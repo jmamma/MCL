@@ -60,7 +60,7 @@ public:
 		}
 		if (activeSenseEnabled) {
 			if (sendActiveSenseTimer == 0) {
-				putc(MIDI_ACTIVE_SENSE);
+				m_putc(MIDI_ACTIVE_SENSE);
 				sendActiveSenseTimer = sendActiveSenseTimeout;
 			} else {
 				sendActiveSenseTimer--;
@@ -74,11 +74,11 @@ public:
   
   virtual void puts(uint8_t *data, uint16_t cnt) {
     while (cnt--)
-      putc(*(data++));
+      m_putc(*(data++));
   }
   
-  virtual void putc(uint8_t c) { }
-  virtual void putc_immediate(uint8_t c) { putc(c); }
+  virtual void m_putc(uint8_t c) { }
+  virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual bool avail() { return false; }
 
   virtual uint8_t getc() {
@@ -90,30 +90,30 @@ public:
   }
   virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     sendCommandByte(cmdByte);
-    putc(byte1);
+    m_putc(byte1);
   }
   
   virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
     sendCommandByte(cmdByte);
-    putc(byte1);
-    putc(byte2);
+    m_putc(byte1);
+    m_putc(byte2);
   }
 
   void sendCommandByte(uint8_t byte) {
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) || MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
       if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
 				running_status = 0;
-				putc(byte);
+				m_putc(byte);
       } else {
-				putc_immediate(byte);
+				m_putc_immediate(byte);
 			}
     } else {
       if (useRunningStatus) {
 				if (running_status != byte) 
-					putc(byte);
+					m_putc(byte);
 				running_status = byte;
       } else {
-				putc(byte);
+				m_putc(byte);
       }
     }
   }
@@ -307,7 +307,7 @@ public:
     puts(msg, cnt);
   }
   inline void sendRaw(uint8_t byte) {
-    putc(byte);
+    m_putc(byte);
   }
 
 	void sendString(const char *data) {

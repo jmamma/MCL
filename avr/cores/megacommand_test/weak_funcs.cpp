@@ -1,6 +1,6 @@
 #include "WProgram.h"
-#include "../../libraries/Midi/src/Midi.h"
-#include <../../libraries/GUI/src/GUI.h>
+#include "./Midi/Midi.h"
+#include <./GUI/GUI.h>
 
 void __attribute__((weak)) setup() {
 }

@@ -1,4 +1,4 @@
-
+\
 #include <Arduino.h>
 //#include "../../Libraries/Midi/src/Midi.h"
 //#include <../../Libraries/Midi/src/MidiClock.h>
@@ -17,6 +17,21 @@ extern "C" {
 //extern MidiClockClass MidiClock;
 //extern volatile uint16_t clock = 0;
 //extern volatile uint16_t slowclock = 0;
+void my_init_ram (void) __attribute__ ((naked))	__attribute__ ((used))  __attribute__ ((section (".init3")));
+
+void my_init_ram (void) {
+  //Set PL6 as output
+  //
+  DDRL |= _BV(PL6);
+   PORTL = 0;
+  XMCRA |= _BV(SRE);
+  //  MCUCR |= _BV(SRE);
+  //  uint8_t *ptr = 0x2000;
+  //  unsigned long i = 0;
+  //  for (i = 0; i < 60000; i++) {
+    //    ptr[i] = 0;
+  //  }
+}
 
 void timer_init(void) {
   TCCR0A = _BV(CS01);

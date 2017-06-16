@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-#include "../../Libraries/CommonTools/src/helpers.h"
+#include "./CommonTools/helpers.h"
 
 void my_init_ram (void) __attribute__ ((naked))	\
     __attribute__ ((section (".init3")));

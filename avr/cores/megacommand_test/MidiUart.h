@@ -4,8 +4,8 @@
 class MidiUartClass;
 
 #include <inttypes.h>
-#include <../../libraries/Midi/src/MidiUartParent.hh>
-#include "../../libraries/CommonTools/src/RingBuffer.h"
+#include <./Midi/MidiUartParent.hh>
+#include "./CommonTools/RingBuffer.h"
 #include <avr/io.h>
 //#define TXEN 3
 //#define RXEN 4

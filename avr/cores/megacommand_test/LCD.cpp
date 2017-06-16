@@ -3,7 +3,7 @@
 #include "LCD.h"
 #include <string.h>
 #include <inttypes.h>
-#include "../../libraries/CommonTools/src/helpers.h"
+#include "./CommonTools/helpers.h"
 
 
 extern "C" {
@@ -14,13 +14,13 @@ extern "C" {
 #define LCD_DATA_PORT PORTF
 #define LCD_DATA_DDR  DDRF
 
-#define LCD_CTRL_PORT PORTE
-#define LCD_CTRL_DDR  DDRE
+#define LCD_CTRL_PORT PORTL
+#define LCD_CTRL_DDR  DDRL
 
 #define LCD_DELAY_US 50
 
-#define LCD_RS     PE2
-#define LCD_ENABLE PE6
+#define LCD_RS     PL3
+#define LCD_ENABLE PL4
 
 #define LCD_SET_ENABLE()   { SET_BIT8(LCD_CTRL_PORT, LCD_ENABLE); }
 #define LCD_CLEAR_ENABLE() { CLEAR_BIT8(LCD_CTRL_PORT, LCD_ENABLE); }
@@ -68,10 +68,12 @@ void LCDClass::putdata(uint8_t data) {
 LCDClass::LCDClass() {
   LCD_DATA_DDR |= 0xF;
   LCD_DATA_PORT = 0x00;
+//  LCD_CTRL_DDR |= 0xF;
   LCD_CTRL_DDR |= _BV(LCD_RS) | _BV(LCD_ENABLE);
-
+  //LCD_CTRL_DRR |= 0xFF
+  //LCD_DATA_PORT = 0x00;
   // wait for display
-  initLCD();
+   initLCD();
 }
 
 void LCDClass::initLCD() {
