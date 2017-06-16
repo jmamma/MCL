@@ -4,8 +4,8 @@
 class MidiUartClass;
 
 #include <inttypes.h>
-#include <../../libraries/Midi/src/MidiUartParent.hh>
-#include "../../libraries/CommonTools/src/RingBuffer.h"
+#include <./Midi/MidiUartParent.hh>
+#include "./CommonTools/RingBuffer.h"
 #include <avr/io.h>
 //#define TXEN 3
 //#define RXEN 4
@@ -39,7 +39,7 @@ class MidiUartClass : public MidiUartParent {
   virtual void m_putc(uint8_t c);
   virtual void m_putc_immediate(uint8_t c);
   virtual bool avail();
-  virtual uint8_t getc();
+  virtual uint8_t m_getc();
 
 	void setSpeed(uint32_t speed);
 
@@ -59,7 +59,7 @@ class MidiUartClass2 : public MidiUartParent {
  public:
   MidiUartClass2();
   virtual bool avail();
-  virtual uint8_t getc();
+  virtual uint8_t m_getc();
 
   volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
 };

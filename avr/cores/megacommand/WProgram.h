@@ -17,7 +17,7 @@ extern "C" {
 }
 #endif
 
-#include "../../Libraries/CommonTools/src/helpers.h"
+#include "CommonTools/helpers.h"
 
 
 
@@ -40,10 +40,10 @@ extern "C" {
 
 //#include "../../libraries/Midi/src/MidiClock.h"
 #include "MidiClock.h"
-#include "../../libraries/Commontools/src/Stack.h"
-#include "../../libraries/GUI/src/GUI.h"
-#include "../../libraries/Midi/src/Midi.h"
-#include "../../libraries/CommonTools/src/WMath.h"
+#include "Stack.h"
+#include "GUI.h"
+#include "Midi.h"
+#include "WMath.h"
 
 #endif
 

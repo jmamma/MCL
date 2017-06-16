@@ -26,7 +26,7 @@ mega.bootloader.unlock_bits=0x3F
 mega.bootloader.lock_bits=0x0F
 
 mega.build.f_cpu=16000000L
-mega.build.core=megacommand_test
+mega.build.core=megacommand
 mega.build.libraries=Midi GUI CommonTools Elektron
 mega.build.variant=mega
 # default board may be overridden by the cpu menu

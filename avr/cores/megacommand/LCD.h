@@ -3,8 +3,8 @@
 
 #include <inttypes.h>
 #include <avr/pgmspace.h>
-#include "../../Libraries/CommonTools/src/helpers.h"
-#include "../../Libraries/GUI/src/LCDParent.hh"
+#include "./CommonTools/helpers.h"
+#include "./GUI/LCDParent.hh"
 
 class LCDClass : public LCDParentClass {
  public:

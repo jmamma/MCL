@@ -17,7 +17,7 @@
  **/
 
 #include <inttypes.h>
-#include "../../Commontools/src/RingBuffer.h"
+#include "./Commontools/RingBuffer.h"
 
 /** Mask for a button pressed. **/
 #define EVENT_BUTTON_PRESSED  _BV(0)

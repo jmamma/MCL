@@ -5,13 +5,13 @@
 //#include "helpers.h"
 #include "LCD.h"
 
-#define SR165_OUT    PD5
-#define SR165_SHLOAD PD6
-#define SR165_CLK    PD7
+#define SR165_OUT    PL0
+#define SR165_SHLOAD PL1
+#define SR165_CLK    PL2
 
-#define SR165_DATA_PORT PORTD
-#define SR165_DDR_PORT  DDRD
-#define SR165_PIN_PORT  PIND
+#define SR165_DATA_PORT PORTL
+#define SR165_DDR_PORT  DDRL
+#define SR165_PIN_PORT  PINL
 
 #define SR165_DELAY() { } // asm("nop"); } // asm("nop");  asm("nop");  }
 

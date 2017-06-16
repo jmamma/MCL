@@ -7,8 +7,8 @@
 #include <util/delay.h>
 
 #include <MidiUart.h>
-#include <../../libraries/Midi/src/midi-common.hh>
-#include <../../libraries/Midi/src/MidiUartParent.hh>
+#include <midi-common.hh>
+#include <MidiUartParent.hh>
 
 #include <MidiClock.h>
 MidiUartClass MidiUart;
@@ -144,7 +144,7 @@ bool MidiUartClass::avail() {
   return !rxRb.isEmpty();
 }
 
-uint8_t MidiUartClass::getc() {
+uint8_t MidiUartClass::m_getc() {
   return rxRb.get();
 }
 
@@ -272,7 +272,7 @@ bool MidiUartClass2::avail() {
   return !rxRb.isEmpty();
 }
 
-uint8_t MidiUartClass2::getc() {
+uint8_t MidiUartClass2::m_getc() {
   return rxRb.get();
 }
 
