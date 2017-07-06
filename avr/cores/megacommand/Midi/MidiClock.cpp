@@ -218,15 +218,9 @@ void MidiClockClass::callCallbacks() {
 	if (state != STARTED)
 		return;
 	
-	if (div16th_counter % 4 == 0) {
-		setLed();
-	} else {
-		clearLed();
-	}
+    //Moved MidiClock callbacks to Main Loop
 
-//Disabled callbacks as they should not be handled during interrupt
-//Also breaks 8x turbo
-    /*	
+    	
 	static bool inCallback = false;
 	if (inCallback) {
 		return;
@@ -251,7 +245,7 @@ void MidiClockClass::callCallbacks() {
 	}
 	
 	inCallback = false;
-*/
+
 }
 
 void MidiClockClass::handleImmediateClock() {
@@ -263,7 +257,13 @@ void MidiClockClass::handleImmediateClock() {
 		MidiUart.m_putc_immediate(0xF8);
     }
 	incrementCounters();
-	callCallbacks();
+	if (div16th_counter % 4 == 0) {
+		setLed();
+	} else {
+		clearLed();
+	}
+
+    //callCallbacks();
 }
 
 /* in interrupt on receiving 0xF8 */

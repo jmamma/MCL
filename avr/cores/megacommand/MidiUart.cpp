@@ -151,6 +151,7 @@ uint8_t MidiUartClass::m_getc() {
 SIGNAL(USART1_RX_vect) {
 isr_usart1(1);
 }
+extern volatile void midi_start();
 void isr_usart1(uint8_t caller) {
   while (UART_CHECK_RX()) {
   uint8_t c = UART_READ_CHAR();
@@ -166,7 +167,7 @@ void isr_usart1(uint8_t caller) {
 
     case MIDI_START:
       MidiClock.handleMidiStart();
-      //midi_start();
+      midi_start();
       break;
 
     case MIDI_STOP:

@@ -329,8 +329,14 @@ MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[512];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 
+uint32_t div96th_counter_last = 0;
 void handleIncomingMidi() {
-  while (MidiUart.avail()) {
+  if (MidiClock.div96th_counter != div96th_counter_last) {
+  div96th_counter_last = MidiClock.div96th_counter;
+  MidiClock.callCallbacks();
+  }
+
+   while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
  //Disable non realtime midi 
@@ -342,10 +348,10 @@ void handleIncomingMidi() {
 void __mainInnerLoop(bool callLoop) {
   //  SET_BIT(OUTPUTPORT, OUTPUTPIN);
   //  setLed2();
-  if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-       MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    MidiClock.updateClockInterval();
-  }
+//  if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
+//       MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
+ //   MidiClock.updateClockInterval();
+ // }
 
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
   handleIncomingMidi();
@@ -358,7 +364,6 @@ void __mainInnerLoop(bool callLoop) {
 void setupEventHandlers();
 void setupMidiCallbacks();
 //void setupClockCallbacks();
-
 int main(void) {
   delay(100);
   init();
