@@ -1,7 +1,7 @@
 #ifndef WProgram_h
 #define WProgram_h
 
-#define DISABLE_MACHINE_NAMES 1
+//#define DISABLE_MACHINE_NAMES 1
 
 #define MIDIDUINO 1
 #define SYSEX_BUF_SIZE 6000
