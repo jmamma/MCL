@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "MDEncoders.h"
+#include "MDEncoders.hh"
 #include "GUI.h"
 #include "MD.h"
 #include "MDParams.hh"

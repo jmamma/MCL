@@ -5,7 +5,7 @@
 
 #include <MD.h>
 #include <GUI.h>
-
+#include "MDParams.hh"
 /**
  * \addtogroup MD Elektron MachineDrum
  *

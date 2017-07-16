@@ -82,7 +82,7 @@ public:
 #include "MDSysex.hh"
 #include "MDParams.hh"
 #include "MDMessages.hh"
-#include "MDEncoders.h"
+#include "MDEncoders.hh"
 
 /**
  * \addtogroup md_md

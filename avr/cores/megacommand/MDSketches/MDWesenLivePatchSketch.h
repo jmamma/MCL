@@ -2,11 +2,11 @@
 
 #ifndef MDWesenLivePatchSketch_H__
 #define MDWesenLivePatchSketch_H__
-/Applications/MidiCtrl.app/Contents/Resources/Java/hardware/libraries/MDSketches/MDArpeggiatorSketch.h
+
 #include <MD.h>
 #include <AutoEncoderPage.h>
 #include <BreakdownPage.h>
-
+#include <MDEncoders.hh>
 /**
  * \addtogroup MD Elektron MachineDrum
  *
@@ -173,7 +173,7 @@ public:
       }
     }
     for (int i = 0; i < 4; i++) {
-      ((MDEncoder *)page4.encoders[i])->track = ramP1Track;
+       ((MDEncoder *)page4.encoders[i])->track = ramP1Track;
     }
     for (int i = 0; i < 4; i++) {
       ((MDFXEncoder *)page.encoders[i])->loadFromKit();

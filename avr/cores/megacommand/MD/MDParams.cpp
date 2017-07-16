@@ -28,7 +28,10 @@ const char *MDLFONames[8] = {
 /**
  * Names for the different machine models of the machinedrum.
  **/
-/*md_machine_name_t machine_names[134] PROGMEM = {
+
+#ifndef DISABLE_MACHINE_NAMES 
+
+const md_machine_name_t machine_names[134] PROGMEM = {
   { "GND---", 0},
   { "GND-SN", 1},
   { "GND-NS", 2},
@@ -163,14 +166,16 @@ const char *MDLFONames[8] = {
   { "ROM-46", 189},
   { "ROM-47", 190},
   { "ROM-48", 191}
-};*/
+};
+
+#endif
 
 PGM_P MDClass::getMachineName(uint8_t machine) {
-//  for (uint8_t i = 0; i < countof(machine_names); i++) {
- //   if (pgm_read_byte(&machine_names[i].id) == machine) {
-  //    return machine_names[i].name;
-   // }
- // }
+  for (uint8_t i = 0; i < countof(machine_names); i++) {
+    if (pgm_read_byte(&machine_names[i].id) == machine) {
+      return machine_names[i].name;
+    }
+  }
   return NULL;
 }
 

@@ -127,7 +127,13 @@ void MidiUartClass::m_putc(uint8_t c) {
 
     txRb.put(c);
     // enable interrupt on empty data register to start transfer
+ // if (IN_IRQ() && UART_CHECK_EMPTY_BUFFER()) {
+   //        MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
+     //     UART_WRITE_CHAR(MidiUart.txRb.get()); 
+  //  }
+ // else {
     SET_BIT(UCSR1B, UDRIE1);
+ // }
   }
 #else
   while (!UART_CHECK_EMPTY_BUFFER());
@@ -155,14 +161,13 @@ extern volatile void midi_start();
 void isr_usart1(uint8_t caller) {
   while (UART_CHECK_RX()) {
   uint8_t c = UART_READ_CHAR();
-  uint8_t stopme = 0;
-  uint16_t countme = 0;
  if (c != MIDI_ACTIVE_SENSE) {
   //  setLed();
   if (MIDI_IS_REALTIME_STATUS_BYTE(c) && MidiClock.mode == MidiClock.EXTERNAL_UART1) {
     switch (c) {
     case MIDI_CLOCK:
       MidiClock.handleClock();
+      //       MidiClock.callCallbacks();
       break;
 
     case MIDI_START:
@@ -176,25 +181,9 @@ void isr_usart1(uint8_t caller) {
 
     case MIDI_CONTINUE:
       MidiClock.handleMidiContinue();
-     // midi_start();
+      midi_start();
       break;
-   /* case MIDI_SYSEX_START:
-      setLed();
-     MidiUart.rxRb.put(c); 
-      while (stopme == 0) {
-        if (UART_CHECK_RX()) { 
-           c = UART_READ_CHAR();
-           if (!MIDI_IS_REALTIME_STATUS_BYTE(c)) { MidiUart.rxRb.put(c); }
-           countme++;
-           if (c == MIDI_SYSEX_END) { 
-      //      GUI.flash_printf("SYS %b", countme);
-            stopme = 1;
-           }
-
-        }
-      }
-      clearLed();
-      break;*/
+    
     default:
       MidiUart.rxRb.put(c);
       break;

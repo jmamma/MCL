@@ -20,7 +20,7 @@ class MidiUartClass;
 #else
 #define RX_BUF_TYPE uint8_t
 #endif
-#define TX_BUF_SIZE 6000
+#define TX_BUF_SIZE 3000
 //define TX_BUF_SIZE 512
 
 #if (TX_BUF_SIZE >= 256)

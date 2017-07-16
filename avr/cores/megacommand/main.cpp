@@ -261,8 +261,8 @@ static inline uint32_t phase_mult(uint32_t val) {
 }
 
 
+uint32_t div96th_counter_last = 0;
 ISR(TIMER1_OVF_vect) {
-
   clock++;
 #ifdef MIDIDUINO_MIDI_CLOCK
 //  if (MidiClock.state == MidiClock.STARTED) {
@@ -308,6 +308,14 @@ ISR(TIMER2_OVF_vect) {
  
        TCNT2 = tcnt2; 
   slowclock++;
+   if (MidiClock.div96th_counter != div96th_counter_last) {
+  div96th_counter_last = MidiClock.div96th_counter;
+  MidiClock.callCallbacks();
+  }
+
+
+
+  
   if (abs(slowclock - lastRunningStatusReset) > 3000) {
     MidiUart.resetRunningStatus();
     lastRunningStatusReset = slowclock;
@@ -324,19 +332,13 @@ ISR(TIMER2_OVF_vect) {
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
 }
 
-uint8_t sysexBuf[8192];
+uint8_t sysexBuf[8144];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[512];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 
-uint32_t div96th_counter_last = 0;
 void handleIncomingMidi() {
-  if (MidiClock.div96th_counter != div96th_counter_last) {
-  div96th_counter_last = MidiClock.div96th_counter;
-  MidiClock.callCallbacks();
-  }
-
-   while (MidiUart.avail()) {
+    while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
  //Disable non realtime midi 
