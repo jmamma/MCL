@@ -95,7 +95,7 @@ void MidiClass::handleByte(uint8_t byte) {
 				in_state = midi_wait_status;
 				midiSysex.abort();
 				goto again;
-
+       } else {
               midiSysex.end();
       }
     } else {
