@@ -321,7 +321,7 @@ ISR(TIMER2_OVF_vect) {
  }
 
 	MidiUart.tickActiveSense();
-	//MidiUart2.tickActiveSense();
+	MidiUart2.tickActiveSense();
   
   //  SET_BIT(OUTPUTPORT, OUTPUTPIN);
 

@@ -259,7 +259,7 @@ void MidiClockClass::handleImmediateClock() {
 	
 	if ((transmit) ) {
 //       MidiUart.putc(0xF8);
-        MidiUart2.m_putc(0xF8);
+        MidiUart2.m_putc_immediate(0xF8);
 		MidiUart.m_putc_immediate(0xF8);
     }
 	incrementCounters();
