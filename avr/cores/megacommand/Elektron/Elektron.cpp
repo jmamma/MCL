@@ -118,6 +118,37 @@ void ElektronHelper::from64Bit(uint64_t num, uint8_t *b) {
   b[6] = (num >> 8) & 0xFF;
   b[7] = (num >> 0) & 0xFF;
 }
+/* check sysex */
+bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
+  uint16_t cksum = 0;
+  for (int i = 0; i < len - 4; i++) {
+    cksum += data[i];
+  }
+  cksum &= 0x3FFF;
+	uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
+  if (cksum != realcksum) {
+#ifdef HOST_MIDIDUINO
+		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
+#endif
+    // wrong checksum
+    return false;
+  }
+	return true;
+}
+
+void ElektronHelper::calculateSysexChecksumAnalog(uint8_t *data, uint16_t len) {
+	data[0] = 0xF0;
+  uint16_t checksum = 0;
+  for (int i = 9; i < len; i++)
+    checksum += data[i];
+  data[len] = (uint8_t)((checksum >> 7) & 0x7F);
+  data[len + 1] = (uint8_t)(checksum & 0x7F);
+  uint16_t length = len + 5 - 7 - 3;
+  data[len + 2] = (uint8_t)((length >> 7) &0x7F);
+  data[len + 3 ] = (uint8_t)(length & 0x7F);
+  data[len + 4] = 0xF7;
+}
+
 
 /* check sysex */
 bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {

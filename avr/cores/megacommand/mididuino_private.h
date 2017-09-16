@@ -6,27 +6,27 @@
 void init(void);
 
 inline void toggleLed(void) {
-  TOGGLE_BIT(PORTE, PE4);
+  TOGGLE_BIT(PORTE, PE5);
 }
 
 inline void setLed(void) {
-  CLEAR_BIT(PORTE, PE4);
-}
-
-inline void clearLed(void) {
-  SET_BIT(PORTE, PE4);
-}
-
-inline void setLed2(void) {
-  CLEAR_BIT(PORTE, PE5);
-}
-
-inline void clearLed2(void) {
   SET_BIT(PORTE, PE5);
 }
 
+inline void clearLed(void) {
+  CLEAR_BIT(PORTE, PE5);
+}
+
+inline void setLed2(void) {
+  SET_BIT(PORTE, PE4);
+}
+
+inline void clearLed2(void) {
+  CLEAR_BIT(PORTE, PE4);
+}
+
 inline void toggleLed2(void) {
-  TOGGLE_BIT(PORTE, PE5);
+  TOGGLE_BIT(PORTE, PE4);
 }
 
 

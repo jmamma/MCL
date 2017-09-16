@@ -1,6 +1,5 @@
 #ifndef MIDI_UART_H__
 #define MIDI_UART_H__
-
 class MidiUartClass;
 
 #include <inttypes.h>
@@ -41,7 +40,7 @@ class MidiUartClass : public MidiUartParent {
   virtual bool avail();
   virtual uint8_t m_getc();
 
-	void setSpeed(uint32_t speed);
+	void setSpeed(uint32_t speed, uint8_t port);
 
   volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
 
@@ -60,7 +59,7 @@ class MidiUartClass2 : public MidiUartParent {
   MidiUartClass2();
   virtual bool avail();
   virtual uint8_t m_getc();
-
+  virtual void m_putc(uint8_t c);
   volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
 };
 

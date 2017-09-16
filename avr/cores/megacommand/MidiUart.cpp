@@ -14,7 +14,6 @@
 MidiUartClass MidiUart;
 MidiUartClass2 MidiUart2;
 
-
 //extern MidiClockClass MidiClock;
 #define UART_BAUDRATE 31250
 #define UART_BAUDRATE_REG (((F_CPU / 16)/(UART_BAUDRATE)) - 1)
@@ -29,6 +28,9 @@ MidiUartClass2 MidiUart2;
 #define UART_READ_CHAR() (UDR1)
 
 #define UART2_CHECK_RX() IS_BIT_SET8(UCSR2A, RXC1)
+#define UART2_CHECK_TX() IS_BIT_SET8(UCSR2A, tXC1)
+
+#define UART2_WRITE_CHAR(c) (UDR2 = (c))
 #define UART2_READ_CHAR() (UDR2)
 
 #include <avr/io.h>
@@ -39,23 +41,26 @@ MidiUartClass::MidiUartClass() : MidiUartParent() {
 
 void MidiUartClass::initSerial() {
   running_status = 0;
-  setSpeed(31250);
-
+  setSpeed(31250,1); 
+  setSpeed(31250,2);
+ 
   //  UBRR0H = (UART_BAUDRATE_REG >> 8);
   //  UBRR0L = (UART_BAUDRATE_REG & 0xFF);
 
   UCSR1C = (3<<UCSZ00); 
 
 
+ 
   /** enable receive, transmit and receive and transmit interrupts. **/
   //  UCSRB = _BV(RXEN) | _BV(TXEN) | _BV(RXCIE);
-  UCSR1B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
+  UCSR1B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+
 
 #ifdef TX_IRQ
 #endif
 }
 
-void MidiUartClass::setSpeed(uint32_t speed) {
+void MidiUartClass::setSpeed(uint32_t speed, uint8_t port) {
 #ifdef TX_IRQ
   // empty TX buffer before switching speed
   while (!txRb.isEmpty())
@@ -70,11 +75,22 @@ void MidiUartClass::setSpeed(uint32_t speed) {
   //cpu /= speed;
   //cpu--;
 //UBRR0H = ((cpu >> 8));
-  
+  if (port == 1) {
   UBRR1H = ((cpu >> 8) & 0xFF);
   UBRR1L = (cpu & 0xFF);
+  }
+  if (port == 2) {
+  UBRR2H = ((cpu >> 8) & 0xFF);
+  UBRR2L = (cpu & 0xFF); 
+  }
 }
 
+void MidiUartClass2::m_putc(uint8_t c) {
+while (!UART2_CHECK_EMPTY_BUFFER());
+
+        UART2_WRITE_CHAR(c);
+
+}
 void MidiUartClass::m_putc_immediate(uint8_t c) {
 //  m_putc(c);
         if (!IN_IRQ()) {
@@ -157,7 +173,8 @@ uint8_t MidiUartClass::m_getc() {
 SIGNAL(USART1_RX_vect) {
 isr_usart1(1);
 }
-extern volatile void midi_start();
+extern void midi_start();
+
 void isr_usart1(uint8_t caller) {
   while (UART_CHECK_RX()) {
   uint8_t c = UART_READ_CHAR();
@@ -198,6 +215,11 @@ MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 UART_WRITE_CHAR(MidiUart.txRb.get());
 }
 if (UART2_CHECK_RX() && (caller == 1)) { isr_usart2(1); }
+//   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
+  //           MidiClock.div96th_counter_last = MidiClock.div96th_counter;
+    //           MidiClock.callCallbacks();
+      //           }
+
 }
 #if 0
     // show overflow debug
@@ -245,8 +267,8 @@ MidiUartClass2::MidiUartClass2() : MidiUartParent() {
 
 void MidiUartClass2::initSerial() {
   running_status = 0;
-  UBRR2H = (UART_BAUDRATE_REG >> 8);
-  UBRR2L = (UART_BAUDRATE_REG & 0xFF);
+//  UBRR2H = (UART_BAUDRATE_REG >> 8);
+//  UBRR2L = (UART_BAUDRATE_REG & 0xFF);
   //  UBRRH = 0;
   //  UBRRL = 15;
 
@@ -294,14 +316,18 @@ void isr_usart2(uint8_t caller) {
     case MIDI_STOP:
       MidiClock.handleMidiStop();
       break;
-
+    
     default:
       MidiUart2.rxRb.put(c);
-      break;
-    }
-  } else {
- //   if (Midi2.midiActive) { MidiUart2.rxRb.put(c); }
+     break;
+     }
   }
+          else {
+      MidiUart2.rxRb.put(c);
+    
+  } 
+ //   if (Midi2.midiActive) { MidiUart2.rxRb.put(c); }
+  
 
 // }
 if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {

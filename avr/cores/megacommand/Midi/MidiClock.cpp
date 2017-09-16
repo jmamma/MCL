@@ -24,7 +24,7 @@ void MidiClockClass::init() {
 	counter = 10000;
 	rx_clock = rx_last_clock = 0;
 	outdiv96th_counter = 0;
-	div96th_counter = indiv96th_counter = 0;
+	div96th_counter_last = div96th_counter = indiv96th_counter = 0;
 	div32th_counter = indiv32th_counter = 0;
 	div16th_counter = indiv16th_counter = 0;
 	mod6_counter = inmod6_counter = 0;
@@ -44,25 +44,31 @@ uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
 }
 
 void MidiClockClass::handleMidiStart() {
-	if (transmit)
+	if (transmit) {
 		MidiUart.sendRaw(MIDI_START);
-	init();
+	    MidiUart2.sendRaw(MIDI_START);
+    }
+    init();
 	state = STARTING;
 }
 
 void MidiClockClass::handleMidiStop() {
 	state = PAUSED;
-	if (transmit)
+	if (transmit) {
 		MidiUart.sendRaw(MIDI_STOP);
+        MidiUart2.sendRaw(MIDI_STOP);
+    }
     init();
 
 }
 
 
 void MidiClockClass::handleMidiContinue() {
-	if (transmit)
+	if (transmit) {
 		MidiUart.sendRaw(MIDI_CONTINUE);
-	state = STARTING;
+        MidiUart2.sendRaw(MIDI_CONTINUE);
+    }
+    state = STARTING;
 	
 	counter = 10000;
 	rx_clock = rx_last_clock = 0;
@@ -253,7 +259,7 @@ void MidiClockClass::handleImmediateClock() {
 	
 	if ((transmit) ) {
 //       MidiUart.putc(0xF8);
-
+        MidiUart2.m_putc(0xF8);
 		MidiUart.m_putc_immediate(0xF8);
     }
 	incrementCounters();

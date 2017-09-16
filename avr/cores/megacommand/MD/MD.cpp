@@ -69,11 +69,14 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *para
 }
 
 void MDClass::sendRequest(uint8_t type, uint8_t param) {
+    USE_LOCK();
+    SET_LOCK();
 	MidiUart.m_putc(0xF0);
 	MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
 	MidiUart.m_putc(type);
 	MidiUart.m_putc(param);
 	MidiUart.m_putc(0xF7);
+    CLEAR_LOCK();
 }
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
@@ -109,10 +112,13 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
 //  0x5E, 0x5D, 0x5F, 0x60
 
 void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
+        USE_LOCK();
+        SET_LOCK();
 	MidiUart.m_putc(0xF0);
 	MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
 	MidiUart.sendRaw(bytes, cnt);
 	MidiUart.m_putc(0xf7);
+    CLEAR_LOCK();
 }
 
 void MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type) {
@@ -311,8 +317,9 @@ void MDClass::muteTrack(uint8_t track, bool mute) {
 }
 
 void MDClass::setStatus(uint8_t id, uint8_t value) {
-	uint8_t data[] = { 0x71, id & 0x7F, value & 0x7F };
-	MD.sendSysex(data, countof(data));
+
+    uint8_t data[] = { 0x71, id & 0x7F, value & 0x7F };
+    MD.sendSysex(data, countof(data));
 }
 
 void MDClass::loadGlobal(uint8_t id) {

@@ -33,6 +33,7 @@ typedef struct scale_s {
 
 extern uint8_t invMajorScale[12];
 
+extern scale_t chromaticScale;
 extern scale_t ionianScale;
 extern scale_t dorianScale;
 extern scale_t phrygianScale;

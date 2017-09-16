@@ -101,7 +101,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 	slaveSpeeds = 0;
 	certifiedSlaveSpeeds = 0;
 
-	MidiUart.setSpeed(31250);
+	MidiUart.setSpeed(31250,1);
 
 	uint8_t speed1;
 	uint8_t speed2;
@@ -209,7 +209,7 @@ uint32_t TurboMidiSysexListenerClass::tmSpeeds[12] = {
 	
 void TurboMidiSysexListenerClass::setSpeed(uint8_t speed) {
 	currentSpeed = speed;
-	MidiUart.setSpeed(tmSpeeds[speed]);
+	MidiUart.setSpeed(tmSpeeds[speed],1);
 }
 
 void TurboMidiSysexListenerClass::sendSpeedTest1(uint8_t speed1) {

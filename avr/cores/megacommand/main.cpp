@@ -261,7 +261,6 @@ static inline uint32_t phase_mult(uint32_t val) {
 }
 
 
-uint32_t div96th_counter_last = 0;
 ISR(TIMER1_OVF_vect) {
   clock++;
 #ifdef MIDIDUINO_MIDI_CLOCK
@@ -308,8 +307,8 @@ ISR(TIMER2_OVF_vect) {
  
        TCNT2 = tcnt2; 
   slowclock++;
-   if (MidiClock.div96th_counter != div96th_counter_last) {
-  div96th_counter_last = MidiClock.div96th_counter;
+   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
+  MidiClock.div96th_counter_last = MidiClock.div96th_counter;
   MidiClock.callCallbacks();
   }
 
@@ -334,11 +333,11 @@ ISR(TIMER2_OVF_vect) {
 
 uint8_t sysexBuf[8144];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
-uint8_t sysexBuf2[512];
+uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 
 void handleIncomingMidi() {
-    while (MidiUart.avail()) {
+  while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
  //Disable non realtime midi 
@@ -355,6 +354,7 @@ void __mainInnerLoop(bool callLoop) {
  //   MidiClock.updateClockInterval();
  // }
 
+
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
   handleIncomingMidi();
   
@@ -369,8 +369,8 @@ void setupMidiCallbacks();
 int main(void) {
   delay(100);
   init();
-  clearLed();
-  clearLed2();
+  //clearLed();
+  //clearLed2();
 
   uint16_t sr = SR165.read16();
   Buttons.clear();
@@ -378,7 +378,6 @@ int main(void) {
   Encoders.poll(sr);
   oldsr = sr;
 
-  MidiSysex.addSysexListener(&MididuinoSysexListener);
 
   OUTPUTDDR |= _BV(OUTPUTPIN);
   setup();

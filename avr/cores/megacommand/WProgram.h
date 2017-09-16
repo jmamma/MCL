@@ -33,7 +33,6 @@ extern "C" {
 // #define MDIIDUINO_SD_CARD      1
 
 #include "mididuino_private.h"
-
 #ifdef __cplusplus
 
 #include "LCD.h"

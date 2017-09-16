@@ -27,7 +27,10 @@ uint8_t invMajorScale[12] = {
   0, 0, 2, 4, 4, 5, 7, 7, 7, 9, 9, 11
 };
 
-
+scale_t chromaticScale = {
+  12,
+  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
+};
 /* greek modes */
 scale_t ionianScale = {
   7,

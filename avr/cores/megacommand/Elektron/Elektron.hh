@@ -68,9 +68,15 @@ public:
   static void from32Bit(uint32_t num, uint8_t *b);
   static uint64_t to64Bit(uint8_t *b);
   static void from64Bit(uint64_t num, uint8_t *b);
-	
-	static bool checkSysexChecksum(uint8_t *data, uint16_t len);
-	static void calculateSysexChecksum(uint8_t *data, uint16_t len);
+  
+  static bool checkSysexChecksum(uint8_t *data, uint16_t len);
+  static void calculateSysexChecksum(uint8_t *data, uint16_t len);
+
+  /*Checksum calcs different offsets for Analog4+AnalogRYTM*/
+  static bool checkSysexChecksumAnalog(uint8_t *data, uint16_t len);
+  static void calculateSysexChecksumAnalog(uint8_t *data, uint16_t len);
+
+
 };
 
 #include "MNMDataEncoder.hh"

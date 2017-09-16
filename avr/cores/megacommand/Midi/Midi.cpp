@@ -89,13 +89,14 @@ void MidiClass::handleByte(uint8_t byte) {
     break;
 
   case midi_wait_sysex:
+
     if (MIDI_IS_STATUS_BYTE(byte)) {
       if (byte != MIDI_SYSEX_END) {
 				in_state = midi_wait_status;
 				midiSysex.abort();
 				goto again;
-      } else {
-				midiSysex.end();
+
+              midiSysex.end();
       }
     } else {
       midiSysex.handleByte(byte);
