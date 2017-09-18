@@ -80,6 +80,7 @@ class A4Class {
 	 */
 	
  public:
+  bool connected = false;
   A4Class();
 	/** Send the given sysex buffer to the A4. **/
   void sendSysex(uint8_t *bytes, uint8_t cnt);
@@ -131,7 +132,7 @@ class A4Class {
   void unmuteTrack(uint8_t track) {
                 muteTrack(track, false);
   }
-
+  void setLevel(uint8_t track, uint8_t value);
 };
 
 /**

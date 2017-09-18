@@ -136,7 +136,7 @@ class MDClass {
 	
  public:
   MDClass();
-
+ bool connected = false; 
 	/** Stores the current global of the MD, usually set by the MDTask. **/
   int currentGlobal;
 	/** Stores the current kit of the MD, usually set by the MDTask. **/
