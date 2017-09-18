@@ -127,6 +127,10 @@ class A4Class {
   bool getBlockingSoundX(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettingsX(uint8_t global, uint16_t timeout = 3000);
 
+  void muteTrack(uint8_t track, bool mute = true);
+  void unmuteTrack(uint8_t track) {
+                muteTrack(track, false);
+  }
 
 };
 

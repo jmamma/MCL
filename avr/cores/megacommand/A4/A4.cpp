@@ -231,4 +231,9 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
 	return ret;
 }
 
+void A4Class::muteTrack(uint8_t track, bool mute) {
+    MidiUart2.sendCC(track - 1, 94, mute ? 1 : 0);
+}
+
+
 A4Class Analog4;
