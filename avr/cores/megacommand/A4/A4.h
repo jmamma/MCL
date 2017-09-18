@@ -80,8 +80,8 @@ class A4Class {
 	 */
 	
  public:
-  bool connected = false;
   A4Class();
+  bool connected = false;
 	/** Send the given sysex buffer to the A4. **/
   void sendSysex(uint8_t *bytes, uint8_t cnt);
 	/**

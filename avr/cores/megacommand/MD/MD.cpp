@@ -404,7 +404,8 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
         handleIncomingMidi();
 		GUI.display();
 	} while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
-	return cb->received;
+	connected = cb->received;
+    return cb->received;
 }
 
 
