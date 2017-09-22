@@ -263,6 +263,7 @@ static inline uint32_t phase_mult(uint32_t val) {
 
 ISR(TIMER1_OVF_vect) {
   clock++;
+  isr_usart1(1);
 #ifdef MIDIDUINO_MIDI_CLOCK
 //  if (MidiClock.state == MidiClock.STARTED) {
  //   MidiClock.handleTimerInt();
@@ -309,6 +310,7 @@ ISR(TIMER2_OVF_vect) {
   slowclock++;
    if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
   MidiClock.div96th_counter_last = MidiClock.div96th_counter;
+  isr_usart1(1);  
   MidiClock.callCallbacks();
   }
 

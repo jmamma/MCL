@@ -212,6 +212,12 @@ void GuiClass::put_value_at2(uint8_t idx, uint8_t value) {
   data[idx+1] = (value % 10) + '0';
 }
 
+void GuiClass::put_value_at1(uint8_t idx, uint8_t value) {
+  char *data = lines[curLine].data;
+  lines[curLine].changed = true;
+  data[idx] = (value % 10) + '0';
+}
+
 
 void GuiClass::put_value_at(uint8_t idx, int value) {
   char *data = lines[curLine].data;

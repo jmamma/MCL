@@ -50,7 +50,7 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
 }
 
 bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
-        if (len != (415 - 10 - 1)) {
+        if (len != (415 - 10 - 0)) {
 		 GUI.setLine(GUI.LINE1);
 		GUI.flash_strings_fill("WRONG LEN", "");
 		GUI.setLine(GUI.LINE2);
@@ -62,15 +62,17 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
 		return false;
 	}
 	
-	if (!ElektronHelper::checkSysexChecksumAnalog(data, len)) {
+	if (!ElektronHelper::checkSysexChecksumAnalog(data + 1, len - 1)) {
 		GUI.flash_strings_fill("WRONG CKSUM", "");
 		return false;
 	}
 	
 	//origPosition = data[3];
 	
-	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 2, len - 4));
+	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
     decoder.stop7Bit();
+    decoder.get8(&origPosition);
+    decoder.skip(2);
     decoder.get(payload, sizeof(payload));		
 	return true;
 }
@@ -99,7 +101,7 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
 	encoder.startChecksum();
     encoder.pack8(0x78); // unknown
 	encoder.pack8(0x3E); // unknown
-    encoder.pack(payload,sizeof(payload));
+    encoder.pack((uint8_t*)&payload,sizeof(payload));
 	uint16_t enclen = encoder.finish();
 	encoder.finishChecksum();
 	
@@ -107,7 +109,7 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
 }
 
 bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
-        if (len != (2679 - 10 - 1)) {
+        if (len != (2679 - 10 -0)) {
 		 GUI.setLine(GUI.LINE1);
 		GUI.flash_strings_fill("WRONG LEN", "");
 		GUI.setLine(GUI.LINE2);
@@ -119,22 +121,23 @@ bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
 		return false;
 	}
 	
-	if (!ElektronHelper::checkSysexChecksumAnalog(data, len)) {
+	if (!ElektronHelper::checkSysexChecksumAnalog(data + 1, len - 1)) {
 		GUI.flash_strings_fill("WRONG CKSUM", "");
 		return false;
 	}
-	
 	//origPosition = data[3];
 	
-	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 2, len - 4));
+	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
     decoder.stop7Bit();
-    decoder.get(payload_start, sizeof(payload_start));		
+    decoder.get8(&origPosition);
+//    decoder.skip(2);
+    decoder.get((uint8_t*) &payload_start, sizeof(payload_start));		
 	
 	for (uint8_t i = 0; i < 4; i++) {
-    decoder.get(sounds[i].payload, sizeof(sounds[i].payload));		
+    decoder.get((uint8_t*)&sounds[i].payload, sizeof(sounds[i].payload));		
     sounds[i].origPosition = i;
     }
-    decoder.get(payload_end, sizeof(payload_end));		
+    decoder.get((uint8_t*)&payload_end, sizeof(payload_end));		
 	
 	
     return true;
@@ -158,8 +161,7 @@ uint16_t A4Kit::toSysex(ElektronDataToSysexEncoder &encoder) {
 	if (workSpace) { encoder.pack8(A4_KITX_MESSAGE_ID); }
     else { encoder.pack8(A4_KIT_MESSAGE_ID); }
     encoder.pack(a4_sysex_proto_version, sizeof(a4_sysex_proto_version));
-    encoder.pack8(origPosition);
-	
+    encoder.pack8(origPosition);	
 	
 	encoder.startChecksum();
     encoder.pack(payload_start,sizeof(payload_start)); // unknow

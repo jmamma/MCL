@@ -252,6 +252,10 @@ class GuiClass {
 	 *
 	 * @{
 	 */
+  
+  
+  
+  void put_value_at1(uint8_t idx, uint8_t value);
   void put_value_at2(uint8_t idx, uint8_t value);
 	/** Display the value in base 10 at the given idx (in 4 character increments). **/
   void put_value(uint8_t idx, uint8_t value);

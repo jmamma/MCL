@@ -382,7 +382,7 @@ isr_usart2(2);
 void isr_usart2(uint8_t caller) {  
   
 // while (UART2_CHECK_RX()) { 
-  
+while (UART2_CHECK_RX()) {  
  uint8_t c = UART2_READ_CHAR();
  if (c != MIDI_ACTIVE_SENSE) { 
   // XXX clock on second input
@@ -415,7 +415,7 @@ void isr_usart2(uint8_t caller) {
   } 
  //   if (Midi2.midiActive) { MidiUart2.rxRb.put(c); }
   
-
+ }
 // }
 if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
         MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
