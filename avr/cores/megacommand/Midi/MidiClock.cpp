@@ -55,6 +55,8 @@ void MidiClockClass::handleMidiStart() {
     init();
 	state = STARTING;
 
+	
+	onMidiStartCallbacks.call(div96th_counter);
 }
 
 void MidiClockClass::handleMidiStop() {
@@ -65,8 +67,8 @@ void MidiClockClass::handleMidiStop() {
     }
     init();
 
+	onMidiStopCallbacks.call(div96th_counter);
 }
-
 
 void MidiClockClass::handleMidiContinue() {
 	if (transmit) {
@@ -75,6 +77,8 @@ void MidiClockClass::handleMidiContinue() {
     }
     state = STARTING;
 	
+	onMidiContinueCallbacks.call(div96th_counter);
+
 	counter = 10000;
 	rx_clock = rx_last_clock = 0;
 	isInit = false;

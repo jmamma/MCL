@@ -34,7 +34,7 @@ MidiUartClass2 MidiUart2;
 #define UART2_READ_CHAR() (UDR2)
 
 #include <avr/io.h>
-//void midi_start();
+
 MidiUartClass::MidiUartClass() : MidiUartParent() {
   initSerial();
 }
@@ -239,7 +239,6 @@ uint8_t MidiUartClass::m_getc() {
 SIGNAL(USART1_RX_vect) {
 isr_usart1(1);
 }
-extern void midi_start();
 
 void isr_usart1(uint8_t caller) {
   while (UART_CHECK_RX()) {
@@ -255,7 +254,6 @@ void isr_usart1(uint8_t caller) {
 
     case MIDI_START:
       MidiClock.handleMidiStart();
-      midi_start();
       break;
 
     case MIDI_STOP:
@@ -264,7 +262,6 @@ void isr_usart1(uint8_t caller) {
 
     case MIDI_CONTINUE:
       MidiClock.handleMidiContinue();
-      midi_start();
       break;
     
     default:

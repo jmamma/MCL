@@ -106,9 +106,41 @@ public:
 	
 	MidiClockClass();
 	
-	CallbackVector1<ClockCallback,8, uint32_t> on96Callbacks;
+	CallbackVector1<ClockCallback,8, uint32_t> onMidiStartCallbacks;
+	CallbackVector1<ClockCallback,8, uint32_t> onMidiStopCallbacks;	
+	CallbackVector1<ClockCallback,8, uint32_t> onMidiContinueCallbacks;
+	
+    CallbackVector1<ClockCallback,8, uint32_t> on96Callbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> on32Callbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> on16Callbacks;
+
+    void addOnMidiStartCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiStartCallbacks.add(obj, func);
+	}
+	void removeOnMidiStartCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiStartCallbacks.remove(obj, func);
+	}
+    void removeOnMidiStartCallback(ClockCallback *obj) {
+		onMidiStartCallbacks.remove(obj);
+	}
+    void addOnMidiStopCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiStopCallbacks.add(obj, func);
+	}
+	void removeOnMidiStopCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiStopCallbacks.remove(obj, func);
+	}
+    void removeOnMidiStopCallback(ClockCallback *obj) {
+		onMidiStopCallbacks.remove(obj);
+	}
+    void addOnMidiContinueCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiContinueCallbacks.add(obj, func);
+	}
+	void removeOnMidiContinueCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onMidiContinueCallbacks.remove(obj, func);
+	}
+    void removeOnMidiContinueCallback(ClockCallback *obj) {
+		onMidiContinueCallbacks.remove(obj);
+	}
 	
 	void addOn96Callback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
 		on96Callbacks.add(obj, func);
