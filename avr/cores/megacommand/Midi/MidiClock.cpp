@@ -28,8 +28,12 @@ void MidiClockClass::init() {
 	div32th_counter = indiv32th_counter = 0;
 	div16th_counter = indiv16th_counter = 0;
 	mod6_counter = inmod6_counter = 0;
-	pll_x = 200;
+    mod3_counter = 0;
+    pll_x = 200;
 	isInit = false;
+
+
+
     //mcl_16counter = 0;
     //mcl_counter = 0;
     //mcl_clock = read_slowclock();;
@@ -50,6 +54,7 @@ void MidiClockClass::handleMidiStart() {
     }
     init();
 	state = STARTING;
+
 }
 
 void MidiClockClass::handleMidiStop() {
@@ -207,10 +212,15 @@ void MidiClockClass::updateClockInterval() {
 void MidiClockClass::incrementCounters() {
 	if (state == STARTING && (mode == INTERNAL_MIDI || useImmediateClock)) {
 		state = STARTED;
+        MidiClock.callCallbacks();
 	} else if (state == STARTED) {
 		div96th_counter++;
 		mod6_counter++;
-		if (mod6_counter == 6) {
+		mod3_counter++;
+        if (mod3_counter == 3) {
+        mod3_counter = 0;
+        }
+        if (mod6_counter == 6) {
 			mod6_counter = 0;
 			div16th_counter++;
 			div32th_counter++;

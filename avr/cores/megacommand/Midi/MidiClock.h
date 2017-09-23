@@ -43,8 +43,12 @@ public:
 	volatile uint32_t indiv32th_counter;
 	volatile uint32_t indiv16th_counter;
 	volatile uint8_t mod6_counter;
-	volatile uint8_t inmod6_counter;
-	volatile uint16_t interval;
+	volatile uint8_t mod3_counter;
+
+
+    volatile uint8_t inmod6_counter;
+
+    volatile uint16_t interval;
 	
 	volatile uint16_t counter;
 	volatile uint16_t rx_phase;
