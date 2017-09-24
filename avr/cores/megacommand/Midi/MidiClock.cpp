@@ -379,28 +379,10 @@ void MidiClockClass::handleTimerInt()  {
 		
 		incrementCounters();
         
-        //For MCL external midi sync hack
-        //Pause and start the sequencer every 4 meausures to keep it locked
-     //   mcl_counter++;
-     //   int16_t current_clock = read_slowclock();
-     //   if (clock_diff(mcl_clock, current_clock) >= 1000) {
-     //   tempo = (mcl_counter / 24) * 60;
-    //    mcl_counter = 0;
-     //   mcl_clock = read_slowclock();
-      //   }
-    //    if ((div16th_counter % 4) == 0) {
-     //   MidiUart.putc_immediate(MIDI_STOP);
-     //   MidiUart.putc_immediate(MIDI_CONTINUE);
-      //  }
-		if (state == STARTED) {
+	if (state == STARTED) {
 			if (transmit) {
 				int len = (div96th_counter - outdiv96th_counter);
-        //        if ((mcl_16counter % 64 == 0) && (mcl_16counter > 0)) {
-        //            MidiUart.putc_immediate(MIDI_STOP);
-        //            MidiUart.putc_immediate(MIDI_START);
-                    
-        //        }
-				for (int i = 0; i < len; i++) {
+   			for (int i = 0; i < len; i++) {
 					MidiUart.putc_immediate(MIDI_CLOCK);
 					outdiv96th_counter++;
 				}
