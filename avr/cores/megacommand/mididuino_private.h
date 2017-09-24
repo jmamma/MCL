@@ -1,7 +1,7 @@
 #ifndef MIDIDUINO_PRIVATE_H__
 #define MIDIDUINO_PRIVATE_H__
 
-#include "helpers.h"
+#include "CommonTools/helpers.h"
 
 void init(void);
 
