@@ -5,7 +5,7 @@
 
 #include "WProgram.h"
 #include "Midi.h"
-#include "../CommonTools/DataEncoder.hh"
+#include "DataEncoder.hh"
 
 /**
  * \addtogroup Elektron

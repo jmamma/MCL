@@ -4,7 +4,7 @@
 #define SKETCH_H__
 
 #include "Pages.hh"
-#include "../CommonTools/Stack.h"
+#include "Stack.h"
 
 /**
  * \addtogroup GUI

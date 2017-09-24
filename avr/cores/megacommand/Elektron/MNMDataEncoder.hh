@@ -5,7 +5,7 @@
 
 #include "WProgram.h"
 #include "ElektronDataEncoder.hh"
-#include "../CommonTools/DataEncoder.hh"
+#include "DataEncoder.hh"
 
 /**
  * \addtogroup Elektron

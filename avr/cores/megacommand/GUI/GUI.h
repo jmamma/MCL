@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 #include "WProgram.h"
-#include "../CommonTools/Vector.hh"
-#include "../CommonTools/Task.hh"
+#include "Vector.hh"
+#include "Task.hh"
 
 #if defined(MIDIDUINO_USE_GUI) || defined(HOST_MIDIDUINO)
 

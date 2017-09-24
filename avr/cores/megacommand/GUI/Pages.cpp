@@ -32,11 +32,11 @@ void Page::redisplayPage() {
 void EncoderPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
 
-  USE_LOCK();
-  SET_LOCK();
+//  USE_LOCK();
+//  SET_LOCK();
   m_memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
   Encoders.clearEncoders();
-  CLEAR_LOCK();
+//  CLEAR_LOCK();
   
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL) 

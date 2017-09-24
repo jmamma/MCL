@@ -3,9 +3,9 @@
 #ifndef PAGES_H__
 #define PAGES_H__
 
-#include "../CommonTools/Stack.h"
-#include "../GUI/Encoders.hh"
-#include "../GUI/ModalGui.hh"
+#include "Stack.h"
+#include "Encoders.hh"
+#include "ModalGui.hh"
 
 class Sketch;
 class PageContainer;

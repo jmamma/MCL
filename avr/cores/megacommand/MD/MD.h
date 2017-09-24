@@ -5,7 +5,7 @@
 
 #include "WProgram.h"
 
-#include "../Elektron/Elektron.hh"
+#include "Elektron.hh"
 
 
 /**

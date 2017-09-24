@@ -4,8 +4,8 @@
 #define MDSYSEX_H__
 
 #include "WProgram.h"
-#include "../Midi/Midi.h"
-#include "../Midi/MidiSysex.hh"
+#include "Midi.h"
+#include "MidiSysex.hh"
 #include "Vector.hh"
 #include "Callback.hh"
 #include "MD.h"

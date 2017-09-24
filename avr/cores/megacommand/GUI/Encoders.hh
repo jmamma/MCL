@@ -4,7 +4,7 @@
 #define ENCODERS_H__
 
 #include <inttypes.h>
-#include "../CommonTools/helpers.h"
+#include "helpers.h"
 #include "GUI_private.h"
 
 /**
