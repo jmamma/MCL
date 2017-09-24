@@ -118,8 +118,6 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 
 	speed1 = getHighestBit(speeds & slaveSpeeds) + 1;
 	speed2 = getHighestBit(certifiedSpeeds & certifiedSlaveSpeeds) + 1;
-	speed1 = 4;
-	speed2 = 4;
 	sendSpeedNegotiationRequest(speed1, speed2);
 	ret = blockForState(tm_master_speed_ack_recvd);
 	GUI.setLine(GUI.LINE2);
