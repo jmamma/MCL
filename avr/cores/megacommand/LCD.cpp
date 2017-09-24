@@ -3,7 +3,7 @@
 #include "LCD.h"
 #include <string.h>
 #include <inttypes.h>
-#include "./CommonTools/helpers.h"
+#include "helpers.h"
 
 
 extern "C" {

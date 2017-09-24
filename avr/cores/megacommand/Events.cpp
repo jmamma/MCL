@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "./GUI/GUI.h"
+#include "GUI.h"
 
 volatile CRingBuffer<gui_event_t, 8> EventRB;
 
