@@ -1,10 +1,7 @@
 
 #include <Arduino.h>
 #include <wiring_private.h>
-//#include "../../Libraries/Midi/src/Midi.h"
-//#include <../../Libraries/Midi/src/MidiClock.h>
 
-//#include <../../Libraries/CommonTools/src/helpers.h>
 #include <WProgram.h>
 //#include <Events.hh>
 extern "C" {
@@ -263,7 +260,7 @@ static inline uint32_t phase_mult(uint32_t val) {
 
 ISR(TIMER1_OVF_vect) {
   clock++;
-  isr_usart1(1);
+  //isr_midi();
 #ifdef MIDIDUINO_MIDI_CLOCK
 //  if (MidiClock.state == MidiClock.STARTED) {
  //   MidiClock.handleTimerInt();
@@ -305,12 +302,11 @@ uint16_t lastRunningStatusReset = 0;
 
 //extern uint16_t myvar;
 ISR(TIMER2_OVF_vect) {
- 
        TCNT2 = tcnt2; 
   slowclock++;
    if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
+  //isr_midi();
   MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-  isr_usart1(1);  
   MidiClock.callCallbacks();
   }
 
@@ -382,9 +378,10 @@ int main(void) {
 
 
   OUTPUTDDR |= _BV(OUTPUTPIN);
+  setupEventHandlers();
+  setupMidiCallbacks();
+
   setup();
-	setupEventHandlers();
-	setupMidiCallbacks();
 //	setupClockCallbacks();
   sei();
 

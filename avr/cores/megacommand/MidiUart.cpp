@@ -237,15 +237,28 @@ uint8_t MidiUartClass::m_getc() {
 }
 
 SIGNAL(USART1_RX_vect) {
-isr_usart1(1);
+isr_midi();
+}
+SIGNAL(USART2_RX_vect) {
+isr_midi();
 }
 
-void isr_usart1(uint8_t caller) {
-  while (UART_CHECK_RX()) {
-  uint8_t c = UART_READ_CHAR();
+
+void isr_midi() {
+  uint8_t c, s; 
+  while (UART_CHECK_RX() || UART2_CHECK_RX()) {
+  if (UART_CHECK_RX()) {
+  c = UART_READ_CHAR();
+  s = 0;
+  }
+  else {
+  c = UART2_READ_CHAR();
+  s = 1;
+  }
  if (c != MIDI_ACTIVE_SENSE) {
   //  setLed();
-  if (MIDI_IS_REALTIME_STATUS_BYTE(c) && MidiClock.mode == MidiClock.EXTERNAL_UART1) {
+  if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+    if  (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) || ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s==1))) {
     switch (c) {
     case MIDI_CLOCK:
       MidiClock.handleClock();
@@ -264,40 +277,33 @@ void isr_usart1(uint8_t caller) {
       MidiClock.handleMidiContinue();
       break;
     
-    default:
-      MidiUart.rxRb.put(c);
-      break;
+    }
     }
   } else {
-    MidiUart.rxRb.put(c);
+    if (s == 0) { MidiUart.rxRb.put(c); }
+    else { MidiUart2.rxRb.put(c); }
   }
  }
+}
 
 if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
 MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 UART_WRITE_CHAR(MidiUart.txRb.get());
 }
-if (UART2_CHECK_RX() && (caller == 1)) { isr_usart2(1); }
-//   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
-  //           MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    //           MidiClock.callCallbacks();
-      //           }
+if (UART2_CHECK_EMPTY_BUFFER() && !MidiUart2.txRb.isEmpty()) {
+MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+ UART2_WRITE_CHAR(MidiUart2.txRb.get());
+}
+
 
 }
-#if 0
-    // show overflow debug
-    if (MidiUart.rxRb.overflow) {
-      setLed2();
-    }
-#endif
 
- // }
-  //  clearLed();
-}
 
 #ifdef TX_IRQ
 SIGNAL(USART1_UDRE_vect) {
 //uint16_t count = 0;
+
+  isr_midi();
 uint8_t c;
 //  while (!MidiUart.txRb.isEmpty()) {
 if (!MidiUart.txRb.isEmpty()) {
@@ -317,14 +323,10 @@ MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
   if (MidiUart.txRb.isEmpty()) {
     CLEAR_BIT(UCSR1B, UDRIE1);
   }
-  clearLed2();
-  if (UART_CHECK_RX()) { isr_usart1(3); }
-  if (UART2_CHECK_RX()) { isr_usart2(3); }
-
 }
 
 SIGNAL(USART2_UDRE_vect) {
-
+isr_midi();
 uint8_t c;
 if (!MidiUart2.txRb.isEmpty()) {
 while (!UART2_CHECK_EMPTY_BUFFER());
@@ -337,8 +339,6 @@ MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
     CLEAR_BIT(UCSR2B, UDRIE1);
   }
   clearLed2();
-  if (UART_CHECK_RX()) { isr_usart1(4); }
-  if (UART2_CHECK_RX()) { isr_usart2(4); }
 
 }
 
@@ -371,68 +371,6 @@ bool MidiUartClass2::avail() {
 uint8_t MidiUartClass2::m_getc() {
   return rxRb.get();
 }
-
-SIGNAL(USART2_RX_vect) {
-isr_usart2(2);
-}
-
-void isr_usart2(uint8_t caller) {  
-  
-// while (UART2_CHECK_RX()) { 
-while (UART2_CHECK_RX()) {  
- uint8_t c = UART2_READ_CHAR();
- if (c != MIDI_ACTIVE_SENSE) { 
-  // XXX clock on second input
-  if (MIDI_IS_REALTIME_STATUS_BYTE(c) && MidiClock.mode == MidiClock.EXTERNAL_UART2) {
-          switch (c) {
-    case MIDI_CLOCK:
-      MidiClock.handleClock();
-      break;
-
-    case MIDI_START:
-      MidiClock.handleMidiStart();
-      break;
-
-    case MIDI_CONTINUE:
-      MidiClock.handleMidiContinue();
-      break;
-
-    case MIDI_STOP:
-      MidiClock.handleMidiStop();
-      break;
-    
-    default:
-      MidiUart2.rxRb.put(c);
-     break;
-     }
-  }
-          else {
-      MidiUart2.rxRb.put(c);
-    
-  } 
- //   if (Midi2.midiActive) { MidiUart2.rxRb.put(c); }
-  
- }
-// }
-if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
-        MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-        UART_WRITE_CHAR(MidiUart.txRb.get());
-}
- if (UART_CHECK_RX() && (caller == 2)) { isr_usart1(2); }
-//if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
-//MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-//UART_WRITE_CHAR(c);
-//}
- }
-#if 0
-  // show overflow debug
-  if (MidiUart.rxRb.overflow) {
-    setLed();
-  }
-#endif
-//}
-}
-
 
 
 
