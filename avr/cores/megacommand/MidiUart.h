@@ -29,7 +29,7 @@ class MidiUartClass;
 #endif
 void isr_usart1(uint8_t caller);
 void isr_usart2(uint8_t caller);
-        
+void isr_midi();        
 class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
   
