@@ -14,7 +14,8 @@ MidiClockClass::MidiClockClass() {
 	init();
 	mode = OFF;
 	setTempo(120);
-	transmit = false;
+	transmit_uart1 = false;
+    transmit_uart2 = false;
 	useImmediateClock = true;
 	
 }
@@ -48,8 +49,10 @@ uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
 }
 
 void MidiClockClass::handleMidiStart() {
-	if (transmit) {
+	if (transmit_uart1) {
 		MidiUart.sendRaw(MIDI_START);
+    }
+    if (transmit_uart2) {
 	    MidiUart2.sendRaw(MIDI_START);
     }
     init();
@@ -61,8 +64,10 @@ void MidiClockClass::handleMidiStart() {
 
 void MidiClockClass::handleMidiStop() {
 	state = PAUSED;
-	if (transmit) {
+	if (transmit_uart1) {
 		MidiUart.sendRaw(MIDI_STOP);
+    }
+    if (transmit_uart2) {
         MidiUart2.sendRaw(MIDI_STOP);
     }
     init();
@@ -71,8 +76,10 @@ void MidiClockClass::handleMidiStop() {
 }
 
 void MidiClockClass::handleMidiContinue() {
-	if (transmit) {
+	if (transmit_uart1) {
 		MidiUart.sendRaw(MIDI_CONTINUE);
+    }
+    if (transmit_uart2) {
         MidiUart2.sendRaw(MIDI_CONTINUE);
     }
     state = STARTING;
@@ -88,16 +95,26 @@ void MidiClockClass::start() {
 	if (mode == INTERNAL_MIDI) {
 		init();
 		state = STARTED;
-		if (transmit)
+		if (transmit_uart1) {
 			MidiUart.sendRaw(MIDI_START);
+        }
+     	if (transmit_uart2) {
+			MidiUart2.sendRaw(MIDI_START);
+        }
+
 	}
 }
 
 void MidiClockClass::stop() {
 	if (mode == INTERNAL_MIDI) {
 		state = PAUSED;
-		if (transmit)
+		if (transmit_uart1) {
 			MidiUart.sendRaw(MIDI_STOP);
+        }
+    	if (transmit_uart2) {
+			MidiUart2.sendRaw(MIDI_STOP);
+        }
+
 	}
 }
 
@@ -271,10 +288,12 @@ void MidiClockClass::callCallbacks() {
 void MidiClockClass::handleImmediateClock() {
 	uint8_t _mod6_counter = mod6_counter;
 	
-	if ((transmit) ) {
+	if (transmit_uart1 ) {
 //       MidiUart.putc(0xF8);
-        MidiUart2.m_putc_immediate(0xF8);
-		MidiUart.m_putc_immediate(0xF8);
+        MidiUart.m_putc_immediate(0xF8);
+    }
+    if (transmit_uart2) {
+		MidiUart2.m_putc_immediate(0xF8);
     }
 	incrementCounters();
 	if (div16th_counter % 4 == 0) {

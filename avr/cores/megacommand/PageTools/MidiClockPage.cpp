@@ -35,7 +35,7 @@ void MidiClockPage::writeClockSettings() {
 		return;
 	uint8_t buf[3];
 	buf[0] = MidiClock.mode;
-	buf[1] = MidiClock.transmit ? 1 : 0;
+	buf[1] = MidiClock.transmit_uart1 ? 1 : 0;
 	buf[2] = MidiClock.useImmediateClock ? 1 : 0;
 	if (!SDCard.writeFile("/ClockSettings.txt", buf, 3, true)) {
 		GUI.flash_strings_fill("ERROR SAVING", "CLOCK SETUP");
@@ -50,7 +50,7 @@ void MidiClockPage::readClockSettings() {
 		GUI.flash_strings_fill("ERROR READING", "CLOCK SETUP");
 	} else {
 		MidiClock.mode = (MidiClockClass::clock_mode_t)buf[0];
-		MidiClock.transmit = buf[1];
+		MidiClock.transmit_uart1 = buf[1];
 		MidiClock.useImmediateClock = buf[2];
 		if (MidiClock.mode == MidiClock.EXTERNAL_MIDI || MidiClock.mode == MidiClock.EXTERNAL_UART2) {
 			MidiClock.start();
@@ -81,7 +81,7 @@ void MidiClockPage::readMergeSettings() {
 
 void MidiClockPage::setup() {
 	clockSourceEncoder.initEnumEncoder(clockSourceEnum, 3, "CLK");
-	transmitEncoder.initBoolEncoder("SND");
+    transmitEncoder.initBoolEncoder("SND");
 	mergerEncoder.initEnumEncoder(mergerConfigStrings, countof(mergerConfigStrings), "MRG");
 	immediateEncoder.initBoolEncoder("IMM");
 	readClockSettings();
@@ -99,8 +99,8 @@ void MidiClockPage::setup() {
 	if (MidiClock.useImmediateClock) {
 		immediateEncoder.setValue(1);
 	}
-	if (MidiClock.transmit) {
-		transmitEncoder.setValue(1);
+	if (MidiClock.transmit_uart1) {
+	   transmitEncoder.setValue(1);
 	}
 	
 	readMergeSettings();
@@ -150,10 +150,10 @@ void MidiClockPage::loop() {
 	}
 	if (transmitEncoder.hasChanged()) {
 		if (transmitEncoder.getBoolValue()) {
-			MidiClock.transmit = true;
+			MidiClock.transmit_uart1 = true;
 			//      GUI.flash_strings_fill("MIDI CLOCK OUT", "ACTIVATED");
 		} else {
-			MidiClock.transmit = false;
+			MidiClock.transmit_uart1 = false;
 			//      GUI.flash_strings_fill("MIDI CLOCK OUT", "DEACTIVATED");
 		}
 		changed = true;
@@ -194,7 +194,7 @@ void initClockPage() {
 		GUI.display();
 		delay(800);
 		MidiClock.mode = MidiClock.EXTERNAL_MIDI;
-		MidiClock.transmit = false;
+		MidiClock.transmit_uart1 = false;
 		
 		midiClockPage.setup();
 		if (BUTTON_DOWN(Buttons.BUTTON1)) {

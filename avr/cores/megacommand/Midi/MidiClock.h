@@ -62,8 +62,10 @@ public:
 	volatile bool updateSmaller;
 	uint16_t pll_x;
 	uint16_t tempo;
-	bool transmit;
-	bool isInit;
+	//bool transmit;
+	bool transmit_uart1;
+    bool transmit_uart2;
+    bool isInit;
 
 //    volatile uint16_t mcl_clock;
  //   volatile uint16_t mcl_counter;
