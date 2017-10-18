@@ -48,7 +48,12 @@ class Encoder {
 public:
 	/** Old value (before move), current value. **/
 	int old, cur;
-	/** Short name. **/
+
+    /** Counter for encoder pulses **/
+    int8_t rot_counter = 0;
+    /** Number of encoder pulses before increasing/decreasing encoder cur value **/
+    uint8_t rot_res = 1;
+    /** Short name. **/
 	char name[4];
 	/**
 	 * If this variable is set to true, and pressmode to false, an
@@ -59,7 +64,7 @@ public:
 	 * is overloaded.
 	 **/
 	bool fastmode;
-	/**
+    /**
 	 * If this variable is set to true, turning the encoder while the
 	 * button is pressed will have no effect on the encoder value.
 	 *
