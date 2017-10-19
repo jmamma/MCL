@@ -84,29 +84,26 @@ public:
 	
 	uint16_t slaveSpeeds;
 	uint16_t certifiedSlaveSpeeds;
+  
+  static const uint16_t speeds =
+    _BV(TURBOMIDI_SPEED_1x)
+    | _BV(TURBOMIDI_SPEED_2x)
+    | _BV(TURBOMIDI_SPEED_3_33x)
+    | _BV(TURBOMIDI_SPEED_4x)
+    //		| _BV(TURBOMIDI_SPEED_5x)
+    //		| _BV(TURBOMIDI_SPEED_6_66x)
+    //		| _BV(TURBOMIDI_SPEED_8x)
+    ;
 
-	static const uint16_t speeds =
-        _BV(TURBOMIDI_SPEED_2x)
-		| _BV(TURBOMIDI_SPEED_4x)
-		| _BV(TURBOMIDI_SPEED_8x)
-//		| _BV(TURBOMIDI_SPEED_3_33x)
-//		| _BV(TURBOMIDI_SPEED_4x)
-	//	| _BV(TURBOMIDI_SPEED_5x)
-//		| _BV(TURBOMIDI_SPEED_6_66x)
-//		| _BV(TURBOMIDI_SPEED_10x)
-		;
-
-	static const uint16_t certifiedSpeeds =
-        _BV(TURBOMIDI_SPEED_2x)
-		| _BV(TURBOMIDI_SPEED_4x)
-		| _BV(TURBOMIDI_SPEED_8x)
-//    	| _BV(TURBOMIDI_SPEED_3_33x)
-//		| _BV(TURBOMIDI_SPEED_4x) 
-	  //  | _BV(TURBOMIDI_SPEED_5x)
-//		| _BV(TURBOMIDI_SPEED_6_66x)
-//		| _BV(TURBOMIDI_SPEED_10x)
-		;
-		
+  static const uint16_t certifiedSpeeds =
+    _BV(TURBOMIDI_SPEED_1x)
+    | _BV(TURBOMIDI_SPEED_2x)
+    | _BV(TURBOMIDI_SPEED_3_33x)
+    | _BV(TURBOMIDI_SPEED_4x) 
+    //		| _BV(TURBOMIDI_SPEED_5x)
+    //		| _BV(TURBOMIDI_SPEED_6_66x)
+    //		| _BV(TURBOMIDI_SPEED_8x)
+    ;	
 
 	typedef enum {
 		tm_state_normal = 0,

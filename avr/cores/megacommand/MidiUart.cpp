@@ -238,17 +238,19 @@ void isr_midi() {
   if (UART_CHECK_RX()) {
   c = UART_READ_CHAR();
   s = 0;
+  MidiUart.recvActiveSenseTimer = 0;
   }
   else {
   c = UART2_READ_CHAR();
   s = 1;
+  MidiUart2.recvActiveSenseTimer = 0;
   }
- if (c != MIDI_ACTIVE_SENSE) {
   //  setLed();
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     if  (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) || ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s==1))) {
     switch (c) {
     case MIDI_CLOCK:
+
       MidiClock.handleClock();
       //       MidiClock.callCallbacks();
       break;
@@ -263,15 +265,18 @@ void isr_midi() {
 
     case MIDI_CONTINUE:
       MidiClock.handleMidiContinue();
-      break;
-    
+      break; 
+    default:
+       if (s == 0) { MidiUart.rxRb.put(c); }
+       else { MidiUart2.rxRb.put(c); } 
+      break;    
     }
     }
   } else {
     if (s == 0) { MidiUart.rxRb.put(c); }
     else { MidiUart2.rxRb.put(c); }
   }
- }
+ 
 }
 
 if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {

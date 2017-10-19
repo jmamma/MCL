@@ -29,6 +29,9 @@ class MidiUartParent {
 public:
   uint8_t running_status;
   uint8_t currentChannel;
+  uint8_t uart_port;
+  uint8_t speed;
+
   bool useRunningStatus;
 	uint16_t sendActiveSenseTimer;
 	uint16_t sendActiveSenseTimeout;
@@ -121,6 +124,17 @@ public:
   CallbackVector1<MidiCallback, 8, uint8_t *>noteOnCallbacks;
   CallbackVector1<MidiCallback, 8, uint8_t *>noteOffCallbacks;
   CallbackVector1<MidiCallback, 8, uint8_t *>ccCallbacks;
+  CallbackVector1<MidiCallback, 8, uint8_t *>recvActiveSenseCallbacks;
+
+  void addOnRecvActiveSenseCallback(MidiCallback *obj, void(MidiCallback::*func)(uint8_t *msg)) {
+    recvActiveSenseCallbacks.add(obj, func);
+  }
+  void removeOnRecvActiveSenseCallback(MidiCallback *obj, void(MidiCallback::*func)(uint8_t *msg) ) { 
+    recvActiveSenseCallbacks.remove(obj, func);
+  }
+  void removeOnRecvActiveSenseCallback(MidiCallback *obj) {
+    recvActiveSenseCallbacks.remove(obj);
+  }
 
   void addOnNoteOnCallback(MidiCallback *obj, void(MidiCallback::*func)(uint8_t *msg)) {
     noteOnCallbacks.add(obj, func);

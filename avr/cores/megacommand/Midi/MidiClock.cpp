@@ -252,7 +252,7 @@ void MidiClockClass::incrementCounters() {
 }
 
 void MidiClockClass::callCallbacks() {
-	if (state != STARTED)
+    if (state != STARTED)
 		return;
 	
     //Moved MidiClock callbacks to Main Loop

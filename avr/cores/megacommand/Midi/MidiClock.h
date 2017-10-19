@@ -116,6 +116,8 @@ public:
 	CallbackVector1<ClockCallback,8, uint32_t> on32Callbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> on16Callbacks;
 
+	CallbackVector1<ClockCallback,8, uint32_t> onClockCallbacks;
+
     void addOnMidiStartCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
 		onMidiStartCallbacks.add(obj, func);
 	}
@@ -172,6 +174,16 @@ public:
 	}
 	void removeOn16Callback(ClockCallback *obj) {
 		on16Callbacks.remove(obj);
+	}
+		
+	void addOnClockCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onClockCallbacks.add(obj, func);
+	}
+	void removeOnClockCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		onClockCallbacks.remove(obj, func);
+	}
+	void removeOnClockCallback(ClockCallback *obj) {
+		onClockCallbacks.remove(obj);
 	}
 	
 	void init();
