@@ -47,6 +47,8 @@ public:
 		sendActiveSenseTimer = 0;
   }
 
+void setSpeed(uint32_t _speed, uint8_t port);
+
 	void setActiveSenseTimer(uint16_t timeout) {
 		if (timeout == 0) {
 			activeSenseEnabled = false;
