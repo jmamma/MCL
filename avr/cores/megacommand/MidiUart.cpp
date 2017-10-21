@@ -60,15 +60,15 @@ void MidiUartClass::initSerial() {
 #endif
 }
 
-void MidiUartClass::setSpeed(uint32_t speed, uint8_t port) {
+void MidiUartClass::setSpeed(uint32_t _speed, uint8_t port) {
 #ifdef TX_IRQ
   // empty TX buffer before switching speed
   while (!txRb.isEmpty())
     ;
 #endif
-
+  speed = _speed;
   uint32_t cpu = (F_CPU / 16);
-  cpu /= speed;
+  cpu /= _speed;
   cpu--;
 
   //uint32_t cpu = (F_CPU / 16);
