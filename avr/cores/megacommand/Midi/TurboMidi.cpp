@@ -101,7 +101,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 	slaveSpeeds = 0;
 	certifiedSlaveSpeeds = 0;
 
-	MidiUart.setSpeed(31250,1);
+	MidiUart.setSpeed(31250);
 
 	uint8_t speed1;
 	uint8_t speed2;
@@ -137,7 +137,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 		GUI.flash_printf("TEST1 TIMEOUT");
 		goto fail;
 	}
-
+GUI.flash_printf("s %X", speed2);
 	sendSpeedTest2(speed2);
 	ret = blockForState(tm_master_test_2_recvd);
 	GUI.setLine(GUI.LINE2);
@@ -207,7 +207,7 @@ uint32_t TurboMidiSysexListenerClass::tmSpeeds[12] = {
 	
 void TurboMidiSysexListenerClass::setSpeed(uint8_t speed) {
 	currentSpeed = speed;
-	MidiUart.setSpeed(tmSpeeds[speed],1);
+	MidiUart.setSpeed(tmSpeeds[speed]);
 }
 
 void TurboMidiSysexListenerClass::sendSpeedTest1(uint8_t speed1) {

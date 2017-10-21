@@ -40,7 +40,6 @@ class MidiUartClass : public MidiUartParent {
   virtual bool avail();
   virtual uint8_t m_getc();
 
-	void setSpeed(uint32_t speed, uint8_t port);
 
   volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
 

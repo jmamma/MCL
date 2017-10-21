@@ -36,13 +36,13 @@ MidiUartClass2 MidiUart2;
 #include <avr/io.h>
 
 MidiUartClass::MidiUartClass() : MidiUartParent() {
+  uart_port = 1;
   initSerial();
 }
 
 void MidiUartClass::initSerial() {
   running_status = 0;
-  setSpeed(31250,1); 
-  setSpeed(31250,2);
+  setSpeed(31250); 
  
   //  UBRR0H = (UART_BAUDRATE_REG >> 8);
   //  UBRR0L = (UART_BAUDRATE_REG & 0xFF);
@@ -313,12 +313,15 @@ MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
 #endif
 
 MidiUartClass2::MidiUartClass2() : MidiUartParent() {
+  uart_port = 2;
   initSerial();
 }
 
 void MidiUartClass2::initSerial() {
   running_status = 0;
-//  UBRR2H = (UART_BAUDRATE_REG >> 8);
+
+  setSpeed(31250);
+  //  UBRR2H = (UART_BAUDRATE_REG >> 8);
 //  UBRR2L = (UART_BAUDRATE_REG & 0xFF);
   //  UBRRH = 0;
   //  UBRRL = 15;
