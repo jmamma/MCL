@@ -59,6 +59,42 @@ void MidiUartClass::initSerial() {
 #ifdef TX_IRQ
 #endif
 }
+void MidiUartClass::setSpeed(uint32_t _speed) {
+#ifdef TX_IRQ
+  // empty TX buffer before switching speed
+  while (!txRb.isEmpty())
+    ;   
+#endif
+  speed = _speed;
+  uint32_t cpu = (F_CPU / 16);
+  cpu /= _speed;
+  cpu--;
+
+  //uint32_t cpu = (F_CPU / 16);
+  //cpu /= speed;
+  //cpu--;
+//UBRR0H = ((cpu >> 8));
+  UBRR1H = ((cpu >> 8) & 0xFF);
+  UBRR1L = (cpu & 0xFF);
+}
+void MidiUartClass2::setSpeed(uint32_t _speed) {
+#ifdef TX_IRQ
+  // empty TX buffer before switching speed
+  while (!txRb.isEmpty())
+    ;   
+#endif
+  speed = _speed;
+  uint32_t cpu = (F_CPU / 16);
+  cpu /= _speed;
+  cpu--;
+
+  //uint32_t cpu = (F_CPU / 16);
+  //cpu /= speed;
+  //cpu--;
+//UBRR0H = ((cpu >> 8));
+  UBRR2H = ((cpu >> 8) & 0xFF);
+  UBRR2L = (cpu & 0xFF); 
+}
 
 void MidiUartClass2::m_putc(uint8_t c) {
 #ifdef TX_IRQ

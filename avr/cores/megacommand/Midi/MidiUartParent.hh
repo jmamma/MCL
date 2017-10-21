@@ -48,8 +48,6 @@ public:
   }
 
 
-   void setSpeed(uint32_t _speed);
-
 	void setActiveSenseTimer(uint16_t timeout) {
 		if (timeout == 0) {
 			activeSenseEnabled = false;
