@@ -78,10 +78,12 @@ void MidiUartClass::setSpeed(uint32_t speed, uint8_t port) {
   if (port == 1) {
   UBRR1H = ((cpu >> 8) & 0xFF);
   UBRR1L = (cpu & 0xFF);
+  MidiUart.speed = speed;
   }
   if (port == 2) {
   UBRR2H = ((cpu >> 8) & 0xFF);
-  UBRR2L = (cpu & 0xFF); 
+  UBRR2L = (cpu & 0xFF);  
+  MidiUart2.speed = speed;
   }
 }
 
