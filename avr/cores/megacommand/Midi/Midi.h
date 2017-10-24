@@ -45,9 +45,6 @@ typedef struct {
 
 class MidiSysexClass;
 
-
-
-typedef void(MidiCallback::*midi_callback_ptr3_t)();
 typedef void(MidiCallback::*midi_callback_ptr_t)(uint8_t *msg);
 typedef void(MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
 

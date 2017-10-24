@@ -30,7 +30,7 @@ public:
   uint8_t running_status;
   uint8_t currentChannel;
   uint8_t uart_port;
-  uint32_t speed;
+  uint8_t speed;
 
   bool useRunningStatus;
 	uint16_t sendActiveSenseTimer;
@@ -46,7 +46,6 @@ public:
 		recvActiveSenseTimer = 0;
 		sendActiveSenseTimer = 0;
   }
-
 
 	void setActiveSenseTimer(uint16_t timeout) {
 		if (timeout == 0) {

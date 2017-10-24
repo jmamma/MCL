@@ -11,5 +11,3 @@ void MidiUartParent::sendString(const char *data, uint16_t cnt) {
 	puts((uint8_t *)data, cnt);
 	sendCommandByte(0xF7);
 }
-
-
