@@ -79,7 +79,7 @@ class MidiSysexClass {
   
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
   bool recordByte(uint8_t c);
-
+  bool callSysexCallBacks;
   uint16_t max_len;
   uint16_t recordLen;
   uint8_t *data;

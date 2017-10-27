@@ -34,6 +34,8 @@ MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf, uint16_t _sysexB
 void MidiClass::init() {
   last_status = running_status = 0;
   in_state = midi_ignore_message;
+  in_state = midi_wait_status; 
+  live_state = midi_wait_status;
 }
 
 void MidiClass::handleByte(uint8_t byte) {
@@ -91,7 +93,7 @@ void MidiClass::handleByte(uint8_t byte) {
       /* ignore */
     }
     break;
-
+/*
   case midi_wait_sysex:
 
     if (MIDI_IS_STATUS_BYTE(byte)) {
@@ -106,15 +108,15 @@ void MidiClass::handleByte(uint8_t byte) {
       midiSysex.handleByte(byte);
     }
     break;
-
+*/
   case midi_wait_status:
     {
-      if (byte == MIDI_SYSEX_START) {
-				in_state = midi_wait_sysex;
-				midiSysex.reset();
-				last_status = running_status = 0;
-				return;
-      }
+   //   if (byte == MIDI_SYSEX_START) {
+	//			in_state = midi_wait_sysex;
+	//			midiSysex.reset();
+	//			last_status = running_status = 0;
+	//			return;
+     // }
 
       if (MIDI_IS_STATUS_BYTE(byte)) {
 				last_status = byte;

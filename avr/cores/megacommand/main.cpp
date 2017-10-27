@@ -304,8 +304,10 @@ uint16_t lastRunningStatusReset = 0;
 ISR(TIMER2_OVF_vect) {
        TCNT2 = tcnt2; 
   slowclock++;
-   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
-  //isr_midi();
+  
+//  isr_midi();
+
+  if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
   MidiClock.div96th_counter_last = MidiClock.div96th_counter;
   MidiClock.callCallbacks();
   }
@@ -329,12 +331,21 @@ ISR(TIMER2_OVF_vect) {
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
 }
 
-uint8_t sysexBuf[8144];
+uint8_t sysexBuf[5500];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 
 void handleIncomingMidi() {
+  if (Midi.midiSysex.callSysexCallBacks) {
+  Midi.midiSysex.end(); 
+  
+  }
+ if (Midi2.midiSysex.callSysexCallBacks) {
+  Midi2.midiSysex.end(); 
+  }
+
+
   while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
@@ -342,6 +353,7 @@ void handleIncomingMidi() {
   while (MidiUart2.avail()) {
     Midi2.handleByte(MidiUart2.m_getc());
   }
+  
 }
 
 void __mainInnerLoop(bool callLoop) {

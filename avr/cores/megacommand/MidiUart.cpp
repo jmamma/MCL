@@ -236,15 +236,21 @@ isr_midi();
 
 void isr_midi() {
   uint8_t c, s; 
+
+  MidiClass *Midi_;
   while (UART_CHECK_RX() || UART2_CHECK_RX()) {
   if (UART_CHECK_RX()) {
   c = UART_READ_CHAR();
   s = 0;
+  
+Midi_ = &Midi;
   MidiUart.recvActiveSenseTimer = 0;
   }
   else {
   c = UART2_READ_CHAR();
   s = 1;
+ 
+Midi_ = &Midi2;
   MidiUart2.recvActiveSenseTimer = 0;
   }
   //  setLed();
@@ -254,7 +260,7 @@ void isr_midi() {
     case MIDI_CLOCK:
 
       MidiClock.handleClock();
-      //       MidiClock.callCallbacks();
+  //    MidiClock.callCallbacks();
       break;
 
     case MIDI_START:
@@ -275,12 +281,60 @@ void isr_midi() {
     }
     }
   } else {
-    if (s == 0) { MidiUart.rxRb.put(c); }
-    else { MidiUart2.rxRb.put(c); }
+
+switch (Midi_->live_state) {  
+case midi_wait_sysex: { 
+
+    if (MIDI_IS_STATUS_BYTE(c)) {
+      if (c != MIDI_SYSEX_END) {
+                Midi_->live_state = midi_wait_status;
+                Midi_->midiSysex.abort();
+      
+       if (s == 0) { MidiUart.rxRb.put(c); }
+
+       else { MidiUart2.rxRb.put(c); } 
+ 
+ } else {
+      //handle sysex end here
+ //     GUI.flash_string("OKAY");
+       Midi_->midiSysex.callSysexCallBacks = true;
+       Midi_->live_state = midi_wait_status; 
+       Midi_->midiSysex.end();
+       
+       //if (s == 0) { MidiUart.rxRb.put(c); }
+       //else { MidiUart2.rxRb.put(c); } 
+     }
+   }
+  else {
+      //record
+       Midi_->midiSysex.handleByte(c);
+    }   
+    break;
   }
  
-}
 
+  case midi_wait_status: {
+      if (c == MIDI_SYSEX_START) {
+                Midi_->live_state = midi_wait_sysex;
+                Midi_->midiSysex.reset();
+                //Midi_->last_status = Midi_->running_status = 0;
+      }
+     else {
+   if (s == 0) { MidiUart.rxRb.put(c); }
+              else { MidiUart2.rxRb.put(c); }
+     }
+     }
+    break;   
+ default:       
+        if (s == 0) { MidiUart.rxRb.put(c); }
+        else { MidiUart2.rxRb.put(c); } 
+    
+break;
+ 
+} 
+
+}
+}
 if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
 MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 UART_WRITE_CHAR(MidiUart.txRb.get());

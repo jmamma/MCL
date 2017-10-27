@@ -11,7 +11,7 @@ class MidiUartClass;
 //#define RXCIE 7
 
 #define TX_IRQ 1
-#define RX_BUF_SIZE 6000
+#define RX_BUF_SIZE 128
 
 //#define RX_BUF_SIZE 2048
 #if (RX_BUF_SIZE >= 256)

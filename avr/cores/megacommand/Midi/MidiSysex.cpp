@@ -8,7 +8,7 @@ void MidiSysexClass::reset() {
   aborted = false;
   recording = false;
   recordLen = 0;
-
+  callSysexCallBacks = false;
   sysexLongId = false;
   recvIds[0] = 0;
   recvIds[1] = 0;
@@ -78,11 +78,13 @@ void MidiSysexClass::start() {
 }
 
 void MidiSysexClass::end() {
+  callSysexCallBacks = false;
   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
     if (isListenerActive(listeners[i])) {
       listeners[i]->end();
     }
   }
+
 }
 
 void MidiSysexClass::handleByte(uint8_t byte) {
