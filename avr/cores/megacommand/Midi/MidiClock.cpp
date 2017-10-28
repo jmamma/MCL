@@ -281,7 +281,7 @@ void MidiClockClass::callCallbacks() {
 #endif 
     // HOST_MIDIDUINO/
 	
-	   on96Callbacks.call(div96th_counter);
+	   on192Callbacks.call(div192th_counter);
 	
 	if (mod6_counter == 0) {
 		on16Callbacks.call(div16th_counter);

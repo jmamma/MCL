@@ -119,7 +119,10 @@ public:
 	CallbackVector1<ClockCallback,8, uint32_t> onMidiStartCallbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> onMidiStopCallbacks;	
 	CallbackVector1<ClockCallback,8, uint32_t> onMidiContinueCallbacks;
+
+
 	
+    CallbackVector1<ClockCallback,8, uint32_t> on192Callbacks;
     CallbackVector1<ClockCallback,8, uint32_t> on96Callbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> on32Callbacks;
 	CallbackVector1<ClockCallback,8, uint32_t> on16Callbacks;
@@ -152,6 +155,15 @@ public:
 	}
     void removeOnMidiContinueCallback(ClockCallback *obj) {
 		onMidiContinueCallbacks.remove(obj);
+	}
+	void addOn192Callback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		on192Callbacks.add(obj, func);
+	}
+	void removeOn192Callback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
+		on192Callbacks.remove(obj, func);
+	}
+    void removeOn192Callback(ClockCallback *obj) {
+		on192Callbacks.remove(obj);
 	}
 	
 	void addOn96Callback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
