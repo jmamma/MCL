@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef MIDICLOCK_H__
@@ -36,15 +37,22 @@ class MidiClockClass {
 public:
 	volatile uint32_t indiv96th_counter;
 	volatile uint32_t outdiv96th_counter;
+    volatile uint32_t div192th_counter_last;	
+	volatile uint32_t div192th_counter;
+	
     volatile uint32_t div96th_counter_last;	
 	volatile uint32_t div96th_counter;
 	volatile uint32_t div32th_counter;
 	volatile uint32_t div16th_counter;
 	volatile uint32_t indiv32th_counter;
 	volatile uint32_t indiv16th_counter;
-	volatile uint8_t mod6_counter;
+    
+    volatile uint8_t mod12_counter;
+    volatile uint8_t mod6_counter;
 	volatile uint8_t mod3_counter;
 
+    uint16_t clock_last_time;
+    uint16_t div192th_time;
 
     volatile uint8_t inmod6_counter;
 
@@ -190,6 +198,7 @@ public:
 	void handleClock();
 	void handleImmediateClock();
 	void updateClockInterval();
+    void increment192Counter();
 	void incrementCounters();
 	void callCallbacks();
 	

@@ -9,6 +9,8 @@ class MidiUartClass;
 //#define TXEN 3
 //#define RXEN 4
 //#define RXCIE 7
+#define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR1,OCF1A)
+#define TIMER2_CHECK_INT() IS_BIT_SET8(TIFR2,OCF2A)
 
 #define TX_IRQ 1
 #define RX_BUF_SIZE 128
@@ -51,7 +53,7 @@ class MidiUartClass : public MidiUartParent {
 };
 
 extern MidiUartClass MidiUart;
-
+extern uint16_t midiclock_last;
 class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
   

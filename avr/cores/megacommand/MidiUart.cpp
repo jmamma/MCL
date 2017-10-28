@@ -15,6 +15,11 @@ MidiUartClass MidiUart;
 MidiUartClass2 MidiUart2;
 
 //extern MidiClockClass MidiClock;
+#define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR1,OCF1A)
+#define TIMER2_CHECK_INT() IS_BIT_SET8(TIFR2,OCF2A)
+#define TIMER1_CLEAR_INT() TIFR1 |= (1 << OCF1A);
+#define TIMER2_CLEAR_INT() TIFR2 |= (1 << OCF2A);
+
 #define UART_BAUDRATE 31250
 #define UART_BAUDRATE_REG (((F_CPU / 16)/(UART_BAUDRATE)) - 1)
 
@@ -125,7 +130,10 @@ void MidiUartClass2::m_putc(uint8_t c) {
  // }
   }
 #else
-  while (!UART2_CHECK_EMPTY_BUFFER());
+  while (!UART2_CHECK_EMPTY_BUFFER()) {
+  if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+   if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() } 
+  }
 //Microseconds(20);
 //MidiUart.sendActiveSenseTimer = 300; 
 MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -141,15 +149,21 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
   USE_LOCK();
   SET_LOCK();
   // block interrupts
-  while (!UART2_CHECK_EMPTY_BUFFER())
-          ;
+  while (!UART2_CHECK_EMPTY_BUFFER()) {
+  if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+   if (TIMER2_CHECK_INT()) { TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() } 
+        }
+          
  MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
           UART2_WRITE_CHAR(c);
   CLEAR_LOCK();
         }
         else {
-       while (!UART2_CHECK_EMPTY_BUFFER())
-       ;
+       while (!UART2_CHECK_EMPTY_BUFFER()) {
+  if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+   if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() } 
+        }
+
 
                 MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
 UART2_WRITE_CHAR(c);
@@ -164,15 +178,22 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   USE_LOCK();
   SET_LOCK();
   // block interrupts
-  while (!UART_CHECK_EMPTY_BUFFER())
-          ;
+  while (!UART_CHECK_EMPTY_BUFFER()) {
+           if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+           if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() } 
+  } 
+        
  MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
           UART_WRITE_CHAR(c);
   CLEAR_LOCK();
         }
         else {
-       while (!UART_CHECK_EMPTY_BUFFER())
-       ;
+       while (!UART_CHECK_EMPTY_BUFFER()) {
+
+     if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+     if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() }  
+       }
+       
 
                 MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 UART_WRITE_CHAR(c);
@@ -191,8 +212,11 @@ void MidiUartClass::m_putc(uint8_t c) {
       if (IN_IRQ()) {
         // if we are in an irq, we need to do the sending ourselves as the TX irq is blocked
         setLed2();
-        while (!UART_CHECK_EMPTY_BUFFER())
-          ;
+        while (!UART_CHECK_EMPTY_BUFFER()) {
+  if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+   if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() } 
+        }
+          
         if (!MidiUart.txRb.isEmpty()) {
           MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
           UART_WRITE_CHAR(MidiUart.txRb.get());
@@ -233,10 +257,8 @@ SIGNAL(USART2_RX_vect) {
 isr_midi();
 }
 
-
 void isr_midi() {
   uint8_t c, s; 
-
   MidiClass *Midi_;
   while (UART_CHECK_RX() || UART2_CHECK_RX()) {
   if (UART_CHECK_RX()) {
@@ -253,12 +275,15 @@ Midi_ = &Midi;
 Midi_ = &Midi2;
   MidiUart2.recvActiveSenseTimer = 0;
   }
+  if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
+ if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() }  
+
+
   //  setLed();
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     if  (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) || ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s==1))) {
     switch (c) {
     case MIDI_CLOCK:
-
       MidiClock.handleClock();
   //    MidiClock.callCallbacks();
       break;

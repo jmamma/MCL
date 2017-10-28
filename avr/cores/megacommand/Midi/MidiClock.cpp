@@ -34,7 +34,9 @@ void MidiClockClass::init() {
 	isInit = false;
 
 
-
+    div192th_counter = 0;
+    mod12_counter = 0;  
+ 
     //mcl_16counter = 0;
     //mcl_counter = 0;
     //mcl_clock = read_slowclock();;
@@ -229,6 +231,12 @@ void MidiClockClass::updateClockInterval() {
 	}
     */
 }
+void MidiClockClass::increment192Counter() {
+ if (state == STARTED) {
+  div192th_counter++;
+  mod12_counter++;  
+ } 
+}
 
 void MidiClockClass::incrementCounters() {
 	if (state == STARTING && (mode == INTERNAL_MIDI || useImmediateClock)) {
@@ -238,12 +246,15 @@ void MidiClockClass::incrementCounters() {
 		div96th_counter++;
 		mod6_counter++;
 		mod3_counter++;
+        mod12_counter++;
+        div192th_counter++;
         if (mod3_counter == 3) {
         mod3_counter = 0;
         }
         if (mod6_counter == 6) {
 			mod6_counter = 0;
-			div16th_counter++;
+			mod12_counter = 0;
+            div16th_counter++;
 			div32th_counter++;
 		} else if (mod6_counter == 3) {
 			div32th_counter++;
@@ -286,7 +297,11 @@ void MidiClockClass::callCallbacks() {
 }
 
 void MidiClockClass::handleImmediateClock() {
-	uint8_t _mod6_counter = mod6_counter;
+    if (clock > clock_last_time) {
+    div192th_time = (clock - clock_last_time) / 2; 
+    } 
+    clock_last_time = clock;
+    uint8_t _mod6_counter = mod6_counter;
 	
 	if (transmit_uart1 ) {
 //       MidiUart.putc(0xF8);

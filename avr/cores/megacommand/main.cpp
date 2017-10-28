@@ -12,6 +12,8 @@ extern "C" {
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 }
+
+
 //extern MidiClockClass MidiClock;
 //extern volatile uint16_t clock = 0;
 //extern volatile uint16_t slowclock = 0;
@@ -30,6 +32,7 @@ void my_init_ram (void) {
     //    ptr[i] = 0;
   //  }
 }
+
 
 void m_init()
 {
@@ -186,26 +189,60 @@ void m_init()
 uint8_t tcnt2;
 void timer_init(void) {
   TCCR0A = _BV(CS01);
-  //  TIMSK |= _BV(TOIE0);
+//   TIMSK |= _BV(TOIE0);
 
   TCCR1A = _BV(WGM10); //  | _BV(COM1A1) | _BV(COM1B1); 
   TCCR1B |= _BV(CS10) | _BV(WGM12); // every cycle
 #ifdef MIDIDUINO_MIDI_CLOCK
-  TIMSK1 |= _BV(TOIE1);
+//  TIMSK1 |= _BV(TOIE1);
 #endif
+
+// http://www.arduinoslovakia.eu/application/timer-calculator
+// Microcontroller: ATmega2560
+// Created: 2017-10-28T08:18:15.310Z
+
+
+  // Clear registers
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
+
+  // 10000 Hz (16000000/((24+1)*64))
+  OCR1A = 24;
+  // CTC
+  TCCR1B |= (1 << WGM12);
+  // Prescaler 64
+  TCCR1B |= (1 << CS11) | (1 << CS10);
+  // Output Compare Match A Interrupt Enable
+  TIMSK1 |= (1 << OCIE1A);
 
  // TCCR2A = _BV(WGM20) | _BV(WGM21) | _BV(CS20) | _BV(CS21); // ) | _BV(CS21); // | _BV(COM21);
 
+  
+  TCCR2A = 0;
+  TCCR2B = 0;
+  TCNT2 = 0;
+
+  // 1000 Hz (16000000/((124+1)*128))
+  OCR2A = 124;
+  // CTC
+  TCCR2A |= (1 << WGM21);
+  // Prescaler 128
+  TCCR2B |= (1 << CS22) | (1 << CS20);
+  // Output Compare Match A Interrupt Enable
+  TIMSK2 |= (1 << OCIE2A);
+/*
   TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
     TCCR2B &= ~(1<<WGM22);
     TCCR2B |= (1<<CS22)  | (1<<CS20); // Set bits
       
-  TIMSK2 &= ~(1<<OCIE2A);
+      TIMSK2 &= ~(1<<OCIE2A);
   
-    TCCR2B &= ~(1<<CS21); 
+        TCCR2B &= ~(1<<CS21); 
       tcnt2 = 131;
       TCNT2 = tcnt2;
         TIMSK2 |= _BV(TOIE2);
+*/
 }
 
 void init(void) {
@@ -257,9 +294,28 @@ static inline uint32_t phase_mult(uint32_t val) {
   return (val * PHASE_FACTOR) >> 8;
 }
 
+ISR(TIMER1_COMPA_vect) {
+//ISR(TIMER1_OVF_vect) {
 
-ISR(TIMER1_OVF_vect) {
   clock++;
+
+  if ((clock > MidiClock.clock_last_time) && (clock - MidiClock.clock_last_time >= MidiClock.div192th_time)) {
+
+  if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
+  MidiClock.increment192Counter(); 
+ 
+  MidiClock.div192th_counter_last = MidiClock.div192th_counter;
+
+  MidiClock.callCallbacks();
+  }
+}
+  if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
+  MidiClock.div96th_counter_last = MidiClock.div96th_counter;
+  MidiClock.callCallbacks();
+  }
+
+
+
   //isr_midi();
 #ifdef MIDIDUINO_MIDI_CLOCK
 //  if (MidiClock.state == MidiClock.STARTED) {
@@ -301,16 +357,12 @@ uint16_t lastRunningStatusReset = 0;
 #define OUTPUTPIN PD0
 
 //extern uint16_t myvar;
-ISR(TIMER2_OVF_vect) {
-       TCNT2 = tcnt2; 
+ISR(TIMER2_COMPA_vect) {
   slowclock++;
-  
+//TCNT2 = tcnt2;  
 //  isr_midi();
 
-  if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
-  MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-  MidiClock.callCallbacks();
-  }
+//  if (slowclock - MidiClock.clock_last_time >= MidiClock.div192th_time) {
 
 
 
