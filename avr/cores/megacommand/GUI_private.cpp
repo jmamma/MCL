@@ -90,12 +90,12 @@ EncodersClass::EncodersClass() {
 }
 
 void EncodersClass::clearEncoders() {
-  USE_LOCK();
-  SET_LOCK();
+ // USE_LOCK();
+ // SET_LOCK();
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     ENCODER_NORMAL(i) = ENCODER_BUTTON(i) = 0;
   }
-  CLEAR_LOCK();
+//  CLEAR_LOCK();
 }
 
 void EncodersClass::poll(uint16_t sr) {
