@@ -170,6 +170,9 @@ void GuiClass::display() {
   GUI.clearFlashLine();
   GUI.setLine(GUI.LINE2);
   GUI.clearFlashLine();
+#ifdef OLED_DISPLAY
+  oled_display.display();
+#endif
 }
 
 char hex2c(uint8_t hex) {

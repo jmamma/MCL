@@ -1,9 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #include "LCDParent.hh"
-
 #include <string.h>
-
+#include "OLED.h"
+//#include <Wire.h>
+//#include <SPI.h>
 /**
  * \addtogroup LCD
  *
@@ -16,28 +17,39 @@
  * \file
  * LCD Parent Class
  **/
-
 #define LINE_LENGTH 16
 
 void LCDParentClass::puts_p(PGM_P s) {
   uint8_t len = 0;
   char c;
   while (((c = pgm_read_byte(s)) != 0) && (len++ < LINE_LENGTH)){
+#ifndef OLED_DISPLAY
     putdata(c);
+#else
+    oled_display.write(c);
+#endif
     s++;
-  }
+  }  
 }
 
 void LCDParentClass::puts(char *s) {
   uint8_t len = 0;
   while (*s != 0 && (len++ < LINE_LENGTH)) {
-    putdata(*s);
-    s++;
+#ifndef OLED_DISPLAY  
+  putdata(*s);
+#else
+  oled_display.write(*s);
+#endif  
+  s++;
   }
 }
 
 void LCDParentClass::line1() {
+#ifdef OLED_DISPLAY  
+  oled_display.setCursor(0,0);
+#else
   putcommand(0x80);
+#endif
 }
 
 void LCDParentClass::line1(char *s) {
@@ -61,7 +73,11 @@ void LCDParentClass::line1_p_fill(PGM_P s) {
 }
 
 void LCDParentClass::line2() {
+#ifdef OLED_DISPLAY
+  oled_display.setCursor(0,15);
+#else
   putcommand(0xc0);
+#endif
 }
 
 void LCDParentClass::line2(char *s) {
@@ -87,18 +103,30 @@ void LCDParentClass::line2_p_fill(PGM_P s) {
 void LCDParentClass::clearLine() {
   uint8_t i;
   for (i = 0; i < 16; i++) {
+#ifndef OLED_DISPLAY    
     putdata(' ');
+#else
+    oled_display.write(' ');
+#endif
   }
 }
 
 void LCDParentClass::puts_fill(char *s, uint8_t i) {
   while (*s != 0) {
+#ifndef OLED_DISPLAY
     putdata(*s);
+#else
+    oled_display.write(*s);
+#endif
     s++;
     i--;
   }
   while (i--) {
+#ifndef OLED_DISPLAY
     putdata(' ');
+#else
+    oled_display.write(' ');
+#endif
   }
 }
 
@@ -109,12 +137,20 @@ void LCDParentClass::puts_fill(char *s) {
 void LCDParentClass::puts_p_fill(PGM_P s, uint8_t i) {
   char c;
   while ((c = pgm_read_byte(s)) != 0) {
-    putdata(c);
+#ifndef OLED_DISPLAY  
+   putdata(c);
+#else
+   oled_display.write(c);
+#endif 
     s++;
     i--;
   }
   while (i--) {
+#ifdef OLED_DISPLAY
+    oled_display.write(c);
+#else
     putdata(' ');
+#endif
   }
 }
 

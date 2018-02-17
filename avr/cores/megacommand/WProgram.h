@@ -7,12 +7,12 @@
 #define SYSEX_BUF_SIZE 6000
 //#define SYSEX_BUF_SIZE 128
 
+#include "wiring_private.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 #include <inttypes.h>
 #include <avr/interrupt.h>
-
 #ifdef __cplusplus
   void __mainInnerLoop(bool callLoop = true);
 
@@ -35,7 +35,10 @@ extern "C" {
 #include "mididuino_private.h"
 #ifdef __cplusplus
 
+
+//#include "OLED.h"
 #include "LCD.h"
+#include "OLED.h"
 #include "GUI_private.h"
 #include "MidiUart.h"
 
@@ -45,7 +48,6 @@ extern "C" {
 #include "GUI.h"
 #include "Midi.h"
 #include "WMath.h"
-
 #endif
 
 #endif /* WProgram_h */
