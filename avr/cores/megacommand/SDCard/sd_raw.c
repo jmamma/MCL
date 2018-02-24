@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2006-2009 by Roland Riegel <feedback@roland-riegel.de>
+ * Copyright (c) 2006-2012 by Roland Riegel <feedback@roland-riegel.de>
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
@@ -10,14 +10,9 @@
 
 #include <string.h>
 #include <avr/io.h>
-#include "sd_raw.hh"
+#include "sd_raw.h"
 
 /**
- * \addtogroup SDCard SD-Card support
- *
- * SD-Card library by Roland Riegel and C++ wrapper
- * @{
- *
  * \addtogroup sd_raw MMC/SD/SDHC card raw access
  *
  * This module implements read and write access to MMC, SD
@@ -151,17 +146,17 @@
 
 #if !SD_RAW_SAVE_RAM
 /* static data buffer for acceleration */
-uint8_t raw_block[512] ;
+static uint8_t raw_block[512];
 /* offset where the data within raw_block lies on the card */
-offset_t raw_block_address;
+static offset_t raw_block_address;
 #if SD_RAW_WRITE_BUFFERING
 /* flag to remember if raw_block was written to the card */
-uint8_t raw_block_written;
+static uint8_t raw_block_written;
 #endif
 #endif
 
 /* card type state */
-uint8_t sd_raw_card_type;
+static uint8_t sd_raw_card_type;
 
 /* private helper functions */
 static void sd_raw_send_byte(uint8_t b);
@@ -202,13 +197,11 @@ uint8_t sd_raw_init()
     /* initialization procedure */
     sd_raw_card_type = 0;
     
-    if(!sd_raw_available())
-        return 0;
+//    if(!sd_raw_available())
+//        return 0;
 
-    
     /* card needs 74 cycles minimum to start up */
-    uint8_t i;
-    for(i = 0; i < 10; ++i)
+    for(uint8_t i = 0; i < 10; ++i)
     {
         /* wait 8 clock cycles */
         sd_raw_rec_byte();
@@ -219,9 +212,7 @@ uint8_t sd_raw_init()
 
     /* reset card */
     uint8_t response;
-    {
-      uint16_t i;
-    for(i = 0; ; ++i)
+    for(uint16_t i = 0; ; ++i)
     {
         response = sd_raw_send_command(CMD_GO_IDLE_STATE, 0);
         if(response == (1 << R1_IDLE_STATE))
@@ -233,8 +224,6 @@ uint8_t sd_raw_init()
             return 0;
         }
     }
-    }
-
 
 #if SD_RAW_SDHC
     /* check for version of SD card specification */
@@ -269,9 +258,7 @@ uint8_t sd_raw_init()
     }
 
     /* wait for card to get ready */
-    {
-    uint16_t i;
-    for(i = 0; ; ++i)
+    for(uint16_t i = 0; ; ++i)
     {
         if(sd_raw_card_type & ((1 << SD_RAW_SPEC_1) | (1 << SD_RAW_SPEC_2)))
         {
@@ -296,7 +283,6 @@ uint8_t sd_raw_init()
             unselect_card();
             return 0;
         }
-    }
     }
 
 #if SD_RAW_SDHC
@@ -433,8 +419,7 @@ uint8_t sd_raw_send_command(uint8_t command, uint32_t arg)
     }
     
     /* receive response */
-    uint8_t i;
-    for(i = 0; i < 10; ++i)
+    for(uint8_t i = 0; i < 10; ++i)
     {
         response = sd_raw_rec_byte();
         if(response != 0xff)
@@ -507,8 +492,7 @@ uint8_t sd_raw_read(offset_t offset, uint8_t* buffer, uintptr_t length)
 #else
             /* read byte block */
             uint8_t* cache = raw_block;
-	    uint16_t i;
-            for(i = 0; i < 512; ++i)
+            for(uint16_t i = 0; i < 512; ++i)
                 *cache++ = sd_raw_rec_byte();
             raw_block_address = block_address;
 
@@ -745,8 +729,7 @@ uint8_t sd_raw_write(offset_t offset, const uint8_t* buffer, uintptr_t length)
 
         /* write byte block */
         uint8_t* cache = raw_block;
-	uint16_t i;
-        for(i = 0; i < 512; ++i)
+        for(uint16_t i = 0; i < 512; ++i)
             sd_raw_send_byte(*cache++);
 
         /* write dummy crc16 */
@@ -881,8 +864,7 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info)
         return 0;
     }
     while(sd_raw_rec_byte() != 0xfe);
-    uint8_t i;
-    for(i = 0; i < 18; ++i)
+    for(uint8_t i = 0; i < 18; ++i)
     {
         uint8_t b = sd_raw_rec_byte();
 
@@ -929,17 +911,22 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info)
 #else
     uint32_t csd_c_size = 0;
 #endif
+    uint8_t csd_structure = 0;
     if(sd_raw_send_command(CMD_SEND_CSD, 0))
     {
         unselect_card();
         return 0;
     }
     while(sd_raw_rec_byte() != 0xfe);
-    for(i = 0; i < 18; ++i)
+    for(uint8_t i = 0; i < 18; ++i)
     {
         uint8_t b = sd_raw_rec_byte();
 
-        if(i == 14)
+        if(i == 0)
+        {
+            csd_structure = b >> 6;
+        }
+        else if(i == 14)
         {
             if(b & 0x40)
                 info->flag_copy = 1;
@@ -952,7 +939,7 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info)
         else
         {
 #if SD_RAW_SDHC
-            if(sd_raw_card_type & (1 << SD_RAW_SPEC_2))
+            if(csd_structure == 0x01)
             {
                 switch(i)
                 {
@@ -970,7 +957,7 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info)
                     info->capacity = (offset_t) csd_c_size * 512 * 1024;
                 }
             }
-            else
+            else if(csd_structure == 0x00)
 #endif
             {
                 switch(i)
@@ -998,7 +985,6 @@ uint8_t sd_raw_get_info(struct sd_raw_info* info)
                         csd_c_size_mult |= b >> 7;
 
                         info->capacity = (uint32_t) csd_c_size << (csd_c_size_mult + csd_read_bl_len + 2);
-
                         break;
                 }
             }

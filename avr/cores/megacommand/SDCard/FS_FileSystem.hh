@@ -3,8 +3,8 @@
 
 
 extern "C" {
-#include "sd_raw.hh"
-#include "sd_raw_config.hh"
+#include "sd_raw.h"
+#include "sd_raw_config.h"
 }
 #include "helpers.h"
 #include "string.h"
