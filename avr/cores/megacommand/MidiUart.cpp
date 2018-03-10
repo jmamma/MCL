@@ -250,10 +250,10 @@ uint8_t MidiUartClass::m_getc() {
   return rxRb.get();
 }
 
-SIGNAL(USART1_RX_vect) {
+ISR(USART1_RX_vect) {
 isr_midi();
 }
-SIGNAL(USART2_RX_vect) {
+ISR(USART2_RX_vect) {
 isr_midi();
 }
 
@@ -276,7 +276,7 @@ Midi_ = &Midi2;
   MidiUart2.recvActiveSenseTimer = 0;
   }
   if (TIMER1_CHECK_INT()) { TCNT1 = 0;  clock++; TIMER1_CLEAR_INT()  }
- if (TIMER2_CHECK_INT()) {TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() }  
+  if (TIMER2_CHECK_INT()) { TCNT2 = 0; slowclock++; TIMER2_CLEAR_INT() }  
 
 
   //  setLed();
@@ -374,7 +374,7 @@ MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
 
 
 #ifdef TX_IRQ
-SIGNAL(USART1_UDRE_vect) {
+ISR(USART1_UDRE_vect) {
 //uint16_t count = 0;
 
   isr_midi();
@@ -399,7 +399,7 @@ MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
   }
 }
 
-SIGNAL(USART2_UDRE_vect) {
+ISR(USART2_UDRE_vect) {
 isr_midi();
 uint8_t c;
 if (!MidiUart2.txRb.isEmpty()) {

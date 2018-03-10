@@ -108,13 +108,13 @@ void MidiSysexClass::handleByte(uint8_t byte) {
       start();
     }
   }
-
+/*
   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
     if (isListenerActive(listeners[i])) {
       listeners[i]->handleByte(byte);
     }
   }
-
+*/
   len++;
 
   if (recording) {

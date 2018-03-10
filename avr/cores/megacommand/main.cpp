@@ -197,7 +197,6 @@ static inline uint32_t phase_mult(uint32_t val) {
 }
 
 ISR(TIMER1_COMPA_vect) {
-//ISR(TIMER1_OVF_vect) {
 
   clock++;
   
@@ -259,7 +258,7 @@ uint16_t lastRunningStatusReset = 0;
 #define OUTPUTPIN PD0
 
 //extern uint16_t myvar;
-ISR(TIMER2_COMPA_vect) {
+ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
   slowclock++;
 //TCNT2 = tcnt2;  
 //  isr_midi();
@@ -356,6 +355,7 @@ int main(void) {
   oled_display.begin();
  
   oled_display.clearDisplay();
+  oled_display.invertDisplay(0);
   oled_display.setRotation(2); 
   oled_display.setTextSize(1);
   oled_display.setTextColor(WHITE, BLACK);

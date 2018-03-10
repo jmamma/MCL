@@ -15,15 +15,6 @@ void A4SysexListenerClass::start() {
 
 void A4SysexListenerClass::handleByte(uint8_t byte) {
 
-        if (MidiSysex2.len == 3) {
-    if (byte == 0x06) {
-      isA4Message = true;
-    } else {
-      isA4Message = false;
-    }
-    return;
-  }
-
   if (isA4Message && MidiSysex2.len == sizeof(a4_sysex_hdr)) {
     msgType = byte;
     switch (byte) {
@@ -47,8 +38,15 @@ void A4SysexListenerClass::handleByte(uint8_t byte) {
 }
 
 void A4SysexListenerClass::end() {
-  if (!isA4Message)
-    return;
+    if (MidiSysex2.data[3] == 0x06) {
+      isA4Message = true;
+    } else {
+      isA4Message = false;
+      return;
+    }
+
+
+  msgType = MidiSysex2.data[sizeof(a4_sysex_hdr)];     
 
   switch (msgType) {
   //case A4_STATUS_RESPONSE_ID:
@@ -109,4 +107,4 @@ void A4SysexListenerClass::end() {
 
 void A4SysexListenerClass::setup() {
   MidiSysex2.addSysexListener(this);
-}
+} 
