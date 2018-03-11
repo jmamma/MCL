@@ -788,6 +788,17 @@ PGM_P model_param_name(uint8_t model, uint8_t param);
 extern const char *MDLFONames[8];
 extern const md_machine_name_t machine_names[134] PROGMEM;
 
+typedef struct md_machine_name_s_short {
+  char name1[3];
+  char name2[3];
+  uint8_t id;
+} md_machine_name_t_short;
+
+extern md_machine_name_t_short const machine_names_short[134] PROGMEM;
+PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
+
+
+
 /* @} @} */
 
 #endif /* MD_PARAMS_H__ */
