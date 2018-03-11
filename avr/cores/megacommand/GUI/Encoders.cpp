@@ -56,17 +56,16 @@ void TempoEncoderHandle(Encoder *enc) {
 }
 #endif
 
-Encoder::Encoder(const char *_name, encoder_handle_t _handler) {
-	old = 0;
-	cur = 0;
-	redisplay = false;
-	setName(_name);
-	handler = _handler;
-	fastmode = true;
-	pressmode = false;
-}
+   
+EncoderParent::EncoderParent(encoder_handle_t _handler = NULL) {
+    old = 0;
+    cur = 0;
+    redisplay = false;
+    handler = _handler;
+     }
 
-void Encoder::checkHandle() {
+
+void EncoderParent::checkHandle() {
 	if (cur != old) {
 		if (handler != NULL)
 			handler(this);
@@ -75,13 +74,7 @@ void Encoder::checkHandle() {
 	old = cur;
 }
 
-void Encoder::setName(const char *_name) {
-	if (_name != NULL)
-		m_strncpy_fill(name, _name, 4);
-	name[3] = '\0';
-}
-
-void Encoder::setValue(int value, bool handle) {
+void EncoderParent::setValue(int value, bool handle) {
 	if (handle) {
 		cur = value;
 		checkHandle();
@@ -91,18 +84,30 @@ void Encoder::setValue(int value, bool handle) {
 	redisplay = true;
 }
 
-void Encoder::displayAt(int i) {
+void EncoderParent::displayAt(int i) {
 	GUI.put_value(i, getValue());
 	redisplay = false;
 }
 
-bool Encoder::hasChanged() {
+bool EncoderParent::hasChanged() {
 	return old != cur;
 }
 
-void Encoder::clear() {
+void EncoderParent::clear() {
 	old = 0;
 	cur = 0;
+  }
+
+Encoder::Encoder(const char *_name = NULL, encoder_handle_t _handler = NULL) : EncoderParent(_handler) {
+    setName(_name);
+    fastmode = true;
+    pressmode = false;
+}
+        
+void Encoder::setName(const char *_name) {
+	if (_name != NULL)
+		m_strncpy_fill(name, _name, 4);
+	name[3] = '\0';
 }
 
 int Encoder::update(encoder_t *enc) {

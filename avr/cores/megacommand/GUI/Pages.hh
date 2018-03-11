@@ -57,53 +57,32 @@ class PageContainer;
  * added to an existing sketch, for example the MidiClockPage used to
  * configure/store/restore midi clock and midi merge setting.
  **/
-class Page {
+
+#define DISPLAY_PIXEL_MODE 0
+#define DISPLAY_TEXT_MODE0 1
+
+class PageParent {
 	/**
 	 * \addtogroup gui_parent_page
 	 * @{
 	 **/
 	
  public:
-	/** The long name of a page (max 16 characters), used for example in ScrollSwitchPage. **/
-  char name[17];
-	/** The short name of a page (3 characters), used for example in SwitchPage. **/
-  char shortName[4];
 	/** Set to true will cause the next call to display() to redisplay the page on the display. **/
   bool redisplay;
-	/** The parent container of the page, usually the Sketch which contains it. **/
+  uint8_t displaymode = DISPLAY_TEXT_MODE0;
+ 
+  /** The parent container of the page, usually the Sketch which contains it. **/
   PageContainer *parent;
 	/** Set to true when the setup() function has been called. **/
   bool isSetup;
 
-	/**
-	 * Create a page with the given long name and short name. setup()
-	 * needs to be called for dynamic initialization steps.
-	 **/
-  Page(const char *_name = NULL, const char *_shortName = NULL) {
+  PageParent() {
     parent = NULL;
     redisplay = false;
-    setName(_name);
-    setShortName(_shortName);
     isSetup = false;
   }
 
-	/** Set the long name (max 16 chars) of the page. **/
-  void setName(const char *_name = NULL) {
-    if (_name != NULL) {
-      m_strncpy(name, _name, 17);
-    } else {
-      name[0] = '\0';
-    }
-  }
-
-	/** Set the short name (max 3 chars) of the page. **/
-  void setShortName(const char *_shortName = NULL) {
-    if (_shortName != NULL) {
-      m_strncpy(shortName, _shortName, 4);
-    } else {
-      shortName[0] = '\0';
-    }
-  }
 
 	/**
 	 * The update() method is called by the GUI main loop on every
@@ -178,6 +157,80 @@ class Page {
 #endif
 
 	/* @} */
+};
+
+class FlexPage : public PageParent {
+
+  public:
+    uint8_t curpage;
+    void (*display_routine)(uint8_t) = NULL;
+   
+    Encoder *encoders[GUI_NUM_ENCODERS];
+
+    FlexPage(void (*func_point)(uint8_t), Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) {
+      setEncoders(e1, e2, e3, e4);
+      set_display_routine(func_point);
+    }
+
+    void setEncoders(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) {
+      encoders[0] = e1;
+      encoders[1] = e2;
+      encoders[2] = e3;
+      encoders[3] = e4;
+    }
+    /** This method will update the encoders according to the hardware moves. **/
+    virtual void update();
+    /** This will clear the encoder movements. **/
+    virtual void clear();
+    /** Display the page using the display routine as specfied by function pointer*/
+    virtual void display();
+    /** Executes the encoder actions by calling checkHandle() on each encoder. **/
+    virtual void finalize();
+    /** Set the display routine to supplied fuction pointer **/
+    void set_display_routine(void(*func_point)(uint8_t));
+    /** Call this to lock all encoders in the page. **/
+    void lockEncoders();
+    /** Call this to unlock all encoders in the page. If their value
+        changed while locked, they will send out their new value.
+    **/
+    void unlockEncoders();
+
+};
+
+class Page : public PageParent {
+  public:
+  /** The long name of a page (max 16 characters), used for example in ScrollSwitchPage. **/
+  char name[17];
+  /** The short name of a page (3 characters), used for example in SwitchPage. **/
+  char shortName[4];
+	/**
+	 * Create a page with the given long name and short name. setup()
+	 * needs to be called for dynamic initialization steps.
+	 **/
+  Page(const char *_name = NULL, const char *_shortName = NULL) : PageParent() {
+    setName(_name);
+    setShortName(_shortName);
+  }
+
+	/** Set the long name (max 16 chars) of the page. **/
+  void setName(const char *_name = NULL) {
+    if (_name != NULL) {
+      m_strncpy(name, _name, 17);
+    } else {
+      name[0] = '\0';
+    }
+  }
+
+	/** Set the short name (max 3 chars) of the page. **/
+  void setShortName(const char *_shortName = NULL) {
+    if (_shortName != NULL) {
+      m_strncpy(shortName, _shortName, 4);
+    } else {
+      shortName[0] = '\0';
+    }
+  }
+  void Page::update();
+
 };
 
 /* @} */

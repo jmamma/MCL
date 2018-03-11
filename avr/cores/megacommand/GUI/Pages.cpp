@@ -20,14 +20,56 @@
 void Page::update() {
 }
 
-void Page::redisplayPage() {
+void PageParent::redisplayPage() {
+  if (displaymode == DISPLAY_TEXT_MODE0) {
   GUI.setLine(GUI.LINE1);
   GUI.clearLine();
   GUI.setLine(GUI.LINE2);
   GUI.clearLine();
   redisplay = true;
+  }
+  else {
+
 }
   
+}
+
+void FlexPage::update() {
+  encoder_t _encoders[GUI_NUM_ENCODERS];
+
+  USE_LOCK();
+  SET_LOCK();
+  m_memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
+  Encoders.clearEncoders();
+  CLEAR_LOCK();
+
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    if (encoders[i] != NULL)
+      encoders[i]->update(_encoders + i);
+  }
+}
+
+void FlexPage::set_display_routine(void(*func_point)(uint8_t)) {
+  display_routine = func_point;
+}
+
+void FlexPage::clear() {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    if (encoders[i] != NULL)
+      encoders[i]->clear();
+  }
+}
+
+void FlexPage::finalize() {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    if (encoders[i] != NULL)
+      encoders[i]->checkHandle();
+  }
+}
+
+void FlexPage::display()  {
+    display_routine(curpage);
+}
 
 void EncoderPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];

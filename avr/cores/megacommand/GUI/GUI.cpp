@@ -29,17 +29,17 @@ void GuiClass::setSketch(Sketch *_sketch) {
     currentPage()->redisplayPage();
 }  
 
-void GuiClass::setPage(Page *page) {
+void GuiClass::setPage(PageParent *page) {
   if (sketch != NULL)
     sketch->setPage(page);
 }
 
-void GuiClass::pushPage(Page *page) {
+void GuiClass::pushPage(PageParent *page) {
   if (sketch != NULL)
     sketch->pushPage(page);
 }
 
-void GuiClass::popPage(Page *page) {
+void GuiClass::popPage(PageParent *page) {
   if (sketch != NULL)
     sketch->popPage(page);
 }
@@ -49,7 +49,7 @@ void GuiClass::popPage() {
     sketch->popPage();
 }
 
-Page *GuiClass::currentPage() {
+PageParent *GuiClass::currentPage() {
   if (sketch != NULL)
     return sketch->currentPage();
   else
