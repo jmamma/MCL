@@ -1,4 +1,4 @@
-#include "MidiSetup.hh"
+#include "MidiSetup.h"
 
 void MidiSetup::cfg_ports() {
 

@@ -1,4 +1,4 @@
-#include "SeqPages.hh"
+#include "SeqSavePage.h"
 
 bool SeqSavePage::displayPage() {
 }

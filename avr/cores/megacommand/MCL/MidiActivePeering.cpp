@@ -1,4 +1,4 @@
-#include "MidiActivePeering.hh"
+#include "MidiActivePeering.h"
 
 void MidiActivePeering::md_setup() {
   MidiUart.setSpeed((uint32_t)31250, 1);

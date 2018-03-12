@@ -14,7 +14,7 @@ bool MCLSysConfig::write_cfg() {
     return false;
   }
 
-  ret = sd_write_data(( uint8_t*)&cfg, sizeof(Config), &cfgfile);
+  ret = mcl_sd.write_data(( uint8_t*)&cfg, sizeof(Config), &cfgfile);
   if (!ret) {
     DEBUG_PRINTLN("Write cfg failed");
   }

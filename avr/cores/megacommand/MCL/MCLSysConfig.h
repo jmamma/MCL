@@ -3,6 +3,7 @@
 #ifndef MCLSYSCONFIG_H__
 #define MCLSYSCONFIG_H__
 #include "MCL.h"
+#include "SDFat.h"
 class MCLSysConfig {
   public:
     uint32_t version;

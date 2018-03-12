@@ -1,4 +1,21 @@
-#include "MCLGfx.hh"
+#include "MCLGfx.h"
+
+void MCLGfx::splashscreen() {
+
+  char str1[17] = "MEGACOMMAND LIVE";
+  char str2[17] = "V2.x.x";
+  str1[16] = '\0';
+  LCD.goLine(0);
+  LCD.puts(str1);
+  LCD.goLine(1);
+  LCD.puts(str2);
+
+  delay(100);
+  // while (rec_global == 0) {
+
+
+  GUI.setPage(&page);
+}
 
 void MCLGfx:draw_notes(uint8_t line_number) {
  if (line_number == 0) {
