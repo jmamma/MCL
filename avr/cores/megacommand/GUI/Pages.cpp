@@ -34,7 +34,7 @@ void PageParent::redisplayPage() {
   
 }
 
-void FlexPage::update() {
+void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
 
   USE_LOCK();
@@ -49,27 +49,20 @@ void FlexPage::update() {
   }
 }
 
-void FlexPage::set_display_routine(void(*func_point)(uint8_t)) {
-  display_routine = func_point;
-}
-
-void FlexPage::clear() {
+void LightPage::clear() {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL)
       encoders[i]->clear();
   }
 }
 
-void FlexPage::finalize() {
+void LightPage::finalize() {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL)
       encoders[i]->checkHandle();
   }
 }
 
-void FlexPage::display()  {
-    display_routine(curpage);
-}
 
 void EncoderPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];

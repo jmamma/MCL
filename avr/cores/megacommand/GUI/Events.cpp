@@ -2,10 +2,12 @@
 
 #include "GUI.h"
 
-volatile CRingBuffer<gui_event_t, 8> EventRB;
+#define MAX_EVENTS 32
+#define MAX_BUTTONS 8
+volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
 
 void pollEventGUI() {
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < MAX_BUTTONS; i++) {
     gui_event_t event;
     event.source = i;
     if (BUTTON_PRESSED(i)) {
