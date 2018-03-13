@@ -83,9 +83,8 @@ void MCL::setup() {
 
   // MidiClock.mode = MidiClock.EXTERNAL_MIDI;
 
-  MCLMidiEvents trigger;
 
-  trigger.setup();
+  NoteInteface.setup()
   //
 
   //      GUI.flash_strings_fill("MIDI CLOCK SRC", "MIDI PORT 2");

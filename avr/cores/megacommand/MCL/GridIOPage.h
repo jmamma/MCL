@@ -1,0 +1,15 @@
+/* Justin Mammarella jmamma@gmail.com 2018 */
+
+#ifndef GRIDIOPAGE_H__
+#define GRIDIOPAGE_H__
+#include "GUI.h"
+
+class GridIOPage : LightPage {
+ public:
+ GridIOPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : FlexPage( e1, e2, e3 ,e4) {
+
+ }
+ virtual bool handleEvent(gui_event_t *event);
+};
+
+#endif /* GRIDIOPAGE_H__ */

@@ -27,7 +27,7 @@ compiler.c.elf.cmd=avr-gcc
 compiler.S.flags=-c -g -x assembler-with-cpp -flto
 compiler.cpp.cmd=avr-g++
 
-compiler.cpp.flags=-c -g -Os {compiler.warning_flags} -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-section,--defsym=__stack=0x8010ff,--section-start,.data=0x81100,--defsym=__heap_end=0x80ffff -I{build.core.path}/Midi -I{build.core.path}/GUI -I{build.core.path}/CommonTools -I{build.core.path}/Elektron -I{build.core.path}/MD -I{build.core.path}/MidiTools -I{build.core.path}/Sequencer -I{build.core.path}/MNM -I{build.core.path}/PageTools -I{build.core.path}/MDSketches -I{build.core.path}/MDPages -I{build.core.path}/A4 -I{build.core.path}/SPI -I{build.core.path}/Wire -I{build.core.path}/Adafruit-GFX-Library -I{build.core.path}/Adafruit_SSD1305_Library -I{build.core.path}/SdFat  -I{build.core.path}/SDCard 
+compiler.cpp.flags=-c -g -Os {compiler.warning_flags} -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-section,--defsym=__stack=0x8010ff,--section-start,.data=0x81100,--defsym=__heap_end=0x80ffff -I{build.core.path}/Midi -I{build.core.path}/GUI -I{build.core.path}/CommonTools -I{build.core.path}/Elektron -I{build.core.path}/MD -I{build.core.path}/MidiTools -I{build.core.path}/Sequencer -I{build.core.path}/MNM -I{build.core.path}/PageTools -I{build.core.path}/MDSketches -I{build.core.path}/MDPages -I{build.core.path}/A4 -I{build.core.path}/SPI -I{build.core.path}/Wire -I{build.core.path}/Adafruit-GFX-Library -I{build.core.path}/Adafruit_SSD1305_Library -I{build.core.path}/SdFat -I{build.core.path}/SDCard -I{build.core.path}/MCL
 
 compiler.ar.cmd=avr-gcc-ar
 compiler.ar.flags=rcs

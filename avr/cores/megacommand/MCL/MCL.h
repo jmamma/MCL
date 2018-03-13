@@ -15,7 +15,7 @@
 #include "MDSysexCallbacks.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
-#include "SeqPages.h"
+#include "MCLPages.h"
 
 #include "GridEncoder.h"
 #include "TrackInfoEncoder.h"

@@ -6,7 +6,7 @@
 
 class MCLGfx {
   public:
-  void draw_notes(uint8_t line_number);
+  void splash_screen();
 };
 
 extern MCLGfx gfx;

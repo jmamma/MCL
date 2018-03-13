@@ -40,6 +40,7 @@ void MidiActivePeering::md_setup() {
       }
       MD.setStatus(0x22, curtrack);
       MD.connected = true;
+      uart1_device = DEVICE_MD;
       GUI.flash_strings_fill("MD", "CONNECTED");
 
       return;
@@ -72,6 +73,7 @@ void MidiActivePeering::check() {
       //  if (!MD.getBlockingStatus(0x22,CALLBACK_TIMEOUT)) {
       MidiUart.setSpeed((uint32_t)31250, 1);
       MD.connected = false;
+      uart1_device = DEVICE_NULL;
       GUI.flash_strings_fill("MD", "DISCONNECTED");
       //   }
     }
