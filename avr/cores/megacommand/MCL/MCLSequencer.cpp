@@ -1,6 +1,10 @@
 #include "MCLSequencer.h"
 
 void MCLSequencer::setup() {
+  for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++ 2) {
+    SeqParamPage seq_param_page[i].init(i, i + 1);
+  }
+
   for (uint8_t i = 0; i < 16; i++) {
     PatternLengths[i] = 16;
   }
@@ -71,7 +75,8 @@ void MCLSequencer::seq_note_off(uint8_t track, uint8_t note) {
   }
 }
 
-void MCLSequencer::noteon_conditional(uint8_t condition, uint8_t track, uint8_t note) {
+void MCLSequencer::noteon_conditional(uint8_t condition, uint8_t track,
+                                      uint8_t note) {
 
   if ((condition == 0)) {
     seq_note_on(track, note);

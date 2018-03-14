@@ -16,6 +16,11 @@ bool CuePage::handleEvent(gui_event_t *event) {
     }
   return true;
   }
-
+  if (EVENT_PRESSED(evt, Buttons.BUTTON1)) {
+      curpage = MIXER_PAGE;
+  return true;  
+  }
   return false;
 }
+
+CuePage cue_page;

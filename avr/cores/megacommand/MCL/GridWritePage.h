@@ -14,4 +14,5 @@ class GridWritePage : GridIOPage {
  void setup();
 };
 
+extern GridWritePage grid_write_page;
 #endif /* GRIDWRITEPAGE_H__ */
