@@ -3,14 +3,14 @@
 void SeqEucPtcPage::setup() {
   SeqPage::setup();
   collect_trigs = true;
-  trackinfo_param1.max = 8;
-  trackinfo_param2.max = 64;
-  trackinfo_param3.max = 64;
-  trackinfo_param4.max = 15;
-  trackinfo_param2.cur = 32;
-  trackinfo_param1.cur = 1;
+  encoders[1]->max = 8;
+  encoders[2]->max = 64;
+  encoders[3]->max = 64;
+  encoders[4]->max = 15;
+  encoders[2]->cur = 32;
+  encoders[1]->cur = 1;
 
-  trackinfo_param3.cur = PatternLengths[last_md_track];
+  encoders[3]->cur = PatternLengths[last_md_track];
   curpage = SEQ_EUCPTC_PAGE;
 }
 

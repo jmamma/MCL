@@ -9,7 +9,7 @@ void SeqStepPage::setup() {
   encoders[2]->min = 1;
   encoders[2]->cur = 12;
   encoders[3]->max = 64;
-  trackinfo_param4.max = 16;
+  encoders[4]->max = 16;
   encoders[3]->cur = PatternLengths[last_md_track];
 
   curpage = SEQ_STEP_PAGE;

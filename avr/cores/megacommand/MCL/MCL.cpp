@@ -53,11 +53,11 @@ void MCL::setup() {
   param4.effect = MD_FX_ECHO;
   param4.fxparam = MD_ECHO_FB;
 
-  trackinfo_param4.handler = octave_handler;
+  encoders[4]->handler = octave_handler;
   mixer_param1.handler = encoder_level_handle;
   mixer_param2.handler = encoder_level_handle;
-  trackinfo_param3.handler = pattern_len_handler;
-  trackinfo_param2.handler = ptc_root_handler;
+  encoders[3]->handler = pattern_len_handler;
+  encoders[2]->handler = ptc_root_handler;
   // mixer_param2.handler = encoder_filter_handle;
   // Setup cfg.uart1_turbo Midi
   frames_startclock = slowclock;

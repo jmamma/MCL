@@ -4,11 +4,11 @@ void SeqRlckPage::setup() {
   SeqPage::setup();
   collect_trigs = false;
 
-  trackinfo_param1.max = 4;
-  trackinfo_param2.max = 64;
-  trackinfo_param3.max = 64;
-  trackinfo_param4.max = 11;
-  trackinfo_param3.cur = PatternLengths[last_md_track];
+  encoders[1]->max = 4;
+  encoders[2]->max = 64;
+  encoders[3]->max = 64;
+  encoders[4]->max = 11;
+  encoders[3]->cur = PatternLengths[last_md_track];
 
   curpage = SEQ_RTRK_PAGE;
 }

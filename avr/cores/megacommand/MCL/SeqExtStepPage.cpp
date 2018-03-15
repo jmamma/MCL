@@ -3,13 +3,13 @@
 void SeqExtStepPage::setup() {
   SeqPage::setup();
   if (ExtPatternResolution[last_ext_track] == 1) {
-    trackinfo_param2.cur = 6;
-    trackinfo_param2.max = 11;
+    encoders[2]->cur = 6;
+    encoders[2]->max = 11;
   } else {
-    trackinfo_param2.cur = 12;
-    trackinfo_param2.max = 23;
+    encoders[2]->cur = 12;
+    encoders[2]->max = 23;
   }
-  trackinfo_param3.cur = ExtPatternLengths[track];
+  encoders[3]->cur = ExtPatternLengths[track];
   cur_col = last_ext_track + 16;
   curpage = SEQ_EXTSTEP_PAGE;
 }

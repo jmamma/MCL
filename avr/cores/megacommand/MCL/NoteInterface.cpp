@@ -32,7 +32,7 @@ void NoteInterface::note_on_event(uint8_t note_num) {
   event.mask = EVENT_BUTTON_PRESSED;
   EventRB.putp(&event);
 
-  if ((curpage == CUE_PAGE) && (trackinfo_param4.getValue() == 0)) {
+  if ((curpage == CUE_PAGE) && (encoders[4]->getValue() == 0)) {
     toggle_cue(note_num);
     md_exploit.send_globals();
   }
@@ -62,18 +62,18 @@ void NoteInterface::note_on_event(uint8_t note_num) {
     uint8_t condition =
         Extconditional[last_extseq_track]
                       [(note_num + (seq_page_select * 16))]; // lower
-    trackinfo_param1.cur = condition;
+    encoders[1]->cur = condition;
     // Micro
     if (utiming == 0) {
       if (ExtPatternResolution[last_extseq_track] == 1) {
         utiming = 6;
-        trackinfo_param2.max = 11;
+        encoders[2]->max = 11;
       } else {
-        trackinfo_param2.max = 23;
+        encoders[2]->max = 23;
         utiming = 12;
       }
     }
-    trackinfo_param2.cur = utiming;
+    encoders[2]->cur = utiming;
 
     gui_last_trig_press = note_num;
   }
@@ -87,7 +87,7 @@ void NoteInterface::note_on_event(uint8_t note_num) {
       return;
     }
 
-    trackinfo_param2.max = 23;
+    encoders[2]->max = 23;
     note_hold = slow_clock;
     int8_t utiming =
         timing[cur_col][(note_num + (seq_page_select * 16))]; // upper
@@ -95,12 +95,12 @@ void NoteInterface::note_on_event(uint8_t note_num) {
         conditional[cur_col][(note_num + (seq_page_select * 16))]; // lower
 
     // Cond
-    trackinfo_param1.cur = condition;
+    encoders[1]->cur = condition;
     // Micro
     if (utiming == 0) {
       utiming = 12;
     }
-    trackinfo_param2.cur = utiming;
+    encoders[2]->cur = utiming;
   }
 
   else if ((curpage == SEQ_PARAM_A_PAGE) || (curpage == SEQ_PARAM_B_PAGE)) {
@@ -111,12 +111,12 @@ void NoteInterface::note_on_event(uint8_t note_num) {
     } else {
       param_offset = 2;
     }
-    trackinfo_param1.cur = PatternLocksParams[last_md_track][param_offset];
-    trackinfo_param3.cur = PatternLocksParams[last_md_track][param_offset + 1];
+    encoders[1]->cur = PatternLocksParams[last_md_track][param_offset];
+    encoders[3]->cur = PatternLocksParams[last_md_track][param_offset + 1];
 
-    trackinfo_param2.cur = PatternLocks[last_md_track][param_offset]
+    encoders[2]->cur = PatternLocks[last_md_track][param_offset]
                                        [(note_num + (seq_page_select * 16))];
-    trackinfo_param4.cur = PatternLocks[last_md_track][param_offset + 1]
+    encoders[4]->cur = PatternLocks[last_md_track][param_offset + 1]
                                        [(note_num + (seq_page_select * 16))];
     notes[note_num] = 1;
 

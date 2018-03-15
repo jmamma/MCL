@@ -47,7 +47,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   return false;
 }
 void SeqPage::setup() {
-  trackinfo_param2.min = 0;
+  encoders[2]->min = 0;
   if (curpage == 0) {
     create_chars_seq();
     currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);

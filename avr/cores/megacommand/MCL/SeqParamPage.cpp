@@ -4,16 +4,16 @@ void SeqParamPage::setup() {
   SeqPage::setup();
   collect_trigs = true;
 
-  trackinfo_param1.max = 23;
-  trackinfo_param2.max = 127;
-  trackinfo_param3.max = 23;
-  trackinfo_param4.max = 127;
+  encoders[1]->max = 23;
+  encoders[2]->max = 127;
+  encoders[3]->max = 23;
+  encoders[4]->max = 127;
 
-  trackinfo_param1.cur = PatternLocksParams[last_md_track][0];
-  trackinfo_param3.cur = PatternLocksParams[last_md_track][1];
-  trackinfo_param2.cur =
+  encoders[1]->cur = PatternLocksParams[last_md_track][0];
+  encoders[3]->cur = PatternLocksParams[last_md_track][1];
+  encoders[2]->cur =
       MD.kit.params[last_md_track][PatternLocksParams[last_md_track][0]];
-  trackinfo_param4.cur =
+  encoders[4]->cur =
       MD.kit.params[last_md_track][PatternLocksParams[last_md_track][1]];
 
   curpage = SEQ_PARAMA_PAGE;
@@ -49,11 +49,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    trackinfo_param1.cur = PatternLocksParams[last_md_track][p1];
-    trackinfo_param3.cur = PatternLocksParams[last_md_track][p2];
-    trackinfo_param2.cur =
+    encoders[1]->cur = PatternLocksParams[last_md_track][p1];
+    encoders[3]->cur = PatternLocksParams[last_md_track][p2];
+    encoders[2]->cur =
         MD.kit.params[last_md_track][PatternLocksParams[last_md_track][p1]];
-    trackinfo_param4.cur =
+    encoders[4]->cur =
         MD.kit.params[last_md_track][PatternLocksParams[last_md_track][p2]];
     curpage = SEQ_PARAM_B_PAGE;
     return true;
