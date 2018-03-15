@@ -20,6 +20,15 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    md_exploit.on();
+    collect_trigs = false;
+    curpage = SEQ_RTRK_PAGE;
+    GUI.setPage(&seq_rtrk_page);
+    return true;
+
+  }
+
   if ((EVENT_PRESSED(evnt, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(evnt, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 

@@ -4,13 +4,13 @@ void SeqStepPage::setup() {
   SeqPage::setup();
   collect_trigs = true;
 
-  trackinfo_param1.max = 13;
-  trackinfo_param2.max = 23;
-  trackinfo_param2.min = 1;
-  trackinfo_param2.cur = 12;
-  trackinfo_param3.max = 64;
+  encoders[1]->max = 13;
+  encoders[2]->max = 23;
+  encoders[2]->min = 1;
+  encoders[2]->cur = 12;
+  encoders[3]->max = 64;
   trackinfo_param4.max = 16;
-  trackinfo_param3.cur = PatternLengths[last_md_track];
+  encoders[3]->cur = PatternLengths[last_md_track];
 
   curpage = SEQ_STEP_PAGE;
 }

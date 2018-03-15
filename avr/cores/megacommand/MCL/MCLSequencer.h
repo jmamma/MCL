@@ -4,12 +4,13 @@
 #define MCLSEQUENCER_H__
 #include "MCL.h"
 #include "midiclock.h"
-
+#include "SeqPages.h"
 #define NUM_PARAM_PAGES 2;
 
 class MCLSequencer : public ClockCallback {
 public:
-  SeqParamPage seq_param_page[NUM_PARAM_PAGES];
+
+
   uint8_t last_ext_track;
 
   void setup();

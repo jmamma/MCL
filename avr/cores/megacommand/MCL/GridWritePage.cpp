@@ -70,4 +70,3 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
 }
 
-GridWritePage grid_write_page;

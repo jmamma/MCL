@@ -1,15 +1,5 @@
 #include "MCL.h"
 
-GridEncoder param1(0, GRID_WIDTH - 4, ENCODER_RES_GRID);
-GridEncoder param2(0, 127, ENCODER_RES_GRID);
-GridEncoder param3(0, 127, 1);
-GridEncoder param4(0, 127, 1);
-
-TrackInfoEncoder trackinfo_param1(0, 3, ENCODER_RES_SEQ);
-TrackInfoEncoder trackinfo_param2(0, 64, ENCODER_RES_SEQ);
-TrackInfoEncoder trackinfo_param3(0, 10, ENCODER_RES_SEQ);
-TrackInfoEncoder trackinfo_param4(0, 16, ENCODER_RES_SEQ);
-
 uint8_t in_sysex = 0;
 uint8_t in_sysex2 = 0;
 int8_t curpage = 0;

@@ -2,7 +2,8 @@
 
 void MCLSequencer::setup() {
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++ 2) {
-    SeqParamPage seq_param_page[i].init(i, i + 1);
+    seq_param_page[i].setEncoders(&mcl_param1, &mcl_param2, &mcl_param3, &mcl_param4);
+    seq_param_page[i].init(i, i + 1);
   }
 
   for (uint8_t i = 0; i < 16; i++) {

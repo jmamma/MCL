@@ -22,6 +22,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
+
+ if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    curpage = SEQ_RPTC_PAGE;
+    GUI.setPage(&seq_rptc_page);
+    return true;
+ }
+
   if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     md_exploit.off();
     GUI.setPage(&grid_page);

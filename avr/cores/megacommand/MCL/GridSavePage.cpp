@@ -55,4 +55,3 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       return true;
   }
 }
-GridSavePage grid_save_page;

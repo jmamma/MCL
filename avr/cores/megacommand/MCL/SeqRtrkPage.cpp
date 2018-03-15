@@ -19,6 +19,14 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    md_exploit.off();
+    curpage = SEQ_RLCK_PAGE;
+    GUI.setPage(&seq_rlck_page);
+    return true;
+
+  }
+
   if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
     md_exploit.off();
     GUI.setPage(&grid_page);

@@ -21,6 +21,20 @@ bool SeqEucPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
+
+
+  if ((curpage == SEQ_EUC_PAGE) && EVENT_RELEASED(event, Buttons.BUTTON1))  {
+  /*  trackinfo_param1.max = 13;
+    trackinfo_param2.max = 23;
+    trackinfo_param2.min = 1;
+    trackinfo_param2.cur = 12;
+    trackinfo_param3.max = 64;
+    trackinfo_param4.max = 16;*/
+    curpage = SEQ_STEP_PAGE;
+    GUI.setPage(&seq_step_page);
+    return true;
+
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     uint8_t notescount = 0;
     for (uint8_t i = 0; i < 16; i++) {

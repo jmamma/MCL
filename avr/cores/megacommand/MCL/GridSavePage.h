@@ -15,5 +15,4 @@ public:
   void setup();
 };
 
-extern GridSavePage grid_save_page;
 #endif /* GRIDSAVEPAGE_H__ */
