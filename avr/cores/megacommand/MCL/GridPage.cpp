@@ -1,10 +1,5 @@
 #include "GridPage.h"
 
-GridEncoder param1(0, GRID_WIDTH - 4, ENCODER_RES_GRID);
-GridEncoder param2(0, 127, ENCODER_RES_GRID);
-GridEncoder param3(0, 127, 1);
-GridEncoder param4(0, 127, 1);
-
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
 

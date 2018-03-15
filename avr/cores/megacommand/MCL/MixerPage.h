@@ -10,7 +10,8 @@ class MixerPage : LightPage {
 
  }
  virtual bool handleEvent(gui_event_t *event);
+ virtual void draw_levels();
+ virtual void display();
 };
 
-extern MixerPage mixer_page;
 #endif /* MIXERPAGE_H__ */

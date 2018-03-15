@@ -1,5 +1,19 @@
 #include "NewProjectPage.h"
 
+void NewProjectPage::display() {
+  if (encoders[1]->hasChanged()) {
+      update_prjpage_char();
+
+    }
+    //    if ((encoders[2]->hasChanged())){
+    newprj[encoders[1]->getValue()] = allowedchar[encoders[2]->getValue()];
+    //  }
+
+    GUI.setLine(GUI.LINE1);
+    GUI.put_string_at(0, "New Project:");
+    GUI.setLine(GUI.LINE2);
+    GUI.put_string_at(0, &newprj[1]);
+}
 bool NewProjectPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 

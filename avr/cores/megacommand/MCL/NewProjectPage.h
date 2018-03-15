@@ -10,6 +10,7 @@ class NewProjectPage : LightPage {
 
  }
  virtual bool handleEvent(gui_event_t *event);
+ virtual void display();
 };
 
 #endif /* NEWPROJECTPAGE_H__ */

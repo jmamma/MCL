@@ -15,7 +15,7 @@ void SeqEucPage::setup() {
   curpage = SEQ_EUC_PAGE;
 }
 
-bool SeqEucPage::displayPage() {}
+bool SeqEucPage::display() {}
 bool SeqEucPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

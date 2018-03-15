@@ -1,5 +1,25 @@
 #include "MixerPage.h"
 
+void MixerPage::draw_levels() {
+  GUI.setLine(GUI.LINE2);
+  uint8_t scaled_level;
+  char str[17] = "                ";
+  for (int i = 0; i < 16; i++) {
+    //  if (MD.kit.levels[i] > 120) { scaled_level = 8; }
+    // else if (MD.kit.levels[i] < 4) { scaled_level = 0; }
+    scaled_level = (int)(((float)MD.kit.levels[i] / (float)127) * 7);
+    if (scaled_level == 7) {
+      str[i] = (char)(255);
+    } else if (scaled_level > 0) {
+      str[i] = (char)(scaled_level + 2);
+    }
+  }
+  GUI.put_string_at(0, str);
+}
+void MixerPage::display() {
+  note_interface.draw_notes(0);
+  this.draw_levels();
+}
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 
@@ -39,4 +59,3 @@ bool MixerPage::setup() {
   md_exploit.on();
   note_inteface.collect_trigs = true;
 }
-MixerPage mixer_page;

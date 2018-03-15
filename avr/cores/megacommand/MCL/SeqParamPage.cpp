@@ -22,7 +22,7 @@ void SeqParamPage::init(uint8_t p1, uint8_t p2) {
   param1 = p1;
   param2 = p2;
 }
-bool SeqParamPage::displayPage() {}
+bool SeqParamPage::display() {}
 bool SeqParamPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

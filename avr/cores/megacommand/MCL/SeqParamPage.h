@@ -16,7 +16,7 @@ public:
   }
   void init(uint8_t p1, uint8_t p2);
   bool handleEvent(gui_event_t *event);
-  bool displayPage();
+  bool display();
   void setup();
 };
 

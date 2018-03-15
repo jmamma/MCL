@@ -10,7 +10,7 @@ class CuePage : LightPage {
 
  }
  bool handleEvent(gui_event_t *event);
+ virtual void display();
  void setup();
 };
-extern CuePage cue_page;
 #endif /* CUEPAGE_H__ */

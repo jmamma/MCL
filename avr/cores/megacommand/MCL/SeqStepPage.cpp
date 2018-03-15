@@ -15,7 +15,7 @@ void SeqStepPage::setup() {
   curpage = SEQ_STEP_PAGE;
 }
 
-bool SeqStepPage::displayPage() {}
+bool SeqStepPage::display() {}
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {

@@ -13,7 +13,7 @@ void GridSavePage::setup() {
   reload_slot_models = 0;
 }
 
-bool GridSavePage::displayPage() {}
+bool GridSavePage::display() {}
 bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

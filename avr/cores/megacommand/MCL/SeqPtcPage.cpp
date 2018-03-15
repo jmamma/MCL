@@ -16,7 +16,7 @@ void SeqPtcPage::setup() {
   curpage = SEQ_PTC_PAGE;
 }
 
-bool SeqPtcPage::displayPage() {}
+bool SeqPtcPage::display() {}
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

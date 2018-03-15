@@ -19,7 +19,7 @@ void GridWritePage::setup() {
   curpage = W_PAGE;
 }
 
-bool GridWritePage::displayPage() {}
+bool GridWritePage::display() {}
 bool GridWritePage::handleEvent(gui_event_t *event) {
   // Call parent GUI handler first.
   if (GridIOPage::handleEvent(event)) {

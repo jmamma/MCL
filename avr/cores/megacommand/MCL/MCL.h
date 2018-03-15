@@ -15,10 +15,19 @@
 #include "MDSysexCallbacks.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
-#include "MCLPages.h"
+
+#include "GridPages.h"
+#include "ProjectPages.h"
+#include "SeqPages.h"
+#include "AuxPages.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
+
+extern MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
+extern MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
+extern MCLSystemPage system_page(&options_param1, &options_param2);
+
 extern uint8_t in_sysex;
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;

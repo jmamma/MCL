@@ -14,7 +14,7 @@ void SeqEucPtcPage::setup() {
   curpage = SEQ_EUCPTC_PAGE;
 }
 
-bool SeqEucPtcPage::displayPage() {}
+bool SeqEucPtcPage::display() {}
 bool SeqEucPtcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

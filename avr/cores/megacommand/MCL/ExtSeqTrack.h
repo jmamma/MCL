@@ -11,7 +11,7 @@ public:
                Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
       : SeqTrack(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
-  bool displayPage();
+  bool display();
   void setup();
 };
 

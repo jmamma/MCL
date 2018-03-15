@@ -10,6 +10,7 @@ class LoadProjectPage : LightPage {
 
  }
  virtual bool handleEvent(gui_event_t *event);
+ virtual void display();
 };
 
 #endif /* LOADPROJECTPAGE_H__ */

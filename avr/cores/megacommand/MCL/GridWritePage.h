@@ -10,7 +10,7 @@ class GridWritePage : GridIOPage {
 
  }
  bool handleEvent(gui_event_t *event);
- bool displayPage();
+ bool display();
  void setup();
 };
 
