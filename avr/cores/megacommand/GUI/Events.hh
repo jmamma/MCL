@@ -37,6 +37,7 @@
 typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
+  uint8_t port;
 } gui_event_t;
 
 /**

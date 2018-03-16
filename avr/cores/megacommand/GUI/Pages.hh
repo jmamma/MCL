@@ -143,8 +143,12 @@ public:
    * set the isSetup flag to true, and check if the flag was set to
    * avoid double initialization.
    **/
-  virtual void setup() {}
 
+  //Call an init routine each time the page is loaded
+  virtual void init() {}
+  virtual void cleanup() {} 
+  virtual void setup() {}
+ 
 #ifdef HOST_MIDIDUINO
   virtual ~Page() {}
 #endif
@@ -156,14 +160,12 @@ class LightPage : public PageParent {
 
 public:
   uint8_t curpage;
-  void (*display_routine)(uint8_t) = NULL;
 
   Encoder *encoders[GUI_NUM_ENCODERS];
 
   LightPage(void (*func_point)(uint8_t), Encoder *e1 = NULL, Encoder *e2 = NULL,
            Encoder *e3 = NULL, Encoder *e4 = NULL) {
     setEncoders(e1, e2, e3, e4);
-    set_display_routine(func_point);
   }
 
   void setEncoders(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -447,12 +449,13 @@ public:
       // can't push the same page twice in a row
       return;
     }
-
+    currentPage()->cleanup();
     page->parent = this;
     if (!page->isSetup) {
       page->setup();
       page->isSetup = true;
     }
+    page->init();
     page->redisplayPage();
     page->show();
     pageStack.push(page);
