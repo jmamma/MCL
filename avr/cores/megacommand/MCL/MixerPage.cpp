@@ -1,5 +1,31 @@
 #include "MixerPage.h"
 
+void MixerPage::set_level(int curtrack, int value) {
+ uint8_t cc;
+  uint8_t channel = curtrack >> 2;
+  if (curtrack < 4) {
+    cc = 8 + curtrack;
+  }
+  else if (curtrack < 8) {
+    cc = 4 + curtrack;
+  }
+  else if (curtrack < 12) {
+    cc = curtrack;
+  }
+  else if (curtrack < 16) {
+    cc = curtrack - 4;
+  }
+  USE_LOCK();
+  SET_LOCK();
+  if (md_exploit.state) {
+    MidiUart.sendCC(channel + 3, cc, value);
+  }
+  else {
+    MidiUart.sendCC(channel + 9, cc, value);
+  }
+  CLEAR_LOCK();
+  in_sysex = 0;
+}
 void MixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
   uint8_t scaled_level;
@@ -16,6 +42,50 @@ void MixerPage::draw_levels() {
   }
   GUI.put_string_at(0, str);
 }
+
+void MixerPage::encoder_level_handle(Encoder *enc) {
+  TrackInfoEncoder *mdEnc = (TrackInfoEncoder *)enc;
+  uint8_t increase = 0;
+  if (enc->pressmode == false) {
+    increase = 1;
+  }
+  if (enc->pressmode == true) {
+    increase = 4;
+  }
+  int track_newlevel;
+  for (int i = 0; i < 16; i++) {
+    if (notes[i] == 1) {
+      //        setLevel(i,mdEnc->getValue() + MD.kit.levels[i] );
+      for (int a = 0; a < increase; a++) {
+        if ((mdEnc->getValue() - mdEnc->old) < 0) {
+          track_newlevel = MD.kit.levels[i] - 1;
+        }
+        //      if ((mdEnc->getValue() - mdEnc->old) > 0) { track_newlevel = MD.kit.levels[i] + 1; }
+        else {
+          track_newlevel = MD.kit.levels[i] + 1;
+        }
+        if ((track_newlevel <= 127) && (track_newlevel >= 0)) {
+          MD.kit.levels[i] += mdEnc->getValue() - mdEnc->old;
+          //if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
+          setLevel(i, MD.kit.levels[i] );
+          //}
+        }
+      }
+    }
+  }
+  if (mdEnc->getValue() >= 127) {
+    mdEnc->cur = 1;
+    mdEnc->old = 0;
+  }
+  else if (mdEnc->getValue() <= 0) {
+    mdEnc->cur = 126;
+    mdEnc->old = 127;
+  }
+
+
+  //draw_levels();
+}
+
 void MixerPage::display() {
   note_interface.draw_notes(0);
   this.draw_levels();
@@ -48,7 +118,20 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
+void MixerPage::create_chars_mixer() {
+  uint8_t temp_charmap[8] = { 0, 0, 0, 0, 0, 0, 0, 31  };
+
+  for (uint8_t i = 1; i < 8; i++) {
+    for (uint8_t x = 1; x < i; x++) {
+      temp_charmap[(8 - x)] = 31;
+      LCD.createChar(1 + i, temp_charmap);
+    }
+
+  }
+}
 bool MixerPage::setup() {
+  Encoders[1]->handler = encoder_level_handle;
+  Encoders[2]->handler = encoder_level_handle;
   create_chars_mixer();
   currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
   curpage = MIXER_PAGE;

@@ -1,5 +1,45 @@
 #include "CuePage.h"
 
+void CuePage::toggle_cue(int i) {
+  if (IS_BIT_SET32(cfg.cues, i)) {
+    CLEAR_BIT32(cfg.cues, i);
+    MD.setTrackRouting(i, 6);
+  } else {
+    SET_BIT32(cfg.cues, i);
+    MD.setTrackRouting(i, 5);
+  }
+}
+void CuePage::toggle_cues_batch() {
+  uint16_t quantize_mute;
+  quantize_mute = 1 << encoders[4]->getValue();
+  int i;
+  for (i = 0; i < 16; i++) {
+    if (notes[i] == 3) {
+      MD.muteTrack(i, true);
+    }
+  }
+  if (encoders[4]->getValue() < 7) {
+    while ((((MidiClock.div32th_counter - pattern_start_clock32th) + 3) %
+            (quantize_mute * 2)) != 0) {
+      GUI.display();
+    }
+  }
+
+  // send the track to master before unmuting
+
+  for (i = 0; i < 16; i++) {
+    if (notes[i] == 3) {
+      if (encoders[4]->getValue() == 7) {
+        setLevel(i, 0);
+      }
+      toggle_cue(i);
+
+      MD.muteTrack(i, false);
+    }
+    //  notes[i] = 0;
+    // trackinfo_page.display();
+  }
+}
 void CuePage::display() {
   GUI.setLine(GUI.LINE2);
 
@@ -26,16 +66,27 @@ void CuePage::display() {
 }
 bool CuePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-
+    if (event->device != MD_DEVICE) {
+      return true;
+    }
     note_interface.draw_notes(0);
-    if (note_interface.notes_all_off()) {
-      if ((curpage == CUE_PAGE) && (encoders[4]->getValue() > 0) &&
-          (note_noteinterface.notes_count_off() > 1)) {
-        toggle_cues_batch();
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+
+      if ((encoders[4]->getValue() == 0)) {
+        toggle_cue(note_num);
         md_exploit.send_globals();
-        md_exploit.off();
-        GUI.setPage(&page);
-        curpage = 0;
+      }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (note_interface.notes_all_off()) {
+        if ((encoders[4]->getValue() > 0) &&
+            (note_noteinterface.notes_count_off() > 1)) {
+          toggle_cues_batch();
+          md_exploit.send_globals();
+          md_exploit.off();
+          GUI.setPage(&page);
+          curpage = 0;
+        }
       }
     }
     return true;

@@ -22,6 +22,7 @@ public:
   void seq_note_on(uint8_t track, uint8_t note);
   void seq_note_off(uint8_t track, uint8_t note);
   void noteon_conditional(uint8_t condition, uint8_t track, uint8_t note);
+  void set_track_param(uint8_t track, uint8_t param, uint8_t value);
 };
 
 extern MCLSequencer mcl_seq;

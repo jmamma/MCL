@@ -8,10 +8,6 @@ uint8_t in_sysex = 0;
 uint8_t in_sysex2 = 0;
 int8_t curpage = 0;
 
-float frames_fps = 10;
-uint16_t frames = 0;
-uint16_t frames_startclock;
-
 void MCL::setup() {
   Serial.begin(9600);
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
@@ -49,22 +45,8 @@ void MCL::setup() {
 
   // Initalise the  Effects Ecnodres
 
-  param2.handler = encoder_param2_handle;
-  param3.handler = encoder_fx_handle;
-  param3.effect = MD_FX_ECHO;
-  param3.fxparam = MD_ECHO_TIME;
-  param4.handler = encoder_fx_handle;
-  param4.effect = MD_FX_ECHO;
-  param4.fxparam = MD_ECHO_FB;
-
-  encoders[4]->handler = octave_handler;
-  mixer_param1.handler = encoder_level_handle;
-  mixer_param2.handler = encoder_level_handle;
-  encoders[3]->handler = pattern_len_handler;
-  encoders[2]->handler = ptc_root_handler;
   // mixer_param2.handler = encoder_filter_handle;
   // Setup cfg.uart1_turbo Midi
-  frames_startclock = slowclock;
   // cfg.uart1_turboMidi.setup();
   // Start the SD Card Initialisation.
 

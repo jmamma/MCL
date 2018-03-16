@@ -13,6 +13,7 @@ public:
   bool handleEvent(gui_event_t *event);
   bool display();
   void setup();
+  void init();
 };
 
 #endif /* SEQSTEPPAGE_H__ */

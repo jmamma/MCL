@@ -16,7 +16,8 @@ bool NoteInterface::is_event(event_t *event) {
   }
   return false;
 }
-void NoteInterface::note_on_event(uint8_t note_num) {
+void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
+
   if (!state) {
     return;
   }
@@ -26,105 +27,17 @@ void NoteInterface::note_on_event(uint8_t note_num) {
   if (notes[note_num] == 0) {
     notes[note_num] = 1;
   }
+  if (note_num < 16) {
+    note_hold = slow_clock;
+  }
 
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = EVENT_BUTTON_PRESSED;
+  event.port = port;
   EventRB.putp(&event);
-
-  if ((curpage == CUE_PAGE) && (encoders[4]->getValue() == 0)) {
-    toggle_cue(note_num);
-    md_exploit.send_globals();
-  }
-
-  if ((curpage == SEQ_STEP_PAGE) && (ice == DEVICE_A4)) {
-
-    load_seq_extstep_page(channel);
-    return;
-  }
-  if ((ice == DEVICE_A4) && (curpage == SEQ_EXTSTEP_PAGE)) {
-    // curpage = SEQ_EXTSTEP_PAGE;
-    load_seq_extstep_page(channel);
-    return;
-  }
-
-  if ((curpage == SEQ_EXTSTEP_PAGE) && (ice == DEVICE_MD)) {
-    note_hold = slow_clock;
-
-    if ((note_num + (seq_page_select * 16)) >=
-        ExtPatternLengths[last_extseq_track]) {
-      notes[note_num] = 0;
-      return;
-    }
-
-    int8_t utiming = Exttiming[last_extseq_track]
-                              [(note_num + (seq_page_select * 16))]; // upper
-    uint8_t condition =
-        Extconditional[last_extseq_track]
-                      [(note_num + (seq_page_select * 16))]; // lower
-    encoders[1]->cur = condition;
-    // Micro
-    if (utiming == 0) {
-      if (ExtPatternResolution[last_extseq_track] == 1) {
-        utiming = 6;
-        encoders[2]->max = 11;
-      } else {
-        encoders[2]->max = 23;
-        utiming = 12;
-      }
-    }
-    encoders[2]->cur = utiming;
-
-    gui_last_trig_press = note_num;
-  }
-
-  if (curpage == SEQ_EUC_PAGE) {
-  }
-  if (curpage == SEQ_STEP_PAGE) {
-
-    if ((note_num + (seq_page_select * 16)) >= PatternLengths[cur_col]) {
-      notes[note_num] = 0;
-      return;
-    }
-
-    encoders[2]->max = 23;
-    note_hold = slow_clock;
-    int8_t utiming =
-        timing[cur_col][(note_num + (seq_page_select * 16))]; // upper
-    uint8_t condition =
-        conditional[cur_col][(note_num + (seq_page_select * 16))]; // lower
-
-    // Cond
-    encoders[1]->cur = condition;
-    // Micro
-    if (utiming == 0) {
-      utiming = 12;
-    }
-    encoders[2]->cur = utiming;
-  }
-
-  else if ((curpage == SEQ_PARAM_A_PAGE) || (curpage == SEQ_PARAM_B_PAGE)) {
-    note_hold = slow_clock;
-    uint8_t param_offset;
-    if (curpage == SEQ_PARAM_A_PAGE) {
-      param_offset = 0;
-    } else {
-      param_offset = 2;
-    }
-    encoders[1]->cur = PatternLocksParams[last_md_track][param_offset];
-    encoders[3]->cur = PatternLocksParams[last_md_track][param_offset + 1];
-
-    encoders[2]->cur = PatternLocks[last_md_track][param_offset]
-                                       [(note_num + (seq_page_select * 16))];
-    encoders[4]->cur = PatternLocks[last_md_track][param_offset + 1]
-                                       [(note_num + (seq_page_select * 16))];
-    notes[note_num] = 1;
-
-  } else {
-    // draw_notes(0);
-  }
 }
-void NoteInterface::note_off_event(uint8_t note_num) {
+void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
@@ -134,6 +47,7 @@ void NoteInterface::note_off_event(uint8_t note_num) {
   gui_event_t event;
   event.source = i;
   event.mask = EVENT_BUTTON_RELEASED;
+  event.port = port;
   EventRB.putp(&event);
 }
 
@@ -217,25 +131,24 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 void NoteIntefaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   if (midi_active_peering.uart1_device != DEVICE_MD) {
-  uint8_t note_num = note_to_track_map(msg[1]);
-  note_on_event(note_num);
+    uint8_t note_num = note_to_track_map(msg[1]);
+    note_on_event(note_num, UART1_PORT);
   }
 }
 void NoteIntefaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = note_to_track_map(msg[1]);
-  note_on_event(note_num);
+  note_on_event(note_num, UART2_PORT);
 }
 void NoteIntefaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   if (midi_active_peering.uart1_device != DEVICE_MD) {
-  uint8_t note_num = note_to_track_map(msg[1]);
-  note_off_event(note_num);
+    uint8_t note_num = note_to_track_map(msg[1]);
+    note_off_event(note_num, UART1_PORT);
   }
 }
 void NoteIntefaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = note_to_track_map(msg[1]);
-  note_off_event(note_num);
+  note_off_event(note_num, UART2_PORT);
 }
-
 
 NoteInterface note_interface;

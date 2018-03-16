@@ -1,7 +1,17 @@
 #include "MidiActivePeering.h"
 
+uint8_t MidiActivePeering::get_device(uint8_t port) {
+ if (port == UART1_PORT) {
+   return uart1_device;
+ } 
+ if (port == UART2_PORT) {
+   return uart2_device;
+ }
+ return 255;
+
+}
 void MidiActivePeering::md_setup() {
-  MidiUart.setSpeed((uint32_t)31250, 1);
+  MidiUart.set_speed((uint32_t)31250, 1);
 
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
 
@@ -9,7 +19,7 @@ void MidiActivePeering::md_setup() {
     if (MD.getBlockingStatus(MD_CURRENT_GLOBAL_SLOT_REQUEST,
                              CALLBACK_TIMEOUT)) {
 
-      turboSetSpeed(cfg_speed_to_turbo(cfg.uart1_turbo), 1);
+      turbo_light.set_speed(turbo_light.lookup_speed(cfg.uart1_turbo), 1);
 
       delay(100);
 
@@ -50,7 +60,7 @@ void MidiActivePeering::md_setup() {
 }
 
 void MidiActivePeering::a4_setup() {
-  MidiUart.setSpeed(31250, 2);
+  MidiUart.set_speed(31250, 2);
   for (uint8_t x = 0; x < 3 && Analog4.connected == false; x++) {
     delay(300);
     if (Analog4.getBlockingSettings(0)) {
@@ -58,7 +68,7 @@ void MidiActivePeering::a4_setup() {
 
       Analog4.connected = true;
       uart2_device = DEVICE_A4;
-      turboSetSpeed(cfg_speed_to_turbo(cfg.uart2_turbo), 2);
+      turbo_light.set_speed(turbo_light.lookup_speed(cfg.uart2_turbo), 2);
     }
   }
   if (Analog4.connected == false) {
@@ -71,7 +81,7 @@ void MidiActivePeering::check() {
   if (MD.connected == true) {
     if ((MidiUart.recvActiveSenseTimer > 300) && (MidiUart.speed > 31250)) {
       //  if (!MD.getBlockingStatus(0x22,CALLBACK_TIMEOUT)) {
-      MidiUart.setSpeed((uint32_t)31250, 1);
+      MidiUart.set_speed((uint32_t)31250, 1);
       MD.connected = false;
       uart1_device = DEVICE_NULL;
       GUI.flash_strings_fill("MD", "DISCONNECTED");
@@ -87,7 +97,7 @@ void MidiActivePeering::check() {
   if (Analog4.connected == true) {
     if ((MidiUart2.recvActiveSenseTimer > 300) && (MidiUart2.speed > 31250)) {
       //  if (!MD.getBlockingStatus(0x22,CALLBACK_TIMEOUT)) {
-      MidiUart.setSpeed(31250, 2);
+      MidiUart.set_speed(31250, 2);
       Analog4.connected = false;
       uart2_device = DEVICE_NULL;
       GUI.flash_strings_fill("A4", "DISCONNECTED");

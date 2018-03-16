@@ -1,3 +1,8 @@
+/* Justin Mammarella jmamma@gmail.com 2018 */
+
+#ifndef SEQPAGES_H__
+#define SEQPAGES_H__
+
 extern MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
 extern MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
 extern MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
@@ -18,3 +23,9 @@ extern SeqPtcPage seq_ptc_page(&seq_param1, &seq_param2, &seq_param3,
                                &seq_param4);
 extern SeqRPtcPage seq_rptc_page(&seq_param1, &seq_param2, &seq_param3,
                                  &seq_param4);
+
+class SeqPages {
+public:
+};
+extern SeqPages seq_pages;
+#endif /* SEQPAGES_H__ */

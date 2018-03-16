@@ -2,6 +2,9 @@
 
 void SeqRtrkPage::setup() {
   SeqPage::setup();
+}
+
+void SeqRtrkPage::init() {
   collect_trigs = false;
 
   encoders[1]->max = 4;
@@ -11,6 +14,7 @@ void SeqRtrkPage::setup() {
   encoders[3]->cur = PatternLengths[last_md_track];
 
   curpage = SEQ_RTRK_PAGE;
+
 }
 
 bool SeqRtrkPage::display() {
@@ -20,9 +24,9 @@ bool SeqRtrkPage::display() {
 
   GUI.put_string_at(0, "RTRK");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[cur_col], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[cur_col], 2);
-  if (cur_col < 16) {
+  const char *str1 = getMachineNameShort(MD.kit.models[grid.cur_col], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[grid.cur_col], 2);
+  if (grid.cur_col < 16) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[3]->getValue());
@@ -34,7 +38,7 @@ bool SeqRtrkPage::display() {
     } else {
       GUI.put_string_at(9, "MID");
     }
-    GUI.put_value_at1(12, cur_col - 16 + 1);
+    GUI.put_value_at1(12, grid.cur_col - 16 + 1);
   }
 
   draw_patternmask(seq_page_select * 16, DEVICE_MD);
@@ -68,10 +72,10 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(Event, Buttons.BUTTON4)) {
-    if (cur_col < 16) {
-      clear_seq_track(cur_col);
+    if (grid.cur_col < 16) {
+      clear_seq_track(grid.cur_col);
     } else {
-      clear_Ext_track(cur_col - 16);
+      clear_Ext_track(grid.cur_col - 16);
     }
     return true;
   }

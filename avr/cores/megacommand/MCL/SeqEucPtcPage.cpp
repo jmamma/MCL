@@ -2,6 +2,9 @@
 
 void SeqEucPtcPage::setup() {
   SeqPage::setup();
+}
+
+void SeqEucPtcPage::init() {
   collect_trigs = true;
   encoders[1]->max = 8;
   encoders[2]->max = 64;
@@ -12,6 +15,7 @@ void SeqEucPtcPage::setup() {
 
   encoders[3]->cur = PatternLengths[last_md_track];
   curpage = SEQ_EUCPTC_PAGE;
+
 }
 
 bool SeqEucPtcPage::display() {}

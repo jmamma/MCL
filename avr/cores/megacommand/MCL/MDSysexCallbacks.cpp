@@ -47,10 +47,10 @@ void MDSysexCallbacks::onKitMessage() {
     //   if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
 
     for (int i = 0; i < 16; i++) {
-      if ((i + cur_col + (cur_row * GRID_WIDTH)) < (128 * GRID_WIDTH)) {
+      if ((i + grid.cur_col + (grid.cur_row * GRID_WIDTH)) < (128 * GRID_WIDTH)) {
         /*Store the track at the  into Minicommand memory by moving the data
          * from a Pattern object into a Track object*/
-        temptrack.store_track_in_grid(i, i, cur_row);
+        temptrack.store_track_in_grid(i, i, grid.cur_row);
       }
       /*Update the encoder page to show current Grids*/
       page.display();

@@ -13,15 +13,34 @@ void GridSavePage::setup() {
   reload_slot_models = 0;
 }
 
-bool GridSavePage::display() {}
+bool GridSavePage::display() {
+  note_interface.draw_notes(0);
+  GUI.setLine(GUI.LINE2);
+    GUI.put_string_at(0, "S");
+
+  char str[5];
+
+
+  if (encoders[1]->getValue() < 8) {
+    MD.getPatternName(encoders[1]->getValue() * 16 + encoders[2]->getValue() , str);
+    GUI.put_string_at(2, str);
+  }
+  else {
+    GUI.put_string_at(2, "OG");
+  }
+
+  uint8_t step_count = (MidiClock.div16th_counter - pattern_start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - pattern_start_clock32th / 2) / 64));
+  GUI.put_value_at2(14, step_count);
+
+}
 bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
-     md_exploit.off();
-        store_tracks_in_mem( 0, param2.getValue(), STORE_IN_PLACE);
-        GUI.setPage(&page);
-        curpage = 0;
-  return true;
+    md_exploit.off();
+    store_tracks_in_mem(0, param2.getValue(), STORE_IN_PLACE);
+    GUI.setPage(&page);
+    curpage = 0;
+    return true;
   }
   if (GridIOPage::handleEvent(event)) {
     return true;
@@ -46,12 +65,12 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       (BUTTON_UP(Buttons.ENCODER1) && BUTTON_UP(Buttons.ENCODER2) &&
        BUTTON_UP(Buttons.ENCODER3) && BUTTON_UP(Buttons.ENCODER4))) {
 
-      // MD.getCurrentPattern(CALLBACK_TIMEOUT);
-      md_exploit.off();
-      store_tracks_in_mem(param1.getValue(), param2.getValue(),
-                          STORE_AT_SPECIFIC);
-      GUI.setPage(&page);
-      curpage = 0;
-      return true;
+    // MD.getCurrentPattern(CALLBACK_TIMEOUT);
+    md_exploit.off();
+    store_tracks_in_mem(param1.getValue(), param2.getValue(),
+                        STORE_AT_SPECIFIC);
+    GUI.setPage(&page);
+    curpage = 0;
+    return true;
   }
 }

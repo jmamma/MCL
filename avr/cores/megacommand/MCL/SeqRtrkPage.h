@@ -13,6 +13,7 @@ public:
   bool handleEvent(gui_event_t *event);
   void display();
   void setup();
+  void init();
 };
 
 #endif /* SEQRTRKPAGE_H__ */

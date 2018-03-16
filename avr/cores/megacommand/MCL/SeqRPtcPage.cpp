@@ -1,6 +1,10 @@
 #include "SeqRptcPage.h"
 
-bool SeqRptcPage::display() {}
+bool SeqRptcPage::display() {
+ SeqPtcPage::display();
+      GUI.put_string_at(0, "RPTC");
+
+}
 bool SeqRptcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
@@ -13,7 +17,7 @@ bool SeqRptcPage::handleEvent(gui_event_t *event) {
     return true;
 
   }
-  if (SeqRptcPage::handleEvent(event)) {
+  if (SeqPtcPage::handleEvent(event)) {
     return true;
   }
 

@@ -4,6 +4,9 @@
 #define MIDIACTIVEPEERING_H__
 #include "MCL.h"
 
+#define UART1_PORT 1
+#define UART2_PORT 2
+
 #define DEVICE_NULL 0
 #define DEVICE_MIDI 0x0F
 #define DEVICE_MD 0x02
@@ -16,6 +19,7 @@ class MidiActivePeering {
   void md_setup();
   void a4_setup();
   void check();
+  uint8_t get_device(uint8_t port);
 };
 
 extern MidiActivePeering midi_active_peering;

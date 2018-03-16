@@ -11,8 +11,10 @@ public:
                Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
-  bool display();
+  void pattern_len_handler(Encoder *enc);
+  virtual bool display();
   void setup();
+  void init();
 };
 
 #endif /* SEQPTCPAGE_H__ */

@@ -33,9 +33,6 @@ extern uint8_t in_sysex;
 extern uint8_t in_sysex2;
 extern int8_t curpage;
 
-extern float frames_fps;
-extern uint16_t frames;
-extern uint16_t frames_startclock;
 
 
 class MCL {

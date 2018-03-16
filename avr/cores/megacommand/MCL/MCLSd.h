@@ -6,6 +6,8 @@
 #include "SdFat.h"
 class MCLSd {
   public:
+  uint16_t sd_write_fail = 0;
+  uint16_t sd_read_fail = 0;
   bool load_init();
   bool read_data(void *data, size_t len, FatFile *filep);
   bool write_data(void *data, size_t len, FatFile *filep);

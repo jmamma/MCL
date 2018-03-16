@@ -1,5 +1,32 @@
 #include "MCLSequencer.h"
 
+void MCLSequencer::set_track_param(uint8_t track, uint8_t param, uint8_t value) {
+ if ((track > 15) || (param > 33))
+    return;
+
+  uint8_t channel = (track >> 2);
+  uint8_t b = track & 3;
+  uint8_t cc = 0;
+  if (param == 32) { // MUTE
+    cc = 12 + b;
+  } else if (param == 33) { //
+    cc = 8 + b;
+  } else {
+    cc = param;
+    if (b < 2) {
+      cc += 16 + b * 24;
+    } else {
+      cc += 24 + b * 24;
+    }
+  }
+  if (md_exploit.state) {
+    MidiUart.sendCC(channel + 3, cc, value);
+  }
+  else {
+    MidiUart.sendCC(channel + 9, cc, value);
+  }
+}
+
 void MCLSequencer::setup() {
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++ 2) {
     seq_param_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3, &seq_param4);

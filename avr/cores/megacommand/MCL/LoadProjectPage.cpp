@@ -40,4 +40,54 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-bool LoadProjectPage::setup() {}
+void LoadProjectPage::setup() {
+  bool ret;
+  int b;
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("Load project page");
+
+  char temp_entry[16];
+
+  SdFile dirfile;
+  int index = 0;
+  int numEntries = 0;
+  //  dirfile.open("/",O_READ);
+  SD.vwd()->rewind();
+
+  while (dirfile.openNext(SD.vwd(), O_READ)) {
+    for (uint8_t c = 0; c < 16; c++ ) {
+      temp_entry[c] = 0;
+    }
+    dirfile.getName(temp_entry, 16);
+    char mcl[3] = "mcl";
+    bool is_mcl_file = true;
+
+    DEBUG_PRINTLN(temp_entry);
+
+    for (uint8_t a = 1; a < 3; a++) {
+      if (temp_entry[14 - a] != mcl[3 - a]) {
+        is_mcl_file = false;
+      }
+    }
+    if (is_mcl_file) {
+      strcpy(&file_entries[numEntries][0], &temp_entry[0]);
+      DEBUG_PRINTLN("project file identified");
+      DEBUG_PRINTLN(file_entries[index]);
+      numEntries++;
+    }
+    index++;
+    dirfile.close();
+
+  }
+
+  if (numEntries <= 0) {
+    numEntries = 0;
+    loadproj_param1->max = 0;
+  }
+  loadproj_param1->max = numEntries - 1;
+
+  curpage = LOAD_PROJECT_PAGE;
+  GUI.setPage(&loadproj_page);
+
+}

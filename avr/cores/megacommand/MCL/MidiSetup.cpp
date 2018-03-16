@@ -30,9 +30,9 @@ void MidiSetup::cfg_ports() {
   }
 
   if (MD.connected) {
-    turboSetSpeed(cfg_speed_to_turbo(cfg.uart1_turbo), 1);
+    turbo_light.set_speed(turbo_light.lookup_speed(cfg.uart1_turbo), 1);
   }
   if (Analog4.connected) {
-    turboSetSpeed(cfg_speed_to_turbo(cfg.uart2_turbo), 2);
+    turbo_light.set_speed(turbo_light.lookup_speed(cfg.uart2_turbo), 2);
   }
 }

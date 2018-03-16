@@ -1,3 +1,5 @@
+#include "SeqPages.h"
+
 MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
 MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
@@ -12,3 +14,5 @@ SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
                                 &seq_param4);
 SeqPtcPage seq_ptc_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
 SeqRPtcPage seq_rptc_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
+
+SeqPages seq_pages;
