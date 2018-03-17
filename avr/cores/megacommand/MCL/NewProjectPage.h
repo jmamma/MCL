@@ -6,6 +6,8 @@
 
 class NewProjectPage : LightPage {
 public:
+const char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
+
   NewProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}

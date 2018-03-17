@@ -4,17 +4,39 @@
 #define SEQPTCPAGE_H__
 #include "GUI.h"
 
+const scale_t *scales[16];
+
 class SeqPtcPage : public SeqPage {
 
 public:
-  SeqPtcPage(Encoder *e1 = NULL,
-               Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
+  poly_count = 0;
+  poly_max = 1;
+
+  bool record_mode = false;
+  SeqPtcMidiEvents midi_events;
+  SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
+             Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
   void pattern_len_handler(Encoder *enc);
+  uint8_t seq_ext_pitch(uint8_t note_num);
   virtual bool display();
+  uint8_t get_machine_pitch(uint8_t track, uint8_t pitch);
+  uint8_t get_next_track();
+  uint8_t calc_pitch(uint8_t note_num);
   void setup();
+  void cleanup();
   void init();
 };
+
+class SeqPtcMidiEvents : public MidiCallBack {
+  bool state;
+
+  void setup_callbacks();
+  void remove_callbacks();
+
+  void onNoteOnCallback_Midi2(uint8_t *msg);
+  void onNoteOffCallback_Midi2(uint8_t *msg);
+}
 
 #endif /* SEQPTCPAGE_H__ */

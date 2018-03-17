@@ -1,6 +1,7 @@
 #include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
+
 void SeqExtStepPage::init() {
   if (ExtPatternResolution[last_ext_track] == 1) {
     encoders[2]->cur = 6;
@@ -12,14 +13,25 @@ void SeqExtStepPage::init() {
   encoders[3]->cur = ExtPatternLengths[track];
   cur_col = last_ext_track + 16;
   curpage = SEQ_EXTSTEP_PAGE;
+  midi_events.setup_callbacks();
 }
+
+void SeqExtStepPage::cleanup() { midi_events.remove_callbacks(); }
+
+
+struct musical_notes  {
+  const char *notes_upper[16] = { "C ", "C#", "D ", "D#", "E ", "F", "F#", "G ", "G#", "A ", "A#", "B " };
+  const char *notes_lower[16] = { "c ", "c#", "d ", "d#", "e ", "f", "f#", "g ", "g#", "a ", "a#", "b " };
+
+};
+
 void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
     for (uint8_t c = 0; c < 6; c++) {
       ExtPatternLengths[c] = encoders[3]->getValue();
     }
   }
-  ExtPatternLengths[last_Ext_track] = encoders[3]->getValue();
+  ExtPatternLengths[last_ext_track] = encoders[3]->getValue();
 }
 
 bool SeqExtStepPage::display() {
@@ -49,7 +61,7 @@ bool SeqExtStepPage::display() {
   // Pos
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
-  if (ExtPatternResolution[last_Ext_track] == 1) {
+  if (ExtPatternResolution[last_ext_track] == 1) {
     if (encoders[2]->getValue() == 0) {
       GUI.put_string_at(2, "--");
     } else if ((encoders[2]->getValue() < 6) &&
@@ -88,13 +100,13 @@ bool SeqExtStepPage::display() {
     for (i = 0; i < 4; i++) {
 
       notenum =
-          abs(ExtPatternNotes[last_Ext_track][i]
-                             [note_interface.last_note + seq_page.page_select * 16]);
+          abs(ExtPatternNotes[last_ext_track][i][note_interface.last_note +
+                                                 seq_page.page_select * 16]);
       if (notenum != 0) {
         notenum = notenum - 1;
         uint8_t oct = notenum / 12;
         uint8_t note = notenum - 12 * (notenum / 12);
-        if (ExtPatternNotes[last_Ext_track][i][note_interface.last_note +
+        if (ExtPatternNotes[last_ext_track][i][note_interface.last_note +
                                                seq_page.page_select * 16] > 0) {
 
           GUI.put_string_at(4 + i * 3, number_to_note.notes_upper[note]);
@@ -115,13 +127,13 @@ bool SeqExtStepPage::display() {
       GUI.put_p_string_at(12, str2);
     } else {
       GUI.put_value_at(6, (encoders[3]->getValue() /
-                           (2 / ExtPatternResolution[last_Ext_track])));
+                           (2 / ExtPatternResolution[last_ext_track])));
       if (Analog4.connected) {
         GUI.put_string_at(10, "A4T");
       } else {
         GUI.put_string_at(10, "MID");
       }
-      GUI.put_value_at1(13, last_Ext_track + 1);
+      GUI.put_value_at1(13, last_ext_track + 1);
     }
   }
   // PatternLengths[cur_col] = encoders[3]->getValue();
@@ -134,89 +146,28 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
-    if (device == MD_DEVICE) {
       uint8_t track = event->source - 128;
-    }
+    
     if (device == A4_DEVICE) {
       uint8_t track = event->source - 128 - 16;
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      if (port == UART2_PORT) {
-        encoders[3]->cur = ExtPatternLengths[channel];
-
-        last_Ext_track = channel;
-        cur_col = 16 + channel;
-
-        for (uint8_t i = 0; i < 16; i++) {
-          uint8_t match = 255;
-          if (notes[i] == 1) {
-            // Look for matching note already on this step
-            // If it's a note off, then disable the note
-            // If it's a note on, set the note note-off.
-            for (uint8_t c = 0; c < 4 && match == 255; c++) {
-              if (ExtPatternNotes[channel][c][i + seq_page.page_select * 16] ==
-                  -(1 * (msg[1] + 1))) {
-                ExtPatternNotes[channel][c][i + seq_page.page_select * 16] = 0;
-                mcl_seq.seq_buffer_notesoff(channel);
-                match = c;
-              }
-              if (ExtPatternNotes[channel][c][i + seq_page.page_select * 16] ==
-                  (1 * (msg[1] + 1))) {
-                ExtPatternNotes[channel][c][i + seq_page.page_select * 16] =
-                    (-1 * (msg[1] + 1));
-                match = c;
-              }
-            }
-
-            // No matches are found, we count number of on and off to determine
-            // next note type.
-            for (uint8_t c = 0; c < 4 && match == 255; c++) {
-              if (ExtPatternNotes[channel][c][i + seq_page.page_select * 16] == 0) {
-                match = c;
-                int8_t ons_and_offs = 0;
-                // Check to see if we have same number of note offs as note ons.
-                // If there are more note ons for given note, the next note
-                // entered should be a note off.
-                for (uint8_t a = 0; a < ExtPatternLengths[channel]; a++) {
-                  for (uint8_t b = 0; b < 4; b++) {
-                    if (ExtPatternNotes[channel][b][a] == -(1 * (msg[1] + 1))) {
-                      ons_and_offs -= 1;
-                    }
-                    if (ExtPatternNotes[channel][b][a] == (1 * (msg[1] + 1))) {
-                      ons_and_offs += 1;
-                    }
-                  }
-                }
-                if (ons_and_offs <= 0) {
-                  ExtPatternNotes[channel][c][i + seq_page.page_select * 16] =
-                      (msg[1] + 1);
-                } else {
-                  ExtPatternNotes[channel][c][i + seq_page.page_select * 16] =
-                      -1 * (msg[1] + 1);
-                }
-              }
-            }
-          }
-        }
-
-        return;
-      }
       if (device == MD_DEVICE) {
 
-        if ((note_num + (seq_page.page_select * 16)) >=
+        if ((track + (seq_page.page_select * 16)) >=
             ExtPatternLengths[last_extseq_track]) {
-          notes[note_num] = 0;
+          notes[track] = 0;
           return;
         }
 
         int8_t utiming =
             Exttiming[last_extseq_track]
-                     [(note_num + (seq_page.page_select * 16))]; // upper
+                     [(track + (seq_page.page_select * 16))]; // upper
         uint8_t condition =
             Extconditional[last_extseq_track]
-                          [(note_num + (seq_page.page_select * 16))]; // lower
+                          [(track + (seq_page.page_select * 16))]; // lower
         encoders[1]->cur = condition;
         // Micro
         if (utiming == 0) {
@@ -230,14 +181,42 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
         encoders[2]->cur = utiming;
 
-        note_interface.last_note = note_num;
+        note_interface.last_note = track;
       }
       if (device == A4_DEVICE) {
-        last_Ext_track = track;
+        last_ext_track = track;
         init();
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+              uint8_t utiming = (encoders[2]->cur + 0);
+              uint8_t condition = encoders[1]->cur;
+              if ((track + (seq_page.page_select * 16)) >= ExtPatternLengths[last_ext_track]) {
+                return true;
+              }
+
+              //  timing = 3;
+              //condition = 3;
+              if ((current_clock - note_hold) < TRIG_HOLD_TIME) {
+                for (uint8_t c = 0; c < 4; c++) {
+                  if (ExtPatternNotes[last_ext_track][c][track + seq_page.page_select * 16] > 0) {
+                    MidiUart2.sendNoteOff(last_ext_track, abs(ExtPatternNotes[last_Ext_track][c][track + seq_page.page_select * 16]) - 1, 0);
+                  }
+                  ExtPatternNotes[last_ext_track][c][track + seq_page.page_select * 16] = 0;
+                }
+                Exttiming[last_ext_track][(track + (seq_page.page_select * 16))] = 0;
+                Extconditional[last_ext_track][(track + (seq_page.page_select * 16))] = 0;
+
+              }
+
+              else {
+                Extconditional[last_ext_track][(track + (seq_page.page_select * 16))] = condition; //upper
+                Exttiming[last_ext_track][(track + (seq_page.page_select * 16))] = utiming; //upper
+
+              }
+
+              return true; 
+
     }
     return true;
   }
@@ -280,7 +259,7 @@ if ( EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
     return true;
   }
 if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    clear_Ext_track(last_Ext_track);
+    clear_Ext_track(last_ext_track);
     return true;
   }
 
@@ -290,4 +269,48 @@ if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
 
 return false;
+}
+
+
+
+void SeqExtStep::onNoteOnCallback_Midi2(uint8_t *msg) {
+  // Step edit for ExtSeq
+  // For each incoming note, check to see if note interface has any steps
+  // selected For selected steps record notes.
+
+  last_ext_track = channel;
+  cur_col = 16 + channel;
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+
+  for (uint8_t i = 0; i < 16; i++) {
+    if (note_interface.notes[i] == 1) {
+      mcl_seq.rec_ext_track(channel, i, msg[1], msg[2]);
+    }
+  }
+}
+
+void SeqExtStep::onNoteOffCallback_Midi2(uint8_t *msg) {}
+
+void SeqExtStepMidiEvents::setup_callbacks() {
+  if (state) {
+    return;
+  }
+ Midi.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallbackMidi2);
+  Midi.addOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallbackMidi2);
+
+  state = true;
+}
+
+void SeqExtStepMidiEvents::remove_callbacks() {
+
+  if (!state) {
+    return;
+  }
+ Midi.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallbackMidi2);
+  Midi.removeOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallbackMidi2);
+  state = false;
 }

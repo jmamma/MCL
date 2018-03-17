@@ -50,9 +50,9 @@ bool SeqStepPage::display() {
   GUI.put_p_string_at(10, str1);
   GUI.put_p_string_at(12, str2);
   GUI.put_value_at(6, encoders[3]->getValue());
-  GUI.put_value_at1(15, seq_page_select + 1);
+  GUI.put_value_at1(15, seq_page.page_select + 1);
   // GUI.put_value_at2(7, encoders[3]->getValue());
-  draw_patternmask((seq_page_select * 16), DEVICE_MD);
+  draw_patternmask((seq_page.page_select * 16), DEVICE_MD);
 }
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
@@ -60,12 +60,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t device = midi_active_peering.get_device(port);
 
-    if (device == MD_DEVICE) {
-      uint8_t track = event->source - 128;
-    }
-    if (device == A4_DEVICE) {
-      uint8_t track = event->source - 128 - 16;
-    }
+    uint8_t track = event->source - 128;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
@@ -73,17 +68,17 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         last_Ext_Track = track;
         GUI.setPage(&seq_extstep_page);
       }
-      if ((note_num + (seq_page_select * 16)) >= PatternLengths[grid.cur_col]) {
-        notes[note_num] = 0;
+      if ((track + (seq_page.page_select * 16)) >=
+          PatternLengths[grid.cur_col]) {
         return;
       }
 
       encoders[2]->max = 23;
       int8_t utiming =
-          timing[grid.cur_col][(note_num + (seq_page_select * 16))]; // upper
+          timing[grid.cur_col][(track + (seq_page.page_select * 16))]; // upper
       uint8_t condition =
           conditional[grid.cur_col]
-                     [(note_num + (seq_page_select * 16))]; // lower
+                     [(track + (seq_page.page_select * 16))]; // lower
 
       // Cond
       encoders[1]->cur = condition;
@@ -94,6 +89,36 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       encoders[2]->cur = utiming;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      if ((track + (seq_page.page_select * 16)) >= PatternLengths[cur_col]) {
+        return;
+      }
+      uint8_t utiming = (encoders[2]->cur + 0);
+      uint8_t condition = encoders[1]->cur;
+
+      //  timing = 3;
+      // condition = 3;
+      conditional[cur_col][(track + (seq_page.page_select * 16))] =
+          condition;                                                    // upper
+      timing[cur_col][(track + (seq_page.page_select * 16))] = utiming; // upper
+
+      //   conditional_timing[cur_col][(track + (encoders[1]->cur * 16))] =
+      //   condition; //lower
+
+      if (!IS_BIT_SET64(PatternMasks[cur_col],
+                        (track + (seq_page.page_select * 16)))) {
+        SET_BIT64(PatternMasks[cur_col], (track + (seq_page.page_select * 16)));
+      } else {
+        if ((current_clock - note_hold) < TRIG_HOLD_TIME) {
+          CLEAR_BIT64(PatternMasks[cur_col],
+                      (track + (seq_page.page_select * 16)));
+        }
+      }
+      // Cond
+      // encoders[3]->cur = condition;
+      // Microƒ
+      // encoders[4]->cur = timing;
+      // draw_notes(1);
+      return;
     }
     return true;
   }
@@ -118,7 +143,7 @@ if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1))  {
-    load_seq_extstep_page(last_Ext_track);
+    load_seq_extstep_page(last_ext_track);
 
     return true;
     /*

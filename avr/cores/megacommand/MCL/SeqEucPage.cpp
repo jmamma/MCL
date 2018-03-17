@@ -44,9 +44,9 @@ bool SeqEucPage::display() {
   } else {
     GUI.put_value_at2(11, encoders[4]->getValue());
   }
-  // draw_patternmask((seq_page_select * 16), DEVICE_MD);
-  // draw_lockmask(seq_page_select * 16);
-  draw_patternmask((seq_page_select * 16), DEVICE_MD);
+  // draw_patternmask((seq_page.page_select * 16), DEVICE_MD);
+  // draw_lockmask(seq_page.page_select * 16);
+  draw_patternmask((seq_page.page_select * 16), DEVICE_MD);
 }
 bool SeqEucPage::handleEvent(gui_event_t *event) {
 

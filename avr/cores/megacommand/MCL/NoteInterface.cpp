@@ -24,7 +24,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   if (note_num > 20) {
     return;
   }
-  if (notes[note_num] == 0) {
+  if (notes[note_num] != 1) {
     notes[note_num] = 1;
   }
   if (note_num < 16) {
@@ -43,7 +43,7 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   }
 
   notes[note_num] = 3;
-
+ 
   gui_event_t event;
   event.source = i;
   event.mask = EVENT_BUTTON_RELEASED;
@@ -51,8 +51,10 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   EventRB.putp(&event);
 }
 
-uint8_t NoteInterface::note_to_track_map(uint8_t note) {
-  uint8_t note_to_track_map[7] = {0, 2, 4, 5, 7, 9, 11};
+
+
+uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
+ uint8_t note_to_track_map[7] = {0, 2, 4, 5, 7, 9, 11};
   for (uint8_t i = 0; i < 7; i++) {
     if (note_to_track_map[i] == (note - (note / 12) * 12)) {
       return i + 16;
@@ -129,25 +131,25 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
 void NoteIntefaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  // only accept input if device is not a MD
-  if (midi_active_peering.uart1_device != DEVICE_MD) {
-    uint8_t note_num = note_to_track_map(msg[1]);
+    if (midi_active_perring.uart1_device == MD_DEVICE) { return; }
+    uint8_t note_num = note_to_track_map(msg[1],midi_active_perring.uart1_device);
     note_on_event(note_num, UART1_PORT);
-  }
 }
 void NoteIntefaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  uint8_t note_num = note_to_track_map(msg[1]);
+  uint8_t note_num = note_to_track_map(msg[1],midi_active_perring.uart2_device);
+  if (DEVICE == A4_DEVICE) { note_num += 16; }
   note_on_event(note_num, UART2_PORT);
 }
 void NoteIntefaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
-  if (midi_active_peering.uart1_device != DEVICE_MD) {
-    uint8_t note_num = note_to_track_map(msg[1]);
+  // MD input is handled by the MDExploit object
+    if (midi_active_perring.uart1_device == MD_DEVICE) { return; }
+    uint8_t note_num = note_to_track_map(msg[1],midi_active_perring.uart1_device);
     note_off_event(note_num, UART1_PORT);
-  }
 }
 void NoteIntefaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  uint8_t note_num = note_to_track_map(msg[1]);
+  uint8_t note_num = note_to_track_map(msg[1],midi_active_perring.uart2_device);
+  if (DEVICE == A4_DEVICE) { note_num += 16; }
   note_off_event(note_num, UART2_PORT);
 }
 

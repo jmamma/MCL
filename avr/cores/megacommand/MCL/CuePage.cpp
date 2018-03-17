@@ -78,6 +78,10 @@ bool CuePage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      if ((encoders[4]->getValue() == 0)) {
+        notes[note_num] = 0;
+      }
+
       if (note_interface.notes_all_off()) {
         if ((encoders[4]->getValue() > 0) &&
             (note_noteinterface.notes_count_off() > 1)) {

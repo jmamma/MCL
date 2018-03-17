@@ -1,8 +1,6 @@
 #include "SeqRtrkPage.h"
 
-void SeqRtrkPage::setup() {
-  SeqPage::setup();
-}
+void SeqRtrkPage::setup() { SeqPage::setup(); }
 
 void SeqRtrkPage::init() {
   collect_trigs = false;
@@ -14,13 +12,12 @@ void SeqRtrkPage::init() {
   encoders[3]->cur = PatternLengths[last_md_track];
 
   curpage = SEQ_RTRK_PAGE;
-
 }
 
 bool SeqRtrkPage::display() {
 
   GUI.setLine(GUI.LINE1);
-  GUI.put_value_at1(15, seq_page_select + 1);
+  GUI.put_value_at1(15, seq_page.page_select + 1);
 
   GUI.put_string_at(0, "RTRK");
 
@@ -32,7 +29,7 @@ bool SeqRtrkPage::display() {
     GUI.put_value_at(5, encoders[3]->getValue());
   } else {
     GUI.put_value_at(5, (encoders[3]->getValue() /
-                         (2 / ExtPatternResolution[last_Ext_track])));
+                         (2 / ExtPatternResolution[last_ext_track])));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -41,12 +38,28 @@ bool SeqRtrkPage::display() {
     GUI.put_value_at1(12, grid.cur_col - 16 + 1);
   }
 
-  draw_patternmask(seq_page_select * 16, DEVICE_MD);
+  draw_patternmask(seq_page.page_select * 16, DEVICE_MD);
 }
 bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
-    return true;
+    uint8_t mask = event->mask;
+    uint8_t device = midi_active_peering.get_device(port);
+
+    uint8_t track = event->source - 128;
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+
+      MD.triggerTrack(note_num, 127);
+    if ((record && (MidiClock.state == 2)) {
+        mcl_seq.rec_track(track, note_num, 127);
+
+        return true;
+
+    }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+    }
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     md_exploit.off();

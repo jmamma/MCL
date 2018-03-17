@@ -30,14 +30,14 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(evt, Buttons.BUTTON2) ) {
     uint8_t pagemax = 4;
-    seq_page_select += 1;
+    seq_page.page_select += 1;
 
     if (grid.cur_col > 15) {
       pagemax = 8;
 
     }
-    if (seq_page_select >= pagemax) {
-      seq_page_select = 0;
+    if (seq_page.page_select >= pagemax) {
+      seq_page.page_select = 0;
     }
 
     return true;
@@ -139,27 +139,27 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
     }
   } else {
 
-    for (int i = 0; i < ExtPatternLengths[last_Ext_track]; i++) {
+    for (int i = 0; i < ExtPatternLengths[last_ext_track]; i++) {
 
       uint8_t step_count =
-          ((MidiClock.div32th_counter / ExtPatternResolution[last_Ext_track]) -
-           (pattern_start_clock32th / ExtPatternResolution[last_Ext_track])) -
-          (ExtPatternLengths[last_Ext_track] *
-           ((MidiClock.div32th_counter / ExtPatternResolution[last_Ext_track] -
-             (pattern_start_clock32th / ExtPatternResolution[last_Ext_track])) /
-            (ExtPatternLengths[last_Ext_track])));
+          ((MidiClock.div32th_counter / ExtPatternResolution[last_ext_track]) -
+           (pattern_start_clock32th / ExtPatternResolution[last_ext_track])) -
+          (ExtPatternLengths[last_ext_track] *
+           ((MidiClock.div32th_counter / ExtPatternResolution[last_ext_track] -
+             (pattern_start_clock32th / ExtPatternResolution[last_ext_track])) /
+            (ExtPatternLengths[last_ext_track])));
       uint8_t noteson = 0;
       uint8_t notesoff = 0;
 
       for (uint8_t a = 0; a < 4; a++) {
 
-        if (ExtPatternNotes[last_Ext_track][a][i] > 0) {
+        if (ExtPatternNotes[last_ext_track][a][i] > 0) {
 
           noteson++;
           //    mystr[i] = (char) 219;
         }
 
-        if (ExtPatternNotes[last_Ext_track][a][i] < 0) {
+        if (ExtPatternNotes[last_ext_track][a][i] < 0) {
           notesoff++;
         }
       }
@@ -188,7 +188,7 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
         }
       }
 
-      if ((i >= ExtPatternLengths[last_Ext_track]) ||
+      if ((i >= ExtPatternLengths[last_ext_track]) ||
           (step_count == i) && (MidiClock.state == 2)) {
         if ((i >= offset) && (i < offset + 16)) {
           mystr[i - offset] = ' ';
@@ -228,7 +228,7 @@ void SeqPage::pattern_len_handler(Encoder *enc) {
           ExtPatternLengths[c] = encoders[3]->getValue();
         }
       }
-      ExtPatternLengths[last_Ext_track] = encoders[3]->getValue();
+      ExtPatternLengths[last_ext_track] = encoders[3]->getValue();
     }
 }
 void SeqPage::create_char_seq() {
@@ -245,7 +245,7 @@ void SeqPage::create_char_seq() {
 
 void SeqPage::display() {
     GUI.setLine(GUI.LINE1);
-    GUI.put_value_at1(15, seq_page_select + 1);
+    GUI.put_value_at1(15, seq_page.page_select + 1);
 }
 
 void SeqPage::setup() {

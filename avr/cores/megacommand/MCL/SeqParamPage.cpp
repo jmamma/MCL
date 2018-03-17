@@ -58,8 +58,8 @@ bool SeqParamPage::display() {
   if (curpage == SEQ_PARAM_B_PAGE) {
     GUI.put_string_at(14, "B");
   }
-  GUI.put_value_at1(15, (seq_page_select + 1));
-  draw_lockmask(seq_page_select * 16);
+  GUI.put_value_at1(15, (seq_page.page_select + 1));
+  draw_lockmask(seq_page.page_select * 16);
 }
 
 bool SeqParamPage::handleEvent(gui_event_t *event) {
@@ -68,25 +68,57 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t device = midi_active_peering.get_device(port);
 
-    if (device == MD_DEVICE) {
-      uint8_t track = event->source - 128;
-    }
+    uint8_t track = event->source - 128;
     if (device == A4_DEVICE) {
-      uint8_t track = event->source - 128 - 16;
+       return true;
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-       uint8_t param_offset;
+      uint8_t param_offset;
       encoders[1]->cur = PatternLocksParams[last_md_track][p1];
       encoders[3]->cur = PatternLocksParams[last_md_track][p2];
 
-      encoders[2]->cur =
-          PatternLocks[last_md_track][p1][(note_num + (seq_page_select * 16))];
-      encoders[4]->cur =
-          PatternLocks[last_md_track][p2][(note_num + (seq_page_select * 16))];
-      notes[note_num] = 1;
+      encoders[2]->cur = PatternLocks[last_md_track][p1]
+                                     [(track + (seq_page.page_select * 16))];
+      encoders[4]->cur = PatternLocks[last_md_track][p2]
+                                     [(track + (seq_page.page_select * 16))];
+      notes[track] = 1;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      int8_t utiming =
+          timing[cur_col][(track + (seq_page.page_select * 16))]; // upper
+      uint8_t condition =
+          conditional[cur_col]
+                     [(track + (seq_page.page_select * 16))]; // lower
+
+      // Fudge timing info if it's not there
+      if (utiming == 0) {
+        utiming = 12;
+        conditional[last_md_track][(track + (seq_page.page_select * 16))] =
+            condition;
+        timing[last_md_track][(track + (seq_page.page_select * 16))] =
+            utiming;
+      }
+      if (IS_BIT_SET64(LockMasks[last_md_track],
+                       (track + (seq_page.page_select * 16)))) {
+        if ((current_clock - note_hold) < 300) {
+          CLEAR_BIT64(LockMasks[last_md_track],
+                      (track + (seq_page.page_select * 16)));
+        }
+      } else {
+        SET_BIT64(LockMasks[last_md_track],
+                  (track + (seq_page.page_select * 16)));
+      }
+
+      notes[track] = 0;
+
+      PatternLocks[last_md_track][param_offset]
+                  [(track + (seq_page.page_select * 16))] = encoders[2]->cur;
+      PatternLocks[last_md_track][param_offset + 1]
+                  [(track + (seq_page.page_select * 16))] = encoders[4]->cur;
+
+      PatternLocksParams[last_md_track][p1] = encoders[1]->cur;
+      PatternLocksParams[last_md_track][p2] = encoders[3]->cur;
     }
     return true;
   }

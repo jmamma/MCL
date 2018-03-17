@@ -1,26 +1,22 @@
 #include "MixerPage.h"
 
 void MixerPage::set_level(int curtrack, int value) {
- uint8_t cc;
+  uint8_t cc;
   uint8_t channel = curtrack >> 2;
   if (curtrack < 4) {
     cc = 8 + curtrack;
-  }
-  else if (curtrack < 8) {
+  } else if (curtrack < 8) {
     cc = 4 + curtrack;
-  }
-  else if (curtrack < 12) {
+  } else if (curtrack < 12) {
     cc = curtrack;
-  }
-  else if (curtrack < 16) {
+  } else if (curtrack < 16) {
     cc = curtrack - 4;
   }
   USE_LOCK();
   SET_LOCK();
   if (md_exploit.state) {
     MidiUart.sendCC(channel + 3, cc, value);
-  }
-  else {
+  } else {
     MidiUart.sendCC(channel + 9, cc, value);
   }
   CLEAR_LOCK();
@@ -60,14 +56,15 @@ void MixerPage::encoder_level_handle(Encoder *enc) {
         if ((mdEnc->getValue() - mdEnc->old) < 0) {
           track_newlevel = MD.kit.levels[i] - 1;
         }
-        //      if ((mdEnc->getValue() - mdEnc->old) > 0) { track_newlevel = MD.kit.levels[i] + 1; }
+        //      if ((mdEnc->getValue() - mdEnc->old) > 0) { track_newlevel =
+        //      MD.kit.levels[i] + 1; }
         else {
           track_newlevel = MD.kit.levels[i] + 1;
         }
         if ((track_newlevel <= 127) && (track_newlevel >= 0)) {
           MD.kit.levels[i] += mdEnc->getValue() - mdEnc->old;
-          //if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
-          setLevel(i, MD.kit.levels[i] );
+          // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
+          setLevel(i, MD.kit.levels[i]);
           //}
         }
       }
@@ -76,14 +73,12 @@ void MixerPage::encoder_level_handle(Encoder *enc) {
   if (mdEnc->getValue() >= 127) {
     mdEnc->cur = 1;
     mdEnc->old = 0;
-  }
-  else if (mdEnc->getValue() <= 0) {
+  } else if (mdEnc->getValue() <= 0) {
     mdEnc->cur = 126;
     mdEnc->old = 127;
   }
 
-
-  //draw_levels();
+  // draw_levels();
 }
 
 void MixerPage::display() {
@@ -92,8 +87,20 @@ void MixerPage::display() {
 }
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
+    uint8_t mask = event->mask;
+    uint8_t device = midi_active_peering.get_device(port);
 
-    return true;
+    uint8_t track = event->source - 128;
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      return true;
+    }
+
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+              draw_notes(0);
+
+      return true;
+    }
   }
   if (EVENT_PRESSED(evt, Buttons.ENCODER1)) {
     level_pressmode = 1;
@@ -119,14 +126,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 }
 
 void MixerPage::create_chars_mixer() {
-  uint8_t temp_charmap[8] = { 0, 0, 0, 0, 0, 0, 0, 31  };
+  uint8_t temp_charmap[8] = {0, 0, 0, 0, 0, 0, 0, 31};
 
   for (uint8_t i = 1; i < 8; i++) {
     for (uint8_t x = 1; x < i; x++) {
       temp_charmap[(8 - x)] = 31;
       LCD.createChar(1 + i, temp_charmap);
     }
-
   }
 }
 bool MixerPage::setup() {
