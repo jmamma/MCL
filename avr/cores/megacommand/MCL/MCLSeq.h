@@ -5,32 +5,19 @@
 #include "MCL.h"
 #include "SeqPages.h"
 #include "midiclock.h"
-#define NUM_PARAM_PAGES 2;
+
+#define NUM_PARAM_PAGES 2
+#define NUM_MD_TRACKS 16
+#define NUM_EXT_TRACKS 4
 
 class MCLSeq : public ClockCallback {
 public:
 
-  uint8_t PatternLengths[16];
-  uint8_t PatternLocks[16][4][64];
-  uint8_t PatternLocksParams[16][4];
-  uint64_t PatternMasks[16];
-  uint64_t LockMasks[16];
-  uint8_t conditional[16][64];
-  uint8_t timing[16][64];
+  static uint8_t num_md_tracks = NUM_MD_TRACKS;
+  static uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 
-  uint8_t ExtPatternMutes[6];
-  uint8_t ExtPatternLengths[6];
-  uint8_t ExtPatternResolution[6]; // Resolution = 2 / ExtPatternResolution
-
-  int8_t ExtPatternNotes[6][4][128];
-  uint8_t ExtPatternNoteBuffer[6][SEQ_NOTEBUF_SIZE];
-
-  uint8_t ExtPatternLocks[4][4][128];
-  uint8_t ExtPatterLockParams[4][4];
-  uint64_t ExtLockMasks[4];
-
-  uint8_t Extconditional[6][128];
-  uint8_t Exttiming[6][128];
+  MDSeqTrack  md_tracks[NUM_MD_TRACKS];
+  ExtSeqTrackExt ext_tracks[NUM_EXT_TRACKS];
 
   MCLSeqMidiEvents midi_events;
 

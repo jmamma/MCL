@@ -88,7 +88,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     if (grid.cur_col < 16) {
       clear_seq_track(grid.cur_col);
     } else {
-      clear_Ext_track(grid.cur_col - 16);
+      mcl_seq.clear_ext_track(grid.cur_col - 16);
     }
     return true;
   }

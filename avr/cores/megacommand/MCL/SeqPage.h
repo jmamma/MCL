@@ -6,8 +6,12 @@
 
 class SeqPage : LightPage {
  public:
- uint8_t page_select;
- SeqPageMidiEvents midi_events;
+ static uint8_t page_select;
+ 
+ static uint8_t last_md_track;
+ static uint8_t last_ext_track;
+
+SeqPageMidiEvents midi_events;
  SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
  midi_events.setup_callbacks();
  }

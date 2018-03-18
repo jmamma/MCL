@@ -193,7 +193,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 6; n++) {
-      clear_Ext_track(n);
+      mcl_seq.clear_ext_track(n);
     }
 
     return true;
@@ -221,7 +221,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (grid.cur_col < 16) {
       clear_seq_track(last_md_track);
     } else {
-      clear_Ext_track(last_ext_track);
+      mcl_seq.clear_ext_track(last_ext_track);
     }
     return true;
   }

@@ -259,7 +259,7 @@ if ( EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
     return true;
   }
 if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    clear_Ext_track(last_ext_track);
+    mcl_seq.clear_ext_track(last_ext_track);
     return true;
   }
 

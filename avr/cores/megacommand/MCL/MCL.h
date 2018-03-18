@@ -10,8 +10,10 @@
 #include "MCLMacros.h"
 #include "MCLSysConfig.h"
 #include "MCLSd.h"
-#include "MCLSequencer.h"
-#include "MDExploit.h"
+
+#include "MDExploit.h" //MDExploit should come before MCLSequencer for callback priority
+#include "MCLSeq.h"
+#include "MCLActions.h"
 #include "MDSysexCallbacks.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
@@ -32,7 +34,6 @@ extern uint8_t in_sysex;
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;
 extern int8_t curpage;
-
 
 
 class MCL {
