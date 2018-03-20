@@ -5,7 +5,9 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() { midi_events.remove_callbacks(); }
 void SeqPtcPage::init() {
-  collect_trigs = false;
+  md_exploit.on(); 
+  note_interface.state = false;
+
 
   encoders[1]->max = 8;
   encoders[2]->max = 64;
@@ -14,7 +16,7 @@ void SeqPtcPage::init() {
   encoders[2]->cur = 32;
   encoders[1]->cur = 1;
 
-  encoders[3]->cur = PatternLengths[last_md_track];
+  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_PTC_PAGE;
 }
@@ -22,17 +24,17 @@ void SeqPtcPage::pattern_len_handler(Encoder *enc) {
   if (grid.cur_col < 16) {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
-        PatternLengths[c] = encoders[3]->getValue();
+        mcl_seq.md_tracks[c].length = encoders[3]->getValue();
       }
     }
-    PatternLengths[last_md_track] = encoders[3]->getValue();
+    mcl_seq.md_tracks[last_md_track].length = encoders[3]->getValue();
   } else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 6; c++) {
-        ExtPatternLengths[c] = encoders[3]->getValue();
+        mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
       }
     }
-    ExtPatternLengths[last_ext_track] = encoders[3]->getValue();
+    mcl_seq.ext_tracks[last_ext_track].length = encoders[3]->getValue();
   }
 }
 md_exploit.init_notes();
@@ -54,7 +56,7 @@ bool SeqPtcPage::display() {
     GUI.put_p_string_at(11, str2);
   } else {
     GUI.put_value_at(5, (encoders[3]->getValue() /
-                         (2 / ExtPatternResolution[last_ext_track])));
+                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -133,7 +135,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     // note interface presses are treated as musical notes here
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t note_num = track;
-      encoders[3]->cur = PatternLengths[last_md_track];
+      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].length;
       encoders[3]->max = 64;
       uint8_t pitch = calc_pitch(note_num);
       uint8_t next_track = poly_next_track();
@@ -166,30 +168,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     curpage = GRID_PAGE;
     return true;
   }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-
-    load_seq_page(SEQ_STEP_PAGE);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-
-    load_seq_page(SEQ_RTRK_PAGE);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    load_seq_page(SEQ_PARAM_A_PAGE);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
-    load_seq_page(SEQ_PTC_PAGE);
-
-    return true;
-  }
-  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
+ if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 6; n++) {
@@ -200,16 +179,16 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (ExtPatternResolution[last_ext_track] == 1) {
-      ExtPatternResolution[last_ext_track] = 2;
+    if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+      mcl_seq.ext_tracks[last_ext_track].resolution = 2;
       if (curpage == SEQ_EXTSTEP_PAGE) {
-        load_seq_extstep_page(last_ext_track);
+       GUI.setPage(seq_extstep_page); 
       }
 
     } else {
-      ExtPatternResolution[last_ext_track] = 1;
+      mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       if (curpage == SEQ_EXTSTEP_PAGE) {
-        load_seq_extstep_page(last_ext_track);
+        GUI.setPage(seq_extstep_page);
       }
     }
 
@@ -259,7 +238,7 @@ void SeqPtcStep::onNoteOnCallback_Midi2(uint8_t *msg) {
   last_Extseq_track = channel;
   grid.cur_col = 16 + channel;
   encoders[3]->max = 128;
-  encoders[3]->cur = ExtPatternLengths[channel];
+  encoders[3]->cur = mcl_seq.ext_tracks[channel].length;
 
   pitch = seq_ext_pitch(note_num);
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
@@ -272,7 +251,7 @@ void SeqPtcStep::onNoteOffCallback_Midi2(uint8_t *msg) {
   last_Extseq_track = channel;
   grid.cur_col = 16 + channel;
   encoders[3]->max = 128;
-  encoders[3]->cur = ExtPatternLengths[channel];
+  encoders[3]->cur = mcl_seq.ext_tracks[channel].length;
 
   pitch = seq_ext_pitch(note_num);
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);

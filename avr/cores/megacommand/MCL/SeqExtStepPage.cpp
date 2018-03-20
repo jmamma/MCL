@@ -3,14 +3,14 @@
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 
 void SeqExtStepPage::init() {
-  if (ExtPatternResolution[last_ext_track] == 1) {
+  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
     encoders[2]->cur = 6;
     encoders[2]->max = 11;
   } else {
     encoders[2]->cur = 12;
     encoders[2]->max = 23;
   }
-  encoders[3]->cur = ExtPatternLengths[track];
+  encoders[3]->cur = mcl_seq.ext_tracks[last_ext_track].length;
   cur_col = last_ext_track + 16;
   curpage = SEQ_EXTSTEP_PAGE;
   midi_events.setup_callbacks();
@@ -28,10 +28,10 @@ struct musical_notes  {
 void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
     for (uint8_t c = 0; c < 6; c++) {
-      ExtPatternLengths[c] = encoders[3]->getValue();
+      mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
     }
   }
-  ExtPatternLengths[last_ext_track] = encoders[3]->getValue();
+  mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
 }
 
 bool SeqExtStepPage::display() {
@@ -61,7 +61,7 @@ bool SeqExtStepPage::display() {
   // Pos
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
-  if (ExtPatternResolution[last_ext_track] == 1) {
+  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
     if (encoders[2]->getValue() == 0) {
       GUI.put_string_at(2, "--");
     } else if ((encoders[2]->getValue() < 6) &&
@@ -99,15 +99,12 @@ bool SeqExtStepPage::display() {
   if (notes_held > 0) {
     for (i = 0; i < 4; i++) {
 
-      notenum =
-          abs(ExtPatternNotes[last_ext_track][i][note_interface.last_note +
-                                                 seq_page.page_select * 16]);
+      notenum = mcl_seq.ext_tracks[last_ext_track].notes[i][note_interface.last_note + seq_page.page_select * 16]
       if (notenum != 0) {
         notenum = notenum - 1;
         uint8_t oct = notenum / 12;
         uint8_t note = notenum - 12 * (notenum / 12);
-        if (ExtPatternNotes[last_ext_track][i][note_interface.last_note +
-                                               seq_page.page_select * 16] > 0) {
+        if (mcl_seq.ext_tracks[last_ext_track].notes[i][note_interface.last_note + seq_page.page_select * 16]] > 0) {
 
           GUI.put_string_at(4 + i * 3, number_to_note.notes_upper[note]);
           GUI.put_value_at1(4 + i * 3 + 2, oct);
@@ -127,7 +124,7 @@ bool SeqExtStepPage::display() {
       GUI.put_p_string_at(12, str2);
     } else {
       GUI.put_value_at(6, (encoders[3]->getValue() /
-                           (2 / ExtPatternResolution[last_ext_track])));
+                           (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
       if (Analog4.connected) {
         GUI.put_string_at(10, "A4T");
       } else {
@@ -136,7 +133,6 @@ bool SeqExtStepPage::display() {
       GUI.put_value_at1(13, last_ext_track + 1);
     }
   }
-  // PatternLengths[cur_col] = encoders[3]->getValue();
   draw_patternmask((seq_page.page_select * 16), DEVICE_A4);
 }
 
@@ -157,21 +153,19 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (device == MD_DEVICE) {
 
         if ((track + (seq_page.page_select * 16)) >=
-            ExtPatternLengths[last_extseq_track]) {
+            mcl_seq.ext_tracks[last_extseq_track].length) {
           notes[track] = 0;
           return;
         }
 
         int8_t utiming =
-            Exttiming[last_extseq_track]
-                     [(track + (seq_page.page_select * 16))]; // upper
+            mcl_seq.ext_tracks[last_extseq_track].timing[(track + (seq_page.page_select * 16))]; // upper
         uint8_t condition =
-            Extconditional[last_extseq_track]
-                          [(track + (seq_page.page_select * 16))]; // lower
+            mcl_seq.ext_tracks[last_extseq_track].conditional[(track + (seq_page.page_select * 16))]; // lower
         encoders[1]->cur = condition;
         // Micro
         if (utiming == 0) {
-          if (ExtPatternResolution[last_extseq_track] == 1) {
+          if (mcl_seq.ext_tracks[last_extseq_track].resolution == 1) {
             utiming = 6;
             encoders[2]->max = 11;
           } else {
@@ -191,7 +185,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
               uint8_t utiming = (encoders[2]->cur + 0);
               uint8_t condition = encoders[1]->cur;
-              if ((track + (seq_page.page_select * 16)) >= ExtPatternLengths[last_ext_track]) {
+              if ((track + (seq_page.page_select * 16)) >=  mcl_seq.ext_tracks[last_extseq_track].length) {
                 return true;
               }
 
@@ -199,19 +193,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
               //condition = 3;
               if ((current_clock - note_hold) < TRIG_HOLD_TIME) {
                 for (uint8_t c = 0; c < 4; c++) {
-                  if (ExtPatternNotes[last_ext_track][c][track + seq_page.page_select * 16] > 0) {
-                    MidiUart2.sendNoteOff(last_ext_track, abs(ExtPatternNotes[last_Ext_track][c][track + seq_page.page_select * 16]) - 1, 0);
+                  if (mcl_seq.ext_tracks[last_ext_track].notes[c][track + seq_page.page_select * 16] > 0) {
+                    MidiUart2.sendNoteOff(last_ext_track, abs(mcl_seq.ext_tracks[last_ext_track].notes[c][track + seq_page.page_select * 16]) - 1, 0);
                   }
-                  ExtPatternNotes[last_ext_track][c][track + seq_page.page_select * 16] = 0;
+                  mcl_seq.ext_tracks[last_ext_track].notes[c][track + seq_page.page_select * 16] = 0;
                 }
-                Exttiming[last_ext_track][(track + (seq_page.page_select * 16))] = 0;
-                Extconditional[last_ext_track][(track + (seq_page.page_select * 16))] = 0;
-
+                mcl_seq.ext_tracks[last_extseq_track].timing[(track + (seq_page.page_select * 16))] = 0;
+ mcl_seq.ext_tracks[last_extseq_track].conditional[(track + (seq_page.page_select * 16))] = 0;
               }
 
               else {
-                Extconditional[last_ext_track][(track + (seq_page.page_select * 16))] = condition; //upper
-                Exttiming[last_ext_track][(track + (seq_page.page_select * 16))] = utiming; //upper
+                mcl_seq.ext_tracks[last_extseq_track].timing[(track + (seq_page.page_select * 16))] = condition; //upper
+                mcl_seq.ext_tracks[last_extseq_track].timing[(track + (seq_page.page_select * 16))] = utiming; //upper
 
               }
 
@@ -238,16 +231,16 @@ if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
 }
 
 if ( EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (ExtPatternResolution[last_ext_track] == 1) {
-      ExtPatternResolution[last_ext_track] = 2;
+    if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+      mcl_seq.ext_tracks[last_ext_track].resolution  = 2;
       if (curpage == SEQ_EXTSTEP_PAGE) {
-        GUI.setPage(seq_extstep_page);
+         init();
       }
-
+ 
     } else {
-      ExtPatternResolution[last_ext_track] = 1;
+      mcl_seq.ext_tracks[last_ext_track].resolution  = 1;
       if (curpage == SEQ_EXTSTEP_PAGE) {
-        GUI.setPage(seq_extstep_page);
+         init(); 
       }
     }
 

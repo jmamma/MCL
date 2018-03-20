@@ -14,7 +14,7 @@ bool MCLSysConfig::write_cfg() {
     return false;
   }
 
-  ret = mcl_sd.write_data(( uint8_t*)&cfg, sizeof(Config), &cfgfile);
+  ret = mcl_sd.write_data(( uint8_t*)&data, sizeof(MCLSysConfigData), &cfgfile);
   if (!ret) {
     DEBUG_PRINTLN("Write cfg failed");
   }
@@ -44,16 +44,16 @@ bool MCLSysConfig::init() {
 
   char my_string[16] = "/project000.mcl";
 
-  cfg.version = CONFIG_VERSION;
-  cfg.number_projects = 0;
-  m_strncpy(cfg.project, my_string, 16);
-  cfg.clock_send = 0;
-  cfg.clock_rec = 0;
-  cfg.uart1_turbo = 2;
-  cfg.uart2_turbo = 2;
-  cur_row = 0;
-  cur_col = 0;
-  cfg.cues = 0;
+  data.version = CONFIG_VERSION;
+  data.number_projects = 0;
+  m_strncpy(data.project, my_string, 16);
+  data.clock_send = 0;
+  data.cfg.clock_rec = 0;
+  data.cfg.uart1_turbo = 2;
+  data.cfg.uart2_turbo = 2;
+  data.cur_row = 0;
+  data.cur_col = 0;
+  data.cues = 0;
   cfgfile.close();
 
   ret = write_cfg();
@@ -62,5 +62,5 @@ bool MCLSysConfig::init() {
   }
   return true;
 }
-File cfgfile;
-MCLSysConfig cfg;
+
+MCLSysConfig mcl_cfg; 

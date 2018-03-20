@@ -300,13 +300,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
   //  }
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
-      seq_euc_page->setup = false;
-      GUI.setPage(&seq_euc_page);
-    } else {
       seq_step_page->setup = false;
       GUI.setPage(&seq_step_page);
-    }
 
     return true;
   }

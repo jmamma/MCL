@@ -146,5 +146,5 @@ bool MixerPage::setup() {
   level_pressmode = 0;
   mixer_param1.cur = 60;
   md_exploit.on();
-  note_inteface.collect_trigs = true;
+  note_inteface.note_interface.state = true;
 }

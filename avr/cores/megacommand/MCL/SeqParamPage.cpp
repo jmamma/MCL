@@ -2,19 +2,20 @@
 
 void SeqParamPage::setup() { SeqPage::setup(); }
 void SeqParamPage::init() {
-  collect_trigs = true;
+  md_exploit.on();
+  note_interface.state = true;
 
   encoders[1]->max = 23;
   encoders[2]->max = 127;
   encoders[3]->max = 23;
   encoders[4]->max = 127;
 
-  encoders[1]->cur = PatternLocksParams[last_md_track][0];
-  encoders[3]->cur = PatternLocksParams[last_md_track][1];
+  encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks_params[0];
+  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks_params[1];
   encoders[2]->cur =
-      MD.kit.params[last_md_track][PatternLocksParams[last_md_track][0]];
+      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[0];
   encoders[4]->cur =
-      MD.kit.params[last_md_track][PatternLocksParams[last_md_track][1]];
+      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[1];
 
   curpage = SEQ_PARAMA_PAGE;
 }
@@ -75,50 +76,48 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t param_offset;
-      encoders[1]->cur = PatternLocksParams[last_md_track][p1];
-      encoders[3]->cur = PatternLocksParams[last_md_track][p2];
+      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p1];
+      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p2];
 
-      encoders[2]->cur = PatternLocks[last_md_track][p1]
-                                     [(track + (seq_page.page_select * 16))];
-      encoders[4]->cur = PatternLocks[last_md_track][p2]
+      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][(track + (seq_page.page_select * 16))];
+      encoders[4]->cur = mcl_seq.md_tracks[last_md_track].locks[p2]
                                      [(track + (seq_page.page_select * 16))];
       notes[track] = 1;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       int8_t utiming =
-          timing[cur_col][(track + (seq_page.page_select * 16))]; // upper
+          mcl_seq.md_tracks[grid.cur_col].timing[(track + (seq_page.page_select * 16))]; // upper
       uint8_t condition =
-          conditional[cur_col]
+          mcl_seq.md_tracks[grid.cur_col].conditional
                      [(track + (seq_page.page_select * 16))]; // lower
 
       // Fudge timing info if it's not there
       if (utiming == 0) {
         utiming = 12;
-        conditional[last_md_track][(track + (seq_page.page_select * 16))] =
+         mcl_seq.md_tracks[last_md_track].conditional[(track + (seq_page.page_select * 16))] =
             condition;
-        timing[last_md_track][(track + (seq_page.page_select * 16))] =
+       mcl_seq.md_tracks[last_md_track].timing[(track + (seq_page.page_select * 16))] =
             utiming;
       }
-      if (IS_BIT_SET64(LockMasks[last_md_track],
+      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lockmask,
                        (track + (seq_page.page_select * 16)))) {
         if ((current_clock - note_hold) < 300) {
-          CLEAR_BIT64(LockMasks[last_md_track],
+          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lockmask,
                       (track + (seq_page.page_select * 16)));
         }
       } else {
-        SET_BIT64(LockMasks[last_md_track],
+        SET_BIT64(mcl_seq.md_tracks[last_md_track].lockmask,
                   (track + (seq_page.page_select * 16)));
       }
 
       notes[track] = 0;
 
-      PatternLocks[last_md_track][param_offset]
-                  [(track + (seq_page.page_select * 16))] = encoders[2]->cur;
-      PatternLocks[last_md_track][param_offset + 1]
+      mcl_seq.md_tracks[last_md_track].locks[param_offset][(track + (seq_page.page_select * 16))] = encoders[2]->cur;
+      mcl_seq.md_tracks[last_md_track].locks[param_offset + 1]
                   [(track + (seq_page.page_select * 16))] = encoders[4]->cur;
 
-      PatternLocksParams[last_md_track][p1] = encoders[1]->cur;
-      PatternLocksParams[last_md_track][p2] = encoders[3]->cur;
+      mcl_seq.md_tracks[last_md_track].params[p1] = encoders[1]->cur;
+      mcl_seq.md_tracks[last_md_track].params[p2] = encoders[3]->cur;
     }
     return true;
   }
@@ -129,7 +128,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    clear_seq_track(grid.cur_col);
+    mcl_seq.md_tracks[last_md_track].clear_seq_track();
     return true;
   }
 
@@ -137,23 +136,23 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(evnt, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 16; n++) {
-      clear_seq_locks(n);
+      mcl_seq.md_tracks[n].clear_seq_locks();
     }
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    encoders[1]->cur = PatternLocksParams[last_md_track][p1];
-    encoders[3]->cur = PatternLocksParams[last_md_track][p2];
+    encoders[1]->cur = mcl_seq.md_tracks[last_md_track].params[p1];
+    encoders[3]->cur = mcl_seq.md_tracks[last_md_track].params[p2];
     encoders[2]->cur =
-        MD.kit.params[last_md_track][PatternLocksParams[last_md_track][p1]];
+        MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
     encoders[4]->cur =
-        MD.kit.params[last_md_track][PatternLocksParams[last_md_track][p2]];
+        MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
     curpage = SEQ_PARAM_B_PAGE;
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    clear_seq_locks(grid.cur_col);
+    mcl_seq.md_tracks[grid.cur_col].clear_seq_locks();
     return true;
   }
 

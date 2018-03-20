@@ -2,7 +2,8 @@
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::init() {
-  collect_trigs = true;
+  md_exploit.on();
+  note_interface.state = true;
 
   encoders[1]->max = 13;
   encoders[2]->max = 23;
@@ -10,7 +11,7 @@ void SeqStepPage::init() {
   encoders[2]->cur = 12;
   encoders[3]->max = 64;
   encoders[4]->max = 16;
-  encoders[3]->cur = PatternLengths[last_md_track];
+  encoders[3]->cur = mcl_seq.md_tracks[last_md_track];
 
   curpage = SEQ_STEP_PAGE;
 }
@@ -89,7 +90,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       encoders[2]->cur = utiming;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if ((track + (seq_page.page_select * 16)) >= PatternLengths[cur_col]) {
+      if ((track + (seq_page.page_select * 16)) >= mcl_seq.md_tracks[grid.cur_col]) {
         return;
       }
       uint8_t utiming = (encoders[2]->cur + 0);

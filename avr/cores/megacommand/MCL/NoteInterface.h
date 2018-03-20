@@ -1,4 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
+// Takes MIDI Note input and turns it into a GUI button press.
 
 #ifndef NOTEINTERFACE_H__
 #define NOTEINTERFACE_H__
@@ -18,7 +19,7 @@ public:
   uint8_t notecount = 0;
   uint8_t last_note;
   bool note_proceed = false;
-  bool state = enable;
+  bool state = true;
   init_notes();
   void setup();
   void draw_notes(uint8_t line_number);

@@ -87,7 +87,7 @@ void Grid::clear_slot(uint16_t i) {
   int32_t offset =
       (int32_t)GRID_SLOT_BYTES + (int32_t)i * (int32_t)GRID_SLOT_BYTES;
 
-  ret = file.seekSet(offset);
+  ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Clear grid failed: ");
@@ -98,7 +98,7 @@ void Grid::clear_slot(uint16_t i) {
   // DEBUG_PRINTLN(sizeof(temptrack.active));
 
   ret = mcl_sd.write_data((uint8_t *)&(temptrack.active),
-                          sizeof(temptrack.active), &file);
+                          sizeof(temptrack.active), &proj.file);
 
   if (!ret) {
     DEBUG_PRINTLN("Write failed");

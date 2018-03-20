@@ -39,7 +39,7 @@ void MidiActivePeering::md_setup() {
       if (rec_global != 1) {
 
         rec_global = 1;
-        send_globals();
+        md_exploit.send_globals();
       }
       switchGlobal(7);
       uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);

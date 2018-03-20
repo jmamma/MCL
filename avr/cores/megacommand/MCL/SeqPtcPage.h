@@ -1,4 +1,4 @@
-/* Justin Mammarella jmamma@gmail.com 2018 */
+:/* Justin Mammarella jmamma@gmail.com 2018 */
 
 #ifndef SEQPTCPAGE_H__
 #define SEQPTCPAGE_H__

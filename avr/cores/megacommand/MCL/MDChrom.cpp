@@ -125,7 +125,7 @@ bool MDExploit::on() {
   //  MD.getBlockingStatus(MD_CURRENT_GLOBAL_SLOT_REQUEST,200);
   start_clock = slowclock;
   return true;
-  // collect_trigs = true;
+  // note_interface.state = true;
   // in_sysex = 0;
 }
 bool MDExploit::off() {
@@ -136,7 +136,7 @@ bool MDExploit::off() {
   if (!state) {
     return false;
   }
-  collect_trigs = false;
+  note_interface.state = false;
 
   //
   //  global_new.tempo = MidiClock.tempo;

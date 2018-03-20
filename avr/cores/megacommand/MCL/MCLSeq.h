@@ -24,31 +24,6 @@ public:
   void setup();
   void onMidiStopCallback();
   void sequencer();
-  void trig_conditional();
-  void send_parameter_locks(uint8_t i, uint8_t step_count);
-  void seq_buffer_notesoff(uint8_t track);
-  void seq_note_on(uint8_t track, uint8_t note);
-  void seq_note_off(uint8_t track, uint8_t note);
-  void noteon_conditional(uint8_t condition, uint8_t track, uint8_t note);
-
-  void set_track_param(uint8_t track, uint8_t param, uint8_t value);
-  void set_track_pitch(uint8_t track, uint8_t pitch);
-  void set_track_step(uint8_t track, uint8_t step, uint8_t utiming,
-                      uint8_t note_num, uint8_t velocity);
-
-  void
-  record_track(uint8_t track, uint8_t note_num,
-               uint8_t velocity) void record_track_locks(uint8_t track,
-                                                         uint8_t track_param,
-                                                         uint8_t value);
-
-  void record_ext_track_noteon(uint8_t track, uint8_t note_num,
-                               uint8_t velocity);
-  void record_ext_track_noteoff(uint8_t track, uint8_t note_num,
-                                uint8_t velocity);
-
-  void set_ext_track_step(uint8_t track, uint8_t step, uint8_t note_num,
-                          uint8_t velocity);
 };
 
 extern MCLSeq mcl_seq;

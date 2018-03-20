@@ -1,4 +1,24 @@
 #include "SeqPage.h"
+void SeqPage::setup() {
+
+  encoders[3]->handler = pattern_len_handler;
+  encoders[2]->min = 0;
+  create_chars_seq();
+  currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  // stored.
+    if (MidiClock.state != 2) {
+      MD.saveCurrentKit(currentkit_temp);
+    }
+
+    MD.getBlockingKit(currentkit_temp);
+    MD.getCurrentTrack(CALLBACK_TIMEOUT);
+
+  grid.cur_col = last_md_track;
+  grid.cur_row = param2.getValue();
+}
+
+
+
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   //  if (note_interface.is_event(event)) {
@@ -6,24 +26,22 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   //  return true;
   //  }
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-
-    load_seq_page(SEQ_STEP_PAGE);
+     GUI.setPage(&seq_step_page);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-
-    load_seq_page(SEQ_RTRK_PAGE);
+    GUI.setPage(&seq_rtrk_page);
 
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    load_seq_page(SEQ_PARAM_A_PAGE);
 
+    GUI.setPage(&seq_param_page[0]);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
-    load_seq_page(SEQ_PTC_PAGE);
+    GUI.setPage(&seq_ptc_page);
 
     return true;
   }
@@ -52,27 +70,27 @@ SeqPage::draw_lockmask(uint8_t offset) {
   char str[17] = "----------------";
   uint8_t step_count =
       (MidiClock.div16th_counter - pattern_start_clock32th / 2) -
-      (PatternLengths[grid.cur_col] *
+      (mcl_seq.md_tracks[grid.cur_col].length *
        ((MidiClock.div16th_counter - pattern_start_clock32th / 2) /
-        PatternLengths[grid.cur_col]));
+        mcl_seq.md_tracks[grid.cur_col].length));
 
   for (int i = 0; i < 16; i++) {
 
-    if (i + offset >= PatternLengths[grid.cur_col]) {
+    if (i + offset >= mcl_seq.md_tracks[grid.cur_col].length) {
       str[i] = ' ';
     } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
-      if (IS_BIT_SET64(LockMasks[grid.cur_col], i + offset)) {
+      if (IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].lockmask, i + offset)) {
         str[i] = 'x';
       }
-      if (IS_BIT_SET64(PatternMasks[grid.cur_col], i + offset) &&
-          !IS_BIT_SET64(LockMasks[grid.cur_col], i + offset)) {
+      if (IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].patternmask, i + offset) &&
+          !IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].lockmask, i + offset)) {
 
         str[i] = (char)165;
       }
-      if (IS_BIT_SET64(PatternMasks[grid.cur_col], i + offset) &&
-          IS_BIT_SET64(LockMasks[grid.cur_col], i + offset)) {
+      if (IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].patternmask, i + offset) &&
+          IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].lockmask, i + offset)) {
 
         str[i] = (char)219;
       }
@@ -99,7 +117,7 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
 
   /*Get the Pattern bit mask for the selected track*/
   //    uint64_t patternmask = getPatternMask(grid.cur_col, grid.cur_row , 3, false);
-  uint64_t patternmask = PatternMasks[grid.cur_col];
+  uint64_t patternmask = mcl_seq.md_tracks[grid.cur_col].patternmask;
   int8_t note_held = 0;
 
   /*Display 16 steps on screen, starting at an offset set by the encoder1
@@ -115,11 +133,11 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
       if (device == DEVICE_MD) {
         uint8_t step_count =
             (MidiClock.div16th_counter - pattern_start_clock32th / 2) -
-            (PatternLengths[grid.cur_col] *
+            (mcl_seq.md_tracks[grid.cur_col].length *
              ((MidiClock.div16th_counter - pattern_start_clock32th / 2) /
-              PatternLengths[grid.cur_col]));
+              mcl_seq.md_tracks[grid.cur_col].length));
 
-        if (i + offset >= PatternLengths[grid.cur_col]) {
+        if (i + offset >= mcl_seq.md_tracks[grid.cur_col].length) {
           mystr[i] = ' ';
         } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
           mystr[i] = ' ';
@@ -139,27 +157,27 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
     }
   } else {
 
-    for (int i = 0; i < ExtPatternLengths[last_ext_track]; i++) {
+    for (int i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
 
       uint8_t step_count =
-          ((MidiClock.div32th_counter / ExtPatternResolution[last_ext_track]) -
-           (pattern_start_clock32th / ExtPatternResolution[last_ext_track])) -
-          (ExtPatternLengths[last_ext_track] *
-           ((MidiClock.div32th_counter / ExtPatternResolution[last_ext_track] -
-             (pattern_start_clock32th / ExtPatternResolution[last_ext_track])) /
-            (ExtPatternLengths[last_ext_track])));
+          ((MidiClock.div32th_counter / mcl_seq.ext_tracks[last_ext_track].resolution) -
+           (pattern_start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) -
+          (mcl_seq.ext_tracks[last_ext_track].length *
+           ((MidiClock.div32th_counter / mcl_seq.ext_tracks[last_ext_track].resolution -
+             (pattern_start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) /
+            (mcl_seq.ext_tracks[last_ext_track].length)));
       uint8_t noteson = 0;
       uint8_t notesoff = 0;
 
       for (uint8_t a = 0; a < 4; a++) {
 
-        if (ExtPatternNotes[last_ext_track][a][i] > 0) {
+        if (mcl_seq.ext_tracks[last_ext_track].notes[a][i] > 0) {
 
           noteson++;
           //    mystr[i] = (char) 219;
         }
 
-        if (ExtPatternNotes[last_ext_track][a][i] < 0) {
+        if (mcl_seq.ext_tracks[last_ext_track].notes[a][i] < 0) {
           notesoff++;
         }
       }
@@ -188,7 +206,7 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
         }
       }
 
-      if ((i >= ExtPatternLengths[last_ext_track]) ||
+      if ((i >= mcl_seq.ext_tracks[last_ext_track].length) ||
           (step_count == i) && (MidiClock.state == 2)) {
         if ((i >= offset) && (i < offset + 16)) {
           mystr[i - offset] = ' ';
@@ -214,21 +232,22 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
 
 void SeqPage::pattern_len_handler(Encoder *enc) {
     if (grid.cur_col < 16) {
-      PatternLengths[grid.cur_col] = encoders[3]->getValue();
+      mcl_seq.md_tracks[grid.cur_col].length = encoders[3]->getValue();
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        for (uint8_t c = 0; c < 16; c++) {
-          PatternLengths[c] = encoders[3]->getValue();
+        for (uint8_t c = 0; c < 6; c++) {
+          mcl_seq.md_tracls[c].length = encoders[3]->getValue();
+
         }
       }
 
     }
     else {
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        for (uint8_t c = 0; c < 6; c++) {
-          ExtPatternLengths[c] = encoders[3]->getValue();
+        for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
+          mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
         }
       }
-      ExtPatternLengths[last_ext_track] = encoders[3]->getValue();
+      mcl_seq.ext_tracks[last_ext_track].length = encoders[3]->getValue();
     }
 }
 void SeqPage::create_char_seq() {
@@ -246,32 +265,6 @@ void SeqPage::create_char_seq() {
 void SeqPage::display() {
     GUI.setLine(GUI.LINE1);
     GUI.put_value_at1(15, seq_page.page_select + 1);
-}
-
-void SeqPage::setup() {
-
-  encoders[3]->handler = pattern_len_handler;
-  encoders[2]->min = 0;
-  if (curpage == 0) {
-    create_chars_seq();
-    currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
-    // curpage = page;
-
-    // Don't save kit if sequencer is running, otherwise parameter locks will be
-    // stored.
-    if (MidiClock.state != 2) {
-      MD.saveCurrentKit(currentkit_temp);
-    }
-
-    MD.getBlockingKit(currentkit_temp);
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
-
-    md_exploit.on();
-  } else {
-    md_exploit.init_notes();
-  }
-  grid.cur_col = last_md_track;
-  grid.cur_row = param2.getValue();
 }
 
 void SeqPageMidiEvents::setup_callbacks() {

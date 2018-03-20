@@ -1,7 +1,7 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef GRIDPAGEPAGE_H__
-#define GRIDPAGEPAGE_H__
+#ifndef GRIDPAGE_H__
+#define GRIDPAGE_H__
 #include "GUI.h"
 
 class GridPage : LightPage {
@@ -28,4 +28,4 @@ public:
   void loop();
 };
 
-#endif /* GRIDPAGEPAGE_H__ */
+#endif /* GRIDPAGE_H__ */

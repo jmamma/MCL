@@ -3,13 +3,15 @@
 void SeqRtrkPage::setup() { SeqPage::setup(); }
 
 void SeqRtrkPage::init() {
-  collect_trigs = false;
+  md_exploit.on();
+
+  note_interface.state = false;
 
   encoders[1]->max = 4;
   encoders[2]->max = 64;
   encoders[3]->max = 64;
   encoders[4]->max = 11;
-  encoders[3]->cur = PatternLengths[last_md_track];
+  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
 }
@@ -29,7 +31,7 @@ bool SeqRtrkPage::display() {
     GUI.put_value_at(5, encoders[3]->getValue());
   } else {
     GUI.put_value_at(5, (encoders[3]->getValue() /
-                         (2 / ExtPatternResolution[last_ext_track])));
+                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -79,16 +81,16 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 16; n++) {
-      clear_seq_track(n);
+      mcl_seq.md_tracks.clear_seq_track();
     }
     return true;
   }
 
   if (EVENT_RELEASED(Event, Buttons.BUTTON4)) {
     if (grid.cur_col < 16) {
-      clear_seq_track(grid.cur_col);
+      mcl_seq.md_tracks[grid.cur_col].clear_seq_track();
     } else {
-      mcl_seq.clear_ext_track(grid.cur_col - 16);
+      mcl_seq.ext_tracks[grid.cur_col].clear_ext_track();
     }
     return true;
   }

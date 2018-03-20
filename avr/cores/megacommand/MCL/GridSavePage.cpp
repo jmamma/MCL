@@ -1,14 +1,13 @@
 #include "GridSavePage.h"
 
 void GridSavePage::setup() {
-  midi_events.setupCallbacks();
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   patternload_param1.cur = (int)MD.currentPattern / (int)16;
   patternload_param2.cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
-  md_exploit_on();
-  collect_trigs = true;
+  md_exploit.on();
+  note_interface.state = true;
   curpage = S_PAGE;
   reload_slot_models = 0;
 }
