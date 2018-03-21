@@ -5,9 +5,8 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() { midi_events.remove_callbacks(); }
 void SeqPtcPage::init() {
-  md_exploit.on(); 
+  md_exploit.on();
   note_interface.state = false;
-
 
   encoders[1]->max = 8;
   encoders[2]->max = 64;
@@ -168,7 +167,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     curpage = GRID_PAGE;
     return true;
   }
- if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
+  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 6; n++) {
@@ -181,15 +180,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
     if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
       mcl_seq.ext_tracks[last_ext_track].resolution = 2;
-      if (curpage == SEQ_EXTSTEP_PAGE) {
-       GUI.setPage(seq_extstep_page); 
-      }
-
     } else {
       mcl_seq.ext_tracks[last_ext_track].resolution = 1;
-      if (curpage == SEQ_EXTSTEP_PAGE) {
-        GUI.setPage(seq_extstep_page);
-      }
     }
 
     return true;
@@ -283,42 +275,32 @@ void SeqPtcStepMidiEvents::remove_callbacks() {
   state = false;
 }
 
-const scale_t *scales[16] {
-  &chromaticScale,
-  &ionianScale,
-  //&dorianScale,
-  &phrygianScale,
-  //&lydianScale,
-  //&mixolydianScale,
-  //&aeolianScale,
-  //&locrianScale,
-  &harmonicMinorScale,
-  &melodicMinorScale,
-  //&lydianDominantScale,
-  //&wholeToneScale,
-  //&wholeHalfStepScale,
-  //&halfWholeStepScale,
-  &majorPentatonicScale,
-  &minorPentatonicScale,
-  &suspendedPentatonicScale,
-  &inSenScale,
-  &bluesScale,
-  //&majorBebopScale,
-  //&dominantBebopScale,
-  //&minorBebopScale,
-  &majorArp,
-  &minorArp,
-  &majorMaj7Arp,
-  &majorMin7Arp,
-  &minorMin7Arp,
-  //&minorMaj7Arp,
-  &majorMaj7Arp9,
-  //&majorMaj7ArpMin9,
-  //&majorMin7Arp9,
-  //&majorMin7ArpMin9,
-  //&minorMin7Arp9,
-  //&minorMin7ArpMin9,
-  //&minorMaj7Arp9,
-  //&minorMaj7ArpMin9
+const scale_t *scales[16]{
+    &chromaticScale, &ionianScale,
+    //&dorianScale,
+    &phrygianScale,
+    //&lydianScale,
+    //&mixolydianScale,
+    //&aeolianScale,
+    //&locrianScale,
+    &harmonicMinorScale, &melodicMinorScale,
+    //&lydianDominantScale,
+    //&wholeToneScale,
+    //&wholeHalfStepScale,
+    //&halfWholeStepScale,
+    &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
+    &inSenScale, &bluesScale,
+    //&majorBebopScale,
+    //&dominantBebopScale,
+    //&minorBebopScale,
+    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
+    //&minorMaj7Arp,
+    &majorMaj7Arp9,
+    //&majorMaj7ArpMin9,
+    //&majorMin7Arp9,
+    //&majorMin7ArpMin9,
+    //&minorMin7Arp9,
+    //&minorMin7ArpMin9,
+    //&minorMaj7Arp9,
+    //&minorMaj7ArpMin9
 };
-

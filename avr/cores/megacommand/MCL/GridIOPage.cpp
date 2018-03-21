@@ -29,7 +29,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
     md_exploit.off();
 
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }

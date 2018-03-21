@@ -10,6 +10,9 @@
 #define NUM_MD_TRACKS 16
 #define NUM_EXT_TRACKS 4
 
+#define SEQ_MUTE_ON 1
+#define SEQ_MUTE_OFF 0
+
 class MCLSeq : public ClockCallback {
 public:
 

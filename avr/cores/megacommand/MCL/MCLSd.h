@@ -4,6 +4,9 @@
 #define MCLSD_H__
 #include "MCL.h"
 #include "SdFat.h"
+
+#define SD_MAX_RETRIES 5 
+
 class MCLSd {
   public:
   uint16_t sd_write_fail = 0;

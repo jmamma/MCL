@@ -3,6 +3,8 @@
 #ifndef SEQPAGES_H__
 #define SEQPAGES_H__
 
+#define ENCODER_RES_SEQ 2
+
 extern MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
 extern MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
 extern MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);

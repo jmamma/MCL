@@ -17,4 +17,3 @@ GridSavePage grid_save_page(&gridio_param1, &gridio_param2, &gridio_param3,
 GridWritePage grid_write_pag(&gridio_param1, &gridio_param2, &gridio_param3,
                              &gridio_param4);
 
-Grid grid;

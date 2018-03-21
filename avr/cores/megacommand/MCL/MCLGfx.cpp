@@ -14,7 +14,7 @@ void MCLGfx::splashscreen() {
   // while (rec_global == 0) {
 
 
-  GUI.setPage(&page);
+  GUI.setPage(&grid_page);
 }
 
 MCLGfx gfx;

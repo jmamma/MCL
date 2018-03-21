@@ -8,6 +8,19 @@
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
+
+#ifdef DEBUGMODE
+#define DEBUG_PRINT(x)  Serial.print(x)
+#define DEBUG_PRINTLN(x)  Serial.println(x)
+#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__FUNCTION__);})
+
+#else
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT_FN(x)
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,8 +33,6 @@ extern "C" {
 #endif
 
 #include "CommonTools/helpers.h"
-
-
 
 /* default config flags */
 #define MIDIDUINO_POLL_GUI     1
@@ -36,13 +47,11 @@ extern "C" {
 #ifdef __cplusplus
 
 
-//#include "OLED.h"
 #include "LCD.h"
 #include "OLED.h"
 #include "GUI_private.h"
 #include "MidiUart.h"
 
-//#include "../../libraries/Midi/src/MidiClock.h"
 #include "MidiClock.h"
 #include "Stack.h"
 #include "GUI.h"

@@ -37,7 +37,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     md_exploit.off();
     store_tracks_in_mem(0, param2.getValue(), STORE_IN_PLACE);
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }
@@ -52,7 +52,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     }
     md_exploit.off();
     store_tracks_in_mem(param1.getValue(), param2.getValue(), STORE_IN_PLACE);
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }
@@ -68,7 +68,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     md_exploit.off();
     store_tracks_in_mem(param1.getValue(), param2.getValue(),
                         STORE_AT_SPECIFIC);
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }

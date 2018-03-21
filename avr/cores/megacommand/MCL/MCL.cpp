@@ -1,15 +1,7 @@
 #include "MCL.h"
 
-MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
-MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
-MCLSystemPage system_page(&options_param1, &options_param2);
-
-uint8_t in_sysex = 0;
-uint8_t in_sysex2 = 0;
-int8_t curpage = 0;
 
 void MCL::setup() {
-  Serial.begin(9600);
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
 
@@ -17,23 +9,6 @@ void MCL::setup() {
 
   LCD.createChar(1, charmap);
 
-  // Enable callbacks, and disable some of the ones we don't want to use.
-
-  // MDTask.setup();
-  // MDTask.verbose = false;
-  // MDTask.autoLoadKit = false;
-  // MDTask.reloadGlobal = false;
-
-  // GUI.addTask(&MDTask);
-
-  // Create a mdHandler object to handle callbacks.
-
-  MDSysexCallbacks mdHandler;
-  mdHandler.setup();
-
-  // int temp = MD.getCurrentKit(50);
-
-  // Load the splashscreen
   gfx.splashscreen();
 
   // Initialise Track Routing to Default output (1 & 2)
@@ -74,7 +49,6 @@ void MCL::setup() {
 
   A4SysexListener.setup();
 
-  sei();
   midi_setup.cfg_ports();
   // md_setup();
   param1.cur = cfg.cur_col;

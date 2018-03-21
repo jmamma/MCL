@@ -88,7 +88,7 @@ bool CuePage::handleEvent(gui_event_t *event) {
           toggle_cues_batch();
           md_exploit.send_globals();
           md_exploit.off();
-          GUI.setPage(&page);
+          GUI.setPage(&grid_page);
           curpage = 0;
         }
       }

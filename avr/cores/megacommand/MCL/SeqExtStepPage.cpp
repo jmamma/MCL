@@ -233,15 +233,11 @@ if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
 if ( EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
     if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
       mcl_seq.ext_tracks[last_ext_track].resolution  = 2;
-      if (curpage == SEQ_EXTSTEP_PAGE) {
          init();
-      }
  
     } else {
       mcl_seq.ext_tracks[last_ext_track].resolution  = 1;
-      if (curpage == SEQ_EXTSTEP_PAGE) {
          init(); 
-      }
     }
 
     return true;

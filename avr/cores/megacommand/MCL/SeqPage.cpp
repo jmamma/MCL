@@ -279,7 +279,7 @@ void SeqPageMidiEvents::remove_callbacks() {
 
 void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (md_exploit.off()) {
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
   }
 }

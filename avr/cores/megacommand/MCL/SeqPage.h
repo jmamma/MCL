@@ -6,6 +6,7 @@
 
 class SeqPage : LightPage {
  public:
+ //Static variables shared amongst derived objects
  static uint8_t page_select;
  
  static uint8_t last_md_track;

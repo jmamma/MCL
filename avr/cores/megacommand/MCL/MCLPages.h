@@ -2,14 +2,11 @@
 
 #ifndef MCLPAGES_H__
 #define MCLPAGES_H__
-#include "GUI.h"
-#include "GridSavePage.h"
-#include "GridWritePage.h"
-#include "CuePage.h"
 
-extern MCLEncoder mcl_param1(0, 3, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param2(0, 64, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param3(0, 10, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param4(0, 16, ENCODER_RES_SEQ);
+#define ENCODER_RES_SYS 2
+
+extern MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
+extern MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
+extern MCLSystemPage system_page(&options_param1, &options_param2);
 
 #endif /* MCLPAGES_H__ */

@@ -3,6 +3,14 @@
 #ifndef GRID_H__
 #define GRID_H__
 
+#define GRID_LENGTH 130
+#define GRID_WIDTH 22
+#define GRID_SLOT_BYTES 4096
+
+#define A4_TRACK_TYPE 2
+#define MD_TRACK_TYPE 1
+#define EXT_TRACK_TYPE 3
+#define EMPTY_TRACK_TYPE 0
 
 class Grid {
 public:

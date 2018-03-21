@@ -4,6 +4,7 @@
 #define MCLSYSCONFIG_H__
 #include "MCL.h"
 #include "SDFat.h"
+#define CONFIG_VERSION 2012
 
 class MCLSysConfigData {
   uint32_t version;

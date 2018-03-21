@@ -4,6 +4,8 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
+#define LOCK_AMOUNT 256
+
 class ParameterLock {
 public:
   uint8_t param_number;

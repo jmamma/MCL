@@ -92,7 +92,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
   md_exploit.off();
   write_tracks_to_md( 0, param2.getValue(), 0);
-  GUI.setPage(&page);
+  GUI.setPage(&grid_page);
   curpage = 0;
   return true;
   }
@@ -111,7 +111,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     md_exploit.off();
     write_original = 0;
     write_tracks_to_md(MD.currentTrack, param2.getValue(), 254);
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }
@@ -127,7 +127,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     write_original = 1;
     write_tracks_to_md(0, param2.getValue(), 0);
 
-    GUI.setPage(&page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
   }

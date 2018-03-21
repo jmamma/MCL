@@ -12,6 +12,7 @@
 #include "MCLSd.h"
 
 #include "MDExploit.h" //MDExploit should come before MCLSequencer for callback priority
+#include "Grid.h"
 #include "MCLSeq.h"
 #include "MCLActions.h"
 #include "MDSysexCallbacks.h"
@@ -22,13 +23,13 @@
 #include "ProjectPages.h"
 #include "SeqPages.h"
 #include "AuxPages.h"
+#include "MCLPages.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
 
-extern MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
-extern MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
-extern MCLSystemPage system_page(&options_param1, &options_param2);
+#define CALLBACK_TIMEOUT 500
+#define GUI_NAME_TIMEOUT 800
 
 extern uint8_t in_sysex;
 extern uint8_t in_sysex;

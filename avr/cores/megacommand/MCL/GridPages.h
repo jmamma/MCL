@@ -3,6 +3,8 @@
 #ifndef GRIDPAGES_H__
 #define GRIDPAGES_H__
 
+#define ENCODER_RES_GRID 2
+#define ENCODER_RES_PAT 2
 
 extern GridEncoder param1(0, GRID_WIDTH - 4, ENCODER_RES_GRID);
 extern GridEncoder param2(0, 127, ENCODER_RES_GRID);
@@ -19,5 +21,4 @@ extern MCLEncoder gridio_param4(0, 11, ENCODER_RES_PAT);
 extern GridSavePage grid_save_page(&gridio_param1, &gridio_param2, &gridio_param3, &gridio_param4);
 extern GridWritePage grid_write_pag(&gridio_param1, &gridio_param2, &gridio_param3, &gridio_param4);
 
-extern Grid grid;
 #endif /* GRIDPAGES_H__ */
