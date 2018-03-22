@@ -2,7 +2,7 @@
 
 #ifndef MCLGFX_H__
 #define MCLGFX_H__
-#include "MCL.h"
+
 
 class MCLGfx {
   public:

@@ -15,7 +15,7 @@ void SeqStepPage::init() {
 
   curpage = SEQ_STEP_PAGE;
 }
-bool SeqStepPage::display() {
+void SeqStepPage::display() {
   GUI.put_string_at(0, "                ");
 
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);

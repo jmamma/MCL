@@ -8,18 +8,18 @@ void GridWritePage::setup() {
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
-  currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  patternload_param3.cur = currentkit_temp;
-  MD.saveCurrentKit(currentkit_temp);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  patternload_param3.cur = MD.currentKit;
+  MD.saveCurrentKit(MD.currentKit);
 
-  // MD.requestKit(currentkit_temp);
+  // MD.requestKit(MD.currentKit);
   md_exploit.on();
   note_interface.state = true;
   // GUI.display();
   curpage = W_PAGE;
 }
 
-bool GridWritePage::display() {
+void GridWritePage::display() {
   draw_notes(0);
   GUI.setLine(GUI.LINE2);
   if (curpage == S_PAGE) {
@@ -40,7 +40,7 @@ bool GridWritePage::display() {
     GUI.put_string_at(2, "OG");
   }
 
-  uint8_t step_count = (MidiClock.div16th_counter - pattern_start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - pattern_start_clock32th / 2) / 64));
+  uint8_t step_count = (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
   if (curpage == W_PAGE) {
     uint8_t x;
@@ -121,7 +121,6 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
       md_exploit.notes[i] = 3;
     }
-    trackposition = TRUE;
     //   write_tracks_to_md(-1);
     md_exploit.off();
     write_original = 1;

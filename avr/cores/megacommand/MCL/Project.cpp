@@ -104,7 +104,6 @@ bool Project::sd_new_project(char *projectname) {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Creating new project");
-  numProjects++;
 
   file.close();
 

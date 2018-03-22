@@ -3,8 +3,10 @@
 #ifndef MDSEQTRACK_H__
 #define MDSEQTRACK_H__
 
+#include "MidiActivePeering.h"
+
 class MDSeqTrackData {
-  public:
+public:
   uint8_t length;
   uint8_t locks[4][64];
   uint8_t locks_params[4];
@@ -19,8 +21,8 @@ class MDSeqTrack : MDSeqTrackData {
 public:
   uint8_t track_number;
   uint8_t port = UART1_PORT;
-  MidiuUart *uart = &MidiUart;
- 
+  MidiUartParent *uart = &MidiUart;
+
   void seq();
   void trig_conditional();
   void send_parameter_locks(uint8_t i, uint8_t step_count);
@@ -29,11 +31,8 @@ public:
   void set_track_step(uint8_t track, uint8_t step, uint8_t utiming,
                       uint8_t note_num, uint8_t velocity);
 
-  void
-  record_track(uint8_t track, uint8_t note_num,
-               uint8_t velocity) void record_track_locks(uint8_t track,
-                                                         uint8_t track_param,
-                                                         uint8_t value);
+  void record_track(uint8_t track, uint8_t note_num, uint8_t velocity);
+  void record_track_locks(uint8_t track, uint8_t track_param, uint8_t value);
   void clear_seq_conditional();
   void clear_seq_locks();
   void clear_seq_track();

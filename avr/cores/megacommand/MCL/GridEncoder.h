@@ -2,7 +2,7 @@
 
 #ifndef GRIDENCODER_H__
 #define GRIDENCODER_H__
-#include "MCL.h"
+
 
 class GridEncoder : public Encoder {
   /**

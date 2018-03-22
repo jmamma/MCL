@@ -34,7 +34,7 @@ void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
   mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
 }
 
-bool SeqExtStepPage::display() {
+void SeqExtStepPage::display() {
   GUI.put_string_at(0, "                ");
 
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);

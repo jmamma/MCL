@@ -3,13 +3,16 @@
 #ifndef MCL_H__
 #define MCL_H__
 
+#include <string.h>
+#include <midi-common.hh>
+
 #include "MD.h"
 #include "A4.h"
 
 #include "MCLGfx.h"
-#include "MCLMacros.h"
 #include "MCLSysConfig.h"
 #include "MCLSd.h"
+#include "MDSeqTrack.h"
 
 #include "MDExploit.h" //MDExploit should come before MCLSequencer for callback priority
 #include "Grid.h"
@@ -35,7 +38,11 @@ extern uint8_t in_sysex;
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;
 extern int8_t curpage;
+extern uint8_t patternswitch;
 
+extern MDPattern pattern_rec;
+extern MDSeqTrack temptrack;
+extern MDSysexCallbacks md_callbacks;
 
 class MCL {
 public:

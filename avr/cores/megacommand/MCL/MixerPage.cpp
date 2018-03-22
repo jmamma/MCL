@@ -139,10 +139,10 @@ bool MixerPage::setup() {
   Encoders[1]->handler = encoder_level_handle;
   Encoders[2]->handler = encoder_level_handle;
   create_chars_mixer();
-  currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   curpage = MIXER_PAGE;
-  MD.saveCurrentKit(currentkit_temp);
-  MD.getBlockingKit(currentkit_temp);
+  MD.saveCurrentKit(MD.currentKit);
+  MD.getBlockingKit(MD.currentKit);
   level_pressmode = 0;
   mixer_param1.cur = 60;
   md_exploit.on();

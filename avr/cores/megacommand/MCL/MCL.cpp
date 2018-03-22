@@ -1,5 +1,14 @@
 #include "MCL.h"
 
+uint8_t in_sysex;
+uint8_t in_sysex;
+uint8_t in_sysex2;
+int8_t curpage;
+uint8_t patternswitch = PATTERN_UDEF;
+
+MDPattern pattern_rec;
+MDSeqTrack temptrack;
+
 
 void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
@@ -33,7 +42,7 @@ void MCL::setup() {
   // if (!ret) { }
 
   // MidiClock.mode = MidiClock.EXTERNAL_MIDI;
-
+  md_callbacks.setup();
 
   NoteInteface.setup()
   //

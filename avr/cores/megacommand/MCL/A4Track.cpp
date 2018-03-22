@@ -1,4 +1,6 @@
 #include "A4Track.h"
+#include "MCLSeq.h"
+#include "MCLSd.h"
 
 bool A4Track::getTrack_from_sysex(int tracknumber, uint8_t column) {
 

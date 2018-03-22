@@ -3,28 +3,29 @@
 #ifndef SEQPAGES_H__
 #define SEQPAGES_H__
 
+#include "MCLEncoder.h"
 #define ENCODER_RES_SEQ 2
+#define NUM_PARAM_PAGES 2
 
-extern MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
-extern MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
-extern MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
-extern MCLEncoder seq_param4(0, 16, ENCODER_RES_SEQ);
+extern MCLEncoder seq_param1;
+extern MCLEncoder seq_param2;
+extern MCLEncoder seq_param3;
+extern MCLEncoder seq_param4;
+
+#include "SeqParamPage.h"
+#include "SeqStepPage.h"
+#include "SeqExtStepPage.h"
+#include "SeqRtrkPage.h"
+#include "SeqRlckPage.h"
+#include "SeqPtcPage.h"
+
 
 extern SeqParamPage seq_param_page[NUM_PARAM_PAGES];
-extern SeqStepPage seq_step_page(&seq_param1, &seq_param2, &seq_param3,
-                                 &seq_param4);
-extern SeqExtStep seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
-                                   &seq_param4);
-extern SeqRtrkPage seq_rtrk_page(&seq_param1, &seq_param2, &seq_param3,
-                                 &seq_param4);
-extern SeqRlckPage seq_rlck_page(&seq_param1, &seq_param2, &seq_param3,
-                                 &seq_param4);
-extern SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
-                                       &seq_param4);
-extern SeqPtcPage seq_ptc_page(&seq_param1, &seq_param2, &seq_param3,
-                               &seq_param4);
-extern SeqRPtcPage seq_rptc_page(&seq_param1, &seq_param2, &seq_param3,
-                                 &seq_param4);
+extern SeqStepPage seq_step_page;
+extern SeqRtrkPage seq_rtrk_page;
+extern SeqRlckPage seq_rlck_page;
+extern SeqExtStepPage seq_extstep_page;
+extern SeqPtcPage seq_ptc_page;
 
 class SeqPages {
 public:

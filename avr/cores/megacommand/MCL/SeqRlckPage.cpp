@@ -16,7 +16,7 @@ void SeqRlckPage::init() {
   midi_events.setup_callbacks();
 }
 void SeqRlckPage::cleanup() { midi_events.remove_callbacks(); }
-bool SeqRlckPage::display() {
+void SeqRlckPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, seq_page.page_select + 1);
 

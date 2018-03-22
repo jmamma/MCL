@@ -31,7 +31,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
         row_name[c] = ' ';
       }
       else {
-        row_name[c] = currentkitName[char_position - 5];
+        row_name[c] = grid.currentkitName[char_position - 5];
       }
     }
     row_name[4] = '\0';
@@ -39,7 +39,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
   }
   else {
     for (uint8_t a = 0; a < 16; a++) {
-      row_name[a] = currentkitName[a];
+      row_name[a] = grid.currentkitName[a];
     }
     row_name[16] = '\0';
 
@@ -49,7 +49,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
 }
 
-void uint32_t Grid::get_slot_model(int column, int row, bool load, A4Track *track_buf) {
+uint8_t Grid::get_slot_model(int column, int row, bool load, A4Track *track_buf) {
   if (column < 16) {
     if ( load == true) {
       if (!temptrack.load_track_from_grid(column, row, 50)) {

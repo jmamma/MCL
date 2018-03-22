@@ -2,7 +2,7 @@
 
 #ifndef MIDISETUP_H__
 #define MIDISETUP_H__
-#include "MCL.h"
+
 
 class MidiSetup {
   public:

@@ -2,11 +2,12 @@
 
 #ifndef NEWPROJECTPAGE_H__
 #define NEWPROJECTPAGE_H__
-#include "GUI.h"
 
+
+char allowedchars;
 class NewProjectPage : LightPage {
 public:
-const char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
+  char newprj[18];
 
   NewProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
@@ -14,7 +15,7 @@ const char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   void setup();
-   void update_prjpage_char();
+  void update_prjpage_char();
 };
 
 #endif /* NEWPROJECTPAGE_H__ */

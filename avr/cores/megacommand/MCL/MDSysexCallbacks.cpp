@@ -31,19 +31,19 @@ void MDSysexCallbacks::onStatusResponseCallback(uint8_t type, uint8_t value) {
 
 void MDSysexCallbacks::onKitMessage() {
   setLed2();
-  /*If patternswitch == PATTERN_STORE then the Kit request is for the purpose of
+  /*If mcl_actions.patternswitch == PATTERN_STORE then the Kit request is for the purpose of
    * obtaining track data*/
   if (!MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
     return;
   }
 
-  if (patternswitch == PATTERN_STORE) {
+  if (mcl_actions.patternswitch == PATTERN_STORE) {
   }
 
   /*Patternswitch == 6, store pattern in memory*/
   /*load up tracks and kit from a pattern that is different from the one
    * currently loaded*/
-  if (patternswitch == 6) {
+  if (mcl_actions.patternswitch == 6) {
     //   if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
 
     for (int i = 0; i < 16; i++) {
@@ -58,12 +58,12 @@ void MDSysexCallbacks::onKitMessage() {
     /*If the pattern can't be retrieved from the sysex data then there's been a
      * problem*/
 
-    patternswitch = PATTERN_UDEF;
+    mcl_actions.patternswitch = PATTERN_UDEF;
 
     //  }
   }
 
-  if (patternswitch == 7) {
+  if (mcl_actions.patternswitch == 7) {
     //  if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
     if (param3.effect == MD_FX_ECHO) {
       param3.setValue(MD.kit.delay[param3.fxparam]);
@@ -76,7 +76,7 @@ void MDSysexCallbacks::onKitMessage() {
       param4.setValue(MD.kit.reverb[param4.fxparam]);
     }
     //   }
-    patternswitch = PATTERN_UDEF;
+    mcl_actions.patternswitch = PATTERN_UDEF;
   }
   clearLed2();
 }
@@ -85,7 +85,7 @@ void onPatternMessage() {
   setLed2();
 
   /*Reverse track callback*/
-  if (patternswitch == 5) {
+  if (mcl_actions.patternswitch == 5) {
     /*Retrieve the pattern from the Sysex buffer and store it in the pattern_rec
      * object. The MD header is 5 bytes long, hence the offset and length
      * change*/
@@ -234,7 +234,7 @@ void onPatternMessage() {
                       //Send the encoded pattern to the MD via sysex
                       pattern_rec.toSysex(encoder);
                       clearLed();
-                      patternswitch = PATTERN_UDEF;
+                      mcl_actions.patternswitch = PATTERN_UDEF;
 
              }
     */
@@ -242,7 +242,7 @@ void onPatternMessage() {
   }
 
   // Loop track switch
-  else if (patternswitch == 4) {
+  else if (mcl_actions.patternswitch == 4) {
     // Retrieve the pattern from the Sysex buffer and store it in the
     // pattern_rec object. The MD header is 5 bytes long, hence the offset and
     // length change
@@ -313,14 +313,14 @@ void onPatternMessage() {
                         pattern_rec.toSysex(encoder);
                         clearLed();
       */
-      patternswitch = PATTERN_UDEF;
+      mcl_actions.patternswitch = PATTERN_UDEF;
     }
     //   else { GUI.flash_strings_fill("SYSEX", "ERROR");  }
   }
 
-  /*If patternswitch == PATTERN_STORE, the pattern receiveed is for storing
+  /*If mcl_actions.patternswitch == PATTERN_STORE, the pattern receiveed is for storing
      track data*/
-  else if (patternswitch == PATTERN_STORE) {
+  else if (mcl_actions.patternswitch == PATTERN_STORE) {
 
     /*Retrieve the pattern from the Sysex buffer and store it in the pattern_rec
      * object. The MD header is 5 bytes long, hence the offset and length
@@ -328,16 +328,16 @@ void onPatternMessage() {
     //        if (pattern_rec.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen
     //        - 5)) {
 
-    // patternswitch = PATTERN_UDEF;
+    // mcl_actions.patternswitch = PATTERN_UDEF;
     //      }
     /*If the pattern can't be retrieved from the sysex data then there's been a
      * problem*/
     //  else { GUI.flash_strings_fill("SYSEX", "ERROR");  }
 
   }
-  /*If patternswitch == 1, the pattern receiveed is for sending a track to the
+  /*If mcl_actions.patternswitch == 1, the pattern receiveed is for sending a track to the
      MD.*/
-  else if (patternswitch == 1) {
+  else if (mcl_actions.patternswitch == 1) {
 
     /*Retrieve the pattern from the Sysex buffer and store it in the pattern_rec
      * object. The MD header is 5 bytes long, hence the offset and length

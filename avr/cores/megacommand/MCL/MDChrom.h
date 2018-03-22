@@ -3,7 +3,7 @@
 #ifndef MDCHROM_H__
 #define MDCHROM_H__
 
-#include "MCL.h"
+
 #define EXPLOIT_MAX_NOTES 20
 
 class MCLChrom {
@@ -33,7 +33,7 @@ public:
 
 extern MCLChrom md_exploit;
 
-class MCLChromMidiEvents : public MidiCallBack {
+class MCLChromMidiEvents : public MidiCallback {
   bool state;
 
   void setup_callbacks();

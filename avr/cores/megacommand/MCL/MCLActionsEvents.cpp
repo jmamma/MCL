@@ -3,7 +3,7 @@
 
 void MCLActionsMidiEvents::onProgramChangeCallback(uint8_t *msg) {
       MCLActions::load_the_damnkit(msg[1]);
-      pattern_start_clock32th = MidiClock.div32th_counter;
+      mcl_actions_callbacks.start_clock32th = MidiClock.div32th_counter;
 }
  
 void MCLActionsMidiEvents::setup_callbacks() {
@@ -70,7 +70,7 @@ void MCLActionsMidiEvents::onNoteOffCallback(uint8_t *msg) {
 }
 void MCLActionsMidiEvents::onProgramChangeCallback(uint8_t *msg) {
       load_the_damnkit(msg[1]);
-      pattern_start_clock32th = MidiClock.div32th_counter;
+      mcl_actions_callbacks.start_clock32th = MidiClock.div32th_counter;
 }
 
 

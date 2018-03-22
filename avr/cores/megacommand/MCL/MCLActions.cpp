@@ -4,11 +4,11 @@
 void MCLActions::setup() {}
 
 void MCLActions::kit_reload(uint8_t pattern) {
- if (mcl_actions.kit_reload != 255) {
+ if (mcl_actions.do_kit_reload != 255) {
     if (mcl_actions.writepattern == pattern) {
-      MD.loadKit(mcl_actions.kit_reload);
+      MD.loadKit(mcl_actions.do_kit_reload);
     }
-    mcl_actions.kit_reload = 255;
+    mcl_actions.do_kit_reload = 255;
 
   }
 
@@ -17,6 +17,43 @@ void MCLActions::kit_reload(uint8_t pattern) {
 MCLActions mcl_actions;
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
+
+bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound) {
+  //       if (Grids[encodervaluer] != NULL) {
+
+  if (column < 16) {
+
+    if (temptrack.load_track_from_grid(column, row, 0)) {
+      if (temptrack.active != EMPTY_TRACK_TYPE) {
+        temptrack.placeTrack_in_sysex(curtrack, column);
+      }
+    }
+  }
+  else {
+    if (Analog4.connected) {
+      A4Track track_buf;
+
+      if (track_buf.load_track_from_grid(column, row, 0)) {
+        if (track_buf.active != EMPTY_TRACK_TYPE) {
+
+          return track_buf.placeTrack_in_sysex(curtrack, column, analogfour_sound);
+        }
+      }
+    }
+    else {
+      ExtTrack track_buf;
+      if (track_buf.load_track_from_grid(column, row, 0)) {
+        if (track_buf.active != EMPTY_TRACK_TYPE) {
+
+          return track_buf.placeTrack_in_sysex(curtrack, column);
+        }
+      }
+    }
+  }
+
+
+}
+
 
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
 
@@ -154,7 +191,7 @@ void MCLActions::write_tracks_to_md( int column, int row, int b) {
   }
 
   if (gridio_param3.getValue() != MD.currentKit) {
-    currentkit_temp = gridio_param3.getValue();
+    MD.currentKit = gridio_param3.getValue();
   }
 
   cur_col = column;
@@ -187,7 +224,7 @@ void MCLActions::send_pattern_kit_to_md() {
 
   A4Track *track_buf;
 
-  MD.getBlockingKit(currentkit_temp);
+  MD.getBlockingKit(MD.currentKit);
   temptrack.load_track_from_grid(0, cur_row, 0);
   //if (!Analog4.getBlockingKitX(0)) { return; }
   //if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8)) { return; }
@@ -356,7 +393,7 @@ void MCLActions::send_pattern_kit_to_md() {
     pattern_rec.scale = temptrack.kitextra.scale;
 
   }
-  // MD.kit.origPosition = currentkit_temp;
+  // MD.kit.origPosition = MD.currentKit;
 
   //Kit
   //If Kit is OG.
@@ -369,8 +406,8 @@ void MCLActions::send_pattern_kit_to_md() {
 
   else {
 
-    pattern_rec.kit = currentkit_temp;
-    MD.kit.origPosition = currentkit_temp;
+    pattern_rec.kit = MD.currentKit;
+    MD.kit.origPosition = MD.currentKit;
     //       }
   }
   //If Pattern is OG
@@ -433,15 +470,15 @@ void MCLActions::send_pattern_kit_to_md() {
     in_sysex2 = 0;
   }
 
-  if (pattern_start_clock32th > MidiClock.div32th_counter) {
-    pattern_start_clock32th = 0;
+  if (mcl_actions_callbacks.start_clock32th > MidiClock.div32th_counter) {
+    mcl_actions_callbacks.start_clock32th = 0;
   }
   if (quantize_mute > 0) {
     if (MidiClock.state == 2) {
       if ((q_pattern_change != 1) && (quantize_mute <= 64)) {
-        // (MidiClock.div32th_counter - pattern_start_clock32th)
+        // (MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th)
         //                   while (((MidiClock.div32th_counter + 3) % (quantize_mute * 2))  != 0) {
-        while ((((MidiClock.div32th_counter - pattern_start_clock32th) + 3) % (quantize_mute * 2))  != 0) {
+        while ((((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) + 3) % (quantize_mute * 2))  != 0) {
           GUI.display();
         }
       }

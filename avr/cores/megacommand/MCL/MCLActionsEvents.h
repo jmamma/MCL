@@ -3,9 +3,11 @@
 #ifndef MCLACTIONSEVENTS_H__
 #define MCLACTIONSEVENTS_H__
 
-#include "MCL.h"
 
-class MCLActionsMidiEvents : public MidiCallBack {
+#include "MidiClock.h"
+#include "midi-common.hh"
+class MCLActionsMidiEvents : public MidiCallback {
+public:
   bool state;
 
   void setup_callbacks();
@@ -18,13 +20,12 @@ class MCLActionsMidiEvents : public MidiCallBack {
   // Control change callback required to disable exploit if CC received
   // Any updating of MD display causes exploit to fail.
   void onControlChangeCallback_Midi(uint8_t *msg);
-
-}
+};
 
 class MCLActionsCallbacks : public ClockCallback {
 public:
   bool state;
-
+  uint32_t start_clock32th = 0;
   void onMidiStartCallback();
 
   void setup_callbacks();

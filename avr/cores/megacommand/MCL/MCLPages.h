@@ -3,10 +3,13 @@
 #ifndef MCLPAGES_H__
 #define MCLPAGES_H__
 
+#include "MCLEncoder.h"
+#include "MCLSystemPage.h"
+
 #define ENCODER_RES_SYS 2
 
-extern MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
-extern MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
-extern MCLSystemPage system_page(&options_param1, &options_param2);
+extern MCLEncoder options_param1;
+extern MCLEncoder options_param2;
+extern MCLSystemPage system_page;
 
 #endif /* MCLPAGES_H__ */

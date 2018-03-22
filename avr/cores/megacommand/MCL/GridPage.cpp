@@ -43,6 +43,16 @@ void GridPage::encoder_fx_handle(Encoder *enc) {
   MD.sendFXParam(mdEnc->fxparam, mdEnc->getValue(), mdEnc->effect);
   CLEAR_LOCK();
 }
+
+void GridPage::encoder_param2_handle(Encoder *enc) {
+
+  if (enc->hasChanged()) {
+    grid_lastclock = slowclock;
+
+    reload_slot_models = 0;
+  }
+}
+
 void GridPage::load_slot_models() {
 
   DEBUG_PRINT_FN(x);
@@ -86,7 +96,7 @@ void GridPage::tick_frames() {
   }
 }
 
-void toggle_fx1() {
+void GridPage::toggle_fx1() {
   dispeffect = 1;
   if (encoders[3]->effect == MD_FX_REV) {
     fx_dc = encoders[3]->getValue();
@@ -103,7 +113,7 @@ void toggle_fx1() {
   }
 }
 
-void toggle_fx2() {
+void GridPage::toggle_fx2() {
  dispeffect = 1;
 
   if (encoder[4]->.effect == MD_FX_REV) {
@@ -132,7 +142,7 @@ void GridPage::display() {
 
   //  return;
 
-  row_name_offset += (float)1 / frames_fps * 1.5;
+  grid.row_name_offset += (float)1 / frames_fps * 1.5;
 
   if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
     toggle_fx1();
@@ -152,7 +162,7 @@ void GridPage::display() {
 
   if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
     display_name = 1;
-    if (clock_diff(cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
+    if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
       cfg.cur_col = encoders[1]->cur;
       cfg.cur_row = encoders[2]->cur;
       cfg.write_cfg();
@@ -344,7 +354,7 @@ void GridPage::loop() { midi_active_peering.check(); }
 bool GridPage::setup() {
   frames_startclock = slowclock;
 
-  encoders[2]->handler = encoder_encoders[2]->handle;
+  encoders[2]->handler = encoder_param2_handle;
   encoders[3]->handler = encoder_fx_handle;
   encoders[3]->effect = MD_FX_ECHO;
   encoders[3]->fxparam = MD_ECHO_TIME;

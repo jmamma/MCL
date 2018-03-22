@@ -2,7 +2,7 @@
 
 #ifndef LOADPROJECTPAGE_H__
 #define LOADPROJECTPAGE_H__
-#include "GUI.h"
+
 
 class LoadProjectPage : LightPage {
  public:

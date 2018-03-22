@@ -39,7 +39,7 @@ void SeqPtcPage::pattern_len_handler(Encoder *enc) {
 md_exploit.init_notes();
 }
 
-bool SeqPtcPage::display() {
+void SeqPtcPage::display() {
   const char *str1 = getMachineNameShort(MD.kit.models[grid.cur_col], 1);
   const char *str2 = getMachineNameShort(MD.kit.models[grid.cur_col], 2);
   GUI.setLine(GUI.LINE1);

@@ -2,7 +2,7 @@
 
 #ifndef A4SEQTRACK_H__
 #define A4SEQTRACK_H__
-#include "GUI.h"
+
 
 class A4SeqTrack : public ExtSeqTrack {
 
@@ -11,7 +11,7 @@ public:
                Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
       : ExtSeqTrack(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
-  bool display();
+  void display();
   void setup();
 };
 

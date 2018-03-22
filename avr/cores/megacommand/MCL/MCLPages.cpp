@@ -1,4 +1,5 @@
-extern MCLEncoder mcl_param1(0, 3, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param2(0, 64, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param3(0, 10, ENCODER_RES_SEQ);
-extern MCLEncoder mcl_param4(0, 16, ENCODER_RES_SEQ);
+#include "MCLSystemPage.cpp"
+
+MCLEncoder options_param1(0, 5, ENCODER_RES_SYS);
+MCLEncoder options_param2(0, 3, ENCODER_RES_SYS);
+MCLSystemPage system_page(options_param1, options_param2);

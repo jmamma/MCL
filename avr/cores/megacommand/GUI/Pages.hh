@@ -163,7 +163,7 @@ public:
 
   Encoder *encoders[GUI_NUM_ENCODERS];
 
-  LightPage(void (*func_point)(uint8_t), Encoder *e1 = NULL, Encoder *e2 = NULL,
+  LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
            Encoder *e3 = NULL, Encoder *e4 = NULL) {
     setEncoders(e1, e2, e3, e4);
   }

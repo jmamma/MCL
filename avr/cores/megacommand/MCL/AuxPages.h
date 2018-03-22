@@ -3,9 +3,13 @@
 #ifndef AUXPAGES_H__
 #define AUXPAGES_H__
 
-extern MCLEncoder mixer_param1(0, 127);
-extern MCLEncoder mixer_param2(0, 127);
-extern MCLEncoder mixer_param3(0, 8);
-MixerPage mixer_page(&mixer_param1, &mixer_param2, &mixer_param3);
-CuePage cue_page(&mixer_param1, &mixer_param2, &mixer_param3);
+#include "MCLEncoder.h"
+#include "MixerPage.h"
+#include "CuePage.h"
+
+extern MCLEncoder mixer_param1;
+extern MCLEncoder mixer_param2;
+extern MCLEncoder mixer_param3;
+extern MixerPage mixer_page;
+extern CuePage cue_page;
 #endif /* AUXPAGES_H__ */

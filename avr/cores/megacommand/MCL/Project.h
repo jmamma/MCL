@@ -3,7 +3,7 @@
 #ifndef PROJECT_H__
 #define PROJECT_H__
 #include "ProjectPages.h"
-#include "MCL.h"
+#include "MCLSysConfig.h"
 #define VERSION 2013
 
 class ProjectHeader {

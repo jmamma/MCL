@@ -1,8 +1,11 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-#include "MCL.h"
 
 #ifndef A4TRACK_H__
 #define A4TRACK_H__
+
+#include "ExtTrack.h"
+#include "A4.h"
+#include "Project.h"
 
 class A4Track : public ExtTrack {
 public:

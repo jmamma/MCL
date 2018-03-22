@@ -10,12 +10,12 @@ void SeqParamPage::init() {
   encoders[3]->max = 23;
   encoders[4]->max = 127;
 
-  encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks_params[0];
-  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks_params[1];
+  encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
+  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
   encoders[2]->cur =
-      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[0];
+      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p1]];
   encoders[4]->cur =
-      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[1];
+      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p2]];
 
   curpage = SEQ_PARAMA_PAGE;
 }
@@ -23,7 +23,7 @@ void SeqParamPage::construct(uint8_t p1, uint8_t p2) {
   param1 = p1;
   param2 = p2;
 }
-bool SeqParamPage::display() {
+void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);
   char myName[4] = "-- ";
   char myName2[4] = "-- ";

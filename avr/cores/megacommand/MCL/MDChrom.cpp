@@ -270,7 +270,7 @@ void MDExploitCallbacks::onMidiStartCallback() {
   exploit_start_clock = slowclock;
   md_exploit.note_proceed = false;
   // }
-  pattern_start_clock32th = 0;
+  mcl_actions_callbacks.start_clock32th = 0;
 }
 
 MDExploit md_exploit;

@@ -2,7 +2,6 @@
 
 #ifndef MIDIACTIVEPEERING_H__
 #define MIDIACTIVEPEERING_H__
-#include "MCL.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2
@@ -13,7 +12,7 @@
 #define DEVICE_A4 0x06
 
 class MidiActivePeering {
-  public:
+public:
   uint8_t uart1_device = DEVICE_NULL;
   uint8_t uart2_device = DEVICE_NULL;
   void md_setup();

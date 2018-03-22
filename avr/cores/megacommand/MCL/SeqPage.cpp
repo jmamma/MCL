@@ -4,13 +4,13 @@ void SeqPage::setup() {
   encoders[3]->handler = pattern_len_handler;
   encoders[2]->min = 0;
   create_chars_seq();
-  currentkit_temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   // stored.
     if (MidiClock.state != 2) {
-      MD.saveCurrentKit(currentkit_temp);
+      MD.saveCurrentKit(MD.currentKit);
     }
 
-    MD.getBlockingKit(currentkit_temp);
+    MD.getBlockingKit(MD.currentKit);
     MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
   grid.cur_col = last_md_track;
@@ -69,9 +69,9 @@ SeqPage::draw_lockmask(uint8_t offset) {
 
   char str[17] = "----------------";
   uint8_t step_count =
-      (MidiClock.div16th_counter - pattern_start_clock32th / 2) -
+      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
       (mcl_seq.md_tracks[grid.cur_col].length *
-       ((MidiClock.div16th_counter - pattern_start_clock32th / 2) /
+       ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) /
         mcl_seq.md_tracks[grid.cur_col].length));
 
   for (int i = 0; i < 16; i++) {
@@ -132,9 +132,9 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
     for (int i = 0; i < 16; i++) {
       if (device == DEVICE_MD) {
         uint8_t step_count =
-            (MidiClock.div16th_counter - pattern_start_clock32th / 2) -
+            (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
             (mcl_seq.md_tracks[grid.cur_col].length *
-             ((MidiClock.div16th_counter - pattern_start_clock32th / 2) /
+             ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) /
               mcl_seq.md_tracks[grid.cur_col].length));
 
         if (i + offset >= mcl_seq.md_tracks[grid.cur_col].length) {
@@ -161,10 +161,10 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
 
       uint8_t step_count =
           ((MidiClock.div32th_counter / mcl_seq.ext_tracks[last_ext_track].resolution) -
-           (pattern_start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) -
+           (mcl_actions_callbacks.start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) -
           (mcl_seq.ext_tracks[last_ext_track].length *
            ((MidiClock.div32th_counter / mcl_seq.ext_tracks[last_ext_track].resolution -
-             (pattern_start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) /
+             (mcl_actions_callbacks.start_clock32th / mcl_seq.ext_tracks[last_ext_track].resolution)) /
             (mcl_seq.ext_tracks[last_ext_track].length)));
       uint8_t noteson = 0;
       uint8_t notesoff = 0;

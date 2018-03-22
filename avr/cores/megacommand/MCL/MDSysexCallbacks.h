@@ -2,7 +2,7 @@
 
 #ifndef MDSYSEXCALLBACKS_H__
 #define MDSYSEXCALLBACKS_H__
-#include "MCL.h"
+
 
 class MDSysexCallbacks : public MDCallback {
 
@@ -14,6 +14,5 @@ public:
   void onPatternMessages();
   void onKitMessages();
 };
-extern;
 
 #endif /* MDSYSEXCALLBACKS_H__ */

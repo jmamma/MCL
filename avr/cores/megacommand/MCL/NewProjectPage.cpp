@@ -1,5 +1,20 @@
 #include "NewProjectPage.h"
 
+char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
+void NewProjectPage::setup() {
+
+  char my_string[16] = "/project___.mcl";
+
+  my_string[8] = (cfg.number_projects % 1000) / 100 + '0';
+  my_string[8 + 1] = (cfg.number_projects % 100) / 10 + '0';
+  my_string[8 + 2] = (cfg.number_projects % 10) + '0';
+
+  m_strncpy(newprj, my_string, 16);
+  curpage = NEW_PROJECT_PAGE;
+
+
+  update_prjpage_char();
+}
 void NewProjectPage::update_prjpage_char() {
   uint8_t x = 0;
   //Check to see that the character chosen is in the list of allowed characters
@@ -68,17 +83,4 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-void NewProjectPage::setup() {
 
-  char my_string[16] = "/project___.mcl";
-
-  my_string[8] = (cfg.number_projects % 1000) / 100 + '0';
-  my_string[8 + 1] = (cfg.number_projects % 100) / 10 + '0';
-  my_string[8 + 2] = (cfg.number_projects % 10) + '0';
-
-  m_strncpy(newprj, my_string, 16);
-  curpage = NEW_PROJECT_PAGE;
-
-
-  update_prjpage_char();
-}

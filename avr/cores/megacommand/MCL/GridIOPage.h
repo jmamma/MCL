@@ -2,7 +2,7 @@
 
 #ifndef GRIDIOPAGE_H__
 #define GRIDIOPAGE_H__
-#include "GUI.h"
+
 
 class GridIOPage : LightPage {
  public:

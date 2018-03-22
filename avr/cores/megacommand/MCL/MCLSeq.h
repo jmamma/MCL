@@ -2,36 +2,18 @@
 
 #ifndef MCLSEQUENCER_H__
 #define MCLSEQUENCER_H__
-#include "MCL.h"
+
 #include "SeqPages.h"
 #include "midiclock.h"
-
-#define NUM_PARAM_PAGES 2
+#include "ExtSeqTrack.h"
+#include "MDTrack.h"
 #define NUM_MD_TRACKS 16
 #define NUM_EXT_TRACKS 4
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
-class MCLSeq : public ClockCallback {
-public:
-
-  static uint8_t num_md_tracks = NUM_MD_TRACKS;
-  static uint8_t num_ext_tracks = NUM_EXT_TRACKS;
-
-  MDSeqTrack  md_tracks[NUM_MD_TRACKS];
-  ExtSeqTrackExt ext_tracks[NUM_EXT_TRACKS];
-
-  MCLSeqMidiEvents midi_events;
-
-  void setup();
-  void onMidiStopCallback();
-  void sequencer();
-};
-
-extern MCLSeq mcl_seq;
-
-class MCLSeqMidiEvents : public MidiCallBack {
+class MCLSeqMidiEvents : public MidiCallback {
   bool state;
 
   void setup_callbacks();
@@ -42,6 +24,26 @@ class MCLSeqMidiEvents : public MidiCallBack {
   void onNoteOffCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
-}
+};
+
+
+class MCLSeq : public ClockCallback {
+public:
+
+  uint8_t num_md_tracks = NUM_MD_TRACKS;
+  uint8_t num_ext_tracks = NUM_EXT_TRACKS;
+
+  MDSeqTrack  md_tracks[NUM_MD_TRACKS];
+  ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
+
+  MCLSeqMidiEvents midi_events;
+
+  void setup();
+  void onMidiStopCallback();
+  void sequencer();
+};
+
+extern MCLSeq mcl_seq;
+
 
 #endif /* MCLSEQUENCER_H__ */

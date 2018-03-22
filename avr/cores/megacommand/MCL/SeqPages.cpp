@@ -13,6 +13,5 @@ SeqRlckPage seq_rlck_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
 SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
                                 &seq_param4);
 SeqPtcPage seq_ptc_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
-SeqRPtcPage seq_rptc_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
 
 SeqPages seq_pages;

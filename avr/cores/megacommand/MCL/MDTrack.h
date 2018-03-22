@@ -1,10 +1,14 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-#include "MCL.h"
-
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
+
+#include "Grid.h"
+#include "MD.h"
+#include "MDSeqTrack.h"
+
 #define LOCK_AMOUNT 256
+#define MD_TRACK_TYPE 1
 
 class ParameterLock {
 public:

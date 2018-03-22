@@ -12,7 +12,7 @@ void GridSavePage::setup() {
   reload_slot_models = 0;
 }
 
-bool GridSavePage::display() {
+void GridSavePage::display() {
   note_interface.draw_notes(0);
   GUI.setLine(GUI.LINE2);
     GUI.put_string_at(0, "S");
@@ -28,7 +28,7 @@ bool GridSavePage::display() {
     GUI.put_string_at(2, "OG");
   }
 
-  uint8_t step_count = (MidiClock.div16th_counter - pattern_start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - pattern_start_clock32th / 2) / 64));
+  uint8_t step_count = (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
 
 }

@@ -2,6 +2,7 @@
 
 #ifndef CUEPAGE_H__
 #define CUEPAGE_H__
+
 #include "GUI.h"
 
 class CuePage : LightPage {

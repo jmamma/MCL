@@ -3,10 +3,17 @@
 #ifndef EXTSEQTRACK_H__
 #define EXTSEQTRACK_H__
 
+#include "MidiUartParent.hh"
+//#include "MidiUart.h"
+#include "WProgram.h"
 #define SEQ_NOTEBUF_SIZE 8
+#define SEQ_MUTE_ON 1
+#define SEQ_MUTE_OFF 0
+
+#define UART2_PORT 2
 
 class ExtSeqTrackData {
-  public:
+public:
   uint8_t length = 16;
   uint8_t resolution = 1; // Resolution = 2 / ExtPatternResolution
 
@@ -18,22 +25,22 @@ class ExtSeqTrackData {
   uint8_t conditional[128];
   uint8_t timing[128];
 };
-class ExtSeqTrack : ExtSeqTrackData {
+class ExtSeqTrack {
 
 public:
   uint8_t channel;
   uint8_t port = UART2_PORT;
-  MidiuUart *uart = &MidiUart2;
+  MidiUartParent *uart = &MidiUart2;
 
   uint8_t mute = SEQ_MUTE_OFF;
   uint8_t
       notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
                                     // currently being played, in order to stop
                                     // them in the event the sequencer stops
-
+  ExtSeqTrackData seq_data;
   void seq();
-  void set_step(uint8_t step, uint8_t note_num,
-                uint8_t velocity) void buffer_notesoff();
+  void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  void buffer_notesoff();
   void note_on(uint8_t note);
   void note_off(uint8_t note);
   void noteon_conditional(uint8_t condition, uint8_t note);

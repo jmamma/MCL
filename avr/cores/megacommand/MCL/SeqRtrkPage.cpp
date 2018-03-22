@@ -16,7 +16,7 @@ void SeqRtrkPage::init() {
   curpage = SEQ_RTRK_PAGE;
 }
 
-bool SeqRtrkPage::display() {
+void SeqRtrkPage::display() {
 
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, seq_page.page_select + 1);

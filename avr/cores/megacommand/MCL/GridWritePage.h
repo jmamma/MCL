@@ -2,7 +2,8 @@
 
 #ifndef GRIDWRITEPAGE_H__
 #define GRIDWRITEPAGE_H__
-#include "GUI.h"
+
+#include "GridIOPage.h"
 
 class GridWritePage : GridIOPage {
  public:
@@ -10,7 +11,7 @@ class GridWritePage : GridIOPage {
 
  }
  bool handleEvent(gui_event_t *event);
- bool display();
+ void display();
  void setup();
 };
 

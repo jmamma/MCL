@@ -2,7 +2,8 @@
 
 #ifndef GRIDSAVEPAGE_H__
 #define GRIDSAVEPAGE_H__
-#include "GUI.h"
+
+#include "GridIOPage.h"
 
 class GridSavePage : public GridIOPage {
 
@@ -11,7 +12,7 @@ public:
                Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
       : GridIOPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
-  bool display();
+  void display();
   void setup();
 };
 

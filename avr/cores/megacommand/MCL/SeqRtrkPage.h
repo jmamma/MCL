@@ -2,7 +2,8 @@
 
 #ifndef SEQRTRKPAGE_H__
 #define SEQRTRKPAGE_H__
-#include "GUI.h"
+
+#include "SeqPage.h"
 
 class SeqRtrkPage : public SeqPage {
 

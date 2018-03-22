@@ -1,16 +1,16 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef SYSTEMPAGE_H__
-#define SYSTEMPAGE_H__
-#include "GUI.h"
+#ifndef MCLSYSTEMPAGE_H__
+#define MCLSYSTEMPAGE_H__
 
-class SystemPage : LightPage {
+
+class MCLSystemPage : LightPage {
  public:
- SystemPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
+ MCLSystemPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
  }
  void display();
  virtual bool handleEvent(gui_event_t *event);
 };
 
-#endif /* SYSTEMPAGE_H__ */
+#endif /* MCLSYSTEMPAGE_H__ */
