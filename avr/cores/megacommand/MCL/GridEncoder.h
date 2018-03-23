@@ -3,6 +3,7 @@
 #ifndef GRIDENCODER_H__
 #define GRIDENCODER_H__
 
+#include "GUI.h"
 
 class GridEncoder : public Encoder {
   /**
@@ -19,7 +20,7 @@ public:
   uint8_t fxparam;
   uint8_t effect;
   uint8_t num;
-
+  bool scroll_fastmode = false;
   /**
      Create a new range-limited encoder with max and min value, short
      name, initial value, and handling function. The initRangeEncoder

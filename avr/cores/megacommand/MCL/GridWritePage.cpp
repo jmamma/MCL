@@ -1,10 +1,12 @@
 #include "GridWritePage.h"
+#include "MCL.h"
+#define W_PAGE 4
 
 void GridWritePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  patternload_param1.cur = (int)MD.currentPattern / (int)16;
-  patternload_param2.cur =
+  encoders[1]->cur = (int)MD.currentPattern / (int)16;
+  encoders[2]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
@@ -119,7 +121,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     for (int i = 0; i < 20; i++) {
 
-      md_exploit.notes[i] = 3;
+      note_interface.notes[i] = 3;
     }
     //   write_tracks_to_md(-1);
     md_exploit.off();

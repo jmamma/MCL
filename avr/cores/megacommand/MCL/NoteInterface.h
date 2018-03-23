@@ -27,7 +27,7 @@ public:
   uint8_t note_hold = 0;
   bool note_proceed = false;
   bool state = true;
-  init_notes();
+  void init_notes();
   void setup();
   void draw_notes(uint8_t line_number);
   void note_on_event(uint8_t note_num, uint8_t port);

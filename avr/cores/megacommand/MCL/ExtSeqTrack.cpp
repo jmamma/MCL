@@ -1,6 +1,7 @@
 #include "ExtSeqTrack.h"
+#include "MCL.h"
 
-void SeqExtTrack::seq() {
+void ExtSeqTrack::seq() {
 
     uint8_t step_count =
         ((MidiClock.div32th_counter / resolution) -
@@ -19,13 +20,12 @@ void SeqExtTrack::seq() {
       timing_counter =
           MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
     }
-    //        if (step_count == (length * (2 /
-    //        resolution) - 1)) {
 
-    if (step_count == length) {
       uint8_t next_step = 0;
+    if (step_count == length) {
+      next_step = 0;
     } else {
-      uint8_t next_step = step_count + 1;
+      next_step = step_count + 1;
     }
 
     int8_t utiming_next = timing[next_step];         // upper
@@ -41,7 +41,7 @@ void SeqExtTrack::seq() {
           }
 
           else if (notes[c][step_count] > 0) {
-            if ((mutes == SEQ_MUTE_OFF)) {
+            if ((mute == SEQ_MUTE_OFF)) {
               noteon_conditional(condition,
                                  abs(notes[c][step_count]) - 1);
             }
@@ -57,7 +57,7 @@ void SeqExtTrack::seq() {
           if (notes[c][step_count + 1] < 0) {
             note_off(abs(notes[c][next_step]) - 1);
           } else if (notes[c][step_count + 1] > 0) {
-            if (mutes == SEQ_MUTE_OFF) {
+            if (mute == SEQ_MUTE_OFF) {
               noteon_conditional(condition,
                                  abs(notes[c][next_step]) - 1);
             }
@@ -65,12 +65,11 @@ void SeqExtTrack::seq() {
         }
       }
     }
-  }
 }
 
 void ExtSeqTrack::buffer_notesoff() {
   for (uint8_t c = 0; c < SEQ_NOTEBUF_SIZE; c++) {
-    if (notebufferuffer[c] > 0) {
+    if (notebuffer[c] > 0) {
       uart->sendNoteOff(channel, notebuffer[c], 0);
       notebuffer[c] = 0;
     }
@@ -97,14 +96,14 @@ void ExtSeqTrack::note_off(uint8_t note) {
   }
 }
 
-void SeqExtTrack::noteon_conditional(uint8_t condition, uint8_t note) {
+void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
   if ((condition == 0)) {
     note_on(note);
   }
 
   else if (condition <= 8) {
-    if (resolution[track] == 2) {
+    if (resolution == 2) {
       if (((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2 + length) /
            length) %
               ((condition)) ==
@@ -132,7 +131,7 @@ void SeqExtTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   }
 }
 
-void SeqExtTrack::set_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
+void ExtSeqTrack::set_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
   uint8_t match = 255;
   // Look for matching note already on this step
   // If it's a note off, then disable the note
@@ -140,7 +139,7 @@ void SeqExtTrack::set_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
   for (uint8_t c = 0; c < 4 && match == 255; c++) {
     if (notes[c][step] == -(1 * (note_num + 1))) {
       notes[c][step] = 0;
-      seq_notesoff(track);
+      buffer_notesoff();
       match = c;
     }
     if (notes[c][step] == (1 * (note_num + 1))) {
@@ -157,7 +156,7 @@ void SeqExtTrack::set_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
       // Check to see if we have same number of note offs as note ons.
       // If there are more note ons for given note, the next note entered should
       // be a note off.
-      for (uint8_t a = 0; a < mcl_seq.ext_tracks[track].length; a++) {
+      for (uint8_t a = 0; a < length; a++) {
         for (uint8_t b = 0; b < 4; b++) {
           if (notes[b][a] == -(1 * (note_num + 1))) {
             ons_and_offs -= 1;
@@ -175,14 +174,14 @@ void SeqExtTrack::set_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
     }
   }
 }
-void SeqExtTrack::record_ext_track_noteoff( uint8_t note_num,
+void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
                                       uint8_t velocity) {
   uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
        (mcl_actions_callbacks.start_clock32th / resolution)) -
-      (mcl_seq.ext_tracks[track].length * ((MidiClock.div32th_counter / resolution -
+      (length * ((MidiClock.div32th_counter / resolution -
                                     (mcl_actions_callbacks.start_clock32th / resolution)) /
-                                   (mcl_seq.ext_tracks[track].length)));
+                                   (length)));
 
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
@@ -201,7 +200,7 @@ void SeqExtTrack::record_ext_track_noteoff( uint8_t note_num,
 
       if (notes[c][step_count] > 0) {
         step_count = step_count + 1;
-        if (step_count > mcl_seq.ext_tracks[track].length) {
+        if (step_count > length) {
           step_count = 0;
         }
         utiming = MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
@@ -223,14 +222,14 @@ void SeqExtTrack::record_ext_track_noteoff( uint8_t note_num,
   timing[step_count] = utiming;
 }
 
-void SeqExtTrack::record_ext_track_noteon( uint8_t note_num,
+void ExtSeqTrack::record_ext_track_noteon( uint8_t note_num,
                                      uint8_t velocity) {
   uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
        (mcl_actions_callbacks.start_clock32th / resolution)) -
-      (mcl_seq.ext_tracks[track].length * ((MidiClock.div32th_counter / resolution -
+      (length * ((MidiClock.div32th_counter / resolution -
                                     (mcl_actions_callbacks.start_clock32th / resolution)) /
-                                   (mcl_seq.ext_tracks[track].length)));
+                                   (length)));
 
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
@@ -265,13 +264,13 @@ void SeqExtTrack::record_ext_track_noteon( uint8_t note_num,
   }
 }
 
-void SeqExtTrack::clear_ext_conditional() {
+void ExtSeqTrack::clear_ext_conditional() {
   for (uint8_t c = 0; c < 128; c++) {
     conditional[c] = 0;
     timing[c] = 0;
   }
 }
-void SeqExtTrack::clear_ext_locks() {
+void ExtSeqTrack::clear_ext_notes() {
   for (uint8_t c = 0; c < 4; c++) {
     for (uint8_t x = 0; x < 128; x++) {
       notes[c][x] = 0;
@@ -280,11 +279,10 @@ void SeqExtTrack::clear_ext_locks() {
   }
 }
 
-void SeqExtTrack::clear_track() {
-  clear_locks();
-  clear_conditional();
-  seq_buffer_notesoff();
-  lockmask = 0;
+void ExtSeqTrack::clear_track() {
+  clear_ext_notes();
+  clear_ext_conditional();
+  buffer_notesoff();
 
 
 }

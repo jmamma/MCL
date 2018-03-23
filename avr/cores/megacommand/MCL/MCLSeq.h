@@ -6,7 +6,8 @@
 #include "SeqPages.h"
 #include "midiclock.h"
 #include "ExtSeqTrack.h"
-#include "MDTrack.h"
+#include "MDSeqTrack.h"
+//#include "MDTrack.h"
 #define NUM_MD_TRACKS 16
 #define NUM_EXT_TRACKS 4
 

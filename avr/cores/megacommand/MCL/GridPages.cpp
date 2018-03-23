@@ -1,4 +1,5 @@
 #include "GridPages.h"
+#include "MCL.h"
 
 GridEncoder param1(0, GRID_WIDTH - 4, ENCODER_RES_GRID);
 GridEncoder param2(0, 127, ENCODER_RES_GRID);

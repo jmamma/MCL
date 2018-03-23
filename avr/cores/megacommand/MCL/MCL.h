@@ -12,9 +12,11 @@
 #include "MCLGfx.h"
 #include "MCLSysConfig.h"
 #include "MCLSd.h"
-#include "MDSeqTrack.h"
+
+#include "Project.h"
 
 #include "MDExploit.h" //MDExploit should come before MCLSequencer for callback priority
+#include "NoteInterface.h"
 #include "Grid.h"
 #include "MCLSeq.h"
 #include "MCLActions.h"
@@ -31,6 +33,8 @@
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
 
+#include "MDTrack.h"
+
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
 
@@ -41,7 +45,7 @@ extern int8_t curpage;
 extern uint8_t patternswitch;
 
 extern MDPattern pattern_rec;
-extern MDSeqTrack temptrack;
+extern MDTrack temptrack;
 extern MDSysexCallbacks md_callbacks;
 
 class MCL {

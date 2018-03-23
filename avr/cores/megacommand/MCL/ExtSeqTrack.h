@@ -25,7 +25,7 @@ public:
   uint8_t conditional[128];
   uint8_t timing[128];
 };
-class ExtSeqTrack {
+class ExtSeqTrack : public ExtSeqTrackData {
 
 public:
   uint8_t channel;
@@ -37,7 +37,6 @@ public:
       notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
                                     // currently being played, in order to stop
                                     // them in the event the sequencer stops
-  ExtSeqTrackData seq_data;
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   void buffer_notesoff();
@@ -50,7 +49,7 @@ public:
   void set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t velocity);
 
   void clear_ext_conditional();
-  void clear_ext_locks();
+  void clear_ext_notes();
   void clear_track();
 };
 

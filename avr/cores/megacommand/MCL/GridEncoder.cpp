@@ -1,3 +1,6 @@
+#include "GridEncoder.h"
+#include "MCL.h"
+
 int GridEncoder::update(encoder_t *enc) {
 
   int inc = enc->normal +
@@ -25,11 +28,11 @@ void GridEncoder::displayAt(int i) {
 
   GUI.setLine(GUI.LINE1);
 
-  char a4_name2[2] = "TK";
+  char a4_name2[3] = "TK";
 
   char strn[3] = "--";
   // A4Track track_buf;
-  uint8_t model = grid_models[encoders[1]->getValue() + i];
+  uint8_t model = grid_page.grid_models[getValue() + i];
 
   // getGridModel(encoders[1]->getValue() + i, encoders[2]->getValue(), true, (A4Track*)
   // &track_buf);
@@ -37,7 +40,7 @@ void GridEncoder::displayAt(int i) {
   /*Retrieve the first 2 characters of Maching Name associated with the Track at
    * the current Grid. First obtain the Model object from the Track object, then
    * convert the MachineType into a string*/
-  if (encoders[1]->getValue() + i < 16) {
+  if (getValue() + i < 16) {
     str = getMachineNameShort(model, 1);
 
     if (str == NULL) {
@@ -50,11 +53,11 @@ void GridEncoder::displayAt(int i) {
       GUI.put_string_at((0 + (i * 3)), strn);
     } else {
       if (model == A4_TRACK_TYPE) {
-        char a4_name1[2] = "A4";
+        char a4_name1[3] = "A4";
         GUI.put_string_at((0 + (i * 3)), a4_name1);
       }
       if (model == EXT_TRACK_TYPE) {
-        char ex_name1[2] = "EX";
+        char ex_name1[3] = "EX";
         GUI.put_string_at((0 + (i * 3)), ex_name1);
       }
     }
@@ -63,7 +66,7 @@ void GridEncoder::displayAt(int i) {
   GUI.setLine(GUI.LINE2);
   str = NULL;
 
-  if (encoders[1]->getValue() + i < 16) {
+  if (getValue() + i < 16) {
 
     str = getMachineNameShort(model, 2);
 
@@ -79,7 +82,7 @@ void GridEncoder::displayAt(int i) {
       GUI.put_string_at((0 + (i * 3)), strn);
     } else {
       GUI.put_string_at((0 + (i * 3)), a4_name2);
-      GUI.put_value_at1(1 + (i * 3), encoders[1]->getValue() + i - 15);
+      GUI.put_value_at1(1 + (i * 3), getValue() + i - 15);
     }
   }
   redisplay = false;

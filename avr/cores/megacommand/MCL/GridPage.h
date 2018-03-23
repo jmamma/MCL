@@ -3,9 +3,9 @@
 #ifndef GRIDPAGE_H__
 #define GRIDPAGE_H__
 
-#include "Pages.hh"
+#include "GUI.h"
 
-class GridPage : LightPage {
+class GridPage : public LightPage {
 public:
   float frames_fps;
   uint8_t cur_col = 0;
@@ -28,12 +28,16 @@ public:
   virtual bool handleEvent(gui_event_t *event);
   void toggle_fx1();
   void toggle_fx2();
-  void encoder_fx_handle(Encoder *enc);
-  void encoder_param2_handle(Encoder *enc);
   void displayScroll(uint8_t i);
   void load_slot_models();
-
+  void tick_frames();
+  void display();
+  void setup();
+  void init();
   void loop();
 };
+
+void encoder_fx_handle(Encoder *enc);
+void encoder_param2_handle(Encoder *enc);
 
 #endif /* GRIDPAGE_H__ */

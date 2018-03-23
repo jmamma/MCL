@@ -1,14 +1,16 @@
 #include "ExtTrack.h"
+#include "MCL.h"
 
-bool ExtTrack::getTrack_from_sysex(int tracknumber, uint8_t column) {
+bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber].seq_data,
+  m_memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
            sizeof(seq_data));
   active = EXT_TRACK_TYPE;
+  return true;
 }
-bool ExtTrack::placeTrack_in_sysex(int tracknumber, uint8_t column) {
+bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&mcl_seq.ext_tracks[tracknumber].seq_data, &seq_data,
+  m_memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
   return true;
 }
@@ -56,7 +58,7 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  getTrack_from_sysex(track - 16, column - 16);
+  get_track_from_sysex(track - 16, column - 16);
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");

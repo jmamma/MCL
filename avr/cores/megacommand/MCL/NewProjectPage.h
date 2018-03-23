@@ -5,7 +5,7 @@
 
 
 char allowedchars;
-class NewProjectPage : LightPage {
+class NewProjectPage : public LightPage {
 public:
   char newprj[18];
 

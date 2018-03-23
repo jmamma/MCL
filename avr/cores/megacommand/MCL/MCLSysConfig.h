@@ -22,9 +22,8 @@ public:
   uint8_t cur_col;
 };
 
-class MCLSysConfig {
+class MCLSysConfig : public MCLSysConfigData {
 public:
-  MCLSysConfigData data;
   uint16_t cfg_save_lastclock = 0;
   File cfgfile;
   bool write_cfg();

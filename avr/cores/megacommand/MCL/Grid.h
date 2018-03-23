@@ -3,8 +3,8 @@
 #ifndef GRID_H__
 #define GRID_H__
 
-#include "GridPages.h"
 #include "A4Track.h"
+#include "GridPages.h"
 
 #define GRID_LENGTH 130
 #define GRID_WIDTH 22
@@ -19,17 +19,13 @@ class Grid {
 public:
   float row_name_offset = 0;
   char row_name[17] = "                ";
-  uint8_t get_slot_model(int column, int row, bool load,
-                               A4Track *track_buf);
- 
+  uint8_t get_slot_model(int column, int row, bool load, A4Track *track_buf);
+
   void setup();
   bool clear_slot(uint16_t i);
-  bool clear_row(uint16_t i);
- char *get_slot_kit(int column, int row, bool load, bool scroll);
+  bool clear_row(uint16_t row);
+  char *get_slot_kit(int column, int row, bool load, bool scroll);
 };
 extern Grid grid;
-extern GridPage grid_page;
-extern GridSavePage grid_save_page;
-extern GridWritePage grid_write_page;
 
 #endif /* GRID_H__ */

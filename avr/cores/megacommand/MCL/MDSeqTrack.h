@@ -16,7 +16,7 @@ public:
   uint8_t timing[64];
 };
 
-class MDSeqTrack : MDSeqTrackData {
+class MDSeqTrack : public MDSeqTrackData {
 
 public:
   uint8_t track_number;

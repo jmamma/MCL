@@ -31,7 +31,8 @@ public:
   void place_track_inpattern(int curtrack, int column, int row,
                              A4Sound *analogfour_sound);
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
-  void store_tracks_in_men(int column, int row, int store_behaviour_);
+
+  void store_tracks_in_mem(int column, int row, int store_behaviour_);
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
 };

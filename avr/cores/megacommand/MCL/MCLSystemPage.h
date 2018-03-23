@@ -4,7 +4,7 @@
 #define MCLSYSTEMPAGE_H__
 
 
-class MCLSystemPage : LightPage {
+class MCLSystemPage : public LightPage {
  public:
  MCLSystemPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 

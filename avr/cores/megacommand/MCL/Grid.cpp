@@ -1,11 +1,12 @@
 #include "Grid.h"
+#include "MCL.h"
 
 void Grid::setup() {}
 
 char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
   A4Track track_buf;
-  if (grid_models[column] == EMPTY_TRACK_TYPE) {
+  if (grid_page.grid_models[column] == EMPTY_TRACK_TYPE) {
     return "----";
   }
 
@@ -31,7 +32,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
         row_name[c] = ' ';
       }
       else {
-        row_name[c] = grid.currentkitName[char_position - 5];
+        row_name[c] = grid_page.currentkitName[char_position - 5];
       }
     }
     row_name[4] = '\0';
@@ -39,7 +40,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
   }
   else {
     for (uint8_t a = 0; a < 16; a++) {
-      row_name[a] = grid.currentkitName[a];
+      row_name[a] = grid_page.currentkitName[a];
     }
     row_name[16] = '\0';
 
@@ -79,7 +80,7 @@ uint8_t Grid::get_slot_model(int column, int row, bool load, A4Track *track_buf)
 
 }
 
-void Grid::clear_slot(uint16_t i) {
+bool Grid::clear_slot(uint16_t i) {
   bool ret;
   int b;
 
@@ -106,13 +107,10 @@ void Grid::clear_slot(uint16_t i) {
   }
   return true;
 }
-void Grid::clear_row(uint16_t i) {
+bool Grid::clear_row(uint16_t row) {
   for (int x = 0; x < GRID_WIDTH; x++) {
     clear_slot(x + (row * GRID_WIDTH));
   }
 }
 
 Grid grid;
-GridPage grid_page;
-GridSavePage grid_save_page;
-GridWritePage grid_write_page;

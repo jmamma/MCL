@@ -7,7 +7,7 @@ int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
 MDPattern pattern_rec;
-MDSeqTrack temptrack;
+MDTrack temptrack;
 
 
 void MCL::setup() {

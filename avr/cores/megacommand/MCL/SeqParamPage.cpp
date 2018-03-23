@@ -70,7 +70,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    if (device == A4_DEVICE) {
+    if (device == DEVICE_A4) {
        return true;
     }
 

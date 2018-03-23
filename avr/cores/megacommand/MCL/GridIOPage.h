@@ -3,8 +3,9 @@
 #ifndef GRIDIOPAGE_H__
 #define GRIDIOPAGE_H__
 
+#include "GUI.h"
 
-class GridIOPage : LightPage {
+class GridIOPage : public LightPage {
  public:
  GridIOPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 

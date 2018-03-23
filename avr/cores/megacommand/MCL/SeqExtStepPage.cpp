@@ -144,13 +144,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
       uint8_t track = event->source - 128;
     
-    if (device == A4_DEVICE) {
+    if (device == DEVICE_A4) {
       uint8_t track = event->source - 128 - 16;
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      if (device == MD_DEVICE) {
+      if (device == DEVICE_MD) {
 
         if ((track + (seq_page.page_select * 16)) >=
             mcl_seq.ext_tracks[last_extseq_track].length) {
@@ -177,7 +177,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
         note_interface.last_note = track;
       }
-      if (device == A4_DEVICE) {
+      if (device == DEVICE_A4) {
         last_ext_track = track;
         init();
       }

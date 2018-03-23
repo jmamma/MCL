@@ -1,17 +1,18 @@
 #include "A4Track.h"
+#include "MCL.h"
 #include "MCLSeq.h"
-#include "MCLSd.h"
+//#include "MCLSd.h"
 
 bool A4Track::getTrack_from_sysex(int tracknumber, uint8_t column) {
 
-        m_memcpy(&seq_data,&mcl_seq.ext_tracks[tracknumber].seq_data, sizeof(seq_data));
+        m_memcpy(&seq_data,&mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
   active = A4_TRACK_TYPE;
 }
 bool A4Track::placeTrack_in_sysex(int tracknumber, uint8_t column,
                                   A4Sound *analogfour_sound) {
   if (active == A4_TRACK_TYPE) {
     m_memcpy(analogfour_sound, &sound, sizeof(A4Sound));
-m_memcpy(&mcl_seq.ext_tracks[tracknumber].seq_data,&seq_data, sizeof(seq_data));
+m_memcpy(&mcl_seq.ext_tracks[tracknumber],&seq_data, sizeof(seq_data));
     return true;
   } else {
     return false;

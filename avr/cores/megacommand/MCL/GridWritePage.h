@@ -5,7 +5,7 @@
 
 #include "GridIOPage.h"
 
-class GridWritePage : GridIOPage {
+class GridWritePage : public GridIOPage {
  public:
  GridWritePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {
 

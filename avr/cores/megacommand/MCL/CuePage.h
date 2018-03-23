@@ -5,14 +5,14 @@
 
 #include "GUI.h"
 
-class CuePage : LightPage {
+class CuePage : public LightPage {
  public:
  CuePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
  }
  void toggle_cue(int i);
  void toggle_cues_batch();
-
+ void set_level(int curtrack, int value);
  bool handleEvent(gui_event_t *event);
  virtual void display();
  void setup();

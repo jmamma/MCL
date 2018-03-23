@@ -13,7 +13,7 @@ public:
 };
 
 
-class SeqPage : LightPage {
+class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;

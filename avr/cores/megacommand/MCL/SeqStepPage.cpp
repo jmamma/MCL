@@ -65,7 +65,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      if (device == A4_DEVICE) {
+      if (device == DEVICE_A4) {
         last_Ext_Track = track;
         GUI.setPage(&seq_extstep_page);
       }

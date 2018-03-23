@@ -6,7 +6,7 @@
 //#include "Pages.hh"
 #include "GUI.h"
 
-class MixerPage : LightPage {
+class MixerPage : public LightPage {
 public:
   uint8_t level_pressmode = 0;
 

@@ -11,7 +11,7 @@ class ProjectHeader {
   uint8_t reserved[16];
   uint32_t hash;
   MCLSysConfig cfg;
-  write_header();
+  bool write_project_header();
 };
 
 class Project {

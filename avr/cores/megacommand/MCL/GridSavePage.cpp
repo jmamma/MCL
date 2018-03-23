@@ -1,15 +1,18 @@
 #include "GridSavePage.h"
+#include "MCL.h"
+#define S_PAGE 3
+
 
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  patternload_param1.cur = (int)MD.currentPattern / (int)16;
-  patternload_param2.cur =
+  encoders[1]->cur = (int)MD.currentPattern / (int)16;
+  encoders[2]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
   md_exploit.on();
   note_interface.state = true;
   curpage = S_PAGE;
-  reload_slot_models = 0;
+  grid_page.reload_slot_models = 0;
 }
 
 void GridSavePage::display() {
@@ -36,7 +39,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     md_exploit.off();
-    store_tracks_in_mem(0, param2.getValue(), STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(0, param2.getValue(), STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -48,10 +51,10 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     for (int i = 0; i < 20; i++) {
 
-      md_exploit.notes[i] = 3;
+      note_interface.notes[i] = 3;
     }
     md_exploit.off();
-    store_tracks_in_mem(param1.getValue(), param2.getValue(), STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(param1.getValue(), param2.getValue(), STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -66,7 +69,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     // MD.getCurrentPattern(CALLBACK_TIMEOUT);
     md_exploit.off();
-    store_tracks_in_mem(param1.getValue(), param2.getValue(),
+    mcl_actions.store_tracks_in_mem(param1.getValue(), param2.getValue(),
                         STORE_AT_SPECIFIC);
     GUI.setPage(&grid_page);
     curpage = 0;

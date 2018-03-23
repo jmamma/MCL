@@ -1,5 +1,22 @@
+#include "GUI.h"
 #include "GridPage.h"
+#include "GridPages.h"
+#include "MCL.h"
 
+void GridPage::init() { md_exploit.off(); }
+void GridPage::setup() {
+  frames_startclock = slowclock;
+
+  encoders[2]->handler = encoder_param2_handle;
+  encoders[3]->handler = encoder_fx_handle;
+  ((GridEncoder *) encoders[3])->effect = MD_FX_ECHO;
+  ((GridEncoder *) encoders[3])->fxparam = MD_ECHO_TIME;
+  encoders[4]->handler = encoder_fx_handle;
+  ((GridEncoder *) encoders[4])->effect = MD_FX_ECHO;
+  ((GridEncoder *) encoders[4])->fxparam = MD_ECHO_FB;
+}
+
+void GridPage::loop() { midi_active_peering.check(); }
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
 
@@ -27,7 +44,7 @@ void GridPage::displayScroll(uint8_t i) {
   }
 }
 
-void GridPage::encoder_fx_handle(Encoder *enc) {
+void encoder_fx_handle(Encoder *enc) {
   GridEncoder *mdEnc = (GridEncoder *)enc;
 
   /*Scale delay feedback for safe ranges*/
@@ -36,7 +53,6 @@ void GridPage::encoder_fx_handle(Encoder *enc) {
     if (mdEnc->getValue() > 68) {
       mdEnc->setValue(68);
     }
-
   }
   USE_LOCK();
   SET_LOCK();
@@ -44,14 +60,16 @@ void GridPage::encoder_fx_handle(Encoder *enc) {
   CLEAR_LOCK();
 }
 
-void GridPage::encoder_param2_handle(Encoder *enc) {
+void encoder_param2_handle(Encoder *enc) {
 
   if (enc->hasChanged()) {
-    grid_lastclock = slowclock;
+    grid_page.grid_lastclock = slowclock;
 
-    reload_slot_models = 0;
+    grid_page.reload_slot_models = 0;
   }
 }
+
+A4Track track_bufx;
 
 void GridPage::load_slot_models() {
 
@@ -60,8 +78,8 @@ void GridPage::load_slot_models() {
   DEBUG_PRINT("Row: ");
   DEBUG_PRINTLN(encoders[2]->getValue());
   for (uint8_t i = 0; i < 22; i++) {
-    grid_models[i] =
-       grid.getGridModel(i, encoders[2]->getValue(), true, (A4Track *)&track_bufx);
+    grid_models[i] = grid.get_slot_model(i, encoders[2]->getValue(), true,
+                                         (A4Track *)&track_bufx);
     DEBUG_PRINT("Slot: ");
     DEBUG_PRINT(i);
     DEBUG_PRINT(" Model: ");
@@ -98,39 +116,39 @@ void GridPage::tick_frames() {
 
 void GridPage::toggle_fx1() {
   dispeffect = 1;
-  if (encoders[3]->effect == MD_FX_REV) {
-    fx_dc = encoders[3]->getValue();
-    encoders[3]->setValue(fx_tm);
+  GridEncoder *enc = (GridEncoder *)encoders[3];
+  if (enc->effect == MD_FX_REV) {
+    fx_dc = enc->getValue();
+    enc->setValue(fx_tm);
 
-    encoders[3]->effect = MD_FX_ECHO;
-    encoders[3]->fxparam = MD_ECHO_TIME;
-  }
-  else {
-    fx_tm = encoders[3]->getValue();
-    encoders[3]->setValue(fx_dc);
-    encoders[3]->effect = MD_FX_REV;
-    encoders[3]->fxparam = MD_REV_DEC;
+    enc->effect = MD_FX_ECHO;
+    enc->fxparam = MD_ECHO_TIME;
+  } else {
+    fx_tm = enc->getValue();
+    enc->setValue(fx_dc);
+    enc->effect = MD_FX_REV;
+    enc->fxparam = MD_REV_DEC;
   }
 }
 
 void GridPage::toggle_fx2() {
- dispeffect = 1;
+  dispeffect = 1;
 
-  if (encoder[4]->.effect == MD_FX_REV) {
-    fx_lv = encoder[4]->.getValue();
-    encoder[4]->.setValue(fx_fb);
-    encoder[4]->.effect = MD_FX_ECHO;
-    encoder[4]->.fxparam = MD_ECHO_FB;
+  GridEncoder *enc = (GridEncoder *)encoders[4];
+  if (enc->effect == MD_FX_REV) {
+    fx_lv = enc->getValue();
+    enc->setValue(fx_fb);
+    enc->effect = MD_FX_ECHO;
+    enc->fxparam = MD_ECHO_FB;
   }
 
   else {
-    fx_fb = encoder[4]->.getValue();
-    encoder[4]->.setValue(fx_lv);
-    encoder[4]->.effect = MD_FX_REV;
-    encoder[4]->.fxparam = MD_REV_LEV;
+    fx_fb = enc->getValue();
+    enc->setValue(fx_lv);
+    enc->effect = MD_FX_REV;
+    enc->fxparam = MD_REV_LEV;
   }
 }
-
 
 void GridPage::display() {
   tick_frames();
@@ -163,9 +181,9 @@ void GridPage::display() {
   if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
     display_name = 1;
     if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
-      cfg.cur_col = encoders[1]->cur;
-      cfg.cur_row = encoders[2]->cur;
-      cfg.write_cfg();
+      mcl_cfg.cur_col = encoders[1]->cur;
+      mcl_cfg.cur_row = encoders[2]->cur;
+      mcl_cfg.write_cfg();
     }
   } else {
 
@@ -200,13 +218,13 @@ void GridPage::display() {
     GUI.setLine(GUI.LINE1);
     /*Displays the kit name of the left most Grid on the first line at position
      * 12*/
-    if (encoders[3]->effect == MD_FX_ECHO) {
+    if (((GridEncoder *) encoders[3])->effect == MD_FX_ECHO) {
       GUI.put_string_at(12, "TM");
     } else {
       GUI.put_string_at(12, "DC");
     }
 
-    if (encoders[4]->effect == MD_FX_ECHO) {
+    if (((GridEncoder *) encoders[4])->effect == MD_FX_ECHO) {
       GUI.put_string_at(14, "FB");
     } else {
       GUI.put_string_at(14, "LV");
@@ -240,7 +258,7 @@ void GridPage::display() {
       // }
     } else {
 
-      GUI.put_string_at(12, getTrackKit(encoders[0]->getValue(),
+      GUI.put_string_at(12, grid.get_slot_kit(encoders[0]->getValue(),
                                         encoders[1]->getValue(), false, true));
     }
     GUI.setLine(GUI.LINE2);
@@ -259,14 +277,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    clear_row(encoders[2]->getValue());
+    grid.clear_row(encoders[2]->getValue());
     reload_slot_models = 0;
     return true;
   }
   // TRACK READ PAGE
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    grid_save_page->setup = false;
+    grid_save_page.isSetup = false;
     GUI.setPage(&grid_save_page);
 
     return true;
@@ -275,7 +293,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   // TRACK WRITE PAGE
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    grid_write_page->setup = false;
+    grid_write_page.isSetup = false;
     GUI.setPage(&grid_write_page);
 
     return true;
@@ -292,7 +310,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mixer_page->setup = false;
+    mixer_page.isSetup = false;
     GUI.setPage(&mixer_page);
     //   draw_levels();
   }
@@ -310,55 +328,38 @@ bool GridPage::handleEvent(gui_event_t *event) {
   //  }
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
-      seq_step_page->setup = false;
-      GUI.setPage(&seq_step_page);
+    seq_step_page.isSetup = false;
+    GUI.setPage(&seq_step_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER2)) {
-    seq_rtrk_page->setup = false;
+    seq_rtrk_page.isSetup = false;
     GUI.setPage(&seq_rtrk_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER3)) {
-    seq_param_a_page->setup = false;
-    GUI.setPage(&seq_param_a_page);
+    seq_param_page[0].isSetup = false;
+    GUI.setPage(&seq_param_page[0]);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER4)) {
-    seq_ptc_page->setup = false;
+    seq_ptc_page.isSetup = false;
     GUI.setPage(&seq_ptc_page);
 
     return true;
   }
-}
 
 if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
     (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
 
-  system_page->setup = false;
+  system_page.isSetup = false;
   GUI.setPage(&system_page);
-
-  curpage = SYSTEM_PAGE;
 
   return true;
 }
 
 return false;
-}
-
-void GridPage::loop() { midi_active_peering.check(); }
-
-bool GridPage::setup() {
-  frames_startclock = slowclock;
-
-  encoders[2]->handler = encoder_param2_handle;
-  encoders[3]->handler = encoder_fx_handle;
-  encoders[3]->effect = MD_FX_ECHO;
-  encoders[3]->fxparam = MD_ECHO_TIME;
-  encoders[4]->handler = encoder_fx_handle;
-  encoders[4]->effect = MD_FX_ECHO;
-  encoders[4]->fxparam = MD_ECHO_FB;
 }

@@ -1,7 +1,9 @@
 #include "MixerPage.h"
 
 void MixerPage::set_level(int curtrack, int value) {
-  uint8_t cc;
+  MD.setTrackParam(curtrack, 33, value);
+        
+        /*  uint8_t cc;
   uint8_t channel = curtrack >> 2;
   if (curtrack < 4) {
     cc = 8 + curtrack;
@@ -20,7 +22,7 @@ void MixerPage::set_level(int curtrack, int value) {
     MidiUart.sendCC(channel + 9, cc, value);
   }
   CLEAR_LOCK();
-  in_sysex = 0;
+  in_sysex = 0; */
 }
 void MixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
@@ -83,7 +85,7 @@ void MixerPage::encoder_level_handle(Encoder *enc) {
 
 void MixerPage::display() {
   note_interface.draw_notes(0);
-  this.draw_levels();
+  draw_levels();
 }
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
