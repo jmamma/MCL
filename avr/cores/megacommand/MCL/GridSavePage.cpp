@@ -6,8 +6,8 @@
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  encoders[1]->cur = (int)MD.currentPattern / (int)16;
-  encoders[2]->cur =
+  encoders[0]->cur = (int)MD.currentPattern / (int)16;
+  encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
   md_exploit.on();
   note_interface.state = true;
@@ -23,8 +23,8 @@ void GridSavePage::display() {
   char str[5];
 
 
-  if (encoders[1]->getValue() < 8) {
-    MD.getPatternName(encoders[1]->getValue() * 16 + encoders[2]->getValue() , str);
+  if (encoders[0]->getValue() < 8) {
+    MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue() , str);
     GUI.put_string_at(2, str);
   }
   else {
@@ -39,7 +39,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     md_exploit.off();
-    mcl_actions.store_tracks_in_mem(0, param2.getValue(), STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(0, encoders[1]->getValue(), STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -54,7 +54,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       note_interface.notes[i] = 3;
     }
     md_exploit.off();
-    mcl_actions.store_tracks_in_mem(param1.getValue(), param2.getValue(), STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(encoders[0]->getValue(), encodes[1]->getValue(), STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -69,7 +69,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     // MD.getCurrentPattern(CALLBACK_TIMEOUT);
     md_exploit.off();
-    mcl_actions.store_tracks_in_mem(param1.getValue(), param2.getValue(),
+    mcl_actions.store_tracks_in_mem(encoders[0]->getValue(), encoders[1]->getValue(),
                         STORE_AT_SPECIFIC);
     GUI.setPage(&grid_page);
     curpage = 0;

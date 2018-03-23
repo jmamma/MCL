@@ -25,14 +25,14 @@ void CuePage::toggle_cue(int i) {
 }
 void CuePage::toggle_cues_batch() {
   uint16_t quantize_mute;
-  quantize_mute = 1 << encoders[4]->getValue();
+  quantize_mute = 1 << encoders[3]->getValue();
   int i;
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
       MD.muteTrack(i, true);
     }
   }
-  if (encoders[4]->getValue() < 7) {
+  if (encoders[3]->getValue() < 7) {
     while ((((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) + 3) %
             (quantize_mute * 2)) != 0) {
       GUI.display();
@@ -43,7 +43,7 @@ void CuePage::toggle_cues_batch() {
 
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
-      if (encoders[4]->getValue() == 7) {
+      if (encoders[3]->getValue() == 7) {
         set_level(i, 0);
       }
       toggle_cue(i);
@@ -62,12 +62,12 @@ void CuePage::display() {
 
   GUI.put_string_at(9, "Q:");
 
-  if (encoders[4]->getValue() == 0) {
+  if (encoders[3]->getValue() == 0) {
     GUI.put_string_at(11, "--");
-  } else if (encoders[4]->getValue() == 7) {
+  } else if (encoders[3]->getValue() == 7) {
     GUI.put_string_at(11, "LV");
   } else {
-    x = 1 << encoders[4]->getValue();
+    x = 1 << encoders[3]->getValue();
 
     GUI.put_value_at2(11, x);
   }
@@ -87,18 +87,18 @@ uint8_t track = event->source - 128;
     note_interface.draw_notes(0);
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      if ((encoders[4]->getValue() == 0)) {
+      if ((encoders[3]->getValue() == 0)) {
         toggle_cue(track);
         md_exploit.send_globals();
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if ((encoders[4]->getValue() == 0)) {
+      if ((encoders[3]->getValue() == 0)) {
         note_interface.notes[track] = 0;
       }
 
       if (note_interface.notes_all_off()) {
-        if ((encoders[4]->getValue() > 0) &&
+        if ((encoders[3]->getValue() > 0) &&
             (note_interface.notes_count_off() > 1)) {
           toggle_cues_batch();
           md_exploit.send_globals();

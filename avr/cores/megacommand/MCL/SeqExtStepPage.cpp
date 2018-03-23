@@ -4,13 +4,13 @@ void SeqExtStepPage::setup() { SeqPage::setup(); }
 
 void SeqExtStepPage::init() {
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    encoders[2]->cur = 6;
-    encoders[2]->max = 11;
+    encoders[1]->cur = 6;
+    encoders[1]->max = 11;
   } else {
-    encoders[2]->cur = 12;
-    encoders[2]->max = 23;
+    encoders[1]->cur = 12;
+    encoders[1]->max = 23;
   }
-  encoders[3]->cur = mcl_seq.ext_tracks[last_ext_track].length;
+  encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length;
   cur_col = last_ext_track + 16;
   curpage = SEQ_EXTSTEP_PAGE;
   midi_events.setup_callbacks();
@@ -28,10 +28,10 @@ struct musical_notes  {
 void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
     for (uint8_t c = 0; c < 6; c++) {
-      mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
+      mcl_seq.ext_tracks[c].length = encoders[2]->getValue();
     }
   }
-  mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
+  mcl_seq.ext_tracks[c].length = encoders[2]->getValue();
 }
 
 void SeqExtStepPage::display() {
@@ -42,18 +42,18 @@ void SeqExtStepPage::display() {
 
   char c[3] = "--";
 
-  if (encoders[1]->getValue() == 0) {
+  if (encoders[0]->getValue() == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (encoders[1]->getValue() <= 8) {
+  } else if (encoders[0]->getValue() <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, encoders[1]->getValue());
+    GUI.put_value_at1(1, encoders[0]->getValue());
 
   } else {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[encoders[1]->getValue() - 9]);
+    GUI.put_value_at1(1, prob[encoders[0]->getValue() - 9]);
   }
 
   // Cond
@@ -62,27 +62,27 @@ void SeqExtStepPage::display() {
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    if (encoders[2]->getValue() == 0) {
+    if (encoders[1]->getValue() == 0) {
       GUI.put_string_at(2, "--");
-    } else if ((encoders[2]->getValue() < 6) &&
-               (encoders[2]->getValue() != 0)) {
+    } else if ((encoders[1]->getValue() < 6) &&
+               (encoders[1]->getValue() != 0)) {
       GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, encoders[2]->getValue() - 6);
+      GUI.put_value_at1(3, encoders[1]->getValue() - 6);
     } else {
       GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, encoders[2]->getValue() - 6);
+      GUI.put_value_at1(3, encoders[1]->getValue() - 6);
     }
   } else {
-    if (encoders[2]->getValue() == 0) {
+    if (encoders[1]->getValue() == 0) {
       GUI.put_string_at(2, "--");
-    } else if ((encoders[2]->getValue() < 12) &&
-               (encoders[2]->getValue() != 0)) {
+    } else if ((encoders[1]->getValue() < 12) &&
+               (encoders[1]->getValue() != 0)) {
       GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, 12 - encoders[2]->getValue());
+      GUI.put_value_at1(3, 12 - encoders[1]->getValue());
 
     } else {
       GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, encoders[2]->getValue() - 12);
+      GUI.put_value_at1(3, encoders[1]->getValue() - 12);
     }
   }
 
@@ -117,13 +117,13 @@ void SeqExtStepPage::display() {
     }
   } else {
     GUI.put_value_at1(15, seq_page.page_select + 1);
-    GUI.put_value_at(6, encoders[3]->getValue());
+    GUI.put_value_at(6, encoders[2]->getValue());
 
     if (cur_col < 16) {
       GUI.put_p_string_at(10, str1);
       GUI.put_p_string_at(12, str2);
     } else {
-      GUI.put_value_at(6, (encoders[3]->getValue() /
+      GUI.put_value_at(6, (encoders[2]->getValue() /
                            (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
       if (Analog4.connected) {
         GUI.put_string_at(10, "A4T");
@@ -162,18 +162,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             mcl_seq.ext_tracks[last_extseq_track].timing[(track + (seq_page.page_select * 16))]; // upper
         uint8_t condition =
             mcl_seq.ext_tracks[last_extseq_track].conditional[(track + (seq_page.page_select * 16))]; // lower
-        encoders[1]->cur = condition;
+        encoders[0]->cur = condition;
         // Micro
         if (utiming == 0) {
           if (mcl_seq.ext_tracks[last_extseq_track].resolution == 1) {
             utiming = 6;
-            encoders[2]->max = 11;
+            encoders[1]->max = 11;
           } else {
-            encoders[2]->max = 23;
+            encoders[1]->max = 23;
             utiming = 12;
           }
         }
-        encoders[2]->cur = utiming;
+        encoders[1]->cur = utiming;
 
         note_interface.last_note = track;
       }
@@ -183,8 +183,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-              uint8_t utiming = (encoders[2]->cur + 0);
-              uint8_t condition = encoders[1]->cur;
+              uint8_t utiming = (encoders[1]->cur + 0);
+              uint8_t condition = encoders[0]->cur;
               if ((track + (seq_page.page_select * 16)) >=  mcl_seq.ext_tracks[last_extseq_track].length) {
                 return true;
               }

@@ -5,8 +5,8 @@
 void GridWritePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  encoders[1]->cur = (int)MD.currentPattern / (int)16;
-  encoders[2]->cur =
+  encoders[0]->cur = (int)MD.currentPattern / (int)16;
+  encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
@@ -34,8 +34,8 @@ void GridWritePage::display() {
   char str[5];
 
 
-  if (gridio_param1.getValue() < 8) {
-    MD.getPatternName(gridio_param1.getValue() * 16 + gridio_param2.getValue() , str);
+  if (encoders[1]->getValue() < 8) {
+    MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue() , str);
     GUI.put_string_at(2, str);
   }
   else {
@@ -50,35 +50,35 @@ void GridWritePage::display() {
     GUI.put_string_at(9, "Q:");
 
     //0-63 OG
-    if (gridio_param3.getValue() == 64) {
+    if (encoders[2]->getValue() == 64) {
       GUI.put_string_at(6, "OG");
     }
     else {
-      GUI.put_value_at2(6, gridio_param3.getValue() + 1);
+      GUI.put_value_at2(6, encoders[2]->getValue() + 1);
     }
 
 
-    if (gridio_param4.getValue() == 0) {
+    if (encoders[3]->getValue() == 0) {
       GUI.put_string_at(11, "--");
     }
-    if (gridio_param4.getValue() == 7) {
+    if (encoders[3]->getValue() == 7) {
       GUI.put_string_at(11, "CU");
     }
-    if (gridio_param4.getValue() == 8) {
+    if (encoders[3]->getValue() == 8) {
       GUI.put_string_at(11, "LV");
     }
-    if (gridio_param4.getValue() == 9) {
+    if (encoders[3]->getValue() == 9) {
       GUI.put_string_at(11, "P ");
     }
-    if (gridio_param4.getValue() == 10) {
+    if (encoders[3]->getValue() == 10) {
       GUI.put_string_at(11, "P+");
     }
-    if (gridio_param4.getValue() == 11) {
+    if (encoders[3]->getValue() == 11) {
       GUI.put_string_at(11, "P-");
     }
 
-    if ((gridio_param4.getValue() < 7) && (gridio_param4.getValue() > 0)) {
-      x = 1 << gridio_param4.getValue();
+    if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
+      x = 1 << encoders[4]->getValue();
       GUI.put_value_at2(11, x);
     }
 
@@ -93,7 +93,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
   md_exploit.off();
-  write_tracks_to_md( 0, param2.getValue(), 0);
+  write_tracks_to_md( 0, grid_page.encoders[1].getValue(), 0);
   GUI.setPage(&grid_page);
   curpage = 0;
   return true;
@@ -112,7 +112,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
     md_exploit.off();
     write_original = 0;
-    write_tracks_to_md(MD.currentTrack, param2.getValue(), 254);
+    write_tracks_to_md(MD.currentTrack, encoders[1]->getValue(), 254);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -126,7 +126,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     //   write_tracks_to_md(-1);
     md_exploit.off();
     write_original = 1;
-    write_tracks_to_md(0, param2.getValue(), 0);
+    write_tracks_to_md(0, encoders[1]->getValue(), 0);
 
     GUI.setPage(&grid_page);
     curpage = 0;

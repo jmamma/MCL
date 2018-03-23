@@ -8,14 +8,14 @@ void SeqPtcPage::init() {
   md_exploit.on();
   note_interface.state = false;
 
-  encoders[1]->max = 8;
+  encoders[0]->max = 8;
+  encoders[1]->max = 64;
   encoders[2]->max = 64;
-  encoders[3]->max = 64;
-  encoders[4]->max = 15;
-  encoders[2]->cur = 32;
-  encoders[1]->cur = 1;
+  encoders[3]->max = 15;
+  encoders[1]->cur = 32;
+  encoders[0]->cur = 1;
 
-  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].length;
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_PTC_PAGE;
 }
@@ -23,17 +23,17 @@ void SeqPtcPage::pattern_len_handler(Encoder *enc) {
   if (grid.cur_col < 16) {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
-        mcl_seq.md_tracks[c].length = encoders[3]->getValue();
+        mcl_seq.md_tracks[c].length = encoders[2]->getValue();
       }
     }
-    mcl_seq.md_tracks[last_md_track].length = encoders[3]->getValue();
+    mcl_seq.md_tracks[last_md_track].length = encoders[2]->getValue();
   } else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 6; c++) {
-        mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
+        mcl_seq.ext_tracks[c].length = encoders[2]->getValue();
       }
     }
-    mcl_seq.ext_tracks[last_ext_track].length = encoders[3]->getValue();
+    mcl_seq.ext_tracks[last_ext_track].length = encoders[2]->getValue();
   }
 }
 md_exploit.init_notes();
@@ -50,11 +50,11 @@ void SeqPtcPage::display() {
     GUI.put_string_at(0, "PTC");
   }
   if (grid.cur_col < 16) {
-    GUI.put_value_at(5, encoders[3]->getValue());
+    GUI.put_value_at(5, encoders[2]->getValue());
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
   } else {
-    GUI.put_value_at(5, (encoders[3]->getValue() /
+    GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
@@ -65,15 +65,15 @@ void SeqPtcPage::display() {
   }
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
-  GUI.put_value_at2(3, encoders[1]->getValue());
+  GUI.put_value_at2(3, encoders[0]->getValue());
 
-  if (encoders[2]->getValue() < 32) {
+  if (encoders[1]->getValue() < 32) {
     GUI.put_string_at(6, "F:-");
-    GUI.put_value_at2(9, 32 - encoders[2]->getValue());
+    GUI.put_value_at2(9, 32 - encoders[1]->getValue());
 
-  } else if (encoders[2]->getValue() > 32) {
+  } else if (encoders[1]->getValue() > 32) {
     GUI.put_string_at(6, "F:+");
-    GUI.put_value_at2(9, encoders[2]->getValue() - 32);
+    GUI.put_value_at2(9, encoders[1]->getValue() - 32);
 
   } else {
     GUI.put_string_at(6, "F: 0");
@@ -81,17 +81,17 @@ void SeqPtcPage::display() {
 
   GUI.put_string_at(12, "S:");
 
-  GUI.put_value_at2(14, encoders[4]->getValue());
+  GUI.put_value_at2(14, encoders[3]->getValue());
 }
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
-  uint8_t size = scales[encoders[4]->cur]->size;
+  uint8_t size = scales[encoders[3]->cur]->size;
   uint8_t oct = note_num / size;
   note_num = note_num - oct * size;
 
-  note_num = scales[encoders[4]->cur]->pitches[note_num];
+  note_num = scales[encoders[3]->cur]->pitches[note_num];
 
-  uint8_t pitch = encoders[1]->getValue() * 12 + oct * 12 + note_num;
+  uint8_t pitch = encoders[0]->getValue() * 12 + oct * 12 + note_num;
 }
 
 uint8_t SeqPtcPage::get_next_track() {
@@ -120,7 +120,7 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
   }
 
   machine_pitch =
-      pgm_read_byte(&tuning->tuning[pitch]) + encoders[2]->getValue() - 32;
+      pgm_read_byte(&tuning->tuning[pitch]) + encoders[1]->getValue() - 32;
   return machine_pitch;
 }
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
@@ -134,8 +134,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     // note interface presses are treated as musical notes here
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t note_num = track;
-      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].length;
-      encoders[3]->max = 64;
+      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+      encoders[2]->max = 64;
       uint8_t pitch = calc_pitch(note_num);
       uint8_t next_track = poly_next_track();
       uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
@@ -212,14 +212,14 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   uint8_t pos = note_num - root_note;
   uint8_t oct = note_num / 12;
   // if (pos >= scales[encoders[4]->cur]->size) {
-  oct += pos / scales[encoders[4]->cur]->size;
+  oct += pos / scales[encoders[3]->cur]->size;
   pos = pos -
-        scales[encoders[4]->cur]->size * (pos / scales[encoders[4]->cur]->size);
+        scales[encoders[3]->cur]->size * (pos / scales[encoders[3]->cur]->size);
   // }
 
   //  if (encoders[4]->getValue() > 0) {
-  pitch = encoders[1]->getValue() * 12 +
-          scales[encoders[4]->cur]->pitches[pos] + oct * 12;
+  pitch = encoders[0]->getValue() * 12 +
+          scales[encoders[3]->cur]->pitches[pos] + oct * 12;
   //   }
 
   return pitch;
@@ -229,8 +229,8 @@ void SeqPtcStep::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   last_Extseq_track = channel;
   grid.cur_col = 16 + channel;
-  encoders[3]->max = 128;
-  encoders[3]->cur = mcl_seq.ext_tracks[channel].length;
+  encoders[2]->max = 128;
+  encoders[2]->cur = mcl_seq.ext_tracks[channel].length;
 
   pitch = seq_ext_pitch(note_num);
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
@@ -242,8 +242,8 @@ void SeqPtcStep::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   last_Extseq_track = channel;
   grid.cur_col = 16 + channel;
-  encoders[3]->max = 128;
-  encoders[3]->cur = mcl_seq.ext_tracks[channel].length;
+  encoders[2]->max = 128;
+  encoders[2]->cur = mcl_seq.ext_tracks[channel].length;
 
   pitch = seq_ext_pitch(note_num);
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);

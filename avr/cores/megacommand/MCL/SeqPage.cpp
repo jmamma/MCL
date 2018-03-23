@@ -1,8 +1,8 @@
 #include "SeqPage.h"
 void SeqPage::setup() {
 
-  encoders[3]->handler = pattern_len_handler;
-  encoders[2]->min = 0;
+  encoders[2]->handler = pattern_len_handler;
+  encoders[1]->min = 0;
   create_chars_seq();
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   // stored.
@@ -232,10 +232,10 @@ SeqPage::draw_patternmask(uint8_t offset, uint8_t device) {
 
 void SeqPage::pattern_len_handler(Encoder *enc) {
     if (grid.cur_col < 16) {
-      mcl_seq.md_tracks[grid.cur_col].length = encoders[3]->getValue();
+      mcl_seq.md_tracks[grid.cur_col].length = encoders[2]->getValue();
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
         for (uint8_t c = 0; c < 6; c++) {
-          mcl_seq.md_tracls[c].length = encoders[3]->getValue();
+          mcl_seq.md_tracls[c].length = encoders[2]->getValue();
 
         }
       }
@@ -244,10 +244,10 @@ void SeqPage::pattern_len_handler(Encoder *enc) {
     else {
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
         for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
-          mcl_seq.ext_tracks[c].length = encoders[3]->getValue();
+          mcl_seq.ext_tracks[c].length = encoders[2]->getValue();
         }
       }
-      mcl_seq.ext_tracks[last_ext_track].length = encoders[3]->getValue();
+      mcl_seq.ext_tracks[last_ext_track].length = encoders[2]->getValue();
     }
 }
 void SeqPage::create_char_seq() {

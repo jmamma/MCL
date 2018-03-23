@@ -7,13 +7,13 @@ void GridPage::init() { md_exploit.off(); }
 void GridPage::setup() {
   frames_startclock = slowclock;
 
-  encoders[2]->handler = encoder_param2_handle;
+  encoders[1]->handler = encoder_param2_handle;
+  encoders[2]->handler = encoder_fx_handle;
+  ((GridEncoder *) encoders[2])->effect = MD_FX_ECHO;
+  ((GridEncoder *) encoders[2])->fxparam = MD_ECHO_TIME;
   encoders[3]->handler = encoder_fx_handle;
   ((GridEncoder *) encoders[3])->effect = MD_FX_ECHO;
-  ((GridEncoder *) encoders[3])->fxparam = MD_ECHO_TIME;
-  encoders[4]->handler = encoder_fx_handle;
-  ((GridEncoder *) encoders[4])->effect = MD_FX_ECHO;
-  ((GridEncoder *) encoders[4])->fxparam = MD_ECHO_FB;
+  ((GridEncoder *) encoders[3])->fxparam = MD_ECHO_FB;
 }
 
 void GridPage::loop() { midi_active_peering.check(); }
@@ -76,9 +76,9 @@ void GridPage::load_slot_models() {
   DEBUG_PRINT_FN(x);
 
   DEBUG_PRINT("Row: ");
-  DEBUG_PRINTLN(encoders[2]->getValue());
+  DEBUG_PRINTLN(encoders[1]->getValue());
   for (uint8_t i = 0; i < 22; i++) {
-    grid_models[i] = grid.get_slot_model(i, encoders[2]->getValue(), true,
+    grid_models[i] = grid.get_slot_model(i, encoders[1]->getValue(), true,
                                          (A4Track *)&track_bufx);
     DEBUG_PRINT("Slot: ");
     DEBUG_PRINT(i);
@@ -162,11 +162,11 @@ void GridPage::display() {
 
   grid.row_name_offset += (float)1 / frames_fps * 1.5;
 
-  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
+  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
     toggle_fx1();
   }
 
-  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[4]->hasChanged())) {
+  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
     toggle_fx2();
   }
   uint8_t display_name = 0;
@@ -204,13 +204,13 @@ void GridPage::display() {
   /*If the effect encoders have been changed, then set a switch to indicate that
    * the effects values should be displayed*/
 
-  if (encoders[3]->hasChanged() || encoders[4]->hasChanged()) {
+  if (encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
     dispeffect = 1;
   }
 
   /*If the grid encoders have been changed, set a switch to indicate that the
    * row/col values should be displayed*/
-  if (encoders[1]->hasChanged() || encoders[2]->hasChanged()) {
+  if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
     dispeffect = 0;
   }
 
@@ -218,13 +218,13 @@ void GridPage::display() {
     GUI.setLine(GUI.LINE1);
     /*Displays the kit name of the left most Grid on the first line at position
      * 12*/
-    if (((GridEncoder *) encoders[3])->effect == MD_FX_ECHO) {
+    if (((GridEncoder *) encoders[2])->effect == MD_FX_ECHO) {
       GUI.put_string_at(12, "TM");
     } else {
       GUI.put_string_at(12, "DC");
     }
 
-    if (((GridEncoder *) encoders[4])->effect == MD_FX_ECHO) {
+    if (((GridEncoder *) encoders[3])->effect == MD_FX_ECHO) {
       GUI.put_string_at(14, "FB");
     } else {
       GUI.put_string_at(14, "LV");
@@ -232,8 +232,8 @@ void GridPage::display() {
 
     GUI.setLine(GUI.LINE2);
     /*Displays the value of the current Row on the screen.*/
-    GUI.put_value_at2(12, (encoders[2]->getValue()));
-    GUI.put_value_at2(14, (encoders[3]->getValue()));
+    GUI.put_value_at2(12, (encoders[1]->getValue()));
+    GUI.put_value_at2(14, (encoders[2]->getValue()));
     // mdEnc1->dispnow = 0;
     //  mdEnc2->dispnow = 0;
 
@@ -277,7 +277,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    grid.clear_row(encoders[2]->getValue());
+    grid.clear_row(encoders[1]->getValue());
     reload_slot_models = 0;
     return true;
   }
@@ -303,7 +303,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     setLed();
     int curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
-    encoders[1]->cur = curtrack;
+    encoders[0]->cur = curtrack;
 
     clearLed();
     return true;

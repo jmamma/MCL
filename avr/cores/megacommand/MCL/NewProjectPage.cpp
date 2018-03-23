@@ -18,24 +18,24 @@ void NewProjectPage::setup() {
 void NewProjectPage::update_prjpage_char() {
   uint8_t x = 0;
   //Check to see that the character chosen is in the list of allowed characters
-  while ((newprj[encoders[1]->cur] != allowedchar[x]) && (x < 38)) {
+  while ((newprj[encoders[0]->cur] != allowedchar[x]) && (x < 38)) {
 
     x++;
   }
 
   //Ensure the encoder does not go out of bounds, by resetting it to a character within the allowed characters list
-  encoders[2]->setValue(x);
+  encoders[1]->setValue(x);
   //Update the projectname.
-  encoders[1]->old = encoders[1]->cur;
+  encoders[0]->old = encoders[0]->cur;
 }
 
 void NewProjectPage::display() {
-  if (encoders[1]->hasChanged()) {
+  if (encoders[0]->hasChanged()) {
       update_prjpage_char();
 
     }
     //    if ((encoders[2]->hasChanged())){
-    newprj[encoders[1]->getValue()] = allowedchar[encoders[2]->getValue()];
+    newprj[encoders[0]->getValue()] = allowedchar[encoders[1]->getValue()];
     //  }
 
     GUI.setLine(GUI.LINE1);

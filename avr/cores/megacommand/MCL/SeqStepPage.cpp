@@ -5,13 +5,13 @@ void SeqStepPage::init() {
   md_exploit.on();
   note_interface.state = true;
 
-  encoders[1]->max = 13;
-  encoders[2]->max = 23;
-  encoders[2]->min = 1;
-  encoders[2]->cur = 12;
-  encoders[3]->max = 64;
-  encoders[4]->max = 16;
-  encoders[3]->cur = mcl_seq.md_tracks[last_md_track];
+  encoders[0]->max = 13;
+  encoders[1]->max = 23;
+  encoders[1]->min = 1;
+  encoders[1]->cur = 12;
+  encoders[2]->max = 64;
+  encoders[3]->max = 16;
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track];
 
   curpage = SEQ_STEP_PAGE;
 }
@@ -23,34 +23,34 @@ void SeqStepPage::display() {
 
   char c[3] = "--";
 
-  if (encoders[1]->getValue() == 0) {
+  if (encoders[0]->getValue() == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (encoders[1]->getValue() <= 8) {
+  } else if (encoders[0]->getValue() <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, encoders[1]->getValue());
+    GUI.put_value_at1(1, encoders[0]->getValue());
 
   } else {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[encoders[1]->getValue() - 9]);
+    GUI.put_value_at1(1, prob[encoders[0]->getValue() - 9]);
   }
 
-  if (encoders[2]->getValue() == 0) {
+  if (encoders[1]->getValue() == 0) {
     GUI.put_string_at(2, "--");
-  } else if ((encoders[2]->getValue() < 12) && (encoders[2]->getValue() != 0)) {
+  } else if ((encoders[1]->getValue() < 12) && (encoders[1]->getValue() != 0)) {
     GUI.put_string_at(2, "-");
-    GUI.put_value_at1(3, 12 - encoders[2]->getValue());
+    GUI.put_value_at1(3, 12 - encoders[1]->getValue());
 
   } else {
     GUI.put_string_at(2, "+");
-    GUI.put_value_at1(3, encoders[2]->getValue() - 12);
+    GUI.put_value_at1(3, encoders[1]->getValue() - 12);
   }
 
   GUI.put_p_string_at(10, str1);
   GUI.put_p_string_at(12, str2);
-  GUI.put_value_at(6, encoders[3]->getValue());
+  GUI.put_value_at(6, encoders[2]->getValue());
   GUI.put_value_at1(15, seq_page.page_select + 1);
   // GUI.put_value_at2(7, encoders[3]->getValue());
   draw_patternmask((seq_page.page_select * 16), DEVICE_MD);
@@ -74,7 +74,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return;
       }
 
-      encoders[2]->max = 23;
+      encoders[1]->max = 23;
       int8_t utiming =
           timing[grid.cur_col][(track + (seq_page.page_select * 16))]; // upper
       uint8_t condition =
@@ -82,19 +82,19 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
                      [(track + (seq_page.page_select * 16))]; // lower
 
       // Cond
-      encoders[1]->cur = condition;
+      encoders[0]->cur = condition;
       // Micro
       if (utiming == 0) {
         utiming = 12;
       }
-      encoders[2]->cur = utiming;
+      encoders[1]->cur = utiming;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if ((track + (seq_page.page_select * 16)) >= mcl_seq.md_tracks[grid.cur_col]) {
         return;
       }
-      uint8_t utiming = (encoders[2]->cur + 0);
-      uint8_t condition = encoders[1]->cur;
+      uint8_t utiming = (encoders[1]->cur + 0);
+      uint8_t condition = encoders[0]->cur;
 
       //  timing = 3;
       // condition = 3;

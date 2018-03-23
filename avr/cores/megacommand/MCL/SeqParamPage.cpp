@@ -5,16 +5,16 @@ void SeqParamPage::init() {
   md_exploit.on();
   note_interface.state = true;
 
-  encoders[1]->max = 23;
-  encoders[2]->max = 127;
-  encoders[3]->max = 23;
-  encoders[4]->max = 127;
+  encoders[0]->max = 23;
+  encoders[1]->max = 127;
+  encoders[2]->max = 23;
+  encoders[3]->max = 127;
 
-  encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
-  encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
-  encoders[2]->cur =
+  encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
+  encoders[1]->cur =
       MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p1]];
-  encoders[4]->cur =
+  encoders[3]->cur =
       MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p2]];
 
   curpage = SEQ_PARAMA_PAGE;
@@ -27,31 +27,31 @@ void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);
   char myName[4] = "-- ";
   char myName2[4] = "-- ";
-  if (encoders[1]->getValue() == 0) {
+  if (encoders[0]->getValue() == 0) {
     GUI.put_string_at(0, "--");
   } else {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[1]->getValue() - 1);
+                                 encoders[0]->getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
     }
     GUI.put_string_at(0, myName);
   }
-  GUI.put_value_at2(4, encoders[2]->getValue());
-  if (encoders[3]->getValue() == 0) {
+  GUI.put_value_at2(4, encoders[1]->getValue());
+  if (encoders[2]->getValue() == 0) {
     GUI.put_string_at(7, "--");
   } else {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[3]->getValue() - 1);
+                                 encoders[2]->getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
     }
     GUI.put_string_at(7, myName2);
   }
 
-  GUI.put_value_at2(11, encoders[4]->getValue());
+  GUI.put_value_at2(11, encoders[3]->getValue());
 
   if (curpage == SEQ_PARAM_A_PAGE) {
     GUI.put_string_at(14, "A");
@@ -76,11 +76,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t param_offset;
-      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p1];
-      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p2];
+      encoders[0]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p1];
+      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p2];
 
-      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][(track + (seq_page.page_select * 16))];
-      encoders[4]->cur = mcl_seq.md_tracks[last_md_track].locks[p2]
+      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][(track + (seq_page.page_select * 16))];
+      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks[p2]
                                      [(track + (seq_page.page_select * 16))];
       notes[track] = 1;
     }
@@ -112,12 +112,12 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
       notes[track] = 0;
 
-      mcl_seq.md_tracks[last_md_track].locks[param_offset][(track + (seq_page.page_select * 16))] = encoders[2]->cur;
+      mcl_seq.md_tracks[last_md_track].locks[param_offset][(track + (seq_page.page_select * 16))] = encoders[1]->cur;
       mcl_seq.md_tracks[last_md_track].locks[param_offset + 1]
-                  [(track + (seq_page.page_select * 16))] = encoders[4]->cur;
+                  [(track + (seq_page.page_select * 16))] = encoders[3]->cur;
 
-      mcl_seq.md_tracks[last_md_track].params[p1] = encoders[1]->cur;
-      mcl_seq.md_tracks[last_md_track].params[p2] = encoders[3]->cur;
+      mcl_seq.md_tracks[last_md_track].params[p1] = encoders[0]->cur;
+      mcl_seq.md_tracks[last_md_track].params[p2] = encoders[2]->cur;
     }
     return true;
   }
@@ -142,11 +142,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    encoders[1]->cur = mcl_seq.md_tracks[last_md_track].params[p1];
-    encoders[3]->cur = mcl_seq.md_tracks[last_md_track].params[p2];
-    encoders[2]->cur =
+    encoders[0]->cur = mcl_seq.md_tracks[last_md_track].params[p1];
+    encoders[2]->cur = mcl_seq.md_tracks[last_md_track].params[p2];
+    encoders[1]->cur =
         MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
-    encoders[4]->cur =
+    encoders[3]->cur =
         MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
     curpage = SEQ_PARAM_B_PAGE;
     return true;

@@ -159,7 +159,7 @@ void MDSeqTrack::set_track_step(uint8_t track, uint8_t step, uint8_t utiming,
   grid.cur_col = track;
   last_md_track = track;
 
-  encoders[3]->cur = mcl_seq.md_tracks[grid.cur_col].length;
+  encoders[2]->cur = mcl_seq.md_tracks[grid.cur_col].length;
   //  timing = 3;
   // condition = 3;
   if (MidiClock.state != 2) {
