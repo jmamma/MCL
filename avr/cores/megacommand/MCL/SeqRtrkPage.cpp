@@ -1,4 +1,5 @@
 #include "SeqRtrkPage.h"
+#include "MCL.h"
 
 void SeqRtrkPage::setup() { SeqPage::setup(); }
 
@@ -46,13 +47,18 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
+    uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      grid_page.cur_col = track_number;
+      md_exploit.last_md_track = track_number;
 
-      MD.triggerTrack(note_num, 127);
+      encoders[2]->cur =
+          mcl_seq.md_tracks[grid_page.cur_col].length MD.triggerTrack(note_num,
+                                                                      127);
     if ((record && (MidiClock.state == 2)) {
         mcl_seq.rec_track(track, note_num, 127);
 

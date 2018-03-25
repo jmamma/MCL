@@ -9,6 +9,7 @@
 #define NI_MAX_NOTES 20
 
 class NoteInterfaceMidiEvents : public MidiCallback {
+public:
   bool state;
   void setup_callbacks();
   void remove_callbacks();
@@ -30,6 +31,7 @@ public:
   void init_notes();
   void setup();
   void draw_notes(uint8_t line_number);
+  uint8_t note_to_track_map(uint8_t note, uint8_t device);
   void note_on_event(uint8_t note_num, uint8_t port);
   void note_off_event(uint8_t note_num, uint8_t port);
   bool is_event(gui_event_t *event);

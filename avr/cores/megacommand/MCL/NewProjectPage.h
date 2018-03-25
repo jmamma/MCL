@@ -3,6 +3,7 @@
 #ifndef NEWPROJECTPAGE_H__
 #define NEWPROJECTPAGE_H__
 
+#include "GUI.h"
 
 char allowedchars;
 class NewProjectPage : public LightPage {

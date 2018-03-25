@@ -1,4 +1,5 @@
-#include "MDSeqTrack.h"
+#include "MCL.h"
+#include "MCLSeq.h"
 
 void MDSeqTrack::seq() {
   uint8_t step_count =
@@ -9,11 +10,11 @@ void MDSeqTrack::seq() {
 
   int8_t utiming = timing[step_count];         // upper
   uint8_t condition = conditional[step_count]; // lower
-
+  uint8_t next_step = 0;
   if (step_count == (length - 1)) {
-    uint8_t next_step = 0;
+    next_step = 0;
   } else {
-    uint8_t next_step = step_count + 1;
+    next_step = step_count + 1;
   }
 
   int8_t utiming_next = timing[next_step];         // upper
@@ -25,7 +26,7 @@ void MDSeqTrack::seq() {
 
   if ((utiming >= 12) && (utiming - 12 == (int8_t)MidiClock.mod12_counter)) {
 
-    send_parameter_locks(track_number, step_count);
+    send_parameter_locks(step_count);
 
     if (IS_BIT_SET64(pattern_mask, step_count)) {
       trig_conditional(condition);
@@ -44,7 +45,7 @@ void MDSeqTrack::seq() {
 }
 void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
   uint8_t c;
-  if (IS_BIT_SET64(lockmask, step_count)) {
+  if (IS_BIT_SET64(lock_mask, step_count)) {
     for (c = 0; c < 4; c++) {
       if (locks[c][step_count] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1,
@@ -60,30 +61,29 @@ void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
     }
   }
 }
-void MDSeqTrack::trig_conditional(uint8_t condition, uint8_t i) {
+void MDSeqTrack::trig_conditional(uint8_t condition) {
   if ((condition == 0)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   } else if (condition <= 8) {
     if (((MidiClock.div16th_counter -
           mcl_actions_callbacks.start_clock32th / 2 + length) /
          length) %
             ((condition)) ==
         0) {
-      MD.triggerTrack(i, 127);
+      MD.triggerTrack(track_number, 127);
     }
   } else if ((condition == 9) && (random(100) <= 10)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   } else if ((condition == 10) && (random(100) <= 25)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   } else if ((condition == 11) && (random(100) <= 50)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   } else if ((condition == 12) && (random(100) <= 75)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   } else if ((condition == 13) && (random(100) <= 90)) {
-    MD.triggerTrack(i, 127);
+    MD.triggerTrack(track_number, 127);
   }
 }
-
 void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
   uint8_t match = 255;
@@ -105,10 +105,10 @@ void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
     }
   }
   if (match != 254) {
-    locks[match][step_count] = value;
+    locks[match][step] = value;
   }
   if (MidiClock.state == 2) {
-    SET_BIT64(lockmask, step_count);
+    SET_BIT64(lock_mask, step);
   }
 }
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
@@ -121,7 +121,7 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 
   set_track_locks(step_count, track_param, value);
 }
-void MDSeqTrack::set_track_pitch(uint8_t pitch) {
+void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
   uint8_t match = 255;
   uint8_t c = 0;
   // Let's try and find an existing param
@@ -138,9 +138,19 @@ void MDSeqTrack::set_track_pitch(uint8_t pitch) {
     }
   }
   if (match != 255) {
-    locks[match][step_count] = realPitch + 1;
-    SET_BIT64(lockmask, step_count);
+    locks[match][step] = pitch + 1;
+    SET_BIT64(lock_mask, step);
   }
+}
+
+void MDSeqTrack::record_track_pitch(uint8_t pitch) {
+  uint8_t step_count =
+      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (length * ((MidiClock.div16th_counter -
+                  mcl_actions_callbacks.start_clock32th / 2) /
+                 length));
+
+  set_track_pitch(step_count, pitch);
 }
 void MDSeqTrack::record_track(uint8_t note_num, uint8_t velocity) {
   uint8_t step_count =
@@ -153,22 +163,19 @@ void MDSeqTrack::record_track(uint8_t note_num, uint8_t velocity) {
   set_track_step(step_count, utiming, note_num, velocity);
 }
 
-void MDSeqTrack::set_track_step(uint8_t track, uint8_t step, uint8_t utiming,
-                                uint8_t note_num, uint8_t velocity) {
+void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
+                                uint8_t velocity) {
   uint8_t condition = 0;
-  grid.cur_col = track;
-  md_exploit.last_md_track = track;
 
-  encoders[2]->cur = mcl_seq.md_tracks[grid.cur_col].length;
   //  timing = 3;
   // condition = 3;
   if (MidiClock.state != 2) {
     return;
   }
 
-  SET_BIT64(PatternMasks[track], step);
-  conditional[track][step] = condition;
-  timing[track][step] = utiming;
+  SET_BIT64(pattern_mask, step);
+  conditional[step] = condition;
+  timing[step] = utiming;
 }
 
 void MDSeqTrack::clear_seq_conditional() {
@@ -180,11 +187,11 @@ void MDSeqTrack::clear_seq_conditional() {
 void MDSeqTrack::clear_seq_locks() {
   for (uint8_t c = 0; c < 4; c++) {
     for (uint8_t x = 0; x < 64; x++) {
-      PatternLocks[c][x] = 0;
+      locks[c][x] = 0;
     }
-    PatternLocksParams[c] = 0;
+    locks_params[c] = 0;
   }
-  LockMasks = 0;
+  lock_mask = 0;
 }
 
 void MDSeqTrack::clear_seq_track() {
@@ -194,6 +201,6 @@ void MDSeqTrack::clear_seq_track() {
 
   clear_seq_locks();
 
-  lockmask = 0;
-  patternmask = 0;
+  lock_mask = 0;
+  pattern_mask = 0;
 }

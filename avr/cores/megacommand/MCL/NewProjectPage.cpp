@@ -1,3 +1,4 @@
+#include "MCL.h"
 #include "NewProjectPage.h"
 
 char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
@@ -5,43 +6,42 @@ void NewProjectPage::setup() {
 
   char my_string[16] = "/project___.mcl";
 
-  my_string[8] = (cfg.number_projects % 1000) / 100 + '0';
-  my_string[8 + 1] = (cfg.number_projects % 100) / 10 + '0';
-  my_string[8 + 2] = (cfg.number_projects % 10) + '0';
+  my_string[8] = (mcl_cfg.number_projects % 1000) / 100 + '0';
+  my_string[8 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
+  my_string[8 + 2] = (mcl_cfg.number_projects % 10) + '0';
 
   m_strncpy(newprj, my_string, 16);
   curpage = NEW_PROJECT_PAGE;
-
 
   update_prjpage_char();
 }
 void NewProjectPage::update_prjpage_char() {
   uint8_t x = 0;
-  //Check to see that the character chosen is in the list of allowed characters
+  // Check to see that the character chosen is in the list of allowed characters
   while ((newprj[encoders[0]->cur] != allowedchar[x]) && (x < 38)) {
 
     x++;
   }
 
-  //Ensure the encoder does not go out of bounds, by resetting it to a character within the allowed characters list
+  // Ensure the encoder does not go out of bounds, by resetting it to a
+  // character within the allowed characters list
   encoders[1]->setValue(x);
-  //Update the projectname.
+  // Update the projectname.
   encoders[0]->old = encoders[0]->cur;
 }
 
 void NewProjectPage::display() {
   if (encoders[0]->hasChanged()) {
-      update_prjpage_char();
+    update_prjpage_char();
+  }
+  //    if ((encoders[2]->hasChanged())){
+  newprj[encoders[0]->getValue()] = allowedchar[encoders[1]->getValue()];
+  //  }
 
-    }
-    //    if ((encoders[2]->hasChanged())){
-    newprj[encoders[0]->getValue()] = allowedchar[encoders[1]->getValue()];
-    //  }
-
-    GUI.setLine(GUI.LINE1);
-    GUI.put_string_at(0, "New Project:");
-    GUI.setLine(GUI.LINE2);
-    GUI.put_string_at(0, &newprj[1]);
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(0, "New Project:");
+  GUI.setLine(GUI.LINE2);
+  GUI.put_string_at(0, &newprj[1]);
 }
 bool NewProjectPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
@@ -63,11 +63,11 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    bool ret = sd_new_project(newprj);
+    bool ret = proj.new_project(newprj);
     if (ret) {
-      if (sd_load_project(newprj)) {
-        
-        Grid.reload_slot_models = false;
+      if (proj.load_project(newprj)) {
+
+        grid_page.reload_slot_models = false;
         GUI.setPage(&grid_page);
         return true;
       } else {
@@ -82,5 +82,3 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
   }
   return false;
 }
-
-

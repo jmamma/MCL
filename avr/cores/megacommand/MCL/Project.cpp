@@ -1,4 +1,5 @@
 #include "Project.h"
+#include "MCL.h"
 
 void Project::setup() {}
 
@@ -26,9 +27,9 @@ bool Project::load_project(char *projectname) {
     return false;
   }
 
-  m_strncpy(cfg.project, projectname, 16);
+  m_strncpy(mcl_cfg.project, projectname, 16);
 
-  ret = cfg.write_cfg();
+  ret = mcl_cfg.write_cfg();
 
   if (!ret) {
     return false;
@@ -51,13 +52,13 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-  ret = mcl_sd.read_data(( uint8_t*) & (project_header), sizeof(project_header), &file);
+  ret = mcl_sd.read_data(( uint8_t*) this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
     DEBUG_PRINTLN("Could not read project header");
     return false;
   }
-  if (project_header.version >= VERSION) {
+  if (version >= VERSION) {
     return true;
   }
   else {
@@ -65,7 +66,7 @@ bool Project::check_project_version() {
   }
 }
 
-bool ProjectHeader::write_project_header() {
+bool Project::write_header() {
 
   bool ret;
   int b;
@@ -73,10 +74,10 @@ bool ProjectHeader::write_project_header() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing project header");
 
-  project_header.version = VERSION;
-  //  Config cfg;
+  version = VERSION;
+  //  Config mcl_cfg.
   //  uint8_t reserved[16];
-  project_header.hash = 0;
+  hash = 0;
 
   ret = file.seekSet(0);
 
@@ -87,7 +88,7 @@ bool ProjectHeader::write_project_header() {
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)&project_header, sizeof(project_header),
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader),
                           &file);
 
   if (!ret) {
@@ -149,7 +150,7 @@ bool Project::new_project(char *projectname) {
       }
     }
 
-    ret = clear_slot(i);
+    ret = grid.clear_slot(i);
     if (!ret) {
       return false;
     }
@@ -162,14 +163,14 @@ bool Project::new_project(char *projectname) {
     return false;
   }
 
-  if (!write_project_header()) {
+  if (!write_header()) {
     return false;
   }
 
-  // m_strncpy(cfg.project, projectname, 16);
+  // m_strncpy(mcl_cfg.project, projectname, 16);
   file.close();
-  cfg.number_projects++;
-  cfg.write_cfg();
+  mcl_cfg.number_projects++;
+  mcl_cfg.write_cfg();
 
   // if (!ret) {
   // return false;

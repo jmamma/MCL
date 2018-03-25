@@ -1,4 +1,5 @@
 #include "ProjectPages.h"
+#include "MCL.h"
 
 extern MCLEncoder loadproj_param1(1, 64, ENCODER_RES_SYS);
 

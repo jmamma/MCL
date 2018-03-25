@@ -1,15 +1,6 @@
 #include "CuePage.h"
 #include "MCL.h"
-/*
-#include "MCLSysConfig.h"
-#include "MD.h"
-#include "NoteInterface.h"
-#include "MCLActions.h"
-#include "MidiActivePeering.h"
-#include "MDExploit.h"
-#include "AuxPages.h"
-#include "Grid.h"
-*/
+
 void CuePage::set_level(int curtrack, int value) {
   MD.setTrackParam(curtrack, 33, value);
 }

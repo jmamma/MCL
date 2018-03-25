@@ -7,11 +7,6 @@
 #include "NewProjectPage.h"
 #include "LoadProjectPage.h"
 
-class ProjectPages {
-public:
-  void setup();
-};
-
 extern MCLEncoder loadproj_param1;
 
 extern MCLEncoder newproj_param1;

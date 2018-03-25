@@ -1,4 +1,5 @@
 #include "SeqStepPage.h"
+#include "MCL.h"
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::init() {
@@ -18,8 +19,10 @@ void SeqStepPage::init() {
 void SeqStepPage::display() {
   GUI.put_string_at(0, "                ");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 2);
+  const char *str1 =
+      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 1);
+  const char *str2 =
+      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 2);
 
   char c[3] = "--";
 
@@ -59,6 +62,7 @@ void SeqStepPage::display() {
 bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
+    uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
@@ -75,11 +79,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
 
       encoders[1]->max = 23;
+
       int8_t utiming =
-          timing[grid.cur_col][(track + (seq_page.page_select * 16))]; // upper
-      uint8_t condition =
-          conditional[grid.cur_col]
-                     [(track + (seq_page.page_select * 16))]; // lower
+          mcl_seq.md_tracks[grid.cur_col]
+              .timing[(track + (seq_page.page_select * 16))]; // upper
+      uint8_t condition = mcl_seq.md_tracks[grid.cur_col] conditional[(
+          track + (seq_page.page_select * 16))]; // lower
 
       // Cond
       encoders[0]->cur = condition;
@@ -90,7 +95,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       encoders[1]->cur = utiming;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if ((track + (seq_page.page_select * 16)) >= mcl_seq.md_tracks[grid.cur_col]) {
+      if ((track + (seq_page.page_select * 16)) >=
+          mcl_seq.md_tracks[grid.cur_col]) {
         return;
       }
       uint8_t utiming = (encoders[1]->cur + 0);
@@ -98,19 +104,21 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       //  timing = 3;
       // condition = 3;
-      conditional[cur_col][(track + (seq_page.page_select * 16))] =
-          condition;                                                    // upper
-      timing[cur_col][(track + (seq_page.page_select * 16))] = utiming; // upper
+      mcl_seq.md_tracks[grid.cur_col]
+          .conditional[(track + (seq_page.page_select * 16))] = condition;
+      mcl_seq.md_tracks[grid.cur_col]
+          .timing[(track + (seq_page.page_select * 16))] = utiming; // upper
 
       //   conditional_timing[cur_col][(track + (encoders[1]->cur * 16))] =
       //   condition; //lower
 
-      if (!IS_BIT_SET64(PatternMasks[cur_col],
+      if (!IS_BIT_SET64(mcl_seq.md_tracks[grid.cur_col].pattern_mask,
                         (track + (seq_page.page_select * 16)))) {
-        SET_BIT64(PatternMasks[cur_col], (track + (seq_page.page_select * 16)));
+        SET_BIT64(mcl_seq.md_tracks[grid.cur_col].pattern_mask,
+                  (track + (seq_page.page_select * 16)));
       } else {
         if ((current_clock - note_hold) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64(PatternMasks[cur_col],
+          CLEAR_BIT64(mcl_seq.md_tracks[grid.cur_col].pattern_mask,
                       (track + (seq_page.page_select * 16)));
         }
       }

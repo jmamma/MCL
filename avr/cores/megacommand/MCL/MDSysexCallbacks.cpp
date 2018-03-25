@@ -1,13 +1,14 @@
 #include "MDSysexCallbacks.h"
+#include "MCL.h"
 
 void MDSysexCallbacks::setup() {
   MDSysexListener.setup();
   MDSysexListener.addOnStatusResponseCallback(
-      this, (md_status_callback_ptr_t)&MDHandler2::onStatusResponseCallback);
+      this, (md_status_callback_ptr_t)&MDSysexCallbacks::onStatusResponseCallback);
   MDSysexListener.addOnPatternMessageCallback(
-      this, (md_callback_ptr_t)&MDHandler2::onPatternMessage);
+      this, (md_callback_ptr_t)&MDSysexCallbacks::onPatternMessage);
   MDSysexListener.addOnKitMessageCallback(
-      this, (md_callback_ptr_t)&MDHandler2::onKitMessage);
+      this, (md_callback_ptr_t)&MDSysexCallbacks::onKitMessage);
 }
 
 void MDSysexCallbacks::onStatusResponseCallback(uint8_t type, uint8_t value) {
@@ -47,13 +48,13 @@ void MDSysexCallbacks::onKitMessage() {
     //   if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
 
     for (int i = 0; i < 16; i++) {
-      if ((i + grid.cur_col + (grid.cur_row * GRID_WIDTH)) < (128 * GRID_WIDTH)) {
+      if ((i + grid_page.cur_col + (grid_page.cur_row * GRID_WIDTH)) < (128 * GRID_WIDTH)) {
         /*Store the track at the  into Minicommand memory by moving the data
          * from a Pattern object into a Track object*/
-        temptrack.store_track_in_grid(i, i, grid.cur_row);
+        temptrack.store_track_in_grid(i, i, grid_page.cur_row);
       }
       /*Update the encoder page to show current Grids*/
-      page.display();
+      grid_page.display();
     }
     /*If the pattern can't be retrieved from the sysex data then there's been a
      * problem*/
@@ -65,15 +66,15 @@ void MDSysexCallbacks::onKitMessage() {
 
   if (mcl_actions.patternswitch == 7) {
     //  if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
-    if (param3.effect == MD_FX_ECHO) {
-      param3.setValue(MD.kit.delay[param3.fxparam]);
+    if (((GridEncoder*)grid_page.encoders[2])->effect == MD_FX_ECHO) {
+      grid_page.encoders[2]->setValue(MD.kit.delay[((GridEncoder*)grid_page.encoders[2])->fxparam]);
     } else {
-      param3.setValue(MD.kit.reverb[param3.fxparam]);
+      grid_page.encoders[2]->setValue(MD.kit.reverb[((GridEncoder*)grid_page.encoders[2])->fxparam]);
     }
-    if (param4.effect == MD_FX_ECHO) {
-      param4.setValue(MD.kit.delay[param4.fxparam]);
+    if (((GridEncoder*)grid_page.encoders[3])->effect == MD_FX_ECHO) {
+      grid_page.encoders[3]->setValue(MD.kit.delay[((GridEncoder*)grid_page.encoders[3])->fxparam]);
     } else {
-      param4.setValue(MD.kit.reverb[param4.fxparam]);
+      grid_page.encoders[3]->setValue(MD.kit.reverb[((GridEncoder*)grid_page.encoders[3])->fxparam]);
     }
     //   }
     mcl_actions.patternswitch = PATTERN_UDEF;

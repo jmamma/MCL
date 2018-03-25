@@ -1,5 +1,7 @@
 #include "SeqPages.h"
 
+uint8_t last_ext_track;
+
 MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
 MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);

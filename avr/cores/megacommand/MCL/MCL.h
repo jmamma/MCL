@@ -23,6 +23,7 @@
 #include "MCLSeq.h"
 #include "MCLActions.h"
 #include "MDSysexCallbacks.h"
+#include "TurboLight.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
 

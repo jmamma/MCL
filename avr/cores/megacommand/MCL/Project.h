@@ -7,21 +7,21 @@
 #define VERSION 2013
 
 class ProjectHeader {
+public:
   uint32_t version;
   uint8_t reserved[16];
   uint32_t hash;
   MCLSysConfig cfg;
-  bool write_project_header();
 };
 
-class Project {
+class Project : public ProjectHeader {
 public:
   File file;
-  ProjectHeader header;
   void setup();
   bool load_project(char *projectname);
   bool check_project_version();
   bool new_project(char *projectname);
+  bool write_header();
 };
 
 extern Project proj;

@@ -1,4 +1,5 @@
 #include "SeqPtcPage.h"
+#include "MCL.h"
 void SeqPtcPage::setup() {
   SeqPage::setup();
   midi_events.setup_callbacks();
@@ -143,7 +144,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       MD.triggerTrack(next_track, 127);
       if ((record) && (MidiClock.state == 2)) {
         mcl_seq.record_track(next_track, note_num, 127);
-        mcl_seq.set_track_pitch(next_track, machine_pitch);
+        mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
       }
       return true;
     }

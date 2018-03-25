@@ -1,4 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
+#include "MCL.h"
 #include "NoteInterface.h"
 
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
@@ -10,7 +11,7 @@ void NoteInterface::init_notes() {
   }
 }
 
-bool NoteInterface::is_event(event_t *event) {
+bool NoteInterface::is_event(gui_event_t *event) {
   if (event->source >= 128) {
     return true;
   }
@@ -28,7 +29,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     notes[note_num] = 1;
   }
   if (note_num < 16) {
-    note_hold = slow_clock;
+    note_hold = slowclock;
   }
 
   gui_event_t event;
@@ -45,7 +46,7 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   notes[note_num] = 3;
 
   gui_event_t event;
-  event.source = i;
+  event.source = note_num + 128;
   event.mask = EVENT_BUTTON_RELEASED;
   event.port = port;
   EventRB.putp(&event);
@@ -111,7 +112,7 @@ void NoteInterface::draw_notes(uint8_t line_number) {
   for (int i = 0; i < 16; i++) {
     if (curpage == CUE_PAGE) {
 
-      if (IS_BIT_SET32(cfg.cues, i)) {
+      if (IS_BIT_SET32(mcl_cfg.cues, i)) {
         str[i] = 'X';
       }
     }
@@ -128,40 +129,40 @@ void NoteInterface::draw_notes(uint8_t line_number) {
   GUI.put_string_at(0, str);
 }
 
-void NoteIntefaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  if (midi_active_perring.uart1_device == DEVICE_MD) {
+void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
+  if (midi_active_peering.uart1_device == DEVICE_MD) {
     return;
   }
-  uint8_t note_num =
-      note_to_track_map(msg[1], midi_active_perring.uart1_device);
-  note_on_event(note_num, UART1_PORT);
+  uint8_t note_num = note_interface.note_to_track_map(
+      msg[1], midi_active_peering.uart1_device);
+  note_interface.note_on_event(note_num, UART1_PORT);
 }
-void NoteIntefaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  uint8_t note_num =
-      note_to_track_map(msg[1], midi_active_perring.uart2_device);
+void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
+  uint8_t note_num = note_interface.note_to_track_map(
+      msg[1], midi_active_peering.uart2_device);
 
   if (midi_active_peering.uart2_device == DEVICE_A4) {
     note_num += 16;
   }
-  note_on_event(note_num, UART2_PORT);
+  note_interface.note_on_event(note_num, UART2_PORT);
 }
-void NoteIntefaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
+void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   // MD input is handled by the NoteInterface object
   if (midi_active_peering.uart1_device == DEVICE_MD) {
     return;
   }
-  uint8_t note_num =
-      note_to_track_map(msg[1], midi_active_perring.uart1_device);
-  note_off_event(note_num, UART1_PORT);
+  uint8_t note_num = note_interface.note_to_track_map(
+      msg[1], midi_active_peering.uart1_device);
+  note_interface.note_off_event(note_num, UART1_PORT);
 }
-void NoteIntefaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  uint8_t note_num =
-      note_to_track_map(msg[1], midi_active_perring.uart2_device);
+void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+  uint8_t note_num = note_interface.note_to_track_map(
+      msg[1], midi_active_peering.uart2_device);
   if (midi_active_peering.uart2_device == DEVICE_A4) {
     note_num += 16;
   }
-  note_off_event(note_num, UART2_PORT);
+  note_interface.note_off_event(note_num, UART2_PORT);
 }
 
 void NoteInterfaceMidiEvents::setup_callbacks() {
@@ -172,12 +173,15 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi;
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
   Midi2.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
- 
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+
   state = true;
 }
 
@@ -190,11 +194,14 @@ void NoteInterfaceMidiEvents::remove_callbacks() {
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi;
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
   Midi2.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2); 
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
 
   state = false;
 }

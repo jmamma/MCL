@@ -76,6 +76,16 @@ bool MDPatternShort::fromSysex(uint8_t *data, uint16_t len) {
 	return true;
 }
 
+void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
+  for (uint8_t p = 0; p < 24; p++) {
+    int8_t idxn = pattern_rec.getLockIdx(track, p);
+    if (idxn != -1) {
+      pattern_rec.locks[idxn][step] = 254;
+    }
+  }
+}
+
+
 bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
 	init();
 	

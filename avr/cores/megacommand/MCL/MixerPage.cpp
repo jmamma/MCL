@@ -1,28 +1,29 @@
+#include "MCL.h"
 #include "MixerPage.h"
 
 void MixerPage::set_level(int curtrack, int value) {
   MD.setTrackParam(curtrack, 33, value);
-        
-        /*  uint8_t cc;
-  uint8_t channel = curtrack >> 2;
-  if (curtrack < 4) {
-    cc = 8 + curtrack;
-  } else if (curtrack < 8) {
-    cc = 4 + curtrack;
-  } else if (curtrack < 12) {
-    cc = curtrack;
-  } else if (curtrack < 16) {
-    cc = curtrack - 4;
-  }
-  USE_LOCK();
-  SET_LOCK();
-  if (md_exploit.state) {
-    MidiUart.sendCC(channel + 3, cc, value);
-  } else {
-    MidiUart.sendCC(channel + 9, cc, value);
-  }
-  CLEAR_LOCK();
-  in_sysex = 0; */
+
+  /*  uint8_t cc;
+uint8_t channel = curtrack >> 2;
+if (curtrack < 4) {
+cc = 8 + curtrack;
+} else if (curtrack < 8) {
+cc = 4 + curtrack;
+} else if (curtrack < 12) {
+cc = curtrack;
+} else if (curtrack < 16) {
+cc = curtrack - 4;
+}
+USE_LOCK();
+SET_LOCK();
+if (md_exploit.state) {
+MidiUart.sendCC(channel + 3, cc, value);
+} else {
+MidiUart.sendCC(channel + 9, cc, value);
+}
+CLEAR_LOCK();
+in_sysex = 0; */
 }
 void MixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
@@ -41,8 +42,8 @@ void MixerPage::draw_levels() {
   GUI.put_string_at(0, str);
 }
 
-void MixerPage::encoder_level_handle(Encoder *enc) {
-  TrackInfoEncoder *mdEnc = (TrackInfoEncoder *)enc;
+void encoder_level_handle(Encoder *enc) {
+  MCLEncoder *mdEnc = (MCLEncoder *)enc;
   uint8_t increase = 0;
   if (enc->pressmode == false) {
     increase = 1;
@@ -52,8 +53,8 @@ void MixerPage::encoder_level_handle(Encoder *enc) {
   }
   int track_newlevel;
   for (int i = 0; i < 16; i++) {
-    if (notes[i] == 1) {
-      //        setLevel(i,mdEnc->getValue() + MD.kit.levels[i] );
+    if (note_interface.notes[i] == 1) {
+      //        set_level(i,mdEnc->getValue() + MD.kit.levels[i] );
       for (int a = 0; a < increase; a++) {
         if ((mdEnc->getValue() - mdEnc->old) < 0) {
           track_newlevel = MD.kit.levels[i] - 1;
@@ -66,7 +67,7 @@ void MixerPage::encoder_level_handle(Encoder *enc) {
         if ((track_newlevel <= 127) && (track_newlevel >= 0)) {
           MD.kit.levels[i] += mdEnc->getValue() - mdEnc->old;
           // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
-          setLevel(i, MD.kit.levels[i]);
+          mixer_page.set_level(i, MD.kit.levels[i]);
           //}
         }
       }
@@ -90,6 +91,7 @@ void MixerPage::display() {
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
+    uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
@@ -99,26 +101,26 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
-              draw_notes(0);
+      note_interface.draw_notes(0);
 
       return true;
     }
   }
-  if (EVENT_PRESSED(evt, Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     level_pressmode = 1;
     return true;
   }
-  if (EVENT_RELEASED(evt, Buttons.ENCODER1)) {
+  if (EVENT_RELEASED(event, Buttons.ENCODER1)) {
     level_pressmode = 0;
     return true;
   }
 
-  if (EVENT_PRESSED(evt, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
 
     curpage = CUE_PAGE;
     return true;
   }
-  if (EVENT_PRESSED(evt, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     md_exploit.off();
     GUI.setPage(&grid_page);
     curpage = 0;
@@ -137,9 +139,9 @@ void MixerPage::create_chars_mixer() {
     }
   }
 }
-bool MixerPage::setup() {
-  Encoders[1]->handler = encoder_level_handle;
-  Encoders[2]->handler = encoder_level_handle;
+void MixerPage::setup() {
+  ((MCLEncoder*) encoders[1])->handler = encoder_level_handle;
+  ((MCLEncoder*) encoders[2])->handler = encoder_level_handle;
   create_chars_mixer();
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   curpage = MIXER_PAGE;
@@ -148,5 +150,5 @@ bool MixerPage::setup() {
   level_pressmode = 0;
   mixer_param1.cur = 60;
   md_exploit.on();
-  note_inteface.note_interface.state = true;
+  note_interface.state = true;
 }

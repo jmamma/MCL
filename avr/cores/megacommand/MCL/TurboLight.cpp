@@ -1,6 +1,6 @@
 #include "TurboLight.h"
 
-void TurboLight::lookup_speed(uint8_t speed) {
+uint8_t TurboLight::lookup_speed(uint8_t speed) {
   switch (speed) {
     case 0:
       return 1;
