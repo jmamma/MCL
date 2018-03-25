@@ -2,9 +2,9 @@
 
 void MCLPageMidiEvents::setup_callbacks() {
   Midi.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback_Midi);
 
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback_Midi2);
@@ -12,7 +12,7 @@ void MCLPageMidiEvents::setup_callbacks() {
       this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback_Midi2);
 
   Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback_Midi);
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback_Midi2);
@@ -20,17 +20,17 @@ void MCLPageMidiEvents::setup_callbacks() {
 
 void MCLPageMidiEvents::remove_callbacks() {
   Midi.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback_Midi);
   Midi2.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback_Midi2);
 
   Midi.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOffCallback_Midi);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLPageMidiEvents::onNoteOnCallback_Midi2);
 
   Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback);
+      this, (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback_Midi);
   Midi2.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLPageMidiEvents::onControlChangeCallback_Midi2);

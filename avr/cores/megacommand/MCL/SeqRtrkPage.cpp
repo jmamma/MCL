@@ -11,7 +11,7 @@ void SeqRtrkPage::init() {
   encoders[1]->max = 64;
   encoders[2]->max = 64;
   encoders[3]->max = 11;
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
 }

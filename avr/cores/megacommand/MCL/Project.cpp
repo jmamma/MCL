@@ -2,7 +2,7 @@
 
 void Project::setup() {}
 
-bool Project::sd_load_project(char *projectname) {
+bool Project::load_project(char *projectname) {
 
   bool ret;
 
@@ -98,7 +98,7 @@ bool ProjectHeader::write_project_header() {
   return true;
 }
 
-bool Project::sd_new_project(char *projectname) {
+bool Project::new_project(char *projectname) {
 
   bool ret;
 

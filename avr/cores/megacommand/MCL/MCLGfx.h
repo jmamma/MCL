@@ -6,7 +6,7 @@
 
 class MCLGfx {
   public:
-  void splash_screen();
+  void splashscreen();
 };
 
 extern MCLGfx gfx;

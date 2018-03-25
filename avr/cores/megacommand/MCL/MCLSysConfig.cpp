@@ -1,4 +1,5 @@
-#include "MCLSysConfig.hh"
+#include "MCL.h"
+#include "MCLSysConfig.h"
 
 bool MCLSysConfig::write_cfg() {
   bool ret;
@@ -14,7 +15,7 @@ bool MCLSysConfig::write_cfg() {
     return false;
   }
 
-  ret = mcl_sd.write_data(( uint8_t*)this, sizeof(MCLSysConfigData), &cfgfile);
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(MCLSysConfigData), &cfgfile);
   if (!ret) {
     DEBUG_PRINTLN("Write cfg failed");
   }
@@ -24,20 +25,19 @@ bool MCLSysConfig::write_cfg() {
   return true;
 }
 
-bool MCLSysConfig::init() {
+bool MCLSysConfig::cfg_init() {
   bool ret;
   int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Initialising cfgfile");
 
-  //DEBUG_PRINTLN("conf ext");
+  // DEBUG_PRINTLN("conf ext");
   cfgfile.remove();
-  ret = cfgfile.createContiguous("/config.mcls", (uint32_t) GRID_SLOT_BYTES);
+  ret = cfgfile.createContiguous("/config.mcls", (uint32_t)GRID_SLOT_BYTES);
   if (ret) {
     DEBUG_PRINTLN("Created new cfgfile");
-  }
-  else {
+  } else {
     DEBUG_PRINTLN("Failed to create new cfgfile");
     return false;
   }
@@ -48,9 +48,9 @@ bool MCLSysConfig::init() {
   number_projects = 0;
   m_strncpy(project, my_string, 16);
   clock_send = 0;
-  cfg.clock_rec = 0;
-  cfg.uart1_turbo = 2;
-  cfg.uart2_turbo = 2;
+  clock_rec = 0;
+  uart1_turbo = 2;
+  uart2_turbo = 2;
   cur_row = 0;
   cur_col = 0;
   cues = 0;
@@ -63,4 +63,4 @@ bool MCLSysConfig::init() {
   return true;
 }
 
-MCLSysConfig mcl_cfg; 
+MCLSysConfig mcl_cfg;

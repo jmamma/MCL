@@ -28,8 +28,7 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void place_track_inpattern(int curtrack, int column, int row,
-                             A4Sound *analogfour_sound);
+  bool place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound);
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
@@ -37,8 +36,8 @@ public:
   void send_pattern_kit_to_md();
 };
 
-MCLActionsCallbacks mcl_actions_callbacks;
-MCLActionsMidiEvents mcl_actions_midievents;
+extern MCLActionsCallbacks mcl_actions_callbacks;
+extern MCLActionsMidiEvents mcl_actions_midievents;
 
 extern MCLActions mcl_actions;
 

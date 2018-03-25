@@ -10,8 +10,8 @@
 
 class NoteInterfaceMidiEvents : public MidiCallback {
   bool state;
-  void setupCallbacks();
-  void removeCallbacks();
+  void setup_callbacks();
+  void remove_callbacks();
 
   void onNoteOnCallback_Midi(uint8_t *msg);
   void onNoteOffCallback_Midi(uint8_t *msg);

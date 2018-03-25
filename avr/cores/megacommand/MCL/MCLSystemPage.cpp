@@ -1,22 +1,26 @@
+#include "MCL.h"
 #include "MCLSystemPage.h"
+
+void MCLSystemPage::setup() {}
+void MCLSystemPage::init() {}
 
 bool MCLSystemPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 
     return true;
   }
-  if (EVENT_RELEASED(evt, Buttons.ENCODER1) ||
-      EVENT_RELEASED(evt, Buttons.ENCODER2) ||
-      EVENT_RELEASED(evt, Buttons.ENCODER3) ||
-      EVENT_RELEASED(evt, Buttons.ENCODER1)) {
+  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
+      EVENT_RELEASED(event, Buttons.ENCODER2) ||
+      EVENT_RELEASED(event, Buttons.ENCODER3) ||
+      EVENT_RELEASED(event, Buttons.ENCODER1)) {
     if (encoders[0]->getValue() == 0) {
-      load_project_page();
+      GUI.setPage(&load_proj_page);
       return true;
     } else if (encoders[0]->getValue() == 1) {
-      new_project_page();
+      GUI.setPage(&new_proj_page);
       return true;
     }
-    cfg.write_cfg();
+    mcl_cfg.write_cfg();
     midi_setup.cfg_ports();
 
     GUI.setPage(&grid_page);
@@ -28,19 +32,16 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
 }
 
 void MCLSystemPage::display() {
-GUI.setLine(GUI.LINE1);
+  GUI.setLine(GUI.LINE1);
   GUI.put_string_at_fill(0, "Name:");
-  GUI.put_string_at(6, &cfg.project[1]);
+  GUI.put_string_at(6, &mcl_cfg.project[1]);
   GUI.setLine(GUI.LINE2);
-
-
 
   if (encoders[0]->getValue() == 4) {
 
-
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(cfg.clock_rec);
+      encoders[1]->setValue(mcl_cfg.clock_rec);
     }
     GUI.put_string_at_fill(0, "CLK REC:");
 
@@ -54,15 +55,13 @@ GUI.setLine(GUI.LINE1);
       if (encoders[1]->getValue() > 1) {
         encoders[1]->cur = 1;
       }
-      cfg.clock_rec = encoders[1]->getValue();
+      mcl_cfg.clock_rec = encoders[1]->getValue();
     }
-  }
-  else if (encoders[0]->getValue() == 5) {
-
+  } else if (encoders[0]->getValue() == 5) {
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(cfg.clock_send);
+      encoders[1]->setValue(mcl_cfg.clock_send);
     }
     GUI.put_string_at_fill(0, "CLK SEND:");
 
@@ -76,14 +75,13 @@ GUI.setLine(GUI.LINE1);
       if (encoders[1]->getValue() > 1) {
         encoders[1]->cur = 1;
       }
-      cfg.clock_send = encoders[1]->getValue();
+      mcl_cfg.clock_send = encoders[1]->getValue();
     }
-  }
-  else if (encoders[0]->getValue() == 2) {
+  } else if (encoders[0]->getValue() == 2) {
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(cfg.uart1_turbo);
+      encoders[1]->setValue(mcl_cfg.uart1_turbo);
     }
     GUI.put_string_at_fill(0, "TURBO 1:");
 
@@ -102,7 +100,7 @@ GUI.setLine(GUI.LINE1);
     }
     if (encoders[1]->hasChanged()) {
       encoders[1]->old = encoders[1]->cur;
-      cfg.uart1_turbo = encoders[1]->getValue();
+      mcl_cfg.uart1_turbo = encoders[1]->getValue();
     }
 
   }
@@ -111,7 +109,7 @@ GUI.setLine(GUI.LINE1);
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(cfg.uart2_turbo);
+      encoders[1]->setValue(mcl_cfg.uart2_turbo);
     }
     GUI.put_string_at_fill(0, "TURBO 2:");
 
@@ -130,18 +128,14 @@ GUI.setLine(GUI.LINE1);
     }
     if (encoders[1]->hasChanged()) {
       encoders[1]->old = encoders[1]->cur;
-      cfg.uart2_turbo = encoders[1]->getValue();
+      mcl_cfg.uart2_turbo = encoders[1]->getValue();
     }
 
-  }
-  else if (encoders[0]->getValue() == 0) {
+  } else if (encoders[0]->getValue() == 0) {
     GUI.put_string_at_fill(0, "Load Project");
-  }
-  else if (encoders[0]->getValue() == 1) {
+  } else if (encoders[0]->getValue() == 1) {
     GUI.put_string_at_fill(0, "New Project");
   }
-
 }
 
-bool MCLSystemPage::setup() {}
 

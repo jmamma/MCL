@@ -10,12 +10,12 @@ void SeqParamPage::init() {
   encoders[2]->max = 23;
   encoders[3]->max = 127;
 
-  encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
+  encoders[0]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].locks_params[p1];
+  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].locks_params[p2];
   encoders[1]->cur =
-      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p1]];
+      MD.kit.params[md_exploit.last_md_track][mcl_seq.md_tracks[md_exploit.last_md_track].locks_params[p1]];
   encoders[3]->cur =
-      MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].locks_params[p2]];
+      MD.kit.params[md_exploit.last_md_track][mcl_seq.md_tracks[md_exploit.last_md_track].locks_params[p2]];
 
   curpage = SEQ_PARAMA_PAGE;
 }
@@ -31,7 +31,7 @@ void SeqParamPage::display() {
     GUI.put_string_at(0, "--");
   } else {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.models[md_exploit.last_md_track],
                                  encoders[0]->getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
@@ -43,7 +43,7 @@ void SeqParamPage::display() {
     GUI.put_string_at(7, "--");
   } else {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.models[md_exploit.last_md_track],
                                  encoders[2]->getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
@@ -76,11 +76,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t param_offset;
-      encoders[0]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p1];
-      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].lock_params[p2];
+      encoders[0]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].lock_params[p1];
+      encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].lock_params[p2];
 
-      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][(track + (seq_page.page_select * 16))];
-      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks[p2]
+      encoders[1]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].locks[p1][(track + (seq_page.page_select * 16))];
+      encoders[3]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].locks[p2]
                                      [(track + (seq_page.page_select * 16))];
       notes[track] = 1;
     }
@@ -94,30 +94,30 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       // Fudge timing info if it's not there
       if (utiming == 0) {
         utiming = 12;
-         mcl_seq.md_tracks[last_md_track].conditional[(track + (seq_page.page_select * 16))] =
+         mcl_seq.md_tracks[md_exploit.last_md_track].conditional[(track + (seq_page.page_select * 16))] =
             condition;
-       mcl_seq.md_tracks[last_md_track].timing[(track + (seq_page.page_select * 16))] =
+       mcl_seq.md_tracks[md_exploit.last_md_track].timing[(track + (seq_page.page_select * 16))] =
             utiming;
       }
-      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lockmask,
+      if (IS_BIT_SET64(mcl_seq.md_tracks[md_exploit.last_md_track].lockmask,
                        (track + (seq_page.page_select * 16)))) {
         if ((current_clock - note_hold) < 300) {
-          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lockmask,
+          CLEAR_BIT64(mcl_seq.md_tracks[md_exploit.last_md_track].lockmask,
                       (track + (seq_page.page_select * 16)));
         }
       } else {
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].lockmask,
+        SET_BIT64(mcl_seq.md_tracks[md_exploit.last_md_track].lockmask,
                   (track + (seq_page.page_select * 16)));
       }
 
       notes[track] = 0;
 
-      mcl_seq.md_tracks[last_md_track].locks[param_offset][(track + (seq_page.page_select * 16))] = encoders[1]->cur;
-      mcl_seq.md_tracks[last_md_track].locks[param_offset + 1]
+      mcl_seq.md_tracks[md_exploit.last_md_track].locks[param_offset][(track + (seq_page.page_select * 16))] = encoders[1]->cur;
+      mcl_seq.md_tracks[md_exploit.last_md_track].locks[param_offset + 1]
                   [(track + (seq_page.page_select * 16))] = encoders[3]->cur;
 
-      mcl_seq.md_tracks[last_md_track].params[p1] = encoders[0]->cur;
-      mcl_seq.md_tracks[last_md_track].params[p2] = encoders[2]->cur;
+      mcl_seq.md_tracks[md_exploit.last_md_track].params[p1] = encoders[0]->cur;
+      mcl_seq.md_tracks[md_exploit.last_md_track].params[p2] = encoders[2]->cur;
     }
     return true;
   }
@@ -128,7 +128,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_seq_track();
+    mcl_seq.md_tracks[md_exploit.last_md_track].clear_seq_track();
     return true;
   }
 
@@ -142,12 +142,12 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    encoders[0]->cur = mcl_seq.md_tracks[last_md_track].params[p1];
-    encoders[2]->cur = mcl_seq.md_tracks[last_md_track].params[p2];
+    encoders[0]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].params[p1];
+    encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].params[p2];
     encoders[1]->cur =
-        MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
+        MD.kit.params[md_exploit.last_md_track][mcl_seq.md_tracks[md_exploit.last_md_track].params[p1]];
     encoders[3]->cur =
-        MD.kit.params[last_md_track][mcl_seq.md_tracks[last_md_track].params[p1]];
+        MD.kit.params[md_exploit.last_md_track][mcl_seq.md_tracks[md_exploit.last_md_track].params[p1]];
     curpage = SEQ_PARAM_B_PAGE;
     return true;
   }

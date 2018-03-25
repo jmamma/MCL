@@ -1,7 +1,6 @@
 #include "MCL.h"
 
 uint8_t in_sysex;
-uint8_t in_sysex;
 uint8_t in_sysex2;
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
@@ -44,11 +43,11 @@ void MCL::setup() {
   // MidiClock.mode = MidiClock.EXTERNAL_MIDI;
   md_callbacks.setup();
 
-  NoteInteface.setup()
+  note_interface.setup();
   //
 
   //      GUI.flash_strings_fill("MIDI CLOCK SRC", "MIDI PORT 2");
-  md_exploit_callbacks.setup();
+  md_exploit.setup();
   //   MidiUart.setActiveSenseTimer(290);
 
   // patternswitch = 7;
@@ -60,8 +59,8 @@ void MCL::setup() {
 
   midi_setup.cfg_ports();
   // md_setup();
-  param1.cur = cfg.cur_col;
-  param2.cur = cfg.cur_row; // turboSetSpeed(1,1);
+  param1.cur = mcl_cfg.cur_col;
+  param2.cur = mcl_cfg.cur_row; // turboSetSpeed(1,1);
   // turboSetSpeed(1,2 );
 }
 MCL mcl;

@@ -1,6 +1,6 @@
 #include "MDTrack.h"
 
-bool getTrack_from_sysex(int tracknumber, uint8_t column) {
+bool get_track_from_sysex(int tracknumber, uint8_t column) {
 
   active = TRUE;
   trigPattern = pattern_rec.trigPatterns[tracknumber];
@@ -90,7 +90,7 @@ bool getTrack_from_sysex(int tracknumber, uint8_t column) {
   patternOrigPosition = pattern_rec.origPosition;
 }
 
-void placeTrack_in_sysex(int tracknumber, uint8_t column) {
+void place_track_in_sysex(int tracknumber, uint8_t column) {
   // Check that the track is active, we don't want to write empty/corrupt data
   // to the MD
   if (active == MD_TRACK_TYPE) {
@@ -225,7 +225,7 @@ bool store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  getTrack_from_sysex(track, column);
+  get_track_from_sysex(track, column);
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
 
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);

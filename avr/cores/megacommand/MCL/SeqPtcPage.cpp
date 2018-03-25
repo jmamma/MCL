@@ -15,7 +15,7 @@ void SeqPtcPage::init() {
   encoders[1]->cur = 32;
   encoders[0]->cur = 1;
 
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].length;
 
   curpage = SEQ_PTC_PAGE;
 }
@@ -26,7 +26,7 @@ void SeqPtcPage::pattern_len_handler(Encoder *enc) {
         mcl_seq.md_tracks[c].length = encoders[2]->getValue();
       }
     }
-    mcl_seq.md_tracks[last_md_track].length = encoders[2]->getValue();
+    mcl_seq.md_tracks[md_exploit.last_md_track].length = encoders[2]->getValue();
   } else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 6; c++) {
@@ -100,7 +100,7 @@ uint8_t SeqPtcPage::get_next_track() {
   } else {
     poly_count++;
   }
-  uint8_t next_track = last_md_track + poly_max - 1;
+  uint8_t next_track = md_exploit.last_md_track + poly_max - 1;
   if (next_track < 15) {
     return next_track;
   } else {
@@ -109,7 +109,7 @@ uint8_t SeqPtcPage::get_next_track() {
 }
 
 uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[md_exploit.last_md_track]);
 
   if (tuning == NULL) {
     return 0;
@@ -134,7 +134,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     // note interface presses are treated as musical notes here
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t note_num = track;
-      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+      encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].length;
       encoders[2]->max = 64;
       uint8_t pitch = calc_pitch(note_num);
       uint8_t next_track = poly_next_track();
@@ -190,7 +190,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
     if (grid.cur_col < 16) {
-      clear_seq_track(last_md_track);
+      clear_seq_track(md_exploit.last_md_track);
     } else {
       mcl_seq.clear_ext_track(last_ext_track);
     }

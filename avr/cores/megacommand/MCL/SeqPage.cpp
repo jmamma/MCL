@@ -13,7 +13,7 @@ void SeqPage::setup() {
     MD.getBlockingKit(MD.currentKit);
     MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
-  grid.cur_col = last_md_track;
+  grid.cur_col = md_exploit.last_md_track;
   grid.cur_row = param2.getValue();
 }
 

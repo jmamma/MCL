@@ -10,7 +10,7 @@ void SeqRlckPage::init() {
   encoders[1]->max = 64;
   encoders[2]->max = 64;
   encoders[3]->max = 11;
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
   midi_events.setup_callbacks();
@@ -101,7 +101,7 @@ void SeqRlckPageCallbacks::onControlChangeCallbackMidi(uint8_t *msg) {
     MD.kit.params[track][track_param] = value;
   }
   cur_col = track;
-  last_md_track = track;
+  md_exploit.last_md_track = track;
   encoders[2]->cur = mcl_seq.md_tracks[cur_col].length;
   mcl_seq.md_tracks[track].rec_track_locks(track_param, value);
 }

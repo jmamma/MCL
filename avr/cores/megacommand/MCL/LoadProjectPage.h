@@ -3,6 +3,8 @@
 #ifndef LOADPROJECTPAGE_H__
 #define LOADPROJECTPAGE_H__
 
+#include "GUI.h"
+
 class LoadProjectPage : public LightPage {
 public:
   char file_entries[30][16];

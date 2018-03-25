@@ -3,12 +3,12 @@
 #include "MCLSeq.h"
 //#include "MCLSd.h"
 
-bool A4Track::getTrack_from_sysex(int tracknumber, uint8_t column) {
+bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
 
         m_memcpy(&seq_data,&mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
   active = A4_TRACK_TYPE;
 }
-bool A4Track::placeTrack_in_sysex(int tracknumber, uint8_t column,
+bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
                                   A4Sound *analogfour_sound) {
   if (active == A4_TRACK_TYPE) {
     m_memcpy(analogfour_sound, &sound, sizeof(A4Sound));
@@ -65,7 +65,7 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
 
   /*analog 4 tracks*/
   if (Analog4.connected) {
-    getTrack_from_sysex(track - 16, column - 16);
+    get_track_from_sysex(track - 16, column - 16);
     ret = mcl_sd.write_data((uint8_t *)this, sizeof(A4Track), &proj.file);
     if (!ret) {
       return false;

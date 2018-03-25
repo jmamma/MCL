@@ -3,7 +3,8 @@
 #ifndef SEQPAGE_H__
 #define SEQPAGE_H__
 
-#include "Pages.hh"
+#include "GUI.h"
+#include "midi-common.hh"
 
 class SeqPageMidiEvents : public MidiCallback {
 public:
@@ -18,8 +19,6 @@ public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
 
-  static uint8_t last_md_track;
-  static uint8_t last_ext_track;
 
   SeqPageMidiEvents midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

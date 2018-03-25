@@ -1,7 +1,11 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "MCLActions.h"
+#include "MCL.h"
 
-void MCLActions::setup() {}
+void MCLActions::setup() {
+mcl_actions_callbacks.setup_callbacks();
+mcl_actions_midievents.setup_callbacks();
+}
 
 void MCLActions::kit_reload(uint8_t pattern) {
  if (mcl_actions.do_kit_reload != 255) {
@@ -15,8 +19,6 @@ void MCLActions::kit_reload(uint8_t pattern) {
 }
 
 MCLActions mcl_actions;
-MCLActionsCallbacks mcl_actions_callbacks;
-MCLActionsMidiEvents mcl_actions_midievents;
 
 bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound) {
   //       if (Grids[encodervaluer] != NULL) {
@@ -25,7 +27,7 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Soun
 
     if (temptrack.load_track_from_grid(column, row, 0)) {
       if (temptrack.active != EMPTY_TRACK_TYPE) {
-        temptrack.placeTrack_in_sysex(curtrack, column);
+        temptrack.place_track_in_sysex(curtrack, column);
       }
     }
   }
@@ -36,7 +38,7 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Soun
       if (track_buf.load_track_from_grid(column, row, 0)) {
         if (track_buf.active != EMPTY_TRACK_TYPE) {
 
-          return track_buf.placeTrack_in_sysex(curtrack, column, analogfour_sound);
+          return track_buf.place_track_in_sysex(curtrack, column, analogfour_sound);
         }
       }
     }
@@ -45,7 +47,7 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Soun
       if (track_buf.load_track_from_grid(column, row, 0)) {
         if (track_buf.active != EMPTY_TRACK_TYPE) {
 
-          return track_buf.placeTrack_in_sysex(curtrack, column);
+          return track_buf.place_track_in_sysex(curtrack, column);
         }
       }
     }
@@ -73,8 +75,8 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
     readpattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
   }
 
-  cur_col = column;
-  cur_row = row;
+  grid_page.cur_col = column;
+  grid_page.cur_row = row;
 
   store_behaviour = store_behaviour_;
   setLed();
@@ -84,12 +86,12 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
   bool save_a4_tracks = false;
   uint8_t i = 0;
   for (i = 0; i < 16; i++) {
-    if (notes[i] == 3) {
+    if (note_interface.notes[i] == 3) {
       save_md_tracks = true;
     }
   }
   for (i = 16; i < 20; i++) {
-    if (notes[i] == 3) {
+    if (note_interface.notes[i] == 3) {
       save_a4_tracks = true;
     }
   }
@@ -134,7 +136,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
 
   int curtrack = 0;
   if (store_behaviour == STORE_AT_SPECIFIC) {
-    curtrack = last_md_track;
+    curtrack = md_exploit.last_md_track;
     //MD.getCurrentTrack(CALLBACK_TIMEOUT);
   }
   uint8_t max_notes = 20;
@@ -142,7 +144,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
     max_notes = 16;
   }
   for (i = 0; i < max_notes; i++) {
-    if (notes[i] == 3) {
+    if (note_interface.notes[i] == 3) {
       if (first_note == 254) {
         first_note = i;
       }
@@ -154,23 +156,23 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
             Analog4.getBlockingSoundX(i - 16);
             analogfour_track.sound.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8);
           }
-          n = analogfour_track.store_track_in_grid(i, i, cur_row);
+          n = analogfour_track.store_track_in_grid(i, i, grid_page.cur_row);
         }
         else {
-          n = temptrack.store_track_in_grid(i, i, cur_row);
+          n = temptrack.store_track_in_grid(i, i, grid_page.cur_row);
         }
       }
 
       if ((store_behaviour == STORE_AT_SPECIFIC) && (i < 16)) {
-        n = temptrack.store_track_in_grid(curtrack + (i - first_note), i, cur_row);
+        n = temptrack.store_track_in_grid(curtrack + (i - first_note), i, grid_page.cur_row);
       }
-      //CLEAR_BIT32(notes, i);
+      //CLEAR_BIT32(note_interface.notes, i);
     }
   }
 
 
   /*Update the encoder page to show current Grids*/
-  page.display();
+  grid_page.display();
   //  int curkit = MD.getBlockingStatus(MD_CURRENT_KIT_REQUEST, CALLBACK_TIMEOUT);
 
 
@@ -194,8 +196,8 @@ void MCLActions::write_tracks_to_md( int column, int row, int b) {
     MD.currentKit = gridio_param3.getValue();
   }
 
-  cur_col = column;
-  cur_row = row;
+  grid_page.cur_col = column;
+  grid_page.cur_row = row;
   patternswitch = 1;
 
   if (!MD.getBlockingPattern(MD.currentPattern)) {
@@ -225,12 +227,12 @@ void MCLActions::send_pattern_kit_to_md() {
   A4Track *track_buf;
 
   MD.getBlockingKit(MD.currentKit);
-  temptrack.load_track_from_grid(0, cur_row, 0);
+  temptrack.load_track_from_grid(0, grid_page.cur_row, 0);
   //if (!Analog4.getBlockingKitX(0)) { return; }
   //if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8)) { return; }
 
   /*Send a quick sysex message to get the current selected track of the MD*/
-  int curtrack = last_md_track;
+  int curtrack = md_exploit.last_md_track;
   // MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
   uint8_t reload = 1;
@@ -295,22 +297,22 @@ void MCLActions::send_pattern_kit_to_md() {
   A4Sound sound_array[4];
   while ((i < 20)) {
 
-    if ((notes[i] > 1)) {
+    if ((note_interface.notes[i] > 1)) {
       if (first_note == 254) {
         first_note = i;
       }
-      //  if (cur_col > 0) {
+      //  if (grid_page.cur_col > 0) {
       if (store_behaviour == STORE_IN_PLACE) {
         track = i;
 
 
         if (i < 16) {
-          place_track_inpattern(track, i + cur_col, cur_row,  (A4Sound*) &sound_array[0]);
+          place_track_inpattern(track, i + grid_page.cur_col, grid_page.cur_row,  (A4Sound*) &sound_array[0]);
         }
         else {
           track = track - 16;
-          mcl_seq.seq_buffer_notesoff(track);
-          if (place_track_inpattern(track, i + cur_col, cur_row, (A4Sound*) &sound_array[track])) {
+          mcl_seq.ext_tracks[track].buffer_notesoff();
+          if (place_track_inpattern(track, i + grid_page.cur_col, grid_page.cur_row, (A4Sound*) &sound_array[track])) {
             if (Analog4.connected) {
               sound_array[track].workSpace = true;
               a4_send[track] = 1;
@@ -322,9 +324,9 @@ void MCLActions::send_pattern_kit_to_md() {
       }
 
 
-      else if ((cur_col + (i - first_note) < 16) && (i < 16)) {
-        track = cur_col + (i - first_note);
-        place_track_inpattern(track,  i, cur_row, &sound_array[0]);
+      else if ((grid_page.cur_col + (i - first_note) < 16) && (i < 16)) {
+        track = grid_page.cur_col + (i - first_note);
+        place_track_inpattern(track,  i, grid_page.cur_row, &sound_array[0]);
 
       }
 
@@ -344,7 +346,7 @@ void MCLActions::send_pattern_kit_to_md() {
           MD.muteTrack(track, true);
         }
         else {
-          ExtPatternMutes[i - 16] = SEQ_MUTE_ON;
+          mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_ON;
         }
       }
     }
@@ -439,7 +441,7 @@ void MCLActions::send_pattern_kit_to_md() {
     MD.loadKit(pattern_rec.kit);
   }
   else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
-    kit_reload = pattern_rec.kit;
+    do_kit_reload = pattern_rec.kit;
     if (q_pattern_change == 1) {
       MD.loadPattern(writepattern);
     }
@@ -488,16 +490,16 @@ void MCLActions::send_pattern_kit_to_md() {
       if (q_pattern_change != 1) {
         for (i = 0; i < 20; i++) {
           //If we're in cue mode, send the track to cue before unmuting
-          if ((notes[i] > 1)) {
+          if ((note_interface.notes[i] > 1)) {
             if ((gridio_param4.getValue() == 7) && (i < 16)) {
-              SET_BIT32(cfg.cues, i);
+              SET_BIT32(mcl_cfg.cues, i);
               MD.setTrackRouting(i, 5);
             }
             if (i < 16) {
               MD.muteTrack(i, false);
             }
             else {
-              ExtPatternMutes[i - 16] = SEQ_MUTE_OFF;
+              mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_OFF;
             }
           }
         }

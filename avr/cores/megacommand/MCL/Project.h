@@ -19,9 +19,9 @@ public:
   File file;
   ProjectHeader header;
   void setup();
-  bool sd_load_project(char *projectname);
+  bool load_project(char *projectname);
   bool check_project_version();
-  bool sd_new_project(char *projectname);
+  bool new_project(char *projectname);
 };
 
 extern Project proj;

@@ -1,5 +1,5 @@
 #include "MCLSd.h"
-
+#include "MCL.h"
 /*
    Function for writing to the project file
 */
@@ -28,34 +28,34 @@ bool MCLSd::load_init() {
   else {
     DEBUG_PRINTLN("SD Init okay");
 
-    if (cfgfile.open("/config.mcls", O_RDWR)) {
+    if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
       DEBUG_PRINTLN("Config file open: success");
 
-      if (sd_read_data(( uint8_t*)&cfg, sizeof(Config), &cfgfile)) {
+      if (read_data(( uint8_t*)&mcl_cfg, sizeof(MCLSysConfigData), &mcl_cfg.cfgfile)) {
         DEBUG_PRINTLN("Config file read: success");
 
-        if (cfg.version != CONFIG_VERSION) {
+        if (mcl_cfg.version != CONFIG_VERSION) {
           DEBUG_PRINTLN("Incompatible config version");
-          if (!cfg_init()) {
+          if (!mcl_cfg.cfg_init()) {
             return false;
           }
-          new_project_page();
+          GUI.setPage(&new_proj_page);
           return true;
 
         }
 
-        else if (cfg.number_projects > 0) {
+        else if (mcl_cfg.number_projects > 0) {
           DEBUG_PRINTLN("Project count greater than 0, try to load existing");
-          if (!sd_load_project(cfg.project)) {
+          if (!proj.load_project(mcl_cfg.project)) {
 
-            new_project_page();
+            GUI.setPage(&new_proj_page);
             return true;
 
           }
           return true;
         }
         else {
-          new_project_page();
+          GUI.setPage(&new_proj_page);
           return true;
 
         }
@@ -63,20 +63,20 @@ bool MCLSd::load_init() {
       else {
         DEBUG_PRINTLN("Could not read cfg file.");
 
-        if (!cfg_init()) {
+        if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        new_project_page();
+        GUI.setPage(&new_proj_page);
         return true;
 
       }
     }
     else {
       DEBUG_PRINTLN("Could not open cfg file. Let's try to create it");
-      if (!cfg_init()) {
+      if (!mcl_cfg.cfg_init()) {
         return false;
       }
-      new_project_page();
+      GUI.setPage(&new_proj_page);
       return true;
 
     }
@@ -109,7 +109,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
       DEBUG_PRINT(b);
       DEBUG_PRINT(" of ");
       DEBUG_PRINTLN(len);
-      sd_write_fail++;
+      write_fail++;
       pass = false;
       /*reset position*/
       ret = filep->seekSet(pos);
@@ -128,7 +128,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
   }
   else {
     DEBUG_PRINTLN("Total write failures");
-    DEBUG_PRINTLN(sd_write_fail);
+    DEBUG_PRINTLN(write_fail);
     return false;
   }
 }
@@ -158,7 +158,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
       DEBUG_PRINT(b);
       DEBUG_PRINT(" of ");
       DEBUG_PRINTLN(len);
-      sd_read_fail++;
+      read_fail++;
 
       /*reset position*/
       ret = filep->seekSet(pos);
@@ -178,7 +178,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
   }
   else {
     DEBUG_PRINTLN("Total read failures");
-    DEBUG_PRINTLN(sd_read_fail);
+    DEBUG_PRINTLN(read_fail);
 
     return false;
   }

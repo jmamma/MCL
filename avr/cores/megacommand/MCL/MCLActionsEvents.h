@@ -12,8 +12,7 @@ public:
 
   void setup_callbacks();
   void remove_callbacks();
-
-  void OnProgramChangeCallback(uint8_t *msg);
+  void onProgramChangeCallback_Midi(uint8_t *msg);
   // Callbacks for intercepting MD triggers as GUI input
   void onNoteOnCallback_Midi(uint8_t *msg);
   void onNoteOffCallback_Midi(uint8_t *msg);

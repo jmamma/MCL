@@ -3,6 +3,7 @@
 #ifndef MCLSYSTEMPAGE_H__
 #define MCLSYSTEMPAGE_H__
 
+#include "GUI.h"
 
 class MCLSystemPage : public LightPage {
  public:
@@ -10,6 +11,8 @@ class MCLSystemPage : public LightPage {
 
  }
  void display();
+ void setup();
+ void init();
  virtual bool handleEvent(gui_event_t *event);
 };
 

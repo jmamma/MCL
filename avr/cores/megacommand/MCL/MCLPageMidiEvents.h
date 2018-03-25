@@ -1,7 +1,8 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-
 #ifndef MCLPAGEMIDIEVENTS_H__
 #define MCLPAGEMIDIEVENTS_H__
+
+#include "MCL.h"
 
 class MCLPageMidiEvents : public MidiCallback {
   public:
@@ -13,5 +14,5 @@ class MCLPageMidiEvents : public MidiCallback {
   virtual void onNoteOffCallback_Midi2(uint8_t *msg);
   virtual void onControlChangeCallback_Midi(uint8_t *msg);
   virtual void onControlChangeCallback_Midi2(uint8_t *msg);
-}
+};
 #endif /* MCLPAGEMIDIEVENTS_H__ */

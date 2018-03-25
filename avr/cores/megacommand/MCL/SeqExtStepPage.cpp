@@ -37,8 +37,8 @@ void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
 void SeqExtStepPage::display() {
   GUI.put_string_at(0, "                ");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 2);
 
   char c[3] = "--";
 

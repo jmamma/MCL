@@ -3,7 +3,7 @@
 #include "GridPages.h"
 #include "MCL.h"
 
-void GridPage::init() { md_exploit.off(); }
+void GridPage::init() { reload_slot_models = 0; md_exploit.off(); }
 void GridPage::setup() {
   frames_startclock = slowclock;
 
@@ -116,7 +116,7 @@ void GridPage::tick_frames() {
 
 void GridPage::toggle_fx1() {
   dispeffect = 1;
-  GridEncoder *enc = (GridEncoder *)encoders[3];
+  GridEncoder *enc = (GridEncoder *)encoders[2];
   if (enc->effect == MD_FX_REV) {
     fx_dc = enc->getValue();
     enc->setValue(fx_tm);
@@ -134,7 +134,7 @@ void GridPage::toggle_fx1() {
 void GridPage::toggle_fx2() {
   dispeffect = 1;
 
-  GridEncoder *enc = (GridEncoder *)encoders[4];
+  GridEncoder *enc = (GridEncoder *)encoders[3];
   if (enc->effect == MD_FX_REV) {
     fx_lv = enc->getValue();
     enc->setValue(fx_fb);

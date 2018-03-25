@@ -157,7 +157,7 @@ void MDSeqTrack::set_track_step(uint8_t track, uint8_t step, uint8_t utiming,
                                 uint8_t note_num, uint8_t velocity) {
   uint8_t condition = 0;
   grid.cur_col = track;
-  last_md_track = track;
+  md_exploit.last_md_track = track;
 
   encoders[2]->cur = mcl_seq.md_tracks[grid.cur_col].length;
   //  timing = 3;

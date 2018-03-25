@@ -1,7 +1,7 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "NoteInterface.h"
 
-void NoteInterface::setup() {}
+void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
   for (uint8_t i = 0; i < 20; i++) {
@@ -147,7 +147,7 @@ void NoteIntefaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 }
 void NoteIntefaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
-  // MD input is handled by the MDExploit object
+  // MD input is handled by the NoteInterface object
   if (midi_active_peering.uart1_device == DEVICE_MD) {
     return;
   }
@@ -162,6 +162,41 @@ void NoteIntefaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     note_num += 16;
   }
   note_off_event(note_num, UART2_PORT);
+}
+
+void NoteInterfaceMidiEvents::setup_callbacks() {
+  if (state) {
+    return;
+  }
+  Midi.addOnNoteOnCallback(
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
+  Midi.addOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi;
+  Midi2.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.addOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+ 
+  state = true;
+}
+
+void NoteInterfaceMidiEvents::remove_callbacks() {
+
+  if (!state) {
+    return;
+  }
+  Midi.removeOnNoteOnCallback(
+      this,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
+  Midi.removeOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi;
+  Midi2.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.removeOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2); 
+
+  state = false;
 }
 
 NoteInterface note_interface;

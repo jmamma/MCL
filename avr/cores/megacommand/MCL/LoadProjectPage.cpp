@@ -1,4 +1,5 @@
 #include "LoadProjectPage.h"
+#include "MCL.h"
 
 void LoadProjectPage::display() {
   GUI.setLine(GUI.LINE1);
@@ -26,10 +27,8 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       temp[0] = '/';
       m_strncpy(&temp[1], file_entries[encoders[0]->getValue()], size);
 
-      if (sd_load_project(temp)) {
-        reload_slot_models = 0;
+      if (proj.load_project(temp)) {
         GUI.setPage(&grid_page);
-        curpage = GRID_PAGE;
       } else {
         GUI.flash_strings_fill("PROJECT ERROR", "NOT COMPATIBLE");
       }
@@ -83,11 +82,11 @@ void LoadProjectPage::setup() {
 
   if (numEntries <= 0) {
     numEntries = 0;
-    loadproj_param1->max = 0;
+   ((MCLEncoder *)encoders[0])->max = 0;
   }
-  loadproj_param1->max = numEntries - 1;
+  ((MCLEncoder *)encoders[0])->max = numEntries - 1;
 
   curpage = LOAD_PROJECT_PAGE;
-  GUI.setPage(&loadproj_page);
+  GUI.setPage(&load_proj_page);
 
 }

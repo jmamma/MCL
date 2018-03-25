@@ -1,3 +1,4 @@
+#include "MCL.h"
 #include "MCLGfx.h"
 
 void MCLGfx::splashscreen() {
@@ -12,7 +13,6 @@ void MCLGfx::splashscreen() {
 
   delay(100);
   // while (rec_global == 0) {
-
 
   GUI.setPage(&grid_page);
 }

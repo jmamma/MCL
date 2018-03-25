@@ -54,7 +54,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       note_interface.notes[i] = 3;
     }
     md_exploit.off();
-    mcl_actions.store_tracks_in_mem(encoders[0]->getValue(), encodes[1]->getValue(), STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(encoders[0]->getValue(), encoders[1]->getValue(), STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
