@@ -39,9 +39,9 @@ void SeqExtStepPage::display() {
   GUI.put_string_at(0, "                ");
 
   const char *str1 =
-      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 1);
+      getMachineNameShort(MD.kit.models[last_md_track], 1);
   const char *str2 =
-      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 2);
+      getMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
 
@@ -139,7 +139,7 @@ void SeqExtStepPage::display() {
       GUI.put_value_at1(13, last_ext_track + 1);
     }
   }
-  draw_patternmask((page_select * 16), DEVICE_A4);
+  draw_pattern_mask((page_select * 16), DEVICE_A4);
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {

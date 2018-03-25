@@ -12,7 +12,7 @@ void SeqRtrkPage::init() {
   encoders[1]->max = 64;
   encoders[2]->max = 64;
   encoders[3]->max = 11;
-  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track].length;
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
 }
@@ -41,7 +41,7 @@ void SeqRtrkPage::display() {
     GUI.put_value_at1(12, grid.cur_col - 16 + 1);
   }
 
-  draw_patternmask(seq_page.page_select * 16, DEVICE_MD);
+  draw_pattern_mask(seq_page.page_select * 16, DEVICE_MD);
 }
 bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
@@ -54,7 +54,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       grid_page.cur_col = track_number;
-      md_exploit.last_md_track = track_number;
+      last_md_track = track_number;
 
       encoders[2]->cur =
           mcl_seq.md_tracks[grid_page.cur_col].length MD.triggerTrack(note_num,

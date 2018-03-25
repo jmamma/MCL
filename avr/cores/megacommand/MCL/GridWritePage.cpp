@@ -106,7 +106,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
        BUTTON_UP(Buttons.ENCODER3) && BUTTON_UP(Buttons.ENCODER4))) {
 
     // MD.getCurrentTrack(CALLBACK_TIMEOUT);
-    int curtrack = md_exploit.last_md_track;
+    int curtrack = last_md_track;
     //        int curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
     md_exploit.off();

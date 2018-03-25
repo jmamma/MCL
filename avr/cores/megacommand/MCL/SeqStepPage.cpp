@@ -12,7 +12,7 @@ void SeqStepPage::init() {
   encoders[1]->cur = 12;
   encoders[2]->max = 64;
   encoders[3]->max = 16;
-  encoders[2]->cur = mcl_seq.md_tracks[md_exploit.last_md_track];
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track];
 
   curpage = SEQ_STEP_PAGE;
 }
@@ -20,9 +20,9 @@ void SeqStepPage::display() {
   GUI.put_string_at(0, "                ");
 
   const char *str1 =
-      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 1);
+      getMachineNameShort(MD.kit.models[last_md_track], 1);
   const char *str2 =
-      getMachineNameShort(MD.kit.models[md_exploit.last_md_track], 2);
+      getMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
 
@@ -56,7 +56,7 @@ void SeqStepPage::display() {
   GUI.put_value_at(6, encoders[2]->getValue());
   GUI.put_value_at1(15, seq_page.page_select + 1);
   // GUI.put_value_at2(7, encoders[3]->getValue());
-  draw_patternmask((seq_page.page_select * 16), DEVICE_MD);
+  draw_pattern_mask((seq_page.page_select * 16), DEVICE_MD);
 }
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
@@ -147,7 +147,7 @@ if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
     return true;
 }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    clear_seq_track(md_exploit.last_md_track);
+    clear_seq_track(last_md_track);
     return true;
   }
 

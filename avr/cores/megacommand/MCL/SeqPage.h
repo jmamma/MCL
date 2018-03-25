@@ -14,6 +14,8 @@ public:
 };
 
 
+void pattern_len_handler(Encoder *enc);
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
@@ -26,13 +28,13 @@ public:
       : LightPage(e1, e2, e3, e4) {
     midi_events.setup_callbacks();
   }
-  virtual void pattern_len_handler(Encoder *enc);
   virtual bool handleEvent(gui_event_t *event);
-  virtual void create_char_seq();
-  void draw_lockmask(uint8_t offset);
-  void draw_patternmask(uint8_t offset, uint8_t device);
-  virtual void setup() {}
-  virtual void init() {}
+  void create_chars_seq();
+  void draw_lock_mask(uint8_t offset);
+  void draw_pattern_mask(uint8_t offset, uint8_t device);
+  void display();
+  void setup();
+  void init();
 };
 
 #endif /* SEQPAGE_H__ */

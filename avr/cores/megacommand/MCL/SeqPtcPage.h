@@ -3,12 +3,11 @@
 #ifndef SEQPTCPAGE_H__
 #define SEQPTCPAGE_H__
 
-#include "Scales.h"
 #include "SeqPage.h"
-
-const scale_t *scales[16];
-
+#include "Scales.h"
+extern scale_t *scales[16];
 class SeqPtcMidiEvents : public MidiCallback {
+public:
   bool state;
 
   void setup_callbacks();
@@ -27,7 +26,8 @@ public:
   bool record_mode = false;
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-             Encoder *e4 = NULL) : SeqPage(e1, e2, e3, e4) {}
+             Encoder *e4 = NULL)
+      : SeqPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
   void pattern_len_handler(Encoder *enc);
   uint8_t seq_ext_pitch(uint8_t note_num);

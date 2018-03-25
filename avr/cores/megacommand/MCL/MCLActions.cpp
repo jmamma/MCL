@@ -136,7 +136,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
 
   int curtrack = 0;
   if (store_behaviour == STORE_AT_SPECIFIC) {
-    curtrack = md_exploit.last_md_track;
+    curtrack = last_md_track;
     //MD.getCurrentTrack(CALLBACK_TIMEOUT);
   }
   uint8_t max_notes = 20;
@@ -232,7 +232,7 @@ void MCLActions::send_pattern_kit_to_md() {
   //if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8)) { return; }
 
   /*Send a quick sysex message to get the current selected track of the MD*/
-  int curtrack = md_exploit.last_md_track;
+  int curtrack = last_md_track;
   // MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
   uint8_t reload = 1;

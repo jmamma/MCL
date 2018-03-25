@@ -6,6 +6,8 @@ void MCLSeq::setup() {
     seq_param_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3,
                                   &seq_param4);
     seq_param_page[i].construct(i, i + 1);
+    seq_param_page[i].page_id = i;
+
   }
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
