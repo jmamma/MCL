@@ -82,7 +82,7 @@ void MDSysexCallbacks::onKitMessage() {
   clearLed2();
 }
 
-void onPatternMessage() {
+void MDSysexCallbacks::onPatternMessage() {
   setLed2();
 
   /*Reverse track callback*/

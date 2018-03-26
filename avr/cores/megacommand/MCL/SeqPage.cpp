@@ -1,19 +1,20 @@
 #include "MCL.h"
 #include "SeqPage.h"
 
+uint8_t SeqPage::page_select = 0;
+
 void SeqPage::create_chars_seq() {
-    uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
-    uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
-    uint8_t temp_charmap3[8] = {0, 30, 1, 1, 1, 30, 0};
-    uint8_t temp_charmap4[8] = {0, 27, 4, 4, 4, 27, 0};
-    LCD.createChar(2, temp_charmap1);
-    LCD.createChar(3, temp_charmap2);
-    LCD.createChar(4, temp_charmap3);
-    LCD.createChar(5, temp_charmap4);
+  uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
+  uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
+  uint8_t temp_charmap3[8] = {0, 30, 1, 1, 1, 30, 0};
+  uint8_t temp_charmap4[8] = {0, 27, 4, 4, 4, 27, 0};
+  LCD.createChar(2, temp_charmap1);
+  LCD.createChar(3, temp_charmap2);
+  LCD.createChar(4, temp_charmap3);
+  LCD.createChar(5, temp_charmap4);
 }
 
 void SeqPage::setup() {
-
   encoders[2]->handler = pattern_len_handler;
   ((MCLEncoder *)encoders[1])->min = 0;
   create_chars_seq();
@@ -29,6 +30,8 @@ void SeqPage::setup() {
   grid_page.cur_col = last_md_track;
   grid_page.cur_row = param2.getValue();
 }
+
+void SeqPage::init() {}
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   //  if (note_interface.is_event(event)) {
@@ -90,18 +93,21 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
     } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
-      if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask, i + offset)) {
+      if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+                       i + offset)) {
         str[i] = 'x';
       }
       if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
                        i + offset) &&
-          !IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask, i + offset)) {
+          !IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+                        i + offset)) {
 
         str[i] = (char)165;
       }
       if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
                        i + offset) &&
-          IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask, i + offset)) {
+          IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+                       i + offset)) {
 
         str[i] = (char)219;
       }
@@ -127,8 +133,8 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
   char mystr[17] = "----------------";
 
   /*Get the Pattern bit mask for the selected track*/
-  //    uint64_t pattern_mask = getPatternMask(grid_page.cur_col, grid_page.cur_row , 3,
-  //    false);
+  //    uint64_t pattern_mask = getPatternMask(grid_page.cur_col,
+  //    grid_page.cur_row , 3, false);
   uint64_t pattern_mask = mcl_seq.md_tracks[grid_page.cur_col].pattern_mask;
   int8_t note_held = 0;
 
@@ -272,12 +278,14 @@ void SeqPage::display() {
 
 void SeqPageMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+      this,
+      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
   Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+      this,
+      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {

@@ -26,7 +26,7 @@ public:
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-    midi_events.setup_callbacks();
+        midi_events.setup_callbacks();
   }
   virtual bool handleEvent(gui_event_t *event);
   void create_chars_seq();

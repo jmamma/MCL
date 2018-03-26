@@ -1,6 +1,10 @@
 #include "CuePage.h"
 #include "MCL.h"
 
+void CuePage::setup() {
+
+}
+
 void CuePage::set_level(int curtrack, int value) {
   MD.setTrackParam(curtrack, 33, value);
 }

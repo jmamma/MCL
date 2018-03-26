@@ -10,7 +10,8 @@ class SeqStepPage : public SeqPage {
 public:
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
-      : SeqPage(e1, e2, e3, e4) {}
+      : SeqPage(e1, e2, e3, e4) {
+      }
   bool handleEvent(gui_event_t *event);
   void display();
   void setup();

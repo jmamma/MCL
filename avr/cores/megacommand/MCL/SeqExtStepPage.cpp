@@ -29,7 +29,7 @@ struct musical_notes {
 void SeqExtStepPage::pattern_len_handler(Encoder *enc) {
 
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
-    for (uint8_t c = 0; c < 6; c++) {
+    for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
       mcl_seq.ext_tracks[c].length = encoders[2]->getValue();
     }
   }

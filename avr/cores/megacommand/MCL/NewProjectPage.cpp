@@ -1,9 +1,7 @@
 #include "MCL.h"
 #include "NewProjectPage.h"
 
-char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
 void NewProjectPage::setup() {
-
   char my_string[16] = "/project___.mcl";
 
   my_string[8] = (mcl_cfg.number_projects % 1000) / 100 + '0';
@@ -17,6 +15,7 @@ void NewProjectPage::setup() {
 }
 void NewProjectPage::update_prjpage_char() {
   uint8_t x = 0;
+  char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
   // Check to see that the character chosen is in the list of allowed characters
   while ((newprj[encoders[0]->cur] != allowedchar[x]) && (x < 38)) {
 
@@ -31,6 +30,8 @@ void NewProjectPage::update_prjpage_char() {
 }
 
 void NewProjectPage::display() {
+  char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
+  // Check to see that the character chosen is in the list of allowed characters
   if (encoders[0]->hasChanged()) {
     update_prjpage_char();
   }

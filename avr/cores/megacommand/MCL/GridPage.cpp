@@ -3,17 +3,23 @@
 #include "GridPages.h"
 #include "MCL.h"
 
-void GridPage::init() { reload_slot_models = 0; md_exploit.off(); }
+void GridPage::init() {
+  reload_slot_models = 0;
+  md_exploit.off();
+}
 void GridPage::setup() {
+  uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
+
+  LCD.createChar(1, charmap);
   frames_startclock = slowclock;
 
   encoders[1]->handler = encoder_param2_handle;
   encoders[2]->handler = encoder_fx_handle;
-  ((GridEncoder *) encoders[2])->effect = MD_FX_ECHO;
-  ((GridEncoder *) encoders[2])->fxparam = MD_ECHO_TIME;
+  ((GridEncoder *)encoders[2])->effect = MD_FX_ECHO;
+  ((GridEncoder *)encoders[2])->fxparam = MD_ECHO_TIME;
   encoders[3]->handler = encoder_fx_handle;
-  ((GridEncoder *) encoders[3])->effect = MD_FX_ECHO;
-  ((GridEncoder *) encoders[3])->fxparam = MD_ECHO_FB;
+  ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
+  ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
 }
 
 void GridPage::loop() { midi_active_peering.check(); }
@@ -86,11 +92,11 @@ void GridPage::load_slot_models() {
     DEBUG_PRINTLN(grid_models[i]);
     if (i == 0) {
       if (temptrack.active != EMPTY_TRACK_TYPE) {
-        for (uint8_t c = 0; c < 17; c++) {
+        for (uint8_t c = 0; c < 16; c++) {
           currentkitName[c] = temptrack.kitName[c];
         }
       } else {
-        for (uint8_t c = 0; c < 17; c++) {
+        for (uint8_t c = 0; c < 16; c++) {
           currentkitName[c] = ' ';
         }
       }
@@ -218,13 +224,13 @@ void GridPage::display() {
     GUI.setLine(GUI.LINE1);
     /*Displays the kit name of the left most Grid on the first line at position
      * 12*/
-    if (((GridEncoder *) encoders[2])->effect == MD_FX_ECHO) {
+    if (((GridEncoder *)encoders[2])->effect == MD_FX_ECHO) {
       GUI.put_string_at(12, "TM");
     } else {
       GUI.put_string_at(12, "DC");
     }
 
-    if (((GridEncoder *) encoders[3])->effect == MD_FX_ECHO) {
+    if (((GridEncoder *)encoders[3])->effect == MD_FX_ECHO) {
       GUI.put_string_at(14, "FB");
     } else {
       GUI.put_string_at(14, "LV");
@@ -259,7 +265,8 @@ void GridPage::display() {
     } else {
 
       GUI.put_string_at(12, grid.get_slot_kit(encoders[0]->getValue(),
-                                        encoders[1]->getValue(), false, true));
+                                              encoders[1]->getValue(), false,
+                                              true));
     }
     GUI.setLine(GUI.LINE2);
 
@@ -352,14 +359,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-    (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
+  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
+      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
 
-  system_page.isSetup = false;
-  GUI.setPage(&system_page);
+    system_page.isSetup = false;
+    GUI.setPage(&system_page);
 
-  return true;
-}
+    return true;
+  }
 
-return false;
+  return false;
 }

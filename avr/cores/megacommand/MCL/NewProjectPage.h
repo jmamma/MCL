@@ -5,7 +5,8 @@
 
 #include "GUI.h"
 
-char allowedchars;
+extern char allowedchar[38];
+
 class NewProjectPage : public LightPage {
 public:
   char newprj[18];

@@ -104,4 +104,3 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
-SeqRtrkPage seq_rtrk_page;
