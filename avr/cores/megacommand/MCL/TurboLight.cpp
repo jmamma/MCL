@@ -1,3 +1,4 @@
+#include "MCL.h"
 #include "TurboLight.h"
 
 uint8_t TurboLight::lookup_speed(uint8_t speed) {
@@ -42,7 +43,7 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
   //USE_LOCK();
   // SET_LOCK();
 
-  sendturbomidiHeader(0x20, MidiUart_);
+  send_header(0x20, MidiUart_);
   MidiUart_->m_putc_immediate(speed);
 
   MidiUart_->m_putc_immediate(0xF7);
@@ -53,7 +54,7 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
     while (!IS_BIT_SET8(UCSR2A, UDRE2));
   }
   delay(50);
-  MidiUart.setSpeed(tmSpeeds[speed ], port);
+  MidiUart.set_speed(tmSpeeds[speed ], port);
   //delay(50);
   MidiUart_->setActiveSenseTimer(150);
   //  MidiUart_->m_putc_immediate(0xF8);
