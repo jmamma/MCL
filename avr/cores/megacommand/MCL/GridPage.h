@@ -4,6 +4,7 @@
 #define GRIDPAGE_H__
 
 #include "GUI.h"
+#include "GridEncoder.h"
 
 class GridPage : public LightPage {
 public:
@@ -23,12 +24,13 @@ public:
   bool reload_slot_models;
 
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-           Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {}
+           Encoder *e4 = NULL) : LightPage(e1, e2 ,e3, e4) {
+      }
   virtual bool handleEvent(gui_event_t *event);
   void toggle_fx1();
   void toggle_fx2();
   void displayScroll(uint8_t i);
+  void displaySlot(uint8_t i);
   void load_slot_models();
   void tick_frames();
   void display();

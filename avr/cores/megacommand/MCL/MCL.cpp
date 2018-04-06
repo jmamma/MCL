@@ -20,7 +20,6 @@ void MCL::setup() {
   ret = mcl_sd.load_init();
 
   // if (!ret) { }
-
   md_callbacks.setup();
 
   note_interface.setup();
@@ -31,8 +30,11 @@ void MCL::setup() {
   A4SysexListener.setup();
 
   midi_setup.cfg_ports();
+  
   // md_setup();
   param1.cur = mcl_cfg.cur_col;
   param2.cur = mcl_cfg.cur_row;
+  GUI.setPage(&grid_page);
+
 }
 MCL mcl;

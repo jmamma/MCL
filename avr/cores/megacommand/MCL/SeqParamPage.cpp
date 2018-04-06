@@ -20,9 +20,9 @@ void SeqParamPage::init() {
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
 }
-void SeqParamPage::construct(uint8_t p1, uint8_t p2) {
-  param1 = p1;
-  param2 = p2;
+void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
+  p1 = p1_;
+  p2 = p2_;
 }
 void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);

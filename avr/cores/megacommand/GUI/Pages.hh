@@ -160,7 +160,7 @@ class LightPage : public PageParent {
 
 public:
   uint8_t curpage;
-
+PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
@@ -449,13 +449,19 @@ public:
       // can't push the same page twice in a row
       return;
     }
-    currentPage()->cleanup();
+    DEBUG_PRINTLN("Pushing page");
+    if (currentPage() != NULL) {
+//    currentPage()->cleanup();
+    }
+    else {
+    DEBUG_PRINTLN("Current Page is NULL");
+    }
     page->parent = this;
     if (!page->isSetup) {
       page->setup();
       page->isSetup = true;
     }
-    page->init();
+ //   page->init();
     page->redisplayPage();
     page->show();
     pageStack.push(page);

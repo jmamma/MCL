@@ -11,7 +11,7 @@ public:
   uint32_t version;
   uint8_t reserved[16];
   uint32_t hash;
-  MCLSysConfig cfg;
+  MCLSysConfigData cfg;
 };
 
 class Project : public ProjectHeader {

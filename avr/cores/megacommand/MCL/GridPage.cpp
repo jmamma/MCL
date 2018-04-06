@@ -4,15 +4,13 @@
 #include "MCL.h"
 
 void GridPage::init() {
-  reload_slot_models = 0;
+  reload_slot_models = false;
   md_exploit.off();
 }
 void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
-
   LCD.createChar(1, charmap);
   frames_startclock = slowclock;
-
   encoders[1]->handler = encoder_param2_handle;
   encoders[2]->handler = encoder_fx_handle;
   ((GridEncoder *)encoders[2])->effect = MD_FX_ECHO;
@@ -20,9 +18,11 @@ void GridPage::setup() {
   encoders[3]->handler = encoder_fx_handle;
   ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
   ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
-}
+  }
 
-void GridPage::loop() { midi_active_peering.check(); }
+void GridPage::loop() {
+  midi_active_peering.check();
+}
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
 
@@ -71,7 +71,7 @@ void encoder_param2_handle(Encoder *enc) {
   if (enc->hasChanged()) {
     grid_page.grid_lastclock = slowclock;
 
-    grid_page.reload_slot_models = 0;
+    grid_page.reload_slot_models = false;
   }
 }
 
@@ -156,7 +156,80 @@ void GridPage::toggle_fx2() {
   }
 }
 
+void GridPage::displaySlot(uint8_t i) {
+  const char *str;
+  /*Calculate the position of the Grid to be displayed based on the Current Row,
+   * Column and Encoder*/
+  // int value = displayx + (displayy * 16) + i;
+
+  GUI.setLine(GUI.LINE1);
+
+  char a4_name2[3] = "TK";
+
+  char strn[3] = "--";
+  // A4Track track_buf;
+  uint8_t model = grid_page.grid_models[encoders[0]->cur + i];
+
+  // getGridModel(encoders[1]->getValue() + i, encoders[2]->getValue(), true,
+  // (A4Track*) &track_buf);
+
+  /*Retrieve the first 2 characters of Maching Name associated with the Track at
+   * the current Grid. First obtain the Model object from the Track object, then
+   * convert the MachineType into a string*/
+  if (encoders[0]->cur + i < 16) {
+    str = getMachineNameShort(model, 1);
+
+    if (str == NULL) {
+      GUI.put_string_at((0 + (i * 3)), strn);
+    } else {
+      GUI.put_p_string_at((0 + (i * 3)), str);
+    }
+  } else {
+    if (model == EMPTY_TRACK_TYPE) {
+      GUI.put_string_at((0 + (i * 3)), strn);
+    } else {
+      if (model == A4_TRACK_TYPE) {
+        char a4_name1[3] = "A4";
+        GUI.put_string_at((0 + (i * 3)), a4_name1);
+      }
+      if (model == EXT_TRACK_TYPE) {
+        char ex_name1[3] = "EX";
+        GUI.put_string_at((0 + (i * 3)), ex_name1);
+      }
+    }
+  }
+
+  GUI.setLine(GUI.LINE2);
+  str = NULL;
+
+  if (encoders[0]->cur + i < 16) {
+
+    str = getMachineNameShort(model, 2);
+
+    if (str == NULL) {
+      GUI.put_string_at((0 + (i * 3)), strn);
+    } else {
+      GUI.put_p_string_at((0 + (i * 3)), str);
+    }
+  }
+
+  else {
+    if (model == EMPTY_TRACK_TYPE) {
+      GUI.put_string_at((0 + (i * 3)), strn);
+    } else {
+      GUI.put_string_at((0 + (i * 3)), a4_name2);
+      GUI.put_value_at1(1 + (i * 3), encoders[0]->getValue() + i - 15);
+    }
+  }
+  redisplay = false;
+}
+
 void GridPage::display() {
+
+    //        for (uint8_t i = 0; i < 4; i++) {
+//GUI.put_value_at2(i * 4, encoders[i]->cur);
+ //           }
+   //         return;
   tick_frames();
   // GUI.put_value16_at(0, MidiClock.div192th_counter);
   //  GUI.put_value16_at(5, MidiClock.div96th_counter);
@@ -197,7 +270,8 @@ void GridPage::display() {
     for (uint8_t i = 0; i < 4; i++) {
 
       /*Display the encoder, ie the Grid i*/
-      encoders[i]->displayAt(i);
+      displaySlot(i);
+      //      GUI.put_value_at2(2 + i * 4,encoders[i]->getValue());
       /*Display the scroll animation. (Scroll animation draws a || at every 4
        * Grids in a row, making it easier to separate and visualise the track
        * Grids)*/
@@ -238,8 +312,9 @@ void GridPage::display() {
 
     GUI.setLine(GUI.LINE2);
     /*Displays the value of the current Row on the screen.*/
-    GUI.put_value_at2(12, (encoders[1]->getValue()));
-    GUI.put_value_at2(14, (encoders[2]->getValue()));
+    GUI.put_value_at2(12, (encoders[2]->getValue()));
+    GUI.put_value_at2(14, (encoders[3]->getValue()));
+
     // mdEnc1->dispnow = 0;
     //  mdEnc2->dispnow = 0;
 
@@ -284,8 +359,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    grid.clear_row(encoders[1]->getValue());
-    reload_slot_models = 0;
+    grid.clear_row(grid_page.encoders[1]->getValue());
+    reload_slot_models = false;
     return true;
   }
   // TRACK READ PAGE
@@ -310,7 +385,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     setLed();
     int curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
-    encoders[0]->cur = curtrack;
+    grid_page.encoders[0]->cur = curtrack;
 
     clearLed();
     return true;

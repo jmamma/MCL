@@ -1,13 +1,14 @@
-#include "MCLSeq.h"
 #include "MCL.h"
+#include "MCLSeq.h"
 
 void MCLSeq::setup() {
-  for (uint8_t i = 0; i < NUM_PARAM_PAGES; i = i + 2) {
+
+  for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
+
     seq_param_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3,
                                   &seq_param4);
-    seq_param_page[i].construct(i, i + 1);
+    seq_param_page[i].construct(i * 2, 1 + i * 2);
     seq_param_page[i].page_id = i;
-
   }
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
@@ -50,7 +51,6 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
-
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -73,7 +73,8 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+      this,
+      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
@@ -91,7 +92,8 @@ void MCLSeqMidiEvents::remove_callbacks() {
   Midi.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+      this,
+      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
   Midi2.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
