@@ -4,9 +4,10 @@
 void SeqRtrkPage::setup() { SeqPage::setup(); }
 
 void SeqRtrkPage::init() {
+  SeqPage::init();
   md_exploit.on();
 
-  note_interface.state = false;
+  note_interface.state = true;
 
   ((MCLEncoder *)encoders[0])->max = 4;
   ((MCLEncoder *)encoders[1])->max = 64;
@@ -16,7 +17,10 @@ void SeqRtrkPage::init() {
 
   curpage = SEQ_RTRK_PAGE;
 }
-
+void SeqRtrkPage::cleanup() {
+  md_exploit.off();
+  SeqPage::cleanup();
+}
 void SeqRtrkPage::display() {
 
   GUI.setLine(GUI.LINE1);
@@ -51,7 +55,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-
+    midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       grid_page.cur_col = track;
       last_md_track = track;
@@ -68,7 +72,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
     }
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) { 
     md_exploit.off();
     GUI.setPage(&seq_rlck_page);
     return true;

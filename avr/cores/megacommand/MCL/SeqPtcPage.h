@@ -5,7 +5,12 @@
 
 #include "SeqPage.h"
 #include "Scales.h"
+#include "MidiActivePeering.h"
+
 extern scale_t *scales[16];
+
+void ptc_pattern_len_handler(Encoder *enc);
+
 class SeqPtcMidiEvents : public MidiCallback {
 public:
   bool state;
@@ -21,7 +26,7 @@ class SeqPtcPage : public SeqPage {
 
 public:
   uint8_t poly_count = 0;
-  uint8_t poly_max = 1;
+  uint8_t poly_max = 8;
 
   bool record_mode = false;
   SeqPtcMidiEvents midi_events;
@@ -29,15 +34,16 @@ public:
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
-  void pattern_len_handler(Encoder *enc);
   uint8_t seq_ext_pitch(uint8_t note_num);
-  virtual void display();
+  void display();
   uint8_t get_machine_pitch(uint8_t track, uint8_t pitch);
   uint8_t get_next_track();
   uint8_t calc_pitch(uint8_t note_num);
   void setup();
   void cleanup();
+  void config_encoders();
   void init();
 };
+
 
 #endif /* SEQPTCPAGE_H__ */

@@ -37,6 +37,7 @@ bool MCLSd::load_init() {
         if (mcl_cfg.version != CONFIG_VERSION) {
           DEBUG_PRINTLN("Incompatible config version");
           if (!mcl_cfg.cfg_init()) {
+DEBUG_PRINTLN("Could not init cfg");
             return false;
           }
           GUI.setPage(&new_proj_page);

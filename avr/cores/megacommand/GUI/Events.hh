@@ -50,7 +50,9 @@ void pollEventGUI();
 /**
  * Event ringbuffer storing the events as they happen on the IO.
  **/
-extern volatile CRingBuffer<gui_event_t, 8> EventRB;
+
+#define MAX_EVENTS 32
+extern volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
 
 /** @} **/
 

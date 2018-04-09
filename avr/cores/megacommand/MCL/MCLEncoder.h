@@ -13,9 +13,9 @@ class MCLEncoder : public Encoder {
 
   public:
     /** Minimum value of the encoder. **/
-    int8_t min;
+    int min;
     /** Maximum value of the encoder. **/
-    int8_t max;
+    int max;
 
     /**
        Create a new range-limited encoder with max and min value, short

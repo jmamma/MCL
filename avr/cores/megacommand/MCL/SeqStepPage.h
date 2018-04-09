@@ -5,9 +5,21 @@
 
 #include "SeqPage.h"
 
+class SeqStepMidiEvents : public MidiCallback {
+public:
+  bool state;
+
+  void setup_callbacks();
+  void remove_callbacks();
+
+  void onNoteOnCallback_Midi2(uint8_t *msg);
+  void onNoteOffCallback_Midi2(uint8_t *msg);
+};
+
 class SeqStepPage : public SeqPage {
 
 public:
+  SeqStepMidiEvents midi_events;
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {
@@ -16,6 +28,7 @@ public:
   void display();
   void setup();
   void init();
+  void cleanup();
 };
 
 #endif /* SEQSTEPPAGE_H__ */

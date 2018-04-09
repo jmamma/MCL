@@ -3,6 +3,8 @@
 
 uint8_t SeqPage::page_select = 0;
 
+uint8_t SeqPage::midi_device = DEVICE_MD;
+
 void SeqPage::create_chars_seq() {
   uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
   uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
@@ -15,9 +17,8 @@ void SeqPage::create_chars_seq() {
 }
 
 void SeqPage::setup() {
-  encoders[2]->handler = pattern_len_handler;
-  ((MCLEncoder *)encoders[1])->min = 0;
   create_chars_seq();
+  if (MD.connected) {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   // stored.
   if (MidiClock.state != 2) {
@@ -27,11 +28,14 @@ void SeqPage::setup() {
   MD.getBlockingKit(MD.currentKit);
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
+  ((MCLEncoder *)encoders[1])->min = 0;
+  ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   grid_page.cur_col = last_md_track;
+  }
   grid_page.cur_row = param2.getValue();
 }
 
-void SeqPage::init() {}
+void SeqPage::init() { seqpage_midi_events.setup_callbacks(); }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   //  if (note_interface.is_event(event)) {
@@ -160,9 +164,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           mystr[i] = ' ';
         } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
           mystr[i] = ' ';
-        } else if (note_interface.notes[i - offset] > 0) {
-          /*If the bit is set, there is a cue at this position. We'd like to
-           * display it as [] on screen*/
+        } else if (note_interface.notes[i - offset] == 1) {
           /*Char 219 on the minicommand LCD is a []*/
 
           mystr[i - offset] = (char)255;
@@ -237,7 +239,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       }
       if ((i >= offset) && (i < offset + 16)) {
 
-        if (note_interface.notes[i - offset] > 0) {
+        if (note_interface.notes[i - offset] == 1) {
           /*If the bit is set, there is a cue at this position. We'd like to
            * display it as [] on screen*/
           /*Char 219 on the minicommand LCD is a []*/
@@ -251,26 +253,30 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
   /*Display the step sequencer pattern on screen, 16 steps at a time*/
   GUI.put_string_at(0, mystr);
 }
-
 void pattern_len_handler(Encoder *enc) {
-  if (grid_page.cur_col < 16) {
-    mcl_seq.md_tracks[grid_page.cur_col].length = seq_param3.getValue();
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
-      for (uint8_t c = 0; c < mcl_seq.num_md_tracks; c++) {
-        mcl_seq.md_tracks[c].length = seq_param3.getValue();
+  MCLEncoder* enc_ = (MCLEncoder*) enc;
+  if (SeqPage::midi_device == DEVICE_MD) {
+   DEBUG_PRINTLN("under 16"); 
+          if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      for (uint8_t c = 0; c < 16; c++) {
+        mcl_seq.md_tracks[c].length = enc_->cur;
       }
+    } else {
+      mcl_seq.md_tracks[last_md_track].length = enc_->cur;
     }
-
   } else {
+    DEBUG_PRINTLN(enc_->cur);
+    DEBUG_PRINTLN(enc_->max);
+    DEBUG_PRINTLN(last_ext_track);
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
-        mcl_seq.ext_tracks[c].length = seq_param3.getValue();
+        mcl_seq.ext_tracks[c].length = enc_->cur;
       }
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].length = enc_->cur;
     }
-    mcl_seq.ext_tracks[last_ext_track].length = seq_param3.getValue();
   }
 }
-
 void SeqPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, page_select + 1);

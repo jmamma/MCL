@@ -12,10 +12,12 @@ void MCLSeq::setup() {
   }
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
+    md_tracks[i].length = 16;
   }
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
+    ext_tracks[i].length = 16;
   }
 
   //   MidiClock.addOnClockCallback(this,

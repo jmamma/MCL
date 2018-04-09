@@ -46,8 +46,8 @@ MidiUartClass::MidiUartClass() : MidiUartParent() {
 
 void MidiUartClass::initSerial() {
   running_status = 0;
-  setSpeed(31250,1); 
-  setSpeed(31250,2);
+  set_speed(31250,1); 
+  set_speed(31250,2);
  
   //  UBRR0H = (UART_BAUDRATE_REG >> 8);
   //  UBRR0L = (UART_BAUDRATE_REG & 0xFF);
@@ -65,7 +65,7 @@ void MidiUartClass::initSerial() {
 #endif
 }
 
-void MidiUartClass::setSpeed(uint32_t speed, uint8_t port) {
+void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
 #ifdef TX_IRQ
   // empty TX buffer before switching speed
   while (!txRb.isEmpty())

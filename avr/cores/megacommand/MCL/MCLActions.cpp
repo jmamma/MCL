@@ -69,6 +69,7 @@ void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
 }
 
 void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_) {
+  DEBUG_PRINT_FN();
   int16_t tclock = slowclock;
   uint8_t readpattern = MD.currentPattern;
   if ((gridio_param1.getValue() * 16 + gridio_param2.getValue()) != MD.currentPattern) {
@@ -98,6 +99,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
 
   if (save_md_tracks) {
     if (!MD.getBlockingPattern(readpattern)) {
+      DEBUG_PRINTLN("could not receive pattern");
       return;
     }
     if (MidiSysex.data[3] == 0x02) {
@@ -120,6 +122,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
     }
 
     if (!MD.getBlockingKit(curkit)) {
+       DEBUG_PRINTLN("could not receive kit");
       return;
     }
   }
@@ -170,10 +173,6 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
     }
   }
 
-
-  /*Update the encoder page to show current Grids*/
-  grid_page.display();
-  //  int curkit = MD.getBlockingStatus(MD_CURRENT_KIT_REQUEST, CALLBACK_TIMEOUT);
 
 
 

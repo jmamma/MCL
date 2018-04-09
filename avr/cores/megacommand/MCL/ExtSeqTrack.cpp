@@ -132,6 +132,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 }
 
 void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t velocity) {
+  DEBUG_PRINTLN("recording notes");
   uint8_t match = 255;
   // Look for matching note already on this step
   // If it's a note off, then disable the note

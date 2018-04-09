@@ -2,8 +2,8 @@
 
 #include "GUI.h"
 
-#define MAX_EVENTS 32
 #define MAX_BUTTONS 8
+
 volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
 
 void pollEventGUI() {

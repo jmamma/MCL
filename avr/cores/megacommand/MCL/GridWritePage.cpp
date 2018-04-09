@@ -25,37 +25,37 @@ void GridWritePage::display() {
   GUI.setLine(GUI.LINE2);
   if (curpage == S_PAGE) {
     GUI.put_string_at(0, "S");
-  }
-  else if (curpage == W_PAGE) {
+  } else if (curpage == W_PAGE) {
     GUI.put_string_at(0, "W");
   }
 
   char str[5];
 
-
   if (encoders[1]->getValue() < 8) {
-    MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue() , str);
+    MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue(),
+                      str);
     GUI.put_string_at(2, str);
-  }
-  else {
+  } else {
     GUI.put_string_at(2, "OG");
   }
 
-  uint8_t step_count = (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) - (64 * ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) / 64));
+  uint8_t step_count =
+      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (64 * ((MidiClock.div16th_counter -
+              mcl_actions_callbacks.start_clock32th / 2) /
+             64));
   GUI.put_value_at2(14, step_count);
   if (curpage == W_PAGE) {
     uint8_t x;
 
     GUI.put_string_at(9, "Q:");
 
-    //0-63 OG
+    // 0-63 OG
     if (encoders[2]->getValue() == 64) {
       GUI.put_string_at(6, "OG");
-    }
-    else {
+    } else {
       GUI.put_value_at2(6, encoders[2]->getValue() + 1);
     }
-
 
     if (encoders[3]->getValue() == 0) {
       GUI.put_string_at(11, "--");
@@ -80,8 +80,6 @@ void GridWritePage::display() {
       x = 1 << encoders[3]->getValue();
       GUI.put_value_at2(11, x);
     }
-
-
   }
 }
 bool GridWritePage::handleEvent(gui_event_t *event) {
@@ -89,13 +87,18 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (GridIOPage::handleEvent(event)) {
     return true;
   }
-
+  DEBUG_PRINTLN(event->source);
   if (note_interface.is_event(event)) {
-  md_exploit.off();
-  mcl_actions.write_tracks_to_md( 0, grid_page.encoders[1]->getValue(), 0);
-  GUI.setPage(&grid_page);
-  curpage = 0;
-  return true;
+      DEBUG_PRINTLN("note event");
+      if (note_interface.notes_all_off()) {
+      DEBUG_PRINTLN("notes all off");
+      md_exploit.off();
+      mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+      GUI.setPage(&grid_page);
+      curpage = 0;
+    }
+
+    return true;
   }
 
   if ((EVENT_RELEASED(event, Buttons.ENCODER1) ||
@@ -111,7 +114,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
     md_exploit.off();
     mcl_actions.write_original = 0;
-    mcl_actions.write_tracks_to_md(MD.currentTrack, grid_page.encoders[1]->getValue(), 254);
+    mcl_actions.write_tracks_to_md(MD.currentTrack,
+                                   grid_page.encoders[1]->getValue(), 254);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -132,4 +136,3 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
 }
-

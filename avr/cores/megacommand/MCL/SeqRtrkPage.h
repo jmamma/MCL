@@ -15,6 +15,7 @@ public:
   void display();
   void setup();
   void init();
+  void cleanup();
 };
 
 #endif /* SEQRTRKPAGE_H__ */

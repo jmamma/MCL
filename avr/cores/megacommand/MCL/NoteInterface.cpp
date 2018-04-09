@@ -12,14 +12,15 @@ void NoteInterface::init_notes() {
 }
 
 bool NoteInterface::is_event(gui_event_t *event) {
+  DEBUG_PRINTLN(event->source);
   if (event->source >= 128) {
     return true;
   }
   return false;
 }
 void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
-
   if (!state) {
+    DEBUG_PRINTLN("note interface disabled");
     return;
   }
   if (note_num > 20) {
@@ -42,9 +43,9 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
-
+  DEBUG_PRINTLN(note_num);
   notes[note_num] = 3;
-
+  DEBUG_PRINTLN("note off");
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = EVENT_BUTTON_RELEASED;
@@ -56,7 +57,11 @@ uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
   uint8_t note_to_track_map[7] = {0, 2, 4, 5, 7, 9, 11};
   for (uint8_t i = 0; i < 7; i++) {
     if (note_to_track_map[i] == (note - (note / 12) * 12)) {
-      return i + 16;
+      if (device == DEVICE_A4) {
+        return i + 16;
+      }
+
+      return i;
     }
   }
 }
@@ -72,7 +77,8 @@ bool NoteInterface::notes_all_off() {
       b++;
     }
   }
-
+  DEBUG_PRINTLN(a);
+  DEBUG_PRINTLN(b);
   if ((a == 0) && (b > 0)) {
     all_notes_off = true;
   }
@@ -116,7 +122,7 @@ void NoteInterface::draw_notes(uint8_t line_number) {
         str[i] = 'X';
       }
     }
-    if (notes[i] > 0) {
+    if (notes[i] > 0 && notes[i] != 3) {
       /*If the bit is set, there is a cue at this position. We'd like to display
        * it as [] on screen*/
       /*Char 219 on the minicommand LCD is a []*/
@@ -140,10 +146,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.uart2_device);
-
-  if (midi_active_peering.uart2_device == DEVICE_A4) {
-    note_num += 16;
-  }
+  DEBUG_PRINTLN(note_num);
   note_interface.note_on_event(note_num, UART2_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
@@ -159,9 +162,8 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.uart2_device);
-  if (midi_active_peering.uart2_device == DEVICE_A4) {
-    note_num += 16;
-  }
+  DEBUG_PRINTLN("note to track");
+  DEBUG_PRINTLN(note_num);
   note_interface.note_off_event(note_num, UART2_PORT);
 }
 

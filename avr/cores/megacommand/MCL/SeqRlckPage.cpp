@@ -1,22 +1,26 @@
-#include "SeqRlckPage.h"
 #include "MCL.h"
+#include "SeqRlckPage.h"
 
 void SeqRlckPage::setup() { SeqPage::setup(); }
 
 void SeqRlckPage::init() {
+  SeqPage::init();
   md_exploit.off();
   note_interface.state = false;
 
-  ((MCLEncoder*)encoders[0])->max = 4;
-  ((MCLEncoder*)encoders[1])->max = 64;
-  ((MCLEncoder*)encoders[2])->max = 64;
-  ((MCLEncoder*)encoders[3])->max = 11;
+  ((MCLEncoder *)encoders[0])->max = 4;
+  ((MCLEncoder *)encoders[1])->max = 64;
+  ((MCLEncoder *)encoders[2])->max = 64;
+  ((MCLEncoder *)encoders[3])->max = 11;
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
   midi_events.setup_callbacks();
 }
-void SeqRlckPage::cleanup() { midi_events.remove_callbacks(); }
+void SeqRlckPage::cleanup() {
+  SeqPage::cleanup();
+  midi_events.remove_callbacks();
+}
 void SeqRlckPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, page_select + 1);
@@ -49,8 +53,6 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    md_exploit.on();
-    note_interface.state = false;
     curpage = SEQ_RTRK_PAGE;
     GUI.setPage(&seq_rtrk_page);
     return true;
@@ -113,9 +115,9 @@ void SeqRlckPageMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  Midi.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqRlckPageMidiEvents::onControlChangeCallback_Midi);
+  Midi.addOnControlChangeCallback(this,
+                                  (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
+                                      onControlChangeCallback_Midi);
   Midi2.addOnControlChangeCallback(this,
                                    (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
                                        onControlChangeCallback_Midi2);
@@ -129,8 +131,8 @@ void SeqRlckPageMidiEvents::remove_callbacks() {
     return;
   }
   Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqRlckPageMidiEvents::onControlChangeCallback_Midi);
+      this, (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
+                onControlChangeCallback_Midi);
   Midi2.removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
                 onControlChangeCallback_Midi2);

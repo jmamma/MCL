@@ -7,6 +7,7 @@
 
 struct musical_notes;
 
+void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:
   bool state;
@@ -28,10 +29,10 @@ public:
   bool handleEvent(gui_event_t *event);
   void display();
 
-  void pattern_len_handler(Encoder *enc);
   void setup();
   void cleanup();
   void init();
+  void config_encoders();
 };
 
 #endif /* SEQEXTSTEPPAGE_H__ */

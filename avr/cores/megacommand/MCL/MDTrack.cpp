@@ -253,6 +253,9 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     DEBUG_PRINTLN("write failed");
     return false;
   }
-
+  DEBUG_PRINTLN("Track stored in grid");
+  DEBUG_PRINT(column); 
+  DEBUG_PRINT(" "); 
+  DEBUG_PRINT(row);
   return true;
 }

@@ -25,7 +25,7 @@ public:
   uint8_t notes[NI_MAX_NOTES];
   uint8_t notecount = 0;
   uint8_t last_note;
-  uint8_t note_hold = 0;
+  uint16_t note_hold = 0;
   bool note_proceed = false;
   bool state = true;
   void init_notes();

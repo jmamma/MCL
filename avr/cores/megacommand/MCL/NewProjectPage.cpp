@@ -2,6 +2,7 @@
 #include "NewProjectPage.h"
 
 void NewProjectPage::setup() {
+  DEBUG_PRINTLN("New project page");
   char my_string[16] = "/project___.mcl";
 
   my_string[8] = (mcl_cfg.number_projects % 1000) / 100 + '0';

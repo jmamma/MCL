@@ -24,6 +24,11 @@ void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
   p1 = p1_;
   p2 = p2_;
 }
+void SeqParamPage::cleanup() {
+  md_exploit.off();
+  SeqPage::cleanup();
+}
+
 void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);
   char myName[4] = "-- ";
@@ -126,7 +131,6 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    md_exploit.off();
     GUI.setPage(&grid_page);
     return true;
   }
@@ -146,7 +150,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     uint8_t page_depth = page_id;
-    if (page_depth < NUM_PARAM_PAGES) {
+    if (page_depth < NUM_PARAM_PAGES - 1) {
       page_depth = page_depth + 1;
     } else {
       page_depth = 0;

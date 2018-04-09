@@ -3,9 +3,11 @@
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::init() {
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("init seqstep");
+  SeqPage::init();
   md_exploit.on();
   note_interface.state = true;
-
   ((MCLEncoder *)encoders[0])->max = 13;
   ((MCLEncoder *)encoders[1])->max = 23;
   ((MCLEncoder *)encoders[1])->min = 1;
@@ -16,7 +18,12 @@ void SeqStepPage::init() {
 
   curpage = SEQ_STEP_PAGE;
 }
+void SeqStepPage::cleanup() {
+  md_exploit.off();
+  SeqPage::cleanup();
+}
 void SeqStepPage::display() {
+  GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
 
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
@@ -53,7 +60,6 @@ void SeqStepPage::display() {
   GUI.put_p_string_at(12, str2);
   GUI.put_value_at(6, encoders[2]->getValue());
   GUI.put_value_at1(15, page_select + 1);
-  // GUI.put_value_at2(7, encoders[3]->getValue());
   draw_pattern_mask((page_select * 16), DEVICE_MD);
 }
 
@@ -65,10 +71,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source - 128;
 
+    midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-
       if (device == DEVICE_A4) {
-        last_ext_track = track;
         GUI.setPage(&seq_extstep_page);
       }
       if ((track + (page_select * 16)) >=
@@ -111,11 +116,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //   condition; //lower
 
       if (!IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
-                        (track + (page_select * 16)))) {
+                              (track + (page_select * 16)))) {
+              DEBUG_PRINTLN("setting bit");
+              DEBUG_PRINT(track + (page_select * 16));
         SET_BIT64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
                   (track + (page_select * 16)));
       } else {
+        DEBUG_PRINTLN("Trying to clear");
         if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
+              DEBUG_PRINTLN("clearing bit");
+            DEBUG_PRINT(track + (page_select * 16));
           CLEAR_BIT64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
                       (track + (page_select * 16)));
         }
@@ -130,38 +140,33 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    md_exploit.off();
     GUI.setPage(&grid_page);
     return true;
-
   }
 
-if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-    (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
+  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
+      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
     for (uint8_t n = 0; n < 16; n++) {
       mcl_seq.md_tracks[n].clear_seq_track();
     }
     return true;
-}
+  }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     mcl_seq.md_tracks[last_md_track].clear_seq_track();
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1))  {
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     GUI.setPage(&seq_extstep_page);
     return true;
     /*
 
       return true;
     */
-
-
   }
   if (SeqPage::handleEvent(event)) {
     return true;
   }
 
-
-return false;
+  return false;
 }

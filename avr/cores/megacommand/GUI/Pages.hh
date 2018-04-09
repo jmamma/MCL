@@ -144,11 +144,11 @@ public:
    * avoid double initialization.
    **/
 
-  //Call an init routine each time the page is loaded
+  // Call an init routine each time the page is loaded
   virtual void init() {}
-  virtual void cleanup() {} 
+  virtual void cleanup() {}
   virtual void setup() {}
- 
+
 #ifdef HOST_MIDIDUINO
   virtual ~Page() {}
 #endif
@@ -160,11 +160,11 @@ class LightPage : public PageParent {
 
 public:
   uint8_t curpage;
-PageContainer *parent;
+  PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
 
-  LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
-           Encoder *e3 = NULL, Encoder *e4 = NULL) {
+  LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
+            Encoder *e4 = NULL) {
     setEncoders(e1, e2, e3, e4);
   }
 
@@ -434,6 +434,15 @@ public:
 
   /** Clear the active page stack, and push page as the currentPage(). **/
   void setPage(Page *page) {
+    if (currentPage() != NULL) {
+      DEBUG_PRINTLN("calling cleanup");
+      currentPage()->cleanup();
+    }
+
+    else {
+      DEBUG_PRINTLN("Current Page is NULL");
+    }
+
     pageStack.reset();
     pushPage(page);
   }
@@ -446,22 +455,17 @@ public:
    **/
   void pushPage(Page *page) {
     if (currentPage() == page) {
+      DEBUG_PRINTLN("can't push twice");
       // can't push the same page twice in a row
       return;
     }
     DEBUG_PRINTLN("Pushing page");
-    if (currentPage() != NULL) {
-//    currentPage()->cleanup();
-    }
-    else {
-    DEBUG_PRINTLN("Current Page is NULL");
-    }
     page->parent = this;
     if (!page->isSetup) {
       page->setup();
       page->isSetup = true;
     }
- //   page->init();
+    page->init();
     page->redisplayPage();
     page->show();
     pageStack.push(page);
