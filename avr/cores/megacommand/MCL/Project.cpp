@@ -110,7 +110,7 @@ bool Project::new_project(char *projectname) {
 
   temptrack.active = EMPTY_TRACK_TYPE;
 
-  // DEBUG_PRINTLN(exitcode);
+   DEBUG_PRINTLN("Attempting to extend project file");
 
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
@@ -122,7 +122,7 @@ bool Project::new_project(char *projectname) {
     DEBUG_PRINTLN("Could not extend file");
     return false;
   }
-
+  DEBUG_PRINTLN("extension succeeded, trying to close"); 
   file.close();
 
   ret = file.open(projectname, O_RDWR);

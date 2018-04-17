@@ -39,10 +39,10 @@ public:
                                     // them in the event the sequencer stops
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  inline void buffer_notesoff();
-  inline void note_on(uint8_t note);
-  inline void note_off(uint8_t note);
-  inline void noteon_conditional(uint8_t condition, uint8_t note);
+  void buffer_notesoff();
+  void note_on(uint8_t note);
+  void note_off(uint8_t note);
+  void noteon_conditional(uint8_t condition, uint8_t note);
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 

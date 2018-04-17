@@ -53,6 +53,10 @@ DEBUG_PRINTLN("Could not init cfg");
             return true;
 
           }
+          else {
+          DEBUG_PRINTLN("Project loaded successfully, load grid");
+          GUI.setPage(&grid_page);
+          }
           return true;
         }
         else {

@@ -54,6 +54,8 @@ bool MCLSysConfig::cfg_init() {
   cur_row = 0;
   cur_col = 0;
   cues = 0;
+  poly_max = 1;
+  uart2_ctrl_mode = MIDI_LOCAL_MODE;
   cfgfile.close();
 
   ret = write_cfg();

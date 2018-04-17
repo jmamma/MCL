@@ -1,5 +1,5 @@
-#include "MDTrack.h"
 #include "MCL.h"
+#include "MDTrack.h"
 
 bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
@@ -59,10 +59,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
       white_space = 1;
     }
   }
-
-  m_memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber],
-           sizeof(seq_data));
-
+  m_memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber], sizeof(seq_data));
   //  trackName[0] = '\0';
   m_memcpy(machine.params, MD.kit.params[tracknumber], 24);
 
@@ -145,8 +142,7 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
     MD.kit.trigGroups[tracknumber] = machine.trigGroup;
     MD.kit.muteGroups[tracknumber] = machine.muteGroup;
 
-    m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data,
-             sizeof(seq_data));
+    m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
   }
 }
 
@@ -178,18 +174,20 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-
   if (m == 0) {
-
-    ret =
-        mcl_sd.read_data((uint8_t *)&(this->kitextra), sizeof(kitextra), &proj.file);
+    if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
+      DEBUG_PRINTLN("lock array size is wrong");
+      return false;
+    }
+    ret = mcl_sd.read_data((uint8_t *)&(this->kitextra), sizeof(kitextra),
+                           &proj.file);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
     }
 
-    ret =
-        mcl_sd.read_data((uint8_t *)&(this->param_number[0]), arraysize, &proj.file);
+    ret = mcl_sd.read_data((uint8_t *)&(this->param_number[0]), arraysize,
+                           &proj.file);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
@@ -235,8 +233,8 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  ret =
-      mcl_sd.write_data((uint8_t *)&(this->param_number[0]), arraysize, &proj.file);
+  ret = mcl_sd.write_data((uint8_t *)&(this->param_number[0]), arraysize,
+                          &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;
@@ -254,8 +252,8 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
   DEBUG_PRINTLN("Track stored in grid");
-  DEBUG_PRINT(column); 
-  DEBUG_PRINT(" "); 
+  DEBUG_PRINT(column);
+  DEBUG_PRINT(" ");
   DEBUG_PRINT(row);
   return true;
 }

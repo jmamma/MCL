@@ -34,7 +34,6 @@ void MCL::setup() {
   // md_setup();
   param1.cur = mcl_cfg.cur_col;
   param2.cur = mcl_cfg.cur_row;
-  GUI.setPage(&grid_page);
 
 }
 MCL mcl;

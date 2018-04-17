@@ -6,6 +6,9 @@
 #include "SDFat.h"
 #define CONFIG_VERSION 2012
 
+#define MIDI_OMNI_MODE 17
+#define MIDI_LOCAL_MODE 16
+
 class MCLSysConfigData {
 public:
   uint32_t version;
@@ -20,6 +23,8 @@ public:
   uint32_t cues;
   uint8_t cur_row;
   uint8_t cur_col;
+  uint8_t poly_max;
+  uint8_t uart2_ctrl_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

@@ -2,6 +2,7 @@
 #include "MixerPage.h"
 
 void MixerPage::set_level(int curtrack, int value) {
+  in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
 
   /*  uint8_t cc;
@@ -116,7 +117,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-
+    GUI.setPage(&cue_page);
     curpage = CUE_PAGE;
     return true;
   }
@@ -140,15 +141,22 @@ void MixerPage::create_chars_mixer() {
   }
 }
 void MixerPage::setup() {
-  ((MCLEncoder*) encoders[1])->handler = encoder_level_handle;
-  ((MCLEncoder*) encoders[2])->handler = encoder_level_handle;
+  ((MCLEncoder *)encoders[1])->handler = encoder_level_handle;
+  ((MCLEncoder *)encoders[2])->handler = encoder_level_handle;
   create_chars_mixer();
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  curpage = MIXER_PAGE;
   MD.saveCurrentKit(MD.currentKit);
   MD.getBlockingKit(MD.currentKit);
+  DEBUG_PRINTLN("got blocking kit");
   level_pressmode = 0;
   mixer_param1.cur = 60;
+  mixer_param2.cur = 60;
+}
+void MixerPage::init() {
   md_exploit.on();
   note_interface.state = true;
+}
+void MixerPage::cleanup() {
+  md_exploit.off();
+  note_interface.state = false;
 }

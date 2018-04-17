@@ -36,48 +36,15 @@ void MCLSystemPage::display() {
   GUI.put_string_at_fill(0, "Name:");
   GUI.put_string_at(6, &mcl_cfg.project[1]);
   GUI.setLine(GUI.LINE2);
+  switch (encoders[0]->getValue()) {
+  case 0:
+    GUI.put_string_at_fill(0, "Load Project");
+    break;
+  case 1:
+    GUI.put_string_at_fill(0, "New Project");
+    break;
 
-  if (encoders[0]->getValue() == 4) {
-
-    if (encoders[0]->hasChanged()) {
-      encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(mcl_cfg.clock_rec);
-    }
-    GUI.put_string_at_fill(0, "CLK REC:");
-
-    if (encoders[1]->getValue() == 0) {
-      GUI.put_string_at_fill(10, "MIDI1");
-    }
-    if (encoders[1]->getValue() >= 1) {
-      GUI.put_string_at_fill(10, "MIDI2");
-    }
-    if (encoders[1]->hasChanged()) {
-      if (encoders[1]->getValue() > 1) {
-        encoders[1]->cur = 1;
-      }
-      mcl_cfg.clock_rec = encoders[1]->getValue();
-    }
-  } else if (encoders[0]->getValue() == 5) {
-
-    if (encoders[0]->hasChanged()) {
-      encoders[0]->old = encoders[0]->cur;
-      encoders[1]->setValue(mcl_cfg.clock_send);
-    }
-    GUI.put_string_at_fill(0, "CLK SEND:");
-
-    if (encoders[1]->getValue() == 0) {
-      GUI.put_string_at_fill(11, "  OFF");
-    }
-    if (encoders[1]->getValue() >= 1) {
-      GUI.put_string_at_fill(11, "MIDI2");
-    }
-    if (encoders[1]->hasChanged()) {
-      if (encoders[1]->getValue() > 1) {
-        encoders[1]->cur = 1;
-      }
-      mcl_cfg.clock_send = encoders[1]->getValue();
-    }
-  } else if (encoders[0]->getValue() == 2) {
+  case 2:
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
@@ -103,9 +70,9 @@ void MCLSystemPage::display() {
       mcl_cfg.uart1_turbo = encoders[1]->getValue();
     }
 
-  }
+    break;
 
-  else if (encoders[0]->getValue() == 3) {
+  case 3:
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
@@ -131,11 +98,89 @@ void MCLSystemPage::display() {
       mcl_cfg.uart2_turbo = encoders[1]->getValue();
     }
 
-  } else if (encoders[0]->getValue() == 0) {
-    GUI.put_string_at_fill(0, "Load Project");
-  } else if (encoders[0]->getValue() == 1) {
-    GUI.put_string_at_fill(0, "New Project");
+    break;
+  case 4:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.clock_rec);
+    }
+    GUI.put_string_at_fill(0, "CLK REC:");
+
+    if (encoders[1]->getValue() == 0) {
+      GUI.put_string_at_fill(10, "MIDI1");
+    }
+    if (encoders[1]->getValue() >= 1) {
+      GUI.put_string_at_fill(10, "MIDI2");
+    }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 1) {
+        encoders[1]->cur = 1;
+      }
+      mcl_cfg.clock_rec = encoders[1]->getValue();
+    }
+    break;
+  case 5:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.clock_send);
+    }
+    GUI.put_string_at_fill(0, "CLK SEND:");
+
+    if (encoders[1]->getValue() == 0) {
+      GUI.put_string_at_fill(11, "  OFF");
+    }
+    if (encoders[1]->getValue() >= 1) {
+      GUI.put_string_at_fill(11, "MIDI2");
+    }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 1) {
+        encoders[1]->cur = 1;
+      }
+      mcl_cfg.clock_send = encoders[1]->getValue();
+    }
+    break;
+  case 6:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.poly_max);
+    }
+    GUI.put_string_at_fill(0, "MD POLYMAX:");
+    GUI.put_value_at2(10, mcl_cfg.poly_max);
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 16) {
+        encoders[1]->cur = 16;
+      }
+      if (encoders[1]->getValue() < 1) {
+        encoders[1]->cur = 1;
+      }
+      mcl_cfg.poly_max = encoders[1]->getValue();
+    }
+  break;
+case 7:
+
+  if (encoders[0]->hasChanged()) {
+    encoders[0]->old = encoders[0]->cur;
+    encoders[1]->setValue(mcl_cfg.uart2_ctrl_mode);
+  }
+  GUI.put_string_at_fill(0, "MD CTRL:");
+  if (encoders[1]->cur == 16) {
+    GUI.put_string_at_fill(9, "INT");
+  }
+  if (encoders[1]->cur < 16) {
+    GUI.put_string_at_fill(9, "CHAN ");
+    GUI.put_value_at2(14, encoders[1]->cur ); 
+  }
+   if (encoders[1]->cur == 17) {
+    GUI.put_string_at_fill(9, "OMNI");
+  }
+  if (encoders[1]->hasChanged()) {
+    if (encoders[1]->getValue() > 17) {
+      encoders[1]->cur = 17;
+    }
+    mcl_cfg.uart2_ctrl_mode = encoders[1]->getValue();
   }
 }
-
-
+}

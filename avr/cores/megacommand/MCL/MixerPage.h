@@ -14,12 +14,14 @@ public:
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
-  virtual bool handleEvent(gui_event_t *event);
-  virtual void draw_levels();
-  virtual void display();
+  bool handleEvent(gui_event_t *event);
+  void draw_levels();
+  void display();
   void create_chars_mixer();
   void set_level(int curtrack, int value);
-  virtual void setup();
+  void setup();
+  void init();
+  void cleanup();
 };
 
 #endif /* MIXERPAGE_H__ */

@@ -59,20 +59,20 @@ void LoadProjectPage::setup() {
       temp_entry[c] = 0;
     }
     dirfile.getName(temp_entry, 16);
-    char mcl[3] = "mcl";
+    char mcl[4] = "mcl";
     bool is_mcl_file = true;
 
     DEBUG_PRINTLN(temp_entry);
 
     for (uint8_t a = 1; a < 3; a++) {
-      if (temp_entry[14 - a] != mcl[3 - a]) {
+      if (temp_entry[strlen(temp_entry) - a] != mcl[3 - a]) {
         is_mcl_file = false;
       }
     }
     if (is_mcl_file) {
       strcpy(&file_entries[numEntries][0], &temp_entry[0]);
       DEBUG_PRINTLN("project file identified");
-      DEBUG_PRINTLN(file_entries[index]);
+      DEBUG_PRINTLN(file_entries[numEntries]);
       numEntries++;
     }
     index++;
@@ -86,7 +86,5 @@ void LoadProjectPage::setup() {
   }
   ((MCLEncoder *)encoders[0])->max = numEntries - 1;
 
-  curpage = LOAD_PROJECT_PAGE;
-  GUI.setPage(&load_proj_page);
 
 }

@@ -14,7 +14,7 @@ void SeqRtrkPage::init() {
   ((MCLEncoder *)encoders[2])->max = 64;
   ((MCLEncoder *)encoders[3])->max = 11;
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
-
+  midi_device = DEVICE_MD;
   curpage = SEQ_RTRK_PAGE;
 }
 void SeqRtrkPage::cleanup() {

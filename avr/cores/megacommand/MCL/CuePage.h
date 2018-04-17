@@ -14,7 +14,9 @@ class CuePage : public LightPage {
  void toggle_cues_batch();
  void set_level(int curtrack, int value);
  bool handleEvent(gui_event_t *event);
- virtual void display();
+ void display();
  void setup();
+ void init();
+ void cleanup();
 };
 #endif /* CUEPAGE_H__ */

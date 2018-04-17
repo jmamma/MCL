@@ -86,10 +86,6 @@ void GridPage::load_slot_models() {
   for (uint8_t i = 0; i < 22; i++) {
     grid_models[i] = grid.get_slot_model(i, encoders[1]->getValue(), true,
                                          (A4Track *)&track_bufx);
-    DEBUG_PRINT("Slot: ");
-    DEBUG_PRINT(i);
-    DEBUG_PRINT(" Model: ");
-    DEBUG_PRINTLN(grid_models[i]);
     if (i == 0) {
       if (temptrack.active != EMPTY_TRACK_TYPE) {
         for (uint8_t c = 0; c < 16; c++) {

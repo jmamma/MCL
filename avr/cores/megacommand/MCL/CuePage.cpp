@@ -1,10 +1,15 @@
 #include "CuePage.h"
 #include "MCL.h"
 
-void CuePage::setup() {
-
+void CuePage::setup() { md_exploit.on(); }
+void CuePage::init() {
+  md_exploit.on();
+  note_interface.state = true;
 }
-
+void CuePage::cleanup() {
+  md_exploit.off();
+  note_interface.state = false;
+}
 void CuePage::set_level(int curtrack, int value) {
   MD.setTrackParam(curtrack, 33, value);
 }
@@ -20,16 +25,18 @@ void CuePage::toggle_cue(int i) {
 }
 void CuePage::toggle_cues_batch() {
   uint16_t quantize_mute;
-  quantize_mute = 1 << encoders[3]->getValue();
+  quantize_mute = 1 << encoders[2]->getValue();
   int i;
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
       MD.muteTrack(i, true);
     }
   }
-  if (encoders[3]->getValue() < 7) {
-    while ((((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) + 3) %
-            (quantize_mute * 2)) != 0) {
+  if (encoders[2]->getValue() < 7) {
+    while (
+        (((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) +
+          3) %
+         (quantize_mute * 2)) != 0) {
       GUI.display();
     }
   }
@@ -38,7 +45,7 @@ void CuePage::toggle_cues_batch() {
 
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
-      if (encoders[3]->getValue() == 7) {
+      if (encoders[2]->getValue() == 7) {
         set_level(i, 0);
       }
       toggle_cue(i);
@@ -56,44 +63,44 @@ void CuePage::display() {
   GUI.put_string_at(0, "CUES     ");
 
   GUI.put_string_at(9, "Q:");
-
-  if (encoders[3]->getValue() == 0) {
+  if (encoders[2]->getValue() == 0) {
     GUI.put_string_at(11, "--");
-  } else if (encoders[3]->getValue() == 7) {
+  } else if (encoders[2]->getValue() == 7) {
     GUI.put_string_at(11, "LV");
   } else {
-    x = 1 << encoders[3]->getValue();
+    x = 1 << encoders[2]->getValue();
 
     GUI.put_value_at2(11, x);
   }
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
-      (64 * ((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) / 64));
+      (64 * ((MidiClock.div16th_counter -
+              mcl_actions_callbacks.start_clock32th / 2) /
+             64));
   GUI.put_value_at2(14, step_count);
-
   note_interface.draw_notes(0);
 }
 bool CuePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-uint8_t track = event->source - 128;
+    uint8_t track = event->source - 128;
     if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
       return true;
     }
     note_interface.draw_notes(0);
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      if ((encoders[3]->getValue() == 0)) {
+      if ((encoders[2]->getValue() == 0)) {
         toggle_cue(track);
         md_exploit.send_globals();
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if ((encoders[3]->getValue() == 0)) {
+      if ((encoders[2]->getValue() == 0)) {
         note_interface.notes[track] = 0;
       }
 
       if (note_interface.notes_all_off()) {
-        if ((encoders[3]->getValue() > 0) &&
+        if ((encoders[2]->getValue() > 0) &&
             (note_interface.notes_count_off() > 1)) {
           toggle_cues_batch();
           md_exploit.send_globals();

@@ -3,9 +3,11 @@
 #ifndef SEQPTCPAGE_H__
 #define SEQPTCPAGE_H__
 
-#include "SeqPage.h"
-#include "Scales.h"
 #include "MidiActivePeering.h"
+#include "Scales.h"
+#include "SeqPage.h"
+
+#define MAX_POLY_NOTES 16
 
 extern scale_t *scales[16];
 
@@ -26,7 +28,8 @@ class SeqPtcPage : public SeqPage {
 
 public:
   uint8_t poly_count = 0;
-  uint8_t poly_max = 8;
+  uint8_t poly_max;
+  uint8_t poly_notes[MAX_POLY_NOTES];
 
   bool record_mode = false;
   SeqPtcMidiEvents midi_events;
@@ -37,13 +40,15 @@ public:
   uint8_t seq_ext_pitch(uint8_t note_num);
   void display();
   uint8_t get_machine_pitch(uint8_t track, uint8_t pitch);
-  uint8_t get_next_track();
+  uint8_t get_next_track(uint8_t pitch);
   uint8_t calc_pitch(uint8_t note_num);
+
+  void trig_md(uint8_t note_num);
+  void trig_md_fromext(uint8_t note_num);
   void setup();
   void cleanup();
   void config_encoders();
   void init();
 };
-
 
 #endif /* SEQPTCPAGE_H__ */

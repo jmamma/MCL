@@ -8,6 +8,7 @@ mcl_actions_midievents.setup_callbacks();
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
+DEBUG_PRINT_FN();
  if (mcl_actions.do_kit_reload != 255) {
     if (mcl_actions.writepattern == pattern) {
       MD.loadKit(mcl_actions.do_kit_reload);
@@ -22,7 +23,7 @@ MCLActions mcl_actions;
 
 bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound) {
   //       if (Grids[encodervaluer] != NULL) {
-
+  DEBUG_PRINT_FN();
   if (column < 16) {
 
     if (temptrack.load_track_from_grid(column, row, 0)) {
@@ -58,7 +59,7 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row, A4Soun
 
 
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
-
+DEBUG_PRINT_FN();
 
   uint8_t data[] = { 0x6b, (uint8_t)rec_type & 0x7F, position, (uint8_t) 1 & 0x7f };
   MD.sendSysex(data, countof(data));
@@ -96,7 +97,6 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
       save_a4_tracks = true;
     }
   }
-
   if (save_md_tracks) {
     if (!MD.getBlockingPattern(readpattern)) {
       DEBUG_PRINTLN("could not receive pattern");
@@ -182,7 +182,7 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
 }
 
 void MCLActions::write_tracks_to_md( int column, int row, int b) {
-
+DEBUG_PRINT_FN();
 
 
   store_behaviour = b;
@@ -222,7 +222,7 @@ void MCLActions::write_tracks_to_md( int column, int row, int b) {
 }
 
 void MCLActions::send_pattern_kit_to_md() {
-
+  DEBUG_PRINT_FN();
   A4Track *track_buf;
 
   MD.getBlockingKit(MD.currentKit);
@@ -233,7 +233,6 @@ void MCLActions::send_pattern_kit_to_md() {
   /*Send a quick sysex message to get the current selected track of the MD*/
   int curtrack = last_md_track;
   // MD.getCurrentTrack(CALLBACK_TIMEOUT);
-
   uint8_t reload = 1;
   uint16_t quantize_mute = 0;
   uint8_t q_pattern_change = 0;
