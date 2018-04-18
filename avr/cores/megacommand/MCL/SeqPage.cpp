@@ -10,7 +10,7 @@ void SeqPage::create_chars_seq() {
   uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
   uint8_t temp_charmap3[8] = {0, 30, 1, 1, 1, 30, 0};
   uint8_t temp_charmap4[8] = {0, 27, 4, 4, 4, 27, 0};
-  LCD.createChar(2, temp_charmap1);
+  LCD.createChar(6, temp_charmap1);
   LCD.createChar(3, temp_charmap2);
   LCD.createChar(4, temp_charmap3);
   LCD.createChar(5, temp_charmap4);
@@ -19,18 +19,18 @@ void SeqPage::create_chars_seq() {
 void SeqPage::setup() {
   create_chars_seq();
   if (MD.connected) {
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  // stored.
-  if (MidiClock.state != 2) {
-    MD.saveCurrentKit(MD.currentKit);
-  }
+    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+    // stored.
+    if (MidiClock.state != 2) {
+      MD.saveCurrentKit(MD.currentKit);
+    }
 
-  MD.getBlockingKit(MD.currentKit);
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
+    MD.getBlockingKit(MD.currentKit);
+    MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
-  ((MCLEncoder *)encoders[1])->min = 0;
-  ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
-  grid_page.cur_col = last_md_track;
+    ((MCLEncoder *)encoders[1])->min = 0;
+    ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
+    grid_page.cur_col = last_md_track;
   }
   grid_page.cur_row = param2.getValue();
 }
@@ -105,23 +105,32 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
                        i + offset) &&
           !IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
                         i + offset)) {
-
+#ifdef OLED_DISPLAY
         str[i] = (char)165;
+#else
+        str[i] = (char)0xF8;
+#endif
       }
       if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
                        i + offset) &&
           IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
                        i + offset)) {
-
+#ifdef OLED_DISPLAY
+        str[i] = (char)2;
+#else
         str[i] = (char)219;
+#endif
       }
 
       if (note_interface.notes[i] > 0) {
-        /*If the bit is set, there is a cue at this position. We'd like to
-         * display it as [] on screen*/
-        /*Char 219 on the minicommand LCD is a []*/
-
+/*If the bit is set, there is a cue at this position. We'd like to
+ * display it as [] on screen*/
+/*Char 219 on the minicommand LCD is a []*/
+#ifdef OLED_DISPLAY
+        str[i] = (char)3;
+#else
         str[i] = (char)255;
+#endif
       }
     }
   }
@@ -166,13 +175,20 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           mystr[i] = ' ';
         } else if (note_interface.notes[i - offset] == 1) {
           /*Char 219 on the minicommand LCD is a []*/
-
+#ifdef OLED_DISPLAY
+          mystr[i] = (char)3;
+#else
           mystr[i - offset] = (char)255;
+#endif
         } else if (IS_BIT_SET64(pattern_mask, i + offset)) {
           /*If the bit is set, there is a trigger at this position. We'd like to
            * display it as [] on screen*/
           /*Char 219 on the minicommand LCD is a []*/
+#ifdef OLED_DISPLAY
+          mystr[i] = (char)2;
+#else
           mystr[i] = (char)219;
+#endif
         }
       }
     }
@@ -215,18 +231,30 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
 
       } else if (noteson > 0) {
         if ((i >= offset) && (i < offset + 16)) {
+#ifdef OLED_DISPLAY
+          mystr[i] = (char)0x5B;
+#else
           mystr[i - offset] = (char)002;
+#endif
         }
         note_held += noteson;
       } else if (notesoff > 0) {
         if ((i >= offset) && (i < offset + 16)) {
+#ifdef OLED_DISPLAY
+          mystr[i] = (char)0x5D;
+#else
           mystr[i - offset] = (char)004;
+#endif
         }
         note_held -= notesoff;
       } else {
         if (note_held >= 1) {
           if ((i >= offset) && (i < offset + 16)) {
+#ifdef OLED_DISPLAY
+            mystr[i] = (char)4;
+#else
             mystr[i - offset] = (char)003;
+#endif
           }
         }
       }
@@ -243,8 +271,11 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           /*If the bit is set, there is a cue at this position. We'd like to
            * display it as [] on screen*/
           /*Char 219 on the minicommand LCD is a []*/
-
+#ifdef OLED_DISPLAY
+          mystr[i] = (char)3;
+#else
           mystr[i - offset] = (char)255;
+#endif
         }
       }
     }
@@ -254,10 +285,10 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
   GUI.put_string_at(0, mystr);
 }
 void pattern_len_handler(Encoder *enc) {
-  MCLEncoder* enc_ = (MCLEncoder*) enc;
+  MCLEncoder *enc_ = (MCLEncoder *)enc;
   if (SeqPage::midi_device == DEVICE_MD) {
-   DEBUG_PRINTLN("under 16"); 
-          if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    DEBUG_PRINTLN("under 16");
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].length = enc_->cur;
       }
