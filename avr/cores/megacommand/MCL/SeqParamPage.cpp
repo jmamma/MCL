@@ -11,6 +11,8 @@ void SeqParamPage::init() {
   ((MCLEncoder *)encoders[2])->max = 23;
   ((MCLEncoder *)encoders[3])->max = 127;
 
+  ((MCLEncoder *)encoders[2])->handler = NULL;
+
   encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
   encoders[1]->cur =

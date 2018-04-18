@@ -122,7 +122,7 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
 #endif
       }
 
-      if (note_interface.notes[i] > 0) {
+      if (note_interface.notes[i] == 1) {
 /*If the bit is set, there is a cue at this position. We'd like to
  * display it as [] on screen*/
 /*Char 219 on the minicommand LCD is a []*/
