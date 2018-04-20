@@ -127,7 +127,11 @@ void NoteInterface::draw_notes(uint8_t line_number) {
        * it as [] on screen*/
       /*Char 219 on the minicommand LCD is a []*/
 
+#ifdef OLED_DISPLAY
+      str[i] = (char)2;
+#else
       str[i] = (char)219;
+#endif
     }
   }
 
