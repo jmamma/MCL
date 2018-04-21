@@ -27,9 +27,9 @@ void SeqRlckPage::display() {
 
   GUI.put_string_at(0, "RLCK");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[grid_page.cur_col], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[grid_page.cur_col], 2);
-  if (grid_page.cur_col < 16) {
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[2]->getValue());
@@ -41,7 +41,7 @@ void SeqRlckPage::display() {
     } else {
       GUI.put_string_at(9, "MID");
     }
-    GUI.put_value_at1(12, grid_page.cur_col - 16 + 1);
+    GUI.put_value_at1(12, last_ext_track + 1);
   }
 
   draw_lock_mask(page_select * 16);
@@ -68,7 +68,7 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[grid_page.cur_col].clear_seq_locks();
+    mcl_seq.md_tracks[last_md_track].clear_seq_locks();
     return true;
   }
 
@@ -103,9 +103,8 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
     MD.kit.params[track][track_param] = value;
   }
-  grid_page.cur_col = track;
   last_md_track = track;
-  seq_rlck_page.encoders[2]->cur = mcl_seq.md_tracks[grid_page.cur_col].length;
+  seq_rlck_page.encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   mcl_seq.md_tracks[track].record_track_locks(track_param, value);
 }
 

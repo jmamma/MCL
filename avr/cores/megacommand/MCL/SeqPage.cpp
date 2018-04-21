@@ -67,7 +67,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     uint8_t pagemax = 4;
     page_select += 1;
 
-    if (grid_page.cur_col > 15) {
+    if (SeqPage::midi_device != DEVICE_MD) {
       pagemax = 8;
     }
     if (page_select >= pagemax) {
@@ -85,25 +85,25 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
   char str[17] = "----------------";
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
-      (mcl_seq.md_tracks[grid_page.cur_col].length *
+      (mcl_seq.md_tracks[last_md_track].length *
        ((MidiClock.div16th_counter -
          mcl_actions_callbacks.start_clock32th / 2) /
-        mcl_seq.md_tracks[grid_page.cur_col].length));
+        mcl_seq.md_tracks[last_md_track].length));
 
   for (int i = 0; i < 16; i++) {
 
-    if (i + offset >= mcl_seq.md_tracks[grid_page.cur_col].length) {
+    if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
       str[i] = ' ';
     } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
-      if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
                        i + offset)) {
         str[i] = 'x';
       }
-      if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
+      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                        i + offset) &&
-          !IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+          !IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
                         i + offset)) {
 #ifdef OLED_DISPLAY
         str[i] = (char)165;
@@ -111,9 +111,9 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
         str[i] = (char)0xF8;
 #endif
       }
-      if (IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
+      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                        i + offset) &&
-          IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].lock_mask,
+          IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
                        i + offset)) {
 #ifdef OLED_DISPLAY
         str[i] = (char)2;
@@ -148,7 +148,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
   /*Get the Pattern bit mask for the selected track*/
   //    uint64_t pattern_mask = getPatternMask(grid_page.cur_col,
   //    grid_page.cur_row , 3, false);
-  uint64_t pattern_mask = mcl_seq.md_tracks[grid_page.cur_col].pattern_mask;
+  uint64_t pattern_mask = mcl_seq.md_tracks[last_md_track].pattern_mask;
   int8_t note_held = 0;
 
   /*Display 16 steps on screen, starting at an offset set by the encoder1
@@ -164,12 +164,12 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       if (device == DEVICE_MD) {
         uint8_t step_count = (MidiClock.div16th_counter -
                               mcl_actions_callbacks.start_clock32th / 2) -
-                             (mcl_seq.md_tracks[grid_page.cur_col].length *
+                             (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
                                 mcl_actions_callbacks.start_clock32th / 2) /
-                               mcl_seq.md_tracks[grid_page.cur_col].length));
+                               mcl_seq.md_tracks[last_md_track].length));
 
-        if (i + offset >= mcl_seq.md_tracks[grid_page.cur_col].length) {
+        if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
           mystr[i] = ' ';
         } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
           mystr[i] = ' ';

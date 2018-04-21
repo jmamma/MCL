@@ -28,9 +28,9 @@ void SeqRtrkPage::display() {
 
   GUI.put_string_at(0, "RTRK");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[grid_page.cur_col], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[grid_page.cur_col], 2);
-  if (grid_page.cur_col < 16) {
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[2]->getValue());
@@ -42,7 +42,7 @@ void SeqRtrkPage::display() {
     } else {
       GUI.put_string_at(9, "MID");
     }
-    GUI.put_value_at1(12, grid_page.cur_col - 16 + 1);
+    GUI.put_value_at1(12, last_ext_track + 1);
   }
 
   draw_pattern_mask(page_select * 16, DEVICE_MD);
@@ -57,22 +57,20 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     uint8_t track = event->source - 128;
     midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      grid_page.cur_col = track;
       last_md_track = track;
 
       encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
       MD.triggerTrack(track, 127);
-    if ((MidiClock.state == 2)) {
+      if ((MidiClock.state == 2)) {
         mcl_seq.md_tracks[last_md_track].record_track(track, 127);
 
         return true;
-
-    }
+      }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
     }
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) { 
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     md_exploit.off();
     GUI.setPage(&seq_rlck_page);
     return true;
@@ -94,10 +92,10 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    if (grid_page.cur_col < 16) {
-      mcl_seq.md_tracks[grid_page.cur_col].clear_seq_track();
+    if (SeqPage::midi_device == DEVICE_MD) {
+      mcl_seq.md_tracks[last_md_track].clear_seq_track();
     } else {
-      mcl_seq.ext_tracks[grid_page.cur_col].clear_track();
+      mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
     return true;
   }

@@ -78,16 +78,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       if ((track + (page_select * 16)) >=
-          mcl_seq.md_tracks[grid_page.cur_col].length) {
+          mcl_seq.md_tracks[last_md_track].length) {
         return true;
       }
 
       ((MCLEncoder *)encoders[1])->max = 23;
 
-      int8_t utiming = mcl_seq.md_tracks[grid_page.cur_col]
+      int8_t utiming = mcl_seq.md_tracks[last_md_Track]
                            .timing[(track + (page_select * 16))]; // upper
       uint8_t condition =
-          mcl_seq.md_tracks[grid_page.cur_col]
+          mcl_seq.md_tracks[last_md_track]
               .conditional[(track + (page_select * 16))]; // lower
 
       // Cond
@@ -100,7 +100,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if ((track + (page_select * 16)) >=
-          mcl_seq.md_tracks[grid_page.cur_col].length) {
+          mcl_seq.md_tracks[last_md_track].length) {
         return true;
       }
       uint8_t utiming = (encoders[1]->cur + 0);
@@ -108,26 +108,26 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       //  timing = 3;
       // condition = 3;
-      mcl_seq.md_tracks[grid_page.cur_col]
+      mcl_seq.md_tracks[last_md_track]
           .conditional[(track + (page_select * 16))] = condition;
-      mcl_seq.md_tracks[grid_page.cur_col]
+      mcl_seq.md_tracks[last_md_track]
           .timing[(track + (page_select * 16))] = utiming; // upper
 
       //   conditional_timing[cur_col][(track + (encoders[1]->cur * 16))] =
       //   condition; //lower
 
-      if (!IS_BIT_SET64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
+      if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                               (track + (page_select * 16)))) {
               DEBUG_PRINTLN("setting bit");
               DEBUG_PRINT(track + (page_select * 16));
-        SET_BIT64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
+        SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                   (track + (page_select * 16)));
       } else {
         DEBUG_PRINTLN("Trying to clear");
         if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
               DEBUG_PRINTLN("clearing bit");
             DEBUG_PRINT(track + (page_select * 16));
-          CLEAR_BIT64(mcl_seq.md_tracks[grid_page.cur_col].pattern_mask,
+          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                       (track + (page_select * 16)));
         }
       }
