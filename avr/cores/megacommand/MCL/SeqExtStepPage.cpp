@@ -152,10 +152,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
         if ((track + (page_select * 16)) >=
             mcl_seq.ext_tracks[last_ext_track].length) {
-            DEBUG_PRINTLN("setting to 0");
-            DEBUG_PRINTLN(last_ext_track);
-            DEBUG_PRINTLN(page_select);
-            note_interface.notes[track] = 0;
+          DEBUG_PRINTLN("setting to 0");
+          DEBUG_PRINTLN(last_ext_track);
+          DEBUG_PRINTLN(page_select);
+          note_interface.notes[track] = 0;
           return;
         }
 
@@ -181,41 +181,44 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      uint8_t utiming = (encoders[1]->cur + 0);
-      uint8_t condition = encoders[0]->cur;
-      if ((track + (page_select * 16)) >=
-          mcl_seq.ext_tracks[last_ext_track].length) {
-        return true;
-      }
+      if (device == DEVICE_MD) {
 
-      //  timing = 3;
-      // condition = 3;
-      if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
-        for (uint8_t c = 0; c < 4; c++) {
-          if (mcl_seq.ext_tracks[last_ext_track]
-                  .notes[c][track + page_select * 16] > 0) {
-            MidiUart2.sendNoteOff(last_ext_track,
-                                  abs(mcl_seq.ext_tracks[last_ext_track]
-                                          .notes[c][track + page_select * 16]) -
-                                      1,
-                                  0);
+        uint8_t utiming = (encoders[1]->cur + 0);
+        uint8_t condition = encoders[0]->cur;
+        if ((track + (page_select * 16)) >=
+            mcl_seq.ext_tracks[last_ext_track].length) {
+          return true;
+        }
+
+        //  timing = 3;
+        // condition = 3;
+        if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
+          for (uint8_t c = 0; c < 4; c++) {
+            if (mcl_seq.ext_tracks[last_ext_track]
+                    .notes[c][track + page_select * 16] > 0) {
+              MidiUart2.sendNoteOff(
+                  last_ext_track,
+                  abs(mcl_seq.ext_tracks[last_ext_track]
+                          .notes[c][track + page_select * 16]) -
+                      1,
+                  0);
+            }
+            mcl_seq.ext_tracks[last_ext_track]
+                .notes[c][track + page_select * 16] = 0;
           }
           mcl_seq.ext_tracks[last_ext_track]
-              .notes[c][track + page_select * 16] = 0;
+              .timing[(track + (page_select * 16))] = 0;
+          mcl_seq.ext_tracks[last_ext_track]
+              .conditional[(track + (page_select * 16))] = 0;
         }
-        mcl_seq.ext_tracks[last_ext_track]
-            .timing[(track + (page_select * 16))] = 0;
-        mcl_seq.ext_tracks[last_ext_track]
-            .conditional[(track + (page_select * 16))] = 0;
-      }
 
-      else {
-        mcl_seq.ext_tracks[last_ext_track]
-            .timing[(track + (page_select * 16))] = condition; // upper
-        mcl_seq.ext_tracks[last_ext_track]
-            .timing[(track + (page_select * 16))] = utiming; // upper
+        else {
+          mcl_seq.ext_tracks[last_ext_track]
+              .timing[(track + (page_select * 16))] = condition; // upper
+          mcl_seq.ext_tracks[last_ext_track]
+              .timing[(track + (page_select * 16))] = utiming; // upper
+        }
       }
-
       return true;
     }
     return true;
