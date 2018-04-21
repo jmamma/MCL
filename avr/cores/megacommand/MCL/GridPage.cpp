@@ -246,7 +246,8 @@ void GridPage::display() {
   }
   uint8_t display_name = 0;
   if (slowclock < grid_lastclock) {
-    grid_lastclock = 0xFFFF - grid_lastclock;
+   grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
+
   }
   if (!reload_slot_models) {
     load_slot_models();
@@ -254,6 +255,8 @@ void GridPage::display() {
   }
 
   if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
+    DEBUG_PRINTLN(grid_lastclock);
+    DEBUG_PRINTLN(slowclock);
     display_name = 1;
     if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
       mcl_cfg.cur_col = encoders[1]->cur;
