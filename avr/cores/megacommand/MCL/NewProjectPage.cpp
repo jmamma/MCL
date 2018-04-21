@@ -8,10 +8,9 @@ void NewProjectPage::setup() {
   my_string[8] = (mcl_cfg.number_projects % 1000) / 100 + '0';
   my_string[8 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
   my_string[8 + 2] = (mcl_cfg.number_projects % 10) + '0';
-
   m_strncpy(newprj, my_string, 16);
   curpage = NEW_PROJECT_PAGE;
-
+  encoders[0]->cur = 1;
   update_prjpage_char();
 }
 void NewProjectPage::update_prjpage_char() {
@@ -59,9 +58,10 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
     LCD.puts("Please Wait");
     LCD.goLine(1);
     LCD.puts("Creating Project");
-
+    DEBUG_PRINTLN(newprj);
     if (SD.exists(newprj)) {
       GUI.flash_strings_fill("Project exists", "");
+      DEBUG_PRINTLN("Project exists");
       return true;
     }
 
