@@ -75,6 +75,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
         GUI.setPage(&seq_extstep_page);
+        return true;
       }
       if ((track + (page_select * 16)) >=
           mcl_seq.md_tracks[grid_page.cur_col].length) {
