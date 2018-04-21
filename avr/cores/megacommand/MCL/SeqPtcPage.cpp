@@ -25,6 +25,7 @@ void SeqPtcPage::config_encoders() {
 
 void SeqPtcPage::init() {
   SeqPage::init();
+
   for (uint8_t x = 0; x < poly_max; x++) {
     poly_notes[x] = 0;
   }
@@ -120,7 +121,7 @@ uint8_t SeqPtcPage::get_next_track(uint8_t pitch) {
 }
 
 uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[track]);
 
   if (tuning == NULL) {
     return 0;
