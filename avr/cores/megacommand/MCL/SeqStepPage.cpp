@@ -84,7 +84,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       ((MCLEncoder *)encoders[1])->max = 23;
 
-      int8_t utiming = mcl_seq.md_tracks[last_md_Track]
+      int8_t utiming = mcl_seq.md_tracks[last_md_track]
                            .timing[(track + (page_select * 16))]; // upper
       uint8_t condition =
           mcl_seq.md_tracks[last_md_track]
