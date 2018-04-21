@@ -106,9 +106,9 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
           !IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
                         i + offset)) {
 #ifdef OLED_DISPLAY
-        str[i] = (char)165;
-#else
         str[i] = (char)0xF8;
+#else
+        str[i] = (char)165;
 #endif
       }
       if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
@@ -123,8 +123,6 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
       }
 
       if (note_interface.notes[i] == 1) {
-/*If the bit is set, there is a cue at this position. We'd like to
- * display it as [] on screen*/
 /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY
         str[i] = (char)3;
