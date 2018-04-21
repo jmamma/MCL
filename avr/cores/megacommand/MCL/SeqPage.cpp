@@ -29,13 +29,15 @@ void SeqPage::setup() {
     MD.getCurrentTrack(CALLBACK_TIMEOUT);
 
     ((MCLEncoder *)encoders[1])->min = 0;
-    ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
     grid_page.cur_col = last_md_track;
   }
   grid_page.cur_row = param2.getValue();
 }
 
-void SeqPage::init() { seqpage_midi_events.setup_callbacks(); }
+void SeqPage::init() {
+  ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
+  seqpage_midi_events.setup_callbacks();
+}
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   //  if (note_interface.is_event(event)) {
