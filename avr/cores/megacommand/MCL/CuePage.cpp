@@ -15,6 +15,38 @@ void CuePage::set_level(int curtrack, int value) {
   MD.setTrackParam(curtrack, 33, value);
   in_sysex = 0;
 }
+void CuePage::draw_cues(uint8_t line_number) {
+  if (line_number == 0) {
+    GUI.setLine(GUI.LINE1);
+  } else {
+    GUI.setLine(GUI.LINE2);
+  }
+  /*Initialise the string with blank steps*/
+  char str[17] = "----------------";
+
+  /*Display 16 track cues on screen,
+   For 16 tracks check to see if there is a cue*/
+  for (int i = 0; i < 16; i++) {
+
+      if (IS_BIT_SET32(mcl_cfg.cues, i)) {
+        str[i] = 'X';
+      }
+    if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
+      /*If the bit is set, there is a cue at this position. We'd like to display
+       * it as [] on screen*/
+      /*Char 219 on the minicommand LCD is a []*/
+
+#ifdef OLED_DISPLAY
+      str[i] = (char)2;
+#else
+      str[i] = (char)219;
+#endif
+    }
+  }
+
+  /*Display the cues*/
+  GUI.put_string_at(0, str);
+}
 
 void CuePage::toggle_cue(int i) {
   if (IS_BIT_SET32(mcl_cfg.cues, i)) {
@@ -80,7 +112,7 @@ void CuePage::display() {
               mcl_actions_callbacks.start_clock32th / 2) /
              64));
   GUI.put_value_at2(14, step_count);
-  note_interface.draw_notes(0);
+  draw_cues(0);
 }
 bool CuePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {

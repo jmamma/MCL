@@ -13,6 +13,7 @@ class CuePage : public LightPage {
  void toggle_cue(int i);
  void toggle_cues_batch();
  void set_level(int curtrack, int value);
+ void draw_cues(uint8_t line_number);
  bool handleEvent(gui_event_t *event);
  void display();
  void setup();
