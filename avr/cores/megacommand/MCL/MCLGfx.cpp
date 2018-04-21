@@ -4,11 +4,17 @@
 void MCLGfx::splashscreen() {
 #ifdef OLED_DISPLAY
   oled_display.setTextSize(2);
-  oled_display.setTextColor(WHITE,BLACK);
+  oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);
   oled_display.println("MEGA");
   oled_display.setCursor(22, 15);
   oled_display.println("COMMAND");
+  oled_display.setCursor(90, 8);
+  oled_display.setTextSize(1);
+  oled_display.print("V");
+  oled_display.print(VERSION / 1000);
+  oled_display.print(".");
+  oled_display.print(VERSION - 2000);
   for (float length = 0; length < 32; length += 0.7) {
 
     // display.fillRect(0, 0, 128, length, BLACK);
@@ -24,7 +30,6 @@ void MCLGfx::splashscreen() {
   }
   oled_display.clearDisplay();
   oled_display.display();
-  oled_display.setTextSize(1);
 #else
   char str1[17] = "MEGACOMMAND LIVE";
   char str2[17] = "V2.x.x";
