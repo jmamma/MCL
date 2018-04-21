@@ -28,9 +28,9 @@ void CuePage::draw_cues(uint8_t line_number) {
    For 16 tracks check to see if there is a cue*/
   for (int i = 0; i < 16; i++) {
 
-      if (IS_BIT_SET32(mcl_cfg.cues, i)) {
-        str[i] = 'X';
-      }
+    if (IS_BIT_SET32(mcl_cfg.cues, i)) {
+      str[i] = 'X';
+    }
     if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
       /*If the bit is set, there is a cue at this position. We'd like to display
        * it as [] on screen*/
@@ -150,5 +150,10 @@ bool CuePage::handleEvent(gui_event_t *event) {
     GUI.setPage(&mixer_page);
     return true;
   }
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    GUI.setPage(&grid_page);
+    return true;
+  }
+
   return false;
 }
