@@ -11,7 +11,9 @@ void CuePage::cleanup() {
   note_interface.state = false;
 }
 void CuePage::set_level(int curtrack, int value) {
+  in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
+  in_sysex = 0;
 }
 
 void CuePage::toggle_cue(int i) {

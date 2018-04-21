@@ -118,8 +118,9 @@ void GuiClass::loop() {
 }
 
 void GuiClass::display() {
+  PageParent *page = NULL;
   if (sketch != NULL) {
-    PageParent *page = sketch->currentPage();
+    page = sketch->currentPage();
     if (page != NULL) {
       page->display();
       page->redisplay = false;
@@ -140,14 +141,10 @@ void GuiClass::display() {
             lines[i].flash[j] = ' ';
           }
         }
-#ifdef HOST_MIDIDUINO
-        printf("%s\n", lines[i].flash);
-#else
         LCD.goLine(i);
         LCD.puts(lines[i].flash);
-#endif
         lines[i].flashChanged = false;
-      }
+        }
     }
 
     if (lines[i].changed && !lines[i].flashActive) {
@@ -156,13 +153,11 @@ void GuiClass::display() {
           lines[i].data[j] = ' ';
         }
       }
-#ifdef HOST_MIDIDUINO
-      printf("%s\n", lines[i].data);
-#else
+      if (page->classic_display) {
       LCD.goLine(i);
       LCD.puts(lines[i].data);
-#endif
       lines[i].changed = false;
+      }
     }
   }
   GUI.setLine(GUI.LINE1);
@@ -170,7 +165,9 @@ void GuiClass::display() {
   GUI.setLine(GUI.LINE2);
   GUI.clearFlashLine();
 #ifdef OLED_DISPLAY
-  oled_display.display();
+  if (page->classic_display) {
+    oled_display.display();
+  }
 #endif
 }
 

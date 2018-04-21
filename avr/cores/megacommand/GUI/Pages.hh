@@ -75,6 +75,8 @@ public:
   bool isSetup;
   bool isCleanedUp;
 
+  bool classic_display = true;
+
   uint8_t displaymode = DISPLAY_TEXT_MODE0;
 
   PageParent() {}
