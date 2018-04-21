@@ -50,6 +50,14 @@ void MCLSystemPage::display() {
       encoders[0]->old = encoders[0]->cur;
       encoders[1]->setValue(mcl_cfg.uart1_turbo);
     }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 3) {
+        encoders[1]->cur = 3;
+      }
+      //     encoders[1]->old = encoders[1]->cur;
+      mcl_cfg.uart1_turbo = encoders[1]->getValue();
+    }
+
     GUI.put_string_at_fill(0, "TURBO 1:");
 
     if (encoders[1]->getValue() == 0) {
@@ -65,11 +73,6 @@ void MCLSystemPage::display() {
     if (encoders[1]->getValue() == 3) {
       GUI.put_string_at_fill(10, "8x");
     }
-    if (encoders[1]->hasChanged()) {
-      encoders[1]->old = encoders[1]->cur;
-      mcl_cfg.uart1_turbo = encoders[1]->getValue();
-    }
-
     break;
 
   case 3:
@@ -78,6 +81,14 @@ void MCLSystemPage::display() {
       encoders[0]->old = encoders[0]->cur;
       encoders[1]->setValue(mcl_cfg.uart2_turbo);
     }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 3) {
+        encoders[1]->cur = 3;
+      }
+      //    encoders[1]->old = encoders[1]->cur;
+      mcl_cfg.uart2_turbo = encoders[1]->getValue();
+    }
+
     GUI.put_string_at_fill(0, "TURBO 2:");
 
     if (encoders[1]->getValue() == 0) {
@@ -93,11 +104,6 @@ void MCLSystemPage::display() {
     if (encoders[1]->getValue() == 3) {
       GUI.put_string_at_fill(10, "8x");
     }
-    if (encoders[1]->hasChanged()) {
-      encoders[1]->old = encoders[1]->cur;
-      mcl_cfg.uart2_turbo = encoders[1]->getValue();
-    }
-
     break;
   case 4:
 
@@ -148,7 +154,7 @@ void MCLSystemPage::display() {
       encoders[1]->setValue(mcl_cfg.poly_max);
     }
     GUI.put_string_at_fill(0, "MD POLYMAX:");
-    GUI.put_value_at2(10, mcl_cfg.poly_max);
+    GUI.put_value_at2(13, mcl_cfg.poly_max);
     if (encoders[1]->hasChanged()) {
       if (encoders[1]->getValue() > 16) {
         encoders[1]->cur = 16;
@@ -158,29 +164,29 @@ void MCLSystemPage::display() {
       }
       mcl_cfg.poly_max = encoders[1]->getValue();
     }
-  break;
-case 7:
+    break;
+  case 7:
 
-  if (encoders[0]->hasChanged()) {
-    encoders[0]->old = encoders[0]->cur;
-    encoders[1]->setValue(mcl_cfg.uart2_ctrl_mode);
-  }
-  GUI.put_string_at_fill(0, "MD CTRL:");
-  if (encoders[1]->cur == 16) {
-    GUI.put_string_at_fill(9, "INT");
-  }
-  if (encoders[1]->cur < 16) {
-    GUI.put_string_at_fill(9, "CHAN ");
-    GUI.put_value_at2(14, encoders[1]->cur ); 
-  }
-   if (encoders[1]->cur == 17) {
-    GUI.put_string_at_fill(9, "OMNI");
-  }
-  if (encoders[1]->hasChanged()) {
-    if (encoders[1]->getValue() > 17) {
-      encoders[1]->cur = 17;
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.uart2_ctrl_mode);
     }
-    mcl_cfg.uart2_ctrl_mode = encoders[1]->getValue();
+    GUI.put_string_at_fill(0, "MD CTRL:");
+    if (encoders[1]->cur == 16) {
+      GUI.put_string_at_fill(9, "INT");
+    }
+    if (encoders[1]->cur < 16) {
+      GUI.put_string_at_fill(9, "CHAN ");
+      GUI.put_value_at2(14, encoders[1]->cur);
+    }
+    if (encoders[1]->cur == 17) {
+      GUI.put_string_at_fill(9, "OMNI");
+    }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 17) {
+        encoders[1]->cur = 17;
+      }
+      mcl_cfg.uart2_ctrl_mode = encoders[1]->getValue();
+    }
   }
-}
 }
