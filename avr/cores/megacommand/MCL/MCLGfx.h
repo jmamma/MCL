@@ -7,6 +7,7 @@
 class MCLGfx {
   public:
   void splashscreen();
+  void init_oled();
 };
 
 extern MCLGfx gfx;

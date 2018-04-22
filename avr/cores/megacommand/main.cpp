@@ -351,20 +351,6 @@ int main(void) {
   DEBUG_INIT();
   //Set SD card select HIGH before initialising OLED.
   PORTB |= (1 << PB0);
-
-  #ifdef OLED_DISPLAY
-  oled_display.begin();
- 
-  oled_display.clearDisplay();
-  oled_display.invertDisplay(0);
-  oled_display.setRotation(2); 
-  oled_display.setTextSize(1);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(0,0);
-  oled_display.display();
-  #endif
- //  while (1);  
- 
   setup();
   for (;;) {
     loop();

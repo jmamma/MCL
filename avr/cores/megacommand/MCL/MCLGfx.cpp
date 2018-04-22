@@ -1,8 +1,20 @@
 #include "MCL.h"
 #include "MCLGfx.h"
 
+void MCLGfx::init_oled() {
+  oled_display.begin();
+
+  oled_display.clearDisplay();
+  oled_display.invertDisplay(0);
+  oled_display.setRotation(2);
+  oled_display.setTextSize(1);
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setCursor(0, 0);
+  oled_display.display();
+}
 void MCLGfx::splashscreen() {
 #ifdef OLED_DISPLAY
+
   oled_display.setTextSize(2);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);

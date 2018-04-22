@@ -58,7 +58,7 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN("Could not read project header");
     return false;
   }
-  if (version >= VERSION) {
+  if (version >= PROJ_VERSION) {
     return true;
   }
   else {
@@ -74,7 +74,7 @@ bool Project::write_header() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing project header");
 
-  version = VERSION;
+  version = PROJ_VERSION;
   //  Config mcl_cfg.
   //  uint8_t reserved[16];
   hash = 0;

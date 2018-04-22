@@ -1,14 +1,12 @@
 #include "MCLSd.h"
 #include "MCL.h"
 /*
-   Function for writing to the project file
+   Function for initialising the SD Card
 */
 SdFat SD;
 
-bool MCLSd::load_init() {
+bool MCLSd::sd_init() {
   bool ret = false;
-  int b;
-
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Initializing SD Card");
   //File file("/test.mcl",O_WRITE);
@@ -16,17 +14,25 @@ bool MCLSd::load_init() {
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
     ret = SD.begin(53, SPI_FULL_SPEED);
     if (!ret) {
-      delay(500);
+      delay(50);
     }
   }
-  if (ret == false) {
-    DEBUG_PRINTLN("SD Card Initializing failed");
-    GUI.flash_strings_fill("SD CARD ERROR", "");
+    if (ret == false) {
+    sd_state = false;
+    DEBUG_PRINTLN("SD Init fail");
     return false;
   }
+  sd_state = true;
 
-  else {
-    DEBUG_PRINTLN("SD Init okay");
+  DEBUG_PRINTLN("SD Init okay");
+  return true;
+
+}
+bool MCLSd::load_init() {
+  bool ret = false;
+  int b;
+
+  if (sd_state) {
 
     if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
       DEBUG_PRINTLN("Config file open: success");

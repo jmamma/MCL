@@ -7,7 +7,6 @@
 #include <midi-common.hh>
 
 #include "WProgram.h"
-
 #include "MD.h"
 #include "A4.h"
 
@@ -38,6 +37,8 @@
 
 #include "MDTrack.h"
 
+#define VERSION 2014
+
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
 
@@ -55,6 +56,7 @@
 #define SEQ_RTRK_PAGE 11
 #define SEQ_RPTC_PAGE 14
 #define LOAD_PROJECT_PAGE 8
+
 
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;
