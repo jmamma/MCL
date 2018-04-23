@@ -1,7 +1,7 @@
+## MIDI-CTRL20
+
 The following repository contains a functional Arduino Mega 2560 core.
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
-
-The repository is maintained by Justin Mammarella <jmamma@gmail.com>
 
 This is a fork of Manuel Odendahl's MIDICtrl Framework for the Ruin&Wesen MiniCommand
 MIDI controller:
@@ -23,3 +23,4 @@ It contains code to:
 - create GUIs (using sketches, pages, modal pages, event handlers)
 - handle SDCard storage
 - interface with the Elektron MachineDrum, MonoMachine, Analog4
+
