@@ -12,7 +12,7 @@ The updated repository contains numerous enhancements and fixes.
 
 - In 2016 the core was adapted to compile with the ArduinoIDE and MegaCommand hardware design.
 - In 2017 the core was modified to work alongside standard Arduino Code and Libraries.
-- In 2018 the MegaCommandLive firmware was refactored in to usable libraries and is now
+- In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
 part of the MIDICtrl framework.
 
 It contains code to:
