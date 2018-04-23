@@ -15,7 +15,23 @@ The updated repository contains numerous enhancements and fixes.
 - In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
 part of the MIDICtrl framework.
 
-# Installation Instructions
+### Installing the MIDICtrl core.
+
+(Instructions for OSX, should be similar for Windows)
+
+Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
+
+Get the MIDICtrl library and MegaCommand Core (same repo):
 ```
+   cd /Applications/Arduino.app/Contents/Java/hardware/
+   git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
+```
+Selecting the Core
+```
+    Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
+```
+The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
+
+The MegaCommand core will be listed at the bottom.
 
 ```
