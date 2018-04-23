@@ -45,7 +45,7 @@ to
 
 1) Open the Arduino IDE Application
 
-2) Select Tools -> Board -> MegaCommand
+2) Select: Tools -> Board -> MegaCommand
 
 ### Compiling MegaCommandLive Firmware
 
