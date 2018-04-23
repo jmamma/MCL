@@ -30,7 +30,7 @@ part of the MIDICtrl framework.
 
 1) Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
 
-2) The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
+The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
 
 The MegaCommand core will be listed at the bottom.
 
