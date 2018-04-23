@@ -4,8 +4,7 @@ The following repository contains a functional Arduino Mega 2560 core and the Me
 
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
 
-This is a fork of Manuel Odendahl's MIDICtrl Framework for the Ruin&Wesen MiniCommand
-MIDI controller:
+This is a fork of Manuel Odendahl's MIDICtrl Framework:
 https://github.com/wesen/mididuino
 
 The updated repository contains numerous enhancements and fixes.
