@@ -49,7 +49,8 @@ to
 
 ### Compiling MegaCommandLive Firmware
 
-All the source code for MegaCommand Live is contained in the following repository.
+All the source code for MegaCommand Live is contained within this repository.
+To compile the MegaCommandLive firmware do the following:
 
 1) Create a new Arduino Sketch
 
