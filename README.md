@@ -43,11 +43,9 @@ to
 
 ### Selecting the Core
 
-1) Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
+1) Open the Arduino IDE Application
 
-The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
-
-The MegaCommand core will be listed at the bottom.
+2) Select Tools -> Board -> MegaCommand
 
 ### Compiling MegaCommandLive Firmware
 
