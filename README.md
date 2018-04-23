@@ -19,19 +19,34 @@ part of the MIDICtrl framework.
 
 (Instructions for OSX, should be similar for Windows)
 
-Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
+1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
 
-Get the MIDICtrl library and MegaCommand Core (same repo):
+2) Get the MIDICtrl library and MegaCommand Core (same repo):
 ```
    cd /Applications/Arduino.app/Contents/Java/hardware/
    git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
 ```
-Selecting the Core
-```
-    Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
-```
-The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
+### Selecting the Core
+
+1) Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
+
+2) The default Arduino core is named "Arduion/Genuino Mega or Mega 2560"
 
 The MegaCommand core will be listed at the bottom.
 
+### Compiling MegaCommandLive Firmware
+
+All the source code for MegaCommand Live is contained in the following repository.
+
+1) Create a new Arduino Sketch
+
+2) Insert the following code
+
 ```
+#include "MCL.h"
+
+void setup() {
+  mcl.setup();
+}
+```
+3) Compile sketch and upload to your MegaCommand
