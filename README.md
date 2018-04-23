@@ -26,6 +26,22 @@ part of the MIDICtrl framework.
    cd /Applications/Arduino.app/Contents/Java/hardware/
    git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
 ```
+
+### Configure the Core
+
+You need to set the correct display type. By default the display type is HD44780 16x2 LCD.
+
+To enable the oled display edit OLED.h
+```
+${install_dir}/MIDICtrl20_MegaCommand/avr/cores/megacommand/OLED.h
+
+Change 
+//#define OLED_DISPLAY
+to
+#define OLED_DISPLAY
+
+```
+
 ### Selecting the Core
 
 1) Open the Arduino IDE, Under the Tools menu, select the core you wish to use from the "Board:" menu
