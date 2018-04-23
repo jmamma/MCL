@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SDFat.h"
-#define CONFIG_VERSION 2012
+#define CONFIG_VERSION 2013
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 16
