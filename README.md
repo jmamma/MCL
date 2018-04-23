@@ -31,7 +31,7 @@ part of the MIDICtrl framework.
 
 You need to set the correct display type. By default the display type is HD44780 16x2 LCD.
 
-To enable the oled display edit OLED.h
+To enable the OLED display edit OLED.h
 ```
 ${install_dir}/MIDICtrl20_MegaCommand/avr/cores/megacommand/OLED.h
 
