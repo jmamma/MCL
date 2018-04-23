@@ -15,13 +15,7 @@ The updated repository contains numerous enhancements and fixes.
 - In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
 part of the MIDICtrl framework.
 
-It contains code to:
+# Installation Instructions
+```
 
-- control the hardware (LCD/OLED, encoders, buttons, MIDI interface, SD card)
-- handle the MIDI inputs and the MIDI output
-- general data structures and algorithms (stack, callbacks, vectors,
-  ring buffers, etc...)
-- create GUIs (using sketches, pages, modal pages, event handlers)
-- handle SDCard storage
-- interface with the Elektron MachineDrum, MonoMachine, Analog4
-
+```
