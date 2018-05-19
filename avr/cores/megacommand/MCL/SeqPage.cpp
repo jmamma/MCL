@@ -173,12 +173,12 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           mystr[i] = ' ';
         } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
           mystr[i] = ' ';
-        } else if (note_interface.notes[i - offset] == 1) {
+        } else if (note_interface.notes[i] == 1) {
           /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY
           mystr[i] = (char)3;
 #else
-          mystr[i - offset] = (char)255;
+          mystr[i] = (char)255;
 #endif
         } else if (IS_BIT_SET64(pattern_mask, i + offset)) {
           /*If the bit is set, there is a trigger at this position. We'd like to
@@ -232,7 +232,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       } else if (noteson > 0) {
         if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-          mystr[i] = (char)0x5B;
+          mystr[i - offest] = (char)0x5B;
 #else
           mystr[i - offset] = (char)002;
 #endif
@@ -241,7 +241,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       } else if (notesoff > 0) {
         if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-          mystr[i] = (char)0x5D;
+          mystr[i - offest] = (char)0x5D;
 #else
           mystr[i - offset] = (char)004;
 #endif
@@ -251,7 +251,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
         if (note_held >= 1) {
           if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-            mystr[i] = (char)4;
+            mystr[i - offest] = (char)4;
 #else
             mystr[i - offset] = (char)003;
 #endif
@@ -272,7 +272,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
            * display it as [] on screen*/
           /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY
-          mystr[i] = (char)3;
+          mystr[i - offset] = (char)3;
 #else
           mystr[i - offset] = (char)255;
 #endif
