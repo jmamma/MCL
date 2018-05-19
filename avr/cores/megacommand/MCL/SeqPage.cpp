@@ -296,9 +296,6 @@ void pattern_len_handler(Encoder *enc) {
       mcl_seq.md_tracks[last_md_track].length = enc_->cur;
     }
   } else {
-    DEBUG_PRINTLN(enc_->cur);
-    DEBUG_PRINTLN(enc_->max);
-    DEBUG_PRINTLN(last_ext_track);
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();

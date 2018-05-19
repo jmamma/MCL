@@ -186,13 +186,13 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
   timing[step] = utiming;
 }
 
-void MDSeqTrack::clear_seq_conditional() {
+void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < 64; c++) {
     conditional[c] = 0;
     timing[c] = 0;
   }
 }
-void MDSeqTrack::clear_seq_locks() {
+void MDSeqTrack::clear_locks() {
   for (uint8_t c = 0; c < 4; c++) {
     for (uint8_t x = 0; x < 64; x++) {
       locks[c][x] = 0;
@@ -202,12 +202,12 @@ void MDSeqTrack::clear_seq_locks() {
   lock_mask = 0;
 }
 
-void MDSeqTrack::clear_seq_track() {
+void MDSeqTrack::clear_track() {
   uint8_t c;
 
-  clear_seq_conditional();
+  clear_conditional();
 
-  clear_seq_locks();
+  clear_locks();
 
   lock_mask = 0;
   pattern_mask = 0;

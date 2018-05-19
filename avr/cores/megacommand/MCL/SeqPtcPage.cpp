@@ -25,7 +25,7 @@ void SeqPtcPage::config_encoders() {
 
 void SeqPtcPage::init() {
   SeqPage::init();
-
+  ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
   for (uint8_t x = 0; x < poly_max; x++) {
     poly_notes[x] = 0;
   }
@@ -39,6 +39,33 @@ void SeqPtcPage::init() {
   curpage = SEQ_PTC_PAGE;
 }
 
+void ptc_pattern_len_handler(Encoder *enc) {
+  MCLEncoder *enc_ = (MCLEncoder *)enc;
+  if (SeqPage::midi_device == DEVICE_MD) {
+
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      for (uint8_t c = 0; c < 16; c++) {
+        mcl_seq.md_tracks[c].length = enc_->cur;
+      }
+    } else {
+      if (seq_ptc_page.poly_max > 1) {
+        for (uint8_t c = 0; c < seq_ptc_page.poly_max; c++) {
+          mcl_seq.md_tracks[last_md_track + c].length = enc_->cur;
+        }
+      }
+    }
+  } else {
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
+        mcl_seq.ext_tracks[c].buffer_notesoff();
+        mcl_seq.ext_tracks[c].length = enc_->cur;
+      }
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
+      mcl_seq.ext_tracks[last_ext_track].length = enc_->cur;
+    }
+  }
+}
 void SeqPtcPage::display() {
   uint8_t dev_num;
   if (midi_device == DEVICE_MD) {
@@ -158,7 +185,6 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   }
 }
 
-
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
@@ -198,28 +224,41 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   }
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
+    if (midi_device == DEVICE_MD) {
+      for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
+        mcl_seq.md_tracks[n].clear_track();
+      }
 
-    for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-      mcl_seq.ext_tracks[n].clear_track();
+    } else {
+      for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
+        mcl_seq.ext_tracks[n].clear_track();
+      }
     }
 
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-      mcl_seq.ext_tracks[last_ext_track].resolution = 2;
-    } else {
-      mcl_seq.ext_tracks[last_ext_track].resolution = 1;
+    if (midi_device != DEVICE_MD) {
+      if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+        mcl_seq.ext_tracks[last_ext_track].resolution = 2;
+      } else {
+        mcl_seq.ext_tracks[last_ext_track].resolution = 1;
+      }
     }
-
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
     if (midi_device == DEVICE_MD) {
-      mcl_seq.md_tracks[last_md_track].clear_seq_track();
+      if (poly_max > 1) {
+        for (uint8_t n = 0; n < poly_max; n++) {
+          mcl_seq.md_tracks[n + last_md_track].clear_track();
+        }
+      } else {
+        mcl_seq.md_tracks[last_md_track].clear_track();
+      }
     } else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }

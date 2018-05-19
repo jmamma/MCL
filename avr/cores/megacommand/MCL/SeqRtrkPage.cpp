@@ -86,14 +86,14 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
     for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].clear_seq_track();
+      mcl_seq.md_tracks[n].clear_track();
     }
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (SeqPage::midi_device == DEVICE_MD) {
-      mcl_seq.md_tracks[last_md_track].clear_seq_track();
+      mcl_seq.md_tracks[last_md_track].clear_track();
     } else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }

@@ -34,9 +34,9 @@ public:
   void record_track(uint8_t note_num, uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
-  void clear_seq_conditional();
-  void clear_seq_locks();
-  void clear_seq_track();
+  void clear_conditional();
+  void clear_locks();
+  void clear_track();
 };
 
 #endif /* MDSEQTRACK_H__ */

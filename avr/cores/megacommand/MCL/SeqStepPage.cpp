@@ -148,12 +148,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
     for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].clear_seq_track();
+      mcl_seq.md_tracks[n].clear_track();
     }
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_seq_track();
+    mcl_seq.md_tracks[last_md_track].clear_track();
     return true;
   }
 
