@@ -11,7 +11,7 @@ void SeqExtStepPage::config_encoders() {
     ((MCLEncoder *)encoders[1])->cur = 12;
     ((MCLEncoder *)encoders[1])->max = 23;
   }
-
+  ((MCLEncoder *)encoders[2])->max = 128;
   encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length;
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 }

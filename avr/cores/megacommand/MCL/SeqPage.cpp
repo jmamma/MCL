@@ -139,25 +139,12 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
   GUI.setLine(GUI.LINE2);
-  /*str is a string used to display 16 steps of the pattern_mask at a time*/
-  /*blank steps sequencer trigs are denoted by a - */
 
-  /*Initialise the string with blank steps*/
-  char mystr[17] = "----------------";
+  char mystr[17] = "                ";
 
-  /*Get the Pattern bit mask for the selected track*/
-  //    uint64_t pattern_mask = getPatternMask(grid_page.cur_col,
-  //    grid_page.cur_row , 3, false);
   uint64_t pattern_mask = mcl_seq.md_tracks[last_md_track].pattern_mask;
   int8_t note_held = 0;
 
-  /*Display 16 steps on screen, starting at an offset set by the encoder1
-   * value*/
-  /*The encoder offset allows you to scroll through the 4 pages of the 16 step
-   * sequencer triggers that make up a 64 step pattern*/
-
-  /*For 16 steps check to see if there is a trigger at pattern position i +
-   * (encoder_offset * 16) */
   if (device == DEVICE_MD) {
 
     for (int i = 0; i < 16; i++) {
@@ -190,6 +177,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           mystr[i] = (char)219;
 #endif
         }
+         else { mystr[i] = '-'; }
       }
     }
   } else {
@@ -222,6 +210,9 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           notesoff++;
         }
       }
+        if ((i >= offset) && (i < offset + 16)) {
+      mystr[i - offset] = '-';
+        }
       if ((noteson > 0) && (notesoff > 0)) {
         if ((i >= offset) && (i < offset + 16)) {
           mystr[i - offset] = (char)005;
@@ -232,7 +223,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       } else if (noteson > 0) {
         if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-          mystr[i - offest] = (char)0x5B;
+          mystr[i - offset] = (char)0x5B;
 #else
           mystr[i - offset] = (char)002;
 #endif
@@ -241,7 +232,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       } else if (notesoff > 0) {
         if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-          mystr[i - offest] = (char)0x5D;
+          mystr[i - offset] = (char)0x5D;
 #else
           mystr[i - offset] = (char)004;
 #endif
@@ -251,7 +242,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
         if (note_held >= 1) {
           if ((i >= offset) && (i < offset + 16)) {
 #ifdef OLED_DISPLAY
-            mystr[i - offest] = (char)4;
+            mystr[i - offset] = (char)4;
 #else
             mystr[i - offset] = (char)003;
 #endif
@@ -259,18 +250,16 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
         }
       }
 
-      if ((i >= mcl_seq.ext_tracks[last_ext_track].length) ||
-          (step_count == i) && (MidiClock.state == 2)) {
-        if ((i >= offset) && (i < offset + 16)) {
-          mystr[i - offset] = ' ';
-        }
-      }
-      if ((i >= offset) && (i < offset + 16)) {
+
+      //if ((i >= mcl_seq.ext_tracks[last_ext_track].length) ||
+      //    ((step_count == i) && (MidiClock.state == 2))) {
+      //    if ((i >= offset) && (i < offset + 16)) {
+      //    mystr[i - offset] = ' ';
+      //   }
+     // }
+       if ((i >= offset) && (i < offset + 16)) {
 
         if (note_interface.notes[i - offset] == 1) {
-          /*If the bit is set, there is a cue at this position. We'd like to
-           * display it as [] on screen*/
-          /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY
           mystr[i - offset] = (char)3;
 #else

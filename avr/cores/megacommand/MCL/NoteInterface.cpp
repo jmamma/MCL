@@ -113,8 +113,6 @@ void NoteInterface::draw_notes(uint8_t line_number) {
   /*Initialise the string with blank steps*/
   char str[17] = "----------------";
 
-  /*Display 16 track cues on screen,
-   For 16 tracks check to see if there is a cue*/
   for (int i = 0; i < 16; i++) {
     if (curpage == CUE_PAGE) {
 
@@ -123,9 +121,6 @@ void NoteInterface::draw_notes(uint8_t line_number) {
       }
     }
     if (notes[i] > 0 && notes[i] != 3) {
-      /*If the bit is set, there is a cue at this position. We'd like to display
-       * it as [] on screen*/
-      /*Char 219 on the minicommand LCD is a []*/
 
 #ifdef OLED_DISPLAY
       str[i] = (char)2;
@@ -135,7 +130,6 @@ void NoteInterface::draw_notes(uint8_t line_number) {
     }
   }
 
-  /*Display the cues*/
   GUI.put_string_at(0, str);
 }
 
