@@ -1,6 +1,8 @@
 #include "MCL.h"
 #include "SeqPtcPage.h"
 
+#define MIDI_LOCAL_MODE 16
+
 void SeqPtcPage::setup() { SeqPage::setup(); }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -26,12 +28,18 @@ void SeqPtcPage::config_encoders() {
 void SeqPtcPage::init() {
   SeqPage::init();
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
+
+  poly_max = mcl_cfg.poly_max;
   for (uint8_t x = 0; x < poly_max; x++) {
     poly_notes[x] = 0;
   }
-  poly_max = mcl_cfg.poly_max;
   midi_events.setup_callbacks();
-  md_exploit.on();
+  if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
+    md_exploit.on();
+  }
+  else {
+    last_md_track = MD.currentTrack;
+  }
   note_interface.state = true;
   config_encoders();
   encoders[1]->cur = 32;
@@ -50,7 +58,9 @@ void ptc_pattern_len_handler(Encoder *enc) {
     } else {
       if (seq_ptc_page.poly_max > 1) {
         for (uint8_t c = 0; c < seq_ptc_page.poly_max; c++) {
-          mcl_seq.md_tracks[last_md_track + c].length = enc_->cur;
+          if (last_md_track + c < 16) {
+            mcl_seq.md_tracks[last_md_track + c].length = enc_->cur;
+          }
         }
       }
     }
@@ -131,7 +141,7 @@ uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
 uint8_t SeqPtcPage::get_next_track(uint8_t pitch) {
   bool match = false;
   // If track previously played pitch, re-use this track
-  for (uint8_t x = last_md_track; x < poly_max && x < 15 && match == false;
+  for (uint8_t x = last_md_track; x < poly_max && x < 16 && match == false;
        x++) {
     if (poly_notes[x] == pitch) {
       return x;
@@ -254,7 +264,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (midi_device == DEVICE_MD) {
       if (poly_max > 1) {
         for (uint8_t n = 0; n < poly_max; n++) {
-          mcl_seq.md_tracks[n + last_md_track].clear_track();
+          if (n + last_md_track < 16) {
+            mcl_seq.md_tracks[n + last_md_track].clear_track();
+          }
         }
       } else {
         mcl_seq.md_tracks[last_md_track].clear_track();
@@ -338,6 +350,46 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   }
 }
 
+void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+  // If external keyboard controlling MD pitch, send parameter updates
+  // to all polyphonic tracks
+  uint8_t param_true = 0;
+  if (param >= 16) {
+    param_true = 1;
+  }
+  if (param < 63) {
+    param = param - 16;
+    track = (param / 24) + (channel - MD.global.baseChannel) * 4;
+    track_param = param - ((param / 24) * 24);
+  } else if (param >= 72) {
+    param = param - 72;
+    track = (param / 24) + 2 + (channel - MD.global.baseChannel) * 4;
+    track_param = param - ((param / 24) * 24);
+  }
+
+  if ((mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) && (seq_ptc_page.poly_max > 1)) {
+    if ((track >= last_md_track) &&
+        (track < last_md_track + seq_ptc_page.poly_max)) {
+      for (uint8_t n = 0; n < seq_ptc_page.poly_max; n++) {
+
+        in_sysex = 1;
+
+        if ((n + last_md_track < 16) && (n + last_md_track != track)) {
+          if (param_true) {
+            MD.setTrackParam(n + last_md_track, track_param, value);
+          }
+        }
+        in_sysex = 0;
+      }
+    }
+  }
+}
+
 void SeqPtcMidiEvents::setup_callbacks() {
   if (state) {
     return;
@@ -346,6 +398,10 @@ void SeqPtcMidiEvents::setup_callbacks() {
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
+  Midi.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+
   state = true;
 }
 
@@ -359,6 +415,10 @@ void SeqPtcMidiEvents::remove_callbacks() {
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+
   state = false;
 }
 
