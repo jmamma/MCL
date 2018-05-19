@@ -313,20 +313,16 @@ void SeqPage::display() {
 }
 
 void SeqPageMidiEvents::setup_callbacks() {
-  Midi.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+//  Midi.addOnControlChangeCallback(
+  //    this,
+   //   (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
-  Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+ // Midi.removeOnControlChangeCallback(
+  //    this,
+   //   (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  if (md_exploit.off()) {
-    GUI.setPage(&grid_page);
-    curpage = 0;
-  }
 }
