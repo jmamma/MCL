@@ -9,7 +9,7 @@
 
 #include "wiring_private.h"
 
-#define DEBUGMODE
+//#define DEBUGMODE
 
 #ifdef DEBUGMODE
 #define DEBUG_INIT() Serial.begin(9600);
