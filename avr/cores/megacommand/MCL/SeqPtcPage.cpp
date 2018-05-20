@@ -311,8 +311,10 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((mcl_cfg.uart2_ctrl_mode == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.trig_md_fromext(note_num);
+    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     return;
   }
+
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -333,7 +335,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if ((mcl_cfg.uart2_ctrl_mode == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
-    return;
+      return;
   }
 
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
