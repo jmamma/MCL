@@ -251,12 +251,11 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
       }
 
 
-      //if ((i >= mcl_seq.ext_tracks[last_ext_track].length) ||
-      //    ((step_count == i) && (MidiClock.state == 2))) {
-      //    if ((i >= offset) && (i < offset + 16)) {
-      //    mystr[i - offset] = ' ';
-      //   }
-     // }
+      if ((step_count == i) && (MidiClock.state == 2)) {
+          if ((i >= offset) && (i < offset + 16)) {
+          mystr[i - offset] = ' ';
+         }
+      }
        if ((i >= offset) && (i < offset + 16)) {
 
         if (note_interface.notes[i - offset] == 1) {
@@ -302,15 +301,15 @@ void SeqPage::display() {
 }
 
 void SeqPageMidiEvents::setup_callbacks() {
-//  Midi.addOnControlChangeCallback(
-  //    this,
-   //   (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+//   Midi.addOnControlChangeCallback(
+//      this,
+//      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
- // Midi.removeOnControlChangeCallback(
-  //    this,
-   //   (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+//  Midi.removeOnControlChangeCallback(
+//      this,
+//    (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
