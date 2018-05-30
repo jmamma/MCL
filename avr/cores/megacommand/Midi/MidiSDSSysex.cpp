@@ -149,6 +149,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     //  if (midi_sds.packetNumber > 0x7F) {
     //       midi_sds.packetNumber = 0;
     //    }
+    DEBUG_PRINTLN("packet received");
     uint8_t samples[60];
     uint8_t midiBytes_per_word = midi_sds.sampleFormat / 7;
     uint8_t bytes_per_word = midi_sds.sampleFormat / 8;
@@ -169,10 +170,12 @@ void MidiSDSSysexListenerClass::data_packet() {
       decode_val = 0;
       // Decode 7 bit midiBytes in to value
       uint8_t shift;
+      //  DEBUG_PRINTLN("MIDI_BIN");
       for (shift = 0; shift < midiBytes_per_word; shift++) {
 
         decode_val = decode_val << 7;
         decode_val |= (uint32_t)(0x7F & MidiSysex.data[n + 4 + shift]);
+        //  Serial.println(MidiSysex.data[n + 4 + shift], HEX);
       }
       // Remove 0 padding.
       decode_val = decode_val >> (8 - shift);
@@ -183,26 +186,16 @@ void MidiSDSSysexListenerClass::data_packet() {
 
         decode_val -= sample_offset;
       }
-      // DEBUG_PRINTLN((int32_t)decode_val);
-      //  Serial.print(" ");
-
-      // Serial.println(decode_val,BIN);
-      DEBUG_PRINTLN((int16_t)decode_val);
-      Serial.print(" ");
 
       // Shift the value in to b, byte values for wav file.
-      for (uint8_t b = bytes_per_word; b > 0; b--) {
-        samples[byte_count + b - 1] =
-            (uint8_t)(decode_val >> ((bytes_per_word - b) * 8)) & (uint8_t)0xFF;
 
-        byte_count++;
+      for (uint8_t b = 0; b < bytes_per_word; b++) {
+        samples[byte_count + b] =
+            (uint8_t)(decode_val >> (8 * (b))) & (uint8_t)0xFF;
       }
 
-      int16_t my_samp =
-          ((int16_t)samples[byte_count - bytes_per_word + 1] << 8) |
-          (int16_t)samples[byte_count - bytes_per_word];
-      // DEBUG_PRINTLN(my_samp);
-      // DEBUG_PRINT(" ");
+      byte_count += bytes_per_word;
+
       num_of_samples++;
     }
 
