@@ -190,6 +190,7 @@ class MDClass {
 	 **/
   void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
 
+  void setSampleName(uint8_t slot, char *name);
 	/** Send the given sysex buffer to the MachineDrum. **/
   void sendSysex(uint8_t *bytes, uint8_t cnt);
 
