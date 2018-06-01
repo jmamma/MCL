@@ -49,7 +49,7 @@ void MidiSDSClass::sendDumpRequest() {
   data[5] = (sampleNumber >> 7) & 0x7F;
   MidiUart.sendRaw(data, 7);
 }
-uint8_t MidiSDSClass::waitForAck(uint16_t timeout) {
+uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
   MidiSDSSysexListener.msgType = 255;
 
@@ -58,13 +58,16 @@ uint8_t MidiSDSClass::waitForAck(uint16_t timeout) {
   do {
     current_clock = read_slowclock();
 
-    // MCL Code, trying to replicate main loop
-
     handleIncomingMidi();
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
   return MidiSDSSysexListener.msgType;
+}
+void MidiSDSClass::cancel() {
+  DEBUG_PRINTLN("cancelling transmission");
+  midi_sds.state = 255;
+  wav_file.close();
 }
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
@@ -79,15 +82,21 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
   setSampleRate(wav_file.header.sampleRate);
   sampleLength = (wav_file.header.subchunk2Size / wav_file.header.numChannels) /
                  (wav_file.header.bitRate / 8);
+  sampleFormat = wav_file.header.bitRate;
   loopType = loop_type;
   loopStart = loop_start;
   loopEnd = loop_end;
   packetNumber = 0;
   sampleNumber = 0;
-
   sendDumpHeader();
-  if (waitForAck() == MIDI_SDS_ACK) {
+  uint8_t rep = 0;
+
+  midi_sds.state = SDS_SEND;
+  if (rep = waitForMsg() == MIDI_SDS_ACK) {
     handShake = true;
+  } else if (rep == MIDI_SDS_CANCEL) {
+    cancel();
+    return false;
   }
   // HandShake disabled.
   bool ret = sendSamples();
@@ -103,16 +112,17 @@ bool MidiSDSClass::sendSamples() {
   }
   uint32_t sample_offset = (pow(2, sampleFormat) / 2) + 1;
   uint32_t num_of_samples = (120 / midiBytes_per_word);
-  uint8_t samples[num_of_samples * bytes_per_word];
+  uint8_t samples[120];
   uint8_t data[120];
   uint8_t n = 0;
   uint8_t byte_count = 0;
-      int32_t encode_val = 0;
-      int32_t uencode_val = 0;
- 
-  for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength; samplesSoFar += num_of_samples) {
-   // DEBUG_PRINTLN("NUM OF SAMPLES");
-   //DEBUG_PRINTLN(num_of_samples); 
+  int32_t encode_val = 0;
+  int32_t uencode_val = 0;
+
+  for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
+       samplesSoFar += num_of_samples) {
+    // DEBUG_PRINTLN("NUM OF SAMPLES");
+    // DEBUG_PRINTLN(num_of_samples);
     ret = wav_file.read_samples(&samples, num_of_samples, samplesSoFar, 0);
 
     if (!ret) {
@@ -121,23 +131,25 @@ bool MidiSDSClass::sendSamples() {
     }
     byte_count = 0;
 
-    for (n = 0; (n <= 120 - midiBytes_per_word) && ((samplesSoFar + byte_count / bytes_per_word) < midi_sds.sampleLength);
+    for (n = 0;
+         (n <= 120 - midiBytes_per_word) &&
+         ((samplesSoFar + byte_count / bytes_per_word) < midi_sds.sampleLength);
          n += midiBytes_per_word) {
       encode_val = 0;
       uencode_val = 0;
       // Shift the value in to b, byte values for wav file.
-    //  DEBUG_PRINTLN(byte_count);
-    //  DEBUG_PRINTLN(n);
-    //   DEBUG_PRINTLN(num_of_samples);
-        
+      //  DEBUG_PRINTLN(byte_count);
+      //  DEBUG_PRINTLN(n);
+      //   DEBUG_PRINTLN(num_of_samples);
+
       for (uint8_t b = 0; b < bytes_per_word; b++) {
 
         encode_val |= ((int32_t)samples[byte_count]) << (b * 8);
         byte_count++;
       }
       // Convert to unsigned
-      
-     DEBUG_PRINTLN((int16_t)encode_val);
+
+      DEBUG_PRINTLN((int16_t)encode_val);
 
       if (bytes_per_word > 1) {
         encode_val = encode_val + sample_offset;
@@ -145,24 +157,24 @@ bool MidiSDSClass::sendSamples() {
         encode_val = encode_val;
       }
       // + 1])  << 16);
-    //  DEBUG_PRINTLN((uint16_t)( (int16_t)encode_val + (int16_t)sample_offset));
+      //  DEBUG_PRINTLN((uint16_t)( (int16_t)encode_val +
+      //  (int16_t)sample_offset));
       DEBUG_PRINTLN(" ");
       uint8_t bits7;
       uint8_t shift;
       for (shift = 0; shift < midiBytes_per_word; shift++) {
-//    DEBUG_PRINTLN("shift");
- //   DEBUG_PRINTLN(shift + n);
-   bits7 = encode_val >> (sampleFormat - (7 * (shift + 1)));
-    data[n + shift] = (uint8_t)0x7F & bits7;
+        //    DEBUG_PRINTLN("shift");
+        //   DEBUG_PRINTLN(shift + n);
+        bits7 = encode_val >> (sampleFormat - (7 * (shift + 1)));
+        data[n + shift] = (uint8_t)0x7F & bits7;
       }
 
-  //  DEBUG_PRINTLN(shift + n);
-  //  DEBUG_PRINTLN("end shift");
-    //    bits7 = encode_val >> (sampleFormat - (7 * (shift + 1)));
+      //  DEBUG_PRINTLN(shift + n);
+      //  DEBUG_PRINTLN("end shift");
+      //    bits7 = encode_val >> (sampleFormat - (7 * (shift + 1)));
       bits7 = encode_val << (8 - shift);
       data[n + shift - 1] = 0x7F & bits7;
-     
-      }
+    }
     if (!handShake) {
 
       delay(200);
@@ -174,23 +186,34 @@ bool MidiSDSClass::sendSamples() {
         // No message received, assume handshake disabled
 
         sendData(data, n);
-        waitForAck(200);
+        msgType = waitForMsg(20);
         if (msgType == 255) {
           handShake = false;
           count = 128;
+          // Timeout in reply, switch to no-handshake proto
+        }
+        if (msgType == MIDI_SDS_WAIT) {
+          DEBUG_PRINTLN("told to wait");
+          msgType = waitForMsg();
+          if (msgType != MIDI_SDS_ACK) {
+            cancel();
+            return false;
+          }
         }
         // Nak received. resend last packet.
         count++;
       }
     }
-
-    packetNumber++;
-
-    if (midi_sds.packetNumber > 0x7F) {
-      midi_sds.packetNumber = 0;
-    }
+    incPacketNumber();
   }
   return true;
+}
+void MidiSDSClass::incPacketNumber() {
+  packetNumber++;
+
+  if (midi_sds.packetNumber > 0x7F) {
+    midi_sds.packetNumber = 0;
+  }
 }
 void MidiSDSClass::sendDumpHeader() {
   uint8_t data[21] = {0xF0, 0x7E, 0x00, 0x1,  0x00, 0x00, 0x00,
@@ -223,8 +246,8 @@ void MidiSDSClass::sendDumpHeader() {
 }
 
 bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
- // DEBUG_PRINT_FN();
- // DEBUG_PRINTLN(len);
+  // DEBUG_PRINT_FN();
+  // DEBUG_PRINTLN(len);
   if (len > 120)
     return false;
   uint8_t data[5] = {0xF0, 0x7E, 0x00, 0x02, 0x00};

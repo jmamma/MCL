@@ -6,6 +6,8 @@
 #define SDS_LOOP_OFF 0x7F
 #define SDS_LOOP_FORWARD 0x00
 #define SDS_LOOP_FORWARD_BACKWARD 0x01
+#define SDS_SEND 0x03
+#define SDS_REC 0x02
 
 class MidiSDSClass {
 public:
@@ -22,7 +24,7 @@ public:
 
   uint32_t samplesSoFar;
   bool handShake;
-
+  uint8_t state;
   MidiSDSClass() {
     deviceID = 0x00;
     packetNumber = 0;
@@ -33,14 +35,17 @@ public:
     loopStart = 0;
     loopEnd = 0;
     loopType = SDS_LOOP_OFF;
+    state = 255;
     handShake = false;
   }
 
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }
-  uint8_t waitForAck(uint16_t timeout = 2000);
+  uint8_t waitForMsg(uint16_t timeout = 2000);
   bool sendWav(char *filename, uint16_t sample_number, uint8_t loop_type = 0x7F,
                uint32_t loop_start = 0, uint32_t loop_end = 0);
   bool sendSamples();
+  void incPacketNumber();
+  void cancel();
   void dump_header();
   void sendAckMessage();
   void sendNakMessage();

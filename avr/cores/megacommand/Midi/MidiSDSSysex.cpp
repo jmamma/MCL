@@ -31,10 +31,18 @@ void MidiSDSSysexListenerClass::end() {
     //  break;
 
   case MIDI_SDS_DUMPHEADER:
+    midi_sds.state = SDS_REC;
+    DEBUG_PRINTLN("header rec");
     dump_header();
     break;
 
   case MIDI_SDS_DATAPACKET:
+    DEBUG_PRINTLN("data packet rec");
+    if (midi_sds.state != SDS_REC) {
+    midi_sds.sendCancelMessage();
+    midi_sds.cancel();
+    return;
+    }
     data_packet();
     break;
 
@@ -55,6 +63,7 @@ void MidiSDSSysexListenerClass::end() {
     break;
 
   case MIDI_SDS_WAIT:
+
     wait();
     break;
 
@@ -113,6 +122,7 @@ void MidiSDSSysexListenerClass::dump_header() {
   if (!midi_sds.wav_file.open(my_string, 1, sampleRate, midi_sds.sampleFormat,
                               overwrite)) {
     midi_sds.sendCancelMessage();
+    midi_sds.cancel();
   }
   midi_sds.samplesSoFar = 0;
   midi_sds.packetNumber = 0;
@@ -149,8 +159,10 @@ void MidiSDSSysexListenerClass::data_packet() {
     //  if (midi_sds.packetNumber > 0x7F) {
     //       midi_sds.packetNumber = 0;
     //    }
+    midi_sds.sendWaitMessage();
+  
     DEBUG_PRINTLN("packet received");
-    uint8_t samples[60];
+    uint8_t samples[120];
     uint8_t midiBytes_per_word = midi_sds.sampleFormat / 7;
     uint8_t bytes_per_word = midi_sds.sampleFormat / 8;
     if (midi_sds.sampleFormat % 7 > 0) {
@@ -195,7 +207,6 @@ void MidiSDSSysexListenerClass::data_packet() {
       }
 
       byte_count += bytes_per_word;
-
       num_of_samples++;
     }
 
@@ -205,17 +216,12 @@ void MidiSDSSysexListenerClass::data_packet() {
             &samples, num_of_samples, midi_sds.samplesSoFar, 0, write_header)) {
       midi_sds.samplesSoFar += num_of_samples;
       midi_sds.sendAckMessage();
-
-      midi_sds.packetNumber += 1;
-      if (midi_sds.packetNumber > 0x7F) {
-        midi_sds.packetNumber = 0;
-      }
+      midi_sds.incPacketNumber();
     } else {
       DEBUG_PRINTLN("error writing sds to SDCard");
       midi_sds.sendCancelMessage();
     }
-    // DEBUG_PRINTLN(midi_sds.samplesSoFar);
-    // DEBUG_PRINT(" ");
+   // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
       DEBUG_PRINTLN("Sample receive finished");
       DEBUG_PRINTLN(midi_sds.wav_file.header.subchunk2Size);
