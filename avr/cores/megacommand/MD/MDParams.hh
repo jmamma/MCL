@@ -33,6 +33,7 @@
 #define MD_PATTERN_REQUEST_ID                0x68
 #define MD_SONG_MESSAGE_ID                   0x69
 #define MD_SONG_REQUEST_ID                   0x6a
+#define MD_SAMPLE_NAME_ID                    0x73
 
 #define MD_LOAD_GLOBAL_ID                    0x56
 #define MD_LOAD_PATTERN_ID                   0x57

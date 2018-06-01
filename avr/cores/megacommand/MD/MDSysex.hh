@@ -3,33 +3,33 @@
 #ifndef MDSYSEX_H__
 #define MDSYSEX_H__
 
-#include "WProgram.h"
+#include "Callback.hh"
+#include "MD.h"
 #include "Midi.h"
 #include "MidiSysex.hh"
 #include "Vector.hh"
-#include "Callback.hh"
-#include "MD.h"
+#include "WProgram.h"
 
 /**
  * \addtogroup MD Elektron MachineDrum
  *
  * @{
- * 
+ *
  * \addtogroup md_sysex MachineDrum Sysex Messages
- * 
+ *
  * @{
  **/
 
 typedef enum {
-    MD_NONE,
-    
-    MD_GET_CURRENT_KIT,
-    MD_GET_KIT,
-    
-    MD_GET_CURRENT_GLOBAL,
-    MD_GET_GLOBAL,
-    
-    MD_DONE
+  MD_NONE,
+
+  MD_GET_CURRENT_KIT,
+  MD_GET_KIT,
+
+  MD_GET_CURRENT_GLOBAL,
+  MD_GET_GLOBAL,
+
+  MD_DONE
 } getCurrentKitStatus_t;
 
 /**
@@ -44,27 +44,34 @@ typedef enum {
  * callbacks.
  **/
 class MDSysexListenerClass : public MidiSysexListenerClass {
-	/**
-	 * \addtogroup md_sysex_listener
-	 *
-	 * @{
-	 **/
+  /**
+   * \addtogroup md_sysex_listener
+   *
+   * @{
+   **/
 
 public:
-	/** Vector storing the onGlobalMessage callbacks (called when a global message is received). **/
-  CallbackVector<MDCallback,8> onGlobalMessageCallbacks;
-	/** Vector storing the onKitMessage callbacks (called when a kit message is received). **/
-  CallbackVector<MDCallback,8> onKitMessageCallbacks;
-	/** Vector storing the onSongMessage callbacks (called when a song messages is received). **/
-  CallbackVector<MDCallback,8> onSongMessageCallbacks;
-	/** Vector storing the onPatternMessage callbacks (called when a pattern message is received). **/
-  CallbackVector<MDCallback,8> onPatternMessageCallbacks;
-	/** Vector storing the onStatusResponse callbacks (when a status response is received). **/
-  CallbackVector2<MDCallback,8,uint8_t,uint8_t> onStatusResponseCallbacks;
+  /** Vector storing the onGlobalMessage callbacks (called when a global message
+   * is received). **/
+  CallbackVector<MDCallback, 8> onGlobalMessageCallbacks;
+  /** Vector storing the onKitMessage callbacks (called when a kit message is
+   * received). **/
+  CallbackVector<MDCallback, 8> onKitMessageCallbacks;
+  /** Vector storing the onSongMessage callbacks (called when a song messages is
+   * received). **/
+  CallbackVector<MDCallback, 8> onSongMessageCallbacks;
+  /** Vector storing the onPatternMessage callbacks (called when a pattern
+   * message is received). **/
+  CallbackVector<MDCallback, 8> onPatternMessageCallbacks;
+  /** Vector storing the onStatusResponse callbacks (when a status response is
+   * received). **/
+  CallbackVector2<MDCallback, 8, uint8_t, uint8_t> onStatusResponseCallbacks;
 
-	/** Stores if the currently received message is a MachineDrum sysex message. **/
+  CallbackVector<MDCallback, 8> onSampleNameCallbacks;
+  /** Stores if the currently received message is a MachineDrum sysex message.
+   * **/
   bool isMDMessage;
-	/** Stores the message type of the currently received sysex message. **/
+  /** Stores the message type of the currently received sysex message. **/
   uint8_t msgType;
 
   MDSysexListenerClass() : MidiSysexListenerClass() {
@@ -75,19 +82,21 @@ public:
 
   virtual void start();
   virtual void handleByte(uint8_t byte);
-  virtual void end();
+  virtual void end_immediate();
 
-	/**
-	 * Add the sysex listener to the MIDI sysex subsystem. This needs to
-	 * be called if you want to use the MDSysexListener (it is called
-	 * automatically by the MDTask subsystem though).
-	 **/
+  /**
+   * Add the sysex listener to the MIDI sysex subsystem. This needs to
+   * be called if you want to use the MDSysexListener (it is called
+   * automatically by the MDTask subsystem though).
+   **/
   void setup();
 
-  void addOnStatusResponseCallback(MDCallback *obj, md_status_callback_ptr_t func) {
+  void addOnStatusResponseCallback(MDCallback *obj,
+                                   md_status_callback_ptr_t func) {
     onStatusResponseCallbacks.add(obj, func);
   }
-  void removeOnStatusResponseCallback(MDCallback *obj, md_status_callback_ptr_t func) {
+  void removeOnStatusResponseCallback(MDCallback *obj,
+                                      md_status_callback_ptr_t func) {
     onStatusResponseCallbacks.remove(obj, func);
   }
   void removeOnStatusResponseCallback(MDCallback *obj) {
@@ -103,7 +112,7 @@ public:
   void removeOnGlobalMessageCallback(MDCallback *obj) {
     onGlobalMessageCallbacks.remove(obj);
   }
-  
+
   void addOnKitMessageCallback(MDCallback *obj, md_callback_ptr_t func) {
     onKitMessageCallbacks.add(obj, func);
   }
@@ -113,7 +122,7 @@ public:
   void removeOnKitMessageCallback(MDCallback *obj) {
     onKitMessageCallbacks.remove(obj);
   }
-  
+
   void addOnPatternMessageCallback(MDCallback *obj, md_callback_ptr_t func) {
     onPatternMessageCallbacks.add(obj, func);
   }
@@ -123,7 +132,7 @@ public:
   void removeOnPatternMessageCallback(MDCallback *obj) {
     onPatternMessageCallbacks.remove(obj);
   }
-  
+
   void addOnSongMessageCallback(MDCallback *obj, md_callback_ptr_t func) {
     onSongMessageCallbacks.add(obj, func);
   }
@@ -134,8 +143,17 @@ public:
     onSongMessageCallbacks.remove(obj);
   }
 
-	/* @} */
-  
+  void addOnSampleNameCallback(MDCallback *obj, md_callback_ptr_t func) {
+    onSampleNameCallbacks.add(obj, func);
+  }
+  void removeOnSampleNameCallback(MDCallback *obj, md_callback_ptr_t func) {
+    onSampleNameCallbacks.remove(obj, func);
+  }
+  void removeOnSampleNameCallback(MDCallback *obj) {
+    onSampleNameCallbacks.remove(obj);
+  }
+
+  /* @} */
 };
 
 #include "MDMessages.hh"

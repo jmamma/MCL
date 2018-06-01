@@ -24,59 +24,55 @@ class MidiSysexClass;
  **/
 
 class MidiSysexListenerClass {
-	/**
-	 * \addtogroup midi_sysex 
-	 *
-	 * @{
-	 **/
-	
- public:
+  /**
+   * \addtogroup midi_sysex
+   *
+   * @{
+   **/
+
+public:
   uint8_t ids[3];
-	MidiSysexClass *sysex;
+  MidiSysexClass *sysex;
 
   MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
-		sysex = _sysex;
+    sysex = _sysex;
     ids[0] = 0;
     ids[1] = 0;
     ids[2] = 0;
   };
-  
-  virtual void start() {
-  }
-  virtual void abort() {
-  }
-  virtual void end() {
-  }
-  virtual void handleByte(uint8_t byte) {
-  }
+
+  virtual void start() {}
+  virtual void abort() {}
+  virtual void end() {}
+  virtual void end_immediate() {}
+  virtual void handleByte(uint8_t byte) {}
 
 #ifdef HOST_MIDIDUINO
-  virtual ~MidiSysexListenerClass() {
-  }
+  virtual ~MidiSysexListenerClass() {}
 #endif
 
-	/* @} */
+  /* @} */
 };
 
 #define NUM_SYSEX_SLAVES 4
 
 class MidiSysexClass {
-	/**
-	 * \addtogroup midi_sysex 
-	 *
-	 * @{
-	 **/
-	
- protected:
+  /**
+   * \addtogroup midi_sysex
+   *
+   * @{
+   **/
+
+protected:
   bool aborted;
   bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
 
- public:
+public:
   void startRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
   void stopRecord();
-  
+
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
   bool recordByte(uint8_t c);
   bool callSysexCallBacks;
@@ -89,7 +85,7 @@ class MidiSysexClass {
   uint16_t len;
 
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
-  
+
   MidiSysexClass(uint8_t *_data, uint16_t size) {
     data = _data;
     max_len = size;
@@ -108,9 +104,9 @@ class MidiSysexClass {
   bool addSysexListener(MidiSysexListenerClass *listener) {
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == NULL || listeners[i] == listener) {
-				listeners[i] = listener;
-				listener->sysex = this;
-				return true;
+        listeners[i] = listener;
+        listener->sysex = this;
+        return true;
       }
     }
     return false;
@@ -118,38 +114,40 @@ class MidiSysexClass {
   void removeSysexListener(MidiSysexListenerClass *listener) {
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == listener)
-	listeners[i] = NULL;
+        listeners[i] = NULL;
     }
   }
   bool isListenerActive(MidiSysexListenerClass *listener);
 
   void reset();
-  
+
   void start();
   void abort();
+  //Handled by main loop
   void end();
+  //Handled by interrupts
+  void end_immediate();
   void handleByte(uint8_t byte);
 
-	/* @} */
+  /* @} */
 };
 
 class MididuinoSysexListenerClass : public MidiSysexListenerClass {
-	/**
-	 * \addtogroup midi_sysex 
-	 *
-	 * @{
-	 **/
-	
- public:
+  /**
+   * \addtogroup midi_sysex
+   *
+   * @{
+   **/
+
+public:
   MididuinoSysexListenerClass();
   virtual void handleByte(uint8_t byte);
 
 #ifdef HOST_MIDIDUINO
-  virtual ~MididuinoSysexListenerClass() {
-  }
+  virtual ~MididuinoSysexListenerClass() {}
 #endif
 
-	/* @} */
+  /* @} */
 };
 
 // extern MidiSysexClass MidiSysex;

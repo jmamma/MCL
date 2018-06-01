@@ -29,7 +29,7 @@ void TurboMidiSysexListenerClass::handleByte(uint8_t byte) {
 	}
 }
 
-void TurboMidiSysexListenerClass::end() {
+void TurboMidiSysexListenerClass::end_immediate() {
 	if (!isGenericMessage)
 		return;
 

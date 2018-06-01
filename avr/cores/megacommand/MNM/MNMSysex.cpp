@@ -74,7 +74,7 @@ void MNMSysexListenerClass::handleByte(uint8_t byte) {
   }
 }
 
-void MNMSysexListenerClass::end() {
+void MNMSysexListenerClass::end_immediate() {
   if (!isMNMMessage)
     return;
 
