@@ -12,11 +12,14 @@ bool Wav::open(char *file_name, uint16_t numChannels, uint32_t sampleRate,
   m_strncpy(&filename, file_name, 16);
   DEBUG_PRINTLN(file_name);
   DEBUG_PRINTLN(file.fileSize());
-  if (!file.isOpen()) {
-    ret = file.open(file_name, O_RDWR | O_CREAT);
-    if (!ret) {
-      DEBUG_PRINTLN("could not open wave file");
-    }
+
+  if (file.isOpen()) {
+  DEBUG_PRINTLN("file already open");
+  file.close();
+  }
+  ret = file.open(file_name, O_RDWR | O_CREAT);
+  if (!ret) {
+    DEBUG_PRINTLN("could not open wave file");
   }
   if (overwrite) {
 
@@ -101,7 +104,7 @@ bool Wav::read_header() {
 }
 
 bool Wav::write_data(void *data, uint32_t size, uint32_t position) {
-  //  DEBUG_PRINT_FN();
+  DEBUG_PRINT_FN();
   //  DEBUG_PRINTLN(size);
   //  DEBUG_PRINTLN(position);
   //  DEBUG_PRINTLN(file.fileSize());
@@ -172,6 +175,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
 
   if (new_subchunk2Size > header.subchunk2Size) {
     header.subchunk2Size = new_subchunk2Size;
+    header.chunkSize = 36 + header.subchunk2Size;
   }
   if (writeheader) {
     ret = write_header();
