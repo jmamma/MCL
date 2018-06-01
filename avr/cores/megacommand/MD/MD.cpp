@@ -115,14 +115,14 @@ void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
   CLEAR_LOCK();
 }
 
-void MDClass:setSampleName(uint8_t slot, char *name) {
+void MDClass::setSampleName(uint8_t slot, char *name) {
   uint8_t data[6];
   data[0] =  0x73;
   data[1] = slot;
-  data[2] = 0x7F & char[0];
-  data[3] = 0x7F & char[1];
-  data[4] = 0x7F & char[2];
-  data[5] = 0x7F & char[3];
+  data[2] = 0x7F & name[0];
+  data[3] = 0x7F & name[1];
+  data[4] = 0x7F & name[2];
+  data[5] = 0x7F & name[3];
   sendSysex(data, 6);
 }
 
