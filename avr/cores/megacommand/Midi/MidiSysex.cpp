@@ -78,6 +78,7 @@ void MidiSysexClass::start() {
 }
 
 void MidiSysexClass::end() {
+  callSysexCallBacks = false;
   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
     if (isListenerActive(listeners[i])) {
       listeners[i]->end();
@@ -86,7 +87,6 @@ void MidiSysexClass::end() {
 
 }
 void MidiSysexClass::end_immediate() {
-  callSysexCallBacks = false;
   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
     if (isListenerActive(listeners[i])) {
       listeners[i]->end_immediate();

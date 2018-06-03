@@ -51,6 +51,13 @@ bool Wav::open(char *file_name, uint16_t numChannels, uint32_t sampleRate,
   return true;
 }
 
+bool Wav::rename(char *new_name) {
+  if (!file.rename(&file, new_name)) {
+  DEBUG_PRINTLN("rename failed");
+  }
+  m_strncpy(&filename, new_name, 16);
+}
+
 bool Wav::write_header() {
   DEBUG_PRINT_FN();
   bool ret;

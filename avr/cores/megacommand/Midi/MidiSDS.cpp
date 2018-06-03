@@ -41,8 +41,10 @@ void MidiSDSClass::sendEOFMessage() {
   sendGeneralMessage(MIDI_SDS_EOF);
 }
 
-void MidiSDSClass::sendDumpRequest() {
+void MidiSDSClass::sendDumpRequest(uint16_t slot) {
   DEBUG_PRINT_FN();
+
+  sampleNumber = slot;
   uint8_t data[7] = {0xF0, 0x7E, 0x00, 0x03, 0x00, 0x00, 0xF7};
   data[2] = deviceID;
   data[4] = sampleNumber & 0x7F;

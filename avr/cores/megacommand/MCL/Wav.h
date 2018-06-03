@@ -71,6 +71,7 @@ public:
                      uint32_t sample_offset = 0, uint8_t channel = 0, bool writeheader = true);
   bool read_samples(void *data, uint32_t num_samples,
                     uint32_t sample_offset = 0, uint8_t channel = 0);
+  bool rename(char *new_name);
 };
 
 #endif /* WAV_H__ */
