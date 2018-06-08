@@ -186,6 +186,9 @@ void MidiSDSSysexListenerClass::data_packet() {
     uint8_t samples[120];
     uint8_t midiBytes_per_word = midi_sds.sampleFormat / 7;
     uint8_t bytes_per_word = midi_sds.sampleFormat / 8;
+    if (midi_sds.sampleFormat % 8 > 0) {
+      bytes_per_word++;
+    }
     if (midi_sds.sampleFormat % 7 > 0) {
       midiBytes_per_word++;
     }

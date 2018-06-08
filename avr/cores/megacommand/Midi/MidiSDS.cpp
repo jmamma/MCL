@@ -109,6 +109,9 @@ bool MidiSDSClass::sendSamples() {
   bool ret = false;
   uint8_t midiBytes_per_word = sampleFormat / 7;
   uint8_t bytes_per_word = sampleFormat / 8;
+  if (sampleFormat % 8 > 0) {
+    bytes_per_word++;
+  }
   if (midi_sds.sampleFormat % 7 > 0) {
     midiBytes_per_word++;
   }
