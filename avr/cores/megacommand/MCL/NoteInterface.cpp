@@ -64,6 +64,7 @@ uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
       return i;
     }
   }
+  return 255;
 }
 bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
