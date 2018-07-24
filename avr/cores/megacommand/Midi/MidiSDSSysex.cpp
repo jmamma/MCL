@@ -140,8 +140,7 @@ void MidiSDSSysexListenerClass::dump_header() {
     return;
   }
   bool overwrite = true;
-  if (!midi_sds.wav_file.open(my_string, 1, sampleRate, midi_sds.sampleFormat,
-                              overwrite)) {
+  if (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate, midi_sds.sampleFormat)) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
   }

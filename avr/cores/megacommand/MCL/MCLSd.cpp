@@ -99,7 +99,7 @@ DEBUG_PRINTLN("Could not init cfg");
 
 bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 
-  int b;
+  size_t b;
   bool pass = false;
   bool ret;
   uint32_t pos = filep->curPosition();
@@ -112,14 +112,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
     b = filep->write(( uint8_t*) data, len);
 
 
-    if (b < len) {
-      DEBUG_PRINT_FN();
-      DEBUG_PRINT("Write Attempt: ");
-      DEBUG_PRINTLN(n);
-      DEBUG_PRINT("Write failed: ");
-      DEBUG_PRINT(b);
-      DEBUG_PRINT(" of ");
-      DEBUG_PRINTLN(len);
+    if (b != len) {
       write_fail++;
       pass = false;
       /*reset position*/
@@ -129,7 +122,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
         return false;
       }
     }
-    if (b == len) {
+    else {
       pass = true;
     }
   }
@@ -138,8 +131,12 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
     return true;
   }
   else {
+
+    DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Total write failures");
     DEBUG_PRINTLN(write_fail);
+    DEBUG_PRINTLN(b);
+    DEBUG_PRINTLN(len);
     return false;
   }
 }
@@ -148,7 +145,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 */
 bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
 
-  int b;
+  size_t b;
   bool pass = false;
   bool ret;
   uint32_t pos = filep->curPosition();
@@ -161,14 +158,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
     b = filep->read(( uint8_t*) data, len);
 
 
-    if (b < len) {
-      DEBUG_PRINT_FN();
-      DEBUG_PRINT("Read Attempt: ");
-      DEBUG_PRINTLN(n);
-      DEBUG_PRINT("Read failed: ");
-      DEBUG_PRINT(b);
-      DEBUG_PRINT(" of ");
-      DEBUG_PRINTLN(len);
+    if (b != len) {
       read_fail++;
 
       /*reset position*/
@@ -179,7 +169,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
       }
       pass = false;
     }
-    if (b == len) {
+    else {
       pass = true;
     }
   }
@@ -188,6 +178,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
     return true;
   }
   else {
+    DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Total read failures");
     DEBUG_PRINTLN(read_fail);
 

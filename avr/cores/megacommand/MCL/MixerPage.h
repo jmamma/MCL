@@ -17,7 +17,6 @@ public:
   bool handleEvent(gui_event_t *event);
   void draw_levels();
   void display();
-  void create_chars_mixer();
   void set_level(int curtrack, int value);
   void setup();
   void init();

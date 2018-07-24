@@ -8,22 +8,21 @@
 
 class Osc {
 public:
-  uint16_t sample_rate;
-  float sample_duration;
+  static float sample_rate;
   uint8_t phase = 0;
-  uint16_t freq = 220;
-  int16_t amplitude = 0xFFFE; // Full scale;
+  Osc(float sample_rate_ = 44100) {
+    sample_rate = sample_rate_; 
+  }
+  virtual float get_sample(uint32_t sample_number, float freq, float phase);
 
-  virtual float get_sample(uint32_t sample_number);
-
-  void set_sample_rate(uint16_t hz);
+  void set_sample_rate(float hz);
 };
 
 class SineOsc : public Osc {
 
 public:
-  SineOsc() { set_sample_rate(44100); }
-  float get_sample(uint32_t sample_number);
+  SineOsc(float sample_rate_ = 44100) { set_sample_rate(sample_rate_); }
+  float get_sample(uint32_t sample_number, float freq, float phase);
 };
 
 class PulseOsc : public Osc {
@@ -33,14 +32,14 @@ public:
   float skew;
   float vmin;
   float vmax;
-  PulseOsc() {
-    set_sample_rate(44100);
+  PulseOsc(float sample_rate_ = 44100) {
+    set_sample_rate(sample_rate_);
     set_width(0.5);
     skew = 0.05;
     vmax = 1;
     vmin = -1;
   }
-  float get_sample(uint32_t sample_number);
+  float get_sample(uint32_t sample_number, float freq, float phase);
   void set_width(float width_);
   void set_skew(float skew_);
 };
@@ -51,13 +50,13 @@ public:
   float skew;
   float vmin;
   float vmax;
-  SawOsc() {
-    set_sample_rate(44100);
+  SawOsc(float sample_rate_ = 44100) {
+    set_sample_rate(sample_rate_);
     skew = 2;
     vmax = 1;
     vmin = -1;
   }
-  float get_sample(uint32_t sample_number);
+  float get_sample(uint32_t sample_number, float freq, float phase);
 };
 
 class TriOsc : public Osc {
@@ -66,13 +65,13 @@ public:
   float width;
   float vmin;
   float vmax;
-  TriOsc() {
-    set_sample_rate(44100);
+  TriOsc(float sample_rate_ = 44100) {
+    set_sample_rate(sample_rate_);
     vmax = 1;
     vmin = -1;
     width = 0.5;
   }
-  float get_sample(uint32_t sample_number);
+  float get_sample(uint32_t sample_number, float freq, float phase);
 };
 
 

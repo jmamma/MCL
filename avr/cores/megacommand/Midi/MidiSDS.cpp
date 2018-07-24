@@ -74,7 +74,7 @@ void MidiSDSClass::cancel() {
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
                            uint32_t loop_end) {
-  if (!wav_file.open(filename)) {
+  if (!wav_file.open(filename, false)) {
     DEBUG_PRINTLN("Could not open WAV");
     return false;
   }
@@ -90,6 +90,8 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
   loopEnd = loop_end;
   packetNumber = 0;
   sampleNumber = 0;
+  DEBUG_PRINTLN("sending dump");
+  DEBUG_PRINTLN(sampleLength);
   sendDumpHeader();
   uint8_t rep = 0;
 
@@ -98,6 +100,7 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
     handShake = true;
   } else if (rep == MIDI_SDS_CANCEL) {
     cancel();
+    wav_file.close();
     return false;
   }
   // HandShake disabled.
@@ -129,7 +132,7 @@ bool MidiSDSClass::sendSamples() {
     // DEBUG_PRINTLN("NUM OF SAMPLES");
     // DEBUG_PRINTLN(num_of_samples);
     ret = wav_file.read_samples(&samples, num_of_samples, samplesSoFar, 0);
-
+ //   DEBUG_PRINTLN(samplesSoFar);
     if (!ret) {
       DEBUG_PRINTLN("could not read");
       return ret;
@@ -154,7 +157,7 @@ bool MidiSDSClass::sendSamples() {
       }
       // Convert to unsigned
 
-      DEBUG_PRINTLN((int16_t)encode_val);
+     // DEBUG_PRINTLN((int16_t)encode_val);
 
       if (bytes_per_word > 1) {
         encode_val = encode_val + sample_offset;
@@ -164,7 +167,6 @@ bool MidiSDSClass::sendSamples() {
       // + 1])  << 16);
       //  DEBUG_PRINTLN((uint16_t)( (int16_t)encode_val +
       //  (int16_t)sample_offset));
-      DEBUG_PRINTLN(" ");
       uint8_t bits7;
       uint8_t shift;
       for (shift = 0; shift < midiBytes_per_word; shift++) {
@@ -211,6 +213,7 @@ bool MidiSDSClass::sendSamples() {
     }
     incPacketNumber();
   }
+//  DEBUG_PRINTLN(samplesSoFar);
   return true;
 }
 void MidiSDSClass::incPacketNumber() {

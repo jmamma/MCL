@@ -3,39 +3,50 @@
 #ifndef MCL_H__
 #define MCL_H__
 
-#include <string.h>
 #include <midi-common.hh>
+#include <string.h>
 
-#include "WProgram.h"
-#include "MD.h"
 #include "A4.h"
+#include "MD.h"
+#include "WProgram.h"
 
 #include "MCLGfx.h"
-#include "MCLSysConfig.h"
 #include "MCLSd.h"
+#include "MCLSysConfig.h"
 
 #include "Project.h"
 
-#include "MDExploit.h" //MDExploit should come before MCLSequencer for callback priority
-#include "NoteInterface.h"
 #include "Grid.h"
-#include "MCLSeq.h"
 #include "MCLActions.h"
+#include "MCLSeq.h"
+#include "MDExploit.h"
 #include "MDSysexCallbacks.h"
-#include "TurboLight.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
+#include "MidiSDS.hh"
+#include "MidiSDSSysex.hh"
+#include "NoteInterface.h"
+#include "TurboLight.h"
 
+#include "AuxPages.h"
 #include "GridPages.h"
+#include "MCLPages.h"
+#include "Osc.h"
+#include "OscMixerPage.h"
+#include "OscPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
-#include "AuxPages.h"
-#include "MCLPages.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
 
 #include "MDTrack.h"
+
+#include "Shared.h"
+#include "WavDesigner.h"
+#include "Wav.h"
+
+#include "DSP.h"
 
 #define VERSION 2014
 
@@ -56,7 +67,6 @@
 #define SEQ_RTRK_PAGE 11
 #define SEQ_RPTC_PAGE 14
 #define LOAD_PROJECT_PAGE 8
-
 
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;

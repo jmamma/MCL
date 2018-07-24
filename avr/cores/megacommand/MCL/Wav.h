@@ -60,8 +60,8 @@ public:
   File file;
   Wav() {
   }
-  bool open(char *file_name, uint16_t numChannels = 1,
-            uint32_t sampleRate = 44100, uint8_t bitRate = 16, bool overwrite = false);
+  bool open(char *file_name, bool overwrite = false, uint16_t numChannels = 1,
+            uint32_t sampleRate = 44100, uint8_t bitRate = 16);
   bool close(bool write = false);
   bool write_header();
   bool read_header();
@@ -72,6 +72,7 @@ public:
   bool read_samples(void *data, uint32_t num_samples,
                     uint32_t sample_offset = 0, uint8_t channel = 0);
   bool rename(char *new_name);
+  bool apply_gain(float gain, uint8_t channel = 0);
 };
 
 #endif /* WAV_H__ */

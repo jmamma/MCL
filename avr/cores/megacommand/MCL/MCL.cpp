@@ -41,9 +41,9 @@ void MCL::setup() {
   md_exploit.setup();
 
   mcl_seq.setup();
-
   A4SysexListener.setup();
 
+  MidiSDSSysexListener.setup();
   midi_setup.cfg_ports();
 
   // md_setup();
