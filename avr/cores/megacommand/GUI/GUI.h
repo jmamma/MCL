@@ -295,7 +295,11 @@ class GuiClass {
   void put_string_at(uint8_t idx, const char *str);
 	/** Display the program-space string at the given idx (in 1 character increments). **/
   void put_p_string_at(uint8_t idx, PGM_P str);
-	void put_string_at_noterminator(uint8_t idx, const char *str);
+	
+	
+	
+  void put_string_at_not(uint8_t idx, const char *str);
+  void put_string_at_noterminator(uint8_t idx, const char *str);
 	/** Display the string at the given idx (in 1 character increments) and fill up with whitespace. **/
   void put_string_at_fill(uint8_t idx, const char *str);
 	/** Display the program-space string at the given idx (in 1 character increments) and fill up with whitespace. **/

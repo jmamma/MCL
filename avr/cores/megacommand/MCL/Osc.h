@@ -6,13 +6,17 @@
 #include "MCL.h"
 #include "Math.h"
 
+#define SIN_OSC 1
+#define TRI_OSC 2
+#define PUL_OSC 3
+#define SAW_OSC 4
+#define USR_OSC 5
+
 class Osc {
 public:
-  static float sample_rate;
+  float sample_rate;
   uint8_t phase = 0;
-  Osc(float sample_rate_ = 44100) {
-    sample_rate = sample_rate_; 
-  }
+  Osc(float sample_rate_ = 44100) { sample_rate = sample_rate_; }
   virtual float get_sample(uint32_t sample_number, float freq, float phase);
 
   void set_sample_rate(float hz);
@@ -28,7 +32,7 @@ public:
 class PulseOsc : public Osc {
 
 public:
-  float width; //from 0 -> 1.0
+  float width; // from 0 -> 1.0
   float skew;
   float vmin;
   float vmax;
@@ -74,6 +78,13 @@ public:
   float get_sample(uint32_t sample_number, float freq, float phase);
 };
 
+class UsrOsc : public Osc {
 
+public:
+  UsrOsc(float sample_rate_ = 44100) { set_sample_rate(sample_rate_); }
+  float get_sample(uint32_t sample_number, float freq, float phase,
+                   uint8_t *usr_values);
+
+};
 
 #endif /* OSC_H__ */

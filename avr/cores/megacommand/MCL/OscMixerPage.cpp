@@ -13,22 +13,23 @@ void OscMixerPage::init() {
 void OscMixerPage::cleanup() { md_exploit.off(); }
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (BUTTON_PRESSED(Buttons.BUTTON3)) {
-    wav_designer.render();
+    wd.render();
+    wd.send();
     return true;
   }
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
-    GUI.setPage(&(wav_designer.pages[0]));
+    GUI.setPage(&(wd.pages[0]));
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER2)) {
-    GUI.setPage(&(wav_designer.pages[1]));
+    GUI.setPage(&(wd.pages[1]));
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER3)) {
-    GUI.setPage(&(wav_designer.pages[2]));
+    GUI.setPage(&(wd.pages[2]));
 
     return true;
   }
@@ -48,26 +49,127 @@ void OscMixerPage::display() {
 
   GUI.put_value_at2(0, enc1.cur);
 
-  GUI.put_value_at2(4, enc2.cur);
+  GUI.put_value_at2(3, enc2.cur);
 
-  GUI.put_value_at2(8, enc3.cur);
+  GUI.put_value_at2(6, enc3.cur);
 
-  GUI.put_value_at(12, enc4.cur);
+  GUI.put_value_at2(9, enc4.cur);
 
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
   draw_levels();
+  draw_wav();
   oled_display.display();
 }
 float OscMixerPage::get_max_gain() {
-  float max_gain = (float)0x7FFE / num_of_channels;
+  float max_gain = (float)MAX_HEADROOM / (num_of_channels);
   return max_gain;
 }
 float OscMixerPage::get_gain(uint8_t channel) {
   MCLEncoder *enc_ = (MCLEncoder *)(encoders[channel]);
-  float max_gain = (float)0x7FFE / num_of_channels;
+  float max_gain = (float)MAX_HEADROOM / (num_of_channels);
   return ((float)enc_->cur / (float)127) * max_gain;
 }
+
+void OscMixerPage::draw_wav() {
+  uint8_t x = 64;
+  uint8_t y = 0;
+  uint8_t h = 30;
+  uint8_t w = 128 - x;
+  TriOsc tri_osc(w);
+  PulseOsc pul_osc(w);
+  SawOsc saw_osc(w);
+  SineOsc sine_osc(w);
+  UsrOsc usr_osc(w);
+  float max_sine_gain = (float)1 / (float)16;
+
+  // Work out lowest base frequency.
+  float fund_freq = 20000;
+  uint8_t lowest_osc_freq = 0;
+  uint8_t i = 0;
+  for (i = 0; i < 3; i++) {
+    if (wd.pages[i].get_freq() < fund_freq) {
+      fund_freq = wd.pages[i].get_freq();
+      lowest_osc_freq = i;
+    }
+  }
+  float freqs[3];
+  for (i = 0; i < 3; i++) {
+    if (lowest_osc_freq == i) {
+      freqs[i] = 1;
+    } else {
+      freqs[i] = wd.pages[i].get_freq() / wd.pages[lowest_osc_freq].get_freq();
+    }
+  }
+  float buffer[w];
+  float largest_sample_so_far;
+  for (uint32_t n = 0; n < w; n++) {
+    float sample = 0;
+
+    // Render each oscillator
+    for (i = 0; i < 3; i++) {
+      float osc_sample = 0;
+      switch (wd.pages[i].get_osc_type()) {
+      case 0:
+        osc_sample += 0;
+        break;
+      // Sine wave with 16 overtones.
+      case 1:
+        for (uint8_t f = 1; f <= 16; f++) {
+          // osc_sample += sine_gain * sine_osc.get_sample(n,
+          // wd.pages[i].get_freq() * (float) h, 0);
+          if (wd.pages[i].sine_levels[f - 1] != 0) {
+
+            float sine_gain =
+                ((float)wd.pages[i].sine_levels[f - 1] / (float)127) *
+                max_sine_gain;
+
+            osc_sample +=
+                sine_osc.get_sample(n, freqs[i] * (float)f, 0) * sine_gain;
+          }
+        }
+        osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
+        break;
+      case 2:
+        osc_sample += tri_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        break;
+      case 3:
+        osc_sample += pul_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        break;
+      case 4:
+        osc_sample += saw_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        break;
+      case 5:
+        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].get_phase(),
+                                         wd.pages[i].usr_values);
+        break;
+      }
+      // Sum oscillator samples together
+      sample += dsp.saturate((osc_sample * wd.mixer.get_gain(i)),
+                             wd.mixer.get_max_gain());
+      // DEBUG_PRINTLN(mixer.get_gain(i));
+    }
+    // Check for overflow outside of int16_t ranges.
+    dsp.saturate(sample, (float)MAX_HEADROOM);
+    sample = sample / MAX_HEADROOM;
+
+    buffer[n] = sample;
+    if (abs(buffer[n]) > largest_sample_so_far) {
+      largest_sample_so_far = abs(buffer[n]);
+    }
+  }
+  for (i = 0; i < w; i++) {
+
+    uint8_t pixel_y =
+        (uint8_t)(((buffer[i]) * (float)(h / 2)) + (h / 2));
+    oled_display.drawPixel(i + x, pixel_y + y, WHITE);
+    // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
+    if (i % 2 == 0) {
+      oled_display.drawPixel(i + x, (h / 2) + y, WHITE);
+    }
+  }
+}
+
 void OscMixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
   uint8_t scaled_level;

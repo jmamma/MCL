@@ -3,17 +3,16 @@
 #include "Math.h"
 #include "Osc.h"
 
-float Osc::sample_rate;
-
+float Osc::get_sample(uint32_t sample_number, float freq, float phase) {
+ return 0;
+}
 void Osc::set_sample_rate(float hz) { sample_rate = hz; }
 
 float SineOsc::get_sample(uint32_t sample_number, float freq, float phase) {
 
   float sample_duration = (float)1 / (float)sample_rate;
   // float sample_duration = (float) 1 / (float) freq;
-  float sample_time = sample_duration * sample_number;
-  float radians = 2 * PI * (freq);
-  return sin(2 * PI * freq * sample_number * sample_duration);
+  return -1 * sin(2 * PI * freq * sample_number * sample_duration);
   // return sin(radians * sample_time);
 }
 
@@ -21,6 +20,7 @@ float PulseOsc::get_sample(uint32_t sample_number, float freq, float phase) {
 
   float n_cycle = floor(sample_rate / freq);
 
+  sample_number = sample_number + (n_cycle);
   float n =
       (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
   float n_edge = floor(n_cycle * width);
@@ -38,6 +38,7 @@ float SawOsc::get_sample(uint32_t sample_number, float freq, float phase) {
 
   float n_cycle = floor(sample_rate / freq);
 
+  sample_number = sample_number + (n_cycle);
   float n =
       (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
 
@@ -46,8 +47,10 @@ float SawOsc::get_sample(uint32_t sample_number, float freq, float phase) {
   float y = a * n + b;
   return y;
 }
+
 float TriOsc::get_sample(uint32_t sample_number, float freq, float phase) {
   float n_cycle = floor(sample_rate / freq);
+  sample_number = sample_number + (n_cycle * .75);
 
   float n = sample_number - floor(sample_number / n_cycle) * n_cycle;
   float n_edge = floor(n_cycle * width);
@@ -63,4 +66,35 @@ float TriOsc::get_sample(uint32_t sample_number, float freq, float phase) {
     float y = a * n + b;
     return y;
   }
+}
+
+float UsrOsc::get_sample(uint32_t sample_number, float freq, float phase,
+                         uint8_t *usr_values) {
+
+  float n_cycle = floor(sample_rate / freq);
+
+  float n = sample_number - floor(sample_number / n_cycle) * n_cycle;
+
+  float partition_size_n = n_cycle / (float)16;
+
+  int start = floor(n / partition_size_n);
+  float n_start = start * partition_size_n;
+  int end;
+  float n_end;
+  if (start < 15) {
+    end = start + 1;
+    n_end = end * partition_size_n;
+
+  } else {
+    end = 0;
+    n_end = n_cycle;
+  }
+  float v_start = -1 * (float)(usr_values[start] - 64) / (float)64;
+  float v_end = -1 * (float)(usr_values[end] - 64) / (float)64;
+
+  float m = ((v_end - v_start) / (n_end - n_start));
+  float b = v_start - m * n_start;
+  float y = m * n + b;
+
+  return y;
 }

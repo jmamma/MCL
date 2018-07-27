@@ -39,6 +39,7 @@ public:
   float get_max_gain();
   float get_gain(uint8_t channel);
   void draw_levels();
+  void draw_wav();
 };
 
 #endif /* OSCMIXERPAGE_H__ */

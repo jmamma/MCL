@@ -24,11 +24,12 @@ public:
   MCLEncoder enc4;
 
   uint8_t sine_levels[16];
-  uint8_t custom_values[16];
+  uint8_t usr_values[16];
+  float largest_sine_peak;
   OscPage() {
-    enc1.initMCLEncoder(0, 4, 0, ENCODER_RES_SEQ);
+    enc1.initMCLEncoder(0, 5, 0, ENCODER_RES_SEQ);
     enc2.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
-    enc3.initMCLEncoder(0, 180, 0, ENCODER_RES_SEQ);
+    enc3.initMCLEncoder(-99, 99, 0, ENCODER_RES_SEQ);
     enc4.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
 
     encoders[0] = (Encoder *)&enc1;
@@ -46,6 +47,12 @@ public:
   void loop();
   void cleanup();
   void draw_levels();
+  void draw_usr();
+  void draw_tri();
+  void draw_saw();
+  void draw_pul();
+  void draw_wav(uint8_t wav_type);
+  void calc_largest_sine_peak();
   float get_freq();
   float get_phase();
   uint8_t get_osc_type();
