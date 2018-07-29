@@ -27,6 +27,7 @@ MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf, uint16_t _sysexB
 	sysexBufLen = _sysexBufLen;
   midiActive = true;
   uart = _uart;
+  midiSysex.uart = _uart;
   receiveChannel = 0xFF;
   init();
 }

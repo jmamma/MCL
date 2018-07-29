@@ -473,6 +473,10 @@ void MCLActions::send_pattern_kit_to_md() {
   if (mcl_actions_callbacks.start_clock32th > MidiClock.div32th_counter) {
     mcl_actions_callbacks.start_clock32th = 0;
   }
+  if (mcl_actions_callbacks.start_clock96th > MidiClock.div96th_counter) {
+    mcl_actions_callbacks.start_clock96th = 0;
+  }
+ 
   if (quantize_mute > 0) {
     if (MidiClock.state == 2) {
       if ((q_pattern_change != 1) && (quantize_mute <= 64)) {

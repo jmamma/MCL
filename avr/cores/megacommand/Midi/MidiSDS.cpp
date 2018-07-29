@@ -89,7 +89,6 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
   loopStart = loop_start;
   loopEnd = loop_end;
   packetNumber = 0;
-  sampleNumber = 0;
   DEBUG_PRINTLN("sending dump");
   DEBUG_PRINTLN(sampleLength);
   sendDumpHeader();

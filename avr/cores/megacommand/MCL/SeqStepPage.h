@@ -12,8 +12,6 @@ public:
   void setup_callbacks();
   void remove_callbacks();
 
-  void onNoteOnCallback_Midi2(uint8_t *msg);
-  void onNoteOffCallback_Midi2(uint8_t *msg);
 };
 
 class SeqStepPage : public SeqPage {

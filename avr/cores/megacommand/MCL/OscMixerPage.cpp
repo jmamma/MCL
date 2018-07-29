@@ -6,15 +6,45 @@ void OscMixerPage::setup() {}
 void OscMixerPage::init() {
   create_chars_mixer();
   classic_display = false;
-  md_exploit.on();
-  note_interface.state = true;
+  oled_display.clearDisplay();
 }
-
-void OscMixerPage::cleanup() { md_exploit.off(); }
+void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (BUTTON_PRESSED(Buttons.BUTTON3)) {
     wd.render();
     wd.send();
+    uint32_t myclock = slowclock;
+    // stored.
+
+    //    while (clock_diff(myclock, slowclock) < 5000)
+
+  //    ;
+
+    //   MidiUart.sendCC(n, 122, 0);
+
+    //    MidiUart.sendCC(n, 122, 127);
+    //   MD.setStatus(0x22, 2);
+    //   MD.setTrackParam(2,2,125);
+    //   MD.setTrackParam(2,2,124);
+  //  MD.getBlockingStatus(MD_CURRENT_GLOBAL_SLOT_REQUEST, CALLBACK_TIMEOUT);
+  //  md_exploit.send_globals();
+    //  for (uint8_t n = 0; n < 127; n++) {
+    //   MD.sendRequest(n,0);
+    //   delay(200);
+    //}
+    //    md_exploit.switch_global(7);
+    // MidiUart.m_putc(0xFF);
+/*
+    for (uint8_t n = 0; n < 16; n++) {
+      MidiUart.sendCC(n, 120, 0);
+
+      MidiUart.sendCC(n, 121, 0);
+
+      MidiUart.sendCC(n, 123, 0);
+    }
+
+    MD.setStatus(0x22, 2);
+  */
     return true;
   }
 
@@ -43,8 +73,10 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
 
 void OscMixerPage::loop() {}
 void OscMixerPage::display() {
-  oled_display.clearDisplay();
+  // oled_display.clearDisplay();
+  oled_display.fillRect(0, 0, 64, 32, BLACK);
   GUI.setLine(GUI.LINE1);
+
   GUI.put_string_at(0, "                ");
 
   GUI.put_value_at2(0, enc1.cur);
@@ -58,6 +90,7 @@ void OscMixerPage::display() {
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
   draw_levels();
+  scanline_width = 4;
   draw_wav();
   oled_display.display();
 }
@@ -101,11 +134,11 @@ void OscMixerPage::draw_wav() {
       freqs[i] = wd.pages[i].get_freq() / wd.pages[lowest_osc_freq].get_freq();
     }
   }
-  float buffer[w];
+  // float buffer[w];
+  oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK); 
   float largest_sample_so_far;
-  for (uint32_t n = 0; n < w; n++) {
+  for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
     float sample = 0;
-
     // Render each oscillator
     for (i = 0; i < 3; i++) {
       float osc_sample = 0;
@@ -153,21 +186,27 @@ void OscMixerPage::draw_wav() {
     dsp.saturate(sample, (float)MAX_HEADROOM);
     sample = sample / MAX_HEADROOM;
 
-    buffer[n] = sample;
-    if (abs(buffer[n]) > largest_sample_so_far) {
-      largest_sample_so_far = abs(buffer[n]);
-    }
-  }
-  for (i = 0; i < w; i++) {
-
-    uint8_t pixel_y =
-        (uint8_t)(((buffer[i]) * (float)(h / 2)) + (h / 2));
-    oled_display.drawPixel(i + x, pixel_y + y, WHITE);
+    //  buffer[n] = sample;
+    //  if (abs(buffer[n]) > largest_sample_so_far) {
+    //  largest_sample_so_far = abs(buffer[n]);
+    //  }
+    uint8_t pixel_y = (uint8_t)(((sample) * (float)(h / 2)) + (h / 2));
+    oled_display.drawPixel(n + x, pixel_y + y, WHITE);
     // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
-    if (i % 2 == 0) {
-      oled_display.drawPixel(i + x, (h / 2) + y, WHITE);
+    if (n % 2 == 0) {
+      oled_display.drawPixel(n + x, (h / 2) + y, WHITE);
     }
   }
+
+  sample_number += scanline_width;
+
+  if (sample_number > 128 - x) {
+    sample_number = 0;
+  }
+
+  // for (i = 0; i < w; i++) {
+
+  // }
 }
 
 void OscMixerPage::draw_levels() {

@@ -46,6 +46,9 @@ void LightPage::update() {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL)
       encoders[i]->update(_encoders + i);
+      if (encoders[i]->hasChanged()) {
+      redisplay = true;
+      }
   }
 }
 

@@ -23,9 +23,12 @@ public:
   MCLEncoder enc3;
   MCLEncoder enc4;
 
+  uint8_t sample_number = 0;
+  uint8_t scanline_width;
   uint8_t sine_levels[16];
   uint8_t usr_values[16];
   float largest_sine_peak;
+  static uint32_t exploit_delay_clock;
   OscPage() {
     enc1.initMCLEncoder(0, 5, 0, ENCODER_RES_SEQ);
     enc2.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);

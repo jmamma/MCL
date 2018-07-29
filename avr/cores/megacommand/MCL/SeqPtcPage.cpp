@@ -78,6 +78,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
 }
 void SeqPtcPage::display() {
   uint8_t dev_num;
+  if (!redisplay) { return true; }
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
   } else {
@@ -222,7 +223,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-
+  redisplay = true;
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     record_mode = !record_mode;
     return true;

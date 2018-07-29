@@ -17,6 +17,7 @@ public:
       pages[i].id = i;
     }
     pages[0].enc1.cur = 1;
+    mixer.enc4.cur = 37;
   }
   bool render();
   bool send();

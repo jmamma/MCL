@@ -37,13 +37,12 @@ void PulseOsc::set_skew(float skew_) { skew = skew_; }
 float SawOsc::get_sample(uint32_t sample_number, float freq, float phase) {
 
   float n_cycle = floor(sample_rate / freq);
-
-  sample_number = sample_number + (n_cycle);
+  sample_number = sample_number + (n_cycle * .5);
   float n =
       (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
 
-  float a = ((vmax - vmin) / n_cycle);
-  float b = vmin;
+  float a = ((vmin - vmax) / n_cycle);
+  float b = vmax;
   float y = a * n + b;
   return y;
 }

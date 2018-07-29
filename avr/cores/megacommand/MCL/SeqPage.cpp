@@ -81,7 +81,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
-void SeqPage::draw_lock_mask(uint8_t offset) {
+void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char str[17] = "----------------";
@@ -96,7 +96,7 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
 
     if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
       str[i] = ' ';
-    } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
+    } else if ((show_current_step) && (step_count == i + offset) && (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
       if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
@@ -137,7 +137,7 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
   GUI.put_string_at(0, str);
 }
 
-void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
+void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -149,17 +149,30 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
 
     for (int i = 0; i < 16; i++) {
       if (device == DEVICE_MD) {
-        uint8_t step_count = (MidiClock.div16th_counter -
+       // uint32_t new_count = MidiClock.div96th_counter;
+        #ifdef OLED_DISPLAY
+        uint32_t count_16th = (MidiClock.div96th_counter + 3) / 6;
+        #else
+        uint32_t count_16th = MidiClock.div96th_counter / 6;
+        #endif
+        uint8_t step_count = (count_16th -
+                              mcl_actions_callbacks.start_clock96th / 5) -
+                             (mcl_seq.md_tracks[last_md_track].length *
+                              ((count_16th -
+                                mcl_actions_callbacks.start_clock96th / 5) /
+                               mcl_seq.md_tracks[last_md_track].length));
+        /*uint8_t step_count = (MidiClock.div16th_counter -
                               mcl_actions_callbacks.start_clock32th / 2) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
                                 mcl_actions_callbacks.start_clock32th / 2) /
-                               mcl_seq.md_tracks[last_md_track].length));
-
+                               mcl_seq.md_tracks[last_md_track].length)); */
+#ifdef OLED_DISPLAY
+ #endif
         if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
           mystr[i] = ' ';
-        } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
-          mystr[i] = ' ';
+        } else if ((show_current_step) && (step_count == i + offset) && (MidiClock.state == 2)) {
+           mystr[i] = ' ';
         } else if (note_interface.notes[i] == 1) {
           /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY

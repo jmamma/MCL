@@ -6,6 +6,9 @@
 void GridPage::init() {
   reload_slot_models = false;
   md_exploit.off();
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
 }
 void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};

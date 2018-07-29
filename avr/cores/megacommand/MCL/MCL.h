@@ -25,6 +25,8 @@
 #include "MidiSetup.h"
 #include "MidiSDS.hh"
 #include "MidiSDSSysex.hh"
+#include "MidiID.hh"
+#include "MidiIDSysex.hh"
 #include "NoteInterface.h"
 #include "TurboLight.h"
 

@@ -1,6 +1,8 @@
 #include "MCL.h"
 #include "SeqStepPage.h"
 
+#define MIDI_OMNI_MODE 17
+
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
@@ -15,7 +17,6 @@ void SeqStepPage::init() {
   ((MCLEncoder *)encoders[2])->max = 64;
   ((MCLEncoder *)encoders[3])->max = 16;
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
-
   curpage = SEQ_STEP_PAGE;
 }
 void SeqStepPage::cleanup() {
@@ -74,7 +75,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
-        GUI.setPage(&seq_extstep_page);
+        // GUI.setPage(&seq_extstep_page);
         return true;
       }
       if ((track + (page_select * 16)) >=
@@ -110,23 +111,23 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       // condition = 3;
       mcl_seq.md_tracks[last_md_track]
           .conditional[(track + (page_select * 16))] = condition;
-      mcl_seq.md_tracks[last_md_track]
-          .timing[(track + (page_select * 16))] = utiming; // upper
+      mcl_seq.md_tracks[last_md_track].timing[(track + (page_select * 16))] =
+          utiming; // upper
 
       //   conditional_timing[cur_col][(track + (encoders[1]->cur * 16))] =
       //   condition; //lower
 
       if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
-                              (track + (page_select * 16)))) {
-              DEBUG_PRINTLN("setting bit");
-              DEBUG_PRINT(track + (page_select * 16));
+                        (track + (page_select * 16)))) {
+        DEBUG_PRINTLN("setting bit");
+        DEBUG_PRINT(track + (page_select * 16));
         SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                   (track + (page_select * 16)));
       } else {
         DEBUG_PRINTLN("Trying to clear");
         if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
-              DEBUG_PRINTLN("clearing bit");
-            DEBUG_PRINT(track + (page_select * 16));
+          DEBUG_PRINTLN("clearing bit");
+          DEBUG_PRINT(track + (page_select * 16));
           CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask,
                       (track + (page_select * 16)));
         }
@@ -171,3 +172,5 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
+
+
