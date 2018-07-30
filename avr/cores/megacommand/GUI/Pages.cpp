@@ -44,11 +44,12 @@ void LightPage::update() {
   CLEAR_LOCK();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    if (encoders[i] != NULL)
+    if (encoders[i] != NULL) {
       encoders[i]->update(_encoders + i);
       if (encoders[i]->hasChanged()) {
       redisplay = true;
       }
+    }
   }
 }
 
@@ -76,9 +77,10 @@ void EncoderPage::update() {
   //CLEAR_LOCK();
   
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    if (encoders[i] != NULL) 
+    if (encoders[i] != NULL)  {
       encoders[i]->update(_encoders + i);
-  }
+    }
+    }
 }
 
 void EncoderPage::clear() {
