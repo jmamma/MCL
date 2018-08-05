@@ -17,17 +17,20 @@ void OscPage::setup() {
 float OscPage::get_freq() {
   float fzero = 440;
   float a = pow(2.00, 1.00 / 12.00);
-  float n = enc2.cur - 64;
+  float n = enc1.cur - 64;
   float fn = fzero * pow(a, n);
-  float fout = fn * pow(2, (float)(enc3.cur - 100) / (float)1200);
+  float fout = fn * pow(2, (float)(enc2.cur - 100) / (float)1200);
   return fout;
 }
 void OscPage::init() {
   DEBUG_PRINTLN("seq extstep init");
+  wd.last_page = this;
   create_chars_mixer();
   // md_exploit.on();
   note_interface.state = true;
+  #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
+  #endif
 }
 
 void OscPage::cleanup() {
@@ -35,27 +38,45 @@ void OscPage::cleanup() {
   DEBUG_PRINT_FN();
 }
 bool OscPage::handleEvent(gui_event_t *event) {
-  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
-    //  md_exploit.off();
-    //  delay(1000);
-    //   wd.render();
-    //   wd.send();
-    //  exploit_delay_clock = slowclock;
+  if (BUTTON_PRESSED(Buttons.BUTTON1)) {
+    osc_waveform++;
+    if (osc_waveform > 5) {
+      osc_waveform = 0;
+    }
+    return true;
+  }
+
+  if (BUTTON_PRESSED(Buttons.BUTTON4)) {
+    // md_exploit.off();
+    // wd.render();
+    // wd.send();
+     //  exploit_delay_clock = slowclock;
     return true;
   }
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
-    GUI.setPage(&(wd.pages[0]));
-
+    if (id == 0) {
+      GUI.setPage(&grid_page);
+    } else {
+      GUI.setPage(&(wd.pages[0]));
+    }
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER2)) {
-    GUI.setPage(&(wd.pages[1]));
+    if (id == 1) {
+      GUI.setPage(&grid_page);
+    } else {
+      GUI.setPage(&(wd.pages[1]));
+    }
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER3)) {
-    GUI.setPage(&(wd.pages[2]));
+    if (id == 2) {
+      GUI.setPage(&grid_page);
+    } else {
+      GUI.setPage(&(wd.pages[2]));
+    }
 
     return true;
   }
@@ -85,7 +106,7 @@ void OscPage::loop() {
   int8_t diff = enc_->cur - enc_->old;
   for (int i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
-      if (enc1.cur == SIN_OSC) {
+      if (osc_waveform == SIN_OSC) {
         newval = sine_levels[i] + diff;
 
         if (newval < 0) {
@@ -97,7 +118,7 @@ void OscPage::loop() {
 
         sine_levels[i] = newval;
       }
-      if (enc1.cur == USR_OSC) {
+      if (osc_waveform == USR_OSC) {
         newval = usr_values[i] + diff;
         if (newval < 0) {
           newval = 0;
@@ -112,9 +133,8 @@ void OscPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
 
-  if ((enc1.cur == SIN_OSC) || (enc1.cur == USR_OSC)) {
-    if ((!md_exploit.state) &&
-        (clock_diff(exploit_delay_clock, slowclock) > 5000)) {
+  if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
+    if (!md_exploit.state) {
       md_exploit.on();
       note_interface.state = true;
     }
@@ -128,7 +148,9 @@ void OscPage::loop() {
 }
 void OscPage::display() {
   // oled_display.clearDisplay();
+  if (!classic_display) {
   oled_display.fillRect(0, 0, 64, 32, BLACK);
+  }
   GUI.setLine(GUI.LINE1);
 
   MusicalNotes number_to_note;
@@ -138,7 +160,7 @@ void OscPage::display() {
 
   uint8_t c = 0;
   uint8_t i = 0;
-  switch (enc1.cur) {
+  switch (osc_waveform) {
   case 0:
     draw_wav(0);
     GUI.put_string_at_not(0, "--");
@@ -147,7 +169,9 @@ void OscPage::display() {
     GUI.put_string_at_not(0, "SIN");
     draw_levels();
     for (i = 0; i < 16; i++) {
-    if (sine_levels[i] > 0) { c++; }
+      if (sine_levels[i] > 0) {
+        c++;
+      }
     }
     scanline_width = 64 / c;
     draw_wav(SIN_OSC);
@@ -174,46 +198,66 @@ void OscPage::display() {
     draw_usr();
     break;
   }
-  uint8_t s = enc2.cur - 7;
-  uint8_t note = s - (floor(s / 12) * 12);
 
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at_not(4, number_to_note.notes_upper[note]);
-  GUI.put_value_at1(6, floor(s / 12));
-
-  if (enc3.cur < 0) {
-    GUI.put_string_at(7, "-");
+    GUI.setLine(GUI.LINE1);
+  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+    float freq = get_freq();
+    float upper = floor(freq / 1000);
+    float lower = floor(freq - (upper * 1000));
+    GUI.put_value_at1(4, (uint8_t) upper);
+    GUI.put_value_at(5, (int16_t) lower);
+    GUI.put_string_at(8,"Hz");
+    // GUI.printf_at(6, "%f", freq);
   } else {
-    GUI.put_string_at(7, "+");
+    uint8_t s = enc1.cur - 8;
+    uint8_t note = s - (floor(s / 12) * 12);
+#ifndef OLED_DISPLAY
+    GUI.put_value_at2(5, enc3.cur);
+    GUI.put_string_at(7,"%");
+#endif
+    GUI.put_string_at_not(4, number_to_note.notes_upper[note]);
+    GUI.put_value_at1(6, floor(s / 12));
+    if (enc3.cur < 0) {
+      GUI.put_string_at(7, "-");
+    } else {
+      GUI.put_string_at(7, "+");
+    }
+    GUI.put_value_at2(8, enc2.cur);
   }
-  GUI.put_value_at2(8, enc3.cur);
   GUI.put_string_at(10, "\0");
   //  GUI.put_string_at(0, my_str);
-
+  if (!classic_display) {
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
   GUI.lines[0].changed = false;
+  }
+#ifdef OLED_DISPLAY
   oled_display.display();
+#endif
 }
 void OscPage::draw_wav(uint8_t wav_type) {
+  #ifndef OLED_DISPLAY
+   return;
+  #endif
   uint8_t x = 64;
   uint8_t y = 0;
   uint8_t h = 30;
   uint8_t w = 128 - x;
-  TriOsc tri_osc(w);
-  PulseOsc pul_osc(w);
-  SawOsc saw_osc(w);
+  float osc_width = get_width();
+  TriOsc tri_osc(w, osc_width);
+  PulseOsc pul_osc(w, osc_width);
+  SawOsc saw_osc(w, osc_width);
   SineOsc sine_osc(w);
   UsrOsc usr_osc(w);
   float sample;
   float max_sine_gain = (float)1 / (float)16;
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
-    oled_display.fillRect(n + x, 0, scanline_width, 32, BLACK);
+  oled_display.fillRect(n + x, 0, scanline_width, 32, BLACK);
   for (uint8_t n = sample_number; n < sample_number + scanline_width; n++) {
-  //  if ((scanline_width < w) && (wav_type > 0)) {
+    //  if ((scanline_width < w) && (wav_type > 0)) {
     //  oled_display.drawLine(n + x, 0, n + x, 32, BLACK);
-   // }
+    // }
     switch (wav_type) {
     case SIN_OSC:
       sample = 0;
@@ -267,9 +311,14 @@ void OscPage::draw_usr() {
   uint8_t y = 0;
   UsrOsc usr_osc(w);
 
+  #ifndef OLED_DISPLAY
+  GUI.setLine(GUI.LINE2);
+  char str[17] = "                "; 
+  #endif
   for (uint8_t i = 0; i < 16; i++) {
-
     sample = usr_osc.get_sample((uint32_t)i * 4, 1, 0, usr_values);
+
+    #ifdef OLED_DISPLAY
 
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
     if (note_interface.notes[i] == 1) {
@@ -277,12 +326,24 @@ void OscPage::draw_usr() {
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);
       oled_display.drawRect(63 + i * 4, pixel_y - 1, 3, 3, WHITE);
     }
+    #else
+    int scaled_level = (int)((float) (sample + 1.0) * .5 * 7.00); 
+    if (scaled_level == 7) {
+       str[i] = (char)(255);
+    } else if (scaled_level > 0) {
+      str[i] = (char)(scaled_level + 2); 
+    }
+    #endif
   }
-  //  GUI.put_string_at(0, str);
+   #ifndef OLED_DISPLAY
+   GUI.put_string_at(0, str);
+   #endif
 }
 
 void OscPage::draw_levels() {
+#ifndef OLED_DISPLAY
   GUI.setLine(GUI.LINE2);
+#endif
   uint8_t scaled_level;
   char str[17] = "                ";
   uint8_t x = 64;
@@ -305,15 +366,18 @@ void OscPage::draw_levels() {
 
     scaled_level = (int)(((float)sine_levels[i] / (float)127) * 7);
     if (scaled_level == 7) {
-
-    } else if (scaled_xlevel > 0) {
+str[i] = (char)(255);
+    } else if (scaled_level > 0) {
       str[i] = (char)(scaled_level + 2);
     }
 
 #endif
   }
+#ifndef OLED_DISPLAY
   GUI.put_string_at(0, str);
+#endif
 }
 
-float OscPage::get_phase() { return enc3.cur; }
-uint8_t OscPage::get_osc_type() { return enc1.cur; }
+float OscPage::get_phase() { return 0; }
+float OscPage::get_width() { return enc3.cur / 128.00; }
+uint8_t OscPage::get_osc_type() { return osc_waveform; }

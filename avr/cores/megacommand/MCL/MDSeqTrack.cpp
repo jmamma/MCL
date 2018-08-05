@@ -84,6 +84,22 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
     MD.triggerTrack(track_number, 127);
   }
 }
+
+uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
+  uint8_t match = 255;
+  uint8_t c = 0;
+  // Let's try and find an existing param
+  for (c = 0; c < 4 && match == 255; c++) {
+    if (locks_params[c] == (track_param + 1)) {
+      match = c;
+    }
+  }
+  if (match != 255) {
+    return locks[match][step];
+  }
+  return 255;
+}
+
 void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
   uint8_t match = 255;
@@ -186,6 +202,12 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
   timing[step] = utiming;
 }
 
+void MDSeqTrack::clear_step_locks(uint8_t step) {
+  for (uint8_t c = 0; c < 4; c++) {
+    locks[c][step] = 0;
+  }
+  CLEAR_BIT64(lock_mask, step);
+}
 void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < 64; c++) {
     conditional[c] = 0;

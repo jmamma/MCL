@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2013
+#define CONFIG_VERSION 2015
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 16
@@ -25,6 +25,8 @@ public:
   uint8_t cur_col;
   uint8_t poly_max;
   uint8_t uart2_ctrl_mode;
+  uint32_t mutes;
+  uint8_t display_mirror;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

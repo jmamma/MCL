@@ -27,7 +27,7 @@ void SeqPage::setup() {
 
     MD.getBlockingKit(MD.currentKit);
     MD.getCurrentTrack(CALLBACK_TIMEOUT);
-
+    last_md_track = MD.currentTrack;
     ((MCLEncoder *)encoders[1])->min = 0;
     grid_page.cur_col = last_md_track;
   }
@@ -151,7 +151,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device, bool show_curren
       if (device == DEVICE_MD) {
        // uint32_t new_count = MidiClock.div96th_counter;
         #ifdef OLED_DISPLAY
-        uint32_t count_16th = (MidiClock.div96th_counter + 3) / 6;
+        uint32_t count_16th = (MidiClock.div96th_counter + 9) / 6;
         #else
         uint32_t count_16th = MidiClock.div96th_counter / 6;
         #endif

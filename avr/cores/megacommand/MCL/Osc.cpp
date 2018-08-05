@@ -41,10 +41,16 @@ float SawOsc::get_sample(uint32_t sample_number, float freq, float phase) {
   float n =
       (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
 
-  float a = ((vmin - vmax) / n_cycle);
+  float n_edge = floor(n_cycle * (width + .5));
+  float a = ((vmin - vmax) / n_edge);
   float b = vmax;
   float y = a * n + b;
+  if (n < n_edge) {
   return y;
+  }
+  else {
+  return vmax;
+  }
 }
 
 float TriOsc::get_sample(uint32_t sample_number, float freq, float phase) {

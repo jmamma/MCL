@@ -15,6 +15,8 @@ uint8_t MidiActivePeering::get_device(uint8_t port) {
 
 void MidiActivePeering::md_setup() {
   DEBUG_PRINT_FN();
+  
+  MidiIDSysexListener.setup();
   MidiUart.set_speed((uint32_t)31250, 1);
 
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
@@ -39,7 +41,7 @@ void MidiActivePeering::md_setup() {
           MD.setStatus(0x22, y);
         }
       }
- //     MD.setStatus(0x22, curtrack);
+      MD.setStatus(0x22,0);
       MD.connected = true;
       GUI.flash_strings_fill("MD", "CONNECTED");
 
@@ -47,6 +49,8 @@ void MidiActivePeering::md_setup() {
     }
   }
   MD.connected = false;
+
+  MidiIDSysexListener.cleanup();
 }
 
 void MidiActivePeering::a4_setup() {
@@ -68,8 +72,6 @@ void MidiActivePeering::a4_setup() {
   }
 }
 void MidiActivePeering::check() {
-  DEBUG_PRINT_FN();
-  MidiIDSysexListener.setup();
   char str[16];
   uint8_t uart1_device = MidiUart.device.get_id();
   uint8_t uart2_device = MidiUart2.device.get_id();
@@ -101,5 +103,4 @@ void MidiActivePeering::check() {
     }
   }
 
-  MidiIDSysexListener.cleanup();
 }

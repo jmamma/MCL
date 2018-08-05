@@ -36,9 +36,9 @@ public:
   float skew;
   float vmin;
   float vmax;
-  PulseOsc(float sample_rate_ = 44100) {
+  PulseOsc(float sample_rate_ = 44100, float width_ = 0.5) {
     set_sample_rate(sample_rate_);
-    set_width(0.5);
+    set_width(width_);
     skew = 0.05;
     vmax = 1;
     vmin = -1;
@@ -54,11 +54,13 @@ public:
   float skew;
   float vmin;
   float vmax;
-  SawOsc(float sample_rate_ = 44100) {
+  float width;
+  SawOsc(float sample_rate_ = 44100, float width_ = 0.5) {
     set_sample_rate(sample_rate_);
     skew = 2;
     vmax = 1;
     vmin = -1;
+    width = width_;
   }
   float get_sample(uint32_t sample_number, float freq, float phase);
 };
@@ -69,11 +71,11 @@ public:
   float width;
   float vmin;
   float vmax;
-  TriOsc(float sample_rate_ = 44100) {
+  TriOsc(float sample_rate_ = 44100, float width_ = 0.5) {
     set_sample_rate(sample_rate_);
     vmax = 1;
     vmin = -1;
-    width = 0.5;
+    width = width_;
   }
   float get_sample(uint32_t sample_number, float freq, float phase);
 };

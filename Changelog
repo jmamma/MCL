@@ -1,0 +1,79 @@
+MCL 2.15 4/07/2018
+
+Important:
+
+MachineDrum Kit 64 is now used as a buffer kit. This kit will be overwritten
+and should not be used.
+
+ - In order to get the current state of the MD kit, the current kit needs to be saved.
+   To prevent unintended overwrites of your current work, we now use kit 63 as a temporary location for 
+   saving and retrieving the current kit.
+
+SystemConfig updated requiring new Project Creation on startup.
+ 
+ - Mute mask was added to the system config. Any changes to the system config
+ layout require a new project to be created on first boot. Old projects are
+ still compatible and can be loaded from the 'Load Project' menu.
+
+Features Added:
+
+Quick PageSelect
+
+- Shift Button 2 now accesses a page quick select menu.
+MD trigger buttons 1 -> 16 can be used to select various pages quickly.
+Alternatively rotary encoder 1 can be used to scroll through available pages.
+Currently (Mute, Mixer, Cue and Wav Designer) pages are accessible through
+this menu.
+
+Wav Designer.
+
+3 Oscillator Additive Synthesiser. Generates single cycle waveforms and sends
+them to a MD sample slot.
+
+Sample Support.
+
+MidiSDS sample format send/rec supported. Used for Wav designer.
+WAV file library has been added. should support 8->24bit samples multi
+channel.
+
+Mute Page
+
+A replacement for the MD mute menu. This features quantisation modes.
+Also LVL function sets the track(s) volume to 0 before unmuting, mixer
+page can then be used to fade in the track(s) gently.
+
+Display Mirror:
+
+When enabled, the MC will transmit a 7bit encoded dump of the display over
+usb-serial which can be viewed using the mc_display_mirror.py script.
+
+Enhancements Bug Fixes:
+
+- OLED SPI frequency doubled. Noticed that the default SPI speed for the OLED
+library was only 4Mhz. Increased to 8MHz. Might provide a small improvement
+to refresh rate.
+
+- Re-drawing of display is disabled in Live Record mode when sequencer running.
+To improve MIDI input latency the OLED display is only updated when changing
+paramter values. This greatly reduces MIDI latency during live record mode.
+
+- Mixer page encoder behaviour improved. large jumps in encoder values are
+supported and midi CC messages are interpolated between to give smooth
+value change.
+
+- Chromatic mode extended to the Seq Step page. Encoder 4 is used to
+select Note of current step (uses one parameter lock track)
+External MIDI keyboard on port 2 can also be used to set note value.
+
+- Improvement of Sequencer GUI. Parameter changes are now applied immediately
+upon encoder change. Current step is now depicted more accurately, would 
+previously lag behind some ms.
+
+- Improvement to Project page GUI. Can now exit load and new project
+pages. New project page shows a blinking cursor for the current character
+select.
+
+
+
+
+

@@ -22,6 +22,7 @@ public:
   MCLEncoder enc2;
   MCLEncoder enc3;
   MCLEncoder enc4;
+  uint8_t osc_waveform;
 
   uint8_t sample_number = 0;
   uint8_t scanline_width;
@@ -30,9 +31,9 @@ public:
   float largest_sine_peak;
   static uint32_t exploit_delay_clock;
   OscPage() {
-    enc1.initMCLEncoder(0, 5, 0, ENCODER_RES_SEQ);
-    enc2.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
-    enc3.initMCLEncoder(-99, 99, 0, ENCODER_RES_SEQ);
+    enc1.initMCLEncoder(8,118, 0, ENCODER_RES_SEQ);
+    enc2.initMCLEncoder(-99, 99, 0, ENCODER_RES_SEQ);
+    enc3.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
     enc4.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
 
     encoders[0] = (Encoder *)&enc1;
@@ -41,7 +42,9 @@ public:
     encoders[3] = (Encoder *)&enc4;
     enc4.handler = osc_mod_handler;
     sine_levels[0] = 127;
-    enc2.cur = 64;
+    enc1.cur = 65;
+    enc2.cur = 0;
+    enc3.cur = 64;
   }
   virtual bool handleEvent(gui_event_t *event);
   void display();
@@ -57,6 +60,7 @@ public:
   void draw_wav(uint8_t wav_type);
   void calc_largest_sine_peak();
   float get_freq();
+  float get_width();
   float get_phase();
   uint8_t get_osc_type();
 };

@@ -1,6 +1,6 @@
 #include "GUI.h"
+#include "MidiUart.h"
 #include "WProgram.h"
-
 #if defined(MIDIDUINO_USE_GUI) || defined(HOST_MIDIDUINO)
 
 Sketch _defaultSketch((char *)"DFT");
@@ -144,7 +144,7 @@ void GuiClass::display() {
         LCD.goLine(i);
         LCD.puts(lines[i].flash);
         lines[i].flashChanged = false;
-        }
+      }
     }
 
     if (lines[i].changed && !lines[i].flashActive) {
@@ -154,9 +154,9 @@ void GuiClass::display() {
         }
       }
       if (page->classic_display) {
-      LCD.goLine(i);
-      LCD.puts(lines[i].data);
-      lines[i].changed = false;
+        LCD.goLine(i);
+        LCD.puts(lines[i].data);
+        lines[i].changed = false;
       }
     }
   }
@@ -164,10 +164,46 @@ void GuiClass::display() {
   GUI.clearFlashLine();
   GUI.setLine(GUI.LINE2);
   GUI.clearFlashLine();
+
 #ifdef OLED_DISPLAY
-  if (page->classic_display) {
-    oled_display.display();
-  }
+#ifndef DEBUGMODE
+    if (display_mirror) {
+      // 7bit encode
+      while (!UART_USB_CHECK_EMPTY_BUFFER())
+        ;
+      UART_USB_WRITE_CHAR(0);
+
+      //  Serial.write(0);
+
+      uint8_t buf[8];
+
+      uint16_t n = 0;
+
+      while (n < 512) {
+        buf[0] = 0x80;
+        for (uint8_t c = 0; c < 7; c++) {
+
+          buf[c + 1] = 0x80;
+          if (n + c < 512) {
+            buf[c + 1] |= oled_display.getBuffer(n + c);
+          }
+          uint8_t msb = oled_display.getBuffer(n + c) >> 7;
+          buf[0] |= msb << c;
+        }
+        for (uint8_t c = 0; c < 8; c++) {
+          while (!UART_USB_CHECK_EMPTY_BUFFER())
+            ;
+          UART_USB_WRITE_CHAR(buf[c]);
+        }
+        // Serial.write(buf, 8);
+
+        n = n + 7;
+      }
+    }
+#endif
+    if (page->classic_display) {
+      oled_display.display();
+    }
 #endif
 }
 

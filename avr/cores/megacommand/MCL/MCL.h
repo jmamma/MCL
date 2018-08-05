@@ -38,6 +38,7 @@
 #include "OscPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
+#include "PageSelectPage.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
@@ -69,6 +70,8 @@
 #define SEQ_RTRK_PAGE 11
 #define SEQ_RPTC_PAGE 14
 #define LOAD_PROJECT_PAGE 8
+
+#define MD_KITBUF_POS 63
 
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;

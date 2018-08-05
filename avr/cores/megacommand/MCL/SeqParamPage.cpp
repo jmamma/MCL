@@ -21,6 +21,7 @@ void SeqParamPage::init() {
   encoders[3]->cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
+  midi_events.setup_callbacks();
 }
 void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
   p1 = p1_;
@@ -29,6 +30,7 @@ void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
 void SeqParamPage::cleanup() {
   md_exploit.off();
   SeqPage::cleanup();
+  midi_events.remove_callbacks();
 }
 
 void SeqParamPage::display() {
@@ -71,6 +73,35 @@ void SeqParamPage::display() {
   draw_lock_mask(page_select * 16);
 }
 
+void SeqParamPage::loop() {
+
+  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
+      encoders[3]->hasChanged()) {
+    for (uint8_t n = 0; n < 16; n++) {
+
+      if (note_interface.notes[n] == 1) {
+        uint8_t step = n + (page_select * 16);
+        int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; // upper
+        uint8_t condition =
+            mcl_seq.md_tracks[last_md_track].conditional[step]; // lower
+
+        // Fudge timing info if it's not there
+        if (utiming == 0) {
+          utiming = 12;
+          mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
+          mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
+        }
+        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
+
+        mcl_seq.md_tracks[last_md_track].locks[p1][step] = encoders[1]->cur;
+        mcl_seq.md_tracks[last_md_track].locks[p2][step] = encoders[3]->cur;
+
+        mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
+        mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
+      }
+    }
+  }
+}
 bool SeqParamPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
@@ -79,56 +110,53 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
+
     if (device == DEVICE_A4) {
       return true;
     }
+    uint8_t step = track + (page_select * 16);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t param_offset;
       encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      encoders[1]->cur = mcl_seq.md_tracks[last_md_track]
-                             .locks[p1][(track + (page_select * 16))];
-      encoders[3]->cur = mcl_seq.md_tracks[last_md_track]
-                             .locks[p2][(track + (page_select * 16))];
+      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
+      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      int8_t utiming =
-          mcl_seq.md_tracks[grid_page.cur_col]
-              .timing[(track + (page_select * 16))]; // upper
-      uint8_t condition =
-          mcl_seq.md_tracks[grid_page.cur_col]
-              .conditional[(track + (page_select * 16))]; // lower
-
-      // Fudge timing info if it's not there
-      if (utiming == 0) {
-        utiming = 12;
-        mcl_seq.md_tracks[last_md_track]
-            .conditional[(track + (page_select * 16))] = condition;
-        mcl_seq.md_tracks[last_md_track]
-            .timing[(track + (page_select * 16))] = utiming;
+      if (device == DEVICE_A4) {
+        // GUI.setPage(&seq_extstep_page);
+        return true;
       }
-      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
-                       (track + (page_select * 16)))) {
+
+      /*      int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; //
+upper uint8_t condition = mcl_seq.md_tracks[last_md_track].conditional[step]; //
+lower
+
+// Fudge timing info if it's not there
+if (utiming == 0) {
+  utiming = 12;
+  mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
+  mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
+}*/
+      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask, step)) {
         if ((slowclock - note_interface.note_hold) < 300) {
-          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask,
-                      (track + (page_select * 16)));
+          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
         }
       } else {
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask,
-                  (track + (page_select * 16)));
+        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
       }
+      /*
+            mcl_seq.md_tracks[last_md_track].locks[p1][step] =
+                encoders[1]->cur;
+            mcl_seq.md_tracks[last_md_track].locks[p2][step] =
+                encoders[3]->cur;
 
-      mcl_seq.md_tracks[last_md_track]
-          .locks[p1][(track + (page_select * 16))] =
-          encoders[1]->cur;
-      mcl_seq.md_tracks[last_md_track]
-          .locks[p2][(track + (page_select * 16))] =
-          encoders[3]->cur;
-
-      mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
-      mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
+            mcl_seq.md_tracks[last_md_track].locks_params[p1] =
+         encoders[0]->cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =
+         encoders[2]->cur;
+        */
     }
     return true;
   }
@@ -162,7 +190,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[grid_page.cur_col].clear_locks();
+    mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
   }
 
@@ -171,4 +199,39 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
   }
 
   return false;
+}
+
+void SeqParamPageMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {}
+
+void SeqParamPageMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
+}
+void SeqParamPageMidiEvents::setup_callbacks() {
+  if (state) {
+    return;
+  }
+
+  Midi2.addOnNoteOnCallback(
+      this,
+      (midi_callback_ptr_t)&SeqParamPageMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.addOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&SeqParamPageMidiEvents::onNoteOffCallback_Midi2);
+
+  state = true;
+}
+
+void SeqParamPageMidiEvents::remove_callbacks() {
+
+  if (!state) {
+    return;
+  }
+
+  Midi2.removeOnNoteOnCallback(
+      this,
+      (midi_callback_ptr_t)&SeqParamPageMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.removeOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&SeqParamPageMidiEvents::onNoteOffCallback_Midi2);
+
+  state = false;
 }

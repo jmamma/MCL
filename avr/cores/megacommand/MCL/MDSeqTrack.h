@@ -31,9 +31,12 @@ public:
   void set_track_step(uint8_t step, uint8_t utiming,
                       uint8_t note_num, uint8_t velocity);
   void set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
+  uint8_t get_track_lock(uint8_t step, uint8_t track_param);
+
   void record_track(uint8_t note_num, uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
+  void clear_step_locks(uint8_t step);
   void clear_conditional();
   void clear_locks();
   void clear_track();

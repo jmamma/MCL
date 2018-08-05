@@ -17,6 +17,7 @@ public:
 class Project : public ProjectHeader {
 public:
   File file;
+  bool project_loaded = false;
   void setup();
   bool load_project(char *projectname);
   bool check_project_version();

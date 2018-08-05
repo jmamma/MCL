@@ -22,6 +22,8 @@ public:
 
 class NoteInterface {
 public:
+  uint8_t uart1_device = DEVICE_MD;
+  uint8_t uart2_device = DEVICE_A4;
   uint8_t notes[NI_MAX_NOTES];
   uint8_t notecount = 0;
   uint8_t last_note;

@@ -49,5 +49,12 @@ void MCL::setup() {
   // md_setup();
   param1.cur = mcl_cfg.cur_col;
   param2.cur = mcl_cfg.cur_row;
+  if (mcl_cfg.display_mirror == 1) {
+     #ifndef DEBUGMODE
+     Serial.begin(250000);
+     GUI.display_mirror = true;
+     #endif
+  }
+
 }
 MCL mcl;

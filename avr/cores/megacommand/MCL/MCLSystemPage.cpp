@@ -22,7 +22,14 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
     }
     mcl_cfg.write_cfg();
     midi_setup.cfg_ports();
-
+    if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
+      GUI.display_mirror = true;
+      Serial.begin(SERIAL_SPEED);
+    }
+    if ((Serial) && (mcl_cfg.display_mirror == 0)) {
+      GUI.display_mirror = false;
+      Serial.end();
+    }
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -188,5 +195,27 @@ void MCLSystemPage::display() {
       }
       mcl_cfg.uart2_ctrl_mode = encoders[1]->getValue();
     }
+    break;
+  case 8:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.display_mirror);
+    }
+    GUI.put_string_at_fill(0, "Display:");
+    if (encoders[1]->cur == 0) {
+      GUI.put_string_at_fill(8, "INT");
+    }
+    if (encoders[1]->cur > 0) {
+      GUI.put_string_at_fill(8, "INT+EXT");
+    }
+  if (encoders[1]->hasChanged()) {
+    if (encoders[1]->getValue() > 1) {
+      encoders[1]->cur = 1;
+    }
+    mcl_cfg.display_mirror = encoders[1]->getValue();
   }
+
+  break;
+}
 }

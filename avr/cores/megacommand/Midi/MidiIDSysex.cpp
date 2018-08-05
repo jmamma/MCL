@@ -37,9 +37,6 @@ void MidiIDSysexListenerClass::end_immediate() {
       dev->manufacturer_id[1] = MidiSysex.data[i++];
       dev->manufacturer_id[2] = MidiSysex.data[i++];
     }
-    for (uint8_t n = 0; n < 8; n++) {
-    DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINTLN(MidiSysex.data[n]);
-    }
     DEBUG_PRINTLN(MidiSysex.data[i]);
     dev->family_code[0] = MidiSysex.data[i++];
     dev->family_code[1] = MidiSysex.data[i++];

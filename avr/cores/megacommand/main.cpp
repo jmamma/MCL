@@ -337,6 +337,7 @@ int main(void) {
   sei();
 
   DEBUG_INIT();
+
   // Set SD card select HIGH before initialising OLED.
   PORTB |= (1 << PB0);
   setup();

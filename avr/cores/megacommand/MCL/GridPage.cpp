@@ -356,11 +356,11 @@ void GridPage::display() {
 
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-
+    
     return true;
   }
 
-  if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
+ if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
     grid.clear_row(grid_page.encoders[1]->getValue());
     reload_slot_models = false;
     return true;
@@ -395,7 +395,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     mixer_page.isSetup = false;
-    GUI.setPage(&mixer_page);
+//    GUI.setPage(&mixer_page);
     //   draw_levels();
   }
   /*IF button1 and encoder buttons are pressed, store current track selected on
@@ -442,6 +442,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
     system_page.isSetup = false;
     GUI.setPage(&system_page);
 
+    return true;
+  }
+  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
     return true;
   }
 

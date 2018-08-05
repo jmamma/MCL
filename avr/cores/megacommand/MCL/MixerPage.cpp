@@ -2,22 +2,23 @@
 #include "MixerPage.h"
 
 void MixerPage::setup() {
-  ((MCLEncoder *)encoders[1])->handler = encoder_level_handle;
-  ((MCLEncoder *)encoders[2])->handler = encoder_level_handle;
+  ((MCLEncoder *)encoders[0])->handler = encoder_level_handle;
+  ((MCLEncoder *)encoders[3])->handler = encoder_level_handle;
   create_chars_mixer();
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  MD.saveCurrentKit(MD.currentKit);
-  MD.getBlockingKit(MD.currentKit);
-  DEBUG_PRINTLN("got blocking kit");
-  level_pressmode = 0;
-  mixer_param1.cur = 60;
-  mixer_param2.cur = 60;
 #ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();
 #endif
 }
 void MixerPage::init() {
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  MD.saveCurrentKit(MD_KITBUF_POS);
+  MD.getBlockingKit(MD_KITBUF_POS);
+  DEBUG_PRINTLN("got blocking kit");
+  level_pressmode = 0;
+  mixer_param1.cur = 60;
+  mixer_param2.cur = 60;
+
   md_exploit.on();
   note_interface.state = true;
 }
@@ -44,8 +45,13 @@ void MixerPage::draw_levels() {
 #ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)MD.kit.levels[i] / (float)127) * 15);
-    oled_display.fillRect(0 + i * 6, 12 + (15 - scaled_level), 4,
-                          scaled_level + 1, WHITE);
+    if (note_interface.notes[i] == 1) {
+      oled_display.fillRect(0 + i * 8, 6 + (15 - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+    } else {
+      oled_display.drawRect(0 + i * 8, 6 + (15 - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+    }
     /*
     if (scaled_level >= 7) {
       str[i] = (char)0xF8;
@@ -71,31 +77,28 @@ void MixerPage::draw_levels() {
 void encoder_level_handle(Encoder *enc) {
   MCLEncoder *mdEnc = (MCLEncoder *)enc;
 
-  uint8_t increase = abs(mdEnc->getValue() - mdEnc->old);
-  int track_newlevel;
-  int dir = 0;
+  int dir = mdEnc->getValue() - mdEnc->old;
+  int track_newval;
+
   for (int i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
-      //        set_level(i,mdEnc->getValue() + MD.kit.levels[i] );
-      for (int a = 0; a < increase; a++) {
-        if ((mdEnc->getValue() - mdEnc->old) < 0) {
-          dir = -1;
-        }
-        //      if ((mdEnc->getValue() - mdEnc->old) > 0) { track_newlevel =
-        //      MD.kit.levels[i] + 1; }
-        else {
-          dir = 1;
-        }
-
-        track_newlevel = MD.kit.levels[i] + dir;
-        if ((track_newlevel <= 127) && (track_newlevel >= 0)) {
-          MD.kit.levels[i] = track_newlevel;
-
-          // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
-          mixer_page.set_level(i, MD.kit.levels[i]);
-          //}
-        }
+      track_newval = MD.kit.levels[i] + dir;
+      if (track_newval < 0) {
+        track_newval = 0;
       }
+      if (track_newval > 127) {
+        track_newval = 127;
+      }
+      for (uint8_t level = MD.kit.levels[i]; level < track_newval; level++) {
+        mixer_page.set_level(i, level);
+      }
+      for (uint8_t level = MD.kit.levels[i]; level > track_newval; level--) {
+        mixer_page.set_level(i, level);
+      }
+      // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
+      mixer_page.set_level(i, track_newval);
+
+      MD.kit.levels[i] = track_newval;
     }
   }
   mdEnc->cur = 64 + dir;
@@ -108,11 +111,13 @@ void MixerPage::display() {
   if (!classic_display) {
     oled_display.clearDisplay();
   }
+#ifndef OLED_DISPLAY
   note_interface.draw_notes(0);
   if (!classic_display) {
     LCD.goLine(0);
     LCD.puts(GUI.lines[0].data);
   }
+#endif
   draw_levels();
   if (!classic_display) {
     oled_display.display();
@@ -146,16 +151,25 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    GUI.setPage(&mixer_page);
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.setPage(&cue_page);
-    curpage = CUE_PAGE;
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    md_exploit.off();
-    GUI.setPage(&grid_page);
-    curpage = 0;
+    GUI.setPage(&page_select_page);
     return true;
   }
+
+  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
+      EVENT_RELEASED(event, Buttons.ENCODER2) ||
+      EVENT_RELEASED(event, Buttons.ENCODER3) ||
+      EVENT_RELEASED(event, Buttons.ENCODER1)) {
+    GUI.setPage(&grid_page);
+    return true;
+  }
+
   return false;
 }
-

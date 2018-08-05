@@ -10,10 +10,6 @@ void SeqPtcPage::cleanup() {
   midi_events.remove_callbacks();
 }
 void SeqPtcPage::config_encoders() {
-  ((MCLEncoder *)encoders[0])->max = 8;
-  ((MCLEncoder *)encoders[1])->max = 64;
-
-  ((MCLEncoder *)encoders[3])->max = 15;
   if (midi_device == DEVICE_MD) {
     ((MCLEncoder *)encoders[2])->max = 64;
 
