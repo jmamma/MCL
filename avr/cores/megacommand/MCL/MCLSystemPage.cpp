@@ -9,10 +9,10 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
-      EVENT_RELEASED(event, Buttons.ENCODER2) ||
-      EVENT_RELEASED(event, Buttons.ENCODER3) ||
-      EVENT_RELEASED(event, Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER1)) {
     if (encoders[0]->getValue() == 0) {
       GUI.setPage(&load_proj_page);
       return true;
@@ -33,11 +33,8 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
-  }
-  else {
-    GUI.setPage(&grid_page);
-    curpage = 0;
-    return true;
+  } else {
+
   }
   return false;
 }
@@ -213,13 +210,13 @@ void MCLSystemPage::display() {
     if (encoders[1]->cur > 0) {
       GUI.put_string_at_fill(8, "INT+EXT");
     }
-  if (encoders[1]->hasChanged()) {
-    if (encoders[1]->getValue() > 1) {
-      encoders[1]->cur = 1;
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 1) {
+        encoders[1]->cur = 1;
+      }
+      mcl_cfg.display_mirror = encoders[1]->getValue();
     }
-    mcl_cfg.display_mirror = encoders[1]->getValue();
-  }
 
-  break;
-}
+    break;
+  }
 }

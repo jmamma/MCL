@@ -141,14 +141,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    level_pressmode = 1;
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.ENCODER1)) {
-    level_pressmode = 0;
-    return true;
-  }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     GUI.setPage(&mixer_page);
@@ -163,10 +155,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
-      EVENT_RELEASED(event, Buttons.ENCODER2) ||
-      EVENT_RELEASED(event, Buttons.ENCODER3) ||
-      EVENT_RELEASED(event, Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER4)) {
     GUI.setPage(&grid_page);
     return true;
   }
