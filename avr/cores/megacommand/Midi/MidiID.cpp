@@ -16,7 +16,7 @@ void MidiID::send_id_request(uint8_t id, uint8_t port) {
   }
   uart->sendRaw(data, sizeof(data));
 }
-void MidiID::init() { family_code[0] = DEVICE_NULL; }
+void MidiID::init() { set_id(DEVICE_NULL); }
 
 bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   DEBUG_PRINT_FN();
@@ -63,12 +63,12 @@ uint8_t MidiID::get_id() { return family_code[0]; }
 
 char *MidiID::get_name(char *str) {
   DEBUG_PRINT_FN();
-  switch (family_code[1]) {
+  switch (family_code[0]) {
   case DEVICE_MD:
-    m_strncpy(str, "MACHINEDRUM", 16);
+    m_strncpy(str, "MD", 3);
     break;
   case DEVICE_A4:
-    m_strncpy(str, "ANALOG4", 16);
+    m_strncpy(str, "A4", 3);
     break;
   case DEVICE_MIDI:
     m_strncpy(str, "MIDI DEVICE", 16);

@@ -63,8 +63,8 @@ uint16_t MNMGlobal::toSysex(uint8_t *data, uint16_t len) {
 
 uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
 	encoder.stop7Bit();
-	encoder.pack8(0xF0);
-	encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+	encoder.begin();
+    encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
 	encoder.pack8(MNM_GLOBAL_MESSAGE_ID);
 	encoder.pack8(0x02); // version
 	encoder.pack8(0x01); // revision
@@ -167,8 +167,8 @@ uint16_t MNMKit::toSysex(uint8_t *data, uint16_t len) {
 
 uint16_t MNMKit::toSysex(MNMDataToSysexEncoder &encoder) {
 	encoder.stop7Bit();
-	encoder.pack8(0xF0);
-	encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+	encoder.begin();
+    encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
 	encoder.pack8(MNM_KIT_MESSAGE_ID);
 	encoder.pack8(0x02); // version
 	encoder.pack8(0x01); // revision
@@ -236,8 +236,8 @@ uint16_t MNMSong::toSysex(uint8_t *sysex, uint16_t len) {
 
 uint16_t MNMSong::toSysex(MNMDataToSysexEncoder &encoder) {
 	encoder.stop7Bit();
-	encoder.pack8(0xF0);
-	encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+	encoder.begin();
+    encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
 	encoder.pack8(MNM_KIT_MESSAGE_ID);
 	encoder.pack8(0x02); // version
 	encoder.pack8(0x01); // revision

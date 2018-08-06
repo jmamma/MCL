@@ -34,7 +34,11 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
     curpage = 0;
     return true;
   }
-
+  else {
+    GUI.setPage(&grid_page);
+    curpage = 0;
+    return true;
+  }
   return false;
 }
 

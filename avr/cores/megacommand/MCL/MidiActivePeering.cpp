@@ -15,7 +15,7 @@ uint8_t MidiActivePeering::get_device(uint8_t port) {
 
 void MidiActivePeering::md_setup() {
   DEBUG_PRINT_FN();
-  
+
   MidiIDSysexListener.setup();
   MidiUart.set_speed((uint32_t)31250, 1);
 
@@ -27,21 +27,19 @@ void MidiActivePeering::md_setup() {
 
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
 
-      delay(100);
+      delay(1200);
 
-      if (md_exploit.rec_global != 1) {
+      md_exploit.rec_global = 1;
 
-        md_exploit.rec_global = 1;
-        md_exploit.send_globals();
-      }
+      md_exploit.send_globals();
       md_exploit.switch_global(7);
-//      uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
+      //      uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
       for (uint8_t x = 0; x < 2; x++) {
         for (uint8_t y = 0; y < 16; y++) {
           MD.setStatus(0x22, y);
         }
       }
-      MD.setStatus(0x22,0);
+      MD.setStatus(0x22, 0);
       MD.connected = true;
       GUI.flash_strings_fill("MD", "CONNECTED");
 
@@ -75,6 +73,8 @@ void MidiActivePeering::check() {
   char str[16];
   uint8_t uart1_device = MidiUart.device.get_id();
   uint8_t uart2_device = MidiUart2.device.get_id();
+  DEBUG_PRINTLN(DEVICE_NULL);
+  DEBUG_PRINTLN(uart1_device);
 
   if (uart1_device != DEVICE_NULL) {
     if ((MidiUart.recvActiveSenseTimer > 300) && (MidiUart.speed > 31250)) {
@@ -102,5 +102,4 @@ void MidiActivePeering::check() {
       a4_setup();
     }
   }
-
 }

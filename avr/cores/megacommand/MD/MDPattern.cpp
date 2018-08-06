@@ -228,8 +228,8 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
 	uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 	
 	encoder.stop7Bit();
-	encoder.pack8(0xF0);
-	encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
+	encoder.begin();
+    encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
 	encoder.pack8(MD_PATTERN_MESSAGE_ID);
 	encoder.pack8(0x03); // version
 	encoder.pack8(0x01);
