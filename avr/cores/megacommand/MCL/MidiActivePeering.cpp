@@ -73,8 +73,6 @@ void MidiActivePeering::check() {
   char str[16];
   uint8_t uart1_device = MidiUart.device.get_id();
   uint8_t uart2_device = MidiUart2.device.get_id();
-  DEBUG_PRINTLN(DEVICE_NULL);
-  DEBUG_PRINTLN(uart1_device);
 
   if (uart1_device != DEVICE_NULL) {
     if ((MidiUart.recvActiveSenseTimer > 300) && (MidiUart.speed > 31250)) {
