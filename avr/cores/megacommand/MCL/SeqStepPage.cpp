@@ -91,27 +91,26 @@ void SeqStepPage::loop() {
       encoders[3]->hasChanged()) {
     tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
 
-    if ((encoders[3]->cur > 0) && (last_md_track < 15)) {
-      for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 0; n < 16; n++) {
 
-        if (note_interface.notes[n] == 1) {
-          uint8_t step = n + (page_select * 16);
-          if (n < mcl_seq.md_tracks[last_md_track].length) {
+      if (note_interface.notes[n] == 1) {
+        uint8_t step = n + (page_select * 16);
+        if (n < mcl_seq.md_tracks[last_md_track].length) {
 
-            uint8_t utiming = (encoders[1]->cur + 0);
-            uint8_t condition = encoders[0]->cur;
+          uint8_t utiming = (encoders[1]->cur + 0);
+          uint8_t condition = encoders[0]->cur;
 
-            //  timing = 3;
-            // condition = 3;
-            mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
-            mcl_seq.md_tracks[last_md_track].timing[step] = utiming; // upper
-            if (tuning != NULL) {
-              uint8_t base = tuning->base;
-              uint8_t note_num = encoders[3]->cur;
-              uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
-              mcl_seq.md_tracks[last_md_track].set_track_pitch(step,
-                                                               machine_pitch);
-            }
+          //  timing = 3;
+          // condition = 3;
+          mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
+          mcl_seq.md_tracks[last_md_track].timing[step] = utiming; // upper
+          if ((encoders[3]->cur > 0) && (last_md_track < 15) &&
+              (tuning != NULL)) {
+            uint8_t base = tuning->base;
+            uint8_t note_num = encoders[3]->cur;
+            uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
+            mcl_seq.md_tracks[last_md_track].set_track_pitch(step,
+                                                             machine_pitch);
           }
         }
       }
@@ -271,8 +270,8 @@ void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if (note_num < tuning->len) {
     uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
     if (MidiClock.state != 2) {
-    MD.setTrackParam(last_md_track, 0, machine_pitch);
-    MD.triggerTrack(last_md_track, 127);
+      MD.setTrackParam(last_md_track, 0, machine_pitch);
+      MD.triggerTrack(last_md_track, 127);
     }
     seq_step_page.encoders[3]->cur = note_num;
   }
