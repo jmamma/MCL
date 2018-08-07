@@ -235,6 +235,7 @@ void MidiClockClass::incrementCounters() {
   mod6_free_counter++;
   if (mod6_free_counter == 6) {
     tempo = (150000 / ((float)midi_clock_diff(last_clock16, clock)));
+    div192th_time = midi_clock_diff(last_clock16, clock) / 12;
     last_clock16 = clock;
     mod6_free_counter = 0;
   }
@@ -282,7 +283,7 @@ void MidiClockClass::callCallbacks() {
   on192Callbacks.call(div192th_counter);
 
   if (mod6_counter == 0) {
-   on16Callbacks.call(div16th_counter);
+    on16Callbacks.call(div16th_counter);
     on32Callbacks.call(div32th_counter);
     // mcl_16counter++;
   }
@@ -294,9 +295,11 @@ void MidiClockClass::callCallbacks() {
 }
 
 void MidiClockClass::handleImmediateClock() {
-  if (clock > clock_last_time) {
-    div192th_time = (clock - clock_last_time) / 2;
-  }
+  // if (clock > clock_last_time) {
+  //  div192th_time = (clock - clock_last_time) / 2;
+  //   DEBUG_PRINTLN( (clock - clock_last_time) / 2);
+
+  // }
   clock_last_time = clock;
   uint8_t _mod6_counter = mod6_counter;
 
