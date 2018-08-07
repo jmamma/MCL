@@ -95,7 +95,7 @@ void SeqStepPage::loop() {
 
       if (note_interface.notes[n] == 1) {
         uint8_t step = n + (page_select * 16);
-        if (n < mcl_seq.md_tracks[last_md_track].length) {
+        if (step < mcl_seq.md_tracks[last_md_track].length) {
 
           uint8_t utiming = (encoders[1]->cur + 0);
           uint8_t condition = encoders[0]->cur;
@@ -212,12 +212,19 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //   condition; //lower
 
       if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask, step)) {
+        uint8_t utiming = (encoders[1]->cur + 0);
+        uint8_t condition = encoders[0]->cur;
+
+        mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
+        mcl_seq.md_tracks[last_md_track].timing[step] = utiming; // upper
         SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
       } else {
         DEBUG_PRINTLN("Trying to clear");
         if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
           mcl_seq.md_tracks[last_md_track].clear_step_locks(step);
+          mcl_seq.md_tracks[last_md_track].conditional[step] = 0;
+          mcl_seq.md_tracks[last_md_track].timing[step] = 12; // upper
         }
       }
       // Cond

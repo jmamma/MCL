@@ -155,18 +155,18 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device, bool show_curren
         #else
         uint32_t count_16th = MidiClock.div96th_counter / 6;
         #endif
-        uint8_t step_count = (count_16th -
+    /*    uint8_t step_count = (count_16th -
                               mcl_actions_callbacks.start_clock96th / 5) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((count_16th -
                                 mcl_actions_callbacks.start_clock96th / 5) /
-                               mcl_seq.md_tracks[last_md_track].length));
-        /*uint8_t step_count = (MidiClock.div16th_counter -
+                               mcl_seq.md_tracks[last_md_track].length));*/
+        uint8_t step_count = (MidiClock.div16th_counter -
                               mcl_actions_callbacks.start_clock32th / 2) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
                                 mcl_actions_callbacks.start_clock32th / 2) /
-                               mcl_seq.md_tracks[last_md_track].length)); */
+                               mcl_seq.md_tracks[last_md_track].length)); 
 #ifdef OLED_DISPLAY
  #endif
         if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
