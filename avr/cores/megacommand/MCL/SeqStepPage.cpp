@@ -19,7 +19,7 @@ void SeqStepPage::init() {
 
   tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
 
-  ((MCLEncoder *)encoders[3])->max = tuning->len;
+  ((MCLEncoder *)encoders[3])->max = tuning->len - 1;
   midi_events.setup_callbacks();
 
   curpage = SEQ_STEP_PAGE;
@@ -104,6 +104,11 @@ void SeqStepPage::loop() {
           // condition = 3;
           mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
           mcl_seq.md_tracks[last_md_track].timing[step] = utiming; // upper
+
+      if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask, step)) {
+
+        SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
+       }
           if ((encoders[3]->cur > 0) && (last_md_track < 15) &&
               (tuning != NULL)) {
             uint8_t base = tuning->base;

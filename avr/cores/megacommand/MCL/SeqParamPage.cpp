@@ -76,7 +76,7 @@ void SeqParamPage::display() {
 void SeqParamPage::loop() {
 
   if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
-      encoders[3]->hasChanged()) {
+      encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
     for (uint8_t n = 0; n < 16; n++) {
 
       if (note_interface.notes[n] == 1) {
@@ -95,11 +95,10 @@ void SeqParamPage::loop() {
 
         mcl_seq.md_tracks[last_md_track].locks[p1][step] = encoders[1]->cur;
         mcl_seq.md_tracks[last_md_track].locks[p2][step] = encoders[3]->cur;
-
-        mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
-        mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
       }
     }
+    mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
+    mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
   }
 }
 bool SeqParamPage::handleEvent(gui_event_t *event) {
@@ -203,8 +202,7 @@ if (utiming == 0) {
 
 void SeqParamPageMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {}
 
-void SeqParamPageMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-}
+void SeqParamPageMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {}
 void SeqParamPageMidiEvents::setup_callbacks() {
   if (state) {
     return;
