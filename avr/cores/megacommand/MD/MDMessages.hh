@@ -84,8 +84,6 @@ public:
   uint8_t trigMode;
 
   MDGlobal() {
-  //125bpm * 2000
-  tempo = 125 * 2000;
   }
 
   /** Read in a global message from a sysex buffer. **/
