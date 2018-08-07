@@ -15,7 +15,20 @@ void OscMixerPage::init() {
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (BUTTON_PRESSED(Buttons.BUTTON4)) {
+    GUI.setLine(GUI.LINE1);
+    GUI.put_string_at(0,"Render..");
+    LCD.goLine(0);
+    LCD.puts(GUI.lines[0].data);
+    #ifdef OLED_DISPLAY
+    oled_display.display();
+    #endif
     wd.render();
+    GUI.put_string_at(0,"Sending..");
+    LCD.goLine(0);
+    LCD.puts(GUI.lines[0].data);
+    #ifdef OLED_DISPLAY
+    oled_display.display();
+    #endif
     wd.send();
     return true;
   }

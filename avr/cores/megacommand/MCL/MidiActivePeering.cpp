@@ -18,16 +18,22 @@ void MidiActivePeering::md_setup() {
 
   MidiIDSysexListener.setup();
   MidiUart.set_speed((uint32_t)31250, 1);
+  GUI.put_string_at(0, "Peering..");
+  LCD.goLine(0);
+  LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+  oled_display.display();
+#endif
 
+  delay(2500);
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
-
-    delay(300);
     if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT,
                                       CALLBACK_TIMEOUT)) {
 
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
-
-      delay(1200);
+      // wait 300 ms, shoul be enought time to allow midiclock tempo to be
+      // calculated before proceeding.
+      delay(300);
 
       md_exploit.rec_global = 1;
 
@@ -40,11 +46,14 @@ void MidiActivePeering::md_setup() {
         }
       }
       MD.setStatus(0x22, 0);
+
       MD.connected = true;
+      // MD.setTempo(MidiClock.tempo * 24);
       GUI.flash_strings_fill("MD", "CONNECTED");
 
       return;
     }
+    delay(250);
   }
   MD.connected = false;
 

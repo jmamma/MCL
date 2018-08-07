@@ -35,6 +35,9 @@ void MCL::setup() {
   // if (!ret) { }
 
   ret = mcl_sd.load_init();
+  DEBUG_PRINTLN("tempo:");
+  DEBUG_PRINTLN(mcl_cfg.tempo);
+  MidiClock.setTempo(mcl_cfg.tempo);
   md_callbacks.setup();
 
   note_interface.setup();
