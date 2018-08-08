@@ -15,6 +15,12 @@ SystemConfig updated requiring new Project Creation on startup.
  layout require a new project to be created on first boot. Old projects are
  still compatible and can be loaded from the 'Load Project' menu.
 
+MD SDS Bug:
+
+- If MD sysex data such as status or dumps is requested at any time prior to
+receiving a sample dump, the MD encoders lock up indefinately. The only
+workaround is to use the WavDesigner pages without accessing other MCL pages.
+
 Features Added:
 
 Quick PageSelect
