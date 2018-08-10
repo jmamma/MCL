@@ -197,7 +197,8 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
-
+   
+  redisplay = true;
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -223,7 +224,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  redisplay = true;
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     record_mode = !record_mode;
     return true;
@@ -319,6 +319,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
+  }
+  if (last_ext_track != channel) {
+    seq_ptc_page.redisplay = true;
   }
   last_ext_track = channel;
   seq_ptc_page.config_encoders();
