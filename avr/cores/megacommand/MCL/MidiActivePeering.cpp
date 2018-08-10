@@ -31,7 +31,7 @@ void MidiActivePeering::md_setup() {
 #endif
   // Hack to prevent unnecessary delay on MC boot
   if ((slowclock > 3000) || (MidiClock.div96th_counter > 0)) {
-    delay(2500);
+    delay(4600);
   }
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
     if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT,
@@ -40,7 +40,7 @@ void MidiActivePeering::md_setup() {
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
       // wait 300 ms, shoul be enought time to allow midiclock tempo to be
       // calculated before proceeding.
-      delay(300);
+      delay(400);
 
       md_exploit.rec_global = 1;
 
