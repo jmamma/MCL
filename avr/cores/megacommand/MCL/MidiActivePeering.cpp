@@ -18,14 +18,21 @@ void MidiActivePeering::md_setup() {
 
   MidiIDSysexListener.setup();
   MidiUart.set_speed((uint32_t)31250, 1);
-  GUI.put_string_at(0, "Peering..");
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
+
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(0, "Peering...");
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
 #ifdef OLED_DISPLAY
   oled_display.display();
 #endif
-
-  delay(2500);
+  // Hack to prevent unnecessary delay on MC boot
+  if ((slowclock > 3000) || (MidiClock.div96th_counter > 0)) {
+    delay(2500);
+  }
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
     if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT,
                                       CALLBACK_TIMEOUT)) {
@@ -62,10 +69,21 @@ void MidiActivePeering::md_setup() {
 
 void MidiActivePeering::a4_setup() {
   DEBUG_PRINT_FN();
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(0, "Peering...");
+  LCD.goLine(0);
+  LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+  oled_display.display();
+#endif
   MidiUart.set_speed(31250, 2);
   for (uint8_t x = 0; x < 3 && Analog4.connected == false; x++) {
     delay(300);
     if (Analog4.getBlockingSettings(0)) {
+      MidiUart2.device.set_id(DEVICE_A4);
       GUI.flash_strings_fill("A4", "CONNECTED");
 
       Analog4.connected = true;
