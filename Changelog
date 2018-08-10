@@ -53,6 +53,11 @@ Display Mirror:
 When enabled, the MC will transmit a 7bit encoded dump of the display over
 usb-serial which can be viewed using the mc_display_mirror.py script.
 
+Midi Forward:
+
+Ability to forward all MIDI messages (except clock/realtime) to alternate
+port. Useful if you want to use the MD with the MC and an attached controller.
+
 Enhancements Bug Fixes:
 
 - OLED SPI frequency doubled. Noticed that the default SPI speed for the OLED

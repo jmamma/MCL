@@ -318,6 +318,14 @@ void isr_midi() {
         }
       }
     } else {
+      if (Midi_->forward) {
+        if (s == 0) {
+          MidiUart2.m_putc(c);
+        }
+        if (s == 1) {
+          MidiUart.m_putc(c);
+        }
+      }
       switch (Midi_->live_state) {
       case midi_wait_sysex: {
 

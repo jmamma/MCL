@@ -58,6 +58,7 @@ bool MCLSysConfig::cfg_init() {
   mutes = 0;
   display_mirror = 0;
   tempo = 125;
+  midi_forward = 0;
   cfgfile.close();
 
   ret = write_cfg();
