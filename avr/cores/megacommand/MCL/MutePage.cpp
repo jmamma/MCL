@@ -1,15 +1,19 @@
 #include "MCL.h"
 #include "MutePage.h"
 
-void MutePage::setup() { md_exploit.on(); }
+void MutePage::setup() {}
 
 void MutePage::init() {
   md_exploit.on();
   note_interface.state = true;
+
+  midi_events.setup_callbacks();
 }
 void MutePage::cleanup() {
   md_exploit.off();
   note_interface.state = false;
+
+  midi_events.remove_callbacks();
 }
 
 void MutePage::draw_mutes(uint8_t line_number) {
@@ -149,3 +153,48 @@ bool MutePage::handleEvent(gui_event_t *event) {
 
   return false;
 }
+
+void MuteMidiEvents::setup_callbacks() {
+  if (state) {
+    return;
+  }
+  Midi.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MuteMidiEvents::onNoteOnCallback_Midi);
+  //  Midi.addOnNoteOffCallback(
+  //    this, (midi_callback_ptr_t)&MuteMidiEvents::onNoteOffCallback_Midi);
+
+  state = true;
+}
+
+void MuteMidiEvents::remove_callbacks() {
+  if (!state) {
+    return;
+  }
+
+  DEBUG_PRINTLN("remove calblacks");
+  Midi.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MuteMidiEvents::onNoteOnCallback_Midi);
+  Midi.removeOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&MuteMidiEvents::onNoteOffCallback_Midi);
+
+  state = false;
+}
+uint8_t MuteMidiEvents::note_to_trig(uint8_t note_num) {
+  uint8_t trig_num = 0;
+  for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
+    if (note_num == MD.global.drumMapping[i]) {
+      trig_num = i;
+    }
+  }
+  return trig_num;
+}
+void MuteMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
+  uint8_t note_num = msg[1];
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+
+  uint8_t n = note_to_trig(msg[1]);
+    if ((msg[0] != 153)) {
+  CLEAR_BIT32(mcl_cfg.mutes, n);
+    }
+}
+void MuteMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}

@@ -11,6 +11,7 @@
 //#include "MDTrack.h"
 #define NUM_MD_TRACKS 16
 #define NUM_EXT_TRACKS 4
+#define LFO_TRACKS 4
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -42,7 +43,8 @@ public:
 
   void setup();
   void onMidiStopCallback();
-  void sequencer();
+  void seq();
+
 };
 
 extern MCLSeq mcl_seq;

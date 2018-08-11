@@ -1,15 +1,24 @@
 #include "MCL.h"
 #include "MCLSeq.h"
-
 void MCLSeq::setup() {
 
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
 
-    seq_param_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3,
-                                  &seq_param4);
+    seq_param_page[i].setEncoders(&seq_param1, &seq_lock1, &seq_param3,
+                                  &seq_lock2);
     seq_param_page[i].construct(i * 2, 1 + i * 2);
     seq_param_page[i].page_id = i;
   }
+  /*  for (uint8_t i = 0; i < NUM_LFO_PAGES; i++) {
+      seq_lfo_page[i].id = i;
+      seq_lfo_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3,
+                                    &seq_param4);
+      for (uint8_t n = 0; n < 48; n++) {
+      mcl_seq.lfos[0].samples[n] = n;
+              //(uint8_t) (((float) n / (float)48) * (float)96);
+      }
+    } */
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
     md_tracks[i].length = 16;
@@ -22,8 +31,8 @@ void MCLSeq::setup() {
 
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
-  MidiClock.addOn192Callback(this,
-                             (midi_clock_callback_ptr_t)&MCLSeq::sequencer);
+  MidiClock.addOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
+
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
 };
@@ -34,17 +43,21 @@ void MCLSeq::onMidiStopCallback() {
   }
 }
 
-void MCLSeq::sequencer() {
+void MCLSeq::seq() {
 
   if (in_sysex == 0) {
-   for (uint8_t i = 0; i < num_md_tracks; i++) {
+
+  //  for (uint8_t i = 0; i < 1; i++) {
+  //    lfos[i].seq();
+  //  }
+
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
       md_tracks[i].seq();
     }
 
     for (uint8_t i = 0; i < num_ext_tracks; i++) {
       ext_tracks[i].seq();
     }
-
   }
 }
 

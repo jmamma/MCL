@@ -5,8 +5,20 @@
 
 #include "GUI.h"
 
+class MuteMidiEvents : public MidiCallback {
+public:
+  bool state;
+
+  void setup_callbacks();
+  void remove_callbacks();
+  uint8_t note_to_trig(uint8_t note_num);
+  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onNoteOffCallback_Midi(uint8_t *msg);
+};
+
 class MutePage : public LightPage {
  public:
+ MuteMidiEvents midi_events;
  uint32_t mutes;
  MutePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
