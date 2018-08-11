@@ -24,7 +24,7 @@ void SeqPtcPage::config_encoders() {
 void SeqPtcPage::init() {
   SeqPage::init();
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
-
+  record_mode = false;
   poly_max = mcl_cfg.poly_max;
   for (uint8_t x = 0; x < poly_max; x++) {
     poly_notes[x] = 0;
@@ -72,6 +72,11 @@ void ptc_pattern_len_handler(Encoder *enc) {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
       mcl_seq.ext_tracks[last_ext_track].length = enc_->cur;
     }
+  }
+}
+void SeqPtcPage::loop() {
+  if (encoders[0]->hasChanged() || encoders[3]->hasChanged()) {
+      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
 }
 void SeqPtcPage::display() {

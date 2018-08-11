@@ -144,7 +144,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART1_PORT) != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
@@ -164,7 +164,7 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART1_PORT) != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
     return;
   }
 
