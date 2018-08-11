@@ -7,13 +7,13 @@ void MutePage::init() {
   md_exploit.on();
   note_interface.state = true;
 
-  midi_events.setup_callbacks();
+//  midi_events.setup_callbacks();
 }
 void MutePage::cleanup() {
   md_exploit.off();
   note_interface.state = false;
 
-  midi_events.remove_callbacks();
+//  midi_events.remove_callbacks();
 }
 
 void MutePage::draw_mutes(uint8_t line_number) {
@@ -36,7 +36,7 @@ void MutePage::draw_mutes(uint8_t line_number) {
 
       str[i] = (char)'-';
     }
-    if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
+    if (note_interface.notes[i] > 0) {
 
 #ifdef OLED_DISPLAY
       str[i] = (char)3;
@@ -70,6 +70,8 @@ void MutePage::toggle_mute(int i) {
   }
 }
 void MutePage::toggle_mutes_batch() {
+
+  //midi_events.remove_callbacks();
   uint16_t quantize_mute;
   quantize_mute = 1 << encoders[2]->getValue();
   int i;
@@ -91,6 +93,8 @@ void MutePage::toggle_mutes_batch() {
     note_interface.notes[i] = 0;
     // trackinfo_page.display();
   }
+
+ // midi_events.setup_callbacks();
 }
 void MutePage::display() {
   GUI.setLine(GUI.LINE2);
@@ -130,7 +134,10 @@ bool MutePage::handleEvent(gui_event_t *event) {
       //// }
 
       // else {
-      toggle_mutes_batch();
+    if (note_interface.notes_all_off()) {
+    toggle_mutes_batch();
+    note_interface.init_notes();
+    }
       //  }
     }
     return true;
@@ -191,10 +198,8 @@ uint8_t MuteMidiEvents::note_to_trig(uint8_t note_num) {
 void MuteMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-
+  DEBUG_PRINTLN("note rec");
   uint8_t n = note_to_trig(msg[1]);
-    if ((msg[0] != 153)) {
-  CLEAR_BIT32(mcl_cfg.mutes, n);
-    }
+  if (msg[0] != 153) { CLEAR_BIT32(mcl_cfg.mutes, n); }
 }
 void MuteMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
