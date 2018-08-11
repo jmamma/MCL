@@ -62,7 +62,9 @@ void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
   }
 }
 void MDSeqTrack::trig_conditional(uint8_t condition) {
-  if ((condition == 0)) {
+  if (condition == 0) {
+
+    mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
     MD.triggerTrack(track_number, 127);
   } else if (condition <= 8) {
     if (((MidiClock.div16th_counter -
@@ -70,18 +72,44 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
          length) %
             ((condition)) ==
         0) {
+      mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
       MD.triggerTrack(track_number, 127);
     }
-  } else if ((condition == 9) && (random(100) <= 10)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 10) && (random(100) <= 25)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 11) && (random(100) <= 50)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 12) && (random(100) <= 75)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 13) && (random(100) <= 90)) {
-    MD.triggerTrack(track_number, 127);
+  } else {
+
+    uint8_t rnd = random(100);
+    switch (condition) {
+    case 9:
+      if (rnd <= 10) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 10:
+      if (rnd <= 25) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 11:
+      if (rnd <= 50) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 12:
+      if (rnd <= 75) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 13:
+      if (rnd <= 90) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    }
   }
 }
 
