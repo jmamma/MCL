@@ -6,14 +6,19 @@ void MutePage::setup() {}
 void MutePage::init() {
   md_exploit.on();
   note_interface.state = true;
-
-//  midi_events.setup_callbacks();
+#ifdef OLED_DISPLAY
+  classic_display = false;
+  oled_display.clearDisplay();
+#endif
+  //  midi_events.setup_callbacks();
 }
 void MutePage::cleanup() {
   md_exploit.off();
   note_interface.state = false;
-
-//  midi_events.remove_callbacks();
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
+  //  midi_events.remove_callbacks();
 }
 
 void MutePage::draw_mutes(uint8_t line_number) {
@@ -26,11 +31,26 @@ void MutePage::draw_mutes(uint8_t line_number) {
   char str[17] = "----------------";
 
   for (int i = 0; i < 16; i++) {
+
 #ifdef OLED_DISPLAY
-    str[i] = (char)2;
+    if (note_interface.notes[i] > 0) {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
+    }
+
+    else if (!IS_BIT_SET32(mcl_cfg.mutes, i)) {
+      oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
+
+    }
+
+    else {
+
+      oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
+    }
+
 #else
+
     str[i] = (char)219;
-#endif
 
     if (IS_BIT_SET32(mcl_cfg.mutes, i)) {
 
@@ -38,12 +58,9 @@ void MutePage::draw_mutes(uint8_t line_number) {
     }
     if (note_interface.notes[i] > 0) {
 
-#ifdef OLED_DISPLAY
-      str[i] = (char)3;
-#else
       str[i] = (char)255;
-#endif
     }
+#endif
   }
 
   GUI.put_string_at(0, str);
@@ -71,7 +88,7 @@ void MutePage::toggle_mute(int i) {
 }
 void MutePage::toggle_mutes_batch() {
 
-  //midi_events.remove_callbacks();
+  // midi_events.remove_callbacks();
   uint16_t quantize_mute;
   quantize_mute = 1 << encoders[2]->getValue();
   int i;
@@ -94,9 +111,13 @@ void MutePage::toggle_mutes_batch() {
     // trackinfo_page.display();
   }
 
- // midi_events.setup_callbacks();
+  // midi_events.setup_callbacks();
 }
 void MutePage::display() {
+
+  if (!classic_display) {
+    oled_display.clearDisplay();
+  }
   GUI.setLine(GUI.LINE2);
   uint8_t x;
   // GUI.put_string_at(12,"Mute");
@@ -119,7 +140,13 @@ void MutePage::display() {
              64));
   GUI.put_value_at2(14, step_count);
   draw_mutes(0);
+#ifdef OLED_DISPLAY
+  LCD.goLine(1);
+  LCD.puts(GUI.lines[1].data);
+  oled_display.display();
+#endif
 }
+
 bool MutePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
@@ -134,10 +161,10 @@ bool MutePage::handleEvent(gui_event_t *event) {
       //// }
 
       // else {
-    if (note_interface.notes_all_off()) {
-    toggle_mutes_batch();
-    note_interface.init_notes();
-    }
+      if (note_interface.notes_all_off()) {
+        toggle_mutes_batch();
+        note_interface.init_notes();
+      }
       //  }
     }
     return true;
@@ -200,6 +227,8 @@ void MuteMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN("note rec");
   uint8_t n = note_to_trig(msg[1]);
-  if (msg[0] != 153) { CLEAR_BIT32(mcl_cfg.mutes, n); }
+  if (msg[0] != 153) {
+    CLEAR_BIT32(mcl_cfg.mutes, n);
+  }
 }
 void MuteMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
