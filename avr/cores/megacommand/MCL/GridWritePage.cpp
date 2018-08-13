@@ -11,7 +11,7 @@ void GridWritePage::setup() {
   patternswitch = 1;
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[2]->cur = MD.currentKit;
-  MD.saveCurrentKit(MD.currentKit);
+  if (mcl_cfg.auto_save == 1) { MD.saveCurrentKit(MD.currentKit); }
 
   // MD.requestKit(MD.currentKit);
   md_exploit.on();

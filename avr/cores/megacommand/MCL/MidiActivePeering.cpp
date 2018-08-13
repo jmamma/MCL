@@ -53,8 +53,7 @@ void MidiActivePeering::md_setup() {
         }
       }
       MD.setStatus(0x22, 0);
-
-      MD.connected = true;
+     MD.connected = true;
       // MD.setTempo(MidiClock.tempo * 24);
       GUI.flash_strings_fill("MD", "CONNECTED");
 

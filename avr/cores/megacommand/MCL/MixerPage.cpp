@@ -1,5 +1,6 @@
 #include "MCL.h"
 #include "MixerPage.h"
+#define FADER_LEN 15
 
 void MixerPage::setup() {
   ((MCLEncoder *)encoders[0])->handler = encoder_level_handle;
@@ -12,12 +13,13 @@ void MixerPage::setup() {
 }
 void MixerPage::init() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  MD.saveCurrentKit(MD_KITBUF_POS);
-  MD.getBlockingKit(MD_KITBUF_POS);
-  DEBUG_PRINTLN("got blocking kit");
+  if ((mcl_cfg.auto_save == 1)) {
+    MD.saveCurrentKit(MD.currentKit);
+  }
+
+  MD.getBlockingKit(MD.currentKit);
   level_pressmode = 0;
   mixer_param1.cur = 60;
-  mixer_param2.cur = 60;
   md_exploit.on();
   note_interface.state = true;
 
@@ -35,23 +37,12 @@ void MixerPage::cleanup() {
 
 void MixerPage::set_level(int curtrack, int value) {
   in_sysex = 1;
+  MD.kit.levels[curtrack] = value;
   MD.setTrackParam(curtrack, 33, value);
   in_sysex = 0;
 }
 
-void MixerPage::loop() {
-  uint8_t dec = MidiClock.tempo / 10;
-  for (uint8_t n = 0; n < 16; n++) {
-    if (disp_levels[n] > 0) {
-      if (disp_levels[n] < dec) {
-        disp_levels[n] = 0;
-    }
-    else {
-      disp_levels[n] -= dec;
-    }
-    }
-  }
-}
+void MixerPage::loop() {}
 
 void MixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
@@ -63,18 +54,20 @@ void MixerPage::draw_levels() {
 // else if (MD.kit.levels[i] < 4) { scaled_level = 0; }
 #ifdef OLED_DISPLAY
 
-    scaled_level = (uint8_t)(((float)MD.kit.levels[i] / (float)127) * 15);
+    scaled_level =
+        (uint8_t)(((float)MD.kit.levels[i] / (float)127) * FADER_LEN);
 
-    scaled_level2 = (uint8_t)(((float)disp_levels[i] / (float)127) * 15);
+    scaled_level2 = (uint8_t)(((float)disp_levels[i] / (float)127) * FADER_LEN);
 
     if (note_interface.notes[i] == 1) {
-      oled_display.fillRect(0 + i * 8, 6 + (15 - scaled_level), 6,
+      oled_display.fillRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
                             scaled_level + 1, WHITE);
-      oled_display.drawLine( + i * 8, 25, 5 + (i*8), 25, WHITE);
+      //      oled_display.drawLine(+i * 8, FADER_LEN + 3 + 8, 5 + (i * 8),
+      //                          FADER_LEN + 3 + 8, WHITE);
     } else {
-      oled_display.drawRect(0 + i * 8, 6 + (15 - scaled_level), 6,
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
                             scaled_level + 1, WHITE);
-      oled_display.fillRect(0 + i * 8, 6 + (15 - scaled_level2), 6,
+      oled_display.fillRect(0 + i * 8, 12 + (FADER_LEN - scaled_level2), 6,
                             scaled_level2 + 1, WHITE);
     }
     /*
@@ -122,8 +115,6 @@ void encoder_level_handle(Encoder *enc) {
       }
       // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
       mixer_page.set_level(i, track_newval);
-
-      MD.kit.levels[i] = track_newval;
     }
   }
   mdEnc->cur = 64 + dir;
@@ -142,10 +133,22 @@ void MixerPage::display() {
     LCD.goLine(0);
     LCD.puts(GUI.lines[0].data);
   }
+
 #endif
+  mute_page.draw_mutes(0);
   draw_levels();
   if (!classic_display) {
     oled_display.display();
+  }
+  uint8_t dec = MidiClock.tempo / 10;
+  for (uint8_t n = 0; n < 16; n++) {
+    if (disp_levels[n] > 0) {
+      if (disp_levels[n] < dec) {
+        disp_levels[n] = 0;
+      } else {
+        disp_levels[n] -= dec;
+      }
+    }
   }
 }
 bool MixerPage::handleEvent(gui_event_t *event) {
@@ -162,17 +165,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       note_interface.draw_notes(0);
-
+      if (note_interface.notes_all_off()) {
+        if (BUTTON_DOWN(Buttons.BUTTON4)) {
+          mute_page.toggle_mutes_batch();
+        }
+        note_interface.init_notes();
+      }
       return true;
     }
   }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    GUI.setPage(&mute_page);
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    // mute_page.toggle_mutes_batch();
+    // note_interface.init_notes();
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.setPage(&cue_page);
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    GUI.setPage(&mute_page);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
@@ -229,11 +237,9 @@ void MixerMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
-
   uint8_t n = note_to_trig(msg[1]);
   if (msg[0] != 153) {
-  mixer_page.disp_levels[n] = MD.kit.levels[n];
+    mixer_page.disp_levels[n] = MD.kit.levels[n];
   }
 }
-void MixerMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
-}
+void MixerMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}

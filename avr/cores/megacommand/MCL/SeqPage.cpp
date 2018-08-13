@@ -21,11 +21,11 @@ void SeqPage::setup() {
   if (MD.connected) {
     MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
     // stored.
-    if (MidiClock.state != 2) {
-      MD.saveCurrentKit(MD_KITBUF_POS);
+    if ((mcl_cfg.auto_save == 1)) {
+      MD.saveCurrentKit(MD.currentKit);
     }
 
-    MD.getBlockingKit(MD_KITBUF_POS);
+    MD.getBlockingKit(MD.currentKit);
     MD.getCurrentTrack(CALLBACK_TIMEOUT);
     last_md_track = MD.currentTrack;
     ((MCLEncoder *)encoders[1])->min = 0;

@@ -4,13 +4,18 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#define ENCODER_RES_SEQ 2
+#define ENCODER_RES_SEQ 4
+#define ENCODER_RES_PARAM 2
 #define NUM_PARAM_PAGES 2
+#define NUM_LFO_PAGES 4
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
+
+extern MCLEncoder seq_lock1;
+extern MCLEncoder seq_lock2;
 
 #include "SeqParamPage.h"
 #include "SeqStepPage.h"
@@ -18,6 +23,7 @@ extern MCLEncoder seq_param4;
 #include "SeqRtrkPage.h"
 #include "SeqRlckPage.h"
 #include "SeqPtcPage.h"
+#include "SeqLFOPage.h"
 
 extern uint8_t last_ext_track;
 
@@ -27,6 +33,7 @@ extern SeqRtrkPage seq_rtrk_page;
 extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 extern SeqPtcPage seq_ptc_page;
+extern SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];
 
 class SeqPages {
 public:

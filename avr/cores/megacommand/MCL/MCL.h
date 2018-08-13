@@ -21,6 +21,7 @@
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSysexCallbacks.h"
+#include "MDEvents.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
 #include "MidiSDS.hh"

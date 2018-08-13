@@ -42,22 +42,20 @@ void MCL::setup() {
 
   note_interface.setup();
   md_exploit.setup();
-
+  md_events.setup();
   mcl_seq.setup();
   A4SysexListener.setup();
 
   MidiSDSSysexListener.setup();
   midi_setup.cfg_ports();
 
-  // md_setup();
   param1.cur = mcl_cfg.cur_col;
   param2.cur = mcl_cfg.cur_row;
   if (mcl_cfg.display_mirror == 1) {
-     #ifndef DEBUGMODE
-     Serial.begin(250000);
-     GUI.display_mirror = true;
-     #endif
+#ifndef DEBUGMODE
+    Serial.begin(250000);
+    GUI.display_mirror = true;
+#endif
   }
-
 }
 MCL mcl;

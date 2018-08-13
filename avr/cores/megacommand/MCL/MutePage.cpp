@@ -62,19 +62,15 @@ void MutePage::draw_mutes(uint8_t line_number) {
     }
 #endif
   }
-
+  #ifndef OLED_DISPLAY
   GUI.put_string_at(0, str);
-}
-void MutePage::set_level(int curtrack, int value) {
-  in_sysex = 1;
-  MD.setTrackParam(curtrack, 33, value);
-  in_sysex = 0;
+  #endif
 }
 void MutePage::toggle_mute(int i) {
   if (IS_BIT_SET32(mcl_cfg.mutes, i)) {
     CLEAR_BIT32(mcl_cfg.mutes, i);
     if (encoders[2]->getValue() == 7) {
-      set_level(i, 0);
+      mixer_page.set_level(i, 0);
     }
     MD.muteTrack(i, false);
   } else {

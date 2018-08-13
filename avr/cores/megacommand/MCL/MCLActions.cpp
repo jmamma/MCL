@@ -116,10 +116,10 @@ void MCLActions::store_tracks_in_mem( int column, int row, int store_behaviour_)
       curkit = pattern_rec.kit;
     }
     else {
-      curkit = MD_KITBUF_POS;
-      MD.saveCurrentKit(MD_KITBUF_POS);
 
-      //curkit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+      curkit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+      if (mcl_cfg.auto_save == 1) { MD.saveCurrentKit(MD.currentKit);  }
+
 
     }
 

@@ -33,6 +33,7 @@ bool MCLSystemPage::handleEvent(gui_event_t *event) {
       Serial.end();
     }
 #endif
+    seq_ptc_page.poly_max = mcl_cfg.poly_max;
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
@@ -185,6 +186,51 @@ void MCLSystemPage::display() {
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.auto_save);
+    }
+    GUI.put_string_at_fill(0, "MD SAVE:");
+
+    if (encoders[1]->getValue() == 0) {
+      GUI.put_string_at_fill(11, "  OFF");
+    }
+    if (encoders[1]->getValue() >= 1) {
+      GUI.put_string_at_fill(11, "AUTO");
+    }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 1) {
+        encoders[1]->cur = 1;
+      }
+      mcl_cfg.auto_save = encoders[1]->getValue();
+    }
+    break;
+
+  case 8:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
+      encoders[1]->setValue(mcl_cfg.poly_start);
+    }
+    GUI.put_string_at_fill(0, "MD POLYSTART:");
+    if (mcl_cfg.poly_start == 0) {
+      GUI.put_string_at(14, "--");
+    } else {
+      GUI.put_value_at2(14, mcl_cfg.poly_start);
+    }
+    if (encoders[1]->hasChanged()) {
+      if (encoders[1]->getValue() > 16) {
+        encoders[1]->cur = 16;
+      }
+      if (encoders[1]->getValue() < 1) {
+        encoders[1]->cur = 0;
+      }
+      mcl_cfg.poly_start = encoders[1]->getValue();
+    }
+    break;
+
+  case 9:
+
+    if (encoders[0]->hasChanged()) {
+      encoders[0]->old = encoders[0]->cur;
       encoders[1]->setValue(mcl_cfg.poly_max);
     }
     GUI.put_string_at_fill(0, "MD POLYMAX:");
@@ -199,7 +245,7 @@ void MCLSystemPage::display() {
       mcl_cfg.poly_max = encoders[1]->getValue();
     }
     break;
-  case 8:
+  case 10:
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;
@@ -223,7 +269,7 @@ void MCLSystemPage::display() {
       mcl_cfg.uart2_ctrl_mode = encoders[1]->getValue();
     }
     break;
-  case 9:
+  case 11:
 
     if (encoders[0]->hasChanged()) {
       encoders[0]->old = encoders[0]->cur;

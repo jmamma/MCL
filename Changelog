@@ -2,15 +2,14 @@ MCL 2.15 4/07/2018
 
 Important:
 
-MachineDrum Kit 64 is now used as a buffer kit. This kit will be overwritten
-and should not be used.
+Kit auto-save disabled by default.
 
- - In order to get the current state of the MD kit, the current kit needs to be saved.
-   To prevent unintended overwrites of your current work, we now use kit 63 as a temporary location for 
-   saving and retrieving the current kit.
+- For MCL to work correctly you need to enable "MD Save: Auto" from the
+system/options page. THe current kit will be saved when entering sub pages.
+This is necessary to obtain the current state of the MD.
 
 SystemConfig updated requiring new Project Creation on startup.
- 
+
  - Mute mask was added to the system config. Any changes to the system config
  layout require a new project to be created on first boot. Old projects are
  still compatible and can be loaded from the 'Load Project' menu.
@@ -48,6 +47,19 @@ A replacement for the MD mute menu. This features quantisation modes.
 Also LVL function sets the track(s) volume to 0 before unmuting, mixer
 page can then be used to fade in the track(s) gently.
 
+Mixer Page:
+
+For OLED users this will depict both mutes and levels.
+Track triggering is displayed visually.
+
+Chromatic mode:
+
+Chromatic mode will be functional from pages outside of PTC page.
+
+MD POLYSTART parameter added. When a POLYSTART value is chosen, Tracks
+from (POLYSTART to POLYSTART + POLYMAX) will be locked in as chromatic
+tracks. Playable from most pages if an external keyboard is attached.
+
 Display Mirror:
 
 When enabled, the MC will transmit a 7bit encoded dump of the display over
@@ -83,8 +95,3 @@ previously lag behind some ms.
 - Improvement to Project page GUI. Can now exit load and new project
 pages. New project page shows a blinking cursor for the current character
 select.
-
-
-
-
-

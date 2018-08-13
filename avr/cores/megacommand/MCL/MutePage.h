@@ -25,7 +25,6 @@ class MutePage : public LightPage {
  }
  void toggle_mute(int i);
  void toggle_mutes_batch();
- void set_level(int curtrack, int value);
  void draw_mutes(uint8_t line_number);
  bool handleEvent(gui_event_t *event);
  void display();

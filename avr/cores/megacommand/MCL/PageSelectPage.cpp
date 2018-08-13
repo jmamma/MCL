@@ -1,8 +1,8 @@
 #include "MCL.h"
 #include "PageSelectPage.h"
 
-#define MUTE_PAGE 0
-#define MIX_PAGE 1
+#define MIX_PAGE 0
+#define MUTE_PAGE 1
 #define CUE_PAGE 2
 #define WAVD_PAGE 8
 

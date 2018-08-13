@@ -18,7 +18,8 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
-void MCLActionsCallbacks::onMidiStartCallback() {}
+void MCLActionsCallbacks::onMidiStartCallback() {
+}
 
 void MCLActionsMidiEvents::setup_callbacks() {
   if (state) {
