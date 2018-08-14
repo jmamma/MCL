@@ -46,6 +46,10 @@ bool OscPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
+    return true;
+  }
   if (BUTTON_PRESSED(Buttons.BUTTON4)) {
     // md_exploit.off();
     // wd.render();
@@ -200,7 +204,7 @@ void OscPage::display() {
   }
 
     GUI.setLine(GUI.LINE1);
-  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+  if (BUTTON_DOWN(Buttons.BUTTON3)) {
     float freq = get_freq();
     float upper = floor(freq / 1000);
     float lower = floor(freq - (upper * 1000));

@@ -32,7 +32,10 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
     wd.send();
     return true;
   }
-
+  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
+    return true;
+  }
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
     GUI.setPage(&(wd.pages[0]));
 

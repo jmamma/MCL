@@ -8,6 +8,7 @@
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+  oled_display.clearDisplay();
   md_exploit.on();
   note_interface.state = true;
 }
