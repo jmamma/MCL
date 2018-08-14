@@ -20,6 +20,7 @@ class MutePage : public LightPage {
  public:
  MuteMidiEvents midi_events;
  uint32_t mutes;
+ uint16_t detect_time;
  MutePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
  }

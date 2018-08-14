@@ -1,6 +1,6 @@
 #include "MCL.h"
 #include "MixerPage.h"
-#define FADER_LEN 15
+#define FADER_LEN 16
 
 void MixerPage::setup() {
   ((MCLEncoder *)encoders[0])->handler = encoder_level_handle;
@@ -24,6 +24,17 @@ void MixerPage::init() {
   note_interface.state = true;
 
   midi_events.setup_callbacks();
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  mute_page.draw_mutes(0);
+  for (uint8_t i = 0; i < 16; i++) {
+    uint8_t scaled_level =
+        (uint8_t)(((float)MD.kit.levels[i] / (float)127) * (float)FADER_LEN);
+
+    oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                          scaled_level + 1, WHITE);
+  }
+#endif
 }
 void MixerPage::cleanup() {
   md_exploit.off();
@@ -55,30 +66,23 @@ void MixerPage::draw_levels() {
 #ifdef OLED_DISPLAY
 
     scaled_level =
-        (uint8_t)(((float)MD.kit.levels[i] / (float)127) * FADER_LEN);
+        (uint8_t)(((float)MD.kit.levels[i] / (float)127) * (float)(FADER_LEN)) +
+        1;
 
-    scaled_level2 = (uint8_t)(((float)disp_levels[i] / (float)127) * FADER_LEN);
+    scaled_level2 =
+        (uint8_t)(((float)disp_levels[i] / (float)127) * (float)(FADER_LEN)) +
+        1;
 
     if (note_interface.notes[i] == 1) {
-      oled_display.fillRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
-                            scaled_level + 1, WHITE);
-      //      oled_display.drawLine(+i * 8, FADER_LEN + 3 + 8, 5 + (i * 8),
-      //                          FADER_LEN + 3 + 8, WHITE);
+      oled_display.fillRect(0 + i * 8, 13 + (FADER_LEN - scaled_level), 6,
+                            scaled_level, WHITE);
     } else {
-      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
-                            scaled_level + 1, WHITE);
-      oled_display.fillRect(0 + i * 8, 12 + (FADER_LEN - scaled_level2), 6,
-                            scaled_level2 + 1, WHITE);
+
+      oled_display.fillRect(1 + i * 8, 14 + (FADER_LEN - scaled_level), 4,
+                            FADER_LEN - scaled_level2, BLACK);
+      oled_display.fillRect(1 + i * 8, 13 + (FADER_LEN - scaled_level2), 4,
+                            scaled_level2, WHITE);
     }
-    /*
-    if (scaled_level >= 7) {
-      str[i] = (char)0xF8;
-    }
-    if (scaled_level == 0) {
-      str[i] = (char)5;
-    } else {
-      str[i] = (char)(scaled_level + 6);
-    }*/
 #else
 
     scaled_level = (int)(((float)MD.kit.levels[i] / (float)127) * 7);
@@ -115,6 +119,15 @@ void encoder_level_handle(Encoder *enc) {
       }
       // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
       mixer_page.set_level(i, track_newval);
+#ifdef OLED_DISPLAY
+      uint8_t scaled_level = ((uint8_t)(((float)MD.kit.levels[i] / (float)127) *
+                                        (float)FADER_LEN));
+
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+
+#endif
     }
   }
   mdEnc->cur = 64 + dir;
@@ -125,7 +138,7 @@ void encoder_level_handle(Encoder *enc) {
 
 void MixerPage::display() {
   if (!classic_display) {
-    oled_display.clearDisplay();
+    //  oled_display.clearDisplay();
   }
 #ifndef OLED_DISPLAY
   note_interface.draw_notes(0);
@@ -135,19 +148,19 @@ void MixerPage::display() {
   }
 
 #endif
-  mute_page.draw_mutes(0);
+#ifdef OLED_DISPLAY
+  // mute_page.draw_mutes(0);
+#endif
   draw_levels();
   if (!classic_display) {
     oled_display.display();
   }
   uint8_t dec = MidiClock.tempo / 10;
   for (uint8_t n = 0; n < 16; n++) {
-    if (disp_levels[n] > 0) {
-      if (disp_levels[n] < dec) {
-        disp_levels[n] = 0;
-      } else {
-        disp_levels[n] -= dec;
-      }
+    if (disp_levels[n] < dec) {
+      disp_levels[n] = 0;
+    } else {
+      disp_levels[n] -= dec;
     }
   }
 }
@@ -159,17 +172,43 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source - 128;
 
+    if (track > 16) {
+      return;
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
+#ifdef OLED_DISPLAY
+
+      if (note_interface.notes[track] > 0) {
+
+        oled_display.fillRect(0 + track * 8, 2, 6, 6, WHITE);
+      }
+
+#endif
+
       return true;
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       note_interface.draw_notes(0);
+#ifdef OLED_DISPLAY
+      uint8_t i = track;
+      uint8_t scaled_level =
+          (uint8_t)(((float)MD.kit.levels[i] / (float)127) * FADER_LEN);
+
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+
+#endif
+
       if (note_interface.notes_all_off()) {
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           mute_page.toggle_mutes_batch();
         }
         note_interface.init_notes();
+#ifdef OLED_DISPLAY
+        mute_page.draw_mutes(0);
+#endif
       }
       return true;
     }

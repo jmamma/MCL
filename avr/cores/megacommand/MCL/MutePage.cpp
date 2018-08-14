@@ -10,7 +10,6 @@ void MutePage::init() {
   classic_display = false;
   oled_display.clearDisplay();
 #endif
-  //  midi_events.setup_callbacks();
 }
 void MutePage::cleanup() {
   md_exploit.off();
@@ -18,7 +17,6 @@ void MutePage::cleanup() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
-  //  midi_events.remove_callbacks();
 }
 
 void MutePage::draw_mutes(uint8_t line_number) {
@@ -35,16 +33,20 @@ void MutePage::draw_mutes(uint8_t line_number) {
 #ifdef OLED_DISPLAY
     if (note_interface.notes[i] > 0) {
 
+
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
 
     else if (!IS_BIT_SET32(mcl_cfg.mutes, i)) {
-      oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
+
+            oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
+            oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
 
     }
 
     else {
 
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
     }
 
@@ -106,8 +108,8 @@ void MutePage::toggle_mutes_batch() {
     note_interface.notes[i] = 0;
     // trackinfo_page.display();
   }
-
-  // midi_events.setup_callbacks();
+   detect_time = slowclock;
+//   midi_events.setup_callbacks();
 }
 void MutePage::display() {
 
@@ -222,8 +224,15 @@ void MuteMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN("note rec");
+  DEBUG_PRINTLN(msg[0]);
   uint8_t n = note_to_trig(msg[1]);
-  if (msg[0] != 153) {
+  if (clock_diff(mute_page.detect_time, slowclock) < 1000) {
+   return;
+  }
+//  if ((msg[0] != 153) && (md_exploit.state)) {
+  //  CLEAR_BIT32(mcl_cfg.mutes, n);
+//  }
+  else if ((msg[0] == 153) && (!md_exploit.state)) {
     CLEAR_BIT32(mcl_cfg.mutes, n);
   }
 }

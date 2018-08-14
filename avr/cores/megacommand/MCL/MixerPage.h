@@ -25,7 +25,7 @@ class MixerPage : public LightPage {
 public:
   MixerMidiEvents midi_events;
   uint8_t level_pressmode = 0;
-  uint8_t disp_levels[16];
+  int8_t disp_levels[16];
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
