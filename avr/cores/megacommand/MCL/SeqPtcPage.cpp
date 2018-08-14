@@ -10,6 +10,7 @@ void SeqPtcPage::setup() {
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
   md_exploit.off();
+  record_mode = false;
   //  midi_events.remove_callbacks();
 }
 void SeqPtcPage::config_encoders() {
