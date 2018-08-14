@@ -201,7 +201,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
 #endif
 
-      if (note_interface.notes_all_off()) {
+      if (note_interface.notes_all_off_md()) {
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           mute_page.toggle_mutes_batch();
         }

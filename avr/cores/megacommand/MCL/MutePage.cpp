@@ -159,7 +159,7 @@ bool MutePage::handleEvent(gui_event_t *event) {
       //// }
 
       // else {
-      if (note_interface.notes_all_off()) {
+      if (note_interface.notes_all_off_md()) {
         toggle_mutes_batch();
         note_interface.init_notes();
       }

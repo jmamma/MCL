@@ -66,6 +66,29 @@ uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
   }
   return 255;
 }
+
+bool NoteInterface::notes_all_off_md() {
+  bool all_notes_off = false;
+  uint8_t a = 0;
+  uint8_t b = 0;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (notes[i] == 1) {
+      a++;
+    }
+    if (notes[i] == 3) {
+      b++;
+    }
+  }
+  DEBUG_PRINTLN(a);
+  DEBUG_PRINTLN(b);
+  if ((a == 0) && (b > 0)) {
+    all_notes_off = true;
+  }
+  return all_notes_off;
+}
+
+
+
 bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
   uint8_t a = 0;

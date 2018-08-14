@@ -38,6 +38,7 @@ public:
   void note_off_event(uint8_t note_num, uint8_t port);
   bool is_event(gui_event_t *event);
   bool notes_all_off();
+  bool notes_all_off_md();
   uint8_t notes_count_off();
   uint8_t notes_count();
 
