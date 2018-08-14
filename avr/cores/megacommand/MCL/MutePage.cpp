@@ -86,7 +86,7 @@ void MutePage::toggle_mute(int i) {
 }
 void MutePage::toggle_mutes_batch() {
 
-  // midi_events.remove_callbacks();
+   midi_events.remove_callbacks();
   uint16_t quantize_mute;
   quantize_mute = 1 << encoders[2]->getValue();
   int i;
@@ -109,7 +109,7 @@ void MutePage::toggle_mutes_batch() {
     // trackinfo_page.display();
   }
    detect_time = slowclock;
-//   midi_events.setup_callbacks();
+  midi_events.setup_callbacks();
 }
 void MutePage::display() {
 
