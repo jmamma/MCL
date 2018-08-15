@@ -43,9 +43,9 @@ void MCL::setup() {
   note_interface.setup();
   md_exploit.setup();
   md_events.setup();
+  mcl_actions.setup();
   mcl_seq.setup();
   A4SysexListener.setup();
-
   MidiSDSSysexListener.setup();
   midi_setup.cfg_ports();
   for (uint8_t n = 0; n < 16; n++) { SET_BIT32(mcl_cfg.mutes, n); }

@@ -2,10 +2,10 @@ MCL 2.15 4/07/2018
 
 Important:
 
-Kit auto-save disabled by default.
+Kit auto-save enabled by default.
 
 - For MCL to work correctly you need to enable "MD Save: Auto" from the
-system/options page. THe current kit will be saved when entering sub pages.
+system/options page. The current kit will be saved when entering sub pages.
 This is necessary to obtain the current state of the MD.
 
 SystemConfig updated requiring new Project Creation on startup.
@@ -95,3 +95,6 @@ previously lag behind some ms.
 - Improvement to Project page GUI. Can now exit load and new project
 pages. New project page shows a blinking cursor for the current character
 select.
+
+- GridWrite Page P+/P- modes were broken.
+
