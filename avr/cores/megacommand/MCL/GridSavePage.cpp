@@ -14,8 +14,35 @@ void GridSavePage::setup() {
   grid_page.reload_slot_models = false;
 }
 
+void GridSavePage::init() {}
+
+void GridSavePage::cleanup() {}
+
 void GridSavePage::display() {
-  note_interface.draw_notes(0);
+  GUI.setLine(GUI.LINE1);
+  char strn[17] = "----------------";
+
+  for (int i = 0; i < 16; i++) {
+
+    if (note_interface.notes[i] == 1) {
+/*Char 219 on the minicommand LCD is a []*/
+#ifdef OLED_DISPLAY
+      strn[i] = (char)3;
+#else
+      strn[i] = (char)255;
+#endif
+    } else if (note_interface.notes[i] == 3) {
+
+#ifdef OLED_DISPLAY
+      strn[i] = (char)2;
+#else
+      strn[i] = (char)219;
+#endif
+    }
+  }
+
+  GUI.put_string_at(0, strn);
+
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "S");
 

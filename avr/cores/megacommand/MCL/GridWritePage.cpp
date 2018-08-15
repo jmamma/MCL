@@ -11,7 +11,9 @@ void GridWritePage::setup() {
   patternswitch = 1;
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[2]->cur = MD.currentKit;
-  if (mcl_cfg.auto_save == 1) { MD.saveCurrentKit(MD.currentKit); }
+  if (mcl_cfg.auto_save == 1) {
+    MD.saveCurrentKit(MD.currentKit);
+  }
 
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
@@ -19,9 +21,34 @@ void GridWritePage::setup() {
   // GUI.display();
   curpage = W_PAGE;
 }
-
+void GridWritePage::init() {}
+void GridWritePage::cleanup() {}
 void GridWritePage::display() {
-  note_interface.draw_notes(0);
+
+  GUI.setLine(GUI.LINE1);
+        char strn[17] = "----------------";
+
+  for (int i = 0; i < 16; i++) {
+
+    if (note_interface.notes[i] == 1) {
+/*Char 219 on the minicommand LCD is a []*/
+#ifdef OLED_DISPLAY
+      strn[i] = (char)3;
+#else
+      strn[i] = (char)255;
+#endif
+    } else if (note_interface.notes[i] == 3) {
+
+#ifdef OLED_DISPLAY
+      strn[i] = (char)2;
+#else
+      strn[i] = (char)219;
+#endif
+    }
+  }
+
+  GUI.put_string_at(0, strn);
+
   GUI.setLine(GUI.LINE2);
   if (curpage == S_PAGE) {
     GUI.put_string_at(0, "S");
@@ -89,8 +116,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
   DEBUG_PRINTLN(event->source);
   if (note_interface.is_event(event)) {
-      DEBUG_PRINTLN("note event");
-      if (note_interface.notes_all_off()) {
+    DEBUG_PRINTLN("note event");
+    if (note_interface.notes_all_off()) {
       DEBUG_PRINTLN("notes all off");
       md_exploit.off();
       mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
