@@ -54,7 +54,8 @@ void MCLSeq::seq() {
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       md_tracks[i].seq();
     }
-
+  }
+  if (in_sysex2 == 0) {
     for (uint8_t i = 0; i < num_ext_tracks; i++) {
       ext_tracks[i].seq();
     }
