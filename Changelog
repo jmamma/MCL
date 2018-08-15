@@ -98,3 +98,6 @@ select.
 
 - GridWrite Page P+/P- modes were broken.
 
+- GridWrite Page: If MD track length is shorter than the pattern length, the
+tracks will automatically loop until they fill up the remaining pattern steps.
+
