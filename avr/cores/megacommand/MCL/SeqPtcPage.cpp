@@ -402,18 +402,25 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     track = (param / 24) + 2 + (channel - MD.global.baseChannel) * 4;
     track_param = param - ((param / 24) * 24);
   }
+  uint8_t start_track;
 
-  if ((mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) &&
-      (seq_ptc_page.poly_max > 1)) {
+  if (mcl_cfg.poly_start == 0) {
+  start_track = last_md_track;
+   }
+  else  {
+  start_track = mcl_cfg.poly_start - 1;
+  }
+
+  if ((seq_ptc_page.poly_max > 1)) {
     if ((track >= last_md_track) &&
         (track < last_md_track + seq_ptc_page.poly_max)) {
       for (uint8_t n = 0; n < seq_ptc_page.poly_max; n++) {
 
         in_sysex = 1;
 
-        if ((n + last_md_track < 16) && (n + last_md_track != track)) {
+        if ((n + start_track < 16) && (n + start_track != track)) {
           if (param_true) {
-            MD.setTrackParam(n + last_md_track, track_param, value);
+            MD.setTrackParam(n + start_track, track_param, value);
           }
         }
         in_sysex = 0;
