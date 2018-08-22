@@ -9,7 +9,8 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
-  md_exploit.off();
+  bool switch_tracks = true;
+  md_exploit.off(switch_tracks);
   record_mode = false;
   //  midi_events.remove_callbacks();
 }
@@ -35,7 +36,8 @@ void SeqPtcPage::init() {
   }
   midi_events.setup_callbacks();
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
-    md_exploit.on();
+    bool switch_tracks = true;
+    md_exploit.on(switch_tracks);
   } else {
     last_md_track = MD.currentTrack;
   }
@@ -55,10 +57,18 @@ void ptc_pattern_len_handler(Encoder *enc) {
         mcl_seq.md_tracks[c].length = enc_->cur;
       }
     } else {
+
+      uint8_t start_track;
+
+      if (mcl_cfg.poly_start == 0) {
+        start_track = last_md_track;
+      } else {
+        start_track = mcl_cfg.poly_start - 1;
+      }
       if (seq_ptc_page.poly_max > 1) {
         for (uint8_t c = 0; c < seq_ptc_page.poly_max; c++) {
-          if (last_md_track + c < 16) {
-            mcl_seq.md_tracks[last_md_track + c].length = enc_->cur;
+          if (start_track + c < 16) {
+            mcl_seq.md_tracks[start_track + c].length = enc_->cur;
           }
         }
       } else {
@@ -152,10 +162,9 @@ uint8_t SeqPtcPage::get_next_track(uint8_t pitch) {
   uint8_t start_track;
   // If track previously played pitch, re-use this track
   if (mcl_cfg.poly_start == 0) {
-  start_track = last_md_track;
-   }
-  else  {
-  start_track = mcl_cfg.poly_start - 1;
+    start_track = last_md_track;
+  } else {
+    start_track = mcl_cfg.poly_start - 1;
   }
   for (uint8_t x = start_track; x < poly_max && x < 1 && MD.isMelodicTrack(x);
        x++) {
@@ -325,8 +334,10 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
-  if ((GUI.currentPage() == &seq_step_page) || (GUI.currentPage() == &seq_extstep_page) ||
-      (GUI.currentPage() == &grid_save_page) || (GUI.currentPage() == &grid_write_page)) {
+  if ((GUI.currentPage() == &seq_step_page) ||
+      (GUI.currentPage() == &seq_extstep_page) ||
+      (GUI.currentPage() == &grid_save_page) ||
+      (GUI.currentPage() == &grid_write_page)) {
     return;
   }
   if ((mcl_cfg.uart2_ctrl_mode == channel) ||
@@ -357,8 +368,10 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN("note off midi2");
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  if ((GUI.currentPage() == &seq_step_page) || (GUI.currentPage() == &seq_extstep_page) ||
-      (GUI.currentPage() == &grid_save_page) || (GUI.currentPage() == &grid_write_page)) {
+  if ((GUI.currentPage() == &seq_step_page) ||
+      (GUI.currentPage() == &seq_extstep_page) ||
+      (GUI.currentPage() == &grid_save_page) ||
+      (GUI.currentPage() == &grid_write_page)) {
     return;
   }
 
@@ -405,15 +418,14 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t start_track;
 
   if (mcl_cfg.poly_start == 0) {
-  start_track = last_md_track;
-   }
-  else  {
-  start_track = mcl_cfg.poly_start - 1;
+    start_track = last_md_track;
+  } else {
+    start_track = mcl_cfg.poly_start - 1;
   }
 
   if ((seq_ptc_page.poly_max > 1)) {
-    if ((track >= last_md_track) &&
-        (track < last_md_track + seq_ptc_page.poly_max)) {
+    if ((track >= start_track) &&
+        (track < start_track + seq_ptc_page.poly_max)) {
       for (uint8_t n = 0; n < seq_ptc_page.poly_max; n++) {
 
         in_sysex = 1;
