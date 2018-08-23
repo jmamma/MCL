@@ -19,10 +19,10 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
   }
 }
 
-uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
-                                   50, 52, 53, 55, 57, 59, 60, 62};
-
 MDClass::MDClass() {
+  uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
+                                     50, 52, 53, 55, 57, 59, 60, 62};
+
   currentGlobal = -1;
   currentKit = -1;
   currentPattern = -1;
@@ -117,7 +117,7 @@ void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
   uint8_t data[6];
-  data[0] =  MD_SAMPLE_NAME_ID;
+  data[0] = MD_SAMPLE_NAME_ID;
   data[1] = slot;
   data[2] = 0x7F & name[0];
   data[3] = 0x7F & name[1];
@@ -381,7 +381,7 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
   do {
     current_clock = read_slowclock();
 
-    // MCL Code, trying to replicate main loop
+    // MCl Code, trying to replicate main loop
 
     if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
          MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
@@ -470,5 +470,194 @@ uint8_t MDClass::getCurrentPattern(uint16_t timeout) {
     return value;
   }
 }
+
+void MDClass::send_gui_command(uint8_t command, uint8_t value) {
+  MidiUart.m_putc(0xF0);
+  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
+  MidiUart.m_putc(MD_GUI_CMD);
+  MidiUart.m_putc(command);
+  MidiUart.m_putc(value);
+  MidiUart.m_putc(0xF7);
+}
+
+void MDClass::toggle_kit_menu() {
+  send_gui_command(MD_GUI_KIT_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::toggle_lfo_menu() {
+  send_gui_command(MD_GUI_LFO_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::hold_up_arrow() {
+  send_gui_command(MD_GUI_UPARROW, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_up_arrow() {
+  send_gui_command(MD_GUI_UPARROW, MD_GUI_CMD_OFF);
+}
+
+void MDClass::hold_down_arrow() {
+  send_gui_command(MD_GUI_DOWNARROW, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_down_arrow() {
+  send_gui_command(MD_GUI_DOWNARROW, MD_GUI_CMD_OFF);
+}
+
+void MDClass::hold_record_button() {
+  send_gui_command(MD_GUI_RECORD, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_record_button() {
+  send_gui_command(MD_GUI_RECORD, MD_GUI_CMD_OFF);
+}
+
+void MDClass::press_play_button() {
+  send_gui_command(MD_GUI_PLAY, MD_GUI_CMD_ON);
+}
+
+void MDClass::hold_stop_button() {
+  send_gui_command(MD_GUI_STOP, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_stop_button() {
+  send_gui_command(MD_GUI_STOP, MD_GUI_CMD_OFF);
+}
+
+void MDClass::press_extended_button() {
+  send_gui_command(MD_GUI_EXTENDED, MD_GUI_CMD_ON);
+}
+
+void MDClass::press_bankgroup_button() {
+  send_gui_command(MD_GUI_BANKGROUP, MD_GUI_CMD_ON);
+}
+
+void MDClass::toggle_accent_window() {
+  send_gui_command(MD_GUI_ACCENT_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::toggle_swing_window() {
+  send_gui_command(MD_GUI_SWING_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::toggle_slide_window() {
+  send_gui_command(MD_GUI_SLIDE_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::hold_trig(uint8_t trig) {
+
+  send_gui_command(MD_GUI_TRIG_1 + trig - 1, MD_GUI_CMD_ON);
+}
+void MDClass::release_trig(uint8_t trig) {
+
+  send_gui_command(MD_GUI_TRIG_1 + trig - 1, MD_GUI_CMD_OFF);
+}
+
+void MDClass::hold_bankselect(uint8_t bank) {
+  send_gui_command(MD_GUI_BANK_1 + bank - 1, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_bankselect(uint8_t bank) {
+
+  send_gui_command(MD_GUI_BANK_1 + bank - 1, MD_GUI_CMD_OFF);
+}
+
+void MDClass::toggle_tempo_window() {
+
+  send_gui_command(MD_GUI_TEMPO_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::hold_function_button() {
+
+  send_gui_command(MD_GUI_FUNC, MD_GUI_CMD_ON);
+}
+void MDClass::release_function_button() {
+
+  send_gui_command(MD_GUI_FUNC, MD_GUI_CMD_OFF);
+}
+
+void MDClass::hold_left_arrow() {
+  send_gui_command(MD_GUI_LEFTARROW, MD_GUI_CMD_ON);
+}
+void MDClass::release_left_arrow() {
+
+  send_gui_command(MD_GUI_LEFTARROW, MD_GUI_CMD_OFF);
+}
+void MDClass::hold_right_arrow() {
+  send_gui_command(MD_GUI_RIGHTARROW, MD_GUI_CMD_ON);
+}
+
+void MDClass::release_right_arrow() {
+  send_gui_command(MD_GUI_RIGHTARROW, MD_GUI_CMD_OFF);
+}
+
+void MDClass::press_yes_button() {
+
+  send_gui_command(MD_GUI_YES, MD_GUI_CMD_ON);
+}
+
+void MDClass::press_no_button() { send_gui_command(MD_GUI_NO, MD_GUI_CMD_ON); }
+
+void MDClass::hold_scale_button() {
+
+  send_gui_command(MD_GUI_SCALE, MD_GUI_CMD_ON);
+}
+void MDClass::release_scale_button() {
+
+  send_gui_command(MD_GUI_SCALE, MD_GUI_CMD_OFF);
+}
+
+void MDClass::toggle_scale_window() {
+  send_gui_command(MD_GUI_SCALE_WIN, MD_GUI_CMD_ON);
+}
+void MDClass::toggle_mute_window() {
+
+  send_gui_command(MD_GUI_MUTE_WIN, MD_GUI_CMD_ON);
+}
+void MDClass::press_patternsong_button() {
+
+ send_gui_command(MD_GUI_PATTERNSONG, MD_GUI_CMD_ON);
+}
+void MDClass::toggle_song_window() {
+
+  send_gui_command(MD_GUI_SONG_WIN, MD_GUI_CMD_ON);
+}
+void MDClass::toggle_global_window() {
+  send_gui_command(MD_GUI_GLOBAL_WIN, MD_GUI_CMD_ON);
+}
+
+void MDClass::copy() { send_gui_command(MD_GUI_COPY, MD_GUI_CMD_ON); }
+void MDClass::clear() { send_gui_command(MD_GUI_CLEAR, MD_GUI_CMD_ON); }
+void MDClass::paste() { send_gui_command(MD_GUI_PASTE, MD_GUI_CMD_ON); }
+void MDClass::toggle_synth_page() {
+
+  send_gui_command(MD_GUI_SYNTH, MD_GUI_CMD_ON);
+}
+void MDClass::track_select(uint8_t track) {
+  send_gui_command(MD_GUI_TRACK_1 - 1 + track, MD_GUI_CMD_ON);
+}
+void MDClass::encoder_button_press(uint8_t encoder) {
+
+  send_gui_command(MD_GUI_ENC_1 - 1 + encoder, MD_GUI_CMD_ON);
+}
+void MDClass::tap_tempo() { send_gui_command(MD_GUI_TEMPO, MD_GUI_CMD_ON); }
+
+void MDClass::set_record_off() {
+  toggle_swing_window();
+  hold_record_button();
+  hold_record_button();
+  release_record_button();
+}
+void MDClass::set_record_on() {
+  toggle_swing_window();
+  hold_record_button();
+  release_record_button();
+}
+void MDClass::clear_all_windows() { set_record_off(); }
+void MDClass::copy_pattern() {
+  clear_all_windows();
+  copy();
+}
+void MDClass::paste_pattern() { paste(); }
 
 MDClass MD;

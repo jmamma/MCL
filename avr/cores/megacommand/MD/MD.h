@@ -472,7 +472,59 @@ class MDClass {
   uint8_t getCurrentPattern(uint16_t timeout);
 
 	/* @} */
-	uint8_t getCurrentTrack(uint16_t timeout);
+  uint8_t getCurrentTrack(uint16_t timeout);
+
+  void send_gui_command(uint8_t command, uint8_t value);
+
+  void toggle_kit_menu();
+  void toggle_lfo_menu();
+  void hold_up_arrow();
+  void release_up_arrow();
+  void hold_down_arrow();
+  void release_down_arrow();
+  void hold_record_button();
+  void release_record_button();
+  void press_play_button();
+  void hold_stop_button();
+  void release_stop_button();
+  void press_extended_button();
+  void press_bankgroup_button();
+  void toggle_accent_window();
+  void toggle_swing_window();
+  void toggle_slide_window();
+  void hold_trig(uint8_t trig);
+  void release_trig(uint8_t trig);
+  void hold_bankselect(uint8_t bank);
+  void release_bankselect(uint8_t bank);
+  void toggle_tempo_window();
+  void hold_function_button();
+  void release_function_button();
+  void hold_left_arrow();
+  void release_left_arrow();
+  void hold_right_arrow();
+  void release_right_arrow();
+  void press_yes_button();
+  void press_no_button();
+  void hold_scale_button();
+  void release_scale_button();
+  void toggle_scale_window();
+  void toggle_mute_window();
+  void press_patternsong_button();
+  void toggle_song_window();
+  void toggle_global_window();
+  void copy();
+  void clear();
+  void paste();
+  void toggle_synth_page();
+  void track_select(uint8_t track);
+  void encoder_button_press(uint8_t encoder);
+  void tap_tempo();
+
+  void set_record_off();
+  void set_record_on();
+  void clear_all_windows();
+  void copy_pattern();
+  void paste_pattern();
 
 };
 

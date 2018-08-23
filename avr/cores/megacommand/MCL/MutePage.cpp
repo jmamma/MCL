@@ -223,8 +223,6 @@ uint8_t MuteMidiEvents::note_to_trig(uint8_t note_num) {
 void MuteMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  DEBUG_PRINTLN("note rec");
-  DEBUG_PRINTLN(msg[0]);
   uint8_t n = note_to_trig(msg[1]);
   if (clock_diff(mute_page.detect_time, slowclock) < 1000) {
    return;
