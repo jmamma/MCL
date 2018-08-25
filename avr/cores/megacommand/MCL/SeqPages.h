@@ -23,7 +23,6 @@ extern MCLEncoder seq_lock2;
 #include "SeqRtrkPage.h"
 #include "SeqRlckPage.h"
 #include "SeqPtcPage.h"
-#include "SeqLFOPage.h"
 
 extern uint8_t last_ext_track;
 
@@ -33,7 +32,6 @@ extern SeqRtrkPage seq_rtrk_page;
 extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 extern SeqPtcPage seq_ptc_page;
-extern SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];
 
 class SeqPages {
 public:
