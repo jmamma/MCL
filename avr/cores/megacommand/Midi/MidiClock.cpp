@@ -102,6 +102,7 @@ void MidiClockClass::start() {
 }
 
 void MidiClockClass::stop() {
+  clearLed();
   if (mode == INTERNAL_MIDI) {
     state = PAUSED;
     if (transmit_uart1) {
@@ -311,7 +312,7 @@ void MidiClockClass::handleImmediateClock() {
     MidiUart2.m_putc_immediate(0xF8);
   }
   incrementCounters();
-  if (div16th_counter % 4 == 0) {
+  if ((div16th_counter % 4 == 0) && (state == STARTED)) {
     setLed();
   } else {
     clearLed();

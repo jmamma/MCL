@@ -68,8 +68,16 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     if (note_interface.notes_all_off()) {
       md_exploit.off();
-      mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
-                                      STORE_IN_PLACE);
+      if (BUTTON_DOWN(Buttons.BUTTON2)) {
+
+        mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
+                                        grid_page.encoders[1]->getValue(),
+                                        STORE_AT_SPECIFIC);
+
+      } else {
+        mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
+                                        STORE_IN_PLACE);
+      }
       GUI.setPage(&grid_page);
 
       curpage = 0;
@@ -81,31 +89,32 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-    for (int i = 0; i < 20; i++) {
 
-      note_interface.notes[i] = 3;
+    md_exploit.off();
+    DEBUG_PRINTLN("notes");
+    DEBUG_PRINTLN(note_interface.notes_all_off());
+
+    if (note_interface.notes_count() > 0) {
+            for (uint8_t i = 0; i < 20; i++) {
+        if (note_interface.notes[i] == 1) {
+          note_interface.notes[i] = 3;
+        }
+      }
+      mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
+                                      grid_page.encoders[1]->getValue(),
+                                      STORE_AT_SPECIFIC);
+
+    } else {
+      DEBUG_PRINTLN("yep");
+      for (int i = 0; i < 20; i++) {
+
+        note_interface.notes[i] = 3;
+      }
+
+      mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
+                                      grid_page.encoders[1]->getValue(),
+                                      STORE_IN_PLACE);
     }
-    md_exploit.off();
-    mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                    grid_page.encoders[1]->getValue(),
-                                    STORE_IN_PLACE);
-    GUI.setPage(&grid_page);
-    curpage = 0;
-    return true;
-  }
-
-  if ((EVENT_RELEASED(event, Buttons.ENCODER1) ||
-       EVENT_RELEASED(event, Buttons.ENCODER2) ||
-       EVENT_RELEASED(event, Buttons.ENCODER3) ||
-       EVENT_RELEASED(event, Buttons.ENCODER4)) &&
-      (BUTTON_UP(Buttons.ENCODER1) && BUTTON_UP(Buttons.ENCODER2) &&
-       BUTTON_UP(Buttons.ENCODER3) && BUTTON_UP(Buttons.ENCODER4))) {
-
-    // MD.getCurrentPattern(CALLBACK_TIMEOUT);
-    md_exploit.off();
-    mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                    grid_page.encoders[1]->getValue(),
-                                    STORE_AT_SPECIFIC);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;

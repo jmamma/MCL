@@ -12,7 +12,7 @@ void PageSelectPage::init() {
   md_exploit.on();
   note_interface.state = true;
 }
-void PageSelectPage::cleanup() { md_exploit.off(); }
+void PageSelectPage::cleanup() { }
 
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
   LightPage *r_page = NULL;
@@ -123,6 +123,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     if (p) {
       GUI.setPage(p);
     } else {
+      md_exploit.off();
       GUI.setPage(&grid_page);
     }
     return true;

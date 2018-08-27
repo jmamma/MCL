@@ -10,14 +10,14 @@ This is necessary to obtain the current state of the MD.
 
 SystemConfig updated requiring new Project Creation on startup.
 
- - Mute mask was added to the system config. Any changes to the system config
+- Mute mask was added to the system config. Any changes to the system config
  layout require a new project to be created on first boot. Old projects are
  still compatible and can be loaded from the 'Load Project' menu.
 
 MD SDS Bug:
 
-- If MD sysex data such as status or dumps is requested at any time prior to
-receiving a sample dump, the MD encoders lock up indefinately. The only
+- If MD sysex data is requested at a time proceeding a sample request,
+the MD encoders and trigs lock up indefinately after the sample is received. The only
 workaround is to use the WavDesigner pages without accessing other MCL pages.
 
 Features Added:
@@ -101,3 +101,7 @@ select.
 - GridWrite Page: If MD track length is shorter than the pattern length, the
 tracks will automatically loop until they fill up the remaining pattern steps.
 
+- Grid Write and Save Pages GUI changes:
+  Precision mode is now enabled by holding shift1 or shift2 buttons.
+  Encoder buttons no longer save or write tracks and instead exit the pages
+   as per standard function.

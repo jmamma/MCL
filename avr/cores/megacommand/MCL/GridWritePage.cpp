@@ -26,7 +26,7 @@ void GridWritePage::cleanup() {}
 void GridWritePage::display() {
 
   GUI.setLine(GUI.LINE1);
-        char strn[17] = "----------------";
+  char strn[17] = "----------------";
 
   for (int i = 0; i < 16; i++) {
 
@@ -120,7 +120,14 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     if (note_interface.notes_all_off()) {
       DEBUG_PRINTLN("notes all off");
       md_exploit.off();
-      mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+      if (BUTTON_DOWN(Buttons.BUTTON4)) {
+
+        mcl_actions.write_tracks_to_md(MD.currentTrack,
+                                       grid_page.encoders[1]->getValue(),
+                                       STORE_AT_SPECIFIC);
+      } else {
+        mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+      }
       GUI.setPage(&grid_page);
       curpage = 0;
     }
@@ -128,36 +135,28 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if ((EVENT_RELEASED(event, Buttons.ENCODER1) ||
-       EVENT_RELEASED(event, Buttons.ENCODER2) ||
-       EVENT_RELEASED(event, Buttons.ENCODER3) ||
-       EVENT_RELEASED(event, Buttons.ENCODER4)) &&
-      (BUTTON_UP(Buttons.ENCODER1) && BUTTON_UP(Buttons.ENCODER2) &&
-       BUTTON_UP(Buttons.ENCODER3) && BUTTON_UP(Buttons.ENCODER4))) {
-
-    // MD.getCurrentTrack(CALLBACK_TIMEOUT);
-    int curtrack = last_md_track;
-    //        int curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
-
-    md_exploit.off();
-    mcl_actions.write_original = 0;
-    mcl_actions.write_tracks_to_md(MD.currentTrack,
-                                   grid_page.encoders[1]->getValue(), 254);
-    GUI.setPage(&grid_page);
-    curpage = 0;
-    return true;
-  }
-
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    for (int i = 0; i < 20; i++) {
 
-      note_interface.notes[i] = 3;
-    }
-    //   write_tracks_to_md(-1);
     md_exploit.off();
-    mcl_actions.write_original = 1;
-    mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+    if (note_interface.notes_count() > 0) {
+      for (uint8_t i = 0; i < 20; i++) {
+        if (note_interface.notes[i] == 1) {
+          note_interface.notes[i] = 3;
+        }
+      }
+      mcl_actions.write_tracks_to_md(MD.currentTrack,
+                                     grid_page.encoders[1]->getValue(),
+                                     STORE_AT_SPECIFIC);
 
+    } else {
+      for (int i = 0; i < 20; i++) {
+
+        note_interface.notes[i] = 3;
+      }
+      //   write_tracks_to_md(-1);
+      mcl_actions.write_original = 1;
+      mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), STORE_IN_PLACE);
+    }
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
