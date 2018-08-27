@@ -15,10 +15,10 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
-      EVENT_RELEASED(event, Buttons.ENCODER2) ||
-      EVENT_RELEASED(event, Buttons.ENCODER3) ||
-      EVENT_RELEASED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER4)) {
     uint8_t size = m_strlen(file_entries[encoders[0]->getValue()]);
     if (strcmp(&file_entries[encoders[0]->getValue()][size - 4], "mcl") == 0) {
 
@@ -33,7 +33,11 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       }
     }
     return true;
-  } else {
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+      EVENT_RELEASED(event, Buttons.BUTTON2) ||
+      EVENT_RELEASED(event, Buttons.BUTTON3) ||
+      EVENT_PRESSED(event, Buttons.BUTTON4)) {
     if (proj.project_loaded) {
       GUI.setPage(&grid_page);
       return true;
