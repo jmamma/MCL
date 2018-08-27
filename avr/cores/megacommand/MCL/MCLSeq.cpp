@@ -35,6 +35,7 @@ void MCLSeq::setup() {
 
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
+  midi_events.setup_callbacks();
 };
 
 void MCLSeq::onMidiStopCallback() {
@@ -83,6 +84,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
+  /*
   Midi.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
@@ -90,6 +92,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+  */
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
@@ -102,6 +105,7 @@ void MCLSeqMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+  /*
   Midi.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(
@@ -109,6 +113,7 @@ void MCLSeqMidiEvents::remove_callbacks() {
   Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+  */
   Midi2.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);

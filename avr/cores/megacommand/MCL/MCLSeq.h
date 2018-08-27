@@ -17,6 +17,7 @@
 #define SEQ_MUTE_OFF 0
 
 class MCLSeqMidiEvents : public MidiCallback {
+public:
   bool state;
 
   void setup_callbacks();
