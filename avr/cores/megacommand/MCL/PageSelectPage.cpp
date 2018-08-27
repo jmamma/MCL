@@ -12,7 +12,10 @@ void PageSelectPage::init() {
   md_exploit.on();
   note_interface.state = true;
 }
-void PageSelectPage::cleanup() { }
+void PageSelectPage::cleanup() {
+  bool switch_tracks = false;
+  md_exploit.off(switch_tracks);
+}
 
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
   LightPage *r_page = NULL;

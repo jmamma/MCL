@@ -20,7 +20,8 @@ void MixerPage::init() {
   MD.getBlockingKit(MD.currentKit);
   level_pressmode = 0;
   mixer_param1.cur = 60;
-  md_exploit.on();
+  bool switch_tracks = false;
+  md_exploit.on(switch_tracks);
   note_interface.state = true;
 
   midi_events.setup_callbacks();
