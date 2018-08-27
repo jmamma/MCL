@@ -166,7 +166,7 @@ uint8_t SeqPtcPage::get_next_track(uint8_t pitch) {
   } else {
     start_track = mcl_cfg.poly_start - 1;
   }
-  for (uint8_t x = start_track; x < poly_max && x < 1 && MD.isMelodicTrack(x);
+  for (uint8_t x = start_track; x < poly_max && x < 16 && MD.isMelodicTrack(x);
        x++) {
     if (poly_notes[x] == pitch) {
       return x;
@@ -222,7 +222,6 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
-  redisplay = true;
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -249,6 +248,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    redisplay = true;
     record_mode = !record_mode;
     return true;
   }
@@ -281,6 +281,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
     }
+    redisplay = true;
     return true;
   }
 
