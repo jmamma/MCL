@@ -29,7 +29,16 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
     #ifdef OLED_DISPLAY
     oled_display.display();
     #endif
+   // if (MD.connected) {
+   //  MD.rec_sample();
+    //}
+   // delay(250);
+    in_sysex = 1;
     wd.send();
+    in_sysex = 0;
+   // delay(100);
+   // MD.press_no_button();
+   // MD.clear_all_windows_quick();
     return true;
   }
   if (BUTTON_PRESSED(Buttons.BUTTON2)) {
