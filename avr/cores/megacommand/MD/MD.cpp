@@ -471,13 +471,27 @@ uint8_t MDClass::getCurrentPattern(uint16_t timeout) {
   }
 }
 
+uint8_t MDClass::getCurrentGlobal(uint16_t timeout) {
+  uint8_t value = getBlockingStatus(MD_CURRENT_GLOBAL_SLOT_REQUEST, timeout);
+  if (value == 255) {
+    return 255;
+  } else {
+    MD.currentGlobal = value;
+    return value;
+  }
+}
+
+
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
+  USE_LOCK();
+  SET_LOCK();
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.m_putc(MD_GUI_CMD);
   MidiUart.m_putc(command);
   MidiUart.m_putc(value);
   MidiUart.m_putc(0xF7);
+  CLEAR_LOCK();
 }
 
 void MDClass::toggle_kit_menu() {
@@ -616,7 +630,7 @@ void MDClass::toggle_mute_window() {
 }
 void MDClass::press_patternsong_button() {
 
- send_gui_command(MD_GUI_PATTERNSONG, MD_GUI_CMD_ON);
+  send_gui_command(MD_GUI_PATTERNSONG, MD_GUI_CMD_ON);
 }
 void MDClass::toggle_song_window() {
 
@@ -643,21 +657,107 @@ void MDClass::encoder_button_press(uint8_t encoder) {
 void MDClass::tap_tempo() { send_gui_command(MD_GUI_TEMPO, MD_GUI_CMD_ON); }
 
 void MDClass::set_record_off() {
-  toggle_swing_window();
+  toggle_slide_window();
   hold_record_button();
   hold_record_button();
   release_record_button();
 }
 void MDClass::set_record_on() {
-  toggle_swing_window();
+  toggle_slide_window();
   hold_record_button();
   release_record_button();
 }
 void MDClass::clear_all_windows() { set_record_off(); }
+void MDClass::clear_all_windows_quick() {
+  toggle_slide_window();
+  press_no_button();
+}
 void MDClass::copy_pattern() {
   clear_all_windows();
   copy();
 }
 void MDClass::paste_pattern() { paste(); }
+
+void MDClass::tap_right_arrow(uint8_t count) {
+  while (count > 0) {
+    hold_right_arrow();
+    release_right_arrow();
+    count--;
+  }
+}
+
+void MDClass::tap_left_arrow(uint8_t count) {
+
+  while (count > 0) {
+    hold_left_arrow();
+    release_left_arrow();
+    count--;
+  }
+}
+
+void MDClass::tap_up_arrow(uint8_t count) {
+  while (count > 0) {
+    hold_up_arrow();
+    release_up_arrow();
+    count--;
+  }
+}
+
+void MDClass::tap_down_arrow(uint8_t count) {
+  while (count > 0) {
+    hold_down_arrow();
+    release_down_arrow();
+    count--;
+  }
+}
+
+void MDClass::enter_global_edit() {
+  uint8_t global = MD.getCurrentGlobal();
+  if (global == 255) { return; }
+  DEBUG_PRINTLN("global");
+  DEBUG_PRINTLN(global);
+  clear_all_windows_quick();
+  delay(10);
+  toggle_global_window();
+  tap_up_arrow(2);
+  tap_left_arrow(3);
+  if (global <= 4) {
+    tap_right_arrow(global);
+  } else {
+    tap_down_arrow(1);
+    tap_right_arrow(global - 4);
+  }
+  press_yes_button();
+  tap_left_arrow();
+  tap_up_arrow(3);
+}
+
+void MDClass::enter_sample_mgr() {
+  enter_global_edit();
+  tap_down_arrow(2);
+  tap_right_arrow();
+  tap_up_arrow(2);
+  tap_down_arrow(2);
+  press_yes_button();
+  tap_left_arrow();
+  tap_up_arrow(3);
+}
+
+void MDClass::rec_sample(uint8_t pos) {
+  enter_sample_mgr();
+  tap_right_arrow();
+  hold_function_button();
+  tap_up_arrow(13);
+  release_function_button();
+
+  if (pos == 255) {
+    tap_up_arrow();
+    press_yes_button();
+    return;
+  } else {
+    tap_down_arrow(pos - 1);
+    press_yes_button();
+  }
+}
 
 MDClass MD;

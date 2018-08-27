@@ -465,14 +465,16 @@ class MDClass {
 	/**
 	 * Get the current kit of the machinedrum, blocking for an answer.
 	 **/
-  uint8_t getCurrentKit(uint16_t timeout);
+  uint8_t getCurrentKit(uint16_t timeout = 3000);
 	/**
 	 * Get the current pattern of the machinedrum, blocking for an answer.
 	 **/
-  uint8_t getCurrentPattern(uint16_t timeout);
+  uint8_t getCurrentPattern(uint16_t timeout = 3000);
 
 	/* @} */
-  uint8_t getCurrentTrack(uint16_t timeout);
+  uint8_t getCurrentTrack(uint16_t timeout = 3000);
+
+  uint8_t getCurrentGlobal(uint16_t timeout = 3000);
 
   void send_gui_command(uint8_t command, uint8_t value);
 
@@ -523,8 +525,18 @@ class MDClass {
   void set_record_off();
   void set_record_on();
   void clear_all_windows();
+  void clear_all_windows_quick();
+
   void copy_pattern();
   void paste_pattern();
+
+  void tap_left_arrow(uint8_t count = 1);
+  void tap_right_arrow(uint8_t count = 1);
+  void tap_up_arrow(uint8_t count = 1);
+  void tap_down_arrow(uint8_t count = 1);
+  void enter_global_edit();
+  void enter_sample_mgr();
+  void rec_sample(uint8_t pos = 255);
 
 };
 
