@@ -7,7 +7,6 @@ void CuePage::init() {
   note_interface.state = true;
 }
 void CuePage::cleanup() {
-  md_exploit.off();
   note_interface.state = false;
 }
 void CuePage::set_level(int curtrack, int value) {

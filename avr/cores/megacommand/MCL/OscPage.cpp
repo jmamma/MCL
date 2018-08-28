@@ -26,7 +26,7 @@ void OscPage::init() {
   DEBUG_PRINTLN("seq extstep init");
   wd.last_page = this;
   create_chars_mixer();
-  // md_exploit.on();
+  //md_exploit.on();
   note_interface.state = true;
   #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -34,7 +34,6 @@ void OscPage::init() {
 }
 
 void OscPage::cleanup() {
-  md_exploit.off();
   DEBUG_PRINT_FN();
 }
 bool OscPage::handleEvent(gui_event_t *event) {
@@ -136,7 +135,6 @@ void OscPage::loop() {
   }
   enc_->cur = 64 + diff;
   enc_->old = 64;
-
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
     if (!md_exploit.state) {
       md_exploit.on();
@@ -149,6 +147,7 @@ void OscPage::loop() {
       md_exploit.off();
     }
   }
+
 }
 void OscPage::display() {
   // oled_display.clearDisplay();

@@ -9,6 +9,7 @@
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   oled_display.clearDisplay();
+  MD.getCurrentTrack(CALLBACK_TIMEOUT);
   md_exploit.on();
   note_interface.state = true;
 }

@@ -38,7 +38,7 @@ void MixerPage::init() {
 #endif
 }
 void MixerPage::cleanup() {
-  md_exploit.off();
+//  md_exploit.off();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
@@ -224,7 +224,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+          GUI.setPage(&page_select_page); 
     return true;
   }
 
