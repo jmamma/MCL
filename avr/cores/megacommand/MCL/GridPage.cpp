@@ -443,6 +443,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+    MD.getCurrentTrack(CALLBACK_TIMEOUT);
     GUI.setPage(&page_select_page);
     return true;
   }
