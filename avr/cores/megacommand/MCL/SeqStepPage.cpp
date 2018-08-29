@@ -8,9 +8,6 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
-  bool switch_tracks = true;
-  md_exploit.on(switch_tracks);
-  note_interface.state = true;
   ((MCLEncoder *)encoders[0])->max = 13;
   ((MCLEncoder *)encoders[1])->max = 23;
   ((MCLEncoder *)encoders[1])->min = 1;
@@ -24,10 +21,10 @@ void SeqStepPage::init() {
   ((MCLEncoder *)encoders[3])->max = tuning->len - 1;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
+  md_exploit.on();
+  note_interface.state = true;
 }
 void SeqStepPage::cleanup() {
-  bool switch_tracks = true;
-  md_exploit.off(switch_tracks);
   midi_events.remove_callbacks();
   SeqPage::cleanup();
 }

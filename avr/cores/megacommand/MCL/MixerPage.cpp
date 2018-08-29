@@ -12,18 +12,10 @@ void MixerPage::setup() {
 #endif
 }
 void MixerPage::init() {
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  if ((mcl_cfg.auto_save == 1)) {
-    MD.saveCurrentKit(MD.currentKit);
-  }
-
-  MD.getBlockingKit(MD.currentKit);
   level_pressmode = 0;
   mixer_param1.cur = 60;
   bool switch_tracks = false;
-  md_exploit.on(switch_tracks);
   note_interface.state = true;
-
   midi_events.setup_callbacks();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -224,7 +216,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-          GUI.setPage(&page_select_page); 
+    GUI.setPage(&page_select_page);
     return true;
   }
 

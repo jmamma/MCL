@@ -36,6 +36,7 @@ public:
   void display();
   void setup();
   void init();
+  void prepare();
   void loop();
 };
 

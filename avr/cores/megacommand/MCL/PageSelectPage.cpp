@@ -9,13 +9,10 @@
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   oled_display.clearDisplay();
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
   md_exploit.on();
   note_interface.state = true;
 }
 void PageSelectPage::cleanup() {
-  bool switch_tracks = false;
-  md_exploit.off(switch_tracks);
 }
 
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {

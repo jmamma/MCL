@@ -26,16 +26,14 @@ void OscPage::init() {
   DEBUG_PRINTLN("seq extstep init");
   wd.last_page = this;
   create_chars_mixer();
-  //md_exploit.on();
+  // md_exploit.on();
   note_interface.state = true;
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  #endif
+#endif
 }
 
-void OscPage::cleanup() {
-  DEBUG_PRINT_FN();
-}
+void OscPage::cleanup() { DEBUG_PRINT_FN(); }
 bool OscPage::handleEvent(gui_event_t *event) {
   if (BUTTON_PRESSED(Buttons.BUTTON1)) {
     osc_waveform++;
@@ -53,7 +51,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
     // md_exploit.off();
     // wd.render();
     // wd.send();
-     //  exploit_delay_clock = slowclock;
+    //  exploit_delay_clock = slowclock;
     return true;
   }
 
@@ -147,12 +145,11 @@ void OscPage::loop() {
       md_exploit.off();
     }
   }
-
 }
 void OscPage::display() {
   // oled_display.clearDisplay();
   if (!classic_display) {
-  oled_display.fillRect(0, 0, 64, 32, BLACK);
+    oled_display.fillRect(0, 0, 64, 32, BLACK);
   }
   GUI.setLine(GUI.LINE1);
 
@@ -202,21 +199,21 @@ void OscPage::display() {
     break;
   }
 
-    GUI.setLine(GUI.LINE1);
+  GUI.setLine(GUI.LINE1);
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
     float freq = get_freq();
     float upper = floor(freq / 1000);
     float lower = floor(freq - (upper * 1000));
-    GUI.put_value_at1(4, (uint8_t) upper);
-    GUI.put_value_at(5, (int16_t) lower);
-    GUI.put_string_at(8,"Hz");
+    GUI.put_value_at1(4, (uint8_t)upper);
+    GUI.put_value_at(5, (int16_t)lower);
+    GUI.put_string_at(8, "Hz");
     // GUI.printf_at(6, "%f", freq);
   } else {
     uint8_t s = enc1.cur - 8;
     uint8_t note = s - (floor(s / 12) * 12);
 #ifndef OLED_DISPLAY
     GUI.put_value_at2(5, enc3.cur);
-    GUI.put_string_at(7,"%");
+    GUI.put_string_at(7, "%");
 #endif
     GUI.put_string_at_not(4, number_to_note.notes_upper[note]);
     GUI.put_value_at1(6, floor(s / 12));
@@ -230,18 +227,21 @@ void OscPage::display() {
   GUI.put_string_at(10, "\0");
   //  GUI.put_string_at(0, my_str);
   if (!classic_display) {
-  LCD.goLine(0);
-  LCD.puts(GUI.lines[0].data);
-  GUI.lines[0].changed = false;
+    LCD.goLine(0);
+    LCD.puts(GUI.lines[0].data);
+    GUI.lines[0].changed = false;
+  } else {
+    GUI.setLine(GUI.LINE2);
+    GUI.put_string_at(0, "                ");
   }
 #ifdef OLED_DISPLAY
   oled_display.display();
 #endif
 }
 void OscPage::draw_wav(uint8_t wav_type) {
-  #ifndef OLED_DISPLAY
-   return;
-  #endif
+#ifndef OLED_DISPLAY
+  return;
+#endif
   uint8_t x = 64;
   uint8_t y = 0;
   uint8_t h = 30;
@@ -314,14 +314,14 @@ void OscPage::draw_usr() {
   uint8_t y = 0;
   UsrOsc usr_osc(w);
 
-  #ifndef OLED_DISPLAY
+#ifndef OLED_DISPLAY
   GUI.setLine(GUI.LINE2);
-  char str[17] = "                "; 
-  #endif
+  char str[17] = "                ";
+#endif
   for (uint8_t i = 0; i < 16; i++) {
     sample = usr_osc.get_sample((uint32_t)i * 4, 1, 0, usr_values);
 
-    #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
 
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
     if (note_interface.notes[i] == 1) {
@@ -329,18 +329,18 @@ void OscPage::draw_usr() {
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);
       oled_display.drawRect(63 + i * 4, pixel_y - 1, 3, 3, WHITE);
     }
-    #else
-    int scaled_level = (int)((float) (sample + 1.0) * .5 * 7.00); 
+#else
+    int scaled_level = (int)((float)(sample + 1.0) * .5 * 7.00);
     if (scaled_level == 7) {
-       str[i] = (char)(255);
+      str[i] = (char)(255);
     } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2); 
+      str[i] = (char)(scaled_level + 2);
     }
-    #endif
+#endif
   }
-   #ifndef OLED_DISPLAY
-   GUI.put_string_at(0, str);
-   #endif
+#ifndef OLED_DISPLAY
+  GUI.put_string_at(0, str);
+#endif
 }
 
 void OscPage::draw_levels() {
@@ -369,7 +369,7 @@ void OscPage::draw_levels() {
 
     scaled_level = (int)(((float)sine_levels[i] / (float)127) * 7);
     if (scaled_level == 7) {
-str[i] = (char)(255);
+      str[i] = (char)(255);
     } else if (scaled_level > 0) {
       str[i] = (char)(scaled_level + 2);
     }

@@ -5,7 +5,6 @@ void SeqRtrkPage::setup() { SeqPage::setup(); }
 
 void SeqRtrkPage::init() {
   SeqPage::init();
-  md_exploit.on();
 
   note_interface.state = true;
 
@@ -16,9 +15,9 @@ void SeqRtrkPage::init() {
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   midi_device = DEVICE_MD;
   curpage = SEQ_RTRK_PAGE;
+  md_exploit.on();
 }
 void SeqRtrkPage::cleanup() {
-  md_exploit.off();
   SeqPage::cleanup();
 }
 void SeqRtrkPage::display() {

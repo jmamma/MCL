@@ -9,8 +9,6 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
-  bool switch_tracks = true;
-  md_exploit.off(switch_tracks);
   record_mode = false;
   //  midi_events.remove_callbacks();
 }
@@ -36,12 +34,12 @@ void SeqPtcPage::init() {
   }
   midi_events.setup_callbacks();
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
-    bool switch_tracks = true;
-    md_exploit.on(switch_tracks);
+    md_exploit.on();
+    note_interface.state = true;
   } else {
+    md_exploit.off();
     last_md_track = MD.currentTrack;
   }
-  note_interface.state = true;
   config_encoders();
   encoders[1]->cur = 32;
   encoders[0]->cur = 1;

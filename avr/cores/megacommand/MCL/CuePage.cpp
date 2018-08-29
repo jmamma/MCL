@@ -1,9 +1,8 @@
 #include "CuePage.h"
 #include "MCL.h"
 
-void CuePage::setup() { md_exploit.on(); }
+void CuePage::setup() { }
 void CuePage::init() {
-  md_exploit.on();
   note_interface.state = true;
 }
 void CuePage::cleanup() {

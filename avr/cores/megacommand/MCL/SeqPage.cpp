@@ -18,20 +18,6 @@ void SeqPage::create_chars_seq() {
 
 void SeqPage::setup() {
   create_chars_seq();
-  if (MD.connected) {
-    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-    // stored.
-    if ((mcl_cfg.auto_save == 1)) {
-      MD.saveCurrentKit(MD.currentKit);
-    }
-
-    MD.getBlockingKit(MD.currentKit);
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
-    last_md_track = MD.currentTrack;
-    ((MCLEncoder *)encoders[1])->min = 0;
-    grid_page.cur_col = last_md_track;
-  }
-  grid_page.cur_row = param2.getValue();
 }
 
 void SeqPage::init() {

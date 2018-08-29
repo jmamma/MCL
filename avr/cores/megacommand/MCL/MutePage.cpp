@@ -4,7 +4,6 @@
 void MutePage::setup() {}
 
 void MutePage::init() {
-  md_exploit.on();
   note_interface.state = true;
 #ifdef OLED_DISPLAY
   classic_display = false;

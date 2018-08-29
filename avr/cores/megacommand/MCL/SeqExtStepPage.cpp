@@ -27,7 +27,6 @@ void SeqExtStepPage::init() {
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
   midi_events.remove_callbacks();
-  md_exploit.off();
 }
 
 void SeqExtStepPage::display() {

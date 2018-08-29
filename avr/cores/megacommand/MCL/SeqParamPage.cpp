@@ -28,7 +28,6 @@ void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
   p2 = p2_;
 }
 void SeqParamPage::cleanup() {
-  md_exploit.off();
   SeqPage::cleanup();
   midi_events.remove_callbacks();
 }

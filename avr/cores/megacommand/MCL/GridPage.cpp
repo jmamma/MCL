@@ -21,6 +21,8 @@ void GridPage::setup() {
   encoders[3]->handler = encoder_fx_handle;
   ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
   ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
+
+
 }
 
 void GridPage::loop() { midi_active_peering.check(); }
@@ -352,6 +354,21 @@ void GridPage::display() {
   }
 }
 
+void GridPage::prepare() {
+  MD.getCurrentTrack(CALLBACK_TIMEOUT);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  if ((mcl_cfg.auto_save == 1)) {
+    MD.saveCurrentKit(MD.currentKit);
+  }
+  MD.getBlockingKit(MD.currentKit);
+
+  if (MD.connected) {
+    ((MCLEncoder *)encoders[1])->min = 0;
+    grid_page.cur_col = last_md_track;
+  }
+  grid_page.cur_row = param2.getValue();
+}
+
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 
@@ -411,24 +428,28 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_step_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER2)) {
     seq_rtrk_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_rtrk_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER3)) {
     seq_param_page[0].isSetup = false;
+    prepare();
     GUI.setPage(&seq_param_page[0]);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER4)) {
     seq_ptc_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_ptc_page);
 
     return true;
@@ -443,7 +464,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (BUTTON_PRESSED(Buttons.BUTTON2)) {
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
+    prepare();
     GUI.setPage(&page_select_page);
     return true;
   }
