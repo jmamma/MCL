@@ -383,12 +383,12 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
 
     // MCl Code, trying to replicate main loop
 
-    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-      MidiClock.updateClockInterval();
-    }
-    handleIncomingMidi();
-    GUI.display();
+//    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
+//         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
+ //     MidiClock.updateClockInterval();
+ //   }
+//    handleIncomingMidi();
+//    GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
   connected = cb->received;
   return cb->received;
