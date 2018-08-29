@@ -135,7 +135,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
 
     md_exploit.off();
     if (note_interface.notes_count() > 0) {
