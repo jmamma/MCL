@@ -268,13 +268,11 @@ void isr_midi() {
       s = 0;
 
       Midi_ = &Midi;
-      MidiUart.recvActiveSenseTimer = 0;
     } else {
       c = UART2_READ_CHAR();
       s = 1;
 
       Midi_ = &Midi2;
-      MidiUart2.recvActiveSenseTimer = 0;
     }
     if (TIMER1_CHECK_INT()) {
       TCNT1 = 0;
@@ -289,6 +287,12 @@ void isr_midi() {
 
     //  setLed();
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+      if (s == 0) {
+
+        MidiUart.recvActiveSenseTimer = 0;
+      } else {
+        MidiUart2.recvActiveSenseTimer = 0;
+      }
       if (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) ||
           ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s == 1))) {
         switch (c) {
