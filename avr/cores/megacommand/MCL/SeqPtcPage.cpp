@@ -10,6 +10,9 @@ void SeqPtcPage::setup() {
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
   record_mode = false;
+  if (MidiClock.state != 2) {
+    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+  }
   //  midi_events.remove_callbacks();
 }
 void SeqPtcPage::config_encoders() {
@@ -124,6 +127,7 @@ void SeqPtcPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
   GUI.put_value_at2(3, encoders[0]->getValue());

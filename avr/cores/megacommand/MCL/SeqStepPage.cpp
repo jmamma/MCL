@@ -27,6 +27,10 @@ void SeqStepPage::init() {
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
   SeqPage::cleanup();
+  if (MidiClock.state != 2) {
+    MD.setTrackParam(last_md_track, 0,
+                       MD.kit.params[last_md_track][0]);
+  }
 }
 void SeqStepPage::display() {
   GUI.setLine(GUI.LINE1);
