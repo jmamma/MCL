@@ -743,6 +743,15 @@ void MDClass::enter_sample_mgr() {
   tap_up_arrow(3);
 }
 
+void MDClass::preview_sample(uint8_t pos) {
+  enter_sample_mgr();
+  tap_right_arrow();
+  hold_function_button();
+  tap_up_arrow(13);
+  release_function_button();
+  tap_down_arrow(pos - 1);
+}
+
 void MDClass::rec_sample(uint8_t pos) {
   enter_sample_mgr();
   tap_right_arrow();

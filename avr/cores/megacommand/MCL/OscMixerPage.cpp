@@ -41,6 +41,10 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
    // MD.clear_all_windows_quick();
     return true;
   }
+  if (BUTTON_PRESSED(Buttons.BUTTON1)) {
+    MD.preview_sample(encoders[3]->cur + 1);
+    return true;
+  }
   if (BUTTON_PRESSED(Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
