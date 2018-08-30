@@ -307,7 +307,6 @@ void __mainInnerLoop(bool callLoop) {
 
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
   handleIncomingMidi();
-  DEBUG_PRINTLN(MidiClock.div32th_counter);
   if (callLoop) {
     GUI.loop();
   }
