@@ -197,8 +197,7 @@ ISR(TIMER1_COMPA_vect) {
 
   clock++;
 
-  if ((clock > MidiClock.clock_last_time) &&
-      (clock - MidiClock.clock_last_time >= MidiClock.div192th_time)) {
+  if (clock_diff(MidiClock.clock_last_time,clock) >= MidiClock.div192th_time) {
 
     if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
       MidiClock.increment192Counter();
@@ -234,7 +233,6 @@ void gui_poll() {
   } else {
     inGui = true;
   }
-  sei(); // reentrant interrupt
 
   uint16_t sr = SR165.read16();
   if (sr != oldsr) {
@@ -309,7 +307,7 @@ void __mainInnerLoop(bool callLoop) {
 
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
   handleIncomingMidi();
-
+  DEBUG_PRINTLN(MidiClock.div32th_counter);
   if (callLoop) {
     GUI.loop();
   }
