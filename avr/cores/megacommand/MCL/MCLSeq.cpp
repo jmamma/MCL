@@ -42,6 +42,11 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < 4; i++) {
     ext_tracks[i].buffer_notesoff();
   }
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].reset_params();
+  }
+
 }
 
 void MCLSeq::seq() {
