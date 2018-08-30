@@ -40,6 +40,7 @@ public:
   void clear_conditional();
   void clear_locks();
   void clear_track();
+  void reset_params();
 };
 
 #endif /* MDSEQTRACK_H__ */
