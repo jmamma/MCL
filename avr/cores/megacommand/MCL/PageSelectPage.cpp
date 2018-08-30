@@ -13,6 +13,7 @@ void PageSelectPage::init() {
   note_interface.state = true;
 }
 void PageSelectPage::cleanup() {
+  note_interface.init_notes();
 }
 
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {

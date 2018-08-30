@@ -31,13 +31,10 @@ public:
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
-  void cleanup() {
- DEBUG_PRINTLN("clean up");
-  seqpage_midi_events.remove_callbacks();
-  }
   void display();
   void setup();
   void init();
+  void cleanup();
 };
 
 #endif /* SEQPAGE_H__ */
