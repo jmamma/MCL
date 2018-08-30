@@ -5,14 +5,19 @@ Important:
 Kit auto-save enabled by default.
 
 - For MCL to work correctly you need to enable "MD Save: Auto" from the
-system/options page. The current kit will be saved when entering sub pages.
-This is necessary to obtain the current state of the MD.
+system/options page. If the sequencer is stopped, the current kit will be
+saved when entering sub pages. This is necessary to obtain the current state of the MD.
 
 SystemConfig updated requiring new Project Creation on startup.
 
 - Mute mask was added to the system config. Any changes to the system config
  layout require a new project to be created on first boot. Old projects are
  still compatible and can be loaded from the 'Load Project' menu.
+
+Stability:
+
+Minimum sequencer jitter and best overall firmware performance is acheived
+when Turbo Midi is set to 4x.
 
 MD SDS Bug:
 
@@ -70,7 +75,7 @@ Midi Forward:
 Ability to forward all MIDI messages (except clock/realtime) to alternate
 port. Useful if you want to use the MD with the MC and an attached controller.
 
-Enhancements Bug Fixes:
+Enhancements Bug Fixes + Changes:
 
 - OLED SPI frequency doubled. Noticed that the default SPI speed for the OLED
 library was only 4Mhz. Increased to 8MHz. Might provide a small improvement
@@ -89,7 +94,7 @@ select Note of current step (uses one parameter lock track)
 External MIDI keyboard on port 2 can also be used to set note value.
 
 - Improvement of Sequencer GUI. Parameter changes are now applied immediately
-upon encoder change. Current step is now depicted more accurately, would 
+upon encoder change. Current step is now depicted more accurately, would
 previously lag behind some ms.
 
 - Improvement to Project page GUI. Can now exit load and new project
@@ -102,6 +107,7 @@ select.
 tracks will automatically loop until they fill up the remaining pattern steps.
 
 - Grid Write and Save Pages GUI changes:
-  Precision mode is now enabled by holding shift1 or shift2 buttons.
+  Precision mode is now enabled by holding shift1 button.
+  Shift2 button will select all tracks/slots.
   Encoder buttons no longer save or write tracks and instead exit the pages
    as per standard function.
