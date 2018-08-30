@@ -11,10 +11,10 @@ void GridWritePage::setup() {
   patternswitch = 1;
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[2]->cur = MD.currentKit;
-  if (mcl_cfg.auto_save == 1) {
+
+  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
   }
-
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
   note_interface.state = true;
@@ -119,14 +119,11 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("note event");
     if (note_interface.notes_all_off()) {
       DEBUG_PRINTLN("notes all off");
-      md_exploit.off();
-      if (BUTTON_DOWN(Buttons.BUTTON4)) {
-
-        mcl_actions.write_tracks_to_md(MD.currentTrack,
-                                       grid_page.encoders[1]->getValue(),
-                                       STORE_AT_SPECIFIC);
-      } else {
-        mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+      if (BUTTON_DOWN(Buttons.BUTTON2)) {
+         return true;
+     } else {
+         md_exploit.off();
+         mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
       }
       GUI.setPage(&grid_page);
       curpage = 0;
@@ -135,8 +132,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-
+  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     md_exploit.off();
     if (note_interface.notes_count() > 0) {
       for (uint8_t i = 0; i < 20; i++) {
@@ -148,7 +144,15 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
                                      grid_page.encoders[1]->getValue(),
                                      STORE_AT_SPECIFIC);
 
-    } else {
+    }
+     GUI.setPage(&grid_page);
+    curpage = 0;
+    return true;
+
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+
+    md_exploit.off();
       for (int i = 0; i < 20; i++) {
 
         note_interface.notes[i] = 3;
@@ -156,7 +160,6 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       //   write_tracks_to_md(-1);
       mcl_actions.write_original = 1;
       mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), STORE_IN_PLACE);
-    }
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
