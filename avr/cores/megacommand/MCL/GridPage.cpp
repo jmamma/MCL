@@ -357,11 +357,10 @@ void GridPage::display() {
 void GridPage::prepare() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  if ((mcl_cfg.auto_save == 1)) {
+  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
   }
   MD.getBlockingKit(MD.currentKit);
-
   if (MD.connected) {
     ((MCLEncoder *)encoders[1])->min = 0;
     grid_page.cur_col = last_md_track;
