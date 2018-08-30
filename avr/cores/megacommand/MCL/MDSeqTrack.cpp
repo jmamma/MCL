@@ -43,6 +43,16 @@ void MDSeqTrack::seq() {
     }
   }
 }
+
+void MDSeqTrack::reset_params() {
+  for (uint8_t c = 0; c < 4; c++) {
+    if (locks_params[c] > 0) {
+      MD.setTrackParam(track_number, locks_params[c] - 1,
+                       MD.kit.params[track_number][locks_params[c] - 1]);
+    }
+  }
+}
+
 void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
   uint8_t c;
   if (IS_BIT_SET64(lock_mask, step_count)) {
