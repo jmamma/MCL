@@ -26,6 +26,7 @@ void MixerPage::init() {
 
     oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
                           scaled_level + 1, WHITE);
+    disp_levels[i] = 0;
   }
 #endif
 }
