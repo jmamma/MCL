@@ -322,6 +322,15 @@ void isr_midi() {
         }
       }
     } else {
+
+      if (MIDI_IS_STATUS_BYTE(c)) {
+        if (s == 0) {
+
+          MidiUart.recvActiveSenseTimer = 0;
+        } else {
+          MidiUart2.recvActiveSenseTimer = 0;
+        }
+      }
       if (Midi_->forward) {
         if (s == 0) {
           MidiUart2.m_putc(c);
