@@ -47,16 +47,16 @@ void MidiActivePeering::md_setup() {
       md_exploit.send_globals();
       md_exploit.switch_global(7);
       //      uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
+      MD.getCurrentTrack(CALLBACK_TIMEOUT);
       for (uint8_t x = 0; x < 2; x++) {
         for (uint8_t y = 0; y < 16; y++) {
           MD.setStatus(0x22, y);
         }
       }
-      MD.setStatus(0x22, 0);
-     MD.connected = true;
+      MD.setStatus(0x22, MD.currentTrack);
+      MD.connected = true;
       // MD.setTempo(MidiClock.tempo * 24);
       GUI.flash_strings_fill("MD", "CONNECTED");
-
       return;
     }
     delay(250);
