@@ -23,7 +23,7 @@ void MidiActivePeering::md_setup() {
 #endif
 
   GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "Peering...");
+  GUI.put_string_at_fill(0, "Peering...");
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
 #ifdef OLED_DISPLAY
@@ -72,7 +72,7 @@ void MidiActivePeering::a4_setup() {
   oled_display.clearDisplay();
 #endif
   GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "Peering...");
+  GUI.put_string_at_fill(0, "Peering...");
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
 #ifdef OLED_DISPLAY

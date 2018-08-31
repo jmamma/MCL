@@ -151,6 +151,10 @@ void OscPage::display() {
   if (!classic_display) {
     oled_display.fillRect(0, 0, 64, 32, BLACK);
   }
+  else {
+    GUI.setLine(GUI.LINE2);
+    GUI.put_string_at(0, "                ");
+  }
   GUI.setLine(GUI.LINE1);
 
   MusicalNotes number_to_note;
@@ -230,9 +234,6 @@ void OscPage::display() {
     LCD.goLine(0);
     LCD.puts(GUI.lines[0].data);
     GUI.lines[0].changed = false;
-  } else {
-    GUI.setLine(GUI.LINE2);
-    GUI.put_string_at(0, "                ");
   }
 #ifdef OLED_DISPLAY
   oled_display.display();
