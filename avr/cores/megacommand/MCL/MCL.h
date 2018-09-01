@@ -52,7 +52,7 @@
 
 #include "DSP.h"
 
-#define VERSION 2014
+#define VERSION 2015
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
