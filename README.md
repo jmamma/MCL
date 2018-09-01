@@ -16,7 +16,7 @@ part of the MIDICtrl framework.
 
 ### Installing the MIDICtrl core.
 
-(Instructions for OSX, should be similar for Windows)
+MacOS / Linux: 
 
 1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
 
@@ -25,6 +25,17 @@ part of the MIDICtrl framework.
    cd /Applications/Arduino.app/Contents/Java/hardware/
    git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
 ```
+Windows:
+
+The Arduino compiler (avr-gcc) does not like spaces within the full path name when compiling the custom core.
+
+1) Download the Windows ZIP file for non-admin install
+https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
+
+2) Extract zip file to desktop.
+
+3) Download MIDICtrl20_MegaCommand and extract to the "arduino-1.8.5\hardware\" folder.
+
 
 ### Configure the Core
 
