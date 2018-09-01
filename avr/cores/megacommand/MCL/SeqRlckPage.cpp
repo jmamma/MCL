@@ -87,6 +87,7 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
   uint8_t param_true = 0;
+  if (param > 119) { return; } 
   if (param >= 16) {
     param_true = 1;
   }

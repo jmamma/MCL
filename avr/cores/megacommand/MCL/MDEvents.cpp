@@ -5,6 +5,11 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
+
+  DEBUG_PRINTLN(channel);
+  DEBUG_PRINTLN(param);
+  DEBUG_PRINTLN(value);
+  if (param > 119) { return; }
   uint8_t track;
   uint8_t track_param;
   uint8_t param_true = 0;
