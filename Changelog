@@ -3,6 +3,7 @@ MCL 2.15 01/08/2018
 ##### Important #######
 
 OLED Display is now the default display type.
+- See Readme on how to enable HD44780 LCD
 
 - Grid Write and Save Pages GUI changes:
   Precision mode is now enabled by holding shift1 button in either page.
