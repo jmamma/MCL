@@ -27,14 +27,7 @@ void GridSavePage::display() {
 
   for (int i = 0; i < 16; i++) {
 
-    if (note_interface.notes[i] == 1) {
-/*Char 219 on the minicommand LCD is a []*/
-#ifdef OLED_DISPLAY
-      strn[i] = (char)3;
-#else
-      strn[i] = (char)255;
-#endif
-    } else if (note_interface.notes[i] == 3) {
+    if (note_interface.notes[i] != 0) {
 
 #ifdef OLED_DISPLAY
       strn[i] = (char)2;
@@ -71,9 +64,8 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     if (note_interface.notes_all_off()) {
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
-         return true;
-      }
-      else {
+        return true;
+      } else {
         md_exploit.off();
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
                                         STORE_IN_PLACE);
@@ -94,7 +86,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN(note_interface.notes_all_off());
 
     if (note_interface.notes_count() > 0) {
-            for (uint8_t i = 0; i < 20; i++) {
+      for (uint8_t i = 0; i < 20; i++) {
         if (note_interface.notes[i] == 1) {
           note_interface.notes[i] = 3;
         }
@@ -102,11 +94,10 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
                                       grid_page.encoders[1]->getValue(),
                                       STORE_AT_SPECIFIC);
-
     }
     GUI.setPage(&grid_page);
     curpage = 0;
-    return true; 
+    return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
 
@@ -114,14 +105,14 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("notes");
     DEBUG_PRINTLN(note_interface.notes_all_off());
 
-     for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; i++) {
 
-        note_interface.notes[i] = 3;
-      }
+      note_interface.notes[i] = 3;
+    }
 
-      mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                      grid_page.encoders[1]->getValue(),
-                                      STORE_IN_PLACE);
+    mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
+                                    grid_page.encoders[1]->getValue(),
+                                    STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;

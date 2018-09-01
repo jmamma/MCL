@@ -421,6 +421,8 @@ public:
 
   /** Switch the line to be displayed, using either GUI.LINE1 or GUI.LINE2. **/
   void setLine(const uint8_t line) { curLine = line; }
+  /** Clear both lines **/
+  void clearLines();
   /** Clear the currently active line. **/
   void clearLine();
   /** Clear the currently active flash line. **/

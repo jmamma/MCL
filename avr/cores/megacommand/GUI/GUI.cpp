@@ -167,43 +167,43 @@ void GuiClass::display() {
 
 #ifdef OLED_DISPLAY
 #ifndef DEBUGMODE
-    if (display_mirror) {
-      // 7bit encode
-      while (!UART_USB_CHECK_EMPTY_BUFFER())
-        ;
-      UART_USB_WRITE_CHAR(0);
+  if (display_mirror) {
+    // 7bit encode
+    while (!UART_USB_CHECK_EMPTY_BUFFER())
+      ;
+    UART_USB_WRITE_CHAR(0);
 
-      //  Serial.write(0);
+    //  Serial.write(0);
 
-      uint8_t buf[8];
+    uint8_t buf[8];
 
-      uint16_t n = 0;
+    uint16_t n = 0;
 
-      while (n < 512) {
-        buf[0] = 0x80;
-        for (uint8_t c = 0; c < 7; c++) {
+    while (n < 512) {
+      buf[0] = 0x80;
+      for (uint8_t c = 0; c < 7; c++) {
 
-          buf[c + 1] = 0x80;
-          if (n + c < 512) {
-            buf[c + 1] |= oled_display.getBuffer(n + c);
-          }
-          uint8_t msb = oled_display.getBuffer(n + c) >> 7;
-          buf[0] |= msb << c;
+        buf[c + 1] = 0x80;
+        if (n + c < 512) {
+          buf[c + 1] |= oled_display.getBuffer(n + c);
         }
-        for (uint8_t c = 0; c < 8; c++) {
-          while (!UART_USB_CHECK_EMPTY_BUFFER())
-            ;
-          UART_USB_WRITE_CHAR(buf[c]);
-        }
-        // Serial.write(buf, 8);
-
-        n = n + 7;
+        uint8_t msb = oled_display.getBuffer(n + c) >> 7;
+        buf[0] |= msb << c;
       }
+      for (uint8_t c = 0; c < 8; c++) {
+        while (!UART_USB_CHECK_EMPTY_BUFFER())
+          ;
+        UART_USB_WRITE_CHAR(buf[c]);
+      }
+      // Serial.write(buf, 8);
+
+      n = n + 7;
     }
+  }
 #endif
-    if (page->classic_display) {
-      oled_display.display();
-    }
+  if (page->classic_display) {
+    oled_display.display();
+  }
 #endif
 }
 
@@ -414,6 +414,15 @@ void GuiClass::flash_printf_at_fill(uint8_t idx, const char *fmt, ...) {
   m_vsnprintf(buf, sizeof(buf), fmt, lp);
   flash_string_at_fill(idx, buf);
   va_end(lp);
+}
+
+void GuiClass::clearLines() {
+  for (uint8_t a = 0; a < 2; a++) {
+    for (uint8_t i = 0; i < sizeof(lines[0].data); i++) {
+      lines[a].data[i] = ' ';
+    }
+    lines[a].changed = true;
+  }
 }
 
 void GuiClass::clearLine() {

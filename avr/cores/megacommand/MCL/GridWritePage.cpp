@@ -30,14 +30,7 @@ void GridWritePage::display() {
 
   for (int i = 0; i < 16; i++) {
 
-    if (note_interface.notes[i] == 1) {
-/*Char 219 on the minicommand LCD is a []*/
-#ifdef OLED_DISPLAY
-      strn[i] = (char)3;
-#else
-      strn[i] = (char)255;
-#endif
-    } else if (note_interface.notes[i] == 3) {
+    if (note_interface.notes[i] != 0) {
 
 #ifdef OLED_DISPLAY
       strn[i] = (char)2;
@@ -46,7 +39,6 @@ void GridWritePage::display() {
 #endif
     }
   }
-
   GUI.put_string_at(0, strn);
 
   GUI.setLine(GUI.LINE2);
@@ -120,10 +112,10 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     if (note_interface.notes_all_off()) {
       DEBUG_PRINTLN("notes all off");
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
-         return true;
-     } else {
-         md_exploit.off();
-         mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+        return true;
+      } else {
+        md_exploit.off();
+        mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
       }
       GUI.setPage(&grid_page);
       curpage = 0;
@@ -143,23 +135,22 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       mcl_actions.write_tracks_to_md(MD.currentTrack,
                                      grid_page.encoders[1]->getValue(),
                                      STORE_AT_SPECIFIC);
-
     }
-     GUI.setPage(&grid_page);
+    GUI.setPage(&grid_page);
     curpage = 0;
     return true;
-
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
 
     md_exploit.off();
-      for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; i++) {
 
-        note_interface.notes[i] = 3;
-      }
-      //   write_tracks_to_md(-1);
-      mcl_actions.write_original = 1;
-      mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), STORE_IN_PLACE);
+      note_interface.notes[i] = 3;
+    }
+    //   write_tracks_to_md(-1);
+    mcl_actions.write_original = 1;
+    mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(),
+                                   STORE_IN_PLACE);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
