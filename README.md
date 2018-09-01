@@ -18,7 +18,7 @@ part of the MIDICtrl framework.
 
 MacOS / Linux: 
 
-1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.6 tested)
+1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
 
 2) Copy Arduino.app to your /Applications folder and launch it.
    (Must be opened first before performing step below)
