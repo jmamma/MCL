@@ -21,11 +21,13 @@ void MidiActivePeering::md_setup() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
-
+  GUI.clearLines();
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at_fill(0, "Peering...");
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
+  LCD.goLine(1);
+  LCD.puts(GUI.lines[1].data);
 #ifdef OLED_DISPLAY
   oled_display.display();
 #endif
@@ -71,10 +73,13 @@ void MidiActivePeering::a4_setup() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
+  GUI.clearLines();
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at_fill(0, "Peering...");
   LCD.goLine(0);
   LCD.puts(GUI.lines[0].data);
+  LCD.goLine(1);
+  LCD.puts(GUI.lines[1].data);
 #ifdef OLED_DISPLAY
   oled_display.display();
 #endif
