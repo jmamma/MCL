@@ -1,9 +1,10 @@
-/* Copyright (c) 2009 - http://ruinwesen.com/ */
+/*c Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef MIDISYSEX_H__
 #define MIDISYSEX_H__
 
 #include <inttypes.h>
+#include "MidiUart.h"
 
 #ifndef SYSEX_BUF_SIZE
 #define SYSEX_BUF_SIZE 1024
@@ -83,6 +84,8 @@ public:
   uint16_t maxRecordLen;
 
   uint16_t len;
+
+  MidiUartParent *uart;
 
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
 

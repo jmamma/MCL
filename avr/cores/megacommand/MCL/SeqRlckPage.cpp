@@ -22,6 +22,7 @@ void SeqRlckPage::cleanup() {
   midi_events.remove_callbacks();
 }
 void SeqRlckPage::display() {
+ if ((!redisplay) && (MidiClock.state == 2)) { return; }
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, page_select + 1);
 
@@ -43,15 +44,15 @@ void SeqRlckPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
-
-  draw_lock_mask(page_select * 16);
+  bool show_current_step = false;
+  draw_lock_mask(page_select * 16,show_current_step);
 }
 bool SeqRlckPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     return true;
   }
-
+ redisplay = true;
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     curpage = SEQ_RTRK_PAGE;
     GUI.setPage(&seq_rtrk_page);
@@ -86,6 +87,7 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
   uint8_t param_true = 0;
+  if (param > 119) { return; } 
   if (param >= 16) {
     param_true = 1;
   }
@@ -120,7 +122,6 @@ void SeqRlckPageMidiEvents::setup_callbacks() {
   Midi2.addOnControlChangeCallback(this,
                                    (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
                                        onControlChangeCallback_Midi2);
-
   state = true;
 }
 
@@ -135,6 +136,5 @@ void SeqRlckPageMidiEvents::remove_callbacks() {
   Midi2.removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
                 onControlChangeCallback_Midi2);
-
   state = false;
 }

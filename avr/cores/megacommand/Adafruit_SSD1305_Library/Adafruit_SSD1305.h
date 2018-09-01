@@ -15,7 +15,6 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
-
 #if ARDUINO >= 100
  #include "Arduino.h"
 #else
@@ -120,6 +119,7 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   void clearDisplay(void);
   void invertDisplay(uint8_t i);
   void setBrightness(uint8_t i);
+  uint8_t getBuffer(uint16_t i);
   void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);

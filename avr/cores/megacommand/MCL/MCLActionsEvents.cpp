@@ -9,13 +9,17 @@ MCLActionsMidiEvents mcl_actions_midievents;
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
   mcl_actions.kit_reload(msg[1]);
   mcl_actions_callbacks.start_clock32th = MidiClock.div32th_counter;
+
+  mcl_actions_callbacks.start_clock96th = MidiClock.div96th_counter;
+
 }
 
 void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
-void MCLActionsCallbacks::onMidiStartCallback() {}
+void MCLActionsCallbacks::onMidiStartCallback() {
+}
 
 void MCLActionsMidiEvents::setup_callbacks() {
   if (state) {

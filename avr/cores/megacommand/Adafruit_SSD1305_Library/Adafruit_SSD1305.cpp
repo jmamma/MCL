@@ -34,7 +34,7 @@ All text above, and the splash screen below must be included in any redistributi
 #include "glcdfont.c"
 
 #ifdef SPI_HAS_TRANSACTION
-SPISettings oledspi = SPISettings(4000000, MSBFIRST, SPI_MODE0);
+SPISettings oledspi = SPISettings(16000000, MSBFIRST, SPI_MODE0);
 #else
 #define ADAFRUIT_SSD1305_SPI SPI_CLOCK_DIV2
 #endif
@@ -303,6 +303,10 @@ void Adafruit_SSD1305::command(uint8_t c) {
     Wire.write(c);
     Wire.endTransmission();
   }
+}
+
+uint8_t Adafruit_SSD1305::getBuffer(uint16_t i) {
+  return buffer[i];
 }
 
 void Adafruit_SSD1305::data(uint8_t c) {

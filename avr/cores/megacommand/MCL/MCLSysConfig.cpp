@@ -7,7 +7,6 @@ bool MCLSysConfig::write_cfg() {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing cfg");
-
   cfgfile.close();
   ret = cfgfile.open("/config.mcls", O_RDWR);
   if (!ret) {
@@ -55,7 +54,13 @@ bool MCLSysConfig::cfg_init() {
   cur_col = 0;
   cues = 0;
   poly_max = 1;
+  poly_start = 0;
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
+  mutes = 0;
+  display_mirror = 0;
+  tempo = 125;
+  midi_forward = 0;
+  auto_save = 1;
   cfgfile.close();
 
   ret = write_cfg();

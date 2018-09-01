@@ -48,6 +48,7 @@ public:
   void trig_md_fromext(uint8_t note_num);
   void setup();
   void cleanup();
+  void loop();
   void config_encoders();
   void init();
 };

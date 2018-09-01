@@ -27,15 +27,7 @@ void SeqExtStepPage::init() {
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
   midi_events.remove_callbacks();
-  md_exploit.off();
 }
-
-struct musical_notes {
-  const char *notes_upper[16] = {"C ", "C#", "D ", "D#", "E ", "F",
-                                 "F#", "G ", "G#", "A ", "A#", "B "};
-  const char *notes_lower[16] = {"c ", "c#", "d ", "d#", "e ", "f",
-                                 "f#", "g ", "g#", "a ", "a#", "b "};
-};
 
 void SeqExtStepPage::display() {
   GUI.setLine(GUI.LINE1);
@@ -87,7 +79,7 @@ void SeqExtStepPage::display() {
     }
   }
 
-  struct musical_notes number_to_note;
+  MusicalNotes number_to_note;
   uint8_t notenum;
   uint8_t notes_held = 0;
   uint8_t i;
@@ -274,6 +266,10 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if (last_ext_track < mcl_seq.num_ext_tracks) {
     last_ext_track = channel;
     seq_extstep_page.config_encoders();
+
+    if (MidiClock.state != 2) {
+      mcl_seq.ext_tracks[channel].note_on(msg[1]);
+    }
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.notes[i] == 1) {
         mcl_seq.ext_tracks[channel].set_ext_track_step(
@@ -283,7 +279,13 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   }
 }
 
-void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {}
+void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (MidiClock.state != 2) {
+    mcl_seq.ext_tracks[channel].note_off(msg[1]);
+  }
+}
 
 void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {

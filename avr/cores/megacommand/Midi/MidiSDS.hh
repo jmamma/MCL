@@ -53,7 +53,7 @@ public:
   void sendWaitMessage();
   void sendEOFMessage();
   void sendGeneralMessage(uint8_t type);
-  void sendDumpRequest();
+  void sendDumpRequest(uint16_t slot);
   void sendDumpHeader();
   bool sendData(uint8_t *buf, uint8_t len);
 };

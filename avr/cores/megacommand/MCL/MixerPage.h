@@ -6,18 +6,34 @@
 //#include "Pages.hh"
 #include "GUI.h"
 
+
+class MixerMidiEvents : public MidiCallback {
+public:
+  bool state;
+
+  void setup_callbacks();
+  void remove_callbacks();
+  uint8_t note_to_trig(uint8_t note_num);
+  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onNoteOffCallback_Midi(uint8_t *msg);
+  void onControlChangeCallback_Midi(uint8_t *msg);
+};
+
 void encoder_level_handle(Encoder *enc);
+
 class MixerPage : public LightPage {
 public:
+  MixerMidiEvents midi_events;
   uint8_t level_pressmode = 0;
-
+  int8_t disp_levels[16];
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {}
+      : LightPage(e1, e2, e3, e4) {
+      }
   bool handleEvent(gui_event_t *event);
   void draw_levels();
   void display();
-  void create_chars_mixer();
+  void loop();
   void set_level(int curtrack, int value);
   void setup();
   void init();

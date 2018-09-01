@@ -13,6 +13,8 @@ class GridWritePage : public GridIOPage {
  bool handleEvent(gui_event_t *event);
  void display();
  void setup();
+ void init();
+ void cleanup();
 };
 
 #endif /* GRIDWRITEPAGE_H__ */

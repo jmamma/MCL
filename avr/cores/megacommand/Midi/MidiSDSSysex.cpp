@@ -15,7 +15,27 @@ void MidiSDSSysexListenerClass::start() {
 
 void MidiSDSSysexListenerClass::handleByte(uint8_t byte) {}
 
-void MidiSDSSysexListenerClass::end() {
+#define ELEKTRON_ID 0x3C
+#define MD_ID 0x02
+#define MD_SDS_NAME 0x73
+
+void MidiSDSSysexListenerClass::end() {}
+
+void MidiSDSSysexListenerClass::end_immediate() {
+
+  if ((MidiSysex.data[2] == ELEKTRON_ID) && (MidiSysex.data[3] == MD_ID) &&
+      (MidiSysex.data[5] == MD_SDS_NAME)) {
+    sds_slot = MidiSysex.data[6];
+    sds_name[0] = MidiSysex.data[7];
+    sds_name[1] = MidiSysex.data[8];
+    sds_name[2] = MidiSysex.data[9];
+    sds_name[3] = MidiSysex.data[10];
+    sds_name_rec = true;
+    DEBUG_PRINTLN("sample name received");
+
+    return;
+  }
+
   if (MidiSysex.data[0] == 0x7E) {
     isSDSMessage = true;
   } else {
@@ -32,16 +52,16 @@ void MidiSDSSysexListenerClass::end() {
 
   case MIDI_SDS_DUMPHEADER:
     midi_sds.state = SDS_REC;
-    DEBUG_PRINTLN("header rec");
+    // DEBUG_PRINTLN("header rec");
     dump_header();
     break;
 
   case MIDI_SDS_DATAPACKET:
     DEBUG_PRINTLN("data packet rec");
     if (midi_sds.state != SDS_REC) {
-    midi_sds.sendCancelMessage();
-    midi_sds.cancel();
-    return;
+      midi_sds.sendCancelMessage();
+      midi_sds.cancel();
+      return;
     }
     data_packet();
     break;
@@ -83,6 +103,7 @@ void MidiSDSSysexListenerClass::ack() {}
 void MidiSDSSysexListenerClass::dump_request() {}
 
 void MidiSDSSysexListenerClass::dump_header() {
+  sds_name_rec = false;
   uint8_t i = 3;
 
   midi_sds.sampleNumber = MidiSysex.data[i++];
@@ -119,8 +140,7 @@ void MidiSDSSysexListenerClass::dump_header() {
     return;
   }
   bool overwrite = true;
-  if (!midi_sds.wav_file.open(my_string, 1, sampleRate, midi_sds.sampleFormat,
-                              overwrite)) {
+  if (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate, midi_sds.sampleFormat)) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
   }
@@ -160,11 +180,14 @@ void MidiSDSSysexListenerClass::data_packet() {
     //       midi_sds.packetNumber = 0;
     //    }
     midi_sds.sendWaitMessage();
-  
+
     DEBUG_PRINTLN("packet received");
     uint8_t samples[120];
     uint8_t midiBytes_per_word = midi_sds.sampleFormat / 7;
     uint8_t bytes_per_word = midi_sds.sampleFormat / 8;
+    if (midi_sds.sampleFormat % 8 > 0) {
+      bytes_per_word++;
+    }
     if (midi_sds.sampleFormat % 7 > 0) {
       midiBytes_per_word++;
     }
@@ -221,12 +244,15 @@ void MidiSDSSysexListenerClass::data_packet() {
       DEBUG_PRINTLN("error writing sds to SDCard");
       midi_sds.sendCancelMessage();
     }
-   // DEBUG_PRINT(" ");
+    // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
       DEBUG_PRINTLN("Sample receive finished");
       DEBUG_PRINTLN(midi_sds.wav_file.header.subchunk2Size);
       bool write_header = true;
       midi_sds.wav_file.close(write_header);
+      if (sds_name_rec) {
+        midi_sds.wav_file.rename(sds_name);
+      }
     }
 
   } else {

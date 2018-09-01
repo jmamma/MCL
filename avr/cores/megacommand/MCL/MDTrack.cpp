@@ -98,10 +98,18 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 
     // pattern_rec.lockPatterns[tracknumber] = 0;
     // Write pattern lock data to pattern
+    uint8_t a;
     pattern_rec.trigPatterns[tracknumber] = trigPattern;
     pattern_rec.accentPatterns[tracknumber] = accentPattern;
     pattern_rec.slidePatterns[tracknumber] = slidePattern;
     pattern_rec.swingPatterns[tracknumber] = swingPattern;
+
+    for (a = length; a < pattern_rec.patternLength; a += length) {
+      pattern_rec.trigPatterns[tracknumber] |= trigPattern << a;
+      pattern_rec.accentPatterns[tracknumber] |= accentPattern << a;
+      pattern_rec.slidePatterns[tracknumber] |= slidePattern << a;
+      pattern_rec.swingPatterns[tracknumber] |= swingPattern << a;
+    }
 
     for (int n = 0; n < arraysize; n++) {
       // DEBUG_PRINTLN();
@@ -111,7 +119,10 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
       // DEBUG_PRINTLN(value[n]);
 
       //  if (arraysize > 5) {     GUI.flash_string_fill("greater than 5"); }
-      pattern_rec.addLock(tracknumber, step[n], param_number[n], value[n]);
+      for (a = 0; a < pattern_rec.patternLength; a += length) {
+        pattern_rec.addLock(tracknumber, step[n] + a, param_number[n],
+                            value[n]);
+      }
     }
 
     // Possible alternative for writing machinedata to the MD without sending

@@ -16,27 +16,16 @@ void SeqPage::create_chars_seq() {
   LCD.createChar(5, temp_charmap4);
 }
 
-void SeqPage::setup() {
-  create_chars_seq();
-  if (MD.connected) {
-    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-    // stored.
-    if (MidiClock.state != 2) {
-      MD.saveCurrentKit(MD.currentKit);
-    }
-
-    MD.getBlockingKit(MD.currentKit);
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
-
-    ((MCLEncoder *)encoders[1])->min = 0;
-    grid_page.cur_col = last_md_track;
-  }
-  grid_page.cur_row = param2.getValue();
-}
+void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
+}
+
+void SeqPage::cleanup() {
+  seqpage_midi_events.remove_callbacks();
+  note_interface.init_notes();
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
@@ -81,7 +70,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
-void SeqPage::draw_lock_mask(uint8_t offset) {
+void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char str[17] = "----------------";
@@ -96,7 +85,8 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
 
     if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
       str[i] = ' ';
-    } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
+    } else if ((show_current_step) && (step_count == i + offset) &&
+               (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
       if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask,
@@ -137,7 +127,8 @@ void SeqPage::draw_lock_mask(uint8_t offset) {
   GUI.put_string_at(0, str);
 }
 
-void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
+void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
+                                bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -149,16 +140,30 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
 
     for (int i = 0; i < 16; i++) {
       if (device == DEVICE_MD) {
+        // uint32_t new_count = MidiClock.div96th_counter;
+#ifdef OLED_DISPLAY
+        uint32_t count_16th = (MidiClock.div96th_counter + 9) / 6;
+#else
+        uint32_t count_16th = MidiClock.div96th_counter / 6;
+#endif
+        /*    uint8_t step_count = (count_16th -
+                                  mcl_actions_callbacks.start_clock96th / 5) -
+                                 (mcl_seq.md_tracks[last_md_track].length *
+                                  ((count_16th -
+                                    mcl_actions_callbacks.start_clock96th / 5) /
+                                   mcl_seq.md_tracks[last_md_track].length));*/
         uint8_t step_count = (MidiClock.div16th_counter -
                               mcl_actions_callbacks.start_clock32th / 2) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
                                 mcl_actions_callbacks.start_clock32th / 2) /
                                mcl_seq.md_tracks[last_md_track].length));
-
+#ifdef OLED_DISPLAY
+#endif
         if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
           mystr[i] = ' ';
-        } else if ((step_count == i + offset) && (MidiClock.state == 2)) {
+        } else if ((show_current_step) && (step_count == i + offset) &&
+                   (MidiClock.state == 2)) {
           mystr[i] = ' ';
         } else if (note_interface.notes[i] == 1) {
           /*Char 219 on the minicommand LCD is a []*/
@@ -176,8 +181,9 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
 #else
           mystr[i] = (char)219;
 #endif
+        } else {
+          mystr[i] = '-';
         }
-         else { mystr[i] = '-'; }
       }
     }
   } else {
@@ -210,9 +216,9 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
           notesoff++;
         }
       }
-        if ((i >= offset) && (i < offset + 16)) {
-      mystr[i - offset] = '-';
-        }
+      if ((i >= offset) && (i < offset + 16)) {
+        mystr[i - offset] = '-';
+      }
       if ((noteson > 0) && (notesoff > 0)) {
         if ((i >= offset) && (i < offset + 16)) {
           mystr[i - offset] = (char)005;
@@ -250,13 +256,12 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device) {
         }
       }
 
-
       if ((step_count == i) && (MidiClock.state == 2)) {
-          if ((i >= offset) && (i < offset + 16)) {
+        if ((i >= offset) && (i < offset + 16)) {
           mystr[i - offset] = ' ';
-         }
+        }
       }
-       if ((i >= offset) && (i < offset + 16)) {
+      if ((i >= offset) && (i < offset + 16)) {
 
         if (note_interface.notes[i - offset] == 1) {
 #ifdef OLED_DISPLAY
@@ -301,16 +306,15 @@ void SeqPage::display() {
 }
 
 void SeqPageMidiEvents::setup_callbacks() {
-//   Midi.addOnControlChangeCallback(
-//      this,
-//      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+  //   Midi.addOnControlChangeCallback(
+  //      this,
+  //      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
-//  Midi.removeOnControlChangeCallback(
-//      this,
-//    (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
+  //  Midi.removeOnControlChangeCallback(
+  //      this,
+  //    (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
-void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-}
+void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}

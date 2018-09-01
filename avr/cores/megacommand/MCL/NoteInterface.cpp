@@ -64,7 +64,31 @@ uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
       return i;
     }
   }
+  return 255;
 }
+
+bool NoteInterface::notes_all_off_md() {
+  bool all_notes_off = false;
+  uint8_t a = 0;
+  uint8_t b = 0;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (notes[i] == 1) {
+      a++;
+    }
+    if (notes[i] == 3) {
+      b++;
+    }
+  }
+  DEBUG_PRINTLN(a);
+  DEBUG_PRINTLN(b);
+  if ((a == 0) && (b > 0)) {
+    all_notes_off = true;
+  }
+  return all_notes_off;
+}
+
+
+
 bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
   uint8_t a = 0;
@@ -134,32 +158,41 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  if (midi_active_peering.uart1_device == DEVICE_MD) {
+  if (midi_active_peering.get_device(UART1_PORT) == note_interface.uart1_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.uart1_device);
+      msg[1], midi_active_peering.get_device(UART1_PORT));
   note_interface.note_on_event(note_num, UART1_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
+
+  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
+    return;
+  }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.uart2_device);
+      msg[1], midi_active_peering.get_device(UART2_PORT));
   DEBUG_PRINTLN(note_num);
   note_interface.note_on_event(note_num, UART2_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   // MD input is handled by the NoteInterface object
-  if (midi_active_peering.uart1_device == DEVICE_MD) {
+  if (midi_active_peering.get_device(UART1_PORT) == note_interface.uart1_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.uart1_device);
+      msg[1], midi_active_peering.get_device(UART1_PORT));
   note_interface.note_off_event(note_num, UART1_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+
+  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
+    return;
+  }
+
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.uart2_device);
+      msg[1], midi_active_peering.get_device(UART2_PORT));
   DEBUG_PRINTLN("note to track");
   DEBUG_PRINTLN(note_num);
   note_interface.note_off_event(note_num, UART2_PORT);

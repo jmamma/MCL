@@ -13,29 +13,6 @@ MidiUartClass MidiUart;
 MidiUartClass2 MidiUart2;
 
 // extern MidiClockClass MidiClock;
-#define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR1, OCF1A)
-#define TIMER2_CHECK_INT() IS_BIT_SET8(TIFR2, OCF2A)
-#define TIMER1_CLEAR_INT() TIFR1 |= (1 << OCF1A);
-#define TIMER2_CLEAR_INT() TIFR2 |= (1 << OCF2A);
-
-#define UART_BAUDRATE 31250
-#define UART_BAUDRATE_REG (((F_CPU / 16) / (UART_BAUDRATE)) - 1)
-
-#define UART_CHECK_EMPTY_BUFFER() IS_BIT_SET8(UCSR1A, UDRE1)
-#define UART2_CHECK_EMPTY_BUFFER() IS_BIT_SET8(UCSR2A, UDRE2)
-
-#define UART_CHECK_RX() IS_BIT_SET8(UCSR1A, RXC1)
-#define UART_CHECK_TX() IS_BIT_SET8(UCSR1A, TXC1)
-
-#define UART_WRITE_CHAR(c) (UDR1 = (c))
-#define UART_READ_CHAR() (UDR1)
-
-#define UART2_CHECK_RX() IS_BIT_SET8(UCSR2A, RXC1)
-#define UART2_CHECK_TX() IS_BIT_SET8(UCSR2A, tXC1)
-
-#define UART2_WRITE_CHAR(c) (UDR2 = (c))
-#define UART2_READ_CHAR() (UDR2)
-
 #include <avr/io.h>
 
 MidiUartClass::MidiUartClass() : MidiUartParent() { initSerial(); }
@@ -291,13 +268,11 @@ void isr_midi() {
       s = 0;
 
       Midi_ = &Midi;
-      MidiUart.recvActiveSenseTimer = 0;
     } else {
       c = UART2_READ_CHAR();
       s = 1;
 
       Midi_ = &Midi2;
-      MidiUart2.recvActiveSenseTimer = 0;
     }
     if (TIMER1_CHECK_INT()) {
       TCNT1 = 0;
@@ -312,6 +287,12 @@ void isr_midi() {
 
     //  setLed();
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+      if (s == 0) {
+
+        MidiUart.recvActiveSenseTimer = 0;
+      } else {
+        MidiUart2.recvActiveSenseTimer = 0;
+      }
       if (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) ||
           ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s == 1))) {
         switch (c) {
@@ -342,6 +323,22 @@ void isr_midi() {
       }
     } else {
 
+      if (MIDI_IS_STATUS_BYTE(c)) {
+        if (s == 0) {
+
+          MidiUart.recvActiveSenseTimer = 0;
+        } else {
+          MidiUart2.recvActiveSenseTimer = 0;
+        }
+      }
+      if (Midi_->forward) {
+        if (s == 0) {
+          MidiUart2.m_putc(c);
+        }
+        if (s == 1) {
+          MidiUart.m_putc(c);
+        }
+      }
       switch (Midi_->live_state) {
       case midi_wait_sysex: {
 

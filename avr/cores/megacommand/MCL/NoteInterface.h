@@ -22,6 +22,8 @@ public:
 
 class NoteInterface {
 public:
+  uint8_t uart1_device = DEVICE_MD;
+  uint8_t uart2_device = DEVICE_A4;
   uint8_t notes[NI_MAX_NOTES];
   uint8_t notecount = 0;
   uint8_t last_note;
@@ -36,6 +38,7 @@ public:
   void note_off_event(uint8_t note_num, uint8_t port);
   bool is_event(gui_event_t *event);
   bool notes_all_off();
+  bool notes_all_off_md();
   uint8_t notes_count_off();
   uint8_t notes_count();
 

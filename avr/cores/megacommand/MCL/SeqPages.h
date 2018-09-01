@@ -4,13 +4,18 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#define ENCODER_RES_SEQ 2
+#define ENCODER_RES_SEQ 4
+#define ENCODER_RES_PARAM 2
 #define NUM_PARAM_PAGES 2
+#define NUM_LFO_PAGES 4
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
+
+extern MCLEncoder seq_lock1;
+extern MCLEncoder seq_lock2;
 
 #include "SeqParamPage.h"
 #include "SeqStepPage.h"

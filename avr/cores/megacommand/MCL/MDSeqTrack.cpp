@@ -43,6 +43,16 @@ void MDSeqTrack::seq() {
     }
   }
 }
+
+void MDSeqTrack::reset_params() {
+  for (uint8_t c = 0; c < 4; c++) {
+    if (locks_params[c] > 0) {
+      MD.setTrackParam(track_number, locks_params[c] - 1,
+                       MD.kit.params[track_number][locks_params[c] - 1]);
+    }
+  }
+}
+
 void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
   uint8_t c;
   if (IS_BIT_SET64(lock_mask, step_count)) {
@@ -50,19 +60,25 @@ void MDSeqTrack::send_parameter_locks(uint8_t step_count) {
       if (locks[c][step_count] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1,
                          locks[c][step_count] - 1);
+      } else if (locks_params[c] > 0) {
+        MD.setTrackParam(track_number, locks_params[c] - 1,
+                         MD.kit.params[track_number][locks_params[c] - 1]);
       }
     }
   } else if (IS_BIT_SET64(pattern_mask, step_count)) {
 
     for (c = 0; c < 4; c++) {
-
-      MD.setTrackParam(track_number, locks_params[c] - 1,
-                       MD.kit.params[track_number][locks_params[c] - 1]);
+      if (locks_params[c] > 0) {
+        MD.setTrackParam(track_number, locks_params[c] - 1,
+                         MD.kit.params[track_number][locks_params[c] - 1]);
+      }
     }
   }
 }
 void MDSeqTrack::trig_conditional(uint8_t condition) {
-  if ((condition == 0)) {
+  if (condition == 0) {
+
+    mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
     MD.triggerTrack(track_number, 127);
   } else if (condition <= 8) {
     if (((MidiClock.div16th_counter -
@@ -70,20 +86,62 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
          length) %
             ((condition)) ==
         0) {
+      mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
       MD.triggerTrack(track_number, 127);
     }
-  } else if ((condition == 9) && (random(100) <= 10)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 10) && (random(100) <= 25)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 11) && (random(100) <= 50)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 12) && (random(100) <= 75)) {
-    MD.triggerTrack(track_number, 127);
-  } else if ((condition == 13) && (random(100) <= 90)) {
-    MD.triggerTrack(track_number, 127);
+  } else {
+
+    uint8_t rnd = random(100);
+    switch (condition) {
+    case 9:
+      if (rnd <= 10) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 10:
+      if (rnd <= 25) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 11:
+      if (rnd <= 50) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 12:
+      if (rnd <= 75) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    case 13:
+      if (rnd <= 90) {
+        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+        MD.triggerTrack(track_number, 127);
+      }
+      break;
+    }
   }
 }
+
+uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
+  uint8_t match = 255;
+  uint8_t c = 0;
+  // Let's try and find an existing param
+  for (c = 0; c < 4 && match == 255; c++) {
+    if (locks_params[c] == (track_param + 1)) {
+      match = c;
+    }
+  }
+  if (match != 255) {
+    return locks[match][step];
+  }
+  return 255;
+}
+
 void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
   uint8_t match = 255;
@@ -186,6 +244,12 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
   timing[step] = utiming;
 }
 
+void MDSeqTrack::clear_step_locks(uint8_t step) {
+  for (uint8_t c = 0; c < 4; c++) {
+    locks[c][step] = 0;
+  }
+  CLEAR_BIT64(lock_mask, step);
+}
 void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < 64; c++) {
     conditional[c] = 0;

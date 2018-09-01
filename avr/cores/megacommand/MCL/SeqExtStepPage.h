@@ -5,8 +5,6 @@
 
 #include "SeqPage.h"
 
-struct musical_notes;
-
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:

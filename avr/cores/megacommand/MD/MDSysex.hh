@@ -67,7 +67,7 @@ public:
    * received). **/
   CallbackVector2<MDCallback, 8, uint8_t, uint8_t> onStatusResponseCallbacks;
 
-  CallbackVector<MDCallback, 8> onSampleNameCallbacks;
+  CallbackVector<MDCallback, 1> onSampleNameCallbacks;
   /** Stores if the currently received message is a MachineDrum sysex message.
    * **/
   bool isMDMessage;

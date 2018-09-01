@@ -14,6 +14,7 @@ public:
 
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
+
 };
 
 class SeqRlckPage : public SeqPage {

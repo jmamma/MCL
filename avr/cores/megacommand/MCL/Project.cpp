@@ -59,6 +59,7 @@ bool Project::check_project_version() {
     return false;
   }
   if (version >= PROJ_VERSION) {
+    project_loaded = true;
     return true;
   }
   else {

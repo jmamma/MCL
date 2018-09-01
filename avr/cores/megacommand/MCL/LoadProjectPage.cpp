@@ -15,13 +15,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.ENCODER1) ||
-      EVENT_RELEASED(event, Buttons.ENCODER2) ||
-      EVENT_RELEASED(event, Buttons.ENCODER3) ||
-      EVENT_RELEASED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER4)) {
     uint8_t size = m_strlen(file_entries[encoders[0]->getValue()]);
-    if (strcmp(&file_entries[encoders[0]->getValue()][size - 4], "mcl") ==
-        0) {
+    if (strcmp(&file_entries[encoders[0]->getValue()][size - 4], "mcl") == 0) {
 
       char temp[size + 1];
       temp[0] = '/';
@@ -35,7 +34,15 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+      EVENT_RELEASED(event, Buttons.BUTTON2) ||
+      EVENT_RELEASED(event, Buttons.BUTTON3) ||
+      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    if (proj.project_loaded) {
+      GUI.setPage(&grid_page);
+      return true;
+    }
+  }
   return false;
 }
 
@@ -55,7 +62,7 @@ void LoadProjectPage::setup() {
   SD.vwd()->rewind();
 
   while (dirfile.openNext(SD.vwd(), O_READ)) {
-    for (uint8_t c = 0; c < 16; c++ ) {
+    for (uint8_t c = 0; c < 16; c++) {
       temp_entry[c] = 0;
     }
     dirfile.getName(temp_entry, 16);
@@ -77,14 +84,11 @@ void LoadProjectPage::setup() {
     }
     index++;
     dirfile.close();
-
   }
 
   if (numEntries <= 0) {
     numEntries = 0;
-   ((MCLEncoder *)encoders[0])->max = 0;
+    ((MCLEncoder *)encoders[0])->max = 0;
   }
   ((MCLEncoder *)encoders[0])->max = numEntries - 1;
-
-
 }

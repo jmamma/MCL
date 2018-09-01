@@ -53,6 +53,7 @@ void ElektronDataToSysexEncoder::startChecksum() {
 	inChecksum = true;
 }
 
+
 void ElektronDataToSysexEncoder::finishChecksum() {
 	uint16_t len = retLen - 5;
 	inChecksum = false;
@@ -61,7 +62,23 @@ void ElektronDataToSysexEncoder::finishChecksum() {
 	pack8(checksum & 0x7F);
 	pack8((len >> 7) & 0x7F);
 	pack8(len & 0x7F);
-	pack8(0xF7);
+    if (uart != NULL) {
+        uart->m_putc(0xF7);
+    }
+   else {
+     *(ptr++) = 0xF7;
+    }
+}
+
+void ElektronDataToSysexEncoder::begin() {
+   if (uart != NULL) {
+        uart->m_putc(0xF0);
+    }
+   else {
+   *(ptr++) = 0xF0;
+   }
+
+   retLen++;
 }
 
 uint16_t ElektronDataToSysexEncoder::finish() {
@@ -120,17 +137,19 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
 }
 
 DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::pack8(uint8_t inb) {
-	if (in7Bit) {
+    if (in7Bit) {
 		DATA_ENCODER_CHECK(encode7Bit(inb));
 	} else {
 #ifdef DATA_ENCODER_CHECKING
 		DATA_ENCODER_CHECK((ptr + 1) < (data + maxLen));
 #endif
-		if (inChecksum) {
+
+        inb &= 0x7F;
+        if (inChecksum) {
 			checksum += inb;
 		}
 		if (uart != NULL) {
-            uart->m_putc(inb);
+           uart->m_putc(inb);
 		} else {
 			*(ptr++) = inb;
 		}

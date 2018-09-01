@@ -11,8 +11,11 @@
 
 //#define DEBUGMODE
 
+#define SERIAL_SPEED 250000
+
 #ifdef DEBUGMODE
-#define DEBUG_INIT() Serial.begin(9600);
+
+#define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
 #define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__FUNCTION__);})
@@ -23,7 +26,6 @@
 #define DEBUG_PRINTLN(x)
 #define DEBUG_PRINT_FN(x)
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {

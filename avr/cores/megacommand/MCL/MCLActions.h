@@ -20,6 +20,7 @@ public:
 
   uint8_t patternswitch = PATTERN_UDEF;
   uint32_t start_clock32th = 0;
+  uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
 
   MCLActions() {}

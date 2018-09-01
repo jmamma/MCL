@@ -39,16 +39,18 @@ https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
 
 ### Configure the Core
 
-You need to set the correct display type. By default the display type is HD44780 16x2 LCD.
+You need to set the correct display type.
 
-To enable the OLED display edit OLED.h
+As of 2.15 OLED display is enabled by default.
+
+To enable the HD44780 16x2 display edit OLED.h
 ```
 ${install_dir}/MIDICtrl20_MegaCommand/avr/cores/megacommand/OLED.h
 
-Change 
-//#define OLED_DISPLAY
+Change
+define OLED_DISPLAY
 to
-#define OLED_DISPLAY
+//#define OLED_DISPLAY
 
 ```
 

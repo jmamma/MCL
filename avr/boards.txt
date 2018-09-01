@@ -32,8 +32,6 @@ mega.build.libraries=Midi GUI CommonTools Elektron
 mega.build.variant=mega
 # default board may be overridden by the cpu menu
 mega.build.board=AVR_MEGA2560
-mega.build.extra_flugs=-IMidi -IGUI -ICommonTools -IElektron
-#mega.build.extra_flags= -Wl,--section-start=. -mcall-prologues -funsigned-char -funsigned-bitfields -fshort-enums -fpack-struct -Wall -fno-default-inline -fno-rtti -fno-implement-inlines -finline-limit=3 -fno-inline-small-functions -fno-tree-scev-cprop -fsplit-wide-types -fno-threadsafe-statics -Wl,--relax
 
 ## Arduino/Genuino Mega w/ ATmega2560
 ## -------------------------

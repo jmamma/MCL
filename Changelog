@@ -1,0 +1,174 @@
+MCL 2.15 01/08/2018
+
+##### Important #######
+
+OLED Display is now the default display type.
+
+- Grid Write and Save Pages GUI changes:
+  Precision mode is now enabled by holding shift1 button in either page.
+  Shift2 button will "write/save" original, which means all tracks and master
+  settings.
+  Encoder buttons no longer save or write tracks.
+
+Kit auto-save enabled by default.
+
+- If auto-save is enabled and the sequencer is stopped, the current kit will be
+  saved when entering sub pages. This is necessary to detect kit changes
+  such as machine change, or masterfx changes.
+
+- Current kit is saved when storing track from the MD when autosave is
+  enabled.
+- Current kit is always saved when writing tracks to the MD regardless of
+  autosave setting.
+
+- SystemConfig updated requiring new Project Creation on startup.
+
+Stability:
+
+- Minimum sequencer jitter and best overall firmware performance is acheived
+  when Turbo Midi is set to 4x. 8x turbo may not provide any performance
+  benefit.
+
+MD SDS Bug:
+
+- If MD sysex data is requested at a time proceeding a sample request,
+  the MD encoders and trigs lock up indefinately after the sample is received.
+  The only current workaround is to power cycle the MD after receiving a sample.
+
+##### Features Added #####
+
+Quick PageSelect:
+
+- Holding Shift Button 1 now accesses a page quick select menu.
+
+- When inside the page select menu:
+  MD trigger buttons 1 -> 16 can be used to select various pages quickly.
+  Rotary encoder 1 can be used to scroll through available pages.
+  Releasing Shift Button 1 enters the selected page.
+
+- Currently (Mute, Mixer, Cue and Wav Designer) pages are accessible through
+  this menu.
+
+Wav Designer.
+
+- Accessible from QuickPageselect menu above.
+
+- 3 Oscillator Additive Synthesiser. Generates single cycle waveforms and sends
+  them to a MD sample slot.
+
+- There are 4 pages to the WavDesigner.
+  Encoder buttons[1-3] select the indivdual oscillators.
+  Oscillator Pages:
+    - Oscillator wavform can be changed by pressing top left button repeteadly.
+    Oscillator WAV Forms:
+	  - SIN: Sine wav with adjustable overtones (each overtone is an octave above
+        fundamental)
+      - TRI
+      - PULSE
+      - SAW
+      - USR: User defined waveform, 16 points with linear interpolation.
+
+    - The MD trigger interface together with encoder 4 can be used to
+      manipulate the SIN and USR waveforms.
+    - Encoder 1 pitch adjusts frequency by semitone.
+    - Encoder 2 is fine tune +-100 Cents
+    - Encoder 3 is pulse width.
+
+  Oscillator Mixer Page:
+    - The wav designer mixer page has volume levels for each of the oscillators.
+
+	- From the mixer page, top right button can be used to render and transmit the waveform.
+      (Some of the  MD GUI will lock up when receiving samples, see bug description
+	  above)
+	- Encoders 1-3 adjust oscillator volume
+	- Encoder 4 adjusts MSD destination sample slot.
+
+Mute Page:
+
+- A replacement for the MD mute menu. This features quantisation modes.
+  Also LVL function sets the track(s) volume to 0 before unmuting, mixer
+  page can then be used to fade in the track(s) gently.
+- MCL will attempt to detect the current mute state. (No way of receiving it
+from the MD)
+
+Mixer Page:
+
+-  For OLED users this will depict both mutes and levels.
+-  Track triggering is displayed visually.
+-  Holding Write Button when pressing MD trigs will toggle mutes according
+   to settings in the Mute Page.
+
+Chromatic mode:
+
+- Chromatic mode will be functional from pages outside of PTC page.
+
+- MD POLYSTART parameter added. When a POLYSTART value is chosen, Tracks
+  from (POLYSTART to POLYSTART + POLYMAX) will be locked in as chromatic
+  tracks. Playable from most pages if an external keyboard is attached.
+
+- When modifying paramters from a chromatic track, the corresponding parameter
+  on remaing poly tracks are updated simultanously.
+
+Display Mirror:
+
+- When enabled, the MC will transmit a 7bit encoded dump of the display over
+  usb-serial which can be viewed using the mc_display_mirror.py script.
+
+Midi Forward:
+
+- Ability to forward all MIDI messages (except clock/realtime) to alternate
+  port. Useful if you want to use the MD with the MC and an attached controller.
+
+Enhancements Bug Fixes + Changes:
+
+- Sample Support.
+  MidiSDS sample format send/rec supported. Used for Wav designer.
+  WAV file library has been added. should support 8->24bit samples multi
+  channel.
+
+- OLED SPI frequency doubled. Noticed that the default SPI speed for the OLED
+  library was only 4Mhz. Increased to 8MHz. Might provide a small improvement
+  to refresh rate.
+
+- Re-drawing of display is disabled in Live Record mode when sequencer running.
+  To improve MIDI input latency the OLED display is only updated when changing
+  paramter values. This greatly reduces MIDI latency during live record mode.
+
+- Mixer page encoder behaviour improved. large jumps in encoder values are
+  supported and midi CC messages are interpolated between to give smooth
+  value change.
+
+- Chromatic mode extended to the Seq Step page. Encoder 4 is used to
+  select Note of current step (uses one parameter lock track)
+  External MIDI keyboard on port 2 can also be used to set note value.
+
+- Improvement of Sequencer GUI. Parameter changes are now applied immediately
+  upon encoder change.
+
+- ExtSeqPage had some GUI problems. Fixed.
+
+- Improvement to Project page GUI. Can now exit load and new project
+pages. New project page shows a blinking cursor for the current character
+select.
+
+- GridWrite Page P+/P- modes were broken.
+
+- GridWrite Page: When writing: If MD track length is shorter than the current pattern
+  length, the selected tracks will automatically loop until they fill up the remaining
+  pattern steps.
+
+- Sequencer stability improvement, no more missing notes.
+
+- Sequencer Track Length adjustment fixes.
+
+- Improvements to sequencer parameter locks and pitch handling.
+
+- Macros to control MD GUI.
+  Discovered undocumented sysex commands that allow for controlling of MD GUI.
+  Used to exit menus and record mode in the MD before enabling Trigger Exploit.
+
+- Various improvements to the Trigger Exploit.
+
+- Changes to ActivePeering for better connectivty and device identificaiton.
+
+- Various other improvements I can't remember. See GitLog.

@@ -1,27 +1,37 @@
-#include "MidiSetup.h"
 #include "MCL.h"
+#include "MidiSetup.h"
 
 void MidiSetup::cfg_ports() {
 
   MidiClock.stop();
-
+ 
+  if (mcl_cfg.midi_forward == 1) {
+    Midi.forward = true;
+  } else {
+    Midi.forward = false;
+  }
+  if (mcl_cfg.midi_forward == 2) {
+    Midi2.forward = true;
+  } else {
+    Midi2.forward = false;
+  }
   if (mcl_cfg.clock_send == 1) {
     MidiClock.transmit_uart2 = true;
-  }
-  else {
+  } else {
     MidiClock.transmit_uart2 = false;
   }
   if (mcl_cfg.clock_rec == 0) {
     MidiClock.mode = MidiClock.EXTERNAL_MIDI;
     MidiClock.transmit_uart1 = false;
 
-  }
-  else {
+  } else {
     MidiClock.transmit_uart1 = true;
     MidiClock.transmit_uart2 = false;
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
+
   MidiClock.start();
+
   if (MD.connected) {
     md_exploit.send_globals();
 

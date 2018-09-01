@@ -1,13 +1,11 @@
 #include "CuePage.h"
 #include "MCL.h"
 
-void CuePage::setup() { md_exploit.on(); }
+void CuePage::setup() { }
 void CuePage::init() {
-  md_exploit.on();
   note_interface.state = true;
 }
 void CuePage::cleanup() {
-  md_exploit.off();
   note_interface.state = false;
 }
 void CuePage::set_level(int curtrack, int value) {
@@ -151,9 +149,16 @@ bool CuePage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&grid_page);
+    GUI.setPage(&page_select_page);
     return true;
   }
 
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER1)) {
+    GUI.setPage(&grid_page);
+    return true;
+  }
   return false;
 }

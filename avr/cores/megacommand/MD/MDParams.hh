@@ -13,64 +13,64 @@
  * @{
  **/
 
-#define MD_ASSIGN_MACHINE_ID                             0x5b
-#define MD_ASSIGN_MACHINE_INIT_SYNTHESIS                 0
-#define MD_ASSIGN_MACHINE_INIT_SYNTHESIS_EFFECTS         1
+#define MD_ASSIGN_MACHINE_ID 0x5b
+#define MD_ASSIGN_MACHINE_INIT_SYNTHESIS 0
+#define MD_ASSIGN_MACHINE_INIT_SYNTHESIS_EFFECTS 1
 #define MD_ASSIGN_MACHINE_INIT_SYNTHESIS_EFFECTS_ROUTING 2
 
-#define MD_CURRENT_GLOBAL_SLOT_REQUEST       0x01
-#define MD_CURRENT_KIT_REQUEST               0x02
-#define MD_CURRENT_PATTERN_REQUEST           0x04
-#define MD_CURRENT_SONG_REQUEST              0x08
-#define MD_CURRENT_SEQUENCER_MODE            0x10
-#define MD_CURRENT_LOCK_MODE                 0x20
+#define MD_CURRENT_GLOBAL_SLOT_REQUEST 0x01
+#define MD_CURRENT_KIT_REQUEST 0x02
+#define MD_CURRENT_PATTERN_REQUEST 0x04
+#define MD_CURRENT_SONG_REQUEST 0x08
+#define MD_CURRENT_SEQUENCER_MODE 0x10
+#define MD_CURRENT_LOCK_MODE 0x20
 
-#define MD_GLOBAL_MESSAGE_ID                 0x50
-#define MD_GLOBAL_REQUEST_ID                 0x51
-#define MD_KIT_MESSAGE_ID                    0x52
-#define MD_KIT_REQUEST_ID                    0x53
-#define MD_PATTERN_MESSAGE_ID                0x67
-#define MD_PATTERN_REQUEST_ID                0x68
-#define MD_SONG_MESSAGE_ID                   0x69
-#define MD_SONG_REQUEST_ID                   0x6a
-#define MD_SAMPLE_NAME_ID                    0x73
+#define MD_GLOBAL_MESSAGE_ID 0x50
+#define MD_GLOBAL_REQUEST_ID 0x51
+#define MD_KIT_MESSAGE_ID 0x52
+#define MD_KIT_REQUEST_ID 0x53
+#define MD_PATTERN_MESSAGE_ID 0x67
+#define MD_PATTERN_REQUEST_ID 0x68
+#define MD_SONG_MESSAGE_ID 0x69
+#define MD_SONG_REQUEST_ID 0x6a
+#define MD_SAMPLE_NAME_ID 0x73
 
-#define MD_LOAD_GLOBAL_ID                    0x56
-#define MD_LOAD_PATTERN_ID                   0x57
-#define MD_LOAD_KIT_ID                       0x58
-#define MD_LOAD_SONG_ID                      0x6c
+#define MD_LOAD_GLOBAL_ID 0x56
+#define MD_LOAD_PATTERN_ID 0x57
+#define MD_LOAD_KIT_ID 0x58
+#define MD_LOAD_SONG_ID 0x6c
 
-#define MD_SAVE_KIT_ID                       0x59
-#define MD_SAVE_SONG_ID                      0x6d
+#define MD_SAVE_KIT_ID 0x59
+#define MD_SAVE_SONG_ID 0x6d
 
-#define MD_RESET_MIDI_NOTE_MAP_ID            0x64
-#define MD_SET_ACTIVE_GLOBAL_ID              0x56
-#define MD_SET_CURRENT_KIT_NAME_ID           0x55
+#define MD_RESET_MIDI_NOTE_MAP_ID 0x64
+#define MD_SET_ACTIVE_GLOBAL_ID 0x56
+#define MD_SET_CURRENT_KIT_NAME_ID 0x55
 
-#define MD_SET_RHYTHM_ECHO_PARAM_ID          0x5d
-#define MD_SET_GATE_BOX_PARAM_ID             0x5e
-#define MD_SET_EQ_PARAM_ID                   0x5f
-#define MD_SET_DYNAMIX_PARAM_ID              0x60
+#define MD_SET_RHYTHM_ECHO_PARAM_ID 0x5d
+#define MD_SET_GATE_BOX_PARAM_ID 0x5e
+#define MD_SET_EQ_PARAM_ID 0x5f
+#define MD_SET_DYNAMIX_PARAM_ID 0x60
 
-#define MD_SET_LFO_PARAM_ID                  0x62
+#define MD_SET_LFO_PARAM_ID 0x62
 #define MD_SET_MIDI_NOTE_TO_TRACK_MAPPING_ID 0x5a
-#define MD_SET_MUTE_GROUP_ID                 0x66
-#define MD_SET_RECEIVE_DUMP_POSITION_ID      0x6b
+#define MD_SET_MUTE_GROUP_ID 0x66
+#define MD_SET_RECEIVE_DUMP_POSITION_ID 0x6b
 
-#define MD_SET_TEMPO_ID                      0x61
-#define MD_SET_TRACK_ROUTING_ID              0x5c
-#define MD_SET_TRIG_GROUP_ID                 0x65
+#define MD_SET_TEMPO_ID 0x61
+#define MD_SET_TRACK_ROUTING_ID 0x5c
+#define MD_SET_TRIG_GROUP_ID 0x65
 
-#define MD_SET_STATUS_ID                     0x71
-#define MD_STATUS_REQUEST_ID                 0x70
-#define MD_STATUS_RESPONSE_ID                0x72
+#define MD_SET_STATUS_ID 0x71
+#define MD_STATUS_REQUEST_ID 0x70
+#define MD_STATUS_RESPONSE_ID 0x72
 
 #define MD_FX_ECHO 0x5d
-#define MD_FX_REV  0x5e
-#define MD_FX_EQ   0x5f
-#define MD_FX_DYN  0x60
+#define MD_FX_REV 0x5e
+#define MD_FX_EQ 0x5f
+#define MD_FX_DYN 0x60
 
-#define GND_MODEL    0
+#define GND_MODEL 0
 #define GND_SN_MODEL 1
 #define GND_NS_MODEL 2
 #define GND_IM_MODEL 3
@@ -153,12 +153,12 @@
 
 #define CTR_AL_MODEL 112
 #define CTR_8P_MODEL 113
-			
+
 #define CTR_RE_MODEL 120
 #define CTR_GB_MODEL 121
 #define CTR_EQ_MODEL 122
 #define CTR_DX_MODEL 123
-			
+
 #define ROM_01_MODEL 128
 #define ROM_02_MODEL 129
 #define ROM_03_MODEL 130
@@ -196,7 +196,7 @@
 #define RAM_R2_MODEL 161
 #define RAM_P1_MODEL 162
 #define RAM_P2_MODEL 163
-			
+
 #define RAM_R3_MODEL 165
 #define RAM_R4_MODEL 166
 #define RAM_P3_MODEL 167
@@ -216,46 +216,46 @@
 #define ROM_44_MODEL 187
 #define ROM_45_MODEL 188
 #define ROM_46_MODEL 189
-#define ROM_47_MODEL 190 
+#define ROM_47_MODEL 190
 #define ROM_48_MODEL 191
 
-#define ROM_MODEL    128
+#define ROM_MODEL 128
 
 #define MD_ECHO_TIME 0
-#define MD_ECHO_MOD  1
+#define MD_ECHO_MOD 1
 #define MD_ECHO_MFRQ 2
-#define MD_ECHO_FB   3
+#define MD_ECHO_FB 3
 #define MD_ECHO_FLTF 4
 #define MD_ECHO_FLTW 5
 #define MD_ECHO_MONO 6
-#define MD_ECHO_LEV  7
+#define MD_ECHO_LEV 7
 
-#define MD_REV_DVOL  0
-#define MD_REV_PRED  1
-#define MD_REV_DEC   2
-#define MD_REV_DAMP  3
-#define MD_REV_HP    4
-#define MD_REV_LP    5
-#define MD_REV_GATE  6
-#define MD_REV_LEV   7
+#define MD_REV_DVOL 0
+#define MD_REV_PRED 1
+#define MD_REV_DEC 2
+#define MD_REV_DAMP 3
+#define MD_REV_HP 4
+#define MD_REV_LP 5
+#define MD_REV_GATE 6
+#define MD_REV_LEV 7
 
-#define MD_EQ_LF     0
-#define MD_EQ_LG     1
-#define MD_EQ_HF     2
-#define MD_EQ_HG     3
-#define MD_EQ_PF     4
-#define MD_EQ_PG     5
-#define MD_EQ_PQ     6
-#define MD_EQ_GAIN   7
+#define MD_EQ_LF 0
+#define MD_EQ_LG 1
+#define MD_EQ_HF 2
+#define MD_EQ_HG 3
+#define MD_EQ_PF 4
+#define MD_EQ_PG 5
+#define MD_EQ_PQ 6
+#define MD_EQ_GAIN 7
 
-#define MD_DYN_ATCK  0
-#define MD_DYN_REL   1
-#define MD_DYN_TRHD  2
-#define MD_DYN_RTIO  3
-#define MD_DYN_KNEE  4
-#define MD_DYN_HP    5
-#define MD_DYN_OUTG  6
-#define MD_DYN_MIX   7
+#define MD_DYN_ATCK 0
+#define MD_DYN_REL 1
+#define MD_DYN_TRHD 2
+#define MD_DYN_RTIO 3
+#define MD_DYN_KNEE 4
+#define MD_DYN_HP 5
+#define MD_DYN_OUTG 6
+#define MD_DYN_MIX 7
 
 /* parameter name macros */
 #define GND_SN_PTCH 0
@@ -668,7 +668,7 @@
 #define CTR_8P_P1 0
 #define CTR_8P_P2 1
 #define CTR_8P_P3 2
-#define CTR_8P_P4 3 
+#define CTR_8P_P4 3
 #define CTR_8P_P5 4
 #define CTR_8P_P6 5
 #define CTR_8P_P7 6
@@ -724,65 +724,145 @@
 #define MODEL_FLTF 12
 #define MODEL_FLTW 13
 #define MODEL_FLTQ 14
-#define MODEL_SRR  15
+#define MODEL_SRR 15
 
 #define MODEL_DIST 16
-#define MODEL_VOL  17
-#define MODEL_PAN  18
-#define MODEL_DEL  19
-#define MODEL_REV  20
+#define MODEL_VOL 17
+#define MODEL_PAN 18
+#define MODEL_DEL 19
+#define MODEL_REV 20
 #define MODEL_LFOS 21
 #define MODEL_LFOD 22
 #define MODEL_LFOM 23
 
 #define MD_ECHO_TIME 0
-#define MD_ECHO_MOD  1
+#define MD_ECHO_MOD 1
 #define MD_ECHO_MFRQ 2
-#define MD_ECHO_FB   3
+#define MD_ECHO_FB 3
 #define MD_ECHO_FLTF 4
 #define MD_ECHO_FLTW 5
 #define MD_ECHO_MONO 6
-#define MD_ECHO_LEV  7
+#define MD_ECHO_LEV 7
 
 #define MD_REV_DVOL 0
 #define MD_REV_PRED 1
-#define MD_REV_DEC  2
+#define MD_REV_DEC 2
 #define MD_REV_DAMP 3
-#define MD_REV_HP   4
-#define MD_REV_LP   5
+#define MD_REV_HP 4
+#define MD_REV_LP 5
 #define MD_REV_GATE 6
-#define MD_REV_LEV  7
+#define MD_REV_LEV 7
 
-#define MD_EQ_LF    0
-#define MD_EQ_LG    1
-#define MD_EQ_HF    2
-#define MD_EQ_HG    3
-#define MD_EQ_PF    4
-#define MD_EQ_PG    5
-#define MD_EQ_PQ    6
-#define MD_EQ_GAIN  7
+#define MD_EQ_LF 0
+#define MD_EQ_LG 1
+#define MD_EQ_HF 2
+#define MD_EQ_HG 3
+#define MD_EQ_PF 4
+#define MD_EQ_PG 5
+#define MD_EQ_PQ 6
+#define MD_EQ_GAIN 7
 
 #define MD_DYN_ATCK 0
-#define MD_DYN_REL  1
+#define MD_DYN_REL 1
 #define MD_DYN_TRHD 2
 #define MD_DYN_RTIO 3
 #define MD_DYN_KNEE 4
-#define MD_DYN_HP   5
+#define MD_DYN_HP 5
 #define MD_DYN_OUTG 6
-#define MD_DYN_MIX  7
+#define MD_DYN_MIX 7
 
-#define MD_LFO_TRACK  0
-#define MD_LFO_PARAM  1
-#define MD_LFO_SHP1   2
-#define MD_LFO_SHP2   3
-#define MD_LFO_UPDTE  4
-#define MD_LFO_SPEED  5
-#define MD_LFO_DEPTH  6
-#define MD_LFO_SHMIX  7
+#define MD_LFO_TRACK 0
+#define MD_LFO_PARAM 1
+#define MD_LFO_SHP1 2
+#define MD_LFO_SHP2 3
+#define MD_LFO_UPDTE 4
+#define MD_LFO_SPEED 5
+#define MD_LFO_DEPTH 6
+#define MD_LFO_SHMIX 7
 
 #define MD_LFO_TYPE_FREE 0
 #define MD_LFO_TYPE_TRIG 1
 #define MD_LFO_TYPE_HOLD 2
+
+#define MD_GUI_CMD_OFF 0x00
+#define MD_GUI_CMD_ON 0x7F
+
+#define MD_GUI_CMD 0x40
+#define MD_GUI_KIT_WIN 0x01
+#define MD_GUI_LFO_WIN 0x02
+#define MD_GUI_UPARROW 0x03
+#define MD_GUI_DOWNARROW 0x04
+#define MD_GUI_RECORD 0x07
+#define MD_GUI_PLAY 0x09
+#define MD_GUI_STOP 0x0A
+#define MD_GUI_EXTENDED 0x0B
+#define MD_GUI_BANKGROUP 0x0C
+#define MD_GUI_ACCENT_WIN 0x0D
+#define MD_GUI_SWING_WIN 0x0E
+#define MD_GUI_SLIDE_WIN 0x0F
+#define MD_GUI_TRIG_1 0x10
+#define MD_GUI_TRIG_2 0x11
+#define MD_GUI_TRIG_3 0x12
+#define MD_GUI_TRIG_4 0x13
+#define MD_GUI_TRIG_5 0x14
+#define MD_GUI_TRIG_6 0x15
+#define MD_GUI_TRIG_7 0x16
+#define MD_GUI_TRIG_8 0x17
+#define MD_GUI_TRIG_9 0x18
+#define MD_GUI_TRIG_10 0x19
+#define MD_GUI_TRIG_11 0x1A
+#define MD_GUI_TRIG_12 0x1B
+#define MD_GUI_TRIG_13 0x1C
+#define MD_GUI_TRIG_14 0x1D
+#define MD_GUI_TRIG_15 0x1E
+#define MD_GUI_TRIG_16 0x1F
+#define MD_GUI_BANK_1 0x20
+#define MD_GUI_BANK_2 0x21
+#define MD_GUI_BANK_3 0x22
+#define MD_GUI_BANK_4 0x23
+#define MD_GUI_TEMPO_WIN 0x24
+#define MD_GUI_FUNC 0x25
+#define MD_GUI_LEFTARROW 0x26
+#define MD_GUI_RIGHTARROW 0x27
+#define MD_GUI_YES 0x28
+#define MD_GUI_NO 0x29
+#define MD_GUI_SCALE 0x2A
+#define MD_GUI_SCALE_WIN 0x2B
+#define MD_GUI_MUTE_WIN 0x2C
+#define MD_GUI_PATTERNSONG 0x2D
+#define MD_GUI_SONG_WIN 0x2E
+#define MD_GUI_GLOBAL_WIN 0x2F
+#define MD_GUI_COPY 0x34
+#define MD_GUI_CLEAR 0x35
+#define MD_GUI_PASTE 0x36
+#define MD_GUI_SYNTH 0x3A
+#define MD_GUI_TRACK_1 0x40
+#define MD_GUI_TRACK_2 0x41
+#define MD_GUI_TRACK_3 0x42
+#define MD_GUI_TRACK_4 0x43
+#define MD_GUI_TRACK_5 0x44
+#define MD_GUI_TRACK_6 0x45
+#define MD_GUI_TRACK_7 0x46
+#define MD_GUI_TRACK_8 0x47
+#define MD_GUI_TRACK_9 0x48
+#define MD_GUI_TRACK_10 0x49
+#define MD_GUI_TRACK_11 0x4A
+#define MD_GUI_TRACK_12 0x4B
+#define MD_GUI_TRACK_13 0x4C
+#define MD_GUI_TRACK_14 0x4D
+#define MD_GUI_TRACK_15 0x4E
+#define MD_GUI_TRACK_16 0x4F
+#define MD_GUI_ENC_1 0x50
+#define MD_GUI_ENC_2 0x51
+#define MD_GUI_ENC_3 0x52
+#define MD_GUI_ENC_4 0x53
+#define MD_GUI_ENC_5 0x54
+#define MD_GUI_ENC_6 0x55
+#define MD_GUI_ENC_7 0x56
+#define MD_GUI_ENC_8 0x57
+#define MD_GUI_TEMPO 0x5A
+
+#define MD_GUI_TRACK_1 0x40
 
 PGM_P model_param_name(uint8_t model, uint8_t param);
 
@@ -797,8 +877,6 @@ typedef struct md_machine_name_s_short {
 
 extern md_machine_name_t_short const machine_names_short[134] PROGMEM;
 PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
-
-
 
 /* @} @} */
 

@@ -31,7 +31,6 @@ void MDSysexCallbacks::onStatusResponseCallback(uint8_t type, uint8_t value) {
   which is residing in memory*/
 
 void MDSysexCallbacks::onKitMessage() {
-  setLed2();
   /*If mcl_actions.patternswitch == PATTERN_STORE then the Kit request is for the purpose of
    * obtaining track data*/
   if (!MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
@@ -79,7 +78,6 @@ void MDSysexCallbacks::onKitMessage() {
     //   }
     mcl_actions.patternswitch = PATTERN_UDEF;
   }
-  clearLed2();
 }
 
 void MDSysexCallbacks::onPatternMessage() {

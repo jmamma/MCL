@@ -5,7 +5,6 @@ void SeqRtrkPage::setup() { SeqPage::setup(); }
 
 void SeqRtrkPage::init() {
   SeqPage::init();
-  md_exploit.on();
 
   note_interface.state = true;
 
@@ -16,13 +15,13 @@ void SeqRtrkPage::init() {
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   midi_device = DEVICE_MD;
   curpage = SEQ_RTRK_PAGE;
+  md_exploit.on();
 }
 void SeqRtrkPage::cleanup() {
-  md_exploit.off();
   SeqPage::cleanup();
 }
 void SeqRtrkPage::display() {
-
+  if ((!redisplay) && (MidiClock.state == 2)) { return; }
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, page_select + 1);
 
@@ -44,8 +43,8 @@ void SeqRtrkPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
-
-  draw_pattern_mask(page_select * 16, DEVICE_MD);
+  bool show_current_step = false;
+  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
 }
 bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
@@ -57,6 +56,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     uint8_t track = event->source - 128;
     midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (device != DEVICE_MD) { return; }
       last_md_track = track;
 
       encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
@@ -69,7 +69,9 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
     }
+    return true;
   }
+  redisplay = true;
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     md_exploit.off();
     GUI.setPage(&seq_rlck_page);

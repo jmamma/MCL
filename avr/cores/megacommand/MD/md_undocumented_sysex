@@ -1,0 +1,80 @@
+MIDI Byte          | Purpose
+(MD SYSEX init)    |
+        0x40       |
+          n        | See below
+          a        | See below
+        0xF7       |
+
+n      | a         | Purpose
+
+0x00   |           |
+0x01   | any       | Toggle KIT menu
+0x02   | any       | Toggle LFO menu
+0x03   | a > 0x64  | Hold up arrow
+       | a <= 0x64 | Release up arrow
+0x04   | a > 0x64  | Hold down arrow
+       | a <= 0x64 | Release down arrow
+0x05   |           |
+0x06   |           |
+0x07   | a > 0x64  | Hold record button
+       | a <= 0x64 | Release record button
+0x08   |           |
+0x09   | any       | Play/Pause
+0x0A   | a > 0x64  | Hold Stop button
+       | a <= 0x64 | Release stop button
+0x0B   | any       | Toggle classic/extended
+0x0C   | any       | Toggle bank group
+0x0D   | a > 0x64  | Toggle accent window
+0x0E   | a > 0x64  | Toggle swing window
+0x0F   | a > 0x64  | Toggle slide window
+0x10   | a > 0x64  | Hold step trig 1
+       | a <= 0x64 | Release step trig 1
+..
+0x1F   | a > 0x64  | Hold step trig 16
+       | a <= 0x64 | Release step trig 16
+0x20   | a > 0x64  | Bank select 0 hold
+       | a <= 0x64 | Bank select 0 release
+..
+0x23   | a > 0x64  | Bank select 3 hold
+       | a <= 0x64 | Bank select 3 release
+0x24   | any       | Toggle tempo window
+0x25   | a > 0x64  | Hold function
+       | a <= 0x64 | Relase function
+0x26   | a > 0x64  | Hold left arrow
+       | a <= 0x64 | Release left arrow
+0x27   | a > 0x64  | Hold right arrow
+       | a <= 0x64 | Release right arrow
+0x28   | any       | Press yes
+0x29   | any       | Press no
+0x2A   | a > 0x64  | Hold scale button
+       | a <= 0x64 | Release scale button
+0x2B   | any       | Toggle scale window
+0x2C   | a > 0x64  | Toggle mute window
+0x2D   | any       | Toggle pattern/song mode
+0x2E   | a > 0x64  | Toggle song window
+0x2F   | a > 0x64  | Toggle global window
+0x30   |           |
+0x31   |           |
+0x32   |           |
+0x33   |           |
+0x34   | any       | Copy
+0x35   | any       | Clear
+0x36   | any       | Paste
+0x37
+0x38
+0x39
+0x3A   | any       | Toggle synth page
+0x3B   |
+0x3C
+0x3D
+0x3E
+0x3F
+0x40   | a > 0x64  | Track select 1
+..
+0x4F   | a > 0x64  | Track select 16
+0x50   | any       | Encoder 1 button press
+..
+0x57   | any       | Enocder 8 button press
+0x5A   | any       | tap tempo
+
+

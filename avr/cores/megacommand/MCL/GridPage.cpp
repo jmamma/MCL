@@ -6,6 +6,9 @@
 void GridPage::init() {
   reload_slot_models = false;
   md_exploit.off();
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
 }
 void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
@@ -18,11 +21,11 @@ void GridPage::setup() {
   encoders[3]->handler = encoder_fx_handle;
   ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
   ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
-  }
 
-void GridPage::loop() {
-  midi_active_peering.check();
+
 }
+
+void GridPage::loop() { midi_active_peering.check(); }
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
 
@@ -222,10 +225,10 @@ void GridPage::displaySlot(uint8_t i) {
 
 void GridPage::display() {
 
-    //        for (uint8_t i = 0; i < 4; i++) {
-//GUI.put_value_at2(i * 4, encoders[i]->cur);
- //           }
-   //         return;
+  //        for (uint8_t i = 0; i < 4; i++) {
+  // GUI.put_value_at2(i * 4, encoders[i]->cur);
+  //           }
+  //         return;
   tick_frames();
   // GUI.put_value16_at(0, MidiClock.div192th_counter);
   //  GUI.put_value16_at(5, MidiClock.div96th_counter);
@@ -246,8 +249,7 @@ void GridPage::display() {
   }
   uint8_t display_name = 0;
   if (slowclock < grid_lastclock) {
-   grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
-
+    grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
   if (!reload_slot_models) {
     load_slot_models();
@@ -261,6 +263,7 @@ void GridPage::display() {
     if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
       mcl_cfg.cur_col = encoders[1]->cur;
       mcl_cfg.cur_row = encoders[2]->cur;
+      mcl_cfg.tempo = MidiClock.tempo;
       mcl_cfg.write_cfg();
     }
   } else {
@@ -351,6 +354,20 @@ void GridPage::display() {
   }
 }
 
+void GridPage::prepare() {
+  MD.getCurrentTrack(CALLBACK_TIMEOUT);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
+    MD.saveCurrentKit(MD.currentKit);
+  }
+  MD.getBlockingKit(MD.currentKit);
+  if (MD.connected) {
+    ((MCLEncoder *)encoders[1])->min = 0;
+    grid_page.cur_col = last_md_track;
+  }
+  grid_page.cur_row = param2.getValue();
+}
+
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 
@@ -392,7 +409,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     mixer_page.isSetup = false;
-    GUI.setPage(&mixer_page);
+    //    GUI.setPage(&mixer_page);
     //   draw_levels();
   }
   /*IF button1 and encoder buttons are pressed, store current track selected on
@@ -410,24 +427,28 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_step_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER2)) {
     seq_rtrk_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_rtrk_page);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER3)) {
     seq_param_page[0].isSetup = false;
+    prepare();
     GUI.setPage(&seq_param_page[0]);
 
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER4)) {
     seq_ptc_page.isSetup = false;
+    prepare();
     GUI.setPage(&seq_ptc_page);
 
     return true;
@@ -439,6 +460,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
     system_page.isSetup = false;
     GUI.setPage(&system_page);
 
+    return true;
+  }
+  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+    prepare();
+    GUI.setPage(&page_select_page);
     return true;
   }
 
