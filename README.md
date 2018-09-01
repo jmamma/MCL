@@ -18,9 +18,12 @@ part of the MIDICtrl framework.
 
 MacOS / Linux: 
 
-1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
+1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.6 tested)
 
-2) Get the MIDICtrl library and MegaCommand Core (same repo):
+2) Copy Arduino.app to your /Applications folder and launch it.
+   (Must be opened first before performing step below)
+
+2) Get the MIDICtrl library and MegaCommand Core (same repo) and copy it to /Applications/Arduino.app/Contents/Java/hardware/ :
 ```
    cd /Applications/Arduino.app/Contents/Java/hardware/
    git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
