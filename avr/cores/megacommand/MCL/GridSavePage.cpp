@@ -8,9 +8,6 @@ void GridSavePage::setup() {
   encoders[0]->cur = (int)MD.currentPattern / (int)16;
   encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
-  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
-    MD.saveCurrentKit(MD.currentKit);
-  }
   md_exploit.on();
   note_interface.state = true;
   curpage = S_PAGE;

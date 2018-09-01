@@ -12,9 +12,6 @@ void GridWritePage::setup() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[2]->cur = MD.currentKit;
 
-  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
-    MD.saveCurrentKit(MD.currentKit);
-  }
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
   note_interface.state = true;

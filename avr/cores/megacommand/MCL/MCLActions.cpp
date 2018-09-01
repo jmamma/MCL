@@ -4,7 +4,7 @@
 
 void MCLActions::setup() {
   DEBUG_PRINTLN("mcl actions setup");
-   mcl_actions_callbacks.setup_callbacks();
+  mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
 }
 
@@ -106,14 +106,13 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       DEBUG_PRINTLN("could not get pattern rec");
       return;
     }
-
     int curkit;
     if (readpattern != MD.currentPattern) {
       curkit = pattern_rec.kit;
     } else {
 
       curkit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-      if (mcl_cfg.auto_save == 1) {
+      if ((mcl_cfg.auto_save == 1)) {
         MD.saveCurrentKit(MD.currentKit);
       }
     }
@@ -164,8 +163,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       }
 
       if ((store_behaviour == STORE_AT_SPECIFIC) && (i < 16)) {
-        n = temptrack.store_track_in_grid((i - first_note), grid_page.cur_col + i,
-                                          grid_page.cur_row);
+        n = temptrack.store_track_in_grid(
+            (i - first_note), grid_page.cur_col + i, grid_page.cur_row);
       }
       // CLEAR_BIT32(note_interface.notes, i);
     }
@@ -185,26 +184,31 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
     writepattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
   }
 
-  if (gridio_param3.getValue() != MD.currentKit) {
-    MD.currentKit = gridio_param3.getValue();
-  }
+  // Get pattern first, hopefully with the original kit assigned.
+  if (write_original != 1) {
+    if (!MD.getBlockingPattern(MD.currentPattern)) {
+      DEBUG_PRINTLN("could not get blocking pattern");
+      return;
+    }
+    if (!pattern_rec.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
 
+      DEBUG_PRINTLN("could not get blocking pattern");
+      return;
+    }
+    if (gridio_param3.getValue() != MD.currentKit) {
+      MD.currentKit = gridio_param3.getValue();
+    } else {
+      MD.saveCurrentKit(MD.currentKit);
+    }
+
+    MD.getBlockingKit(MD.currentKit);
+  }
   grid_page.cur_col = column;
   grid_page.cur_row = row;
   patternswitch = 1;
 
-  if (!MD.getBlockingPattern(MD.currentPattern)) {
-    DEBUG_PRINTLN("could not get blocking pattern");
-    return;
-  }
-
-  if (pattern_rec.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
-
-    send_pattern_kit_to_md();
-    patternswitch = PATTERN_UDEF;
-  } else {
-    DEBUG_PRINTLN("could not get blocking pattern");
-  }
+  send_pattern_kit_to_md();
+  patternswitch = PATTERN_UDEF;
 
   //  }
 
@@ -215,7 +219,6 @@ void MCLActions::send_pattern_kit_to_md() {
   DEBUG_PRINT_FN();
   A4Track *track_buf;
 
-  MD.getBlockingKit(MD.currentKit);
   temptrack.load_track_from_grid(0, grid_page.cur_row, 0);
   // if (!Analog4.getBlockingKitX(0)) { return; }
   // if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8))
@@ -298,8 +301,7 @@ void MCLActions::send_pattern_kit_to_md() {
         } else {
           track = track - 16;
           mcl_seq.ext_tracks[track].buffer_notesoff();
-          if (place_track_inpattern(track, i,
-                                    grid_page.cur_row,
+          if (place_track_inpattern(track, i, grid_page.cur_row,
                                     (A4Sound *)&sound_array[track])) {
             if (Analog4.connected) {
               sound_array[track].workSpace = true;
