@@ -51,7 +51,7 @@ To enable the HD44780 16x2 display edit OLED.h
 ${install_dir}/MIDICtrl20_MegaCommand/avr/cores/megacommand/OLED.h
 
 Change
-define OLED_DISPLAY
+#define OLED_DISPLAY
 to
 //#define OLED_DISPLAY
 
