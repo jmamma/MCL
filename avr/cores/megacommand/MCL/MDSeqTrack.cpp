@@ -296,13 +296,27 @@ void MDSeqTrack::clear_conditional() {
   }
 }
 void MDSeqTrack::clear_locks() {
+  uint8_t locks_params_buf[4];
+
+  //Need to buffer this, as we dont want sequencer interrupt
+  //to access it whilst we're cleaning up
+
   for (uint8_t c = 0; c < 4; c++) {
     for (uint8_t x = 0; x < 64; x++) {
       locks[c][x] = 0;
     }
+
+    locks_params_buf[c] = locks_params[c];
     locks_params[c] = 0;
   }
   lock_mask = 0;
+
+  for (uint8_t c = 0; c < 4; c++) {
+      if (locks_params_buf[c] > 0) {
+        MD.setTrackParam(track_number, locks_params_buf[c] - 1, locks_params_orig[c]);
+      }
+  }
+
 }
 
 void MDSeqTrack::clear_track(bool locks) {
