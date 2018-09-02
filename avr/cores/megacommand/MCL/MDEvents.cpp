@@ -2,6 +2,9 @@
 
 void MDEvents::setup() { midi_events.setup_callbacks(); }
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  //Don't update lock params if we're recording locks.
+  if ((GUI.currentPage() == &seq_rlck_page) && (MidiClock.state == 2)) { return; }
+
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -23,7 +26,10 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       track = (param / 24) + 2 + (channel - MD.global.baseChannel) * 4;
       track_param = param - ((param / 24) * 24);
     }
+
     MD.kit.params[track][track_param] = value;
+    mcl_seq.md_tracks[track].update_param(track_param, value);
+
   } else {
     if (param < 16) {
       track = param - 8 + (channel - MD.global.baseChannel) * 4;

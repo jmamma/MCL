@@ -154,6 +154,7 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
     MD.kit.muteGroups[tracknumber] = machine.muteGroup;
 
     m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+    mcl_seq.md_tracks[tracknumber].update_params();
   }
 }
 

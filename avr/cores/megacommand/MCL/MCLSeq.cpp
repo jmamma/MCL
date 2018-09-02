@@ -35,9 +35,18 @@ void MCLSeq::setup() {
 
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
+  MidiClock.addOnMidiStartCallback(
+      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
   midi_events.setup_callbacks();
 };
 
+void MCLSeq::onMidiStartCallback() {
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].update_params();
+  }
+
+
+}
 void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < 4; i++) {
     ext_tracks[i].buffer_notesoff();

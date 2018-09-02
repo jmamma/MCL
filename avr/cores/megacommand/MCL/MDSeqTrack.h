@@ -23,6 +23,8 @@ public:
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
 
+  uint8_t locks_params_orig[4];
+
   void seq();
   inline void trig_conditional(uint8_t condition);
   inline void send_parameter_locks(uint8_t step_count);
@@ -39,7 +41,10 @@ public:
   void clear_step_locks(uint8_t step);
   void clear_conditional();
   void clear_locks();
-  void clear_track();
+  void clear_track(bool locks = true);
+
+  void update_params();
+  void update_param(uint8_t param_id, uint8_t value);
   void reset_params();
 };
 

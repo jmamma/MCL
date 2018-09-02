@@ -43,6 +43,7 @@ public:
   MCLSeqMidiEvents midi_events;
 
   void setup();
+  void onMidiStartCallback();
   void onMidiStopCallback();
   void seq();
 

@@ -98,6 +98,7 @@ void SeqParamPage::loop() {
     }
     mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
     mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
+    mcl_seq.md_tracks[last_md_track].update_params();
   }
 }
 bool SeqParamPage::handleEvent(gui_event_t *event) {
