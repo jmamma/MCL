@@ -74,9 +74,6 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     readpattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
   }
 
-  grid_page.cur_col = column;
-  grid_page.cur_row = row;
-
   store_behaviour = store_behaviour_;
   setLed();
   patternswitch = PATTERN_STORE;
@@ -156,20 +153,21 @@ void MCLActions::store_tracks_in_mem(int column, int row,
             analogfour_track.sound.fromSysex(MidiSysex2.data + 8,
                                              MidiSysex2.recordLen - 8);
           }
-          n = analogfour_track.store_track_in_grid(i, i, grid_page.cur_row);
+          n = analogfour_track.store_track_in_grid(i, i, grid_page.getRow());
         } else {
-          n = temptrack.store_track_in_grid(i, i, grid_page.cur_row);
+          n = temptrack.store_track_in_grid(i, i, grid_page.getRow());
         }
       }
 
       if ((store_behaviour == STORE_AT_SPECIFIC) && (i < 16)) {
         n = temptrack.store_track_in_grid(
-            (i - first_note), grid_page.cur_col + i, grid_page.cur_row);
+            (i - first_note), grid_page.getCol() + i, grid_page.getRow());
       }
       // CLEAR_BIT32(note_interface.notes, i);
     }
   }
-
+  grid_page.row_headers[grid_page.cur_row].active = true;
+  grid_page.row_headers[grid_page.cur_row].write(grid_page.getRow());
   clearLed();
   DEBUG_PRINTLN(slowclock - tclock);
 }
@@ -203,8 +201,6 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
 
     MD.getBlockingKit(MD.currentKit);
   }
-  grid_page.cur_col = column;
-  grid_page.cur_row = row;
   patternswitch = 1;
 
   send_pattern_kit_to_md();
@@ -219,7 +215,7 @@ void MCLActions::send_pattern_kit_to_md() {
   DEBUG_PRINT_FN();
   A4Track *track_buf;
 
-  temptrack.load_track_from_grid(0, grid_page.cur_row, 0);
+  temptrack.load_track_from_grid(0, grid_page.getRow(), 0);
   // if (!Analog4.getBlockingKitX(0)) { return; }
   // if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8))
   // { return; }
@@ -291,17 +287,17 @@ void MCLActions::send_pattern_kit_to_md() {
       if (first_note == 254) {
         first_note = i;
       }
-      //  if (grid_page.cur_col > 0) {
+      //  if (grid_page.encoders[0]->cur > 0) {
       if (store_behaviour == STORE_IN_PLACE) {
         track = i;
 
         if (i < 16) {
-          place_track_inpattern(track, i, grid_page.cur_row,
+          place_track_inpattern(track, i, grid_page.getRow(),
                                 (A4Sound *)&sound_array[0]);
         } else {
           track = track - 16;
           mcl_seq.ext_tracks[track].buffer_notesoff();
-          if (place_track_inpattern(track, i, grid_page.cur_row,
+          if (place_track_inpattern(track, i, grid_page.getRow(),
                                     (A4Sound *)&sound_array[track])) {
             if (Analog4.connected) {
               sound_array[track].workSpace = true;
@@ -313,7 +309,7 @@ void MCLActions::send_pattern_kit_to_md() {
 
       else if ((curtrack + (i - first_note) < 16) && (i < 16)) {
         track = curtrack + (i - first_note);
-        place_track_inpattern(track, i, grid_page.cur_row, &sound_array[0]);
+        place_track_inpattern(track, i, grid_page.getRow(), &sound_array[0]);
       }
 
       if (gridio_param4.getValue() == 8) {
@@ -357,7 +353,7 @@ void MCLActions::send_pattern_kit_to_md() {
 
     //     MD.kit.origPosition = temptrack.origPosition;
     for (uint8_t c = 0; c < 17; c++) {
-      MD.kit.name[c] = temptrack.kitName[c];
+      MD.kit.name[c] = grid_page.row_headers[grid_page.cur_row].name[c];
     }
 
     m_memcpy(&MD.kit.reverb[0], &temptrack.kitextra.reverb,

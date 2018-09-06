@@ -37,7 +37,6 @@ public:
 class MDTrack {
 public:
   uint8_t active = MD_TRACK_TYPE;
-  char kitName[17];
   char trackName[17];
   uint8_t origPosition;
   uint8_t patternOrigPosition;

@@ -17,6 +17,7 @@
 #include "Project.h"
 
 #include "Grid.h"
+#include "GridRowHeader.h"
 #include "MCLActions.h"
 #include "MCLSeq.h"
 #include "MDExploit.h"

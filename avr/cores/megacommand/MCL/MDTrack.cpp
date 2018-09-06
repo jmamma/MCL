@@ -49,10 +49,9 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   uint8_t white_space = 0;
   for (uint8_t c = 0; c < 17; c++) {
     if (white_space == 0) {
-      kitName[c] = MD.kit.name[c];
       trackName[c] = MD.kit.name[c];
+      if (!grid_page.row_headers[grid_page.cur_row].active) { grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c]; }
     } else {
-      kitName[c] = ' ';
       trackName[c] = ' ';
     }
     if (MD.kit.name[c] == '\0') {
@@ -163,10 +162,8 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   bool ret;
   int b = 0;
 
-  DEBUG_PRINT_FN();
-  int32_t offset =
-      (int32_t)GRID_SLOT_BYTES +
-      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+//  DEBUG_PRINT_FN();
+  int32_t offset = grid.get_slot_offset(column, row);
 
   int32_t len;
 
@@ -227,9 +224,9 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   int b = 0;
   DEBUG_PRINT_FN();
   int32_t len;
-  int32_t offset =
-      (int32_t)GRID_SLOT_BYTES +
-      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+
+  int32_t offset = grid.get_slot_offset(column, row);
+
   ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("seek failed");
@@ -263,6 +260,9 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     DEBUG_PRINTLN("write failed");
     return false;
   }
+  uint8_t model = machine.model;
+  grid_page.row_headers[grid_page.cur_row].update_model(column, model, DEVICE_MD);
+
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(column);
   DEBUG_PRINT(" ");

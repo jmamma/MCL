@@ -17,15 +17,17 @@
 
 class Grid {
 public:
-  float row_name_offset = 0;
-  char row_name[17] = "                ";
   uint8_t get_slot_model(int column, int row, bool load, A4Track *track_buf);
 
   void setup();
-  bool clear_slot(uint16_t i);
-  bool clear_row(uint16_t row);
-  char *get_slot_kit(int column, int row, bool load, bool scroll);
+  int32_t get_slot_offset(int16_t column, int16_t row);
+  int32_t get_header_offset(int16_t row);
+  bool clear_slot(int16_t column, int16_t row, bool update_header = true);
+  bool clear_row(int16_t row);
+  bool clear_model(int16_t column, uint16_t row);
+  //  char *get_slot_kit(int column, int row, bool load, bool scroll);
 };
+
 extern Grid grid;
 
 #endif /* GRID_H__ */

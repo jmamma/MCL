@@ -5,10 +5,20 @@
 
 #include "GUI.h"
 #include "GridEncoder.h"
+#include "GridRowHeader.h"
+
+#define MAX_VISIBLE_ROWS 4
+#define MAX_VISIBLE_COLS 8
 
 class GridPage : public LightPage {
 public:
+
+  GridRowHeader row_headers[MAX_VISIBLE_ROWS];
+
   float frames_fps;
+  uint8_t cursor_x = 0;
+  uint8_t cursoy_y = 0;
+
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint16_t frames = 0;
@@ -19,8 +29,6 @@ public:
   uint8_t fx_lv = 0;
   uint8_t fx_tm = 0;
   uint8_t dispeffect;
-  char currentkitName[16];
-  uint8_t grid_models[22];
   bool reload_slot_models;
 
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -31,9 +39,16 @@ public:
   void toggle_fx2();
   void displayScroll(uint8_t i);
   void displaySlot(uint8_t i);
+  uint8_t getCol();
+  uint8_t getRow();
   void load_slot_models();
+  void load_slot_models_oled();
+  void load_slot_model_row(uint8_t y, uint8_t row);
+  void shift_slot_models(uint8_t count, bool direction);
   void tick_frames();
   void display();
+  void display_oled();
+  void display_slot_oled(uint8_t x, uint8_t y, char *strn);
   void setup();
   void init();
   void prepare();

@@ -116,7 +116,7 @@ bool Project::new_project(char *projectname) {
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
                                                    (uint32_t)GRID_LENGTH *
-                                                   (uint32_t)GRID_WIDTH);
+                                                   (uint32_t)(GRID_WIDTH + 1));
 
   if (!ret) {
     file.close();
@@ -140,8 +140,8 @@ bool Project::new_project(char *projectname) {
   DEBUG_PRINTLN("Initializing project.. please wait");
 
   // Initialise the project file by filling the grid with blank data.
-  for (int32_t i = 0; i < GRID_LENGTH * GRID_WIDTH; i++) {
-    if (i % 25 == 0) {
+  for (int32_t i = 0; i < GRID_LENGTH; i++) {
+    if (i % 2 == 0) {
       if (ledstatus == 0) {
         setLed2();
         ledstatus = 1;
@@ -151,7 +151,7 @@ bool Project::new_project(char *projectname) {
       }
     }
 
-    ret = grid.clear_slot(i);
+    ret = grid.clear_row(i);
     if (!ret) {
       return false;
     }

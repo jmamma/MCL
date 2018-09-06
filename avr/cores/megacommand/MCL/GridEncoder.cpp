@@ -32,7 +32,7 @@ void GridEncoder::displayAt(int i) {
 
   char strn[3] = "--";
   // A4Track track_buf;
-  uint8_t model = grid_page.grid_models[getValue() + i];
+  uint8_t model = grid_page.row_headers[grid_page.cur_row].track_type[getValue() + i];
 
   // getGridModel(encoders[1]->getValue() + i, encoders[2]->getValue(), true, (A4Track*)
   // &track_buf);
