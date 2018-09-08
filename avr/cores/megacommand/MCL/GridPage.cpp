@@ -287,13 +287,43 @@ void GridPage::display_slot_oled(uint8_t x, uint8_t y, char *strn) {
 }
 
 void GridPage::display_oled() {
+  uint8_t x_offset = 43;
+  uint8_t y_offset = 8;
 
   classic_display = false;
   oled_display.clearDisplay();
-  //oled_display.setFont(&FreeSans12pt7b);
-  oled_display.setCursor(0,0);
-  oled_display.print(MidiClock.tempo);
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(0, 10);
+  oled_display.print(round(MidiClock.tempo));
+
+  oled_display.setCursor(22, y_offset + 1 * 8);
+
+  uint8_t tri_x = 9, tri_y = 12;
+  if (MidiClock.state == 2) {
+
+    oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
+    oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
+                              tri_y + 4, WHITE);
+  }
+  if (MidiClock.state == 0) {
+    oled_display.fillRect(tri_x + 6, tri_y + 1, 4, 4, WHITE);
+  }
+
   oled_display.setFont(&TomThumb);
+
+  oled_display.setCursor(0, y_offset + 1 + 1 * 8);
+  char dev[3] = "  ";
+
+  oled_display.print(MidiUart.device.get_name(dev));
+
+  oled_display.setCursor(0, y_offset + 3 * 8);
+  char dev2[3] = "  ";
+  oled_display.print(MidiUart2.device.get_name(dev2));
+
+  //   if (MidiClock.state == 1) {
+  //  oled_display.print('>');
+  //  }
+
   char str[3];
   PGM_P tmp;
   encoders[1]->handler = NULL;
@@ -344,23 +374,30 @@ void GridPage::display_oled() {
     cur_row = new_val;
     load_slot_models();
   }
-  uint8_t x_offset = 43;
-  uint8_t y_offset = 8;
   oled_display.setTextWrap(false);
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
-     if ((y == cur_row)) {
-         oled_display.setCursor(x_offset - 5, y_offset + y * 8); 
-         oled_display.print(">"); 
-     }
- 
+    if ((y == cur_row)) {
+      oled_display.setCursor(x_offset - 5, y_offset + y * 8);
+      oled_display.print(">");
+    }
+
     oled_display.setCursor(x_offset, y_offset + y * 8);
     for (uint8_t x = 0; x < 8; x++) {
+      uint8_t device = row_headers[y].device[x + encoders[0]->cur - cur_col];
       uint8_t model = row_headers[y].track_type[x + encoders[0]->cur - cur_col];
-      if (row_headers[y].device[x + encoders[0]->cur - cur_col] == DEVICE_MD) {
+      if (device == DEVICE_MD) {
         tmp = getMachineNameShort(model, 2);
         m_strncpy_p(str, tmp, 3);
       }
-     if ((x == cur_col) && (y == cur_row)) {
+      if (device == DEVICE_A4) {
+        str[0] = 'A';
+        str[1] = model + '0';
+      }
+      if (device == DEVICE_MIDI) {
+        str[0] = 'M';
+        str[1] = model + '0';
+      }
+      if ((x == cur_col) && (y == cur_row)) {
         oled_display.fillRect(oled_display.getCursorX() - 1,
                               oled_display.getCursorY() - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
@@ -392,14 +429,23 @@ void GridPage::display_oled() {
 
   oled_display.setTextColor(BLACK, WHITE);
   if (row_headers[cur_row].active) {
-  oled_display.print(row_headers[cur_row].name);
+    oled_display.print(row_headers[cur_row].name);
   }
-  oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
 
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.print(encoders[0]->cur);
+  oled_display.setCursor(16, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
+
+  char val[4];
+  val[0] = (encoders[0]->cur % 100) / 10 + '0';
+  val[1] = (encoders[0]->cur % 10) + '0';
+  val[2] = '\0';
+  oled_display.print(val);
   oled_display.print(" ");
-  oled_display.print(encoders[1]->cur);
+  val[0] = encoders[1]->cur / 100 + '0';
+  val[1] = (encoders[1]->cur % 100) / 10 + '0';
+  val[2] = (encoders[1]->cur % 10) + '0';
+  val[3] = '\0';
+  oled_display.print(val);
 
   /*
     oled_display.println("BD LT HH -- -- BD SD CC ");

@@ -66,7 +66,7 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
     if (!ret) {
       return false;
     }
-   uint8_t model = track - 16;
+   uint8_t model = track - 16 + 1;
     grid_page.row_headers[grid_page.cur_row].update_model(column, model, DEVICE_A4);
     return true;
   }

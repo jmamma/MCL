@@ -71,7 +71,7 @@ public:
 	
 	volatile bool updateSmaller;
 	uint16_t pll_x;
-	uint16_t tempo;
+	float tempo;
 	//bool transmit;
 	bool transmit_uart1;
     bool transmit_uart2;

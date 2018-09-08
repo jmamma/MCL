@@ -8,7 +8,9 @@
  #include "WProgram.h"
 #endif
 #include "gfxfont.h"
-#include <Fonts/TomThumb.h>
+#include "Fonts/TomThumb.h"
+#include "Fonts/Elektrothic.h"
+
 class Adafruit_GFX : public Print {
 
  public:

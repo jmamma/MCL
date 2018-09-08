@@ -33,7 +33,7 @@ void MidiClockClass::init() {
   isInit = false;
   div192th_counter = 0;
   mod12_counter = 0;
-  last_clock16 = clock;
+  //last_clock16 = clock;
   // mcl_16counter = 0;
   // mcl_counter = 0;
   // mcl_clock = read_slowclock();;
@@ -234,8 +234,8 @@ void MidiClockClass::increment192Counter() {
 
 void MidiClockClass::incrementCounters() {
   mod6_free_counter++;
-  if (mod6_free_counter == 6) {
-    tempo = (150000 / ((float)midi_clock_diff(last_clock16, clock)));
+  if (mod6_free_counter == 6) { 
+    tempo = ((float)150000 / ((float)midi_clock_diff(last_clock16, clock)));
     div192th_time = midi_clock_diff(last_clock16, clock) / 12;
     last_clock16 = clock;
     mod6_free_counter = 0;
