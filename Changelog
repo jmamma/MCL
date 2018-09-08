@@ -1,3 +1,25 @@
+MCL 2.16 08/08/2018
+
+Changes:
+
+Improvements to the behaviour of Parameter Locks.
+
+- Track parameters with paramter locks now have their correct default
+  values detected. The default value is restored when the sequencer is
+  stopped, or on next trig without a lock.
+
+  Previously, saving the current kit or writing track to the current
+  pattern would incorrectly cause the 'default' parameter value to change
+  to the last parameter lock value sent.
+
+SeqStepPage:
+
+- TrigLocks are now cleared when a trig is set, not when a trig is deleted.
+
+Bug fixes:
+
+- MDExploit track switching improved.
+
 MCL 2.15 01/08/2018
 
 ##### Important #######

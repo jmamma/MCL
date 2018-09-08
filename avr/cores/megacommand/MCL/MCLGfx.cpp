@@ -44,7 +44,7 @@ void MCLGfx::splashscreen() {
   oled_display.display();
 #else
   char str1[17] = "MEGACOMMAND LIVE";
-  char str2[17] = "V2.15";
+  char str2[17] = "V2.16";
   str1[16] = '\0';
   LCD.goLine(0);
   LCD.puts(str1);
