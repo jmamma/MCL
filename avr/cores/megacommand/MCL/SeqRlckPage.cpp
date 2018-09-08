@@ -88,7 +88,7 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
   uint8_t param_true = 0;
 
-  if (param > 119) { return; } 
+  if (param > 119) { return; }
   if (param >= 16) {
     param_true = 1;
   }
@@ -105,7 +105,9 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (MidiClock.state != 2) { return; }
   last_md_track = track;
   seq_rlck_page.encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+
   mcl_seq.md_tracks[track].record_track_locks(track_param, value);
+  MD.kit.params[track][track_param] = value;
 }
 
 void SeqRlckPageMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
