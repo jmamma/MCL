@@ -11,7 +11,10 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
   mcl_actions_callbacks.start_clock32th = MidiClock.div32th_counter;
 
   mcl_actions_callbacks.start_clock96th = MidiClock.div96th_counter;
-
+  if (MidiClock.state != 2) {
+    MD.getCurrentKit();
+    MD.getBlockingKit(MD.currentKit);
+  }
 }
 
 void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
