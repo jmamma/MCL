@@ -37,6 +37,8 @@ void MCLSeq::setup() {
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
+   MidiClock.addOnMidiContinueCallback(
+      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
   midi_events.setup_callbacks();
 };
 
