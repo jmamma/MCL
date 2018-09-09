@@ -300,7 +300,7 @@ void isr_midi() {
           MidiClock.handleClock();
           //    MidiClock.callCallbacks();
           break;
-
+       /*
         case MIDI_START:
           MidiClock.handleMidiStart();
           break;
@@ -311,7 +311,7 @@ void isr_midi() {
 
         case MIDI_CONTINUE:
           MidiClock.handleMidiContinue();
-          break;
+          break; */
         default:
           if (s == 0) {
             MidiUart.rxRb.put(c);

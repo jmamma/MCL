@@ -43,15 +43,12 @@ void MidiClass::handleByte(uint8_t byte) {
  again:
   if (MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
 
-#ifdef HOST_MIDIDUINO
-    USE_LOCK();
-    SET_LOCK();
     
     if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
       switch (byte) {
-      case MIDI_CLOCK:
-				MidiClock.handleClock();
-				break;
+    //  case MIDI_CLOCK:
+	//			MidiClock.handleClock();
+	//			break;
 	
       case MIDI_START:
 				MidiClock.handleMidiStart();
@@ -67,10 +64,6 @@ void MidiClass::handleByte(uint8_t byte) {
 				break;
       }
     }
-
-    CLEAR_LOCK();
-#endif
-
 		if (byte == MIDI_ACTIVE_SENSE) {
             uint8_t tmp_msg[1];
             tmp_msg[0] = uart->uart_port;
