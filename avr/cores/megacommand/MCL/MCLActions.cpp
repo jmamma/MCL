@@ -294,7 +294,6 @@ void MCLActions::send_pattern_kit_to_md() {
   A4Sound sound_array[4];
   KitExtra kit_extra;
 
-  if (write_original == 1) { pattern_rec.patternLength = kit_extra.patternLength; }
 
   while ((i < 20)) {
 
@@ -310,6 +309,7 @@ void MCLActions::send_pattern_kit_to_md() {
           if (i == first_note) {
           //Use first track's original kit values for write orig
           m_memcpy(&kit_extra,&(md_track->kitextra),sizeof(kit_extra));
+          if (write_original == 1) { pattern_rec.patternLength = kit_extra.patternLength; }
           }
           place_track_inpattern(track, i, grid_page.getRow(),
                                 (A4Sound *)&sound_array[0]);
@@ -368,13 +368,12 @@ void MCLActions::send_pattern_kit_to_md() {
   // If write original, let's copy the master fx settings from the first track
   // in row Let's also set the kit receive position to be the original.
 
-  if ((write_original == 1) && (md_track->active != EMPTY_TRACK_TYPE)) {
+  if ((write_original == 1)) {
 
     //     MD.kit.origPosition = md_track->origPosition;
     for (uint8_t c = 0; c < 17; c++) {
       MD.kit.name[c] = grid_page.row_headers[grid_page.cur_row].name[c];
     }
-
     m_memcpy(&MD.kit.reverb[0], kit_extra.reverb,
              sizeof(kit_extra.reverb));
     m_memcpy(&MD.kit.delay[0], kit_extra.delay,
