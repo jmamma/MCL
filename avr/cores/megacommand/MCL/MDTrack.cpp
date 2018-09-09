@@ -4,33 +4,33 @@
 bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
   active = TRUE;
-  trigPattern = pattern_rec.trigPatterns[tracknumber];
-  accentPattern = pattern_rec.accentPatterns[tracknumber];
-  slidePattern = pattern_rec.slidePatterns[tracknumber];
-  swingPattern = pattern_rec.swingPatterns[tracknumber];
-  length = pattern_rec.patternLength;
-  kitextra.swingAmount = pattern_rec.swingAmount;
-  kitextra.accentAmount = pattern_rec.accentAmount;
-  kitextra.patternLength = pattern_rec.patternLength;
-  kitextra.doubleTempo = pattern_rec.doubleTempo;
-  kitextra.scale = pattern_rec.scale;
+  trigPattern = MD.pattern.trigPatterns[tracknumber];
+  accentPattern = MD.pattern.accentPatterns[tracknumber];
+  slidePattern = MD.pattern.slidePatterns[tracknumber];
+  swingPattern = MD.pattern.swingPatterns[tracknumber];
+  length = MD.pattern.patternLength;
+  kitextra.swingAmount = MD.pattern.swingAmount;
+  kitextra.accentAmount = MD.pattern.accentAmount;
+  kitextra.patternLength = MD.pattern.patternLength;
+  kitextra.doubleTempo = MD.pattern.doubleTempo;
+  kitextra.scale = MD.pattern.scale;
 
   // Extract parameter lock data and store it in a useable data structure
   int n = 0;
   arraysize = 0;
   for (int i = 0; i < 24; i++) {
-    if (IS_BIT_SET32(pattern_rec.lockPatterns[tracknumber], i)) {
-      int8_t idx = pattern_rec.paramLocks[tracknumber][i];
+    if (IS_BIT_SET32(MD.pattern.lockPatterns[tracknumber], i)) {
+      int8_t idx = MD.pattern.paramLocks[tracknumber][i];
       if (idx >= 0) {
         for (int s = 0; s < 64; s++) {
 
-          if ((pattern_rec.locks[idx][s] <= 127) &&
-              (pattern_rec.locks[idx][s] >= 0)) {
+          if ((MD.pattern.locks[idx][s] <= 127) &&
+              (MD.pattern.locks[idx][s] >= 0)) {
             if (IS_BIT_SET64(trigPattern, s)) {
 
               locks[n].step = s;
               locks[n].param_number = i;
-              locks[n].value = pattern_rec.locks[idx][s];
+              locks[n].value = MD.pattern.locks[idx][s];
               n++;
             }
           }
@@ -84,7 +84,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   m_memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
   m_memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
   origPosition = MD.kit.origPosition;
-  patternOrigPosition = pattern_rec.origPosition;
+  patternOrigPosition = MD.pattern.origPosition;
 }
 
 void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
@@ -92,22 +92,22 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
   // to the MD
   if (active == MD_TRACK_TYPE) {
     for (int x = 0; x < 64; x++) {
-      pattern_rec.clear_step_locks(tracknumber, x);
+      MD.pattern.clear_step_locks(tracknumber, x);
     }
 
-    // pattern_rec.lockPatterns[tracknumber] = 0;
+    // MD.pattern.lockPatterns[tracknumber] = 0;
     // Write pattern lock data to pattern
     uint8_t a;
-    pattern_rec.trigPatterns[tracknumber] = trigPattern;
-    pattern_rec.accentPatterns[tracknumber] = accentPattern;
-    pattern_rec.slidePatterns[tracknumber] = slidePattern;
-    pattern_rec.swingPatterns[tracknumber] = swingPattern;
+    MD.pattern.trigPatterns[tracknumber] = trigPattern;
+    MD.pattern.accentPatterns[tracknumber] = accentPattern;
+    MD.pattern.slidePatterns[tracknumber] = slidePattern;
+    MD.pattern.swingPatterns[tracknumber] = swingPattern;
 
-    for (a = length; a < pattern_rec.patternLength; a += length) {
-      pattern_rec.trigPatterns[tracknumber] |= trigPattern << a;
-      pattern_rec.accentPatterns[tracknumber] |= accentPattern << a;
-      pattern_rec.slidePatterns[tracknumber] |= slidePattern << a;
-      pattern_rec.swingPatterns[tracknumber] |= swingPattern << a;
+    for (a = length; a < MD.pattern.patternLength; a += length) {
+      MD.pattern.trigPatterns[tracknumber] |= trigPattern << a;
+      MD.pattern.accentPatterns[tracknumber] |= accentPattern << a;
+      MD.pattern.slidePatterns[tracknumber] |= slidePattern << a;
+      MD.pattern.swingPatterns[tracknumber] |= swingPattern << a;
     }
 
     for (int n = 0; n < arraysize; n++) {
@@ -118,8 +118,8 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
       // DEBUG_PRINTLN(value[n]);
 
       //  if (arraysize > 5) {     GUI.flash_string_fill("greater than 5"); }
-      for (a = 0; a < pattern_rec.patternLength; a += length) {
-        pattern_rec.addLock(tracknumber, locks[n].step + a, locks[n].param_number,
+      for (a = 0; a < MD.pattern.patternLength; a += length) {
+        MD.pattern.addLock(tracknumber, locks[n].step + a, locks[n].param_number,
                             locks[n].value);
       }
     }

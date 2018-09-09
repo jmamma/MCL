@@ -5,9 +5,7 @@ uint8_t in_sysex2;
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
-MDPattern pattern_rec;
 EmptyTrack temp_track;
-MDSysexCallbacks md_callbacks;
 
 void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
@@ -38,13 +36,13 @@ void MCL::setup() {
   DEBUG_PRINTLN("tempo:");
   DEBUG_PRINTLN(mcl_cfg.tempo);
   MidiClock.setTempo(mcl_cfg.tempo);
-  md_callbacks.setup();
 
   note_interface.setup();
   md_exploit.setup();
   md_events.setup();
   mcl_actions.setup();
   mcl_seq.setup();
+  MDSysexListener.setup();
   A4SysexListener.setup();
   MidiSDSSysexListener.setup();
   midi_setup.cfg_ports();
@@ -58,5 +56,9 @@ void MCL::setup() {
     GUI.display_mirror = true;
 #endif
   }
+  DEBUG_PRINTLN("Track sizes:");
+  DEBUG_PRINTLN(sizeof(A4Track));
+  DEBUG_PRINTLN(sizeof(MDTrack));
+
 }
 MCL mcl;

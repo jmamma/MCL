@@ -21,7 +21,6 @@
 #include "MCLActions.h"
 #include "MCLSeq.h"
 #include "MDExploit.h"
-#include "MDSysexCallbacks.h"
 #include "MDEvents.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
@@ -81,9 +80,7 @@ extern uint8_t in_sysex2;
 extern int8_t curpage;
 extern uint8_t patternswitch;
 
-extern MDPattern pattern_rec;
 extern EmptyTrack temp_track;
-extern MDSysexCallbacks md_callbacks;
 
 class MCL {
 public:

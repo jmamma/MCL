@@ -416,7 +416,11 @@ bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
   MD.requestKit(kit);
   bool ret = waitBlocking(&cb, timeout);
   MDSysexListener.removeOnKitMessageCallback(&cb);
-
+  if (ret) {
+   if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
+   return true;
+   }
+  }
   return ret;
 }
 
@@ -427,6 +431,11 @@ bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
   MD.requestPattern(pattern);
   bool ret = waitBlocking(&cb, timeout);
   MDSysexListener.removeOnPatternMessageCallback(&cb);
+  if (ret) {
+   if (MD.pattern.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
+   return true;
+   }
+  }
 
   return ret;
 }

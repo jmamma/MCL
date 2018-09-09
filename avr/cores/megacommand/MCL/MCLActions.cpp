@@ -104,16 +104,9 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       DEBUG_PRINTLN("could not receive pattern");
       return;
     }
-    if (MidiSysex.data[3] == 0x02) {
-      DEBUG_PRINTLN("MD Pattern");
-    }
-    if (!pattern_rec.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
-      DEBUG_PRINTLN("could not get pattern rec");
-      return;
-    }
     int curkit;
     if (readpattern != MD.currentPattern) {
-      curkit = pattern_rec.kit;
+      curkit = MD.pattern.kit;
     } else {
 
       curkit = MD.getCurrentKit(CALLBACK_TIMEOUT);
@@ -196,12 +189,7 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
       DEBUG_PRINTLN("could not get blocking pattern");
       return;
     }
-    if (!pattern_rec.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
-
-      DEBUG_PRINTLN("could not get blocking pattern");
-      return;
-    }
-    if (gridio_param3.getValue() != MD.currentKit) {
+   if (gridio_param3.getValue() != MD.currentKit) {
       MD.currentKit = gridio_param3.getValue();
     } else {
       MD.saveCurrentKit(MD.currentKit);
@@ -252,7 +240,7 @@ void MCLActions::send_pattern_kit_to_md() {
     quantize_mute = 254;
   }
   if (gridio_param4.getValue() >= 9) {
-    quantize_mute = pattern_rec.patternLength;
+    quantize_mute = MD.pattern.patternLength;
     q_pattern_change = 1;
     reload = 0;
     if ((gridio_param4.getValue() == 9) &&
@@ -309,7 +297,7 @@ void MCLActions::send_pattern_kit_to_md() {
           if (i == first_note) {
           //Use first track's original kit values for write orig
           m_memcpy(&kit_extra,&(md_track->kitextra),sizeof(kit_extra));
-          if (write_original == 1) { pattern_rec.patternLength = kit_extra.patternLength; }
+          if (write_original == 1) { MD.pattern.patternLength = kit_extra.patternLength; }
           }
           place_track_inpattern(track, i, grid_page.getRow(),
                                 (A4Sound *)&sound_array[0]);
@@ -382,10 +370,10 @@ void MCLActions::send_pattern_kit_to_md() {
              sizeof(kit_extra.eq));
     m_memcpy(&MD.kit.dynamics[0], kit_extra.dynamics,
              sizeof(kit_extra.dynamics));
-    pattern_rec.swingAmount = kit_extra.swingAmount;
-    pattern_rec.accentAmount = kit_extra.accentAmount;
-    pattern_rec.doubleTempo = kit_extra.doubleTempo;
-    pattern_rec.scale = kit_extra.scale;
+    MD.pattern.swingAmount = kit_extra.swingAmount;
+    MD.pattern.accentAmount = kit_extra.accentAmount;
+    MD.pattern.doubleTempo = kit_extra.doubleTempo;
+    MD.pattern.scale = kit_extra.scale;
   }
   // MD.kit.origPosition = MD.currentKit;
 
@@ -394,30 +382,30 @@ void MCLActions::send_pattern_kit_to_md() {
   if (gridio_param3.getValue() == 64) {
 
     MD.kit.origPosition = md_track->origPosition;
-    pattern_rec.kit = md_track->origPosition;
+    MD.pattern.kit = md_track->origPosition;
 
   }
 
   else {
 
-    pattern_rec.kit = MD.currentKit;
+    MD.pattern.kit = MD.currentKit;
     MD.kit.origPosition = MD.currentKit;
     //       }
   }
   // If Pattern is OG
   if (gridio_param1.getValue() == 8) {
-    pattern_rec.origPosition = md_track->patternOrigPosition;
+    MD.pattern.origPosition = md_track->patternOrigPosition;
     reload = 0;
   } else {
-    pattern_rec.setPosition(writepattern);
+    MD.pattern.setPosition(writepattern);
   }
 
   // MidiUart.setActiveSenseTimer(0);
   in_sysex = 1;
 
-  md_setsysex_recpos(8, pattern_rec.origPosition);
+  md_setsysex_recpos(8, MD.pattern.origPosition);
 
-  pattern_rec.toSysex(encoder);
+  MD.pattern.toSysex(encoder);
   in_sysex = 1;
 
   /*Send the encoded kit to the MD via sysex*/
@@ -428,9 +416,9 @@ void MCLActions::send_pattern_kit_to_md() {
   //
   //    MidiUart.setActiveSenseTimer(290);
   if (reload == 1) {
-    MD.loadKit(pattern_rec.kit);
+    MD.loadKit(MD.pattern.kit);
   } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
-    do_kit_reload = pattern_rec.kit;
+    do_kit_reload = MD.pattern.kit;
     if (q_pattern_change == 1) {
       MD.loadPattern(writepattern);
     }

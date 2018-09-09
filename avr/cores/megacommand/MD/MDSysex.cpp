@@ -48,6 +48,9 @@ void MDSysexListenerClass::handleByte(uint8_t byte) {
 }
 
 void MDSysexListenerClass::end_immediate() {
+}
+
+void MDSysexListenerClass::end() {
   if (MidiSysex.data[3] == 0x02) {
     isMDMessage = true;
   } else {
@@ -55,12 +58,9 @@ void MDSysexListenerClass::end_immediate() {
     return;
   }
   msgType = MidiSysex.data[sizeof(machinedrum_sysex_hdr)];
-}
-
-void MDSysexListenerClass::end() {
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
-    onStatusResponseCallbacks.call(MidiSysex.data[6], MidiSysex.data[7]);
+   onStatusResponseCallbacks.call(MidiSysex.data[6], MidiSysex.data[7]);
     break;
 
   case MD_GLOBAL_MESSAGE_ID:
@@ -82,6 +82,8 @@ void MDSysexListenerClass::end() {
     onSampleNameCallbacks.call();
     break;
   }
+
+
 }
 
 void MDSysexListenerClass::setup() { MidiSysex.addSysexListener(this); }

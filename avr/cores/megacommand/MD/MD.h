@@ -149,7 +149,8 @@ class MDClass {
   bool loadedKit;
 	/** Stores the kit settings of the machinedrum (usually set by MDTask). **/
   MDKit kit;
-	/** Set to true if the global was loaded (usually set by MDTask). **/
+  MDPattern pattern;
+  /** Set to true if the global was loaded (usually set by MDTask). **/
   bool loadedGlobal;
 	/**
 	 * Stores the global settings of the machinedrum (usually set by MDTask).
