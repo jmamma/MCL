@@ -44,16 +44,14 @@ public:
   uint64_t accentPattern;
   uint64_t slidePattern;
   uint64_t swingPattern;
-  // Machine object for Track Machine Type
+
   MDMachine machine;
-  //
-  MDSeqTrackData seq_data;
-  // Array to hold parameter locks.
-  int arraysize;
   KitExtra kitextra;
-  uint8_t param_number[LOCK_AMOUNT];
-  int8_t value[LOCK_AMOUNT];
-  uint8_t step[LOCK_AMOUNT];
+
+  MDSeqTrackData seq_data;
+
+  int arraysize;
+  ParameterLock locks[LOCK_AMOUNT];
 
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);

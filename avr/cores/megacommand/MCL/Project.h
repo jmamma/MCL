@@ -4,7 +4,7 @@
 #define PROJECT_H__
 #include "ProjectPages.h"
 #include "MCLSysConfig.h"
-#define PROJ_VERSION 2016
+#define PROJ_VERSION 2017
 
 class ProjectHeader {
 public:

@@ -28,9 +28,9 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
               (pattern_rec.locks[idx][s] >= 0)) {
             if (IS_BIT_SET64(trigPattern, s)) {
 
-              step[n] = s;
-              param_number[n] = i;
-              value[n] = pattern_rec.locks[idx][s];
+              locks[n].step = s;
+              locks[n].param_number = i;
+              locks[n].value = pattern_rec.locks[idx][s];
               n++;
             }
           }
@@ -119,8 +119,8 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 
       //  if (arraysize > 5) {     GUI.flash_string_fill("greater than 5"); }
       for (a = 0; a < pattern_rec.patternLength; a += length) {
-        pattern_rec.addLock(tracknumber, step[n] + a, param_number[n],
-                            value[n]);
+        pattern_rec.addLock(tracknumber, locks[n].step + a, locks[n].param_number,
+                            locks[n].value);
       }
     }
 
@@ -195,20 +195,8 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
       return false;
     }
 
-    ret = mcl_sd.read_data((uint8_t *)&(this->param_number[0]), arraysize,
+    ret = mcl_sd.read_data((uint8_t *)&(this->locks[0]), arraysize * 3,
                            &proj.file);
-    if (!ret) {
-      DEBUG_PRINTLN("read failed");
-      return false;
-    }
-
-    ret = mcl_sd.read_data((uint8_t *)&(this->value[0]), arraysize, &proj.file);
-    if (!ret) {
-      DEBUG_PRINTLN("read failed");
-      return false;
-    }
-
-    ret = mcl_sd.read_data((uint8_t *)&(this->step[0]), arraysize, &proj.file);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
@@ -216,6 +204,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
   return true;
 }
+
 bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
@@ -236,7 +225,7 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   }
 
   get_track_from_sysex(track, column);
-  len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
+  len = sizeof(MDTrack) - sizeof(this->locks);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
   if (!ret) {
@@ -244,25 +233,15 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)&(this->param_number[0]), arraysize,
+  ret = mcl_sd.write_data((uint8_t *)&(this->locks[0]), arraysize * 3,
                           &proj.file);
+
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)&(this->value[0]), arraysize, &proj.file);
-  if (!ret) {
-    DEBUG_PRINTLN("write failed");
-    return false;
-  }
-
-  ret = mcl_sd.write_data((uint8_t *)&(this->step[0]), arraysize, &proj.file);
-  if (!ret) {
-    DEBUG_PRINTLN("write failed");
-    return false;
-  }
-  uint8_t model = machine.model;
+ uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model, DEVICE_MD);
 
   DEBUG_PRINTLN("Track stored in grid");
