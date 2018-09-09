@@ -50,6 +50,8 @@ bool MCLSysConfig::cfg_init() {
   clock_rec = 0;
   uart1_turbo = 2;
   uart2_turbo = 2;
+  col = 0;
+  row = 0;
   cur_row = 0;
   cur_col = 0;
   cues = 0;

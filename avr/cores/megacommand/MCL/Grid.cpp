@@ -50,30 +50,34 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
 }
 */
-uint8_t Grid::get_slot_model(int column, int row, bool load, A4Track *track_buf) {
+uint8_t Grid::get_slot_model(int column, int row, bool load) {
+  MDTrack *md_track = (MDTrack*) &temp_track;
+  A4Track *a4_track = (A4Track*) &temp_track;
+  ExtTrack *ext_track = (ExtTrack*) &temp_track;
+
   if (column < 16) {
     if ( load == true) {
-      if (!temptrack.load_track_from_grid(column, row, 50)) {
+      if (!md_track->load_track_from_grid(column, row, 50)) {
         return NULL;
       }
     }
 
 
-    if (temptrack.active == EMPTY_TRACK_TYPE) {
+    if (md_track->active == EMPTY_TRACK_TYPE) {
       return NULL;
     }
     else {
-      return temptrack.machine.model;
+      return md_track->machine.model;
     }
   }
 
   else {
     if ( load == true) {
-      if (!track_buf->load_track_from_grid(column, row, 50)) {
+      if (!a4_track->load_track_from_grid(column, row, 50)) {
         return NULL;
       }
     }
-    return track_buf->active;
+    return md_track->active;
 
 
   }
@@ -94,8 +98,10 @@ int32_t Grid::get_header_offset(int16_t row) {
 
 
 bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
+
   bool ret;
   int b;
+
   if (update_header) {
     GridRowHeader row_header;
     row_header.read(row);
@@ -103,7 +109,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
     row_header.write(row);
   }
 
-  temptrack.active = EMPTY_TRACK_TYPE;
+  temp_track.active = EMPTY_TRACK_TYPE;
   int32_t offset = get_slot_offset(column, row);
 
   ret = proj.file.seekSet(offset);
@@ -118,8 +124,8 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   // DEBUG_PRINTLN("Writing");
   // DEBUG_PRINTLN(sizeof(temptrack.active));
 
-  ret = mcl_sd.write_data((uint8_t *)&(temptrack.active),
-                          sizeof(temptrack.active), &proj.file);
+  ret = mcl_sd.write_data((uint8_t *)&(temp_track),
+                          sizeof(temp_track), &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;

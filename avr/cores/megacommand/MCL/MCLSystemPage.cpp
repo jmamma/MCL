@@ -2,7 +2,11 @@
 #include "MCLSystemPage.h"
 
 void MCLSystemPage::setup() {}
-void MCLSystemPage::init() {}
+void MCLSystemPage::init() {
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
+}
 
 bool MCLSystemPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {

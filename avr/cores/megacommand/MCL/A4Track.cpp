@@ -47,6 +47,8 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
+  active = A4_TRACK_TYPE;
+
   bool ret;
   int b = 0;
   DEBUG_PRINT_FN();

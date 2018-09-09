@@ -1,5 +1,5 @@
-#include "Project.h"
 #include "MCL.h"
+#include "Project.h"
 
 void Project::setup() {}
 
@@ -36,7 +36,6 @@ bool Project::load_project(char *projectname) {
   }
 
   return true;
-
 }
 
 bool Project::check_project_version() {
@@ -52,7 +51,7 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-  ret = mcl_sd.read_data(( uint8_t*) this, sizeof(ProjectHeader), &file);
+  ret = mcl_sd.read_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
     DEBUG_PRINTLN("Could not read project header");
@@ -61,8 +60,7 @@ bool Project::check_project_version() {
   if (version >= PROJ_VERSION) {
     project_loaded = true;
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
@@ -89,8 +87,7 @@ bool Project::write_header() {
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader),
-                          &file);
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
     DEBUG_PRINTLN("Write header failed");
@@ -109,9 +106,9 @@ bool Project::new_project(char *projectname) {
 
   file.close();
 
-  temptrack.active = EMPTY_TRACK_TYPE;
+  temp_track.active = EMPTY_TRACK_TYPE;
 
-   DEBUG_PRINTLN("Attempting to extend project file");
+  DEBUG_PRINTLN("Attempting to extend project file");
 
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
@@ -123,7 +120,7 @@ bool Project::new_project(char *projectname) {
     DEBUG_PRINTLN("Could not extend file");
     return false;
   }
-  DEBUG_PRINTLN("extension succeeded, trying to close"); 
+  DEBUG_PRINTLN("extension succeeded, trying to close");
   file.close();
 
   ret = file.open(projectname, O_RDWR);

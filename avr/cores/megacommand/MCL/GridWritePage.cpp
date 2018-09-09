@@ -18,7 +18,12 @@ void GridWritePage::setup() {
   // GUI.display();
   curpage = W_PAGE;
 }
-void GridWritePage::init() {}
+void GridWritePage::init() {
+ #ifdef OLED_DISPLAY
+ oled_display.clearDisplay();
+ #endif
+
+}
 void GridWritePage::cleanup() {}
 void GridWritePage::display() {
 

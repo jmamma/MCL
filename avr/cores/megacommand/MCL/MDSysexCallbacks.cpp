@@ -9,7 +9,8 @@ void MDSysexCallbacks::setup() {
       this, (md_callback_ptr_t)&MDSysexCallbacks::onPatternMessage);
   MDSysexListener.addOnKitMessageCallback(
       this, (md_callback_ptr_t)&MDSysexCallbacks::onKitMessage);
-}
+
+      }
 
 void MDSysexCallbacks::onStatusResponseCallback(uint8_t type, uint8_t value) {
   switch (type) {
@@ -45,12 +46,12 @@ void MDSysexCallbacks::onKitMessage() {
    * currently loaded*/
   if (mcl_actions.patternswitch == 6) {
     //   if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
-
+    MDTrack *md_track = (MDTrack*) &temp_track;
     for (int i = 0; i < 16; i++) {
       if ((i + grid_page.cur_col + (grid_page.cur_row * GRID_WIDTH)) < (128 * GRID_WIDTH)) {
         /*Store the track at the  into Minicommand memory by moving the data
          * from a Pattern object into a Track object*/
-        temptrack.store_track_in_grid(i, i, grid_page.cur_row);
+        md_track->store_track_in_grid(i, i, grid_page.cur_row);
       }
       /*Update the encoder page to show current Grids*/
       grid_page.display();

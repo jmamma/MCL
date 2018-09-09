@@ -14,7 +14,11 @@ void GridSavePage::setup() {
   grid_page.reload_slot_models = false;
 }
 
-void GridSavePage::init() {}
+void GridSavePage::init() {
+ #ifdef OLED_DISPLAY
+ oled_display.clearDisplay();
+ #endif
+}
 
 void GridSavePage::cleanup() {}
 

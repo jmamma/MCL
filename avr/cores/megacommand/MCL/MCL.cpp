@@ -6,7 +6,7 @@ int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
 MDPattern pattern_rec;
-MDTrack temptrack;
+EmptyTrack temp_track;
 MDSysexCallbacks md_callbacks;
 
 void MCL::setup() {
@@ -50,9 +50,7 @@ void MCL::setup() {
   midi_setup.cfg_ports();
   for (uint8_t n = 0; n < 16; n++) { SET_BIT32(mcl_cfg.mutes, n); }
   mute_page.midi_events.setup_callbacks();
-
-  param1.cur = mcl_cfg.cur_col;
-  param2.cur = mcl_cfg.cur_row;
+  
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE

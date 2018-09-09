@@ -3,8 +3,8 @@
 #ifndef GRID_H__
 #define GRID_H__
 
-#include "A4Track.h"
 #include "GridPages.h"
+#include "A4Track.h"
 
 #define GRID_LENGTH 130
 #define GRID_WIDTH 22
@@ -17,7 +17,7 @@
 
 class Grid {
 public:
-  uint8_t get_slot_model(int column, int row, bool load, A4Track *track_buf);
+  uint8_t get_slot_model(int column, int row, bool load);
 
   void setup();
   int32_t get_slot_offset(int16_t column, int16_t row);

@@ -22,8 +22,16 @@ void GridPage::setup() {
   encoders[3]->handler = encoder_fx_handle;
   ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
   ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
+  encoders[0]->cur = mcl_cfg.col;
+  encoders[1]->cur = mcl_cfg.row;
+  cur_col = mcl_cfg.cur_col;
+  cur_row = mcl_cfg.cur_row;
 }
-
+void GridPage::cleanup() {
+#ifdef OLED_DISPLAY
+   oled_display.setFont();
+#endif
+}
 void GridPage::loop() { midi_active_peering.check(); }
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
@@ -148,7 +156,7 @@ void GridPage::tick_frames() {
   }
   if (clock_diff(frames_startclock, current_clock) >= 250) {
     frames_fps = frames;
-    DEBUG_PRINTLN((float)frames * (float)4);
+    //DEBUG_PRINTLN((float)frames * (float)4);
     // frames_fps = ((frames + frames_fps)/ 2);
     frames = 0;
     frames_startclock = slowclock;
@@ -306,7 +314,8 @@ void GridPage::display_oled() {
                               tri_y + 4, WHITE);
   }
   if (MidiClock.state == 0) {
-    oled_display.fillRect(tri_x + 6, tri_y + 1, 4, 4, WHITE);
+    oled_display.fillRect(tri_x + 6, tri_y + 1, 2, 4, WHITE);
+    oled_display.fillRect(tri_x + 9, tri_y + 1, 2, 4, WHITE);
   }
 
   oled_display.setFont(&TomThumb);
@@ -314,22 +323,26 @@ void GridPage::display_oled() {
   oled_display.setCursor(0, y_offset + 1 + 1 * 8);
   char dev[3] = "  ";
 
-  oled_display.print(MidiUart.device.get_name(dev));
+  MidiUart.device.get_name(dev);
+  dev[2] = '\0';
+  oled_display.print(dev);
 
   oled_display.setCursor(0, y_offset + 3 * 8);
   char dev2[3] = "  ";
-  oled_display.print(MidiUart2.device.get_name(dev2));
+  MidiUart2.device.get_name(dev2);
+  dev2[2] = '\0';
+  oled_display.print(dev2);
 
   //   if (MidiClock.state == 1) {
   //  oled_display.print('>');
   //  }
-
   char str[3];
   PGM_P tmp;
   encoders[1]->handler = NULL;
   //  oled_display.setFont(&Org_01);
   int8_t diff, new_val;
   if (encoders[0]->hasChanged()) {
+    DEBUG_PRINTLN("yep");
     diff = encoders[0]->cur - encoders[0]->old;
     new_val = cur_col + diff;
     if (new_val > MAX_VISIBLE_COLS - 1) {
@@ -429,7 +442,11 @@ void GridPage::display_oled() {
 
   oled_display.setTextColor(BLACK, WHITE);
   if (row_headers[cur_row].active) {
-    oled_display.print(row_headers[cur_row].name);
+    char rowname[10];
+    m_strncpy(rowname, row_headers[cur_row].name, 9);
+    rowname[9] = '\0';
+
+    oled_display.print(rowname);
   }
 
   oled_display.setTextColor(WHITE, BLACK);
@@ -446,13 +463,6 @@ void GridPage::display_oled() {
   val[2] = (encoders[1]->cur % 10) + '0';
   val[3] = '\0';
   oled_display.print(val);
-
-  /*
-    oled_display.println("BD LT HH -- -- BD SD CC ");
-    oled_display.println("-- CP LT BD LT CC 01 CC ");
-    oled_display.println("BD CP R0 R9 R1 M9 LT -- ");
-    oled_display.println("BD CP LT -- LT CC HH LT ");
-  */
 
   oled_display.display();
 }
@@ -495,8 +505,12 @@ void GridPage::display() {
     DEBUG_PRINTLN(slowclock);
     display_name = 1;
     if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
-      mcl_cfg.cur_col = encoders[1]->cur;
-      mcl_cfg.cur_row = encoders[2]->cur;
+      mcl_cfg.cur_col = cur_col;
+      mcl_cfg.cur_row = cur_row;
+
+      mcl_cfg.col = encoders[0]->cur;
+      mcl_cfg.row = encoders[1]->cur;
+
       mcl_cfg.tempo = MidiClock.tempo;
       mcl_cfg.write_cfg();
     }
@@ -596,11 +610,6 @@ void GridPage::prepare() {
     MD.saveCurrentKit(MD.currentKit);
   }
   MD.getBlockingKit(MD.currentKit);
-  if (MD.connected) {
-    ((MCLEncoder *)encoders[1])->min = 0;
-    grid_page.cur_col = last_md_track;
-  }
-  grid_page.cur_row = param2.getValue();
 }
 
 bool GridPage::handleEvent(gui_event_t *event) {

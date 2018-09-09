@@ -21,6 +21,9 @@ void SeqPage::setup() { create_chars_seq(); }
 void SeqPage::init() {
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
 }
 
 void SeqPage::cleanup() {

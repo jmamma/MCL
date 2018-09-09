@@ -220,6 +220,8 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
+  active = MD_TRACK_TYPE;
+
   bool ret;
   int b = 0;
   DEBUG_PRINT_FN();
@@ -235,7 +237,7 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
 
   get_track_from_sysex(track, column);
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
-
+  DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
@@ -267,5 +269,7 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   DEBUG_PRINT(column);
   DEBUG_PRINT(" ");
   DEBUG_PRINT(row);
+  DEBUG_PRINT("model");
+  DEBUG_PRINT(model);
   return true;
 }

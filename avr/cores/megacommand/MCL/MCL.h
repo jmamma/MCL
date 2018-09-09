@@ -46,6 +46,7 @@
 #include "MCLEncoder.h"
 
 #include "MDTrack.h"
+#include "EmptyTrack.h"
 
 #include "Shared.h"
 #include "WavDesigner.h"
@@ -81,7 +82,7 @@ extern int8_t curpage;
 extern uint8_t patternswitch;
 
 extern MDPattern pattern_rec;
-extern MDTrack temptrack;
+extern EmptyTrack temp_track;
 extern MDSysexCallbacks md_callbacks;
 
 class MCL {

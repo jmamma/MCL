@@ -6,6 +6,7 @@
 #include "Grid.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
+#include "GridTrack.h"
 
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
@@ -34,10 +35,8 @@ public:
   uint8_t scale;
 };
 
-class MDTrack {
+class MDTrack : public GridTrack {
 public:
-  uint8_t active = MD_TRACK_TYPE;
-  char trackName[17];
   uint8_t origPosition;
   uint8_t patternOrigPosition;
   uint8_t length;

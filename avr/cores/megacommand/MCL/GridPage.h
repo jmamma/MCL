@@ -18,7 +18,8 @@ public:
   float frames_fps;
   uint8_t cursor_x = 0;
   uint8_t cursoy_y = 0;
-
+  uint8_t col = 0;
+  uint8_t row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint16_t frames = 0;
@@ -50,6 +51,7 @@ public:
   void display_oled();
   void display_slot_oled(uint8_t x, uint8_t y, char *strn);
   void setup();
+  void cleanup();
   void init();
   void prepare();
   void loop();
