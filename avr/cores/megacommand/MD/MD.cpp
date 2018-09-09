@@ -387,7 +387,7 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
 //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
  //     MidiClock.updateClockInterval();
  //   }
-//    handleIncomingMidi();
+   handleIncomingMidi();
 //    GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
   connected = cb->received;

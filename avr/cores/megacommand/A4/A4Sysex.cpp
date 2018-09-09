@@ -47,6 +47,9 @@ void A4SysexListenerClass::end_immediate() {
 
   msgType = MidiSysex2.data[sizeof(a4_sysex_hdr)];
 
+}
+
+void A4SysexListenerClass::end() {
   switch (msgType) {
     // case A4_STATUS_RESPONSE_ID:
     //  onStatusResponseCallbacks.call(MidiSysex2.data[6], MidiSysex2.data[7]);

@@ -49,7 +49,7 @@ public:
   virtual void start();
   virtual void handleByte(uint8_t byte);
   virtual void end_immediate();
-
+  virtual void end();
   /**
    * Add the sysex listener to the MIDI sysex subsystem. This needs to
    * be called if you want to use the A4SysexListener (it is called
