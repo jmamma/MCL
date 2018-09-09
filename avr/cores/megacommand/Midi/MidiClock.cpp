@@ -67,7 +67,7 @@ void MidiClockClass::handleMidiStop() {
   if (transmit_uart2) {
     MidiUart2.sendRaw(MIDI_STOP);
   }
-  init();
+//  init();
 
   onMidiStopCallbacks.call(div96th_counter);
 }
