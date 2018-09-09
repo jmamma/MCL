@@ -37,6 +37,9 @@ public:
 
 class MDTrack : public GridTrack {
 public:
+
+  MDSeqTrackData seq_data;
+
   uint8_t origPosition;
   uint8_t patternOrigPosition;
   uint8_t length;
@@ -46,9 +49,8 @@ public:
   uint64_t swingPattern;
 
   MDMachine machine;
-  KitExtra kitextra;
 
-  MDSeqTrackData seq_data;
+  KitExtra kitextra;
 
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];

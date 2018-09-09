@@ -173,7 +173,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     return false;
   }
 
-  len = (sizeof(MDTrack) - sizeof(kitextra) - (LOCK_AMOUNT * 3));
+  len = (sizeof(MDTrack) - (LOCK_AMOUNT * 3));
 
   // len = (sizeof(MDTrack)  - (LOCK_AMOUNT * 3));
 
@@ -183,25 +183,16 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-  if (m == 0) {
     if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
       DEBUG_PRINTLN("lock array size is wrong");
       return false;
     }
-    ret = mcl_sd.read_data((uint8_t *)&(this->kitextra), sizeof(kitextra),
-                           &proj.file);
-    if (!ret) {
-      DEBUG_PRINTLN("read failed");
-      return false;
-    }
-
     ret = mcl_sd.read_data((uint8_t *)&(this->locks[0]), arraysize * 3,
                            &proj.file);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
     }
-  }
   return true;
 }
 
@@ -225,7 +216,7 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   }
 
   get_track_from_sysex(track, column);
-  len = sizeof(MDTrack) - sizeof(this->locks);
+  len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
   if (!ret) {

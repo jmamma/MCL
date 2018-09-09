@@ -293,6 +293,9 @@ void MCLActions::send_pattern_kit_to_md() {
   uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
   A4Sound sound_array[4];
   KitExtra kit_extra;
+
+  if (write_original == 1) { pattern_rec.patternLength = kit_extra.patternLength; }
+
   while ((i < 20)) {
 
     if ((note_interface.notes[i] > 1)) {
@@ -305,6 +308,7 @@ void MCLActions::send_pattern_kit_to_md() {
 
         if (i < 16) {
           if (i == first_note) {
+          //Use first track's original kit values for write orig
           m_memcpy(&kit_extra,&(md_track->kitextra),sizeof(kit_extra));
           }
           place_track_inpattern(track, i, grid_page.getRow(),
@@ -379,10 +383,8 @@ void MCLActions::send_pattern_kit_to_md() {
              sizeof(kit_extra.eq));
     m_memcpy(&MD.kit.dynamics[0], kit_extra.dynamics,
              sizeof(kit_extra.dynamics));
-    pattern_rec.patternLength = md_track->length;
     pattern_rec.swingAmount = kit_extra.swingAmount;
     pattern_rec.accentAmount = kit_extra.accentAmount;
-    pattern_rec.patternLength = kit_extra.patternLength;
     pattern_rec.doubleTempo = kit_extra.doubleTempo;
     pattern_rec.scale = kit_extra.scale;
   }
