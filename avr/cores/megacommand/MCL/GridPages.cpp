@@ -1,7 +1,11 @@
 #include "GridPages.h"
 #include "MCL.h"
 
+#ifdef OLED_DISPLAY
 GridEncoder param1(GRID_WIDTH - 1, 0, 1);
+#else
+GridEncoder param1(GRID_WIDTH - 4, 0, 1);
+#endif
 GridEncoder param2(GRID_LENGTH - 1, 0 , 1);
 GridEncoder param3(0, 127, 1);
 GridEncoder param4(0, 127, 1);
