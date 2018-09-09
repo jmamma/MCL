@@ -5,26 +5,25 @@
 #include "Midi.h"
 #include "MidiClock.h"
 
-const midi_parse_t midi_parse[] = {
-  { MIDI_NOTE_OFF,         midi_wait_byte_2 },
-  { MIDI_NOTE_ON,          midi_wait_byte_2 },
-  { MIDI_AFTER_TOUCH,      midi_wait_byte_2 },
-  { MIDI_CONTROL_CHANGE,   midi_wait_byte_2 },
-  { MIDI_PROGRAM_CHANGE,   midi_wait_byte_1 },
-  { MIDI_CHANNEL_PRESSURE, midi_wait_byte_1 },
-  { MIDI_PITCH_WHEEL,      midi_wait_byte_2 },
-  /* special handling for SYSEX */
-  { MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1 },
-  { MIDI_SONG_POSITION_PTR, midi_wait_byte_2 },
-  { MIDI_SONG_SELECT,       midi_wait_byte_1 },
-  { MIDI_TUNE_REQUEST,      midi_wait_status },
-  { 0, midi_ignore_message}
-};
+const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
+                                   {MIDI_NOTE_ON, midi_wait_byte_2},
+                                   {MIDI_AFTER_TOUCH, midi_wait_byte_2},
+                                   {MIDI_CONTROL_CHANGE, midi_wait_byte_2},
+                                   {MIDI_PROGRAM_CHANGE, midi_wait_byte_1},
+                                   {MIDI_CHANNEL_PRESSURE, midi_wait_byte_1},
+                                   {MIDI_PITCH_WHEEL, midi_wait_byte_2},
+                                   /* special handling for SYSEX */
+                                   {MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1},
+                                   {MIDI_SONG_POSITION_PTR, midi_wait_byte_2},
+                                   {MIDI_SONG_SELECT, midi_wait_byte_1},
+                                   {MIDI_TUNE_REQUEST, midi_wait_status},
+                                   {0, midi_ignore_message}};
 
-MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf, uint16_t _sysexBufLen)
-	: midiSysex(_sysexBuf, _sysexBufLen) {
-	sysexBuf = _sysexBuf;
-	sysexBufLen = _sysexBufLen;
+MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf,
+                     uint16_t _sysexBufLen)
+    : midiSysex(_sysexBuf, _sysexBufLen) {
+  sysexBuf = _sysexBuf;
+  sysexBufLen = _sysexBufLen;
   midiActive = true;
   uart = _uart;
   midiSysex.uart = _uart;
@@ -35,43 +34,41 @@ MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf, uint16_t _sysexB
 void MidiClass::init() {
   last_status = running_status = 0;
   in_state = midi_ignore_message;
-  in_state = midi_wait_status; 
+  in_state = midi_wait_status;
   live_state = midi_wait_status;
 }
 
 void MidiClass::handleByte(uint8_t byte) {
- again:
+again:
   if (MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
 
-    
-    if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
-      switch (byte) {
-    //  case MIDI_CLOCK:
-	//			MidiClock.handleClock();
-	//			break;
-	
-      case MIDI_START:
-				MidiClock.handleMidiStart();
-				break;
+    //    if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
+    switch (byte) {
+      //  case MIDI_CLOCK:
+      //			MidiClock.handleClock();
+      //			break;
 
-      case MIDI_CONTINUE:
-				MidiClock.handleMidiContinue();
-				break;
-	
-				
-      case MIDI_STOP:
-				MidiClock.handleMidiStop();
-				break;
-      }
+    case MIDI_START:
+      MidiClock.handleMidiStart();
+      break;
+
+    case MIDI_CONTINUE:
+      MidiClock.handleMidiContinue();
+      break;
+
+    case MIDI_STOP:
+      MidiClock.handleMidiStop();
+      break;
     }
-		if (byte == MIDI_ACTIVE_SENSE) {
-            uint8_t tmp_msg[1];
-            tmp_msg[0] = uart->uart_port;
+    //  }
+    if (byte == MIDI_ACTIVE_SENSE) {
+      uint8_t tmp_msg[1];
+      tmp_msg[0] = uart->uart_port;
 
-            uart->recvActiveSenseCallbacks.call((uint8_t*) &tmp_msg);
-			uart->recvActiveSenseTimer = 0;
-        }
-		
+      uart->recvActiveSenseCallbacks.call((uint8_t *)&tmp_msg);
+      uart->recvActiveSenseTimer = 0;
+    }
+
     return;
   }
 
@@ -87,80 +84,79 @@ void MidiClass::handleByte(uint8_t byte) {
       /* ignore */
     }
     break;
-/*
-  case midi_wait_sysex:
+    /*
+      case midi_wait_sysex:
+
+        if (MIDI_IS_STATUS_BYTE(byte)) {
+          if (byte != MIDI_SYSEX_END) {
+                                    in_state = midi_wait_status;
+                                    midiSysex.abort();
+                                    goto again;
+           } else {
+                  midiSysex.end();
+          }
+        } else {
+          midiSysex.handleByte(byte);
+        }
+        break;
+    */
+  case midi_wait_status: {
+    //   if (byte == MIDI_SYSEX_START) {
+    //			in_state = midi_wait_sysex;
+    //			midiSysex.reset();
+    //			last_status = running_status = 0;
+    //			return;
+    // }
 
     if (MIDI_IS_STATUS_BYTE(byte)) {
-      if (byte != MIDI_SYSEX_END) {
-				in_state = midi_wait_status;
-				midiSysex.abort();
-				goto again;
-       } else {
-              midiSysex.end();
-      }
+      last_status = byte;
+      running_status = 0;
     } else {
-      midiSysex.handleByte(byte);
+      if (last_status == 0)
+        break;
+      running_status = 1;
     }
-    break;
-*/
-  case midi_wait_status:
-    {
-   //   if (byte == MIDI_SYSEX_START) {
-	//			in_state = midi_wait_sysex;
-	//			midiSysex.reset();
-	//			last_status = running_status = 0;
-	//			return;
-     // }
 
-      if (MIDI_IS_STATUS_BYTE(byte)) {
-				last_status = byte;
-				running_status = 0;
-      } else {
-				if (last_status == 0)
-					break;
-				running_status = 1;
-      }
-
-      uint8_t status = last_status;
-      if (MIDI_IS_VOICE_STATUS_BYTE(status)) {
-				status = MIDI_VOICE_TYPE_NIBBLE(status);
-      }
-
-      uint8_t i;
-      for (i = 0; midi_parse[i].midi_status != 0; i++) {
-				if (midi_parse[i].midi_status == status) {
-					in_state = midi_parse[i].next_state;
-					msg[0] = last_status;
-					in_msg_len = 1;
-					break;
-				}
-      }
-      callback = i;
-
-      if (midi_parse[i].midi_status == 0) {
-				in_state = midi_ignore_message;
-				return;
-      }
-      if (running_status)
-				goto again;
+    uint8_t status = last_status;
+    if (MIDI_IS_VOICE_STATUS_BYTE(status)) {
+      status = MIDI_VOICE_TYPE_NIBBLE(status);
     }
-    break;
+
+    uint8_t i;
+    for (i = 0; midi_parse[i].midi_status != 0; i++) {
+      if (midi_parse[i].midi_status == status) {
+        in_state = midi_parse[i].next_state;
+        msg[0] = last_status;
+        in_msg_len = 1;
+        break;
+      }
+    }
+    callback = i;
+
+    if (midi_parse[i].midi_status == 0) {
+      in_state = midi_ignore_message;
+      return;
+    }
+    if (running_status)
+      goto again;
+  } break;
 
   case midi_wait_byte_1:
     // trying to fix bug that causes midi messages to overlap
-    // if a midicallback triggered another midi event then the status was not update in time
-    // and collision occured between data streamss
+    // if a midicallback triggered another midi event then the status was not
+    // update in time and collision occured between data streamss
     in_state = midi_wait_status;
- 
+
     msg[in_msg_len++] = byte;
     if (midi_parse[callback].midi_status == MIDI_NOTE_ON && msg[2] == 0) {
-      callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
+      callback =
+          0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
 #ifdef HOST_MIDIDUINO
-		messageCallback.call(msg, in_msg_len);
+    messageCallback.call(msg, in_msg_len);
 #endif
-		
+
     if (callback < 7) {
       midiCallbacks[callback].call(msg);
 #if 0
@@ -178,7 +174,7 @@ void MidiClass::handleByte(uint8_t byte) {
       MidiClock.handleSongPositionPtr(msg);
 #endif
     }
-		
+
     in_state = midi_wait_status;
     break;
 
