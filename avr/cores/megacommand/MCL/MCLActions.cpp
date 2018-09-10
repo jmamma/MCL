@@ -285,6 +285,9 @@ void MCLActions::send_pattern_kit_to_md() {
   // Used as a way of flaggin which A4 tracks are to be sent
   uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
   A4Sound sound_array[4];
+
+  if (write_original == 1) {  pattern_rec.patternLength = temptrack.length; }
+
   while ((i < 20)) {
 
     if ((note_interface.notes[i] > 1)) {
