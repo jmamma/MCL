@@ -82,7 +82,7 @@ void GridPage::loop() {
   if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
     toggle_fx2();
   }
-  uint8_t display_name = 0;
+  display_name = 0;
   if (slowclock < grid_lastclock) {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
@@ -157,10 +157,9 @@ void GridPage::load_slot_models() {
   }
 #else
 
-    row_headers[0].read(getRow());
+  row_headers[0].read(getRow());
 
 #endif
-
 }
 void GridPage::tick_frames() {
   uint16_t current_clock = slowclock;
@@ -343,12 +342,12 @@ void GridPage::display_oled() {
 void GridPage::display() {
 
   tick_frames();
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   display_oled();
   return;
-  #endif;
+#endif;
 
-  //Rendering code for HD44780 below 
+  // Rendering code for HD44780 below
   char str[3];
   char str2[3];
   PGM_P tmp;
@@ -427,7 +426,9 @@ void GridPage::display() {
     if (display_name == 1) {
       GUI.put_string_at(0, "                ");
 
-      GUI.put_string_at(0, row_headers[cur_row].name);
+      if (row_headers[cur_row].active) {
+        GUI.put_string_at(0, row_headers[cur_row].name);
+      }
       GUI.setLine(GUI.LINE2);
 
       GUI.put_string_at(0, "                ");
