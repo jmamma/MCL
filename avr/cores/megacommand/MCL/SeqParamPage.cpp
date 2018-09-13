@@ -23,7 +23,7 @@ void SeqParamPage::init() {
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
   midi_events.setup_callbacks();
   #ifdef OLED_DISPLAY
-  oled_display.clear_display();
+  oled_display.clearDisplay();
   #endif
 }
 void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
