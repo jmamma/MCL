@@ -60,6 +60,7 @@ void GridPage::loop() {
     cur_row = new_val;
     load_slot_models();
     reload_slot_models = false;
+    grid_lastclock = slowclock;
   }
 #else
   cur_col = encoders[0]->cur;
@@ -83,7 +84,6 @@ void GridPage::loop() {
   if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
     toggle_fx2();
   }
-  display_name = 0;
   if (slowclock < grid_lastclock) {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
@@ -92,7 +92,8 @@ void GridPage::loop() {
     DEBUG_PRINTLN(grid_lastclock);
     DEBUG_PRINTLN(slowclock);
     display_name = 1;
-    if (clock_diff(mcl_cfg.cfg_save_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
+    } else {
+   if (display_name == 1) {
       mcl_cfg.cur_col = cur_col;
       mcl_cfg.cur_row = cur_row;
 
@@ -100,9 +101,13 @@ void GridPage::loop() {
       mcl_cfg.row = encoders[1]->cur;
 
       mcl_cfg.tempo = MidiClock.tempo;
+      DEBUG_PRINTLN("write cfg");
       mcl_cfg.write_cfg();
     }
+
+  display_name = 0;
   }
+
 }
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
