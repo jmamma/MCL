@@ -63,7 +63,8 @@ void GridPage::loop() {
   }
 #else
   cur_col = encoders[0]->cur;
-  cur_row = encoders[1]->cur;
+  //cur_row = encoders[1]->cur;
+  cur_row = 0;
   if (encoders[1]->hasChanged()) {
     grid_lastclock = slowclock;
     reload_slot_models = false;
@@ -427,7 +428,7 @@ void GridPage::display() {
       GUI.put_string_at(0, "                ");
 
       if (row_headers[cur_row].active) {
-        GUI.put_string_at(0, row_headers[cur_row].name);
+        GUI.put_string_at(0, row_headers[0].name);
       }
       GUI.setLine(GUI.LINE2);
 
