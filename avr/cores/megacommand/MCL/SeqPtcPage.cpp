@@ -203,8 +203,11 @@ void SeqPtcPage::trig_md(uint8_t note_num) {
   uint8_t pitch = calc_pitch(note_num);
   uint8_t next_track = get_next_track(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
+  USE_LOCK();
+  SET_LOCK();
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
+  CLEAR_LOCK();
   if ((record_mode) && (MidiClock.state == 2)) {
     mcl_seq.md_tracks[next_track].record_track(note_num, 127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
@@ -214,8 +217,11 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   uint8_t pitch = seq_ext_pitch(note_num - 32);
   uint8_t next_track = get_next_track(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
+  USE_LOCK();
+  SET_LOCK();
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
+  CLEAR_LOCK();
   if ((record_mode) && (MidiClock.state == 2)) {
     mcl_seq.md_tracks[next_track].record_track(note_num, 127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
