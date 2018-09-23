@@ -86,7 +86,6 @@ again:
     }
     goto again;
   } else {
-    clearLed2();
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
     txRb.put(c);
@@ -237,7 +236,6 @@ again:
     }
     goto again;
   } else {
-    clearLed2();
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
     txRb.put(c);
@@ -256,8 +254,8 @@ bool MidiUartClass::avail() { return !rxRb.isEmpty(); }
 
 uint8_t MidiUartClass::m_getc() { return rxRb.get(); }
 
-ISR(USART1_RX_vect) { isr_midi(); }
-ISR(USART2_RX_vect) { isr_midi(); }
+ISR(USART1_RX_vect) { uint8_t old_ram_bank = switch_ram_bank(0); isr_midi(); switch_ram_bank(old_ram_bank); }
+ISR(USART2_RX_vect) { uint8_t old_ram_bank = switch_ram_bank(0); isr_midi(); switch_ram_bank(old_ram_bank); }
 
 void isr_midi() {
   uint8_t c, s;
@@ -300,18 +298,18 @@ void isr_midi() {
           MidiClock.handleClock();
           //    MidiClock.callCallbacks();
           break;
-       /*
+ 
         case MIDI_START:
-          MidiClock.handleMidiStart();
+          MidiClock.handleImmediateMidiStart();
           break;
 
         case MIDI_STOP:
-          MidiClock.handleMidiStop();
+          MidiClock.handleImmediateMidiStop();
           break;
 
         case MIDI_CONTINUE:
-          MidiClock.handleMidiContinue();
-          break; */
+          MidiClock.handleImmediateMidiContinue();
+          break;
         default:
           if (s == 0) {
             MidiUart.rxRb.put(c);
@@ -409,7 +407,7 @@ void isr_midi() {
 #ifdef TX_IRQ
 ISR(USART1_UDRE_vect) {
   // uint16_t count = 0;
-
+  uint8_t old_ram_bank = switch_ram_bank(0);
   isr_midi();
   uint8_t c;
   //  while (!MidiUart.txRb.isEmpty()) {
@@ -431,9 +429,11 @@ ISR(USART1_UDRE_vect) {
   if (MidiUart.txRb.isEmpty()) {
     CLEAR_BIT(UCSR1B, UDRIE1);
   }
+  switch_ram_bank(old_ram_bank);
 }
 
 ISR(USART2_UDRE_vect) {
+  uint8_t old_ram_bank = switch_ram_bank(0);
   isr_midi();
   uint8_t c;
   if (!MidiUart2.txRb.isEmpty()) {
@@ -447,7 +447,7 @@ ISR(USART2_UDRE_vect) {
   if (MidiUart2.txRb.isEmpty()) {
     CLEAR_BIT(UCSR2B, UDRIE1);
   }
-  clearLed2();
+  switch_ram_bank(old_ram_bank);
 }
 
 #endif
