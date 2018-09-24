@@ -50,7 +50,9 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   for (uint8_t c = 0; c < 17; c++) {
     if (white_space == 0) {
       trackName[c] = MD.kit.name[c];
-      if (!grid_page.row_headers[grid_page.cur_row].active) { grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c]; }
+      if (!grid_page.row_headers[grid_page.cur_row].active) {
+        grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
+      }
     } else {
       trackName[c] = ' ';
     }
@@ -87,82 +89,106 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   patternOrigPosition = MD.pattern.origPosition;
 }
 
-void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
-  // Check that the track is active, we don't want to write empty/corrupt data
-  // to the MD
-  if (active == MD_TRACK_TYPE) {
-    for (int x = 0; x < 64; x++) {
-      MD.pattern.clear_step_locks(tracknumber, x);
+void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit) {
+  if (active != MD_TRACK_TYPE) {
+    return;
+  }
+
+  m_memcpy(kit->params[tracknumber], machine.params, 24);
+
+  kit->levels[tracknumber] = machine.level;
+  kit->models[tracknumber] = machine.model;
+
+  if (machine.lfo.destinationTrack == column) {
+
+    machine.lfo.destinationTrack = tracknumber;
+  }
+
+  m_memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
+
+  kit->trigGroups[tracknumber] = machine.trigGroup;
+  kit->muteGroups[tracknumber] = machine.muteGroup;
+}
+
+void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
+                                     MDPattern *pattern) {
+  if (active != MD_TRACK_TYPE) {
+    return;
+  }
+
+  for (int x = 0; x < 64; x++) {
+    pattern->clear_step_locks(tracknumber, x);
+  }
+
+  // MD.pattern.lockPatterns[tracknumber] = 0;
+  // Write pattern lock data to pattern
+  uint8_t a;
+  pattern->trigPatterns[tracknumber] = trigPattern;
+  pattern->accentPatterns[tracknumber] = accentPattern;
+  pattern->slidePatterns[tracknumber] = slidePattern;
+  pattern->swingPatterns[tracknumber] = swingPattern;
+
+  for (a = length; a < pattern->patternLength; a += length) {
+    pattern->trigPatterns[tracknumber] |= trigPattern << a;
+    pattern->accentPatterns[tracknumber] |= accentPattern << a;
+    pattern->slidePatterns[tracknumber] |= slidePattern << a;
+    pattern->swingPatterns[tracknumber] |= swingPattern << a;
+  }
+
+  for (int n = 0; n < arraysize; n++) {
+    // DEBUG_PRINTLN();
+    // DEBUG_PRINTLN("Adding");
+    // DEBUG_PRINTLN(step[n]);
+    // DEBUG_PRINTLN(param_number[n]);
+    // DEBUG_PRINTLN(value[n]);
+
+    //  if (arraysize > 5) {     GUI.flash_string_fill("greater than 5"); }
+    for (a = 0; a < pattern->patternLength; a += length) {
+      pattern->addLock(tracknumber, locks[n].step + a, locks[n].param_number,
+                       locks[n].value);
     }
-
-    // MD.pattern.lockPatterns[tracknumber] = 0;
-    // Write pattern lock data to pattern
-    uint8_t a;
-    MD.pattern.trigPatterns[tracknumber] = trigPattern;
-    MD.pattern.accentPatterns[tracknumber] = accentPattern;
-    MD.pattern.slidePatterns[tracknumber] = slidePattern;
-    MD.pattern.swingPatterns[tracknumber] = swingPattern;
-
-    for (a = length; a < MD.pattern.patternLength; a += length) {
-      MD.pattern.trigPatterns[tracknumber] |= trigPattern << a;
-      MD.pattern.accentPatterns[tracknumber] |= accentPattern << a;
-      MD.pattern.slidePatterns[tracknumber] |= slidePattern << a;
-      MD.pattern.swingPatterns[tracknumber] |= swingPattern << a;
-    }
-
-    for (int n = 0; n < arraysize; n++) {
-      // DEBUG_PRINTLN();
-      // DEBUG_PRINTLN("Adding");
-      // DEBUG_PRINTLN(step[n]);
-      // DEBUG_PRINTLN(param_number[n]);
-      // DEBUG_PRINTLN(value[n]);
-
-      //  if (arraysize > 5) {     GUI.flash_string_fill("greater than 5"); }
-      for (a = 0; a < MD.pattern.patternLength; a += length) {
-        MD.pattern.addLock(tracknumber, locks[n].step + a, locks[n].param_number,
-                            locks[n].value);
-      }
-    }
-
-    // Possible alternative for writing machinedata to the MD without sending
-    // the entire Kit >> MD.setMachine(tracknumber, &machine)
-
-    /*Don't forget to store the Kit data as well which is taken from the Track's
-      /associated MDMachine object.*/
-
-    /*if kit_sendmode == 1 then we're going to send an entire kit to the
-      machinedrum inorder to load up the machine on the desired track In this
-      case, we'll need to copy machine model to the kit MD.kit object which will
-      be converted into a sysex message and sent to the MD*/
-    /*if kit_sendmode == 0 then we'll load up the machine via sysex and Midi CC
-     * messages without sending the kit*/
-
-    m_memcpy(MD.kit.params[tracknumber], machine.params, 24);
-
-    MD.kit.levels[tracknumber] = machine.level;
-    MD.kit.models[tracknumber] = machine.model;
-
-    if (machine.lfo.destinationTrack == column) {
-
-      machine.lfo.destinationTrack = tracknumber;
-    }
-
-    m_memcpy(&MD.kit.lfos[tracknumber], &machine.lfo, sizeof(machine.lfo));
-
-    MD.kit.trigGroups[tracknumber] = machine.trigGroup;
-    MD.kit.muteGroups[tracknumber] = machine.muteGroup;
-
-    m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
-    mcl_seq.md_tracks[tracknumber].update_params();
   }
 }
 
-bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
+void MDTrack::load_seq_data(int tracknumber) {
+  m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  mcl_seq.md_tracks[tracknumber].update_params();
+}
+
+void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
+  place_track_in_pattern(tracknumber, column, &(MD.pattern));
+  place_track_in_kit(tracknumber, column, &(MD.kit));
+  load_seq_data(tracknumber);
+}
+
+bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
 
   bool ret;
   int b = 0;
 
-//  DEBUG_PRINT_FN();
+  int32_t offset = grid.get_slot_offset(column, row);
+
+  ret = proj.file.seekSet(offset);
+  if (!ret) {
+    DEBUG_PRINTLN("Seek failed");
+    return false;
+  }
+
+  ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
+
+  if (!ret) {
+    DEBUG_PRINTLN("read failed");
+    return false;
+  }
+  return true;
+}
+
+bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
+
+  bool ret;
+  int b = 0;
+
+  //  DEBUG_PRINT_FN();
   int32_t offset = grid.get_slot_offset(column, row);
 
   int32_t len;
@@ -183,16 +209,16 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-    if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
-      DEBUG_PRINTLN("lock array size is wrong");
-      return false;
-    }
-    ret = mcl_sd.read_data((uint8_t *)&(this->locks[0]), arraysize * 3,
-                           &proj.file);
-    if (!ret) {
-      DEBUG_PRINTLN("read failed");
-      return false;
-    }
+  if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
+    DEBUG_PRINTLN("lock array size is wrong");
+    return false;
+  }
+  ret =
+      mcl_sd.read_data((uint8_t *)&(this->locks[0]), arraysize * 3, &proj.file);
+  if (!ret) {
+    DEBUG_PRINTLN("read failed");
+    return false;
+  }
   return true;
 }
 
@@ -232,8 +258,9 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
- uint8_t model = machine.model;
-  grid_page.row_headers[grid_page.cur_row].update_model(column, model, DEVICE_MD);
+  uint8_t model = machine.model;
+  grid_page.row_headers[grid_page.cur_row].update_model(column, model,
+                                                        DEVICE_MD);
 
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(column);
@@ -241,5 +268,34 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   DEBUG_PRINT(row);
   DEBUG_PRINT("model");
   DEBUG_PRINT(model);
+  return true;
+}
+
+bool MDTrack::store_in_mem(uint8_t column) {
+  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+
+  uint32_t pos = BANK1_R1_START + len * (uint32_t)column;
+
+  volatile uint8_t *ptr;
+
+  ptr = reinterpret_cast<uint8_t *>(pos);
+  switch_ram_bank(1);
+  memcpy(ptr, this, len);
+  switch_ram_bank(0);
+  return true;
+}
+
+bool MDTrack::load_from_mem(uint8_t column) {
+  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+
+  uint32_t pos = BANK1_R1_START + len * (uint32_t)column;
+
+  volatile uint8_t *ptr;
+
+  ptr = reinterpret_cast<uint8_t *>(pos);
+
+  switch_ram_bank(1);
+  memcpy(this, ptr, len);
+  switch_ram_bank(0);
   return true;
 }

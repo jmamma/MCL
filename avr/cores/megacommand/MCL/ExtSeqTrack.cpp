@@ -5,10 +5,10 @@ void ExtSeqTrack::seq() {
 
     uint8_t step_count =
         ((MidiClock.div32th_counter / resolution) -
-         (mcl_actions_callbacks.start_clock32th / resolution)) -
+         (mcl_actions.start_clock32th / resolution)) -
         (length *
          ((MidiClock.div32th_counter / resolution -
-           (mcl_actions_callbacks.start_clock32th / resolution)) /
+           (mcl_actions.start_clock32th / resolution)) /
           (length)));
 
     int8_t utiming = timing[step_count];         // upper
@@ -104,14 +104,14 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
   else if (condition <= 8) {
     if (resolution == 2) {
-      if (((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2 + length) /
+      if (((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2 + length) /
            length) %
               ((condition)) ==
           0) {
         note_on(note);
       }
     } else {
-      if (((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th + length) /
+      if (((MidiClock.div32th_counter - mcl_actions.start_clock32th + length) /
            length) %
               ((condition)) ==
           0) {
@@ -179,9 +179,9 @@ void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
                                       uint8_t velocity) {
   uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions_callbacks.start_clock32th / resolution)) -
+       (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
-                                    (mcl_actions_callbacks.start_clock32th / resolution)) /
+                                    (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
 
   uint8_t utiming =
@@ -227,9 +227,9 @@ void ExtSeqTrack::record_ext_track_noteon( uint8_t note_num,
                                      uint8_t velocity) {
   uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions_callbacks.start_clock32th / resolution)) -
+       (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
-                                    (mcl_actions_callbacks.start_clock32th / resolution)) /
+                                    (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
 
   uint8_t utiming =

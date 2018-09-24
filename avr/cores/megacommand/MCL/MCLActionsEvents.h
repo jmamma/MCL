@@ -24,8 +24,6 @@ public:
 class MCLActionsCallbacks : public ClockCallback {
 public:
   bool state;
-  uint32_t start_clock32th = 0;
-  uint32_t start_clock96th = 0;
   void onMidiStartCallback();
 
   void setup_callbacks();

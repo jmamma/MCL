@@ -28,6 +28,7 @@ Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
 // extern volatile uint16_t slowclock = 0;
+
 void my_init_ram(void) __attribute__((naked)) __attribute__((used))
 __attribute__((section(".init3")));
 
@@ -35,7 +36,7 @@ void my_init_ram(void) {
   // Set PL6 as output
   //
   DDRL |= _BV(PL6);
-  PORTL |= ~(_BV(PL6));
+  PORTL &= ~(_BV(PL6));
   XMCRA |= _BV(SRE);
   //  MCUCR |= _BV(SRE);
   //  uint8_t *ptr = 0x2000;
@@ -193,7 +194,11 @@ static inline uint32_t phase_mult(uint32_t val) {
   return (val * PHASE_FACTOR) >> 8;
 }
 
+bool in_irq = false;
+
 ISR(TIMER1_COMPA_vect) {
+
+  uint8_t old_ram_bank = switch_ram_bank(0);
 
   clock++;
 
@@ -204,22 +209,14 @@ ISR(TIMER1_COMPA_vect) {
 
       MidiClock.div192th_counter_last = MidiClock.div192th_counter;
 
-      MidiClock.callCallbacks();
+      if (enable_clock_callbacks) { MidiClock.callCallbacks(); }
     }
   }
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    MidiClock.callCallbacks();
+    if (enable_clock_callbacks) { MidiClock.callCallbacks(); }
   }
-
-  // isr_midi();
-#ifdef MIDIDUINO_MIDI_CLOCK
-//  if (MidiClock.state == MidiClock.STARTED) {
-//   MidiClock.handleTimerInt();
-// }
-#endif
-
-  //  clearLed2();
+  switch_ram_bank(old_ram_bank);
 }
 
 // XXX CMP to have better time
@@ -253,6 +250,7 @@ uint16_t lastRunningStatusReset = 0;
 
 // extern uint16_t myvar;
 ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+  uint8_t old_ram_bank = switch_ram_bank(0);
   slowclock++;
   // TCNT2 = tcnt2;
   //  isr_midi();
@@ -272,6 +270,7 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif
+  switch_ram_bank(old_ram_bank);
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
 }
 
@@ -279,6 +278,8 @@ uint8_t sysexBuf[5500];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
+
+bool enable_clock_callbacks = true;
 
 void handleIncomingMidi() {
   if (Midi.midiSysex.callSysexCallBacks) {

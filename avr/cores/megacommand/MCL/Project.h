@@ -4,7 +4,7 @@
 #define PROJECT_H__
 #include "ProjectPages.h"
 #include "MCLSysConfig.h"
-#define PROJ_VERSION 2018
+#define PROJ_VERSION 2020
 
 class ProjectHeader {
 public:

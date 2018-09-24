@@ -3,14 +3,14 @@
 
 bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
+  memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
            sizeof(seq_data));
   active = EXT_TRACK_TYPE;
   return true;
 }
 bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
+  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
   return true;
 }

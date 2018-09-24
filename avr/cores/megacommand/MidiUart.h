@@ -84,6 +84,8 @@ class MidiUartClass : public MidiUartParent {
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;
+extern bool enable_clock_callbacks;
+
 class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
   

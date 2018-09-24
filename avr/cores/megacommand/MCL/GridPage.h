@@ -35,8 +35,12 @@ public:
   uint8_t fx_tm = 0;
   uint8_t dispeffect;
   uint8_t display_name = 0;
-  bool reload_slot_models;
 
+  bool reload_slot_models;
+  bool show_slot_menu = false;
+
+  uint8_t active_slots[16];
+  uint8_t slot_apply;
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
@@ -48,6 +52,9 @@ public:
   uint8_t getRow();
   void load_slot_models();
   void tick_frames();
+  void display_slot_menu();
+  void display_grid_info();
+  void display_grid();
   void display();
   void display_oled();
   void setup();

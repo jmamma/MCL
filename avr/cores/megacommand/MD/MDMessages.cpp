@@ -298,13 +298,13 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 #endif
 
   /* swap params */
-  m_memcpy(_params, params[srcTrack], 24);
-  m_memcpy(params[srcTrack], params[dstTrack], 24);
-  m_memcpy(params[dstTrack], _params, 24);
+  memcpy(_params, params[srcTrack], 24);
+  memcpy(params[srcTrack], params[dstTrack], 24);
+  memcpy(params[dstTrack], _params, 24);
 
-  m_memcpy(&_lfo, &lfos[srcTrack], sizeof(_lfo));
-  m_memcpy(&lfos[srcTrack], &lfos[dstTrack], sizeof(_lfo));
-  m_memcpy(&lfos[dstTrack], &_lfo, sizeof(_lfo));
+  memcpy(&_lfo, &lfos[srcTrack], sizeof(_lfo));
+  memcpy(&lfos[srcTrack], &lfos[dstTrack], sizeof(_lfo));
+  memcpy(&lfos[dstTrack], &_lfo, sizeof(_lfo));
 
   /* swap level, model, trig group, mute group */
   _level = levels[srcTrack];

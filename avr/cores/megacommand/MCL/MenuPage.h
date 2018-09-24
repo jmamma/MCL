@@ -12,6 +12,7 @@
 #define MAX_VISIBLE_ROWS 1
 #endif
 
+#define MENU_WIDTH 78
 class MenuPage : public LightPage {
 public:
   uint8_t cur_col = 0;
@@ -26,7 +27,7 @@ public:
   }
   void draw_scrollbar(uint8_t x_offset);
   void draw_item(uint8_t item_n, uint8_t row);
-  void draw_menu(uint8_t x_offset, uint8_t y_offset);
+  void draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width = MENU_WIDTH);
   void loop();
   void display();
   void setup();

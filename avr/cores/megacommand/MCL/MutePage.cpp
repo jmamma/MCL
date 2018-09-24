@@ -90,7 +90,7 @@ void MutePage::toggle_mutes_batch() {
   int i;
   if ((encoders[2]->getValue() > 0) && (encoders[2]->getValue() < 7)) {
     while (
-        (((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) +
+        (((MidiClock.div32th_counter - mcl_actions.start_clock32th) +
           3) %
          (quantize_mute * 2)) != 0) {
       GUI.display();
@@ -130,9 +130,9 @@ void MutePage::display() {
     GUI.put_value_at2(11, x);
   }
   uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (64 * ((MidiClock.div16th_counter -
-              mcl_actions_callbacks.start_clock32th / 2) /
+              mcl_actions.start_clock32th / 2) /
              64));
   GUI.put_value_at2(14, step_count);
   draw_mutes(0);

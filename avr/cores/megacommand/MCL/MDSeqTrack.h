@@ -5,6 +5,10 @@
 
 #define UART1_PORT 1
 
+#define SEQ_NOTEBUF_SIZE 8
+#define SEQ_MUTE_ON 1
+#define SEQ_MUTE_OFF 0
+
 class MDSeqTrackData {
 public:
   uint8_t length;
@@ -24,8 +28,12 @@ public:
   MidiUartParent *uart = &MidiUart;
 
   uint8_t locks_params_orig[4];
-
+  bool load = false;
+  uint8_t mute_state = SEQ_MUTE_OFF;
   void seq();
+  void mute() { mute_state = SEQ_MUTE_ON; }
+  void unmute() { mute_state = SEQ_MUTE_OFF; }
+
   inline void trig_conditional(uint8_t condition);
   inline void send_parameter_locks(uint8_t step_count);
 

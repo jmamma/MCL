@@ -2,10 +2,11 @@
 #include "GridPage.h"
 #include "GridPages.h"
 #include "MCL.h"
-
 void GridPage::init() {
+  show_slot_menu = false;
   reload_slot_models = false;
   md_exploit.off();
+
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
@@ -15,16 +16,14 @@ void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
   LCD.createChar(1, charmap);
   frames_startclock = slowclock;
-  encoders[2]->handler = encoder_fx_handle;
-  ((GridEncoder *)encoders[2])->effect = MD_FX_ECHO;
-  ((GridEncoder *)encoders[2])->fxparam = MD_ECHO_TIME;
-  encoders[3]->handler = encoder_fx_handle;
-  ((GridEncoder *)encoders[3])->effect = MD_FX_ECHO;
-  ((GridEncoder *)encoders[3])->fxparam = MD_ECHO_FB;
   encoders[0]->cur = mcl_cfg.col;
   encoders[1]->cur = mcl_cfg.row;
   cur_col = mcl_cfg.cur_col;
   cur_row = mcl_cfg.cur_row;
+
+  for (uint8_t n = 0; n < 16; n++) {
+   active_slots[n] = 255;
+  }
 }
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
@@ -35,7 +34,14 @@ void GridPage::loop() {
   midi_active_peering.check();
   int8_t diff, new_val;
 #ifdef OLED_DISPLAY
+  if (show_slot_menu) {
+    grid_slot_page.loop();
+    return;
+  } else {
+  }
+
   if (encoders[0]->hasChanged()) {
+    DEBUG_PRINTLN("blah");
     diff = encoders[0]->cur - encoders[0]->old;
     new_val = cur_col + diff;
     if (new_val > MAX_VISIBLE_COLS - 1) {
@@ -57,14 +63,47 @@ void GridPage::loop() {
     if (new_val < 0) {
       new_val = 0;
     }
+    // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
     load_slot_models();
     reload_slot_models = false;
     grid_lastclock = slowclock;
+
+    volatile uint8_t *ptr;
+    //   USE_LOCK();
+    //   SET_LOCK();
+    PORTL &= ~(_BV(PL6));
+    // digitalWrite(43, HIGH);
+
+    MDTrack md_track;
+
+ //   uint32_t len =
+   //     sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+ //   uint32_t pos = BANK1_R1_START;
+ //   ptr = reinterpret_cast<uint8_t *>(pos);
+
+    //   PORTL &= ~(_BV(PL6));
+    // switch_ram_bank(1);
+
+    // PORTL |= (_BV(PL6));
+/*    for (uint8_t n = 0; n < 16; n++) {
+      md_track.load_track_from_grid(n, getRow(), len);
+      switch_ram_bank(1);
+      memcpy(ptr, &md_track, len);
+      switch_ram_bank(0);
+      grid_page.active_slots[n] = cur_row;
+      DEBUG_PRINTLN(md_track.machine.model);
+      pos += len;
+      ptr = reinterpret_cast<uint8_t *>(pos);
+    }*/
+    // switch_ram_bank(0);
+    // PORTL |= (_BV(PL6));
+    // CLEAR_LOCK();
   }
+
 #else
   cur_col = encoders[0]->cur;
-  //cur_row = encoders[1]->cur;
+  // cur_row = encoders[1]->cur;
   cur_row = 0;
   if (encoders[1]->hasChanged()) {
     grid_lastclock = slowclock;
@@ -76,14 +115,15 @@ void GridPage::loop() {
     load_slot_models();
     reload_slot_models = true;
   }
+  /*
+    if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
+      toggle_fx1();
+    }
 
-  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
-    toggle_fx1();
-  }
-
-  if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
-    toggle_fx2();
-  }
+    if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
+      toggle_fx2();
+    }
+    */
   if (slowclock < grid_lastclock) {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
@@ -92,8 +132,8 @@ void GridPage::loop() {
     DEBUG_PRINTLN(grid_lastclock);
     DEBUG_PRINTLN(slowclock);
     display_name = 1;
-    } else {
-   if (display_name == 1) {
+  } else {
+    if (display_name == 1) {
       mcl_cfg.cur_col = cur_col;
       mcl_cfg.cur_row = cur_row;
 
@@ -105,9 +145,8 @@ void GridPage::loop() {
       mcl_cfg.write_cfg();
     }
 
-  display_name = 0;
+    display_name = 0;
   }
-
 }
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
@@ -152,9 +191,9 @@ void encoder_fx_handle(Encoder *enc) {
   CLEAR_LOCK();
 }
 
-uint8_t GridPage::getRow() { return encoders[1]->cur; }
+uint8_t GridPage::getRow() { return param2.cur; }
 
-uint8_t GridPage::getCol() { return encoders[0]->cur; }
+uint8_t GridPage::getCol() { return param1.cur; }
 
 void GridPage::load_slot_models() {
 #ifdef OLED_DISPLAY
@@ -220,12 +259,10 @@ void GridPage::toggle_fx2() {
   }
 }
 
-void GridPage::display_oled() {
+void GridPage::display_grid_info() {
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
-  classic_display = false;
-  oled_display.clearDisplay();
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
   oled_display.print(round(MidiClock.tempo));
@@ -259,6 +296,43 @@ void GridPage::display_oled() {
   dev2[2] = '\0';
   oled_display.print(dev2);
 
+  oled_display.setCursor(16, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
+
+  char val[4];
+  val[0] = (encoders[0]->cur % 100) / 10 + '0';
+  val[1] = (encoders[0]->cur % 10) + '0';
+  val[2] = '\0';
+  oled_display.print(val);
+  oled_display.print(" ");
+  val[0] = encoders[1]->cur / 100 + '0';
+  val[1] = (encoders[1]->cur % 100) / 10 + '0';
+  val[2] = (encoders[1]->cur % 10) + '0';
+  val[3] = '\0';
+  oled_display.print(val);
+
+  oled_display.setCursor(1, y_offset + 2 * 8);
+  oled_display.fillRect(oled_display.getCursorX() - 1,
+                        oled_display.getCursorY() - 6, 37, 7, WHITE);
+
+  oled_display.setTextColor(BLACK, WHITE);
+  if (row_headers[cur_row].active) {
+    char rowname[10];
+    m_strncpy(rowname, row_headers[cur_row].name, 9);
+    rowname[9] = '\0';
+
+    oled_display.print(rowname);
+  }
+
+  oled_display.setTextColor(WHITE, BLACK);
+}
+
+void GridPage::display_grid() {
+  uint8_t x_offset = 43;
+  uint8_t y_offset = 8;
+
+  oled_display.setFont(&TomThumb);
+
+  classic_display = false;
   //   if (MidiClock.state == 1) {
   //  oled_display.print('>');
   //  }
@@ -275,8 +349,8 @@ void GridPage::display_oled() {
 
     oled_display.setCursor(x_offset, y_offset + y * 8);
     for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
-      uint8_t device = row_headers[y].device[x + encoders[0]->cur - cur_col];
-      uint8_t model = row_headers[y].track_type[x + encoders[0]->cur - cur_col];
+      uint8_t device = row_headers[y].device[x + getCol() - cur_col];
+      uint8_t model = row_headers[y].track_type[x + getCol() - cur_col];
       if (device == DEVICE_MD) {
         tmp = getMachineNameShort(model, 2);
         m_strncpy_p(str, tmp, 3);
@@ -296,52 +370,50 @@ void GridPage::display_oled() {
       } else {
         oled_display.setTextColor(WHITE, BLACK);
       }
-      if (model == 0) {
-        oled_display.print("--");
+      if ( (((MidiClock.div16th_counter + 1) % 4 == 0) && (MidiClock.state == 2))  && ( (y + getRow() - cur_row) == active_slots[x]) ) {
+        oled_display.setCursor(oled_display.getCursorX() + 8,oled_display.getCursorY());
       } else {
-        oled_display.print(str);
+        if (model == 0) {
+          oled_display.print("--");
+        } else {
+          oled_display.print(str);
+        }
       }
-      if ((x + 1 + encoders[0]->cur - cur_col) % 4 == 0) {
+
+      if ((x + 1 + getCol() - cur_col) % 4 == 0) {
         oled_display.setTextColor(WHITE, BLACK);
         oled_display.print(" | ");
       } else {
         oled_display.print(" ");
       }
 
-      if ((x == encoders[0]->cur) && (y == encoders[1]->cur)) {
+      if ((x == getCol()) && (y == encoders[1]->cur)) {
         //   oled_display.drawRect(xpos_old, y_offset + 2 + (y - 1) * 8, 8, 6,
         //                       WHITE);
       }
     }
   }
+}
+void GridPage::display_slot_menu() {
+  uint8_t x_offset = 43;
+  uint8_t y_offset = 8;
+  grid_slot_page.draw_menu(1, y_offset, 39);
+  // grid_slot_page.draw_scrollbar(36);
+}
 
-  oled_display.setCursor(1, y_offset + 2 * 8);
-  oled_display.fillRect(oled_display.getCursorX() - 1,
-                        oled_display.getCursorY() - 6, 37, 7, WHITE);
+void GridPage::display_oled() {
+  uint8_t x_offset = 43;
+  uint8_t y_offset = 8;
 
-  oled_display.setTextColor(BLACK, WHITE);
-  if (row_headers[cur_row].active) {
-    char rowname[10];
-    m_strncpy(rowname, row_headers[cur_row].name, 9);
-    rowname[9] = '\0';
+  oled_display.clearDisplay();
 
-    oled_display.print(rowname);
+  oled_display.setFont(&TomThumb);
+  if (!show_slot_menu) {
+    display_grid_info();
+  } else {
+    display_slot_menu();
   }
-
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(16, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
-
-  char val[4];
-  val[0] = (encoders[0]->cur % 100) / 10 + '0';
-  val[1] = (encoders[0]->cur % 10) + '0';
-  val[2] = '\0';
-  oled_display.print(val);
-  oled_display.print(" ");
-  val[0] = encoders[1]->cur / 100 + '0';
-  val[1] = (encoders[1]->cur % 100) / 10 + '0';
-  val[2] = (encoders[1]->cur % 10) + '0';
-  val[3] = '\0';
-  oled_display.print(val);
+  display_grid();
 
   oled_display.display();
 }
@@ -515,19 +587,35 @@ bool GridPage::handleEvent(gui_event_t *event) {
     //    GUI.setPage(&mixer_page);
     //   draw_levels();
   }
-  /*IF button1 and encoder buttons are pressed, store current track selected on
-   * MD into the corresponding Grid*/
 
-  //  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
-  //      MD.getBlockingGlobal(1);
-  //          MD.global.baseChannel = 9;
-  //        //global_new.baseChannel;
-  //          for (int i=0; i < 16; i++) {
-  //            MD.muteTrack(i,true);
-  //          }
-  //           setLevel(8,100);
-  //  }
+  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
 
+      show_slot_menu = true;
+      slot.load_track_from_grid(getCol(), getRow());
+      if (slot.chain.active == false) {
+        if (getRow() > 128) {
+          slot.chain.row = 0;
+        } else {
+          slot.chain.row = getRow() + 1;
+        }
+      }
+      encoders[0] = &grid_slot_param1;
+      encoders[1] = &grid_slot_param2;
+      grid_slot_param1.cur = 0;
+      slot_apply = 0;
+      return true;
+  }
+
+  if (BUTTON_RELEASED(Buttons.BUTTON3)) {
+      show_slot_menu = false;
+      encoders[0] = &param1;
+      encoders[1] = &param2;
+      for (uint8_t track = 0; track < slot_apply; track++) {
+      slot.store_track_in_grid(track + getCol(), getRow());
+      }
+      file.sync();
+    return true;
+  }
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();

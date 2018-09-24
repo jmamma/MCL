@@ -39,7 +39,7 @@ void LightPage::update() {
 
   USE_LOCK();
   SET_LOCK();
-  m_memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
+  memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
   Encoders.clearEncoders();
   CLEAR_LOCK();
 
@@ -72,7 +72,7 @@ void EncoderPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
   //USE_LOCK();
   //SET_LOCK();
-  m_memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
+  memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
   Encoders.clearEncoders();
   //CLEAR_LOCK();
   

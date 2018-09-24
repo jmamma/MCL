@@ -16,12 +16,16 @@
 
 #include "Project.h"
 
+#include "GridChain.h"
 #include "Grid.h"
 #include "GridRowHeader.h"
+#include "GridTask.h"
 #include "MCLActions.h"
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDEvents.h"
+#include "Menu.h"
+#include "MenuPage.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
 #include "MidiSDS.hh"
@@ -45,7 +49,7 @@
 #include "MCLEncoder.h"
 
 #include "MDTrack.h"
-#include "EmptyTrack.h"
+//#include "EmptyTrack.h"
 
 #include "Shared.h"
 #include "WavDesigner.h"
@@ -75,12 +79,18 @@
 
 #define MD_KITBUF_POS 63
 
+//Memory layout for SRAM bank 1
+
+#define BANK1_R1_START 0x2200
+#define BANK1_R1_END (BANK1_R1_START + (sizeof(GridTrack) + sizeof(MDMachine) + sizeof(MDSeqTrackData)) * NUM_MD_TRACKS)
+#define BANK1_R2_START (BANK1_R1_END + 1)
+#define BANK1_R2_END (BANK1_R2_START + (sizeof(GridTrack) + sizeof(MDMachine) + sizeof(MDSeqTrackData)) * NUM_MD_TRACKS)
+
 extern uint8_t in_sysex;
 extern uint8_t in_sysex2;
 extern int8_t curpage;
 extern uint8_t patternswitch;
 
-extern EmptyTrack temp_track;
 
 class MCL {
 public:

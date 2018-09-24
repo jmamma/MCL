@@ -78,10 +78,10 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
   char str[17] = "----------------";
   uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (mcl_seq.md_tracks[last_md_track].length *
        ((MidiClock.div16th_counter -
-         mcl_actions_callbacks.start_clock32th / 2) /
+         mcl_actions.start_clock32th / 2) /
         mcl_seq.md_tracks[last_md_track].length));
 
   for (int i = 0; i < 16; i++) {
@@ -156,10 +156,10 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
                                     mcl_actions_callbacks.start_clock96th / 5) /
                                    mcl_seq.md_tracks[last_md_track].length));*/
         uint8_t step_count = (MidiClock.div16th_counter -
-                              mcl_actions_callbacks.start_clock32th / 2) -
+                              mcl_actions.start_clock32th / 2) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
-                                mcl_actions_callbacks.start_clock32th / 2) /
+                                mcl_actions.start_clock32th / 2) /
                                mcl_seq.md_tracks[last_md_track].length));
 #ifdef OLED_DISPLAY
 #endif
@@ -196,12 +196,12 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
       uint8_t step_count =
           ((MidiClock.div32th_counter /
             mcl_seq.ext_tracks[last_ext_track].resolution) -
-           (mcl_actions_callbacks.start_clock32th /
+           (mcl_actions.start_clock32th /
             mcl_seq.ext_tracks[last_ext_track].resolution)) -
           (mcl_seq.ext_tracks[last_ext_track].length *
            ((MidiClock.div32th_counter /
                  mcl_seq.ext_tracks[last_ext_track].resolution -
-             (mcl_actions_callbacks.start_clock32th /
+             (mcl_actions.start_clock32th /
               mcl_seq.ext_tracks[last_ext_track].resolution)) /
             (mcl_seq.ext_tracks[last_ext_track].length)));
       uint8_t noteson = 0;

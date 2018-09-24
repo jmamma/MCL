@@ -31,7 +31,7 @@ void MCLSeq::setup() {
 
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
-  MidiClock.addOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
+  enable();
 
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
@@ -41,6 +41,18 @@ void MCLSeq::setup() {
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
   midi_events.setup_callbacks();
 };
+
+void MCLSeq::enable() {
+  if (state) { return; }
+  MidiClock.addOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
+  state = true;
+}
+void MCLSeq::disable() {
+  if (!state) { return; }
+  MidiClock.removeOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
+  state = false;
+}
+
 
 void MCLSeq::onMidiStartCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -69,7 +81,7 @@ void MCLSeq::seq() {
   //  }
 
     for (uint8_t i = 0; i < num_md_tracks; i++) {
-      md_tracks[i].seq();
+      if (md_tracks[i].mute_state == SEQ_MUTE_OFF) { md_tracks[i].seq(); }
     }
   }
   if (in_sysex2 == 0) {

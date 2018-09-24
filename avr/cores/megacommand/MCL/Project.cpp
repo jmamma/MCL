@@ -106,8 +106,6 @@ bool Project::new_project(char *projectname) {
 
   file.close();
 
-  temp_track.active = EMPTY_TRACK_TYPE;
-
   DEBUG_PRINTLN("Attempting to extend project file");
 
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES +
