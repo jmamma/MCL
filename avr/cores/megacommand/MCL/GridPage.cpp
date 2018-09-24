@@ -613,7 +613,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       for (uint8_t track = 0; track < slot_apply; track++) {
       slot.store_track_in_grid(track + getCol(), getRow());
       }
-      file.sync();
+      proj.file.sync();
     return true;
   }
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {

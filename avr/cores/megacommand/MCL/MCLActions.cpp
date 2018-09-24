@@ -172,15 +172,15 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       // CLEAR_BIT32(note_interface.notes, i);
     }
   }
- 
+
 
   grid_page.row_headers[grid_page.cur_row].active = true;
   grid_page.row_headers[grid_page.cur_row].write(grid_page.getRow());
 
 
   //Sync project file to SD Card
-  file.sync();
-  
+  proj.file.sync();
+
   clearLed();
   DEBUG_PRINTLN(slowclock - tclock);
 }
