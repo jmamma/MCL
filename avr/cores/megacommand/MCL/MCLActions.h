@@ -3,9 +3,9 @@
 #ifndef MCLACTIONS_H__
 #define MCLACTIONS_H__
 
-
 #include "MCLActionsEvents.h"
 #include "A4.h"
+#include "EmptyTrack.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -19,6 +19,8 @@ public:
   uint8_t write_original = 0;
 
   uint8_t patternswitch = PATTERN_UDEF;
+
+  uint32_t start_clock16th = 0;
   uint32_t start_clock32th = 0;
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
@@ -29,7 +31,7 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound);
+  bool place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
