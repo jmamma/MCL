@@ -42,7 +42,7 @@ const menu_t slot_menu_layout PROGMEM = {
         {"CHAIN:", 2, 2, (uint8_t *) &slot.chain.active, (Page*) NULL, {{0, "OFF"},{1, "ON"}}},
         {"LOOP:  ", 128, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
         {"ROW:    ", 128 - 1, 0, (uint8_t*) &slot.chain.row, NULL, {}},
-        {"APPLY:", 16, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}}
+        {"APPLY:", 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}}
     }
 };
 

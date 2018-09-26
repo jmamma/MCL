@@ -44,6 +44,18 @@ void MDSeqTrack::seq() {
   }
 }
 
+bool MDSeqTrack::is_param(uint8_t param_id) {
+  bool match = false;
+  for (uint8_t c = 0; c < 4; c++) {
+    if (locks_params[c] > 0) {
+      if (locks_params[c] - 1 == param_id) {
+       return true;
+      }
+    }
+  }
+  return false;
+}
+
 void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   bool match = false;
   for (uint8_t c = 0; c < 4 && match == false; c++) {

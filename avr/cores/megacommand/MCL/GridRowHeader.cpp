@@ -1,9 +1,9 @@
 #include "MCL.h"
 #include "GridRowHeader.h"
 
-void GridRowHeader::update_model(int16_t column, uint8_t model, uint8_t dev) {
-  track_type[column] = model;
-  device[column] = dev;
+void GridRowHeader::update_model(int16_t column, uint8_t model_, uint8_t track_type_) {
+  model[column] = model_;
+  track_type[column] = track_type_;
 }
 
 bool GridRowHeader::write(int16_t row) {
@@ -43,7 +43,7 @@ void GridRowHeader::init() {
   active = false;
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {
     track_type[x] = 0;
-    device[x] = 0;
+    model[x] = 0;
   }
 }
 

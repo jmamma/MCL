@@ -8,8 +8,6 @@
 
 class ExtTrack : public GridTrack {
 public:
-  char kitName[17];
-
   ExtSeqTrackData seq_data;
 
   bool get_track_from_sysex(int tracknumber, uint8_t column);

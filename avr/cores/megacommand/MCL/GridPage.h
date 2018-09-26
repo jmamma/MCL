@@ -39,7 +39,7 @@ public:
   bool reload_slot_models;
   bool show_slot_menu = false;
 
-  uint8_t active_slots[16];
+  uint8_t active_slots[20];
   uint8_t slot_apply;
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)

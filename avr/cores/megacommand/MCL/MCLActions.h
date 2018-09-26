@@ -6,6 +6,7 @@
 #include "MCLActionsEvents.h"
 #include "A4.h"
 #include "EmptyTrack.h"
+#include "MD.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -37,6 +38,8 @@ public:
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
+
+  void md_set_machine(uint8_t track, MDMachine* model, MDKit *kit_ = NULL);
 };
 
 extern MCLActionsCallbacks mcl_actions_callbacks;

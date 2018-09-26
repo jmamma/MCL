@@ -3,7 +3,7 @@
 
 bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  active = TRUE;
+  active = MD_TRACK_TYPE;
   trigPattern = MD.pattern.trigPatterns[tracknumber];
   accentPattern = MD.pattern.accentPatterns[tracknumber];
   slidePattern = MD.pattern.slidePatterns[tracknumber];
@@ -50,9 +50,6 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   for (uint8_t c = 0; c < 17; c++) {
     if (white_space == 0) {
       trackName[c] = MD.kit.name[c];
-      if (!grid_page.row_headers[grid_page.cur_row].active) {
-        grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
-      }
     } else {
       trackName[c] = ' ';
     }
@@ -93,8 +90,9 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit) {
   if (active != MD_TRACK_TYPE) {
     return;
   }
-
-  m_memcpy(kit->params[tracknumber], machine.params, 24);
+  DEBUG_PRINTLN("plaing track in kit");
+  DEBUG_PRINTLN(tracknumber);
+  memcpy(kit->params[tracknumber], &(machine.params), 24);
 
   kit->levels[tracknumber] = machine.level;
   kit->models[tracknumber] = machine.model;
@@ -104,7 +102,7 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit) {
     machine.lfo.destinationTrack = tracknumber;
   }
 
-  m_memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
+  memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
 
   kit->trigGroups[tracknumber] = machine.trigGroup;
   kit->muteGroups[tracknumber] = machine.muteGroup;
@@ -260,7 +258,7 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
 
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
-                                                        DEVICE_MD);
+                                                        MD_TRACK_TYPE);
 
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(column);
@@ -271,10 +269,10 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   return true;
 }
 
-bool MDTrack::store_in_mem(uint8_t column) {
+bool MDTrack::store_in_mem(uint8_t column, uint32_t region) {
   uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = BANK1_R1_START + len * (uint32_t)column;
+  uint32_t pos = region + len * (uint32_t)column;
 
   volatile uint8_t *ptr;
 
@@ -285,10 +283,10 @@ bool MDTrack::store_in_mem(uint8_t column) {
   return true;
 }
 
-bool MDTrack::load_from_mem(uint8_t column) {
+bool MDTrack::load_from_mem(uint8_t column, uint32_t region) {
   uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = BANK1_R1_START + len * (uint32_t)column;
+  uint32_t pos = region + len * (uint32_t)column;
 
   volatile uint8_t *ptr;
 

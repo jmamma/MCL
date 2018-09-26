@@ -21,7 +21,7 @@ void GridPage::setup() {
   cur_col = mcl_cfg.cur_col;
   cur_row = mcl_cfg.cur_row;
 
-  for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < 20; n++) {
    active_slots[n] = 255;
   }
 }
@@ -349,19 +349,19 @@ void GridPage::display_grid() {
 
     oled_display.setCursor(x_offset, y_offset + y * 8);
     for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
-      uint8_t device = row_headers[y].device[x + getCol() - cur_col];
-      uint8_t model = row_headers[y].track_type[x + getCol() - cur_col];
-      if (device == DEVICE_MD) {
+      uint8_t track_type = row_headers[y].track_type[x + getCol() - cur_col];
+      uint8_t model = row_headers[y].model[x + getCol() - cur_col];
+      if (track_type == MD_TRACK_TYPE) {
         tmp = getMachineNameShort(model, 2);
         m_strncpy_p(str, tmp, 3);
       }
-      if (device == DEVICE_A4) {
+      if (track_type == A4_TRACK_TYPE) {
         str[0] = 'A';
-        str[1] = model + '0';
+        str[1] = (x + getCol() - cur_col - 16) + '0';
       }
-      if (device == DEVICE_MIDI) {
+      if (track_type == EXT_TRACK_TYPE) {
         str[0] = 'M';
-        str[1] = model + '0';
+        str[1] = (x + getCol() - cur_col - 16) + '0';
       }
       if ((x == cur_col) && (y == cur_row)) {
         oled_display.fillRect(oled_display.getCursorX() - 1,
@@ -370,7 +370,7 @@ void GridPage::display_grid() {
       } else {
         oled_display.setTextColor(WHITE, BLACK);
       }
-      if ( (((MidiClock.div16th_counter + 1) % 4 == 0) && (MidiClock.state == 2))  && ( (y + getRow() - cur_row) == active_slots[x]) ) {
+      if ( (((MidiClock.div16th_counter + 1) % 4 == 0) && (MidiClock.state == 2))  && ( (y + getRow() - cur_row) == active_slots[x + getCol() - cur_col]) ) {
         oled_display.setCursor(oled_display.getCursorX() + 8,oled_display.getCursorY());
       } else {
         if (model == 0) {
@@ -431,26 +431,26 @@ void GridPage::display() {
   PGM_P tmp;
   uint8_t y = 0;
   for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
-    uint8_t device = row_headers[y].device[x + encoders[0]->cur];
-    uint8_t model = row_headers[y].track_type[x + encoders[0]->cur];
+    uint8_t track_type = row_headers[y].track_type[x + encoders[0]->cur];
+    uint8_t model = row_headers[y].model[x + encoders[0]->cur];
     str[0] = '-';
     str[1] = '-';
     str2[0] = '-';
     str2[1] = '-';
 
-    if (device == DEVICE_MD) {
+    if (track_type == MD_TRACK_TYPE) {
       tmp = getMachineNameShort(model, 1);
       m_strncpy_p(str, tmp, 3);
       tmp = getMachineNameShort(model, 2);
       m_strncpy_p(str2, tmp, 3);
     }
-    if (device == DEVICE_A4) {
+    if (track_type == A4_TRACK_TYPE) {
       str[0] = 'A';
       str[1] = '4';
       str2[0] = 'T';
       str2[1] = model + '0';
     }
-    if (device == DEVICE_MIDI) {
+    if (track_type == EXT_TRACK_TYPE) {
       str[0] = 'M';
       str[1] = 'I';
       str2[0] = 'T';
@@ -551,7 +551,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (BUTTON_RELEASED(Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) {
     grid.clear_row(grid_page.encoders[1]->getValue());
-    reload_slot_models = false;
+    load_slot_models();
+    reload_slot_models = true;
     return true;
   }
   // TRACK READ PAGE
@@ -592,13 +593,16 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
       show_slot_menu = true;
       slot.load_track_from_grid(getCol(), getRow());
-      if (slot.chain.active == false) {
+/*
+      if (slot.active == EMPTY_TRACK_TYPE) {
+        DEBUG_PRINTLN("empty track");
+        slot.chain.loops = 1;
         if (getRow() > 128) {
           slot.chain.row = 0;
         } else {
           slot.chain.row = getRow() + 1;
         }
-      }
+      }*/
       encoders[0] = &grid_slot_param1;
       encoders[1] = &grid_slot_param2;
       grid_slot_param1.cur = 0;
@@ -610,8 +614,12 @@ bool GridPage::handleEvent(gui_event_t *event) {
       show_slot_menu = false;
       encoders[0] = &param1;
       encoders[1] = &param2;
-      for (uint8_t track = 0; track < slot_apply; track++) {
-      slot.store_track_in_grid(track + getCol(), getRow());
+        slot.active = row_headers[cur_row].track_type[getCol()];
+        slot.store_track_in_grid(getCol(), getRow());
+
+      for (uint8_t track = 1; track < slot_apply && track + getCol() < 20; track++) {
+        slot.active = row_headers[cur_row].track_type[track + getCol()];
+        slot.store_track_in_grid(track + getCol(), getRow());
       }
       proj.file.sync();
     return true;

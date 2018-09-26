@@ -6,6 +6,7 @@
 #include "GridTrack.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
+#include "MCLMemory.h"
 
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
@@ -35,7 +36,7 @@ public:
 };
 
 class MDTrackLight : public GridTrack {
- public:
+public:
 };
 
 class MDTrack : public GridTrack {
@@ -55,7 +56,7 @@ public:
 
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
- 
+
   void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit);
   void load_seq_data(int tracknumber);
   void place_track_in_pattern(int tracknumber, uint8_t column,
@@ -67,9 +68,9 @@ public:
   bool load_track_from_grid(int32_t column, int32_t row);
   bool store_track_in_grid(int track, int32_t column, int32_t row);
 
-  //Store/retrieve portion of track object in mem bank2
-  bool store_in_mem(uint8_t column);
-  bool load_from_mem(uint8_t column);
+  // Store/retrieve portion of track object in mem bank2
+  bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);
+  bool load_from_mem(uint8_t column, uint32_t region = BANK1_R1_START);
 };
 
 #endif /* MDTRACK_H__ */

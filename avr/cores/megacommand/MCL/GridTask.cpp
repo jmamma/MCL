@@ -12,83 +12,102 @@ void GridTask::run() {
   if (MidiClock.state != 2) {
     return;
   }
-
   EmptyTrack empty_track;
+
   MDTrack *md_track = (MDTrack *)&empty_track;
+  A4Track *a4_track = (A4Track *)&empty_track;
+  ExtTrack *ext_track = (ExtTrack *)&empty_track;
+
   uint32_t div16th_counter = MidiClock.div16th_counter;
-  uint32_t myclock = slowclock;
 
-  bool send = false;
-  uint8_t slots_changed[16];
-  for (uint8_t n = 0; n < 16; n++) {
-    //   if (n < 9) {
-    //     chains[n].active = 1;
-    //   } else {
-    //     chains[n].active = false;
-    //  }
+  uint8_t slots_changed[20];
+  GUI.removeTask(&grid_task);
+  for (uint8_t n = 0; n < 20; n++) {
     slots_changed[n] = 0;
+
     if (chains[n].active > 0) {
-      if ((((div16th_counter + 3 - mcl_actions.start_clock16th)) %
-           (chains[n].loops * mcl_seq.md_tracks[n].length)) == 0) {
+      if (n < 16) {
+        if ((((div16th_counter + 3 - mcl_actions.start_clock16th)) %
+             (chains[n].loops * mcl_seq.md_tracks[n].length)) == 0) {
+          DEBUG_PRINT("loading ");
+          DEBUG_PRINTLN(n);
+          md_track->load_from_mem(n);
+          if (md_track->active != MD_TRACK_TYPE) {
+            DEBUG_PRINTLN("shit");
+          }
+          if (md_track->active != EMPTY_TRACK_TYPE) {
 
-        send = false;
-        md_track->load_from_mem(n);
+            mcl_seq.disable();
+            //  mcl_seq.md_tracks[n].mute();
+            mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit));
+            md_track->place_track_in_kit(n, n, &(MD.kit));
+            md_track->load_seq_data(n);
+            mcl_seq.md_tracks[n].update_params();
+            mcl_seq.enable();
+            //   mcl_seq.md_tracks[n].unmute();
+            //    DEBUG_PRINTLN(MidiClock.div16th_counter);
+          } else {
+            bool clear_locks = true;
+            mcl_seq.md_tracks[n].clear_track(clear_locks);
+          }
 
-        if (md_track->active != EMPTY_TRACK_TYPE) {
-          md_track->place_track_in_kit(n, chains[n].row, &(MD.kit));
-          mcl_seq.disable();
-          //  mcl_seq.md_tracks[n].mute();
-          MD.setMachine(n, &(md_track->machine));
-          md_track->load_seq_data(n);
-          mcl_seq.enable();
-          //   mcl_seq.md_tracks[n].unmute();
-          //    DEBUG_PRINTLN(MidiClock.div16th_counter);
-        } else {
-          bool clear_locks = true;
-          mcl_seq.md_tracks[n].clear_track(clear_locks);
+          grid_page.active_slots[n] = chains[n].row;
+          memcpy(&chains[n], &md_track->chain, sizeof(GridChain));
+
+          slots_changed[n] = 1;
         }
-        memcpy(&chains[n], &md_track->chain, sizeof(GridChain));
-        slots_changed[n] = 1;
+      } else {
+        if ((((div16th_counter + 3 - mcl_actions.start_clock16th)) %
+             (chains[n].loops * mcl_seq.ext_tracks[n - 16].length)) == 0) {
+          a4_track->load_from_mem(n);
+
+          if (a4_track->active != EMPTY_TRACK_TYPE) {
+            mcl_seq.disable();
+            mcl_seq.ext_tracks[n - 16].buffer_notesoff();
+            //  mcl_seq.md_tracks[n].mute();
+            if (a4_track->active == A4_TRACK_TYPE) {
+              a4_track->sound.toSysex();
+            }
+
+            a4_track->load_seq_data(n - 16);
+            mcl_seq.enable();
+            //   mcl_seq.md_tracks[n].unmute();
+            //    DEBUG_PRINTLN(MidiClock.div16th_counter);
+          } else {
+            mcl_seq.ext_tracks[n - 16].clear_track();
+          }
+
+          grid_page.active_slots[n] = chains[n].row;
+          memcpy(&chains[n], &ext_track->chain, sizeof(GridChain));
+          slots_changed[n] = 1;
+        }
       }
     }
   }
-  for (uint8_t n = 0; n < 16; n++) {
+  MD.saveCurrentKit(MD.currentKit);
+  uint8_t count = 0;
+  for (uint8_t n = 0; n < 20; n++) {
     if (slots_changed[n] == 1) {
-      int32_t len =
-          sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-      if (md_track->load_track_from_grid(n, chains[n].row, len)) {
-        md_track->store_in_mem(n);
+      if (count % 8 == 0) {
+        handleIncomingMidi();
+        GUI.loop();
+      }
+      count++;
+      if (n < 16) {
 
-        grid_page.active_slots[n] = md_track->chain.row;
+        int32_t len =
+            sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+        if (md_track->load_track_from_grid(n, chains[n].row, len)) {
+          md_track->store_in_mem(n);
+        }
+      } else {
+        DEBUG_PRINTLN(chains[n].row);
+        if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
+          a4_track->store_in_mem(n);
+        }
       }
     }
   }
-  if (send) {
-    // while ((((div16th_counter + 1 - mcl_actions.start_clock16th)) % (16)) !=
-    // 0)
-    //   ;
-    /*
-          ElektronDataToSysexEncoder encoder(&MidiUart);
-    mcl_actions.md_setsysex_recpos(4, MD.kit.origPosition);
-
-    mcl_seq.disable();
-    MD.kit.toSysex(encoder);
-    uint32_t pos = BANK1_R1_START;
-    ptr = reinterpret_cast<uint8_t *>(pos);
-
-    for (uint8_t n = 0; n < 16; n++) {
-      if (chains[n].active > 0) {
-        switch_ram_bank(1);
-        memcpy(&md_track, ptr, len);
-        switch_ram_bank(0);
-        md_track.load_seq_data(n);
-      }
-      pos += len;
-      ptr = reinterpret_cast<uint8_t *>(pos);
-    }
-    MD.loadKit(MD.pattern.kit);
-    mcl_seq.enable();
- */
-  }
+  GUI.addTask(&grid_task);
 }
 GridTask grid_task(0);

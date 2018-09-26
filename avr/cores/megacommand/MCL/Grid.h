@@ -7,7 +7,7 @@
 #include "A4Track.h"
 
 #define GRID_LENGTH 130
-#define GRID_WIDTH 22
+#define GRID_WIDTH 20
 #define GRID_SLOT_BYTES 4096
 
 #define A4_TRACK_TYPE 2

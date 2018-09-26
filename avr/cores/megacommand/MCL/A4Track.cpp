@@ -3,6 +3,12 @@
 #include "MCLSeq.h"
 //#include "MCLSd.h"
 
+
+void A4Track::load_seq_data(int tracknumber) {
+
+memcpy(&mcl_seq.ext_tracks[tracknumber],&seq_data, sizeof(seq_data));
+}
+
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
 
         memcpy(&seq_data,&mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
@@ -12,7 +18,7 @@ bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
                                   A4Sound *analogfour_sound) {
   if (active == A4_TRACK_TYPE) {
     memcpy(analogfour_sound, &sound, sizeof(A4Sound));
-memcpy(&mcl_seq.ext_tracks[tracknumber],&seq_data, sizeof(seq_data));
+    load_seq_data(tracknumber);
     return true;
   } else {
     return false;
@@ -68,8 +74,36 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
     if (!ret) {
       return false;
     }
-   uint8_t model = track - 16 + 1;
-    grid_page.row_headers[grid_page.cur_row].update_model(column, model, DEVICE_A4);
+    grid_page.row_headers[grid_page.cur_row].update_model(column, column, A4_TRACK_TYPE);
     return true;
   }
+}
+
+bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
+  uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+
+  uint32_t pos = region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+
+  volatile uint8_t *ptr;
+
+  ptr = reinterpret_cast<uint8_t *>(pos);
+  switch_ram_bank(1);
+  memcpy(ptr, this, sizeof(A4Track));
+  switch_ram_bank(0);
+  return true;
+}
+
+bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
+  uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+
+  uint32_t pos = region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+
+  volatile uint8_t *ptr;
+
+  ptr = reinterpret_cast<uint8_t *>(pos);
+
+  switch_ram_bank(1);
+  memcpy(this, ptr, sizeof(A4Track));
+  switch_ram_bank(0);
+  return true;
 }
