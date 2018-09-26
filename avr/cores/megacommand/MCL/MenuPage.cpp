@@ -10,7 +10,7 @@ void MenuPage::setup() {
 
 void MenuPage::loop() {
     ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
-    ((MCLEncoder *)encoders[0])->max = menu.get_option_range(cur_row) - 1;
+    ((MCLEncoder *)encoders[0])->max = menu.get_option_range(encoders[1]->cur) - 1;
 
 
     if (encoders[1]->hasChanged()) {
@@ -26,7 +26,7 @@ void MenuPage::loop() {
 
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
-    uint8_t *dest_var = menu.get_dest_variable(cur_row);
+    uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       encoders[0]->setValue(*dest_var);
     } else {
@@ -34,7 +34,7 @@ void MenuPage::loop() {
     }
 
   } else if (encoders[0]->hasChanged()) {
-    uint8_t *dest_var = menu.get_dest_variable(cur_row);
+    uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       *dest_var = encoders[0]->cur;
     }

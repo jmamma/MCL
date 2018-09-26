@@ -49,7 +49,7 @@ bool MDSeqTrack::is_param(uint8_t param_id) {
   for (uint8_t c = 0; c < 4; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] - 1 == param_id) {
-       return true;
+        return true;
       }
     }
   }
@@ -207,7 +207,7 @@ void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   for (c = 0; c < 4 && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
-      locks_params_orig[c] = MD.kit.params[track_param];
+      locks_params_orig[c] = MD.kit.params[track_number][track_param];
       match = c;
     }
   }
@@ -243,7 +243,7 @@ void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
   for (c = 0; c < 4 && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = 1;
-      locks_params_orig[c] = MD.kit.params[0];
+      locks_params_orig[c] = MD.kit.params[track_number][0];
       match = c;
     }
   }
@@ -336,4 +336,30 @@ void MDSeqTrack::clear_track(bool locks) {
   }
   lock_mask = 0;
   pattern_mask = 0;
+}
+
+void MDSeqTrack::merge_from_md(MDTrack *md_track) {
+  DEBUG_PRINT_FN();
+  length = md_track->length;
+  for (int n = 0; n < md_track->arraysize; n++) {
+    set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,
+                    md_track->locks[n].value);
+    SET_BIT64(lock_mask, md_track->locks[n].step);
+  }
+  pattern_mask |= md_track->trigPattern;
+  uint32_t swing = md_track->kitextra.swingAmount >> 14;
+
+  uint64_t swingpattern;
+  if (md_track->kitextra.swingEditAll > 0) {
+    swingpattern |= md_track->kitextra.swingPattern;
+  } else {
+    swingpattern |= md_track->swingPattern;
+  }
+  for (uint8_t a = 0; a < length; a++) {
+
+    conditional[a] = 0;
+    if (IS_BIT_SET64(md_track->kitextra.swingPattern, a)) {
+      timing[a] = ((float)(swing - 50) / (float)50) * 12;
+    }
+  }
 }

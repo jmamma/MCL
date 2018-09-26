@@ -181,13 +181,13 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           }
           n = a4_track->store_track_in_grid(i, i, grid_page.getRow());
         } else {
-          n = md_track->store_track_in_grid(i, i, grid_page.getRow());
+          n = md_track->store_track_in_grid(i, grid_page.getRow(), i);
         }
       }
 
       if ((store_behaviour == STORE_AT_SPECIFIC) && (i < 16)) {
-        n = md_track->store_track_in_grid(
-            (i - first_note), grid_page.getCol() + i, grid_page.getRow());
+        n = md_track->store_track_in_grid(grid_page.getCol() + i,
+                                          grid_page.getRow(), (i - first_note));
       }
       // CLEAR_BIT32(note_interface.notes, i);
     }
@@ -412,7 +412,16 @@ void MCLActions::send_pattern_kit_to_md() {
     MD.pattern.accentAmount = kit_extra.accentAmount;
     MD.pattern.doubleTempo = kit_extra.doubleTempo;
     MD.pattern.scale = kit_extra.scale;
+
+    MD.pattern.accentEditAll = kit_extra.accentEditAll;
+    MD.pattern.slideEditAll = kit_extra.slideEditAll;
+    MD.pattern.swingEditAll = kit_extra.swingEditAll;
+
+    MD.pattern.accentPattern = kit_extra.accentPattern;
+    MD.pattern.slidePattern = kit_extra.slidePattern;
+    MD.pattern.swingPattern = kit_extra.swingPattern;
   }
+
   // MD.kit.origPosition = MD.currentKit;
 
   // Kit
@@ -530,15 +539,19 @@ void MCLActions::send_pattern_kit_to_md() {
     }
   }
   // Pre-cache next chain
-  // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+  // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) +
+  // sizeof(MDMachine);
   for (uint8_t n = 0; n < 20; n++) {
     if (note_interface.notes[n] > 0) {
       if (n < 16) {
-        if (md_track->load_track_from_grid(n, grid_task.chains[n].row,sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))) {
-         DEBUG_PRINT("caching: col row :");
-         DEBUG_PRINT(n);
-         DEBUG_PRINT(grid_task.chains[n].row);
-         md_track->store_in_mem(n);
+        if (md_track->load_track_from_grid(n, grid_task.chains[n].row,
+                                           sizeof(GridTrack) +
+                                               sizeof(MDSeqTrackData) +
+                                               sizeof(MDMachine))) {
+          DEBUG_PRINT("caching: col row :");
+          DEBUG_PRINT(n);
+          DEBUG_PRINT(grid_task.chains[n].row);
+          md_track->store_in_mem(n);
         }
       } else {
         if (a4_track->load_track_from_grid(n, grid_task.chains[n].row, 0)) {
@@ -561,7 +574,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
   } else {
     DEBUG_PRINTLN("compare");
     DEBUG_PRINTLN(track);
-    DEBUG_PRINTLN(kit_->models[track] );
+    DEBUG_PRINTLN(kit_->models[track]);
     DEBUG_PRINTLN(machine->model);
     if (kit_->models[track] != machine->model) {
       MD.assignMachine(track, machine->model);

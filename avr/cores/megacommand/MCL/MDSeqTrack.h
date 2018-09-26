@@ -3,22 +3,14 @@
 #ifndef MDSEQTRACK_H__
 #define MDSEQTRACK_H__
 
+#include "MDTrack.h"
+#include "MDSeqTrackData.h"
+
 #define UART1_PORT 1
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
-
-class MDSeqTrackData {
-public:
-  uint8_t length;
-  uint8_t locks[4][64];
-  uint8_t locks_params[4];
-  uint64_t pattern_mask;
-  uint64_t lock_mask;
-  uint8_t conditional[64];
-  uint8_t timing[64];
-};
 
 class MDSeqTrack : public MDSeqTrackData {
 
@@ -38,8 +30,8 @@ public:
   inline void send_parameter_locks(uint8_t step_count);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
-  void set_track_step(uint8_t step, uint8_t utiming,
-                      uint8_t note_num, uint8_t velocity);
+  void set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
+                      uint8_t velocity);
   void set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
   uint8_t get_track_lock(uint8_t step, uint8_t track_param);
 
@@ -55,6 +47,8 @@ public:
   void update_params();
   void update_param(uint8_t param_id, uint8_t value);
   void reset_params();
+
+  void merge_from_md(MDTrack *md_track);
 };
 
 #endif /* MDSEQTRACK_H__ */

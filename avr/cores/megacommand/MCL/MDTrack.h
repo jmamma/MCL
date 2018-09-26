@@ -6,6 +6,7 @@
 #include "GridTrack.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
+#include "MDSeqTrackData.h"
 #include "MCLMemory.h"
 
 #define LOCK_AMOUNT 256
@@ -33,6 +34,14 @@ public:
   uint8_t patternLength;
   uint8_t doubleTempo;
   uint8_t scale;
+
+  uint64_t accentPattern;
+  uint64_t slidePattern;
+  uint64_t swingPattern;
+
+    uint32_t accentEditAll;
+  uint32_t slideEditAll;
+  uint32_t swingEditAll;
 };
 
 class MDTrackLight : public GridTrack {
@@ -57,6 +66,8 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
+  void clear_track();
+
   void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit);
   void load_seq_data(int tracknumber);
   void place_track_in_pattern(int tracknumber, uint8_t column,
@@ -66,7 +77,7 @@ public:
   void place_track_in_sysex(int tracknumber, uint8_t column);
   bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
   bool load_track_from_grid(int32_t column, int32_t row);
-  bool store_track_in_grid(int track, int32_t column, int32_t row);
+  bool store_track_in_grid(int32_t column, int32_t row, int track = 255);
 
   // Store/retrieve portion of track object in mem bank2
   bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);

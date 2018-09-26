@@ -41,6 +41,8 @@ public:
 
   uint8_t active_slots[20];
   uint8_t slot_apply;
+  uint8_t merge_md = 0;
+
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}

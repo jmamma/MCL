@@ -15,6 +15,14 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   kitextra.doubleTempo = MD.pattern.doubleTempo;
   kitextra.scale = MD.pattern.scale;
 
+  kitextra.accentEditAll = MD.pattern.accentEditAll;
+  kitextra.slideEditAll = MD.pattern.slideEditAll;
+  kitextra.swingEditAll = MD.pattern.swingEditAll;
+
+  kitextra.accentPattern = MD.pattern.accentPattern;
+  kitextra.slidePattern = MD.pattern.slidePattern;
+  kitextra.swingPattern = MD.pattern.swingPattern;
+
   // Extract parameter lock data and store it in a useable data structure
   int n = 0;
   arraysize = 0;
@@ -106,6 +114,15 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit) {
 
   kit->trigGroups[tracknumber] = machine.trigGroup;
   kit->muteGroups[tracknumber] = machine.muteGroup;
+}
+
+void MDTrack::clear_track() {
+  arraysize = 0;
+  trigPattern = 0;
+  accentPattern = 0;
+  slidePattern = 0;
+  swingPattern = 0;
+
 }
 
 void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
@@ -220,7 +237,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
   return true;
 }
 
-bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
+bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -239,7 +256,9 @@ bool MDTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  get_track_from_sysex(track, column);
+  if (track != 255) { 
+          get_track_from_sysex(track, column); }
+
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
