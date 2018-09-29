@@ -32,12 +32,10 @@ class CRingBuffer {
 	 * \addtogroup helpers_cringbuffer
 	 * @{
 	 **/
-  
- public:
   volatile T rd, wr;
   volatile C buf[N];
-  volatile T len = N;
-
+  
+ public:
   volatile uint8_t overflow;
 
   CRingBuffer();
@@ -52,9 +50,9 @@ class CRingBuffer {
 	/** Get the next element without removing it from the ring buffer. **/
   C peek() volatile;
 	/** Returns true if the ring buffer is empty. **/
-  inline bool isEmpty() volatile;
+  bool isEmpty() volatile;
 	/** Returns true if the ring buffer is full. **/
- inline bool isFull() volatile;
+  bool isFull() volatile;
 	/** Returns the number of elements in the ring buffer. **/
 	T size() volatile;
 
@@ -85,8 +83,7 @@ template <class C, int N, class T >
     return false;
   }
   buf[wr] = c;
-  wr++;
-  if (wr == N) { wr = 0; }
+  wr = RB_INC(wr);
   return true;
 }
 
@@ -104,7 +101,7 @@ template <class C, int N, class T>
     overflow++;
     return false;
   }
-  memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
+  m_memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
   wr = RB_INC(wr);
   return true;
 }
@@ -115,8 +112,7 @@ template <class C, int N, class T>
   if (isEmpty())
     return 0;
   C ret = buf[rd];
-  rd++;
-  if (rd == N) { rd = 0; }
+  rd = RB_INC(rd);
   return ret;
 }
 
@@ -124,7 +120,7 @@ template <class C, int N, class T>
   bool CRingBuffer<C, N, T>::getp(C *dst) volatile {
   if (isEmpty())
     return false;
-  memcpy(dst, (void *)&buf[rd], sizeof(C));
+  m_memcpy(dst, (void *)&buf[rd], sizeof(C));
   rd = RB_INC(rd);
   return true;
 }
@@ -147,12 +143,10 @@ template <class C, int N, class T>
 
 template <class C, int N, class T>
   bool CRingBuffer<C, N, T>::isFull() volatile {
- // USE_LOCK();
- // SET_LOCK();
-  T a = wr + 1;
-  if (a == N) { a = 0; }
-  bool ret = (a == rd);
-//  CLEAR_LOCK();
+  USE_LOCK();
+  SET_LOCK();
+  bool ret = (RB_INC(wr) == rd);
+  CLEAR_LOCK();
   return ret;
 }
 
