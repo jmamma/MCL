@@ -8,7 +8,6 @@
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
-
 //#define DEBUGMODE
 
 #define SERIAL_SPEED 250000
@@ -64,5 +63,27 @@ extern "C" {
 #include "Midi.h"
 #include "WMath.h"
 #endif
+
+
+extern uint32_t write_count;
+extern uint32_t write_count_time;
+
+extern uint8_t ram_bank;
+extern inline uint8_t switch_ram_bank(uint8_t x) {
+  //USE_LOCK();
+  //SET_LOCK();
+  uint8_t old_bank = (uint8_t) (PORTL >> PL6) & 0x01;
+
+  if (x != old_bank) {
+    //DISABLE timer 1 if switching banks.
+ //   if (x == 0) { sbi(TIMSK0, TOIE0); }
+  //  else { cbi(TIMSK0, TOIE0); }
+    PORTL ^= _BV(PL6);
+  //  CLEAR_LOCK();
+    return old_bank;
+  }
+//  CLEAR_LOCK();
+  return x;
+}
 
 #endif /* WProgram_h */
