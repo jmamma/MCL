@@ -300,30 +300,29 @@ inline void isr_midi() {
       }
       if (((MidiClock.mode == MidiClock.EXTERNAL_UART1) && (s == 0)) ||
           ((MidiClock.mode == MidiClock.EXTERNAL_UART2) && (s == 1))) {
-        switch (c) {
-        case MIDI_CLOCK:
+
+        if (c == MIDI_CLOCK) {
           MidiClock.handleClock();
           //    MidiClock.callCallbacks();
-          break;
+        } else {
+          switch (c) {
+          case MIDI_START:
+            MidiClock.handleImmediateMidiStart();
+            break;
 
-        case MIDI_START:
-          MidiClock.handleImmediateMidiStart();
-          break;
+          case MIDI_STOP:
+            MidiClock.handleImmediateMidiStop();
+            break;
 
-        case MIDI_STOP:
-          MidiClock.handleImmediateMidiStop();
-          break;
-
-        case MIDI_CONTINUE:
-          MidiClock.handleImmediateMidiContinue();
-          break;
-        default:
+          case MIDI_CONTINUE:
+            MidiClock.handleImmediateMidiContinue();
+            break;
+          }
           if (s == 0) {
             MidiUart.rxRb.put(c);
           } else {
             MidiUart2.rxRb.put(c);
           }
-          break;
         }
       }
     } else {
@@ -416,7 +415,7 @@ inline void isr_midi() {
 ISR(USART1_UDRE_vect) {
   // uint16_t count = 0;
   uint8_t old_ram_bank = switch_ram_bank(0);
-   isr_midi();
+  //  isr_midi();
   //  while (!MidiUart.txRb.isEmpty()) {
   if (!MidiUart.txRb.isEmpty()) {
     while (!UART_CHECK_EMPTY_BUFFER())
@@ -441,7 +440,7 @@ ISR(USART1_UDRE_vect) {
 
 ISR(USART2_UDRE_vect) {
   uint8_t old_ram_bank = switch_ram_bank(0);
-  isr_midi();
+  //  isr_midi();
 
   uint8_t c;
   if (!MidiUart2.txRb.isEmpty()) {
