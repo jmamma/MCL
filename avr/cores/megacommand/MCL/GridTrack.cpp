@@ -21,7 +21,7 @@ bool GridTrack::load_track_from_grid(int32_t column, int32_t row) {
   len = (sizeof(GridTrack));
 
   // len = (sizeof(GridTrack)  - (LOCK_AMOUNT * 3));
-
+  DEBUG_PRINTLN("reading grid track");
   ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
 
   if (!ret) {

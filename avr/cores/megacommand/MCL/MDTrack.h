@@ -39,9 +39,11 @@ public:
   uint64_t slidePattern;
   uint64_t swingPattern;
 
-    uint32_t accentEditAll;
+  uint32_t accentEditAll;
   uint32_t slideEditAll;
   uint32_t swingEditAll;
+
+
 };
 
 class MDTrackLight : public GridTrack {
@@ -68,7 +70,7 @@ public:
 
   void clear_track();
 
-  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit);
+  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit, bool levels = true);
   void load_seq_data(int tracknumber);
   void place_track_in_pattern(int tracknumber, uint8_t column,
                               MDPattern *pattern);

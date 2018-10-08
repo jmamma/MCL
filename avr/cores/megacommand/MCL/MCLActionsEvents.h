@@ -3,9 +3,9 @@
 #ifndef MCLACTIONSEVENTS_H__
 #define MCLACTIONSEVENTS_H__
 
-
 #include "MidiClock.h"
 #include "midi-common.hh"
+
 class MCLActionsMidiEvents : public MidiCallback {
 public:
   bool state;
@@ -25,6 +25,7 @@ class MCLActionsCallbacks : public ClockCallback {
 public:
   bool state;
   void onMidiStartCallback();
+  void onMidiStopCallback();
 
   void setup_callbacks();
   void remove_callbacks();

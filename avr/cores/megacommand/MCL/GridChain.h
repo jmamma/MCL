@@ -4,7 +4,6 @@
 class GridChain {
 
 public:
-  uint8_t active;
   uint8_t row;
   uint8_t loops;
 

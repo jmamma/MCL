@@ -21,9 +21,21 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
+void MCLActionsCallbacks::onMidiStopCallback() {
+ DEBUG_PRINTLN("initialising nearest steps");
+//   memset(&mcl_actions.nearest_steps[0], 0, 20);
+  for (uint8_t n = 0; n < 20; n++) {
+  mcl_actions.nearest_steps[n] = 0;
+  }
+  mcl_actions.calc_nearest_step();
+}
+
 void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
+ // for (uint8_t n = 0; n < 20; n++) {
+ // mcl_actions.nearest_steps[n] = 0;
+ // }
 }
 
 void MCLActionsMidiEvents::setup_callbacks() {
@@ -70,6 +82,8 @@ void MCLActionsCallbacks::setup_callbacks() {
   }
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+  MidiClock.addOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
 //  MidiClock.addOnMidiContinueCallback(
   //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
@@ -81,7 +95,9 @@ void MCLActionsCallbacks::remove_callbacks() {
   }
   MidiClock.removeOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-//  MidiClock.removeOnMidiContinueCallback(
+  MidiClock.removeOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
+  //  MidiClock.removeOnMidiContinueCallback(
   //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
   state = false;

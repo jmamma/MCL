@@ -73,6 +73,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   machine.level = MD.kit.levels[tracknumber];
   machine.model = MD.kit.models[tracknumber];
 
+
   /*Check to see if LFO is modulating host track*/
   /*IF it is then we need to make sure that the LFO destination is updated to
    * the new row posiiton*/
@@ -94,15 +95,14 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   patternOrigPosition = MD.pattern.origPosition;
 }
 
-void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit) {
+void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit, bool levels) {
   if (active != MD_TRACK_TYPE) {
     return;
   }
-  DEBUG_PRINTLN("plaing track in kit");
-  DEBUG_PRINTLN(tracknumber);
   memcpy(kit->params[tracknumber], &(machine.params), 24);
-
+  if (levels) {
   kit->levels[tracknumber] = machine.level;
+  }
   kit->models[tracknumber] = machine.model;
 
   if (machine.lfo.destinationTrack == column) {
@@ -296,9 +296,12 @@ bool MDTrack::store_in_mem(uint8_t column, uint32_t region) {
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
+ // cbi(TIMSK0, TOIE0);
   switch_ram_bank(1);
   memcpy(ptr, this, len);
+  
   switch_ram_bank(0);
+ // sbi(TIMSK0, TOIE0);
   return true;
 }
 
@@ -310,9 +313,10 @@ bool MDTrack::load_from_mem(uint8_t column, uint32_t region) {
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
-
+// cbi(TIMSK0, TOIE0);
   switch_ram_bank(1);
   memcpy(this, ptr, len);
   switch_ram_bank(0);
+// sbi(TIMSK0, TOIE0);
   return true;
 }

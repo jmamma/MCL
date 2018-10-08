@@ -39,7 +39,8 @@ public:
   bool reload_slot_models;
   bool show_slot_menu = false;
 
-  uint8_t active_slots[20];
+  uint8_t chain_enabled = 0;
+  int active_slots[20];
   uint8_t slot_apply;
   uint8_t merge_md = 0;
 

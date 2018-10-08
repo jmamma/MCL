@@ -3,9 +3,9 @@
 #ifndef MCLACTIONS_H__
 #define MCLACTIONS_H__
 
-#include "MCLActionsEvents.h"
 #include "A4.h"
 #include "EmptyTrack.h"
+#include "MCLActionsEvents.h"
 #include "MD.h"
 
 #define PATTERN_STORE 0
@@ -26,20 +26,35 @@ public:
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
 
+  GridChain chains[20];
+  uint16_t md_latency;
+  uint16_t a4_latency;
+  uint32_t nearest_step;
+  bool active = false;
+
+  uint32_t nearest_steps[20] = { };
+
   MCLActions() {}
+
   void setup();
   void send_globals();
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool place_track_inpattern(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
+  bool place_track_inpattern(int curtrack, int column, int row,
+                             A4Sound *analogfour_sound,
+                             EmptyTrack *empty_track);
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
 
-  void md_set_machine(uint8_t track, MDMachine* model, MDKit *kit_ = NULL);
+  void calc_nearest_step();
+  void calc_latency(EmptyTrack *empty_track);
+  int calc_md_set_machine_latency(uint8_t track, MDMachine *model,
+                                  MDKit *kit_ = NULL);
+  void md_set_machine(uint8_t track, MDMachine *model, MDKit *kit_ = NULL);
 };
 
 extern MCLActionsCallbacks mcl_actions_callbacks;

@@ -6,7 +6,7 @@ void GridPage::init() {
   show_slot_menu = false;
   reload_slot_models = false;
   md_exploit.off();
-
+  load_slot_models();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
@@ -16,13 +16,13 @@ void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
   LCD.createChar(1, charmap);
   frames_startclock = slowclock;
-  encoders[0]->cur = mcl_cfg.col;
+  encoders[0]->cur = 0;
   encoders[1]->cur = mcl_cfg.row;
-  cur_col = mcl_cfg.cur_col;
+  cur_col = 0;
   cur_row = mcl_cfg.cur_row;
 
   for (uint8_t n = 0; n < 20; n++) {
-    active_slots[n] = 255;
+    active_slots[n] = -1;
   }
 }
 void GridPage::cleanup() {
@@ -41,7 +41,6 @@ void GridPage::loop() {
   }
 
   if (encoders[0]->hasChanged()) {
-    DEBUG_PRINTLN("blah");
     diff = encoders[0]->cur - encoders[0]->old;
     new_val = cur_col + diff;
     if (new_val > MAX_VISIBLE_COLS - 1) {
@@ -65,8 +64,8 @@ void GridPage::loop() {
     }
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
-    load_slot_models();
-    reload_slot_models = false;
+    if ((cur_row == MAX_VISIBLE_ROWS - 1) || (cur_row == 0)) { load_slot_models(); }
+    reload_slot_models = true;
     grid_lastclock = slowclock;
 
     volatile uint8_t *ptr;
@@ -340,7 +339,6 @@ void GridPage::display_grid() {
   PGM_P tmp;
   encoders[1]->handler = NULL;
   //  oled_display.setFont(&Org_01);
-  oled_display.setTextWrap(false);
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
     if ((y == cur_row)) {
       oled_display.setCursor(x_offset - 5, y_offset + y * 8);
@@ -409,8 +407,9 @@ void GridPage::display_oled() {
   uint8_t y_offset = 8;
 
   oled_display.clearDisplay();
-
-  oled_display.setFont(&TomThumb);
+  oled_display.setTextWrap(false);
+  oled_display.setFont(&TomThumb); 
+  oled_display.setTextColor(WHITE, BLACK);
   if (!show_slot_menu) {
     display_grid_info();
   } else {
@@ -543,7 +542,9 @@ void GridPage::prepare() {
   if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
   }
-  MD.getBlockingKit(MD.currentKit);
+  if (MD.currentKit != MD.kit.origPosition) {
+    MD.getBlockingKit(MD.currentKit);
+  }
 }
 
 bool GridPage::handleEvent(gui_event_t *event) {
@@ -595,7 +596,12 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (BUTTON_PRESSED(Buttons.BUTTON3)) {
 
     show_slot_menu = true;
+    DEBUG_PRINTLN(getCol());
+    DEBUG_PRINTLN(getRow());
     slot.load_track_from_grid(getCol(), getRow());
+    DEBUG_PRINTLN("what's in the slot");
+    DEBUG_PRINTLN(slot.chain.loops);
+    DEBUG_PRINTLN(slot.chain.row);
     /*
           if (slot.active == EMPTY_TRACK_TYPE) {
             DEBUG_PRINTLN("empty track");
@@ -608,7 +614,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           }*/
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
-    grid_slot_param1.cur = 0;
+    grid_slot_page.init();
     slot_apply = 0;
     merge_md = 0;
     return true;
@@ -628,16 +634,18 @@ bool GridPage::handleEvent(gui_event_t *event) {
     MDSeqTrack md_seq_track;
     for (uint8_t track = 0; track < count && track + getCol() < 20; track++) {
       slot.active = row_headers[cur_row].track_type[track + getCol()];
-      slot.store_track_in_grid(track + getCol(), getRow());
-      proj.file.sync();
-      if (merge_md > 0) {
-        md_track.load_track_from_grid(track + getCol(), getRow());
+      if (slot.active != EMPTY_TRACK_TYPE) {
+        slot.store_track_in_grid(track + getCol(), getRow());
+        proj.file.sync();
+        if (merge_md > 0) {
+          md_track.load_track_from_grid(track + getCol(), getRow());
 
-        memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
-        md_seq_track.merge_from_md(&md_track);
-        md_track.clear_track();
-        memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-        md_track.store_track_in_grid(track + getCol(), getRow());
+          memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
+          md_seq_track.merge_from_md(&md_track);
+          md_track.clear_track();
+          memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+          md_track.store_track_in_grid(track + getCol(), getRow());
+        }
       }
     }
 

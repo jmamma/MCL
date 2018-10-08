@@ -7,7 +7,8 @@
 class GridTask : public Task {
 
 public:
-  GridChain chains[20];
+  bool active = false;
+
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 
   void setup(uint16_t interval = 0);
