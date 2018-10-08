@@ -37,6 +37,9 @@ public:
       notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
                                     // currently being played, in order to stop
                                     // them in the event the sequencer stops
+  uint8_t step_count;
+  uint32_t start_clock32th;
+
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   void buffer_notesoff();
@@ -51,6 +54,8 @@ public:
   void clear_ext_conditional();
   void clear_ext_notes();
   void clear_track();
+  void set_length(uint8_t len);
+
 };
 
 #endif /* EXTSEQTRACK_H__ */

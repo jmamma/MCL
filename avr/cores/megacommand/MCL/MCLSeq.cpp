@@ -21,12 +21,12 @@ void MCLSeq::setup() {
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
-    md_tracks[i].length = 16;
+    md_tracks[i].set_length(16);
   }
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
-    ext_tracks[i].length = 16;
+    ext_tracks[i].set_length(16);
   }
 
   //   MidiClock.addOnClockCallback(this,
@@ -62,12 +62,17 @@ void MCLSeq::onMidiStartCallback() {
 
 }
 void MCLSeq::onMidiStopCallback() {
-  for (uint8_t i = 0; i < 4; i++) {
+  DEBUG_PRINTLN("resetting step_counts");
+        for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].buffer_notesoff();
+    ext_tracks[i].start_clock32th = 0;
+    ext_tracks[i].step_count = 0;
   }
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset_params();
+    md_tracks[i].start_clock32th = 0;
+    md_tracks[i].step_count = 0;
   }
 
 }

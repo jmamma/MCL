@@ -8,6 +8,9 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
+
+  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+
   ((MCLEncoder *)encoders[0])->max = 13;
   ((MCLEncoder *)encoders[1])->max = 23;
   ((MCLEncoder *)encoders[1])->min = 1;

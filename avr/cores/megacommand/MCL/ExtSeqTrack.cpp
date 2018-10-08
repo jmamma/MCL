@@ -1,16 +1,23 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
-void ExtSeqTrack::seq() {
-
-    uint8_t step_count =
+void ExtSeqTrack::set_length(uint8_t len) {
+   length = len;
+   if (step_count >= length) {
+   step_count = step_count - length;
+   }
+   DEBUG_PRINTLN(step_count);
+   /*uint8_t step_count =
         ((MidiClock.div32th_counter / resolution) -
          (mcl_actions.start_clock32th / resolution)) -
         (length *
          ((MidiClock.div32th_counter / resolution -
            (mcl_actions.start_clock32th / resolution)) /
           (length)));
-
+*/
+}
+void ExtSeqTrack::seq() {
+    if (in_sysex2 == 0) {
     int8_t utiming = timing[step_count];         // upper
     uint8_t condition = conditional[step_count]; // lower
 
@@ -65,6 +72,10 @@ void ExtSeqTrack::seq() {
         }
       }
     }
+  }
+  if (((MidiClock.mod12_counter == 0) || (MidiClock.mod12_counter == 6)) && (resolution == 1)) { step_count++; }
+  if ((MidiClock.mod12_counter == 0) && (resolution == 2)) { step_count++; }
+  if (step_count == length) { step_count = 0; }
 }
 
 void ExtSeqTrack::buffer_notesoff() {
@@ -177,13 +188,13 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t vel
 }
 void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
                                       uint8_t velocity) {
-  uint8_t step_count =
+ /* uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
        (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
                                     (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
-
+*/
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
@@ -225,13 +236,13 @@ void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
 
 void ExtSeqTrack::record_ext_track_noteon( uint8_t note_num,
                                      uint8_t velocity) {
-  uint8_t step_count =
+  /*uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
        (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
                                     (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
-
+*/
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 

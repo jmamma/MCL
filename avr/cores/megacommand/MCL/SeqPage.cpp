@@ -77,13 +77,13 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char str[17] = "----------------";
-  uint8_t step_count =
+  /*uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (mcl_seq.md_tracks[last_md_track].length *
        ((MidiClock.div16th_counter -
          mcl_actions.start_clock32th / 2) /
-        mcl_seq.md_tracks[last_md_track].length));
-
+        mcl_seq.md_tracks[last_md_track].length)); */
+  uint8_t step_count = mcl_seq.md_tracks[last_md_track].length;
   for (int i = 0; i < 16; i++) {
 
     if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
@@ -155,12 +155,14 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
                                   ((count_16th -
                                     mcl_actions_callbacks.start_clock96th / 5) /
                                    mcl_seq.md_tracks[last_md_track].length));*/
-        uint8_t step_count = (MidiClock.div16th_counter -
+       /* uint8_t step_count = (MidiClock.div16th_counter -
                               mcl_actions.start_clock32th / 2) -
                              (mcl_seq.md_tracks[last_md_track].length *
                               ((MidiClock.div16th_counter -
                                 mcl_actions.start_clock32th / 2) /
-                               mcl_seq.md_tracks[last_md_track].length));
+                               mcl_seq.md_tracks[last_md_track].length)); */
+
+       uint8_t step_count = mcl_seq.md_tracks[last_md_track].step_count;
 #ifdef OLED_DISPLAY
 #endif
         if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
@@ -193,7 +195,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
     for (int i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
 
-      uint8_t step_count =
+     /* uint8_t step_count =
           ((MidiClock.div32th_counter /
             mcl_seq.ext_tracks[last_ext_track].resolution) -
            (mcl_actions.start_clock32th /
@@ -204,6 +206,8 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
              (mcl_actions.start_clock32th /
               mcl_seq.ext_tracks[last_ext_track].resolution)) /
             (mcl_seq.ext_tracks[last_ext_track].length)));
+      */
+      uint8_t step_count = mcl_seq.ext_tracks[last_ext_track].step_count;
       uint8_t noteson = 0;
       uint8_t notesoff = 0;
 
@@ -286,20 +290,20 @@ void pattern_len_handler(Encoder *enc) {
     DEBUG_PRINTLN("under 16");
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
-        mcl_seq.md_tracks[c].length = enc_->cur;
+        mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
     } else {
-      mcl_seq.md_tracks[last_md_track].length = enc_->cur;
+      mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
     }
   } else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
-        mcl_seq.ext_tracks[c].length = enc_->cur;
+        mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
     } else {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-      mcl_seq.ext_tracks[last_ext_track].length = enc_->cur;
+      mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
 }

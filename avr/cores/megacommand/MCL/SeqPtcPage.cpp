@@ -55,7 +55,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
-        mcl_seq.md_tracks[c].length = enc_->cur;
+        mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
     } else {
 
@@ -69,11 +69,11 @@ void ptc_pattern_len_handler(Encoder *enc) {
       if (seq_ptc_page.poly_max > 1) {
         for (uint8_t c = 0; c < seq_ptc_page.poly_max; c++) {
           if (start_track + c < 16) {
-            mcl_seq.md_tracks[start_track + c].length = enc_->cur;
+            mcl_seq.md_tracks[start_track + c].set_length(enc_->cur);
           }
         }
       } else {
-        mcl_seq.md_tracks[last_md_track].length = enc_->cur;
+        mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
       }
     }
 
@@ -81,11 +81,11 @@ void ptc_pattern_len_handler(Encoder *enc) {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
-        mcl_seq.ext_tracks[c].length = enc_->cur;
+        mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
     } else {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-      mcl_seq.ext_tracks[last_ext_track].length = enc_->cur;
+      mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
 }
