@@ -1,7 +1,13 @@
 #include "MCL.h"
 #include "MenuPage.h"
 
-void MenuPage::init() { oled_display.setFont(&TomThumb); }
+void MenuPage::init() {
+  oled_display.setFont(&TomThumb);
+  uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
+  if (dest_var != NULL) {
+    encoders[0]->setValue(*dest_var);
+  }
+}
 void MenuPage::setup() {
 #ifdef OLED_DISPLAY
   classic_display = false;
@@ -9,11 +15,11 @@ void MenuPage::setup() {
 }
 
 void MenuPage::loop() {
-    ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
-    ((MCLEncoder *)encoders[0])->max = menu.get_option_range(encoders[1]->cur) - 1;
+  ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
+  ((MCLEncoder *)encoders[0])->max =
+      menu.get_option_range(encoders[1]->cur) - 1;
 
-
-    if (encoders[1]->hasChanged()) {
+  if (encoders[1]->hasChanged()) {
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 
@@ -32,8 +38,9 @@ void MenuPage::loop() {
     } else {
       encoders[0]->setValue(0);
     }
-
-  } else if (encoders[0]->hasChanged()) {
+  }
+  if (encoders[0]->hasChanged()) {
+    DEBUG_PRINTLN(encoders[0]->cur);
     uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       *dest_var = encoders[0]->cur;
