@@ -202,6 +202,13 @@ ISR(TIMER1_COMPA_vect) {
 
   clock++;
 
+  if (clock_diff(write_count_time, clock) >= 1000) {
+//  DEBUG_PRINT("bps: ");
+//  DEBUG_PRINTLN(write_count * 10);
+//  DEBUG_PRINTLN(MidiClock.div192th_time);
+  write_count = 0;
+  write_count_time = clock;
+  }
   if (clock_diff(MidiClock.clock_last_time,clock) >= MidiClock.div192th_time) {
 
     if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
@@ -209,13 +216,23 @@ ISR(TIMER1_COMPA_vect) {
 
       MidiClock.div192th_counter_last = MidiClock.div192th_counter;
 
-      if (enable_clock_callbacks) { MidiClock.callCallbacks(); }
+      if ((MidiClock.state == 2) && (enable_clock_callbacks)) { MidiClock.callCallbacks(); }
     }
   }
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    if (enable_clock_callbacks) { MidiClock.callCallbacks(); }
+    if ((MidiClock.state == 2) && (enable_clock_callbacks)) { MidiClock.callCallbacks(); }
   }
+/*
+  if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
+    MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
+    write_count++;
+    UART_WRITE_CHAR(MidiUart.txRb.get());
+  }
+  if (UART2_CHECK_EMPTY_BUFFER() && !MidiUart2.txRb.isEmpty()) {
+    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+    UART2_WRITE_CHAR(MidiUart2.txRb.get());
+  }*/
   switch_ram_bank(old_ram_bank);
 }
 
@@ -250,6 +267,9 @@ uint16_t lastRunningStatusReset = 0;
 
 // extern uint16_t myvar;
 ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+
+//ISR(TIMER2_COMPA_vect) {
+
   uint8_t old_ram_bank = switch_ram_bank(0);
   slowclock++;
   // TCNT2 = tcnt2;
