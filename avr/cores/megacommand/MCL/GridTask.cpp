@@ -64,6 +64,7 @@ void GridTask::run() {
   if (grid_page.chain_enabled == 0) {
     return;
   }
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
   uint8_t curkit;
   ElektronDataToSysexEncoder encoder(&MidiUart);
   if (MidiClock.div32th_counter + div32th_margin >=
@@ -89,13 +90,12 @@ void GridTask::run() {
 
   for (uint8_t n = 0; n < 20; n++) {
     slots_changed[n] = 0;
-    if ((grid_page.active_slots[n] > 0) && (mcl_actions.chains[n].loops > 0)) {
+    if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       if (n < 16) {
 
         uint32_t next_transition = mcl_actions.nearest_steps[n] * 2;
-
         if (div32th_counter >= next_transition) {
-
+ 
           md_track->load_from_mem(n);
           if (slots_loaded[n] == 0) {
             //        md_track->place_track_in_kit(n, n, &(MD.kit));
@@ -245,12 +245,18 @@ void GridTask::run() {
         }
         count++;
         if (n < 16) {
-
+          DEBUG_PRINTLN("trying to cache MD track");
+          DEBUG_PRINTLN(n);
+          DEBUG_PRINTLN(mcl_actions.chains[n].row);
           int32_t len =
               sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
           if (md_track->load_track_from_grid(n, mcl_actions.chains[n].row,
                                              len)) {
+            DEBUG_PRINTLN("storing");
             md_track->store_in_mem(n);
+          }
+          else {
+          DEBUG_PRINTLN("failed");
           }
         } else {
           DEBUG_PRINTLN("trying to load a4 track");

@@ -594,7 +594,9 @@ void MCLActions::calc_nearest_step() {
   uint32_t step;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
-    if (grid_page.active_slots[n] > 0) {
+     DEBUG_PRINTLN(grid_page.active_slots[n]);
+    if (grid_page.active_slots[n] >= 0) {
+
       if ((chains[n].loops == 0) || (chains[n].row == grid_page.active_slots[n]))  {
         //If chain loops set to 0, ignore track.
         nearest_steps[n] = MidiClock.div16th_counter - 1;
@@ -602,6 +604,8 @@ void MCLActions::calc_nearest_step() {
 
       if (n < 16) {
         step = chains[n].loops * mcl_seq.md_tracks[n].length;
+        DEBUG_PRINTLN(n);
+        DEBUG_PRINTLN(step);
         if (step < 4) {
           step = 4;
         }
