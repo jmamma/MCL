@@ -49,12 +49,14 @@ public:
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
-
+  
+  void calc_nearest_slot_step(uint8_t n);
   void calc_nearest_step();
   void calc_latency(EmptyTrack *empty_track);
   int calc_md_set_machine_latency(uint8_t track, MDMachine *model,
                                   MDKit *kit_ = NULL);
   void md_set_machine(uint8_t track, MDMachine *model, MDKit *kit_ = NULL);
+
 };
 
 extern MCLActionsCallbacks mcl_actions_callbacks;

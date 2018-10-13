@@ -241,7 +241,8 @@ void GridTask::run() {
     uint8_t count = 0;
     for (uint8_t n = 0; n < 20; n++) {
       if (slots_changed[n] == 1) {
-        if (count % 8 == 0) {
+    
+              if (count % 8 == 0) {
           handleIncomingMidi();
           GUI.loop();
         }
@@ -268,6 +269,8 @@ void GridTask::run() {
             a4_track->store_in_mem(n);
           }
         }
+    
+    mcl_actions.calc_nearest_slot_step(n);
       }
     }
     mcl_actions.calc_nearest_step();

@@ -538,25 +538,25 @@ void MCLActions::send_pattern_kit_to_md() {
   //
   for (uint8_t n = 0; n < 20; n++) {
     if (note_interface.notes[n] > 0) {
-     // if (chains[n].active > 0) {
+      // if (chains[n].active > 0) {
 
-        DEBUG_PRINTLN("about to load");
-        DEBUG_PRINTLN(chains[n].row);
-        DEBUG_PRINTLN(n);
-        if ((n < 16)) {
-          if (md_track->load_track_from_grid(n, chains[n].row,
-                                             sizeof(GridTrack) +
-                                                 sizeof(MDSeqTrackData) +
-                                                 sizeof(MDMachine))) {
+      DEBUG_PRINTLN("about to load");
+      DEBUG_PRINTLN(chains[n].row);
+      DEBUG_PRINTLN(n);
+      if ((n < 16)) {
+        if (md_track->load_track_from_grid(n, chains[n].row,
+                                           sizeof(GridTrack) +
+                                               sizeof(MDSeqTrackData) +
+                                               sizeof(MDMachine))) {
 
-            md_track->store_in_mem(n);
-          }
-        } else {
-          if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
-            a4_track->store_in_mem(n);
-          }
+          md_track->store_in_mem(n);
         }
-    //  }
+      } else {
+        if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
+          a4_track->store_in_mem(n);
+        }
+      }
+      //  }
     }
   }
 
@@ -581,6 +581,11 @@ void MCLActions::send_pattern_kit_to_md() {
       }
     }
   }
+  for (uint8_t n = 0; n < 20; n++) {
+    if (note_interface.notes[n] > 0) {
+            calc_nearest_slot_step(n);
+    }
+  }
   calc_nearest_step();
   calc_latency(&empty_track);
 
@@ -589,37 +594,36 @@ void MCLActions::send_pattern_kit_to_md() {
   write_original = 0;
 }
 
+void MCLActions::calc_nearest_slot_step(uint8_t n) {
+
+  DEBUG_PRINT_FN();
+  uint32_t step;
+  if (n < 16) {
+    step = chains[n].loops * mcl_seq.md_tracks[n].length;
+    DEBUG_PRINTLN(n);
+    DEBUG_PRINTLN(step);
+    if (step < 4) {
+      step = 4;
+    }
+    nearest_steps[n] += step;
+  } else {
+    step = chains[n].loops * mcl_seq.ext_tracks[n - 16].length;
+    if (step < 4) {
+      step = 4;
+    }
+    nearest_steps[n] += step;
+  }
+}
+
 void MCLActions::calc_nearest_step() {
   nearest_step = -1;
-  uint32_t step;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
-     DEBUG_PRINTLN(grid_page.active_slots[n]);
-    if (grid_page.active_slots[n] >= 0) {
+    DEBUG_PRINTLN(grid_page.active_slots[n]);
+    if ((chains[n].loops > 0) || (chains[n].row != grid_page.active_slots[n])) {
 
-      if ((chains[n].loops == 0) || (chains[n].row == grid_page.active_slots[n]))  {
-        //If chain loops set to 0, ignore track.
-        nearest_steps[n] = MidiClock.div16th_counter - 1;
-      }else {
-
-      if (n < 16) {
-        step = chains[n].loops * mcl_seq.md_tracks[n].length;
-        DEBUG_PRINTLN(n);
-        DEBUG_PRINTLN(step);
-        if (step < 4) {
-          step = 4;
-        }
-        nearest_steps[n] += step;
-      } else {
-        step = chains[n].loops * mcl_seq.ext_tracks[n - 16].length;
-        if (step < 4) {
-          step = 4;
-        }
-        nearest_steps[n] += step;
-      }
       if (nearest_steps[n] < nearest_step) {
         nearest_step = nearest_steps[n];
-      }
       }
     }
   }
@@ -627,7 +631,6 @@ void MCLActions::calc_nearest_step() {
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   DEBUG_PRINTLN("nearest step");
   DEBUG_PRINTLN(nearest_step);
-
 }
 
 void MCLActions::calc_latency(EmptyTrack *empty_track) {
@@ -651,7 +654,7 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
       }
     }
   }
- grid_task.active = true;
+  grid_task.active = true;
 }
 int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
                                             MDKit *kit_) {
