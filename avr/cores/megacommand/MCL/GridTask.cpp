@@ -225,8 +225,10 @@ void GridTask::run() {
       }
 
       else {
+              if (mcl_actions.chains[n].loops == 0) {
         bool clear_locks = true;
         mcl_seq.md_tracks[n].clear_track(clear_locks);
+              }
       }
     }
     in_sysex = 0;
