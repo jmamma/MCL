@@ -582,7 +582,7 @@ void MCLActions::send_pattern_kit_to_md() {
     }
   }
   for (uint8_t n = 0; n < 20; n++) {
-    if (note_interface.notes[n] > 0) {
+    if (grid_page.active_slots[n] >= 0) {
       calc_nearest_slot_step(n);
     }
   }
@@ -625,7 +625,10 @@ void MCLActions::calc_nearest_step() {
           (chains[n].row != grid_page.active_slots[n])) {
 
         if (nearest_steps[n] < nearest_step) {
-          nearest_step = nearest_steps[n];
+          DEBUG_PRINTLN("setting nearest");
+          DEBUG_PRINTLN( nearest_steps[n]);
+          DEBUG_PRINTLN(n);
+           nearest_step = nearest_steps[n];
         }
       }
     }
