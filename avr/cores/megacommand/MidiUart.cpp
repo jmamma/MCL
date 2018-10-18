@@ -14,8 +14,6 @@ MidiUartClass2 MidiUart2;
 
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
-uint32_t write_count = 0;
-uint32_t write_count_time = 0;
 
 MidiUartClass::MidiUartClass() : MidiUartParent() { initSerial(); }
 
@@ -229,7 +227,6 @@ again:
       txRb.put(c);
       if (UART_CHECK_EMPTY_BUFFER()) {
         MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-        write_count++;
         UART_WRITE_CHAR(MidiUart.txRb.get());
       }
       if (!txRb.isEmpty()) {
@@ -243,7 +240,6 @@ again:
       txRb.put(c);
       if (UART_CHECK_EMPTY_BUFFER()) {
         MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-        write_count++;
         UART_WRITE_CHAR(MidiUart.txRb.get());
       }
       if (!txRb.isEmpty()) {
@@ -407,7 +403,6 @@ inline void isr_midi() {
   }
   if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    write_count++;
     UART_WRITE_CHAR(MidiUart.txRb.get());
   }
   if (UART2_CHECK_EMPTY_BUFFER() && !MidiUart2.txRb.isEmpty()) {
@@ -431,7 +426,6 @@ ISR(USART1_UDRE_vect) {
     //    if (UART_CHECK_EMPTY_BUFFER()) {
     // if ((c != MIDI_ACTIVE_SENSE) || (count == 0)) {
     UART_WRITE_CHAR(MidiUart.txRb.get());
-    write_count++;
     // count++;
     //  }
     //  }
