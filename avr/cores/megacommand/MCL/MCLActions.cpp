@@ -601,7 +601,7 @@ void MCLActions::send_pattern_kit_to_md() {
 void MCLActions::calc_nearest_slot_step(uint8_t n) {
 
 //  DEBUG_PRINT_FN();
-  uint32_t step;
+  uint16_t step;
 //  DEBUG_PRINTLN(n);
 //  DEBUG_PRINTLN(nearest_steps[n]);
   if (n < 16) {
@@ -622,21 +622,18 @@ void MCLActions::calc_nearest_slot_step(uint8_t n) {
 
 void MCLActions::calc_nearest_step() {
   nearest_step = -1;
- // DEBUG_PRINT_FN();
+  bool first_step = false;
+  // DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
  //   DEBUG_PRINTLN(grid_page.active_slots[n]);
     if (grid_page.active_slots[n] >= 0) {
       if ((chains[n].loops > 0) ||
           (chains[n].row != grid_page.active_slots[n])) {
-
-        if (nearest_steps[n] < nearest_step) {
-   //       DEBUG_PRINTLN("setting nearest");
-     //     DEBUG_PRINTLN( nearest_steps[n]);
-       //   DEBUG_PRINTLN(n);
+         if (MidiClock.clock_less_than(nearest_steps[n],nearest_step)) {
            nearest_step = nearest_steps[n];
         }
-      }
     }
+  }
   }
   DEBUG_PRINTLN("current_step");
   DEBUG_PRINTLN(MidiClock.div16th_counter);

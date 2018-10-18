@@ -67,8 +67,11 @@ void GridTask::run() {
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   uint8_t curkit;
   ElektronDataToSysexEncoder encoder(&MidiUart);
-  if (MidiClock.div32th_counter + div32th_margin >=
-      mcl_actions.nearest_step * 2) {
+
+  //! MidiClock.clock_less_than(a,b) == !(a < b) == (a >= b)
+
+  if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                 (uint32_t)mcl_actions.nearest_step * 2)) {
     //   while ((MidiClock.div32th_counter != (mcl_actions.nearest_step * 2 -
     //   div32th_latency)) && (MidiClock.state == 2));
     //
@@ -93,8 +96,8 @@ void GridTask::run() {
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       if (n < 16) {
 
-        uint32_t next_transition = mcl_actions.nearest_steps[n] * 2;
-        if (div32th_counter >= next_transition) {
+        uint32_t next_transition = (uint32_t)mcl_actions.nearest_steps[n] * 2;
+        if (!MidiClock.clock_less_than(div32th_counter, next_transition)) {
 
           md_track->load_from_mem(n);
           if (slots_loaded[n] == 0) {
@@ -108,9 +111,9 @@ void GridTask::run() {
           slots_changed[n] = 1;
         }
       } else {
-        uint32_t next_transition = mcl_actions.nearest_steps[n] * 2;
+        uint32_t next_transition = (uint32_t)mcl_actions.nearest_steps[n] * 2;
 
-        if (div32th_counter >= next_transition) {
+        if (!MidiClock.clock_less_than(div32th_counter, next_transition)) {
 
           grid_page.active_slots[n] = mcl_actions.chains[n].row;
           memcpy(&mcl_actions.chains[n], &ext_track->chain, sizeof(GridChain));
@@ -129,10 +132,11 @@ void GridTask::run() {
 
     uint32_t go_step = mcl_actions.nearest_step * 12 - md_div192th_latency -
                        a4_div192th_latency;
+    uint32_t diff;
     if (mcl_actions.a4_latency > 0) {
-      while ((clock_diff(MidiClock.div192th_counter, go_step) != 0) &&
+      while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, go_step)) != 0) &&
              (MidiClock.div192th_counter < go_step) && (MidiClock.state == 2)) {
-        if (clock_diff(MidiClock.div192th_counter, go_step) > 8) {
+        if (diff > 8) {
 
           handleIncomingMidi();
           GUI.loop();
@@ -164,9 +168,10 @@ void GridTask::run() {
     DEBUG_PRINTLN(md_div192th_latency);
     DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - md_div192th_latency);
     uint32_t go_step = mcl_actions.nearest_step * 12 - md_div192th_latency;
-    while ((clock_diff(MidiClock.div192th_counter, go_step) != 0) &&
+    uint32_t diff;
+    while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, go_step)) != 0) &&
            (MidiClock.div192th_counter < go_step) && (MidiClock.state == 2)) {
-      if (clock_diff(MidiClock.div192th_counter, go_step) > 8) {
+      if (diff > 8) {
 
         handleIncomingMidi();
 
@@ -259,10 +264,10 @@ void GridTask::run() {
     for (uint8_t n = 0; n < 20; n++) {
       if (slots_changed[n] == 1) {
 
-        /*            if (count % 8 == 0) {
-                  handleIncomingMidi();
-                  GUI.loop();
-                }*/
+        if (count % 8 == 0) {
+          handleIncomingMidi();
+          GUI.loop();
+        }
         count++;
         if (n < 16) {
           //          DEBUG_PRINTLN("trying to cache MD track");

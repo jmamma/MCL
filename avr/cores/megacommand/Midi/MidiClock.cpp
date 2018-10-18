@@ -23,16 +23,14 @@ void MidiClockClass::init() {
   state = PAUSED;
   counter = 10000;
   rx_clock = rx_last_clock = 0;
-  outdiv96th_counter = 0;
-  div96th_counter = indiv96th_counter = 0;
-  div32th_counter = indiv32th_counter = 0;
-  div16th_counter = indiv16th_counter = 0;
+  div96th_counter = 0;
+  div32th_counter = 0;
+  div16th_counter = 0;
   div192th_counter_last = -1;
   div96th_counter_last = -1;
   clock_last_time = clock;
   mod6_counter = inmod6_counter = 0;
   mod3_counter = 0;
-  pll_x = 200;
   isInit = false;
   div192th_counter = 0;
   mod12_counter = 0;
@@ -46,8 +44,42 @@ uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
   if (new_clock >= old_clock)
     return new_clock - old_clock;
   else
-    return new_clock + (65535 - old_clock);
+    return new_clock + (0xFFFF - old_clock);
 }
+
+//div192 overflow occurs at 12 * (div16 max)
+uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock, uint32_t new_clock) {
+  if (new_clock >= old_clock)
+    return new_clock - old_clock;
+  else
+    return new_clock + (0xBFFF4 - old_clock); //0xBFFF4 = 0xFFFF * 12
+}
+
+
+bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
+  uint32_t a_new = (uint32_t) a;
+  if (a < MidiClock.div16th_counter) {
+    a_new += 0xFFFF;
+  }
+  uint32_t b_new = (uint32_t) b;
+  if (b < MidiClock.div16th_counter) {
+    b_new += 0xFFFF;
+  }
+  return a_new < b_new;
+}
+
+bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
+  uint32_t a_new = (uint64_t) a;
+  if (a < MidiClock.div32th_counter) {
+    a_new += 0x1FFFE; //0xFFFF * 2 (max value for div32th counter)
+  }
+  uint32_t b_new = (uint64_t) b;
+  if (b < MidiClock.div32th_counter) {
+    b_new += 0x1FFFE;
+  }
+  return a_new < b_new;
+}
+
 
 void MidiClockClass::handleImmediateMidiStart() {
   if (transmit_uart1) {
@@ -270,6 +302,12 @@ void MidiClockClass::incrementCounters() {
       mod12_counter = 0;
       div16th_counter++;
       div32th_counter++;
+      //div32th counter should be at most 2x div16th_counter
+      if (div16th_counter == 0) {
+      div32th_counter = 0;
+      div96th_counter = 0;
+      div192th_counter = 0;
+      }
     } else if (mod6_counter == 3) {
       div32th_counter++;
     }

@@ -21,7 +21,7 @@ public:
 
   uint8_t patternswitch = PATTERN_UDEF;
 
-  uint32_t start_clock16th = 0;
+  uint16_t start_clock16th = 0;
   uint32_t start_clock32th = 0;
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
@@ -29,10 +29,10 @@ public:
   GridChain chains[20];
   uint16_t md_latency;
   uint16_t a4_latency;
-  uint32_t nearest_step;
+  uint16_t nearest_step;
   bool active = false;
 
-  uint32_t nearest_steps[20] = { };
+  uint16_t nearest_steps[20] = { };
 
   MCLActions() {}
 

@@ -34,17 +34,14 @@ class MidiClockClass {
    **/
 
 public:
-  volatile uint32_t indiv96th_counter;
-  volatile uint32_t outdiv96th_counter;
+
   volatile uint32_t div192th_counter_last;
   volatile uint32_t div192th_counter;
 
   volatile uint32_t div96th_counter_last;
   volatile uint32_t div96th_counter;
   volatile uint32_t div32th_counter;
-  volatile uint32_t div16th_counter;
-  volatile uint32_t indiv32th_counter;
-  volatile uint32_t indiv16th_counter;
+  volatile uint16_t div16th_counter;
 
   volatile uint8_t mod12_counter;
   volatile uint8_t mod6_counter;
@@ -77,8 +74,7 @@ public:
   bool isInit;
 
   //    volatile uint16_t mcl_clock;
-  //   volatile uint16_t mcl_counter;
-
+  //   volatile uint16_t mcl_countbool
   volatile enum {
     PAUSED = 0,
     STARTING = 1,
@@ -209,6 +205,9 @@ public:
   void increment192Counter();
   void incrementCounters();
   void callCallbacks();
+  bool clock_less_than(uint16_t a, uint16_t b);
+  bool clock_less_than(uint32_t a, uint32_t b);
+  uint32_t clock_diff_div192(uint32_t old_clock, uint32_t new_clock);
 
   void handleImmediateMidiStart();
   void handleImmediateMidiContinue();
