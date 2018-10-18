@@ -329,8 +329,12 @@ void MCLActions::send_pattern_kit_to_md() {
 
           if (i == first_note) {
             // Use first track's original kit values for write orig
-
+            if (md_track->active != EMPTY_TRACK_TYPE) {
             memcpy(&kit_extra, &(md_track->kitextra), sizeof(kit_extra));
+            }
+            else {
+            write_original = 0;
+            }
             if (write_original == 1) {
               MD.pattern.patternLength = kit_extra.patternLength;
             }
@@ -442,12 +446,12 @@ void MCLActions::send_pattern_kit_to_md() {
   }
 
   // MidiUart.setActiveSenseTimer(0);
-  in_sysex = 1;
+  //in_sysex = 1;
 
   md_setsysex_recpos(8, MD.pattern.origPosition);
 
   MD.pattern.toSysex(encoder);
-  in_sysex = 1;
+ // in_sysex = 1;
 
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
@@ -482,13 +486,13 @@ void MCLActions::send_pattern_kit_to_md() {
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
     // if (write_original == 1) {
-    in_sysex2 = 1;
+    //in_sysex2 = 1;
     for (i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
         sound_array[i].toSysex();
       }
     }
-    in_sysex2 = 0;
+    //in_sysex2 = 0;
   }
 
   if (mcl_actions.start_clock32th > MidiClock.div32th_counter) {
@@ -560,7 +564,7 @@ void MCLActions::send_pattern_kit_to_md() {
     }
   }
 
-  in_sysex = 0;
+  //in_sysex = 0;
   if (MidiClock.state != 2) {
     for (uint8_t n = 0; n < 20; n++) {
       nearest_steps[n] = 0;
@@ -596,12 +600,12 @@ void MCLActions::send_pattern_kit_to_md() {
 
 void MCLActions::calc_nearest_slot_step(uint8_t n) {
 
-  DEBUG_PRINT_FN();
+//  DEBUG_PRINT_FN();
   uint32_t step;
+//  DEBUG_PRINTLN(n);
+//  DEBUG_PRINTLN(nearest_steps[n]);
   if (n < 16) {
     step = chains[n].loops * mcl_seq.md_tracks[n].length;
-    DEBUG_PRINTLN(n);
-    DEBUG_PRINTLN(step);
     if (step < 4) {
       step = 4;
     }
@@ -613,21 +617,22 @@ void MCLActions::calc_nearest_slot_step(uint8_t n) {
     }
     nearest_steps[n] += step;
   }
+  DEBUG_PRINTLN(nearest_steps[n]);
 }
 
 void MCLActions::calc_nearest_step() {
   nearest_step = -1;
-  DEBUG_PRINT_FN();
+ // DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
-    DEBUG_PRINTLN(grid_page.active_slots[n]);
+ //   DEBUG_PRINTLN(grid_page.active_slots[n]);
     if (grid_page.active_slots[n] >= 0) {
       if ((chains[n].loops > 0) ||
           (chains[n].row != grid_page.active_slots[n])) {
 
         if (nearest_steps[n] < nearest_step) {
-          DEBUG_PRINTLN("setting nearest");
-          DEBUG_PRINTLN( nearest_steps[n]);
-          DEBUG_PRINTLN(n);
+   //       DEBUG_PRINTLN("setting nearest");
+     //     DEBUG_PRINTLN( nearest_steps[n]);
+       //   DEBUG_PRINTLN(n);
            nearest_step = nearest_steps[n];
         }
       }
@@ -668,7 +673,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
   int bytes = 0;
 
   if (kit_->models[track] != machine->model) {
-    bytes += 4 + 7;
+    bytes += 5 + 7;
   }
 
   MDLFO *lfo = &(machine->lfo);
@@ -699,8 +704,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
     bytes += 3 + 7;
   }
   for (uint8_t i = 0; i < 24; i++) {
-
-    if ((kit_->params[track][i] != machine->params[i])) {
+    if ((kit_->params[track][i] != machine->params[i]) || ((i < 8) && (kit_->models[track] != machine->model))) {
       //       (mcl_seq.md_tracks[track].is_param(i)))) {
       bytes += 3;
     }
@@ -714,7 +718,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
     MD.setMachine(track, machine);
   } else {
     if (kit_->models[track] != machine->model) {
-      MD.assignMachine(track, machine->model);
+      MD.assignMachine(track, machine->model,0);
     }
     MDLFO *lfo = &(machine->lfo);
     if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
@@ -758,7 +762,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
     //  mcl_seq.md_tracks[track].send_params = true;
     for (uint8_t i = 0; i < 24; i++) {
 
-      if (((kit_->params[track][i] != machine->params[i]))) {
+      if (((kit_->params[track][i] != machine->params[i])) || ((i < 8) && (kit_->models[track] != machine->model)) ) {
         //   (mcl_seq.md_tracks[track].is_param(i)))) {
         // mcl_seq.md_tracks[track].params[i] = machine->params[i];
         MD.setTrackParam(track, i, machine->params[i]);
