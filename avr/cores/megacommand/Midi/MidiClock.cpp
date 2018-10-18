@@ -24,9 +24,12 @@ void MidiClockClass::init() {
   counter = 10000;
   rx_clock = rx_last_clock = 0;
   outdiv96th_counter = 0;
-  div96th_counter_last = div96th_counter = indiv96th_counter = 0;
+  div96th_counter = indiv96th_counter = 0;
   div32th_counter = indiv32th_counter = 0;
   div16th_counter = indiv16th_counter = 0;
+  div192th_counter_last = -1;
+  div96th_counter_last = -1;
+  clock_last_time = clock;
   mod6_counter = inmod6_counter = 0;
   mod3_counter = 0;
   pll_x = 200;
@@ -56,6 +59,7 @@ void MidiClockClass::handleImmediateMidiStart() {
   init();
   state = STARTING;
 
+  DEBUG_PRINTLN("START");
 }
 
 void MidiClockClass::handleImmediateMidiStop() {
