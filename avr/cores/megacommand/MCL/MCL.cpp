@@ -1,7 +1,5 @@
 #include "MCL.h"
 
-uint8_t in_sysex;
-uint8_t in_sysex2;
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 

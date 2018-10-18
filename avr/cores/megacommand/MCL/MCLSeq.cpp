@@ -18,12 +18,10 @@ void MCLSeq::setup() {
               //(uint8_t) (((float) n / (float)48) * (float)96);
       }
     } */
-
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
   }
-
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
@@ -79,21 +77,24 @@ void MCLSeq::onMidiStopCallback() {
 
 void MCLSeq::seq() {
 
-  if (in_sysex == 0) {
+//  if (in_sysex == 0) {
+
 
   //  for (uint8_t i = 0; i < 1; i++) {
   //    lfos[i].seq();
   //  }
 
     for (uint8_t i = 0; i < num_md_tracks; i++) {
-      if (md_tracks[i].mute_state == SEQ_MUTE_OFF) { md_tracks[i].seq(); }
+       md_tracks[i].seq();
     }
-  }
-  if (in_sysex2 == 0) {
+
+
+    //  }
+ // if (in_sysex2 == 0) {
     for (uint8_t i = 0; i < num_ext_tracks; i++) {
       ext_tracks[i].seq();
     }
-  }
+ // }
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}

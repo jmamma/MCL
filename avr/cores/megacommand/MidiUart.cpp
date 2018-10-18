@@ -66,6 +66,8 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
 
 void MidiUartClass2::m_putc(uint8_t c) {
   //#ifdef BLAH
+  if (c == 0xF0) { uart_block = 1; }
+  if (c == 0xF7) { uart_block = 0; }
 again:
   bool isEmpty = txRb.isEmpty();
 
@@ -104,6 +106,7 @@ again:
 
 void MidiUartClass2::m_putc_immediate(uint8_t c) {
 
+#
   if (!IN_IRQ()) {
     USE_LOCK();
     SET_LOCK();
@@ -186,6 +189,8 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
 
 void MidiUartClass::m_putc(uint8_t c) {
   //#ifdef BLAH
+  if (c == 0xF0) { uart_block = 1; }
+  if (c == 0xF7) { uart_block = 0; }
 again:
 
   if (txRb.isFull()) {

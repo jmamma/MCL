@@ -81,8 +81,6 @@
 #define MD_KITBUF_POS 63
 
 //Memory layout for SRAM bank 1
-extern uint8_t in_sysex;
-extern uint8_t in_sysex2;
 extern int8_t curpage;
 extern uint8_t patternswitch;
 

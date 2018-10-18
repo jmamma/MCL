@@ -9,9 +9,9 @@ void CuePage::cleanup() {
   note_interface.state = false;
 }
 void CuePage::set_level(int curtrack, int value) {
-  in_sysex = 1;
+  //in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
-  in_sysex = 0;
+  //in_sysex = 0;
 }
 void CuePage::draw_cues(uint8_t line_number) {
   if (line_number == 0) {

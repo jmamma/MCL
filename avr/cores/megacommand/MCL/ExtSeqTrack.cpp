@@ -17,7 +17,7 @@ void ExtSeqTrack::set_length(uint8_t len) {
 */
 }
 void ExtSeqTrack::seq() {
-    if (in_sysex2 == 0) {
+    if (MidiUart2.uart_block == 0) {
     int8_t utiming = timing[step_count];         // upper
     uint8_t condition = conditional[step_count]; // lower
 
@@ -37,7 +37,7 @@ void ExtSeqTrack::seq() {
 
     int8_t utiming_next = timing[next_step];         // upper
     uint8_t condition_next = conditional[next_step]; // lower
-    if (!in_sysex2) {
+    if (MidiUart2.uart_block == 0) {
 
       if ((utiming >= (6 * resolution)) &&
           (utiming - (6 * resolution) == (int8_t)timing_counter)) {

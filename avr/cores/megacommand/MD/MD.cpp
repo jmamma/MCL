@@ -64,13 +64,11 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 void MDClass::sendRequest(uint8_t type, uint8_t param) {
  // USE_LOCK();
 //  SET_LOCK();
-   enable_clock_callbacks = false;
-   MidiUart.m_putc(0xF0);
+  MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.m_putc(type);
   MidiUart.m_putc(param);
   MidiUart.m_putc(0xF7);
-  enable_clock_callbacks = true;
  // CLEAR_LOCK();
 }
 
@@ -108,12 +106,10 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
 //  0x5E, 0x5D, 0x5F, 0x60
 
 void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
-  enable_clock_callbacks = false;
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.sendRaw(bytes, cnt);
   MidiUart.m_putc(0xf7);
-  enable_clock_callbacks = true;
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
@@ -526,14 +522,12 @@ uint8_t MDClass::getCurrentGlobal(uint16_t timeout) {
 }
 
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
-  enable_clock_callbacks = false;
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.m_putc(MD_GUI_CMD);
   MidiUart.m_putc(command);
   MidiUart.m_putc(value);
   MidiUart.m_putc(0xF7);
-  enable_clock_callbacks = true;
 }
 
 void MDClass::toggle_kit_menu() {

@@ -437,14 +437,14 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         (track < start_track + seq_ptc_page.poly_max)) {
       for (uint8_t n = 0; n < seq_ptc_page.poly_max; n++) {
 
-        in_sysex = 1;
+        //in_sysex = 1;
 
         if ((n + start_track < 16) && (n + start_track != track)) {
           if (param_true) {
             MD.setTrackParam(n + start_track, track_param, value);
           }
         }
-        in_sysex = 0;
+       // in_sysex = 0;
       }
     }
   }

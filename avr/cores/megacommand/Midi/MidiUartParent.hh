@@ -31,6 +31,7 @@ public:
   uint8_t running_status;
   uint8_t currentChannel;
   uint8_t uart_port;
+  uint8_t uart_block;
   uint32_t speed;
 
   bool useRunningStatus;
@@ -89,14 +90,18 @@ public:
 
   inline virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
   inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+    uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
+    uart_block = 0;
   }
 
   inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+    uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
     m_putc(byte2);
+    uart_block = 0;
   }
 
   inline void sendCommandByte(uint8_t byte) {
