@@ -95,7 +95,7 @@ void GridTask::run() {
 
         uint32_t next_transition = mcl_actions.nearest_steps[n] * 2;
         if (div32th_counter >= next_transition) {
- 
+
           md_track->load_from_mem(n);
           if (slots_loaded[n] == 0) {
             //        md_track->place_track_in_kit(n, n, &(MD.kit));
@@ -138,7 +138,7 @@ void GridTask::run() {
           GUI.loop();
         }
       }
-      in_sysex2 = 1;
+      // in_sysex2 = 1;
     }
     for (uint8_t n = 16; n < 20; n++) {
       if (slots_changed[n] > 0) {
@@ -147,8 +147,8 @@ void GridTask::run() {
         if (mcl_actions.a4_latency > 0) {
           DEBUG_PRINTLN("here");
           if (a4_track->active == A4_TRACK_TYPE) {
-          DEBUG_PRINTLN("send a4 sound"); 
-           a4_track->sound.toSysex();
+            DEBUG_PRINTLN("send a4 sound");
+            a4_track->sound.toSysex();
           }
         }
         mcl_seq.ext_tracks[n - 16].buffer_notesoff();
@@ -175,7 +175,7 @@ void GridTask::run() {
     }
     DEBUG_PRINTLN("div16");
     DEBUG_PRINTLN(MidiClock.div16th_counter);
-    in_sysex = 1;
+    // in_sysex = 1;
     uint32_t div192th_counter_old = MidiClock.div192th_counter;
 
     //   MD.kit.toSysex(encoder);
@@ -218,22 +218,39 @@ void GridTask::run() {
             md_track->place_track_in_kit(n, n, &(MD.kit), false);
             slots_loaded[n] = 1;
           }
+
+          mcl_seq.md_tracks[n].start_step = mcl_actions.nearest_step;
+          mcl_seq.md_tracks[n].mute_until_start = true;
+
           md_track->load_seq_data(n);
-          mcl_seq.md_tracks[n].step_count = 0;
-          mcl_seq.md_tracks[n].start_clock32th = mcl_actions.nearest_step * 2;
+          // DEBUG_PRINT("THIS ");
+
+          //  DEBUG_PRINTLN(mcl_actions.nearest_step -
+          //  MidiClock.div16th_counter);
+          //   DEBUG_PRINT(n);
+          // DEBUG_PRINT(" ");
+          //  DEBUG_PRINTLN(MidiClock.div16th_counter);
+          // DEBUG_PRINTLN(mcl_actions.nearest_step);
+          // mcl_seq.md_tracks[n].step_count = 0;
         }
       }
 
       else {
-              if (mcl_actions.chains[n].loops == 0) {
-        bool clear_locks = true;
-        mcl_seq.md_tracks[n].clear_track(clear_locks);
-              }
+        if (mcl_actions.chains[n].loops == 0) {
+          DEBUG_PRINTLN("clearing track");
+          bool clear_locks = true;
+          mcl_seq.md_tracks[n].clear_track(clear_locks);
+        }
       }
     }
-    in_sysex = 0;
-    in_sysex2 = 0;
-
+    //  DEBUG_PRINTLN("step counts");
+    //   for (uint8_t n = 0; n < 16; n++) {
+    //   DEBUG_PRINT(mcl_seq.md_tracks[n].step_count); DEBUG_PRINT(" ");
+    //  }
+    //  DEBUG_PRINTLN(MidiClock.div16th_counter);
+    // in_sysex = 0;
+    // in_sysex2 = 0;
+    // DEBUG_PRINTLN("step_counts");
     DEBUG_PRINTLN("took this long");
     DEBUG_PRINTLN(clock_diff(div192th_counter_old, MidiClock.div192th_counter));
   }
@@ -241,25 +258,24 @@ void GridTask::run() {
     uint8_t count = 0;
     for (uint8_t n = 0; n < 20; n++) {
       if (slots_changed[n] == 1) {
-    
-              if (count % 8 == 0) {
-          handleIncomingMidi();
-          GUI.loop();
-        }
+
+        /*            if (count % 8 == 0) {
+                  handleIncomingMidi();
+                  GUI.loop();
+                }*/
         count++;
         if (n < 16) {
-          DEBUG_PRINTLN("trying to cache MD track");
-          DEBUG_PRINTLN(n);
-          DEBUG_PRINTLN(mcl_actions.chains[n].row);
+          //          DEBUG_PRINTLN("trying to cache MD track");
+          //         DEBUG_PRINTLN(n);
+          //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
           int32_t len =
               sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
           if (md_track->load_track_from_grid(n, mcl_actions.chains[n].row,
                                              len)) {
-            DEBUG_PRINTLN("storing");
+            //  DEBUG_PRINTLN("storing");
             md_track->store_in_mem(n);
-          }
-          else {
-          DEBUG_PRINTLN("failed");
+          } else {
+            DEBUG_PRINTLN("failed");
           }
         } else {
           DEBUG_PRINTLN("trying to load a4 track");
@@ -269,8 +285,8 @@ void GridTask::run() {
             a4_track->store_in_mem(n);
           }
         }
-    
-    mcl_actions.calc_nearest_slot_step(n);
+
+        mcl_actions.calc_nearest_slot_step(n);
       }
     }
     mcl_actions.calc_nearest_step();

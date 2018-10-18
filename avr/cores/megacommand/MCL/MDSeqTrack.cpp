@@ -3,10 +3,10 @@
 
 void MDSeqTrack::set_length(uint8_t len) {
   length = len;
-     if (step_count >= length) {
-   step_count = step_count - length;
-   }
-  /*   
+  if (step_count >= length) {
+    step_count = step_count - length;
+  }
+  /*
   step_count =
       (MidiClock.div16th_counter - start_clock32th / 2) -
       (length * ((MidiClock.div16th_counter - start_clock32th / 2) /
@@ -15,77 +15,91 @@ void MDSeqTrack::set_length(uint8_t len) {
 }
 
 void MDSeqTrack::seq() {
-  if (in_sysex == 0) {
-  if ((mute_until_zero) && (step_count != 0)) {
-  return;
-  }
-  else {
-  mute_until_zero = false;
-  }
-  int8_t utiming = timing[step_count];         // upper
-  uint8_t condition = conditional[step_count]; // lower
-  uint8_t next_step = 0;
-  if (step_count == (length - 1)) {
-    next_step = 0;
-  } else {
-    next_step = step_count + 1;
-  }
+  if (mute_until_start) {
 
-  int8_t utiming_next = timing[next_step];         // upper
-  uint8_t condition_next = conditional[next_step]; // lower
-
-  //-5 -4 -3 -2 -1  0  1 2 3 4 5
-  //   0 1  2  3  4  5  6  7 8 9 10 11
-  ///  0  1  2  3  4  5  0  1 2 3 4 5
-
-  if ((utiming >= 12) && (utiming - 12 == (int8_t)MidiClock.mod12_counter)) {
-
-    send_parameter_locks(step_count);
-
-    if (IS_BIT_SET64(pattern_mask, step_count)) {
-      trig_conditional(condition);
+    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
+      //      DEBUG_PRINTLN("unmuting");
+      //     DEBUG_PRINTLN(track_number);
+      //  DEBUG_PRINTLN(MidiClock.div16th_counter);
+      //  DEBUG_PRINTLN(start_step);
+      // DEBUG_PRINTLN(MidiClock.mod12_counter);
+      step_count = 0;
+      mute_until_start = false;
     }
   }
-/*
-  if (send_params && IS_BIT_SET64(pattern_mask, next_step)) {
-  if ((utiming_next < 12) &&
-      ((int8_t)MidiClock.mod12_counter) >= utiming_next - 1) {
+  if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
+      (mute_state == SEQ_MUTE_OFF)) {
+    int8_t utiming = timing[step_count];         // upper
+    uint8_t condition = conditional[step_count]; // lower
+    uint8_t next_step = 0;
+    if (step_count == (length - 1)) {
+      next_step = 0;
+    } else {
+      next_step = step_count + 1;
+    }
 
+    int8_t utiming_next = timing[next_step];         // upper
+    uint8_t condition_next = conditional[next_step]; // lower
 
-          for (uint8_t n = 0; n < 24; n++) {
-      if (params[n] != 255) {
-        MD.setTrackParam(track_number, n, params[n]);
+    //-5 -4 -3 -2 -1  0  1 2 3 4 5
+    //   0 1  2  3  4  5  6  7 8 9 10 11
+    ///  0  1  2  3  4  5  0  1 2 3 4 5
+
+    if ((utiming >= 12) && (utiming - 12 == (int8_t)MidiClock.mod12_counter)) {
+
+      send_parameter_locks(step_count);
+
+      if (IS_BIT_SET64(pattern_mask, step_count)) {
+        trig_conditional(condition);
       }
     }
-          DEBUG_PRINTLN("trig group issue");
-          DEBUG_PRINTLN(trigGroup);
-    if (trigGroup <= 16) {
-      for (uint8_t n = 0; n < 24; n++) {
-        if (mcl_seq.md_tracks[trigGroup].params[n] != 255) {
-          MD.setTrackParam(trigGroup, n,
-                           mcl_seq.md_tracks[trigGroup].params[n]);
+    /*
+      if (send_params && IS_BIT_SET64(pattern_mask, next_step)) {
+      if ((utiming_next < 12) &&
+          ((int8_t)MidiClock.mod12_counter) >= utiming_next - 1) {
+
+
+              for (uint8_t n = 0; n < 24; n++) {
+          if (params[n] != 255) {
+            MD.setTrackParam(track_number, n, params[n]);
+          }
         }
+              DEBUG_PRINTLN("trig group issue");
+              DEBUG_PRINTLN(trigGroup);
+        if (trigGroup <= 16) {
+          for (uint8_t n = 0; n < 24; n++) {
+            if (mcl_seq.md_tracks[trigGroup].params[n] != 255) {
+              MD.setTrackParam(trigGroup, n,
+                               mcl_seq.md_tracks[trigGroup].params[n]);
+            }
+          }
+        }
+        send_params = false;
+      }
+      } */
+    if ((utiming_next < 12) &&
+        ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
+
+      send_parameter_locks(next_step);
+
+      if (IS_BIT_SET64(pattern_mask, next_step)) {
+        trig_conditional(condition_next);
       }
     }
-    send_params = false;
   }
-  } */
-  if ((utiming_next < 12) &&
-      ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
-
-    send_parameter_locks(next_step);
-
-    if (IS_BIT_SET64(pattern_mask, next_step)) {
-      trig_conditional(condition_next);
+  if (MidiClock.mod12_counter == 11) {
+    if (step_count == length - 1) {
+      step_count = 0;
+    } else {
+      step_count++;
     }
+    //   DEBUG_PRINT(step_count);
+    //   DEBUG_PRINT(" ");
   }
-  }
-  if (MidiClock.mod12_counter == 0) { step_count++; }
-  if (step_count == length) { step_count = 0; }
 }
 
-bool MDSeqTrack::is_param(uint8_t param_id) { 
- bool match = false;
+bool MDSeqTrack::is_param(uint8_t param_id) {
+  bool match = false;
   for (uint8_t c = 0; c < 4; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] - 1 == param_id) {
@@ -133,8 +147,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
   if (IS_BIT_SET64(lock_mask, step)) {
     for (c = 0; c < 4; c++) {
       if (locks[c][step] > 0) {
-        MD.setTrackParam(track_number, locks_params[c] - 1,
-                         locks[c][step] - 1);
+        MD.setTrackParam(track_number, locks_params[c] - 1, locks[c][step] - 1);
       } else if (locks_params[c] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1,
                          locks_params_orig[c]);
@@ -253,11 +266,11 @@ void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   }
 }
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
-/*
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) /
-                 length));*/
+  /*
+    uint8_t step_count =
+        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+        (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2)
+    / length));*/
   if (step_count >= length) {
     return;
   }
@@ -288,20 +301,20 @@ void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
 }
 
 void MDSeqTrack::record_track_pitch(uint8_t pitch) {
- /* uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) /
-                 length)); */
+  /* uint8_t step_count =
+       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+       (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2)
+     / length)); */
   if (step_count >= length) {
     return;
   }
   set_track_pitch(step_count, pitch);
 }
 void MDSeqTrack::record_track(uint8_t note_num, uint8_t velocity) {
- /*uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) /
-                 length)); */
+  /*uint8_t step_count =
+       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+       (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2)
+     / length)); */
 
   if (step_count >= length) {
     return;
