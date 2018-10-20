@@ -27,6 +27,9 @@ void MDSeqTrack::seq() {
       mute_until_start = false;
     }
   }
+  if (MidiUart.uart_block != 0) {
+  DEBUG_PRINTLN("block");
+  }
   if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
     int8_t utiming = timing[step_count];         // upper
@@ -93,8 +96,8 @@ void MDSeqTrack::seq() {
     } else {
       step_count++;
     }
-    //   DEBUG_PRINT(step_count);
-    //   DEBUG_PRINT(" ");
+       DEBUG_PRINT(step_count);
+       DEBUG_PRINT(" ");
   }
 }
 
@@ -403,10 +406,12 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     swingpattern |= md_track->swingPattern;
   }
   for (uint8_t a = 0; a < length; a++) {
-
-    conditional[a] = 0;
+    if (IS_BIT_SET64(md_track->trigPattern,a)) {
+      conditional[a] = 0;
+      timing[a] = 12;
+    }
     if (IS_BIT_SET64(md_track->kitextra.swingPattern, a)) {
-      timing[a] = ((float)(swing - 50) / (float)50) * 12;
+      timing[a] = ((float)(swing - 50) / (float)50) * 12 + 12;
     }
   }
 }
