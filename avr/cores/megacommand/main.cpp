@@ -201,24 +201,22 @@ ISR(TIMER1_COMPA_vect) {
   uint8_t old_ram_bank = switch_ram_bank(0);
 
   clock++;
-
+  if (MidiClock.state == 2) {
   if (clock_diff(MidiClock.clock_last_time, clock) >= MidiClock.div192th_time) {
-    // DEBUG_PRINTLN("192");
-    // DEBUG_PRINTLN(MidiClock.mod12_counter);
-    if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
+      if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
       MidiClock.increment192Counter();
-
       MidiClock.div192th_counter_last = MidiClock.div192th_counter;
-      if ((MidiClock.state == 2) && (enable_clock_callbacks)) {
+      if ((enable_clock_callbacks)) {
         MidiClock.callCallbacks();
       }
     }
   }
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    if ((MidiClock.state == 2) && (enable_clock_callbacks)) {
+    if ((enable_clock_callbacks)) {
       MidiClock.callCallbacks();
     }
+  }
   }
   switch_ram_bank(old_ram_bank);
 }
