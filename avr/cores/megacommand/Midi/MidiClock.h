@@ -112,6 +112,8 @@ public:
   MidiClockClass();
 
   CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartCallbacks;
+
+  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartImmediateCallbacks;
   CallbackVector1<ClockCallback, 8, uint32_t> onMidiStopCallbacks;
   CallbackVector1<ClockCallback, 8, uint32_t> onMidiContinueCallbacks;
 
@@ -121,6 +123,17 @@ public:
   CallbackVector1<ClockCallback, 8, uint32_t> on16Callbacks;
 
   CallbackVector1<ClockCallback, 8, uint32_t> onClockCallbacks;
+  void addOnMidiStartImmediateCallback(ClockCallback *obj,
+                              midi_clock_callback_ptr_t func) {
+    onMidiStartImmediateCallbacks.add(obj, func);
+  }
+  void removeOnMidiStartImmediateCallback(ClockCallback *obj,
+                                 midi_clock_callback_ptr_t func) {
+    onMidiStartImmediateCallbacks.remove(obj, func);
+  }
+  void removeOnMidiStartImmediateCallback(ClockCallback *obj) {
+    onMidiStartImmediateCallbacks.remove(obj);
+  }
 
   void addOnMidiStartCallback(ClockCallback *obj,
                               midi_clock_callback_ptr_t func) {

@@ -34,10 +34,6 @@ void MidiClockClass::init() {
   isInit = false;
   div192th_counter = 0;
   mod12_counter = 0;
-  //last_clock16 = clock;
-  // mcl_16counter = 0;
-  // mcl_counter = 0;
-  // mcl_clock = read_slowclock();;
 }
 
 uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
@@ -47,21 +43,21 @@ uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
     return new_clock + (0xFFFF - old_clock);
 }
 
-//div192 overflow occurs at 12 * (div16 max)
-uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock, uint32_t new_clock) {
+// div192 overflow occurs at 12 * (div16 max)
+uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock,
+                                           uint32_t new_clock) {
   if (new_clock >= old_clock)
     return new_clock - old_clock;
   else
-    return new_clock + (0xBFFF4 - old_clock); //0xBFFF4 = 0xFFFF * 12
+    return new_clock + (0xBFFF4 - old_clock); // 0xBFFF4 = 0xFFFF * 12
 }
 
-
 bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
-  uint32_t a_new = (uint32_t) a;
+  uint32_t a_new = (uint32_t)a;
   if (a < MidiClock.div16th_counter) {
     a_new += 0xFFFF;
   }
-  uint32_t b_new = (uint32_t) b;
+  uint32_t b_new = (uint32_t)b;
   if (b < MidiClock.div16th_counter) {
     b_new += 0xFFFF;
   }
@@ -69,17 +65,16 @@ bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
 }
 
 bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
-  uint32_t a_new = (uint64_t) a;
+  uint32_t a_new = (uint64_t)a;
   if (a < MidiClock.div32th_counter) {
-    a_new += 0x1FFFE; //0xFFFF * 2 (max value for div32th counter)
+    a_new += 0x1FFFE; // 0xFFFF * 2 (max value for div32th counter)
   }
-  uint32_t b_new = (uint64_t) b;
+  uint32_t b_new = (uint64_t)b;
   if (b < MidiClock.div32th_counter) {
     b_new += 0x1FFFE;
   }
   return a_new < b_new;
 }
-
 
 void MidiClockClass::handleImmediateMidiStart() {
   if (transmit_uart1) {
@@ -89,6 +84,8 @@ void MidiClockClass::handleImmediateMidiStart() {
     MidiUart2.sendRaw(MIDI_START);
   }
   init();
+
+  onMidiStartImmediateCallbacks.call(div96th_counter);
   state = STARTING;
 
   DEBUG_PRINTLN("START");
@@ -102,8 +99,8 @@ void MidiClockClass::handleImmediateMidiStop() {
   if (transmit_uart2) {
     MidiUart2.sendRaw(MIDI_STOP);
   }
-//  init();
 
+  //  init();
 }
 
 void MidiClockClass::handleImmediateMidiContinue() {
@@ -118,18 +115,22 @@ void MidiClockClass::handleImmediateMidiContinue() {
   counter = 10000;
   rx_clock = rx_last_clock = 0;
   isInit = false;
-}
+  incrementCounters();
 
+  //  init();
+}
 
 void MidiClockClass::handleMidiStart() {
   onMidiStartCallbacks.call(div96th_counter);
 }
 
 void MidiClockClass::handleMidiStop() {
+
   onMidiStopCallbacks.call(div96th_counter);
 }
 
 void MidiClockClass::handleMidiContinue() {
+
   onMidiContinueCallbacks.call(div96th_counter);
 }
 
@@ -279,7 +280,7 @@ void MidiClockClass::increment192Counter() {
 
 void MidiClockClass::incrementCounters() {
   mod6_free_counter++;
-  if (mod6_free_counter == 6) { 
+  if (mod6_free_counter == 6) {
     tempo = ((float)150000 / ((float)midi_clock_diff(last_clock16, clock)));
     div192th_time = midi_clock_diff(last_clock16, clock) / 12;
     last_clock16 = clock;
@@ -302,11 +303,11 @@ void MidiClockClass::incrementCounters() {
       mod12_counter = 0;
       div16th_counter++;
       div32th_counter++;
-      //div32th counter should be at most 2x div16th_counter
+      // div32th counter should be at most 2x div16th_counter
       if (div16th_counter == 0) {
-      div32th_counter = 0;
-      div96th_counter = 0;
-      div192th_counter = 0;
+        div32th_counter = 0;
+        div96th_counter = 0;
+        div192th_counter = 0;
       }
     } else if (mod6_counter == 3) {
       div32th_counter++;

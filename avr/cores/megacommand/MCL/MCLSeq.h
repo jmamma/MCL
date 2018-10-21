@@ -46,7 +46,11 @@ public:
   void setup();
   void enable();
   void disable();
+
+
   void onMidiStartCallback();
+  void onMidiStartImmediateCallback();
+  void onMidiContinueCallback();
   void onMidiStopCallback();
   void seq();
 

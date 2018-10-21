@@ -16,8 +16,7 @@ void MCLSeq::setup() {
       for (uint8_t n = 0; n < 48; n++) {
       mcl_seq.lfos[0].samples[n] = n;
               //(uint8_t) (((float) n / (float)48) * (float)96);
-      }
-    } */
+      }    } */
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
@@ -35,66 +34,91 @@ void MCLSeq::setup() {
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
-   MidiClock.addOnMidiContinueCallback(
-      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
+  MidiClock.addOnMidiStartImmediateCallback(
+      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartImmediateCallback);
+
+  MidiClock.addOnMidiContinueCallback(
+      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiContinueCallback);
   midi_events.setup_callbacks();
 };
 
 void MCLSeq::enable() {
-  if (state) { return; }
+  if (state) {
+    return;
+  }
   MidiClock.addOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
   state = true;
 }
 void MCLSeq::disable() {
-  if (!state) { return; }
+  if (!state) {
+    return;
+  }
   MidiClock.removeOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
   state = false;
 }
 
-
-void MCLSeq::onMidiStartCallback() {
+void MCLSeq::onMidiContinueCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
-
-
 }
-void MCLSeq::onMidiStopCallback() {
-  DEBUG_PRINTLN("resetting step_counts");
-        for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].buffer_notesoff();
+
+void MCLSeq::onMidiStartImmediateCallback() {
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
   }
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].reset_params();
+ for (uint8_t i = 0; i < num_md_tracks; i++) {
+
     md_tracks[i].start_clock32th = 0;
     md_tracks[i].step_count = 0;
   }
 
 }
 
+void MCLSeq::onMidiStartCallback() {
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].update_params();
+  }
+
+  for (uint8_t n = 0; n < 20; n++) {
+    if (grid_page.active_slots[n] >= 0) {
+      mcl_actions.nearest_steps[n] = 0;
+      mcl_actions.calc_nearest_slot_step(n);
+    }
+  }
+  mcl_actions.calc_nearest_step();
+}
+
+void MCLSeq::onMidiStopCallback() {
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].buffer_notesoff();
+  }
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].reset_params();
+  }
+}
+
 void MCLSeq::seq() {
 
-//  if (in_sysex == 0) {
-
+  //  if (in_sysex == 0) {
 
   //  for (uint8_t i = 0; i < 1; i++) {
   //    lfos[i].seq();
   //  }
 
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-       md_tracks[i].seq();
-    }
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].seq();
+  }
 
-
-    //  }
- // if (in_sysex2 == 0) {
-    for (uint8_t i = 0; i < num_ext_tracks; i++) {
-      ext_tracks[i].seq();
-    }
- // }
+  //  }
+  // if (in_sysex2 == 0) {
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].seq();
+  }
+  // }
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
