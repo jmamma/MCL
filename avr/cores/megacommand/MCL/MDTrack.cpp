@@ -167,7 +167,11 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
 
 void MDTrack::load_seq_data(int tracknumber) {
   m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+
+  mcl_seq.md_tracks[tracknumber].set_length(mcl_seq.md_tracks[tracknumber].length);
   mcl_seq.md_tracks[tracknumber].update_params();
+
+
 }
 
 void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {

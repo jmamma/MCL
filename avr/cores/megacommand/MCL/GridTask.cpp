@@ -1,3 +1,4 @@
+#include "EmptyTrack.h"
 #include "GridTask.h"
 #include "MCL.h"
 
@@ -14,6 +15,7 @@ void GridTask::run() {
   if (MidiClock.state != 2) {
     return;
   }
+
   EmptyTrack empty_track;
 
   MDTrack *md_track = (MDTrack *)&empty_track;
@@ -30,38 +32,14 @@ void GridTask::run() {
   bool send_a4_sound = false;
   bool send_md_kit = false;
 
-  float bytes_per_second_uart1 = (float)MidiUart.speed / (float)10;
-
-  float bytes_per_second_uart2 = (float)MidiUart2.speed / (float)10;
-
-  float md_latency_in_seconds =
-      (float)mcl_actions.md_latency / bytes_per_second_uart1;
-  float a4_latency_in_seconds =
-      (float)mcl_actions.a4_latency / bytes_per_second_uart2;
-  float div32th_per_second =
-      ((float)MidiClock.tempo / (float)60) * (float)4 * (float)2;
-  // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
-  float div192th_per_second =
-      ((float)MidiClock.tempo / (float)60) * (float)4 * (float)12;
-  // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
-  uint8_t md_div32th_latency =
-      round(div32th_per_second * md_latency_in_seconds) + 1;
-  uint8_t a4_div32th_latency =
-      round(div32th_per_second * a4_latency_in_seconds) + 1;
-
-  uint8_t md_div192th_latency =
-      round(div192th_per_second * md_latency_in_seconds) + 3;
-  uint8_t a4_div192th_latency =
-      round(div192th_per_second * a4_latency_in_seconds) + 3;
-
-  // uint8_t div16th_margin = (((md_div32th_latency + a4_div32th_latency)) / 2)
+ // uint8_t div16th_margin = (((md_div32th_latency + a4_div32th_latency)) / 2)
   // + 4;
   uint8_t div32th_margin = 8;
   // DEBUG_PRINTLN(md_div32th_latency);
   // DEBUG_PRINTLN(a4_div32th_latency);
 
   uint32_t div32th_counter;
-  if (grid_page.chain_enabled == 0) {
+  if (mcl_cfg.chain_mode == 0) {
     return;
   }
   DEBUG_PRINTLN(MidiClock.div16th_counter);
@@ -75,7 +53,6 @@ void GridTask::run() {
     //   while ((MidiClock.div32th_counter != (mcl_actions.nearest_step * 2 -
     //   div32th_latency)) && (MidiClock.state == 2));
     //
-    DEBUG_PRINTLN(div32th_per_second * md_latency_in_seconds);
     DEBUG_PRINTLN("timing");
     DEBUG_PRINTLN(MidiClock.div32th_counter);
     DEBUG_PRINTLN(MidiClock.div32th_counter + 8);
@@ -127,14 +104,15 @@ void GridTask::run() {
     DEBUG_PRINTLN("waiting to send a4");
     DEBUG_PRINTLN(MidiClock.div192th_counter);
     DEBUG_PRINTLN(mcl_actions.a4_latency);
-    DEBUG_PRINTLN(a4_div192th_latency);
-    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - a4_div192th_latency);
+    DEBUG_PRINTLN(mcl_actions.a4_div192th_latency);
+    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - mcl_actions.a4_div192th_latency);
 
-    uint32_t go_step = mcl_actions.nearest_step * 12 - md_div192th_latency -
-                       a4_div192th_latency;
+    uint32_t go_step = mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency -
+                       mcl_actions.a4_div192th_latency;
     uint32_t diff;
     if (mcl_actions.a4_latency > 0) {
-      while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, go_step)) != 0) &&
+      while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
+                                                  go_step)) != 0) &&
              (MidiClock.div192th_counter < go_step) && (MidiClock.state == 2)) {
         if (diff > 8) {
 
@@ -165,11 +143,11 @@ void GridTask::run() {
   }
   if (send_md_kit) {
     DEBUG_PRINTLN(MidiClock.div192th_counter);
-    DEBUG_PRINTLN(md_div192th_latency);
-    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - md_div192th_latency);
-    uint32_t go_step = mcl_actions.nearest_step * 12 - md_div192th_latency;
+    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency);
+    uint32_t go_step = mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency;
     uint32_t diff;
-    while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, go_step)) != 0) &&
+    while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
+                                                go_step)) != 0) &&
            (MidiClock.div192th_counter < go_step) && (MidiClock.state == 2)) {
       if (diff > 8) {
 
@@ -204,7 +182,8 @@ void GridTask::run() {
       if (slots_changed[n] > 0) {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
-          uint8_t trigGroup = md_track->machine.trigGroup;
+          #ifdef HANDLE_GROUPS
+           uint8_t trigGroup = md_track->machine.trigGroup;
           if ((trigGroup < 16) && (trigGroup != n) &&
               (slots_loaded[trigGroup] == 0)) {
             md_track->load_from_mem(trigGroup);
@@ -218,6 +197,7 @@ void GridTask::run() {
             md_track->load_from_mem(n);
             slots_loaded[trigGroup] = 1;
           }
+          #endif
           if (slots_loaded[n] == 0) {
             mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit));
             md_track->place_track_in_kit(n, n, &(MD.kit), false);
@@ -261,6 +241,8 @@ void GridTask::run() {
   }
   if (send_md_kit || send_a4_sound) {
     uint8_t count = 0;
+    uint8_t slots_cached[20] = {0};
+
     for (uint8_t n = 0; n < 20; n++) {
       if (slots_changed[n] == 1) {
 
@@ -279,6 +261,18 @@ void GridTask::run() {
                                              len)) {
             //  DEBUG_PRINTLN("storing");
             md_track->store_in_mem(n);
+            slots_cached[n] = 1;
+            #ifdef HANDLE_GROUPS
+            uint8_t trigGroup = md_track->machine.trigGroup;
+            if ((trigGroup < 16) && (trigGroup != n) &&
+                (slots_cached[trigGroup] == 0)) {
+              if (md_track->load_track_from_grid(
+                      trigGroup, mcl_actions.chains[n].row, len)) {
+                md_track->store_in_mem(trigGroup);
+                slots_cached[trigGroup] = 1;
+              }
+            }
+           #endif
           } else {
             DEBUG_PRINTLN("failed");
           }

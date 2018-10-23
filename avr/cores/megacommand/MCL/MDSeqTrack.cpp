@@ -4,7 +4,7 @@
 void MDSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {
-    step_count = step_count - length;
+    step_count = (step_count % length);
   }
   /*
   step_count =
@@ -96,8 +96,8 @@ void MDSeqTrack::seq() {
     } else {
       step_count++;
     }
-       DEBUG_PRINT(step_count);
-       DEBUG_PRINT(" ");
+//       DEBUG_PRINT(step_count);
+//       DEBUG_PRINT(" ");
   }
 }
 

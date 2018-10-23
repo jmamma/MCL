@@ -85,6 +85,7 @@ void MCLSeq::onMidiStartCallback() {
   for (uint8_t n = 0; n < 20; n++) {
     if (grid_page.active_slots[n] >= 0) {
       mcl_actions.nearest_steps[n] = 0;
+      mcl_actions.nearest_steps_old[n] = 0;
       mcl_actions.calc_nearest_slot_step(n);
     }
   }

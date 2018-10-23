@@ -27,6 +27,7 @@ public:
   uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
+
   bool send_params = false;
   bool mute_until_start = false;
 

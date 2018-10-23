@@ -33,6 +33,7 @@ public:
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
+  uint8_t chain_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

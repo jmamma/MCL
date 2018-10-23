@@ -33,6 +33,13 @@ public:
   bool active = false;
 
   uint16_t nearest_steps[20] = { };
+  uint16_t nearest_steps_old[20] = { };
+
+  uint8_t md_div32th_latency;
+  uint8_t a4_div32th_latency;
+
+  uint8_t md_div192th_latency;
+  uint8_t a4_div192th_latency;
 
   MCLActions() {}
 
@@ -49,7 +56,7 @@ public:
   void store_tracks_in_mem(int column, int row, int store_behaviour_);
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
-  
+  void prepare_next_chain(int row);
   void calc_nearest_slot_step(uint8_t n);
   void calc_nearest_step();
   void calc_latency(EmptyTrack *empty_track);
