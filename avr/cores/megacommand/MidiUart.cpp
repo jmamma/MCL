@@ -64,8 +64,12 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
 
 void MidiUartClass2::m_putc(uint8_t c) {
   //#ifdef BLAH
-  if (c == 0xF0) { uart_block = 1; }
-  if (c == 0xF7) { uart_block = 0; }
+  if (c == 0xF0) {
+    uart_block = 1;
+  }
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
 again:
   bool isEmpty = txRb.isEmpty();
 
@@ -89,16 +93,30 @@ again:
   } else {
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
-    txRb.put(c);
-    if (UART2_CHECK_EMPTY_BUFFER()) {
-      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-      UART2_WRITE_CHAR(MidiUart2.txRb.get());
+    if (IN_IRQ()) {
+      txRb.put(c);
+      if (UART2_CHECK_EMPTY_BUFFER()) {
+        MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+        UART2_WRITE_CHAR(txRb.get());
+      }
+      if (!txRb.isEmpty()) {
+        SET_BIT(UCSR2B, UDRIE1);
+      }
+
+    } else {
+      USE_LOCK();
+      SET_LOCK();
+
+      txRb.put(c);
+      if (UART2_CHECK_EMPTY_BUFFER()) {
+        MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+        UART2_WRITE_CHAR(txRb.get());
+      }
+      if (!txRb.isEmpty()) {
+        SET_BIT(UCSR2B, UDRIE1);
+      }
+      CLEAR_LOCK();
     }
-    // else {
-    else if (!txRb.isEmpty()) {
-      SET_BIT(UCSR2B, UDRIE1);
-    }
-    // }
   }
 }
 
@@ -187,8 +205,12 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
 
 void MidiUartClass::m_putc(uint8_t c) {
   //#ifdef BLAH
-  if (c == 0xF0) { uart_block = 1; }
-  if (c == 0xF7) { uart_block = 0; }
+  if (c == 0xF0) {
+    uart_block = 1;
+  }
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
 again:
 
   if (txRb.isFull()) {
