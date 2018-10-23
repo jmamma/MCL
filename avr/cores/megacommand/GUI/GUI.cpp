@@ -67,12 +67,6 @@ void GuiClass::redisplay() {
 void loop();
 
 void GuiClass::loop() {
-  for (int i = 0; i < tasks.size; i++) {
-    if (tasks.arr[i] != NULL) {
-      tasks.arr[i]->checkTask();
-    }
-  }
-
   while (!EventRB.isEmpty()) {
     gui_event_t event;
     EventRB.getp(&event);
@@ -91,6 +85,12 @@ void GuiClass::loop() {
         continue;
     }
   }
+  for (int i = 0; i < tasks.size; i++) {
+    if (tasks.arr[i] != NULL) {
+      tasks.arr[i]->checkTask();
+    }
+  }
+
 
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
