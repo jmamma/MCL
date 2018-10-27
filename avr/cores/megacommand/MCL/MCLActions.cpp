@@ -203,7 +203,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
 void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINT_FN();
-  if ((mcl_cfg.chain_mode == 1) && ((write_original == 0) || (MidiClock.state == 2))) {
+  if ((mcl_cfg.chain_mode == 1) &&
+      ((write_original == 0) || (MidiClock.state == 2))) {
     prepare_next_chain(row);
     //  grid_task.run();
     return;
@@ -289,8 +290,8 @@ void MCLActions::prepare_next_chain(int row) {
       }
     }
   }
- uint16_t next_step;
- if (q > 0) {
+  uint16_t next_step;
+  if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
   } else {
     next_step = MidiClock.div16th_counter + 1;
@@ -444,11 +445,13 @@ void MCLActions::send_pattern_kit_to_md() {
       //   }
 
       note_count++;
-      if ((quantize_mute > 0) && (gridio_param4.getValue() < 8)) {
-        if (i < 16) {
-          MD.muteTrack(track, true);
-        } else {
-          mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_ON;
+      if (MidiClock.state == 2) {
+        if ((quantize_mute > 0) && (gridio_param4.getValue() < 8)) {
+          if (i < 16) {
+            MD.muteTrack(track, true);
+          } else {
+            mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_ON;
+          }
         }
       }
     }
@@ -729,6 +732,10 @@ void MCLActions::calc_nearest_step() {
       }
     }
   }
+  nearest_bar = nearest_step / 16 + 1;
+  nearest_beat = nearest_step % 4 + 1;
+  //nearest_step = nearest_step % 16;
+
   DEBUG_PRINTLN("current_step");
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   DEBUG_PRINTLN("nearest step");
@@ -771,18 +778,13 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
       ((float)MidiClock.tempo / (float)60) * (float)4 * (float)2;
   // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
   float div192th_per_second = div32th_per_second * 6;
-    //  ((float)MidiClock.tempo / (float)60) * (float)4 * (float)12;
+  //  ((float)MidiClock.tempo / (float)60) * (float)4 * (float)12;
   // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
-   md_div32th_latency =
-      round(div32th_per_second * md_latency_in_seconds) + 1;
-   a4_div32th_latency =
-      round(div32th_per_second * a4_latency_in_seconds) + 1;
+  md_div32th_latency = round(div32th_per_second * md_latency_in_seconds) + 1;
+  a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
 
-  md_div192th_latency =
-      round(div192th_per_second * md_latency_in_seconds) + 3;
-  a4_div192th_latency =
-      round(div192th_per_second * a4_latency_in_seconds) + 3;
-
+  md_div192th_latency = round(div192th_per_second * md_latency_in_seconds) + 3;
+  a4_div192th_latency = round(div192th_per_second * a4_latency_in_seconds) + 3;
 }
 
 int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,

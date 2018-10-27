@@ -55,6 +55,7 @@ public:
   void load_slot_models();
   void tick_frames();
   void display_slot_menu();
+  void display_counters();
   void display_grid_info();
   void display_grid();
   void display();

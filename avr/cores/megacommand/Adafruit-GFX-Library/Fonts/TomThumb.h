@@ -114,7 +114,7 @@ const uint8_t TomThumbBitmaps[] PROGMEM = {
    0xE0, 0x20, 0x20, 0x20, 0xE0,        /* 0x5D bracketright */
    0x40, 0xA0,                          /* 0x5E asciicircum */
    0xE0,                                /* 0x5F underscore */
-   0x80, 0x40,                          /* 0x60 grave */
+   0x00, 0x00,                          /* 0x60 space white */
    0xC0, 0x60, 0xA0, 0xE0,              /* 0x61 a */
    0x80, 0xC0, 0xA0, 0xA0, 0xC0,        /* 0x62 b */
    0x60, 0x80, 0x80, 0x60,              /* 0x63 c */
@@ -325,7 +325,7 @@ const GFXglyph TomThumbGlyphs[] PROGMEM = {
    { 273, 8, 5, 4, 0, -5 },  /* 0x5D bracketright */
    { 278, 8, 2, 4, 0, -5 },  /* 0x5E asciicircum */
    { 280, 8, 1, 4, 0, -1 },  /* 0x5F underscore */
-   { 281, 8, 2, 3, 0, -5 },  /* 0x60 grave */
+   { 281, 8, 1, 4, 0, -5 },  /* 0x60 space wide */
    { 283, 8, 4, 4, 0, -4 },  /* 0x61 a */
    { 287, 8, 5, 4, 0, -5 },  /* 0x62 b */
    { 292, 8, 4, 4, 0, -4 },  /* 0x63 c */

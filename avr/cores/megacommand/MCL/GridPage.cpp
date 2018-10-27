@@ -64,7 +64,9 @@ void GridPage::loop() {
     }
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
-    if ((cur_row == MAX_VISIBLE_ROWS - 1) || (cur_row == 0)) { load_slot_models(); }
+    if ((cur_row == MAX_VISIBLE_ROWS - 1) || (cur_row == 0)) {
+      load_slot_models();
+    }
     reload_slot_models = true;
     grid_lastclock = slowclock;
 
@@ -258,6 +260,47 @@ void GridPage::toggle_fx2() {
   }
 }
 
+void GridPage::display_counters() {
+
+  uint8_t y_offset = 8;
+  uint8_t x_offset = 20;
+
+  oled_display.setFont(&TomThumb);
+  char val[4];
+  //val[0] = (MidiClock.bar_counter / 100) + '0';
+  val[0] = (MidiClock.bar_counter % 100) / 10 + '0';
+  val[1] = (MidiClock.bar_counter % 10) + '0';
+  val[2] = '\0';
+  if (val[0] == '0') {
+    val[0] = (char)0x60;
+  if (val[1] == '0') {
+    val[1] = (char)0x60;
+  }
+  }
+  oled_display.setCursor(24, y_offset);
+  oled_display.print(val);
+
+  oled_display.print(":");
+  oled_display.print(MidiClock.beat_counter);
+
+  if ((mcl_cfg.chain_mode == 1) && (mcl_actions.nearest_step != (uint16_t)-1)) {
+   // val[0] = (mcl_actions.nearest_bar / 100) + '0';
+    val[0] = (mcl_actions.nearest_bar % 100) / 10 + '0';
+    val[1] = (mcl_actions.nearest_bar % 10) + '0';
+
+    if (val[0] == '0') {
+      val[0] = (char)0x60;
+     if (val[1] == '0') {
+      val[1] = (char)0x60;
+     }
+    }
+    oled_display.setCursor(24, y_offset + 8);
+    oled_display.print(val);
+    oled_display.print(":");
+    oled_display.print(mcl_actions.nearest_beat);
+  }
+}
+
 void GridPage::display_grid_info() {
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
@@ -265,6 +308,11 @@ void GridPage::display_grid_info() {
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
   oled_display.print(round(MidiClock.tempo));
+
+  display_counters();
+  oled_display.setFont(&TomThumb);
+  //  oled_display.print(":");
+  // oled_display.print(MidiClock.step_counter);
 
   oled_display.setCursor(22, y_offset + 1 * 8);
 
@@ -276,11 +324,9 @@ void GridPage::display_grid_info() {
                               tri_y + 4, WHITE);
   }
   if (MidiClock.state == 0) {
-    oled_display.fillRect(tri_x + 6, tri_y + 1, 2, 4, WHITE);
-    oled_display.fillRect(tri_x + 9, tri_y + 1, 2, 4, WHITE);
+    oled_display.fillRect(tri_x + 3, tri_y, 2, 5, WHITE);
+    oled_display.fillRect(tri_x + 6, tri_y, 2, 5, WHITE);
   }
-
-  oled_display.setFont(&TomThumb);
 
   oled_display.setCursor(0, y_offset + 1 + 1 * 8);
   char dev[3] = "  ";
@@ -368,8 +414,7 @@ void GridPage::display_grid() {
       } else {
         oled_display.setTextColor(WHITE, BLACK);
       }
-      if ((((MidiClock.div16th_counter + 1) % 4 == 0) &&
-           (MidiClock.state == 2)) &&
+      if (((MidiClock.step_counter == 1) && (MidiClock.state == 2)) &&
           ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
         oled_display.setCursor(oled_display.getCursorX() + 8,
                                oled_display.getCursorY());
@@ -408,7 +453,7 @@ void GridPage::display_oled() {
 
   oled_display.clearDisplay();
   oled_display.setTextWrap(false);
-  oled_display.setFont(&TomThumb); 
+  oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE, BLACK);
   if (!show_slot_menu) {
     display_grid_info();

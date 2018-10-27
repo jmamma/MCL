@@ -48,9 +48,13 @@ public:
   volatile uint8_t mod3_counter;
   volatile uint8_t mod6_free_counter;
 
-  uint16_t clock_last_time;
-  uint16_t div192th_time;
-  uint16_t last_clock16;
+  volatile uint16_t clock_last_time;
+  volatile uint16_t div192th_time;
+  volatile uint16_t last_clock16;
+
+  volatile uint16_t bar_counter;
+  volatile uint8_t beat_counter;
+  volatile uint8_t step_counter;
 
   volatile uint8_t inmod6_counter;
 

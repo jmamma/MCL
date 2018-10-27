@@ -26,11 +26,17 @@ public:
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
 
+  bool active = false;
+
   GridChain chains[20];
+
   uint16_t md_latency;
   uint16_t a4_latency;
-  uint16_t nearest_step;
-  bool active = false;
+
+  uint16_t nearest_step = -1;
+
+  uint16_t nearest_bar;
+  uint8_t nearest_beat;
 
   uint16_t nearest_steps[20] = { };
   uint16_t nearest_steps_old[20] = { };

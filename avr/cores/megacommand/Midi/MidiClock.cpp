@@ -23,17 +23,20 @@ void MidiClockClass::init() {
   state = PAUSED;
   counter = 10000;
   rx_clock = rx_last_clock = 0;
+  div192th_counter_last = -1;
+  div192th_counter = 0;
+  div96th_counter_last = -1;
   div96th_counter = 0;
   div32th_counter = 0;
   div16th_counter = 0;
-  div192th_counter_last = -1;
-  div96th_counter_last = -1;
   clock_last_time = clock;
+  mod12_counter = 0;
   mod6_counter = inmod6_counter = 0;
   mod3_counter = 0;
+  bar_counter = 1;
+  beat_counter = 1;
+  step_counter = 1;
   isInit = false;
-  div192th_counter = 0;
-  mod12_counter = 0;
 }
 
 uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
@@ -299,6 +302,7 @@ void MidiClockClass::incrementCounters() {
       mod3_counter = 0;
     }
     if (mod6_counter == 6) {
+      step_counter++;
       mod6_counter = 0;
       mod12_counter = 0;
       div16th_counter++;
@@ -311,6 +315,14 @@ void MidiClockClass::incrementCounters() {
       }
     } else if (mod6_counter == 3) {
       div32th_counter++;
+    }
+    if (step_counter == 5) {
+    step_counter = 1;
+    beat_counter++;
+    }
+    if (beat_counter == 5) {
+    beat_counter = 1;
+    bar_counter++;
     }
   }
 }
@@ -364,7 +376,7 @@ void MidiClockClass::handleImmediateClock() {
     MidiUart2.m_putc_immediate(0xF8);
   }
   incrementCounters();
-  if ((div16th_counter % 4 == 0) && (state == STARTED)) {
+  if ((step_counter == 1) && (state == STARTED)) {
     setLed();
   } else {
     clearLed();
