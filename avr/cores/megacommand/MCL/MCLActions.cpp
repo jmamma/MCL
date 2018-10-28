@@ -204,8 +204,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINT_FN();
   if ((mcl_cfg.chain_mode > 0) &&
-     // ((write_original == 0 ||)
-       (MidiClock.state == 2)) {
+      // ((write_original == 0 ||)
+      (MidiClock.state == 2)) {
     prepare_next_chain(row);
     //  grid_task.run();
     return;
@@ -280,7 +280,9 @@ void MCLActions::prepare_next_chain(int row) {
 
       if ((trigGroup < 16) && (trigGroup != n) &&
           (slots_cached[trigGroup] == 0)) {
-
+        DEBUG_PRINTLN("caching trig group");
+        DEBUG_PRINTLN(n);
+        DEBUG_PRINTLN(trigGroup);
         if (md_track->load_track_from_grid(trigGroup, row, len)) {
           md_track->store_in_mem(trigGroup);
           slots_cached[n] = 1;
@@ -313,7 +315,9 @@ void MCLActions::prepare_next_chain(int row) {
       nearest_steps[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;
-      if (grid_page.active_slots[n] < 0) { grid_page.active_slots[n] = 0x7FFF; }
+      if (grid_page.active_slots[n] < 0) {
+        grid_page.active_slots[n] = 0x7FFF;
+      }
     }
   }
   calc_nearest_step();
@@ -757,17 +761,17 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
   md_latency = 0;
   a4_latency = 0;
 
-  for (uint8_t n = 0; n < 16; n++) {
-    if (grid_page.active_slots[n] > 0) {
+  for (uint8_t n = 0; n < 20; n++) {
+    if (grid_page.active_slots[n] >= 0) {
       if (n < 16) {
         if (nearest_steps[n] == nearest_step) {
           md_track->load_from_mem(n);
           md_latency +=
               calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
-        } else {
-          if (nearest_steps[n] == nearest_step) {
-            a4_latency += A4_SOUND_LENGTH;
-          }
+        }
+      } else {
+        if (nearest_steps[n] == nearest_step) {
+          a4_latency += A4_SOUND_LENGTH;
         }
       }
     }

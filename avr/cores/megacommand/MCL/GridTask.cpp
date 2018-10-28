@@ -32,7 +32,7 @@ void GridTask::run() {
   bool send_a4_sound = false;
   bool send_md_kit = false;
 
- // uint8_t div16th_margin = (((md_div32th_latency + a4_div32th_latency)) / 2)
+  // uint8_t div16th_margin = (((md_div32th_latency + a4_div32th_latency)) / 2)
   // + 4;
   uint8_t div32th_margin = 8;
   // DEBUG_PRINTLN(md_div32th_latency);
@@ -69,7 +69,10 @@ void GridTask::run() {
 
   for (uint8_t n = 0; n < 20; n++) {
     slots_changed[n] = -1;
-    if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
+    if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0) &&
+        ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
+         (mcl_cfg.chain_mode == 2))) {
+
       if (n < 16) {
 
         uint32_t next_transition = (uint32_t)mcl_actions.nearest_steps[n] * 2;
@@ -83,7 +86,17 @@ void GridTask::run() {
           slots_changed[n] = mcl_actions.chains[n].row;
           memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
           if (mcl_cfg.chain_mode == 2) {
-          mcl_actions.chains[n].loops = 0;
+            mcl_actions.chains[n].loops = 0;
+          } else if (mcl_cfg.chain_mode == 3) {
+            mcl_actions.chains[n].loops = random(1, 8);
+            uint8_t lower = 0;
+            if (mcl_actions.chains[n].row > 0) {
+              lower = mcl_actions.chains[n].row - 1;
+            } else {
+              lower = mcl_actions.chains[n].row;
+            }
+            uint8_t upper = mcl_actions.chains[n].row + 2;
+            mcl_actions.chains[n].row = random(lower, upper);
           }
 
           send_md_kit = true;
@@ -105,9 +118,11 @@ void GridTask::run() {
     DEBUG_PRINTLN(MidiClock.div192th_counter);
     DEBUG_PRINTLN(mcl_actions.a4_latency);
     DEBUG_PRINTLN(mcl_actions.a4_div192th_latency);
-    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - mcl_actions.a4_div192th_latency);
+    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 -
+                  mcl_actions.a4_div192th_latency);
 
-    uint32_t go_step = mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency -
+    uint32_t go_step = mcl_actions.nearest_step * 12 -
+                       mcl_actions.md_div192th_latency -
                        mcl_actions.a4_div192th_latency;
     uint32_t diff;
     if (mcl_actions.a4_latency > 0) {
@@ -140,13 +155,15 @@ void GridTask::run() {
         a4_track->load_seq_data(n - 16);
 
         grid_page.active_slots[n] = slots_changed[n];
-     }
+      }
     }
   }
   if (send_md_kit) {
     DEBUG_PRINTLN(MidiClock.div192th_counter);
-    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency);
-    uint32_t go_step = mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency;
+    DEBUG_PRINTLN(mcl_actions.nearest_step * 12 -
+                  mcl_actions.md_div192th_latency);
+    uint32_t go_step =
+        mcl_actions.nearest_step * 12 - mcl_actions.md_div192th_latency;
     uint32_t diff;
     while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                 go_step)) != 0) &&
@@ -184,8 +201,8 @@ void GridTask::run() {
       if (slots_changed[n] >= 0) {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
-          #ifdef HANDLE_GROUPS
-           uint8_t trigGroup = md_track->machine.trigGroup;
+#ifdef HANDLE_GROUPS
+          uint8_t trigGroup = md_track->machine.trigGroup;
           if ((trigGroup < 16) && (trigGroup != n) &&
               (slots_loaded[trigGroup] == 0)) {
             md_track->load_from_mem(trigGroup);
@@ -199,7 +216,7 @@ void GridTask::run() {
             md_track->load_from_mem(n);
             slots_loaded[trigGroup] = 1;
           }
-          #endif
+#endif
           if (slots_loaded[n] == 0) {
             mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit));
             md_track->place_track_in_kit(n, n, &(MD.kit), false);
@@ -224,7 +241,7 @@ void GridTask::run() {
       }
 
       else {
-        if (mcl_actions.chains[n].loops == 0) {
+        if ((mcl_actions.chains[n].loops == 0) && (mcl_cfg.chain_mode != 2)) {
           DEBUG_PRINTLN("clearing track");
           bool clear_locks = true;
           mcl_seq.md_tracks[n].clear_track(clear_locks);
@@ -265,7 +282,7 @@ void GridTask::run() {
             //  DEBUG_PRINTLN("storing");
             md_track->store_in_mem(n);
             slots_cached[n] = 1;
-            #ifdef HANDLE_GROUPS
+#ifdef HANDLE_GROUPS
             uint8_t trigGroup = md_track->machine.trigGroup;
             if ((trigGroup < 16) && (trigGroup != n) &&
                 (slots_cached[trigGroup] == 0)) {
@@ -275,7 +292,7 @@ void GridTask::run() {
                 slots_cached[trigGroup] = 1;
               }
             }
-           #endif
+#endif
           } else {
             DEBUG_PRINTLN("failed");
           }
