@@ -414,7 +414,7 @@ void GridPage::display_grid() {
       } else {
         oled_display.setTextColor(WHITE, BLACK);
       }
-      if (((MidiClock.step_counter != 1) && (MidiClock.state == 2)) &&
+      if ((((MidiClock.step_counter == 2) || (MidiClock.step_counter == 3)) && (MidiClock.state == 2)) &&
           ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
         oled_display.setCursor(oled_display.getCursorX() + 8,
                                oled_display.getCursorY());
