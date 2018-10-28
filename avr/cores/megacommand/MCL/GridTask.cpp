@@ -52,11 +52,10 @@ void GridTask::run() {
                                  (uint32_t)mcl_actions.nearest_step * 2)) {
     //   while ((MidiClock.div32th_counter != (mcl_actions.nearest_step * 2 -
     //   div32th_latency)) && (MidiClock.state == 2));
-    //
-    DEBUG_PRINTLN("timing");
-    DEBUG_PRINTLN(MidiClock.div32th_counter);
-    DEBUG_PRINTLN(MidiClock.div32th_counter + 8);
-    DEBUG_PRINTLN(mcl_actions.nearest_step * 2);
+
+    DEBUG_PRINTLN("Preparing for next transition:");
+    DEBUG_PRINTLN(MidiClock.div16th_counter);
+    DEBUG_PRINTLN(mcl_actions.nearest_step);
 
     // MD.getCurrentKit();
     // MD.getBlockingKit(MD.currentKit);

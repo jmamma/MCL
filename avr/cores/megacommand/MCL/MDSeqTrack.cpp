@@ -27,9 +27,6 @@ void MDSeqTrack::seq() {
       mute_until_start = false;
     }
   }
-  if (MidiUart.uart_block != 0) {
-  DEBUG_PRINTLN("block");
-  }
   if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
     int8_t utiming = timing[step_count];         // upper
@@ -50,7 +47,8 @@ void MDSeqTrack::seq() {
 
     if ((utiming >= 12) && (utiming - 12 == (int8_t)MidiClock.mod12_counter)) {
 
-      send_parameter_locks(step_count);
+    //Dont transmit locks if MDExploit is on.
+      if ((track_number != 15) || (!md_exploit.state)) { send_parameter_locks(step_count); }
 
       if (IS_BIT_SET64(pattern_mask, step_count)) {
         trig_conditional(condition);
@@ -83,7 +81,8 @@ void MDSeqTrack::seq() {
     if ((utiming_next < 12) &&
         ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
 
-      send_parameter_locks(next_step);
+      if ((track_number != 15) || (!md_exploit.state)) { send_parameter_locks(next_step); }
+
 
       if (IS_BIT_SET64(pattern_mask, next_step)) {
         trig_conditional(condition_next);

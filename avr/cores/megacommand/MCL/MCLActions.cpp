@@ -204,7 +204,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINT_FN();
   if ((mcl_cfg.chain_mode == 1) &&
-      ((write_original == 0) || (MidiClock.state == 2))) {
+     // ((write_original == 0 ||)
+       (MidiClock.state == 2)) {
     prepare_next_chain(row);
     //  grid_task.run();
     return;
@@ -242,7 +243,7 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
 }
 
 void MCLActions::prepare_next_chain(int row) {
-
+  DEBUG_PRINT_FN();
   EmptyTrack empty_track;
   MDTrack *md_track = (MDTrack *)&empty_track;
   A4Track *a4_track = (A4Track *)&empty_track;
@@ -252,11 +253,15 @@ void MCLActions::prepare_next_chain(int row) {
   MD.getBlockingKit(MD.currentKit);
   uint8_t q;
 
-  if (MidiClock.state != 2) {
-    q = 0;
+  //  if (MidiClock.state != 2) {
+  //  q = 0;
+  //  } else {
+  if (gridio_param4.cur == 0) {
+    q = 2;
   } else {
-    q = gridio_param4.cur;
+    q = 1 << gridio_param4.cur;
   }
+  //  }
 
   uint8_t slots_cached[20] = {0};
   int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
@@ -296,7 +301,11 @@ void MCLActions::prepare_next_chain(int row) {
   } else {
     next_step = MidiClock.div16th_counter + 1;
   }
-
+  DEBUG_PRINTLN("q");
+  DEBUG_PRINTLN(q);
+  DEBUG_PRINTLN("write step");
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
+  DEBUG_PRINTLN(next_step);
   for (uint8_t n = 0; n < 20; n++) {
 
     if (note_interface.notes[n] > 0) {
@@ -304,7 +313,7 @@ void MCLActions::prepare_next_chain(int row) {
       nearest_steps[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;
-      grid_page.active_slots[n] = row;
+      if (grid_page.active_slots[n] < 0) { grid_page.active_slots[n] = 0xFFFE; }
     }
   }
   calc_nearest_step();
@@ -734,7 +743,7 @@ void MCLActions::calc_nearest_step() {
   }
   nearest_bar = nearest_step / 16 + 1;
   nearest_beat = nearest_step % 4 + 1;
-  //nearest_step = nearest_step % 16;
+  // nearest_step = nearest_step % 16;
 
   DEBUG_PRINTLN("current_step");
   DEBUG_PRINTLN(MidiClock.div16th_counter);
