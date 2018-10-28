@@ -203,7 +203,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
 void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINT_FN();
-  if ((mcl_cfg.chain_mode == 1) &&
+  if ((mcl_cfg.chain_mode > 0) &&
      // ((write_original == 0 ||)
        (MidiClock.state == 2)) {
     prepare_next_chain(row);

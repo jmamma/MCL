@@ -82,6 +82,9 @@ void GridTask::run() {
 
           grid_page.active_slots[n] = mcl_actions.chains[n].row;
           memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
+          if (mcl_cfg.chain_mode == 2) {
+          mcl_actions.chains[n].loops = 0;
+          }
 
           send_md_kit = true;
           slots_changed[n] = 1;
