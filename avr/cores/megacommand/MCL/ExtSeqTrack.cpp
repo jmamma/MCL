@@ -17,7 +17,15 @@ void ExtSeqTrack::set_length(uint8_t len) {
 */
 }
 void ExtSeqTrack::seq() {
-    if (MidiUart2.uart_block == 0) {
+      if (mute_until_start) {
+
+    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
+      step_count = 0;
+      mute_until_start = false;
+    }
+  }
+  if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
+  (mute_state == SEQ_MUTE_OFF)) {
     int8_t utiming = timing[step_count];         // upper
     uint8_t condition = conditional[step_count]; // lower
 
@@ -48,10 +56,8 @@ void ExtSeqTrack::seq() {
           }
 
           else if (notes[c][step_count] > 0) {
-            if ((mute == SEQ_MUTE_OFF)) {
               noteon_conditional(condition,
                                  abs(notes[c][step_count]) - 1);
-            }
           }
         }
       }
@@ -64,10 +70,8 @@ void ExtSeqTrack::seq() {
           if (notes[c][step_count + 1] < 0) {
             note_off(abs(notes[c][next_step]) - 1);
           } else if (notes[c][step_count + 1] > 0) {
-            if (mute == SEQ_MUTE_OFF) {
               noteon_conditional(condition,
                                  abs(notes[c][next_step]) - 1);
-            }
           }
         }
       }

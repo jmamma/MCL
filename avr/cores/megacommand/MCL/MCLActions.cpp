@@ -313,7 +313,7 @@ void MCLActions::prepare_next_chain(int row) {
       nearest_steps[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;
-      if (grid_page.active_slots[n] < 0) { grid_page.active_slots[n] = 0xFFFE; }
+      if (grid_page.active_slots[n] < 0) { grid_page.active_slots[n] = 0x7FFF; }
     }
   }
   calc_nearest_step();
@@ -459,7 +459,7 @@ void MCLActions::send_pattern_kit_to_md() {
           if (i < 16) {
             MD.muteTrack(track, true);
           } else {
-            mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_ON;
+            mcl_seq.ext_tracks[i - 16].mute_state = SEQ_MUTE_ON;
           }
         }
       }
@@ -613,7 +613,7 @@ void MCLActions::send_pattern_kit_to_md() {
             if (i < 16) {
               MD.muteTrack(i, false);
             } else {
-              mcl_seq.ext_tracks[i - 16].mute = SEQ_MUTE_OFF;
+              mcl_seq.ext_tracks[i - 16].mute_state = SEQ_MUTE_OFF;
             }
           }
         }

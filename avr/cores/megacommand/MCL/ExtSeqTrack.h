@@ -32,13 +32,14 @@ public:
   uint8_t port = UART2_PORT;
   MidiUartParent *uart = &MidiUart2;
 
-  uint8_t mute = SEQ_MUTE_OFF;
+  uint8_t mute_state = SEQ_MUTE_OFF;
   uint8_t
       notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
                                     // currently being played, in order to stop
                                     // them in the event the sequencer stops
   uint8_t step_count;
-  uint32_t start_clock32th;
+  uint32_t start_step;
+  bool mute_until_start = false;
 
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);

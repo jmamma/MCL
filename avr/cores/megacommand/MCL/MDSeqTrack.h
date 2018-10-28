@@ -28,7 +28,6 @@ public:
   uint8_t trigGroup;
   uint32_t start_step;
 
-  bool send_params = false;
   bool mute_until_start = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;

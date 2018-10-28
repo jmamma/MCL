@@ -65,13 +65,13 @@ void MCLSeq::onMidiContinueCallback() {
 
 void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].start_clock32th = 0;
+    //ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
   }
 
  for (uint8_t i = 0; i < num_md_tracks; i++) {
 
-    md_tracks[i].start_clock32th = 0;
+   // md_tracks[i].start_clock32th = 0;
     md_tracks[i].step_count = 0;
   }
 
@@ -134,7 +134,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
   if (channel < mcl_seq.num_ext_tracks) {
     if (param == 0x5E) {
-      mcl_seq.ext_tracks[channel].mute = value;
+      mcl_seq.ext_tracks[channel].mute_state = value;
     }
   }
 }

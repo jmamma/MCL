@@ -22,7 +22,7 @@ void GridTask::run() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  uint8_t slots_changed[20];
+  int slots_changed[20];
   uint8_t slots_loaded[16];
 
   for (uint8_t i = 0; i < 16; i++) {
@@ -68,7 +68,7 @@ void GridTask::run() {
   GUI.removeTask(&grid_task);
 
   for (uint8_t n = 0; n < 20; n++) {
-    slots_changed[n] = 0;
+    slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       if (n < 16) {
 
@@ -80,23 +80,21 @@ void GridTask::run() {
             //        md_track->place_track_in_kit(n, n, &(MD.kit));
           }
 
-          grid_page.active_slots[n] = mcl_actions.chains[n].row;
+          slots_changed[n] = mcl_actions.chains[n].row;
           memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
           if (mcl_cfg.chain_mode == 2) {
           mcl_actions.chains[n].loops = 0;
           }
 
           send_md_kit = true;
-          slots_changed[n] = 1;
         }
       } else {
         uint32_t next_transition = (uint32_t)mcl_actions.nearest_steps[n] * 2;
 
         if (!MidiClock.clock_less_than(div32th_counter, next_transition)) {
 
-          grid_page.active_slots[n] = mcl_actions.chains[n].row;
+          slots_changed[n] = mcl_actions.chains[n].row;
           memcpy(&mcl_actions.chains[n], &ext_track->chain, sizeof(GridChain));
-          slots_changed[n] = 1;
           send_a4_sound = true;
         }
       }
@@ -125,7 +123,7 @@ void GridTask::run() {
       // in_sysex2 = 1;
     }
     for (uint8_t n = 16; n < 20; n++) {
-      if (slots_changed[n] > 0) {
+      if (slots_changed[n] >= 0) {
         a4_track->load_from_mem(n);
         DEBUG_PRINTLN(mcl_actions.a4_latency);
         if (mcl_actions.a4_latency > 0) {
@@ -136,11 +134,13 @@ void GridTask::run() {
           }
         }
         mcl_seq.ext_tracks[n - 16].buffer_notesoff();
+
+        mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.nearest_step;
+        mcl_seq.ext_tracks[n - 16].mute_until_start = true;
         a4_track->load_seq_data(n - 16);
-        mcl_seq.ext_tracks[n - 16].step_count = 0;
-        mcl_seq.ext_tracks[n - 16].start_clock32th =
-            mcl_actions.nearest_step * 2;
-      }
+
+        grid_page.active_slots[n] = slots_changed[n];
+     }
     }
   }
   if (send_md_kit) {
@@ -181,7 +181,7 @@ void GridTask::run() {
     // DEBUG_PRINTLN("loading md kit");
     for (uint8_t n = 0; n < 16; n++) {
 
-      if (slots_changed[n] > 0) {
+      if (slots_changed[n] >= 0) {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
           #ifdef HANDLE_GROUPS
@@ -210,6 +210,7 @@ void GridTask::run() {
           mcl_seq.md_tracks[n].mute_until_start = true;
 
           md_track->load_seq_data(n);
+          grid_page.active_slots[n] = slots_changed[n];
           // DEBUG_PRINT("THIS ");
 
           //  DEBUG_PRINTLN(mcl_actions.nearest_step -
@@ -246,7 +247,7 @@ void GridTask::run() {
     uint8_t slots_cached[20] = {0};
 
     for (uint8_t n = 0; n < 20; n++) {
-      if (slots_changed[n] == 1) {
+      if (slots_changed[n] >= 0) {
 
         if (count % 8 == 0) {
           handleIncomingMidi();
