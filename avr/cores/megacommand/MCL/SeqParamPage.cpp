@@ -170,7 +170,7 @@ if (utiming == 0) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_track();
+    mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
   }
 
