@@ -99,9 +99,10 @@ void SeqParamPage::loop() {
         mcl_seq.md_tracks[last_md_track].locks[p2][step] = encoders[3]->cur;
       }
     }
+   if (encoders[0]->hasChanged() || encoders[2]->hasChanged()) {
+    mcl_seq.md_tracks[last_md_track].reset_params();
     mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
     mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
-    if (encoders[0]->hasChanged() || encoders[2]->hasChanged()) {
     mcl_seq.md_tracks[last_md_track].update_params();
     }
   }
