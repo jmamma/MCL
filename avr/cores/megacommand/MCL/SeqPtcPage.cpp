@@ -203,13 +203,15 @@ void SeqPtcPage::trig_md(uint8_t note_num) {
   uint8_t pitch = calc_pitch(note_num);
   uint8_t next_track = get_next_track(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
-  USE_LOCK();
-  SET_LOCK();
   MD.setTrackParam(next_track, 0, machine_pitch);
-  MD.triggerTrack(next_track, 127);
-  CLEAR_LOCK();
+  if (!BUTTON_DOWN(Buttons.BUTTON2)) {
+    MD.triggerTrack(next_track, 127);
+  }
   if ((record_mode) && (MidiClock.state == 2)) {
-    mcl_seq.md_tracks[next_track].record_track(note_num, 127);
+
+    if (!BUTTON_DOWN(Buttons.BUTTON2)) {
+      mcl_seq.md_tracks[next_track].record_track(note_num, 127);
+    }
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
@@ -220,10 +222,14 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   USE_LOCK();
   SET_LOCK();
   MD.setTrackParam(next_track, 0, machine_pitch);
-  MD.triggerTrack(next_track, 127);
+  if (!BUTTON_DOWN(Buttons.BUTTON2)) {
+    MD.triggerTrack(next_track, 127);
+  }
   CLEAR_LOCK();
   if ((record_mode) && (MidiClock.state == 2)) {
-    mcl_seq.md_tracks[next_track].record_track(note_num, 127);
+    if (!BUTTON_DOWN(Buttons.BUTTON2)) {
+      mcl_seq.md_tracks[next_track].record_track(note_num, 127);
+    }
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
@@ -437,14 +443,14 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         (track < start_track + seq_ptc_page.poly_max)) {
       for (uint8_t n = 0; n < seq_ptc_page.poly_max; n++) {
 
-        //in_sysex = 1;
+        // in_sysex = 1;
 
         if ((n + start_track < 16) && (n + start_track != track)) {
           if (param_true) {
             MD.setTrackParam(n + start_track, track_param, value);
           }
         }
-       // in_sysex = 0;
+        // in_sysex = 0;
       }
     }
   }
