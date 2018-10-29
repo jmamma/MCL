@@ -312,7 +312,7 @@ void MCLActions::prepare_next_chain(int row) {
 
     if (note_interface.notes[n] > 0) {
       // if (chains[n].active > 0) {
-      nearest_steps[n] = next_step;
+      next_transitions[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;
       if (grid_page.active_slots[n] < 0) {
@@ -320,7 +320,7 @@ void MCLActions::prepare_next_chain(int row) {
       }
     }
   }
-  calc_nearest_step();
+  calc_next_transition();
   calc_latency(&empty_track);
 }
 
@@ -656,12 +656,6 @@ void MCLActions::send_pattern_kit_to_md() {
   }
 
   // in_sysex = 0;
-  /*  if (MidiClock.state != 2) {
-      for (uint8_t n = 0; n < 20; n++) {
-        nearest_steps[n] = 0;
-        nearest_steps_old[n] = 0;
-      }
-    } else {*/
   for (uint8_t n = 0; n < 20; n++) {
     if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       uint32_t len;
@@ -673,15 +667,15 @@ void MCLActions::send_pattern_kit_to_md() {
         if (len < 4) {
           len = 4;
         } */
-      //  nearest_steps[n] = nearest_steps_old[n];
+      //  next_transitions[n] = next_transitions_old[n];
       if (n < 16) {
-        nearest_steps[n] =
+        next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
       } else {
-        nearest_steps[n] =
+        next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.ext_tracks[n - 16].step_count;
       }
-      calc_nearest_slot_step(n);
+      calc_next_slot_transition(n);
     }
   }
   /* } */
@@ -691,7 +685,7 @@ void MCLActions::send_pattern_kit_to_md() {
 
     //}
   }
-  calc_nearest_step();
+  calc_next_transition();
   calc_latency(&empty_track);
 
   clearLed();
@@ -699,13 +693,13 @@ void MCLActions::send_pattern_kit_to_md() {
   write_original = 0;
 }
 
-void MCLActions::calc_nearest_slot_step(uint8_t n) {
+void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   DEBUG_PRINT_FN();
   uint16_t len;
   DEBUG_PRINTLN(n);
-  //  DEBUG_PRINTLN(nearest_steps[n]);
-  nearest_steps_old[n] = nearest_steps[n];
+  //  DEBUG_PRINTLN(next_transitions[n]);
+  next_transitions_old[n] = next_transitions[n];
 
   if (n < 16) {
     len = chains[n].loops * mcl_seq.md_tracks[n].length;
@@ -715,19 +709,19 @@ void MCLActions::calc_nearest_slot_step(uint8_t n) {
   if (len < 4) {
     len = 4;
   }
-  nearest_steps[n] += len;
+  next_transitions[n] += len;
 
   // check for overflow and make sure next nearest step is greater than
   // midiclock counter
-  while ((nearest_steps[n] >= nearest_steps_old[n]) &&
-         (nearest_steps[n] < MidiClock.div16th_counter)) {
-    nearest_steps[n] += len;
+  while ((next_transitions[n] >= next_transitions_old[n]) &&
+         (next_transitions[n] < MidiClock.div16th_counter)) {
+    next_transitions[n] += len;
   }
-  DEBUG_PRINTLN(nearest_steps[n]);
+  DEBUG_PRINTLN(next_transitions[n]);
 }
 
-void MCLActions::calc_nearest_step() {
-  nearest_step = -1;
+void MCLActions::calc_next_transition() {
+  next_transition = -1;
   bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
@@ -739,20 +733,20 @@ void MCLActions::calc_nearest_step() {
     if (grid_page.active_slots[n] >= 0) {
       if ((chains[n].loops > 0) ||
           (chains[n].row != grid_page.active_slots[n])) {
-        if (MidiClock.clock_less_than(nearest_steps[n], nearest_step)) {
-          nearest_step = nearest_steps[n];
+        if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
+          next_transition = next_transitions[n];
         }
       }
     }
   }
-  nearest_bar = nearest_step / 16 + 1;
-  nearest_beat = nearest_step % 4 + 1;
-  // nearest_step = nearest_step % 16;
+  nearest_bar = next_transition / 16 + 1;
+  nearest_beat = next_transition % 4 + 1;
+  // next_transition = next_transition % 16;
 
   DEBUG_PRINTLN("current_step");
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   DEBUG_PRINTLN("nearest step");
-  DEBUG_PRINTLN(nearest_step);
+  DEBUG_PRINTLN(next_transition);
 }
 
 void MCLActions::calc_latency(EmptyTrack *empty_track) {
@@ -764,13 +758,13 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
   for (uint8_t n = 0; n < 20; n++) {
     if (grid_page.active_slots[n] >= 0) {
       if (n < 16) {
-        if (nearest_steps[n] == nearest_step) {
+        if (next_transitions[n] == next_transition) {
           md_track->load_from_mem(n);
           md_latency +=
               calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
         }
       } else {
-        if (nearest_steps[n] == nearest_step) {
+        if (next_transitions[n] == next_transition) {
           a4_latency += A4_SOUND_LENGTH;
         }
       }

@@ -33,13 +33,13 @@ public:
   uint16_t md_latency;
   uint16_t a4_latency;
 
-  uint16_t nearest_step = -1;
+  uint16_t next_transition = -1;
 
   uint16_t nearest_bar;
   uint8_t nearest_beat;
 
-  uint16_t nearest_steps[20] = { };
-  uint16_t nearest_steps_old[20] = { };
+  uint16_t next_transitions[20] = { 0 };
+  uint16_t next_transitions_old[20] = { 0 };
 
   uint8_t md_div32th_latency;
   uint8_t a4_div32th_latency;
@@ -63,8 +63,8 @@ public:
   void write_tracks_to_md(int column, int row, int b);
   void send_pattern_kit_to_md();
   void prepare_next_chain(int row);
-  void calc_nearest_slot_step(uint8_t n);
-  void calc_nearest_step();
+  void calc_next_slot_transition(uint8_t n);
+  void calc_next_transition();
   void calc_latency(EmptyTrack *empty_track);
   int calc_md_set_machine_latency(uint8_t track, MDMachine *model,
                                   MDKit *kit_ = NULL);

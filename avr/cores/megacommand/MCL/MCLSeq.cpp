@@ -84,12 +84,12 @@ void MCLSeq::onMidiStartCallback() {
 
   for (uint8_t n = 0; n < 20; n++) {
     if (grid_page.active_slots[n] >= 0) {
-      mcl_actions.nearest_steps[n] = 0;
-      mcl_actions.nearest_steps_old[n] = 0;
-      mcl_actions.calc_nearest_slot_step(n);
+      mcl_actions.next_transitions[n] = 0;
+      mcl_actions.next_transitions_old[n] = 0;
+      mcl_actions.calc_next_slot_transition(n);
     }
   }
-  mcl_actions.calc_nearest_step();
+  mcl_actions.calc_next_transition();
 }
 
 void MCLSeq::onMidiStopCallback() {

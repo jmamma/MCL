@@ -23,18 +23,18 @@ void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::onMidiStopCallback() {
  DEBUG_PRINTLN("initialising nearest steps");
-//   memset(&mcl_actions.nearest_steps[0], 0, 20);
+//   memset(&mcl_actions.next_transitions[0], 0, 20);
   for (uint8_t n = 0; n < 20; n++) {
-  mcl_actions.nearest_steps[n] = 0;
+  mcl_actions.next_transitions[n] = 0;
   }
-  mcl_actions.calc_nearest_step();
+  mcl_actions.calc_next_transition();
 }
 
 void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
  // for (uint8_t n = 0; n < 20; n++) {
- // mcl_actions.nearest_steps[n] = 0;
+ // mcl_actions.next_transitions[n] = 0;
  // }
 }
 
