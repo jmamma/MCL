@@ -21,6 +21,12 @@ void SeqParamPage::init() {
   encoders[3]->cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
+  //Prevent hasChanged from being called
+  encoders[0]->old = encoders[0]->cur;
+  encoders[1]->old = encoders[1]->cur;
+  encoders[2]->old = encoders[2]->cur;
+  encoders[3]->old = encoders[3]->cur;
+
   midi_events.setup_callbacks();
   #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
