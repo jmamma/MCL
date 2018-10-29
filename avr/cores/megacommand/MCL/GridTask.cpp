@@ -3,6 +3,7 @@
 #include "MCL.h"
 
 #define DIV16_MARGIN 8
+#define HANDLE_GROUPS 1
 
 void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
@@ -266,8 +267,8 @@ void GridTask::run() {
     for (uint8_t n = 0; n < 20; n++) {
       if (slots_changed[n] >= 0) {
 
+        handleIncomingMidi();
         if (count % 8 == 0) {
-          handleIncomingMidi();
           GUI.loop();
         }
         count++;
