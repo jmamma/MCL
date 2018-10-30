@@ -18,11 +18,11 @@ void MDSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      //      DEBUG_PRINTLN("unmuting");
-      //     DEBUG_PRINTLN(track_number);
-      //  DEBUG_PRINTLN(MidiClock.div16th_counter);
-      //  DEBUG_PRINTLN(start_step);
-      // DEBUG_PRINTLN(MidiClock.mod12_counter);
+            DEBUG_PRINTLN("unmuting");
+           DEBUG_PRINTLN(track_number);
+        DEBUG_PRINTLN(MidiClock.div16th_counter);
+        DEBUG_PRINTLN(start_step);
+        DEBUG_PRINTLN(MidiClock.mod12_counter);
       step_count = 0;
       mute_until_start = false;
     }
@@ -396,7 +396,10 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     SET_BIT64(lock_mask, md_track->locks[n].step);
   }
   pattern_mask |= md_track->trigPattern;
-  uint32_t swing = md_track->kitextra.swingAmount >> 14;
+  //32770.0 is scalar to get MD swing amount in to readible percentage
+  //MD sysex docs are not clear on this one so i had to hax it.
+
+  float swing = (float) md_track->kitextra.swingAmount / 32770.0;
 
   uint64_t swingpattern;
   if (md_track->kitextra.swingEditAll > 0) {
@@ -409,8 +412,8 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
       conditional[a] = 0;
       timing[a] = 12;
     }
-    if (IS_BIT_SET64(md_track->kitextra.swingPattern, a)) {
-      timing[a] = ((float)(swing - 50) / (float)50) * 12 + 12;
+    if (IS_BIT_SET64(swingpattern, a)) {
+            timing[a] = round(swing * 12.0) + 12;
     }
   }
 }
