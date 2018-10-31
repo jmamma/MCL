@@ -40,7 +40,7 @@ const menu_t slot_menu_layout PROGMEM = {
     "Slot",
     5,
     {
-        {"CHAIN:", 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "ON"},{2,"MAN"},{3,"RND"}}},
+        {"CHAIN:", 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
         {"LOOP:  ", 128, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
         {"ROW:    ", 128 - 1, 0, (uint8_t*) &slot.chain.row, NULL, {}},
         {"APPLY:", 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
