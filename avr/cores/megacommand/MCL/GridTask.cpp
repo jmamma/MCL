@@ -143,19 +143,23 @@ void GridTask::run() {
       if (slots_changed[n] >= 0) {
         a4_track->load_from_mem(n);
         DEBUG_PRINTLN(mcl_actions.a4_latency);
-        if (mcl_actions.a4_latency > 0) {
-          DEBUG_PRINTLN("here");
-          if (a4_track->active == A4_TRACK_TYPE) {
-            DEBUG_PRINTLN("send a4 sound");
-            a4_track->sound.toSysex();
+
+        if (a4_track->active == A4_TRACK_TYPE) {
+          if (mcl_actions.a4_latency > 0) {
+            DEBUG_PRINTLN("here");
+            if (a4_track->active == A4_TRACK_TYPE) {
+              DEBUG_PRINTLN("send a4 sound");
+              a4_track->sound.toSysex();
+            }
           }
         }
-        mcl_seq.ext_tracks[n - 16].buffer_notesoff();
+        if (a4_track->active != EMPTY_TRACK_TYPE) {
+          mcl_seq.ext_tracks[n - 16].buffer_notesoff();
 
-        mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.next_transition;
-        mcl_seq.ext_tracks[n - 16].mute_until_start = true;
-        a4_track->load_seq_data(n - 16);
-
+          mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.next_transition;
+          mcl_seq.ext_tracks[n - 16].mute_until_start = true;
+          a4_track->load_seq_data(n - 16);
+        }
         grid_page.active_slots[n] = slots_changed[n];
       }
     }
