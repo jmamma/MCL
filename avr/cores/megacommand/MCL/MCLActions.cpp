@@ -257,9 +257,12 @@ void MCLActions::prepare_next_chain(int row) {
   //  q = 0;
   //  } else {
   if (gridio_param4.cur == 0) {
-    q = 2;
+    q = 4;
   } else {
     q = 1 << gridio_param4.cur;
+  }
+  if (q < 4) {
+   q = 4;
   }
   //  }
 
@@ -315,9 +318,9 @@ void MCLActions::prepare_next_chain(int row) {
       next_transitions[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;
-      if (grid_page.active_slots[n] < 0) {
+      //if (grid_page.active_slots[n] < 0) {
         grid_page.active_slots[n] = 0x7FFF;
-      }
+     // }
     }
   }
   calc_next_transition();
@@ -725,11 +728,11 @@ void MCLActions::calc_next_transition() {
   bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < 20; n++) {
-    DEBUG_PRINT(n);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT(grid_page.active_slots[n]);
-    DEBUG_PRINT(" ");
-    DEBUG_PRINT(chains[n].row);
+    DEBUG_PRINTLN(n);
+    DEBUG_PRINTLN(grid_page.active_slots[n]);
+    DEBUG_PRINTLN(chains[n].row);
+    DEBUG_PRINTLN(next_transitions[n]);
+    DEBUG_PRINTLN(" ");
     if (grid_page.active_slots[n] >= 0) {
       if ((chains[n].loops > 0) ||
           (chains[n].row != grid_page.active_slots[n])) {
