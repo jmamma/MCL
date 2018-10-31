@@ -153,14 +153,18 @@ void GridTask::run() {
             }
           }
         }
+
+        grid_page.active_slots[n] = slots_changed[n];
         if (a4_track->active != EMPTY_TRACK_TYPE) {
           mcl_seq.ext_tracks[n - 16].buffer_notesoff();
 
           mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.next_transition;
           mcl_seq.ext_tracks[n - 16].mute_until_start = true;
           a4_track->load_seq_data(n - 16);
+        } else {
+          DEBUG_PRINTLN("clearing track");
+          mcl_seq.ext_tracks[n - 16].clear_track();
         }
-        grid_page.active_slots[n] = slots_changed[n];
       }
     }
   }
@@ -185,23 +189,6 @@ void GridTask::run() {
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     // in_sysex = 1;
     uint32_t div192th_counter_old = MidiClock.div192th_counter;
-
-    //   MD.kit.toSysex(encoder);
-    //    DEBUG_PRINTLN("what we have left");
-    //  DEBUG_PRINTLN(MidiClock.div32th_counter);
-    //   DEBUG_PRINTLN(MidiClock.div32th_counter);
-    //   DEBUG_PRINTLN(MidiClock.mod12_counter);
-    //   while ((MidiClock.mod12_counter != 11) && (MidiClock.state == 2)) {
-
-    // }
-    //  md_exploit.off();
-    //   MD.loadKit(MD.currentKit);
-    // md_exploit.on();
-    //   DEBUG_PRINTLN("took this long");
-    //  DEBUG_PRINTLN(clock_diff(div192th_counter_old,
-    //  MidiClock.div192th_counter));
-
-    // DEBUG_PRINTLN("loading md kit");
     for (uint8_t n = 0; n < 16; n++) {
 
       if (slots_changed[n] >= 0) {
@@ -229,42 +216,25 @@ void GridTask::run() {
             slots_loaded[n] = 1;
           }
 
-          mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
-          mcl_seq.md_tracks[n].mute_until_start = true;
+          if (md_track->active == MD_TRACK_TYPE) {
 
-          md_track->load_seq_data(n);
-          grid_page.active_slots[n] = slots_changed[n];
-          // DEBUG_PRINT("THIS ");
+            mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
+            mcl_seq.md_tracks[n].mute_until_start = true;
 
-          //  DEBUG_PRINTLN(mcl_actions.next_transition -
-          //  MidiClock.div16th_counter);
-          //   DEBUG_PRINT(n);
-          // DEBUG_PRINT(" ");
-          //  DEBUG_PRINTLN(MidiClock.div16th_counter);
-          // DEBUG_PRINTLN(mcl_actions.next_transition);
-          // mcl_seq.md_tracks[n].step_count = 0;
+            md_track->load_seq_data(n);
+          }
         }
-      }
 
-      else {
-        if ((mcl_actions.chains[n].loops == 0) && (mcl_cfg.chain_mode != 2)) {
-          DEBUG_PRINTLN("clearing track");
-          bool clear_locks = true;
-          mcl_seq.md_tracks[n].clear_track(clear_locks);
+        else {
+            //&& (mcl_cfg.chain_mode != 2)) {
+            DEBUG_PRINTLN("clearing track");
+            bool clear_locks = true;
+            mcl_seq.md_tracks[n].clear_track(clear_locks);
         }
+
+        grid_page.active_slots[n] = slots_changed[n];
       }
     }
-    //  DEBUG_PRINTLN("step counts");
-    //   for (uint8_t n = 0; n < 16; n++) {
-    //   DEBUG_PRINT(mcl_seq.md_tracks[n].step_count); DEBUG_PRINT(" ");
-    //  }
-    //  DEBUG_PRINTLN(MidiClock.div16th_counter);
-    // in_sysex = 0;
-    // in_sysex2 = 0;
-    // DEBUG_PRINTLN("step_counts");
-    DEBUG_PRINTLN("took this long");
-    DEBUG_PRINTLN(MidiClock.div16th_counter);
-    DEBUG_PRINTLN(clock_diff(div192th_counter_old, MidiClock.div192th_counter));
   }
   //  if (send_md_kit || send_a4_sound) {
   uint8_t count = 0;

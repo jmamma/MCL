@@ -3,19 +3,18 @@
 #include "MCLSeq.h"
 //#include "MCLSd.h"
 
-
 void A4Track::load_seq_data(int tracknumber) {
-
-memcpy(&mcl_seq.ext_tracks[tracknumber],&seq_data, sizeof(seq_data));
+  mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
+  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-        memcpy(&seq_data,&mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
+  memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
   active = A4_TRACK_TYPE;
 }
 bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
-                                  A4Sound *analogfour_sound) {
+                                   A4Sound *analogfour_sound) {
   if (active == A4_TRACK_TYPE) {
     memcpy(analogfour_sound, &sound, sizeof(A4Sound));
     load_seq_data(tracknumber);
@@ -74,15 +73,18 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
     if (!ret) {
       return false;
     }
-    grid_page.row_headers[grid_page.cur_row].update_model(column, column, A4_TRACK_TYPE);
+    grid_page.row_headers[grid_page.cur_row].update_model(column, column,
+                                                          A4_TRACK_TYPE);
     return true;
   }
 }
 
 bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+  uint32_t mdlen =
+      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+  uint32_t pos =
+      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
 
   volatile uint8_t *ptr;
 
@@ -94,9 +96,11 @@ bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
 }
 
 bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+  uint32_t mdlen =
+      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+  uint32_t pos =
+      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
 
   volatile uint8_t *ptr;
 
