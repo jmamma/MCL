@@ -317,12 +317,15 @@ void MidiClockClass::incrementCounters() {
       div32th_counter++;
     }
     if (step_counter == 5) {
-    step_counter = 1;
-    beat_counter++;
+      step_counter = 1;
+      beat_counter++;
     }
     if (beat_counter == 5) {
-    beat_counter = 1;
-    bar_counter++;
+      beat_counter = 1;
+      bar_counter++;
+    }
+    if (bar_counter == 101) {
+      bar_counter = 1;
     }
   }
 }

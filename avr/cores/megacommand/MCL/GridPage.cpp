@@ -273,9 +273,9 @@ void GridPage::display_counters() {
   val[2] = '\0';
   if (val[0] == '0') {
     val[0] = (char)0x60;
-    if (val[1] == '0') {
-      val[1] = (char)0x60;
-    }
+  //  if (val[1] == '0') {
+  //    val[1] = (char)0x60;
+   // }
   }
   oled_display.setCursor(24, y_offset);
   oled_display.print(val);
@@ -317,7 +317,7 @@ void GridPage::display_grid_info() {
 
   oled_display.setCursor(22, y_offset + 1 * 8);
 
-  uint8_t tri_x = 9, tri_y = 12;
+  uint8_t tri_x = 10, tri_y = 12;
   if (MidiClock.state == 2) {
 
     oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
@@ -325,8 +325,8 @@ void GridPage::display_grid_info() {
                               tri_y + 4, WHITE);
   }
   if (MidiClock.state == 0) {
-    oled_display.fillRect(tri_x + 3, tri_y, 2, 5, WHITE);
-    oled_display.fillRect(tri_x + 6, tri_y, 2, 5, WHITE);
+    oled_display.fillRect(tri_x - 1, tri_y, 2, 5, WHITE);
+    oled_display.fillRect(tri_x + 2, tri_y, 2, 5, WHITE);
   }
 
   oled_display.setCursor(0, y_offset + 1 + 1 * 8);
