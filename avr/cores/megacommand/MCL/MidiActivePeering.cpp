@@ -20,6 +20,7 @@ void MidiActivePeering::md_setup() {
   MidiUart.set_speed((uint32_t)31250, 1);
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
+  oled_display.setFont();
 #endif
   GUI.clearLines();
   GUI.setLine(GUI.LINE1);
@@ -32,13 +33,14 @@ void MidiActivePeering::md_setup() {
   oled_display.display();
 #endif
   // Hack to prevent unnecessary delay on MC boot
-  if ((slowclock > 3000) || (MidiClock.div96th_counter > 0)) {
+  MD.connected = false;
+  if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
     delay(4600);
   }
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
     if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT,
                                       CALLBACK_TIMEOUT)) {
-
+      DEBUG_PRINTLN("Midi ID: success");
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
       // wait 300 ms, shoul be enought time to allow midiclock tempo to be
       // calculated before proceeding.
@@ -60,10 +62,11 @@ void MidiActivePeering::md_setup() {
       // MD.setTempo(MidiClock.tempo * 24);
       MD.getCurrentKit();
       MD.getBlockingKit(MD.currentKit);
+#ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");
-      return;
+#endif
     }
-    delay(250);
+    if (MD.connected == false) { DEBUG_PRINTLN("delay"); delay(250); }
   }
   MD.connected = false;
 
@@ -74,6 +77,7 @@ void MidiActivePeering::a4_setup() {
   DEBUG_PRINT_FN();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
+  oled_display.setFont();
 #endif
   GUI.clearLines();
   GUI.setLine(GUI.LINE1);
@@ -90,8 +94,9 @@ void MidiActivePeering::a4_setup() {
     delay(300);
     if (Analog4.getBlockingSettings(0)) {
       MidiUart2.device.set_id(DEVICE_A4);
+#ifdef OLED_DISPLAY
       GUI.flash_strings_fill("A4", "CONNECTED");
-
+#endif
       Analog4.connected = true;
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
     }
@@ -99,7 +104,9 @@ void MidiActivePeering::a4_setup() {
   if (Analog4.connected == false) {
     // If sysex not receiverd assume generic midi device;
     MidiUart2.device.set_id(DEVICE_MIDI);
+#ifndef OLED_DISPLAY
     GUI.flash_strings_fill("MIDI DEVICE", "CONNECTED");
+#endif
   }
 }
 void MidiActivePeering::check() {
@@ -112,7 +119,9 @@ void MidiActivePeering::check() {
       MidiUart.set_speed((uint32_t)31250, 1);
       MD.connected = false;
 
+#ifndef OLED_DISPLAY
       GUI.flash_strings_fill(MidiUart.device.get_name(str), "DISCONNECTED");
+#endif
       MidiUart.device.init();
     }
   } else if (uart1_device == DEVICE_NULL) {
@@ -125,7 +134,9 @@ void MidiActivePeering::check() {
     if ((MidiUart2.recvActiveSenseTimer > 300) && (MidiUart2.speed > 31250)) {
       MidiUart.set_speed(31250, 2);
       Analog4.connected = false;
+#ifndef OLED_DISPLAY
       GUI.flash_strings_fill(MidiUart2.device.get_name(str), "DISCONNECTED");
+#endif
       MidiUart2.device.init();
     }
   } else if ((Analog4.connected == false) && (uart2_device == DEVICE_NULL)) {
