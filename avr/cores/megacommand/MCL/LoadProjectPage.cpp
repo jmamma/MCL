@@ -3,12 +3,13 @@
 
 void LoadProjectPage::display() {
 #ifdef OLED_DISPLAY
+  oled_display.setFont();
   oled_display.clearDisplay();
-#endif 
+#endif
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "Project:");
   GUI.setLine(GUI.LINE2);
-  
+
   GUI.put_string_at_fill(0, file_entries[encoders[0]->cur]);
   return;
 }

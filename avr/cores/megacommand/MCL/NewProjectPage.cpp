@@ -5,6 +5,7 @@ void NewProjectPage::setup() {}
 
 void NewProjectPage::init() {
 #ifdef OLED_DISPLAY
+  oled_display.setFont();
   oled_display.clearDisplay();
 #endif
   last_clock = slowclock;
