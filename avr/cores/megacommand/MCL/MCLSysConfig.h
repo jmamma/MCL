@@ -9,6 +9,8 @@
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 16
 
+extern void mclsys_apply_config();
+
 class MCLSysConfigData {
 public:
   uint32_t version;

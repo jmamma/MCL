@@ -2,9 +2,13 @@
 #include "MCL.h"
 
 void LoadProjectPage::display() {
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif 
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "Project:");
   GUI.setLine(GUI.LINE2);
+  
   GUI.put_string_at_fill(0, file_entries[encoders[0]->cur]);
   return;
 }
@@ -49,6 +53,9 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 void LoadProjectPage::setup() {
   bool ret;
   int b;
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Load project page");
@@ -61,7 +68,7 @@ void LoadProjectPage::setup() {
   //  dirfile.open("/",O_READ);
   SD.vwd()->rewind();
 
-  while (dirfile.openNext(SD.vwd(), O_READ)) {
+  while (dirfile.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
     for (uint8_t c = 0; c < 16; c++) {
       temp_entry[c] = 0;
     }

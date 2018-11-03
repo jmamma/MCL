@@ -18,6 +18,8 @@ void MenuPage::loop() {
   ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
   ((MCLEncoder *)encoders[0])->max =
       menu.get_option_range(encoders[1]->cur) - 1;
+  ((MCLEncoder *)encoders[0])->min =
+      menu.get_option_min(encoders[1]->cur);
 
   if (encoders[1]->hasChanged()) {
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
@@ -51,9 +53,9 @@ void MenuPage::loop() {
 void MenuPage::draw_scrollbar(uint8_t x_offset) {
   uint8_t number_of_items = menu.get_number_of_items();
   uint8_t length =
-      ((float)(MAX_VISIBLE_ROWS - 1) / (float)number_of_items) * 32;
+      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32;
   uint8_t y =
-      ((float)(encoders[1]->cur - cur_row) / (float)number_of_items) * 32;
+      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 32;
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 == 0) {
       oled_display.drawPixel(x_offset + 1, n, WHITE);
@@ -152,8 +154,26 @@ bool MenuPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER1)) {
     Page *page_callback = menu.get_page_callback(encoders[1]->cur);
     if (page_callback != NULL) {
-      GUI.setPage(page_callback);
+      DEBUG_PRINTLN("setting page");
+      DEBUG_PRINTLN((uint16_t)page_callback);
+      GUI.pushPage(page_callback);
+      return;
     }
+  }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+      EVENT_PRESSED(event, Buttons.BUTTON2) ||
+      EVENT_PRESSED(event, Buttons.BUTTON3) ||
+      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    // Page *exit_page_callback = menu.get_exit_page_callback();
+    void (*exit_func)() = menu.get_exit_function();
+    if (exit_func != NULL) {
+      (*exit_func)();
+      //
+    }
+    // if (exit_page_callback != NULL) {
+    GUI.popPage();
+    //}
     return true;
   }
 }

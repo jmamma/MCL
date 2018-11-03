@@ -4,6 +4,9 @@
 void NewProjectPage::setup() {}
 
 void NewProjectPage::init() {
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
   last_clock = slowclock;
   DEBUG_PRINTLN("New project page");
   char my_string[16] = "/project___.mcl";
@@ -34,6 +37,10 @@ void NewProjectPage::update_prjpage_char() {
 }
 
 void NewProjectPage::display() {
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
+
   char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
   // Check to see that the character chosen is in the list of allowed characters
   if (encoders[0]->hasChanged()) {

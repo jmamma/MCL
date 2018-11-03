@@ -5,9 +5,11 @@
 
 #include "GUI.h"
 
+#define MAX_ENTRIES 64
+
 class LoadProjectPage : public LightPage {
 public:
-  char file_entries[30][16];
+  char file_entries[MAX_ENTRIES][16];
   LoadProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}

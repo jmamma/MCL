@@ -27,7 +27,7 @@ void GridPage::setup() {
 }
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
-  oled_display.setFont();
+   oled_display.setFont();
 #endif
 }
 void GridPage::loop() {
@@ -731,7 +731,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
 
     system_page.isSetup = false;
-    GUI.setPage(&system_page);
+    GUI.pushPage(&system_page);
 
     return true;
   }

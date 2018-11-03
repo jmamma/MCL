@@ -4,6 +4,8 @@
 #define MAX_MENU_ITEMS 16
 #define MAX_MENU_OPTIONS 16
 
+typedef void(*FP)();
+
 typedef struct menu_option_s {
   uint8_t pos;
   char name[17];
@@ -11,6 +13,7 @@ typedef struct menu_option_s {
 
 typedef struct menu_item_s {
   char name[17];
+  uint8_t min;
   uint8_t range;
   uint8_t number_of_options;
   uint8_t *destination_var; // pointer to variable to be updated by param change
@@ -22,6 +25,8 @@ typedef struct menu_s {
   char name[11];
   uint8_t number_of_items;
   menu_item_t items[MAX_MENU_ITEMS];
+  void (*exit_function)();
+  Page *exit_page_callback;
 } menu_t;
 
 class Menu {
@@ -40,7 +45,10 @@ public:
   menu_item_t *get_item(uint8_t item_n);
   PGM_P get_item_name(uint8_t item_n);
   Page *get_page_callback(uint8_t item_n);
+  //Page *get_exit_page_callback();
+  FP get_exit_function();
   uint8_t *get_dest_variable(uint8_t item_n);
+  uint8_t get_option_min(uint8_t item_n);
   uint8_t get_option_range(uint8_t item_n);
   uint8_t get_number_of_options(uint8_t item_n);
   PGM_P get_option_name(uint8_t item_n, uint8_t option_n);

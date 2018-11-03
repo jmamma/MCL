@@ -1,6 +1,23 @@
 #include "MCL.h"
 #include "MCLSysConfig.h"
 
+void mclsys_apply_config() {
+  mcl_cfg.write_cfg();
+  midi_setup.cfg_ports();
+#ifndef DEBUGMODE
+  if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
+    GUI.display_mirror = true;
+
+    Serial.begin(SERIAL_SPEED);
+  }
+  if ((Serial) && (mcl_cfg.display_mirror == 0)) {
+    GUI.display_mirror = false;
+    Serial.end();
+  }
+#endif
+  seq_ptc_page.poly_max = mcl_cfg.poly_max;
+}
+
 bool MCLSysConfig::write_cfg() {
   bool ret;
   int b;

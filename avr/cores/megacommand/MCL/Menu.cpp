@@ -4,6 +4,15 @@
 void Menu::set_layout(menu_t *menu_layout) { layout = menu_layout; }
 
 PGM_P Menu::get_name() { return layout->name; }
+/*
+Page *Menu::get_exit_page_callback() {
+  return pgm_read_word(&(layout->exit_page_callback));
+}
+*/
+FP Menu::get_exit_function() {
+  return pgm_read_word(&(layout->exit_function));
+}
+
 
 uint8_t Menu::get_number_of_items() {
   return pgm_read_byte(&(layout->number_of_items));
@@ -33,6 +42,11 @@ uint8_t Menu::get_option_range(uint8_t item_n) {
   menu_item_t *item = get_item(item_n);
   return pgm_read_byte(&(item->range));
 }
+uint8_t Menu::get_option_min(uint8_t item_n) {
+  menu_item_t *item = get_item(item_n);
+  return pgm_read_byte(&(item->min));
+}
+
 
 uint8_t Menu::get_number_of_options(uint8_t item_n) {
   menu_item_t *item = get_item(item_n);

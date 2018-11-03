@@ -4,7 +4,7 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#define ENCODER_RES_SEQ 4
+#define ENCODER_RES_SEQ 2
 #define ENCODER_RES_PARAM 2
 #define NUM_PARAM_PAGES 2
 #define NUM_LFO_PAGES 4

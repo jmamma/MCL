@@ -40,12 +40,14 @@ const menu_t slot_menu_layout PROGMEM = {
     "Slot",
     5,
     {
-        {"CHAIN:", 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
-        {"LOOP:  ", 128, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
-        {"ROW:    ", 128 - 1, 0, (uint8_t*) &slot.chain.row, NULL, {}},
-        {"APPLY:", 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
-        {"MERGE", 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}}
-    }
+        {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
+        {"LOOP:  ", 0, 128, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
+        {"ROW:    ", 0, 128 - 1, 0, (uint8_t*) &slot.chain.row, NULL, {}},
+        {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
+        {"MERGE", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}}
+    },
+    (void*)NULL,
+    (Page*)NULL,
 };
 
 extern MCLEncoder grid_slot_param1;

@@ -36,7 +36,7 @@ void SeqPtcPage::init() {
     poly_notes[x] = 0;
   }
   midi_events.setup_callbacks();
-  if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
+  if (mcl_cfg.uart2_ctrl_mode - 1 == MIDI_LOCAL_MODE) {
     md_exploit.on();
     note_interface.state = true;
   } else {
@@ -355,8 +355,8 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (GUI.currentPage() == &grid_write_page)) {
     return;
   }
-  if ((mcl_cfg.uart2_ctrl_mode == channel) ||
-      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
+      (mcl_cfg.uart2_ctrl_mode - 1 == MIDI_OMNI_MODE)) {
     seq_ptc_page.trig_md_fromext(note_num);
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     return;
@@ -390,8 +390,8 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     return;
   }
 
-  if ((mcl_cfg.uart2_ctrl_mode == channel) ||
-      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
+      (mcl_cfg.uart2_ctrl_mode - 1 == MIDI_OMNI_MODE)) {
     return;
   }
 
