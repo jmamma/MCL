@@ -100,7 +100,15 @@ void MenuPage::draw_item(uint8_t item_n, uint8_t row) {
 void MenuPage::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
   oled_display.setCursor(x_offset, y_offset);
 #ifdef OLED_DISPLAY
-  for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
+  uint8_t number_of_items = menu.get_number_of_items();
+  uint8_t max_items;
+  if (number_of_items > MAX_VISIBLE_ROWS) {
+    max_items = MAX_VISIBLE_ROWS;
+  }
+  else {
+    max_items = number_of_items;
+  }
+  for (uint8_t n = 0; n < max_items; n++) {
 
     oled_display.setCursor(x_offset, y_offset + 8 * n);
     if (n == cur_row) {
