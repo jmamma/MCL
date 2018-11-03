@@ -2,7 +2,7 @@
 #include "MidiSetup.h"
 
 void MidiSetup::cfg_ports() {
-
+  DEBUG_PRINT_FN();
   MidiClock.stop();
  
   if (mcl_cfg.midi_forward == 1) {

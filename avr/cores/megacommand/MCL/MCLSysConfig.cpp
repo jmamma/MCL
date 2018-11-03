@@ -2,6 +2,7 @@
 #include "MCLSysConfig.h"
 
 void mclsys_apply_config() {
+  DEBUG_PRINT_FN();
   mcl_cfg.write_cfg();
   midi_setup.cfg_ports();
 #ifndef DEBUGMODE

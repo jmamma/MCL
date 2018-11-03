@@ -54,8 +54,8 @@ const menu_t mdconfig_menu_layout PROGMEM = {
     {
         {"MD SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"MD POLY-START:",0, 17, 0, (uint8_t *) &mcl_cfg.poly_start, (Page*) NULL, {}},
-        {"MD POLY-MAX:",0, 17, 0, (uint8_t *) &mcl_cfg.poly_max, (Page*) NULL, {}},
-        {"MD CTRL-CHAN:",1, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, {{17, "INT"},{18, "OMNI"}}},
+        {"MD POLY-MAX:", 1, 17, 0, (uint8_t *) &mcl_cfg.poly_max, (Page*) NULL, {}},
+        {"MD CTRL-CHAN:",1, 19, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, {{17, "INT"},{18, "OMNI"}}},
 
     },
     (void*) NULL,
