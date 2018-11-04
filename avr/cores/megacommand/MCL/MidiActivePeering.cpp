@@ -68,7 +68,6 @@ void MidiActivePeering::md_setup() {
     }
     if (MD.connected == false) { DEBUG_PRINTLN("delay"); delay(250); }
   }
-  MD.connected = false;
 
   MidiIDSysexListener.cleanup();
 }
@@ -118,7 +117,6 @@ void MidiActivePeering::check() {
     if ((MidiUart.recvActiveSenseTimer > 300) && (MidiUart.speed > 31250)) {
       MidiUart.set_speed((uint32_t)31250, 1);
       MD.connected = false;
-
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill(MidiUart.device.get_name(str), "DISCONNECTED");
 #endif
