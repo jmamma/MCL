@@ -35,9 +35,6 @@ uint8_t SeqPtcPage::calc_poly_count() {
       count++;
     }
   }
-  if (count == 0) {
-    count = 1;
-  }
   DEBUG_PRINTLN(count);
   return count;
 }
@@ -176,6 +173,10 @@ uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t voice = 255;
   uint8_t count = 0;
+
+  if (poly_max == 0) {
+  return last_md_track;
+  }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
     if (MD.isMelodicTrack(x) && IS_BIT_SET(mcl_cfg.poly_mask, x)) {
@@ -242,13 +243,10 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   uint8_t pitch = seq_ext_pitch(note_num - 32);
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
-  USE_LOCK();
-  SET_LOCK();
   MD.setTrackParam(next_track, 0, machine_pitch);
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
   }
-  CLEAR_LOCK();
   if ((record_mode) && (MidiClock.state == 2)) {
     if (!BUTTON_DOWN(Buttons.BUTTON2)) {
       mcl_seq.md_tracks[next_track].record_track(note_num, 127);
