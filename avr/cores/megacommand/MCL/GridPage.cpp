@@ -588,8 +588,9 @@ void GridPage::prepare() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
+    MD.getBlockingKit(MD.currentKit);
   }
-  if (MD.currentKit != MD.kit.origPosition) {
+  else if (MD.currentKit != MD.kit.origPosition) {
     MD.getBlockingKit(MD.currentKit);
   }
 }
