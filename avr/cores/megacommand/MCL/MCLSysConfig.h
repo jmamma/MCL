@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2020
+#define CONFIG_VERSION 2021
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 16
@@ -27,8 +27,7 @@ public:
   uint8_t col;
   uint8_t cur_row;
   uint8_t cur_col;
-  uint8_t poly_start;
-  uint8_t poly_max;
+  uint16_t poly_mask;
   uint8_t uart2_ctrl_mode;
   uint32_t mutes;
   uint8_t display_mirror;

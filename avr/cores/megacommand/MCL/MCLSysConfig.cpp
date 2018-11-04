@@ -16,7 +16,6 @@ void mclsys_apply_config() {
     Serial.end();
   }
 #endif
-  seq_ptc_page.poly_max = mcl_cfg.poly_max;
 }
 
 bool MCLSysConfig::write_cfg() {
@@ -73,8 +72,7 @@ bool MCLSysConfig::cfg_init() {
   cur_row = 0;
   cur_col = 0;
   cues = 0;
-  poly_max = 1;
-  poly_start = 0;
+  poly_mask = 0;
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;

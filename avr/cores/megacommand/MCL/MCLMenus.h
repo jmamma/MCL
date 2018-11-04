@@ -6,6 +6,7 @@
 #include "MCLEncoder.h"
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
+#include "PolyPage.h"
 #include "GridPages.h"
 
 #define ENCODER_RES_SYS 2
@@ -14,6 +15,10 @@ extern MCLEncoder options_param1;
 extern MCLEncoder options_param2;
 extern MCLEncoder config_param1;
 extern MCLEncoder config_param2;
+
+extern MCLEncoder config_param3;
+extern MCLEncoder config_param4;
+extern MCLEncoder config_param5;
 
 extern MenuPage system_page;
 extern MenuPage midi_config_page;
@@ -52,13 +57,11 @@ const menu_t midiconfig_menu_layout PROGMEM = {
 
 const menu_t mdconfig_menu_layout PROGMEM = {
     "MD",
-    4,
+     3,
     {
-        {"MD SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, {{0, "OFF"},{1, "AUTO"}}},
-        {"MD POLY-START:",0, 17, 0, (uint8_t *) &mcl_cfg.poly_start, (Page*) NULL, {}},
-        {"MD POLY-MAX:", 1, 17, 0, (uint8_t *) &mcl_cfg.poly_max, (Page*) NULL, {}},
-        {"MD CTRL-CHAN:",1, 19, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, {{17, "INT"},{18, "OMNI"}}},
-
+        {"AUTO SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, {{0, "OFF"},{1, "ON"}}},
+        {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, {{0, "INT"},{17, "OMNI"}}},
+        {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, {}},
     },
     (void*)(&mclsys_apply_config),
 };

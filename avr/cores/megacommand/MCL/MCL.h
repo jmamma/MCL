@@ -14,6 +14,7 @@
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
 
+#include "PolyPage.h"
 #include "Project.h"
 
 #include "GridChain.h"

@@ -2,7 +2,6 @@
 #include "MenuPage.h"
 
 void MenuPage::init() {
-  oled_display.setFont(&TomThumb);
   uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
     encoders[0]->setValue(*dest_var);
@@ -18,8 +17,7 @@ void MenuPage::loop() {
   ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
   ((MCLEncoder *)encoders[0])->max =
       menu.get_option_range(encoders[1]->cur) - 1;
-  ((MCLEncoder *)encoders[0])->min =
-      menu.get_option_min(encoders[1]->cur);
+  ((MCLEncoder *)encoders[0])->min = menu.get_option_min(encoders[1]->cur);
 
   if (encoders[1]->hasChanged()) {
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
@@ -104,8 +102,7 @@ void MenuPage::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
   uint8_t max_items;
   if (number_of_items > MAX_VISIBLE_ROWS) {
     max_items = MAX_VISIBLE_ROWS;
-  }
-  else {
+  } else {
     max_items = number_of_items;
   }
   for (uint8_t n = 0; n < max_items; n++) {
@@ -132,6 +129,7 @@ void MenuPage::display() {
 
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
+  oled_display.setFont(&TomThumb);
   char str[17];
   PGM_P pgp;
   pgp = menu.get_name();
