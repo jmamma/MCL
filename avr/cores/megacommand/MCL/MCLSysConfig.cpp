@@ -78,6 +78,7 @@ bool MCLSysConfig::cfg_init() {
   display_mirror = 0;
   tempo = 125;
   midi_forward = 0;
+  auto_merge = 0;
   auto_save = 1;
   chain_mode = 0;
   cfgfile.close();

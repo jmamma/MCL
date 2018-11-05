@@ -4,10 +4,10 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2021
+#define CONFIG_VERSION 2022
 
 #define MIDI_OMNI_MODE 17
-#define MIDI_LOCAL_MODE 16
+#define MIDI_LOCAL_MODE 0
 
 extern void mclsys_apply_config();
 
@@ -34,6 +34,7 @@ public:
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
+  uint8_t auto_merge;
   uint8_t chain_mode;
 };
 

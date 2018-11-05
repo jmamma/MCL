@@ -73,7 +73,6 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   machine.level = MD.kit.levels[tracknumber];
   machine.model = MD.kit.models[tracknumber];
 
-
   /*Check to see if LFO is modulating host track*/
   /*IF it is then we need to make sure that the LFO destination is updated to
    * the new row posiiton*/
@@ -95,13 +94,14 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   patternOrigPosition = MD.pattern.origPosition;
 }
 
-void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit, bool levels) {
+void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
+                                 bool levels) {
   if (active != MD_TRACK_TYPE) {
     return;
   }
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
-  kit->levels[tracknumber] = machine.level;
+    kit->levels[tracknumber] = machine.level;
   }
   kit->models[tracknumber] = machine.model;
 
@@ -122,7 +122,6 @@ void MDTrack::clear_track() {
   accentPattern = 0;
   slidePattern = 0;
   swingPattern = 0;
-
 }
 
 void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
@@ -168,10 +167,9 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
 void MDTrack::load_seq_data(int tracknumber) {
   m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
 
-  mcl_seq.md_tracks[tracknumber].set_length(mcl_seq.md_tracks[tracknumber].length);
+  mcl_seq.md_tracks[tracknumber].set_length(
+      mcl_seq.md_tracks[tracknumber].length);
   mcl_seq.md_tracks[tracknumber].update_params();
-
-
 }
 
 void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
@@ -260,8 +258,18 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
     return false;
   }
 
-  if (track != 255) { 
-          get_track_from_sysex(track, column); }
+  if (track != 255) {
+    get_track_from_sysex(track, column);
+  }
+
+  if (mcl_cfg.auto_merge == 1) {
+    DEBUG_PRINTLN("auto merge");
+    MDSeqTrack md_seq_track;
+    memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
+    md_seq_track.merge_from_md(this);
+    clear_track();
+    memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+  }
 
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
   DEBUG_PRINTLN(len);
@@ -300,12 +308,12 @@ bool MDTrack::store_in_mem(uint8_t column, uint32_t region) {
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
- // cbi(TIMSK0, TOIE0);
+  // cbi(TIMSK0, TOIE0);
   switch_ram_bank(1);
   memcpy(ptr, this, len);
-  
+
   switch_ram_bank(0);
- // sbi(TIMSK0, TOIE0);
+  // sbi(TIMSK0, TOIE0);
   return true;
 }
 
@@ -317,10 +325,10 @@ bool MDTrack::load_from_mem(uint8_t column, uint32_t region) {
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
-// cbi(TIMSK0, TOIE0);
+  // cbi(TIMSK0, TOIE0);
   switch_ram_bank(1);
   memcpy(this, ptr, len);
   switch_ram_bank(0);
-// sbi(TIMSK0, TOIE0);
+  // sbi(TIMSK0, TOIE0);
   return true;
 }

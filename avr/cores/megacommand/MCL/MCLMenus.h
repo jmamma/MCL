@@ -57,9 +57,10 @@ const menu_t midiconfig_menu_layout PROGMEM = {
 
 const menu_t mdconfig_menu_layout PROGMEM = {
     "MD",
-     3,
+     4,
     {
         {"AUTO SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, {{0, "OFF"},{1, "ON"}}},
+        {"SEQ MERGE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_merge, (Page*) NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, {{0, "INT"},{17, "OMNI"}}},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, {}},
     },
