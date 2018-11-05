@@ -88,7 +88,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   EmptyTrack empty_track;
 
   empty_track.chain.row = row;
-  empty_track.chain.loops = 1;
+  empty_track.chain.loops = 0;
 
   MDTrack *md_track = (MDTrack *)&empty_track;
   A4Track *a4_track = (A4Track *)&empty_track;
