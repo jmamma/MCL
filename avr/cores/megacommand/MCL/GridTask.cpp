@@ -245,9 +245,9 @@ void GridTask::run() {
 
       handleIncomingMidi();
       if (count % 8 == 0) {
-        GUI.loop();
+        if (GUI.currentPage() != &grid_write_page) { GUI.loop(); }
       }
-      if (slots_changed[n] != mcl_actions.chains[n].row) {
+      if ((slots_changed[n] != mcl_actions.chains[n].row)) {
 
         count++;
         if (n < 16) {
