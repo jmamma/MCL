@@ -56,8 +56,7 @@ void MCLGfx::splashscreen() {
   oled_display.print(VERSION / 1000);
   oled_display.print(".");
   oled_display.print(VERSION - 2000);
-  delay(200);
-  for (float length = 0; length < 32; length += 0.7) {
+/*  for (float length = 0; length < 32; length += 0.7) {
 
     // display.fillRect(0, 0, 128, length, BLACK);
     for (uint8_t x = 0; x < 50 + (length * 5); x++) {
@@ -66,12 +65,14 @@ void MCLGfx::splashscreen() {
                              BLACK);
     }
 
-    //:    display.drawLine(0, length, 128, length, BLACK);
+ √   //:    display.drawLine(0, length, 128, length, BLACK);
 
     oled_display.display();
-  }
-  oled_display.clearDisplay();
+  }  oled_display.clearDisplay();
+  */
   oled_display.display();
+
+  delay(800);
 #else
   char str1[17] = "MEGACOMMAND LIVE";
   char str2[17] = "V2.16";
