@@ -36,6 +36,8 @@ public:
   uint8_t auto_save;
   uint8_t auto_merge;
   uint8_t chain_mode;
+  uint8_t chain_rand_min;
+  uint8_t chain_rand_max;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

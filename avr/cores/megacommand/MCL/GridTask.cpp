@@ -93,14 +93,7 @@ void GridTask::run() {
               mcl_actions.chains[n].loops = 0;
             } else if (mcl_cfg.chain_mode == 3) {
               mcl_actions.chains[n].loops = random(1, 8);
-              uint8_t lower = 0;
-              if (mcl_actions.chains[n].row > 0) {
-                lower = mcl_actions.chains[n].row - 1;
-              } else {
-                lower = mcl_actions.chains[n].row;
-              }
-              uint8_t upper = mcl_actions.chains[n].row + 2;
-              mcl_actions.chains[n].row = random(lower, upper);
+              mcl_actions.chains[n].row = random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
             }
 
             send_md_kit = true;

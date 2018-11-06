@@ -81,6 +81,9 @@ bool MCLSysConfig::cfg_init() {
   auto_merge = 0;
   auto_save = 1;
   chain_mode = 0;
+  chain_rand_min = 0;
+  chain_rand_max = 1;
+
   cfgfile.close();
 
   ret = write_cfg();

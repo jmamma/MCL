@@ -19,20 +19,23 @@ extern MCLEncoder config_param2;
 extern MCLEncoder config_param3;
 extern MCLEncoder config_param4;
 extern MCLEncoder config_param5;
+extern MCLEncoder config_param6;
 
 extern MenuPage system_page;
 extern MenuPage midi_config_page;
 extern MenuPage md_config_page;
 extern MenuPage mcl_config_page;
+extern MenuPage chain_config_page;
 
 const menu_t system_menu_layout PROGMEM = {
     "GLOBAL",
-    5,
+    6,
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, {}},
         {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) &new_proj_page, {}},
         {"MIDI",0, 0, 0, (uint8_t *) NULL, (Page*) &midi_config_page, {}},
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, {}},
+        {"CHAIN MODE", 0, 0, 0, (uint8_t *) NULL, (Page*) &chain_config_page, {}},
         {"SYSTEM", 0, 0, 0, (uint8_t *) NULL, (Page*) &mcl_config_page, {}},
     },
     (void*) NULL,
@@ -66,6 +69,18 @@ const menu_t mdconfig_menu_layout PROGMEM = {
     },
     (void*)(&mclsys_apply_config),
 };
+
+const menu_t chain_menu_layout PROGMEM = {
+    "CHAIN",
+    3,
+    {
+        {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
+        {"RAND MIN:", 0, 127, 0, (uint8_t *) &mcl_cfg.chain_rand_min, (Page*) NULL, {}},
+        {"RAND MAX:", 0, 127, 0, (uint8_t *) &mcl_cfg.chain_rand_max, (Page*) NULL, {}},
+    },
+    (void*)(&mclsys_apply_config),
+};
+
 
 const menu_t mclconfig_menu_layout PROGMEM = {
     "SYSTEM",
