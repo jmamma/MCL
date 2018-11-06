@@ -27,7 +27,7 @@ void GridPage::setup() {
 }
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
-   oled_display.setFont();
+  oled_display.setFont();
 #endif
 }
 void GridPage::loop() {
@@ -129,12 +129,12 @@ void GridPage::loop() {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
 
-  if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
-    DEBUG_PRINTLN(grid_lastclock);
-    DEBUG_PRINTLN(slowclock);
-    display_name = 1;
-  } else {
-    if (display_name == 1) {
+   if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
+ ///   DEBUG_PRINTLN(grid_lastclock);
+ //   DEBUG_PRINTLN(slowclock);
+ //   display_name = 1;
+   } else {
+  //  if (display_name == 1) {
       mcl_cfg.cur_col = cur_col;
       mcl_cfg.cur_row = cur_row;
 
@@ -144,9 +144,9 @@ void GridPage::loop() {
       mcl_cfg.tempo = MidiClock.tempo;
       DEBUG_PRINTLN("write cfg");
       mcl_cfg.write_cfg();
-    }
+   // }
 
-    display_name = 0;
+   // display_name = 0;
   }
 }
 void GridPage::displayScroll(uint8_t i) {
@@ -265,7 +265,6 @@ void GridPage::display_counters() {
   uint8_t y_offset = 8;
   uint8_t x_offset = 20;
 
-  oled_display.setFont(&TomThumb);
   char val[4];
   // val[0] = (MidiClock.bar_counter / 100) + '0';
   val[0] = (MidiClock.bar_counter % 100) / 10 + '0';
@@ -273,10 +272,12 @@ void GridPage::display_counters() {
   val[2] = '\0';
   if (val[0] == '0') {
     val[0] = (char)0x60;
-  //  if (val[1] == '0') {
-  //    val[1] = (char)0x60;
-   // }
+    //  if (val[1] == '0') {
+    //    val[1] = (char)0x60;
+    // }
   }
+  
+  oled_display.setFont(&TomThumb);
   oled_display.setCursor(24, y_offset);
   oled_display.print(val);
 
@@ -475,35 +476,41 @@ void GridPage::display() {
 #endif;
 
   // Rendering code for HD44780 below
-  char str[3];
-  char str2[3];
+  char str[3] = "  ";
+  char str2[3] = "  ";
   PGM_P tmp;
   uint8_t y = 0;
   for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
     uint8_t track_type = row_headers[y].track_type[x + encoders[0]->cur];
     uint8_t model = row_headers[y].model[x + encoders[0]->cur];
-    str[0] = '-';
-    str[1] = '-';
-    str2[0] = '-';
-    str2[1] = '-';
+    if (((MidiClock.step_counter == 1) &&
+         (MidiClock.state == 2)) &&
+        ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
 
-    if (track_type == MD_TRACK_TYPE) {
-      tmp = getMachineNameShort(model, 1);
-      m_strncpy_p(str, tmp, 3);
-      tmp = getMachineNameShort(model, 2);
-      m_strncpy_p(str2, tmp, 3);
-    }
-    if (track_type == A4_TRACK_TYPE) {
-      str[0] = 'A';
-      str[1] = '4';
-      str2[0] = 'T';
-      str2[1] = model + '0';
-    }
-    if (track_type == EXT_TRACK_TYPE) {
-      str[0] = 'M';
-      str[1] = 'I';
-      str2[0] = 'T';
-      str2[1] = model + '0';
+    } else {
+      str[0] = '-';
+      str[1] = '-';
+      str2[0] = '-';
+      str2[1] = '-';
+
+      if (track_type == MD_TRACK_TYPE) {
+        tmp = getMachineNameShort(model, 1);
+        m_strncpy_p(str, tmp, 3);
+        tmp = getMachineNameShort(model, 2);
+        m_strncpy_p(str2, tmp, 3);
+      }
+      if (track_type == A4_TRACK_TYPE) {
+        str[0] = 'A';
+        str[1] = '4';
+        str2[0] = 'T';
+        str2[1] = model + '0';
+      }
+      if (track_type == EXT_TRACK_TYPE) {
+        str[0] = 'M';
+        str[1] = 'I';
+        str2[0] = 'T';
+        str2[1] = model + '0';
+      }
     }
     GUI.setLine(GUI.LINE1);
     GUI.put_string_at(x * 3, str);
@@ -512,75 +519,32 @@ void GridPage::display() {
     displayScroll(x);
   }
 
-  if (encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
-    dispeffect = 1;
-  }
+  GUI.setLine(GUI.LINE1);
+  /*Displays the kit name of the left most Grid on the first line at position
+   * 12*/
+  if (display_name == 1) {
+    GUI.put_string_at(0, "                ");
 
-  /*If the grid encoders have been changed, set a switch to indicate that the
-   * row/col values should be displayed*/
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
-    dispeffect = 0;
-  }
-
-  if (dispeffect == 1) {
-    GUI.setLine(GUI.LINE1);
-    /*Displays the kit name of the left most Grid on the first line at position
-     * 12*/
-    if (((GridEncoder *)encoders[2])->effect == MD_FX_ECHO) {
-      GUI.put_string_at(12, "TM");
-    } else {
-      GUI.put_string_at(12, "DC");
-    }
-
-    if (((GridEncoder *)encoders[3])->effect == MD_FX_ECHO) {
-      GUI.put_string_at(14, "FB");
-    } else {
-      GUI.put_string_at(14, "LV");
-    }
-
-    GUI.setLine(GUI.LINE2);
-    /*Displays the value of the current Row on the screen.*/
-    GUI.put_value_at2(12, (encoders[2]->getValue()));
-    GUI.put_value_at2(14, (encoders[3]->getValue()));
-
-    // mdEnc1->dispnow = 0;
-    //  mdEnc2->dispnow = 0;
-
-  } else {
-    GUI.setLine(GUI.LINE1);
-    /*Displays the kit name of the left most Grid on the first line at position
-     * 12*/
-    if (display_name == 1) {
-      GUI.put_string_at(0, "                ");
-
-      if (row_headers[cur_row].active) {
-        GUI.put_string_at(0, row_headers[0].name);
-      }
-      GUI.setLine(GUI.LINE2);
-
-      GUI.put_string_at(0, "                ");
-      // temptrack.patternOrigPosition;
-      char str[5];
-
-      // if (gridio_encoders[1]->getValue() < 8) {
-      // if (temptrack.active != EMPTY_TRACK_TYPE) {
-      //   MD.getPatternName(temptrack.patternOrigPosition , str);
-      // }
-      // }
-    } else {
-
-      //      GUI.put_string_at(12, grid.get_slot_kit(encoders[0]->getValue(),
-      //                                            encoders[1]->getValue(),
-      //                                            false,
-      //                                          true));
+    if (row_headers[cur_row].active) {
+      GUI.put_string_at(0, row_headers[0].name);
     }
     GUI.setLine(GUI.LINE2);
 
-    /*Displays the value of the current Row on the screen.*/
-    GUI.put_value_at2(12, (encoders[0]->getValue()));
-    /*Displays the value of the current Column on the screen.*/
-    GUI.put_value_at2(14, (encoders[1]->getValue()));
+    GUI.put_string_at(0, "                ");
+    // temptrack.patternOrigPosition;
+    char str[5];
   }
+  // if (gridio_encoders[1]->getValue() < 8) {
+  // if (temptrack.active != EMPTY_TRACK_TYPE) {
+  //   MD.getPatternName(temptrack.patternOrigPosition , str);
+  // }
+  // }
+  GUI.setLine(GUI.LINE2);
+
+  /*Displays the value of the current Row on the screen.*/
+  GUI.put_value_at2(12, (encoders[0]->getValue()));
+  /*Displays the value of the current Column on the screen.*/
+  GUI.put_value_at2(14, (encoders[1]->getValue()));
 }
 
 void GridPage::prepare() {
@@ -589,10 +553,44 @@ void GridPage::prepare() {
   if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
     MD.getBlockingKit(MD.currentKit);
-  }
-  else if (MD.currentKit != MD.kit.origPosition) {
+  } else if (MD.currentKit != MD.kit.origPosition) {
     MD.getBlockingKit(MD.currentKit);
   }
+}
+
+void apply_slot_changes_cb() {
+ grid_page.apply_slot_changes();
+}
+
+void GridPage::apply_slot_changes() {
+  show_slot_menu = false;
+  encoders[0] = &param1;
+  encoders[1] = &param2;
+  uint8_t count;
+  if (slot_apply == 0) {
+    count = 1;
+  } else {
+    count = slot_apply;
+  }
+  MDTrack md_track;
+  MDSeqTrack md_seq_track;
+  for (uint8_t track = 0; track < count && track + getCol() < 20; track++) {
+    slot.active = row_headers[cur_row].track_type[track + getCol()];
+    //  if (slot.active != EMPTY_TRACK_TYPE) {
+    slot.store_track_in_grid(track + getCol(), getRow());
+    proj.file.sync();
+    if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
+      md_track.load_track_from_grid(track + getCol(), getRow());
+
+      memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
+      md_seq_track.merge_from_md(&md_track);
+      md_track.clear_track();
+      memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+      md_track.store_track_in_grid(track + getCol(), getRow());
+    }
+  }
+
+  proj.file.sync();
 }
 
 bool GridPage::handleEvent(gui_event_t *event) {
@@ -641,6 +639,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     //   draw_levels();
   }
 
+#ifdef OLED_DISPLAY
   if (BUTTON_PRESSED(Buttons.BUTTON3)) {
 
     show_slot_menu = true;
@@ -668,37 +667,41 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+#else
   if (BUTTON_RELEASED(Buttons.BUTTON3)) {
-    show_slot_menu = false;
-    encoders[0] = &param1;
-    encoders[1] = &param2;
-    uint8_t count;
-    if (slot_apply == 0) {
-      count = 1;
-    } else {
-      count = slot_apply;
-    }
-    MDTrack md_track;
-    MDSeqTrack md_seq_track;
-    for (uint8_t track = 0; track < count && track + getCol() < 20; track++) {
-      slot.active = row_headers[cur_row].track_type[track + getCol()];
-      //  if (slot.active != EMPTY_TRACK_TYPE) {
-      slot.store_track_in_grid(track + getCol(), getRow());
-      proj.file.sync();
-      if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
-        md_track.load_track_from_grid(track + getCol(), getRow());
-
-        memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
-        md_seq_track.merge_from_md(&md_track);
-        md_track.clear_track();
-        memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-        md_track.store_track_in_grid(track + getCol(), getRow());
-      }
-    }
-
-    proj.file.sync();
+    display_name = 0;
     return true;
   }
+  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
+  display_name = 1;
+  return;
+  }
+  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (BUTTON_PRESSED(Buttons.ENCODER1)) {
+      slot.load_track_from_grid(getCol(), getRow());
+      display_name = 0;
+      GUI.pushPage(&grid_slot_page);
+    }
+    if (BUTTON_PRESSED(Buttons.ENCODER2)) {
+      slot.load_track_from_grid(getCol() + 1, getRow());
+      display_name = 0;
+      GUI.pushPage(&grid_slot_page);
+    }
+
+    if (BUTTON_PRESSED(Buttons.ENCODER3)) {
+      slot.load_track_from_grid(getCol() + 2, getRow());
+      display_name = 0;
+      GUI.pushPage(&grid_slot_page);
+    }
+
+    if (BUTTON_PRESSED(Buttons.ENCODER4)) {
+      slot.load_track_from_grid(getCol() + 3, getRow());
+      display_name = 0;
+      GUI.pushPage(&grid_slot_page);
+    }
+   return true;
+  }
+#endif
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();

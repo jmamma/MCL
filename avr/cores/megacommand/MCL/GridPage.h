@@ -64,8 +64,11 @@ public:
   void cleanup();
   void init();
   void prepare();
+  void apply_slot_changes();
   void loop();
 };
+
+extern void apply_slot_changes_cb();
 
 void encoder_fx_handle(Encoder *enc);
 

@@ -91,7 +91,7 @@ void PolyPage::display() {
   GUI.setLine(GUI.LINE2);
   uint8_t x;
   // GUI.put_string_at(12,"Poly");
-  GUI.put_string_at(0, "Poly Select ");
+  GUI.put_string_at(0, "VOICE SELECT ");
 
 
   draw_mask(0);

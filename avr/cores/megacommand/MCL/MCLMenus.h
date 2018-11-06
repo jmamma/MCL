@@ -26,7 +26,7 @@ extern MenuPage md_config_page;
 extern MenuPage mcl_config_page;
 
 const menu_t system_menu_layout PROGMEM = {
-    "GLOBAL ",
+    "GLOBAL",
     5,
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, {}},

@@ -3,8 +3,13 @@
 #ifndef GRIDPAGES_H__
 #define GRIDPAGES_H__
 
-#define ENCODER_RES_GRID 2
+#ifdef OLED_DISPLAY
+#define ENCODER_RES_GRID 1
 #define ENCODER_RES_PAT 2
+#else
+#define ENCODER_RES_GRID 4
+#define ENCODER_RES_PAT 4
+#endif
 
 #include "GridEncoder.h"
 #include "GridPage.h"
@@ -46,7 +51,7 @@ const menu_t slot_menu_layout PROGMEM = {
         {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
         {"MERGE", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}}
     },
-    (void*)NULL,
+    (void*)&apply_slot_changes_cb,
     (Page*)NULL,
 };
 
