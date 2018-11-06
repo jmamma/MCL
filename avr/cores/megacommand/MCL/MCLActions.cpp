@@ -213,17 +213,18 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
   store_behaviour = b;
   writepattern = MD.currentPattern;
   if (((gridio_param1.getValue() * 16 + gridio_param2.getValue()) !=
-       MD.currentPattern)) {
+       MD.currentPattern) &&
+      (mcl_cfg.chain_mode == 0)) {
     writepattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
   }
-
   // Get pattern first, hopefully with the original kit assigned.
   if (write_original != 1) {
     if (!MD.getBlockingPattern(MD.currentPattern)) {
       DEBUG_PRINTLN("could not get blocking pattern");
       return;
     }
-    if (gridio_param3.getValue() != MD.currentKit) {
+    if ((gridio_param3.getValue() != MD.currentKit) &&
+        (mcl_cfg.chain_mode == 0)) {
       MD.currentKit = gridio_param3.getValue();
     } else {
       MD.saveCurrentKit(MD.currentKit);
@@ -265,68 +266,65 @@ void MCLActions::prepare_next_chain(int row) {
     q = 4;
   }
   //  }
-  if (mcl_cfg.chain_mode > 0) {
-    uint8_t slots_cached[20] = {0};
-    int32_t len =
-        sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+  uint8_t slots_cached[20] = {0};
+  int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-    for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < 16; n++) {
 
-      if (note_interface.notes[n] > 0) {
+    if (note_interface.notes[n] > 0) {
 
-        if (md_track->load_track_from_grid(n, row, len)) {
+      if (md_track->load_track_from_grid(n, row, len)) {
 
-          md_track->store_in_mem(n);
+        md_track->store_in_mem(n);
+        slots_cached[n] = 1;
+      }
+
+      uint8_t trigGroup = md_track->machine.trigGroup;
+
+      if ((trigGroup < 16) && (trigGroup != n) &&
+          (slots_cached[trigGroup] == 0)) {
+        DEBUG_PRINTLN("caching trig group");
+        DEBUG_PRINTLN(n);
+        DEBUG_PRINTLN(trigGroup);
+        if (md_track->load_track_from_grid(trigGroup, row, len)) {
+          md_track->store_in_mem(trigGroup);
           slots_cached[n] = 1;
         }
-
-        uint8_t trigGroup = md_track->machine.trigGroup;
-
-        if ((trigGroup < 16) && (trigGroup != n) &&
-            (slots_cached[trigGroup] == 0)) {
-          DEBUG_PRINTLN("caching trig group");
-          DEBUG_PRINTLN(n);
-          DEBUG_PRINTLN(trigGroup);
-          if (md_track->load_track_from_grid(trigGroup, row, len)) {
-            md_track->store_in_mem(trigGroup);
-            slots_cached[n] = 1;
-          }
-        }
       }
     }
-    for (uint8_t n = 16; n < 20; n++) {
-      if (note_interface.notes[n] > 0) {
-        if (a4_track->load_track_from_grid(n, row, 0)) {
-          a4_track->store_in_mem(n);
-        }
-      }
-    }
-    uint16_t next_step;
-    if (q > 0) {
-      next_step = (MidiClock.div16th_counter / q) * q + q;
-    } else {
-      next_step = MidiClock.div16th_counter + 1;
-    }
-    DEBUG_PRINTLN("q");
-    DEBUG_PRINTLN(q);
-    DEBUG_PRINTLN("write step");
-    DEBUG_PRINTLN(MidiClock.div16th_counter);
-    DEBUG_PRINTLN(next_step);
-    for (uint8_t n = 0; n < 20; n++) {
-
-      if (note_interface.notes[n] > 0) {
-        // if (chains[n].active > 0) {
-        next_transitions[n] = next_step;
-        chains[n].row = row;
-        chains[n].loops = 1;
-        // if (grid_page.active_slots[n] < 0) {
-        grid_page.active_slots[n] = 0x7FFF;
-        // }
-      }
-    }
-    calc_next_transition();
-    calc_latency(&empty_track);
   }
+  for (uint8_t n = 16; n < 20; n++) {
+    if (note_interface.notes[n] > 0) {
+      if (a4_track->load_track_from_grid(n, row, 0)) {
+        a4_track->store_in_mem(n);
+      }
+    }
+  }
+  uint16_t next_step;
+  if (q > 0) {
+    next_step = (MidiClock.div16th_counter / q) * q + q;
+  } else {
+    next_step = MidiClock.div16th_counter + 1;
+  }
+  DEBUG_PRINTLN("q");
+  DEBUG_PRINTLN(q);
+  DEBUG_PRINTLN("write step");
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
+  DEBUG_PRINTLN(next_step);
+  for (uint8_t n = 0; n < 20; n++) {
+
+    if (note_interface.notes[n] > 0) {
+      // if (chains[n].active > 0) {
+      next_transitions[n] = next_step;
+      chains[n].row = row;
+      chains[n].loops = 1;
+      // if (grid_page.active_slots[n] < 0) {
+      grid_page.active_slots[n] = 0x7FFF;
+      // }
+    }
+  }
+  calc_next_transition();
+  calc_latency(&empty_track);
 }
 
 void MCLActions::send_pattern_kit_to_md() {
@@ -363,7 +361,7 @@ void MCLActions::send_pattern_kit_to_md() {
   if (gridio_param4.getValue() == 8) {
     quantize_mute = 254;
   }
-  if (gridio_param4.getValue() >= 9) {
+  if ((gridio_param4.getValue() >= 9) && (mcl_cfg.chain_mode > 0)) {
     quantize_mute = MD.pattern.patternLength;
     q_pattern_change = 1;
     reload = 0;
@@ -541,21 +539,15 @@ void MCLActions::send_pattern_kit_to_md() {
     MD.pattern.setPosition(writepattern);
   }
 
-  // MidiUart.setActiveSenseTimer(0);
-  // in_sysex = 1;
-
   md_setsysex_recpos(8, MD.pattern.origPosition);
 
   MD.pattern.toSysex(encoder);
-  // in_sysex = 1;
 
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex(encoder2);
   /*Instruct the MD to reload the kit, as the kit changes won't update until the
    * kit is reloaded*/
-  //
-  //    MidiUart.setActiveSenseTimer(290);
   if (reload == 1) {
     MD.loadKit(MD.pattern.kit);
   } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
@@ -564,31 +556,14 @@ void MCLActions::send_pattern_kit_to_md() {
       MD.loadPattern(writepattern);
     }
   }
-  /*kit_sendmode != 1 therefore we are going to send the Machine via Sysex and
-   * Midi cc without sending the kit*/
-
-  // I fthe sequencer is running then we will pause and wait for the next
-  // divison
-  //  for (int n=0; n < 16; n++) {
-  //      MD.global.baseChannel = 10;
-  //      for (i=0; i < 16; i++) {
-  //       MD.muteTrack(i,true);
-  //      }
-  // }
-  //          delay(100);
-  // Midiclock start hack
-
   // Send Analog4
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
-    // if (write_original == 1) {
-    // in_sysex2 = 1;
     for (i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
         sound_array[i].toSysex();
       }
     }
-    // in_sysex2 = 0;
   }
 
   if (mcl_actions.start_clock32th > MidiClock.div32th_counter) {
@@ -636,6 +611,13 @@ void MCLActions::send_pattern_kit_to_md() {
   // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) +
   // sizeof(MDMachine);
   //
+  clearLed();
+  /*All the tracks have been sent so clear the write queue*/
+  write_original = 0;
+  if (mcl_cfg.chain_mode == 0) {
+    return;
+  }
+
   for (uint8_t n = 0; n < 20; n++) {
     if (note_interface.notes[n] > 0) {
       // if (chains[n].active > 0) {
@@ -692,10 +674,6 @@ void MCLActions::send_pattern_kit_to_md() {
   }
   calc_next_transition();
   calc_latency(&empty_track);
-
-  clearLed();
-  /*All the tracks have been sent so clear the write queue*/
-  write_original = 0;
 }
 
 void MCLActions::calc_next_slot_transition(uint8_t n) {
