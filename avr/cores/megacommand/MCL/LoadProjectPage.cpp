@@ -3,15 +3,160 @@
 
 void LoadProjectPage::display() {
 #ifdef OLED_DISPLAY
-  oled_display.setFont();
+  uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.clearDisplay();
-#endif
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "Project:");
-  GUI.setLine(GUI.LINE2);
+  oled_display.setFont(&TomThumb);
+  oled_display.setCursor(0, 8);
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.println("Projects");
+  for (uint8_t n = 0; n < 32; n++) {
+    if (n % 2 != 0) {
+      oled_display.drawPixel(x_offset - 6, n, WHITE);
+    }
+  }
 
-  GUI.put_string_at_fill(0, file_entries[encoders[0]->cur]);
+  oled_display.setCursor(x_offset, 8);
+  uint8_t max_items;
+  if (numEntries > MAX_VISIBLE_ROWS) {
+    max_items = MAX_VISIBLE_ROWS;
+  } else {
+    max_items = numEntries;
+  }
+  for (uint8_t n = 0; n < max_items; n++) {
+
+    oled_display.setCursor(x_offset, y_offset + 8 * n);
+    if (n == cur_row) {
+      oled_display.setTextColor(BLACK, WHITE);
+      oled_display.fillRect(oled_display.getCursorX() - 3,
+                            oled_display.getCursorY() - 6, width, 7, WHITE);
+    } else {
+      oled_display.setTextColor(WHITE, BLACK);
+      if (encoders[0]->cur - cur_row + n == cur_proj) {
+        oled_display.setCursor(x_offset - 4, y_offset + n * 8);
+        oled_display.print(">");
+      }
+    }
+    oled_display.println(file_entries[encoders[0]->cur - cur_row + n]);
+  }
+  draw_scrollbar(120);
+  oled_display.display();
+#else
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(0, "Load Project:");
+  GUI.setLine(GUI.LINE2);
+  if (cur_proj == encoders[0]->cur) {
+    GUI.put_string_at_fill(0, ">");
+  }
+  else {
+    GUI.put_string_at_fill(0, " ");
+  }
+  GUI.put_string_at_fill(1, file_entries[encoders[0]->cur]);
+
+#endif
   return;
+}
+
+void LoadProjectPage::setup() {
+  bool ret;
+  int b;
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  classic_display = false;
+#endif
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("Load project page");
+}
+void LoadProjectPage::init() {
+  char temp_entry[16];
+
+  SdFile dirfile;
+  int index = 0;
+  //  dirfile.open("/",O_READ);
+  SD.vwd()->rewind();
+  numEntries = 0;
+  while (dirfile.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
+    for (uint8_t c = 0; c < 16; c++) {
+      temp_entry[c] = 0;
+    }
+    dirfile.getName(temp_entry, 16);
+    char mcl[4] = "mcl";
+    bool is_mcl_file = true;
+
+    DEBUG_PRINTLN(temp_entry);
+
+    for (uint8_t a = 1; a < 3; a++) {
+      if (temp_entry[strlen(temp_entry) - a] != mcl[3 - a]) {
+        is_mcl_file = false;
+      }
+    }
+    if (is_mcl_file) {
+      strcpy(&file_entries[numEntries][0], &temp_entry[0]);
+      DEBUG_PRINTLN("project file identified");
+      DEBUG_PRINTLN(file_entries[numEntries]);
+
+      if (strcmp(&temp_entry[0], &mcl_cfg.project[1]) == 0) {
+        DEBUG_PRINTLN("match");
+        DEBUG_PRINTLN(temp_entry);
+        DEBUG_PRINTLN(mcl_cfg.project);
+
+        cur_proj = numEntries;
+        encoders[0]->cur = numEntries;
+      }
+
+      numEntries++;
+    }
+    index++;
+    dirfile.close();
+    DEBUG_PRINTLN(numEntries);
+  }
+
+  if (numEntries <= 0) {
+    numEntries = 0;
+    ((MCLEncoder *)encoders[0])->max = 0;
+  }
+  ((MCLEncoder *)encoders[0])->max = numEntries - 1;
+
+  DEBUG_PRINTLN("finished load proj setup");
+}
+
+void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
+  uint8_t number_of_items = numEntries;
+  uint8_t length =
+      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32;
+  uint8_t y =
+      ((float)(encoders[0]->cur - cur_row) / (float)(number_of_items - 1)) * 32;
+  for (uint8_t n = 0; n < 32; n++) {
+    if (n % 2 == 0) {
+      oled_display.drawPixel(x_offset + 1, n, WHITE);
+      oled_display.drawPixel(x_offset + 3, n, WHITE);
+
+    } else {
+      oled_display.drawPixel(x_offset + 2, n, WHITE);
+    }
+  }
+
+  oled_display.fillRect(x_offset + 1, y + 1, 3, length - 2, BLACK);
+  oled_display.drawRect(x_offset, y, 5, length, WHITE);
+}
+
+void LoadProjectPage::loop() {
+
+  if (encoders[0]->hasChanged()) {
+
+    uint8_t diff = encoders[0]->cur - encoders[0]->old;
+    int8_t new_val = cur_row + diff;
+#ifdef OLED_DISPLAY
+    if (new_val > MAX_VISIBLE_ROWS - 1) {
+      new_val = MAX_VISIBLE_ROWS - 1;
+    }
+    if (new_val < 0) {
+      new_val = 0;
+    }
+#endif
+    // MD.assignMachine(0, encoders[0]->cur);
+    cur_row = new_val;
+  }
 }
 
 bool LoadProjectPage::handleEvent(gui_event_t *event) {
@@ -34,7 +179,17 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       if (proj.load_project(temp)) {
         GUI.setPage(&grid_page);
       } else {
+#ifdef OLED_DISPLAY
+        oled_display.clearDisplay();
+        oled_display.setFont(&TomThumb);
+        oled_display.setCursor(0, 8);
+        oled_display.setTextColor(WHITE, BLACK);
+        oled_display.println("PROJECT NOT COMPATIBLE");
+        oled_display.display();
+        delay(700);
+#else
         GUI.flash_strings_fill("PROJECT ERROR", "NOT COMPATIBLE");
+#endif
       }
     }
     return true;
@@ -49,54 +204,4 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     }
   }
   return false;
-}
-
-void LoadProjectPage::setup() {
-  bool ret;
-  int b;
-  #ifdef OLED_DISPLAY
-  oled_display.clearDisplay();
-  #endif
-
-  DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Load project page");
-
-  char temp_entry[16];
-
-  SdFile dirfile;
-  int index = 0;
-  int numEntries = 0;
-  //  dirfile.open("/",O_READ);
-  SD.vwd()->rewind();
-
-  while (dirfile.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
-    for (uint8_t c = 0; c < 16; c++) {
-      temp_entry[c] = 0;
-    }
-    dirfile.getName(temp_entry, 16);
-    char mcl[4] = "mcl";
-    bool is_mcl_file = true;
-
-    DEBUG_PRINTLN(temp_entry);
-
-    for (uint8_t a = 1; a < 3; a++) {
-      if (temp_entry[strlen(temp_entry) - a] != mcl[3 - a]) {
-        is_mcl_file = false;
-      }
-    }
-    if (is_mcl_file) {
-      strcpy(&file_entries[numEntries][0], &temp_entry[0]);
-      DEBUG_PRINTLN("project file identified");
-      DEBUG_PRINTLN(file_entries[numEntries]);
-      numEntries++;
-    }
-    index++;
-    dirfile.close();
-  }
-
-  if (numEntries <= 0) {
-    numEntries = 0;
-    ((MCLEncoder *)encoders[0])->max = 0;
-  }
-  ((MCLEncoder *)encoders[0])->max = numEntries - 1;
 }
