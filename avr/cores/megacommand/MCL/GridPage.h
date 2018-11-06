@@ -38,6 +38,7 @@ public:
 
   bool reload_slot_models;
   bool show_slot_menu = false;
+  bool write_cfg = false;
 
   int active_slots[20];
   uint8_t slot_apply;

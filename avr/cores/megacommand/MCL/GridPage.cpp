@@ -100,6 +100,7 @@ void GridPage::loop() {
     // switch_ram_bank(0);
     // PORTL |= (_BV(PL6));
     // CLEAR_LOCK();
+    write_cfg = true;
   }
 
 #else
@@ -109,6 +110,7 @@ void GridPage::loop() {
   if (encoders[1]->hasChanged()) {
     grid_lastclock = slowclock;
     reload_slot_models = false;
+    write_cfg = true;
   }
 #endif
 
@@ -125,16 +127,16 @@ void GridPage::loop() {
       toggle_fx2();
     }
     */
+ 
   if (slowclock < grid_lastclock) {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
 
-  if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
+  if (clock_diff(grid_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
     ///   DEBUG_PRINTLN(grid_lastclock);
     //   DEBUG_PRINTLN(slowclock);
     //   display_name = 1;
-  } else {
-    //  if (display_name == 1) {
+      if ((write_cfg) && (MidiClock.state != 2)) {
     mcl_cfg.cur_col = cur_col;
     mcl_cfg.cur_row = cur_row;
 
@@ -144,8 +146,10 @@ void GridPage::loop() {
     mcl_cfg.tempo = MidiClock.tempo;
     DEBUG_PRINTLN("write cfg");
     mcl_cfg.write_cfg();
+    grid_lastclock = slowclock;
+    write_cfg = false;
     // }
-
+    }
     // display_name = 0;
   }
 }

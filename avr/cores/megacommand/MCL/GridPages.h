@@ -4,11 +4,15 @@
 #define GRIDPAGES_H__
 
 #ifdef OLED_DISPLAY
+
 #define ENCODER_RES_GRID 1
 #define ENCODER_RES_PAT 2
+
 #else
+
 #define ENCODER_RES_GRID 4
 #define ENCODER_RES_PAT 4
+
 #endif
 
 #include "GridEncoder.h"

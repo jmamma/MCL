@@ -2,11 +2,13 @@
 #include "MCL.h"
 
 #ifdef OLED_DISPLAY
-MCLEncoder param1(GRID_WIDTH - 1, 0, ENCODER_RES_GRID);
+MCLEncoder param1(GRID_WIDTH - 1, 0, 1);
+MCLEncoder param2(GRID_LENGTH - 1, 0 , 1);
 #else
 MCLEncoder param1(GRID_WIDTH - 4, 0, ENCODER_RES_GRID);
-#endif
 MCLEncoder param2(GRID_LENGTH - 1, 0 , ENCODER_RES_GRID);
+#endif
+
 MCLEncoder param3(0, 127, ENCODER_RES_GRID);
 MCLEncoder param4(0, 127, ENCODER_RES_GRID);
 
