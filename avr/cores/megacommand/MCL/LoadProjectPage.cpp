@@ -31,12 +31,12 @@ void LoadProjectPage::display() {
                             oled_display.getCursorY() - 6, width, 7, WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
-      if (encoders[0]->cur - cur_row + n == cur_proj) {
+      if (encoders[1]->cur - cur_row + n == cur_proj) {
         oled_display.setCursor(x_offset - 4, y_offset + n * 8);
         oled_display.print(">");
       }
     }
-    oled_display.println(file_entries[encoders[0]->cur - cur_row + n]);
+    oled_display.println(file_entries[encoders[1]->cur - cur_row + n]);
   }
   draw_scrollbar(120);
   oled_display.display();
@@ -44,13 +44,13 @@ void LoadProjectPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "Load Project:");
   GUI.setLine(GUI.LINE2);
-  if (cur_proj == encoders[0]->cur) {
+  if (cur_proj == encoders[1]->cur) {
     GUI.put_string_at_fill(0, ">");
   }
   else {
     GUI.put_string_at_fill(0, " ");
   }
-  GUI.put_string_at_fill(1, file_entries[encoders[0]->cur]);
+  GUI.put_string_at_fill(1, file_entries[encoders[1]->cur]);
 
 #endif
   return;
@@ -101,7 +101,7 @@ void LoadProjectPage::init() {
         DEBUG_PRINTLN(mcl_cfg.project);
 
         cur_proj = numEntries;
-        encoders[0]->cur = numEntries;
+        encoders[1]->cur = numEntries;
       }
 
       numEntries++;
@@ -113,9 +113,9 @@ void LoadProjectPage::init() {
 
   if (numEntries <= 0) {
     numEntries = 0;
-    ((MCLEncoder *)encoders[0])->max = 0;
+    ((MCLEncoder *)encoders[1])->max = 0;
   }
-  ((MCLEncoder *)encoders[0])->max = numEntries - 1;
+  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
 
   DEBUG_PRINTLN("finished load proj setup");
 }
@@ -125,7 +125,7 @@ void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
   uint8_t length =
       ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32;
   uint8_t y =
-      ((float)(encoders[0]->cur - cur_row) / (float)(number_of_items - 1)) * 32;
+      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 32;
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 == 0) {
       oled_display.drawPixel(x_offset + 1, n, WHITE);
@@ -142,9 +142,9 @@ void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
 
 void LoadProjectPage::loop() {
 
-  if (encoders[0]->hasChanged()) {
+  if (encoders[1]->hasChanged()) {
 
-    uint8_t diff = encoders[0]->cur - encoders[0]->old;
+    uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 #ifdef OLED_DISPLAY
     if (new_val > MAX_VISIBLE_ROWS - 1) {
@@ -154,7 +154,7 @@ void LoadProjectPage::loop() {
       new_val = 0;
     }
 #endif
-    // MD.assignMachine(0, encoders[0]->cur);
+    // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
   }
 }
@@ -169,12 +169,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    uint8_t size = m_strlen(file_entries[encoders[0]->getValue()]);
-    if (strcmp(&file_entries[encoders[0]->getValue()][size - 4], "mcl") == 0) {
+    uint8_t size = m_strlen(file_entries[encoders[1]->getValue()]);
+    if (strcmp(&file_entries[encoders[1]->getValue()][size - 4], "mcl") == 0) {
 
       char temp[size + 1];
       temp[0] = '/';
-      m_strncpy(&temp[1], file_entries[encoders[0]->getValue()], size);
+      m_strncpy(&temp[1], file_entries[encoders[1]->getValue()], size);
 
       if (proj.load_project(temp)) {
         GUI.setPage(&grid_page);
@@ -199,7 +199,7 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       EVENT_RELEASED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     if (proj.project_loaded) {
-      GUI.setPage(&grid_page);
+      GUI.popPage();
       return true;
     }
   }

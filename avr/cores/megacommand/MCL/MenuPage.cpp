@@ -136,6 +136,7 @@ void MenuPage::display() {
   #ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
+  oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.println(str);
