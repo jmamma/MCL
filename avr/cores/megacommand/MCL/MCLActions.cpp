@@ -262,69 +262,71 @@ void MCLActions::prepare_next_chain(int row) {
     q = 1 << gridio_param4.cur;
   }
   if (q < 4) {
-   q = 4;
+    q = 4;
   }
   //  }
+  if (mcl_cfg.chain_mode > 0) {
+    uint8_t slots_cached[20] = {0};
+    int32_t len =
+        sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint8_t slots_cached[20] = {0};
-  int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+    for (uint8_t n = 0; n < 16; n++) {
 
-  for (uint8_t n = 0; n < 16; n++) {
+      if (note_interface.notes[n] > 0) {
 
-    if (note_interface.notes[n] > 0) {
+        if (md_track->load_track_from_grid(n, row, len)) {
 
-      if (md_track->load_track_from_grid(n, row, len)) {
-
-        md_track->store_in_mem(n);
-        slots_cached[n] = 1;
-      }
-
-      uint8_t trigGroup = md_track->machine.trigGroup;
-
-      if ((trigGroup < 16) && (trigGroup != n) &&
-          (slots_cached[trigGroup] == 0)) {
-        DEBUG_PRINTLN("caching trig group");
-        DEBUG_PRINTLN(n);
-        DEBUG_PRINTLN(trigGroup);
-        if (md_track->load_track_from_grid(trigGroup, row, len)) {
-          md_track->store_in_mem(trigGroup);
+          md_track->store_in_mem(n);
           slots_cached[n] = 1;
+        }
+
+        uint8_t trigGroup = md_track->machine.trigGroup;
+
+        if ((trigGroup < 16) && (trigGroup != n) &&
+            (slots_cached[trigGroup] == 0)) {
+          DEBUG_PRINTLN("caching trig group");
+          DEBUG_PRINTLN(n);
+          DEBUG_PRINTLN(trigGroup);
+          if (md_track->load_track_from_grid(trigGroup, row, len)) {
+            md_track->store_in_mem(trigGroup);
+            slots_cached[n] = 1;
+          }
         }
       }
     }
-  }
-  for (uint8_t n = 16; n < 20; n++) {
-    if (note_interface.notes[n] > 0) {
-      if (a4_track->load_track_from_grid(n, row, 0)) {
-        a4_track->store_in_mem(n);
+    for (uint8_t n = 16; n < 20; n++) {
+      if (note_interface.notes[n] > 0) {
+        if (a4_track->load_track_from_grid(n, row, 0)) {
+          a4_track->store_in_mem(n);
+        }
       }
     }
-  }
-  uint16_t next_step;
-  if (q > 0) {
-    next_step = (MidiClock.div16th_counter / q) * q + q;
-  } else {
-    next_step = MidiClock.div16th_counter + 1;
-  }
-  DEBUG_PRINTLN("q");
-  DEBUG_PRINTLN(q);
-  DEBUG_PRINTLN("write step");
-  DEBUG_PRINTLN(MidiClock.div16th_counter);
-  DEBUG_PRINTLN(next_step);
-  for (uint8_t n = 0; n < 20; n++) {
-
-    if (note_interface.notes[n] > 0) {
-      // if (chains[n].active > 0) {
-      next_transitions[n] = next_step;
-      chains[n].row = row;
-      chains[n].loops = 1;
-      //if (grid_page.active_slots[n] < 0) {
-        grid_page.active_slots[n] = 0x7FFF;
-     // }
+    uint16_t next_step;
+    if (q > 0) {
+      next_step = (MidiClock.div16th_counter / q) * q + q;
+    } else {
+      next_step = MidiClock.div16th_counter + 1;
     }
+    DEBUG_PRINTLN("q");
+    DEBUG_PRINTLN(q);
+    DEBUG_PRINTLN("write step");
+    DEBUG_PRINTLN(MidiClock.div16th_counter);
+    DEBUG_PRINTLN(next_step);
+    for (uint8_t n = 0; n < 20; n++) {
+
+      if (note_interface.notes[n] > 0) {
+        // if (chains[n].active > 0) {
+        next_transitions[n] = next_step;
+        chains[n].row = row;
+        chains[n].loops = 1;
+        // if (grid_page.active_slots[n] < 0) {
+        grid_page.active_slots[n] = 0x7FFF;
+        // }
+      }
+    }
+    calc_next_transition();
+    calc_latency(&empty_track);
   }
-  calc_next_transition();
-  calc_latency(&empty_track);
 }
 
 void MCLActions::send_pattern_kit_to_md() {
