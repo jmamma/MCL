@@ -129,24 +129,24 @@ void GridPage::loop() {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
   }
 
-   if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
- ///   DEBUG_PRINTLN(grid_lastclock);
- //   DEBUG_PRINTLN(slowclock);
- //   display_name = 1;
-   } else {
-  //  if (display_name == 1) {
-      mcl_cfg.cur_col = cur_col;
-      mcl_cfg.cur_row = cur_row;
+  if (clock_diff(grid_lastclock, slowclock) < GUI_NAME_TIMEOUT) {
+    ///   DEBUG_PRINTLN(grid_lastclock);
+    //   DEBUG_PRINTLN(slowclock);
+    //   display_name = 1;
+  } else {
+    //  if (display_name == 1) {
+    mcl_cfg.cur_col = cur_col;
+    mcl_cfg.cur_row = cur_row;
 
-      mcl_cfg.col = encoders[0]->cur;
-      mcl_cfg.row = encoders[1]->cur;
+    mcl_cfg.col = encoders[0]->cur;
+    mcl_cfg.row = encoders[1]->cur;
 
-      mcl_cfg.tempo = MidiClock.tempo;
-      DEBUG_PRINTLN("write cfg");
-      mcl_cfg.write_cfg();
-   // }
+    mcl_cfg.tempo = MidiClock.tempo;
+    DEBUG_PRINTLN("write cfg");
+    mcl_cfg.write_cfg();
+    // }
 
-   // display_name = 0;
+    // display_name = 0;
   }
 }
 void GridPage::displayScroll(uint8_t i) {
@@ -276,7 +276,7 @@ void GridPage::display_counters() {
     //    val[1] = (char)0x60;
     // }
   }
-  
+
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(24, y_offset);
   oled_display.print(val);
@@ -483,8 +483,7 @@ void GridPage::display() {
   for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
     uint8_t track_type = row_headers[y].track_type[x + encoders[0]->cur];
     uint8_t model = row_headers[y].model[x + encoders[0]->cur];
-    if (((MidiClock.step_counter == 1) &&
-         (MidiClock.state == 2)) &&
+    if (((MidiClock.step_counter == 1) && (MidiClock.state == 2)) &&
         ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
 
     } else {
@@ -558,9 +557,7 @@ void GridPage::prepare() {
   }
 }
 
-void apply_slot_changes_cb() {
- grid_page.apply_slot_changes();
-}
+void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
 void GridPage::apply_slot_changes() {
   show_slot_menu = false;
@@ -666,15 +663,18 @@ bool GridPage::handleEvent(gui_event_t *event) {
     merge_md = 0;
     return true;
   }
-
+  if (BUTTON_RELEASED(Buttons.BUTTON3)) {
+    apply_slot_changes();
+    return true;
+  }
 #else
   if (BUTTON_RELEASED(Buttons.BUTTON3)) {
     display_name = 0;
     return true;
   }
   if (BUTTON_PRESSED(Buttons.BUTTON3)) {
-  display_name = 1;
-  return;
+    display_name = 1;
+    return;
   }
   if (BUTTON_DOWN(Buttons.BUTTON3)) {
     if (BUTTON_PRESSED(Buttons.ENCODER1)) {
@@ -699,7 +699,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       display_name = 0;
       GUI.pushPage(&grid_slot_page);
     }
-   return true;
+    return true;
   }
 #endif
   if (BUTTON_PRESSED(Buttons.ENCODER1)) {
