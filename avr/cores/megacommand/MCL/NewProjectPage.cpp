@@ -79,11 +79,11 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
-    gfx.alert("Please wait", "Creating Project");
+    gfx.alert("PLEASE WAIT", "CREATING PROJECT");
 
     DEBUG_PRINTLN(newprj);
     if (SD.exists(newprj)) {
-      gfx.alert("Project exists", "");
+      gfx.alert("PROJECT EXISTS", "");
       DEBUG_PRINTLN("Project exists");
       return true;
     }
