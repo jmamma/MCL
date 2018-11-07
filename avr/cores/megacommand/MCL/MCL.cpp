@@ -56,6 +56,7 @@ void MCL::setup() {
   DEBUG_PRINTLN("Track sizes:");
   DEBUG_PRINTLN(sizeof(A4Track));
   DEBUG_PRINTLN(sizeof(MDTrack));
-
+  DEBUG_PRINTLN(sizeof(MDSeqTrackData));
+  DEBUG_PRINTLN(sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine));
 }
 MCL mcl;

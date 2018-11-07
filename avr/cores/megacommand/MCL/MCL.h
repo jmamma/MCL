@@ -59,7 +59,7 @@
 
 #include "DSP.h"
 
-#define VERSION 2016
+#define VERSION 2020
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

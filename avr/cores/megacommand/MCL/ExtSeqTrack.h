@@ -16,7 +16,7 @@ class ExtSeqTrackData {
 public:
   uint8_t length;
   uint8_t resolution = 1; // Resolution = 2 / ExtPatternResolution
-
+  uint8_t reserved[4];
   int8_t notes[4][128]; // 128 steps, up to 4 notes per step
   uint8_t locks[4][128];
   uint8_t locks_params[4];
