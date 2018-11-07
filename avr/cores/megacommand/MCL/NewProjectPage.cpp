@@ -78,13 +78,12 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    LCD.goLine(0);
-    LCD.puts("Please Wait");
-    LCD.goLine(1);
-    LCD.puts("Creating Project");
+
+    gfx.alert("Please wait", "Creating Project");
+
     DEBUG_PRINTLN(newprj);
     if (SD.exists(newprj)) {
-      GUI.flash_strings_fill("Project exists", "");
+      gfx.alert("Project exists", "");
       DEBUG_PRINTLN("Project exists");
       return true;
     }
@@ -97,7 +96,7 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
         GUI.setPage(&grid_page);
         return true;
       } else {
-        GUI.flash_strings_fill("SD FAILURE", "--");
+        gfx.alert("SD FAILURE", "--");
         return false;
         //  LCD.goLine(0);
         // LCD.puts("SD Failure");

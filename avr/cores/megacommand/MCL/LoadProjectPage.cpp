@@ -179,6 +179,8 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       if (proj.load_project(temp)) {
         GUI.setPage(&grid_page);
       } else {
+        gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
+/*
 #ifdef OLED_DISPLAY
         oled_display.clearDisplay();
         oled_display.setFont(&TomThumb);
@@ -190,6 +192,7 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 #else
         GUI.flash_strings_fill("PROJECT ERROR", "NOT COMPATIBLE");
 #endif
+*/
       }
     }
     return true;

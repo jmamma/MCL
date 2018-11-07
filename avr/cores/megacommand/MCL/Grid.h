@@ -6,7 +6,7 @@
 #include "GridPages.h"
 #include "A4Track.h"
 
-#define GRID_LENGTH 130
+#define GRID_LENGTH 128
 #define GRID_WIDTH 20
 #define GRID_SLOT_BYTES 4096
 

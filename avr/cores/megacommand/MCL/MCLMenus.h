@@ -75,8 +75,8 @@ const menu_t chain_menu_layout PROGMEM = {
     3,
     {
         {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
-        {"RAND MIN:", 0, 127, 0, (uint8_t *) &mcl_cfg.chain_rand_min, (Page*) NULL, {}},
-        {"RAND MAX:", 0, 127, 0, (uint8_t *) &mcl_cfg.chain_rand_max, (Page*) NULL, {}},
+        {"RAND MIN:", 0, 128, 0, (uint8_t *) &mcl_cfg.chain_rand_min, (Page*) NULL, {}},
+        {"RAND MAX:", 0, 128, 0, (uint8_t *) &mcl_cfg.chain_rand_max, (Page*) NULL, {}},
     },
     (void*)(&mclsys_apply_config),
 };

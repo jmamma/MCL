@@ -133,14 +133,24 @@ bool Project::new_project(char *projectname) {
   uint8_t ledstatus = 0;
 
   DEBUG_PRINTLN("Initializing project.. please wait");
-
+#ifdef OLED_DISPLAY
+  oled_display.drawRect(15, 23, 98, 6, WHITE);
+#endif
   // Initialise the project file by filling the grid with blank data.
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
-    if (i % 2 == 0) {
+
+#ifdef OLED_DISPLAY
+          if (i % 16 == 0) {
+        oled_display.fillRect(15, 23, ((float)i / (float)GRID_LENGTH) * 98, 6,
+                              WHITE);
+        oled_display.display();
+    }
+#endif
+          if (i % 2 == 0) {
       if (ledstatus == 0) {
         setLed2();
         ledstatus = 1;
-      } else {
+     } else {
         clearLed2();
         ledstatus = 0;
       }

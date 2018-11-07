@@ -122,6 +122,7 @@ class Adafruit_GFX : public Print {
   // get current cursor position (get rotation safe maximum values, using: width() for x, height() for y)
   int16_t getCursorX(void) const;
   int16_t getCursorY(void) const;
+  GFXfont *getFont() { return gfxFont; }
 
  protected:
   void
