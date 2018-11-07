@@ -65,8 +65,8 @@ bool MCLSysConfig::cfg_init() {
   m_strncpy(project, my_string, 16);
   clock_send = 0;
   clock_rec = 0;
-  uart1_turbo = 2;
-  uart2_turbo = 2;
+  uart1_turbo = 3;
+  uart2_turbo = 3;
   col = 0;
   row = 0;
   cur_row = 0;
