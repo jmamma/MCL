@@ -123,9 +123,9 @@ void LoadProjectPage::init() {
 void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
   uint8_t number_of_items = numEntries;
   uint8_t length =
-      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32;
+      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 31;
   uint8_t y =
-      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 32;
+      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 31;
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 == 0) {
       oled_display.drawPixel(x_offset + 1, n, WHITE);

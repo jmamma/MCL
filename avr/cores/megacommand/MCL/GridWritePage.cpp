@@ -12,6 +12,13 @@ void GridWritePage::setup() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[2]->cur = MD.currentKit;
 
+  if (mcl_cfg.chain_mode > 0) {
+  ((MCLEncoder*) encoders[3])->max = 6;
+  if (encoders[3]->cur > 7) { encoders[3]->cur = 0; }
+  }
+  else {
+  ((MCLEncoder*) encoders[3])->max = 11;
+  }
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
   note_interface.state = true;
@@ -79,10 +86,10 @@ void GridWritePage::display() {
     GUI.put_string_at(11, "--");
   }
   if (encoders[3]->getValue() == 7) {
-    GUI.put_string_at(11, "CU");
+    GUI.put_string_at(11, "LV");
   }
   if (encoders[3]->getValue() == 8) {
-    GUI.put_string_at(11, "LV");
+    GUI.put_string_at(11, "CU");
   }
   if (encoders[3]->getValue() == 9) {
     GUI.put_string_at(11, "P ");
