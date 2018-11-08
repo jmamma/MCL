@@ -38,7 +38,9 @@ void LoadProjectPage::display() {
     }
     oled_display.println(file_entries[encoders[1]->cur - cur_row + n]);
   }
-  draw_scrollbar(120);
+  if (numEntries > MAX_VISIBLE_ROWS) {
+    draw_scrollbar(120);
+  }
   oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
@@ -46,8 +48,7 @@ void LoadProjectPage::display() {
   GUI.setLine(GUI.LINE2);
   if (cur_proj == encoders[1]->cur) {
     GUI.put_string_at_fill(0, ">");
-  }
-  else {
+  } else {
     GUI.put_string_at_fill(0, " ");
   }
   GUI.put_string_at_fill(1, file_entries[encoders[1]->cur]);
@@ -122,10 +123,11 @@ void LoadProjectPage::init() {
 
 void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
   uint8_t number_of_items = numEntries;
-  uint8_t length =
-      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 31;
-  uint8_t y =
-      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 31;
+  uint8_t length = round(
+      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
+  uint8_t y = round(
+      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) *
+      32);
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 == 0) {
       oled_display.drawPixel(x_offset + 1, n, WHITE);
@@ -180,19 +182,19 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
         GUI.setPage(&grid_page);
       } else {
         gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
-/*
-#ifdef OLED_DISPLAY
-        oled_display.clearDisplay();
-        oled_display.setFont(&TomThumb);
-        oled_display.setCursor(0, 8);
-        oled_display.setTextColor(WHITE, BLACK);
-        oled_display.println("PROJECT NOT COMPATIBLE");
-        oled_display.display();
-        delay(700);
-#else
-        GUI.flash_strings_fill("PROJECT ERROR", "NOT COMPATIBLE");
-#endif
-*/
+        /*
+        #ifdef OLED_DISPLAY
+                oled_display.clearDisplay();
+                oled_display.setFont(&TomThumb);
+                oled_display.setCursor(0, 8);
+                oled_display.setTextColor(WHITE, BLACK);
+                oled_display.println("PROJECT NOT COMPATIBLE");
+                oled_display.display();
+                delay(700);
+        #else
+                GUI.flash_strings_fill("PROJECT ERROR", "NOT COMPATIBLE");
+        #endif
+        */
       }
     }
     return true;

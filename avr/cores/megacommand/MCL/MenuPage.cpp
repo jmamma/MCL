@@ -53,9 +53,9 @@ void MenuPage::loop() {
 void MenuPage::draw_scrollbar(uint8_t x_offset) {
   uint8_t number_of_items = menu.get_number_of_items();
   uint8_t length =
-      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 31;
+      round(((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
   uint8_t y =
-      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 31;
+      round(((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 32);
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 == 0) {
       oled_display.drawPixel(x_offset + 1, n, WHITE);
@@ -147,7 +147,11 @@ void MenuPage::display() {
   }
 
   draw_menu(x_offset, 8);
+
+  uint8_t number_of_items = menu.get_number_of_items();
+  if (number_of_items > MAX_VISIBLE_ROWS) {
   draw_scrollbar(120);
+  }
   oled_display.display();
 
   #else
@@ -164,7 +168,6 @@ void MenuPage::display() {
     GUI.put_string_at_fill(0,str);
   }
 
-  uint8_t number_of_items = menu.get_number_of_items();
 
   if (cur_row > number_of_items - 1) {
     return true;
