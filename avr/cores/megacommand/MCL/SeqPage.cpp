@@ -83,7 +83,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
        ((MidiClock.div16th_counter -
          mcl_actions.start_clock32th / 2) /
         mcl_seq.md_tracks[last_md_track].length)); */
-  uint8_t step_count = mcl_seq.md_tracks[last_md_track].length;
+  uint8_t step_count = mcl_seq.md_tracks[last_md_track].step_count;
   for (int i = 0; i < 16; i++) {
 
     if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
