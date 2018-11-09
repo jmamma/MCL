@@ -4,8 +4,15 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#define ENCODER_RES_SEQ 4
+
+#ifdef OLED_DISPLAY
+#define ENCODER_RES_SEQ 2
 #define ENCODER_RES_PARAM 2
+#else
+#define ENCODER_RES_SEQ 2
+#define ENCODER_RES_PARAM 2
+#endif
+
 #define NUM_PARAM_PAGES 2
 #define NUM_LFO_PAGES 4
 
@@ -17,12 +24,12 @@ extern MCLEncoder seq_param4;
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
 
-#include "SeqParamPage.h"
-#include "SeqStepPage.h"
 #include "SeqExtStepPage.h"
-#include "SeqRtrkPage.h"
-#include "SeqRlckPage.h"
+#include "SeqParamPage.h"
 #include "SeqPtcPage.h"
+#include "SeqRlckPage.h"
+#include "SeqRtrkPage.h"
+#include "SeqStepPage.h"
 
 extern uint8_t last_ext_track;
 

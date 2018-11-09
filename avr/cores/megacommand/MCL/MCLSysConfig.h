@@ -4,10 +4,12 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2019
+#define CONFIG_VERSION 2023
 
 #define MIDI_OMNI_MODE 17
-#define MIDI_LOCAL_MODE 16
+#define MIDI_LOCAL_MODE 0
+
+extern void mclsys_apply_config();
 
 class MCLSysConfigData {
 public:
@@ -21,16 +23,22 @@ public:
   uint8_t drumRouting[16];
   uint8_t cue_output;
   uint32_t cues;
+  uint8_t row;
+  uint8_t col;
   uint8_t cur_row;
   uint8_t cur_col;
-  uint8_t poly_start;
-  uint8_t poly_max;
+  uint16_t poly_mask;
   uint8_t uart2_ctrl_mode;
   uint32_t mutes;
   uint8_t display_mirror;
-  uint16_t tempo;
+  uint8_t screen_saver;
+  float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
+  uint8_t auto_merge;
+  uint8_t chain_mode;
+  uint8_t chain_rand_min;
+  uint8_t chain_rand_max;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

@@ -28,6 +28,7 @@ Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
 // extern volatile uint16_t slowclock = 0;
+
 void my_init_ram(void) __attribute__((naked)) __attribute__((used))
 __attribute__((section(".init3")));
 
@@ -35,7 +36,7 @@ void my_init_ram(void) {
   // Set PL6 as output
   //
   DDRL |= _BV(PL6);
-  PORTL |= ~(_BV(PL6));
+  PORTL &= ~(_BV(PL6));
   XMCRA |= _BV(SRE);
   //  MCUCR |= _BV(SRE);
   //  uint8_t *ptr = 0x2000;
@@ -193,33 +194,31 @@ static inline uint32_t phase_mult(uint32_t val) {
   return (val * PHASE_FACTOR) >> 8;
 }
 
+bool in_irq = false;
+
 ISR(TIMER1_COMPA_vect) {
 
+  uint8_t old_ram_bank = switch_ram_bank(0);
+
   clock++;
-
-  if (clock_diff(MidiClock.clock_last_time,clock) >= MidiClock.div192th_time) {
-
-    if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
+  if (MidiClock.state == 2) {
+  if (clock_diff(MidiClock.clock_last_time, clock) >= MidiClock.div192th_time) {
+      if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
       MidiClock.increment192Counter();
-
       MidiClock.div192th_counter_last = MidiClock.div192th_counter;
-
-      MidiClock.callCallbacks();
+      if ((enable_clock_callbacks)) {
+        MidiClock.callCallbacks();
+      }
     }
   }
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    MidiClock.callCallbacks();
+    if ((enable_clock_callbacks)) {
+      MidiClock.callCallbacks();
+    }
   }
-
-  // isr_midi();
-#ifdef MIDIDUINO_MIDI_CLOCK
-//  if (MidiClock.state == MidiClock.STARTED) {
-//   MidiClock.handleTimerInt();
-// }
-#endif
-
-  //  clearLed2();
+  }
+  switch_ram_bank(old_ram_bank);
 }
 
 // XXX CMP to have better time
@@ -252,13 +251,18 @@ uint16_t lastRunningStatusReset = 0;
 #define OUTPUTPIN PD0
 
 // extern uint16_t myvar;
+uint16_t minuteclock = 0;
+
 ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+
+ uint8_t old_ram_bank = switch_ram_bank(0);
+
   slowclock++;
-  // TCNT2 = tcnt2;
-  //  isr_midi();
-
-  //  if (slowclock - MidiClock.clock_last_time >= MidiClock.div192th_time) {
-
+  minuteclock++;
+  if (minuteclock == 60000) {
+  minuteclock = 0;
+  clock_minutes++;
+  }
   if (abs(slowclock - lastRunningStatusReset) > 3000) {
     MidiUart.resetRunningStatus();
     lastRunningStatusReset = slowclock;
@@ -267,18 +271,19 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
 
-  //  SET_BIT(OUTPUTPORT, OUTPUTPIN);
-
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif
-  //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
+
+  switch_ram_bank(old_ram_bank);
 }
 
 uint8_t sysexBuf[5500];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
+
+bool enable_clock_callbacks = true;
 
 void handleIncomingMidi() {
   if (Midi.midiSysex.callSysexCallBacks) {

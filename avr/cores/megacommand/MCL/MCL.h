@@ -14,14 +14,20 @@
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
 
+#include "PolyPage.h"
 #include "Project.h"
 
+#include "GridChain.h"
 #include "Grid.h"
+#include "GridRowHeader.h"
+#include "GridTask.h"
 #include "MCLActions.h"
 #include "MCLSeq.h"
+#include "MCLMemory.h"
 #include "MDExploit.h"
-#include "MDSysexCallbacks.h"
 #include "MDEvents.h"
+#include "Menu.h"
+#include "MenuPage.h"
 #include "MidiActivePeering.h"
 #include "MidiSetup.h"
 #include "MidiSDS.hh"
@@ -33,7 +39,7 @@
 
 #include "AuxPages.h"
 #include "GridPages.h"
-#include "MCLPages.h"
+#include "MCLMenus.h"
 #include "Osc.h"
 #include "OscMixerPage.h"
 #include "OscPage.h"
@@ -45,6 +51,7 @@
 #include "MCLEncoder.h"
 
 #include "MDTrack.h"
+//#include "EmptyTrack.h"
 
 #include "Shared.h"
 #include "WavDesigner.h"
@@ -52,7 +59,7 @@
 
 #include "DSP.h"
 
-#define VERSION 2016
+#define VERSION 2020
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -74,14 +81,10 @@
 
 #define MD_KITBUF_POS 63
 
-extern uint8_t in_sysex;
-extern uint8_t in_sysex2;
+//Memory layout for SRAM bank 1
 extern int8_t curpage;
 extern uint8_t patternswitch;
 
-extern MDPattern pattern_rec;
-extern MDTrack temptrack;
-extern MDSysexCallbacks md_callbacks;
 
 class MCL {
 public:

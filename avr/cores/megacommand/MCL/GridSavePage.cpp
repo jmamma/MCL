@@ -14,7 +14,11 @@ void GridSavePage::setup() {
   grid_page.reload_slot_models = false;
 }
 
-void GridSavePage::init() {}
+void GridSavePage::init() {
+ #ifdef OLED_DISPLAY
+ oled_display.clearDisplay();
+ #endif
+}
 
 void GridSavePage::cleanup() {}
 
@@ -50,9 +54,9 @@ void GridSavePage::display() {
   }
 
   uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (64 * ((MidiClock.div16th_counter -
-              mcl_actions_callbacks.start_clock32th / 2) /
+              mcl_actions.start_clock32th / 2) /
              64));
   GUI.put_value_at2(14, step_count);
 }

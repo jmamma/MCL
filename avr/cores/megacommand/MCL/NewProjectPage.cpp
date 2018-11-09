@@ -4,6 +4,10 @@
 void NewProjectPage::setup() {}
 
 void NewProjectPage::init() {
+#ifdef OLED_DISPLAY
+  oled_display.setFont();
+  oled_display.clearDisplay();
+#endif
   last_clock = slowclock;
   DEBUG_PRINTLN("New project page");
   char my_string[16] = "/project___.mcl";
@@ -34,6 +38,10 @@ void NewProjectPage::update_prjpage_char() {
 }
 
 void NewProjectPage::display() {
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
+
   char allowedchar[38] = "0123456789abcdefghijklmnopqrstuvwxyz_";
   // Check to see that the character chosen is in the list of allowed characters
   if (encoders[0]->hasChanged()) {
@@ -70,13 +78,12 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    LCD.goLine(0);
-    LCD.puts("Please Wait");
-    LCD.goLine(1);
-    LCD.puts("Creating Project");
+
+    gfx.alert("PLEASE WAIT", "CREATING PROJECT");
+
     DEBUG_PRINTLN(newprj);
     if (SD.exists(newprj)) {
-      GUI.flash_strings_fill("Project exists", "");
+      gfx.alert("PROJECT EXISTS", "");
       DEBUG_PRINTLN("Project exists");
       return true;
     }
@@ -89,7 +96,7 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
         GUI.setPage(&grid_page);
         return true;
       } else {
-        GUI.flash_strings_fill("SD FAILURE", "--");
+        gfx.alert("SD FAILURE", "--");
         return false;
         //  LCD.goLine(0);
         // LCD.puts("SD Failure");

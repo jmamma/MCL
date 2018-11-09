@@ -8,20 +8,24 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
+
+  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+
   ((MCLEncoder *)encoders[0])->max = 13;
   ((MCLEncoder *)encoders[1])->max = 23;
   ((MCLEncoder *)encoders[1])->min = 1;
   encoders[1]->cur = 12;
   encoders[0]->cur = 0;
   ((MCLEncoder *)encoders[2])->max = 64;
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  midi_events.setup_callbacks();
+  curpage = SEQ_STEP_PAGE;
 
+  md_exploit.on();
+
+  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
 
   ((MCLEncoder *)encoders[3])->max = tuning->len - 1;
-  midi_events.setup_callbacks();
-  curpage = SEQ_STEP_PAGE;
-  md_exploit.on();
   note_interface.state = true;
 }
 void SeqStepPage::cleanup() {

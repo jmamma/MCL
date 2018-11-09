@@ -41,10 +41,10 @@ void MixerPage::cleanup() {
 }
 
 void MixerPage::set_level(int curtrack, int value) {
-  in_sysex = 1;
+  //in_sysex = 1;
   MD.kit.levels[curtrack] = value;
   MD.setTrackParam(curtrack, 33, value);
-  in_sysex = 0;
+  //in_sysex = 0;
 }
 
 void MixerPage::loop() {}

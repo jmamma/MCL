@@ -1,16 +1,31 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
-void ExtSeqTrack::seq() {
-
-    uint8_t step_count =
+void ExtSeqTrack::set_length(uint8_t len) {
+   length = len;
+   if (step_count >= length) {
+   step_count = length % step_count;
+   }
+   DEBUG_PRINTLN(step_count);
+   /*uint8_t step_count =
         ((MidiClock.div32th_counter / resolution) -
-         (mcl_actions_callbacks.start_clock32th / resolution)) -
+         (mcl_actions.start_clock32th / resolution)) -
         (length *
          ((MidiClock.div32th_counter / resolution -
-           (mcl_actions_callbacks.start_clock32th / resolution)) /
+           (mcl_actions.start_clock32th / resolution)) /
           (length)));
+*/
+}
+void ExtSeqTrack::seq() {
+      if (mute_until_start) {
 
+    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
+      step_count = 0;
+      mute_until_start = false;
+    }
+  }
+  if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
+  (mute_state == SEQ_MUTE_OFF)) {
     int8_t utiming = timing[step_count];         // upper
     uint8_t condition = conditional[step_count]; // lower
 
@@ -30,7 +45,7 @@ void ExtSeqTrack::seq() {
 
     int8_t utiming_next = timing[next_step];         // upper
     uint8_t condition_next = conditional[next_step]; // lower
-    if (!in_sysex2) {
+    if (MidiUart2.uart_block == 0) {
 
       if ((utiming >= (6 * resolution)) &&
           (utiming - (6 * resolution) == (int8_t)timing_counter)) {
@@ -41,10 +56,8 @@ void ExtSeqTrack::seq() {
           }
 
           else if (notes[c][step_count] > 0) {
-            if ((mute == SEQ_MUTE_OFF)) {
               noteon_conditional(condition,
                                  abs(notes[c][step_count]) - 1);
-            }
           }
         }
       }
@@ -57,14 +70,16 @@ void ExtSeqTrack::seq() {
           if (notes[c][step_count + 1] < 0) {
             note_off(abs(notes[c][next_step]) - 1);
           } else if (notes[c][step_count + 1] > 0) {
-            if (mute == SEQ_MUTE_OFF) {
               noteon_conditional(condition,
                                  abs(notes[c][next_step]) - 1);
-            }
           }
         }
       }
     }
+  }
+  if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) && (resolution == 1)) { step_count++; }
+  if ((MidiClock.mod12_counter == 11) && (resolution == 2)) { step_count++; }
+  if (step_count == length) { step_count = 0; }
 }
 
 void ExtSeqTrack::buffer_notesoff() {
@@ -104,14 +119,14 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
   else if (condition <= 8) {
     if (resolution == 2) {
-      if (((MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2 + length) /
+      if (((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2 + length) /
            length) %
               ((condition)) ==
           0) {
         note_on(note);
       }
     } else {
-      if (((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th + length) /
+      if (((MidiClock.div32th_counter - mcl_actions.start_clock32th + length) /
            length) %
               ((condition)) ==
           0) {
@@ -177,13 +192,13 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t vel
 }
 void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
                                       uint8_t velocity) {
-  uint8_t step_count =
+ /* uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions_callbacks.start_clock32th / resolution)) -
+       (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
-                                    (mcl_actions_callbacks.start_clock32th / resolution)) /
+                                    (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
-
+*/
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
@@ -225,13 +240,13 @@ void ExtSeqTrack::record_ext_track_noteoff( uint8_t note_num,
 
 void ExtSeqTrack::record_ext_track_noteon( uint8_t note_num,
                                      uint8_t velocity) {
-  uint8_t step_count =
+  /*uint8_t step_count =
       ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions_callbacks.start_clock32th / resolution)) -
+       (mcl_actions.start_clock32th / resolution)) -
       (length * ((MidiClock.div32th_counter / resolution -
-                                    (mcl_actions_callbacks.start_clock32th / resolution)) /
+                                    (mcl_actions.start_clock32th / resolution)) /
                                    (length)));
-
+*/
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 

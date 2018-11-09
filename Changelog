@@ -1,3 +1,124 @@
+MCL 2.20 09/11/2018
+
+###### IMPORTANT ######
+   Projects created on older versions will not be compatible with MCL 2.20
+
+Stable support for 8x Turbo.
+-  Significant improvments to the MIDI code now makes 8x Turbo
+   the most stable speed setting.
+
+   Choose this speed on both ports for lowest sequencer jitter and
+   fastest transmission times.
+
+GUI overhaul:
+-  Both the HD44780 and OLED display get significant updates to the GUI
+   to accomadate Chain mode. This includes a complete redesign of the
+   menu system.
+
+   The GridPage has been completely redisgned for both displays.
+
+   Screensaver added for OLED display (5 minutes delay)
+
+Slot menu:
+
+
+-  To access the Slot menu:
+
+    OLED_DISPLAY:
+
+       Shift2 button will open the Slot menu for the selected slot.
+
+    HD44780 LCD:
+
+       Hold Shift 2 button + Encoder Button [ 1 - 4] will open the Slot menu
+       for visible slots [ 1 - 4 ].
+
+-  Slot Menu has following options and selectable values:
+    Chain: [ --, auto, manual, random ]
+    Loops:  (0, 64)
+    Row:    (0,127)
+    Seq: [ --, merge ]
+    Clear: [ --, YES ]
+    Apply: (0,20)
+
+    Chain (global setting):
+     - auto: enables chain auto mode global setting
+     - manual: enables chain manual mode global setting
+     - random: enables chain random mode global setting
+
+    Loops: specify how many times to loop track/slot
+
+    Row: specify which row to load/jump to after n loops.
+
+    Seq: merge slot's MD sequencer data in to the internal sequencer
+
+    Clear: clear the select slot.
+
+    Apply: apply the above changes to the next N slots upon exit of SlotMenu.
+
+Chain Mode:
+
+  Chain Mode is enabled through the SlotMenu, or Global Settings->Chain Mode
+  menus.
+
+  Chain Mode is an enhancement of the default MCL write mode. It works
+  like an old school music tracker. Tracks from different rows can be chained
+  together and made to load automatically.
+
+  Previously, when 'writing tracks' the MD pattern data would be transmited to
+  the MD, and the corresponding internal sequencer data would be loaded along side it.
+
+  When chain mode is enabled, only the MegaCommand internal sequencer data is 
+  loaded and used to sequencer the Machindrum. By performing all the MD sequencing 
+  from the MegaCommand we can load tracks instantaneoulsy without any audible delay.
+  In addition, individual tracks can be chained together to form complex sequences or
+  songs.
+
+  To use chain mode, you must first "merge" your MD pattern data in to the
+  internal sequencer. To do this, you can enable the "auto-merge"
+  setting in the MachineDrum global settings page. If auto-mege is enabled,
+  any time you save a track to the MegaCommand, the MD sequencer data will be
+  merged in to the internal sequencer track for that slot.
+
+  The SlotMenu can also be used to merge sequencer data on specific slots or
+  entire rows. (see slot menu above)
+
+  Chain mode resembles an old school music tracker. From the slot menu
+  you can set the duration for which a track should play by setting the number
+  of loops. The row value specifies which row of the Grid the track should
+  load next after it has completed.
+
+  Chain mode can be configured in 1 of 4 ways [ --, auto, manual, random ]
+  If Chain mode is disabled then the write page performs as per pervious
+  versions.
+
+  If Auto mode is selected. Tracks written through the WritePage,
+  will automatically load other tracks based on their Loop and Row settings.
+
+  If Manual mode is selected, tracks will only be loaded through the Write
+  page. (Useful if you want to pause the chaining functionality)
+
+  If Random mode is chosen, tracks will automatically load based on random
+  loop and row settings limited by parameter range in Global->ChainMode menu.
+
+  When Chain mode is activated, the Write Page now displays "Chain".
+  The quantization options behave slightly differently in Chain mode.
+  In Chain mode, tracks will start playing from step 0 based on the
+  step quanitzation.
+
+GridPage Changes:
+
+  If chain mode is active:
+
+  The current active slot will blink.
+
+  On the OLED display, the current Bar:Beat is dispicted.
+  The next transition Bar:Beat is displayed below this.
+
+BugFixes:
+
+Numerous bug fixes and enhancements. See the git log
+
 MCL 2.16a 10/08/2018
 
 Hotfix:

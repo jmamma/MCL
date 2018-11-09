@@ -8,9 +8,9 @@ MCLActionsMidiEvents mcl_actions_midievents;
 
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
   mcl_actions.kit_reload(msg[1]);
-  mcl_actions_callbacks.start_clock32th = MidiClock.div32th_counter;
+  mcl_actions.start_clock32th = MidiClock.div32th_counter;
 
-  mcl_actions_callbacks.start_clock96th = MidiClock.div96th_counter;
+  mcl_actions.start_clock96th = MidiClock.div96th_counter;
   if (MidiClock.state != 2) {
     MD.getCurrentKit();
     MD.getBlockingKit(MD.currentKit);
@@ -21,7 +21,21 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
+void MCLActionsCallbacks::onMidiStopCallback() {
+ DEBUG_PRINTLN("initialising nearest steps");
+//   memset(&mcl_actions.next_transitions[0], 0, 20);
+  for (uint8_t n = 0; n < 20; n++) {
+  mcl_actions.next_transitions[n] = 0;
+  }
+  mcl_actions.calc_next_transition();
+}
+
 void MCLActionsCallbacks::onMidiStartCallback() {
+  mcl_actions.start_clock32th = 0;
+  mcl_actions.start_clock16th = 0;
+ // for (uint8_t n = 0; n < 20; n++) {
+ // mcl_actions.next_transitions[n] = 0;
+ // }
 }
 
 void MCLActionsMidiEvents::setup_callbacks() {
@@ -68,8 +82,10 @@ void MCLActionsCallbacks::setup_callbacks() {
   }
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-  MidiClock.addOnMidiContinueCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+  MidiClock.addOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
+//  MidiClock.addOnMidiContinueCallback(
+  //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
   state = true;
 };
@@ -79,8 +95,10 @@ void MCLActionsCallbacks::remove_callbacks() {
   }
   MidiClock.removeOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-  MidiClock.removeOnMidiContinueCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+  MidiClock.removeOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
+  //  MidiClock.removeOnMidiContinueCallback(
+  //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
   state = false;
 };

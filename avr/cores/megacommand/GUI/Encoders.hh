@@ -50,8 +50,10 @@ public:
 	/** Old value (before move), current value. **/
 	int old, cur;
 
-    /** Counter for encoder pulses **/
-    int8_t rot_counter = 0;
+    /** Counters for encoder pulses **/
+    int8_t rot_counter_up = 0;
+    int8_t rot_counter_down = 0;
+    /** Number of encoder pulses before increasing/decreasing encoder cur value **/
     /** Number of encoder pulses before increasing/decreasing encoder cur value **/
     uint8_t rot_res = 1;
 

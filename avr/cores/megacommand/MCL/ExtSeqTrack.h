@@ -16,7 +16,7 @@ class ExtSeqTrackData {
 public:
   uint8_t length;
   uint8_t resolution = 1; // Resolution = 2 / ExtPatternResolution
-
+  uint8_t reserved[4];
   int8_t notes[4][128]; // 128 steps, up to 4 notes per step
   uint8_t locks[4][128];
   uint8_t locks_params[4];
@@ -32,11 +32,15 @@ public:
   uint8_t port = UART2_PORT;
   MidiUartParent *uart = &MidiUart2;
 
-  uint8_t mute = SEQ_MUTE_OFF;
+  uint8_t mute_state = SEQ_MUTE_OFF;
   uint8_t
       notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
                                     // currently being played, in order to stop
                                     // them in the event the sequencer stops
+  uint8_t step_count;
+  uint32_t start_step;
+  bool mute_until_start = false;
+
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   void buffer_notesoff();
@@ -51,6 +55,8 @@ public:
   void clear_ext_conditional();
   void clear_ext_notes();
   void clear_track();
+  void set_length(uint8_t len);
+
 };
 
 #endif /* EXTSEQTRACK_H__ */

@@ -3,23 +3,23 @@
 
 bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
+  memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
            sizeof(seq_data));
   active = EXT_TRACK_TYPE;
   return true;
 }
 bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 
-  m_memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
+  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
   return true;
 }
 bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   bool ret;
   int b = 0;
-  int32_t offset =
-      (int32_t)GRID_SLOT_BYTES +
-      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+
+  int32_t offset = grid.get_slot_offset(column, row);
+
   int32_t len;
   ret = proj.file.seekSet(offset);
   if (!ret) {
@@ -49,9 +49,9 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
   int b = 0;
   DEBUG_PRINT_FN();
   int32_t len;
-  int32_t offset =
-      (int32_t)GRID_SLOT_BYTES +
-      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+
+  int32_t offset = (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+
   ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("Seek failed");
@@ -64,5 +64,8 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     DEBUG_PRINTLN("Write failed");
     return false;
   }
+  uint8_t model = column;
+  grid_page.row_headers[grid_page.cur_row].update_model(column, model, EXT_TRACK_TYPE);
+
   return true;
 }

@@ -3,8 +3,17 @@
 #ifndef GRIDPAGES_H__
 #define GRIDPAGES_H__
 
-#define ENCODER_RES_GRID 2
+#ifdef OLED_DISPLAY
+
+#define ENCODER_RES_GRID 1
 #define ENCODER_RES_PAT 2
+
+#else
+
+#define ENCODER_RES_GRID 4
+#define ENCODER_RES_PAT 4
+
+#endif
 
 #include "GridEncoder.h"
 #include "GridPage.h"
@@ -12,12 +21,16 @@
 #include "MCLEncoder.h"
 #include "GridSavePage.h"
 #include "GridWritePage.h"
+#include "Menu.h"
+#include "MenuPage.h"
+#include "GridChain.h"
+#include "GridTrack.h"
+#include "MCLSysConfig.h"
 
-
-extern GridEncoder param1;
-extern GridEncoder param2;
-extern GridEncoder param3;
-extern GridEncoder param4;
+extern MCLEncoder param1;
+extern MCLEncoder param2;
+extern MCLEncoder param3;
+extern MCLEncoder param4;
 
 extern GridPage grid_page;
 
@@ -29,4 +42,26 @@ extern MCLEncoder gridio_param4;
 extern GridSavePage grid_save_page;
 extern GridWritePage grid_write_page;
 
+
+extern GridTrack slot;
+
+const menu_t slot_menu_layout PROGMEM = {
+    "Slot",
+    6,
+    {
+        {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
+        {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
+        {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, NULL, {}},
+        {"MERGE:", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}},
+        {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.clear_slot, (Page*) NULL, {{0,"--"},{1, "YES"}}},
+        {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
+    },
+    (void*)&apply_slot_changes_cb,
+    (Page*)NULL,
+};
+
+extern MCLEncoder grid_slot_param1;
+extern MCLEncoder grid_slot_param2;
+
+extern MenuPage grid_slot_page;
 #endif /* GRIDPAGES_H__ */

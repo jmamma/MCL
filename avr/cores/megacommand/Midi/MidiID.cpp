@@ -62,7 +62,6 @@ void MidiID::set_id(uint8_t id) { family_code[0] = id; }
 uint8_t MidiID::get_id() { return family_code[0]; }
 
 char *MidiID::get_name(char *str) {
-  DEBUG_PRINT_FN();
   switch (family_code[0]) {
   case DEVICE_MD:
     m_strncpy(str, "MD", 3);

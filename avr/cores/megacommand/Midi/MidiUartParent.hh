@@ -7,6 +7,7 @@
 #include "Vector.hh"
 #include <midi-common.hh>
 #include "MidiID.hh"
+
 /**
  * \addtogroup Midi
  *
@@ -30,6 +31,7 @@ public:
   uint8_t running_status;
   uint8_t currentChannel;
   uint8_t uart_port;
+  uint8_t uart_block;
   uint32_t speed;
 
   bool useRunningStatus;
@@ -59,7 +61,7 @@ public:
     }
   }
 
-  void tickActiveSense() {
+  inline void tickActiveSense() {
     if (recvActiveSenseTimer < 65535) {
       recvActiveSenseTimer++;
     }
@@ -86,19 +88,23 @@ public:
 
   virtual uint8_t getc() { return 0; }
 
-  virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
-  virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+  inline virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
+  inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+    uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
+    uart_block = 0;
   }
 
-  virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+  inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+    uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
     m_putc(byte2);
+    uart_block = 0;
   }
 
-  void sendCommandByte(uint8_t byte) {
+  inline void sendCommandByte(uint8_t byte) {
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
         MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
       if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
@@ -216,7 +222,7 @@ public:
     sendRPN(currentChannel, parameter, value);
   }
 
-  void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
+  inline void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
 
@@ -225,7 +231,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+  inline void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
 
@@ -234,7 +240,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
+  inline void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
     if ((channel >= 16) || (cc >= 128) || (value >= 128))
       return;
 
@@ -243,7 +249,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  void sendProgramChange(uint8_t channel, uint8_t program) {
+  inline void sendProgramChange(uint8_t channel, uint8_t program) {
     if ((channel >= 16) || (program >= 128))
       return;
 

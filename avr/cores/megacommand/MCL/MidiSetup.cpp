@@ -2,7 +2,7 @@
 #include "MidiSetup.h"
 
 void MidiSetup::cfg_ports() {
-
+  DEBUG_PRINT_FN();
   MidiClock.stop();
  
   if (mcl_cfg.midi_forward == 1) {
@@ -30,7 +30,6 @@ void MidiSetup::cfg_ports() {
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
 
-  MidiClock.start();
 
   if (MD.connected) {
     md_exploit.send_globals();
@@ -46,4 +45,7 @@ void MidiSetup::cfg_ports() {
   if (Analog4.connected) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   }
+
+  MidiClock.start();
+
 }

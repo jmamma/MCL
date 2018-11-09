@@ -9,9 +9,9 @@ void CuePage::cleanup() {
   note_interface.state = false;
 }
 void CuePage::set_level(int curtrack, int value) {
-  in_sysex = 1;
+  //in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
-  in_sysex = 0;
+  //in_sysex = 0;
 }
 void CuePage::draw_cues(uint8_t line_number) {
   if (line_number == 0) {
@@ -66,7 +66,7 @@ void CuePage::toggle_cues_batch() {
   }
   if (encoders[2]->getValue() < 7) {
     while (
-        (((MidiClock.div32th_counter - mcl_actions_callbacks.start_clock32th) +
+        (((MidiClock.div32th_counter - mcl_actions.start_clock32th) +
           3) %
          (quantize_mute * 2)) != 0) {
       GUI.display();
@@ -105,9 +105,9 @@ void CuePage::display() {
     GUI.put_value_at2(11, x);
   }
   uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions_callbacks.start_clock32th / 2) -
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (64 * ((MidiClock.div16th_counter -
-              mcl_actions_callbacks.start_clock32th / 2) /
+              mcl_actions.start_clock32th / 2) /
              64));
   GUI.put_value_at2(14, step_count);
   draw_cues(0);

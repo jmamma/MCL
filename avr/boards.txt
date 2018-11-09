@@ -18,8 +18,8 @@ mega.vid.5=0x2341
 mega.pid.5=0x0242
 
 mega.upload.tool=avrdude
-#0xFFFF - 0x1FC1 = 57343
-mega.upload.maximum_data_size=57343
+#0xFFFF - 0x2200 = 56831
+mega.upload.maximum_data_size=56831
 
 mega.bootloader.tool=avrdude
 mega.bootloader.low_fuses=0xFF

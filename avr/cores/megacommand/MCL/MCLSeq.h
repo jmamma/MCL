@@ -41,9 +41,16 @@ public:
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
 
   MCLSeqMidiEvents midi_events;
+  bool state = false;
 
   void setup();
+  void enable();
+  void disable();
+
+
   void onMidiStartCallback();
+  void onMidiStartImmediateCallback();
+  void onMidiContinueCallback();
   void onMidiStopCallback();
   void seq();
 

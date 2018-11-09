@@ -37,7 +37,7 @@ void A4SysexListenerClass::handleByte(uint8_t byte) {
   }
 }
 
-void A4SysexListenerClass::end_immediate() {
+void A4SysexListenerClass::end() {
   if (MidiSysex2.data[3] == 0x06) {
     isA4Message = true;
   } else {
@@ -46,6 +46,7 @@ void A4SysexListenerClass::end_immediate() {
   }
 
   msgType = MidiSysex2.data[sizeof(a4_sysex_hdr)];
+
 
   switch (msgType) {
     // case A4_STATUS_RESPONSE_ID:
@@ -100,6 +101,10 @@ void A4SysexListenerClass::end_immediate() {
     onSettingsMessageCallbacks.call();
     break;
   }
+
+}
+
+void A4SysexListenerClass::end_immediate() {
 }
 
 void A4SysexListenerClass::setup() { MidiSysex2.addSysexListener(this); }

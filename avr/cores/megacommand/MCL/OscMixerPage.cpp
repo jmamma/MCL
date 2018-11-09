@@ -33,9 +33,9 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
    //  MD.rec_sample();
     //}
    // delay(250);
-    in_sysex = 1;
+    //in_sysex = 1;
     wd.send();
-    in_sysex = 0;
+    //in_sysex = 0;
    // delay(100);
    // MD.press_no_button();
    // MD.clear_all_windows_quick();

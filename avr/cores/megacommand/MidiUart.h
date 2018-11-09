@@ -61,7 +61,8 @@ class MidiUartClass;
 #endif
 void isr_usart1(uint8_t caller);
 void isr_usart2(uint8_t caller);
-void isr_midi();        
+void isr_midi();
+
 class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
   
@@ -84,6 +85,8 @@ class MidiUartClass : public MidiUartParent {
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;
+extern bool enable_clock_callbacks;
+
 class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
   

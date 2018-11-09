@@ -2,15 +2,12 @@
 #ifndef EXTTRACK_H__
 #define EXTTRACK_H__
 #include "ExtSeqTrack.h"
+#include "GridTrack.h"
 
 #define EMPTY_TRACK_TYPE 0
 
-class ExtTrack {
+class ExtTrack : public GridTrack {
 public:
-  uint8_t active = EMPTY_TRACK_TYPE;
-  char kitName[17];
-  char trackName[17];
-
   ExtSeqTrackData seq_data;
 
   bool get_track_from_sysex(int tracknumber, uint8_t column);

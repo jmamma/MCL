@@ -1,5 +1,5 @@
-#include "Project.h"
 #include "MCL.h"
+#include "Project.h"
 
 void Project::setup() {}
 
@@ -36,7 +36,6 @@ bool Project::load_project(char *projectname) {
   }
 
   return true;
-
 }
 
 bool Project::check_project_version() {
@@ -52,7 +51,7 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-  ret = mcl_sd.read_data(( uint8_t*) this, sizeof(ProjectHeader), &file);
+  ret = mcl_sd.read_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
     DEBUG_PRINTLN("Could not read project header");
@@ -61,8 +60,7 @@ bool Project::check_project_version() {
   if (version >= PROJ_VERSION) {
     project_loaded = true;
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
@@ -89,8 +87,7 @@ bool Project::write_header() {
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader),
-                          &file);
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
     DEBUG_PRINTLN("Write header failed");
@@ -109,21 +106,19 @@ bool Project::new_project(char *projectname) {
 
   file.close();
 
-  temptrack.active = EMPTY_TRACK_TYPE;
-
-   DEBUG_PRINTLN("Attempting to extend project file");
+  DEBUG_PRINTLN("Attempting to extend project file");
 
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
                                                    (uint32_t)GRID_LENGTH *
-                                                   (uint32_t)GRID_WIDTH);
+                                                   (uint32_t)(GRID_WIDTH + 1));
 
   if (!ret) {
     file.close();
     DEBUG_PRINTLN("Could not extend file");
     return false;
   }
-  DEBUG_PRINTLN("extension succeeded, trying to close"); 
+  DEBUG_PRINTLN("extension succeeded, trying to close");
   file.close();
 
   ret = file.open(projectname, O_RDWR);
@@ -138,22 +133,33 @@ bool Project::new_project(char *projectname) {
   uint8_t ledstatus = 0;
 
   DEBUG_PRINTLN("Initializing project.. please wait");
-
+#ifdef OLED_DISPLAY
+  oled_display.drawRect(15, 23, 98, 6, WHITE);
+#endif
   // Initialise the project file by filling the grid with blank data.
-  for (int32_t i = 0; i < GRID_LENGTH * GRID_WIDTH; i++) {
-    if (i % 25 == 0) {
+  for (int32_t i = 0; i < GRID_LENGTH; i++) {
+
+#ifdef OLED_DISPLAY
+          if (i % 16 == 0) {
+        oled_display.fillRect(15, 23, ((float)i / (float)GRID_LENGTH) * 98, 6,
+                              WHITE);
+        oled_display.display();
+    }
+#endif
+          if (i % 2 == 0) {
       if (ledstatus == 0) {
         setLed2();
         ledstatus = 1;
-      } else {
+     } else {
         clearLed2();
         ledstatus = 0;
       }
     }
 
-    ret = grid.clear_slot(i);
+    ret = grid.clear_row(i);
     if (!ret) {
-      return false;
+    DEBUG_PRINTLN("coud not clear row");
+    return false;
     }
   }
   clearLed2();
@@ -172,7 +178,7 @@ bool Project::new_project(char *projectname) {
   file.close();
   mcl_cfg.number_projects++;
   mcl_cfg.write_cfg();
-
+  DEBUG_PRINTLN("project created");
   // if (!ret) {
   // return false;
   // }

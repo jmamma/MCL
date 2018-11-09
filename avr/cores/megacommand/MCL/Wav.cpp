@@ -119,7 +119,7 @@ bool Wav::read_header() {
     return false;
   }
 
-  m_memcpy(&header, &header_buf, sizeof(header));
+  memcpy(&header, &header_buf, sizeof(header));
   if ((header.bitRate > 28) || (header.bitRate < 8)) {
     DEBUG_PRINTLN("header bitRate is not valid:");
     DEBUG_PRINTLN(header.bitRate);
