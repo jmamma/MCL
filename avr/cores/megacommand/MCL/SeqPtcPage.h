@@ -51,6 +51,7 @@ public:
   void cleanup();
   void loop();
   void config_encoders();
+  void init_poly();
   void init();
 };
 

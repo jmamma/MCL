@@ -19,6 +19,7 @@ void PolyPage::init() {
 
 void PolyPage::cleanup() {
   //  md_exploit.off();
+  seq_ptc_page.init_poly();
   note_interface.state = false;
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();

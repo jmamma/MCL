@@ -5,6 +5,7 @@
 
 void SeqPtcPage::setup() {
   SeqPage::setup();
+  init_poly();
   midi_events.setup_callbacks();
 }
 void SeqPtcPage::cleanup() {
@@ -39,18 +40,20 @@ uint8_t SeqPtcPage::calc_poly_count() {
   return count;
 }
 
-void SeqPtcPage::init() {
-  DEBUG_PRINT_FN();
-  SeqPage::init();
+void SeqPtcPage::init_poly() {
   poly_count = 0;
   poly_max = calc_poly_count();
-
-  ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
-  record_mode = false;
   for (uint8_t x = 0; x < 16; x++) {
     poly_notes[x] = -1;
   }
-  midi_events.setup_callbacks();
+}
+
+void SeqPtcPage::init() {
+  DEBUG_PRINT_FN();
+  SeqPage::init();
+  ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
+  record_mode = false;
+ midi_events.setup_callbacks();
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
