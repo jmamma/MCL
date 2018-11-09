@@ -47,13 +47,14 @@ extern GridTrack slot;
 
 const menu_t slot_menu_layout PROGMEM = {
     "Slot",
-    5,
+    6,
     {
         {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
         {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, {}},
         {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, NULL, {}},
+        {"MERGE", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}},
+        {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.clear_slot, (Page*) NULL, {{0,"--"},{1, "YES"}}},
         {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, {{0," "}}},
-        {"MERGE", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, {{0, "--"},{1, "SEQ"}}}
     },
     (void*)&apply_slot_changes_cb,
     (Page*)NULL,

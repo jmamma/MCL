@@ -42,6 +42,7 @@ public:
 
   int active_slots[20];
   uint8_t slot_apply;
+  uint8_t clear_slot;
   uint8_t merge_md = 0;
 
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
