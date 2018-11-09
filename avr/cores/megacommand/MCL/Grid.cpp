@@ -145,7 +145,7 @@ bool Grid::clear_row(int16_t row) {
   for (int x = 0; x < GRID_WIDTH; x++) {
     clear_slot(x, row, update_header);
   }
-  row_header.write(row);
+  return row_header.write(row);
 
 }
 
