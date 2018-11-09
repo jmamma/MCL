@@ -24,7 +24,7 @@ public:
 
   uint8_t locks_params_orig[4];
   bool load = false;
-  uint8_t params[24];
+//  uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
 

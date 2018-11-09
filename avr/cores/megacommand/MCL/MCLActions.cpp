@@ -880,9 +880,6 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
         MD.setTrackParam(track, i, machine->params[i]);
       }
 
-      else {
-        mcl_seq.md_tracks[track].params[i] = 255;
-      }
     }
   }
 }
