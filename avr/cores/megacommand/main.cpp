@@ -251,17 +251,18 @@ uint16_t lastRunningStatusReset = 0;
 #define OUTPUTPIN PD0
 
 // extern uint16_t myvar;
+uint16_t minuteclock = 0;
+
 ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 
-  // ISR(TIMER2_COMPA_vect) {
+ uint8_t old_ram_bank = switch_ram_bank(0);
 
-  uint8_t old_ram_bank = switch_ram_bank(0);
   slowclock++;
-  // TCNT2 = tcnt2;
-  //  isr_midi();
-
-  //  if (slowclock - MidiClock.clock_last_time >= MidiClock.div192th_time) {
-
+  minuteclock++;
+  if (minuteclock == 60000) {
+  minuteclock = 0;
+  clock_minutes++;
+  }
   if (abs(slowclock - lastRunningStatusReset) > 3000) {
     MidiUart.resetRunningStatus();
     lastRunningStatusReset = slowclock;
@@ -270,13 +271,11 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
 
-  //  SET_BIT(OUTPUTPORT, OUTPUTPIN);
-
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif
+
   switch_ram_bank(old_ram_bank);
-  //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
 }
 
 uint8_t sysexBuf[5500];

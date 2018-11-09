@@ -84,10 +84,10 @@ const menu_t chain_menu_layout PROGMEM = {
 
 const menu_t mclconfig_menu_layout PROGMEM = {
     "SYSTEM",
-    1,
+    2,
     {
         {"DISPLAY:", 0, 2, 2, (uint8_t *) &mcl_cfg.display_mirror, (Page*) NULL, {{0, "INT"}, {1, "INT+EXT"}}},
-
+        {"SCREENSAVER:", 0, 2, 2, (uint8_t *) &mcl_cfg.screen_saver, (Page*) NULL, {{0, "OFF"}, {1, "ON"}}},
     },
     (void*)(&mclsys_apply_config),
 };

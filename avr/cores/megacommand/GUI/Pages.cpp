@@ -1,8 +1,8 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "WProgram.h"
 #include "GUI.h"
 #include "Pages.hh"
+#include "WProgram.h"
 
 /**
  * \addtogroup GUI
@@ -17,21 +17,17 @@
  * GUI Pages
  **/
 
-void Page::update() {
-}
+void Page::update() {}
 
 void PageParent::redisplayPage() {
   if (displaymode == DISPLAY_TEXT_MODE0) {
-  GUI.setLine(GUI.LINE1);
-  GUI.clearLine();
-  GUI.setLine(GUI.LINE2);
-  GUI.clearLine();
-  redisplay = true;
+    GUI.setLine(GUI.LINE1);
+    GUI.clearLine();
+    GUI.setLine(GUI.LINE2);
+    GUI.clearLine();
+    redisplay = true;
+  } else {
   }
-  else {
-
-}
-  
 }
 
 void LightPage::update() {
@@ -47,7 +43,10 @@ void LightPage::update() {
     if (encoders[i] != NULL) {
       encoders[i]->update(_encoders + i);
       if (encoders[i]->hasChanged()) {
-      redisplay = true;
+        GUI.screen_saver = false;
+        clock_minutes = 0;
+        minuteclock = 0;
+        redisplay = true;
       }
     }
   }
@@ -67,20 +66,19 @@ void LightPage::finalize() {
   }
 }
 
-
 void EncoderPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
-  //USE_LOCK();
-  //SET_LOCK();
+  // USE_LOCK();
+  // SET_LOCK();
   memcpy(_encoders, Encoders.encoders, sizeof(_encoders));
   Encoders.clearEncoders();
-  //CLEAR_LOCK();
-  
+  // CLEAR_LOCK();
+
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    if (encoders[i] != NULL)  {
+    if (encoders[i] != NULL) {
       encoders[i]->update(_encoders + i);
     }
-    }
+  }
 }
 
 void EncoderPage::clear() {
@@ -98,14 +96,14 @@ void EncoderPage::display() {
   for (uint8_t i = 0; i < 4; i++) {
     if (encoders[i] != NULL)
       if (encoders[i]->hasChanged() || redisplay || encoders[i]->redisplay) {
-				encoders[i]->displayAt(i);
+        encoders[i]->displayAt(i);
       }
   }
 }
 
 void EncoderPage::finalize() {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    if (encoders[i] != NULL) 
+    if (encoders[i] != NULL)
       encoders[i]->checkHandle();
   }
 }
@@ -120,7 +118,6 @@ void EncoderPage::displayNames() {
   }
 }
 
-
 void SwitchPage::display() {
   if (redisplay) {
     GUI.setLine(GUI.LINE1);
@@ -128,7 +125,7 @@ void SwitchPage::display() {
     GUI.setLine(GUI.LINE2);
     for (int i = 0; i < 4; i++) {
       if (pages[i] != NULL) {
-				GUI.put_string_fill(i, pages[i]->shortName);
+        GUI.put_string_fill(i, pages[i]->shortName);
       }
     }
   }
@@ -138,7 +135,7 @@ bool SwitchPage::handleEvent(gui_event_t *event) {
   for (int i = Buttons.ENCODER1; i <= Buttons.ENCODER4; i++) {
     if (pages[i] != NULL && EVENT_PRESSED(event, i)) {
       if (parent != NULL) {
-				parent->setPage(pages[i - Buttons.ENCODER1]);
+        parent->setPage(pages[i - Buttons.ENCODER1]);
       }
       return true;
     }
@@ -174,7 +171,7 @@ bool EncoderSwitchPage::handleEvent(gui_event_t *event) {
   for (int i = Buttons.BUTTON1; i <= Buttons.BUTTON4; i++) {
     if (pages[i] != NULL && EVENT_PRESSED(event, i)) {
       if (parent != NULL) {
-				parent->setPage(pages[i - Buttons.BUTTON1]);
+        parent->setPage(pages[i - Buttons.BUTTON1]);
       }
       return true;
     }
@@ -221,7 +218,7 @@ bool ScrollSwitchPage::handleEvent(gui_event_t *event) {
   if (page != NULL) {
     if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
       if (parent != NULL) {
-				parent->setPage(page);
+        parent->setPage(page);
       }
       return true;
     }

@@ -1,6 +1,9 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
+
+#define SCREEN_SAVER_TIME 5
+
 #if defined(MIDIDUINO_USE_GUI) || defined(HOST_MIDIDUINO)
 
 Sketch _defaultSketch((char *)"DFT");
@@ -67,6 +70,13 @@ void GuiClass::redisplay() {
 void loop();
 
 void GuiClass::loop() {
+
+  if (!EventRB.isEmpty()) {
+    clock_minutes = 0;
+    minuteclock = 0;
+    screen_saver = false;
+  }
+
   while (!EventRB.isEmpty()) {
     gui_event_t event;
     EventRB.getp(&event);
@@ -91,7 +101,6 @@ void GuiClass::loop() {
     }
   }
 
-
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {
@@ -106,9 +115,16 @@ void GuiClass::loop() {
 #ifndef HOST_MIDIDUINO
   ::loop();
 #endif
-
-  display();
-
+  if ((use_screen_saver) && (!screen_saver) && (clock_minutes >= SCREEN_SAVER_TIME)) {
+    screen_saver = true;
+#ifdef OLED_DISPLAY
+    oled_display.clearDisplay();
+    oled_display.display();
+#endif
+  }
+  if (screen_saver == false) {
+    display();
+  }
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {

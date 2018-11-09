@@ -16,6 +16,13 @@ void mclsys_apply_config() {
     Serial.end();
   }
 #endif
+  if (mcl_cfg.screen_saver == 1) {
+  GUI.use_screen_saver = true;
+  }
+  else {
+  GUI.use_screen_saver = false;
+  }
+
 }
 
 bool MCLSysConfig::write_cfg() {
@@ -76,6 +83,7 @@ bool MCLSysConfig::cfg_init() {
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;
+  screen_saver = 0;
   tempo = 125;
   midi_forward = 0;
   auto_merge = 0;

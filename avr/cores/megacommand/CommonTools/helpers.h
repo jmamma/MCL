@@ -196,6 +196,7 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 #else
 extern volatile uint16_t clock;
 extern volatile uint16_t slowclock;
+extern volatile uint16_t clock_minutes;
 #endif
 
 /** @} **/

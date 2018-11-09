@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2022
+#define CONFIG_VERSION 2023
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -31,6 +31,7 @@ public:
   uint8_t uart2_ctrl_mode;
   uint32_t mutes;
   uint8_t display_mirror;
+  uint8_t screen_saver;
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;

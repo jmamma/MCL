@@ -8,7 +8,7 @@
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
-//#define DEBUGMODE
+#define DEBUGMODE
 
 #define SERIAL_SPEED 250000
 
@@ -67,7 +67,7 @@ extern "C" {
 
 extern uint32_t write_count;
 extern uint32_t write_count_time;
-
+extern uint16_t minuteclock;
 extern uint8_t ram_bank;
 extern inline uint8_t switch_ram_bank(uint8_t x) {
   //USE_LOCK();
