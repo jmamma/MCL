@@ -42,7 +42,6 @@ void MenuPage::loop() {
     }
   }
   if (encoders[0]->hasChanged()) {
-    DEBUG_PRINTLN(encoders[0]->cur);
     uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       *dest_var = encoders[0]->cur;

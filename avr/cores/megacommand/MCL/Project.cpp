@@ -158,7 +158,8 @@ bool Project::new_project(char *projectname) {
 
     ret = grid.clear_row(i);
     if (!ret) {
-      return false;
+    DEBUG_PRINTLN("coud not clear row");
+    return false;
     }
   }
   clearLed2();
@@ -177,7 +178,7 @@ bool Project::new_project(char *projectname) {
   file.close();
   mcl_cfg.number_projects++;
   mcl_cfg.write_cfg();
-
+  DEBUG_PRINTLN("project created");
   // if (!ret) {
   // return false;
   // }
