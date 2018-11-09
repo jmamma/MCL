@@ -3,6 +3,8 @@ MCL 2.20 09/11/2018
 ###### IMPORTANT ######
    Projects created on older versions will not be compatible with MCL 2.20
 
+Changes:
+
 Stable support for 8x Turbo.
 -  Significant improvments to the MIDI code now makes 8x Turbo
    the most stable speed setting.
@@ -20,7 +22,6 @@ GUI overhaul:
    Screensaver added for OLED display (5 minutes delay)
 
 Slot menu:
-
 
 -  To access the Slot menu:
 
@@ -108,12 +109,17 @@ Chain Mode:
 
 GridPage Changes:
 
-  If chain mode is active:
-
   The current active slot will blink.
 
-  On the OLED display, the current Bar:Beat is dispicted.
+  On the OLED display, the current Bar:Beat is shown.
   The next transition Bar:Beat is displayed below this.
+
+Poly Config
+
+  Voice selection is now achieved through the MD triger interface.
+  Enter Global -> Machinedrum -> Poly Config.
+  Selected tracks will be used as polyphonic voices for chromatic modes.
+  If no tracks are selected, the current MD track is played monophonically.
 
 BugFixes:
 
