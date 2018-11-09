@@ -538,7 +538,9 @@ void MCLActions::send_pattern_kit_to_md() {
   } else {
     MD.pattern.setPosition(writepattern);
   }
-
+  for (uint8_t n = 0; n < 16; n++) {
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+  }
   md_setsysex_recpos(8, MD.pattern.origPosition);
 
   MD.pattern.toSysex(encoder);
@@ -556,6 +558,7 @@ void MCLActions::send_pattern_kit_to_md() {
       MD.loadPattern(writepattern);
     }
   }
+
   // Send Analog4
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
@@ -607,6 +610,10 @@ void MCLActions::send_pattern_kit_to_md() {
       md_exploit.send_globals();
     }
   }
+  for (uint8_t n = 0; n < 16; n++) {
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
+  }
+
   // Pre-cache next chain
   // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) +
   // sizeof(MDMachine);
@@ -879,7 +886,6 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
         // mcl_seq.md_tracks[track].params[i] = machine->params[i];
         MD.setTrackParam(track, i, machine->params[i]);
       }
-
     }
   }
 }
