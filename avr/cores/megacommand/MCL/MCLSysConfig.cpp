@@ -83,7 +83,7 @@ bool MCLSysConfig::cfg_init() {
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;
-  screen_saver = 0;
+  screen_saver = 1;
   tempo = 125;
   midi_forward = 0;
   auto_merge = 0;
