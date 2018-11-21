@@ -89,10 +89,9 @@ void MutePage::toggle_mutes_batch() {
   quantize_mute = 1 << encoders[2]->getValue();
   int i;
   if ((encoders[2]->getValue() > 0) && (encoders[2]->getValue() < 7)) {
-    while (
-        (((MidiClock.div32th_counter - mcl_actions.start_clock32th) +
+    while ((MidiClock.state == 2) && ((((MidiClock.div32th_counter - mcl_actions.start_clock32th) +
           3) %
-         (quantize_mute * 2)) != 0) {
+         (quantize_mute * 2)) != 0)) {
       GUI.display();
     }
   }
