@@ -721,7 +721,7 @@ void MCLActions::calc_next_transition() {
     DEBUG_PRINTLN(next_transitions[n]);
     DEBUG_PRINTLN(" ");
     if (grid_page.active_slots[n] >= 0) {
-      if ((chains[n].loops > 0) ||
+      if ((chains[n].loops > 0) &&
           (chains[n].row != grid_page.active_slots[n])) {
         if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
           next_transition = next_transitions[n];

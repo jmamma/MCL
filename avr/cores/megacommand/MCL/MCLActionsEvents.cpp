@@ -26,6 +26,7 @@ void MCLActionsCallbacks::onMidiStopCallback() {
 //   memset(&mcl_actions.next_transitions[0], 0, 20);
   for (uint8_t n = 0; n < 20; n++) {
   mcl_actions.next_transitions[n] = 0;
+  mcl_actions.calc_next_slot_transition(n);
   }
   mcl_actions.calc_next_transition();
 }
