@@ -75,7 +75,7 @@ void MCLGfx::splashscreen() {
   delay(800);
 #else
   char str1[17] = "MEGACOMMAND LIVE";
-  char str2[17] = "V2.20";
+  char str2[17] = "V2.21";
   str1[16] = '\0';
   LCD.goLine(0);
   LCD.puts(str1);
