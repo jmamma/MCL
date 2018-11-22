@@ -651,7 +651,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
     grid_slot_page.init();
-    // slot_apply = 0;
+    slot_apply = 0;
     merge_md = 0;
     return true;
   }
@@ -672,23 +672,27 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (BUTTON_PRESSED(Buttons.ENCODER1)) {
       slot.load_track_from_grid(getCol(), getRow());
       display_name = 0;
+      slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
     if (BUTTON_PRESSED(Buttons.ENCODER2)) {
       slot.load_track_from_grid(getCol() + 1, getRow());
       display_name = 0;
+      slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
     if (BUTTON_PRESSED(Buttons.ENCODER3)) {
       slot.load_track_from_grid(getCol() + 2, getRow());
       display_name = 0;
+      slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
     if (BUTTON_PRESSED(Buttons.ENCODER4)) {
       slot.load_track_from_grid(getCol() + 3, getRow());
       display_name = 0;
+      slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
     return true;
