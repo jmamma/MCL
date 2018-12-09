@@ -1073,7 +1073,7 @@ tuning_t const *track_tunings[16];
 
 const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model) {
   uint8_t i;
-  if (((model >= 128) && (model <= 159))) {
+  if (((model >= 128) && (model <= 191))) {
     return &rom_tuning_t;
   }
   for (i = 0; i < countof(tunings); i++) {
