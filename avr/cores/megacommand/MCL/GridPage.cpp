@@ -207,7 +207,7 @@ uint8_t GridPage::getCol() { return param1.cur; }
 void GridPage::load_slot_models() {
 #ifdef OLED_DISPLAY
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-        row_headers[n].read(getRow() - cur_row + n);
+    row_headers[n].read(getRow() - cur_row + n);
   }
 #else
 
@@ -417,7 +417,11 @@ void GridPage::display_grid() {
         str[0] = 'M';
         str[1] = (x + getCol() - cur_col - 16) + '0';
       }
-      if ((x == cur_col) && (y == cur_row)) {
+
+      if (((slot_apply > 0) &&
+               ((x <= cur_col + slot_apply - 1) && (x > cur_col)) ||
+           (x == cur_col)) &&
+          (y == cur_row)) {
         oled_display.fillRect(oled_display.getCursorX() - 1,
                               oled_display.getCursorY() - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
@@ -603,6 +607,7 @@ void GridPage::apply_slot_changes() {
     clear_slot = 0;
   }
   proj.file.sync();
+  slot_apply = 0;
 }
 
 bool GridPage::handleEvent(gui_event_t *event) {
