@@ -173,7 +173,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
             a4_track->sound.fromSysex(MidiSysex2.data + 8,
                                       MidiSysex2.recordLen - 8);
           }
-          n = a4_track->store_track_in_grid(i, i, grid_page.getRow());
+          n = a4_track->store_track_in_grid(i, grid_page.getRow(), i);
         } else {
           n = md_track->store_track_in_grid(i, grid_page.getRow(), i);
         }

@@ -581,12 +581,35 @@ void GridPage::apply_slot_changes() {
   } else {
     count = slot_apply;
   }
+  if (slot_copy == 1) {
+    slot_buffer_mask = 0;
+    slot_buffer_row = getRow();
+  }
+
+  else if (slot_paste == 1) {
+    uint8_t first = 255;
+    uint8_t n = 0;
+    for (n = 0; n < GRID_WIDTH && first == 255; n++) {
+      if (IS_BIT_SET32(slot_buffer_mask, n)) {
+      first = n;
+      }
+    }
+    for (n = 0; n + first < GRID_WIDTH && getCol() + n < GRID_WIDTH; n++) {
+      if (IS_BIT_SET32(slot_buffer_mask, n + first)) {
+        grid.copy_slot(n + first, slot_buffer_row, getCol() + n, getRow());
+      }
+    }
+    row_headers[cur_row].write(getRow());
+  }
+
   MDTrack md_track;
   MDSeqTrack md_seq_track;
   for (uint8_t track = 0; track < count && track + getCol() < 20; track++) {
-    if (clear_slot == 1) {
+    if (slot_clear == 1) {
       grid.clear_slot(track + getCol(), getRow());
       reload_slot_models = true;
+    } else if (slot_copy == 1) {
+      SET_BIT32(slot_buffer_mask, track + getCol());
     }
     slot.active = row_headers[cur_row].track_type[track + getCol()];
     //  if (slot.active != EMPTY_TRACK_TYPE) {
@@ -602,12 +625,15 @@ void GridPage::apply_slot_changes() {
       md_track.store_track_in_grid(track + getCol(), getRow());
     }
   }
-  if (clear_slot == 1) {
+  if ((slot_clear == 1) || (slot_paste == 1)) {
     load_slot_models();
-    clear_slot = 0;
   }
+
   proj.file.sync();
   slot_apply = 0;
+  slot_clear = 0;
+  slot_copy = 0;
+  slot_paste = 0;
 }
 
 bool GridPage::handleEvent(gui_event_t *event) {

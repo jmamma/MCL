@@ -50,6 +50,48 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
 }
 */
+bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row) {
+  DEBUG_PRINT_FN();
+  DEBUG_PRINT(s_col); DEBUG_PRINT(" "); DEBUG_PRINT(d_col); DEBUG_PRINTLN(" ");
+  if (s_col < 16 && d_col > 15) { return false; }
+  if (s_col > 15 && d_col < 16) { return false; }
+  EmptyTrack temp_track;
+  MDTrack *md_track = (MDTrack*) &temp_track;
+  A4Track *a4_track = (A4Track*) &temp_track;
+  ExtTrack *ext_track = (ExtTrack*) &temp_track;
+
+  if (s_col < 16) {
+    md_track->load_track_from_grid(s_col, s_row);
+    //bit of a hack to keep lfos modulating the same track.
+    int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
+    int trig_dest = md_track->machine.trigGroup - s_col;
+    int mute_dest = md_track->machine.muteGroup - s_col;
+    if (range_check(d_col + lfo_dest, 0, 15)) {
+      md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
+    }
+    else {
+      md_track->machine.lfo.destinationTrack = 255;
+    }
+    if (range_check(d_col + trig_dest, 0, 15)) {
+      md_track->machine.trigGroup = d_col + trig_dest;
+    }
+    else {
+      md_track->machine.trigGroup = 255;
+    }
+    if (range_check(d_col + mute_dest, 0, 15)) {
+      md_track->machine.muteGroup = d_col + mute_dest;
+    }
+    else {
+      md_track->machine.muteGroup = 255;
+    }
+    md_track->store_track_in_grid(d_col, d_row);
+  }
+  else {
+    a4_track->load_track_from_grid(s_col, s_row);
+    a4_track->store_track_in_grid(d_col, d_row);
+  }
+}
+
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
   EmptyTrack temp_track;
   MDTrack *md_track = (MDTrack*) &temp_track;
@@ -62,8 +104,6 @@ uint8_t Grid::get_slot_model(int column, int row, bool load) {
         return NULL;
       }
     }
-
-
     if (md_track->active == EMPTY_TRACK_TYPE) {
       return NULL;
     }

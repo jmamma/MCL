@@ -48,7 +48,7 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
   return false;
 }
-bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
+bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -68,15 +68,17 @@ bool A4Track::store_track_in_grid(int track, int32_t column, int32_t row) {
 
   /*analog 4 tracks*/
   if (Analog4.connected) {
-    get_track_from_sysex(track - 16, column - 16);
-    ret = mcl_sd.write_data((uint8_t *)this, sizeof(A4Track), &proj.file);
-    if (!ret) {
-      return false;
+    if (track != 255) {
+      get_track_from_sysex(track - 16, column - 16);
     }
-    grid_page.row_headers[grid_page.cur_row].update_model(column, column,
-                                                          A4_TRACK_TYPE);
-    return true;
   }
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(A4Track), &proj.file);
+  if (!ret) {
+    return false;
+  }
+  grid_page.row_headers[grid_page.cur_row].update_model(column, column,
+                                                        A4_TRACK_TYPE);
+  return true;
 }
 
 bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
