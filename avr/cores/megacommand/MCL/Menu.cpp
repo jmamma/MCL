@@ -9,6 +9,13 @@ Page *Menu::get_exit_page_callback() {
   return pgm_read_word(&(layout->exit_page_callback));
 }
 */
+
+FP Menu::get_row_function(uint8_t item_n) {
+  menu_item_t *item = get_item(item_n);
+  return pgm_read_word(&(item->row_function));
+}
+
+
 FP Menu::get_exit_function() {
   return pgm_read_word(&(layout->exit_function));
 }

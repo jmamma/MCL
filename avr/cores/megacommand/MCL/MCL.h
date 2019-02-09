@@ -17,23 +17,24 @@
 #include "PolyPage.h"
 #include "Project.h"
 
-#include "GridChain.h"
 #include "Grid.h"
+#include "GridChain.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
 #include "MCLActions.h"
-#include "MCLSeq.h"
+#include "MCLGUI.h"
 #include "MCLMemory.h"
-#include "MDExploit.h"
+#include "MCLSeq.h"
 #include "MDEvents.h"
+#include "MDExploit.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"
-#include "MidiSetup.h"
-#include "MidiSDS.hh"
-#include "MidiSDSSysex.hh"
 #include "MidiID.hh"
 #include "MidiIDSysex.hh"
+#include "MidiSDS.hh"
+#include "MidiSDSSysex.hh"
+#include "MidiSetup.h"
 #include "NoteInterface.h"
 #include "TurboLight.h"
 
@@ -43,9 +44,9 @@
 #include "Osc.h"
 #include "OscMixerPage.h"
 #include "OscPage.h"
+#include "PageSelectPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
-#include "PageSelectPage.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
@@ -54,8 +55,8 @@
 //#include "EmptyTrack.h"
 
 #include "Shared.h"
-#include "WavDesigner.h"
 #include "Wav.h"
+#include "WavDesigner.h"
 
 #include "DSP.h"
 
@@ -81,10 +82,9 @@
 
 #define MD_KITBUF_POS 63
 
-//Memory layout for SRAM bank 1
+// Memory layout for SRAM bank 1
 extern int8_t curpage;
 extern uint8_t patternswitch;
-
 
 class MCL {
 public:

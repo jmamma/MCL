@@ -77,6 +77,7 @@ public:
 };
 
 extern void apply_slot_changes_cb();
+extern void rename_row();
 
 void encoder_fx_handle(Encoder *enc);
 

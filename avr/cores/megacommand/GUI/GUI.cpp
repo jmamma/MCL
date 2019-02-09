@@ -309,6 +309,13 @@ void GuiClass::put_p_string(uint8_t idx, PGM_P str) {
 void GuiClass::put_p_string_fill(uint8_t idx, PGM_P str) {
   put_p_string_at_fill(idx << 2, str);
 }
+
+void GuiClass::put_string_at_len(uint8_t idx, const char *str, uint8_t len) {
+  char *data = lines[curLine].data;
+  m_strncpy(data + idx, str, len);
+  lines[curLine].changed = true;
+}
+
 void GuiClass::put_string_at_not(uint8_t idx, const char *str) {
   char *data = lines[curLine].data;
   m_strncpy(data + idx, str, m_strlen(str) - 1);

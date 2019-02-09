@@ -196,12 +196,17 @@ bool MenuPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER1)) {
+
+    void (*row_func)() = menu.get_row_function(encoders[1]->cur);
     Page *page_callback = menu.get_page_callback(encoders[1]->cur);
     if (page_callback != NULL) {
       DEBUG_PRINTLN("setting page");
       DEBUG_PRINTLN((uint16_t)page_callback);
       GUI.pushPage(page_callback);
       return;
+    }
+    if (row_func != NULL) {
+      (*row_func)();
     }
   }
 
