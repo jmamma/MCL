@@ -36,7 +36,14 @@ void LoadProjectPage::display() {
         oled_display.print(">");
       }
     }
-    oled_display.println(file_entries[encoders[1]->cur - cur_row + n]);
+    char temp_entry[16];
+    uint16_t entry_num = encoders[1]->cur - cur_row + n;
+    uint32_t pos = FILE_ENTRIES_START + entry_num * 16;
+    volatile uint8_t *ptr = pos;
+    switch_ram_bank(1);
+    memcpy(&temp_entry[0], ptr,16);
+    switch_ram_bank(0);
+    oled_display.println(temp_entry);
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
     draw_scrollbar(120);
@@ -51,7 +58,15 @@ void LoadProjectPage::display() {
   } else {
     GUI.put_string_at_fill(0, " ");
   }
-  GUI.put_string_at_fill(1, file_entries[encoders[1]->cur]);
+  char temp_entry[16];
+  uint16_t entry_num = encoders[1]->cur;
+  uint32_t pos = FILE_ENTRIES_START + entry_num * 16;
+  volatile uint8_t *ptr;
+  switch_ram_bank(1);
+  strcpy(&temp_entry[0], ptr);
+  switch_ram_bank(0);
+
+  GUI.put_string_at_fill(1, temp_entry);
 
 #endif
   return;
@@ -69,6 +84,7 @@ void LoadProjectPage::setup() {
   DEBUG_PRINTLN("Load project page");
 }
 void LoadProjectPage::init() {
+  DEBUG_PRINT_FN();
   char temp_entry[16];
 
   SdFile dirfile;
@@ -92,9 +108,13 @@ void LoadProjectPage::init() {
       }
     }
     if (is_mcl_file) {
-      strcpy(&file_entries[numEntries][0], &temp_entry[0]);
+      uint16_t num_of_entries = numEntries;
+      uint32_t pos = FILE_ENTRIES_START + numEntries * 16;
+      volatile uint8_t *ptr = pos;
+      switch_ram_bank(1);
+      memcpy(ptr, &temp_entry[0],16);
+      switch_ram_bank(0);
       DEBUG_PRINTLN("project file identified");
-      DEBUG_PRINTLN(file_entries[numEntries]);
 
       if (strcmp(&temp_entry[0], &mcl_cfg.project[1]) == 0) {
         DEBUG_PRINTLN("match");
@@ -171,12 +191,20 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    uint8_t size = m_strlen(file_entries[encoders[1]->getValue()]);
-    if (strcmp(&file_entries[encoders[1]->getValue()][size - 4], "mcl") == 0) {
+
+      char temp_entry[16];
+      uint32_t pos = FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+      volatile uint8_t *ptr = pos;
+      switch_ram_bank(1);
+      memcpy(&temp_entry[0],ptr,16);
+      switch_ram_bank(0);
+
+    uint8_t size = m_strlen(temp_entry);
+    if (strcmp(temp_entry[size - 4], "mcl") == 0) {
 
       char temp[size + 1];
       temp[0] = '/';
-      m_strncpy(&temp[1], file_entries[encoders[1]->getValue()], size);
+      m_strncpy(&temp[1], temp_entry, size);
 
       if (proj.load_project(temp)) {
         GUI.setPage(&grid_page);

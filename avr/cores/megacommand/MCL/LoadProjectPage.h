@@ -5,7 +5,7 @@
 
 #include "GUI.h"
 
-#define MAX_ENTRIES 64
+#define MAX_ENTRIES 1024
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
 #else
@@ -16,8 +16,8 @@
 
 class LoadProjectPage : public LightPage {
 public:
-  char file_entries[MAX_ENTRIES][16];
-  uint8_t numEntries;
+//  char file_entries[MAX_ENTRIES][16];
+  int numEntries;
 
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
