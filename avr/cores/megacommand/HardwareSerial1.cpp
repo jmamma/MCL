@@ -34,6 +34,8 @@
 // file prevents the linker from pulling in any unused instances in the
 // first place.
 
+#if defined(ENABLE_HWSERIAL1)
+
 #if defined(HAVE_HWSERIAL1)
 
 #if defined(UART1_RX_vect)
@@ -67,3 +69,4 @@ bool Serial1_available() {
 }
 
 #endif // HAVE_HWSERIAL1
+#endif // ENABLE_HWSERIAL1
