@@ -3,6 +3,8 @@
 
 //#define DISABLE_MACHINE_NAMES 1
 
+#define MEGACOMMAND 1
+
 #define MIDIDUINO 1
 #define SYSEX_BUF_SIZE 6000
 //#define SYSEX_BUF_SIZE 128

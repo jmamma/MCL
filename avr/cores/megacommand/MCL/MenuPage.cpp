@@ -50,6 +50,7 @@ void MenuPage::loop() {
 }
 
 void MenuPage::draw_scrollbar(uint8_t x_offset) {
+#ifdef OLED_DISPLAY
   uint8_t number_of_items = menu.get_number_of_items();
   uint8_t length =
       round(((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
@@ -67,9 +68,11 @@ void MenuPage::draw_scrollbar(uint8_t x_offset) {
 
   oled_display.fillRect(x_offset + 1, y + 1, 3, length - 2, BLACK);
   oled_display.drawRect(x_offset, y, 5, length, WHITE);
+#endif
 }
 
 void MenuPage::draw_item(uint8_t item_n, uint8_t row) {
+#ifdef OLED_DISPLAY
   char str[17];
   PGM_P pgp = menu.get_item_name(item_n);
   if (pgp != NULL) {
@@ -94,9 +97,11 @@ void MenuPage::draw_item(uint8_t item_n, uint8_t row) {
       oled_display.println(str);
     }
   }
+#endif
 }
 
 void MenuPage::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
+#ifdef OLED_DISPLAY
   oled_display.setCursor(x_offset, y_offset);
   uint8_t number_of_items = menu.get_number_of_items();
   uint8_t max_items;
@@ -122,7 +127,10 @@ void MenuPage::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
 
 
   oled_display.setTextColor(WHITE, BLACK);
+#endif
+
 }
+
 void MenuPage::display() {
 
   char str[17];
@@ -132,6 +140,7 @@ void MenuPage::display() {
   m_strncpy_p(str, pgp, 16);
 
 
+  uint8_t number_of_items = menu.get_number_of_items();
   #ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
@@ -147,7 +156,6 @@ void MenuPage::display() {
 
   draw_menu(x_offset, 8);
 
-  uint8_t number_of_items = menu.get_number_of_items();
   if (number_of_items > MAX_VISIBLE_ROWS) {
   draw_scrollbar(120);
   }

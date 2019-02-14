@@ -146,9 +146,11 @@ void MixerPage::display() {
   // mute_page.draw_mutes(0);
 #endif
   draw_levels();
+#ifdef OLED_DISPLAY
   if (!classic_display) {
     oled_display.display();
   }
+#endif
   uint8_t dec = MidiClock.tempo / 10;
   for (uint8_t n = 0; n < 16; n++) {
     if (disp_levels[n] < dec) {

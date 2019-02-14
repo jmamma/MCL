@@ -109,10 +109,11 @@ void MutePage::toggle_mutes_batch() {
   midi_events.setup_callbacks();
 }
 void MutePage::display() {
-
+#ifdef OLED_DISPLAY
   if (!classic_display) {
     oled_display.clearDisplay();
   }
+#endif
   GUI.setLine(GUI.LINE2);
   uint8_t x;
   // GUI.put_string_at(12,"Mute");

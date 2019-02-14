@@ -142,6 +142,7 @@ void LoadProjectPage::init() {
 }
 
 void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
+#ifdef OLED_DISPLAY
   uint8_t number_of_items = numEntries;
   uint8_t length = round(
       ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
@@ -160,6 +161,7 @@ void LoadProjectPage::draw_scrollbar(uint8_t x_offset) {
 
   oled_display.fillRect(x_offset + 1, y + 1, 3, length - 2, BLACK);
   oled_display.drawRect(x_offset, y, 5, length, WHITE);
+#endif
 }
 
 void LoadProjectPage::loop() {

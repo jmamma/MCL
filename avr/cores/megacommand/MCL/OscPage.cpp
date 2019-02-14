@@ -149,7 +149,9 @@ void OscPage::loop() {
 void OscPage::display() {
   // oled_display.clearDisplay();
   if (!classic_display) {
+    #ifdef OLED_DISPLAY
     oled_display.fillRect(0, 0, 64, 32, BLACK);
+    #endif
   }
   else {
     GUI.setLine(GUI.LINE2);
@@ -230,19 +232,19 @@ void OscPage::display() {
   }
   GUI.put_string_at(10, "\0");
   //  GUI.put_string_at(0, my_str);
+#ifdef OLED_DISPLAY
   if (!classic_display) {
     LCD.goLine(0);
     LCD.puts(GUI.lines[0].data);
     GUI.lines[0].changed = false;
   }
+#endif
 #ifdef OLED_DISPLAY
   oled_display.display();
 #endif
 }
 void OscPage::draw_wav(uint8_t wav_type) {
-#ifndef OLED_DISPLAY
-  return;
-#endif
+#ifdef OLED_DISPLAY
   uint8_t x = 64;
   uint8_t y = 0;
   uint8_t h = 30;
@@ -257,6 +259,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   float max_sine_gain = (float)1 / (float)16;
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
+
   oled_display.fillRect(n + x, 0, scanline_width, 32, BLACK);
   for (uint8_t n = sample_number; n < sample_number + scanline_width; n++) {
     //  if ((scanline_width < w) && (wav_type > 0)) {
@@ -305,6 +308,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   if (sample_number > 128 - x) {
     sample_number = 0;
   }
+#endif
 }
 
 void OscPage::draw_usr() {

@@ -269,7 +269,7 @@ void GridPage::toggle_fx2() {
 }
 
 void GridPage::display_counters() {
-
+#ifdef OLED_DISPLAY
   uint8_t y_offset = 8;
   uint8_t x_offset = 20;
 
@@ -309,9 +309,11 @@ void GridPage::display_counters() {
     oled_display.print(":");
     oled_display.print(mcl_actions.nearest_beat);
   }
+#endif
 }
 
 void GridPage::display_grid_info() {
+#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
@@ -379,9 +381,11 @@ void GridPage::display_grid_info() {
   }
 
   oled_display.setTextColor(WHITE, BLACK);
+#endif
 }
 
 void GridPage::display_grid() {
+#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
@@ -454,6 +458,7 @@ void GridPage::display_grid() {
       }
     }
   }
+#endif
 }
 void GridPage::display_slot_menu() {
   uint8_t x_offset = 43;
@@ -463,6 +468,7 @@ void GridPage::display_slot_menu() {
 }
 
 void GridPage::display_oled() {
+#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
@@ -478,6 +484,7 @@ void GridPage::display_oled() {
   display_grid();
 
   oled_display.display();
+#endif
 }
 void GridPage::display() {
 

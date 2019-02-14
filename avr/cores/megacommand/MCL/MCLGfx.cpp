@@ -2,6 +2,7 @@
 #include "MCLGfx.h"
 
 void MCLGfx::init_oled() {
+#ifdef OLED_DISPLAY
   oled_display.begin();
 
   oled_display.clearDisplay();
@@ -11,8 +12,10 @@ void MCLGfx::init_oled() {
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(0, 0);
   oled_display.display();
+#endif
 }
 
+#ifdef OLED_DISPLAY
 #define BITMAP_MCL_LOGO_W 58
 #define BITMAP_MCL_LOGO_H 19
 
@@ -37,6 +40,7 @@ const unsigned char mcl_logo_bitmap[] PROGMEM = {
 ,0x00,0x1f,0xf3,0xff,0xf3,0xfe,0x78,0x00
 ,0x00,0x1f,0xf3,0xff,0xf3,0xfe,0x70,0x00
 };
+#endif
 
 void MCLGfx::splashscreen() {
 #ifdef OLED_DISPLAY

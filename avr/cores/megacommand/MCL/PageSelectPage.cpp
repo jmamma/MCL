@@ -8,7 +8,9 @@
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
+#endif
   md_exploit.on();
   note_interface.state = true;
 }
@@ -34,11 +36,13 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
       m_strncpy(str, "CUE ", 4);
     r_page = &cue_page;
     break;
+#ifdef WAV_DESIGNER
   case WAVD_PAGE:
     if (str)
       m_strncpy(str, "WAVD", 4);
     r_page = wd.last_page;
     break;
+#endif
   default:
     if (str)
       m_strncpy(str, "----", 4);

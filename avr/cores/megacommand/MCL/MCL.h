@@ -10,6 +10,10 @@
 #include "MD.h"
 #include "WProgram.h"
 
+#ifdef MEGACOMMAND
+  #define WAV_DESIGNER 1
+#endif
+
 #include "MCLGfx.h"
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
@@ -41,9 +45,16 @@
 #include "AuxPages.h"
 #include "GridPages.h"
 #include "MCLMenus.h"
+
+#ifdef WAV_DESIGNER
 #include "Osc.h"
 #include "OscMixerPage.h"
 #include "OscPage.h"
+#include "Wav.h"
+#include "WavDesigner.h"
+#include "DSP.h"
+#endif
+
 #include "PageSelectPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
@@ -55,10 +66,12 @@
 //#include "EmptyTrack.h"
 
 #include "Shared.h"
-#include "Wav.h"
-#include "WavDesigner.h"
 
-#include "DSP.h"
+//MCL Fonts
+#ifdef OLED_DISPLAY
+#include "Fonts/TomThumb.h"
+#include "Fonts/Elektrothic.h"
+#endif
 
 #define VERSION 2021
 

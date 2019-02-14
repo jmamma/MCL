@@ -87,7 +87,9 @@ void PolyPage::toggle_mask(uint8_t i) {
 void PolyPage::display() {
 
   if (!classic_display) {
+#ifdef OLED_DISPLAY
     oled_display.clearDisplay();
+#endif
   }
   GUI.setLine(GUI.LINE2);
   uint8_t x;

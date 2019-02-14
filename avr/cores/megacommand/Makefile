@@ -27,11 +27,12 @@ OPTIM=-Os
 #CFLAGS = -c -g $(OPTIM) -w -ffunction-sections -fdata-sections -mmcu=atmega64 -DF_CPU=16000000L -Wl,--section-start=.bss=0x802000,--defsym=__heap_end=0x80ffff
 #CXXFLAGS = -c -g $(OPTIM) -w -fno-exceptions -ffunction-sections -fdata-sections -mmcu=atmega64 -DF_CPU=16000000L -Wl,--section-start=.bss=0x802000,--defsym=__heap_end=0x80ffff
 #CLDFLAGS =  $(OPTIM) -Wl,--gc-sections -mmcu=atmega64 -o /Users/manuel/mididuino/minicommand-sketches/profileTest/applet/profileTest.elf -Wl,--section-start=.bss=0x802000,--defsym=__heap_end=0x80ffff
-CFLAGS = -c -g -Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
-CXXFLAGS = -c -g -Os -w -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x82100,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+CFLAGS = -c -g -Os -Wextra -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+
+CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x82100,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 CLDFLAGS = -Wall -Wextra -Os -flto -fuse-linker-plugin -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega2560
 #DIRS = $(shell find . -type d | cut -c3- | uniq | grep -v 'github' | grep -v -e '^$')
-DIRS = MidiSketches PageTools SDCard MNM MidiTools Elektron A4 Wire Wire/utility Midi Monome Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library MNMSketches CommonTools MDSketches GUI LFO MD Sequencer MNMPages MDPages
+DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD
 #DIRS = CommonTools Midi GUI SDCard MNM MD MidiTools Elektron
 #LDIRS = $(foreach dir,$(DIRS),$(LBASE_DIR)/$(dir)) $(BASE_DIR)/hardware/cores/$(CORE)
 #LDIRS = $(foreach dir,$(DIRS),$(LBASE_DIR)/$(dir)) $(BASE_DIR)/hardware/cores/$(CORE)

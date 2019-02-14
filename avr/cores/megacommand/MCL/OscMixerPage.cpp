@@ -137,7 +137,9 @@ void OscMixerPage::draw_wav() {
     }
   }
   // float buffer[w];
+#ifdef OLED_DISPLAY
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
+#endif
   float largest_sample_so_far;
   for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
     float sample = 0;
@@ -196,11 +198,13 @@ void OscMixerPage::draw_wav() {
     //  largest_sample_so_far = abs(buffer[n]);
     //  }
     uint8_t pixel_y = (uint8_t)(((sample) * (float)(h / 2)) + (h / 2));
+#ifdef OLED_DISPLAY
     oled_display.drawPixel(n + x, pixel_y + y, WHITE);
     // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
     if (n % 2 == 0) {
       oled_display.drawPixel(n + x, (h / 2) + y, WHITE);
     }
+#endif
   }
 
   sample_number += scanline_width;
