@@ -48,6 +48,7 @@ void SeqRlckPage::display() {
   }
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
+  SeqPage::display();
 }
 bool SeqRlckPage::handleEvent(gui_event_t *event) {
 

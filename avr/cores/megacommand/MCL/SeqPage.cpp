@@ -5,6 +5,10 @@ uint8_t SeqPage::page_select = 0;
 
 uint8_t SeqPage::midi_device = DEVICE_MD;
 
+uint8_t SeqPage::length = 0;
+uint8_t SeqPage::resolution = 0;
+uint8_t SeqPage::apply = 0;
+
 void SeqPage::create_chars_seq() {
   uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
   uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
@@ -21,9 +25,10 @@ void SeqPage::setup() { create_chars_seq(); }
 void SeqPage::init() {
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
+  classic_display = false;
   oled_display.clearDisplay();
-  #endif
+#endif
 }
 
 void SeqPage::cleanup() {
@@ -70,6 +75,37 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+#ifdef OLED_DISPLAY
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+
+    show_track_menu = true;
+    if (midi_device == DEVICE_MD) {
+      DEBUG_PRINTLN("okay using MD for length update");
+      SeqPage::length = (mcl_seq.md_tracks[last_md_track].length);
+      SeqPage::resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+    }
+    if (midi_device == DEVICE_A4) {
+      SeqPage::length = (mcl_seq.ext_tracks[last_ext_track].length);
+      SeqPage::resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+    }
+
+    encoders[0] = &track_menu_param1;
+    encoders[1] = &track_menu_param2;
+    track_menu_page.init();
+    SeqPage::length = 0;
+    return true;
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    oled_display.clearDisplay();
+    show_track_menu = false;
+    return true;
+  }
+#else
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      GUI.pushPage(&track_menu_page);
+    return true;
+  }
+#endif
 
   return false;
 }
@@ -155,14 +191,14 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
                                   ((count_16th -
                                     mcl_actions_callbacks.start_clock96th / 5) /
                                    mcl_seq.md_tracks[last_md_track].length));*/
-       /* uint8_t step_count = (MidiClock.div16th_counter -
-                              mcl_actions.start_clock32th / 2) -
-                             (mcl_seq.md_tracks[last_md_track].length *
-                              ((MidiClock.div16th_counter -
-                                mcl_actions.start_clock32th / 2) /
-                               mcl_seq.md_tracks[last_md_track].length)); */
+        /* uint8_t step_count = (MidiClock.div16th_counter -
+                               mcl_actions.start_clock32th / 2) -
+                              (mcl_seq.md_tracks[last_md_track].length *
+                               ((MidiClock.div16th_counter -
+                                 mcl_actions.start_clock32th / 2) /
+                                mcl_seq.md_tracks[last_md_track].length)); */
 
-       uint8_t step_count = mcl_seq.md_tracks[last_md_track].step_count;
+        uint8_t step_count = mcl_seq.md_tracks[last_md_track].step_count;
 #ifdef OLED_DISPLAY
 #endif
         if (i + offset >= mcl_seq.md_tracks[last_md_track].length) {
@@ -195,18 +231,18 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
     for (int i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
 
-     /* uint8_t step_count =
-          ((MidiClock.div32th_counter /
-            mcl_seq.ext_tracks[last_ext_track].resolution) -
-           (mcl_actions.start_clock32th /
-            mcl_seq.ext_tracks[last_ext_track].resolution)) -
-          (mcl_seq.ext_tracks[last_ext_track].length *
+      /* uint8_t step_count =
            ((MidiClock.div32th_counter /
-                 mcl_seq.ext_tracks[last_ext_track].resolution -
-             (mcl_actions.start_clock32th /
-              mcl_seq.ext_tracks[last_ext_track].resolution)) /
-            (mcl_seq.ext_tracks[last_ext_track].length)));
-      */
+             mcl_seq.ext_tracks[last_ext_track].resolution) -
+            (mcl_actions.start_clock32th /
+             mcl_seq.ext_tracks[last_ext_track].resolution)) -
+           (mcl_seq.ext_tracks[last_ext_track].length *
+            ((MidiClock.div32th_counter /
+                  mcl_seq.ext_tracks[last_ext_track].resolution -
+              (mcl_actions.start_clock32th /
+               mcl_seq.ext_tracks[last_ext_track].resolution)) /
+             (mcl_seq.ext_tracks[last_ext_track].length)));
+       */
       uint8_t step_count = mcl_seq.ext_tracks[last_ext_track].step_count;
       uint8_t noteson = 0;
       uint8_t notesoff = 0;
@@ -307,10 +343,46 @@ void pattern_len_handler(Encoder *enc) {
     }
   }
 }
+
+void SeqPage::loop() {
+
+  if (show_track_menu) {
+    if (midi_device == DEVICE_MD) {
+      DEBUG_PRINTLN("okay using MD for length update");
+      (mcl_seq.md_tracks[last_md_track].length) = SeqPage::length;
+      (mcl_seq.md_tracks[last_md_track].resolution) = SeqPage::resolution;
+    }
+    if (midi_device == DEVICE_A4) {
+      (mcl_seq.ext_tracks[last_ext_track].length) = SeqPage::length;
+      (mcl_seq.ext_tracks[last_ext_track].resolution) = SeqPage::resolution;
+    }
+     track_menu_page.loop();
+  }
+
+}
 void SeqPage::display() {
+
+  for (uint8_t i = 0; i < 2; i++) {
+    LCD.goLine(i);
+    LCD.puts(GUI.lines[i].data);
+    GUI.lines[i].changed = false;
+  }
   GUI.setLine(GUI.LINE1);
   GUI.put_value_at1(15, page_select + 1);
+#ifdef OLED_DISPLAY
+  if (show_track_menu) {
+    uint8_t x_offset = 43;
+    uint8_t y_offset = 8;
+    oled_display.setFont(&TomThumb);
+    oled_display.fillRect(84, 0, 40, 32, BLACK);
+    track_menu_page.draw_menu(86, y_offset, 39);
+  }
+  oled_display.display();
+  oled_display.setFont();
+#endif
+
 }
+
 
 void SeqPageMidiEvents::setup_callbacks() {
   //   Midi.addOnControlChangeCallback(

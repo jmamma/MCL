@@ -14,7 +14,7 @@ void OscMixerPage::init() {
 }
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
-  if (BUTTON_PRESSED(Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.setLine(GUI.LINE1);
     GUI.put_string_at(0,"Render..");
     LCD.goLine(0);
@@ -41,31 +41,31 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
    // MD.clear_all_windows_quick();
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     MD.preview_sample(encoders[3]->cur + 1);
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     GUI.setPage(&(wd.pages[0]));
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER2)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
     GUI.setPage(&(wd.pages[1]));
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER3)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
     GUI.setPage(&(wd.pages[2]));
 
     return true;
   }
 
-  if (BUTTON_PRESSED(Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     GUI.setPage(&grid_page);
     return true;
   }

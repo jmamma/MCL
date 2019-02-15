@@ -32,7 +32,7 @@ mega.build.libraries=Midi GUI CommonTools Elektron
 mega.build.variant=mega
 # default board may be overridden by the cpu menu
 mega.build.board=AVR_MEGA2560
-
+mega.build.dependency=true
 ## Arduino/Genuino Mega w/ ATmega2560
 ## -------------------------
 mega.menu.cpu.atmega2560=ATmega2560 (Mega 2560)

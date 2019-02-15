@@ -45,6 +45,7 @@ void SeqRtrkPage::display() {
   }
   bool show_current_step = false;
   draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  SeqPage::display();
 }
 bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 

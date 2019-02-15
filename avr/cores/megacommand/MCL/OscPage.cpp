@@ -35,7 +35,7 @@ void OscPage::init() {
 
 void OscPage::cleanup() { DEBUG_PRINT_FN(); }
 bool OscPage::handleEvent(gui_event_t *event) {
-  if (BUTTON_PRESSED(Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     osc_waveform++;
     if (osc_waveform > 5) {
       osc_waveform = 0;
@@ -43,11 +43,11 @@ bool OscPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     // md_exploit.off();
     // wd.render();
     // wd.send();
@@ -55,7 +55,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (BUTTON_PRESSED(Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     if (id == 0) {
       GUI.setPage(&grid_page);
     } else {
@@ -63,7 +63,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER2)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
     if (id == 1) {
       GUI.setPage(&grid_page);
     } else {
@@ -72,7 +72,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER3)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
     if (id == 2) {
       GUI.setPage(&grid_page);
     } else {
@@ -81,7 +81,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
     GUI.setPage(&(wd.mixer));
 

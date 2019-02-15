@@ -4,6 +4,7 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
+#include "MCLMenus.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
@@ -40,8 +41,25 @@ extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 extern SeqPtcPage seq_ptc_page;
 
-class SeqPages {
-public:
+extern MCLEncoder track_menu_param1;
+extern MCLEncoder track_menu_param2;
+extern MenuPage track_menu_page;
+
+const menu_t track_menu_layout PROGMEM = { 
+    "TRACk",
+    5,  
+    {   
+        {"LENGTH:", 0, 64, 0, (uint8_t *) &SeqPage::length, (Page*) NULL, (void*)NULL, {}},
+        {"MULTI:", 1, 2, 2, (uint8_t *) &SeqPage::resolution, (Page*) NULL, (void*)NULL, {{1, "1x"},{2, "2x"}}},
+
+        {"APPLY:", 0, 1, 2, (uint8_t *) &SeqPage::apply, (Page*) NULL, (void*)NULL, {{1, "--"},{1, "ALL"}}},
+        {"LOAD SND:", 0,  0, 0, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, (void*)NULL, {}},
+        {"SAVE SND:", 0, 0, 0, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, (void*)NULL, {}},
+   },  
+
+    (void*)(&mclsys_apply_config),
+
 };
-extern SeqPages seq_pages;
+
+
 #endif /* SEQPAGES_H__ */

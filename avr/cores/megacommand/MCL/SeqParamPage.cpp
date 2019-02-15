@@ -79,6 +79,7 @@ void SeqParamPage::display() {
   }
   GUI.put_value_at1(15, (page_select + 1));
   draw_lock_mask(page_select * 16);
+  SeqPage::display();
 }
 
 void SeqParamPage::loop() {

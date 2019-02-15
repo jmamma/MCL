@@ -123,11 +123,11 @@ void GridPage::loop() {
     reload_slot_models = true;
   }
   /*
-    if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
+    if (_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
       toggle_fx1();
     }
 
-    if (BUTTON_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
+    if (_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
       toggle_fx2();
     }
     */
@@ -680,7 +680,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
 #ifdef OLED_DISPLAY
-  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
 
     show_slot_menu = true;
     DEBUG_PRINTLN(getCol());
@@ -706,41 +706,41 @@ bool GridPage::handleEvent(gui_event_t *event) {
     merge_md = 0;
     return true;
   }
-  if (BUTTON_RELEASED(Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     apply_slot_changes();
     return true;
   }
 #else
-  if (BUTTON_RELEASED(Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     display_name = 0;
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     display_name = 1;
     return;
   }
-  if (BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (BUTTON_PRESSED(Buttons.ENCODER1)) {
+  if (_DOWN(Buttons.BUTTON3)) {
+    if (_PRESSED(event, Buttons.ENCODER1)) {
       slot.load_track_from_grid(getCol(), getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
-    if (BUTTON_PRESSED(Buttons.ENCODER2)) {
+    if (_PRESSED(event, Buttons.ENCODER2)) {
       slot.load_track_from_grid(getCol() + 1, getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
-    if (BUTTON_PRESSED(Buttons.ENCODER3)) {
+    if (_PRESSED(event, Buttons.ENCODER3)) {
       slot.load_track_from_grid(getCol() + 2, getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
-    if (BUTTON_PRESSED(Buttons.ENCODER4)) {
+    if (_PRESSED(event, Buttons.ENCODER4)) {
       slot.load_track_from_grid(getCol() + 3, getRow());
       display_name = 0;
       slot_apply = 0;
@@ -749,28 +749,28 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 #endif
-  if (BUTTON_PRESSED(Buttons.ENCODER1)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();
     GUI.setPage(&seq_step_page);
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER2)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
     seq_rtrk_page.isSetup = false;
     prepare();
     GUI.setPage(&seq_rtrk_page);
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER3)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
     seq_param_page[0].isSetup = false;
     prepare();
     GUI.setPage(&seq_param_page[0]);
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     seq_ptc_page.isSetup = false;
     prepare();
     GUI.setPage(&seq_ptc_page);
@@ -786,7 +786,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (BUTTON_PRESSED(Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     prepare();
     GUI.setPage(&page_select_page);
     return true;

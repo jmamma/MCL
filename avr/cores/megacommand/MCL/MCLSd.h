@@ -5,7 +5,7 @@
 
 #include "SdFat.h"
 
-#define SD_MAX_RETRIES 5 
+#define SD_MAX_RETRIES 5
 
 class MCLSd {
   public:

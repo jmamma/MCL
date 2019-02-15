@@ -45,7 +45,7 @@ void MCL::setup() {
   midi_setup.cfg_ports();
   for (uint8_t n = 0; n < 16; n++) { SET_BIT32(mcl_cfg.mutes, n); }
   mute_page.midi_events.setup_callbacks();
-  GUI.addTask(&grid_task); 
+  GUI.addTask(&grid_task);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE

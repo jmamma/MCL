@@ -21,6 +21,10 @@ public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
   static uint8_t midi_device;
+  static uint8_t length;
+  static uint8_t resolution;
+  static uint8_t apply;
+  bool show_track_menu;
 
   SeqPageMidiEvents seqpage_midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -31,6 +35,7 @@ public:
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
+  void loop();
   void display();
   void setup();
   void init();

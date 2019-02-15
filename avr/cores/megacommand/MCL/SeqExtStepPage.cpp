@@ -124,6 +124,7 @@ void SeqExtStepPage::display() {
     GUI.put_value_at1(13, last_ext_track + 1);
   }
   draw_pattern_mask((page_select * 16), DEVICE_A4);
+  SeqPage::display();
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {

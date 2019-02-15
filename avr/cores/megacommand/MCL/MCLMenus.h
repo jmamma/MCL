@@ -9,6 +9,7 @@
 #include "PolyPage.h"
 #include "GridPages.h"
 #include "TextInputPage.h"
+#include "SeqPages.h"
 
 #define ENCODER_RES_SYS 2
 

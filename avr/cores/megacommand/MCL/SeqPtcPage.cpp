@@ -160,6 +160,7 @@ void SeqPtcPage::display() {
   GUI.put_string_at(12, "S:");
 
   GUI.put_value_at2(14, encoders[3]->getValue());
+  SeqPage::display();
 }
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
