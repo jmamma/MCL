@@ -32,6 +32,8 @@ public:
   void display();
   void setup();
   void init();
+  bool enter();
+  bool exit();
   virtual bool handleEvent(gui_event_t *event);
 };
 

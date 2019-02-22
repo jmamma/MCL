@@ -5,6 +5,7 @@ void TextInputPage::setup() {}
 
 void TextInputPage::init() {
 #ifdef OLED_DISPLAY
+  oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont();
   oled_display.clearDisplay();
 #endif

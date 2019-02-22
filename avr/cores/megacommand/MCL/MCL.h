@@ -21,6 +21,7 @@
 #include "PolyPage.h"
 #include "Project.h"
 
+#include "FileBrowserPage.h"
 #include "Grid.h"
 #include "GridChain.h"
 #include "GridRowHeader.h"
@@ -31,6 +32,7 @@
 #include "MCLSeq.h"
 #include "MDEvents.h"
 #include "MDExploit.h"
+#include "MDSound.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"

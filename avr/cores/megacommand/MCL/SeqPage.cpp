@@ -98,11 +98,19 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     oled_display.clearDisplay();
     show_track_menu = false;
+  void (*row_func)() = track_menu_page.menu.get_row_function(track_menu_page.encoders[1]->cur);
+  DEBUG_PRINTLN(track_menu_page.encoders[1]->cur);
+  if (row_func != NULL) {
+          DEBUG_PRINTLN("func call");
+      (*row_func)();
+      return;
+  }
+    track_menu_page.enter();
     return true;
   }
 #else
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-      GUI.pushPage(&track_menu_page);
+    GUI.pushPage(&track_menu_page);
     return true;
   }
 #endif
@@ -356,9 +364,8 @@ void SeqPage::loop() {
       (mcl_seq.ext_tracks[last_ext_track].length) = SeqPage::length;
       (mcl_seq.ext_tracks[last_ext_track].resolution) = SeqPage::resolution;
     }
-     track_menu_page.loop();
+    track_menu_page.loop();
   }
-
 }
 void SeqPage::display() {
 
@@ -380,9 +387,7 @@ void SeqPage::display() {
   oled_display.display();
   oled_display.setFont();
 #endif
-
 }
-
 
 void SeqPageMidiEvents::setup_callbacks() {
   //   Midi.addOnControlChangeCallback(

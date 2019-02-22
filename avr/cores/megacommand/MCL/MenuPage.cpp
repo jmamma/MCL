@@ -195,16 +195,8 @@ void MenuPage::display() {
 #endif
 }
 
-bool MenuPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER1)) {
-
+bool MenuPage::enter() {
+    DEBUG_PRINT_FN();
     void (*row_func)() = menu.get_row_function(encoders[1]->cur);
     Page *page_callback = menu.get_page_callback(encoders[1]->cur);
     if (page_callback != NULL) {
@@ -214,14 +206,13 @@ bool MenuPage::handleEvent(gui_event_t *event) {
       return;
     }
     if (row_func != NULL) {
+      DEBUG_PRINTLN("calling callback func");
       (*row_func)();
     }
-  }
+ 
+}
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+bool MenuPage::exit() {
     // Page *exit_page_callback = menu.get_exit_page_callback();
     void (*exit_func)() = menu.get_exit_function();
     if (exit_func != NULL) {
@@ -231,6 +222,27 @@ bool MenuPage::handleEvent(gui_event_t *event) {
     // if (exit_page_callback != NULL) {
     GUI.popPage();
     //}
+
+}
+
+bool MenuPage::handleEvent(gui_event_t *event) {
+  if (note_interface.is_event(event)) {
+
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+      EVENT_PRESSED(event, Buttons.ENCODER2) ||
+      EVENT_PRESSED(event, Buttons.ENCODER3) ||
+      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+    enter();
+    return true;
+  }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+      EVENT_PRESSED(event, Buttons.BUTTON2) ||
+      EVENT_PRESSED(event, Buttons.BUTTON3) ||
+      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    exit();
     return true;
   }
 }

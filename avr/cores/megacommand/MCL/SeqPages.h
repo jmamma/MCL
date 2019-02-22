@@ -45,17 +45,20 @@ extern MCLEncoder track_menu_param1;
 extern MCLEncoder track_menu_param2;
 extern MenuPage track_menu_page;
 
-const menu_t track_menu_layout PROGMEM = { 
+extern void mcl_save_sound();
+extern void mcl_load_sound();
+
+const menu_t track_menu_layout PROGMEM = {
     "TRACk",
-    5,  
-    {   
+    5,
+    {
         {"LENGTH:", 0, 64, 0, (uint8_t *) &SeqPage::length, (Page*) NULL, (void*)NULL, {}},
         {"MULTI:", 1, 2, 2, (uint8_t *) &SeqPage::resolution, (Page*) NULL, (void*)NULL, {{1, "1x"},{2, "2x"}}},
 
         {"APPLY:", 0, 1, 2, (uint8_t *) &SeqPage::apply, (Page*) NULL, (void*)NULL, {{1, "--"},{1, "ALL"}}},
-        {"LOAD SND:", 0,  0, 0, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, (void*)NULL, {}},
-        {"SAVE SND:", 0, 0, 0, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, (void*)NULL, {}},
-   },  
+        {"LOAD SND:", 0,  0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_load_sound, {}},
+        {"SAVE SND:", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_save_sound, {}},
+   },
 
     (void*)(&mclsys_apply_config),
 
