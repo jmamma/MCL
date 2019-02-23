@@ -1,8 +1,9 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
-#define GRID_WIDTH 20
 
 #ifndef GRIDROW_H__
 #define GRIDROW_H__
+
+#define GRID_WIDTH 22
 
 class GridRowHeader {
  public:
