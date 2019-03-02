@@ -195,7 +195,7 @@ void GridTask::run() {
             if (md_track->active == MD_TRACK_TYPE) {
 
               mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
-                                         &(MD.kit));
+                                         &(MD.kit), false);
               md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
                                            false);
             }
@@ -204,7 +204,7 @@ void GridTask::run() {
           }
 #endif
           if (slots_loaded[n] == 0) {
-            mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit));
+            mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),false);
             md_track->place_track_in_kit(n, n, &(MD.kit), false);
             slots_loaded[n] = 1;
           }

@@ -13,6 +13,7 @@ public:
   char *title;
   char text[17];
   uint8_t length;
+  uint8_t max_length;
   bool return_state;
   uint16_t last_clock;
 

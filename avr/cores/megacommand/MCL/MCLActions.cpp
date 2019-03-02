@@ -785,7 +785,7 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
 }
 
 int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
-                                            MDKit *kit_) {
+                                            MDKit *kit_, bool set_level) {
   // int sysex_headers_bytes = 7;
   int bytes = 0;
 
@@ -820,6 +820,10 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
   if ((kit_->muteGroups[track] != machine->muteGroup)) {
     bytes += 3 + 7;
   }
+  if ((set_level) && (kit_->levels[track] != machine->level)) {
+    bytes += 3;
+  }
+
   for (uint8_t i = 0; i < 24; i++) {
     if ((kit_->params[track][i] != machine->params[i]) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
@@ -831,7 +835,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
   return bytes;
 }
 void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
-                                MDKit *kit_) {
+                                MDKit *kit_, bool set_level) {
   if (kit_ == NULL) {
     MD.setMachine(track, machine);
   } else {
@@ -873,6 +877,10 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
       } else {
         MD.setMuteGroup(track, machine->muteGroup);
       }
+    }
+
+    if ((set_level) && (kit_->levels[track] != machine->level)) {
+       MD.setTrackParam(track, 33, machine->level);
     }
     //  MidiUart.useRunningStatus = true;
     //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;

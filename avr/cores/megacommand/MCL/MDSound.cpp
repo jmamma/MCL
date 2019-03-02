@@ -14,38 +14,37 @@ bool MDSound::read_sound() {
   return ret;
 }
 
-bool MDSound::name_sound() { 
-  char menu_name[16] = "Sound Name";
-  return mcl_gui.wait_for_input(name, menu_name, 8); 
-}
-
 bool MDSound::fetch_sound(uint8_t track) {
   DEBUG_PRINT_FN();
-  memcpy(&machine1, &(MD.kit.models[track]), sizeof(MDMachine));
-  memcpy(&lfo1, &(MD.kit.lfos[track]), sizeof(MDLFO));
+  machine_count = 0;
+  machine1.model = MD.kit.models[track];
+  memcpy(&machine1.params, &(MD.kit.params[track]), 24);
+  memcpy(&machine1.lfo, &(MD.kit.lfos[track]), sizeof(MDLFO));
 
-  if (lfo1.destinationTrack == track) {
-    lfo1.destinationTrack = 0;
-  } else if (lfo1.destinationTrack == track + 1) {
-    lfo1.destinationTrack = 1;
-  } else {
-    lfo1.destinationTrack = 255;
-  }
   uint8_t trigGroup = MD.kit.trigGroups[track];
+  if (machine1.lfo.destinationTrack == track) {
+    machine1.lfo.destinationTrack = 0;
+  } else if (machine1.lfo.destinationTrack == trigGroup) {
+    machine1.lfo.destinationTrack = 1;
+  } else {
+    machine1.lfo.destinationTrack = 255;
+  }
   machine_count++;
 
   // If track uses trigGroup, assume sound is made up of two models.
 
   if ((trigGroup < 16) && (trigGroup != track)) {
-    memcpy(&machine2, MD.kit.models[track], sizeof(MDMachine));
-    memcpy(&lfo2, &(MD.kit.lfos[track]), sizeof(MDLFO));
+  machine2.model = MD.kit.models[trigGroup];
+  memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
+  memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
 
-    if (lfo2.destinationTrack == track) {
-      lfo2.destinationTrack = 1;
+
+    if (machine2.lfo.destinationTrack == track) {
+      machine2.lfo.destinationTrack = 1;
     }
 
-    if (lfo2.destinationTrack == track - 1) {
-      lfo2.destinationTrack = 0;
+    if (machine2.lfo.destinationTrack == track - 1) {
+      machine2.lfo.destinationTrack = 0;
     }
 
     machine_count++;
@@ -54,34 +53,59 @@ bool MDSound::fetch_sound(uint8_t track) {
 
 bool MDSound::load_sound(uint8_t track) {
   DEBUG_PRINT_FN();
-  memcpy(&(MD.kit.models[track]), &machine1, sizeof(MDMachine));
-  memcpy(&(MD.kit.lfos[track]), &lfo1, sizeof(MDLFO));
-  if (lfo1.destinationTrack < 16) {
-    MD.kit.lfos[track].destinationTrack += track;
+
+  DEBUG_PRINTLN(machine1.model);
+
+  PGM_P tmp;
+  char str[3] = "  ";
+  tmp = getMachineNameShort(machine1.model, 2);
+  m_strncpy_p(str, tmp, 3);
+  DEBUG_PRINTLN(str);
+
+  if ((machine_count > 1) && (track != 15)) {
+    DEBUG_PRINTLN("loading second machine");
+    tmp = getMachineNameShort(machine2.model, 2);
+     m_strncpy_p(str, tmp, 3);
+    DEBUG_PRINTLN(str);
+
+    if (machine2.lfo.destinationTrack < 16) {
+      machine2.lfo.destinationTrack += track;
+    }
+    machine1.trigGroup = track + 1;
+    machine2.trigGroup = track;
+
+    mcl_actions.md_set_machine(track + 1, &machine2, &MD.kit, true);
+    MD.kit.models[track + 1] = machine2.model;
+    memcpy(&(MD.kit.params[track + 1]), &machine2.params, 24);
+    memcpy(&(MD.kit.lfos[track + 1]), &machine2.lfo, sizeof(MDLFO));
+
+  } else {
+    machine1.trigGroup = track;
+  }
+
+  if (machine1.lfo.destinationTrack < 16) {
+    machine1.lfo.destinationTrack += track;
   }
 
 
-  if ((machine_count > 1) && (track != 15)) {
-    memcpy(&(MD.kit.models[track + 1]), &machine2, sizeof(MDMachine));
-    memcpy(&(MD.kit.lfos[track + 1]), &lfo2, sizeof(MDLFO));
-    MD.kit.trigGroups[track] = track + 1;
-    MD.kit.trigGroups[track + 1] = track;
+  mcl_actions.md_set_machine(track, &machine1, &MD.kit ,true);
 
-    if (lfo2.destinationTrack < 16) {
-      MD.kit.lfos[track + 1].destinationTrack += track;
-    }
-
-    mcl_actions.md_set_machine(track + 1, NULL, &MD.kit);
-    }
+  if (machine_count == 1) {
+  MD.kit.trigGroups[track] = track;
+  }
   else {
-    MD.kit.trigGroups[track] = track;
-   }
+  MD.kit.trigGroups[track] = track + 1;
+  }
 
-  mcl_actions.md_set_machine(track, NULL, &MD.kit);
+  MD.kit.models[track] = machine1.model;
+  memcpy(&(MD.kit.params[track]), &machine1.params, 24);
+  memcpy(&(MD.kit.lfos[track]), &machine1.lfo, sizeof(MDLFO));
+
+
 }
 
 bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
-   DEBUG_PRINT_FN();
+  DEBUG_PRINT_FN();
 
   // DEBUG_PRINTLN(size);
   // DEBUG_PRINTLN(position);

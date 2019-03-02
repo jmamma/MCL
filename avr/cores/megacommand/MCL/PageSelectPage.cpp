@@ -5,6 +5,7 @@
 #define MUTE_PAGE 1
 #define CUE_PAGE 2
 #define WAVD_PAGE 8
+#define SOUND 7
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -23,29 +24,35 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
   switch (page_number) {
   case MUTE_PAGE:
     if (str)
-      m_strncpy(str, "MUTE", 4);
+      strncpy(str, "MUTE", 5);
     r_page = &mute_page;
     break;
   case MIX_PAGE:
     if (str)
-      m_strncpy(str, "MIX ", 4);
+      strncpy(str, "MIX ", 5);
     r_page = &mixer_page;
     break;
   case CUE_PAGE:
     if (str)
-      m_strncpy(str, "CUE ", 4);
+      strncpy(str, "CUE ", 5);
     r_page = &cue_page;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:
     if (str)
-      m_strncpy(str, "WAVD", 4);
+      strncpy(str, "WAVD", 5);
     r_page = wd.last_page;
     break;
 #endif
+  case SOUND:
+    if (str)
+    strncpy(str, "SOUND", 6);
+    r_page = &sound_browser;
+    break;
+
   default:
     if (str)
-      m_strncpy(str, "----", 4);
+      strncpy(str, "----", 4);
   }
   return r_page;
 }
@@ -86,7 +93,7 @@ void PageSelectPage::loop() {
 
 void PageSelectPage::display() {
   GUI.setLine(GUI.LINE1);
-  char str[5] = "    ";
+  char str[6] = "     ";
   get_page(page_select, str);
   LightPage *temp = NULL;
   GUI.put_string_at_fill(0, "Page Select:");

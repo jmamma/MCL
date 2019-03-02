@@ -21,7 +21,7 @@
 #include "PolyPage.h"
 #include "Project.h"
 
-#include "FileBrowserPage.h"
+#include "SoundBrowserPage.h"
 #include "Grid.h"
 #include "GridChain.h"
 #include "GridRowHeader.h"
