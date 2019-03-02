@@ -75,46 +75,49 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-#ifdef OLED_DISPLAY
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  /*
+  #ifdef OLED_DISPLAY
 
-    show_track_menu = true;
-    if (midi_device == DEVICE_MD) {
-      DEBUG_PRINTLN("okay using MD for length update");
-      SeqPage::length = (mcl_seq.md_tracks[last_md_track].length);
-      SeqPage::resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+
+      show_track_menu = true;
+      if (midi_device == DEVICE_MD) {
+        DEBUG_PRINTLN("okay using MD for length update");
+        SeqPage::length = (mcl_seq.md_tracks[last_md_track].length);
+        SeqPage::resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+      }
+      if (midi_device == DEVICE_A4) {
+        SeqPage::length = (mcl_seq.ext_tracks[last_ext_track].length);
+        SeqPage::resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      }
+
+      encoders[0] = &track_menu_param1;
+      encoders[1] = &track_menu_param2;
+      track_menu_page.init();
+      SeqPage::length = 0;
+      return true;
     }
-    if (midi_device == DEVICE_A4) {
-      SeqPage::length = (mcl_seq.ext_tracks[last_ext_track].length);
-      SeqPage::resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+      oled_display.clearDisplay();
+      show_track_menu = false;
+    void (*row_func)() =
+  track_menu_page.menu.get_row_function(track_menu_page.encoders[1]->cur);
+    DEBUG_PRINTLN(track_menu_page.encoders[1]->cur);
+    if (row_func != NULL) {
+            DEBUG_PRINTLN("func call");
+        (*row_func)();
+        return;
     }
-
-    encoders[0] = &track_menu_param1;
-    encoders[1] = &track_menu_param2;
-    track_menu_page.init();
-    SeqPage::length = 0;
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    oled_display.clearDisplay();
-    show_track_menu = false;
-  void (*row_func)() = track_menu_page.menu.get_row_function(track_menu_page.encoders[1]->cur);
-  DEBUG_PRINTLN(track_menu_page.encoders[1]->cur);
-  if (row_func != NULL) {
-          DEBUG_PRINTLN("func call");
-      (*row_func)();
-      return;
-  }
-    track_menu_page.enter();
-    return true;
-  }
-#else
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    GUI.pushPage(&track_menu_page);
-    return true;
-  }
-#endif
-
+      track_menu_page.enter();
+      return true;
+    }
+  #else
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      GUI.pushPage(&track_menu_page);
+      return true;
+    }
+  #endif
+  */
   return false;
 }
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
@@ -370,6 +373,11 @@ void SeqPage::loop() {
 void SeqPage::display() {
 
   for (uint8_t i = 0; i < 2; i++) {
+    for (int j = 0; j < 16; j++) {
+      if (GUI.lines[i].data[j] == 0) {
+        GUI.lines[i].data[j] = ' ';
+      }
+    }
     LCD.goLine(i);
     LCD.puts(GUI.lines[i].data);
     GUI.lines[i].changed = false;
