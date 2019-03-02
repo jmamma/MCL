@@ -18,6 +18,7 @@ bool MDSound::fetch_sound(uint8_t track) {
   DEBUG_PRINT_FN();
   machine_count = 0;
   machine1.model = MD.kit.models[track];
+  machine1.level = MD.kit.levels[track];
   memcpy(&machine1.params, &(MD.kit.params[track]), 24);
   memcpy(&machine1.lfo, &(MD.kit.lfos[track]), sizeof(MDLFO));
 
@@ -28,6 +29,7 @@ bool MDSound::fetch_sound(uint8_t track) {
     machine1.lfo.destinationTrack = 1;
   } else {
     machine1.lfo.destinationTrack = 255;
+    machine1.lfo.depth = 0;
   }
   machine_count++;
 
@@ -35,6 +37,7 @@ bool MDSound::fetch_sound(uint8_t track) {
 
   if ((trigGroup < 16) && (trigGroup != track)) {
   machine2.model = MD.kit.models[trigGroup];
+  machine2.level = MD.kit.levels[trigGroup];
   memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
   memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
 
@@ -43,8 +46,12 @@ bool MDSound::fetch_sound(uint8_t track) {
       machine2.lfo.destinationTrack = 1;
     }
 
-    if (machine2.lfo.destinationTrack == track - 1) {
+    else if (machine2.lfo.destinationTrack == track - 1) {
       machine2.lfo.destinationTrack = 0;
+    }
+    else {
+     machine2.lfo.destinationTrack = 255;
+     machine2.lfo.depth = 0;
     }
 
     machine_count++;
