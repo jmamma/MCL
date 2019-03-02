@@ -95,8 +95,13 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
     text_input_page.return_state = true;
+    uint8_t cpy_len = text_input_page.length;
+    for (uint8_t n = text_input_page.length - 1; n > 0 && text_input_page.text[n] == ' '; n--) {
+    cpy_len -= 1;
+    }
     m_strncpy(text_input_page.textp, &(text_input_page.text[0]),
-              text_input_page.length);
+    cpy_len);
+    text_input_page.textp[cpy_len] = '\0';
     GUI.popPage();
     return true;
   }
