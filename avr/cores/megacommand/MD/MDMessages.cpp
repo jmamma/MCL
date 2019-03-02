@@ -8,6 +8,62 @@
 #include "MD.h"
 uint8_t lfo_statestore[31];
 
+void MDMachine::normalize_level() {
+  DEBUG_PRINT_FN();
+  if (level == 127) {
+    return;
+  }
+  DEBUG_PRINTLN(lfo.destinationTrack);
+  DEBUG_PRINTLN(track);
+  DEBUG_PRINTLN(lfo.destinationParam);
+  if ((lfo.destinationParam == MODEL_VOL) && (lfo.destinationTrack == track)) {
+/*    uint8_t a = 127 - level;
+    uint8_t b = params[MODEL_LFOD];
+
+    uint8_t inc = a;
+    if (a > b) {
+    inc = b;
+    }
+
+    float scale = (float) inc / (float) 127;
+    level += inc;
+
+    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
+    params[MODEL_LFOD] -= inc;
+    lfo.depth = params[MODEL_LFOD];
+*/
+    uint8_t level_orig = level;
+
+    uint8_t a = 127 - level;
+    uint8_t inc = a;
+    float scale = (float) level / (float) 127;
+
+    level += inc;
+    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
+    params[MODEL_LFOD] = (uint8_t) ((float) params[MODEL_LFOD] * scale);
+    lfo.depth = params[MODEL_LFOD];
+  } else {
+    uint8_t a = 127 - level;
+    uint8_t b = params[MODEL_VOL];
+   // if (b < 3) { b = 3; }
+    uint8_t inc = a;
+   // if (a > b) {
+    //inc = b;
+   // }
+
+    float scale = (float) level / (float) 127;
+
+   // float scale = (float) inc / (float) 127;
+
+    level += inc;
+    //params[MODEL_VOL] -= inc;
+  
+    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
+   // params[MODEL_LFOD] = (uint8_t) ((float) params[MODEL_LFOD] * scale);
+    // params[MODEL_VOL] = (uint8_t) ( scale * (float) params[MODEL_VOL]);
+  }
+}
+
 bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
   if (len != 0xC4 - 6) {
     //		printf("wrong length\n");
@@ -79,8 +135,8 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder &encoder) {
 
   encoder.pack8(baseChannel);
   encoder.pack8(unused);
-  uint8_t tempo_lower = (uint8_t) (tempo & 0x7F);
-  uint8_t tempo_upper = (uint8_t) (tempo >> 7);
+  uint8_t tempo_lower = (uint8_t)(tempo & 0x7F);
+  uint8_t tempo_upper = (uint8_t)(tempo >> 7);
   encoder.pack8(tempo_upper);
   encoder.pack8(tempo_lower);
   encoder.packb(extendedMode ? 1 : 0);
@@ -103,7 +159,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder &encoder) {
     //        byte = byte + 32;
     SET_BIT(byte, 6);
   encoder.pack8(byte);
-  encoder.packb(localOn ? 1 : 0) ;
+  encoder.packb(localOn ? 1 : 0);
 
   //	encoder.pack(&drumLeft, 12);
 

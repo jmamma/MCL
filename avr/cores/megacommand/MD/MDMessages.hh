@@ -159,6 +159,7 @@ public:
   uint8_t trigGroup;
   uint8_t muteGroup;
 
+  void normalize_level();
   /* @} */
 };
 
