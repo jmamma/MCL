@@ -10,6 +10,8 @@ void FileBrowserPage::setup() {
   //char *mcl = ".mcl";
   //strcpy(match, mcl);
 #endif
+  char *files = "Files";
+  strcpy(title, files);
   DEBUG_PRINT_FN();
 }
 
@@ -30,7 +32,7 @@ void FileBrowserPage::init() {
   // file.open("/",O_READ);
   SD.vwd()->rewind();
   numEntries = 0;
-
+  cur_file = 255;
   if (show_save) {
   char create_new[9] = "[ SAVE ]";
   add_entry(&create_new[0]);
@@ -59,7 +61,7 @@ void FileBrowserPage::init() {
     DEBUG_PRINTLN(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
-    } else if (file.isDirectory()) {
+    } else if (file.isDirectory() && dir_browser) {
       is_match_file = true;
     } else {
       //  } else {
@@ -73,12 +75,12 @@ void FileBrowserPage::init() {
     if (is_match_file) {
      DEBUG_PRINTLN("project file identified");
       add_entry(&temp_entry[0]);
-      if (strcmp(&temp_entry[0], &mcl_cfg.project[1]) == 0) {
+      if (strcmp(&temp_entry[0], &mcl_cfg.project[0]) == 0) {
         DEBUG_PRINTLN("match");
         DEBUG_PRINTLN(temp_entry);
         DEBUG_PRINTLN(mcl_cfg.project);
 
-        cur_proj = numEntries;
+        cur_file = numEntries;
         encoders[1]->cur = numEntries;
       }
 
@@ -103,7 +105,7 @@ void FileBrowserPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.println("Files");
+  oled_display.println(title);
   for (uint8_t n = 0; n < 32; n++) {
     if (n % 2 != 0) {
       oled_display.drawPixel(x_offset - 6, n, WHITE);
@@ -126,7 +128,7 @@ void FileBrowserPage::display() {
                             oled_display.getCursorY() - 6, width, 7, WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
-      if (encoders[1]->cur - cur_row + n == cur_proj) {
+      if (encoders[1]->cur - cur_row + n == cur_file) {
         oled_display.setCursor(x_offset - 4, y_offset + n * 8);
         oled_display.print(">");
       }
@@ -146,9 +148,9 @@ void FileBrowserPage::display() {
   oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "Load Project:");
+  GUI.put_string_at(0, title);
   GUI.setLine(GUI.LINE2);
-  if (cur_proj == encoders[1]->cur) {
+  if (cur_file == encoders[1]->cur) {
     GUI.put_string_at_fill(0, ">");
   } else {
     GUI.put_string_at_fill(0, " ");
@@ -308,10 +310,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    if (proj.project_loaded) {
-      GUI.popPage();
+      GUI.setPage(&grid_page);
       return true;
-    }
   }
   return false;
 }

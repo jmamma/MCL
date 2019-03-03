@@ -4,6 +4,7 @@
 #define LOADPROJECTPAGE_H__
 
 #include "GUI.h"
+#include "FileBrowserPage.h"
 
 #define MAX_ENTRIES 1024
 #ifdef OLED_DISPLAY
@@ -14,22 +15,13 @@
 
 #define MENU_WIDTH 78
 
-class LoadProjectPage : public LightPage {
+class LoadProjectPage : public FileBrowserPage {
 public:
-//  char file_entries[MAX_ENTRIES][16];
-  int numEntries;
 
-  uint8_t cur_col = 0;
-  uint8_t cur_row = 0;
-  uint8_t cur_proj = 0;
   LoadProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {}
+      : FileBrowserPage(e1, e2, e3, e4) {}
   virtual bool handleEvent(gui_event_t *event);
-  virtual void display();
-  void draw_scrollbar(uint8_t x_offset);
-  void loop();
-  void setup();
   void init();
 };
 

@@ -29,11 +29,12 @@ class FileBrowserPage : public LightPage {
   char lwd[128];
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
-  uint8_t cur_proj = 0;
+  uint8_t cur_file = 0;
   bool dir_browser = false;
   bool show_save = true;
   bool show_parent = true;
   bool show_new_folder = true;
+  char title[12];
   File file;
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

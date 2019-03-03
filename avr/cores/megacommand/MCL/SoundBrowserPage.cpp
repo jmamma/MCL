@@ -9,6 +9,8 @@ void SoundBrowserPage::init() {
   char *snd = ".snd";
   strcpy(match, snd);
   dir_browser = true;
+  char *files = "Sounds";
+  strcpy(title, files);
   FileBrowserPage::init();
 }
 
