@@ -29,8 +29,11 @@ bool MDSound::fetch_sound(uint8_t track) {
     machine1.lfo.destinationTrack = 1;
   } else {
     machine1.lfo.destinationTrack = 255;
-    machine1.lfo.depth = 0;
+    machine1.lfo.depth = machine1.params[MODEL_LFOD] = 0;
   }
+
+  machine1.track = 0;
+  machine1.normalize_level();
   machine_count++;
 
   // If track uses trigGroup, assume sound is made up of two models.
@@ -42,20 +45,23 @@ bool MDSound::fetch_sound(uint8_t track) {
   memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
 
 
-    if (machine2.lfo.destinationTrack == track) {
+    if (machine2.lfo.destinationTrack == trigGroup) {
       machine2.lfo.destinationTrack = 1;
     }
 
-    else if (machine2.lfo.destinationTrack == track - 1) {
+    else if (machine2.lfo.destinationTrack == track) {
       machine2.lfo.destinationTrack = 0;
     }
     else {
      machine2.lfo.destinationTrack = 255;
-     machine2.lfo.depth = 0;
+     machine2.lfo.depth = machine2.params[MODEL_LFOD] = 0;
     }
 
     machine_count++;
+    machine2.track = 1;
+    machine2.normalize_level();
   }
+
 }
 
 bool MDSound::load_sound(uint8_t track) {

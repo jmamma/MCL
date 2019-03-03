@@ -8,14 +8,15 @@
 #include "MD.h"
 uint8_t lfo_statestore[31];
 
-void MDMachine::normalize_level() {
+float MDMachine::normalize_level() {
   DEBUG_PRINT_FN();
   if (level == 127) {
-    return;
+    return 1.0;
   }
   DEBUG_PRINTLN(lfo.destinationTrack);
   DEBUG_PRINTLN(track);
   DEBUG_PRINTLN(lfo.destinationParam);
+  float scale = 1.0;
   if ((lfo.destinationParam == MODEL_VOL) && (lfo.destinationTrack == track)) {
 /*    uint8_t a = 127 - level;
     uint8_t b = params[MODEL_LFOD];
@@ -36,7 +37,7 @@ void MDMachine::normalize_level() {
 
     uint8_t a = 127 - level;
     uint8_t inc = a;
-    float scale = (float) level / (float) 127;
+    scale = (float) level / (float) 127;
 
     level += inc;
     params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
@@ -51,17 +52,18 @@ void MDMachine::normalize_level() {
     //inc = b;
    // }
 
-    float scale = (float) level / (float) 127;
+    scale = (float) level / (float) 127;
 
    // float scale = (float) inc / (float) 127;
 
     level += inc;
     //params[MODEL_VOL] -= inc;
-  
+
     params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
    // params[MODEL_LFOD] = (uint8_t) ((float) params[MODEL_LFOD] * scale);
     // params[MODEL_VOL] = (uint8_t) ( scale * (float) params[MODEL_VOL]);
   }
+  return scale;
 }
 
 bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {

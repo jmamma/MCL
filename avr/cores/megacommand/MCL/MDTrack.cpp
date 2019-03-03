@@ -79,6 +79,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
   if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
     MD.kit.lfos[tracknumber].destinationTrack = column;
+    machine.track = column;
   }
   /*Copies Lfo data from the kit object into the machine object*/
   m_memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
@@ -260,6 +261,21 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
 
   if (track != 255) {
     get_track_from_sysex(track, column);
+  }
+  // Normalise level and vol locks
+  if (mcl_cfg.auto_normalize == 1) {
+    float scale = machine.normalize_level();
+    for (uint8_t n = 0; n < arraysize; n++) {
+      if ((machine.lfo.destinationParam == MODEL_VOL) &&
+          (machine.lfo.destinationTrack == machine.track)) {
+        if (locks[n].param_number == MODEL_LFOD) {
+          locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+        }
+      }
+      if (locks[n].param_number == MODEL_VOL) {
+        locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+      }
+    }
   }
 
   if (mcl_cfg.auto_merge == 1) {
