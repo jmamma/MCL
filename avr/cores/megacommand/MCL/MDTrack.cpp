@@ -240,6 +240,35 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
   return true;
 }
 
+void MDTrack::normalize() {
+  float scale = machine.normalize_level();
+  for (uint8_t n = 0; n < arraysize; n++) {
+    if ((machine.lfo.destinationParam == MODEL_VOL) &&
+        (machine.lfo.destinationTrack == machine.track)) {
+      if (locks[n].param_number == MODEL_LFOD) {
+        locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+      }
+    }
+    if (locks[n].param_number == MODEL_VOL) {
+      locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+    }
+  }
+
+  for (uint8_t c = 0; c < 4; c++) {
+    if (seq_data.locks_params[c] > 0) {
+      if ((seq_data.locks_params[c] - 1 == MODEL_LFOD) ||
+          (seq_data.locks_params[c] - 1 == MODEL_VOL)) {
+        for (uint8_t n = 0; n < 64; n++) {
+          if (seq_data.locks[c][n] > 0) {
+            seq_data.locks[c][n] =
+                (uint8_t)(scale * (float)(seq_data.locks[c][n] - 1)) + 1;
+          }
+        }
+      }
+    }
+  }
+}
+
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
@@ -264,18 +293,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   }
   // Normalise level and vol locks
   if (mcl_cfg.auto_normalize == 1) {
-    float scale = machine.normalize_level();
-    for (uint8_t n = 0; n < arraysize; n++) {
-      if ((machine.lfo.destinationParam == MODEL_VOL) &&
-          (machine.lfo.destinationTrack == machine.track)) {
-        if (locks[n].param_number == MODEL_LFOD) {
-          locks[n].value = (uint8_t)(scale * (float)locks[n].value);
-        }
-      }
-      if (locks[n].param_number == MODEL_VOL) {
-        locks[n].value = (uint8_t)(scale * (float)locks[n].value);
-      }
-    }
+    normalize();
   }
 
   if (mcl_cfg.auto_merge == 1) {
