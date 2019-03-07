@@ -240,8 +240,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
   return true;
 }
 
-void MDTrack::normalize() {
-  float scale = machine.normalize_level();
+void MDTrack::scale_seq_vol(float scale) {
   for (uint8_t n = 0; n < arraysize; n++) {
     if ((machine.lfo.destinationParam == MODEL_VOL) &&
         (machine.lfo.destinationTrack == machine.track)) {
@@ -267,6 +266,16 @@ void MDTrack::normalize() {
       }
     }
   }
+}
+
+void MDTrack::scale_vol(float scale) {
+  machine.scale_vol(scale);
+  scale_seq_vol(scale);
+}
+
+void MDTrack::normalize() {
+  float scale = machine.normalize_level();
+  scale_seq_vol(scale);
 }
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {

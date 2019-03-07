@@ -85,6 +85,12 @@ public:
   bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);
   bool load_from_mem(uint8_t column, uint32_t region = BANK1_R1_START);
 
+  //scale machine track vol by percentage
+  void scale_vol(float scale);
+
+  //scale vol locks by percentage
+  void scale_seq_vol(float scale);
+
   // normalize track level
   void normalize();
 
