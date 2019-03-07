@@ -324,17 +324,9 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   // 138 bytes approx
   assignMachine(track, machine->model);
   setLFO(track, &(machine->lfo), false);
-  if (machine->trigGroup == 255) {
-    setTrigGroup(track, track);
-  } else {
-    setTrigGroup(track, machine->trigGroup);
-  }
-  if (machine->muteGroup == 255) {
+  setTrigGroup(track, machine->trigGroup);
 
-    setMuteGroup(track, track);
-  } else {
-    setMuteGroup(track, machine->muteGroup);
-  }
+  setMuteGroup(track, machine->muteGroup);
 //  MidiUart.useRunningStatus = true;
   for (uint8_t i = 0; i < 24; i++) {
     setTrackParam(track, i, machine->params[i]);
