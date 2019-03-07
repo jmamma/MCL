@@ -25,6 +25,12 @@ public:
   uint32_t samplesSoFar;
   bool handShake;
   uint8_t state;
+
+  //cached calculations
+  uint8_t midiBytes_per_word;
+  uint8_t bytes_per_word;
+  int32_t sample_offset;
+
   MidiSDSClass() {
     deviceID = 0x00;
     packetNumber = 0;

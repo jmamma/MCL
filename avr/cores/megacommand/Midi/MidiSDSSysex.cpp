@@ -44,7 +44,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
   }
 
   msgType = MidiSysex.data[2];
-
+  uint8_t oled_old;
   switch (msgType) {
     // case MidiSDS_STATUS_RESPONSE_ID:
     //  onStatusResponseCallbacks.call(MidiSysex2.data[6], MidiSysex2.data[7]);
@@ -53,7 +53,14 @@ void MidiSDSSysexListenerClass::end_immediate() {
   case MIDI_SDS_DUMPHEADER:
     midi_sds.state = SDS_REC;
     // DEBUG_PRINTLN("header rec");
+    oled_old = (uint8_t)(PORTL >> PL7) & 0x01;
+
+    PORTL |= _BV(PL7); // set PL7 high
     dump_header();
+    if (oled_old == 0) {
+      PORTL &= ~_BV(PL7);
+    }
+
     break;
 
   case MIDI_SDS_DATAPACKET:
@@ -63,7 +70,15 @@ void MidiSDSSysexListenerClass::end_immediate() {
       midi_sds.cancel();
       return;
     }
+    oled_old = (uint8_t)(PORTL >> PL7) & 0x01;
+
+    PORTL |= _BV(PL7); // set PL7 high
     data_packet();
+
+    if (oled_old == 0) {
+      PORTL &= ~_BV(PL7);
+    }
+
     break;
 
   case MIDI_SDS_DUMPREQUEST:
@@ -140,12 +155,23 @@ void MidiSDSSysexListenerClass::dump_header() {
     return;
   }
   bool overwrite = true;
-  if (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate, midi_sds.sampleFormat)) {
+  if (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate,
+                              midi_sds.sampleFormat)) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
   }
   midi_sds.samplesSoFar = 0;
   midi_sds.packetNumber = 0;
+
+  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2) + 1;
+  midi_sds.midiBytes_per_word = midi_sds.sampleFormat / 7;
+  midi_sds.bytes_per_word = midi_sds.sampleFormat / 8;
+  if (midi_sds.sampleFormat % 8 > 0) {
+    midi_sds.bytes_per_word++;
+  }
+  if (midi_sds.sampleFormat % 7 > 0) {
+    midi_sds.midiBytes_per_word++;
+  }
   // temp_file.open("temp_file.sds", FILE_WRITE | O_CREAT);
   ///  temp_file.close();
   midi_sds.sendAckMessage();
@@ -183,30 +209,22 @@ void MidiSDSSysexListenerClass::data_packet() {
 
     DEBUG_PRINTLN("packet received");
     uint8_t samples[120];
-    uint8_t midiBytes_per_word = midi_sds.sampleFormat / 7;
-    uint8_t bytes_per_word = midi_sds.sampleFormat / 8;
-    if (midi_sds.sampleFormat % 8 > 0) {
-      bytes_per_word++;
-    }
-    if (midi_sds.sampleFormat % 7 > 0) {
-      midiBytes_per_word++;
-    }
+
     uint32_t num_of_samples = 0;
     uint8_t byte_count = 0;
 
-    int32_t sample_offset = (pow(2, midi_sds.sampleFormat) / 2) + 1;
 
     uint32_t decode_val = 0;
     uint32_t decode_signed = 0;
     for (uint8_t n = 0;
-         n <= 120 - midiBytes_per_word &&
+         n <= 120 - midi_sds.midiBytes_per_word &&
          (num_of_samples + midi_sds.samplesSoFar) < midi_sds.sampleLength;
-         n = n + midiBytes_per_word) {
+         n = n + midi_sds.midiBytes_per_word) {
       decode_val = 0;
       // Decode 7 bit midiBytes in to value
       uint8_t shift;
       //  DEBUG_PRINTLN("MIDI_BIN");
-      for (shift = 0; shift < midiBytes_per_word; shift++) {
+      for (shift = 0; shift < midi_sds.midiBytes_per_word; shift++) {
 
         decode_val = decode_val << 7;
         decode_val |= (uint32_t)(0x7F & MidiSysex.data[n + 4 + shift]);
@@ -217,19 +235,19 @@ void MidiSDSSysexListenerClass::data_packet() {
       // For bit depth greater than 8 we need to convert the sample
       // from unsigned to signed by subtracting offset
 
-      if (bytes_per_word > 1) {
+      if (midi_sds.bytes_per_word > 1) {
 
-        decode_val -= sample_offset;
+        decode_val -= midi_sds.sample_offset;
       }
 
       // Shift the value in to b, byte values for wav file.
 
-      for (uint8_t b = 0; b < bytes_per_word; b++) {
+      for (uint8_t b = 0; b < midi_sds.bytes_per_word; b++) {
         samples[byte_count + b] =
             (uint8_t)(decode_val >> (8 * (b))) & (uint8_t)0xFF;
       }
 
-      byte_count += bytes_per_word;
+      byte_count += midi_sds.bytes_per_word;
       num_of_samples++;
     }
 
