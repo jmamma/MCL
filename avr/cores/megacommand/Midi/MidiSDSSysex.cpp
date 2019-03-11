@@ -19,8 +19,41 @@ void MidiSDSSysexListenerClass::handleByte(uint8_t byte) {}
 #define MD_ID 0x02
 #define MD_SDS_NAME 0x73
 
-void MidiSDSSysexListenerClass::end() {}
+void MidiSDSSysexListenerClass::end() {
+  if (MidiSysex.data[0] == 0x7E) {
+    isSDSMessage = true;
+  } else {
+    isSDSMessage = false;
+    return;
+  }
 
+  msgType = MidiSysex.data[2];
+  switch (msgType) {
+
+  case MIDI_SDS_DUMPHEADER:
+
+    if (midi_sds.state != SDS_READY) {
+      DEBUG_PRINTLN("header received, not in ready");
+      return;
+    }
+    midi_sds.state = SDS_REC;
+
+    dump_header();
+
+    break;
+
+  case MIDI_SDS_DATAPACKET:
+    if (midi_sds.state != SDS_REC) {
+      DEBUG_PRINTLN("not in sds rec mode");
+      midi_sds.sendCancelMessage();
+      midi_sds.cancel();
+      return;
+    }
+    data_packet();
+
+    break;
+  }
+}
 void MidiSDSSysexListenerClass::end_immediate() {
 
   if ((MidiSysex.data[2] == ELEKTRON_ID) && (MidiSysex.data[3] == MD_ID) &&
@@ -44,43 +77,8 @@ void MidiSDSSysexListenerClass::end_immediate() {
   }
 
   msgType = MidiSysex.data[2];
-  uint8_t oled_old;
+
   switch (msgType) {
-    // case MidiSDS_STATUS_RESPONSE_ID:
-    //  onStatusResponseCallbacks.call(MidiSysex2.data[6], MidiSysex2.data[7]);
-    //  break;
-
-  case MIDI_SDS_DUMPHEADER:
-    midi_sds.state = SDS_REC;
-    // DEBUG_PRINTLN("header rec");
-    oled_old = (uint8_t)(PORTL >> PL7) & 0x01;
-
-    PORTL |= _BV(PL7); // set PL7 high
-    dump_header();
-    if (oled_old == 0) {
-      PORTL &= ~_BV(PL7);
-    }
-
-    break;
-
-  case MIDI_SDS_DATAPACKET:
-    DEBUG_PRINTLN("data packet rec");
-    if (midi_sds.state != SDS_REC) {
-      midi_sds.sendCancelMessage();
-      midi_sds.cancel();
-      return;
-    }
-    oled_old = (uint8_t)(PORTL >> PL7) & 0x01;
-
-    PORTL |= _BV(PL7); // set PL7 high
-    data_packet();
-
-    if (oled_old == 0) {
-      PORTL &= ~_BV(PL7);
-    }
-
-    break;
-
   case MIDI_SDS_DUMPREQUEST:
     dump_request();
     break;
@@ -163,7 +161,9 @@ void MidiSDSSysexListenerClass::dump_header() {
   midi_sds.samplesSoFar = 0;
   midi_sds.packetNumber = 0;
 
-  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2) + 1;
+  //  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2) + 1;
+
+  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2);
   midi_sds.midiBytes_per_word = midi_sds.sampleFormat / 7;
   midi_sds.bytes_per_word = midi_sds.sampleFormat / 8;
   if (midi_sds.sampleFormat % 8 > 0) {
@@ -207,27 +207,26 @@ void MidiSDSSysexListenerClass::data_packet() {
     //    }
     midi_sds.sendWaitMessage();
 
-    DEBUG_PRINTLN("packet received");
     uint8_t samples[120];
 
     uint32_t num_of_samples = 0;
     uint8_t byte_count = 0;
 
-
     uint32_t decode_val = 0;
-    uint32_t decode_signed = 0;
+    int16_t signed_val = 0;
     for (uint8_t n = 0;
          n <= 120 - midi_sds.midiBytes_per_word &&
          (num_of_samples + midi_sds.samplesSoFar) < midi_sds.sampleLength;
          n = n + midi_sds.midiBytes_per_word) {
       decode_val = 0;
+      signed_val = 0;
       // Decode 7 bit midiBytes in to value
       uint8_t shift;
       //  DEBUG_PRINTLN("MIDI_BIN");
       for (shift = 0; shift < midi_sds.midiBytes_per_word; shift++) {
 
         decode_val = decode_val << 7;
-        decode_val |= (uint32_t)(0x7F & MidiSysex.data[n + 4 + shift]);
+        decode_val |= (int32_t)(0x7F & MidiSysex.data[n + 4 + shift]);
         //  Serial.println(MidiSysex.data[n + 4 + shift], HEX);
       }
       // Remove 0 padding.
@@ -236,15 +235,18 @@ void MidiSDSSysexListenerClass::data_packet() {
       // from unsigned to signed by subtracting offset
 
       if (midi_sds.bytes_per_word > 1) {
-
-        decode_val -= midi_sds.sample_offset;
+        signed_val = decode_val - midi_sds.sample_offset;
+        // decode_val -= midi_sds.sample_offset;
+      } else {
+        signed_val = decode_val;
       }
-
       // Shift the value in to b, byte values for wav file.
-
+      //DEBUG_PRINTLN(" ");
+      //DEBUG_PRINT(decode_val);
+      //DEBUG_PRINT(",");
+      //DEBUG_PRINT(signed_val);
       for (uint8_t b = 0; b < midi_sds.bytes_per_word; b++) {
-        samples[byte_count + b] =
-            (uint8_t)(decode_val >> (8 * (b))) & (uint8_t)0xFF;
+        samples[byte_count + b] = (uint8_t)((signed_val >> (8 * (b))) & 0xFF);
       }
 
       byte_count += midi_sds.bytes_per_word;
@@ -261,6 +263,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     } else {
       DEBUG_PRINTLN("error writing sds to SDCard");
       midi_sds.sendCancelMessage();
+      midi_sds.state = SDS_READY;
     }
     // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
@@ -271,6 +274,7 @@ void MidiSDSSysexListenerClass::data_packet() {
       if (sds_name_rec) {
         midi_sds.wav_file.rename(sds_name);
       }
+      midi_sds.state = SDS_READY;
     }
 
   } else {
@@ -280,7 +284,6 @@ void MidiSDSSysexListenerClass::data_packet() {
     DEBUG_PRINTLN(MidiSysex.data[MidiSysex.len - 1]);
     DEBUG_PRINT(" ");
     DEBUG_PRINT(checksum);
-
     midi_sds.sendNakMessage();
   }
 }

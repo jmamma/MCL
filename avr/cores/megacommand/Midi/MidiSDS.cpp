@@ -32,7 +32,7 @@ void MidiSDSClass::sendCancelMessage() {
 }
 
 void MidiSDSClass::sendWaitMessage() {
-  DEBUG_PRINT_FN();
+//  DEBUG_PRINT_FN();
   sendGeneralMessage(MIDI_SDS_WAIT);
 }
 
@@ -68,12 +68,17 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 }
 void MidiSDSClass::cancel() {
   DEBUG_PRINTLN("cancelling transmission");
-  midi_sds.state = 255;
   wav_file.close();
+  state = SDS_READY;
 }
+
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
                            uint32_t loop_end) {
+  if (state != SDS_READY) {
+          DEBUG_PRINTLN("sds not in ready state");
+  return false;
+  }
   if (!wav_file.open(filename, false)) {
     DEBUG_PRINTLN("Could not open WAV");
     return false;
@@ -105,6 +110,7 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
   // HandShake disabled.
   bool ret = sendSamples();
   wav_file.close();
+  state = SDS_READY;
   return ret;
 }
 bool MidiSDSClass::sendSamples() {
@@ -117,7 +123,7 @@ bool MidiSDSClass::sendSamples() {
   if (midi_sds.sampleFormat % 7 > 0) {
     midiBytes_per_word++;
   }
-  uint32_t sample_offset = (pow(2, sampleFormat) / 2) + 1;
+  uint32_t sample_offset = (pow(2, sampleFormat) / 2);
   uint32_t num_of_samples = (120 / midiBytes_per_word);
   uint8_t samples[120];
   uint8_t data[120];

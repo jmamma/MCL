@@ -8,7 +8,7 @@
 #define SDS_LOOP_FORWARD_BACKWARD 0x01
 #define SDS_SEND 0x03
 #define SDS_REC 0x02
-
+#define SDS_READY 0xFF
 class MidiSDSClass {
 public:
   Wav wav_file;
@@ -24,7 +24,7 @@ public:
 
   uint32_t samplesSoFar;
   bool handShake;
-  uint8_t state;
+  uint8_t state = SDS_READY;
 
   //cached calculations
   uint8_t midiBytes_per_word;
@@ -41,7 +41,7 @@ public:
     loopStart = 0;
     loopEnd = 0;
     loopType = SDS_LOOP_OFF;
-    state = 255;
+    state = SDS_READY;
     handShake = false;
   }
 
