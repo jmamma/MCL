@@ -68,6 +68,7 @@ public:
   void calc_latency(EmptyTrack *empty_track);
   int calc_md_set_machine_latency(uint8_t track, MDMachine *model,
                                   MDKit *kit_ = NULL, bool send_level = false);
+  void md_set_fxs(MDKit *kit_);
   void md_set_machine(uint8_t track, MDMachine *model, MDKit *kit_ = NULL, bool send_level = false);
 
 };

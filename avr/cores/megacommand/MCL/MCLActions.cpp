@@ -834,6 +834,15 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
 
   return bytes;
 }
+
+void MCLActions::md_set_fxs(MDKit *kit_) {
+  for (uint8_t n = 0; n < 8; n++) {
+  MD.setCompressorParam(n,kit_->dynamics[n]);
+  MD.setEQParam(n,kit_->eq[n]);
+  MD.setReverbParam(n,kit_->reverb[n]);
+  MD.setDelayParam(n,kit_-delay[n]);
+  }
+}
 void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
                                 MDKit *kit_, bool set_level) {
   if (kit_ == NULL) {
