@@ -325,13 +325,13 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   assignMachine(track, machine->model);
   setLFO(track, &(machine->lfo), false);
   if (machine->trigGroup == 255) {
-    setTrigGroup(track, track);
+    setTrigGroup(track, 127);
   } else {
     setTrigGroup(track, machine->trigGroup);
   }
   if (machine->muteGroup == 255) {
 
-    setMuteGroup(track, track);
+    setMuteGroup(track, 127);
   } else {
     setMuteGroup(track, machine->muteGroup);
   }
@@ -806,5 +806,26 @@ void MDClass::rec_sample(uint8_t pos) {
     press_yes_button();
   }
 }
+
+void MDClass::send_sample(uint8_t pos) {
+
+  enter_sample_mgr();
+  tap_down_arrow();
+  tap_right_arrow();
+  hold_function_button();
+  tap_up_arrow(13);
+  release_function_button();
+
+  if (pos == 255) {
+    tap_up_arrow();
+    press_yes_button();
+    return;
+  } else {
+    tap_down_arrow(pos - 1);
+    press_yes_button();
+  }
+}
+
+
 
 MDClass MD;

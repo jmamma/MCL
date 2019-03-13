@@ -548,6 +548,7 @@ public:
   void enter_global_edit();
   void enter_sample_mgr();
   void rec_sample(uint8_t pos = 255);
+  void send_sample(uint8_t pos = 255);
   void preview_sample(uint8_t pos);
 };
 
