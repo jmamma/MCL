@@ -6,6 +6,7 @@
 #define CUE_PAGE 2
 #define WAVD_PAGE 8
 #define SOUND 7
+#define LOUDNESS 10
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -46,10 +47,14 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
 #endif
   case SOUND:
     if (str)
-    strncpy(str, "SOUND", 6);
+      strncpy(str, "SOUND", 6);
     r_page = &sound_browser;
     break;
-
+  case LOUDNESS:
+    if (str)
+      strncpy(str, "LOUDN",6);
+    r_page = &loudness_page;
+    break;
   default:
     if (str)
       strncpy(str, "----", 4);
