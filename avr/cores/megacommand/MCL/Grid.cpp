@@ -76,7 +76,7 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row)
       md_track->machine.trigGroup = d_col + trig_dest;
     }
     else {
-      md_track->machine.trigGroup = 255;
+      md_track->machine.trigGroup = 127;
     }
     if (range_check(d_col + mute_dest, 0, 15)) {
       md_track->machine.muteGroup = d_col + mute_dest;
