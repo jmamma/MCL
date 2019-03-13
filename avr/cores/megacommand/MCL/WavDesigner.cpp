@@ -204,7 +204,7 @@ bool WavDesigner::render() {
 }
 bool WavDesigner::send() {
     return midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD, loop_start,
-                          loop_end);
+                          loop_end, true);
 }
 
 WavDesigner wd;

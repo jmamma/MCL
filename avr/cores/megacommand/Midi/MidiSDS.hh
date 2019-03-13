@@ -51,7 +51,7 @@ public:
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }
   uint8_t waitForMsg(uint16_t timeout = 2000);
   bool sendWav(char *filename, uint16_t sample_number, uint8_t loop_type = 0x7F,
-               uint32_t loop_start = 0, uint32_t loop_end = 0);
+               uint32_t loop_start = 0, uint32_t loop_end = 0, bool handshake = true);
   bool sendSamples();
   void incPacketNumber();
   void cancel();
