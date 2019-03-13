@@ -26,6 +26,7 @@
 #include "GridChain.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
+#include "LoudnessPage.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MCLMemory.h"
