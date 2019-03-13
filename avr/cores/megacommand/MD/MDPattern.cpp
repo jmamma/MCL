@@ -183,6 +183,11 @@ bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
 	return true;
 }
 
+uint16_t MDPattern::toSysex() {
+  ElektronDataToSysexEncoder encoder(&MidiUart);
+  return toSysex(encoder);
+}
+
 uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
 	ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
 	
