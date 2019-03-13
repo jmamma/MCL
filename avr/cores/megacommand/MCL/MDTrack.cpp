@@ -246,10 +246,16 @@ void MDTrack::scale_seq_vol(float scale) {
         (machine.lfo.destinationTrack == machine.track)) {
       if (locks[n].param_number == MODEL_LFOD) {
         locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+        if (locks[n].value > 127) {
+          locks[n].value = 127;
+        }
       }
     }
     if (locks[n].param_number == MODEL_VOL) {
       locks[n].value = (uint8_t)(scale * (float)locks[n].value);
+      if (locks[n].value > 127) {
+        locks[n].value = 127;
+      }
     }
   }
 
@@ -261,6 +267,9 @@ void MDTrack::scale_seq_vol(float scale) {
           if (seq_data.locks[c][n] > 0) {
             seq_data.locks[c][n] =
                 (uint8_t)(scale * (float)(seq_data.locks[c][n] - 1)) + 1;
+            if (seq_data.locks[c][n] > 127) {
+              seq_data.locks[c][n] = 127;
+            }
           }
         }
       }
@@ -269,6 +278,7 @@ void MDTrack::scale_seq_vol(float scale) {
 }
 
 void MDTrack::scale_vol(float scale) {
+  normalize();
   machine.scale_vol(scale);
   scale_seq_vol(scale);
 }
