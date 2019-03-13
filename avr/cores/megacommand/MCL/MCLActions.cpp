@@ -840,7 +840,7 @@ void MCLActions::md_set_fxs(MDKit *kit_) {
   MD.setCompressorParam(n,kit_->dynamics[n]);
   MD.setEQParam(n,kit_->eq[n]);
   MD.setReverbParam(n,kit_->reverb[n]);
-  MD.setDelayParam(n,kit_-delay[n]);
+  MD.setEchoParam(n,kit_->delay[n]);
   }
 }
 void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
