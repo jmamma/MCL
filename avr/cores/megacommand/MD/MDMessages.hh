@@ -96,7 +96,6 @@ public:
    * for example to send directly to the UAR.
    **/
   uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
-
   /* @} */
 };
 
@@ -159,6 +158,7 @@ public:
   uint8_t trigGroup;
   uint8_t muteGroup;
 
+  void scale_vol(float scale);
   float normalize_level();
   /* @} */
 };
@@ -226,6 +226,8 @@ public:
 
   /** Read in a kit message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  /** Encode and send a kit **/
+  uint16_t toSysex();
   /** Convert a kit object to a sysex buffer ready to be sent to the MD. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   /**
@@ -239,6 +241,8 @@ public:
    **/
   void swapTracks(uint8_t srcTrack, uint8_t dstTrack);
 
+  void init_eq();
+  void init_dynamix();
   /* @} */
 };
 

@@ -8,61 +8,32 @@
 #include "MD.h"
 uint8_t lfo_statestore[31];
 
+void MDMachine::scale_vol(float scale) {
+  DEBUG_PRINT_FN();
+  params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
+  if (params[MODEL_VOL] > 127) {
+    params[MODEL_VOL] = 127;
+  }
+  if ((lfo.destinationParam == MODEL_VOL) && (lfo.destinationTrack == track)) {
+    params[MODEL_LFOD] = (uint8_t)((float)params[MODEL_LFOD] * scale);
+
+    if (params[MODEL_LFOD] > 127) {
+      params[MODEL_LFOD] = 127;
+    }
+    lfo.depth = params[MODEL_LFOD];
+  }
+}
+
 float MDMachine::normalize_level() {
   DEBUG_PRINT_FN();
   if (level == 127) {
     return 1.0;
   }
-  DEBUG_PRINTLN(lfo.destinationTrack);
-  DEBUG_PRINTLN(track);
-  DEBUG_PRINTLN(lfo.destinationParam);
-  float scale = 1.0;
-  if ((lfo.destinationParam == MODEL_VOL) && (lfo.destinationTrack == track)) {
-/*    uint8_t a = 127 - level;
-    uint8_t b = params[MODEL_LFOD];
 
-    uint8_t inc = a;
-    if (a > b) {
-    inc = b;
-    }
+  float scale = (float)level / (float)127;
+  level = 127;
 
-    float scale = (float) inc / (float) 127;
-    level += inc;
-
-    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
-    params[MODEL_LFOD] -= inc;
-    lfo.depth = params[MODEL_LFOD];
-*/
-    uint8_t level_orig = level;
-
-    uint8_t a = 127 - level;
-    uint8_t inc = a;
-    scale = (float) level / (float) 127;
-
-    level += inc;
-    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
-    params[MODEL_LFOD] = (uint8_t) ((float) params[MODEL_LFOD] * scale);
-    lfo.depth = params[MODEL_LFOD];
-  } else {
-    uint8_t a = 127 - level;
-    uint8_t b = params[MODEL_VOL];
-   // if (b < 3) { b = 3; }
-    uint8_t inc = a;
-   // if (a > b) {
-    //inc = b;
-   // }
-
-    scale = (float) level / (float) 127;
-
-   // float scale = (float) inc / (float) 127;
-
-    level += inc;
-    //params[MODEL_VOL] -= inc;
-
-    params[MODEL_VOL] = (uint8_t) ((float) params[MODEL_VOL] * scale);
-   // params[MODEL_LFOD] = (uint8_t) ((float) params[MODEL_LFOD] * scale);
-    // params[MODEL_VOL] = (uint8_t) ( scale * (float) params[MODEL_VOL]);
-  }
+  scale_vol(scale);
   return scale;
 }
 
@@ -272,6 +243,11 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   return true;
 }
 
+uint16_t MDKit::toSysex() {
+  ElektronDataToSysexEncoder encoder(&MidiUart);
+  return toSysex(encoder);
+}
+
 uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
   ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
   if (len < 0xC5)
@@ -408,6 +384,28 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   return true;
+}
+
+void MDKit::init_eq() {
+  eq[MD_EQ_LF] = 0;
+  eq[MD_EQ_LG] = 64;
+  eq[MD_EQ_HF] = 0;
+  eq[MD_EQ_HG] = 64;
+  eq[MD_EQ_PF] = 64;
+  eq[MD_EQ_PG] = 64;
+  eq[MD_EQ_PQ] = 64;
+  eq[MD_EQ_GAIN] = 127;
+}
+
+void MDKit::init_dynamix() {
+  dynamics[MD_DYN_ATCK] = 127;
+  dynamics[MD_DYN_REL] = 127;
+  dynamics[MD_DYN_TRHD] = 127;
+  dynamics[MD_DYN_RTIO] = 0;
+  dynamics[MD_DYN_KNEE] = 127;
+  dynamics[MD_DYN_HP] = 127;
+  dynamics[MD_DYN_OUTG] = 0;
+  dynamics[MD_DYN_MIX] = 127;
 }
 
 uint16_t MDSong::toSysex(uint8_t *data, uint16_t len) {
