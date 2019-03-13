@@ -101,7 +101,7 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
 
   midi_sds.state = SDS_SEND;
   if (rep = waitForMsg() == MIDI_SDS_ACK) {
-    handShake = true;
+    hand_shake_state = true;
   } else if (rep == MIDI_SDS_CANCEL) {
     cancel();
     wav_file.close();
@@ -187,7 +187,7 @@ bool MidiSDSClass::sendSamples() {
       bits7 = encode_val << (8 - shift);
       data[n + shift - 1] = 0x7F & bits7;
     }
-    if (!handShake) {
+    if (!hand_shake_state) {
 
       delay(200);
       sendData(data, n);
@@ -200,7 +200,7 @@ bool MidiSDSClass::sendSamples() {
         sendData(data, n);
         msgType = waitForMsg(20);
         if (msgType == 255) {
-          handShake = false;
+          hand_shake_state = false;
           count = 128;
           // Timeout in reply, switch to no-handshake proto
         }

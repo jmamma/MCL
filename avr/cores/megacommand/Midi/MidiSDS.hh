@@ -23,7 +23,10 @@ public:
   uint8_t loopType;
 
   uint32_t samplesSoFar;
-  bool handShake;
+
+  bool use_hand_shake = true;
+  bool hand_shake_state;
+
   uint8_t state = SDS_READY;
 
   //cached calculations
@@ -42,7 +45,7 @@ public:
     loopEnd = 0;
     loopType = SDS_LOOP_OFF;
     state = SDS_READY;
-    handShake = false;
+    hand_shake_state = false;
   }
 
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }

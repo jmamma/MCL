@@ -30,19 +30,7 @@ void MidiSDSSysexListenerClass::end() {
   msgType = MidiSysex.data[2];
   switch (msgType) {
 
-  case MIDI_SDS_DUMPHEADER:
-
-    if (midi_sds.state != SDS_READY) {
-      DEBUG_PRINTLN("header received, not in ready");
-      return;
-    }
-    midi_sds.state = SDS_REC;
-
-    dump_header();
-
-    break;
-
-  case MIDI_SDS_DATAPACKET:
+    case MIDI_SDS_DATAPACKET:
     if (midi_sds.state != SDS_REC) {
       DEBUG_PRINTLN("not in sds rec mode");
       midi_sds.sendCancelMessage();
@@ -79,7 +67,20 @@ void MidiSDSSysexListenerClass::end_immediate() {
   msgType = MidiSysex.data[2];
 
   switch (msgType) {
-  case MIDI_SDS_DUMPREQUEST:
+  case MIDI_SDS_DUMPHEADER:
+
+    if (midi_sds.state != SDS_READY) {
+      DEBUG_PRINTLN("header received, not in ready");
+      return;
+    }
+    midi_sds.state = SDS_REC;
+
+    dump_header();
+
+    break;
+
+
+          case MIDI_SDS_DUMPREQUEST:
     dump_request();
     break;
 
@@ -174,7 +175,7 @@ void MidiSDSSysexListenerClass::dump_header() {
   }
   // temp_file.open("temp_file.sds", FILE_WRITE | O_CREAT);
   ///  temp_file.close();
-  midi_sds.sendAckMessage();
+  if (midi_sds.use_hand_shake) { midi_sds.sendAckMessage(); }
 }
 
 void MidiSDSSysexListenerClass::data_packet() {
@@ -258,7 +259,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     if (midi_sds.wav_file.write_samples(
             &samples, num_of_samples, midi_sds.samplesSoFar, 0, write_header)) {
       midi_sds.samplesSoFar += num_of_samples;
-      midi_sds.sendAckMessage();
+      if (midi_sds.use_hand_shake) { midi_sds.sendAckMessage(); }
       midi_sds.incPacketNumber();
     } else {
       DEBUG_PRINTLN("error writing sds to SDCard");
