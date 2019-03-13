@@ -129,7 +129,6 @@ bool Wav::read_header() {
 }
 
 bool Wav::write_data(void *data, uint32_t size, uint32_t position) {
-  DEBUG_PRINT_FN();
   //  DEBUG_PRINTLN(size);
   //  DEBUG_PRINTLN(position);
   //  DEBUG_PRINTLN(file.fileSize());
@@ -236,6 +235,54 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_offset,
   //  DEBUG_PRINTLN(data_offset);
   bool ret = read_data(data, size, position + data_offset);
   return ret;
+}
+
+int16_t Wav::find_peak(uint8_t channel = 0) {
+  DEBUG_PRINT_FN();
+  int16_t peak_value = 0;
+  int16_t current_sample = 0;
+
+  uint8_t bytes_per_word = header.bitRate / 8;
+  if (header.bitRate % 8 > 0) {
+    bytes_per_word++;
+  }
+  uint32_t num_of_samples =
+      (header.subchunk2Size / header.numChannels) / bytes_per_word;
+
+  int16_t buffer_size = 512;
+
+  int16_t buffer[buffer_size];
+  int16_t read_size = buffer_size / bytes_per_word;
+  uint32_t sample_val = 0;
+  uint32_t sample_max = (pow(2, header.bitRate) / 2);
+  bool write_header = false;
+
+  DEBUG_PRINTLN("read_size");
+  DEBUG_PRINTLN(read_size);
+  DEBUG_PRINTLN(num_of_samples);
+  DEBUG_PRINTLN(bytes_per_word);
+  DEBUG_PRINTLN(buffer_size);
+  for (int32_t n = 0; n < num_of_samples; n += read_size) {
+    // Adjust read size if too large
+    if (n + read_size > num_of_samples) {
+      read_size = num_of_samples - n;
+    }
+    // Read read_size samples.
+
+    if (!read_samples(buffer, read_size, n, channel)) {
+      DEBUG_PRINTLN("could not read");
+      return false;
+    }
+    // Itterate through samples in buffer
+    for (uint16_t sample = 0; sample < read_size; sample += 1) {
+
+      current_sample = buffer[sample];
+      if (peak_value < abs(current_sample)) { peak_value = current_sample; }
+    }
+  }
+  DEBUG_PRINTLN("peak found");
+  DEBUG_PRINTLN(peak_value);
+  return peak_value;
 }
 
 bool Wav::apply_gain(float gain, uint8_t channel = 0) {
