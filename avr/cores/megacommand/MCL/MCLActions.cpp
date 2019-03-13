@@ -386,9 +386,6 @@ void MCLActions::send_pattern_kit_to_md() {
     }
   }
 
-  /*Define sysex encoder objects for the Pattern and Kit*/
-  ElektronDataToSysexEncoder encoder(&MidiUart);
-  ElektronDataToSysexEncoder encoder2(&MidiUart);
   /*Write the selected trackinto a Pattern object by moving it from a Track
     object into a Pattern object The destination track is the currently selected
     track on the machinedrum.
@@ -543,11 +540,11 @@ void MCLActions::send_pattern_kit_to_md() {
   }
   md_setsysex_recpos(8, MD.pattern.origPosition);
 
-  MD.pattern.toSysex(encoder);
+  MD.pattern.toSysex();
 
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
-  MD.kit.toSysex(encoder2);
+  MD.kit.toSysex();
   /*Instruct the MD to reload the kit, as the kit changes won't update until the
    * kit is reloaded*/
   if (reload == 1) {
