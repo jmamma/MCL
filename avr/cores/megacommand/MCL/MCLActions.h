@@ -41,6 +41,8 @@ public:
   uint16_t next_transitions[20] = { 0 };
   uint16_t next_transitions_old[20] = { 0 };
 
+  uint8_t send_machine[20] = { 0 };
+
   uint8_t md_div32th_latency;
   uint8_t a4_div32th_latency;
 

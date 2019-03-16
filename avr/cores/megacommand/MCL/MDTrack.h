@@ -47,13 +47,17 @@ public:
 };
 
 class MDTrackLight : public GridTrack {
-public:
-};
-
-class MDTrack : public GridTrack {
-public:
+  public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+
+  // Store/retrieve portion of track object in mem bank2
+  bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);
+  bool load_from_mem(uint8_t column, uint32_t region = BANK1_R1_START);
+};
+
+class MDTrack : public MDTrackLight {
+public:
 
   uint8_t origPosition;
   uint8_t patternOrigPosition;
@@ -74,16 +78,12 @@ public:
   void load_seq_data(int tracknumber);
   void place_track_in_pattern(int tracknumber, uint8_t column,
                               MDPattern *pattern);
-
+  void get_machine_from_kit(int tracknumber, uint8_t column);
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);
   bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
   bool load_track_from_grid(int32_t column, int32_t row);
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255);
-
-  // Store/retrieve portion of track object in mem bank2
-  bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);
-  bool load_from_mem(uint8_t column, uint32_t region = BANK1_R1_START);
 
   //scale machine track vol by percentage
   void scale_vol(float scale);

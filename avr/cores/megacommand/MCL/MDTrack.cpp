@@ -1,6 +1,28 @@
 #include "MCL.h"
 #include "MDTrack.h"
 
+void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
+  //  trackName[0] = '\0';
+  memcpy(machine.params, MD.kit.params[tracknumber], 24);
+
+  machine.track = tracknumber;
+  machine.level = MD.kit.levels[tracknumber];
+  machine.model = MD.kit.models[tracknumber];
+
+  /*Check to see if LFO is modulating host track*/
+  /*IF it is then we need to make sure that the LFO destination is updated to
+   * the new row posiiton*/
+
+  if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
+    MD.kit.lfos[tracknumber].destinationTrack = column;
+    machine.track = column;
+  }
+  /*Copies Lfo data from the kit object into the machine object*/
+  memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
+
+  machine.trigGroup = MD.kit.trigGroups[tracknumber];
+  machine.muteGroup = MD.kit.muteGroups[tracknumber];
+}
 bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
   active = MD_TRACK_TYPE;
@@ -54,6 +76,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   /*Don't forget to copy the Machine data as well
     Which is obtained from the received Kit object MD.kit*/
   //  m_strncpy(kitName, MD.kit.name, 17);
+  /*
   uint8_t white_space = 0;
   for (uint8_t c = 0; c < 17; c++) {
     if (white_space == 0) {
@@ -65,32 +88,15 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
       white_space = 1;
     }
   }
-  m_memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber], sizeof(seq_data));
+  */
+  memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber], sizeof(seq_data));
   //  trackName[0] = '\0';
-  m_memcpy(machine.params, MD.kit.params[tracknumber], 24);
+  get_machine_from_kit(tracknumber, column);
 
-  machine.track = tracknumber;
-  machine.level = MD.kit.levels[tracknumber];
-  machine.model = MD.kit.models[tracknumber];
-
-  /*Check to see if LFO is modulating host track*/
-  /*IF it is then we need to make sure that the LFO destination is updated to
-   * the new row posiiton*/
-
-  if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
-    MD.kit.lfos[tracknumber].destinationTrack = column;
-    machine.track = column;
-  }
-  /*Copies Lfo data from the kit object into the machine object*/
-  m_memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
-
-  machine.trigGroup = MD.kit.trigGroups[tracknumber];
-  machine.muteGroup = MD.kit.muteGroups[tracknumber];
-
-  m_memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
-  m_memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
-  m_memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
-  m_memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
+  memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
+  memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
+  memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
+  memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
   origPosition = MD.kit.origPosition;
   patternOrigPosition = MD.pattern.origPosition;
 }
@@ -166,7 +172,7 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
 }
 
 void MDTrack::load_seq_data(int tracknumber) {
-  m_memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
 
   mcl_seq.md_tracks[tracknumber].set_length(
       mcl_seq.md_tracks[tracknumber].length);
@@ -353,7 +359,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   return true;
 }
 
-bool MDTrack::store_in_mem(uint8_t column, uint32_t region) {
+bool MDTrackLight::store_in_mem(uint8_t column, uint32_t region) {
   uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
   uint32_t pos = region + len * (uint32_t)column;
@@ -370,7 +376,7 @@ bool MDTrack::store_in_mem(uint8_t column, uint32_t region) {
   return true;
 }
 
-bool MDTrack::load_from_mem(uint8_t column, uint32_t region) {
+bool MDTrackLight::load_from_mem(uint8_t column, uint32_t region) {
   uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
   uint32_t pos = region + len * (uint32_t)column;
@@ -385,3 +391,5 @@ bool MDTrack::load_from_mem(uint8_t column, uint32_t region) {
   // sbi(TIMSK0, TOIE0);
   return true;
 }
+
+

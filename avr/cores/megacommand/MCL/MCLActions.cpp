@@ -203,9 +203,12 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
 void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINT_FN();
-  if ((mcl_cfg.chain_mode > 0) &&
-      // ((write_original == 0 ||)
-      (MidiClock.state == 2)) {
+  if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
+    if (MD.currentKit != MD.kit.origPosition) {
+      MD.getBlockingKit(MD.currentKit);
+    }
+    // MD.saveCurrentKit(MD.currentKit);
+    // MD.getBlockingKit(MD.currentKit);
     prepare_next_chain(row);
     //  grid_task.run();
     return;
@@ -250,8 +253,8 @@ void MCLActions::prepare_next_chain(int row) {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  MD.saveCurrentKit(MD.currentKit);
-  MD.getBlockingKit(MD.currentKit);
+  // MD.saveCurrentKit(MD.currentKit);
+  // MD.getBlockingKit(MD.currentKit);
   uint8_t q;
 
   //  if (MidiClock.state != 2) {
@@ -272,7 +275,7 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < 16; n++) {
 
     if (note_interface.notes[n] > 0) {
-
+      send_machine[n] = 0;
       if (md_track->load_track_from_grid(n, row, len)) {
 
         md_track->store_in_mem(n);
@@ -294,6 +297,7 @@ void MCLActions::prepare_next_chain(int row) {
     }
   }
   for (uint8_t n = 16; n < 20; n++) {
+    send_machine[n] = 0;
     if (note_interface.notes[n] > 0) {
       if (a4_track->load_track_from_grid(n, row, 0)) {
         a4_track->store_in_mem(n);
@@ -335,14 +339,7 @@ void MCLActions::send_pattern_kit_to_md() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  // md_track->load_track_from_grid(0, grid_page.getRow());
-  // if (!Analog4.getBlockingKitX(0)) { return; }
-  // if (!analog4_kit.fromSysex(MidiSysex2.data + 8, MidiSysex2.recordLen - 8))
-  // { return; }
-
-  /*Send a quick sysex message to get the current selected track of the MD*/
   int curtrack = last_md_track;
-  // MD.getCurrentTrack(CALLBACK_TIMEOUT);
   uint8_t reload = 1;
   uint16_t quantize_mute = 0;
   uint8_t q_pattern_change = 0;
@@ -385,11 +382,6 @@ void MCLActions::send_pattern_kit_to_md() {
       gridio_param4.cur = 10;
     }
   }
-
-  /*Write the selected trackinto a Pattern object by moving it from a Track
-    object into a Pattern object The destination track is the currently selected
-    track on the machinedrum.
-  */
 
   uint8_t i = 0;
   int track = 0;
@@ -486,7 +478,15 @@ void MCLActions::send_pattern_kit_to_md() {
   */
   // If write original, let's copy the master fx settings from the first track
   // in row Let's also set the kit receive position to be the original.
+  /*  if ((mcl_cfg.chain_mode > 0) && (write_original == 1)) {
+      for (uint8_t n = 0; n < 16; n++) {
+        md_track->get_machine_from_kit(n, n);
+        md_set_machine(n, &(md_track->machine), &(MD.kit), true);
+      }
+      md_set_fxs(&MD.kit);
+    }*/
 
+  // else {
   if ((write_original == 1)) {
     DEBUG_PRINTLN("write original");
     //     MD.kit.origPosition = md_track->origPosition;
@@ -511,22 +511,15 @@ void MCLActions::send_pattern_kit_to_md() {
     MD.pattern.swingPattern = kit_extra.swingPattern;
   }
 
-  // MD.kit.origPosition = MD.currentKit;
-
-  // Kit
   // If Kit is OG.
   if (gridio_param3.getValue() == 64) {
-
     MD.kit.origPosition = md_track->origPosition;
     MD.pattern.kit = md_track->origPosition;
-
   }
 
   else {
-
     MD.pattern.kit = MD.currentKit;
     MD.kit.origPosition = MD.currentKit;
-    //       }
   }
   // If Pattern is OG
   if (gridio_param1.getValue() == 8) {
@@ -545,8 +538,8 @@ void MCLActions::send_pattern_kit_to_md() {
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  /*Instruct the MD to reload the kit, as the kit changes won't update until the
-   * kit is reloaded*/
+  /*Instruct the MD to reload the kit, as the kit changes won't update until
+   * the kit is reloaded*/
   if (reload == 1) {
     MD.loadKit(MD.pattern.kit);
   } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
@@ -555,7 +548,7 @@ void MCLActions::send_pattern_kit_to_md() {
       MD.loadPattern(writepattern);
     }
   }
-
+  // }
   // Send Analog4
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
@@ -738,21 +731,21 @@ void MCLActions::calc_next_transition() {
 
 void MCLActions::calc_latency(EmptyTrack *empty_track) {
   MDTrack *md_track = (MDTrack *)empty_track;
-
+  A4Track *a4_track = (A4Track *)empty_track;
   md_latency = 0;
   a4_latency = 0;
 
   for (uint8_t n = 0; n < 20; n++) {
-    if (grid_page.active_slots[n] >= 0) {
+    if ((grid_page.active_slots[n] >= 0) && (send_machine[n] == 0)) {
       if (n < 16) {
         if (next_transitions[n] == next_transition) {
           md_track->load_from_mem(n);
-          md_latency +=
-              calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
+            md_latency +=
+                calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
         }
       } else {
         if (next_transitions[n] == next_transition) {
-          a4_latency += A4_SOUND_LENGTH;
+            a4_latency += A4_SOUND_LENGTH;
         }
       }
     }
@@ -834,14 +827,14 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
 
 void MCLActions::md_set_fxs(MDKit *kit_) {
   for (uint8_t n = 0; n < 8; n++) {
-  MD.setCompressorParam(n,kit_->dynamics[n]);
-  MD.setEQParam(n,kit_->eq[n]);
-  MD.setReverbParam(n,kit_->reverb[n]);
-  MD.setEchoParam(n,kit_->delay[n]);
+    MD.setCompressorParam(n, kit_->dynamics[n]);
+    MD.setEQParam(n, kit_->eq[n]);
+    MD.setReverbParam(n, kit_->reverb[n]);
+    MD.setEchoParam(n, kit_->delay[n]);
   }
 }
-void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
-                                MDKit *kit_, bool set_level) {
+void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
+                                bool set_level) {
   if (kit_ == NULL) {
     MD.setMachine(track, machine);
   } else {
@@ -871,7 +864,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
 
     if ((kit_->trigGroups[track] != machine->trigGroup)) {
       if (machine->trigGroup == 255) {
-        MD.setTrigGroup(track, track);
+        MD.setTrigGroup(track, 127);
       } else {
         MD.setTrigGroup(track, machine->trigGroup);
       }
@@ -879,14 +872,14 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine,
     if ((kit_->muteGroups[track] != machine->muteGroup)) {
       if (machine->muteGroup == 255) {
 
-        MD.setMuteGroup(track, track);
+        MD.setMuteGroup(track, 127);
       } else {
         MD.setMuteGroup(track, machine->muteGroup);
       }
     }
 
     if ((set_level) && (kit_->levels[track] != machine->level)) {
-       MD.setTrackParam(track, 33, machine->level);
+      MD.setTrackParam(track, 33, machine->level);
     }
     //  MidiUart.useRunningStatus = true;
     //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;
