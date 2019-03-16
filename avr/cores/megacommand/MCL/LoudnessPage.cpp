@@ -216,8 +216,9 @@ bool LoudnessPage::wait_for_sample() {
     }
 #endif
   }
-
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
+#endif
   if (midi_sds.samplesSoFar != midi_sds.sampleLength) {
   return false;
   }
