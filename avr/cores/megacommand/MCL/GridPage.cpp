@@ -719,28 +719,28 @@ bool GridPage::handleEvent(gui_event_t *event) {
     display_name = 1;
     return;
   }
-  if (_DOWN(Buttons.BUTTON3)) {
-    if (_PRESSED(event, Buttons.ENCODER1)) {
+  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
       slot.load_track_from_grid(getCol(), getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
-    if (_PRESSED(event, Buttons.ENCODER2)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
       slot.load_track_from_grid(getCol() + 1, getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
-    if (_PRESSED(event, Buttons.ENCODER3)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
       slot.load_track_from_grid(getCol() + 2, getRow());
       display_name = 0;
       slot_apply = 0;
       GUI.pushPage(&grid_slot_page);
     }
 
-    if (_PRESSED(event, Buttons.ENCODER4)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
       slot.load_track_from_grid(getCol() + 3, getRow());
       display_name = 0;
       slot_apply = 0;
