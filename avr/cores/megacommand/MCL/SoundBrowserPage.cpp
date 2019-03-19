@@ -38,6 +38,7 @@ void SoundBrowserPage::save_sound() {
     sound.fetch_sound(MD.currentTrack);
     sound.write_sound();
     sound.file.close();
+    gfx.alert("File Saved", temp_entry);
   }
 }
 
@@ -55,16 +56,20 @@ void SoundBrowserPage::load_sound() {
     DEBUG_PRINTLN(temp_entry);
     if (!sound.file.open(temp_entry, O_READ)) {
     DEBUG_PRINTLN("error openning");
+    gfx.alert("Error", "Opening");
     return;
     }
     sound.read_sound();
     if (sound.id != SOUND_ID) {
       sound.file.close();
-      return;
+      gfx.alert("Error", "Not compatible");
+    return;
     }
     sound.load_sound(MD.currentTrack);
+    gfx.alert("Loaded","Sound");
     sound.file.close();
   }
+
 }
 
 bool SoundBrowserPage::handleEvent(gui_event_t *event) {

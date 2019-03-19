@@ -80,8 +80,8 @@ void FileBrowserPage::init() {
         DEBUG_PRINTLN(temp_entry);
         DEBUG_PRINTLN(mcl_cfg.project);
 
-        cur_file = numEntries;
-        encoders[1]->cur = numEntries;
+        cur_file = numEntries - 1;
+        encoders[1]->cur = numEntries - 1;
       }
 
     }
