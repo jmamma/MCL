@@ -80,6 +80,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
 void MCLSeq::onMidiStartCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
+    md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
 
   for (uint8_t n = 0; n < 20; n++) {
