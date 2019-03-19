@@ -154,16 +154,16 @@ void FileBrowserPage::display() {
     GUI.put_string_at_fill(0, ">");
   } else {
     GUI.put_string_at_fill(0, " ");
-  }
-  char temp_entry[16];
+   }
+  char temp_entry[17];
   uint16_t entry_num = encoders[1]->cur;
   uint32_t pos = FILE_ENTRIES_START + entry_num * 16;
-  volatile uint8_t *ptr;
+  volatile uint8_t *ptr = pos;
   switch_ram_bank(1);
-  strcpy(&temp_entry[0], ptr);
+  memcpy(&temp_entry[0], ptr, 16);
   switch_ram_bank(0);
-
-  GUI.put_string_at_fill(1, temp_entry);
+  temp_entry[16] = '\0';
+  GUI.put_string_at(1, temp_entry);
 
 #endif
   return;
