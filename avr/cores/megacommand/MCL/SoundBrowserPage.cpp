@@ -2,6 +2,10 @@
 #include "SoundBrowserPage.h"
 #include "MDSound.h"
 
+void SoundBrowserPage::setup() {
+  SD.mkdir("/Sounds/MD", true);
+  FileBrowserPage::setup();
+}
 void SoundBrowserPage::init() {
 
   DEBUG_PRINT_FN();
