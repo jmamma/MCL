@@ -74,7 +74,7 @@ void MidiSDSClass::cancel() {
 
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
-                           uint32_t loop_end) {
+                           uint32_t loop_end, bool handshake) {
   if (state != SDS_READY) {
           DEBUG_PRINTLN("sds not in ready state");
   return false;

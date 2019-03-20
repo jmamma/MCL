@@ -1,3 +1,58 @@
+MCL 2.30 20/03/2019
+
+Features and Fixes:
+
+- Chain Mode Improvements: Chain mode no longer saves and requests the
+current kit when sequencer is running. This fixes some complications with
+parameter locks, and also improves chain page responsiveness.
+
+- MIDI SDS Receive is fixed and working.
+
+- Added Loudness Page, and loudness features
+
+  Auto Normalize: When activated,  all saved track have their LEV boosted to
+  127, and parameters controlling VOL (including parameter locks) are lowered
+  to compensate. VOL parameter locks and LFOs with destination VOL are
+  adjusted too.
+
+  The resulting track loudness remains the same, but the Track LEV parameter
+  is no longer set arbitrarily. LEV == 127 will always be the loudest volume
+  for a track.
+
+  Gain Boost: The ability to boost / reduce the VOL of all tracks in the
+  current kit by a percentage amount.
+
+  Peak Analyser: The MD is instructed to record 1 Bar of the current pattern.
+  The recording is transferred to the MegaCommand and the WAV file is decoded
+  and analysed. The peak value in the recording is found and this is used to
+  determine an appropriate gain boost to increase pattern/kit loudness using
+  the Boost function above.
+
+- Added Sound Page, to Page Select Menu.
+  It's now possible to save and recall sounds from the MD. A sound consists of
+  1 or more tracks (2 maximum).
+
+  To save a sound enter the Sound Page. Select the desired track on the MD,
+  and then choose save. If the selected track triggers another machine, both
+  track machines will saved as part of the sound.
+
+  To load a sound enter the Sound Page. Select the desired track on the MD,
+  select the sound to be loaded from the browser, and press an encoder
+  buttton.
+
+- fixed unreliable button response in WavDesigner
+
+- New file browser page, with memory improvements. 1024 files visble per
+directory.
+
+- Added the ability to rename rows.
+
+- Added the ability to copy and paste slots within the grid
+
+- Graphically depict slot selection when modifying slot_apply
+
+- Fix for chromatic mode, tuning map was not available for ROM machines greater than 31
+
 MCL 2.20 09/11/2018
 
 ###### IMPORTANT ######

@@ -15,6 +15,7 @@ class SoundBrowserPage : public FileBrowserPage {
   void add_entry(char *entry);
   void draw_scrollbar(uint8_t x_offset);
   void init();
+  void setup();
   void save_sound();
   void load_sound();
 };
