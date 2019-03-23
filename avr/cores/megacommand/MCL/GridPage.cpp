@@ -93,9 +93,7 @@ void GridPage::loop() {
     // PORTL |= (_BV(PL6));
     /*    for (uint8_t n = 0; n < 16; n++) {
           md_track.load_track_from_grid(n, getRow(), len);
-          switch_ram_bank(1);
-          memcpy(ptr, &md_track, len);
-          switch_ram_bank(0);
+          memcpy_bank1(ptr, &md_track, len);
           grid_page.active_slots[n] = cur_row;
           DEBUG_PRINTLN(md_track.machine.model);
           pos += len;

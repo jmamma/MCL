@@ -91,9 +91,7 @@ bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
-  switch_ram_bank(1);
-  memcpy(ptr, this, sizeof(A4Track));
-  switch_ram_bank(0);
+  memcpy_bank1(ptr, this, sizeof(A4Track));
   return true;
 }
 
@@ -108,8 +106,6 @@ bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
 
   ptr = reinterpret_cast<uint8_t *>(pos);
 
-  switch_ram_bank(1);
-  memcpy(this, ptr, sizeof(A4Track));
-  switch_ram_bank(0);
+  memcpy_bank1(this, ptr, sizeof(A4Track));
   return true;
 }
