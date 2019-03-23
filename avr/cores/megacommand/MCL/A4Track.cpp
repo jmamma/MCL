@@ -72,7 +72,7 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
       get_track_from_sysex(track - 16, column - 16);
     }
   }
-  ret = mcl_sd.write_data((uint8_t *)this, sizeof(A4Track), &proj.file);
+  ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);
   if (!ret) {
     return false;
   }
@@ -83,22 +83,18 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
 
 bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
 
-  uint32_t pos =
-      region + A4_TRACK_LEN * (uint32_t)(column - 16);
+  uint32_t pos = region + A4_TRACK_LEN * (uint32_t)(column - 16);
 
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
-  memcpy_bank1(ptr, this, sizeof(A4Track));
+  memcpy_bank1(ptr, this, A4_TRACK_LEN);
   return true;
 }
 
 bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen =
-      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos =
-      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+  uint32_t pos = region + A4_TRACK_LEN * (uint32_t)(column - 16);
 
   volatile uint8_t *ptr;
 
