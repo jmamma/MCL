@@ -36,7 +36,6 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
   if (column < 16) {
 
     if (md_track->load_track_from_grid(column, row)) {
-      //      md_track->store_in_mem(column, BANK1_R2_START);
       memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
 
       grid_page.active_slots[column] = row;
@@ -49,7 +48,6 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
     if (Analog4.connected) {
 
       if (a4_track->load_track_from_grid(column, row, 0)) {
-        //   a4_track->sta4_ore_in_mem(column, BANK1_R2_START);
         memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
 
         grid_page.active_slots[column] = row;
@@ -60,7 +58,6 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
       }
     } else {
       if (ext_track->load_track_from_grid(column, row, 0)) {
-        //    a4_track->store_in_mem(column, BANK1_R2_START);
         memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
         grid_page.active_slots[column] = row;
         if (ext_track->active != EMPTY_TRACK_TYPE) {

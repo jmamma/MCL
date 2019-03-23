@@ -82,11 +82,9 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
 }
 
 bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen =
-      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
   uint32_t pos =
-      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
+      region + A4_TRACK_LEN * (uint32_t)(column - 16);
 
   volatile uint8_t *ptr;
 

@@ -360,29 +360,27 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
 }
 
 bool MDTrackLight::store_in_mem(uint8_t column, uint32_t region) {
-  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = region + len * (uint32_t)column;
+  uint32_t pos = region + MD_TRACK_LEN * (uint32_t)column;
 
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
   // cbi(TIMSK0, TOIE0);
-  memcpy_bank1(ptr, this, len);
+  memcpy_bank1(ptr, this, MD_TRACK_LEN);
   // sbi(TIMSK0, TOIE0);
   return true;
 }
 
 bool MDTrackLight::load_from_mem(uint8_t column, uint32_t region) {
-  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
-  uint32_t pos = region + len * (uint32_t)column;
+  uint32_t pos = region + MD_TRACK_LEN * (uint32_t)column;
 
   volatile uint8_t *ptr;
 
   ptr = reinterpret_cast<uint8_t *>(pos);
   // cbi(TIMSK0, TOIE0);
-  memcpy_bank1(this, ptr, len);
+  memcpy_bank1(this, ptr, MD_TRACK_LEN);
   // sbi(TIMSK0, TOIE0);
   return true;
 }
