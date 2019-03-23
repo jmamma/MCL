@@ -37,7 +37,9 @@ https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
 
 2) Extract zip file to desktop.
 
-3) Download MIDICtrl20_MegaCommand and extract to the "arduino-1.8.5\hardware\" folder.
+3) Download MIDICtrl20_MegaCommand and extract to the `arduino-1.8.5\hardware\` folder. 
+
+4) If you have an admin-installed Arduino IDE, extract MIDICtrl20_MegaCommand to the arduino user directory `%USERPROFILE%\Documents\Arduino\hardware\` (e.g. `C:\Users\your_name\Documents\Arduino\hardware\`)
 
 
 ### Configure the Core

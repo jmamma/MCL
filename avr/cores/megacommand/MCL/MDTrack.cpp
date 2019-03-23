@@ -368,10 +368,7 @@ bool MDTrackLight::store_in_mem(uint8_t column, uint32_t region) {
 
   ptr = reinterpret_cast<uint8_t *>(pos);
   // cbi(TIMSK0, TOIE0);
-  switch_ram_bank(1);
-  memcpy(ptr, this, len);
-
-  switch_ram_bank(0);
+  memcpy_bank1(ptr, this, len);
   // sbi(TIMSK0, TOIE0);
   return true;
 }
@@ -385,9 +382,7 @@ bool MDTrackLight::load_from_mem(uint8_t column, uint32_t region) {
 
   ptr = reinterpret_cast<uint8_t *>(pos);
   // cbi(TIMSK0, TOIE0);
-  switch_ram_bank(1);
-  memcpy(this, ptr, len);
-  switch_ram_bank(0);
+  memcpy_bank1(this, ptr, len);
   // sbi(TIMSK0, TOIE0);
   return true;
 }

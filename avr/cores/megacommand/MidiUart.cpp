@@ -277,14 +277,12 @@ bool MidiUartClass::avail() { return !rxRb.isEmpty(); }
 uint8_t MidiUartClass::m_getc() { return rxRb.get(); }
 
 ISR(USART1_RX_vect) {
-  uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
   isr_midi();
-  switch_ram_bank(old_ram_bank);
 }
 ISR(USART2_RX_vect) {
-  uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
   isr_midi();
-  switch_ram_bank(old_ram_bank);
 }
 
 inline void isr_midi() {
@@ -436,7 +434,7 @@ inline void isr_midi() {
 #ifdef TX_IRQ
 ISR(USART1_UDRE_vect) {
   // uint16_t count = 0;
-  uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
   //  isr_midi();
   //  while (!MidiUart.txRb.isEmpty()) {
   if (!MidiUart.txRb.isEmpty()) {
@@ -456,11 +454,10 @@ ISR(USART1_UDRE_vect) {
   if (MidiUart.txRb.isEmpty()) {
     CLEAR_BIT(UCSR1B, UDRIE1);
   }
-  switch_ram_bank(old_ram_bank);
 }
 
 ISR(USART2_UDRE_vect) {
-  uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
   //  isr_midi();
 
   uint8_t c;
@@ -475,7 +472,6 @@ ISR(USART2_UDRE_vect) {
   if (MidiUart2.txRb.isEmpty()) {
     CLEAR_BIT(UCSR2B, UDRIE1);
   }
-  switch_ram_bank(old_ram_bank);
 }
 
 #endif

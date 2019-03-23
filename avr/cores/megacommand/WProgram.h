@@ -88,4 +88,25 @@ extern inline uint8_t switch_ram_bank(uint8_t x) {
   return x;
 }
 
+#ifdef __cplusplus
+
+class RamBankSelector {
+  private:
+  uint8_t m_oldbank;
+  public:
+  RamBankSelector(uint8_t bank) { m_oldbank = switch_ram_bank(bank); }
+  ~RamBankSelector() { switch_ram_bank(m_oldbank); }
+};
+
+#define select_bank(x) RamBankSelector __bank_selector(x)
+
+#endif// __cplusplus
+
+#define memcpy_bank1(dst, src, len) \
+  do { \
+  switch_ram_bank(1); \
+  memcpy(dst, src, len); \
+  switch_ram_bank(0); \
+  } while (false)
+
 #endif /* WProgram_h */
