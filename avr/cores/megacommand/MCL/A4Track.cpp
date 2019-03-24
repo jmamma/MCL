@@ -80,26 +80,3 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
                                                         A4_TRACK_TYPE);
   return true;
 }
-
-bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
-
-  uint32_t pos = region + A4_TRACK_LEN * (uint32_t)(column - 16);
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-  memcpy_bank1(ptr, this, A4_TRACK_LEN);
-  return true;
-}
-
-bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
-
-  uint32_t pos = region + A4_TRACK_LEN * (uint32_t)(column - 16);
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-
-  memcpy_bank1(this, ptr, sizeof(A4Track));
-  return true;
-}
