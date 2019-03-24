@@ -7,8 +7,10 @@
 #include "A4.h"
 #include "Project.h"
 #include "MCLMemory.h"
+#include "Bank1Object.h"
 
-class A4Track : public ExtTrack {
+class A4Track : public ExtTrack, 
+                public Bank1Object<A4_TRACK_LEN, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
 public:
   A4Sound sound;
   void load_seq_data(int tracknumber);
@@ -18,9 +20,6 @@ public:
   bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255);
 
-  //Store/retrieve portion of track object in mem bank2
-  bool store_in_mem(uint8_t column, uint32_t region = BANK1_A4_TRACKS_START);
-  bool load_from_mem(uint8_t column, uint32_t region = BANK1_A4_TRACKS_START);
 };
 
 #endif /* A4TRACK_H__ */

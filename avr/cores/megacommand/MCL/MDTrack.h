@@ -8,6 +8,7 @@
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
 #include "MCLMemory.h"
+#include "Bank1Object.h"
 
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
@@ -46,14 +47,12 @@ public:
 
 };
 
-class MDTrackLight : public GridTrack {
+class MDTrackLight : public GridTrack,
+                     public Bank1Object<MD_TRACK_LEN, 0, BANK1_MD_TRACKS_START> {
   public:
   MDSeqTrackData seq_data;
   MDMachine machine;
 
-  // Store/retrieve portion of track object in mem bank2
-  bool store_in_mem(uint8_t column, uint32_t region = BANK1_MD_TRACKS_START);
-  bool load_from_mem(uint8_t column, uint32_t region = BANK1_MD_TRACKS_START);
 };
 
 class MDTrack : public MDTrackLight {
