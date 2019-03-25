@@ -3,14 +3,14 @@
 #ifndef GRIDROW_H__
 #define GRIDROW_H__
 
+#define GRID_WIDTH 22
+
 class GridRowHeader {
- private:
-  static constexpr int c_GridWidth = 22;
  public:
   bool active;
   char name[17];
-  uint8_t track_type[c_GridWidth];
-  uint8_t model[c_GridWidth];
+  uint8_t track_type[GRID_WIDTH];
+  uint8_t model[GRID_WIDTH];
 
   void update_model(int16_t column, uint8_t model_, uint8_t track_type_);
   bool write(int16_t row);
