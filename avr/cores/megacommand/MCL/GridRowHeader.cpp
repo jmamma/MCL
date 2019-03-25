@@ -41,7 +41,7 @@ bool GridRowHeader::read(int16_t row) {
 
 void GridRowHeader::init() {
   active = false;
-  for (uint8_t x = 0; x < GRID_WIDTH; x++) {
+  for (uint8_t x = 0; x < c_GridWidth; x++) {
     track_type[x] = 0;
     model[x] = 0;
   }

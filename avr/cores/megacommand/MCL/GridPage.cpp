@@ -84,7 +84,7 @@ void GridPage::loop() {
 
     //   uint32_t len =
     //     sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-    //   uint32_t pos = BANK1_R1_START;
+    //   uint32_t pos = BANK1_MD_TRACKS_START;
     //   ptr = reinterpret_cast<uint8_t *>(pos);
 
     //   PORTL &= ~(_BV(PL6));

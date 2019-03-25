@@ -52,8 +52,8 @@ class MDTrackLight : public GridTrack {
   MDMachine machine;
 
   // Store/retrieve portion of track object in mem bank2
-  bool store_in_mem(uint8_t column, uint32_t region = BANK1_R1_START);
-  bool load_from_mem(uint8_t column, uint32_t region = BANK1_R1_START);
+  bool store_in_mem(uint8_t column, uint32_t region = BANK1_MD_TRACKS_START);
+  bool load_from_mem(uint8_t column, uint32_t region = BANK1_MD_TRACKS_START);
 };
 
 class MDTrack : public MDTrackLight {
