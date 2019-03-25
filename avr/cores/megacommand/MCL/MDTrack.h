@@ -48,7 +48,7 @@ public:
 };
 
 class MDTrackLight : public GridTrack,
-                     public Bank1Object<MD_TRACK_LEN, 0, BANK1_MD_TRACKS_START> {
+                     public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
   public:
   MDSeqTrackData seq_data;
   MDMachine machine;

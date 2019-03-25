@@ -3,19 +3,14 @@
 #ifndef MCLMEMORY_H__
 #define MCLMEMORY_H__
 
-#include "MDMessages.hh"
-#include "MDSeqTrackData.h"
-#include "GridTrack.h"
-#include "ExtSeqTrack.h"
-
 #define NUM_MD_TRACKS    16
 #define NUM_A4_TRACKS    4
 #define NUM_EXT_TRACKS   4
 #define NUM_LFO_TRACKS   4
 #define NUM_FILE_ENTRIES 1024
 
-#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDMachine) + sizeof(MDSeqTrackData))
-#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
+#define MD_TRACK_LEN (sizeof(MDTrackLight))
+#define A4_TRACK_LEN (sizeof(A4Track))
 
 // 16x MD tracks
 #define BANK1_MD_TRACKS_START 0x2200

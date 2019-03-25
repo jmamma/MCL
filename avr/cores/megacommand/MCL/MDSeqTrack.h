@@ -3,7 +3,6 @@
 #ifndef MDSEQTRACK_H__
 #define MDSEQTRACK_H__
 
-#include "MDTrack.h"
 #include "MDSeqTrackData.h"
 
 #define UART1_PORT 1
@@ -11,6 +10,9 @@
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
+
+// forward declare MDTrack
+class MDTrack;
 
 class MDSeqTrack : public MDSeqTrackData {
 
