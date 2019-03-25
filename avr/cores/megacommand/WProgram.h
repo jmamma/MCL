@@ -72,19 +72,12 @@ extern uint32_t write_count_time;
 extern uint16_t minuteclock;
 extern uint8_t ram_bank;
 extern inline uint8_t switch_ram_bank(uint8_t x) {
-  //USE_LOCK();
-  //SET_LOCK();
   uint8_t old_bank = (uint8_t) (PORTL >> PL6) & 0x01;
 
   if (x != old_bank) {
-    //DISABLE timer 1 if switching banks.
- //   if (x == 0) { sbi(TIMSK0, TOIE0); }
-  //  else { cbi(TIMSK0, TOIE0); }
     PORTL ^= _BV(PL6);
-  //  CLEAR_LOCK();
     return old_bank;
   }
-//  CLEAR_LOCK();
   return x;
 }
 
@@ -102,11 +95,10 @@ class RamBankSelector {
 
 #endif// __cplusplus
 
-#define memcpy_bank1(dst, src, len) \
-  do { \
-  switch_ram_bank(1); \
-  memcpy(dst, src, len); \
-  switch_ram_bank(0); \
-  } while (false)
+extern inline void memcpy_bank1(uint8_t dst, volatile void *src, uint32_t len) {
+  switch_ram_bank(1);
+  memcpy(dst, src, len);
+  switch_ram_bank(0);
+}
 
 #endif /* WProgram_h */
