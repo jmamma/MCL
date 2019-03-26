@@ -6,6 +6,8 @@ Features and Fixes:
 current kit when sequencer is running. This fixes some complications with
 parameter locks, and also improves chain page responsiveness.
 
+Track muteGroups and trigGroups are now properly removed.
+
 - MIDI SDS Receive is fixed and working.
 
 - Added Loudness Page, and loudness features
