@@ -5,7 +5,7 @@
 
 #define NUM_MD_TRACKS    16
 #define NUM_A4_TRACKS    4
-#define NUM_EXT_TRACKS   4
+#define NUM_EXT_TRACKS   NUM_A4_TRACKS
 #define NUM_LFO_TRACKS   4
 #define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
 #define NUM_FILE_ENTRIES 1024
