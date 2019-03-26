@@ -23,10 +23,10 @@ void GridTask::run() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  int slots_changed[20];
-  uint8_t slots_loaded[16];
+  int slots_changed[NUM_TRACKS];
+  uint8_t slots_loaded[NUM_MD_TRACKS];
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
     slots_loaded[i] = 0;
   }
 
@@ -68,7 +68,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       // mark slot as changed in case next statement doesnt pass
@@ -80,7 +80,7 @@ void GridTask::run() {
         if ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
             (mcl_cfg.chain_mode == 2)) {
 
-          if (n < 16) {
+          if (n < NUM_MD_TRACKS) {
 
             md_track->load_from_mem(n);
             if (slots_loaded[n] == 0) {
@@ -132,7 +132,7 @@ void GridTask::run() {
       }
       // in_sysex2 = 1;
     }
-    for (uint8_t n = 16; n < 20; n++) {
+    for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
         a4_track->load_from_mem(n);
         DEBUG_PRINTLN(mcl_actions.a4_latency);
@@ -149,14 +149,14 @@ void GridTask::run() {
 
         grid_page.active_slots[n] = slots_changed[n];
         if (a4_track->active != EMPTY_TRACK_TYPE) {
-          mcl_seq.ext_tracks[n - 16].buffer_notesoff();
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].buffer_notesoff();
 
-          mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.next_transition;
-          mcl_seq.ext_tracks[n - 16].mute_until_start = true;
-          a4_track->load_seq_data(n - 16);
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step = mcl_actions.next_transition;
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
+          a4_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
           DEBUG_PRINTLN("clearing track");
-          mcl_seq.ext_tracks[n - 16].clear_track();
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].clear_track();
         }
       }
     }
@@ -182,7 +182,7 @@ void GridTask::run() {
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     // in_sysex = 1;
     uint32_t div192th_counter_old = MidiClock.div192th_counter;
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
       if (slots_changed[n] >= 0) {
         md_track->load_from_mem(n);
@@ -232,13 +232,13 @@ void GridTask::run() {
   }
   //  if (send_md_kit || send_a4_sound) {
   uint8_t count = 0;
-  uint8_t slots_cached[20] = {0};
+  uint8_t slots_cached[NUM_TRACKS] = {0};
 
   EmptyTrack empty_track2;
   MDTrack *md_temp_track = (MDTrack *)&empty_track2;
   A4Track *a4_temp_track = (A4Track *)&empty_track2;
 
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if (slots_changed[n] >= 0) {
 
       handleIncomingMidi();
@@ -248,7 +248,7 @@ void GridTask::run() {
       if ((slots_changed[n] != mcl_actions.chains[n].row)) {
 
         count++;
-        if (n < 16) {
+        if (n < NUM_MD_TRACKS) {
           //          DEBUG_PRINTLN("trying to cache MD track");
           //         DEBUG_PRINTLN(n);
           //       DEBUG_PRINTLN(mcl_actions.chains[n].row);

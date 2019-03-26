@@ -13,7 +13,32 @@
 #define STORE_IN_PLACE 0
 #define STORE_AT_SPECIFIC 254
 
-class MCLActions {
+class ChainModeData {
+public:
+  GridChain chains[NUM_TRACKS];
+
+  uint16_t md_latency;
+  uint16_t a4_latency;
+
+  uint16_t next_transition = -1;
+
+  uint16_t nearest_bar;
+  uint8_t nearest_beat;
+
+  uint16_t next_transitions[NUM_TRACKS] = { 0 };
+  uint16_t next_transitions_old[NUM_TRACKS] = { 0 };
+
+  uint8_t send_machine[NUM_TRACKS] = { 0 };
+
+  uint8_t md_div32th_latency;
+  uint8_t a4_div32th_latency;
+
+  uint8_t md_div192th_latency;
+  uint8_t a4_div192th_latency;
+
+};
+
+class MCLActions : public ChainModeData {
 public:
   uint8_t do_kit_reload;
   int writepattern;
@@ -25,29 +50,6 @@ public:
   uint32_t start_clock32th = 0;
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
-
-  bool active = false;
-
-  GridChain chains[20];
-
-  uint16_t md_latency;
-  uint16_t a4_latency;
-
-  uint16_t next_transition = -1;
-
-  uint16_t nearest_bar;
-  uint8_t nearest_beat;
-
-  uint16_t next_transitions[20] = { 0 };
-  uint16_t next_transitions_old[20] = { 0 };
-
-  uint8_t send_machine[20] = { 0 };
-
-  uint8_t md_div32th_latency;
-  uint8_t a4_div32th_latency;
-
-  uint8_t md_div192th_latency;
-  uint8_t a4_div192th_latency;
 
   MCLActions() {}
 
