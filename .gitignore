@@ -1,2 +1,5 @@
 .vscode
 bin
+obj
+.ionide
+.vs
