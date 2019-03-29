@@ -179,7 +179,7 @@ let hexprint =
     | x   -> printf "%02x " x
  
 let rec recall (dat: byte list list) x y =
-    let n_rows = Console.WindowHeight - 5
+    let n_rows = Console.WindowHeight - 6
     let n_cols = Console.WindowWidth / 3 - 5
 
     let y = max 0 <| min y (List.length dat)
@@ -223,14 +223,17 @@ let rec recall (dat: byte list list) x y =
         x |> List.iter hexprint
     )
 
-    Console.SetCursorPosition(0, n_rows )
+    Console.SetCursorPosition(0, n_rows + 2)
     Console.WriteLine("============================================================")
     printfn "X = 0x%x" x
-    printfn "Y = 0x%x" y
+    printf  "Y = 0x%x" y
 
     let k = Console.ReadKey().Key
     match k with
     | ConsoleKey.Escape     -> ()
+    | ConsoleKey.Spacebar   -> 
+        Console.Clear()
+        recall dat x y
     | ConsoleKey.LeftArrow  -> recall dat (x-1) y
     | ConsoleKey.RightArrow -> recall dat (x+1) y
     | ConsoleKey.UpArrow    -> recall dat x     (y-1)
