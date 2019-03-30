@@ -3,8 +3,8 @@
 #define FADER_LEN 16
 
 void MixerPage::setup() {
-  ((MCLEncoder *)encoders[0])->handler = encoder_level_handle;
-  ((MCLEncoder *)encoders[3])->handler = encoder_level_handle;
+  encoders[0]->handler = encoder_level_handle;
+  encoders[3]->handler = encoder_level_handle;
   create_chars_mixer();
 #ifdef OLED_DISPLAY
   classic_display = false;
@@ -43,7 +43,10 @@ void MixerPage::cleanup() {
 void MixerPage::set_level(int curtrack, int value) {
   //in_sysex = 1;
   MD.kit.levels[curtrack] = value;
+  USE_LOCK();
+  SET_LOCK();
   MD.setTrackParam(curtrack, 33, value);
+  CLEAR_LOCK();
   //in_sysex = 0;
 }
 
@@ -91,9 +94,8 @@ void MixerPage::draw_levels() {
 }
 
 void encoder_level_handle(Encoder *enc) {
-  MCLEncoder *mdEnc = (MCLEncoder *)enc;
 
-  int dir = mdEnc->getValue() - mdEnc->old;
+  int dir = enc->getValue() - enc->old;
   int track_newval;
 
   for (int i = 0; i < 16; i++) {
@@ -124,8 +126,8 @@ void encoder_level_handle(Encoder *enc) {
 #endif
     }
   }
-  mdEnc->cur = 64 + dir;
-  mdEnc->old = 64;
+  enc->cur = 64 + dir;
+  enc->old = 64;
 
   // draw_levels();
 }
@@ -227,7 +229,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
+    if (note_interface.notes_count() == 0) { GUI.setPage(&grid_page); }
     return true;
   }
 
