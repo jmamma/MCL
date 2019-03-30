@@ -38,7 +38,7 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     if (m > 0) {
       ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
     } else {
-      ret = mcl_sd.read_data((uint8_t *)(this), sizeof(A4Track), &proj.file);
+      ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
     }
     if (!ret) {
       DEBUG_PRINTLN("Write failed");
