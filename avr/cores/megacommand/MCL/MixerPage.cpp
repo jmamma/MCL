@@ -4,7 +4,10 @@
 
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
-  encoders[3]->handler = encoder_level_handle;
+  encoders[1]->handler = encoder_filtf_handle;
+  encoders[2]->handler = encoder_filtw_handle;
+  encoders[3]->handler = encoder_lastparam_handle;
+  create_chars_mixer();
   create_chars_mixer();
 #ifdef OLED_DISPLAY
   classic_display = false;
@@ -13,7 +16,10 @@ void MixerPage::setup() {
 }
 void MixerPage::init() {
   level_pressmode = 0;
-  mixer_param1.cur = 60;
+  encoders[0]->cur = 60;
+  encoders[1]->cur = 60;
+  encoders[2]->cur = 60;
+  encoders[3]->cur = 60;
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
@@ -41,13 +47,13 @@ void MixerPage::cleanup() {
 }
 
 void MixerPage::set_level(int curtrack, int value) {
-  //in_sysex = 1;
+  // in_sysex = 1;
   MD.kit.levels[curtrack] = value;
   USE_LOCK();
   SET_LOCK();
   MD.setTrackParam(curtrack, 33, value);
   CLEAR_LOCK();
-  //in_sysex = 0;
+  // in_sysex = 0;
 }
 
 void MixerPage::loop() {}
@@ -128,8 +134,56 @@ void encoder_level_handle(Encoder *enc) {
   }
   enc->cur = 64 + dir;
   enc->old = 64;
+}
+void encoder_filtf_handle(Encoder *enc) {
+  mixer_page.adjust_param(enc, MODEL_FLTF);
+}
+void encoder_filtw_handle(Encoder *enc) {
+  mixer_page.adjust_param(enc, MODEL_FLTW);
+}
+void encoder_lastparam_handle(Encoder *enc) {
+  mixer_page.adjust_param(enc, md_events.last_md_param);
+}
 
-  // draw_levels();
+void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
+
+  int dir = enc->getValue() - enc->old;
+  int newval;
+
+  for (int i = 0; i < 16; i++) {
+    if (note_interface.notes[i] == 1) {
+      newval = MD.kit.params[i][param] + dir;
+      if (newval < 0) {
+        newval = 0;
+      }
+      if (newval > 127) {
+        newval = 127;
+      }
+      for (uint8_t value = MD.kit.params[i][param]; value < newval;
+           value++) {
+        USE_LOCK();
+        SET_LOCK();
+        MD.setTrackParam(i, param, value);
+       MD.kit.params[i][param] = value;
+        CLEAR_LOCK();
+      }
+      for (uint8_t value = MD.kit.params[i][param]; value > newval;
+           value--) {
+        USE_LOCK();
+        SET_LOCK();
+        MD.setTrackParam(i, param, value);
+        MD.kit.params[i][param] = value;
+        CLEAR_LOCK();
+      }
+    USE_LOCK();
+    SET_LOCK();
+    MD.setTrackParam(i, param, newval);
+    MD.kit.params[i][param] = newval;
+    CLEAR_LOCK();
+    }
+  }
+  enc->cur = 64 + dir;
+  enc->old = 64;
 }
 
 void MixerPage::display() {
@@ -229,7 +283,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    if (note_interface.notes_count() == 0) { GUI.setPage(&grid_page); }
+    if (note_interface.notes_count() == 0) {
+      GUI.setPage(&grid_page);
+    }
     return true;
   }
 
