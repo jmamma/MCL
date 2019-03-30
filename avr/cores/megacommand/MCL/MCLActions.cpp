@@ -315,7 +315,7 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      // if (chains[n].active > 0) {
+      transition_level[n] = gridio_param3.getValue();
       next_transitions[n] = next_step;
       chains[n].row = row;
       chains[n].loops = 1;

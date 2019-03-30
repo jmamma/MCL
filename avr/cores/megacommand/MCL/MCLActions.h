@@ -29,6 +29,7 @@ public:
   uint16_t next_transitions_old[NUM_TRACKS] = { 0 };
 
   uint8_t send_machine[NUM_TRACKS] = { 0 };
+  uint8_t transition_level[NUM_TRACKS] = { 0 };
 
   uint8_t md_div32th_latency;
   uint8_t a4_div32th_latency;
