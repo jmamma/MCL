@@ -5,9 +5,11 @@ open System.IO
 open System.Threading
 open System.IO.Ports
 open A4Cmds
+open A4Types
 open Microsoft.FSharp.Text.StructuredFormat
 open Microsoft.FSharp.Text.StructuredFormat.LayoutOps
 open Newtonsoft.Json
+open System
 
 let blockL sep_l sep_r (xs: Layout list) =
     aboveListL [
@@ -40,10 +42,9 @@ type CommunicationRecord =
             pairL "cmd" (byteL x.cmd)
             pairL "params" (bytesL x.parameters)
             pairL "response" (bytesL x.response)
+            pairL "rspLen" (List.length x.response)
         ]
         fmt layout
-
-type CommunicationRecords = CommunicationRecord list
 
 let communicate (com: SerialPort) (input: int list) : CommunicationRecord = 
     match input with
@@ -244,7 +245,18 @@ let rec recall (dat: byte list list) x y =
     | ConsoleKey.End        -> recall dat (x+n_cols) y
     | _                     -> recall dat x     y
 
-
+let ``extract note pitch samples from B1 to B16`` com =
+    (* The source data is B1-B16 running C4-D#5, track1. Other tracks are empty. *)
+    printfn "Running B1-B16 extraction"
+    let results = 
+        [for i in 0x10..0x1F -> [ 0x64; i] ]
+     |> List.map (fun cmd -> 
+        printfn "extracting %A" cmd
+        let result = communicate com cmd
+        printfn "result = %A" result
+        result) 
+     |> List.map JsonConvert.SerializeObject
+    File.AppendAllLines("B1-B16_note_pitch.json", results)
     
 [<EntryPoint>]
 let main argv =
@@ -262,13 +274,7 @@ let main argv =
         Console.Clear()
         recall data 0 0
 
-    | [| "B1-B13" |] ->
-        printfn "Running B1-B13 extraction"
-        let results = 
-            [for i in 0x10..0x1C -> [ 0x64; i] ]
-         |> List.map (communicate com) 
-         |> List.map JsonConvert.SerializeObject
-        File.AppendAllLines("B1-B13.json", results)
+    | [| "B1-B16" |] -> ``extract note pitch samples from B1 to B16`` com
     | [| "collect" |]
     | _ ->
         let results = 

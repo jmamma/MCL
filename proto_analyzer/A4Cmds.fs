@@ -1,38 +1,50 @@
 ﻿module A4Cmds
 
+// kit response len = 2679
 let A4_KIT_MESSAGE_ID =                    0x52
 let A4_KIT_REQUEST_ID =                    0x62
 
+// kitx response len = 2679
 let A4_KITX_MESSAGE_ID =                   0x58
 let A4_KITX_REQUEST_ID =                   0x68
 
+// sound response len = 415
 let A4_SOUND_MESSAGE_ID =                  0x53
 let A4_SOUND_REQUEST_ID =                  0x63
 
+// soundx response len = 415
 let A4_SOUNDX_MESSAGE_ID =                 0x59
 let A4_SOUNDX_REQUEST_ID =                 0x69
 
+// pattern response len = 14788
 let A4_PATTERN_MESSAGE_ID =                0x54
 let A4_PATTERN_REQUEST_ID =                0x64
 
+// patternx response len = 14788
 let A4_PATTERNX_MESSAGE_ID =               0x5A
 let A4_PATTERNX_REQUEST_ID =               0x6A
 
+// song response len = 1506
 let A4_SONG_MESSAGE_ID =                   0x55
 let A4_SONG_REQUEST_ID =                   0x65
 
+// songx response len = 1506
 let A4_SONGX_MESSAGE_ID =                  0x5B
 let A4_SONGX_REQUEST_ID =                  0x6B
 
+// settings response len = 85
 let A4_SETTINGS_MESSAGE_ID =               0x56
 let A4_SETTINGS_REQUEST_ID =               0x66
 
+// settingsx response len = 85
 let A4_SETTINGSX_MESSAGE_ID =              0x5C
 let A4_SETTINGSX_REQUEST_ID =              0x6C
 
+// global response len = 2612
 let A4_GLOBAL_MESSAGE_ID =                 0x57
 let A4_GLOBAL_REQUEST_ID =                 0x67
 
+// global response len = 2612
 let A4_GLOBALX_MESSAGE_ID =                0x5D
 let A4_GLOBALX_REQUEST_ID =                0x6D
 

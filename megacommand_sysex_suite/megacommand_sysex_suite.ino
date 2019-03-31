@@ -85,55 +85,7 @@ void newline()
 void send_request()
 {
   switch(cmd_buf[0]){
-    case 0x7c:
-    case 0x60:
-    case 0xe0:
-    case 0xe1:
-    case 0xe2:
-    case 0xe3:
-    case 0xe4:
-    case 0xe5:
-    case 0xe6:
-    case 0xe7:
-    case 0xe8:
-    case 0xf8:
-    case 0xfd:
-    case 0xfb:
-    case 0xfa:
-    case 0xfc:
-    case 0x81:
-    case 0x82:
-    case 0x83:
-    case 0x84:
-    case 0x91:
-    case 0x92:
-    case 0x93:
-    case 0x94:
-    
-    case 0x52:
-    case 0x62:
-    case 0x58:
-    case 0x68:
-    case 0x53:
-    case 0x63:
-    case 0x59:
-    case 0x69:
-    case 0x54:
-    case 0x64:
-    case 0x5a:
-    case 0x6a:
-    case 0x55:
-    case 0x65:
-    case 0x5b:
-    case 0x6b:
-    case 0x56:
-    case 0x66:
-    case 0x5c:
-    case 0x6c:
-    case 0x57:
-    case 0x67:
-    case 0x5d:
-    case 0x6d:    
+    case 0x7c: 
       Serial.println(">> not sending command!");
       return;
     default:
@@ -217,17 +169,15 @@ void loop() {
   }
 
   // bit banging A4
-  if(readline()){
-    if(cmd_len == 0){
-      byte_3_bitbang();
-    }else{
-      send_request();
-    }
-  }
+//  if(readline()){
+//    if(cmd_len == 0){
+//      byte_3_bitbang();
+//    }else{
+//      send_request();
+//    }
+//  }
 
-  /*
   if (readline()){
     send_request();
   }
-  */
 }
