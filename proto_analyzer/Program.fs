@@ -104,7 +104,10 @@ let rec probe com dat cmd len r =
     let len = max 0 <| min len 6
     let cmd = max 0 <| min cmd 127
     let r = match r with
-            | Fixed(dat, _) when List.length dat <> len -> Fixed(synthesize_payload len, 0)
+            | Fixed(dat, i) when List.length dat <> len -> 
+                let makeup = max 0 <| len - List.length dat
+                let dat_append = List.append <| List.truncate len dat
+                Fixed(dat_append (List.init makeup (fun _ -> 0)), max 0 <| min i (List.length dat - 1))
             | Fixed(dat, i) -> Fixed(dat, max 0 <| min i (List.length dat - 1))
             | _ -> r
 
@@ -148,6 +151,7 @@ let rec probe com dat cmd len r =
 
     let plus  i i' x = if i <> i' then x else x+1
     let minus i i' x = if i <> i' then x else x-1
+    let zero  i i' x = if i <> i' then x else 0
 
     match k, r with
     | ConsoleKey.Escape, _        -> List.rev dat
@@ -165,6 +169,7 @@ let rec probe com dat cmd len r =
           | ConsoleKey.DownArrow  -> List.mapi (minus i) dat, i
           | ConsoleKey.LeftArrow  -> dat, i-1
           | ConsoleKey.RightArrow -> dat, i+1
+          | ConsoleKey.D0         -> List.mapi (zero i) dat, i+1
           | _                     -> dat, i
       probe' cmd len <| Fixed(dat, i)
     | _                      -> probe' cmd len r
@@ -183,8 +188,13 @@ let rec recall (dat: byte list list) x y =
     let n_rows = Console.WindowHeight - 6
     let n_cols = Console.WindowWidth / 3 - 5
 
-    let y = max 0 <| min y (List.length dat)
-    let x = max 0 <| min x ((List.min << List.map List.length) dat)
+    let y' = max 0 <| min y (List.length dat - 1)
+    let x' = max 0 <| min x (List.min <| List.map (fun x -> List.length x - 1) dat)
+
+    if x <> x' || y <> y' 
+    then Console.Clear()
+
+    let x, y = x', y'
 
     Console.SetCursorPosition(5, 0)
     [1..n_cols] |> List.iter (fun i ->
@@ -198,7 +208,7 @@ let rec recall (dat: byte list list) x y =
 
     let col_diff =
         [0..n_cols-1] |> List.map (fun i ->
-            view |> List.map (List.item i) 
+            view |> List.map (List.tryItem i) 
                  |> List.distinct 
                  |> List.length
         )
@@ -245,19 +255,87 @@ let rec recall (dat: byte list list) x y =
     | ConsoleKey.End        -> recall dat (x+n_cols) y
     | _                     -> recall dat x     y
 
+let extract_patterns com patterns =
+    [for i in patterns -> [ 0x64; i] ]
+ |> List.map (fun cmd -> 
+    printfn "extracting %A" cmd
+    let result = communicate com cmd
+    printfn "result = %A" result
+    result) 
+ |> List.map JsonConvert.SerializeObject
+
+
 let ``extract note pitch samples from B1 to B16`` com =
     (* The source data is B1-B16 running C4-D#5, track1. Other tracks are empty. *)
     printfn "Running B1-B16 extraction"
-    let results = 
-        [for i in 0x10..0x1F -> [ 0x64; i] ]
-     |> List.map (fun cmd -> 
-        printfn "extracting %A" cmd
-        let result = communicate com cmd
-        printfn "result = %A" result
-        result) 
-     |> List.map JsonConvert.SerializeObject
-    File.AppendAllLines("B1-B16_note_pitch.json", results)
+    let sources = [0x3C..0x4B] 
+               |> List.mapi (fun i note -> 
+                  Pattern('B', i, mkpattern (Track1 [o; mknote note; o; o; o; o; o; o; o; o; o; o; o; o; o; o;])))
+    let results = extract_patterns com [0x10..0x1F]
+    File.WriteAllLines("B1-B16_note_pitch.json", results)
+    File.WriteAllLines("B1-B16_note_pitch.src.json", List.map JsonConvert.SerializeObject sources)
     
+let ``extract trigger parameters from C5`` com =
+    (* plain trigger, trig mute, accent, note slide, parameter slide, combinations. *)
+    let to_bool x = if x = 0 then false else true
+    let n a b c d e =
+        {
+            Active = to_bool e
+            Mute = to_bool d
+            Accent = to_bool c
+            NoteSlide = to_bool b
+            ParamSlide = to_bool a
+            Note = C4
+        }
+    printfn "Running C5-C8 extraction"
+
+    let triggers = [
+         n 0 0 0 0 0
+         n 0 0 0 0 1
+         n 0 0 0 1 0
+         n 0 0 0 1 1
+         n 0 0 1 0 0
+         n 0 0 1 0 1
+         n 0 0 1 1 0
+         n 0 0 1 1 1
+         n 0 1 0 0 0
+         n 0 1 0 0 1
+         n 0 1 0 1 0
+         n 0 1 0 1 1
+         n 0 1 1 0 0
+         n 0 1 1 0 1
+         n 0 1 1 1 0
+         n 0 1 1 1 1
+         // ----
+         n 1 0 0 0 0
+         n 1 0 0 0 1
+         n 1 0 0 1 0
+         n 1 0 0 1 1
+         n 1 0 1 0 0
+         n 1 0 1 0 1
+         n 1 0 1 1 0
+         n 1 0 1 1 1
+         n 1 1 0 0 0
+         n 1 1 0 0 1
+         n 1 1 0 1 0
+         n 1 1 0 1 1
+         n 1 1 1 0 0
+         n 1 1 1 0 1
+         n 1 1 1 1 0
+         n 1 1 1 1 1
+         ]
+    let no_triggers = List.init 32 (fun _ -> n 0 0 0 0 0)
+    let p i trks = Pattern('C', i - 1, {mkpattern (Tracks trks) with Scale = scale_32} )
+    let sources  = [
+        p 5 [triggers; no_triggers]
+        p 6 [no_triggers; triggers]
+        p 7 [triggers; triggers]
+        p 8 [no_triggers; no_triggers]
+    ]
+    let results = extract_patterns com [ 0x24..0x27 ]
+    File.WriteAllLines("C5_trigger_variations.json", results)
+    File.WriteAllLines("C5_trigger_variations.src.json", List.map JsonConvert.SerializeObject sources)
+
 [<EntryPoint>]
 let main argv =
     use com = new SerialPort("COM3", 250000)
@@ -275,6 +353,7 @@ let main argv =
         recall data 0 0
 
     | [| "B1-B16" |] -> ``extract note pitch samples from B1 to B16`` com
+    | [| "C5" |] -> ``extract trigger parameters from C5`` com
     | [| "collect" |]
     | _ ->
         let results = 
