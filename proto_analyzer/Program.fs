@@ -196,7 +196,7 @@ let rec recall (dat: byte list list) x y =
 
     let x, y = x', y'
 
-    Console.SetCursorPosition(5, 0)
+    Console.SetCursorPosition(6, 0)
     [1..n_cols] |> List.iter (fun i ->
         if i % 4 = 1 then hexprint <| byte (i + x - 1)
         else printf "   "
@@ -215,12 +215,12 @@ let rec recall (dat: byte list list) x y =
 
     col_diff |> List.iteri (fun i x ->
         if x = 1 then
-            Console.SetCursorPosition(5 + i * 3, 1)
+            Console.SetCursorPosition(6 + i * 3, 1)
             Console.ForegroundColor <- ConsoleColor.Green
             Console.Write(".")
             Console.ForegroundColor <- ConsoleColor.White
         else
-            Console.SetCursorPosition(5 + i * 3, 1)
+            Console.SetCursorPosition(6 + i * 3, 1)
             Console.BackgroundColor <- ConsoleColor.Red
             Console.Write("!")
             Console.BackgroundColor <- ConsoleColor.Black
@@ -230,7 +230,7 @@ let rec recall (dat: byte list list) x y =
     view
         |> List.iteri (fun i x -> 
         Console.SetCursorPosition(0, i + 2)
-        printf "%02d   " (i + y)
+        printf "%03d   " (i + y)
         x |> List.iter hexprint
     )
 
@@ -255,8 +255,8 @@ let rec recall (dat: byte list list) x y =
     | ConsoleKey.End        -> recall dat (x+n_cols) y
     | _                     -> recall dat x     y
 
-let extract_patterns com patterns =
-    [for i in patterns -> [ 0x64; i] ]
+let extract com patterns =
+    patterns
  |> List.map (fun cmd -> 
     printfn "extracting %A" cmd
     let result = communicate com cmd
@@ -264,6 +264,9 @@ let extract_patterns com patterns =
     result) 
  |> List.map JsonConvert.SerializeObject
 
+let extract_patterns com patterns =
+    [for i in patterns -> [ 0x64; i] ]
+ |> extract com
 
 let ``extract note pitch samples from B1 to B16`` com =
     (* The source data is B1-B16 running C4-D#5, track1. Other tracks are empty. *)
@@ -336,6 +339,14 @@ let ``extract trigger parameters from C5`` com =
     File.WriteAllLines("C5_trigger_variations.json", results)
     File.WriteAllLines("C5_trigger_variations.src.json", List.map JsonConvert.SerializeObject sources)
 
+let ``extract sounds`` com =
+    (* The source data is sound patch 0 to 103 from pool used for identifying param positions. *)
+    printfn "Running sound extraction"
+    let results = extract com [for i in 0..103 -> [0x63; i]]
+    File.WriteAllLines("sounds.json", results)
+
+
+
 [<EntryPoint>]
 let main argv =
     use com = new SerialPort("COM3", 250000)
@@ -354,6 +365,7 @@ let main argv =
 
     | [| "B1-B16" |] -> ``extract note pitch samples from B1 to B16`` com
     | [| "C5" |] -> ``extract trigger parameters from C5`` com
+    | [| "sound" |] -> ``extract sounds`` com
     | [| "collect" |]
     | _ ->
         let results = 
