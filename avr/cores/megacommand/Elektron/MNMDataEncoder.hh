@@ -97,13 +97,13 @@ public:
 	uint8_t repeatCount;
 	uint8_t repeatByte;
 	uint16_t totalCnt;
-	
+
 public:
-	MNMSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL, uint16_t _maxLen = 0)) {
-		init(DATA_ENCODER_INIT(_data, _maxLen));
+	MNMSysexDecoder(DATA_ENCODER_INIT(Midi *_midi = NULL, uint16_t _offset = NULL, uint16_t _maxLen = 0)) {
+		init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
 	}
-	
-	virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
+
+	virtual void init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
 	virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 	virtual DATA_ENCODER_RETURN_TYPE getNextByte(uint8_t *c);
 };

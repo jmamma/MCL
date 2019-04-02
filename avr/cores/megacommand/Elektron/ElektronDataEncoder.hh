@@ -123,9 +123,9 @@ class ElektronSysexDecoder : public DataDecoder {
   bool in7Bit;
 
 public:
-  ElektronSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
+  ElektronSysexDecoder(DATA_ENCODER_INIT(Midi *_midi, uint16_t _offset = NULL,
                                          uint16_t _maxLen = 0)) {
-    init(DATA_ENCODER_INIT(_data, _maxLen));
+    init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
   }
 
   /** Start the decoding of 7-bit data. **/
@@ -137,7 +137,7 @@ public:
   /** Stop the decoding of 7-bit data. **/
   void stop7Bit() { in7Bit = false; }
 
-  virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
+  virtual void init(DATA_ENCODER_INIT(Midi *_midi, uint16_t _offset, uint16_t _maxLen));
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 };
 
