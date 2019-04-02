@@ -21,7 +21,10 @@
 #define DATA_ENCODER_TRUE()  return
 #define DATA_ENCODER_FALSE() return
 
-#define DATA_ENCODER_INIT(midi, data_or_offset, length) midi, data_or_offset
+
+
+#define DATA_ENCODER_INIT(data, length) midi, data
+#define DATA_ENCODER_INIT(midi, offset, length) midi, offset
 
 #define DATA_ENCODER_UNCHECKING 1
 
@@ -145,8 +148,8 @@ class DataDecoder {
 	 * @{
 	 **/
 public:
-//	uint8_t *data;
-//	uint8_t *ptr;
+    uint8_t *data;
+    uint8_t *ptr;
 
     uint16_t n;
     uint16_t offset;
@@ -156,10 +159,16 @@ public:
     DataDecoder() {
 	}
 
-	virtual void init(Midi *_midi, uint16_t _offset) {
+	virtual void init(uint8_t *_data) {
+        data = _data;
+        ptr = data;
+    }
+
+    virtual void init(Midi *_midi, uint16_t _offset) {
 		offset = _offset;
 		n = offset;
         midi = _midi;
+        data = ptr = NULL;
 	}
 
 	uint16_t getIdx() {
@@ -237,9 +246,17 @@ public:
 			get64(&c[i]);
 		}
 	}
+    uint16_t get(uint8_t *data, uint16_t len) {
+ 	    uint16_t i;
+		for (i = 0; i < len; i++) {
+			get8(data + i);
+		}
+		return i;
+
+    }
 
 	uint16_t get(uint16_t _offset, uint16_t len) {
-		uint16_t i;
+      	uint16_t i;
 		for (i = _offset; i < len; i++) {
 			get8(i);
 		}

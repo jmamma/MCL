@@ -3,9 +3,9 @@
 #ifndef MNM_DATA_ENCODER_H__
 #define MNM_DATA_ENCODER_H__
 
-#include "WProgram.h"
-#include "ElektronDataEncoder.hh"
 #include "DataEncoder.hh"
+#include "ElektronDataEncoder.hh"
+#include "WProgram.h"
 
 /**
  * \addtogroup Elektron
@@ -21,31 +21,35 @@
  **/
 
 /**
- * \addtogroup elektron_mnm_data_to_sysex_encoder Monomachine Data to Sysex Encoder
+ * \addtogroup elektron_mnm_data_to_sysex_encoder Monomachine Data to Sysex
+ *Encoder
  *
  * @{
  *
  **/
 
-/** Class to encoder normal 8-bit data to 7-bit encoded and compressed sysex data. **/
+/** Class to encoder normal 8-bit data to 7-bit encoded and compressed sysex
+ * data. **/
 class MNMDataToSysexEncoder : public ElektronDataToSysexEncoder {
 public:
   uint8_t lastByte;
   uint8_t lastCnt;
   bool isFirstByte;
-	uint16_t totalCnt;
-  
+  uint16_t totalCnt;
+
 public:
-  MNMDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL, uint16_t _sysexLen = 0)) {
+  MNMDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
+                                          uint16_t _sysexLen = 0)) {
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
   }
 
-	MNMDataToSysexEncoder(MidiUartParent *_uart) {
-		init(DATA_ENCODER_INIT(NULL, 0), _uart);
-	}
+  MNMDataToSysexEncoder(MidiUartParent *_uart) {
+    init(DATA_ENCODER_INIT(NULL, 0), _uart);
+  }
 
-  virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex = NULL, uint16_t _sysexLen = 0),
-										MidiUartParent *_uart = NULL);
+  virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
+                                      uint16_t _sysexLen = 0),
+                    MidiUartParent *_uart = NULL);
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
   DATA_ENCODER_RETURN_TYPE packLastByte();
@@ -55,7 +59,8 @@ public:
 /** @} **/
 
 /**
- * \addtogroup elektron_mnm_sysex_to_data_encoder Monomachine Sysex to Data Encoder
+ * \addtogroup elektron_mnm_sysex_to_data_encoder Monomachine Sysex to Data
+ *Encoder
  *
  * @{
  *
@@ -65,9 +70,10 @@ public:
 class MNMSysexToDataEncoder : public ElektronSysexToDataEncoder {
 public:
   uint8_t repeat;
-	uint16_t totalCnt;
-  
-  MNMSysexToDataEncoder(DATA_ENCODER_INIT(uint8_t *_data = NULL, uint16_t _maxLen = 0)) {
+  uint16_t totalCnt;
+
+  MNMSysexToDataEncoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
+                                          uint16_t _maxLen = 0)) {
     init(DATA_ENCODER_INIT(_data, _maxLen));
   }
 
@@ -76,7 +82,6 @@ public:
   DATA_ENCODER_RETURN_TYPE unpack8Bit();
   virtual uint16_t finish();
 };
-
 
 /** @} **/
 
@@ -93,19 +98,27 @@ public:
   uint8_t cnt7;
   uint8_t bits;
   uint8_t tmpData[7];
-	uint16_t cnt;
-	uint8_t repeatCount;
-	uint8_t repeatByte;
-	uint16_t totalCnt;
+  uint16_t cnt;
+  uint8_t repeatCount;
+  uint8_t repeatByte;
+  uint16_t totalCnt;
 
 public:
-	MNMSysexDecoder(DATA_ENCODER_INIT(Midi *_midi = NULL, uint16_t _offset = NULL, uint16_t _maxLen = 0)) {
-		init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
-	}
+  MNMSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
+                                    uint16_t _maxLen = 0)) {
+    init(DATA_ENCODER_INIT(_data, _maxLen));
+  }
+  MNMSysexDecoder(DATA_ENCODER_INIT(Midi *_midi = NULL, uint16_t _offset = NULL,
+                                    uint16_t _maxLen = 0)) {
+    init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+  }
 
-	virtual void init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
-	virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
-	virtual DATA_ENCODER_RETURN_TYPE getNextByte(uint8_t *c);
+  virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
+
+  virtual void init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+
+  virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
+  virtual DATA_ENCODER_RETURN_TYPE getNextByte(uint8_t *c);
 };
 
 #endif /* MNM_DATA_ENCODER_H__ */

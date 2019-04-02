@@ -146,6 +146,15 @@ uint16_t MNMSysexToDataEncoder::finish() {
 	
 }
 
+void MNMSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen)) {
+    DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+	cnt7 = 0;
+	cnt = 0;
+	repeatCount = 0;
+	repeatByte = 0;
+	totalCnt = 0;
+}
+
 void MNMSysexDecoder::init(DATA_ENCODER_INIT(Midi *_midi, uint16_t _offset, uint16_t _maxLen)) {
 	DataDecoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
 	cnt7 = 0;
@@ -157,13 +166,13 @@ void MNMSysexDecoder::init(DATA_ENCODER_INIT(Midi *_midi, uint16_t _offset, uint
 
 DATA_ENCODER_RETURN_TYPE MNMSysexDecoder::getNextByte(uint8_t *c) {
 	if ((cnt % 8) == 0) {
-	    midi->getSysexByte(n++);
-    //	bits = *(ptr++);
+        if (data) { bits = *(ptr++); }
+        else { midi->getSysexByte(n++); }
 		cnt++;
 	}
 	bits <<= 1;
-    c = midi->getSysexByte(n++) | (bits & 0x80);
-	//*c = *(ptr++) | (bits & 0x80);
+	if (data) { *c = *(ptr++) | (bits & 0x80); }
+    else { c = midi->getSysexByte(n++) | (bits & 0x80); }
 	cnt++;
 
 	DATA_ENCODER_TRUE();
