@@ -20,9 +20,10 @@ const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {0, midi_ignore_message}};
 
 MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf,
-                     uint16_t _sysexBufLen)
-    : midiSysex(_sysexBuf, _sysexBufLen) {
+                     uint16_t _sysexBufLen, volatile uint8_t *ptr)
+    : midiSysex(_sysexBuf, _sysexBufLen, ptr) {
   sysexBuf = _sysexBuf;
+  sysex_highmem_buf = ptr;
   sysexBufLen = _sysexBufLen;
   midiActive = true;
   uart = _uart;

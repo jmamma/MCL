@@ -18,7 +18,7 @@ void MidiSysexClass::reset() {
 
 void MidiSysexClass::resetRecord(uint8_t *buf, uint16_t maxLen) {
   if (buf == NULL) {
-    recordBuf = data;
+    recordBuf = NULL;
     maxRecordLen = max_len;
   } else {
     recordBuf = buf;
@@ -33,9 +33,7 @@ void MidiSysexClass::startRecord(uint8_t *buf, uint16_t maxLen) {
   recording = true;
 }
 
-void MidiSysexClass::stopRecord() {
-  recording = false;
-}
+void MidiSysexClass::stopRecord() { recording = false; }
 
 bool MidiSysexClass::isListenerActive(MidiSysexListenerClass *listener) {
   if (listener == NULL)
@@ -44,9 +42,8 @@ bool MidiSysexClass::isListenerActive(MidiSysexListenerClass *listener) {
   if (listener->ids[0] == 0xFF)
     return true;
   if (sysexLongId) {
-    if (recvIds[0] == listener->ids[0] &&
-				recvIds[1] == listener->ids[1] &&
-				recvIds[2] == listener->ids[2])
+    if (recvIds[0] == listener->ids[0] && recvIds[1] == listener->ids[1] &&
+        recvIds[2] == listener->ids[2])
       return true;
     else
       return false;
@@ -84,7 +81,6 @@ void MidiSysexClass::end() {
       listeners[i]->end();
     }
   }
-
 }
 void MidiSysexClass::end_immediate() {
   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
@@ -92,9 +88,7 @@ void MidiSysexClass::end_immediate() {
       listeners[i]->end_immediate();
     }
   }
-
 }
-
 
 void MidiSysexClass::handleByte(uint8_t byte) {
   if (aborted)
@@ -117,13 +111,13 @@ void MidiSysexClass::handleByte(uint8_t byte) {
       start();
     }
   }
-/*
-  for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
-    if (isListenerActive(listeners[i])) {
-      listeners[i]->handleByte(byte);
+  /*
+    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+      if (isListenerActive(listeners[i])) {
+        listeners[i]->handleByte(byte);
+      }
     }
-  }
-*/
+  */
   len++;
 
   if (recording) {
@@ -132,16 +126,36 @@ void MidiSysexClass::handleByte(uint8_t byte) {
 }
 
 bool MidiSysexClass::recordByte(uint8_t c) {
-  if (recordLen < maxRecordLen && recordBuf != NULL) {
-    recordBuf[recordLen++] = c;
+  if (recordLen < maxRecordLen) {
+    // Record data to specified memory buffer
+    if (recordBuf != NULL) {
+      recordBuf[recordLen++] = c;
+      return true;
+    } else {
+      // Write to sysex buffers in HIGH membank
+      put_byte_bank1(sysex_highmem_buf + recordLen, c);
+      recordLen++;
+    }
     return true;
-  } else {
-    return false;
   }
+  return false;
 }
 
-MididuinoSysexListenerClass::MididuinoSysexListenerClass() 
-	: MidiSysexListenerClass() {
+uint8_t MidiSysexClass::getByte(uint8_t n) {
+  if (n < maxRecordLen) {
+    // Record data to specified memory buffer
+    if (recordBuf != NULL) {
+      return recordBuf[n];
+    } else {
+      // Write to sysex buffers in HIGH membank
+      return get_byte_bank1(sysex_highmem_buf + n);
+    }
+  }
+  return 255;
+}
+
+MididuinoSysexListenerClass::MididuinoSysexListenerClass()
+    : MidiSysexListenerClass() {
   ids[0] = MIDIDUINO_SYSEX_VENDOR_1;
   ids[1] = MIDIDUINO_SYSEX_VENDOR_2;
   ids[2] = BOARD_ID;

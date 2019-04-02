@@ -69,18 +69,22 @@ protected:
   bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
+  uint8_t *data;
+  uint8_t *recordBuf;
+  volatile uint8_t *sysex_highmem_buf;
 
 public:
   void startRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
   void stopRecord();
 
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
-  bool recordByte(uint8_t c);
+
+  inline bool recordByte(uint8_t c);
+  inline uint8_t getByte(uint8_t n);
+
   bool callSysexCallBacks;
   uint16_t max_len;
   uint16_t recordLen;
-  uint8_t *data;
-  uint8_t *recordBuf;
   uint16_t maxRecordLen;
 
   uint16_t len;
