@@ -167,8 +167,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           if (Analog4.connected) {
             DEBUG_PRINTLN("a4 get sound");
             Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
-            a4_track->sound.fromSysex(MidiSysex2.data + 8,
-                                      MidiSysex2.recordLen - 8);
+            a4_track->sound.fromSysex(MidiSysex2.data,
+                                      MidiSysex2.recordLen);
           }
           n = a4_track->store_track_in_grid(i, grid_page.getRow(), i);
         } else {

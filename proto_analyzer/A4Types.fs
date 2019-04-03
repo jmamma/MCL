@@ -11,8 +11,8 @@ type SignedParam          = sbyte
 type UnsignedParam        = byte
 type SpecialUnsignedParam = byte
 type NoteParam            = byte
-type FloatParam           = | Value of float // 8bit float encoding with special values like 1/8, 0.625 etc.
-type Float2Param          = | Value of float // 8bit float encoding with doubling steps
+type NoteLenParam         = | Value of float // 8bit float encoding with special values like 1/8, 0.625 etc.
+type TimeLenParam         = | Value of float // 8bit float encoding with doubling steps
 type DoubleParam          = | Value of float // 16bit fixed-point, range=0~127 step = 128 / 16384
 type SDoubleParam         = | Value of float // 16bit signed fixed-point, range=-128~127 step = 256 / 16384
 type BoolParam            = bool
@@ -78,14 +78,14 @@ type Sound =
         // 32 items to now
         // Filter
         F1Freq:           DoubleParam
-        F1Res:            SignedParam
+        F1Res:            UnsignedParam
         F1Overdrive:      SignedParam
         // Value 32 = note intervals
         F1KeyTrack:       SignedParam
         F1EnvDepth:       SignedParam
 
-        F2Freq:           SignedParam
-        F2Res:            SignedParam
+        F2Freq:           DoubleParam
+        F2Res:            UnsignedParam
         F2Type:           SpecialUnsignedParam
         // Value 32 = note intervals
         F2KeyTrack:       SignedParam
@@ -117,7 +117,7 @@ type Sound =
         EnvFltSustain:    UnsignedParam
         EnvFltRelease:    UnsignedParam
         EnvFltShape:      SpecialUnsignedParam
-        EnvFltGateLen:    Float2Param
+        EnvFltGateLen:    TimeLenParam
         EnvFltDstA:       SpecialUnsignedParam
         EnvFltDepthA:     SDoubleParam
         EnvFltDstB:       SpecialUnsignedParam
@@ -130,7 +130,7 @@ type Sound =
         Env2Sustain:      UnsignedParam
         Env2Release:      UnsignedParam
         Env2Shape:        SpecialUnsignedParam
-        Env2GateLen:      Float2Param
+        Env2GateLen:      TimeLenParam
         Env2DstA:         SpecialUnsignedParam
         Env2DepthA:       SDoubleParam
         Env2DstB:         SpecialUnsignedParam
@@ -264,14 +264,14 @@ type TrackSettings =
         // Note
         MainNote: NoteParam
         NoteVel:  UnsignedParam
-        NoteLen:  FloatParam
+        NoteLen:  NoteLenParam
         // uTiming, TRC, ENV, ENV, LFO, LFO are only for P-LOCK.
 
         //Arp
         ArpMode:  SpecialUnsignedParam
         ArpSpeed: UnsignedParam // up to 96
         ArpRange: UnsignedParam // [1..8]
-        ArpNoteLength: FloatParam
+        ArpNoteLength: NoteLenParam
         ArpLegato: BoolParam
         ArpNote2: SignedParam
         ArpNote3: SignedParam
@@ -365,3 +365,151 @@ let mkpattern (notes: mkpattern_param) =
         Swing    = byte 50
         SwingSeq = Array.init 16 (fun i -> i % 2 = 0)
     }
+
+
+
+let SoundPatches = [|
+        // Osc1
+        "Osc1Tuning:       SignedParam"
+        "Osc1Fine:         SignedParam"
+        "Osc1Detune:       SignedParam"
+        "Osc1KeyTracking:  BoolParam"
+        "Osc1Level:        UnsignedParam"
+        "Osc1Waveform:     SpecialUnsignedParam"
+        "Osc1PulseWidth:   SignedParam"
+        "Osc1PWMSpeed:     UnsignedParam"
+        "Osc1PWMDepth:     UnsignedParam"
+
+        // Noise
+        "NoiseSH:          UnsignedParam"
+        "NoiseColor:       SignedParam"
+        "NoiseFade:        SignedParam"
+        "NoiseLevel:       UnsignedParam"
+
+        // Osc2
+        "Osc2Tuning:       SignedParam"
+        "Osc2Fine:         SignedParam"
+        "Osc2Detune:       SignedParam"
+        "Osc2KeyTracking:  BoolParam"
+        "Osc2Level:        UnsignedParam"
+        "Osc2Waveform:     SpecialUnsignedParam"
+        "Osc2PulseWidth:   SignedParam"
+        "Osc2PWMSpeed:     UnsignedParam"
+        "Osc2PWMDepth:     UnsignedParam"
+
+        // 22 items to now
+        // Osc common
+        "Osc1AM:           BoolParam"
+        "SyncMode:         SpecialUnsignedParam"
+        "SyncAmount:       UnsignedParam"
+        "BendDepth:        SignedParam"
+        "NoteSlideTime:    UnsignedParam"
+        "Osc2AM:           BoolParam"
+        "OscRetrig:        BoolParam"
+        "VibratoFade:      SignedParam"
+        "VibratoSpeed:     UnsignedParam"
+        "VibratoDepth:     UnsignedParam"
+
+        // 32 items to now
+        // Filter
+        "F1Freq:           DoubleParam"
+        "F1Res:            UnsignedParam"
+        "F1Overdrive:      SignedParam"
+        // Value 32 = note intervals
+        "F1KeyTrack:       SignedParam"
+        "F1EnvDepth:       SignedParam"
+
+        "F2Freq:           DoubleParam"
+        "F2Res:            UnsignedParam"
+        "F2Type:           SpecialUnsignedParam"
+        // Value 32 = note intervals
+        "F2KeyTrack:       SignedParam"
+        "F2EnvDepth:       SignedParam"
+
+        // 42 items to now
+        // added after getting 42 sounds in the pool...
+        "Osc1Sub:          SpecialUnsignedParam"
+        "Osc2Sub:          SpecialUnsignedParam"
+
+        // 44 items to now
+        // Amp
+        "AmpAttack:        UnsignedParam"
+        "AmpDecay:         UnsignedParam"
+        "AmpSustain:       UnsignedParam"
+        "AmpRelease:       UnsignedParam"
+        "AmpShape:         SpecialUnsignedParam"
+        "Chorus:           UnsignedParam"
+        "Delay:            UnsignedParam"
+        "Reverb:           UnsignedParam"
+        "AmpLevel:         UnsignedParam"
+        "Panning:          SignedParam"
+        "Accent:           UnsignedParam"
+
+        // 55 items to now
+        // EnvF = Filter Env
+        "EnvFltAttack:     UnsignedParam"
+        "EnvFltDecay:      UnsignedParam"
+        "EnvFltSustain:    UnsignedParam"
+        "EnvFltRelease:    UnsignedParam"
+        "EnvFltShape:      SpecialUnsignedParam"
+        "EnvFltGateLen:    TimeLenParam"
+        "EnvFltDstA:       SpecialUnsignedParam"
+        "EnvFltDepthA:     SDoubleParam"
+        "EnvFltDstB:       SpecialUnsignedParam"
+        "EnvFltDepthB:     SDoubleParam"
+
+        // 65 items to now
+        // Env2
+        "Env2Attack:       UnsignedParam"
+        "Env2Decay:        UnsignedParam"
+        "Env2Sustain:      UnsignedParam"
+        "Env2Release:      UnsignedParam"
+        "Env2Shape:        SpecialUnsignedParam"
+        "Env2GateLen:      TimeLenParam"
+        "Env2DstA:         SpecialUnsignedParam"
+        "Env2DepthA:       SDoubleParam"
+        "Env2DstB:         SpecialUnsignedParam"
+        "Env2DepthB:       SDoubleParam"
+
+        // 75 items to now
+        // LFO1
+        "LFO1Speed:        SignedParam"
+        "LFO1Multiplier:   SpecialUnsignedParam"
+        "LFO1Fade:         SignedParam"
+        "LFO1StartPhase:   UnsignedParam"
+        "LFO1Mode:         SpecialUnsignedParam"
+        "LFO1Wave:         SpecialUnsignedParam"
+        "LFO1DstA:         SpecialUnsignedParam"
+        "LFO1DepthA:       SDoubleParam"
+        "LFO1DstB:         SpecialUnsignedParam"
+        "LFO1DepthB:       SDoubleParam"
+
+        // LFO2
+        "LFO2Speed:        SignedParam"
+        "LFO2Multiplier:   SpecialUnsignedParam"
+        "LFO2Fade:         SignedParam"
+        "LFO2StartPhase:   UnsignedParam"
+        "LFO2Mode:         SpecialUnsignedParam"
+        "LFO2Wave:         SpecialUnsignedParam"
+        "LFO2DstA:         SpecialUnsignedParam"
+        "LFO2DepthA:       SDoubleParam"
+        "LFO2DstB:         SpecialUnsignedParam"
+        "LFO2DepthB:       SDoubleParam"
+
+        //95 items to now
+
+        // added after 95 sounds in pool..
+        "OscDrift:         BoolParam"
+        "F1ResBoost:       BoolParam"
+        "Legato:           BoolParam"
+        "PortaMode:        SpecialUnsignedParam"
+        "Vel2Vol:          SpecialUnsignedParam"
+
+        //100 items to now
+
+        // VelMod
+        "VelModBipolar:    BoolParam"
+        "patch 102: dst ramping, depth all 0; ramping order follows A4 vst menu listing"
+        "patch 103: dst all None, depth ramping"
+
+|]

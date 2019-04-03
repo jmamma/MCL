@@ -5,6 +5,8 @@
 #include "helpers.h"
 #include "Elektron.hh"
 
+#include <algorithm>
+
 extern uint8_t a4_sysex_hdr[5];
 
 /**
@@ -90,6 +92,129 @@ public:
   /* @} */
 };
 
+class a4time_t {
+  uint8_t data;
+public:
+  a4time_t(uint8_t dat) : data(dat) {}
+  float decode() { return .0f; }
+};
+
+class a4notelen_t {
+  uint8_t data;
+public:
+  a4notelen_t(uint8_t dat) : data(dat) {}
+  float decode() { return .0f; }
+};
+
+/**
+ * Two-byte unsigned floating numbers
+ **/
+class a4ufloat_t {
+  uint8_t data[2];
+public:
+  a4ufloat_t(uint8_t dat[2]) { std::copy(dat, dat + 2, data); }
+  float decode() { return .0f; }
+};
+
+/**
+ * Two-byte signed floating numbers
+ **/
+class a4sfloat_t {
+  uint8_t data[2];
+public:
+  a4sfloat_t(uint8_t dat[2]) { std::copy(dat, dat + 2, data); }
+  float decode() { return .0f; }
+};
+
+__attribute__((packed))
+struct a4osc_t {
+  int8_t  tuning;
+  int8_t  fine;
+  bool    keytrack;
+  uint8_t level;
+  int8_t  detune;
+  uint8_t waveform;
+  int8_t  pulse_width;
+  uint8_t pwm_speed;
+  uint8_t pwm_depth;
+  uint8_t sub;
+  bool    am;
+};
+
+__attribute__((packed))
+struct a4flt_t{
+  a4ufloat_t freq;
+  uint8_t    res;
+  int8_t     overdrive;
+  int8_t     keytrack;
+  int8_t     env_depth;
+};
+
+__attribute__((packed))
+struct a4env_t {
+  uint8_t    attack;
+  uint8_t    decay;
+  uint8_t    sustain;
+  uint8_t    release;
+  uint8_t    shape;
+  a4time_t   gatelen;
+  uint8_t    destA;
+  a4sfloat_t depthA;
+  uint8_t    destB;
+  a4sfloat_t depthB;
+};
+
+__attribute__((packed))
+struct a4lfo_t {
+  int8_t  speed;
+  uint8_t multiplier;
+  int8_t  fade;
+  uint8_t phase;
+  uint8_t mode;
+  uint8_t wave;
+  uint8_t destA;
+  a4sfloat_t depthA;
+  uint8_t destB;
+  a4sfloat_t depthB;
+};
+
+__attribute__((packed))
+struct a4mod_t {
+  uint8_t dest[5];
+  int8_t  depth[5];
+};
+
+__attribute__((packed))
+struct a4sound_common_t {
+  uint8_t noise_samplehold;
+  int8_t  noise_color;
+  int8_t  noise_fade;
+  uint8_t noise_level;
+  uint8_t sync_mode;
+  uint8_t sync_amount;
+  uint8_t note_slidetime;
+  bool    note_legato;
+  uint8_t note_portamode;
+  uint8_t note_velcurve;
+  bool    osc_retrig;
+  bool    osc_drift;
+  int8_t  vibrato_fade;
+  uint8_t vibrato_speed;
+  uint8_t vibrato_depth;
+  uint8_t amp_attack;
+  uint8_t amp_decay;
+  uint8_t amp_sustain;
+  uint8_t amp_release;
+  uint8_t amp_shape;
+  uint8_t amp_chorus;
+  uint8_t amp_delay;
+  uint8_t amp_reverb;
+  uint8_t amp_level;
+  int8_t  amp_panning;
+  uint8_t amp_accent;
+};
+
+__attribute__((packed))
 class A4Sound {
   /**
    * \addtogroup md_sysex_kit
@@ -97,13 +222,29 @@ class A4Sound {
    **/
 
 public:
-  bool workSpace; // When transferring sounds, we must decide if we are going to
-                  // send them to the RAM workspace, or permanent memory.
-  uint8_t origPosition;
-  uint8_t payload[415 - 10 - 2 - 4 - 1];
+  bool soundpool; // When transferring sounds, we must decide if we are going to
+                  // send them to the pool (RAM workspace), or permanent memory.
+                  // The pooled patches can be P-Locked, while permanent memory
+                  // patches should be loaded to the track and then pooled first
+
+  uint8_t          origPosition; // 0-127
+  uint8_t          tags[4];      // 32 tags
+  char             name[16];     // null-terminated
+  a4osc_t          osc[2];
+  a4flt_t          filter[2];
+  a4env_t          envF;
+  a4env_t          env2;
+  a4sound_common_t common;
+  bool             mod_velocity_bipolar;
+  a4mod_t          mod_velocity;
+  a4mod_t          mod_aftertouch;
+  a4mod_t          mod_modwheel;
+  a4mod_t          mod_pitchbend;
+  a4mod_t          mod_breadth;
+  
   bool fromSysex(uint8_t *sysex, uint16_t len);
-  /** Convert the global object into a sysex buffer to be sent to the
-   * machinedrum. **/
+  /** Convert the sound object into a sysex buffer to be sent to the
+   * AnalogFour. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   uint16_t toSysex(ElektronDataToSysexEncoder &encoder);

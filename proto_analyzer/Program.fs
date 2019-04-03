@@ -346,6 +346,53 @@ let ``extract sounds`` com =
     File.WriteAllLines("sounds.json", results)
 
 
+let read_records filename =
+    File.ReadLines(filename)
+  |>Seq.map JsonConvert.DeserializeObject<CommunicationRecord>
+  |>Seq.map (fun x -> x.response)
+  |>List.ofSeq
+
+type SoundInferResult = 
+    {
+        Id:   int
+        Name: string
+        Diff: (int * byte * byte) list
+    }
+
+let ``infer sound params`` () =
+    // first effective parameter payload is at 0x2b
+    let base_patch :: patches = read_records "sounds.json"
+    let inferer (pid: int) 
+                (p: byte list) =
+        let zip   = List.zip base_patch p |> List.mapi (fun i (a,b) -> (i,a,b))
+        let diff  = List.choose (fun ((i,a,b) as x) -> if a<>b && i >= 0x2b && i < 410 then Some x else None) zip
+        {
+            Id = pid + 1
+            Name = SoundPatches.[pid]
+            Diff = diff
+        }
+    let fmt_result {Id=pid; Name=name; Diff=diff} =
+        let inline fmt_seq (x: ^T list) = String.Join(" ", List.map (sprintf "%04x") x)
+        let offset, _base, patch  = List.unzip3 diff
+        let content = [ 
+            "-------------------------------------"
+            sprintf "Patch #%03d: %s" pid name
+            sprintf "Offset:    %s" (fmt_seq offset)
+            sprintf "Base:      %s" (fmt_seq _base)
+            sprintf "Patch:     %s" (fmt_seq patch)
+            ""
+        ]
+        String.Join("\n", content)
+
+    let results = 
+        List.mapi inferer patches
+        |> List.sortBy (fun x -> 
+            let o0, _, _ = x.Diff.Head
+            o0)
+        |> List.map (fmt_result)
+    File.WriteAllLines("sounds.inference.txt", results)
+
+
 
 [<EntryPoint>]
 let main argv =
@@ -355,17 +402,14 @@ let main argv =
 
     match argv with
     | [| "analyze"; filename |] ->
-        let data = 
-            File.ReadLines(filename)
-          |>Seq.map JsonConvert.DeserializeObject<CommunicationRecord>
-          |>Seq.map (fun x -> x.response)
-          |>List.ofSeq
+        let data = read_records filename
         Console.Clear()
         recall data 0 0
 
     | [| "B1-B16" |] -> ``extract note pitch samples from B1 to B16`` com
     | [| "C5" |] -> ``extract trigger parameters from C5`` com
     | [| "sound" |] -> ``extract sounds`` com
+    | [| "infer_snd" |] -> ``infer sound params`` ()
     | [| "collect" |]
     | _ ->
         let results = 

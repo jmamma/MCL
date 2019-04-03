@@ -232,6 +232,16 @@ public:
 		}
 	}
 
+	template<typename T>
+	uint16_t get(const T& data) {
+		uint16_t i;
+		uint8_t* pdata = &data;
+		for (i = 0; i < sizeof(data); i++) {
+			get8(pdata + i);
+		}
+		return i;
+	}
+
 	uint16_t get(uint8_t *data, uint16_t len) {
 		uint16_t i;
 		for (i = 0; i < len; i++) {

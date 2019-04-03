@@ -6,6 +6,8 @@
 
 #include "A4.h"
 
+#include <array>
+
 bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
   if (len != 0xC4 - 6) {
     //		printf("wrong length\n");
@@ -48,8 +50,26 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
   return enclen + 5;
 }
 
+/**
+ * 0xF0 [8B prologue] [1B ORIGPOS] 
+ * <begin checksum> [8B header] <begin 7bit enc> 
+ * {1B BEGIN SOUND} {4B 32-TAGS} {15B + nul NAME}
+ * <begin parameters>
+ */
+
+static constexpr std::array<uint8_t, 8> a4sound_prologue { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
+static constexpr std::array<uint8_t, 8> a4sound_header   { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
+
+static constexpr size_t a4sound_sysex_len = 415 - 2; // 2 for sysex frame
+static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
+static constexpr size_t a4sound_checksum_startidx = a4sound_origpos_idx + 1;
+static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + sizeof(a4sound_header);
+
+///  !Note, sysex frame wrappers are not included in [data..data+len)
+///  !Note, first effective payload byte is origPosition @ 0x08.
+///  !Note, checksum starts at 0x09 without origPosition.
 bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != (415 - 10 - 0)) {
+  if (len != a4sound_sysex_len) {
     GUI.setLine(GUI.LINE1);
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
@@ -60,18 +80,31 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksumAnalog(data + 1, len - 1)) {
+  if (!ElektronHelper::checkSysexChecksumAnalog(
+    data + a4sound_checksum_startidx,
+    len - a4sound_checksum_startidx)) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
 
-  // origPosition = data[3];
+  origPosition = data[a4sound_origpos_idx];
 
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
-  decoder.stop7Bit();
-  decoder.get8(&origPosition);
-  decoder.skip(2);
-  decoder.get(payload, sizeof(payload));
+  ElektronSysexDecoder decoder(
+    DATA_ENCODER_INIT(
+      data + a4sound_encoding_startidx,
+      len - a4sound_encoding_startidx - 4));
+  decoder.skip(1); // skip sound header 0x05
+  decoder.get(tags);
+  decoder.get(name);
+  decoder.get(osc[0].tuning);
+  decoder.get(osc[0].fine);
+  decoder.get(osc[1].tuning);
+  decoder.get(osc[1].fine);
+  decoder.get(osc[0].detune);
+  decoder.get(osc[1].detune);
+  decoder.get(osc[0].keytrack);
+  decoder.get(osc[1].keytrack);
+  // hold on...
   return true;
 }
 
@@ -90,7 +123,7 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();
   encoder.begin();
   encoder.pack(a4_sysex_hdr, sizeof(a4_sysex_hdr));
-  if (workSpace) {
+  if (!soundpool) {
     encoder.pack8(A4_SOUNDX_MESSAGE_ID);
   } else {
     encoder.pack8(A4_SOUND_MESSAGE_ID);
