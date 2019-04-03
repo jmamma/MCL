@@ -79,6 +79,7 @@ class A4Class {
 public:
   A4Class();
   bool connected = false;
+  MidiClass *midi = &Midi2;
   /** Send the given sysex buffer to the A4. **/
   void sendSysex(uint8_t *bytes, uint8_t cnt);
   /**

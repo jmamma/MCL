@@ -141,7 +141,7 @@ bool MidiSysexClass::recordByte(uint8_t c) {
   return false;
 }
 
-uint8_t MidiSysexClass::getByte(uint8_t n) {
+uint8_t MidiSysexClass::getSysexByte(uint8_t n) {
   if (n < maxRecordLen) {
     // Record data to specified memory buffer
     if (recordBuf != NULL) {

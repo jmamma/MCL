@@ -13,51 +13,19 @@ void MDSysexListenerClass::start() {
 }
 
 void MDSysexListenerClass::handleByte(uint8_t byte) {
-  if (MidiSysex.data[3] == 0x02) {
-    isMDMessage = true;
-  } else {
-    isMDMessage = false;
-    return;
-  }
-  msgType = MidiSysex.data[sizeof(machinedrum_sysex_hdr)];
-
-  if (isMDMessage && MidiSysex.len == sizeof(machinedrum_sysex_hdr)) {
-    msgType = byte;
-    switch (byte) {
-    case MD_GLOBAL_MESSAGE_ID:
-      //      MidiSysex.startRecord();
-      break;
-
-    case MD_KIT_MESSAGE_ID:
-      //      MidiSysex.startRecord();
-      break;
-
-    case MD_STATUS_RESPONSE_ID:
-      // MidiSysex.startRecord();
-      break;
-
-    case MD_PATTERN_MESSAGE_ID:
-      //      MidiSysex.startRecord();
-      break;
-
-    case MD_SONG_MESSAGE_ID:
-      //      MidiSysex.startRecord();
-      break;
-    }
-  }
 }
 
 void MDSysexListenerClass::end_immediate() {
 }
 
 void MDSysexListenerClass::end() {
-  if (MidiSysex.data[3] == 0x02) {
+  if (MD.midi->midiSysex.getSysexByte(3) == 0x02) {
     isMDMessage = true;
   } else {
     isMDMessage = false;
     return;
   }
-  msgType = MidiSysex.data[sizeof(machinedrum_sysex_hdr)];
+  msgType = MD.midi->midiSysex.getSysexByte(sizeof(machinedrum_sysex_hdr));
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
    onStatusResponseCallbacks.call(MidiSysex.data[6], MidiSysex.data[7]);

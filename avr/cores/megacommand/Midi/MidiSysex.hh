@@ -80,7 +80,7 @@ public:
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
   inline bool recordByte(uint8_t c);
-  inline uint8_t getByte(uint8_t n);
+  inline uint8_t getSysexByte(uint8_t n);
 
   bool callSysexCallBacks;
   uint16_t max_len;
@@ -93,7 +93,8 @@ public:
 
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(uint8_t *_data, uint16_t size) {
+  MidiSysexClass(uint8_t *_data, uint16_t size, volatile uint8_t *ptr) {
+    sysex_highmem_buf = ptr;
     data = _data;
     max_len = size;
     len = 0;

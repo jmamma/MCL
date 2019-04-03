@@ -75,7 +75,7 @@ void MDTaskClass::onStatusResponseCallback(uint8_t type, uint8_t value) {
 
 void MDTaskClass::onGlobalMessageCallback() {
   MD.loadedGlobal = false;
-  if (MD.global.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
+  if (MD.global.fromSysex(5, MidiSysex.recordLen - 5)) {
     MD.loadedGlobal = true;
     globalChangeCallbacks.call();
   } else {
@@ -85,7 +85,7 @@ void MDTaskClass::onGlobalMessageCallback() {
 
 void MDTaskClass::onKitMessageCallback() {
   MD.loadedKit = false;
-  if (MD.kit.fromSysex(MidiSysex.data + 5, MidiSysex.recordLen - 5)) {
+  if (MD.kit.fromSysex(5, MidiSysex.recordLen - 5)) {
     MD.loadedKit = true;
     if (verbose) {
       GUI.setLine(GUI.LINE1);

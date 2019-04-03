@@ -284,7 +284,7 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 //MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 
 MidiClass Midi(&MidiUart,NULL,SYSEX1_DATA_LEN, SYSEX1_DATA_BEGIN);
-MidiClass Midi2(&MidiUart,NULL,SYSEX2_DATA_LEN, SYSEX2_DATA_BEGIN);
+MidiClass Midi2(&MidiUart2,NULL,SYSEX2_DATA_LEN, SYSEX2_DATA_BEGIN);
 
 bool enable_clock_callbacks = true;
 

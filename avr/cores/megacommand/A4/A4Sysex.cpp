@@ -38,14 +38,14 @@ void A4SysexListenerClass::handleByte(uint8_t byte) {
 }
 
 void A4SysexListenerClass::end() {
-  if (MidiSysex2.data[3] == 0x06) {
+  if (Analog4.midi->midiSysex.getSysexByte(3) == 0x06) {
     isA4Message = true;
   } else {
     isA4Message = false;
     return;
   }
 
-  msgType = MidiSysex2.data[sizeof(a4_sysex_hdr)];
+  msgType = Analog4.midi->midiSysex.getSysexByte(sizeof(a4_sysex_hdr));
 
 
   switch (msgType) {
