@@ -216,16 +216,16 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
     if (in7Bit) {
 		if ((cnt7 % 8) == 0) {
 			if (data) { bits = *(ptr++); }
-            else { bits = midi->midiSysex.getSysexByte(n++); }
+            else { bits = midi->midiSysex.getByte(n++); }
 			cnt7++;
 		}
 		bits <<= 1;
         if (data) { *c = *(ptr++) | (bits & 0x80); }
-        else { *c = midi->midiSysex.getSysexByte(n++) | (bits & 0x80); }
+        else { *c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
 		cnt7++;
 	} else {
 	    if (data) { c = *(ptr++); }
-        else { *c = midi->midiSysex.getSysexByte(n++); }
+        else { *c = midi->midiSysex.getByte(n++); }
     }
 
 	DATA_ENCODER_TRUE();

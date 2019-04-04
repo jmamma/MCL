@@ -80,7 +80,7 @@ public:
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
   inline bool recordByte(uint8_t c);
-  inline uint8_t getSysexByte(uint8_t n);
+  inline uint8_t getByte(uint8_t n);
 
   bool callSysexCallBacks;
   uint16_t max_len;

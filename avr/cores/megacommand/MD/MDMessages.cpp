@@ -97,7 +97,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getSysexByte(offset + 3);
+  origPosition = midi->midiSysex.getByte(offset + 3);
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
   decoder.stop7Bit();
   decoder.get(drumRouting, 16);
@@ -309,7 +309,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
 
   origPosition = midi->midiSysex.getByte(3 + offset);
 
-  ElektronSysexDecoder decoder(DATA_ENCODER_INI(midi, offset + 4, len - 4));
+  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
   GUI.setLine(GUI.LINE2);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
@@ -499,20 +499,20 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
   return true;
 }
 
-bool MDSong::fromSysex(Midi *midi) {
+bool MDSong::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
 
   if (len < 0x1a - 7)
     return false;
 
-  if (!ElektronHelper::checkSysexChecksum(midi, data + offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
     return false;
   }
 
   numRows = (len - (0x1A - 7)) / 12;
 
-  origPosition = midi->midiSysex.getSysexByte(offset + 3);
+  origPosition = midi->midiSysex.getByte(offset + 3);
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);

@@ -463,7 +463,7 @@ bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
   bool ret = waitBlocking(&cb, timeout);
   MDSysexListener.removeOnPatternMessageCallback(&cb);
   if (ret) {
-    if (MD.pattern.fromSysex(midi) {
+    if (MD.pattern.fromSysex(midi)) {
       return true;
     }
   }

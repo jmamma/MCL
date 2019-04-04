@@ -15,7 +15,7 @@ void MNMSysexListenerClass::start() {
 }
 
 void MNMSysexListenerClass::handleByte(uint8_t byte) {
-  if (MidiSysex.len == 3) {
+  if (sysex->len == 3) {
     isMNMEncodedMessage = false;
     if (byte == 0x03) {
       isMNMMessage = true;
@@ -26,17 +26,17 @@ void MNMSysexListenerClass::handleByte(uint8_t byte) {
   }
   
   if (isMNMMessage) {
-    if (MidiSysex.len == sizeof(monomachine_sysex_hdr)) {
+    if (sysex->len == sizeof(monomachine_sysex_hdr)) {
       msgType = byte;
       switch (byte) {
       case MNM_STATUS_RESPONSE_ID:
-				// MidiSysex.startRecord();
+				// sysex->startRecord();
 				break;
 	
       case MNM_GLOBAL_MESSAGE_ID:
       case MNM_KIT_MESSAGE_ID:
       case MNM_SONG_MESSAGE_ID:
-				//				MidiSysex.resetRecord();
+				//				sysex->resetRecord();
 				isMNMEncodedMessage = false;
 				break;
 
@@ -47,17 +47,17 @@ void MNMSysexListenerClass::handleByte(uint8_t byte) {
     }
 
     if (isMNMEncodedMessage) {
-      if (MidiSysex.len >= sizeof(monomachine_sysex_hdr)) {
-				if (MidiSysex.len == 9) {
-					encoder.init(DATA_ENCODER_INIT(MidiSysex.recordBuf + MidiSysex.recordLen,
-																				 MidiSysex.maxRecordLen - MidiSysex.recordLen));
+      if (sysex->len >= sizeof(monomachine_sysex_hdr)) {
+				if (sysex->len == 9) {
+					encoder.init(DATA_ENCODER_INIT(sysex->recordBuf + sysex->recordLen,
+																				 sysex->maxRecordLen - sysex->recordLen));
 				}
-				if (MidiSysex.len < 9) {
-					if (MidiSysex.len == 8) {
+				if (sysex->len < 9) {
+					if (sysex->len == 8) {
 						msgCksum = byte;
 						msgLen++;
 					}
-					MidiSysex.recordByte(byte);
+					sysex->recordByte(byte);
 				} else {
 					if (sysexCirc.size() == 4 && byte != 0xF7) {
 						uint8_t c = sysexCirc.get(3);
@@ -82,7 +82,7 @@ void MNMSysexListenerClass::end_immediate() {
     uint16_t len = encoder.finish();
     //    printf("%x\n", len);
     if (len > 0) {
-      MidiSysex.recordLen += len;
+      sysex->recordLen += len;
     }
     msgCksum &= 0x3FFF;
     uint16_t realCksum = ElektronHelper::to16Bit7(sysexCirc.get(3), sysexCirc.get(2));
@@ -103,7 +103,7 @@ void MNMSysexListenerClass::end_immediate() {
 
   switch (msgType) {
   case MNM_STATUS_RESPONSE_ID:
-    onStatusResponseCallbacks.call(MidiSysex.data[6], MidiSysex.data[7]);
+    onStatusResponseCallbacks.call(sysex->getByte(6), sysex->getByte(7));
     break;
     
     
@@ -125,6 +125,7 @@ void MNMSysexListenerClass::end_immediate() {
   }
 }
 
-void MNMSysexListenerClass::setup() {
-  MidiSysex.addSysexListener(this);
+void MNMSysexListenerClass::setup(MidiClass *_midi) {
+  sysex = _midi->midiSysex;
+  sysex->addSysexListener(this);
 }

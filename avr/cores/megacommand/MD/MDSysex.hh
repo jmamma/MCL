@@ -90,7 +90,7 @@ public:
    * be called if you want to use the MDSysexListener (it is called
    * automatically by the MDTask subsystem though).
    **/
-  void setup();
+  void setup(MidiClass *_midi);
 
   void addOnStatusResponseCallback(MDCallback *obj,
                                    md_status_callback_ptr_t func) {

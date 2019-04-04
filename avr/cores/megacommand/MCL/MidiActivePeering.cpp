@@ -16,7 +16,7 @@ uint8_t MidiActivePeering::get_device(uint8_t port) {
 void MidiActivePeering::md_setup() {
   DEBUG_PRINT_FN();
 
-  MidiIDSysexListener.setup();
+  MidiIDSysexListener.setup(&Midi);
   MidiUart.set_speed((uint32_t)31250, 1);
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();

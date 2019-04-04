@@ -14,7 +14,7 @@ void MDTaskClass::setup(uint16_t _interval, bool _autoLoadKit, bool _autoLoadGlo
   autoLoadGlobal = _autoLoadGlobal;
   reloadGlobal = _reloadGlobal;
   
-  MDSysexListener.setup();
+  MDSysexListener.setup(MD.midi);
   MDSysexListener.addOnStatusResponseCallback
     (this, (md_status_callback_ptr_t)&MDTaskClass::onStatusResponseCallback);
   

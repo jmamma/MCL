@@ -167,12 +167,12 @@ void MNMSysexDecoder::init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset,
 DATA_ENCODER_RETURN_TYPE MNMSysexDecoder::getNextByte(uint8_t *c) {
 	if ((cnt % 8) == 0) {
         if (data) { bits = *(ptr++); }
-        else { midi->midiSysex.getSysexByte(n++); }
+        else { midi->midiSysex.getByte(n++); }
 		cnt++;
 	}
 	bits <<= 1;
 	if (data) { *c = *(ptr++) | (bits & 0x80); }
-    else { c = midi->midiSysex.getSysexByte(n++) | (bits & 0x80); }
+    else { c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
 	DATA_ENCODER_TRUE();
 }
 

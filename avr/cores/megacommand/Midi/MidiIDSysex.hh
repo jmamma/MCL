@@ -26,7 +26,7 @@ public:
   virtual void handleByte(uint8_t byte);
   virtual void end();
   virtual void end_immediate();
-  void setup();
+  void setup(MidiClass *_midi);
   void cleanup();
   /* @} */
 };
