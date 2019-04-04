@@ -90,7 +90,7 @@ public:
         return recordBuf[n];
 
       } else {
-        // Write to sysex buffers in HIGH membank
+       // Write to sysex buffers in HIGH membank
         return get_byte_bank1(sysex_highmem_buf + n);
       }
     }
