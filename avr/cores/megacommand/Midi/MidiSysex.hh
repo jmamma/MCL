@@ -83,11 +83,12 @@ public:
     put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
- uint8_t getByte(uint8_t n) {
+  uint8_t getByte(uint16_t n) {
     if (n < maxRecordLen) {
       // Record data to specified memory buffer
       if (recordBuf != NULL) {
         return recordBuf[n];
+
       } else {
         // Write to sysex buffers in HIGH membank
         return get_byte_bank1(sysex_highmem_buf + n);
@@ -104,7 +105,7 @@ public:
         return true;
       } else {
         // Write to sysex buffers in HIGH membank
-        putByte(recordLen,c);
+        putByte(recordLen, c);
         recordLen++;
       }
       return true;

@@ -20,9 +20,12 @@ void MidiSysexClass::resetRecord(uint8_t *buf, uint16_t maxLen) {
   if ((buf == NULL) && (data != NULL)) {
     recordBuf = data;
     maxRecordLen = max_len;
-  } else {
+  } else if (buf) {
     recordBuf = buf;
     maxRecordLen = maxLen;
+  }
+  else {
+    maxRecordLen = max_len;
   }
   recording = false;
   recordLen = 0;
