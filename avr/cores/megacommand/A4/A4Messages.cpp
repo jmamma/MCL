@@ -59,12 +59,39 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
 
 static constexpr std::array<uint8_t, 8> a4sound_prologue  { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
 static constexpr std::array<uint8_t, 8> a4soundx_prologue { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x59, 0x01, 0x01 };
-static constexpr std::array<uint8_t, 8> a4sound_header   { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
+static constexpr std::array<uint8_t, 8> a4sound_header    { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
+static constexpr std::array<uint8_t, 4> a4sound_footer    { 0x3a, 0xe3, 0x7a, 0x4e };
 
 static constexpr size_t a4sound_sysex_len = 415 - 2; // 2 for sysex frame
 static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
 static constexpr size_t a4sound_checksum_startidx = a4sound_origpos_idx + 1;
 static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + sizeof(a4sound_header);
+
+// caller guarantees: 1. in checksum; 2. not in 7bit enc.
+// when this routine exits, condition 1) and 2) hold.
+bool A4Sound::fromSysex_impl(ElektronSysexDecoder &decoder) {
+  decoder.start7Bit();
+  decoder.skip(1); // skip sound header 0x05
+  decoder.get(tags);
+  decoder.get(name);
+  decoder.get(sound);
+  decoder.skip(sizeof(a4sound_footer));
+  decoder.stop7Bit();
+}
+
+// caller guarantees: 1. in checksum; 2. not in 7bit enc.
+// when this routine exits, condition 1) and 2) hold.
+void A4Sound::toSysex_impl(ElektronDataToSysexEncoder &encoder)
+{
+  encoder.pack(a4sound_header);
+  encoder.start7Bit();
+  encoder.pack8(0x05);
+  encoder.pack(tags);
+  encoder.pack(name);
+  encoder.pack(sound);
+  encoder.pack(a4sound_footer);
+  encoder.stop7Bit();
+}
 
 ///  !Note, sysex frame wrappers are not included in [data..data+len)
 ///  !Note, first effective payload byte is origPosition @ 0x08.
@@ -89,16 +116,12 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   origPosition = data[a4sound_origpos_idx];
-
   ElektronSysexDecoder decoder(
     DATA_ENCODER_INIT(
       data + a4sound_encoding_startidx,
       len - a4sound_encoding_startidx - 4));
-  decoder.skip(1); // skip sound header 0x05
-  decoder.get(tags);
-  decoder.get(name);
-  decoder.get(sound);
-  // hold on...
+
+  return fromSysex_impl(decoder);
   return true;
 }
 
@@ -117,7 +140,6 @@ uint16_t A4Sound::toSysex(uint8_t *data, uint16_t len) {
 uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();
   encoder.begin();
-  encoder.pack(a4_sysex_hdr, sizeof(a4_sysex_hdr));
   if (!soundpool) {
     encoder.pack(a4soundx_prologue);
   } else {
@@ -125,16 +147,9 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
   }
   encoder.pack8(origPosition);
   encoder.startChecksum();
-  encoder.pack(a4sound_header);
-  encoder.start7Bit();
-  encoder.pack8(0x05);
-  encoder.pack(tags);
-  encoder.pack(name);
-  encoder.pack(sound);
-
+  toSysex_impl(encoder);
   uint16_t enclen = encoder.finish();
   encoder.finishChecksum();
-
   return enclen + 5;
 }
 
@@ -154,8 +169,6 @@ bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
-  // origPosition = data[3];
-
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
   decoder.stop7Bit();
   decoder.get8(&origPosition);
@@ -163,7 +176,7 @@ bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
   decoder.get((uint8_t *)&payload_start, sizeof(payload_start));
 
   for (uint8_t i = 0; i < 4; i++) {
-    decoder.get((uint8_t *)&sounds[i].payload, sizeof(sounds[i].payload));
+    sounds[i].fromSysex_impl(decoder);
     sounds[i].origPosition = i;
   }
   decoder.get((uint8_t *)&payload_end, sizeof(payload_end));
@@ -197,8 +210,7 @@ uint16_t A4Kit::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.startChecksum();
   encoder.pack(payload_start, sizeof(payload_start)); // unknow
   for (uint8_t i = 0; i < 4; i++) {
-
-    encoder.pack(sounds[i].payload, sizeof(sounds[i].payload));
+    sounds[i].toSysex_impl(encoder);
   }
   encoder.pack(payload_end, sizeof(payload_end));
   uint16_t enclen = encoder.finish();

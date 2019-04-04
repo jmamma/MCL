@@ -385,8 +385,10 @@ public:
   a4sound_t        sound;
   
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex_impl(ElektronSysexDecoder &decoder);
   /** Convert the sound object into a sysex buffer to be sent to the
    * AnalogFour. **/
+  void toSysex_impl(ElektronDataToSysexEncoder &encoder);
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
