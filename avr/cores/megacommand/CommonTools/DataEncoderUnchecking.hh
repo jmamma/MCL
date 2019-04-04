@@ -45,11 +45,22 @@ class DataEncoder {
 public:
   uint8_t *data;
   uint8_t *ptr;
+
+  uint16_t n;
+  uint16_t offset;
+
+  MidiClass *midi;
+
   virtual void init(uint8_t *_data) {
     data = _data;
     ptr = data;
   }
-
+  virtual void init(MidiClass *_midi, uint16_t _offset) {
+        offset = _offset;
+        n = offset;
+        midi = _midi;
+        data = ptr = NULL;
+ }
 	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
 		for (uint16_t i = 0; i < len; i++) {
 			pack8(inb[i]);

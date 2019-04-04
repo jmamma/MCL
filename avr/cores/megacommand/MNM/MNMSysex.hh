@@ -29,6 +29,8 @@ public:
   uint16_t msgLen;
   uint16_t msgCksum;
 
+  MidiClass *midi;
+
   MNMSysexListenerClass() : MidiSysexListenerClass() {
     ids[0] = 0;
     ids[1] = 0x20;

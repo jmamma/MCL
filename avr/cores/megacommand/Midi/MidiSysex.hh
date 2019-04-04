@@ -79,23 +79,11 @@ public:
 
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
-  bool MidiSysexClass::recordByte(uint8_t c) {
-    if (recordLen < maxRecordLen) {
-      // Record data to specified memory buffer
-      if (recordBuf != NULL) {
-        recordBuf[recordLen++] = c;
-        return true;
-      } else {
-        // Write to sysex buffers in HIGH membank
-        put_byte_bank1(sysex_highmem_buf + recordLen, c);
-        recordLen++;
-      }
-      return true;
-    }
-    return false;
+  bool putByte(uint16_t offset, uint8_t c) {
+    put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
-  uint8_t MidiSysexClass::getByte(uint8_t n) {
+ uint8_t getByte(uint8_t n) {
     if (n < maxRecordLen) {
       // Record data to specified memory buffer
       if (recordBuf != NULL) {
@@ -106,6 +94,22 @@ public:
       }
     }
     return 255;
+  }
+
+  bool recordByte(uint8_t c) {
+    if (recordLen < maxRecordLen) {
+      // Record data to specified memory buffer
+      if (recordBuf != NULL) {
+        recordBuf[recordLen++] = c;
+        return true;
+      } else {
+        // Write to sysex buffers in HIGH membank
+        putByte(recordLen,c);
+        recordLen++;
+      }
+      return true;
+    }
+    return false;
   }
   bool callSysexCallBacks;
   uint16_t max_len;

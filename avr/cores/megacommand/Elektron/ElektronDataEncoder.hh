@@ -101,7 +101,14 @@ public:
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
   }
 
+  ElektronSysexToDataEncoder(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen = 0) {
+    init(DATA_ENCODER_INIT(_midi, _offset, _sysexLen));
+  }
+
+
   virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex, uint16_t _sysexLen));
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen));
+
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
   DATA_ENCODER_RETURN_TYPE unpack8Bit();
   virtual uint16_t finish();

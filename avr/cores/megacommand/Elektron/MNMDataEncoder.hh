@@ -38,8 +38,7 @@ public:
   uint16_t totalCnt;
 
 public:
-  MNMDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
-                                          uint16_t _sysexLen = 0)) {
+  MNMDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL, uint16_t _sysexLen = 0)) {
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
   }
 
@@ -72,12 +71,20 @@ public:
   uint8_t repeat;
   uint16_t totalCnt;
 
+
+
   MNMSysexToDataEncoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
                                           uint16_t _maxLen = 0)) {
     init(DATA_ENCODER_INIT(_data, _maxLen));
   }
+  MNMSysexToDataEncoder(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset = 0,
+                                          uint16_t _maxLen = 0)) {
+   init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+  }
+
 
   virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen));
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
   DATA_ENCODER_RETURN_TYPE unpack8Bit();
   virtual uint16_t finish();
@@ -115,7 +122,7 @@ public:
 
   virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
 
-  virtual void init(DATA_ENCODER_INIT(MidiClass *midi, uint16_t offset, uint16_t _maxLen));
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t offset, uint16_t _maxLen));
 
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
   virtual DATA_ENCODER_RETURN_TYPE getNextByte(uint8_t *c);
