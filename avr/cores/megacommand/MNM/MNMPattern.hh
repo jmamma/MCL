@@ -115,8 +115,9 @@ public:
 		maxLocks = 62;
 		init();
   }
-  
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
+
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
 	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
 	
