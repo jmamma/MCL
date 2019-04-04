@@ -3,8 +3,8 @@
 #ifndef MIDISYSEX_H__
 #define MIDISYSEX_H__
 
-#include <inttypes.h>
 #include "MidiUart.h"
+#include <inttypes.h>
 
 #ifndef SYSEX_BUF_SIZE
 #define SYSEX_BUF_SIZE 1024
@@ -79,9 +79,34 @@ public:
 
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
-  inline bool recordByte(uint8_t c);
-  inline uint8_t getByte(uint8_t n);
+  bool MidiSysexClass::recordByte(uint8_t c) {
+    if (recordLen < maxRecordLen) {
+      // Record data to specified memory buffer
+      if (recordBuf != NULL) {
+        recordBuf[recordLen++] = c;
+        return true;
+      } else {
+        // Write to sysex buffers in HIGH membank
+        put_byte_bank1(sysex_highmem_buf + recordLen, c);
+        recordLen++;
+      }
+      return true;
+    }
+    return false;
+  }
 
+  uint8_t MidiSysexClass::getByte(uint8_t n) {
+    if (n < maxRecordLen) {
+      // Record data to specified memory buffer
+      if (recordBuf != NULL) {
+        return recordBuf[n];
+      } else {
+        // Write to sysex buffers in HIGH membank
+        return get_byte_bank1(sysex_highmem_buf + n);
+      }
+    }
+    return 255;
+  }
   bool callSysexCallBacks;
   uint16_t max_len;
   uint16_t recordLen;
@@ -131,9 +156,9 @@ public:
 
   void start();
   void abort();
-  //Handled by main loop
+  // Handled by main loop
   void end();
-  //Handled by interrupts
+  // Handled by interrupts
   void end_immediate();
   void handleByte(uint8_t byte);
 

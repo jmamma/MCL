@@ -125,35 +125,6 @@ void MidiSysexClass::handleByte(uint8_t byte) {
   }
 }
 
-bool MidiSysexClass::recordByte(uint8_t c) {
-  if (recordLen < maxRecordLen) {
-    // Record data to specified memory buffer
-    if (recordBuf != NULL) {
-      recordBuf[recordLen++] = c;
-      return true;
-    } else {
-      // Write to sysex buffers in HIGH membank
-      put_byte_bank1(sysex_highmem_buf + recordLen, c);
-      recordLen++;
-    }
-    return true;
-  }
-  return false;
-}
-
-uint8_t MidiSysexClass::getByte(uint8_t n) {
-  if (n < maxRecordLen) {
-    // Record data to specified memory buffer
-    if (recordBuf != NULL) {
-      return recordBuf[n];
-    } else {
-      // Write to sysex buffers in HIGH membank
-      return get_byte_bank1(sysex_highmem_buf + n);
-    }
-  }
-  return 255;
-}
-
 MididuinoSysexListenerClass::MididuinoSysexListenerClass()
     : MidiSysexListenerClass() {
   ids[0] = MIDIDUINO_SYSEX_VENDOR_1;
