@@ -384,6 +384,19 @@ let ``infer sound params`` () =
                                     (pid >= 100 || i < 0x122)  
                                  then Some x 
                                  else None)
+
+        // attach nearby MSBs
+        let ((offset_h, _, _), (offset_t, _, _))  =(diff.Head, List.last diff)
+        let msbs  = zip
+                 |> List.choose (fun ((i,a,b) as x) -> 
+                                 if i >= 0x2b && i >= offset_h - 4 && i <= offset_t + 4
+                                 then Some x 
+                                 else None)
+
+        let diff = diff @ msbs
+                |> List.sortBy (fun (i,_,_) -> i)
+                |> List.distinct
+
         {
             Id = pid + 1
             Name = SoundPatches.[pid]
@@ -395,7 +408,7 @@ let ``infer sound params`` () =
         let content = [ 
             "-------------------------------------"
             sprintf "Patch #%03d: %s" pid name
-            sprintf "MSB flg:   %s" (String.Join(" ", List.map (fun x -> if (x-0x12) % 8 = 0 then "x   " else "    ") offset))
+            sprintf "Indicator: %s" (String.Join(" ", List.map (fun (x,a,b) -> if (x-0x12) % 8 = 0 then "x   " elif a<>b then "vvvv" else "    ") diff))
             sprintf "Offset:    %s" (fmt_seq offset)
             sprintf "Base:      %s" (fmt_seq _base)
             sprintf "Patch:     %s" (fmt_seq patch)

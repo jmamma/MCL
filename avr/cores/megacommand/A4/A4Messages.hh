@@ -230,7 +230,7 @@ public:
   uint8_t          origPosition; // 0-127
   uint8_t          tags[4];      // 32 tags
   char             name[16];     // null-terminated
-  a4osc_t          osc[2];
+  a4osc_t          osc;
   a4flt_t          filter[2];
   a4env_t          envF;
   a4env_t          env2;
