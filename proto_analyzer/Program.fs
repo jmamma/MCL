@@ -361,11 +361,29 @@ type SoundInferResult =
 
 let ``infer sound params`` () =
     // first effective parameter payload is at 0x2b
+    // 7bit codec start from 0x12
     let base_patch :: patches = read_records "sounds.json"
+
+    let fix offset _from _to = List.mapi ( fun i x -> if i = offset && x = (byte _from) then (byte _to) else x )
+    // fix some incorrect samplings -- some params are changed mistakenly (encoder too sensitive)
+    // $0xa1 should be 00 or 7F but some are 1
+    // $0xbd should not be 03. (base=02, patch=06)
+    let fixes = 
+        fix 0xa1 1 0
+     >> fix 0xbd 3 2
+    let patches = List.map fixes patches
+
     let inferer (pid: int) 
                 (p: byte list) =
         let zip   = List.zip base_patch p |> List.mapi (fun i (a,b) -> (i,a,b))
-        let diff  = List.choose (fun ((i,a,b) as x) -> if a<>b && i >= 0x2b && i < 410 then Some x else None) zip
+        let diff  = zip 
+                 |> List.choose (fun ((i,a,b) as x) -> 
+                                 if a<>b && i >= 0x2b && i < 410 &&
+                                    // accidentally tweaked some mod settings. filter them
+                                    // until we're rampling the mod settings.
+                                    (pid >= 100 || i < 0x122)  
+                                 then Some x 
+                                 else None)
         {
             Id = pid + 1
             Name = SoundPatches.[pid]
@@ -377,6 +395,7 @@ let ``infer sound params`` () =
         let content = [ 
             "-------------------------------------"
             sprintf "Patch #%03d: %s" pid name
+            sprintf "MSB flg:   %s" (String.Join(" ", List.map (fun x -> if (x-0x12) % 8 = 0 then "x   " else "    ") offset))
             sprintf "Offset:    %s" (fmt_seq offset)
             sprintf "Base:      %s" (fmt_seq _base)
             sprintf "Patch:     %s" (fmt_seq patch)
