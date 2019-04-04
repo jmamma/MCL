@@ -419,7 +419,7 @@ let ``infer sound params`` () =
     let results = 
         List.mapi inferer patches
         |> List.sortBy (fun x -> 
-            let o0, _, _ = x.Diff.Head
+            let o0, _, _ = List.find (fun (_,a,b) -> a<>b) x.Diff
             o0)
         |> List.map (fmt_result)
     File.WriteAllLines("sounds.inference.txt", results)

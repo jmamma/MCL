@@ -127,91 +127,243 @@ public:
 };
 
 __attribute__((packed))
-struct a4osc_t {
-  int8_t  tuning;
-  int8_t  fine;
-  bool    keytrack;
-  uint8_t level;
-  int8_t  detune;
-  uint8_t waveform;
-  int8_t  pulse_width;
-  uint8_t pwm_speed;
-  uint8_t pwm_depth;
-  uint8_t sub;
-  bool    am;
-};
-
-__attribute__((packed))
 struct a4flt_t{
   a4ufloat_t freq;
   uint8_t    res;
+  uint8_t    res_pad;
   int8_t     overdrive;
+  int8_t     overdrive_pad;
   int8_t     keytrack;
+  int8_t     keytrack_pad;
   int8_t     env_depth;
-};
-
-__attribute__((packed))
-struct a4env_t {
-  uint8_t    attack;
-  uint8_t    decay;
-  uint8_t    sustain;
-  uint8_t    release;
-  uint8_t    shape;
-  a4time_t   gatelen;
-  uint8_t    destA;
-  a4sfloat_t depthA;
-  uint8_t    destB;
-  a4sfloat_t depthB;
-};
-
-__attribute__((packed))
-struct a4lfo_t {
-  int8_t  speed;
-  uint8_t multiplier;
-  int8_t  fade;
-  uint8_t phase;
-  uint8_t mode;
-  uint8_t wave;
-  uint8_t destA;
-  a4sfloat_t depthA;
-  uint8_t destB;
-  a4sfloat_t depthB;
+  int8_t     env_depth_pad;
 };
 
 __attribute__((packed))
 struct a4mod_t {
-  uint8_t dest[5];
-  int8_t  depth[5];
+  int8_t  depth1;
+  uint8_t pad1[2];
+  uint8_t dest1;
+  int8_t  depth2;
+  uint8_t pad2[2];
+  uint8_t dest2;
+  int8_t  depth3;
+  uint8_t pad3[2];
+  uint8_t dest3;
+  int8_t  depth4;
+  uint8_t pad4[2];
+  uint8_t dest4;
+  int8_t  depth5;
+  uint8_t pad5[2];
+  uint8_t dest5;
 };
 
 __attribute__((packed))
-struct a4sound_common_t {
-  uint8_t noise_samplehold;
-  int8_t  noise_color;
-  int8_t  noise_fade;
-  uint8_t noise_level;
-  uint8_t sync_mode;
-  uint8_t sync_amount;
-  uint8_t note_slidetime;
-  bool    note_legato;
-  uint8_t note_portamode;
-  uint8_t note_velcurve;
-  bool    osc_retrig;
-  bool    osc_drift;
-  int8_t  vibrato_fade;
-  uint8_t vibrato_speed;
-  uint8_t vibrato_depth;
-  uint8_t amp_attack;
-  uint8_t amp_decay;
-  uint8_t amp_sustain;
-  uint8_t amp_release;
-  uint8_t amp_shape;
-  uint8_t amp_chorus;
-  uint8_t amp_delay;
-  uint8_t amp_reverb;
-  uint8_t amp_level;
-  int8_t  amp_panning;
-  uint8_t amp_accent;
+struct a4sound_t {
+  // 0x2b
+  int8_t      osc1_tuning;
+  int8_t      osc1_fine;
+  int8_t      osc2_tuning;
+  int8_t      osc2_fine;
+  int8_t      osc1_detune;
+  int8_t      osc1_detune_pad;
+  int8_t      osc2_detune;
+  int8_t      osc2_detune_pad;
+  bool        osc1_keytrack;
+  bool        osc1_keytrack_pad;
+  bool        osc2_keytrack;
+  bool        osc2_keytrack_pad;
+  uint8_t     osc1_level;
+  uint8_t     osc1_level_pad;
+  uint8_t     osc2_level;
+  uint8_t     osc2_level_pad;
+  // 0x3d
+  uint8_t     osc1_waveform;
+  uint8_t     osc1_waveform_pad;
+  uint8_t     osc2_waveform;
+  uint8_t     osc2_waveform_pad;
+  uint8_t     osc1_sub;
+  uint8_t     osc1_sub_pad;
+  uint8_t     osc2_sub;
+  uint8_t     osc2_sub_pad;
+  // 0x46
+  int8_t      osc1_pulse_width;
+  int8_t      osc1_pulse_width_pad;
+  int8_t      osc2_pulse_width;
+  int8_t      osc2_pulse_width_pad;
+  uint8_t     osc1_pwm_speed;
+  uint8_t     osc1_pwm_speed_pad;
+  uint8_t     osc2_pwm_speed;
+  uint8_t     osc2_pwm_speed_pad;
+  uint8_t     osc1_pwm_depth;
+  uint8_t     osc1_pwm_depth_pad;
+  uint8_t     osc2_pwm_depth;
+  uint8_t     osc2_pwm_depth_pad;
+  uint8_t     osc_pad[6];
+  // 0x51
+  uint8_t     noise_samplehold;
+  uint8_t     noise_samplehold_pad;
+  int8_t      noise_fade;
+  int8_t      noise_fade_pad;
+  uint8_t     noise_level;
+  uint8_t     noise_level_pad;
+  bool        osc1_am;
+  bool        osc1_am_pad;
+  bool        osc2_am;
+  bool        osc2_am_pad;
+  uint8_t     sync_mode;
+  uint8_t     sync_mode_pad;
+  uint8_t     sync_amount;
+  uint8_t     sync_amount_pad;
+  int8_t      bend_depth;
+  int8_t      bend_depth_pad;
+  uint8_t     note_slidetime;
+  uint8_t     note_slidetime_pad;
+  bool        osc_retrig;
+  bool        osc_retrig_pad;
+  // 0x71
+  int8_t      vibrato_fade;
+  int8_t      vibrato_fade_pad;
+  uint8_t     vibrato_speed;
+  uint8_t     vibrato_speed_pad;
+  uint8_t     vibrato_depth;
+  uint8_t     vibrato_depth_pad;
+  // 0x78
+  a4flt_t     filter1;
+  a4flt_t     filter2;
+  uint8_t     filters_pad[2];
+  // 0x91
+  uint8_t     amp_chorus;
+  uint8_t     amp_chorus_pad;
+  uint8_t     amp_delay;
+  uint8_t     amp_delay_pad;
+  uint8_t     amp_reverb;
+  uint8_t     amp_reverb_pad;
+  int8_t      amp_panning;
+  int8_t      amp_panning_pad;
+  uint8_t     amp_level;
+  uint8_t     amp_level_pad;
+  uint8_t     amp_accent;
+  uint8_t     amp_accent_pad;
+  // 0x9f
+  uint8_t     envF_attack;
+  uint8_t     envF_attack_pad;
+  uint8_t     env2_attack;
+  uint8_t     env2_attack_pad;
+  uint8_t     amp_attack;
+  uint8_t     amp_attack_pad;
+  uint8_t     envF_decay;
+  uint8_t     envF_decay_pad;
+  uint8_t     env2_decay;
+  uint8_t     env2_decay_pad;
+  uint8_t     amp_decay;
+  uint8_t     amp_decay_pad;
+  uint8_t     envF_sustain;
+  uint8_t     envF_sustain_pad;
+  uint8_t     env2_sustain;
+  uint8_t     env2_sustain_pad;
+  uint8_t     amp_sustain;
+  uint8_t     amp_sustain_pad;
+  uint8_t     envF_release;
+  uint8_t     envF_release_pad;
+  uint8_t     env2_release;
+  uint8_t     env2_release_pad;
+  uint8_t     amp_release;
+  uint8_t     amp_release_pad;
+  // 0xbb
+  uint8_t     envF_shape;
+  uint8_t     envF_shape_pad;
+  uint8_t     env2_shape;
+  uint8_t     env2_shape_pad;
+  uint8_t     amp_shape;
+  uint8_t     amp_shape_pad;
+  a4time_t    envF_gatelen;
+  a4time_t    envF_gatelen_pad;
+  a4time_t    env2_gatelen;
+  a4time_t    env2_gatelen_pad;
+  uint8_t     envF_destA;
+  uint8_t     envF_destA_pad;
+  uint8_t     envF_destB;
+  uint8_t     envF_destB_pad;
+  uint8_t     env2_destA;
+  uint8_t     env2_destA_pad;
+  uint8_t     env2_destB;
+  uint8_t     env2_destB_pad;
+  a4sfloat_t  envF_depthB;
+  a4sfloat_t  envF_depthB_pad;
+  a4sfloat_t  envF_depthA;
+  a4sfloat_t  envF_depthA_pad;
+  a4sfloat_t  env2_depthA;
+  a4sfloat_t  env2_depthA_pad;
+  a4sfloat_t  env2_depthB;
+  a4sfloat_t  env2_depthB_pad;
+
+  int8_t      lfo1_speed;
+  int8_t      lfo1_speed_pad;
+  int8_t      lfo2_speed;
+  int8_t      lfo2_speed_pad;
+  uint8_t     lfo1_multiplier;
+  uint8_t     lfo1_multiplier_pad;
+  uint8_t     lfo2_multiplier;
+  uint8_t     lfo2_multiplier_pad;
+  int8_t      lfo1_fade;
+  int8_t      lfo1_fade_pad;
+  int8_t      lfo2_fade;
+  int8_t      lfo2_fade_pad;
+  uint8_t     lfo1_phase;
+  uint8_t     lfo1_phase_pad;
+  uint8_t     lfo2_phase;
+  uint8_t     lfo2_phase_pad;
+  uint8_t     lfo1_mode;
+  uint8_t     lfo1_mode_pad;
+  uint8_t     lfo2_mode;
+  uint8_t     lfo2_mode_pad;
+  uint8_t     lfo1_wave;
+  uint8_t     lfo1_wave_pad;
+  uint8_t     lfo2_wave;
+  uint8_t     lfo2_wave_pad;
+  uint8_t     lfo1_destA;
+  uint8_t     lfo1_destA_pad;
+  uint8_t     lfo1_destB;
+  uint8_t     lfo1_destB_pad;
+  uint8_t     lfo2_destA;
+  uint8_t     lfo2_destA_pad;
+  uint8_t     lfo2_destB;
+  uint8_t     lfo2_destB_pad;
+  a4sfloat_t  lfo1_depthA;
+  a4sfloat_t  lfo1_depthA_pad;
+  a4sfloat_t  lfo1_depthB;
+  a4sfloat_t  lfo1_depthB_pad;
+  a4sfloat_t  lfo2_depthA;
+  a4sfloat_t  lfo2_depthA_pad;
+  a4sfloat_t  lfo2_depthB;
+  a4sfloat_t  lfo2_depthB_pad;
+
+  uint8_t     lfo_pad[8];
+
+  // 0x10f
+  int8_t      noise_color;
+  uint8_t     noise_color_pad[7];
+  bool        osc_drift;
+  uint8_t     note_portamode;
+  bool        note_legato;
+  uint8_t     note_velcurve;
+  bool        f1res_boost;
+  uint8_t     f1res_boost_pad[3];
+
+  // 0x121
+  a4mod_t          mod_velocity;
+  bool             mod_velocity_pad;
+  // 0x139
+  bool             mod_velocity_bipolar;
+  // 0x13B
+  a4mod_t          mod_aftertouch;
+  // 0x151
+  a4mod_t          mod_modwheel;
+  // 0x168
+  a4mod_t          mod_pitchbend;
+  // 0x17F
+  a4mod_t          mod_breadth;
 };
 
 __attribute__((packed))
@@ -230,17 +382,7 @@ public:
   uint8_t          origPosition; // 0-127
   uint8_t          tags[4];      // 32 tags
   char             name[16];     // null-terminated
-  a4osc_t          osc;
-  a4flt_t          filter[2];
-  a4env_t          envF;
-  a4env_t          env2;
-  a4sound_common_t common;
-  bool             mod_velocity_bipolar;
-  a4mod_t          mod_velocity;
-  a4mod_t          mod_aftertouch;
-  a4mod_t          mod_modwheel;
-  a4mod_t          mod_pitchbend;
-  a4mod_t          mod_breadth;
+  a4sound_t        sound;
   
   bool fromSysex(uint8_t *sysex, uint16_t len);
   /** Convert the sound object into a sysex buffer to be sent to the
