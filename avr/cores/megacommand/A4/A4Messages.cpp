@@ -57,7 +57,8 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
  * <begin parameters>
  */
 
-static constexpr std::array<uint8_t, 8> a4sound_prologue { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
+static constexpr std::array<uint8_t, 8> a4sound_prologue  { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
+static constexpr std::array<uint8_t, 8> a4soundx_prologue { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x59, 0x01, 0x01 };
 static constexpr std::array<uint8_t, 8> a4sound_header   { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
 
 static constexpr size_t a4sound_sysex_len = 415 - 2; // 2 for sysex frame
@@ -96,14 +97,7 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
   decoder.skip(1); // skip sound header 0x05
   decoder.get(tags);
   decoder.get(name);
-  decoder.get(osc[0].tuning);
-  decoder.get(osc[0].fine);
-  decoder.get(osc[1].tuning);
-  decoder.get(osc[1].fine);
-  decoder.get(osc[0].detune);
-  decoder.get(osc[1].detune);
-  decoder.get(osc[0].keytrack);
-  decoder.get(osc[1].keytrack);
+  decoder.get(sound);
   // hold on...
   return true;
 }
@@ -112,9 +106,10 @@ uint16_t A4Sound::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart2);
   return toSysex(encoder);
 }
+
 uint16_t A4Sound::toSysex(uint8_t *data, uint16_t len) {
   ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
-  if (len < 0xC5)
+  if (len < 0xC5) // what is 0xC5?
     return 0;
   return toSysex(encoder);
 }
@@ -124,17 +119,19 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.begin();
   encoder.pack(a4_sysex_hdr, sizeof(a4_sysex_hdr));
   if (!soundpool) {
-    encoder.pack8(A4_SOUNDX_MESSAGE_ID);
+    encoder.pack(a4soundx_prologue);
   } else {
-    encoder.pack8(A4_SOUND_MESSAGE_ID);
+    encoder.pack(a4sound_prologue);
   }
-  encoder.pack(a4_sysex_proto_version, sizeof(a4_sysex_proto_version));
   encoder.pack8(origPosition);
-
   encoder.startChecksum();
-  encoder.pack8(0x78); // unknown
-  encoder.pack8(0x3E); // unknown
-  encoder.pack((uint8_t *)&payload, sizeof(payload));
+  encoder.pack(a4sound_header);
+  encoder.start7Bit();
+  encoder.pack8(0x05);
+  encoder.pack(tags);
+  encoder.pack(name);
+  encoder.pack(sound);
+
   uint16_t enclen = encoder.finish();
   encoder.finishChecksum();
 

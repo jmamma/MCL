@@ -48,18 +48,25 @@ public:
     ptr = data;
   }
 
+	template <typename T>
+	DATA_ENCODER_RETURN_TYPE pack(const T &in) {
+		uint8_t *inb = (uint8_t *)&in;
+		for (uint16_t i = 0; i < sizeof(T); i++)
+		{
+			pack8(inb[i]);
+		}
+	}
+
 	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
-		for (uint16_t i = 0; i < len; i++) {
+		for (uint16_t i = 0; i < len; i++)
+		{
 			pack8(inb[i]);
 		}
 	}
 
 	virtual DATA_ENCODER_RETURN_TYPE packb(bool inb) {
-		if (inb)
-			pack8(1);
-		else
-			pack8(0);
-  }
+		pack8((uint8_t)inb);
+	}
 
 	uint16_t getIdx() {
 		return ptr - data;
