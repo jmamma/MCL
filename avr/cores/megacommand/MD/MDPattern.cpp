@@ -99,7 +99,7 @@ if ((len != (0xACA - 6)) && (len != (0x1521 - 6)))  {
 	isExtraPattern = (len == (0x1521 - 6));
 	
 	if (!ElektronHelper::checkSysexChecksum(data, len)) {
-		return false;
+        return false;
 	}
 	
 	origPosition = data[3];
@@ -194,13 +194,18 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 #else
 		printf("WRONG LENGTH: %x\n", len);
 #endif
+
+        DEBUG_PRINTLN("WRONG LENGTH");
+        DEBUG_PRINTLN(len);
 		return false;
 	}
 	
 	isExtraPattern = (len == (0x1521 - 6));
 	
 	if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
-		return false;
+		
+        DEBUG_PRINTLN("bad checksum");
+            return false;
 	}
 	
 	origPosition = midi->midiSysex.getByte(3);
