@@ -122,7 +122,7 @@ public:
 
   virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
 
-  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t offset, uint16_t _maxLen));
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen));
 
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
   virtual DATA_ENCODER_RETURN_TYPE getNextByte(uint8_t *c);
