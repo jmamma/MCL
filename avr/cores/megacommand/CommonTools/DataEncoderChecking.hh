@@ -23,8 +23,8 @@
 
 #define GET_MACRO(_1,_2,_3,NAME,...) NAME
 #define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
-#define DATA_ENCODER_INIT2(data, length) data
-#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
+#define DATA_ENCODER_INIT2(data, length) data, length
+#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset, length
 
 #define DATA_ENCODER_CHECKING 1
 
@@ -57,10 +57,11 @@ public:
     ptr = data;
   }
 
-  virtual void init(MidiClass *_midi, uint16_t _offset) {
+  virtual void init(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen) {
         offset = _offset;
         n = offset;
         midi = _midi;
+        maxLen = _maxLen;
         data = ptr = NULL;
   }
 
@@ -194,11 +195,12 @@ public:
 		ptr = data;
 	}
 
-    virtual void init(MidiClass *_midi, uint16_t _offset) {
+    virtual void init(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen) {
         offset = _offset;
         n = offset;
         midi = _midi;
         data = ptr = NULL;
+        maxLen = _maxLen;
     }
 
 	uint16_t getIdx() {
