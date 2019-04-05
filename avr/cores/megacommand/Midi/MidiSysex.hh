@@ -102,11 +102,9 @@ public:
       // Record data to specified memory buffer
       if (recordBuf != NULL) {
         recordBuf[recordLen++] = c;
-        return true;
       } else {
         // Write to sysex buffers in HIGH membank
-        putByte(recordLen, c);
-        recordLen++;
+        putByte(recordLen++, c);
       }
       return true;
     }
