@@ -69,8 +69,6 @@ template <int N, class T = uint8_t>
   };
 };
 
-#define RB_INC(x) (T)(((x) + 1) % N)
-
 template <class C, int N, class T>
   CRingBuffer<C, N, T>::CRingBuffer() {
   rd = 0;
@@ -105,7 +103,8 @@ template <class C, int N, class T>
     return false;
   }
   memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
-  wr = RB_INC(wr);
+  wr++;
+  if (wr == N) { wr = 0; }
   return true;
 }
 
@@ -125,7 +124,8 @@ template <class C, int N, class T>
   if (isEmpty())
     return false;
   memcpy(dst, (void *)&buf[rd], sizeof(C));
-  rd = RB_INC(rd);
+  rd++;
+  if (rd == N) { rd = 0; }
   return true;
 }
 
