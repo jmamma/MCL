@@ -43,7 +43,6 @@ class MidiUartClass;
 
 
 #define TX_IRQ 1
-#define RX_BUF_SIZE 128
 
 //#define RX_BUF_SIZE 2048
 #if (RX_BUF_SIZE >= 256)
@@ -51,7 +50,6 @@ class MidiUartClass;
 #else
 #define RX_BUF_TYPE uint8_t
 #endif
-#define TX_BUF_SIZE 3000
 //define TX_BUF_SIZE 512
 
 #if (TX_BUF_SIZE >= 256)
@@ -65,9 +63,9 @@ void isr_midi();
 
 class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
-  
+
  public:
-  MidiUartClass();
+  MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
   virtual void m_putc(uint8_t c);
   virtual void m_putc_immediate(uint8_t c);
   virtual bool avail();
@@ -75,10 +73,10 @@ class MidiUartClass : public MidiUartParent {
 
 	void set_speed(uint32_t speed, uint8_t port);
 
-  volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
+  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
 
 #ifdef TX_IRQ
-  volatile RingBuffer<TX_BUF_SIZE, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
 #endif
 
 };
@@ -89,16 +87,16 @@ extern bool enable_clock_callbacks;
 
 class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
-  
+
  public:
-  MidiUartClass2();
+  MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
   virtual bool avail();
   virtual uint8_t m_getc();
   virtual void m_putc(uint8_t c);
   virtual void m_putc_immediate(uint8_t c);
-  volatile RingBuffer<RX_BUF_SIZE, RX_BUF_TYPE> rxRb;
+  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
 
-  volatile RingBuffer<TX_BUF_SIZE, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
 };
 
 extern MidiUartClass2 MidiUart2;
