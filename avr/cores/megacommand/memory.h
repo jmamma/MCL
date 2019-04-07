@@ -47,21 +47,18 @@ class RamBankSelector {
 #endif// __cplusplus
 
 extern inline void memcpy_bank1(volatile void *dst, volatile void *src, uint32_t len) {
-  switch_ram_bank(1);
+  select_bank(1);
   memcpy(dst, src, len);
-  switch_ram_bank(0);
 }
 
 extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
-  switch_ram_bank(1);
+  select_bank(1);
   *dst = byte;
-  switch_ram_bank(0);
 }
 
 extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
-  switch_ram_bank(1);
+  select_bank(1);
   uint8_t c = *dst;
-  switch_ram_bank(0);
   return c;
 }
 
