@@ -79,7 +79,7 @@ public:
 
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
-  inline void putByte(uint16_t offset, uint8_t c) {
+  void putByte(uint16_t offset, uint8_t c) {
     put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
