@@ -632,8 +632,8 @@ void GridPage::apply_slot_changes() {
       slot.active = row_headers[cur_row].track_type[track + getCol()];
       //  if (slot.active != EMPTY_TRACK_TYPE) {
       slot.store_track_in_grid(track + getCol(), getRow());
-      proj.file.sync();
     }
+    proj.file.sync();
     if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
       md_track.load_track_from_grid(track + getCol(), getRow());
 
