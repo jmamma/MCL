@@ -390,7 +390,7 @@ void MDSeqTrack::clear_track(bool locks) {
 void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   DEBUG_PRINT_FN();
 
-  if (md_track->trigPattern == 0) {
+  if (md_track->trigPattern == 0 && ((pattern_mask | lock_mask) != 0)) {
   //If the MD sequencer data is empty, abort merge.
   //This will prevent unnecessary length change of internal seq pattern
   return;
