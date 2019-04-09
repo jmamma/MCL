@@ -85,11 +85,9 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
   }
 }
 
-
 bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
 	init();
-	
-	if ((len != (0xACA - 6)) && (len != (0x1521 - 6)))  {
+if ((len != (0xACA - 6)) && (len != (0x1521 - 6)))  {
 #ifndef HOST_MIDIDUINO
 		GUI.flash_string_fill("WRONG LENGTH");
 #else
@@ -101,11 +99,117 @@ bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
 	isExtraPattern = (len == (0x1521 - 6));
 	
 	if (!ElektronHelper::checkSysexChecksum(data, len)) {
-		return false;
+        return false;
 	}
 	
 	origPosition = data[3];
 	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 0xA - 6, 74));
+	decoder.get32(trigPatterns, 16);
+	
+	decoder.start7Bit();
+	decoder.get32(lockPatterns, 16);
+	
+	decoder.start7Bit();
+    
+    decoder.get32(&accentPattern);
+
+    decoder.get32(&slidePattern);
+	decoder.get32(&swingPattern);
+
+    decoder.get32(&swingAmount);
+
+	/*
+	 accentPattern = decoder.gget32();
+	 slidePattern  = decoder.gget32();
+	 swingPattern  = decoder.gget32();
+	 swingAmount   = decoder.gget32();
+	 */
+	decoder.stop7Bit();
+	
+    
+    
+	
+	 accentAmount  = decoder.gget8();
+	 patternLength = decoder.gget8();
+	 doubleTempo   = decoder.gget8();
+	 scale         = decoder.gget8();
+	 kit           = decoder.gget8();
+	 numLockedRows = decoder.gget8();
+	 
+	
+	decoder.start7Bit();
+	for (uint8_t i = 0; i < 64; i++) {
+		decoder.get(locks[i], 32);
+	}
+	
+	decoder.start7Bit();
+	decoder.get32(&accentEditAll);
+    decoder.get32(&slideEditAll);
+    decoder.get32(&swingEditAll);
+	decoder.get32(accentPatterns, 16);
+	decoder.get32(slidePatterns, 16);
+	decoder.get32(swingPatterns, 16);
+	
+	numRows = 0;
+	for (int i = 0; i < 16; i++) {
+		for (int j = 0; j < 24; j++) {
+			if (IS_BIT_SET32(lockPatterns[i], j)) {
+				paramLocks[i][j] = numRows;
+				lockTracks[numRows] = i;
+				lockParams[numRows] = j;
+				numRows++;
+			}
+		}
+	}
+	
+	if (isExtraPattern) {
+		decoder.start7Bit();
+		decoder.get32hi(trigPatterns, 16);
+		decoder.get32hi(&accentPattern);
+		
+		 decoder.get32hi(&slidePattern);
+		 decoder.get32hi(&swingPattern);
+		 
+		for (uint8_t i = 0; i < 64; i++) {
+			decoder.get(locks[i] + 32, 32);
+		}
+          decoder.get32hi(accentPatterns, 16);
+          decoder.get32hi(slidePatterns, 16);
+				decoder.get32hi(swingPatterns, 16);
+	}
+	
+	return true;
+}
+
+
+bool MDPattern::fromSysex(MidiClass *midi) {
+
+	init();
+	uint16_t len = midi->midiSysex.recordLen - 5;
+    uint16_t offset = 5;
+	
+	if ((len != (0xACA - 6)) && (len != (0x1521 - 6)))  {
+#ifndef HOST_MIDIDUINO
+		GUI.flash_string_fill("WRONG LENGTH");
+#else
+		printf("WRONG LENGTH: %x\n", len);
+#endif
+
+        DEBUG_PRINTLN("WRONG LENGTH");
+        DEBUG_PRINTLN(len);
+		return false;
+	}
+	
+	isExtraPattern = (len == (0x1521 - 6));
+	
+	if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+		
+        DEBUG_PRINTLN("bad checksum");
+            return false;
+	}
+	
+	origPosition = midi->midiSysex.getByte(3);
+	ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 0xA - 6, 74));
 	decoder.get32(trigPatterns, 16);
 	
 	decoder.start7Bit();

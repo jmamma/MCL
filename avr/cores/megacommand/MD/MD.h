@@ -50,6 +50,7 @@ class MDBlockCurrentStatusCallback : public MDCallback {
    **/
 
 public:
+
   uint8_t type;
   uint8_t value;
   bool received;
@@ -136,6 +137,7 @@ class MDClass {
 public:
   MDClass();
   bool connected = false;
+  MidiClass *midi = &Midi;
   /** Stores the current global of the MD, usually set by the MDTask. **/
   int currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/

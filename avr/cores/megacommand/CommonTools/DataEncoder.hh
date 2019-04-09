@@ -39,7 +39,6 @@ class UartDataEncoder : public DataEncoder {
 		 
 public:
 	MidiUartParent *uart;
-	
 	UartDataEncoder(MidiUartParent *_uart) {
 		uart = _uart;
 	}

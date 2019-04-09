@@ -21,7 +21,11 @@
 #define DATA_ENCODER_TRUE()  return
 #define DATA_ENCODER_FALSE() return
 
-#define DATA_ENCODER_INIT(data, length) data
+//Required for Macro argument overloading
+#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
+#define DATA_ENCODER_INIT2(data, length) data
+#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
 
 #define DATA_ENCODER_UNCHECKING 1
 
@@ -31,7 +35,6 @@
  *
  * @{
  **/
-
 
 /** DataEncoder class, packing various values into a data buffer. **/
 class DataEncoder {
@@ -43,11 +46,21 @@ public:
   uint8_t *data;
   uint8_t *ptr;
 
+  uint16_t n;
+  uint16_t offset;
+
+  MidiClass *midi;
+
   virtual void init(uint8_t *_data) {
     data = _data;
     ptr = data;
   }
-
+  virtual void init(MidiClass *_midi, uint16_t _offset) {
+        offset = _offset;
+        n = offset;
+        midi = _midi;
+        data = ptr = NULL;
+ }
 	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
 		for (uint16_t i = 0; i < len; i++) {
 			pack8(inb[i]);
@@ -145,15 +158,27 @@ class DataDecoder {
 	 * @{
 	 **/
 public:
-	uint8_t *data;
-	uint8_t *ptr;
+    uint8_t *data;
+    uint8_t *ptr;
 
-	DataDecoder() {
+    uint16_t n;
+    uint16_t offset;
+
+    MidiClass *midi;
+
+    DataDecoder() {
 	}
 
 	virtual void init(uint8_t *_data) {
-		data = _data;
-		ptr = data;
+        data = _data;
+        ptr = data;
+    }
+
+    virtual void init(MidiClass *_midi, uint16_t _offset) {
+		offset = _offset;
+		n = offset;
+        midi = _midi;
+        data = ptr = NULL;
 	}
 
 	uint16_t getIdx() {
@@ -231,14 +256,14 @@ public:
 			get64(&c[i]);
 		}
 	}
-
-	uint16_t get(uint8_t *data, uint16_t len) {
-		uint16_t i;
+    uint16_t get(uint8_t *data, uint16_t len) {
+ 	    uint16_t i;
 		for (i = 0; i < len; i++) {
 			get8(data + i);
 		}
 		return i;
-	}
+
+    }
 
 	uint8_t gget8() {
 		uint8_t b;

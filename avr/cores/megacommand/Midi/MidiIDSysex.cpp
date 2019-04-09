@@ -27,30 +27,30 @@ void MidiIDSysexListenerClass::end_immediate() {
   MidiID *dev = &(sysex->uart->device);
   uint16_t p = (uint16_t) dev;
   DEBUG_PRINTLN(p);
- 
 
-  if ((MidiSysex.data[0] == ids[0]) && (MidiSysex.data[2] == ids[1]) &&
-      (MidiSysex.data[3] == ids[2])) {
-    uint8_t i = 4;
-    dev->manufacturer_id[0] = MidiSysex.data[i];
-    if (MidiSysex.data[i++] == 0) {
-      dev->manufacturer_id[1] = MidiSysex.data[i++];
-      dev->manufacturer_id[2] = MidiSysex.data[i++];
+  uint8_t i = 2;
+  if ((sysex->getByte(i++) == 0x06) &&
+      (sysex->getByte(i++) == 0x02)) {
+
+    DEBUG_PRINTLN("MidiID message detected");
+    dev->manufacturer_id[0] = sysex->getByte(i++);
+    if (dev->manufacturer_id[0] == 0) {
+      dev->manufacturer_id[1] = sysex->getByte(i++);
+      dev->manufacturer_id[2] = sysex->getByte(i++);
     }
-    DEBUG_PRINTLN(MidiSysex.data[i]);
-    dev->family_code[0] = MidiSysex.data[i++];
-    dev->family_code[1] = MidiSysex.data[i++];
-    dev->family_member[0] = MidiSysex.data[i++];
-    dev->family_member[1] = MidiSysex.data[i++];
+    dev->family_code[0] = sysex->getByte(i++);
+    dev->family_code[1] = sysex->getByte(i++);
+    dev->family_member[0] = sysex->getByte(i++);
+    dev->family_member[1] = sysex->getByte(i++);
 
-    dev->software_revision[0] = MidiSysex.data[i++];
-    dev->software_revision[1] = MidiSysex.data[i++];
-    dev->software_revision[2] = MidiSysex.data[i++];
-    dev->software_revision[3] = MidiSysex.data[i++];
-    
-    msgType = MidiSysex.data[2];
+    dev->software_revision[0] = sysex->getByte(i++);
+    dev->software_revision[1] = sysex->getByte(i++);
+    dev->software_revision[2] = sysex->getByte(i++);
+    dev->software_revision[3] = sysex->getByte(i++);
+
+    msgType = sysex->getByte(2);
     isIDMessage = true;
-    
+    DEBUG_PRINTLN("fam code");
     DEBUG_PRINTLN(dev->family_code[0]);
    return;
   }
@@ -61,7 +61,8 @@ void MidiIDSysexListenerClass::end_immediate() {
   }
 
 }
-void MidiIDSysexListenerClass::setup() {
+void MidiIDSysexListenerClass::setup(MidiClass *_midi) {
+  sysex = &(_midi->midiSysex);
   //MidiSysex.addSysexListener(this);
 //  MidiSysex2.addSysexListener(this);
 }

@@ -89,6 +89,8 @@ public:
 
   /** Read in a global message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
+
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -254,6 +256,7 @@ public:
 
   /** Read in a kit message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Encode and send a kit **/
   uint16_t toSysex();
   /** Convert a kit object to a sysex buffer ready to be sent to the MD. **/
@@ -320,6 +323,7 @@ public:
 
   /** Read in a song message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Convert a song object to a sysex buffer ready to be sent to the MD. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   /**

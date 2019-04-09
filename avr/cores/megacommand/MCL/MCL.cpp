@@ -39,9 +39,9 @@ void MCL::setup() {
   md_events.setup();
   mcl_actions.setup();
   mcl_seq.setup();
-  MDSysexListener.setup();
-  A4SysexListener.setup();
-  MidiSDSSysexListener.setup();
+  MDSysexListener.setup(&Midi);
+  A4SysexListener.setup(&Midi2);
+  MidiSDSSysexListener.setup(&Midi);
   midi_setup.cfg_ports();
   for (uint8_t n = 0; n < 16; n++) { SET_BIT32(mcl_cfg.mutes, n); }
   mute_page.midi_events.setup_callbacks();

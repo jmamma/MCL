@@ -87,7 +87,7 @@ uint8_t sysexBuf[SYSEX_BUF_SIZE];
   uint16_t sysexBufLen;
 
   MidiClass(MidiUartParent *_uart = NULL, uint8_t *_sysexBuf = NULL,
-            uint16_t _sysexBufLen = 0);
+            uint16_t _sysexBufLen = 0, volatile uint8_t *ptr = NULL);
 
   void init();
   void handleByte(uint8_t c);

@@ -164,6 +164,13 @@ void ElektronSysexToDataEncoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t
   cnt = 0;
 	retLen = 0;
 }
+void ElektronSysexToDataEncoder::init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen)) {
+	DataEncoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+	cnt7 = 0;
+  cnt = 0;
+	retLen = 0;
+}
+
 
 DATA_ENCODER_RETURN_TYPE ElektronSysexToDataEncoder::pack8(uint8_t inb) {
 	if ((cnt % 8) == 0) {
@@ -182,7 +189,12 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexToDataEncoder::pack8(uint8_t inb) {
 
 DATA_ENCODER_RETURN_TYPE ElektronSysexToDataEncoder::unpack8Bit() {
 	for (uint8_t i = 0; i < cnt7; i++) {
+        if (data) {
 		*(ptr++) = tmpData[i];
+        }
+        else {
+        midi->midiSysex.putByte(n++,tmpData[i]);
+        }
 		retLen++;
 	}
 	cnt7 = 0;
@@ -201,23 +213,32 @@ uint16_t ElektronSysexToDataEncoder::finish() {
 #endif
 }
 
- void ElektronSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen)) {
-	 DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+void ElektronSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen)) {
+     DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+	 start7Bit();
+}
+
+ void ElektronSysexDecoder::init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen)) {
+	 DataDecoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
 	 start7Bit();
 }
 
 DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
-	if (in7Bit) {
+
+    if (in7Bit) {
 		if ((cnt7 % 8) == 0) {
-			bits = *(ptr++);
+			if (data) { bits = *(ptr++); }
+            else { bits = midi->midiSysex.getByte(n++); }
 			cnt7++;
 		}
 		bits <<= 1;
-		*c = *(ptr++) | (bits & 0x80);
+        if (data) { *c = *(ptr++) | (bits & 0x80); }
+        else { *c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
 		cnt7++;
 	} else {
-		*c = *(ptr++);
-	}
+	    if (data) { c = *(ptr++); }
+        else { *c = midi->midiSysex.getByte(n++); }
+    }
 
 	DATA_ENCODER_TRUE();
 }

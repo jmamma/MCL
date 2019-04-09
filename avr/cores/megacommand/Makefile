@@ -32,7 +32,7 @@ CFLAGS = -c -g -Os -Wextra -std=gnu11 -ffunction-sections -fdata-sections -MMD -
 CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x82100,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 CLDFLAGS = -Wall -Wextra -Os -flto -fuse-linker-plugin -Wl,--gc-section,--defsym=__stack=0x8020ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega2560
 #DIRS = $(shell find . -type d | cut -c3- | uniq | grep -v 'github' | grep -v -e '^$')
-DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD
+DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD MNM
 #DIRS = CommonTools Midi GUI SDCard MNM MD MidiTools Elektron
 #LDIRS = $(foreach dir,$(DIRS),$(LBASE_DIR)/$(dir)) $(BASE_DIR)/hardware/cores/$(CORE)
 #LDIRS = $(foreach dir,$(DIRS),$(LBASE_DIR)/$(dir)) $(BASE_DIR)/hardware/cores/$(CORE)

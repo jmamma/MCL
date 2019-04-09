@@ -55,7 +55,7 @@ public:
    * be called if you want to use the A4SysexListener (it is called
    * automatically by the A4Task subsystem though).
    **/
-  void setup();
+  void setup(MidiClass *_midi);
 
   void addOnSoundMessageCallback(A4Callback *obj, A4_callback_ptr_t func) {
     onSoundMessageCallbacks.add(obj, func);
