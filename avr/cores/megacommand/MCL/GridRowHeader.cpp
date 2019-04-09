@@ -38,6 +38,17 @@ bool GridRowHeader::read(int16_t row) {
   return ret;
 }
 
+bool GridRowHeader::is_empty() {
+  DEBUG_PRINT_FN();
+  uint8_t count = 0;
+  for (uint8_t x = 0; x < GRID_WIDTH; x++) {
+    if (track_type[x] == 0xFF) {
+    count++;
+    }
+    DEBUG_PRINTLN(track_type[x]);
+  }
+  return (count == GRID_WIDTH - 1);
+}
 
 void GridRowHeader::init() {
   active = false;
