@@ -225,13 +225,11 @@ void GridTask::run() {
               slots_loaded[n] = 1;
             }
           }
-          if (md_track->active == MD_TRACK_TYPE) {
 
             mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
             mcl_seq.md_tracks[n].mute_until_start = true;
 
             md_track->load_seq_data(n);
-          }
         }
 
         else {
@@ -276,8 +274,8 @@ void GridTask::run() {
             //  DEBUG_PRINTLN("storing");
             md_temp_track->load_from_mem(n);
 
-            if (memcmp(&(md_temp_track->machine), &(md_track->machine),
-                       sizeof(MDMachine)) != 0) {
+            if ((md_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(md_temp_track->machine), &(md_track->machine),
+                       sizeof(MDMachine)) != 0)) {
               mcl_actions.send_machine[n] = 0;
             } else {
               mcl_actions.send_machine[n] = 1;
@@ -309,7 +307,7 @@ void GridTask::run() {
           DEBUG_PRINTLN(mcl_actions.chains[n].row);
           if (a4_track->load_track_from_grid(n, mcl_actions.chains[n].row, 0)) {
             a4_temp_track->load_from_mem(n);
-            if (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0) {
+            if ((a4_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0)) {
               mcl_actions.send_machine[n] = 0;
             } else {
               mcl_actions.send_machine[n] = 1;

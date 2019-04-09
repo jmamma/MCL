@@ -272,11 +272,15 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      send_machine[n] = 0;
       if (md_track->load_track_from_grid(n, row, len)) {
-
         md_track->store_in_mem(n);
         slots_cached[n] = 1;
+      }
+      if (md_track->active != EMPTY_TRACK_TYPE) {
+      send_machine[n] = 0;
+      }
+      else {
+      send_machine[n] = 1;
       }
 
       uint8_t trigGroup = md_track->machine.trigGroup;
@@ -294,10 +298,15 @@ void MCLActions::prepare_next_chain(int row) {
     }
   }
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
-    send_machine[n] = 0;
     if (note_interface.notes[n] > 0) {
       if (a4_track->load_track_from_grid(n, row, 0)) {
         a4_track->store_in_mem(n);
+      }
+      if (a4_track->active != EMPTY_TRACK_TYPE) {
+      send_machine[n] = 0;
+      }
+      else {
+      send_machine[n] = 1;
       }
     }
   }
