@@ -34,15 +34,10 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
 
   DEBUG_PRINT_FN();
   if (column < NUM_MD_TRACKS) {
-
     if (md_track->load_track_from_grid(column, row)) {
       memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
-
       grid_page.active_slots[column] = row;
-      if (md_track->active != EMPTY_TRACK_TYPE) {
-        md_track->place_track_in_sysex(curtrack, column);
-        return true;
-      }
+      md_track->place_track_in_sysex(curtrack, column);
     }
   } else {
     if (Analog4.connected) {
@@ -51,18 +46,14 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
         memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
 
         grid_page.active_slots[column] = row;
-        if (a4_track->active != EMPTY_TRACK_TYPE) {
-          return a4_track->place_track_in_sysex(curtrack, column,
-                                                analogfour_sound);
-        }
+        return a4_track->place_track_in_sysex(curtrack, column,
+                                              analogfour_sound);
       }
     } else {
       if (ext_track->load_track_from_grid(column, row, 0)) {
         memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
         grid_page.active_slots[column] = row;
-        if (ext_track->active != EMPTY_TRACK_TYPE) {
-          return ext_track->place_track_in_sysex(curtrack, column);
-        }
+        return ext_track->place_track_in_sysex(curtrack, column);
       }
     }
   }
@@ -277,10 +268,9 @@ void MCLActions::prepare_next_chain(int row) {
         slots_cached[n] = 1;
       }
       if (md_track->active != EMPTY_TRACK_TYPE) {
-      send_machine[n] = 0;
-      }
-      else {
-      send_machine[n] = 1;
+        send_machine[n] = 0;
+      } else {
+        send_machine[n] = 1;
       }
 
       uint8_t trigGroup = md_track->machine.trigGroup;
@@ -303,10 +293,9 @@ void MCLActions::prepare_next_chain(int row) {
         a4_track->store_in_mem(n);
       }
       if (a4_track->active != EMPTY_TRACK_TYPE) {
-      send_machine[n] = 0;
-      }
-      else {
-      send_machine[n] = 1;
+        send_machine[n] = 0;
+      } else {
+        send_machine[n] = 1;
       }
     }
   }
@@ -440,7 +429,8 @@ void MCLActions::send_pattern_kit_to_md() {
         }
       }
 
-      else if ((curtrack + (i - first_note) < NUM_MD_TRACKS) && (i < NUM_MD_TRACKS)) {
+      else if ((curtrack + (i - first_note) < NUM_MD_TRACKS) &&
+               (i < NUM_MD_TRACKS)) {
         track = curtrack + (i - first_note);
         place_track_inpattern(track, i, grid_page.getRow(), &sound_array[0],
                               &empty_track);
@@ -661,8 +651,8 @@ void MCLActions::send_pattern_kit_to_md() {
         next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
       } else {
-        next_transitions[n] =
-            MidiClock.div16th_counter - mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count;
+        next_transitions[n] = MidiClock.div16th_counter -
+                              mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count;
       }
       calc_next_slot_transition(n);
     }
@@ -739,12 +729,12 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
       if (n < NUM_MD_TRACKS) {
         if (next_transitions[n] == next_transition) {
           md_track->load_from_mem(n);
-            md_latency +=
-                calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
+          md_latency +=
+              calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
         }
       } else {
         if (next_transitions[n] == next_transition) {
-            a4_latency += A4_SOUND_LENGTH;
+          a4_latency += A4_SOUND_LENGTH;
         }
       }
     }
