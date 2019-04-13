@@ -1,5 +1,4 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
-
 #include "MD.h"
 #include "MDPattern.hh"
 #include "Elektron.hh"
@@ -294,7 +293,6 @@ uint16_t MDPattern::toSysex() {
 
 uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
 	ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
-	
 	isExtraPattern = patternLength > 32;
 	uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 	
@@ -307,6 +305,7 @@ uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
 uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
 	isExtraPattern = patternLength > 32;
 	
+    if (MidiClock.state == 2) { encoder.throttle = true; }
 	cleanupLocks();
 	recalculateLockPatterns();
 	

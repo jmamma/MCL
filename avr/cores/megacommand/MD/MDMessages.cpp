@@ -369,6 +369,7 @@ uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
+  if (MidiClock.state == 2) { encoder.throttle = true; }
   encoder.stop7Bit();
   encoder.begin();
   encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));

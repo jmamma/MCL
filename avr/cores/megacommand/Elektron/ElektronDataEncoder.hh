@@ -7,6 +7,8 @@
 #include "Midi.h"
 #include "WProgram.h"
 
+#define THROTTLE_US 100
+
 /**
  * \addtogroup Elektron
  *
@@ -36,15 +38,17 @@ protected:
   uint8_t buf[8];
   uint16_t checksum;
   bool inChecksum;
-
 public:
+  bool throttle;
   ElektronDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
                                                uint16_t _sysexLen = 0)) {
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
+    throttle = false;
   }
 
   ElektronDataToSysexEncoder(MidiUartParent *_uart) {
     init(DATA_ENCODER_INIT(NULL, 0), _uart);
+    throttle = false;
   }
 
   /** Start the conversion of 8-bit data into 7-bit data. **/
