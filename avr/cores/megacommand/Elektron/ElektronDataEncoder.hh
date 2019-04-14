@@ -7,7 +7,7 @@
 #include "Midi.h"
 #include "WProgram.h"
 
-#define THROTTLE_US 100
+#define THROTTLE_US 160
 
 /**
  * \addtogroup Elektron
