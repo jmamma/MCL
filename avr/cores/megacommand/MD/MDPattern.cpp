@@ -303,9 +303,10 @@ uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
+    DEBUG_PRINT_FN();
 	isExtraPattern = patternLength > 32;
 	
-    if (MidiClock.state == 2) { encoder.throttle = true; }
+    if ((MidiClock.state == 2)  && (MD.midi->uart->speed > 62500)) { DEBUG_PRINTLN("using throttle"); encoder.throttle = true; }
 	cleanupLocks();
 	recalculateLockPatterns();
 	

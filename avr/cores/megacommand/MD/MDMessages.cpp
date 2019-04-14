@@ -130,7 +130,6 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   return true;
 }
 
-
 uint16_t MDGlobal::toSysex(uint8_t *data, uint16_t len) {
   ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
   return toSysex(encoder);
@@ -355,7 +354,6 @@ bool MDKit::fromSysex(MidiClass *midi) {
   return true;
 }
 
-
 uint16_t MDKit::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart);
   return toSysex(encoder);
@@ -369,7 +367,9 @@ uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
-  if (MidiClock.state == 2) { encoder.throttle = true; }
+  if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
+    encoder.throttle = true;
+  }
   encoder.stop7Bit();
   encoder.begin();
   encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
@@ -530,7 +530,6 @@ bool MDSong::fromSysex(MidiClass *midi) {
 
   return true;
 }
-
 
 void MDKit::init_eq() {
   eq[MD_EQ_LF] = 0;
