@@ -154,7 +154,7 @@ public:
   bool loadedGlobal;
 
   uint32_t swing_last;
-
+  uint8_t doubletempo_last;
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).
    *

@@ -302,6 +302,9 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
     encoder.throttle = true;
     float swing = (float) MD.swing_last / 16385.0;
     encoder.throttle_mod12 = round(swing * 12);
+    encoder.doubletempo = MD.doubletempo_last;
+    DEBUG_PRINTLN("double temp");
+    DEBUG_PRINTLN(MD.doubletempo_last);
   }
   cleanupLocks();
   recalculateLockPatterns();

@@ -371,6 +371,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
     encoder.throttle = true;
       float swing = (float) MD.swing_last / 16385.0;
     encoder.throttle_mod12 = floor((swing) * 12);
+    encoder.doubletempo = MD.doubletempo_last;
     DEBUG_PRINTLN("swing");
     DEBUG_PRINTLN(encoder.throttle_mod12);
   }

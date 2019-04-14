@@ -226,7 +226,7 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
   DEBUG_PRINTLN("saving swing");
   DEBUG_PRINTLN(MD.pattern.swingAmount);
   MD.swing_last = MD.pattern.swingAmount;
-
+  MD.doubletempo_last = MD.pattern.doubleTempo;
   send_pattern_kit_to_md();
 
   patternswitch = PATTERN_UDEF;

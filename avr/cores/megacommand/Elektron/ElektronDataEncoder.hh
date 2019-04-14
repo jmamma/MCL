@@ -7,7 +7,7 @@
 #include "Midi.h"
 #include "WProgram.h"
 
-#define THROTTLE_US 140
+#define THROTTLE_US 160
 
 /**
  * \addtogroup Elektron
@@ -41,6 +41,7 @@ protected:
 public:
   bool throttle;
   uint8_t throttle_mod12;
+  uint8_t doubletempo;
 
   ElektronDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
                                                uint16_t _sysexLen = 0)) {
