@@ -208,11 +208,11 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
     writepattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
   }
   // Get pattern first, hopefully with the original kit assigned.
-  if (write_original != 1) {
     if (!MD.getBlockingPattern(MD.currentPattern)) {
       DEBUG_PRINTLN("could not get blocking pattern");
       return;
     }
+   if (write_original != 1) {
     if ((gridio_param3.getValue() != MD.currentKit) &&
         (mcl_cfg.chain_mode == 0)) {
       MD.currentKit = gridio_param3.getValue();
@@ -223,6 +223,9 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
     MD.getBlockingKit(MD.currentKit);
   }
   patternswitch = 1;
+  DEBUG_PRINTLN("saving swing");
+  DEBUG_PRINTLN(MD.pattern.swingAmount);
+  MD.swing_last = MD.pattern.swingAmount;
 
   send_pattern_kit_to_md();
 
@@ -525,12 +528,12 @@ void MCLActions::send_pattern_kit_to_md() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
   }
-  md_setsysex_recpos(8, MD.pattern.origPosition);
+  //md_setsysex_recpos(8, MD.pattern.origPosition);
 
   MD.pattern.toSysex();
 
   /*Send the encoded kit to the MD via sysex*/
-  md_setsysex_recpos(4, MD.kit.origPosition);
+ // md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   /*Instruct the MD to reload the kit, as the kit changes won't update until
    * the kit is reloaded*/
