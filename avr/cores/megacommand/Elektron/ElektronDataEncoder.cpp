@@ -52,6 +52,24 @@ void ElektronDataToSysexEncoder::startChecksum() {
   inChecksum = true;
 }
 
+void ElektronDataToSysexEncoder::uart_send(uint8_t c) {
+  if (throttle) {
+    bool do_throttle = false;
+    uint8_t v = 0;
+    if (MidiClock.mod6_counter == 0) {
+      do_throttle = true;
+    }
+    if (MidiClock.mod12_counter == throttle_mod12) {
+      do_throttle = true;
+    }
+    if (do_throttle) {
+      delayMicroseconds(THROTTLE_US);
+    }
+    uart->m_putc_immediate(c);
+  } else {
+    uart->m_putc(c);
+  }
+}
 void ElektronDataToSysexEncoder::finishChecksum() {
   uint16_t len = retLen - 5;
   inChecksum = false;
@@ -61,13 +79,7 @@ void ElektronDataToSysexEncoder::finishChecksum() {
   pack8((len >> 7) & 0x7F);
   pack8(len & 0x7F);
   if (uart != NULL) {
-    if (throttle) {
-      delayMicroseconds(THROTTLE_US);
-      uart->m_putc_immediate(0xF7);
-    }
-    else {
-    uart->m_putc(0xF7);
-    }
+    uart_send(0xF7);
   } else {
     *(ptr++) = 0xF7;
   }
@@ -75,13 +87,7 @@ void ElektronDataToSysexEncoder::finishChecksum() {
 
 void ElektronDataToSysexEncoder::begin() {
   if (uart != NULL) {
-    if (throttle) {
-      delayMicroseconds(THROTTLE_US);
-      uart->m_putc_immediate(0xF0);
-    }
-    else {
-    uart->m_putc(0xF0);
-    }
+    uart_send(0xF0);
   } else {
     *(ptr++) = 0xF0;
   }
@@ -99,13 +105,7 @@ uint16_t ElektronDataToSysexEncoder::finish() {
   }
   if (uart != NULL) {
     for (uint8_t i = 0; i < inc; i++) {
-      if (throttle) {
-        delayMicroseconds(THROTTLE_US);
-        uart->m_putc_immediate(ptr[i]);
-      }
-      else {
-        uart->m_putc(ptr[i]);
-      }
+      uart_send(ptr[i]);
     }
     ptr = data;
   } else {
@@ -137,14 +137,8 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
     }
     if (uart != NULL) {
       for (uint8_t i = 0; i < 8; i++) {
-        if (throttle) {
-          delayMicroseconds(THROTTLE_US);
-        uart->m_putc_immediate(data[i]);
-        }
-        else {
-        uart->m_putc(data[i]);
-        }
-        }
+        uart_send(data[i]);
+      }
       ptr = data;
     } else {
       ptr += 8;
@@ -168,13 +162,7 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::pack8(uint8_t inb) {
       checksum += inb;
     }
     if (uart != NULL) {
-      if (throttle) {
-        delayMicroseconds(THROTTLE_US);
-        uart->m_putc_immediate(inb);
-      }
-      else {
-      uart->m_putc(inb);
-      }
+      uart_send(inb);
     } else {
       *(ptr++) = inb;
     }

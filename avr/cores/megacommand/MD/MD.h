@@ -145,7 +145,6 @@ public:
   int currentTrack;
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
   int currentPattern;
-
   /** Set to true if the kit was loaded (usually set by MDTask). **/
   bool loadedKit;
   /** Stores the kit settings of the machinedrum (usually set by MDTask). **/
@@ -153,6 +152,9 @@ public:
   MDPattern pattern;
   /** Set to true if the global was loaded (usually set by MDTask). **/
   bool loadedGlobal;
+
+  uint32_t swing_last;
+
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).
    *
