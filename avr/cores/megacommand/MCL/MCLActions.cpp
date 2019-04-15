@@ -355,7 +355,7 @@ void MCLActions::send_pattern_kit_to_md() {
   if (gridio_param4.getValue() == 8) {
     quantize_mute = 254;
   }
-  if ((gridio_param4.getValue() >= 9) && (mcl_cfg.chain_mode > 0)) {
+  if ((gridio_param4.getValue() >= 9) && (mcl_cfg.chain_mode == 0)) {
     quantize_mute = MD.pattern.patternLength;
     q_pattern_change = 1;
     reload = 0;
@@ -542,7 +542,8 @@ void MCLActions::send_pattern_kit_to_md() {
   } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
     do_kit_reload = MD.pattern.kit;
     if (q_pattern_change == 1) {
-      MD.loadPattern(writepattern);
+   DEBUG_PRINTLN("sending pattern change");
+            MD.loadPattern(writepattern);
     }
   }
   // }
