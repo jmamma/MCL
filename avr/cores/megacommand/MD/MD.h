@@ -153,7 +153,7 @@ public:
   /** Set to true if the global was loaded (usually set by MDTask). **/
   bool loadedGlobal;
 
-  uint32_t swing_last;
+  //uint32_t swing_last;
 
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).

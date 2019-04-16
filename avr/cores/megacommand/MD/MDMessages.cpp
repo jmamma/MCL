@@ -369,10 +369,10 @@ uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
     encoder.throttle = true;
-      float swing = (float) MD.swing_last / 16385.0;
-    encoder.throttle_mod12 = floor((swing) * 12);
-    DEBUG_PRINTLN("swing");
-    DEBUG_PRINTLN(encoder.throttle_mod12);
+    //float swing = (float) MD.swing_last / 16385.0;
+    //encoder.throttle_mod12 = floor((swing) * 12);
+    //DEBUG_PRINTLN("swing");
+    //DEBUG_PRINTLN(encoder.throttle_mod12);
   }
   encoder.stop7Bit();
   encoder.begin();

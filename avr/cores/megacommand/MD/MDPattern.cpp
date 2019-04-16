@@ -300,8 +300,8 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
     DEBUG_PRINTLN("using throttle");
     encoder.throttle = true;
-    float swing = (float) MD.swing_last / 16385.0;
-    encoder.throttle_mod12 = round(swing * 12);
+    //float swing = (float) MD.swing_last / 16385.0;
+    //encoder.throttle_mod12 = round(swing * 12);
   }
   cleanupLocks();
   recalculateLockPatterns();

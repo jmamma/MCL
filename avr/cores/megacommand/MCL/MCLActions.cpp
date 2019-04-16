@@ -223,9 +223,9 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
     MD.getBlockingKit(MD.currentKit);
   }
   patternswitch = 1;
-  DEBUG_PRINTLN("saving swing");
-  DEBUG_PRINTLN(MD.pattern.swingAmount);
-  MD.swing_last = MD.pattern.swingAmount;
+  //DEBUG_PRINTLN("saving swing");
+  //DEBUG_PRINTLN(MD.pattern.swingAmount);
+  //MD.swing_last = MD.pattern.swingAmount;
 
   send_pattern_kit_to_md();
 
