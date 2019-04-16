@@ -22,6 +22,7 @@ public:
 void encoder_level_handle(Encoder *enc);
 void encoder_filtf_handle(Encoder *enc);
 void encoder_filtw_handle(Encoder *enc);
+void encoder_filtq_handle(Encoder *enc);
 void encoder_lastparam_handle(Encoder *enc);
 
 class MixerPage : public LightPage {

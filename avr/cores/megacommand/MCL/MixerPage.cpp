@@ -6,7 +6,7 @@ void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
   encoders[1]->handler = encoder_filtf_handle;
   encoders[2]->handler = encoder_filtw_handle;
-  encoders[3]->handler = encoder_lastparam_handle;
+  encoders[3]->handler = encoder_filtq_handle;
   create_chars_mixer();
   create_chars_mixer();
 #ifdef OLED_DISPLAY
@@ -140,6 +140,9 @@ void encoder_filtf_handle(Encoder *enc) {
 }
 void encoder_filtw_handle(Encoder *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTW);
+}
+void encoder_filtq_handle(Encoder *enc) {
+  mixer_page.adjust_param(enc, MODEL_FLTQ);
 }
 void encoder_lastparam_handle(Encoder *enc) {
   mixer_page.adjust_param(enc, md_events.last_md_param);
