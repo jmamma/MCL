@@ -99,11 +99,9 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
 
     char temp_entry[16];
     char dir_entry[16];
-    uint32_t pos = FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
     volatile uint8_t *ptr = pos;
-    switch_ram_bank(1);
-    memcpy(&temp_entry[0], ptr, 16);
-    switch_ram_bank(0);
+    memcpy_bank1(&temp_entry[0], ptr, 16);
     char *up_one_dir = "..";
 
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
@@ -144,11 +142,9 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON1)) {
      char temp_entry[16];
     char dir_entry[16];
-    uint32_t pos = FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
     volatile uint8_t *ptr = pos;
-    switch_ram_bank(1);
-    memcpy(&temp_entry[0], ptr, 16);
-    switch_ram_bank(0);
+    memcpy_bank1(&temp_entry[0], ptr, 16);
     SD.remove(temp_entry);
     init();
     return;

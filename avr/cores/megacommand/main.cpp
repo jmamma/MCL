@@ -200,7 +200,7 @@ bool in_irq = false;
 
 ISR(TIMER1_COMPA_vect) {
 
-  uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
 
   clock++;
   if (MidiClock.state == 2) {
@@ -220,7 +220,6 @@ ISR(TIMER1_COMPA_vect) {
     }
   }
   }
-  switch_ram_bank(old_ram_bank);
 }
 
 // XXX CMP to have better time
@@ -257,7 +256,7 @@ uint16_t minuteclock = 0;
 
 ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 
- uint8_t old_ram_bank = switch_ram_bank(0);
+  select_bank(0);
 
   slowclock++;
   minuteclock++;
@@ -277,13 +276,16 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
   gui_poll();
 #endif
 
-  switch_ram_bank(old_ram_bank);
 }
-
+/*
 uint8_t sysexBuf[5500];
 MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
 uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
+*/
+
+MidiClass Midi(&MidiUart,NULL,SYSEX1_DATA_LEN, BANK1_SYSEX1_DATA_START);
+MidiClass Midi2(&MidiUart2,NULL,SYSEX2_DATA_LEN, BANK1_SYSEX2_DATA_START);
 
 bool enable_clock_callbacks = true;
 

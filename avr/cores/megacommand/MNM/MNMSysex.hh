@@ -29,6 +29,8 @@ public:
   uint16_t msgLen;
   uint16_t msgCksum;
 
+  MidiClass *midi;
+
   MNMSysexListenerClass() : MidiSysexListenerClass() {
     ids[0] = 0;
     ids[1] = 0x20;
@@ -39,7 +41,7 @@ public:
   virtual void handleByte(uint8_t byte);
   virtual void end_immediate();
 
-  void setup();
+  void setup(MidiClass *_midi);
 
   void addOnStatusResponseCallback(MNMCallback *obj,
                                    mnm_status_callback_ptr_t func) {

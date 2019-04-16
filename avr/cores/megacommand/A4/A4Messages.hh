@@ -78,6 +78,7 @@ public:
 
   /** Read in a global message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -102,6 +103,7 @@ public:
   uint8_t origPosition;
   uint8_t payload[415 - 10 - 2 - 4 - 1];
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);

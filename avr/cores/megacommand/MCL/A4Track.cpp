@@ -4,8 +4,14 @@
 //#include "MCLSd.h"
 
 void A4Track::load_seq_data(int tracknumber) {
-  mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
-  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+
+  if (active == EMPTY_TRACK_TYPE) {
+    mcl_seq.ext_tracks[tracknumber].clear_track();
+  } else {
+    mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
+    memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  }
+
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
@@ -38,7 +44,7 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     if (m > 0) {
       ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
     } else {
-      ret = mcl_sd.read_data((uint8_t *)(this), sizeof(A4Track), &proj.file);
+      ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
     }
     if (!ret) {
       DEBUG_PRINTLN("Write failed");
@@ -72,44 +78,11 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track) {
       get_track_from_sysex(track - 16, column - 16);
     }
   }
-  ret = mcl_sd.write_data((uint8_t *)this, sizeof(A4Track), &proj.file);
+  ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);
   if (!ret) {
     return false;
   }
   grid_page.row_headers[grid_page.cur_row].update_model(column, column,
                                                         A4_TRACK_TYPE);
-  return true;
-}
-
-bool A4Track::store_in_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen =
-      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-
-  uint32_t pos =
-      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-  switch_ram_bank(1);
-  memcpy(ptr, this, sizeof(A4Track));
-  switch_ram_bank(0);
-  return true;
-}
-
-bool A4Track::load_from_mem(uint8_t column, uint32_t region) {
-  uint32_t mdlen =
-      sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-
-  uint32_t pos =
-      region + mdlen * 16 + sizeof(A4Track) * (uint32_t)(column - 16);
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-
-  switch_ram_bank(1);
-  memcpy(this, ptr, sizeof(A4Track));
-  switch_ram_bank(0);
   return true;
 }

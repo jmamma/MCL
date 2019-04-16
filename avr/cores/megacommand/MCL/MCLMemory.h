@@ -3,11 +3,24 @@
 #ifndef MCLMEMORY_H__
 #define MCLMEMORY_H__
 
-#define BANK1_R1_START 0x2200
-#define BANK1_R1_END (BANK1_R1_START + (sizeof(GridTrack) + sizeof(MDMachine) + sizeof(MDSeqTrackData)) * NUM_MD_TRACKS)
-#define BANK1_R2_START (BANK1_R1_END + 1)
-#define BANK1_R2_END (BANK1_R2_START + (sizeof(GridTrack) + sizeof(MDMachine) + sizeof(MDSeqTrackData)) * NUM_MD_TRACKS)
-#define FILE_ENTRIES_START (BANK1_R2_END + 1)
-#define MAX_ENTRIES 1024
-#define FILE_ENTRIES_END (FILE_ENTRIES_START + 16 * MAX_ENTRIES
+#define NUM_MD_TRACKS    16
+#define NUM_A4_TRACKS    4
+#define NUM_EXT_TRACKS   NUM_A4_TRACKS
+#define NUM_LFO_TRACKS   4
+#define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
+#define NUM_FILE_ENTRIES 256
+
+//#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
+//#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
+#define MD_TRACK_LEN (sizeof(MDTrackLight))
+#define A4_TRACK_LEN (sizeof(A4Track))
+
+// 16x MD tracks
+#define BANK1_MD_TRACKS_START BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN
+
+// 4x A4 tracks
+#define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
+// 1024x FILE entries
+#define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
+#define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES)
 #endif /* MCLMEMORY_H__ */

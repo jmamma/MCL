@@ -8,7 +8,6 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-
   DEBUG_PRINTLN(channel);
   DEBUG_PRINTLN(param);
   DEBUG_PRINTLN(value);
@@ -30,6 +29,7 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     MD.kit.params[track][track_param] = value;
     mcl_seq.md_tracks[track].update_param(track_param, value);
 
+    md_events.last_md_param = track_param;
   } else {
     if (param < 16) {
       track = param - 8 + (channel - MD.global.baseChannel) * 4;
@@ -37,6 +37,7 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       MD.kit.levels[track] = value;
     }
   }
+
 }
 
 void MDMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}

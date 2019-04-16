@@ -16,11 +16,9 @@ void FileBrowserPage::setup() {
 }
 
 void FileBrowserPage::add_entry(char *entry) {
-      uint32_t pos = FILE_ENTRIES_START + numEntries * 16;
+      uint32_t pos = BANK1_FILE_ENTRIES_START + numEntries * 16;
       volatile uint8_t *ptr = pos;
-      switch_ram_bank(1);
-      memcpy(ptr, &entry[0], 16);
-      switch_ram_bank(0);
+      memcpy_bank1(ptr, entry, 16);
       numEntries++;
 }
 
@@ -135,11 +133,9 @@ void FileBrowserPage::display() {
     }
     char temp_entry[16];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    uint32_t pos = FILE_ENTRIES_START + entry_num * 16;
+    uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
     volatile uint8_t *ptr = pos;
-    switch_ram_bank(1);
-    memcpy(&temp_entry[0], ptr, 16);
-    switch_ram_bank(0);
+    memcpy_bank1(temp_entry, ptr, 16);
     oled_display.println(temp_entry);
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
@@ -157,11 +153,9 @@ void FileBrowserPage::display() {
    }
   char temp_entry[17];
   uint16_t entry_num = encoders[1]->cur;
-  uint32_t pos = FILE_ENTRIES_START + entry_num * 16;
+  uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
   volatile uint8_t *ptr = pos;
-  switch_ram_bank(1);
-  memcpy(&temp_entry[0], ptr, 16);
-  switch_ram_bank(0);
+  memcpy_bank1(temp_entry, ptr, 16);
   temp_entry[16] = '\0';
   GUI.put_string_at(1, temp_entry);
 
@@ -246,11 +240,9 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
     char temp_entry[16];
     char dir_entry[16];
-    uint32_t pos = FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
     volatile uint8_t *ptr = pos;
-    switch_ram_bank(1);
-    memcpy(&temp_entry[0], ptr, 16);
-    switch_ram_bank(0);
+    memcpy_bank1(temp_entry, ptr, 16);
     char *up_one_dir = "..";
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
       /*

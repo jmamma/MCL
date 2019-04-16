@@ -20,7 +20,11 @@
 #define DATA_ENCODER_CHECK(condition) { if (!(condition)) return false; }
 #define DATA_ENCODER_TRUE() { return true; }
 #define DATA_ENCODER_FALSE() { return true; }
-#define DATA_ENCODER_INIT(data, length) data, length
+
+#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
+#define DATA_ENCODER_INIT2(data, length) data, length
+#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset, length
 
 #define DATA_ENCODER_CHECKING 1
 
@@ -42,15 +46,28 @@ public:
   uint8_t *ptr;
   uint16_t maxLen;
 
+  uint16_t n;
+  uint16_t offset;
+
+  MidiClass *midi;
+
   virtual void init(uint8_t *_data, uint16_t _maxLen) {
     data = _data;
     maxLen = _maxLen;
     ptr = data;
   }
 
-	uint16_t getIdx() {
+  virtual void init(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen) {
+        offset = _offset;
+        n = offset;
+        midi = _midi;
+        maxLen = _maxLen;
+        data = ptr = NULL;
+  }
+
+  uint16_t getIdx() {
 		return ptr - data;
-	}
+  }
 
 	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
 		for (uint16_t i = 0; i < len; i++) {
@@ -163,6 +180,12 @@ public:
 	uint8_t *ptr;
 	uint16_t maxLen;
 
+
+    uint16_t n;
+    uint16_t offset;
+
+    MidiClass *midi;
+
 	DataDecoder() {
 	}
 
@@ -171,6 +194,14 @@ public:
 		maxLen = _maxLen;
 		ptr = data;
 	}
+
+    virtual void init(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen) {
+        offset = _offset;
+        n = offset;
+        midi = _midi;
+        data = ptr = NULL;
+        maxLen = _maxLen;
+    }
 
 	uint16_t getIdx() {
 		return ptr - data;

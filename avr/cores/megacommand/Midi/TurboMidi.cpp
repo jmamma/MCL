@@ -10,17 +10,8 @@ static uint8_t turbomidi_sysex_header[] = {
 	0xF0, 0x00, 0x20, 0x3c, 0x00, 0x00
 };
 
-TurboMidiSysexListenerClass::TurboMidiSysexListenerClass() :
-	MidiSysexListenerClass() {
-	ids[0] = 0x00;
-	ids[1] = 0x20;
-	ids[2] = 0x3c;
-	currentSpeed = TURBOMIDI_SPEED_1x;
-	state = tm_state_normal;
-}
-
 void TurboMidiSysexListenerClass::handleByte(uint8_t byte) {
-	if (MidiSysex.len == 3) {
+	if (sysex->len == 3) {
 		if (byte == 0x00) {
 			isGenericMessage = true;
 		} else {
@@ -33,7 +24,7 @@ void TurboMidiSysexListenerClass::end_immediate() {
 	if (!isGenericMessage)
 		return;
 
-	switch (MidiSysex.data[5]) {
+	switch (sysex->getByte(5)) {
 		/* master requests (when we are slave) */
 	case TURBOMIDI_SPEED_REQUEST:
 		break;
@@ -52,8 +43,8 @@ void TurboMidiSysexListenerClass::end_immediate() {
 	case TURBOMIDI_SPEED_ANSWER:
 		{
 			if (state == tm_master_wait_req_answer) {
-				slaveSpeeds = MidiSysex.data[6] | (MidiSysex.data[7] << 7);
-				certifiedSlaveSpeeds = MidiSysex.data[8] | (MidiSysex.data[9] << 7);
+				slaveSpeeds = sysex->getByte(6) | (sysex->getByte(7) << 7);
+				certifiedSlaveSpeeds = sysex->getByte(8) | (sysex->getByte(9) << 7);
 				state = tm_master_req_answer_recvd;
 			}
 		}

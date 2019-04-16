@@ -103,9 +103,9 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
 void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
                                  bool levels) {
-  if (active != MD_TRACK_TYPE) {
-    return;
-  }
+//  if (active != MD_TRACK_TYPE) {
+ //   return;
+//  }
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
     kit->levels[tracknumber] = machine.level;
@@ -123,6 +123,11 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
   kit->muteGroups[tracknumber] = machine.muteGroup;
 }
 
+void MDTrack::init() {
+  clear_track();
+  machine.init();
+}
+
 void MDTrack::clear_track() {
   arraysize = 0;
   trigPattern = 0;
@@ -133,9 +138,9 @@ void MDTrack::clear_track() {
 
 void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
                                      MDPattern *pattern) {
-  if (active != MD_TRACK_TYPE) {
-    return;
-  }
+//  if (active != MD_TRACK_TYPE) {
+ //   return;
+ // }
 
   for (int x = 0; x < 64; x++) {
     pattern->clear_step_locks(tracknumber, x);
@@ -172,11 +177,15 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
 }
 
 void MDTrack::load_seq_data(int tracknumber) {
-  memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  if (active == EMPTY_TRACK_TYPE) {
+    mcl_seq.md_tracks[tracknumber].clear_track();
+  } else {
+    memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
 
-  mcl_seq.md_tracks[tracknumber].set_length(
-      mcl_seq.md_tracks[tracknumber].length);
-  mcl_seq.md_tracks[tracknumber].update_params();
+    mcl_seq.md_tracks[tracknumber].set_length(
+        mcl_seq.md_tracks[tracknumber].length);
+    mcl_seq.md_tracks[tracknumber].update_params();
+  }
 }
 
 void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
@@ -232,6 +241,10 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
+  }
+  if (active == EMPTY_TRACK_TYPE) {
+    init();
+    return true;
   }
   if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
     DEBUG_PRINTLN("lock array size is wrong");
@@ -358,38 +371,3 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   DEBUG_PRINT(model);
   return true;
 }
-
-bool MDTrackLight::store_in_mem(uint8_t column, uint32_t region) {
-  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-
-  uint32_t pos = region + len * (uint32_t)column;
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-  // cbi(TIMSK0, TOIE0);
-  switch_ram_bank(1);
-  memcpy(ptr, this, len);
-
-  switch_ram_bank(0);
-  // sbi(TIMSK0, TOIE0);
-  return true;
-}
-
-bool MDTrackLight::load_from_mem(uint8_t column, uint32_t region) {
-  uint32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-
-  uint32_t pos = region + len * (uint32_t)column;
-
-  volatile uint8_t *ptr;
-
-  ptr = reinterpret_cast<uint8_t *>(pos);
-  // cbi(TIMSK0, TOIE0);
-  switch_ram_bank(1);
-  memcpy(this, ptr, len);
-  switch_ram_bank(0);
-  // sbi(TIMSK0, TOIE0);
-  return true;
-}
-
-

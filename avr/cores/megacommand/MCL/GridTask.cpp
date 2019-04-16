@@ -23,10 +23,10 @@ void GridTask::run() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  int slots_changed[20];
-  uint8_t slots_loaded[16];
+  int slots_changed[NUM_TRACKS];
+  uint8_t slots_loaded[NUM_MD_TRACKS];
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
     slots_loaded[i] = 0;
   }
 
@@ -68,7 +68,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       // mark slot as changed in case next statement doesnt pass
@@ -80,7 +80,7 @@ void GridTask::run() {
         if ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
             (mcl_cfg.chain_mode == 2)) {
 
-          if (n < 16) {
+          if (n < NUM_MD_TRACKS) {
 
             md_track->load_from_mem(n);
             if (slots_loaded[n] == 0) {
@@ -93,7 +93,8 @@ void GridTask::run() {
               mcl_actions.chains[n].loops = 0;
             } else if (mcl_cfg.chain_mode == 3) {
               mcl_actions.chains[n].loops = random(1, 8);
-              mcl_actions.chains[n].row = random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
+              mcl_actions.chains[n].row =
+                  random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
             }
 
             send_md_kit = true;
@@ -132,13 +133,14 @@ void GridTask::run() {
       }
       // in_sysex2 = 1;
     }
-    for (uint8_t n = 16; n < 20; n++) {
+    for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
         a4_track->load_from_mem(n);
         DEBUG_PRINTLN(mcl_actions.a4_latency);
- 
+
         if (a4_track->active == A4_TRACK_TYPE) {
-          if ((mcl_actions.a4_latency > 0) && (mcl_actions.send_machine[n] == 0)) {
+          if ((mcl_actions.a4_latency > 0) &&
+              (mcl_actions.send_machine[n] == 0)) {
             DEBUG_PRINTLN("here");
             if (a4_track->active == A4_TRACK_TYPE) {
               DEBUG_PRINTLN("send a4 sound");
@@ -149,14 +151,15 @@ void GridTask::run() {
 
         grid_page.active_slots[n] = slots_changed[n];
         if (a4_track->active != EMPTY_TRACK_TYPE) {
-          mcl_seq.ext_tracks[n - 16].buffer_notesoff();
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].buffer_notesoff();
 
-          mcl_seq.ext_tracks[n - 16].start_step = mcl_actions.next_transition;
-          mcl_seq.ext_tracks[n - 16].mute_until_start = true;
-          a4_track->load_seq_data(n - 16);
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step =
+              mcl_actions.next_transition;
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
+          a4_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
           DEBUG_PRINTLN("clearing track");
-          mcl_seq.ext_tracks[n - 16].clear_track();
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].clear_track();
         }
       }
     }
@@ -182,48 +185,58 @@ void GridTask::run() {
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     // in_sysex = 1;
     uint32_t div192th_counter_old = MidiClock.div192th_counter;
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
       if (slots_changed[n] >= 0) {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
           if (mcl_actions.send_machine[n] == 0) {
 #ifdef HANDLE_GROUPS
-          uint8_t trigGroup = md_track->machine.trigGroup;
-          if ((trigGroup < 16) && (trigGroup != n) &&
-              (slots_loaded[trigGroup] == 0)) {
-            md_track->load_from_mem(trigGroup);
-            if (md_track->active == MD_TRACK_TYPE) {
+            uint8_t trigGroup = md_track->machine.trigGroup;
+            if ((trigGroup < 16) && (trigGroup != n) &&
+                (slots_loaded[trigGroup] == 0)) {
+              md_track->load_from_mem(trigGroup);
+              if (md_track->active == MD_TRACK_TYPE) {
 
-              mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
-                                         &(MD.kit), false);
-              md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
-                                           false);
+                bool set_level = false;
+                if (mcl_actions.transition_level[n] == 1) {
+                  set_level = true;
+                  md_track->machine.level = 0;
+                }
+
+                mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
+                                           &(MD.kit), set_level);
+                md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
+                                             set_level);
+              }
+              md_track->load_from_mem(n);
+              slots_loaded[trigGroup] = 1;
             }
-            md_track->load_from_mem(n);
-            slots_loaded[trigGroup] = 1;
-          }
 #endif
-          if (slots_loaded[n] == 0) {
-            mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),false);
-            md_track->place_track_in_kit(n, n, &(MD.kit), false);
-            slots_loaded[n] = 1;
+            if (slots_loaded[n] == 0) {
+              bool set_level = false;
+              if (mcl_actions.transition_level[n] == 1) {
+                set_level = true;
+                md_track->machine.level = 0;
+              }
+              mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
+                                         set_level);
+              md_track->place_track_in_kit(n, n, &(MD.kit), set_level);
+              slots_loaded[n] = 1;
+            }
           }
-          }
-          if (md_track->active == MD_TRACK_TYPE) {
 
             mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
             mcl_seq.md_tracks[n].mute_until_start = true;
 
             md_track->load_seq_data(n);
-          }
         }
 
         else {
-            //&& (mcl_cfg.chain_mode != 2)) {
-            DEBUG_PRINTLN("clearing track");
-            bool clear_locks = true;
-            mcl_seq.md_tracks[n].clear_track(clear_locks);
+          //&& (mcl_cfg.chain_mode != 2)) {
+          DEBUG_PRINTLN("clearing track");
+          bool clear_locks = true;
+          mcl_seq.md_tracks[n].clear_track(clear_locks);
         }
 
         grid_page.active_slots[n] = slots_changed[n];
@@ -232,23 +245,25 @@ void GridTask::run() {
   }
   //  if (send_md_kit || send_a4_sound) {
   uint8_t count = 0;
-  uint8_t slots_cached[20] = {0};
+  uint8_t slots_cached[NUM_TRACKS] = {0};
 
   EmptyTrack empty_track2;
   MDTrack *md_temp_track = (MDTrack *)&empty_track2;
   A4Track *a4_temp_track = (A4Track *)&empty_track2;
 
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if (slots_changed[n] >= 0) {
 
       handleIncomingMidi();
       if (count % 8 == 0) {
-        if (GUI.currentPage() != &grid_write_page) { GUI.loop(); }
+        if (GUI.currentPage() != &grid_write_page) {
+          GUI.loop();
+        }
       }
       if ((slots_changed[n] != mcl_actions.chains[n].row)) {
 
         count++;
-        if (n < 16) {
+        if (n < NUM_MD_TRACKS) {
           //          DEBUG_PRINTLN("trying to cache MD track");
           //         DEBUG_PRINTLN(n);
           //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
@@ -259,12 +274,12 @@ void GridTask::run() {
             //  DEBUG_PRINTLN("storing");
             md_temp_track->load_from_mem(n);
 
-            if (memcmp(&(md_temp_track->machine), &(md_track->machine),sizeof(MDMachine)) != 0) {
-            mcl_actions.send_machine[n] = 0;
-            }
-            else {
-            mcl_actions.send_machine[n] = 1;
-            DEBUG_PRINTLN("machines match");
+            if ((md_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(md_temp_track->machine), &(md_track->machine),
+                       sizeof(MDMachine)) != 0)) {
+              mcl_actions.send_machine[n] = 0;
+            } else {
+              mcl_actions.send_machine[n] = 1;
+              DEBUG_PRINTLN("machines match");
             }
 
             md_track->store_in_mem(n);
@@ -277,7 +292,8 @@ void GridTask::run() {
               if (md_track->load_track_from_grid(
                       trigGroup, mcl_actions.chains[n].row, len)) {
                 md_track->store_in_mem(trigGroup);
-                mcl_actions.send_machine[trigGroup] = mcl_actions.send_machine[n];
+                mcl_actions.send_machine[trigGroup] =
+                    mcl_actions.send_machine[n];
                 slots_cached[trigGroup] = 1;
               }
             }
@@ -291,10 +307,9 @@ void GridTask::run() {
           DEBUG_PRINTLN(mcl_actions.chains[n].row);
           if (a4_track->load_track_from_grid(n, mcl_actions.chains[n].row, 0)) {
             a4_temp_track->load_from_mem(n);
-            if (memcmp(&(a4_temp_track), &(a4_track),sizeof(A4Track)) != 0) {
+            if ((a4_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0)) {
               mcl_actions.send_machine[n] = 0;
-            }
-            else {
+            } else {
               mcl_actions.send_machine[n] = 1;
               DEBUG_PRINTLN("sounds match");
             }

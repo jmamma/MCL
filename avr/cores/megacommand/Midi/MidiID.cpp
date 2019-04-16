@@ -50,7 +50,6 @@ uint8_t MidiID::waitForId(uint16_t timeout) {
   uint16_t current_clock = start_clock;
   do {
     current_clock = read_slowclock();
-
     handleIncomingMidi();
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&

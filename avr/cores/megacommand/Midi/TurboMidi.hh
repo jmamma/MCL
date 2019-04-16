@@ -47,7 +47,14 @@ class TurboMidiSysexListenerClass : public MidiSysexListenerClass {
    * @{
    **/
 public:
-  TurboMidiSysexListenerClass();
+  TurboMidiSysexListenerClass()
+      : MidiSysexListenerClass() {
+    ids[0] = 0x00;
+    ids[1] = 0x20;
+    ids[2] = 0x3c;
+    currentSpeed = TURBOMIDI_SPEED_1x;
+    state = tm_state_normal;
+  };
 
   bool isGenericMessage;
 
@@ -55,7 +62,7 @@ public:
   virtual void start() { isGenericMessage = false; }
   virtual void end_immediate();
 
-  void setup() { MidiSysex.addSysexListener(this); }
+  void setup(MidiClass *midi_) { sysex = &(midi_->midiSysex); sysex->addSysexListener(this); }
 
   void setupTurboMidiSlave();
 

@@ -26,7 +26,7 @@ GridWritePage grid_write_page(&gridio_param1, &gridio_param2, &gridio_param3,
 
 GridTrack slot;
 
-MCLEncoder grid_slot_param1(0, 8, ENCODER_RES_PAT);
-MCLEncoder grid_slot_param2(0, 8, ENCODER_RES_PAT);
+MCLEncoder grid_slot_param1(0, 7, ENCODER_RES_PAT);
+MCLEncoder grid_slot_param2(0, 16, ENCODER_RES_PAT);
 MenuPage grid_slot_page(&slot_menu_layout, &grid_slot_param1, &grid_slot_param2);
 

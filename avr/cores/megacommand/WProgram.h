@@ -51,8 +51,9 @@ extern "C" {
 // #define MDIIDUINO_SD_CARD      1
 
 #include "mididuino_private.h"
-#ifdef __cplusplus
+#include "memory.h"
 
+#ifdef __cplusplus
 
 #include "LCD.h"
 #include "OLED.h"
@@ -70,22 +71,5 @@ extern "C" {
 extern uint32_t write_count;
 extern uint32_t write_count_time;
 extern uint16_t minuteclock;
-extern uint8_t ram_bank;
-extern inline uint8_t switch_ram_bank(uint8_t x) {
-  //USE_LOCK();
-  //SET_LOCK();
-  uint8_t old_bank = (uint8_t) (PORTL >> PL6) & 0x01;
-
-  if (x != old_bank) {
-    //DISABLE timer 1 if switching banks.
- //   if (x == 0) { sbi(TIMSK0, TOIE0); }
-  //  else { cbi(TIMSK0, TOIE0); }
-    PORTL ^= _BV(PL6);
-  //  CLEAR_LOCK();
-    return old_bank;
-  }
-//  CLEAR_LOCK();
-  return x;
-}
 
 #endif /* WProgram_h */

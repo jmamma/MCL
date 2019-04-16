@@ -22,7 +22,7 @@
 
 class FileBrowserPage : public LightPage {
   public:
-//  char file_entries[MAX_ENTRIES][16];
+//  char file_entries[NUM_FILE_ENTRIES][16];
   int numEntries;
 
   char match[5];
