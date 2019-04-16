@@ -61,7 +61,7 @@ void GridWritePage::display() {
 
     char str[5];
 
-    if (encoders[1]->getValue() < 8) {
+    if (encoders[1]->getValue() < 16) {
       MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue(),
                         str);
       GUI.put_string_at(2, str);
@@ -89,9 +89,9 @@ void GridWritePage::display() {
 
     if (encoders[2]->getValue() == 0) {
       GUI.put_string_at(6, "--");
-    }
-    if (encoders[2]->getValue() == 1) {
-      GUI.put_string_at(6, "LV");
+    //}
+    //if (encoders[2]->getValue() == 1) {
+     // GUI.put_string_at(6, "LV");
     }
   }
 
