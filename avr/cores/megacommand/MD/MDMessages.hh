@@ -4,6 +4,7 @@
 #define MDMESSAGES_H__
 
 #include "MDPattern.hh"
+#include "MDParams.hh"
 
 extern uint8_t machinedrum_sysex_hdr[5];
 
@@ -88,6 +89,8 @@ public:
 
   /** Read in a global message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
+
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -137,6 +140,19 @@ public:
   /** The LFO mix setting. **/
   uint8_t mix;
 
+  void init(uint8_t track) {
+  destinationTrack = track;
+  destinationParam = 0;
+  shape1 = 0;
+  shape2 = 0;
+  type = 0;
+  for (uint8_t i = 0; i > 31; i++) {
+  state[i] = i;
+  }
+  speed = 64;
+  depth = 0;
+  mix = 0;
+  }
   /* @} */
 };
 
@@ -160,6 +176,20 @@ public:
 
   void scale_vol(float scale);
   float normalize_level();
+  void init() {
+  uint8_t init_params[24] = { 0, 0, 0, 0,
+             0, 0, 0, 0,
+             0, 0, 64, 64,
+             0, 127, 0, 0,
+             0, 127, 64, 0,
+             0, 64, 0, 0 };
+  memcpy(&params,&init_params, sizeof(params));
+  level = 127;
+  model = GND_MODEL;
+  trigGroup = 127;
+  muteGroup = 127;
+  lfo.init(track);
+  }
   /* @} */
 };
 
@@ -226,6 +256,7 @@ public:
 
   /** Read in a kit message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Encode and send a kit **/
   uint16_t toSysex();
   /** Convert a kit object to a sysex buffer ready to be sent to the MD. **/
@@ -292,6 +323,7 @@ public:
 
   /** Read in a song message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Convert a song object to a sysex buffer ready to be sent to the MD. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   /**

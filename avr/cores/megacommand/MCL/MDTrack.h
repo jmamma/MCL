@@ -71,6 +71,8 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
+  void init();
+
   void clear_track();
 
   void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit, bool levels = true);

@@ -18,6 +18,7 @@ public:
 class MDEvents {
  public:
  MDMidiEvents midi_events;
+ uint8_t last_md_param;
  MDEvents() {}
  void setup();
 };

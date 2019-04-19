@@ -85,6 +85,12 @@ void MNMSysexToDataEncoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _max
   repeat = 0;
 	totalCnt = 0;
 }
+void MNMSysexToDataEncoder::init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen)) {
+  ElektronSysexToDataEncoder::init(DATA_ENCODER_INIT(_midi,_offset, _maxLen));
+  repeat = 0;
+	totalCnt = 0;
+}
+
 
 DATA_ENCODER_RETURN_TYPE MNMSysexToDataEncoder::pack8(uint8_t inb) {
   //  printf("pack: %x\n", inb);
@@ -114,7 +120,8 @@ DATA_ENCODER_RETURN_TYPE MNMSysexToDataEncoder::unpack8Bit() {
 #ifdef DATA_ENCODER_CHECKING
 				DATA_ENCODER_CHECK(retLen <= maxLen);
 #endif
-				*(ptr++) = tmpData[i];
+				if (data) { *(ptr++) = tmpData[i]; }
+                else { midi->midiSysex.putByte(n++, tmpData[i]); }
 				retLen++;
       }
     } else {
@@ -122,7 +129,8 @@ DATA_ENCODER_RETURN_TYPE MNMSysexToDataEncoder::unpack8Bit() {
 #ifdef DATA_ENCODER_CHECKING
 				DATA_ENCODER_CHECK(retLen <= maxLen);
 #endif
-				*(ptr++) = tmpData[i];
+				if (data) { *(ptr++) = tmpData[i]; }
+                else { midi->midiSysex.putByte(n++, tmpData[i]); }
 				retLen++;
       }
       repeat = 0;
@@ -147,7 +155,16 @@ uint16_t MNMSysexToDataEncoder::finish() {
 }
 
 void MNMSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen)) {
-	DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+    DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+	cnt7 = 0;
+	cnt = 0;
+	repeatCount = 0;
+	repeatByte = 0;
+	totalCnt = 0;
+}
+
+void MNMSysexDecoder::init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen)) {
+	DataDecoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
 	cnt7 = 0;
 	cnt = 0;
 	repeatCount = 0;
@@ -157,13 +174,13 @@ void MNMSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen)) 
 
 DATA_ENCODER_RETURN_TYPE MNMSysexDecoder::getNextByte(uint8_t *c) {
 	if ((cnt % 8) == 0) {
-		bits = *(ptr++);
+        if (data) { bits = *(ptr++); }
+        else { midi->midiSysex.getByte(n++); }
 		cnt++;
 	}
 	bits <<= 1;
-	*c = *(ptr++) | (bits & 0x80);
-	cnt++;
-
+	if (data) { *c = *(ptr++) | (bits & 0x80); }
+    else { c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
 	DATA_ENCODER_TRUE();
 }
 

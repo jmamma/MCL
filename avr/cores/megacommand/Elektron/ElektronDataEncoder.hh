@@ -7,6 +7,8 @@
 #include "Midi.h"
 #include "WProgram.h"
 
+#define THROTTLE_US 140
+
 /**
  * \addtogroup Elektron
  *
@@ -36,23 +38,29 @@ protected:
   uint8_t buf[8];
   uint16_t checksum;
   bool inChecksum;
-
 public:
+  bool throttle;
+  uint8_t throttle_mod12;
+
   ElektronDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
                                                uint16_t _sysexLen = 0)) {
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
+    throttle = false;
+    throttle_mod12 = 255;
   }
 
   ElektronDataToSysexEncoder(MidiUartParent *_uart) {
     init(DATA_ENCODER_INIT(NULL, 0), _uart);
+    throttle = false;
+    throttle_mod12 = 255;
   }
 
+  void uart_send(uint8_t c);
   /** Start the conversion of 8-bit data into 7-bit data. **/
   void start7Bit();
   /** Finish the conversion of 8-bit data into 7-bit data. This will flush
    * remaining 7-bit bytes. **/
   void stop7Bit();
-
   /** Finish the current conversion and flush remaining data, and start 7-bit
    * conversion. **/
   void reset();
@@ -101,7 +109,14 @@ public:
     init(DATA_ENCODER_INIT(_sysex, _sysexLen));
   }
 
+  ElektronSysexToDataEncoder(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen = 0) {
+    init(DATA_ENCODER_INIT(_midi, _offset, _sysexLen));
+  }
+
+
   virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex, uint16_t _sysexLen));
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen));
+
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
   DATA_ENCODER_RETURN_TYPE unpack8Bit();
   virtual uint16_t finish();
@@ -124,8 +139,13 @@ class ElektronSysexDecoder : public DataDecoder {
 
 public:
   ElektronSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
-                                         uint16_t _maxLen = 0)) {
+                        uint16_t _maxLen = 0)) {
     init(DATA_ENCODER_INIT(_data, _maxLen));
+  }
+
+  ElektronSysexDecoder(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset = NULL,
+                                         uint16_t _maxLen = 0)) {
+    init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
   }
 
   /** Start the decoding of 7-bit data. **/
@@ -137,6 +157,7 @@ public:
   /** Stop the decoding of 7-bit data. **/
   void stop7Bit() { in7Bit = false; }
 
+  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen));
   virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 };

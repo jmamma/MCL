@@ -4,20 +4,24 @@
 void GridWritePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
+  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   encoders[0]->cur = (int)MD.currentPattern / (int)16;
   encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  encoders[2]->cur = MD.currentKit;
-
   if (mcl_cfg.chain_mode > 0) {
-  ((MCLEncoder*) encoders[3])->max = 6;
-  if (encoders[3]->cur > 7) { encoders[3]->cur = 0; }
+    ((MCLEncoder *)encoders[3])->max = 6;
+    if (encoders[3]->cur > 7) {
+      encoders[3]->cur = 0;
+    }
+    ((MCLEncoder *)encoders[2])->max = 1;
   }
+
   else {
-  ((MCLEncoder*) encoders[3])->max = 11;
+    encoders[2]->cur = MD.currentKit;
+    ((MCLEncoder *)encoders[3])->max = 11;
+    ((MCLEncoder *)encoders[2])->max = 64;
   }
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
@@ -57,7 +61,7 @@ void GridWritePage::display() {
 
     char str[5];
 
-    if (encoders[1]->getValue() < 8) {
+    if (encoders[1]->getValue() < 16) {
       MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue(),
                         str);
       GUI.put_string_at(2, str);
@@ -81,7 +85,16 @@ void GridWritePage::display() {
     } else {
       GUI.put_value_at2(6, encoders[2]->getValue() + 1);
     }
+  } else {
+
+    if (encoders[2]->getValue() == 0) {
+      GUI.put_string_at(6, "--");
+    //}
+    //if (encoders[2]->getValue() == 1) {
+     // GUI.put_string_at(6, "LV");
+    }
   }
+
   if (encoders[3]->getValue() == 0) {
     GUI.put_string_at(11, "--");
   }

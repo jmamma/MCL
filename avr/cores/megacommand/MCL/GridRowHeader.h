@@ -15,6 +15,7 @@ class GridRowHeader {
   void update_model(int16_t column, uint8_t model_, uint8_t track_type_);
   bool write(int16_t row);
   bool read(int16_t row);
+  bool is_empty();
   void init();
 };
 

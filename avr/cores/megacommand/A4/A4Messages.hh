@@ -80,6 +80,7 @@ public:
 
   /** Read in a global message from a sysex buffer. **/
   bool fromSysex(uint8_t *sysex, uint16_t len);
+  bool fromSysex(MidiClass *midi);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -384,11 +385,14 @@ public:
   char             name[16];     // null-terminated
   a4sound_t        sound;
   
-  bool fromSysex(uint8_t *sysex, uint16_t len);
+
   bool fromSysex_impl(ElektronSysexDecoder &decoder);
   /** Convert the sound object into a sysex buffer to be sent to the
    * AnalogFour. **/
   void toSysex_impl(ElektronDataToSysexEncoder &encoder);
+  bool fromSysex(MidiClass *midi);
+  /** Convert the global object into a sysex buffer to be sent to the
+   * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   uint16_t toSysex(ElektronDataToSysexEncoder &encoder);

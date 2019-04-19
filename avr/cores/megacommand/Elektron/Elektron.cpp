@@ -119,13 +119,33 @@ void ElektronHelper::from64Bit(uint64_t num, uint8_t *b) {
   b[7] = (num >> 0) & 0xFF;
 }
 /* check sysex */
+
 bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
   uint16_t cksum = 0;
   for (int i = 0; i < len - 4; i++) {
-    cksum += data[i];
+  cksum += data[i];
   }
   cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
+  uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
+
+  if (cksum != realcksum) {
+#ifdef HOST_MIDIDUINO
+		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
+#endif
+    // wrong checksum
+    return false;
+  }
+	return true;
+
+}
+
+bool ElektronHelper::checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset, uint16_t len) {
+  uint16_t cksum = 0;
+  for (int i = 0; i < len - 4; i++) {
+    cksum += midi->midiSysex.getByte(i + offset);
+  }
+  cksum &= 0x3FFF;
+	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex.getByte(offset + len - 4), midi->midiSysex.getByte(offset + len - 3));
   if (cksum != realcksum) {
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
@@ -157,7 +177,24 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
     cksum += data[i];
   }
   cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
+  uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
+  if (cksum != realcksum) {
+#ifdef HOST_MIDIDUINO
+		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
+#endif
+    // wrong checksum
+    return false;
+  }
+	return true;
+}
+
+bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16_t len) {
+  uint16_t cksum = 0;
+  for (int i = 9 - 6; i < len - 4; i++) {
+    cksum += midi->midiSysex.getByte(i + offset);
+  }
+  cksum &= 0x3FFF;
+	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex.getByte(offset + len - 4), midi->midiSysex.getByte(offset + len - 3));
   if (cksum != realcksum) {
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);

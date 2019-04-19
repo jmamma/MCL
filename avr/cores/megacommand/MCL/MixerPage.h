@@ -20,6 +20,10 @@ public:
 };
 
 void encoder_level_handle(Encoder *enc);
+void encoder_filtf_handle(Encoder *enc);
+void encoder_filtw_handle(Encoder *enc);
+void encoder_filtq_handle(Encoder *enc);
+void encoder_lastparam_handle(Encoder *enc);
 
 class MixerPage : public LightPage {
 public:
@@ -31,6 +35,7 @@ public:
       : LightPage(e1, e2, e3, e4) {
       }
   bool handleEvent(gui_event_t *event);
+  void adjust_param(Encoder *enc, uint8_t param);
   void draw_levels();
   void display();
   void loop();

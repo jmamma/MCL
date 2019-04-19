@@ -82,6 +82,54 @@ bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
   return true;
 }
 
+bool MDGlobal::fromSysex(MidiClass *midi) {
+  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t offset = 5;
+
+  if (len != 0xC4 - 6) {
+    //		printf("wrong length\n");
+    // wrong length
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+    //		printf("wrong checksum\n");
+    return false;
+  }
+
+  origPosition = midi->midiSysex.getByte(offset + 3);
+  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+  decoder.stop7Bit();
+  decoder.get(drumRouting, 16);
+
+  decoder.start7Bit();
+  decoder.get(keyMap, 128);
+  decoder.stop7Bit();
+
+  decoder.get8(&baseChannel);
+  decoder.get8(&unused);
+  decoder.get16(&tempo);
+  decoder.getb(&extendedMode);
+
+  uint8_t byte = 0;
+  decoder.get8(&byte);
+  clockIn = IS_BIT_SET(byte, 0);
+  transportIn = IS_BIT_SET(byte, 4);
+  clockOut = IS_BIT_SET(byte, 5);
+  transportOut = IS_BIT_SET(byte, 6);
+  decoder.getb(&localOn);
+
+  decoder.get(&drumLeft, 12);
+
+  for (int i = 0; i < 128; i++) {
+    if (keyMap[i] < 16) {
+      drumMapping[keyMap[i]] = i;
+    }
+  }
+
+  return true;
+}
+
 uint16_t MDGlobal::toSysex(uint8_t *data, uint16_t len) {
   ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
   return toSysex(encoder);
@@ -243,6 +291,69 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   return true;
 }
 
+bool MDKit::fromSysex(MidiClass *midi) {
+  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t offset = 5;
+  if (len != (0x4d1 - 7)) {
+    GUI.flash_strings_fill("WRONG LEN", "");
+    GUI.setLine(GUI.LINE2);
+    GUI.flash_put_value16(0, len);
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+    GUI.flash_strings_fill("WRONG CKSUM", "");
+    return false;
+  }
+
+  origPosition = midi->midiSysex.getByte(3 + offset);
+
+  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+  GUI.setLine(GUI.LINE2);
+  decoder.stop7Bit();
+  decoder.get((uint8_t *)name, 16);
+  name[16] = '\0';
+
+  decoder.get((uint8_t *)params, 16 * 24);
+  decoder.get(levels, 16);
+
+  decoder.start7Bit();
+  decoder.get32(models, 16);
+  decoder.stop7Bit(); // reset 7 bit
+  decoder.start7Bit();
+  // uint8_t lfo_out;
+
+  for (uint8_t i = 0; i < 16; i++) {
+    decoder.get((uint8_t *)&lfos[i], 5);
+    decoder.get((uint8_t *)&lfo_statestore, 31);
+
+    //	decoder.get((uint8_t *)&lfos[i], 5);
+    //   for (int j = 0; j < 31; j++) {
+    //      decoder.get((uint8_t *)&lfo_out,1);
+    //                      LCD.goLine(0);
+    //    LCD.putnumber(j);
+    //                    LCD.goLine(1);
+    //  LCD.putnumber((int)lfo_out);
+    // delay(400);
+
+    //        }
+  }
+  //  GUI.flash_put_value(0, lfo_out);
+
+  decoder.stop7Bit();
+
+  decoder.get(reverb, 8);
+  decoder.get(delay, 8);
+  decoder.get(eq, 8);
+  decoder.get(dynamics, 8);
+
+  decoder.start7Bit();
+  decoder.get(trigGroups, 16);
+  decoder.get(muteGroups, 16);
+
+  return true;
+}
+
 uint16_t MDKit::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart);
   return toSysex(encoder);
@@ -256,6 +367,13 @@ uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
+  if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
+    encoder.throttle = true;
+    //float swing = (float) MD.swing_last / 16385.0;
+    //encoder.throttle_mod12 = floor((swing) * 12);
+    //DEBUG_PRINTLN("swing");
+    //DEBUG_PRINTLN(encoder.throttle_mod12);
+  }
   encoder.stop7Bit();
   encoder.begin();
   encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
@@ -370,6 +488,37 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
 
   origPosition = data[3];
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+  decoder.stop7Bit();
+  decoder.get((uint8_t *)name, 16);
+  name[16] = '\0';
+
+  for (int i = 0; i < numRows; i++) {
+    decoder.start7Bit();
+    decoder.get((uint8_t *)&rows[i], 4);
+    decoder.get16(&rows[i].mutes);
+    decoder.get16(&rows[i].tempo);
+    decoder.get(&rows[i].startPosition, 2);
+    decoder.stop7Bit();
+  }
+
+  return true;
+}
+
+bool MDSong::fromSysex(MidiClass *midi) {
+  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t offset = 5;
+
+  if (len < 0x1a - 7)
+    return false;
+
+  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+    return false;
+  }
+
+  numRows = (len - (0x1A - 7)) / 12;
+
+  origPosition = midi->midiSysex.getByte(offset + 3);
+  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';

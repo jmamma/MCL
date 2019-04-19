@@ -81,7 +81,7 @@ public:
     while (cnt--)
       m_putc(*(data++));
   }
-
+  virtual uint8_t m_getc() {}
   virtual void m_putc(uint8_t c) {}
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual bool avail() { return false; }

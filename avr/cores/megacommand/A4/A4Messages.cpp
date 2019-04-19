@@ -125,6 +125,35 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
   return true;
 }
 
+bool A4Sound::fromSysex(MidiClass *midi) {
+  uint16_t len = midi->midiSysex.recordLen - 8;
+  uint16_t offset = 8;
+  if (len != (415 - 10 - 0)) {
+    GUI.setLine(GUI.LINE1);
+    GUI.flash_strings_fill("WRONG LEN", "");
+    GUI.setLine(GUI.LINE2);
+
+    GUI.put_value16(0, len);
+    //  GUI.put_value16(8, 384 - 10 - 2 -2 -1);
+
+    return false;
+  }
+
+  if (!ElektronHelper::checkSysexChecksumAnalog(midi, offset + 1, len - 1)) {
+    GUI.flash_strings_fill("WRONG CKSUM", "");
+    return false;
+  }
+
+  // origPosition = data[3];
+
+  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset, len - 4));
+  decoder.stop7Bit();
+  decoder.get8(&origPosition);
+  decoder.skip(2);
+  decoder.get(payload, sizeof(payload));
+  return true;
+}
+
 uint16_t A4Sound::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart2);
   return toSysex(encoder);

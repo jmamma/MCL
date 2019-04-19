@@ -11,7 +11,7 @@ void MNMTaskClass::setup(uint16_t _interval, bool _autoLoadKit, bool _autoLoadGl
   autoLoadGlobal = _autoLoadGlobal;
   reloadGlobal = _reloadGlobal;
 
-  MNMSysexListener.setup();
+  MNMSysexListener.setup(MNM.midi);
   MNMSysexListener.addOnStatusResponseCallback
     (this, (mnm_status_callback_ptr_t)&MNMTaskClass::onStatusResponseCallback);
   MNMSysexListener.addOnGlobalMessageCallback
@@ -77,7 +77,7 @@ void MNMTaskClass::onStatusResponseCallback(uint8_t type, uint8_t value) {
 
 void MNMTaskClass::onGlobalMessageCallback() {
   MNM.loadedGlobal = false;
-  if (MNM.global.fromSysex(MidiSysex.data, MidiSysex.recordLen)) {
+  if (MNM.global.fromSysex(MNM.midi)) {
     MNM.loadedGlobal = true;
     globalChangeCallbacks.call();
   }
@@ -85,7 +85,7 @@ void MNMTaskClass::onGlobalMessageCallback() {
 
 void MNMTaskClass::onKitMessageCallback() {
   MNM.loadedKit = false;
-  if (MNM.kit.fromSysex(MidiSysex.data, MidiSysex.recordLen)) {
+  if (MNM.kit.fromSysex(MNM.midi)) {
     MNM.loadedKit = true;
     kitChangeCallbacks.call();
     if (verbose) {
