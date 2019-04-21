@@ -4,6 +4,62 @@
 
 #include "MidiUartParent.hh"
 
+void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+
+  if (param >= 16) {
+    MD.parseCC(channel, param, &track, &track_param);
+    MD.kit.params[track][track_param] = value;
+
+    last_md_param = track_param;
+  } else {
+      track = param - 8 + (channel - MD.global.baseChannel) * 4;
+      MD.kit.levels[track] = value;
+  }
+
+}
+
+void MDMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
+
+void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
+ uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+ uint8_t note = msg[1];
+ if ((channel == 0x0F) && (note == MIDI_NOTE_C3)) {
+ SET_BIT16(MD.mute_mask, mute_mask_track);
+ }
+}
+
+void MDClass::get_mute_state() {
+ for (uint8_t n = 0; n < 16; n++) {
+
+ }
+}
+
+void MDMidiEvents::enable_live_kit_update() {
+  if (kitupdate_state) {
+    return;
+  }
+  Midi.addOnControlChangeCallback(
+      this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  kitupdate_state = true;
+}
+
+void MDMidiEvents::disable_live_kit_update() {
+
+  if (!kitupdate_state) {
+    return;
+  }
+  Midi.removeOnControlChangeCallback(
+      this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  kitupdate_state = false;
+}
+
+
+
 uint8_t machinedrum_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x02, 0x00};
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {

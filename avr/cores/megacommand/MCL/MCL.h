@@ -31,7 +31,6 @@
 #include "MCLGUI.h"
 #include "MCLMemory.h"
 #include "MCLSeq.h"
-#include "MDEvents.h"
 #include "MDExploit.h"
 #include "MDSound.h"
 #include "Menu.h"

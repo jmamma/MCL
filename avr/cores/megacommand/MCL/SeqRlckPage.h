@@ -5,7 +5,7 @@
 
 #include "SeqPage.h"
 
-class SeqRlckPageMidiEvents : public MidiCallback {
+class SeqRlckPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   bool state;
 
@@ -14,7 +14,8 @@ public:
 
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
-
+  void onMidiStopCallback();
+  void onMidiStartCallback();
 };
 
 class SeqRlckPage : public SeqPage {

@@ -145,7 +145,7 @@ void encoder_filtq_handle(Encoder *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTQ);
 }
 void encoder_lastparam_handle(Encoder *enc) {
-  mixer_page.adjust_param(enc, md_events.last_md_param);
+  mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
 }
 
 void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
