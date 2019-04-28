@@ -1,2 +1,6 @@
 .vscode
 bin
+.ionide
+.ccls-cache
+sketch/*.elf
+sketch/*.hex
