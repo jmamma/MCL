@@ -34,10 +34,34 @@ void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
 }
 
 void MDClass::get_mute_state() {
+/*  Midi.addOnNoteOnCallback(MDMidiEvents, (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi);
  for (uint8_t n = 0; n < 16; n++) {
+  MD.assignMachine(n, MID_16_MODEL, 0);
+  midi_events.mute_mask_track = n;
+
+  if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, 127); } 
+  uint16_t start_clock = read_slowclock();
+  uint16_t current_clock = start_clock;
+  do {
+    current_clock = read_slowclock();
+
+    handleIncomingMidi();
+  } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
+
+  if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, Kit.trigGroups[n]); } 
+  assignMachine(n, kit->models[n]);
+  setLFO(track, &(kit->lfos[track]), false);
+  setTrigGroup(track, kit->trigGroups[track]);
+  for (uint8_t i = 0; i < 8; i++) {
+    setTrackParam(track, i, kit->params[track][i]);
+  }
+
 
  }
-}
+ Midi.removeOnNoteOnCallback(
+      &MDMidiEvents, (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi);
+*/
+      }
 
 void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
