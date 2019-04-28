@@ -390,7 +390,7 @@ void MDSeqTrack::clear_track(bool locks) {
 void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   DEBUG_PRINT_FN();
 
-  if (md_track->trigPattern == 0) {
+  if (md_track->trigPattern == 0 && ((pattern_mask | lock_mask) != 0)) {
   //If the MD sequencer data is empty, abort merge.
   //This will prevent unnecessary length change of internal seq pattern
   return;
@@ -406,7 +406,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   //32770.0 is scalar to get MD swing amount in to readible percentage
   //MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float) md_track->kitextra.swingAmount / 32770.0;
+  float swing = (float) md_track->kitextra.swingAmount / 16385.0;
 
   uint64_t swingpattern;
   if (md_track->kitextra.swingEditAll > 0) {

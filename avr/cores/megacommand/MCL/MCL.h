@@ -76,8 +76,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2030
-#define VERSION_STR "2.30"
+#define VERSION 2031
+#define VERSION_STR "2.31"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
