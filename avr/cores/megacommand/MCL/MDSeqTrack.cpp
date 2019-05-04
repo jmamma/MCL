@@ -146,27 +146,41 @@ void MDSeqTrack::reset_params() {
 
 void MDSeqTrack::send_parameter_locks(uint8_t step) {
   uint8_t c;
-  if (IS_BIT_SET64(lock_mask, step)) {
+  bool lock_mask_step = IS_BIT_SET64(lock_mask, step);
+  bool pattern_mask_step = IS_BIT_SET64(pattern_mask, step);
+
+  if (lock_mask_step && pattern_mask_step) {
+     for (c = 0; c < 4; c++) {
+      if (locks[c][step] > 0) {
+        MD.setTrackParam(track_number, locks_params[c] - 1, locks[c][step] - 1);
+      }
+      else if (locks_params[c] > 0) {
+          MD.setTrackParam(track_number, locks_params[c] - 1,
+                         locks_params_orig[c]);
+      }
+    }
+  }
+
+  else if (lock_mask_step) {
     for (c = 0; c < 4; c++) {
       if (locks[c][step] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1, locks[c][step] - 1);
       }
     }
-  } else if (IS_BIT_SET64(pattern_mask, step)) {
+  }
+
+  else if (pattern_mask_step) {
 
     for (c = 0; c < 4; c++) {
       if (locks_params[c] > 0) {
 
         MD.setTrackParam(track_number, locks_params[c] - 1,
                          locks_params_orig[c]);
-        //        MD.setTrackParam(track_number, locks_params[c] - 1,
-        //       MD.setTrackParam(track_number, locks_params[c] - 1,
-        //                      MD.kit.params[track_number][locks_params[c] -
-        //                      1]);
       }
     }
   }
 }
+
 void MDSeqTrack::trig_conditional(uint8_t condition) {
   if (condition == 0) {
 
