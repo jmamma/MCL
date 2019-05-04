@@ -257,7 +257,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&grid_page);
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) { GUI.setPage(&grid_page); }
     return true;
   }
 
