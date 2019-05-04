@@ -41,27 +41,28 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   //  return true;
   //  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&seq_step_page);
-    return true;
+  if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
+      GUI.setPage(&seq_step_page);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
+      GUI.setPage(&seq_rtrk_page);
+
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
+
+      GUI.setPage(&seq_param_page[0]);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+
+      GUI.setPage(&seq_ptc_page);
+
+      return true;
+    }
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    GUI.setPage(&seq_rtrk_page);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-
-    GUI.setPage(&seq_param_page[0]);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
-    GUI.setPage(&seq_ptc_page);
-
-    return true;
-  }
-
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     uint8_t pagemax = 4;
     page_select += 1;
