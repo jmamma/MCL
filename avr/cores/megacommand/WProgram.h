@@ -10,7 +10,7 @@
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
-#define DEBUGMODE
+//#define DEBUGMODE
 
 #define SERIAL_SPEED 250000
 
