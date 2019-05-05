@@ -529,12 +529,11 @@ void MCLActions::send_pattern_kit_to_md() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
   }
-  //md_setsysex_recpos(8, MD.pattern.origPosition);
-
+  md_setsysex_recpos(8, MD.pattern.origPosition);
   MD.pattern.toSysex();
 
   /*Send the encoded kit to the MD via sysex*/
- // md_setsysex_recpos(4, MD.kit.origPosition);
+  md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   /*Instruct the MD to reload the kit, as the kit changes won't update until
    * the kit is reloaded*/
