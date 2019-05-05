@@ -91,7 +91,7 @@ template <class C, int N, class T >
   put_byte_bank1(ptr + wr, c);
   }
   wr++;
-  if (wr == N) { wr = 0; }
+  if (wr == len) { wr = 0; }
   return true;
 }
 
@@ -116,7 +116,7 @@ template <class C, int N, class T>
   memcpy_bank1(ptr + wr, (void *)c, sizeof(*c));
   }
   wr++;
-  if (wr == N) { wr = 0; }
+  if (wr == len) { wr = 0; }
   return true;
 }
 
@@ -129,7 +129,7 @@ template <class C, int N, class T>
   if (ptr == NULL) { ret = buf[rd]; }
   else { ret = get_byte_bank1(ptr + rd); }
   rd++;
-  if (rd == N) { rd = 0; }
+  if (rd == len) { rd = 0; }
   return ret;
 }
 
@@ -144,7 +144,7 @@ template <class C, int N, class T>
   memcpy_bank1(dst, ptr + wr, sizeof(C));
   }
   rd++;
-  if (rd == N) { rd = 0; }
+  if (rd == len) { rd = 0; }
   return true;
 }
 
@@ -169,7 +169,7 @@ template <class C, int N, class T>
   USE_LOCK();
   SET_LOCK();
   T a = wr + 1;
-  if (a == N) { a = 0; }
+  if (a == len) { a = 0; }
   bool ret = (a == rd);
   CLEAR_LOCK();
   return ret;
