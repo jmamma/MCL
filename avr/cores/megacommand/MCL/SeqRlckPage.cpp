@@ -5,7 +5,9 @@ void SeqRlckPage::setup() { SeqPage::setup(); }
 
 void SeqRlckPage::init() {
   SeqPage::init();
-  if (MidiClock.state == 2) { MD.midi_events.disable_live_kit_update(); }
+  if (MidiClock.state == 2) {
+    MD.midi_events.disable_live_kit_update();
+  }
   md_exploit.off();
   note_interface.state = false;
 
@@ -20,7 +22,9 @@ void SeqRlckPage::init() {
 }
 void SeqRlckPage::cleanup() {
   SeqPage::cleanup();
-  if (MidiClock.state == 2) { MD.midi_events.enable_live_kit_update(); }
+  if (MidiClock.state == 2) {
+    MD.midi_events.enable_live_kit_update();
+  }
   midi_events.remove_callbacks();
 }
 void SeqRlckPage::display() {
@@ -67,12 +71,25 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
-      mcl_seq.md_tracks[last_md_track].clear_locks();
+    mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    if (MD.getCurrentTrack(CALLBACK_TIMEOUT) != last_md_track) {
+     for (uint8_t c = 0; c < 4; c++) {
+      if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
+        last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
+      }
+    }
+    last_md_track = MD.currentTrack;
+    }
     mcl_seq.md_tracks[last_md_track].clear_param_locks(last_param_id);
+    for (uint8_t c = 0; c < 4; c++) {
+      if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
+        last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
+      }
+    }
     return true;
   }
 
@@ -109,11 +126,11 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 void SeqRlckPageMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
 
 void SeqRlckPageMidiEvents::onMidiStopCallback() {
- MD.midi_events.enable_live_kit_update();
+  MD.midi_events.enable_live_kit_update();
 }
 
 void SeqRlckPageMidiEvents::onMidiStartCallback() {
- MD.midi_events.disable_live_kit_update();
+  MD.midi_events.disable_live_kit_update();
 }
 
 void SeqRlckPageMidiEvents::setup_callbacks() {
@@ -128,11 +145,14 @@ void SeqRlckPageMidiEvents::setup_callbacks() {
                                        onControlChangeCallback_Midi2);
 
   MidiClock.addOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStopCallback);
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStopCallback);
   MidiClock.addOnMidiStartCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
   MidiClock.addOnMidiContinueCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
 
   state = true;
 }
@@ -149,12 +169,14 @@ void SeqRlckPageMidiEvents::remove_callbacks() {
       this, (midi_callback_ptr_t)&SeqRlckPageMidiEvents::
                 onControlChangeCallback_Midi2);
   MidiClock.removeOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStopCallback);
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStopCallback);
   MidiClock.removeOnMidiStartCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
   MidiClock.removeOnMidiContinueCallback(
-      this, (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
-
+      this,
+      (midi_clock_callback_ptr_t)&SeqRlckPageMidiEvents::onMidiStartCallback);
 
   state = false;
 }
