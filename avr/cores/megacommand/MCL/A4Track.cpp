@@ -4,8 +4,14 @@
 //#include "MCLSd.h"
 
 void A4Track::load_seq_data(int tracknumber) {
-  mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
-  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+
+  if (active == EMPTY_TRACK_TYPE) {
+    mcl_seq.ext_tracks[tracknumber].clear_track();
+  } else {
+    mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
+    memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  }
+
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {

@@ -79,18 +79,18 @@ public:
 
   void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0);
 
-  bool putByte(uint16_t offset, uint8_t c) {
+  void putByte(uint16_t offset, uint8_t c) {
     put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
   uint8_t getByte(uint16_t n) {
     if (n < maxRecordLen) {
-      // Record data to specified memory buffer
+      // Retrieve data from specified memory buffer
       if (recordBuf != NULL) {
         return recordBuf[n];
 
       } else {
-       // Write to sysex buffers in HIGH membank
+       // Read from sysex buffers in HIGH membank
         return get_byte_bank1(sysex_highmem_buf + n);
       }
     }

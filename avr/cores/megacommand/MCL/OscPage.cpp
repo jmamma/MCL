@@ -82,9 +82,9 @@ bool OscPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
     GUI.setPage(&(wd.mixer));
-
+    }
     return true;
   }
 

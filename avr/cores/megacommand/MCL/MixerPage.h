@@ -22,6 +22,7 @@ public:
 void encoder_level_handle(Encoder *enc);
 void encoder_filtf_handle(Encoder *enc);
 void encoder_filtw_handle(Encoder *enc);
+void encoder_filtq_handle(Encoder *enc);
 void encoder_lastparam_handle(Encoder *enc);
 
 class MixerPage : public LightPage {
@@ -29,6 +30,7 @@ public:
   MixerMidiEvents midi_events;
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
+  uint8_t params[16][3];
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {

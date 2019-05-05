@@ -40,6 +40,8 @@ void MCLSeq::setup() {
   MidiClock.addOnMidiContinueCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiContinueCallback);
   midi_events.setup_callbacks();
+
+
 };
 
 void MCLSeq::enable() {
@@ -127,7 +129,18 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
-void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
+void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+
+  if (param >= 16) {
+    MD.parseCC(channel, param, &track, &track_param);
+    mcl_seq.md_tracks[track].update_param(track_param, value);
+  }
+}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -149,10 +162,11 @@ void MCLSeqMidiEvents::setup_callbacks() {
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
+  */
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
-  */
+ 
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);

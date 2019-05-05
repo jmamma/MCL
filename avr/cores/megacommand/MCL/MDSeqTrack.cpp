@@ -18,11 +18,11 @@ void MDSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-            DEBUG_PRINTLN("unmuting");
-           DEBUG_PRINTLN(track_number);
-        DEBUG_PRINTLN(MidiClock.div16th_counter);
-        DEBUG_PRINTLN(start_step);
-        DEBUG_PRINTLN(MidiClock.mod12_counter);
+      DEBUG_PRINTLN("unmuting");
+      DEBUG_PRINTLN(track_number);
+      DEBUG_PRINTLN(MidiClock.div16th_counter);
+      DEBUG_PRINTLN(start_step);
+      DEBUG_PRINTLN(MidiClock.mod12_counter);
       step_count = 0;
       mute_until_start = false;
     }
@@ -47,8 +47,10 @@ void MDSeqTrack::seq() {
 
     if ((utiming >= 12) && (utiming - 12 == (int8_t)MidiClock.mod12_counter)) {
 
-    //Dont transmit locks if MDExploit is on.
-      if ((track_number != 15) || (!md_exploit.state)) { send_parameter_locks(step_count); }
+      // Dont transmit locks if MDExploit is on.
+      if ((track_number != 15) || (!md_exploit.state)) {
+        send_parameter_locks(step_count);
+      }
 
       if (IS_BIT_SET64(pattern_mask, step_count)) {
         trig_conditional(condition);
@@ -81,8 +83,9 @@ void MDSeqTrack::seq() {
     if ((utiming_next < 12) &&
         ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
 
-      if ((track_number != 15) || (!md_exploit.state)) { send_parameter_locks(next_step); }
-
+      if ((track_number != 15) || (!md_exploit.state)) {
+        send_parameter_locks(next_step);
+      }
 
       if (IS_BIT_SET64(pattern_mask, next_step)) {
         trig_conditional(condition_next);
@@ -95,8 +98,8 @@ void MDSeqTrack::seq() {
     } else {
       step_count++;
     }
-//       DEBUG_PRINT(step_count);
-//       DEBUG_PRINT(" ");
+    //       DEBUG_PRINT(step_count);
+    //       DEBUG_PRINT(" ");
   }
 }
 
@@ -146,32 +149,40 @@ void MDSeqTrack::reset_params() {
 
 void MDSeqTrack::send_parameter_locks(uint8_t step) {
   uint8_t c;
-  if (IS_BIT_SET64(lock_mask, step)) {
+  bool lock_mask_step = IS_BIT_SET64(lock_mask, step);
+  bool pattern_mask_step = IS_BIT_SET64(pattern_mask, step);
+
+  if (lock_mask_step && pattern_mask_step) {
     for (c = 0; c < 4; c++) {
       if (locks[c][step] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1, locks[c][step] - 1);
       } else if (locks_params[c] > 0) {
         MD.setTrackParam(track_number, locks_params[c] - 1,
                          locks_params_orig[c]);
-        //        MD.setTrackParam(track_number, locks_params[c] - 1,
-        //                 MD.kit.params[track_number][locks_params[c] - 1]);
       }
     }
-  } else if (IS_BIT_SET64(pattern_mask, step)) {
+  }
+
+  else if (lock_mask_step) {
+    for (c = 0; c < 4; c++) {
+      if (locks[c][step] > 0) {
+        MD.setTrackParam(track_number, locks_params[c] - 1, locks[c][step] - 1);
+      }
+    }
+  }
+
+  else if (pattern_mask_step) {
 
     for (c = 0; c < 4; c++) {
       if (locks_params[c] > 0) {
 
         MD.setTrackParam(track_number, locks_params[c] - 1,
                          locks_params_orig[c]);
-        //        MD.setTrackParam(track_number, locks_params[c] - 1,
-        //       MD.setTrackParam(track_number, locks_params[c] - 1,
-        //                      MD.kit.params[track_number][locks_params[c] -
-        //                      1]);
       }
     }
   }
 }
+
 void MDSeqTrack::trig_conditional(uint8_t condition) {
   if (condition == 0) {
 
@@ -340,6 +351,38 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
   timing[step] = utiming;
 }
 
+bool MDSeqTrack::is_locks(uint8_t step) {
+  bool match = false;
+  for (uint8_t c = 0; c < 4 && match == false; c++) {
+    if (locks[c][step] > 0) {
+      match = true;
+    }
+  }
+  return match;
+}
+
+void MDSeqTrack::clear_param_locks(uint8_t param_id) {
+  uint8_t match = 255;
+  for (uint8_t c = 0; c < 4 && match == 255; c++) {
+    if (locks_params[c] > 0) {
+      if (locks_params[c] - 1 == param_id) {
+        match = c;
+      }
+    }
+  }
+
+  if (match != 255) {
+    for (uint8_t x = 0; x < 64; x++) {
+      locks[match][x] = 0;
+      if (!is_locks(x)) {
+        CLEAR_BIT64(lock_mask, x);
+      }
+    }
+
+    MD.setTrackParam(track_number, param_id, locks_params_orig[match]);
+  }
+}
+
 void MDSeqTrack::clear_step_locks(uint8_t step) {
   for (uint8_t c = 0; c < 4; c++) {
     locks[c][step] = 0;
@@ -390,10 +433,10 @@ void MDSeqTrack::clear_track(bool locks) {
 void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   DEBUG_PRINT_FN();
 
-  if (md_track->trigPattern == 0) {
-  //If the MD sequencer data is empty, abort merge.
-  //This will prevent unnecessary length change of internal seq pattern
-  return;
+  if (md_track->trigPattern == 0 && ((pattern_mask | lock_mask) != 0)) {
+    // If the MD sequencer data is empty, abort merge.
+    // This will prevent unnecessary length change of internal seq pattern
+    return;
   }
   set_length(md_track->length);
 
@@ -403,10 +446,10 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     SET_BIT64(lock_mask, md_track->locks[n].step);
   }
   pattern_mask |= md_track->trigPattern;
-  //32770.0 is scalar to get MD swing amount in to readible percentage
-  //MD sysex docs are not clear on this one so i had to hax it.
+  // 32770.0 is scalar to get MD swing amount in to readible percentage
+  // MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float) md_track->kitextra.swingAmount / 32770.0;
+  float swing = (float)md_track->kitextra.swingAmount / 16385.0;
 
   uint64_t swingpattern;
   if (md_track->kitextra.swingEditAll > 0) {
@@ -415,12 +458,12 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     swingpattern |= md_track->swingPattern;
   }
   for (uint8_t a = 0; a < length; a++) {
-    if (IS_BIT_SET64(md_track->trigPattern,a)) {
+    if (IS_BIT_SET64(md_track->trigPattern, a)) {
       conditional[a] = 0;
       timing[a] = 12;
     }
     if (IS_BIT_SET64(swingpattern, a)) {
-            timing[a] = round(swing * 12.0) + 12;
+      timing[a] = round(swing * 12.0) + 12;
     }
   }
 }

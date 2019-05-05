@@ -173,7 +173,7 @@ if (utiming == 0) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    GUI.setPage(&grid_page);
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) { GUI.setPage(&grid_page); }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {

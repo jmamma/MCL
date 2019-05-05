@@ -6,7 +6,7 @@ void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
   encoders[1]->handler = encoder_filtf_handle;
   encoders[2]->handler = encoder_filtw_handle;
-  encoders[3]->handler = encoder_lastparam_handle;
+  encoders[3]->handler = encoder_filtq_handle;
   create_chars_mixer();
   create_chars_mixer();
 #ifdef OLED_DISPLAY
@@ -23,9 +23,15 @@ void MixerPage::init() {
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
+  for (uint8_t i = 0; i < 16; i++) {
+    for (uint8_t c = 0; c < 3; c++) {
+      params[i][c] = MD.kit.params[i][MODEL_FLTF + c];
+    }
+  }
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   mute_page.draw_mutes(0);
+
   for (uint8_t i = 0; i < 16; i++) {
     uint8_t scaled_level =
         (uint8_t)(((float)MD.kit.levels[i] / (float)127) * (float)FADER_LEN);
@@ -33,7 +39,7 @@ void MixerPage::init() {
     oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
                           scaled_level + 1, WHITE);
     disp_levels[i] = 0;
-  }
+ }
 #endif
 }
 void MixerPage::cleanup() {
@@ -141,8 +147,11 @@ void encoder_filtf_handle(Encoder *enc) {
 void encoder_filtw_handle(Encoder *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTW);
 }
+void encoder_filtq_handle(Encoder *enc) {
+  mixer_page.adjust_param(enc, MODEL_FLTQ);
+}
 void encoder_lastparam_handle(Encoder *enc) {
-  mixer_page.adjust_param(enc, md_events.last_md_param);
+  mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
 }
 
 void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
@@ -159,27 +168,25 @@ void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
       if (newval > 127) {
         newval = 127;
       }
-      for (uint8_t value = MD.kit.params[i][param]; value < newval;
-           value++) {
-        USE_LOCK();
-        SET_LOCK();
-        MD.setTrackParam(i, param, value);
-       MD.kit.params[i][param] = value;
-        CLEAR_LOCK();
-      }
-      for (uint8_t value = MD.kit.params[i][param]; value > newval;
-           value--) {
+      for (uint8_t value = MD.kit.params[i][param]; value < newval; value++) {
         USE_LOCK();
         SET_LOCK();
         MD.setTrackParam(i, param, value);
         MD.kit.params[i][param] = value;
         CLEAR_LOCK();
       }
-    USE_LOCK();
-    SET_LOCK();
-    MD.setTrackParam(i, param, newval);
-    MD.kit.params[i][param] = newval;
-    CLEAR_LOCK();
+      for (uint8_t value = MD.kit.params[i][param]; value > newval; value--) {
+        USE_LOCK();
+        SET_LOCK();
+        MD.setTrackParam(i, param, value);
+        MD.kit.params[i][param] = value;
+        CLEAR_LOCK();
+      }
+      USE_LOCK();
+      SET_LOCK();
+      MD.setTrackParam(i, param, newval);
+      MD.kit.params[i][param] = newval;
+      CLEAR_LOCK();
     }
   }
   enc->cur = 64 + dir;
@@ -276,6 +283,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    for (uint8_t i = 0; i < 16; i++) {
+      if (note_interface.notes[i] == 1) {
+        for (uint8_t c = 0; c < 3; c++) {
+          if (MD.kit.params[i][MODEL_FLTF + c] != params[i][c]) {
+            USE_LOCK();
+            SET_LOCK();
+            MD.setTrackParam(i, MODEL_FLTF + c, params[i][c]);
+            MD.kit.params[i][MODEL_FLTF + c] = params[i][c];
+            CLEAR_LOCK();
+           }
+        }
+      }
+    }
     return true;
   }
 

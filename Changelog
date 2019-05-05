@@ -1,3 +1,55 @@
+MCL 2.31 16/04/2019
+
+Fixes:
+
+Mixer Page:
+
+- Faster encoder rotation is now supported, by pressing the encoder button
+and rotating. (When tracks are selected using trigger interface)
+
+- Encoder 2 now adjusts FILTF for selected tracks.
+- Encoder 3 now adjusts FILTW for selected tracks.
+- Encoder 4 now adjusts FILTQ for selected tracks.
+
+Chain Mode/Grid:
+
+- Clear row now works correctly. Was incorrectly leaving slots active and
+showing them as deleted. This messed up some chain mode behaviours.
+
+- When a row is cleared completely, the row name is now initialised.
+
+Internal Sequencer:
+
+- Reduced sequencer muting/skipping when entering pages.
+
+Write Mode:
+
+- Fix write mode reliability
+
+It was discovered that due to improvements in MIDI performance
+in the MCL firmware, write mode became unreliable when sequencer was running. The
+MD is unable to receive pattern/kit dumps at 4x or above turbo when
+sequencer triggers are being executed. To circumvent this problem
+we've added throttle to Write Mode, to limit data transfer rate when the
+sequencer is live. The throttle is only activated during pattern/kit sends.
+
+- Improve handling of empty slots: Writing an empty slot will now transmit GND
+machine to MD.
+
+- P+/P- modes were broken when chain mode was added (fixed)
+
+- Pattern selection encoder on Write Page was incorrectly limited to 8 instead of 16.
+
+MIDICtrl Core:
+
+- New Memory layout.
+
+Sysex code refactored to use HIGH memory bank. This frees up a signifcant
+amount of RAM in the heap.
+
+This change was made in preparation for handling larger sysex dumps from
+newer elektron machines.
+
 MCL 2.30 20/03/2019
 
 Features and Fixes:

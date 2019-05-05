@@ -25,7 +25,7 @@ void GridPage::setup() {
   if (mcl_cfg.row < MAX_VISIBLE_ROWS) { cur_row = mcl_cfg.row; }
   else { cur_row = MAX_VISIBLE_ROWS - 1; }
   */
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     active_slots[n] = -1;
   }
 }
@@ -622,17 +622,25 @@ void GridPage::apply_slot_changes() {
 
   MDTrack md_track;
   MDSeqTrack md_seq_track;
-  for (uint8_t track = 0; track < count && track + getCol() < 20; track++) {
+  for (uint8_t track = 0; track < count && track + getCol() < NUM_TRACKS; track++) {
     if (slot_clear == 1) {
       grid.clear_slot(track + getCol(), getRow());
+      row_headers[cur_row].update_model(track + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
+      if (row_headers[cur_row].is_empty()) {
+      char *str_tmp = "\0";
+      strcpy(row_headers[cur_row].name,str_tmp);
+      row_headers[cur_row].write(getRow());
+      }
       reload_slot_models = true;
+      proj.file.sync();
     } else if (slot_copy == 1) {
       SET_BIT32(slot_buffer_mask, track + getCol());
+    } else {
+      slot.active = row_headers[cur_row].track_type[track + getCol()];
+      //  if (slot.active != EMPTY_TRACK_TYPE) {
+      slot.store_track_in_grid(track + getCol(), getRow()); 
+      proj.file.sync();
     }
-    slot.active = row_headers[cur_row].track_type[track + getCol()];
-    //  if (slot.active != EMPTY_TRACK_TYPE) {
-    slot.store_track_in_grid(track + getCol(), getRow());
-    proj.file.sync();
     if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
       md_track.load_track_from_grid(track + getCol(), getRow());
 
