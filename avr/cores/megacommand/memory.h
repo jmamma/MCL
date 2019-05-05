@@ -62,5 +62,17 @@ extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   return c;
 }
 
+template<typename T>
+extern inline T get_bank1(volatile T *dst) {
+  select_bank(1);
+  T c = *dst;
+  return c;
+}
+
+template<typename T>
+extern inline void put_bank1(volatile T *dst, T data) {
+  select_bank(1);
+  *dst = data;
+}
 
 #endif /* MEMORY_H__ */
