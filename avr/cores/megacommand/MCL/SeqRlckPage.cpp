@@ -67,14 +67,12 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
 
-    for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
-      mcl_seq.md_tracks[n].clear_locks();
-    }
+      mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_locks();
+    mcl_seq.md_tracks[last_md_track].clear_param_locks(last_param_id);
     return true;
   }
 
@@ -105,6 +103,7 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   MD.kit.params[track][track_param] = value;
   mcl_seq.md_tracks[track].record_track_locks(track_param, value);
+  seq_rlck_page.last_param_id = track_param;
 }
 
 void SeqRlckPageMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}

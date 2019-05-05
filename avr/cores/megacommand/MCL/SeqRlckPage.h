@@ -21,6 +21,7 @@ public:
 class SeqRlckPage : public SeqPage {
 
 public:
+  uint8_t last_param_id;
   SeqRlckPageMidiEvents midi_events;
   SeqRlckPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
