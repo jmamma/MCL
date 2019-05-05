@@ -113,6 +113,21 @@ typedef struct tuning_s {
   /* @} */
 } tuning_t;
 
+class MDMidiEvents : public MidiCallback {
+public:
+  bool kitupdate_state;
+
+  void enable_live_kit_update();
+  void disable_live_kit_update();
+
+  uint8_t last_md_param;
+  uint16_t mute_mask_track;
+  void onControlChangeCallback_Midi(uint8_t *msg);
+  void onControlChangeCallback_Midi2(uint8_t *msg);
+  void onNoteOnCallback_Midi(uint8_t *msg);
+};
+
+
 /**
  * This is the main class used to communicate with a Machinedrum
  * connected to the Minicommand.
@@ -138,6 +153,7 @@ public:
   MDClass();
   bool connected = false;
   MidiClass *midi = &Midi;
+  MDMidiEvents midi_events;
   /** Stores the current global of the MD, usually set by the MDTask. **/
   int currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
@@ -153,6 +169,7 @@ public:
   /** Set to true if the global was loaded (usually set by MDTask). **/
   bool loadedGlobal;
 
+  uint16_t mute_mask;
   //uint32_t swing_last;
 
   /**
@@ -490,6 +507,8 @@ public:
   uint8_t getCurrentTrack(uint16_t timeout = 3000);
 
   uint8_t getCurrentGlobal(uint16_t timeout = 3000);
+
+  void get_mute_state();
 
   void send_gui_command(uint8_t command, uint8_t value);
 

@@ -53,7 +53,8 @@ public:
   void clear_conditional();
   void clear_locks();
   void clear_track(bool locks = true);
-
+  bool is_locks(uint8_t step);
+  void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
   void update_params();
   void update_param(uint8_t param_id, uint8_t value);

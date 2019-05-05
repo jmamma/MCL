@@ -36,7 +36,9 @@ void MCL::setup() {
 
   note_interface.setup();
   md_exploit.setup();
-  md_events.setup();
+
+  MD.midi_events.enable_live_kit_update();
+
   mcl_actions.setup();
   mcl_seq.setup();
   MDSysexListener.setup(&Midi);
