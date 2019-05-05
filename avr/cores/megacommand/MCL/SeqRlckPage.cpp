@@ -114,6 +114,8 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 
   last_md_track = track;
+  //ignore level
+  if (track_param > 31) { return; }
   seq_rlck_page.encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
 
   mcl_seq.md_tracks[track].update_param(track_param, value);
