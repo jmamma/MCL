@@ -12,8 +12,9 @@ void GridWritePage::setup() {
   patternswitch = 1;
   if (mcl_cfg.chain_mode > 0) {
     ((MCLEncoder *)encoders[3])->max = 6;
-    if (encoders[3]->cur > 7) {
-      encoders[3]->cur = 0;
+    if (mode == WRITE_PAGE) {
+      encoders[3]->cur = 4;
+      mode = CHAIN_PAGE;
     }
     ((MCLEncoder *)encoders[2])->max = 1;
   }
