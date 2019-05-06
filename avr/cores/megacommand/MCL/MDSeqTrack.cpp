@@ -56,31 +56,7 @@ void MDSeqTrack::seq() {
         trig_conditional(condition);
       }
     }
-    /*
-      if (send_params && IS_BIT_SET64(pattern_mask, next_step)) {
-      if ((utiming_next < 12) &&
-          ((int8_t)MidiClock.mod12_counter) >= utiming_next - 1) {
-
-
-              for (uint8_t n = 0; n < 24; n++) {
-          if (params[n] != 255) {
-            MD.setTrackParam(track_number, n, params[n]);
-          }
-        }
-              DEBUG_PRINTLN("trig group issue");
-              DEBUG_PRINTLN(trigGroup);
-        if (trigGroup <= 16) {
-          for (uint8_t n = 0; n < 24; n++) {
-            if (mcl_seq.md_tracks[trigGroup].params[n] != 255) {
-              MD.setTrackParam(trigGroup, n,
-                               mcl_seq.md_tracks[trigGroup].params[n]);
-            }
-          }
-        }
-        send_params = false;
-      }
-      } */
-    if ((utiming_next < 12) &&
+   if ((utiming_next < 12) &&
         ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
 
       if ((track_number != 15) || (!md_exploit.state)) {
@@ -183,19 +159,21 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
   }
 }
 
+void MDSeqTrack::send_trig() {
+    mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+    if (MD.kit.trigGroups[track_number] < 16) { mixer_page.disp_levels[MD.kit.trigGroups[track_number]] = MD.kit.levels[MD.kit.trigGroups[track_number]]; }
+    MD.triggerTrack(track_number, 127);
+}
 void MDSeqTrack::trig_conditional(uint8_t condition) {
   if (condition == 0) {
-
-    mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-    MD.triggerTrack(track_number, 127);
+    send_trig();
   } else if (condition <= 8) {
     if (((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2 +
           length) /
          length) %
             ((condition)) ==
         0) {
-      mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-      MD.triggerTrack(track_number, 127);
+      send_trig();
     }
   } else {
 
@@ -203,32 +181,27 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
     switch (condition) {
     case 9:
       if (rnd <= 10) {
-        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-        MD.triggerTrack(track_number, 127);
+        send_trig();
       }
       break;
     case 10:
       if (rnd <= 25) {
-        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-        MD.triggerTrack(track_number, 127);
+        send_trig();
       }
       break;
     case 11:
       if (rnd <= 50) {
-        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-        MD.triggerTrack(track_number, 127);
+        send_trig();
       }
       break;
     case 12:
       if (rnd <= 75) {
-        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-        MD.triggerTrack(track_number, 127);
+        send_trig();
       }
       break;
     case 13:
       if (rnd <= 90) {
-        mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-        MD.triggerTrack(track_number, 127);
+        send_trig();
       }
       break;
     }

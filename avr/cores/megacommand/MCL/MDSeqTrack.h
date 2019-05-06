@@ -37,6 +37,7 @@ public:
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
+  inline void send_trig();
   inline void trig_conditional(uint8_t condition);
   inline void send_parameter_locks(uint8_t step);
 
