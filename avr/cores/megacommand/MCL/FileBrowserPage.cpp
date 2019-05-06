@@ -43,11 +43,13 @@ void FileBrowserPage::init() {
 
   char up_one_dir[3] = "..";
   SD.vwd()->getName(temp_entry, 16);
-  if ((show_parent) && !((sizeof(temp_entry) == 1) && (temp_entry[0] == '/'))) {
+  DEBUG_PRINTLN(temp_entry);
+
+  if ((show_parent) && !(strcmp(temp_entry,"/") == 0)) {
     add_entry(&up_one_dir[0]);
   }
 
-  encoders[1]->cur = 0;
+  encoders[1]->cur = 1;
 
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
     for (uint8_t c = 0; c < 16; c++) {
