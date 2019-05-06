@@ -72,7 +72,7 @@ template <int N, class T = uint8_t>
 
 template <class C, int N, class T>
   CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
-  ptr = static_cast<volatile C*>(_ptr);
+  ptr = reinterpret_cast<volatile C*>(_ptr);
   rd = 0;
   wr = 0;
   overflow = 0;
