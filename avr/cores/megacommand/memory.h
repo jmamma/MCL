@@ -1,7 +1,22 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
-#define BANK1_SYSEX1_DATA_START 0x2200
+#define RX_BUF_SIZE 0x80
+#define TX_BUF_SIZE 0x0C00
+
+#define BANK1_UART1_RX_BUFFER_START 0x2200
+#define UART1_RX_BUFFER_LEN (RX_BUF_SIZE)
+
+#define BANK1_UART1_TX_BUFFER_START (BANK1_UART1_RX_BUFFER_START + UART1_RX_BUFFER_LEN)
+#define UART1_TX_BUFFER_LEN (TX_BUF_SIZE)
+
+#define BANK1_UART2_RX_BUFFER_START (BANK1_UART1_TX_BUFFER_START + UART1_TX_BUFFER_LEN)
+#define UART2_RX_BUFFER_LEN (RX_BUF_SIZE)
+
+#define BANK1_UART2_TX_BUFFER_START (BANK1_UART2_RX_BUFFER_START + UART2_RX_BUFFER_LEN)
+#define UART2_TX_BUFFER_LEN (TX_BUF_SIZE)
+
+#define BANK1_SYSEX1_DATA_START (BANK1_UART2_TX_BUFFER_START + UART2_TX_BUFFER_LEN)
 #define SYSEX1_DATA_LEN 0x1830 //6KB
 
 #define BANK1_SYSEX2_DATA_START (BANK1_SYSEX1_DATA_START + SYSEX1_DATA_LEN)
@@ -32,21 +47,18 @@ class RamBankSelector {
 #endif// __cplusplus
 
 extern inline void memcpy_bank1(volatile void *dst, volatile void *src, uint32_t len) {
-  switch_ram_bank(1);
+  select_bank(1);
   memcpy(dst, src, len);
-  switch_ram_bank(0);
 }
 
 extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
-  switch_ram_bank(1);
+  select_bank(1);
   *dst = byte;
-  switch_ram_bank(0);
 }
 
 extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
-  switch_ram_bank(1);
+  select_bank(1);
   uint8_t c = *dst;
-  switch_ram_bank(0);
   return c;
 }
 
