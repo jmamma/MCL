@@ -43,7 +43,7 @@ void FileBrowserPage::init() {
 
   char up_one_dir[3] = "..";
   SD.vwd()->getName(temp_entry, 16);
-  if ((show_parent) && (strlen(temp_entry) > 1)) {
+  if ((show_parent) && !((sizeof(temp_entry) == 1) && (temp_entry[0] == '/'))) {
     add_entry(&up_one_dir[0]);
   }
 
