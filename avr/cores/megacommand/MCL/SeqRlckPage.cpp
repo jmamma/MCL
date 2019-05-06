@@ -70,8 +70,9 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
 
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-
-    mcl_seq.md_tracks[last_md_track].clear_locks();
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].clear_locks();
+    }
     return true;
   }
 
