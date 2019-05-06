@@ -489,7 +489,7 @@ void MCLActions::send_pattern_kit_to_md() {
     DEBUG_PRINTLN("write original");
     //     MD.kit.origPosition = md_track->origPosition;
     for (uint8_t c = 0; c < 17; c++) {
-      MD.kit.name[c] = grid_page.row_headers[grid_page.cur_row].name[c];
+      MD.kit.name[c] = toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
     }
     memcpy(&MD.kit.reverb[0], kit_extra.reverb, sizeof(kit_extra.reverb));
     memcpy(&MD.kit.delay[0], kit_extra.delay, sizeof(kit_extra.delay));
