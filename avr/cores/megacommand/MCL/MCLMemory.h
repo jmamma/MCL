@@ -3,12 +3,12 @@
 #ifndef MCLMEMORY_H__
 #define MCLMEMORY_H__
 
-#define NUM_MD_TRACKS    16
-#define NUM_A4_TRACKS    4
+#define NUM_MD_TRACKS    16UL
+#define NUM_A4_TRACKS    4UL
 #define NUM_EXT_TRACKS   NUM_A4_TRACKS
-#define NUM_LFO_TRACKS   4
+#define NUM_LFO_TRACKS   4UL
 #define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
-#define NUM_FILE_ENTRIES 256
+#define NUM_FILE_ENTRIES 256UL
 
 //#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
 //#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
@@ -31,7 +31,7 @@
 #define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
 // 1024x FILE entries
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
-#define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES)
+#define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
 
 
 #pragma message (VAR_NAME_VALUE(NUM_MD_TRACKS))

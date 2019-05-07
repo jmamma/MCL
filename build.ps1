@@ -4,27 +4,32 @@ Write-Host "============> Build started."
 
 $buildOutput = &{
     arduino compile --warnings default -b MIDICtrl20_MegaCommand:avr:mega .\sketch\
-} 2>&1 | ForEach-Object { Write-Host $_; $_ } | Select-String $pattern
-
-# pass 1
-$buildOutput | ForEach-Object {
-    $lines = $_.ToString()
-    $equation = $lines.Substring($lines.IndexOf($pattern) + $pattern.Length).Split([System.Environment]::NewLine)[0].Trim()
-    $evaluate = $equation.Replace("sizeof(", '$($').Insert(0, '$')
-    Invoke-Expression $evaluate
-} -ErrorAction SilentlyContinue
+} 2>&1 | ForEach-Object { 
+    $content = $_.ToString()
+    if ($content.Contains("pragma message")) {
+        Write-Host $_ -ForegroundColor Green
+    } elseif ($content.Contains("overflow")){
+        Write-Host $_ -ForegroundColor Red
+    } elseif ($content.Contains("invalid conversion")) {
+        Write-Host $_ -ForegroundColor DarkGray
+    }else{
+        Write-Host $_
+    }
+    $_ 
+} | Select-String $pattern
 
 Write-Host "============> Build complete."
 
-# pass 2
 $bank1 = @{}
 
 $buildOutput | ForEach-Object {
     $lines = $_.ToString()
     $equation = $lines.Substring($lines.IndexOf($pattern) + $pattern.Length).Split([System.Environment]::NewLine)[0].Trim()
-    $evaluate = $equation.Replace("sizeof(", '$($').Insert(0, '$')
+    $equation = $equation.Replace("sizeof(MDTrackLight)", "501").Replace("sizeof(A4Track)", "1742")
+    $evaluate = $equation.Replace("sizeof(", '$($').Replace("UL", "").Insert(0, '$')
+    
     $variable = $evaluate.Split("=")[0]
-    Invoke-Expression $evaluate
+    . Invoke-Expression $evaluate
     $value = Invoke-Expression $variable
     $bank1[$variable] = $value
 } -ErrorAction SilentlyContinue
