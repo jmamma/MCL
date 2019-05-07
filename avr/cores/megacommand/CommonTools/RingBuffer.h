@@ -37,7 +37,7 @@ class CRingBuffer {
   volatile T rd, wr;
   volatile C buf[N];
   volatile T len = N;
-  volatile uint8_t *ptr = NULL;
+  volatile C *ptr = NULL;
 
   volatile uint8_t overflow;
 
@@ -72,7 +72,7 @@ template <int N, class T = uint8_t>
 
 template <class C, int N, class T>
   CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
-  ptr = _ptr;
+  ptr = reinterpret_cast<volatile C*>(_ptr);
   rd = 0;
   wr = 0;
   overflow = 0;
@@ -88,7 +88,7 @@ template <class C, int N, class T >
   buf[wr] = c;
   }
   else {
-  put_byte_bank1(ptr + wr, c);
+  put_bank1(ptr + wr, c);
   }
   wr++;
   if (wr == len) { wr = 0; }
@@ -113,7 +113,7 @@ template <class C, int N, class T>
   memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
   }
   else {
-  memcpy_bank1(ptr + wr, (void *)c, sizeof(*c));
+  memcpy_bank1((void*)&(ptr)[wr], (void *)c, sizeof(*c));
   }
   wr++;
   if (wr == len) { wr = 0; }
@@ -127,7 +127,7 @@ template <class C, int N, class T>
     return 0;
   C ret;
   if (ptr == NULL) { ret = buf[rd]; }
-  else { ret = get_byte_bank1(ptr + rd); }
+  else { ret = get_bank1(ptr + rd); }
   rd++;
   if (rd == len) { rd = 0; }
   return ret;
@@ -141,7 +141,7 @@ template <class C, int N, class T>
   memcpy(dst, (void *)&buf[rd], sizeof(C));
   }
   else {
-  memcpy_bank1(dst, ptr + wr, sizeof(C));
+  memcpy_bank1(dst, (void*)&ptr[rd], sizeof(C));
   }
   rd++;
   if (rd == len) { rd = 0; }
