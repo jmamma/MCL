@@ -34,7 +34,6 @@ class MidiClockClass {
    **/
 
 public:
-
   volatile uint32_t div192th_counter_last;
   volatile uint32_t div192th_counter;
 
@@ -128,11 +127,11 @@ public:
 
   CallbackVector1<ClockCallback, 8, uint32_t> onClockCallbacks;
   void addOnMidiStartImmediateCallback(ClockCallback *obj,
-                              midi_clock_callback_ptr_t func) {
+                                       midi_clock_callback_ptr_t func) {
     onMidiStartImmediateCallbacks.add(obj, func);
   }
   void removeOnMidiStartImmediateCallback(ClockCallback *obj,
-                                 midi_clock_callback_ptr_t func) {
+                                          midi_clock_callback_ptr_t func) {
     onMidiStartImmediateCallbacks.remove(obj, func);
   }
   void removeOnMidiStartImmediateCallback(ClockCallback *obj) {
@@ -216,19 +215,184 @@ public:
   }
 
   void init();
-  void handleClock();
-  void handleImmediateClock();
+  void MidiClockClass::callCallbacks() {
+    if (state != STARTED)
+      return;
+
+    // Moved MidiClock callbacks to Main Loop
+
+    static bool inCallback = false;
+    if (inCallback) {
+      return;
+    } else {
+      inCallback = true;
+    }
+
+#ifndef HOST_MIDIDUINO
+    sei();
+#endif
+    // HOST_MIDIDUINO/
+
+    on192Callbacks.call(div192th_counter);
+
+    if (mod6_counter == 0) {
+      on16Callbacks.call(div16th_counter);
+      on32Callbacks.call(div32th_counter);
+      // mcl_16counter++;
+    }
+    if (mod6_counter == 3) {
+      on32Callbacks.call(div32th_counter);
+    }
+
+    inCallback = false;
+  }
+
+  void MidiClockClass::handleImmediateClock() {
+    // if (clock > clock_last_time) {
+    //  div192th_time = (clock - clock_last_time) / 2;
+    //   DEBUG_PRINTLN( (clock - clock_last_time) / 2);
+
+    // }
+    clock_last_time = clock;
+    uint8_t _mod6_counter = mod6_counter;
+
+    if (transmit_uart1) {
+      //       MidiUart.putc(0xF8);
+      MidiUart.m_putc_immediate(0xF8);
+    }
+    if (transmit_uart2) {
+      MidiUart2.m_putc_immediate(0xF8);
+    }
+    incrementCounters();
+    if ((step_counter == 1) && (state == STARTED)) {
+      setLed();
+    } else {
+      clearLed();
+    }
+
+    // callCallbacks();
+  }
+
+  /* in interrupt on receiving 0xF8 */
+  void MidiClockClass::handleClock() {
+
+    if (useImmediateClock) {
+      handleImmediateClock();
+      return;
+    }
+  }
+  void MidiClockClass::increment192Counter() {
+    if (state == STARTED) {
+      div192th_counter++;
+      mod12_counter++;
+    }
+  }
+  uint16_t midi_clock_diff(uint16_t old_clock, uint16_t new_clock) {
+    if (new_clock >= old_clock)
+      return new_clock - old_clock;
+    else
+      return new_clock + (0xFFFF - old_clock);
+  }
+  void MidiClockClass::calc_tempo() {
+      tempo = ((float)150000 / ((float)midi_clock_diff(last_clock16, clock)));
+  }
+  void MidiClockClass::incrementCounters() {
+    mod6_free_counter++;
+    if (mod6_free_counter == 6) {
+      div192th_time = midi_clock_diff(last_clock16, clock) / 12;
+      calc_tempo();
+      mod6_free_counter = 0;
+      last_clock16 = clock;
+    }
+    if (state == STARTING && (mode == INTERNAL_MIDI || useImmediateClock)) {
+      state = STARTED;
+      callCallbacks();
+    } else if (state == STARTED) {
+      div96th_counter++;
+      mod6_counter++;
+      mod12_counter++;
+      mod3_counter++;
+      div192th_counter++;
+      if (mod3_counter == 3) {
+        mod3_counter = 0;
+      }
+      if (mod6_counter == 6) {
+        step_counter++;
+        mod6_counter = 0;
+        mod12_counter = 0;
+        div16th_counter++;
+        div32th_counter++;
+        // div32th counter should be at most 2x div16th_counter
+        if (div16th_counter == 0) {
+          div32th_counter = 0;
+          div96th_counter = 0;
+          div192th_counter = 0;
+        }
+      } else if (mod6_counter == 3) {
+        div32th_counter++;
+      }
+      if (step_counter == 5) {
+        step_counter = 1;
+        beat_counter++;
+      }
+      if (beat_counter == 5) {
+        beat_counter = 1;
+        bar_counter++;
+      }
+      if (bar_counter == 101) {
+        bar_counter = 1;
+      }
+    }
+  }
   void updateClockInterval();
-  void increment192Counter();
-  void incrementCounters();
-  void callCallbacks();
   bool clock_less_than(uint16_t a, uint16_t b);
   bool clock_less_than(uint32_t a, uint32_t b);
   uint32_t clock_diff_div192(uint32_t old_clock, uint32_t new_clock);
 
-  void handleImmediateMidiStart();
-  void handleImmediateMidiContinue();
-  void handleImmediateMidiStop();
+  void MidiClockClass::handleImmediateMidiStart() {
+    if (transmit_uart1) {
+      MidiUart.sendRaw(MIDI_START);
+    }
+    if (transmit_uart2) {
+      MidiUart2.sendRaw(MIDI_START);
+    }
+    init();
+
+    onMidiStartImmediateCallbacks.call(div96th_counter);
+    state = STARTING;
+
+    DEBUG_PRINTLN("START");
+  }
+
+  void MidiClockClass::handleImmediateMidiStop() {
+    state = PAUSED;
+    if (transmit_uart1) {
+      MidiUart.sendRaw(MIDI_STOP);
+    }
+    if (transmit_uart2) {
+      MidiUart2.sendRaw(MIDI_STOP);
+    }
+
+    //  init();
+  }
+
+  void MidiClockClass::handleImmediateMidiContinue() {
+    if (transmit_uart1) {
+      MidiUart.sendRaw(MIDI_CONTINUE);
+    }
+    if (transmit_uart2) {
+      MidiUart2.sendRaw(MIDI_CONTINUE);
+    }
+    state = STARTING;
+
+    counter = 10000;
+    rx_clock = rx_last_clock = 0;
+    isInit = false;
+    incrementCounters();
+
+    //  init();
+  }
+
   void handleMidiStart();
   void handleMidiContinue();
   void handleMidiStop();
