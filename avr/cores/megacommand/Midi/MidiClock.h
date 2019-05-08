@@ -299,7 +299,7 @@ public:
   void MidiClockClass::incrementCounters() {
     mod6_free_counter++;
     if (mod6_free_counter == 6) {
-      div192th_time = midi_clock_diff(last_clock16, clock) / 12;
+      div192th_time = midi_clock_diff(last_clock16, clock) * .08333;
       calc_tempo();
       mod6_free_counter = 0;
       last_clock16 = clock;
