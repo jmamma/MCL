@@ -88,7 +88,6 @@ void MidiUartClass2::m_putc(uint8_t c) {
   if (c == 0xF7) {
     uart_block = 0;
   }
-again:
 
   if (txRb.isFull()) {
     while (txRb.isFull()) {
@@ -106,7 +105,6 @@ again:
         SET_BIT(UCSR2B, UDRIE1);
       }
     }
-    goto again;
   } else {
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
@@ -206,7 +204,6 @@ void MidiUartClass::m_putc(uint8_t c) {
   if (c == 0xF7) {
     uart_block = 0;
   }
-again:
 
   if (txRb.isFull()) {
     while (txRb.isFull()) {
@@ -235,7 +232,6 @@ again:
         SET_BIT(UCSR1B, UDRIE1);
       }
     }
-    goto again;
   } else {
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
