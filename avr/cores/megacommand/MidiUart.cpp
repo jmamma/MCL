@@ -89,7 +89,6 @@ void MidiUartClass2::m_putc(uint8_t c) {
     uart_block = 0;
   }
 again:
-  bool isEmpty = txRb.isEmpty();
 
   if (txRb.isFull()) {
     while (txRb.isFull()) {
@@ -111,30 +110,8 @@ again:
   } else {
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
-    if (IN_IRQ()) {
-      txRb.put(c);
-      if (UART2_CHECK_EMPTY_BUFFER()) {
-        MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-        UART2_WRITE_CHAR(txRb.get());
-      }
-      if (!txRb.isEmpty()) {
-        SET_BIT(UCSR2B, UDRIE1);
-      }
-
-    } else {
-      USE_LOCK();
-      SET_LOCK();
-
-      txRb.put(c);
-      if (UART2_CHECK_EMPTY_BUFFER()) {
-        MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-        UART2_WRITE_CHAR(txRb.get());
-      }
-      if (!txRb.isEmpty()) {
-        SET_BIT(UCSR2B, UDRIE1);
-      }
-      CLEAR_LOCK();
-    }
+    txRb.put(c);
+    SET_BIT(UCSR2B, UDRIE1);
   }
 }
 
@@ -263,30 +240,8 @@ again:
     // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
 
     // enable interrupt on empty data register to start transfer
-    if (IN_IRQ()) {
-      txRb.put(c);
-      if (UART_CHECK_EMPTY_BUFFER()) {
-        MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-        UART_WRITE_CHAR(MidiUart.txRb.get());
-      }
-      if (!txRb.isEmpty()) {
-        SET_BIT(UCSR1B, UDRIE1);
-      }
-
-    } else {
-      USE_LOCK();
-      SET_LOCK();
-
-      txRb.put(c);
-      if (UART_CHECK_EMPTY_BUFFER()) {
-        MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-        UART_WRITE_CHAR(MidiUart.txRb.get());
-      }
-      if (!txRb.isEmpty()) {
-        SET_BIT(UCSR1B, UDRIE1);
-      }
-      CLEAR_LOCK();
-    }
+    txRb.put(c);
+    SET_BIT(UCSR1B, UDRIE1);
   }
 }
 
