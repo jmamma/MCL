@@ -290,10 +290,7 @@ ISR(USART1_RX_vect) {
   select_bank(0);
   isr_midi();
 }
-ISR(USART2_RX_vect) {
-  select_bank(0);
-  isr_midi();
-}
+ISR(USART2_RX_vect, ISR_ALIASOF(USART1_RX_vect));
 
 inline void isr_midi() {
   uint8_t c, s;
