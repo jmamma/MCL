@@ -227,7 +227,7 @@ public:
       return;
 
     uint8_t msg[3] = {MIDI_NOTE_ON | channel, note, velocity};
-    noteOnCallbacks.call(msg);
+    //noteOnCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
@@ -236,7 +236,7 @@ public:
       return;
 
     uint8_t msg[3] = {MIDI_NOTE_OFF | channel, note, velocity};
-    noteOffCallbacks.call(msg);
+    //noteOffCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
@@ -245,7 +245,7 @@ public:
       return;
 
     uint8_t msg[3] = {MIDI_CONTROL_CHANGE | channel, cc, value};
-    ccCallbacks.call(msg);
+    //ccCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
