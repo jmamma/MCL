@@ -213,12 +213,14 @@ ISR(TIMER1_COMPA_vect) {
       }
     }
   }
+  /*
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
     if ((enable_clock_callbacks)) {
-      MidiClock.callCallbacks();
+            MidiClock.callCallbacks();
     }
   }
+  */
   }
 }
 
