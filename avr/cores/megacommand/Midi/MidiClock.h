@@ -229,7 +229,7 @@ public:
     }
 
 #ifndef HOST_MIDIDUINO
-    sei();
+    //sei();
 #endif
     // HOST_MIDIDUINO/
 
