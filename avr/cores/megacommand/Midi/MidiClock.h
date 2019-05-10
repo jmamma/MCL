@@ -223,6 +223,7 @@ public:
 
     static bool inCallback = false;
     if (inCallback) {
+      DEBUG_PRINTLN("clock collision");
       return;
     } else {
       inCallback = true;

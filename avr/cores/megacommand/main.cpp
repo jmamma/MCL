@@ -256,7 +256,7 @@ uint16_t lastRunningStatusReset = 0;
 // extern uint16_t myvar;
 uint16_t minuteclock = 0;
 
-ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+ISR(TIMER2_COMPA_vect) {
 
   select_bank(0);
 
@@ -273,7 +273,7 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
-
+  sei();
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif
