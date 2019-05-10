@@ -66,18 +66,26 @@ class MidiUartClass : public MidiUartParent {
 
  public:
   MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
-  virtual void m_putc(uint8_t c);
-  virtual void m_putc_immediate(uint8_t c);
-  virtual bool avail();
-  virtual uint8_t m_getc();
 
-	void set_speed(uint32_t speed, uint8_t port);
+  inline void m_putc(uint8_t c) {
+  if (c == 0xF0) {
+    uart_block = 1;
+  }
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
+   txRb.put(c);
+   SET_BIT(UCSR1B, UDRIE1);
+  }
+  inline bool avail() { return !rxRb.isEmpty(); }
+  inline uint8_t m_getc() { return rxRb.get(); }
+
+  virtual void m_putc_immediate(uint8_t c);
+
+  void set_speed(uint32_t speed, uint8_t port);
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-
-#ifdef TX_IRQ
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-#endif
 
 };
 
@@ -90,12 +98,21 @@ class MidiUartClass2 : public MidiUartParent {
 
  public:
   MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
-  virtual bool avail();
-  virtual uint8_t m_getc();
-  virtual void m_putc(uint8_t c);
+  inline bool avail() { return !rxRb.isEmpty(); }
+  inline uint8_t m_getc() { return rxRb.get(); }
+
+  inline void m_putc(uint8_t c) {
+  if (c == 0xF0) {
+    uart_block = 1;
+  }
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
+   txRb.put(c);
+    SET_BIT(UCSR2B, UDRIE1);
+  }
   virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
 };
 
