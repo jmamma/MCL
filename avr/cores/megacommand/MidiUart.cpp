@@ -80,39 +80,6 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
   }
 }
 
-void MidiUartClass2::m_putc(uint8_t c) {
-  //#ifdef BLAH
-  if (c == 0xF0) {
-    uart_block = 1;
-  }
-  if (c == 0xF7) {
-    uart_block = 0;
-  }
-
-  if (txRb.isFull()) {
-    while (txRb.isFull()) {
-      if (IN_IRQ()) {
-        // if we are in an irq, we need to do the sending ourselves as the TX
-        // irq is blocked
-        setLed2();
-        while (!UART2_CHECK_EMPTY_BUFFER())
-          ;
-        if (!MidiUart2.txRb.isEmpty()) {
-          MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-          UART2_WRITE_CHAR(MidiUart2.txRb.get());
-        }
-      } else {
-        SET_BIT(UCSR2B, UDRIE1);
-      }
-    }
-  } else {
-    // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-
-    txRb.put(c);
-    SET_BIT(UCSR2B, UDRIE1);
-  }
-}
-
 void MidiUartClass2::m_putc_immediate(uint8_t c) {
 
 #
@@ -195,55 +162,6 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
     UART_WRITE_CHAR(c);
   }
 }
-
-void MidiUartClass::m_putc(uint8_t c) {
-  //#ifdef BLAH
-  if (c == 0xF0) {
-    uart_block = 1;
-  }
-  if (c == 0xF7) {
-    uart_block = 0;
-  }
-
-  if (txRb.isFull()) {
-    while (txRb.isFull()) {
-      if (IN_IRQ()) {
-        // if we are in an irq, we need to do the sending ourselves as the TX
-        // irq is blocked
-        setLed2();
-        while (!UART_CHECK_EMPTY_BUFFER()) {
-          if (TIMER1_CHECK_INT()) {
-            TCNT1 = 0;
-            clock++;
-            TIMER1_CLEAR_INT()
-          }
-          if (TIMER2_CHECK_INT()) {
-            TCNT2 = 0;
-            slowclock++;
-            TIMER2_CLEAR_INT()
-          }
-        }
-
-        if (!MidiUart.txRb.isEmpty()) {
-          MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-          UART_WRITE_CHAR(MidiUart.txRb.get());
-        }
-      } else {
-        SET_BIT(UCSR1B, UDRIE1);
-      }
-    }
-  } else {
-    // MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-
-    // enable interrupt on empty data register to start transfer
-    txRb.put(c);
-    SET_BIT(UCSR1B, UDRIE1);
-  }
-}
-
-bool MidiUartClass::avail() { return !rxRb.isEmpty(); }
-
-uint8_t MidiUartClass::m_getc() { return rxRb.get(); }
 
 ISR(USART1_RX_vect) {
   select_bank(0);
@@ -495,6 +413,3 @@ void MidiUartClass2::initSerial() {
   UCSR2B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
 }
 
-bool MidiUartClass2::avail() { return !rxRb.isEmpty(); }
-
-uint8_t MidiUartClass2::m_getc() { return rxRb.get(); }
