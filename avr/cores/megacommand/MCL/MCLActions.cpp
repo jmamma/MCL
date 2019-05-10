@@ -754,10 +754,10 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
       (float)mcl_actions.a4_latency / bytes_per_second_uart2;
 
   float div32th_per_second =
-      ((float)MidiClock.tempo / (float)60) * (float)4 * (float)2;
+      ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)2;
   // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
   float div192th_per_second = div32th_per_second * 6;
-  //  ((float)MidiClock.tempo / (float)60) * (float)4 * (float)12;
+  //  ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)12;
   // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
   md_div32th_latency = round(div32th_per_second * md_latency_in_seconds) + 1;
   a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
