@@ -260,9 +260,9 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
-  if (SeqPage::handleEvent(event)) {
-    return;
-  }
+//  if (SeqPage::handleEvent(event)) {
+//    return;
+//  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
