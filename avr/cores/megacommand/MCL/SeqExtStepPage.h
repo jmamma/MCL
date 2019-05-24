@@ -30,6 +30,7 @@ public:
   void setup();
   void cleanup();
   void init();
+  void config();
   void config_encoders();
 };
 

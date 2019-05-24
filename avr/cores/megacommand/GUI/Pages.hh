@@ -148,6 +148,7 @@ public:
 
   // Call an init routine each time the page is loaded
   virtual void init() {}
+  virtual void config() {}
   virtual void cleanup() {}
   virtual void setup() {}
 
@@ -193,6 +194,7 @@ public:
   /** Call this to unlock all encoders in the page. If their value
       changed while locked, they will send out their new value.
   **/
+  virtual void config() {}
   void unlockEncoders();
 };
 

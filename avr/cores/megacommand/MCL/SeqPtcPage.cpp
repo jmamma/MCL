@@ -260,6 +260,9 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
+  if (SeqPage::handleEvent(event)) {
+    return;
+  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -312,7 +315,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
     if (midi_device != DEVICE_MD) {
       if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 2;

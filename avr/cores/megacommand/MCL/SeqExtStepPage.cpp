@@ -2,7 +2,7 @@
 #include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
-
+void SeqExtStepPage::config() { encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length; }
 void SeqExtStepPage::config_encoders() {
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
     ((MCLEncoder *)encoders[1])->cur = 6;
@@ -12,7 +12,7 @@ void SeqExtStepPage::config_encoders() {
     ((MCLEncoder *)encoders[1])->max = 23;
   }
   ((MCLEncoder *)encoders[2])->max = 128;
-  encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length;
+  config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 }
 void SeqExtStepPage::init() {
@@ -128,6 +128,9 @@ void SeqExtStepPage::display() {
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
+  if (SeqPage::handleEvent(event)) {
+    return;
+  }
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -225,7 +228,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2) && BUTTON_DOWN(Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
     if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
       mcl_seq.ext_tracks[last_ext_track].resolution = 2;
       init();
@@ -253,10 +256,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
-
   return false;
 }
 
