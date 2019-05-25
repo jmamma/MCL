@@ -103,16 +103,6 @@ void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   }
 }
 
-void MDSeqTrack::update_kit_params() {
-  for (uint8_t c = 0; c < 4; c++) {
-    if (locks_params[c] > 0) {
-      uint8_t param_id = locks_params[c] - 1;
-      MD.kit.params[track_number][param_id] = locks_params_orig[c];
-    }
-  }
-
-}
-
 void MDSeqTrack::update_params() {
 
   for (uint8_t c = 0; c < 4; c++) {

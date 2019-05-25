@@ -566,14 +566,11 @@ void GridPage::display() {
 void GridPage::prepare() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  if ((mcl_cfg.auto_save == 1)) {
+  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
     MD.saveCurrentKit(MD.currentKit);
     MD.getBlockingKit(MD.currentKit);
-    if (MidiClock.state == 2) {
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].update_kit_params();
-    }
-    }
+  } else if (MD.currentKit != MD.kit.origPosition) {
+    MD.getBlockingKit(MD.currentKit);
   }
 }
 
