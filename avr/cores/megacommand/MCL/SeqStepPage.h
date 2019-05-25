@@ -27,6 +27,7 @@ public:
   void display();
   void setup();
   void init();
+  void config();
   void loop();
   void cleanup();
 };

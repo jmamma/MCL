@@ -24,7 +24,8 @@ public:
   static uint8_t length;
   static uint8_t resolution;
   static uint8_t apply;
-  bool show_track_menu;
+  static uint8_t ignore_button_release;
+  static bool show_track_menu;
 
   SeqPageMidiEvents seqpage_midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
