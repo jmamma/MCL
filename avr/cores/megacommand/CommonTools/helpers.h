@@ -44,6 +44,13 @@ extern "C" {
 #define IS_BIT_SET8(port, bit) (((port) & (uint8_t)(1 << (bit))) ? 1 : 0)
 #define IS_BIT_CLEAR8(port, bit) (((port) & (uint8_t)(1 << (bit))) == 0 ? 1 : 0)
 
+/** 16-bit macros. **/
+#define SET_BIT16(port, bit)   ((port) |= (uint16_t)(1UL << (bit)))
+#define CLEAR_BIT16(port, bit) ((port) &= (uint16_t)~(1UL << (bit)))
+#define TOGGLE_BIT16(port, bit) ((port) ^= (uint16_t)(1UL << (bit)))
+#define IS_BIT_SET16(port, bit) (((port) & (uint16_t)(1UL << (bit))) ? 1 : 0)
+#define IS_BIT_CLEAR16(port, bit) (((port) & (uint16_t)(1UL << (bit))) == 0 ? 1 : 0)
+
 /** 32-bit macros. **/
 #define SET_BIT32(port, bit)   ((port) |= (uint32_t)(1UL << (bit)))
 #define CLEAR_BIT32(port, bit) ((port) &= (uint32_t)~(1UL << (bit)))

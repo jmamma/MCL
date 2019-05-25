@@ -8,6 +8,8 @@ uint8_t SeqPage::midi_device = DEVICE_MD;
 uint8_t SeqPage::length = 0;
 uint8_t SeqPage::resolution = 0;
 uint8_t SeqPage::apply = 0;
+uint8_t SeqPage::ignore_button_release = 255;
+bool SeqPage::show_track_menu = false;
 
 void SeqPage::create_chars_seq() {
   uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
@@ -23,6 +25,7 @@ void SeqPage::create_chars_seq() {
 void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
+  ignore_button_release = 255;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
 #ifdef OLED_DISPLAY
@@ -37,43 +40,100 @@ void SeqPage::cleanup() {
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
-  //  if (note_interface.is_event(event)) {
+  if (note_interface.is_event(event)) {
+    uint8_t port = event->port;
+    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t track = event->source - 128;
 
-  //  return true;
-  //  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&seq_step_page);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    GUI.setPage(&seq_rtrk_page);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-
-    GUI.setPage(&seq_param_page[0]);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
-    GUI.setPage(&seq_ptc_page);
-
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    uint8_t pagemax = 4;
-    page_select += 1;
-
-    if (SeqPage::midi_device != DEVICE_MD) {
-      pagemax = 8;
+    if (BUTTON_DOWN(Buttons.BUTTON2)) {
+      uint8_t step = track;
+      step += 1 + page_select * 16;
+      if (SeqPage::midi_device == DEVICE_MD) {
+        if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+            mcl_seq.md_tracks[n].length = step;
+          }
+        }
+        mcl_seq.md_tracks[last_md_track].length = step;
+      } else {
+        if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+            mcl_seq.ext_tracks[n].length = step;
+          }
+        }
+        mcl_seq.ext_tracks[last_ext_track].length = step;
+      }
+      encoders[2]->cur = step;
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+        note_interface.notes[track] = 0;
+        ignore_button_release = 2;
+      }
+      return true;
+      //}
     }
-    if (page_select >= pagemax) {
-      page_select = 0;
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      if (device == DEVICE_MD) {
+        last_md_track = track;
+        if (GUI.currentPage() == &seq_extstep_page) {
+          GUI.setPage(&seq_step_page);
+        }
+        GUI.currentPage()->redisplay = true;
+        GUI.currentPage()->config();
+        encoders[2]->old = encoders[2]->cur;
+        return true;
+      } else {
+        last_ext_track = track - 16;
+        if (GUI.currentPage() == &seq_step_page) {
+          GUI.setPage(&seq_extstep_page);
+        }
+        GUI.currentPage()->redisplay = true;
+        GUI.currentPage()->config(); 
+        encoders[2]->old = encoders[2]->cur;
+        return true;
+      }
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+        note_interface.notes[track] = 0;
+        ignore_button_release = 2;
+      }
+      return true;
     }
+  }
+  if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
+    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
+      GUI.setPage(&seq_step_page);
+      return false;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
+      GUI.setPage(&seq_rtrk_page);
 
-    return true;
+      return false;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
+
+      GUI.setPage(&seq_param_page[0]);
+      return false;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+
+      GUI.setPage(&seq_ptc_page);
+
+      return false;
+    }
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+    if (ignore_button_release != 2) {
+      ignore_button_release = 255;
+      uint8_t pagemax = 4;
+      page_select += 1;
+
+      if (SeqPage::midi_device != DEVICE_MD) {
+        pagemax = 8;
+      }
+      if (page_select >= pagemax) {
+        page_select = 0;
+      }
+    }
+    return false;
   }
   /*
   #ifdef OLED_DISPLAY
@@ -333,6 +393,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 }
 void pattern_len_handler(Encoder *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
+  if (!enc_->hasChanged()) { return; }
   if (SeqPage::midi_device == DEVICE_MD) {
     DEBUG_PRINTLN("under 16");
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
@@ -383,7 +444,9 @@ void SeqPage::display() {
     GUI.lines[i].changed = false;
   }
   GUI.setLine(GUI.LINE1);
-  GUI.put_value_at1(15, page_select + 1);
+  if (GUI.currentPage() != &seq_ptc_page) {
+    GUI.put_value_at1(15, page_select + 1);
+  }
 #ifdef OLED_DISPLAY
   if (show_track_menu) {
     uint8_t x_offset = 43;

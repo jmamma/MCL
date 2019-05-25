@@ -9,20 +9,20 @@ extern "C" {
 #include "helpers.h"
 #include "string.h"
 //Let's define a simple binary pattern to identify to filesystem of 10101010
-#define FS_ID 170
-#define FS_VERSION 100
-#define FS_ENTRY_DISABLED 0
-#define FS_ENTRY_DELETED 3
-#define FS_ENTRY_ACTIVE 1
-#define FS_MAX_ENTRIES 10000
-#define FS_BLOCK_SIZE 512
+#define FS_ID 170UL
+#define FS_VERSION 100UL
+#define FS_ENTRY_DISABLED 0UL
+#define FS_ENTRY_DELETED 3UL
+#define FS_ENTRY_ACTIVE 1UL
+#define FS_MAX_ENTRIES 10000UL
+#define FS_BLOCK_SIZE 512UL
 #define FS_HEADER_RESERVED 512
-#define FS_ENTRY_SIZE 256
-#define FS_MIN_FILE_SIZE 262144 //0.25megabyte, to mitigate small file lock-in as file space is fragmented.
+#define FS_ENTRY_SIZE 256UL
+#define FS_MIN_FILE_SIZE 262144UL //0.25megabyte, to mitigate small file lock-in as file space is fragmented.
 #define FS_TABLE_RESERVED (FS_MAX_ENTRIES * FS_ENTRY_SIZE)
-#define FS_ENABLED 1
-#define FS_DISABLED 0
-#define FS_FILE_NAME_LENGTH 16
+#define FS_ENABLED 1UL
+#define FS_DISABLED 0UL
+#define FS_FILE_NAME_LENGTH 16UL
 // FS_FileSystemLayout
 //
 // 0    Header

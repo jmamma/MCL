@@ -56,8 +56,9 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source - 128;
     midi_device = device;
+    if (BUTTON_DOWN(Buttons.BUTTON2) || BUTTON_DOWN(Buttons.BUTTON3)) { return true; }
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device != DEVICE_MD) { return; }
+      if (device != DEVICE_MD) { return true; }
       last_md_track = track;
 
       encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;

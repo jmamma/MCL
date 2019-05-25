@@ -116,6 +116,10 @@ void SeqParamPage::loop() {
 }
 bool SeqParamPage::handleEvent(gui_event_t *event) {
 
+  if (SeqPage::handleEvent(event)) {
+    return true;
+  }
+
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -173,7 +177,7 @@ if (utiming == 0) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    GUI.setPage(&grid_page);
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) { GUI.setPage(&grid_page); }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
@@ -203,10 +207,6 @@ if (utiming == 0) {
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     mcl_seq.md_tracks[last_md_track].clear_locks();
-    return true;
-  }
-
-  if (SeqPage::handleEvent(event)) {
     return true;
   }
 

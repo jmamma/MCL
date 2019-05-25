@@ -290,8 +290,8 @@ void GridPage::display_counters() {
   oled_display.print(":");
   oled_display.print(MidiClock.beat_counter);
 
-  if (((mcl_cfg.chain_mode == 1) || (mcl_cfg.chain_mode == 3)) &&
-      (mcl_actions.next_transition != (uint16_t)-1)) {
+  if ((mcl_cfg.chain_mode > 0) &&
+      (mcl_actions.next_transition != (uint16_t)-1) && (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
     // val[0] = (mcl_actions.nearest_bar / 100) + '0';
     val[0] = (mcl_actions.nearest_bar % 100) / 10 + '0';
     val[1] = (mcl_actions.nearest_bar % 10) + '0';

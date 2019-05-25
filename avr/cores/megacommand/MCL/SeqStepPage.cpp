@@ -4,6 +4,11 @@
 #define MIDI_OMNI_MODE 17
 
 void SeqStepPage::setup() { SeqPage::setup(); }
+void SeqStepPage::config() {
+  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
+  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  seq_param4.max = tuning->len - 1;
+}
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
@@ -19,21 +24,16 @@ void SeqStepPage::init() {
   seq_param3.max = 64;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
-
+  config();
   md_exploit.on();
 
-  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
-
-  seq_param4.max = tuning->len - 1;
   note_interface.state = true;
 }
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
   SeqPage::cleanup();
   if (MidiClock.state != 2) {
-    MD.setTrackParam(last_md_track, 0,
-                       MD.kit.params[last_md_track][0]);
+    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
 }
 void SeqStepPage::display() {
@@ -97,6 +97,7 @@ void SeqStepPage::display() {
 }
 void SeqStepPage::loop() {
   SeqPage::loop();
+
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
@@ -115,10 +116,11 @@ void SeqStepPage::loop() {
           mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
           mcl_seq.md_tracks[last_md_track].timing[step] = utiming; // upper
 
-      if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask, step)) {
+          if (!IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].pattern_mask,
+                            step)) {
 
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
-       }
+            SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
+          }
           if ((seq_param4.cur > 0) && (last_md_track < 15) &&
               (tuning != NULL)) {
             uint8_t base = tuning->base;
@@ -134,11 +136,11 @@ void SeqStepPage::loop() {
 }
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
-        if (SeqPage::handleEvent(event)) {
+  if (SeqPage::handleEvent(event)) {
+    return;
   }
 
-
-   if (note_interface.is_event(event)) {
+  if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
@@ -257,7 +259,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&grid_page);
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
+      GUI.setPage(&grid_page);
+    }
     return true;
   }
 

@@ -9,13 +9,23 @@
 #include <midi-common.hh>
 
 #include <MidiClock.h>
-MidiUartClass MidiUart;
-MidiUartClass2 MidiUart2;
+MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,UART1_RX_BUFFER_LEN,(volatile uint8_t *)BANK1_UART1_TX_BUFFER_START,UART1_TX_BUFFER_LEN);
+MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,UART2_RX_BUFFER_LEN,(volatile uint8_t *)BANK1_UART2_TX_BUFFER_START,UART2_TX_BUFFER_LEN);
 
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
 
-MidiUartClass::MidiUartClass() : MidiUartParent() { initSerial(); }
+MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf,uint16_t rx_buf_size, volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartParent() {
+  if (rx_buf) {
+  rxRb.ptr = rx_buf;
+  rxRb.len = rx_buf_size;
+  }
+  if (tx_buf) {
+  txRb.ptr = tx_buf;
+  txRb.len = tx_buf_size;
+  }
+  initSerial();
+}
 
 void MidiUartClass::initSerial() {
   running_status = 0;
@@ -280,10 +290,7 @@ ISR(USART1_RX_vect) {
   select_bank(0);
   isr_midi();
 }
-ISR(USART2_RX_vect) {
-  select_bank(0);
-  isr_midi();
-}
+ISR(USART2_RX_vect, ISR_ALIASOF(USART1_RX_vect));
 
 inline void isr_midi() {
   uint8_t c, s;
@@ -476,7 +483,17 @@ ISR(USART2_UDRE_vect) {
 
 #endif
 
-MidiUartClass2::MidiUartClass2() : MidiUartParent() { initSerial(); }
+MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size, volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartParent() { 
+  if (rx_buf) {
+  rxRb.ptr = rx_buf;
+  rxRb.len = rx_buf_size;
+  }
+  if (tx_buf) {
+  txRb.ptr = tx_buf;
+  txRb.len = tx_buf_size;
+  }
+  initSerial();
+}
 
 void MidiUartClass2::initSerial() {
   running_status = 0;
