@@ -4,6 +4,8 @@
 
 #include "MidiUartParent.hh"
 
+#define SYSEX_RETRIES 1
+
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -522,6 +524,9 @@ uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
 
 bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
   MDBlockCurrentStatusCallback cb;
+  uint8_t count = SYSEX_RETRIES;
+  while ((MidiClock.state == 2) && ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)));
+  while (count) {
   MDSysexListener.addOnKitMessageCallback(
       &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
   MD.requestKit(kit);
@@ -532,11 +537,16 @@ bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
       return true;
     }
   }
-  return ret;
+  count--;
+  }
+  return false;
 }
 
 bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
   MDBlockCurrentStatusCallback cb;
+  uint8_t count = SYSEX_RETRIES;
+  while ((MidiClock.state == 2) && ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)));
+  while (count) {
   MDSysexListener.addOnPatternMessageCallback(
       &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
   MD.requestPattern(pattern);
@@ -547,8 +557,9 @@ bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
       return true;
     }
   }
-
-  return ret;
+  count--;
+  }
+  return false;
 }
 
 bool MDClass::getBlockingGlobal(uint8_t global, uint16_t timeout) {
