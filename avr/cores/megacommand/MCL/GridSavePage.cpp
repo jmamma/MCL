@@ -53,6 +53,10 @@ void GridSavePage::display() {
     GUI.put_string_at(2, "OG");
   }
 
+  if ((mcl_cfg.auto_merge == 1) && (MidiClock.state != 2)) {
+    GUI.put_string_at(6, "MERGE");
+  }
+
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (64 * ((MidiClock.div16th_counter -
