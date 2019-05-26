@@ -43,7 +43,7 @@ void GridTask::run() {
   if (mcl_cfg.chain_mode == 0) {
     return;
   }
-  DEBUG_PRINTLN(MidiClock.div16th_counter);
+//  DEBUG_PRINTLN(MidiClock.div16th_counter);
   uint8_t curkit;
   ElektronDataToSysexEncoder encoder(&MidiUart);
 
