@@ -89,7 +89,7 @@ bool MCLSysConfig::cfg_init() {
   auto_merge = 0;
   auto_save = 1;
   auto_normalize = 0;
-  chain_mode = 0;
+  chain_mode = 2;
   chain_rand_min = 0;
   chain_rand_max = 1;
 
