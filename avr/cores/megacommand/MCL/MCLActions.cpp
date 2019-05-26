@@ -107,9 +107,11 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     }
   }
   if (save_md_tracks) {
-    if (!MD.getBlockingPattern(readpattern)) {
-      DEBUG_PRINTLN("could not receive pattern");
-      return;
+    if (MidiClock.state != 2) {
+      if (!MD.getBlockingPattern(readpattern)) {
+        DEBUG_PRINTLN("could not receive pattern");
+        return;
+      }
     }
     int curkit;
     if (readpattern != MD.currentPattern) {
@@ -202,26 +204,21 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
   }
   store_behaviour = b;
   writepattern = MD.currentPattern;
+  /*
   if (((gridio_param1.getValue() * 16 + gridio_param2.getValue()) !=
        MD.currentPattern) &&
       (mcl_cfg.chain_mode == 0)) {
     writepattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
-  }
+  }*/
   // Get pattern first, hopefully with the original kit assigned.
     if (!MD.getBlockingPattern(MD.currentPattern)) {
       DEBUG_PRINTLN("could not get blocking pattern");
       return;
     }
-   if (write_original != 1) {
-    if ((gridio_param3.getValue() != MD.currentKit) &&
-        (mcl_cfg.chain_mode == 0)) {
-      MD.currentKit = gridio_param3.getValue();
-    } else {
-      MD.saveCurrentKit(MD.currentKit);
-    }
 
+    MD.saveCurrentKit(MD.currentKit);
     MD.getBlockingKit(MD.currentKit);
-  }
+  
   patternswitch = 1;
   //DEBUG_PRINTLN("saving swing");
   //DEBUG_PRINTLN(MD.pattern.swingAmount);
@@ -342,6 +339,7 @@ void MCLActions::send_pattern_kit_to_md() {
   uint16_t quantize_mute = 0;
   uint8_t q_pattern_change = 0;
 
+  /*
   if (writepattern != MD.currentPattern) {
     reload = 0;
   }
@@ -380,6 +378,7 @@ void MCLActions::send_pattern_kit_to_md() {
       gridio_param4.cur = 10;
     }
   }
+  */
 
   uint8_t i = 0;
   int track = 0;
@@ -438,7 +437,7 @@ void MCLActions::send_pattern_kit_to_md() {
         place_track_inpattern(track, i, grid_page.getRow(), &sound_array[0],
                               &empty_track);
       }
-
+      /*
       if (gridio_param4.getValue() == 8) {
         if (i < NUM_MD_TRACKS) {
           MD.kit.levels[track] = 0;
@@ -458,6 +457,7 @@ void MCLActions::send_pattern_kit_to_md() {
           }
         }
       }
+      */
     }
   }
 
@@ -509,26 +509,29 @@ void MCLActions::send_pattern_kit_to_md() {
     MD.pattern.swingPattern = kit_extra.swingPattern;
   }
 
+  /*
   // If Kit is OG.
   if (gridio_param3.getValue() == 64) {
     MD.kit.origPosition = md_track->origPosition;
     MD.pattern.kit = md_track->origPosition;
   }
 
-  else {
+  else { */
     MD.pattern.kit = MD.currentKit;
     MD.kit.origPosition = MD.currentKit;
-  }
+  //}
   // If Pattern is OG
-  if (gridio_param1.getValue() == 8) {
+ /* if (gridio_param1.getValue() == 8) {
     MD.pattern.origPosition = md_track->patternOrigPosition;
     reload = 0;
-  } else {
+  } else {*/
     MD.pattern.setPosition(writepattern);
-  }
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+ // }
+  /*
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
-  }
+  }*/
+
   md_setsysex_recpos(8, MD.pattern.origPosition);
   MD.pattern.toSysex();
 
@@ -537,15 +540,15 @@ void MCLActions::send_pattern_kit_to_md() {
   MD.kit.toSysex();
   /*Instruct the MD to reload the kit, as the kit changes won't update until
    * the kit is reloaded*/
-  if (reload == 1) {
+ // if (reload == 1) {
     MD.loadKit(MD.pattern.kit);
-  } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
+/*  } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
     do_kit_reload = MD.pattern.kit;
     if (q_pattern_change == 1) {
    DEBUG_PRINTLN("sending pattern change");
             MD.loadPattern(writepattern);
     }
-  }
+  }*/
   // }
   // Send Analog4
   if (Analog4.connected) {
@@ -557,13 +560,14 @@ void MCLActions::send_pattern_kit_to_md() {
     }
   }
 
+  /*
   if (mcl_actions.start_clock32th > MidiClock.div32th_counter) {
     mcl_actions.start_clock32th = 0;
   }
   if (mcl_actions.start_clock96th > MidiClock.div96th_counter) {
     mcl_actions.start_clock96th = 0;
-  }
-
+  }*/
+/*
   if (quantize_mute > 0) {
     if (MidiClock.state == 2) {
       if ((q_pattern_change != 1) && (quantize_mute <= 64)) {
@@ -601,6 +605,7 @@ void MCLActions::send_pattern_kit_to_md() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
   }
+  */
 
   // Pre-cache next chain
   // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) +

@@ -95,7 +95,7 @@ void GridWritePage::display() {
      // GUI.put_string_at(6, "LV");
     }
   }
-
+  /*
   if (encoders[3]->getValue() == 0) {
     GUI.put_string_at(11, "--");
   }
@@ -114,7 +114,7 @@ void GridWritePage::display() {
   if (encoders[3]->getValue() == 11) {
     GUI.put_string_at(11, "P-");
   }
-
+  */
   if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
     x = 1 << encoders[3]->getValue();
     GUI.put_value_at2(11, x);
