@@ -138,12 +138,6 @@ void NoteInterface::draw_notes(uint8_t line_number) {
   char str[17] = "----------------";
 
   for (int i = 0; i < 16; i++) {
-    if (curpage == CUE_PAGE) {
-
-      if (IS_BIT_SET32(mcl_cfg.cues, i)) {
-        str[i] = 'X';
-      }
-    }
     if (notes[i] > 0 && notes[i] != 3) {
 
 #ifdef OLED_DISPLAY
