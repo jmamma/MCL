@@ -64,7 +64,7 @@ void CuePage::toggle_cues_batch() {
       MD.muteTrack(i, true);
     }
   }
-  if (encoders[2]->getValue() < 7) {
+  if ((encoders[2]->getValue() < 7) && (encoders[2]->getValue() > 0)) {
     while (
         (((MidiClock.div32th_counter - mcl_actions.start_clock32th) +
           3) %
@@ -118,28 +118,21 @@ bool CuePage::handleEvent(gui_event_t *event) {
     if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
       return true;
     }
-    note_interface.draw_notes(0);
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+   draw_cues(0);
+    /*    if (event->mask == EVENT_BUTTON_PRESSED) {
 
       if ((encoders[2]->getValue() == 0)) {
         toggle_cue(track);
         md_exploit.send_globals();
       }
-    }
+    } */
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if ((encoders[2]->getValue() == 0)) {
-        note_interface.notes[track] = 0;
-      }
 
-      if (note_interface.notes_all_off()) {
-        if ((encoders[2]->getValue() > 0) &&
-            (note_interface.notes_count_off() > 1)) {
+     if (note_interface.notes_all_off()) {
           toggle_cues_batch();
-          md_exploit.send_globals();
-          md_exploit.off();
-          GUI.setPage(&grid_page);
+          note_interface.init_notes();
+          //  md_exploit.send_globals();
           curpage = 0;
-        }
       }
     }
     return true;
@@ -157,7 +150,11 @@ bool CuePage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&grid_page);
+   ElektronDataToSysexEncoder encoder2(&MidiUart);
+  md_exploit.setup_global(1);
+  MD.global.toSysex(encoder2);
+          GUI.setPage(&grid_page);
+
     return true;
   }
   return false;
