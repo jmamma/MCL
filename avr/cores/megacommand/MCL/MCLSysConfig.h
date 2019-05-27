@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2026
+#define CONFIG_VERSION 2027
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -21,8 +21,7 @@ public:
   uint8_t clock_send;
   uint8_t clock_rec;
   uint8_t drumRouting[16];
-  uint8_t cue_output;
-  uint32_t cues;
+  uint8_t routing[24];
   uint8_t row;
   uint8_t col;
   uint8_t cur_row;

@@ -3,7 +3,7 @@
 
 #define MIX_PAGE 0
 #define MUTE_PAGE 1
-#define CUE_PAGE 2
+#define ROUTE_PAGE 2
 #define WAVD_PAGE 8
 #define SOUND 7
 #define LOUDNESS 10
@@ -33,10 +33,10 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
       strncpy(str, "MIX ", 5);
     r_page = &mixer_page;
     break;
-  case CUE_PAGE:
+  case ROUTE_PAGE:
     if (str)
-      strncpy(str, "CUE ", 5);
-    r_page = &cue_page;
+      strncpy(str, "ROUT ", 6);
+    r_page = &route_page;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:
