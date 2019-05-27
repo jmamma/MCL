@@ -300,7 +300,7 @@ public:
 
   void calc_tempo() {
     if (last_diff_clock16 != diff_clock16) {
-      tempo = ((float)150000 / ((float)diff_clock16));
+      tempo = ((float)75000 / ((float)diff_clock16));
       last_diff_clock16 = diff_clock16;
     }
   }
