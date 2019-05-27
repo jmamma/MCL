@@ -1,8 +1,11 @@
-#include "RoutePage.h"
 #include "MCL.h"
+#include "RoutePage.h"
 
 void RoutePage::setup() {}
-void RoutePage::init() { note_interface.state = true; }
+void RoutePage::init() {
+  hasChanged = false;
+  note_interface.state = true;
+}
 void RoutePage::cleanup() { note_interface.state = false; }
 void RoutePage::set_level(int curtrack, int value) {
   // in_sysex = 1;
@@ -26,8 +29,8 @@ void RoutePage::draw_routes(uint8_t line_number) {
       str[i] = (char)'A' + mcl_cfg.routing[i];
     }
     if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
-      /*If the bit is set, there is a route at this position. We'd like to display
-       * it as [] on screen*/
+      /*If the bit is set, there is a route at this position. We'd like to
+       * display it as [] on screen*/
       /*Char 219 on the minicommand LCD is a []*/
 
 #ifdef OLED_DISPLAY
@@ -81,6 +84,7 @@ void RoutePage::toggle_routes_batch() {
     //  note_interface.notes[i] = 0;
     // trackinfo_page.display();
   }
+  hasChanged = true;
 }
 void RoutePage::display() {
   GUI.clearLines();
@@ -93,8 +97,7 @@ void RoutePage::display() {
   GUI.put_string_at(9, "Q:");
   if (encoders[1]->getValue() == 0) {
     GUI.put_string_at(11, "--");
-  }
-  else {
+  } else {
     x = 1 << encoders[1]->getValue();
     GUI.put_value_at2(11, x);
   }
@@ -146,9 +149,14 @@ bool RoutePage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    ElektronDataToSysexEncoder encoder2(&MidiUart);
-    md_exploit.setup_global(1);
-    MD.global.toSysex(encoder2);
+    if (hasChanged) {
+      ElektronDataToSysexEncoder encoder2(&MidiUart);
+      md_exploit.setup_global(1);
+      while ((MidiClock.state == 2) &&
+             ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+        ;
+      MD.global.toSysex(encoder2);
+    }
     GUI.setPage(&grid_page);
 
     return true;
