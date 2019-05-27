@@ -24,9 +24,8 @@ void SeqStepPage::init() {
   seq_param3.max = 64;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
-  config();
   md_exploit.on();
-
+  config();
   note_interface.state = true;
 }
 void SeqStepPage::cleanup() {
