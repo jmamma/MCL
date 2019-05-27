@@ -37,7 +37,8 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
     if (md_track->load_track_from_grid(column, row)) {
       memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
       grid_page.active_slots[column] = row;
-      md_track->place_track_in_sysex(curtrack, column);
+      md_track->place_track_in_kit(curtrack, column, &(MD.kit));
+      md_track->load_seq_data(curtrack);
     }
   } else {
     if (Analog4.connected) {
@@ -69,8 +70,7 @@ void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   //  MD.sendRequest(0x6b,00000011);
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row,
-                                     int store_behaviour_) {
+void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -82,15 +82,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
-  int16_t tclock = slowclock;
   uint8_t readpattern = MD.currentPattern;
-  if ((gridio_param1.getValue() * 16 + gridio_param2.getValue()) !=
-      MD.currentPattern) {
-    readpattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
-  }
 
-  store_behaviour = store_behaviour_;
-  setLed();
   patternswitch = PATTERN_STORE;
 
   bool save_md_tracks = false;
@@ -106,8 +99,12 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       save_a4_tracks = true;
     }
   }
+  bool storepattern = false;
+
+  if (MidiClock.state == 2) { merge = false; }
   if (save_md_tracks) {
-    if (MidiClock.state != 2) {
+    if ((merge)) {
+      DEBUG_PRINTLN("fetching pattern");
       if (!MD.getBlockingPattern(readpattern)) {
         DEBUG_PRINTLN("could not receive pattern");
         return;
@@ -130,54 +127,38 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     }
   }
 
-  // A4Track analogfour_track;
-  //  MDTrack md_track->;
+  uint8_t first_note = 255;
 
-  bool n;
-  /*Send a quick sysex message to get the current selected track of the MD*/
-
-  //       int curtrack = 0;
-
-  uint8_t first_note = 254;
-
-  int curtrack = 0;
-  if (store_behaviour == STORE_AT_SPECIFIC) {
-    curtrack = last_md_track;
-    // MD.getCurrentTrack(CALLBACK_TIMEOUT);
-  }
   uint8_t max_notes = NUM_TRACKS;
   if (!Analog4.connected) {
     max_notes = NUM_MD_TRACKS;
   }
+
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
-      if (first_note == 254) {
+      if (first_note == 255) {
         first_note = i;
       }
 
-      if (store_behaviour == STORE_IN_PLACE) {
-        if (i >= NUM_MD_TRACKS) {
-          if (Analog4.connected) {
-            DEBUG_PRINTLN("a4 get sound");
-            Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
-            a4_track->sound.fromSysex(Analog4.midi);
-          }
-          n = a4_track->store_track_in_grid(i, grid_page.getRow(), i);
-        } else {
-          n = md_track->store_track_in_grid(i, grid_page.getRow(), i);
+      if (i >= NUM_MD_TRACKS) {
+        if (Analog4.connected) {
+          DEBUG_PRINTLN("a4 get sound");
+          Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
+          a4_track->sound.fromSysex(Analog4.midi);
         }
+        a4_track->store_track_in_grid(i, grid_page.getRow(), i);
+      } else {
+        md_track->store_track_in_grid(i, grid_page.getRow(), i, false,
+                                          merge);
       }
-
-      if ((store_behaviour == STORE_AT_SPECIFIC) && (i < NUM_MD_TRACKS)) {
-        n = md_track->store_track_in_grid(grid_page.getCol() + i,
-                                          grid_page.getRow(), (i - first_note));
-      }
-      // CLEAR_BIT32(note_interface.notes, i);
     }
   }
 
-  for (uint8_t c = 0; c < 17; c++) {
-    grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
+  // Only update row name if, the current name is empty
+  if (strlen(grid_page.row_headers[grid_page.cur_row].name) == 0) {
+    for (uint8_t c = 0; c < 17; c++) {
+      grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
+    }
   }
 
   grid_page.row_headers[grid_page.cur_row].active = true;
@@ -185,12 +166,9 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
   // Sync project file to SD Card
   proj.file.sync();
-
-  clearLed();
-  DEBUG_PRINTLN(slowclock - tclock);
 }
 
-void MCLActions::write_tracks_to_md(int column, int row, int b) {
+void MCLActions::write_tracks(int column, int row) {
   DEBUG_PRINT_FN();
   if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
     if (MD.currentKit != MD.kit.origPosition) {
@@ -202,35 +180,11 @@ void MCLActions::write_tracks_to_md(int column, int row, int b) {
     //  grid_task.run();
     return;
   }
-  store_behaviour = b;
-  writepattern = MD.currentPattern;
-  /*
-  if (((gridio_param1.getValue() * 16 + gridio_param2.getValue()) !=
-       MD.currentPattern) &&
-      (mcl_cfg.chain_mode == 0)) {
-    writepattern = (gridio_param1.getValue() * 16 + gridio_param2.getValue());
-  }*/
-  // Get pattern first, hopefully with the original kit assigned.
-    if (!MD.getBlockingPattern(MD.currentPattern)) {
-      DEBUG_PRINTLN("could not get blocking pattern");
-      return;
-    }
+  MD.saveCurrentKit(MD.currentKit);
+  MD.getBlockingKit(MD.currentKit);
 
-    MD.saveCurrentKit(MD.currentKit);
-    MD.getBlockingKit(MD.currentKit);
-  
-  patternswitch = 1;
-  //DEBUG_PRINTLN("saving swing");
-  //DEBUG_PRINTLN(MD.pattern.swingAmount);
-  //MD.swing_last = MD.pattern.swingAmount;
+  send_tracks_to_devices();
 
-  send_pattern_kit_to_md();
-
-  patternswitch = PATTERN_UDEF;
-
-  //  }
-
-  // clearLed();
 }
 
 void MCLActions::prepare_next_chain(int row) {
@@ -312,7 +266,7 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      //transition_level[n] = gridio_param3.getValue();
+      // transition_level[n] = gridio_param3.getValue();
       transition_level[n] = 0;
       next_transitions[n] = next_step;
       chains[n].row = row;
@@ -326,7 +280,7 @@ void MCLActions::prepare_next_chain(int row) {
   calc_latency(&empty_track);
 }
 
-void MCLActions::send_pattern_kit_to_md() {
+void MCLActions::send_tracks_to_devices() {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -335,50 +289,6 @@ void MCLActions::send_pattern_kit_to_md() {
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 
   int curtrack = last_md_track;
-  uint8_t reload = 1;
-  uint16_t quantize_mute = 0;
-  uint8_t q_pattern_change = 0;
-
-  /*
-  if (writepattern != MD.currentPattern) {
-    reload = 0;
-  }
-  if (gridio_param4.getValue() == 0) {
-    quantize_mute = 0;
-  } else if (gridio_param4.getValue() < 7) {
-    quantize_mute = 1 << gridio_param4.getValue();
-  }
-  if (gridio_param4.getValue() == 7) {
-    quantize_mute = 254;
-  }
-  if (gridio_param4.getValue() == 8) {
-    quantize_mute = 254;
-  }
-  if ((gridio_param4.getValue() >= 9) && (mcl_cfg.chain_mode == 0)) {
-    quantize_mute = MD.pattern.patternLength;
-    q_pattern_change = 1;
-    reload = 0;
-    if ((gridio_param4.getValue() == 9) &&
-        (writepattern == MD.currentPattern)) {
-      reload = 1;
-    }
-    if (gridio_param4.getValue() == 10) {
-      if (writepattern == 127) {
-        writepattern = 0;
-      } else {
-        writepattern = writepattern + 1;
-      }
-      gridio_param4.cur = 11;
-    } else if (gridio_param4.getValue() == 11) {
-      if (writepattern == 0) {
-        writepattern = 127;
-      } else {
-        writepattern = writepattern - 1;
-      }
-      gridio_param4.cur = 10;
-    }
-  }
-  */
 
   uint8_t i = 0;
   int track = 0;
@@ -399,157 +309,56 @@ void MCLActions::send_pattern_kit_to_md() {
         first_note = i;
       }
       //  if (grid_page.encoders[0]->cur > 0) {
-      if (store_behaviour == STORE_IN_PLACE) {
-        track = i;
+      track = i;
 
-        if (i < NUM_MD_TRACKS) {
-          place_track_inpattern(track, i, grid_page.getRow(),
-                                (A4Sound *)&sound_array[0], &empty_track);
+      if (i < NUM_MD_TRACKS) {
+        place_track_inpattern(track, i, grid_page.getRow(),
+                              (A4Sound *)&sound_array[0], &empty_track);
 
-          if (i == first_note) {
-            // Use first track's original kit values for write orig
-            if (md_track->active != EMPTY_TRACK_TYPE) {
-              memcpy(&kit_extra, &(md_track->kitextra), sizeof(kit_extra));
-            } else {
-              write_original = 0;
-            }
-            if (write_original == 1) {
-              MD.pattern.patternLength = kit_extra.patternLength;
-            }
-          }
-        } else {
-          track = track - NUM_MD_TRACKS;
-          mcl_seq.ext_tracks[track].buffer_notesoff();
-          if (place_track_inpattern(track, i, grid_page.getRow(),
-                                    (A4Sound *)&sound_array[track],
-                                    &empty_track)) {
-            if (Analog4.connected) {
-              sound_array[track].workSpace = true;
-              a4_send[track] = 1;
-            }
-          }
-        }
-      }
-
-      else if ((curtrack + (i - first_note) < NUM_MD_TRACKS) &&
-               (i < NUM_MD_TRACKS)) {
-        track = curtrack + (i - first_note);
-        place_track_inpattern(track, i, grid_page.getRow(), &sound_array[0],
-                              &empty_track);
-      }
-      /*
-      if (gridio_param4.getValue() == 8) {
-        if (i < NUM_MD_TRACKS) {
-          MD.kit.levels[track] = 0;
-        } else if (Analog4.connected) {
-          Analog4.setLevel(i - NUM_MD_TRACKS, 0);
-        }
-      }
-      //   }
-
-      note_count++;
-      if (MidiClock.state == 2) {
-        if ((quantize_mute > 0) && (gridio_param4.getValue() < 8)) {
-          if (i < NUM_MD_TRACKS) {
-            MD.muteTrack(track, true);
+        if (i == first_note) {
+          // Use first track's original kit values for write orig
+          if (md_track->active != EMPTY_TRACK_TYPE) {
+            memcpy(&kit_extra, &(md_track->kitextra), sizeof(kit_extra));
           } else {
-            mcl_seq.ext_tracks[i - NUM_MD_TRACKS].mute_state = SEQ_MUTE_ON;
+            write_original = 0;
+          }
+        }
+      } else {
+        track = track - NUM_MD_TRACKS;
+        mcl_seq.ext_tracks[track].buffer_notesoff();
+        if (place_track_inpattern(track, i, grid_page.getRow(),
+                                  (A4Sound *)&sound_array[track],
+                                  &empty_track)) {
+          if (Analog4.connected) {
+            sound_array[track].workSpace = true;
+            a4_send[track] = 1;
           }
         }
       }
-      */
     }
   }
-
-  /*Set the pattern position on the MD the pattern is to be written to*/
-
-  setLed();
-
-  /*Send the encoded pattern to the MD via sysex*/
-
-  // int temp = MD.getCurrentKit(CALLBACK_TIMEOUT);
-
-  /*Tell the MD to receive the kit sysexdump in the current kit position*/
-
-  /* Retrieve the position of the current kit loaded by the MD.
-    Use this position to store the modi
-  */
-  // If write original, let's copy the master fx settings from the first track
-  // in row Let's also set the kit receive position to be the original.
-  /*  if ((mcl_cfg.chain_mode > 0) && (write_original == 1)) {
-      for (uint8_t n = 0; n < 16; n++) {
-        md_track->get_machine_from_kit(n, n);
-        md_set_machine(n, &(md_track->machine), &(MD.kit), true);
-      }
-      md_set_fxs(&MD.kit);
-    }*/
-
-  // else {
   if ((write_original == 1)) {
     DEBUG_PRINTLN("write original");
     //     MD.kit.origPosition = md_track->origPosition;
     for (uint8_t c = 0; c < 17; c++) {
-      MD.kit.name[c] = toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
+      MD.kit.name[c] =
+          toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
     }
     memcpy(&MD.kit.reverb[0], kit_extra.reverb, sizeof(kit_extra.reverb));
     memcpy(&MD.kit.delay[0], kit_extra.delay, sizeof(kit_extra.delay));
     memcpy(&MD.kit.eq[0], kit_extra.eq, sizeof(kit_extra.eq));
     memcpy(&MD.kit.dynamics[0], kit_extra.dynamics, sizeof(kit_extra.dynamics));
-    MD.pattern.swingAmount = kit_extra.swingAmount;
-    MD.pattern.accentAmount = kit_extra.accentAmount;
-    MD.pattern.doubleTempo = kit_extra.doubleTempo;
-    MD.pattern.scale = kit_extra.scale;
-
-    MD.pattern.accentEditAll = kit_extra.accentEditAll;
-    MD.pattern.slideEditAll = kit_extra.slideEditAll;
-    MD.pattern.swingEditAll = kit_extra.swingEditAll;
-
-    MD.pattern.accentPattern = kit_extra.accentPattern;
-    MD.pattern.slidePattern = kit_extra.slidePattern;
-    MD.pattern.swingPattern = kit_extra.swingPattern;
   }
 
-  /*
-  // If Kit is OG.
-  if (gridio_param3.getValue() == 64) {
-    MD.kit.origPosition = md_track->origPosition;
-    MD.pattern.kit = md_track->origPosition;
-  }
-
-  else { */
-    MD.pattern.kit = MD.currentKit;
-    MD.kit.origPosition = MD.currentKit;
-  //}
-  // If Pattern is OG
- /* if (gridio_param1.getValue() == 8) {
-    MD.pattern.origPosition = md_track->patternOrigPosition;
-    reload = 0;
-  } else {*/
-    MD.pattern.setPosition(writepattern);
- // }
-  /*
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
-  }*/
-
-  md_setsysex_recpos(8, MD.pattern.origPosition);
-  MD.pattern.toSysex();
+  MD.kit.origPosition = MD.currentKit;
 
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   /*Instruct the MD to reload the kit, as the kit changes won't update until
    * the kit is reloaded*/
- // if (reload == 1) {
-    MD.loadKit(MD.pattern.kit);
-/*  } else if ((q_pattern_change == 1) || (writepattern != MD.currentPattern)) {
-    do_kit_reload = MD.pattern.kit;
-    if (q_pattern_change == 1) {
-   DEBUG_PRINTLN("sending pattern change");
-            MD.loadPattern(writepattern);
-    }
-  }*/
-  // }
+  // if (reload == 1) {
+  MD.loadKit(MD.pattern.kit);
   // Send Analog4
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
@@ -559,59 +368,6 @@ void MCLActions::send_pattern_kit_to_md() {
       }
     }
   }
-
-  /*
-  if (mcl_actions.start_clock32th > MidiClock.div32th_counter) {
-    mcl_actions.start_clock32th = 0;
-  }
-  if (mcl_actions.start_clock96th > MidiClock.div96th_counter) {
-    mcl_actions.start_clock96th = 0;
-  }*/
-/*
-  if (quantize_mute > 0) {
-    if (MidiClock.state == 2) {
-      if ((q_pattern_change != 1) && (quantize_mute <= 64)) {
-        // (MidiClock.div32th_counter - mcl_actions.start_clock32th)
-        //                   while (((MidiClock.div32th_counter + 3) %
-        //                   (quantize_mute * 2))  != 0) {
-        while (
-            (((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
-             (quantize_mute * 2)) != 0) {
-          GUI.display();
-        }
-      }
-
-      if (q_pattern_change != 1) {
-        for (i = 0; i < NUM_TRACKS; i++) {
-          // If we're in cue mode, send the track to cue before unmuting
-          if ((note_interface.notes[i] > 1)) {
-            if ((gridio_param4.getValue() == 7) && (i < NUM_MD_TRACKS)) {
-              SET_BIT32(mcl_cfg.cues, i);
-              MD.setTrackRouting(i, 5);
-            }
-            if (i < NUM_MD_TRACKS) {
-              MD.muteTrack(i, false);
-            } else {
-              mcl_seq.ext_tracks[i - NUM_MD_TRACKS].mute_state = SEQ_MUTE_OFF;
-            }
-          }
-        }
-      }
-    }
-    if (gridio_param4.getValue() == 7) {
-      md_exploit.send_globals();
-    }
-  }
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
-  }
-  */
-
-  // Pre-cache next chain
-  // uint32_t mdlen = sizeof(GridTrack) + sizeof(MDSeqTrackData) +
-  // sizeof(MDMachine);
-  //
-  clearLed();
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
   if (mcl_cfg.chain_mode == 0) {

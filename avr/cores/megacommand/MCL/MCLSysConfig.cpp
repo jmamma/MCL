@@ -86,7 +86,6 @@ bool MCLSysConfig::cfg_init() {
   screen_saver = 1;
   tempo = 125;
   midi_forward = 0;
-  auto_merge = 0;
   auto_save = 1;
   auto_normalize = 0;
   chain_mode = 2;

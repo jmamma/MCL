@@ -14,7 +14,7 @@ MCLEncoder param4(0, 127, ENCODER_RES_GRID);
 
 GridPage grid_page(&param1, &param2, &param3, &param4);
 
-MCLEncoder gridio_param1(0, 8, ENCODER_RES_PAT);
+MCLEncoder gridio_param1(0, 1, ENCODER_RES_PAT);
 MCLEncoder gridio_param2(0, 15, ENCODER_RES_PAT);
 MCLEncoder gridio_param3(0, 64, ENCODER_RES_PAT);
 MCLEncoder gridio_param4(0, 11, ENCODER_RES_PAT);

@@ -421,7 +421,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     // This will prevent unnecessary length change of internal seq pattern
     return;
   }
-  set_length(md_track->length);
+  if ((pattern_mask | lock_mask) == 0) { set_length(md_track->length); }
 
   for (int n = 0; n < md_track->arraysize; n++) {
     set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,
