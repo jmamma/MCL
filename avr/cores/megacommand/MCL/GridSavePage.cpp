@@ -5,9 +5,7 @@
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  encoders[0]->cur = (int)MD.currentPattern / (int)16;
-  encoders[1]->cur =
-      MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
+  encoders[0]->cur = 1;
   md_exploit.on();
   note_interface.state = true;
   curpage = S_PAGE;
@@ -15,9 +13,9 @@ void GridSavePage::setup() {
 }
 
 void GridSavePage::init() {
- #ifdef OLED_DISPLAY
- oled_display.clearDisplay();
- #endif
+#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+#endif
 }
 
 void GridSavePage::cleanup() {}
@@ -41,27 +39,18 @@ void GridSavePage::display() {
   GUI.put_string_at(0, strn);
 
   GUI.setLine(GUI.LINE2);
-  GUI.put_string_at(0, "S");
+  GUI.put_string_at_fill(0, "S");
 
-  char str[5];
-
-  if (encoders[0]->getValue() < 8) {
-    MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue(),
-                      str);
-    GUI.put_string_at(2, str);
+  if ((MidiClock.state != 2) && (encoders[0]->cur == 1)) {
+    GUI.put_string_at(3, "MERGE");
   } else {
-    GUI.put_string_at(2, "OG");
-  }
-
-  if ((mcl_cfg.auto_merge == 1) && (MidiClock.state != 2)) {
-    GUI.put_string_at(6, "MERGE");
+    GUI.put_string_at(3, "--");
   }
 
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 * ((MidiClock.div16th_counter -
-              mcl_actions.start_clock32th / 2) /
-             64));
+      (64 *
+       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
 }
 bool GridSavePage::handleEvent(gui_event_t *event) {
@@ -72,8 +61,9 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         return true;
       } else {
         md_exploit.off();
+        bool merge = (encoders[0]->cur == 1);
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
-                                        STORE_IN_PLACE);
+                                        merge);
       }
       GUI.setPage(&grid_page);
 
@@ -85,25 +75,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-    md_exploit.off();
-    DEBUG_PRINTLN("notes");
-    DEBUG_PRINTLN(note_interface.notes_all_off());
-
-    if (note_interface.notes_count() > 0) {
-      for (uint8_t i = 0; i < 20; i++) {
-        if (note_interface.notes[i] == 1) {
-          note_interface.notes[i] = 3;
-        }
-      }
-      mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                      grid_page.encoders[1]->getValue(),
-                                      STORE_AT_SPECIFIC);
-    }
-    GUI.setPage(&grid_page);
-    curpage = 0;
-    return true;
-  }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
 
     md_exploit.off();
@@ -114,10 +85,9 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
       note_interface.notes[i] = 3;
     }
-
+    bool merge = (encoders[0]->cur == 1);
     mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                    grid_page.encoders[1]->getValue(),
-                                    STORE_IN_PLACE);
+                                    grid_page.encoders[1]->getValue(), merge);
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;
