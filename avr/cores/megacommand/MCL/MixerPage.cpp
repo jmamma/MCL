@@ -8,7 +8,6 @@ void MixerPage::setup() {
   encoders[2]->handler = encoder_filtw_handle;
   encoders[3]->handler = encoder_filtq_handle;
   create_chars_mixer();
-  create_chars_mixer();
 #ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();

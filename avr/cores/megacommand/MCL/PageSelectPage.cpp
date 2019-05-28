@@ -35,7 +35,7 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     break;
   case ROUTE_PAGE:
     if (str)
-      strncpy(str, "ROUT ", 6);
+      strncpy(str, "ROUT ", 5);
     r_page = &route_page;
     break;
 #ifdef WAV_DESIGNER
