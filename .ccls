@@ -13,3 +13,5 @@
 -Iavr/cores/megacommand/Midi
 -Iavr/cores/megacommand/MCL
 -IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
+-D__AVR_ATmega2560__
+-DARDUINO=110
