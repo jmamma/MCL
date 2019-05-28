@@ -26,6 +26,9 @@
  * @{
  **/
 
+const uint8_t _bvmasks[]  PROGMEM = {0b00000001, 0b00000010, 0b00000100, 0b00001000, 0b00010000, 0b00100000, 0b01000000, 0b10000000};
+const uint8_t _ibvmasks[] PROGMEM = {0b11111110, 0b11111101, 0b11111011, 0b11110111, 0b11101111, 0b11011111, 0b10111111, 0b01111111};
+
 /** Return the length of a string. **/
 uint16_t m_strlen(const char *src) {
   uint16_t result = 0;
