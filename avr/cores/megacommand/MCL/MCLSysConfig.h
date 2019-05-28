@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2024
+#define CONFIG_VERSION 2026
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -35,7 +35,6 @@ public:
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
-  uint8_t auto_merge;
   uint8_t chain_mode;
   uint8_t chain_rand_min;
   uint8_t chain_rand_max;

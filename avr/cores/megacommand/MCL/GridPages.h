@@ -47,13 +47,12 @@ extern GridTrack slot;
 
 const menu_t slot_menu_layout PROGMEM = {
     "Slot",
-    9,
+    8,
     {
-        {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
+        {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{1, "AUT"},{2,"MAN"},{3,"RND"}}},
         {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, (void*)NULL, {}},
         {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, (void*)NULL, {}},
         {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, (void*)NULL, {{0," "}}},
-        {"MERGE:", 0, 2, 2, (uint8_t *) &grid_page.merge_md, (Page*) NULL, (void*)NULL, {{0, "--"},{1, "SEQ"}}},
         {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.slot_clear, (Page*) NULL, (void*)NULL, {{0,"--"},{1, "YES"}}},
         {"COPY:", 0, 2, 2, (uint8_t *) &grid_page.slot_copy, (Page*) NULL, (void*)NULL, {{0,"--"},{1, "YES"}}},
         {"PASTE:", 0, 2, 2, (uint8_t *) &grid_page.slot_paste, (Page*) NULL, (void*)NULL,{{0,"--"},{1, "YES"}}},
