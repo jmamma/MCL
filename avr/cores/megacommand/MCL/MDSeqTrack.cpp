@@ -103,6 +103,16 @@ void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   }
 }
 
+void MDSeqTrack::update_kit_params() {
+  for (uint8_t c = 0; c < 4; c++) {
+    if (locks_params[c] > 0) {
+      uint8_t param_id = locks_params[c] - 1;
+      MD.kit.params[track_number][param_id] = locks_params_orig[c];
+    }
+  }
+
+}
+
 void MDSeqTrack::update_params() {
 
   for (uint8_t c = 0; c < 4; c++) {
@@ -411,7 +421,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     // This will prevent unnecessary length change of internal seq pattern
     return;
   }
-  set_length(md_track->length);
+  if ((pattern_mask | lock_mask) == 0) { set_length(md_track->length); }
 
   for (int n = 0; n < md_track->arraysize; n++) {
     set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,

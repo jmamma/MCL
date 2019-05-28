@@ -145,7 +145,7 @@ void GridPage::loop() {
       mcl_cfg.col = encoders[0]->cur;
       mcl_cfg.row = encoders[1]->cur;
 
-      mcl_cfg.tempo = MidiClock.tempo;
+      mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN("write cfg");
       mcl_cfg.write_cfg();
       grid_lastclock = slowclock;
@@ -317,7 +317,7 @@ void GridPage::display_grid_info() {
 
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
-  oled_display.print(round(MidiClock.tempo));
+  oled_display.print(round(MidiClock.get_tempo()));
 
   display_counters();
   oled_display.setFont(&TomThumb);
@@ -566,11 +566,14 @@ void GridPage::display() {
 void GridPage::prepare() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  if ((mcl_cfg.auto_save == 1) && (MidiClock.state != 2)) {
+  if ((mcl_cfg.auto_save == 1)) {
     MD.saveCurrentKit(MD.currentKit);
     MD.getBlockingKit(MD.currentKit);
-  } else if (MD.currentKit != MD.kit.origPosition) {
-    MD.getBlockingKit(MD.currentKit);
+    if (MidiClock.state == 2) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_kit_params();
+    }
+    }
   }
 }
 

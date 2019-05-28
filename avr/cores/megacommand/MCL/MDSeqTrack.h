@@ -57,6 +57,7 @@ public:
   bool is_locks(uint8_t step);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
+  void update_kit_params();
   void update_params();
   void update_param(uint8_t param_id, uint8_t value);
   void reset_params();

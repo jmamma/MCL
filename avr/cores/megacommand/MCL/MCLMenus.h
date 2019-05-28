@@ -67,10 +67,9 @@ const menu_t midiconfig_menu_layout PROGMEM = {
 
 const menu_t mdconfig_menu_layout PROGMEM = {
     "MD",
-    5,
+    4,
     {
         {"AUTO SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "ON"}}},
-        {"SEQ MERGE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_merge, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, (void*)NULL, {{0, "INT"},{17, "OMNI"}}},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, (void*)NULL, {}},
@@ -82,7 +81,7 @@ const menu_t chain_menu_layout PROGMEM = {
     "CHAIN",
     3,
     {
-        {"CHAIN:", 0, 4, 4, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUT"},{2,"MAN"},{3,"RND"}}},
+        {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{1, "AUT"},{2,"MAN"},{3,"RND"}}},
         {"RAND MIN:", 0, 128, 0, (uint8_t *) &mcl_cfg.chain_rand_min, (Page*) NULL, (void*)NULL, {}},
         {"RAND MAX:", 0, 128, 0, (uint8_t *) &mcl_cfg.chain_rand_max, (Page*) NULL, (void*)NULL, {}},
     },

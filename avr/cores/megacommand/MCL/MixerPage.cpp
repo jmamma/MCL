@@ -8,7 +8,6 @@ void MixerPage::setup() {
   encoders[2]->handler = encoder_filtw_handle;
   encoders[3]->handler = encoder_filtq_handle;
   create_chars_mixer();
-  create_chars_mixer();
 #ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();
@@ -214,7 +213,7 @@ void MixerPage::display() {
     oled_display.display();
   }
 #endif
-  uint8_t dec = MidiClock.tempo / 10;
+  uint8_t dec = MidiClock.get_tempo() / 10;
   for (uint8_t n = 0; n < 16; n++) {
     if (disp_levels[n] < dec) {
       disp_levels[n] = 0;

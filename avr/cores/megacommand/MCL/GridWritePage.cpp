@@ -95,7 +95,7 @@ void GridWritePage::display() {
      // GUI.put_string_at(6, "LV");
     }
   }
-
+  /*
   if (encoders[3]->getValue() == 0) {
     GUI.put_string_at(11, "--");
   }
@@ -114,7 +114,7 @@ void GridWritePage::display() {
   if (encoders[3]->getValue() == 11) {
     GUI.put_string_at(11, "P-");
   }
-
+  */
   if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
     x = 1 << encoders[3]->getValue();
     GUI.put_value_at2(11, x);
@@ -134,7 +134,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
         return true;
       } else {
         md_exploit.off();
-        mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(), 0);
+        mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
       }
       GUI.setPage(&grid_page);
       curpage = 0;
@@ -143,22 +143,6 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-    md_exploit.off();
-    if (note_interface.notes_count() > 0) {
-      for (uint8_t i = 0; i < 20; i++) {
-        if (note_interface.notes[i] == 1) {
-          note_interface.notes[i] = 3;
-        }
-      }
-      mcl_actions.write_tracks_to_md(MD.currentTrack,
-                                     grid_page.encoders[1]->getValue(),
-                                     STORE_AT_SPECIFIC);
-    }
-    GUI.setPage(&grid_page);
-    curpage = 0;
-    return true;
-  }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
 
     md_exploit.off();
@@ -168,8 +152,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     }
     //   write_tracks_to_md(-1);
     mcl_actions.write_original = 1;
-    mcl_actions.write_tracks_to_md(0, grid_page.encoders[1]->getValue(),
-                                   STORE_IN_PLACE);
+    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;

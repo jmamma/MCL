@@ -78,7 +78,7 @@ bool MCLSysConfig::cfg_init() {
   row = 0;
   cur_row = 0;
   cur_col = 0;
-  cues = 0;
+  memset(&routing,6,sizeof(routing));
   poly_mask = 0;
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
   mutes = 0;
@@ -86,10 +86,9 @@ bool MCLSysConfig::cfg_init() {
   screen_saver = 1;
   tempo = 125;
   midi_forward = 0;
-  auto_merge = 0;
   auto_save = 1;
   auto_normalize = 0;
-  chain_mode = 0;
+  chain_mode = 2;
   chain_rand_min = 0;
   chain_rand_max = 1;
 

@@ -64,9 +64,10 @@ public:
                              EmptyTrack *empty_track);
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
-  void store_tracks_in_mem(int column, int row, int store_behaviour_);
-  void write_tracks_to_md(int column, int row, int b);
-  void send_pattern_kit_to_md();
+  void store_tracks_in_mem(int column, int row, bool merge);
+
+  void write_tracks(int column, int row);
+  void send_tracks_to_devices();
   void prepare_next_chain(int row);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();

@@ -23,9 +23,17 @@ void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
-bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  active = MD_TRACK_TYPE;
+bool MDTrack::get_track_from_kit(int tracknumber, uint8_t column) {
+  get_machine_from_kit(tracknumber, column);
+  memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
+  memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
+  memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
+  memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
+  origPosition = MD.kit.origPosition;
+}
+
+bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   trigPattern = MD.pattern.trigPatterns[tracknumber];
   accentPattern = MD.pattern.accentPatterns[tracknumber];
   slidePattern = MD.pattern.slidePatterns[tracknumber];
@@ -45,7 +53,6 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   kitextra.slidePattern = MD.pattern.slidePattern;
   kitextra.swingPattern = MD.pattern.swingPattern;
 
-  // Extract parameter lock data and store it in a useable data structure
   int n = 0;
   arraysize = 0;
   for (int i = 0; i < 24; i++) {
@@ -72,40 +79,27 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   //  itoa(n,&str[2],10);
 
   arraysize = n;
+ 
+  patternOrigPosition = MD.pattern.origPosition;
+}
 
-  /*Don't forget to copy the Machine data as well
-    Which is obtained from the received Kit object MD.kit*/
-  //  m_strncpy(kitName, MD.kit.name, 17);
-  /*
-  uint8_t white_space = 0;
-  for (uint8_t c = 0; c < 17; c++) {
-    if (white_space == 0) {
-      trackName[c] = MD.kit.name[c];
-    } else {
-      trackName[c] = ' ';
-    }
-    if (MD.kit.name[c] == '\0') {
-      white_space = 1;
-    }
-  }
-  */
+
+bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
+
+  active = MD_TRACK_TYPE;
+
+  get_track_from_pattern(tracknumber, column);
+  get_track_from_kit(tracknumber, column);
+
   memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber], sizeof(seq_data));
   //  trackName[0] = '\0';
-  get_machine_from_kit(tracknumber, column);
-
-  memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
-  memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
-  memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
-  memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
-  origPosition = MD.kit.origPosition;
-  patternOrigPosition = MD.pattern.origPosition;
 }
 
 void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
                                  bool levels) {
-//  if (active != MD_TRACK_TYPE) {
- //   return;
-//  }
+  //  if (active != MD_TRACK_TYPE) {
+  //   return;
+  //  }
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
     kit->levels[tracknumber] = machine.level;
@@ -138,9 +132,9 @@ void MDTrack::clear_track() {
 
 void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
                                      MDPattern *pattern) {
-//  if (active != MD_TRACK_TYPE) {
- //   return;
- // }
+  //  if (active != MD_TRACK_TYPE) {
+  //   return;
+  // }
 
   for (int x = 0; x < 64; x++) {
     pattern->clear_step_locks(tracknumber, x);
@@ -307,7 +301,8 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
+bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
+                                  bool merge) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -327,20 +322,23 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
   }
 
   if (track != 255) {
-    get_track_from_sysex(track, column);
+    if ((storepattern) || (merge)) { get_track_from_pattern(track, column); }
+    get_track_from_kit(track, column);
   }
+  memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
   // Normalise level and vol locks
-  if (mcl_cfg.auto_normalize == 1) {
-    normalize();
-  }
 
-  if (mcl_cfg.auto_merge == 1) {
+  if (merge) {
     DEBUG_PRINTLN("auto merge");
     MDSeqTrack md_seq_track;
     memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
     md_seq_track.merge_from_md(this);
-    clear_track();
     memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+  }
+  if (!storepattern) { clear_track(); }
+
+  if (mcl_cfg.auto_normalize == 1) {
+    normalize();
   }
 
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
@@ -350,7 +348,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
     DEBUG_PRINTLN("write failed");
     return false;
   }
-
+  if (storepattern) {
   ret = mcl_sd.write_data((uint8_t *)&(this->locks[0]), arraysize * 3,
                           &proj.file);
 
@@ -358,7 +356,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track) {
     DEBUG_PRINTLN("write failed");
     return false;
   }
-
+  }
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
                                                         MD_TRACK_TYPE);
