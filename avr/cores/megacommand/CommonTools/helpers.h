@@ -24,6 +24,7 @@ extern "C" {
 
 extern const uint8_t _bvmasks[];
 extern const uint8_t _ibvmasks[];
+extern const uint32_t _bvmasks32[];
 
 /**
  * \addtogroup helpers_bitmanipulation Bit-manipulation macros
@@ -31,7 +32,7 @@ extern const uint8_t _ibvmasks[];
  **/
 
 /** 32 bit bit accessing macro. **/
-#define _BV32(i) (uint32_t)((uint32_t)(1UL << i))
+#define _BV32(i) (_bvmasks32[i]) 
 
 /** Bit-level access and test macros. **/
 #define SET_BIT(target, bit)                (((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'])
