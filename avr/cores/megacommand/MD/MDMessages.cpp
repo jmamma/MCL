@@ -295,9 +295,8 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
-    GUI.flash_strings_fill("WRONG LEN", "");
-    GUI.setLine(GUI.LINE2);
-    GUI.flash_put_value16(0, len);
+    DEBUG_PRINTLN("kit wrong length");
+    DEBUG_PRINTLN(len);
     return false;
   }
 
@@ -350,7 +349,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
-
+  DEBUG_PRINTLN("kit okay");
   return true;
 }
 

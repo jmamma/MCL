@@ -106,15 +106,14 @@ void timer_init(void) {
   TCCR1B = 0;
   TCNT1 = 0;
 
-  // 10000 Hz (16000000/((24+1)*64))
-  OCR1A = 24;
+  // 5000 Hz (16000000/((49+1)*64))
+  OCR1A = 49;
   // CTC
   TCCR1B |= (1 << WGM12);
   // Prescaler 64
   TCCR1B |= (1 << CS11) | (1 << CS10);
   // Output Compare Match A Interrupt Enable
   TIMSK1 |= (1 << OCIE1A);
-
   // TCCR2A = _BV(WGM20) | _BV(WGM21) | _BV(CS20) | _BV(CS21); // ) | _BV(CS21);
   // // | _BV(COM21);
 
@@ -213,12 +212,14 @@ ISR(TIMER1_COMPA_vect) {
       }
     }
   }
+  /*
   if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
     MidiClock.div96th_counter_last = MidiClock.div96th_counter;
     if ((enable_clock_callbacks)) {
-      MidiClock.callCallbacks();
+            MidiClock.callCallbacks();
     }
   }
+  */
   }
 }
 
@@ -254,7 +255,7 @@ uint16_t lastRunningStatusReset = 0;
 // extern uint16_t myvar;
 uint16_t minuteclock = 0;
 
-ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
+ISR(TIMER2_COMPA_vect) {
 
   select_bank(0);
 
@@ -271,7 +272,7 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
-
+  sei();
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif

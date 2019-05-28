@@ -8,6 +8,8 @@
 #include <midi-common.hh>
 #include "MidiID.hh"
 
+//#define MIDI_VALIDATE
+
 /**
  * \addtogroup Midi
  *
@@ -223,51 +225,63 @@ public:
   }
 
   inline void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
+    #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
     uint8_t msg[3] = {MIDI_NOTE_ON | channel, note, velocity};
-    noteOnCallbacks.call(msg);
+    //noteOnCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   inline void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+    #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
     uint8_t msg[3] = {MIDI_NOTE_OFF | channel, note, velocity};
-    noteOffCallbacks.call(msg);
+    //noteOffCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   inline void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
-    if ((channel >= 16) || (cc >= 128) || (value >= 128))
+    #ifdef MIDI_VALIDATE
+    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
     uint8_t msg[3] = {MIDI_CONTROL_CHANGE | channel, cc, value};
-    ccCallbacks.call(msg);
+    //ccCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   inline void sendProgramChange(uint8_t channel, uint8_t program) {
-    if ((channel >= 16) || (program >= 128))
+    #ifdef MIDI_VALIDATE
+    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
     sendMessage(MIDI_PROGRAM_CHANGE | channel, program);
   }
 
   void sendPolyKeyPressure(uint8_t channel, uint8_t note, uint8_t pressure) {
-    if ((channel >= 16) || (note >= 128) || (pressure >= 128))
+    #ifdef MIDI_VALIDATE
+    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
     sendMessage(MIDI_AFTER_TOUCH | channel, note, pressure);
   }
 
   void sendChannelPressure(uint8_t channel, uint8_t pressure) {
-    if ((channel >= 16) || (pressure >= 128))
+    #ifdef MIDI_VALIDATE
+    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
+    #endif
 
-    sendMessage(MIDI_CHANNEL_PRESSURE | channel, pressure);
+   sendMessage(MIDI_CHANNEL_PRESSURE | channel, pressure);
   }
 
   void sendPitchBend(uint8_t channel, int16_t pitchbend) {

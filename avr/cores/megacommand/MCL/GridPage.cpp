@@ -145,7 +145,7 @@ void GridPage::loop() {
       mcl_cfg.col = encoders[0]->cur;
       mcl_cfg.row = encoders[1]->cur;
 
-      mcl_cfg.tempo = MidiClock.tempo;
+      mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN("write cfg");
       mcl_cfg.write_cfg();
       grid_lastclock = slowclock;
@@ -317,7 +317,7 @@ void GridPage::display_grid_info() {
 
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
-  oled_display.print(round(MidiClock.tempo));
+  oled_display.print(round(MidiClock.get_tempo()));
 
   display_counters();
   oled_display.setFont(&TomThumb);

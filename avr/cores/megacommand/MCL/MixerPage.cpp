@@ -214,7 +214,7 @@ void MixerPage::display() {
     oled_display.display();
   }
 #endif
-  uint8_t dec = MidiClock.tempo / 10;
+  uint8_t dec = MidiClock.get_tempo() / 10;
   for (uint8_t n = 0; n < 16; n++) {
     if (disp_levels[n] < dec) {
       disp_levels[n] = 0;

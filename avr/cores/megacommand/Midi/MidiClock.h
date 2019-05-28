@@ -32,7 +32,8 @@ class MidiClockClass {
    *
    * @{
    **/
-
+protected:
+  float tempo;
 public:
   volatile uint32_t div192th_counter_last;
   volatile uint32_t div192th_counter;
@@ -50,6 +51,9 @@ public:
   volatile uint16_t clock_last_time;
   volatile uint16_t div192th_time;
   volatile uint16_t last_clock16;
+
+  volatile uint16_t last_diff_clock16;
+  volatile uint16_t diff_clock16;
 
   volatile uint8_t bar_counter;
   volatile uint8_t beat_counter;
@@ -70,7 +74,6 @@ public:
 
   volatile bool updateSmaller;
   uint16_t pll_x;
-  float tempo;
   // bool transmit;
   bool transmit_uart1;
   bool transmit_uart2;
@@ -215,7 +218,7 @@ public:
   }
 
   void init();
-  void MidiClockClass::callCallbacks() {
+  void callCallbacks() {
     if (state != STARTED)
       return;
 
@@ -223,6 +226,7 @@ public:
 
     static bool inCallback = false;
     if (inCallback) {
+      DEBUG_PRINTLN("clock collision");
       return;
     } else {
       inCallback = true;
@@ -247,7 +251,7 @@ public:
     inCallback = false;
   }
 
-  void MidiClockClass::handleImmediateClock() {
+  void handleImmediateClock() {
     // if (clock > clock_last_time) {
     //  div192th_time = (clock - clock_last_time) / 2;
     //   DEBUG_PRINTLN( (clock - clock_last_time) / 2);
@@ -274,14 +278,14 @@ public:
   }
 
   /* in interrupt on receiving 0xF8 */
-  void MidiClockClass::handleClock() {
+  void handleClock() {
 
     if (useImmediateClock) {
       handleImmediateClock();
       return;
     }
   }
-  void MidiClockClass::increment192Counter() {
+  void increment192Counter() {
     if (state == STARTED) {
       div192th_counter++;
       mod12_counter++;
@@ -293,21 +297,28 @@ public:
     else
       return new_clock + (0xFFFF - old_clock);
   }
-  void MidiClockClass::calc_tempo() {
-      tempo = ((float)150000 / ((float)midi_clock_diff(last_clock16, clock)));
+
+  void calc_tempo() {
+    if (last_diff_clock16 != diff_clock16) {
+      tempo = ((float)75000 / ((float)diff_clock16));
+      last_diff_clock16 = diff_clock16;
+    }
   }
+
+  float get_tempo() {
+    calc_tempo();
+    return tempo;
+  }
+
   void MidiClockClass::incrementCounters() {
     mod6_free_counter++;
     if (mod6_free_counter == 6) {
-      div192th_time = midi_clock_diff(last_clock16, clock) / 12;
-      calc_tempo();
+      diff_clock16 = midi_clock_diff(last_clock16, clock);
+      div192th_time = diff_clock16 * .08333;
       mod6_free_counter = 0;
       last_clock16 = clock;
     }
-    if (state == STARTING && (mode == INTERNAL_MIDI || useImmediateClock)) {
-      state = STARTED;
-      callCallbacks();
-    } else if (state == STARTED) {
+   if (state == STARTED) {
       div96th_counter++;
       mod6_counter++;
       mod12_counter++;
@@ -343,6 +354,11 @@ public:
         bar_counter = 1;
       }
     }
+      else if (state == STARTING && (mode == INTERNAL_MIDI || useImmediateClock)) {
+      state = STARTED;
+      callCallbacks();
+    }
+ 
   }
   void updateClockInterval();
   bool clock_less_than(uint16_t a, uint16_t b);
