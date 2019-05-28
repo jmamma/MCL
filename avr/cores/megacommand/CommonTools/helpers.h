@@ -22,6 +22,8 @@ extern "C" {
 #endif
 #define IN_IRQ()  !IS_BIT_SET(SREG, SREG_I)
 
+extern const uint8_t _bvmasks[];
+extern const uint8_t _ibvmasks[];
 
 /**
  * \addtogroup helpers_bitmanipulation Bit-manipulation macros
@@ -32,38 +34,39 @@ extern "C" {
 #define _BV32(i) (uint32_t)((uint32_t)(1UL << i))
 
 /** Bit-level access and test macros. **/
-#define SET_BIT(port, bit)   ((port) |= (1 << (bit)))
-#define CLEAR_BIT(port, bit) ((port) &= ~(1 << (bit)))
-#define TOGGLE_BIT(port, bit) ((port) ^= (1 << (bit)))
-#define IS_BIT_SET(port, bit) (((port) & (1 << (bit))) ? 1 : 0)
-#define IS_BIT_CLEAR(port, bit) (((port) & (1 << (bit))) == 0 ? 1 : 0)
+#define SET_BIT(target, bit)                (((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'])
+#define CLEAR_BIT(target, bit)              (((uint8_t*)(&target))[(uint8_t)bit / 8U] &= _ibvmasks[(uint8_t)bit & '\07'])
+#define TOGGLE_BIT(target, bit)             (((uint8_t*)(&target))[(uint8_t)bit / 8U] ^=  _bvmasks[(uint8_t)bit & '\07'])
+#define IS_BIT_SET(target, bit)      ((bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
+#define IS_BIT_CLEAR(target, bit)   (!(bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
 
 /** 8-bit macros. **/
-#define SET_BIT8(port, bit)   ((port) |= (uint8_t)(1 << (bit)))
-#define CLEAR_BIT8(port, bit) ((port) &= (uint8_t)~(1 << (bit)))
-#define IS_BIT_SET8(port, bit) (((port) & (uint8_t)(1 << (bit))) ? 1 : 0)
-#define IS_BIT_CLEAR8(port, bit) (((port) & (uint8_t)(1 << (bit))) == 0 ? 1 : 0)
+#define SET_BIT8(target, bit)               (((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'])
+#define CLEAR_BIT8(target, bit)             (((uint8_t*)(&target))[(uint8_t)bit / 8U] &= _ibvmasks[(uint8_t)bit & '\07'])
+#define TOGGLE_BIT8(target, bit)            (((uint8_t*)(&target))[(uint8_t)bit / 8U] ^=  _bvmasks[(uint8_t)bit & '\07'])
+#define IS_BIT_SET8(target, bit)     ((bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
+#define IS_BIT_CLEAR8(target, bit)  (!(bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
 
 /** 16-bit macros. **/
-#define SET_BIT16(port, bit)   ((port) |= (uint16_t)(1UL << (bit)))
-#define CLEAR_BIT16(port, bit) ((port) &= (uint16_t)~(1UL << (bit)))
-#define TOGGLE_BIT16(port, bit) ((port) ^= (uint16_t)(1UL << (bit)))
-#define IS_BIT_SET16(port, bit) (((port) & (uint16_t)(1UL << (bit))) ? 1 : 0)
-#define IS_BIT_CLEAR16(port, bit) (((port) & (uint16_t)(1UL << (bit))) == 0 ? 1 : 0)
+#define SET_BIT16(target, bit)              (((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'])
+#define CLEAR_BIT16(target, bit)            (((uint8_t*)(&target))[(uint8_t)bit / 8U] &= _ibvmasks[(uint8_t)bit & '\07'])
+#define TOGGLE_BIT16(target, bit)           (((uint8_t*)(&target))[(uint8_t)bit / 8U] ^=  _bvmasks[(uint8_t)bit & '\07'])
+#define IS_BIT_SET16(target, bit)    ((bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
+#define IS_BIT_CLEAR16(target, bit) (!(bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
 
 /** 32-bit macros. **/
-#define SET_BIT32(port, bit)   ((port) |= (uint32_t)(1UL << (bit)))
-#define CLEAR_BIT32(port, bit) ((port) &= (uint32_t)~(1UL << (bit)))
-#define TOGGLE_BIT32(port, bit) ((port) ^= (uint32_t)(1UL << (bit)))
-#define IS_BIT_SET32(port, bit) (((port) & (uint32_t)(1UL << (bit))) ? 1 : 0)
-#define IS_BIT_CLEAR32(port, bit) (((port) & (uint32_t)(1UL << (bit))) == 0 ? 1 : 0)
+#define SET_BIT32(target, bit)              (((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'])
+#define CLEAR_BIT32(target, bit)            (((uint8_t*)(&target))[(uint8_t)bit / 8U] &= _ibvmasks[(uint8_t)bit & '\07'])
+#define TOGGLE_BIT32(target, bit)           (((uint8_t*)(&target))[(uint8_t)bit / 8U] ^=  _bvmasks[(uint8_t)bit & '\07'])
+#define IS_BIT_SET32(target, bit)    ((bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
+#define IS_BIT_CLEAR32(target, bit) (!(bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
 
 /** 64-bit macros. **/
-#define SET_BIT64(port, bit)   ((port) |= (uint64_t)(1ULL << (bit)))
-#define CLEAR_BIT64(port, bit) ((port) &= (uint64_t)~(1ULL << (bit)))
-#define TOGGLE_BIT64(port, bit) ((port) ^= (uint64_t)(1ULL << (bit)))
-#define IS_BIT_SET64(port, bit) (((port) & (uint64_t)(1ULL << (bit))) ? 1 : 0)
-#define IS_BIT_CLEAR64(port, bit) (((port) & (uint64_t)(1ULL << (bit))) == 0 ? 1 : 0)
+#define SET_BIT64(target, bit)            do{((uint8_t*)(&target))[(uint8_t)bit / 8U] |=  _bvmasks[(uint8_t)bit & '\07'];}while(false)
+#define CLEAR_BIT64(target, bit)          do{((uint8_t*)(&target))[(uint8_t)bit / 8U] &= _ibvmasks[(uint8_t)bit & '\07'];}while(false)
+#define TOGGLE_BIT64(target, bit)         do{((uint8_t*)(&target))[(uint8_t)bit / 8U] ^=  _bvmasks[(uint8_t)bit & '\07'];}while(false)
+#define IS_BIT_SET64(target, bit)     (bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07'])
+#define IS_BIT_CLEAR64(target, bit) (!(bool)(((uint8_t*)(&target))[(uint8_t)bit / 8U] &   _bvmasks[(uint8_t)bit & '\07']))
 
 /** @} */
 
