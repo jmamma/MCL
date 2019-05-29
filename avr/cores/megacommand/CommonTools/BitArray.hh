@@ -45,35 +45,35 @@ public:
 	/** Get the value of bit idx. **/
   uint8_t getBit(uint16_t idx) {
     idx += offset;
-    return IS_BIT_SET(addr[idx >> 3], idx & 7);
+    return IS_BIT_SET(addr[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/** Set the bit at idx. **/
   void setBit(uint16_t idx) {
     idx += offset;
-    SET_BIT(addr[idx >> 3], idx & 7);
+    SET_BIT(addr[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/** Set or clear the bit at idx. **/
   void setBit(uint16_t idx, uint8_t value) {
     idx += offset;
     if (value) {
-      SET_BIT(addr[idx >> 3], idx & 7);
+      SET_BIT(addr[idx / 0b00001000], idx & 0b00000111);
     } else {
-      CLEAR_BIT(addr[idx >> 3], idx & 7);
+      CLEAR_BIT(addr[idx / 0b00001000], idx & 0b00000111);
     }
   }
 
 	/** Clear the bit at idx. **/
   void clearBit(uint16_t idx) {
     idx += offset;
-    CLEAR_BIT(addr[idx >> 3], idx & 7);
+    CLEAR_BIT(addr[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/** Toggle the bit at idx. **/
-  uint8_t toggleBit(uint16_t idx) {
+  void toggleBit(uint16_t idx) {
     idx += offset;
-    return TOGGLE_BIT(addr[idx >> 3], idx & 7);
+    TOGGLE_BIT(addr[idx / 0b00001000], idx & 0b00000111);
   }
 	/* @} */
 };
@@ -98,32 +98,32 @@ public:
 
 	/** Get the value of bit idx. **/
   uint8_t isBitSet(uint16_t idx) {
-    return IS_BIT_SET(_bits[idx >> 3], idx & 7);
+    return IS_BIT_SET(_bits[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/** Set the bit at idx. **/
   void setBit(uint16_t idx) {
-    SET_BIT(_bits[idx >> 3], idx & 7);
+    SET_BIT(_bits[idx / 0b00001000], idx & 0b00000111);
   }
 
 
 	/** Set or clear the bit at idx. **/
   void setBit(uint16_t idx, uint8_t value) {
     if (value) {
-      SET_BIT(_bits[idx >> 3], idx & 7);
+      SET_BIT(_bits[idx / 0b00001000], idx & 0b00000111);
     } else {
-      CLEAR_BIT(_bits[idx >> 3], idx & 7);
+      CLEAR_BIT(_bits[idx / 0b00001000], idx & 0b00000111);
     }
   }
 
 	/** Clear the bit at idx. **/
   void clearBit(uint16_t idx) {
-    CLEAR_BIT(_bits[idx >> 3], idx & 7);
+    CLEAR_BIT(_bits[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/** Toggle the bit at idx. **/
   void toggleBit(uint16_t idx) {
-    TOGGLE_BIT(_bits[idx >> 3], idx & 7);
+    TOGGLE_BIT(_bits[idx / 0b00001000], idx & 0b00000111);
   }
 
 	/* @} */
