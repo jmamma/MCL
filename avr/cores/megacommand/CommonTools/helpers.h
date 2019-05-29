@@ -49,11 +49,11 @@ extern const uint32_t _bvmasks32[];
 #define _BV32(i) (_bvmasks32[i]) 
 
 /** Bit-level access and test macros. **/
-#define SET_BIT(target, bit)                do { (target) |=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
-#define CLEAR_BIT(target, bit)              do { (target) &= _ibvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
-#define TOGGLE_BIT(target, bit)             do { (target) ^=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
-#define IS_BIT_SET(target, bit)          ((bool)((target) &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
-#define IS_BIT_CLEAR(target, bit)       (!(bool)((target) &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
+#define SET_BIT(target, bit)                do { (target) |=  _bvmasks[((uint8_t)(bit))]; } while (false)
+#define CLEAR_BIT(target, bit)              do { (target) &= _ibvmasks[((uint8_t)(bit))]; } while (false)
+#define TOGGLE_BIT(target, bit)             do { (target) ^=  _bvmasks[((uint8_t)(bit))]; } while (false)
+#define IS_BIT_SET(target, bit)          ((bool)((target) &   _bvmasks[((uint8_t)(bit))]))
+#define IS_BIT_CLEAR(target, bit)       (!(bool)((target) &   _bvmasks[((uint8_t)(bit))]))
 
 /** 8-bit macros. **/
 #define SET_BIT8(target, bit)               SET_BIT(target,bit)
@@ -65,8 +65,8 @@ extern const uint32_t _bvmasks32[];
 #define SET_BIT_RADDR(target, bit)          do { ((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] |=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
 #define CLEAR_BIT_RADDR(target, bit)        do { ((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &= _ibvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
 #define TOGGLE_BIT_RADDR(target, bit)       do { ((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] ^=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
-#define IS_BIT_SET_RADDR(target, bit)    ((bool) ((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111])
-#define IS_BIT_CLEAR_RADDR(target, bit) (!(bool) ((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111])
+#define IS_BIT_SET_RADDR(target, bit)    ((bool)(((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
+#define IS_BIT_CLEAR_RADDR(target, bit) (!(bool)(((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
 
 /** 16-bit macros. **/
 #define SET_BIT16(target, bit)              SET_BIT_RADDR(target, bit)
