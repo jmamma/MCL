@@ -49,18 +49,24 @@ public:
   bool put(C c) volatile;
   /** A slightly more efficient version of put, if ptr == NULL */
   bool put_h(C c) volatile;
-  /** put_h but when running from within isr **/
+  /** put_h but when running from within isr that is already blocking**/
   bool put_h_isr(C c) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
   bool putp(C *c) volatile;
   /** Return the next element in the ring buffer. **/
   C get() volatile;
+  /** A slightly more efficient version of get, if ptr == NULL */
+  C get_h() volatile;
+  /** get_h but when running from within isr that is already blocking**/
+  C get_h_isr() volatile;
   /** Copy the next element into dst. **/
   bool getp(C *dst) volatile;
   /** Get the next element without removing it from the ring buffer. **/
   C peek() volatile;
   /** Returns true if the ring buffer is empty. **/
   inline bool isEmpty() volatile;
+  /** Returns true if the ring buffer is empty. Use in isr**/
+  inline bool isEmpty_isr() volatile;
   /** Returns true if the ring buffer is full. **/
   inline bool isFull() volatile;
   /** Returns the number of elements in the ring buffer. **/
@@ -178,11 +184,41 @@ bool CRingBuffer<C, N, T>::putp(C *c) volatile {
   return true;
 }
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
-  if (isEmpty())
-    return 0;
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h() volatile {
   USE_LOCK();
   SET_LOCK();
+  if (isEmpty_isr())
+    return 0;
+  C ret;
+
+  ret = get_bank1(ptr + rd);
+  rd++;
+  if (rd == len) {
+    rd = 0;
+  }
+  CLEAR_LOCK();
+  return ret;
+}
+
+
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
+  if (isEmpty_isr())
+    return 0;
+  C ret;
+  ret = get_bank1(ptr + rd);
+  rd++;
+  if (rd == len) {
+    rd = 0;
+  }
+  return ret;
+}
+
+
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
+  USE_LOCK();
+  SET_LOCK();
+  if (isEmpty_isr())
+    return 0;
   C ret;
   if (ptr == NULL) {
     ret = buf[rd];
@@ -229,6 +265,13 @@ bool CRingBuffer<C, N, T>::isEmpty() volatile {
   SET_LOCK();
   bool ret = (rd == wr);
   CLEAR_LOCK();
+  return ret;
+}
+
+
+template <class C, int N, class T>
+bool CRingBuffer<C, N, T>::isEmpty_isr() volatile {
+  bool ret = (rd == wr);
   return ret;
 }
 
