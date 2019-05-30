@@ -157,8 +157,8 @@ if (utiming == 0) {
   mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
 }*/
       if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask, step)) {
-        if ((slowclock - note_interface.note_hold) < 300) {
-          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
+        if (clock_diff(note_interface.note_hold,slowclock) < TRIG_HOLD_TIME) {
+            CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
         }
       } else {
         SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
