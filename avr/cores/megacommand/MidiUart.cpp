@@ -342,24 +342,11 @@ ISR(USART2_RX_vect) {
 
 #ifdef TX_IRQ
 ISR(USART1_UDRE_vect) {
-  // uint16_t count = 0;
   select_bank(0);
-  //  isr_midi();
-  //  while (!MidiUart.txRb.isEmpty()) {
   if (!MidiUart.txRb.isEmpty_isr()) {
-    while (!UART_CHECK_EMPTY_BUFFER())
-      ;
-    // Microseconds(20);
-    // MidiUart.sendActiveSenseTimer = 300;
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    //    if (UART_CHECK_EMPTY_BUFFER()) {
-    // if ((c != MIDI_ACTIVE_SENSE) || (count == 0)) {
     UART_WRITE_CHAR(MidiUart.txRb.get_h_isr());
-    // count++;
-    //  }
-    //  }
   }
-
   if (MidiUart.txRb.isEmpty_isr()) {
     CLEAR_BIT(UCSR1B, UDRIE1);
   }
@@ -367,17 +354,10 @@ ISR(USART1_UDRE_vect) {
 
 ISR(USART2_UDRE_vect) {
   select_bank(0);
-  //  isr_midi();
-
-  uint8_t c;
   if (!MidiUart2.txRb.isEmpty_isr()) {
-    while (!UART2_CHECK_EMPTY_BUFFER())
-      ;
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    c = MidiUart2.txRb.get_h_isr();
-    UART2_WRITE_CHAR(c);
+    UART2_WRITE_CHAR(MidiUart2.txRb.get_h_isr());
   }
-
   if (MidiUart2.txRb.isEmpty_isr()) {
     CLEAR_BIT(UCSR2B, UDRIE1);
   }
