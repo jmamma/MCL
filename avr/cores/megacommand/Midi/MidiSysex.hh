@@ -204,11 +204,13 @@ public:
   }
 
   void start() {
+    /*
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i])) {
         listeners[i]->start();
       }
     }
+    */
   }
   void abort() {
     // don't reset len, leave at maximum when aborted
@@ -224,40 +226,34 @@ public:
   void end();
   // Handled by interrupts
   void end_immediate() {
+    recvIds[0] = getByte(0);
+    if (recvIds[0] == 0x00) {
+      sysexLongId = true;
+    } else {
+      sysexLongId = false;
+    }
+    if (sysexLongId) {
+        recvIds[1] = getByte(1);
+        recvIds[2] = getByte(2);
+    }
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i])) {
         listeners[i]->end_immediate();
       }
     }
   }
+
   void handleByte(uint8_t byte) {
     if (aborted)
       return;
 
-    if (len == 0) {
-      recvIds[0] = byte;
-      if (byte == 0x00) {
-        sysexLongId = true;
-      } else {
-        sysexLongId = false;
-        start();
-      }
-    }
-    if (sysexLongId) {
-      if (len == 1) {
-        recvIds[1] = byte;
-      } else if (len == 2) {
-        recvIds[2] = byte;
-        start();
-      }
-    }
     /*
-      for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
-        if (isListenerActive(listeners[i])) {
-          listeners[i]->handleByte(byte);
-        }
-      }
-    */
+       for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+         if (isListenerActive(listeners[i])) {
+           listeners[i]->handleByte(byte);
+         }
+       }
+     */
     len++;
 
     if (recording) {
