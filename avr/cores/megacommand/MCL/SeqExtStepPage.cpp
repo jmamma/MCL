@@ -188,7 +188,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
         //  timing = 3;
         // condition = 3;
-        if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold,slowclock) < TRIG_HOLD_TIME) {
           for (uint8_t c = 0; c < 4; c++) {
             if (mcl_seq.ext_tracks[last_ext_track]
                     .notes[c][track + page_select * 16] > 0) {
