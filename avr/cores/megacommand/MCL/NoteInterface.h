@@ -6,6 +6,8 @@
 
 #include "GUI.h"
 
+#define TRIG_HOLD_TIME 200
+
 #define NI_MAX_NOTES 20
 
 class NoteInterfaceMidiEvents : public MidiCallback {

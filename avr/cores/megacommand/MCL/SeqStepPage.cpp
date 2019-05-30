@@ -242,7 +242,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         SET_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
       } else {
         DEBUG_PRINTLN("Trying to clear");
-        if ((slowclock - note_interface.note_hold) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold,slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].pattern_mask, step);
           mcl_seq.md_tracks[last_md_track].conditional[step] = 0;
           mcl_seq.md_tracks[last_md_track].timing[step] = 12; // upper
