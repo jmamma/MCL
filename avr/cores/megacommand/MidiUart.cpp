@@ -188,7 +188,7 @@ ISR(USART1_RX_vect) {
           MidiClock.handleImmediateMidiContinue();
           break;
         }
-        MidiUart.rxRb.put(c);
+        MidiUart.rxRb.put_h_isr(c);
       }
     }
   } else {
@@ -207,7 +207,7 @@ ISR(USART1_RX_vect) {
           Midi.live_state = midi_wait_status;
           Midi.midiSysex.abort();
 
-          MidiUart.rxRb.put(c);
+          MidiUart.rxRb.put_h_isr(c);
 
         } else {
           // handle sysex end here
@@ -229,11 +229,11 @@ ISR(USART1_RX_vect) {
         Midi.midiSysex.reset();
         // Midi_->last_status = Midi_->running_status = 0;
       } else {
-        MidiUart.rxRb.put(c);
+        MidiUart.rxRb.put_h_isr(c);
       }
     } break;
     default:
-      MidiUart.rxRb.put(c);
+      MidiUart.rxRb.put_h_isr(c);
 
       break;
     }
@@ -275,7 +275,7 @@ ISR(USART2_RX_vect) {
           MidiClock.handleImmediateMidiContinue();
           break;
         }
-        MidiUart2.rxRb.put(c);
+        MidiUart2.rxRb.put_h_isr(c);
       }
     }
   } else {
@@ -294,7 +294,7 @@ ISR(USART2_RX_vect) {
           Midi2.live_state = midi_wait_status;
           Midi2.midiSysex.abort();
 
-          MidiUart2.rxRb.put(c);
+          MidiUart2.rxRb.put_h_isr(c);
 
         } else {
           // handle sysex end here
@@ -319,11 +319,11 @@ ISR(USART2_RX_vect) {
         Midi2.midiSysex.reset();
         // Midi_->last_status = Midi_->running_status = 0;
       } else {
-        MidiUart2.rxRb.put(c);
+        MidiUart2.rxRb.put_h_isr(c);
       }
     } break;
     default:
-      MidiUart2.rxRb.put(c);
+      MidiUart2.rxRb.put_h_isr(c);
 
       break;
     }
