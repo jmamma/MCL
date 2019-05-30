@@ -9,8 +9,8 @@
 #include "MidiID.hh"
 
 //#define MIDI_VALIDATE
-//#define MIDI_RUNNINGSTATUS
-//
+//#define MIDI_RUNNING_STATUS
+
 /**
  * \addtogroup Midi
  *
@@ -108,7 +108,7 @@ public:
   }
 
   inline void sendCommandByte(uint8_t byte) {
-    #ifdef MIDI_RUNNINGSTATUS
+   #ifdef MIDI_RUNNING_STATUS
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
         MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
       if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
