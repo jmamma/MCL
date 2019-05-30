@@ -216,7 +216,7 @@ public:
     // don't reset len, leave at maximum when aborted
     //  len = 0;
     aborted = true;
-
+    recording = false;
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i]))
         listeners[i]->abort();
@@ -244,19 +244,8 @@ public:
   }
 
   void handleByte(uint8_t byte) {
-    if (aborted)
-      return;
-
-    /*
-       for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
-         if (isListenerActive(listeners[i])) {
-           listeners[i]->handleByte(byte);
-         }
-       }
-     */
-    len++;
-
     if (recording) {
+      len++;
       recordByte(byte);
     }
   }
