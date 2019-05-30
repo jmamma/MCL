@@ -6,6 +6,10 @@
 #include "WProgram.h"
 #include <inttypes.h>
 
+#ifdef DEBUGMODE
+#define CHECKING
+#endif
+
 /**
  * \addtogroup CommonTools
  *
@@ -37,9 +41,9 @@ public:
   volatile C buf[N];
   volatile T len = N;
   volatile C *ptr = NULL;
-
+  #ifdef CHECKING
   volatile uint8_t overflow;
-
+  #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
   /** Add a new element c to the ring buffer. **/
   bool put(C c) volatile;
@@ -72,17 +76,21 @@ CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
   ptr = reinterpret_cast<volatile C *>(_ptr);
   rd = 0;
   wr = 0;
+  #ifdef CHECKING
   overflow = 0;
+  #endif
 }
 
 template <class C, int N, class T>
 bool CRingBuffer<C, N, T>::put(C c) volatile {
   USE_LOCK();
   SET_LOCK();
+  #ifdef CHECKING
   if (isFull()) {
     overflow++;
     return false;
   }
+  #endif
   if (ptr == NULL) {
     buf[wr] = c;
   } else {
@@ -106,12 +114,14 @@ template <class C, int N, class T> T CRingBuffer<C, N, T>::size() volatile {
 
 template <class C, int N, class T>
 bool CRingBuffer<C, N, T>::putp(C *c) volatile {
+  USE_LOCK();
+  SET_LOCK();
+  #ifdef CHECKING
   if (isFull()) {
     overflow++;
     return false;
   }
-  USE_LOCK();
-  SET_LOCK();
+  #endif
   if (ptr == NULL) {
     memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
   } else {
