@@ -162,10 +162,10 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
 }
 
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
-  if (global.baseChannel > 15)
+/*  if (global.baseChannel > 15)
     return;
-  if ((track > 15) || (param > 33))
-    return;
+    if ((track > 15) || (param > 33))
+    return;*/
 
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
