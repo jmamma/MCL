@@ -19,6 +19,7 @@ class MDSeqTrack : public MDSeqTrackData {
 public:
   uint8_t track_number;
   uint8_t step_count;
+  uint8_t iterations;
   uint32_t start_clock32th;
 
   uint8_t port = UART1_PORT;
@@ -29,7 +30,7 @@ public:
 //  uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
-
+  
   bool mute_until_start = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;

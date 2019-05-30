@@ -24,6 +24,7 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
       step_count = 0;
+      iterations = 0;`
       mute_until_start = false;
     }
   }
@@ -71,6 +72,8 @@ void MDSeqTrack::seq() {
   if (MidiClock.mod12_counter == 11) {
     if (step_count == length - 1) {
       step_count = 0;
+      iterations++;
+      if (iterations > 8) { iterations = 0; }
     } else {
       step_count++;
     }
@@ -178,11 +181,7 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
   if (condition == 0) {
     send_trig();
   } else if (condition <= 8) {
-    if (((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2 +
-          length) /
-         length) %
-            ((condition)) ==
-        0) {
+            if ((iterations % condition) == 0) {
       send_trig();
     }
   } else {
