@@ -47,6 +47,10 @@ public:
   CRingBuffer(volatile uint8_t *ptr = NULL);
   /** Add a new element c to the ring buffer. **/
   bool put(C c) volatile;
+  /** A slightly more efficient version of put, if ptr == NULL */
+  bool put_h(C c) volatile;
+  /** put_h but when running from within isr **/
+  bool put_h_isr(C c) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
   bool putp(C *c) volatile;
   /** Return the next element in the ring buffer. **/
@@ -80,6 +84,45 @@ CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
   overflow = 0;
   #endif
 }
+
+template <class C, int N, class T>
+bool CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  put_bank1(ptr + wr, c);
+  wr++;
+  if (wr == len) {
+    wr = 0;
+  }
+  return true;
+}
+
+
+template <class C, int N, class T>
+bool CRingBuffer<C, N, T>::put_h(C c) volatile {
+  USE_LOCK();
+  SET_LOCK();
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  put_bank1(ptr + wr, c);
+  wr++;
+  if (wr == len) {
+    wr = 0;
+  }
+  CLEAR_LOCK();
+  return true;
+}
+
 
 template <class C, int N, class T>
 bool CRingBuffer<C, N, T>::put(C c) volatile {

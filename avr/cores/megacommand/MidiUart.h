@@ -74,7 +74,7 @@ class MidiUartClass : public MidiUartParent {
   if (c == 0xF7) {
     uart_block = 0;
   }
-   txRb.put(c);
+   txRb.put_h(c);
    SET_BIT(UCSR1B, UDRIE1);
   }
   inline bool avail() { return !rxRb.isEmpty(); }
@@ -108,7 +108,7 @@ class MidiUartClass2 : public MidiUartParent {
   if (c == 0xF7) {
     uart_block = 0;
   }
-   txRb.put(c);
+   txRb.put_h(c);
     SET_BIT(UCSR2B, UDRIE1);
   }
   virtual void m_putc_immediate(uint8_t c);
