@@ -45,9 +45,10 @@ void ExtSeqTrack::seq() {
 
     int8_t utiming_next = timing[next_step];         // upper
     uint8_t condition_next = conditional[next_step]; // lower
+    uint8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
-      if ((utiming >= (6 * resolution)) &&
-          (utiming - (6 * resolution) == (int8_t)timing_counter)) {
+      if ((utiming >= timing_mid) &&
+          ((utiming - timing_mid) == (int8_t)timing_counter)) {
 
         if (notes[c][step_count] < 0) {
           note_off(abs(notes[c][step_count]) - 1);
@@ -58,7 +59,7 @@ void ExtSeqTrack::seq() {
         }
       }
 
-      if ((utiming_next < (6 * resolution)) &&
+      if ((utiming_next < timing_mid) &&
           ((utiming_next) == (int8_t)timing_counter)) {
 
         if (notes[c][step_count + 1] < 0) {
