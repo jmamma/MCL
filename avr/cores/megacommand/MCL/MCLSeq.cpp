@@ -69,6 +69,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     //ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
+    ext_tracks[i].iterations = 1;
   }
 
  for (uint8_t i = 0; i < num_md_tracks; i++) {

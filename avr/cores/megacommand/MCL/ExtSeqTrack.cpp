@@ -79,7 +79,13 @@ void ExtSeqTrack::seq() {
   }
   if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) && (resolution == 1)) { step_count++; }
   if ((MidiClock.mod12_counter == 11) && (resolution == 2)) { step_count++; }
-  if (step_count == length) { step_count = 0; }
+  if (step_count == length) {
+      step_count = 0;
+      iterations++;
+      if (iterations > 8) {
+      iterations = 1;
+      }
+  }
 }
 
 void ExtSeqTrack::buffer_notesoff() {
@@ -112,36 +118,69 @@ void ExtSeqTrack::note_off(uint8_t note) {
 }
 
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
-
-  if ((condition == 0)) {
+  switch (condition) {
+  case 0:
     note_on(note);
+    break;
+  case 1:
+    note_on(note);
+    break;
+  case 2:
+    if (!IS_BIT_SET(iterations, 0)) {
+      note_on(note);
+    }
+  case 4:
+    if ((iterations == 4) || (iterations == 8)) {
+      note_on(note);
+    }
+  case 8:
+    if ((iterations == 8)) {
+      note_on(note);
+    }
+    break;
+  case 3:
+    if ((iterations == 3) || (iterations == 6)) {
+      note_on(note);
+    }
+    break;
+  case 5:
+    if (iterations == 5) {
+      note_on(note);
+    }
+    break;
+  case 7:
+    if (iterations == 7) {
+      note_on(note);
+    }
+    break;
+  case 9:
+    if (get_random_byte() <= 13) {
+      note_on(note);
+    }
+    break;
+  case 10:
+    if (get_random_byte() <= 32) {
+      note_on(note);
+    }
+    break;
+  case 11:
+    if (get_random_byte() <= 64) {
+      note_on(note);
+    }
+    break;
+  case 12:
+    if (get_random_byte() <= 96) {
+      note_on(note);
+    }
+    break;
+  case 13:
+    if (get_random_byte() <= 115) {
+      note_on(note);
+    }
+    break;
   }
 
-  else if (condition <= 8) {
-    if (resolution == 2) {
-      if (((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2 + length) /
-           length) %
-              ((condition)) ==
-          0) {
-        note_on(note);
-      }
-    } else {
-      if (((MidiClock.div32th_counter - mcl_actions.start_clock32th + length) /
-           length) %
-              ((condition)) ==
-          0) {
-        note_on(note);
-      }
-    }
-  } else if ((condition == 9) && (random(100) <= 10)) {
-    note_on(note);
-  } else if ((condition == 10) && (random(100) <= 25)) {
-    note_on(note);
-  } else if ((condition == 11) && (random(100) <= 50)) {
-    note_on(note);
-  } else if ((condition == 12) && (random(100) <= 75)) {
-    note_on(note);
-  } else if ((condition == 13) && (random(100) <= 90)) {
+  if ((condition == 0)) {
     note_on(note);
   }
 }
