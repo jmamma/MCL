@@ -226,6 +226,7 @@ ISR(TIMER1_COMPA_vect) {
 // XXX CMP to have better time
 
 static uint16_t oldsr = 0;
+volatile uint8_t *rand_ptr = 0;
 
 void gui_poll() {
   static bool inGui = false;
