@@ -234,7 +234,7 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
       send_trig();
     }
     break;
-  }
+ }
 }
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
