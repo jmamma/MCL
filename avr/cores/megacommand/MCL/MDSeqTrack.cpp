@@ -24,7 +24,7 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
       step_count = 0;
-      iterations = 0;`
+      iterations = 1;
       mute_until_start = false;
     }
   }
@@ -73,7 +73,7 @@ void MDSeqTrack::seq() {
     if (step_count == length - 1) {
       step_count = 0;
       iterations++;
-      if (iterations > 8) { iterations = 0; }
+      if (iterations > 8) { iterations = 1; }
     } else {
       step_count++;
     }
@@ -178,16 +178,31 @@ void MDSeqTrack::send_trig() {
     MD.triggerTrack(track_number, 127);
 }
 void MDSeqTrack::trig_conditional(uint8_t condition) {
-  if (condition == 0) {
-    send_trig();
-  } else if (condition <= 8) {
-            if ((iterations % condition) == 0) {
-      send_trig();
-    }
-  } else {
-
-    uint8_t rnd = random(100);
+    uint8_t rnd;
+    if (condition > 8) { rnd = random(100); }
     switch (condition) {
+    case 0:
+        send_trig();
+    break;
+    case 1:
+        send_trig();
+    break;
+    case 2:
+        if (!IS_BIT_SET(iterations,0)) { send_trig(); }
+    case 4:
+        if ((iterations == 4) || (iterations == 8)) { send_trig(); }
+    case 8:
+        if ((iterations == 8)) { send_trig(); }
+    break;
+    case 3:
+        if ((iterations == 3) || (iterations == 6)) { send_trig(); }
+    break;
+    case 5:
+        if (iterations == 5) { send_trig(); }
+    break;
+    case 7:
+        if (iterations == 7) { send_trig(); }
+    break;
     case 9:
       if (rnd <= 10) {
         send_trig();
@@ -214,7 +229,6 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
       }
       break;
     }
-  }
 }
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
