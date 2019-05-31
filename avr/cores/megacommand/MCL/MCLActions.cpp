@@ -125,6 +125,11 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
       DEBUG_PRINTLN("could not receive kit");
       return;
     }
+    if (MidiClock.state == 2) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].update_kit_params();
+      }
+    }
   }
 
   uint8_t first_note = 255;
