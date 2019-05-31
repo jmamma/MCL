@@ -34,8 +34,10 @@ void ExtSeqTrack::seq() {
       timing_counter =
           MidiClock.mod12_counter;
       }
+      else {
       timing_counter =
           MidiClock.mod12_counter - 6;
+      }
     }
 
     uint8_t next_step = 0;
