@@ -57,7 +57,7 @@ void MDSeqTrack::seq() {
         trig_conditional(condition);
       }
     }
-   if ((utiming_next < 12) &&
+    if ((utiming_next < 12) &&
         ((utiming_next) == (int8_t)MidiClock.mod12_counter)) {
 
       if ((track_number != 15) || (!md_exploit.state)) {
@@ -73,7 +73,9 @@ void MDSeqTrack::seq() {
     if (step_count == length - 1) {
       step_count = 0;
       iterations++;
-      if (iterations > 8) { iterations = 1; }
+      if (iterations > 8) {
+        iterations = 1;
+      }
     } else {
       step_count++;
     }
@@ -113,7 +115,6 @@ void MDSeqTrack::update_kit_params() {
       MD.kit.params[track_number][param_id] = locks_params_orig[c];
     }
   }
-
 }
 
 void MDSeqTrack::update_params() {
@@ -173,62 +174,75 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
 }
 
 void MDSeqTrack::send_trig() {
-    mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-    if (MD.kit.trigGroups[track_number] < 16) { mixer_page.disp_levels[MD.kit.trigGroups[track_number]] = MD.kit.levels[MD.kit.trigGroups[track_number]]; }
-    MD.triggerTrack(track_number, 127);
+  mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
+  if (MD.kit.trigGroups[track_number] < 16) {
+    mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
+        MD.kit.levels[MD.kit.trigGroups[track_number]];
+  }
+  MD.triggerTrack(track_number, 127);
 }
 void MDSeqTrack::trig_conditional(uint8_t condition) {
-    uint8_t rnd;
-    if (condition > 8) { rnd = random(100); }
-    switch (condition) {
-    case 0:
-        send_trig();
+  switch (condition) {
+  case 0:
+    send_trig();
     break;
-    case 1:
-        send_trig();
+  case 1:
+    send_trig();
     break;
-    case 2:
-        if (!IS_BIT_SET(iterations,0)) { send_trig(); }
-    case 4:
-        if ((iterations == 4) || (iterations == 8)) { send_trig(); }
-    case 8:
-        if ((iterations == 8)) { send_trig(); }
-    break;
-    case 3:
-        if ((iterations == 3) || (iterations == 6)) { send_trig(); }
-    break;
-    case 5:
-        if (iterations == 5) { send_trig(); }
-    break;
-    case 7:
-        if (iterations == 7) { send_trig(); }
-    break;
-    case 9:
-      if (rnd <= 10) {
-        send_trig();
-      }
-      break;
-    case 10:
-      if (rnd <= 25) {
-        send_trig();
-      }
-      break;
-    case 11:
-      if (rnd <= 50) {
-        send_trig();
-      }
-      break;
-    case 12:
-      if (rnd <= 75) {
-        send_trig();
-      }
-      break;
-    case 13:
-      if (rnd <= 90) {
-        send_trig();
-      }
-      break;
+  case 2:
+    if (!IS_BIT_SET(iterations, 0)) {
+      send_trig();
     }
+  case 4:
+    if ((iterations == 4) || (iterations == 8)) {
+      send_trig();
+    }
+  case 8:
+    if ((iterations == 8)) {
+      send_trig();
+    }
+    break;
+  case 3:
+    if ((iterations == 3) || (iterations == 6)) {
+      send_trig();
+    }
+    break;
+  case 5:
+    if (iterations == 5) {
+      send_trig();
+    }
+    break;
+  case 7:
+    if (iterations == 7) {
+      send_trig();
+    }
+    break;
+  case 9:
+    if (get_random_byte() <= 13) {
+      send_trig();
+    }
+    break;
+  case 10:
+    if (get_random_byte() <= 32) {
+      send_trig();
+    }
+    break;
+  case 11:
+    if (get_random_byte() <= 64) {
+      send_trig();
+    }
+    break;
+  case 12:
+    if (get_random_byte() <= 96) {
+      send_trig();
+    }
+    break;
+  case 13:
+    if (get_random_byte() <= 115) {
+      send_trig();
+    }
+    break;
+  }
 }
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
@@ -434,7 +448,9 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     // This will prevent unnecessary length change of internal seq pattern
     return;
   }
-  if ((pattern_mask | lock_mask) == 0) { set_length(md_track->length); }
+  if ((pattern_mask | lock_mask) == 0) {
+    set_length(md_track->length);
+  }
 
   for (int n = 0; n < md_track->arraysize; n++) {
     set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,
