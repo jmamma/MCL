@@ -177,10 +177,6 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
     }
     break;
   }
-
-  if ((condition == 0)) {
-    note_on(note);
-  }
 }
 
 void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
