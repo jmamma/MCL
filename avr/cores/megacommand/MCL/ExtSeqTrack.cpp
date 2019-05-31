@@ -26,14 +26,16 @@ void ExtSeqTrack::seq() {
   }
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
-    int8_t utiming = timing[step_count];         // upper
-    uint8_t condition = conditional[step_count]; // lower
 
     int8_t timing_counter = MidiClock.mod12_counter;
 
     if ((resolution == 1)) {
+      if (MidiClock.mod12_counter < 6) {
       timing_counter =
-          MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
+          MidiClock.mod12_counter;
+      }
+      timing_counter =
+          MidiClock.mod12_counter - 6;
     }
 
     uint8_t next_step = 0;
@@ -43,29 +45,27 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    int8_t utiming_next = timing[next_step];         // upper
-    uint8_t condition_next = conditional[next_step]; // lower
-    uint8_t timing_mid = 6 * resolution;
+    int8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
-      if ((utiming >= timing_mid) &&
-          ((utiming - timing_mid) == (int8_t)timing_counter)) {
+      if ((timing[step_count] >= timing_mid) &&
+          (((int8_t)timing[step_count] - timing_mid) == (int8_t)timing_counter)) {
 
         if (notes[c][step_count] < 0) {
           note_off(abs(notes[c][step_count]) - 1);
         }
 
         else if (notes[c][step_count] > 0) {
-          noteon_conditional(condition, abs(notes[c][step_count]) - 1);
+          noteon_conditional(conditional[step_count], abs(notes[c][step_count]) - 1);
         }
       }
 
-      if ((utiming_next < timing_mid) &&
-          ((utiming_next) == (int8_t)timing_counter)) {
+      if ((timing[next_step] < timing_mid) &&
+          ((timing[next_step]) == (int8_t)timing_counter)) {
 
         if (notes[c][step_count + 1] < 0) {
           note_off(abs(notes[c][next_step]) - 1);
         } else if (notes[c][step_count + 1] > 0) {
-          noteon_conditional(condition, abs(notes[c][next_step]) - 1);
+          noteon_conditional(conditional[next_step], abs(notes[c][next_step]) - 1);
         }
       }
     }
