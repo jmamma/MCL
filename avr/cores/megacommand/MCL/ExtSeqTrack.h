@@ -39,6 +39,7 @@ public:
                                     // them in the event the sequencer stops
   uint8_t step_count;
   uint32_t start_step;
+  uint8_t iterations;
   bool mute_until_start = false;
 
   void seq();
