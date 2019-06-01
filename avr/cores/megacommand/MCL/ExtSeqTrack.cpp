@@ -31,12 +31,9 @@ void ExtSeqTrack::seq() {
 
     if ((resolution == 1)) {
       if (MidiClock.mod12_counter < 6) {
-      timing_counter =
-          MidiClock.mod12_counter;
-      }
-      else {
-      timing_counter =
-          MidiClock.mod12_counter - 6;
+        timing_counter = MidiClock.mod12_counter;
+      } else {
+        timing_counter = MidiClock.mod12_counter - 6;
       }
     }
 
@@ -50,14 +47,16 @@ void ExtSeqTrack::seq() {
     int8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
       if ((timing[step_count] >= timing_mid) &&
-          (((int8_t)timing[step_count] - timing_mid) == (int8_t)timing_counter)) {
+          (((int8_t)timing[step_count] - timing_mid) ==
+           (int8_t)timing_counter)) {
 
         if (notes[c][step_count] < 0) {
           note_off(abs(notes[c][step_count]) - 1);
         }
 
         else if (notes[c][step_count] > 0) {
-          noteon_conditional(conditional[step_count], abs(notes[c][step_count]) - 1);
+          noteon_conditional(conditional[step_count],
+                             abs(notes[c][step_count]) - 1);
         }
       }
 
@@ -67,7 +66,8 @@ void ExtSeqTrack::seq() {
         if (notes[c][step_count + 1] < 0) {
           note_off(abs(notes[c][next_step]) - 1);
         } else if (notes[c][step_count + 1] > 0) {
-          noteon_conditional(conditional[next_step], abs(notes[c][next_step]) - 1);
+          noteon_conditional(conditional[next_step],
+                             abs(notes[c][next_step]) - 1);
         }
       }
     }
@@ -87,33 +87,25 @@ void ExtSeqTrack::seq() {
     }
   }
 }
-
-void ExtSeqTrack::buffer_notesoff() {
-  for (uint8_t c = 0; c < SEQ_NOTEBUF_SIZE; c++) {
-    if (notebuffer[c] > 0) {
-      uart->sendNoteOff(channel, notebuffer[c], 0);
-      notebuffer[c] = 0;
-    }
-  }
-}
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
 
-  for (uint8_t c = 0; c < SEQ_NOTEBUF_SIZE; c++) {
-    if (notebuffer[c] == 0) {
-      notebuffer[c] = note;
-      return;
-    }
+  // Greater than 64
+  if (IS_BIT_SET(note, 6)) {
+    SET_BIT64(note_buffer[1], note - 64);
+  } else {
+    SET_BIT64(note_buffer[0], note);
   }
 }
+
 void ExtSeqTrack::note_off(uint8_t note) {
   uart->sendNoteOff(channel, note, 0);
 
-  for (uint8_t i = 0; i < SEQ_NOTEBUF_SIZE; i++) {
-    if (notebuffer[i] == note) {
-      notebuffer[i] = 0;
-      return;
-    }
+  // Greater than 64
+  if (IS_BIT_SET(note, 6)) {
+    CLEAR_BIT64(note_buffer[1], note - 64);
+  } else {
+    CLEAR_BIT64(note_buffer[0], note);
   }
 }
 
