@@ -63,46 +63,46 @@ public:
    * the branch does not equal zero */
 
   void buffer_notesoff64(uint64_t *buf) {
-    if (buf[0]) {
-      buffer_notesoff32((uint32_t *)buf[0], 0);
-    }
-    if (buf[1]) {
-      buffer_notesoff32((uint32_t *)buf[1], 64);
-    }
+    buffer_notesoff32((uint32_t *)buf[0], 0);
+    buffer_notesoff32((uint32_t *)buf[1], 64);
   }
   void buffer_notesoff32(uint32_t *buf, uint8_t offset) {
-    if (buf[0]) {
-      buffer_notesoff16((uint16_t *)buf[0], offset);
-    }
-    if (buf[1]) {
-      buffer_notesoff16((uint16_t *)buf[1], offset + 32);
-    }
+    buffer_notesoff16((uint16_t *)buf[0], offset);
+    buffer_notesoff16((uint16_t *)buf[1], offset + 32);
   }
   void buffer_notesoff16(uint16_t *buf, uint8_t offset) {
-    if (buf[0]) {
+    if ((uint8_t *)buf[0]) {
       buffer_notesoff8((uint8_t *)buf[0], offset);
     }
-    if (buf[1]) {
+    if ((uint8_t *)buf[1]) {
       buffer_notesoff8((uint8_t *)buf[1], offset + 16);
     }
   }
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
-  if (IS_BIT_SET(*buf, 0)) {
-      uart->sendNoteOff(channel, offset, 0); }
-  if (IS_BIT_SET(*buf, 1)) {
-      uart->sendNoteOff(channel, offset + 1, 0); }
-  if (IS_BIT_SET(*buf, 2)) {
-      uart->sendNoteOff(channel, offset + 2, 0); }
-  if (IS_BIT_SET(*buf, 3)) {
-      uart->sendNoteOff(channel, offset + 3, 0); }
-  if (IS_BIT_SET(*buf, 4)) {
-      uart->sendNoteOff(channel, offset + 4, 0); }
-  if (IS_BIT_SET(*buf, 5)) {
-      uart->sendNoteOff(channel, offset + 5, 0); }
-  if (IS_BIT_SET(*buf, 6)) {
-      uart->sendNoteOff(channel, offset + 6, 0); }
-  if (IS_BIT_SET(*buf, 7)) {
-      uart->sendNoteOff(channel, offset + 7, 0); }
+    if (IS_BIT_SET(*buf, 0)) {
+      uart->sendNoteOff(channel, offset, 0);
+    }
+    if (IS_BIT_SET(*buf, 1)) {
+      uart->sendNoteOff(channel, offset + 1, 0);
+    }
+    if (IS_BIT_SET(*buf, 2)) {
+      uart->sendNoteOff(channel, offset + 2, 0);
+    }
+    if (IS_BIT_SET(*buf, 3)) {
+      uart->sendNoteOff(channel, offset + 3, 0);
+    }
+    if (IS_BIT_SET(*buf, 4)) {
+      uart->sendNoteOff(channel, offset + 4, 0);
+    }
+    if (IS_BIT_SET(*buf, 5)) {
+      uart->sendNoteOff(channel, offset + 5, 0);
+    }
+    if (IS_BIT_SET(*buf, 6)) {
+      uart->sendNoteOff(channel, offset + 6, 0);
+    }
+    if (IS_BIT_SET(*buf, 7)) {
+      uart->sendNoteOff(channel, offset + 7, 0);
+    }
   }
 };
 
