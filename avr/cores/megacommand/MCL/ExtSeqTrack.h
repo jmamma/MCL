@@ -33,10 +33,8 @@ public:
   MidiUartParent *uart = &MidiUart2;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
-  uint8_t
-      notebuffer[SEQ_NOTEBUF_SIZE]; // we need to keep track of what notes are
-                                    // currently being played, in order to stop
-                                    // them in the event the sequencer stops
+
+  uint64_t note_buffer[2]; // 2 x 64 bit masks to store state of 128 notes.
   uint8_t step_count;
   uint32_t start_step;
   uint8_t iterations;
@@ -44,7 +42,6 @@ public:
 
   void seq();
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  void buffer_notesoff();
   void note_on(uint8_t note);
   void note_off(uint8_t note);
   void noteon_conditional(uint8_t condition, uint8_t note);
@@ -58,6 +55,55 @@ public:
   void clear_track();
   void set_length(uint8_t len);
 
+  void buffer_notesoff() {
+    buffer_notesoff64(&note_buffer[0]);
+    buffer_notesoff64(&note_buffer[1]);
+  }
+  /* Binary search tree, only traverses down the branch if
+   * the branch does not equal zero */
+
+  void buffer_notesoff64(uint64_t *buf) {
+    if (buf[0]) {
+      buffer_notesoff32((uint32_t *)buf[0], 0);
+    }
+    if (buf[1]) {
+      buffer_notesoff32((uint32_t *)buf[1], 64);
+    }
+  }
+  void buffer_notesoff32(uint32_t *buf, uint8_t offset) {
+    if (buf[0]) {
+      buffer_notesoff16((uint16_t *)buf[0], offset);
+    }
+    if (buf[1]) {
+      buffer_notesoff16((uint16_t *)buf[1], offset + 32);
+    }
+  }
+  void buffer_notesoff16(uint16_t *buf, uint8_t offset) {
+    if (buf[0]) {
+      buffer_notesoff8((uint8_t *)buf[0], offset);
+    }
+    if (buf[1]) {
+      buffer_notesoff8((uint8_t *)buf[1], offset + 16);
+    }
+  }
+  void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
+  if (IS_BIT_SET(*buf, 0)) {
+      uart->sendNoteOff(channel, offset, 0); }
+  if (IS_BIT_SET(*buf, 1)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 2)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 3)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 4)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 5)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 6)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  if (IS_BIT_SET(*buf, 7)) {
+      uart->sendNoteOff(channel, ++offset, 0); }
+  }
 };
 
 #endif /* EXTSEQTRACK_H__ */
