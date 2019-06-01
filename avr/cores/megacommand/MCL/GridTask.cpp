@@ -99,9 +99,9 @@ void GridTask::run() {
 
             send_md_kit = true;
           } else {
-
+            a4_track->load_from_mem(n);
             slots_changed[n] = mcl_actions.chains[n].row;
-            memcpy(&mcl_actions.chains[n], &ext_track->chain,
+            memcpy(&mcl_actions.chains[n], &a4_track->chain,
                    sizeof(GridChain));
             send_a4_sound = true;
           }

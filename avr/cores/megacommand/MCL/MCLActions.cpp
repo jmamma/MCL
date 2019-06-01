@@ -420,8 +420,14 @@ void MCLActions::send_tracks_to_devices() {
         next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
       } else {
+        if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].resolution == 2) {
         next_transitions[n] = MidiClock.div16th_counter -
-                              mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count;
+                              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count) ;
+        }
+        else {
+        next_transitions[n] = MidiClock.div16th_counter -
+                              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count * 2) ;
+        }
       }
       calc_next_slot_transition(n);
     }
