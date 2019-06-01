@@ -90,19 +90,19 @@ public:
   if (IS_BIT_SET(*buf, 0)) {
       uart->sendNoteOff(channel, offset, 0); }
   if (IS_BIT_SET(*buf, 1)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 1, 0); }
   if (IS_BIT_SET(*buf, 2)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 2, 0); }
   if (IS_BIT_SET(*buf, 3)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 3, 0); }
   if (IS_BIT_SET(*buf, 4)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 4, 0); }
   if (IS_BIT_SET(*buf, 5)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 5, 0); }
   if (IS_BIT_SET(*buf, 6)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 6, 0); }
   if (IS_BIT_SET(*buf, 7)) {
-      uart->sendNoteOff(channel, ++offset, 0); }
+      uart->sendNoteOff(channel, offset + 7, 0); }
   }
 };
 
