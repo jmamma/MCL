@@ -89,7 +89,8 @@ void ExtSeqTrack::seq() {
 }
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
-
+  DEBUG_PRINTLN("note on");
+  DEBUG_PRINTLN(note);
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
     SET_BIT64(note_buffer[1], note - 64);
