@@ -3,7 +3,7 @@
 #include "MCLActions.h"
 
 #define MD_KIT_LENGTH 0x4D0
-#define A4_SOUND_LENGTH 0x18E
+#define A4_SOUND_LENGTH 0x19F
 
 void MCLActions::setup() {
   DEBUG_PRINTLN("mcl actions setup");
