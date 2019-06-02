@@ -32,6 +32,7 @@ void GridPage::setup() {
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
   oled_display.setFont();
+  oled_display.setTextColor(WHITE, BLACK);
 #endif
 }
 void GridPage::loop() {
