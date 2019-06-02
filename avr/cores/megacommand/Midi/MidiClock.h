@@ -399,13 +399,9 @@ public:
     if (transmit_uart2) {
       MidiUart2.sendRaw(MIDI_CONTINUE);
     }
-    state = STARTING;
+    state = STARTED;
 
-    counter = 10000;
-    rx_clock = rx_last_clock = 0;
     isInit = false;
-    incrementCounters();
-
     //  init();
   }
 
