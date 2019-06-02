@@ -40,10 +40,10 @@ void GridTask::run() {
   // DEBUG_PRINTLN(a4_div32th_latency);
 
   uint32_t div32th_counter;
-  if (mcl_cfg.chain_mode == 0) {
+  if ((mcl_cfg.chain_mode == 0) || (mcl_actions.next_transition == (uint16_t) -1)) {
     return;
   }
-//  DEBUG_PRINTLN(MidiClock.div16th_counter);
+  //  DEBUG_PRINTLN(MidiClock.div16th_counter);
   uint8_t curkit;
   ElektronDataToSysexEncoder encoder(&MidiUart);
 
@@ -101,8 +101,7 @@ void GridTask::run() {
           } else {
             a4_track->load_from_mem(n);
             slots_changed[n] = mcl_actions.chains[n].row;
-            memcpy(&mcl_actions.chains[n], &a4_track->chain,
-                   sizeof(GridChain));
+            memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
             send_a4_sound = true;
           }
         }
@@ -226,10 +225,10 @@ void GridTask::run() {
             }
           }
 
-            mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
-            mcl_seq.md_tracks[n].mute_until_start = true;
+          mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
+          mcl_seq.md_tracks[n].mute_until_start = true;
 
-            md_track->load_seq_data(n);
+          md_track->load_seq_data(n);
         }
 
         else {
@@ -250,80 +249,86 @@ void GridTask::run() {
   EmptyTrack empty_track2;
   MDTrack *md_temp_track = (MDTrack *)&empty_track2;
   A4Track *a4_temp_track = (A4Track *)&empty_track2;
+  if (mcl_cfg.chain_mode != 2) {
+    for (uint8_t n = 0; n < NUM_TRACKS; n++) {
+      if (slots_changed[n] >= 0) {
 
-  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    if (slots_changed[n] >= 0) {
-
-      handleIncomingMidi();
-      if (count % 8 == 0) {
-        if (GUI.currentPage() != &grid_write_page) {
-          GUI.loop();
+        handleIncomingMidi();
+        if (count % 8 == 0) {
+          if (GUI.currentPage() != &grid_write_page) {
+            GUI.loop();
+          }
         }
-      }
-      if ((slots_changed[n] != mcl_actions.chains[n].row)) {
+        if ((slots_changed[n] != mcl_actions.chains[n].row)) {
 
-        count++;
-        if (n < NUM_MD_TRACKS) {
-          //          DEBUG_PRINTLN("trying to cache MD track");
-          //         DEBUG_PRINTLN(n);
-          //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-          int32_t len =
-              sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-          if (md_track->load_track_from_grid(n, mcl_actions.chains[n].row,
-                                             len)) {
-            //  DEBUG_PRINTLN("storing");
-            md_temp_track->load_from_mem(n);
+          count++;
+          if (n < NUM_MD_TRACKS) {
+            //          DEBUG_PRINTLN("trying to cache MD track");
+            //         DEBUG_PRINTLN(n);
+            //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
+            int32_t len =
+                sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+            if (md_track->load_track_from_grid(n, mcl_actions.chains[n].row,
+                                               len)) {
+              //  DEBUG_PRINTLN("storing");
+              md_temp_track->load_from_mem(n);
 
-            if ((md_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(md_temp_track->machine), &(md_track->machine),
-                       sizeof(MDMachine)) != 0)) {
-              mcl_actions.send_machine[n] = 0;
-            } else {
-              mcl_actions.send_machine[n] = 1;
-              DEBUG_PRINTLN("machines match");
-            }
+              if ((md_track->active != EMPTY_TRACK_TYPE) &&
+                  (memcmp(&(md_temp_track->machine), &(md_track->machine),
+                          sizeof(MDMachine)) != 0)) {
+                mcl_actions.send_machine[n] = 0;
+              } else {
+                mcl_actions.send_machine[n] = 1;
+                DEBUG_PRINTLN("machines match");
+              }
 
-            md_track->store_in_mem(n);
-            slots_cached[n] = 1;
+              md_track->store_in_mem(n);
+              slots_cached[n] = 1;
 
 #ifdef HANDLE_GROUPS
-            uint8_t trigGroup = md_track->machine.trigGroup;
-            if ((trigGroup < 16) && (trigGroup != n) &&
-                (slots_cached[trigGroup] == 0)) {
-              if (md_track->load_track_from_grid(
-                      trigGroup, mcl_actions.chains[n].row, len)) {
-                md_track->store_in_mem(trigGroup);
-                mcl_actions.send_machine[trigGroup] =
-                    mcl_actions.send_machine[n];
-                slots_cached[trigGroup] = 1;
+              uint8_t trigGroup = md_track->machine.trigGroup;
+              if ((trigGroup < 16) && (trigGroup != n) &&
+                  (slots_cached[trigGroup] == 0)) {
+                if (md_track->load_track_from_grid(
+                        trigGroup, mcl_actions.chains[n].row, len)) {
+                  md_track->store_in_mem(trigGroup);
+                  mcl_actions.send_machine[trigGroup] =
+                      mcl_actions.send_machine[n];
+                  slots_cached[trigGroup] = 1;
+                }
               }
-            }
 #endif
-          } else {
-            DEBUG_PRINTLN("failed");
-          }
-        } else {
-          DEBUG_PRINTLN("trying to load a4 track");
-          DEBUG_PRINTLN(n);
-          DEBUG_PRINTLN(mcl_actions.chains[n].row);
-          if (a4_track->load_track_from_grid(n, mcl_actions.chains[n].row, 0)) {
-            a4_temp_track->load_from_mem(n);
-            if ((a4_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0)) {
-              mcl_actions.send_machine[n] = 0;
             } else {
-              mcl_actions.send_machine[n] = 1;
-              DEBUG_PRINTLN("sounds match");
+              DEBUG_PRINTLN("failed");
             }
-            a4_track->store_in_mem(n);
+          } else {
+            DEBUG_PRINTLN("trying to load a4 track");
+            DEBUG_PRINTLN(n);
+            DEBUG_PRINTLN(mcl_actions.chains[n].row);
+            if (a4_track->load_track_from_grid(n, mcl_actions.chains[n].row,
+                                               0)) {
+              a4_temp_track->load_from_mem(n);
+              if ((a4_track->active != EMPTY_TRACK_TYPE) &&
+                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=
+                   0)) {
+                mcl_actions.send_machine[n] = 0;
+              } else {
+                mcl_actions.send_machine[n] = 1;
+                DEBUG_PRINTLN("sounds match");
+              }
+              a4_track->store_in_mem(n);
+            }
           }
         }
-      }
 
-      mcl_actions.calc_next_slot_transition(n);
+        mcl_actions.calc_next_slot_transition(n);
+      }
     }
+    mcl_actions.calc_next_transition();
+    mcl_actions.calc_latency(&empty_track);
+  } else {
+    mcl_actions.next_transition = (uint16_t) -1;
   }
-  mcl_actions.calc_next_transition();
-  mcl_actions.calc_latency(&empty_track);
-  //  }
   GUI.addTask(&grid_task);
 }
 
