@@ -375,7 +375,8 @@ void MCLActions::send_tracks_to_devices() {
   }
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
-  if (mcl_cfg.chain_mode == 0) {
+  if ((mcl_cfg.chain_mode == 0) || (mcl_cfg.chain_mode == 2)) {
+    next_transition = (uint16_t) -1;
     return;
   }
 
@@ -443,7 +444,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint16_t len;
   DEBUG_PRINTLN(n);
   //  DEBUG_PRINTLN(next_transitions[n]);
-  next_transitions_old[n] = next_transitions[n];
+  uint16_t next_transitions_old = next_transitions[n];
 
   if (n < NUM_MD_TRACKS) {
     len = chains[n].loops * mcl_seq.md_tracks[n].length;
@@ -457,7 +458,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   // check for overflow and make sure next nearest step is greater than
   // midiclock counter
-  while ((next_transitions[n] >= next_transitions_old[n]) &&
+  while ((next_transitions[n] >= next_transitions_old) &&
          (next_transitions[n] < MidiClock.div16th_counter)) {
     next_transitions[n] += len;
   }
@@ -465,7 +466,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 }
 
 void MCLActions::calc_next_transition() {
-  next_transition = -1;
+  next_transition = (uint16_t) -1;
   bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {

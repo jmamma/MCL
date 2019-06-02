@@ -20,13 +20,12 @@ public:
   uint16_t md_latency;
   uint16_t a4_latency;
 
-  uint16_t next_transition = -1;
+  uint16_t next_transition = (uint16_t) -1;
 
   uint16_t nearest_bar;
   uint8_t nearest_beat;
 
   uint16_t next_transitions[NUM_TRACKS] = { 0 };
-  uint16_t next_transitions_old[NUM_TRACKS] = { 0 };
 
   uint8_t send_machine[NUM_TRACKS] = { 0 };
   uint8_t transition_level[NUM_TRACKS] = { 0 };
