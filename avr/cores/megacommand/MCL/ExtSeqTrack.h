@@ -34,7 +34,7 @@ public:
 
   uint8_t mute_state = SEQ_MUTE_OFF;
 
-  uint64_t note_buffer[2]; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint8_t step_count;
   uint32_t start_step;
   uint8_t iterations;
@@ -56,30 +56,30 @@ public:
   void set_length(uint8_t len);
 
   void buffer_notesoff() {
-    buffer_notesoff64(&note_buffer[0],64);
-    buffer_notesoff64(&note_buffer[1],64);
+    buffer_notesoff64(&(note_buffer[0]),0);
+    buffer_notesoff64(&(note_buffer[1]),64);
   }
 
   void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
-    buffer_notesoff32((uint32_t *)buf[0], offset);
-    buffer_notesoff32((uint32_t *)buf[1], offset + 32);
+    buffer_notesoff32(&(((uint32_t *)buf)[0]), offset);
+    buffer_notesoff32(&(((uint32_t *)buf)[1]), offset + 32);
   }
 
   void buffer_notesoff32(uint32_t *buf, uint8_t offset) {
-    buffer_notesoff16((uint16_t *)buf[0], offset);
-    buffer_notesoff16((uint16_t *)buf[1], offset + 16);
+    buffer_notesoff16(&(((uint16_t *)buf)[0]), offset);
+    buffer_notesoff16(&(((uint16_t *)buf)[1]), offset + 16);
   }
 
   void buffer_notesoff16(uint16_t *buf, uint8_t offset) {
-    if ((uint8_t *)buf[0]) {
-      buffer_notesoff8((uint8_t *)buf[0], offset);
-    }
-    if ((uint8_t *)buf[1]) {
-      buffer_notesoff8((uint8_t *)buf[1], offset + 8);
+    if (((uint8_t *)buf)[0]) {
+      buffer_notesoff8(&(((uint8_t *)buf)[0]), offset);
+     }
+    if (((uint8_t *)buf)[1]) {
+      buffer_notesoff8(&(((uint8_t *)buf)[1]), offset + 8);
     }
   }
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
-    if (IS_BIT_SET(*buf, 0)) {
+     if (IS_BIT_SET(*buf, 0)) {
       uart->sendNoteOff(channel, offset, 0);
     }
     if (IS_BIT_SET(*buf, 1)) {
@@ -91,7 +91,7 @@ public:
     if (IS_BIT_SET(*buf, 3)) {
       uart->sendNoteOff(channel, offset + 3, 0);
     }
-    if (IS_BIT_SET(*buf, 4)) {
+      if (IS_BIT_SET(*buf, 4)) {
       uart->sendNoteOff(channel, offset + 4, 0);
     }
     if (IS_BIT_SET(*buf, 5)) {
@@ -103,7 +103,8 @@ public:
     if (IS_BIT_SET(*buf, 7)) {
       uart->sendNoteOff(channel, offset + 7, 0);
     }
-  }
+    *buf = 0;
+    }
 };
 
 #endif /* EXTSEQTRACK_H__ */
