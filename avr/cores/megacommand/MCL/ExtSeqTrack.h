@@ -56,26 +56,26 @@ public:
   void set_length(uint8_t len);
 
   void buffer_notesoff() {
-    buffer_notesoff64(&note_buffer[0]);
-    buffer_notesoff64(&note_buffer[1]);
+    buffer_notesoff64(&note_buffer[0],64);
+    buffer_notesoff64(&note_buffer[1],64);
   }
-  /* Binary search tree, only traverses down the branch if
-   * the branch does not equal zero */
 
-  void buffer_notesoff64(uint64_t *buf) {
-    buffer_notesoff32((uint32_t *)buf[0], 0);
-    buffer_notesoff32((uint32_t *)buf[1], 64);
+  void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
+    buffer_notesoff32((uint32_t *)buf[0], offset);
+    buffer_notesoff32((uint32_t *)buf[1], offset + 32);
   }
+
   void buffer_notesoff32(uint32_t *buf, uint8_t offset) {
     buffer_notesoff16((uint16_t *)buf[0], offset);
-    buffer_notesoff16((uint16_t *)buf[1], offset + 32);
+    buffer_notesoff16((uint16_t *)buf[1], offset + 16);
   }
+
   void buffer_notesoff16(uint16_t *buf, uint8_t offset) {
     if ((uint8_t *)buf[0]) {
       buffer_notesoff8((uint8_t *)buf[0], offset);
     }
     if ((uint8_t *)buf[1]) {
-      buffer_notesoff8((uint8_t *)buf[1], offset + 16);
+      buffer_notesoff8((uint8_t *)buf[1], offset + 8);
     }
   }
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
