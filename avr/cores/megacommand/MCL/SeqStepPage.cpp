@@ -38,7 +38,7 @@ void SeqStepPage::cleanup() {
 void SeqStepPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
-
+  GUI.put_value_at1(15, page_select + 1);
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
   const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
 

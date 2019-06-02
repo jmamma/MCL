@@ -444,9 +444,6 @@ void SeqPage::display() {
     GUI.lines[i].changed = false;
   }
   GUI.setLine(GUI.LINE1);
-  if (GUI.currentPage() != &seq_ptc_page) {
-    GUI.put_value_at1(15, page_select + 1);
-  }
 #ifdef OLED_DISPLAY
   if (show_track_menu) {
     uint8_t x_offset = 43;
