@@ -40,6 +40,8 @@ void MCLSeq::setup() {
   MidiClock.addOnMidiContinueCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiContinueCallback);
   midi_events.setup_callbacks();
+
+
 };
 
 void MCLSeq::enable() {
@@ -65,17 +67,18 @@ void MCLSeq::onMidiContinueCallback() {
 
 void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    // ext_tracks[i].start_clock32th = 0;
+    //ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
     ext_tracks[i].iterations = 1;
   }
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
+ for (uint8_t i = 0; i < num_md_tracks; i++) {
 
-    // md_tracks[i].start_clock32th = 0;
+   // md_tracks[i].start_clock32th = 0;
     md_tracks[i].step_count = 0;
     md_tracks[i].iterations = 1;
-  }
+ }
+
 }
 
 void MCLSeq::onMidiStartCallback() {
@@ -97,151 +100,22 @@ void MCLSeq::onMidiStopCallback() {
 
 void MCLSeq::seq() {
 
+  //  if (in_sysex == 0) {
+
+  //  for (uint8_t i = 0; i < 1; i++) {
+  //    lfos[i].seq();
+  //  }
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    if (md_tracks[i].mute_until_start) {
-      if (clock_diff(MidiClock.div16th_counter, md_tracks[i].start_step) == 0) {
-        md_tracks[i].step_count = 0;
-        md_tracks[i].iterations = 1;
-        md_tracks[i].mute_until_start = false;
-      }
-    }
-    if ((MidiUart.uart_block == 0) &&
-        (md_tracks[i].mute_until_start == false) &&
-        (md_tracks[i].mute_state == SEQ_MUTE_OFF)) {
-
-      uint8_t next_step = 0;
-      if (md_tracks[i].step_count == (md_tracks[i].length - 1)) {
-        next_step = 0;
-      } else {
-        next_step = md_tracks[i].step_count + 1;
-      }
-
-      if ((md_tracks[i].timing[md_tracks[i].step_count] >= 12) &&
-          ((int8_t)md_tracks[i].timing[md_tracks[i].step_count] - 12 ==
-           (int8_t)MidiClock.mod12_counter)) {
-
-        // Dont transmit locks if MDExploit is on.
-        if ((i != 15) || (!md_exploit.state)) {
-          md_tracks[i].send_parameter_locks(md_tracks[i].step_count);
-        }
-
-        if (IS_BIT_SET64(md_tracks[i].pattern_mask, md_tracks[i].step_count)) {
-          md_tracks[i].trig_conditional(
-              md_tracks[i].conditional[md_tracks[i].step_count]);
-        }
-      }
-      if ((md_tracks[i].timing[next_step] < 12) &&
-          ((md_tracks[i].timing[next_step]) == MidiClock.mod12_counter)) {
-
-        if ((i != 15) || (!md_exploit.state)) {
-          md_tracks[i].send_parameter_locks(next_step);
-        }
-
-        if (IS_BIT_SET64(md_tracks[i].pattern_mask, next_step)) {
-          md_tracks[i].trig_conditional(md_tracks[i].conditional[next_step]);
-        }
-      }
-    }
-    if (MidiClock.mod12_counter == 11) {
-      if (md_tracks[i].step_count == md_tracks[i].length - 1) {
-        md_tracks[i].step_count = 0;
-        md_tracks[i].iterations++;
-        if (md_tracks[i].iterations > 8) {
-          md_tracks[i].iterations = 1;
-        }
-      } else {
-        md_tracks[i].step_count++;
-      }
-    }
+    md_tracks[i].seq();
   }
 
+  //  }
+  // if (in_sysex2 == 0) {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-
-    if (ext_tracks[i].mute_until_start) {
-
-      if (clock_diff(MidiClock.div16th_counter, ext_tracks[i].start_step) ==
-          0) {
-        ext_tracks[i].step_count = 0;
-        ext_tracks[i].mute_until_start = false;
-      }
-    }
-    if ((MidiUart2.uart_block == 0) &&
-        (ext_tracks[i].mute_until_start == false) &&
-        (ext_tracks[i].mute_state == SEQ_MUTE_OFF)) {
-
-      int8_t timing_counter = MidiClock.mod12_counter;
-
-      if ((ext_tracks[i].resolution == 1)) {
-        if (MidiClock.mod12_counter < 6) {
-          timing_counter = MidiClock.mod12_counter;
-        } else {
-          timing_counter = MidiClock.mod12_counter - 6;
-        }
-      }
-
-      uint8_t next_step = 0;
-      if (ext_tracks[i].step_count == ext_tracks[i].length) {
-        next_step = 0;
-      } else {
-        next_step = ext_tracks[i].step_count + 1;
-      }
-
-      int8_t timing_mid = 6 * ext_tracks[i].resolution;
-      for (uint8_t c = 0; c < 4; c++) {
-        if ((ext_tracks[i].timing[ext_tracks[i].step_count] >= timing_mid) &&
-            (((int8_t)ext_tracks[i].timing[ext_tracks[i].step_count] - timing_mid) ==
-             (int8_t)timing_counter)) {
-
-          if (ext_tracks[i].notes[c][ext_tracks[i].step_count] < 0) {
-            ext_tracks[i].note_off(
-                abs(ext_tracks[i].notes[c][ext_tracks[i].step_count]) - 1);
-          }
-
-          else if (ext_tracks[i].notes[c][ext_tracks[i].step_count] > 0) {
-            ext_tracks[i].noteon_conditional(
-                ext_tracks[i].conditional[ext_tracks[i].step_count],
-                abs(ext_tracks[i].notes[c][ext_tracks[i].step_count]) - 1);
-          }
-        }
-
-        if ((ext_tracks[i].timing[next_step] < timing_mid) &&
-            ((ext_tracks[i].timing[next_step]) == (int8_t)timing_counter)) {
-
-          if (ext_tracks[i].notes[c][ext_tracks[i].step_count + 1] < 0) {
-            ext_tracks[i].note_off(abs(ext_tracks[i].notes[c][next_step]) - 1);
-          } else if (ext_tracks[i].notes[c][ext_tracks[i].step_count + 1] > 0) {
-            ext_tracks[i].noteon_conditional(
-                ext_tracks[i].conditional[next_step],
-                abs(ext_tracks[i].notes[c][next_step]) - 1);
-          }
-        }
-      }
-    }
-    if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) &&
-        (ext_tracks[i].resolution == 1)) {
-      ext_tracks[i].step_count++;
-    }
-    if ((MidiClock.mod12_counter == 11) && (ext_tracks[i].resolution == 2)) {
-      ext_tracks[i].step_count++;
-    }
-    if (ext_tracks[i].step_count == ext_tracks[i].length) {
-      ext_tracks[i].step_count = 0;
-      ext_tracks[i].iterations++;
-      if (ext_tracks[i].iterations > 8) {
-        ext_tracks[i].iterations = 1;
-      }
-    }
+    ext_tracks[i].seq();
   }
-
-  /*
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      md_tracks[i].seq();
-    }
-
-    for (uint8_t i = 0; i < num_ext_tracks; i++) {
-      ext_tracks[i].seq();
-    }
-  */
+  // }
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
@@ -285,7 +159,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
-
+ 
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
