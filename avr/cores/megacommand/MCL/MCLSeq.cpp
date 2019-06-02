@@ -83,15 +83,6 @@ void MCLSeq::onMidiStartCallback() {
     md_tracks[i].update_params();
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
-
-  for (uint8_t n = 0; n < 20; n++) {
-    if (grid_page.active_slots[n] >= 0) {
-      mcl_actions.next_transitions[n] = 0;
-      mcl_actions.next_transitions_old[n] = 0;
-      mcl_actions.calc_next_slot_transition(n);
-    }
-  }
-  mcl_actions.calc_next_transition();
 }
 
 void MCLSeq::onMidiStopCallback() {
