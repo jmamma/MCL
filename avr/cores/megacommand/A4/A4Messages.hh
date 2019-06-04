@@ -5,8 +5,6 @@
 #include "helpers.h"
 #include "Elektron.hh"
 
-#include <algorithm>
-
 extern uint8_t a4_sysex_hdr[5];
 
 /**
@@ -113,7 +111,7 @@ public:
 class a4ufloat_t {
   uint8_t data[2];
 public:
-  a4ufloat_t(uint8_t dat[2]) { std::copy(dat, dat + 2, data); }
+  a4ufloat_t(uint8_t dat[2]) { memcpy(&data,&dat,2); }
   float decode() { return .0f; }
 };
 
@@ -123,7 +121,7 @@ public:
 class a4sfloat_t {
   uint8_t data[2];
 public:
-  a4sfloat_t(uint8_t dat[2]) { std::copy(dat, dat + 2, data); }
+  a4sfloat_t(uint8_t dat[2]) {  memcpy(&data,&dat,2); }
   float decode() { return .0f; }
 };
 
@@ -391,6 +389,7 @@ public:
    * AnalogFour. **/
   void toSysex_impl(ElektronDataToSysexEncoder &encoder);
   bool fromSysex(MidiClass *midi);
+  bool fromSysex(uint8_t *data, uint16_t len);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);

@@ -6,8 +6,6 @@
 
 #include "A4.h"
 
-#include <array>
-
 bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
   if (len != 0xC4 - 6) {
     //		printf("wrong length\n");
@@ -57,10 +55,10 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
  * <begin parameters>
  */
 
-static constexpr std::array<uint8_t, 8> a4sound_prologue  { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
-static constexpr std::array<uint8_t, 8> a4soundx_prologue { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x59, 0x01, 0x01 };
-static constexpr std::array<uint8_t, 8> a4sound_header    { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
-static constexpr std::array<uint8_t, 4> a4sound_footer    { 0x3a, 0xe3, 0x7a, 0x4e };
+static constexpr uint8_t a4sound_prologue[8] =  { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
+static constexpr uint8_t a4soundx_prologue[8] = { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x59, 0x01, 0x01 };
+static constexpr uint8_t a4sound_header[8] = { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
+static constexpr uint8_t a4sound_footer[4] =  { 0x3a, 0xe3, 0x7a, 0x4e };
 
 static constexpr size_t a4sound_sysex_len = 415 - 2; // 2 for sysex frame
 static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
@@ -128,7 +126,7 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
 bool A4Sound::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 8;
   uint16_t offset = 8;
-  if (len != (415 - 10 - 0)) {
+  if (len != a4sound_sysex_len) {
     GUI.setLine(GUI.LINE1);
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
