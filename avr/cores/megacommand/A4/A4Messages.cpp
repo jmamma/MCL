@@ -120,12 +120,11 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
       len - a4sound_encoding_startidx - 4));
 
   return fromSysex_impl(decoder);
-  return true;
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.recordLen - 8;
-  uint16_t offset = 8;
+  uint16_t len = midi->midiSysex.recordLen - a4sound_checksum_startidx;
+  uint16_t offset = a4sound_checksum_startidx;
   if (len != a4sound_sysex_len) {
     GUI.setLine(GUI.LINE1);
     GUI.flash_strings_fill("WRONG LEN", "");
@@ -137,19 +136,15 @@ bool A4Sound::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksumAnalog(midi, offset + 1, len - 1)) {
+  if (!ElektronHelper::checkSysexChecksumAnalog(midi, offset, len - 1)) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
 
-  // origPosition = data[3];
-
+  origPosition = midi->midiSysex.getByte(a4sound_origpos_idx);
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset, len - 4));
-  decoder.stop7Bit();
-  decoder.get8(&origPosition);
-  decoder.skip(2);
-  decoder.get(payload, sizeof(payload));
-  return true;
+
+  return fromSysex_impl(decoder);
 }
 
 uint16_t A4Sound::toSysex() {

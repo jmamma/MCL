@@ -269,7 +269,7 @@ public:
 	template<typename T>
 	uint16_t get(const T& data) {
 		uint16_t i;
-		uint8_t* pdata = &data;
+		uint8_t* pdata = (uint8_t *) &data;
 		for (i = 0; i < sizeof(data); i++) {
 			get8(pdata + i);
 		}
