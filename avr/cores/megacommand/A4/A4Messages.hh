@@ -94,6 +94,7 @@ public:
 class a4time_t {
   uint8_t data;
 public:
+  a4time_t() {};
   a4time_t(uint8_t dat) : data(dat) {}
   float decode() { return .0f; }
 };
@@ -101,6 +102,7 @@ public:
 class a4notelen_t {
   uint8_t data;
 public:
+  a4notelen_t() {};
   a4notelen_t(uint8_t dat) : data(dat) {}
   float decode() { return .0f; }
 };
@@ -111,6 +113,7 @@ public:
 class a4ufloat_t {
   uint8_t data[2];
 public:
+  a4ufloat_t() {};
   a4ufloat_t(uint8_t dat[2]) { memcpy(&data,&dat,2); }
   float decode() { return .0f; }
 };
@@ -121,6 +124,7 @@ public:
 class a4sfloat_t {
   uint8_t data[2];
 public:
+  a4sfloat_t() {};
   a4sfloat_t(uint8_t dat[2]) {  memcpy(&data,&dat,2); }
   float decode() { return .0f; }
 };
@@ -373,6 +377,7 @@ class A4Sound {
    **/
 
 public:
+  A4Sound() { };
   bool soundpool; // When transferring sounds, we must decide if we are going to
                   // send them to the pool (RAM workspace), or permanent memory.
                   // The pooled patches can be P-Locked, while permanent memory
