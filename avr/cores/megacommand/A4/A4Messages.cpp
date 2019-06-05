@@ -136,7 +136,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksumAnalog(midi, offset, len - 1)) {
+  if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len - 1)) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
