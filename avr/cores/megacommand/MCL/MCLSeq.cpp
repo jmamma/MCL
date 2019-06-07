@@ -98,6 +98,9 @@ void MCLSeq::onMidiStopCallback() {
   }
 }
 
+#pragma GCC push_options
+#pragma GCC optimize ("unroll-loops")
+
 void MCLSeq::seq() {
 
   //  if (in_sysex == 0) {
@@ -117,7 +120,7 @@ void MCLSeq::seq() {
   }
   // }
 }
-
+#pragma GCC pop_options
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
