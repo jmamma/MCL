@@ -38,7 +38,7 @@ void MDSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    if ((timing[step_count] >= 12) && ((int8_t)timing[step_count] - 12 == (int8_t)MidiClock.mod12_counter)) {
+    if ((timing[step_count] >= 12) && (timing[step_count] - 12 == MidiClock.mod12_counter)) {
 
       // Dont transmit locks if MDExploit is on.
       if ((track_number != 15) || (!md_exploit.state)) {

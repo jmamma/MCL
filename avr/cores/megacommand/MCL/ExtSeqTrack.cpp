@@ -27,7 +27,7 @@ void ExtSeqTrack::seq() {
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
-    int8_t timing_counter = MidiClock.mod12_counter;
+    uint8_t timing_counter = MidiClock.mod12_counter;
 
     if ((resolution == 1)) {
       if (MidiClock.mod12_counter < 6) {
@@ -44,11 +44,11 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    int8_t timing_mid = 6 * resolution;
+    uint8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
       if ((timing[step_count] >= timing_mid) &&
-          (((int8_t)timing[step_count] - timing_mid) ==
-           (int8_t)timing_counter)) {
+          ((timing[step_count] - timing_mid) ==
+           timing_counter)) {
 
         if (notes[c][step_count] < 0) {
           note_off(abs(notes[c][step_count]) - 1);
@@ -61,11 +61,11 @@ void ExtSeqTrack::seq() {
       }
 
       if ((timing[next_step] < timing_mid) &&
-          ((timing[next_step]) == (int8_t)timing_counter)) {
+          ((timing[next_step]) == timing_counter)) {
 
-        if (notes[c][step_count + 1] < 0) {
+        if (notes[c][next_step] < 0) {
           note_off(abs(notes[c][next_step]) - 1);
-        } else if (notes[c][step_count + 1] > 0) {
+        } else if (notes[c][next_step] > 0) {
           noteon_conditional(conditional[next_step],
                              abs(notes[c][next_step]) - 1);
         }
@@ -76,7 +76,7 @@ void ExtSeqTrack::seq() {
       (resolution == 1)) {
     step_count++;
   }
-  if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
+  else if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
     step_count++;
   }
   if (step_count == length) {
