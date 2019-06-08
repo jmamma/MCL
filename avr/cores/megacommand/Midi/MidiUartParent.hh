@@ -9,7 +9,8 @@
 #include "MidiID.hh"
 
 //#define MIDI_VALIDATE
-
+//#define MIDI_RUNNINGSTATUS
+//
 /**
  * \addtogroup Midi
  *
@@ -107,6 +108,7 @@ public:
   }
 
   inline void sendCommandByte(uint8_t byte) {
+    #ifdef MIDI_RUNNINGSTATUS
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
         MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
       if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
@@ -124,6 +126,9 @@ public:
         m_putc(byte);
       }
     }
+   #else
+    m_putc(byte);
+   #endif
   }
 
   CallbackVector1<MidiCallback, 8, uint8_t *> noteOnCallbacks;
