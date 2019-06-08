@@ -162,25 +162,25 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
 }
 
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
-  if (global.baseChannel > 15)
-    return;
-  if ((track > 15) || (param > 33))
-    return;
-
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
-  if (param == 32) { // MUTE
-    cc = 12 + b;
-  } else if (param == 33) { // LEV
-    cc = 8 + b;
-  } else {
+  if (param < 32) {
     cc = param;
     if (b < 2) {
       cc += 16 + b * 24;
     } else {
       cc += 24 + b * 24;
     }
+  }
+  else if (param == 32) { // MUTE
+    cc = 12 + b;
+  }
+  else if (param == 33) { // LEV
+    cc = 8 + b;
+  }
+  else {
+    return;
   }
   MidiUart.sendCC(channel + global.baseChannel, cc, value);
 }
