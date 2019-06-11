@@ -32,7 +32,7 @@ uint8_t SeqPtcPage::calc_poly_count() {
   DEBUG_PRINT_FN();
   uint8_t count = 0;
   for (uint8_t x = 0; x < 16; x++) {
-    if (IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       count++;
     }
   }
@@ -81,7 +81,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
       if (seq_ptc_page.poly_count > 1) {
         for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_seq.md_tracks[c].set_length(enc_->cur);
           }
         }
@@ -183,7 +183,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       if (poly_notes[x] == pitch) {
         return x;
       }
@@ -196,7 +196,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   }
   // Reuse existing track for noew pitch
   for (uint8_t x = 0; x < 16 && voice == 255; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       if (count == poly_count) {
         voice = x;
       } else {
@@ -333,7 +333,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
       if (poly_count > 1) {
         for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
 
             mcl_seq.md_tracks[c].clear_track();
           }
@@ -465,11 +465,11 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t start_track;
 
   if ((seq_ptc_page.poly_max > 1)) {
-    if (IS_BIT_SET(mcl_cfg.poly_mask, track)) {
+    if (IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
 
       for (uint8_t n = 0; n < 16; n++) {
 
-        if (IS_BIT_SET(mcl_cfg.poly_mask, n) && (n != track)) {
+        if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
           if (param_true) {
             MD.setTrackParam(n, track_param, value);
           }
