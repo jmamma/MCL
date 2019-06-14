@@ -19,6 +19,7 @@ class RoutePage : public LightPage {
  void display();
  void setup();
  void init();
+ void update_globals();
  void cleanup();
 };
 #endif /* ROUTEPAGE_H__ */
