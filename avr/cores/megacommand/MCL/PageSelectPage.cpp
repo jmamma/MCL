@@ -3,6 +3,8 @@
 
 #define MIX_PAGE 0
 #define ROUTE_PAGE 1
+#define RAM_PAGE 4
+#define ROUTE_PAGE 2
 #define WAVD_PAGE 8
 #define SOUND 7
 
@@ -32,6 +34,11 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     if (str)
       strncpy(str, "ROUTE", 6);
     r_page = &route_page;
+    break;
+  case RAM_PAGE:
+    if (str)
+      strncpy(str, "RAM  ", 5);
+    r_page = &ram_page;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:

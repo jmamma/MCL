@@ -1,7 +1,7 @@
 #include "MCL.h"
 
 MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
-MCLEncoder seq_param2(0, 64, ENCODER_RES_SEQ);
+MCLEncoder seq_param2(0, 4, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
 MCLEncoder seq_param4(0, 64, ENCODER_RES_SEQ);
 

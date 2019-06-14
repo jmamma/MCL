@@ -6,6 +6,7 @@
 #include "MCLEncoder.h"
 #include "MixerPage.h"
 #include "RoutePage.h"
+#include "RAMPage.h"
 
 extern MCLEncoder mixer_param1;
 extern MCLEncoder mixer_param2;
@@ -16,4 +17,6 @@ extern MCLEncoder route_param2;
 
 extern MixerPage mixer_page;
 extern RoutePage route_page;
+
+extern RAMPage ram_page;
 #endif /* AUXPAGES_H__ */
