@@ -6,10 +6,10 @@ void SeqParamPage::init() {
   md_exploit.on();
   note_interface.state = true;
 
-  ((MCLEncoder *)encoders[0])->max = 23;
-  ((MCLEncoder *)encoders[1])->max = 127;
-  ((MCLEncoder *)encoders[2])->max = 23;
-  ((MCLEncoder *)encoders[3])->max = 127;
+  ((MCLEncoder *)encoders[0])->max = 24;
+  ((MCLEncoder *)encoders[1])->max = 128;
+  ((MCLEncoder *)encoders[2])->max = 24;
+  ((MCLEncoder *)encoders[3])->max = 128;
 
   ((MCLEncoder *)encoders[2])->handler = NULL;
 
@@ -21,16 +21,16 @@ void SeqParamPage::init() {
   encoders[3]->cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
-  //Prevent hasChanged from being called
+  // Prevent hasChanged from being called
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
   encoders[2]->old = encoders[2]->cur;
   encoders[3]->old = encoders[3]->cur;
 
   midi_events.setup_callbacks();
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  #endif
+#endif
 }
 void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
   p1 = p1_;
@@ -56,7 +56,11 @@ void SeqParamPage::display() {
     }
     GUI.put_string_at(0, myName);
   }
-  GUI.put_value_at2(4, encoders[1]->getValue());
+  if (encoders[1]->getValue() == 0) {
+    GUI.put_string_at(4, "--");
+  } else {
+    GUI.put_value_at2(4, encoders[1]->getValue() - 1);
+  }
   if (encoders[2]->getValue() == 0) {
     GUI.put_string_at(7, "--");
   } else {
@@ -68,9 +72,11 @@ void SeqParamPage::display() {
     }
     GUI.put_string_at(7, myName2);
   }
-
-  GUI.put_value_at2(11, encoders[3]->getValue());
-
+  if (encoders[3]->getValue() == 0) {
+    GUI.put_string_at(11, "--");
+  } else {
+    GUI.put_value_at2(11, encoders[3]->getValue() - 1);
+  }
   if (page_id == 0) {
     GUI.put_string_at(14, "A");
   }
@@ -106,11 +112,11 @@ void SeqParamPage::loop() {
         mcl_seq.md_tracks[last_md_track].locks[p2][step] = encoders[3]->cur;
       }
     }
-   if (encoders[0]->hasChanged() || encoders[2]->hasChanged()) {
-    mcl_seq.md_tracks[last_md_track].reset_params();
-    mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
-    mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
-    mcl_seq.md_tracks[last_md_track].update_params();
+    if (encoders[0]->hasChanged() || encoders[2]->hasChanged()) {
+      mcl_seq.md_tracks[last_md_track].reset_params();
+      mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
+      mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
+      mcl_seq.md_tracks[last_md_track].update_params();
     }
   }
 }
@@ -157,8 +163,8 @@ if (utiming == 0) {
   mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
 }*/
       if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask, step)) {
-        if (clock_diff(note_interface.note_hold,slowclock) < TRIG_HOLD_TIME) {
-            CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
+        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
         }
       } else {
         SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
@@ -177,7 +183,9 @@ if (utiming == 0) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) { GUI.setPage(&grid_page); }
+    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
+      GUI.setPage(&grid_page);
+    }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
