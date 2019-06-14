@@ -56,7 +56,8 @@ void RoutePage::toggle_route(int i, uint8_t routing) {
 void RoutePage::toggle_routes_batch() {
   uint16_t quantize_mute;
   quantize_mute = 1 << encoders[2]->getValue();
-  int i;
+  uint8_t i;
+  hasChanged = true;
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
       MD.muteTrack(i, true);
@@ -84,8 +85,19 @@ void RoutePage::toggle_routes_batch() {
     //  note_interface.notes[i] = 0;
     // trackinfo_page.display();
   }
-  hasChanged = true;
 }
+
+void RoutePage::update_globals() {
+  if (hasChanged) {
+    ElektronDataToSysexEncoder encoder2(&MidiUart);
+    md_exploit.setup_global(1);
+    while ((MidiClock.state == 2) &&
+           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+      ;
+    MD.global.toSysex(encoder2);
+  }
+}
+
 void RoutePage::display() {
   GUI.clearLines();
   GUI.setLine(GUI.LINE2);
@@ -137,10 +149,12 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    update_globals();
     GUI.setPage(&mixer_page);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    update_globals();
     GUI.setPage(&page_select_page);
     return true;
   }
@@ -149,14 +163,7 @@ bool RoutePage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    if (hasChanged) {
-      ElektronDataToSysexEncoder encoder2(&MidiUart);
-      md_exploit.setup_global(1);
-      while ((MidiClock.state == 2) &&
-             ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-        ;
-      MD.global.toSysex(encoder2);
-    }
+    update_globals();
     GUI.setPage(&grid_page);
 
     return true;
