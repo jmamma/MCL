@@ -16,7 +16,7 @@ void SeqStepPage::init() {
 
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-  seq_param1.max = 13;
+  seq_param1.max = 14;
   seq_param2.max = 23;
   seq_param2.min = 1;
   seq_param2.cur = 12;
@@ -52,10 +52,14 @@ void SeqStepPage::display() {
 
     GUI.put_value_at1(1, seq_param1.getValue());
 
-  } else {
+  } else if (seq_param1.getValue() <= 13) {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
     GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
+  }
+
+  else if (seq_param1.getValue() == 14) {
+    GUI.put_string_at(0, "1S");
   }
 
   if (seq_param2.getValue() == 0) {

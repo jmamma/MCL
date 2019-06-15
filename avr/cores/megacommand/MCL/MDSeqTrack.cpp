@@ -38,10 +38,12 @@ void MDSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    if ((timing[step_count] >= 12) && (timing[step_count] - 12 == MidiClock.mod12_counter)) {
+    if ((timing[step_count] >= 12) &&
+        (timing[step_count] - 12 == MidiClock.mod12_counter)) {
 
       // Dont transmit locks if MDExploit is on.
-      if ((track_number != md_exploit.track_with_nolocks) || (!md_exploit.state)) {
+      if ((track_number != md_exploit.track_with_nolocks) ||
+          (!md_exploit.state)) {
         send_parameter_locks(step_count);
       }
 
@@ -52,7 +54,8 @@ void MDSeqTrack::seq() {
     if ((timing[next_step] < 12) &&
         ((timing[next_step]) == MidiClock.mod12_counter)) {
 
-      if ((track_number != md_exploit.track_with_nolocks) || (!md_exploit.state)) {
+      if ((track_number != md_exploit.track_with_nolocks) ||
+          (!md_exploit.state)) {
         send_parameter_locks(next_step);
       }
 
@@ -234,7 +237,12 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
       send_trig();
     }
     break;
- }
+  case 14:
+    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+      SET_BIT64(oneshot_mask, step_count);
+      send_trig();
+    }
+  }
 }
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
@@ -348,6 +356,7 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
     return;
   }
 
+  CLEAR_BIT64(oneshot_mask, step);
   SET_BIT64(pattern_mask, step);
   conditional[step] = condition;
   timing[step] = utiming;
@@ -396,6 +405,7 @@ void MDSeqTrack::clear_conditional() {
     conditional[c] = 0;
     timing[c] = 0;
   }
+  oneshot_mask = 0;
 }
 void MDSeqTrack::clear_locks() {
   uint8_t locks_params_buf[4];

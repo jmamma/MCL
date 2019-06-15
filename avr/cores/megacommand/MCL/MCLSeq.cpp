@@ -77,6 +77,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
    // md_tracks[i].start_clock32th = 0;
     md_tracks[i].step_count = 0;
     md_tracks[i].iterations = 1;
+    md_tracks[i].oneshot_mask = 0;
  }
 
 }
