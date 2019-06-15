@@ -9,7 +9,7 @@
 #define SLOT_RAM_RECORD (1 << (sizeof(GridChain::row) * 8)) - 1 - 1
 #define SLOT_RAM_PLAY (1 << (sizeof(GridChain::row) * 8)) - 1 - 2
 
-class RAMPage : public LightPage {
+class RAMPage : public LightPage, MidiCallback {
 public:
   RAMPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
@@ -17,7 +17,9 @@ public:
       }
 
   bool handleEvent(gui_event_t *event);
+  bool midi_state = false;
   uint8_t magic;
+
   void display();
   void setup();
   void init();
@@ -33,6 +35,11 @@ public:
   void reverse(uint8_t track);
   bool slice(uint8_t track, uint8_t linked_track);
   void setup_sequencer(uint8_t track);
+
+  void setup_callbacks();
+  void remove_callbacks();
+
+  void onControlChangeCallback_Midi(uint8_t *msg);
 };
 
 extern MCLEncoder ram_param1;

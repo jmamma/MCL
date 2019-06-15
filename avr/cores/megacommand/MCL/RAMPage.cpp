@@ -12,6 +12,7 @@ void RAMPage::init() {
 #endif
   encoders[0]->cur = 100;
   md_exploit.off();
+  setup_callbacks();
 }
 
 void RAMPage::cleanup() {
@@ -44,7 +45,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
   md_track.machine.params[RAM_R_MLEV] = mlev;
   md_track.machine.params[RAM_R_MBAL] = pan;
   md_track.machine.params[RAM_R_ILEV] = 0;
-  md_track.machine.params[RAM_R_LEN] = encoders[3]->cur * 32 - 1;
+  md_track.machine.params[RAM_R_LEN] = encoders[3]->cur * 16 - 1;
   md_track.machine.params[RAM_R_RATE] = 127;
   md_track.machine.params[MODEL_AMD] = 0;
   md_track.machine.params[MODEL_AMF] = 0;
@@ -374,6 +375,51 @@ void RAMPage::display() {
 */
 #ifdef OLED_DISPLAY
 #endif
+}
+void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+  // If external keyboard controlling MD pitch, send parameter updates
+  // to all polyphonic tracks
+  uint8_t param_true = 0;
+
+  MD.parseCC(channel, param, &track, &track_param);
+
+  if (grid_page.active_slots[track] != SLOT_RAM_PLAY) { return; }
+
+      for (uint8_t n = 0; n < 16; n++) {
+
+        if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) && (n != track)) {
+            MD.setTrackParam(n, track_param, value);
+        }
+        // in_sysex = 0;
+  }
+}
+
+void RAMPage::setup_callbacks() {
+  if (midi_state) {
+    return;
+  }
+  Midi.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
+
+  midi_state = true;
+}
+
+void RAMPage::remove_callbacks() {
+  if (!midi_state) {
+    return;
+  }
+
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
+
+  midi_state = false;
 }
 
 bool RAMPage::handleEvent(gui_event_t *event) {
