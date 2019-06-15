@@ -54,8 +54,8 @@ public:
   void record_track_pitch(uint8_t pitch);
   void clear_step_locks(uint8_t step);
   void clear_conditional();
-  void clear_locks();
-  void clear_track(bool locks = true);
+  void clear_locks(bool reset_params = true);
+  void clear_track(bool locks = true, bool reset_params = true);
   bool is_locks(uint8_t step);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);

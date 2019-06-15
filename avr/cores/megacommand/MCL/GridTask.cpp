@@ -157,7 +157,7 @@ void GridTask::run() {
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
           a4_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
-          DEBUG_PRINTLN("clearing track");
+          DEBUG_PRINTLN("clearing ext track");
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].clear_track();
         }
       }
@@ -193,16 +193,27 @@ void GridTask::run() {
 #ifdef HANDLE_GROUPS
             uint8_t trigGroup = md_track->machine.trigGroup;
             if ((trigGroup < 16) && (trigGroup != n) &&
-                (slots_loaded[trigGroup] == 0)) {
+                (slots_loaded[trigGroup] == 0) && (slots_changed[n] == 0)) {
               md_track->load_from_mem(trigGroup);
               if (md_track->active == MD_TRACK_TYPE) {
 
                 bool set_level = false;
-                if (mcl_actions.transition_level[n] == 1) {
+                switch (mcl_actions.transition_level[n]) {
+                case 1:
                   set_level = true;
                   md_track->machine.level = 0;
+                  break;
+                case TRANSITION_UNMUTE:
+                  DEBUG_PRINTLN("unmuting");
+                  DEBUG_PRINT(trigGroup);
+                  MD.muteTrack(trigGroup, false);
+                  break;
+                case TRANSITION_MUTE:
+                  DEBUG_PRINTLN("muting");
+                  DEBUG_PRINT(trigGroup);
+                  MD.muteTrack(trigGroup, true);
+                break;
                 }
-
                 mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
                                            &(MD.kit), set_level);
                 md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
@@ -214,10 +225,22 @@ void GridTask::run() {
 #endif
             if (slots_loaded[n] == 0) {
               bool set_level = false;
-              if (mcl_actions.transition_level[n] == 1) {
-                set_level = true;
-                md_track->machine.level = 0;
-              }
+                 switch (mcl_actions.transition_level[n]) {
+                case 1:
+                  set_level = true;
+                  md_track->machine.level = 0;
+                  break;
+                case TRANSITION_UNMUTE:
+                   DEBUG_PRINTLN("unmuting");
+                  DEBUG_PRINT(n);
+                  MD.muteTrack(n, false);
+                  break;
+                case TRANSITION_MUTE:
+                  DEBUG_PRINTLN("muting");
+                  DEBUG_PRINT(n);
+                 MD.muteTrack(n, true);
+                break;
+                }
               mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
                                          set_level);
               md_track->place_track_in_kit(n, n, &(MD.kit), set_level);
@@ -234,8 +257,10 @@ void GridTask::run() {
         else {
           //&& (mcl_cfg.chain_mode != 2)) {
           DEBUG_PRINTLN("clearing track");
+          DEBUG_PRINTLN(n);
           bool clear_locks = true;
-          mcl_seq.md_tracks[n].clear_track(clear_locks);
+          bool reset_params = false;
+          mcl_seq.md_tracks[n].clear_track(clear_locks,reset_params);
         }
 
         grid_page.active_slots[n] = slots_changed[n];

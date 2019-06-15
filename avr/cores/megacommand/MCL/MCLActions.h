@@ -13,6 +13,9 @@
 #define STORE_IN_PLACE 0
 #define STORE_AT_SPECIFIC 254
 
+#define TRANSITION_MUTE 2
+#define TRANSITION_UNMUTE 3
+
 class ChainModeData {
 public:
   GridChain chains[NUM_TRACKS];

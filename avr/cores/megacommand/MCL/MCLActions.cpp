@@ -507,6 +507,9 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
           md_track->load_from_mem(n);
           md_latency +=
               calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
+           if (transition_level[n] == TRANSITION_MUTE || transition_level[n] == TRANSITION_UNMUTE) {
+              md_latency += 3;
+           }
         }
       } else {
         if (next_transitions[n] == next_transition) {
