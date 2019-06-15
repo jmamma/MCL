@@ -40,7 +40,7 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
   return true;
 }
-bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
+bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -58,7 +58,7 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     return false;
   }
 
-  get_track_from_sysex(track - 16, column - 16);
+  if (online) { get_track_from_sysex(track - 16, column - 16); }
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");

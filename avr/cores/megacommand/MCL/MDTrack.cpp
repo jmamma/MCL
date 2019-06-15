@@ -302,7 +302,7 @@ void MDTrack::normalize() {
 }
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
-                                  bool merge) {
+                                  bool merge, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -325,7 +325,10 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     if ((storepattern) || (merge)) { get_track_from_pattern(track, column); }
     get_track_from_kit(track, column);
   }
-  memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
+
+  if (online) {
+    memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
+  }
   // Normalise level and vol locks
 
   if (merge) {

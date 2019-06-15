@@ -2,13 +2,13 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
+#include "Bank1Object.h"
 #include "Grid.h"
 #include "GridTrack.h"
+#include "MCLMemory.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
-#include "MCLMemory.h"
-#include "Bank1Object.h"
 
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
@@ -43,20 +43,18 @@ public:
   uint32_t accentEditAll;
   uint32_t slideEditAll;
   uint32_t swingEditAll;
-
-
 };
 
-class MDTrackLight : public GridTrack,
-                     public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
-  public:
+class MDTrackLight
+    : public GridTrack,
+      public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
+public:
   MDSeqTrackData seq_data;
   MDMachine machine;
 };
 
 class MDTrack : public MDTrackLight {
 public:
-
   uint8_t origPosition;
   uint8_t patternOrigPosition;
   uint8_t length;
@@ -74,7 +72,8 @@ public:
 
   void clear_track();
 
-  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit, bool levels = true);
+  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
+                          bool levels = true);
   void load_seq_data(int tracknumber);
   void place_track_in_pattern(int tracknumber, uint8_t column,
                               MDPattern *pattern);
@@ -86,18 +85,18 @@ public:
   bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
   bool load_track_from_grid(int32_t column, int32_t row);
 
+  bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
+                           bool storepattern = false, bool merge = false,
+                           bool online = false);
 
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool storepattern = false, bool merge = false);
-
-  //scale machine track vol by percentage
+  // scale machine track vol by percentage
   void scale_vol(float scale);
 
-  //scale vol locks by percentage
+  // scale vol locks by percentage
   void scale_seq_vol(float scale);
 
   // normalize track level
   void normalize();
-
 };
 
 #endif /* MDTRACK_H__ */

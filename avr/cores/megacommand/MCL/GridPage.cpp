@@ -292,7 +292,8 @@ void GridPage::display_counters() {
   oled_display.print(MidiClock.beat_counter);
 
   if ((mcl_cfg.chain_mode > 0) &&
-      (mcl_actions.next_transition != (uint16_t) -1) && (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
+      (mcl_actions.next_transition != (uint16_t)-1) &&
+      (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
     // val[0] = (mcl_actions.nearest_bar / 100) + '0';
     val[0] = (mcl_actions.nearest_bar % 100) / 10 + '0';
     val[1] = (mcl_actions.nearest_bar % 10) + '0';
@@ -406,7 +407,7 @@ void GridPage::display_grid() {
 
     oled_display.setCursor(x_offset, y_offset + y * 8);
     for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
-        uint8_t track_type = row_headers[y].track_type[x + getCol() - cur_col];
+      uint8_t track_type = row_headers[y].track_type[x + getCol() - cur_col];
       uint8_t model = row_headers[y].model[x + getCol() - cur_col];
       if (track_type == MD_TRACK_TYPE) {
         tmp = getMachineNameShort(model, 2);
@@ -571,18 +572,19 @@ void GridPage::prepare() {
     MD.saveCurrentKit(MD.currentKit);
     MD.getBlockingKit(MD.currentKit);
     if (MidiClock.state == 2) {
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].update_kit_params();
-    }
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].update_kit_params();
+      }
     }
   }
 }
 
 void rename_row() {
   char *my_title = "Row Name:";
-  if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name, my_title, 8)) {
-  grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
-  proj.file.sync();
+  if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
+                             my_title, 8)) {
+    grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
+    proj.file.sync();
   }
 }
 
@@ -593,10 +595,11 @@ void GridPage::apply_slot_changes() {
   encoders[0] = &param1;
   encoders[1] = &param2;
   uint8_t count;
-  void (*row_func)() = grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
+  void (*row_func)() =
+      grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
-      (*row_func)();
-      return;
+    (*row_func)();
+    return;
   }
   if (slot_apply == 0) {
     count = 1;
@@ -611,48 +614,62 @@ void GridPage::apply_slot_changes() {
   else if (slot_paste == 1) {
     uint8_t first = 255;
     uint8_t n = 0;
-    for (n = 0; n < GRID_WIDTH && first == 255; n++) {
+    uint8_t count = 0;
+    for (n = 0; n < GRID_WIDTH; n++) {
       if (IS_BIT_SET32(slot_buffer_mask, n)) {
-      first = n;
+        if (first == 255) { first = n; }
+        count++;
       }
     }
+    bool destination_same = false;
+    if (count == 1) { destination_same = true; }
     for (n = 0; n + first < GRID_WIDTH && getCol() + n < GRID_WIDTH; n++) {
       if (IS_BIT_SET32(slot_buffer_mask, n + first)) {
-        grid.copy_slot(n + first, slot_buffer_row, getCol() + n, getRow());
+        grid.copy_slot(n + first, slot_buffer_row, getCol() + n, getRow(), destination_same);
       }
     }
     row_headers[cur_row].write(getRow());
   }
-
-  MDTrack md_track;
-  MDSeqTrack md_seq_track;
-  for (uint8_t track = 0; track < count && track + getCol() < NUM_TRACKS; track++) {
-    if (slot_clear == 1) {
-      grid.clear_slot(track + getCol(), getRow());
-      row_headers[cur_row].update_model(track + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
-      if (row_headers[cur_row].is_empty()) {
-      char *str_tmp = "\0";
-      strcpy(row_headers[cur_row].name,str_tmp);
-      row_headers[cur_row].write(getRow());
+  if (slot_paste != 1) {
+    MDTrack md_track;
+    MDSeqTrack md_seq_track;
+    for (uint8_t track = 0; track < count && track + getCol() < NUM_TRACKS;
+         track++) {
+      if (slot_clear == 1) {
+        // Delete slot(s)
+        grid.clear_slot(track + getCol(), getRow());
+        row_headers[cur_row].update_model(track + getCol(), EMPTY_TRACK_TYPE,
+                                          DEVICE_NULL);
+        if (row_headers[cur_row].is_empty()) {
+          char *str_tmp = "\0";
+          strcpy(row_headers[cur_row].name, str_tmp);
+          row_headers[cur_row].write(getRow());
+        }
+        reload_slot_models = true;
+        proj.file.sync();
+      } else if (slot_copy == 1) {
+        // Mark slot for copy
+        SET_BIT32(slot_buffer_mask, track + getCol());
+      } else {
+        // Save slot chain data
+        slot.active = row_headers[cur_row].track_type[track + getCol()];
+        //  if (slot.active != EMPTY_TRACK_TYPE) {
+        slot.store_track_in_grid(track + getCol(), getRow());
+        proj.file.sync();
       }
-      reload_slot_models = true;
-      proj.file.sync();
-    } else if (slot_copy == 1) {
-      SET_BIT32(slot_buffer_mask, track + getCol());
-    } else {
-      slot.active = row_headers[cur_row].track_type[track + getCol()];
-      //  if (slot.active != EMPTY_TRACK_TYPE) {
-      slot.store_track_in_grid(track + getCol(), getRow()); 
-      proj.file.sync();
-    }
-    if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
-      md_track.load_track_from_grid(track + getCol(), getRow());
+      /*
+      Merge sequencer data. Deprecate, now controlled in save page.
 
-      memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
-      md_seq_track.merge_from_md(&md_track);
-      md_track.clear_track();
-      memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-      md_track.store_track_in_grid(track + getCol(), getRow());
+      if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
+        md_track.load_track_from_grid(track + getCol(), getRow());
+
+        memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
+        md_seq_track.merge_from_md(&md_track);
+        md_track.clear_track();
+        memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+        md_track.store_track_in_grid(track + getCol(), getRow());
+      }
+      */
     }
   }
   if ((slot_clear == 1) || (slot_paste == 1)) {

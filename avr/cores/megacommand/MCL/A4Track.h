@@ -20,7 +20,7 @@ public:
   bool place_track_in_sysex(int tracknumber, uint8_t column,
                            A4Sound *analogfour_sound);
   bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255);
+  bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
 
 };
 

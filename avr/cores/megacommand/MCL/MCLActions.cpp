@@ -151,10 +151,10 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
           Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
           a4_track->sound.fromSysex(Analog4.midi);
         }
-        a4_track->store_track_in_grid(i, grid_page.getRow(), i);
+        a4_track->store_track_in_grid(i, grid_page.getRow(), i, true);
       } else {
         md_track->store_track_in_grid(i, grid_page.getRow(), i, false,
-                                          merge);
+                                          merge, true);
       }
     }
   }
