@@ -449,19 +449,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
   // If external keyboard controlling MD pitch, send parameter updates
   // to all polyphonic tracks
-  uint8_t param_true = 0;
-  if (param >= 16) {
-    param_true = 1;
-  }
-  if (param < 63) {
-    param = param - 16;
-    track = (param / 24) + (channel - MD.global.baseChannel) * 4;
-    track_param = param - ((param / 24) * 24);
-  } else if (param >= 72) {
-    param = param - 72;
-    track = (param / 24) + 2 + (channel - MD.global.baseChannel) * 4;
-    track_param = param - ((param / 24) * 24);
-  }
+  MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
 
   if ((seq_ptc_page.poly_max > 1)) {
@@ -470,7 +458,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       for (uint8_t n = 0; n < 16; n++) {
 
         if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
-          if (param_true) {
+          if (track_param < 24) {
             MD.setTrackParam(n, track_param, value);
           }
         }
