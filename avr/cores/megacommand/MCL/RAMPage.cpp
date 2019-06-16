@@ -71,7 +71,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
     md_track.seq_data.pattern_mask = 1;
-    //oneshot
+    // oneshot
     md_track.seq_data.conditional[0] = 14;
   } else {
     md_track.machine.trigGroup = 255;
@@ -148,10 +148,11 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
     }
     SET_BIT64(mcl_seq.md_tracks[track].lock_mask, n);
     if (linked_track < track) {
-      mcl_seq.md_tracks[track].locks[0][n] = mcl_seq.md_tracks[linked_track].locks[0][n];
-      mcl_seq.md_tracks[track].locks[1][n] = mcl_seq.md_tracks[linked_track].locks[1][n];
-    }
-    else if (magic == 0) {
+      mcl_seq.md_tracks[track].locks[0][n] =
+          mcl_seq.md_tracks[linked_track].locks[0][n];
+      mcl_seq.md_tracks[track].locks[1][n] =
+          mcl_seq.md_tracks[linked_track].locks[1][n];
+    } else if (magic == 0) {
       mcl_seq.md_tracks[track].locks[0][n] = sample_inc * s + 1;
       mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (s + 1) + 1;
       if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
@@ -168,25 +169,26 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
         }
         break;
       case 6:
-      
-      mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (slices - s) + 1;
-      mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (slices -s + 1) + 1;
-      if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-        mcl_seq.md_tracks[track].locks[1][n] = 128;
-      }
 
-      break;
+        mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (slices - s) + 1;
+        mcl_seq.md_tracks[track].locks[1][n] =
+            (sample_inc) * (slices - s + 1) + 1;
+        if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
+          mcl_seq.md_tracks[track].locks[1][n] = 128;
+        }
+
+        break;
       case 7:
 
-      uint8_t t;
-      t = random(0,slices);
-      mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (t) + 1;
-      mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (t + 1) + 1;
-      if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-        mcl_seq.md_tracks[track].locks[1][n] = 128;
-      }
+        uint8_t t;
+        t = random(0, slices);
+        mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (t) + 1;
+        mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (t + 1) + 1;
+        if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
+          mcl_seq.md_tracks[track].locks[1][n] = 128;
+        }
 
-      break;
+        break;
       case 4:
       case 3:
       case 2:
@@ -203,16 +205,13 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           } else {
             m = s + 1;
           }
-        }
-        else  if (m == 5) {
+        } else if (m == 5) {
           if (IS_BIT_SET64(mcl_seq.md_tracks[0].pattern_mask, n)) {
             m = s;
           } else {
             m = m + 1;
           }
         }
-
-
 
         else {
           while (m > slices) {
@@ -306,7 +305,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   uint8_t m = mcl_seq.md_tracks[track].length;
 
   next_step =
-        MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+      MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
   grid_page.active_slots[track] = 0x7FFF;
   mcl_actions.transition_level[track] = TRANSITION_MUTE;
   mcl_actions.next_transitions[track] = next_step;
@@ -352,10 +351,38 @@ void RAMPage::display() {
     oled_display.clearDisplay();
 #endif
   }
+  GUI.clearLines();
   GUI.setLine(GUI.LINE1);
   uint8_t x;
   // GUI.put_string_at(12,"RAM");
-  GUI.put_string_at(0, "RAM ");
+  GUI.put_string_at(0, "RAM");
+  uint8_t record_state = 0;
+
+  for (uint8_t n = NUM_MD_TRACKS - 1; n > 0 && record_state == 0; n--) {
+    if (mcl_actions.chains[n].row == SLOT_RAM_RECORD || mcl_actions.chains[n].row == SLOT_RAM_PLAY) {
+    record_state = 1;
+    }
+    else if ((grid_page.active_slots[n] == SLOT_RAM_RECORD) &&
+        (mcl_seq.md_tracks[n].oneshot_mask == 0)) {
+    record_state = 2;
+    }
+    else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY)) {
+    record_state = 3;
+    }
+    // in_sysex = 0;
+  }
+  switch (record_state) {
+  case 1:
+    GUI.put_string_at(5, "[Queue]");
+  break;
+  case 2:
+    GUI.put_string_at(5, "[Recording]");
+  break;
+  case 3:
+    GUI.put_string_at(5, "[Playback]");
+  break;
+  }
+
   GUI.setLine(GUI.LINE2);
 
   if (encoders[0]->cur == 0) {
@@ -367,11 +394,11 @@ void RAMPage::display() {
   GUI.put_value_at(5, encoders[1]->cur);
   GUI.put_value_at(9, 1 << encoders[2]->cur);
   GUI.put_value_at(13, encoders[3]->cur);
-  /*
-  GUI.put_value_at1(8,msb);
-  GUI.put_string_at(9,".");
-  GUI.put_value_at1(10,mantissa / 10);
-  GUI.put_value_at1(11,mantissa % 10);
+/*
+GUI.put_value_at1(8,msb);
+GUI.put_string_at(9,".");
+GUI.put_value_at1(10,mantissa / 10);
+GUI.put_value_at1(11,mantissa % 10);
 */
 #ifdef OLED_DISPLAY
 #endif
@@ -388,14 +415,16 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
 
   MD.parseCC(channel, param, &track, &track_param);
 
-  if (grid_page.active_slots[track] != SLOT_RAM_PLAY) { return; }
+  if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
+    return;
+  }
 
-      for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < 16; n++) {
 
-        if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) && (n != track)) {
-            MD.setTrackParam(n, track_param, value);
-        }
-        // in_sysex = 0;
+    if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) && (n != track)) {
+      MD.setTrackParam(n, track_param, value);
+    }
+    // in_sysex = 0;
   }
 }
 
@@ -404,8 +433,7 @@ void RAMPage::setup_callbacks() {
     return;
   }
   Midi.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
+      this, (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
 
   midi_state = true;
 }
@@ -416,8 +444,7 @@ void RAMPage::remove_callbacks() {
   }
 
   Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
+      this, (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
 
   midi_state = false;
 }
