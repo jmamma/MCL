@@ -50,7 +50,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
   md_track.machine.params[RAM_R_MLEV] = mlev;
   md_track.machine.params[RAM_R_MBAL] = pan;
   md_track.machine.params[RAM_R_ILEV] = 0;
-  md_track.machine.params[RAM_R_LEN] = encoders[3]->cur * 16 - 1;
+  md_track.machine.params[RAM_R_LEN] = encoders[3]->cur * 16;
+  if (md_track.machine.params[RAM_R_LEN] > 127) { md_track.machine.params[RAM_R_LEN] = 127; } 
   md_track.machine.params[RAM_R_RATE] = 127;
   md_track.machine.params[MODEL_AMD] = 0;
   md_track.machine.params[MODEL_AMF] = 0;
@@ -139,8 +140,9 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   uint8_t sample_inc = 128 / slices;
   uint8_t track_length = encoders[3]->cur * 4;
   uint8_t step_inc = track_length / slices;
-
-  mcl_seq.md_tracks[track].clear_track();
+  bool clear_locks = true;
+  bool send_params = false;
+  mcl_seq.md_tracks[track].clear_track(clear_locks, send_params);
 
   mcl_seq.md_tracks[track].locks_params[0] = ROM_STRT + 1;
   mcl_seq.md_tracks[track].locks_params[1] = ROM_END + 1;
