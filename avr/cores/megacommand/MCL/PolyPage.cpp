@@ -61,7 +61,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
 
     str[i] = (char)219;
 
-    if (!IS_BIT16_SET(*poly_mask, i)) {
+    if (!IS_BIT_SET16(*poly_mask, i)) {
 
       str[i] = (char)'-';
     }
