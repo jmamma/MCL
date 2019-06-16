@@ -1,6 +1,11 @@
 #include "MCL.h"
 #include "RAMPage.h"
 
+#define STATE_NOSTATE 0
+#define STATE_QUEUE 1
+#define STATE_RECORD 2
+#define STATE_PLAY 3
+
 void RAMPage::setup() { DEBUG_PRINT_FN(); }
 
 void RAMPage::init() {
@@ -39,7 +44,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
   memset(&(md_track.machine.params), 255, 24);
 
   uint16_t steps = encoders[3]->cur * 4;
-
+  rec_state = STATE_QUEUE;
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
   md_track.machine.params[RAM_R_MLEV] = mlev;
@@ -67,7 +72,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
 
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 0;
+    md_track.seq_data.pattern_mask = 1;
+    md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
     md_track.seq_data.pattern_mask = 1;
@@ -247,6 +253,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   uint16_t steps = encoders[3]->cur * 4;
 
+  rec_state = STATE_QUEUE;
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
   /*
@@ -278,7 +285,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 0;
+    md_track.seq_data.pattern_mask = 1;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
     md_track.seq_data.pattern_mask = 1;
@@ -356,31 +363,34 @@ void RAMPage::display() {
   uint8_t x;
   // GUI.put_string_at(12,"RAM");
   GUI.put_string_at(0, "RAM");
-  uint8_t record_state = 0;
-
-  for (uint8_t n = NUM_MD_TRACKS - 1; n > 0 && record_state == 0; n--) {
-    if (mcl_actions.chains[n].row == SLOT_RAM_RECORD || mcl_actions.chains[n].row == SLOT_RAM_PLAY) {
-    record_state = 1;
-    }
-    else if ((grid_page.active_slots[n] == SLOT_RAM_RECORD) &&
-        (mcl_seq.md_tracks[n].oneshot_mask == 0)) {
-    record_state = 2;
-    }
-    else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY)) {
-    record_state = 3;
+  uint8_t break_loop = 0;
+  for (uint8_t n = NUM_MD_TRACKS - 1; n > 0 && break_loop == 0; n--) {
+    if ((grid_page.active_slots[n] == SLOT_RAM_RECORD) &&
+        (mcl_seq.md_tracks[n].step_count == 0)) {
+       if (rec_state == STATE_QUEUE) {
+        rec_state = STATE_RECORD;
+      } else if ((rec_state == STATE_RECORD) &&
+        (mcl_seq.md_tracks[n].oneshot_mask != 0)) {
+        rec_state = STATE_NOSTATE;
+      }
+      break_loop = 1;
+    } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
+               (mcl_seq.md_tracks[n].step_count == 0)) {
+      rec_state = STATE_PLAY;
+      break_loop = 1;
     }
     // in_sysex = 0;
   }
-  switch (record_state) {
-  case 1:
+  switch (rec_state) {
+  case STATE_QUEUE:
     GUI.put_string_at(5, "[Queue]");
-  break;
-  case 2:
+    break;
+  case STATE_RECORD:
     GUI.put_string_at(5, "[Recording]");
-  break;
-  case 3:
+    break;
+  case STATE_PLAY:
     GUI.put_string_at(5, "[Playback]");
-  break;
+    break;
   }
 
   GUI.setLine(GUI.LINE2);

@@ -19,6 +19,7 @@ public:
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
   uint8_t magic;
+  uint8_t rec_state;
 
   void display();
   void setup();
