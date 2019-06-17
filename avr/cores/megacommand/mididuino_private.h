@@ -5,30 +5,50 @@
 
 void init(void);
 
+#ifdef MEGACOMMAND
 inline void toggleLed(void) {
   TOGGLE_BIT(PORTE, PE5);
 }
-
 inline void setLed(void) {
   SET_BIT(PORTE, PE5);
 }
-
 inline void clearLed(void) {
   CLEAR_BIT(PORTE, PE5);
 }
-
 inline void setLed2(void) {
   SET_BIT(PORTE, PE4);
 }
-
 inline void clearLed2(void) {
   CLEAR_BIT(PORTE, PE4);
 }
-
 inline void toggleLed2(void) {
   TOGGLE_BIT(PORTE, PE4);
 }
+#else
+inline void toggleLed(void) {
+  TOGGLE_BIT(PORTE, PE4);
+}
 
+inline void setLed(void) {
+  CLEAR_BIT(PORTE, PE4);
+}
+
+inline void clearLed(void) {
+  SET_BIT(PORTE, PE4);
+}
+
+inline void setLed2(void) {
+  CLEAR_BIT(PORTE, PE5);
+}
+
+inline void clearLed2(void) {
+  SET_BIT(PORTE, PE5);
+}
+
+inline void toggleLed2(void) {
+  TOGGLE_BIT(PORTE, PE5);
+}
+#endif
 
 #define FIRMWARE_LENGTH_ADDR ((uint16_t *)0x00)
 #define FIRMWARE_CHECKSUM_ADDR ((uint16_t *)0x02)
