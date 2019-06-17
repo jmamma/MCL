@@ -9,10 +9,10 @@
 #include <midi-common.hh>
 
 #include <MidiClock.h>
-MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART_RX_BUFFER_START,
-                       UART_RX_BUFFER_LEN,
-                       (volatile uint8_t *)BANK1_UART_TX_BUFFER_START,
-                       UART_TX_BUFFER_LEN);
+MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,
+                       UART1_RX_BUFFER_LEN,
+                       (volatile uint8_t *)BANK1_UART1_TX_BUFFER_START,
+                       UART1_TX_BUFFER_LEN);
 MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,
                          UART2_RX_BUFFER_LEN,
                          (volatile uint8_t *)BANK1_UART2_TX_BUFFER_START,
@@ -186,7 +186,7 @@ ISR(USART0_RX_vect) {
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
 
     MidiUart.recvActiveSenseTimer = 0;
-    if (((MidiClock.mode == MidiClock.EXTERNAL_UART))) {
+    if (((MidiClock.mode == MidiClock.EXTERNAL_UART1))) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();
