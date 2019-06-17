@@ -59,7 +59,7 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
     while (!IS_BIT_SET8(UCSR0A, UDRE1));
   }
   else {
-    while (!IS_BIT_SET8(UCSR1A, UDRE2));
+    while (!IS_BIT_SET8(UCSR1A, UDRE1));
   }
 
   #endif
