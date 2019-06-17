@@ -11,11 +11,23 @@ extern "C" {
 #include <avr/interrupt.h>
 }
 
+#ifdef MEGACOMMAND
+
 #define LCD_DATA_PORT PORTF
 #define LCD_DATA_DDR  DDRF
 
 #define LCD_CTRL_PORT PORTL
 #define LCD_CTRL_DDR  DDRL
+
+#else
+
+#define LCD_DATA_PORT PORTF
+#define LCD_DATA_DDR  DDRF
+
+#define LCD_CTRL_PORT PORTE
+#define LCD_CTRL_DDR  DDRE
+
+#endif
 
 #define LCD_DELAY_US 50
 
