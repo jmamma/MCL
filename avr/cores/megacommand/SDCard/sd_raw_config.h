@@ -114,7 +114,7 @@ extern "C"
     //MiniCommand disable SD CS pin when card not in use
     #define unselect_card() ({ PORTE |= (1 << PE7); })
     //Minicommand disable SD CS pin when card not in use
-    #define select_card() ({ PORTE &= ~(1 << PE70);})
+    #define select_card() ({ PORTE &= ~(1 << PE7);})
 
 #endif
 
