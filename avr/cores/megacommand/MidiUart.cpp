@@ -48,7 +48,7 @@ void MidiUartClass::initSerial() {
   #else
   UCSR0C = (3<<UCSZ00);
 
-  UCSR0B = _BV(RXEN) | _BV(TXEN) | _BV(RXCIE);
+  UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
   #endif
 }
 
@@ -383,6 +383,7 @@ ISR(USART2_TX_vect) {
 #elif UART2_TX
 ISR(USART1_TX_vect) {
 #endif
+#ifdef UART2_TX
   select_bank(0);
   if (!MidiUart2.txRb.isEmpty_isr()) {
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -392,7 +393,7 @@ ISR(USART1_TX_vect) {
     UART2_CLEAR_ISR_TX_BIT();
   }
 }
-
+#endif
 #endif
 
 MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
@@ -420,9 +421,9 @@ void MidiUartClass2::initSerial() {
   UCSR2B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
 #else
 #ifdef UART2_TX
-  USCR1B = _BV(RXEN) | _BV(TXEN) | _BV(RXCIE);
+  USCR1B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
 #else
-  UCSR1B = _BV(RXEN) | _BV(RXCIE);
+  UCSR1B = _BV(RXEN1) | _BV(RXCIE1);
 #endif
 #endif
 }

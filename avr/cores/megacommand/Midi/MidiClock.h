@@ -91,11 +91,11 @@ public:
 
   typedef enum {
     OFF = 0,
-    INTERNAL,
+    INTERNAL_M,
     EXTERNAL_UART1,
     EXTERNAL_UART2
   } clock_mode_t;
-#define INTERNAL_MIDI INTERNAL
+#define INTERNAL_MIDI INTERNAL_M
 #define EXTERNAL_MIDI EXTERNAL_UART1
 
 #else
