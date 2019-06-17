@@ -10,7 +10,14 @@
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
+
 //#define DEBUGMODE
+
+#ifdef MEGACOMMAND
+  #define SD_CS 53 //PB0
+#else
+  #define SD_CS 9  //PE7
+#endif
 
 #define SERIAL_SPEED 250000
 
