@@ -1,4 +1,8 @@
 #include "MCL.h"
+#include "WavDesigner.h"
+#include "DSP.h"
+#include "Osc.h"
+
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();
   float sample_rate = 44100;
