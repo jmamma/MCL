@@ -137,7 +137,6 @@ bool Wav::write_data(void *data, uint32_t size, uint32_t position) {
   ret = file.seekSet(position);
 
   if (!ret) {
-    Serial.println(SD.card()->errorCode(), HEX);
     DEBUG_PRINTLN("could not seek");
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());

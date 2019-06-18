@@ -94,9 +94,9 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
 }
 
 
-#ifdef UART2_TX
 void MidiUartClass2::m_putc_immediate(uint8_t c) {
 
+#ifdef UART2_TX
   if (!IN_IRQ()) {
     USE_LOCK();
     SET_LOCK();
@@ -134,8 +134,8 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
     UART2_WRITE_CHAR(c);
   }
-}
 #endif
+}
 
 void MidiUartClass::m_putc_immediate(uint8_t c) {
   //  m_putc(c);

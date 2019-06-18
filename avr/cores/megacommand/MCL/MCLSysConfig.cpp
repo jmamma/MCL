@@ -6,6 +6,7 @@ void mclsys_apply_config() {
   mcl_cfg.write_cfg();
   midi_setup.cfg_ports();
 #ifndef DEBUGMODE
+#ifdef MEGACOMMAND
   if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
     GUI.display_mirror = true;
 
@@ -15,6 +16,7 @@ void mclsys_apply_config() {
     GUI.display_mirror = false;
     Serial.end();
   }
+#endif
 #endif
   if (mcl_cfg.screen_saver == 1) {
   GUI.use_screen_saver = true;

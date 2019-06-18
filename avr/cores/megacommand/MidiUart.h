@@ -2,10 +2,10 @@
 #define MIDI_UART_H__
 class MidiUartClass;
 
-#include "RingBuffer.h"
-#include <MidiUartParent.hh>
-#include <avr/io.h>
 #include <inttypes.h>
+#include <MidiUartParent.hh>
+#include "RingBuffer.h"
+#include <avr/io.h>
 //#define TXEN 3
 //#define RXEN 4
 //#define RXCIE 7
@@ -154,6 +154,7 @@ public:
     UART2_SET_ISR_TX_BIT();
   #endif
   }
+
   virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX
