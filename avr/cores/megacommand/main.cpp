@@ -163,11 +163,6 @@ void init(void) {
   SET_BIT(DDRD, PD4);
   SET_BIT(PORTD, PD4);
 
-  // activate background pwm
-  TCCR3B = _BV(WGM32) | _BV(CS30);
-  TCCR3A = _BV(WGM30) | _BV(COM3A1);
-  OCR3A = 160;
-
   DDRE |= _BV(PE4) | _BV(PE5);
   //  DDRB |= _BV(PB0);
   //  DDRC |= _BV(PC3);
