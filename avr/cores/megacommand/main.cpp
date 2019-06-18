@@ -37,8 +37,13 @@ __attribute__((section(".init3")));
 void my_init_ram(void) {
   // Set PL6 as output
   //
+  #ifdef MEGACOMMAND
   DDRL |= _BV(PL6);
   PORTL &= ~(_BV(PL6));
+  #else
+  DDRB |= _BV(PB0);
+  PORTB &= ~(_BV(PB0));
+  #endif
   XMCRA |= _BV(SRE);
   //  MCUCR |= _BV(SRE);
   //  uint8_t *ptr = 0x2000;
@@ -113,34 +118,31 @@ void timer_init(void) {
   // Prescaler 64
   TCCR1B |= (1 << CS11) | (1 << CS10);
   // Output Compare Match A Interrupt Enable
+  #ifdef MEGACOMMAND
   TIMSK1 |= (1 << OCIE1A);
+  #else
+  TIMSK |= (1 << OCIE1A);
+  #endif
   // TCCR2A = _BV(WGM20) | _BV(WGM21) | _BV(CS20) | _BV(CS21); // ) | _BV(CS21);
   // // | _BV(COM21);
 
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCNT2 = 0;
+  TCCR3A = 0;
+  TCCR3B = 0;
+  TCNT3 = 0;
 
   // 1000 Hz (16000000/((124+1)*128))
-  OCR2A = 124;
+  OCR3A = 124;
   // CTC
-  TCCR2A |= (1 << WGM21);
+  TCCR3A |= (1 << WGM21);
   // Prescaler 128
-  TCCR2B |= (1 << CS22) | (1 << CS20);
+  TCCR3B |= (1 << CS22) | (1 << CS20);
   // Output Compare Match A Interrupt Enable
-  TIMSK2 |= (1 << OCIE2A);
-  /*
-    TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
-      TCCR2B &= ~(1<<WGM22);
-      TCCR2B |= (1<<CS22)  | (1<<CS20); // Set bits
+  #ifdef MEGACOMMAND
+  TIMSK3 |= (1 << OCIE3A);
+  #else
+  ETIMSK |= (1 << OCIE3A);
+  #endif
 
-        TIMSK2 &= ~(1<<OCIE2A);
-
-          TCCR2B &= ~(1<<CS21);
-        tcnt2 = 131;
-        TCNT2 = tcnt2;
-          TIMSK2 |= _BV(TOIE2);
-  */
 }
 
 void init(void) {
@@ -148,15 +150,14 @@ void init(void) {
   wdt_disable();
   //  wdt_enable(WDTO_15MS);
 
-  // Set PL7 (OLED CS high)
-  // DDRL |= _BV(PL7);
-  //  PORTL |= ~(_BV(PL7));
   // Configure Port C as 8 channels of output. disable pullup resistors.
   DDRC = 0xFF;
   PORTC = 0x00;
 
   /* move interrupts to bootloader section */
   MCUCR = _BV(IVCE);
+
+  //Enable External SRAM
   MCUCR = _BV(SRE);
 
   // activate lever converter
@@ -256,7 +257,7 @@ uint16_t lastRunningStatusReset = 0;
 // extern uint16_t myvar;
 uint16_t minuteclock = 0;
 
-ISR(TIMER2_COMPA_vect) {
+ISR(TIMER3_COMPA_vect) {
 
   select_bank(0);
 
@@ -347,7 +348,11 @@ int main(void) {
   DEBUG_INIT();
 
   // Set SD card select HIGH before initialising OLED.
+  #ifdef MEGACOMMAND
   PORTB |= (1 << PB0);
+  #else
+  PORTE |= (1 << PE7);
+  #endif
   setup();
   for (;;) {
     loop();

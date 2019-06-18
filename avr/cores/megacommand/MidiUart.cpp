@@ -107,10 +107,10 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         clock++;
         TIMER1_CLEAR_INT()
       }
-      if (TIMER2_CHECK_INT()) {
+      if (TIMER3_CHECK_INT()) {
         TCNT2 = 0;
         slowclock++;
-        TIMER2_CLEAR_INT()
+        TIMER3_CLEAR_INT()
       }
     }
 
@@ -124,10 +124,10 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         clock++;
         TIMER1_CLEAR_INT()
       }
-      if (TIMER2_CHECK_INT()) {
+      if (TIMER3_CHECK_INT()) {
         TCNT2 = 0;
         slowclock++;
-        TIMER2_CLEAR_INT()
+        TIMER3_CLEAR_INT()
       }
     }
 
@@ -149,10 +149,10 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         clock++;
         TIMER1_CLEAR_INT()
       }
-      if (TIMER2_CHECK_INT()) {
+      if (TIMER3_CHECK_INT()) {
         TCNT2 = 0;
         slowclock++;
-        TIMER2_CLEAR_INT()
+        TIMER3_CLEAR_INT()
       }
     }
 
@@ -167,10 +167,10 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         clock++;
         TIMER1_CLEAR_INT()
       }
-      if (TIMER2_CHECK_INT()) {
+      if (TIMER3_CHECK_INT()) {
         TCNT2 = 0;
         slowclock++;
-        TIMER2_CLEAR_INT()
+        TIMER3_CLEAR_INT()
       }
     }
 
