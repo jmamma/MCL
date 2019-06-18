@@ -37,6 +37,7 @@ public:
       }
   bool handleEvent(gui_event_t *event);
   void adjust_param(Encoder *enc, uint8_t param);
+  void draw_routes(uint8_t line_number);
   void draw_levels();
   void display();
   void loop();

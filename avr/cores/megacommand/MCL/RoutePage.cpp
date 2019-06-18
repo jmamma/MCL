@@ -65,13 +65,13 @@ void RoutePage::toggle_routes_batch() {
       GUI.display();
     }
   }
-
+  /*
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
       MD.muteTrack(i, true);
     }
   }
-
+*/
   // send the track to master before unmuting
 
   for (i = 0; i < 16; i++) {
@@ -81,7 +81,7 @@ void RoutePage::toggle_routes_batch() {
       }
       toggle_route(i, encoders[0]->cur);
 
-      MD.muteTrack(i, false);
+  //   MD.muteTrack(i, false);
     }
     //  note_interface.notes[i] = 0;
     // trackinfo_page.display();
@@ -106,7 +106,7 @@ void RoutePage::display() {
   uint8_t x;
 
   // GUI.put_string_at(12,"Route");
-  GUI.put_string_at(0, "R");
+  GUI.put_string_at(0, "ROUTE");
 
   GUI.put_string_at(9, "Q:");
   if (encoders[1]->getValue() == 0) {
