@@ -38,7 +38,7 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     break;
   case RAM_PAGE:
     if (str)
-      strncpy(str, "RAM  ", 5);
+      strncpy(str, "RAM", 4);
     r_page = &ram_page;
     break;
 #ifdef WAV_DESIGNER
