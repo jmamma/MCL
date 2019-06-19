@@ -217,7 +217,6 @@ void MCLActions::prepare_next_chain(int row) {
   //  }
   uint8_t slots_cached[NUM_TRACKS] = {0};
   int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
@@ -247,8 +246,13 @@ void MCLActions::prepare_next_chain(int row) {
   }
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
+            DEBUG_PRINTLN("about to load");
+            DEBUG_PRINTLN(n);
       if (a4_track->load_track_from_grid(n, row, 0)) {
         a4_track->store_in_mem(n);
+        DEBUG_PRINTLN("checking a4 load");
+        DEBUG_PRINTLN(a4_track->chain.row);
+        DEBUG_PRINTLN(a4_track->chain.loops);
       }
       if (a4_track->active != EMPTY_TRACK_TYPE) {
         send_machine[n] = 0;
@@ -444,6 +448,11 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint16_t len;
   DEBUG_PRINTLN(n);
   //  DEBUG_PRINTLN(next_transitions[n]);
+  if ((chains[n].loops == 0)) {
+    next_transitions[n] = -1;
+    return;
+  }
+
   uint16_t next_transitions_old = next_transitions[n];
 
   if (n < NUM_MD_TRACKS) {
@@ -470,15 +479,15 @@ void MCLActions::calc_next_transition() {
   bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    DEBUG_PRINTLN(n);
+   if (grid_page.active_slots[n] >= 0) {
+      if ((chains[n].loops > 0) &&
+          (chains[n].row != grid_page.active_slots[n])) {
+        if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
+     DEBUG_PRINTLN(n);
     DEBUG_PRINTLN(grid_page.active_slots[n]);
     DEBUG_PRINTLN(chains[n].row);
     DEBUG_PRINTLN(next_transitions[n]);
     DEBUG_PRINTLN(" ");
-    if (grid_page.active_slots[n] >= 0) {
-      if ((chains[n].loops > 0) &&
-          (chains[n].row != grid_page.active_slots[n])) {
-        if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
           next_transition = next_transitions[n];
         }
       }
