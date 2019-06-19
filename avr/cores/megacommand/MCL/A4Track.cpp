@@ -11,7 +11,6 @@ void A4Track::load_seq_data(int tracknumber) {
     mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
     memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
   }
-
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
@@ -39,21 +38,19 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-  if (Analog4.connected) {
-    if (m > 0) {
-      ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
-    } else {
-      ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
-    }
-    if (!ret) {
-      DEBUG_PRINTLN("Write failed");
-      return false;
-    }
-    return true;
+  if (m > 0) {
+    ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
+  } else {
+    ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
   }
-  return false;
+  if (!ret) {
+    DEBUG_PRINTLN("Write failed");
+    return false;
+  }
+  return true;
 }
-bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track, bool online) {
+bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
+                                  bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -73,12 +70,12 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track, bool o
 
   /*analog 4 tracks*/
   if (online) {
-  if (Analog4.connected) {
-    if (track != 255) {
-      get_track_from_sysex(track - 16, column - 16);
+    if (Analog4.connected) {
+      if (track != 255) {
+        get_track_from_sysex(track - 16, column - 16);
+      }
     }
-  }
-  memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
+    memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
   }
   ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);
   if (!ret) {
