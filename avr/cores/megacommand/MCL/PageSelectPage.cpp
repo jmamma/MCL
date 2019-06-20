@@ -5,6 +5,7 @@
 #define ROUTE_PAGE 1
 #define WAVD_PAGE 8
 #define SOUND 7
+
 #define LOUDNESS 10
 
 void PageSelectPage::setup() {}
@@ -39,16 +40,20 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     r_page = wd.last_page;
     break;
 #endif
+#ifdef SOUND_PAGE
   case SOUND:
     if (str)
       strncpy(str, "SOUND", 6);
     r_page = &sound_browser;
     break;
+#endif
+#ifdef LOUDNESS_PAGE
   case LOUDNESS:
     if (str)
       strncpy(str, "LOUDNESS",9);
     r_page = &loudness_page;
     break;
+#endif
   default:
     if (str)
       strncpy(str, "----", 5);

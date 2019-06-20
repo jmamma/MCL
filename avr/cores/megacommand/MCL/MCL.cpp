@@ -43,7 +43,11 @@ void MCL::setup() {
   mcl_seq.setup();
   MDSysexListener.setup(&Midi);
   A4SysexListener.setup(&Midi2);
+
+#ifdef MEGACOMMAND
   MidiSDSSysexListener.setup(&Midi);
+#endif
+
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
 
