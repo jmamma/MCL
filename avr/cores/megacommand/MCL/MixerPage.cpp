@@ -7,6 +7,9 @@ void MixerPage::setup() {
   encoders[1]->handler = encoder_filtf_handle;
   encoders[2]->handler = encoder_filtw_handle;
   encoders[3]->handler = encoder_filtq_handle;
+  if (route_page.encoders[0]->cur == 0) {
+  route_page.encoders[0]->cur = 2;
+  }
   create_chars_mixer();
 #ifdef OLED_DISPLAY
   classic_display = false;
@@ -29,7 +32,7 @@ void MixerPage::init() {
   }
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  mute_page.draw_mutes(0);
+  draw_routes(0);
 
   for (uint8_t i = 0; i < 16; i++) {
     uint8_t scaled_level =
@@ -49,6 +52,56 @@ void MixerPage::cleanup() {
   note_interface.state = false;
 
   midi_events.remove_callbacks();
+}
+
+
+void MixerPage::draw_routes(uint8_t line_number) {
+  if (line_number == 0) {
+    GUI.setLine(GUI.LINE1);
+  } else {
+    GUI.setLine(GUI.LINE2);
+  }
+  /*Initialise the string with blank steps*/
+  char str[17] = "----------------";
+
+  for (int i = 0; i < 16; i++) {
+
+#ifdef OLED_DISPLAY
+    if (note_interface.notes[i] > 0) {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
+    }
+
+    else if (mcl_cfg.routing[i] == 6) {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
+      oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
+
+    }
+
+    else {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
+      oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
+    }
+
+#else
+
+    str[i] = (char)219;
+
+    if (mcl_cfg.routing[i] == 6)  {
+
+      str[i] = (char)'-';
+    }
+    if (note_interface.notes[i] > 0) {
+
+      str[i] = (char)255;
+    }
+#endif
+  }
+#ifndef OLED_DISPLAY
+  GUI.put_string_at(0, str);
+#endif
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -261,26 +314,29 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
       if (note_interface.notes_all_off_md()) {
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
-          mute_page.toggle_mutes_batch();
+          route_page.toggle_routes_batch();
         }
         note_interface.init_notes();
 #ifdef OLED_DISPLAY
-        mute_page.draw_mutes(0);
+       draw_routes(0);
 #endif
       }
       return true;
     }
   }
+/*
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    // mute_page.toggle_mutes_batch();
-    // note_interface.init_notes();
-    return true;
+          route_page.toggle_routes_batch();
+        note_interface.init_notes();
+#ifdef OLED_DISPLAY
+       draw_routes(0);
+#endif
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    GUI.setPage(&mute_page);
-    return true;
-  }
+*/
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    route_page.update_globals();
+    md_exploit.off();
+    md_exploit.on();
     GUI.setPage(&page_select_page);
     return true;
   }
@@ -306,7 +362,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
     if (note_interface.notes_count() == 0) {
-      GUI.setPage(&grid_page);
+       route_page.update_globals();
+       GUI.setPage(&grid_page);
     }
     return true;
   }

@@ -55,22 +55,23 @@ void RoutePage::toggle_route(int i, uint8_t routing) {
 }
 void RoutePage::toggle_routes_batch() {
   uint16_t quantize_mute;
-  quantize_mute = 1 << encoders[2]->getValue();
+  quantize_mute = 1 << encoders[1]->getValue();
   uint8_t i;
   hasChanged = true;
+  if ((encoders[2]->getValue() < 7) && (encoders[2]->getValue() > 0)) {
+    while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
+             (quantize_mute * 2)) != 0) &&
+           (MidiClock.state == 2)) {
+      GUI.display();
+    }
+  }
+  /*
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 3) {
       MD.muteTrack(i, true);
     }
   }
-  if ((encoders[2]->getValue() < 7) && (encoders[2]->getValue() > 0)) {
-    while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
-             (quantize_mute * 2)) != 0) &&
-           (MidiClock.state == 2)) {
-      GUI.loop();
-    }
-  }
-
+*/
   // send the track to master before unmuting
 
   for (i = 0; i < 16; i++) {
@@ -80,7 +81,7 @@ void RoutePage::toggle_routes_batch() {
       }
       toggle_route(i, encoders[0]->cur);
 
-      MD.muteTrack(i, false);
+  //   MD.muteTrack(i, false);
     }
     //  note_interface.notes[i] = 0;
     // trackinfo_page.display();
@@ -95,6 +96,7 @@ void RoutePage::update_globals() {
            ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
       ;
     MD.global.toSysex(encoder2);
+  hasChanged = false;
   }
 }
 
@@ -104,7 +106,7 @@ void RoutePage::display() {
   uint8_t x;
 
   // GUI.put_string_at(12,"Route");
-  GUI.put_string_at(0, "R");
+  GUI.put_string_at(0, "ROUTE");
 
   GUI.put_string_at(9, "Q:");
   if (encoders[1]->getValue() == 0) {
@@ -150,11 +152,15 @@ bool RoutePage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     update_globals();
+    md_exploit.off();
+    md_exploit.on();
     GUI.setPage(&mixer_page);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     update_globals();
+    md_exploit.off();
+    md_exploit.on();
     GUI.setPage(&page_select_page);
     return true;
   }

@@ -30,37 +30,24 @@ void GridTask::run() {
     slots_loaded[i] = 0;
   }
 
-  bool send_a4_sound = false;
-  bool send_md_kit = false;
+  bool send_ext_slots = false;
+  bool send_md_slots = false;
 
-  // uint8_t div16th_margin = (((md_div32th_latency + a4_div32th_latency)) / 2)
-  // + 4;
   uint8_t div32th_margin = 8;
-  // DEBUG_PRINTLN(md_div32th_latency);
-  // DEBUG_PRINTLN(a4_div32th_latency);
 
   uint32_t div32th_counter;
-  if ((mcl_cfg.chain_mode == 0) || (mcl_actions.next_transition == (uint16_t) -1)) {
+  if ((mcl_cfg.chain_mode == 0) ||
+      (mcl_actions.next_transition == (uint16_t)-1)) {
     return;
   }
-  //  DEBUG_PRINTLN(MidiClock.div16th_counter);
-  uint8_t curkit;
-  ElektronDataToSysexEncoder encoder(&MidiUart);
-
-  //! MidiClock.clock_less_than(a,b) == !(a < b) == (a >= b)
 
   if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                  (uint32_t)mcl_actions.next_transition * 2)) {
-    //   while ((MidiClock.div32th_counter != (mcl_actions.next_transition * 2 -
-    //   div32th_latency)) && (MidiClock.state == 2));
 
     DEBUG_PRINTLN("Preparing for next transition:");
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition);
 
-    // MD.getCurrentKit();
-    // MD.getBlockingKit(MD.currentKit);
-    // mcl_actions.md_setsysex_recpos(4, MD.currentKit);
     div32th_counter = MidiClock.div32th_counter + div32th_margin;
   } else {
     return;
@@ -83,32 +70,29 @@ void GridTask::run() {
           if (n < NUM_MD_TRACKS) {
 
             md_track->load_from_mem(n);
-            if (slots_loaded[n] == 0) {
-              //        md_track->place_track_in_kit(n, n, &(MD.kit));
-            }
 
             slots_changed[n] = mcl_actions.chains[n].row;
             memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
-            if (mcl_cfg.chain_mode == 2) {
-              mcl_actions.chains[n].loops = 0;
-            } else if (mcl_cfg.chain_mode == 3) {
-              mcl_actions.chains[n].loops = random(1, 8);
-              mcl_actions.chains[n].row =
-                  random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
-            }
-
-            send_md_kit = true;
+            send_md_slots = true;
           } else {
             a4_track->load_from_mem(n);
             slots_changed[n] = mcl_actions.chains[n].row;
             memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
-            send_a4_sound = true;
+            send_ext_slots = true;
+          }
+          //Override chain data if in manual or random mode
+          if (mcl_cfg.chain_mode == 2) {
+            mcl_actions.chains[n].loops = 0;
+          } else if (mcl_cfg.chain_mode == 3) {
+            mcl_actions.chains[n].loops = random(1, 8);
+            mcl_actions.chains[n].row =
+                random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
           }
         }
       }
     }
   }
-  if (send_a4_sound) {
+  if (send_ext_slots) {
     DEBUG_PRINTLN("waiting to send a4");
     DEBUG_PRINTLN(MidiClock.div192th_counter);
     DEBUG_PRINTLN(mcl_actions.a4_latency);
@@ -163,7 +147,7 @@ void GridTask::run() {
       }
     }
   }
-  if (send_md_kit) {
+  if (send_md_slots) {
     DEBUG_PRINTLN(MidiClock.div192th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition * 12 -
                   mcl_actions.md_div192th_latency);
@@ -212,7 +196,7 @@ void GridTask::run() {
                   DEBUG_PRINTLN("muting");
                   DEBUG_PRINT(trigGroup);
                   MD.muteTrack(trigGroup, true);
-                break;
+                  break;
                 }
                 mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
                                            &(MD.kit), set_level);
@@ -225,22 +209,22 @@ void GridTask::run() {
 #endif
             if (slots_loaded[n] == 0) {
               bool set_level = false;
-                 switch (mcl_actions.transition_level[n]) {
-                case 1:
-                  set_level = true;
-                  md_track->machine.level = 0;
-                  break;
-                case TRANSITION_UNMUTE:
-                   DEBUG_PRINTLN("unmuting");
-                  DEBUG_PRINT(n);
-                  MD.muteTrack(n, false);
-                  break;
-                case TRANSITION_MUTE:
-                  DEBUG_PRINTLN("muting");
-                  DEBUG_PRINT(n);
-                 MD.muteTrack(n, true);
+              switch (mcl_actions.transition_level[n]) {
+              case 1:
+                set_level = true;
+                md_track->machine.level = 0;
                 break;
-                }
+              case TRANSITION_UNMUTE:
+                DEBUG_PRINTLN("unmuting");
+                DEBUG_PRINT(n);
+                MD.muteTrack(n, false);
+                break;
+              case TRANSITION_MUTE:
+                DEBUG_PRINTLN("muting");
+                DEBUG_PRINT(n);
+                MD.muteTrack(n, true);
+                break;
+              }
               mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
                                          set_level);
               md_track->place_track_in_kit(n, n, &(MD.kit), set_level);
@@ -260,14 +244,13 @@ void GridTask::run() {
           DEBUG_PRINTLN(n);
           bool clear_locks = true;
           bool reset_params = false;
-          mcl_seq.md_tracks[n].clear_track(clear_locks,reset_params);
+          mcl_seq.md_tracks[n].clear_track(clear_locks, reset_params);
         }
 
         grid_page.active_slots[n] = slots_changed[n];
       }
     }
   }
-  //  if (send_md_kit || send_a4_sound) {
   uint8_t count = 0;
   uint8_t slots_cached[NUM_TRACKS] = {0};
 
@@ -345,14 +328,13 @@ void GridTask::run() {
             }
           }
         }
-
         mcl_actions.calc_next_slot_transition(n);
       }
     }
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency(&empty_track);
   } else {
-    mcl_actions.next_transition = (uint16_t) -1;
+    mcl_actions.next_transition = (uint16_t)-1;
   }
   GUI.addTask(&grid_task);
 }
