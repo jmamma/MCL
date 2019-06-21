@@ -10,24 +10,13 @@ class MidiUartClass;
 //#define RXEN 4
 //#define RXCIE 7
 
-#ifdef MEGACOMMAND
 #define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR1, OCF1A)
+#define TIMER2_CHECK_INT() IS_BIT_SET8(TIFR2, OCF2A)
 #define TIMER1_CLEAR_INT() TIFR1 |= (1 << OCF1A);
-#define TIMER3_CHECK_INT() IS_BIT_SET8(TIFR3, OCF3A)
-#define TIMER3_CLEAR_INT() TIFR3 |= (1 << OCF3A);
-#else
-#define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR, OCF1A)
-#define TIMER1_CLEAR_INT() TIFR |= (1 << OCF1A);
-#define TIMER3_CHECK_INT() IS_BIT_SET8(ETIFR, OCF3A)
-#define TIMER3_CLEAR_INT() ETIFR |= (1 << OCF3A);
-#endif
+#define TIMER2_CLEAR_INT() TIFR2 |= (1 << OCF2A);
 
 #define UART_BAUDRATE 31250
 #define UART_BAUDRATE_REG (((F_CPU / 16) / (UART_BAUDRATE)) - 1)
-
-#ifdef MEGACOMMAND
-
-#define UART_USB 1
 
 #define UART_USB_CHECK_EMPTY_BUFFER() IS_BIT_SET8(UCSR0A, UDRE0)
 
@@ -39,8 +28,6 @@ class MidiUartClass;
 
 #define UART_WRITE_CHAR(c) (UDR1 = (c))
 #define UART_READ_CHAR() (UDR1)
-
-#define UART2_TX 1
 
 #define UART2_CHECK_RX() IS_BIT_SET8(UCSR2A, RXC1)
 #define UART2_CHECK_TX() IS_BIT_SET8(UCSR2A, tXC1)
@@ -54,33 +41,6 @@ class MidiUartClass;
 #define UART_USB_WRITE_CHAR(c) (UDR0 = (c))
 #define UART_USB_READ_CHAR() (UDR0)
 
-#define UART_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR1B, UDRIE1)
-#define UART2_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR2B, UDRIE1)
-
-#define UART_SET_ISR_TX_BIT() SET_BIT(UCSR1B, UDRIE1)
-#define UART2_SET_ISR_TX_BIT() SET_BIT(UCSR2B, UDRIE1)
-
-#else
-
-#define UART_CHECK_EMPTY_BUFFER() IS_BIT_SET8(UCSR0A, UDRE1)
-#define UART2_CHECK_EMPTY_BUFFER() IS_BIT_SET8(UCSR1A, UDRE2)
-
-#define UART_CHECK_RX() IS_BIT_SET8(UCSR0A, RXC)
-#define UART_CHECK_TX() IS_BIT_SET8(UCSR0A, TXC)
-
-#define UART_WRITE_CHAR(c) (UDR0 = (c))
-#define UART_READ_CHAR() (UDR0)
-
-#define UART2_CHECK_RX() IS_BIT_SET8(UCSR1A, RXC)
-#define UART2_READ_CHAR() (UDR1)
-
-#define UART_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR0B, UDRIE1)
-#define UART2_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR1B, UDRIE1)
-
-#define UART_SET_ISR_TX_BIT() CLEAR_BIT(UCSR0B, UDRIE1)
-#define UART2_SET_ISR_TX_BIT() CLEAR_BIT(UCSR1B, UDRIE1)
-
-#endif
 
 #define TX_IRQ 1
 
@@ -90,7 +50,7 @@ class MidiUartClass;
 #else
 #define RX_BUF_TYPE uint8_t
 #endif
-// define TX_BUF_SIZE 512
+//define TX_BUF_SIZE 512
 
 #if (TX_BUF_SIZE >= 256)
 #define TX_BUF_TYPE uint16_t
@@ -104,19 +64,18 @@ void isr_midi();
 class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
 
-public:
-  MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
-                volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
+ public:
+  MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
 
   inline void m_putc(uint8_t c) {
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
-    txRb.put_h(c);
-    UART_SET_ISR_TX_BIT();
+  if (c == 0xF0) {
+    uart_block = 1;
+  }
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
+   txRb.put_h(c);
+   SET_BIT(UCSR1B, UDRIE1);
   }
   inline bool avail() { return !rxRb.isEmpty(); }
   inline uint8_t m_getc() { return rxRb.get(); }
@@ -127,6 +86,7 @@ public:
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+
 };
 
 extern MidiUartClass MidiUart;
@@ -136,30 +96,24 @@ extern bool enable_clock_callbacks;
 class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
 
-public:
-  MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
-                 volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
+ public:
+  MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0, volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
   inline bool avail() { return !rxRb.isEmpty(); }
   inline uint8_t m_getc() { return rxRb.get(); }
 
   inline void m_putc(uint8_t c) {
-  #ifdef UART2_TX
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
-    txRb.put_h(c);
-    UART2_SET_ISR_TX_BIT();
-  #endif
+  if (c == 0xF0) {
+    uart_block = 1;
   }
-
+  if (c == 0xF7) {
+    uart_block = 0;
+  }
+   txRb.put_h(c);
+    SET_BIT(UCSR2B, UDRIE1);
+  }
   virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  #ifdef UART2_TX
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-  #endif
 };
 
 extern MidiUartClass2 MidiUart2;

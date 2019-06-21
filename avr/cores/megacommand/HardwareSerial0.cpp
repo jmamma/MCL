@@ -23,6 +23,7 @@
 */
 
 #include "Arduino.h"
+#include "Core.h"
 #include "HardwareSerial.h"
 #include "HardwareSerial_private.h"
 
