@@ -366,9 +366,9 @@ ISR(USART1_RX_vect) {
 #ifdef TX_IRQ
 
 #ifdef MEGACOMMAND
-ISR(USART1_TX_vect) {
+ISR(USART1_UDRE_vect) {
 #else
-ISR(USART0_TX_vect) {
+ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
   if (!MidiUart.txRb.isEmpty_isr()) {
@@ -381,9 +381,9 @@ ISR(USART0_TX_vect) {
 }
 
 #ifdef MEGACOMMAND
-ISR(USART2_TX_vect) {
+ISR(USART2_UDRE_vect) {
 #elif UART2_TX
-ISR(USART1_TX_vect) {
+ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
