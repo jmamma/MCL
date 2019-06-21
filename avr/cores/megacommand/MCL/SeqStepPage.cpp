@@ -279,7 +279,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     mcl_seq.md_tracks[last_md_track].clear_track();
     return true;
   }
-
+#ifdef EXT_TRACKS
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     GUI.setPage(&seq_extstep_page);
     return true;
@@ -288,6 +288,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     */
   }
+#endif
   return false;
 }
 

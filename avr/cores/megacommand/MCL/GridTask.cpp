@@ -20,9 +20,10 @@ void GridTask::run() {
   EmptyTrack empty_track;
 
   MDTrack *md_track = (MDTrack *)&empty_track;
+#ifdef EXT_TRACKS
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
-
+#endif
   int slots_changed[NUM_TRACKS];
   uint8_t slots_loaded[NUM_MD_TRACKS];
 
@@ -74,12 +75,15 @@ void GridTask::run() {
             slots_changed[n] = mcl_actions.chains[n].row;
             memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
             send_md_slots = true;
-          } else {
+          }
+#ifdef EXT_TRACKS
+          else {
             a4_track->load_from_mem(n);
             slots_changed[n] = mcl_actions.chains[n].row;
             memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
             send_ext_slots = true;
           }
+#endif
           //Override chain data if in manual or random mode
           if (mcl_cfg.chain_mode == 2) {
             mcl_actions.chains[n].loops = 0;
@@ -92,6 +96,7 @@ void GridTask::run() {
       }
     }
   }
+#ifdef EXT_TRACKS
   if (send_ext_slots) {
     DEBUG_PRINTLN("waiting to send a4");
     DEBUG_PRINTLN(MidiClock.div192th_counter);
@@ -147,6 +152,7 @@ void GridTask::run() {
       }
     }
   }
+#endif
   if (send_md_slots) {
     DEBUG_PRINTLN(MidiClock.div192th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition * 12 -
@@ -256,7 +262,9 @@ void GridTask::run() {
 
   EmptyTrack empty_track2;
   MDTrack *md_temp_track = (MDTrack *)&empty_track2;
+#ifdef EXT_TRACKS
   A4Track *a4_temp_track = (A4Track *)&empty_track2;
+#endif
   if (mcl_cfg.chain_mode != 2) {
     for (uint8_t n = 0; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
@@ -309,7 +317,9 @@ void GridTask::run() {
             } else {
               DEBUG_PRINTLN("failed");
             }
-          } else {
+          }
+#ifdef EXT_TRACKS
+          else {
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_PRINTLN(n);
             DEBUG_PRINTLN(mcl_actions.chains[n].row);
@@ -327,6 +337,7 @@ void GridTask::run() {
               a4_track->store_in_mem(n);
             }
           }
+#endif
         }
         mcl_actions.calc_next_slot_transition(n);
       }

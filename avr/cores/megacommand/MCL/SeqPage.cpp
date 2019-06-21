@@ -55,7 +55,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
           }
         }
         mcl_seq.md_tracks[last_md_track].length = step;
-      } else {
+      } 
+#ifdef EXT_TRACKS
+      else {
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
           for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
             mcl_seq.ext_tracks[n].length = step;
@@ -63,6 +65,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         }
         mcl_seq.ext_tracks[last_ext_track].length = step;
       }
+#endif
       encoders[2]->cur = step;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         note_interface.notes[track] = 0;
@@ -74,15 +77,19 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       if (device == DEVICE_MD) {
         last_md_track = track;
+#ifdef EXT_TRACK
         if (GUI.currentPage() == &seq_extstep_page) {
           GUI.setPage(&seq_step_page);
         }
+#endif
         GUI.currentPage()->redisplay = true;
         GUI.currentPage()->config();
         encoders[2]->old = encoders[2]->cur;
         return true;
-      } else {
-        last_ext_track = track - 16;
+      }
+#ifdef EXT_TRACK
+      else {
+      last_ext_track = track - 16;
         if (GUI.currentPage() == &seq_step_page) {
           GUI.setPage(&seq_extstep_page);
         }
@@ -91,6 +98,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         encoders[2]->old = encoders[2]->cur;
         return true;
       }
+#endif
       if (event->mask == EVENT_BUTTON_RELEASED) {
         note_interface.notes[track] = 0;
         ignore_button_release = 2;
@@ -298,7 +306,9 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
         }
       }
     }
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
 
     for (int i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
 
@@ -387,6 +397,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
       }
     }
   }
+#endif
 
   /*Display the step sequencer pattern on screen, 16 steps at a time*/
   GUI.put_string_at(0, mystr);
@@ -403,7 +414,9 @@ void pattern_len_handler(Encoder *enc) {
     } else {
       mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
     }
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
@@ -414,6 +427,7 @@ void pattern_len_handler(Encoder *enc) {
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
+#endif
 }
 
 void SeqPage::loop() {
@@ -424,10 +438,12 @@ void SeqPage::loop() {
       (mcl_seq.md_tracks[last_md_track].length) = SeqPage::length;
       (mcl_seq.md_tracks[last_md_track].resolution) = SeqPage::resolution;
     }
+#ifdef EXT_TRACKS
     if (midi_device == DEVICE_A4) {
       (mcl_seq.ext_tracks[last_ext_track].length) = SeqPage::length;
       (mcl_seq.ext_tracks[last_ext_track].resolution) = SeqPage::resolution;
     }
+#endif
     track_menu_page.loop();
   }
 }

@@ -23,24 +23,11 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
-                                       A4Sound *analogfour_sound,
-                                       EmptyTrack *empty_track) {
-
-  //       if (Grids[encodervaluer] != NULL) {
-  MDTrack *md_track = (MDTrack *)empty_track;
-  A4Track *a4_track = (A4Track *)empty_track;
-  ExtTrack *ext_track = (ExtTrack *)empty_track;
+bool MCLActions::load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
-  if (column < NUM_MD_TRACKS) {
-    if (md_track->load_track_from_grid(column, row)) {
-      memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
-      grid_page.active_slots[column] = row;
-      md_track->place_track_in_kit(curtrack, column, &(MD.kit));
-      md_track->load_seq_data(curtrack);
-    }
-  } else {
+  A4Track *a4_track = (A4Track *)empty_track;
+  ExtTrack *ext_track = (ExtTrack *)empty_track;
     if (Analog4.connected) {
 
       if (a4_track->load_track_from_grid(column, row, 0)) {
@@ -57,7 +44,22 @@ bool MCLActions::place_track_inpattern(int curtrack, int column, int row,
         return ext_track->place_track_in_sysex(curtrack, column);
       }
     }
+
+}
+
+bool MCLActions::load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track) {
+
+  MDTrack *md_track = (MDTrack *)empty_track;
+  DEBUG_PRINT_FN();
+  if (column < NUM_MD_TRACKS) {
+    if (md_track->load_track_from_grid(column, row)) {
+      memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
+      grid_page.active_slots[column] = row;
+      md_track->place_track_in_kit(curtrack, column, &(MD.kit));
+      md_track->load_seq_data(curtrack);
+    }
   }
+
 }
 
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
@@ -79,9 +81,10 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
   empty_track.chain.loops = 0;
 
   MDTrack *md_track = (MDTrack *)&empty_track;
+#ifdef EXT_TRACKS
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
-
+#endif
   uint8_t readpattern = MD.currentPattern;
 
   patternswitch = PATTERN_STORE;
@@ -94,11 +97,13 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
       save_md_tracks = true;
     }
   }
+#ifdef EXT_TRACKS
   for (i = NUM_MD_TRACKS; i < NUM_TRACKS; i++) {
     if (note_interface.notes[i] == 3) {
       save_a4_tracks = true;
     }
   }
+#endif
   bool storepattern = false;
 
   if (MidiClock.state == 2) { merge = false; }
@@ -135,27 +140,32 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
   uint8_t first_note = 255;
 
   uint8_t max_notes = NUM_TRACKS;
+#ifndef EXT_TRACKS
+  max_notes = NUM_MD_TRACKS;
+#else
   if (!Analog4.connected) {
     max_notes = NUM_MD_TRACKS;
   }
+#endif
 
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
       if (first_note == 255) {
         first_note = i;
       }
-
-      if (i >= NUM_MD_TRACKS) {
+      if (i < NUM_MD_TRACKS) {
+        md_track->store_track_in_grid(i, grid_page.getRow(), i, false, merge, true);
+      }
+#ifdef EXT_TRACKS
+      else {
         if (Analog4.connected) {
           DEBUG_PRINTLN("a4 get sound");
           Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
           a4_track->sound.fromSysex(Analog4.midi);
         }
         a4_track->store_track_in_grid(i, grid_page.getRow(), i, true);
-      } else {
-        md_track->store_track_in_grid(i, grid_page.getRow(), i, false,
-                                          merge, true);
       }
+#endif
     }
   }
 
@@ -196,9 +206,10 @@ void MCLActions::prepare_next_chain(int row) {
   DEBUG_PRINT_FN();
   EmptyTrack empty_track;
   MDTrack *md_track = (MDTrack *)&empty_track;
+#ifdef EXT_TRACKS
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
-
+#endif
   // MD.saveCurrentKit(MD.currentKit);
   // MD.getBlockingKit(MD.currentKit);
   uint8_t q;
@@ -244,6 +255,7 @@ void MCLActions::prepare_next_chain(int row) {
       }
     }
   }
+#ifdef EXT_TRACKS
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
             DEBUG_PRINTLN("about to load");
@@ -261,6 +273,7 @@ void MCLActions::prepare_next_chain(int row) {
       }
     }
   }
+#endif
   uint16_t next_step;
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
@@ -294,8 +307,13 @@ void MCLActions::send_tracks_to_devices() {
 
   EmptyTrack empty_track;
   MDTrack *md_track = (MDTrack *)&empty_track;
+#ifdef EXT_TRACKS
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
+  // Used as a way of flaggin which A4 tracks are to be sent
+  uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
+  A4Sound sound_array[4];
+#endif
 
   int curtrack = last_md_track;
 
@@ -303,10 +321,6 @@ void MCLActions::send_tracks_to_devices() {
   int track = 0;
   uint8_t note_count = 0;
   uint8_t first_note = 254;
-
-  // Used as a way of flaggin which A4 tracks are to be sent
-  uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
-  A4Sound sound_array[4];
 
   KitExtra kit_extra;
   volatile uint8_t *ptr;
@@ -321,8 +335,7 @@ void MCLActions::send_tracks_to_devices() {
       track = i;
 
       if (i < NUM_MD_TRACKS) {
-        place_track_inpattern(track, i, grid_page.getRow(),
-                              (A4Sound *)&sound_array[0], &empty_track);
+        load_track_from_md(track, i, grid_page.getRow(), &empty_track);
 
         if (i == first_note) {
           // Use first track's original kit values for write orig
@@ -332,10 +345,12 @@ void MCLActions::send_tracks_to_devices() {
             write_original = 0;
           }
         }
-      } else {
+      }
+#ifdef EXT_TRACKS
+      else {
         track = track - NUM_MD_TRACKS;
         mcl_seq.ext_tracks[track].buffer_notesoff();
-        if (place_track_inpattern(track, i, grid_page.getRow(),
+        if (load_track_from_ext(track, i, grid_page.getRow(),
                                   (A4Sound *)&sound_array[track],
                                   &empty_track)) {
           if (Analog4.connected) {
@@ -344,6 +359,7 @@ void MCLActions::send_tracks_to_devices() {
           }
         }
       }
+#endif
     }
   }
   if ((write_original == 1)) {
@@ -369,6 +385,7 @@ void MCLActions::send_tracks_to_devices() {
   // if (reload == 1) {
   MD.loadKit(MD.pattern.kit);
   // Send Analog4
+#ifdef EXT_TRACKS
   if (Analog4.connected) {
     uint8_t a4_kit_send = 0;
     for (i = 0; i < 4; i++) {
@@ -377,6 +394,7 @@ void MCLActions::send_tracks_to_devices() {
       }
     }
   }
+#endif
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
   if ((mcl_cfg.chain_mode == 0) || (mcl_cfg.chain_mode == 2)) {
@@ -399,11 +417,14 @@ void MCLActions::send_tracks_to_devices() {
 
           md_track->store_in_mem(n);
         }
-      } else {
+      }
+      #ifdef EXT_TRACKS
+      else {
         if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
           a4_track->store_in_mem(n);
         }
       }
+      #endif
       //  }
     }
   }
@@ -424,7 +445,9 @@ void MCLActions::send_tracks_to_devices() {
       if (n < NUM_MD_TRACKS) {
         next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
-      } else {
+      }
+#ifdef EXT_TRACKS
+      else {
         if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].resolution == 2) {
         next_transitions[n] = MidiClock.div16th_counter -
                               (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count) ;
@@ -434,6 +457,7 @@ void MCLActions::send_tracks_to_devices() {
                               (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count * 2) ;
         }
       }
+#endif
       calc_next_slot_transition(n);
     }
   }
@@ -457,9 +481,12 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   if (n < NUM_MD_TRACKS) {
     len = chains[n].loops * mcl_seq.md_tracks[n].length;
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     len = chains[n].loops * mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
   }
+#endif
   if (len < 4) {
     len = 4;
   }
@@ -505,9 +532,11 @@ void MCLActions::calc_next_transition() {
 
 void MCLActions::calc_latency(EmptyTrack *empty_track) {
   MDTrack *md_track = (MDTrack *)empty_track;
-  A4Track *a4_track = (A4Track *)empty_track;
   md_latency = 0;
+#ifdef EXT_TRACKS
+  A4Track *a4_track = (A4Track *)empty_track;
   a4_latency = 0;
+#endif
 
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if ((grid_page.active_slots[n] >= 0) && (send_machine[n] == 0)) {
@@ -520,23 +549,25 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
               md_latency += 3;
            }
         }
-      } else {
+      }
+#ifdef EXT_TRACKS
+      else {
         if (next_transitions[n] == next_transition) {
           a4_latency += A4_SOUND_LENGTH;
         }
       }
+#endif
     }
   }
   grid_task.active = true;
 
   float bytes_per_second_uart1 = (float)MidiUart.speed / (float)10;
 
-  float bytes_per_second_uart2 = (float)MidiUart2.speed / (float)10;
 
   float md_latency_in_seconds =
       (float)mcl_actions.md_latency / bytes_per_second_uart1;
-  float a4_latency_in_seconds =
-      (float)mcl_actions.a4_latency / bytes_per_second_uart2;
+
+
 
   float div32th_per_second =
       ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)2;
@@ -545,10 +576,16 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
   //  ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)12;
   // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
   md_div32th_latency = round(div32th_per_second * md_latency_in_seconds) + 1;
-  a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
 
   md_div192th_latency = round(div192th_per_second * md_latency_in_seconds) + 3;
+
+#ifdef EXT_TRACKS
+  float bytes_per_second_uart2 = (float)MidiUart2.speed / (float)10;
+  float a4_latency_in_seconds =
+      (float)mcl_actions.a4_latency / bytes_per_second_uart2;
   a4_div192th_latency = round(div192th_per_second * a4_latency_in_seconds) + 3;
+  a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
+#endif
 }
 
 int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,

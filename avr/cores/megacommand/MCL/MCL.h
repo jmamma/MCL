@@ -14,6 +14,7 @@
   #define WAV_DESIGNER
   #define LOUDNESS_PAGE
   #define SOUND_PAGE
+  #define EXT_TRACKS
 #endif
 
 #include "MCLGfx.h"

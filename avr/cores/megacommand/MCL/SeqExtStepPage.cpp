@@ -2,8 +2,13 @@
 #include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
-void SeqExtStepPage::config() { encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length; }
+void SeqExtStepPage::config() {
+#ifdef EXT_TRACKS
+        encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length; 
+#endif
+}
 void SeqExtStepPage::config_encoders() {
+#ifdef EXT_TRACKS
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
     ((MCLEncoder *)encoders[1])->cur = 6;
     ((MCLEncoder *)encoders[1])->max = 11;
@@ -14,6 +19,7 @@ void SeqExtStepPage::config_encoders() {
   ((MCLEncoder *)encoders[2])->max = 128;
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+#endif
 }
 void SeqExtStepPage::init() {
   DEBUG_PRINTLN("seq extstep init");
@@ -30,6 +36,7 @@ void SeqExtStepPage::cleanup() {
 }
 
 void SeqExtStepPage::display() {
+
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
 
@@ -54,6 +61,7 @@ void SeqExtStepPage::display() {
   // Pos
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
+#ifdef EXT_TRACKS
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
     if (encoders[1]->getValue() == 0) {
       GUI.put_string_at(2, "--");
@@ -124,6 +132,7 @@ void SeqExtStepPage::display() {
     GUI.put_value_at1(13, last_ext_track + 1);
   }
   draw_pattern_mask((page_select * 16), DEVICE_A4);
+  #endif
   SeqPage::display();
 }
 
@@ -131,6 +140,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (SeqPage::handleEvent(event)) {
     return;
   }
+#ifdef EXT_TRACKS
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -256,6 +266,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
+#endif
   return false;
 }
 
@@ -263,6 +274,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // Step edit for ExtSeq
   // For each incoming note, check to see if note interface has any steps
   // selected For selected steps record notes.
+#ifdef EXT_TRACKS
   DEBUG_PRINTLN("note on midi2 ext");
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if (last_ext_track < mcl_seq.num_ext_tracks) {
@@ -279,14 +291,16 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       }
     }
   }
+#endif
 }
 
 void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-
+#ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if (MidiClock.state != 2) {
     mcl_seq.ext_tracks[channel].note_off(msg[1]);
   }
+#endif
 }
 
 void SeqExtStepMidiEvents::setup_callbacks() {

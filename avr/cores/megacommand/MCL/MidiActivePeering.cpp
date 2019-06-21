@@ -2,14 +2,16 @@
 #include "MCL.h"
 
 uint8_t MidiActivePeering::get_device(uint8_t port) {
-  uint8_t uart1_device = MidiUart.device.get_id();
-  uint8_t uart2_device = MidiUart2.device.get_id();
   if (port == UART1_PORT) {
+    uint8_t uart1_device = MidiUart.device.get_id();
     return uart1_device;
   }
+#ifdef EXT_TRACKS
   if (port == UART2_PORT) {
+    uint8_t uart2_device = MidiUart2.device.get_id();
     return uart2_device;
   }
+#endif
   return 255;
 }
 
@@ -66,7 +68,10 @@ void MidiActivePeering::md_setup() {
       GUI.flash_strings_fill("MD", "CONNECTED");
 #endif
     }
-    if (MD.connected == false) { DEBUG_PRINTLN("delay"); delay(250); }
+    if (MD.connected == false) {
+      DEBUG_PRINTLN("delay");
+      delay(250);
+    }
   }
 
   MidiIDSysexListener.cleanup();
@@ -111,7 +116,6 @@ void MidiActivePeering::a4_setup() {
 void MidiActivePeering::check() {
   char str[16];
   uint8_t uart1_device = MidiUart.device.get_id();
-  uint8_t uart2_device = MidiUart2.device.get_id();
 
   if (uart1_device != DEVICE_NULL) {
     if ((MidiUart.recvActiveSenseTimer > 300) && (MidiUart.speed > 31250)) {
@@ -127,7 +131,8 @@ void MidiActivePeering::check() {
       md_setup();
     }
   }
-
+#ifdef EXT_TRACKS
+  uint8_t uart2_device = MidiUart2.device.get_id();
   if (Analog4.connected == true) {
     if ((MidiUart2.recvActiveSenseTimer > 300) && (MidiUart2.speed > 31250)) {
       MidiUart.set_speed(31250, 2);
@@ -142,4 +147,5 @@ void MidiActivePeering::check() {
       a4_setup();
     }
   }
+#endif
 }

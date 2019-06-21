@@ -33,7 +33,9 @@ void SeqRtrkPage::display() {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[2]->getValue());
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
@@ -43,6 +45,7 @@ void SeqRtrkPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+#endif
   bool show_current_step = false;
   draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
   SeqPage::display();
@@ -98,9 +101,12 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (SeqPage::midi_device == DEVICE_MD) {
       mcl_seq.md_tracks[last_md_track].clear_track();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
+#endif
     return true;
   }
 
