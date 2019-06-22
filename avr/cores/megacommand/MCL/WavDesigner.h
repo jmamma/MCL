@@ -5,6 +5,8 @@
 
 #include "MCL.h"
 #include "Math.h"
+#include "OscPage.h"
+#include "OscMixerPage.h"
 
 class WavDesigner {
 public:

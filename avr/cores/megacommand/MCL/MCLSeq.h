@@ -7,6 +7,7 @@
 #include "ExtSeqTrack.h"
 #include "MDSeqTrack.h"
 #include "midi-common.hh"
+#include "MCLMemory.h"
 
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
@@ -31,10 +32,12 @@ class MCLSeq : public ClockCallback {
 public:
 
   uint8_t num_md_tracks = NUM_MD_TRACKS;
-  uint8_t num_ext_tracks = NUM_EXT_TRACKS;
-
   MDSeqTrack  md_tracks[NUM_MD_TRACKS];
+
+#ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
+  uint8_t num_ext_tracks = NUM_EXT_TRACKS;
+#endif
 
   MCLSeqMidiEvents midi_events;
   bool state = false;

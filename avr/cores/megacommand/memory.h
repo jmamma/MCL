@@ -42,6 +42,8 @@
 #pragma message (VAR_NAME_VALUE(BANK1_SYSEX2_DATA_START))
 #pragma message (VAR_NAME_VALUE(SYSEX2_DATA_LEN))
 
+#ifdef MEGACOMMAND
+
 #define PL6_MASK (1 << PL6)
 
 extern inline uint8_t switch_ram_bank(uint8_t x) {
@@ -53,6 +55,23 @@ extern inline uint8_t switch_ram_bank(uint8_t x) {
   }
   return x;
 }
+
+#else
+
+#define PB0_MASK (1 << PB0)
+
+extern inline uint8_t switch_ram_bank(uint8_t x) {
+  uint8_t old_bank = (uint8_t) (PORTB & PB0_MASK);
+
+  if (x != old_bank) {
+    PORTB ^= PB0_MASK;
+    return old_bank;
+  }
+  return x;
+}
+
+#endif
+
 
 #ifdef __cplusplus
 

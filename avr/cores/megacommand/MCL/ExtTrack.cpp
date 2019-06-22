@@ -7,9 +7,10 @@ bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   return true;
 }
 bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
-
+#ifdef EXT_TRACKS
   memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
+#endif
   return true;
 }
 bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
@@ -55,11 +56,12 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool 
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-
+  #ifdef EXT_TRACKS
   if (online) {
     get_track_from_sysex(track - 16, column - 16);
     memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16],sizeof(seq_data));
   }
+  #endif
 
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {

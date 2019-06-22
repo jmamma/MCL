@@ -42,7 +42,9 @@ void SeqRlckPage::display() {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[2]->getValue());
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
@@ -52,6 +54,7 @@ void SeqRlckPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+#endif
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
   SeqPage::display();

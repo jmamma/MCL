@@ -4,13 +4,14 @@
 //#include "MCLSd.h"
 
 void A4Track::load_seq_data(int tracknumber) {
-
+#ifdef EXT_TRACKS
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.ext_tracks[tracknumber].clear_track();
   } else {
     mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
     memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
   }
+#endif
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
@@ -69,6 +70,7 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
   }
 
   /*analog 4 tracks*/
+#ifdef EXT_TRACKS
   if (online) {
     if (Analog4.connected) {
       if (track != 255) {
@@ -77,6 +79,7 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
     }
     memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
   }
+#endif
   ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);
   if (!ret) {
     return false;

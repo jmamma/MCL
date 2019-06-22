@@ -47,12 +47,22 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
   MidiUart_->m_putc_immediate(speed);
 
   MidiUart_->m_putc_immediate(0xF7);
+  #ifdef MEGACOMMAND
   if (port == 1) {
     while (!IS_BIT_SET8(UCSR1A, UDRE1));
   }
   else {
     while (!IS_BIT_SET8(UCSR2A, UDRE2));
   }
+  #else
+  if (port == 1) {
+    while (!IS_BIT_SET8(UCSR0A, UDRE1));
+  }
+  else {
+    while (!IS_BIT_SET8(UCSR1A, UDRE1));
+  }
+
+  #endif
   for (uint8_t n = 0; n < 16; n++) {
   MidiUart_->m_putc_immediate(0x00);
   }

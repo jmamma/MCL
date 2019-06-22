@@ -21,11 +21,14 @@ void SeqPtcPage::config_encoders() {
     ((MCLEncoder *)encoders[2])->max = 64;
 
     encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     ((MCLEncoder *)encoders[2])->max = (uint8_t)128;
     ((MCLEncoder *)encoders[2])->cur =
         mcl_seq.ext_tracks[last_ext_track].length;
   }
+#endif
 }
 
 uint8_t SeqPtcPage::calc_poly_count() {
@@ -90,7 +93,9 @@ void ptc_pattern_len_handler(Encoder *enc) {
       }
     }
 
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
@@ -101,11 +106,14 @@ void ptc_pattern_len_handler(Encoder *enc) {
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
+#endif
 }
 void SeqPtcPage::loop() {
+#ifdef EXT_TRACKS
   if (encoders[0]->hasChanged() || encoders[3]->hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
+#endif
 }
 void SeqPtcPage::display() {
   uint8_t dev_num;
@@ -114,9 +122,12 @@ void SeqPtcPage::display() {
   }
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     dev_num = last_ext_track + 16;
   }
+#endif
   const char *str1 = getMachineNameShort(MD.kit.models[dev_num], 1);
   const char *str2 = getMachineNameShort(MD.kit.models[dev_num], 2);
   GUI.setLine(GUI.LINE1);
@@ -130,7 +141,9 @@ void SeqPtcPage::display() {
     GUI.put_value_at(5, encoders[2]->getValue());
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
@@ -140,6 +153,7 @@ void SeqPtcPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+#endif
 
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
@@ -306,16 +320,19 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl_seq.md_tracks[n].clear_track();
       }
 
-    } else {
+    }
+    #ifdef EXT_TRACKS
+    else {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
     }
-
+    #endif
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
+    #ifdef EXT_TRACKS
     if (midi_device != DEVICE_MD) {
       if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 2;
@@ -323,6 +340,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
     }
+    #endif
     redisplay = true;
     return true;
   }
@@ -343,9 +361,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       else {
         mcl_seq.md_tracks[last_md_track].clear_track();
       }
-    } else {
+    } 
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
+#endif
     return true;
   }
 
@@ -382,7 +403,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN(channel);
   if ((GUI.currentPage() == &seq_step_page) ||
+#ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
+#endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
@@ -393,7 +416,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     return;
   }
-
+  #ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -410,13 +433,16 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((seq_ptc_page.record_mode) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
+  #endif
 }
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN("note off midi2");
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if ((GUI.currentPage() == &seq_step_page) ||
+#ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
+#endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
@@ -426,7 +452,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_ctrl_mode  == MIDI_OMNI_MODE)) {
     return;
   }
-
+  #ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -439,6 +465,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (seq_ptc_page.record_mode && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
+  #endif
 }
 
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {

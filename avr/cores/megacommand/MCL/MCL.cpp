@@ -42,8 +42,15 @@ void MCL::setup() {
   mcl_actions.setup();
   mcl_seq.setup();
   MDSysexListener.setup(&Midi);
+
+#ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
+#endif
+
+#ifdef MEGACOMMAND
   MidiSDSSysexListener.setup(&Midi);
+#endif
+
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
 
@@ -61,7 +68,9 @@ void MCL::setup() {
   }
 
   DEBUG_PRINTLN("Track sizes:");
+#ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));
+#endif
   DEBUG_PRINTLN(sizeof(MDTrack));
   DEBUG_PRINTLN(sizeof(MDSeqTrackData));
   DEBUG_PRINTLN(sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine));
