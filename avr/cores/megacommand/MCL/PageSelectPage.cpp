@@ -2,10 +2,8 @@
 #include "PageSelectPage.h"
 
 #define MIX_PAGE 0
-#define RAM_PAGE 4
 #define ROUTE_PAGE 1
 #define RAM_PAGE 4
-#define ROUTE_PAGE 2
 #define WAVD_PAGE 8
 #define SOUND 7
 
