@@ -129,13 +129,12 @@ void timer_init(void) {
   TCCR3A = 0;
   TCCR3B = 0;
   TCNT3 = 0;
-
-  // 1000 Hz (16000000/((124+1)*128))
-  OCR3A = 124;
+  // 1000 Hz (16000000/((249+1)*64))
+  OCR3A = 249;
   // CTC
-  TCCR3A |= (1 << WGM21);
-  // Prescaler 128
-  TCCR3B |= (1 << CS22) | (1 << CS20);
+  TCCR3A |= (1 << WGM32);
+  // Prescaler 64
+  TCCR3B |= (1 << CS31) | (1 << CS30);
   // Output Compare Match A Interrupt Enable
   #ifdef MEGACOMMAND
   TIMSK3 |= (1 << OCIE3A);
