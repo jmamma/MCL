@@ -30,6 +30,7 @@
 #include <avr/interrupt.h>
 
 #include "binary.h"
+#include "Core.h"
 
 #ifdef __cplusplus
 extern "C"{
