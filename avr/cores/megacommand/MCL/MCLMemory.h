@@ -3,11 +3,16 @@
 #ifndef MCLMEMORY_H__
 #define MCLMEMORY_H__
 
+#ifdef MEGACOMMAND
+#define EXT_TRACKS
+#endif
+
 #define NUM_MD_TRACKS    16UL
 
 #ifdef EXT_TRACKS
 #define NUM_A4_TRACKS    4UL
 #else
+#pragma message("EXT TRACKS DISABLED")
 #define NUM_A4_TRACKS    0UL
 #endif
 
@@ -34,6 +39,7 @@
 #ifdef EXT_TRACKS
 #define EMPTY_TRACK_LEN A4_TRACK_LEN
 #else
+#pragma message("EMPTY_TRACK_LEN == MD_TRACK_LEN")
 #define EMPTY_TRACK_LEN MD_TRACK_LEN
 #endif
 
