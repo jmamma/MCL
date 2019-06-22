@@ -2,6 +2,7 @@
 #define WProgram_h
 
 //#define DISABLE_MACHINE_NAMES 1
+
 #include "Core.h"
 
 #define MIDIDUINO 1

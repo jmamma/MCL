@@ -1,9 +1,9 @@
-#include "Core.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "GUI_private.h"
 //#include "helpers.h"
+#include "Core.h"
 #include "LCD.h"
 
 #ifdef MEGACOMMAND
