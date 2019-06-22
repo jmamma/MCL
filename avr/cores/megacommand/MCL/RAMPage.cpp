@@ -316,7 +316,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   next_step =
       MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
   grid_page.active_slots[track] = 0x7FFF;
-  mcl_actions.transition_level[track] = TRANSITION_MUTE;
+  //mcl_actions.transition_level[track] = TRANSITION_MUTE;
   mcl_actions.next_transitions[track] = next_step;
 
   mcl_actions.calc_next_transition();
@@ -434,7 +434,24 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   for (uint8_t n = 0; n < 16; n++) {
 
     if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) && (n != track)) {
-      MD.setTrackParam(n, track_param, value);
+      if (track_param == MODEL_PAN) {
+        if (n < track) {
+          MD.setTrackParam(n, track_param,127 - value);
+          //Pan law.
+         uint8_t lev = ((float)(value - 64) / (float)64) * (float)27 + 100;
+          MD.setTrackParam(track, MODEL_VOL, lev);
+          MD.setTrackParam(n, MODEL_VOL, lev);
+        }
+        else {
+          MD.setTrackParam(n, track_param,63 + (64 - value));
+          uint8_t lev = ((float)(64 - value) / (float)64) * (float)27 + 100;
+          MD.setTrackParam(track, MODEL_VOL, lev);
+          MD.setTrackParam(n, MODEL_VOL, lev);
+        }
+      }
+      else {
+        MD.setTrackParam(n, track_param, value);
+      }
     }
     // in_sysex = 0;
   }
@@ -510,7 +527,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&grid_page);
+    GUI.setPage(&page_select_page);
     return true;
   }
 
