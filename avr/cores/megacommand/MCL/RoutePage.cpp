@@ -53,7 +53,7 @@ void RoutePage::toggle_route(int i, uint8_t routing) {
   }
   MD.setTrackRouting(i, mcl_cfg.routing[i]);
 }
-void RoutePage::toggle_routes_batch() {
+void RoutePage::toggle_routes_batch(bool solo) {
   uint16_t quantize_mute;
   quantize_mute = 1 << encoders[1]->getValue();
   uint8_t i;
@@ -75,14 +75,25 @@ void RoutePage::toggle_routes_batch() {
   // send the track to master before unmuting
 
   for (i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 3) {
-      if (encoders[2]->getValue() == 7) {
-        set_level(i, 0);
+    if (!solo) {
+      if ((note_interface.notes[i] == 3)) {
+        toggle_route(i, encoders[0]->cur);
       }
-      toggle_route(i, encoders[0]->cur);
-
-  //   MD.muteTrack(i, false);
     }
+    else {
+      uint8_t routing_last =  mcl_cfg.routing[i];
+      if (note_interface.notes[i] == 3) {
+        mcl_cfg.routing[i] = 6;
+      }
+      else {
+        if (mcl_cfg.routing[i] == 6) {
+        mcl_cfg.routing[i] = encoders[0]->cur;
+        }
+      }
+      if (mcl_cfg.routing[i] != routing_last) {
+        MD.setTrackRouting(i, mcl_cfg.routing[i]);
+      }
+    }///
     //  note_interface.notes[i] = 0;
     // trackinfo_page.display();
   }

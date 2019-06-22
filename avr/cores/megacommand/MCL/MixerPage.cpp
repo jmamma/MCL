@@ -316,6 +316,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           route_page.toggle_routes_batch();
         }
+        if (BUTTON_DOWN(Buttons.BUTTON1)) {
+          route_page.toggle_routes_batch(true);
+        }
         note_interface.init_notes();
 #ifdef OLED_DISPLAY
        draw_routes(0);

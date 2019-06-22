@@ -12,7 +12,7 @@ class RoutePage : public LightPage {
 
  }
  void toggle_route(int i, uint8_t routing);
- void toggle_routes_batch();
+ void toggle_routes_batch(bool solo = false);
  void set_level(int curtrack, int value);
  void draw_routes(uint8_t line_number);
  bool handleEvent(gui_event_t *event);
