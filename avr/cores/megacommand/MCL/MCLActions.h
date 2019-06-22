@@ -7,6 +7,7 @@
 #include "EmptyTrack.h"
 #include "MCLActionsEvents.h"
 #include "MD.h"
+#include "MCLMemory.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254

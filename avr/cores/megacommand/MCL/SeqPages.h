@@ -5,6 +5,7 @@
 
 #include "MCLEncoder.h"
 #include "MCLMenus.h"
+#include "MCLMemory.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2

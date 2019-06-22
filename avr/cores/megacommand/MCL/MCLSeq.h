@@ -7,6 +7,7 @@
 #include "ExtSeqTrack.h"
 #include "MDSeqTrack.h"
 #include "midi-common.hh"
+#include "MCLMemory.h"
 
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
