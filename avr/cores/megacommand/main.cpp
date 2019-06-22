@@ -132,7 +132,7 @@ void timer_init(void) {
   // 1000 Hz (16000000/((249+1)*64))
   OCR3A = 249;
   // CTC
-  TCCR3A |= (1 << WGM32);
+  TCCR3B |= (1 << WGM32);
   // Prescaler 64
   TCCR3B |= (1 << CS31) | (1 << CS30);
   // Output Compare Match A Interrupt Enable
