@@ -69,45 +69,14 @@ void GridWritePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
   uint8_t x;
+  /*
+    if (encoders[2]->getValue() == 0) {
+      GUI.put_string_at(6, "--");
+    }
+ */
 
   GUI.put_string_at(9, "Q:");
 
-  // 0-63 OG
-  if (mcl_cfg.chain_mode == 0) {
-    if (encoders[2]->getValue() == 64) {
-      GUI.put_string_at(6, "OG");
-    } else {
-      GUI.put_value_at2(6, encoders[2]->getValue() + 1);
-    }
-  } else {
-
-    if (encoders[2]->getValue() == 0) {
-      GUI.put_string_at(6, "--");
-    //}
-    //if (encoders[2]->getValue() == 1) {
-     // GUI.put_string_at(6, "LV");
-    }
-  }
-  /*
-  if (encoders[3]->getValue() == 0) {
-    GUI.put_string_at(11, "--");
-  }
-  if (encoders[3]->getValue() == 7) {
-    GUI.put_string_at(11, "LV");
-  }
-  if (encoders[3]->getValue() == 8) {
-    GUI.put_string_at(11, "CU");
-  }
-  if (encoders[3]->getValue() == 9) {
-    GUI.put_string_at(11, "P ");
-  }
-  if (encoders[3]->getValue() == 10) {
-    GUI.put_string_at(11, "P+");
-  }
-  if (encoders[3]->getValue() == 11) {
-    GUI.put_string_at(11, "P-");
-  }
-  */
   if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
     x = 1 << encoders[3]->getValue();
     GUI.put_value_at2(11, x);
