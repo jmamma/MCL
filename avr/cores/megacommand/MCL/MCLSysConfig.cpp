@@ -89,7 +89,7 @@ bool MCLSysConfig::cfg_init() {
   tempo = 125;
   midi_forward = 0;
   auto_save = 1;
-  auto_normalize = 0;
+  auto_normalize = 1;
   chain_mode = 2;
   chain_rand_min = 0;
   chain_rand_max = 1;
