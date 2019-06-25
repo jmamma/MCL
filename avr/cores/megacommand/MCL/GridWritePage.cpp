@@ -10,20 +10,13 @@ void GridWritePage::setup() {
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
-  if (mcl_cfg.chain_mode > 0) {
     ((MCLEncoder *)encoders[3])->max = 6;
     if (mode == WRITE_PAGE) {
       encoders[3]->cur = 4;
       mode = CHAIN_PAGE;
     }
     ((MCLEncoder *)encoders[2])->max = 1;
-  }
 
-  else {
-    encoders[2]->cur = MD.currentKit;
-    ((MCLEncoder *)encoders[3])->max = 11;
-    ((MCLEncoder *)encoders[2])->max = 64;
-  }
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
   note_interface.state = true;
