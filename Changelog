@@ -1,3 +1,89 @@
+MCL 2.40 25/06/2019
+
+Important:
+
+Write mode has been removed completely. MCL will no longer transmit
+pattern data to the MD.
+
+You must now use Chain Mode and the internal sequencer.
+
+When saving tracks from the MD you can merge sequencer data in to the
+internal sequencer using the MERGE option, in the SavePage.
+
+Fixes + Enhancements:
+
+CuePage is now RoutePage:
+
+    CuePage has been replaced with a generalised Audio Routing page, and
+    now works correctly with chain mode.
+
+MutePage has been deprecated:
+    Sequencer mutes are replaced with audio mutes.
+    Audio mutes are now controlled through the MixerPage and RoutePage.
+
+Parameter lock behaviour now follows the MD Sequencer implementation more
+closely.
+
+SeqParam/Rlck Page changes:
+    Pressing [ Chain | Write ] button will clear lock params in reverse
+    order until none are present.
+
+    Don't allow parameter locking of LEV
+
+Sequencer Pages:
+
+    Added SeqPage GUI for length and current track;
+
+    [ Shift 2 ] + [ Trigger ] = Quick Track Select. Works with A4 as well.
+
+    [ Shift 1 ] + [ Trigger ] = Set Track Length to selected step. (Offset by current
+    page)
+
+    [ Shift 1 ] + [ Shift 2 ] + [ Trigger ] = Set All Tracks (of same device type) to
+    selected step
+
+    Added one-shot trigs to conditional trig options.
+
+MixerPage:
+    [ Shift 2 ]  now reverts FLTF FLTW FLTQ settings for selected tracks.
+    Values are cached when entering MixerPage.
+    This is useful for creating filter sweeps then 'drops'.
+
+    Mutes are now audio mutes, not MD sequencer mutes.
+	Save button now allows solo-ing of selected tracks.
+
+Loudness Page fixes:
+
+    Analyzer was broken-ish. Record track would not trigger correctly.
+
+    Boosting loudness whilst sequencer was running could send corrupt
+    pattern data to the MD.
+
+General:
+
+- Convert lowercase to uppercase when transmit kitname
+- Fix: filebrowser would not allow access to parent dir
+- Low level ISR code re-written for faster execution.
+- Low level Memory code improved for faster execution.
+- Data structure for MIDI are now stored in second memory bank.
+- Lowlevel MIDI code improved for faster execution
+- Sequencer code re-written for faster execution
+- Code base has been made compatible with original Minicommand hardware.
+- Fix: midi tempo calculation, during midi continue.
+- Fix: various bugsa and edge cases in Chain mode, manual and automatic.
+- Fix: SeqExtPage bad character glitch
+- Fix: SeqParam page showing param values offset by 1.
+- Fix: SeqParam page not allowing selection of all 24 params
+- Fix: reolution bug causing glitched track length for A4/Ext tracks
+- Fix: Grid copy + paste was broken. Would not copy sequencer data correctly.
+- Diversion track for MDExploit no longer fixed to track 16, will be
+calculated dynamically
+- Improved PageSelect page naming.
+- Kit autosave now occurs before entering all pages ensuring kit data
+is up-to-date.
+- AUTO merge is now default behaviour, the option is removed from chain menu
+and is instead accessible from Save Page.
+
 MCL 2.31 16/04/2019
 
 Fixes:
