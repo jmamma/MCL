@@ -113,8 +113,11 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 
   memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
 
-  kit->trigGroups[tracknumber] = machine.trigGroup;
-  kit->muteGroups[tracknumber] = machine.muteGroup;
+  if ((machine.trigGroup < 16) && (machine.trigGroup != column)) { kit->trigGroups[tracknumber] = machine.trigGroup; }
+  else { kit->trigGroups[tracknumber] = 255; }
+
+  if ((machine.muteGroup < 16) && (machine.muteGroup != column)) { kit->muteGroups[tracknumber] = machine.muteGroup; }
+  else { kit->muteGroups[tracknumber] = 255; }
 }
 
 void MDTrack::init() {

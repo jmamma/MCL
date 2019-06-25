@@ -677,15 +677,14 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
     }
 
     if ((kit_->trigGroups[track] != machine->trigGroup)) {
-      if (machine->trigGroup == 255) {
+      if ((machine->trigGroup > 15) || (kit_->trigGroups[track] == track)) {
         MD.setTrigGroup(track, 127);
       } else {
         MD.setTrigGroup(track, machine->trigGroup);
       }
     }
     if ((kit_->muteGroups[track] != machine->muteGroup)) {
-      if (machine->muteGroup == 255) {
-
+      if ((machine->muteGroup > 15) || (kit_->muteGroups[track] == track)) {
         MD.setMuteGroup(track, 127);
       } else {
         MD.setMuteGroup(track, machine->muteGroup);
