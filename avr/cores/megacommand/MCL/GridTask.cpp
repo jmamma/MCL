@@ -27,6 +27,13 @@ void GridTask::run() {
   int slots_changed[NUM_TRACKS] = {-1};
   uint8_t slots_loaded[NUM_MD_TRACKS] = {0};
 
+  for (uint8_t a = 0; a < NUM_TRACKS; a++) {
+    slots_changed[a] = -1;
+  }
+
+  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
+    slots_loaded[a] = 0;
+  }
 
   bool send_ext_slots = false;
   bool send_md_slots = false;
@@ -194,6 +201,8 @@ void GridTask::run() {
                 case TRANSITION_MUTE:
                   MD.muteTrack(trigGroup, true);
                   break;
+                default:
+                  break;
                 }
                 mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
                                            &(MD.kit), set_level);
@@ -223,6 +232,9 @@ void GridTask::run() {
                 DEBUG_PRINTLN("muting");
                 DEBUG_PRINT(n);
                 MD.muteTrack(n, true);
+                break;
+              default:
+                DEBUG_PRINTLN("default");
                 break;
               }
               mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
