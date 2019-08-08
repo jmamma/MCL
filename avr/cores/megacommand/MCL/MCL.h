@@ -39,6 +39,7 @@
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MCLMemory.h"
+#include "MCLClipBoard.h"
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSound.h"
