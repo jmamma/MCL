@@ -622,6 +622,10 @@ void GridPage::apply_slot_changes() {
   width = encoders[2]->cur;
   height = encoders[3]->cur;
 #endif
+
+  uint8_t slot_update = 0;
+  if (slot_copy + slot_paste + slot_clear == 0) { slot_update = 1; }
+
   if (slot_copy == 1) {
 
     mcl_clipboard.copy(getCol(), getRow(), width, height);
@@ -642,21 +646,21 @@ void GridPage::apply_slot_changes() {
           // Delete slot(s)
           grid.clear_slot(x + getCol(), y + getRow());
           header.update_model(x + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
-        } else {
+        } else if (slot_update == 1) {
           // Save slot chain data
           slot.active = header.track_type[x + getCol()];
           slot.store_track_in_grid(x + getCol(), y + getRow());
         }
       }
       // If all slots are deleted then clear the row name
-      if (header.is_empty()) {
+      if (header.is_empty() && (slot_clear == 1)) {
         char *str_tmp = "\0";
         strcpy(header.name, str_tmp);
         header.write(y + getRow());
       }
     }
   }
-  if ((slot_clear == 1) || (slot_paste == 1)) {
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.file.sync();
     load_slot_models();
   }
