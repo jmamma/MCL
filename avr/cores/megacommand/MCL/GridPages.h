@@ -56,7 +56,7 @@ const menu_t slot_menu_layout PROGMEM = {
         {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{1, "AUT"},{2,"MAN"},{3,"RND"}}},
         {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, (void*)NULL, {}},
         {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, (void*)NULL, {}},
-   #ifndef OLED_DISPAY
+   #ifndef OLED_DISPLAY
         {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, (void*)NULL, {{0," "}}},
    #endif
         {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.slot_clear, (Page*) NULL, (void*)NULL, {{0,"--"},{1, "YES"}}},
