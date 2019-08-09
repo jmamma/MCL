@@ -30,6 +30,7 @@ bool MCLClipBoard::open() {
 bool MCLClipBoard::close() { return file.close(); }
 
 bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
+  DEBUG_PRINT_FN();
   t_col = col;
   t_row = row;
   t_w = w;
@@ -48,7 +49,7 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
     offset = grid.get_header_offset(y + row);
     ret = file.seekSet(offset);
     ret = mcl_sd.write_data((uint8_t *)(&header), sizeof(GridRowHeader), &file);
-
+    DEBUG_PRINTLN(header.name);
     for (int x = 0; x < w; x++) {
       offset = grid.get_slot_offset(x + col, y + row);
       ret = proj.file.seekSet(offset);
@@ -64,6 +65,7 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   close();
 }
 bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
+  DEBUG_PRINT_FN();
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return;
@@ -86,11 +88,12 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
     header.read(y + row);
 
-    if ((strlen(header.name) == 0) || (t_w == GRID_WIDTH && col == 0)) {
-      offset = grid.get_header_offset(y + row);
+    if ((strlen(header.name) == 0) || (!header.active) || (t_w == GRID_WIDTH && col == 0)) {
+      offset = grid.get_header_offset(y + t_row);
       ret = file.seekSet(offset);
       ret = mcl_sd.read_data((uint8_t *)(&header_copy), sizeof(GridRowHeader),
-                             &file);
+                            &file);
+      header.active = true;
       strcpy(&(header.name[0]), &(header_copy.name[0]));
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
