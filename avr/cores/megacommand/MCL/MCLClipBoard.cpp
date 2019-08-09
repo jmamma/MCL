@@ -29,7 +29,7 @@ bool MCLClipBoard::open() {
 }
 bool MCLClipBoard::close() { return file.close(); }
 
-bool MCLClipBoard::copy(int col, int row, int w, int h) {
+bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   t_col = col;
   t_row = row;
   t_w = w;
@@ -41,7 +41,14 @@ bool MCLClipBoard::copy(int col, int row, int w, int h) {
   EmptyTrack temp_track;
   int32_t offset;
   bool ret;
+  GridRowHeader header;
+
   for (int y = 0; y < h; y++) {
+    header.read(y + row);
+    offset = grid.get_header_offset(y + row);
+    ret = file.seekSet(offset);
+    ret = mcl_sd.write_data((uint8_t *)(&header), sizeof(GridRowHeader), &file);
+
     for (int x = 0; x < w; x++) {
       offset = grid.get_slot_offset(x + col, y + row);
       ret = proj.file.seekSet(offset);
@@ -56,7 +63,7 @@ bool MCLClipBoard::copy(int col, int row, int w, int h) {
   }
   close();
 }
-bool MCLClipBoard::paste(int col, int row) {
+bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return;
@@ -75,86 +82,90 @@ bool MCLClipBoard::paste(int col, int row) {
   bool ret;
 
   GridRowHeader header;
-  for (int y = 0; y < t_h; y++) {
-    if (y + row < GRID_LENGTH) {
-      header.read(y + row);
-      for (int x = 0; x < t_w; x++) {
+  GridRowHeader header_copy;
+  for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
+    header.read(y + row);
 
-        offset = grid.get_slot_offset(x, y);
-        ret = file.seekSet(offset);
-        ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
-        uint8_t s_col = x + t_col;
-        uint8_t d_col = x + col;
-        if (x + col < GRID_WIDTH) {
-          switch (temp_track.active) {
-          case EMPTY_TRACK_TYPE:
-            header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
-            break;
-
-          case EXT_TRACK_TYPE:
-            if (x + col >= NUM_MD_TRACKS) {
-              header.update_model(x + col, x + col, EXT_TRACK_TYPE);
-              offset = grid.get_slot_offset(x + col, y + row);
-              ret = proj.file.seekSet(offset);
-              ret = mcl_sd.write_data(ext_track, sizeof(ExtTrack), &proj.file);
-            }
-            break;
-
-          case A4_TRACK_TYPE:
-            if (x + col >= NUM_MD_TRACKS) {
-              header.update_model(x + col, x + col, A4_TRACK_TYPE);
-              offset = grid.get_slot_offset(x + col, y + row);
-              ret = proj.file.seekSet(offset);
-              ret = mcl_sd.write_data(a4_track, sizeof(A4Track), &proj.file);
-            }
-            break;
-
-          case MD_TRACK_TYPE:
-            if (x + col < NUM_MD_TRACKS) {
-              header.update_model(x + col, md_track->machine.model,
-                                  MD_TRACK_TYPE);
-              if ((destination_same)) {
-                if (md_track->machine.trigGroup == s_col) {
-                  md_track->machine.trigGroup = 255;
-                }
-                if (md_track->machine.muteGroup == s_col) {
-                  md_track->machine.muteGroup = 255;
-                }
-                if (md_track->machine.lfo.destinationTrack == s_col) {
-                  md_track->machine.lfo.destinationTrack = d_col;
-                }
-              } else {
-                int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
-                int trig_dest = md_track->machine.trigGroup - s_col;
-                int mute_dest = md_track->machine.muteGroup - s_col;
-                if (range_check(d_col + lfo_dest, 0, 15)) {
-                  md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
-                } else {
-                  md_track->machine.lfo.destinationTrack = 255;
-                }
-                if (range_check(d_col + trig_dest, 0, 15)) {
-                  md_track->machine.trigGroup = d_col + trig_dest;
-                } else {
-                  md_track->machine.trigGroup = 255;
-                }
-                if (range_check(d_col + mute_dest, 0, 15)) {
-                  md_track->machine.muteGroup = d_col + mute_dest;
-                } else {
-                  md_track->machine.muteGroup = 255;
-                }
-              }
-              offset = grid.get_slot_offset(x + col, y + row);
-              ret = proj.file.seekSet(offset);
-              ret = mcl_sd.write_data(md_track, sizeof(MDTrack), &proj.file);
-            }
-            break;
-          default:
-            break;
-          }
-        }
-      }
-      header.write(y + row);
+    if ((strlen(header.name) == 0) || (t_w == GRID_WIDTH && col == 0)) {
+      offset = grid.get_header_offset(y + row);
+      ret = file.seekSet(offset);
+      ret = mcl_sd.read_data((uint8_t *)(&header_copy), sizeof(GridRowHeader),
+                             &file);
+      strcpy(&(header.name[0]), &(header_copy.name[0]));
     }
+    for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
+
+      offset = grid.get_slot_offset(x, y);
+      ret = file.seekSet(offset);
+      ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
+      uint8_t s_col = x + t_col;
+      uint8_t d_col = x + col;
+      switch (temp_track.active) {
+      case EMPTY_TRACK_TYPE:
+        header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
+        break;
+
+      case EXT_TRACK_TYPE:
+        if (x + col >= NUM_MD_TRACKS) {
+          header.update_model(x + col, x + col, EXT_TRACK_TYPE);
+          offset = grid.get_slot_offset(x + col, y + row);
+          ret = proj.file.seekSet(offset);
+          ret = mcl_sd.write_data(ext_track, sizeof(ExtTrack), &proj.file);
+        }
+        break;
+
+      case A4_TRACK_TYPE:
+        if (x + col >= NUM_MD_TRACKS) {
+          header.update_model(x + col, x + col, A4_TRACK_TYPE);
+          offset = grid.get_slot_offset(x + col, y + row);
+          ret = proj.file.seekSet(offset);
+          ret = mcl_sd.write_data(a4_track, sizeof(A4Track), &proj.file);
+        }
+        break;
+
+      case MD_TRACK_TYPE:
+        if (x + col < NUM_MD_TRACKS) {
+          header.update_model(x + col, md_track->machine.model, MD_TRACK_TYPE);
+          if ((destination_same)) {
+            if (md_track->machine.trigGroup == s_col) {
+              md_track->machine.trigGroup = 255;
+            }
+            if (md_track->machine.muteGroup == s_col) {
+              md_track->machine.muteGroup = 255;
+            }
+            if (md_track->machine.lfo.destinationTrack == s_col) {
+              md_track->machine.lfo.destinationTrack = d_col;
+            }
+          } else {
+            int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
+            int trig_dest = md_track->machine.trigGroup - s_col;
+            int mute_dest = md_track->machine.muteGroup - s_col;
+            if (range_check(d_col + lfo_dest, 0, 15)) {
+              md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
+            } else {
+              md_track->machine.lfo.destinationTrack = 255;
+            }
+            if (range_check(d_col + trig_dest, 0, 15)) {
+              md_track->machine.trigGroup = d_col + trig_dest;
+            } else {
+              md_track->machine.trigGroup = 255;
+            }
+            if (range_check(d_col + mute_dest, 0, 15)) {
+              md_track->machine.muteGroup = d_col + mute_dest;
+            } else {
+              md_track->machine.muteGroup = 255;
+            }
+          }
+          offset = grid.get_slot_offset(x + col, y + row);
+          ret = proj.file.seekSet(offset);
+          ret = mcl_sd.write_data(md_track, sizeof(MDTrack), &proj.file);
+        }
+        break;
+      default:
+        break;
+      }
+    }
+    header.write(y + row);
   }
   close();
 }
