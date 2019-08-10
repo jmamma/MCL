@@ -25,15 +25,7 @@ void GridTask::run() {
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 #endif
   int slots_changed[NUM_TRACKS];
-  uint8_t slots_loaded[NUM_MD_TRACKS];
-
-  for (uint8_t a = 0; a < NUM_TRACKS; a++) {
-    slots_changed[a] = -1;
-  }
-
-  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
-    slots_loaded[a] = 0;
-  }
+  uint8_t slots_loaded[NUM_MD_TRACKS] = { 0 };
 
   bool send_ext_slots = false;
   bool send_md_slots = false;
