@@ -654,7 +654,9 @@ void GridPage::apply_slot_changes() {
       }
       // If all slots are deleted then clear the row name
       if (header.is_empty() && (slot_clear == 1)) {
+        DEBUG_PRINTLN("clearing row name");
         char *str_tmp = "\0";
+        header.active = false;
         strcpy(header.name, str_tmp);
         header.write(y + getRow());
       }
