@@ -605,6 +605,9 @@ void GridPage::apply_slot_changes() {
   A4Track *a4_track = (A4Track *)&temp_track;
   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
+  GridTrack temp_slot;
+  temp_slot.load_track_from_grid(getCol(), getRow());
+
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
@@ -624,7 +627,14 @@ void GridPage::apply_slot_changes() {
 #endif
 
   uint8_t slot_update = 0;
-  if (slot_copy + slot_paste + slot_clear == 0) { slot_update = 1; height = 1; }
+
+  if (slot_copy + slot_paste + slot_clear == 0) {
+    if ((temp_slot.chain.row != slot.chain.row) ||
+        (temp_slot.chain.loops != slot.chain.loops)) {
+      slot_update = 1;
+    }
+    height = 1;
+  }
 
   if (slot_copy == 1) {
 
@@ -634,8 +644,7 @@ void GridPage::apply_slot_changes() {
 
   else if (slot_paste == 1) {
     mcl_clipboard.paste(getCol(), getRow());
-  }
-  else {
+  } else {
     GridRowHeader header;
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
