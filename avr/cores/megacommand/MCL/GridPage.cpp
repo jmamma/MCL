@@ -624,7 +624,7 @@ void GridPage::apply_slot_changes() {
 #endif
 
   uint8_t slot_update = 0;
-  if (slot_copy + slot_paste + slot_clear == 0) { slot_update = 1; }
+  if (slot_copy + slot_paste + slot_clear == 0) { slot_update = 1; height = 1; }
 
   if (slot_copy == 1) {
 
