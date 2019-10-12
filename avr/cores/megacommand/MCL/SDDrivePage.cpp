@@ -32,10 +32,29 @@ void SDDrivePage::save_snapshot() {
     strcat(temp_entry, c_snapshot_suffix);
     DEBUG_PRINTLN("creating new snapshot:");
     DEBUG_PRINTLN(temp_entry);
-    //sound.file.open(temp_entry, O_RDWR | O_CREAT);
-    //sound.fetch_sound(MD.currentTrack);
-    //sound.write_sound();
-    //sound.file.close();
+    file.open(temp_entry, O_RDWR | O_CREAT);
+    //  Globals
+    for(int i=0;i<8;++i){
+      MD.getBlockingGlobal(i);
+      mcl_sd.write_data(&MD.global, sizeof(MD.global), &file);
+    }
+    //  Patterns
+    for(int i=0;i<128;++i){
+      MD.getBlockingPattern(i);
+      mcl_sd.write_data(&MD.pattern, sizeof(MD.pattern), &file);
+    }
+    //  Kits
+    for(int i=0;i<64;++i){
+      MD.getBlockingKit(i);
+      mcl_sd.write_data(&MD.kit, sizeof(MD.kit), &file);
+    }
+    //  Songs
+    //for(int i=0;i<64;++i){
+      //MD.getBlockingSong(i);
+      //mcl_sd.write_data(&MD.song, sizeof(MD.song), &file); // <--- ??
+    //}
+    //  Save complete
+    file.close();
     gfx.alert("File Saved", temp_entry);
   }
 }
@@ -49,12 +68,42 @@ void SDDrivePage::load_snapshot() {
     file.close();
     DEBUG_PRINTLN("loading snapshot");
     DEBUG_PRINTLN(temp_entry);
-    //if (!sound.file.open(temp_entry, O_READ)) {
-      //DEBUG_PRINTLN("error openning");
-      //gfx.alert("Error", "Opening");
-      //return;
-    //}
-    //sound.file.close();
+    if (!file.open(temp_entry, O_READ))
+    {
+      DEBUG_PRINTLN("error openning");
+      gfx.alert("Error", "Opening");
+      return;
+    }
+
+    MidiUart.sendRaw(MIDI_STOP);
+    MidiClock.handleImmediateMidiStop();
+    // Stop everything
+    grid_page.prepare();
+
+
+    //  Globals
+    for(int i=0;i<8;++i){
+      mcl_sd.read_data(&MD.global, sizeof(MD.global), &file);
+      mcl_actions.md_setsysex_recpos(2, i);
+      {
+        ElektronDataToSysexEncoder encoder(&MidiUart);
+        MD.global.toSysex(encoder);
+      }
+    }
+    //  Patterns
+    for(int i=0;i<128;++i){
+      mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file);
+      mcl_actions.md_setsysex_recpos(8, i);
+      MD.pattern.toSysex();
+    }
+    //  Kits
+    for(int i=0;i<64;++i){
+      mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file);
+      mcl_actions.md_setsysex_recpos(4, i);
+      MD.kit.toSysex();
+    }
+    //  Load complete
+    file.close();
     gfx.alert("Loaded","Snapshot");
   }
 
