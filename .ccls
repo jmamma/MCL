@@ -1,18 +1,53 @@
-%g++
+clang++
+%c -std=gnu11
+%cpp -std=c++11
+#  Treats all headers as c++ headers
+%h %hpp -x c++-header
+#  Include dirs in Makefile:
+#  DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD MNM
+#  LDIRS = $(foreach dir,$(DIRS),$(CORE_DIR)/$(dir)) ${CORE_DIR} ${VARIENTS_DIR}
+#  INCS = $(foreach dir,$(LDIRS),-I$(dir))
+#
+#  DIRS
+-Iavr/cores/megacommand/Sequencer
+-Iavr/cores/megacommand/SDCard
+-Iavr/cores/megacommand/Elektron
+-Iavr/cores/megacommand/A4
+-Iavr/cores/megacommand/Wire
+-Iavr/cores/megacommand/Wire/utility
+-Iavr/cores/megacommand/Midi
+-Iavr/cores/megacommand/MidiTools
+-Iavr/cores/megacommand/Adafruit-GFX-Library
+-Iavr/cores/megacommand/Adafruit-GFX-Library/Fonts
+-Iavr/cores/megacommand/SdFat
+-Iavr/cores/megacommand/SdFat/SdCard
+-Iavr/cores/megacommand/SdFat/FatLib
+-Iavr/cores/megacommand/SdFat/SpiDriver
+-Iavr/cores/megacommand/SdFat/SpiDriver/boards
+-Iavr/cores/megacommand/MCL
+-Iavr/cores/megacommand/SPI
+-Iavr/cores/megacommand/Adafruit_SSD1305_Library
+-Iavr/cores/megacommand/CommonTools
+-Iavr/cores/megacommand/GUI
+-Iavr/cores/megacommand/MD
+-Iavr/cores/megacommand/MNM
+#  CORE_DIR
+-Iavr/cores/megacommand
+#  VARIENTS_DIR
+-Ivariants/mega
+#  Additionally include the AVR environment
+-IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
+#
+#  CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x82200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+#  Define the flags: -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+-DF_CPU=16000000L
+-DARDUINO=10803
+-DARDUINO_AVR_MEGA2560
+-DARDUINO_ARCH_AVR
+#  Additional define flags
+-D__AVR_ATmega2560__
+-DAVR
+#  Compiler options
 -Wall
 -Wextra
-%h -x c++-header
-%hh -x c++-header
-%c -std=gnu11
-%cpp -pedantic
-%cpp -std=c++11
-%cpp -stdlib=libc++
--Iavr/cores/megacommand/
--Iavr/cores/megacommand/CommonTools
--Iavr/cores/megacommand/Elektron
--Iavr/cores/megacommand/Midi
--Iavr/cores/megacommand/MCL
--IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
--D__AVR_ATmega2560__
--DARDUINO=110
--DAVR
+%c %cpp -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics
