@@ -1,10 +1,13 @@
-#include "MCL.h"
 #include "SDDrivePage.h"
+#include "MCL.h"
 
-const char* c_snapshot_suffix = ".snap";
+const char *c_snapshot_suffix = ".snp";
+const char *c_snapshot_root = "/Snapshots/MD";
 
 void SDDrivePage::setup() {
-  SD.mkdir("/Snapshots/MD", true);
+  SD.mkdir(c_snapshot_root, true);
+  SD.chdir(c_snapshot_root);
+  strcpy(lwd, c_snapshot_root);
   FileBrowserPage::setup();
 }
 
@@ -12,11 +15,11 @@ void SDDrivePage::init() {
 
   DEBUG_PRINT_FN();
   md_exploit.off();
+  //  !note match only supports 3-char suffix
   strcpy(match, c_snapshot_suffix);
-  dir_browser = true;
+  show_dirs = true;
   strcpy(title, "Snapshots");
   FileBrowserPage::init();
-
 }
 
 void SDDrivePage::save_snapshot() {
@@ -24,34 +27,48 @@ void SDDrivePage::save_snapshot() {
 
   MDSound sound;
   char sound_name[] = "________";
-  char my_title[] = "Snapshot Name";
 
-  if (mcl_gui.wait_for_input(sound_name, my_title, 8)) {
+  if (mcl_gui.wait_for_input(sound_name, "Snapshot Name", 8)) {
+    if (file.isOpen()) {
+      file.close();
+    }
+
     char temp_entry[16];
     strcpy(temp_entry, sound_name);
     strcat(temp_entry, c_snapshot_suffix);
     DEBUG_PRINTLN("creating new snapshot:");
     DEBUG_PRINTLN(temp_entry);
-    file.open(temp_entry, O_RDWR | O_CREAT);
+    if (!file.open(temp_entry, O_WRITE | O_CREAT)) {
+      DEBUG_PRINTLN("error openning");
+      gfx.alert("Error", "Cannot open file for write");
+      return;
+    }
     //  Globals
-    for(int i=0;i<8;++i){
+    for (int i = 0; i < 8; ++i) {
+      DEBUG_PRINT("saving global #");
+      DEBUG_PRINTLN(i);
       MD.getBlockingGlobal(i);
       mcl_sd.write_data(&MD.global, sizeof(MD.global), &file);
     }
     //  Patterns
-    for(int i=0;i<128;++i){
+    for (int i = 0; i < 128; ++i) {
+      DEBUG_PRINT("getting pattern #");
+      DEBUG_PRINTLN(i);
       MD.getBlockingPattern(i);
+      DEBUG_PRINT("writting pattern");
       mcl_sd.write_data(&MD.pattern, sizeof(MD.pattern), &file);
     }
     //  Kits
-    for(int i=0;i<64;++i){
+    for (int i = 0; i < 64; ++i) {
+      DEBUG_PRINT("saving kit #");
+      DEBUG_PRINTLN(i);
       MD.getBlockingKit(i);
       mcl_sd.write_data(&MD.kit, sizeof(MD.kit), &file);
     }
     //  Songs
-    //for(int i=0;i<64;++i){
-      //MD.getBlockingSong(i);
-      //mcl_sd.write_data(&MD.song, sizeof(MD.song), &file); // <--- ??
+    // for(int i=0;i<64;++i){
+    // MD.getBlockingSong(i);
+    // mcl_sd.write_data(&MD.song, sizeof(MD.song), &file); // <--- ??
     //}
     //  Save complete
     file.close();
@@ -68,10 +85,9 @@ void SDDrivePage::load_snapshot() {
     file.close();
     DEBUG_PRINTLN("loading snapshot");
     DEBUG_PRINTLN(temp_entry);
-    if (!file.open(temp_entry, O_READ))
-    {
+    if (!file.open(temp_entry, O_READ)) {
       DEBUG_PRINTLN("error openning");
-      gfx.alert("Error", "Opening");
+      gfx.alert("Error", "Cannot open file for read");
       return;
     }
 
@@ -80,9 +96,10 @@ void SDDrivePage::load_snapshot() {
     // Stop everything
     grid_page.prepare();
 
-
     //  Globals
-    for(int i=0;i<8;++i){
+    for (int i = 0; i < 8; ++i) {
+      DEBUG_PRINT("loading global #");
+      DEBUG_PRINTLN(i);
       mcl_sd.read_data(&MD.global, sizeof(MD.global), &file);
       mcl_actions.md_setsysex_recpos(2, i);
       {
@@ -91,27 +108,28 @@ void SDDrivePage::load_snapshot() {
       }
     }
     //  Patterns
-    for(int i=0;i<128;++i){
+    for (int i = 0; i < 128; ++i) {
+      DEBUG_PRINT("loading pattern #");
+      DEBUG_PRINTLN(i);
       mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file);
       mcl_actions.md_setsysex_recpos(8, i);
       MD.pattern.toSysex();
     }
     //  Kits
-    for(int i=0;i<64;++i){
+    for (int i = 0; i < 64; ++i) {
+      DEBUG_PRINT("loading kit #");
+      DEBUG_PRINTLN(i);
       mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file);
       mcl_actions.md_setsysex_recpos(4, i);
       MD.kit.toSysex();
     }
     //  Load complete
     file.close();
-    gfx.alert("Loaded","Snapshot");
+    gfx.alert("Loaded", "Snapshot");
   }
-
 }
 
-
-bool SDDrivePage::handleEvent(gui_event_t *event) 
-{
+bool SDDrivePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
 
     return true;
@@ -135,7 +153,7 @@ bool SDDrivePage::handleEvent(gui_event_t *event)
     char temp_entry[16];
     char dir_entry[16];
     uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = (uint8_t*)pos;
+    volatile uint8_t *ptr = (uint8_t *)pos;
     memcpy_bank1(&temp_entry[0], ptr, 16);
 
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
@@ -170,10 +188,11 @@ bool SDDrivePage::handleEvent(gui_event_t *event)
 
     return true;
   }
-  
- // if ((EVENT_RELEASED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON3)) || 
+
+  // if ((EVENT_RELEASED(event, Buttons.BUTTON1) &&
+  // BUTTON_DOWN(Buttons.BUTTON3)) ||
   if (EVENT_RELEASED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON1)) {
-     char temp_entry[16];
+    char temp_entry[16];
     char dir_entry[16];
     uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
     volatile uint8_t *ptr = pos;
@@ -187,8 +206,8 @@ bool SDDrivePage::handleEvent(gui_event_t *event)
       EVENT_RELEASED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
     //  EVENT_RELEASED(event, Buttons.BUTTON4)) {
-      GUI.setPage(&grid_page);
-      return true;
+    GUI.setPage(&grid_page);
+    return true;
   }
   return false;
 }

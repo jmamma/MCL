@@ -2,24 +2,21 @@
 #include "MCL.h"
 
 void FileBrowserPage::setup() {
-  bool ret;
-  int b;
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   classic_display = false;
-  //char *mcl = ".mcl";
-  //strcpy(match, mcl);
+  // char *mcl = ".mcl";
+  // strcpy(match, mcl);
 #endif
-  char *files = "Files";
-  strcpy(title, files);
+  strcpy(title, "Files");
   DEBUG_PRINT_FN();
 }
 
 void FileBrowserPage::add_entry(char *entry) {
-      uint32_t pos = BANK1_FILE_ENTRIES_START + numEntries * 16;
-      volatile uint8_t *ptr = pos;
-      memcpy_bank1(ptr, entry, 16);
-      numEntries++;
+  uint32_t pos = BANK1_FILE_ENTRIES_START + numEntries * 16;
+  volatile uint8_t *ptr = (uint8_t*)pos;
+  memcpy_bank1(ptr, entry, 16);
+  numEntries++;
 }
 
 void FileBrowserPage::init() {
@@ -27,55 +24,53 @@ void FileBrowserPage::init() {
   char temp_entry[16];
 
   int index = 0;
-  // file.open("/",O_READ);
+  //  reset directory pointer
   SD.vwd()->rewind();
   numEntries = 0;
   cur_file = 255;
   if (show_save) {
-  char create_new[9] = "[ SAVE ]";
-  add_entry(&create_new[0]);
+    char create_new[9] = "[ SAVE ]";
+    add_entry(&create_new[0]);
   }
 
   if (show_new_folder) {
-  char folder[16] = "[ NEW FOLDER ]";
-  add_entry(&folder[0]);
+    char folder[16] = "[ NEW FOLDER ]";
+    add_entry(&folder[0]);
   }
 
   char up_one_dir[3] = "..";
   SD.vwd()->getName(temp_entry, 16);
   DEBUG_PRINTLN(temp_entry);
 
-  if ((show_parent) && !(strcmp(temp_entry,"/") == 0)) {
+  if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry(&up_one_dir[0]);
   }
 
   encoders[1]->cur = 1;
 
+  //  iterate through the files
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
     for (uint8_t c = 0; c < 16; c++) {
       temp_entry[c] = 0;
     }
     file.getName(temp_entry, 16);
     bool is_match_file = false;
-    //    if (dir_browser == true) {
     DEBUG_PRINTLN(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
-    } else if (file.isDirectory() && dir_browser) {
+    } else if (file.isDirectory() && show_dirs) {
       is_match_file = true;
     } else {
-      //  } else {
-     char *arg1 =  &temp_entry[strlen(temp_entry) - 4];
-    DEBUG_PRINTLN(arg1);
-             if (strcmp(arg1,match) == 0) {
+      char *arg1 = &temp_entry[strlen(temp_entry) - 4];
+      DEBUG_PRINTLN(arg1);
+      if (strcmp(arg1, match) == 0) {
         is_match_file = true;
-        }
+      }
     }
-    //  }
     if (is_match_file) {
-     DEBUG_PRINTLN("project file identified");
-      add_entry(&temp_entry[0]);
-      if (strcmp(&temp_entry[0], &mcl_cfg.project[0]) == 0) {
+      DEBUG_PRINTLN("file matched");
+      add_entry(temp_entry);
+      if (strcmp(temp_entry, mcl_cfg.project) == 0) {
         DEBUG_PRINTLN("match");
         DEBUG_PRINTLN(temp_entry);
         DEBUG_PRINTLN(mcl_cfg.project);
@@ -83,7 +78,6 @@ void FileBrowserPage::init() {
         cur_file = numEntries - 1;
         encoders[1]->cur = numEntries - 1;
       }
-
     }
     index++;
     file.close();
@@ -95,7 +89,7 @@ void FileBrowserPage::init() {
     ((MCLEncoder *)encoders[1])->max = 0;
   }
   ((MCLEncoder *)encoders[1])->max = numEntries - 1;
-  DEBUG_PRINTLN("finished load proj setup");
+  DEBUG_PRINTLN("finished list files");
 }
 
 void FileBrowserPage::display() {
@@ -152,7 +146,7 @@ void FileBrowserPage::display() {
     GUI.put_string_at_fill(0, ">");
   } else {
     GUI.put_string_at_fill(0, " ");
-   }
+  }
   char temp_entry[17];
   uint16_t entry_num = encoders[1]->cur;
   uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
@@ -208,18 +202,18 @@ void FileBrowserPage::loop() {
 }
 
 bool FileBrowserPage::create_folder() {
-    char *my_title = "Create Folder";
-    char new_dir[17] = "new_folder      ";
-    if (mcl_gui.wait_for_input(new_dir, my_title, 8)) {
-      for (uint8_t n = 0; n < strlen(new_dir); n++) {
-        if (new_dir[n] == ' ') {
-          new_dir[n] = '\0';
-        }
+  char *my_title = "Create Folder";
+  char new_dir[17] = "new_folder      ";
+  if (mcl_gui.wait_for_input(new_dir, my_title, 8)) {
+    for (uint8_t n = 0; n < strlen(new_dir); n++) {
+      if (new_dir[n] == ' ') {
+        new_dir[n] = '\0';
       }
-      SD.mkdir(new_dir);
-      init();
     }
-   return true;
+    SD.mkdir(new_dir);
+    init();
+  }
+  return true;
 }
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
@@ -232,7 +226,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
     if (encoders[0]->getValue() == 0) {
-     return;
+      return;
     }
 
     if (encoders[1]->getValue() == 1) {
@@ -306,9 +300,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
-      GUI.setPage(&grid_page);
-      return true;
+    GUI.setPage(&grid_page);
+    return true;
   }
   return false;
 }
-

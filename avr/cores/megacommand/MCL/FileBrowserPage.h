@@ -30,7 +30,7 @@ class FileBrowserPage : public LightPage {
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t cur_file = 0;
-  bool dir_browser = false;
+  bool show_dirs = false;
   bool show_save = true;
   bool show_parent = true;
   bool show_new_folder = true;

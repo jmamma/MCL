@@ -5,7 +5,7 @@ void LoadProjectPage::init() {
 
   DEBUG_PRINT_FN();
   show_save = false;
-  dir_browser = false;
+  show_dirs = false;
   show_new_folder = false;
   char *mcl = ".mcl";
   strcpy(match, mcl);
