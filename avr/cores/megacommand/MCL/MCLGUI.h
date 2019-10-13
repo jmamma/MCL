@@ -8,6 +8,9 @@
 class MCLGUI {
 public:
   bool wait_for_input(char *dst, char *title, uint8_t len);
+  void draw_vertical_dashline(uint8_t x);
+  void draw_vertical_separator(uint8_t x);
+  void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
 };
 
 extern MCLGUI mcl_gui;

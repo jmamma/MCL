@@ -100,11 +100,7 @@ void FileBrowserPage::display() {
   oled_display.setCursor(0, 8);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.println(title);
-  for (uint8_t n = 0; n < 32; n++) {
-    if (n % 2 != 0) {
-      oled_display.drawPixel(x_offset - 6, n, WHITE);
-    }
-  }
+  mcl_gui.draw_vertical_dashline(x_offset - 6);
 
   oled_display.setCursor(x_offset, 8);
   uint8_t max_items;
@@ -130,7 +126,7 @@ void FileBrowserPage::display() {
     char temp_entry[16];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
     uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
-    volatile uint8_t *ptr = pos;
+    volatile uint8_t *ptr = (uint8_t*)pos;
     memcpy_bank1(temp_entry, ptr, 16);
     oled_display.println(temp_entry);
   }
@@ -161,24 +157,7 @@ void FileBrowserPage::display() {
 
 void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 #ifdef OLED_DISPLAY
-  uint8_t number_of_items = numEntries;
-  uint8_t length = round(
-      ((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
-  uint8_t y = round(
-      ((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) *
-      32);
-  for (uint8_t n = 0; n < 32; n++) {
-    if (n % 2 == 0) {
-      oled_display.drawPixel(x_offset + 1, n, WHITE);
-      oled_display.drawPixel(x_offset + 3, n, WHITE);
-
-    } else {
-      oled_display.drawPixel(x_offset + 2, n, WHITE);
-    }
-  }
-
-  oled_display.fillRect(x_offset + 1, y + 1, 3, length - 2, BLACK);
-  oled_display.drawRect(x_offset, y, 5, length, WHITE);
+  mcl_gui.draw_vertical_scrollbar(x_offset, numEntries, MAX_VISIBLE_ROWS, encoders[1]->cur - cur_row);
 #endif
 }
 
