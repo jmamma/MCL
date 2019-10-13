@@ -33,6 +33,11 @@ void SDDrivePage::save_snapshot() {
       file.close();
     }
 
+    MidiUart.sendRaw(MIDI_STOP);
+    MidiClock.handleImmediateMidiStop();
+    // Stop everything
+    grid_page.prepare();
+
     char temp_entry[16];
     strcpy(temp_entry, sound_name);
     strcat(temp_entry, c_snapshot_suffix);
@@ -45,23 +50,20 @@ void SDDrivePage::save_snapshot() {
     }
     //  Globals
     for (int i = 0; i < 8; ++i) {
-      DEBUG_PRINT("saving global #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Saving global", i, 8);
       MD.getBlockingGlobal(i);
       mcl_sd.write_data(&MD.global, sizeof(MD.global), &file);
     }
     //  Patterns
     for (int i = 0; i < 128; ++i) {
-      DEBUG_PRINT("getting pattern #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Saving pattern", i, 128);
+      DEBUG_PRINT(i);
       MD.getBlockingPattern(i);
-      DEBUG_PRINT("writting pattern");
       mcl_sd.write_data(&MD.pattern, sizeof(MD.pattern), &file);
     }
     //  Kits
     for (int i = 0; i < 64; ++i) {
-      DEBUG_PRINT("saving kit #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Saving kit", i, 64);
       MD.getBlockingKit(i);
       mcl_sd.write_data(&MD.kit, sizeof(MD.kit), &file);
     }
@@ -98,8 +100,7 @@ void SDDrivePage::load_snapshot() {
 
     //  Globals
     for (int i = 0; i < 8; ++i) {
-      DEBUG_PRINT("loading global #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Loading global", i, 8);
       mcl_sd.read_data(&MD.global, sizeof(MD.global), &file);
       mcl_actions.md_setsysex_recpos(2, i);
       {
@@ -109,16 +110,14 @@ void SDDrivePage::load_snapshot() {
     }
     //  Patterns
     for (int i = 0; i < 128; ++i) {
-      DEBUG_PRINT("loading pattern #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Loading pattern", i, 128);
       mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file);
       mcl_actions.md_setsysex_recpos(8, i);
       MD.pattern.toSysex();
     }
     //  Kits
     for (int i = 0; i < 64; ++i) {
-      DEBUG_PRINT("loading kit #");
-      DEBUG_PRINTLN(i);
+      mcl_gui.draw_progress("Loading kit", i, 64);
       mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file);
       mcl_actions.md_setsysex_recpos(4, i);
       MD.kit.toSysex();
@@ -195,7 +194,7 @@ bool SDDrivePage::handleEvent(gui_event_t *event) {
     char temp_entry[16];
     char dir_entry[16];
     uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = pos;
+    volatile uint8_t *ptr = (uint8_t*)pos;
     memcpy_bank1(&temp_entry[0], ptr, 16);
     SD.remove(temp_entry);
     init();
