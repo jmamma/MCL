@@ -205,18 +205,18 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
     if (encoders[0]->getValue() == 0) {
-      return;
+      return false;
     }
 
     if (encoders[1]->getValue() == 1) {
       create_folder();
-      return;
+      return false;
     }
 
     char temp_entry[16];
     char dir_entry[16];
     uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = pos;
+    volatile uint8_t *ptr = (uint8_t*)pos;
     memcpy_bank1(temp_entry, ptr, 16);
     char *up_one_dir = "..";
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
@@ -234,13 +234,13 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
       SD.vwd()->getName(dir_entry, 16);
       lwd[strlen(lwd) - strlen(dir_entry) - 1] = '\0';
-      DEBUG_PRINTLN(lwd);
+      DEBUG_DUMP(lwd);
 
       init();
-      return;
+      return false;
       SD.vwd()->getName(temp_entry, 16);
-      DEBUG_PRINTLN(temp_entry);
-      return;
+      DEBUG_DUMP(temp_entry);
+      return false;
     }
     file.open(temp_entry, O_READ);
     if (file.isDirectory()) {
@@ -255,7 +255,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN(temp_entry);
       SD.chdir(temp_entry);
       init();
-      return;
+      return false;
     }
 
     GUI.popPage();

@@ -2,7 +2,7 @@
 #include "MCL.h"
 
 const char *c_snapshot_suffix = ".snp";
-const char *c_snapshot_root = "/Snapshots/MD";
+const char *c_snapshot_root = "/SDDrive/MD";
 
 void SDDrivePage::setup() {
   SD.mkdir(c_snapshot_root, true);
@@ -18,7 +18,7 @@ void SDDrivePage::init() {
   //  !note match only supports 3-char suffix
   strcpy(match, c_snapshot_suffix);
   show_dirs = true;
-  strcpy(title, "Snapshots");
+  strcpy(title, "SD-Drive");
   FileBrowserPage::init();
 }
 
@@ -101,7 +101,10 @@ void SDDrivePage::load_snapshot() {
     //  Globals
     for (int i = 0; i < 8; ++i) {
       mcl_gui.draw_progress("Loading global", i, 8);
-      mcl_sd.read_data(&MD.global, sizeof(MD.global), &file);
+      if(!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file))
+      {
+        goto load_error;
+      }
       mcl_actions.md_setsysex_recpos(2, i);
       {
         ElektronDataToSysexEncoder encoder(&MidiUart);
@@ -111,20 +114,32 @@ void SDDrivePage::load_snapshot() {
     //  Patterns
     for (int i = 0; i < 128; ++i) {
       mcl_gui.draw_progress("Loading pattern", i, 128);
-      mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file);
+      if(!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file))
+      {
+        goto load_error;
+      }
       mcl_actions.md_setsysex_recpos(8, i);
       MD.pattern.toSysex();
     }
     //  Kits
     for (int i = 0; i < 64; ++i) {
       mcl_gui.draw_progress("Loading kit", i, 64);
-      mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file);
+      if(!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file))
+      {
+        goto load_error;
+      }
       mcl_actions.md_setsysex_recpos(4, i);
       MD.kit.toSysex();
     }
     //  Load complete
+load_complete:
     file.close();
     gfx.alert("Loaded", "Snapshot");
+    return;
+load_error:
+    file.close();
+    gfx.alert("Snapshot loading failed!", "SD card read failure");
+    return;
   }
 }
 
@@ -157,11 +172,23 @@ bool SDDrivePage::handleEvent(gui_event_t *event) {
 
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
       file.close();
+      SD.chdir(lwd);
 
       SD.vwd()->getName(dir_entry, 16);
-      lwd[strlen(lwd) - strlen(dir_entry) - 1] = '\0';
-      DEBUG_PRINTLN(lwd);
-      SD.chdir(lwd);
+      auto len_lwd = strlen(lwd);
+      auto len_dir_entry = strlen(dir_entry);
+
+      // trim ending '/'
+      if (lwd[len_lwd - 1] == '/') {
+        lwd[--len_lwd] = '\0';
+      }
+      if (dir_entry[len_dir_entry - 1] == '/') {
+        dir_entry[--len_dir_entry] = '\0';
+      }
+
+      lwd[len_lwd - len_dir_entry] = '\0';
+      DEBUG_DUMP(dir_entry);
+      DEBUG_DUMP(lwd);
 
       init();
       return false;
@@ -194,7 +221,7 @@ bool SDDrivePage::handleEvent(gui_event_t *event) {
     char temp_entry[16];
     char dir_entry[16];
     uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = (uint8_t*)pos;
+    volatile uint8_t *ptr = (uint8_t *)pos;
     memcpy_bank1(&temp_entry[0], ptr, 16);
     SD.remove(temp_entry);
     init();

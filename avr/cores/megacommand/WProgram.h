@@ -26,12 +26,14 @@
 #define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
+#define DEBUG_DUMP(x)  ({Serial.print(#x); Serial.print(" = "); Serial.println(x);})
 #define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__FUNCTION__);})
 
 #else
 #define DEBUG_INIT()
 #define DEBUG_PRINT(x)
 #define DEBUG_PRINTLN(x)
+#define DEBUG_DUMP(x)
 #define DEBUG_PRINT_FN(x)
 #endif
 
