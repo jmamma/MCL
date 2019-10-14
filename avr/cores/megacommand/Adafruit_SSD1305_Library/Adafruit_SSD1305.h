@@ -27,6 +27,7 @@ All text above, and the splash screen must be included in any redistribution
 
 #define BLACK 0
 #define WHITE 1
+#define INVERT 2
 
 /*=========================================================================
     SSD1305 Displays

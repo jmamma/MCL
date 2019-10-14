@@ -205,12 +205,12 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
     if (encoders[0]->getValue() == 0) {
-      return false;
+      return true;
     }
 
     if (encoders[1]->getValue() == 1) {
       create_folder();
-      return false;
+      return true;
     }
 
     char temp_entry[16];
@@ -237,10 +237,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       DEBUG_DUMP(lwd);
 
       init();
-      return false;
+      return true;
       SD.vwd()->getName(temp_entry, 16);
       DEBUG_DUMP(temp_entry);
-      return false;
+      return true;
     }
     file.open(temp_entry, O_READ);
     if (file.isDirectory()) {
@@ -255,7 +255,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN(temp_entry);
       SD.chdir(temp_entry);
       init();
-      return false;
+      return true;
     }
 
     GUI.popPage();

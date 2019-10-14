@@ -140,10 +140,16 @@ void Adafruit_SSD1305::drawPixel(int16_t x, int16_t y, uint16_t color) {
     break;
   }  
 
+draw_pixel:
   // x is which column
   if (color == WHITE) 
     buffer[x+ (y/8)*SSD1305_LCDWIDTH] |= _BV((y%8));  
-  else
+  else if (color == INVERT)
+  {
+    color = (buffer[x+ (y/8)*SSD1305_LCDWIDTH] & _BV((y%8))) ? BLACK : WHITE;
+    goto draw_pixel;
+  }
+  else // BLACK
     buffer[x+ (y/8)*SSD1305_LCDWIDTH] &= ~_BV((y%8)); 
 }
 

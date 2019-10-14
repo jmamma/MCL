@@ -1,6 +1,6 @@
 clang++
 %c -std=gnu11
-%cpp -std=c++11
+%cpp -std=c++14
 #  Treats all headers as c++ headers
 %h %hpp -x c++-header
 #  Include dirs in Makefile:

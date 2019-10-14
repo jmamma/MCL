@@ -101,8 +101,7 @@ void SDDrivePage::load_snapshot() {
     //  Globals
     for (int i = 0; i < 8; ++i) {
       mcl_gui.draw_progress("Loading global", i, 8);
-      if(!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file))
-      {
+      if (!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file)) {
         goto load_error;
       }
       mcl_actions.md_setsysex_recpos(2, i);
@@ -114,8 +113,7 @@ void SDDrivePage::load_snapshot() {
     //  Patterns
     for (int i = 0; i < 128; ++i) {
       mcl_gui.draw_progress("Loading pattern", i, 128);
-      if(!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file))
-      {
+      if (!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file)) {
         goto load_error;
       }
       mcl_actions.md_setsysex_recpos(8, i);
@@ -124,19 +122,18 @@ void SDDrivePage::load_snapshot() {
     //  Kits
     for (int i = 0; i < 64; ++i) {
       mcl_gui.draw_progress("Loading kit", i, 64);
-      if(!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file))
-      {
+      if (!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file)) {
         goto load_error;
       }
       mcl_actions.md_setsysex_recpos(4, i);
       MD.kit.toSysex();
     }
     //  Load complete
-load_complete:
+  load_complete:
     file.close();
     gfx.alert("Loaded", "Snapshot");
     return;
-load_error:
+  load_error:
     file.close();
     gfx.alert("Snapshot loading failed!", "SD card read failure");
     return;

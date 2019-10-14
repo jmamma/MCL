@@ -7,8 +7,6 @@
 
 #define FLASH_SPEED 400
 
-extern char allowedchar[38];
-
 class NewProjectPage : public LightPage {
 public:
   char newprj[18];
