@@ -7,10 +7,11 @@ void LoadProjectPage::init() {
   show_save = false;
   show_dirs = false;
   show_new_folder = false;
-  char *mcl = ".mcl";
-  strcpy(match, mcl);
-  char *files = "Project";
-  strcpy(title, files);
+  strcpy(match, ".mcl");
+  strcpy(title, "Project");
+  strcpy(lwd, "/");
+  SD.chdir("/");
+
   FileBrowserPage::init();
 }
 

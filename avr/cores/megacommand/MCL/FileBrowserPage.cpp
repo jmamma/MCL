@@ -61,6 +61,7 @@ void FileBrowserPage::init() {
     } else if (file.isDirectory() && show_dirs) {
       is_match_file = true;
     } else {
+      // XXX only 3char suffix
       char *arg1 = &temp_entry[strlen(temp_entry) - 4];
       DEBUG_DUMP(arg1);
       if (strcmp(arg1, match) == 0) {
@@ -93,7 +94,7 @@ void FileBrowserPage::init() {
 
 void FileBrowserPage::display() {
 #ifdef OLED_DISPLAY
-  uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
+  constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.clearDisplay();
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);

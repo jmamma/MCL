@@ -36,6 +36,7 @@ public:
   bool show_new_folder = true;
   char title[12];
   File file;
+  const char* blank_entry = "        ";
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)

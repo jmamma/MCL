@@ -87,7 +87,7 @@ void MCLGfx::splashscreen() {
   //  GUI.setPage(&grid_page);
 }
 
-void MCLGfx::alert(char *str1, char *str2) {
+void MCLGfx::alert(const char *str1, const char *str2) {
 #ifdef OLED_DISPLAY
   mcl_gui.draw_infobox(str1, str2);
   oled_display.display();

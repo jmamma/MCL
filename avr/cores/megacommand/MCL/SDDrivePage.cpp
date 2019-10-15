@@ -25,10 +25,10 @@ void SDDrivePage::init() {
 void SDDrivePage::save_snapshot() {
   DEBUG_PRINT_FN();
 
-  MDSound sound;
-  char sound_name[] = "________";
+  char entry_name[] = "________";
+  strcpy(entry_name, blank_entry);
 
-  if (mcl_gui.wait_for_input(sound_name, "Snapshot Name", 8)) {
+  if (mcl_gui.wait_for_input(entry_name, "Snapshot Name", 8)) {
     if (file.isOpen()) {
       file.close();
     }
@@ -39,7 +39,7 @@ void SDDrivePage::save_snapshot() {
     grid_page.prepare();
 
     char temp_entry[16];
-    strcpy(temp_entry, sound_name);
+    strcpy(temp_entry, entry_name);
     strcat(temp_entry, c_snapshot_suffix);
     DEBUG_PRINTLN("creating new snapshot:");
     DEBUG_PRINTLN(temp_entry);

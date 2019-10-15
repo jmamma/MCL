@@ -25,10 +25,8 @@ void SoundBrowserPage::init() {
 void SoundBrowserPage::save_sound() {
   DEBUG_PRINT_FN();
 
-  char *snd = ".snd";
   MDSound sound;
-  char *sound_name = "________";
-  char *my_title = "Sound Name";
+  char sound_name[] = "________";
 
   grid_page.prepare();
   PGM_P tmp;
@@ -36,10 +34,10 @@ void SoundBrowserPage::save_sound() {
   memcpy(sound_name, MD.kit.name, 4);
   m_strncpy_p(&sound_name[5], tmp, 3);
 
-  if (mcl_gui.wait_for_input(sound_name, my_title, 8)) {
+  if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[16];
     strcpy(temp_entry, sound_name);
-    strcat(temp_entry, snd);
+    strcat(temp_entry, ".snd");
     DEBUG_PRINTLN("creating new sound:");
     DEBUG_PRINTLN(temp_entry);
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
@@ -53,7 +51,6 @@ void SoundBrowserPage::save_sound() {
 void SoundBrowserPage::load_sound() {
 
   DEBUG_PRINT_FN();
-  char *snd = ".snd";
   grid_page.prepare();
   if (file.isOpen()) {
     char temp_entry[16];
