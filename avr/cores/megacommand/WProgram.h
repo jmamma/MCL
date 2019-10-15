@@ -27,7 +27,8 @@
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
 #define DEBUG_DUMP(x)  ({Serial.print(#x); Serial.print(" = "); Serial.println(x);})
-#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__FUNCTION__);})
+// __PRETTY_FUNCTION__ is a gcc extension
+#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__PRETTY_FUNCTION__);})
 
 #else
 #define DEBUG_INIT()

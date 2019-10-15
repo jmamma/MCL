@@ -182,9 +182,8 @@ void FileBrowserPage::loop() {
 }
 
 bool FileBrowserPage::create_folder() {
-  char *my_title = "Create Folder";
   char new_dir[17] = "new_folder      ";
-  if (mcl_gui.wait_for_input(new_dir, my_title, 8)) {
+  if (mcl_gui.wait_for_input(new_dir, "Create Folder", 8)) {
     for (uint8_t n = 0; n < strlen(new_dir); n++) {
       if (new_dir[n] == ' ') {
         new_dir[n] = '\0';
@@ -240,6 +239,9 @@ void FileBrowserPage::_cd(const char *child) {
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
+
+  DEBUG_PRINT_FN();
+
   if (note_interface.is_event(event)) {
     return false;
   }
@@ -273,6 +275,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       return false;
     }
 
+    DEBUG_DUMP(temp_entry);
     file.open(temp_entry, O_READ);
 
     // chdir to child

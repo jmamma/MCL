@@ -155,7 +155,8 @@ void TextInputPage::display_normal() {
   auto time = clock_diff(last_clock, slowclock);
 
 #ifdef OLED_DISPLAY
-  mcl_gui.clear_popup();
+  //mcl_gui.clear_popup(); <-- E_TOOSLOW
+  oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
   oled_display.setFont();
   oled_display.setCursor(s_text_x, s_text_y);
   oled_display.println(text);
@@ -218,7 +219,6 @@ void TextInputPage::display() {
 
 bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-
     return true;
   }
 
@@ -264,6 +264,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
+
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     // Clear text
     for (uint8_t n = 1; n < length; n++) {
