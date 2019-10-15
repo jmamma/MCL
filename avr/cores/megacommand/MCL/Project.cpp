@@ -3,7 +3,7 @@
 
 void Project::setup() {}
 
-bool Project::load_project(char *projectname) {
+bool Project::load_project(const char *projectname) {
 
   bool ret;
 
@@ -40,7 +40,6 @@ bool Project::load_project(char *projectname) {
 
 bool Project::check_project_version() {
   bool ret;
-  int b = 0;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Check project version");
@@ -68,7 +67,6 @@ bool Project::check_project_version() {
 bool Project::write_header() {
 
   bool ret;
-  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing project header");
@@ -97,7 +95,7 @@ bool Project::write_header() {
   return true;
 }
 
-bool Project::new_project(char *projectname) {
+bool Project::new_project(const char *projectname) {
 
   bool ret;
 

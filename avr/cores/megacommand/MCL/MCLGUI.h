@@ -7,14 +7,15 @@
 
 class MCLGUI {
 public:
-  bool wait_for_input(char *dst, char *title, uint8_t len);
+  bool wait_for_input(char *dst, const char *title, uint8_t len);
+  void draw_infobox(const char* line1, const char* line2);
   void draw_vertical_dashline(uint8_t x);
   void draw_vertical_separator(uint8_t x);
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
   ///  Clear the content area of a popup
   void clear_popup();
-  void draw_popup(char* title, bool deferred_display = false);
-  void draw_progress(char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
+  void draw_popup(const char* title, bool deferred_display = false);
+  void draw_progress(const char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
 
   static constexpr uint8_t s_menu_w = 96;
   static constexpr uint8_t s_menu_h = 24;

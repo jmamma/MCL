@@ -89,17 +89,9 @@ void MCLGfx::splashscreen() {
 
 void MCLGfx::alert(char *str1, char *str2) {
 #ifdef OLED_DISPLAY
-  GFXfont *old_font = oled_display.getFont();
-  oled_display.clearDisplay();
-  oled_display.setFont(&TomThumb);
-  oled_display.setCursor(0, 8);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.println(str1);
-  oled_display.setCursor(0, 18);
-  oled_display.println(str2);
+  mcl_gui.draw_infobox(str1, str2);
   oled_display.display();
   delay(700);
-  oled_display.setFont(old_font);
 #else
   GUI.flash_strings_fill(str1, str2);
   GUI.display();

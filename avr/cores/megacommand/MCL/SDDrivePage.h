@@ -12,11 +12,12 @@ public:
             Encoder *e4 = NULL)
       : FileBrowserPage(e1, e2, e3, e4) { }
 
-  bool handleEvent(gui_event_t *event);
   void init();
   void setup();
   void save_snapshot();
   void load_snapshot();
+  virtual void on_select(const char*);
+  virtual void on_new();
 };
 
 extern SDDrivePage sddrive_page;

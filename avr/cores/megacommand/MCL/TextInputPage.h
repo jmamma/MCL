@@ -10,7 +10,7 @@
 class TextInputPage : public LightPage {
 public:
   char *textp;
-  char *title;
+  const char *title;
   char text[17];
   uint8_t length;
   uint8_t max_length;
@@ -29,7 +29,7 @@ public:
   void display_normal();
   void display_charpane();
   void init();
-  void init_text(char *text_, char *title_, uint8_t len);
+  void init_text(char *text_, const char *title_, uint8_t len);
   void setup();
   void update_char();
 };

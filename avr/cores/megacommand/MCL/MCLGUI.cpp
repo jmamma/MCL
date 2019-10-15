@@ -1,6 +1,6 @@
 #include "MCL.h"
 
-bool MCLGUI::wait_for_input(char *dst, char *title, uint8_t len) {
+bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
   text_input_page.init_text(dst, title, len);
   GUI.pushPage(&text_input_page);
@@ -37,7 +37,8 @@ void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
   oled_display.drawRect(x, y, 5, length, WHITE);
 }
 
-void MCLGUI::draw_popup(char *title, bool deferred_display) {
+//  ref: Design/popup_menu.png
+void MCLGUI::draw_popup(const char *title, bool deferred_display) {
   oled_display.setFont(&TomThumb);
 
   // draw menu body
@@ -75,7 +76,7 @@ static constexpr uint8_t s_progress_h = 5;
 
 static uint8_t s_progress_cookie = 0;
 
-void MCLGUI::draw_progress(char *msg, uint8_t cur, uint8_t _max,
+void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
                            bool deferred_display) {
   draw_popup(msg, true);
 
@@ -102,3 +103,39 @@ void MCLGUI::draw_progress(char *msg, uint8_t cur, uint8_t _max,
   }
 }
 
+//  ref: Design/infobox.png
+void MCLGUI::draw_infobox(const char* line1, const char* line2)
+{
+  constexpr auto info_y1 = 2;
+  constexpr auto info_y2 = 27;
+  constexpr auto info_x1 = 12;
+  constexpr auto info_x2 = 124;
+  constexpr auto circle_x = info_x1 + 10;
+  constexpr auto circle_y = info_y1 + 15;
+
+  constexpr auto info_w = info_x2 - info_x1 + 1;
+  constexpr auto info_h = info_y2 - info_y1 + 1;
+
+  auto oldfont = oled_display.getFont();
+
+  oled_display.fillRect(info_x1 - 1, info_y1 - 1, info_w + 3, info_h + 3, BLACK);
+  oled_display.drawRect(info_x1, info_y1, info_w, info_h, WHITE);
+  oled_display.drawFastHLine(info_x1 + 1, info_y2 + 1, info_w, WHITE);
+  oled_display.drawFastVLine(info_x2 + 1, info_y1 + 1, info_h - 1, WHITE);
+  oled_display.fillRect(info_x1 + 1, info_y1 + 1, info_w - 2, 6, WHITE);
+
+  oled_display.fillCircle(circle_x, circle_y, 6, WHITE);
+  oled_display.fillRect(circle_x - 1, circle_y - 3, 2, 4, BLACK);
+  oled_display.fillRect(circle_x - 1, circle_y + 2, 2, 2, BLACK);
+
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(BLACK);
+  oled_display.setCursor(info_x1 + 4, info_y1 + 6);
+  oled_display.println(line1);
+
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(info_x1 + 23, info_y1 + 17);
+  oled_display.println(line2);
+
+  oled_display.setFont(oldfont);
+}

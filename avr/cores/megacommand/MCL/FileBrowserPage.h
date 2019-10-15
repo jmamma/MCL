@@ -4,8 +4,8 @@
 #define FILEBROWSERPAGE_H__
 
 #include "GUI.h"
-#include "SdFat.h"
 #include "MCLEncoder.h"
+#include "SdFat.h"
 #include "SeqPage.h"
 
 #define MAX_ENTRIES 1024
@@ -21,8 +21,8 @@
 #define MAX_FB_ITEMS 4
 
 class FileBrowserPage : public LightPage {
-  public:
-//  char file_entries[NUM_FILE_ENTRIES][16];
+public:
+  //  char file_entries[NUM_FILE_ENTRIES][16];
   int numEntries;
 
   char match[5];
@@ -48,7 +48,19 @@ class FileBrowserPage : public LightPage {
   virtual void loop();
   virtual void setup();
   virtual void init();
-};
 
+  virtual void on_new() {}
+  virtual void on_select(char *) {}
+  virtual void on_delete(char *) {}
+  virtual void on_rename(char *from, char *to) {}
+  // on cancel, the page will be popped,
+  // and there's a last chance to clean up.
+  virtual void on_cancel() { GUI.popPage(); }
+
+private:
+  void _calcindices(int &, int &);
+  void _cd_up();
+  void _cd(const char *);
+};
 
 #endif /* FILEBROWSERPAGE_H__ */

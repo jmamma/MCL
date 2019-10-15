@@ -38,7 +38,7 @@ void TextInputPage::init() {
 #endif
 }
 
-void TextInputPage::init_text(char *text_, char *title_, uint8_t len) {
+void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   textp = text_;
   title = title_;
   length = len;

@@ -129,7 +129,6 @@ void SDDrivePage::load_snapshot() {
       MD.kit.toSysex();
     }
     //  Load complete
-  load_complete:
     file.close();
     gfx.alert("Loaded", "Snapshot");
     return;
@@ -140,100 +139,12 @@ void SDDrivePage::load_snapshot() {
   }
 }
 
-bool SDDrivePage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
-    if (encoders[1]->getValue() == 0) {
-      save_snapshot();
-      init();
-      return false;
-    }
-
-    if (encoders[1]->getValue() == 1) {
-      create_folder();
-      return false;
-    }
-
-    char temp_entry[16];
-    char dir_entry[16];
-    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = (uint8_t *)pos;
-    memcpy_bank1(&temp_entry[0], ptr, 16);
-
-    if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
-      file.close();
-      SD.chdir(lwd);
-
-      SD.vwd()->getName(dir_entry, 16);
-      auto len_lwd = strlen(lwd);
-      auto len_dir_entry = strlen(dir_entry);
-
-      // trim ending '/'
-      if (lwd[len_lwd - 1] == '/') {
-        lwd[--len_lwd] = '\0';
-      }
-      if (dir_entry[len_dir_entry - 1] == '/') {
-        dir_entry[--len_dir_entry] = '\0';
-      }
-
-      lwd[len_lwd - len_dir_entry] = '\0';
-      DEBUG_DUMP(dir_entry);
-      DEBUG_DUMP(lwd);
-
-      init();
-      return false;
-    }
-
-    file.open(temp_entry, O_READ);
-
-    if (file.isDirectory()) {
-      file.close();
-      SD.vwd()->getName(dir_entry, 16);
-      strcat(lwd, dir_entry);
-      if (dir_entry[strlen(dir_entry) - 1] != '/') {
-        strcat(lwd, "/");
-      }
-      DEBUG_PRINTLN(lwd);
-      DEBUG_PRINTLN(temp_entry);
-      SD.chdir(temp_entry);
-      init();
-      return false;
-    }
-
-    load_snapshot();
-
-    return true;
-  }
-
-  // if ((EVENT_RELEASED(event, Buttons.BUTTON1) &&
-  // BUTTON_DOWN(Buttons.BUTTON3)) ||
-  if (EVENT_RELEASED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON1)) {
-    char temp_entry[16];
-    char dir_entry[16];
-    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = (uint8_t *)pos;
-    memcpy_bank1(&temp_entry[0], ptr, 16);
-    SD.remove(temp_entry);
-    init();
-    return false;
-  }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON2) ||
-      EVENT_RELEASED(event, Buttons.BUTTON1) ||
-      EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    //  EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    GUI.setPage(&grid_page);
-    return true;
-  }
-  return false;
+void SDDrivePage::on_new() {
+  save_snapshot();
+  init();
 }
+
+void SDDrivePage::on_select(const char *__) { load_snapshot(); }
 
 MCLEncoder sddrive_param1(1, 10, ENCODER_RES_SYS);
 MCLEncoder sddrive_param2(0, 36, ENCODER_RES_SYS);
