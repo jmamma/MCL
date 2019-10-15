@@ -133,7 +133,7 @@ void TextInputPage::config_charpane() {
 }
 
 void TextInputPage::display_normal() {
-  constexpr auto s_text_x = MCLGUI::s_menu_x + 16;
+  constexpr auto s_text_x = MCLGUI::s_menu_x + 8;
   constexpr auto s_text_y = MCLGUI::s_menu_y + 12;
 
   // update cursor position
@@ -227,6 +227,12 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (!normal_mode) {
     if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
       oled_display.clearDisplay();
+      // before exiting charpane, advance current cursor to the next.
+      ++cursor_position;
+      if(cursor_position >= length) {
+        cursor_position = length - 1;
+      }
+      // then, config normal input line
       config_normal();
       return true;
     }
@@ -237,14 +243,14 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    text_input_page.return_state = true;
-    uint8_t cpy_len = text_input_page.length;
-    for (uint8_t n = text_input_page.length - 1;
-         n > 0 && text_input_page.text[n] == ' '; n--) {
+    return_state = true;
+    uint8_t cpy_len = length;
+    for (uint8_t n = length - 1;
+         n > 0 && text[n] == ' '; n--) {
       cpy_len -= 1;
     }
-    m_strncpy(text_input_page.textp, &(text_input_page.text[0]), cpy_len);
-    text_input_page.textp[cpy_len] = '\0';
+    m_strncpy(textp, text, cpy_len);
+    textp[cpy_len] = '\0';
     GUI.popPage();
     return true;
   }
@@ -276,7 +282,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    text_input_page.return_state = false;
+    return_state = false;
     GUI.popPage();
   }
   return false;

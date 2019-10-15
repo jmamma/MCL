@@ -109,8 +109,8 @@ void GridPage::loop() {
   }
 
   if (clock_diff(grid_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
-    ///   DEBUG_PRINTLN(grid_lastclock);
-    //   DEBUG_PRINTLN(slowclock);
+    ///   DEBUG_DUMP(grid_lastclock);
+    //   DEBUG_DUMP(slowclock);
     //   display_name = 1;
     if ((write_cfg) && (MidiClock.state != 2)) {
       mcl_cfg.cur_col = cur_col;

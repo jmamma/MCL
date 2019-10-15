@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "Project.h"
+#include "MCL.h"
 
 void Project::setup() {}
 
@@ -140,17 +140,15 @@ bool Project::new_project(char *projectname) {
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-          if (i % 16 == 0) {
-        oled_display.fillRect(15, 23, ((float)i / (float)GRID_LENGTH) * 98, 6,
-                              WHITE);
-        oled_display.display();
+    if (i % 16 == 0) {
+      mcl_gui.draw_progress("Initializing project", i, GRID_LENGTH);
     }
 #endif
-          if (i % 2 == 0) {
+    if (i % 2 == 0) {
       if (ledstatus == 0) {
         setLed2();
         ledstatus = 1;
-     } else {
+      } else {
         clearLed2();
         ledstatus = 0;
       }
@@ -158,8 +156,8 @@ bool Project::new_project(char *projectname) {
 
     ret = grid.clear_row(i);
     if (!ret) {
-    DEBUG_PRINTLN("coud not clear row");
-    return false;
+      DEBUG_PRINTLN("coud not clear row");
+      return false;
     }
   }
   clearLed2();

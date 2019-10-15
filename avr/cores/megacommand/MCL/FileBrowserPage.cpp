@@ -40,7 +40,7 @@ void FileBrowserPage::init() {
 
   char up_one_dir[3] = "..";
   SD.vwd()->getName(temp_entry, 16);
-  DEBUG_PRINTLN(temp_entry);
+  DEBUG_DUMP(temp_entry);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry(&up_one_dir[0]);
@@ -55,14 +55,14 @@ void FileBrowserPage::init() {
     }
     file.getName(temp_entry, 16);
     bool is_match_file = false;
-    DEBUG_PRINTLN(temp_entry);
+    DEBUG_DUMP(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
       is_match_file = true;
     } else {
       char *arg1 = &temp_entry[strlen(temp_entry) - 4];
-      DEBUG_PRINTLN(arg1);
+      DEBUG_DUMP(arg1);
       if (strcmp(arg1, match) == 0) {
         is_match_file = true;
       }
@@ -71,9 +71,8 @@ void FileBrowserPage::init() {
       DEBUG_PRINTLN("file matched");
       add_entry(temp_entry);
       if (strcmp(temp_entry, mcl_cfg.project) == 0) {
-        DEBUG_PRINTLN("match");
-        DEBUG_PRINTLN(temp_entry);
-        DEBUG_PRINTLN(mcl_cfg.project);
+        DEBUG_DUMP(temp_entry);
+        DEBUG_DUMP(mcl_cfg.project);
 
         cur_file = numEntries - 1;
         encoders[1]->cur = numEntries - 1;
@@ -81,7 +80,7 @@ void FileBrowserPage::init() {
     }
     index++;
     file.close();
-    DEBUG_PRINTLN(numEntries);
+    DEBUG_DUMP(numEntries);
   }
 
   if (numEntries <= 0) {
@@ -222,7 +221,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
       /*
             SD.vwd()->getName(temp_entry,16);
-            DEBUG_PRINTLN(temp_entry);
+            DEBUG_DUMP(temp_entry);
 
             file.openParent(SD.vwd());
             file.getName(temp_entry,16);
@@ -251,8 +250,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
         char *slash = "/";
         strcat(lwd, slash);
       }
-      DEBUG_PRINTLN(lwd);
-      DEBUG_PRINTLN(temp_entry);
+      DEBUG_DUMP(lwd);
+      DEBUG_DUMP(temp_entry);
       SD.chdir(temp_entry);
       init();
       return true;

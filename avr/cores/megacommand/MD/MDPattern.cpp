@@ -190,7 +190,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 #endif
 
     DEBUG_PRINTLN("WRONG LENGTH");
-    DEBUG_PRINTLN(len);
+    DEBUG_DUMP(len);
     return false;
   }
 
