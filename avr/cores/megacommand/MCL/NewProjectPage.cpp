@@ -15,6 +15,10 @@ void NewProjectPage::init() {
 }
 
 void NewProjectPage::display() {
+}
+
+bool NewProjectPage::handleEvent(gui_event_t *event) {
+  // don't handle any events
   if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
 
     char full_path[sizeof(newprj) + 5] = {'\0'};
@@ -28,7 +32,7 @@ void NewProjectPage::display() {
     if (SD.exists(full_path)) {
       gfx.alert("PROJECT EXISTS", "");
       DEBUG_PRINTLN("Project exists");
-      return;
+      return false;
     }
 
     bool ret = proj.new_project(full_path);
@@ -36,20 +40,13 @@ void NewProjectPage::display() {
       if (proj.load_project(full_path)) {
         grid_page.reload_slot_models = false;
         GUI.setPage(&grid_page);
-        return;
       } else {
         gfx.alert("SD FAILURE", "--");
-        return;
       }
+      return false;
     }
   } else if (proj.project_loaded) {
     GUI.setPage(&grid_page);
+    return true;
   }
-}
-
-
-bool NewProjectPage::handleEvent(gui_event_t *event)
-{
-  // don't handle any events
-  return false;
 }

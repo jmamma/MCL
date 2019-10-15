@@ -45,7 +45,7 @@ bool GridRowHeader::is_empty() {
     if (track_type[x] == 0xFF) {
     count++;
     }
-    DEBUG_PRINTLN(track_type[x]);
+    DEBUG_DUMP(track_type[x]);
   }
   return (count == GRID_WIDTH - 1);
 }

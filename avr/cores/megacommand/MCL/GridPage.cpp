@@ -197,7 +197,7 @@ void GridPage::tick_frames() {
   }
   if (clock_diff(frames_startclock, current_clock) >= 250) {
     frames_fps = frames;
-    // DEBUG_PRINTLN((float)frames * (float)4);
+    // DEBUG_DUMP((float)frames * (float)4);
     // frames_fps = ((frames + frames_fps)/ 2);
     frames = 0;
     frames_startclock = slowclock;
@@ -683,12 +683,12 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
 
     show_slot_menu = true;
-    DEBUG_PRINTLN(getCol());
-    DEBUG_PRINTLN(getRow());
+    DEBUG_DUMP(getCol());
+    DEBUG_DUMP(getRow());
     slot.load_track_from_grid(getCol(), getRow());
     DEBUG_PRINTLN("what's in the slot");
-    DEBUG_PRINTLN(slot.chain.loops);
-    DEBUG_PRINTLN(slot.chain.row);
+    DEBUG_DUMP(slot.chain.loops);
+    DEBUG_DUMP(slot.chain.row);
     /*
           if (slot.active == EMPTY_TRACK_TYPE) {
             DEBUG_PRINTLN("empty track");

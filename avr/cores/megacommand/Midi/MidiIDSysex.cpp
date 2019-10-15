@@ -26,7 +26,7 @@ void MidiIDSysexListenerClass::end_immediate() {
   DEBUG_PRINT_FN();
   MidiID *dev = &(sysex->uart->device);
   uint16_t p = (uint16_t) dev;
-  DEBUG_PRINTLN(p);
+  DEBUG_DUMP(p);
 
   uint8_t i = 2;
   if ((sysex->getByte(i++) == 0x06) &&
@@ -51,7 +51,7 @@ void MidiIDSysexListenerClass::end_immediate() {
     msgType = sysex->getByte(2);
     isIDMessage = true;
     DEBUG_PRINTLN("fam code");
-    DEBUG_PRINTLN(dev->family_code[0]);
+    DEBUG_DUMP(dev->family_code[0]);
    return;
   }
 

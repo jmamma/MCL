@@ -87,7 +87,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (GridIOPage::handleEvent(event)) {
     return true;
   }
-  DEBUG_PRINTLN(event->source);
+  DEBUG_DUMP(event->source);
   if (note_interface.is_event(event)) {
     DEBUG_PRINTLN("note event");
     if (note_interface.notes_all_off()) {
