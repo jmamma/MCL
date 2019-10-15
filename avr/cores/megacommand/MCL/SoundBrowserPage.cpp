@@ -26,7 +26,7 @@ void SoundBrowserPage::save_sound() {
   DEBUG_PRINT_FN();
 
   MDSound sound;
-  char sound_name[] = "________";
+  char sound_name[] = "        ";
 
   grid_page.prepare();
   PGM_P tmp;

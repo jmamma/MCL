@@ -25,8 +25,7 @@ void SDDrivePage::init() {
 void SDDrivePage::save_snapshot() {
   DEBUG_PRINT_FN();
 
-  char entry_name[] = "________";
-  strcpy(entry_name, blank_entry);
+  char entry_name[] = "        ";
 
   if (mcl_gui.wait_for_input(entry_name, "Snapshot Name", 8)) {
     if (file.isOpen()) {

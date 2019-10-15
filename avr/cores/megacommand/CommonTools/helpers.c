@@ -288,6 +288,18 @@ void m_strnappend(void *dst, const char *src, int len) {
   m_strncpy(ptr, src, len - i);
 }
 
+/** Convert the string to UPPERCASE. **/
+void m_toupper(char* str)
+{
+  char chr;
+  while((chr = *str)) {
+    if(chr >= 'a' && chr <= 'z') {
+      *str = chr - 'a' + 'A';
+    }
+    ++str;
+  }
+}
+
 /** @} **/
 
 /**

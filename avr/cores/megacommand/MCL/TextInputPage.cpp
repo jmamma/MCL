@@ -162,8 +162,13 @@ void TextInputPage::display_normal() {
   oled_display.println(text);
   if (time < FLASH_SPEED) {
     // the default font is 6x8
-    oled_display.fillRect(s_text_x + 6 * cursor_position, s_text_y, 6, 8,
-                          INVERT);
+    auto tx = s_text_x + 6 * cursor_position;
+    oled_display.fillRect(tx, s_text_y, 6, 8,
+                          WHITE);
+    oled_display.setCursor(s_text_x + 6 * cursor_position, s_text_y);
+    oled_display.setTextColor(BLACK);
+    oled_display.print(text[cursor_position]);
+    oled_display.setTextColor(WHITE);
   }
   if (time > FLASH_SPEED * 2) {
     last_clock = slowclock;

@@ -37,8 +37,14 @@ void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
   oled_display.drawRect(x, y, 5, length, WHITE);
 }
 
+static char title_buf[16];
+
 //  ref: Design/popup_menu.png
 void MCLGUI::draw_popup(const char *title, bool deferred_display) {
+
+  strcpy(title_buf, title);
+  m_toupper(title_buf);
+
   oled_display.setFont(&TomThumb);
 
   // draw menu body
@@ -54,10 +60,10 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display) {
   oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 2, BLACK);
 
   oled_display.setTextColor(BLACK);
-  // auto len = strlen(msg) * 3;
-  // oled_display.setCursor(64 - (len / 2), s_menu_y);
+  //auto len = strlen(title_buf) * 5;
+  //oled_display.setCursor(s_title_x + (s_title_w - len) / 2 , s_menu_y + 3);
   oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
-  oled_display.println(title);
+  oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
   if (!deferred_display) {
     oled_display.display();
@@ -131,7 +137,9 @@ void MCLGUI::draw_infobox(const char* line1, const char* line2)
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(info_x1 + 4, info_y1 + 6);
-  oled_display.println(line1);
+  strcpy(title_buf, line1);
+  m_toupper(title_buf);
+  oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(info_x1 + 23, info_y1 + 17);
