@@ -8,7 +8,11 @@
 #define MONO 0
 #define LINK 1
 
-void RAMPage::setup() { DEBUG_PRINT_FN(); }
+void RAMPage::setup() {
+  DEBUG_PRINT_FN();
+  encoders[0]->cur = MONO;
+  encoders[3]->cur = 4;
+}
 
 void RAMPage::init() {
   DEBUG_PRINT_FN();
@@ -189,7 +193,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           mcl_seq.md_tracks[track].locks[0][n] = 128;
         }
         break;
-      case 6:
+      case 5:
 
         mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (slices - s) + 1;
         mcl_seq.md_tracks[track].locks[1][n] =
@@ -199,7 +203,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
         }
 
         break;
-      case 7:
+      case 6:
 
         uint8_t t;
         t = random(0, slices);
@@ -214,7 +218,6 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
       case 3:
       case 2:
       case 1:
-      case 5:
         // Revers every 2nd.
         //
         uint8_t m = mode;
@@ -225,12 +228,6 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
             m = s;
           } else {
             m = s + 1;
-          }
-        } else if (m == 5) {
-          if (IS_BIT_SET64(mcl_seq.md_tracks[0].pattern_mask, n)) {
-            m = s;
-          } else {
-            m = m + 1;
           }
         }
 
@@ -342,7 +339,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 void RAMPage::setup_ram_play_mono(uint8_t track) {
   magic = 0;
   uint8_t model = RAM_P1_MODEL;
-  if (page_id == 0) {
+  if (page_id == 1) {
     model = RAM_P2_MODEL;
   }
   setup_ram_play(track, model, 64);
@@ -361,7 +358,7 @@ void RAMPage::setup_ram_play_stereo(uint8_t track) {
 void RAMPage::setup_ram_rec_mono(uint8_t track, uint8_t mlev, uint8_t len,
                                  uint8_t rate) {
   uint8_t model = RAM_R1_MODEL;
-  if (page_id == 0) {
+  if (page_id == 1) {
     model = RAM_R2_MODEL;
   }
   setup_ram_rec(track, model, mlev, len, rate, 63);
@@ -388,7 +385,8 @@ void RAMPage::display() {
   uint8_t x;
   // GUI.put_string_at(12,"RAM");
   GUI.put_string_at(0, "RAM");
-  uint8_t n = 15 - page_id;
+  GUI.put_value_at1(4, page_id + 1);
+  uint8_t n = 14 + page_id;
   if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
   if ((rec_state == STATE_QUEUE) && (MidiClock.div16th_counter == transition_step + record_len)) {
       rec_state = STATE_RECORD;
@@ -400,13 +398,13 @@ void RAMPage::display() {
   // in_sysex = 0;
   switch (rec_state) {
   case STATE_QUEUE:
-    GUI.put_string_at(5, "[Queue]");
+    GUI.put_string_at(6, "[Queue]");
     break;
   case STATE_RECORD:
-    GUI.put_string_at(5, "[Recording]");
+    GUI.put_string_at(6, "[Record]");
     break;
   case STATE_PLAY:
-    GUI.put_string_at(5, "[Playback]");
+    GUI.put_string_at(6, "[Play]");
     break;
   }
 
@@ -513,9 +511,9 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     if (encoders[0]->cur == 0) {
       if (page_id == 0) {
-        setup_ram_rec_mono(15, 64, 4 * encoders[3]->cur - 1, 128);
-      } else {
         setup_ram_rec_mono(14, 64, 4 * encoders[3]->cur - 1, 128);
+      } else {
+        setup_ram_rec_mono(15, 64, 4 * encoders[3]->cur - 1, 128);
       }
     } else {
         setup_ram_rec_stereo(14, 64 - 16, 4 * encoders[3]->cur - 1, 128);
@@ -525,7 +523,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     magic = 1;
     if (encoders[0]->cur == MONO) {
-      slice(15 - page_id, 255);
+      slice(14 + page_id, 255);
     } else {
       slice(14, 15);
       slice(15, 14);
@@ -535,8 +533,8 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     magic = 0;
     if (encoders[0]->cur == MONO) {
-      if (!slice(15 - page_id, 255)) {
-        setup_ram_play_mono(15 - page_id);
+      if (!slice(14 + page_id, 255)) {
+        setup_ram_play_mono(14 + page_id);
       }
     } else {
       slice(14, 15);
@@ -554,17 +552,17 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-MCLEncoder ram_a_param1(MONO, 1, 2);
-MCLEncoder ram_a_param2(0, 255, 2);
-MCLEncoder ram_a_param3(0, 5, 2);
-MCLEncoder ram_a_param4(4, 8, 2);
+MCLEncoder ram_a_param1(0, 1);
+MCLEncoder ram_a_param2(0, 6);
+MCLEncoder ram_a_param3(0, 5);
+MCLEncoder ram_a_param4(1, 8);
 
-MCLEncoder ram_b_param1(MONO, 1, 2);
-MCLEncoder ram_b_param2(0, 255, 2);
-MCLEncoder ram_b_param3(0, 5, 2);
-MCLEncoder ram_b_param4(4, 8, 2);
+MCLEncoder ram_b_param1(0, 1);
+MCLEncoder ram_b_param2(0, 6);
+MCLEncoder ram_b_param3(0, 5);
+MCLEncoder ram_b_param4(1, 8);
 
-RAMPage ram_page_a((uint8_t)1, &ram_a_param1, &ram_a_param2, &ram_a_param3,
+RAMPage ram_page_a((uint8_t)0, &ram_a_param1, &ram_a_param2, &ram_a_param3,
                    &ram_a_param4);
-RAMPage ram_page_b((uint8_t)0, &ram_a_param1, &ram_b_param2, &ram_b_param3,
+RAMPage ram_page_b((uint8_t)1, &ram_a_param1, &ram_b_param2, &ram_b_param3,
                    &ram_b_param4);
