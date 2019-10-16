@@ -17,14 +17,14 @@ void RAMPage::setup() {
 void RAMPage::init() {
   DEBUG_PRINT_FN();
 #ifdef OLED_DISPLAY
-  // classic_display = false;
+  classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
   encoders[0]->cur = MONO;
   md_exploit.off();
   if (page_id == 0) {
-  setup_callbacks();
+    setup_callbacks();
   }
 }
 
@@ -84,12 +84,12 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
     md_track.seq_data.pattern_mask = 1;
-   // md_track.seq_data.conditional[0] = 14;
+    // md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
     md_track.seq_data.pattern_mask = 1;
     // oneshot
-    //md_track.seq_data.conditional[0] = 14;
+    // md_track.seq_data.conditional[0] = 14;
   } else {
     md_track.machine.trigGroup = 255;
     md_track.seq_data.pattern_mask = 0;
@@ -112,7 +112,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t mlev,
       MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
 
   transition_step = next_step;
-  record_len = (uint8_t) steps;
+  record_len = (uint8_t)steps;
   /*
     if (MD.kit.models[track] == md_track.machine.model) {
     mcl_actions.send_machine[track] = 1; } else {
@@ -329,7 +329,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   // mcl_actions.transition_level[track] = TRANSITION_MUTE;
   mcl_actions.next_transitions[track] = next_step;
   transition_step = next_step;
-  record_len = (uint8_t) steps;
+  record_len = (uint8_t)steps;
   mcl_actions.calc_next_transition();
 
   EmptyTrack empty_track;
@@ -373,6 +373,21 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t mlev, uint8_t len,
   setup_ram_rec(track + 1, RAM_R2_MODEL, mlev, len, rate, 127, track);
 }
 
+void RAMPage::loop() {
+  uint8_t n = 14 + page_id;
+  if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
+    if ((rec_state == STATE_QUEUE) &&
+        (MidiClock.div16th_counter == transition_step + record_len)) {
+      rec_state = STATE_RECORD;
+    }
+    // else if ((rec_state == STATE_RECORD) && (MidiClock.div16th_counter >=
+    // transition_step + record_len + record_len)) {
+  } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
+             (MidiClock.div16th_counter >= transition_step + record_len)) {
+    rec_state = STATE_PLAY;
+  } 
+}
+
 void RAMPage::display() {
 
   if (!classic_display) {
@@ -380,22 +395,14 @@ void RAMPage::display() {
     oled_display.clearDisplay();
 #endif
   }
+#ifndef OLED_DISPLAY
   GUI.clearLines();
   GUI.setLine(GUI.LINE1);
   uint8_t x;
-  // GUI.put_string_at(12,"RAM");
+
   GUI.put_string_at(0, "RAM");
   GUI.put_value_at1(4, page_id + 1);
-  uint8_t n = 14 + page_id;
-  if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
-  if ((rec_state == STATE_QUEUE) && (MidiClock.div16th_counter == transition_step + record_len)) {
-      rec_state = STATE_RECORD;
-  }
-  //else if ((rec_state == STATE_RECORD) && (MidiClock.div16th_counter >= transition_step + record_len + record_len)) {
-  } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY)  && (MidiClock.div16th_counter >= transition_step + record_len)) {
-    rec_state = STATE_PLAY;
-  }
-  // in_sysex = 0;
+
   switch (rec_state) {
   case STATE_QUEUE:
     GUI.put_string_at(6, "[Queue]");
@@ -421,13 +428,87 @@ void RAMPage::display() {
   GUI.put_value_at2(8, 1 << encoders[2]->cur);
   GUI.put_string_at(11, "L:");
   GUI.put_value_at2(13, (encoders[3]->cur * 4));
-/*
-GUI.put_value_at1(8,msb);
-GUI.put_string_at(9,".");
-GUI.put_value_at1(10,mantissa / 10);
-GUI.put_value_at1(11,mantissa % 10);
-*/
+#endif
 #ifdef OLED_DISPLAY
+
+  oled_display.setCursor(0,0);
+
+  oled_display.print("RAM");
+  oled_display.print(page_id + 1);
+  switch (rec_state) {
+  case STATE_QUEUE:
+    oled_display.print(" [Queue]");
+    break;
+  case STATE_RECORD:
+    oled_display.print(" [Record]");
+    break;
+  case STATE_PLAY:
+    oled_display.print(" [Play]");
+    break;
+  }
+
+
+oled_display.setCursor(0,15);
+  if (encoders[0]->cur == 0) {
+    oled_display.print("MON ");
+  } else {
+    oled_display.print("LNK ");
+  }
+
+  oled_display.print(encoders[1]->cur);
+  oled_display.print(" S:");
+  oled_display.print(1 << encoders[2]->cur);
+  oled_display.print(" Q:");
+  oled_display.print(encoders[3]->cur * 4);
+
+  uint8_t w_x = 100, w_y = 4;
+  oled_display.drawPixel(w_x + 21, w_y + 24, WHITE);
+  oled_display.drawCircle(w_x + 21, w_y + 24, 2, WHITE);
+  oled_display.drawLine(w_x + 21, w_y + 9, w_x + 23, +w_y + 23, WHITE);
+  oled_display.drawLine(w_x + 9, w_y + 21, w_x + 21, +w_y + 26, WHITE);
+
+  switch (wheel_spin) {
+  case 0:
+    oled_display.drawBitmap(w_x, w_y, wheel_top, 21, 21, WHITE);
+    break;
+  case 1:
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE);
+    break;
+  case 2:
+    oled_display.drawBitmap(w_x, w_y, wheel_side, 21, 21, WHITE);
+    break;
+  case 3:
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, false, true);
+    break;
+  case 4:
+    oled_display.drawBitmap(w_x, w_y, wheel_top, 21, 21, WHITE, false, true);
+    break;
+  case 5:
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, true, true);
+    break;
+  case 6:
+    oled_display.drawBitmap(w_x, w_y, wheel_side, 21, 21, WHITE, true, false);
+    break;
+  case 7:
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, true, false);
+    break;
+  }
+  if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
+      ((rec_state == STATE_RECORD) || (rec_state == STATE_PLAY))) {
+    if (magic == 1) {
+      if (wheel_spin == 0) {
+        wheel_spin = 8;
+      }
+      wheel_spin--;
+    } else {
+      wheel_spin++;
+      if (wheel_spin == 8) {
+        wheel_spin = 0;
+      }
+    }
+    wheel_spin_last_clock = MidiClock.div16th_counter;
+  }
+  oled_display.display();
 #endif
 }
 void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -440,7 +521,9 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   // to all polyphonic tracks
   uint8_t param_true = 0;
 
-  if (encoders[0]->cur == MONO) { return; }
+  if (encoders[0]->cur == MONO) {
+    return;
+  }
   MD.parseCC(channel, param, &track, &track_param);
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
@@ -516,8 +599,8 @@ bool RAMPage::handleEvent(gui_event_t *event) {
         setup_ram_rec_mono(15, 64, 4 * encoders[3]->cur - 1, 128);
       }
     } else {
-        setup_ram_rec_stereo(14, 64 - 16, 4 * encoders[3]->cur - 1, 128);
-      }
+      setup_ram_rec_stereo(14, 64 - 16, 4 * encoders[3]->cur - 1, 128);
+    }
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
