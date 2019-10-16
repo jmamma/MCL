@@ -385,7 +385,7 @@ void RAMPage::loop() {
   } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
              (MidiClock.div16th_counter >= transition_step + record_len)) {
     rec_state = STATE_PLAY;
-  } 
+  }
 }
 
 void RAMPage::display() {
@@ -402,8 +402,7 @@ void RAMPage::display() {
 
   GUI.put_string_at(0, "RAM");
   GUI.put_value_at1(4, page_id + 1);
-
-  switch (rec_state) {
+  ≈ switch (rec_state) {
   case STATE_QUEUE:
     GUI.put_string_at(6, "[Queue]");
     break;
@@ -430,8 +429,23 @@ void RAMPage::display() {
   GUI.put_value_at2(13, (encoders[3]->cur * 4));
 #endif
 #ifdef OLED_DISPLAY
+  float remain;
+  if (rec_state != STATE_NOSTATE) {
+    if (transition_step > MidiClock.div16th_counter) {
 
-  oled_display.setCursor(0,0);
+      remain =
+          ((float)(transition_step) /
+           (float)MidiClock.div16th_counter);
+    }
+    //  else if (rec_state == STATE_RECORD{
+    else {
+      uint8_t n = 14 + page_id;
+      remain = (float)mcl_seq.md_tracks[n].step_count /
+               (float)mcl_seq.md_tracks[n].length;
+    }
+  oled_display.fillRect(0, 28, remain * 50, 4, WHITE);
+  }
+  oled_display.setCursor(0, 0);
 
   oled_display.print("RAM");
   oled_display.print(page_id + 1);
@@ -447,8 +461,7 @@ void RAMPage::display() {
     break;
   }
 
-
-oled_display.setCursor(0,15);
+  oled_display.setCursor(0, 15);
   if (encoders[0]->cur == 0) {
     oled_display.print("MON ");
   } else {
