@@ -546,7 +546,7 @@ void RAMPage::display() {
     oled_display.print("STEREO ");
   }
   oled_display.setFont();
-  oled_display.setCursor(0, 20);
+  oled_display.setCursor(0, 24);
   switch (encoders[0]->cur) {
   case SOURCE_MAIN:
     if (mcl_cfg.ram_page_mode == LINK) {
@@ -568,7 +568,7 @@ void RAMPage::display() {
         oled_display.print("INPB ");
       }
     } else {
-      oled_display.print("INPA");
+      oled_display.print("INPA ");
     }
 
     break;
@@ -580,7 +580,7 @@ void RAMPage::display() {
         oled_display.print("INPB ");
       }
     } else {
-      oled_display.print("INPB");
+      oled_display.print("INPB ");
     }
     break;
   }
@@ -723,7 +723,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     if (mcl_cfg.ram_page_mode == MONO) {
-      uint8_t lev = 64 - 32;
+      uint8_t lev = 64;
       if (encoders[0]->cur == SOURCE_MAIN) {
         lev = 64;
       }
@@ -740,7 +740,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
                              4 * encoders[3]->cur - 1, 128);
       }
       if (encoders[0]->cur == SOURCE_INP) {
-        setup_ram_rec_stereo(14, 64 - 32, encoders[0]->cur,
+        setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
                              4 * encoders[3]->cur - 1, 128);
       }
     }
