@@ -11,6 +11,7 @@ MCLEncoder config_param4(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
 
+MenuPage aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
 MenuPage system_page(&system_menu_layout, &options_param1, &options_param2);
 MenuPage midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
