@@ -39,6 +39,7 @@ public:
   void loop();
   void display();
   void setup();
+  void select_track(uint8_t device, uint8_t track);
   void init();
   void cleanup();
 };

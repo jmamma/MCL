@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "SeqPage.h"
+#include "MCL.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -39,15 +39,45 @@ void SeqPage::cleanup() {
   note_interface.init_notes();
 }
 
+void SeqPage::select_track(uint8_t device, uint8_t track) {
+  if (device == DEVICE_MD) {
+    last_md_track = track;
+#ifdef EXT_TRACK
+    if (GUI.currentPage() == &seq_extstep_page) {
+      GUI.setPage(&seq_step_page);
+    }
+#endif
+    GUI.currentPage()->redisplay = true;
+    GUI.currentPage()->config();
+    encoders[2]->old = encoders[2]->cur;
+  }
+#ifdef EXT_TRACK
+  else {
+    last_ext_track = track - 16;
+    if (GUI.currentPage() == &seq_step_page) {
+      GUI.setPage(&seq_extstep_page);
+    }
+    GUI.currentPage()->redisplay = true;
+    GUI.currentPage()->config();
+    encoders[2]->old = encoders[2]->cur;
+  }
+#endif
+}
+
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
     uint8_t track = event->source - 128;
 
+    //  TI + SHIFT1: adjust track seq length.
+    //  Ignore SHIFT1 release event so it won't trigger
+    //  a seq page select action.
     if (BUTTON_DOWN(Buttons.BUTTON2)) {
+      //  calculate the intended seq length.
       uint8_t step = track;
       step += 1 + page_select * 16;
+      //  Further, if SHIFT2 is pressed, set all tracks.
       if (SeqPage::midi_device == DEVICE_MD) {
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
@@ -55,7 +85,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
           }
         }
         mcl_seq.md_tracks[last_md_track].length = step;
-      } 
+      }
 #ifdef EXT_TRACKS
       else {
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
@@ -74,38 +104,18 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return true;
       //}
     }
+
+    // TI + SHIFT2 = select track.
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
-      if (device == DEVICE_MD) {
-        last_md_track = track;
-#ifdef EXT_TRACK
-        if (GUI.currentPage() == &seq_extstep_page) {
-          GUI.setPage(&seq_step_page);
-        }
-#endif
-        GUI.currentPage()->redisplay = true;
-        GUI.currentPage()->config();
-        encoders[2]->old = encoders[2]->cur;
-        return true;
-      }
-#ifdef EXT_TRACK
-      else {
-      last_ext_track = track - 16;
-        if (GUI.currentPage() == &seq_step_page) {
-          GUI.setPage(&seq_extstep_page);
-        }
-        GUI.currentPage()->redisplay = true;
-        GUI.currentPage()->config(); 
-        encoders[2]->old = encoders[2]->cur;
-        return true;
-      }
-#endif
-      if (event->mask == EVENT_BUTTON_RELEASED) {
-        note_interface.notes[track] = 0;
-        ignore_button_release = 2;
-      }
+      select_track(device, track);
       return true;
     }
-  }
+
+    // notify derived class about unhandled TI event
+    return false;
+  } // end TI events
+
+  // if no TI button pressed, enable page switching.
   if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
     if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
       GUI.setPage(&seq_step_page);
@@ -128,6 +138,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return false;
     }
   }
+
+  // A not-ignored BUTTON2 release event triggers sequence page select
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     if (ignore_button_release != 2) {
       ignore_button_release = 255;
@@ -143,6 +155,25 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
+
+  // SHIFT2 changes ENC4 to track select
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    encoders[3] = &trackselect_enc;
+    if (midi_device == DEVICE_MD) {
+      trackselect_enc.cur = trackselect_enc.old = last_md_track;
+    }
+#ifdef EXT_TRACKS
+    else if (midi_device == DEVICE_A4) {
+      trackselect_enc.cur = trackselect_enc.old = last_ext_track;
+    }
+#endif
+  }
+  else if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    encoders[3] = &seq_param4;
+  }
+  
+  
+
   /*
   #ifdef OLED_DISPLAY
 
@@ -188,6 +219,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   */
   return false;
 }
+
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
@@ -404,7 +436,9 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 }
 void pattern_len_handler(Encoder *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
-  if (!enc_->hasChanged()) { return; }
+  if (!enc_->hasChanged()) {
+    return;
+  }
   if (SeqPage::midi_device == DEVICE_MD) {
     DEBUG_PRINTLN("under 16");
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
@@ -445,8 +479,28 @@ void SeqPage::loop() {
     }
 #endif
     track_menu_page.loop();
+    return;
+  }
+
+  if (trackselect_enc.hasChanged()) {
+
+    auto plus = trackselect_enc.cur > trackselect_enc.old;
+    auto track = last_md_track;
+#ifdef EXT_TRACKS
+    if (midi_device == DEVICE_A4) {
+      track = last_ext_track;
+    }
+#endif
+    if(plus && track < 15) {
+      ++track;
+    }else if (!plus && track > 0) {
+      --track;
+    }
+    select_track(midi_device, track);
+    trackselect_enc.old = trackselect_enc.cur = track;
   }
 }
+
 void SeqPage::display() {
 
   for (uint8_t i = 0; i < 2; i++) {
@@ -461,6 +515,28 @@ void SeqPage::display() {
   }
   GUI.setLine(GUI.LINE1);
 #ifdef OLED_DISPLAY
+
+  //  Display current active track
+  oled_display.fillRect(110, 0, 18, 32, BLACK);
+  oled_display.setCursor(110, 0);
+  oled_display.print("TRK");
+  oled_display.setCursor(110, 8);
+  oled_display.setFont(&TomThumb);
+  if (midi_device == DEVICE_MD) {
+    oled_display.print("MD ");
+    oled_display.print(last_md_track + 1);
+  }
+#ifdef EXT_TRACKS
+  else if (midi_device == DEVICE_A4) {
+    oled_display.print("A4 ");
+    oled_display.print(last_ext_track + 1);
+  }
+  else {
+    oled_display.print("MI ");
+    oled_display.print(last_ext_track + 1);
+  }
+#endif
+
   if (show_track_menu) {
     uint8_t x_offset = 43;
     uint8_t y_offset = 8;
