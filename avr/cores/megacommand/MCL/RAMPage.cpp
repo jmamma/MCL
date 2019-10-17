@@ -456,41 +456,41 @@ void RAMPage::display() {
       GUI.put_string_at(0, "LNK");
     }
   */
-  switch (encoders[0]->cur) {
+
+    switch (encoders[0]->cur) {
   case SOURCE_MAIN:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0, "L");
+        GUI.put_string_at(0,"L");
       }
       if (page_id == 1) {
-        GUI.put_string_at(0, "R");
+        GUI.put_string_at(0,"R");
       }
     } else {
-      GUI.put_string_at(0, "M");
+      GUI.put_string_at(0,"M");
     }
     break;
   case SOURCE_INPA:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0, "IA");
-      }
-      if (page_id == 1) {
-        GUI.put_string_at(0, "IB");
+        GUI.put_string_at(0,"INA");
+      } else {
+        GUI.put_string_at(0,"INB");
       }
     } else {
-      GUI.put_string_at(0, "IA");
+      GUI.put_string_at(0,"INA");
     }
+
     break;
   case SOURCE_INPB:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0, "IA");
-      }
-      if (page_id == 1) {
-        GUI.put_string_at(0, "IB");
+        GUI.put_string_at(0,"INA");
+      } else {
+        GUI.put_string_at(0,"INB");
       }
     } else {
-      GUI.put_string_at(0, "IB");
+      GUI.put_string_at(0,"INB");
     }
     break;
   }
@@ -502,7 +502,8 @@ void RAMPage::display() {
 #endif
 #ifdef OLED_DISPLAY
   float remain;
-  if (rec_state != STATE_NOSTATE) {
+  oled_display.drawRoundRect(105, 28, 20, 4 , 1, WHITE);
+  if ((rec_state != STATE_NOSTATE)) {
     if (MidiClock.clock_less_than(transition_step + record_len,
                                   MidiClock.div16th_counter)) {
 
@@ -515,8 +516,9 @@ void RAMPage::display() {
       remain = (float)mcl_seq.md_tracks[n].step_count /
                (float)mcl_seq.md_tracks[n].length;
     }
-    oled_display.drawRect(100, 28, 20, 4, WHITE);
-    oled_display.fillRect(100, 28, remain * 20, 4, WHITE);
+    uint8_t width = remain * 18;
+    if (width <= 3) { width = 3; }
+    oled_display.fillRoundRect(105, 28, width, 4, 1, WHITE);
   }
   oled_display.setFont();
   oled_display.setCursor(0, 0);
@@ -549,37 +551,36 @@ void RAMPage::display() {
   case SOURCE_MAIN:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        oled_display.print("LEFT   ");
+        oled_display.print("LEFT ");
       }
       if (page_id == 1) {
-        oled_display.print("RIGHT  ");
+        oled_display.print("RIGHT");
       }
     } else {
-      oled_display.print("MAIN   ");
+      oled_display.print("MAIN ");
     }
     break;
   case SOURCE_INPA:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        oled_display.print("INPUTA ");
-      }
-      if (page_id == 1) {
-        oled_display.print("INPUTB ");
+        oled_display.print("INPA ");
+      } else {
+        oled_display.print("INPB ");
       }
     } else {
-      oled_display.print("INPUTA ");
+      oled_display.print("INPA");
     }
+
     break;
   case SOURCE_INPB:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        oled_display.print("INPUTA ");
-      }
-      if (page_id == 1) {
-        oled_display.print("INPUTB ");
+        oled_display.print("INPA ");
+      } else {
+        oled_display.print("INPB ");
       }
     } else {
-      oled_display.print("INPUTB ");
+      oled_display.print("INPB");
     }
     break;
   }
@@ -590,36 +591,36 @@ void RAMPage::display() {
   oled_display.print(" LEN:");
   oled_display.print(encoders[3]->cur * 4);
 
-  uint8_t w_x = 100, w_y = 0;
-  oled_display.drawPixel(w_x + 21, w_y + 24, WHITE);
-  oled_display.drawCircle(w_x + 21, w_y + 24, 2, WHITE);
-  oled_display.drawLine(w_x + 21, w_y + 9, w_x + 23, w_y + 23, WHITE);
-  oled_display.drawLine(w_x + 9, w_y + 21, w_x + 21, w_y + 26, WHITE);
+  uint8_t w_x = 104, w_y = 0;
+  oled_display.drawPixel(w_x + 19, w_y + 24, WHITE);
+  oled_display.drawCircle(w_x + 19, w_y + 24, 2, WHITE);
+  oled_display.drawLine(w_x + 18, w_y + 9, w_x + 21, w_y + 23, WHITE);
+  oled_display.drawLine(w_x + 7, w_y + 19, w_x + 19, w_y + 26, WHITE);
 
   switch (wheel_spin) {
   case 0:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 21, 21, WHITE);
+    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE);
     break;
   case 1:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE);
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE);
     break;
   case 2:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 21, 21, WHITE);
+    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE);
     break;
   case 3:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, false, true);
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, false, true);
     break;
   case 4:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 21, 21, WHITE, false, true);
+    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE, false, true);
     break;
   case 5:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, true, true);
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, true);
     break;
   case 6:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 21, 21, WHITE, true, false);
+    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE, true, false);
     break;
   case 7:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 21, 21, WHITE, true, false);
+    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, false);
     break;
   }
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
