@@ -374,7 +374,7 @@ void GridPage::display_grid() {
   encoders[1]->handler = NULL;
   //  oled_display.setFont(&Org_01);
 
-  oled_display.setCursor(x_offset - 5, y_offset + cur_row * 8);
+  oled_display.setCursor(x_offset - 6, y_offset + cur_row * 8);
   oled_display.print(">");
 
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
@@ -436,13 +436,18 @@ void GridPage::display_grid() {
       if (track_idx % 4 == 3) {
         if (y == 0) {
           // draw vertical separator
-          mcl_gui.draw_vertical_dashline(cur_posx + 9);
+          mcl_gui.draw_vertical_dashline(cur_posx + 9, 3);
         }
         cur_posx += 12;
       } else {
         cur_posx += 10;
       }
     }
+  }
+
+  // optionally, draw the first separator
+  if ((getCol() - cur_col) % 4 == 0) {
+    mcl_gui.draw_vertical_dashline(x_offset - 2, 3);
   }
 #endif
 }

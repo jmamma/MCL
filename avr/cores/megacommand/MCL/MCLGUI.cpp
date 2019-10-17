@@ -10,8 +10,8 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   return text_input_page.return_state;
 }
 
-void MCLGUI::draw_vertical_dashline(uint8_t x) {
-  for (uint8_t y = 1; y < 32; y += 2) {
+void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from) {
+  for (uint8_t y = from; y < 32; y += 2) {
     oled_display.drawPixel(x, y, WHITE);
   }
 }

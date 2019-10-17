@@ -9,7 +9,7 @@ class MCLGUI {
 public:
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_infobox(const char* line1, const char* line2);
-  void draw_vertical_dashline(uint8_t x);
+  void draw_vertical_dashline(uint8_t x, uint8_t from = 1);
   void draw_vertical_separator(uint8_t x);
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
   ///  Clear the content area of a popup
