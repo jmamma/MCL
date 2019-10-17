@@ -730,6 +730,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     merge_md = 0;
     return true;
   }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     apply_slot_changes();
     return true;
@@ -773,6 +774,34 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 #endif
+
+  if (BUTTON_DOWN(Buttons.BUTTON3) &&
+      (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+       EVENT_PRESSED(event, Buttons.ENCODER2) ||
+       EVENT_PRESSED(event, Buttons.ENCODER3) ||
+       EVENT_PRESSED(event, Buttons.ENCODER4))) {
+    show_slot_menu = false;
+    encoders[0] = &param1;
+    encoders[1] = &param2;
+    auto col = getCol();
+    for (int i = 0; i < 20; ++i) {
+      note_interface.notes[i] = 0;
+    }
+    note_interface.notes[col] = 3;
+    mcl_actions.write_tracks(0, getRow());
+    if (col < 16) {
+      last_md_track = col;
+      trackselect_enc.cur = trackselect_enc.old = col;
+    }
+#ifdef EXT_TRACKS
+    else {
+      last_ext_track = col - 16;
+      trackselect_enc.cur = trackselect_enc.old = col - 16;
+    }
+#endif
+    md_exploit.ignore_last_track_once = true;
+  }
+
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();
