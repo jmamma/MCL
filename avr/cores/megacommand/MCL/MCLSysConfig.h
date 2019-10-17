@@ -38,6 +38,7 @@ public:
   uint8_t chain_rand_min;
   uint8_t chain_rand_max;
   uint8_t auto_normalize;
+  uint8_t ram_page_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {
