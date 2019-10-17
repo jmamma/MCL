@@ -71,6 +71,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display) {
 }
 
 void MCLGUI::clear_popup() {
+  // XXX too slow
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, s_menu_h - 5,
                         BLACK);
 }
