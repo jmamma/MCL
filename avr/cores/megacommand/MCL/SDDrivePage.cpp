@@ -27,11 +27,6 @@ void SDDrivePage::save_snapshot() {
 
   char entry_name[] = "        ";
 
-  if (mcl_gui.wait_for_confirm("Confirm", "Save snapshot?"))
-  {
-    gfx.alert("Confirmed", "Save");
-  }
-
   if (mcl_gui.wait_for_input(entry_name, "Snapshot Name", 8)) {
     if (file.isOpen()) {
       file.close();
