@@ -632,7 +632,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
     if ((kit_->params[track][i] != machine->params[i]) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
       //       (mcl_seq.md_tracks[track].is_param(i)))) {
-      bytes += 3;
+      if (machine->params[i] != 255) { bytes += 3; }
     }
   }
 
@@ -704,7 +704,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
           ((i < 8) && (kit_->models[track] != machine->model))) {
         //   (mcl_seq.md_tracks[track].is_param(i)))) {
         // mcl_seq.md_tracks[track].params[i] = machine->params[i];
-        MD.setTrackParam(track, i, machine->params[i]);
+        if (machine->params[i] != 255) { MD.setTrackParam(track, i, machine->params[i]); }
       }
     }
   }

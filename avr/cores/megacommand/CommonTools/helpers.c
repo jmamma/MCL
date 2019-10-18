@@ -391,6 +391,11 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) {
  * @{
  **/
 
+//Determine if co-ordinate x,y is within rectangular area 
+bool in_area(int x, int y, int x2, int y2, int w, int h) {
+  return (x >= x2) && (x <= x2 + w) && (y >= y2) && (y <= y2 + h);
+}
+
 /**
  * Map x from the range in_min - in_max to the range out_min - out_max.
  *
