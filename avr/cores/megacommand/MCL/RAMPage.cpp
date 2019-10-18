@@ -426,6 +426,17 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
 }
 
 void RAMPage::loop() {
+
+  //Prevent number of slices exceeding number of steps.
+  uint8_t steps = encoders[3]->cur * 4;
+  uint8_t slices = 1 << encoders[2]->cur;
+
+  while (slices > steps) {
+  encoders[2]->cur--;
+ // encoders[2]->old = encoders[2]->cur;
+  slices = 1 << encoders[2]->cur;
+  }
+
   uint8_t n = 14 + page_id;
   if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
     if ((RAMPage::rec_states[page_id] == STATE_QUEUE) &&
@@ -617,7 +628,7 @@ void RAMPage::display() {
   oled_display.print(encoders[1]->cur);
   oled_display.print(" S:");
   oled_display.print(1 << encoders[2]->cur);
-  oled_display.print(" LEN:");
+  oled_display.print(" L:");
   oled_display.print(encoders[3]->cur * 4);
 
   uint8_t w_x = 104, w_y = 0;
