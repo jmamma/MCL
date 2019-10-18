@@ -6,6 +6,7 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
+#define NUM_RAM_PAGES 2
 #define SLOT_RAM_RECORD (1 << (sizeof(GridChain::row) * 8)) - 1 - 1
 #define SLOT_RAM_PLAY (1 << (sizeof(GridChain::row) * 8)) - 1 - 2
 
