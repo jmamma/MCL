@@ -127,8 +127,10 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   uint8_t m = mcl_seq.md_tracks[track].length;
 
-  uint16_t next_step =
-      MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+//  uint16_t next_step =
+  //    MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+
+  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
 
   transition_step = next_step;
   record_len = (uint8_t)steps;
@@ -341,11 +343,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   mcl_actions.chains[track].loops = 1;
   mcl_actions.send_machine[track] = 0;
 
-  uint16_t next_step;
   uint8_t m = mcl_seq.md_tracks[track].length;
 
-  next_step =
-      MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+ //uint16_t next_step =   MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
   grid_page.active_slots[track] = 0x7FFF;
   // mcl_actions.transition_level[track] = TRANSITION_MUTE;
   mcl_actions.next_transitions[track] = next_step;
