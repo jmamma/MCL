@@ -10,6 +10,7 @@ MCLEncoder config_param3(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param4(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
+MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
 
 MenuPage aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
 MenuPage ram_config_page(&rampage1_menu_layout, &config_param1, &config_param6);
@@ -20,6 +21,9 @@ MenuPage md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
 MenuPage mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
+MenuPage ram_config_page(&rampage1_menu_layout, &config_param1,
+                         &config_param7);
+
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);

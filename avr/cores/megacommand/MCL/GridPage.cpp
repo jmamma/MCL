@@ -41,11 +41,28 @@ void GridPage::loop() {
   int8_t diff, new_val;
 #ifdef OLED_DISPLAY
   if (show_slot_menu) {
+
+    if (encoders[3]->hasChanged()) {
+      if (cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1) {
+        load_slot_models();
+        reload_slot_models = true;
+      }
+    }
     grid_slot_page.loop();
     return;
   } else {
   }
-
+  /*
+   if (encoders[2]->hasChanged()) {
+    diff = encoders[2]->cur - encoders[2]->old;
+    if (cur_col + encoders[2]->cur > MAX_VISIBLE_COLS - 1) {
+      encoders[0]->cur += diff;
+      encoders[0]->old = encoders[0]->cur;
+    }
+   }
+*/
+  encoders[2]->cur = 1;
+  encoders[3]->cur = 1;
   if (encoders[0]->hasChanged()) {
     diff = encoders[0]->cur - encoders[0]->old;
     new_val = cur_col + diff;
@@ -179,8 +196,13 @@ uint8_t GridPage::getCol() { return param1.cur; }
 
 void GridPage::load_slot_models() {
 #ifdef OLED_DISPLAY
+  uint8_t row_shift = 0;
+  if ((cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1)) {
+    row_shift = cur_row + encoders[3]->cur - MAX_VISIBLE_ROWS;
+  }
+
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    row_headers[n].read(getRow() - cur_row + n);
+    row_headers[n].read(getRow() - cur_row + n + row_shift);
   }
 #else
 
@@ -372,16 +394,27 @@ void GridPage::display_grid() {
   char str[3];
   PGM_P tmp;
   encoders[1]->handler = NULL;
-  //  oled_display.setFont(&Org_01);
+  uint8_t row_shift = 0;
+  uint8_t col_shift = 0;
+  if (show_slot_menu) {
+    if (cur_col + encoders[2]->cur > MAX_VISIBLE_COLS - 1) {
+      col_shift = cur_col + encoders[2]->cur - MAX_VISIBLE_COLS;
+    }
 
-  oled_display.setCursor(x_offset - 6, y_offset + cur_row * 8);
-  oled_display.print(">");
-
+    if (cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1) {
+      row_shift = cur_row + encoders[3]->cur - MAX_VISIBLE_ROWS;
+    }
+  }
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
+
+    if ((y + row_shift == cur_row)) {
+      oled_display.setCursor(x_offset - 6, y_offset + y * 8);
+      oled_display.print(">");
+    }
 
     auto cur_posx = x_offset;
     auto cur_posy = y_offset + y * 8;
-    for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
+    for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift; x++) {
       oled_display.setCursor(cur_posx, cur_posy);
 
       auto track_idx = x + getCol() - cur_col;
@@ -409,7 +442,8 @@ void GridPage::display_grid() {
       }
 
       //  Highlight the current cursor position + slot menu apply range
-      if (x >= cur_col && x < cur_col + max(1, slot_apply) && y == cur_row) {
+      if (in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
+                  encoders[3]->cur - 1)) {
         oled_display.fillRect(cur_posx - 1, cur_posy - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
         active_cue_color = BLACK;
@@ -446,7 +480,7 @@ void GridPage::display_grid() {
   }
 
   // optionally, draw the first separator
-  if ((getCol() - cur_col) % 4 == 0) {
+  if ((getCol() - cur_col + col_shift) % 4 == 0) {
     mcl_gui.draw_vertical_dashline(x_offset - 2, 3);
   }
 #endif
@@ -586,94 +620,86 @@ void GridPage::apply_slot_changes() {
   show_slot_menu = false;
   encoders[0] = &param1;
   encoders[1] = &param2;
-  uint8_t count;
+
+  uint8_t width;
+  uint8_t height;
+
+  EmptyTrack temp_track;
+  MDTrack *md_track = (MDTrack *)&temp_track;
+  A4Track *a4_track = (A4Track *)&temp_track;
+  ExtTrack *ext_track = (ExtTrack *)&temp_track;
+
+  GridTrack temp_slot;
+  temp_slot.load_track_from_grid(getCol(), getRow());
+
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
     (*row_func)();
     return;
   }
+#ifndef OLED_DISPLAY
   if (slot_apply == 0) {
-    count = 1;
+    width = 1;
   } else {
-    count = slot_apply;
+    width = slot_apply;
   }
+  height = 1;
+#else
+  width = encoders[2]->cur;
+  height = encoders[3]->cur;
+#endif
+
+  uint8_t slot_update = 0;
+
+  if (slot_copy + slot_paste + slot_clear == 0) {
+    if ((temp_slot.chain.row != slot.chain.row) ||
+        (temp_slot.chain.loops != slot.chain.loops)) {
+      slot_update = 1;
+    }
+    height = 1;
+  }
+
   if (slot_copy == 1) {
-    slot_buffer_mask = 0;
-    slot_buffer_row = getRow();
+
+    mcl_clipboard.copy(getCol(), getRow(), width, height);
+
   }
 
   else if (slot_paste == 1) {
-    uint8_t first = 255;
-    uint8_t n = 0;
-    uint8_t count = 0;
-    for (n = 0; n < GRID_WIDTH; n++) {
-      if (IS_BIT_SET32(slot_buffer_mask, n)) {
-        if (first == 255) {
-          first = n;
-        }
-        count++;
-      }
-    }
-    bool destination_same = false;
-    if (count == 1) {
-      destination_same = true;
-    }
-    for (n = 0; n + first < GRID_WIDTH && getCol() + n < GRID_WIDTH; n++) {
-      if (IS_BIT_SET32(slot_buffer_mask, n + first)) {
-        grid.copy_slot(n + first, slot_buffer_row, getCol() + n, getRow(),
-                       destination_same);
-      }
-    }
-    row_headers[cur_row].write(getRow());
-  }
-  if (slot_paste != 1) {
-    MDTrack md_track;
-    MDSeqTrack md_seq_track;
-    for (uint8_t track = 0; track < count && track + getCol() < NUM_TRACKS;
-         track++) {
-      if (slot_clear == 1) {
-        // Delete slot(s)
-        grid.clear_slot(track + getCol(), getRow());
-        row_headers[cur_row].update_model(track + getCol(), EMPTY_TRACK_TYPE,
-                                          DEVICE_NULL);
-        if (row_headers[cur_row].is_empty()) {
-          char *str_tmp = "\0";
-          strcpy(row_headers[cur_row].name, str_tmp);
-          row_headers[cur_row].write(getRow());
-        }
-        reload_slot_models = true;
-        proj.file.sync();
-      } else if (slot_copy == 1) {
-        // Mark slot for copy
-        SET_BIT32(slot_buffer_mask, track + getCol());
-      } else {
-        // Save slot chain data
-        slot.active = row_headers[cur_row].track_type[track + getCol()];
-        //  if (slot.active != EMPTY_TRACK_TYPE) {
-        slot.store_track_in_grid(track + getCol(), getRow());
-        proj.file.sync();
-      }
-      /*
-      Merge sequencer data. Deprecate, now controlled in save page.
+    mcl_clipboard.paste(getCol(), getRow());
+  } else {
+    GridRowHeader header;
 
-      if ((merge_md > 0) && (slot.active != EMPTY_TRACK_TYPE)) {
-        md_track.load_track_from_grid(track + getCol(), getRow());
+    for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
+      header.read(y + getRow());
 
-        memcpy(&(md_seq_track), &(md_track.seq_data), sizeof(MDSeqTrackData));
-        md_seq_track.merge_from_md(&md_track);
-        md_track.clear_track();
-        memcpy(&(md_track.seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-        md_track.store_track_in_grid(track + getCol(), getRow());
+      for (uint8_t x = 0; x < width && x + getCol() < GRID_WIDTH; x++) {
+        if (slot_clear == 1) {
+          // Delete slot(s)
+          grid.clear_slot(x + getCol(), y + getRow());
+          header.update_model(x + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
+        } else if (slot_update == 1) {
+          // Save slot chain data
+          slot.active = header.track_type[x + getCol()];
+          slot.store_track_in_grid(x + getCol(), y + getRow());
+        }
       }
-      */
+      // If all slots are deleted then clear the row name
+      if (header.is_empty() && (slot_clear == 1)) {
+        DEBUG_PRINTLN("clearing row name");
+        char *str_tmp = "\0";
+        header.active = false;
+        strcpy(header.name, str_tmp);
+        header.write(y + getRow());
+      }
     }
   }
-  if ((slot_clear == 1) || (slot_paste == 1)) {
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
+    proj.file.sync();
     load_slot_models();
   }
 
-  proj.file.sync();
   slot_apply = 0;
   slot_clear = 0;
   slot_copy = 0;
@@ -726,6 +752,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
     grid_slot_page.init();
+    encoders[2]->cur = 1;
+    encoders[3]->cur = 1;
     slot_apply = 0;
     merge_md = 0;
     return true;

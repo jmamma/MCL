@@ -14,6 +14,9 @@
 
 #define SOURCE_INP 1
 
+uint8_t RAMPage::rec_states[NUM_RAM_PAGES];
+uint8_t RAMPage::slice_modes[NUM_RAM_PAGES];
+
 void RAMPage::setup() {
   DEBUG_PRINT_FN();
   encoders[3]->cur = 4;
@@ -34,6 +37,12 @@ void RAMPage::init() {
   }
   if (page_id == 0) {
     setup_callbacks();
+  }
+  if (mcl_cfg.ram_page_mode == LINK) {
+   for (uint8_t n = 0; n < 4; n++) {
+   if (page_id == 0) { encoders[n]->cur = ram_page_b.encoders[n]->cur; }
+   else { encoders[n]->cur = ram_page_a.encoders[n]->cur; }
+   }
   }
 }
 
@@ -61,7 +70,10 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   memset(&(md_track.machine.params), 255, 24);
 
   uint16_t steps = encoders[3]->cur * 4;
-  rec_state = STATE_QUEUE;
+  RAMPage::rec_states[page_id] = STATE_QUEUE;
+  if (mcl_cfg.ram_page_mode == LINK) {
+    RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_QUEUE;
+  }
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
 
@@ -127,8 +139,10 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   uint8_t m = mcl_seq.md_tracks[track].length;
 
-  uint16_t next_step =
-      MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+  //  uint16_t next_step =
+  //    MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+
+  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
 
   transition_step = next_step;
   record_len = (uint8_t)steps;
@@ -157,11 +171,11 @@ void RAMPage::reverse(uint8_t track) {
       model != RAM_P4_MODEL) {
     return;
   }
-  if (magic == 0) {
+  if (RAMPage::slice_modes[page_id] == 0) {
     MD.setTrackParam(track, ROM_STRT, 127);
     MD.setTrackParam(track, ROM_END, 0);
   }
-  if (magic == 1) {
+  if (RAMPage::slice_modes[page_id] == 1) {
     MD.setTrackParam(track, ROM_STRT, 0);
     MD.setTrackParam(track, ROM_END, 127);
   }
@@ -198,7 +212,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           mcl_seq.md_tracks[linked_track].locks[0][n];
       mcl_seq.md_tracks[track].locks[1][n] =
           mcl_seq.md_tracks[linked_track].locks[1][n];
-    } else if (magic == 0) {
+    } else if (RAMPage::slice_modes[page_id] == 0) {
       mcl_seq.md_tracks[track].locks[0][n] = sample_inc * s + 1;
       mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (s + 1) + 1;
       if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
@@ -286,7 +300,11 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   uint16_t steps = encoders[3]->cur * 4;
 
-  rec_state = STATE_QUEUE;
+  RAMPage::rec_states[page_id] = STATE_QUEUE;
+  if (mcl_cfg.ram_page_mode == LINK) {
+    RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_QUEUE;
+  }
+
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
   /*
@@ -341,11 +359,11 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   mcl_actions.chains[track].loops = 1;
   mcl_actions.send_machine[track] = 0;
 
-  uint16_t next_step;
   uint8_t m = mcl_seq.md_tracks[track].length;
 
-  next_step =
-      MidiClock.div16th_counter + (m - mcl_seq.md_tracks[track].step_count);
+  // uint16_t next_step =   MidiClock.div16th_counter + (m -
+  // mcl_seq.md_tracks[track].step_count);
+  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
   grid_page.active_slots[track] = 0x7FFF;
   // mcl_actions.transition_level[track] = TRANSITION_MUTE;
   mcl_actions.next_transitions[track] = next_step;
@@ -358,7 +376,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 }
 
 void RAMPage::setup_ram_play_mono(uint8_t track) {
-  magic = 0;
+  RAMPage::slice_modes[page_id] = 0;
   uint8_t model = RAM_P1_MODEL;
   if (page_id == 1) {
     model = RAM_P2_MODEL;
@@ -371,7 +389,7 @@ void RAMPage::setup_ram_play_stereo(uint8_t track) {
     return;
   }
 
-  magic = 0;
+  RAMPage::slice_modes[page_id] = 0;
   setup_ram_play(track, RAM_P1_MODEL, 0, track + 1);
   setup_ram_play(track + 1, RAM_P2_MODEL, 127, track);
 }
@@ -408,17 +426,38 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
 }
 
 void RAMPage::loop() {
+
+  //Prevent number of slices exceeding number of steps.
+  uint8_t steps = encoders[3]->cur * 4;
+  uint8_t slices = 1 << encoders[2]->cur;
+
+  while (slices > steps) {
+  encoders[2]->cur--;
+ // encoders[2]->old = encoders[2]->cur;
+  slices = 1 << encoders[2]->cur;
+  }
+
   uint8_t n = 14 + page_id;
   if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
-    if ((rec_state == STATE_QUEUE) &&
+    if ((RAMPage::rec_states[page_id] == STATE_QUEUE) &&
         (MidiClock.div16th_counter == transition_step + record_len)) {
-      rec_state = STATE_RECORD;
+      if (mcl_cfg.ram_page_mode == LINK) {
+        RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_RECORD;
+      } else {
+        RAMPage::rec_states[page_id] = STATE_RECORD;
+      }
+      // else if ((RAMPage::rec_states[page_id] == STATE_RECORD) &&
+      // (MidiClock.div16th_counter >= transition_step + record_len +
+      // record_len)) {
     }
-    // else if ((rec_state == STATE_RECORD) && (MidiClock.div16th_counter >=
-    // transition_step + record_len + record_len)) {
   } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
+
              (MidiClock.div16th_counter >= transition_step + record_len)) {
-    rec_state = STATE_PLAY;
+    if (mcl_cfg.ram_page_mode == LINK) {
+      RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_PLAY;
+    } else {
+      RAMPage::rec_states[page_id] = STATE_PLAY;
+    }
   }
 }
 
@@ -436,7 +475,7 @@ void RAMPage::display() {
 
   GUI.put_string_at(0, "RAM");
   GUI.put_value_at1(4, page_id + 1);
-  switch (rec_state) {
+  switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
     GUI.put_string_at(6, "[Queue]");
     break;
@@ -457,40 +496,40 @@ void RAMPage::display() {
     }
   */
 
-    switch (encoders[0]->cur) {
+  switch (encoders[0]->cur) {
   case SOURCE_MAIN:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0,"L");
+        GUI.put_string_at(0, "L");
       }
       if (page_id == 1) {
-        GUI.put_string_at(0,"R");
+        GUI.put_string_at(0, "R");
       }
     } else {
-      GUI.put_string_at(0,"M");
+      GUI.put_string_at(0, "M");
     }
     break;
   case SOURCE_INPA:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0,"INA");
+        GUI.put_string_at(0, "INA");
       } else {
-        GUI.put_string_at(0,"INB");
+        GUI.put_string_at(0, "INB");
       }
     } else {
-      GUI.put_string_at(0,"INA");
+      GUI.put_string_at(0, "INA");
     }
 
     break;
   case SOURCE_INPB:
     if (mcl_cfg.ram_page_mode == LINK) {
       if (page_id == 0) {
-        GUI.put_string_at(0,"INA");
+        GUI.put_string_at(0, "INA");
       } else {
-        GUI.put_string_at(0,"INB");
+        GUI.put_string_at(0, "INB");
       }
     } else {
-      GUI.put_string_at(0,"INB");
+      GUI.put_string_at(0, "INB");
     }
     break;
   }
@@ -502,30 +541,31 @@ void RAMPage::display() {
 #endif
 #ifdef OLED_DISPLAY
   float remain;
-  oled_display.drawRoundRect(105, 28, 20, 4 , 1, WHITE);
-  if ((rec_state != STATE_NOSTATE)) {
+  oled_display.drawRoundRect(105, 28, 20, 4, 1, WHITE);
+  if ((RAMPage::rec_states[page_id] != STATE_NOSTATE)) {
     if (MidiClock.clock_less_than(transition_step + record_len,
                                   MidiClock.div16th_counter)) {
 
       remain = ((float)(MidiClock.div16th_counter) /
                 (float)(transition_step + record_len));
     }
-    //  else if (rec_state == STATE_RECORD{
+    //  else if (RAMPage::rec_states[page_id] == STATE_RECORD{
     else {
       uint8_t n = 14 + page_id;
       remain = (float)mcl_seq.md_tracks[n].step_count /
                (float)mcl_seq.md_tracks[n].length;
     }
-    uint8_t width = remain * 18;
-    if (width <= 3) { width = 3; }
-    oled_display.fillRoundRect(105, 28, width, 4, 1, WHITE);
+    uint8_t width = remain * 20;
+    if (width >= 3) {
+      oled_display.fillRoundRect(105, 28, width, 4, 1, WHITE);
+    }
   }
   oled_display.setFont();
   oled_display.setCursor(0, 0);
 
   oled_display.print("RAM");
   oled_display.print(page_id + 1);
-  switch (rec_state) {
+  switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
     oled_display.print(" [Queue]");
     break;
@@ -588,7 +628,7 @@ void RAMPage::display() {
   oled_display.print(encoders[1]->cur);
   oled_display.print(" S:");
   oled_display.print(1 << encoders[2]->cur);
-  oled_display.print(" LEN:");
+  oled_display.print(" L:");
   oled_display.print(encoders[3]->cur * 4);
 
   uint8_t w_x = 104, w_y = 0;
@@ -624,8 +664,10 @@ void RAMPage::display() {
     break;
   }
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
-      ((rec_state == STATE_RECORD) || (rec_state == STATE_PLAY))) {
-    if (magic == 1) {
+      ((RAMPage::rec_states[page_id] == STATE_RECORD) ||
+       (RAMPage::rec_states[page_id] == STATE_PLAY))) {
+    if ((RAMPage::slice_modes[page_id] == 1) &&
+        (RAMPage::rec_states[page_id] != STATE_RECORD)) {
       if (wheel_spin == 0) {
         wheel_spin = 8;
       }
@@ -747,7 +789,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    magic = 1;
+    RAMPage::slice_modes[page_id] = 1;
     if (mcl_cfg.ram_page_mode == MONO) {
       slice(14 + page_id, 255);
     } else {
@@ -757,7 +799,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    magic = 0;
+    RAMPage::slice_modes[page_id] = 0;
     if (mcl_cfg.ram_page_mode == MONO) {
       if (!slice(14 + page_id, 255)) {
         setup_ram_play_mono(14 + page_id);

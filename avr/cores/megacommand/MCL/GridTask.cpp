@@ -24,16 +24,8 @@ void GridTask::run() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 #endif
-  int slots_changed[NUM_TRACKS] = {-1};
-  uint8_t slots_loaded[NUM_MD_TRACKS] = {0};
-
-  for (uint8_t a = 0; a < NUM_TRACKS; a++) {
-    slots_changed[a] = -1;
-  }
-
-  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
-    slots_loaded[a] = 0;
-  }
+  int slots_changed[NUM_TRACKS];
+  uint8_t slots_loaded[NUM_MD_TRACKS] = { 0 };
 
   bool send_ext_slots = false;
   bool send_md_slots = false;
@@ -61,6 +53,7 @@ void GridTask::run() {
   GUI.removeTask(&grid_task);
 
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
+    slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       // mark slot as changed in case next statement doesnt pass
       uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
@@ -189,6 +182,7 @@ void GridTask::run() {
                 (slots_loaded[trigGroup] == 0) && (slots_changed[n] == 0)) {
               md_track->load_from_mem(trigGroup);
               if (md_track->active == MD_TRACK_TYPE) {
+
                 bool set_level = false;
                 switch (mcl_actions.transition_level[n]) {
                 case 1:
@@ -196,9 +190,13 @@ void GridTask::run() {
                   md_track->machine.level = 0;
                   break;
                 case TRANSITION_UNMUTE:
+                  DEBUG_PRINTLN("unmuting");
+                  DEBUG_DUMP(trigGroup);
                   MD.muteTrack(trigGroup, false);
                   break;
                 case TRANSITION_MUTE:
+                  DEBUG_PRINTLN("muting");
+                  DEBUG_DUMP(trigGroup);
                   MD.muteTrack(trigGroup, true);
                   break;
                 default:
@@ -208,9 +206,6 @@ void GridTask::run() {
                                            &(MD.kit), set_level);
                 md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
                                              set_level);
-                //clear sequence on trigGroup track
-                //bool reset_params, clear_locks = true;
-                //mcl_seq.md_tracks[trigGroup].clear_track(clear_locks,reset_params);
               }
               md_track->load_from_mem(n);
               slots_loaded[trigGroup] = 1;

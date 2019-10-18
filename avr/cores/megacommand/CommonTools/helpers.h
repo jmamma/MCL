@@ -131,7 +131,7 @@ extern const uint32_t _bvmasks32[];
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 #endif
 //long map(long x, long in_min, long in_max, long out_min, long out_max);
-
+bool in_area(int x, int y, int x2, int y2, int w, int h);
 uint8_t u_limit_value(uint8_t value, int8_t encoder, uint8_t min, uint8_t max);
 int limit_value(int value, int encoder, int min, int max);
 uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
