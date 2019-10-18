@@ -1,5 +1,23 @@
 #include "FileBrowserPage.h"
-#include "MCL.h"
+
+const menu_t file_menu PROGMEM = {
+    "File",
+    5,
+    {
+        {"NEW FOLDER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"OVERWRITE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"CANCEL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+    },
+    NULL,
+    (Page *)NULL,
+};
+
+MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
+MCLEncoder file_menu_encoder2(0, 1, ENCODER_RES_PAT);
+MenuPage file_menu_page((menu_t *)&file_menu, &file_menu_encoder,
+                        &file_menu_encoder2);
 
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
@@ -23,6 +41,16 @@ void FileBrowserPage::init() {
   DEBUG_PRINT_FN();
   char temp_entry[16];
 
+  // config menu
+  file_menu_page.menu.enable_entry(0, show_new_folder);
+  file_menu_page.menu.enable_entry(1, true); // delete
+  file_menu_page.menu.enable_entry(2, true); // rename
+  file_menu_page.menu.enable_entry(3, show_overwrite);
+  file_menu_page.menu.enable_entry(4, true); // cancel
+  file_menu_encoder.cur = file_menu_encoder.old = 0;
+  file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
+  filemenu_active = false;
+
   int index = 0;
   //  reset directory pointer
   SD.vwd()->rewind();
@@ -31,11 +59,6 @@ void FileBrowserPage::init() {
   if (show_save) {
     char create_new[9] = "[ SAVE ]";
     add_entry(&create_new[0]);
-  }
-
-  if (show_new_folder) {
-    char folder[16] = "[ NEW FOLDER ]";
-    add_entry(&folder[0]);
   }
 
   char up_one_dir[3] = "..";
@@ -164,6 +187,11 @@ void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 
 void FileBrowserPage::loop() {
 
+  if (filemenu_active) {
+    file_menu_page.loop();
+    return;
+  }
+
   if (encoders[1]->hasChanged()) {
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
@@ -195,9 +223,8 @@ bool FileBrowserPage::create_folder() {
   return true;
 }
 
-void FileBrowserPage::_calcindices(int &saveidx, int &newfolderidx) {
+void FileBrowserPage::_calcindices(int &saveidx) {
   saveidx = show_save ? 0 : -1;
-  newfolderidx = show_new_folder ? (saveidx + 1) : -1;
 }
 
 void FileBrowserPage::_cd_up() {
@@ -238,6 +265,47 @@ void FileBrowserPage::_cd(const char *child) {
   init();
 }
 
+void FileBrowserPage::_handle_filemenu() {
+  char buf1[16];
+  uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+  volatile uint8_t *ptr = (uint8_t *)pos;
+  memcpy_bank1(&buf1[0], ptr, 16);
+
+  char buf2[32] = { '\0' };
+
+  switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
+  case 0: // new folder
+    create_folder();
+    break;
+  case 1: // delete
+    strcat(buf2, "Delete ");
+    strcat(buf2, buf1);
+    strcat(buf2, "?");
+    if(mcl_gui.wait_for_confirm("CONFIRM", buf2))
+    {
+      on_delete(buf1);
+    }
+    break;
+  case 2: // overwrite
+    strcat(buf2, "Overwrite ");
+    strcat(buf2, buf1);
+    strcat(buf2, "?");
+    if(mcl_gui.wait_for_confirm("CONFIRM", buf2))
+    {
+      file.open(buf1, O_READ);
+      on_select(buf1);
+    }
+    break;
+  case 3:
+    strcat(buf2, buf1);
+    if(mcl_gui.wait_for_input(buf2, "RENAME TO:", 16))
+    {
+      on_rename(buf1, buf2);
+    }
+    break;
+  }
+}
+
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   DEBUG_PRINT_FN();
@@ -246,22 +314,33 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     return false;
   }
 
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    filemenu_active = true;
+    encoders[0] = &file_menu_encoder;
+    encoders[1] = &file_menu_encoder2;
+    file_menu_page.init();
+    return false;
+  }
+
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    filemenu_active = false;
+    encoders[0] = param1;
+    encoders[1] = param2;
+    _handle_filemenu();
+    return false;
+  }
+
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
-    int i_save, i_newfolder;
-    _calcindices(i_save, i_newfolder);
+    int i_save;
+    _calcindices(i_save);
 
     if (encoders[1]->getValue() == i_save) {
       on_new();
       return true;
-    }
-
-    if (encoders[1]->getValue() == i_newfolder) {
-      create_folder();
-      return false;
     }
 
     char temp_entry[16];

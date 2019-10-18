@@ -17,8 +17,13 @@ void SDDrivePage::init() {
   md_exploit.off();
   //  !note match only supports 3-char suffix
   strcpy(match, c_snapshot_suffix);
-  show_dirs = true;
   strcpy(title, "SD-Drive");
+
+  show_save = true;
+  show_dirs = true;
+  show_filemenu = true;
+  show_new_folder = true;
+  show_overwrite = true;
   FileBrowserPage::init();
 }
 
@@ -141,6 +146,10 @@ void SDDrivePage::load_snapshot() {
 void SDDrivePage::on_new() {
   save_snapshot();
   init();
+}
+
+void SDDrivePage::on_delete(const char* file) {
+  gfx.alert("SDDrivePage::on_delete", file);
 }
 
 void SDDrivePage::on_select(const char *__) { load_snapshot(); }

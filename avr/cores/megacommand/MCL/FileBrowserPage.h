@@ -3,6 +3,7 @@
 #ifndef FILEBROWSERPAGE_H__
 #define FILEBROWSERPAGE_H__
 
+#include "MCL.h"
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "SdFat.h"
@@ -30,16 +31,25 @@ public:
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t cur_file = 0;
-  bool show_dirs = false;
-  bool show_save = true;
-  bool show_parent = true;
-  bool show_new_folder = true;
   char title[12];
   File file;
 
+  // configuration, should be set before calling base init()
+  bool show_dirs = false;
+  bool show_save = true;
+  bool show_parent = true;
+  bool show_filemenu;
+  bool show_new_folder = true;
+  bool show_overwrite;
+
+  bool filemenu_active;
+
+  Encoder* param1;
+  Encoder* param2;
+
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {}
+      : LightPage(e1, e2, e3, e4), param1(e1), param2(e2) {}
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   void add_entry(char *entry);
@@ -58,7 +68,9 @@ public:
   virtual void on_cancel() { GUI.popPage(); }
 
 private:
-  void _calcindices(int &, int &);
+
+  void _handle_filemenu();
+  void _calcindices(int &);
   void _cd_up();
   void _cd(const char *);
 };

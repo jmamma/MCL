@@ -4,13 +4,16 @@
 void LoadProjectPage::init() {
 
   DEBUG_PRINT_FN();
-  show_save = false;
-  show_dirs = false;
-  show_new_folder = false;
   strcpy(match, ".mcl");
   strcpy(title, "Project");
   strcpy(lwd, "/");
   SD.chdir("/");
+
+  show_save = false;
+  show_dirs = false;
+  show_filemenu = true;
+  show_new_folder = false;
+  show_overwrite = false;
 
   FileBrowserPage::init();
 }

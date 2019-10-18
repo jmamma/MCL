@@ -1,5 +1,6 @@
 #ifndef MENU_H__
 #define MENU_H__
+#include "MCL.h"
 
 #define MAX_MENU_ITEMS 16
 #define MAX_MENU_OPTIONS 16
@@ -35,15 +36,19 @@ class Menu {
 public:
   menu_t *layout;
   uint8_t values[MAX_MENU_ITEMS];
+  uint8_t entry_mask[(MAX_MENU_ITEMS + 7)/8];
 
-  Menu() {}
+  Menu();
 
   void set_layout(menu_t *menu_layout);
+  void enable_entry(uint8_t entry_index, bool en);
+  bool is_entry_enable(uint8_t entry_index);
 
   PGM_P get_name();
 
   uint8_t get_number_of_items();
   menu_item_t *get_item(uint8_t item_n);
+  uint8_t get_item_index(uint8_t item_n);
   PGM_P get_item_name(uint8_t item_n);
   Page *get_page_callback(uint8_t item_n);
   //Page *get_exit_page_callback();
