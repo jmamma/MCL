@@ -6,7 +6,7 @@ void ExtSeqTrack::set_length(uint8_t len) {
   if (step_count >= length) {
     step_count = length % step_count;
   }
-  DEBUG_PRINTLN(step_count);
+  DEBUG_DUMP(step_count);
   /*uint8_t step_count =
        ((MidiClock.div32th_counter / resolution) -
         (mcl_actions.start_clock32th / resolution)) -
@@ -90,7 +90,7 @@ void ExtSeqTrack::seq() {
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
   DEBUG_PRINTLN("note on");
-  DEBUG_PRINTLN(note);
+  DEBUG_DUMP(note);
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
     SET_BIT64(note_buffer[1], note - 64);

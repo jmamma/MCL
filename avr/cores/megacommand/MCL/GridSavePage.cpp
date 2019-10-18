@@ -79,7 +79,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     md_exploit.off();
     DEBUG_PRINTLN("notes");
-    DEBUG_PRINTLN(note_interface.notes_all_off());
+    DEBUG_DUMP(note_interface.notes_all_off());
 
     for (int i = 0; i < 20; i++) {
 

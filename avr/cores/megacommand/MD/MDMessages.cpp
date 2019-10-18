@@ -296,7 +296,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
     DEBUG_PRINTLN("kit wrong length");
-    DEBUG_PRINTLN(len);
+    DEBUG_DUMP(len);
     return false;
   }
 
@@ -371,7 +371,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder &encoder) {
     //float swing = (float) MD.swing_last / 16385.0;
     //encoder.throttle_mod12 = floor((swing) * 12);
     //DEBUG_PRINTLN("swing");
-    //DEBUG_PRINTLN(encoder.throttle_mod12);
+    //DEBUG_DUMP(encoder.throttle_mod12);
   }
   encoder.stop7Bit();
   encoder.begin();

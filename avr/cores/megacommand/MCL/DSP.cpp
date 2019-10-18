@@ -13,9 +13,9 @@ float DSP::saturate(float sample, float max) {
   float skew = .07;
   
   float sat_percent = 20;
-  //  DEBUG_PRINTLN(abs(sample));
-  //  DEBUG_PRINTLN(max);
-  //  DEBUG_PRINTLN(percent_max);
+  //  DEBUG_DUMP(abs(sample));
+  //  DEBUG_DUMP(max);
+  //  DEBUG_DUMP(percent_max);
   float c = log((float)skew * (float)max) / sat_percent;
 
   if (abs(sample) < ((1.00 - (sat_percent / 100)) * max)) {
@@ -24,7 +24,7 @@ float DSP::saturate(float sample, float max) {
 
     float y = -1 * exp(percent_max * .80) + max;
 
-    //  DEBUG_PRINTLN(y);
+    //  DEBUG_DUMP(y);
     if (sample < 0) {
       y = y * -1.00;
     }

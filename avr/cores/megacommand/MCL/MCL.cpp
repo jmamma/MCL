@@ -3,7 +3,6 @@
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
-
 void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
@@ -60,11 +59,10 @@ void MCL::setup() {
     GUI.display_mirror = true;
 #endif
   }
-    if (mcl_cfg.screen_saver == 1) {
-  GUI.use_screen_saver = true;
-  }
-  else {
-  GUI.use_screen_saver = false;
+  if (mcl_cfg.screen_saver == 1) {
+    GUI.use_screen_saver = true;
+  } else {
+    GUI.use_screen_saver = false;
   }
 
   DEBUG_PRINTLN("Track sizes:");

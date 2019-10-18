@@ -211,6 +211,7 @@ void m_str16cpy_p_fill(void *dst, PGM_P src);
 void m_str16cpy_p(void *dst, PGM_P src);
 void m_strnappend(void *dst, const char *src, int len);
 uint16_t m_strlen(const char *str);
+void m_toupper(char* str);
 
 /** @} */
 

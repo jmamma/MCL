@@ -1,6 +1,6 @@
 
-#include "MCL.h"
 #include "MenuPage.h"
+#include "MCL.h"
 
 void MenuPage::init() {
   ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
@@ -34,14 +34,14 @@ void MenuPage::loop() {
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
-    #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
     if (new_val > MAX_VISIBLE_ROWS - 1) {
       new_val = MAX_VISIBLE_ROWS - 1;
     }
     if (new_val < 0) {
       new_val = 0;
     }
-    #endif
+#endif
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
     uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
@@ -61,23 +61,8 @@ void MenuPage::loop() {
 
 void MenuPage::draw_scrollbar(uint8_t x_offset) {
 #ifdef OLED_DISPLAY
-  uint8_t number_of_items = menu.get_number_of_items();
-  uint8_t length =
-      round(((float)(MAX_VISIBLE_ROWS - 1) / (float)(number_of_items - 1)) * 32);
-  uint8_t y =
-      round(((float)(encoders[1]->cur - cur_row) / (float)(number_of_items - 1)) * 32);
-  for (uint8_t n = 0; n < 32; n++) {
-    if (n % 2 == 0) {
-      oled_display.drawPixel(x_offset + 1, n, WHITE);
-      oled_display.drawPixel(x_offset + 3, n, WHITE);
-
-    } else {
-      oled_display.drawPixel(x_offset + 2, n, WHITE);
-    }
-  }
-
-  oled_display.fillRect(x_offset + 1, y + 1, 3, length - 2, BLACK);
-  oled_display.drawRect(x_offset, y, 5, length, WHITE);
+  mcl_gui.draw_vertical_scrollbar(x_offset, menu.get_number_of_items(),
+                                  MAX_VISIBLE_ROWS, encoders[1]->cur - cur_row);
 #endif
 }
 
@@ -92,7 +77,7 @@ void MenuPage::draw_item(uint8_t item_n, uint8_t row) {
   uint8_t number_of_items = menu.get_number_of_items();
 
   if (item_n > number_of_items - 1) {
-    return true;
+    return;
   }
 
   uint8_t number_of_options = menu.get_number_of_options(item_n);
@@ -133,12 +118,10 @@ void MenuPage::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
     draw_item(encoders[1]->cur - cur_row + n, n);
   }
 
-   // draw_item.read(getRow());
-
+  // draw_item.read(getRow());
 
   oled_display.setTextColor(WHITE, BLACK);
 #endif
-
 }
 
 void MenuPage::display() {
@@ -149,42 +132,36 @@ void MenuPage::display() {
 
   m_strncpy_p(str, pgp, 16);
 
-
   uint8_t number_of_items = menu.get_number_of_items();
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.println(str);
-  for (uint8_t n = 0; n < 32; n++) {
-    if (n % 2 != 0) {
-      oled_display.drawPixel(x_offset - 6, n, WHITE);
-    }
-  }
+  mcl_gui.draw_vertical_dashline(x_offset - 6);
 
   draw_menu(x_offset, 8);
 
   if (number_of_items > MAX_VISIBLE_ROWS) {
-  draw_scrollbar(120);
+    draw_scrollbar(120);
   }
   oled_display.display();
 
-  #else
-   GUI.setLine(GUI.LINE1);
-   GUI.put_string_at(0,"[");
-   GUI.put_string_at(1, str);
+#else
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(0, "[");
+  GUI.put_string_at(1, str);
 
-   GUI.put_string_at(m_strlen(str),"]");
-   pgp = menu.get_item_name(cur_row);
+  GUI.put_string_at(m_strlen(str), "]");
+  pgp = menu.get_item_name(cur_row);
 
-   GUI.setLine(GUI.LINE2);
-   if (pgp != NULL) {
+  GUI.setLine(GUI.LINE2);
+  if (pgp != NULL) {
     m_strncpy_p(str, pgp, 16);
-    GUI.put_string_at_fill(0,str);
+    GUI.put_string_at_fill(0, str);
   }
-
 
   if (cur_row > number_of_items - 1) {
     return true;
@@ -195,10 +172,10 @@ void MenuPage::display() {
 
     pgp = menu.get_option_name(cur_row, *(menu.get_dest_variable(cur_row)));
     if (pgp == NULL) {
-      GUI.put_value_at(10,*(menu.get_dest_variable(cur_row)));
+      GUI.put_value_at(10, *(menu.get_dest_variable(cur_row)));
     } else {
       m_strncpy_p(str, pgp, 11);
-      GUI.put_string_at(10,str);
+      GUI.put_string_at(10, str);
     }
   }
 
@@ -206,33 +183,31 @@ void MenuPage::display() {
 }
 
 bool MenuPage::enter() {
-    DEBUG_PRINT_FN();
-    void (*row_func)() = menu.get_row_function(encoders[1]->cur);
-    Page *page_callback = menu.get_page_callback(encoders[1]->cur);
-    if (page_callback != NULL) {
-      DEBUG_PRINTLN("setting page");
-      DEBUG_PRINTLN((uint16_t)page_callback);
-      GUI.pushPage(page_callback);
-      return;
-    }
-    if (row_func != NULL) {
-      DEBUG_PRINTLN("calling callback func");
-      (*row_func)();
-    }
- 
+  DEBUG_PRINT_FN();
+  void (*row_func)() = menu.get_row_function(encoders[1]->cur);
+  Page *page_callback = menu.get_page_callback(encoders[1]->cur);
+  if (page_callback != NULL) {
+    DEBUG_PRINTLN("setting page");
+    DEBUG_PRINTLN((uint16_t)page_callback);
+    GUI.pushPage(page_callback);
+    return false;
+  }
+  if (row_func != NULL) {
+    DEBUG_PRINTLN("calling callback func");
+    (*row_func)();
+  }
 }
 
 bool MenuPage::exit() {
-    // Page *exit_page_callback = menu.get_exit_page_callback();
-    void (*exit_func)() = menu.get_exit_function();
-    if (exit_func != NULL) {
-      (*exit_func)();
-      //
-    }
-    // if (exit_page_callback != NULL) {
-    GUI.popPage();
-    //}
-
+  // Page *exit_page_callback = menu.get_exit_page_callback();
+  void (*exit_func)() = menu.get_exit_function();
+  if (exit_func != NULL) {
+    (*exit_func)();
+    //
+  }
+  // if (exit_page_callback != NULL) {
+  GUI.popPage();
+  //}
 }
 
 bool MenuPage::handleEvent(gui_event_t *event) {

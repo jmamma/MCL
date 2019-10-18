@@ -1,9 +1,9 @@
-#include "MCL.h"
 #include "Project.h"
+#include "MCL.h"
 
 void Project::setup() {}
 
-bool Project::load_project(char *projectname) {
+bool Project::load_project(const char *projectname) {
 
   bool ret;
 
@@ -40,7 +40,6 @@ bool Project::load_project(char *projectname) {
 
 bool Project::check_project_version() {
   bool ret;
-  int b = 0;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Check project version");
@@ -68,7 +67,6 @@ bool Project::check_project_version() {
 bool Project::write_header() {
 
   bool ret;
-  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing project header");
@@ -97,7 +95,7 @@ bool Project::write_header() {
   return true;
 }
 
-bool Project::new_project(char *projectname) {
+bool Project::new_project(const char *projectname) {
 
   bool ret;
 
@@ -140,17 +138,15 @@ bool Project::new_project(char *projectname) {
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-          if (i % 16 == 0) {
-        oled_display.fillRect(15, 23, ((float)i / (float)GRID_LENGTH) * 98, 6,
-                              WHITE);
-        oled_display.display();
+    if (i % 16 == 0) {
+      mcl_gui.draw_progress("Initializing project", i, GRID_LENGTH);
     }
 #endif
-          if (i % 2 == 0) {
+    if (i % 2 == 0) {
       if (ledstatus == 0) {
         setLed2();
         ledstatus = 1;
-     } else {
+      } else {
         clearLed2();
         ledstatus = 0;
       }
@@ -158,8 +154,8 @@ bool Project::new_project(char *projectname) {
 
     ret = grid.clear_row(i);
     if (!ret) {
-    DEBUG_PRINTLN("coud not clear row");
-    return false;
+      DEBUG_PRINTLN("coud not clear row");
+      return false;
     }
   }
   clearLed2();

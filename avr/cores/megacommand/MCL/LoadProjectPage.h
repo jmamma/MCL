@@ -21,7 +21,7 @@ public:
   LoadProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
       : FileBrowserPage(e1, e2, e3, e4) {}
-  virtual bool handleEvent(gui_event_t *event);
+  virtual void on_select(const char* entry);
   void init();
 };
 

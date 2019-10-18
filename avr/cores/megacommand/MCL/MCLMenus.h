@@ -7,6 +7,7 @@
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 #include "PolyPage.h"
+#include "SDDrivePage.h"
 #include "GridPages.h"
 #include "TextInputPage.h"
 #include "SeqPages.h"
@@ -92,12 +93,13 @@ const menu_t midiconfig_menu_layout PROGMEM = {
 
 const menu_t mdconfig_menu_layout PROGMEM = {
     "MD",
-    4,
+    5,
     {
         {"KIT SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, (void*)NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, (void*)NULL, {{0, "INT"},{17, "OMNI"}}},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, (void*)NULL, {}},
+        {"SD DRIVE", 0, 0, 0, (uint8_t *) NULL, (Page*) &sddrive_page, (void*)NULL, {}},
     },
     (void*)(&mclsys_apply_config),
 };
