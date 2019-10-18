@@ -6,6 +6,7 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
+#define NUM_RAM_PAGES 2
 #define SLOT_RAM_RECORD (1 << (sizeof(GridChain::row) * 8)) - 1 - 1
 #define SLOT_RAM_PLAY (1 << (sizeof(GridChain::row) * 8)) - 1 - 2
 
@@ -46,9 +47,9 @@ public:
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
 
-  uint8_t record_mode;
+  static uint8_t rec_states[NUM_RAM_PAGES];
+  static uint8_t slice_modes[NUM_RAM_PAGES];
 
-  uint8_t magic;
   uint8_t rec_state;
   uint8_t track1;
   uint8_t track2;
