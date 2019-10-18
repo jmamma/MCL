@@ -516,9 +516,10 @@ void RAMPage::display() {
       remain = (float)mcl_seq.md_tracks[n].step_count /
                (float)mcl_seq.md_tracks[n].length;
     }
-    uint8_t width = remain * 18;
-    if (width <= 3) { width = 3; }
+    uint8_t width = remain * 20;
+    if (width >= 3) {
     oled_display.fillRoundRect(105, 28, width, 4, 1, WHITE);
+    }
   }
   oled_display.setFont();
   oled_display.setCursor(0, 0);
@@ -625,7 +626,7 @@ void RAMPage::display() {
   }
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
       ((rec_state == STATE_RECORD) || (rec_state == STATE_PLAY))) {
-    if (magic == 1) {
+    if ((magic == 1) && (rec_state != STATE_RECORD)) {
       if (wheel_spin == 0) {
         wheel_spin = 8;
       }
