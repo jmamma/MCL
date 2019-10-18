@@ -541,7 +541,7 @@ void RAMPage::display() {
 #endif
 #ifdef OLED_DISPLAY
   float remain;
-  oled_display.drawRoundRect(105, 28, 20, 4, 1, WHITE);
+  oled_display.drawRoundRect(104, 28, 22, 4, 1, WHITE);
   if ((RAMPage::rec_states[page_id] != STATE_NOSTATE)) {
     if (MidiClock.clock_less_than(transition_step + record_len,
                                   MidiClock.div16th_counter)) {
@@ -555,10 +555,8 @@ void RAMPage::display() {
       remain = (float)mcl_seq.md_tracks[n].step_count /
                (float)mcl_seq.md_tracks[n].length;
     }
-    uint8_t width = remain * 20;
-    if (width >= 3) {
-      oled_display.fillRoundRect(105, 28, width, 4, 1, WHITE);
-    }
+    uint8_t width = remain * 21;
+      oled_display.fillRect(105, 28, width, 4, WHITE);
   }
   oled_display.setFont();
   oled_display.setCursor(0, 0);
