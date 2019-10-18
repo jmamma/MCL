@@ -3,10 +3,20 @@
 #include "MenuPage.h"
 
 void MenuPage::init() {
-  uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
+  ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
+  if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
+   ((MCLEncoder *)encoders[1])->cur = 0;
+  }
+   ((MCLEncoder *)encoders[0])->max =
+      menu.get_option_range(encoders[1]->cur) - 1;
+  ((MCLEncoder *)encoders[0])->min = menu.get_option_min(encoders[1]->cur);
+
+ uint8_t *dest_var = menu.get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
     encoders[0]->setValue(*dest_var);
   }
+  encoders[0]->old = encoders[0]->cur;
+  encoders[1]->old = encoders[1]->cur;
 }
 void MenuPage::setup() {
 #ifdef OLED_DISPLAY
@@ -15,12 +25,12 @@ void MenuPage::setup() {
 }
 
 void MenuPage::loop() {
-  ((MCLEncoder *)encoders[1])->max = menu.get_number_of_items() - 1;
+
+    if (encoders[1]->hasChanged()) {
   ((MCLEncoder *)encoders[0])->max =
       menu.get_option_range(encoders[1]->cur) - 1;
   ((MCLEncoder *)encoders[0])->min = menu.get_option_min(encoders[1]->cur);
 
-  if (encoders[1]->hasChanged()) {
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
