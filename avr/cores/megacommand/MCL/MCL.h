@@ -16,6 +16,8 @@
   #define SOUND_PAGE
 #endif
 
+#define NUM_RAM_PAGES 2
+
 #include "MCLGfx.h"
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
