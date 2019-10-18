@@ -46,9 +46,9 @@ public:
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
 
-  uint8_t record_mode;
+  static uint8_t rec_states[NUM_RAM_PAGES];
+  static uint8_t slice_modes[NUM_RAM_PAGES];
 
-  uint8_t magic;
   uint8_t rec_state;
   uint8_t track1;
   uint8_t track2;
