@@ -1,8 +1,6 @@
 #include "MCL.h"
 #include "Menu.h"
 
-Menu::Menu() { memset(entry_mask, 0xFF, sizeof(entry_mask)); }
-
 void Menu::set_layout(menu_t *menu_layout) { layout = menu_layout; }
 
 void Menu::enable_entry(uint8_t entry_index, bool en) {

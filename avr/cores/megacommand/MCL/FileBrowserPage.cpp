@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "FileBrowserPage.h"
+#include "MCL.h"
 
 const menu_t file_menu PROGMEM = {
     "File",
@@ -15,8 +15,8 @@ const menu_t file_menu PROGMEM = {
     (Page *)NULL,
 };
 
-MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MCLEncoder file_menu_encoder2(0, 1, ENCODER_RES_PAT);
+MCLEncoder file_menu_encoder(0, 1, ENCODER_RES_PAT);
+MCLEncoder file_menu_encoder2(0, 4, ENCODER_RES_PAT);
 MenuPage file_menu_page((menu_t *)&file_menu, &file_menu_encoder,
                         &file_menu_encoder2);
 
@@ -48,8 +48,8 @@ void FileBrowserPage::init() {
   file_menu_page.menu.enable_entry(2, true); // rename
   file_menu_page.menu.enable_entry(3, show_overwrite);
   file_menu_page.menu.enable_entry(4, true); // cancel
-  file_menu_encoder.cur = file_menu_encoder.old = 0;
-  file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
+  file_menu_encoder2.cur = file_menu_encoder2.old = 0;
+  file_menu_encoder2.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
   int index = 0;
@@ -118,6 +118,13 @@ void FileBrowserPage::init() {
 
 void FileBrowserPage::display() {
 #ifdef OLED_DISPLAY
+  if (filemenu_active) {
+    oled_display.fillRect(0, 8, 38, 24, BLACK);
+    file_menu_page.draw_menu(0, 14, 38);
+    oled_display.display();
+    return;
+  }
+
   constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.clearDisplay();
   oled_display.setFont(&TomThumb);
@@ -157,6 +164,7 @@ void FileBrowserPage::display() {
   if (numEntries > MAX_VISIBLE_ROWS) {
     draw_scrollbar(120);
   }
+
   oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
@@ -272,9 +280,9 @@ void FileBrowserPage::_handle_filemenu() {
   volatile uint8_t *ptr = (uint8_t *)pos;
   memcpy_bank1(&buf1[0], ptr, 16);
 
-  char buf2[32] = { '\0' };
+  char buf2[32] = {'\0'};
 
-  switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
+  switch (file_menu_page.menu.get_item_index(file_menu_encoder2.cur)) {
   case 0: // new folder
     create_folder();
     break;
@@ -282,8 +290,7 @@ void FileBrowserPage::_handle_filemenu() {
     strcat(buf2, "Delete ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
-    if(mcl_gui.wait_for_confirm("CONFIRM", buf2))
-    {
+    if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
     break;
@@ -291,16 +298,14 @@ void FileBrowserPage::_handle_filemenu() {
     strcat(buf2, "Overwrite ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
-    if(mcl_gui.wait_for_confirm("CONFIRM", buf2))
-    {
+    if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       file.open(buf1, O_READ);
       on_select(buf1);
     }
     break;
   case 3:
     strcat(buf2, buf1);
-    if(mcl_gui.wait_for_input(buf2, "RENAME TO:", 16))
-    {
+    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", 16)) {
       on_rename(buf1, buf2);
     }
     break;

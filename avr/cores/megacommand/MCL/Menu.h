@@ -1,8 +1,6 @@
 #ifndef MENU_H__
 #define MENU_H__
 
-#include "MCL.h"
-
 #define MAX_MENU_ITEMS 16
 #define MAX_MENU_OPTIONS 16
 
@@ -39,7 +37,7 @@ public:
   uint8_t values[MAX_MENU_ITEMS];
   uint8_t entry_mask[(MAX_MENU_ITEMS + 7) / 8];
 
-  Menu();
+  Menu(){ memset(entry_mask, 0xFF, sizeof(entry_mask)); }
 
   void set_layout(menu_t *menu_layout);
   void enable_entry(uint8_t entry_index, bool en);
