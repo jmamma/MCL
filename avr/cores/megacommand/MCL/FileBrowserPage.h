@@ -3,7 +3,6 @@
 #ifndef FILEBROWSERPAGE_H__
 #define FILEBROWSERPAGE_H__
 
-#include "MCL.h"
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "SdFat.h"

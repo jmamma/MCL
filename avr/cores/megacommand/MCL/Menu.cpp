@@ -1,3 +1,4 @@
+#include "MCL.h"
 #include "Menu.h"
 
 Menu::Menu() { memset(entry_mask, 0xFF, sizeof(entry_mask)); }
