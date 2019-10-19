@@ -25,13 +25,13 @@ extern MCLEncoder config_param5;
 extern MCLEncoder config_param6;
 extern MCLEncoder config_param7;
 
-extern MenuPage system_page;
-extern MenuPage midi_config_page;
-extern MenuPage md_config_page;
-extern MenuPage mcl_config_page;
-extern MenuPage chain_config_page;
-extern MenuPage aux_config_page;
-extern MenuPage ram_config_page;
+extern MenuPage<7> system_page;
+extern MenuPage<5> midi_config_page;
+extern MenuPage<5> md_config_page;
+extern MenuPage<2> mcl_config_page;
+extern MenuPage<3> chain_config_page;
+extern MenuPage<1> aux_config_page;
+extern MenuPage<1> ram_config_page;
 
 extern MCLEncoder input_encoder1;
 extern MCLEncoder input_encoder2;
@@ -39,7 +39,7 @@ extern MCLEncoder input_encoder2;
 extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
-extern MenuPage file_menu_page;
+extern MenuPage<5> file_menu_page;
 
 
 #endif /* MCLMENUS_H__ */

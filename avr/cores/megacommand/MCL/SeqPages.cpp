@@ -27,7 +27,7 @@ SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
 SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &ptc_param_scale);
 MCLEncoder track_menu_param1(0, 8, ENCODER_RES_PAT);
 MCLEncoder track_menu_param2(0, 8, ENCODER_RES_PAT);
-MenuPage track_menu_page(&track_menu_layout, &track_menu_param1, &track_menu_param2);
+MenuPage<5> track_menu_page(&track_menu_layout, &track_menu_param1, &track_menu_param2);
 
 
 //SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];
