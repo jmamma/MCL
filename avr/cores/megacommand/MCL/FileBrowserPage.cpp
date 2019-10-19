@@ -101,8 +101,9 @@ void FileBrowserPage::init() {
 void FileBrowserPage::display() {
 #ifdef OLED_DISPLAY
   if (filemenu_active) {
-    oled_display.fillRect(0, 8, 38, 24, BLACK);
-    file_menu_page.draw_menu(0, 14, 38);
+    oled_display.fillRect(0, 3, 42, 28, BLACK);
+    oled_display.drawRect(1, 4, 40, 26, WHITE);
+    file_menu_page.draw_menu(3, 12, 39, 3);
     oled_display.display();
     return;
   }
@@ -294,6 +295,22 @@ void FileBrowserPage::_handle_filemenu() {
   }
 }
 
+void FileBrowserPage::on_delete(const char *entry) {
+  if (SD.remove(entry)) {
+    gfx.alert("SUCCESS", "File removed.");
+  } else {
+    gfx.alert("ERROR", "File not removed.");
+  }
+}
+
+void FileBrowserPage::on_rename(const char* from, const char* to) {
+  if (SD.rename(from, to)) {
+    gfx.alert("SUCCESS", "File renamed.");
+  } else {
+    gfx.alert("ERROR", "File not renamed.");
+  }
+}
+
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   DEBUG_PRINT_FN();
@@ -304,6 +321,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     filemenu_active = true;
+    file_menu_encoder.cur = file_menu_encoder.old = 0;
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();
@@ -311,10 +329,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    filemenu_active = false;
     encoders[0] = param1;
     encoders[1] = param2;
     _handle_filemenu();
+    init();
     return false;
   }
 

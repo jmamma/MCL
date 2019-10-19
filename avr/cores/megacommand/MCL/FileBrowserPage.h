@@ -65,8 +65,8 @@ public:
 
   virtual void on_new() {}
   virtual void on_select(const char *) {}
-  virtual void on_delete(const char *) {}
-  virtual void on_rename(const char *from, const char *to) {}
+  virtual void on_delete(const char *);
+  virtual void on_rename(const char *from, const char *to);
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }

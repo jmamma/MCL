@@ -18,7 +18,6 @@ public:
   void load_snapshot();
   virtual void on_select(const char*);
   virtual void on_new();
-  virtual void on_delete(const char*);
 };
 
 extern SDDrivePage sddrive_page;

@@ -148,10 +148,6 @@ void SDDrivePage::on_new() {
   init();
 }
 
-void SDDrivePage::on_delete(const char *file) {
-  gfx.alert("SDDrivePage::on_delete", file);
-}
-
 void SDDrivePage::on_select(const char *__) { load_snapshot(); }
 
 MCLEncoder sddrive_param1(1, 10, ENCODER_RES_SYS);
