@@ -20,7 +20,7 @@ public:
 
   Menu menu;
 
-  MenuPage(menu_t *layout, Encoder *e1 = NULL, Encoder *e2 = NULL,
+  MenuPage(const menu_t *layout, Encoder *e1 = NULL, Encoder *e2 = NULL,
            Encoder *e3 = NULL, Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
     menu.set_layout(layout);

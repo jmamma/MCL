@@ -1,7 +1,7 @@
 #include "MCL.h"
 #include "Menu.h"
 
-void Menu::set_layout(menu_t *menu_layout) { layout = menu_layout; }
+void Menu::set_layout(const menu_t *menu_layout) { layout = menu_layout; }
 
 void Menu::enable_entry(uint8_t entry_index, bool en) {
   auto midx = entry_index / 8;
