@@ -44,11 +44,16 @@ public:
   bool filemenu_active = false;
 
   char title[12];
+  Encoder* param1;
+  Encoder* param2;
   File file;
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {}
+      : LightPage(e1, e2, e3, e4) {
+          param1 = e1;
+          param2 = e2;
+      }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   void add_entry(char *entry);

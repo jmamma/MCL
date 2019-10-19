@@ -1,9 +1,9 @@
 #include "MCL.h"
-#include "Menu.h"
 
 void Menu::set_layout(menu_t *menu_layout) { layout = menu_layout; }
 
 void Menu::enable_entry(uint8_t entry_index, bool en) {
+
   auto midx = entry_index / 8;
   auto bit = entry_index % 8;
 
@@ -46,11 +46,11 @@ uint8_t Menu::get_number_of_items() {
 
 menu_item_t *Menu::get_item(uint8_t item_n) {
   uint8_t entry_cnt = pgm_read_byte(&(layout->number_of_items));
-  for(uint8_t idx = 0; idx < entry_cnt; ++idx) {
-    if(is_entry_enable(idx)) {
+  for (uint8_t idx = 0; idx < entry_cnt; ++idx) {
+    if (is_entry_enable(idx)) {
       if (item_n == 0) {
         return &layout->items[idx];
-      }else {
+      } else {
         --item_n;
       }
     }
@@ -58,8 +58,7 @@ menu_item_t *Menu::get_item(uint8_t item_n) {
   return nullptr;
 }
 
-uint8_t Menu::get_item_index(uint8_t item_n)
-{
+uint8_t Menu::get_item_index(uint8_t item_n) {
   auto pentry = get_item(item_n);
   return pentry - &layout->items[0];
 }

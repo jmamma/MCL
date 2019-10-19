@@ -34,7 +34,6 @@ class Menu {
 
 public:
   menu_t *layout;
-  uint8_t values[MAX_MENU_ITEMS];
   uint8_t entry_mask[2];
 
   Menu(){

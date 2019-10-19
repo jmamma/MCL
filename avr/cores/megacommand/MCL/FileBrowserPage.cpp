@@ -25,13 +25,13 @@ void FileBrowserPage::init() {
   char temp_entry[16];
 
   // config menu
-  //file_menu_page.menu.enable_entry(0, show_new_folder);
-  //file_menu_page.menu.enable_entry(1, true); // delete
-  //file_menu_page.menu.enable_entry(2, true); // rename
-  //file_menu_page.menu.enable_entry(3, show_overwrite);
-  //file_menu_page.menu.enable_entry(4, true); // cancel
-  //file_menu_encoder.cur = file_menu_encoder.old = 0;
-  //file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
+  file_menu_page.menu.enable_entry(0, show_new_folder);
+  file_menu_page.menu.enable_entry(1, true); // delete
+  file_menu_page.menu.enable_entry(2, true); // rename
+  file_menu_page.menu.enable_entry(3, show_overwrite);
+  file_menu_page.menu.enable_entry(4, true); // cancel
+  file_menu_encoder.cur = file_menu_encoder.old = 0;
+  file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
   int index = 0;
@@ -312,8 +312,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     filemenu_active = false;
-    //encoders[0] = param1;
-    //encoders[1] = param2;
+    encoders[0] = param1;
+    encoders[1] = param2;
     _handle_filemenu();
     return false;
   }
