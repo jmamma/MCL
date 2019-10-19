@@ -25,13 +25,13 @@ void FileBrowserPage::init() {
   char temp_entry[16];
 
   // config menu
-  //file_menu_page.menu.enable_entry(0, show_new_folder);
-  //file_menu_page.menu.enable_entry(1, true); // delete
-  //file_menu_page.menu.enable_entry(2, true); // rename
-  //file_menu_page.menu.enable_entry(3, show_overwrite);
-  //file_menu_page.menu.enable_entry(4, true); // cancel
+  file_menu_page.menu.enable_entry(0, show_new_folder);
+  file_menu_page.menu.enable_entry(1, true); // delete
+  file_menu_page.menu.enable_entry(2, true); // rename
+  file_menu_page.menu.enable_entry(3, show_overwrite);
+  file_menu_page.menu.enable_entry(4, true); // cancel
   file_menu_encoder.cur = file_menu_encoder.old = 0;
-  //file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
+  file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
   int index = 0;
@@ -102,7 +102,7 @@ void FileBrowserPage::display() {
 #ifdef OLED_DISPLAY
   if (filemenu_active) {
     oled_display.fillRect(0, 8, 38, 24, BLACK);
-    //file_menu_page.draw_menu(0, 14, 38);
+    file_menu_page.draw_menu(0, 14, 38);
     oled_display.display();
     return;
   }
@@ -179,7 +179,7 @@ void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 void FileBrowserPage::loop() {
 
   if (filemenu_active) {
-    //file_menu_page.loop();
+    file_menu_page.loop();
     return;
   }
 
@@ -264,8 +264,8 @@ void FileBrowserPage::_handle_filemenu() {
 
   char buf2[32] = {'\0'};
 
-  //switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
-  switch (file_menu_encoder.cur) {
+  switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
+  //switch (file_menu_encoder.cur) {
   case 0: // new folder
     create_folder();
     break;
@@ -307,7 +307,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     filemenu_active = true;
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
-    //file_menu_page.init();
+    file_menu_page.init();
     return false;
   }
 
