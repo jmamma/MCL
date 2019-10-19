@@ -276,19 +276,19 @@ void FileBrowserPage::_handle_filemenu() {
       on_delete(buf1);
     }
     break;
-  case 2: // overwrite
+  case 2: // rename
+    strcat(buf2, buf1);
+    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", 16)) {
+      on_rename(buf1, buf2);
+    }
+    break;
+  case 3: // overwrite
     strcat(buf2, "Overwrite ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       file.open(buf1, O_READ);
       on_select(buf1);
-    }
-    break;
-  case 3:
-    strcat(buf2, buf1);
-    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", 16)) {
-      on_rename(buf1, buf2);
     }
     break;
   }
