@@ -7,6 +7,8 @@
 #include "MCLEncoder.h"
 #include "SdFat.h"
 #include "SeqPage.h"
+#include "Menu.h"
+#include "MenuPage.h"
 
 #define MAX_ENTRIES 1024
 
@@ -30,25 +32,23 @@ public:
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t cur_file = 0;
-  char title[12];
-  File file;
 
   // configuration, should be set before calling base init()
   bool show_dirs = false;
   bool show_save = true;
   bool show_parent = true;
-  bool show_filemenu;
   bool show_new_folder = true;
-  bool show_overwrite;
+  bool show_filemenu = true;
+  bool show_overwrite = false;
 
-  bool filemenu_active;
+  bool filemenu_active = false;
 
-  Encoder* param1;
-  Encoder* param2;
+  char title[12];
+  File file;
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4), param1(e1), param2(e2) {}
+      : LightPage(e1, e2, e3, e4) {}
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   void add_entry(char *entry);

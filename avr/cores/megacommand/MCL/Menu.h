@@ -35,9 +35,11 @@ class Menu {
 public:
   menu_t *layout;
   uint8_t values[MAX_MENU_ITEMS];
-  uint8_t entry_mask[(MAX_MENU_ITEMS + 7) / 8];
+  uint8_t entry_mask[2];
 
-  Menu(){ memset(entry_mask, 0xFF, sizeof(entry_mask)); }
+  Menu(){
+      entry_mask[0] = entry_mask[1] = 0xFF;
+  }
 
   void set_layout(menu_t *menu_layout);
   void enable_entry(uint8_t entry_index, bool en);

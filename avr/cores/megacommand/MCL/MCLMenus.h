@@ -38,6 +38,9 @@ extern MCLEncoder input_encoder2;
 
 extern TextInputPage text_input_page;
 
+extern MCLEncoder file_menu_encoder;
+extern MenuPage file_menu_page;
+
 const menu_t system_menu_layout PROGMEM = {
     "GLOBAL",
     7,
@@ -126,6 +129,19 @@ const menu_t mclconfig_menu_layout PROGMEM = {
     (void*)(&mclsys_apply_config),
 };
 
+const menu_t file_menu_layout PROGMEM = {
+    "FILE",
+    5,
+    {
+        {"NEW FOLDER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
+        {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
+        {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
+        {"OVERWRITE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
+        {"CANCEL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
+    },
+    NULL,
+    (Page *)NULL,
+};
 
 
 #endif /* MCLMENUS_H__ */

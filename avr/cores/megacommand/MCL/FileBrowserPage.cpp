@@ -1,24 +1,6 @@
 #include "FileBrowserPage.h"
 #include "MCL.h"
-
-const menu_t file_menu PROGMEM = {
-    "File",
-    5,
-    {
-        {"NEW FOLDER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"OVERWRITE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"CANCEL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-    },
-    NULL,
-    (Page *)NULL,
-};
-
-MCLEncoder file_menu_encoder(0, 1, ENCODER_RES_PAT);
-MCLEncoder file_menu_encoder2(0, 4, ENCODER_RES_PAT);
-MenuPage file_menu_page((menu_t *)&file_menu, &file_menu_encoder,
-                        &file_menu_encoder2);
+#include "MCLMenus.h"
 
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
@@ -43,13 +25,13 @@ void FileBrowserPage::init() {
   char temp_entry[16];
 
   // config menu
-  file_menu_page.menu.enable_entry(0, show_new_folder);
-  file_menu_page.menu.enable_entry(1, true); // delete
-  file_menu_page.menu.enable_entry(2, true); // rename
-  file_menu_page.menu.enable_entry(3, show_overwrite);
-  file_menu_page.menu.enable_entry(4, true); // cancel
-  file_menu_encoder2.cur = file_menu_encoder2.old = 0;
-  file_menu_encoder2.max = file_menu_page.menu.get_number_of_items() - 1;
+  //file_menu_page.menu.enable_entry(0, show_new_folder);
+  //file_menu_page.menu.enable_entry(1, true); // delete
+  //file_menu_page.menu.enable_entry(2, true); // rename
+  //file_menu_page.menu.enable_entry(3, show_overwrite);
+  //file_menu_page.menu.enable_entry(4, true); // cancel
+  //file_menu_encoder.cur = file_menu_encoder.old = 0;
+  //file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
   int index = 0;
@@ -282,7 +264,7 @@ void FileBrowserPage::_handle_filemenu() {
 
   char buf2[32] = {'\0'};
 
-  switch (file_menu_page.menu.get_item_index(file_menu_encoder2.cur)) {
+  switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case 0: // new folder
     create_folder();
     break;
@@ -322,16 +304,16 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     filemenu_active = true;
-    encoders[0] = &file_menu_encoder;
-    encoders[1] = &file_menu_encoder2;
+    encoders[0] = &config_param1;
+    encoders[1] = &file_menu_encoder;
     file_menu_page.init();
     return false;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     filemenu_active = false;
-    encoders[0] = param1;
-    encoders[1] = param2;
+    //encoders[0] = param1;
+    //encoders[1] = param2;
     _handle_filemenu();
     return false;
   }
@@ -372,13 +354,6 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     // select an entry
     on_select(temp_entry);
     return true;
-  }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-    // TODO shift menu
-    // TODO delete
-    // TODO rename
-    // TODO copy/paste
   }
 
   // cancel
