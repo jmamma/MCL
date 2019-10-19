@@ -182,13 +182,8 @@ public:
   virtual void update();
   /** This will clear the encoder movements. **/
   virtual void clear();
-  /** Display the page using the display routine as specfied by function
-   * pointer*/
-  virtual void display();
   /** Executes the encoder actions by calling checkHandle() on each encoder. **/
   virtual void finalize();
-  /** Set the display routine to supplied fuction pointer **/
-  virtual void setup();
   /** Call this to lock all encoders in the page. **/
   void lockEncoders();
   /** Call this to unlock all encoders in the page. If their value
