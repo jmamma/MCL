@@ -140,7 +140,6 @@ const menu_t file_menu_layout PROGMEM = {
         {"CANCEL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, (void*)NULL, {}},
     },
     NULL,
-    (Page *)NULL,
 };
 
 

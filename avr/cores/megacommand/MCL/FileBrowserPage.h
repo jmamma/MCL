@@ -24,11 +24,13 @@
 
 class FileBrowserPage : public LightPage {
 public:
+  File file;
   //  char file_entries[NUM_FILE_ENTRIES][16];
   int numEntries;
 
   char match[5];
   char lwd[128];
+  char title[12];
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t cur_file = 0;
@@ -43,10 +45,8 @@ public:
 
   bool filemenu_active = false;
 
-  char title[12];
   Encoder* param1;
   Encoder* param2;
-  File file;
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
