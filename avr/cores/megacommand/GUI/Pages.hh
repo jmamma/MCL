@@ -92,7 +92,7 @@ public:
    * }
    * \endcode
    **/
-  virtual void update();
+  virtual void update() {}
   /**
    * The loop() method is basically the same as the update() method.
    **/
@@ -185,12 +185,11 @@ public:
   /** Executes the encoder actions by calling checkHandle() on each encoder. **/
   virtual void finalize();
   /** Call this to lock all encoders in the page. **/
-  void lockEncoders();
+  void lockEncoders() {} // TODO
   /** Call this to unlock all encoders in the page. If their value
       changed while locked, they will send out their new value.
   **/
-  virtual void config() {}
-  void unlockEncoders();
+  void unlockEncoders() {} // TODO
 };
 
 class Page : public PageParent {
