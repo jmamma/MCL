@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "SDDrivePage.h"
+#include "MCL.h"
 
 const char *c_snapshot_suffix = ".snp";
 const char *c_snapshot_root = "/SDDrive/MD";
@@ -148,7 +148,7 @@ void SDDrivePage::on_new() {
   init();
 }
 
-void SDDrivePage::on_delete(const char* file) {
+void SDDrivePage::on_delete(const char *file) {
   gfx.alert("SDDrivePage::on_delete", file);
 }
 

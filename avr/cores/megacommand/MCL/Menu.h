@@ -4,14 +4,14 @@
 #define MAX_MENU_ITEMS 16
 #define MAX_MENU_OPTIONS 16
 
-typedef void (*FP)();
+typedef void(*FP)();
 
-struct menu_option_t {
+typedef struct menu_option_s {
   uint8_t pos;
   char name[17];
-};
+} menu_option_t;
 
-struct menu_item_t {
+typedef struct menu_item_s {
   char name[17];
   uint8_t min;
   uint8_t range;
@@ -20,15 +20,15 @@ struct menu_item_t {
   Page *page_callback;
   void (*row_function)();
   menu_option_t options[MAX_MENU_OPTIONS];
-};
+} menu_item_t;
 
-struct menu_t {
+typedef struct menu_s {
   char name[11];
   uint8_t number_of_items;
   menu_item_t items[MAX_MENU_ITEMS];
   void (*exit_function)();
   Page *exit_page_callback;
-};
+} menu_t;
 
 class Menu {
 
