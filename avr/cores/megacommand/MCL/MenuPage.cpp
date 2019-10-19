@@ -94,13 +94,13 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 #endif
 }
 
-void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
+void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width, uint8_t rows) {
 #ifdef OLED_DISPLAY
   oled_display.setCursor(x_offset, y_offset);
   uint8_t number_of_items = get_menu()->get_number_of_items();
   uint8_t max_items;
-  if (number_of_items > MAX_VISIBLE_ROWS) {
-    max_items = MAX_VISIBLE_ROWS;
+  if (number_of_items > rows) {
+    max_items = rows;
   } else {
     max_items = number_of_items;
   }

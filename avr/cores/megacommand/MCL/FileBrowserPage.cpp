@@ -265,7 +265,6 @@ void FileBrowserPage::_handle_filemenu() {
   char buf2[32] = {'\0'};
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
-  //switch (file_menu_encoder.cur) {
   case 0: // new folder
     create_folder();
     break;

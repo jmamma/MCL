@@ -26,7 +26,8 @@ public:
   void draw_scrollbar(uint8_t x_offset);
   void draw_item(uint8_t item_n, uint8_t row);
   void draw_menu(uint8_t x_offset, uint8_t y_offset,
-                 uint8_t width = MENU_WIDTH);
+                 uint8_t width = MENU_WIDTH,
+                 uint8_t rows = MAX_VISIBLE_ROWS);
   void loop();
   void display();
   void setup();

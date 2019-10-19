@@ -56,20 +56,4 @@ extern MenuPage<5> track_menu_page;
 extern void mcl_save_sound();
 extern void mcl_load_sound();
 
-const menu_t<5> track_menu_layout PROGMEM = {
-    "TRACk",
-    {
-        {"LENGTH:", 0, 64, 0, (uint8_t *) &SeqPage::length, (Page*) NULL, (void*)NULL, {}},
-        {"MULTI:", 1, 2, 2, (uint8_t *) &SeqPage::resolution, (Page*) NULL, (void*)NULL, {{1, "1x"},{2, "2x"}}},
-
-        {"APPLY:", 0, 1, 2, (uint8_t *) &SeqPage::apply, (Page*) NULL, (void*)NULL, {{1, "--"},{1, "ALL"}}},
-//        {"LOAD SND:", 0,  0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_load_sound, {}},
-//        {"SAVE SND:", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_save_sound, {}},
-   },
-
-    (void*)(&mclsys_apply_config),
-
-};
-
-
 #endif /* SEQPAGES_H__ */

@@ -92,7 +92,7 @@ const menu_t<2> mclconfig_menu_layout PROGMEM = {
 const menu_t<5> file_menu_layout PROGMEM = {
     "FILE",
     {
-        {"NEW FOLDER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"NEW DIR.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         {"OVERWRITE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
