@@ -13,10 +13,12 @@ void FileBrowserPage::setup() {
   DEBUG_PRINT_FN();
 }
 
-void FileBrowserPage::add_entry(char *entry) {
-  uint32_t pos = BANK1_FILE_ENTRIES_START + numEntries * 16;
-  volatile uint8_t *ptr = (uint8_t *)pos;
-  memcpy_bank1(ptr, entry, 16);
+void FileBrowserPage::add_entry(const char *entry) {
+  char buf[16];
+  m_strncpy(buf, entry, sizeof(buf));
+  buf[15] = '\0';
+  volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
+  memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
 }
 
@@ -41,16 +43,14 @@ void FileBrowserPage::init() {
   numEntries = 0;
   cur_file = 255;
   if (show_save) {
-    char create_new[9] = "[ SAVE ]";
-    add_entry(&create_new[0]);
+    add_entry("[ SAVE ]");
   }
 
-  char up_one_dir[3] = "..";
   SD.vwd()->getName(temp_entry, 16);
   DEBUG_DUMP(temp_entry);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
-    add_entry(up_one_dir);
+    add_entry("..");
   }
 
   encoders[1]->cur = 1;
@@ -140,8 +140,8 @@ void FileBrowserPage::display() {
     }
     char temp_entry[16];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
-    volatile uint8_t *ptr = (uint8_t *)pos;
+    volatile uint8_t *ptr =
+        (uint8_t *)BANK1_FILE_ENTRIES_START + entry_num * 16;
     memcpy_bank1(temp_entry, ptr, 16);
     oled_display.println(temp_entry);
   }
@@ -205,11 +205,6 @@ void FileBrowserPage::loop() {
 bool FileBrowserPage::create_folder() {
   char new_dir[17] = "new_folder      ";
   if (mcl_gui.wait_for_input(new_dir, "Create Folder", 8)) {
-    for (uint8_t n = 0; n < strlen(new_dir); n++) {
-      if (new_dir[n] == ' ') {
-        new_dir[n] = '\0';
-      }
-    }
     SD.mkdir(new_dir);
     init();
   }
@@ -221,50 +216,71 @@ void FileBrowserPage::_calcindices(int &saveidx) {
 }
 
 void FileBrowserPage::_cd_up() {
-  char dir_entry[16];
-  file.close();
-  SD.chdir(lwd);
+  DEBUG_PRINT_FN();
 
-  SD.vwd()->getName(dir_entry, 16);
+  file.close();
+
+  // don't cd up if we are at the root
   auto len_lwd = strlen(lwd);
-  auto len_dir_entry = strlen(dir_entry);
+  if (len_lwd < 2) {
+    init();
+    return;
+  }
 
   // trim ending '/'
   if (lwd[len_lwd - 1] == '/') {
     lwd[--len_lwd] = '\0';
   }
-  if (dir_entry[len_dir_entry - 1] == '/') {
-    dir_entry[--len_dir_entry] = '\0';
+
+  // find parent path separator and trim it
+  for (int i = len_lwd - 1; i >= 0; --i) {
+    if (lwd[i] == '/') {
+      lwd[i] = '\0';
+      break;
+    }
   }
 
-  lwd[len_lwd - len_dir_entry] = '\0';
-  DEBUG_DUMP(dir_entry);
+  // in case root is trimmed, add it back
+  if (lwd[0] == '\0') {
+    strcpy(lwd, "/");
+  }
+
   DEBUG_DUMP(lwd);
 
+  SD.chdir(lwd);
   init();
 }
 
 void FileBrowserPage::_cd(const char *child) {
-  char dir_entry[16];
   file.close();
-  SD.vwd()->getName(dir_entry, 16);
-  strcat(lwd, dir_entry);
-  if (dir_entry[strlen(dir_entry) - 1] != '/') {
+  if (!SD.chdir(child)) {
+    gfx.alert("ERROR", "Failed to change dir.");
+    init();
+    return;
+  }
+  if (strcmp(lwd, "/") != 0) {
     strcat(lwd, "/");
   }
+  strcat(lwd, child);
+  auto len_lwd = strlen(lwd);
+  // trim ending '/'
+  if (lwd[len_lwd - 1] == '/') {
+    lwd[--len_lwd] = '\0';
+  }
+
   DEBUG_DUMP(lwd);
   DEBUG_DUMP(child);
-  SD.chdir(child);
   init();
 }
 
 void FileBrowserPage::_handle_filemenu() {
   char buf1[16];
-  uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-  volatile uint8_t *ptr = (uint8_t *)pos;
-  memcpy_bank1(&buf1[0], ptr, 16);
-
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+  memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
+  char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
+  uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case 0: // new folder
@@ -279,8 +295,19 @@ void FileBrowserPage::_handle_filemenu() {
     }
     break;
   case 2: // rename
+    // trim the suffix is present, add back later
     strcat(buf2, buf1);
-    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", 16)) {
+    if (suffix_pos != nullptr) {
+      buf2[suffix_pos - buf1] = '\0';
+    }
+    // default max length = 8, can extend if buf2 without suffix
+    // is longer than 8.
+    name_length = max(name_length, strlen(buf2));
+    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", name_length)) {
+      if (suffix_pos != nullptr) {
+        // paste the suffix back
+        strcat(buf2, suffix_pos);
+      }
       on_rename(buf1, buf2);
     }
     break;
@@ -289,6 +316,8 @@ void FileBrowserPage::_handle_filemenu() {
     strcat(buf2, buf1);
     strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
+      // the derived class may expect the file to be open
+      // when on_select is called.
       file.open(buf1, O_READ);
       on_select(buf1);
     }
@@ -297,14 +326,25 @@ void FileBrowserPage::_handle_filemenu() {
 }
 
 void FileBrowserPage::on_delete(const char *entry) {
-  if (SD.remove(entry)) {
-    gfx.alert("SUCCESS", "File removed.");
+  file.open(entry, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+  if (dir) {
+    if (SD.rmdir(entry)) {
+      gfx.alert("SUCCESS", "Folder removed.");
+    } else {
+      gfx.alert("ERROR", "Folder not removed.");
+    }
   } else {
-    gfx.alert("ERROR", "File not removed.");
+    if (SD.remove(entry)) {
+      gfx.alert("SUCCESS", "File removed.");
+    } else {
+      gfx.alert("ERROR", "File not removed.");
+    }
   }
 }
 
-void FileBrowserPage::on_rename(const char* from, const char* to) {
+void FileBrowserPage::on_rename(const char *from, const char *to) {
   if (SD.rename(from, to)) {
     gfx.alert("SUCCESS", "File renamed.");
   } else {
@@ -352,9 +392,9 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     char temp_entry[16];
-    uint32_t pos = BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    volatile uint8_t *ptr = (uint8_t *)pos;
-    memcpy_bank1(&temp_entry[0], ptr, 16);
+    volatile uint8_t *ptr =
+        (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+    memcpy_bank1(temp_entry, ptr, 16);
 
     // chdir to parent
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
