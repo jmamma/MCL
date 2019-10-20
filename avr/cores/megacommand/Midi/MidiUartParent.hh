@@ -7,7 +7,7 @@
 #include "Vector.hh"
 #include <midi-common.hh>
 #include "MidiID.hh"
-
+#include "Core.h"
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
@@ -64,7 +64,7 @@ public:
     }
   }
 
-  inline void tickActiveSense() {
+  ALWAYS_INLINE() void tickActiveSense() {
     if (recvActiveSenseTimer < 65535) {
       recvActiveSenseTimer++;
     }
@@ -91,15 +91,15 @@ public:
 
   virtual uint8_t getc() { return 0; }
 
-  inline virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
-  inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
     uart_block = 0;
   }
 
-  inline virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
     uart_block = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1);
@@ -107,7 +107,7 @@ public:
     uart_block = 0;
   }
 
-  inline void sendCommandByte(uint8_t byte) {
+  ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
    #ifdef MIDI_RUNNING_STATUS
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
         MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
@@ -185,51 +185,51 @@ public:
     ccCallbacks.remove(obj);
   }
 
-  inline void resetRunningStatus() { running_status = 0; }
+  ALWAYS_INLINE() void resetRunningStatus() { running_status = 0; }
 
-  inline void sendNoteOn(uint8_t note, uint8_t velocity) {
+  ALWAYS_INLINE() void sendNoteOn(uint8_t note, uint8_t velocity) {
     sendNoteOn(currentChannel, note, velocity);
   }
-  inline void sendNoteOff(uint8_t note, uint8_t velocity) {
+  ALWAYS_INLINE() void sendNoteOff(uint8_t note, uint8_t velocity) {
     sendNoteOff(currentChannel, note, velocity);
   }
-  inline void sendNoteOff(uint8_t note) {
+  ALWAYS_INLINE() void sendNoteOff(uint8_t note) {
     sendNoteOff(currentChannel, note, 0);
   }
-  inline void sendCC(uint8_t cc, uint8_t value) {
+  ALWAYS_INLINE() void sendCC(uint8_t cc, uint8_t value) {
     sendCC(currentChannel, cc, value);
   }
-  inline void sendProgramChange(uint8_t program) {
+  ALWAYS_INLINE() void sendProgramChange(uint8_t program) {
     sendProgramChange(currentChannel, program);
   }
 
-  inline void sendPolyKeyPressure(uint8_t note, uint8_t pressure) {
+  ALWAYS_INLINE() void sendPolyKeyPressure(uint8_t note, uint8_t pressure) {
     sendPolyKeyPressure(currentChannel, note, pressure);
   }
 
-  inline void sendChannelPressure(uint8_t pressure) {
+  ALWAYS_INLINE() void sendChannelPressure(uint8_t pressure) {
     sendChannelPressure(currentChannel, pressure);
   }
 
-  inline void sendPitchBend(int16_t pitchbend) {
+  ALWAYS_INLINE() void sendPitchBend(int16_t pitchbend) {
     sendPitchBend(currentChannel, pitchbend);
   }
 
-  inline void sendNRPN(uint16_t parameter, uint8_t value) {
+  ALWAYS_INLINE() void sendNRPN(uint16_t parameter, uint8_t value) {
     sendNRPN(currentChannel, parameter, value);
   }
-  inline void sendNRPN(uint16_t parameter, uint16_t value) {
+  ALWAYS_INLINE() void sendNRPN(uint16_t parameter, uint16_t value) {
     sendNRPN(currentChannel, parameter, value);
   }
 
-  inline void sendRPN(uint16_t parameter, uint8_t value) {
+  ALWAYS_INLINE() void sendRPN(uint16_t parameter, uint8_t value) {
     sendRPN(currentChannel, parameter, value);
   }
-  inline void sendRPN(uint16_t parameter, uint16_t value) {
+  ALWAYS_INLINE() void sendRPN(uint16_t parameter, uint16_t value) {
     sendRPN(currentChannel, parameter, value);
   }
 
-  inline void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
+  ALWAYS_INLINE() void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
     #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
@@ -240,7 +240,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  inline void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+  ALWAYS_INLINE() void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
     #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
@@ -251,7 +251,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  inline void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
+  ALWAYS_INLINE() void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
     #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
@@ -262,7 +262,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  inline void sendProgramChange(uint8_t channel, uint8_t program) {
+  ALWAYS_INLINE() void sendProgramChange(uint8_t channel, uint8_t program) {
     #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
@@ -324,8 +324,8 @@ public:
     puts(data, cnt);
     sendCommandByte(0xF7);
   }
-  inline void sendRaw(uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
-  inline void sendRaw(uint8_t byte) { m_putc(byte); }
+  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
+  ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }
   void sendString(const char *data, uint16_t cnt);

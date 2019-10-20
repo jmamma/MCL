@@ -27,7 +27,7 @@
 #define HELPERS_H__
 
 #include <inttypes.h>
-
+#include <Core.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -222,7 +222,7 @@ void m_toupper(char* str);
 			
 extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
-uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+ALWAYS_INLINE() uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 #ifdef HOST_MIDIDUINO
 #else

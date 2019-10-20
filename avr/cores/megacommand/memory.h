@@ -118,7 +118,7 @@ extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
 
 extern volatile uint8_t *rand_ptr;
 
-extern inline uint8_t get_random_byte() {
+ALWAYS_INLINE() extern inline uint8_t get_random_byte() {
     return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock) & 0x7F;
 }
 
