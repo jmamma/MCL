@@ -25,6 +25,7 @@ void FileBrowserPage::init() {
   char temp_entry[16];
 
   // config menu
+  file_menu_page.visible_rows = 3;
   file_menu_page.menu.enable_entry(0, show_new_folder);
   file_menu_page.menu.enable_entry(1, true); // delete
   file_menu_page.menu.enable_entry(2, true); // rename
@@ -101,9 +102,9 @@ void FileBrowserPage::init() {
 void FileBrowserPage::display() {
 #ifdef OLED_DISPLAY
   if (filemenu_active) {
-    oled_display.fillRect(0, 3, 42, 28, BLACK);
-    oled_display.drawRect(1, 4, 40, 26, WHITE);
-    file_menu_page.draw_menu(3, 12, 39, 3);
+    oled_display.fillRect(0, 3, 45, 28, BLACK);
+    oled_display.drawRect(1, 4, 43, 26, WHITE);
+    file_menu_page.draw_menu(6, 12, 39);
     oled_display.display();
     return;
   }
@@ -322,6 +323,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
+    file_menu_page.cur_row = 0;
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();

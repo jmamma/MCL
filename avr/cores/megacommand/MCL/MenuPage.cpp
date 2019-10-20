@@ -34,8 +34,8 @@ void MenuPageBase::loop() {
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 #ifdef OLED_DISPLAY
-    if (new_val > MAX_VISIBLE_ROWS - 1) {
-      new_val = MAX_VISIBLE_ROWS - 1;
+    if (new_val > visible_rows - 1) {
+      new_val = visible_rows - 1;
     }
     if (new_val < 0) {
       new_val = 0;
@@ -61,7 +61,7 @@ void MenuPageBase::loop() {
 void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
 #ifdef OLED_DISPLAY
   mcl_gui.draw_vertical_scrollbar(x_offset, get_menu()->get_number_of_items(),
-                                  MAX_VISIBLE_ROWS, encoders[1]->cur - cur_row);
+                                  visible_rows, encoders[1]->cur - cur_row);
 #endif
 }
 
@@ -94,13 +94,13 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 #endif
 }
 
-void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width, uint8_t rows) {
+void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
 #ifdef OLED_DISPLAY
   oled_display.setCursor(x_offset, y_offset);
   uint8_t number_of_items = get_menu()->get_number_of_items();
   uint8_t max_items;
-  if (number_of_items > rows) {
-    max_items = rows;
+  if (number_of_items > visible_rows) {
+    max_items = visible_rows;
   } else {
     max_items = number_of_items;
   }
@@ -143,7 +143,7 @@ void MenuPageBase::display() {
 
   draw_menu(x_offset, 8);
 
-  if (number_of_items > MAX_VISIBLE_ROWS) {
+  if (number_of_items > visible_rows) {
     draw_scrollbar(120);
   }
   oled_display.display();
