@@ -300,6 +300,19 @@ void m_toupper(char* str)
   }
 }
 
+/** Trim ending spaces **/
+void m_trim_space(char* str)
+{
+  for(int i = m_strlen(str) - 1; i >= 0; --i) {
+    if (str[i] == ' ') {
+      str[i] = '\0';
+    }
+    // break on first visible character
+    if (str[i] != '\0') {
+      break;
+    }
+  }
+}
 /** @} **/
 
 /**
