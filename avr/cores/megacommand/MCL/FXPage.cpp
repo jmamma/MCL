@@ -1,6 +1,6 @@
 #include "FXPage.h"
 #include "MCL.h"
-
+#include "RAMPage.h"
 #define FX_TYPE 0
 #define FX_PARAM 1
 #define NUM_OF_ENCODERS 4
@@ -102,9 +102,9 @@ void FXPage::display() {
   oled_display.setFont();
   oled_display.setCursor(0, 0);
 
-  oled_display.print("FX");
+  oled_display.print("FX ");
   oled_display.print(page_mode ? 1 : 0);
-
+  oled_display.print(" ");
    for (uint8_t i = 0; i < NUM_OF_ENCODERS; i++) {
     uint8_t n = i + ((page_mode ?  1 : 0) * NUM_OF_ENCODERS);
 
@@ -112,12 +112,14 @@ void FXPage::display() {
         uint8_t fx_type = params[n].type;
 
    
-    oled_display.print(encoders[i]->cur);
-    oled_display.print(" "); 
+    mcl_gui.draw_encoder(10 + 20 * i, 10, encoders[i]->cur);
    }
-  oled_display.display();
+ 
+   mcl_gui.draw_encoder(100,10,0);
+   oled_display.display();
 
 #endif
+
 }
 void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);

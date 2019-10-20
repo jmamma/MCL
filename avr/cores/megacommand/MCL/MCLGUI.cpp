@@ -11,8 +11,7 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   return text_input_page.return_state;
 }
 
-bool MCLGUI::wait_for_confirm(const char *title, const char* text)
-{
+bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
   questiondialog_page.init(title, text);
   GUI.pushPage(&questiondialog_page);
   while (GUI.currentPage() == &questiondialog_page) {
@@ -71,8 +70,8 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display) {
   oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 2, BLACK);
 
   oled_display.setTextColor(BLACK);
-  //auto len = strlen(title_buf) * 5;
-  //oled_display.setCursor(s_title_x + (s_title_w - len) / 2 , s_menu_y + 3);
+  // auto len = strlen(title_buf) * 5;
+  // oled_display.setCursor(s_title_x + (s_title_w - len) / 2 , s_menu_y + 3);
   oled_display.setCursor(s_title_x + 2, s_menu_y + 4);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
@@ -121,11 +120,12 @@ void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
 }
 
 //  ref: Design/infobox.png
-void MCLGUI::draw_infobox(const char* line1, const char* line2, const int line2_offset)
-{
+void MCLGUI::draw_infobox(const char *line1, const char *line2,
+                          const int line2_offset) {
   auto oldfont = oled_display.getFont();
 
-  oled_display.fillRect(info_x1 - 1, info_y1 - 1, info_w + 3, info_h + 3, BLACK);
+  oled_display.fillRect(info_x1 - 1, info_y1 - 1, info_w + 3, info_h + 3,
+                        BLACK);
   oled_display.drawRect(info_x1, info_y1, info_w, info_h, WHITE);
   oled_display.drawFastHLine(info_x1 + 1, info_y2 + 1, info_w, WHITE);
   oled_display.drawFastVLine(info_x2 + 1, info_y1 + 1, info_h - 1, WHITE);
@@ -149,3 +149,66 @@ void MCLGUI::draw_infobox(const char* line1, const char* line2, const int line2_
   oled_display.setFont(oldfont);
 }
 
+void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
+
+  auto oldfont = oled_display.getFont();
+
+  bool vert_flip = false;
+  bool horiz_flip = false;
+  uint8_t image_w = 11;
+  uint8_t image_h = 11;
+
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
+  oled_display.print(value);
+
+  if (value < 32) {
+    vert_flip = false;
+    horiz_flip = false;
+    if (value < 5) {
+      value = 5;
+    }
+  } else if (value < 64) {
+    vert_flip = false;
+    horiz_flip = true;
+    value = 32 - (value - 32);
+  } else if (value < 96) {
+    vert_flip = true;
+    horiz_flip = true;
+    value = value - 64;
+  } else if (value < 128) {
+    vert_flip = true;
+    horiz_flip = false;
+    value = 32 - (value - 96);
+    if (value < 5) {
+      value = 5;
+    }
+  }
+
+  if (value < 5) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_0, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else if (value < 11) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_1, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else if (value < 16) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_2, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else if (value < 22) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_3, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else if (value < 27) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_4, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else if (value <= 32) {
+    oled_display.drawBitmap(x, y + 2, encoder_small_5, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  }
+
+  oled_display.drawPixel(x + image_w / 2, y, WHITE);
+  oled_display.drawPixel(x, y + 2 + image_h, WHITE);
+  oled_display.drawPixel(x + image_w - 1, y + 2 + image_h, WHITE);
+
+oled_display.setFont(oldfont);
+}
