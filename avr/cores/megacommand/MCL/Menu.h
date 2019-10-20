@@ -2,7 +2,7 @@
 #define MENU_H__
 
 #define MAX_MENU_ITEMS 16
-#define MAX_MENU_OPTIONS 16
+#define MAX_MENU_OPTIONS 6
 
 typedef void (*FP)();
 
