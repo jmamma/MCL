@@ -100,7 +100,7 @@ public:
     put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
-  ALWAYS_INLINE() uint8_t getByte(uint16_t n) {
+  uint8_t getByte(uint16_t n) {
     if (n < maxRecordLen) {
       // Retrieve data from specified memory buffer
       if (recordBuf != NULL) {

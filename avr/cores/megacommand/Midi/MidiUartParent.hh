@@ -251,7 +251,7 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  ALWAYS_INLINE() void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
+  void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
     #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;

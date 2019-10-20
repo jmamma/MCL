@@ -39,7 +39,7 @@ public:
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
   ALWAYS_INLINE() void seq();
-  ALWAYS_INLINE() void send_trig();
+  void send_trig();
   ALWAYS_INLINE() void trig_conditional(uint8_t condition);
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
