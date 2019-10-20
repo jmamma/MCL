@@ -3,14 +3,16 @@
 
 #include <avr/pgmspace.h>
 #include <inttypes.h>
+#include "Core.h"
+
 class SR165Class {
   inline void rst();
   inline void clk();
  public:
   SR165Class();
-  uint8_t read();
-  uint16_t read16();
-  uint8_t read_norst();
+  ALWAYS_INLINE() uint8_t read();
+  ALWAYS_INLINE() uint16_t read16();
+  ALWAYS_INLINE() uint8_t read_norst();
 };
 
 #define GUI_NUM_ENCODERS 4
@@ -30,13 +32,13 @@ class EncodersClass {
 
   EncodersClass();
 
-  void poll(uint16_t sr);
-  void clearEncoders();
+  ALWAYS_INLINE() void poll(uint16_t sr);
+  ALWAYS_INLINE() void clearEncoders();
 
-  inline int8_t getNormal(uint8_t i) { return encoders[i].normal; }
-  inline int8_t getButton(uint8_t i) { return encoders[i].button; }
+  ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
+  ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
 
-  int8_t limitValue(int8_t value, int8_t min, int8_t max) {
+  ALWAYS_INLINE() int8_t limitValue(int8_t value, int8_t min, int8_t max) {
     if (value > max)
       return max;
     if (value < min)
@@ -132,8 +134,8 @@ class ButtonsClass {
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
   
   ButtonsClass();
-  void clear();
-  void poll(uint8_t sr);
+  ALWAYS_INLINE() void clear();
+  ALWAYS_INLINE() void poll(uint8_t sr);
 };
 
 extern SR165Class SR165;
