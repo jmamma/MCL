@@ -108,7 +108,7 @@ public:
   MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
                 volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
 
-  inline void m_putc(uint8_t c) {
+  ALWAYS_INLINE() void m_putc(uint8_t c) {
     if (c == 0xF0) {
       uart_block = 1;
     }
@@ -118,10 +118,10 @@ public:
     txRb.put_h(c);
     UART_SET_ISR_TX_BIT();
   }
-  inline bool avail() { return !rxRb.isEmpty(); }
-  inline uint8_t m_getc() { return rxRb.get(); }
+  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
+  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
-  virtual void m_putc_immediate(uint8_t c);
+  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
 
   void set_speed(uint32_t speed, uint8_t port);
 
@@ -139,10 +139,10 @@ class MidiUartClass2 : public MidiUartParent {
 public:
   MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
                  volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
-  inline bool avail() { return !rxRb.isEmpty(); }
-  inline uint8_t m_getc() { return rxRb.get(); }
+  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
+  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
-  inline void m_putc(uint8_t c) {
+  ALWAYS_INLINE() void m_putc(uint8_t c) {
   #ifdef UART2_TX
     if (c == 0xF0) {
       uart_block = 1;
@@ -155,7 +155,7 @@ public:
   #endif
   }
 
-  virtual void m_putc_immediate(uint8_t c);
+  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;

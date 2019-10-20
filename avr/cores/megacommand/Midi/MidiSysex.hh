@@ -74,14 +74,14 @@ protected:
   volatile uint8_t *sysex_highmem_buf;
 
 public:
-  void startRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
+  ALWAYS_INLINE() void startRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
     resetRecord(buf, maxLen);
     recording = true;
   }
 
-  void stopRecord() { recording = false; }
+  ALWAYS_INLINE() void stopRecord() { recording = false; }
 
-  void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
+  ALWAYS_INLINE() void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
     if ((buf == NULL) && (data != NULL)) {
       recordBuf = data;
       maxRecordLen = max_len;
@@ -96,11 +96,11 @@ public:
     recordLen = 0;
   }
 
-  void putByte(uint16_t offset, uint8_t c) {
+  ALWAYS_INLINE() void putByte(uint16_t offset, uint8_t c) {
     put_byte_bank1(sysex_highmem_buf + offset, c);
   }
 
-  uint8_t getByte(uint16_t n) {
+  ALWAYS_INLINE() uint8_t getByte(uint16_t n) {
     if (n < maxRecordLen) {
       // Retrieve data from specified memory buffer
       if (recordBuf != NULL) {
@@ -114,7 +114,7 @@ public:
     return 255;
   }
 
-  bool recordByte(uint8_t c) {
+  ALWAYS_INLINE() bool recordByte(uint8_t c) {
     if (recordLen < maxRecordLen) {
       // Record data to specified memory buffer
       if (recordBuf != NULL) {
@@ -170,7 +170,7 @@ public:
         listeners[i] = NULL;
     }
   }
-  bool isListenerActive(MidiSysexListenerClass *listener) {
+  ALWAYS_INLINE() bool isListenerActive(MidiSysexListenerClass *listener) {
     if (listener == NULL)
       return false;
     /* catch all */
@@ -190,7 +190,7 @@ public:
     }
   }
 
-  void reset() {
+  ALWAYS_INLINE() void reset() {
     len = 0;
     aborted = false;
     recording = false;
@@ -212,7 +212,7 @@ public:
     }
     */
   }
-  void abort() {
+  ALWAYS_INLINE() void abort() {
     // don't reset len, leave at maximum when aborted
     //  len = 0;
     aborted = true;
@@ -225,7 +225,7 @@ public:
   // Handled by main loop
   void end();
   // Handled by interrupts
-  void end_immediate() {
+  ALWAYS_INLINE() void end_immediate() {
     recvIds[0] = getByte(0);
     if (recvIds[0] == 0x00) {
       sysexLongId = true;
@@ -243,7 +243,7 @@ public:
     }
   }
 
-  void handleByte(uint8_t byte) {
+  ALWAYS_INLINE() void handleByte(uint8_t byte) {
     if (recording) {
       len++;
       recordByte(byte);
