@@ -8,6 +8,9 @@
 
 class MCLGUI {
 public:
+  // fills dst buffer with input text. ensures that:
+  // 1. dst is null-terminated
+  // 2. dst has no trailing spaces 
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1);
   bool wait_for_confirm(const char *title, const char* text);

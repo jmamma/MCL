@@ -4,15 +4,42 @@ param(
   [Switch]
   $Quiet,
   [Switch]
-  $Upload
+  $Upload,
+  [Switch]
+  $Clean,
+  [Switch]
+  $Debug
 )
 
 $pattern = "#pragma message:" 
 
 Write-Host "============> Build started."
 
+$DEBUG_FLAG = ""
+$DEBUG_OPT = ""
+
+if ($Debug) {
+    $DEBUG_FLAG = "--build-properties"
+    $DEBUG_OPT = "compiler.cpp.extra_flags=-DDEBUGMODE"
+}
+
+if ($Clean) {
+    Remove-Item -ErrorAction SilentlyContinue -Recurse -Force bin
+    Remove-Item -ErrorAction SilentlyContinue -Recurse -Force obj
+}
+
+$BIN_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\bin")
+$OBJ_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\obj")
+$SKETCH_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\sketch")
+
 $buildOutput = & {
-  arduino compile --warnings default -b MIDICtrl20_MegaCommand:avr:mega .\sketch\ 
+  arduino compile `
+      --warnings default `
+      --build-path $BIN_PATH `
+      --build-cache-path $OBJ_PATH `
+      -b MIDICtrl20_MegaCommand:avr:mega `
+      $DEBUG_FLAG $DEBUG_OPT `
+      $SKETCH_PATH
   $Script:compileStatus = $LASTEXITCODE
 } 2>&1 | ForEach-Object { 
   $content = $_.ToString()
