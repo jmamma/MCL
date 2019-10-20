@@ -8,6 +8,9 @@
 
 class MCLGUI {
 public:
+  // fills dst buffer with input text. ensures that:
+  // 1. dst is null-terminated
+  // 2. dst has no trailing spaces 
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   bool wait_for_confirm(const char *title, const char* text);
   void draw_infobox(const char* line1, const char* line2, const int line2_offset = 0);

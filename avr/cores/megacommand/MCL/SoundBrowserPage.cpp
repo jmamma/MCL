@@ -16,9 +16,14 @@ void SoundBrowserPage::init() {
   md_exploit.off();
   char *snd = ".snd";
   strcpy(match, snd);
-  show_dirs = true;
   char *files = "Sounds";
   strcpy(title, files);
+
+  show_dirs = true;
+  show_save = true;
+  show_filemenu = true;
+  show_new_folder = true;
+  show_overwrite = true;
   FileBrowserPage::init();
 }
 

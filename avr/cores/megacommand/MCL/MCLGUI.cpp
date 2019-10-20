@@ -7,6 +7,7 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   while (GUI.currentPage() == &text_input_page) {
     GUI.loop();
   }
+  m_trim_space(dst);
   return text_input_page.return_state;
 }
 
