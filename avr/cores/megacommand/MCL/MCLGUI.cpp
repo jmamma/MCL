@@ -163,12 +163,14 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
   oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
   oled_display.print(value);
 
+  //Scale encoder values to 123. encoder animation does not start and stop on 0.
+  value = (uint8_t) ((float) value * .95);
+
+  value += 4;
+
   if (value < 32) {
     vert_flip = false;
     horiz_flip = false;
-    if (value < 5) {
-      value = 5;
-    }
   } else if (value < 64) {
     vert_flip = false;
     horiz_flip = true;
@@ -177,32 +179,33 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
     vert_flip = true;
     horiz_flip = true;
     value = value - 64;
-  } else if (value < 128) {
+  } else {
     vert_flip = true;
     horiz_flip = false;
+    if (value > 122) { value = 122; }
     value = 32 - (value - 96);
-    if (value < 5) {
-      value = 5;
-    }
   }
 
-  if (value < 5) {
+  if (value < 4) {
     oled_display.drawBitmap(x, y + 2, encoder_small_0, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
-  } else if (value < 11) {
+  } else if (value < 9) {
     oled_display.drawBitmap(x, y + 2, encoder_small_1, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
-  } else if (value < 16) {
+  } else if (value < 14) {
     oled_display.drawBitmap(x, y + 2, encoder_small_2, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
-  } else if (value < 22) {
+  } else if (value < 19) {
     oled_display.drawBitmap(x, y + 2, encoder_small_3, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
-  } else if (value < 27) {
+  } else if (value < 24) {
     oled_display.drawBitmap(x, y + 2, encoder_small_4, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
-  } else if (value <= 32) {
+  } else if (value < 30) {
     oled_display.drawBitmap(x, y + 2, encoder_small_5, image_w, image_h, WHITE,
+                            vert_flip, horiz_flip);
+  } else {
+    oled_display.drawBitmap(x, y + 2, encoder_small_6, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   }
 
@@ -210,5 +213,5 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
   oled_display.drawPixel(x, y + 2 + image_h, WHITE);
   oled_display.drawPixel(x + image_w - 1, y + 2 + image_h, WHITE);
 
-oled_display.setFont(oldfont);
+  oled_display.setFont(oldfont);
 }
