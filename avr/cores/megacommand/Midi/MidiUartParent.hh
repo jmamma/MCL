@@ -80,7 +80,7 @@ public:
 
   virtual void initSerial() { running_status = 0; }
 
-  virtual void puts(uint8_t *data, uint16_t cnt) {
+  ALWAYS_INLINE() virtual void puts(uint8_t *data, uint16_t cnt) {
     while (cnt--)
       m_putc(*(data++));
   }
