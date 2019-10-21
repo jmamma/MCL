@@ -217,8 +217,8 @@ public:
     onClockCallbacks.remove(obj);
   }
 
-  void init();
-  void callCallbacks() {
+  ALWAYS_INLINE() void init();
+  ALWAYS_INLINE() void callCallbacks() {
     if (state != STARTED)
       return;
 
@@ -251,7 +251,7 @@ public:
     inCallback = false;
   }
 
-  void handleImmediateClock() {
+ ALWAYS_INLINE() void handleImmediateClock() {
     // if (clock > clock_last_time) {
     //  div192th_time = (clock - clock_last_time) / 2;
     //   DEBUG_PRINTLN( (clock - clock_last_time) / 2);
@@ -278,14 +278,14 @@ public:
   }
 
   /* in interrupt on receiving 0xF8 */
-  void handleClock() {
+ ALWAYS_INLINE() void handleClock() {
 
     if (useImmediateClock) {
       handleImmediateClock();
       return;
     }
   }
-  void increment192Counter() {
+ ALWAYS_INLINE() void increment192Counter() {
     if (state == STARTED) {
       div192th_counter++;
       mod12_counter++;
@@ -310,7 +310,7 @@ public:
     return tempo;
   }
 
-  void MidiClockClass::incrementCounters() {
+  ALWAYS_INLINE() void MidiClockClass::incrementCounters() {
     mod6_free_counter++;
     if (mod6_free_counter == 6) {
       diff_clock16 = midi_clock_diff(last_clock16, clock);
@@ -365,7 +365,7 @@ public:
   bool clock_less_than(uint32_t a, uint32_t b);
   uint32_t clock_diff_div192(uint32_t old_clock, uint32_t new_clock);
 
-  void MidiClockClass::handleImmediateMidiStart() {
+  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiStart() {
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_START);
     }
@@ -380,7 +380,7 @@ public:
     DEBUG_PRINTLN("START");
   }
 
-  void MidiClockClass::handleImmediateMidiStop() {
+  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiStop() {
     state = PAUSED;
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_STOP);
@@ -392,7 +392,7 @@ public:
     //  init();
   }
 
-  void MidiClockClass::handleImmediateMidiContinue() {
+  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiContinue() {
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_CONTINUE);
     }
