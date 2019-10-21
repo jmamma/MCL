@@ -161,7 +161,12 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
   }
 }
 
+
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
+  setTrackParam_inline(track,param,value);
+}
+
+void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value) {
 
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;

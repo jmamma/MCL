@@ -221,7 +221,7 @@ ISR(TIMER1_COMPA_vect) {
 static uint16_t oldsr = 0;
 volatile uint8_t *rand_ptr = 0;
 
-void gui_poll() {
+ALWAYS_INLINE() void gui_poll() {
   static bool inGui = false;
   if (inGui) {
     return;
