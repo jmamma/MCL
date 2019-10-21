@@ -145,6 +145,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
       } else if (locks_params[c] > 0) {
         send_param = locks_params_orig[c];
       }
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
     }
   }
 
@@ -152,6 +153,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
     for (c = 0; c < 4; c++) {
       if (locks[c][step] > 0) {
         send_param = locks[c][step] - 1;
+        MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
     }
   }
@@ -161,11 +163,9 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
     for (c = 0; c < 4; c++) {
       if (locks_params[c] > 0) {
         send_param = locks_params_orig[c];
+        MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
     }
-  }
-  if (send_param != 255) {
-    MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
   }
 }
 
