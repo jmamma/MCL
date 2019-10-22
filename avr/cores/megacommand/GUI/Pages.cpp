@@ -46,6 +46,7 @@ void LightPage::update() {
         GUI.screen_saver = false;
         clock_minutes = 0;
         minuteclock = 0;
+        last_used_clock[i] = slowclock;
         redisplay = true;
       }
     }
