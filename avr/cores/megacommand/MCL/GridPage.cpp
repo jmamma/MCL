@@ -451,8 +451,7 @@ void GridPage::display_grid() {
         oled_display.setTextColor(WHITE, BLACK);
       }
 
-      if ((MidiClock.step_counter == 2 || MidiClock.step_counter == 3) &&
-          MidiClock.state == 2 && row_idx == active_slots[track_idx]) {
+      if (MidiClock.getBlinkHint() && row_idx == active_slots[track_idx]) {
         // blink, don't print
         blink = true;
       } else if (model == 0) {
@@ -486,7 +485,6 @@ void GridPage::display_grid() {
 #endif
 }
 void GridPage::display_slot_menu() {
-  uint8_t x_offset = 43;
   uint8_t y_offset = 8;
   grid_slot_page.draw_menu(1, y_offset, 39);
   // grid_slot_page.draw_scrollbar(36);
@@ -494,8 +492,6 @@ void GridPage::display_slot_menu() {
 
 void GridPage::display_oled() {
 #ifdef OLED_DISPLAY
-  uint8_t x_offset = 43;
-  uint8_t y_offset = 8;
 
   oled_display.clearDisplay();
   oled_display.setTextWrap(false);
@@ -518,7 +514,7 @@ void GridPage::display() {
 #ifdef OLED_DISPLAY
   display_oled();
   return;
-#endif;
+#endif
 
   // Rendering code for HD44780 below
   char str[3] = "  ";

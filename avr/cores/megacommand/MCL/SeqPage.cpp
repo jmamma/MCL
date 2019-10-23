@@ -102,7 +102,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         ignore_button_release = 2;
       }
       return true;
-      //}
     }
 
     // TI + SHIFT2 = select track.
@@ -167,12 +166,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       trackselect_enc.cur = trackselect_enc.old = last_ext_track;
     }
 #endif
-  }
-  else if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  } else if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[3] = &seq_param4;
   }
-  
-  
 
   /*
   #ifdef OLED_DISPLAY
@@ -240,24 +236,19 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
                (MidiClock.state == 2)) {
       str[i] = ' ';
     } else {
-      if (IS_BIT_SET64(active_track.lock_mask,
-                       i + offset)) {
+      if (IS_BIT_SET64(active_track.lock_mask, i + offset)) {
         str[i] = 'x';
       }
-      if (IS_BIT_SET64(active_track.pattern_mask,
-                       i + offset) &&
-          !IS_BIT_SET64(active_track.lock_mask,
-                        i + offset)) {
+      if (IS_BIT_SET64(active_track.pattern_mask, i + offset) &&
+          !IS_BIT_SET64(active_track.lock_mask, i + offset)) {
 #ifdef OLED_DISPLAY
         str[i] = (char)0xF8;
 #else
         str[i] = (char)165;
 #endif
       }
-      if (IS_BIT_SET64(active_track.pattern_mask,
-                       i + offset) &&
-          IS_BIT_SET64(active_track.lock_mask,
-                       i + offset)) {
+      if (IS_BIT_SET64(active_track.pattern_mask, i + offset) &&
+          IS_BIT_SET64(active_track.lock_mask, i + offset)) {
 #ifdef OLED_DISPLAY
         str[i] = (char)2;
 #else
@@ -493,9 +484,9 @@ void SeqPage::loop() {
       track = last_ext_track;
     }
 #endif
-    if(plus && track < 15) {
+    if (plus && track < 15) {
       ++track;
-    }else if (!plus && track > 0) {
+    } else if (!plus && track > 0) {
       --track;
     }
     select_track(midi_device, track);
@@ -503,8 +494,8 @@ void SeqPage::loop() {
   }
 }
 
+#ifndef OLED_DISPLAY
 void SeqPage::display() {
-
   for (uint8_t i = 0; i < 2; i++) {
     for (int j = 0; j < 16; j++) {
       if (GUI.lines[i].data[j] == 0) {
@@ -516,40 +507,104 @@ void SeqPage::display() {
     GUI.lines[i].changed = false;
   }
   GUI.setLine(GUI.LINE1);
-#ifdef OLED_DISPLAY
+}
+#else
+//  ref: design/Sequencer.png
+void SeqPage::display() {
 
-  //  Display current active track
-  oled_display.fillRect(110, 0, 18, 32, BLACK);
-  oled_display.setCursor(110, 0);
-  oled_display.print("TRK");
-  oled_display.setCursor(110, 8);
+  oled_display.fillRect(pane_x1, 0, pane_w, 32, BLACK);
   oled_display.setFont(&TomThumb);
-  if (midi_device == DEVICE_MD) {
-    oled_display.print("MD ");
-    oled_display.print(last_md_track + 1);
-  }
-#ifdef EXT_TRACKS
-  else if (midi_device == DEVICE_A4) {
-    oled_display.print("A4 ");
-    oled_display.print(last_ext_track + 1);
-  }
-  else {
-    oled_display.print("MI ");
-    oled_display.print(last_ext_track + 1);
-  }
-#endif
 
-  if (show_track_menu) {
-    uint8_t x_offset = 43;
-    uint8_t y_offset = 8;
-    oled_display.setFont(&TomThumb);
-    oled_display.fillRect(84, 0, 40, 32, BLACK);
-    track_menu_page.draw_menu(86, y_offset, 39);
+  bool is_md = (midi_device == DEVICE_MD);
+#ifdef EXT_TRACKS
+  bool ext_is_a4 = (seq_extstep_page.midi_device == DEVICE_A4);
+#else
+  bool ext_is_a4 = false;
+#endif
+  uint8_t track_id = last_md_track;
+  if (!is_md)
+  {
+    track_id = last_ext_track;
   }
+  track_id += 1;
+
+  //  draw MD/EXT label
+  if (is_md) {
+    oled_display.fillRect(label_x, label_md_y, label_w, label_h, WHITE);
+    oled_display.setCursor(label_x + 1, label_md_y + 6);
+    oled_display.setTextColor(BLACK);
+    oled_display.print("MD");
+    oled_display.setTextColor(WHITE);
+  } else {
+    oled_display.setCursor(label_x + 1, label_md_y + 6);
+    oled_display.setTextColor(WHITE);
+    oled_display.print("MD");
+    oled_display.fillRect(label_x, label_ex_y, label_w, label_h, WHITE);
+    oled_display.setTextColor(BLACK);
+  }
+  oled_display.setCursor(label_x + 1, label_ex_y + 6);
+  if (ext_is_a4) {
+    oled_display.print("A4");
+  } else {
+    oled_display.print("MI");
+  }
+
+  //  draw current active track
+  oled_display.setTextColor(WHITE);
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(trackid_x, trackid_y);
+  oled_display.print(track_id);
+
+  //  draw stop/play/rec state
+  if (recording) {
+    oled_display.fillRect(22, 8, 4, 5, WHITE);
+    oled_display.drawPixel(22, 8, BLACK);
+    oled_display.drawPixel(25, 8, BLACK);
+    oled_display.drawPixel(22, 12, BLACK);
+    oled_display.drawPixel(25, 12, BLACK);
+  } else if (MidiClock.state == 2) {
+    oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
+    oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
+                              tri_y + 4, WHITE);
+  } else {
+    oled_display.fillRect(tri_x, tri_y, 4, 5, WHITE);
+  }
+
+  //  draw page index
+  uint8_t pidx_x = pidx_x0;
+  bool blink = MidiClock.getBlinkHint();
+  uint8_t playing_idx = MidiClock.bar_counter % 4;
+  for (uint8_t i = 0; i < 4; ++i) {
+    oled_display.drawRect(pidx_x, pidx_y, pidx_w, pidx_h, WHITE);
+
+    // highlight page_select
+    if (page_select == i) {
+      oled_display.drawFastHLine(pidx_x+1, pidx_y+1, pidx_w-2, WHITE);
+    } 
+
+    // blink playing_idx
+    if(playing_idx == i && blink) {
+      if(page_select == i) {
+        oled_display.drawFastHLine(pidx_x+2, pidx_y+1, 2, BLACK);
+      }else{
+        oled_display.drawFastHLine(pidx_x+1, pidx_y+1, pidx_w-2, WHITE);
+      }
+    }
+
+    pidx_x += pidx_w + 1;
+  }
+
+  // if (show_track_menu) {
+  // uint8_t x_offset = 43;
+  // uint8_t y_offset = 8;
+  // oled_display.setFont(&TomThumb);
+  // oled_display.fillRect(84, 0, 40, 32, BLACK);
+  // track_menu_page.draw_menu(86, y_offset, 39);
+  //}
   oled_display.display();
   oled_display.setFont();
-#endif
 }
+#endif
 
 void SeqPageMidiEvents::setup_callbacks() {
   //   Midi.addOnControlChangeCallback(

@@ -131,6 +131,10 @@ void MidiClockClass::setTempo(uint16_t _tempo) {
   CLEAR_LOCK();
 }
 
+bool MidiClockClass::getBlinkHint() {
+  return state == STARTED && (step_counter == 2 || step_counter == 3);
+}
+
 void MidiClockClass::handleSongPositionPtr(uint8_t *msg) {
   /*
       if (mode == EXTERNAL || mode == EXTERNAL_UART2) {
