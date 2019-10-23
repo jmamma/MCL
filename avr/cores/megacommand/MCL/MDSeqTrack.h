@@ -35,13 +35,14 @@ public:
   bool mute_until_start = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
-  void seq();
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
-  inline void send_trig();
-  inline void trig_conditional(uint8_t condition);
-  inline void send_parameter_locks(uint8_t step);
+  ALWAYS_INLINE() void seq();
+  void send_trig();
+  ALWAYS_INLINE() void send_trig_inline();
+  ALWAYS_INLINE() void trig_conditional(uint8_t condition);
+  ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,

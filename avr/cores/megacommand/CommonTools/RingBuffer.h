@@ -46,29 +46,29 @@ public:
   #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
   /** Add a new element c to the ring buffer. **/
-  bool put(C c) volatile;
+  ALWAYS_INLINE() bool put(C c) volatile;
   /** A slightly more efficient version of put, if ptr == NULL */
-  bool put_h(C c) volatile;
+  ALWAYS_INLINE() bool put_h(C c) volatile;
   /** put_h but when running from within isr that is already blocking**/
-  bool put_h_isr(C c) volatile;
+  ALWAYS_INLINE() bool put_h_isr(C c) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
-  bool putp(C *c) volatile;
+  ALWAYS_INLINE() bool putp(C *c) volatile;
   /** Return the next element in the ring buffer. **/
-  C get() volatile;
+  ALWAYS_INLINE() C get() volatile;
   /** A slightly more efficient version of get, if ptr == NULL */
-  C get_h() volatile;
+  ALWAYS_INLINE() C get_h() volatile;
   /** get_h but when running from within isr that is already blocking**/
-  C get_h_isr() volatile;
+  ALWAYS_INLINE() C get_h_isr() volatile;
   /** Copy the next element into dst. **/
-  bool getp(C *dst) volatile;
+  ALWAYS_INLINE() bool getp(C *dst) volatile;
   /** Get the next element without removing it from the ring buffer. **/
-  C peek() volatile;
+  ALWAYS_INLINE() C peek() volatile;
   /** Returns true if the ring buffer is empty. **/
-  inline bool isEmpty() volatile;
+  ALWAYS_INLINE() bool isEmpty() volatile;
   /** Returns true if the ring buffer is empty. Use in isr**/
-  inline bool isEmpty_isr() volatile;
+  ALWAYS_INLINE() bool isEmpty_isr() volatile;
   /** Returns true if the ring buffer is full. **/
-  inline bool isFull() volatile;
+  ALWAYS_INLINE() bool isFull() volatile;
   /** Returns the number of elements in the ring buffer. **/
   T size() volatile;
 
