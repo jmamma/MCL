@@ -21,7 +21,17 @@ public:
   void clear_popup();
   void draw_popup(const char* title, bool deferred_display = false);
   void draw_progress(const char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
+
   void draw_encoder(uint8_t x, uint8_t y, uint8_t value);
+  void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
+
+  bool show_encoder_value(Encoder *encoder);
+
+  void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
+  void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+  void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name);
+  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+
   static constexpr uint8_t s_menu_w = 96;
   static constexpr uint8_t s_menu_h = 24;
   static constexpr uint8_t s_menu_x = (128 - s_menu_w) / 2;

@@ -4,7 +4,7 @@
 #define FX_TYPE 0
 #define FX_PARAM 1
 #define NUM_OF_ENCODERS 4
-
+#define INTERPOLATE
 void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
@@ -64,13 +64,16 @@ void FXPage::loop() {
 
       uint8_t val;
       //Interpolation.
+#ifdef INTERPOLATE
       for (val = encoders[i]->old; val < encoders[i]->cur; val++) {
         MD.sendFXParam(fx_param, val, fx_type);
       }
       for (val = encoders[i]->old; val > encoders[i]->cur; val--) {
         MD.sendFXParam(fx_param, val, fx_type);
       }
-
+#else
+       MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
+#endif
     }
   }
 }
@@ -111,10 +114,9 @@ void FXPage::display() {
         uint8_t fx_param = params[n].param;
         uint8_t fx_type = params[n].type;
 
-   
-    mcl_gui.draw_encoder(10 + 20 * i, 10, encoders[i]->cur);
+    mcl_gui.draw_encoder(10 + 20 * i, 10, encoders[i], str, show_value);
    }
- 
+
    mcl_gui.draw_encoder(100,10,0);
    oled_display.display();
 
@@ -169,7 +171,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
+//    GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
   page_mode = !(page_mode);
@@ -180,8 +182,9 @@ bool FXPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
   }
-
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
+    return true;
   }
 
   return false;

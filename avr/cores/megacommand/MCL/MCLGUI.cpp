@@ -151,19 +151,13 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
 
-  auto oldfont = oled_display.getFont();
 
   bool vert_flip = false;
   bool horiz_flip = false;
   uint8_t image_w = 11;
   uint8_t image_h = 11;
 
-  oled_display.setFont(&TomThumb);
-  oled_display.setTextColor(WHITE);
-  oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
-  oled_display.print(value);
-
-  //Scale encoder values to 123. encoder animation does not start and stop on 0.
+    //Scale encoder values to 123. encoder animation does not start and stop on 0.
   value = (uint8_t) ((float) value * .95);
 
   value += 4;
@@ -187,31 +181,102 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
   }
 
   if (value < 4) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_0, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_0, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else if (value < 9) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_1, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_1, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else if (value < 14) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_2, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_2, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else if (value < 19) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_3, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_3, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else if (value < 24) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_4, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_4, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else if (value < 30) {
-    oled_display.drawBitmap(x, y + 2, encoder_small_5, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_5, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   } else {
-    oled_display.drawBitmap(x, y + 2, encoder_small_6, image_w, image_h, WHITE,
+    oled_display.drawBitmap(x, y, encoder_small_6, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   }
+}
 
-  oled_display.drawPixel(x + image_w / 2, y, WHITE);
-  oled_display.drawPixel(x, y + 2 + image_h, WHITE);
-  oled_display.drawPixel(x + image_w - 1, y + 2 + image_h, WHITE);
+void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
+  draw_encoder(x , y, encoder->value);
+}
+
+bool MCLGUI::show_encoder_value(Encoder *encoder) {
+  uint8_t match = 255;
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match != 255; i++) {
+    if (GUI.page->encoders[i] == encoder) {
+      match = i;
+    }
+  }
+  if (match != 255) {
+    if (clock_diff(GUI.page->last_used_clock[match], slowclock) > SHOW_VALUE_TIMEOUT))  { show_value = true; }
+  }
+
+}
+
+void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
+  bool show_value = show_encoder_value(encoder);
+  draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+}
+
+void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value) {
+
+  auto oldfont = oled_display.getFont();
+
+  uint8_t image_w = 11;
+  uint8_t image_h = 11;
+
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+
+  //Find the encoder number matching the encoder.
+  if (show_value) {
+    oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
+    oled_display.print(value);
+  }
+
+  oled_display.setCursor(x, y);
+  oled_display.print(name);
+
+  y += 10;
+
+  draw_encoder(x, y, value);
+
+  oled_display.drawPixel(x + image_w / 2, y - 2, WHITE);
+  oled_display.drawPixel(x, y + image_h, WHITE);
+  oled_display.drawPixel(x + image_w - 1, y + image_h + 2, WHITE);
+
 
   oled_display.setFont(oldfont);
+}
+
+
+void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
+  bool show_value = show_encoder_value(encoder);
+  draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+}
+
+
+void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value) {
+
+  if (show_value) {
+    oled_display.setCursor(x, y);
+    oled_display.print(value);
+  }
+  else {
+  oled_display.setCursor(x, y);
+  oled_display.print(name);
+  }
+  y += 6;
+
+  draw_encoder(x, y, value);
+
+
 }
