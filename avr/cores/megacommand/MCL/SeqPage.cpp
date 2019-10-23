@@ -557,11 +557,11 @@ void SeqPage::display() {
 
   //  draw stop/play/rec state
   if (recording) {
-    oled_display.fillRect(22, 8, 4, 5, WHITE);
-    oled_display.drawPixel(22, 8, BLACK);
-    oled_display.drawPixel(25, 8, BLACK);
-    oled_display.drawPixel(22, 12, BLACK);
-    oled_display.drawPixel(25, 12, BLACK);
+    oled_display.fillRect(22, tri_y, 4, 5, WHITE);
+    oled_display.drawPixel(22, tri_y, BLACK);
+    oled_display.drawPixel(25, tri_y, BLACK);
+    oled_display.drawPixel(22, tri_y + 4, BLACK);
+    oled_display.drawPixel(25, tri_y + 4, BLACK);
   } else if (MidiClock.state == 2) {
     oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
     oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
