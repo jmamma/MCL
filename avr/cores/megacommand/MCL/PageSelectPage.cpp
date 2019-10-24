@@ -7,8 +7,9 @@
 #define RAM_PAGE_B 15
 #define WAVD_PAGE 8
 #define SOUND 7
-
-#define LOUDNESS 10
+#define FX_PAGE_A 10
+#define FX_PAGE_B 11
+#define LOUDNESS 9
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -44,6 +45,16 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     if (str)
       strncpy(str, "RAM 2", 6);
     r_page = &ram_page_b;
+    break;
+ case FX_PAGE_A:
+    if (str)
+      strncpy(str, "DELAY", 8);
+    r_page = &fx_page_a;
+    break;
+ case FX_PAGE_B:
+    if (str)
+      strncpy(str, "REVERB", 8);
+    r_page = &fx_page_b;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:
@@ -108,6 +119,9 @@ void PageSelectPage::loop() {
 }
 
 void PageSelectPage::display() {
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
   GUI.setLine(GUI.LINE1);
   char str[16];
   get_page(page_select, str);
