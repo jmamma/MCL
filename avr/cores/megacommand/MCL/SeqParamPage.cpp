@@ -148,7 +148,8 @@ void SeqParamPage::display() {
   draw_knob(3, encoders[3], "VAL");
   draw_pattern_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
-  SeqPage::display();
+
+  oled_display.display();
 }
 
 #endif
