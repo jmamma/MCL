@@ -119,6 +119,9 @@ void PageSelectPage::loop() {
 }
 
 void PageSelectPage::display() {
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
   GUI.setLine(GUI.LINE1);
   char str[16];
   get_page(page_select, str);
