@@ -407,11 +407,6 @@ void GridPage::display_grid() {
   }
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
 
-    if ((y + row_shift == cur_row)) {
-      oled_display.setCursor(x_offset - 6, y_offset + y * 8);
-      oled_display.print(">");
-    }
-
     auto cur_posx = x_offset;
     auto cur_posy = y_offset + y * 8;
     for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift; x++) {
@@ -480,7 +475,7 @@ void GridPage::display_grid() {
 
   // optionally, draw the first separator
   if ((getCol() - cur_col + col_shift) % 4 == 0) {
-    mcl_gui.draw_vertical_dashline(x_offset - 2, 3);
+    mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
 #endif
 }
