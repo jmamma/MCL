@@ -3,7 +3,6 @@
 #include "RAMPage.h"
 #define FX_TYPE 0
 #define FX_PARAM 1
-#define NUM_OF_ENCODERS 4
 #define INTERPOLATE
 void FXPage::setup() { DEBUG_PRINT_FN(); }
 
@@ -15,31 +14,29 @@ void FXPage::init() {
   oled_display.setFont();
 #endif
   md_exploit.off();
-      for (uint8_t a = 0; a < num_of_params; a++) {
-      DEBUG_PRINTLN("params");
-      DEBUG_PRINTLN(params[a].type);
-      DEBUG_PRINTLN(params[a].param);
-      } 
 
-
-  for (uint8_t n = 0; n < num_of_params; n++) {
-
+  for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+    uint8_t a = ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[n].param;
+
+    DEBUG_PRINTLN(params[n].param);
     switch (params[n].type) {
     case MD_FX_ECHO:
       DEBUG_PRINTLN("setting delay");
       DEBUG_PRINTLN(n);
-      DEBUG_PRINTLN(fx_param); 
-      encoders[n]->cur = MD.kit.delay[fx_param];
+      DEBUG_PRINTLN(fx_param);
+      encoders[a]->cur = MD.kit.delay[fx_param];
       break;
     case MD_FX_REV:
-      encoders[n]->cur = MD.kit.reverb[fx_param];
+      DEBUG_PRINTLN("setting reverb");
+      DEBUG_PRINTLN(n);
+      encoders[a]->cur = MD.kit.reverb[fx_param];
       break;
     case MD_FX_EQ:
-      encoders[n]->cur = MD.kit.eq[fx_param];
+      encoders[a]->cur = MD.kit.eq[fx_param];
       break;
     case MD_FX_DYN:
-      encoders[n]->cur = MD.kit.dynamics[fx_param];
+      encoders[a]->cur = MD.kit.dynamics[fx_param];
       break;
     }
 
@@ -55,15 +52,15 @@ void FXPage::cleanup() {
 
 void FXPage::loop() {
 
-  for (uint8_t i = 0; i < NUM_OF_ENCODERS; i++) {
-    uint8_t n = i + ((page_mode ?  1 : 0) * NUM_OF_ENCODERS);
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
 
     if (encoders[i]->hasChanged()) {
-        uint8_t fx_param = params[n].param;
-        uint8_t fx_type = params[n].type;
+      uint8_t fx_param = params[n].param;
+      uint8_t fx_type = params[n].type;
 
       uint8_t val;
-      //Interpolation.
+      // Interpolation.
 #ifdef INTERPOLATE
       for (val = encoders[i]->old; val < encoders[i]->cur; val++) {
         MD.sendFXParam(fx_param, val, fx_type);
@@ -72,7 +69,7 @@ void FXPage::loop() {
         MD.sendFXParam(fx_param, val, fx_type);
       }
 #else
-       MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
+      MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
 #endif
     }
   }
@@ -108,23 +105,22 @@ void FXPage::display() {
   oled_display.print("FX ");
   oled_display.print(page_mode ? 1 : 0);
   oled_display.print(" ");
-   PGM_P param_name = NULL;
-   char str[4];
-   for (uint8_t i = 0; i < NUM_OF_ENCODERS; i++) {
-    uint8_t n = i + ((page_mode ?  1 : 0) * NUM_OF_ENCODERS);
+  PGM_P param_name = NULL;
+  char str[4];
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
 
-        uint8_t fx_param = params[n].param;
-        uint8_t fx_type = params[n].type;
-    param_name = fx_param_name(fx_type, encoders[0]->getValue() - 1);
+    uint8_t fx_param = params[n].param;
+    uint8_t fx_type = params[n].type;
+    param_name = fx_param_name(fx_type, fx_param);
     m_strncpy_p(str, param_name, 4);
 
-    mcl_gui.draw_light_encoder(10 + 20 * i, 10, encoders[i], str);
-   }
+    mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
+  }
 
-   oled_display.display();
+  oled_display.display();
 
 #endif
-
 }
 
 void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -175,10 +171,10 @@ bool FXPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-//    GUI.setPage(&grid_page);
+    //    GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-  page_mode = !(page_mode);
+    page_mode = !(page_mode);
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
