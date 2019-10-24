@@ -877,6 +877,7 @@ typedef struct md_machine_name_s_short {
 
 extern md_machine_name_t_short const machine_names_short[134] PROGMEM;
 PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
+extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
 
 /* @} @} */
 
