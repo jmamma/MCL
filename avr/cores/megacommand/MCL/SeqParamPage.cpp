@@ -266,7 +266,6 @@ if (utiming == 0) {
     return true;
   }
 
-#ifndef OLED_DISPLAY
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     uint8_t page_depth = page_id;
     if (page_depth < NUM_PARAM_PAGES - 1) {
