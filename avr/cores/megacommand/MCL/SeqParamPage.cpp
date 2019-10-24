@@ -144,8 +144,8 @@ void SeqParamPage::display() {
   draw_knob(0, "TGT", myName);
   draw_knob(2, "TGT", myName2);
 
-  draw_knob(1, encoders[1]->getValue());
-  draw_knob(3, encoders[3]->getValue());
+  draw_knob(1, encoders[1], "VAL");
+  draw_knob(3, encoders[3], "VAL");
   draw_pattern_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
   SeqPage::display();

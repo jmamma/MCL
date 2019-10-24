@@ -758,17 +758,9 @@ void SeqPage::draw_knob(uint8_t i, const char *title, const char *text) {
   oled_display.print(text);
 }
 
-void SeqPage::draw_knob(uint8_t i, uint8_t val) {
+void SeqPage::draw_knob(uint8_t i, Encoder* enc, const char* name) {
   uint8_t x = knob_x0 + i * knob_w;
-  oled_display.setFont(&TomThumb);
-  oled_display.setTextColor(WHITE);
-  oled_display.setCursor(x + 4, 7);
-
-  if(val == 0) {
-    oled_display.print("--");
-  }else {
-    oled_display.print(val);
-  }
+  mcl_gui.draw_md_encoder(x + 1, 1, enc, name);
 }
 
 void SeqPageMidiEvents::setup_callbacks() {

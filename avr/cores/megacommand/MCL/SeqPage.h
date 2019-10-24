@@ -42,7 +42,7 @@ public:
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
-  void draw_knob(uint8_t i, uint8_t val);
+  void draw_knob(uint8_t i, Encoder* enc, const char* name);
   void select_track(uint8_t device, uint8_t track);
 
   virtual bool handleEvent(gui_event_t *event);
