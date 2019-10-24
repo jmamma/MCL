@@ -73,9 +73,8 @@ void FXPage::loop() {
       for (val = encoders[i]->old; val > encoders[i]->cur; val--) {
         MD.sendFXParam(fx_param, val, fx_type);
       }
-#else
-      MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
 #endif
+      MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
     }
   }
 }
