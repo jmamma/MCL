@@ -694,7 +694,7 @@ void SeqPage::display() {
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = !MidiClock.getBlinkHint(true);
-  uint8_t playing_idx = (MidiClock.bar_counter + 1) % 4;
+  uint8_t playing_idx = (MidiClock.bar_counter - 1) % 4;
   for (uint8_t i = 0; i < 4; ++i) {
     oled_display.drawRect(pidx_x, pidx_y, pidx_w, pidx_h, WHITE);
 
