@@ -468,7 +468,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
       if (note_interface.notes[i] == 1) {
         // TI feedback
-        oled_display.fillRect(trig_x, trig_y, seq_w, trig_h + 1, WHITE);
+        oled_display.fillRect(trig_x - 1, trig_y, seq_w + 2, trig_h + 1, WHITE);
       } else if (!in_range) {
         // don't draw
       } else {
@@ -478,10 +478,6 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
         } else {
           oled_display.drawRect(trig_x, trig_y, seq_w, trig_h, WHITE);
         }
-        oled_display.drawPixel(trig_x, trig_y, BLACK);
-        oled_display.drawPixel(trig_x, trig_y + trig_h - 1, BLACK);
-        oled_display.drawPixel(trig_x + seq_w - 1, trig_y, BLACK);
-        oled_display.drawPixel(trig_x + seq_w - 1, trig_y + trig_h - 1, BLACK);
       }
 
       trig_x += seq_w + 1;
