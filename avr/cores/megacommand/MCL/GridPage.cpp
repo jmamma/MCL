@@ -451,7 +451,7 @@ void GridPage::display_grid() {
         oled_display.setTextColor(WHITE, BLACK);
       }
 
-      if (MidiClock.getBlinkHint() && row_idx == active_slots[track_idx]) {
+      if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_idx]) {
         // blink, don't print
         blink = true;
       } else if (model == 0) {

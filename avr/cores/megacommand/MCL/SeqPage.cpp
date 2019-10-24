@@ -433,7 +433,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
-      oled_display.fillRect(led_x, led_y - 1, seq_w + 2, led_h, WHITE);
+      oled_display.fillRect(led_x - 1, led_y - 1, seq_w + 2, led_h + 1, WHITE);
     } else if (!in_range) {
       // don't draw
     } else if (current ^ locked) {
@@ -442,7 +442,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
     } else if (current && locked) {
       // highlight 2
       oled_display.fillRect(led_x, led_y, seq_w, led_h, WHITE);
-      oled_display.drawPixel(led_x + 2, led_y, BLACK);
+      oled_display.drawPixel(led_x + 2, led_y + 1, BLACK);
     } else {
       // frame only
       oled_display.drawRect(led_x, led_y, seq_w, led_h, WHITE);
@@ -693,7 +693,7 @@ void SeqPage::display() {
 
   //  draw page index
   uint8_t pidx_x = pidx_x0;
-  bool blink = !MidiClock.getBlinkHint();
+  bool blink = !MidiClock.getBlinkHint(true);
   uint8_t playing_idx = (MidiClock.bar_counter + 1) % 4;
   for (uint8_t i = 0; i < 4; ++i) {
     oled_display.drawRect(pidx_x, pidx_y, pidx_w, pidx_h, WHITE);
