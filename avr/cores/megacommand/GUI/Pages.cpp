@@ -30,6 +30,8 @@ void PageParent::redisplayPage() {
   }
 }
 
+uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];
+
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
 
