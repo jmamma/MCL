@@ -8,7 +8,22 @@ void SeqStepPage::config() {
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
   seq_param4.max = tuning->len - 1;
+
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+  constexpr uint8_t len1 = sizeof(info1);
+
+  char buf[len1] = { '\0' };
+  m_strncpy_p(buf, str1, len1);
+  strncpy(info1, buf, len1);
+  strncat(info1, ">", len1);
+  m_strncpy_p(buf, str2, len1);
+  strncat(info1, buf, len1);
+
+  strcpy(info2, "NOTE");
 }
+
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
@@ -28,6 +43,7 @@ void SeqStepPage::init() {
   config();
   note_interface.state = true;
 }
+
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
   SeqPage::cleanup();
@@ -36,6 +52,7 @@ void SeqStepPage::cleanup() {
   }
 }
 
+#ifndef OLED_DISPLAY
 void SeqStepPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
@@ -99,6 +116,67 @@ void SeqStepPage::display() {
 
   SeqPage::display();
 }
+#else
+void SeqStepPage::display() {
+  SeqPage::display();
+
+  char c[3] = "--";
+
+  if (seq_param1.getValue() == 0) {
+    GUI.put_string_at(0, "L1");
+
+  } else if (seq_param1.getValue() <= 8) {
+    GUI.put_string_at(0, "L");
+
+    GUI.put_value_at1(1, seq_param1.getValue());
+
+  } else if (seq_param1.getValue() <= 13) {
+    GUI.put_string_at(0, "P");
+    uint8_t prob[5] = {1, 2, 5, 7, 9};
+    GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
+  }
+
+  else if (seq_param1.getValue() == 14) {
+    GUI.put_string_at(0, "1S");
+  }
+
+  if (seq_param2.getValue() == 0) {
+    GUI.put_string_at(2, "--");
+  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
+    GUI.put_string_at(2, "-");
+    GUI.put_value_at2(3, 12 - seq_param2.getValue());
+
+  } else {
+    GUI.put_string_at(2, "+");
+    GUI.put_value_at2(3, seq_param2.getValue() - 12);
+  }
+
+  if (show_pitch) {
+    tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+    if (tuning != NULL) {
+      if (seq_param4.cur == 0) {
+        GUI.put_string_at(10, "--");
+      } else {
+        uint8_t base = tuning->base;
+        uint8_t notenum = seq_param4.cur + base;
+        MusicalNotes number_to_note;
+        uint8_t oct = notenum / 12;
+        uint8_t note = notenum - 12 * (notenum / 12);
+        GUI.put_string_at(10, number_to_note.notes_upper[note]);
+        GUI.put_value_at1(12, oct);
+      }
+    }
+  } else {
+  }
+  GUI.put_value_at(6, seq_param3.getValue());
+  GUI.put_value_at1(15, page_select + 1);
+  draw_lock_mask((page_select * 16), DEVICE_MD);
+  draw_pattern_mask((page_select * 16), DEVICE_MD);
+
+  oled_display.display();
+  oled_display.setFont();
+}
+#endif
 
 void SeqStepPage::loop() {
   SeqPage::loop();

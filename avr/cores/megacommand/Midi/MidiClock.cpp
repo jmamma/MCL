@@ -71,7 +71,6 @@ bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
   return a_new < b_new;
 }
 
-
 void MidiClockClass::handleMidiStart() {
   onMidiStartCallbacks.call(div96th_counter);
 }
@@ -131,8 +130,13 @@ void MidiClockClass::setTempo(uint16_t _tempo) {
   CLEAR_LOCK();
 }
 
-bool MidiClockClass::getBlinkHint() {
-  return state == STARTED && (step_counter == 2 || step_counter == 3);
+bool MidiClockClass::getBlinkHint(bool onbeat) {
+  if (state != STARTED)
+    return false;
+  if (onbeat)
+    return (step_counter == 1 || step_counter == 2);
+  else
+    return (step_counter == 2 || step_counter == 3);
 }
 
 void MidiClockClass::handleSongPositionPtr(uint8_t *msg) {

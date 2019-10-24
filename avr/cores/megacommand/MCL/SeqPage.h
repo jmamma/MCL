@@ -28,6 +28,8 @@ public:
   static bool show_track_menu;
 
   bool recording = false;
+  char info1[8] = { '\0' };
+  char info2[8] = { '\0' };
 
   SeqPageMidiEvents seqpage_midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -38,6 +40,7 @@ public:
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
+  void draw_knob_frame();
   void loop();
   void display();
   void setup();
@@ -66,6 +69,17 @@ public:
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
+
+  static constexpr uint8_t info1_y = 19;
+  static constexpr uint8_t info2_y = 26;
+  static constexpr uint8_t info_h = 7;
+
+  static constexpr uint8_t seq_w = 5;
+  static constexpr uint8_t seq_x0 = 32;
+  static constexpr uint8_t led_y = 22;
+  static constexpr uint8_t trig_y = 26;
+  static constexpr uint8_t led_h = 3;
+  static constexpr uint8_t trig_h = 5;
 };
 
 #endif /* SEQPAGE_H__ */
