@@ -10,7 +10,7 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
-  record_mode = false;
+  recording = false;
   if (MidiClock.state != 2) {
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
@@ -55,7 +55,7 @@ void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
-  record_mode = false;
+  recording = false;
  midi_events.setup_callbacks();
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
@@ -132,7 +132,7 @@ void SeqPtcPage::display() {
   const char *str2 = getMachineNameShort(MD.kit.models[dev_num], 2);
   GUI.setLine(GUI.LINE1);
 
-  if (record_mode) {
+  if (recording) {
     GUI.put_string_at(0, "RPTC");
   } else {
     GUI.put_string_at(0, "PTC");
@@ -249,7 +249,7 @@ void SeqPtcPage::trig_md(uint8_t note_num) {
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
   }
-  if ((record_mode) && (MidiClock.state == 2)) {
+  if ((recording) && (MidiClock.state == 2)) {
 
     if (!BUTTON_DOWN(Buttons.BUTTON2)) {
       mcl_seq.md_tracks[next_track].record_track(note_num, 127);
@@ -265,7 +265,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
   }
-  if ((record_mode) && (MidiClock.state == 2)) {
+  if ((recording) && (MidiClock.state == 2)) {
     if (!BUTTON_DOWN(Buttons.BUTTON2)) {
       mcl_seq.md_tracks[next_track].record_track(note_num, 127);
     }
@@ -305,7 +305,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     redisplay = true;
-    record_mode = !record_mode;
+    recording = !recording;
     return true;
   }
 
@@ -397,6 +397,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
 
   return pitch;
 }
+
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN("note on midi2");
   uint8_t note_num = msg[1];
@@ -430,7 +431,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
-  if ((seq_ptc_page.record_mode) && (MidiClock.state == 2)) {
+  if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
   #endif
@@ -462,7 +463,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);
-  if (seq_ptc_page.record_mode && (MidiClock.state == 2)) {
+  if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
   #endif

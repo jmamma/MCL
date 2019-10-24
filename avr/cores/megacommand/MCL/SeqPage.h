@@ -57,6 +57,8 @@ public:
   static constexpr uint8_t trackid_x = 15;
   static constexpr uint8_t trackid_y = 8;
 
+  static constexpr uint8_t cir_x1 = 22;
+  static constexpr uint8_t cir_x2 = 25;
   static constexpr uint8_t tri_x = 16;
   static constexpr uint8_t tri_y = 9;
 

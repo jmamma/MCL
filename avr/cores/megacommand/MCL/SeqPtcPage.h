@@ -32,7 +32,6 @@ public:
   uint8_t poly_max = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
 
-  bool record_mode = false;
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
              Encoder *e4 = NULL)

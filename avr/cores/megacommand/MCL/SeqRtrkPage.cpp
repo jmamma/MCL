@@ -15,6 +15,7 @@ void SeqRtrkPage::init() {
   encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   midi_device = DEVICE_MD;
   curpage = SEQ_RTRK_PAGE;
+  recording = true;
   md_exploit.on();
 }
 void SeqRtrkPage::cleanup() {
