@@ -108,21 +108,25 @@ void FXPage::display() {
   oled_display.print("FX ");
   oled_display.print(page_mode ? 1 : 0);
   oled_display.print(" ");
+   PGM_P param_name = NULL;
+   char str[4];
    for (uint8_t i = 0; i < NUM_OF_ENCODERS; i++) {
     uint8_t n = i + ((page_mode ?  1 : 0) * NUM_OF_ENCODERS);
 
         uint8_t fx_param = params[n].param;
         uint8_t fx_type = params[n].type;
+    param_name = fx_param_name(fx_type, encoders[0]->getValue() - 1);
+    m_strncpy_p(str, param_name, 4);
 
-    mcl_gui.draw_encoder(10 + 20 * i, 10, encoders[i], str, show_value);
+    mcl_gui.draw_light_encoder(10 + 20 * i, 10, encoders[i], str);
    }
 
-   mcl_gui.draw_encoder(100,10,0);
    oled_display.display();
 
 #endif
 
 }
+
 void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];

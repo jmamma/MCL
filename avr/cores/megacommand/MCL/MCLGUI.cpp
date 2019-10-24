@@ -1,4 +1,5 @@
 #include "MCL.h"
+#define SHOW_VALUE_TIMEOUT 500
 
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
@@ -205,25 +206,29 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
 }
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
-  draw_encoder(x , y, encoder->value);
+  draw_encoder(x , y, encoder->cur);
 }
 
 bool MCLGUI::show_encoder_value(Encoder *encoder) {
   uint8_t match = 255;
+
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match != 255; i++) {
-    if (GUI.page->encoders[i] == encoder) {
+    if (((LightPage*) GUI.currentPage())->encoders[i] == encoder) {
       match = i;
     }
   }
+
   if (match != 255) {
-    if (clock_diff(GUI.page->last_used_clock[match], slowclock) > SHOW_VALUE_TIMEOUT))  { show_value = true; }
+    if (clock_diff(((LightPage*) GUI.currentPage())->encoders_used_clock[match], slowclock) > SHOW_VALUE_TIMEOUT)  { return true; }
   }
+
+  return false;
 
 }
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
   bool show_value = show_encoder_value(encoder);
-  draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+  draw_md_encoder(x, y, encoder->cur, name, show_value);
 }
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value) {
@@ -260,7 +265,7 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *na
 
 void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
   bool show_value = show_encoder_value(encoder);
-  draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+  draw_light_encoder(x, y, encoder->cur, name, show_value);
 }
 
 
