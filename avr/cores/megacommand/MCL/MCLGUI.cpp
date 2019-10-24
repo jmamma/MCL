@@ -246,23 +246,36 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
-
+  uint8_t x_offset = x;
   // Find the encoder number matching the encoder.
-  if (show_value) {
-    oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
-    oled_display.print(value);
+  if (strlen(name) == 2) {
+    x_offset += 2;
   }
-
-  oled_display.setCursor(x, y);
+  oled_display.setCursor(x_offset, y);
   oled_display.print(name);
 
-  y += 10;
+  y += 5;
 
   draw_encoder(x, y, value);
 
-  oled_display.drawPixel(x + image_w / 2, y - 2, WHITE);
-  oled_display.drawPixel(x, y + image_h, WHITE);
+  oled_display.drawPixel(x + image_w / 2, y - 3, WHITE);
+  oled_display.drawPixel(x, y + image_h + 2, WHITE);
   oled_display.drawPixel(x + image_w - 1, y + image_h + 2, WHITE);
+
+  x_offset = x;
+  if (show_value) {
+    if (value < 10) {
+      x_offset += 2;
+    }
+    if (value < 100) {
+      x_offset += 2;
+    }
+
+    oled_display.setCursor(x_offset, y + image_h + 1 + 8);
+
+    oled_display.print(value);
+  }
+
 
   oled_display.setFont(oldfont);
 }
