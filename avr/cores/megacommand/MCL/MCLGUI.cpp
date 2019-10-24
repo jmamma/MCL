@@ -225,6 +225,9 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
                    slowclock) < SHOW_VALUE_TIMEOUT) {
       return true;
     }
+    else {
+    ((LightPage *)GUI.currentPage())->encoders_used_clock[match] = slowclock - SHOW_VALUE_TIMEOUT - 1;
+    }
   }
 
   return false;
