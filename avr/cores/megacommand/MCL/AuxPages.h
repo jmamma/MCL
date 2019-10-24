@@ -29,5 +29,6 @@ extern MCLEncoder fx_param3;
 extern MCLEncoder fx_param4;
 
 extern FXPage fx_page_a;
+extern FXPage fx_page_b;
 
 #endif /* AUXPAGES_H__ */

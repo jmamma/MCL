@@ -1,5 +1,5 @@
 #include "MCL.h"
-#define SHOW_VALUE_TIMEOUT 500
+#define SHOW_VALUE_TIMEOUT 2000
 
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
@@ -159,14 +159,14 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
 
-
   bool vert_flip = false;
   bool horiz_flip = false;
   uint8_t image_w = 11;
   uint8_t image_h = 11;
 
-    //Scale encoder values to 123. encoder animation does not start and stop on 0.
-  value = (uint8_t) ((float) value * .95);
+  // Scale encoder values to 123. encoder animation does not start and stop on
+  // 0.
+  value = (uint8_t)((float)value * .95);
 
   value += 4;
 
@@ -184,7 +184,9 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
   } else {
     vert_flip = true;
     horiz_flip = false;
-    if (value > 122) { value = 122; }
+    if (value > 122) {
+      value = 122;
+    }
     value = 32 - (value - 96);
   }
 
@@ -213,32 +215,39 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
 }
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
-  draw_encoder(x , y, encoder->cur);
+  draw_encoder(x, y, encoder->cur);
 }
 
 bool MCLGUI::show_encoder_value(Encoder *encoder) {
   uint8_t match = 255;
 
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match != 255; i++) {
-    if (((LightPage*) GUI.currentPage())->encoders[i] == encoder) {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match == 255; i++) {
+    if (((LightPage *)GUI.currentPage())->encoders[i] == encoder) {
       match = i;
     }
   }
 
   if (match != 255) {
-    if (clock_diff(((LightPage*) GUI.currentPage())->encoders_used_clock[match], slowclock) > SHOW_VALUE_TIMEOUT)  { return true; }
+    if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
+                   slowclock) < SHOW_VALUE_TIMEOUT) {
+      return true;
+    }
+    else {
+    ((LightPage *)GUI.currentPage())->encoders_used_clock[match] = slowclock - SHOW_VALUE_TIMEOUT - 1;
+    }
   }
 
   return false;
-
 }
 
-void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
+void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
+                             const char *name) {
   bool show_value = show_encoder_value(encoder);
   draw_md_encoder(x, y, encoder->cur, name, show_value);
 }
 
-void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value) {
+void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
+                             const char *name, bool show_value) {
 
   auto oldfont = oled_display.getFont();
 
@@ -247,48 +256,77 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *na
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
-
-  //Find the encoder number matching the encoder.
-  if (show_value) {
-    oled_display.setCursor(x, y + image_h + 1 + 2 + 8);
-    oled_display.print(value);
+  uint8_t x_offset = x;
+  // Find the encoder number matching the encoder.
+  if (strlen(name) == 2) {
+    x_offset += 2;
   }
-
-  oled_display.setCursor(x, y);
+  oled_display.setCursor(x_offset, y);
   oled_display.print(name);
 
-  y += 10;
+  y += 5;
 
   draw_encoder(x, y, value);
 
-  oled_display.drawPixel(x + image_w / 2, y - 2, WHITE);
-  oled_display.drawPixel(x, y + image_h, WHITE);
+  oled_display.drawPixel(x + image_w / 2, y - 3, WHITE);
+  oled_display.drawPixel(x, y + image_h + 2, WHITE);
   oled_display.drawPixel(x + image_w - 1, y + image_h + 2, WHITE);
+
+  x_offset = x;
+  if (show_value) {
+    if (value < 10) {
+      x_offset += 2;
+    }
+    if (value < 100) {
+      x_offset += 2;
+    }
+
+    oled_display.setCursor(x_offset, y + image_h + 1 + 8);
+
+    oled_display.print(value);
+  }
 
 
   oled_display.setFont(oldfont);
 }
 
-
-void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char*name) {
+void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
+                                const char *name) {
   bool show_value = show_encoder_value(encoder);
   draw_light_encoder(x, y, encoder->cur, name, show_value);
 }
 
+void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
+                                const char *name, bool show_value) {
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
 
-void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value) {
+  oled_display.setTextColor(WHITE);
+
+  uint8_t x_offset = x;
 
   if (show_value) {
-    oled_display.setCursor(x, y);
+    if (value < 10) {
+      x_offset += 2;
+    }
+    if (value < 100) {
+      x_offset += 2;
+    }
+
+    oled_display.setCursor(x_offset, y);
+
     oled_display.print(value);
+  } else {
+
+    if (strlen(name) == 2) {
+      x_offset += 2;
+    }
+    oled_display.setCursor(x_offset, y);
+    oled_display.print(name);
   }
-  else {
-  oled_display.setCursor(x, y);
-  oled_display.print(name);
-  }
-  y += 6;
+  y += 2;
 
   draw_encoder(x, y, value);
 
-
+  oled_display.setFont(oldfont);
 }
