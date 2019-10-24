@@ -165,6 +165,7 @@ public:
   uint8_t curpage;
   PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
+  static uint16_t encoders_used_clock[GUI_NUM_ENCODERS];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL) {

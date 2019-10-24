@@ -194,10 +194,13 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value) 
 //  0x5E, 0x5D, 0x5F, 0x60
 
 void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
+  USE_LOCK();
+  SET_LOCK();
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.sendRaw(bytes, cnt);
   MidiUart.m_putc(0xf7);
+  CLEAR_LOCK();
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {

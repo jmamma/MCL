@@ -764,6 +764,43 @@ const model_param_name_t ctr_8p_model_names[] PROGMEM = { { "P1", 0},
 						    { "P7P", 21},
 						    { "P8T", 22},
 						    { "P8P", 23}, {"", 127} };
+
+const model_param_name_t ctr_re_model_names[] PROGMEM = { { "TIM", 0},
+                         { "MOD", 1},
+                         { "MFQ", 2},
+                         { "FB", 3},
+                         { "FLF", 4},
+                         { "FLW", 5},
+                         { "MON", 6},
+                         { "LEV", 7} };
+
+const model_param_name_t ctr_gb_model_names[] PROGMEM = { { "DVL", 0},
+                         { "PRE", 1},
+                         { "DEC", 2},
+                         { "DMP", 3},
+                         { "HP", 4},
+                         { "LP", 5},
+                         { "GAT", 6},
+                         { "LEV", 7} };
+
+const model_param_name_t ctr_eq_model_names[] PROGMEM = { { "LF", 0},
+                         { "LG", 1},
+                         { "HF", 2},
+                         { "HG", 3},
+                         { "PF", 4},
+                         { "PG", 5},
+                         { "PQ", 6},
+                         { "GAI", 7} };
+
+const model_param_name_t ctr_dx_model_names[] PROGMEM = { { "ATK", 0},
+                         { "REL", 1},
+                         { "THR", 2},
+                         { "RAT", 3},
+                         { "KNE", 4},
+                         { "HP", 5},
+                         { "GAI", 6},
+                         { "MIX", 7} };
+
 const model_param_name_t rom_model_names[] PROGMEM = { { "PTC", 0},
 						 { "DEC", 1},
 						 { "HLD", 2},
@@ -872,6 +909,12 @@ model_to_param_names_t model_param_names[] = {
 
   { CTR_AL_MODEL, ctr_al_model_names },
   { CTR_8P_MODEL, ctr_8p_model_names },
+
+  { CTR_RE_MODEL, ctr_re_model_names },
+  { CTR_GB_MODEL, ctr_gb_model_names },
+  { CTR_EQ_MODEL, ctr_eq_model_names },
+  { CTR_DX_MODEL, ctr_dx_model_names },
+
   { ROM_MODEL,    rom_model_names },
   { RAM_R1_MODEL,  ram_r_model_names },
   { RAM_R2_MODEL,  ram_r_model_names },
@@ -942,6 +985,16 @@ PGM_P model_param_name(uint8_t model, uint8_t param) {
     }
     return get_param_name(get_model_param_names(model), param);
   }
+}
+
+uint8_t map_fx_to_model(uint8_t fx_type) {
+ if ((fx_type > MD_FX_DYN) || (fx_type < MD_FX_ECHO)) { return 255; }
+ return fx_type - MD_FX_ECHO + CTR_RE_MODEL;
+}
+
+
+PGM_P fx_param_name(uint8_t fx_type, uint8_t param) {
+   return model_param_name(map_fx_to_model(fx_type), param);
 }
 
 static const uint8_t efm_rs_tuning[] PROGMEM = {
