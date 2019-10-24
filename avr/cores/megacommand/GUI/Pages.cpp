@@ -4,7 +4,6 @@
 #include "Pages.hh"
 #include "WProgram.h"
 
-uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];
 /**
  * \addtogroup GUI
  *
