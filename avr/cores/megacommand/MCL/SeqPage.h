@@ -80,6 +80,11 @@ public:
   static constexpr uint8_t trig_y = 26;
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;
+
+  static constexpr uint8_t knob_x0 = 31;
+  static constexpr uint8_t knob_w = 24;
+  static constexpr uint8_t knob_xend = 127;
+  static constexpr uint8_t knob_y = 19;
 };
 
 #endif /* SEQPAGE_H__ */

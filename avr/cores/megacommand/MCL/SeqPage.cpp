@@ -715,7 +715,7 @@ void SeqPage::display() {
     pidx_x += pidx_w + 1;
   }
 
-  //  draw info line 1
+  //  draw info lines
   oled_display.fillRect(0, info1_y, pane_w, info_h, WHITE);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(1, info1_y + 6);
@@ -733,6 +733,19 @@ void SeqPage::display() {
   //}
 }
 #endif
+
+
+void SeqPage::draw_knob_frame()
+{
+#ifndef OLED_DISPLAY
+  return;
+#endif
+  for(uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
+    mcl_gui.draw_vertical_dashline(x, 0, knob_y);
+    oled_display.drawPixel(x, knob_y, WHITE);
+  }
+  mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
+}
 
 void SeqPageMidiEvents::setup_callbacks() {
   //   Midi.addOnControlChangeCallback(

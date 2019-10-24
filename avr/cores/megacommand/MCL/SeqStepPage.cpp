@@ -120,6 +120,8 @@ void SeqStepPage::display() {
 void SeqStepPage::display() {
   SeqPage::display();
 
+  draw_knob_frame();
+
   char c[3] = "--";
 
   if (seq_param1.getValue() == 0) {

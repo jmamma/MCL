@@ -21,8 +21,14 @@ bool MCLGUI::wait_for_confirm(const char *title, const char* text)
   return questiondialog_page.return_state;
 }
 
-void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from) {
-  for (uint8_t y = from; y < 32; y += 2) {
+void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from, uint8_t to) {
+  for (uint8_t y = from; y < to; y += 2) {
+    oled_display.drawPixel(x, y, WHITE);
+  }
+}
+
+void MCLGUI::draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to) {
+  for (uint8_t x = from; x < to; x += 2) {
     oled_display.drawPixel(x, y, WHITE);
   }
 }

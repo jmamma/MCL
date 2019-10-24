@@ -12,7 +12,8 @@ public:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces 
   bool wait_for_input(char *dst, const char *title, uint8_t len);
-  void draw_vertical_dashline(uint8_t x, uint8_t from = 1);
+  void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
+  void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
   bool wait_for_confirm(const char *title, const char* text);
   void draw_infobox(const char* line1, const char* line2, const int line2_offset = 0);
   void draw_vertical_separator(uint8_t x);
