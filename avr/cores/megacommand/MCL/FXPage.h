@@ -39,6 +39,8 @@ public:
   void loop();
   void cleanup();
 
+  void update_encoders();
+
   void setup_callbacks();
   void remove_callbacks();
 

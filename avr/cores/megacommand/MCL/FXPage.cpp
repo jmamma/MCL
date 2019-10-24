@@ -14,6 +14,9 @@ void FXPage::init() {
   oled_display.setFont();
 #endif
   md_exploit.off();
+  update_encoders();
+}
+void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     uint8_t a = ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS) + n;
@@ -42,7 +45,9 @@ void FXPage::init() {
 
     encoders[n]->old = encoders[n]->cur;
   }
+
 }
+
 void FXPage::cleanup() {
   //  md_exploit.off();
 #ifdef OLED_DISPLAY
@@ -115,8 +120,11 @@ void FXPage::display() {
     param_name = fx_param_name(fx_type, fx_param);
     m_strncpy_p(str, param_name, 4);
 
-    mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
+ //   mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
+
+    mcl_gui.draw_md_encoder(30 + 20 * i, 6, encoders[i], str);
   }
+  
 
   oled_display.display();
 
@@ -175,6 +183,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     page_mode = !(page_mode);
+    update_encoders();
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
