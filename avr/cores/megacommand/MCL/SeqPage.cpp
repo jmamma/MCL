@@ -734,17 +734,41 @@ void SeqPage::display() {
 }
 #endif
 
-
-void SeqPage::draw_knob_frame()
-{
+void SeqPage::draw_knob_frame() {
 #ifndef OLED_DISPLAY
   return;
 #endif
-  for(uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
+  // draw frame
+  for (uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
     mcl_gui.draw_vertical_dashline(x, 0, knob_y);
     oled_display.drawPixel(x, knob_y, WHITE);
   }
   mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
+}
+
+void SeqPage::draw_knob(uint8_t i, const char *title, const char *text) {
+  uint8_t x = knob_x0 + i * knob_w;
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(x + 4, 7);
+  oled_display.print(title);
+
+  oled_display.setFont();
+  oled_display.setCursor(x + 4, 9);
+  oled_display.print(text);
+}
+
+void SeqPage::draw_knob(uint8_t i, uint8_t val) {
+  uint8_t x = knob_x0 + i * knob_w;
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(x + 4, 7);
+
+  if(val == 0) {
+    oled_display.print("--");
+  }else {
+    oled_display.print(val);
+  }
 }
 
 void SeqPageMidiEvents::setup_callbacks() {

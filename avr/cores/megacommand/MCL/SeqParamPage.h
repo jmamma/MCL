@@ -28,12 +28,14 @@ public:
       : SeqPage(e1, e2, e3, e4) {}
 
   void construct(uint8_t p1, uint8_t p2);
-  bool handleEvent(gui_event_t *event);
-  void display();
-  void loop();
-  void setup();
-  void init();
-  void cleanup();
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void config();
+  virtual void loop();
+  virtual void setup();
+  virtual void init();
+  virtual void cleanup();
 };
 
 #endif /* SEQPARAMPAGE_H__ */

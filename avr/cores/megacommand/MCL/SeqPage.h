@@ -30,23 +30,27 @@ public:
   bool recording = false;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };
+  uint8_t timeout_values[4] = { 0 }; // 255 == highlight
 
   SeqPageMidiEvents seqpage_midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
-  virtual bool handleEvent(gui_event_t *event);
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
-  void loop();
-  void display();
-  void setup();
+  void draw_knob(uint8_t i, const char* title, const char* text);
+  void draw_knob(uint8_t i, uint8_t val);
   void select_track(uint8_t device, uint8_t track);
-  void init();
-  void cleanup();
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void loop();
+  virtual void display();
+  virtual void setup();
+  virtual void init();
+  virtual void cleanup();
 
   static constexpr uint8_t pane_x1 = 0;
   static constexpr uint8_t pane_x2 = 30;
