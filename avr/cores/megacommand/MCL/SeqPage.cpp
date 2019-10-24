@@ -758,9 +758,13 @@ void SeqPage::draw_knob(uint8_t i, const char *title, const char *text) {
   oled_display.print(text);
 }
 
-void SeqPage::draw_knob(uint8_t i, Encoder* enc, const char* name) {
+void SeqPage::draw_knob(uint8_t i, Encoder* enc, const char* title) {
   uint8_t x = knob_x0 + i * knob_w;
-  mcl_gui.draw_md_encoder(x + 1, 1, enc, name);
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(x + 4, 7);
+  oled_display.print(title);
+  mcl_gui.draw_encoder(x + 7, 8, enc);
 }
 
 void SeqPageMidiEvents::setup_callbacks() {

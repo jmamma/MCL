@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "SeqParamPage.h"
+#include "MCL.h"
 
 void SeqParamPage::setup() { SeqPage::setup(); }
 void SeqParamPage::config() {
@@ -17,9 +17,9 @@ void SeqParamPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "PARAM-");
-  if(page_id == 0) {
+  if (page_id == 0) {
     strcat(info2, "A");
-  }else {
+  } else {
     strcat(info2, "B");
   }
 }
@@ -128,7 +128,6 @@ void SeqParamPage::display() {
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
     }
-    GUI.put_string_at(0, myName);
   }
 
   if (encoders[2]->getValue() != 0) {
@@ -138,7 +137,6 @@ void SeqParamPage::display() {
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
     }
-    GUI.put_string_at(7, myName2);
   }
 
   draw_knob(0, "TGT", myName);
