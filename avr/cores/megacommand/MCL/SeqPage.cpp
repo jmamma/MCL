@@ -738,6 +738,7 @@ void SeqPage::draw_knob_frame() {
   for (uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
     mcl_gui.draw_vertical_dashline(x, 0, knob_y);
     oled_display.drawPixel(x, knob_y, WHITE);
+    oled_display.drawPixel(x, knob_y + 1, WHITE);
   }
   mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
 }
