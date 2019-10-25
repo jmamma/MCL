@@ -66,10 +66,31 @@ void SeqPtcPage::init() {
     md_exploit.off();
     last_md_track = MD.currentTrack;
   }
+  curpage = SEQ_PTC_PAGE;
+
+  config();
+}
+
+void SeqPtcPage::config()
+{
   config_encoders();
   encoders[1]->cur = 32;
   encoders[0]->cur = 1;
-  curpage = SEQ_PTC_PAGE;
+
+  // config info labels
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+  constexpr uint8_t len1 = sizeof(info1);
+
+  char buf[len1] = {'\0'};
+  m_strncpy_p(buf, str1, len1);
+  strncpy(info1, buf, len1);
+  strncat(info1, ">", len1);
+  m_strncpy_p(buf, str2, len1);
+  strncat(info1, buf, len1);
+
+  strcpy(info2, "CHROMAT");
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {
@@ -115,6 +136,8 @@ void SeqPtcPage::loop() {
   }
 #endif
 }
+
+#ifndef OLED_DISPLAY
 void SeqPtcPage::display() {
   uint8_t dev_num;
   if (!redisplay) {
@@ -176,6 +199,50 @@ void SeqPtcPage::display() {
   GUI.put_value_at2(14, encoders[3]->getValue());
   SeqPage::display();
 }
+#else
+void SeqPtcPage::display() {
+  uint8_t dev_num;
+  if (!redisplay) {
+    return;
+  }
+
+  SeqPage::display();
+
+  if (midi_device == DEVICE_MD) {
+    dev_num = last_md_track;
+  }
+#ifdef EXT_TRACKS
+  else {
+    dev_num = last_ext_track + 16;
+  }
+#endif
+
+  draw_knob_frame();
+  char buf1[4];
+
+  // draw OCTAVE
+  itoa(encoders[0]->getValue(), buf1, 10);
+  draw_knob(0, "OCT", buf1);
+
+  // draw FREQ
+  if (encoders[1]->getValue() < 32) {
+    strcpy(buf1, "-");
+    itoa(32 - encoders[1]->getValue(), buf1 + 1, 10);
+  } else if (encoders[1]->getValue() > 32) {
+    strcpy(buf1, "+");
+    itoa(encoders[1]->getValue() - 32, buf1 + 1, 10);
+  } else {
+    strcpy(buf1, "0");
+  }
+  draw_knob(1, "DET", buf1); //detune
+
+  // draw SCALE
+  itoa(encoders[3]->getValue(), buf1, 10);
+  draw_knob(3, "SCA", buf1);
+
+  oled_display.display();
+}
+#endif
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
   uint8_t size = scales[encoders[3]->cur]->size;
