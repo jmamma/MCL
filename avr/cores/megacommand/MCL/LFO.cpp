@@ -34,7 +34,7 @@ uint8_t ExpLFO::get_sample(uint8_t sample_number) {
 
 uint8_t TriLFO::get_sample(uint8_t sample_number) {
  uint8_t y;
- if (sample_number > 63) {
+ if (sample_number > LFO_LENGTH / 2) {
  y = (127 - sample_number) * 2;
  }
  else {
@@ -44,7 +44,7 @@ uint8_t TriLFO::get_sample(uint8_t sample_number) {
 }
 
 uint8_t SinLFO::get_sample(uint8_t sample_number) {
-  float sample_duration = (float)1 / (float)127;
+  float sample_duration = (float)1 / (float)LFO_LENGTH;
   // float sample_duration = (float) 1 / (float) freq;
   return (float) (MAX / 2.0) * cos(2 * PI * 1 * sample_number * sample_duration) + (float) (MAX / 2.0);
 }

@@ -7,6 +7,7 @@
 #include "Math.h"
 
 #define EXP_LFO 1
+#define LFO_LENGTH 128
 
 class LFO {
 public:

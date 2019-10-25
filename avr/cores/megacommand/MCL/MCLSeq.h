@@ -3,11 +3,12 @@
 #ifndef MCLSEQUENCER_H__
 #define MCLSEQUENCER_H__
 
-#include "SeqPages.h"
 #include "ExtSeqTrack.h"
-#include "MDSeqTrack.h"
-#include "midi-common.hh"
+#include "LFOSeqTrack.h"
 #include "MCLMemory.h"
+#include "MDSeqTrack.h"
+#include "SeqPages.h"
+#include "midi-common.hh"
 
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
@@ -27,17 +28,18 @@ public:
   void onControlChangeCallback_Midi2(uint8_t *msg);
 };
 
-
 class MCLSeq : public ClockCallback {
 public:
-
   uint8_t num_md_tracks = NUM_MD_TRACKS;
-  MDSeqTrack  md_tracks[NUM_MD_TRACKS];
+  MDSeqTrack md_tracks[NUM_MD_TRACKS];
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
   uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
+
+  LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
+  uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -46,16 +48,13 @@ public:
   void enable();
   void disable();
 
-
   void onMidiStartCallback();
   void onMidiStartImmediateCallback();
   void onMidiContinueCallback();
   void onMidiStopCallback();
   void seq();
-
 };
 
 extern MCLSeq mcl_seq;
-
 
 #endif /* MCLSEQUENCER_H__ */

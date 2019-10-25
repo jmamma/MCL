@@ -1,4 +1,5 @@
 #include "LFOPage.h"
+#include "LFO.h"
 #include "MCL.h"
 #include "MCLSeq.h"
 
@@ -79,8 +80,8 @@ void LFOPage::display() {
   uint8_t h = 30;
   uint8_t y = 0;
 
-  for (uint8_t n = 0; n < 127; n++) {
-  oled_display.drawPixel(x + n, (float) 32 - mcl_seq.my_lfo[n] * ((float) h * (float)DIV_1_127), WHITE);
+  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
+  oled_display.drawPixel(x + n, (float) 32 - mcl_seq.lfo_tracks[0].wav_table[n] * ((float) h * (float)DIV_1_127), WHITE);
     if (n % 2 == 0) {
       oled_display.drawPixel(x + n, (h / 2) + y, WHITE);
     }

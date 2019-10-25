@@ -1,5 +1,7 @@
 #include "MCL.h"
 #include "MCLSeq.h"
+#include "LFO.h"
+
 void MCLSeq::setup() {
 
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
@@ -31,6 +33,21 @@ void MCLSeq::setup() {
 #endif
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
+
+  //SinLFO tri_lfo;
+  ExpLFO exp_lfo(20);
+  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
+  lfo_tracks[0].wav_table[n] = exp_lfo.get_sample(n);
+  }
+
+  lfo_tracks[0].enable = true;
+  lfo_tracks[0].params[0].dest = MD_FX_ECHO;
+  lfo_tracks[0].params[0].param = MD_ECHO_LEV;
+  lfo_tracks[0].mode = LFO_MODE_ONE;
+  for (uint8_t n = 0; n < 64; n += 4) {
+  SET_BIT64(lfo_tracks[0].pattern_mask, n);
+  }
+
   enable();
 
   MidiClock.addOnMidiStopCallback(
@@ -84,6 +101,12 @@ void MCLSeq::onMidiStartImmediateCallback() {
     md_tracks[i].oneshot_mask = 0;
  }
 
+ for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+
+     lfo_tracks[i].step_count = 0;
+ }
+
+
 }
 
 void MCLSeq::onMidiStartCallback() {
@@ -128,6 +151,18 @@ void MCLSeq::seq() {
   }
 #endif
   // }
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].seq();
+  }
+#endif
+
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].seq();
+  }
+//  if (MidiClock.step_counter == 1) {
+//    lfo_sample = 0;
+//  }
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
