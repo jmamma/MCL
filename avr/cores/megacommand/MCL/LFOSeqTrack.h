@@ -3,7 +3,6 @@
 #ifndef LFOSEQTRACK_H__
 #define LFOSEQTRACK_H__
 #include "WProgram.h"
-#include "LFO.h"
 
 #define NUM_OF_LFO_PARAMS 2
 
@@ -22,9 +21,11 @@ typedef struct seq_lfo_params_t {
 
 class LFOSeqTrack {
 public:
-  uint8_t wav_table[LFO_LENGTH];
+  uint8_t wav_table[128];
   uint8_t sample_count;
-  uint8_t speed = 1;
+  uint8_t sample_hold = 0;
+
+  uint8_t speed = 0;
   uint8_t mode;
 
   uint8_t length = 16;
