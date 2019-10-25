@@ -43,3 +43,6 @@ FXPage fx_page_a(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
 
 FXPage fx_page_b(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
                  (fx_param_t*) &fx_reverb_params, 8);
+
+LFOPage lfo_page(&fx_param1, &fx_param2, &fx_param3, &fx_param4);
+
