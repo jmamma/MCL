@@ -63,7 +63,7 @@ void LFOPage::loop() {
     mcl_seq.lfo_tracks[0].params[0].dest = encoders[0]->cur;
     mcl_seq.lfo_tracks[0].params[0].update_offset();
     CLEAR_LOCK();
-    if (encoders[0]->cur >= NUM_MD_TRACKS) {
+    if (encoders[0]->cur > NUM_MD_TRACKS) {
       ((MCLEncoder*)encoders[1])->max = 7;
     }
     else {
@@ -87,7 +87,7 @@ void LFOPage::loop() {
     mcl_seq.lfo_tracks[0].params[1].dest = encoders[2]->cur;
     mcl_seq.lfo_tracks[0].params[1].update_offset();
     CLEAR_LOCK();
-    if (encoders[0]->cur >= NUM_MD_TRACKS) {
+    if (encoders[0]->cur > NUM_MD_TRACKS) {
       ((MCLEncoder*)encoders[3])->max = 7;
     }
     else {
