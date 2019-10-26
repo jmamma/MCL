@@ -231,9 +231,9 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
                    slowclock) < SHOW_VALUE_TIMEOUT) {
       return true;
-    }
-    else {
-    ((LightPage *)GUI.currentPage())->encoders_used_clock[match] = slowclock - SHOW_VALUE_TIMEOUT - 1;
+    } else {
+      ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
+          slowclock - SHOW_VALUE_TIMEOUT - 1;
     }
   }
 
@@ -286,7 +286,6 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
     oled_display.print(value);
   }
 
-
   oled_display.setFont(oldfont);
 }
 
@@ -329,4 +328,24 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   draw_encoder(x, y, value);
 
   oled_display.setFont(oldfont);
+}
+
+void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
+                           uint8_t note_height, uint8_t num_of_notes,
+                           uint64_t note_mask) {
+  uint16_t chromatic = 0b0000'0101'0100'1010;
+  uint8_t note_type = 0;
+
+  for (uint8_t n = 0; n < num_of_notes; n++) {
+    if (IS_BIT_SET16(chromatic, note_type)) {
+      oled_display.fillRect(x - 1, y + 1, 3, (note_height / 2) - 1, WHITE);
+    } else {
+      oled_display.drawRect(x, y, note_width, note_height, WHITE);
+      x += note_width - 1;
+    }
+    note_type++;
+    if (note_type == 12) {
+      note_type = 0;
+    }
+  }
 }

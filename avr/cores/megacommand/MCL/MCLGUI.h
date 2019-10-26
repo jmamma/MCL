@@ -35,6 +35,7 @@ public:
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
   void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+  void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width, uint8_t note_height, uint8_t num_of_notes, uint64_t note_mask);
 
   static constexpr uint8_t s_menu_w = 96;
   static constexpr uint8_t s_menu_h = 24;

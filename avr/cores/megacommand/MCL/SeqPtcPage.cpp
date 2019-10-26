@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "SeqPtcPage.h"
+#include "MCL.h"
 
 #define MIDI_LOCAL_MODE 0
 
@@ -56,7 +56,7 @@ void SeqPtcPage::init() {
   SeqPage::init();
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
   recording = false;
- midi_events.setup_callbacks();
+  midi_events.setup_callbacks();
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
@@ -71,8 +71,7 @@ void SeqPtcPage::init() {
   config();
 }
 
-void SeqPtcPage::config()
-{
+void SeqPtcPage::config() {
   config_encoders();
   encoders[1]->cur = 32;
   encoders[0]->cur = 1;
@@ -234,11 +233,27 @@ void SeqPtcPage::display() {
   } else {
     strcpy(buf1, "0");
   }
-  draw_knob(1, "DET", buf1); //detune
+  draw_knob(1, "DET", buf1); // detune
+
+  // draw LEN
+  if (midi_device == DEVICE_MD) {
+    draw_knob(2, encoders[2], "LEN");
+  }
+#ifdef EXT_TRACKS
+  else {
+    itoa(encoders[2]->getValue() /
+             (2 / mcl_seq.ext_tracks[last_ext_track].resolution),
+         buf1, 10);
+    draw_knob(2, "LEN", buf1);
+  }
+#endif
 
   // draw SCALE
   itoa(encoders[3]->getValue(), buf1, 10);
   draw_knob(3, "SCA", buf1);
+
+  // draw TI keyboard
+  mcl_gui.draw_keyboard(32, 23, 6, 8, 24, 0);
 
   oled_display.display();
 }
@@ -260,7 +275,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t count = 0;
 
   if (poly_max == 0) {
-  return last_md_track;
+    return last_md_track;
   }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
@@ -341,9 +356,9 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
-//  if (SeqPage::handleEvent(event)) {
-//    return;
-//  }
+  //  if (SeqPage::handleEvent(event)) {
+  //    return;
+  //  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -388,18 +403,18 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
 
     }
-    #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
     else {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
     }
-    #endif
+#endif
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
-    #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
     if (midi_device != DEVICE_MD) {
       if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 2;
@@ -407,7 +422,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
     }
-    #endif
+#endif
     redisplay = true;
     return true;
   }
@@ -428,7 +443,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       else {
         mcl_seq.md_tracks[last_md_track].clear_track();
       }
-    } 
+    }
 #ifdef EXT_TRACKS
     else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
@@ -484,7 +499,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     return;
   }
-  #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -501,7 +516,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
-  #endif
+#endif
 }
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN("note off midi2");
@@ -517,10 +532,10 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   }
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
-      (mcl_cfg.uart2_ctrl_mode  == MIDI_OMNI_MODE)) {
+      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     return;
   }
-  #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -533,7 +548,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
-  #endif
+#endif
 }
 
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
