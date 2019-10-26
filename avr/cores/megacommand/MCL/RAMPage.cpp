@@ -365,7 +365,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   // mcl_seq.md_tracks[track].step_count);
   uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
   grid_page.active_slots[track] = 0x7FFF;
-  // mcl_actions.transition_level[track] = TRANSITION_MUTE;
+  mcl_actions.transition_level[track] = TRANSITION_NORMAL;
   mcl_actions.next_transitions[track] = next_step;
   transition_step = next_step;
   record_len = (uint8_t)steps;
