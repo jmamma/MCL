@@ -30,7 +30,11 @@ class SeqPtcPage : public SeqPage {
 public:
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
+  uint8_t last_midi_state = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
+  uint64_t note_mask = 0;
+  uint8_t deferred_timer = 0;
+  const uint8_t render_defer_time = 200;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -42,7 +46,7 @@ public:
   uint8_t get_next_voice(uint8_t pitch);
   uint8_t calc_pitch(uint8_t note_num);
 
-  void trig_md(uint8_t note_num);
+  void trig_md(uint8_t note_num, uint8_t pitch);
   void trig_md_fromext(uint8_t note_num);
   void config_encoders();
   void init_poly();

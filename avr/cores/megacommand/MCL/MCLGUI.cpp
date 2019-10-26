@@ -333,16 +333,48 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
 void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                            uint8_t note_height, uint8_t num_of_notes,
                            uint64_t note_mask) {
-  uint16_t chromatic = 0b0000'0101'0100'1010;
+  const uint16_t chromatic = 0b0000010101001010;
+  const uint8_t half = note_height / 2;
+  const uint8_t y2 = y + note_height - 1;
+  const uint8_t wm1 = note_width - 1;
+
   uint8_t note_type = 0;
 
+  bool last_black = false;
+
+  // draw first '|'
+  oled_display.drawFastVLine(x, y, note_height, WHITE);
+
   for (uint8_t n = 0; n < num_of_notes; n++) {
-    if (IS_BIT_SET16(chromatic, note_type)) {
-      oled_display.fillRect(x - 1, y + 1, 3, (note_height / 2) - 1, WHITE);
+
+    bool pressed = IS_BIT_SET64(note_mask, n);
+    bool black = IS_BIT_SET16(chromatic, note_type);
+
+    if (black) {
+      // previous '|' has already filled the center col.
+      oled_display.drawRect(x - 1, y + 1, 3, half - 1, WHITE);
+      if (pressed) {
+        oled_display.drawFastVLine(x, y + 1, half - 2, BLACK);
+      }
     } else {
-      oled_display.drawRect(x, y, note_width, note_height, WHITE);
-      x += note_width - 1;
+      if (pressed && last_black) {
+        oled_display.fillRect(x + 2, y, note_width - 2, half, WHITE);
+        oled_display.fillRect(x + 1, y + half, wm1, half + 1, WHITE);
+        oled_display.drawPixel(x + 1, y, WHITE);
+      } else if (pressed) {
+        oled_display.fillRect(x, y, note_width, note_height, WHITE);
+      } else {
+        // draw ']'
+        oled_display.drawFastHLine(x, y, note_width, WHITE);
+        oled_display.drawFastHLine(x, y2, note_width, WHITE);
+        oled_display.drawFastVLine(x + wm1, y, note_height, WHITE);
+      }
+
+      x += wm1;
     }
+
+    last_black = black;
+
     note_type++;
     if (note_type == 12) {
       note_type = 0;
