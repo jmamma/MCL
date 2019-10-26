@@ -333,9 +333,9 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
 }
 
 void SeqPtcPage::trig_md(uint8_t note, uint8_t pitch) {
+  pitch = encoders[0]->getValue() * 12 + pitch;
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
-  pitch = encoders[0]->getValue() * 12 + pitch;
   MD.setTrackParam(next_track, 0, machine_pitch);
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
