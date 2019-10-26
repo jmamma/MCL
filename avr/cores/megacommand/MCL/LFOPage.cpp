@@ -35,11 +35,11 @@ void LFOPage::update_encoders() {
     encoders[0]->cur = mcl_seq.lfo_tracks[0].params[0].dest;
     ((MCLEncoder*)encoders[0])->max = NUM_MD_TRACKS + 4;
     encoders[1]->cur = mcl_seq.lfo_tracks[0].params[0].param;
-    ((MCLEncoder*)encoders[1])->max = 24;
+    ((MCLEncoder*)encoders[1])->max = 23;
     encoders[2]->cur = mcl_seq.lfo_tracks[0].params[1].dest;
     ((MCLEncoder*)encoders[2])->max = 16 + 4;
     encoders[3]->cur = mcl_seq.lfo_tracks[0].params[1].param;
-    ((MCLEncoder*)encoders[3])->max = 24;
+    ((MCLEncoder*)encoders[3])->max = 23;
   }
  if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
@@ -64,9 +64,11 @@ void LFOPage::loop() {
     mcl_seq.lfo_tracks[0].params[0].update_offset();
     CLEAR_LOCK();
     if (encoders[0]->cur >= NUM_MD_TRACKS) {
-      ((MCLEncoder*)encoders[1])->max = 8;
+      ((MCLEncoder*)encoders[1])->max = 7;
     }
-
+    else {
+      ((MCLEncoder*)encoders[1])->max = 23;
+    }
   }
   if (encoders[1]->hasChanged()) {
     USE_LOCK();
@@ -86,7 +88,10 @@ void LFOPage::loop() {
     mcl_seq.lfo_tracks[0].params[1].update_offset();
     CLEAR_LOCK();
     if (encoders[0]->cur >= NUM_MD_TRACKS) {
-      ((MCLEncoder*)encoders[3])->max = 8;
+      ((MCLEncoder*)encoders[3])->max = 7;
+    }
+    else {
+      ((MCLEncoder*)encoders[3])->max = 23;
     }
 
   }
@@ -94,7 +99,7 @@ void LFOPage::loop() {
     USE_LOCK();
     SET_LOCK();
     mcl_seq.lfo_tracks[0].params[1].reset_param_offset();
-    mcl_seq.lfo_tracks[0].params[1].param = encoders[2]->cur;
+    mcl_seq.lfo_tracks[0].params[1].param = encoders[3]->cur;
     mcl_seq.lfo_tracks[0].params[1].offset = mcl_seq.lfo_tracks[0].params[1].get_param_offset(encoders[2]->cur, encoders[3]->cur);
     mcl_seq.lfo_tracks[0].params[1].update_offset();
     CLEAR_LOCK();
