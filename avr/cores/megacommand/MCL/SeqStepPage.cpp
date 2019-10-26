@@ -124,7 +124,6 @@ void SeqStepPage::display() {
   draw_knob_frame();
 
   char K[4];
-
   if (seq_param1.getValue() == 0) {
     strcpy(K, "L1");
   } else if (seq_param1.getValue() <= 8) {
@@ -140,12 +139,13 @@ void SeqStepPage::display() {
   draw_knob(0, "COND", K);
 
   strcpy(K, "--");
+  K[3] = '\0';
   if (seq_param2.getValue() == 0) {
   } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
-    K[1] = 12 - seq_param2.getValue() + '0';
+    itoa(12 - seq_param2.getValue(), K+1, 10);
   } else {
     K[0] = '+';
-    K[1] = seq_param2.getValue() - 12 + '0';
+    itoa(seq_param2.getValue() - 12, K+1, 10);
   }
   draw_knob(1, "UTIM", K);
 
