@@ -4,7 +4,7 @@
 #define LFOSEQTRACK_H__
 #include "WProgram.h"
 
-#define NUM_OF_LFO_PARAMS 2
+#define NUM_LFO_PARAMS 2
 
 // LFO is free running as is never reset
 #define LFO_MODE_FREE 0
@@ -13,11 +13,24 @@
 // LFO resets on trig but only plays 1 cycle
 #define LFO_MODE_ONE 2
 
-typedef struct seq_lfo_params_t {
+// LFO will symmetrically oscillate around offset value
+#define LFO_OFFSET_CENTRE 0
+
+// LFO maximum value will be equal to the offset.
+#define LFO_OFFSET_MAX 1
+
+class LFOSeqParam {
+public:
   uint8_t dest;
   uint8_t param;
   uint8_t depth;
-} seq_lfo_params_t;
+  uint8_t offset;
+
+  uint8_t get_param_offset(uint8_t dest, uint8_t param);
+  void reset_param(uint8_t dest, uint8_t param, uint8_t value);
+  void reset_param_offset();
+  void update_offset();
+};
 
 class LFOSeqTrack {
 public:
@@ -27,18 +40,22 @@ public:
 
   uint8_t speed = 0;
   uint8_t mode;
+  uint8_t offset_behaviour;
 
   uint8_t length = 16;
   uint8_t step_count;
   uint64_t pattern_mask;
 
-  bool enable = false;
+  bool enable = true;
 
-  seq_lfo_params_t params[NUM_OF_LFO_PARAMS];
+  LFOSeqParam params[NUM_LFO_PARAMS];
   LFOSeqTrack() { init(); };
-
+  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t param);
+  void update_params_offset();
+  void reset_params_offset();
+  void check_and_update_params_offset(uint8_t dest, uint8_t value);
   void init() {
-    for (uint8_t a = 0; a < NUM_OF_LFO_PARAMS; a++) {
+    for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       params[a].dest = 255;
     }
   }

@@ -34,20 +34,6 @@ void MCLSeq::setup() {
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
 
-  //SinLFO tri_lfo;
-  ExpLFO exp_lfo(20);
-  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-  lfo_tracks[0].wav_table[n] = exp_lfo.get_sample(n);
-  }
-
-  lfo_tracks[0].enable = true;
-  lfo_tracks[0].params[0].dest = MD_FX_ECHO;
-  lfo_tracks[0].params[0].param = MD_ECHO_LEV;
-  lfo_tracks[0].mode = LFO_MODE_ONE;
-  for (uint8_t n = 0; n < 64; n += 4) {
-  SET_BIT64(lfo_tracks[0].pattern_mask, n);
-  }
-
   enable();
 
   MidiClock.addOnMidiStopCallback(
@@ -83,6 +69,9 @@ void MCLSeq::onMidiContinueCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].update_params_offset();
+  }
 }
 
 void MCLSeq::onMidiStartImmediateCallback() {
@@ -114,6 +103,10 @@ void MCLSeq::onMidiStartCallback() {
     md_tracks[i].update_params();
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].update_params_offset();
+  }
+
 }
 
 void MCLSeq::onMidiStopCallback() {
@@ -125,6 +118,10 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset_params();
   }
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].reset_params_offset();
+  }
+
 }
 
 #ifdef MEGACOMMAND
@@ -181,6 +178,9 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
     mcl_seq.md_tracks[track].update_param(track_param, value);
+    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
+       mcl_seq.lfo_tracks[n].check_and_update_params_offset(track_param, value);
+    }
   }
 }
 

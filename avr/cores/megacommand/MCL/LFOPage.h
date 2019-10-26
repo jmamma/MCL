@@ -5,9 +5,13 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
+#include "LFOSeqTrack.h"
 
 #define NUM_LFO_PAGES 2
 
+#define SIN_WAV 0
+#define TRI_WAV 1
+#define EXP_WAV 2
 //
 class LFOPage : public LightPage, MidiCallback {
 public:
@@ -22,13 +26,17 @@ public:
   bool page_mode;
   uint8_t page_id;
 
+  uint8_t waveform;
+  uint8_t depth;
+
   void display();
   void setup();
+  void draw_pattern_mask();
   void init();
   void loop();
   void cleanup();
-
   void update_encoders();
+  void load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track, uint8_t depth);
 
   void setup_callbacks();
   void remove_callbacks();

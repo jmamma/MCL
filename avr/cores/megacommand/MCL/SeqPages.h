@@ -16,7 +16,6 @@
 #endif
 
 #define NUM_PARAM_PAGES 2
-#define NUM_LFO_PAGES 4
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
