@@ -151,16 +151,16 @@ void SeqExtStepPage::display() {
   draw_knob_frame();
 
   char K[4];
-  if (seq_param1.getValue() == 0) {
+  if (encoders[0]->getValue() == 0) {
     strcpy(K, "L1");
-  } else if (seq_param1.getValue() <= 8) {
+  } else if (encoders[0]->getValue() <= 8) {
     strcpy(K, "L ");
-    K[1] = seq_param1.getValue() + '0';
-  } else if (seq_param1.getValue() <= 13) {
+    K[1] = encoders[0]->getValue() + '0';
+  } else if (encoders[0]->getValue() <= 13) {
     strcpy(K, "P ");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    K[1] = prob[seq_param1.getValue() - 9] + '0';
-  } else if (seq_param1.getValue() == 14) {
+    K[1] = prob[encoders[0]->getValue() - 9] + '0';
+  } else if (encoders[0]->getValue() == 14) {
     strcpy(K, "1S");
   }
   draw_knob(0, "COND", K);

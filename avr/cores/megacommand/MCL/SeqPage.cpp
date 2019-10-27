@@ -437,12 +437,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
     } else if (current ^ locked) {
       // highlight
       oled_display.fillRect(led_x, led_y, seq_w, led_h, WHITE);
-    } else if (current && locked) {
-      // highlight 2
-      oled_display.fillRect(led_x, led_y, seq_w, led_h, WHITE);
-      oled_display.drawPixel(led_x + 2, led_y + 1, BLACK);
     } else {
-      // frame only
+      // (current && locked) or (not current && not locked), frame only
       oled_display.drawRect(led_x, led_y, seq_w, led_h, WHITE);
     }
 
@@ -703,9 +699,7 @@ void SeqPage::display() {
     // blink playing_idx
     if (playing_idx == i && blink) {
       if (page_select == i) {
-        if(page_count == 4) {
-          oled_display.drawFastHLine(pidx_x + 2, pidx_y + 1, 2, BLACK);
-        }
+        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
       } else {
         oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
       }
