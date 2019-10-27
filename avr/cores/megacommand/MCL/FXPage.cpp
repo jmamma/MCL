@@ -19,20 +19,16 @@ void FXPage::init() {
 void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+    ((MCLEncoder*)encoders[n])->max = 127;
+
     uint8_t a = ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
 
-    DEBUG_PRINTLN(params[n].param);
     switch (params[a].type) {
     case MD_FX_ECHO:
-      DEBUG_PRINTLN("setting delay");
-      DEBUG_PRINTLN(n);
-      DEBUG_PRINTLN(fx_param);
       encoders[n]->cur = MD.kit.delay[fx_param];
       break;
     case MD_FX_REV:
-      DEBUG_PRINTLN("setting reverb");
-      DEBUG_PRINTLN(n);
       encoders[n]->cur = MD.kit.reverb[fx_param];
       break;
     case MD_FX_EQ:
