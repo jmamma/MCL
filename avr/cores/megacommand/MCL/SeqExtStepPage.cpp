@@ -13,6 +13,7 @@ void SeqExtStepPage::config() {
 
   strcpy(info2, "EXT");
 }
+
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
