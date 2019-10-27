@@ -684,7 +684,8 @@ void SeqPage::display() {
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
-  uint8_t playing_idx = (MidiClock.bar_counter - 1) % 4;
+  // XXX should retrieve true track length
+  uint8_t playing_idx = (MidiClock.bar_counter - 1) % page_count;
   uint8_t w = pidx_w;
   if (page_count == 8) { 
     w /= 2; 
