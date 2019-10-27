@@ -80,11 +80,12 @@ const menu_t<3> chain_menu_layout PROGMEM = {
 };
 
 
-const menu_t<2> mclconfig_menu_layout PROGMEM = {
+const menu_t<3> mclconfig_menu_layout PROGMEM = {
     "SYSTEM",
     {
         {"DISPLAY:", 0, 2, 2, (uint8_t *) &mcl_cfg.display_mirror, (Page*) NULL, NULL, {{0, "INT"}, {1, "INT+EXT"}}},
         {"SCREENSAVER:", 0, 2, 2, (uint8_t *) &mcl_cfg.screen_saver, (Page*) NULL, NULL, {{0, "OFF"}, {1, "ON"}}},
+        {"DIAGNOSTIC:", 0, 0, 0, (uint8_t *) NULL, (Page*) &diag_page, NULL, {}},
     },
     (&mclsys_apply_config),
 };
@@ -107,7 +108,7 @@ MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<5> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
-MenuPage<2> mcl_config_page(&mclconfig_menu_layout, &config_param1,
+MenuPage<3> mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
 MenuPage<1> ram_config_page(&rampage1_menu_layout, &config_param1,
                          &config_param7);
