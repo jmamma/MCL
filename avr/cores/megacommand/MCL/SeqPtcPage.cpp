@@ -2,6 +2,7 @@
 #include "MCL.h"
 
 #define MIDI_LOCAL_MODE 0
+#define NUM_KEYS 32
 
 void SeqPtcPage::setup() {
   SeqPage::setup();
@@ -264,7 +265,7 @@ void SeqPtcPage::display() {
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard
-  mcl_gui.draw_keyboard(32, 23, 6, 9, 32, note_mask);
+  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
   oled_display.display();
 }
@@ -348,11 +349,17 @@ void SeqPtcPage::trig_md(uint8_t note, uint8_t pitch) {
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
-
+void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
+  uint8_t pitch = seq_ext_pitch(note_num - 32);
+  uint8_t next_track = get_next_voice(pitch);
+  uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
+  CLEAR_BIT64(note_mask, pitch); 
+}
 void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   uint8_t pitch = seq_ext_pitch(note_num - 32);
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
+  SET_BIT64(note_mask, pitch);
   MD.setTrackParam(next_track, 0, machine_pitch);
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
@@ -378,6 +385,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
+    // do not route EXT TI events to MD.
+    if (device != DEVICE_MD) { return false; }
+
     uint8_t note = event->source - 128;
     uint8_t pitch = calc_pitch(note);
     DEBUG_PRINTLN("yep");
@@ -385,10 +395,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_PRESSED) {
 
       SET_BIT64(note_mask, pitch);
-      // do not route MD TI events to EXT.
-      if (device != DEVICE_MD) {
-        return false;
-      }
       midi_device = device;
       config_encoders();
       trig_md(note, pitch);
@@ -510,6 +516,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   }
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    
     seq_ptc_page.trig_md_fromext(note_num);
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     return;
@@ -527,6 +534,8 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
@@ -549,7 +558,8 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
-    return;
+      seq_ptc_page.clear_trig_fromext(note_num);
+          return;
   }
 #ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
@@ -560,6 +570,8 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   seq_ptc_page.config_encoders();
 
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);

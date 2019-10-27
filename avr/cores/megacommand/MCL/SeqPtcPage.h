@@ -48,6 +48,8 @@ public:
 
   void trig_md(uint8_t note_num, uint8_t pitch);
   void trig_md_fromext(uint8_t note_num);
+  void clear_trig_fromext(uint8_t note_num);
+
   void config_encoders();
   void init_poly();
 
