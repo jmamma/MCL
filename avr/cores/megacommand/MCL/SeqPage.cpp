@@ -677,9 +677,7 @@ void SeqPage::display() {
     oled_display.drawPixel(cir_x2, tri_y, BLACK);
     oled_display.drawPixel(cir_x1, tri_y + 4, BLACK);
     oled_display.drawPixel(cir_x2, tri_y + 4, BLACK);
-  } 
-
-  if (MidiClock.state == 2) {
+  } else if (MidiClock.state == 2) {
     oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
     oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
                               tri_y + 4, WHITE);
@@ -713,7 +711,7 @@ void SeqPage::display() {
       }
     }
 
-    pidx_x += pidx_w + 1;
+    pidx_x += w + 1;
   }
 
   //  draw info lines
