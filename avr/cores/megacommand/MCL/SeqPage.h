@@ -20,6 +20,7 @@ class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
+  static uint8_t page_count;
   static uint8_t midi_device;
   static uint8_t length;
   static uint8_t resolution;

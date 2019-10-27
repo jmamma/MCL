@@ -11,7 +11,7 @@ void SeqExtStepPage::config() {
 
   char buf[len1] = {'\0'};
 
-  strcpy(info2, "NOTE");
+  strcpy(info2, "EXT");
 }
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
@@ -29,6 +29,7 @@ void SeqExtStepPage::config_encoders() {
 }
 
 void SeqExtStepPage::init() {
+  page_count = 8;
   DEBUG_PRINTLN("seq extstep init");
   curpage = SEQ_EXTSTEP_PAGE;
   md_exploit.on();

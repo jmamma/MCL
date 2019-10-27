@@ -519,7 +519,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_DUMP(channel);
 
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
-  uint8_t scaled_pitch = pitch - (pitch / NUM_KEYS) * NUM_KEYS;
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   seq_ptc_page.queue_redraw();
 
@@ -563,7 +563,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
-  uint8_t scaled_pitch = pitch - (pitch / NUM_KEYS) * NUM_KEYS;
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   seq_ptc_page.queue_redraw();
 

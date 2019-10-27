@@ -87,6 +87,20 @@ void SeqRlckPage::display() {
     return;
   }
   SeqPage::display();
+
+  draw_knob_frame();
+
+  uint8_t len = encoders[2]->getValue();
+#ifdef EXT_TRACKS
+  if (SeqPage::midi_device != DEVICE_MD) {
+    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
+  }
+#endif
+
+  char K[4];
+  itoa(len, K, 10);
+  draw_knob(2, "LEN", K);
+
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
   draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);

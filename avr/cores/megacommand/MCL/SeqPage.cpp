@@ -9,6 +9,7 @@ uint8_t SeqPage::length = 0;
 uint8_t SeqPage::resolution = 0;
 uint8_t SeqPage::apply = 0;
 uint8_t SeqPage::ignore_button_release = 255;
+uint8_t SeqPage::page_count = 4;
 bool SeqPage::show_track_menu = false;
 
 void SeqPage::create_chars_seq() {
@@ -26,6 +27,7 @@ void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
   ignore_button_release = 255;
+  page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
 #ifdef OLED_DISPLAY
@@ -142,13 +144,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     if (ignore_button_release != 2) {
       ignore_button_release = 255;
-      uint8_t pagemax = 4;
       page_select += 1;
 
-      if (SeqPage::midi_device != DEVICE_MD) {
-        pagemax = 8;
-      }
-      if (page_select >= pagemax) {
+      if (page_select >= page_count) {
         page_select = 0;
       }
     }
@@ -630,7 +628,7 @@ void SeqPage::display() {
 
   bool is_md = (midi_device == DEVICE_MD);
 #ifdef EXT_TRACKS
-  bool ext_is_a4 = (seq_extstep_page.midi_device == DEVICE_A4);
+  bool ext_is_a4 = Analog4.connected;
 #else
   bool ext_is_a4 = false;
 #endif
@@ -679,7 +677,9 @@ void SeqPage::display() {
     oled_display.drawPixel(cir_x2, tri_y, BLACK);
     oled_display.drawPixel(cir_x1, tri_y + 4, BLACK);
     oled_display.drawPixel(cir_x2, tri_y + 4, BLACK);
-  } else if (MidiClock.state == 2) {
+  } 
+
+  if (MidiClock.state == 2) {
     oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
     oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
                               tri_y + 4, WHITE);
@@ -689,22 +689,27 @@ void SeqPage::display() {
 
   //  draw page index
   uint8_t pidx_x = pidx_x0;
-  bool blink = !MidiClock.getBlinkHint(true);
+  bool blink = MidiClock.getBlinkHint(true);
   uint8_t playing_idx = (MidiClock.bar_counter - 1) % 4;
-  for (uint8_t i = 0; i < 4; ++i) {
-    oled_display.drawRect(pidx_x, pidx_y, pidx_w, pidx_h, WHITE);
+  uint8_t w = pidx_w;
+  if (page_count == 8) { w = w / 2; }
+
+  for (uint8_t i = 0; i < page_count; ++i) {
+    oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
 
     // highlight page_select
     if (page_select == i) {
-      oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, pidx_w - 2, WHITE);
+      oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
     }
 
     // blink playing_idx
     if (playing_idx == i && blink) {
       if (page_select == i) {
-        oled_display.drawFastHLine(pidx_x + 2, pidx_y + 1, 2, BLACK);
+        if(page_count == 4) {
+          oled_display.drawFastHLine(pidx_x + 2, pidx_y + 1, 2, BLACK);
+        }
       } else {
-        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, pidx_w - 2, WHITE);
+        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
       }
     }
 
