@@ -11,7 +11,9 @@
 #define LFO_DESTINATION 0
 #define LFO_SETTINGS 1
 
-void LFOPage::setup() { DEBUG_PRINT_FN(); }
+void LFOPage::setup() {
+//  lfo_track = &mcl_seq.lfo_tracks[0]; 
+  DEBUG_PRINT_FN(); }
 
 void LFOPage::init() {
   DEBUG_PRINT_FN();
@@ -20,8 +22,11 @@ void LFOPage::init() {
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-  md_exploit.on();
   update_encoders();
+
+  if (lfo_track->mode != LFO_MODE_FREE) {
+    md_exploit.on();
+  }
 }
 void LFOPage::cleanup() {
   md_exploit.off();
@@ -32,23 +37,26 @@ void LFOPage::cleanup() {
 
 void LFOPage::update_encoders() {
   if (page_mode == LFO_DESTINATION) {
-    encoders[0]->cur = mcl_seq.lfo_tracks[0].params[0].dest;
+    encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max = NUM_MD_TRACKS + 4;
-    encoders[1]->cur = mcl_seq.lfo_tracks[0].params[0].param;
+    encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
-    encoders[2]->cur = mcl_seq.lfo_tracks[0].params[1].dest;
-    ((MCLEncoder *)encoders[2])->max = 16 + 4;
-    encoders[3]->cur = mcl_seq.lfo_tracks[0].params[1].param;
+    encoders[2]->cur = lfo_track->params[1].dest;
+    ((MCLEncoder *)encoders[2])->max = NUM_MD_TRACKS + 4;
+    encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
   }
   if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
     ((MCLEncoder *)encoders[0])->max = 2;
-    encoders[1]->cur = mcl_seq.lfo_tracks[0].mode;
-    ((MCLEncoder *)encoders[1])->max = 2;
-    encoders[2]->cur = mcl_seq.lfo_tracks[0].speed;
+
+    encoders[1]->cur = lfo_track->speed;
+    ((MCLEncoder *)encoders[1])->max = 127;
+
+    encoders[2]->cur = lfo_track->params[0].depth;
     ((MCLEncoder *)encoders[2])->max = 127;
-    encoders[3]->cur = depth;
+
+    encoders[3]->cur = lfo_track->params[1].depth;
     ((MCLEncoder *)encoders[3])->max = 127;
   }
 }
@@ -59,9 +67,9 @@ void LFOPage::loop() {
     if (encoders[0]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      mcl_seq.lfo_tracks[0].params[0].reset_param_offset();
-      mcl_seq.lfo_tracks[0].params[0].dest = encoders[0]->cur;
-      mcl_seq.lfo_tracks[0].params[0].update_offset();
+      lfo_track->params[0].reset_param_offset();
+      lfo_track->params[0].dest = encoders[0]->cur;
+      lfo_track->params[0].update_offset();
       CLEAR_LOCK();
       if (encoders[0]->cur > NUM_MD_TRACKS) {
         ((MCLEncoder *)encoders[1])->max = 7;
@@ -72,23 +80,23 @@ void LFOPage::loop() {
     if (encoders[1]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      mcl_seq.lfo_tracks[0].params[0].reset_param_offset();
-      mcl_seq.lfo_tracks[0].params[0].param = encoders[1]->cur;
-      mcl_seq.lfo_tracks[0].params[0].offset =
-          mcl_seq.lfo_tracks[0].params[0].get_param_offset(encoders[0]->cur,
+      lfo_track->params[0].reset_param_offset();
+      lfo_track->params[0].param = encoders[1]->cur;
+      lfo_track->params[0].offset =
+          lfo_track->params[0].get_param_offset(encoders[0]->cur,
                                                            encoders[1]->cur);
-      mcl_seq.lfo_tracks[0].params[0].update_offset();
+      lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
 
     if (encoders[2]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      mcl_seq.lfo_tracks[0].params[1].reset_param_offset();
-      mcl_seq.lfo_tracks[0].params[1].dest = encoders[2]->cur;
-      mcl_seq.lfo_tracks[0].params[1].update_offset();
+      lfo_track->params[1].reset_param_offset();
+      lfo_track->params[1].dest = encoders[2]->cur;
+      lfo_track->params[1].update_offset();
       CLEAR_LOCK();
-      if (encoders[0]->cur > NUM_MD_TRACKS) {
+      if (encoders[2]->cur > NUM_MD_TRACKS) {
         ((MCLEncoder *)encoders[3])->max = 7;
       } else {
         ((MCLEncoder *)encoders[3])->max = 23;
@@ -97,39 +105,42 @@ void LFOPage::loop() {
     if (encoders[3]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      mcl_seq.lfo_tracks[0].params[1].reset_param_offset();
-      mcl_seq.lfo_tracks[0].params[1].param = encoders[3]->cur;
-      mcl_seq.lfo_tracks[0].params[1].offset =
-          mcl_seq.lfo_tracks[0].params[1].get_param_offset(encoders[2]->cur,
+      lfo_track->params[1].reset_param_offset();
+      lfo_track->params[1].param = encoders[3]->cur;
+      lfo_track->params[1].offset =
+          lfo_track->params[1].get_param_offset(encoders[2]->cur,
                                                            encoders[3]->cur);
-      mcl_seq.lfo_tracks[0].params[1].update_offset();
+      lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
   }
   if (page_mode == LFO_SETTINGS) {
     if (encoders[0]->hasChanged()) {
       waveform = encoders[0]->cur;
-      load_wavetable(waveform, &mcl_seq.lfo_tracks[0], depth);
+      load_wavetable(waveform, lfo_track, 0,
+                     lfo_track->params[0].depth);
+      load_wavetable(waveform, lfo_track, 1,
+                     lfo_track->params[1].depth);
     }
+
     if (encoders[1]->hasChanged()) {
-      mcl_seq.lfo_tracks[0].mode = encoders[1]->cur;
+      lfo_track->speed = encoders[1]->cur;
     }
 
     if (encoders[2]->hasChanged()) {
-      mcl_seq.lfo_tracks[0].speed = encoders[2]->cur;
+      lfo_track->params[0].depth = encoders[2]->cur;
+      load_wavetable(waveform, lfo_track, 0, encoders[2]->cur);
     }
 
     if (encoders[3]->hasChanged()) {
-      depth = encoders[3]->cur;
-      mcl_seq.lfo_tracks[0].params[0].depth = depth;
-      mcl_seq.lfo_tracks[0].params[1].depth = depth;
-      load_wavetable(waveform, &mcl_seq.lfo_tracks[0], depth);
+      lfo_track->params[1].depth = encoders[3]->cur;
+      load_wavetable(waveform, lfo_track, 1, encoders[3]->cur);
     }
   }
 }
 
 void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
-                             uint8_t depth) {
+                             uint8_t param, uint8_t depth) {
   SinLFO sin_lfo;
   TriLFO tri_lfo;
   ExpLFO exp_lfo;
@@ -151,7 +162,7 @@ void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
   }
   // ExpLFO exp_lfo(20);
   for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-    lfo_track->wav_table[n] =
+    lfo_track->wav_table[param][n] =
         (float)lfo->get_sample(n) * ((float)depth * (float)(DIV_1_127));
   }
 }
@@ -184,7 +195,7 @@ void LFOPage::display() {
   oled_display.setCursor(0, 0);
 
   oled_display.print("LFO ");
-  if (mcl_seq.lfo_tracks[0].enable) {
+  if (lfo_track->enable) {
     oled_display.print("ON");
   } else {
     oled_display.print("OFF");
@@ -214,7 +225,7 @@ void LFOPage::display() {
 
   for (uint8_t n = 0; n < LFO_LENGTH; n++) {
     oled_display.drawPixel(x + n,
-                           (float)32 - mcl_seq.lfo_tracks[0].wav_table[n] *
+                           (float)32 - lfo_track->wav_table[0][n] *
                                            ((float)h * (float)DIV_1_127),
                            WHITE);
     if (n % 2 == 0) {
@@ -231,12 +242,27 @@ void LFOPage::display() {
   }
   if (page_mode == LFO_SETTINGS) {
     mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "SHP");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "TYP");
     mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "SPD");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP");
+    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP1");
+    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP2");
   }
 
-  draw_pattern_mask();
+   // draw_pattern_mask();
+
+    oled_display.setCursor(0, 20);
+  switch (lfo_track->mode) {
+  case LFO_MODE_FREE:
+    oled_display.print("FREE");
+    break;
+  case LFO_MODE_TRIG:
+    draw_pattern_mask();
+    oled_display.print("TRIG");
+    break;
+  case LFO_MODE_ONE:
+    draw_pattern_mask();
+    oled_display.print("ONE");
+    break;
+  }
 
   oled_display.display();
 
@@ -245,18 +271,19 @@ void LFOPage::display() {
 
 void LFOPage::draw_pattern_mask() {
 
-  uint8_t trig_x = 10;
+  uint8_t trig_x = 32;
   uint8_t trig_y = 20;
   uint8_t seq_w = 5;
   uint8_t trig_h = 5;
 
-  uint64_t pattern_mask = mcl_seq.lfo_tracks[0].pattern_mask;
+  uint64_t pattern_mask = lfo_track->pattern_mask;
+  //uint64_t pattern_mask = mcl_seq.lfo_tracks[0].pattern_mask;
 
   uint8_t offset = 0;
   for (int i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
-    bool in_range = idx < mcl_seq.lfo_tracks[0].length;
+    bool in_range = idx < lfo_track->length;
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
@@ -321,16 +348,16 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     uint8_t midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
+        // GUI.setPage(&seq_extstep_page)
         return true;
       }
-      if (!IS_BIT_SET64(mcl_seq.lfo_tracks[0].pattern_mask, step)) {
+      if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
 
-        SET_BIT64(mcl_seq.lfo_tracks[0].pattern_mask, step);
+        SET_BIT64(lfo_track->pattern_mask, step);
       } else {
         DEBUG_PRINTLN("Trying to clear");
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64(mcl_seq.lfo_tracks[0].pattern_mask, step);
+          CLEAR_BIT64(lfo_track->pattern_mask, step);
         }
       }
     }
@@ -350,13 +377,23 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    if (lfo_track->mode >= LFO_MODE_ONE) {
+      lfo_track->mode = 0;
+    } else {
+      lfo_track->mode += 1;
+    }
+    if (lfo_track->mode == LFO_MODE_FREE) {
+      md_exploit.off();
+    } else {
+      md_exploit.on();
+    }
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-     mcl_seq.lfo_tracks[0].enable = !(mcl_seq.lfo_tracks[0].enable);
-     if (!mcl_seq.lfo_tracks[0].enable) {
-      mcl_seq.lfo_tracks[0].reset_params_offset();
-     }
+    lfo_track->enable = !(lfo_track->enable);
+    if (!lfo_track->enable) {
+      lfo_track->reset_params_offset();
+    }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);

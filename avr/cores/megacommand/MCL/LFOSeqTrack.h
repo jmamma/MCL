@@ -34,7 +34,7 @@ public:
 
 class LFOSeqTrack {
 public:
-  uint8_t wav_table[128];
+  uint8_t wav_table[2][128];
   uint8_t sample_count;
   uint8_t sample_hold = 0;
 

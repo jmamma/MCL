@@ -15,9 +15,10 @@
 //
 class LFOPage : public LightPage, MidiCallback {
 public:
-  LFOPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
+  LFOPage(LFOSeqTrack *lfo_track_, Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
+  lfo_track = lfo_track_;
   }
 
   bool handleEvent(gui_event_t *event);
@@ -26,8 +27,11 @@ public:
   bool page_mode;
   uint8_t page_id;
 
+  LFOSeqTrack *lfo_track;
+
   uint8_t waveform;
   uint8_t depth;
+  uint8_t depth2;
 
   void display();
   void setup();
@@ -36,7 +40,7 @@ public:
   void loop();
   void cleanup();
   void update_encoders();
-  void load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track, uint8_t depth);
+  void load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track, uint8_t param, uint8_t depth);
 
   void setup_callbacks();
   void remove_callbacks();

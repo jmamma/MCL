@@ -9,7 +9,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
 
   switch (offset_behaviour) {
   case LFO_OFFSET_CENTRE:
-    val = offset + (wav_table[sample_count] - (depth / 2));
+    val = offset + (wav_table[param][sample_count] - (depth / 2));
     if (val > 127) {
       return 127;
     }
@@ -20,7 +20,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
     }
     break;
   case LFO_OFFSET_MAX:
-    val = offset - depth + wav_table[sample_count];
+    val = offset - depth + wav_table[param][sample_count];
     if (val > 127) {
       return 127;
     }
