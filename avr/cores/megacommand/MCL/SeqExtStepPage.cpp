@@ -9,7 +9,13 @@ void SeqExtStepPage::config() {
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
 
-  char buf[len1] = {'\0'};
+#ifdef EXT_TRACKS
+  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+    strcpy(info1, "HI-RES");
+  } else {
+    strcpy(info1, "LOW-RES");
+  }
+#endif
 
   strcpy(info2, "EXT");
 }
@@ -193,9 +199,8 @@ void SeqExtStepPage::display() {
   draw_knob(1, "UTIM", K);
 
   MusicalNotes number_to_note;
-  uint8_t note;
   uint8_t notes_held = 0;
-  uint8_t i;
+  uint8_t i, j;
   for (i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
       notes_held += 1;
@@ -206,23 +211,35 @@ void SeqExtStepPage::display() {
   draw_knob(2, "LEN", K);
 
   if (notes_held > 0) {
-    uint8_t x = knob_x0 + knob_w * 3 + 4;
+    uint8_t x = knob_x0 + knob_w * 3 + 2;
     auto *oldfont = oled_display.getFont();
     oled_display.setFont(&TomThumb);
-    for (i = 0; i < 4; i++) {
-      oled_display.setCursor(x, i * 5 + 5);
-      note = active_track.notes[i][note_interface.last_note + page_select * 16];
-      if (note != 0) {
-        note = note - 1;
-        uint8_t oct = note / 12;
-        uint8_t note = note - 12 * (note / 12);
-        if (active_track.notes[i][note_interface.last_note + page_select * 16] >
-            0) {
-          oled_display.print(number_to_note.notes_upper[note]);
-        } else {
-          oled_display.print(number_to_note.notes_lower[note]);
+    uint8_t note_idx = 0;
+    for (i = 0; i < 2; i++) {
+      for (j = 0; j < 2; j++) {
+        oled_display.setCursor(x + j * 11, 6 + i * 8);
+        const int8_t &c_note =
+            active_track
+                .notes[note_idx][note_interface.last_note + page_select * 16];
+        if (c_note != 0) {
+          uint8_t note = abs(c_note);
+          DEBUG_DUMP(c_note);
+          DEBUG_DUMP(note);
+          note = note - 1;
+          uint8_t oct = note / 12;
+          note = note - 12 * oct;
+          DEBUG_DUMP(note);
+          DEBUG_DUMP(oct);
+          if (c_note > 0) {
+            oled_display.print(number_to_note.notes_upper[note]);
+          } else {
+            oled_display.print(number_to_note.notes_lower[note]);
+          }
+
+          oled_display.print(oct);
         }
-        oled_display.print(oct);
+
+        ++note_idx;
       }
     }
     oled_display.setFont(oldfont);

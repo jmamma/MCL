@@ -520,7 +520,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
         oled_display.drawFastVLine(trig_x - 1, trig_y, trig_h, WHITE);
       }
 
-      if (right_most) { // right |
+      if (right_most && note_held) { // right |
         oled_display.drawFastVLine(trig_x + seq_w, trig_y, trig_h, WHITE);
       }
 
