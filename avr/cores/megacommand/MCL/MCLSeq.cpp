@@ -130,36 +130,22 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
-  //  if (in_sysex == 0) {
-
-  //  for (uint8_t i = 0; i < 1; i++) {
-  //    lfos[i].seq();
-  //  }
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
 
-  //  }
-  // if (in_sysex2 == 0) {
-#ifdef EXT_TRACKS
-  for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].seq();
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].seq();
   }
-#endif
-  // }
+
+
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq();
   }
 #endif
 
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].seq();
-  }
-//  if (MidiClock.step_counter == 1) {
-//    lfo_sample = 0;
-//  }
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
