@@ -50,8 +50,10 @@ public:
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
+  inline uint8_t octave_to_pitch() { return encoders[0]->getValue() * 12; }
   void config_encoders();
   void init_poly();
+  void queue_redraw();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
