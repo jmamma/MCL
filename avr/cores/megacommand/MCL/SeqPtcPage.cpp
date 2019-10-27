@@ -58,6 +58,7 @@ void SeqPtcPage::init() {
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
   recording = false;
   midi_events.setup_callbacks();
+  note_mask = 0;
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
