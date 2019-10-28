@@ -416,7 +416,7 @@ public:
   void stop();
   void pause();
   void setTempo(uint16_t tempo);
-  uint16_t getTempo();
+  bool getBlinkHint(bool onbeat);
 
   bool isStarted() { return state == STARTED; }
 

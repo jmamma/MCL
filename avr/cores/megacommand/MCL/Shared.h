@@ -7,9 +7,9 @@
 #include "Math.h"
 
 struct MusicalNotes {
-  const char *notes_upper[16] = {"C ", "C#", "D ", "D#", "E ", "F",
+  const char *notes_upper[16] = {"C ", "C#", "D ", "D#", "E ", "F ",
                                  "F#", "G ", "G#", "A ", "A#", "B "};
-  const char *notes_lower[16] = {"c ", "c#", "d ", "d#", "e ", "f",
+  const char *notes_lower[16] = {"c ", "c#", "d ", "d#", "e ", "f ",
                                  "f#", "g ", "g#", "a ", "a#", "b "};
 };
 

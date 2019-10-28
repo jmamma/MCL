@@ -106,6 +106,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    //  write the whole row
 
     md_exploit.off();
     for (int i = 0; i < 20; i++) {

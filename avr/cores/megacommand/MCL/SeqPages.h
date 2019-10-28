@@ -22,6 +22,7 @@ extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
+extern MCLEncoder trackselect_enc;
 
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;

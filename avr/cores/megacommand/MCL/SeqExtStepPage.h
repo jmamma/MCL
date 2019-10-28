@@ -4,6 +4,7 @@
 #define SEQEXTSTEPPAGE_H__
 
 #include "SeqPage.h"
+#include "SeqStepPage.h"
 
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
@@ -24,14 +25,14 @@ public:
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
-  bool handleEvent(gui_event_t *event);
-  void display();
-
-  void setup();
-  void cleanup();
-  void init();
-  void config();
   void config_encoders();
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void setup();
+  virtual void init();
+  virtual void config();
+  virtual void cleanup();
 };
 
 #endif /* SEQEXTSTEPPAGE_H__ */

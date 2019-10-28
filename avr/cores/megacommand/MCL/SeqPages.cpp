@@ -18,6 +18,8 @@ MCLEncoder seq_param2(0, 4, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
 MCLEncoder seq_param4(0, 64, ENCODER_RES_SEQ);
 
+MCLEncoder trackselect_enc(0, 15, ENCODER_RES_SEQ);
+
 MCLEncoder seq_lock1(0, 127, ENCODER_RES_PARAM);
 MCLEncoder seq_lock2(0, 127, ENCODER_RES_PARAM);
 

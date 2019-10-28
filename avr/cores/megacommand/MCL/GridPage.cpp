@@ -1,5 +1,5 @@
-#include "GUI.h"
 #include "GridPage.h"
+#include "GUI.h"
 #include "GridPages.h"
 #include "MCL.h"
 void GridPage::init() {
@@ -35,6 +35,7 @@ void GridPage::cleanup() {
   oled_display.setTextColor(WHITE, BLACK);
 #endif
 }
+
 void GridPage::loop() {
   midi_active_peering.check();
   int8_t diff, new_val;
@@ -405,65 +406,80 @@ void GridPage::display_grid() {
     }
   }
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
-    if ((y + row_shift == cur_row)) {
-      oled_display.setCursor(x_offset - 5, y_offset + y * 8);
-      oled_display.print(">");
-    }
 
-    oled_display.setCursor(x_offset, y_offset + y * 8);
+    auto cur_posx = x_offset;
+    auto cur_posy = y_offset + y * 8;
     for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift; x++) {
-      uint8_t track_type = row_headers[y].track_type[x + getCol() - cur_col];
-      uint8_t model = row_headers[y].model[x + getCol() - cur_col];
-      if (track_type == MD_TRACK_TYPE) {
+      oled_display.setCursor(cur_posx, cur_posy);
+
+      auto track_idx = x + getCol() - cur_col;
+      auto row_idx = y + getRow() - cur_row;
+      uint8_t track_type = row_headers[y].track_type[track_idx];
+      uint8_t model = row_headers[y].model[track_idx];
+
+      bool blink = false;
+      auto active_cue_color = WHITE;
+
+      //  Set cell label
+      switch (track_type) {
+      case MD_TRACK_TYPE:
         tmp = getMachineNameShort(model, 2);
         m_strncpy_p(str, tmp, 3);
-      }
-      if (track_type == A4_TRACK_TYPE) {
+        break;
+      case A4_TRACK_TYPE:
         str[0] = 'A';
         str[1] = (x + getCol() - cur_col - 16) + '0';
-      }
-      if (track_type == EXT_TRACK_TYPE) {
+        break;
+      case EXT_TRACK_TYPE:
         str[0] = 'M';
         str[1] = (x + getCol() - cur_col - 16) + '0';
+        break;
       }
+
+      //  Highlight the current cursor position + slot menu apply range
       if (in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
                   encoders[3]->cur - 1)) {
-        oled_display.fillRect(oled_display.getCursorX() - 1,
-                              oled_display.getCursorY() - 6, 9, 7, WHITE);
+        oled_display.fillRect(cur_posx - 1, cur_posy - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
+        active_cue_color = BLACK;
       } else {
         oled_display.setTextColor(WHITE, BLACK);
       }
-      if ((((MidiClock.step_counter == 2) || (MidiClock.step_counter == 3)) &&
-           (MidiClock.state == 2)) &&
-          ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
-        oled_display.setCursor(oled_display.getCursorX() + 8,
-                               oled_display.getCursorY());
+
+      if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_idx]) {
+        // blink, don't print
+        blink = true;
+      } else if (model == 0) {
+        oled_display.print("--");
       } else {
-        if (model == 0) {
-          oled_display.print("--");
-        } else {
-          oled_display.print(str);
+        oled_display.print(str);
+      }
+
+      if (row_idx == active_slots[track_idx] && !blink) {
+        // a gentle visual cue for active slots
+        oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
+      }
+
+      // tomThumb is 4x6
+      if (track_idx % 4 == 3) {
+        if (y == 0) {
+          // draw vertical separator
+          mcl_gui.draw_vertical_dashline(cur_posx + 9, 3);
         }
-      }
-
-      if ((x + 1 + getCol() - cur_col) % 4 == 0) {
-        oled_display.setTextColor(WHITE, BLACK);
-        oled_display.print(" | ");
+        cur_posx += 12;
       } else {
-        oled_display.print(" ");
-      }
-
-      if ((x == getCol()) && (y == encoders[1]->cur)) {
-        //   oled_display.drawRect(xpos_old, y_offset + 2 + (y - 1) * 8, 8, 6,
-        //                       WHITE);
+        cur_posx += 10;
       }
     }
+  }
+
+  // optionally, draw the first separator
+  if ((getCol() - cur_col + col_shift) % 4 == 0) {
+    mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
 #endif
 }
 void GridPage::display_slot_menu() {
-  uint8_t x_offset = 43;
   uint8_t y_offset = 8;
   grid_slot_page.draw_menu(1, y_offset, 39);
   // grid_slot_page.draw_scrollbar(36);
@@ -471,8 +487,6 @@ void GridPage::display_slot_menu() {
 
 void GridPage::display_oled() {
 #ifdef OLED_DISPLAY
-  uint8_t x_offset = 43;
-  uint8_t y_offset = 8;
 
   oled_display.clearDisplay();
   oled_display.setTextWrap(false);
@@ -488,13 +502,14 @@ void GridPage::display_oled() {
   oled_display.display();
 #endif
 }
+
 void GridPage::display() {
 
   tick_frames();
 #ifdef OLED_DISPLAY
   display_oled();
   return;
-#endif;
+#endif
 
   // Rendering code for HD44780 below
   char str[3] = "  ";
@@ -734,6 +749,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     merge_md = 0;
     return true;
   }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     apply_slot_changes();
     return true;
@@ -777,6 +793,34 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 #endif
+
+  if (BUTTON_DOWN(Buttons.BUTTON3) &&
+      (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+       EVENT_PRESSED(event, Buttons.ENCODER2) ||
+       EVENT_PRESSED(event, Buttons.ENCODER3) ||
+       EVENT_PRESSED(event, Buttons.ENCODER4))) {
+    show_slot_menu = false;
+    encoders[0] = &param1;
+    encoders[1] = &param2;
+    auto col = getCol();
+    for (int i = 0; i < 20; ++i) {
+      note_interface.notes[i] = 0;
+    }
+    note_interface.notes[col] = 3;
+    mcl_actions.write_tracks(0, getRow());
+    if (col < 16) {
+      last_md_track = col;
+      trackselect_enc.cur = trackselect_enc.old = col;
+    }
+#ifdef EXT_TRACKS
+    else {
+      last_ext_track = col - 16;
+      trackselect_enc.cur = trackselect_enc.old = col - 16;
+    }
+#endif
+    md_exploit.ignore_last_track_once = true;
+  }
+
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();
