@@ -53,6 +53,7 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
 }
+
 bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

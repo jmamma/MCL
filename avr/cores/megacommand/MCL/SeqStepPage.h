@@ -23,13 +23,13 @@ public:
               Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {
       }
-  bool handleEvent(gui_event_t *event);
-  void display();
-  void setup();
-  void init();
-  void config();
-  void loop();
-  void cleanup();
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void setup();
+  virtual void init();
+  virtual void config();
+  virtual void loop();
+  virtual void cleanup();
 };
 
 #endif /* SEQSTEPPAGE_H__ */

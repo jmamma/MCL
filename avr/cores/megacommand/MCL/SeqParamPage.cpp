@@ -1,8 +1,31 @@
-#include "MCL.h"
 #include "SeqParamPage.h"
+#include "MCL.h"
 
 void SeqParamPage::setup() { SeqPage::setup(); }
+void SeqParamPage::config() {
+  // config info labels
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+  constexpr uint8_t len1 = sizeof(info1);
+
+  char buf[len1] = {'\0'};
+  m_strncpy_p(buf, str1, len1);
+  strncpy(info1, buf, len1);
+  strncat(info1, ">", len1);
+  m_strncpy_p(buf, str2, len1);
+  strncat(info1, buf, len1);
+
+  strcpy(info2, "PARAM-");
+  if (page_id == 0) {
+    strcat(info2, "A");
+  } else {
+    strcat(info2, "B");
+  }
+}
+
 void SeqParamPage::init() {
+  config();
   md_exploit.on();
   note_interface.state = true;
 
@@ -32,15 +55,18 @@ void SeqParamPage::init() {
   oled_display.clearDisplay();
 #endif
 }
+
 void SeqParamPage::construct(uint8_t p1_, uint8_t p2_) {
   p1 = p1_;
   p2 = p2_;
 }
+
 void SeqParamPage::cleanup() {
   SeqPage::cleanup();
   midi_events.remove_callbacks();
 }
 
+#ifndef OLED_DISPLAY
 void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);
   char myName[4] = "-- ";
@@ -87,7 +113,44 @@ void SeqParamPage::display() {
   draw_lock_mask(page_select * 16);
   SeqPage::display();
 }
+#else
+void SeqParamPage::display() {
+  SeqPage::display();
+  draw_knob_frame();
 
+  char myName[4] = "-- ";
+  char myName2[4] = "-- ";
+
+  if (encoders[0]->getValue() != 0) {
+    PGM_P modelname = NULL;
+    modelname = model_param_name(MD.kit.models[last_md_track],
+                                 encoders[0]->getValue() - 1);
+    if (modelname != NULL) {
+      m_strncpy_p(myName, modelname, 4);
+    }
+  }
+
+  if (encoders[2]->getValue() != 0) {
+    PGM_P modelname = NULL;
+    modelname = model_param_name(MD.kit.models[last_md_track],
+                                 encoders[2]->getValue() - 1);
+    if (modelname != NULL) {
+      m_strncpy_p(myName2, modelname, 4);
+    }
+  }
+
+  draw_knob(0, "TGT", myName);
+  draw_knob(2, "TGT", myName2);
+
+  draw_knob(1, encoders[1], "VAL");
+  draw_knob(3, encoders[3], "VAL");
+  draw_pattern_mask(page_select * 16, DEVICE_MD);
+  draw_lock_mask(page_select * 16);
+
+  oled_display.display();
+}
+
+#endif
 void SeqParamPage::loop() {
 
   if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||

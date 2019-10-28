@@ -21,8 +21,14 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
   return questiondialog_page.return_state;
 }
 
-void MCLGUI::draw_vertical_dashline(uint8_t x) {
-  for (uint8_t y = 1; y < 32; y += 2) {
+void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from, uint8_t to) {
+  for (uint8_t y = from; y < to; y += 2) {
+    oled_display.drawPixel(x, y, WHITE);
+  }
+}
+
+void MCLGUI::draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to) {
+  for (uint8_t x = from; x < to; x += 2) {
     oled_display.drawPixel(x, y, WHITE);
   }
 }
@@ -82,6 +88,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display) {
 }
 
 void MCLGUI::clear_popup() {
+  // XXX too slow
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, s_menu_h - 5,
                         BLACK);
 }
@@ -224,9 +231,9 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
                    slowclock) < SHOW_VALUE_TIMEOUT) {
       return true;
-    }
-    else {
-    ((LightPage *)GUI.currentPage())->encoders_used_clock[match] = slowclock - SHOW_VALUE_TIMEOUT - 1;
+    } else {
+      ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
+          slowclock - SHOW_VALUE_TIMEOUT - 1;
     }
   }
 
@@ -279,7 +286,6 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
     oled_display.print(value);
   }
 
-
   oled_display.setFont(oldfont);
 }
 
@@ -322,4 +328,56 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   draw_encoder(x, y, value);
 
   oled_display.setFont(oldfont);
+}
+
+void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
+                           uint8_t note_height, uint8_t num_of_notes,
+                           uint64_t note_mask) {
+  const uint16_t chromatic = 0b0000010101001010;
+  const uint8_t half = note_height / 2;
+  const uint8_t y2 = y + note_height - 1;
+  const uint8_t wm1 = note_width - 1;
+
+  uint8_t note_type = 0;
+
+  bool last_black = false;
+
+  // draw first '|'
+  oled_display.drawFastVLine(x, y, note_height, WHITE);
+
+  for (uint8_t n = 0; n < num_of_notes; n++) {
+
+    bool pressed = IS_BIT_SET64(note_mask, n);
+    bool black = IS_BIT_SET16(chromatic, note_type);
+
+    if (black) {
+      // previous '|' has already filled the center col.
+      oled_display.drawRect(x - 1, y + 1, 3, half - 1, WHITE);
+      if (pressed) {
+        oled_display.drawFastVLine(x, y + 1, half - 2, BLACK);
+      }
+    } else {
+      if (pressed && last_black) {
+        oled_display.fillRect(x + 2, y, note_width - 2, half, WHITE);
+        oled_display.fillRect(x + 1, y + half, wm1, half + 1, WHITE);
+        oled_display.drawPixel(x + 1, y, WHITE);
+      } else if (pressed) {
+        oled_display.fillRect(x, y, note_width, note_height, WHITE);
+      } else {
+        // draw ']'
+        oled_display.drawFastHLine(x, y, note_width, WHITE);
+        oled_display.drawFastHLine(x, y2, note_width, WHITE);
+        oled_display.drawFastVLine(x + wm1, y, note_height, WHITE);
+      }
+
+      x += wm1;
+    }
+
+    last_black = black;
+
+    note_type++;
+    if (note_type == 12) {
+      note_type = 0;
+    }
+  }
 }

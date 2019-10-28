@@ -12,15 +12,19 @@ public:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces 
   bool wait_for_input(char *dst, const char *title, uint8_t len);
+  void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
+  void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
   bool wait_for_confirm(const char *title, const char* text);
   void draw_infobox(const char* line1, const char* line2, const int line2_offset = 0);
-  void draw_vertical_dashline(uint8_t x);
   void draw_vertical_separator(uint8_t x);
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
   ///  Clear the content area of a popup
   void clear_popup();
   void draw_popup(const char* title, bool deferred_display = false);
   void draw_progress(const char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
+
+  void clear_leftpane();
+  void clear_rightpane();
 
   void draw_encoder(uint8_t x, uint8_t y, uint8_t value);
   void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
@@ -31,6 +35,7 @@ public:
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
   void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
+  void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width, uint8_t note_height, uint8_t num_of_notes, uint64_t note_mask);
 
   static constexpr uint8_t s_menu_w = 96;
   static constexpr uint8_t s_menu_h = 24;
@@ -38,6 +43,9 @@ public:
   static constexpr uint8_t s_menu_y = (32 - s_menu_h) / 2;
   static constexpr uint8_t s_title_x = 31;
   static constexpr uint8_t s_title_w = 64;
+
+  static constexpr uint8_t s_rightpane_offset_x = 43;
+  static constexpr uint8_t s_rightpane_offset_y = 8;
 
   static constexpr auto info_y1 = 2;
   static constexpr auto info_y2 = 27;
