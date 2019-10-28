@@ -46,14 +46,16 @@ public:
   volatile uint8_t mod12_counter;
   volatile uint8_t mod6_counter;
   volatile uint8_t mod3_counter;
-  volatile uint8_t mod6_free_counter;
 
+  volatile uint8_t mod4_free_counter;
+  volatile uint16_t div128_counter;
+  volatile uint16_t div128_time;
+   
   volatile uint16_t clock_last_time;
-  volatile uint16_t div192th_time;
-  volatile uint16_t last_clock16;
 
-  volatile uint16_t last_diff_clock16;
-  volatile uint16_t diff_clock16;
+  volatile uint16_t last_diff_clock4;
+  volatile uint16_t diff_clock4;
+  volatile uint16_t last_clock4;
 
   volatile uint8_t bar_counter;
   volatile uint8_t beat_counter;
@@ -299,9 +301,10 @@ public:
   }
 
   void calc_tempo() {
-    if (last_diff_clock16 != diff_clock16) {
-      tempo = ((float)75000 / ((float)diff_clock16));
-      last_diff_clock16 = diff_clock16;
+    DEBUG_PRINTLN(diff_clock4);
+    if (last_diff_clock4 != diff_clock4) {
+      tempo = ((float)50000 / ((float)diff_clock4));
+      last_diff_clock4 = diff_clock4;
     }
   }
 
@@ -311,12 +314,12 @@ public:
   }
 
   ALWAYS_INLINE() void MidiClockClass::incrementCounters() {
-    mod6_free_counter++;
-    if (mod6_free_counter == 6) {
-      diff_clock16 = midi_clock_diff(last_clock16, clock);
-      div192th_time = diff_clock16 * .08333;
-      mod6_free_counter = 0;
-      last_clock16 = clock;
+    mod4_free_counter++;
+    if (mod4_free_counter == 4) {
+      diff_clock4 = midi_clock_diff(last_clock4, clock);
+      last_clock4 = clock;
+      div128_time = diff_clock4 / 8;
+      mod4_free_counter = 0;
     }
    if (state == STARTED) {
       div96th_counter++;
