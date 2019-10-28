@@ -106,8 +106,11 @@ void RoutePage::update_globals() {
     while ((MidiClock.state == 2) &&
            ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
       ;
+    USE_LOCK();
+    SET_LOCK();
     MD.global.toSysex(encoder2);
-  hasChanged = false;
+    CLEAR_LOCK();
+    hasChanged = false;
   }
 }
 
