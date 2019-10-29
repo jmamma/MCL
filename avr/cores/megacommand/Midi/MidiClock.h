@@ -50,7 +50,7 @@ public:
   volatile uint8_t mod4_free_counter;
   volatile uint16_t div128_counter;
   volatile uint16_t div128_time;
-   
+  volatile uint8_t div128th_countdown;
   volatile uint16_t clock_last_time;
 
   volatile uint16_t last_diff_clock4;
@@ -261,7 +261,7 @@ public:
     // }
     clock_last_time = clock;
     uint8_t _mod6_counter = mod6_counter;
-
+    div128th_countdown = 0; 
     if (transmit_uart1) {
       //       MidiUart.putc(0xF8);
       MidiUart.m_putc_immediate(0xF8);

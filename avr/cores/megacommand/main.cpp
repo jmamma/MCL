@@ -195,11 +195,12 @@ ISR(TIMER1_COMPA_vect) {
   select_bank(0);
 
   clock++;
-
+  MidiClock.div128th_countdown++;
   if (MidiClock.state == 2) {
-  if (clock_diff(MidiClock.clock_last_time, clock) >= MidiClock.div128_time) {
+  if (MidiClock.div128th_countdown >= MidiClock.div128_time) {
       if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
       MidiClock.increment192Counter();
+      MidiClock.div128th_countdown = 0; 
       MidiClock.div192th_counter_last = MidiClock.div192th_counter;
       if ((enable_clock_callbacks)) {
         MidiClock.callCallbacks();
