@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef MIDICLOCK_H__
@@ -47,15 +46,15 @@ public:
   volatile uint8_t mod6_counter;
   volatile uint8_t mod3_counter;
 
-  volatile uint8_t mod4_free_counter;
+  volatile uint8_t mod8_free_counter;
   volatile uint16_t div128_counter;
   volatile uint16_t div128_time;
   volatile uint8_t div128th_countdown;
   volatile uint16_t clock_last_time;
 
-  volatile uint16_t last_diff_clock4;
-  volatile uint16_t diff_clock4;
-  volatile uint16_t last_clock4;
+  volatile uint16_t last_diff_clock8;
+  volatile uint16_t diff_clock8;
+  volatile uint16_t last_clock8;
 
   volatile uint8_t bar_counter;
   volatile uint8_t beat_counter;
@@ -301,10 +300,10 @@ public:
   }
 
   void calc_tempo() {
-    DEBUG_PRINTLN(diff_clock4);
-    if (last_diff_clock4 != diff_clock4) {
-      tempo = ((float)50000 / ((float)diff_clock4));
-      last_diff_clock4 = diff_clock4;
+    DEBUG_PRINTLN(diff_clock8);
+    if (last_diff_clock8 != diff_clock8) {
+      tempo = ((float)100000 / ((float)diff_clock8));
+      last_diff_clock8 = diff_clock8;
     }
   }
 
@@ -314,12 +313,12 @@ public:
   }
 
   ALWAYS_INLINE() void MidiClockClass::incrementCounters() {
-    mod4_free_counter++;
-    if (mod4_free_counter == 4) {
-      diff_clock4 = midi_clock_diff(last_clock4, clock);
-      last_clock4 = clock;
-      div128_time = diff_clock4 / 8;
-      mod4_free_counter = 0;
+    mod8_free_counter++;
+    if (mod8_free_counter == 8) {
+      diff_clock8 = midi_clock_diff(last_clock8, clock);
+      last_clock8 = clock;
+      div128_time = diff_clock8 / 16;
+      mod8_free_counter = 0;
     }
    if (state == STARTED) {
       div96th_counter++;
