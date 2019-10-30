@@ -48,7 +48,7 @@ void LFOPage::update_encoders() {
   }
   if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
-    ((MCLEncoder *)encoders[0])->max = 2;
+    ((MCLEncoder *)encoders[0])->max = 5;
 
     encoders[1]->cur = lfo_track->speed;
     ((MCLEncoder *)encoders[1])->max = 127;
@@ -143,9 +143,11 @@ void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
                              uint8_t param, uint8_t depth) {
   SinLFO sin_lfo;
   TriLFO tri_lfo;
+  RampLFO ramp_lfo;
+  IRampLFO iramp_lfo;
   ExpLFO exp_lfo;
+  IExpLFO iexp_lfo;
   LFO *lfo;
-
   switch (waveform) {
   case SIN_WAV:
     lfo = (LFO *)&sin_lfo;
@@ -155,15 +157,28 @@ void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
     lfo = (LFO *)&tri_lfo;
     lfo_track->offset_behaviour = LFO_OFFSET_CENTRE;
     break;
+  case IRAMP_WAV:
+    lfo = (LFO *)&iramp_lfo;
+    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
+    break;
+  case RAMP_WAV:
+    lfo = (LFO *)&ramp_lfo;
+    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
+    break;
   case EXP_WAV:
     lfo = (LFO *)&exp_lfo;
     lfo_track->offset_behaviour = LFO_OFFSET_MAX;
     break;
+  case IEXP_WAV:
+    lfo = (LFO *)&iexp_lfo;
+    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
+    break;
   }
+  lfo->amplitude = depth;
   // ExpLFO exp_lfo(20);
   for (uint8_t n = 0; n < LFO_LENGTH; n++) {
     lfo_track->wav_table[param][n] =
-        (float)lfo->get_sample(n) * ((float)depth * (float)(DIV_1_127));
+        (float)lfo->get_sample(n);
   }
 }
 void LFOPage::display() {
