@@ -1,4 +1,3 @@
-
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef MIDICLOCK_H__
@@ -46,14 +45,16 @@ public:
   volatile uint8_t mod12_counter;
   volatile uint8_t mod6_counter;
   volatile uint8_t mod3_counter;
-  volatile uint8_t mod6_free_counter;
 
+  volatile uint8_t mod8_free_counter;
+  volatile uint16_t div196_counter;
+  volatile uint16_t div196_time;
+  volatile uint8_t div196th_countdown;
   volatile uint16_t clock_last_time;
-  volatile uint16_t div192th_time;
-  volatile uint16_t last_clock16;
 
-  volatile uint16_t last_diff_clock16;
-  volatile uint16_t diff_clock16;
+  volatile uint16_t last_diff_clock8;
+  volatile uint16_t diff_clock8;
+  volatile uint16_t last_clock8;
 
   volatile uint8_t bar_counter;
   volatile uint8_t beat_counter;
@@ -259,7 +260,7 @@ public:
     // }
     clock_last_time = clock;
     uint8_t _mod6_counter = mod6_counter;
-
+    div196th_countdown = 0; 
     if (transmit_uart1) {
       //       MidiUart.putc(0xF8);
       MidiUart.m_putc_immediate(0xF8);
@@ -299,9 +300,10 @@ public:
   }
 
   void calc_tempo() {
-    if (last_diff_clock16 != diff_clock16) {
-      tempo = ((float)75000 / ((float)diff_clock16));
-      last_diff_clock16 = diff_clock16;
+    DEBUG_PRINTLN(diff_clock8);
+    if (last_diff_clock8 != diff_clock8) {
+      tempo = ((float)100000 / ((float)diff_clock8));
+      last_diff_clock8 = diff_clock8;
     }
   }
 
@@ -311,12 +313,12 @@ public:
   }
 
   ALWAYS_INLINE() void MidiClockClass::incrementCounters() {
-    mod6_free_counter++;
-    if (mod6_free_counter == 6) {
-      diff_clock16 = midi_clock_diff(last_clock16, clock);
-      div192th_time = diff_clock16 * .08333;
-      mod6_free_counter = 0;
-      last_clock16 = clock;
+    mod8_free_counter++;
+    if (mod8_free_counter == 8) {
+      diff_clock8 = midi_clock_diff(last_clock8, clock);
+      last_clock8 = clock;
+      div196_time = diff_clock8 / 16;
+      mod8_free_counter = 0;
     }
    if (state == STARTED) {
       div96th_counter++;
