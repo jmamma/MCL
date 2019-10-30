@@ -19,6 +19,8 @@
 // LFO maximum value will be equal to the offset.
 #define LFO_OFFSET_MAX 1
 
+#define WAV_LENGTH 96
+
 class LFOSeqParam {
 public:
   uint8_t dest;
@@ -34,7 +36,7 @@ public:
 
 class LFOSeqTrack {
 public:
-  uint8_t wav_table[2][128];
+  uint8_t wav_table[2][WAV_LENGTH];
   uint8_t sample_count;
   uint8_t sample_hold = 0;
 

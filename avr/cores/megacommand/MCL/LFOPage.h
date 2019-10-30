@@ -12,8 +12,8 @@
 #define SIN_WAV 0
 #define TRI_WAV 1
 #define RAMP_WAV 2
-#define IRAMP_WAV 3
-#define IEXP_WAV 4
+#define IEXP_WAV 3
+#define IRAMP_WAV 4
 #define EXP_WAV 5
 //
 class LFOPage : public LightPage, MidiCallback {

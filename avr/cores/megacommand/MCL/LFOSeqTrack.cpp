@@ -57,12 +57,17 @@ void LFOSeqTrack::seq() {
       }
     }
   }
-  sample_hold += 1;
-  if (sample_hold >= speed) {
-    sample_hold = 0;
-    sample_count += 1;
-  }
 
+  if (speed == 0) {
+    sample_count += 2;
+  }
+  else {
+    sample_hold += 1;
+    if (sample_hold >= speed - 1) {
+      sample_hold = 0;
+      sample_count += 1;
+    }
+  }
   if (sample_count > LFO_LENGTH) {
     // Free running LFO should reset, oneshot should hold at last value.
     if (mode == LFO_MODE_ONE) {

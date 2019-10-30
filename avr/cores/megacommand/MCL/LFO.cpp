@@ -67,11 +67,14 @@ uint8_t TriLFO::get_sample(uint8_t sample_number) {
 }
 
 uint8_t SinLFO::get_sample(uint8_t sample_number) {
-  float sample_duration = (float)1 / (float)LFO_LENGTH;
-  // float sample_duration = (float) 1 / (float) freq;
-  return (float)(amplitude / 2.0) *
-             cos(2 * PI * 1 * sample_number * sample_duration) +
+  float sample_duration = (float)1.0 / (float)LFO_LENGTH;
+
+  uint8_t y = (float)(amplitude / 2.0) *
+             sin(2.0 * PI * (float) sample_number * sample_duration) +
          (float)(amplitude / 2.0);
+  return y;
+
 }
+
 
 uint8_t LFO::get_sample(uint8_t sample_number) { return 0; }

@@ -240,8 +240,7 @@ void LFOPage::display() {
 
   for (uint8_t n = 0; n < LFO_LENGTH; n++) {
     oled_display.drawPixel(x + n,
-                           (float)32 - lfo_track->wav_table[0][n] *
-                                           ((float)h * (float)DIV_1_127),
+                           (float)32 - ((float) lfo_track->wav_table[0][n] / (float)lfo_track->params[0].depth) * 32,
                            WHITE);
     if (n % 2 == 0) {
       oled_display.drawPixel(x + n, (h / 2) + y, WHITE);
