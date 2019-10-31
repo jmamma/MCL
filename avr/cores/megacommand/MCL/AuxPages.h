@@ -4,6 +4,7 @@
 #define AUXPAGES_H__
 
 #include "MCLEncoder.h"
+#include "LFOPage.h"
 #include "MixerPage.h"
 #include "RoutePage.h"
 #include "RAMPage.h"
@@ -30,5 +31,7 @@ extern MCLEncoder fx_param4;
 
 extern FXPage fx_page_a;
 extern FXPage fx_page_b;
+
+extern LFOPage lfo_page;
 
 #endif /* AUXPAGES_H__ */

@@ -1,5 +1,4 @@
 #include "MCL.h"
-#define SHOW_VALUE_TIMEOUT 2000
 
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();

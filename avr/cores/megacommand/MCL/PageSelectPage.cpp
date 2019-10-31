@@ -10,6 +10,7 @@
 #define FX_PAGE_A 10
 #define FX_PAGE_B 11
 #define LOUDNESS 9
+#define LFO_PAGE 6
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -55,6 +56,11 @@ LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
     if (str)
       strncpy(str, "REVERB", 8);
     r_page = &fx_page_b;
+    break;
+  case LFO_PAGE:
+    if (str)
+      strncpy(str, "LFO", 8);
+    r_page = &lfo_page;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:

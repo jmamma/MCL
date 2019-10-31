@@ -1,4 +1,6 @@
 #include "AuxPages.h"
+#include "MCL.h"
+#include "MCLSeq.h"
 
 extern MCLEncoder mixer_param1(0, 127);
 extern MCLEncoder mixer_param2(0, 127);
@@ -43,3 +45,6 @@ FXPage fx_page_a(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
 
 FXPage fx_page_b(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
                  (fx_param_t*) &fx_reverb_params, 8);
+
+LFOPage lfo_page(&(mcl_seq.lfo_tracks[0]), &fx_param1, &fx_param2, &fx_param3, &fx_param4);
+
