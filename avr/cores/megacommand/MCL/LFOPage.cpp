@@ -12,8 +12,9 @@
 #define LFO_SETTINGS 1
 
 void LFOPage::setup() {
-//  lfo_track = &mcl_seq.lfo_tracks[0]; 
-  DEBUG_PRINT_FN(); }
+  //  lfo_track = &mcl_seq.lfo_tracks[0];
+  DEBUG_PRINT_FN();
+}
 
 void LFOPage::init() {
   DEBUG_PRINT_FN();
@@ -82,9 +83,8 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[0].reset_param_offset();
       lfo_track->params[0].param = encoders[1]->cur;
-      lfo_track->params[0].offset =
-          lfo_track->params[0].get_param_offset(encoders[0]->cur,
-                                                           encoders[1]->cur);
+      lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
+          encoders[0]->cur, encoders[1]->cur);
       lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
@@ -107,9 +107,8 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[1].reset_param_offset();
       lfo_track->params[1].param = encoders[3]->cur;
-      lfo_track->params[1].offset =
-          lfo_track->params[1].get_param_offset(encoders[2]->cur,
-                                                           encoders[3]->cur);
+      lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
+          encoders[2]->cur, encoders[3]->cur);
       lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
@@ -117,10 +116,8 @@ void LFOPage::loop() {
   if (page_mode == LFO_SETTINGS) {
     if (encoders[0]->hasChanged()) {
       waveform = encoders[0]->cur;
-      load_wavetable(waveform, lfo_track, 0,
-                     lfo_track->params[0].depth);
-      load_wavetable(waveform, lfo_track, 1,
-                     lfo_track->params[1].depth);
+      load_wavetable(waveform, lfo_track, 0, lfo_track->params[0].depth);
+      load_wavetable(waveform, lfo_track, 1, lfo_track->params[1].depth);
     }
 
     if (encoders[1]->hasChanged()) {
@@ -177,12 +174,11 @@ void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
   lfo->amplitude = depth;
   // ExpLFO exp_lfo(20);
   for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-    lfo_track->wav_table[param][n] =
-        (float)lfo->get_sample(n);
+    lfo_track->wav_table[param][n] = (float)lfo->get_sample(n);
   }
 }
 void LFOPage::display() {
-
+  auto oldfont = oled_display.getFont();
   if (!classic_display) {
 #ifdef OLED_DISPLAY
     oled_display.clearDisplay();
@@ -206,7 +202,7 @@ void LFOPage::display() {
 
 #endif
 #ifdef OLED_DISPLAY
-  oled_display.setFont();
+  oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 0);
 
   oled_display.print("LFO ");
@@ -235,15 +231,21 @@ void LFOPage::display() {
   */
 
   uint8_t x = 0;
-  uint8_t h = 30;
-  uint8_t y = 0;
-
-  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-    oled_display.drawPixel(x + n,
-                           (float)32 - ((float) lfo_track->wav_table[0][n] / (float)lfo_track->params[0].depth) * 32,
-                           WHITE);
-    if (n % 2 == 0) {
-      oled_display.drawPixel(x + n, (h / 2) + y, WHITE);
+  uint8_t y = 16;
+  uint8_t lfo_height = 16;
+  uint8_t width = 32;
+  LFOSeqTrack temp_track;
+  uint8_t inc = LFO_LENGTH / width;
+  load_wavetable(waveform, &temp_track, 0, lfo_height);
+ 
+  // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
+  SeqPage::draw_knob_frame();
+  for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
+    oled_display.drawPixel(
+        x, y + lfo_height - temp_track.wav_table[0][n],
+        WHITE);
+    if (x % 2 == 0) {
+      oled_display.drawPixel(x, (lfo_height / 2) + y, WHITE);
     }
   }
   uint8_t i = 0;
@@ -260,61 +262,26 @@ void LFOPage::display() {
     mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP1");
     mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP2");
   }
+  // draw_pattern_mask();
 
-   // draw_pattern_mask();
-
-    oled_display.setCursor(0, 20);
+  oled_display.setCursor(0, 10);
   switch (lfo_track->mode) {
   case LFO_MODE_FREE:
     oled_display.print("FREE");
     break;
   case LFO_MODE_TRIG:
-    draw_pattern_mask();
+    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count, lfo_track->length, true);
     oled_display.print("TRIG");
     break;
   case LFO_MODE_ONE:
-    draw_pattern_mask();
+    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count, lfo_track->length, true);
     oled_display.print("ONE");
     break;
   }
 
   oled_display.display();
-
+  oled_display.setFont(oldfont);
 #endif
-}
-
-void LFOPage::draw_pattern_mask() {
-
-  uint8_t trig_x = 32;
-  uint8_t trig_y = 20;
-  uint8_t seq_w = 5;
-  uint8_t trig_h = 5;
-
-  uint64_t pattern_mask = lfo_track->pattern_mask;
-  //uint64_t pattern_mask = mcl_seq.lfo_tracks[0].pattern_mask;
-
-  uint8_t offset = 0;
-  for (int i = 0; i < 16; i++) {
-
-    uint8_t idx = i + offset;
-    bool in_range = idx < lfo_track->length;
-
-    if (note_interface.notes[i] == 1) {
-      // TI feedback
-      oled_display.fillRect(trig_x - 1, trig_y, seq_w + 2, trig_h + 1, WHITE);
-    } else if (!in_range) {
-      // don't draw
-    } else {
-      if (IS_BIT_SET64(pattern_mask, i + offset)) {
-        /*If the bit is set, there is a trigger at this position. */
-        oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, WHITE);
-      } else {
-        oled_display.drawRect(trig_x, trig_y, seq_w, trig_h, WHITE);
-      }
-    }
-
-    trig_x += seq_w + 1;
-  }
 }
 void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);

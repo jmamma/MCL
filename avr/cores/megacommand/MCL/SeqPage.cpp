@@ -446,19 +446,15 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   }
 }
 
-void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
-                                bool show_current_step) {
+void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
 
   uint8_t trig_x = seq_x0;
 
-  if (device == DEVICE_MD) {
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t pattern_mask = active_track.pattern_mask;
 
     for (int i = 0; i < 16; i++) {
 
       uint8_t idx = i + offset;
-      bool in_range = idx < active_track.length;
+      bool in_range = idx < length;
 
       if (note_interface.notes[i] == 1) {
         // TI feedback
@@ -466,7 +462,8 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
       } else if (!in_range) {
         // don't draw
       } else {
-        if (IS_BIT_SET64(pattern_mask, i + offset) && (i + offset != active_track.step_count)) {
+
+        if (IS_BIT_SET64(pattern_mask, i + offset) && ((i + offset != step_count) || (MidiClock.state != 2))) {
           /*If the bit is set, there is a trigger at this position. */
           oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, WHITE);
         } else {
@@ -476,6 +473,19 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
       trig_x += seq_w + 1;
     }
+
+}
+
+void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
+                                bool show_current_step) {
+
+  uint8_t trig_x = seq_x0;
+
+  if (device == DEVICE_MD) {
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
+    uint64_t pattern_mask = active_track.pattern_mask;
+
+    draw_pattern_mask(offset, active_track.pattern_mask, active_track.step_count, active_track.length, show_current_step);
   }
 #ifdef EXT_TRACKS
   else {

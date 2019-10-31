@@ -6,6 +6,7 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "LFOSeqTrack.h"
+#include "SeqPage.h"
 
 #define NUM_LFO_PAGES 2
 
@@ -16,11 +17,11 @@
 #define IRAMP_WAV 4
 #define EXP_WAV 5
 //
-class LFOPage : public LightPage, MidiCallback {
+class LFOPage : public SeqPage, MidiCallback {
 public:
   LFOPage(LFOSeqTrack *lfo_track_, Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {
+      : SeqPage(e1, e2, e3, e4) {
   lfo_track = lfo_track_;
   }
 
@@ -38,7 +39,7 @@ public:
 
   void display();
   void setup();
-  void draw_pattern_mask();
+//  void draw_pattern_mask();
   void init();
   void loop();
   void cleanup();
