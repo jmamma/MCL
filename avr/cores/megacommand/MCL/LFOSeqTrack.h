@@ -49,7 +49,7 @@ public:
   uint8_t step_count;
   uint64_t pattern_mask;
 
-  bool enable = true;
+  bool enable = false;
 
   LFOSeqParam params[NUM_LFO_PARAMS];
   LFOSeqTrack() { init(); };

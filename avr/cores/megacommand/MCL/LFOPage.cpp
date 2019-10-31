@@ -62,10 +62,14 @@ void LFOPage::update_encoders() {
     encoders[3]->cur = lfo_track->params[1].depth;
     ((MCLEncoder *)encoders[3])->max = 127;
   }
+  loop();
+  
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    ((LightPage *)this)->encoders_used_clock[i] =
+    encoders[i]->old = encoders[i]->cur;
+        ((LightPage *)this)->encoders_used_clock[i] =
         slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
+  
 }
 
 void LFOPage::loop() {
@@ -209,7 +213,7 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
     strcpy(K, "--");
     break;
   case 17:
-    strcpy(K, "DEL");
+    strcpy(K, "ECH");
     break;
   case 18:
     strcpy(K, "REV");
@@ -225,7 +229,7 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
     itoa(value, K, 10);
     break;
   }
-  draw_knob(knob, "DST", K);
+  draw_knob(knob, "DEST", K);
 }
 
 void LFOPage::display() {
@@ -276,11 +280,11 @@ void LFOPage::display() {
     oled_display.setCursor(label_x + 1, label_md_y + 13);
     oled_display.print("OFF");
   }
-  draw_page_index();
+  draw_page_index(false);
 
   oled_display.setCursor(0, 0);
 
-  uint8_t x = knob_x0 + 4;
+  uint8_t x = knob_x0 + 5;
   uint8_t y = 8;
   uint8_t lfo_height = 7;
   uint8_t width = 13;

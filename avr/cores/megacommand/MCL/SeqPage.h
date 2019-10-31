@@ -46,7 +46,7 @@ public:
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
-  void draw_page_index();
+  void draw_page_index(bool show_page_index = true);
   void select_track(uint8_t device, uint8_t track);
 
   virtual bool handleEvent(gui_event_t *event);

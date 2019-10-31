@@ -1,6 +1,6 @@
+#include "LFO.h"
 #include "MCL.h"
 #include "MCLSeq.h"
-#include "LFO.h"
 
 void MCLSeq::setup() {
 
@@ -26,7 +26,13 @@ void MCLSeq::setup() {
   }
 
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-   lfo_tracks[i].track_number = i;
+    lfo_tracks[i].track_number = i;
+    if (i == 0) {
+      lfo_tracks[i].params[0].dest = 17;
+      lfo_tracks[i].params[1].dest = 18;
+      lfo_tracks[i].params[0].param = 8;
+      lfo_tracks[i].params[1].param = 8;
+    }
   }
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
@@ -50,8 +56,6 @@ void MCLSeq::setup() {
   MidiClock.addOnMidiContinueCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiContinueCallback);
   midi_events.setup_callbacks();
-
-
 };
 
 void MCLSeq::enable() {
@@ -81,25 +85,23 @@ void MCLSeq::onMidiContinueCallback() {
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    //ext_tracks[i].start_clock32th = 0;
+    // ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
     ext_tracks[i].iterations = 1;
   }
 #endif
- for (uint8_t i = 0; i < num_md_tracks; i++) {
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
 
-   // md_tracks[i].start_clock32th = 0;
+    // md_tracks[i].start_clock32th = 0;
     md_tracks[i].step_count = 0;
     md_tracks[i].iterations = 1;
     md_tracks[i].oneshot_mask = 0;
- }
+  }
 
- for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-
-     lfo_tracks[i].step_count = 0;
- }
-
-
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].sample_hold = 0;
+    lfo_tracks[i].step_count = 0;
+  }
 }
 
 void MCLSeq::onMidiStartCallback() {
@@ -110,7 +112,6 @@ void MCLSeq::onMidiStartCallback() {
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
-
 }
 
 void MCLSeq::onMidiStopCallback() {
@@ -125,15 +126,13 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
   }
-
 }
 
 #ifdef MEGACOMMAND
 #pragma GCC push_options
-#pragma GCC optimize ("unroll-loops")
+#pragma GCC optimize("unroll-loops")
 #endif
 void MCLSeq::seq() {
-
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
@@ -143,13 +142,11 @@ void MCLSeq::seq() {
     lfo_tracks[i].seq();
   }
 
-
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq();
   }
 #endif
-
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
@@ -169,7 +166,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     MD.parseCC(channel, param, &track, &track_param);
     mcl_seq.md_tracks[track].update_param(track_param, value);
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-       mcl_seq.lfo_tracks[n].check_and_update_params_offset(track_param, value);
+      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track_param, value);
     }
   }
 }
@@ -200,11 +197,11 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
-  #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
-  #endif
+#endif
   state = true;
 }
 

@@ -619,7 +619,7 @@ void SeqPage::loop() {
   }
 }
 
-void SeqPage::draw_page_index() {
+void SeqPage::draw_page_index(bool show_page_index) {
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
@@ -635,13 +635,13 @@ void SeqPage::draw_page_index() {
     oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
 
     // highlight page_select
-    if (page_select == i) {
+    if ((page_select == i) && (show_page_index)) {
       oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
     }
 
     // blink playing_idx
     if (playing_idx == i && blink) {
-      if (page_select == i) {
+      if ((page_select == i) && (show_page_index)) {
         oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
       } else {
         oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
