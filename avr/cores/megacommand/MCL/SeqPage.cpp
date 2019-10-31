@@ -415,19 +415,19 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
   GUI.put_string_at(0, mystr);
 }
 #else
-void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
-  auto &active_track = mcl_seq.md_tracks[last_md_track];
-  uint8_t step_count = active_track.step_count;
 
+
+
+void SeqPage::draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
   uint8_t led_x = seq_x0;
 
   for (int i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
-    bool in_range = idx < active_track.length;
+    bool in_range = idx < length;
     bool current =
         show_current_step && step_count == idx && MidiClock.state == 2;
-    bool locked = in_range && IS_BIT_SET64(active_track.lock_mask, i + offset);
+    bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
@@ -444,6 +444,12 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
     led_x += seq_w + 1;
   }
+
+}
+
+void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
+  auto &active_track = mcl_seq.md_tracks[last_md_track];
+  draw_lock_mask(offset, active_track.lock_mask, active_track.step_count, active_track.length, show_current_step);
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
@@ -613,6 +619,41 @@ void SeqPage::loop() {
   }
 }
 
+void SeqPage::draw_page_index() {
+  //  draw page index
+  uint8_t pidx_x = pidx_x0;
+  bool blink = MidiClock.getBlinkHint(true);
+  // XXX should retrieve true track length
+  uint8_t playing_idx = (MidiClock.bar_counter - 1) % page_count;
+  uint8_t w = pidx_w;
+  if (page_count == 8) { 
+    w /= 2; 
+    pidx_x -= 1;
+  }
+
+  for (uint8_t i = 0; i < page_count; ++i) {
+    oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
+
+    // highlight page_select
+    if (page_select == i) {
+      oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
+    }
+
+    // blink playing_idx
+    if (playing_idx == i && blink) {
+      if (page_select == i) {
+        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
+      } else {
+        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
+      }
+    }
+
+    pidx_x += w + 1;
+  }
+
+
+}
+
 #ifndef OLED_DISPLAY
 void SeqPage::display() {
   for (uint8_t i = 0; i < 2; i++) {
@@ -690,38 +731,7 @@ void SeqPage::display() {
   } else {
     oled_display.fillRect(tri_x, tri_y, 4, 5, WHITE);
   }
-
-  //  draw page index
-  uint8_t pidx_x = pidx_x0;
-  bool blink = MidiClock.getBlinkHint(true);
-  // XXX should retrieve true track length
-  uint8_t playing_idx = (MidiClock.bar_counter - 1) % page_count;
-  uint8_t w = pidx_w;
-  if (page_count == 8) { 
-    w /= 2; 
-    pidx_x -= 1;
-  }
-
-  for (uint8_t i = 0; i < page_count; ++i) {
-    oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
-
-    // highlight page_select
-    if (page_select == i) {
-      oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
-    }
-
-    // blink playing_idx
-    if (playing_idx == i && blink) {
-      if (page_select == i) {
-        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
-      } else {
-        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
-      }
-    }
-
-    pidx_x += w + 1;
-  }
-
+  draw_page_index();
   //  draw info lines
   oled_display.fillRect(0, info1_y, pane_w, info_h, WHITE);
   oled_display.setTextColor(BLACK);

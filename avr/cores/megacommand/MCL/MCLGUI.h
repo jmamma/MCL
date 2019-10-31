@@ -6,6 +6,8 @@
 #include "TextInputPage.h"
 #include "QuestionDialogPage.h"
 
+#define SHOW_VALUE_TIMEOUT 2000
+
 class MCLGUI {
 public:
   // fills dst buffer with input text. ensures that:

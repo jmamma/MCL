@@ -24,6 +24,10 @@ void MCLSeq::setup() {
     md_tracks[i].set_length(16);
     md_tracks[i].resolution = 1;
   }
+
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+   lfo_tracks[i].track_number = i;
+  }
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;

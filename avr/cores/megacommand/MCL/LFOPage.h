@@ -30,13 +30,14 @@ public:
 
   bool page_mode;
   uint8_t page_id;
-
   LFOSeqTrack *lfo_track;
 
   uint8_t waveform;
   uint8_t depth;
   uint8_t depth2;
 
+  void draw_dest(uint8_t knob, uint8_t value);
+  void draw_param(uint8_t knob, uint8_t  dest, uint8_t param);
   void display();
   void setup();
 //  void draw_pattern_mask();

@@ -39,12 +39,14 @@ public:
       : LightPage(e1, e2, e3, e4) {
   }
   void create_chars_seq();
+  void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
+  void draw_page_index();
   void select_track(uint8_t device, uint8_t track);
 
   virtual bool handleEvent(gui_event_t *event);

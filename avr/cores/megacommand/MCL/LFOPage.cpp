@@ -1,7 +1,9 @@
 #include "LFO.h"
 #include "LFOPage.h"
 #include "MCL.h"
+#include "MCLGUI.h"
 #include "MCLSeq.h"
+#include "MD.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -59,6 +61,10 @@ void LFOPage::update_encoders() {
 
     encoders[3]->cur = lfo_track->params[1].depth;
     ((MCLEncoder *)encoders[3])->max = 127;
+  }
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    ((LightPage *)this)->encoders_used_clock[i] =
+        slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
 }
 
@@ -177,6 +183,51 @@ void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
     lfo_track->wav_table[param][n] = (float)lfo->get_sample(n);
   }
 }
+
+void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
+
+  char myName[4] = "-- ";
+
+  PGM_P modelname = NULL;
+  if (dest != 0) {
+    if (dest < 17) {
+      modelname = model_param_name(MD.kit.models[dest - 1], param);
+    } else {
+      modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
+    }
+    if (modelname != NULL) {
+      m_strncpy_p(myName, modelname, 4);
+    }
+  }
+  draw_knob(knob, "PAR", myName);
+}
+
+void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
+  char K[4];
+  switch (value) {
+  case 0:
+    strcpy(K, "--");
+    break;
+  case 17:
+    strcpy(K, "DEL");
+    break;
+  case 18:
+    strcpy(K, "REV");
+    break;
+  case 19:
+    strcpy(K, "EQ");
+    break;
+  case 20:
+    strcpy(K, "DYN");
+    break;
+  default:
+    //  K[0] = 'T';
+    itoa(value, K, 10);
+    break;
+  }
+  draw_knob(knob, "DST", K);
+}
+
 void LFOPage::display() {
   auto oldfont = oled_display.getFont();
   if (!classic_display) {
@@ -202,80 +253,112 @@ void LFOPage::display() {
 
 #endif
 #ifdef OLED_DISPLAY
+  oled_display.setTextColor(WHITE);
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(trackid_x, trackid_y);
+  uint8_t lfo_track_num = lfo_track->track_number;
+  if (lfo_track_num < 10) {
+    oled_display.print('0');
+  }
+  oled_display.print(lfo_track_num);
   oled_display.setFont(&TomThumb);
-  oled_display.setCursor(0, 0);
+  //  draw MD/EXT label
 
-  oled_display.print("LFO ");
-  if (lfo_track->enable) {
+  oled_display.setCursor(label_x + 1, label_md_y + 6);
+  oled_display.print("LFO");
+  if ((lfo_track->enable)) {
+    oled_display.fillRect(label_x, label_md_y + 7, label_w, label_h, WHITE);
+    oled_display.setCursor(label_x + 1, label_md_y + 13);
+    oled_display.setTextColor(BLACK);
     oled_display.print("ON");
+    oled_display.setTextColor(WHITE);
   } else {
+    oled_display.setCursor(label_x + 1, label_md_y + 13);
     oled_display.print("OFF");
   }
-  // oled_display.print(page_mode ? 1 : 0);
-  oled_display.print(" ");
+  draw_page_index();
 
-  /*  PGM_P param_name = NULL;
-    char str[4];
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-      uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
+  oled_display.setCursor(0, 0);
 
-      uint8_t fx_param = params[n].param;
-      uint8_t fx_type = params[n].type;
-      param_name = fx_param_name(fx_type, fx_param);
-      m_strncpy_p(str, param_name, 4);
-
-      mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
-
-   //   mcl_gui.draw_md_encoder(30 + 20 * i, 6, encoders[i], str);
-    }
-  */
-
-  uint8_t x = 0;
-  uint8_t y = 16;
-  uint8_t lfo_height = 16;
-  uint8_t width = 32;
+  uint8_t x = knob_x0 + 4;
+  uint8_t y = 8;
+  uint8_t lfo_height = 7;
+  uint8_t width = 13;
   LFOSeqTrack temp_track;
-  uint8_t inc = LFO_LENGTH / width;
-  load_wavetable(waveform, &temp_track, 0, lfo_height);
- 
+
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
-  for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
-    oled_display.drawPixel(
-        x, y + lfo_height - temp_track.wav_table[0][n],
-        WHITE);
-    if (x % 2 == 0) {
-      oled_display.drawPixel(x, (lfo_height / 2) + y, WHITE);
-    }
-  }
-  uint8_t i = 0;
-  if (page_mode == LFO_DESTINATION) {
+  char K[4];
 
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DST");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "PAR");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DST");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "PAR");
+  if (page_mode == LFO_DESTINATION) {
+    draw_dest(0, encoders[0]->cur);
+    draw_param(1, encoders[0]->cur, encoders[1]->cur);
+    draw_dest(2, encoders[2]->cur);
+    draw_param(3, encoders[2]->cur, encoders[3]->cur);
   }
   if (page_mode == LFO_SETTINGS) {
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "SHP");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "SPD");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP1");
-    mcl_gui.draw_light_encoder(30 + 20 * i, 5, encoders[i++], "DEP2");
+    /*
+        char K[4];
+        switch (encoders[0]->cur) {
+        case SIN_WAV:
+          strcpy(K, "SIN");
+          break;
+        case TRI_WAV:
+          strcpy(K, "TRI");
+          break;
+        case IRAMP_WAV:
+          strcpy(K, "SAW");
+          break;
+        case RAMP_WAV:
+          strcpy(K, "RMP");
+          break;
+        case EXP_WAV:
+          strcpy(K, "DEC");
+          break;
+        case IEXP_WAV:
+          strcpy(K, "EXP");
+          break;
+        }
+        strcpy(K, "");
+    */ 
+    load_wavetable(waveform, &temp_track, 0, lfo_height);
+    uint8_t inc = LFO_LENGTH / width;
+      for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
+      if (n < LFO_LENGTH) {
+      oled_display.drawPixel(x, y + lfo_height - temp_track.wav_table[0][n],
+                             WHITE);
+      }
+    }
+  
+    x = knob_x0 + 2;
+    oled_display.setCursor(x + 4, 7);
+    oled_display.print("WAV");
+
+    draw_knob(1, encoders[1], "SPD");
+    draw_knob(2, encoders[2], "DEP1");
+    draw_knob(3, encoders[3], "DEP2");
   }
   // draw_pattern_mask();
+  oled_display.setFont(&TomThumb);
+  // oled_display.setCursor(1, info1_y + 6);
+  // oled_display.print("MODE: ");
 
-  oled_display.setCursor(0, 10);
+  oled_display.setCursor(1, info2_y + 6);
   switch (lfo_track->mode) {
   case LFO_MODE_FREE:
     oled_display.print("FREE");
     break;
   case LFO_MODE_TRIG:
-    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count, lfo_track->length, true);
+    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
+                      lfo_track->length, true);
     oled_display.print("TRIG");
     break;
   case LFO_MODE_ONE:
-    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count, lfo_track->length, true);
-    oled_display.print("ONE");
+    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
+                      lfo_track->length, true);
+    oled_display.print("TRIG ONE");
     break;
   }
 
