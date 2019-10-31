@@ -56,17 +56,20 @@ void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
 static char title_buf[16];
 
 //  ref: Design/popup_menu.png
-void MCLGUI::draw_popup(const char *title, bool deferred_display) {
+void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
 
   strcpy(title_buf, title);
   m_toupper(title_buf);
 
+  if (h == 0) {
+    h = s_menu_h;
+  }
   oled_display.setFont(&TomThumb);
 
   // draw menu body
-  oled_display.fillRect(s_menu_x - 1, s_menu_y - 1, s_menu_w + 2, s_menu_h + 2,
+  oled_display.fillRect(s_menu_x - 1, s_menu_y - 1, s_menu_w + 2, h + 2,
                         BLACK);
-  oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, s_menu_h, WHITE);
+  oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, h, WHITE);
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 1, s_menu_w - 2, 4, WHITE);
 
   // draw the title '____/**********\____' part
@@ -241,6 +244,18 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
   }
 
   return false;
+}
+
+void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name, const char* value)
+{
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(x + 4, y + 6);
+  oled_display.print(name);
+
+  oled_display.setFont();
+  oled_display.setCursor(x + 4, y + 8);
+  oled_display.print(value);
 }
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,

@@ -68,6 +68,7 @@ public:
   static constexpr uint8_t knob_x0 = 31;
   static constexpr uint8_t knob_w = 24;
   static constexpr uint8_t knob_xend = 127;
+  static constexpr uint8_t knob_y0 = 1;
   static constexpr uint8_t knob_y = 20;
 };
 
