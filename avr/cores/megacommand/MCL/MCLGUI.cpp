@@ -131,12 +131,16 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
                           const int line2_offset) {
   auto oldfont = oled_display.getFont();
 
-  oled_display.fillRect(dlg_info_x1 - 1, dlg_info_y1 - 1, dlg_info_w + 3, dlg_info_h + 3,
-                        BLACK);
-  oled_display.drawRect(dlg_info_x1, dlg_info_y1, dlg_info_w, dlg_info_h, WHITE);
-  oled_display.drawFastHLine(dlg_info_x1 + 1, dlg_info_y2 + 1, dlg_info_w, WHITE);
-  oled_display.drawFastVLine(dlg_info_x2 + 1, dlg_info_y1 + 1, dlg_info_h - 1, WHITE);
-  oled_display.fillRect(dlg_info_x1 + 1, dlg_info_y1 + 1, dlg_info_w - 2, 6, WHITE);
+  oled_display.fillRect(dlg_info_x1 - 1, dlg_info_y1 - 1, dlg_info_w + 3,
+                        dlg_info_h + 3, BLACK);
+  oled_display.drawRect(dlg_info_x1, dlg_info_y1, dlg_info_w, dlg_info_h,
+                        WHITE);
+  oled_display.drawFastHLine(dlg_info_x1 + 1, dlg_info_y2 + 1, dlg_info_w,
+                             WHITE);
+  oled_display.drawFastVLine(dlg_info_x2 + 1, dlg_info_y1 + 1, dlg_info_h - 1,
+                             WHITE);
+  oled_display.fillRect(dlg_info_x1 + 1, dlg_info_y1 + 1, dlg_info_w - 2, 6,
+                        WHITE);
 
   oled_display.fillCircle(dlg_circle_x, dlg_circle_y, 6, WHITE);
   oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 2, 4, BLACK);
@@ -381,10 +385,122 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
   }
 }
 
+void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
+                        uint64_t pattern_mask, uint8_t step_count,
+                        uint8_t length) {
+  for (int i = 0; i < 16; i++) {
+
+    uint8_t idx = i + offset;
+    bool in_range = idx < length;
+
+    if (note_interface.notes[i] == 1) {
+      // TI feedback
+      oled_display.fillRect(x - 1, y, seq_w + 2, trig_h + 1, WHITE);
+    } else if (!in_range) {
+      // don't draw
+    } else {
+      if (IS_BIT_SET64(pattern_mask, i + offset) &&
+          ((i + offset != step_count) || (MidiClock.state != 2))) {
+        /*If the bit is set, there is a trigger at this position. */
+        oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+      } else {
+        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+      }
+    }
+
+    x += seq_w + 1;
+  }
+}
+
+void MCLGUI::draw_ext_track(uint8_t x, uint8_t y, uint8_t offset,
+                            uint8_t ext_trackid, bool show_current_step) {
+#ifdef EXT_TRACKS
+  int8_t note_held = 0;
+  auto &active_track = mcl_seq.ext_tracks[ext_trackid];
+  for (int i = 0; i < active_track.length; i++) {
+
+    uint8_t step_count = active_track.step_count;
+    uint8_t noteson = 0;
+    uint8_t notesoff = 0;
+    bool in_range = (i >= offset) && (i < offset + 16);
+    bool right_most = (i == active_track.length - 1);
+
+    for (uint8_t a = 0; a < 4; a++) {
+      if (active_track.notes[a][i] > 0) {
+        noteson++;
+      }
+      if (active_track.notes[a][i] < 0) {
+        notesoff++;
+      }
+    }
+
+    note_held += noteson;
+    note_held -= notesoff;
+
+    if (!in_range) {
+      continue;
+    }
+
+    if (note_interface.notes[i - offset] == 1) {
+      oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+    } else if (!note_held) { // --
+      oled_display.drawFastHLine(x - 1, y + 2, seq_w + 2, WHITE);
+    } else { // draw top, bottom
+      oled_display.drawFastHLine(x - 1, y, seq_w + 2, WHITE);
+      oled_display.drawFastHLine(x - 1, y + trig_h - 1, seq_w + 2,
+                                 WHITE);
+    }
+
+    if (noteson > 0 || notesoff > 0) { // left |
+      oled_display.drawFastVLine(x - 1, y, trig_h, WHITE);
+    }
+
+    if (right_most && note_held) { // right |
+      oled_display.drawFastVLine(x + seq_w, y, trig_h, WHITE);
+    }
+
+    if ((step_count == i) && (MidiClock.state == 2) && show_current_step) {
+      oled_display.fillRect(x, y, seq_w, trig_h, INVERT);
+    }
+
+    x += seq_w + 1;
+  }
+#endif // EXT_TRACKS
+}
+
+void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
+                       uint8_t step_count, uint8_t length,
+                       bool show_current_step) {
+  for (int i = 0; i < 16; i++) {
+
+    uint8_t idx = i + offset;
+    bool in_range = idx < length;
+    bool current =
+        show_current_step && step_count == idx && MidiClock.state == 2;
+    bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
+
+    if (note_interface.notes[i] == 1) {
+      // TI feedback
+      oled_display.fillRect(x - 1, y - 1, seq_w + 2, led_h + 1, WHITE);
+    } else if (!in_range) {
+      // don't draw
+    } else if (current ^ locked) {
+      // highlight
+      oled_display.fillRect(x, y, seq_w, led_h, WHITE);
+    } else {
+      // (current && locked) or (not current && not locked), frame only
+      oled_display.drawRect(x, y, seq_w, led_h, WHITE);
+    }
+
+    x += seq_w + 1;
+  }
+}
+
 void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
   oled_display.setFont(&TomThumb);
   if (s1_active) {
-    oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w, pane_label_h, WHITE);
+    oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w,
+                          pane_label_h, WHITE);
     oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
     oled_display.setTextColor(BLACK);
     oled_display.print(s1);
@@ -393,7 +509,8 @@ void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
     oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
     oled_display.setTextColor(WHITE);
     oled_display.print(s1);
-    oled_display.fillRect(pane_label_x, pane_label_ex_y, pane_label_w, pane_label_h, WHITE);
+    oled_display.fillRect(pane_label_x, pane_label_ex_y, pane_label_w,
+                          pane_label_h, WHITE);
     oled_display.setTextColor(BLACK);
   }
   oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
@@ -420,16 +537,17 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
     oled_display.drawPixel(pane_cir_x1, pane_tri_y + 4, BLACK);
     oled_display.drawPixel(pane_cir_x2, pane_tri_y + 4, BLACK);
   } else if (playing) {
-    oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4, WHITE);
-    oled_display.fillTriangle(pane_tri_x + 1, pane_tri_y, pane_tri_x + 3, pane_tri_y + 2, pane_tri_x + 1,
-                              pane_tri_y + 4, WHITE);
+    oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4,
+                          WHITE);
+    oled_display.fillTriangle(pane_tri_x + 1, pane_tri_y, pane_tri_x + 3,
+                              pane_tri_y + 2, pane_tri_x + 1, pane_tri_y + 4,
+                              WHITE);
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
   }
 }
 
-void MCLGUI::draw_panel_number(uint8_t number)
-{
+void MCLGUI::draw_panel_number(uint8_t number) {
   oled_display.setTextColor(WHITE);
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(pane_trackid_x, pane_trackid_y);

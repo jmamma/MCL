@@ -61,12 +61,9 @@ public:
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
 
-  static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t seq_x0 = 32;
   static constexpr uint8_t led_y = 22;
   static constexpr uint8_t trig_y = 26;
-  static constexpr uint8_t led_h = 3;
-  static constexpr uint8_t trig_h = 5;
 
   static constexpr uint8_t knob_x0 = 31;
   static constexpr uint8_t knob_w = 24;

@@ -38,11 +38,18 @@ public:
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
   void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width, uint8_t note_height, uint8_t num_of_notes, uint64_t note_mask);
+  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length);
+  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid, bool show_current_step);
+  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step);
 
   void draw_panel_toggle(const char* s1, const char* s2, bool s1_active);
   void draw_panel_labels(const char* info1, const char* info2);
   void draw_panel_status(bool recording, bool playing);
   void draw_panel_number(uint8_t number);
+
+  static constexpr uint8_t seq_w = 5;
+  static constexpr uint8_t led_h = 3;
+  static constexpr uint8_t trig_h = 5;
 
   static constexpr uint8_t s_menu_w = 96;
   static constexpr uint8_t s_menu_h = 24;

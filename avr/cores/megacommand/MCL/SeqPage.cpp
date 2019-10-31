@@ -419,32 +419,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
 
 void SeqPage::draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
-  uint8_t led_x = seq_x0;
-
-  for (int i = 0; i < 16; i++) {
-
-    uint8_t idx = i + offset;
-    bool in_range = idx < length;
-    bool current =
-        show_current_step && step_count == idx && MidiClock.state == 2;
-    bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
-
-    if (note_interface.notes[i] == 1) {
-      // TI feedback
-      oled_display.fillRect(led_x - 1, led_y - 1, seq_w + 2, led_h + 1, WHITE);
-    } else if (!in_range) {
-      // don't draw
-    } else if (current ^ locked) {
-      // highlight
-      oled_display.fillRect(led_x, led_y, seq_w, led_h, WHITE);
-    } else {
-      // (current && locked) or (not current && not locked), frame only
-      oled_display.drawRect(led_x, led_y, seq_w, led_h, WHITE);
-    }
-
-    led_x += seq_w + 1;
-  }
-
+  mcl_gui.draw_leds(seq_x0, led_y, offset, lock_mask, step_count, length, show_current_step);
 }
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
@@ -453,98 +428,18 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
-
-  uint8_t trig_x = seq_x0;
-
-
-    for (int i = 0; i < 16; i++) {
-
-      uint8_t idx = i + offset;
-      bool in_range = idx < length;
-
-      if (note_interface.notes[i] == 1) {
-        // TI feedback
-        oled_display.fillRect(trig_x - 1, trig_y, seq_w + 2, trig_h + 1, WHITE);
-      } else if (!in_range) {
-        // don't draw
-      } else {
-        if (IS_BIT_SET64(pattern_mask, i + offset) && ((i + offset != step_count) || (MidiClock.state != 2))) {
-          /*If the bit is set, there is a trigger at this position. */
-          oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, WHITE);
-        } else {
-          oled_display.drawRect(trig_x, trig_y, seq_w, trig_h, WHITE);
-        }
-      }
-
-      trig_x += seq_w + 1;
-    }
-
+  mcl_gui.draw_trigs(seq_x0, trig_y, offset, pattern_mask, step_count, length);
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
                                 bool show_current_step) {
-
-  uint8_t trig_x = seq_x0;
-
   if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t pattern_mask = active_track.pattern_mask;
-
     draw_pattern_mask(offset, active_track.pattern_mask, active_track.step_count, active_track.length, show_current_step);
   }
 #ifdef EXT_TRACKS
   else {
-
-    int8_t note_held = 0;
-    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-    for (int i = 0; i < active_track.length; i++) {
-
-      uint8_t step_count = active_track.step_count;
-      uint8_t noteson = 0;
-      uint8_t notesoff = 0;
-      bool in_range = (i >= offset) && (i < offset + 16);
-      bool right_most = (i == active_track.length - 1);
-
-      for (uint8_t a = 0; a < 4; a++) {
-        if (active_track.notes[a][i] > 0) {
-          noteson++;
-        }
-        if (active_track.notes[a][i] < 0) {
-          notesoff++;
-        }
-      }
-
-      note_held += noteson;
-      note_held -= notesoff;
-
-      if (!in_range) {
-        continue;
-      }
-
-      if (note_interface.notes[i - offset] == 1) {
-        oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, WHITE);
-      } else if (!note_held) { // --
-        oled_display.drawFastHLine(trig_x - 1, trig_y + 2, seq_w + 2, WHITE);
-      } else { // draw top, bottom
-        oled_display.drawFastHLine(trig_x - 1, trig_y, seq_w + 2, WHITE);
-        oled_display.drawFastHLine(trig_x - 1, trig_y + trig_h - 1, seq_w + 2,
-                                   WHITE);
-      }
-
-      if (noteson > 0 || notesoff > 0) { // left |
-        oled_display.drawFastVLine(trig_x - 1, trig_y, trig_h, WHITE);
-      }
-
-      if (right_most && note_held) { // right |
-        oled_display.drawFastVLine(trig_x + seq_w, trig_y, trig_h, WHITE);
-      }
-
-      if ((step_count == i) && (MidiClock.state == 2) && show_current_step) {
-        oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, INVERT);
-      }
-
-      trig_x += seq_w + 1;
-    }
+    mcl_gui.draw_ext_track(seq_x0, trig_y, offset, last_ext_track, show_current_step);
   }
 #endif
 }
