@@ -63,13 +63,12 @@ void LFOPage::update_encoders() {
     ((MCLEncoder *)encoders[3])->max = 127;
   }
   loop();
-  
+
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     encoders[i]->old = encoders[i]->cur;
-        ((LightPage *)this)->encoders_used_clock[i] =
+    ((LightPage *)this)->encoders_used_clock[i] =
         slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
-  
 }
 
 void LFOPage::loop() {
@@ -268,17 +267,23 @@ void LFOPage::display() {
   oled_display.setFont(&TomThumb);
   //  draw MD/EXT label
 
-  oled_display.setCursor(label_x + 1, label_md_y + 6);
-  oled_display.print("LFO");
   if ((lfo_track->enable)) {
-    oled_display.fillRect(label_x, label_md_y + 7, label_w, label_h, WHITE);
     oled_display.setCursor(label_x + 1, label_md_y + 13);
+    oled_display.print("OFF");
+    oled_display.fillRect(label_x, label_md_y, label_w, label_h, WHITE);
+    oled_display.setCursor(label_x + 1, label_md_y + 6);
     oled_display.setTextColor(BLACK);
     oled_display.print("ON");
     oled_display.setTextColor(WHITE);
   } else {
+
+    oled_display.setCursor(label_x + 1, label_md_y + 6);
+    oled_display.print("ON");
+    oled_display.fillRect(label_x, label_md_y + 7, label_w, label_h, WHITE);
     oled_display.setCursor(label_x + 1, label_md_y + 13);
+    oled_display.setTextColor(BLACK);
     oled_display.print("OFF");
+    oled_display.setTextColor(WHITE);
   }
   draw_page_index(false);
 
@@ -324,16 +329,16 @@ void LFOPage::display() {
           break;
         }
         strcpy(K, "");
-    */ 
+    */
     load_wavetable(waveform, &temp_track, 0, lfo_height);
     uint8_t inc = LFO_LENGTH / width;
-      for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
+    for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
       if (n < LFO_LENGTH) {
-      oled_display.drawPixel(x, y + lfo_height - temp_track.wav_table[0][n],
-                             WHITE);
+        oled_display.drawPixel(x, y + lfo_height - temp_track.wav_table[0][n],
+                               WHITE);
       }
     }
-  
+
     x = knob_x0 + 2;
     oled_display.setCursor(x + 4, 7);
     oled_display.print("WAV");
@@ -348,6 +353,17 @@ void LFOPage::display() {
   // oled_display.print("MODE: ");
 
   oled_display.setCursor(1, info2_y + 6);
+
+  if (page_mode) {
+    oled_display.print("LFO A");
+  } else {
+    oled_display.print("LFO B");
+  }
+
+  oled_display.fillRect(0, info1_y, pane_w, info_h, WHITE);
+  oled_display.setTextColor(BLACK);
+  oled_display.setCursor(1, info1_y + 6);
+
   switch (lfo_track->mode) {
   case LFO_MODE_FREE:
     oled_display.print("FREE");
@@ -362,10 +378,10 @@ void LFOPage::display() {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
                       lfo_track->length, true);
-    oled_display.print("TRIG ONE");
+    oled_display.print("ONE");
     break;
   }
-
+  oled_display.setTextColor(WHITE);
   oled_display.display();
   oled_display.setFont(oldfont);
 #endif
