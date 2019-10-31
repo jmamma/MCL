@@ -466,7 +466,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
       } else if (!in_range) {
         // don't draw
       } else {
-        if (IS_BIT_SET64(pattern_mask, i + offset) && (i + offset != active_track.step_count)) {
+        if (IS_BIT_SET64(pattern_mask, i + offset) && ((i + offset != active_track.step_count) || (MidiClock.state != 2))) {
           /*If the bit is set, there is a trigger at this position. */
           oled_display.fillRect(trig_x, trig_y, seq_w, trig_h, WHITE);
         } else {
