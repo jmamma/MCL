@@ -22,7 +22,7 @@ public:
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
   ///  Clear the content area of a popup
   void clear_popup();
-  void draw_popup(const char* title, bool deferred_display = false);
+  void draw_popup(const char* title, bool deferred_display = false, uint8_t h = 0);
   void draw_progress(const char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
 
   void clear_leftpane();
@@ -33,6 +33,7 @@ public:
 
   bool show_encoder_value(Encoder *encoder);
 
+  void draw_text_encoder(uint8_t x, uint8_t y, const char *name, const char* value);
   void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
@@ -51,7 +52,7 @@ public:
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;
 
-  static constexpr uint8_t s_menu_w = 96;
+  static constexpr uint8_t s_menu_w = 104;
   static constexpr uint8_t s_menu_h = 24;
   static constexpr uint8_t s_menu_x = (128 - s_menu_w) / 2;
   static constexpr uint8_t s_menu_y = (32 - s_menu_h) / 2;

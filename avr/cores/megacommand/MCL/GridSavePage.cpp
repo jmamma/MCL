@@ -12,14 +12,15 @@ void GridSavePage::setup() {
   grid_page.reload_slot_models = false;
 }
 
-void GridSavePage::init() {
+void GridSavePage::init() { 
 #ifdef OLED_DISPLAY
-  oled_display.clearDisplay();
+  mcl_gui.draw_popup("SAVE", true, 28);
 #endif
 }
 
 void GridSavePage::cleanup() {}
 
+#ifndef OLED_DISPLAY
 void GridSavePage::display() {
   GUI.setLine(GUI.LINE1);
   char strn[17] = "----------------";
@@ -28,11 +29,7 @@ void GridSavePage::display() {
 
     if (note_interface.notes[i] != 0) {
 
-#ifdef OLED_DISPLAY
-      strn[i] = (char)2;
-#else
       strn[i] = (char)219;
-#endif
     }
   }
 
@@ -53,6 +50,32 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   GUI.put_value_at2(14, step_count);
 }
+#else
+void GridSavePage::display() {
+
+  oled_display.fillRect(MCLGUI::s_menu_x + 3, MCLGUI::s_menu_y + 20, 98, 7, BLACK);
+  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
+
+  const char* merge = "NO";
+  if ((MidiClock.state != 2) && (encoders[0]->cur == 1)) {
+    merge = "YES";
+  }
+
+  oled_display.fillRect(MCLGUI::s_menu_x + 8, MCLGUI::s_menu_y + 5, 18, 16, BLACK);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 5, "MERGE", merge);
+
+  char step[4] = {'\0'};
+  uint8_t step_count =
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+      (64 *
+       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+  itoa(step_count, step, 10);
+
+  oled_display.fillRect(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 24, MCLGUI::s_menu_y + 5, 16, 16, BLACK);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 24, MCLGUI::s_menu_y + 5, "STEP", step);
+  oled_display.display();
+}
+#endif
 
 bool GridSavePage::handleEvent(gui_event_t *event) {
 
