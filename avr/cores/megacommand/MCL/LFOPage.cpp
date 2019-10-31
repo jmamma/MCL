@@ -232,7 +232,6 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
 }
 
 void LFOPage::display() {
-  auto oldfont = oled_display.getFont();
   if (!classic_display) {
 #ifdef OLED_DISPLAY
     oled_display.clearDisplay();
@@ -256,38 +255,11 @@ void LFOPage::display() {
 
 #endif
 #ifdef OLED_DISPLAY
-  oled_display.setTextColor(WHITE);
-  oled_display.setFont(&Elektrothic);
-  oled_display.setCursor(trackid_x, trackid_y);
+  auto oldfont = oled_display.getFont();
   uint8_t lfo_track_num = lfo_track->track_number;
-  if (lfo_track_num < 10) {
-    oled_display.print('0');
-  }
-  oled_display.print(lfo_track_num);
-  oled_display.setFont(&TomThumb);
-  //  draw MD/EXT label
-
-  if ((lfo_track->enable)) {
-    oled_display.setCursor(label_x + 1, label_md_y + 13);
-    oled_display.print("OFF");
-    oled_display.fillRect(label_x, label_md_y, label_w, label_h, WHITE);
-    oled_display.setCursor(label_x + 1, label_md_y + 6);
-    oled_display.setTextColor(BLACK);
-    oled_display.print("ON");
-    oled_display.setTextColor(WHITE);
-  } else {
-
-    oled_display.setCursor(label_x + 1, label_md_y + 6);
-    oled_display.print("ON");
-    oled_display.fillRect(label_x, label_md_y + 7, label_w, label_h, WHITE);
-    oled_display.setCursor(label_x + 1, label_md_y + 13);
-    oled_display.setTextColor(BLACK);
-    oled_display.print("OFF");
-    oled_display.setTextColor(WHITE);
-  }
+  mcl_gui.draw_panel_number(lfo_track_num);
+  mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
   draw_page_index(false);
-
-  oled_display.setCursor(0, 0);
 
   uint8_t x = knob_x0 + 5;
   uint8_t y = 8;
@@ -297,7 +269,6 @@ void LFOPage::display() {
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
-  char K[4];
 
   if (page_mode == LFO_DESTINATION) {
     draw_dest(0, encoders[0]->cur);
@@ -306,30 +277,6 @@ void LFOPage::display() {
     draw_param(3, encoders[2]->cur, encoders[3]->cur);
   }
   if (page_mode == LFO_SETTINGS) {
-    /*
-        char K[4];
-        switch (encoders[0]->cur) {
-        case SIN_WAV:
-          strcpy(K, "SIN");
-          break;
-        case TRI_WAV:
-          strcpy(K, "TRI");
-          break;
-        case IRAMP_WAV:
-          strcpy(K, "SAW");
-          break;
-        case RAMP_WAV:
-          strcpy(K, "RMP");
-          break;
-        case EXP_WAV:
-          strcpy(K, "DEC");
-          break;
-        case IEXP_WAV:
-          strcpy(K, "EXP");
-          break;
-        }
-        strcpy(K, "");
-    */
     load_wavetable(waveform, &temp_track, 0, lfo_height);
     uint8_t inc = LFO_LENGTH / width;
     for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
@@ -347,41 +294,35 @@ void LFOPage::display() {
     draw_knob(2, encoders[2], "DEP1");
     draw_knob(3, encoders[3], "DEP2");
   }
-  // draw_pattern_mask();
   oled_display.setFont(&TomThumb);
-  // oled_display.setCursor(1, info1_y + 6);
-  // oled_display.print("MODE: ");
-
-  oled_display.setCursor(1, info2_y + 6);
+  const char* info1;
+  const char* info2;
 
   if (page_mode) {
-    oled_display.print("LFO A");
+    info1 = "LFO A";
   } else {
-    oled_display.print("LFO B");
+    info1 = "LFO B";
   }
-
-  oled_display.fillRect(0, info1_y, pane_w, info_h, WHITE);
-  oled_display.setTextColor(BLACK);
-  oled_display.setCursor(1, info1_y + 6);
 
   switch (lfo_track->mode) {
   case LFO_MODE_FREE:
-    oled_display.print("FREE");
+    info2 = "FREE";
     break;
   case LFO_MODE_TRIG:
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
                       lfo_track->length, true);
-    oled_display.print("TRIG");
+    info2 = "TRIG";
     break;
   case LFO_MODE_ONE:
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
                       lfo_track->length, true);
-    oled_display.print("ONE");
+    info2 = "ONE";
     break;
   }
-  oled_display.setTextColor(WHITE);
+  mcl_gui.draw_panel_labels(info1, info2);
+
   oled_display.display();
   oled_display.setFont(oldfont);
 #endif

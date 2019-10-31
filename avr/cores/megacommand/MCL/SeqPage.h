@@ -56,31 +56,10 @@ public:
   virtual void init();
   virtual void cleanup();
 
-  static constexpr uint8_t pane_x1 = 0;
-  static constexpr uint8_t pane_x2 = 30;
-  static constexpr uint8_t pane_w = pane_x2 - pane_x1;
-  static constexpr uint8_t label_x = 0;
-  static constexpr uint8_t label_md_y = 0;
-  static constexpr uint8_t label_ex_y = 7;
-  static constexpr uint8_t label_w = 13;
-  static constexpr uint8_t label_h = 7;
-
-  static constexpr uint8_t trackid_x = 15;
-  static constexpr uint8_t trackid_y = 8;
-
-  static constexpr uint8_t cir_x1 = 22;
-  static constexpr uint8_t cir_x2 = 25;
-  static constexpr uint8_t tri_x = 16;
-  static constexpr uint8_t tri_y = 9;
-
   static constexpr uint8_t pidx_x0 = 1;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
-
-  static constexpr uint8_t info1_y = 19;
-  static constexpr uint8_t info2_y = 26;
-  static constexpr uint8_t info_h = 7;
 
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t seq_x0 = 32;

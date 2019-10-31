@@ -131,26 +131,26 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
                           const int line2_offset) {
   auto oldfont = oled_display.getFont();
 
-  oled_display.fillRect(info_x1 - 1, info_y1 - 1, info_w + 3, info_h + 3,
+  oled_display.fillRect(dlg_info_x1 - 1, dlg_info_y1 - 1, dlg_info_w + 3, dlg_info_h + 3,
                         BLACK);
-  oled_display.drawRect(info_x1, info_y1, info_w, info_h, WHITE);
-  oled_display.drawFastHLine(info_x1 + 1, info_y2 + 1, info_w, WHITE);
-  oled_display.drawFastVLine(info_x2 + 1, info_y1 + 1, info_h - 1, WHITE);
-  oled_display.fillRect(info_x1 + 1, info_y1 + 1, info_w - 2, 6, WHITE);
+  oled_display.drawRect(dlg_info_x1, dlg_info_y1, dlg_info_w, dlg_info_h, WHITE);
+  oled_display.drawFastHLine(dlg_info_x1 + 1, dlg_info_y2 + 1, dlg_info_w, WHITE);
+  oled_display.drawFastVLine(dlg_info_x2 + 1, dlg_info_y1 + 1, dlg_info_h - 1, WHITE);
+  oled_display.fillRect(dlg_info_x1 + 1, dlg_info_y1 + 1, dlg_info_w - 2, 6, WHITE);
 
-  oled_display.fillCircle(circle_x, circle_y, 6, WHITE);
-  oled_display.fillRect(circle_x - 1, circle_y - 3, 2, 4, BLACK);
-  oled_display.fillRect(circle_x - 1, circle_y + 2, 2, 2, BLACK);
+  oled_display.fillCircle(dlg_circle_x, dlg_circle_y, 6, WHITE);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 2, 4, BLACK);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 2, 2, BLACK);
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
-  oled_display.setCursor(info_x1 + 4, info_y1 + 6);
+  oled_display.setCursor(dlg_info_x1 + 4, dlg_info_y1 + 6);
   strcpy(title_buf, line1);
   m_toupper(title_buf);
   oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
-  oled_display.setCursor(info_x1 + 23, info_y1 + 17 + line2_offset);
+  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 17 + line2_offset);
   oled_display.println(line2);
 
   oled_display.setFont(oldfont);
@@ -379,4 +379,62 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
       note_type = 0;
     }
   }
+}
+
+void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
+  oled_display.setFont(&TomThumb);
+  if (s1_active) {
+    oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w, pane_label_h, WHITE);
+    oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
+    oled_display.setTextColor(BLACK);
+    oled_display.print(s1);
+    oled_display.setTextColor(WHITE);
+  } else {
+    oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
+    oled_display.setTextColor(WHITE);
+    oled_display.print(s1);
+    oled_display.fillRect(pane_label_x, pane_label_ex_y, pane_label_w, pane_label_h, WHITE);
+    oled_display.setTextColor(BLACK);
+  }
+  oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
+  oled_display.print(s2);
+  oled_display.setTextColor(WHITE);
+}
+
+void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {
+  oled_display.setFont(&TomThumb);
+  oled_display.fillRect(0, pane_info1_y, pane_w, pane_info_h, WHITE);
+  oled_display.setTextColor(BLACK);
+  oled_display.setCursor(1, pane_info1_y + 6);
+  oled_display.print(info1);
+  oled_display.setTextColor(WHITE);
+  oled_display.setCursor(1, pane_info2_y + 6);
+  oled_display.print(info2);
+}
+
+void MCLGUI::draw_panel_status(bool recording, bool playing) {
+  if (recording) {
+    oled_display.fillRect(pane_cir_x1, pane_tri_y, 4, 5, WHITE);
+    oled_display.drawPixel(pane_cir_x1, pane_tri_y, BLACK);
+    oled_display.drawPixel(pane_cir_x2, pane_tri_y, BLACK);
+    oled_display.drawPixel(pane_cir_x1, pane_tri_y + 4, BLACK);
+    oled_display.drawPixel(pane_cir_x2, pane_tri_y + 4, BLACK);
+  } else if (playing) {
+    oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4, WHITE);
+    oled_display.fillTriangle(pane_tri_x + 1, pane_tri_y, pane_tri_x + 3, pane_tri_y + 2, pane_tri_x + 1,
+                              pane_tri_y + 4, WHITE);
+  } else {
+    oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
+  }
+}
+
+void MCLGUI::draw_panel_number(uint8_t number)
+{
+  oled_display.setTextColor(WHITE);
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(pane_trackid_x, pane_trackid_y);
+  if (number < 10) {
+    oled_display.print('0');
+  }
+  oled_display.print(number);
 }

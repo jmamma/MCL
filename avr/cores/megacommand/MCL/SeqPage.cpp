@@ -668,8 +668,10 @@ void SeqPage::display() {
   GUI.setLine(GUI.LINE1);
 }
 #else
+
 //  ref: design/Sequencer.png
 void SeqPage::display() {
+  auto* oldfont = oled_display.getFont();
   oled_display.clearDisplay();
 
   bool is_md = (midi_device == DEVICE_MD);
@@ -686,59 +688,21 @@ void SeqPage::display() {
   track_id += 1;
 
   //  draw current active track
-  oled_display.setTextColor(WHITE);
-  oled_display.setFont(&Elektrothic);
-  oled_display.setCursor(trackid_x, trackid_y);
-  if (track_id < 10) {
-    oled_display.print('0');
-  }
-  oled_display.print(track_id);
+  mcl_gui.draw_panel_number(track_id);
 
-  oled_display.setFont(&TomThumb);
   //  draw MD/EXT label
-  if (is_md) {
-    oled_display.fillRect(label_x, label_md_y, label_w, label_h, WHITE);
-    oled_display.setCursor(label_x + 1, label_md_y + 6);
-    oled_display.setTextColor(BLACK);
-    oled_display.print("MD");
-    oled_display.setTextColor(WHITE);
-  } else {
-    oled_display.setCursor(label_x + 1, label_md_y + 6);
-    oled_display.setTextColor(WHITE);
-    oled_display.print("MD");
-    oled_display.fillRect(label_x, label_ex_y, label_w, label_h, WHITE);
-    oled_display.setTextColor(BLACK);
-  }
-  oled_display.setCursor(label_x + 1, label_ex_y + 6);
+  const char* str_ext = "MI";
   if (ext_is_a4) {
-    oled_display.print("A4");
-  } else {
-    oled_display.print("MI");
+    str_ext = "A4";
   }
+  mcl_gui.draw_panel_toggle("MD", str_ext, is_md);
 
   //  draw stop/play/rec state
-  if (recording) {
-    oled_display.fillRect(cir_x1, tri_y, 4, 5, WHITE);
-    oled_display.drawPixel(cir_x1, tri_y, BLACK);
-    oled_display.drawPixel(cir_x2, tri_y, BLACK);
-    oled_display.drawPixel(cir_x1, tri_y + 4, BLACK);
-    oled_display.drawPixel(cir_x2, tri_y + 4, BLACK);
-  } else if (MidiClock.state == 2) {
-    oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
-    oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
-                              tri_y + 4, WHITE);
-  } else {
-    oled_display.fillRect(tri_x, tri_y, 4, 5, WHITE);
-  }
+  mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
+
   draw_page_index();
   //  draw info lines
-  oled_display.fillRect(0, info1_y, pane_w, info_h, WHITE);
-  oled_display.setTextColor(BLACK);
-  oled_display.setCursor(1, info1_y + 6);
-  oled_display.print(info1);
-  oled_display.setTextColor(WHITE);
-  oled_display.setCursor(1, info2_y + 6);
-  oled_display.print(info2);
+  mcl_gui.draw_panel_labels(info1, info2);
 
   // if (show_track_menu) {
   // uint8_t x_offset = 43;
@@ -747,6 +711,7 @@ void SeqPage::display() {
   // oled_display.fillRect(84, 0, 40, 32, BLACK);
   // track_menu_page.draw_menu(86, y_offset, 39);
   //}
+  oled_display.setFont(oldfont);
 }
 #endif
 
