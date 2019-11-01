@@ -73,20 +73,20 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.setFont(&TomThumb);
 
   // draw menu body
-  oled_display.fillRect(s_menu_x - 1, s_menu_y - 1, s_menu_w + 2, h + 2, BLACK);
+  oled_display.fillRect(s_menu_x - 1, s_menu_y - 2, s_menu_w + 2, h + 2, BLACK);
   oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, h, WHITE);
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 1, s_menu_w - 2, 4, WHITE);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y - 1, s_menu_w - 2, 6, WHITE);
 
   // draw the title '____/**********\____' part
-  oled_display.drawRect(s_title_x, s_menu_y - 3, s_title_w, 3, BLACK);
-  oled_display.drawRect(s_title_x, s_menu_y - 2, s_title_w, 2, WHITE);
-  oled_display.drawPixel(s_title_x, s_menu_y - 2, BLACK);
-  oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 2, BLACK);
+  oled_display.drawRect(s_title_x, s_menu_y - 4, s_title_w, 4, BLACK);
+  oled_display.fillRect(s_title_x, s_menu_y - 3, s_title_w, 3, WHITE);
+  oled_display.drawPixel(s_title_x, s_menu_y - 3, BLACK);
+  oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 3, BLACK);
 
   oled_display.setTextColor(BLACK);
-  // auto len = strlen(title_buf) * 5;
-  // oled_display.setCursor(s_title_x + (s_title_w - len) / 2 , s_menu_y + 3);
-  oled_display.setCursor(s_title_x + 2, s_menu_y + 4);
+  auto len = strlen(title_buf) * 4;
+  oled_display.setCursor(s_title_x + (s_title_w - len) / 2 , s_menu_y + 3);
+  //oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
   if (!deferred_display) {
@@ -416,7 +416,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
-      oled_display.fillRect(x - 1, y, seq_w + 2, trig_h + 1, WHITE);
+      oled_display.fillRect(x + 1, y + 1, seq_w - 2, trig_h - 2, WHITE);
     } else if (!in_range) {
       // don't draw
     } else {
@@ -501,7 +501,7 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
-      oled_display.fillRect(x - 1, y - 1, seq_w + 2, led_h + 1, WHITE);
+      oled_display.fillRect(x, y, seq_w, led_h, WHITE);
     } else if (!in_range) {
       // don't draw
     } else if (current ^ locked) {
