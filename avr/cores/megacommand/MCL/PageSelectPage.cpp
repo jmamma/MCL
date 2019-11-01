@@ -1,16 +1,53 @@
 #include "MCL.h"
 #include "PageSelectPage.h"
+#include <avr/pgmspace.h>
 
-#define MIX_PAGE 0
-#define ROUTE_PAGE 1
-#define RAM_PAGE_A 14
-#define RAM_PAGE_B 15
-#define LFO_PAGE 6
-#define SOUND 7
-#define WAVD_PAGE 8
-#define LOUDNESS 9
-#define FX_PAGE_A 10
-#define FX_PAGE_B 11
+struct PageCategory {
+  char Name[16];
+  uint8_t PageCount;
+  uint8_t FirstPage;
+};
+
+struct PageSelectEntry {
+  char Name[16];
+  LightPage *Page;
+  uint8_t PageNumber; // same as trig id
+  uint8_t CategoryId;
+};
+
+const PageCategory Categories[] PROGMEM = {
+    {"GRID", 1, 0}, {"SEQ", 4, 1},  {"MIX", 3, 5},  {"SOUND", 2, 8},
+    {"FX", 2, 10},  {"RAM", 2, 12}, {"LFO", 1, 14}, {"CONFIG", 1, 15},
+};
+
+const PageSelectEntry Entries[] PROGMEM = {
+    {"GRID", &grid_page, 0xFF, 0},
+
+    {"NOTES", &seq_step_page, 0, 1},
+    {"RECORD", &seq_rtrk_page, 1, 1},
+    {"LOCKS", &seq_param_page[0], 2, 1},
+    {"CHROMA", &seq_ptc_page, 3, 1},
+
+    {"MIXER", &mixer_page, 4, 2},
+    {"ROUTE", &route_page, 5, 2},
+    {"LOUDNESS", &loudness_page, 6, 2},
+
+    {"WAV DESIGNER", &wd.pages[0], 7, 3},
+    {"SOUND MANAGER", &sound_browser, 8, 3},
+
+    {"DELAY", &fx_page_a, 9, 4},
+    {"REVERB", &fx_page_b, 10, 4},
+
+    {"RAM-1", &ram_page_a, 11, 5},
+    {"RAM-2", &fx_page_b, 12, 5},
+
+    {"LFO", &lfo_page, 13, 6},
+
+    {"CONFIG", &system_page, 0xFF, 7},
+};
+
+constexpr uint8_t n_category = sizeof(Categories) / sizeof(PageCategory);
+constexpr uint8_t n_entry = sizeof(Entries) / sizeof(PageSelectEntry);
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -20,74 +57,21 @@ void PageSelectPage::init() {
   md_exploit.on();
   note_interface.state = true;
 }
-void PageSelectPage::cleanup() {
-  note_interface.init_notes();
-}
+void PageSelectPage::cleanup() { note_interface.init_notes(); }
 
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
-  LightPage *r_page = NULL;
-  switch (page_number) {
-  case MIX_PAGE:
-    if (str)
-      strncpy(str, "MIX", 4);
-    r_page = &mixer_page;
-    break;
-  case ROUTE_PAGE:
-    if (str)
-      strncpy(str, "ROUTE", 6);
-    r_page = &route_page;
-    break;
-  case RAM_PAGE_A:
-    if (str)
-      strncpy(str, "RAM 1", 6);
-    r_page = &ram_page_a;
-    break;
-  case RAM_PAGE_B:
-    if (str)
-      strncpy(str, "RAM 2", 6);
-    r_page = &ram_page_b;
-    break;
- case FX_PAGE_A:
-    if (str)
-      strncpy(str, "DELAY", 8);
-    r_page = &fx_page_a;
-    break;
- case FX_PAGE_B:
-    if (str)
-      strncpy(str, "REVERB", 8);
-    r_page = &fx_page_b;
-    break;
-  case LFO_PAGE:
-    if (str)
-      strncpy(str, "LFO", 8);
-    r_page = &lfo_page;
-    break;
-#ifdef WAV_DESIGNER
-  case WAVD_PAGE:
-    if (str)
-      strncpy(str, "WAV DESIGNER", 13);
-    r_page = wd.last_page;
-    break;
-#endif
-#ifdef SOUND_PAGE
-  case SOUND:
-    if (str)
-      strncpy(str, "SOUND", 6);
-    r_page = &sound_browser;
-    break;
-#endif
-#ifdef LOUDNESS_PAGE
-  case LOUDNESS:
-    if (str)
-      strncpy(str, "LOUDNESS",9);
-    r_page = &loudness_page;
-    break;
-#endif
-  default:
-    if (str)
-      strncpy(str, "----", 5);
+  for (uint8_t i = 0; i < n_entry; ++i) {
+    if (page_number == pgm_read_byte(&Entries[i].PageNumber)) {
+      if (str) {
+        m_strncpy_p(str, (PGM_P) & (Entries[i].Name), 16);
+      }
+      return pgm_read_word(&Entries[i].Page);
+    }
   }
-  return r_page;
+  if (str) {
+    strncpy(str, "----", 5);
+  }
+  return NULL;
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
@@ -126,9 +110,9 @@ void PageSelectPage::loop() {
 }
 
 void PageSelectPage::display() {
-  #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  #endif
+#endif
   GUI.setLine(GUI.LINE1);
   char str[16];
   get_page(page_select, str);
