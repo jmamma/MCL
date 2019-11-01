@@ -79,21 +79,19 @@ void GridSavePage::display() {
   oled_display.setFont(&TomThumb);
   // draw data flow in the center
   if (MidiClock.state != 2 && encoders[0]->cur == 1) {
-    oled_display.setCursor(53, MCLGUI::s_menu_y + 12);
+    oled_display.setCursor(52, MCLGUI::s_menu_y + 12);
     oled_display.print("MD");
     oled_display.setCursor(50, MCLGUI::s_menu_y + 19);
     oled_display.print("SEQ");
 
-    oled_display.fillRect(64, MCLGUI::s_menu_y + 7, 4, 2, WHITE);
-    oled_display.fillRect(64, MCLGUI::s_menu_y + 15, 4, 2, WHITE);
-    oled_display.fillRect(68, MCLGUI::s_menu_y + 7, 2, 10, WHITE);
-    oled_display.fillRect(70, MCLGUI::s_menu_y + 11, 2, 2, WHITE);
-    oled_display.drawPixel(71, MCLGUI::s_menu_y + 11, BLACK);
+    oled_display.drawFastHLine(63, MCLGUI::s_menu_y + 8, 2, WHITE);
+    oled_display.drawFastHLine(63, MCLGUI::s_menu_y + 15, 2, WHITE);
+    oled_display.drawFastVLine(65, MCLGUI::s_menu_y + 8, 8, WHITE);
+    mcl_gui.draw_horizontal_arrow(66, MCLGUI::s_menu_y + 12, 5);
   } else {
     oled_display.setCursor(50, MCLGUI::s_menu_y + 15);
     oled_display.print("SEQ");
-    oled_display.fillRect(64, MCLGUI::s_menu_y + 11, 8, 2, WHITE);
-    oled_display.drawPixel(71, MCLGUI::s_menu_y + 11, BLACK);
+    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 12, 8);
   }
 
   oled_display.setCursor(74, MCLGUI::s_menu_y + 15);

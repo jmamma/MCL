@@ -32,6 +32,12 @@ void MCLGUI::draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to) {
   }
 }
 
+void MCLGUI::draw_horizontal_arrow(uint8_t x, uint8_t y, uint8_t w) {
+  oled_display.drawFastHLine(x, y, w, WHITE);
+  oled_display.drawFastVLine(x + w - 2, y - 1, 3, WHITE);
+  oled_display.drawFastVLine(x + w - 3, y - 2, 5, WHITE);
+}
+
 void MCLGUI::draw_vertical_separator(uint8_t x) {
   auto x_ = x + 2;
   for (uint8_t y = 0; y < 32; y += 2) {
