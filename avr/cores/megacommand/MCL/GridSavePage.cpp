@@ -58,11 +58,14 @@ void GridSavePage::display() {
   mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
 
   const char* merge = "NO";
-  if ((MidiClock.state != 2) && (encoders[0]->cur == 1)) {
+  if (encoders[0]->cur == 1) {
     merge = "YES";
   }
+  if (MidiClock.state == 2) {
+    merge = "---";
+  }
 
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 5, "MERGE", merge);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MERGE", merge);
 
   char step[4] = {'\0'};
   uint8_t step_count =
@@ -71,7 +74,32 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   itoa(step_count, step, 10);
 
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 5, "STEP", step);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 4, "STEP", step);
+
+  oled_display.setFont(&TomThumb);
+  // draw data flow in the center
+  if (MidiClock.state != 2 && encoders[0]->cur == 1) {
+    oled_display.setCursor(53, MCLGUI::s_menu_y + 12);
+    oled_display.print("MD");
+    oled_display.setCursor(50, MCLGUI::s_menu_y + 19);
+    oled_display.print("SEQ");
+
+    oled_display.fillRect(64, MCLGUI::s_menu_y + 7, 4, 2, WHITE);
+    oled_display.fillRect(64, MCLGUI::s_menu_y + 15, 4, 2, WHITE);
+    oled_display.fillRect(68, MCLGUI::s_menu_y + 7, 2, 10, WHITE);
+    oled_display.fillRect(70, MCLGUI::s_menu_y + 11, 2, 2, WHITE);
+    oled_display.drawPixel(71, MCLGUI::s_menu_y + 11, BLACK);
+  } else {
+    oled_display.setCursor(50, MCLGUI::s_menu_y + 15);
+    oled_display.print("SEQ");
+    oled_display.fillRect(64, MCLGUI::s_menu_y + 11, 8, 2, WHITE);
+    oled_display.drawPixel(71, MCLGUI::s_menu_y + 11, BLACK);
+  }
+
+  oled_display.setCursor(74, MCLGUI::s_menu_y + 15);
+  oled_display.print("GRID");
+
+
   oled_display.display();
 }
 #endif
