@@ -14,7 +14,7 @@ void GridSavePage::setup() {
 
 void GridSavePage::init() { 
 #ifdef OLED_DISPLAY
-  mcl_gui.draw_popup("SAVE", true, 28);
+  mcl_gui.draw_popup("SAVE TO GRID", true, 28);
 #endif
 }
 
@@ -53,7 +53,8 @@ void GridSavePage::display() {
 #else
 void GridSavePage::display() {
 
-  oled_display.fillRect(MCLGUI::s_menu_x + 3, MCLGUI::s_menu_y + 20, 98, 7, BLACK);
+  mcl_gui.clear_popup(28);
+
   mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
 
   const char* merge = "NO";
@@ -61,7 +62,6 @@ void GridSavePage::display() {
     merge = "YES";
   }
 
-  oled_display.fillRect(MCLGUI::s_menu_x + 8, MCLGUI::s_menu_y + 5, 18, 16, BLACK);
   mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 5, "MERGE", merge);
 
   char step[4] = {'\0'};
@@ -71,8 +71,7 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   itoa(step_count, step, 10);
 
-  oled_display.fillRect(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 24, MCLGUI::s_menu_y + 5, 16, 16, BLACK);
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 24, MCLGUI::s_menu_y + 5, "STEP", step);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 5, "STEP", step);
   oled_display.display();
 }
 #endif
