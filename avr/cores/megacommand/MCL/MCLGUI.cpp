@@ -67,8 +67,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.setFont(&TomThumb);
 
   // draw menu body
-  oled_display.fillRect(s_menu_x - 1, s_menu_y - 1, s_menu_w + 2, h + 2,
-                        BLACK);
+  oled_display.fillRect(s_menu_x - 1, s_menu_y - 1, s_menu_w + 2, h + 2, BLACK);
   oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, h, WHITE);
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 1, s_menu_w - 2, 4, WHITE);
 
@@ -89,10 +88,11 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   }
 }
 
-void MCLGUI::clear_popup() {
-  // XXX too slow
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, s_menu_h - 5,
-                        BLACK);
+void MCLGUI::clear_popup(uint8_t h) {
+  if (h == 0) {
+    h = s_menu_h;
+  }
+  oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, h - 5, BLACK);
 }
 
 static constexpr uint8_t s_progress_x = 31;
@@ -246,8 +246,8 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
   return false;
 }
 
-void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name, const char* value)
-{
+void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
+                               const char *value) {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(x + 4, y + 6);
@@ -462,8 +462,7 @@ void MCLGUI::draw_ext_track(uint8_t x, uint8_t y, uint8_t offset,
       oled_display.drawFastHLine(x - 1, y + 2, seq_w + 2, WHITE);
     } else { // draw top, bottom
       oled_display.drawFastHLine(x - 1, y, seq_w + 2, WHITE);
-      oled_display.drawFastHLine(x - 1, y + trig_h - 1, seq_w + 2,
-                                 WHITE);
+      oled_display.drawFastHLine(x - 1, y + trig_h - 1, seq_w + 2, WHITE);
     }
 
     if (noteson > 0 || notesoff > 0) { // left |
@@ -571,3 +570,40 @@ void MCLGUI::draw_panel_number(uint8_t number) {
   }
   oled_display.print(number);
 }
+
+//  ================ SPRITES ================
+
+const unsigned char encoder_small_0 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0x80, 0x20, 0x80, 0x20, 0x4e, 0x40,
+	0x4e, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder1', 11x11px
+const unsigned char encoder_small_1 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0x80, 0x20, 0x80, 0x20, 0x5c, 0x40,
+	0x4c, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder2', 11x11px
+const unsigned char encoder_small_2 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0x80, 0x20, 0x90, 0x20, 0x58, 0x40,
+	0x48, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder3', 11x11px
+const unsigned char encoder_small_3 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0x80, 0x20, 0xb0, 0x20, 0x58, 0x40,
+	0x40, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder4', 11x11px
+const unsigned char encoder_small_4 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0xb0, 0x20, 0xb0, 0x20, 0x58, 0x40,
+	0x40, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder5', 11x11px
+const unsigned char encoder_small_5 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0x80, 0x20, 0xb0, 0x20, 0xb0, 0x20, 0x50, 0x40,
+	0x40, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
+// 'encoder6', 11x11px
+const unsigned char encoder_small_6 [] PROGMEM = {
+	0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0xb0, 0x20, 0xb0, 0x20, 0xb0, 0x20, 0x40, 0x40, 
+	0x40, 0x40, 0x31, 0x80, 0x0e, 0x00
+};
