@@ -5,12 +5,12 @@
 #define ROUTE_PAGE 1
 #define RAM_PAGE_A 14
 #define RAM_PAGE_B 15
-#define LFO_PAGE 6
-#define SOUND 7
 #define WAVD_PAGE 8
-#define LOUDNESS 9
+#define SOUND 7
 #define FX_PAGE_A 10
 #define FX_PAGE_B 11
+#define LOUDNESS 9
+#define LFO_PAGE 6
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -107,7 +107,6 @@ uint8_t PageSelectPage::get_nextpage_up() {
   }
   return page_select;
 }
-
 void PageSelectPage::loop() {
   MCLEncoder *enc_ = &enc1;
   // largest_sine_peak = 1.0 / 16.00;
