@@ -26,7 +26,7 @@ void GridWritePage::setup() {
 
 void GridWritePage::init() {
 #ifdef OLED_DISPLAY
-  mcl_gui.draw_popup("CHAIN FROM GRID", true, 28);
+  mcl_gui.draw_popup("CHAIN", true, 28);
 #endif
 }
 

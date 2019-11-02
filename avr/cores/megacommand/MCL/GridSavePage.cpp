@@ -14,7 +14,7 @@ void GridSavePage::setup() {
 
 void GridSavePage::init() { 
 #ifdef OLED_DISPLAY
-  mcl_gui.draw_popup("SAVE TO GRID", true, 28);
+  mcl_gui.draw_popup("SAVE", true, 28);
 #endif
 }
 
@@ -74,7 +74,7 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   itoa(step_count, step, 10);
 
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 4, "STEP", step);
+ // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 4, "STEP", step);
 
   oled_display.setFont(&TomThumb);
   // draw data flow in the center
