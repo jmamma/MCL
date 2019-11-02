@@ -614,23 +614,16 @@ void SeqPage::draw_knob_frame() {
 #ifndef OLED_DISPLAY
   return;
 #endif
+  mcl_gui.draw_knob_frame();
   // draw frame
-  for (uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
-    mcl_gui.draw_vertical_dashline(x, 0, knob_y);
-    oled_display.drawPixel(x, knob_y, WHITE);
-    oled_display.drawPixel(x, knob_y + 1, WHITE);
-  }
-  mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
 }
 
 void SeqPage::draw_knob(uint8_t i, const char *title, const char *text) {
-  uint8_t x = knob_x0 + i * knob_w;
-  mcl_gui.draw_text_encoder(x, knob_y0, title, text);
+  mcl_gui.draw_knob(i,title,text);
 }
 
 void SeqPage::draw_knob(uint8_t i, Encoder* enc, const char* title) {
-  uint8_t x = knob_x0 + i * knob_w;
-  mcl_gui.draw_light_encoder(x + 6, 6, enc, title);
+  mcl_gui.draw_knob(i,enc,title);
 }
 
 void SeqPageMidiEvents::setup_callbacks() {

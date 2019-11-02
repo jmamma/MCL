@@ -59,6 +59,25 @@ void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
   oled_display.drawRect(x, y, 5, length, WHITE);
 }
 
+void MCLGUI::draw_knob_frame() {
+  for (uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
+    mcl_gui.draw_vertical_dashline(x, 0, knob_y);
+    oled_display.drawPixel(x, knob_y, WHITE);
+    oled_display.drawPixel(x, knob_y + 1, WHITE);
+  }
+  mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
+}
+
+void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text) {
+  uint8_t x = knob_x0 + i * knob_w;
+  draw_text_encoder(x, knob_y0, title, text);
+}
+
+void MCLGUI::draw_knob(uint8_t i, Encoder* enc, const char* title) {
+  uint8_t x = knob_x0 + i * knob_w;
+  draw_light_encoder(x + 6, 6, enc, title);
+}
+
 static char title_buf[16];
 
 //  ref: Design/popup_menu.png

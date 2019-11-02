@@ -49,6 +49,10 @@ public:
   void draw_panel_status(bool recording, bool playing);
   void draw_panel_number(uint8_t number);
 
+  void draw_knob_frame();
+  void draw_knob(uint8_t i, const char* title, const char* text);
+  void draw_knob(uint8_t i, Encoder* enc, const char* name);
+
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;
@@ -94,6 +98,12 @@ public:
 
   static constexpr uint8_t pane_trackid_x = 15;
   static constexpr uint8_t pane_trackid_y = 8;
+
+  static constexpr uint8_t knob_x0 = 31;
+  static constexpr uint8_t knob_w = 24;
+  static constexpr uint8_t knob_xend = 127;
+  static constexpr uint8_t knob_y0 = 1;
+  static constexpr uint8_t knob_y = 20;
 };
 
 extern MCLGUI mcl_gui;
