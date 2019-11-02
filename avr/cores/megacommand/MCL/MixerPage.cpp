@@ -1,6 +1,8 @@
 #include "MCL.h"
 #include "MixerPage.h"
+
 #define FADER_LEN 16
+#define FADE_RATE 26
 
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
@@ -266,7 +268,7 @@ void MixerPage::display() {
     oled_display.display();
   }
 #endif
-  uint8_t dec = MidiClock.get_tempo() / 10;
+  uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
   for (uint8_t n = 0; n < 16; n++) {
     if (disp_levels[n] < dec) {
       disp_levels[n] = 0;
