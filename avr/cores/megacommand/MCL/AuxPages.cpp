@@ -41,10 +41,10 @@ fx_param_t fx_reverb_params[8] = {
 
 
 FXPage fx_page_a(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
-                 (fx_param_t*) &fx_echo_params, 8);
+                 (fx_param_t*) &fx_echo_params, 8, "ECHO");
 
 FXPage fx_page_b(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
-                 (fx_param_t*) &fx_reverb_params, 8);
+                 (fx_param_t*) &fx_reverb_params, 8, "REVERB");
 
 LFOPage lfo_page(&(mcl_seq.lfo_tracks[0]), &fx_param1, &fx_param2, &fx_param3, &fx_param4);
 

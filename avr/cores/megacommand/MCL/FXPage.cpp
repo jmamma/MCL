@@ -40,8 +40,9 @@ void FXPage::update_encoders() {
     }
 
     encoders[n]->old = encoders[n]->cur;
+    ((LightPage *)this)->encoders_used_clock[n] =
+        slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
-
 }
 
 void FXPage::cleanup() {
@@ -99,14 +100,12 @@ void FXPage::display() {
 
 #endif
 #ifdef OLED_DISPLAY
-  oled_display.setFont();
-  oled_display.setCursor(0, 0);
-
-  oled_display.print("FX ");
-  oled_display.print(page_mode ? 1 : 0);
-  oled_display.print(" ");
+  auto oldfont = oled_display.getFont();
   PGM_P param_name = NULL;
   char str[4];
+
+  mcl_gui.draw_knob_frame();
+
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
 
@@ -115,14 +114,21 @@ void FXPage::display() {
     param_name = fx_param_name(fx_type, fx_param);
     m_strncpy_p(str, param_name, 4);
 
-    mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
-
- //   mcl_gui.draw_md_encoder(30 + 20 * i, 6, encoders[i], str);
+    mcl_gui.draw_knob(i, encoders[i], str);
+  //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
   }
-
-
+  oled_display.setFont(&TomThumb);
+  const char* info1;
+  const char* info2;
+  if (page_mode) {
+    info1 = "FX A";
+  } else {
+    info1 = "FX B";
+  }
+  info2 = &fx_page_title[0];
+  mcl_gui.draw_panel_labels(info1, info2);
   oled_display.display();
-
+  oled_display.setFont(oldfont);
 #endif
 }
 

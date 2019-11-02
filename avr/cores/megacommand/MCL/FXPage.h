@@ -17,16 +17,20 @@ typedef struct fx_param_t {
 class FXPage : public LightPage, MidiCallback {
 public:
   FXPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
-          Encoder *e3 = NULL, Encoder *e4 = NULL, fx_param_t *params_ = NULL, uint8_t num_of_params_ = 0)
+          Encoder *e3 = NULL, Encoder *e4 = NULL, fx_param_t *params_ = NULL, uint8_t num_of_params_ = 0, const char* title = NULL)
       : LightPage(e1, e2, e3, e4) {
 
       params = params_;
       num_of_params = num_of_params_;
+      if (title) {
+        strcpy(fx_page_title, title);
+      }
   }
 
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
 
+  char fx_page_title[8];
   fx_param_t *params;
   uint8_t num_of_params;
 
