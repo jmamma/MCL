@@ -2,7 +2,7 @@
 #include "MixerPage.h"
 
 #define FADER_LEN 16
-#define FADE_RATE 26
+#define FADE_RATE 16
 
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
