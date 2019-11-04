@@ -61,10 +61,6 @@ public:
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
 
-  static constexpr uint8_t seq_x0 = 32;
-  static constexpr uint8_t led_y = 22;
-  static constexpr uint8_t trig_y = 26;
-
 };
 
 #endif /* SEQPAGE_H__ */
