@@ -39,10 +39,13 @@ void RAMPage::init() {
     setup_callbacks();
   }
   if (mcl_cfg.ram_page_mode == LINK) {
-   for (uint8_t n = 0; n < 4; n++) {
-   if (page_id == 0) { encoders[n]->cur = ram_page_b.encoders[n]->cur; }
-   else { encoders[n]->cur = ram_page_a.encoders[n]->cur; }
-   }
+    for (uint8_t n = 0; n < 4; n++) {
+      if (page_id == 0) {
+        encoders[n]->cur = ram_page_b.encoders[n]->cur;
+      } else {
+        encoders[n]->cur = ram_page_a.encoders[n]->cur;
+      }
+    }
   }
 }
 
@@ -427,14 +430,14 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
 
 void RAMPage::loop() {
 
-  //Prevent number of slices exceeding number of steps.
+  // Prevent number of slices exceeding number of steps.
   uint8_t steps = encoders[3]->cur * 4;
   uint8_t slices = 1 << encoders[2]->cur;
 
   while (slices > steps) {
-  encoders[2]->cur--;
- // encoders[2]->old = encoders[2]->cur;
-  slices = 1 << encoders[2]->cur;
+    encoders[2]->cur--;
+    // encoders[2]->old = encoders[2]->cur;
+    slices = 1 << encoders[2]->cur;
   }
 
   uint8_t n = 14 + page_id;
@@ -541,7 +544,107 @@ void RAMPage::display() {
 #endif
 #ifdef OLED_DISPLAY
   float remain;
-  oled_display.drawRoundRect(104, 28, 22, 4, 1, WHITE);
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont();
+  oled_display.setCursor(34, 24);
+  switch (RAMPage::rec_states[page_id]) {
+  case STATE_QUEUE:
+    oled_display.print(" [Queue]");
+    break;
+  case STATE_RECORD:
+    oled_display.print(" [Record]");
+    break;
+  case STATE_PLAY:
+    oled_display.print(" [Play]");
+    break;
+  }
+  oled_display.setFont(&TomThumb);
+  oled_display.setCursor(0, 32);
+
+  oled_display.print("RAM ");
+  oled_display.print(page_id + 1);
+
+  oled_display.setCursor(105, 32);
+  if (mcl_cfg.ram_page_mode == 0) {
+    oled_display.print("MONO");
+  } else {
+    oled_display.print("LINK");
+  }
+  oled_display.setFont();
+  oled_display.setCursor(0, 24);
+
+  char *source;
+
+  switch (encoders[0]->cur) {
+  case SOURCE_MAIN:
+    if (mcl_cfg.ram_page_mode == LINK) {
+      if (page_id == 0) {
+        source = "L ";
+      }
+      if (page_id == 1) {
+        source = "R";
+      }
+    } else {
+      source = "INT";
+    }
+    break;
+  case SOURCE_INPA:
+    if (mcl_cfg.ram_page_mode == LINK) {
+      if (page_id == 0) {
+        source = "A ";
+      } else {
+        source = "B ";
+      }
+    } else {
+      source = "A ";
+    }
+
+    break;
+  case SOURCE_INPB:
+    if (mcl_cfg.ram_page_mode == LINK) {
+      if (page_id == 0) {
+        source = "A ";
+      } else {
+        source = "B ";
+      }
+    } else {
+      source = "B ";
+    }
+    break;
+  }
+  /*
+    oled_display.print(encoders[1]->cur);
+    oled_display.print(" S:");
+    oled_display.print(1 << encoders[2]->cur);
+    oled_display.print(" L:");
+    oled_display.print(encoders[3]->cur * 4);
+  */
+  mcl_gui.draw_knob_frame();
+  mcl_gui.draw_knob(0, "SRC", source);
+
+
+  char val[4];
+
+  itoa(encoders[1]->cur, val, 10);
+  mcl_gui.draw_knob(1, "MOD", val);
+
+  itoa(1 << encoders[2]->cur, val, 10);
+  mcl_gui.draw_knob(2, "SLI", val);
+
+  itoa(encoders[3]->cur * 4, val, 10);
+  mcl_gui.draw_knob(3, "LEN", val);
+
+  uint8_t w_x = 0, w_y = 2;
+  oled_display.drawPixel(w_x + 24, w_y + 0, WHITE);
+  oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
+  oled_display.drawLine(w_x + 12, w_y - 1, w_x + 24, w_y - 3, WHITE);
+  oled_display.drawLine(w_x + 17, w_y + 15, w_x + 26, w_y + 2, WHITE);
+
+  uint8_t progress_x = w_x + 0;
+  uint8_t progress_y = w_y + 20;
+  uint8_t progress_w = 19;
+  oled_display.drawRoundRect(progress_x, progress_y, progress_w, 4, 1, WHITE);
+
   if ((RAMPage::rec_states[page_id] != STATE_NOSTATE)) {
     if (MidiClock.clock_less_than(transition_step + record_len,
                                   MidiClock.div16th_counter)) {
@@ -555,85 +658,9 @@ void RAMPage::display() {
       remain = (float)mcl_seq.md_tracks[n].step_count /
                (float)mcl_seq.md_tracks[n].length;
     }
-    uint8_t width = remain * 21;
-      oled_display.fillRect(105, 28, width, 4, WHITE);
+    uint8_t width = remain * (progress_w - 1);
+    oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
   }
-  oled_display.setFont();
-  oled_display.setCursor(0, 0);
-
-  oled_display.print("RAM");
-  oled_display.print(page_id + 1);
-  switch (RAMPage::rec_states[page_id]) {
-  case STATE_QUEUE:
-    oled_display.print(" [Queue]");
-    break;
-  case STATE_RECORD:
-    oled_display.print(" [Record]");
-    break;
-  case STATE_PLAY:
-    oled_display.print(" [Play]");
-    break;
-  }
-
-  oled_display.setFont(&TomThumb);
-
-  oled_display.setCursor(0, 16);
-  if (mcl_cfg.ram_page_mode == 0) {
-    oled_display.print("MONO ");
-  } else {
-    oled_display.print("STEREO ");
-  }
-  oled_display.setFont();
-  oled_display.setCursor(0, 24);
-  switch (encoders[0]->cur) {
-  case SOURCE_MAIN:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        oled_display.print("LEFT ");
-      }
-      if (page_id == 1) {
-        oled_display.print("RIGHT");
-      }
-    } else {
-      oled_display.print("MAIN ");
-    }
-    break;
-  case SOURCE_INPA:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        oled_display.print("INPA ");
-      } else {
-        oled_display.print("INPB ");
-      }
-    } else {
-      oled_display.print("INPA ");
-    }
-
-    break;
-  case SOURCE_INPB:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        oled_display.print("INPA ");
-      } else {
-        oled_display.print("INPB ");
-      }
-    } else {
-      oled_display.print("INPB ");
-    }
-    break;
-  }
-
-  oled_display.print(encoders[1]->cur);
-  oled_display.print(" S:");
-  oled_display.print(1 << encoders[2]->cur);
-  oled_display.print(" L:");
-  oled_display.print(encoders[3]->cur * 4);
-
-  uint8_t w_x = 104, w_y = 0;
-  oled_display.drawPixel(w_x + 19, w_y + 24, WHITE);
-  oled_display.drawCircle(w_x + 19, w_y + 24, 2, WHITE);
-  oled_display.drawLine(w_x + 18, w_y + 9, w_x + 21, w_y + 23, WHITE);
-  oled_display.drawLine(w_x + 7, w_y + 19, w_x + 19, w_y + 26, WHITE);
 
   switch (wheel_spin) {
   case 0:
@@ -679,6 +706,7 @@ void RAMPage::display() {
     wheel_spin_last_clock = MidiClock.div16th_counter;
   }
   oled_display.display();
+  oled_display.setFont(oldfont);
 #endif
 }
 void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {

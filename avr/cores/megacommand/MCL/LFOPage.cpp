@@ -261,7 +261,7 @@ void LFOPage::display() {
   mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
   draw_page_index(false);
 
-  uint8_t x = knob_x0 + 5;
+  uint8_t x = mcl_gui.knob_x0 + 5;
   uint8_t y = 8;
   uint8_t lfo_height = 7;
   uint8_t width = 13;
@@ -286,7 +286,7 @@ void LFOPage::display() {
       }
     }
 
-    x = knob_x0 + 2;
+    x = mcl_gui.knob_x0 + 2;
     oled_display.setCursor(x + 4, 7);
     oled_display.print("WAV");
 
