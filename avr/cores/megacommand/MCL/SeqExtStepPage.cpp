@@ -211,7 +211,7 @@ void SeqExtStepPage::display() {
   draw_knob(2, "LEN", K);
 
   if (notes_held > 0) {
-    uint8_t x = knob_x0 + knob_w * 3 + 2;
+    uint8_t x = mcl_gui.knob_x0 + mcl_gui.knob_w * 3 + 2;
     auto *oldfont = oled_display.getFont();
     oled_display.setFont(&TomThumb);
     uint8_t note_idx = 0;
