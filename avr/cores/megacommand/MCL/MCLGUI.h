@@ -153,5 +153,9 @@ extern const unsigned char encoder_small_4 [];
 extern const unsigned char encoder_small_5 [];
 // 'encoder6', 11x11px
 extern const unsigned char encoder_small_6 [];
+// 'gatebox', 24x25px
+extern const unsigned char icon_gatebox [];
+// 'rythmecho', 24x25px
+extern const unsigned char icon_rhytmecho [];
 
 #endif /* MCLGUI_H__ */

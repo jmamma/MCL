@@ -1,6 +1,8 @@
 #include "FXPage.h"
 #include "MCL.h"
 #include "RAMPage.h"
+#include "MCLGUI.h"
+
 #define FX_TYPE 0
 #define FX_PARAM 1
 #define INTERPOLATE
@@ -104,6 +106,12 @@ void FXPage::display() {
   PGM_P param_name = NULL;
   char str[4];
 
+  if (page_id == 0) {
+  oled_display.drawBitmap(0, 0, icon_rhytmecho, 24, 18, WHITE);
+  }
+  else {
+  oled_display.drawBitmap(0, 0, icon_gatebox, 24, 18, WHITE);
+  }
   mcl_gui.draw_knob_frame();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
