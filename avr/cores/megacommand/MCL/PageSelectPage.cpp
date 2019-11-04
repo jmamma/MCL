@@ -39,7 +39,7 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"REVERB", &fx_page_b, 10, 4},
 
     {"RAM-1", &ram_page_a, 11, 5},
-    {"RAM-2", &fx_page_b, 12, 5},
+    {"RAM-2", &ram_page_b, 12, 5},
 
     {"LFO", &lfo_page, 13, 6},
 
