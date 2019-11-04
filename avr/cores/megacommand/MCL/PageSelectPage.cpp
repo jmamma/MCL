@@ -23,7 +23,7 @@ const PageCategory Categories[] PROGMEM = {
 const PageSelectEntry Entries[] PROGMEM = {
     {"GRID", &grid_page, 0xFF, 0},
 
-    {"NOTES", &seq_step_page, 0, 1},
+    {"STEPS", &seq_step_page, 0, 1},
     {"RECORD", &seq_rtrk_page, 1, 1},
     {"LOCKS", &seq_param_page[0], 2, 1},
     {"CHROMA", &seq_ptc_page, 3, 1},
