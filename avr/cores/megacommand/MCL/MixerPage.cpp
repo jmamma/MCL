@@ -18,6 +18,7 @@ void MixerPage::setup() {
   oled_display.clearDisplay();
 #endif
 }
+
 void MixerPage::init() {
   level_pressmode = 0;
   encoders[0]->cur = 60;
@@ -46,6 +47,7 @@ void MixerPage::init() {
  }
 #endif
 }
+
 void MixerPage::cleanup() {
 //  md_exploit.off();
 #ifdef OLED_DISPLAY

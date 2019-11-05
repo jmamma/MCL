@@ -35,16 +35,17 @@ public:
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
       }
-  bool handleEvent(gui_event_t *event);
   void adjust_param(Encoder *enc, uint8_t param);
   void draw_routes(uint8_t line_number);
   void draw_levels();
-  void display();
-  void loop();
   void set_level(int curtrack, int value);
-  void setup();
-  void init();
-  void cleanup();
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void loop();
+  virtual void setup();
+  virtual void init();
+  virtual void cleanup();
 };
 
 #endif /* MIXERPAGE_H__ */
