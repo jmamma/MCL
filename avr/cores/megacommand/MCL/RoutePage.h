@@ -12,6 +12,8 @@ class RoutePage : public LightPage {
 
  }
 
+ char info_line2[9];
+
  virtual bool handleEvent(gui_event_t *event);
  virtual void display();
  virtual void setup();

@@ -181,7 +181,7 @@ void RoutePage::display() {
 
   auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
-  oled_display.drawBitmap(0, 0, icon_route, 24, 25, WHITE);
+  oled_display.drawBitmap(0, 0, icon_route, 24, 18, WHITE);
 
   mcl_gui.draw_knob_frame();
 
@@ -204,7 +204,9 @@ void RoutePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
 
   itoa(step_count, Q, 10);
-  mcl_gui.draw_knob(3, "STEP", Q);
+  strcpy(info_line2, "STEP ");
+  strcat(info_line2, Q);
+  mcl_gui.draw_panel_labels("ROUTE", info_line2);
 
   draw_routes();
   oled_display.display();
