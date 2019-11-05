@@ -546,7 +546,7 @@ void RAMPage::display() {
   float remain;
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
-  oled_display.setCursor(34, 24);
+  oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
     oled_display.print(" [Queue]");
