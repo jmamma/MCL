@@ -161,5 +161,7 @@ extern const unsigned char encoder_small_6 [];
 extern const unsigned char icon_gatebox [];
 // 'rythmecho', 24x25px
 extern const unsigned char icon_rhytmecho [];
+// 'route', 24x25px
+extern const unsigned char icon_route [];
 
 #endif /* MCLGUI_H__ */

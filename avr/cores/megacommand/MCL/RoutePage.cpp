@@ -181,14 +181,8 @@ void RoutePage::display() {
 
   auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
+  oled_display.drawBitmap(0, 0, icon_route, 24, 25, WHITE);
 
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 *
-       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-  mcl_gui.draw_panel_number(step_count);
-  mcl_gui.draw_panel_status(false, MidiClock.state == 2);
-  mcl_gui.draw_panel_labels("ROUTE", "");
   mcl_gui.draw_knob_frame();
 
   char str_tmp[2] = "0";
@@ -203,6 +197,14 @@ void RoutePage::display() {
     itoa(x, Q, 10);
   }
   mcl_gui.draw_knob(1, "QUANT", Q);
+
+  uint8_t step_count =
+      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+      (64 *
+       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+
+  itoa(step_count, Q, 10);
+  mcl_gui.draw_knob(3, "STEP", Q);
 
   draw_routes();
   oled_display.display();
