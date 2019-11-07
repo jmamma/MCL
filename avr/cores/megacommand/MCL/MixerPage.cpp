@@ -8,20 +8,20 @@
 void MixerPage::set_display_mode(uint8_t param) {
   display_mode = param;
   switch (param) {
-    case MODEL_FLTF:
-      strcpy(info_line2, "FLTF");
-      break;
-    case MODEL_FLTW:
-      strcpy(info_line2, "FLTW");
-      break;
-    case MODEL_FLTQ:
-      strcpy(info_line2, "FLTQ");
-      break;
-    case MODEL_LEVEL:
-    default:
-      display_mode = MODEL_LEVEL;
-      strcpy(info_line2, "VOLUME");
-      break;
+  case MODEL_FLTF:
+    strcpy(info_line2, "FLTF");
+    break;
+  case MODEL_FLTW:
+    strcpy(info_line2, "FLTW");
+    break;
+  case MODEL_FLTQ:
+    strcpy(info_line2, "FLTQ");
+    break;
+  case MODEL_LEVEL:
+  default:
+    display_mode = MODEL_LEVEL;
+    strcpy(info_line2, "VOLUME");
+    break;
   }
 }
 
@@ -135,8 +135,8 @@ void encoder_lastparam_handle(Encoder *enc) {
 
 void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
 
-  if(initializing) {
-    if(param == MODEL_FLTQ) {
+  if (initializing) {
+    if (param == MODEL_FLTQ) {
       initializing = false;
     }
   } else {
@@ -226,29 +226,37 @@ void MixerPage::display() {
   uint8_t meter_level;
   uint8_t fader_x = MCLGUI::seq_x0;
   for (int i = 0; i < 16; i++) {
-    oled_display.fillRect(fader_x + 1, FADER_Y, 3, FADER_LEN, WHITE);
 
-    switch(display_mode) {
-      case MODEL_LEVEL:
-        fader_level = MD.kit.levels[i];
-        break;
-      default:
-        fader_level = MD.kit.params[i][display_mode];
-        break;
+    if (display_mode == MODEL_LEVEL) {
+      fader_level = MD.kit.levels[i];
+    } else {
+      fader_level = MD.kit.params[i][display_mode];
     }
 
-    fader_level = (fader_level / 127.0f) * (FADER_LEN - 2);
+    fader_level = (fader_level / 127.0f) * (FADER_LEN - 3);
     meter_level = (disp_levels[i] / 127.0f) * (FADER_LEN - 2);
 
-    if (note_interface.notes[i] != 1) {
-      // draw meter only if not pressed
-      oled_display.fillRect(fader_x + 2, FADER_Y + 1, 1,
-                            FADER_LEN - meter_level - 2, BLACK);
-    }
+    if (display_mode == MODEL_LEVEL) {
+      oled_display.fillRect(fader_x, FADER_Y + FADER_LEN - fader_level - 2, 5,
+                            fader_level, WHITE);
 
-    // draw fader knob
-    oled_display.fillRect(fader_x, FADER_Y + FADER_LEN - fader_level - 2,
-                          MCLGUI::seq_w, 2, WHITE);
+      if (note_interface.notes[i] != 1) {
+        // draw meter only if not pressed
+        oled_display.fillRect(fader_x + 1,
+                              FADER_Y + FADER_LEN - meter_level - 1, 3,
+                              meter_level, BLACK);
+      }
+    } else {
+      oled_display.fillRect(fader_x + 1, FADER_Y, 3, FADER_LEN, WHITE);
+      if (note_interface.notes[i] != 1) {
+        // draw meter only if not pressed
+        oled_display.fillRect(fader_x + 2, FADER_Y + 1, 1,
+                              FADER_LEN - meter_level - 2, BLACK);
+      }
+      // draw fader knob
+      oled_display.fillRect(fader_x, FADER_Y + FADER_LEN - fader_level - 2,
+                            MCLGUI::seq_w, 2, WHITE);
+    }
 
     fader_x += MCLGUI::seq_w + 1;
   }
