@@ -37,7 +37,6 @@ void GridPage::cleanup() {
 }
 
 void GridPage::loop() {
-  midi_active_peering.check();
   int8_t diff, new_val;
 #ifdef OLED_DISPLAY
   if (show_slot_menu) {
