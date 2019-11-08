@@ -1,8 +1,7 @@
 #include "MixerPage.h"
 #include "MCL.h"
 
-#define FADER_Y 3
-#define FADER_LEN 21
+#define FADER_LEN 16
 #define FADE_RATE 16
 
 void MixerPage::set_display_mode(uint8_t param) {
@@ -24,6 +23,32 @@ void MixerPage::set_display_mode(uint8_t param) {
     break;
   }
 }
+
+#ifdef OLED_DISPLAY
+static void oled_draw_routing() {
+  for (int i = 0; i < 16; ++i) {
+    // draw routing
+    if (note_interface.notes[i] > 0) {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
+    }
+
+    else if (mcl_cfg.routing[i] == 6) {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
+      oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
+
+    }
+
+    else {
+
+      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
+      oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
+    }
+  }
+}
+
+#endif
 
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
@@ -57,9 +82,17 @@ void MixerPage::init() {
 
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  oled_display.drawBitmap(1, 2, icon_mixer, 28, 15, WHITE);
+  oled_draw_routing();
   set_display_mode(MODEL_LEVEL);
   initializing = true;
+  for (uint8_t i = 0; i < 16; i++) {
+    uint8_t scaled_level =
+        (uint8_t)(((float)MD.kit.levels[i] / (float)127) * (float)FADER_LEN);
+
+    oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                          scaled_level + 1, WHITE);
+    disp_levels[i] = 0;
+  }
 #endif
 }
 
@@ -89,6 +122,8 @@ void MixerPage::draw_levels() {}
 
 void encoder_level_handle(Encoder *enc) {
 
+  bool redraw_frame = (mixer_page.display_mode != MODEL_LEVEL);
+
   mixer_page.set_display_mode(MODEL_LEVEL);
 
   int dir = enc->getValue() - enc->old;
@@ -111,6 +146,16 @@ void encoder_level_handle(Encoder *enc) {
       }
       // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
       mixer_page.set_level(i, track_newval);
+    }
+
+    if (note_interface.notes[i] == 1 || redraw_frame) {
+#ifdef OLED_DISPLAY
+      uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;
+
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+#endif
     }
   }
   enc->cur = 64 + dir;
@@ -174,6 +219,14 @@ void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
       MD.setTrackParam(i, param, newval);
       MD.kit.params[i][param] = newval;
       CLEAR_LOCK();
+
+#ifdef OLED_DISPLAY
+      uint8_t scaled_level = (newval / 127.0f) * FADER_LEN;
+
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.fillRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+#endif
     }
   }
   enc->cur = 64 + dir;
@@ -215,16 +268,14 @@ void MixerPage::display() {
   }
 }
 #else
+
 void MixerPage::display() {
 
   auto oldfont = oled_display.getFont();
-  mcl_gui.draw_panel_labels("MIXER", info_line2);
-  mcl_gui.clear_rightpane();
-  route_page.draw_routes();
 
   uint8_t fader_level;
   uint8_t meter_level;
-  uint8_t fader_x = MCLGUI::seq_x0;
+  uint8_t fader_x = 0;
   for (int i = 0; i < 16; i++) {
 
     if (display_mode == MODEL_LEVEL) {
@@ -233,32 +284,32 @@ void MixerPage::display() {
       fader_level = MD.kit.params[i][display_mode];
     }
 
-    fader_level = (fader_level / 127.0f) * (FADER_LEN - 3);
-    meter_level = (disp_levels[i] / 127.0f) * (FADER_LEN - 2);
+    fader_level = (fader_level / 127.0f) * FADER_LEN + 1;
+    meter_level = (disp_levels[i] / 127.0f) * FADER_LEN + 1;
 
     if (display_mode == MODEL_LEVEL) {
-      oled_display.fillRect(fader_x, FADER_Y + FADER_LEN - fader_level - 2, 5,
-                            fader_level, WHITE);
 
-      if (note_interface.notes[i] != 1) {
+      if (note_interface.notes[i] == 1) {
+        oled_display.fillRect(fader_x, 13 + (FADER_LEN - fader_level), 6,
+                              fader_level, WHITE);
+      } else {
+
         // draw meter only if not pressed
-        oled_display.fillRect(fader_x + 1,
-                              FADER_Y + FADER_LEN - meter_level - 1, 3,
-                              meter_level, BLACK);
+        oled_display.fillRect(fader_x + 1, 14 + (FADER_LEN - fader_level), 4,
+                              FADER_LEN - meter_level, BLACK);
+        oled_display.fillRect(fader_x + 1, 13 + (FADER_LEN - meter_level), 4,
+                              meter_level, WHITE);
       }
     } else {
-      oled_display.fillRect(fader_x + 1, FADER_Y, 3, FADER_LEN, WHITE);
-      if (note_interface.notes[i] != 1) {
-        // draw meter only if not pressed
-        oled_display.fillRect(fader_x + 2, FADER_Y + 1, 1,
-                              FADER_LEN - meter_level - 2, BLACK);
-      }
-      // draw fader knob
-      oled_display.fillRect(fader_x, FADER_Y + FADER_LEN - fader_level - 2,
-                            MCLGUI::seq_w, 2, WHITE);
+      meter_level = min(fader_level, meter_level);
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.fillRect(fader_x, 13 + (FADER_LEN - fader_level), 6,
+                            fader_level, WHITE);
+      oled_display.fillRect(fader_x + 1, 14 + (FADER_LEN - meter_level), 4,
+                            meter_level - 1, BLACK);
     }
 
-    fader_x += MCLGUI::seq_w + 1;
+    fader_x += 8;
   }
 
   uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
@@ -286,14 +337,29 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (track > 16) {
       return false;
     }
-
     if (event->mask == EVENT_BUTTON_PRESSED) {
+#ifdef OLED_DISPLAY
+
+      if (note_interface.notes[track] > 0) {
+
+        oled_display.fillRect(0 + track * 8, 2, 6, 6, WHITE);
+      }
+
+#endif
+
       return true;
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
 #ifndef OLED_DISPLAY
       note_interface.draw_notes(0);
+#else
+      uint8_t i = track;
+      uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+
 #endif
 
       if (note_interface.notes_all_off_md()) {
@@ -304,6 +370,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           route_page.toggle_routes_batch(true);
         }
         note_interface.init_notes();
+#ifdef OLED_DISPLAY
+        oled_draw_routing();
+#endif
       }
       return true;
     }
