@@ -188,15 +188,9 @@ void SeqPtcPage::loop() {
     redisplay = true;
   }
 
-  oled_display.clearDisplay();
-  oled_display.setCursor(0,0);
-  oled_display.print(deferred_timer);
-  oled_display.display();
-
-  if (deferred_timer > 0) {
-    if (--deferred_timer == 0) {
-      redisplay = true;
-    }
+  if (deferred_timer != 0 && clock_diff(deferred_timer, slowclock) > render_defer_time) {
+    deferred_timer = 0;
+    redisplay = true;
   }
 }
 
@@ -426,7 +420,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 void SeqPtcPage::queue_redraw() {
-  deferred_timer = render_defer_time;
+  deferred_timer = slowclock;
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
