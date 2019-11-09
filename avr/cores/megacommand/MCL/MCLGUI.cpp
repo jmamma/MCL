@@ -136,7 +136,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
   float prog = (float)cur / (float)_max;
   auto progx = (uint8_t)(x_pos + 1 + prog * (s_progress_w - 2));
   // draw the progress
-  oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos + 1,
+  oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos - 1,
                         s_progress_h - 2, WHITE);
 
   uint8_t shift = 1;
