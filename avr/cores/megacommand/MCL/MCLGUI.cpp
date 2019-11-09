@@ -75,7 +75,7 @@ void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text) {
 
 void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title) {
   uint8_t x = knob_x0 + i * knob_w;
-  draw_light_encoder(x + 6, 6, enc, title);
+  draw_light_encoder(x + 7, 6, enc, title);
 }
 
 static char title_buf[16];
@@ -94,7 +94,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   // draw menu body
   oled_display.fillRect(s_menu_x - 1, s_menu_y - 2, s_menu_w + 2, h + 2, BLACK);
   oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, h, WHITE);
-  oled_display.fillRect(s_menu_x + 1, s_menu_y - 1, s_menu_w - 2, 6, WHITE);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y - 1, s_menu_w - 2, 5, WHITE);
 
   // draw the title '____/**********\____' part
   oled_display.drawRect(s_title_x, s_menu_y - 4, s_title_w, 4, BLACK);
@@ -120,35 +120,49 @@ void MCLGUI::clear_popup(uint8_t h) {
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, h - 5, BLACK);
 }
 
-static constexpr uint8_t s_progress_x = 31;
-static constexpr uint8_t s_progress_y = 16;
-static constexpr uint8_t s_progress_w = 64;
-static constexpr uint8_t s_progress_h = 5;
-
-static uint8_t s_progress_cookie = 0;
-
 void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
-                           bool deferred_display) {
-  draw_popup(msg, true);
+                           bool deferred_display, uint8_t x_pos,
+                           uint8_t y_pos) {
 
-  oled_display.fillRect(s_progress_x + 1, s_progress_y + 1, s_progress_w - 2,
+  draw_popup(msg, true);
+  draw_progress_bar(cur, _max, deferred_display, x_pos, y_pos);
+}
+void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
+                               uint8_t x_pos, uint8_t y_pos) {
+
+  oled_display.fillRect(x_pos + 1, y_pos + 1, s_progress_w - 2,
                         s_progress_h - 2, BLACK);
 
   float prog = (float)cur / (float)_max;
-  auto progx = (uint8_t)(s_progress_x + 1 + prog * (s_progress_w - 2));
+  auto progx = (uint8_t)(x_pos + 1 + prog * (s_progress_w - 2));
   // draw the progress
-  oled_display.fillRect(s_progress_x + 1, s_progress_y + 1,
-                        progx - s_progress_x + 1, s_progress_h - 2, WHITE);
-  s_progress_cookie = (s_progress_cookie + 1) % 3;
+  oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos - 1,
+                        s_progress_h - 2, WHITE);
 
-  // draw the '///////' pattern, note the cookie
-  for (uint8_t i = s_progress_cookie + s_progress_x + 1; i < progx; i += 3) {
-    oled_display.drawLine(i, s_progress_y + s_progress_h - 2, i + 2,
-                          s_progress_y + 1, BLACK);
+  uint8_t shift = 1;
+
+  // draw the '///////' pattern, using circular shifting
+  uint8_t x = 0;
+
+  uint8_t bitmask = s_progress_cookie;
+  uint8_t temp_bitmask = s_progress_cookie;
+
+  for (uint8_t i = x_pos + 1; i <= progx; i += 1) {
+
+    for (uint8_t n = 0; n < s_progress_h - 2; n++) {
+      uint8_t a = s_progress_h - 2 - n;
+
+      if (IS_BIT_SET(temp_bitmask, a)) {
+        oled_display.drawPixel(i, y_pos + 1 + n, BLACK);
+      }
+    }
+    temp_bitmask = (temp_bitmask >> shift) | (temp_bitmask << (8 - shift));
   }
 
-  oled_display.drawRect(s_progress_x, s_progress_y, s_progress_w, s_progress_h,
-                        WHITE);
+  s_progress_cookie = (bitmask >> shift) | (bitmask << (8 - shift));
+
+  oled_display.drawRect(x_pos, y_pos, s_progress_w, s_progress_h, WHITE);
+
   if (!deferred_display) {
     oled_display.display();
   }
@@ -436,6 +450,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     if (note_interface.notes[i] == 1) {
       // TI feedback
       oled_display.fillRect(x + 1, y + 1, seq_w - 2, trig_h - 2, WHITE);
+      // oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
     } else if (!in_range) {
       // don't draw
     } else {
@@ -443,6 +458,14 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
           ((i + offset != step_count) || (MidiClock.state != 2))) {
         /*If the bit is set, there is a trigger at this position. */
         oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+        /*
+        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+        oled_display.drawPixel(x + 1, y + 1, WHITE);
+        oled_display.drawPixel(x + 3, y + 1, WHITE);
+        oled_display.drawPixel(x + 1, y + 3, WHITE);
+        oled_display.drawPixel(x + 3, y + 3, WHITE);
+        oled_display.drawPixel(x + 2, y + 2, WHITE);
+       */
       } else {
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
       }
@@ -664,10 +687,30 @@ const unsigned char icon_route[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// 'mixer', 28x15px
-const unsigned char icon_mixer[] PROGMEM = {
-    0x8c, 0x46, 0x23, 0x10, 0x0c, 0x06, 0x03, 0x00, 0x8c, 0x5f, 0xa3, 0x10,
-    0x3f, 0x1f, 0x83, 0x00, 0xbf, 0x50, 0xaf, 0xd0, 0x21, 0x1f, 0x8f, 0xc0,
-    0xbf, 0x50, 0xa8, 0x50, 0x21, 0x1f, 0x8f, 0xc0, 0xbf, 0x50, 0xa8, 0x50,
-    0x21, 0x1f, 0x8f, 0xc0, 0xbf, 0x5f, 0xa8, 0x50, 0x3f, 0x06, 0x0f, 0xc0,
-    0x8c, 0x46, 0x2f, 0xd0, 0x0c, 0x06, 0x03, 0x00, 0x8c, 0x46, 0x23, 0x10};
+// 'md_rev', 34x24px
+const unsigned char icon_md[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x01, 0xa0, 0x00, 0x00, 0x00,
+    0x06, 0xb0, 0x00, 0x00, 0x00, 0x1a, 0xe8, 0x00, 0x00, 0x00, 0x6b, 0xac,
+    0x00, 0x00, 0x01, 0xee, 0xbe, 0x00, 0x00, 0x07, 0x3a, 0xe7, 0x00, 0x00,
+    0x1c, 0x1b, 0x9c, 0x80, 0x00, 0x70, 0x0e, 0x70, 0x80, 0x01, 0xc0, 0x1f,
+    0xc3, 0x40, 0x07, 0x80, 0x6f, 0x0c, 0xc0, 0x1c, 0xc1, 0x9c, 0x33, 0xc0,
+    0x6b, 0x66, 0x70, 0xcf, 0x00, 0x6c, 0xfd, 0xc3, 0x3c, 0x00, 0xbf, 0xff,
+    0x0c, 0xf0, 0x00, 0xd3, 0xcc, 0x33, 0xc0, 0x00, 0xef, 0x30, 0xcf, 0x00,
+    0x00, 0x74, 0xc3, 0x3c, 0x00, 0x00, 0x3b, 0x0c, 0xf0, 0x00, 0x00, 0x1d,
+    0x33, 0xc0, 0x00, 0x00, 0x0e, 0xcf, 0x00, 0x00, 0x00, 0x07, 0x3c, 0x00,
+    0x00, 0x00, 0x03, 0x70, 0x00, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00, 0x00};
+
+// 'analog4_rev', 34x24px
+const unsigned char icon_a4[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x01, 0xe0, 0x00, 0x00, 0x00,
+    0x06, 0xb0, 0x00, 0x00, 0x00, 0x1a, 0xd8, 0x00, 0x00, 0x00, 0x6b, 0xac,
+    0x00, 0x00, 0x01, 0xae, 0xb6, 0x00, 0x00, 0x06, 0xba, 0xff, 0x00, 0x00,
+    0x1e, 0xeb, 0x8c, 0x80, 0x00, 0x73, 0xae, 0x30, 0x80, 0x01, 0xc1, 0xb8,
+    0xc3, 0x40, 0x07, 0x03, 0xe3, 0x0c, 0xc0, 0x1a, 0x0d, 0xec, 0x33, 0xc0,
+    0x6b, 0x37, 0xf0, 0xcf, 0x00, 0x6f, 0xdc, 0xc3, 0x3c, 0x00, 0xbc, 0xf3,
+    0x0c, 0xf0, 0x00, 0xd3, 0xcc, 0x33, 0xc0, 0x00, 0xef, 0xf0, 0xcf, 0x00,
+    0x00, 0x76, 0xc3, 0x3c, 0x00, 0x00, 0x3b, 0x0c, 0xf0, 0x00, 0x00, 0x1d,
+    0x33, 0xc0, 0x00, 0x00, 0x0e, 0xcf, 0x00, 0x00, 0x00, 0x07, 0x3c, 0x00,
+    0x00, 0x00, 0x03, 0x70, 0x00, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00, 0x00};
+
+MCLGUI mcl_gui;

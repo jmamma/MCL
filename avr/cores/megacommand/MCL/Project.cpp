@@ -138,9 +138,9 @@ bool Project::new_project(const char *projectname) {
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-    if (i % 16 == 0) {
-      mcl_gui.draw_progress("Initializing project", i, GRID_LENGTH);
-    }
+//    if (i % 16 == 0) {
+      mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
+  //  }
 #endif
     if (i % 2 == 0) {
       if (ledstatus == 0) {

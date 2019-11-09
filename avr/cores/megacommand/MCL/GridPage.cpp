@@ -37,7 +37,6 @@ void GridPage::cleanup() {
 }
 
 void GridPage::loop() {
-  midi_active_peering.check();
   int8_t diff, new_val;
 #ifdef OLED_DISPLAY
   if (show_slot_menu) {
@@ -61,8 +60,6 @@ void GridPage::loop() {
     }
    }
 */
-  encoders[2]->cur = 1;
-  encoders[3]->cur = 1;
   if (encoders[0]->hasChanged()) {
     diff = encoders[0]->cur - encoders[0]->old;
     new_val = cur_col + diff;
@@ -96,6 +93,10 @@ void GridPage::loop() {
     volatile uint8_t *ptr;
     write_cfg = true;
   }
+  encoders[2]->cur = 1;
+  encoders[3]->cur = 1;
+  ((MCLEncoder*)encoders[2])->max = GRID_WIDTH - getCol();
+  ((MCLEncoder*)encoders[3])->max = GRID_LENGTH - getRow();
 
 #else
   cur_col = encoders[0]->cur;
@@ -398,7 +399,9 @@ void GridPage::display_grid() {
   uint8_t col_shift = 0;
   if (show_slot_menu) {
     if (cur_col + encoders[2]->cur > MAX_VISIBLE_COLS - 1) {
+
       col_shift = cur_col + encoders[2]->cur - MAX_VISIBLE_COLS;
+
     }
 
     if (cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1) {

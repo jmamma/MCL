@@ -27,6 +27,13 @@ void SDDrivePage::init() {
   FileBrowserPage::init();
 }
 
+void SDDrivePage::display() {
+   FileBrowserPage::display();
+   if (progress_max != 0) {
+   mcl_gui.draw_progress_bar(progress_i, progress_max, false);
+   }
+}
+
 void SDDrivePage::save_snapshot() {
   DEBUG_PRINT_FN();
 
@@ -53,20 +60,26 @@ void SDDrivePage::save_snapshot() {
       return;
     }
     //  Globals
+    progress_max = 8;
     for (int i = 0; i < 8; ++i) {
+      progress_i = i;
       mcl_gui.draw_progress("Saving global", i, 8);
       MD.getBlockingGlobal(i);
       mcl_sd.write_data(&MD.global, sizeof(MD.global), &file);
     }
     //  Patterns
+    progress_max = 128;
     for (int i = 0; i < 128; ++i) {
+      progress_i = i;
       mcl_gui.draw_progress("Saving pattern", i, 128);
       DEBUG_PRINT(i);
       MD.getBlockingPattern(i);
       mcl_sd.write_data(&MD.pattern, sizeof(MD.pattern), &file);
     }
     //  Kits
+    progress_max = 64;
     for (int i = 0; i < 64; ++i) {
+      progress_i = 64;
       mcl_gui.draw_progress("Saving kit", i, 64);
       MD.getBlockingKit(i);
       mcl_sd.write_data(&MD.kit, sizeof(MD.kit), &file);
@@ -77,9 +90,11 @@ void SDDrivePage::save_snapshot() {
     // mcl_sd.write_data(&MD.song, sizeof(MD.song), &file); // <--- ??
     //}
     //  Save complete
+    progress_max = 0;
     file.close();
     gfx.alert("File Saved", temp_entry);
   }
+
 }
 
 void SDDrivePage::load_snapshot() {
@@ -103,7 +118,9 @@ void SDDrivePage::load_snapshot() {
     grid_page.prepare();
 
     //  Globals
+    progress_max = 8;
     for (int i = 0; i < 8; ++i) {
+      progress_i = i;
       mcl_gui.draw_progress("Loading global", i, 8);
       if (!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file)) {
         goto load_error;
@@ -115,7 +132,9 @@ void SDDrivePage::load_snapshot() {
       }
     }
     //  Patterns
+    progress_max = 128;
     for (int i = 0; i < 128; ++i) {
+      progress_i = i;
       mcl_gui.draw_progress("Loading pattern", i, 128);
       if (!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file)) {
         goto load_error;
@@ -124,7 +143,9 @@ void SDDrivePage::load_snapshot() {
       MD.pattern.toSysex();
     }
     //  Kits
+    progress_max = 64;
     for (int i = 0; i < 64; ++i) {
+      progress_i = i;
       mcl_gui.draw_progress("Loading kit", i, 64);
       if (!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file)) {
         goto load_error;
@@ -133,10 +154,12 @@ void SDDrivePage::load_snapshot() {
       MD.kit.toSysex();
     }
     //  Load complete
+    progress_max = 0;
     file.close();
     gfx.alert("Loaded", "Snapshot");
     return;
   load_error:
+    progress_max = 0;
     file.close();
     gfx.alert("Snapshot loading failed!", "SD card read failure");
     return;

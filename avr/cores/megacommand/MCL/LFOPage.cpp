@@ -10,8 +10,8 @@
 #define INTERPOLATE
 #define DIV_1_127 .0079
 
-#define LFO_DESTINATION 0
-#define LFO_SETTINGS 1
+#define LFO_DESTINATION 1
+#define LFO_SETTINGS 0
 
 void LFOPage::setup() {
   //  lfo_track = &mcl_seq.lfo_tracks[0];
@@ -299,9 +299,9 @@ void LFOPage::display() {
   const char* info2;
 
   if (page_mode) {
-    info1 = "LFO A";
+    info1 = "LFO>DST";
   } else {
-    info1 = "LFO B";
+    info1 = "LFO>MOD";
   }
 
   switch (lfo_track->mode) {

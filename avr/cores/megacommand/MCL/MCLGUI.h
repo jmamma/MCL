@@ -3,28 +3,41 @@
 #ifndef MCLGUI_H__
 #define MCLGUI_H__
 
-#include "TextInputPage.h"
 #include "QuestionDialogPage.h"
+#include "TextInputPage.h"
 
 #define SHOW_VALUE_TIMEOUT 2000
 
 class MCLGUI {
 public:
+  uint8_t s_progress_cookie = 0b00110011;
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
-  // 2. dst has no trailing spaces 
+  // 2. dst has no trailing spaces
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
   void draw_horizontal_arrow(uint8_t x, uint8_t y, uint8_t w);
-  bool wait_for_confirm(const char *title, const char* text);
-  void draw_infobox(const char* line1, const char* line2, const int line2_offset = 0);
+  bool wait_for_confirm(const char *title, const char *text);
+  void draw_infobox(const char *line1, const char *line2,
+                    const int line2_offset = 0);
   void draw_vertical_separator(uint8_t x);
-  void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window, uint8_t n_current);
+  void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window,
+                               uint8_t n_current);
   ///  Clear the content area of a popup
   void clear_popup(uint8_t h = 0);
-  void draw_popup(const char* title, bool deferred_display = false, uint8_t h = 0);
-  void draw_progress(const char* msg, uint8_t cur, uint8_t _max, bool deferred_display = false);
+  void draw_popup(const char *title, bool deferred_display = false,
+                  uint8_t h = 0);
+
+  void draw_progress_bar(uint8_t cur, uint8_t _max,
+                         bool deferred_display = true,
+                         uint8_t x_pos = s_progress_x,
+                         uint8_t y_pos = s_progress_y);
+
+  void draw_progress(const char *msg, uint8_t cur, uint8_t _max,
+                     bool deferred_display = false,
+                     uint8_t x_pos = s_progress_x,
+                     uint8_t y_pos = s_progress_y);
 
   void clear_leftpane();
   void clear_rightpane();
@@ -34,24 +47,34 @@ public:
 
   bool show_encoder_value(Encoder *encoder);
 
-  void draw_text_encoder(uint8_t x, uint8_t y, const char *name, const char* value);
-  void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
-  void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
-  void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name);
-  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool show_value);
-  void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width, uint8_t note_height, uint8_t num_of_notes, uint64_t note_mask);
-  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length);
-  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid, bool show_current_step);
-  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step);
+  void draw_text_encoder(uint8_t x, uint8_t y, const char *name,
+                         const char *value);
+  void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
+                       const char *name);
+  void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
+                       bool show_value);
+  void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
+                          const char *name);
+  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
+                          bool show_value);
+  void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
+                     uint8_t note_height, uint8_t num_of_notes,
+                     uint64_t note_mask);
+  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask,
+                  uint8_t step_count, uint8_t length);
+  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid,
+                      bool show_current_step);
+  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
+                 uint8_t step_count, uint8_t length, bool show_current_step);
 
-  void draw_panel_toggle(const char* s1, const char* s2, bool s1_active);
-  void draw_panel_labels(const char* info1, const char* info2);
+  void draw_panel_toggle(const char *s1, const char *s2, bool s1_active);
+  void draw_panel_labels(const char *info1, const char *info2);
   void draw_panel_status(bool recording, bool playing);
   void draw_panel_number(uint8_t number);
 
   void draw_knob_frame();
-  void draw_knob(uint8_t i, const char* title, const char* text);
-  void draw_knob(uint8_t i, Encoder* enc, const char* name);
+  void draw_knob(uint8_t i, const char *title, const char *text);
+  void draw_knob(uint8_t i, Encoder *enc, const char *name);
 
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
@@ -108,62 +131,75 @@ public:
   static constexpr uint8_t knob_xend = 127;
   static constexpr uint8_t knob_y0 = 1;
   static constexpr uint8_t knob_y = 20;
+
+  static constexpr uint8_t s_progress_x = 31;
+  static constexpr uint8_t s_progress_y = 16;
+  static constexpr uint8_t s_progress_w = 64;
+  static constexpr uint8_t s_progress_h = 5;
 };
 
 extern MCLGUI mcl_gui;
 /*
 // 'encoder_medium_1', 15x15px
 const unsigned char encoder_medium_0 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02,
-	0x80, 0x02, 0x80, 0x02, 0x40, 0x04, 0x43, 0x84, 0x23, 0x88, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x40, 0x04, 0x43, 0x84, 0x23,
+0x88, 0x18, 0x30, 0x07, 0xc0
 };
 // 'encoder_medium_2', 15x15px
 const unsigned char encoder_medium_1 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02,
-	0x80, 0x02, 0x80, 0x02, 0x40, 0x04, 0x47, 0x04, 0x23, 0x08, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x40, 0x04, 0x47, 0x04, 0x23,
+0x08, 0x18, 0x30, 0x07, 0xc0
 };
 // 'encoder_medium_3', 15x15px
 const unsigned char encoder_medium_2 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02,
-	0x80, 0x02, 0x80, 0x02, 0x48, 0x04, 0x46, 0x04, 0x26, 0x08, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x48, 0x04, 0x46, 0x04, 0x26,
+0x08, 0x18, 0x30, 0x07, 0xc0
 };
 // 'encoder_medium_4', 15x15px
 const unsigned char encoder_medium_3 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02,
-	0x80, 0x02, 0x90, 0x02, 0x58, 0x04, 0x4c, 0x04, 0x20, 0x08, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0x80, 0x02, 0x80, 0x02, 0x90, 0x02, 0x58, 0x04, 0x4c, 0x04, 0x20,
+0x08, 0x18, 0x30, 0x07, 0xc0
 };
 // 'encoder_medium_5', 15x15px
 const unsigned char encoder_medium_4 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0x80, 0x02,
-	0xb0, 0x02, 0xb0, 0x02, 0x50, 0x04, 0x40, 0x04, 0x20, 0x08, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0x80, 0x02, 0xb0, 0x02, 0xb0, 0x02, 0x50, 0x04, 0x40, 0x04, 0x20,
+0x08, 0x18, 0x30, 0x07, 0xc0
 };
 // 'encoder_medium_6', 15x15px
 const unsigned char encoder_medium_5 [] PROGMEM = {
-	0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02, 0x80, 0x02, 0xa0, 0x02,
-	0xb0, 0x02, 0xb0, 0x02, 0x40, 0x04, 0x40, 0x04, 0x20, 0x08, 0x18, 0x30, 0x07, 0xc0
+        0x07, 0xc0, 0x18, 0x30, 0x20, 0x08, 0x40, 0x04, 0x40, 0x04, 0x80, 0x02,
+0x80, 0x02, 0xa0, 0x02, 0xb0, 0x02, 0xb0, 0x02, 0x40, 0x04, 0x40, 0x04, 0x20,
+0x08, 0x18, 0x30, 0x07, 0xc0
 };
 */
 // 'encoder0', 11x11px
-extern const unsigned char encoder_small_0 [];
+extern const unsigned char encoder_small_0[];
 // 'encoder1', 11x11px
-extern const unsigned char encoder_small_1 [];
+extern const unsigned char encoder_small_1[];
 // 'encoder2', 11x11px
-extern const unsigned char encoder_small_2 [];
+extern const unsigned char encoder_small_2[];
 // 'encoder3', 11x11px
-extern const unsigned char encoder_small_3 [];
+extern const unsigned char encoder_small_3[];
 // 'encoder4', 11x11px
-extern const unsigned char encoder_small_4 [];
+extern const unsigned char encoder_small_4[];
 // 'encoder5', 11x11px
-extern const unsigned char encoder_small_5 [];
+extern const unsigned char encoder_small_5[];
 // 'encoder6', 11x11px
-extern const unsigned char encoder_small_6 [];
+extern const unsigned char encoder_small_6[];
 // 'gatebox', 24x25px
-extern const unsigned char icon_gatebox [];
+extern const unsigned char icon_gatebox[];
 // 'rythmecho', 24x25px
 extern const unsigned char icon_rhytmecho [];
-// 'route', 24x25px
+// 'route', 24x16px
 extern const unsigned char icon_route [];
-// 'mixer', 28x15px
-extern const unsigned char icon_mixer[];
+// 'md_rev', 34x24px
+extern const unsigned char icon_md[];
+// 'a4_rev', 34x24px
+extern const unsigned char icon_a4[];
 
 #endif /* MCLGUI_H__ */
