@@ -570,7 +570,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  seq_ptc_page.queue_redraw();
 
   // matches control channel, or MIDI2 is OMNI?
   // then route midi message to MD
@@ -578,6 +577,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.trig_md_fromext(pitch);
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    seq_ptc_page.queue_redraw();
     return;
   }
 
@@ -595,6 +595,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
 #endif
 }
 
@@ -614,11 +615,11 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  seq_ptc_page.queue_redraw();
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.clear_trig_fromext(pitch);
+    seq_ptc_page.queue_redraw();
     return;
   }
 #ifdef EXT_TRACKS
@@ -633,6 +634,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
 #endif
 }
 
