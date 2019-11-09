@@ -427,9 +427,6 @@ void SeqPtcPage::queue_redraw() {
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
-    // deferred trigger redraw to update TI keyboard feedback.
-    queue_redraw();
-
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
@@ -452,6 +449,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     } else if (mask == EVENT_BUTTON_RELEASED) {
       CLEAR_BIT(note_mask, pitch);
     }
+
+    // deferred trigger redraw to update TI keyboard feedback.
+    queue_redraw();
 
     return true;
   } // TI events
