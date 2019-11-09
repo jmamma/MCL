@@ -130,7 +130,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
       GUI.setPage(&seq_rtrk_page);
-
       return false;
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
@@ -141,7 +140,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
       GUI.setPage(&seq_ptc_page);
-
       return false;
     }
   }

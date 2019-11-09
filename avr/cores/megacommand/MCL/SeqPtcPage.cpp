@@ -188,6 +188,11 @@ void SeqPtcPage::loop() {
     redisplay = true;
   }
 
+  oled_display.clearDisplay();
+  oled_display.setCursor(0,0);
+  oled_display.print(deferred_timer);
+  oled_display.display();
+
   if (deferred_timer > 0) {
     if (--deferred_timer == 0) {
       redisplay = true;
@@ -493,9 +498,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       } else {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
+      seq_ptc_page.queue_redraw();
     }
 #endif
-    seq_ptc_page.queue_redraw();
     return true;
   }
 
@@ -519,7 +524,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
 #endif
-    seq_ptc_page.queue_redraw();
     return true;
   }
 
