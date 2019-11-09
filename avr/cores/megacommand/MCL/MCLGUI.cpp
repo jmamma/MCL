@@ -450,20 +450,24 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 
     if (note_interface.notes[i] == 1) {
       // TI feedback
-      oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+      oled_display.fillRect(x + 1, y + 1, seq_w - 2, trig_h - 2, WHITE);
+      //oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
     } else if (!in_range) {
       // don't draw
     } else {
       if (IS_BIT_SET64(pattern_mask, i + offset) &&
           ((i + offset != step_count) || (MidiClock.state != 2))) {
         /*If the bit is set, there is a trigger at this position. */
+        oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+        /*
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
         oled_display.drawPixel(x + 1, y + 1, WHITE);
         oled_display.drawPixel(x + 3, y + 1, WHITE);
         oled_display.drawPixel(x + 1, y + 3, WHITE);
         oled_display.drawPixel(x + 3, y + 3, WHITE);
         oled_display.drawPixel(x + 2, y + 2, WHITE);
-      } else {
+       */
+        } else {
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
       }
     }
