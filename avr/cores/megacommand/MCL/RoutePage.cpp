@@ -181,7 +181,7 @@ void RoutePage::display() {
 
   auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
-  oled_display.drawBitmap(0, 0, icon_route, 24, 18, WHITE);
+  oled_display.drawBitmap(0, 0, icon_route, 24, 16, WHITE);
 
   mcl_gui.draw_knob_frame();
 
