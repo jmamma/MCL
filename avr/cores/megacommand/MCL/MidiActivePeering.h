@@ -17,6 +17,9 @@ public:
 
   virtual void run();
   virtual void destroy() {};
+  void prepare_display();
+  void delay_progress(uint16_t clock_);
+
   void md_setup();
   void a4_setup();
   uint8_t get_device(uint8_t port);
