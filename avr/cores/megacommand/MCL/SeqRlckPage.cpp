@@ -18,6 +18,7 @@ void SeqRlckPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "RLCK");
+  display_page_index = false;
 }
 
 void SeqRlckPage::init() {

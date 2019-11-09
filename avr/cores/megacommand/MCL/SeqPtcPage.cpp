@@ -4,6 +4,47 @@
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 32
 
+scale_t *scales[16]{
+    &chromaticScale, &ionianScale,
+    //&dorianScale,
+    &phrygianScale,
+    //&lydianScale,
+    //&mixolydianScale,
+    //&aeolianScale,
+    //&locrianScale,
+    &harmonicMinorScale, &melodicMinorScale,
+    //&lydianDominantScale,
+    //&wholeToneScale,
+    //&wholeHalfStepScale,
+    //&halfWholeStepScale,
+    &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
+    &inSenScale, &bluesScale,
+    //&majorBebopScale,
+    //&dominantBebopScale,
+    //&minorBebopScale,
+    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
+    //&minorMaj7Arp,
+    &majorMaj7Arp9,
+    //&majorMaj7ArpMin9,
+    //&majorMin7Arp9,
+    //&majorMin7ArpMin9,
+    //&minorMin7Arp9,
+    //&minorMin7ArpMin9,
+    //&minorMaj7Arp9,
+    //&minorMaj7ArpMin9
+};
+
+typedef char scale_name_t[4];
+
+const scale_name_t scale_names[] PROGMEM = {
+  "---", "ION",
+  "PHR", 
+  "mHA", "mME",
+  "MPE", "mPE", "sPE",
+  "ISS", "BLU", 
+  "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
+};
+
 void SeqPtcPage::setup() {
   SeqPage::setup();
   init_poly();
@@ -92,6 +133,7 @@ void SeqPtcPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "CHROMAT");
+  display_page_index = false;
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {
@@ -137,15 +179,19 @@ void SeqPtcPage::loop() {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
 #endif
+
+  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+    queue_redraw();
+  }
+
   if (last_midi_state != MidiClock.state) {
     last_midi_state = MidiClock.state;
     redisplay = true;
   }
 
-  if (deferred_timer > 0) {
-    if (--deferred_timer == 0) {
-      redisplay = true;
-    }
+  if (deferred_timer != 0 && clock_diff(deferred_timer, slowclock) > render_defer_time) {
+    deferred_timer = 0;
+    redisplay = true;
   }
 }
 
@@ -250,7 +296,8 @@ void SeqPtcPage::display() {
 
   // draw LEN
   if (midi_device == DEVICE_MD) {
-    draw_knob(2, encoders[2], "LEN");
+    itoa(encoders[2]->getValue(), buf1, 10);
+    draw_knob(2, "LEN", buf1);
   }
 #ifdef EXT_TRACKS
   else {
@@ -262,7 +309,7 @@ void SeqPtcPage::display() {
 #endif
 
   // draw SCALE
-  itoa(encoders[3]->getValue(), buf1, 10);
+  m_strncpy_p(buf1, scale_names[encoders[3]->getValue()], 4);
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard
@@ -374,15 +421,12 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 }
 
 void SeqPtcPage::queue_redraw() {
-  deferred_timer = render_defer_time;
+  deferred_timer = slowclock;
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
-    // deferred trigger redraw to update TI keyboard feedback.
-    queue_redraw();
-
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
@@ -406,11 +450,14 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       CLEAR_BIT(note_mask, pitch);
     }
 
+    // deferred trigger redraw to update TI keyboard feedback.
+    queue_redraw();
+
     return true;
   } // TI events
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    redisplay = true;
+    seq_ptc_page.queue_redraw();
     recording = !recording;
     return true;
   }
@@ -446,9 +493,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       } else {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
+      seq_ptc_page.queue_redraw();
     }
 #endif
-    redisplay = true;
     return true;
   }
 
@@ -476,7 +523,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   }
 
   if (SeqPage::handleEvent(event)) {
-    redisplay = true;
+    seq_ptc_page.queue_redraw();
     return true;
   }
 
@@ -522,7 +569,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  seq_ptc_page.queue_redraw();
 
   // matches control channel, or MIDI2 is OMNI?
   // then route midi message to MD
@@ -530,6 +576,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.trig_md_fromext(pitch);
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    seq_ptc_page.queue_redraw();
     return;
   }
 
@@ -547,6 +594,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
 #endif
 }
 
@@ -566,11 +614,11 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  seq_ptc_page.queue_redraw();
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.clear_trig_fromext(pitch);
+    seq_ptc_page.queue_redraw();
     return;
   }
 #ifdef EXT_TRACKS
@@ -585,6 +633,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
 #endif
 }
 
@@ -647,32 +696,3 @@ void SeqPtcMidiEvents::remove_callbacks() {
   state = false;
 }
 
-scale_t *scales[16]{
-    &chromaticScale, &ionianScale,
-    //&dorianScale,
-    &phrygianScale,
-    //&lydianScale,
-    //&mixolydianScale,
-    //&aeolianScale,
-    //&locrianScale,
-    &harmonicMinorScale, &melodicMinorScale,
-    //&lydianDominantScale,
-    //&wholeToneScale,
-    //&wholeHalfStepScale,
-    //&halfWholeStepScale,
-    &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
-    &inSenScale, &bluesScale,
-    //&majorBebopScale,
-    //&dominantBebopScale,
-    //&minorBebopScale,
-    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
-    //&minorMaj7Arp,
-    &majorMaj7Arp9,
-    //&majorMaj7ArpMin9,
-    //&majorMin7Arp9,
-    //&majorMin7ArpMin9,
-    //&minorMin7Arp9,
-    //&minorMin7ArpMin9,
-    //&minorMaj7Arp9,
-    //&minorMaj7ArpMin9
-};
