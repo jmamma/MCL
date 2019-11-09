@@ -12,8 +12,11 @@ public:
             Encoder *e4 = NULL)
       : FileBrowserPage(e1, e2, e3, e4) { }
 
+  uint8_t progress_i;
+  uint8_t progress_max;
   void init();
   void setup();
+  void display();
   void save_snapshot();
   void load_snapshot();
   virtual void on_select(const char*);
