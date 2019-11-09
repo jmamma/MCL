@@ -75,7 +75,7 @@ void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text) {
 
 void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title) {
   uint8_t x = knob_x0 + i * knob_w;
-  draw_light_encoder(x + 6, 6, enc, title);
+  draw_light_encoder(x + 7, 6, enc, title);
 }
 
 static char title_buf[16];
