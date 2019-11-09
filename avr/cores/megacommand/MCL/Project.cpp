@@ -139,7 +139,7 @@ bool Project::new_project(const char *projectname) {
 
 #ifdef OLED_DISPLAY
 //    if (i % 16 == 0) {
-      mcl_gui.draw_progress("Initializing project", i, GRID_LENGTH);
+      mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
   //  }
 #endif
     if (i % 2 == 0) {
