@@ -133,6 +133,7 @@ void SeqPtcPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "CHROMAT");
+  display_page_index = false;
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {

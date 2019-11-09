@@ -29,6 +29,7 @@ public:
   static bool show_track_menu;
 
   bool recording = false;
+  bool display_page_index = true;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };
   uint8_t timeout_values[4] = { 0 }; // 255 == highlight

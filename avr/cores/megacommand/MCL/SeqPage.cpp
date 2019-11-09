@@ -599,7 +599,9 @@ void SeqPage::display() {
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 
-  draw_page_index();
+  if (display_page_index) {
+    draw_page_index();
+  }
   //  draw info lines
   mcl_gui.draw_panel_labels(info1, info2);
 
