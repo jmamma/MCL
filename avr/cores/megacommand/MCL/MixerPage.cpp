@@ -306,7 +306,7 @@ void MixerPage::display() {
       oled_display.fillRect(fader_x, 13 + (FADER_LEN - fader_level), 6,
                             fader_level, WHITE);
       oled_display.fillRect(fader_x + 1, 14 + (FADER_LEN - meter_level), 4,
-                            meter_level - 1, BLACK);
+                            meter_level - 2, BLACK);
     }
 
     fader_x += 8;
