@@ -130,7 +130,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
       GUI.setPage(&seq_rtrk_page);
-
       return false;
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
@@ -141,7 +140,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
 
       GUI.setPage(&seq_ptc_page);
-
       return false;
     }
   }
@@ -425,7 +423,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
 
 void SeqPage::draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
-  mcl_gui.draw_leds(seq_x0, led_y, offset, lock_mask, step_count, length, show_current_step);
+  mcl_gui.draw_leds(MCLGUI::seq_x0, MCLGUI::led_y, offset, lock_mask, step_count, length, show_current_step);
 }
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
@@ -434,7 +432,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step) {
-  mcl_gui.draw_trigs(seq_x0, trig_y, offset, pattern_mask, step_count, length);
+  mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask, step_count, length);
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
@@ -445,7 +443,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
   }
 #ifdef EXT_TRACKS
   else {
-    mcl_gui.draw_ext_track(seq_x0, trig_y, offset, last_ext_track, show_current_step);
+    mcl_gui.draw_ext_track(MCLGUI::seq_x0, MCLGUI::trig_y, offset, last_ext_track, show_current_step);
   }
 #endif
 }
@@ -601,7 +599,9 @@ void SeqPage::display() {
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 
-  draw_page_index();
+  if (display_page_index) {
+    draw_page_index();
+  }
   //  draw info lines
   mcl_gui.draw_panel_labels(info1, info2);
 

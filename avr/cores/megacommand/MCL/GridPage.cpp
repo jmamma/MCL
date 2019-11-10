@@ -1,5 +1,5 @@
-#include "GridPage.h"
 #include "GUI.h"
+#include "GridPage.h"
 #include "GridPages.h"
 #include "MCL.h"
 void GridPage::init() {
@@ -95,8 +95,8 @@ void GridPage::loop() {
   }
   encoders[2]->cur = 1;
   encoders[3]->cur = 1;
-  ((MCLEncoder*)encoders[2])->max = GRID_WIDTH - getCol();
-  ((MCLEncoder*)encoders[3])->max = GRID_LENGTH - getRow();
+  ((MCLEncoder *)encoders[2])->max = GRID_WIDTH - getCol();
+  ((MCLEncoder *)encoders[3])->max = GRID_LENGTH - getRow();
 
 #else
   cur_col = encoders[0]->cur;
@@ -401,7 +401,6 @@ void GridPage::display_grid() {
     if (cur_col + encoders[2]->cur > MAX_VISIBLE_COLS - 1) {
 
       col_shift = cur_col + encoders[2]->cur - MAX_VISIBLE_COLS;
-
     }
 
     if (cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1) {
@@ -586,14 +585,16 @@ void GridPage::display() {
 }
 
 void GridPage::prepare() {
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  if ((mcl_cfg.auto_save == 1)) {
-    MD.saveCurrentKit(MD.currentKit);
-    MD.getBlockingKit(MD.currentKit);
-    if (MidiClock.state == 2) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].update_kit_params();
+  if (MD.connected) {
+    MD.getCurrentTrack(CALLBACK_TIMEOUT);
+    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+    if ((mcl_cfg.auto_save == 1)) {
+      MD.saveCurrentKit(MD.currentKit);
+      MD.getBlockingKit(MD.currentKit);
+      if (MidiClock.state == 2) {
+        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          mcl_seq.md_tracks[n].update_kit_params();
+        }
       }
     }
   }

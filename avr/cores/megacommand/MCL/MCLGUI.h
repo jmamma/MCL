@@ -11,6 +11,7 @@
 class MCLGUI {
 public:
   uint8_t s_progress_cookie = 0b00110011;
+  uint8_t s_progress_count = 0;
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
@@ -122,6 +123,10 @@ public:
   static constexpr uint8_t pane_trackid_x = 15;
   static constexpr uint8_t pane_trackid_y = 8;
 
+  static constexpr uint8_t seq_x0 = 32;
+  static constexpr uint8_t led_y = 22;
+  static constexpr uint8_t trig_y = 26;
+
   static constexpr uint8_t knob_x0 = 31;
   static constexpr uint8_t knob_w = 24;
   static constexpr uint8_t knob_xend = 127;
@@ -132,6 +137,8 @@ public:
   static constexpr uint8_t s_progress_y = 16;
   static constexpr uint8_t s_progress_w = 64;
   static constexpr uint8_t s_progress_h = 5;
+
+  static constexpr uint8_t s_progress_speed = 1;
 };
 
 extern MCLGUI mcl_gui;
@@ -190,11 +197,12 @@ extern const unsigned char encoder_small_6[];
 // 'gatebox', 24x25px
 extern const unsigned char icon_gatebox[];
 // 'rythmecho', 24x25px
-extern const unsigned char icon_rhytmecho[];
+extern const unsigned char icon_rhytmecho [];
+// 'route', 24x16px
+extern const unsigned char icon_route [];
 // 'md_rev', 34x24px
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px
 extern const unsigned char icon_a4[];
-
 
 #endif /* MCLGUI_H__ */

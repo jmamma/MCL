@@ -188,7 +188,7 @@ ISR(USART0_RX_vect) {
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
 
     MidiUart.recvActiveSenseTimer = 0;
-    if (((MidiClock.mode == MidiClock.EXTERNAL_UART1))) {
+    if (MidiClock.mode == MidiClock.EXTERNAL_UART1) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();

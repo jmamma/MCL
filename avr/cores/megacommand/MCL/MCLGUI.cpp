@@ -158,9 +158,11 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
     }
     temp_bitmask = (temp_bitmask >> shift) | (temp_bitmask << (8 - shift));
   }
-
+  if (s_progress_count == s_progress_speed) {
   s_progress_cookie = (bitmask >> shift) | (bitmask << (8 - shift));
-
+  s_progress_count = 0;
+  }
+  s_progress_count++;
   oled_display.drawRect(x_pos, y_pos, s_progress_w, s_progress_h, WHITE);
 
   if (!deferred_display) {
@@ -586,6 +588,7 @@ void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(1, pane_info1_y + 6);
   oled_display.print(info1);
+  oled_display.fillRect(0, pane_info2_y, pane_w, pane_info_h, BLACK);
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(1, pane_info2_y + 6);
   oled_display.print(info2);
@@ -607,6 +610,14 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
   }
+}
+
+void MCLGUI::clear_leftpane() {
+  oled_display.fillRect(0, 0, pane_w, 32, BLACK);
+}
+
+void MCLGUI::clear_rightpane() {
+  oled_display.fillRect(pane_w, 0, 128 - pane_w, 32, BLACK);
 }
 
 void MCLGUI::draw_panel_number(uint8_t number) {
@@ -668,6 +679,15 @@ const unsigned char icon_rhytmecho[] PROGMEM = {
     0xf0, 0x00, 0x00, 0x00, 0x7b, 0xdb, 0x7c, 0x7b, 0xdb, 0x7c, 0x63,
     0x1b, 0x6c, 0x7b, 0x1f, 0x6c, 0x7b, 0x1f, 0x6c, 0x63, 0x1b, 0x6c,
     0x7b, 0xdb, 0x7c, 0x7b, 0xdb, 0x7c, 0x00, 0x00, 0x00};
+
+// 'route', 24x16px
+const unsigned char icon_route[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xf1, 0xf8, 0x07,
+    0xe3, 0xf0, 0x06, 0x03, 0x00, 0x06, 0x03, 0x00, 0x1f, 0x8f,
+    0xc0, 0x0f, 0x07, 0x80, 0x06, 0x03, 0x00, 0x00, 0x00, 0x00,
+    0x0f, 0x07, 0x80, 0x19, 0x8c, 0xc0, 0x0f, 0x07, 0x80, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 // 'md_rev', 34x24px
 const unsigned char icon_md[] PROGMEM = {

@@ -734,6 +734,7 @@
 #define MODEL_LFOS 21
 #define MODEL_LFOD 22
 #define MODEL_LFOM 23
+#define MODEL_LEVEL 33
 
 #define MD_ECHO_TIME 0
 #define MD_ECHO_MOD 1

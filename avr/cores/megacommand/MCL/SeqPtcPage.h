@@ -33,8 +33,8 @@ public:
   uint8_t last_midi_state = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
   uint64_t note_mask = 0;
-  uint8_t deferred_timer = 0;
-  const uint8_t render_defer_time = 200;
+  uint16_t deferred_timer = 0;
+  const uint8_t render_defer_time = 50;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

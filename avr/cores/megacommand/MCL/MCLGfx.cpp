@@ -67,8 +67,14 @@ void MCLGfx::splashscreen() {
     }  oled_display.clearDisplay();
     */
   oled_display.display();
+  delay(750);
 
-  delay(800);
+  for (uint8_t a = 0; a < 32; a++) {
+  oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 30, a, BLACK);
+  oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 30, 32 - a, BLACK);
+  oled_display.display();
+  }
+
 #else
 
   DEBUG_PRINTLN("HD44780 enabled");
