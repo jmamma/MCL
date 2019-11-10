@@ -11,6 +11,7 @@
 class MCLGUI {
 public:
   uint8_t s_progress_cookie = 0b00110011;
+  uint8_t s_progress_count = 0;
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
@@ -136,6 +137,8 @@ public:
   static constexpr uint8_t s_progress_y = 16;
   static constexpr uint8_t s_progress_w = 64;
   static constexpr uint8_t s_progress_h = 5;
+
+  static constexpr uint8_t s_progress_speed = 1;
 };
 
 extern MCLGUI mcl_gui;

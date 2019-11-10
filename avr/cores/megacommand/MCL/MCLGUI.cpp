@@ -158,9 +158,11 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
     }
     temp_bitmask = (temp_bitmask >> shift) | (temp_bitmask << (8 - shift));
   }
-
+  if (s_progress_count == s_progress_speed) {
   s_progress_cookie = (bitmask >> shift) | (bitmask << (8 - shift));
-
+  s_progress_count = 0;
+  }
+  s_progress_count++;
   oled_display.drawRect(x_pos, y_pos, s_progress_w, s_progress_h, WHITE);
 
   if (!deferred_display) {
