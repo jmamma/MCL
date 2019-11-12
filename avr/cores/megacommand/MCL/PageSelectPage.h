@@ -22,9 +22,10 @@ public:
   virtual void cleanup();
   virtual bool handleEvent(gui_event_t *event);
 
-  LightPage *get_page(uint8_t page_number, char *str = NULL);
   uint8_t get_nextpage_down();
   uint8_t get_nextpage_up();
+  // get a page in the current category.
+  uint8_t get_category_page(uint8_t offset);
 };
 
 extern PageSelectPage page_select_page;
