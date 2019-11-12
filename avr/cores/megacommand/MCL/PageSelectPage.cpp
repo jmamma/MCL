@@ -122,6 +122,26 @@ uint8_t PageSelectPage::get_nextpage_up() {
   return page_select;
 }
 
+uint8_t PageSelectPage::get_nextpage_catdown() {
+  auto page_id = get_pageidx(page_select);
+  auto cat_id = pgm_read_byte(&Entries[page_id].CategoryId);
+  if (cat_id > 0) {
+    return pgm_read_byte(&Categories[cat_id - 1].FirstPage);
+  } else {
+    return page_select;
+  }
+}
+
+uint8_t PageSelectPage::get_nextpage_catup() {
+  auto page_id = get_pageidx(page_select);
+  auto cat_id = pgm_read_byte(&Entries[page_id].CategoryId);
+  if (cat_id < n_category - 1) {
+    return pgm_read_byte(&Categories[cat_id + 1].FirstPage);
+  } else {
+    return page_select;
+  }
+}
+
 uint8_t PageSelectPage::get_category_page(uint8_t offset) {
   auto page_id = get_pageidx(page_select);
   auto cat_id = pgm_read_byte(&Entries[page_id].CategoryId);
@@ -136,13 +156,24 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 
 void PageSelectPage::loop() {
   MCLEncoder *enc_ = &enc1;
-  // largest_sine_peak = 1.0 / 16.00;
   int8_t diff = enc_->cur - enc_->old;
   if ((diff > 0) && (page_select < 16)) {
     page_select = get_nextpage_up();
   }
   if ((diff < 0) && (page_select > 0)) {
     page_select = get_nextpage_down();
+  }
+
+  enc_->cur = 64 + diff;
+  enc_->old = 64;
+
+  enc_ = &enc2;
+  diff = enc_->cur - enc_->old;
+  if ((diff > 0) && (page_select < 16)) {
+    page_select = get_nextpage_catup();
+  }
+  if ((diff < 0) && (page_select > 0)) {
+    page_select = get_nextpage_catdown();
   }
 
   enc_->cur = 64 + diff;
