@@ -461,12 +461,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     recording = !recording;
     return true;
   }
-
+/*
   if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     GUI.setPage(&grid_page);
     return true;
   }
-
+*/
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
     if (midi_device == DEVICE_MD) {

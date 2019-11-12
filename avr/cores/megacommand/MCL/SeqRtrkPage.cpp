@@ -133,11 +133,11 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    md_exploit.off();
-    GUI.setPage(&grid_page);
-    return true;
-  }
+//  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
+//    md_exploit.off();
+//    GUI.setPage(&grid_page);
+//    return true;
+//  }
 
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {

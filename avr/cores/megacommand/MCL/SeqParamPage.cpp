@@ -245,12 +245,13 @@ if (utiming == 0) {
     }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
+/*  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
     if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
       GUI.setPage(&grid_page);
     }
     return true;
   }
+*/
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
