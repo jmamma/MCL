@@ -32,9 +32,9 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"CHROMA", &seq_ptc_page, 7, 1},
 
 
-    {"WAV DESIGNER", &wd.pages[0], 8, 3},
-    {"SOUND MANAGER", &sound_browser, 7, 3},
-    {"LOUDNESS", &loudness_page, 9, 2},
+    {"SOUND MANAGER", &sound_browser, 8, 3},
+    {"WAV DESIGNER", &wd.pages[0], 9, 3},
+    {"LOUDNESS", &loudness_page, 10, 2},
 
     {"DELAY", &fx_page_a, 12, 4},
     {"REVERB", &fx_page_b, 13, 4},
