@@ -138,7 +138,7 @@ public:
   static constexpr uint8_t s_progress_w = 64;
   static constexpr uint8_t s_progress_h = 5;
 
-  static constexpr uint8_t s_progress_speed = 1;
+  static constexpr uint8_t s_progress_speed = 2;
 };
 
 extern MCLGUI mcl_gui;
