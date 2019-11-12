@@ -825,6 +825,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     md_exploit.ignore_last_track_once = true;
   }
 
+/*
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();
@@ -853,6 +854,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+*/
 
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {

@@ -414,10 +414,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    if (note_interface.notes_count() == 0) {
-      route_page.update_globals();
-      GUI.setPage(&grid_page);
-    }
+//    if (note_interface.notes_count() == 0) {
+//      route_page.update_globals();
+//      GUI.setPage(&grid_page);
+//    }
     return true;
   }
 

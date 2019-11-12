@@ -123,6 +123,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   } // end TI events
 
   // if no TI button pressed, enable page switching.
+/*
   if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
     if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
       GUI.setPage(&seq_step_page);
@@ -143,9 +144,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return false;
     }
   }
-
+*/
   // A not-ignored BUTTON2 release event triggers sequence page select
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     if (ignore_button_release != 2) {
       ignore_button_release = 255;
       page_select += 1;
@@ -157,6 +158,14 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     return false;
   }
 
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    route_page.update_globals();
+    md_exploit.off();
+    md_exploit.on();
+    GUI.setPage(&page_select_page);
+  }
+
+  /*
   // SHIFT2 changes ENC4 to track select
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     encoders[3] = &trackselect_enc;
@@ -171,7 +180,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   } else if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[3] = &seq_param4;
   }
-
+*/
   /*
   #ifdef OLED_DISPLAY
 

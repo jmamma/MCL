@@ -20,28 +20,28 @@ const PageCategory Categories[] PROGMEM = {
     {"FX", 2, 10},  {"RAM", 2, 12}, {"LFO", 1, 14}, {"CONFIG", 1, 15},
 };
 
-const PageSelectEntry Entries[] PROGMEM = {
-    {"GRID", &grid_page, 0xFF, 0},
+const PageSelectEntry Entries[] PROGMEM = { 
+    {"GRID", &grid_page, 0, 0},
+    {"MIXER", &mixer_page, 1, 2},
+    {"ROUTE", &route_page, 2, 2},
+    {"LFO", &lfo_page, 3, 6},
 
-    {"STEPS", &seq_step_page, 0, 1},
-    {"RECORD", &seq_rtrk_page, 1, 1},
-    {"LOCKS", &seq_param_page[0], 2, 1},
-    {"CHROMA", &seq_ptc_page, 3, 1},
+    {"STEP EDIT", &seq_step_page, 4, 1},
+    {"RECORD", &seq_rtrk_page, 5, 1},
+    {"LOCKS", &seq_param_page[0], 6, 1},
+    {"CHROMA", &seq_ptc_page, 7, 1},
 
-    {"MIXER", &mixer_page, 4, 2},
-    {"ROUTE", &route_page, 5, 2},
-    {"LOUDNESS", &loudness_page, 6, 2},
 
-    {"WAV DESIGNER", &wd.pages[0], 7, 3},
-    {"SOUND MANAGER", &sound_browser, 8, 3},
+    {"WAV DESIGNER", &wd.pages[0], 8, 3},
+    {"SOUND MANAGER", &sound_browser, 7, 3},
+    {"LOUDNESS", &loudness_page, 9, 2},
 
-    {"DELAY", &fx_page_a, 9, 4},
-    {"REVERB", &fx_page_b, 10, 4},
+    {"DELAY", &fx_page_a, 12, 4},
+    {"REVERB", &fx_page_b, 13, 4},
 
-    {"RAM-1", &ram_page_a, 11, 5},
-    {"RAM-2", &ram_page_b, 12, 5},
+    {"RAM-1", &ram_page_a, 14, 5},
+    {"RAM-2", &ram_page_b, 15, 5},
 
-    {"LFO", &lfo_page, 13, 6},
 
     {"CONFIG", &system_page, 0xFF, 7},
 };
