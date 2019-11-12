@@ -390,12 +390,13 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (event->mask == EVENT_BUTTON_RELEASED) {
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+/*  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
     GUI.setPage(&grid_page);
   }
+*/
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     page_mode = !(page_mode);
     update_encoders();
