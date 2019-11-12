@@ -81,7 +81,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     //  TI + SHIFT1: adjust track seq length.
     //  Ignore SHIFT1 release event so it won't trigger
     //  a seq page select action.
-    if (BUTTON_DOWN(Buttons.BUTTON2)) {
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
       //  calculate the intended seq length.
       uint8_t step = track;
       step += 1 + page_select * 16;
@@ -113,10 +113,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
 
     // TI + SHIFT2 = select track.
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+ /*   if (BUTTON_DOWN(Buttons.BUTTON3)) {
       select_track(device, track);
       return true;
-    }
+    }*/
 
     // notify derived class about unhandled TI event
     return false;
