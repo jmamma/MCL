@@ -48,6 +48,19 @@ void LFOPage::update_encoders() {
     ((MCLEncoder *)encoders[2])->max = NUM_MD_TRACKS + 4;
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
+
+    if (encoders[0]->cur > NUM_MD_TRACKS) {
+        ((MCLEncoder *)encoders[1])->max = 7;
+      } else {
+        ((MCLEncoder *)encoders[1])->max = 23;
+      }
+
+    if (encoders[2]->cur > NUM_MD_TRACKS) {
+        ((MCLEncoder *)encoders[3])->max = 7;
+      } else {
+        ((MCLEncoder *)encoders[3])->max = 23;
+    }
+
   }
   if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
@@ -62,7 +75,7 @@ void LFOPage::update_encoders() {
     encoders[3]->cur = lfo_track->params[1].depth;
     ((MCLEncoder *)encoders[3])->max = 127;
   }
-  loop();
+//  loop();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     encoders[i]->old = encoders[i]->cur;
