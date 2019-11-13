@@ -101,6 +101,7 @@ void PageSelectPage::init() {
 #endif
   md_exploit.on();
   note_interface.state = true;
+  classic_display = false;
 }
 void PageSelectPage::cleanup() { note_interface.init_notes(); }
 
@@ -155,7 +156,7 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::loop() {
-  MCLEncoder *enc_ = &enc1;
+  MCLEncoder *enc_ = encoders[0];
   int8_t diff = enc_->cur - enc_->old;
   if ((diff > 0) && (page_select < 16)) {
     page_select = get_nextpage_up();
@@ -167,7 +168,7 @@ void PageSelectPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
 
-  enc_ = &enc2;
+  enc_ = encoders[1];
   diff = enc_->cur - enc_->old;
   if ((diff > 0) && (page_select < 16)) {
     page_select = get_nextpage_catup();
@@ -183,7 +184,18 @@ void PageSelectPage::loop() {
 void PageSelectPage::display() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
+  char str[16];
+  oled_display.setCursor(0,0);
+  oled_display.print("Page Select:");
+  get_category_name(page_select, str);
+  oled_display.print(str);
+
+  oled_display.setCursor(0,15);
+  get_page(page_select, str);
+  oled_display.print(str);
+  oled_display.display();
+
+#else
   GUI.setLine(GUI.LINE1);
   char str[16];
   GUI.put_string_at_fill(0, "Page Select:");
@@ -193,6 +205,7 @@ void PageSelectPage::display() {
   GUI.setLine(GUI.LINE2);
   get_page(page_select, str);
   GUI.put_string_at_fill(0, str);
+#endif
 }
 
 bool PageSelectPage::handleEvent(gui_event_t *event) {
@@ -222,28 +235,34 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     LightPage *p;
     p = get_page(page_select, nullptr);
-    if (p) {
-      GUI.setPage(p);
-    } else {
+    if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       md_exploit.off();
       GUI.setPage(&grid_page);
+    } else {
+      GUI.setPage(p);
     }
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.ENCODER1)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    md_exploit.off();
+    GUI.setPage(&grid_page);
+    return true;
+  }
+
+  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     page_select = get_category_page(0);
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.ENCODER2)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
     page_select = get_category_page(1);
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.ENCODER3)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
     page_select = get_category_page(2);
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     page_select = get_category_page(3);
     return true;
   }
@@ -251,4 +270,6 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-PageSelectPage page_select_page;
+MCLEncoder page_select_param1(0,127);
+MCLEncoder page_select_param2(0,127);
+PageSelectPage page_select_page(&page_select_param1, &page_select_param2);

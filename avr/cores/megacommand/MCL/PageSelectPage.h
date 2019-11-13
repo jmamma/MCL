@@ -5,16 +5,17 @@
 
 #include "GUI.h"
 
+extern MCLEncoder page_select_param1;
+extern MCLEncoder page_select_param2;
+
 class PageSelectPage : public LightPage {
 public:
-  MCLEncoder enc1;
-  MCLEncoder enc2;
   uint8_t page_select;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-    encoders[0] = &enc1;
-    encoders[1] = &enc2;
+    encoders[0] = e1;
+    encoders[1] = e2;
   }
 
   virtual void display();
