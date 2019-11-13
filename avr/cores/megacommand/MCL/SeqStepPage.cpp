@@ -237,10 +237,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         // GUI.setPage(&seq_extstep_page);
         return true;
       }
-      // track 16 should not have locks
-      if (last_md_track < 15) {
-        show_pitch = true;
-      }
+      show_pitch = true;
+
       if (step >= active_track.length) {
         return true;
       }
