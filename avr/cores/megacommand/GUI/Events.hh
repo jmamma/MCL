@@ -53,6 +53,7 @@ void pollEventGUI();
 
 #define MAX_EVENTS 32
 extern volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
+extern volatile uint8_t event_ignore_next_mask;
 
 /** @} **/
 
