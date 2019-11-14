@@ -11,7 +11,7 @@ void pollEventGUI() {
   for (int i = 0; i < MAX_BUTTONS; i++) {
     gui_event_t event;
     event.source = i;
-    if (!IS_BIT_SET64(event_ignore_next_mask, i)) {
+    if (!IS_BIT_SET(event_ignore_next_mask, i)) {
       if (BUTTON_PRESSED(i)) {
         event.mask = EVENT_BUTTON_PRESSED;
         EventRB.putp(&event);
@@ -21,7 +21,7 @@ void pollEventGUI() {
         EventRB.putp(&event);
       }
     } else {
-      CLEAR_BIT64(event_ignore_next_mask, i);
+      CLEAR_BIT(event_ignore_next_mask, i);
     }
   }
 }
