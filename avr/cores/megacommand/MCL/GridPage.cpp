@@ -825,6 +825,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     md_exploit.ignore_last_track_once = true;
   }
 
+  // TODO add back an option for this?
 /*
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;

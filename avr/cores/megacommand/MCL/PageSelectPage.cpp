@@ -32,7 +32,7 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"LFO", &lfo_page, 3, 0, 24, 25, (uint8_t *)icon_lfo},
 
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, (uint8_t *)icon_step},
-    {"RECORD", &seq_rtrk_page, 5, 1, 0, 0, nullptr},
+    {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t*) icon_rec},
     {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
     {"CHROMA", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
 
