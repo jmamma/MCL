@@ -184,7 +184,6 @@ void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
-
   // check rotation, move pixel around if necessary*
   // MegaCommand rotation
   y = SSD1305_LCDHEIGHT - y - h;
@@ -259,6 +258,9 @@ void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
     h = SSD1305_LCDHEIGHT - y;
   }
 
+  if (x + w > SSD1305_LCDWIDTH) {
+    w = SSD1305_LCDHEIGHT - x;
+  }
   // check rotation, move pixel around if necessary*
   // MegaCommand rotation
   y = SSD1305_LCDHEIGHT - y - h;
