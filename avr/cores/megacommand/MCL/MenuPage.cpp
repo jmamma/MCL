@@ -214,18 +214,12 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     enter();
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     exit();
     return true;
   }

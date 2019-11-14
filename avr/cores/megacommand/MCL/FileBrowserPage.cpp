@@ -378,10 +378,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     return false;
   }
 
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     int i_save;
     _calcindices(i_save);
@@ -417,9 +414,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
 
   // cancel
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_RELEASED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     on_cancel();
     return true;
   }
