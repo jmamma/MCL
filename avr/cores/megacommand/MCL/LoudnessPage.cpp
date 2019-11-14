@@ -309,24 +309,19 @@ bool LoudnessPage::handleEvent(gui_event_t *event) {
   if (event->mask == EVENT_BUTTON_RELEASED) {
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     scale_vol((float)encoders[0]->cur / (float)100);
     encoders[0]->cur = 100;
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    float inc = check_loudness();
-    encoders[0]->cur = inc * 100;
-  }
+//  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+//    float inc = check_loudness();
+ //   encoders[0]->cur = inc * 100;
+//  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    GUI.setPage(&grid_page);
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
     return true;
   }
 

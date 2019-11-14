@@ -16,12 +16,12 @@ void osc_mod_handler(Encoder *enc);
 
 class OscPage : public LightPage {
 public:
-  // Static variables shared amongst derived objects
   uint8_t id;
   MCLEncoder enc1;
   MCLEncoder enc2;
   MCLEncoder enc3;
   MCLEncoder enc4;
+  bool show_freq = false;
   uint8_t osc_waveform;
 
   uint8_t sample_number = 0;
