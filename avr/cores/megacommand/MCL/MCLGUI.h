@@ -194,6 +194,26 @@ extern const unsigned char encoder_small_4[];
 extern const unsigned char encoder_small_5[];
 // 'encoder6', 11x11px
 extern const unsigned char encoder_small_6[];
+
+// 'wheel1', 19x19px
+extern const unsigned char wheel_top [];
+// 'wheel2', 19x19px
+extern const unsigned char wheel_angle [];
+// 'wheel3', 19x19px
+extern const unsigned char wheel_side [];
+
+// 'chroma', 24x25px 
+extern const unsigned char icon_chroma[];
+// 'grid', 24x15px
+extern const unsigned char icon_grid[];
+// 'lfo', 24x25px
+extern const unsigned char icon_lfo[];
+// 'mixer', 24x15px
+extern const unsigned char icon_mixer[];
+// 'para', 24x19px
+extern const unsigned char icon_para[];
+// 'step', 24x25px
+extern const unsigned char icon_step[];
 // 'gatebox', 24x25px
 extern const unsigned char icon_gatebox[];
 // 'rythmecho', 24x25px
