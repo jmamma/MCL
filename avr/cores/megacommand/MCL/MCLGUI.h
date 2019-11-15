@@ -226,6 +226,8 @@ extern const unsigned char icon_gatebox[];
 extern const unsigned char icon_rhytmecho [];
 // 'route', 24x16px
 extern const unsigned char icon_route [];
+// 'sound', 24x19px
+extern const unsigned char icon_sound[];
 // 'md_rev', 34x24px
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px
