@@ -85,10 +85,10 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   if (get_menu()->get_option_range(item_n) > 0) {
 
     oled_display.print(" ");
-    pgp = get_menu()->get_option_name(item_n,
-                                      *(get_menu()->get_dest_variable(item_n)));
+    uint8_t *pdest = get_menu()->get_dest_variable(item_n);
+    pgp = get_menu()->get_option_name(item_n, *pdest);
     if (pgp == NULL) {
-      oled_display.println(*(get_menu()->get_dest_variable(item_n)));
+      oled_display.println(*pdest);
     } else {
       m_strncpy_p(str, pgp, 11);
       oled_display.println(str);

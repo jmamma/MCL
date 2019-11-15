@@ -55,7 +55,7 @@ extern SeqPtcPage seq_ptc_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<9> seq_menu_page;
+extern MenuPage<7> seq_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();
