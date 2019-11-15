@@ -46,6 +46,11 @@ extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 #endif
 
+extern MCLEncoder ptc_param_oct;
+extern MCLEncoder ptc_param_finetune;
+extern MCLEncoder ptc_param_len;
+extern MCLEncoder ptc_param_scale;
+
 extern SeqPtcPage seq_ptc_page;
 
 extern MCLEncoder seq_menu_value_encoder;

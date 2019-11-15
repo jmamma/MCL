@@ -29,12 +29,12 @@ SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &pt
 const menu_t<9> seq_menu_layout PROGMEM = {
     "SEQ",
     {
-        {"TRACK SEL.", 0, 16, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
+        {"TRACK SEL.", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
         {"COPY TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         {"CLEAR TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_track_handler, {}},
         {"CLEAR LCKS.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_locks_handler, {}},
         {"PASTE TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"TRACK RES.", 1, 2, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {0, "1x"}, {1, "2x"} }},
+        {"TRACK RES.", 0, 2, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {0, "1x"}, {1, "2x"} }},
         {"STEP SHIFT", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         // clear all tracks
         {"CLEAR ALL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_all_tracks_handler, {}},

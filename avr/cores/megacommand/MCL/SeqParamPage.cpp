@@ -33,25 +33,25 @@ void SeqParamPage::init() {
   note_interface.state = true;
 
   seq_param1.max = 24;
-  seq_param2.max = 128;
+  seq_lock1.max = 128;
   seq_param3.max = 24;
-  seq_param4.max = 128;
+  seq_lock2.max = 128;
 
   seq_param3.handler = NULL;
 
   seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
-  seq_param2.cur =
+  seq_lock1.cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p1]];
-  seq_param4.cur =
+  seq_lock2.cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
   // Prevent hasChanged from being called
   seq_param1.old = seq_param1.cur;
-  seq_param2.old = seq_param2.cur;
+  seq_lock1.old = seq_lock1.cur;
   seq_param3.old = seq_param3.cur;
-  seq_param4.old = seq_param4.cur;
+  seq_lock2.old = seq_lock2.cur;
 
   midi_events.setup_callbacks();
 #ifdef OLED_DISPLAY
@@ -85,10 +85,10 @@ void SeqParamPage::display() {
     }
     GUI.put_string_at(0, myName);
   }
-  if (seq_param2.getValue() == 0) {
+  if (seq_lock1.getValue() == 0) {
     GUI.put_string_at(4, "--");
   } else {
-    GUI.put_value_at2(4, seq_param2.getValue() - 1);
+    GUI.put_value_at2(4, seq_lock1.getValue() - 1);
   }
   if (seq_param3.getValue() == 0) {
     GUI.put_string_at(7, "--");
@@ -101,10 +101,10 @@ void SeqParamPage::display() {
     }
     GUI.put_string_at(7, myName2);
   }
-  if (seq_param4.getValue() == 0) {
+  if (seq_lock2.getValue() == 0) {
     GUI.put_string_at(11, "--");
   } else {
-    GUI.put_value_at2(11, seq_param4.getValue() - 1);
+    GUI.put_value_at2(11, seq_lock2.getValue() - 1);
   }
   if (page_id == 0) {
     GUI.put_string_at(14, "A");
@@ -147,8 +147,8 @@ void SeqParamPage::display() {
   draw_knob(0, "TGT", myName);
   draw_knob(2, "TGT", myName2);
 
-  draw_knob(1, &seq_param2, "VAL");
-  draw_knob(3, &seq_param4, "VAL");
+  draw_knob(1, &seq_lock1, "VAL");
+  draw_knob(3, &seq_lock2, "VAL");
   draw_pattern_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
 
@@ -160,8 +160,8 @@ void SeqParamPage::display() {
 #endif
 void SeqParamPage::loop() {
 
-  if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
-      seq_param3.hasChanged() || seq_param4.hasChanged()) {
+  if (seq_param1.hasChanged() || seq_lock1.hasChanged() ||
+      seq_param3.hasChanged() || seq_lock2.hasChanged()) {
     for (uint8_t n = 0; n < 16; n++) {
 
       if (note_interface.notes[n] == 1) {
@@ -178,8 +178,8 @@ void SeqParamPage::loop() {
         }
         SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
 
-        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_param2.cur;
-        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_param4.cur;
+        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_lock1.cur;
+        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_lock2.cur;
       }
     }
     if (seq_param1.hasChanged() || seq_param3.hasChanged()) {
@@ -213,8 +213,8 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      seq_param2.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
-      seq_param4.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
+      seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
+      seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
@@ -241,9 +241,9 @@ if (utiming == 0) {
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =
-                seq_param2.cur;
+                seq_lock1.cur;
             mcl_seq.md_tracks[last_md_track].locks[p2][step] =
-                seq_param4.cur;
+                seq_lock2.cur;
 
             mcl_seq.md_tracks[last_md_track].locks_params[p1] =
          seq_param1.cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =

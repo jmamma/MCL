@@ -10,7 +10,7 @@ uint8_t SeqPage::page_count = 4;
 bool SeqPage::show_seq_menu = false;
 
 uint8_t opt_resolution = 0;
-uint8_t opt_trackid = 0;
+uint8_t opt_trackid = 1;
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
 
@@ -73,8 +73,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       // TI + SHIFT2 = select track.
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        opt_trackid = track;
+        opt_trackid = track + 1;
         select_track(device, track);
+        redisplay = true;
       }
 
       return true;
@@ -154,10 +155,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (opt_midi_device_capture == DEVICE_MD) {
       DEBUG_PRINTLN("okay using MD for length update");
-      opt_trackid = last_md_track;
+      opt_trackid = last_md_track + 1;
       opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
     } else {
-      opt_trackid = last_ext_track;
+      opt_trackid = last_ext_track + 1;
       opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
     }
 
@@ -467,7 +468,7 @@ void pattern_len_handler(Encoder *enc) {
   }
   if (SeqPage::midi_device == DEVICE_MD) {
     DEBUG_PRINTLN("under 16");
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
@@ -477,7 +478,7 @@ void pattern_len_handler(Encoder *enc) {
   }
 #ifdef EXT_TRACKS
   else {
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
@@ -491,7 +492,7 @@ void pattern_len_handler(Encoder *enc) {
 }
 
 void opt_trackid_handler() {
-  opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid);
+  opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }
 
 void opt_resolution_handler() {
@@ -545,6 +546,9 @@ void opt_clear_all_locks_handler() {
 }
 
 void SeqPage::config_as_trackedit() {
+
+  toggleLed();
+
   seq_menu_page.menu.enable_entry(2, true);
   seq_menu_page.menu.enable_entry(3, false);
 
@@ -553,6 +557,9 @@ void SeqPage::config_as_trackedit() {
 }
 
 void SeqPage::config_as_lockedit() {
+
+  toggleLed2();
+
   seq_menu_page.menu.enable_entry(2, false);
   seq_menu_page.menu.enable_entry(3, true);
 

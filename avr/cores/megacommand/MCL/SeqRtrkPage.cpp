@@ -20,6 +20,9 @@ void SeqRtrkPage::config() {
 
   strcpy(info2, "RTRK");
   display_page_index = false;
+
+  // config menu
+  config_as_trackedit();
 }
 
 void SeqRtrkPage::init() {
