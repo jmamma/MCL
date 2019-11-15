@@ -92,6 +92,15 @@ void SoundBrowserPage::on_cancel() {
 
 void SoundBrowserPage::on_select(const char *__) { load_sound(); }
 
+bool SoundBrowserPage::handleEvent(gui_event_t* event) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
+    return true;
+  }
+
+  return FileBrowserPage::handleEvent(event);
+}
+
 MCLEncoder soundbrowser_param1(1, 10, ENCODER_RES_SYS);
 MCLEncoder soundbrowser_param2(0, 36, ENCODER_RES_SYS);
 SoundBrowserPage sound_browser(&soundbrowser_param1, &soundbrowser_param2);
