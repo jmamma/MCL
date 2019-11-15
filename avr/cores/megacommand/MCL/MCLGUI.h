@@ -208,9 +208,13 @@ extern const unsigned char icon_chroma[];
 extern const unsigned char icon_rec[];
 // 'grid', 24x15px
 extern const unsigned char icon_grid[];
-// 'lfo', 24x25px
+// 'lfo', 24x24px
 extern const unsigned char icon_lfo[];
-// 'mixer', 24x15px
+// 'loudness', 24x16px
+extern const unsigned char icon_loudness[];
+// 'wavd', 24x19px
+extern const unsigned char icon_wavd[];
+// 'mixer', 24x16px
 extern const unsigned char icon_mixer[];
 // 'para', 24x19px
 extern const unsigned char icon_para[];
