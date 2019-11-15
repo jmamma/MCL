@@ -45,7 +45,7 @@ const menu_t<9> seq_menu_layout PROGMEM = {
 };
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
-MCLEncoder seq_menu_entry_encoder(0, 8, ENCODER_RES_PAT);
+MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 MenuPage<9> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 //SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];

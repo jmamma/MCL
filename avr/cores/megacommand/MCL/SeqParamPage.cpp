@@ -189,7 +189,10 @@ void SeqParamPage::loop() {
       mcl_seq.md_tracks[last_md_track].update_params();
     }
   }
+
+  SeqPage::loop();
 }
+
 bool SeqParamPage::handleEvent(gui_event_t *event) {
 
   if (SeqPage::handleEvent(event)) {

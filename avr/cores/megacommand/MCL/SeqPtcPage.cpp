@@ -195,6 +195,8 @@ void SeqPtcPage::loop() {
     deferred_timer = 0;
     redisplay = true;
   }
+
+  SeqPage::loop();
 }
 
 #ifndef OLED_DISPLAY
