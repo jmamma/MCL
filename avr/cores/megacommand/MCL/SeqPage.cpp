@@ -13,6 +13,8 @@ uint8_t opt_resolution = 0;
 uint8_t opt_trackid = 1;
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
+static MCLEncoder *opt_param1_capture = nullptr;
+static MCLEncoder *opt_param2_capture = nullptr;
 
 void SeqPage::create_chars_seq() {
   uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
@@ -162,21 +164,21 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
     }
 
+    opt_param1_capture = (MCLEncoder *)encoders[0];
+    opt_param2_capture = (MCLEncoder *)encoders[1];
     encoders[0] = &seq_menu_value_encoder;
     encoders[1] = &seq_menu_entry_encoder;
     seq_menu_page.init();
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    encoders[0] = &seq_param1;
-    encoders[1] = &seq_param2;
+    encoders[0] = opt_param1_capture;
+    encoders[1] = opt_param2_capture;
     oled_display.clearDisplay();
     show_seq_menu = false;
     void (*row_func)() =
         seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
-    DEBUG_PRINTLN(seq_menu_page.encoders[1]->cur);
     if (row_func != NULL) {
-      DEBUG_PRINTLN("func call");
       (*row_func)();
       return true;
     }
@@ -547,8 +549,6 @@ void opt_clear_all_locks_handler() {
 
 void SeqPage::config_as_trackedit() {
 
-  toggleLed();
-
   seq_menu_page.menu.enable_entry(2, true);
   seq_menu_page.menu.enable_entry(3, false);
 
@@ -557,8 +557,6 @@ void SeqPage::config_as_trackedit() {
 }
 
 void SeqPage::config_as_lockedit() {
-
-  toggleLed2();
 
   seq_menu_page.menu.enable_entry(2, false);
   seq_menu_page.menu.enable_entry(3, true);
@@ -665,7 +663,6 @@ void SeqPage::display() {
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
     seq_menu_page.draw_menu(128 - width, 8, width);
   }
-
 }
 #endif
 
