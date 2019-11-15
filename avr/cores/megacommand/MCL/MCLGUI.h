@@ -204,6 +204,8 @@ extern const unsigned char wheel_side [];
 
 // 'chroma', 24x25px 
 extern const unsigned char icon_chroma[];
+// 'rec', 24x15px
+extern const unsigned char icon_rec[];
 // 'grid', 24x15px
 extern const unsigned char icon_grid[];
 // 'lfo', 24x25px
