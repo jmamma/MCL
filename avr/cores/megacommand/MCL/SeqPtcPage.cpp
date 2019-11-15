@@ -60,14 +60,14 @@ void SeqPtcPage::cleanup() {
 }
 void SeqPtcPage::config_encoders() {
   if (midi_device == DEVICE_MD) {
-    ((MCLEncoder *)encoders[2])->max = 64;
+    seq_param3.max = 64;
 
     encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
   }
 #ifdef EXT_TRACKS
   else {
-    ((MCLEncoder *)encoders[2])->max = (uint8_t)128;
-    ((MCLEncoder *)encoders[2])->cur =
+    seq_param3.max = (uint8_t)128;
+    seq_param3.cur =
         mcl_seq.ext_tracks[last_ext_track].length;
   }
 #endif
@@ -96,7 +96,7 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
-  ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
+  seq_param3.handler = ptc_pattern_len_handler;
   recording = false;
   midi_events.setup_callbacks();
   note_mask = 0;
@@ -116,8 +116,8 @@ void SeqPtcPage::init() {
 
 void SeqPtcPage::config() {
   config_encoders();
-  encoders[1]->cur = 32;
-  encoders[0]->cur = 1;
+  seq_param2.cur = 32;
+  seq_param1.cur = 1;
 
   // config info labels
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
@@ -178,12 +178,12 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
 void SeqPtcPage::loop() {
 #ifdef EXT_TRACKS
-  if (encoders[0]->hasChanged() || encoders[3]->hasChanged()) {
+  if (seq_param1.hasChanged() || seq_param4.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
 #endif
 
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+  if (seq_param1.hasChanged() || seq_param2.hasChanged() || seq_param3.hasChanged() || seq_param4.hasChanged()) {
     queue_redraw();
   }
 
@@ -222,13 +222,13 @@ void SeqPtcPage::display() {
     GUI.put_string_at(0, "PTC");
   }
   if (midi_device == DEVICE_MD) {
-    GUI.put_value_at(5, encoders[2]->getValue());
+    GUI.put_value_at(5, seq_param3.getValue());
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (encoders[2]->getValue() /
+    GUI.put_value_at(5, (seq_param3.getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
@@ -241,15 +241,15 @@ void SeqPtcPage::display() {
 
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
-  GUI.put_value_at2(3, encoders[0]->getValue());
+  GUI.put_value_at2(3, seq_param1.getValue());
 
-  if (encoders[1]->getValue() < 32) {
+  if (seq_param2.getValue() < 32) {
     GUI.put_string_at(6, "F:-");
-    GUI.put_value_at2(9, 32 - encoders[1]->getValue());
+    GUI.put_value_at2(9, 32 - seq_param2.getValue());
 
-  } else if (encoders[1]->getValue() > 32) {
+  } else if (seq_param2.getValue() > 32) {
     GUI.put_string_at(6, "F:+");
-    GUI.put_value_at2(9, encoders[1]->getValue() - 32);
+    GUI.put_value_at2(9, seq_param2.getValue() - 32);
 
   } else {
     GUI.put_string_at(6, "F: 0");
@@ -257,7 +257,7 @@ void SeqPtcPage::display() {
 
   GUI.put_string_at(12, "S:");
 
-  GUI.put_value_at2(14, encoders[3]->getValue());
+  GUI.put_value_at2(14, seq_param4.getValue());
   SeqPage::display();
 }
 #else
@@ -283,16 +283,16 @@ void SeqPtcPage::display() {
   char buf1[4];
 
   // draw OCTAVE
-  itoa(encoders[0]->getValue(), buf1, 10);
+  itoa(seq_param1.getValue(), buf1, 10);
   draw_knob(0, "OCT", buf1);
 
   // draw FREQ
-  if (encoders[1]->getValue() < 32) {
+  if (seq_param2.getValue() < 32) {
     strcpy(buf1, "-");
-    itoa(32 - encoders[1]->getValue(), buf1 + 1, 10);
-  } else if (encoders[1]->getValue() > 32) {
+    itoa(32 - seq_param2.getValue(), buf1 + 1, 10);
+  } else if (seq_param2.getValue() > 32) {
     strcpy(buf1, "+");
-    itoa(encoders[1]->getValue() - 32, buf1 + 1, 10);
+    itoa(seq_param2.getValue() - 32, buf1 + 1, 10);
   } else {
     strcpy(buf1, "0");
   }
@@ -300,12 +300,12 @@ void SeqPtcPage::display() {
 
   // draw LEN
   if (midi_device == DEVICE_MD) {
-    itoa(encoders[2]->getValue(), buf1, 10);
+    itoa(seq_param3.getValue(), buf1, 10);
     draw_knob(2, "LEN", buf1);
   }
 #ifdef EXT_TRACKS
   else {
-    itoa(encoders[2]->getValue() /
+    itoa(seq_param3.getValue() /
              (2 / mcl_seq.ext_tracks[last_ext_track].resolution),
          buf1, 10);
     draw_knob(2, "LEN", buf1);
@@ -313,7 +313,7 @@ void SeqPtcPage::display() {
 #endif
 
   // draw SCALE
-  m_strncpy_p(buf1, scale_names[encoders[3]->getValue()], 4);
+  m_strncpy_p(buf1, scale_names[seq_param4.getValue()], 4);
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard
@@ -327,11 +327,11 @@ void SeqPtcPage::display() {
 #endif
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
-  uint8_t size = scales[encoders[3]->cur]->size;
+  uint8_t size = scales[seq_param4.cur]->size;
   uint8_t oct = note_num / size;
   note_num = note_num - oct * size;
 
-  return scales[encoders[3]->cur]->pitches[note_num] + oct * 12;
+  return scales[seq_param4.cur]->pitches[note_num] + oct * 12;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
@@ -384,7 +384,7 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
   }
 
   uint8_t machine_pitch =
-      pgm_read_byte(&tuning->tuning[pitch]) + encoders[1]->getValue() - 32;
+      pgm_read_byte(&tuning->tuning[pitch]) + seq_param2.getValue() - 32;
   return machine_pitch;
 }
 
@@ -513,15 +513,15 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   uint8_t root_note = (note_num / 12) * 12;
   uint8_t pos = note_num - root_note;
   uint8_t oct = note_num / 12;
-  // if (pos >= scales[encoders[4]->cur]->size) {
-  oct += pos / scales[encoders[3]->cur]->size;
+  // if (pos >= scales[seq_param5.cur]->size) {
+  oct += pos / scales[seq_param4.cur]->size;
   pos = pos -
-        scales[encoders[3]->cur]->size * (pos / scales[encoders[3]->cur]->size);
+        scales[seq_param4.cur]->size * (pos / scales[seq_param4.cur]->size);
   // }
 
-  //  if (encoders[4]->getValue() > 0) {
+  //  if (seq_param5.getValue() > 0) {
   pitch = octave_to_pitch() +
-          scales[encoders[3]->cur]->pitches[pos] + oct * 12;
+          scales[seq_param4.cur]->pitches[pos] + oct * 12;
   //   }
 
   return pitch;

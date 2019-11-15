@@ -32,26 +32,26 @@ void SeqParamPage::init() {
   md_exploit.on();
   note_interface.state = true;
 
-  ((MCLEncoder *)encoders[0])->max = 24;
-  ((MCLEncoder *)encoders[1])->max = 128;
-  ((MCLEncoder *)encoders[2])->max = 24;
-  ((MCLEncoder *)encoders[3])->max = 128;
+  seq_param1.max = 24;
+  seq_param2.max = 128;
+  seq_param3.max = 24;
+  seq_param4.max = 128;
 
-  ((MCLEncoder *)encoders[2])->handler = NULL;
+  seq_param3.handler = NULL;
 
-  encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
-  encoders[1]->cur =
+  seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
+  seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
+  seq_param2.cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p1]];
-  encoders[3]->cur =
+  seq_param4.cur =
       MD.kit.params[last_md_track]
                    [mcl_seq.md_tracks[last_md_track].locks_params[p2]];
   // Prevent hasChanged from being called
-  encoders[0]->old = encoders[0]->cur;
-  encoders[1]->old = encoders[1]->cur;
-  encoders[2]->old = encoders[2]->cur;
-  encoders[3]->old = encoders[3]->cur;
+  seq_param1.old = seq_param1.cur;
+  seq_param2.old = seq_param2.cur;
+  seq_param3.old = seq_param3.cur;
+  seq_param4.old = seq_param4.cur;
 
   midi_events.setup_callbacks();
 #ifdef OLED_DISPLAY
@@ -74,37 +74,37 @@ void SeqParamPage::display() {
   GUI.setLine(GUI.LINE1);
   char myName[4] = "-- ";
   char myName2[4] = "-- ";
-  if (encoders[0]->getValue() == 0) {
+  if (seq_param1.getValue() == 0) {
     GUI.put_string_at(0, "--");
   } else {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[0]->getValue() - 1);
+                                 seq_param1.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
     }
     GUI.put_string_at(0, myName);
   }
-  if (encoders[1]->getValue() == 0) {
+  if (seq_param2.getValue() == 0) {
     GUI.put_string_at(4, "--");
   } else {
-    GUI.put_value_at2(4, encoders[1]->getValue() - 1);
+    GUI.put_value_at2(4, seq_param2.getValue() - 1);
   }
-  if (encoders[2]->getValue() == 0) {
+  if (seq_param3.getValue() == 0) {
     GUI.put_string_at(7, "--");
   } else {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[2]->getValue() - 1);
+                                 seq_param3.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
     }
     GUI.put_string_at(7, myName2);
   }
-  if (encoders[3]->getValue() == 0) {
+  if (seq_param4.getValue() == 0) {
     GUI.put_string_at(11, "--");
   } else {
-    GUI.put_value_at2(11, encoders[3]->getValue() - 1);
+    GUI.put_value_at2(11, seq_param4.getValue() - 1);
   }
   if (page_id == 0) {
     GUI.put_string_at(14, "A");
@@ -126,19 +126,19 @@ void SeqParamPage::display() {
   char myName[4] = "-- ";
   char myName2[4] = "-- ";
 
-  if (encoders[0]->getValue() != 0) {
+  if (seq_param1.getValue() != 0) {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[0]->getValue() - 1);
+                                 seq_param1.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
     }
   }
 
-  if (encoders[2]->getValue() != 0) {
+  if (seq_param3.getValue() != 0) {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track],
-                                 encoders[2]->getValue() - 1);
+                                 seq_param3.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
     }
@@ -147,8 +147,8 @@ void SeqParamPage::display() {
   draw_knob(0, "TGT", myName);
   draw_knob(2, "TGT", myName2);
 
-  draw_knob(1, encoders[1], "VAL");
-  draw_knob(3, encoders[3], "VAL");
+  draw_knob(1, &seq_param2, "VAL");
+  draw_knob(3, &seq_param4, "VAL");
   draw_pattern_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
 
@@ -160,8 +160,8 @@ void SeqParamPage::display() {
 #endif
 void SeqParamPage::loop() {
 
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
-      encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+  if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
+      seq_param3.hasChanged() || seq_param4.hasChanged()) {
     for (uint8_t n = 0; n < 16; n++) {
 
       if (note_interface.notes[n] == 1) {
@@ -178,14 +178,14 @@ void SeqParamPage::loop() {
         }
         SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
 
-        mcl_seq.md_tracks[last_md_track].locks[p1][step] = encoders[1]->cur;
-        mcl_seq.md_tracks[last_md_track].locks[p2][step] = encoders[3]->cur;
+        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_param2.cur;
+        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_param4.cur;
       }
     }
-    if (encoders[0]->hasChanged() || encoders[2]->hasChanged()) {
+    if (seq_param1.hasChanged() || seq_param3.hasChanged()) {
       mcl_seq.md_tracks[last_md_track].reset_params();
-      mcl_seq.md_tracks[last_md_track].locks_params[p1] = encoders[0]->cur;
-      mcl_seq.md_tracks[last_md_track].locks_params[p2] = encoders[2]->cur;
+      mcl_seq.md_tracks[last_md_track].locks_params[p1] = seq_param1.cur;
+      mcl_seq.md_tracks[last_md_track].locks_params[p2] = seq_param3.cur;
       mcl_seq.md_tracks[last_md_track].update_params();
     }
   }
@@ -210,11 +210,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t param_offset;
-      encoders[0]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
-      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
+      seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
+      seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      encoders[1]->cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
-      encoders[3]->cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
+      seq_param2.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
+      seq_param4.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
@@ -241,13 +241,13 @@ if (utiming == 0) {
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =
-                encoders[1]->cur;
+                seq_param2.cur;
             mcl_seq.md_tracks[last_md_track].locks[p2][step] =
-                encoders[3]->cur;
+                seq_param4.cur;
 
             mcl_seq.md_tracks[last_md_track].locks_params[p1] =
-         encoders[0]->cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =
-         encoders[2]->cur;
+         seq_param1.cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =
+         seq_param3.cur;
         */
     }
     return true;

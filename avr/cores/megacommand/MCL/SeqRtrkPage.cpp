@@ -27,11 +27,11 @@ void SeqRtrkPage::init() {
 
   note_interface.state = true;
 
-  ((MCLEncoder *)encoders[0])->max = 4;
-  ((MCLEncoder *)encoders[1])->max = 64;
-  ((MCLEncoder *)encoders[2])->max = 64;
-  ((MCLEncoder *)encoders[3])->max = 11;
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  seq_param1.max = 4;
+  seq_param2.max = 64;
+  seq_param3.max = 64;
+  seq_param4.max = 11;
+  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   midi_device = DEVICE_MD;
   curpage = SEQ_RTRK_PAGE;
   recording = true;
@@ -56,11 +56,11 @@ void SeqRtrkPage::display() {
   if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
-    GUI.put_value_at(5, encoders[2]->getValue());
+    GUI.put_value_at(5, seq_param3.getValue());
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (encoders[2]->getValue() /
+    GUI.put_value_at(5, (seq_param3.getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
@@ -82,7 +82,7 @@ void SeqRtrkPage::display() {
   auto *oldfont = oled_display.getFont();
   draw_knob_frame();
 
-  uint8_t len = encoders[2]->getValue();
+  uint8_t len = seq_param3.getValue();
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
     len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
@@ -117,7 +117,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
       if (device != DEVICE_MD) { return true; }
       last_md_track = track;
 
-      encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+      seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
       MD.triggerTrack(track, 127);
       if (MidiClock.state == 2) {
         mcl_seq.md_tracks[last_md_track].record_track(track, 127);

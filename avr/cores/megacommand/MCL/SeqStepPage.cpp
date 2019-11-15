@@ -247,7 +247,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      ((MCLEncoder *)encoders[1])->max = 23;
+      seq_param2.max = 23;
       int8_t utiming = active_track.timing[step];         // upper
       uint8_t condition = active_track.conditional[step]; // lower
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
