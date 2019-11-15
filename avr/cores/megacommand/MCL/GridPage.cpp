@@ -798,6 +798,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 #endif
 
+/*
   if (BUTTON_DOWN(Buttons.BUTTON3) &&
       (EVENT_PRESSED(event, Buttons.ENCODER1) ||
        EVENT_PRESSED(event, Buttons.ENCODER2) ||
@@ -825,8 +826,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     md_exploit.ignore_last_track_once = true;
   }
 
-  // TODO add back an option for this?
-/*
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     seq_step_page.isSetup = false;
     prepare();

@@ -77,8 +77,9 @@ void SeqRtrkPage::display() {
 #else
 void SeqRtrkPage::display() {
   if ((!redisplay) && (MidiClock.state == 2)) { return; }
-  SeqPage::display();
 
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
   draw_knob_frame();
 
   uint8_t len = encoders[2]->getValue();
@@ -96,7 +97,9 @@ void SeqRtrkPage::display() {
   draw_lock_mask(page_select * 16, show_current_step);
   draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
 
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 #endif
 
@@ -138,27 +141,6 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
 //    GUI.setPage(&grid_page);
 //    return true;
 //  }
-
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-
-    for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].clear_track();
-    }
-    return true;
-  }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    if (SeqPage::midi_device == DEVICE_MD) {
-      mcl_seq.md_tracks[last_md_track].clear_track();
-    }
-#ifdef EXT_TRACKS
-    else {
-      mcl_seq.ext_tracks[last_ext_track].clear_track();
-    }
-#endif
-    return true;
-  }
 
   if (SeqPage::handleEvent(event)) {
     return true;

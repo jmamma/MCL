@@ -16,17 +16,24 @@ public:
 
 extern void pattern_len_handler(Encoder *enc);
 
+
+extern uint8_t opt_trackid;
+extern uint8_t opt_resolution;
+extern void opt_trackid_handler();
+extern void opt_resolution_handler();
+extern void opt_clear_track_handler();
+extern void opt_clear_locks_handler();
+extern void opt_clear_all_tracks_handler();
+extern void opt_clear_all_locks_handler();
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
   static uint8_t page_count;
   static uint8_t midi_device;
-  static uint8_t length;
-  static uint8_t resolution;
-  static uint8_t apply;
   static uint8_t ignore_button_release;
-  static bool show_track_menu;
+  static bool show_seq_menu;
 
   bool recording = false;
   bool display_page_index = true;
@@ -39,6 +46,8 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
+  void config_as_trackedit();
+  void config_as_lockedit();
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);

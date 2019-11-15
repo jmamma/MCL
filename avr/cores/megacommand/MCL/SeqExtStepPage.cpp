@@ -18,6 +18,9 @@ void SeqExtStepPage::config() {
 #endif
 
   strcpy(info2, "EXT");
+
+  // config menu
+  config_as_trackedit();
 }
 
 void SeqExtStepPage::config_encoders() {
@@ -153,7 +156,7 @@ void SeqExtStepPage::display() {
 }
 #else
 void SeqExtStepPage::display() {
-  SeqPage::display();
+  oled_display.clearDisplay();
 
   draw_knob_frame();
 
@@ -246,6 +249,8 @@ void SeqExtStepPage::display() {
   }
 
   draw_pattern_mask(page_select * 16, DEVICE_A4);
+
+  SeqPage::display();
   oled_display.display();
 #endif
 }
@@ -342,34 +347,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
-    if (active_track.resolution == 1) {
-      active_track.resolution = 2;
-      init();
-
-    } else {
-      active_track.resolution = 1;
-      init();
-    }
-
-    return true;
-  }
-
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     GUI.setPage(&seq_step_page);
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    active_track.clear_track();
-    return true;
-  }
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-      active_track.clear_track();
-    }
-    return true;
-  }
+
 #endif
   return false;
 }

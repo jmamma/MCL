@@ -21,7 +21,6 @@ extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
-extern MCLEncoder trackselect_enc;
 
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
@@ -49,9 +48,9 @@ extern SeqExtStepPage seq_extstep_page;
 
 extern SeqPtcPage seq_ptc_page;
 
-extern MCLEncoder track_menu_param1;
-extern MCLEncoder track_menu_param2;
-extern MenuPage<5> track_menu_page;
+extern MCLEncoder seq_menu_value_encoder;
+extern MCLEncoder seq_menu_entry_encoder;
+extern MenuPage<9> seq_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();

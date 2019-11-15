@@ -22,6 +22,9 @@ void SeqParamPage::config() {
   } else {
     strcat(info2, "B");
   }
+
+  // config menu
+  config_as_lockedit();
 }
 
 void SeqParamPage::init() {
@@ -115,7 +118,9 @@ void SeqParamPage::display() {
 }
 #else
 void SeqParamPage::display() {
-  SeqPage::display();
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
+
   draw_knob_frame();
 
   char myName[4] = "-- ";
@@ -147,7 +152,9 @@ void SeqParamPage::display() {
   draw_pattern_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
 
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 
 #endif
@@ -252,19 +259,6 @@ if (utiming == 0) {
     return true;
   }
 */
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_locks();
-    return true;
-  }
-
-  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-
-    for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].clear_locks();
-    }
-    return true;
-  }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     uint8_t page_depth = page_id;
@@ -275,10 +269,6 @@ if (utiming == 0) {
     }
 
     GUI.setPage(&seq_param_page[page_depth]);
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    mcl_seq.md_tracks[last_md_track].clear_locks();
     return true;
   }
 

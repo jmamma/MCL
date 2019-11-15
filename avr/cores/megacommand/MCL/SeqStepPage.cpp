@@ -21,8 +21,10 @@ void SeqStepPage::config() {
   strncat(info1, ">", len1);
   m_strncpy_p(buf, str2, len1);
   strncat(info1, buf, len1);
-
   strcpy(info2, "NOTE");
+
+  // config menu
+  config_as_trackedit();
 }
 
 void SeqStepPage::init() {
@@ -119,7 +121,8 @@ void SeqStepPage::display() {
 }
 #else
 void SeqStepPage::display() {
-  SeqPage::display();
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
 
   draw_knob_frame();
 
@@ -172,8 +175,9 @@ void SeqStepPage::display() {
   draw_lock_mask((page_select * 16), DEVICE_MD);
   draw_pattern_mask((page_select * 16), DEVICE_MD);
 
+  SeqPage::display();
   oled_display.display();
-  oled_display.setFont();
+  oled_display.setFont(oldfont);
 }
 #endif
 
@@ -343,17 +347,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].clear_track();
-    }
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    active_track.clear_track();
-    return true;
-  }
 #ifdef EXT_TRACKS
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     GUI.setPage(&seq_extstep_page);

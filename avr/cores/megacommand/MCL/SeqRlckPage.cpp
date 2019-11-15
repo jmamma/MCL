@@ -19,6 +19,9 @@ void SeqRlckPage::config() {
 
   strcpy(info2, "RLCK");
   display_page_index = false;
+
+  // config menu
+  config_as_lockedit();
 }
 
 void SeqRlckPage::init() {
@@ -87,7 +90,9 @@ void SeqRlckPage::display() {
   if ((!redisplay) && (MidiClock.state == 2)) {
     return;
   }
-  SeqPage::display();
+
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
 
   draw_knob_frame();
 
@@ -106,7 +111,9 @@ void SeqRlckPage::display() {
   draw_lock_mask(page_select * 16, show_current_step);
   draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
 
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 #endif
 
@@ -119,14 +126,6 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     curpage = SEQ_RTRK_PAGE;
     GUI.setPage(&seq_rtrk_page);
-    return true;
-  }
-
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].clear_locks();
-    }
     return true;
   }
 

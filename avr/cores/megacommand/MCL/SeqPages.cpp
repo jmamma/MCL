@@ -1,24 +1,9 @@
 #include "MCL.h"
 
-const menu_t<5> track_menu_layout PROGMEM = {
-  "TRACk",
-  {
-    {"LENGTH:", 0, 64, 0, (uint8_t *) &SeqPage::length, (Page*) NULL, NULL, {}},
-    {"MULTI:", 1, 2, 2, (uint8_t *) &SeqPage::resolution, (Page*) NULL, NULL, {{1, "1x"},{2, "2x"}}},
-
-    {"APPLY:", 0, 1, 2, (uint8_t *) &SeqPage::apply, (Page*) NULL, NULL, {{1, "--"},{1, "ALL"}}},
-//    {"LOAD SND:", 0,  0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_load_sound, {}},
-//    {"SAVE SND:", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_save_sound, {}},
-  },
-  (&mclsys_apply_config),
-};
-
 MCLEncoder seq_param1(0, 3, ENCODER_RES_SEQ);
 MCLEncoder seq_param2(0, 4, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
 MCLEncoder seq_param4(0, 64, ENCODER_RES_SEQ);
-
-MCLEncoder trackselect_enc(0, 15, ENCODER_RES_SEQ);
 
 MCLEncoder seq_lock1(0, 127, ENCODER_RES_PARAM);
 MCLEncoder seq_lock2(0, 127, ENCODER_RES_PARAM);
@@ -40,9 +25,27 @@ SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
 #endif
 
 SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &ptc_param_scale);
-MCLEncoder track_menu_param1(0, 8, ENCODER_RES_PAT);
-MCLEncoder track_menu_param2(0, 8, ENCODER_RES_PAT);
-MenuPage<5> track_menu_page(&track_menu_layout, &track_menu_param1, &track_menu_param2);
 
+const menu_t<9> seq_menu_layout PROGMEM = {
+    "SEQ",
+    {
+        {"TRACK SEL.", 0, 16, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
+        {"COPY TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"CLEAR TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_track_handler, {}},
+        {"CLEAR LCKS.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_locks_handler, {}},
+        {"PASTE TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"TRACK RES.", 1, 2, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {0, "1x"}, {1, "2x"} }},
+        {"STEP SHIFT", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        // clear all tracks
+        {"CLEAR ALL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_all_tracks_handler, {}},
+        // clear all locks
+        {"CLEAR ALL", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, opt_clear_all_locks_handler, {}},
+    },
+    NULL,
+};
+
+MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
+MCLEncoder seq_menu_entry_encoder(0, 8, ENCODER_RES_PAT);
+MenuPage<9> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 //SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];

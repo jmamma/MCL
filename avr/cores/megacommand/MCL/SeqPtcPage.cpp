@@ -134,6 +134,9 @@ void SeqPtcPage::config() {
 
   strcpy(info2, "CHROMAT");
   display_page_index = false;
+
+  // config menu
+  config_as_trackedit();
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {
@@ -264,7 +267,8 @@ void SeqPtcPage::display() {
     return;
   }
 
-  SeqPage::display();
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
 
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
@@ -315,7 +319,10 @@ void SeqPtcPage::display() {
   // draw TI keyboard
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
+
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 #endif
 
@@ -467,37 +474,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     return true;
   }
 */
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    if (midi_device == DEVICE_MD) {
-      for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
-        mcl_seq.md_tracks[n].clear_track();
-      }
-
-    }
-#ifdef EXT_TRACKS
-    else {
-      for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-        mcl_seq.ext_tracks[n].clear_track();
-      }
-    }
-#endif
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
-#ifdef EXT_TRACKS
-    if (midi_device != DEVICE_MD) {
-      if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-        mcl_seq.ext_tracks[last_ext_track].resolution = 2;
-      } else {
-        mcl_seq.ext_tracks[last_ext_track].resolution = 1;
-      }
-      seq_ptc_page.queue_redraw();
-    }
-#endif
-    return true;
-  }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
