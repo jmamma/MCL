@@ -245,6 +245,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     return_state = false;
+    GUI.ignoreNextEvent(event->source);
     GUI.popPage();
     return true;
   }
@@ -281,6 +282,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     m_strncpy(textp, text, cpy_len);
     textp[cpy_len] = '\0';
+    GUI.ignoreNextEvent(event->source);
     GUI.popPage();
     return true;
   }
