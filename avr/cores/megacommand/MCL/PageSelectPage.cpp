@@ -311,6 +311,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     LightPage *p;
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
+      GUI.ignoreNextEvent(Buttons.BUTTON1);
       md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
