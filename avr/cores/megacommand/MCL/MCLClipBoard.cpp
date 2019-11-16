@@ -68,7 +68,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
          sizeof(md_track->seq_data));
   md_track->get_machine_from_kit(track, track);
-  ret = mcl_sd.write_data(&temp_track, sizeof(temp_track), &file);
+  ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
   close();
   if (!ret) { DEBUG_PRINTLN("failed write"); }
   return ret;
@@ -95,7 +95,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   int32_t offset = grid.get_slot_offset(source_track, GRID_LENGTH);
   ret = file.seekSet(offset);
   if (ret) {
-    ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
+    ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
     if (!ret) {
       DEBUG_PRINTLN("failed read");
       close();
