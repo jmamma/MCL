@@ -561,6 +561,7 @@ void opt_copy_track_handler() {
     mcl_clipboard.copy_sequencer();
   }
   if (opt_trackall == 1) {
+    mcl_clipboard.copy_track = last_md_track;
     mcl_clipboard.copy_sequencer_track(last_md_track);
   }
   opt_trackall =0;
@@ -571,7 +572,7 @@ void opt_paste_track_handler() {
     mcl_clipboard.paste_sequencer();
   }
   if (opt_trackall == 1) {
-    mcl_clipboard.paste_sequencer_track(last_md_track);
+    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track, last_md_track);
   }
   opt_trackall = 0;
 }

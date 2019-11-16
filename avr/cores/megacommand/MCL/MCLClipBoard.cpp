@@ -51,16 +51,16 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
 
 bool MCLClipBoard::paste_sequencer() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (!paste_sequencer_track(n)) { return false; }
+    if (!paste_sequencer_track(n,n)) { return false; }
   }
   return true;
 }
 
-bool MCLClipBoard::paste_sequencer_track(uint8_t track) {
+bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   bool ret;
   EmptyTrack temp_track;
   MDTrack *md_track = (MDTrack*)(&temp_track);
-  int32_t offset = grid.get_slot_offset(track, GRID_LENGTH);
+  int32_t offset = grid.get_slot_offset(source_track, GRID_LENGTH);
   ret = file.seekSet(offset);
   if (ret) {
   ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
