@@ -11,8 +11,6 @@
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
-//#define MIDI_VALIDATE
-
 /**
  * \addtogroup Midi
  *
