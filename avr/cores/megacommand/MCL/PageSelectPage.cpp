@@ -321,6 +321,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     md_exploit.off();
+    GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
     return true;
   }
