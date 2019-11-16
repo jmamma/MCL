@@ -20,6 +20,11 @@ public:
   bool open();
   bool close();
 
+  bool copy_sequencer();
+  bool copy_sequencer_track(uint8_t track);
+  bool paste_sequencer();
+  bool paste_sequencer_track(uint8_t track);
+
   bool copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h);
   bool paste(uint16_t col, uint16_t row);
 

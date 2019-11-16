@@ -19,11 +19,14 @@ extern void pattern_len_handler(Encoder *enc);
 
 extern uint8_t opt_trackid;
 extern uint8_t opt_resolution;
-extern uint8_t opt_clearall;
+extern uint8_t opt_trackall;
+
 extern void opt_trackid_handler();
 extern void opt_resolution_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
+extern void opt_copy_track_handler();
+extern void opt_paste_track_handler();
 
 class SeqPage : public LightPage {
 public:

@@ -6,13 +6,13 @@
 
 #define FILENAME_CLIPBOARD "clipboard.tmp"
 
+//Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
+
+#define CLIPBOARD_FILE_SIZE (uint32_t)GRID_SLOT_BYTES + (uint32_t)GRID_SLOT_BYTES * (uint32_t)(GRID_LENGTH + 1) * (uint32_t)(GRID_WIDTH + 1)
+
 bool MCLClipBoard::init() {
   DEBUG_PRINTLN("Creating clipboard");
-  bool ret = file.createContiguous(FILENAME_CLIPBOARD,
-                                   (uint32_t)GRID_SLOT_BYTES +
-                                       (uint32_t)GRID_SLOT_BYTES *
-                                           (uint32_t)GRID_LENGTH *
-                                           (uint32_t)(GRID_WIDTH + 1));
+  bool ret = file.createContiguous(FILENAME_CLIPBOARD,CLIPBOARD_FILE_SIZE);
   if (ret) {
     file.close();
   } else {
@@ -28,6 +28,55 @@ bool MCLClipBoard::open() {
   }
 }
 bool MCLClipBoard::close() { return file.close(); }
+
+bool MCLClipBoard::copy_sequencer() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    if (!copy_sequencer_track(n)) { return false; }
+  }
+  return true;
+}
+
+bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
+  bool ret;
+  EmptyTrack temp_track;
+  MDTrack *md_track = (MDTrack*)(&temp_track);
+  int32_t offset = grid.get_slot_offset(track, GRID_LENGTH);
+  ret = file.seekSet(offset);
+  if (!ret) { return false; }
+  memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
+           sizeof(md_track->seq_data));
+  md_track->get_machine_from_kit(track,track);
+  return mcl_sd.write_data(&temp_track, sizeof(temp_track), &file);
+}
+
+bool MCLClipBoard::paste_sequencer() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    if (!paste_sequencer_track(n)) { return false; }
+  }
+  return true;
+}
+
+bool MCLClipBoard::paste_sequencer_track(uint8_t track) {
+  bool ret;
+  EmptyTrack temp_track;
+  MDTrack *md_track = (MDTrack*)(&temp_track);
+  int32_t offset = grid.get_slot_offset(track, GRID_LENGTH);
+  ret = file.seekSet(offset);
+  if (ret) {
+  ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
+  if (!ret) { return false; }
+  }
+  else {
+  return false;
+  }
+  memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
+           sizeof(md_track->seq_data));
+  md_track->place_track_in_kit(track, track, &(MD.kit),true);
+  MD.setMachine(track, &(md_track->machine));
+  return true;
+}
+
+
 
 bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   DEBUG_PRINT_FN();
