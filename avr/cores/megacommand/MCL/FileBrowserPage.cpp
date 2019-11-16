@@ -409,6 +409,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     // select an entry
+    GUI.ignoreNextEvent(event->source);
     on_select(temp_entry);
     return true;
   }
