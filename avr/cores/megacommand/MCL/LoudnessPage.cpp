@@ -6,6 +6,8 @@ void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 
 void LoudnessPage::init() {
   DEBUG_PRINT_FN();
+
+  md_exploit.off();
 #ifdef OLED_DISPLAY
   // classic_display = false;
   oled_display.clearDisplay();
@@ -122,6 +124,7 @@ void LoudnessPage::scale_vol(float inc) {
   MDTrack *md_track = (MDTrack *)&empty_track;
 
   grid_page.prepare();
+
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   MD.getBlockingPattern(MD.currentPattern);
   uint8_t seq_mute_states[NUM_MD_TRACKS];
@@ -139,7 +142,6 @@ void LoudnessPage::scale_vol(float inc) {
     md_track->place_track_in_pattern(n, n, &MD.pattern);
     md_track->place_track_in_kit(n, n, &MD.kit);
   }
-
   mcl_actions.md_setsysex_recpos(8, MD.pattern.origPosition);
   MD.pattern.toSysex();
 
@@ -274,11 +276,9 @@ void LoudnessPage::check_grid_loudness(int col, int row) {
 
 void LoudnessPage::display() {
 
-  if (!classic_display) {
 #ifdef OLED_DISPLAY
     oled_display.clearDisplay();
 #endif
-  }
   GUI.setLine(GUI.LINE1);
   uint8_t x;
   // GUI.put_string_at(12,"Loudness");
