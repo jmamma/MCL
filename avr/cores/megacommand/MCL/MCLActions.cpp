@@ -354,7 +354,7 @@ void MCLActions::send_tracks_to_devices() {
                                   (A4Sound *)&sound_array[track],
                                   &empty_track)) {
           if (Analog4.connected) {
-            sound_array[track].workSpace = true;
+            sound_array[track].soundpool = true;
             a4_send[track] = 1;
           }
         }
