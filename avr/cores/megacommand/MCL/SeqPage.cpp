@@ -10,7 +10,9 @@ bool SeqPage::show_seq_menu = false;
 
 uint8_t opt_resolution = 1;
 uint8_t opt_trackid = 1;
-uint8_t opt_trackall = 0;
+uint8_t opt_copy = 0;
+uint8_t opt_paste = 0;
+uint8_t opt_clear = 0;
 
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -509,28 +511,28 @@ void opt_resolution_handler() {
 
 void opt_clear_track_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-    if (opt_trackall == 2) {
+    if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
-    } else if (opt_trackall == 1) {
+    } else if (opt_clear == 1) {
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
   } else {
-    if (opt_trackall == 2) {
+    if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
-    } else if (opt_trackall == 1) {
+    } else if (opt_clear == 1) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
   }
-  opt_trackall = 0;
+  opt_clear = 0;
 }
 
 void opt_clear_locks_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-    if (opt_trackall) {
+    if (opt_clear) {
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_locks();
       }
@@ -540,6 +542,7 @@ void opt_clear_locks_handler() {
   } else {
     // TODO ext locks
   }
+  opt_clear = 0;
 }
 
 void opt_clear_all_tracks_handler() {
@@ -557,24 +560,24 @@ void opt_clear_all_locks_handler() {
 }
 
 void opt_copy_track_handler() {
-  if (opt_trackall == 2) {
+  if (opt_copy == 2) {
     mcl_clipboard.copy_sequencer();
   }
-  if (opt_trackall == 1) {
+  if (opt_copy == 1) {
     mcl_clipboard.copy_track = last_md_track;
     mcl_clipboard.copy_sequencer_track(last_md_track);
   }
-  opt_trackall =0;
+  opt_copy = 0;
 }
 
 void opt_paste_track_handler() {
-  if (opt_trackall == 2) {
+  if (opt_paste == 2) {
     mcl_clipboard.paste_sequencer();
   }
-  if (opt_trackall == 1) {
+  if (opt_paste == 1) {
     mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track, last_md_track);
   }
-  opt_trackall = 0;
+  opt_paste = 0;
 }
 
 void SeqPage::config_as_trackedit() {
