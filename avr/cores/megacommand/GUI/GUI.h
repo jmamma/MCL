@@ -175,7 +175,7 @@ public:
     eventHandlers.remove(handler);
   }
   void ignoreNextEvent(uint8_t i) {
-  SET_BIT64(event_ignore_next_mask, i);
+  SET_BIT(event_ignore_next_mask, i);
   }
   /**
    * Add a new task to be periodically polled (max 8).
