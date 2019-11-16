@@ -58,7 +58,7 @@ uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
 static constexpr uint8_t a4sound_prologue[8] =  { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x53, 0x01, 0x01 };
 static constexpr uint8_t a4soundx_prologue[8] = { 0x00, 0x20, 0x3c, 0x06, 0x00, 0x59, 0x01, 0x01 };
 static constexpr uint8_t a4sound_header[8] = { 0x78, 0x3e, 0x6f, 0x3a, 0x3a, 0x00, 0x00, 0x00 };
-static constexpr uint8_t a4sound_footer[4] =  { 0x3a, 0xe3, 0x7a, 0x4e };
+static constexpr uint8_t a4sound_footer[4] =  { 0x3a, 0x3e, 0x7a, 0x4e };
 
 static constexpr size_t a4sound_sysex_len = 415 - 2; // 2 for sysex frame
 static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
@@ -123,9 +123,12 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.recordLen - a4sound_checksum_startidx;
+  const auto &reclen = midi->midiSysex.recordLen;
+
+  // len / offset: checksum'ed part
+  uint16_t len = reclen - a4sound_checksum_startidx;
   uint16_t offset = a4sound_checksum_startidx;
-  if (len != a4sound_sysex_len) {
+  if (reclen != a4sound_sysex_len) {
     GUI.setLine(GUI.LINE1);
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
@@ -136,7 +139,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len - 1)) {
+  if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len)) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }

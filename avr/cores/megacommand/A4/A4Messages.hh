@@ -142,23 +142,19 @@ struct a4flt_t{
   int8_t     env_depth_pad;
 };
 
+// XXX to be studied further
 __attribute__((packed))
 struct a4mod_t {
-  int8_t  depth1;
-  uint8_t pad1[2];
-  uint8_t dest1;
-  int8_t  depth2;
-  uint8_t pad2[2];
-  uint8_t dest2;
-  int8_t  depth3;
-  uint8_t pad3[2];
-  uint8_t dest3;
-  int8_t  depth4;
-  uint8_t pad4[2];
-  uint8_t dest4;
-  int8_t  depth5;
-  uint8_t pad5[2];
-  uint8_t dest5;
+  uint8_t dest1[2];
+  int8_t  depth1[2];
+  uint8_t dest2[2];
+  int8_t  depth2[2];
+  uint8_t dest3[2];
+  int8_t  depth3[2];
+  uint8_t dest4[2];
+  int8_t  depth4[2];
+  uint8_t dest5[2];
+  int8_t  depth5[2];
 };
 
 __attribute__((packed))
@@ -203,7 +199,7 @@ struct a4sound_t {
   uint8_t     osc2_pwm_depth;
   uint8_t     osc2_pwm_depth_pad;
   uint8_t     osc_pad[6];
-  // 0x51
+  // 0x5b
   uint8_t     noise_samplehold;
   uint8_t     noise_samplehold_pad;
   int8_t      noise_fade;
@@ -293,13 +289,9 @@ struct a4sound_t {
   uint8_t     env2_destB;
   uint8_t     env2_destB_pad;
   a4sfloat_t  envF_depthB;
-  a4sfloat_t  envF_depthB_pad;
   a4sfloat_t  envF_depthA;
-  a4sfloat_t  envF_depthA_pad;
   a4sfloat_t  env2_depthA;
-  a4sfloat_t  env2_depthA_pad;
   a4sfloat_t  env2_depthB;
-  a4sfloat_t  env2_depthB_pad;
 
   int8_t      lfo1_speed;
   int8_t      lfo1_speed_pad;
@@ -334,13 +326,9 @@ struct a4sound_t {
   uint8_t     lfo2_destB;
   uint8_t     lfo2_destB_pad;
   a4sfloat_t  lfo1_depthA;
-  a4sfloat_t  lfo1_depthA_pad;
   a4sfloat_t  lfo1_depthB;
-  a4sfloat_t  lfo1_depthB_pad;
   a4sfloat_t  lfo2_depthA;
-  a4sfloat_t  lfo2_depthA_pad;
   a4sfloat_t  lfo2_depthB;
-  a4sfloat_t  lfo2_depthB_pad;
 
   uint8_t     lfo_pad[8];
 
@@ -448,5 +436,10 @@ public:
 };
 
 /* @} */
+
+#include "MCLMemory.h"
+
+// __WOW<sizeof(a4sound_t)> sza4;
+// sizeof(a4sound_t) is 318, which encodes 363 bytes in 7-bit enc, + 42 bytes header metadata + 8B prologue + 2B SYSEX frame = 415B
 
 #endif /* A4MESSAGES_H__ */

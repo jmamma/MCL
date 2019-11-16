@@ -26,7 +26,7 @@
 //#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
 
 //Use these to produce compiler errors that probes the sizes!
-//template<int X> struct __WOW;
+template<int X> struct __WOW;
 //__WOW<sizeof(MDTrackLight)> szmd;
 //__WOW<sizeof(A4Track)> sza4;
 #pragma message("MD_TRACK_LEN = 501")
