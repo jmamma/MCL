@@ -225,6 +225,7 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    GUI.ignoreNextEvent(event->source);
     exit();
     return true;
   }

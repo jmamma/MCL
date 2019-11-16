@@ -31,7 +31,6 @@ public:
   static uint8_t page_select;
   static uint8_t page_count;
   static uint8_t midi_device;
-  static uint8_t ignore_button_release;
   static bool show_seq_menu;
 
   bool recording = false;

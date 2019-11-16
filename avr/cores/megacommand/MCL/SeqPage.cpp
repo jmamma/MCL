@@ -5,7 +5,6 @@ uint8_t SeqPage::page_select = 0;
 
 uint8_t SeqPage::midi_device = DEVICE_MD;
 
-uint8_t SeqPage::ignore_button_release = 255;
 uint8_t SeqPage::page_count = 4;
 bool SeqPage::show_seq_menu = false;
 
@@ -31,7 +30,6 @@ void SeqPage::create_chars_seq() {
 void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
-  ignore_button_release = 255;
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
@@ -115,7 +113,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[2]->cur = step;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         note_interface.notes[track] = 0;
-        ignore_button_release = 4;
+        GUI.ignoreNextEvent(event->source);
       }
       return true;
     }
@@ -126,16 +124,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    if (ignore_button_release != 4) {
       page_select += 1;
 
       if (page_select >= page_count) {
         page_select = 0;
       }
-    } else {
-      // clear ignore flag
-      ignore_button_release = 255;
-    }
     return true;
   }
 
