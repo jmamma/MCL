@@ -12,6 +12,7 @@
 #define SD_RAW_CONFIG_H
 
 #include <stdint.h>
+#include "Core.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -105,10 +106,18 @@ extern "C"
     #define configure_pin_ss() DDRB |= (1 << DDB0)
     #define configure_pin_miso() DDRB &= ~(1 << DDB3)
 
+#ifdef MEGACOMMAND
     //MegaCommand disable SD CS pin when card not in use
     #define unselect_card() ({ PORTB |= (1 << PB0); })
     //Megacommand disable SD CS pin when card not in use, enable OLED pin
     #define select_card() ({ PORTL |= (1 << PL7); PORTB &= ~(1 << PB0);})
+#else
+    //MiniCommand disable SD CS pin when card not in use
+    #define unselect_card() ({ PORTE |= (1 << PE7); })
+    //Minicommand disable SD CS pin when card not in use
+    #define select_card() ({ PORTE &= ~(1 << PE7);})
+
+#endif
 
 #else
     #error "no sd/mmc pin mapping available!"

@@ -1,7 +1,49 @@
-#include "MCL.h"
 #include "SeqPtcPage.h"
+#include "MCL.h"
 
 #define MIDI_LOCAL_MODE 0
+#define NUM_KEYS 32
+
+scale_t *scales[16]{
+    &chromaticScale, &ionianScale,
+    //&dorianScale,
+    &phrygianScale,
+    //&lydianScale,
+    //&mixolydianScale,
+    //&aeolianScale,
+    //&locrianScale,
+    &harmonicMinorScale, &melodicMinorScale,
+    //&lydianDominantScale,
+    //&wholeToneScale,
+    //&wholeHalfStepScale,
+    //&halfWholeStepScale,
+    &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
+    &inSenScale, &bluesScale,
+    //&majorBebopScale,
+    //&dominantBebopScale,
+    //&minorBebopScale,
+    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
+    //&minorMaj7Arp,
+    &majorMaj7Arp9,
+    //&majorMaj7ArpMin9,
+    //&majorMin7Arp9,
+    //&majorMin7ArpMin9,
+    //&minorMin7Arp9,
+    //&minorMin7ArpMin9,
+    //&minorMaj7Arp9,
+    //&minorMaj7ArpMin9
+};
+
+typedef char scale_name_t[4];
+
+const scale_name_t scale_names[] PROGMEM = {
+  "---", "ION",
+  "PHR", 
+  "mHA", "mME",
+  "MPE", "mPE", "sPE",
+  "ISS", "BLU", 
+  "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
+};
 
 void SeqPtcPage::setup() {
   SeqPage::setup();
@@ -10,7 +52,7 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
-  record_mode = false;
+  recording = false;
   if (MidiClock.state != 2) {
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
@@ -21,18 +63,21 @@ void SeqPtcPage::config_encoders() {
     ((MCLEncoder *)encoders[2])->max = 64;
 
     encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     ((MCLEncoder *)encoders[2])->max = (uint8_t)128;
     ((MCLEncoder *)encoders[2])->cur =
         mcl_seq.ext_tracks[last_ext_track].length;
   }
+#endif
 }
 
 uint8_t SeqPtcPage::calc_poly_count() {
   DEBUG_PRINT_FN();
   uint8_t count = 0;
   for (uint8_t x = 0; x < 16; x++) {
-    if (IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       count++;
     }
   }
@@ -52,8 +97,9 @@ void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
   ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
-  record_mode = false;
- midi_events.setup_callbacks();
+  recording = false;
+  midi_events.setup_callbacks();
+  note_mask = 0;
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
@@ -63,10 +109,31 @@ void SeqPtcPage::init() {
     md_exploit.off();
     last_md_track = MD.currentTrack;
   }
+  curpage = SEQ_PTC_PAGE;
+
+  config();
+}
+
+void SeqPtcPage::config() {
   config_encoders();
   encoders[1]->cur = 32;
   encoders[0]->cur = 1;
-  curpage = SEQ_PTC_PAGE;
+
+  // config info labels
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+  constexpr uint8_t len1 = sizeof(info1);
+
+  char buf[len1] = {'\0'};
+  m_strncpy_p(buf, str1, len1);
+  strncpy(info1, buf, len1);
+  strncat(info1, ">", len1);
+  m_strncpy_p(buf, str2, len1);
+  strncat(info1, buf, len1);
+
+  strcpy(info2, "CHROMAT");
+  display_page_index = false;
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {
@@ -81,7 +148,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
       if (seq_ptc_page.poly_count > 1) {
         for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_seq.md_tracks[c].set_length(enc_->cur);
           }
         }
@@ -90,7 +157,9 @@ void ptc_pattern_len_handler(Encoder *enc) {
       }
     }
 
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         mcl_seq.ext_tracks[c].buffer_notesoff();
@@ -101,12 +170,32 @@ void ptc_pattern_len_handler(Encoder *enc) {
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
+#endif
 }
+
 void SeqPtcPage::loop() {
+#ifdef EXT_TRACKS
   if (encoders[0]->hasChanged() || encoders[3]->hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
+#endif
+
+  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+    queue_redraw();
+  }
+
+  if (last_midi_state != MidiClock.state) {
+    last_midi_state = MidiClock.state;
+    redisplay = true;
+  }
+
+  if (deferred_timer != 0 && clock_diff(deferred_timer, slowclock) > render_defer_time) {
+    deferred_timer = 0;
+    redisplay = true;
+  }
 }
+
+#ifndef OLED_DISPLAY
 void SeqPtcPage::display() {
   uint8_t dev_num;
   if (!redisplay) {
@@ -114,14 +203,17 @@ void SeqPtcPage::display() {
   }
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     dev_num = last_ext_track + 16;
   }
+#endif
   const char *str1 = getMachineNameShort(MD.kit.models[dev_num], 1);
   const char *str2 = getMachineNameShort(MD.kit.models[dev_num], 2);
   GUI.setLine(GUI.LINE1);
 
-  if (record_mode) {
+  if (recording) {
     GUI.put_string_at(0, "RPTC");
   } else {
     GUI.put_string_at(0, "PTC");
@@ -130,7 +222,9 @@ void SeqPtcPage::display() {
     GUI.put_value_at(5, encoders[2]->getValue());
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
@@ -140,6 +234,7 @@ void SeqPtcPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+#endif
 
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
@@ -162,16 +257,74 @@ void SeqPtcPage::display() {
   GUI.put_value_at2(14, encoders[3]->getValue());
   SeqPage::display();
 }
+#else
+void SeqPtcPage::display() {
+  uint8_t dev_num;
+  if (!redisplay) {
+    return;
+  }
+
+  SeqPage::display();
+
+  if (midi_device == DEVICE_MD) {
+    dev_num = last_md_track;
+  }
+#ifdef EXT_TRACKS
+  else {
+    dev_num = last_ext_track + 16;
+  }
+#endif
+
+  draw_knob_frame();
+  char buf1[4];
+
+  // draw OCTAVE
+  itoa(encoders[0]->getValue(), buf1, 10);
+  draw_knob(0, "OCT", buf1);
+
+  // draw FREQ
+  if (encoders[1]->getValue() < 32) {
+    strcpy(buf1, "-");
+    itoa(32 - encoders[1]->getValue(), buf1 + 1, 10);
+  } else if (encoders[1]->getValue() > 32) {
+    strcpy(buf1, "+");
+    itoa(encoders[1]->getValue() - 32, buf1 + 1, 10);
+  } else {
+    strcpy(buf1, "0");
+  }
+  draw_knob(1, "DET", buf1); // detune
+
+  // draw LEN
+  if (midi_device == DEVICE_MD) {
+    itoa(encoders[2]->getValue(), buf1, 10);
+    draw_knob(2, "LEN", buf1);
+  }
+#ifdef EXT_TRACKS
+  else {
+    itoa(encoders[2]->getValue() /
+             (2 / mcl_seq.ext_tracks[last_ext_track].resolution),
+         buf1, 10);
+    draw_knob(2, "LEN", buf1);
+  }
+#endif
+
+  // draw SCALE
+  m_strncpy_p(buf1, scale_names[encoders[3]->getValue()], 4);
+  draw_knob(3, "SCA", buf1);
+
+  // draw TI keyboard
+  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
+
+  oled_display.display();
+}
+#endif
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
   uint8_t size = scales[encoders[3]->cur]->size;
   uint8_t oct = note_num / size;
   note_num = note_num - oct * size;
 
-  note_num = scales[encoders[3]->cur]->pitches[note_num];
-
-  uint8_t pitch = encoders[0]->getValue() * 12 + oct * 12 + note_num;
-  return pitch;
+  return scales[encoders[3]->cur]->pitches[note_num] + oct * 12;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
@@ -179,11 +332,11 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t count = 0;
 
   if (poly_max == 0) {
-  return last_md_track;
+    return last_md_track;
   }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       if (poly_notes[x] == pitch) {
         return x;
       }
@@ -196,7 +349,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   }
   // Reuse existing track for noew pitch
   for (uint8_t x = 0; x < 16 && voice == 255; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET(mcl_cfg.poly_mask, x)) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       if (count == poly_count) {
         voice = x;
       } else {
@@ -227,31 +380,39 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
       pgm_read_byte(&tuning->tuning[pitch]) + encoders[1]->getValue() - 32;
   return machine_pitch;
 }
-void SeqPtcPage::trig_md(uint8_t note_num) {
-  uint8_t pitch = calc_pitch(note_num);
+
+void SeqPtcPage::trig_md(uint8_t note, uint8_t pitch) {
+  pitch = octave_to_pitch() + pitch;
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
   MD.setTrackParam(next_track, 0, machine_pitch);
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
   }
-  if ((record_mode) && (MidiClock.state == 2)) {
+  if ((recording) && (MidiClock.state == 2)) {
 
     if (!BUTTON_DOWN(Buttons.BUTTON2)) {
-      mcl_seq.md_tracks[next_track].record_track(note_num, 127);
+      mcl_seq.md_tracks[next_track].record_track(note, 127);
     }
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
+
+void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
+  uint8_t pitch = seq_ext_pitch(note_num - 32);
+  CLEAR_BIT64(note_mask, pitch);
+}
+
 void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   uint8_t pitch = seq_ext_pitch(note_num - 32);
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
+  SET_BIT64(note_mask, pitch);
   MD.setTrackParam(next_track, 0, machine_pitch);
   if (!BUTTON_DOWN(Buttons.BUTTON2)) {
     MD.triggerTrack(next_track, 127);
   }
-  if ((record_mode) && (MidiClock.state == 2)) {
+  if ((recording) && (MidiClock.state == 2)) {
     if (!BUTTON_DOWN(Buttons.BUTTON2)) {
       mcl_seq.md_tracks[next_track].record_track(note_num, 127);
     }
@@ -259,39 +420,45 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   }
 }
 
+void SeqPtcPage::queue_redraw() {
+  deferred_timer = slowclock;
+}
+
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
-//  if (SeqPage::handleEvent(event)) {
-//    return;
-//  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+    // do not route EXT TI events to MD.
+    if (device != DEVICE_MD) {
+      return false;
+    }
+
+    uint8_t note = event->source - 128;
+    uint8_t pitch = calc_pitch(note);
     DEBUG_PRINTLN("yep");
     // note interface presses are treated as musical notes here
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device != DEVICE_MD) {
-        return;
-      }
+    if (mask == EVENT_BUTTON_PRESSED) {
+
+      SET_BIT64(note_mask, pitch);
       midi_device = device;
       config_encoders();
-      trig_md(track);
-      return true;
+      trig_md(note, pitch);
+    } else if (mask == EVENT_BUTTON_RELEASED) {
+      CLEAR_BIT(note_mask, pitch);
     }
 
-    if (event->mask == EVENT_BUTTON_RELEASED) {
-      //      draw_notes(0);
+    // deferred trigger redraw to update TI keyboard feedback.
+    queue_redraw();
 
-      return true;
-    }
     return true;
-  }
+  } // TI events
+
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    redisplay = true;
-    record_mode = !record_mode;
+    seq_ptc_page.queue_redraw();
+    recording = !recording;
     return true;
   }
 
@@ -299,6 +466,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
     return true;
   }
+
   if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
     if (midi_device == DEVICE_MD) {
@@ -306,24 +474,28 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl_seq.md_tracks[n].clear_track();
       }
 
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
     }
-
+#endif
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
+#ifdef EXT_TRACKS
     if (midi_device != DEVICE_MD) {
       if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
         mcl_seq.ext_tracks[last_ext_track].resolution = 2;
       } else {
         mcl_seq.ext_tracks[last_ext_track].resolution = 1;
       }
+      seq_ptc_page.queue_redraw();
     }
-    redisplay = true;
+#endif
     return true;
   }
 
@@ -333,23 +505,25 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
       if (poly_count > 1) {
         for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
 
             mcl_seq.md_tracks[c].clear_track();
           }
         }
-      }
-
-      else {
+      } else {
         mcl_seq.md_tracks[last_md_track].clear_track();
       }
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
+#endif
     return true;
   }
 
   if (SeqPage::handleEvent(event)) {
+    seq_ptc_page.queue_redraw();
     return true;
   }
 
@@ -370,63 +544,84 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   // }
 
   //  if (encoders[4]->getValue() > 0) {
-  pitch = encoders[0]->getValue() * 12 +
+  pitch = octave_to_pitch() +
           scales[encoders[3]->cur]->pitches[pos] + oct * 12;
   //   }
 
   return pitch;
 }
+
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  DEBUG_PRINTLN("note on midi2");
-  uint8_t note_num = msg[1];
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  DEBUG_PRINTLN(channel);
   if ((GUI.currentPage() == &seq_step_page) ||
+#ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
+#endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
   }
+
+  uint8_t note_num = msg[1];
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  DEBUG_PRINT("note on midi2: ");
+  DEBUG_DUMP(channel);
+
+  uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+
+  // matches control channel, or MIDI2 is OMNI?
+  // then route midi message to MD
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
-    seq_ptc_page.trig_md_fromext(note_num);
+    seq_ptc_page.trig_md_fromext(pitch);
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    seq_ptc_page.queue_redraw();
     return;
   }
 
+#ifdef EXT_TRACKS
+  // otherwise, translate the message and send it back to MIDI2.
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
-  }
-  if (last_ext_track != channel) {
-    seq_ptc_page.redisplay = true;
   }
   last_ext_track = channel;
   seq_ptc_page.config_encoders();
 
   DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
-  if ((seq_ptc_page.record_mode) && (MidiClock.state == 2)) {
+  if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
+#endif
 }
+
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  DEBUG_PRINTLN("note off midi2");
-  uint8_t note_num = msg[1];
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if ((GUI.currentPage() == &seq_step_page) ||
+#ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
+#endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
   }
 
+  DEBUG_PRINTLN("note off midi2");
+  uint8_t note_num = msg[1];
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
-      (mcl_cfg.uart2_ctrl_mode  == MIDI_OMNI_MODE)) {
+      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    seq_ptc_page.clear_trig_fromext(pitch);
+    seq_ptc_page.queue_redraw();
     return;
   }
-
+#ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
@@ -434,11 +629,12 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   last_ext_track = channel;
   seq_ptc_page.config_encoders();
 
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);
-  if (seq_ptc_page.record_mode && (MidiClock.state == 2)) {
+  if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
   }
+  seq_ptc_page.queue_redraw();
+#endif
 }
 
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -449,28 +645,16 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
   // If external keyboard controlling MD pitch, send parameter updates
   // to all polyphonic tracks
-  uint8_t param_true = 0;
-  if (param >= 16) {
-    param_true = 1;
-  }
-  if (param < 63) {
-    param = param - 16;
-    track = (param / 24) + (channel - MD.global.baseChannel) * 4;
-    track_param = param - ((param / 24) * 24);
-  } else if (param >= 72) {
-    param = param - 72;
-    track = (param / 24) + 2 + (channel - MD.global.baseChannel) * 4;
-    track_param = param - ((param / 24) * 24);
-  }
+  MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
 
   if ((seq_ptc_page.poly_max > 1)) {
-    if (IS_BIT_SET(mcl_cfg.poly_mask, track)) {
+    if (IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
 
       for (uint8_t n = 0; n < 16; n++) {
 
-        if (IS_BIT_SET(mcl_cfg.poly_mask, n) && (n != track)) {
-          if (param_true) {
+        if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
+          if (track_param < 24) {
             MD.setTrackParam(n, track_param, value);
           }
         }
@@ -512,32 +696,3 @@ void SeqPtcMidiEvents::remove_callbacks() {
   state = false;
 }
 
-scale_t *scales[16]{
-    &chromaticScale, &ionianScale,
-    //&dorianScale,
-    &phrygianScale,
-    //&lydianScale,
-    //&mixolydianScale,
-    //&aeolianScale,
-    //&locrianScale,
-    &harmonicMinorScale, &melodicMinorScale,
-    //&lydianDominantScale,
-    //&wholeToneScale,
-    //&wholeHalfStepScale,
-    //&halfWholeStepScale,
-    &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
-    &inSenScale, &bluesScale,
-    //&majorBebopScale,
-    //&dominantBebopScale,
-    //&minorBebopScale,
-    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
-    //&minorMaj7Arp,
-    &majorMaj7Arp9,
-    //&majorMaj7ArpMin9,
-    //&majorMin7Arp9,
-    //&majorMin7ArpMin9,
-    //&minorMin7Arp9,
-    //&minorMin7ArpMin9,
-    //&minorMaj7Arp9,
-    //&minorMaj7ArpMin9
-};

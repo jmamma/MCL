@@ -33,9 +33,8 @@
 // HardwareSerial instance in as well. Putting each instance in its own
 // file prevents the linker from pulling in any unused instances in the
 // first place.
-
 #if defined(HAVE_HWSERIAL0)
-
+#ifdef MEGACOMMAND
 #if defined(USART_RX_vect)
   ISR(USART_RX_vect)
 #elif defined(USART0_RX_vect)
@@ -63,7 +62,7 @@ ISR(USART_UDRE_vect)
 {
   Serial._tx_udr_empty_irq();
 }
-
+#endif
 #if defined(UBRRH) && defined(UBRRL)
   HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR);
 #else
@@ -75,5 +74,4 @@ ISR(USART_UDRE_vect)
 bool Serial0_available() {
   return Serial.available();
 }
-
 #endif // HAVE_HWSERIAL0

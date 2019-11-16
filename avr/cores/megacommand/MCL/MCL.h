@@ -11,7 +11,9 @@
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND
-  #define WAV_DESIGNER 1
+  #define WAV_DESIGNER
+  #define LOUDNESS_PAGE
+  #define SOUND_PAGE
 #endif
 
 #include "MCLGfx.h"
@@ -21,15 +23,23 @@
 #include "PolyPage.h"
 #include "Project.h"
 
+#ifdef SOUND_PAGE
 #include "SoundBrowserPage.h"
+#endif
+
 #include "Grid.h"
 #include "GridChain.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
+
+#ifdef LOUDNESS_PAGE
 #include "LoudnessPage.h"
+#endif
+
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MCLMemory.h"
+#include "MCLClipBoard.h"
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSound.h"
@@ -38,8 +48,12 @@
 #include "MidiActivePeering.h"
 #include "MidiID.hh"
 #include "MidiIDSysex.hh"
+
+#ifdef MEGACOMMAND
 #include "MidiSDS.hh"
 #include "MidiSDSSysex.hh"
+#endif
+
 #include "MidiSetup.h"
 #include "NoteInterface.h"
 #include "TurboLight.h"
@@ -75,8 +89,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2031
-#define VERSION_STR "2.31"
+#define VERSION 2040
+#define VERSION_STR "2.40"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

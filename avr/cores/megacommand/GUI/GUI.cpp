@@ -181,6 +181,7 @@ void GuiClass::display() {
   GUI.setLine(GUI.LINE2);
   GUI.clearFlashLine();
 
+#ifdef UART_USB
 #ifdef OLED_DISPLAY
 #ifndef DEBUGMODE
   if (display_mirror) {
@@ -216,6 +217,7 @@ void GuiClass::display() {
       n = n + 7;
     }
   }
+#endif
 #endif
   if (page->classic_display) {
     oled_display.display();

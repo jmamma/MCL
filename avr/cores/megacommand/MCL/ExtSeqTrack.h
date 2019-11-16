@@ -15,7 +15,7 @@
 class ExtSeqTrackData {
 public:
   uint8_t length;
-  uint8_t resolution = 1; // Resolution = 2 / ExtPatternResolution
+  uint8_t resolution; // Resolution = 2 / ExtPatternResolution
   uint8_t reserved[4];
   int8_t notes[4][128]; // 128 steps, up to 4 notes per step
   uint8_t locks[4][128];
@@ -40,11 +40,12 @@ public:
   uint8_t iterations;
   bool mute_until_start = false;
 
-  void seq();
-  void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  void note_on(uint8_t note);
-  void note_off(uint8_t note);
-  void noteon_conditional(uint8_t condition, uint8_t note);
+  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  ALWAYS_INLINE() void note_on(uint8_t note);
+  ALWAYS_INLINE() void note_off(uint8_t note);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
+
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 

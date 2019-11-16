@@ -30,29 +30,38 @@ class SeqPtcPage : public SeqPage {
 public:
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
+  uint8_t last_midi_state = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
+  uint64_t note_mask = 0;
+  uint16_t deferred_timer = 0;
+  const uint8_t render_defer_time = 50;
 
-  bool record_mode = false;
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
-  bool handleEvent(gui_event_t *event);
   uint8_t calc_poly_count();
   uint8_t seq_ext_pitch(uint8_t note_num);
-  void display();
   uint8_t get_machine_pitch(uint8_t track, uint8_t pitch);
   uint8_t get_next_voice(uint8_t pitch);
   uint8_t calc_pitch(uint8_t note_num);
 
-  void trig_md(uint8_t note_num);
+  void trig_md(uint8_t note_num, uint8_t pitch);
   void trig_md_fromext(uint8_t note_num);
-  void setup();
-  void cleanup();
-  void loop();
+  void clear_trig_fromext(uint8_t note_num);
+
+  inline uint8_t octave_to_pitch() { return encoders[0]->getValue() * 12; }
   void config_encoders();
   void init_poly();
-  void init();
+  void queue_redraw();
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void setup();
+  virtual void cleanup();
+  virtual void loop();
+  virtual void init();
+  virtual void config();
 };
 
 #endif /* SEQPTCPAGE_H__ */

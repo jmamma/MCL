@@ -4,13 +4,14 @@
 
 #include "Grid.h"
 #include "GridTrack.h"
+#include "MCLMemory.h"
 
 class EmptyTrack : public GridTrack {
 public:
   //Assume A4Track consume most data size out
   //of all the tracktypes
 
-  uint8_t data[sizeof(A4Track)];
+  uint8_t data[EMPTY_TRACK_LEN];
         /*
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);

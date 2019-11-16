@@ -7,18 +7,22 @@
 #include "EmptyTrack.h"
 #include "MCLActionsEvents.h"
 #include "MD.h"
+#include "MCLMemory.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
 #define STORE_IN_PLACE 0
 #define STORE_AT_SPECIFIC 254
 
+#define TRANSITION_NORMAL 0
+#define TRANSITION_MUTE 2
+#define TRANSITION_UNMUTE 3
+
 class ChainModeData {
 public:
   GridChain chains[NUM_TRACKS];
 
   uint16_t md_latency;
-  uint16_t a4_latency;
 
   uint16_t next_transition = (uint16_t) -1;
 
@@ -31,11 +35,13 @@ public:
   uint8_t transition_level[NUM_TRACKS] = { 0 };
 
   uint8_t md_div32th_latency;
-  uint8_t a4_div32th_latency;
 
   uint8_t md_div192th_latency;
+#ifdef EXT_TRACKS
+  uint16_t a4_latency;
+  uint8_t a4_div32th_latency;
   uint8_t a4_div192th_latency;
-
+#endif
 };
 
 class MCLActions : public ChainModeData {
@@ -58,9 +64,9 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool place_track_inpattern(int curtrack, int column, int row,
-                             A4Sound *analogfour_sound,
-                             EmptyTrack *empty_track);
+  bool load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
+  bool load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track);
+
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
   void store_tracks_in_mem(int column, int row, bool merge);

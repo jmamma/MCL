@@ -67,8 +67,14 @@ void MCLGfx::splashscreen() {
     }  oled_display.clearDisplay();
     */
   oled_display.display();
+  delay(750);
 
-  delay(800);
+  for (uint8_t a = 0; a < 32; a++) {
+  oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 30, a, BLACK);
+  oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 30, 32 - a, BLACK);
+  oled_display.display();
+  }
+
 #else
 
   DEBUG_PRINTLN("HD44780 enabled");
@@ -87,19 +93,11 @@ void MCLGfx::splashscreen() {
   //  GUI.setPage(&grid_page);
 }
 
-void MCLGfx::alert(char *str1, char *str2) {
+void MCLGfx::alert(const char *str1, const char *str2) {
 #ifdef OLED_DISPLAY
-  GFXfont *old_font = oled_display.getFont();
-  oled_display.clearDisplay();
-  oled_display.setFont(&TomThumb);
-  oled_display.setCursor(0, 8);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.println(str1);
-  oled_display.setCursor(0, 18);
-  oled_display.println(str2);
+  mcl_gui.draw_infobox(str1, str2);
   oled_display.display();
   delay(700);
-  oled_display.setFont(old_font);
 #else
   GUI.flash_strings_fill(str1, str2);
   GUI.display();

@@ -3,24 +3,35 @@
 #include <util/delay.h>
 #include "GUI_private.h"
 //#include "helpers.h"
+#include "Core.h"
 #include "LCD.h"
 
-#define SR165_OUT    PL0
-#define SR165_SHLOAD PL1
-#define SR165_CLK    PL2
+#ifdef MEGACOMMAND
+  #define SR165_OUT    PL0
+  #define SR165_SHLOAD PL1
+  #define SR165_CLK    PL2
 
-#define SR165_DATA_PORT PORTL
-#define SR165_DDR_PORT  DDRL
-#define SR165_PIN_PORT  PINL
+  #define SR165_DATA_PORT PORTL
+  #define SR165_DDR_PORT  DDRL
+  #define SR165_PIN_PORT  PINL
+#else
+  #define SR165_OUT    PD5
+  #define SR165_SHLOAD PD6
+  #define SR165_CLK    PD7
+
+  #define SR165_DATA_PORT PORTD
+  #define SR165_DDR_PORT  DDRD
+  #define SR165_PIN_PORT  PIND
+#endif
 
 #define SR165_DELAY() { } // asm("nop"); } // asm("nop");  asm("nop");  }
 
-inline void SR165Class::clk() {
+ALWAYS_INLINE() inline void SR165Class::clk() {
   CLEAR_BIT8(SR165_DATA_PORT, SR165_CLK);
   SET_BIT8(SR165_DATA_PORT, SR165_CLK);
 }
 
-inline void SR165Class::rst() {
+ALWAYS_INLINE() inline void SR165Class::rst() {
   CLEAR_BIT8(SR165_DATA_PORT, SR165_SHLOAD);
   SET_BIT8(SR165_DATA_PORT, SR165_SHLOAD);
 }
@@ -33,7 +44,7 @@ SR165Class::SR165Class() {
   SET_BIT8(SR165_DATA_PORT, SR165_SHLOAD);
 }
 
-uint8_t SR165Class::read() {
+ALWAYS_INLINE()  uint8_t SR165Class::read() {
   rst();
 
   uint8_t res = 0;
@@ -47,7 +58,7 @@ uint8_t SR165Class::read() {
   return res;
 }
 
-uint8_t SR165Class::read_norst() {
+ALWAYS_INLINE()  uint8_t SR165Class::read_norst() {
   uint8_t res = 0;
   uint8_t i = 0;
   for (i = 0; i < 8; i++) {
@@ -60,7 +71,7 @@ uint8_t SR165Class::read_norst() {
 }
 
 
-uint16_t SR165Class::read16() {
+ALWAYS_INLINE()  uint16_t SR165Class::read16() {
   rst();
 
   uint16_t res = 0;

@@ -3,14 +3,21 @@
 
 //#define DISABLE_MACHINE_NAMES 1
 
-#define MEGACOMMAND 1
+#include "Core.h"
 
 #define MIDIDUINO 1
 #define SYSEX_BUF_SIZE 6000
 //#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
+
 //#define DEBUGMODE
+
+#ifdef MEGACOMMAND
+  #define SD_CS 53 //PB0
+#else
+  #define SD_CS 9  //PE7
+#endif
 
 #define SERIAL_SPEED 250000
 
@@ -19,12 +26,15 @@
 #define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
-#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__FUNCTION__);})
+#define DEBUG_DUMP(x)  ({Serial.print(#x); Serial.print(" = "); Serial.println(x);})
+// __PRETTY_FUNCTION__ is a gcc extension
+#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__PRETTY_FUNCTION__);})
 
 #else
 #define DEBUG_INIT()
 #define DEBUG_PRINT(x)
 #define DEBUG_PRINTLN(x)
+#define DEBUG_DUMP(x)
 #define DEBUG_PRINT_FN(x)
 #endif
 

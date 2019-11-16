@@ -30,6 +30,8 @@ void PageParent::redisplayPage() {
   }
 }
 
+uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];
+
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
 
@@ -46,6 +48,7 @@ void LightPage::update() {
         GUI.screen_saver = false;
         clock_minutes = 0;
         minuteclock = 0;
+        encoders_used_clock[i] = slowclock;
         redisplay = true;
       }
     }

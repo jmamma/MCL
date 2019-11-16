@@ -16,6 +16,7 @@ public:
   uint64_t lock_mask;
   uint8_t conditional[64];
   uint8_t timing[64];
+
 };
 
 #endif /* MDSEQTRACKDATA_H__ */

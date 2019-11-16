@@ -161,20 +161,17 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
   }
 }
 
+
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
-  if (global.baseChannel > 15)
-    return;
-  if ((track > 15) || (param > 33))
-    return;
+  setTrackParam_inline(track,param,value);
+}
+
+void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value) {
 
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
-  if (param == 32) { // MUTE
-    cc = 12 + b;
-  } else if (param == 33) { // LEV
-    cc = 8 + b;
-  } else {
+  if (param < 32) {
     cc = param;
     if (b < 2) {
       cc += 16 + b * 24;
@@ -182,16 +179,28 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
       cc += 24 + b * 24;
     }
   }
+  else if (param == 32) { // MUTE
+    cc = 12 + b;
+  }
+  else if (param == 33) { // LEV
+    cc = 8 + b;
+  }
+  else {
+    return;
+  }
   MidiUart.sendCC(channel + global.baseChannel, cc, value);
 }
 
 //  0x5E, 0x5D, 0x5F, 0x60
 
 void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
+  USE_LOCK();
+  SET_LOCK();
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.sendRaw(bytes, cnt);
   MidiUart.m_putc(0xf7);
+  CLEAR_LOCK();
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
@@ -843,8 +852,7 @@ void MDClass::enter_global_edit() {
   if (global == 255) {
     return;
   }
-  DEBUG_PRINTLN("global");
-  DEBUG_PRINTLN(global);
+  DEBUG_DUMP(global);
   clear_all_windows_quick();
   delay(10);
   toggle_global_window();

@@ -30,6 +30,7 @@
 #include <avr/interrupt.h>
 
 #include "binary.h"
+#include "Core.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -194,6 +195,7 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 #endif
 
 #define NOT_ON_TIMER 0
+#define TIMER0  1 //Needed for ATmega64/128 and ATmega8515/162
 #define TIMER0A 1
 #define TIMER0B 2
 #define TIMER1A 3

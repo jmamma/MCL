@@ -3,7 +3,6 @@
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
-
 void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
@@ -42,12 +41,18 @@ void MCL::setup() {
   mcl_actions.setup();
   mcl_seq.setup();
   MDSysexListener.setup(&Midi);
+
+#ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
+#endif
+
+#ifdef MEGACOMMAND
   MidiSDSSysexListener.setup(&Midi);
+#endif
+
   midi_setup.cfg_ports();
-  for (uint8_t n = 0; n < 16; n++) { SET_BIT32(mcl_cfg.mutes, n); }
-  mute_page.midi_events.setup_callbacks();
   GUI.addTask(&grid_task);
+  GUI.addTask(&midi_active_peering);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
@@ -55,15 +60,16 @@ void MCL::setup() {
     GUI.display_mirror = true;
 #endif
   }
-    if (mcl_cfg.screen_saver == 1) {
-  GUI.use_screen_saver = true;
-  }
-  else {
-  GUI.use_screen_saver = false;
+  if (mcl_cfg.screen_saver == 1) {
+    GUI.use_screen_saver = true;
+  } else {
+    GUI.use_screen_saver = false;
   }
 
   DEBUG_PRINTLN("Track sizes:");
+#ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));
+#endif
   DEBUG_PRINTLN(sizeof(MDTrack));
   DEBUG_PRINTLN(sizeof(MDSeqTrackData));
   DEBUG_PRINTLN(sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine));

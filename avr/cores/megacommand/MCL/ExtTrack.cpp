@@ -3,15 +3,15 @@
 
 bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
-  memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber],
-           sizeof(seq_data));
-  active = EXT_TRACK_TYPE;
+ active = EXT_TRACK_TYPE;
   return true;
 }
 bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
-
+#ifdef EXT_TRACKS
+  if (seq_data.resolution == 0) { seq_data.resolution = 1; }
   memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
+#endif
   return true;
 }
 bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
@@ -40,7 +40,7 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
   return true;
 }
-bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
+bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -57,8 +57,13 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row) {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
+  #ifdef EXT_TRACKS
+  if (online) {
+    get_track_from_sysex(track - 16, column - 16);
+    memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16],sizeof(seq_data));
+  }
+  #endif
 
-  get_track_from_sysex(track - 16, column - 16);
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");

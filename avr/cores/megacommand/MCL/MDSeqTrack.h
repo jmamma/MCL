@@ -21,6 +21,7 @@ public:
   uint8_t step_count;
   uint8_t iterations;
   uint32_t start_clock32th;
+  uint64_t oneshot_mask;
 
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
@@ -34,13 +35,14 @@ public:
   bool mute_until_start = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
-  void seq();
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
-  inline void send_trig();
-  inline void trig_conditional(uint8_t condition);
-  inline void send_parameter_locks(uint8_t step);
+  ALWAYS_INLINE() void seq();
+  void send_trig();
+  ALWAYS_INLINE() void send_trig_inline();
+  ALWAYS_INLINE() void trig_conditional(uint8_t condition);
+  ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
@@ -53,8 +55,8 @@ public:
   void record_track_pitch(uint8_t pitch);
   void clear_step_locks(uint8_t step);
   void clear_conditional();
-  void clear_locks();
-  void clear_track(bool locks = true);
+  void clear_locks(bool reset_params = true);
+  void clear_track(bool locks = true, bool reset_params = true);
   bool is_locks(uint8_t step);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);

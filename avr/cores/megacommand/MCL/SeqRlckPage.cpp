@@ -3,6 +3,24 @@
 
 void SeqRlckPage::setup() { SeqPage::setup(); }
 
+void SeqRlckPage::config() {
+  // config info labels
+  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+  constexpr uint8_t len1 = sizeof(info1);
+
+  char buf[len1] = {'\0'};
+  m_strncpy_p(buf, str1, len1);
+  strncpy(info1, buf, len1);
+  strncat(info1, ">", len1);
+  m_strncpy_p(buf, str2, len1);
+  strncat(info1, buf, len1);
+
+  strcpy(info2, "RLCK");
+  display_page_index = false;
+}
+
 void SeqRlckPage::init() {
   SeqPage::init();
   if (MidiClock.state == 2) {
@@ -10,6 +28,8 @@ void SeqRlckPage::init() {
   }
   md_exploit.off();
   note_interface.state = false;
+  recording = true;
+  config();
 
   ((MCLEncoder *)encoders[0])->max = 4;
   ((MCLEncoder *)encoders[1])->max = 64;
@@ -20,6 +40,7 @@ void SeqRlckPage::init() {
   curpage = SEQ_RTRK_PAGE;
   midi_events.setup_callbacks();
 }
+
 void SeqRlckPage::cleanup() {
   SeqPage::cleanup();
   if (MidiClock.state == 2) {
@@ -27,6 +48,8 @@ void SeqRlckPage::cleanup() {
   }
   midi_events.remove_callbacks();
 }
+
+#ifndef OLED_DISPLAY
 void SeqRlckPage::display() {
   if ((!redisplay) && (MidiClock.state == 2)) {
     return;
@@ -42,7 +65,9 @@ void SeqRlckPage::display() {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
     GUI.put_value_at(5, encoders[2]->getValue());
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     GUI.put_value_at(5, (encoders[2]->getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
@@ -52,10 +77,39 @@ void SeqRlckPage::display() {
     }
     GUI.put_value_at1(12, last_ext_track + 1);
   }
+#endif
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
   SeqPage::display();
 }
+#else
+void SeqRlckPage::display() {
+  if ((!redisplay) && (MidiClock.state == 2)) {
+    return;
+  }
+  SeqPage::display();
+
+  draw_knob_frame();
+
+  uint8_t len = encoders[2]->getValue();
+#ifdef EXT_TRACKS
+  if (SeqPage::midi_device != DEVICE_MD) {
+    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
+  }
+#endif
+
+  char K[4];
+  itoa(len, K, 10);
+  draw_knob(2, "LEN", K);
+
+  bool show_current_step = false;
+  draw_lock_mask(page_select * 16, show_current_step);
+  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+
+  oled_display.display();
+}
+#endif
+
 bool SeqRlckPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {

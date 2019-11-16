@@ -6,6 +6,7 @@ void mclsys_apply_config() {
   mcl_cfg.write_cfg();
   midi_setup.cfg_ports();
 #ifndef DEBUGMODE
+#ifdef MEGACOMMAND
   if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
     GUI.display_mirror = true;
 
@@ -15,6 +16,7 @@ void mclsys_apply_config() {
     GUI.display_mirror = false;
     Serial.end();
   }
+#endif
 #endif
   if (mcl_cfg.screen_saver == 1) {
   GUI.use_screen_saver = true;
@@ -87,11 +89,11 @@ bool MCLSysConfig::cfg_init() {
   tempo = 125;
   midi_forward = 0;
   auto_save = 1;
-  auto_normalize = 0;
+  auto_normalize = 1;
   chain_mode = 2;
   chain_rand_min = 0;
   chain_rand_max = 1;
-
+  ram_page_mode = 0;
   cfgfile.close();
 
   ret = write_cfg();

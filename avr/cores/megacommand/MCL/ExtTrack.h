@@ -13,7 +13,7 @@ public:
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   bool place_track_in_sysex(int tracknumber, uint8_t column);
   bool load_track_from_grid(int32_t column, int32_t row, int m);
-  bool store_track_in_grid(int track, int32_t column, int32_t row);
+  bool store_track_in_grid(int track, int32_t column, int32_t row, bool online = false);
 };
 
 #endif /* EXTTRACK_H__ */

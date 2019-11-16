@@ -4,18 +4,34 @@
 #define AUXPAGES_H__
 
 #include "MCLEncoder.h"
+#include "LFOPage.h"
 #include "MixerPage.h"
 #include "RoutePage.h"
-#include "MutePage.h"
+#include "RAMPage.h"
+#include "FXPage.h"
+#include "MD.h"
 
 extern MCLEncoder mixer_param1;
 extern MCLEncoder mixer_param2;
 extern MCLEncoder mixer_param3;
 extern MCLEncoder mixer_param4;
-extern MCLEncoder mute_param1;
 extern MCLEncoder route_param1;
+extern MCLEncoder route_param2;
 
 extern MixerPage mixer_page;
 extern RoutePage route_page;
-extern MutePage mute_page;
+
+extern RAMPage ram_page_a;
+extern RAMPage ram_page_b;
+
+extern MCLEncoder fx_param1;
+extern MCLEncoder fx_param2;
+extern MCLEncoder fx_param3;
+extern MCLEncoder fx_param4;
+
+extern FXPage fx_page_a;
+extern FXPage fx_page_b;
+
+extern LFOPage lfo_page;
+
 #endif /* AUXPAGES_H__ */

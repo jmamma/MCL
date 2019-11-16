@@ -113,8 +113,11 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 
   memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
 
-  kit->trigGroups[tracknumber] = machine.trigGroup;
-  kit->muteGroups[tracknumber] = machine.muteGroup;
+  if ((machine.trigGroup < 16) && (machine.trigGroup != column)) { kit->trigGroups[tracknumber] = machine.trigGroup; }
+  else { kit->trigGroups[tracknumber] = 255; }
+
+  if ((machine.muteGroup < 16) && (machine.muteGroup != column)) { kit->muteGroups[tracknumber] = machine.muteGroup; }
+  else { kit->muteGroups[tracknumber] = 255; }
 }
 
 void MDTrack::init() {
@@ -175,7 +178,7 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
-
+    mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
     mcl_seq.md_tracks[tracknumber].update_params();
@@ -302,7 +305,7 @@ void MDTrack::normalize() {
 }
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
-                                  bool merge) {
+                                  bool merge, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -325,7 +328,10 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     if ((storepattern) || (merge)) { get_track_from_pattern(track, column); }
     get_track_from_kit(track, column);
   }
-  memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
+
+  if (online) {
+    memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
+  }
   // Normalise level and vol locks
 
   if (merge) {

@@ -27,6 +27,7 @@ All text above, and the splash screen must be included in any redistribution
 
 #define BLACK 0
 #define WHITE 1
+#define INVERT 2
 
 /*=========================================================================
     SSD1305 Displays
@@ -123,6 +124,10 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
+
+  virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+  virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  virtual void fillScreen(uint16_t color);
 
 private:
   uint8_t _i2caddr;

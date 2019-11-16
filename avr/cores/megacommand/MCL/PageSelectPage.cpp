@@ -2,11 +2,15 @@
 #include "PageSelectPage.h"
 
 #define MIX_PAGE 0
-#define MUTE_PAGE 1
-#define ROUTE_PAGE 2
+#define ROUTE_PAGE 1
+#define RAM_PAGE_A 14
+#define RAM_PAGE_B 15
 #define WAVD_PAGE 8
 #define SOUND 7
-#define LOUDNESS 10
+#define FX_PAGE_A 10
+#define FX_PAGE_B 11
+#define LOUDNESS 9
+#define LFO_PAGE 6
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
@@ -23,41 +27,65 @@ void PageSelectPage::cleanup() {
 LightPage *PageSelectPage::get_page(uint8_t page_number, char *str) {
   LightPage *r_page = NULL;
   switch (page_number) {
-  case MUTE_PAGE:
-    if (str)
-      strncpy(str, "MUTE", 5);
-    r_page = &mute_page;
-    break;
   case MIX_PAGE:
     if (str)
-      strncpy(str, "MIX ", 5);
+      strncpy(str, "MIX", 4);
     r_page = &mixer_page;
     break;
   case ROUTE_PAGE:
     if (str)
-      strncpy(str, "ROUT ", 5);
+      strncpy(str, "ROUTE", 6);
     r_page = &route_page;
+    break;
+  case RAM_PAGE_A:
+    if (str)
+      strncpy(str, "RAM 1", 6);
+    r_page = &ram_page_a;
+    break;
+  case RAM_PAGE_B:
+    if (str)
+      strncpy(str, "RAM 2", 6);
+    r_page = &ram_page_b;
+    break;
+ case FX_PAGE_A:
+    if (str)
+      strncpy(str, "DELAY", 8);
+    r_page = &fx_page_a;
+    break;
+ case FX_PAGE_B:
+    if (str)
+      strncpy(str, "REVERB", 8);
+    r_page = &fx_page_b;
+    break;
+  case LFO_PAGE:
+    if (str)
+      strncpy(str, "LFO", 8);
+    r_page = &lfo_page;
     break;
 #ifdef WAV_DESIGNER
   case WAVD_PAGE:
     if (str)
-      strncpy(str, "WAVD", 5);
+      strncpy(str, "WAV DESIGNER", 13);
     r_page = wd.last_page;
     break;
 #endif
+#ifdef SOUND_PAGE
   case SOUND:
     if (str)
       strncpy(str, "SOUND", 6);
     r_page = &sound_browser;
     break;
+#endif
+#ifdef LOUDNESS_PAGE
   case LOUDNESS:
     if (str)
-      strncpy(str, "LOUDN",6);
+      strncpy(str, "LOUDNESS",9);
     r_page = &loudness_page;
     break;
+#endif
   default:
     if (str)
-      strncpy(str, "----", 4);
+      strncpy(str, "----", 5);
   }
   return r_page;
 }
@@ -97,8 +125,11 @@ void PageSelectPage::loop() {
 }
 
 void PageSelectPage::display() {
+  #ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
+  #endif
   GUI.setLine(GUI.LINE1);
-  char str[6] = "     ";
+  char str[16];
   get_page(page_select, str);
   LightPage *temp = NULL;
   GUI.put_string_at_fill(0, "Page Select:");

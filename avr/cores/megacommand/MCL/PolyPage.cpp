@@ -44,7 +44,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
 
-    else if (IS_BIT_SET(*poly_mask, i)) {
+    else if (IS_BIT_SET16(*poly_mask, i)) {
 
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
@@ -61,7 +61,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
 
     str[i] = (char)219;
 
-    if (!IS_BIT_SET(*poly_mask, i)) {
+    if (!IS_BIT_SET16(*poly_mask, i)) {
 
       str[i] = (char)'-';
     }
@@ -77,10 +77,10 @@ void PolyPage::draw_mask(uint8_t line_number) {
 }
 
 void PolyPage::toggle_mask(uint8_t i) {
-  if (IS_BIT_SET(*poly_mask, i)) {
-    CLEAR_BIT(*poly_mask, i);
+  if (IS_BIT_SET16(*poly_mask, i)) {
+    CLEAR_BIT16(*poly_mask, i);
   } else {
-    SET_BIT(*poly_mask, i);
+    SET_BIT16(*poly_mask, i);
   }
 }
 

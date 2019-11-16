@@ -27,7 +27,7 @@
 #define HELPERS_H__
 
 #include <inttypes.h>
-
+#include <Core.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -131,7 +131,7 @@ extern const uint32_t _bvmasks32[];
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 #endif
 //long map(long x, long in_min, long in_max, long out_min, long out_max);
-
+bool in_area(int x, int y, int x2, int y2, int w, int h);
 uint8_t u_limit_value(uint8_t value, int8_t encoder, uint8_t min, uint8_t max);
 int limit_value(int value, int encoder, int min, int max);
 uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
@@ -211,6 +211,8 @@ void m_str16cpy_p_fill(void *dst, PGM_P src);
 void m_str16cpy_p(void *dst, PGM_P src);
 void m_strnappend(void *dst, const char *src, int len);
 uint16_t m_strlen(const char *str);
+void m_toupper(char* str);
+void m_trim_space(char* str);
 
 /** @} */
 
@@ -221,7 +223,7 @@ uint16_t m_strlen(const char *str);
 			
 extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
-uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+ALWAYS_INLINE() uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 #ifdef HOST_MIDIDUINO
 #else

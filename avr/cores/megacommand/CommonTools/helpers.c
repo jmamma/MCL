@@ -288,6 +288,31 @@ void m_strnappend(void *dst, const char *src, int len) {
   m_strncpy(ptr, src, len - i);
 }
 
+/** Convert the string to UPPERCASE. **/
+void m_toupper(char* str)
+{
+  char chr;
+  while((chr = *str)) {
+    if(chr >= 'a' && chr <= 'z') {
+      *str = chr - 'a' + 'A';
+    }
+    ++str;
+  }
+}
+
+/** Trim ending spaces **/
+void m_trim_space(char* str)
+{
+  for(int i = m_strlen(str) - 1; i >= 0; --i) {
+    if (str[i] == ' ') {
+      str[i] = '\0';
+    }
+    // break on first visible character
+    if (str[i] != '\0') {
+      break;
+    }
+  }
+}
 /** @} **/
 
 /**
@@ -378,6 +403,11 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) {
  *
  * @{
  **/
+
+//Determine if co-ordinate x,y is within rectangular area 
+bool in_area(int x, int y, int x2, int y2, int w, int h) {
+  return (x >= x2) && (x <= x2 + w) && (y >= y2) && (y <= y2 + h);
+}
 
 /**
  * Map x from the range in_min - in_max to the range out_min - out_max.

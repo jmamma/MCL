@@ -3,10 +3,22 @@
 #ifndef MCLMEMORY_H__
 #define MCLMEMORY_H__
 
+#ifdef MEGACOMMAND
+#define EXT_TRACKS
+#endif
+
 #define NUM_MD_TRACKS    16UL
+
+#ifdef EXT_TRACKS
 #define NUM_A4_TRACKS    4UL
+#else
+#pragma message("EXT TRACKS DISABLED")
+#define NUM_A4_TRACKS    0UL
+#endif
+
 #define NUM_EXT_TRACKS   NUM_A4_TRACKS
-#define NUM_LFO_TRACKS   4UL
+
+#define NUM_LFO_TRACKS   2UL
 #define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
 #define NUM_FILE_ENTRIES 256UL
 
@@ -23,6 +35,13 @@
 
 #define MD_TRACK_LEN (sizeof(MDTrackLight))
 #define A4_TRACK_LEN (sizeof(A4Track))
+
+#ifdef EXT_TRACKS
+#define EMPTY_TRACK_LEN A4_TRACK_LEN
+#else
+#pragma message("EMPTY_TRACK_LEN == MD_TRACK_LEN")
+#define EMPTY_TRACK_LEN MD_TRACK_LEN
+#endif
 
 // 16x MD tracks
 #define BANK1_MD_TRACKS_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)

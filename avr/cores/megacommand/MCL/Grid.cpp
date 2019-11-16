@@ -50,43 +50,59 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
 }
 */
-bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row) {
+bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
+                     bool destination_same) {
   DEBUG_PRINT_FN();
-  DEBUG_PRINT(s_col); DEBUG_PRINT(" "); DEBUG_PRINT(d_col); DEBUG_PRINTLN(" ");
-  if (s_col < 16 && d_col > 15) { return false; }
-  if (s_col > 15 && d_col < 16) { return false; }
+  DEBUG_PRINT(s_col);
+  DEBUG_PRINT(" ");
+  DEBUG_PRINT(d_col);
+  DEBUG_PRINTLN(" ");
+  if (s_col < 16 && d_col > 15) {
+    return false;
+  }
+  if (s_col > 15 && d_col < 16) {
+    return false;
+  }
   EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack*) &temp_track;
-  A4Track *a4_track = (A4Track*) &temp_track;
-  ExtTrack *ext_track = (ExtTrack*) &temp_track;
+  MDTrack *md_track = (MDTrack *)&temp_track;
+  A4Track *a4_track = (A4Track *)&temp_track;
+  ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   if (s_col < 16) {
     md_track->load_track_from_grid(s_col, s_row);
-    //bit of a hack to keep lfos modulating the same track.
-    int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
-    int trig_dest = md_track->machine.trigGroup - s_col;
-    int mute_dest = md_track->machine.muteGroup - s_col;
-    if (range_check(d_col + lfo_dest, 0, 15)) {
-      md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
-    }
-    else {
-      md_track->machine.lfo.destinationTrack = 255;
-    }
-    if (range_check(d_col + trig_dest, 0, 15)) {
-      md_track->machine.trigGroup = d_col + trig_dest;
-    }
-    else {
-      md_track->machine.trigGroup = 127;
-    }
-    if (range_check(d_col + mute_dest, 0, 15)) {
-      md_track->machine.muteGroup = d_col + mute_dest;
-    }
-    else {
-      md_track->machine.muteGroup = 255;
+    // bit of a hack to keep lfos modulating the same track.
+    if (destination_same) {
+      if (md_track->machine.trigGroup == s_col) {
+        md_track->machine.trigGroup = 255;
+      }
+      if (md_track->machine.muteGroup == s_col) {
+        md_track->machine.muteGroup = 255;
+      }
+      if (md_track->machine.lfo.destinationTrack == s_col) {
+        md_track->machine.lfo.destinationTrack = d_col;
+      }
+    } else {
+      int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
+      int trig_dest = md_track->machine.trigGroup - s_col;
+      int mute_dest = md_track->machine.muteGroup - s_col;
+      if (range_check(d_col + lfo_dest, 0, 15)) {
+        md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
+      } else {
+        md_track->machine.lfo.destinationTrack = 255;
+      }
+      if (range_check(d_col + trig_dest, 0, 15)) {
+        md_track->machine.trigGroup = d_col + trig_dest;
+      } else {
+        md_track->machine.trigGroup = 255;
+      }
+      if (range_check(d_col + mute_dest, 0, 15)) {
+        md_track->machine.muteGroup = d_col + mute_dest;
+      } else {
+        md_track->machine.muteGroup = 255;
+      }
     }
     md_track->store_track_in_grid(d_col, d_row);
-  }
-  else {
+  } else {
     a4_track->load_track_from_grid(s_col, s_row);
     a4_track->store_track_in_grid(d_col, d_row);
   }
@@ -94,49 +110,46 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row)
 
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
   EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack*) &temp_track;
-  A4Track *a4_track = (A4Track*) &temp_track;
-  ExtTrack *ext_track = (ExtTrack*) &temp_track;
+  MDTrack *md_track = (MDTrack *)&temp_track;
+  A4Track *a4_track = (A4Track *)&temp_track;
+  ExtTrack *ext_track = (ExtTrack *)&temp_track;
   int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
   if (column < 16) {
-    if ( load == true) {
-      if (!md_track->load_track_from_grid(column, row,len)) {
+    if (load == true) {
+      if (!md_track->load_track_from_grid(column, row, len)) {
         return NULL;
       }
     }
     if (md_track->active == EMPTY_TRACK_TYPE) {
       return NULL;
-    }
-    else {
+    } else {
       return md_track->machine.model;
     }
   }
 
   else {
-    if ( load == true) {
+    if (load == true) {
       if (!a4_track->load_track_from_grid(column, row, 50)) {
         return NULL;
       }
     }
     return md_track->active;
-
-
   }
-
 }
 
 int32_t Grid::get_slot_offset(int16_t column, int16_t row) {
-  int32_t offset =
-      (int32_t)GRID_SLOT_BYTES + (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
+  int32_t offset = (int32_t)GRID_SLOT_BYTES +
+                   (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
+                       (int32_t)GRID_SLOT_BYTES;
   return offset;
 }
 
 int32_t Grid::get_header_offset(int16_t row) {
   int32_t offset =
-      (int32_t)GRID_SLOT_BYTES + (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
+      (int32_t)GRID_SLOT_BYTES +
+      (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
   return offset;
 }
-
 
 bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
@@ -162,15 +175,15 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   if (!ret) {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Clear grid failed: ");
-    DEBUG_PRINTLN(row);
-    DEBUG_PRINTLN(column);
+    DEBUG_DUMP(row);
+    DEBUG_DUMP(column);
     return false;
   }
   // DEBUG_PRINTLN("Writing");
-  // DEBUG_PRINTLN(sizeof(temptrack.active));
+  // DEBUG_DUMP(sizeof(temptrack.active));
 
-  ret = mcl_sd.write_data((uint8_t *)&(temp_track),
-                          sizeof(temp_track), &proj.file);
+  ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track),
+                          &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;
@@ -186,7 +199,6 @@ bool Grid::clear_row(int16_t row) {
     clear_slot(x, row, update_header);
   }
   return row_header.write(row);
-
 }
 
 Grid grid;
