@@ -508,22 +508,23 @@ void opt_resolution_handler() {
 
 void opt_clear_track_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-    if (opt_clearall) {
+    if (opt_clearall == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
-    } else {
+    } else if (opt_clearall == 1) {
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
   } else {
-    if (opt_clearall) {
+    if (opt_clearall == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
-    } else {
+    } else if (opt_clearall == 1) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
   }
+  opt_clearall = 0;
 }
 
 void opt_clear_locks_handler() {

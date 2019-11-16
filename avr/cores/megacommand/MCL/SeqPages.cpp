@@ -31,8 +31,8 @@ const menu_t<7> seq_menu_layout PROGMEM = {
     {
         {"TRACK SEL.", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
         {"COPY TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
-        {"CLEAR", 0, 2, 2, (uint8_t *)&opt_clearall, (Page *)NULL, opt_clear_track_handler, { {0, "TRK."}, {1, "ALL"}}},
-        {"CLEAR", 0, 0, 2, (uint8_t *)&opt_clearall, (Page *)NULL, opt_clear_locks_handler, { {0, "LCKS."}, {1, "ALL"}}},
+        {"CLEAR", 0, 3, 3, (uint8_t *)&opt_clearall, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK."}, {2, "ALL"}}},
+        {"CLEAR", 0, 0, 3, (uint8_t *)&opt_clearall, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {2, "LCKS."}, {2, "ALL"}}},
         {"PASTE TRK.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
         {"TRACK RES.", 1, 3, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {1, "2x"}, {2, "1x"} }},
         {"STEP SHIFT", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
