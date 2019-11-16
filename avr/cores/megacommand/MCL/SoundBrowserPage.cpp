@@ -98,6 +98,11 @@ bool SoundBrowserPage::handleEvent(gui_event_t* event) {
     return true;
   }
 
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    return true;
+  }
+
+
   return FileBrowserPage::handleEvent(event);
 }
 
