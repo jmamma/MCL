@@ -187,8 +187,8 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
                         WHITE);
 
   oled_display.fillCircle(dlg_circle_x, dlg_circle_y, 6, WHITE);
-  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 2, 4, BLACK);
-  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 2, 2, BLACK);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 3, 4, BLACK);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 3, 2, BLACK);
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
@@ -198,7 +198,7 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
-  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 17 + line2_offset);
+  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 16 + line2_offset);
   oled_display.println(line2);
 
   oled_display.setFont(oldfont);
