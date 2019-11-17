@@ -343,8 +343,12 @@ void ExtSeqTrack::rotate_left() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == 0) { new_pos = length - 1 - 1; }
      else { new_pos = n - 1; }
-     memcpy(&notes[0][new_pos], &(temp_data.notes[0][n]), 4);
-     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), 4);
+
+     for (uint8_t a = 0; a < 4; a++) {
+       notes[a][new_pos] = temp_data.notes[a][n];
+       locks[a][new_pos] = temp_data.locks[a][n];
+     }
+
      conditional[new_pos] = temp_data.conditional[n];
      timing[new_pos] = temp_data.timing[n];
   }
@@ -364,8 +368,12 @@ void ExtSeqTrack::rotate_right() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == length - 1) { new_pos = 0; }
      else { new_pos = n + 1; }
-     memcpy(&notes[0][new_pos], &(temp_data.notes[0][n]), 4);
-     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), 4);
+
+     for (uint8_t a = 0; a < 4; a++) {
+       notes[a][new_pos] = temp_data.notes[a][n];
+       locks[a][new_pos] = temp_data.locks[0][n];
+     }
+
      conditional[new_pos] = temp_data.conditional[n];
      timing[new_pos] = temp_data.timing[n];
   }

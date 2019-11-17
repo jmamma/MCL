@@ -509,7 +509,10 @@ void MDSeqTrack::rotate_left() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == 0) { new_pos = length - 1 - 1; }
      else { new_pos = n - 1; }
-     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
+
+     for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+       locks[a][new_pos] = temp_data.locks[a][n];
+     }
      conditional[new_pos] = temp_data.conditional[n];
      timing[new_pos] = temp_data.timing[n];
   }
@@ -531,7 +534,11 @@ void MDSeqTrack::rotate_right() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == length - 1) { new_pos = 0; }
      else { new_pos = n + 1; }
-     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
+
+     for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+       locks[a][new_pos] = temp_data.locks[a][n];
+     }
+
      conditional[new_pos] = temp_data.conditional[n];
      timing[new_pos] = temp_data.timing[n];
   }
