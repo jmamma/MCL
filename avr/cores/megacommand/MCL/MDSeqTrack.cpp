@@ -507,7 +507,7 @@ void MDSeqTrack::rotate_left() {
   memcpy(&temp_data, this, sizeof(MDSeqTrackData));
 
   for (uint8_t n = 0; n < length; n++) {
-     if (n == 0) { new_pos = length - 1 - 1; }
+     if (n == 0) { new_pos = length - 1; }
      else { new_pos = n - 1; }
 
      for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {

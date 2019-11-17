@@ -341,7 +341,7 @@ void ExtSeqTrack::rotate_left() {
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
   for (uint8_t n = 0; n < length; n++) {
-     if (n == 0) { new_pos = length - 1 - 1; }
+     if (n == 0) { new_pos = length - 1; }
      else { new_pos = n - 1; }
 
      for (uint8_t a = 0; a < 4; a++) {
