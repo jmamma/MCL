@@ -8,7 +8,10 @@
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
-#define CLIPBOARD_FILE_SIZE (uint32_t) GRID_SLOT_BYTES + (uint32_t)GRID_SLOT_BYTES *(uint32_t)(GRID_LENGTH + 1) * (uint32_t)(GRID_WIDTH + 1)
+#define CLIPBOARD_FILE_SIZE                                                    \
+  (uint32_t) GRID_SLOT_BYTES +                                                 \
+      (uint32_t)GRID_SLOT_BYTES *(uint32_t)(GRID_LENGTH + 1) *                 \
+          (uint32_t)(GRID_WIDTH + 1)
 
 bool MCLClipBoard::init() {
   DEBUG_PRINTLN("Creating clipboard");
@@ -22,28 +25,36 @@ bool MCLClipBoard::init() {
 }
 
 bool MCLClipBoard::open() {
-   DEBUG_PRINT_FN();
+  DEBUG_PRINT_FN();
   if (!file.open(FILENAME_CLIPBOARD, O_RDWR)) {
     init();
     return file.open(FILENAME_CLIPBOARD, O_RDWR);
   }
   return true;
-/*
-  if (file.fileSize() < CLIPBOARD_FILE_SIZE) {
-    file.close();
-    SD.remove(FILENAME_CLIPBOARD);
-    DEBUG_PRINTLN("clipboard file size too small deleting");
-    init();
-    return file.open(FILENAME_CLIPBOARD, O_RDWR);
-  } */
+  /*
+    if (file.fileSize() < CLIPBOARD_FILE_SIZE) {
+      file.close();
+      SD.remove(FILENAME_CLIPBOARD);
+      DEBUG_PRINTLN("clipboard file size too small deleting");
+      init();
+      return file.open(FILENAME_CLIPBOARD, O_RDWR);
+    } */
 }
 
 bool MCLClipBoard::close() { return file.close(); }
 
-bool MCLClipBoard::copy_sequencer() {
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (!copy_sequencer_track(n)) {
-      return false;
+bool MCLClipBoard::copy_sequencer(uint8_t offset) {
+  if (offset < NUM_MD_TRACKS) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+      if (!copy_sequencer_track(n)) {
+        return false;
+      }
+    }
+  } else {
+    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+      if (!copy_sequencer_track(n + NUM_MD_TRACKS)) {
+        return false;
+      }
     }
   }
   return true;
@@ -66,26 +77,37 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     return false;
   }
   if (track < NUM_MD_TRACKS) {
-  memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
-         sizeof(md_track->seq_data));
-  md_track->get_machine_from_kit(track, track);
-  ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
+    memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
+           sizeof(md_track->seq_data));
+    md_track->get_machine_from_kit(track, track);
+    ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
   }
 
   else {
-  memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],sizeof(ExtSeqTrackData));
-  ret = mcl_sd.write_data(&temp_track, sizeof(ExtSeqTrack), &file);
+    memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],
+           sizeof(ExtSeqTrackData));
+    ret = mcl_sd.write_data(&temp_track, sizeof(ExtSeqTrack), &file);
   }
 
   close();
-  if (!ret) { DEBUG_PRINTLN("failed write"); }
+  if (!ret) {
+    DEBUG_PRINTLN("failed write");
+  }
   return ret;
 }
 
-bool MCLClipBoard::paste_sequencer() {
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (!paste_sequencer_track(n, n)) {
-      return false;
+bool MCLClipBoard::paste_sequencer(uint8_t offset) {
+  if (offset < NUM_MD_TRACKS) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+      if (!paste_sequencer_track(n, n)) {
+        return false;
+      }
+    }
+  } else {
+    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+      if (!paste_sequencer_track(n + offset, n + offset)) {
+        return false;
+      }
     }
   }
   return true;
@@ -96,7 +118,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   bool ret;
   EmptyTrack temp_track;
   MDTrack *md_track = (MDTrack *)(&temp_track);
-   if (!open()) {
+  if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return;
   }
@@ -104,10 +126,9 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   ret = file.seekSet(offset);
   if (ret) {
     if (source_track < NUM_MD_TRACKS) {
-     ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
-    }
-    else {
-     ret = mcl_sd.read_data(&temp_track, sizeof(ExtSeqTrackData), &file);
+      ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
+    } else {
+      ret = mcl_sd.read_data(&temp_track, sizeof(ExtSeqTrackData), &file);
     }
     if (!ret) {
       DEBUG_PRINTLN("failed read");
@@ -120,27 +141,25 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     return false;
   }
   if (source_track < NUM_MD_TRACKS) {
-  DEBUG_PRINTLN("loading seq track");
-  memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
-         sizeof(md_track->seq_data));
+    DEBUG_PRINTLN("loading seq track");
+    memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
+           sizeof(md_track->seq_data));
 
-  if (md_track->machine.trigGroup == source_track) {
-    md_track->machine.trigGroup = 255;
-  }
-  if (md_track->machine.muteGroup == source_track) {
-    md_track->machine.muteGroup = 255;
-  }
-  if (md_track->machine.lfo.destinationTrack == source_track) {
-    md_track->machine.lfo.destinationTrack = track;
-  }
-  DEBUG_PRINTLN("sending seq track");
-  md_track->place_track_in_kit(track, track, &(MD.kit), true);
-  MD.setMachine(track, &(md_track->machine));
-  }
-  else if (track >= NUM_MD_TRACKS) {
-   memcpy(&mcl_seq.ext_tracks[track - NUM_MD_TRACKS], &(temp_track),
-         sizeof(ExtSeqTrackData));
-
+    if (md_track->machine.trigGroup == source_track) {
+      md_track->machine.trigGroup = 255;
+    }
+    if (md_track->machine.muteGroup == source_track) {
+      md_track->machine.muteGroup = 255;
+    }
+    if (md_track->machine.lfo.destinationTrack == source_track) {
+      md_track->machine.lfo.destinationTrack = track;
+    }
+    DEBUG_PRINTLN("sending seq track");
+    md_track->place_track_in_kit(track, track, &(MD.kit), true);
+    MD.setMachine(track, &(md_track->machine));
+  } else if (track >= NUM_MD_TRACKS) {
+    memcpy(&mcl_seq.ext_tracks[track - NUM_MD_TRACKS], &(temp_track),
+           sizeof(ExtSeqTrackData));
   }
   close();
   return true;

@@ -562,22 +562,45 @@ void opt_clear_all_locks_handler() {
 
 void opt_copy_track_handler() {
   if (opt_copy == 2) {
+     if (opt_midi_device_capture == DEVICE_MD) { 
     mcl_clipboard.copy_sequencer();
+     }
+     else {
+    mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
+    }
   }
   if (opt_copy == 1) {
+    if (opt_midi_device_capture == DEVICE_MD) {
     mcl_clipboard.copy_track = last_md_track;
     mcl_clipboard.copy_sequencer_track(last_md_track);
+    }
+    else {
+    mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
+    mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
+    }
   }
   opt_copy = 0;
 }
 
 void opt_paste_track_handler() {
   if (opt_paste == 2) {
+    if (opt_midi_device_capture == DEVICE_MD) {
     mcl_clipboard.paste_sequencer();
+    }
+    else {
+    mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
+    }
+
   }
   if (opt_paste == 1) {
+    if (opt_midi_device_capture == DEVICE_MD) {
     mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                         last_md_track);
+    }
+    else {
+    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
+                                        last_ext_track + NUM_MD_TRACKS);
+   }
   }
   opt_paste = 0;
 }
