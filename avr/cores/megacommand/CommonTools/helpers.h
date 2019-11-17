@@ -45,8 +45,8 @@ extern const uint32_t _bvmasks32[];
  * @{
  **/
 
-#define ROTATE_LEFT(target, length) do { target = (target >> shift) | (target << (length - shift)); } while (false)
-#define ROTATE_RIGHT(target, length) do { target = (target << shift) | (target >> (length - shift)); } while (false)
+#define ROTATE_LEFT(target, length) do { target = (target >> 1) | (target << (length - 1)); } while (false)
+#define ROTATE_RIGHT(target, length) do { target = (target << 1) | (target >> (length - 1)); } while (false)
 
 /** 32 bit bit accessing macro. **/
 #define _BV32(i) (_bvmasks32[i])

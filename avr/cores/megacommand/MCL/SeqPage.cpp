@@ -1,5 +1,5 @@
-#include "SeqPage.h"
 #include "MCL.h"
+#include "SeqPage.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -13,6 +13,7 @@ uint8_t opt_trackid = 1;
 uint8_t opt_copy = 0;
 uint8_t opt_paste = 0;
 uint8_t opt_clear = 0;
+uint8_t opt_shift = 0;
 
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -127,11 +128,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-      page_select += 1;
+    page_select += 1;
 
-      if (page_select >= page_count) {
-        page_select = 0;
-      }
+    if (page_select >= page_count) {
+      page_select = 0;
+    }
     return true;
   }
 
@@ -575,9 +576,31 @@ void opt_paste_track_handler() {
     mcl_clipboard.paste_sequencer();
   }
   if (opt_paste == 1) {
-    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track, last_md_track);
+    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
+                                        last_md_track);
   }
   opt_paste = 0;
+}
+
+void opt_shift_track_handler() {
+  switch (opt_shift) {
+  case 0:
+    mcl_seq.md_tracks[last_md_track].rotate_left();
+    break;
+  case 1:
+    mcl_seq.md_tracks[last_md_track].rotate_right();
+    break;
+  case 2:
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+      mcl_seq.md_tracks[n].rotate_left();
+    }
+    break;
+  case 3:
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+      mcl_seq.md_tracks[n].rotate_right();
+    }
+    break;
+  }
 }
 
 void SeqPage::config_as_trackedit() {

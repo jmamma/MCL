@@ -494,10 +494,6 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
 #define DIR_LEFT 0
 #define DIR_RIGHT 1
 
-void MDSeqTrack::rotate(bool dir) {
-
-}
-
 void MDSeqTrack::rotate_left() {
 
   ROTATE_LEFT(lock_mask, length);
@@ -513,9 +509,9 @@ void MDSeqTrack::rotate_left() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == 0) { new_pos = length - 1 - 1; }
      else { new_pos = n - 1; }
-     memcpy(&locks[0][new_pos], &(temp_data->locks[0][n]), NUM_MD_LOCKS);
-     conditional[new_pos] = temp_data->conditional[n];
-     timing[new_pos] = temp_data->conditional[n];
+     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.conditional[n];
   }
 
 }
@@ -535,9 +531,9 @@ void MDSeqTrack::rotate_right() {
   for (uint8_t n = 0; n < length; n++) {
      if (n == length - 1) { new_pos = 0; }
      else { new_pos = n + 1; }
-     memcpy(&locks[0][new_pos], &(temp_data->locks[0][n]), NUM_MD_LOCKS);
-     conditional[new_pos] = temp_data->conditional[n];
-     timing[new_pos] = temp_data->conditional[n];
+     memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.conditional[n];
   }
 
 }

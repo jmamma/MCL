@@ -35,7 +35,7 @@ const menu_t<7> seq_menu_layout PROGMEM = {
         {"CLEAR", 0, 0, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {2, "LCKS."}, {2, "ALL"}}},
         {"PASTE", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK."}, {2, "ALL"}}},
         {"TRACK RES.", 1, 3, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {1, "2x"}, {2, "1x"} }},
-        {"STEP SHIFT", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, {}},
+        {"SHIFT", 0, 4, 4, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "L"}, {1, "R"}, {2,"L>ALL"}, {3, "R>ALL"}}},
     },
     NULL,
 };
