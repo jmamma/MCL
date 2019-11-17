@@ -533,11 +533,11 @@ void opt_clear_track_handler() {
 
 void opt_clear_locks_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-    if (opt_clear) {
+    if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_locks();
       }
-    } else {
+    } else if (opt_clear == 1) {
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
