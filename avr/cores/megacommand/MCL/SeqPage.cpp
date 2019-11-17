@@ -677,9 +677,15 @@ void SeqPage::draw_page_index(bool show_page_index) {
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
-  // XXX should retrieve true track length
-  uint8_t playing_idx = (MidiClock.bar_counter - 1) % page_count;
-  uint8_t w = pidx_w;
+
+  uint8_t playing_idx;
+  if (midi_device == DEVICE_MD) {
+   playing_idx = (mcl_seq.md_tracks[last_md_track].step_count) / 16;
+  }
+  else {
+   playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count) / 16;
+  }
+   uint8_t w = pidx_w;
   if (page_count == 8) {
     w /= 2;
     pidx_x -= 1;
