@@ -156,10 +156,11 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
         oled_display.drawPixel(i, y_pos + 1 + n, BLACK);
       }
     }
-    temp_bitmask = (temp_bitmask >> shift) | (temp_bitmask << (8 - shift));
+    ROTATE_LEFT(temp_bitmask, 8);
   }
   if (s_progress_count == s_progress_speed) {
-    s_progress_cookie = (bitmask >> shift) | (bitmask << (8 - shift));
+    s_progress_cookie = bitmask;
+    ROTATE_LEFT(s_progress_cookie,8);
     s_progress_count = 0;
   }
   s_progress_count++;
