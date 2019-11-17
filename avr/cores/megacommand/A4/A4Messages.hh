@@ -372,10 +372,24 @@ public:
                   // patches should be loaded to the track and then pooled first
 
   uint8_t          origPosition; // 0-127
+
+
+  // === Begin new a4 sound patch layout
   uint8_t          tags[4];      // 32 tags
   char             name[16];     // null-terminated
+  // sizeof(a4sound_t) is 318, which encodes 363 bytes in 7-bit enc, + 42 bytes header metadata + 8B prologue + 2B SYSEX frame = 415B
   a4sound_t        sound;
-  
+  // === End new a4 sound patch layout, 338B
+
+  // old a4 sound patch layout: uint8_t[415 - 10 - 2 - 4 - 1], 398 bytes
+  // -10 : prologue and 0x78 0x3E, part of a4 sound header.
+  // -2: sysex frame
+  // -4: len & checksum
+  // -1: origposition
+  uint8_t          sound_pad[60];
+
+  bool is_legacy_format();
+  void fromLegacySysexDump();
 
   bool fromSysex_impl(ElektronSysexDecoder &decoder);
   /** Convert the sound object into a sysex buffer to be sent to the
@@ -436,10 +450,5 @@ public:
 };
 
 /* @} */
-
-#include "MCLMemory.h"
-
-// __WOW<sizeof(a4sound_t)> sza4;
-// sizeof(a4sound_t) is 318, which encodes 363 bytes in 7-bit enc, + 42 bytes header metadata + 8B prologue + 2B SYSEX frame = 415B
 
 #endif /* A4MESSAGES_H__ */

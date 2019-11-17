@@ -49,6 +49,11 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("Write failed");
     return false;
   }
+  // if loading legacy patch, parse A4 sound from sysex dump format
+  if (sound.is_legacy_format()) {
+    sound.fromLegacySysexDump();
+  }
+
   return true;
 }
 bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
@@ -89,3 +94,8 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
                                                         A4_TRACK_TYPE);
   return true;
 }
+
+ //#include "MCLMemory.h"
+//__WOW<sizeof(a4sound_t)> sza4t;
+//__WOW<sizeof(A4Track)> sza4;
+//__WOW<sizeof(MDTrackLight)> szmd;
