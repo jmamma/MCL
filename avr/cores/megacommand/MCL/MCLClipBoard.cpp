@@ -65,10 +65,18 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     close();
     return false;
   }
+  if (track < NUM_MD_TRACKS) {
   memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
          sizeof(md_track->seq_data));
   md_track->get_machine_from_kit(track, track);
   ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
+  }
+
+  else {
+  memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],sizeof(ExtSeqTrackData));
+  ret = mcl_sd.write_data(&temp_track, sizeof(ExtSeqTrack), &file);
+  }
+
   close();
   if (!ret) { DEBUG_PRINTLN("failed write"); }
   return ret;
@@ -95,7 +103,12 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   int32_t offset = grid.get_slot_offset(source_track, GRID_LENGTH);
   ret = file.seekSet(offset);
   if (ret) {
-    ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
+    if (source_track < NUM_MD_TRACKS) {
+     ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
+    }
+    else {
+     ret = mcl_sd.read_data(&temp_track, sizeof(ExtSeqTrackData), &file);
+    }
     if (!ret) {
       DEBUG_PRINTLN("failed read");
       close();
@@ -106,7 +119,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN("failed seek");
     return false;
   }
-
+  if (source_track < NUM_MD_TRACKS) {
   DEBUG_PRINTLN("loading seq track");
   memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
          sizeof(md_track->seq_data));
@@ -123,6 +136,12 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   DEBUG_PRINTLN("sending seq track");
   md_track->place_track_in_kit(track, track, &(MD.kit), true);
   MD.setMachine(track, &(md_track->machine));
+  }
+  else if (track >= NUM_MD_TRACKS) {
+   memcpy(&mcl_seq.ext_tracks[track - NUM_MD_TRACKS], &(temp_track),
+         sizeof(ExtSeqTrackData));
+
+  }
   close();
   return true;
 }
