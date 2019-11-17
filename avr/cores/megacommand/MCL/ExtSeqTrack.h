@@ -106,6 +106,9 @@ public:
     }
     *buf = 0;
     }
+
+   void rotate_left();
+   void rotate_right();
 };
 
 #endif /* EXTSEQTRACK_H__ */

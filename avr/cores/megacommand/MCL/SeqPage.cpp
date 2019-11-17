@@ -585,20 +585,42 @@ void opt_paste_track_handler() {
 void opt_shift_track_handler() {
   switch (opt_shift) {
   case 0:
-    mcl_seq.md_tracks[last_md_track].rotate_left();
+    if (opt_midi_device_capture == DEVICE_MD) {
+      mcl_seq.md_tracks[last_md_track].rotate_left();
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].rotate_left();
+    }
+
     break;
   case 1:
-    mcl_seq.md_tracks[last_md_track].rotate_right();
+    if (opt_midi_device_capture == DEVICE_MD) {
+      mcl_seq.md_tracks[last_md_track].rotate_right();
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].rotate_right();
+    }
     break;
   case 2:
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-      mcl_seq.md_tracks[n].rotate_left();
+    if (opt_midi_device_capture == DEVICE_MD) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].rotate_left();
+      }
+    } else {
+      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+        mcl_seq.ext_tracks[n].rotate_left();
+      }
     }
     break;
   case 3:
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-      mcl_seq.md_tracks[n].rotate_right();
+    if (opt_midi_device_capture == DEVICE_MD) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].rotate_right();
+      }
+    } else {
+      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+        mcl_seq.ext_tracks[n].rotate_right();
+      }
     }
+
     break;
   }
 }

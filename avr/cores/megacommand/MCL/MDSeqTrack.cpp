@@ -511,7 +511,7 @@ void MDSeqTrack::rotate_left() {
      else { new_pos = n - 1; }
      memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
      conditional[new_pos] = temp_data.conditional[n];
-     timing[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
   }
 
 }
@@ -533,7 +533,7 @@ void MDSeqTrack::rotate_right() {
      else { new_pos = n + 1; }
      memcpy(&locks[0][new_pos], &(temp_data.locks[0][n]), NUM_MD_LOCKS);
      conditional[new_pos] = temp_data.conditional[n];
-     timing[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
   }
 
 }
