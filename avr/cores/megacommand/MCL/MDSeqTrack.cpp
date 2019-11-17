@@ -490,3 +490,54 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     }
   }
 }
+
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+
+void MDSeqTrack::rotate(bool dir) {
+
+}
+
+void MDSeqTrack::rotate_left() {
+
+  ROTATE_LEFT(lock_mask, length);
+  ROTATE_LEFT(pattern_mask, length);
+  ROTATE_LEFT(oneshot_mask, length);
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+
+  for (uint8_t n = 0; n < length; n++) {
+     if (n == 0) { new_pos = length - 1 - 1; }
+     else { new_pos = n - 1; }
+     memcpy(&locks[0][new_pos], &(temp_data->locks[0][n]), NUM_MD_LOCKS);
+     conditional[new_pos] = temp_data->conditional[n];
+     timing[new_pos] = temp_data->conditional[n];
+  }
+
+}
+
+void MDSeqTrack::rotate_right() {
+
+  ROTATE_RIGHT(lock_mask, length);
+  ROTATE_RIGHT(pattern_mask, length);
+  ROTATE_RIGHT(oneshot_mask, length);
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+
+  for (uint8_t n = 0; n < length; n++) {
+     if (n == length - 1) { new_pos = 0; }
+     else { new_pos = n + 1; }
+     memcpy(&locks[0][new_pos], &(temp_data->locks[0][n]), NUM_MD_LOCKS);
+     conditional[new_pos] = temp_data->conditional[n];
+     timing[new_pos] = temp_data->conditional[n];
+  }
+
+}

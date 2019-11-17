@@ -67,6 +67,10 @@ public:
   void merge_from_md(MDTrack *md_track);
 
   void set_length(uint8_t len);
+
+  void rotate_left();
+  void rotate_right();
+
 };
 
 #endif /* MDSEQTRACK_H__ */
