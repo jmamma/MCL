@@ -800,11 +800,16 @@ void SeqPage::display() {
   //  draw info lines
   mcl_gui.draw_panel_labels(info1, info2);
 
-  if (show_seq_menu) {
+  if (show_seq_menu || show_step_menu) {
     constexpr uint8_t width = 52;
     oled_display.setFont(&TomThumb);
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
+    if (show_step_menu) {
+    step_menu_page.draw_menu(128 - width, 8, width);
+    }
+    if (show_seq_menu) {
     seq_menu_page.draw_menu(128 - width, 8, width);
+    }
   }
 }
 #endif
