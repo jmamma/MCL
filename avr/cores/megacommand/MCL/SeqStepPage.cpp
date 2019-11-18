@@ -319,7 +319,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming; // upper
-        active_track.clear_step_locks(step);
+        //active_track.clear_step_locks(step);
         SET_BIT64(active_track.pattern_mask, step);
       } else {
         DEBUG_PRINTLN("Trying to clear");
