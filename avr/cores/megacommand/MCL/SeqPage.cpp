@@ -7,6 +7,8 @@ uint8_t SeqPage::midi_device = DEVICE_MD;
 
 uint8_t SeqPage::page_count = 4;
 bool SeqPage::show_seq_menu = false;
+bool SeqPage::show_step_menu = false;
+uint8_t SeqPage::step_select = 255;
 
 uint8_t opt_resolution = 1;
 uint8_t opt_trackid = 1;
@@ -145,37 +147,65 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
 #ifdef OLED_DISPLAY
   // activate show_seq_menu only if S2 press is not a key combination
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !show_seq_menu &&
-      !BUTTON_DOWN(Buttons.BUTTON4)) {
-    show_seq_menu = true;
-    // capture current midi_device value
-    opt_midi_device_capture = midi_device;
-    // capture current page.
-    opt_seqpage_capture = this;
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
+    // If MD trig is held and BUTTON3 is pressed, launch note menu
+    if (!note_interface.notes_all_off_md() && (!show_step_menu)) {
+      uint8_t note = 255;
+      for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
+        if (note_interface.notes[n] == 1) {
+          note = n;
+        }
+      }
+      if (note == 255) {
+        return false;
+      }
+      step_select = note;
 
-    if (opt_midi_device_capture == DEVICE_MD) {
-      DEBUG_PRINTLN("okay using MD for length update");
-      opt_trackid = last_md_track + 1;
-      opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
-    } else {
-      opt_trackid = last_ext_track + 1;
-      opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      opt_param1_capture = (MCLEncoder *)encoders[0];
+      opt_param2_capture = (MCLEncoder *)encoders[1];
+      encoders[0] = &step_menu_value_encoder;
+      encoders[1] = &step_menu_entry_encoder;
+      step_menu_page.init();
+      show_step_menu = true;
+    } else if (!show_seq_menu) {
+      show_seq_menu = true;
+      // capture current midi_device value
+      opt_midi_device_capture = midi_device;
+      // capture current page.
+      opt_seqpage_capture = this;
+
+      if (opt_midi_device_capture == DEVICE_MD) {
+        DEBUG_PRINTLN("okay using MD for length update");
+        opt_trackid = last_md_track + 1;
+        opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+      } else {
+        opt_trackid = last_ext_track + 1;
+        opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      }
+
+      opt_param1_capture = (MCLEncoder *)encoders[0];
+      opt_param2_capture = (MCLEncoder *)encoders[1];
+      encoders[0] = &seq_menu_value_encoder;
+      encoders[1] = &seq_menu_entry_encoder;
+      seq_menu_page.init();
+      return true;
     }
-
-    opt_param1_capture = (MCLEncoder *)encoders[0];
-    opt_param2_capture = (MCLEncoder *)encoders[1];
-    encoders[0] = &seq_menu_value_encoder;
-    encoders[1] = &seq_menu_entry_encoder;
-    seq_menu_page.init();
-    return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;
     oled_display.clearDisplay();
+    void (*row_func)();
+    if (show_seq_menu) {
+      void (*row_func)() =
+          seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+
+    } else if (show_step_menu) {
+      void (*row_func)() =
+          step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
+    }
     show_seq_menu = false;
-    void (*row_func)() =
-        seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+    show_step_menu = false;
     if (row_func != NULL) {
       (*row_func)();
       return true;
@@ -562,21 +592,19 @@ void opt_clear_all_locks_handler() {
 
 void opt_copy_track_handler() {
   if (opt_copy == 2) {
-     if (opt_midi_device_capture == DEVICE_MD) { 
-    mcl_clipboard.copy_sequencer();
-     }
-     else {
-    mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
+    if (opt_midi_device_capture == DEVICE_MD) {
+      mcl_clipboard.copy_sequencer();
+    } else {
+      mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
     }
   }
   if (opt_copy == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
-    mcl_clipboard.copy_track = last_md_track;
-    mcl_clipboard.copy_sequencer_track(last_md_track);
-    }
-    else {
-    mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
-    mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
+      mcl_clipboard.copy_track = last_md_track;
+      mcl_clipboard.copy_sequencer_track(last_md_track);
+    } else {
+      mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
+      mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
     }
   }
   opt_copy = 0;
@@ -585,24 +613,29 @@ void opt_copy_track_handler() {
 void opt_paste_track_handler() {
   if (opt_paste == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
-    mcl_clipboard.paste_sequencer();
+      mcl_clipboard.paste_sequencer();
+    } else {
+      mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
-    else {
-    mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
-    }
-
   }
   if (opt_paste == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
-    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
-                                        last_md_track);
+      mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
+                                          last_md_track);
+    } else {
+      mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
+                                          last_ext_track + NUM_MD_TRACKS);
     }
-    else {
-    mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
-                                        last_ext_track + NUM_MD_TRACKS);
-   }
   }
   opt_paste = 0;
+}
+
+void opt_copy_step_handler() {
+  mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select, &mcl_clipboard.step);
+}
+
+void opt_paste_step_handler() {
+  mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select, &mcl_clipboard.step);
 }
 
 void opt_shift_track_handler() {
@@ -671,6 +704,10 @@ void SeqPage::loop() {
     }
     return;
   }
+  else if (show_step_menu) {
+    step_menu_page.loop();
+  }
+
 }
 
 void SeqPage::draw_page_index(bool show_page_index) {
@@ -680,12 +717,11 @@ void SeqPage::draw_page_index(bool show_page_index) {
 
   uint8_t playing_idx;
   if (midi_device == DEVICE_MD) {
-   playing_idx = (mcl_seq.md_tracks[last_md_track].step_count) / 16;
+    playing_idx = (mcl_seq.md_tracks[last_md_track].step_count) / 16;
+  } else {
+    playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count) / 16;
   }
-  else {
-   playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count) / 16;
-  }
-   uint8_t w = pidx_w;
+  uint8_t w = pidx_w;
   if (page_count == 8) {
     w /= 2;
     pidx_x -= 1;

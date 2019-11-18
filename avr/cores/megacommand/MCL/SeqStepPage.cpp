@@ -238,7 +238,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
+        GUI.setPage(&seq_extstep_page);
         return true;
       }
       show_pitch = true;

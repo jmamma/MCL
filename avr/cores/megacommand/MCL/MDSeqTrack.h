@@ -71,6 +71,8 @@ public:
   void rotate_left();
   void rotate_right();
 
+  void copy_step(uint8_t n, MDSeqStep *step);
+  void paste_step(uint8_t n, MDSeqStep *step);
 };
 
 #endif /* MDSEQTRACK_H__ */

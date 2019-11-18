@@ -546,3 +546,25 @@ void MDSeqTrack::rotate_right() {
 
   }
 }
+
+void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
+  step->active = true;
+  for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+    step->locks[a] = locks[a][n];
+  }
+  step->conditional = conditional[n];
+  step->timing = timing[n];
+  step->lock_mask = IS_BIT_SET64(lock_mask,n);
+  step->pattern_mask = IS_BIT_SET64(pattern_mask,n);
+}
+
+void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
+  for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+    locks[a][n] = step->locks[a];
+  }
+  conditional[n] = step->conditional;
+  timing[n] = step->timing;
+  if (step->lock_mask)  { SET_BIT64(lock_mask,n); }
+  if (step->pattern_mask) { SET_BIT64(pattern_mask,n); }
+}
+

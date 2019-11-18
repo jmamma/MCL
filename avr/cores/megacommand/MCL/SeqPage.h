@@ -31,6 +31,8 @@ extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler();
 extern void opt_paste_track_handler();
 extern void opt_shift_track_handler();
+extern void opt_paste_step_handler();
+extern void opt_copy_step_handler();
 
 class SeqPage : public LightPage {
 public:
@@ -38,7 +40,9 @@ public:
   static uint8_t page_select;
   static uint8_t page_count;
   static uint8_t midi_device;
+  static uint8_t step_select;
   static bool show_seq_menu;
+  static bool show_step_menu;
 
   bool recording = false;
   bool display_page_index = true;

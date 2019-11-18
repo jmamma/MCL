@@ -4,8 +4,8 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#include "MCLMenus.h"
 #include "MCLMemory.h"
+#include "MCLMenus.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
@@ -24,7 +24,6 @@ extern MCLEncoder seq_param4;
 
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
-
 
 #include "SeqParamPage.h"
 #include "SeqPtcPage.h"
@@ -56,6 +55,10 @@ extern SeqPtcPage seq_ptc_page;
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
 extern MenuPage<7> seq_menu_page;
+
+extern MCLEncoder step_menu_value_encoder;
+extern MCLEncoder step_menu_entry_encoder;
+extern MenuPage<2> step_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();

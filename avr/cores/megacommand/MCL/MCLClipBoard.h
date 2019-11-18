@@ -5,7 +5,7 @@
 #include "Grid.h"
 #include "SdFat.h"
 #include "Shared.h"
-
+#include "MDSeqTrackData.h"
 #define FILENAME_CLIPBOARD "clipboard.tmp"
 
 class MCLClipBoard {
@@ -18,6 +18,8 @@ public:
   uint8_t copy_track;
 
   File file;
+
+  MDSeqStep step;
 
   bool init();
   bool open();
