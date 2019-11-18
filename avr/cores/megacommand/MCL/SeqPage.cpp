@@ -149,7 +149,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   // activate show_seq_menu only if S2 press is not a key combination
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if (!note_interface.notes_all_off_md() && (!show_step_menu)) {
+    if ((note_interface.notes_count_off() != 0) && (!show_step_menu)) {
       uint8_t note = 255;
       for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
         if (note_interface.notes[n] == 1) {
@@ -205,13 +205,17 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       void (*row_func)() =
           step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
     }
-    show_seq_menu = false;
-    show_step_menu = false;
-    if (row_func != NULL) {
+   if (row_func != NULL) {
       (*row_func)();
+      show_seq_menu = false;
+      show_step_menu = false;
       return true;
     }
-    seq_menu_page.enter();
+    if (show_seq_menu) { seq_menu_page.enter(); }
+    if (show_step_menu) { step_menu_page.enter(); }
+
+    show_seq_menu = false;
+    show_step_menu = false;
     return true;
   }
 #else
