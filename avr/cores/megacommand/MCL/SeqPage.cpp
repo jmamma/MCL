@@ -167,6 +167,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[1] = &step_menu_entry_encoder;
       step_menu_page.init();
       show_step_menu = true;
+      return true;
     } else if (!show_seq_menu) {
       show_seq_menu = true;
       // capture current midi_device value
