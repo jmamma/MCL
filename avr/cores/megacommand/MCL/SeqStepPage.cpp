@@ -1,5 +1,5 @@
-#include "SeqStepPage.h"
 #include "MCL.h"
+#include "SeqStepPage.h"
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 32
@@ -146,10 +146,10 @@ void SeqStepPage::display() {
   K[3] = '\0';
   if (seq_param2.getValue() == 0) {
   } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
-    itoa(12 - seq_param2.getValue(), K+1, 10);
+    itoa(12 - seq_param2.getValue(), K + 1, 10);
   } else {
     K[0] = '+';
-    itoa(seq_param2.getValue() - 12, K+1, 10);
+    itoa(seq_param2.getValue() - 12, K + 1, 10);
   }
   draw_knob(1, "UTIM", K);
 
@@ -173,15 +173,15 @@ void SeqStepPage::display() {
       draw_knob(3, "PTC", K);
     }
   }
-  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) && (!note_interface.notes_all_off_md())) {
-  uint64_t note_mask = 0;
-  uint8_t note = seq_param4.cur - 3;
-  SET_BIT64(note_mask, note - 24 * (note / 24) );
-  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
+  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) && (!note_interface.notes_all_off_md() && (!show_seq_menu) && (!show_step_menu))) {
+    uint64_t note_mask = 0;
+    uint8_t note = seq_param4.cur - 3;
+    SET_BIT64(note_mask, note - 24 * (note / 24));
+    mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
   }
   else {
-  draw_lock_mask((page_select * 16), DEVICE_MD);
-  draw_pattern_mask((page_select * 16), DEVICE_MD);
+    draw_lock_mask((page_select * 16), DEVICE_MD);
+    draw_pattern_mask((page_select * 16), DEVICE_MD);
   }
 
   SeqPage::display();
@@ -246,7 +246,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
-//        GUI.setPage(&seq_extstep_page);
+        //        GUI.setPage(&seq_extstep_page);
         return true;
       }
       show_pitch = true;
@@ -277,6 +277,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         } else {
           seq_param4.cur = note_num;
         }
+        seq_param4.old = seq_param4.cur;
       }
       // Micro
       if (utiming == 0) {
@@ -322,7 +323,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //   conditional_timing[cur_col][(track + (seq_param2.cur * 16))] =
       //   condition; //lower
       if (note_interface.notes_all_off_md()) {
-      mcl_gui.init_encoders_used_clock();
+        mcl_gui.init_encoders_used_clock();
       }
       if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
@@ -330,7 +331,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming; // upper
-        //active_track.clear_step_locks(step);
+        // active_track.clear_step_locks(step);
         SET_BIT64(active_track.pattern_mask, step);
       } else {
         DEBUG_PRINTLN("Trying to clear");
@@ -351,9 +352,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   } // end TI events
 
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-//    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-//      GUI.setPage(&grid_page);
-//    }
+    //    if (note_interface.notes_all_off() || (note_interface.notes_count() ==
+    //    0)) {
+    //      GUI.setPage(&grid_page);
+    //    }
     return true;
   }
 
