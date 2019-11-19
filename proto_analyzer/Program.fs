@@ -11,6 +11,12 @@ open Microsoft.FSharp.Text.StructuredFormat.LayoutOps
 open Newtonsoft.Json
 open System
 
+type TargetDevice =
+| AnalogFour
+| MonoMachine
+
+let mutable dev = MonoMachine
+
 let blockL sep_l sep_r (xs: Layout list) =
     aboveListL [
     sepL sep_l @@-
@@ -47,27 +53,41 @@ type CommunicationRecord =
         fmt layout
 
 let communicate (com: SerialPort) (input: int list) : CommunicationRecord = 
-    match input with
-    | [] -> failwith "empty input"
-    | cmd :: _ when List.contains cmd A4_BAD_COMMANDS -> failwith "bad command"
-    | cmd :: parameters ->
+    match dev, input with
+    | _, [] -> failwith "empty input"
+    | AnalogFour, cmd :: _ when List.contains cmd A4_BAD_COMMANDS -> failwith "bad command"
+    | _, cmd :: parameters ->
     let request = 
-        [
-            // begin sysex
-            [ 0xf0 ]
-            // A4 header
-            [ 0x00; 0x20; 0x3c; 0x06; 0x00 ]
-            // command
-            [ cmd ]
-            // a4 proto. ver.
-            [ 0x01; 0x01 ]
-            // the rest of input
-            parameters
-            // a4 proto. endframe
-            [ 0x00; 0x00; 0x00; 0x05]
-            // end sysex
-            [ 0xf7 ]
-        ]
+        if dev = AnalogFour then 
+            [
+                // begin sysex
+                [ 0xf0 ]
+                // A4 header
+                [ 0x00; 0x20; 0x3c; 0x06; 0x00 ]
+                // command
+                [ cmd ]
+                // a4 proto. ver.
+                [ 0x01; 0x01 ]
+                // the rest of input
+                parameters
+                // a4 proto. endframe
+                [ 0x00; 0x00; 0x00; 0x05]
+                // end sysex
+                [ 0xf7 ]
+            ]
+        else 
+            [
+                // begin sysex
+                [ 0xf0 ]
+                // MonoMachine header
+                [ 0x00; 0x20; 0x3c; 0x03; 0x00 ]
+                // command
+                [ cmd ]
+                // the rest of input
+                parameters
+                // end sysex
+                [ 0xf7 ]
+            ]
         |> List.concat
         |> List.map byte
         |> List.toArray
@@ -80,7 +100,8 @@ let communicate (com: SerialPort) (input: int list) : CommunicationRecord =
             try com.ReadByte() |> byte |> Some
             with | :? TimeoutException -> None
         match read_byte with
-        | Some x -> __read_exhaustive(x :: data)
+        | Some x -> 
+            __read_exhaustive(x :: data)
         | None ->
           {
             cmd = byte(cmd)
@@ -428,26 +449,39 @@ let ``infer sound params`` () =
 
 [<EntryPoint>]
 let main argv =
-    use com = new SerialPort("COM3", 250000)
+    use com = new SerialPort("COM4", 250000)
     com.ReadTimeout <- 100
     com.Open()
 
+    let mutable argv = List.ofArray argv
+
     match argv with
-    | [| "analyze"; filename |] ->
+    | "a4" :: rest ->
+        argv <- rest
+        dev <- AnalogFour
+    | "mono" :: rest ->
+        argv <- rest
+        dev <- MonoMachine
+    | _ -> ()
+
+    match argv with
+    | [ "analyze"; filename ] ->
         let data = read_records filename
         Console.Clear()
         recall data 0 0
-
-    | [| "B1-B16" |] -> ``extract note pitch samples from B1 to B16`` com
-    | [| "C5" |] -> ``extract trigger parameters from C5`` com
-    | [| "sound" |] -> ``extract sounds`` com
-    | [| "infer_snd" |] -> ``infer sound params`` ()
-    | [| "collect" |]
+    | [ "B1-B16" ] -> 
+        ``extract note pitch samples from B1 to B16`` com
+    | [ "C5" ] -> 
+        ``extract trigger parameters from C5`` com
+    | [ "sound" ] -> 
+        ``extract sounds`` com
+    | [ "infer_snd" ] -> 
+        ``infer sound params`` ()
+    | [ "collect" ]
     | _ ->
         let results = 
-            probe com [] 0x64 1 Random
+            probe com [] 0x40 1 (Fixed([], 0))
             |> List.map JsonConvert.SerializeObject
-
         File.AppendAllLines("records.json", results)
     
 
