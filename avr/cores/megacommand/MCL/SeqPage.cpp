@@ -636,12 +636,25 @@ void opt_paste_track_handler() {
 }
 
 void opt_copy_step_handler() {
-  mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select, &mcl_clipboard.step);
+  mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
 
 void opt_paste_step_handler() {
-  mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select, &mcl_clipboard.step);
+  mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
+
+void opt_mute_step_handler() {
+  for (uint8_t n = 0; n < note_interface.notes[n]; n++) {
+    if (n == 1) { SET_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
+  }
+}
+
+void opt_umute_step_handler() {
+  for (uint8_t n = 0; n < note_interface.notes[n]; n++) {
+    if (n == 1) { CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
+  }
+}
+
 
 void opt_shift_track_handler() {
   switch (opt_shift) {

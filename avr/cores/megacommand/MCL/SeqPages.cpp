@@ -44,18 +44,20 @@ MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 MenuPage<7> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
-const menu_t<2> step_menu_layout PROGMEM = {
-    "SEQ",
+const menu_t<4> step_menu_layout PROGMEM = {
+    "STP",
     {
-        {"COPY STEP", 0, 0, 0, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_step_handler, {}},
-        {"PASTE STEP", 0, 0, 0, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_step_handler, {}},
+        {"COPY STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_copy_step_handler, {}},
+        {"PASTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_paste_step_handler, {}},
+        {"MUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_mute_step_handler, {}},
+        {"UNMUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_unmute_step_handler, {}},
     },
     NULL,
 };
 
 MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<2> step_menu_page(&step_menu_layout, &step_menu_value_encoder, &step_menu_entry_encoder);
+MenuPage<4> step_menu_page(&step_menu_layout, &step_menu_value_encoder, &step_menu_entry_encoder);
 
 
 //SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];

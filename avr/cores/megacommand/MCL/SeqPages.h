@@ -58,7 +58,7 @@ extern MenuPage<7> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
 extern MCLEncoder step_menu_entry_encoder;
-extern MenuPage<2> step_menu_page;
+extern MenuPage<4> step_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();
