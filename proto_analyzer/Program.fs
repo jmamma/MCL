@@ -445,7 +445,19 @@ let ``infer sound params`` () =
         |> List.map (fmt_result)
     File.WriteAllLines("sounds.inference.txt", results)
 
-
+let ``serial monitor`` (com: SerialPort) =
+  let mutable cur = 0
+  while true do
+    try 
+      let b = com.ReadByte() |> byte
+      printf "%02X" b
+      cur <- cur + 1
+      if cur < 16 then
+        printf " "
+      else
+        cur <- 0
+        printfn ""
+    with | :? TimeoutException -> ()
 
 [<EntryPoint>]
 let main argv =
@@ -475,6 +487,8 @@ let main argv =
         ``extract trigger parameters from C5`` com
     | [ "sound" ] -> 
         ``extract sounds`` com
+    | [ "monitor" ] -> 
+        ``serial monitor`` com
     | [ "infer_snd" ] -> 
         ``infer sound params`` ()
     | [ "collect" ]
