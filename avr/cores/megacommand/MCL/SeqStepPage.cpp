@@ -2,6 +2,7 @@
 #include "MCL.h"
 
 #define MIDI_OMNI_MODE 17
+#define NUM_KEYS 32
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
@@ -172,8 +173,15 @@ void SeqStepPage::display() {
       draw_knob(3, "PTC", K);
     }
   }
+  if (mcl_gui.show_encoder_value(&seq_param4)) {
+  uint64_t note_mask = 0;
+  SET_BIT64(note_mask, seq_param4.cur - 24 * (seq_param4.cur / 24) );
+  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
+  }
+  else {
   draw_lock_mask((page_select * 16), DEVICE_MD);
   draw_pattern_mask((page_select * 16), DEVICE_MD);
+  }
 
   SeqPage::display();
   oled_display.display();
