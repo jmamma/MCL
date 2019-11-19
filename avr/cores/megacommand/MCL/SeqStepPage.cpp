@@ -104,7 +104,7 @@ void SeqStepPage::display() {
         uint8_t base = tuning->base;
         uint8_t notenum = seq_param4.cur + base;
         MusicalNotes number_to_note;
-        uint8_t oct = notenum / 12;
+        uint8_t oct = (notenum / 12) - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         GUI.put_string_at(10, number_to_note.notes_upper[note]);
         GUI.put_value_at1(12, oct);
@@ -156,15 +156,15 @@ void SeqStepPage::display() {
   itoa(seq_param3.getValue(), K, 10);
   draw_knob(2, "LEN", K);
 
+  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
   if (show_pitch) {
-    tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
     if (tuning != NULL) {
       strcpy(K, "--");
       if (seq_param4.cur != 0) {
         uint8_t base = tuning->base;
         uint8_t notenum = seq_param4.cur + base;
         MusicalNotes number_to_note;
-        uint8_t oct = notenum / 12;
+        uint8_t oct = notenum / 12 - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         strcpy(K, number_to_note.notes_upper[note]);
         K[2] = oct + '0';
@@ -173,13 +173,14 @@ void SeqStepPage::display() {
       draw_knob(3, "PTC", K);
     }
   }
-  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) && (!note_interface.notes_all_off_md() && (!show_seq_menu) && (!show_step_menu))) {
+  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
+      (!note_interface.notes_all_off_md()) && (!show_seq_menu) &&
+      (!show_step_menu) && (tuning != NULL)) {
     uint64_t note_mask = 0;
-    uint8_t note = seq_param4.cur - 3;
+    uint8_t note = seq_param4.cur + tuning->base;
     SET_BIT64(note_mask, note - 24 * (note / 24));
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
-  }
-  else {
+  } else {
     draw_lock_mask((page_select * 16), DEVICE_MD);
     draw_pattern_mask((page_select * 16), DEVICE_MD);
   }
