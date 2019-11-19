@@ -84,6 +84,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = track + 1;
         select_track(device, track);
         redisplay = true;
+        seq_menu_page.select_item(0);
       }
 
       return true;
