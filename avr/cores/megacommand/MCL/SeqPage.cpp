@@ -151,7 +151,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   // activate show_seq_menu only if S2 press is not a key combination
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if ((note_interface.notes_count_on() != 0) && (!show_step_menu)) {
+    if ((note_interface.notes_count_on() != 0) && (!show_step_menu) && (GUI.currentPage() != &seq_ptc_page)) {
       uint8_t note = 255;
       for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
         if (note_interface.notes[n] == 1) {

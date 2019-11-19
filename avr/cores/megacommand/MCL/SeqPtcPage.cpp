@@ -1,8 +1,8 @@
-#include "SeqPtcPage.h"
 #include "MCL.h"
+#include "SeqPtcPage.h"
 
 #define MIDI_LOCAL_MODE 0
-#define NUM_KEYS 32
+#define NUM_KEYS 24
 
 scale_t *scales[16]{
     &chromaticScale, &ionianScale,
@@ -37,12 +37,8 @@ scale_t *scales[16]{
 typedef char scale_name_t[4];
 
 const scale_name_t scale_names[] PROGMEM = {
-  "---", "ION",
-  "PHR", 
-  "mHA", "mME",
-  "MPE", "mPE", "sPE",
-  "ISS", "BLU", 
-  "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
+    "---", "ION", "PHR", "mHA", "mME", "MPE", "mPE", "sPE",
+    "ISS", "BLU", "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
 };
 
 void SeqPtcPage::setup() {
@@ -66,8 +62,7 @@ void SeqPtcPage::config_encoders() {
 #ifdef EXT_TRACKS
   else {
     ptc_param_len.max = (uint8_t)128;
-    ptc_param_len.cur =
-        mcl_seq.ext_tracks[last_ext_track].length;
+    ptc_param_len.cur = mcl_seq.ext_tracks[last_ext_track].length;
   }
 #endif
 }
@@ -119,12 +114,26 @@ void SeqPtcPage::config() {
   ptc_param_oct.cur = 1;
 
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
-
   constexpr uint8_t len1 = sizeof(info1);
-
   char buf[len1] = {'\0'};
+  char *str1;
+  char *str2;
+  if (midi_device == DEVICE_MD) {
+    str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+    str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  } else {
+    char str_first[3] = "--";
+    if (Analog4.connected) {
+      strcpy(str_first, "A4");
+    } else {
+      strcpy(str_first, "MI");
+    }
+    char str_second[3] = "T ";
+    str_second[1] = '0' + last_ext_track;
+    str1 = &str_first[0];
+    str2 = &str_second[0];
+  }
+
   m_strncpy_p(buf, str1, len1);
   strncpy(info1, buf, len1);
   strncat(info1, ">", len1);
@@ -182,7 +191,8 @@ void SeqPtcPage::loop() {
   }
 #endif
 
-  if (ptc_param_oct.hasChanged() || ptc_param_finetune.hasChanged() || ptc_param_len.hasChanged() || ptc_param_scale.hasChanged()) {
+  if (ptc_param_oct.hasChanged() || ptc_param_finetune.hasChanged() ||
+      ptc_param_len.hasChanged() || ptc_param_scale.hasChanged()) {
     queue_redraw();
   }
 
@@ -191,7 +201,8 @@ void SeqPtcPage::loop() {
     redisplay = true;
   }
 
-  if (deferred_timer != 0 && clock_diff(deferred_timer, slowclock) > render_defer_time) {
+  if (deferred_timer != 0 &&
+      clock_diff(deferred_timer, slowclock) > render_defer_time) {
     deferred_timer = 0;
     redisplay = true;
   }
@@ -320,7 +331,6 @@ void SeqPtcPage::display() {
   // draw TI keyboard
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
-
   SeqPage::display();
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -384,8 +394,8 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
     pitch = tuning->len - 1;
   }
 
-  uint8_t machine_pitch =
-      pgm_read_byte(&tuning->tuning[pitch]) + ptc_param_finetune.getValue() - 32;
+  uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[pitch]) +
+                          ptc_param_finetune.getValue() - 32;
   return machine_pitch;
 }
 
@@ -428,11 +438,16 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   }
 }
 
-void SeqPtcPage::queue_redraw() {
-  deferred_timer = slowclock;
-}
+void SeqPtcPage::queue_redraw() { deferred_timer = slowclock; }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
+
+  if (SeqPage::handleEvent(event)) {
+    if (show_seq_menu) {
+      seq_ptc_page.queue_redraw();
+      return true;
+    }
+  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -469,12 +484,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     recording = !recording;
     return true;
   }
-/*
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
-    return true;
-  }
-*/
+  /*
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      GUI.setPage(&grid_page);
+      return true;
+    }
+  */
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
@@ -499,11 +514,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (SeqPage::handleEvent(event)) {
-    seq_ptc_page.queue_redraw();
-    return true;
-  }
-
   return false;
 }
 
@@ -516,13 +526,13 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   uint8_t oct = note_num / 12;
   // if (pos >= scales[seq_param5.cur]->size) {
   oct += pos / scales[ptc_param_scale.cur]->size;
-  pos = pos -
-        scales[ptc_param_scale.cur]->size * (pos / scales[ptc_param_scale.cur]->size);
+  pos = pos - scales[ptc_param_scale.cur]->size *
+                  (pos / scales[ptc_param_scale.cur]->size);
   // }
 
   //  if (seq_param5.getValue() > 0) {
-  pitch = octave_to_pitch() +
-          scales[ptc_param_scale.cur]->pitches[pos] + oct * 12;
+  pitch =
+      octave_to_pitch() + scales[ptc_param_scale.cur]->pitches[pos] + oct * 12;
   //   }
 
   return pitch;
@@ -672,4 +682,3 @@ void SeqPtcMidiEvents::remove_callbacks() {
 
   state = false;
 }
-
