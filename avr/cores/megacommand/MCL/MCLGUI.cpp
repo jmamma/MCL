@@ -160,7 +160,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
   }
   if (s_progress_count == s_progress_speed) {
     s_progress_cookie = bitmask;
-    ROTATE_LEFT(s_progress_cookie,8);
+    ROTATE_LEFT(s_progress_cookie, 8);
     s_progress_count = 0;
   }
   s_progress_count++;
@@ -459,8 +459,16 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     } else {
       if (IS_BIT_SET64(pattern_mask, i + offset) &&
           ((i + offset != step_count) || (MidiClock.state != 2))) {
+        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+        if (IS_BIT_SET64(mute_mask, i + offset)) {
+          oled_display.drawPixel(x + 1, y + 1, WHITE);
+          oled_display.drawPixel(x + 2, y + 2, WHITE);
+          oled_display.drawPixel(x + 3, y + 3, WHITE);
+        }
         /*If the bit is set, there is a trigger at this position. */
-        oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+        else {
+          oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+        }
         /*
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
         oled_display.drawPixel(x + 1, y + 1, WHITE);
@@ -471,11 +479,6 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
        */
       } else {
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-        if (IS_BIT_SET64(mute_mask, i + offset)) {
-        oled_display.drawPixel(x + 1, y + 1, WHITE);
-        oled_display.drawPixel(x + 2, y + 2, WHITE);
-        oled_display.drawPixel(x + 3, y + 3, WHITE);
-        }
       }
     }
 
@@ -797,8 +800,7 @@ const unsigned char icon_sound[] PROGMEM = {
     0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0,
     0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc3, 0xe0, 0x01, 0xc7, 0xe0,
     0x01, 0xc7, 0xe0, 0x07, 0xc7, 0xc0, 0x0f, 0xc3, 0x80, 0x0f, 0xc0, 0x00,
-    0x0f, 0x80, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+    0x0f, 0x80, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 // 'md_rev', 34x24px
 const unsigned char icon_md[] PROGMEM = {
