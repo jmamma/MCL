@@ -16,6 +16,7 @@ uint8_t opt_copy = 0;
 uint8_t opt_paste = 0;
 uint8_t opt_clear = 0;
 uint8_t opt_shift = 0;
+uint8_t opt_reverse = 0;
 
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -649,12 +650,11 @@ void opt_mute_step_handler() {
   }
 }
 
-void opt_umute_step_handler() {
+void opt_unmute_step_handler() {
   for (uint8_t n = 0; n < note_interface.notes[n]; n++) {
     if (n == 1) { CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
   }
 }
-
 
 void opt_shift_track_handler() {
   switch (opt_shift) {
@@ -697,6 +697,32 @@ void opt_shift_track_handler() {
 
     break;
   }
+}
+
+void opt_reverse_track_handler() {
+
+   if (opt_reverse == 1) {
+     if (opt_midi_device_capture == DEVICE_MD) {
+       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          mcl_seq.md_tracks[last_md_track].reverse();
+       }
+     }
+     else {
+       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+          mcl_seq.ext_tracks[last_ext_track].reverse();
+       }
+     }
+   }
+
+   if (opt_reverse == 0) {
+     if (opt_midi_device_capture == DEVICE_MD) {
+          mcl_seq.md_tracks[last_md_track].reverse();
+     }
+     else {
+          mcl_seq.ext_tracks[last_ext_track].reverse();
+     }
+   }
+
 }
 
 void SeqPage::config_as_trackedit() {

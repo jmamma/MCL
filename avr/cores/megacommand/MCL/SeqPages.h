@@ -54,7 +54,7 @@ extern SeqPtcPage seq_ptc_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<7> seq_menu_page;
+extern MenuPage<8> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
 extern MCLEncoder step_menu_entry_encoder;

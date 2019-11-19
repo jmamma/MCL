@@ -109,6 +109,7 @@ public:
 
    void rotate_left();
    void rotate_right();
+   void reverse();
 };
 
 #endif /* EXTSEQTRACK_H__ */

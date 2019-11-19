@@ -547,6 +547,32 @@ void MDSeqTrack::rotate_right() {
   }
 }
 
+void MDSeqTrack::reverse() {
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+  oneshot_mask = 0;
+  pattern_mask = 0;
+  lock_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+     new_pos = length - n - 1;
+
+     for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+       locks[a][new_pos] = temp_data.locks[a][n];
+     }
+
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
+     if (IS_BIT_SET64(temp_data.pattern_mask, n)) { SET_BIT64(pattern_mask, new_pos); }
+     if (IS_BIT_SET64(temp_data.lock_mask, n)) { SET_BIT64(lock_mask, new_pos); }
+
+  }
+}
+
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->active = true;
   for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {

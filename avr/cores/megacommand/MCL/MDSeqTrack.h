@@ -70,6 +70,7 @@ public:
 
   void rotate_left();
   void rotate_right();
+  void reverse();
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
