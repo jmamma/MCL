@@ -43,6 +43,7 @@ public:
   bool notes_all_off_md();
   uint8_t notes_count_off();
   uint8_t notes_count();
+  uint8_t notes_count_on();
 
   NoteInterfaceMidiEvents ni_midi_events;
 };
