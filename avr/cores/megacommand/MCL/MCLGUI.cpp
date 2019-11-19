@@ -444,7 +444,7 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         uint64_t pattern_mask, uint8_t step_count,
-                        uint8_t length) {
+                        uint8_t length, uint64_t mute_mask) {
   for (int i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
@@ -471,6 +471,11 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
        */
       } else {
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+        if (IS_BIT_SET64(mute_mask, i + offset)) {
+        oled_display.drawPixel(x + 1, y + 1, WHITE);
+        oled_display.drawPixel(x + 2, y + 2, WHITE);
+        oled_display.drawPixel(x + 3, y + 3, WHITE);
+        }
       }
     }
 

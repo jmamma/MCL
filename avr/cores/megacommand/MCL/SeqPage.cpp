@@ -474,9 +474,9 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask,
                                 uint8_t step_count, uint8_t length,
-                                bool show_current_step) {
+                                bool show_current_step, uint64_t mute_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
-                     step_count, length);
+                     step_count, length, mute_mask);
 }
 
 void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
@@ -485,7 +485,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     draw_pattern_mask(offset, active_track.pattern_mask,
                       active_track.step_count, active_track.length,
-                      show_current_step);
+                      show_current_step, active_track.oneshot_mask);
   }
 #ifdef EXT_TRACKS
   else {
