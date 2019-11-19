@@ -646,13 +646,7 @@ void opt_paste_step_handler() {
 
 void opt_mute_step_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (note_interface.notes[n] == 1) { SET_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
-  }
-}
-
-void opt_unmute_step_handler() {
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (note_interface.notes[n] == 1) { CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
+    if (note_interface.notes[n] == 1) { TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
   }
 }
 

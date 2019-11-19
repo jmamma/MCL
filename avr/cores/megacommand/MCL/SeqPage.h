@@ -36,7 +36,6 @@ extern void opt_reverse_track_handler();
 extern void opt_paste_step_handler();
 extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
-extern void opt_unmute_step_handler();
 
 class SeqPage : public LightPage {
 public:
