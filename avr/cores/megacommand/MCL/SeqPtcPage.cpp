@@ -444,9 +444,10 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (SeqPage::handleEvent(event)) {
     if (show_seq_menu) {
-      seq_ptc_page.queue_redraw();
+      redisplay = true;
       return true;
     }
+     queue_redraw();
   }
 
   if (note_interface.is_event(event)) {
