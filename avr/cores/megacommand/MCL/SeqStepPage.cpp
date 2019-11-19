@@ -173,9 +173,10 @@ void SeqStepPage::display() {
       draw_knob(3, "PTC", K);
     }
   }
-  if (mcl_gui.show_encoder_value(&seq_param4)) {
+  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) && (!note_interface.notes_all_off_md())) {
   uint64_t note_mask = 0;
-  SET_BIT64(note_mask, seq_param4.cur - 24 * (seq_param4.cur / 24) );
+  uint8_t note = seq_param4.cur - 3;
+  SET_BIT64(note_mask, note - 24 * (note / 24) );
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
   }
   else {
@@ -320,7 +321,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             }*/
       //   conditional_timing[cur_col][(track + (seq_param2.cur * 16))] =
       //   condition; //lower
-
+      if (note_interface.notes_all_off_md()) {
+      mcl_gui.init_encoders_used_clock();
+      }
       if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_param1.cur;
