@@ -162,7 +162,7 @@ void PageSelectPage::md_prepare() {
     }
       #else
       MD.requestKit(MD.currentKit);
-      delay(10);
+      delay(20);
       #endif
     }
   }
