@@ -136,30 +136,40 @@ void PageSelectPage::init() {
   }
   md_exploit.off(switch_tracks);
   md_prepare();
-  delay(10);
   md_exploit.on(switch_tracks);
   note_interface.state = true;
   classic_display = false;
 }
 
 void PageSelectPage::md_prepare() {
-
+  #ifndef USE_BLOCKINGKIT
   kit_cb.init();
 
   MDSysexListener.addOnKitMessageCallback(
       &kit_cb,
       (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-
+  #endif
   if (MD.connected) {
     MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
     if ((mcl_cfg.auto_save == 1)) {
       MD.saveCurrentKit(MD.currentKit);
+      #ifdef USE_BLOCKINGKIT
+      MD.getBlockingKit(MD.currentKit, CALLBACK_TIMEOUT);
+     if (MidiClock.state == 2) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].update_kit_params();
+      }
+    }
+      #else
       MD.requestKit(MD.currentKit);
+      delay(10);
+      #endif
     }
   }
 }
 
 void PageSelectPage::cleanup() {
+  #ifndef USE_BLOCKINGKIT
   if (kit_cb.received) {
     MD.kit.fromSysex(MD.midi);
     if (MidiClock.state == 2) {
@@ -169,6 +179,7 @@ void PageSelectPage::cleanup() {
     }
   }
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
+  #endif
   note_interface.init_notes();
 }
 
