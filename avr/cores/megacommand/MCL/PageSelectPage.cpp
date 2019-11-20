@@ -136,7 +136,7 @@ void PageSelectPage::init() {
   }
   md_exploit.off(switch_tracks);
   md_prepare();
-
+  delay(10);
   md_exploit.on(switch_tracks);
   note_interface.state = true;
   classic_display = false;
