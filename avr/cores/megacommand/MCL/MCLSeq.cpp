@@ -73,13 +73,18 @@ void MCLSeq::disable() {
   state = false;
 }
 
-void MCLSeq::onMidiContinueCallback() {
+void MCLSeq::update_params() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
+
+}
+
+void MCLSeq::onMidiContinueCallback() {
+  update_params();
 }
 
 void MCLSeq::onMidiStartImmediateCallback() {

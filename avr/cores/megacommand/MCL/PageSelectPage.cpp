@@ -156,9 +156,7 @@ void PageSelectPage::md_prepare() {
       #ifdef USE_BLOCKINGKIT
       MD.getBlockingKit(MD.currentKit, CALLBACK_TIMEOUT);
      if (MidiClock.state == 2) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].update_kit_params();
-      }
+        mcl_seq.update_params();
     }
       #else
       MD.requestKit(MD.currentKit);
@@ -173,9 +171,7 @@ void PageSelectPage::cleanup() {
   if (kit_cb.received) {
     MD.kit.fromSysex(MD.midi);
     if (MidiClock.state == 2) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].update_kit_params();
-      }
+        mcl_seq.update_params();
     }
   }
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
