@@ -107,6 +107,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
           }
         }
         mcl_seq.md_tracks[last_md_track].length = step;
+
       }
 #ifdef EXT_TRACKS
       else {
@@ -121,7 +122,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[2]->cur = step;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         note_interface.notes[track] = 0;
-        GUI.ignoreNextEvent(event->source);
+      }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
+      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+        GUI.ignoreNextEvent(Buttons.BUTTON3);
       }
       return true;
     }
@@ -142,10 +146,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     if (route_page.hasChanged) {
-    route_page.update_globals();
-    bool switch_tracks = false;
-    md_exploit.off(false);
-    md_exploit.on();
+      route_page.update_globals();
+      bool switch_tracks = false;
+      md_exploit.off(false);
+      md_exploit.on();
     }
     GUI.setPage(&page_select_page);
   }
@@ -154,7 +158,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   // activate show_seq_menu only if S2 press is not a key combination
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if ((note_interface.notes_count_on() != 0) && (!show_step_menu) && (GUI.currentPage() != &seq_ptc_page)) {
+    if ((note_interface.notes_count_on() != 0) && (!show_step_menu) &&
+        (GUI.currentPage() != &seq_ptc_page)) {
       uint8_t note = 255;
       for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
         if (note_interface.notes[n] == 1) {
@@ -210,14 +215,18 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       void (*row_func)() =
           step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
     }
-   if (row_func != NULL) {
+    if (row_func != NULL) {
       (*row_func)();
       show_seq_menu = false;
       show_step_menu = false;
       return true;
     }
-    if (show_seq_menu) { seq_menu_page.enter(); }
-    if (show_step_menu) { step_menu_page.enter(); }
+    if (show_seq_menu) {
+      seq_menu_page.enter();
+    }
+    if (show_step_menu) {
+      step_menu_page.enter();
+    }
 
     show_seq_menu = false;
     show_step_menu = false;
@@ -641,16 +650,21 @@ void opt_paste_track_handler() {
 }
 
 void opt_copy_step_handler() {
-  mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
+  mcl_seq.md_tracks[last_md_track].copy_step(
+      SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
 
 void opt_paste_step_handler() {
-  mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
+  mcl_seq.md_tracks[last_md_track].paste_step(
+      SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
 
 void opt_mute_step_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (note_interface.notes[n] == 1) { TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask, n + SeqPage::page_select * 16); }
+    if (note_interface.notes[n] == 1) {
+      TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask,
+                   n + SeqPage::page_select * 16);
+    }
   }
 }
 
@@ -699,28 +713,25 @@ void opt_shift_track_handler() {
 
 void opt_reverse_track_handler() {
 
-   if (opt_reverse == 2) {
-     if (opt_midi_device_capture == DEVICE_MD) {
-       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          mcl_seq.md_tracks[n].reverse();
-       }
-     }
-     else {
-       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-          mcl_seq.ext_tracks[n].reverse();
-       }
-     }
-   }
+  if (opt_reverse == 2) {
+    if (opt_midi_device_capture == DEVICE_MD) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].reverse();
+      }
+    } else {
+      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+        mcl_seq.ext_tracks[n].reverse();
+      }
+    }
+  }
 
-   if (opt_reverse == 1) {
-     if (opt_midi_device_capture == DEVICE_MD) {
-          mcl_seq.md_tracks[last_md_track].reverse();
-     }
-     else {
-          mcl_seq.ext_tracks[last_ext_track].reverse();
-     }
-   }
-
+  if (opt_reverse == 1) {
+    if (opt_midi_device_capture == DEVICE_MD) {
+      mcl_seq.md_tracks[last_md_track].reverse();
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].reverse();
+    }
+  }
 }
 
 void SeqPage::config_as_trackedit() {
@@ -745,11 +756,9 @@ void SeqPage::loop() {
       seq_menu_value_encoder.cur = opt_trackid;
     }
     return;
-  }
-  else if (show_step_menu) {
+  } else if (show_step_menu) {
     step_menu_page.loop();
   }
-
 }
 
 void SeqPage::draw_page_index(bool show_page_index) {
@@ -846,10 +855,10 @@ void SeqPage::display() {
     oled_display.setFont(&TomThumb);
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
     if (show_step_menu) {
-    step_menu_page.draw_menu(128 - width, 8, width);
+      step_menu_page.draw_menu(128 - width, 8, width);
     }
     if (show_seq_menu) {
-    seq_menu_page.draw_menu(128 - width, 8, width);
+      seq_menu_page.draw_menu(128 - width, 8, width);
     }
   }
 }
