@@ -105,6 +105,34 @@ void LFOSeqTrack::update_params_offset() {
     params[n].update_offset();
   }
 }
+
+void LFOSeqTrack::update_kit_params() {
+  for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
+  params[n].update_kit();
+  }
+}
+
+void LFOSeqParam::update_kit() {
+   if (dest <= NUM_MD_TRACKS) {
+     MD.kit.params[dest - 1][param] = offset;
+  } else {
+    switch (dest - NUM_MD_TRACKS - 1) {
+    case MD_FX_ECHO - MD_FX_ECHO:
+      MD.kit.delay[param] = offset;
+      break;
+    case MD_FX_DYN - MD_FX_ECHO:
+      MD.kit.dynamics[param] = offset;
+      break;
+    case MD_FX_REV - MD_FX_ECHO:
+      MD.kit.reverb[param] = offset;
+      break;
+    case MD_FX_EQ - MD_FX_ECHO:
+      MD.kit.eq[param] = offset;
+      break;
+    }
+  }
+}
+
 void LFOSeqParam::update_offset() { offset = get_param_offset(dest, param); }
 void LFOSeqParam::reset_param_offset() { reset_param(dest, param, offset); }
 

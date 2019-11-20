@@ -48,6 +48,7 @@ public:
   void enable();
   void disable();
 
+  void update_kit_params();
   void update_params();
   void onMidiStartCallback();
   void onMidiStartImmediateCallback();

@@ -592,9 +592,7 @@ void GridPage::prepare() {
       MD.saveCurrentKit(MD.currentKit);
       MD.getBlockingKit(MD.currentKit);
       if (MidiClock.state == 2) {
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          mcl_seq.md_tracks[n].update_kit_params();
-        }
+        mcl_seq.update_kit_params();
       }
     }
   }

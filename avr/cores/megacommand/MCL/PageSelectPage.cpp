@@ -132,7 +132,7 @@ void PageSelectPage::init() {
 #endif
   bool switch_tracks = false;
   if (!md_exploit.state) {
-  last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
+    last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
   }
   md_exploit.off(switch_tracks);
   md_prepare();
@@ -142,45 +142,41 @@ void PageSelectPage::init() {
 }
 
 void PageSelectPage::md_prepare() {
-  #ifndef USE_BLOCKINGKIT
+#ifndef USE_BLOCKINGKIT
   kit_cb.init();
 
   MDSysexListener.addOnKitMessageCallback(
       &kit_cb,
       (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-  #endif
+#endif
   if (MD.connected) {
     MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
     if ((mcl_cfg.auto_save == 1)) {
       MD.saveCurrentKit(MD.currentKit);
-      #ifdef USE_BLOCKINGKIT
+#ifdef USE_BLOCKINGKIT
       MD.getBlockingKit(MD.currentKit, CALLBACK_TIMEOUT);
-     if (MidiClock.state == 2) {
-        //Restore kit param values that are being modulaated by locks
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          mcl_seq.md_tracks[n].update_kit_params();
-        }
-     }
-      #else
+      if (MidiClock.state == 2) {
+        // Restore kit param values that are being modulaated by locks
+        mcl_seq.update_kit_params();
+      }
+#else
       MD.requestKit(MD.currentKit);
       delay(20);
-      #endif
+#endif
     }
   }
 }
 
 void PageSelectPage::cleanup() {
-  #ifndef USE_BLOCKINGKIT
+#ifndef USE_BLOCKINGKIT
   if (kit_cb.received) {
     MD.kit.fromSysex(MD.midi);
     if (MidiClock.state == 2) {
-     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          mcl_seq.md_tracks[n].update_kit_params();
-      }
+       mcl_seq.update_kit_params();
     }
   }
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
-  #endif
+#endif
   note_interface.init_notes();
 }
 

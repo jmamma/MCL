@@ -72,7 +72,15 @@ void MCLSeq::disable() {
   MidiClock.removeOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
   state = false;
 }
-
+// restore kit params
+void MCLSeq::update_kit_params() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_kit_params();
+  }
+  for (uint8_t n = 0; n < NUM_LFO_TRACKS; n++) {
+    mcl_seq.lfo_tracks[n].update_kit_params();
+  }
+}
 void MCLSeq::update_params() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
@@ -80,12 +88,9 @@ void MCLSeq::update_params() {
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
-
 }
 
-void MCLSeq::onMidiContinueCallback() {
-  update_params();
-}
+void MCLSeq::onMidiContinueCallback() { update_params(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS

@@ -32,6 +32,7 @@ public:
   void reset_param(uint8_t dest, uint8_t param, uint8_t value);
   void reset_param_offset();
   void update_offset();
+  void update_kit();
 };
 
 class LFOSeqTrack {
@@ -54,6 +55,7 @@ public:
   LFOSeqParam params[NUM_LFO_PARAMS];
   LFOSeqTrack() { init(); };
   ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t param);
+  void update_kit_params();
   void update_params_offset();
   void reset_params_offset();
   void check_and_update_params_offset(uint8_t dest, uint8_t value);
