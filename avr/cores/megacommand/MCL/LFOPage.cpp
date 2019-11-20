@@ -272,7 +272,7 @@ void LFOPage::display() {
   uint8_t lfo_track_num = lfo_track->track_number;
   mcl_gui.draw_panel_number(lfo_track_num);
   mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
-  draw_page_index(false);
+  draw_page_index(false, lfo_track->step_count / 4);
 
   uint8_t x = mcl_gui.knob_x0 + 5;
   uint8_t y = 8;

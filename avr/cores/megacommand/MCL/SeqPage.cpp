@@ -761,16 +761,20 @@ void SeqPage::loop() {
   }
 }
 
-void SeqPage::draw_page_index(bool show_page_index) {
+void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
 
   uint8_t playing_idx;
-  if (midi_device == DEVICE_MD) {
-    playing_idx = (mcl_seq.md_tracks[last_md_track].step_count) / 16;
+  if (_playing_idx == 255) {
+    if (midi_device == DEVICE_MD) {
+      playing_idx = (mcl_seq.md_tracks[last_md_track].step_count - ((mcl_seq.md_tracks[last_md_track].step_count) / 16) * 16) / 4;
+    } else {
+      playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count - ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /4;
+    }
   } else {
-    playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count) / 16;
+    playing_idx = _playing_idx;
   }
   uint8_t w = pidx_w;
   if (page_count == 8) {
