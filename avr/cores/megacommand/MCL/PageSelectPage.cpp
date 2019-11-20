@@ -32,13 +32,13 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"LFO", &lfo_page, 3, 0, 24, 24, (uint8_t *)icon_lfo},
 
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, (uint8_t *)icon_step},
-    {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t*) icon_rec},
+    {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t *)icon_rec},
     {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
     {"CHROMA", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
 
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, (uint8_t *)icon_sound},
-    {"WAV DESIGNER", &wd.pages[0], 9, 2, 24, 19, (uint8_t*)icon_wavd},
-    {"LOUDNESS", &loudness_page, 10, 2, 24, 16, (uint8_t*)icon_loudness},
+    {"WAV DESIGNER", &wd.pages[0], 9, 2, 24, 19, (uint8_t *)icon_wavd},
+    {"LOUDNESS", &loudness_page, 10, 2, 24, 16, (uint8_t *)icon_loudness},
 
     {"DELAY", &fx_page_a, 12, 3, 24, 25, (uint8_t *)icon_rhytmecho},
     {"REVERB", &fx_page_b, 13, 3, 24, 25, (uint8_t *)icon_gatebox},
@@ -130,11 +130,47 @@ void PageSelectPage::init() {
     oled_display.print(str);
   }
 #endif
-  md_exploit.on();
+  bool switch_tracks = false;
+  if (!md_exploit.state) {
+  last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
+  }
+  md_exploit.off(switch_tracks);
+  md_prepare();
+
+  md_exploit.on(switch_tracks);
   note_interface.state = true;
   classic_display = false;
 }
-void PageSelectPage::cleanup() { note_interface.init_notes(); }
+
+void PageSelectPage::md_prepare() {
+
+  kit_cb.init();
+
+  MDSysexListener.addOnKitMessageCallback(
+      &kit_cb,
+      (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
+
+  if (MD.connected) {
+    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
+    if ((mcl_cfg.auto_save == 1)) {
+      MD.saveCurrentKit(MD.currentKit);
+      MD.requestKit(MD.currentKit);
+    }
+  }
+}
+
+void PageSelectPage::cleanup() {
+  if (kit_cb.received) {
+    MD.kit.fromSysex(MD.midi);
+    if (MidiClock.state == 2) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].update_kit_params();
+      }
+    }
+  }
+  MDSysexListener.removeOnKitMessageCallback(&kit_cb);
+  note_interface.init_notes();
+}
 
 uint8_t PageSelectPage::get_nextpage_down() {
   for (int8_t i = page_select - 1; i >= 0; i--) {
@@ -217,16 +253,16 @@ void PageSelectPage::display() {
   char str[16];
   const uint8_t *icon;
   uint8_t iconw, iconh;
-  uint8_t pageidx; 
+  uint8_t pageidx;
   uint8_t catidx;
 
   pageidx = get_pageidx(page_select);
   get_page_icon(pageidx, icon, iconw, iconh);
   get_page(pageidx, str);
 
-  if(pageidx < n_entry) {
+  if (pageidx < n_entry) {
     catidx = pgm_read_byte(&Entries[pageidx].CategoryId);
-  }else {
+  } else {
     catidx = 0xFF;
   }
 

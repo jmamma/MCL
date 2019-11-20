@@ -4,12 +4,14 @@
 #define PageSelectPAGE_H__
 
 #include "GUI.h"
+#include "MD.h"
 
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;
 
 class PageSelectPage : public LightPage {
 public:
+  MDCallback kit_cb;
   uint8_t page_select;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
@@ -23,6 +25,8 @@ public:
   virtual void init();
   virtual void loop();
   virtual void cleanup();
+  virtual void md_prepare();
+
   virtual bool handleEvent(gui_event_t *event);
 
   // get a page in the current category.

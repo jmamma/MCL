@@ -2,7 +2,7 @@
 #include "SeqStepPage.h"
 
 #define MIDI_OMNI_MODE 17
-#define NUM_KEYS 32
+#define NUM_KEYS 24
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {

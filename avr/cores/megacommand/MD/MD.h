@@ -24,7 +24,34 @@
  * MD Callback class, inherit from this class if you want to use callbacks on MD
  *events.
  **/
-class MDCallback {};
+
+class MDCallback {
+  public:
+  uint8_t type;
+  uint8_t value;
+  bool received;
+
+  MDCallback(uint8_t _type = 0) {
+    type = _type;
+    init();
+  }
+
+  void init() {
+    received = false;
+    value = 255;
+  }
+  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
+
+    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
+    if (type == _type) {
+      value = param;
+      received = true;
+    }
+  }
+
+  virtual void onSysexReceived() { received = true; }
+
+};
 
 /**
  * Standard method prototype for argument-less MD callbacks.
@@ -44,33 +71,10 @@ typedef void (MDCallback::*md_status_callback_ptr_t)(uint8_t type,
  * from the MachineDrum.
  **/
 class MDBlockCurrentStatusCallback : public MDCallback {
-  /**
-   * \addtogroup md_callbacks
-   * @{
-   **/
 
 public:
-
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  MDBlockCurrentStatusCallback(uint8_t _type = 0) {
-    type = _type;
-    received = false;
-    value = 255;
+  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {
   }
-
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-
-    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-
-  void onSysexReceived() { received = true; }
 
   /* @} */
 };

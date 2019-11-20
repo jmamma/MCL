@@ -141,9 +141,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    if (route_page.hasChanged) {
     route_page.update_globals();
-    md_exploit.off();
+    bool switch_tracks = false;
+    md_exploit.off(false);
     md_exploit.on();
+    }
     GUI.setPage(&page_select_page);
   }
 

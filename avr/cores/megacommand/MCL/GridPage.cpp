@@ -865,7 +865,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    prepare();
     GUI.setPage(&page_select_page);
     return true;
   }
