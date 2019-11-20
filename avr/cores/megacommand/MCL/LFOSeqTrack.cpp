@@ -86,9 +86,9 @@ void LFOSeqTrack::seq() {
   }
 }
 
-void LFOSeqTrack::check_and_update_params_offset(uint8_t dest, uint8_t value) {
+void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest, uint8_t value) {
   for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    if (params[n].dest == dest) {
+    if ((params[n].dest - 1 == track) && (params[n].param == dest)) {
       params[n].offset = value;
     }
   }

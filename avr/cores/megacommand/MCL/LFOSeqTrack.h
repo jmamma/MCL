@@ -58,7 +58,7 @@ public:
   void update_kit_params();
   void update_params_offset();
   void reset_params_offset();
-  void check_and_update_params_offset(uint8_t dest, uint8_t value);
+  void check_and_update_params_offset(uint8_t dest, uint8_t param, uint8_t value);
   void init() {
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       params[a].dest = 255;

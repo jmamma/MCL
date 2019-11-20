@@ -176,7 +176,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     MD.parseCC(channel, param, &track, &track_param);
     mcl_seq.md_tracks[track].update_param(track_param, value);
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track_param, value);
+      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track, track_param, value);
     }
   }
 }
