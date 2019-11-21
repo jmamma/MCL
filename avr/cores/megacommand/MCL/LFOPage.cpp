@@ -15,6 +15,11 @@
 
 void LFOPage::setup() {
   //  lfo_track = &mcl_seq.lfo_tracks[0];
+
+  lfo_track->params[0].update_offset();
+  lfo_track->params[1].update_offset();
+  lfo_track->wav_table_state[0] = false;
+  lfo_track->wav_table_state[1] = false;
   DEBUG_PRINT_FN();
 }
 
@@ -50,17 +55,16 @@ void LFOPage::update_encoders() {
     ((MCLEncoder *)encoders[3])->max = 23;
 
     if (encoders[0]->cur > NUM_MD_TRACKS) {
-        ((MCLEncoder *)encoders[1])->max = 7;
-      } else {
-        ((MCLEncoder *)encoders[1])->max = 23;
-      }
-
-    if (encoders[2]->cur > NUM_MD_TRACKS) {
-        ((MCLEncoder *)encoders[3])->max = 7;
-      } else {
-        ((MCLEncoder *)encoders[3])->max = 23;
+      ((MCLEncoder *)encoders[1])->max = 7;
+    } else {
+      ((MCLEncoder *)encoders[1])->max = 23;
     }
 
+    if (encoders[2]->cur > NUM_MD_TRACKS) {
+      ((MCLEncoder *)encoders[3])->max = 7;
+    } else {
+      ((MCLEncoder *)encoders[3])->max = 23;
+    }
   }
   if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
@@ -75,7 +79,7 @@ void LFOPage::update_encoders() {
     encoders[3]->cur = lfo_track->params[1].depth;
     ((MCLEncoder *)encoders[3])->max = 127;
   }
-//  loop();
+  //  loop();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     encoders[i]->old = encoders[i]->cur;
@@ -105,8 +109,8 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[0].reset_param_offset();
       lfo_track->params[0].param = encoders[1]->cur;
-      lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
-          encoders[0]->cur, encoders[1]->cur);
+    //  lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
+     //     encoders[0]->cur, encoders[1]->cur);
       lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
@@ -129,74 +133,38 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[1].reset_param_offset();
       lfo_track->params[1].param = encoders[3]->cur;
-      lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
-          encoders[2]->cur, encoders[3]->cur);
+    //  lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
+     //     encoders[2]->cur, encoders[3]->cur);
       lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
   }
+  // wav_tables need to be recalculated when depth or waveform changes.
+
   if (page_mode == LFO_SETTINGS) {
     if (encoders[0]->hasChanged()) {
-      waveform = encoders[0]->cur;
-      load_wavetable(waveform, lfo_track, 0, lfo_track->params[0].depth);
-      load_wavetable(waveform, lfo_track, 1, lfo_track->params[1].depth);
+      lfo_track->set_wav_type(encoders[0]->cur);
     }
 
     if (encoders[1]->hasChanged()) {
-      lfo_track->speed = encoders[1]->cur;
+      lfo_track->set_speed(encoders[1]->cur);
     }
 
     if (encoders[2]->hasChanged()) {
-      lfo_track->params[0].depth = encoders[2]->cur;
-      load_wavetable(waveform, lfo_track, 0, encoders[2]->cur);
+      lfo_track->set_depth(0, encoders[2]->cur);
     }
 
     if (encoders[3]->hasChanged()) {
-      lfo_track->params[1].depth = encoders[3]->cur;
-      load_wavetable(waveform, lfo_track, 1, encoders[3]->cur);
+      lfo_track->set_depth(1, encoders[3]->cur);
     }
   }
-}
 
-void LFOPage::load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track,
-                             uint8_t param, uint8_t depth) {
-  SinLFO sin_lfo;
-  TriLFO tri_lfo;
-  RampLFO ramp_lfo;
-  IRampLFO iramp_lfo;
-  ExpLFO exp_lfo;
-  IExpLFO iexp_lfo;
-  LFO *lfo;
-  switch (waveform) {
-  case SIN_WAV:
-    lfo = (LFO *)&sin_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_CENTRE;
-    break;
-  case TRI_WAV:
-    lfo = (LFO *)&tri_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_CENTRE;
-    break;
-  case IRAMP_WAV:
-    lfo = (LFO *)&iramp_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case RAMP_WAV:
-    lfo = (LFO *)&ramp_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case EXP_WAV:
-    lfo = (LFO *)&exp_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case IEXP_WAV:
-    lfo = (LFO *)&iexp_lfo;
-    lfo_track->offset_behaviour = LFO_OFFSET_MAX;
-    break;
+  if (!lfo_track->wav_table_up_to_date(0)) {
+    lfo_track->load_wav_table(0);
   }
-  lfo->amplitude = depth;
-  // ExpLFO exp_lfo(20);
-  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-    lfo_track->wav_table[param][n] = (float)lfo->get_sample(n);
+
+  if (!lfo_track->wav_table_up_to_date(1)) {
+    lfo_track->load_wav_table(1);
   }
 }
 
@@ -290,7 +258,9 @@ void LFOPage::display() {
     draw_param(3, encoders[2]->cur, encoders[3]->cur);
   }
   if (page_mode == LFO_SETTINGS) {
-    load_wavetable(waveform, &temp_track, 0, lfo_height);
+    temp_track.set_wav_type(lfo_track->wav_type);
+    temp_track.set_depth(0, lfo_height);
+    temp_track.load_wav_table(0);
     uint8_t inc = LFO_LENGTH / width;
     for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
       if (n < LFO_LENGTH) {
@@ -308,8 +278,8 @@ void LFOPage::display() {
     draw_knob(3, encoders[3], "DEP2");
   }
   oled_display.setFont(&TomThumb);
-  const char* info1;
-  const char* info2;
+  const char *info1;
+  const char *info2;
 
   if (page_mode) {
     info1 = "LFO>DST";
@@ -403,13 +373,13 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (event->mask == EVENT_BUTTON_RELEASED) {
     return true;
   }
-/*  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
-  }
-*/
+  /*  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+        EVENT_PRESSED(event, Buttons.ENCODER2) ||
+        EVENT_PRESSED(event, Buttons.ENCODER3) ||
+        EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      GUI.setPage(&grid_page);
+    }
+  */
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     page_mode = !(page_mode);
     update_encoders();

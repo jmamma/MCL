@@ -30,8 +30,8 @@ void MCLSeq::setup() {
     if (i == 0) {
       lfo_tracks[i].params[0].dest = 17;
       lfo_tracks[i].params[1].dest = 18;
-      lfo_tracks[i].params[0].param = 8;
-      lfo_tracks[i].params[1].param = 8;
+      lfo_tracks[i].params[0].param = 7;
+      lfo_tracks[i].params[1].param = 7;
     }
   }
 #ifdef EXT_TRACKS
