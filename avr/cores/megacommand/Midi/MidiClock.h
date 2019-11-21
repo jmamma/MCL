@@ -301,7 +301,7 @@ public:
   }
 
   void calc_tempo() {
-    DEBUG_PRINTLN(diff_clock8);
+    //DEBUG_PRINTLN(diff_clock8);
     if (last_diff_clock8 != diff_clock8) {
       tempo = 100000.0f / diff_clock8;
       last_diff_clock8 = diff_clock8;

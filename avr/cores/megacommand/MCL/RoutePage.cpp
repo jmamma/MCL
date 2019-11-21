@@ -255,7 +255,7 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
-
+/*
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -265,5 +265,6 @@ bool RoutePage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+*/
   return false;
 }

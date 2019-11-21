@@ -16,17 +16,36 @@ public:
 
 extern void pattern_len_handler(Encoder *enc);
 
+
+extern uint8_t opt_trackid;
+extern uint8_t opt_resolution;
+extern uint8_t opt_copy;
+extern uint8_t opt_paste;
+extern uint8_t opt_clear;
+extern uint8_t opt_shift;
+extern uint8_t opt_reverse;
+
+extern void opt_trackid_handler();
+extern void opt_resolution_handler();
+extern void opt_clear_track_handler();
+extern void opt_clear_locks_handler();
+extern void opt_copy_track_handler();
+extern void opt_paste_track_handler();
+extern void opt_shift_track_handler();
+extern void opt_reverse_track_handler();
+extern void opt_paste_step_handler();
+extern void opt_copy_step_handler();
+extern void opt_mute_step_handler();
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
   static uint8_t page_count;
   static uint8_t midi_device;
-  static uint8_t length;
-  static uint8_t resolution;
-  static uint8_t apply;
-  static uint8_t ignore_button_release;
-  static bool show_track_menu;
+  static uint8_t step_select;
+  static bool show_seq_menu;
+  static bool show_step_menu;
 
   bool recording = false;
   bool display_page_index = true;
@@ -39,15 +58,17 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
+  void config_as_trackedit();
+  void config_as_lockedit();
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
-  void draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
+  void draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true, uint64_t mute_mask = 0);
   void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
-  void draw_page_index(bool show_page_index = true);
+  void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(uint8_t device, uint8_t track);
 
   virtual bool handleEvent(gui_event_t *event);

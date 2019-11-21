@@ -1,8 +1,8 @@
-#include "SeqPtcPage.h"
 #include "MCL.h"
+#include "SeqPtcPage.h"
 
 #define MIDI_LOCAL_MODE 0
-#define NUM_KEYS 32
+#define NUM_KEYS 24
 
 scale_t *scales[16]{
     &chromaticScale, &ionianScale,
@@ -37,12 +37,8 @@ scale_t *scales[16]{
 typedef char scale_name_t[4];
 
 const scale_name_t scale_names[] PROGMEM = {
-  "---", "ION",
-  "PHR", 
-  "mHA", "mME",
-  "MPE", "mPE", "sPE",
-  "ISS", "BLU", 
-  "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
+    "---", "ION", "PHR", "mHA", "mME", "MPE", "mPE", "sPE",
+    "ISS", "BLU", "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
 };
 
 void SeqPtcPage::setup() {
@@ -60,15 +56,13 @@ void SeqPtcPage::cleanup() {
 }
 void SeqPtcPage::config_encoders() {
   if (midi_device == DEVICE_MD) {
-    ((MCLEncoder *)encoders[2])->max = 64;
-
-    encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+    ptc_param_len.max = 64;
+    ptc_param_len.cur = mcl_seq.md_tracks[last_md_track].length;
   }
 #ifdef EXT_TRACKS
   else {
-    ((MCLEncoder *)encoders[2])->max = (uint8_t)128;
-    ((MCLEncoder *)encoders[2])->cur =
-        mcl_seq.ext_tracks[last_ext_track].length;
+    ptc_param_len.max = (uint8_t)128;
+    ptc_param_len.cur = mcl_seq.ext_tracks[last_ext_track].length;
   }
 #endif
 }
@@ -96,7 +90,7 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
-  ((MCLEncoder *)encoders[2])->handler = ptc_pattern_len_handler;
+  ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
   midi_events.setup_callbacks();
   note_mask = 0;
@@ -116,16 +110,30 @@ void SeqPtcPage::init() {
 
 void SeqPtcPage::config() {
   config_encoders();
-  encoders[1]->cur = 32;
-  encoders[0]->cur = 1;
+  ptc_param_finetune.cur = 32;
+  ptc_param_oct.cur = 1;
 
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
-
   constexpr uint8_t len1 = sizeof(info1);
-
   char buf[len1] = {'\0'};
+  char *str1;
+  char *str2;
+  if (midi_device == DEVICE_MD) {
+    str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
+    str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  } else {
+    char str_first[3] = "--";
+    if (Analog4.connected) {
+      strcpy(str_first, "A4");
+    } else {
+      strcpy(str_first, "MI");
+    }
+    char str_second[3] = "T ";
+    str_second[1] = '0' + last_ext_track;
+    str1 = &str_first[0];
+    str2 = &str_second[0];
+  }
+
   m_strncpy_p(buf, str1, len1);
   strncpy(info1, buf, len1);
   strncat(info1, ">", len1);
@@ -134,6 +142,9 @@ void SeqPtcPage::config() {
 
   strcpy(info2, "CHROMAT");
   display_page_index = false;
+
+  // config menu
+  config_as_trackedit();
 }
 
 void ptc_pattern_len_handler(Encoder *enc) {
@@ -175,12 +186,13 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
 void SeqPtcPage::loop() {
 #ifdef EXT_TRACKS
-  if (encoders[0]->hasChanged() || encoders[3]->hasChanged()) {
+  if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   }
 #endif
 
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+  if (ptc_param_oct.hasChanged() || ptc_param_finetune.hasChanged() ||
+      ptc_param_len.hasChanged() || ptc_param_scale.hasChanged()) {
     queue_redraw();
   }
 
@@ -189,10 +201,13 @@ void SeqPtcPage::loop() {
     redisplay = true;
   }
 
-  if (deferred_timer != 0 && clock_diff(deferred_timer, slowclock) > render_defer_time) {
+  if (deferred_timer != 0 &&
+      clock_diff(deferred_timer, slowclock) > render_defer_time) {
     deferred_timer = 0;
     redisplay = true;
   }
+
+  SeqPage::loop();
 }
 
 #ifndef OLED_DISPLAY
@@ -219,13 +234,13 @@ void SeqPtcPage::display() {
     GUI.put_string_at(0, "PTC");
   }
   if (midi_device == DEVICE_MD) {
-    GUI.put_value_at(5, encoders[2]->getValue());
+    GUI.put_value_at(5, ptc_param_len.getValue());
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (encoders[2]->getValue() /
+    GUI.put_value_at(5, (ptc_param_len.getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
@@ -238,15 +253,15 @@ void SeqPtcPage::display() {
 
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at(0, "OC:");
-  GUI.put_value_at2(3, encoders[0]->getValue());
+  GUI.put_value_at2(3, ptc_param_oct.getValue());
 
-  if (encoders[1]->getValue() < 32) {
+  if (ptc_param_finetune.getValue() < 32) {
     GUI.put_string_at(6, "F:-");
-    GUI.put_value_at2(9, 32 - encoders[1]->getValue());
+    GUI.put_value_at2(9, 32 - ptc_param_finetune.getValue());
 
-  } else if (encoders[1]->getValue() > 32) {
+  } else if (ptc_param_finetune.getValue() > 32) {
     GUI.put_string_at(6, "F:+");
-    GUI.put_value_at2(9, encoders[1]->getValue() - 32);
+    GUI.put_value_at2(9, ptc_param_finetune.getValue() - 32);
 
   } else {
     GUI.put_string_at(6, "F: 0");
@@ -254,7 +269,7 @@ void SeqPtcPage::display() {
 
   GUI.put_string_at(12, "S:");
 
-  GUI.put_value_at2(14, encoders[3]->getValue());
+  GUI.put_value_at2(14, ptc_param_scale.getValue());
   SeqPage::display();
 }
 #else
@@ -264,7 +279,8 @@ void SeqPtcPage::display() {
     return;
   }
 
-  SeqPage::display();
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
 
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
@@ -279,16 +295,16 @@ void SeqPtcPage::display() {
   char buf1[4];
 
   // draw OCTAVE
-  itoa(encoders[0]->getValue(), buf1, 10);
+  itoa(ptc_param_oct.getValue(), buf1, 10);
   draw_knob(0, "OCT", buf1);
 
   // draw FREQ
-  if (encoders[1]->getValue() < 32) {
+  if (ptc_param_finetune.getValue() < 32) {
     strcpy(buf1, "-");
-    itoa(32 - encoders[1]->getValue(), buf1 + 1, 10);
-  } else if (encoders[1]->getValue() > 32) {
+    itoa(32 - ptc_param_finetune.getValue(), buf1 + 1, 10);
+  } else if (ptc_param_finetune.getValue() > 32) {
     strcpy(buf1, "+");
-    itoa(encoders[1]->getValue() - 32, buf1 + 1, 10);
+    itoa(ptc_param_finetune.getValue() - 32, buf1 + 1, 10);
   } else {
     strcpy(buf1, "0");
   }
@@ -296,12 +312,12 @@ void SeqPtcPage::display() {
 
   // draw LEN
   if (midi_device == DEVICE_MD) {
-    itoa(encoders[2]->getValue(), buf1, 10);
+    itoa(ptc_param_len.getValue(), buf1, 10);
     draw_knob(2, "LEN", buf1);
   }
 #ifdef EXT_TRACKS
   else {
-    itoa(encoders[2]->getValue() /
+    itoa(ptc_param_len.getValue() /
              (2 / mcl_seq.ext_tracks[last_ext_track].resolution),
          buf1, 10);
     draw_knob(2, "LEN", buf1);
@@ -309,22 +325,24 @@ void SeqPtcPage::display() {
 #endif
 
   // draw SCALE
-  m_strncpy_p(buf1, scale_names[encoders[3]->getValue()], 4);
+  m_strncpy_p(buf1, scale_names[ptc_param_scale.getValue()], 4);
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 #endif
 
 uint8_t SeqPtcPage::calc_pitch(uint8_t note_num) {
-  uint8_t size = scales[encoders[3]->cur]->size;
+  uint8_t size = scales[ptc_param_scale.cur]->size;
   uint8_t oct = note_num / size;
   note_num = note_num - oct * size;
 
-  return scales[encoders[3]->cur]->pitches[note_num] + oct * 12;
+  return scales[ptc_param_scale.cur]->pitches[note_num] + oct * 12;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
@@ -376,8 +394,8 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
     pitch = tuning->len - 1;
   }
 
-  uint8_t machine_pitch =
-      pgm_read_byte(&tuning->tuning[pitch]) + encoders[1]->getValue() - 32;
+  uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[pitch]) +
+                          ptc_param_finetune.getValue() - 32;
   return machine_pitch;
 }
 
@@ -420,11 +438,17 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   }
 }
 
-void SeqPtcPage::queue_redraw() {
-  deferred_timer = slowclock;
-}
+void SeqPtcPage::queue_redraw() { deferred_timer = slowclock; }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
+
+  if (SeqPage::handleEvent(event)) {
+    if (show_seq_menu) {
+      redisplay = true;
+      return true;
+    }
+     queue_redraw();
+  }
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -461,43 +485,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     recording = !recording;
     return true;
   }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
-    return true;
-  }
-
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    if (midi_device == DEVICE_MD) {
-      for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
-        mcl_seq.md_tracks[n].clear_track();
-      }
-
+  /*
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      GUI.setPage(&grid_page);
+      return true;
     }
-#ifdef EXT_TRACKS
-    else {
-      for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-        mcl_seq.ext_tracks[n].clear_track();
-      }
-    }
-#endif
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
-#ifdef EXT_TRACKS
-    if (midi_device != DEVICE_MD) {
-      if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-        mcl_seq.ext_tracks[last_ext_track].resolution = 2;
-      } else {
-        mcl_seq.ext_tracks[last_ext_track].resolution = 1;
-      }
-      seq_ptc_page.queue_redraw();
-    }
-#endif
-    return true;
-  }
+  */
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
 
@@ -522,11 +515,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (SeqPage::handleEvent(event)) {
-    seq_ptc_page.queue_redraw();
-    return true;
-  }
-
   return false;
 }
 
@@ -537,15 +525,15 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   uint8_t root_note = (note_num / 12) * 12;
   uint8_t pos = note_num - root_note;
   uint8_t oct = note_num / 12;
-  // if (pos >= scales[encoders[4]->cur]->size) {
-  oct += pos / scales[encoders[3]->cur]->size;
-  pos = pos -
-        scales[encoders[3]->cur]->size * (pos / scales[encoders[3]->cur]->size);
+  // if (pos >= scales[seq_param5.cur]->size) {
+  oct += pos / scales[ptc_param_scale.cur]->size;
+  pos = pos - scales[ptc_param_scale.cur]->size *
+                  (pos / scales[ptc_param_scale.cur]->size);
   // }
 
-  //  if (encoders[4]->getValue() > 0) {
-  pitch = octave_to_pitch() +
-          scales[encoders[3]->cur]->pitches[pos] + oct * 12;
+  //  if (seq_param5.getValue() > 0) {
+  pitch =
+      octave_to_pitch() + scales[ptc_param_scale.cur]->pitches[pos] + oct * 12;
   //   }
 
   return pitch;
@@ -695,4 +683,3 @@ void SeqPtcMidiEvents::remove_callbacks() {
 
   state = false;
 }
-

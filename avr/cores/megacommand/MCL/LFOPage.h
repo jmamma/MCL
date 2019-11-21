@@ -45,7 +45,6 @@ public:
   void loop();
   void cleanup();
   void update_encoders();
-  void load_wavetable(uint8_t waveform, LFOSeqTrack *lfo_track, uint8_t param, uint8_t depth);
 
   void setup_callbacks();
   void remove_callbacks();

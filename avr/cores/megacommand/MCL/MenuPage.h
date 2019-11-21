@@ -29,6 +29,10 @@ public:
   void draw_item(uint8_t item_n, uint8_t row);
   void draw_menu(uint8_t x_offset, uint8_t y_offset,
                  uint8_t width = MENU_WIDTH);
+  void select_item(uint8_t item = 0) {
+  cur_row = 0;
+  encoders[1]->cur = 0;
+  }
   void loop();
   void display();
   void setup();

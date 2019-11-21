@@ -516,6 +516,9 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
   return cb->received;
 }
 
+//Perform checks on current sysex buffer to see if it Sysex.
+//
+
 uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
   MDBlockCurrentStatusCallback cb(type);
 

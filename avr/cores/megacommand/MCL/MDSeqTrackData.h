@@ -5,6 +5,16 @@
 
 #define NUM_MD_LOCKS 4
 
+class MDSeqStep {
+public:
+  bool active;
+  uint8_t locks[NUM_MD_LOCKS];
+  uint8_t conditional;
+  uint8_t timing;
+  bool lock_mask;
+  bool pattern_mask;
+};
+
 class MDSeqTrackData {
 public:
   uint8_t length;

@@ -184,11 +184,11 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
   bool send_trig = false;
   switch (condition) {
   case 0:
-    send_trig = true;
-    break;
   case 1:
-    send_trig = true;
-    break;
+    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+      send_trig = true;
+    }
+  break;
   case 2:
     if (!IS_BIT_SET(iterations, 0)) {
       send_trig = true;
@@ -488,5 +488,127 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     if (IS_BIT_SET64(swingpattern, a)) {
       timing[a] = round(swing * 12.0) + 12;
     }
+  }
+}
+
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+
+void MDSeqTrack::rotate_left() {
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+  oneshot_mask = 0;
+  pattern_mask = 0;
+  lock_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+    if (n == 0) {
+      new_pos = length - 1;
+    } else {
+      new_pos = n - 1;
+    }
+
+    for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+      locks[a][new_pos] = temp_data.locks[a][n];
+    }
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
+    if (IS_BIT_SET64(temp_data.pattern_mask, n)) {
+      SET_BIT64(pattern_mask, new_pos);
+    }
+    if (IS_BIT_SET64(temp_data.lock_mask, n)) {
+      SET_BIT64(lock_mask, new_pos);
+    }
+  }
+}
+
+void MDSeqTrack::rotate_right() {
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+  oneshot_mask = 0;
+  pattern_mask = 0;
+  lock_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+    if (n == length - 1) {
+      new_pos = 0;
+    } else {
+      new_pos = n + 1;
+    }
+
+    for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+      locks[a][new_pos] = temp_data.locks[a][n];
+    }
+
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
+    if (IS_BIT_SET64(temp_data.pattern_mask, n)) {
+      SET_BIT64(pattern_mask, new_pos);
+    }
+    if (IS_BIT_SET64(temp_data.lock_mask, n)) {
+      SET_BIT64(lock_mask, new_pos);
+    }
+  }
+}
+
+void MDSeqTrack::reverse() {
+
+  int8_t new_pos = 0;
+
+  MDSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(MDSeqTrackData));
+  oneshot_mask = 0;
+  pattern_mask = 0;
+  lock_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+    new_pos = length - n - 1;
+
+    for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+      locks[a][new_pos] = temp_data.locks[a][n];
+    }
+
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
+    if (IS_BIT_SET64(temp_data.pattern_mask, n)) {
+      SET_BIT64(pattern_mask, new_pos);
+    }
+    if (IS_BIT_SET64(temp_data.lock_mask, n)) {
+      SET_BIT64(lock_mask, new_pos);
+    }
+  }
+}
+
+void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
+  step->active = true;
+  for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+    step->locks[a] = locks[a][n];
+  }
+  step->conditional = conditional[n];
+  step->timing = timing[n];
+  step->lock_mask = IS_BIT_SET64(lock_mask, n);
+  step->pattern_mask = IS_BIT_SET64(pattern_mask, n);
+}
+
+void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
+  for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
+    locks[a][n] = step->locks[a];
+  }
+  conditional[n] = step->conditional;
+  timing[n] = step->timing;
+  if (step->lock_mask) {
+    SET_BIT64(lock_mask, n);
+  }
+  if (step->pattern_mask) {
+    SET_BIT64(pattern_mask, n);
   }
 }

@@ -327,3 +327,91 @@ void ExtSeqTrack::clear_track() {
   clear_ext_conditional();
   buffer_notesoff();
 }
+
+void ExtSeqTrack::rotate_left() {
+
+  int8_t new_pos = 0;
+
+  ExtSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
+
+  for (uint8_t a = 0; a < 4; a++) {
+  lock_masks[a] = 0;
+  }
+  //oneshot_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+     if (n == 0) { new_pos = length - 1; }
+     else { new_pos = n - 1; }
+
+     for (uint8_t a = 0; a < 4; a++) {
+       notes[a][new_pos] = temp_data.notes[a][n];
+       locks[a][new_pos] = temp_data.locks[a][n];
+       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a],new_pos);
+       }
+     }
+
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
+  }
+}
+void ExtSeqTrack::rotate_right() {
+
+  int8_t new_pos = 0;
+
+  ExtSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
+
+  for (uint8_t a = 0; a < 4; a++) {
+  lock_masks[a] = 0;
+  }
+  //oneshot_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+     if (n == length - 1) { new_pos = 0; }
+     else { new_pos = n + 1; }
+
+     for (uint8_t a = 0; a < 4; a++) {
+       notes[a][new_pos] = temp_data.notes[a][n];
+       locks[a][new_pos] = temp_data.locks[0][n];
+       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a],new_pos);
+       }
+     }
+
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
+  }
+}
+
+void ExtSeqTrack::reverse() {
+
+  int8_t new_pos = 0;
+
+  ExtSeqTrackData temp_data;
+
+  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
+
+  for (uint8_t a = 0; a < 4; a++) {
+  lock_masks[a] = 0;
+  }
+  //oneshot_mask = 0;
+
+  for (uint8_t n = 0; n < length; n++) {
+     new_pos = length - n - 1;
+
+     for (uint8_t a = 0; a < 4; a++) {
+       notes[a][new_pos] = temp_data.notes[a][n];
+       locks[a][new_pos] = temp_data.locks[0][n];
+       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a],new_pos);
+       }
+     }
+
+     conditional[new_pos] = temp_data.conditional[n];
+     timing[new_pos] = temp_data.timing[n];
+  }
+}

@@ -592,9 +592,7 @@ void GridPage::prepare() {
       MD.saveCurrentKit(MD.currentKit);
       MD.getBlockingKit(MD.currentKit);
       if (MidiClock.state == 2) {
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          mcl_seq.md_tracks[n].update_kit_params();
-        }
+        mcl_seq.update_kit_params();
       }
     }
   }
@@ -798,6 +796,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 #endif
 
+/*
   if (BUTTON_DOWN(Buttons.BUTTON3) &&
       (EVENT_PRESSED(event, Buttons.ENCODER1) ||
        EVENT_PRESSED(event, Buttons.ENCODER2) ||
@@ -853,6 +852,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+*/
 
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
@@ -863,7 +863,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    prepare();
     GUI.setPage(&page_select_page);
     return true;
   }

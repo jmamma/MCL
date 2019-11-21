@@ -4,7 +4,7 @@
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
-  encoders[2]->cur = mcl_seq.ext_tracks[last_ext_track].length;
+  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
 #endif
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
@@ -18,18 +18,21 @@ void SeqExtStepPage::config() {
 #endif
 
   strcpy(info2, "EXT");
+
+  // config menu
+  config_as_trackedit();
 }
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    ((MCLEncoder *)encoders[1])->cur = 6;
-    ((MCLEncoder *)encoders[1])->max = 11;
+    seq_param2.cur = 6;
+    seq_param2.max = 11;
   } else {
-    ((MCLEncoder *)encoders[1])->cur = 12;
-    ((MCLEncoder *)encoders[1])->max = 23;
+    seq_param2.cur = 12;
+    seq_param2.max = 23;
   }
-  ((MCLEncoder *)encoders[2])->max = 128;
+  seq_param3.max = 128;
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 #endif
@@ -58,48 +61,48 @@ void SeqExtStepPage::display() {
 
   char c[3] = "--";
 
-  if (encoders[0]->getValue() == 0) {
+  if (seq_param1.getValue() == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (encoders[0]->getValue() <= 8) {
+  } else if (seq_param1.getValue() <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, encoders[0]->getValue());
+    GUI.put_value_at1(1, seq_param1.getValue());
 
   } else {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[encoders[0]->getValue() - 9]);
+    GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
   }
 
   // Cond
-  //    GUI.put_value_at2(0, encoders[1]->getValue());
+  //    GUI.put_value_at2(0, seq_param2.getValue());
   // Pos
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
 #ifdef EXT_TRACKS
   if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    if (encoders[1]->getValue() == 0) {
+    if (seq_param2.getValue() == 0) {
       GUI.put_string_at(2, "--");
-    } else if ((encoders[1]->getValue() < 6) &&
-               (encoders[1]->getValue() != 0)) {
+    } else if ((seq_param2.getValue() < 6) &&
+               (seq_param2.getValue() != 0)) {
       GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, encoders[1]->getValue() - 6);
+      GUI.put_value_at1(3, seq_param2.getValue() - 6);
     } else {
       GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, encoders[1]->getValue() - 6);
+      GUI.put_value_at1(3, seq_param2.getValue() - 6);
     }
   } else {
-    if (encoders[1]->getValue() == 0) {
+    if (seq_param2.getValue() == 0) {
       GUI.put_string_at(2, "--");
-    } else if ((encoders[1]->getValue() < 12) &&
-               (encoders[1]->getValue() != 0)) {
+    } else if ((seq_param2.getValue() < 12) &&
+               (seq_param2.getValue() != 0)) {
       GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, 12 - encoders[1]->getValue());
+      GUI.put_value_at1(3, 12 - seq_param2.getValue());
 
     } else {
       GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, encoders[1]->getValue() - 12);
+      GUI.put_value_at1(3, seq_param2.getValue() - 12);
     }
   }
 
@@ -136,9 +139,9 @@ void SeqExtStepPage::display() {
     }
   } else {
     GUI.put_value_at1(15, page_select + 1);
-    GUI.put_value_at(6, encoders[2]->getValue());
+    GUI.put_value_at(6, seq_param3.getValue());
 
-    GUI.put_value_at(6, (encoders[2]->getValue() /
+    GUI.put_value_at(6, (seq_param3.getValue() /
                          (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(10, "A4T");
@@ -153,21 +156,21 @@ void SeqExtStepPage::display() {
 }
 #else
 void SeqExtStepPage::display() {
-  SeqPage::display();
+  oled_display.clearDisplay();
 
   draw_knob_frame();
 
   char K[4];
-  if (encoders[0]->getValue() == 0) {
+  if (seq_param1.getValue() == 0) {
     strcpy(K, "L1");
-  } else if (encoders[0]->getValue() <= 8) {
+  } else if (seq_param1.getValue() <= 8) {
     strcpy(K, "L ");
-    K[1] = encoders[0]->getValue() + '0';
-  } else if (encoders[0]->getValue() <= 13) {
+    K[1] = seq_param1.getValue() + '0';
+  } else if (seq_param1.getValue() <= 13) {
     strcpy(K, "P ");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    K[1] = prob[encoders[0]->getValue() - 9] + '0';
-  } else if (encoders[0]->getValue() == 14) {
+    K[1] = prob[seq_param1.getValue() - 9] + '0';
+  } else if (seq_param1.getValue() == 14) {
     strcpy(K, "1S");
   }
   draw_knob(0, "COND", K);
@@ -177,23 +180,23 @@ void SeqExtStepPage::display() {
   strcpy(K, "--");
   K[3] = '\0';
   if (active_track.resolution == 1) {
-    if (encoders[1]->getValue() == 0) {
-    } else if ((encoders[1]->getValue() < 6) &&
-               (encoders[1]->getValue() != 0)) {
-      itoa(6 - encoders[1]->getValue(), K + 1, 10);
+    if (seq_param2.getValue() == 0) {
+    } else if ((seq_param2.getValue() < 6) &&
+               (seq_param2.getValue() != 0)) {
+      itoa(6 - seq_param2.getValue(), K + 1, 10);
     } else {
       K[0] = '+';
-      itoa(encoders[1]->getValue() - 6, K + 1, 10);
+      itoa(seq_param2.getValue() - 6, K + 1, 10);
     }
   } else {
-    if (encoders[1]->getValue() == 0) {
-    } else if ((encoders[1]->getValue() < 12) &&
-               (encoders[1]->getValue() != 0)) {
-      itoa(12 - encoders[1]->getValue(), K + 1, 10);
+    if (seq_param2.getValue() == 0) {
+    } else if ((seq_param2.getValue() < 12) &&
+               (seq_param2.getValue() != 0)) {
+      itoa(12 - seq_param2.getValue(), K + 1, 10);
 
     } else {
       K[0] = '+';
-      itoa(encoders[1]->getValue() - 12, K + 1, 10);
+      itoa(seq_param2.getValue() - 12, K + 1, 10);
     }
   }
   draw_knob(1, "UTIM", K);
@@ -207,7 +210,7 @@ void SeqExtStepPage::display() {
     }
   }
 
-  itoa(encoders[2]->getValue() / (2 / active_track.resolution), K, 10);
+  itoa(seq_param3.getValue() / (2 / active_track.resolution), K, 10);
   draw_knob(2, "LEN", K);
 
   if (notes_held > 0) {
@@ -246,6 +249,8 @@ void SeqExtStepPage::display() {
   }
 
   draw_pattern_mask(page_select * 16, DEVICE_A4);
+
+  SeqPage::display();
   oled_display.display();
 #endif
 }
@@ -283,18 +288,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             active_track.timing[(track + (page_select * 16))]; // upper
         uint8_t condition =
             active_track.conditional[(track + (page_select * 16))]; // lower
-        encoders[0]->cur = condition;
+        seq_param1.cur = condition;
         // Micro
         if (utiming == 0) {
           if (active_track.resolution == 1) {
             utiming = 6;
-            ((MCLEncoder *)encoders[1])->max = 11;
+            seq_param2.max = 11;
           } else {
-            ((MCLEncoder *)encoders[1])->max = 23;
+            seq_param2.max = 23;
             utiming = 12;
           }
         }
-        encoders[1]->cur = utiming;
+        seq_param2.cur = utiming;
 
         note_interface.last_note = track;
       }
@@ -302,8 +307,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_MD) {
 
-        uint8_t utiming = (encoders[1]->cur + 0);
-        uint8_t condition = encoders[0]->cur;
+        uint8_t utiming = (seq_param2.cur + 0);
+        uint8_t condition = seq_param1.cur;
         if ((track + (page_select * 16)) >= active_track.length) {
           return true;
         }
@@ -342,34 +347,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON2)) {
-    if (active_track.resolution == 1) {
-      active_track.resolution = 2;
-      init();
-
-    } else {
-      active_track.resolution = 1;
-      init();
-    }
-
-    return true;
-  }
-
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     GUI.setPage(&seq_step_page);
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    active_track.clear_track();
-    return true;
-  }
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-      active_track.clear_track();
-    }
-    return true;
-  }
+
 #endif
   return false;
 }

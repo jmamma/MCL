@@ -30,8 +30,8 @@ void MCLSeq::setup() {
     if (i == 0) {
       lfo_tracks[i].params[0].dest = 17;
       lfo_tracks[i].params[1].dest = 18;
-      lfo_tracks[i].params[0].param = 8;
-      lfo_tracks[i].params[1].param = 8;
+      lfo_tracks[i].params[0].param = 7;
+      lfo_tracks[i].params[1].param = 7;
     }
   }
 #ifdef EXT_TRACKS
@@ -72,8 +72,16 @@ void MCLSeq::disable() {
   MidiClock.removeOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
   state = false;
 }
-
-void MCLSeq::onMidiContinueCallback() {
+// restore kit params
+void MCLSeq::update_kit_params() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_kit_params();
+  }
+  for (uint8_t n = 0; n < NUM_LFO_TRACKS; n++) {
+    mcl_seq.lfo_tracks[n].update_kit_params();
+  }
+}
+void MCLSeq::update_params() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
@@ -82,12 +90,15 @@ void MCLSeq::onMidiContinueCallback() {
   }
 }
 
+void MCLSeq::onMidiContinueCallback() { update_params(); }
+
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].step_count = 0;
     ext_tracks[i].iterations = 1;
+    ext_tracks[i].mute_until_start = false;
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -96,6 +107,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
     md_tracks[i].step_count = 0;
     md_tracks[i].iterations = 1;
     md_tracks[i].oneshot_mask = 0;
+    md_tracks[i].mute_until_start = false;
   }
 
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -166,7 +178,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     MD.parseCC(channel, param, &track, &track_param);
     mcl_seq.md_tracks[track].update_param(track_param, value);
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track_param, value);
+      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track, track_param, value);
     }
   }
 }

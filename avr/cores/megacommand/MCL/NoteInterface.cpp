@@ -109,6 +109,16 @@ bool NoteInterface::notes_all_off() {
   return all_notes_off;
 }
 
+uint8_t NoteInterface::notes_count_on() {
+  uint8_t a = 0;
+  for (uint8_t i = 0; i < 20; i++) {
+    if (notes[i] == 1) {
+      a++;
+    }
+  }
+ return a;
+}
+
 uint8_t NoteInterface::notes_count_off() {
   uint8_t a = 0;
   for (uint8_t i = 0; i < 20; i++) {
