@@ -174,7 +174,7 @@ void SeqStepPage::display() {
     }
   }
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
-      (!note_interface.notes_all_off_md()) && (!show_seq_menu) &&
+      (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu) && (tuning != NULL)) {
     uint64_t note_mask = 0;
     uint8_t note = seq_param4.cur + tuning->base;
