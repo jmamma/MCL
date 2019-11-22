@@ -390,6 +390,52 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   oled_display.setFont(oldfont);
 }
 
+void MCLGUI::draw_microtiming(uint8_t resolution, uint8_t timing) {
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+
+  oled_display.setTextColor(WHITE);
+  if (resolution == 0) { resolution = 1; }
+  if (resolution > 2) { resolution = 1; }
+  uint8_t degrees = 24 / resolution;
+  uint8_t heights[12];
+
+  if (resolution == 1) {
+  uint8_t heights_highres[12] = { 12, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2 };
+  memcpy(&heights, &heights_highres, 12);
+  }
+  else {
+  uint8_t heights_lowres[6] = { 12, 4, 6, 10, 4, 8 };
+  memcpy(&heights, &heights_lowres, 6);
+  }
+  uint8_t y_pos = 11;
+  uint8_t a = 0;
+  uint8_t w = 96;
+  uint8_t x_pos = 64 - (w / 2);
+  uint8_t x_w = (w / (degrees));
+  uint8_t x = x_pos;
+
+  oled_display.fillRect(8,2,128 - 16, 32 - 2,BLACK);
+  oled_display.drawRect(8 + 1, 2 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
+
+  oled_display.setCursor(x_pos + 34, 10);
+  oled_display.print("uTIMING");
+ 
+  oled_display.drawLine(x, y_pos + heights[0], x + w, y_pos + heights[0], WHITE);
+  for (uint8_t n = 0; n <= degrees; n++) {
+  oled_display.drawLine(x, y_pos + heights[0], x, y_pos + heights[0] - heights[a] , WHITE);
+  a++;
+  if (n == timing) {
+  oled_display.fillRect(x - 1, y_pos + heights[0] + 3, 3, 3, WHITE);
+  oled_display.drawPixel(x, y_pos + heights[0] + 2, WHITE);
+  }
+
+  if (a == degrees / 2) { a = 0; }
+  x += x_w;
+  }
+oled_display.setFont(oldfont);
+}
+
 void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                            uint8_t note_height, uint8_t num_of_notes,
                            uint64_t note_mask) {
