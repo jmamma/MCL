@@ -180,11 +180,12 @@ void SeqStepPage::display() {
     uint8_t note = seq_param4.cur + tuning->base;
     SET_BIT64(note_mask, note - 24 * (note / 24));
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
+    SeqPage::display();
   }
 
   else {
     draw_lock_mask((page_select * 16), DEVICE_MD);
-    draw_pattern_mask((page_select * 16), DEVICE_MD); 
+    draw_pattern_mask((page_select * 16), DEVICE_MD);
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
