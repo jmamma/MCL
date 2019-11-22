@@ -125,7 +125,6 @@ void SeqStepPage::display() {
 void SeqStepPage::display() {
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
-  SeqPage::display();
   draw_knob_frame();
 
   char K[4];
@@ -183,14 +182,17 @@ void SeqStepPage::display() {
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
   }
 
-  else if (mcl_gui.show_encoder_value(&seq_param2) &&
-         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-         (!show_step_menu)) {
-          mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].resolution, seq_param2.cur);
-         }
   else {
     draw_lock_mask((page_select * 16), DEVICE_MD);
-    draw_pattern_mask((page_select * 16), DEVICE_MD);
+    draw_pattern_mask((page_select * 16), DEVICE_MD); 
+    SeqPage::display();
+    if (mcl_gui.show_encoder_value(&seq_param2) &&
+        (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
+        (!show_step_menu)) {
+
+      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].resolution,
+                               seq_param2.cur);
+    }
   }
   oled_display.display();
   oled_display.setFont(oldfont);
