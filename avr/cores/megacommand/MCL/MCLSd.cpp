@@ -1,5 +1,5 @@
-#include "MCLSd.h"
 #include "MCL.h"
+#include "MCLSd.h"
 /*
    Function for initialising the SD Card
 */
@@ -9,7 +9,7 @@ bool MCLSd::sd_init() {
   bool ret = false;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Initializing SD Card");
-  //File file("/test.mcl",O_WRITE);
+  // File file("/test.mcl",O_WRITE);
   /*Configuration file used to store settings when Minicommand is turned off*/
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
     ret = SD.begin(SD_CS, SPI_FULL_SPEED);
@@ -17,7 +17,7 @@ bool MCLSd::sd_init() {
       delay(50);
     }
   }
-    if (ret == false) {
+  if (ret == false) {
     sd_state = false;
     DEBUG_PRINTLN("SD Init fail");
     return false;
@@ -26,7 +26,6 @@ bool MCLSd::sd_init() {
 
   DEBUG_PRINTLN("SD Init okay");
   return true;
-
 }
 bool MCLSd::load_init() {
   bool ret = false;
@@ -37,13 +36,14 @@ bool MCLSd::load_init() {
     if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
       DEBUG_PRINTLN("Config file open: success");
 
-      if (read_data(( uint8_t*)&mcl_cfg, sizeof(MCLSysConfigData), &mcl_cfg.cfgfile)) {
+      if (read_data((uint8_t *)&mcl_cfg, sizeof(MCLSysConfigData),
+                    &mcl_cfg.cfgfile)) {
         DEBUG_PRINTLN("Config file read: success");
 
         if (mcl_cfg.version != CONFIG_VERSION) {
           DEBUG_PRINTLN("Incompatible config version");
           if (!mcl_cfg.cfg_init()) {
-DEBUG_PRINTLN("Could not init cfg");
+            DEBUG_PRINTLN("Could not init cfg");
             return false;
           }
           GUI.setPage(&new_proj_page);
@@ -54,24 +54,20 @@ DEBUG_PRINTLN("Could not init cfg");
         else if (mcl_cfg.number_projects > 0) {
           DEBUG_PRINTLN("Project count greater than 0, try to load existing");
           if (!proj.load_project(mcl_cfg.project)) {
-
+            DEBUG_PRINTLN("error loading project");
             GUI.setPage(&new_proj_page);
             return true;
 
-          }
-          else {
-          DEBUG_PRINTLN("Project loaded successfully, load grid");
-          GUI.setPage(&grid_page);
+          } else {
+            DEBUG_PRINTLN("Project loaded successfully, load grid");
+            return true;
           }
           return true;
-        }
-        else {
+        } else {
           GUI.setPage(&new_proj_page);
           return true;
-
         }
-      }
-      else {
+      } else {
         DEBUG_PRINTLN("Could not read cfg file.");
 
         if (!mcl_cfg.cfg_init()) {
@@ -79,23 +75,19 @@ DEBUG_PRINTLN("Could not init cfg");
         }
         GUI.setPage(&new_proj_page);
         return true;
-
       }
-    }
-    else {
+    } else {
       DEBUG_PRINTLN("Could not open cfg file. Let's try to create it");
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
       GUI.setPage(&new_proj_page);
       return true;
-
     }
     return true;
   }
-
+  return false;
 }
-
 
 bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 
@@ -108,9 +100,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 
   for (n = 0; n < SD_MAX_RETRIES && pass == false; n++) {
 
-
-    b = filep->write(( uint8_t*) data, len);
-
+    b = filep->write((uint8_t *)data, len);
 
     if (b != len) {
       write_fail++;
@@ -121,16 +111,14 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
         DEBUG_PRINTLN("Could not seek, failing");
         return false;
       }
-    }
-    else {
+    } else {
       pass = true;
     }
   }
 
   if (pass) {
     return true;
-  }
-  else {
+  } else {
 
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Total write failures");
@@ -154,9 +142,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
 
   for (n = 0; n < SD_MAX_RETRIES && pass == false; n++) {
 
-
-    b = filep->read(( uint8_t*) data, len);
-
+    b = filep->read((uint8_t *)data, len);
 
     if (b != len) {
       read_fail++;
@@ -168,16 +154,14 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
         return false;
       }
       pass = false;
-    }
-    else {
+    } else {
       pass = true;
     }
   }
 
   if (pass) {
     return true;
-  }
-  else {
+  } else {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Total read failures");
     DEBUG_PRINTLN(read_fail);

@@ -30,6 +30,8 @@ void MCL::setup() {
   text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
   text_input_page.no_escape = false;
+  if (ret) { GUI.setPage(&grid_page); }
+
   DEBUG_PRINTLN("tempo:");
   DEBUG_PRINTLN(mcl_cfg.tempo);
   MidiClock.setTempo(mcl_cfg.tempo);

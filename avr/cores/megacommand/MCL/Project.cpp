@@ -32,6 +32,7 @@ bool Project::load_project(const char *projectname) {
   ret = mcl_cfg.write_cfg();
 
   if (!ret) {
+    DEBUG_PRINTLN("could not write cfg");
     return false;
   }
 
