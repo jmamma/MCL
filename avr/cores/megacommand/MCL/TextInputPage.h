@@ -18,7 +18,7 @@ public:
   uint16_t last_clock;
   bool normal_mode;
   uint8_t cursor_position;
-
+  bool no_escape = false;
   TextInputPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}

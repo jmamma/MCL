@@ -243,9 +243,11 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    if (!no_escape) {
     return_state = false;
     GUI.ignoreNextEvent(event->source);
     GUI.popPage();
+    }
     return true;
   }
 

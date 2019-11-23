@@ -1,10 +1,10 @@
 #include "NewProjectPage.h"
 #include "MCL.h"
 
-void NewProjectPage::setup() {}
+void NewProjectPage::setup() {
+}
 
 void NewProjectPage::init() {
-
   DEBUG_PRINTLN("New project page");
   char my_string[sizeof(newprj)] = "project___";
 
@@ -12,6 +12,8 @@ void NewProjectPage::init() {
   my_string[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
   my_string[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
   m_strncpy(newprj, my_string, sizeof(newprj));
+  gui_event_t event;
+  handleEvent(&event);
 }
 
 void NewProjectPage::display() {
@@ -19,6 +21,7 @@ void NewProjectPage::display() {
 
 bool NewProjectPage::handleEvent(gui_event_t *event) {
   // don't handle any events
+  again:
   if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
 
     char full_path[sizeof(newprj) + 5] = {'\0'};
@@ -30,9 +33,8 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
 
     DEBUG_PRINTLN(full_path);
     if (SD.exists(full_path)) {
-      gfx.alert("PROJECT EXISTS", "");
-      DEBUG_PRINTLN("Project exists");
-      return false;
+      gfx.alert("ERROR", "PROJECT EXISTS");
+      goto again;
     }
 
     bool ret = proj.new_project(full_path);
@@ -41,7 +43,8 @@ bool NewProjectPage::handleEvent(gui_event_t *event) {
         grid_page.reload_slot_models = false;
         GUI.setPage(&grid_page);
       } else {
-        gfx.alert("SD FAILURE", "--");
+        gfx.alert("ERROR", "SD ERROR");
+        goto again;
       }
       return false;
     }

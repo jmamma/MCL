@@ -98,6 +98,7 @@ void MCLGfx::alert(const char *str1, const char *str2) {
   mcl_gui.draw_infobox(str1, str2);
   oled_display.display();
   delay(700);
+  oled_display.clearDisplay();
 #else
   GUI.flash_strings_fill(str1, str2);
   GUI.display();
