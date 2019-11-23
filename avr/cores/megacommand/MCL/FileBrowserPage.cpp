@@ -280,6 +280,9 @@ void FileBrowserPage::_handle_filemenu() {
   memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
+  for (uint8_t n = 1; n < 32; n++) {
+  buf2[n] = ' ';
+  }
   uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
