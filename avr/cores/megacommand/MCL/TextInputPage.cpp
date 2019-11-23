@@ -33,7 +33,6 @@ void TextInputPage::init() {
   GUI.lines[0].flashActive = false;
   GUI.lines[1].flashActive = false;
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setFont();
 #endif
 }
 
@@ -150,7 +149,7 @@ void TextInputPage::display_normal() {
     encoders[1]->old = encoders[1]->cur;
     text[cursor_position] = _getchar(encoders[1]->getValue());
   }
-
+  auto oldfont = oled_display.getFont();
   auto time = clock_diff(last_clock, slowclock);
 
 #ifdef OLED_DISPLAY
@@ -171,7 +170,7 @@ void TextInputPage::display_normal() {
   if (time > FLASH_SPEED * 2) {
     last_clock = slowclock;
   }
-
+  oled_display.setFont(oldfont);
   oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
