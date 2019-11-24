@@ -1,7 +1,7 @@
 #include "MCL.h"
 #include "SeqPage.h"
 
-uint8_t SeqPage::page_select = 0;
+    uint8_t SeqPage::page_select = 0;
 
 uint8_t SeqPage::midi_device = DEVICE_MD;
 
@@ -17,6 +17,7 @@ uint8_t opt_paste = 0;
 uint8_t opt_clear = 0;
 uint8_t opt_shift = 0;
 uint8_t opt_reverse = 0;
+uint8_t opt_clear_step = 0;
 
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -230,6 +231,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     show_seq_menu = false;
     show_step_menu = false;
+    mcl_gui.init_encoders_used_clock();
     return true;
   }
 #else
@@ -668,6 +670,24 @@ void opt_mute_step_handler() {
   }
 }
 
+void opt_clear_step_locks_handler() {
+  if (opt_clear_step == 1) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+      if (note_interface.notes[n] == 1) {
+
+        if (opt_midi_device_capture == DEVICE_MD) {
+          mcl_seq.md_tracks[last_md_track].clear_step_locks(
+              SeqPage::step_select + SeqPage::page_select * 16);
+        } else {
+          //        mcl_seq.ext_tracks[last_ext_track].clear_step_locks(
+          //          SeqPage::step_select + SeqPage::page_select * 16);
+        }
+      }
+    }
+  }
+  opt_clear_step = 0;
+}
+
 void opt_shift_track_handler() {
   switch (opt_shift) {
   case 1:
@@ -769,9 +789,15 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   uint8_t playing_idx;
   if (_playing_idx == 255) {
     if (midi_device == DEVICE_MD) {
-      playing_idx = (mcl_seq.md_tracks[last_md_track].step_count - ((mcl_seq.md_tracks[last_md_track].step_count) / 16) * 16) / 4;
+      playing_idx =
+          (mcl_seq.md_tracks[last_md_track].step_count -
+           ((mcl_seq.md_tracks[last_md_track].step_count) / 16) * 16) /
+          4;
     } else {
-      playing_idx = (mcl_seq.ext_tracks[last_ext_track].step_count - ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /4;
+      playing_idx =
+          (mcl_seq.ext_tracks[last_ext_track].step_count -
+           ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /
+          4;
     }
   } else {
     playing_idx = _playing_idx;

@@ -30,10 +30,10 @@ const menu_t<8> seq_menu_layout PROGMEM = {
     "SEQ",
     {
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
-        {"COPY:", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, { {0, "--",}, {1, "TRK."}, {2, "ALL"}}},
-        {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK."}, {2, "ALL"}}},
-        {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {1, "LCKS."}, {2, "ALL"}}},
-        {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK."}, {2, "ALL"}}},
+        {"COPY:", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
+        {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
+        {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {1, "LCKS"}, {2, "ALL"}}},
+        {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
         {"TRACK RES:", 1, 3, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {1, "2x"}, {2, "1x"} }},
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "--",}, {1, "L"}, {2, "R"}, {3,"L>ALL"}, {4, "R>ALL"}}},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"} }},
@@ -45,9 +45,10 @@ MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 MenuPage<8> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
-const menu_t<3> step_menu_layout PROGMEM = {
+const menu_t<4> step_menu_layout PROGMEM = {
     "STP",
     {
+        {"CLEAR:", 0, 2, 2, (uint8_t *)&opt_clear_step, (Page *)NULL, opt_clear_step_locks_handler, { {0, "--",}, {1, "LCKS"}}},
         {"COPY STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_copy_step_handler, {}},
         {"PASTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_paste_step_handler, {}},
         {"MUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_mute_step_handler, {}},
@@ -57,7 +58,7 @@ const menu_t<3> step_menu_layout PROGMEM = {
 
 MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<3> step_menu_page(&step_menu_layout, &step_menu_value_encoder, &step_menu_entry_encoder);
+MenuPage<4> step_menu_page(&step_menu_layout, &step_menu_value_encoder, &step_menu_entry_encoder);
 
 
 //SeqLFOPage seq_lfo_page[NUM_LFO_PAGES];

@@ -24,6 +24,7 @@ extern uint8_t opt_paste;
 extern uint8_t opt_clear;
 extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
+extern uint8_t opt_clear_step;
 
 extern void opt_trackid_handler();
 extern void opt_resolution_handler();
@@ -36,6 +37,7 @@ extern void opt_reverse_track_handler();
 extern void opt_paste_step_handler();
 extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
+extern void opt_clear_step_locks_handler();
 
 class SeqPage : public LightPage {
 public:
