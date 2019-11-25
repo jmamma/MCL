@@ -6,74 +6,78 @@ Complete GUI overhaul:
 
 Button assignment has been improved to provide consistency across all pages.
 
-    [ Save ] button: Cancel/Exit/No
-    [ Write ] button: Confirm/Enter/Yes
-    [ Shift1 ] button now opens PageSelect menu in all sub-pages.
-    [ Shift2 ] button opens an options menu on sequencer pages.
-
-    Encoder buttons no are no longer used for navigating the GUI and instead
-    work as fast rotate mode, as per the Elektron devices.
+    The general sense of the buttons:
+        [ Save   ] button: Cancel/Exit/No
+        [ Write  ] button: Confirm/Enter/Yes
+        [ Shift1 ] button now opens PageSelect menu in all sub-pages.
+        [ Shift2 ] button opens an options menu on sequencer pages and file browser pages.
+        [ Encoder] buttons are no longer used for navigating the GUI and instead, work as fast rotate mode, as per the Elektron devices.
+    
+    In Sequencer pages:
+        [ Save  ] button: Switches between different tabs
+        [ Write ] button: Switches sequencer steps. 
+	Hold [Write] and press a trigger adjusts track len.
 
     PageSelect layout has been improved:
-	   [ Encoder 1] to scroll through all available pages
-	   [ Encoder 2] to scroll through page categories
-	   [ Save ] to exit back to grid
+        [ Encoder 1] to scroll through all available pages
+        [ Encoder 2] to scroll through page categories
+        [ Save ] to exit back to grid
+        [ Encoder buttons] Quick select page in a category
 
 Enahanced Graphics:
     New graphics for Sequencer Pages.
-	Visual Chromatic Keyboard + Visual uTIMING.
-	Graphical icons for PageSelect.
-    Trimetric Spites.
-	GUI popups.
-	Loading screens.
-	Graphical Encoders.
+        Revamped visual sequencer steps/locks
+        Visual Chromatic Keyboard + Visual uTIMING.
+        Chromatic scale names are displayed
+        Graphical icons for PageSelect.
+    New graphics for PageSelect page.
+    GUI popups.
+    Loading/peering screens & trimetric Spites.
+    Graphical Encoders.
 
 Improved Project and File navigation.
     Abiltiy to rename/delete files/projects
 
 Improved Text Input:
-    Text input page now features a Char Select Pane.
+    [Shift1] button: Text input page now features a Char Select Pane.
+    [Shift2] button: Now functions as backspace.
 
 Sequencer Track Menu and Trig Menu.
-    Track menu accessible by holding shift 2.
-	   Allows for changing current tracks.
-       Copying/pasting/deleting/shifting/reversing tracks.
-
-
-    Trig menu accessible by pressing a trig and then holding shift 2. Allows
-	copying/pasting of trigs, adding/remove trig mutes clearing locks.
+    Track menu accessible by holding [Shift2].
+        Allows for changing current tracks.
+        Copying/pasting/deleting/shifting/reversing tracks.
+    Trig menu accessible by press-holding a trig and then holding shift 2.
+        Allows copying/pasting of trigs, adding/remove trig mutes clearing locks.
 
 Grid Page:
-  Slot menu, provides copy + paste options. Encoders 3 and 4 are used to
-  select a rectangular region of tracks/slots to be copied.
-  They can be pasted between projects.
+    Slot menu, provides copy + paste options.
+    Encoders 3 and 4 are used to select a rectangular region of tracks/slots to be copied.
+    Clipboard content can be pasted between projects.
 
 SD Drive:
-  Poor man's plus drive. Backup/restore MD's entire memory including pattern +
-  kits + globals. All stored on the SD Card for retrieval.
+    Poor man's plus drive. Backup/restore MD's entire memory including pattern + kits + globals. 
+    All stored on the SD Card for retrieval.
 
 RAM Pages:
-  Two RAM pages are provided Page Select pages 15 + 16.
-  These machines take the hastle out of RAM record + playback by automating RAM machine sampling of the MD output or external input.
-  Recordings can be sliced, and maniputated using a variety of effects.
+    Two RAM pages are provided Page Select pages 15 + 16.
+    These machines take the hastle out of RAM record + playback by automating RAM machine sampling of the MD output or external input.
+    Recordings can be sliced, and maniputated using a variety of effects.
 
 FX Pages:
-  Two FX pages used to control Delay or Reverb.
+    Two FX pages used to control Delay or Reverb.
 
 LFO Page:
-  A single global LFO (Lower frequency oscillator) page is provided which can
-  be used to manipulate any MD parameter, either a Track Param or Global FX.
-  Two destinations are selectable and a variatey of wave shapes available.
-  The LFO can be triggered by a dedicated 16 step sequencer track, or be set
-  to run freely.
+    A single global LFO (Lower frequency oscillator) page is provided which can
+    be used to manipulate any MD parameter, either a Track Param or Global FX.
+    Two destinations are selectable and a variatey of wave shapes available.
+    The LFO can be triggered by a dedicated 16 step sequencer track, or be set
+    to run freely.
 
 Firmware Performance & MIDI Timing :
-  Improvements to the low level MIDI interrupt code means reduced latency and
-  tighter sequencer performance.
-  Faster GUI routines, means higher framerate and snappier performance.
-  Improved latency coompensation for realtime recording on Chromatic and
-  Record pages.
-  Device peering now works from any page.
+    Improvements to the low level MIDI interrupt code means reduced latency and tighter sequencer performance.
+    Faster GUI routines, means higher framerate and snappier performance.
+    Improved latency coompensation for realtime recording on Chromatic and Record pages.
+    Device peering now works from any page.
 
 MCL 2.40 25/06/2019
 
