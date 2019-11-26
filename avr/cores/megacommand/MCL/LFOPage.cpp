@@ -380,12 +380,12 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       GUI.setPage(&grid_page);
     }
   */
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     page_mode = !(page_mode);
     update_encoders();
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     if (lfo_track->mode >= LFO_MODE_ONE) {
       lfo_track->mode = 0;
     } else {

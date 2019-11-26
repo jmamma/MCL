@@ -218,10 +218,10 @@ void GuiClass::display() {
     }
   }
 #endif
-#endif
   if (page->classic_display) {
     oled_display.display();
   }
+#endif
 #endif
 }
 

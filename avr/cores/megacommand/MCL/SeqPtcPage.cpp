@@ -121,7 +121,9 @@ void SeqPtcPage::config() {
   if (midi_device == DEVICE_MD) {
     str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
     str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
-  } else {
+  }
+  #ifdef EXT_TRACKS
+  else {
     char str_first[3] = "--";
     if (Analog4.connected) {
       strcpy(str_first, "A4");
@@ -133,7 +135,7 @@ void SeqPtcPage::config() {
     str1 = &str_first[0];
     str2 = &str_second[0];
   }
-
+  #endif
   m_strncpy_p(buf, str1, len1);
   strncpy(info1, buf, len1);
   strncat(info1, ">", len1);

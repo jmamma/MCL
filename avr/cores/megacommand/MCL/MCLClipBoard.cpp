@@ -82,13 +82,13 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     md_track->get_machine_from_kit(track, track);
     ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
   }
-
+#ifdef EXT_TRACKS
   else {
     memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],
            sizeof(ExtSeqTrackData));
     ret = mcl_sd.write_data(&temp_track, sizeof(ExtSeqTrack), &file);
   }
-
+#endif
   close();
   if (!ret) {
     DEBUG_PRINTLN("failed write");
@@ -157,10 +157,13 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN("sending seq track");
     md_track->place_track_in_kit(track, track, &(MD.kit), true);
     MD.setMachine(track, &(md_track->machine));
-  } else if (track >= NUM_MD_TRACKS) {
+  }
+#ifdef EXT_TRACKS
+  else if (track >= NUM_MD_TRACKS) {
     memcpy(&mcl_seq.ext_tracks[track - NUM_MD_TRACKS], &(temp_track),
            sizeof(ExtSeqTrackData));
   }
+#endif
   close();
   return true;
 }

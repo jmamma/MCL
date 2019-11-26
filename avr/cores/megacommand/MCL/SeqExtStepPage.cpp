@@ -260,8 +260,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (SeqPage::handleEvent(event)) {
     return true;
   }
-  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+
 #ifdef EXT_TRACKS
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
