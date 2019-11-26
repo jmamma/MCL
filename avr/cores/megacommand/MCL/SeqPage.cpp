@@ -572,7 +572,9 @@ void opt_clear_track_handler() {
     } else if (opt_clear == 1) {
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
@@ -581,6 +583,7 @@ void opt_clear_track_handler() {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
   }
+#endif
   opt_clear = 0;
 }
 
@@ -601,34 +604,46 @@ void opt_clear_locks_handler() {
 
 void opt_clear_all_tracks_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     mcl_seq.ext_tracks[last_ext_track].clear_track();
   }
+#endif
 }
 
 void opt_clear_all_locks_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
-  } else {
+  }
+#ifdef EXT_TRACKS
+  else {
     // TODO ext locks
   }
+#endif
 }
 
 void opt_copy_track_handler() {
   if (opt_copy == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.copy_sequencer();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
     }
+#endif
   }
   if (opt_copy == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.copy_track = last_md_track;
       mcl_clipboard.copy_sequencer_track(last_md_track);
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
       mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
     }
+#endif
   }
   opt_copy = 0;
 }
@@ -637,18 +652,24 @@ void opt_paste_track_handler() {
   if (opt_paste == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.paste_sequencer();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
+#endif
   }
   if (opt_paste == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_md_track);
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_ext_track + NUM_MD_TRACKS);
     }
+#endif
   }
   opt_paste = 0;
 }
@@ -695,40 +716,50 @@ void opt_shift_track_handler() {
   case 1:
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_seq.md_tracks[last_md_track].rotate_left();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].rotate_left();
     }
-
+#endif
     break;
   case 2:
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_seq.md_tracks[last_md_track].rotate_right();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].rotate_right();
     }
+#endif
     break;
   case 3:
     if (opt_midi_device_capture == DEVICE_MD) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].rotate_left();
       }
-    } else {
+    }
+#ifdef EXT_TRACKS
+      else {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].rotate_left();
       }
     }
+#endif
     break;
   case 4:
     if (opt_midi_device_capture == DEVICE_MD) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].rotate_right();
       }
-    } else {
+    }
+#ifdef EXT_TRACKS 
+else {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].rotate_right();
       }
     }
-
+#endif
     break;
   }
 }
@@ -740,19 +771,25 @@ void opt_reverse_track_handler() {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].reverse();
       }
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].reverse();
       }
     }
+#endif
   }
 
   if (opt_reverse == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_seq.md_tracks[last_md_track].reverse();
-    } else {
+    }
+#ifdef EXT_TRACKS
+    else {
       mcl_seq.ext_tracks[last_ext_track].reverse();
     }
+#endif
   }
 }
 
@@ -796,12 +833,15 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
           (mcl_seq.md_tracks[last_md_track].step_count -
            ((mcl_seq.md_tracks[last_md_track].step_count) / 16) * 16) /
           4;
-    } else {
+    }
+#ifdef EXT_TRACKS
+      else {
       playing_idx =
           (mcl_seq.ext_tracks[last_ext_track].step_count -
            ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /
           4;
     }
+#endif
   } else {
     playing_idx = _playing_idx;
   }

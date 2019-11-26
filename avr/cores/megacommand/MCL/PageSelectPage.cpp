@@ -35,11 +35,15 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t *)icon_rec},
     {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
     {"CHROMA", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
-
+#ifdef SOUND_PAGE
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, (uint8_t *)icon_sound},
+#endif
+#ifdef WAV_DESIGNER
     {"WAV DESIGNER", &wd.pages[0], 9, 2, 24, 19, (uint8_t *)icon_wavd},
+#endif
+#ifdef LOUDNESS_PAGE
     {"LOUDNESS", &loudness_page, 10, 2, 24, 16, (uint8_t *)icon_loudness},
-
+#endif
     {"DELAY", &fx_page_a, 12, 3, 24, 25, (uint8_t *)icon_rhytmecho},
     {"REVERB", &fx_page_b, 13, 3, 24, 25, (uint8_t *)icon_gatebox},
     {"RAM-1", &ram_page_a, 14, 3, 19, 19, (uint8_t *)wheel_top},
