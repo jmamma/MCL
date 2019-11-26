@@ -257,18 +257,20 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    if (cursor_position == 0) {
-      return false;
-    }
 
-    if (cursor_position == length - 1 && isspace(text[cursor_position])) {
+    if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
       // delete last
       text[cursor_position] = ' ';
     } else {
+      if (cursor_position == 0) {
+        // move the cursor, and delete first
+        cursor_position = 1;
+      }
       // backspace
       for (uint8_t i = cursor_position - 1; i < length - 1; ++i) {
         text[i] = text[i + 1];
       }
+      text[length - 1] = ' ';
       --cursor_position;
     }
     config_normal();
