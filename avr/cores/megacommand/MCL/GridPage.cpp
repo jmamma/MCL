@@ -316,7 +316,7 @@ void GridPage::display_grid_info() {
 
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
-  oled_display.print((int)floor(MidiClock.get_tempo()));
+  oled_display.print(round(MidiClock.get_tempo()));
 
   display_counters();
   oled_display.setFont(&TomThumb);
