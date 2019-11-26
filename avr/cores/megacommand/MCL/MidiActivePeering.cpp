@@ -17,11 +17,12 @@ uint8_t MidiActivePeering::get_device(uint8_t port) {
 }
 
 void MidiActivePeering::prepare_display() {
+#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
   oled_display.println("Peering...");
-
+#endif
 }
 
 void MidiActivePeering::delay_progress(uint16_t clock_) {
@@ -97,7 +98,9 @@ void MidiActivePeering::md_setup() {
   }
 
   MidiIDSysexListener.cleanup();
+#ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);
+#endif
 }
 
 void MidiActivePeering::a4_setup() {
@@ -136,7 +139,9 @@ void MidiActivePeering::a4_setup() {
     GUI.flash_strings_fill("MIDI DEVICE", "CONNECTED");
 #endif
   }
+#ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);
+#endif
 }
 void MidiActivePeering::run() {
   char str[16];

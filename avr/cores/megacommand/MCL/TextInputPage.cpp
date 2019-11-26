@@ -94,10 +94,9 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
 // E0 -> x axis [0..17]
 // E1 -> y axis [0..3]
 void TextInputPage::config_charpane() {
-#ifndef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   // char pane not supported on 1602 displays
-  return;
-#endif
+
   ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
   ((MCLEncoder *)encoders[1])->max = charpane_h - 1;
   normal_mode = false;
@@ -128,6 +127,7 @@ void TextInputPage::config_charpane() {
   calc_charpane_coord(sx, sy);
   oled_display.fillRect(sx, sy, 7, 7, INVERT);
   oled_display.display();
+#endif
 }
 
 void TextInputPage::display_normal() {
@@ -149,11 +149,11 @@ void TextInputPage::display_normal() {
     encoders[1]->old = encoders[1]->cur;
     text[cursor_position] = _getchar(encoders[1]->getValue());
   }
-  auto oldfont = oled_display.getFont();
   auto time = clock_diff(last_clock, slowclock);
 
 #ifdef OLED_DISPLAY
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
+  auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
   oled_display.setFont();
   oled_display.setCursor(s_text_x, s_text_y);
@@ -190,7 +190,7 @@ void TextInputPage::display_normal() {
 }
 
 void TextInputPage::display_charpane() {
-
+#ifdef OLED_DISPLAY
   if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
     // clear old highlight
     uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
@@ -211,6 +211,7 @@ void TextInputPage::display_charpane() {
 
   last_clock = slowclock;
   oled_display.display();
+#endif
 }
 
 void TextInputPage::display() {
@@ -224,7 +225,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
-
+  #ifdef OLED_DIPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
   if (!normal_mode) {
@@ -241,7 +242,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-
+  #endif
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (!no_escape) {
     return_state = false;

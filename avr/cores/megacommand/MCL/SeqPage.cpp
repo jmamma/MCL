@@ -1,7 +1,7 @@
 #include "MCL.h"
 #include "SeqPage.h"
 
-    uint8_t SeqPage::page_select = 0;
+uint8_t SeqPage::page_select = 0;
 
 uint8_t SeqPage::midi_device = DEVICE_MD;
 
@@ -204,6 +204,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+#ifdef OLED_DISPLAY
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;
     oled_display.clearDisplay();
@@ -233,6 +234,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     show_step_menu = false;
     mcl_gui.init_encoders_used_clock();
     return true;
+#endif
   }
 #else
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
@@ -782,6 +784,7 @@ void SeqPage::loop() {
 }
 
 void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
+#ifdef OLED_DISPLAY
   //  draw page index
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
@@ -827,6 +830,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 
     pidx_x += w + 1;
   }
+#endif
 }
 
 #ifndef OLED_DISPLAY

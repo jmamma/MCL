@@ -36,14 +36,18 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+#ifdef OLED_DISPLAY
     oled_display.fillRect(MCLGUI::dlg_info_x2 - 82, MCLGUI::dlg_info_y1 + 18, 12, 6, INVERT);
     oled_display.display();
+#endif
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+#ifdef OLED_DISPLAY
     oled_display.fillRect(MCLGUI::dlg_info_x2 - 51, MCLGUI::dlg_info_y1 + 18, 12, 6, INVERT);
     oled_display.display();
+#endif
     return true;
   }
 
