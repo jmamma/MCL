@@ -17,11 +17,11 @@ void QuestionDialogPage::init(const char* title, const char* text) {
   oled_display.setCursor(MCLGUI::dlg_info_x2 - 55, MCLGUI::dlg_info_y1 + 24);
   oled_display.print("W YES");
 
-  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 17, 21, 8, WHITE);
-  oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 17, 19, 8, WHITE);
+  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 21, 9, WHITE);
+  oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 21, 9, WHITE);
 
-  oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 18, 5, 6, INVERT);
-  oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 18, 5, 6, INVERT);
+  oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17, 5, 7, INVERT);
+  oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17, 5, 7, INVERT);
 
   oled_display.setFont(oldfont);
   oled_display.display();
