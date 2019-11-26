@@ -13,6 +13,8 @@
 #define OLED_DC 44
 #define OLED_RESET 38
 
+#ifdef OLED_DISPLAY
 extern Adafruit_SSD1305 oled_display;
+#endif
 
 #endif /* OLED_H__ */
