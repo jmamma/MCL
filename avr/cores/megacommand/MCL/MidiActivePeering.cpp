@@ -97,7 +97,9 @@ void MidiActivePeering::md_setup() {
   }
 
   MidiIDSysexListener.cleanup();
+#ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);
+#endif
 }
 
 void MidiActivePeering::a4_setup() {
@@ -136,7 +138,9 @@ void MidiActivePeering::a4_setup() {
     GUI.flash_strings_fill("MIDI DEVICE", "CONNECTED");
 #endif
   }
+#ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);
+#endif
 }
 void MidiActivePeering::run() {
   char str[16];

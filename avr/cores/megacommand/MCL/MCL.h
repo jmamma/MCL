@@ -84,10 +84,8 @@
 #include "Shared.h"
 
 //MCL Fonts
-#ifdef OLED_DISPLAY
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
-#endif
 
 #define VERSION 2050
 #define VERSION_STR "2.50"

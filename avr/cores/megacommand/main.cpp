@@ -23,9 +23,7 @@ extern "C" {
 #define OLED_DC 44
 #define OLED_RESET 38
 
-#ifdef OLED_DISPLAY
 Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
-#endif
 
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
