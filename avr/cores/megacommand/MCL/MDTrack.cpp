@@ -210,6 +210,11 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
+
+  if (active == EMPTY_TRACK_TYPE) {
+  seq_data.length = 16;
+  }
+
   return true;
 }
 
