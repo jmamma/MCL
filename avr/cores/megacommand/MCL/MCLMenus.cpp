@@ -1,4 +1,5 @@
 #include "MCLMenus.h"
+#include "Project.h"
 
 MCLEncoder options_param1(0, 11, ENCODER_RES_SYS);
 MCLEncoder options_param2(0, 17, ENCODER_RES_SYS);
@@ -12,11 +13,15 @@ MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
 
+void new_proj_handler() {
+  proj.new_project();
+}
+
 const menu_t<7> system_menu_layout PROGMEM = {
     "GLOBAL",
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, NULL, {}},
-        {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) &new_proj_page, NULL, {}},
+        {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &new_proj_handler, {}},
         {"MIDI",0, 0, 0, (uint8_t *) NULL, (Page*) &midi_config_page, NULL, {}},
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, NULL, {}},
         {"CHAIN MODE", 0, 0, 0, (uint8_t *) NULL, (Page*) &chain_config_page, NULL, {}},

@@ -25,6 +25,8 @@ extern MCLEncoder config_param5;
 extern MCLEncoder config_param6;
 extern MCLEncoder config_param7;
 
+extern void new_proj_handler();
+
 extern MenuPage<7> system_page;
 extern MenuPage<5> midi_config_page;
 extern MenuPage<5> md_config_page;

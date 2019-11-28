@@ -46,7 +46,7 @@ bool MCLSd::load_init() {
             DEBUG_PRINTLN("Could not init cfg");
             return false;
           }
-          GUI.setPage(&new_proj_page);
+          proj.new_project();
           return true;
 
         }
@@ -55,7 +55,7 @@ bool MCLSd::load_init() {
           DEBUG_PRINTLN("Project count greater than 0, try to load existing");
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN("error loading project");
-            GUI.setPage(&new_proj_page);
+             proj.new_project();
             return true;
 
           } else {
@@ -64,7 +64,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          GUI.setPage(&new_proj_page);
+           proj.new_project();
           return true;
         }
       } else {
@@ -73,7 +73,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        GUI.setPage(&new_proj_page);
+         proj.new_project();
         return true;
       }
     } else {
@@ -81,7 +81,7 @@ bool MCLSd::load_init() {
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
-      GUI.setPage(&new_proj_page);
+       proj.new_project();
       return true;
     }
     return true;

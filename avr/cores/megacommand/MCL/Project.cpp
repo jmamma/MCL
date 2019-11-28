@@ -3,6 +3,51 @@
 
 void Project::setup() {}
 
+bool Project::new_project() {
+  char newprj[14];
+
+  char my_string[sizeof(newprj)] = "project___";
+
+  my_string[7] = (mcl_cfg.number_projects % 1000) / 100 + '0';
+  my_string[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
+  my_string[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
+  m_strncpy(newprj, my_string, sizeof(newprj));
+  again:
+
+  if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
+
+    char full_path[sizeof(newprj) + 5] = {'\0'};
+    strcat(full_path, "/");
+    strcat(full_path, newprj);
+    strcat(full_path, ".mcl");
+
+    gfx.alert("PLEASE WAIT", "CREATING PROJECT");
+
+    DEBUG_PRINTLN(full_path);
+    if (SD.exists(full_path)) {
+      gfx.alert("ERROR", "PROJECT EXISTS");
+      goto again;
+    }   
+
+    bool ret = proj.new_project(full_path);
+    if (ret) {
+      if (proj.load_project(full_path)) {
+        grid_page.reload_slot_models = false;
+        DEBUG_PRINTLN("project loaded, setting page to grid");
+        GUI.setPage(&grid_page);
+        return true;
+      } else {
+        gfx.alert("ERROR", "SD ERROR");
+        goto again;
+      }   
+      return false;
+    }   
+  } else if (proj.project_loaded) {
+    GUI.setPage(&grid_page);
+    return true;
+  }
+}
+
 bool Project::load_project(const char *projectname) {
 
   bool ret;
