@@ -3,7 +3,7 @@
 #ifndef GRIDROW_H__
 #define GRIDROW_H__
 
-#define GRID_WIDTH 22
+#define GRID_WIDTH 20
 
 class GridRowHeader {
  public:

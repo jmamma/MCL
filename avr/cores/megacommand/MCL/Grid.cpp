@@ -191,12 +191,11 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   return true;
 }
 
-bool Grid::clear_row(int16_t row) {
-  bool update_header = false;
+__attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   GridRowHeader row_header;
   row_header.init();
   for (int x = 0; x < GRID_WIDTH; x++) {
-    clear_slot(x, row, update_header);
+    clear_slot(x, row, false);
   }
   return row_header.write(row);
 }
