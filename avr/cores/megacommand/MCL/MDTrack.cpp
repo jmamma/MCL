@@ -341,6 +341,8 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
 
   if (merge) {
     DEBUG_PRINTLN("auto merge");
+    //Set track length to equal MD pattern length on merge
+    seq_data.length = length;
     MDSeqTrack md_seq_track;
     memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
     md_seq_track.merge_from_md(this);
