@@ -241,13 +241,13 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    update_globals();
-    md_exploit.off();
-    md_exploit.on();
-    GUI.setPage(&mixer_page);
-    return true;
-  }
+  //if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    //update_globals();
+    //md_exploit.off();
+    //md_exploit.on();
+    //GUI.setPage(&mixer_page);
+    //return true;
+  //}
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     update_globals();
     md_exploit.off();
