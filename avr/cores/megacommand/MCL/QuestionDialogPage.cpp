@@ -26,6 +26,16 @@ void QuestionDialogPage::init(const char* title, const char* text) {
   oled_display.setFont(oldfont);
   oled_display.display();
 #else
+  GUI.clearLines();
+  GUI.setLine(GUI.LINE1);
+  uint8_t x;
+
+  GUI.put_string_at(13, "YES");
+  GUI.put_string_at(0, "NO");
+
+  GUI.setLine(GUI.LINE2);
+  GUI.put_string_at(0, text);
+  GUI.display();
   // TODO
 #endif
 }

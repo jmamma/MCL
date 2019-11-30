@@ -74,7 +74,9 @@ void SDDrivePage::save_snapshot() {
       return;
     }
   }
-
+  #ifdef OLED_DISPLAY
+  mcl_gfx.alert("Please Wait", "Saving Snap");
+  #endif
   DEBUG_PRINTLN("creating new snapshot:");
   DEBUG_PRINTLN(temp_entry);
   if (!file.open(temp_entry, O_WRITE | O_CREAT)) {
@@ -173,6 +175,9 @@ void SDDrivePage::load_snapshot() {
     gfx.alert("Error", "Cannot open file for read");
     return;
   }
+  #ifdef OLED_DISPLAY
+  mcl_gfx.alert("Please Wait", "Restoring Snap");
+  #endif
 
   MidiUart.sendRaw(MIDI_STOP);
   MidiClock.handleImmediateMidiStop();
