@@ -109,8 +109,8 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[0].reset_param_offset();
       lfo_track->params[0].param = encoders[1]->cur;
-    //  lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
-     //     encoders[0]->cur, encoders[1]->cur);
+      //  lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
+      //     encoders[0]->cur, encoders[1]->cur);
       lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
@@ -133,8 +133,8 @@ void LFOPage::loop() {
       SET_LOCK();
       lfo_track->params[1].reset_param_offset();
       lfo_track->params[1].param = encoders[3]->cur;
-    //  lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
-     //     encoders[2]->cur, encoders[3]->cur);
+      //  lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
+      //     encoders[2]->cur, encoders[3]->cur);
       lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
@@ -183,7 +183,15 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       m_strncpy_p(myName, modelname, 4);
     }
   }
+#ifdef OLED_DISPLAY
   draw_knob(knob, "PAR", myName);
+#else
+  GUI.setLine(GUI.LINE1);
+
+  GUI.put_string_at(knob * 4, myName);
+  ;
+
+#endif
 }
 
 void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
@@ -209,7 +217,12 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
     itoa(value, K, 10);
     break;
   }
+#ifdef OLED_DISPLAY
   draw_knob(knob, "DEST", K);
+#else
+  GUI.setLine(GUI.LINE1);
+  GUI.put_string_at(knob * 4, K);
+#endif
 }
 
 void LFOPage::display() {
@@ -233,7 +246,63 @@ void LFOPage::display() {
       GUI.put_string_at(0, "LNK");
     }
   */
+  if (page_mode == LFO_DESTINATION) {
+    draw_dest(0, encoders[0]->cur);
+    draw_param(1, encoders[0]->cur, encoders[1]->cur);
+    draw_dest(2, encoders[2]->cur);
+    draw_param(3, encoders[2]->cur, encoders[3]->cur);
+  }
+  if (page_mode == LFO_SETTINGS) {
+    char K[4];
+    switch (lfo_track->wav_type) {
+    case SIN_WAV:
+      strcpy(K, "SIN");
+      break;
+    case TRI_WAV:
+      strcpy(K, "TRI");
+      break;
+    case IRAMP_WAV:
+      strcpy(K, "IR");
+      break;
+    case RAMP_WAV:
+      strcpy(K, "R");
+      break;
+    case EXP_WAV:
+      strcpy(K, "EX");
+      break;
+    case IEXP_WAV:
+      strcpy(K, "IEX");
+      break;
+    }
+    GUI.setLine(GUI.LINE1);
+    GUI.put_string_at(0, K);
+    GUI.put_value_at(4, encoders[1]->cur);
+    GUI.put_value_at(8, encoders[2]->cur);
+    GUI.put_value_at(12, encoders[3]->cur);
+    GUI.setLine(GUI.LINE2);
+    if (lfo_track->enable) {
+      switch (lfo_track->mode) {
+      case LFO_MODE_FREE:
+        GUI.put_string_at(0, "FREE");
+        break;
+      case LFO_MODE_TRIG:
+      case LFO_MODE_ONE:
+        char str[17] = "----------------";
 
+        for (int i = 0; i < 16; i++) {
+          if (IS_BIT_SET64(lfo_track->pattern_mask, i)) {
+
+            str[i] = (char)219;
+          }
+        }
+        GUI.put_string_at(0, str);
+        break;
+      }
+    }
+    else {
+    GUI.put_string_at(0, "LFO: OFF");
+    }
+}
 #endif
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
@@ -380,12 +449,12 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       GUI.setPage(&grid_page);
     }
   */
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     page_mode = !(page_mode);
     update_encoders();
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     if (lfo_track->mode >= LFO_MODE_ONE) {
       lfo_track->mode = 0;
     } else {
@@ -398,7 +467,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     lfo_track->enable = !(lfo_track->enable);
     if (!lfo_track->enable) {
       lfo_track->reset_params_offset();
