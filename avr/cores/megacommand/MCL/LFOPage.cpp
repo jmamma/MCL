@@ -298,11 +298,10 @@ void LFOPage::display() {
         GUI.put_string_at(0, str);
         break;
       }
+    } else {
+      GUI.put_string_at(0, "LFO: OFF");
     }
-    else {
-    GUI.put_string_at(0, "LFO: OFF");
-    }
-}
+  }
 #endif
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
@@ -463,6 +462,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     if (lfo_track->mode == LFO_MODE_FREE) {
       md_exploit.off();
     } else {
+      note_interface.state = true;
       md_exploit.on();
     }
   }
