@@ -1,7 +1,5 @@
 MCL 2.50 01/12/2019
 
-Note: HD44780 16x2 LCD display is not supported in this release.
-
 Complete GUI overhaul:
 
 Button assignment has been improved to provide consistency across all pages.
