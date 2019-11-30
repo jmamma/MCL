@@ -1,5 +1,5 @@
-#include "MixerPage.h"
 #include "MCL.h"
+#include "MixerPage.h"
 
 #define FADER_LEN 16
 #define FADE_RATE 16
@@ -118,7 +118,40 @@ void MixerPage::set_level(int curtrack, int value) {
 
 void MixerPage::loop() {}
 
-void MixerPage::draw_levels() {}
+void MixerPage::draw_levels() {
+  GUI.setLine(GUI.LINE2);
+  uint8_t scaled_level;
+  uint8_t scaled_level2;
+  char str[17] = "                ";
+  uint8_t fader_level;
+  for (int i = 0; i < 16; i++) {
+
+    if (display_mode == MODEL_LEVEL) {
+      fader_level = MD.kit.levels[i];
+    } else {
+      fader_level = MD.kit.params[i][display_mode];
+    }
+    //  if (note_interface.notes[i] == 1) {
+    //   scaled_level = (int)(disp_levels[i] / 127.0f) * 7;
+    //   } else {
+    scaled_level = (int)(((float)fader_level / (float)127) * 7);
+    //    }
+    if (scaled_level == 7) {
+      str[i] = (char)(255);
+    } else if (scaled_level > 0) {
+      str[i] = (char)(scaled_level + 2);
+    }
+  }
+  GUI.put_string_at(0, str);
+  uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
+  for (uint8_t n = 0; n < 16; n++) {
+    if (disp_levels[n] < dec) {
+      disp_levels[n] = 0;
+    } else {
+      disp_levels[n] -= dec;
+    }
+  }
+}
 
 void encoder_level_handle(Encoder *enc) {
 
@@ -257,15 +290,7 @@ void MixerPage::display() {
     }
   }
   GUI.put_string_at(0, str);
-
-  uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
-  for (uint8_t n = 0; n < 16; n++) {
-    if (disp_levels[n] < dec) {
-      disp_levels[n] = 0;
-    } else {
-      disp_levels[n] -= dec;
-    }
-  }
+  draw_levels();
 }
 #else
 
@@ -414,10 +439,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-//    if (note_interface.notes_count() == 0) {
-//      route_page.update_globals();
-//      GUI.setPage(&grid_page);
-//    }
+    //    if (note_interface.notes_count() == 0) {
+    //      route_page.update_globals();
+    //      GUI.setPage(&grid_page);
+    //    }
     return true;
   }
 
