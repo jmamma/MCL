@@ -39,6 +39,9 @@ extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
 extern void opt_clear_step_locks_handler();
 
+extern void seq_menu_handler();
+extern void step_menu_handler();
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects

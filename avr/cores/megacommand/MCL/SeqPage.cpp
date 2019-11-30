@@ -203,8 +203,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-#ifdef OLED_DISPLAY
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;
     oled_display.clearDisplay();
@@ -234,17 +234,42 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     show_step_menu = false;
     mcl_gui.init_encoders_used_clock();
     return true;
-#endif
   }
 #else
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
+    // If MD trig is held and BUTTON3 is pressed, launch note menu
+    if ((note_interface.notes_count_on() != 0) &&
+        (GUI.currentPage() != &seq_ptc_page)) {
+      uint8_t note = 255;
+      for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
+        if (note_interface.notes[n] == 1) {
+          note = n;
+        }
+      }
+      if (note == 255) {
+        return false;
+      }
+      step_select = note;
+      show_step_menu = true;
+      GUI.pushPage(&step_menu_page);
+  } else {
+    if (opt_midi_device_capture == DEVICE_MD) {
+      DEBUG_PRINTLN("okay using MD for length update");
+      opt_trackid = last_md_track + 1;
+      opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+    } else {
+      opt_trackid = last_ext_track + 1;
+      opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+    }
     // capture current midi_device value
     opt_midi_device_capture = midi_device;
     // capture current page.
     opt_seqpage_capture = this;
     GUI.pushPage(&seq_menu_page);
+    show_seq_menu = true;
     return true;
   }
+}
 #endif
 
   // legacy enc push page switching code
@@ -740,7 +765,7 @@ void opt_shift_track_handler() {
       }
     }
 #ifdef EXT_TRACKS
-      else {
+    else {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].rotate_left();
       }
@@ -753,8 +778,8 @@ void opt_shift_track_handler() {
         mcl_seq.md_tracks[n].rotate_right();
       }
     }
-#ifdef EXT_TRACKS 
-else {
+#ifdef EXT_TRACKS
+    else {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].rotate_right();
       }
@@ -791,6 +816,17 @@ void opt_reverse_track_handler() {
     }
 #endif
   }
+}
+
+void seq_menu_handler() {
+#ifndef OLED_DISPLAY
+SeqPage::show_seq_menu = false;
+#endif
+}
+void step_menu_handler() {
+#ifndef OLED_DISPLAY
+SeqPage::show_step_menu = false;
+#endif
 }
 
 void SeqPage::config_as_trackedit() {
@@ -835,7 +871,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
           4;
     }
 #ifdef EXT_TRACKS
-      else {
+    else {
       playing_idx =
           (mcl_seq.ext_tracks[last_ext_track].step_count -
            ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /
