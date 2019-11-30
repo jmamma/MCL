@@ -225,7 +225,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
-  #ifdef OLED_DIPLAY
+  #ifdef OLED_DISPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
   if (!normal_mode) {
