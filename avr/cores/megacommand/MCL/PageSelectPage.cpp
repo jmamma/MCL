@@ -133,6 +133,7 @@ void PageSelectPage::init() {
     oled_display.setCursor(label_pos[i], 31);
     oled_display.print(str);
   }
+  classic_display = false;
 #endif
   bool switch_tracks = false;
   if (!md_exploit.state) {
@@ -142,7 +143,7 @@ void PageSelectPage::init() {
   md_prepare();
   md_exploit.on(switch_tracks);
   note_interface.state = true;
-  classic_display = false;
+
 }
 
 void PageSelectPage::md_prepare() {

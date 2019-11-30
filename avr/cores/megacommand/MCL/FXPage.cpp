@@ -96,6 +96,8 @@ void FXPage::loop() {
 }
 void FXPage::display() {
 
+  char str[4];
+  PGM_P param_name = NULL;
   if (!classic_display) {
 #ifdef OLED_DISPLAY
     oled_display.clearDisplay();
@@ -109,19 +111,27 @@ void FXPage::display() {
   GUI.put_string_at(0, "FX");
   GUI.put_value_at1(4, page_mode ? 1 : 0);
   GUI.setLine(GUI.LINE2);
-  /*
-    if (mcl_cfg.ram_page_mode == 0) {
-      GUI.put_string_at(0, "MON");
-    } else {
-      GUI.put_string_at(0, "LNK");
-    }
-  */
+
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
+
+    uint8_t fx_param = params[n].param;
+    uint8_t fx_type = params[n].type;
+    GUI.setLine(GUI.LINE1);
+    param_name = fx_param_name(fx_type, fx_param);
+    m_strncpy_p(str, param_name, 4);
+
+    GUI.put_string_at(i * 4, str);
+
+    GUI.setLine(GUI.LINE2);
+    GUI.put_value_at(i * 4, encoders[i]->cur);
+  //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
+  }
+
 
 #endif
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
-  PGM_P param_name = NULL;
-  char str[4];
 
   if (page_id == 0) {
   oled_display.drawBitmap(0, 0, icon_rhytmecho, 24, 18, WHITE);
