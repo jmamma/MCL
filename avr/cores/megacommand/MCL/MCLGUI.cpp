@@ -631,10 +631,10 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
         show_current_step && step_count == idx && MidiClock.state == 2;
     bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
 
-    if (note_interface.notes[i] == 1) {
+//    if (note_interface.notes[i] == 1) {
       // TI feedback
-      oled_display.fillRect(x, y, seq_w, led_h, WHITE);
-    } else if (!in_range) {
+  //     oled_display.drawRect(x, y, seq_w, led_h, WHITE);
+    if (!in_range) {
       // don't draw
     } else if (current ^ locked) {
       // highlight
