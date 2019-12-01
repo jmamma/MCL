@@ -81,18 +81,19 @@ void MCLGfx::splashscreen() {
   char str1[17] = "MEGACOMMAND LIVE";
   char str2[17] = VERSION_STR;
   str1[16] = '\0';
-  LCD.goLine(0);
-  LCD.puts(str1);
-  LCD.goLine(1);
-  LCD.puts(str2);
-
+  display_text(&str1[0], &str2[0]);
   delay(200);
 #endif
   // while (rec_global == 0) {
 
   //  GUI.setPage(&grid_page);
 }
-
+void MCLGfx::display_text(const char *str1, const char *str2) {
+  LCD.goLine(0);
+  LCD.puts(str1);
+  LCD.goLine(1);
+  LCD.puts(str2);
+}
 void MCLGfx::alert(const char *str1, const char *str2) {
 #ifdef OLED_DISPLAY
   mcl_gui.draw_infobox(str1, str2);
