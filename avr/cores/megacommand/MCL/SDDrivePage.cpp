@@ -197,6 +197,9 @@ void SDDrivePage::load_snapshot() {
     {
       ElektronDataToSysexEncoder encoder(&MidiUart);
       MD.global.toSysex(encoder);
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
     }
   }
   //  Patterns
@@ -209,6 +212,9 @@ void SDDrivePage::load_snapshot() {
     }
     mcl_actions.md_setsysex_recpos(8, i);
     MD.pattern.toSysex();
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
   }
   //  Kits
   progress_max = 64;
@@ -220,6 +226,10 @@ void SDDrivePage::load_snapshot() {
     }
     mcl_actions.md_setsysex_recpos(4, i);
     MD.kit.toSysex();
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
+ 
   }
   //  Load complete
   progress_max = 0;
