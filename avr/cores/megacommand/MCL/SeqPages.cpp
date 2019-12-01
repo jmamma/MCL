@@ -38,7 +38,7 @@ const menu_t<8> seq_menu_layout PROGMEM = {
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "--",}, {1, "L"}, {2, "R"}, {3,"L>ALL"}, {4, "R>ALL"}}},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"} }},
     },
-    NULL,
+    seq_menu_handler,
 };
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
@@ -53,7 +53,7 @@ const menu_t<4> step_menu_layout PROGMEM = {
         {"PASTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_paste_step_handler, {}},
         {"MUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_mute_step_handler, {}},
     },
-    NULL,
+    step_menu_handler,
 };
 
 MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);

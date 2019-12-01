@@ -820,12 +820,12 @@ void opt_reverse_track_handler() {
 
 void seq_menu_handler() {
 #ifndef OLED_DISPLAY
-//SeqPage::show_seq_menu = false;
+SeqPage::show_seq_menu = false;
 #endif
 }
 void step_menu_handler() {
 #ifndef OLED_DISPLAY
-//SeqPage::show_step_menu = false;
+SeqPage::show_step_menu = false;
 #endif
 }
 
