@@ -24,8 +24,9 @@ void FileBrowserPage::add_entry(const char *entry) {
 
 void FileBrowserPage::init() {
   DEBUG_PRINT_FN();
-  char temp_entry[16];
 
+  char temp_entry[16];
+  call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
   file_menu_page.menu.enable_entry(0, show_new_folder);
@@ -52,7 +53,6 @@ void FileBrowserPage::init() {
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
   }
-
   encoders[1]->cur = 1;
 
   //  iterate through the files
@@ -179,6 +179,12 @@ void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 }
 
 void FileBrowserPage::loop() {
+#ifndef OLED_DISPLAY
+  if (call_handle_filemenu) { 
+    call_handle_filemenu = false;
+    _handle_filemenu();
+  }
+#endif
 
   if (filemenu_active) {
     file_menu_page.loop();
@@ -278,10 +284,11 @@ void FileBrowserPage::_handle_filemenu() {
   volatile uint8_t *ptr =
       (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
   memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
+
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
   for (uint8_t n = 1; n < 32; n++) {
-  buf2[n] = ' ';
+    buf2[n] = ' ';
   }
   uint8_t name_length = 8;
 
@@ -362,7 +369,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return false;
   }
-
+#ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
@@ -372,15 +379,20 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.init();
     return false;
   }
-
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[0] = param1;
     encoders[1] = param2;
+
     _handle_filemenu();
     init();
     return false;
   }
-
+#else
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    call_handle_filemenu = true;
+    GUI.pushPage(&file_menu_page);
+  }
+#endif
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     int i_save;

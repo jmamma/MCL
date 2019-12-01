@@ -45,6 +45,8 @@ public:
 
   bool filemenu_active = false;
 
+  bool call_handle_filemenu = false;
+
   Encoder* param1;
   Encoder* param2;
 
