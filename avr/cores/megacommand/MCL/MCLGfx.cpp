@@ -101,7 +101,7 @@ void MCLGfx::alert(const char *str1, const char *str2) {
   oled_display.clearDisplay();
 #else
   GUI.flash_strings_fill(str1, str2);
-  GUI.display();
+  GUI.display_lcd();
 #endif
   DEBUG_PRINTLN(str1);
   DEBUG_PRINTLN(str2);

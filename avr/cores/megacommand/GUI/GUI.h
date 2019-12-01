@@ -240,6 +240,10 @@ public:
    * It then handles the displaying of "flash" messages, by checking
    * how long the active flash message has been running.
    **/
+
+  /** update hd44780 **/
+  void display_lcd();
+
   void display();
 
   /**
