@@ -30,7 +30,7 @@ extern void new_proj_handler();
 extern MenuPage<7> system_page;
 extern MenuPage<5> midi_config_page;
 extern MenuPage<5> md_config_page;
-extern MenuPage<3> mcl_config_page;
+extern MenuPage<2> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
 extern MenuPage<1> ram_config_page;
