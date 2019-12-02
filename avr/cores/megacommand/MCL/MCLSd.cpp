@@ -1,5 +1,6 @@
 #include "MCL.h"
 #include "MCLSd.h"
+#include "MCLGfx.h"
 /*
    Function for initialising the SD Card
 */
@@ -46,6 +47,9 @@ bool MCLSd::load_init() {
             DEBUG_PRINTLN("Could not init cfg");
             return false;
           }
+          #ifdef OLED_DISPLAY
+          gfx.draw_evil();
+          #endif
           proj.new_project();
           return true;
 
