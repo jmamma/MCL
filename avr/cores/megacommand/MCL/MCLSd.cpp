@@ -49,6 +49,7 @@ bool MCLSd::load_init() {
           }
           #ifdef OLED_DISPLAY
           gfx.draw_evil();
+          oled_display.clearDisplay();
           #endif
           proj.new_project();
           return true;
