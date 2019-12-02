@@ -123,7 +123,7 @@ void MCLGfx::splashscreen() {
   char str2[17] = VERSION_STR;
   str1[16] = '\0';
   display_text(&str1[0], &str2[0]);
-  delay(400);
+  delay(200);
 #endif
   // while (rec_global == 0) {
 
