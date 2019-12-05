@@ -66,19 +66,17 @@ void GridSavePage::display() {
 
   mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
 
-  const char *merge = "SEQ";
-  if (MidiClock.state == 2) {
-    merge = "---";
-  } else {
+  const char *modestr = "SEQ";
+  if (MidiClock.state != 2) {
     if (encoders[0]->cur == SAVE_MD) {
-      merge = "MD";
+      modestr = "MD";
     }
     if (encoders[0]->cur == SAVE_MERGE) {
-      merge = "MERGE";
+      modestr = "MERGE";
     }
-  }
+  } 
   mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MODE",
-                            merge);
+                            modestr);
 
   char step[4] = {'\0'};
   uint8_t step_count =
@@ -92,23 +90,24 @@ void GridSavePage::display() {
 
   oled_display.setFont(&TomThumb);
   // draw data flow in the center
-  if (MidiClock.state != 2 && encoders[0]->cur == 1) {
-    oled_display.setCursor(52, MCLGUI::s_menu_y + 12);
+  constexpr uint8_t data_x = 56;
+  if (MidiClock.state != 2 && encoders[0]->cur == SAVE_MERGE) {
+    oled_display.setCursor(data_x + 2, MCLGUI::s_menu_y + 12);
     oled_display.print("MD");
-    oled_display.setCursor(50, MCLGUI::s_menu_y + 19);
+    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
     oled_display.print("SEQ");
 
-    oled_display.drawFastHLine(63, MCLGUI::s_menu_y + 8, 2, WHITE);
-    oled_display.drawFastHLine(63, MCLGUI::s_menu_y + 15, 2, WHITE);
-    oled_display.drawFastVLine(65, MCLGUI::s_menu_y + 8, 8, WHITE);
-    mcl_gui.draw_horizontal_arrow(66, MCLGUI::s_menu_y + 12, 5);
+    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
+    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2, WHITE);
+    oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
+    mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
   } else {
-    oled_display.setCursor(50, MCLGUI::s_menu_y + 15);
-    oled_display.print("SEQ");
-    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 12, 8);
+    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
+    oled_display.print(modestr);
+    mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
   }
 
-  oled_display.setCursor(74, MCLGUI::s_menu_y + 15);
+  oled_display.setCursor(data_x + 24, MCLGUI::s_menu_y + 15);
   oled_display.print("GRID");
 
   oled_display.display();
