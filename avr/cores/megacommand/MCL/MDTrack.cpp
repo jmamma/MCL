@@ -310,7 +310,7 @@ void MDTrack::normalize() {
 }
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
-                                  bool merge, bool online) {
+                                  uint8_t merge, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -330,7 +330,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
   }
 
   if (track != 255) {
-    if ((storepattern) || (merge)) { get_track_from_pattern(track, column); }
+    if ((storepattern) || (merge > 0)) { get_track_from_pattern(track, column); }
     get_track_from_kit(track, column);
   }
 
@@ -339,12 +339,17 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
   }
   // Normalise level and vol locks
 
-  if (merge) {
+  if (merge > 0) {
     DEBUG_PRINTLN("auto merge");
     //Set track length to equal MD pattern length on merge
-    seq_data.length = length;
     MDSeqTrack md_seq_track;
+    if (merge == SAVE_MERGE) {
     memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
+    }
+    if (merge == SAVE_MD) {
+     md_seq_track.init();
+     seq_data.length = length;
+    }
     md_seq_track.merge_from_md(this);
     memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
   }

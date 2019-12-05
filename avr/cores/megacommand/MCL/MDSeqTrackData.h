@@ -26,7 +26,16 @@ public:
   uint64_t lock_mask;
   uint8_t conditional[64];
   uint8_t timing[64];
-
+  void init() {
+  length = 16;
+  resolution = 1;
+  memset(&locks, NUM_MD_LOCKS * 64, 0);
+  memset(&locks_params, NUM_MD_LOCKS, 0);
+  pattern_mask = 0;
+  lock_mask = 0;
+  memset(&conditional, 64, 0);
+  memset(&timing, 64, 0);
+  }
 };
 
 #endif /* MDSEQTRACKDATA_H__ */

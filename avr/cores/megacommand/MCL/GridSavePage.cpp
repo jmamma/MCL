@@ -1,5 +1,6 @@
 #include "GridSavePage.h"
 #include "MCL.h"
+#include "MDTrack.h"
 #define S_PAGE 3
 
 void GridSavePage::setup() {
@@ -12,7 +13,7 @@ void GridSavePage::setup() {
   grid_page.reload_slot_models = false;
 }
 
-void GridSavePage::init() { 
+void GridSavePage::init() {
 #ifdef OLED_DISPLAY
   mcl_gui.draw_popup("SAVE TO GRID", true, 28);
 #endif
@@ -38,11 +39,19 @@ void GridSavePage::display() {
   GUI.setLine(GUI.LINE2);
   GUI.put_string_at_fill(0, "S");
 
-  if ((MidiClock.state != 2) && (encoders[0]->cur == 1)) {
-    GUI.put_string_at(3, "MERGE");
+  const char *merge = "SEQ";
+  if (MidiClock.state == 2) {
+    merge = "---";
   } else {
-    GUI.put_string_at(3, "--");
+    if (encoders[0]->cur == SAVE_MD) {
+      merge = "MD";
+    }
+    if (encoders[0]->cur == SAVE_MERGE) {
+      merge = "MERGE";
+    }
   }
+
+  GUI.put_string_at(3, merge);
 
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
@@ -57,15 +66,19 @@ void GridSavePage::display() {
 
   mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
 
-  const char* merge = "NO";
-  if (encoders[0]->cur == 1) {
-    merge = "YES";
-  }
+  const char *merge = "SEQ";
   if (MidiClock.state == 2) {
     merge = "---";
+  } else {
+    if (encoders[0]->cur == SAVE_MD) {
+      merge = "MD";
+    }
+    if (encoders[0]->cur == SAVE_MERGE) {
+      merge = "MERGE";
+    }
   }
-
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MERGE", merge);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MODE",
+                            merge);
 
   char step[4] = {'\0'};
   uint8_t step_count =
@@ -74,7 +87,8 @@ void GridSavePage::display() {
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   itoa(step_count, step, 10);
 
-  // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 4, "STEP", step);
+  // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
+  // MCLGUI::s_menu_y + 4, "STEP", step);
 
   oled_display.setFont(&TomThumb);
   // draw data flow in the center
@@ -96,7 +110,6 @@ void GridSavePage::display() {
 
   oled_display.setCursor(74, MCLGUI::s_menu_y + 15);
   oled_display.print("GRID");
-
 
   oled_display.display();
 }

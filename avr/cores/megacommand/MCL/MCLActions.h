@@ -69,7 +69,7 @@ public:
 
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
-  void store_tracks_in_mem(int column, int row, bool merge);
+  void store_tracks_in_mem(int column, int row, uint8_t merge);
 
   void write_tracks(int column, int row);
   void send_tracks_to_devices();

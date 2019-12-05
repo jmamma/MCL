@@ -72,7 +72,7 @@ void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   //  MD.sendRequest(0x6b,00000011);
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
+void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -106,9 +106,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
 #endif
   bool storepattern = false;
 
-  if (MidiClock.state == 2) { merge = false; }
+  if (MidiClock.state == 2) { merge = 0; }
   if (save_md_tracks) {
-    if ((merge)) {
+    if (merge > 0) {
       DEBUG_PRINTLN("fetching pattern");
       if (!MD.getBlockingPattern(readpattern)) {
         DEBUG_PRINTLN("could not receive pattern");
