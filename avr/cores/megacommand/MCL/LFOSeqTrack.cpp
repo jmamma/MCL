@@ -102,8 +102,7 @@ void LFOSeqTrack::seq() {
 
   if (speed == 0) {
     sample_count += 2;
-  }
-  else {
+  } else {
     sample_hold += 1;
     if (sample_hold >= speed - 1) {
       sample_hold = 0;
@@ -128,7 +127,8 @@ void LFOSeqTrack::seq() {
   }
 }
 
-void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest, uint8_t value) {
+void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,
+                                                 uint8_t value) {
   for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
     if ((params[n].dest - 1 == track) && (params[n].param == dest)) {
       wav_table_state[n] = false;
@@ -138,8 +138,10 @@ void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest, ui
 }
 
 void LFOSeqTrack::reset_params_offset() {
-  for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    params[n].reset_param_offset();
+  if (enable) {
+    for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
+      params[n].reset_param_offset();
+    }
   }
 }
 
@@ -151,13 +153,13 @@ void LFOSeqTrack::update_params_offset() {
 
 void LFOSeqTrack::update_kit_params() {
   for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-  params[n].update_kit();
+    params[n].update_kit();
   }
 }
 
 void LFOSeqParam::update_kit() {
-   if (dest <= NUM_MD_TRACKS) {
-     MD.kit.params[dest - 1][param] = offset;
+  if (dest <= NUM_MD_TRACKS) {
+    MD.kit.params[dest - 1][param] = offset;
   } else {
     switch (dest - NUM_MD_TRACKS - 1) {
     case MD_FX_ECHO - MD_FX_ECHO:
