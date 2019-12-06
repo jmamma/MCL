@@ -146,7 +146,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
       note_interface.notes[i] = 3;
     }
-    bool merge = (encoders[0]->cur == 1);
+    uint8_t merge = encoders[0]->cur;
     mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
                                     grid_page.encoders[1]->getValue(), merge);
     GUI.setPage(&grid_page);
