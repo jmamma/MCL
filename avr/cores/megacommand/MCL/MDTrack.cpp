@@ -334,17 +334,12 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     get_track_from_kit(track, column);
   }
 
-  if (online) {
-    memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
-  }
-  // Normalise level and vol locks
-
-  if (merge > 0) {
+  if (merge > 0 && online) {
     DEBUG_PRINTLN("auto merge");
     //Set track length to equal MD pattern length on merge
     MDSeqTrack md_seq_track;
     if (merge == SAVE_MERGE) {
-    memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
+    memcpy(&(md_seq_track), &(mcl_seq.md_tracks[track]), sizeof(MDSeqTrackData));
     }
     if (merge == SAVE_MD) {
      md_seq_track.init();

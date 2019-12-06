@@ -71,6 +71,9 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
+  MDTrack() {
+  arraysize = 0;
+  }
   void init();
 
   void clear_track();
