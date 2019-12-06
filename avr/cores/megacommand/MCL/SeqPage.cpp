@@ -725,7 +725,7 @@ void opt_clear_step_locks_handler() {
 
         if (opt_midi_device_capture == DEVICE_MD) {
           mcl_seq.md_tracks[last_md_track].clear_step_locks(
-              SeqPage::step_select + SeqPage::page_select * 16);
+              n + SeqPage::page_select * 16);
         } else {
           //        mcl_seq.ext_tracks[last_ext_track].clear_step_locks(
           //          SeqPage::step_select + SeqPage::page_select * 16);
