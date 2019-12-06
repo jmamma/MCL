@@ -122,7 +122,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         return true;
       } else {
         md_exploit.off();
-        bool merge = (encoders[0]->cur == 1);
+        uint8_t merge = encoders[0]->cur;
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
                                         merge);
       }
