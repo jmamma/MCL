@@ -289,7 +289,7 @@ void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
       match = c;
     }
   }
-  if (match != 254) {
+  if (match != 255) {
     locks[match][step] = value + 1;
   }
   if (MidiClock.state == 2) {
