@@ -71,6 +71,7 @@ void MCLGfx::draw_evil() {
   oled_display.display();
 }
   delay(1800);
+  oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(oldfont);
 #endif
 }

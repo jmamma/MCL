@@ -1,6 +1,6 @@
 #include "MCL.h"
-#include "MCLSd.h"
 #include "MCLGfx.h"
+#include "MCLSd.h"
 /*
    Function for initialising the SD Card
 */
@@ -32,6 +32,13 @@ bool MCLSd::load_init() {
   bool ret = false;
   int b;
 
+  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+#ifdef OLED_DISPLAY
+    gfx.draw_evil();
+    oled_display.clearDisplay();
+#endif
+  }
+
   if (sd_state) {
 
     if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
@@ -47,10 +54,10 @@ bool MCLSd::load_init() {
             DEBUG_PRINTLN("Could not init cfg");
             return false;
           }
-          #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
           gfx.draw_evil();
           oled_display.clearDisplay();
-          #endif
+#endif
           proj.new_project();
           return true;
 
@@ -60,7 +67,7 @@ bool MCLSd::load_init() {
           DEBUG_PRINTLN("Project count greater than 0, try to load existing");
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN("error loading project");
-             proj.new_project();
+            proj.new_project();
             return true;
 
           } else {
@@ -69,7 +76,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-           proj.new_project();
+          proj.new_project();
           return true;
         }
       } else {
@@ -78,7 +85,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-         proj.new_project();
+        proj.new_project();
         return true;
       }
     } else {
@@ -86,7 +93,7 @@ bool MCLSd::load_init() {
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
-       proj.new_project();
+      proj.new_project();
       return true;
     }
     return true;
