@@ -29,12 +29,12 @@ public:
   void init() {
   length = 16;
   resolution = 1;
-  memset(&locks, NUM_MD_LOCKS * 64, 0);
-  memset(&locks_params, NUM_MD_LOCKS, 0);
+  memset(&locks, 0, NUM_MD_LOCKS * 64);
+  memset(&locks_params, 0, NUM_MD_LOCKS);
   pattern_mask = 0;
   lock_mask = 0;
-  memset(&conditional, 64, 0);
-  memset(&timing, 64, 12);
+  memset(&conditional, 0, 64);
+  memset(&timing, 12, 64);
   }
 };
 
