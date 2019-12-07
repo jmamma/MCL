@@ -116,31 +116,33 @@ void SeqPtcPage::config() {
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
   char buf[len1] = {'\0'};
-  char *str1;
-  char *str2;
+
+  char str_first[3] = "--";
+  char str_second[3] = "--";
   if (midi_device == DEVICE_MD) {
+    char *str1;
+    char *str2;
     str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
     str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+
+    m_strncpy_p(str_first, str1, len1);
+
+    m_strncpy_p(str_second, str2, len1);
   }
-  #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
   else {
-    char str_first[3] = "--";
     if (Analog4.connected) {
       strcpy(str_first, "A4");
     } else {
       strcpy(str_first, "MI");
     }
-    char str_second[3] = "T ";
-    str_second[1] = '0' + last_ext_track;
-    str1 = &str_first[0];
-    str2 = &str_second[0];
+    str_second[0] = 'T';
+    str_second[1] = last_ext_track + '1';
   }
-  #endif
-  m_strncpy_p(buf, str1, len1);
-  strncpy(info1, buf, len1);
+#endif
+  strncpy(info1, str_first, len1);
   strncat(info1, ">", len1);
-  m_strncpy_p(buf, str2, len1);
-  strncat(info1, buf, len1);
+  strncat(info1, str_second, len1);
 
   strcpy(info2, "CHROMAT");
   display_page_index = false;
@@ -449,7 +451,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       redisplay = true;
       return true;
     }
-     queue_redraw();
+    queue_redraw();
   }
 
   if (note_interface.is_event(event)) {
@@ -469,8 +471,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_PRESSED) {
 
       SET_BIT64(note_mask, pitch);
+      if (midi_device != DEVICE_MD) {
+        midi_device = device;
+        config();
+      } else {
+        config_encoders();
+      }
       midi_device = device;
-      config_encoders();
       trig_md(note, pitch);
     } else if (mask == EVENT_BUTTON_RELEASED) {
       CLEAR_BIT(note_mask, pitch);
@@ -572,6 +579,13 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
+  if (SeqPage::midi_device != midi_active_peering.get_device(UART2_PORT) ||
+      (last_ext_track != channel)) {
+
+    SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+    last_ext_track = channel;
+    seq_ptc_page.config();
+  }
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
