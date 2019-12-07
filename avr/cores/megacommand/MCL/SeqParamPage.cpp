@@ -88,7 +88,7 @@ void SeqParamPage::display() {
   if (seq_lock1.getValue() == 0) {
     GUI.put_string_at(4, "--");
   } else {
-    GUI.put_value_at2(4, seq_lock1.getValue() - 1);
+    GUI.put_value_at2(4, seq_lock1.getValue());
   }
   if (seq_param3.getValue() == 0) {
     GUI.put_string_at(7, "--");
@@ -104,7 +104,7 @@ void SeqParamPage::display() {
   if (seq_lock2.getValue() == 0) {
     GUI.put_string_at(11, "--");
   } else {
-    GUI.put_value_at2(11, seq_lock2.getValue() - 1);
+    GUI.put_value_at2(11, seq_lock2.getValue());
   }
   if (page_id == 0) {
     GUI.put_string_at(14, "A");
@@ -178,8 +178,8 @@ void SeqParamPage::loop() {
         }
         SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
 
-        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_lock1.cur;
-        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_lock2.cur;
+        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_lock1.cur + 1;
+        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_lock2.cur + 1;
       }
     }
     if (seq_param1.hasChanged() || seq_param3.hasChanged()) {
@@ -216,8 +216,8 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step];
-      seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step];
+      seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step] - 1;
+      seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step] - 1;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
