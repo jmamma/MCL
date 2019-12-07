@@ -19,34 +19,38 @@ void OscMixerPage::init() {
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    GUI.ignoreNextEvent(event->source);
+    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+
 #ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
+      oled_display.clearDisplay();
 #endif
-    GUI.setLine(GUI.LINE1);
-    GUI.put_string_at(0, "Render..");
-    LCD.goLine(0);
-    LCD.puts(GUI.lines[0].data);
+      GUI.setLine(GUI.LINE1);
+      GUI.put_string_at(0, "Render..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
 #ifdef OLED_DISPLAY
-    oled_display.display();
-    oled_display.clearDisplay();
+      oled_display.display();
+      oled_display.clearDisplay();
 #endif
-    wd.render();
-    GUI.put_string_at(0, "Sending..");
-    LCD.goLine(0);
-    LCD.puts(GUI.lines[0].data);
+      wd.render();
+      GUI.put_string_at(0, "Sending..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
 #ifdef OLED_DISPLAY
-    oled_display.display();
+      oled_display.display();
 #endif
-    // if (MD.connected) {
-    //  MD.rec_sample();
-    //}
-    // delay(250);
-    // in_sysex = 1;
-    wd.send();
-    // in_sysex = 0;
-    // delay(100);
-    // MD.press_no_button();
-    // MD.clear_all_windows_quick();
+      // if (MD.connected) {
+      //  MD.rec_sample();
+      //}
+      // delay(250);
+      // in_sysex = 1;
+      wd.send();
+      // in_sysex = 0;
+      // delay(100);
+      // MD.press_no_button();
+      // MD.clear_all_windows_quick();
+    }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
