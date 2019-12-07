@@ -380,10 +380,8 @@ void MCLActions::send_tracks_to_devices() {
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  /*Instruct the MD to reload the kit, as the kit changes won't update until
-   * the kit is reloaded*/
-  // if (reload == 1) {
-  MD.loadKit(MD.pattern.kit);
+  MD.loadKit(MD.kit.origPosition);
+
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
