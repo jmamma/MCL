@@ -311,9 +311,6 @@ void MDTrack::normalize() {
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
                                   uint8_t merge, bool online) {
-  /*Assign a track to Grid i*/
-  /*Extraact track data from received pattern and kit and store in track
-   * object*/
   active = MD_TRACK_TYPE;
 
   bool ret;
@@ -334,31 +331,32 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     get_track_from_kit(track, column);
   }
 
-  if (online) {
-    memcpy(&seq_data, &mcl_seq.md_tracks[track], sizeof(seq_data));
-  }
-  // Normalise level and vol locks
-
-  if (merge > 0) {
+  if (merge > 0 && online) {
     DEBUG_PRINTLN("auto merge");
-    //Set track length to equal MD pattern length on merge
     MDSeqTrack md_seq_track;
     if (merge == SAVE_MERGE) {
-    memcpy(&(md_seq_track), &(this->seq_data), sizeof(MDSeqTrackData));
+     //Load up internal sequencer data
+     memcpy(&(md_seq_track), &(mcl_seq.md_tracks[track]), sizeof(MDSeqTrackData));
     }
     if (merge == SAVE_MD) {
      md_seq_track.init();
      seq_data.length = length;
     }
+    //merge md pattern data with seq_data
     md_seq_track.merge_from_md(this);
+    //copy merged data in to this track object's seq data for writing to SD
     memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
   }
+
+  //Legacy, we no longer store the MD data.
   if (!storepattern) { clear_track(); }
 
+  //Normalise track levels
   if (mcl_cfg.auto_normalize == 1) {
     normalize();
   }
 
+  //Write data to sd
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);

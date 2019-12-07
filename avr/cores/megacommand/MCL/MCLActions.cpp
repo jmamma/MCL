@@ -169,8 +169,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     }
   }
 
-  // Only update row name if, the current name is empty
-  if (strlen(grid_page.row_headers[grid_page.cur_row].name) == 0) {
+  // Only update row name if, the current row is not active.
+  if (!grid_page.row_headers[grid_page.cur_row].active) {
     for (uint8_t c = 0; c < 17; c++) {
       grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
     }

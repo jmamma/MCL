@@ -600,10 +600,15 @@ void GridPage::prepare() {
 
 void rename_row() {
   char *my_title = "Row Name:";
-  if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
+  if (grid_page.row_headers[grid_page.cur_row].active) {
+    if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
                              my_title, 8)) {
-    grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
-    proj.file.sync();
+      grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
+      proj.file.sync();
+    }
+  }
+  else {
+  gfx.alert("Error","Row not active");
   }
 }
 
