@@ -30,6 +30,7 @@ void SeqParamPage::config() {
 void SeqParamPage::init() {
   config();
   md_exploit.on();
+  toggle_device = false;
   note_interface.state = true;
 
   seq_param1.max = 24;

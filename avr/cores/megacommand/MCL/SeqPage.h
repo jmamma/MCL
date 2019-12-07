@@ -51,6 +51,7 @@ public:
   static uint8_t step_select;
   static bool show_seq_menu;
   static bool show_step_menu;
+  static bool toggle_device;
 
   bool recording = false;
   bool display_page_index = true;

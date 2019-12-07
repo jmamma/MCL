@@ -27,7 +27,7 @@ void SeqRtrkPage::config() {
 
 void SeqRtrkPage::init() {
   SeqPage::init();
-
+  toggle_device = false;
   note_interface.state = true;
 
   seq_param1.max = 4;
@@ -86,12 +86,13 @@ void SeqRtrkPage::display() {
   draw_knob_frame();
 
   uint8_t len = seq_param3.getValue();
+/*
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
     len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
   }
 #endif
-
+*/
   char K[4];
   itoa(len, K, 10);
   draw_knob(2, "LEN", K);

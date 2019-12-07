@@ -26,6 +26,7 @@ void SeqRlckPage::config() {
 
 void SeqRlckPage::init() {
   SeqPage::init();
+  toggle_device = false;
   if (MidiClock.state == 2) {
     MD.midi_events.disable_live_kit_update();
   }
@@ -97,12 +98,13 @@ void SeqRlckPage::display() {
   draw_knob_frame();
 
   uint8_t len = seq_param3.getValue();
+/*
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
     len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
   }
 #endif
-
+*/
   char K[4];
   itoa(len, K, 10);
   draw_knob(2, "LEN", K);

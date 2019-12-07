@@ -8,6 +8,8 @@ uint8_t SeqPage::midi_device = DEVICE_MD;
 uint8_t SeqPage::page_count = 4;
 bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
+bool SeqPage::toggle_device = true;
+
 uint8_t SeqPage::step_select = 255;
 
 uint8_t opt_resolution = 1;
@@ -45,6 +47,7 @@ void SeqPage::init() {
   classic_display = false;
   oled_display.clearDisplay();
 #endif
+  toggle_device = true;
 }
 
 void SeqPage::cleanup() {
@@ -252,24 +255,24 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       step_select = note;
       show_step_menu = true;
       GUI.pushPage(&step_menu_page);
-  } else {
-    if (opt_midi_device_capture == DEVICE_MD) {
-      DEBUG_PRINTLN("okay using MD for length update");
-      opt_trackid = last_md_track + 1;
-      opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
     } else {
-      opt_trackid = last_ext_track + 1;
-      opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      if (opt_midi_device_capture == DEVICE_MD) {
+        DEBUG_PRINTLN("okay using MD for length update");
+        opt_trackid = last_md_track + 1;
+        opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+      } else {
+        opt_trackid = last_ext_track + 1;
+        opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      }
+      // capture current midi_device value
+      opt_midi_device_capture = midi_device;
+      // capture current page.
+      opt_seqpage_capture = this;
+      GUI.pushPage(&seq_menu_page);
+      show_seq_menu = true;
+      return true;
     }
-    // capture current midi_device value
-    opt_midi_device_capture = midi_device;
-    // capture current page.
-    opt_seqpage_capture = this;
-    GUI.pushPage(&seq_menu_page);
-    show_seq_menu = true;
-    return true;
   }
-}
 #endif
 
   // legacy enc push page switching code
@@ -820,12 +823,12 @@ void opt_reverse_track_handler() {
 
 void seq_menu_handler() {
 #ifndef OLED_DISPLAY
-SeqPage::show_seq_menu = false;
+  SeqPage::show_seq_menu = false;
 #endif
 }
 void step_menu_handler() {
 #ifndef OLED_DISPLAY
-SeqPage::show_step_menu = false;
+  SeqPage::show_step_menu = false;
 #endif
 }
 
@@ -929,6 +932,9 @@ void SeqPage::display() {
 void SeqPage::display() {
 
   bool is_md = (midi_device == DEVICE_MD);
+  if (!toggle_device) {
+    is_md = true;
+  }
 #ifdef EXT_TRACKS
   bool ext_is_a4 = Analog4.connected;
 #else
@@ -946,8 +952,12 @@ void SeqPage::display() {
 
   //  draw MD/EXT label
   const char *str_ext = "MI";
-  if (ext_is_a4) {
-    str_ext = "A4";
+  if (toggle_device) {
+    if (ext_is_a4) {
+      str_ext = "A4";
+    }
+  } else {
+    str_ext = "  ";
   }
   mcl_gui.draw_panel_toggle("MD", str_ext, is_md);
 
