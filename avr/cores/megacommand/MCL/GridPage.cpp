@@ -660,7 +660,12 @@ void GridPage::apply_slot_changes() {
 
   if (slot_copy == 1) {
 #ifdef OLED_DISPLAY
-  oled_display.textbox("COPY", "");
+  if (width > 0) {
+  oled_display.textbox("COPY ", "SLOTS");
+  }
+  else {
+  oled_display.textbox("COPY ", "SLOT");
+  }
 #endif
     mcl_clipboard.copy(getCol(), getRow(), width, height);
 
@@ -673,7 +678,12 @@ void GridPage::apply_slot_changes() {
     GridRowHeader header;
 #ifdef OLED_DISPLAY
     if (slot_clear == 1) {
-  oled_display.textbox("CLEAR", "");
+    if (width > 0) {
+    oled_display.textbox("CLEAR ", "SLOTS");
+    }
+    else {
+  oled_display.textbox("CLEAR ", "SLOT");
+    }
     }
     else if (slot_update == 1) {
   oled_display.textbox("CHAIN ", "UPDATE");
