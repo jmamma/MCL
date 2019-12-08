@@ -62,7 +62,7 @@ public:
   void reset_params_offset();
 
   bool wav_table_up_to_date(uint8_t n) {
-    return wav_table_state[2];
+    return wav_table_state[n];
   }
 
   void check_and_update_params_offset(uint8_t dest, uint8_t param, uint8_t value);

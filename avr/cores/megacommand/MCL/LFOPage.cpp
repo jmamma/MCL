@@ -468,10 +468,10 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    lfo_track->enable = !(lfo_track->enable);
-    if (!lfo_track->enable) {
+    if (lfo_track->enable) {
       lfo_track->reset_params_offset();
     }
+    lfo_track->enable = !(lfo_track->enable);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);

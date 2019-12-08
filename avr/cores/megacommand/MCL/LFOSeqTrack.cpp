@@ -45,13 +45,14 @@ void LFOSeqTrack::load_wav_table(uint8_t table) {
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
-  uint8_t offset = params[param].offset;
-  uint8_t depth = params[param].depth;
+  int8_t offset = params[param].offset;
+  int8_t depth = params[param].depth;
+  int8_t sample = wav_table[param][sample_count];
   int8_t val;
 
   switch (offset_behaviour) {
   case LFO_OFFSET_CENTRE:
-    val = offset + (wav_table[param][sample_count] - (depth / 2));
+    val = offset + (sample - (depth / 2));
     if (val > 127) {
       return 127;
     }
@@ -62,7 +63,8 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
     }
     break;
   case LFO_OFFSET_MAX:
-    val = offset - depth + wav_table[param][sample_count];
+    //val = 127 - sample;
+    val = offset - depth + sample;
     if (val > 127) {
       return 127;
     }
@@ -130,7 +132,7 @@ void LFOSeqTrack::seq() {
 void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,
                                                  uint8_t value) {
   for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    if ((params[n].dest - 1 == track) && (params[n].param == dest)) {
+    if ((params[n].dest == track) && (params[n].param == dest)) {
       wav_table_state[n] = false;
       params[n].offset = value;
     }
