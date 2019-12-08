@@ -15,6 +15,7 @@ public:
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
+  void draw_textbox(char *text, char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);

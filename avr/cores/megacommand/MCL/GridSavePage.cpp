@@ -6,7 +6,6 @@
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  encoders[0]->cur = 1;
   md_exploit.on();
   note_interface.state = true;
   curpage = S_PAGE;
@@ -74,7 +73,7 @@ void GridSavePage::display() {
     if (encoders[0]->cur == SAVE_MERGE) {
       modestr = "MERGE";
     }
-  } 
+  }
   mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MODE",
                             modestr);
 
@@ -121,6 +120,18 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
         return true;
       } else {
+
+        const char *modestr = "SEQ";
+        if (MidiClock.state != 2) {
+          if (encoders[0]->cur == SAVE_MD) {
+            modestr = "MD";
+          }
+          if (encoders[0]->cur == SAVE_MERGE) {
+            modestr = "MERGE";
+          }
+        }
+
+        mcl_gui.draw_textbox("SAVE ", modestr);
         md_exploit.off();
         uint8_t merge = encoders[0]->cur;
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
@@ -137,6 +148,17 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    const char *modestr = "SEQ";
+    if (MidiClock.state != 2) {
+      if (encoders[0]->cur == SAVE_MD) {
+        modestr = "MD";
+      }
+      if (encoders[0]->cur == SAVE_MERGE) {
+        modestr = "MERGE";
+      }
+    }
+
+    mcl_gui.draw_textbox("SAVE ", modestr);
 
     md_exploit.off();
     DEBUG_PRINTLN("notes");

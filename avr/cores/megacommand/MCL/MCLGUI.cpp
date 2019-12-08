@@ -1,5 +1,23 @@
 #include "MCL.h"
 
+void MCLGUI::draw_textbox(char *text, char *text2) {
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont();
+  uint8_t font_width = 6;
+  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t x = 64 - w / 2;
+  uint8_t y = 8;
+
+  oled_display.fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, BLACK);
+  oled_display.drawRect(x, y, w, 8 * 2, WHITE);
+  oled_display.setCursor(x + font_width, y + 4);
+  oled_display.print(text);
+  oled_display.print(text2);
+  oled_display.display();
+  oled_display.setFont(oldfont);
+
+}
+
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
   text_input_page.init_text(dst, title, len);

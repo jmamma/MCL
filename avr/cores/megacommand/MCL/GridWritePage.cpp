@@ -144,6 +144,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
         return true;
       } else {
+        mcl_gui.draw_textbox("CHAIN","");
         md_exploit.off();
         mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
       }
@@ -163,6 +164,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       note_interface.notes[i] = 3;
     }
     //   write_tracks_to_md(-1);
+    mcl_gui.draw_textbox("CHAIN + FX","");
     mcl_actions.write_original = 1;
     mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
     GUI.setPage(&grid_page);
