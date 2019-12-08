@@ -22,7 +22,7 @@ void SeqStepPage::config() {
   strncat(info1, ">", len1);
   m_strncpy_p(buf, str2, len1);
   strncat(info1, buf, len1);
-  strcpy(info2, "NOTE");
+  strcpy(info2, "STEP");
 
   // config menu
   config_as_trackedit();
