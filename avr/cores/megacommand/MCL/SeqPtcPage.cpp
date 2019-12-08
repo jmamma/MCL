@@ -506,18 +506,26 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (midi_device == DEVICE_MD) {
 
       if (poly_count > 1) {
+#ifdef OLED_DISPLAY
+            oled_display.textbox("CLEAR ", "POLY TRACKS");
+#endif
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-
-            mcl_seq.md_tracks[c].clear_track();
+           mcl_seq.md_tracks[c].clear_track();
           }
         }
       } else {
-        mcl_seq.md_tracks[last_md_track].clear_track();
+#ifdef OLED_DISPLAY
+            oled_display.textbox("CLEAR ", "TRACK");
+#endif
+              mcl_seq.md_tracks[last_md_track].clear_track();
       }
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+            oled_display.textbox("CLEAR ", "EXT TRACK");
+#endif
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
 #endif
