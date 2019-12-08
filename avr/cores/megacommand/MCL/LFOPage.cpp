@@ -338,7 +338,7 @@ void LFOPage::display() {
     }
 
     x = mcl_gui.knob_x0 + 2;
-    oled_display.setCursor(x + 4, 7);
+    oled_display.setCursor(x + 5, 6);
     oled_display.print("WAV");
 
     draw_knob(1, encoders[1], "SPD");
@@ -350,26 +350,26 @@ void LFOPage::display() {
   const char *info2;
 
   if (page_mode) {
-    info1 = "LFO>DST";
+    info2 = "LFO>DST";
   } else {
-    info1 = "LFO>MOD";
+    info2 = "LFO>MOD";
   }
 
   switch (lfo_track->mode) {
   case LFO_MODE_FREE:
-    info2 = "FREE";
+    info1 = "FREE";
     break;
   case LFO_MODE_TRIG:
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
                       lfo_track->length, true);
-    info2 = "TRIG";
+    info1 = "TRIG";
     break;
   case LFO_MODE_ONE:
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_pattern_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
                       lfo_track->length, true);
-    info2 = "ONE";
+    info1 = "ONE";
     break;
   }
   mcl_gui.draw_panel_labels(info1, info2);
