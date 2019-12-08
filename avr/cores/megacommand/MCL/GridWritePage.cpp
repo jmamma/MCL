@@ -169,7 +169,12 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     }
     //   write_tracks_to_md(-1);
 #ifdef OLED_DISPLAY
+    if (MidiClock.state != 2) {
     oled_display.textbox("CHAIN PAT", " + FX");
+    }
+    else {
+    oled_display.textbox("CHAIN PAT", "");
+    }
 #endif
     mcl_actions.write_original = 1;
     mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
