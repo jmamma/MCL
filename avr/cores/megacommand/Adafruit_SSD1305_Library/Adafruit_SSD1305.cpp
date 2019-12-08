@@ -27,10 +27,10 @@ redistribution
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1305.h"
+#include "glcdfont.c"
 #include <SPI.h>
 #include <Wire.h>
 #include <stdlib.h>
-#include "glcdfont.c"
 
 #ifdef SPI_HAS_TRANSACTION
 SPISettings oledspi = SPISettings(16000000, MSBFIRST, SPI_MODE0);
@@ -241,11 +241,11 @@ void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
 
 void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
                                 uint16_t color) {
-  //for (int16_t x2 = x + w; x < x2; ++x)
+  // for (int16_t x2 = x + w; x < x2; ++x)
   //{
-    //drawFastVLine(x, y, h, color);
+  // drawFastVLine(x, y, h, color);
   //}
-  //return;
+  // return;
   if (x < 0) {
     x = 0;
   }
@@ -535,16 +535,22 @@ void Adafruit_SSD1305::data(uint8_t c) {
   }
 }
 
-
 void Adafruit_SSD1305::textbox(char *text, char *text2, uint16_t delay) {
   textbox_clock = slowclock;
   strncpy(textbox_str, text, sizeof(textbox_str));
   strncpy(textbox_str2, text2, sizeof(textbox_str));
   textbox_delay = delay;
+  textbox_enabled = true;
 }
 
 void Adafruit_SSD1305::display(void) {
-  if (clock_diff(textbox_clock, slowclock) < textbox_delay) { draw_textbox(textbox_str, textbox_str2); }
+  if (textbox_enabled) {
+    if (clock_diff(textbox_clock, slowclock) < textbox_delay) {
+      draw_textbox(textbox_str, textbox_str2);
+    } else {
+      textbox_enabled = false;
+    }
+  }
   uint16_t i = 0;
   uint8_t page;
   if (SSD1305_LCDHEIGHT == 64)

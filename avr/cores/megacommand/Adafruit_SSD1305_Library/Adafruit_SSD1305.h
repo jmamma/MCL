@@ -133,6 +133,7 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   virtual void fillScreen(uint16_t color);
 
 private:
+  bool textbox_enabled = false;
   uint16_t textbox_delay;
   uint16_t textbox_clock;
   char textbox_str[12];
