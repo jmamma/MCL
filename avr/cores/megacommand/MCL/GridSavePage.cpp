@@ -125,6 +125,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         const char *modestr = "SEQ";
 #ifdef OLED_DISPLAY
         oled_display.textbox("SAVE SLOTS: ", modestr);
+        oled_display.display();
 #endif
         if (MidiClock.state != 2) {
           if (encoders[0]->cur == SAVE_MD) {
@@ -162,6 +163,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     }
 #ifdef OLED_DISPLAY
     oled_display.textbox("SAVE PAT: ", modestr);
+    oled_display.display();
 #endif
     md_exploit.off();
     DEBUG_PRINTLN("notes");

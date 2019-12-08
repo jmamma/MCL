@@ -594,19 +594,19 @@ void opt_resolution_handler() {
 void opt_clear_track_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
     if (opt_clear == 2) {
- #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR MD ", "TRACKS");
+#ifdef OLED_DISPLAY
+      oled_display.textbox("CLEAR MD ", "TRACKS");
 #endif
-  
+
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
- #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR TRACK", "");
+#ifdef OLED_DISPLAY
+      oled_display.textbox("CLEAR TRACK", "");
 #endif
- 
-            mcl_seq.md_tracks[last_md_track].clear_track();
+
+      mcl_seq.md_tracks[last_md_track].clear_track();
     }
   }
 #ifdef EXT_TRACKS
@@ -614,15 +614,15 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
 #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR TRACK", "");
+        oled_display.textbox("CLEAR TRACK", "");
 #endif
         mcl_seq.ext_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
- #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR EXT ", "TRACKS");
+#ifdef OLED_DISPLAY
+      oled_display.textbox("CLEAR EXT ", "TRACKS");
 #endif
-            mcl_seq.ext_tracks[last_ext_track].clear_track();
+      mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
   }
 #endif
@@ -634,16 +634,15 @@ void opt_clear_locks_handler() {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
 #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR ALL ", "LOCKS");
+        oled_display.textbox("CLEAR MD ", "LOCKS");
 #endif
 
         mcl_seq.md_tracks[n].clear_locks();
       }
     } else if (opt_clear == 1) {
 #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR TRACK ", "LOCKS");
+      oled_display.textbox("CLEAR ", "LOCKS");
 #endif
-
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
@@ -673,26 +672,38 @@ void opt_clear_all_locks_handler() {
 }
 
 void opt_copy_track_handler() {
-#ifdef OLED_DISPLAY
-  oled_display.textbox("COPY TRACK", "");
-#endif
   if (opt_copy == 2) {
+
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("COPY MD ", "TRACKS");
+#endif
+
       mcl_clipboard.copy_sequencer();
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("COPY EXT ", "TRACKS");
+#endif
       mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
     }
 #endif
   }
   if (opt_copy == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("COPY TRACK", "");
+#endif
       mcl_clipboard.copy_track = last_md_track;
       mcl_clipboard.copy_sequencer_track(last_md_track);
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("COPY EXT ", "TRACK");
+#endif
+
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
       mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
     }
@@ -702,26 +713,36 @@ void opt_copy_track_handler() {
 }
 
 void opt_paste_track_handler() {
-#ifdef OLED_DISPLAY
-  oled_display.textbox("PASTE TRACK", "");
-#endif
   if (opt_paste == 2) {
+
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("PASTE MD ", "TRACKS");
+#endif
       mcl_clipboard.paste_sequencer();
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("PASTE EXT ", "TRACKS");
+#endif
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
 #endif
   }
   if (opt_paste == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("PASTE TRACK", "");
+#endif
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_md_track);
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("PASTE EXT ", "TRACK");
+#endif
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_ext_track + NUM_MD_TRACKS);
     }
@@ -757,9 +778,9 @@ void opt_mute_step_handler() {
 
 void opt_clear_step_locks_handler() {
 #ifdef OLED_DISPLAY
-oled_display.textbox("CLEAR STEP: ", "LOCKS");
+  oled_display.textbox("CLEAR STEP: ", "LOCKS");
 #endif
-if (opt_clear_step == 1) {
+  if (opt_clear_step == 1) {
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
       if (note_interface.notes[n] == 1) {
 
@@ -833,12 +854,18 @@ void opt_reverse_track_handler() {
 
   if (opt_reverse == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      //oled_display.textbox("REVERSE ", "MD TRACKS");
+#endif
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].reverse();
       }
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      //oled_display.textbox("REVERSE ", "EXT TRACKS");
+#endif
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].reverse();
       }
@@ -848,10 +875,16 @@ void opt_reverse_track_handler() {
 
   if (opt_reverse == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
+#ifdef OLED_DISPLAY
+      //oled_display.textbox("REVERSE ", "TRACK");
+#endif
       mcl_seq.md_tracks[last_md_track].reverse();
     }
 #ifdef EXT_TRACKS
     else {
+#ifdef OLED_DISPLAY
+      //oled_display.textbox("REVERSE ", "EXT TRACK");
+#endif
       mcl_seq.ext_tracks[last_ext_track].reverse();
     }
 #endif
