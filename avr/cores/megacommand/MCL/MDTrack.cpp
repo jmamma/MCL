@@ -66,7 +66,9 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
             if (IS_BIT_SET64(trigPattern, s)) {
 
               locks[n].step = s;
-              locks[n].param_number = i;
+              DEBUG_PRINTLN("storing lock");
+              locks[n].param_number = i; 
+              DEBUG_PRINTLN(locks[n].param_number);
               locks[n].value = MD.pattern.locks[idx][s];
               n++;
             }
@@ -79,6 +81,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   //  itoa(n,&str[2],10);
 
   arraysize = n;
+  DEBUG_PRINTLN(arraysize);
  
   patternOrigPosition = MD.pattern.origPosition;
 }
@@ -347,7 +350,9 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     //copy merged data in to this track object's seq data for writing to SD
     memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
   }
-
+  else {
+     memcpy(&(this->seq_data), &(mcl_seq.md_tracks[track]), sizeof(MDSeqTrackData));
+  }
   //Legacy, we no longer store the MD data.
   if (!storepattern) { clear_track(); }
 
