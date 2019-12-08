@@ -148,6 +148,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       } else {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CHAIN SLOTS", "");
+        oled_display.display();
 #endif
         md_exploit.off();
         mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
@@ -171,9 +172,11 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
     if (MidiClock.state != 2) {
     oled_display.textbox("CHAIN PAT", " + FX");
+    oled_display.display();
     }
     else {
     oled_display.textbox("CHAIN PAT", "");
+    oled_display.display();
     }
 #endif
     mcl_actions.write_original = 1;

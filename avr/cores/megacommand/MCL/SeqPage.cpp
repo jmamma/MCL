@@ -594,21 +594,35 @@ void opt_resolution_handler() {
 void opt_clear_track_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
     if (opt_clear == 2) {
+ #ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR MD ", "TRACKS");
+#endif
+  
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
-      mcl_seq.md_tracks[last_md_track].clear_track();
+ #ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR TRACK", "");
+#endif
+ 
+            mcl_seq.md_tracks[last_md_track].clear_track();
     }
   }
 #ifdef EXT_TRACKS
   else {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR TRACK", "");
+#endif
         mcl_seq.ext_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
-      mcl_seq.ext_tracks[last_ext_track].clear_track();
+ #ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR EXT ", "TRACKS");
+#endif
+            mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
   }
 #endif
@@ -619,9 +633,17 @@ void opt_clear_locks_handler() {
   if (opt_midi_device_capture == DEVICE_MD) {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR ALL ", "LOCKS");
+#endif
+
         mcl_seq.md_tracks[n].clear_locks();
       }
     } else if (opt_clear == 1) {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("CLEAR TRACK ", "LOCKS");
+#endif
+
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
@@ -651,6 +673,9 @@ void opt_clear_all_locks_handler() {
 }
 
 void opt_copy_track_handler() {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("COPY TRACK", "");
+#endif
   if (opt_copy == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.copy_sequencer();
@@ -677,6 +702,9 @@ void opt_copy_track_handler() {
 }
 
 void opt_paste_track_handler() {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("PASTE TRACK", "");
+#endif
   if (opt_paste == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
       mcl_clipboard.paste_sequencer();
@@ -703,11 +731,17 @@ void opt_paste_track_handler() {
 }
 
 void opt_copy_step_handler() {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("COPY STEP", "");
+#endif
   mcl_seq.md_tracks[last_md_track].copy_step(
       SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
 
 void opt_paste_step_handler() {
+#ifdef OLED_DISPLAY
+  oled_display.textbox("PASTE STEP", "");
+#endif
   mcl_seq.md_tracks[last_md_track].paste_step(
       SeqPage::step_select + SeqPage::page_select * 16, &mcl_clipboard.step);
 }
@@ -722,7 +756,10 @@ void opt_mute_step_handler() {
 }
 
 void opt_clear_step_locks_handler() {
-  if (opt_clear_step == 1) {
+#ifdef OLED_DISPLAY
+oled_display.textbox("CLEAR STEP: ", "LOCKS");
+#endif
+if (opt_clear_step == 1) {
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
       if (note_interface.notes[n] == 1) {
 

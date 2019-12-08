@@ -123,7 +123,7 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   uint8_t getBuffer(uint16_t i);
   bool redisplay = true;
 
-  void textbox(char *text, char *text2, uint16_t delay = 800, displaynow = false);
+  void textbox(char *text, char *text2, uint16_t delay = 800);
   void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);

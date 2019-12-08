@@ -659,16 +659,26 @@ void GridPage::apply_slot_changes() {
   }
 
   if (slot_copy == 1) {
-
+#ifdef OLED_DISPLAY
+  oled_display.textbox("COPY", "");
+#endif
     mcl_clipboard.copy(getCol(), getRow(), width, height);
 
   }
 
   else if (slot_paste == 1) {
+    oled_display.textbox("PASTE", "");
     mcl_clipboard.paste(getCol(), getRow());
   } else {
     GridRowHeader header;
-
+#ifdef OLED_DISPLAY
+    if (slot_clear == 1) {
+  oled_display.textbox("CLEAR", "");
+    }
+    else if (slot_update == 1) {
+  oled_display.textbox("CHAIN ", "UPDATE");
+    }
+#endif
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       header.read(y + getRow());
 
