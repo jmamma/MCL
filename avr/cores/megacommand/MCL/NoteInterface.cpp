@@ -23,7 +23,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     DEBUG_PRINTLN("note interface disabled");
     return;
   }
-  if (note_num > 20) {
+ if (note_num > 20) {
     return;
   }
   if (notes[note_num] != 1) {
@@ -32,7 +32,10 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   if (note_num < 16) {
     note_hold = slowclock;
   }
-
+  if (IS_BIT_SET64(ignore_next_mask, note_num)) {
+     CLEAR_BIT64(ignore_next_mask, note_num);
+     return;
+  }
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = EVENT_BUTTON_PRESSED;
@@ -43,8 +46,13 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
-  DEBUG_PRINTLN(note_num);
+ DEBUG_PRINTLN(note_num);
   notes[note_num] = 3;
+  if (IS_BIT_SET64(ignore_next_mask, note_num)) {
+     CLEAR_BIT64(ignore_next_mask, note_num);
+     return;
+  }
+
   DEBUG_PRINTLN("note off");
   gui_event_t event;
   event.source = note_num + 128;

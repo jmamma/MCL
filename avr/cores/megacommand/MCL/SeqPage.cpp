@@ -86,6 +86,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       // TI + SHIFT2 = select track.
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
         opt_trackid = track + 1;
+        note_interface.ignoreNextEvent(track);
         select_track(device, track);
         redisplay = true;
         seq_menu_page.select_item(0);
@@ -124,6 +125,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       }
 #endif
       encoders[2]->cur = step;
+      note_interface.ignoreNextEvent(track);
       if (event->mask == EVENT_BUTTON_RELEASED) {
         note_interface.notes[track] = 0;
       }
