@@ -970,6 +970,20 @@ void Adafruit_GFX::setRotation(uint8_t x) {
   }
 }
 
+void Adafruit_GFX::draw_textbox(char *text, char *text2) {
+  auto oldfont = getFont();
+  setFont();
+  uint8_t font_width = 6;
+  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t x = 64 - w / 2;
+  uint8_t y = 8;
+  fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, 0);
+  drawRect(x, y, w, 8 * 2, 1);
+  setCursor(x + font_width, y + 4);
+  print(text);
+  print(text2);
+  setFont(oldfont);
+}
 // Enable (or disable) Code Page 437-compatible charset.
 // There was an error in glcdfont.c for the longest time -- one character
 // (#176, the 'light shade' block) was missing -- this threw off the index

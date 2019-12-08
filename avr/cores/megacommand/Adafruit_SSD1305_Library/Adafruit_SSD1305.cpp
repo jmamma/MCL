@@ -30,7 +30,6 @@ redistribution
 #include <SPI.h>
 #include <Wire.h>
 #include <stdlib.h>
-
 #include "glcdfont.c"
 
 #ifdef SPI_HAS_TRANSACTION
@@ -536,7 +535,16 @@ void Adafruit_SSD1305::data(uint8_t c) {
   }
 }
 
+
+void Adafruit_SSD1305::textbox(char *text, char *text2, uint16_t delay) {
+  textbox_clock = slowclock;
+  strncpy(textbox_str, text, sizeof(textbox_str));
+  strncpy(textbox_str2, text2, sizeof(textbox_str));
+  textbox_delay = delay;
+}
+
 void Adafruit_SSD1305::display(void) {
+  if (clock_diff(textbox_clock, slowclock) < textbox_delay) { draw_textbox(textbox_str, textbox_str2); }
   uint16_t i = 0;
   uint8_t page;
   if (SSD1305_LCDHEIGHT == 64)

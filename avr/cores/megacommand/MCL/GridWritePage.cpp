@@ -10,12 +10,12 @@ void GridWritePage::setup() {
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
   patternswitch = 1;
-    ((MCLEncoder *)encoders[3])->max = 6;
-    if (mode == WRITE_PAGE) {
-      encoders[3]->cur = 4;
-      mode = CHAIN_PAGE;
-    }
-    ((MCLEncoder *)encoders[2])->max = 1;
+  ((MCLEncoder *)encoders[3])->max = 6;
+  if (mode == WRITE_PAGE) {
+    encoders[3]->cur = 4;
+    mode = CHAIN_PAGE;
+  }
+  ((MCLEncoder *)encoders[2])->max = 1;
 
   // MD.requestKit(MD.currentKit);
   md_exploit.on();
@@ -93,7 +93,7 @@ void GridWritePage::display() {
 
   mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
 
-  char K[4] = { '\0' };
+  char K[4] = {'\0'};
 
   // draw step count
   uint8_t step_count =
@@ -101,7 +101,8 @@ void GridWritePage::display() {
       (64 *
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
   itoa(step_count, K, 10);
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "STEP", K);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "STEP",
+                            K);
 
   // draw quantize
   strcpy(K, "---");
@@ -109,7 +110,8 @@ void GridWritePage::display() {
     uint8_t x = 1 << encoders[3]->getValue();
     itoa(x, K, 10);
   }
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26, MCLGUI::s_menu_y + 4, "QUANT", K);
+  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
+                            MCLGUI::s_menu_y + 4, "QUANT", K);
 
   oled_display.setFont(&TomThumb);
   // draw data flow in the center
@@ -144,7 +146,9 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
         return true;
       } else {
-        mcl_gui.draw_textbox("CHAIN","");
+#ifdef OLED_DISPLAY
+        oled_display.textbox("CHAIN SLOTS", "");
+#endif
         md_exploit.off();
         mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
       }
@@ -164,7 +168,9 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       note_interface.notes[i] = 3;
     }
     //   write_tracks_to_md(-1);
-    mcl_gui.draw_textbox("CHAIN + FX","");
+#ifdef OLED_DISPLAY
+    oled_display.textbox("CHAIN PAT", " + FX");
+#endif
     mcl_actions.write_original = 1;
     mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
     GUI.setPage(&grid_page);

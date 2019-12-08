@@ -22,7 +22,7 @@ All text above, and the splash screen must be included in any redistribution
 #endif
 
 #include <Adafruit_GFX.h>
-
+#include "helpers.h"
 #define adagfx_swap(a, b) { uint8_t t = a; a = b; b = t; }
 
 #define BLACK 0
@@ -121,6 +121,9 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   void invertDisplay(uint8_t i);
   void setBrightness(uint8_t i);
   uint8_t getBuffer(uint16_t i);
+  bool redisplay = true;
+
+  void textbox(char *text, char *text2, uint16_t delay = 800);
   void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);
@@ -130,6 +133,10 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   virtual void fillScreen(uint16_t color);
 
 private:
+  uint16_t textbox_delay;
+  uint16_t textbox_clock;
+  char textbox_str[12];
+  char textbox_str2[12];
   uint8_t _i2caddr;
   int8_t sid, sclk, dc, rst, cs;
   void spixfer(uint8_t x);

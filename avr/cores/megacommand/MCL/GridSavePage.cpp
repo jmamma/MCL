@@ -121,7 +121,11 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         return true;
       } else {
 
+        uint16_t last_clock = slowclock;
         const char *modestr = "SEQ";
+#ifdef OLED_DISPLAY
+        oled_display.textbox("SAVE SLOTS: ", modestr);
+#endif
         if (MidiClock.state != 2) {
           if (encoders[0]->cur == SAVE_MD) {
             modestr = "MD";
@@ -131,7 +135,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
           }
         }
 
-        mcl_gui.draw_textbox("SAVE ", modestr);
         md_exploit.off();
         uint8_t merge = encoders[0]->cur;
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
@@ -157,9 +160,9 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         modestr = "MERGE";
       }
     }
-
-    mcl_gui.draw_textbox("SAVE ", modestr);
-
+#ifdef OLED_DISPLAY
+    oled_display.textbox("SAVE PAT: ", modestr);
+#endif
     md_exploit.off();
     DEBUG_PRINTLN("notes");
     DEBUG_DUMP(note_interface.notes_all_off());
