@@ -1,6 +1,7 @@
 #include "MCL.h"
 
 void MCLGUI::draw_textbox(char *text, char *text2) {
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
   uint8_t font_width = 6;
@@ -15,7 +16,7 @@ void MCLGUI::draw_textbox(char *text, char *text2) {
   oled_display.print(text2);
   oled_display.display();
   oled_display.setFont(oldfont);
-
+#endif
 }
 
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {

@@ -33,7 +33,6 @@ public:
   uint8_t params[16][3];
   char info_line2[9];
   uint8_t display_mode;
-  bool initializing = false;
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {

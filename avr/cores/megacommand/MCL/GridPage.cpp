@@ -672,7 +672,9 @@ void GridPage::apply_slot_changes() {
   }
 
   else if (slot_paste == 1) {
+#ifdef OLED_DISPLAY
     oled_display.textbox("PASTE", "");
+#endif
     mcl_clipboard.paste(getCol(), getRow());
   } else {
     GridRowHeader header;
