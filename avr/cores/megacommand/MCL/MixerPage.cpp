@@ -68,8 +68,8 @@ void MixerPage::setup() {
 void MixerPage::init() {
   level_pressmode = 0;
   for (uint8_t i = 0; i < 4; i++) {
-  encoders[i]->cur = 64;
-  encoders[i]->old = 64;
+    encoders[i]->cur = 64;
+    encoders[i]->old = 64;
   }
   bool switch_tracks = false;
   note_interface.state = true;
@@ -84,7 +84,6 @@ void MixerPage::init() {
   oled_display.clearDisplay();
   oled_draw_routing();
   set_display_mode(MODEL_LEVEL);
-  initializing = true;
   for (uint8_t i = 0; i < 16; i++) {
     uint8_t scaled_level =
         (uint8_t)(((float)MD.kit.levels[i] / (float)127) * (float)FADER_LEN);
@@ -213,13 +212,7 @@ void encoder_lastparam_handle(Encoder *enc) {
 
 void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
 
-  if (initializing) {
-    if (param == MODEL_FLTQ) {
-      initializing = false;
-    }
-  } else {
-    set_display_mode(param);
-  }
+  set_display_mode(param);
 
   int dir = enc->getValue() - enc->old;
   int newval;
