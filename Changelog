@@ -25,6 +25,7 @@ Enahanced Graphics:
 	GUI popups.
 	Loading screens.
 	Graphical Encoders.
+    User action feedback textboxes for almost all user actions.
 
 Improved Project and File navigation.
     Abiltiy to rename/delete files/projects
@@ -40,6 +41,12 @@ Sequencer Track Menu and Trig Menu.
 
     Trig menu accessible by pressing a trig and then holding shift 2. Allows
 	copying/pasting of trigs, adding/remove trig mutes clearing locks.
+
+Save/Chain Pages:
+    3 Save modes now: SEQ, MD, MERGE. (MD and MERGE only available when
+	sequencer is stopped and are used for copying MD pattern data)
+
+	New GUI popup menu.
 
 Grid Page:
   Slot menu, provides copy + paste options. Encoders 3 and 4 are used to
@@ -72,6 +79,7 @@ Firmware Performance & MIDI Timing :
   Improved latency coompensation for realtime recording on Chromatic and
   Record pages.
   Device peering now works from any page.
+  Numerous bug and workflow fixes.
 
 MCL 2.40 25/06/2019
 
