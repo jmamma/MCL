@@ -67,10 +67,10 @@ void MixerPage::setup() {
 
 void MixerPage::init() {
   level_pressmode = 0;
-  encoders[0]->cur = 60;
-  encoders[1]->cur = 60;
-  encoders[2]->cur = 60;
-  encoders[3]->cur = 60;
+  for (uint8_t i = 0; i < 4; i++) {
+  encoders[i]->cur = 64;
+  encoders[i]->old = 64;
+  }
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
