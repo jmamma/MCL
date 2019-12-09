@@ -59,6 +59,9 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
+#ifdef OLED_DISPLAY
+    oled_display.textbox("DISPLAY ","MIRROR");
+#endif
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif
