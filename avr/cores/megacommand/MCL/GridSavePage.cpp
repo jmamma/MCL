@@ -101,9 +101,23 @@ void GridSavePage::display() {
     oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
     mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
   } else {
-    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
-    oled_display.print(modestr);
-    mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
+    if (encoders[0]->cur == SAVE_SEQ || MidiClock.state == 2) {
+        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 12);
+        oled_display.print("SND");
+        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
+        oled_display.print("SEQ");
+
+        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
+        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2,
+                                   WHITE);
+        oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
+        mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
+      }
+    else {
+      oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
+      oled_display.print(modestr);
+      mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
+    }
   }
 
   oled_display.setCursor(data_x + 24, MCLGUI::s_menu_y + 15);

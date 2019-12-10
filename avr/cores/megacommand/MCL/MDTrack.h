@@ -13,6 +13,7 @@
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
 
+#define SAVE_SEQ 0
 #define SAVE_MD 1
 #define SAVE_MERGE 2
 
@@ -71,9 +72,6 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
-  MDTrack() {
-  arraysize = 0;
-  }
   void init();
 
   void clear_track();
