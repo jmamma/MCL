@@ -32,7 +32,7 @@ bool MCLSd::load_init() {
   bool ret = false;
   int b;
 
-  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+  if (BUTTON_DOWN(Buttons.BUTTON2)) {
 #ifdef OLED_DISPLAY
     gfx.draw_evil();
     oled_display.clearDisplay();

@@ -67,7 +67,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
 
               locks[n].step = s;
               DEBUG_PRINTLN("storing lock");
-              locks[n].param_number = i; 
+              locks[n].param_number = i;
               DEBUG_PRINTLN(locks[n].param_number);
               locks[n].value = MD.pattern.locks[idx][s];
               n++;
@@ -82,10 +82,9 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
 
   arraysize = n;
   DEBUG_PRINTLN(arraysize);
- 
+
   patternOrigPosition = MD.pattern.origPosition;
 }
-
 
 bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
@@ -116,11 +115,17 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 
   memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
 
-  if ((machine.trigGroup < 16) && (machine.trigGroup != column)) { kit->trigGroups[tracknumber] = machine.trigGroup; }
-  else { kit->trigGroups[tracknumber] = 255; }
+  if ((machine.trigGroup < 16) && (machine.trigGroup != column)) {
+    kit->trigGroups[tracknumber] = machine.trigGroup;
+  } else {
+    kit->trigGroups[tracknumber] = 255;
+  }
 
-  if ((machine.muteGroup < 16) && (machine.muteGroup != column)) { kit->muteGroups[tracknumber] = machine.muteGroup; }
-  else { kit->muteGroups[tracknumber] = 255; }
+  if ((machine.muteGroup < 16) && (machine.muteGroup != column)) {
+    kit->muteGroups[tracknumber] = machine.muteGroup;
+  } else {
+    kit->muteGroups[tracknumber] = 255;
+  }
 }
 
 void MDTrack::init() {
@@ -215,7 +220,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
   }
 
   if (active == EMPTY_TRACK_TYPE) {
-  seq_data.length = 16;
+    seq_data.length = 16;
   }
 
   return true;
@@ -312,8 +317,9 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool storepattern,
-                                  uint8_t merge, bool online) {
+bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
+                                  bool storepattern, uint8_t merge,
+                                  bool online) {
   active = MD_TRACK_TYPE;
 
   bool ret;
@@ -329,39 +335,43 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     return false;
   }
 
-  if (track != 255) {
-    if ((storepattern) || (merge > 0)) { get_track_from_pattern(track, column); }
+  if (track != 255 && online == true) {
+    if ((storepattern) || (merge > 0)) {
+      get_track_from_pattern(track, column);
+    }
     get_track_from_kit(track, column);
-  }
 
-  if (merge > 0 && online) {
-    DEBUG_PRINTLN("auto merge");
-    MDSeqTrack md_seq_track;
-    if (merge == SAVE_MERGE) {
-     //Load up internal sequencer data
-     memcpy(&(md_seq_track), &(mcl_seq.md_tracks[track]), sizeof(MDSeqTrackData));
+    if (merge > 0) {
+      DEBUG_PRINTLN("auto merge");
+      MDSeqTrack md_seq_track;
+      if (merge == SAVE_MERGE) {
+        // Load up internal sequencer data
+        memcpy(&(md_seq_track), &(mcl_seq.md_tracks[track]),
+               sizeof(MDSeqTrackData));
+      }
+      if (merge == SAVE_MD) {
+        md_seq_track.init();
+        seq_data.length = length;
+      }
+      // merge md pattern data with seq_data
+      md_seq_track.merge_from_md(this);
+      // copy merged data in to this track object's seq data for writing to SD
+      memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
+    } else {
+      memcpy(&(this->seq_data), &(mcl_seq.md_tracks[track]),
+             sizeof(MDSeqTrackData));
     }
-    if (merge == SAVE_MD) {
-     md_seq_track.init();
-     seq_data.length = length;
+    // Legacy, we no longer store the MD data.
+    if (!storepattern) {
+      clear_track();
     }
-    //merge md pattern data with seq_data
-    md_seq_track.merge_from_md(this);
-    //copy merged data in to this track object's seq data for writing to SD
-    memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-  }
-  else {
-     memcpy(&(this->seq_data), &(mcl_seq.md_tracks[track]), sizeof(MDSeqTrackData));
-  }
-  //Legacy, we no longer store the MD data.
-  if (!storepattern) { clear_track(); }
 
-  //Normalise track levels
-  if (mcl_cfg.auto_normalize == 1) {
-    normalize();
+    // Normalise track levels
+    if (mcl_cfg.auto_normalize == 1) {
+      normalize();
+    }
   }
-
-  //Write data to sd
+  // Write data to sd
   len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
@@ -370,13 +380,13 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track, bool s
     return false;
   }
   if (storepattern) {
-  ret = mcl_sd.write_data((uint8_t *)&(this->locks[0]), arraysize * 3,
-                          &proj.file);
+    ret = mcl_sd.write_data((uint8_t *)&(this->locks[0]), arraysize * 3,
+                            &proj.file);
 
-  if (!ret) {
-    DEBUG_PRINTLN("write failed");
-    return false;
-  }
+    if (!ret) {
+      DEBUG_PRINTLN("write failed");
+      return false;
+    }
   }
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
