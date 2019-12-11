@@ -94,6 +94,9 @@ bool MCLSd::load_init() {
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
+#ifdef OLED_DISPLAY
+      oled_display.clearDisplay();
+#endif
       proj.new_project();
       return true;
     }
