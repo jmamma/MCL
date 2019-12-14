@@ -39,8 +39,9 @@ class LFOSeqTrack {
 public:
   uint8_t track_number;
   uint8_t wav_type;
-  uint8_t wav_table[2][WAV_LENGTH];
-  bool wav_table_state[2];
+  uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];
+  bool wav_table_state[NUM_LFO_PARAMS];
+  uint8_t last_wav_value[NUM_LFO_PARAMS];
   uint8_t sample_count;
   uint8_t sample_hold = 0;
 
@@ -68,6 +69,7 @@ public:
   void check_and_update_params_offset(uint8_t dest, uint8_t param, uint8_t value);
   void init() {
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
+      last_wav_value[a] = 255;
       params[a].dest = 255;
     }
   }

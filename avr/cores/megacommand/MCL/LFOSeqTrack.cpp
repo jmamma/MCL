@@ -63,7 +63,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
     }
     break;
   case LFO_OFFSET_MAX:
-    //val = 127 - sample;
+    // val = 127 - sample;
     val = offset - depth + sample;
     if (val > 127) {
       return 127;
@@ -86,17 +86,21 @@ void LFOSeqTrack::seq() {
   }
   if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
+      uint8_t wav_value = get_wav_value(sample_count, i);
+      if (last_wav_value[i] != wav_value) {
 
-      if (params[i].dest > 0) {
-        // MD CC LFO
-        if (params[i].dest <= NUM_MD_TRACKS) {
-          MD.setTrackParam_inline(params[i].dest - 1, params[i].param,
-                                  get_wav_value(sample_count, i));
-        }
-        // MD FX LFO
-        else {
-          MD.sendFXParam(params[i].param, get_wav_value(sample_count, i),
-                         MD_FX_ECHO + params[i].dest - NUM_MD_TRACKS - 1);
+        if (params[i].dest > 0) {
+          // MD CC LFO
+          if (params[i].dest <= NUM_MD_TRACKS) {
+            MD.setTrackParam_inline(params[i].dest - 1, params[i].param,
+                                    wav_value);
+          }
+          // MD FX LFO
+          else {
+            MD.sendFXParam(params[i].param, wav_value,
+                           MD_FX_ECHO + params[i].dest - NUM_MD_TRACKS - 1);
+          }
+          last_wav_value[i] = wav_value;
         }
       }
     }
