@@ -136,8 +136,8 @@ private:
   bool textbox_enabled = false;
   uint16_t textbox_delay;
   uint16_t textbox_clock;
-  char textbox_str[12];
-  char textbox_str2[12];
+  char textbox_str[16];
+  char textbox_str2[16];
   uint8_t _i2caddr;
   int8_t sid, sclk, dc, rst, cs;
   void spixfer(uint8_t x);
