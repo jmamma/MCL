@@ -135,15 +135,10 @@ void PageSelectPage::init() {
   }
   classic_display = false;
 #endif
-  bool switch_tracks = false;
   if (!md_exploit.state) {
     last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
   }
-  md_exploit.off(switch_tracks);
-  md_prepare();
-  md_exploit.on(switch_tracks);
-  note_interface.state = true;
-
+  loop_init = true;
 }
 
 void PageSelectPage::md_prepare() {
@@ -175,11 +170,14 @@ void PageSelectPage::md_prepare() {
 void PageSelectPage::cleanup() {
 #ifndef USE_BLOCKINGKIT
   uint16_t myclock = slowclock;
-  while (!kit_cb.received && (clock_diff(myclock, slowclock) < 400));
-  if (kit_cb.received) {
-    MD.kit.fromSysex(MD.midi);
-    if (MidiClock.state == 2) {
-       mcl_seq.update_kit_params();
+  if (!loop_init) {
+    while (!kit_cb.received && (clock_diff(myclock, slowclock) < 400))
+      ;
+    if (kit_cb.received) {
+      MD.kit.fromSysex(MD.midi);
+      if (MidiClock.state == 2) {
+        mcl_seq.update_kit_params();
+      }
     }
   }
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
@@ -238,6 +236,15 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::loop() {
+  if (loop_init) {
+    bool switch_tracks = false;
+    md_exploit.off(switch_tracks);
+    md_prepare();
+    md_exploit.on(switch_tracks);
+    note_interface.state = true;
+    loop_init = false;
+  }
+
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur - enc_->old;
   if ((diff > 0) && (page_select < 16)) {
