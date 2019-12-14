@@ -174,6 +174,8 @@ void PageSelectPage::md_prepare() {
 
 void PageSelectPage::cleanup() {
 #ifndef USE_BLOCKINGKIT
+  uint16_t myclock = slowclock;
+  while (!kit_cb.received && (clock_diff(myclock, slowclock) < 400));
   if (kit_cb.received) {
     MD.kit.fromSysex(MD.midi);
     if (MidiClock.state == 2) {
