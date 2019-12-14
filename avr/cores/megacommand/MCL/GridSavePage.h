@@ -12,6 +12,7 @@ public:
                Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL)
       : GridIOPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event);
+  void loop();
   void display();
   void setup();
   void init();

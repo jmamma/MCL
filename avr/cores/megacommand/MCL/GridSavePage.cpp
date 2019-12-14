@@ -18,6 +18,15 @@ void GridSavePage::init() {
 #endif
 }
 
+void GridSavePage::loop() {
+
+ //prevent encoder 0 from changing when sequencer is running
+ if (encoders[0]->hasChanged() && MidiClock.state == 2) {
+   encoders[0]->cur = encoders[0]->old;
+ }
+
+}
+
 void GridSavePage::cleanup() {}
 
 #ifndef OLED_DISPLAY
