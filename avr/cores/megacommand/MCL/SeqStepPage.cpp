@@ -8,8 +8,14 @@ void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  seq_param4.cur = 0;
+  seq_param4.old = 0;
+  if (tuning) {
   seq_param4.max = tuning->len - 1;
-
+  }
+  else {
+  seq_param4.max = 1;
+  }
   // config info labels
   const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
   const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
@@ -205,8 +211,10 @@ void SeqStepPage::loop() {
 
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
+    DEBUG_PRINTLN("has changed");
     tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
+
+    MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
     for (uint8_t n = 0; n < 16; n++) {
 
@@ -235,6 +243,9 @@ void SeqStepPage::loop() {
         }
       }
     }
+  seq_param1.old = seq_param1.cur;
+  seq_param2.old = seq_param2.cur;
+  seq_param4.old = seq_param4.cur;
   }
 }
 
@@ -244,7 +255,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  auto &active_track = mcl_seq.md_tracks[last_md_track];
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -257,6 +268,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == DEVICE_A4) {
         //        GUI.setPage(&seq_extstep_page);
+    
         return true;
       }
       show_pitch = true;
@@ -301,6 +313,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       if (device == DEVICE_A4) {
         // GUI.setPage(&seq_extstep_page);
+        setLed2();
         return true;
       }
 
@@ -308,7 +321,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         show_pitch = false;
       }
       if (step >= active_track.length) {
-        return true;
+      DEBUG_PRINTLN("bad length");
+      DEBUG_PRINTLN(active_track.length);
+      DEBUG_PRINTLN(step);
+              return true;
       }
 
       /*      uint8_t utiming = (seq_param2.cur + 0);
@@ -340,13 +356,25 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_param1.cur;
 
+        DEBUG_PRINTLN("settting");
+        DEBUG_PRINTLN(last_md_track);
+        
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming; // upper
         // active_track.clear_step_locks(step);
         CLEAR_BIT64(active_track.oneshot_mask, step);
         SET_BIT64(active_track.pattern_mask, step);
       } else {
-        DEBUG_PRINTLN("Trying to clear");
+        DEBUG_PRINTLN("clear step");
+        /*
+        DEBUG_DUMP(step);
+        Serial.println();
+#       for (uint8_t n = 0; n < 64; n++) {
+        if (IS_BIT_SET64(active_track.pattern_mask, n)) { Serial.print(1); }
+        else { Serial.print(0); }
+        }
+        Serial.println();
+        */
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(active_track.pattern_mask, step);
           active_track.conditional[step] = 0;
