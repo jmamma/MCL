@@ -53,6 +53,9 @@ void FileBrowserPage::init() {
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
   }
+  encoders[1]->cur = 1;
+  encoders[1]->old = 1;
+  cur_row = 1;
 
   //  iterate through the files
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
@@ -95,9 +98,6 @@ void FileBrowserPage::init() {
     ((MCLEncoder *)encoders[1])->max = 0;
   }
   ((MCLEncoder *)encoders[1])->max = numEntries - 1;
-  encoders[1]->cur = 1;
-  encoders[1]->old = 1;
-  cur_row = 1;
   DEBUG_PRINTLN("finished list files");
 }
 
@@ -182,7 +182,7 @@ void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 
 void FileBrowserPage::loop() {
 #ifndef OLED_DISPLAY
-  if (call_handle_filemenu) { 
+  if (call_handle_filemenu) {
     call_handle_filemenu = false;
     _handle_filemenu();
   }
