@@ -118,7 +118,7 @@ void LFOSeqTrack::seq() {
   if (sample_count > LFO_LENGTH) {
     // Free running LFO should reset, oneshot should hold at last value.
     if (mode == LFO_MODE_ONE) {
-      sample_count = LFO_LENGTH;
+      sample_count = LFO_LENGTH - 1;
     } else {
       sample_count = 0;
     }
