@@ -288,6 +288,31 @@ void m_strnappend(void *dst, const char *src, int len) {
   m_strncpy(ptr, src, len - i);
 }
 
+/** Convert the string to UPPERCASE. **/
+void m_toupper(char* str)
+{
+  char chr;
+  while((chr = *str)) {
+    if(chr >= 'a' && chr <= 'z') {
+      *str = chr - 'a' + 'A';
+    }
+    ++str;
+  }
+}
+
+/** Trim ending spaces **/
+void m_trim_space(char* str)
+{
+  for(int i = m_strlen(str) - 1; i >= 0; --i) {
+    if (str[i] == ' ') {
+      str[i] = '\0';
+    }
+    // break on first visible character
+    if (str[i] != '\0') {
+      break;
+    }
+  }
+}
 /** @} **/
 
 /**

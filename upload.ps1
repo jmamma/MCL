@@ -1,1 +1,1 @@
-arduino upload -b MIDICtrl20_MegaCommand:avr:mega .\sketch\  -pCOM4
+arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega .\sketch\  -pCOM4

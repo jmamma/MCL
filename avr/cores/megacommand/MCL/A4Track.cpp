@@ -49,6 +49,10 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("Write failed");
     return false;
   }
+  if (active == EMPTY_TRACK_TYPE) {
+  seq_data.length = 16;
+  }
+
   return true;
 }
 bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,

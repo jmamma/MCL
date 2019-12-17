@@ -1,9 +1,9 @@
-#include "MCL.h"
-#include "OscPage.h"
-#include "OscMixerPage.h"
-#include "WavDesigner.h"
 #include "DSP.h"
+#include "MCL.h"
 #include "OSC.h"
+#include "OscMixerPage.h"
+#include "OscPage.h"
+#include "WavDesigner.h"
 
 void OscMixerPage::setup() {}
 
@@ -19,61 +19,53 @@ void OscMixerPage::init() {
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.setLine(GUI.LINE1);
-    GUI.put_string_at(0,"Render..");
-    LCD.goLine(0);
-    LCD.puts(GUI.lines[0].data);
-    #ifdef OLED_DISPLAY
-    oled_display.display();
-    #endif
-    wd.render();
-    GUI.put_string_at(0,"Sending..");
-    LCD.goLine(0);
-    LCD.puts(GUI.lines[0].data);
-    #ifdef OLED_DISPLAY
-    oled_display.display();
-    #endif
-   // if (MD.connected) {
-   //  MD.rec_sample();
-    //}
-   // delay(250);
-    //in_sysex = 1;
-    wd.send();
-    //in_sysex = 0;
-   // delay(100);
-   // MD.press_no_button();
-   // MD.clear_all_windows_quick();
+    GUI.ignoreNextEvent(event->source);
+    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+
+#ifdef OLED_DISPLAY
+      oled_display.clearDisplay();
+#endif
+      GUI.setLine(GUI.LINE1);
+      GUI.put_string_at(0, "Render..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+      oled_display.clearDisplay();
+#endif
+      wd.render();
+      GUI.put_string_at(0, "Sending..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+#endif
+      // if (MD.connected) {
+      //  MD.rec_sample();
+      //}
+      // delay(250);
+      // in_sysex = 1;
+      wd.send();
+      // in_sysex = 0;
+      // delay(100);
+      // MD.press_no_button();
+      // MD.clear_all_windows_quick();
+    }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    wd.load_next_page(id);
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     MD.preview_sample(encoders[3]->cur + 1);
     return true;
   }
+
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    GUI.setPage(&(wd.pages[0]));
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    GUI.setPage(&(wd.pages[1]));
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    GUI.setPage(&(wd.pages[2]));
-
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
-    return true;
-  }
-
   return false;
 }
 

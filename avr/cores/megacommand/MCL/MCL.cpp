@@ -3,7 +3,6 @@
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
-
 void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
@@ -28,8 +27,11 @@ void MCL::setup() {
 
   gfx.splashscreen();
   // if (!ret) { }
-
+  text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
+  text_input_page.no_escape = false;
+  if (ret) { GUI.setPage(&grid_page); }
+
   DEBUG_PRINTLN("tempo:");
   DEBUG_PRINTLN(mcl_cfg.tempo);
   MidiClock.setTempo(mcl_cfg.tempo);
@@ -53,18 +55,21 @@ void MCL::setup() {
 
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
+  GUI.addTask(&midi_active_peering);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
+#ifdef OLED_DISPLAY
+    oled_display.textbox("DISPLAY ","MIRROR");
+#endif
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif
   }
-    if (mcl_cfg.screen_saver == 1) {
-  GUI.use_screen_saver = true;
-  }
-  else {
-  GUI.use_screen_saver = false;
+  if (mcl_cfg.screen_saver == 1) {
+    GUI.use_screen_saver = true;
+  } else {
+    GUI.use_screen_saver = false;
   }
 
   DEBUG_PRINTLN("Track sizes:");

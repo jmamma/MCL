@@ -6,6 +6,8 @@ void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 
 void LoudnessPage::init() {
   DEBUG_PRINT_FN();
+
+  md_exploit.off();
 #ifdef OLED_DISPLAY
   // classic_display = false;
   oled_display.clearDisplay();
@@ -122,12 +124,10 @@ void LoudnessPage::scale_vol(float inc) {
   MDTrack *md_track = (MDTrack *)&empty_track;
 
   grid_page.prepare();
-  MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  MD.getBlockingPattern(MD.currentPattern);
+
   uint8_t seq_mute_states[NUM_MD_TRACKS];
   for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
     seq_mute_states[a] = mcl_seq.md_tracks[a].mute_state;
-    mcl_seq.md_tracks[a].mute_state = SEQ_MUTE_ON;
   }
   for (uint8_t n = 0; n < 16; n++) {
     md_track->get_track_from_sysex(n, n);
@@ -136,17 +136,12 @@ void LoudnessPage::scale_vol(float inc) {
     md_track->scale_vol(inc);
     memcpy(&mcl_seq.md_tracks[n], &(md_track->seq_data),
            sizeof(md_track->seq_data));
-    md_track->place_track_in_pattern(n, n, &MD.pattern);
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+    //    md_track->place_track_in_pattern(n, n, &MD.pattern);
     md_track->place_track_in_kit(n, n, &MD.kit);
+    MD.setMachine(n, &(md_track->machine));
   }
 
-  mcl_actions.md_setsysex_recpos(8, MD.pattern.origPosition);
-  MD.pattern.toSysex();
-
-  mcl_actions.md_setsysex_recpos(4, MD.kit.origPosition);
-  MD.kit.toSysex();
-
-  MD.loadKit(MD.pattern.kit);
   for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
     mcl_seq.md_tracks[a].mute_state = seq_mute_states[a];
   }
@@ -274,11 +269,9 @@ void LoudnessPage::check_grid_loudness(int col, int row) {
 
 void LoudnessPage::display() {
 
-  if (!classic_display) {
 #ifdef OLED_DISPLAY
     oled_display.clearDisplay();
 #endif
-  }
   GUI.setLine(GUI.LINE1);
   uint8_t x;
   // GUI.put_string_at(12,"Loudness");
@@ -309,29 +302,24 @@ bool LoudnessPage::handleEvent(gui_event_t *event) {
   if (event->mask == EVENT_BUTTON_RELEASED) {
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     scale_vol((float)encoders[0]->cur / (float)100);
     encoders[0]->cur = 100;
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    float inc = check_loudness();
-    encoders[0]->cur = inc * 100;
-  }
+//  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+//    float inc = check_loudness();
+ //   encoders[0]->cur = inc * 100;
+//  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    GUI.setPage(&grid_page);
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    GUI.setPage(&page_select_page);
     return true;
   }
 
   return false;
 }
 
-MCLEncoder loudness_param1(0, 255, 2);
+MCLEncoder loudness_param1(1, 255, 2);
 LoudnessPage loudness_page(&loudness_param1);

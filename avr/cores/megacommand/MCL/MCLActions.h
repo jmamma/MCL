@@ -14,6 +14,7 @@
 #define STORE_IN_PLACE 0
 #define STORE_AT_SPECIFIC 254
 
+#define TRANSITION_NORMAL 0
 #define TRANSITION_MUTE 2
 #define TRANSITION_UNMUTE 3
 
@@ -68,7 +69,7 @@ public:
 
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
-  void store_tracks_in_mem(int column, int row, bool merge);
+  void store_tracks_in_mem(int column, int row, uint8_t merge);
 
   void write_tracks(int column, int row);
   void send_tracks_to_devices();

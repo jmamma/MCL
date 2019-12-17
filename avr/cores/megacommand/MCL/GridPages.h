@@ -45,25 +45,15 @@ extern GridWritePage grid_write_page;
 
 extern GridTrack slot;
 
-const menu_t slot_menu_layout PROGMEM = {
-    "Slot",
-    8,
-    {
-        {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, (void*)NULL, {{1, "AUT"},{2,"MAN"},{3,"RND"}}},
-        {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, (void*)NULL, {}},
-        {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, (void*)NULL, {}},
-        {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, (void*)NULL, {{0," "}}},
-        {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.slot_clear, (Page*) NULL, (void*)NULL, {{0,"--"},{1, "YES"}}},
-        {"COPY:", 0, 2, 2, (uint8_t *) &grid_page.slot_copy, (Page*) NULL, (void*)NULL, {{0,"--"},{1, "YES"}}},
-        {"PASTE:", 0, 2, 2, (uint8_t *) &grid_page.slot_paste, (Page*) NULL, (void*)NULL,{{0,"--"},{1, "YES"}}},
-        {"RENAME", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, (void*)&rename_row, {}},
-    },
-    (void*)&apply_slot_changes_cb,
-    (Page*)NULL,
-};
-
 extern MCLEncoder grid_slot_param1;
 extern MCLEncoder grid_slot_param2;
 
-extern MenuPage grid_slot_page;
+extern MenuPage<
+    #ifndef OLED_DISPLAY
+    8
+    #else
+    7
+    #endif
+>
+grid_slot_page;
 #endif /* GRIDPAGES_H__ */

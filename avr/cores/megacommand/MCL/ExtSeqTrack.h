@@ -40,11 +40,12 @@ public:
   uint8_t iterations;
   bool mute_until_start = false;
 
-  void seq();
-  void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  void note_on(uint8_t note);
-  void note_off(uint8_t note);
-  void noteon_conditional(uint8_t condition, uint8_t note);
+  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  ALWAYS_INLINE() void note_on(uint8_t note);
+  ALWAYS_INLINE() void note_off(uint8_t note);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
+
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 
@@ -105,6 +106,10 @@ public:
     }
     *buf = 0;
     }
+
+   void rotate_left();
+   void rotate_right();
+   void reverse();
 };
 
 #endif /* EXTSEQTRACK_H__ */

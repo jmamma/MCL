@@ -19,9 +19,10 @@ public:
   File file;
   bool project_loaded = false;
   void setup();
-  bool load_project(char *projectname);
+  bool new_project();
+  bool load_project(const char *projectname);
   bool check_project_version();
-  bool new_project(char *projectname);
+  bool new_project(const char *projectname);
   bool write_header();
 };
 

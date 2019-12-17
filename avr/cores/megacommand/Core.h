@@ -3,4 +3,11 @@
 
 #define MEGACOMMAND
 
+#ifdef MEGACOMMAND
+ // #define ALWAYS_INLINE()
+  #define ALWAYS_INLINE() __attribute__((always_inline))
+#else
+  #define ALWAYS_INLINE()
+#endif
+
 #endif /* CORE_H__ */

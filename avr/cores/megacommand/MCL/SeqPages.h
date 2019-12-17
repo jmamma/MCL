@@ -4,8 +4,8 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#include "MCLMenus.h"
 #include "MCLMemory.h"
+#include "MCLMenus.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
@@ -16,7 +16,6 @@
 #endif
 
 #define NUM_PARAM_PAGES 2
-#define NUM_LFO_PAGES 4
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
@@ -25,7 +24,6 @@ extern MCLEncoder seq_param4;
 
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
-
 
 #include "SeqParamPage.h"
 #include "SeqPtcPage.h"
@@ -47,30 +45,22 @@ extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 #endif
 
+extern MCLEncoder ptc_param_oct;
+extern MCLEncoder ptc_param_finetune;
+extern MCLEncoder ptc_param_len;
+extern MCLEncoder ptc_param_scale;
+
 extern SeqPtcPage seq_ptc_page;
 
-extern MCLEncoder track_menu_param1;
-extern MCLEncoder track_menu_param2;
-extern MenuPage track_menu_page;
+extern MCLEncoder seq_menu_value_encoder;
+extern MCLEncoder seq_menu_entry_encoder;
+extern MenuPage<8> seq_menu_page;
+
+extern MCLEncoder step_menu_value_encoder;
+extern MCLEncoder step_menu_entry_encoder;
+extern MenuPage<4> step_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();
-
-const menu_t track_menu_layout PROGMEM = {
-    "TRACk",
-    5,
-    {
-        {"LENGTH:", 0, 64, 0, (uint8_t *) &SeqPage::length, (Page*) NULL, (void*)NULL, {}},
-        {"MULTI:", 1, 2, 2, (uint8_t *) &SeqPage::resolution, (Page*) NULL, (void*)NULL, {{1, "1x"},{2, "2x"}}},
-
-        {"APPLY:", 0, 1, 2, (uint8_t *) &SeqPage::apply, (Page*) NULL, (void*)NULL, {{1, "--"},{1, "ALL"}}},
-//        {"LOAD SND:", 0,  0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_load_sound, {}},
-//        {"SAVE SND:", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, (void*) &mcl_save_sound, {}},
-   },
-
-    (void*)(&mclsys_apply_config),
-
-};
-
 
 #endif /* SEQPAGES_H__ */

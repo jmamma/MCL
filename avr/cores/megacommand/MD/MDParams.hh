@@ -734,6 +734,7 @@
 #define MODEL_LFOS 21
 #define MODEL_LFOD 22
 #define MODEL_LFOM 23
+#define MODEL_LEVEL 33
 
 #define MD_ECHO_TIME 0
 #define MD_ECHO_MOD 1
@@ -877,6 +878,7 @@ typedef struct md_machine_name_s_short {
 
 extern md_machine_name_t_short const machine_names_short[134] PROGMEM;
 PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
+extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
 
 /* @} @} */
 

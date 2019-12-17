@@ -175,12 +175,12 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   if (!ret) {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("Clear grid failed: ");
-    DEBUG_PRINTLN(row);
-    DEBUG_PRINTLN(column);
+    DEBUG_DUMP(row);
+    DEBUG_DUMP(column);
     return false;
   }
   // DEBUG_PRINTLN("Writing");
-  // DEBUG_PRINTLN(sizeof(temptrack.active));
+  // DEBUG_DUMP(sizeof(temptrack.active));
 
   ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track),
                           &proj.file);
@@ -191,12 +191,11 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   return true;
 }
 
-bool Grid::clear_row(int16_t row) {
-  bool update_header = false;
+__attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   GridRowHeader row_header;
   row_header.init();
   for (int x = 0; x < GRID_WIDTH; x++) {
-    clear_slot(x, row, update_header);
+    clear_slot(x, row, false);
   }
   return row_header.write(row);
 }

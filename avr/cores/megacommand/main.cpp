@@ -35,15 +35,15 @@ void my_init_ram(void) __attribute__((naked)) __attribute__((used))
 __attribute__((section(".init3")));
 
 void my_init_ram(void) {
-  // Set PL6 as output
-  //
-  #ifdef MEGACOMMAND
+// Set PL6 as output
+//
+#ifdef MEGACOMMAND
   DDRL |= _BV(PL6);
   PORTL &= ~(_BV(PL6));
-  #else
+#else
   DDRB |= _BV(PB0);
   PORTB &= ~(_BV(PB0));
-  #endif
+#endif
   XMCRA |= _BV(SRE);
   //  MCUCR |= _BV(SRE);
   //  uint8_t *ptr = 0x2000;
@@ -117,12 +117,12 @@ void timer_init(void) {
   TCCR1B |= (1 << WGM12);
   // Prescaler 64
   TCCR1B |= (1 << CS11) | (1 << CS10);
-  // Output Compare Match A Interrupt Enable
-  #ifdef MEGACOMMAND
+// Output Compare Match A Interrupt Enable
+#ifdef MEGACOMMAND
   TIMSK1 |= (1 << OCIE1A);
-  #else
+#else
   TIMSK |= (1 << OCIE1A);
-  #endif
+#endif
   // TCCR2A = _BV(WGM20) | _BV(WGM21) | _BV(CS20) | _BV(CS21); // ) | _BV(CS21);
   // // | _BV(COM21);
 
@@ -135,13 +135,12 @@ void timer_init(void) {
   TCCR3B |= (1 << WGM32);
   // Prescaler 64
   TCCR3B |= (1 << CS31) | (1 << CS30);
-  // Output Compare Match A Interrupt Enable
-  #ifdef MEGACOMMAND
+// Output Compare Match A Interrupt Enable
+#ifdef MEGACOMMAND
   TIMSK3 |= (1 << OCIE3A);
-  #else
+#else
   ETIMSK |= (1 << OCIE3A);
-  #endif
-
+#endif
 }
 
 void init(void) {
@@ -156,7 +155,7 @@ void init(void) {
   /* move interrupts to bootloader section */
   MCUCR = _BV(IVCE);
 
-  //Enable External SRAM
+  // Enable External SRAM
   MCUCR = _BV(SRE);
 
   // activate lever converter
@@ -195,24 +194,18 @@ ISR(TIMER1_COMPA_vect) {
   select_bank(0);
 
   clock++;
+  MidiClock.div192th_countdown++;
   if (MidiClock.state == 2) {
-  if (clock_diff(MidiClock.clock_last_time, clock) >= MidiClock.div192th_time) {
+    if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
       if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
-      MidiClock.increment192Counter();
-      MidiClock.div192th_counter_last = MidiClock.div192th_counter;
-      if ((enable_clock_callbacks)) {
-        MidiClock.callCallbacks();
+        MidiClock.increment192Counter();
+        MidiClock.div192th_countdown = 0;
+        MidiClock.div192th_counter_last = MidiClock.div192th_counter;
+        if ((enable_clock_callbacks)) {
+          MidiClock.callCallbacks();
+        }
       }
     }
-  }
-  /*
-  if (MidiClock.div96th_counter != MidiClock.div96th_counter_last) {
-    MidiClock.div96th_counter_last = MidiClock.div96th_counter;
-    if ((enable_clock_callbacks)) {
-            MidiClock.callCallbacks();
-    }
-  }
-  */
   }
 }
 
@@ -221,7 +214,7 @@ ISR(TIMER1_COMPA_vect) {
 static uint16_t oldsr = 0;
 volatile uint8_t *rand_ptr = 0;
 
-void gui_poll() {
+ALWAYS_INLINE() void gui_poll() {
   static bool inGui = false;
   if (inGui) {
     return;
@@ -256,8 +249,8 @@ ISR(TIMER3_COMPA_vect) {
   slowclock++;
   minuteclock++;
   if (minuteclock == 60000) {
-  minuteclock = 0;
-  clock_minutes++;
+    minuteclock = 0;
+    clock_minutes++;
   }
   if (abs(slowclock - lastRunningStatusReset) > 3000) {
     MidiUart.resetRunningStatus();
@@ -270,7 +263,6 @@ ISR(TIMER3_COMPA_vect) {
 #ifdef MIDIDUINO_POLL_GUI_IRQ
   gui_poll();
 #endif
-
 }
 /*
 uint8_t sysexBuf[5500];
@@ -279,8 +271,8 @@ uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 */
 
-MidiClass Midi(&MidiUart,NULL,SYSEX1_DATA_LEN, BANK1_SYSEX1_DATA_START);
-MidiClass Midi2(&MidiUart2,NULL,SYSEX2_DATA_LEN, BANK1_SYSEX2_DATA_START);
+MidiClass Midi(&MidiUart, NULL, SYSEX1_DATA_LEN, BANK1_SYSEX1_DATA_START);
+MidiClass Midi2(&MidiUart2, NULL, SYSEX2_DATA_LEN, BANK1_SYSEX2_DATA_START);
 
 bool enable_clock_callbacks = true;
 
@@ -339,12 +331,12 @@ int main(void) {
 
   DEBUG_INIT();
 
-  // Set SD card select HIGH before initialising OLED.
-  #ifdef MEGACOMMAND
+// Set SD card select HIGH before initialising OLED.
+#ifdef MEGACOMMAND
   PORTB |= (1 << PB0);
-  #else
+#else
   PORTE |= (1 << PE7);
-  #endif
+#endif
   setup();
   for (;;) {
     loop();

@@ -6,11 +6,13 @@
 
 class MCLGfx {
   public:
+  void draw_evil();
   void splashscreen();
   void init_oled();
-  void alert(char *str1, char *str2);
-};
+  void display_text(const char *str1, const char *str2);
+  void alert(const char *str1, const char *str2);
 
+};
 extern MCLGfx gfx;
 
 #endif /* MCLGFX_H__ */

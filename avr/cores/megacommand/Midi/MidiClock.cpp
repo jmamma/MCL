@@ -32,7 +32,6 @@ void MidiClockClass::init() {
   clock_last_time = clock;
   mod12_counter = 0;
   mod6_counter = inmod6_counter = 0;
-  mod3_counter = 0;
   bar_counter = 1;
   beat_counter = 1;
   step_counter = 1;
@@ -70,7 +69,6 @@ bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
   }
   return a_new < b_new;
 }
-
 
 void MidiClockClass::handleMidiStart() {
   onMidiStartCallbacks.call(div96th_counter);
@@ -129,6 +127,15 @@ void MidiClockClass::setTempo(uint16_t _tempo) {
   //  interval = 62500 / (tempo * 24 / 60);
   interval = (uint32_t)((uint32_t)156250 / tempo) - 16;
   CLEAR_LOCK();
+}
+
+bool MidiClockClass::getBlinkHint(bool onbeat) {
+  if (state != STARTED)
+    return false;
+  if (onbeat)
+    return (step_counter == 1 || step_counter == 2);
+  else
+    return (step_counter == 2 || step_counter == 3);
 }
 
 void MidiClockClass::handleSongPositionPtr(uint8_t *msg) {

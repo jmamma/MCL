@@ -13,6 +13,10 @@
 #define LOCK_AMOUNT 256
 #define MD_TRACK_TYPE 1
 
+#define SAVE_SEQ 0
+#define SAVE_MD 1
+#define SAVE_MERGE 2
+
 class ParameterLock {
 public:
   uint8_t param_number;
@@ -68,6 +72,10 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
+  MDTrack() {
+  arraysize = 0;
+  }
+
   void init();
 
   void clear_track();
@@ -86,7 +94,7 @@ public:
   bool load_track_from_grid(int32_t column, int32_t row);
 
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
-                           bool storepattern = false, bool merge = false,
+                           bool storepattern = false, uint8_t merge = 0,
                            bool online = false);
 
   // scale machine track vol by percentage

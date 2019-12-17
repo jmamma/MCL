@@ -72,7 +72,7 @@ void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   //  MD.sendRequest(0x6b,00000011);
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
+void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -106,9 +106,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
 #endif
   bool storepattern = false;
 
-  if (MidiClock.state == 2) { merge = false; }
+  if (MidiClock.state == 2) { merge = 0; }
   if (save_md_tracks) {
-    if ((merge)) {
+    if (merge > 0) {
       DEBUG_PRINTLN("fetching pattern");
       if (!MD.getBlockingPattern(readpattern)) {
         DEBUG_PRINTLN("could not receive pattern");
@@ -169,8 +169,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, bool merge) {
     }
   }
 
-  // Only update row name if, the current name is empty
-  if (strlen(grid_page.row_headers[grid_page.cur_row].name) == 0) {
+  // Only update row name if, the current row is not active.
+  if (!grid_page.row_headers[grid_page.cur_row].active) {
     for (uint8_t c = 0; c < 17; c++) {
       grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
     }
@@ -380,10 +380,8 @@ void MCLActions::send_tracks_to_devices() {
   /*Send the encoded kit to the MD via sysex*/
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  /*Instruct the MD to reload the kit, as the kit changes won't update until
-   * the kit is reloaded*/
-  // if (reload == 1) {
-  MD.loadKit(MD.pattern.kit);
+  MD.loadKit(MD.kit.origPosition);
+
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
@@ -632,7 +630,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
     if ((kit_->params[track][i] != machine->params[i]) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
       //       (mcl_seq.md_tracks[track].is_param(i)))) {
-      bytes += 3;
+      if (machine->params[i] != 255) { bytes += 3; }
     }
   }
 
@@ -704,7 +702,7 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
           ((i < 8) && (kit_->models[track] != machine->model))) {
         //   (mcl_seq.md_tracks[track].is_param(i)))) {
         // mcl_seq.md_tracks[track].params[i] = machine->params[i];
-        MD.setTrackParam(track, i, machine->params[i]);
+        if (machine->params[i] != 255) { MD.setTrackParam(track, i, machine->params[i]); }
       }
     }
   }

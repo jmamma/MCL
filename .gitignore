@@ -1,5 +1,6 @@
 .vscode
 bin
+obj
 .ionide
 .ccls-cache
 sketch/*.elf

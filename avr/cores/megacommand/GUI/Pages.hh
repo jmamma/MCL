@@ -92,7 +92,7 @@ public:
    * }
    * \endcode
    **/
-  virtual void update();
+  virtual void update() {}
   /**
    * The loop() method is basically the same as the update() method.
    **/
@@ -165,6 +165,7 @@ public:
   uint8_t curpage;
   PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
+  static uint16_t encoders_used_clock[GUI_NUM_ENCODERS];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL) {
@@ -182,20 +183,14 @@ public:
   virtual void update();
   /** This will clear the encoder movements. **/
   virtual void clear();
-  /** Display the page using the display routine as specfied by function
-   * pointer*/
-  virtual void display();
   /** Executes the encoder actions by calling checkHandle() on each encoder. **/
   virtual void finalize();
-  /** Set the display routine to supplied fuction pointer **/
-  virtual void setup();
   /** Call this to lock all encoders in the page. **/
-  void lockEncoders();
+  void lockEncoders() {} // TODO
   /** Call this to unlock all encoders in the page. If their value
       changed while locked, they will send out their new value.
   **/
-  virtual void config() {}
-  void unlockEncoders();
+  void unlockEncoders() {} // TODO
 };
 
 class Page : public PageParent {

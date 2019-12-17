@@ -38,6 +38,9 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     DEBUG_PRINTLN("Read failed");
     return false;
   }
+  if (active == EMPTY_TRACK_TYPE) {
+  seq_data.length = 16;
+  }
   return true;
 }
 bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool online) {

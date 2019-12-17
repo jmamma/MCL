@@ -161,7 +161,12 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
   }
 }
 
+
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
+  setTrackParam_inline(track,param,value);
+}
+
+void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value) {
 
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
@@ -189,10 +194,13 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
 //  0x5E, 0x5D, 0x5F, 0x60
 
 void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
+  USE_LOCK();
+  SET_LOCK();
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.sendRaw(bytes, cnt);
   MidiUart.m_putc(0xf7);
+  CLEAR_LOCK();
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
@@ -507,6 +515,9 @@ bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
   connected = cb->received;
   return cb->received;
 }
+
+//Perform checks on current sysex buffer to see if it Sysex.
+//
 
 uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
   MDBlockCurrentStatusCallback cb(type);
@@ -844,8 +855,7 @@ void MDClass::enter_global_edit() {
   if (global == 255) {
     return;
   }
-  DEBUG_PRINTLN("global");
-  DEBUG_PRINTLN(global);
+  DEBUG_DUMP(global);
   clear_all_windows_quick();
   delay(10);
   toggle_global_window();

@@ -27,7 +27,7 @@
 #define HELPERS_H__
 
 #include <inttypes.h>
-
+#include <Core.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
@@ -45,8 +45,11 @@ extern const uint32_t _bvmasks32[];
  * @{
  **/
 
+#define ROTATE_LEFT(target, length) do { target = (target >> 1) | (target << (length - 1)); } while (false)
+#define ROTATE_RIGHT(target, length) do { target = (target << 1) | (target >> (length - 1)); } while (false)
+
 /** 32 bit bit accessing macro. **/
-#define _BV32(i) (_bvmasks32[i]) 
+#define _BV32(i) (_bvmasks32[i])
 
 /** Bit-level access and test macros. **/
 #define SET_BIT(target, bit)                do { (target) |=  _bvmasks[((uint8_t)(bit))]; } while (false)
@@ -211,6 +214,8 @@ void m_str16cpy_p_fill(void *dst, PGM_P src);
 void m_str16cpy_p(void *dst, PGM_P src);
 void m_strnappend(void *dst, const char *src, int len);
 uint16_t m_strlen(const char *str);
+void m_toupper(char* str);
+void m_trim_space(char* str);
 
 /** @} */
 
@@ -221,7 +226,7 @@ uint16_t m_strlen(const char *str);
 			
 extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
-uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+ALWAYS_INLINE() uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 #ifdef HOST_MIDIDUINO
 #else
