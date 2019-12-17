@@ -14,6 +14,7 @@ public:
   #ifndef USE_BLOCKINGKIT
   MDCallback kit_cb;
   #endif
+  bool loop_init = false;
   uint8_t page_select;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
