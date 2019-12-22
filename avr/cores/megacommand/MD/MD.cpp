@@ -625,12 +625,15 @@ uint8_t MDClass::getCurrentGlobal(uint16_t timeout) {
 }
 
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
+  USE_LOCK();
+  SET_LOCK();
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.m_putc(MD_GUI_CMD);
   MidiUart.m_putc(command);
   MidiUart.m_putc(value);
   MidiUart.m_putc(0xF7);
+  CLEAR_LOCK();
 }
 
 void MDClass::toggle_kit_menu() {
