@@ -140,18 +140,20 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
 
   if (lock_mask_step && pattern_mask_step) {
     for (c = 0; c < 4; c++) {
-      if (locks[c][step] > 0) {
-        send_param = locks[c][step] - 1;
-      } else if (locks_params[c] > 0) {
-        send_param = locks_params_orig[c];
+      if (locks_params[c] > 0) {
+        if (locks[c][step] > 0) {
+          send_param = locks[c][step] - 1;
+        } else {
+          send_param = locks_params_orig[c];
+        }
+        MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
     }
   }
 
   else if (lock_mask_step) {
     for (c = 0; c < 4; c++) {
-      if (locks[c][step] > 0) {
+      if (locks[c][step] > 0 && locks_params[c] > 0) {
         send_param = locks[c][step] - 1;
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
@@ -188,7 +190,7 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
     if (!IS_BIT_SET64(oneshot_mask, step_count)) {
       send_trig = true;
     }
-  break;
+    break;
   case 2:
     if (!IS_BIT_SET(iterations, 0)) {
       send_trig = true;
