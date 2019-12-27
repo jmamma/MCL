@@ -13,12 +13,13 @@ void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
   /*IF it is then we need to make sure that the LFO destination is updated to
    * the new row posiiton*/
 
+ /*Copies Lfo data from the kit object into the machine object*/
+  memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
+
   if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
-    MD.kit.lfos[tracknumber].destinationTrack = column;
+    machine.lfo.destinationTrack = column;
     machine.track = column;
   }
-  /*Copies Lfo data from the kit object into the machine object*/
-  memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
 
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
@@ -112,9 +113,23 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 
     machine.lfo.destinationTrack = tracknumber;
   }
-
+  //sanity check.
+  if (machine.lfo.destinationTrack > 15) {
+   DEBUG_PRINTLN("warning: lfo dest was out of bounds");
+   machine.lfo.destinationTrack = tracknumber;
+  }
   memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
-
+  /*
+  DEBUG_PRINTLN("LFO");
+  DEBUG_DUMP(kit->lfos[tracknumber].destinationTrack);
+  DEBUG_DUMP(kit->lfos[tracknumber].destinationParam);
+  DEBUG_DUMP(kit->lfos[tracknumber].shape1);
+  DEBUG_DUMP(kit->lfos[tracknumber].shape2);
+  DEBUG_DUMP(kit->lfos[tracknumber].type);
+  DEBUG_DUMP(kit->lfos[tracknumber].speed);
+  DEBUG_DUMP(kit->lfos[tracknumber].depth);
+  DEBUG_DUMP(kit->lfos[tracknumber].mix);
+  */
   if ((machine.trigGroup < 16) && (machine.trigGroup != column)) {
     kit->trigGroups[tracknumber] = machine.trigGroup;
   } else {
