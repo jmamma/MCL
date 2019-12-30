@@ -490,6 +490,10 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   } // TI events
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
+    GUI.pushPage(&poly_page);
+    return true;
+    }
     seq_ptc_page.queue_redraw();
     recording = !recording;
     return true;
@@ -502,7 +506,10 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   */
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-
+    if (BUTTON_DOWN(Buttons.BUTTON1)) {
+    GUI.pushPage(&poly_page);
+    return true;
+    }
     if (midi_device == DEVICE_MD) {
 
       if (poly_count > 1) {

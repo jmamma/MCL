@@ -14,7 +14,6 @@ void PolyPage::init() {
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-
 }
 
 void PolyPage::cleanup() {
@@ -96,7 +95,6 @@ void PolyPage::display() {
   // GUI.put_string_at(12,"Poly");
   GUI.put_string_at(0, "VOICE SELECT ");
 
-
   draw_mask(0);
 #ifdef OLED_DISPLAY
   LCD.goLine(1);
@@ -122,19 +120,17 @@ bool PolyPage::handleEvent(gui_event_t *event) {
       toggle_mask(track);
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-     note_interface.notes[track] = 0;
+      note_interface.notes[track] = 0;
     }
     //  }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    GUI.ignoreNextEvent(event->source);
     GUI.popPage();
     return true;
   }
-
 
   return false;
 }
