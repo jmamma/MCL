@@ -1,4 +1,4 @@
-/* Copyright (c) 2009 - http://ruinwesen.com/ */
+:/* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef PAGES_H__
 #define PAGES_H__
@@ -483,6 +483,7 @@ public:
    * method of the new topmost page.
    **/
   void popPage() {
+    currentPage()->cleanup();
     Page *page;
     pageStack.pop(&page);
     if (page != NULL) {
