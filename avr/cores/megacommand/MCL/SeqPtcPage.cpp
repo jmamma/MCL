@@ -571,12 +571,10 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINT("note on midi2: ");
   DEBUG_DUMP(channel);
 
-  uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
-  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
-  SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-
   // matches control channel, or MIDI2 is OMNI?
   // then route midi message to MD
+  uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
+
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     seq_ptc_page.trig_md_fromext(pitch);
@@ -584,6 +582,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_ptc_page.queue_redraw();
     return;
   }
+
+ uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+ SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
 
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
