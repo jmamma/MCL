@@ -23,6 +23,7 @@ void MCLSeq::setup() {
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
     md_tracks[i].resolution = 1;
+    md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
 
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -119,7 +120,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
 void MCLSeq::onMidiStartCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
-    md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
@@ -133,6 +133,7 @@ void MCLSeq::onMidiStopCallback() {
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
   }
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
