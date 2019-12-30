@@ -353,7 +353,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t voice = 255;
   uint8_t count = 0;
 
-  if (poly_max == 0) {
+  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track) && (mcl_cfg.uart2_ctrl_mode == 0))) {
     return last_md_track;
   }
   // If track previously played pitch, re-use this track
