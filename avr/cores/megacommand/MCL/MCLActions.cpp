@@ -380,12 +380,13 @@ void MCLActions::send_tracks_to_devices() {
   MD.kit.origPosition = MD.currentKit;
 
   /*Send the encoded kit to the MD via sysex*/
-  USE_LOCK();
-  SET_LOCK();
-  md_setsysex_recpos(4, MD.kit.origPosition);
-  MD.kit.toSysex();
-  MD.loadKit(MD.kit.origPosition);
-  CLEAR_LOCK();
+
+//  mcl_seq.disable();
+ // md_setsysex_recpos(4, MD.kit.origPosition);
+  md_set_kit(&MD.kit);
+ //
+//  MD.loadKit(MD.kit.origPosition);
+//  mcl_seq.enable();
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
@@ -639,6 +640,24 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
 
   return bytes;
 }
+
+void MCLActions::md_set_kit(MDKit *kit_) {
+  MDTrack temp_track;
+
+  MD.setKitName((kit_->name));
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+  temp_track.get_machine_from_kit(n,n);
+  md_set_machine(n, &(temp_track.machine), NULL, true);
+    MD.setTrackParam(n, 33, temp_track.machine.level);
+  }
+  md_set_fxs(kit_);
+
+  if ((mcl_cfg.auto_save == 1)) {
+      MD.saveCurrentKit(MD.currentKit);
+      MD.loadKit(MD.currentKit);
+  }
+}
+
 
 void MCLActions::md_set_fxs(MDKit *kit_) {
   for (uint8_t n = 0; n < 8; n++) {

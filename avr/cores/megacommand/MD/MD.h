@@ -336,6 +336,7 @@ public:
 
   void setMachine(uint8_t track, MDMachine *machine);
 
+  void setKitName(char *name);
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
