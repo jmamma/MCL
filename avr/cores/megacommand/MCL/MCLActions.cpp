@@ -381,15 +381,12 @@ void MCLActions::send_tracks_to_devices() {
 
   /*Send the encoded kit to the MD via sysex*/
 
-  /*
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   MD.loadKit(MD.kit.origPosition);
-  */
 
   //  mcl_seq.disable();
-  // md_setsysex_recpos(4, MD.kit.origPosition);
-  md_set_kit(&MD.kit);
+  //md_set_kit(&MD.kit);
 
   // Send Analog4
 #ifdef EXT_TRACKS
