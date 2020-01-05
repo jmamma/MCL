@@ -106,6 +106,7 @@ void SeqPtcPage::init() {
   curpage = SEQ_PTC_PAGE;
 
   config();
+  re_init = false;
 }
 
 void SeqPtcPage::config() {
@@ -189,6 +190,9 @@ void ptc_pattern_len_handler(Encoder *enc) {
 }
 
 void SeqPtcPage::loop() {
+  if (re_init) {
+  init();
+  }
 #ifdef EXT_TRACKS
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
@@ -491,6 +495,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
+    re_init = true;
     GUI.pushPage(&poly_page);
     return true;
     }
