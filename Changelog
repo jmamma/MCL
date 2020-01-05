@@ -1,3 +1,30 @@
+MCL 2.51 05/01/2019
+
+Bug fix release:
+
+   - Poly mode would not work unless MD was restarted, fixed.
+
+   - Chromatic Page: Changes to voice selection.
+
+       If current track is a poly track, then select voices from the poly
+       tracks. Otherwise if current is not a poly track use the current track
+       as the chromatic voice.
+
+       When MD is set to be controlled by external midi, only the poly voices
+       will be playable.
+
+   - Check parameter lock destinations more carefully before sending.
+
+   - Prevent MCL from sending bogus LFO destination track which could cause MD
+     lockup.
+
+   - Chaining an entire row, and then immediately pressing play on the MD
+   could cause corrupt sysex data to be sent to the MD, causing an abupt
+   pattern change. fixed.
+
+   - Sequencer notes would occasionally drop out when using page_select page.
+   fixed.
+
 MCL 2.50 01/12/2019
 
 Complete GUI overhaul:
