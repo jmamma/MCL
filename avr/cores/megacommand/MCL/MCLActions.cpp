@@ -325,12 +325,9 @@ void MCLActions::send_tracks_to_devices() {
   KitExtra kit_extra;
   volatile uint8_t *ptr;
 
-  uint8_t seq_mute_states[NUM_TRACKS];
 
   for (i = 0; i < NUM_TRACKS; i++) {
 
-    seq_mute_states[i] = mcl_seq.md_tracks[i].mute_state;
-    mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
 
     if ((note_interface.notes[i] > 1)) {
       if (first_note == 254) {
@@ -383,12 +380,12 @@ void MCLActions::send_tracks_to_devices() {
   MD.kit.origPosition = MD.currentKit;
 
   /*Send the encoded kit to the MD via sysex*/
+  USE_LOCK();
+  SET_LOCK();
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   MD.loadKit(MD.kit.origPosition);
-  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-  mcl_seq.md_tracks[i].mute_state = seq_mute_states[i];
-  }
+  CLEAR_LOCK();
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
