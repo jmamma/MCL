@@ -1,4 +1,4 @@
-:/* Copyright (c) 2009 - http://ruinwesen.com/ */
+/* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #ifndef PAGES_H__
 #define PAGES_H__
