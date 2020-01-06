@@ -4,11 +4,14 @@ Bug fix release:
 
    - Poly mode would not work unless MD was restarted, fixed.
 
+   - Poly voice select is now accessible from Chromatic Page by pressing [
+   Save + Write|Chain ]
+
    - Chromatic Page: Changes to voice selection.
 
        If current track is a poly track, then select voices from the poly
-       tracks. Otherwise if current is not a poly track use the current track
-       as the chromatic voice.
+       tracks. Otherwise if current track is not a poly track use the current track
+       as a monophonic voice.
 
        When MD is set to be controlled by external midi, only the poly voices
        will be playable.
@@ -20,6 +23,10 @@ Bug fix release:
 
    - Sequencer notes would occasionally drop out when using page_select page.
    fixed.
+
+   - Chaining an entire row, and then immediately pressing play on the MD
+     could cause corrupt sysex data to be sent to the MD, causing loud noises
+	 and an abrupt pattern change. fixed.
 
 MCL 2.50 01/12/2019
 

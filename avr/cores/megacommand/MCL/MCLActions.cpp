@@ -325,10 +325,11 @@ void MCLActions::send_tracks_to_devices() {
   KitExtra kit_extra;
   volatile uint8_t *ptr;
 
-
+  uint8_t mute_states[16];
   for (i = 0; i < NUM_TRACKS; i++) {
 
-
+    mute_states[i] = mcl_seq.md_tracks[i].mute_state;
+    mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
     if ((note_interface.notes[i] > 1)) {
       if (first_note == 254) {
         first_note = i;
@@ -380,6 +381,7 @@ void MCLActions::send_tracks_to_devices() {
   MD.kit.origPosition = MD.currentKit;
 
   /*Send the encoded kit to the MD via sysex*/
+  uint16_t myclock = slowclock;
 
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
@@ -399,6 +401,17 @@ void MCLActions::send_tracks_to_devices() {
     }
   }
 #endif
+  uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float) MidiUart.speed);
+
+  DEBUG_PRINTLN("latency");
+  DEBUG_PRINTLN(md_latency_ms);
+
+  while (clock_diff(myclock,slowclock) < md_latency_ms) { GUI.loop(); };
+
+  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
+    mcl_seq.md_tracks[i].mute_state = mute_states[i];
+  }
+
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
   if ((mcl_cfg.chain_mode == 0) || (mcl_cfg.chain_mode == 2)) {
