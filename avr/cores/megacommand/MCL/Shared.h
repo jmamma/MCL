@@ -4,7 +4,7 @@
 #define SHARED_H__
 
 #include "MCL.h"
-#include "Math.h"
+#include "math.h"
 
 struct MusicalNotes {
   const char *notes_upper[16] = {"C ", "C#", "D ", "D#", "E ", "F ",

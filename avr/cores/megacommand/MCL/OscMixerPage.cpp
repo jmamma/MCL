@@ -1,6 +1,6 @@
 #include "DSP.h"
 #include "MCL.h"
-#include "OSC.h"
+#include "Osc.h"
 #include "OscMixerPage.h"
 #include "OscPage.h"
 #include "WavDesigner.h"

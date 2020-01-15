@@ -4,7 +4,7 @@
 #define WAVDESIGNER_H__
 
 #include "MCL.h"
-#include "Math.h"
+#include "math.h"
 #include "OscPage.h"
 #include "OscMixerPage.h"
 
