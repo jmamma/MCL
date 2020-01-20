@@ -14,7 +14,7 @@ bool TrigInterface::on() {
     return false;
   }
   if (!MD.connected) {
-    return;
+    return false;
   }
   state = true;
   DEBUG_PRINTLN("activating trig interface");
@@ -22,6 +22,7 @@ bool TrigInterface::on() {
   note_interface.notecount = 0;
   note_interface.init_notes();
   note_interface.note_proceed = true;
+  return true;
 }
 
 bool TrigInterface::off() {
@@ -31,11 +32,12 @@ bool TrigInterface::off() {
     return false;
   }
   if (!MD.connected) {
-    return;
+    return false;
   }
   DEBUG_PRINTLN("deactiviating trig interface");
   state = false;
   deactivate_trig_interface();
+  return true;
 }
 
 void TrigInterface::end() { }
@@ -54,8 +56,8 @@ bool TrigInterface::is_trig_interface() {
  uint8_t msg[2] = { 0x7F, 0x0D };
  uint8_t i = 0;
 
- if (sysex->getByte(i) != msg[i]) { return false; }
- if (sysex->getByte(++i) != msg[i]) { return false; }
+ if (sysex->getByte(0) != msg[0]) { return false; }
+ if (sysex->getByte(1) != msg[1]) { return false; }
 
  return true;
 }
