@@ -67,15 +67,16 @@ void TrigInterface::end_immediate() {
   if (!state) {
     return;
   }
-  uint8_t trig = sysex->getByte(3);
+  uint8_t trig = sysex->getByte(2);
 
   if (trig >= 0x40) {
   note_interface.note_off_event(trig - 0x40, UART1_PORT);
   }
   else {
+  DEBUG_PRINTLN("trig on");
+  DEBUG_PRINTLN(trig);
   note_interface.note_on_event(trig, UART1_PORT);
   }
-
   return;
 }
 
