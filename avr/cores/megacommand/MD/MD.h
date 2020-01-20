@@ -244,6 +244,7 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
+  void sendRequest(uint8_t *data, uint8_t len); 
   void sendRequest(uint8_t type, uint8_t param);
 
   /**

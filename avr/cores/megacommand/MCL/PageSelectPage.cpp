@@ -238,9 +238,10 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 void PageSelectPage::loop() {
   if (loop_init) {
     bool switch_tracks = false;
-    md_exploit.off(switch_tracks);
+    //md_exploit.off(switch_tracks);
     md_prepare();
-    md_exploit.on(switch_tracks);
+    //md_exploit.on(switch_tracks);
+    trig_interface.on();
     note_interface.state = true;
     loop_init = false;
   }
@@ -370,7 +371,8 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
-      md_exploit.off();
+      trig_interface.off();
+    //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
       GUI.setPage(p);
@@ -379,7 +381,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    md_exploit.off();
+    trig_interface.off();
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
     return true;

@@ -82,6 +82,7 @@
 //#include "EmptyTrack.h"
 
 #include "Shared.h"
+#include "TrigInterface.h"
 
 //MCL Fonts
 #ifdef OLED_DISPLAY

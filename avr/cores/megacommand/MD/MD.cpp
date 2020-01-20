@@ -142,6 +142,16 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
   }
 }
 
+void MDClass::sendRequest(uint8_t *data, uint8_t len) {
+  USE_LOCK();
+  SET_LOCK();
+  MidiUart.m_putc(0xF0);
+  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
+  MidiUart.sendRaw(data, len);
+  MidiUart.m_putc(0xF7);
+  CLEAR_LOCK();
+}
+
 void MDClass::sendRequest(uint8_t type, uint8_t param) {
   USE_LOCK();
   SET_LOCK();
