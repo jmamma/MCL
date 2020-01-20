@@ -10,8 +10,8 @@ public:
   bool state = false;
 
   TrigInterface() : MidiSysexListenerClass() {
-    //    ids[0] = 0x7F;
-    //    ids[1] = 0x0D;
+    ids[0] = 0x7F;
+    ids[1] = 0x0D;
   }
   void setup(MidiClass *_midi) {
     sysex = &(_midi->midiSysex);
