@@ -22,9 +22,6 @@ public:
   bool on();
   bool off();
 
-  void activate_trig_interface();
-  void deactivate_trig_interface();
-
   virtual void start();
   virtual void end();
   virtual void end_immediate();

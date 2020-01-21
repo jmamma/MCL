@@ -18,7 +18,7 @@ bool TrigInterface::on() {
   }
   state = true;
   DEBUG_PRINTLN("activating trig interface");
-  activate_trig_interface();
+  MD.activate_trig_interface();
   note_interface.notecount = 0;
   note_interface.init_notes();
   note_interface.note_proceed = true;
@@ -36,21 +36,11 @@ bool TrigInterface::off() {
   }
   DEBUG_PRINTLN("deactiviating trig interface");
   state = false;
-  deactivate_trig_interface();
+  MD.deactivate_trig_interface();
   return true;
 }
 
 void TrigInterface::end() { }
-
-void TrigInterface::activate_trig_interface() {
- uint8_t data[3] = { 0x70, 0x31, 0x01 };
- MD.sendRequest(data, sizeof(data));
-}
-
-void TrigInterface::deactivate_trig_interface() {
- uint8_t data[3] = { 0x70, 0x31, 0x00 };
- MD.sendRequest(data, sizeof(data));
-}
 
 bool TrigInterface::is_trig_interface() {
  uint8_t msg[2] = { 0x7F, 0x0D };

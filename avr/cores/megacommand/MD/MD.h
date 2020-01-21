@@ -244,9 +244,14 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
-  void sendRequest(uint8_t *data, uint8_t len); 
+  void sendRequest(uint8_t *data, uint8_t len);
   void sendRequest(uint8_t type, uint8_t param);
 
+  void activate_trig_interface();
+  void deactivate_trig_interface();
+  void set_leds_batch(uint16_t bitmask);
+  void set_led(uint8_t idx);
+  void clear_led(uint8_t idx);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH
