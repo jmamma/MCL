@@ -5,7 +5,7 @@
 void GridPage::init() {
   show_slot_menu = false;
   reload_slot_models = false;
-  md_exploit.off();
+  trig_interface.off();
   load_slot_models();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();

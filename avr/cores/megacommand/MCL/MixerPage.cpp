@@ -405,9 +405,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
   */
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    route_page.update_globals();
-    md_exploit.off();
-    md_exploit.on();
+    trig_interface.on();
     GUI.setPage(&page_select_page);
     return true;
   }

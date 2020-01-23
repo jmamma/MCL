@@ -6,7 +6,7 @@
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  md_exploit.on();
+  trig_interface.on();
   note_interface.state = true;
   curpage = S_PAGE;
   grid_page.reload_slot_models = false;
@@ -157,7 +157,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         oled_display.display();
 #endif
 
-        md_exploit.off();
+        trig_interface.off();
 
         uint8_t save_mode = encoders[0]->cur;
         if (MidiClock.state == 2) {
@@ -183,7 +183,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     oled_display.textbox("SAVE PAT: ", modestr);
     oled_display.display();
 #endif
-    md_exploit.off();
+    trig_interface.off();
     DEBUG_PRINTLN("notes");
     DEBUG_DUMP(note_interface.notes_all_off());
 

@@ -135,9 +135,7 @@ void PageSelectPage::init() {
   }
   classic_display = false;
 #endif
-  if (!md_exploit.state) {
-    last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
-  }
+  last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
   loop_init = true;
 }
 

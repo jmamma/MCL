@@ -37,7 +37,7 @@ void MCL::setup() {
   MidiClock.setTempo(mcl_cfg.tempo);
 
   note_interface.setup();
-  md_exploit.setup();
+  //md_exploit.setup();
 
   MD.midi_events.enable_live_kit_update();
 

@@ -69,12 +69,7 @@ void MidiActivePeering::md_setup() {
       myclock = slowclock;
 
       delay_progress(400);
-
-      md_exploit.rec_global = 1;
-
       md_exploit.send_globals();
-      md_exploit.switch_global(7);
-      //      uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
       MD.getCurrentTrack(CALLBACK_TIMEOUT);
       for (uint8_t x = 0; x < 2; x++) {
         for (uint8_t y = 0; y < 16; y++) {
