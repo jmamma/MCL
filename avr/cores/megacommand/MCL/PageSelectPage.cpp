@@ -236,10 +236,10 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 void PageSelectPage::loop() {
   if (loop_init) {
     bool switch_tracks = false;
-    //md_exploit.off(switch_tracks);
+    //md_exploit.off(switch_tracks); 
+    trig_interface.on();
     md_prepare();
     //md_exploit.on(switch_tracks);
-    trig_interface.on();
     note_interface.state = true;
     loop_init = false;
   }
