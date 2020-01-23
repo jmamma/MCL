@@ -155,6 +155,7 @@ class MDClass {
 
 public:
   MDClass();
+  uint64_t fw_caps;
   bool connected = false;
   MidiClass *midi = &Midi;
   MDMidiEvents midi_events;
@@ -246,6 +247,8 @@ public:
    **/
   void sendRequest(uint8_t *data, uint8_t len);
   void sendRequest(uint8_t type, uint8_t param);
+
+  void get_fw_caps();
 
   void activate_trig_interface();
   void deactivate_trig_interface();
@@ -477,6 +480,8 @@ public:
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/
+  uint8_t waitBlocking(uint16_t timeout = 1000);
+
   bool waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
   /**
    * Get the status answer from the machinedrum, blocking until either
