@@ -192,7 +192,7 @@ void MDClass::deactivate_trig_interface() {
 void MDClass::set_leds_batch(uint16_t bitmask) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
   data[2] = bitmask >> 9;
-  data[3] = (bitmask >> 2) & 0x7F;
+  data[3] = (bitmask >> 3) & 0x7F;
   data[4] = (bitmask << 5) & 0x7F;
   sendRequest(data, sizeof(data));
 }
