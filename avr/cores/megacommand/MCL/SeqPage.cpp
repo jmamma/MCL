@@ -59,13 +59,6 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   if (device == DEVICE_MD) {
 
     last_md_track = track;
-    if (track == md_exploit.track_with_nolocks) {
-      if (md_exploit.state) {
-      md_exploit.off();
-      note_interface.state = true;
-      md_exploit.on();
-      }
-    }
   }
 #ifdef EXT_TRACKS
   else {
@@ -153,12 +146,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    if (route_page.hasChanged) {
-      route_page.update_globals();
-      bool switch_tracks = false;
-      md_exploit.off(false);
-      md_exploit.on();
-    }
     GUI.setPage(&page_select_page);
   }
 

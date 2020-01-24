@@ -14,7 +14,7 @@ void SDDrivePage::setup() {
 void SDDrivePage::init() {
 
   DEBUG_PRINT_FN();
-  md_exploit.off();
+  trig_interface.off();
   //  !note match only supports 3-char suffix
   strcpy(match, c_snapshot_suffix);
   strcpy(title, "SD-Drive");

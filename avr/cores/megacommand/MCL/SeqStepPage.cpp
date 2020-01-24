@@ -49,7 +49,7 @@ void SeqStepPage::init() {
   seq_param3.max = 64;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
-  md_exploit.on();
+  trig_interface.on();
   config();
   note_interface.state = true;
 }
