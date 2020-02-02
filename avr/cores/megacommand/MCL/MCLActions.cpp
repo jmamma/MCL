@@ -378,14 +378,13 @@ void MCLActions::send_tracks_to_devices() {
     memcpy(&MD.kit.dynamics[0], kit_extra.dynamics, sizeof(kit_extra.dynamics));
   }
 
-  MD.kit.origPosition = MD.currentKit;
+  MD.kit.origPosition = 99;
 
   /*Send the encoded kit to the MD via sysex*/
   uint16_t myclock = slowclock;
 
   md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  MD.loadKit(MD.kit.origPosition);
 
   //  mcl_seq.disable();
   //md_set_kit(&MD.kit);
