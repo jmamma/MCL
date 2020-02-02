@@ -198,8 +198,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = last_md_track + 1;
         opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
       } else {
+      #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      #endif
       }
 
       opt_param1_capture = (MCLEncoder *)encoders[0];
@@ -265,8 +267,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = last_md_track + 1;
         opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
       } else {
+      #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+      #endif
       }
       // capture current midi_device value
       opt_midi_device_capture = midi_device;
@@ -1016,9 +1020,11 @@ void SeqPage::display() {
 #endif
 
   uint8_t track_id = last_md_track;
+#ifdef EXT_TRACKS
   if (!is_md) {
     track_id = last_ext_track;
   }
+#endif
   track_id += 1;
 
   //  draw current active track
