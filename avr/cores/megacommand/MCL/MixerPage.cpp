@@ -448,6 +448,9 @@ void MixerMidiEvents::setup_callbacks() {
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
+  Midi.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&MixerMidiEvents::onControlChangeCallback_Midi);
 
   state = true;
 }
@@ -462,9 +465,34 @@ void MixerMidiEvents::remove_callbacks() {
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&MixerMidiEvents::onControlChangeCallback_Midi);
 
   state = false;
 }
+
+void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+
+  MD.parseCC(channel, param, &track, &track_param);
+
+  for (int i = 0; i < 16; i++) {
+    if ((note_interface.notes[i] == 1) && (i != track)) {
+      USE_LOCK();
+      SET_LOCK();
+      MD.setTrackParam(i, track_param, value);
+      MD.kit.params[i][track_param] = value;
+      CLEAR_LOCK();
+    }
+  }
+
+}
+
 uint8_t MixerMidiEvents::note_to_trig(uint8_t note_num) {
   uint8_t trig_num = 0;
   for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
