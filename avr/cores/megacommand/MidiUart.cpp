@@ -199,7 +199,7 @@ ISR(USART0_RX_vect) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();
-        MidiClock.callCallbacks();
+        MidiClock.callCallbacks(true);
       } else {
         switch (c) {
         case MIDI_START:
@@ -290,7 +290,7 @@ ISR(USART1_RX_vect) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();
-        MidiClock.callCallbacks();
+        MidiClock.callCallbacks(true);
       } else {
         switch (c) {
         case MIDI_START:
