@@ -37,8 +37,7 @@ void MDTrackSelect::end_immediate() {
   if (!state) {
     return;
   }
-  uint8_t last_md_track = sysex->getByte(2);
-  MD.currentTrack = last_md_track;
+  MD.currentTrack = sysex->getByte(2);
   return;
 }
 

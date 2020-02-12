@@ -906,7 +906,9 @@ void SeqPage::config_as_lockedit() {
 }
 
 void SeqPage::loop() {
-
+  if (last_md_track != MD.currentTrack) {
+  select_track(midi_device, MD.currentTrack);
+  }
   if (show_seq_menu) {
     seq_menu_page.loop();
     if (opt_midi_device_capture != DEVICE_MD && opt_trackid > 4) {
