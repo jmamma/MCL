@@ -42,22 +42,14 @@ bool TrigInterface::off() {
 
 void TrigInterface::end() { }
 
-bool TrigInterface::is_trig_interface() {
- uint8_t msg[2] = { 0x7F, 0x0D };
- uint8_t i = 0;
-
- if (sysex->getByte(0) != msg[0]) { return false; }
- if (sysex->getByte(1) != msg[1]) { return false; }
-
- return true;
-}
-
 void TrigInterface::end_immediate() {
-//  if (!is_trig_interface()) { return; }
   if (!state) {
     return;
   }
-  uint8_t trig = sysex->getByte(2);
+ if (sysex->getByte(0) != ids[0]) { return false; }
+ if (sysex->getByte(1) != ids[1]) { return false; }
+
+ uint8_t trig = sysex->getByte(2);
 
   if (trig >= 0x40) {
   note_interface.note_off_event(trig - 0x40, UART1_PORT);

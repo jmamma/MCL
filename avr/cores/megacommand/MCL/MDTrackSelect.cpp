@@ -37,8 +37,12 @@ void MDTrackSelect::end_immediate() {
   if (!state) {
     return;
   }
-  MD.currentTrack = sysex->getByte(2);
-  return;
+
+ if (sysex->getByte(0) != ids[0]) { return false; }
+ if (sysex->getByte(1) != ids[1]) { return false; }
+
+ MD.currentTrack = sysex->getByte(2);
+ return;
 }
 
 MDTrackSelect md_track_select;

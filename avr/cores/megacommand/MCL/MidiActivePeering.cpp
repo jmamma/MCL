@@ -26,10 +26,10 @@ void MidiActivePeering::prepare_display() {
 }
 
 void MidiActivePeering::delay_progress(uint16_t clock_) {
-    uint16_t myclock = slowclock;
-    while (clock_diff(myclock, slowclock) < clock_) {
-      mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-    }
+  uint16_t myclock = slowclock;
+  while (clock_diff(myclock, slowclock) < clock_) {
+    mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+  }
 }
 
 void MidiActivePeering::md_setup() {
@@ -37,7 +37,7 @@ void MidiActivePeering::md_setup() {
 
   MidiIDSysexListener.setup(&Midi);
   MidiUart.set_speed((uint32_t)31250, 1);
-#ifdef OLED_DISPLAY 
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
   prepare_display();
   oled_display.drawBitmap(14, 8, icon_md, 34, 42, WHITE);
@@ -55,8 +55,9 @@ void MidiActivePeering::md_setup() {
   MD.connected = false;
   uint16_t myclock = slowclock;
 
+  md_track_select.off();
   if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
-  delay_progress(4600);
+    delay_progress(4600);
   }
 
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
@@ -91,7 +92,7 @@ void MidiActivePeering::md_setup() {
       delay(250);
     }
   }
-
+  md_track_select.on();
   MidiIDSysexListener.cleanup();
 #ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);

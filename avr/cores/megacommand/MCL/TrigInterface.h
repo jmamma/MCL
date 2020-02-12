@@ -18,7 +18,6 @@ public:
     sysex->addSysexListener(this);
   }
 
-  bool is_trig_interface();
   bool on();
   bool off();
 
