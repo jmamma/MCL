@@ -47,6 +47,7 @@ void MCL::setup() {
   MDSysexListener.setup(&Midi);
   trig_interface.setup(&Midi);
   md_track_select.setup(&Midi);
+  md_track_select.on();
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
 #endif
