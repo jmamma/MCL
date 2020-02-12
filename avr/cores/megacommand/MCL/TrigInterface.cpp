@@ -53,7 +53,7 @@ bool TrigInterface::is_trig_interface() {
 }
 
 void TrigInterface::end_immediate() {
-  if (!is_trig_interface()) { return; }
+//  if (!is_trig_interface()) { return; }
   if (!state) {
     return;
   }

@@ -43,6 +43,7 @@
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSound.h"
+#include "MDTrackSelect.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"
