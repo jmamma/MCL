@@ -80,7 +80,7 @@ void MidiActivePeering::md_setup() {
       }
       MD.setStatus(0x22, MD.currentTrack);
       MD.connected = true;
-      // MD.setTempo(MidiClock.tempo * 24);
+      MD.getBlockingKit(0xF7);
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");
 #endif

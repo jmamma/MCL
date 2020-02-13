@@ -17,9 +17,11 @@ void MixerPage::set_display_mode(uint8_t param) {
     strcpy(info_line2, "FLTQ");
     break;
   case MODEL_LEVEL:
-  default:
     display_mode = MODEL_LEVEL;
     strcpy(info_line2, "VOLUME");
+    break;
+  default:
+    strcpy(info_line2, "PAR");
     break;
   }
 }
@@ -74,11 +76,7 @@ void MixerPage::init() {
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
-  for (uint8_t i = 0; i < 16; i++) {
-    for (uint8_t c = 0; c < 3; c++) {
-      params[i][c] = MD.kit.params[i][MODEL_FLTF + c];
-    }
-  }
+  memcpy(&params, MD.kit.params, sizeof(params));
 
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -412,12 +410,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.notes[i] == 1) {
-        for (uint8_t c = 0; c < 3; c++) {
-          if (MD.kit.params[i][MODEL_FLTF + c] != params[i][c]) {
+        for (uint8_t c = 0; c < 24; c++) {
+          if (MD.kit.params[i][c] != params[i][c]) {
             USE_LOCK();
             SET_LOCK();
-            MD.setTrackParam(i, MODEL_FLTF + c, params[i][c]);
-            MD.kit.params[i][MODEL_FLTF + c] = params[i][c];
+            MD.setTrackParam(i, c, params[i][c]);
+            MD.kit.params[i][c] = params[i][c];
             CLEAR_LOCK();
           }
         }
@@ -486,11 +484,22 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       USE_LOCK();
       SET_LOCK();
       MD.setTrackParam(i, track_param, value);
-      MD.kit.params[i][track_param] = value;
+      if (track_param < 24) {
+        MD.kit.params[i][track_param] = value;
+      } else {
+        MD.kit.levels[i] = value;
+      }
       CLEAR_LOCK();
     }
-  }
+    if (track_param == 33) {
+      uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;
 
+      oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
+      oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
+                            scaled_level + 1, WHITE);
+    }
+  }
+  mixer_page.set_display_mode(track_param);
 }
 
 uint8_t MixerMidiEvents::note_to_trig(uint8_t note_num) {
