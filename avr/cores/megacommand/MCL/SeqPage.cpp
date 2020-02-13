@@ -49,10 +49,10 @@ void SeqPage::init() {
 #endif
   toggle_device = true;
   if (mcl_cfg.track_select == 1) {
-  seq_menu_page.menu.enable_entry(0, true);
+  seq_menu_page.menu.enable_entry(0, false);
   }
   else {
-  seq_menu_page.menu.enable_entry(0, false);
+  seq_menu_page.menu.enable_entry(0, true);
   }
 }
 
@@ -85,7 +85,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (show_seq_menu) {
       // TI + SHIFT2 = select track.
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      if (BUTTON_DOWN(Buttons.BUTTON3) && (mcl_cfg.track_select == 0)) {
         opt_trackid = track + 1;
         note_interface.ignoreNextEvent(track);
         select_track(device, track);
