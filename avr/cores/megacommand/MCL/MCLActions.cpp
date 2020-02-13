@@ -115,18 +115,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         return;
       }
     }
-    int curkit;
-    if (readpattern != MD.currentPattern) {
-      curkit = MD.pattern.kit;
-    } else {
 
-      curkit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-      if ((mcl_cfg.auto_save == 1)) {
-        MD.saveCurrentKit(MD.currentKit);
-      }
-    }
-
-    if (!MD.getBlockingKit(curkit)) {
+    if (!MD.getBlockingKit(0x7F)) {
       DEBUG_PRINTLN("could not receive kit");
       return;
     }
@@ -187,16 +177,12 @@ void MCLActions::write_tracks(int column, int row) {
   DEBUG_PRINT_FN();
   if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
     if (MD.currentKit != MD.kit.origPosition) {
-      MD.getBlockingKit(MD.currentKit);
+      MD.getBlockingKit(0x7F);
     }
-    // MD.saveCurrentKit(MD.currentKit);
-    // MD.getBlockingKit(MD.currentKit);
     prepare_next_chain(row);
-    //  grid_task.run();
     return;
   }
-  MD.saveCurrentKit(MD.currentKit);
-  MD.getBlockingKit(MD.currentKit);
+  MD.getBlockingKit(0x7F);
 
   send_tracks_to_devices();
 
@@ -210,8 +196,6 @@ void MCLActions::prepare_next_chain(int row) {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 #endif
-  // MD.saveCurrentKit(MD.currentKit);
-  // MD.getBlockingKit(MD.currentKit);
   uint8_t q;
 
   //  if (MidiClock.state != 2) {
@@ -378,7 +362,7 @@ void MCLActions::send_tracks_to_devices() {
     memcpy(&MD.kit.dynamics[0], kit_extra.dynamics, sizeof(kit_extra.dynamics));
   }
 
-  MD.kit.origPosition = 99;
+  MD.kit.origPosition = 0xF7;
 
   /*Send the encoded kit to the MD via sysex*/
   uint16_t myclock = slowclock;

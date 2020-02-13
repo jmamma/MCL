@@ -148,20 +148,16 @@ void PageSelectPage::md_prepare() {
       (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
 #endif
   if (MD.connected) {
-    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-    if ((mcl_cfg.auto_save == 1)) {
-      MD.saveCurrentKit(MD.currentKit);
 #ifdef USE_BLOCKINGKIT
-      MD.getBlockingKit(MD.currentKit, CALLBACK_TIMEOUT);
-      if (MidiClock.state == 2) {
-        // Restore kit param values that are being modulaated by locks
-        mcl_seq.update_kit_params();
-      }
-#else
-      MD.requestKit(MD.currentKit);
-      delay(20);
-#endif
+    MD.getBlockingKit(0x7F, CALLBACK_TIMEOUT);
+    if (MidiClock.state == 2) {
+      // Restore kit param values that are being modulaated by locks
+      mcl_seq.update_kit_params();
     }
+#else
+    MD.requestKit(0x7F);
+    delay(20);
+#endif
   }
 }
 
@@ -236,10 +232,10 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 void PageSelectPage::loop() {
   if (loop_init) {
     bool switch_tracks = false;
-    //md_exploit.off(switch_tracks); 
+    // md_exploit.off(switch_tracks);
     trig_interface.on();
     md_prepare();
-    //md_exploit.on(switch_tracks);
+    // md_exploit.on(switch_tracks);
     note_interface.state = true;
     loop_init = false;
   }
@@ -370,7 +366,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
       trig_interface.off();
-    //  md_exploit.off();
+      //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
       GUI.setPage(p);

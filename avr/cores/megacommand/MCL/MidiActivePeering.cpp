@@ -81,8 +81,6 @@ void MidiActivePeering::md_setup() {
       MD.setStatus(0x22, MD.currentTrack);
       MD.connected = true;
       // MD.setTempo(MidiClock.tempo * 24);
-      MD.getCurrentKit();
-      MD.getBlockingKit(MD.currentKit);
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");
 #endif
@@ -92,7 +90,9 @@ void MidiActivePeering::md_setup() {
       delay(250);
     }
   }
-  md_track_select.on();
+  if (mcl_cfg.track_select == 1) {
+    md_track_select.on();
+  }
   MidiIDSysexListener.cleanup();
 #ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);

@@ -48,6 +48,12 @@ void SeqPage::init() {
   oled_display.clearDisplay();
 #endif
   toggle_device = true;
+  if (mcl_cfg.track_select == 1) {
+  seq_menu_page.menu.enable_entry(0, true);
+  }
+  else {
+  seq_menu_page.menu.enable_entry(0, false);
+  }
 }
 
 void SeqPage::cleanup() {
