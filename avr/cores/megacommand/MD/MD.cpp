@@ -163,20 +163,25 @@ void MDClass::sendRequest(uint8_t type, uint8_t param) {
   CLEAR_LOCK();
 }
 
-void MDClass::get_fw_caps() {
+bool MDClass::get_fw_caps() {
   uint8_t cb_type = 255;
 
   uint8_t data[2] = {0x70, 0x30};
   sendRequest(data, sizeof(data));
 
   uint8_t msgType = waitBlocking();
-  
+
+  ((uint8_t *)&(fw_caps))[0] = 0;
+  ((uint8_t *)&(fw_caps))[1] = 1;
+
   if (msgType == 0x72) {
     if (MDSysexListener.sysex->getByte(1) == 0x30) {
       ((uint8_t *)&(fw_caps))[0] = MDSysexListener.sysex->getByte(2);
       ((uint8_t *)&(fw_caps))[1] = MDSysexListener.sysex->getByte(3);
     }
+  return true;
   }
+  return false;
 }
 
 void MDClass::activate_trig_interface() {
@@ -186,6 +191,16 @@ void MDClass::activate_trig_interface() {
 
 void MDClass::deactivate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x00};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::activate_track_select() {
+  uint8_t data[3] = {0x70, 0x32, 0x01};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::deactivate_track_select() {
+  uint8_t data[3] = {0x70, 0x32, 0x00};
   sendRequest(data, sizeof(data));
 }
 

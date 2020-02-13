@@ -85,7 +85,7 @@ void MidiActivePeering::md_setup() {
          oled_display.display();
          while (1);
       }
-
+      MD.activate_track_select();
       MD.getBlockingKit(0xF7);
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");

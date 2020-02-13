@@ -248,10 +248,14 @@ public:
   void sendRequest(uint8_t *data, uint8_t len);
   void sendRequest(uint8_t type, uint8_t param);
 
-  void get_fw_caps();
+  bool get_fw_caps();
 
   void activate_trig_interface();
   void deactivate_trig_interface();
+
+  void activate_track_select();
+  void deactivate_track_select();
+
   void set_leds_batch(uint16_t bitmask);
   void set_led(uint8_t idx);
   void clear_led(uint8_t idx);
