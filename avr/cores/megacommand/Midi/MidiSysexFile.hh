@@ -2,9 +2,14 @@
 #define MIDISYSEXFILE_H__
 
 class MidiSysexFile {
-  
+
+  MidiUart *uart; 
   File file;
-  
+ 
+  MidiSysexFile(MidiClass *_midi) {
+    uart = _midi->uart;
+  }
+
   bool send(char *file_name) {
     
     bool ret;
@@ -45,7 +50,8 @@ class MidiSysexFile {
          } 
        }
        for (uint8_t c = 0; c < len; c++) {
-          m_putc(buf[c]);
+           while (uart->txRb.isFull());
+           uart->m_putc(buf[c]);
        }
 
        else {
@@ -54,6 +60,8 @@ class MidiSysexFile {
        }
 
     }
+
+    return true;
 
   }
   bool recv();
