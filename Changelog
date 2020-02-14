@@ -1,3 +1,40 @@
+MCL 2.60 15/02/2019
+
+Note: MCL update 2.60, requires that you upgrade your Machinedrum to OS version 1.70.
+
+Changes:
+
+  - The Trigger Interface is now supported natively, removing all limitations associated
+    with the original exploit.
+
+    You can now freely manipulate the MD GUI and parameters when using pages
+	that use the trigger interface.
+
+	Tracks will no longer switch when the TI mode is enabled.
+
+  - Track Select: Track selection is now synced with the MD.
+
+    To change tracks in the sequencer pages, simply change track on the MD.
+    A new menu item "Track Select" has been added. Default is Auto. "Man" will
+	disable the track synchronization between the MD and MCL.
+
+  - Auto save option is now deprecated.
+
+    MCL will no longer save/overwrite your kit data.
+
+    MCL no longer auto-saves the current kit to get the active kit data.
+    Similarly, writing/chaining tracks to the MD will no longer auto-save the
+    kit and instead will only modifys the loaded kit data.
+
+- Mixer Page:
+
+    CTRL Group. Select multiple tracks in the Mixer Page, adjusting any MD parameter
+    will change the same parameter across the selected tracks.
+
+- Wav Designer.
+
+    The MD's buttons and encoders will no longer become unresponsive after transmitting samples.
+
 MCL 2.51 05/01/2019
 
 Bug fix release:
