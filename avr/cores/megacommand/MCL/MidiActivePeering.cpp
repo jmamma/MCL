@@ -55,7 +55,6 @@ void MidiActivePeering::md_setup() {
   MD.connected = false;
   uint16_t myclock = slowclock;
 
-  md_track_select.off();
   if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
     delay_progress(4600);
   }
@@ -87,7 +86,6 @@ void MidiActivePeering::md_setup() {
          oled_display.display();
          while (1);
       }
-      MD.activate_track_select();
       MD.getBlockingKit(0xF7);
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");
@@ -97,9 +95,6 @@ void MidiActivePeering::md_setup() {
       DEBUG_PRINTLN("delay");
       delay(250);
     }
-  }
-  if (mcl_cfg.track_select == 1) {
-    md_track_select.on();
   }
   MidiIDSysexListener.cleanup();
 #ifdef OLED_DISPLAY

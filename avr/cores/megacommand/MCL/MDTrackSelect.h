@@ -15,7 +15,6 @@ public:
   }
   void setup(MidiClass *_midi) {
     sysex = &(_midi->midiSysex);
-    sysex->addSysexListener(this);
   }
 
   bool is_trig_interface();

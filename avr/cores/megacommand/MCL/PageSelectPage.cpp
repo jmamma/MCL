@@ -135,8 +135,8 @@ void PageSelectPage::init() {
   }
   classic_display = false;
 #endif
-  last_md_track = MD.getCurrentTrack(CALLBACK_TIMEOUT);
   loop_init = true;
+  display();
 }
 
 void PageSelectPage::md_prepare() {
@@ -369,6 +369,8 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
+      MD.getCurrentTrack(CALLBACK_TIMEOUT);
+      last_md_track = MD.currentTrack;
       GUI.setPage(p);
     }
     return true;

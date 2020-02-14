@@ -40,6 +40,9 @@ void SeqPage::create_chars_seq() {
 void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
+  if (mcl_cfg.track_select == 1) {
+    md_track_select.on();
+  }
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
@@ -57,6 +60,9 @@ void SeqPage::init() {
 }
 
 void SeqPage::cleanup() {
+  if (mcl_cfg.track_select == 1) {
+    md_track_select.off();
+  }
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
 }

@@ -357,7 +357,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
       if (note_interface.notes[track] > 0) {
         oled_display.fillRect(0 + track * 8, 2, 6, 6, WHITE);
-        MD.setStatus(0x22, track);
+        if (note_interface.notes_count_on() == 1) {
+          MD.setStatus(0x22, track);
+        }
       }
 
 #endif

@@ -24,9 +24,7 @@ void mclsys_apply_config() {
     GUI.use_screen_saver = false;
   }
   if (MD.connected) {
-    if (mcl_cfg.track_select == 1) {
-      md_track_select.on();
-    } else {
+    if (mcl_cfg.track_select != 1) {
       md_track_select.off();
     }
   }

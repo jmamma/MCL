@@ -7,6 +7,7 @@ void MDTrackSelect::start() {
 }
 
 bool MDTrackSelect::on() {
+  MD.activate_track_select();
   sysex->addSysexListener(this);
   if (state) {
     return false;
@@ -19,6 +20,7 @@ bool MDTrackSelect::on() {
 }
 
 bool MDTrackSelect::off() {
+  MD.deactivate_track_select();
   sysex->removeSysexListener(this);
   if (!state) {
     return false;
