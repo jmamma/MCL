@@ -355,10 +355,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
 #ifdef OLED_DISPLAY
-
       if (note_interface.notes[track] > 0) {
-
         oled_display.fillRect(0 + track * 8, 2, 6, 6, WHITE);
+        MD.setStatus(0x22, track);
       }
 
 #endif
