@@ -80,6 +80,8 @@ void MidiActivePeering::md_setup() {
       }
       MD.setStatus(0x22, MD.currentTrack);
       MD.connected = true;
+      MD.setGlobal(7);
+      MD.global.baseChannel = 9;
       if (!MD.get_fw_caps()) {
          oled_display.textbox("UPGRADE ", "MACHINEDRUM");
          oled_display.display();

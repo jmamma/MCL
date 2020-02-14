@@ -533,6 +533,11 @@ void MDClass::setStatus(uint8_t id, uint8_t value) {
   MD.sendSysex(data, countof(data));
 }
 
+void MDClass::setGlobal(uint8_t id) {
+  uint8_t data[] = {0x56, (uint8_t)id & 0x7F};
+  MD.sendSysex(data, countof(data));
+}
+
 void MDClass::loadGlobal(uint8_t id) { setStatus(1, id); }
 
 void MDClass::loadKit(uint8_t kit) { setStatus(2, kit); }

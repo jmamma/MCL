@@ -403,6 +403,7 @@ public:
   /**
    * Send a sysex message to load the given global.
    **/
+  void setGlobal(uint8_t id);
   void loadGlobal(uint8_t id);
   /**
    * Send a sysex message to load the given kit.
