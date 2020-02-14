@@ -269,6 +269,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         return true;
       }
+      mcl_seq.midi_events.update_params = false;
+      MD.midi_events.disable_live_kit_update();
+
+      if (MidiClock.state != 2) {
+        active_track.send_parameter_locks(step);
+      }
       show_pitch = true;
 
       if (step >= active_track.length) {
@@ -345,6 +351,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //   condition; //lower
       if (note_interface.notes_all_off_md()) {
         mcl_gui.init_encoders_used_clock();
+        active_track.reset_params();
+        mcl_seq.midi_events.update_params = true;
+        MD.midi_events.enable_live_kit_update();
       }
       if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
@@ -418,10 +427,40 @@ void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   }
 }
 
+void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+
+  MD.parseCC(channel, param, &track, &track_param);
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+  uint8_t step;
+  if (track_param > 23) {
+    return;
+  }
+
+  for (int i = 0; i < 16; i++) {
+    if ((note_interface.notes[i] == 1)) {
+      step = i + (SeqPage::page_select * 16);
+      active_track.set_track_locks(step, track_param, value);
+      if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+        SET_BIT64(active_track.pattern_mask, step);
+        SET_BIT64(active_track.lock_mask, step);
+      }
+    }
+  }
+}
+
 void SeqStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
+
+  Midi.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
 
@@ -433,6 +472,9 @@ void SeqStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
   state = false;

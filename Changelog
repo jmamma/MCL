@@ -26,6 +26,11 @@ Changes:
     Similarly, writing/chaining tracks to the MD will no longer auto-save the
     kit and instead will only modifys the loaded kit data.
 
+- Step Edit
+
+  Parameter locks can now be added from the Step page by holding a trig and
+  rotating a MD parameter.
+
 - Mixer Page:
 
     CTRL Group. Select multiple tracks in the Mixer Page, adjusting any MD parameter
