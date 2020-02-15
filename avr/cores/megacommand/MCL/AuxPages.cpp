@@ -32,8 +32,8 @@ fx_param_t fx_echo_params[8] = {
 fx_param_t fx_reverb_params[8] = {
     {MD_FX_REV, MD_REV_DVOL},
     {MD_FX_REV, MD_REV_DEC},
-    {MD_FX_REV, MD_REV_LP},
     {MD_FX_REV, MD_REV_HP},
+    {MD_FX_REV, MD_REV_LP},
     {MD_FX_REV, MD_REV_DAMP},
     {MD_FX_REV, MD_REV_GATE},
     {MD_FX_REV, MD_REV_PRED},
