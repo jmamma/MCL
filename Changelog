@@ -15,8 +15,8 @@ Changes:
   - Track Select: Track selection is now synced with the MD.
 
     To change tracks in the sequencer pages, simply change track on the MD.
-    A new menu item "Track Select" has been added. Default is Auto. "Man" will
-	disable the track synchronization between the MD and MCL.
+    A new Global->Machinedrum menu item "Track Select" has been added.
+	Default is Auto. "Man" will disable the track synchronization between the MD and MCL.
 
   - Auto save option is now deprecated.
 
@@ -24,7 +24,7 @@ Changes:
 
     MCL no longer auto-saves the current kit to get the active kit data.
     Similarly, writing/chaining tracks to the MD will no longer auto-save the
-    kit and instead will only modifys the loaded kit data.
+    kit and instead will only modify the loaded kit data.
 
 - Step Edit
 
@@ -33,7 +33,7 @@ Changes:
 
 - Mixer Page:
 
-    CTRL Group. Select multiple tracks in the Mixer Page, adjusting any MD parameter
+    CTRL All. Select multiple tracks in the Mixer Page, adjusting any MD parameter
     will change the same parameter across the selected tracks.
 
 - Wav Designer.
