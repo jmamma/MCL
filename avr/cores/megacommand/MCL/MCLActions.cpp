@@ -385,7 +385,7 @@ void MCLActions::send_tracks_to_devices() {
   }
 #endif
   uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float) MidiUart.speed);
-
+  md_latency_ms+= 10;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(md_latency_ms);
 
