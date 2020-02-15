@@ -33,11 +33,11 @@ void LFOPage::init() {
   update_encoders();
 
   if (lfo_track->mode != LFO_MODE_FREE) {
-    md_exploit.on();
+    trig_interface.on();
   }
 }
 void LFOPage::cleanup() {
-  md_exploit.off();
+  trig_interface.off();
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
@@ -460,10 +460,10 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       lfo_track->mode += 1;
     }
     if (lfo_track->mode == LFO_MODE_FREE) {
-      md_exploit.off();
+      trig_interface.off();
     } else {
       note_interface.state = true;
-      md_exploit.on();
+      trig_interface.on();
     }
   }
 

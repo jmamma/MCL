@@ -13,7 +13,7 @@ void SoundBrowserPage::setup() {
 void SoundBrowserPage::init() {
 
   DEBUG_PRINT_FN();
-  md_exploit.off();
+  trig_interface.off();
   char *snd = ".snd";
   strcpy(match, snd);
   char *files = "Sounds";

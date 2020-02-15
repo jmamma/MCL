@@ -37,14 +37,16 @@ void MCL::setup() {
   MidiClock.setTempo(mcl_cfg.tempo);
 
   note_interface.setup();
-  md_exploit.setup();
+  //md_exploit.setup();
 
   MD.midi_events.enable_live_kit_update();
 
   mcl_actions.setup();
   mcl_seq.setup();
-  MDSysexListener.setup(&Midi);
 
+  MDSysexListener.setup(&Midi);
+  trig_interface.setup(&Midi);
+  md_track_select.setup(&Midi);
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
 #endif

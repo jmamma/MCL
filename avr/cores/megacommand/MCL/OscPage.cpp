@@ -108,16 +108,12 @@ void OscPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
-    if (!md_exploit.state) {
-      md_exploit.on();
+      trig_interface.on();
       note_interface.state = true;
-    }
   }
 
   else {
-    if (md_exploit.state) {
-      md_exploit.off();
-    }
+      trig_interface.off();
   }
 }
 void OscPage::display() {

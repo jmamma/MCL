@@ -26,10 +26,10 @@ void MidiActivePeering::prepare_display() {
 }
 
 void MidiActivePeering::delay_progress(uint16_t clock_) {
-    uint16_t myclock = slowclock;
-    while (clock_diff(myclock, slowclock) < clock_) {
-      mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-    }
+  uint16_t myclock = slowclock;
+  while (clock_diff(myclock, slowclock) < clock_) {
+    mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+  }
 }
 
 void MidiActivePeering::md_setup() {
@@ -37,7 +37,7 @@ void MidiActivePeering::md_setup() {
 
   MidiIDSysexListener.setup(&Midi);
   MidiUart.set_speed((uint32_t)31250, 1);
-#ifdef OLED_DISPLAY 
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
   prepare_display();
   oled_display.drawBitmap(14, 8, icon_md, 34, 42, WHITE);
@@ -56,7 +56,7 @@ void MidiActivePeering::md_setup() {
   uint16_t myclock = slowclock;
 
   if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
-  delay_progress(4600);
+    delay_progress(4600);
   }
 
   for (uint8_t x = 0; x < 3 && MD.connected == false; x++) {
@@ -69,12 +69,7 @@ void MidiActivePeering::md_setup() {
       myclock = slowclock;
 
       delay_progress(400);
-
-      md_exploit.rec_global = 1;
-
       md_exploit.send_globals();
-      md_exploit.switch_global(7);
-      //      uint8_t curtrack = MD.getCurrentTrack(CALLBACK_TIMEOUT);
       MD.getCurrentTrack(CALLBACK_TIMEOUT);
       for (uint8_t x = 0; x < 2; x++) {
         for (uint8_t y = 0; y < 16; y++) {
@@ -84,9 +79,18 @@ void MidiActivePeering::md_setup() {
       }
       MD.setStatus(0x22, MD.currentTrack);
       MD.connected = true;
-      // MD.setTempo(MidiClock.tempo * 24);
-      MD.getCurrentKit();
-      MD.getBlockingKit(MD.currentKit);
+      MD.setGlobal(7);
+      MD.global.baseChannel = 9;
+      if (!MD.get_fw_caps()) {
+#ifdef OLED_DISPLAY
+         oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+         oled_display.display();
+#else
+         gfx.display_text("UPGRADE", "MACHINEDRUM");
+#endif
+         while (1);
+      }
+      MD.getBlockingKit(0xF7);
 #ifndef OLED_DISPLAY
       GUI.flash_strings_fill("MD", "CONNECTED");
 #endif
@@ -96,7 +100,6 @@ void MidiActivePeering::md_setup() {
       delay(250);
     }
   }
-
   MidiIDSysexListener.cleanup();
 #ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);

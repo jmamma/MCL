@@ -7,7 +7,7 @@ void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 void LoudnessPage::init() {
   DEBUG_PRINT_FN();
 
-  md_exploit.off();
+  trig_interface.off();
 #ifdef OLED_DISPLAY
   // classic_display = false;
   oled_display.clearDisplay();

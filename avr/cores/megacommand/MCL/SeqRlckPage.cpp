@@ -30,7 +30,7 @@ void SeqRlckPage::init() {
   if (MidiClock.state == 2) {
     MD.midi_events.disable_live_kit_update();
   }
-  md_exploit.off();
+  trig_interface.off();
   note_interface.state = false;
   recording = true;
   config();

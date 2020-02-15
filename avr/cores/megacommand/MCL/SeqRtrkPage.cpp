@@ -39,7 +39,7 @@ void SeqRtrkPage::init() {
   curpage = SEQ_RTRK_PAGE;
   recording = true;
   config();
-  md_exploit.on();
+  trig_interface.on();
 }
 
 void SeqRtrkPage::cleanup() {
@@ -135,13 +135,13 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   }
   redisplay = true;
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    md_exploit.off();
+    trig_interface.off();
     GUI.setPage(&seq_rlck_page);
     return true;
   }
 
 //  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-//    md_exploit.off();
+//    trig_interface.off();
 //    GUI.setPage(&grid_page);
 //    return true;
 //  }

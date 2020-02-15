@@ -65,7 +65,7 @@ const menu_t<5> midiconfig_menu_layout PROGMEM = {
 const menu_t<5> mdconfig_menu_layout PROGMEM = {
     "MD",
     {
-        {"KIT SAVE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_save, (Page*) NULL, NULL, {{0, "OFF"},{1, "AUTO"}}},
+        {"TRACK SELECT:",0, 2, 2, (uint8_t *) &mcl_cfg.track_select, (Page*) NULL, NULL, {{0, "MAN"},{1, "AUTO"}}},
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, NULL, {{0, "INT"},{17, "OMNI"}}},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, NULL, {}},

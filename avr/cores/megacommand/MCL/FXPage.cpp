@@ -15,7 +15,7 @@ void FXPage::init() {
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-  md_exploit.off();
+  trig_interface.off();
   update_encoders();
 }
 void FXPage::update_encoders() {

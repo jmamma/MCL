@@ -29,7 +29,7 @@ void SeqParamPage::config() {
 
 void SeqParamPage::init() {
   config();
-  md_exploit.on();
+  trig_interface.on();
   toggle_device = false;
   note_interface.state = true;
 

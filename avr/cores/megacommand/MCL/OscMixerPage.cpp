@@ -8,7 +8,7 @@
 void OscMixerPage::setup() {}
 
 void OscMixerPage::init() {
-  md_exploit.off();
+  trig_interface.off();
   wd.last_page = this;
   create_chars_mixer();
 #ifdef OLED_DISPLAY
