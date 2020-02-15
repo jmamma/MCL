@@ -82,8 +82,12 @@ void MidiActivePeering::md_setup() {
       MD.setGlobal(7);
       MD.global.baseChannel = 9;
       if (!MD.get_fw_caps()) {
+#ifdef OLED_DISPLAY
          oled_display.textbox("UPGRADE ", "MACHINEDRUM");
          oled_display.display();
+#else
+         gfx.display_text("UPGRADE", "MACHINEDRUM");
+#endif
          while (1);
       }
       MD.getBlockingKit(0xF7);

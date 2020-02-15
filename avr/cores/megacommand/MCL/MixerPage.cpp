@@ -379,7 +379,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
 #endif
 
-      if (note_interface.notes_all_off_md()) {
+      if (note_interface.notes_count_on() == 0) {
+      //  encoder_level_handle(mixer_page.encoders[0]);
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           route_page.toggle_routes_batch();
         }
@@ -494,10 +495,11 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
     if (track_param == 33) {
       uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;
-
+#ifdef OLED_DISPLAY
       oled_display.fillRect(0 + i * 8, 12, 6, FADER_LEN, BLACK);
       oled_display.drawRect(0 + i * 8, 12 + (FADER_LEN - scaled_level), 6,
                             scaled_level + 1, WHITE);
+#endif
     }
   }
   mixer_page.set_display_mode(track_param);

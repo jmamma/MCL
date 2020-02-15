@@ -9,13 +9,14 @@ void TrigInterface::start() {
 
 bool TrigInterface::on() {
 
-  sysex->addSysexListener(this);
   if (state) {
     return false;
   }
   if (!MD.connected) {
     return false;
   }
+
+  sysex->addSysexListener(this);
   state = true;
   DEBUG_PRINTLN("activating trig interface");
   MD.activate_trig_interface();
