@@ -43,6 +43,7 @@
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSound.h"
+#include "MDTrackSelect.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"
@@ -82,6 +83,7 @@
 //#include "EmptyTrack.h"
 
 #include "Shared.h"
+#include "TrigInterface.h"
 
 //MCL Fonts
 #ifdef OLED_DISPLAY
@@ -89,8 +91,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2051
-#define VERSION_STR "2.51"
+#define VERSION 2060
+#define VERSION_STR "2.60"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

@@ -19,12 +19,15 @@ void mclsys_apply_config() {
 #endif
 #endif
   if (mcl_cfg.screen_saver == 1) {
-  GUI.use_screen_saver = true;
+    GUI.use_screen_saver = true;
+  } else {
+    GUI.use_screen_saver = false;
   }
-  else {
-  GUI.use_screen_saver = false;
+  if (MD.connected) {
+    if (mcl_cfg.track_select != 1) {
+      md_track_select.off();
+    }
   }
-
 }
 
 bool MCLSysConfig::write_cfg() {
@@ -80,7 +83,7 @@ bool MCLSysConfig::cfg_init() {
   row = 0;
   cur_row = 0;
   cur_col = 0;
-  memset(&routing,6,sizeof(routing));
+  memset(&routing, 6, sizeof(routing));
   poly_mask = 0;
   uart2_ctrl_mode = MIDI_LOCAL_MODE;
   mutes = 0;
@@ -94,6 +97,7 @@ bool MCLSysConfig::cfg_init() {
   chain_rand_min = 0;
   chain_rand_max = 1;
   ram_page_mode = 0;
+  track_select = 1;
   cfgfile.close();
 
   ret = write_cfg();

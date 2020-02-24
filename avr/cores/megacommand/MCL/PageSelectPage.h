@@ -6,6 +6,8 @@
 #include "GUI.h"
 #include "MD.h"
 
+#define USE_BLOCKINGKIT
+
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;
 

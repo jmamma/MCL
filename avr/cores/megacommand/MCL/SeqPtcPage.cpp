@@ -97,10 +97,10 @@ void SeqPtcPage::init() {
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
-    md_exploit.on();
+    trig_interface.on();
     note_interface.state = true;
   } else {
-    md_exploit.off();
+    trig_interface.off();
     last_md_track = MD.currentTrack;
   }
   curpage = SEQ_PTC_PAGE;

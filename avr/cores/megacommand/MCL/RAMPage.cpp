@@ -29,7 +29,7 @@ void RAMPage::init() {
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-  md_exploit.off();
+  trig_interface.off();
   if (mcl_cfg.ram_page_mode == MONO) {
     ((MCLEncoder *)encoders[0])->max = 2;
   } else {

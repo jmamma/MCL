@@ -17,7 +17,7 @@
 class MCLSeqMidiEvents : public MidiCallback {
 public:
   bool state;
-
+  bool update_params;
   void setup_callbacks();
   void remove_callbacks();
 

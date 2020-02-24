@@ -18,7 +18,7 @@ void GridWritePage::setup() {
   ((MCLEncoder *)encoders[2])->max = 1;
 
   // MD.requestKit(MD.currentKit);
-  md_exploit.on();
+  trig_interface.on();
   note_interface.state = true;
   // GUI.display();
   curpage = W_PAGE;
@@ -150,7 +150,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
         oled_display.textbox("CHAIN SLOTS", "");
         oled_display.display();
 #endif
-        md_exploit.off();
+        trig_interface.off();
         mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
       }
       GUI.setPage(&grid_page);
@@ -163,7 +163,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
 
-    md_exploit.off();
+    trig_interface.off();
     for (int i = 0; i < 20; i++) {
 
       note_interface.notes[i] = 3;

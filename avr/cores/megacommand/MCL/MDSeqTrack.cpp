@@ -42,10 +42,7 @@ void MDSeqTrack::seq() {
         (timing[step_count] - 12 == MidiClock.mod12_counter)) {
 
       // Dont transmit locks if MDExploit is on.
-      if ((track_number != md_exploit.track_with_nolocks) ||
-          (!md_exploit.state)) {
         send_parameter_locks(step_count);
-      }
 
       if (IS_BIT_SET64(pattern_mask, step_count)) {
         trig_conditional(conditional[step_count]);
@@ -54,10 +51,7 @@ void MDSeqTrack::seq() {
     if ((timing[next_step] < 12) &&
         ((timing[next_step]) == MidiClock.mod12_counter)) {
 
-      if ((track_number != md_exploit.track_with_nolocks) ||
-          (!md_exploit.state)) {
         send_parameter_locks(next_step);
-      }
 
       if (IS_BIT_SET64(pattern_mask, next_step)) {
         trig_conditional(conditional[next_step]);

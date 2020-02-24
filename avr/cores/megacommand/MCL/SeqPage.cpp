@@ -40,6 +40,9 @@ void SeqPage::create_chars_seq() {
 void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
+  if (mcl_cfg.track_select == 1) {
+    md_track_select.on();
+  }
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
@@ -48,9 +51,18 @@ void SeqPage::init() {
   oled_display.clearDisplay();
 #endif
   toggle_device = true;
+  if (mcl_cfg.track_select == 1) {
+  seq_menu_page.menu.enable_entry(0, false);
+  }
+  else {
+  seq_menu_page.menu.enable_entry(0, true);
+  }
 }
 
 void SeqPage::cleanup() {
+  if (mcl_cfg.track_select == 1) {
+    md_track_select.off();
+  }
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
 }
@@ -59,13 +71,6 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   if (device == DEVICE_MD) {
 
     last_md_track = track;
-    if (track == md_exploit.track_with_nolocks) {
-      if (md_exploit.state) {
-      md_exploit.off();
-      note_interface.state = true;
-      md_exploit.on();
-      }
-    }
   }
 #ifdef EXT_TRACKS
   else {
@@ -86,7 +91,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (show_seq_menu) {
       // TI + SHIFT2 = select track.
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      if (BUTTON_DOWN(Buttons.BUTTON3) && (mcl_cfg.track_select == 0)) {
         opt_trackid = track + 1;
         note_interface.ignoreNextEvent(track);
         select_track(device, track);
@@ -153,12 +158,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    if (route_page.hasChanged) {
-      route_page.update_globals();
-      bool switch_tracks = false;
-      md_exploit.off(false);
-      md_exploit.on();
-    }
     GUI.setPage(&page_select_page);
   }
 
@@ -923,7 +922,9 @@ void SeqPage::config_as_lockedit() {
 }
 
 void SeqPage::loop() {
-
+  if (last_md_track != MD.currentTrack) {
+  select_track(midi_device, MD.currentTrack);
+  }
   if (show_seq_menu) {
     seq_menu_page.loop();
     if (opt_midi_device_capture != DEVICE_MD && opt_trackid > 4) {

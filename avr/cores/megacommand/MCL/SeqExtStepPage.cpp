@@ -42,7 +42,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN("seq extstep init");
   curpage = SEQ_EXTSTEP_PAGE;
-  md_exploit.on();
+  trig_interface.on();
   note_interface.state = true;
   config_encoders();
   midi_events.setup_callbacks();
@@ -336,14 +336,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
       }
       return true;
-    }
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-      md_exploit.off();
-      GUI.setPage(&grid_page);
     }
     return true;
   }

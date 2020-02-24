@@ -169,6 +169,7 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+  if (!update_params) { return; }
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -207,6 +208,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   */
+  update_params = true;
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);

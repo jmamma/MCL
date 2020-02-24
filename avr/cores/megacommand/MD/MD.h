@@ -155,6 +155,7 @@ class MDClass {
 
 public:
   MDClass();
+  uint64_t fw_caps;
   bool connected = false;
   MidiClass *midi = &Midi;
   MDMidiEvents midi_events;
@@ -244,8 +245,20 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
+  void sendRequest(uint8_t *data, uint8_t len);
   void sendRequest(uint8_t type, uint8_t param);
 
+  bool get_fw_caps();
+
+  void activate_trig_interface();
+  void deactivate_trig_interface();
+
+  void activate_track_select();
+  void deactivate_track_select();
+
+  void set_leds_batch(uint16_t bitmask);
+  void set_led(uint8_t idx);
+  void clear_led(uint8_t idx);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH
@@ -390,6 +403,7 @@ public:
   /**
    * Send a sysex message to load the given global.
    **/
+  void setGlobal(uint8_t id);
   void loadGlobal(uint8_t id);
   /**
    * Send a sysex message to load the given kit.
@@ -471,6 +485,8 @@ public:
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/
+  uint8_t waitBlocking(uint16_t timeout = 1000);
+
   bool waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
   /**
    * Get the status answer from the machinedrum, blocking until either
