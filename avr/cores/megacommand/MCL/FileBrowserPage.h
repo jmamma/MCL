@@ -43,6 +43,7 @@ public:
   bool show_new_folder = true;
   bool show_filemenu = true;
   bool show_overwrite = false;
+  bool deferred_display = false;
 
   bool filemenu_active = false;
 

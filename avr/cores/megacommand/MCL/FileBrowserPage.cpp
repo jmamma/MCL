@@ -153,7 +153,10 @@ void FileBrowserPage::display() {
     draw_scrollbar(120);
   }
 
-  oled_display.display();
+  if (!deferred_display)
+  {
+    oled_display.display();
+  }
 #else
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, title);
@@ -381,7 +384,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();
-    return false;
+    return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[0] = param1;
@@ -389,7 +392,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
     _handle_filemenu();
     init();
-    return false;
+    return true;
   }
 #else
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
@@ -415,7 +418,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     // chdir to parent
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
       _cd_up();
-      return false;
+      return true;
     }
 
     DEBUG_DUMP(temp_entry);
@@ -425,7 +428,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     if (!select_dirs) {
       if (file.isDirectory()) {
         _cd(temp_entry);
-        return false;
+        return true;
       }
     }
 
