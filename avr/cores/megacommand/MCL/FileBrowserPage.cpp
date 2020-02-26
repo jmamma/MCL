@@ -25,6 +25,14 @@ void FileBrowserPage::add_entry(const char *entry) {
 void FileBrowserPage::init() {
   DEBUG_PRINT_FN();
 
+  if (show_filetypes) {
+    if (filetype_idx > filetype_max) filetype_idx = filetype_max;
+    if (filetype_idx < 0) filetype_idx = 0;
+    strcpy(match, filetypes[filetype_idx]);
+    ((MCLEncoder*)param1)->min = 0;
+    ((MCLEncoder*)param1)->max = filetype_max;
+  }
+
   char temp_entry[16];
   call_handle_filemenu = false;
   // config menu
@@ -151,10 +159,16 @@ void FileBrowserPage::display() {
     draw_scrollbar(120);
   }
 
-  if (!deferred_display)
-  {
-    oled_display.display();
+  if (show_filetypes) {
+    oled_display.setTextColor(WHITE, BLACK);
+    for (int i = 0; i <= filetype_max; ++i) {
+      oled_display.setCursor(2, 18 + i * 6);
+      oled_display.println(filetype_names[i]);
+    }
+    oled_display.fillRect(0, 12 + filetype_idx * 6, 35, 7, INVERT);
   }
+
+  oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, title);
@@ -210,6 +224,11 @@ void FileBrowserPage::loop() {
 #endif
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
+  }
+
+  if (param1->hasChanged()) {
+    filetype_idx = param1->cur;
+    init();
   }
 }
 

@@ -21,6 +21,7 @@
 #define MENU_WIDTH 78
 
 #define MAX_FB_ITEMS 4
+#define MAX_FT_SELECT 3
 
 class FileBrowserPage : public LightPage {
 public:
@@ -42,7 +43,12 @@ public:
   bool show_new_folder = true;
   bool show_filemenu = true;
   bool show_overwrite = false;
-  bool deferred_display = false;
+
+  bool show_filetypes = false;
+  uint8_t filetype_idx = 0;
+  uint8_t filetype_max = 0;
+  const char* filetypes[MAX_FT_SELECT];
+  const char* filetype_names[MAX_FT_SELECT];
 
   bool filemenu_active = false;
 

@@ -10,12 +10,10 @@ public:
 
   SDDrivePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
-      : FileBrowserPage(e1, e2, e3, e4), filetype_encoder(e1) { }
+      : FileBrowserPage(e1, e2, e3, e4) { }
 
-  Encoder* filetype_encoder;
   uint8_t progress_i;
   uint8_t progress_max;
-  uint8_t browse_filetype; // 0=snp, 1=spk
   void init();
   void setup();
   void save_snapshot();
@@ -23,7 +21,6 @@ public:
   virtual void on_select(const char*);
   virtual void on_new();
   virtual void display();
-  virtual void loop();
 };
 
 extern SDDrivePage sddrive_page;
