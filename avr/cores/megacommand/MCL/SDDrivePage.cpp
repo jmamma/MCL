@@ -1,7 +1,13 @@
 #include "MCL_impl.h"
 
+//  !note match only supports 3-char suffix
 const char *c_snapshot_suffix = ".snp";
 const char *c_samplepack_suffix = ".spk";
+
+const char* c_snapshot_filetype_name = "Snapshot";
+const char* c_samplepack_filetype_name = "Sample";
+
+
 const char *c_snapshot_root = "/SDDrive/MD";
 
 #define FT_SNP 0
@@ -10,8 +16,12 @@ const char *c_snapshot_root = "/SDDrive/MD";
 void SDDrivePage::setup() {
   SD.mkdir(c_snapshot_root, true);
   SD.chdir(c_snapshot_root);
-  browse_filetype = FT_SNP;
   strcpy(lwd, c_snapshot_root);
+  filetypes[0] = c_snapshot_suffix;
+  filetypes[1] = c_samplepack_suffix;
+  filetype_names[0] = c_snapshot_filetype_name;
+  filetype_names[1] = c_samplepack_filetype_name;
+  filetype_max = FT_SPK;
   FileBrowserPage::setup();
 }
 
@@ -19,15 +29,6 @@ void SDDrivePage::init() {
 
   DEBUG_PRINT_FN();
   trig_interface.off();
-  //  !note match only supports 3-char suffix
-  switch (browse_filetype) {
-    case FT_SNP:
-      strcpy(match, c_snapshot_suffix);
-      break;
-    case FT_SPK:
-      strcpy(match, c_samplepack_suffix);
-      break;
-  }
   strcpy(title, "SD-Drive");
 
   show_save = true;
@@ -35,20 +36,12 @@ void SDDrivePage::init() {
   show_filemenu = true;
   show_new_folder = true;
   show_overwrite = true;
-  deferred_display = true;
+  show_filetypes = true;
   FileBrowserPage::init();
 }
 
 void SDDrivePage::display() {
   FileBrowserPage::display();
-  oled_display.setFont(&TomThumb);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(2, 18);
-  oled_display.println("SNAPSHOT");
-  oled_display.setCursor(2, 24);
-  oled_display.println("SAMPLE");
-  oled_display.fillRect(0, 12 + browse_filetype * 6, 35, 7, INVERT);
-  oled_display.display();
   if (progress_max != 0) {
     mcl_gui.draw_progress_bar(progress_i, progress_max, false);
   }
@@ -267,7 +260,7 @@ load_error:
 }
 
 void SDDrivePage::on_new() {
-  switch (browse_filetype) {
+  switch (filetype_idx) {
     case FT_SNP:
       save_snapshot();
       break;
@@ -278,16 +271,8 @@ void SDDrivePage::on_new() {
   init();
 }
 
-void SDDrivePage::loop(){
-  FileBrowserPage::loop();
-  if (filetype_encoder->hasChanged()) {
-    browse_filetype = filetype_encoder->cur;
-    init();
-  }
-}
-
 void SDDrivePage::on_select(const char *__) { 
-  switch (browse_filetype) {
+  switch (filetype_idx) {
     case FT_SNP: 
       load_snapshot(); 
       break;
