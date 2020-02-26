@@ -3,19 +3,35 @@
 #include "MDSound.h"
 
 const char* c_sound_root = "/Sounds/MD";
+const char* c_snd_suffix = ".snd";
+const char* c_syx_suffix = ".syx";
+const char* c_wav_suffix = ".wav";
+
+const char* c_snd_name = "SOUND";
+const char* c_syx_name = "SDS";
+const char* c_wav_name = "WAV";
+
+#define FT_SND 0
+#define FT_SYX 1
+#define FT_WAV 2
 
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.chdir(c_sound_root);
   strcpy(lwd, c_sound_root);
+  filetypes[0] = c_snd_suffix;
+  filetypes[1] = c_syx_suffix;
+  filetypes[2] = c_wav_suffix;
+  filetype_names[0] = c_snd_name;
+  filetype_names[1] = c_syx_name;
+  filetype_names[2] = c_wav_name;
+  filetype_max = FT_WAV;
   FileBrowserPage::setup();
 }
 void SoundBrowserPage::init() {
 
   DEBUG_PRINT_FN();
   trig_interface.off();
-  char *snd = ".snd";
-  strcpy(match, snd);
   char *files = "Sounds";
   strcpy(title, files);
 
@@ -24,6 +40,7 @@ void SoundBrowserPage::init() {
   show_filemenu = true;
   show_new_folder = true;
   show_overwrite = true;
+  show_filetypes = true;
   FileBrowserPage::init();
 }
 
@@ -82,15 +99,37 @@ void SoundBrowserPage::load_sound() {
 }
 
 void SoundBrowserPage::on_new() {
-  save_sound();
-  init();
+  switch (filetype_idx) {
+    case FT_SND:
+      save_sound();
+      init();
+      break;
+    case FT_SYX:
+      // TODO recv syx
+      break;
+    case FT_WAV:
+      // TODO recv wav
+      break;
+  }
 }
 
 void SoundBrowserPage::on_cancel() {
   GUI.setPage(&grid_page);
 }
 
-void SoundBrowserPage::on_select(const char *__) { load_sound(); }
+void SoundBrowserPage::on_select(const char *__) { 
+  switch (filetype_idx) {
+    case FT_SND:
+      load_sound();
+      break;
+    case FT_SYX:
+      // TODO send syx
+      break;
+    case FT_WAV:
+      // TODO send wav
+      break;
+  }
+}
 
 bool SoundBrowserPage::handleEvent(gui_event_t* event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
