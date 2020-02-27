@@ -18,7 +18,7 @@ const char *c_wav_name = "WAV";
 #define PA_SELECT 1
 
 static char s_samplename[6];
-static bool s_query_returned = false;
+static volatile bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
@@ -60,6 +60,7 @@ void SoundBrowserPage::init() {
 }
 
 void SoundBrowserPage::query_sample_slots() {
+  DEBUG_PRINT_FN();
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
   numEntries = 0;
@@ -67,7 +68,7 @@ void SoundBrowserPage::query_sample_slots() {
   uint8_t data[3] = {0x70, 0x34, 0x00};
   sysex->addSysexListener(this);
   for (int i = 0; i < 48; ++i) {
-    mcl_gui.draw_progress("Loading ROM slots", i, 47);
+    mcl_gui.draw_progress("Loading slots", i, 47);
     s_query_returned = false;
     MD.sendRequest(data, 3);
     while (!s_query_returned) {
@@ -236,6 +237,8 @@ void SoundBrowserPage::start() {}
 void SoundBrowserPage::end() {}
 
 void SoundBrowserPage::end_immediate() {
+  DEBUG_PRINT_FN();
+
   if (sysex->getByte(0) != 0x00)
     return;
   if (sysex->getByte(1) != 0x20)
@@ -250,6 +253,7 @@ void SoundBrowserPage::end_immediate() {
     return;
   if (sysex->getByte(6) != 0x34)
     return;
+  DEBUG_PRINTLN("SoundBrowserPage: end_immediate passed");
   for (int i = 0; i < 5; ++i) {
     s_samplename[i] = sysex->getByte(7 + i);
   }
