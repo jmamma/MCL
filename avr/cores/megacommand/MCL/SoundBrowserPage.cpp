@@ -258,6 +258,7 @@ void SoundBrowserPage::end_immediate() {
     s_samplename[i] = sysex->getByte(7 + i);
   }
   s_samplename[5] = 0;
+  s_query_returned = true;
 }
 
 MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
