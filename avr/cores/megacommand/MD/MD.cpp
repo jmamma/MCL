@@ -205,7 +205,7 @@ void MDClass::deactivate_track_select() {
 }
 
 void MDClass::set_leds_batch(uint16_t bitmask) {
-  uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
+  uint8_t data[5] = {0x70, 0x36, 0x00, 0x00, 0x00};
   data[2] = bitmask >> 9;
   data[3] = (bitmask >> 3) & 0x7F;
   data[4] = (bitmask << 5) & 0x7F;
@@ -214,13 +214,13 @@ void MDClass::set_leds_batch(uint16_t bitmask) {
 
 void MDClass::set_led(uint8_t idx) {
 
-  uint8_t data[3] = {0x70, 0x34, 0x00};
+  uint8_t data[3] = {0x70, 0x35, 0x00};
   data[2] = idx + 0x40;
   sendRequest(data, sizeof(data));
 }
 
 void MDClass::clear_led(uint8_t idx) {
-  uint8_t data[3] = {0x70, 0x34, 0x00};
+  uint8_t data[3] = {0x70, 0x35, 0x00};
   data[2] = idx;
   sendRequest(data, sizeof(data));
 }

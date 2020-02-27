@@ -47,8 +47,8 @@ void TrigInterface::end_immediate() {
   if (!state) {
     return;
   }
- if (sysex->getByte(0) != ids[0]) { return false; }
- if (sysex->getByte(1) != ids[1]) { return false; }
+ if (sysex->getByte(0) != ids[0]) { return; }
+ if (sysex->getByte(1) != ids[1]) { return; }
 
  uint8_t trig = sysex->getByte(2);
 

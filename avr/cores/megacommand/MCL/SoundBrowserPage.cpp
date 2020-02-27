@@ -1,47 +1,81 @@
 #include "SoundBrowserPage.h"
 #include "MCL.h"
 #include "MDSound.h"
+#include "MidiSDS.hh"
+#include "Wav.h"
 
-const char* c_sound_root = "/Sounds/MD";
-const char* c_snd_suffix = ".snd";
-const char* c_syx_suffix = ".syx";
-const char* c_wav_suffix = ".wav";
+const char *c_sound_root = "/Sounds/MD";
+const char *c_snd_suffix = ".snd";
+const char *c_wav_suffix = ".wav";
 
-const char* c_snd_name = "SOUND";
-const char* c_syx_name = "SDS";
-const char* c_wav_name = "WAV";
+const char *c_snd_name = "SOUND";
+const char *c_wav_name = "WAV";
 
 #define FT_SND 0
-#define FT_SYX 1
-#define FT_WAV 2
+#define FT_WAV 1
+
+#define PA_NEW 0
+#define PA_SELECT 1
+
+static char s_samplename[6];
+static bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.chdir(c_sound_root);
   strcpy(lwd, c_sound_root);
   filetypes[0] = c_snd_suffix;
-  filetypes[1] = c_syx_suffix;
-  filetypes[2] = c_wav_suffix;
+  filetypes[1] = c_wav_suffix;
   filetype_names[0] = c_snd_name;
-  filetype_names[1] = c_syx_name;
-  filetype_names[2] = c_wav_name;
+  filetype_names[1] = c_wav_name;
   filetype_max = FT_WAV;
   FileBrowserPage::setup();
 }
-void SoundBrowserPage::init() {
 
+void SoundBrowserPage::init() {
   DEBUG_PRINT_FN();
   trig_interface.off();
-  char *files = "Sounds";
-  strcpy(title, files);
 
-  show_dirs = true;
-  show_save = true;
-  show_filemenu = true;
-  show_new_folder = true;
-  show_overwrite = true;
-  show_filetypes = true;
-  FileBrowserPage::init();
+  if (samplemgr_show) {
+    show_dirs = false;
+    show_save = false;
+    show_filemenu = false;
+    show_new_folder = false;
+    show_overwrite = false;
+    show_filetypes = false;
+    char *files = "MD-ROM";
+    strcpy(title, files);
+    query_sample_slots();
+  } else {
+    show_dirs = true;
+    show_save = true;
+    show_filemenu = true;
+    show_new_folder = true;
+    show_overwrite = true;
+    show_filetypes = true;
+    char *files = "Sounds";
+    strcpy(title, files);
+    FileBrowserPage::init();
+  }
+}
+
+void SoundBrowserPage::query_sample_slots() {
+  encoders[1]->cur = 0;
+  encoders[1]->old = 0;
+  numEntries = 0;
+  cur_file = 0;
+  uint8_t data[3] = {0x70, 0x34, 0x00};
+  sysex->addSysexListener(this);
+  for (int i = 0; i < 48; ++i) {
+    mcl_gui.draw_progress("Loading ROM slots", i, 47);
+    s_query_returned = false;
+    MD.sendRequest(data, 3);
+    while (!s_query_returned) {
+      handleIncomingMidi();
+    }
+    add_entry(s_samplename);
+  }
+  sysex->removeSysexListener(this);
 }
 
 void SoundBrowserPage::save_sound() {
@@ -98,53 +132,130 @@ void SoundBrowserPage::load_sound() {
   }
 }
 
+// send current selected wav file to slot
+void SoundBrowserPage::send_wav(int slot) {
+  DEBUG_PRINT_FN();
+  if (file.isOpen()) {
+    char temp_entry[16];
+    file.getName(temp_entry, 16);
+    file.close();
+    DEBUG_PRINTLN("sending sample");
+    DEBUG_PRINTLN(temp_entry);
+    // TODO
+    midi_sds.sendWav(temp_entry, slot);
+    gfx.alert("Sample sent", temp_entry);
+  }
+}
+
+void SoundBrowserPage::recv_wav(int slot) {
+  DEBUG_PRINT_FN();
+
+  char wav_name[] = "        ";
+
+  if (mcl_gui.wait_for_input(wav_name, "Sample Name", 8)) {
+    char temp_entry[16];
+    strcpy(temp_entry, wav_name);
+    strcat(temp_entry, ".wav");
+    DEBUG_PRINTLN("Receiving new sample:");
+    DEBUG_PRINTLN(temp_entry);
+    // TODO
+    gfx.alert("Sample received", temp_entry);
+  }
+}
+
 void SoundBrowserPage::on_new() {
-  switch (filetype_idx) {
+  if (!samplemgr_show) {
+    switch (filetype_idx) {
     case FT_SND:
       save_sound();
-      init();
-      break;
-    case FT_SYX:
-      // TODO recv syx
       break;
     case FT_WAV:
-      // TODO recv wav
+      pending_action = PA_NEW;
+      samplemgr_show = true;
       break;
+    }
+    init();
+  } else {
+    // shouldn't happen.
+    // show_save = false for samplemgr.
+    samplemgr_show = false;
+    init();
   }
 }
 
 void SoundBrowserPage::on_cancel() {
-  GUI.setPage(&grid_page);
-}
-
-void SoundBrowserPage::on_select(const char *__) { 
-  switch (filetype_idx) {
-    case FT_SND:
-      load_sound();
-      break;
-    case FT_SYX:
-      // TODO send syx
-      break;
-    case FT_WAV:
-      // TODO send wav
-      break;
+  if (samplemgr_show) {
+    // on cancel, break out of sample manager
+    samplemgr_show = false;
   }
 }
 
-bool SoundBrowserPage::handleEvent(gui_event_t* event) {
+void SoundBrowserPage::on_select(const char *__) {
+  if (!samplemgr_show) {
+    switch (filetype_idx) {
+    case FT_SND:
+      load_sound();
+      break;
+    case FT_WAV:
+      pending_action = PA_SELECT;
+      samplemgr_show = true;
+      init();
+      break;
+    }
+  } else {
+    samplemgr_show = false;
+    auto slot = encoders[1]->cur;
+    switch (pending_action) {
+    case PA_NEW:
+      recv_wav(slot);
+      break;
+    case PA_SELECT:
+      send_wav(slot);
+      break;
+    }
+  }
+}
+
+bool SoundBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) && !samplemgr_show) {
+    // intercept cancel event for non-samplemgr
     return true;
   }
-
 
   return FileBrowserPage::handleEvent(event);
 }
 
-MCLEncoder soundbrowser_param1(1, 10, ENCODER_RES_SYS);
+// MidiSysexListenerClass implementation
+void SoundBrowserPage::start() {}
+
+void SoundBrowserPage::end() {}
+
+void SoundBrowserPage::end_immediate() {
+  if (sysex->getByte(0) != 0x00)
+    return;
+  if (sysex->getByte(1) != 0x20)
+    return;
+  if (sysex->getByte(2) != 0x3C)
+    return;
+  if (sysex->getByte(3) != 0x02)
+    return;
+  if (sysex->getByte(4) != 0x00)
+    return;
+  if (sysex->getByte(5) != 0x72)
+    return;
+  if (sysex->getByte(6) != 0x34)
+    return;
+  for (int i = 0; i < 5; ++i) {
+    s_samplename[i] = sysex->getByte(7 + i);
+  }
+  s_samplename[5] = 0;
+}
+
+MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
 MCLEncoder soundbrowser_param2(0, 36, ENCODER_RES_SYS);
 SoundBrowserPage sound_browser(&soundbrowser_param1, &soundbrowser_param2);
