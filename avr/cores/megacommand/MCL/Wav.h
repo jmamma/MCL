@@ -14,7 +14,7 @@ public:
   uint32_t chunkSize;
   char format[4]; //"WAVE";
 
-  // The "fmt" sub-chunk
+  // The "fmt " sub-chunk
   uint8_t subchunk1ID[4];
   uint32_t subchunk1Size;
   uint16_t audioFormat; // Audio format 1=PCM,6=mulaw,7=alaw,     257=IBM
