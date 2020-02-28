@@ -77,7 +77,7 @@ void MidiSDSClass::cancel() {
 
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
-                           uint32_t loop_end, bool handshake) {
+                           uint32_t loop_end, bool handshake, bool show_progress) {
   if (state != SDS_READY) {
     DEBUG_PRINTLN("sds not in ready state");
     return false;
@@ -115,12 +115,12 @@ wait:
     goto wait;
   }
   // HandShake disabled.
-  bool ret = sendSamples();
+  bool ret = sendSamples(show_progress);
   wav_file.close();
   state = SDS_READY;
   return ret;
 }
-bool MidiSDSClass::sendSamples() {
+bool MidiSDSClass::sendSamples(bool show_progress) {
   bool ret = false;
   uint8_t midiBytes_per_word = sampleFormat / 7;
   uint8_t bytes_per_word = sampleFormat / 8;
@@ -139,8 +139,23 @@ bool MidiSDSClass::sendSamples() {
   int32_t encode_val = 0;
   int32_t uencode_val = 0;
 
+  uint8_t show_progress_i = 0;
+
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
+
+    ++show_progress_i;
+
+    if (show_progress && show_progress_i == 10) {
+      show_progress_i = 0;
+#ifdef OLED_DISPLAY
+      uint32_t progress = samplesSoFar * 80 / midi_sds.sampleLength;
+      mcl_gui.draw_progress("Sending sample", progress, 80);
+#else
+      gfx.display_text("Sending sample", "");
+#endif
+    }
+
     DEBUG_PRINTLN("NUM OF SAMPLES");
     DEBUG_PRINTLN(num_of_samples);
     ret = wav_file.read_samples(&samples, num_of_samples, samplesSoFar, 0);

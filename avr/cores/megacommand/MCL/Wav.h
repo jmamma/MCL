@@ -6,6 +6,7 @@
 #include "MCL.h"
 #define WAV_DATA_OFFSET 44
 
+// ref: http://soundfile.sapp.org/doc/WaveFormat/
 class WavHeader {
 public:
   // The RIFF chunk descriptor
