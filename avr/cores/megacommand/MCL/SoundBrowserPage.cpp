@@ -157,6 +157,7 @@ void SoundBrowserPage::send_wav(int slot) {
     file.close();
     DEBUG_PRINTLN("sending sample");
     DEBUG_PRINTLN(temp_entry);
+    mcl_gui.draw_popup("Sending sample");
     // TODO loop stuff? do we have info?
     midi_sds.sendWav(temp_entry, slot);
     gfx.alert("Sample sent", temp_entry);
