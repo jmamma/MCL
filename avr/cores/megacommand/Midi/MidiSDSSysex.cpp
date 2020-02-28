@@ -80,7 +80,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
     break;
 
 
-          case MIDI_SDS_DUMPREQUEST:
+  case MIDI_SDS_DUMPREQUEST:
     dump_request();
     break;
 

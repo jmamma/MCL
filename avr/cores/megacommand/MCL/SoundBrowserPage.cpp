@@ -14,7 +14,7 @@ const char *c_wav_name = "WAV";
 #define PA_NEW 0
 #define PA_SELECT 1
 
-static char s_samplename[6];
+static char s_samplename[5];
 static volatile bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
@@ -26,6 +26,7 @@ void SoundBrowserPage::setup() {
   filetype_names[0] = c_snd_name;
   filetype_names[1] = c_wav_name;
   filetype_max = FT_WAV;
+  sysex = &(Midi.midiSysex);
   FileBrowserPage::setup();
 }
 
@@ -60,19 +61,36 @@ void SoundBrowserPage::query_sample_slots() {
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
   numEntries = 0;
-  cur_file = 0;
+  cur_file = 255; // XXX why 255?
   uint8_t data[3] = {0x70, 0x34, 0x00};
+  call_handle_filemenu = false;
   sysex->addSysexListener(this);
   for (int i = 0; i < 48; ++i) {
     mcl_gui.draw_progress("Loading slots", i, 47);
     s_query_returned = false;
+    data[2] = i;
     MD.sendRequest(data, 3);
+    uint16_t time_start = read_slowclock();
     while (!s_query_returned) {
       handleIncomingMidi();
+      uint16_t time_now = read_slowclock();
+      if (clock_diff(time_start, time_now) > 200) {
+        DEBUG_PRINT(i);
+        DEBUG_PRINTLN(": timeout");
+        break;
+      }
     }
-    add_entry(s_samplename);
+    if (s_query_returned) {
+      DEBUG_PRINTLN(s_samplename);
+      char temp_entry[16];
+      sprintf(temp_entry, "%02d - %s", i, s_samplename);
+      add_entry(temp_entry);
+    } else {
+      add_entry("ERROR");
+    }
   }
   sysex->removeSysexListener(this);
+  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
 }
 
 void SoundBrowserPage::save_sound() {
@@ -89,9 +107,8 @@ void SoundBrowserPage::save_sound() {
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[16];
-    strcpy(temp_entry, sound_name);
-    strcat(temp_entry, ".snd");
-    DEBUG_PRINTLN(F("creating new sound:"));
+    sprintf(temp_entry, "%s.snd", sound_name);
+    DEBUG_PRINTLN("creating new sound:");
     DEBUG_PRINTLN(temp_entry);
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
     sound.fetch_sound(MD.currentTrack);
@@ -138,7 +155,7 @@ void SoundBrowserPage::send_wav(int slot) {
     file.close();
     DEBUG_PRINTLN("sending sample");
     DEBUG_PRINTLN(temp_entry);
-    // TODO
+    // TODO loop stuff? do we have info?
     midi_sds.sendWav(temp_entry, slot);
     gfx.alert("Sample sent", temp_entry);
   }
@@ -156,6 +173,7 @@ void SoundBrowserPage::recv_wav(int slot) {
     DEBUG_PRINTLN("Receiving new sample:");
     DEBUG_PRINTLN(temp_entry);
     // TODO
+    midi_sds.sendDumpRequest(slot);
     gfx.alert("Sample received", temp_entry);
   }
 }
@@ -200,7 +218,6 @@ void SoundBrowserPage::on_select(const char *__) {
       break;
     }
   } else {
-    samplemgr_show = false;
     auto slot = encoders[1]->cur;
     switch (pending_action) {
     case PA_NEW:
@@ -210,6 +227,8 @@ void SoundBrowserPage::on_select(const char *__) {
       send_wav(slot);
       break;
     }
+    samplemgr_show = false;
+    init();
   }
 }
 
@@ -219,8 +238,12 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) && !samplemgr_show) {
-    // intercept cancel event for non-samplemgr
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    if (samplemgr_show) {
+      samplemgr_show = false;
+      init();
+    }
+    // intercept cancel event
     return true;
   }
 
@@ -233,14 +256,7 @@ void SoundBrowserPage::start() {}
 void SoundBrowserPage::end() {}
 
 void SoundBrowserPage::end_immediate() {
-  DEBUG_PRINT_FN();
-
-  if (sysex->getByte(0) != 0x00)
-    return;
-  if (sysex->getByte(1) != 0x20)
-    return;
-  if (sysex->getByte(2) != 0x3C)
-    return;
+  DEBUG_PRINT_FN("begin pattern matching");
   if (sysex->getByte(3) != 0x02)
     return;
   if (sysex->getByte(4) != 0x00)
@@ -249,11 +265,14 @@ void SoundBrowserPage::end_immediate() {
     return;
   if (sysex->getByte(6) != 0x34)
     return;
-  DEBUG_PRINTLN("SoundBrowserPage: end_immediate passed");
-  for (int i = 0; i < 5; ++i) {
+  DEBUG_PRINT_FN("end pattern matching");
+  for (int i = 0; i < 4; ++i) {
     s_samplename[i] = sysex->getByte(7 + i);
+    DEBUG_PRINT((int)s_samplename[i]);
+    DEBUG_PRINT(" ");
   }
-  s_samplename[5] = 0;
+  DEBUG_PRINTLN();
+  s_samplename[4] = 0;
   s_query_returned = true;
 }
 

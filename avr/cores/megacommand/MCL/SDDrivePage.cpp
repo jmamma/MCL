@@ -79,10 +79,7 @@ void SDDrivePage::save_snapshot() {
   if (file.open(temp_entry, O_READ)) {
     file.close();
     char msg[24] = {'\0'};
-    strcpy(msg, "Overwrite ");
-    strcat(msg, entry_name);
-    strcat(msg, "?");
-
+    sprintf(msg, "Overwrite %s?", entry_name);
     if (!mcl_gui.wait_for_confirm("File exists", msg)) {
       return;
     }

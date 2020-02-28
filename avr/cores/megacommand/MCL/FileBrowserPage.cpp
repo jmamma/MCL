@@ -229,8 +229,13 @@ void FileBrowserPage::loop() {
   }
 
   if (param1->hasChanged()) {
-    filetype_idx = param1->cur;
-    init();
+    if (show_filetypes) {
+      filetype_idx = param1->cur;
+      init();
+    } else {
+      // lock the value -- upper logic may disable it temporarily
+      param1->cur = param1->old;
+    }
   }
 }
 
@@ -323,9 +328,7 @@ void FileBrowserPage::_handle_filemenu() {
     create_folder();
     break;
   case 1: // delete
-    strcat(buf2, "Delete ");
-    strcat(buf2, buf1);
-    strcat(buf2, "?");
+    sprintf(buf2, "Delete %s?", buf1);
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
@@ -348,9 +351,7 @@ void FileBrowserPage::_handle_filemenu() {
     }
     break;
   case 3: // overwrite
-    strcat(buf2, "Overwrite ");
-    strcat(buf2, buf1);
-    strcat(buf2, "?");
+    sprintf(buf2, "Overwrite %s?", buf1);
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       // the derived class may expect the file to be open
       // when on_select is called.
