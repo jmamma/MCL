@@ -49,7 +49,8 @@ void SoundBrowserPage::init() {
     query_sample_slots();
   } else {
     show_dirs = true;
-    show_save = true;
+    //show_save = true;
+    show_save = (filetype_idx == FT_SND);
     show_filemenu = true;
     show_new_folder = true;
     show_overwrite = true;
@@ -66,6 +67,7 @@ void SoundBrowserPage::query_sample_slots() {
   encoders[1]->old = 0;
   numEntries = 0;
   cur_file = 255; // XXX why 255?
+  cur_row = 0;
   uint8_t data[3] = {0x70, 0x34, 0x00};
   call_handle_filemenu = false;
   sysex->addSysexListener(this);
