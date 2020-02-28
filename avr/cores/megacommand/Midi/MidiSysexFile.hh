@@ -3,6 +3,8 @@
 
 class MidiSysexFile {
 
+  public:
+
   MidiUart *uart; 
   File file;
  
