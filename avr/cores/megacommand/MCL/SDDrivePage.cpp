@@ -1,18 +1,24 @@
 #include "SDDrivePage.h"
 #include "MCL.h"
+#include "MidiSDS.hh"
+#include "Wav.h"
+#include "MidiSysexFile.hh"
 
 //  !note match only supports 3-char suffix
 const char *c_snapshot_suffix = ".snp";
 const char *c_samplepack_suffix = ".spk";
+const char *c_sysex_suffix = ".syx";
 
 const char* c_snapshot_filetype_name = "Snapshot";
 const char* c_samplepack_filetype_name = "Sample";
+const char* c_sysex_filetype_name = "SYSEX";
 
 
 const char *c_snapshot_root = "/SDDrive/MD";
 
 #define FT_SNP 0
 #define FT_SPK 1
+#define FT_SYX 2
 
 void SDDrivePage::setup() {
   SD.mkdir(c_snapshot_root, true);
@@ -20,9 +26,11 @@ void SDDrivePage::setup() {
   strcpy(lwd, c_snapshot_root);
   filetypes[0] = c_snapshot_suffix;
   filetypes[1] = c_samplepack_suffix;
+  filetypes[2] = c_sysex_suffix;
   filetype_names[0] = c_snapshot_filetype_name;
   filetype_names[1] = c_samplepack_filetype_name;
-  filetype_max = FT_SPK;
+  filetype_names[2] = c_sysex_filetype_name;
+  filetype_max = FT_SYX;
   FileBrowserPage::setup();
 }
 
@@ -254,13 +262,96 @@ load_error:
   return;
 }
 
+void SDDrivePage::send_sysex()
+{
+  if (!file.isOpen()) {
+    return;
+  }
+
+  if (!MD.connected) {
+    gfx.alert("Error", "MD is not connected");
+    return;
+  }
+
+  char temp_entry[16];
+  file.getName(temp_entry, 16);
+  file.close();
+
+  if (!mcl_gui.wait_for_confirm("Send SYSEX", temp_entry)) {
+    return;
+  }
+
+#ifndef OLED_DISPLAY
+  gfx.display_text("Please Wait", "Sending SYSEX");
+#else
+  mcl_gui.draw_popup("Sending SYSEX");
+#endif
+  // TODO Midi2?
+  MidiSysexFile msf(&Midi);
+  msf.send(temp_entry);
+}
+
+void SDDrivePage::recv_sysex()
+{
+  // TODO receive sysex dump
+}
+
+void SDDrivePage::send_sample_pack() {
+  DEBUG_PRINT_FN();
+
+  if (!file.isOpen()) {
+    return;
+  }
+
+  if (!MD.connected) {
+    gfx.alert("Error", "MD is not connected");
+    return;
+  }
+
+  if (!mcl_gui.wait_for_confirm("Load sample pack", "Overwrite MD data?")) {
+    return;
+  }
+
+  char temp_entry[16];
+  file.getName(temp_entry, 16);
+  file.close();
+
+  if (!file.open(temp_entry, O_READ)) {
+    DEBUG_PRINTLN("error openning");
+    gfx.alert("Error", "Cannot open file for read");
+    return;
+  }
+
+#ifndef OLED_DISPLAY
+  gfx.display_text("Please Wait", "Loading samples");
+#endif
+
+  int slot = 0;
+  while(slot < 48 && 0 < file.readBytesUntil('\n', temp_entry, sizeof(temp_entry))) {
+#ifdef OLED_DISPLAY
+    char line2[16];
+    sprintf(line2, "Sending #%d..", slot);
+    mcl_gui.draw_infobox("Loading samples", line2);
+#endif
+    midi_sds.sendWav(temp_entry, slot);
+    ++slot;
+  }
+}
+
+void SDDrivePage::recv_sample_pack() {
+  // TODO save samplepack
+}
+
 void SDDrivePage::on_new() {
   switch (filetype_idx) {
     case FT_SNP:
       save_snapshot();
       break;
     case FT_SPK:
-      // TODO save samplepack
+      recv_sample_pack();
+      break;
+    case FT_SYX:
+      recv_sysex();
       break;
   }
   init();
@@ -272,7 +363,10 @@ void SDDrivePage::on_select(const char *__) {
       load_snapshot(); 
       break;
     case FT_SPK:
-      //TODO load sample pack
+      send_sample_pack();
+      break;
+    case FT_SYX:
+      send_sysex();
       break;
   }
 }
