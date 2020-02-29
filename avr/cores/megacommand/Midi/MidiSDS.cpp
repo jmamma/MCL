@@ -131,7 +131,7 @@ void MidiSDSClass::setName(char *filename, uint16_t slot) {
   if (last < 0)
     last = len - 1;
 
-  if (last < 4) {
+  if (last <= 4) {
     for(int i=0;i<last;++i){
       name[i] = filename[i];
       name[last] = 0;
@@ -139,8 +139,8 @@ void MidiSDSClass::setName(char *filename, uint16_t slot) {
   } else {
     name[0] = filename[0];
     name[1] = filename[1];
-    name[2] = filename[last - 1];
-    name[3] = filename[last];
+    name[2] = filename[last - 2];
+    name[3] = filename[last - 1];
     name[4] = 0;
   }
   MD.setSampleName(slot, name);

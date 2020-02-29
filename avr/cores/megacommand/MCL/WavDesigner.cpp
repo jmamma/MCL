@@ -209,10 +209,10 @@ bool WavDesigner::render() {
   // first_zero_crossing = 0;
 }
 bool WavDesigner::send() {
+  midi_sds.setName("SYN", mixer.enc4.cur);
   bool ret = midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD,
                               loop_start, loop_end, true, true);
   if (!ret) return false;
-  midi_sds.setName("SYN", mixer.enc4.cur);
   return true;
 }
 
