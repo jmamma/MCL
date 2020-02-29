@@ -53,7 +53,6 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
 }
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
-  MidiSDSSysexListener.sysex->addSysexListener(&MidiSDSSysexListener);
   MidiSDSSysexListener.msgType = 255;
 
   uint16_t start_clock = read_slowclock();
@@ -65,7 +64,6 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
-  MidiSDSSysexListener.sysex->removeSysexListener(&MidiSDSSysexListener);
   DEBUG_DUMP(MidiSDSSysexListener.msgType);
   return MidiSDSSysexListener.msgType;
 }
