@@ -329,7 +329,11 @@ void SDDrivePage::send_sample_pack() {
 #endif
 
   int slot = 0;
-  while(slot < 48 && 0 < file.readBytesUntil('\n', temp_entry, sizeof(temp_entry))) {
+  int len = 0;
+  while(slot < 48) {
+    len = file.readBytesUntil('\n', temp_entry, sizeof(temp_entry) - 1);
+    if (len <= 0) break;
+    temp_entry[len] = 0;
 #ifdef OLED_DISPLAY
     char line2[16];
     sprintf(line2, "Sending #%d..", slot);
