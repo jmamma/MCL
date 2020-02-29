@@ -75,7 +75,8 @@ void MidiSDSClass::cancel() {
 
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
-                           uint32_t loop_end, bool handshake, bool show_progress) {
+                           uint32_t loop_end, bool handshake,
+                           bool show_progress) {
   if (state != SDS_READY) {
     DEBUG_PRINTLN("sds not in ready state");
     return false;
@@ -118,6 +119,33 @@ wait:
   state = SDS_READY;
   return ret;
 }
+
+void MidiSDSClass::setName(char *filename, uint16_t slot) {
+  char name[5];
+  int len = strlen(filename);
+  int last = len - 1;
+  // trim '.wav'
+  while (last >= 0 && filename[last] != '.') {
+    --last;
+  }
+  if (last < 0)
+    last = len - 1;
+
+  if (last < 4) {
+    for(int i=0;i<last;++i){
+      name[i] = filename[i];
+      name[last] = 0;
+    }
+  } else {
+    name[0] = filename[0];
+    name[1] = filename[1];
+    name[2] = filename[last - 1];
+    name[3] = filename[last];
+    name[4] = 0;
+  }
+  MD.setSampleName(slot, name);
+}
+
 bool MidiSDSClass::sendSamples(bool show_progress) {
   bool ret = false;
   uint8_t midiBytes_per_word = sampleFormat / 7;

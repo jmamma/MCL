@@ -1,9 +1,9 @@
-#include "MCL.h"
 #include "WavDesigner.h"
 #include "DSP.h"
+#include "MCL.h"
+#include "MidiSDS.hh"
 #include "Osc.h"
 #include "Wav.h"
-#include "MidiSDS.hh"
 
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();
@@ -97,7 +97,7 @@ bool WavDesigner::render() {
         // DEBUG_PRINTLN(osc_sample);
         break;
       case 2:
-       tri_osc.width = pages[i].get_width();
+        tri_osc.width = pages[i].get_width();
         osc_sample +=
             tri_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
         break;
@@ -132,7 +132,7 @@ bool WavDesigner::render() {
       sample = -1 * MAX_HEADROOM;
     }
     // DEBUG_PRINTLN(" ");
-   
+
     // Need to correctly convert from float to int
     int16_t out_sample;
     if (sample > 0) {
@@ -140,7 +140,7 @@ bool WavDesigner::render() {
     } else {
       out_sample = (int16_t)(sample - 0.5);
     }
-    DEBUG_PRINTLN(out_sample); 
+    DEBUG_PRINTLN(out_sample);
     buffer[samples_so_far] = out_sample;
 
     samples_so_far++;
@@ -209,8 +209,11 @@ bool WavDesigner::render() {
   // first_zero_crossing = 0;
 }
 bool WavDesigner::send() {
-    return midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD, loop_start,
-                          loop_end, true);
+  bool ret = midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD,
+                              loop_start, loop_end, true, true);
+  if (!ret) return false;
+  midi_sds.setName("SYN", mixer.enc4.cur);
+  return true;
 }
 
 WavDesigner wd;

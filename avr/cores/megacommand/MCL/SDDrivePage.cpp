@@ -333,7 +333,8 @@ void SDDrivePage::send_sample_pack() {
     sprintf(line2, "Sending #%d..", slot);
     mcl_gui.draw_infobox("Loading samples", line2);
 #endif
-    midi_sds.sendWav(temp_entry, slot, 0xa7F, 0, 0, true, false);
+    midi_sds.sendWav(temp_entry, slot, 0x7F, 0, 0, true, false);
+    midi_sds.setName(temp_entry, slot);
     ++slot;
   }
 }
