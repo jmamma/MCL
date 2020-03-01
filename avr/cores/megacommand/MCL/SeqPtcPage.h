@@ -25,7 +25,12 @@ public:
   void onControlChangeCallback_Midi(uint8_t *msg);
 };
 
-class SeqPtcPage : public SeqPage {
+#define ARP_UP 0
+#define ARP_DOWN 1
+#define ARP_CIRC 2
+#define ARP_RND 3
+
+class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
@@ -55,6 +60,19 @@ public:
   void config_encoders();
   void init_poly();
   void queue_redraw();
+
+  bool arp_enabled = false;
+  uint8_t arp_idx;
+  uint8_t arp_speed;
+  uint8_t arp_mode;
+  uint8_t arp_oct;
+  uint8_t arp_count;
+
+  void setup_arp();
+  void remove_arp();
+  uint8_t arp_get_next_note_up(uint8_t);
+  uint8_t arp_get_next_note_down(uint8_t);
+  void on_16_callback();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

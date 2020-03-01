@@ -45,6 +45,7 @@ void SeqPtcPage::setup() {
   SeqPage::setup();
   init_poly();
   midi_events.setup_callbacks();
+  setup_arp();
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -191,7 +192,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
 
 void SeqPtcPage::loop() {
   if (re_init) {
-  init();
+    init();
   }
 #ifdef EXT_TRACKS
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
@@ -357,7 +358,8 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t voice = 255;
   uint8_t count = 0;
 
-  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track) && (mcl_cfg.uart2_ctrl_mode == 0))) {
+  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track) &&
+                        (mcl_cfg.uart2_ctrl_mode == 0))) {
     return last_md_track;
   }
   // If track previously played pitch, re-use this track
@@ -448,6 +450,96 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 
 void SeqPtcPage::queue_redraw() { deferred_timer = slowclock; }
 
+void SeqPtcPage::setup_arp() {
+  arp_enabled = true;
+  arp_idx = 0;
+  MidiClock.addOn16Callback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
+}
+
+void SeqPtcPage::remove_arp() {
+  arp_enabled = false;
+  MidiClock.removeOn16Callback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
+}
+
+uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
+
+  for (uint8_t i = cur + 1; i < NUM_MD_TRACKS; i++) {
+    if (note_interface.notes[i] == 1) {
+      return i;
+    }
+  }
+  for (uint8_t i = 0; i <= cur; i++) {
+    if (note_interface.notes[i] == 1) {
+      return i;
+    }
+  }
+  return 255;
+}
+
+uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {
+
+ for (uint8_t i = cur - 1; i > 0; i--) {
+    if (note_interface.notes[i] == 1) {
+      return i;
+    }
+  }
+  for (uint8_t i = NUM_MD_TRACKS - 1; i >= cur; i--) {
+    if (note_interface.notes[i] == 1) {
+      return i;
+    }
+  }
+  return 255;
+}
+
+void SeqPtcPage::on_16_callback() {
+  bool trig = false;
+  uint8_t note;
+
+  switch (arp_speed) {
+  case 0:
+    trig = true;
+    break;
+  case 1:
+    if ((arp_count == 0) || (arp_count == 2) || (arp_count == 4) ||
+        (arp_count == 6)) {
+      trig = true;
+    }
+    break;
+  case 2:
+    if ((arp_count == 0) || (arp_count == 4)) {
+      trig = true;
+    }
+    break;
+  case 3:
+    if (arp_count == 0) {
+      trig = true;
+    }
+  }
+
+  if (trig == true) {
+    switch (arp_mode) {
+    case ARP_UP:
+      note = arp_get_next_note_up(arp_idx);
+      break;
+    case ARP_DOWN:
+      note = arp_get_next_note_down(arp_idx);
+      break;
+    }
+    if (note < NUM_MD_TRACKS) {
+    arp_idx = note;
+    uint8_t pitch = calc_pitch(note);
+    trig_md(note, pitch);
+    }
+  }
+
+  arp_count++;
+  if (arp_count > 7) {
+    arp_count = 0;
+  }
+}
+
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (SeqPage::handleEvent(event)) {
@@ -482,7 +574,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         config_encoders();
       }
       midi_device = device;
-      trig_md(note, pitch);
+
+      if (!arp_enabled) { trig_md(note, pitch); }
     } else if (mask == EVENT_BUTTON_RELEASED) {
       CLEAR_BIT(note_mask, pitch);
     }
@@ -495,9 +588,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
-    re_init = true;
-    GUI.pushPage(&poly_page);
-    return true;
+      re_init = true;
+      GUI.pushPage(&poly_page);
+      return true;
     }
     seq_ptc_page.queue_redraw();
     recording = !recording;
@@ -512,31 +605,31 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (BUTTON_DOWN(Buttons.BUTTON1)) {
-    GUI.pushPage(&poly_page);
-    return true;
+      GUI.pushPage(&poly_page);
+      return true;
     }
     if (midi_device == DEVICE_MD) {
 
       if (poly_count > 1) {
 #ifdef OLED_DISPLAY
-            oled_display.textbox("CLEAR ", "POLY TRACKS");
+        oled_display.textbox("CLEAR ", "POLY TRACKS");
 #endif
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-           mcl_seq.md_tracks[c].clear_track();
+            mcl_seq.md_tracks[c].clear_track();
           }
         }
       } else {
 #ifdef OLED_DISPLAY
-            oled_display.textbox("CLEAR ", "TRACK");
+        oled_display.textbox("CLEAR ", "TRACK");
 #endif
-              mcl_seq.md_tracks[last_md_track].clear_track();
+        mcl_seq.md_tracks[last_md_track].clear_track();
       }
     }
 #ifdef EXT_TRACKS
     else {
 #ifdef OLED_DISPLAY
-            oled_display.textbox("CLEAR ", "EXT TRACK");
+      oled_display.textbox("CLEAR ", "EXT TRACK");
 #endif
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
@@ -595,8 +688,8 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     return;
   }
 
- uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
- SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+  uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
 
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
