@@ -29,6 +29,8 @@ public:
 #define ARP_DOWN 1
 #define ARP_CIRC 2
 #define ARP_RND 3
+#define ARP_UPTHUMB 4
+#define ARP_DOWNPINK 5
 
 class SeqPtcPage : public SeqPage, public ClockCallback {
 

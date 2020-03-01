@@ -469,12 +469,12 @@ uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
 
   for (uint8_t i = cur + 1; i < NUM_MD_TRACKS; i++) {
     if ((note_interface.notes[i] == 1)) {
-            return i;
+      return i;
     }
   }
   for (uint8_t i = 0; i <= cur; i++) {
     if (note_interface.notes[i] == 1) {
-   return i;
+      return i;
     }
   }
   return 255;
@@ -487,8 +487,8 @@ uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {
     }
   }
   for (uint8_t i = NUM_MD_TRACKS - 1; i >= cur; i--) {
-     if (note_interface.notes[i] == 1) {
-     return i;
+    if (note_interface.notes[i] == 1) {
+      return i;
     }
   }
 
@@ -520,20 +520,28 @@ void SeqPtcPage::on_16_callback() {
     }
   }
 
+  bool ignore_base = false;
+
   if (trig == true) {
     switch (arp_mode.cur) {
     case ARP_UP:
       note = arp_get_next_note_up(arp_idx);
       if (note < arp_idx) {
-        if (arp_base < arp_oct.cur) { arp_base++; }
-        else { arp_base = 0; }
+        if (arp_base < arp_oct.cur) {
+          arp_base++;
+        } else {
+          arp_base = 0;
+        }
       }
       break;
     case ARP_DOWN:
       note = arp_get_next_note_down(arp_idx);
       if (note > arp_idx) {
-        if (arp_base > 0) { arp_base--; }
-        else { arp_base = arp_oct.cur; }
+        if (arp_base > 0) {
+          arp_base--;
+        } else {
+          arp_base = arp_oct.cur;
+        }
       }
       break;
     case ARP_CIRC:
@@ -543,27 +551,73 @@ void SeqPtcPage::on_16_callback() {
         if (note_tmp > arp_idx) {
           note = note_tmp;
         } else {
-          if (arp_base < arp_oct.cur) { arp_base++; note = note_tmp; }
-          else {
-          arp_dir = 1;
-          note = arp_get_next_note_down(arp_idx);
+          if (arp_base < arp_oct.cur) {
+            arp_base++;
+            note = note_tmp;
+          } else {
+            arp_dir = 1;
+            note = arp_get_next_note_down(arp_idx);
           }
-          }
+        }
       } else if (arp_dir == 1) {
         note_tmp = arp_get_next_note_down(arp_idx);
         if (note_tmp < arp_idx) {
           note = note_tmp;
         } else {
-          if (arp_base > 0) { arp_base--; note = note_tmp; }
-          else { arp_dir = 0;
-          note = arp_get_next_note_up(arp_idx);
+          if (arp_base > 0) {
+            arp_base--;
+            note = note_tmp;
+          } else {
+            arp_dir = 0;
+            note = arp_get_next_note_up(arp_idx);
           }
         }
       }
+    break;
+    case ARP_RND:
+      note = arp_get_next_note_down(get_random_byte() & 0xF);
+      arp_base = get_random_byte() & arp_oct.cur;
+      break;
+    case ARP_UPTHUMB:
+      note = arp_get_next_note_up(arp_idx);
+      note_tmp = arp_get_next_note_up(arp_idx);
+      ignore_base = true;
+      if (note_tmp < arp_idx) {
+        ignore_base = false;
+      }
+      if (note < arp_idx) {
+        if (arp_base < arp_oct.cur) {
+          arp_base++;
+        } else {
+          arp_base = 0;
+        }
+      }
+      break;
+    case ARP_DOWNPINK:
+      note = arp_get_next_note_down(arp_idx);
+       note_tmp = arp_get_next_note_down(arp_idx);
+      ignore_base = true;
+      if (note_tmp >arp_idx) {
+        ignore_base = false;
+      }
+      if (note > arp_idx) {
+        if (arp_base > 0) {
+          arp_base--;
+        } else {
+          arp_base = arp_oct.cur;
+        }
+      }
+      break;
+ 
+
     }
     if (note < NUM_MD_TRACKS) {
       arp_idx = note;
-      uint8_t pitch = calc_pitch(note) + arp_base * 12;
+      uint8_t pitch;
+      if (ignore_base) { pitch = calc_pitch(note); }
+      else {
+        pitch = calc_pitch(note) + arp_base * 12;
+      }
       trig_md(note, pitch);
     }
   }
