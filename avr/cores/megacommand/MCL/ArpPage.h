@@ -22,6 +22,7 @@ public:
 
   bool handleEvent(gui_event_t *event);
 
+  void loop();
   void display();
   void setup();
   void init();

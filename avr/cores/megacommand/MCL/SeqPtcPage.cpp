@@ -46,7 +46,6 @@ void SeqPtcPage::setup() {
   SeqPage::setup();
   init_poly();
   midi_events.setup_callbacks();
-  setup_arp();
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -199,6 +198,7 @@ void SeqPtcPage::loop() {
 #ifdef EXT_TRACKS
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
+    note_mask = 0;
   }
 #endif
 
@@ -453,6 +453,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
 void SeqPtcPage::queue_redraw() { deferred_timer = slowclock; }
 
 void SeqPtcPage::setup_arp() {
+  if (arp_enabled) { return; }
   arp_enabled = true;
   arp_idx = 0;
   MidiClock.addOn16Callback(
@@ -460,6 +461,7 @@ void SeqPtcPage::setup_arp() {
 }
 
 void SeqPtcPage::remove_arp() {
+  if (!arp_enabled) { return; }
   arp_enabled = false;
   MidiClock.removeOn16Callback(
       this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
@@ -526,7 +528,7 @@ void SeqPtcPage::on_16_callback() {
     switch (arp_mode.cur) {
     case ARP_UP:
       note = arp_get_next_note_up(arp_idx);
-      if (note < arp_idx) {
+      if (note <= arp_idx) {
         if (arp_base < arp_oct.cur) {
           arp_base++;
         } else {
@@ -536,7 +538,7 @@ void SeqPtcPage::on_16_callback() {
       break;
     case ARP_DOWN:
       note = arp_get_next_note_down(arp_idx);
-      if (note > arp_idx) {
+      if (note >= arp_idx) {
         if (arp_base > 0) {
           arp_base--;
         } else {

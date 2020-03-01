@@ -4,7 +4,7 @@
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 7, ENCODER_RES_SEQ);
 MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 4, ENCODER_RES_SEQ);
+MCLEncoder arp_und(0, 1, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {}
 
@@ -25,6 +25,21 @@ void ArpPage::cleanup() {
   oled_display.clearDisplay();
 #endif
 }
+#define ARP_ON 1
+#define ARP_OFF 0
+
+void ArpPage::loop() {
+  if (encoders[0]->hasChanged()) {
+    switch (encoders[0]->cur) {
+    case ARP_ON:
+      seq_ptc_page.setup_arp();
+      break;
+    case ARP_OFF:
+      seq_ptc_page.remove_arp();
+      break;
+    }
+  }
+}
 
 void ArpPage::display() {
 
@@ -33,56 +48,78 @@ void ArpPage::display() {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
-  oled_display.setTextColor(WHITE);
 
   oled_display.fillRect(8, 2, 128 - 16, 32 - 2, BLACK);
   oled_display.drawRect(8 + 1, 2 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
 
-  oled_display.setCursor(34, 10);
+
+
+  oled_display.setCursor(42, 10);
+
+  oled_display.setTextColor(WHITE);
   oled_display.print("ARPEGGIATOR");
   char str[5];
+  uint8_t y = 12;
+  uint8_t x = 16;
+
   switch (encoders[0]->cur) {
+  case ARP_ON:
+    strcpy(str, "ON");
+    break;
+  case ARP_OFF:
+    strcpy(str, "--");
+    break;
+  }
+  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
+
+  switch (encoders[1]->cur) {
   case ARP_UP:
-    strcpy(str,"UP");
+    strcpy(str, "UP");
     break;
   case ARP_DOWN:
-    strcpy(str,"DWN");
+    strcpy(str, "DWN");
     break;
   case ARP_CIRC:
-    strcpy(str,"CIR");
+    strcpy(str, "CIR");
     break;
   case ARP_RND:
-    strcpy(str,"RND");
+    strcpy(str, "RND");
     break;
   case ARP_UPTHUMB:
-    strcpy(str,"UPT");
+    strcpy(str, "UPT");
     break;
   case ARP_DOWNPINK:
-    strcpy(str,"DNP");
+    strcpy(str, "DNP");
     break;
   case ARP_UPPINK:
-    strcpy(str,"UPP");
+    strcpy(str, "UPP");
     break;
   case ARP_DOWNTHUMB:
-    strcpy(str,"DNT");
+    strcpy(str, "DNT");
     break;
   default:
     break;
   }
-  uint8_t y = 12;
-  mcl_gui.draw_text_encoder(mcl_gui.knob_x0,y, "MODE", str);
-
-  itoa(encoders[1]->cur, str, 10);
-  mcl_gui.draw_text_encoder(mcl_gui.knob_x0 + 1 * mcl_gui.knob_w, y, "SPD", str);
+  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
   itoa(encoders[2]->cur, str, 10);
-  mcl_gui.draw_text_encoder(mcl_gui.knob_x0 + 2 * mcl_gui.knob_w, y, "OCT", str);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "SPD", str);
+
+  itoa(encoders[3]->cur, str, 10);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "OCT", str);
 
   oled_display.display();
   oled_display.setFont(oldfont);
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) || EVENT_PRESSED(event, Buttons.BUTTON3) || EVENT_PRESSED(event, Buttons.BUTTON2) ||
+      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    GUI.ignoreNextEvent(event->source);
+    GUI.popPage();
+    return true;
+  }
+
   seq_ptc_page.handleEvent(event);
 
   if (note_interface.is_event(event)) {
@@ -91,12 +128,5 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
-    return true;
-  }
-
   return false;
 }
