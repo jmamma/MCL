@@ -63,9 +63,8 @@ public:
 
   bool arp_enabled = false;
   uint8_t arp_idx;
-  uint8_t arp_speed;
-  uint8_t arp_mode;
-  uint8_t arp_oct;
+  uint8_t arp_base;
+  uint8_t arp_dir;
   uint8_t arp_count;
 
   void setup_arp();

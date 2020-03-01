@@ -1,3 +1,4 @@
+#include "ArpPage.h"
 #include "MCL.h"
 #include "SeqPtcPage.h"
 
@@ -91,6 +92,7 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
+  seq_menu_page.menu.enable_entry(0, true);
   ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
   midi_events.setup_callbacks();
@@ -466,30 +468,30 @@ void SeqPtcPage::remove_arp() {
 uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
 
   for (uint8_t i = cur + 1; i < NUM_MD_TRACKS; i++) {
-    if (note_interface.notes[i] == 1) {
-      return i;
+    if ((note_interface.notes[i] == 1)) {
+            return i;
     }
   }
   for (uint8_t i = 0; i <= cur; i++) {
     if (note_interface.notes[i] == 1) {
-      return i;
+   return i;
     }
   }
   return 255;
 }
 
 uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {
-
- for (uint8_t i = cur - 1; i > 0; i--) {
-    if (note_interface.notes[i] == 1) {
+  for (int8_t i = cur - 1; i >= 0; i--) {
+    if ((note_interface.notes[i] == 1)) {
       return i;
     }
   }
   for (uint8_t i = NUM_MD_TRACKS - 1; i >= cur; i--) {
-    if (note_interface.notes[i] == 1) {
-      return i;
+     if (note_interface.notes[i] == 1) {
+     return i;
     }
   }
+
   return 255;
 }
 
@@ -497,7 +499,7 @@ void SeqPtcPage::on_16_callback() {
   bool trig = false;
   uint8_t note;
 
-  switch (arp_speed) {
+  switch (arp_speed.cur) {
   case 0:
     trig = true;
     break;
@@ -519,18 +521,50 @@ void SeqPtcPage::on_16_callback() {
   }
 
   if (trig == true) {
-    switch (arp_mode) {
+    switch (arp_mode.cur) {
     case ARP_UP:
       note = arp_get_next_note_up(arp_idx);
+      if (note < arp_idx) {
+        if (arp_base < arp_oct.cur) { arp_base++; }
+        else { arp_base = 0; }
+      }
       break;
     case ARP_DOWN:
       note = arp_get_next_note_down(arp_idx);
+      if (note > arp_idx) {
+        if (arp_base > 0) { arp_base--; }
+        else { arp_base = arp_oct.cur; }
+      }
       break;
+    case ARP_CIRC:
+      uint8_t note_tmp;
+      if (arp_dir == 0) {
+        note_tmp = arp_get_next_note_up(arp_idx);
+        if (note_tmp > arp_idx) {
+          note = note_tmp;
+        } else {
+          if (arp_base < arp_oct.cur) { arp_base++; note = note_tmp; }
+          else {
+          arp_dir = 1;
+          note = arp_get_next_note_down(arp_idx);
+          }
+          }
+      } else if (arp_dir == 1) {
+        note_tmp = arp_get_next_note_down(arp_idx);
+        if (note_tmp < arp_idx) {
+          note = note_tmp;
+        } else {
+          if (arp_base > 0) { arp_base--; note = note_tmp; }
+          else { arp_dir = 0;
+          note = arp_get_next_note_up(arp_idx);
+          }
+        }
+      }
     }
     if (note < NUM_MD_TRACKS) {
-    arp_idx = note;
-    uint8_t pitch = calc_pitch(note);
-    trig_md(note, pitch);
+      arp_idx = note;
+      uint8_t pitch = calc_pitch(note) + arp_base * 12;
+      trig_md(note, pitch);
     }
   }
 
@@ -575,7 +609,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
       midi_device = device;
 
-      if (!arp_enabled) { trig_md(note, pitch); }
+      if (!arp_enabled) {
+        trig_md(note, pitch);
+      }
     } else if (mask == EVENT_BUTTON_RELEASED) {
       CLEAR_BIT(note_mask, pitch);
     }

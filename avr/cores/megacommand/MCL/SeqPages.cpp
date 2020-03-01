@@ -26,9 +26,12 @@ SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
 
 SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &ptc_param_scale);
 
-const menu_t<8> seq_menu_layout PROGMEM = {
+ArpPage arp_page(&arp_mode, &arp_speed, &arp_oct, &arp_und);
+
+const menu_t<9> seq_menu_layout PROGMEM = {
     "SEQ",
     {
+        {"ARPEGIATOR:", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, {}},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
         {"COPY:", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
@@ -43,7 +46,7 @@ const menu_t<8> seq_menu_layout PROGMEM = {
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<8> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<9> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 const menu_t<4> step_menu_layout PROGMEM = {
     "STP",
