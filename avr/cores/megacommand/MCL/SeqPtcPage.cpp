@@ -467,13 +467,13 @@ void SeqPtcPage::remove_arp() {
 
 uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
 
-  for (uint8_t i = cur + 1; i < NUM_MD_TRACKS; i++) {
-    if ((note_interface.notes[i] == 1)) {
+  for (uint8_t i = cur + 1; i < 24; i++) {
+    if (IS_BIT_SET32(note_mask, i)) {
       return i;
     }
   }
   for (uint8_t i = 0; i <= cur; i++) {
-    if (note_interface.notes[i] == 1) {
+    if (IS_BIT_SET32(note_mask, i)) {
       return i;
     }
   }
@@ -482,12 +482,12 @@ uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
 
 uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {
   for (int8_t i = cur - 1; i >= 0; i--) {
-    if ((note_interface.notes[i] == 1)) {
+    if (IS_BIT_SET32(note_mask, i)) {
       return i;
     }
   }
   for (uint8_t i = NUM_MD_TRACKS - 1; i >= cur; i--) {
-    if (note_interface.notes[i] == 1) {
+    if (IS_BIT_SET32(note_mask, i)) {
       return i;
     }
   }
@@ -573,10 +573,26 @@ void SeqPtcPage::on_16_callback() {
           }
         }
       }
-    break;
+      break;
     case ARP_RND:
       note = arp_get_next_note_down(get_random_byte() & 0xF);
       arp_base = get_random_byte() & arp_oct.cur;
+      break;
+    case ARP_DOWNTHUMB:
+      note = arp_get_next_note_down(arp_idx);
+      note_tmp = arp_get_next_note_up(arp_idx);
+      ignore_base = true;
+      if (note_tmp < arp_idx) {
+        ignore_base = false;
+      }
+      note = arp_get_next_note_down(arp_idx);
+      if (note > arp_idx) {
+        if (arp_base > 0) {
+          arp_base--;
+        } else {
+          arp_base = arp_oct.cur;
+        }
+      }
       break;
     case ARP_UPTHUMB:
       note = arp_get_next_note_up(arp_idx);
@@ -595,9 +611,9 @@ void SeqPtcPage::on_16_callback() {
       break;
     case ARP_DOWNPINK:
       note = arp_get_next_note_down(arp_idx);
-       note_tmp = arp_get_next_note_down(arp_idx);
+      note_tmp = arp_get_next_note_down(arp_idx);
       ignore_base = true;
-      if (note_tmp >arp_idx) {
+      if (note_tmp > arp_idx) {
         ignore_base = false;
       }
       if (note > arp_idx) {
@@ -608,14 +624,28 @@ void SeqPtcPage::on_16_callback() {
         }
       }
       break;
- 
-
+    case ARP_UPPINK:
+      note = arp_get_next_note_up(arp_idx);
+      note_tmp = arp_get_next_note_down(arp_idx);
+      ignore_base = true;
+      if (note_tmp > arp_idx) {
+        ignore_base = false;
+      }
+      if (note > arp_idx) {
+        if (arp_base > 0) {
+          arp_base--;
+        } else {
+          arp_base = arp_oct.cur;
+        }
+      }
+      break;
     }
     if (note < NUM_MD_TRACKS) {
       arp_idx = note;
       uint8_t pitch;
-      if (ignore_base) { pitch = calc_pitch(note); }
-      else {
+      if (ignore_base) {
+        pitch = calc_pitch(note);
+      } else {
         pitch = calc_pitch(note) + arp_base * 12;
       }
       trig_md(note, pitch);
@@ -667,7 +697,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         trig_md(note, pitch);
       }
     } else if (mask == EVENT_BUTTON_RELEASED) {
-      CLEAR_BIT(note_mask, pitch);
+
+      CLEAR_BIT64(note_mask, pitch);
     }
 
     // deferred trigger redraw to update TI keyboard feedback.
