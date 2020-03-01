@@ -912,14 +912,14 @@ void step_menu_handler() {
 
 void SeqPage::config_as_trackedit() {
 
-  seq_menu_page.menu.enable_entry(2, true);
-  seq_menu_page.menu.enable_entry(3, false);
+  seq_menu_page.menu.enable_entry(3, true);
+  seq_menu_page.menu.enable_entry(4, false);
 }
 
 void SeqPage::config_as_lockedit() {
 
-  seq_menu_page.menu.enable_entry(2, false);
-  seq_menu_page.menu.enable_entry(3, true);
+  seq_menu_page.menu.enable_entry(3, false);
+  seq_menu_page.menu.enable_entry(4, true);
 }
 
 void SeqPage::loop() {
