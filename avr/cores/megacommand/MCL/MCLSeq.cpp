@@ -25,7 +25,7 @@ void MCLSeq::setup() {
     md_tracks[i].resolution = 1;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
-
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].track_number = i;
     if (i == 0) {
@@ -35,6 +35,7 @@ void MCLSeq::setup() {
       lfo_tracks[i].params[1].param = 7;
     }
   }
+#endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
@@ -78,17 +79,21 @@ void MCLSeq::update_kit_params() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].update_kit_params();
   }
+#ifdef LFO_TRACKS
   for (uint8_t n = 0; n < NUM_LFO_TRACKS; n++) {
     mcl_seq.lfo_tracks[n].update_kit_params();
   }
+#endif
 }
 void MCLSeq::update_params() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
+#endif
 }
 
 void MCLSeq::onMidiContinueCallback() { update_params(); }
@@ -110,20 +115,23 @@ void MCLSeq::onMidiStartImmediateCallback() {
     md_tracks[i].oneshot_mask = 0;
     md_tracks[i].mute_until_start = false;
   }
-
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].sample_hold = 0;
     lfo_tracks[i].step_count = 0;
   }
+#endif
 }
 
 void MCLSeq::onMidiStartCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
+#endif
 }
 
 void MCLSeq::onMidiStopCallback() {
@@ -136,9 +144,11 @@ void MCLSeq::onMidiStopCallback() {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
   }
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
   }
+#endif
 }
 
 #ifdef MEGACOMMAND
@@ -150,10 +160,11 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
-
+#ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq();
   }
+#endif
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
@@ -179,9 +190,11 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
     mcl_seq.md_tracks[track].update_param(track_param, value);
+#ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
       mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param, value);
     }
+#endif
   }
 }
 
