@@ -28,7 +28,7 @@ public:
 
   uint8_t locks_params_orig[4];
   bool load = false;
-//  uint8_t params[24];
+  //  uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
 
@@ -45,12 +45,11 @@ public:
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
-  void set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
-                      uint8_t velocity);
+  void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
   void set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
   uint8_t get_track_lock(uint8_t step, uint8_t track_param);
 
-  void record_track(uint8_t note_num, uint8_t velocity);
+  void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
   void clear_step_locks(uint8_t step);

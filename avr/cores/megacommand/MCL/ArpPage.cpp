@@ -4,7 +4,7 @@
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 7, ENCODER_RES_SEQ);
 MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 1, ENCODER_RES_SEQ);
+MCLEncoder arp_und(0, 3, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {}
 
@@ -25,8 +25,6 @@ void ArpPage::cleanup() {
   oled_display.clearDisplay();
 #endif
 }
-#define ARP_ON 1
-#define ARP_OFF 0
 
 void ArpPage::loop() {
   if (encoders[0]->hasChanged()) {
@@ -38,6 +36,9 @@ void ArpPage::loop() {
       seq_ptc_page.remove_arp();
       break;
     }
+  }
+  if (encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+  seq_ptc_page.render_arp();
   }
 }
 

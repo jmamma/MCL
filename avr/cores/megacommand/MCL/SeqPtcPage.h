@@ -34,6 +34,12 @@ public:
 #define ARP_DOWNPINK 6
 #define ARP_DOWNTHUMB 7
 
+#define ARP_ON 1
+#define ARP_SKIP 2
+#define ARP_SHIFT 3
+#define ARP_OFF 0
+
+#define ARP_MAX_NOTES 16 * 3
 class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
@@ -56,7 +62,7 @@ public:
   uint8_t get_next_voice(uint8_t pitch);
   uint8_t calc_pitch(uint8_t note_num);
 
-  void trig_md(uint8_t note_num, uint8_t pitch);
+  void trig_md(uint8_t pitch);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
@@ -66,6 +72,9 @@ public:
   void queue_redraw();
 
   bool arp_enabled = false;
+  uint8_t arp_notes[ARP_MAX_NOTES];
+  uint8_t arp_len;
+
   uint8_t arp_idx;
   uint8_t arp_base;
   uint8_t arp_dir;
@@ -73,6 +82,8 @@ public:
 
   void setup_arp();
   void remove_arp();
+  void render_arp();
+
   uint8_t arp_get_next_note_up(uint8_t);
   uint8_t arp_get_next_note_down(uint8_t);
   void on_16_callback();

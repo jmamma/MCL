@@ -337,7 +337,7 @@ void MDSeqTrack::record_track_pitch(uint8_t pitch) {
   }
   set_track_pitch(step_count, pitch);
 }
-void MDSeqTrack::record_track(uint8_t note_num, uint8_t velocity) {
+void MDSeqTrack::record_track(uint8_t velocity) {
   /*uint8_t step_count =
        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
        (length * ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2)
@@ -347,10 +347,10 @@ void MDSeqTrack::record_track(uint8_t note_num, uint8_t velocity) {
     return;
   }
   uint8_t utiming = MidiClock.mod12_counter + 12;
-  set_track_step(step_count, utiming, note_num, velocity);
+  set_track_step(step_count, utiming, velocity);
 }
 
-void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
+void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
                                 uint8_t velocity) {
   uint8_t condition = 0;
 
