@@ -199,6 +199,8 @@ void SeqPtcPage::loop() {
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     note_mask = 0;
+    recalc_notemask();
+    render_arp();
   }
 #endif
 
@@ -412,7 +414,7 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t pitch) {
 }
 
 void SeqPtcPage::trig_md(uint8_t pitch) {
-  pitch = octave_to_pitch() + pitch;
+  pitch = ptc_param_oct.cur * 12 + pitch;
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
   MD.setTrackParam(next_track, 0, machine_pitch);
@@ -475,69 +477,309 @@ void SeqPtcPage::remove_arp() {
       this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
 }
 
-uint8_t SeqPtcPage::arp_get_next_note_up(uint8_t cur) {
+uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {}
+#define NOTE_RANGE 24
 
-  for (uint8_t i = cur + 1; i < 24; i++) {
-    if (IS_BIT_SET32(note_mask, i)) {
-      return i;
-    }
-  }
-  for (uint8_t i = 0; i <= cur; i++) {
-    if (IS_BIT_SET32(note_mask, i)) {
-      return i;
-    }
-  }
-  return 255;
-}
+uint8_t SeqPtcPage::arp_get_next_note_up(int8_t cur) {
 
-uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {
-  for (int8_t i = cur - 1; i >= 0; i--) {
+  for (int8_t i = cur + 1; i < NOTE_RANGE; i++) {
     if (IS_BIT_SET32(note_mask, i)) {
       return i;
     }
   }
-  for (uint8_t i = NUM_MD_TRACKS - 1; i >= cur; i--) {
-    if (IS_BIT_SET32(note_mask, i)) {
-      return i;
-    }
-  }
-
   return 255;
 }
 
 void SeqPtcPage::render_arp() {
+  DEBUG_PRINT_FN();
   if (!arp_enabled) {
     return;
   }
-  uint8_t first_note = 255;
   arp_len = 0;
-  for (uint8_t i = 0; i < ARP_MAX_NOTES && first_note == 255; i++) {
+
+  uint8_t num_of_notes;
+  uint8_t note = 0;
+  uint8_t b = 0;
+
+  uint8_t sort_up[NOTE_RANGE];
+  uint8_t sort_down[NOTE_RANGE];
+
+  note = arp_get_next_note_up(-1);
+  if (note != 255) {
+    num_of_notes++;
+    sort_up[0] = note;
+  } else {
+    return;
+  }
+
+  // Collect notes, sort in ascending order
+  DEBUG_PRINTLN("collecting notes");
+  for (uint8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
+    note = arp_get_next_note_up(sort_up[i - 1]);
+    if (note != 255) {
+      num_of_notes++;
+      sort_up[i] = note;
+      DEBUG_PRINTLN(i);
+    }
+  }
+  DEBUG_PRINTLN("finish");
+  DEBUG_PRINTLN(num_of_notes);
+  if (num_of_notes == 0) {
+    return;
+  }
+  // Sort notes in descending order
+
+  for (uint8_t i = 0; i < num_of_notes; i++) {
+    sort_down[num_of_notes - i - 1] = sort_up[i];
+  }
+  note = 255;
+
+  // Generate 1 itteration of the arp
+  switch (arp_mode.cur) {
+
+  case ARP_UP2:
+  case ARP_UPM:
+  case ARP_UPP:
+  case ARP_UP:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_up[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_DOWN2:
+  case ARP_DOWNM:
+  case ARP_DOWNP:
+  case ARP_DOWN:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_down[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+
+  case ARP_UPDOWN:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_up[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
+      note = sort_down[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_DOWNUP:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_down[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
+      note = sort_up[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len++;
+    }
+
+    break;
+  case ARP_UPNDOWN:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_up[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_down[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_DOWNNUP:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_down[i];
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_up[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_CONV:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      if (i & 1) {
+        note = sort_down[b];
+        b++;
+      } else {
+        note = sort_up[b];
+      }
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_DIV:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      if (i & 1) {
+        note = sort_up[b];
+        b++;
+      } else {
+        note = sort_down[b];
+      }
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_CONVDIV:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      if (i & 1) {
+        note = sort_down[b];
+        b++;
+      } else {
+        note = sort_up[b];
+      }
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    b = 0;
+    for (uint8_t i = 1; i < num_of_notes; i++) {
+      if (i & 1) {
+        note = sort_down[b];
+        b++;
+      } else {
+        note = sort_up[b];
+      }
+      arp_notes[i] = calc_pitch(note);
+      arp_len++;
+    }
+    break;
+  case ARP_PINKUP:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_up[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len += 2;
+    }
+    for (uint8_t i = 1; i < arp_len; i += 2) {
+      note = sort_down[0];
+      arp_notes[i] = note;
+    }
+
+    break;
+
+  case ARP_PINKDOWN:
+    for (uint8_t i = 0; i < num_of_notes; i++) {
+      note = sort_down[i];
+      arp_notes[arp_len] = calc_pitch(note);
+      arp_len += 2;
+    }
+    for (uint8_t i = 1; i < arp_len; i += 2) {
+      note = sort_up[0];
+      arp_notes[i] = note;
+    }
+
+    break;
+
+
+  }
+
+  // Generate subsequent octave itterations
+  if (arp_mode.cur <= ARP_PINKDOWN) {
+  for (uint8_t n = 0; n < arp_oct.cur; n++) {
+    for (uint8_t i = 0; i < num_of_notes && arp_len < ARP_MAX_NOTES; i++) {
+      arp_notes[arp_len] = arp_notes[i] + (n + 1) * 12;
+      arp_len++;
+    }
+  }
+  }
+  else {
+  switch (arp_mode.cur) {
+   case ARP_UPP:
+   case ARP_DOWNP:
+    for (uint8_t n = 0; n < arp_oct.cur; n++) {
+      for (uint8_t i = 0; i < num_of_notes && arp_len < ARP_MAX_NOTES; i++) {
+        arp_notes[arp_len] = arp_notes[i];
+        if (i == num_of_notes - 1) { arp_notes[arp_len] += (n + 1) * 12; }
+        arp_len++;
+      }
+   }
+   break;
+   case ARP_UPM:
+   case ARP_DOWNM:
+    for (uint8_t n = 0; n < arp_oct.cur; n++) {
+      for (uint8_t i = 0; i < num_of_notes && arp_len < ARP_MAX_NOTES; i++) {
+        arp_notes[arp_len] = arp_notes[i];
+        if (i == 0) { arp_notes[arp_len] += (n + 1) * 12; }
+        arp_len++;
+      }
+   }
+   break;
+   case ARP_UP2:
+   case ARP_DOWN2:
+    for (uint8_t n = 0; n < arp_oct.cur; n++) {
+      for (uint8_t i = 0; i < num_of_notes && arp_len < ARP_MAX_NOTES; i++) {
+        arp_notes[arp_len] = arp_notes[i];
+        if (!(i & 1)) { arp_notes[arp_len] += (n + 1) * 12; }
+        arp_len++;
+      }
+   }
+   break;
+
+
+  }
+
+  }
+  if (arp_idx >= arp_len) {
+    arp_idx = arp_len - 1;
+  }
+}
+/*
+void SeqPtcPage::render_arp2() {
+  if (!arp_enabled) {
+    return;
+  }
+  if (arp_mode.cur == ARP_RND) {
+    arp_len = 1;
+    return;
+  }
+
+  uint8_t first_note = 255;
+  uint8_t last_note = 255;
+  arp_len = 0;
+  for (uint8_t i = 0; i < ARP_MAX_NOTES; i++) {
     if (IS_BIT_SET32(note_mask, i)) {
-      first_note = i;
+      last_note = i;
+      if (first_note == 255) {
+        first_note = i;
+      }
     }
   }
   if (first_note == 255) {
     return;
   }
   uint8_t idx = first_note;
+  uint8_t idx2 = last_note;
   uint8_t note = 255;
 
   uint8_t pitch = 255;
   uint8_t first_pitch = calc_pitch(first_note);
 
-//  arp_notes[0] = first_pitch;
-//  arp_len++;
-
-  while (pitch != first_pitch && arp_len < ARP_MAX_NOTES) {
+  while (((pitch != first_pitch) || (arp_len == 1)) &&
+         arp_len < ARP_MAX_NOTES) {
     bool ignore_base = false;
+
     switch (arp_mode.cur) {
     case ARP_UP:
-      note = arp_get_next_note_up(idx);
-      if (note <= idx) {
-        if (arp_base < arp_oct.cur) {
-          arp_base++;
-        } else {
-          arp_base = 0;
+      if (arp_len == 0) {
+        note = first_note;
+      } else {
+        note = arp_get_next_note_up(idx);
+        if (note <= idx) {
+          if (arp_base < arp_oct.cur) {
+            arp_base++;
+          } else {
+            arp_base = 0;
+          }
         }
       }
       break;
@@ -549,6 +791,24 @@ void SeqPtcPage::render_arp() {
         } else {
           arp_base = arp_oct.cur;
         }
+      }
+      break;
+    case ARP_CONV:
+      if (arp_dir == 0) {
+        uint8_t note_tmp = arp_get_next_note_up(idx);
+        if (note_tmp < note) {
+          if (arp_base < arp_oct.cur) {
+            arp_base++;
+          } else {
+            arp_base = 0;
+          }
+        }
+        note = note_tmp;
+        arp_dir = 1;
+      } else {
+        note = arp_get_next_note_down(idx2);
+        idx2 = note;
+        arp_dir = 0;
       }
       break;
     case ARP_CIRC:
@@ -578,26 +838,6 @@ void SeqPtcPage::render_arp() {
             arp_dir = 0;
             note = arp_get_next_note_up(idx);
           }
-        }
-      }
-      break;
-    case ARP_RND:
-      note = arp_get_next_note_down(get_random_byte() & 0xF);
-      arp_base = get_random_byte() & arp_oct.cur;
-      break;
-    case ARP_DOWNTHUMB:
-      note = arp_get_next_note_down(idx);
-      note_tmp = arp_get_next_note_up(idx);
-      ignore_base = true;
-      if (note_tmp < idx) {
-        ignore_base = false;
-      }
-      note = arp_get_next_note_down(idx);
-      if (note > idx) {
-        if (arp_base > 0) {
-          arp_base--;
-        } else {
-          arp_base = arp_oct.cur;
         }
       }
       break;
@@ -631,21 +871,6 @@ void SeqPtcPage::render_arp() {
         }
       }
       break;
-    case ARP_UPPINK:
-      note = arp_get_next_note_up(idx);
-      note_tmp = arp_get_next_note_down(idx);
-      ignore_base = true;
-      if (note_tmp > idx) {
-        ignore_base = false;
-      }
-      if (note > idx) {
-        if (arp_base > 0) {
-          arp_base--;
-        } else {
-          arp_base = arp_oct.cur;
-        }
-      }
-      break;
     }
     if (note < NUM_MD_TRACKS) {
       idx = note;
@@ -653,60 +878,81 @@ void SeqPtcPage::render_arp() {
       if (!ignore_base) {
         arp_notes[arp_len] += arp_base * 12;
         pitch = arp_notes[arp_len];
-      }
-      else {
+      } else {
         pitch = arp_notes[arp_len] + arp_base * 12;
       }
       arp_len++;
+    } else {
+      break;
     }
   }
-  if (arp_idx >= arp_len) { arp_idx = arp_len - 1; }
+  if (arp_idx >= arp_len) {
+    arp_idx = arp_len - 1;
+  }
 }
-
+*/
 void SeqPtcPage::on_16_callback() {
   bool trig = false;
   uint8_t note;
 
-  uint8_t arp_count_tmp = arp_count;
-  if (arp_und.cur == ARP_SHIFT) {
-    arp_count_tmp++;
-  } else if (((arp_und.cur == ARP_SKIP) && (arp_count_tmp != 0)) || (arp_und.cur == ARP_ON)) {
-    switch (arp_speed.cur) {
-    case 0:
+  switch (arp_speed.cur) {
+  case 0:
+    trig = true;
+    break;
+  case 1:
+    if ((arp_count == 0) || (arp_count == 2) || (arp_count == 4) ||
+        (arp_count == 6)) {
       trig = true;
-      break;
-    case 1:
-      if ((arp_count_tmp == 0) || (arp_count_tmp == 2) ||
-          (arp_count_tmp == 4) || (arp_count_tmp == 6)) {
-        trig = true;
-      }
-      break;
-    case 2:
-      if ((arp_count_tmp == 0) || (arp_count_tmp == 4)) {
-        trig = true;
-      }
-      break;
-    case 3:
-      if (arp_count_tmp == 0) {
-        trig = true;
-      }
     }
+    break;
+  case 2:
+    if ((arp_count == 0) || (arp_count == 4)) {
+      trig = true;
+    }
+    break;
+  case 3:
+    if (arp_count == 0) {
+      trig = true;
+    }
+    break;
   }
+
   bool ignore_base = false;
 
   if (trig == true) {
     if (arp_len > 0) {
-    trig_md(arp_notes[arp_idx]);
-    arp_idx++;
-    if (arp_idx == arp_len) {
-      arp_idx = 0;
-    }
+      if (arp_mode.cur == ARP_RND) {
+        if (note_mask > 0) {
+          note = 255;
+          while (note == 255) {
+          note = arp_get_next_note_up(get_random_byte() & 0xF);
+          if (note == 255) { note = arp_get_next_note_down(get_random_byte() & 0xF); }
+          }
+          arp_base = get_random_byte() & arp_oct.cur;
+          trig_md(note + arp_base * 12);
+        }
+      } else {
+        trig_md(arp_notes[arp_idx]);
+      }
+      arp_idx++;
+      if (arp_idx == arp_len) {
+        arp_idx = 0;
+      }
     }
   }
 
   arp_count++;
   if (arp_count > 7) {
     arp_count = 0;
+  }
+}
+
+void SeqPtcPage::recalc_notemask() {
+  for (uint8_t i = 0; i < 24; i++) {
+    if (note_interface.notes[i] == 1) {
+      uint8_t pitch = calc_pitch(i);
+      SET_BIT64(note_mask, pitch);
+    }
   }
 }
 
@@ -829,8 +1075,8 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   // }
 
   //  if (seq_param5.getValue() > 0) {
-  pitch =
-      octave_to_pitch() + scales[ptc_param_scale.cur]->pitches[pos] + oct * 12;
+  pitch = ptc_param_oct.cur * 12 + scales[ptc_param_scale.cur]->pitches[pos] +
+          oct * 12;
   //   }
 
   return pitch;

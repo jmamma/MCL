@@ -2,9 +2,9 @@
 #include "MCL.h"
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
-MCLEncoder arp_mode(0, 7, ENCODER_RES_SEQ);
-MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
+MCLEncoder arp_speed(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_und(0, 1, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {}
 
@@ -37,10 +37,18 @@ void ArpPage::loop() {
       break;
     }
   }
-  if (encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
-  seq_ptc_page.render_arp();
+  if (encoders[1]->hasChanged() || encoders[2]->hasChanged() ||
+      encoders[3]->hasChanged()) {
+    seq_ptc_page.render_arp();
   }
 }
+
+typedef char arp_name_t[4];
+
+const arp_name_t arp_names[] PROGMEM = {
+    "UP", "DWN", "UD",  "DU", "UND", "DNU", "CNV", "DIV", "CND",
+    "PU", "PD",  "UPP", "DP", "UPM", "DM",  "U2",  "D2",  "RND",
+};
 
 void ArpPage::display() {
 
@@ -49,11 +57,8 @@ void ArpPage::display() {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
-
   oled_display.fillRect(8, 2, 128 - 16, 32 - 2, BLACK);
   oled_display.drawRect(8 + 1, 2 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
-
-
 
   oled_display.setCursor(42, 10);
 
@@ -70,37 +75,17 @@ void ArpPage::display() {
   case ARP_OFF:
     strcpy(str, "--");
     break;
+  case ARP_SKIP:
+    strcpy(str, "SKP");
+    break;
+  case ARP_SHIFT:
+    strcpy(str, "SHF");
+    break;
   }
   mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
 
-  switch (encoders[1]->cur) {
-  case ARP_UP:
-    strcpy(str, "UP");
-    break;
-  case ARP_DOWN:
-    strcpy(str, "DWN");
-    break;
-  case ARP_CIRC:
-    strcpy(str, "CIR");
-    break;
-  case ARP_RND:
-    strcpy(str, "RND");
-    break;
-  case ARP_UPTHUMB:
-    strcpy(str, "UPT");
-    break;
-  case ARP_DOWNPINK:
-    strcpy(str, "DNP");
-    break;
-  case ARP_UPPINK:
-    strcpy(str, "UPP");
-    break;
-  case ARP_DOWNTHUMB:
-    strcpy(str, "DNT");
-    break;
-  default:
-    break;
-  }
+  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
   itoa(encoders[2]->cur, str, 10);
@@ -114,7 +99,9 @@ void ArpPage::display() {
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) || EVENT_PRESSED(event, Buttons.BUTTON3) || EVENT_PRESSED(event, Buttons.BUTTON2) ||
+  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+      EVENT_PRESSED(event, Buttons.BUTTON3) ||
+      EVENT_PRESSED(event, Buttons.BUTTON2) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
     GUI.popPage();

@@ -6,6 +6,7 @@
 #include "MidiActivePeering.h"
 #include "Scales.h"
 #include "SeqPage.h"
+#include "SeqPages.h"
 
 #define MAX_POLY_NOTES 16
 
@@ -27,12 +28,23 @@ public:
 
 #define ARP_UP 0
 #define ARP_DOWN 1
-#define ARP_CIRC 2
-#define ARP_RND 3
-#define ARP_UPTHUMB 4
-#define ARP_UPPINK 5
-#define ARP_DOWNPINK 6
-#define ARP_DOWNTHUMB 7
+#define ARP_UPDOWN 2
+#define ARP_DOWNUP 3
+#define ARP_UPNDOWN 4
+#define ARP_DOWNNUP 5
+#define ARP_CONV 6
+#define ARP_DIV 7
+#define ARP_CONVDIV 8
+#define ARP_PINKUP 9
+#define ARP_PINKDOWN 10
+#define ARP_UPP 11
+#define ARP_DOWNP 12
+#define ARP_UPM 13
+#define ARP_DOWNM 14
+#define ARP_UP2 15
+#define ARP_DOWN2 16
+#define ARP_RND 17
+
 
 #define ARP_ON 1
 #define ARP_SKIP 2
@@ -66,7 +78,6 @@ public:
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
-  inline uint8_t octave_to_pitch() { return encoders[0]->getValue() * 12; }
   void config_encoders();
   void init_poly();
   void queue_redraw();
@@ -84,7 +95,9 @@ public:
   void remove_arp();
   void render_arp();
 
-  uint8_t arp_get_next_note_up(uint8_t);
+  void recalc_notemask();
+
+  uint8_t arp_get_next_note_up(int8_t);
   uint8_t arp_get_next_note_down(uint8_t);
   void on_16_callback();
 
