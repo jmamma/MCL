@@ -4,7 +4,7 @@
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
 MCLEncoder arp_speed(0, 3, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 1, ENCODER_RES_SEQ);
+MCLEncoder arp_und(0, 2, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {}
 
@@ -36,6 +36,10 @@ void ArpPage::loop() {
       seq_ptc_page.remove_arp();
       break;
     }
+    if (encoders[0]->old > 1) {
+    seq_ptc_page.note_mask = 0;
+    seq_ptc_page.render_arp();
+    }
   }
   if (encoders[1]->hasChanged() || encoders[2]->hasChanged() ||
       encoders[3]->hasChanged()) {
@@ -47,7 +51,7 @@ typedef char arp_name_t[4];
 
 const arp_name_t arp_names[] PROGMEM = {
     "UP", "DWN", "UD",  "DU", "UND", "DNU", "CNV", "DIV", "CND",
-    "PU", "PD",  "UPP", "DP", "UPM", "DM",  "U2",  "D2",  "RND",
+    "PU", "PD", "TU", "TD", "UPP", "DP", "U2",  "D2",  "RND",
 };
 
 void ArpPage::display() {
@@ -75,11 +79,8 @@ void ArpPage::display() {
   case ARP_OFF:
     strcpy(str, "--");
     break;
-  case ARP_SKIP:
-    strcpy(str, "SKP");
-    break;
-  case ARP_SHIFT:
-    strcpy(str, "SHF");
+  case ARP_LATCH:
+    strcpy(str, "LAT");
     break;
   }
   mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);

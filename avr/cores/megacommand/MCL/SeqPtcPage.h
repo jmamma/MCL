@@ -37,18 +37,17 @@ public:
 #define ARP_CONVDIV 8
 #define ARP_PINKUP 9
 #define ARP_PINKDOWN 10
-#define ARP_UPP 11
-#define ARP_DOWNP 12
-#define ARP_UPM 13
-#define ARP_DOWNM 14
+#define ARP_THUMBUP 11
+#define ARP_THUMBDOWN 12
+#define ARP_UPP 13
+#define ARP_DOWNP 14
 #define ARP_UP2 15
 #define ARP_DOWN2 16
 #define ARP_RND 17
 
 
 #define ARP_ON 1
-#define ARP_SKIP 2
-#define ARP_SHIFT 3
+#define ARP_LATCH 2
 #define ARP_OFF 0
 
 #define ARP_MAX_NOTES 16 * 3
