@@ -10,7 +10,7 @@
 
 #define MAX_POLY_NOTES 16
 
-extern scale_t *scales[16];
+extern scale_t *scales[24];
 
 void ptc_pattern_len_handler(Encoder *enc);
 
@@ -44,7 +44,6 @@ public:
 #define ARP_UP2 15
 #define ARP_DOWN2 16
 #define ARP_RND 17
-
 
 #define ARP_ON 1
 #define ARP_LATCH 2

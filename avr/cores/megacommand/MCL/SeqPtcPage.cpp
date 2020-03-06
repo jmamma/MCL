@@ -5,25 +5,18 @@
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
 
-scale_t *scales[16]{
-    &chromaticScale, &ionianScale,
-    //&dorianScale,
-    &phrygianScale,
-    //&lydianScale,
-    //&mixolydianScale,
-    //&aeolianScale,
-    //&locrianScale,
-    &harmonicMinorScale, &melodicMinorScale,
+scale_t *scales[24]{
+    &chromaticScale, &ionianScale, &dorianScale, &phrygianScale, &lydianScale,
+    &mixolydianScale, &aeolianScale, &locrianScale, &harmonicMinorScale,
+    &melodicMinorScale,
     //&lydianDominantScale,
     //&wholeToneScale,
     //&wholeHalfStepScale,
     //&halfWholeStepScale,
     &majorPentatonicScale, &minorPentatonicScale, &suspendedPentatonicScale,
-    &inSenScale, &bluesScale,
-    //&majorBebopScale,
-    //&dominantBebopScale,
-    //&minorBebopScale,
-    &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp, &minorMin7Arp,
+    &inSenScale, &bluesScale, &majorBebopScale, &dominantBebopScale,
+    &minorBebopScale, &majorArp, &minorArp, &majorMaj7Arp, &majorMin7Arp,
+    &minorMin7Arp,
     //&minorMaj7Arp,
     &majorMaj7Arp9,
     //&majorMaj7ArpMin9,
@@ -38,8 +31,9 @@ scale_t *scales[16]{
 typedef char scale_name_t[4];
 
 const scale_name_t scale_names[] PROGMEM = {
-    "---", "ION", "PHR", "mHA", "mME", "MPE", "mPE", "sPE",
-    "ISS", "BLU", "MAJ", "MIN", "MM7", "Mm7", "mm7", "M79",
+    "---", "MAJ", "DOR", "PHR", "LYD", "MIX", "MIN", "LOC",
+    "mHA", "mME", "MPE", "mPE", "sPE", "ISS", "BLU", "MBP",
+    "DBP", "mBP", "MA",  "MIA", "MM7", "Mm7", "mm7", "M79",
 };
 
 void SeqPtcPage::setup() {
@@ -534,12 +528,11 @@ void SeqPtcPage::render_arp() {
   }
   note = 255;
 
-  // Generate 1 itteration of the arp
   switch (arp_mode.cur) {
   case ARP_RND:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[random(0, num_of_notes)];
-      arp_notes[arp_len++] = calc_pitch(note) + 12 * random(0,arp_oct.cur);
+      arp_notes[arp_len++] = calc_pitch(note) + 12 * random(0, arp_oct.cur);
     }
     break;
 
@@ -997,8 +990,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
     } else if (mask == EVENT_BUTTON_RELEASED) {
       if (arp_und.cur != ARP_LATCH) {
-      CLEAR_BIT64(note_mask, pitch);
-      render_arp();
+        CLEAR_BIT64(note_mask, pitch);
+        render_arp();
       }
     }
 
@@ -1154,8 +1147,8 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_pitch(note_num);
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   if (arp_und.cur != ARP_LATCH) {
-  CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  seq_ptc_page.render_arp();
+    CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+    seq_ptc_page.render_arp();
   }
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
