@@ -412,14 +412,10 @@ void SeqPtcPage::trig_md(uint8_t pitch) {
   uint8_t next_track = get_next_voice(pitch);
   uint8_t machine_pitch = get_machine_pitch(next_track, pitch);
   MD.setTrackParam(next_track, 0, machine_pitch);
-  if (!BUTTON_DOWN(Buttons.BUTTON2)) {
-    MD.triggerTrack(next_track, 127);
-  }
+  MD.triggerTrack(next_track, 127);
   if ((recording) && (MidiClock.state == 2)) {
 
-    if (!BUTTON_DOWN(Buttons.BUTTON2)) {
-      mcl_seq.md_tracks[next_track].record_track(127);
-    }
+    mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
@@ -437,13 +433,9 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   SET_BIT64(note_mask, pitch);
   render_arp();
   MD.setTrackParam(next_track, 0, machine_pitch);
-  if (!BUTTON_DOWN(Buttons.BUTTON2)) {
-    MD.triggerTrack(next_track, 127);
-  }
+  MD.triggerTrack(next_track, 127);
   if ((recording) && (MidiClock.state == 2)) {
-    if (!BUTTON_DOWN(Buttons.BUTTON2)) {
-      mcl_seq.md_tracks[next_track].record_track(127);
-    }
+    mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
