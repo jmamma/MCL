@@ -43,6 +43,7 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
+  //trig_interface.off();
   recording = false;
   if (MidiClock.state != 2) {
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
@@ -88,10 +89,10 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(0, true);
   ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
-  midi_events.setup_callbacks();
   note_mask = 0;
   DEBUG_PRINTLN("control mode:");
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
+  trig_interface.on();
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
     trig_interface.on();
     note_interface.state = true;
@@ -288,7 +289,6 @@ void SeqPtcPage::display() {
 
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
-
   if (midi_device == DEVICE_MD) {
     dev_num = last_md_track;
   }
@@ -338,6 +338,11 @@ void SeqPtcPage::display() {
   // draw TI keyboard
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
+  oled_display.setFont(&TomThumb);
+  if (mcl_cfg.poly_mask > 0) {
+    oled_display.setCursor(107, 32);
+    oled_display.print("POLY");
+  }
   SeqPage::display();
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -995,12 +1000,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      re_init = true;
-      GUI.pushPage(&poly_page);
+    re_init = true;
+    GUI.pushPage(&poly_page);
       return true;
     }
     seq_ptc_page.queue_redraw();
     recording = !recording;
+    if (recording) { oled_display.textbox("RECORDING", ""); }
     return true;
   }
   /*
@@ -1012,6 +1018,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (BUTTON_DOWN(Buttons.BUTTON1)) {
+      re_init = true;
       GUI.pushPage(&poly_page);
       return true;
     }

@@ -9,7 +9,6 @@ void PolyPage::init() {
   DEBUG_PRINT_FN();
   trig_interface.on();
   note_interface.init_notes();
-  note_interface.state = true;
 #ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();
@@ -18,9 +17,7 @@ void PolyPage::init() {
 }
 
 void PolyPage::cleanup() {
-  //  md_exploit.off();
   seq_ptc_page.init_poly();
-  note_interface.state = false;
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
