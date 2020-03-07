@@ -24,6 +24,7 @@ public:
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
+  void onControlChangeCallback_Midi2(uint8_t *msg);
 };
 
 #define ARP_UP 0

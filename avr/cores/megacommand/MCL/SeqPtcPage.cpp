@@ -193,7 +193,6 @@ void SeqPtcPage::loop() {
 #ifdef EXT_TRACKS
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged()) {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-    note_mask = 0;
     recalc_notemask();
     render_arp();
   }
@@ -320,7 +319,12 @@ void SeqPtcPage::display() {
   // draw LEN
   if (midi_device == DEVICE_MD) {
     itoa(ptc_param_len.getValue(), buf1, 10);
+    if (mcl_cfg.poly_mask > 0) {
+    draw_knob(2, "PLEN", buf1);
+    }
+    else {
     draw_knob(2, "LEN", buf1);
+    }
   }
 #ifdef EXT_TRACKS
   else {
@@ -938,6 +942,7 @@ void SeqPtcPage::on_16_callback() {
 }
 
 void SeqPtcPage::recalc_notemask() {
+  note_mask = 0;
   for (uint8_t i = 0; i < 24; i++) {
     if (note_interface.notes[i] == 1) {
       uint8_t pitch = calc_pitch(i);
@@ -1171,14 +1176,31 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #endif
 }
 
+void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track;
+  uint8_t track_param;
+  // If external keyboard controlling MD param, send parameter updates
+  // to all polyphonic tracks
+  if ((param < 16) || (param > 39)) { return; }
+  // If Midi2 forwarding data to port 1 , ignore this to prevent double messages.
+  //
+  if (mcl_cfg.midi_forward == 2) { return; }
+  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
+      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+       if (IS_BIT_SET16(mcl_cfg.poly_mask,n)) { MD.setTrackParam(n, param - 16, value); }
+    }
+  }
+}
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-  // If external keyboard controlling MD pitch, send parameter updates
-  // to all polyphonic tracks
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
 
@@ -1209,6 +1231,10 @@ void SeqPtcMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+  Midi2.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
+
 
   state = true;
 }
@@ -1226,6 +1252,10 @@ void SeqPtcMidiEvents::remove_callbacks() {
   Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
+
 
   state = false;
 }
