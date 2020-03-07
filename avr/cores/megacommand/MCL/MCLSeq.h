@@ -38,8 +38,10 @@ public:
   uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 
+#ifdef LFO_TRACKS
   LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
   uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
+#endif
 
   MCLSeqMidiEvents midi_events;
   bool state = false;

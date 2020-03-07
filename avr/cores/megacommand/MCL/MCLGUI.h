@@ -231,6 +231,10 @@ extern const unsigned char icon_para[];
 extern const unsigned char icon_step[];
 // 'gatebox', 24x25px
 extern const unsigned char icon_gatebox[];
+// 'ram1', 24x25px
+extern const unsigned char icon_ram1[];
+// 'ram2', 24x25px
+extern const unsigned char icon_ram2[];
 // 'rythmecho', 24x25px
 extern const unsigned char icon_rhytmecho [];
 // 'route', 24x16px

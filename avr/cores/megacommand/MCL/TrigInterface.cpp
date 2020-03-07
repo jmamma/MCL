@@ -27,14 +27,14 @@ bool TrigInterface::on() {
 }
 
 bool TrigInterface::off() {
-  sysex->removeSysexListener(this);
-  note_interface.note_proceed = false;
-  if (!state) {
+ if (!state) {
     return false;
   }
   if (!MD.connected) {
     return false;
   }
+  sysex->removeSysexListener(this);
+  note_interface.note_proceed = false;
   DEBUG_PRINTLN("deactiviating trig interface");
   state = false;
   MD.deactivate_trig_interface();

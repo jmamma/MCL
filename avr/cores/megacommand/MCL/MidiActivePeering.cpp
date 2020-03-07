@@ -35,6 +35,13 @@ void MidiActivePeering::delay_progress(uint16_t clock_) {
 void MidiActivePeering::md_setup() {
   DEBUG_PRINT_FN();
 
+
+  bool ts = md_track_select.state;
+  bool ti = trig_interface.state;
+
+  if (ts) { md_track_select.off(); }
+  if (ti) { trig_interface.off(); }
+
   MidiIDSysexListener.setup(&Midi);
   MidiUart.set_speed((uint32_t)31250, 1);
 #ifdef OLED_DISPLAY
@@ -100,7 +107,11 @@ void MidiActivePeering::md_setup() {
       delay(250);
     }
   }
+
   MidiIDSysexListener.cleanup();
+  if (ts) { md_track_select.on(); }
+  if (ti) { trig_interface.on(); }
+  GUI.currentPage()->redisplay = true;
 #ifdef OLED_DISPLAY
   oled_display.setFont(oldfont);
 #endif

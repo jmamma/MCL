@@ -5,6 +5,7 @@
 
 #ifdef MEGACOMMAND
 #define EXT_TRACKS
+#define LFO_TRACKS
 #endif
 
 #define NUM_MD_TRACKS    16UL

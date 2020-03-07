@@ -391,7 +391,6 @@ public:
     } else if (state == STARTING &&
                (mode == INTERNAL_MIDI || useImmediateClock)) {
       state = STARTED;
-      callCallbacks(true);
     }
   }
 
