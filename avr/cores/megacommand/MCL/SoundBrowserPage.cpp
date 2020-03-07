@@ -17,8 +17,7 @@ const char *c_wav_name = "WAV";
 #define PA_NEW 0
 #define PA_SELECT 1
 
-static char s_samplename[5];
-static volatile bool s_query_returned = false;
+static bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
@@ -49,7 +48,7 @@ void SoundBrowserPage::init() {
     query_sample_slots();
   } else {
     show_dirs = true;
-    //show_save = true;
+    // show_save = true;
     show_save = (filetype_idx == FT_SND);
     show_filemenu = true;
     show_new_folder = true;
@@ -68,35 +67,25 @@ void SoundBrowserPage::query_sample_slots() {
   numEntries = 0;
   cur_file = 255; // XXX why 255?
   cur_row = 0;
-  uint8_t data[3] = {0x70, 0x34, 0x00};
+  uint8_t data[2] = {0x70, 0x34};
   call_handle_filemenu = false;
+
   sysex->addSysexListener(this);
-  for (int i = 0; i < 48; ++i) {
-    mcl_gui.draw_progress("Loading slots", i, 47);
-    s_query_returned = false;
-    data[2] = i;
-    MD.sendRequest(data, 3);
-    uint16_t time_start = read_slowclock();
-    while (!s_query_returned) {
-      handleIncomingMidi();
-      uint16_t time_now = read_slowclock();
-      if (clock_diff(time_start, time_now) > 200) {
-        DEBUG_PRINT(i);
-        DEBUG_PRINTLN(": timeout");
-        break;
-      }
-    }
-    if (s_query_returned) {
-      DEBUG_PRINTLN(s_samplename);
-      char temp_entry[16];
-      sprintf(temp_entry, "%02d - %s", i, s_samplename);
-      add_entry(temp_entry);
-    } else {
-      add_entry("ERROR");
-    }
+  MD.sendRequest(data, 2);
+  DEBUG_PRINTLN("slot query sent");
+  auto time_start = read_slowclock();
+  auto time_now = time_start;
+  do {
+    handleIncomingMidi();
+    time_now = read_slowclock();
+  } while(!s_query_returned && clock_diff(time_start, time_now) < 1000);
+
+  if (!s_query_returned) {
+    add_entry("ERROR");
   }
-  sysex->removeSysexListener(this);
   ((MCLEncoder *)encoders[1])->max = numEntries - 1;
+
+  sysex->removeSysexListener(this);
 }
 
 void SoundBrowserPage::save_sound() {
@@ -163,7 +152,8 @@ void SoundBrowserPage::send_wav(int slot) {
     DEBUG_PRINTLN(temp_entry);
     // TODO loop stuff? do we have info?
     midi_sds.setName(temp_entry, slot);
-    midi_sds.sendWav(temp_entry, slot, 0x7F, 0, 0, true, /* show progress */true);
+    midi_sds.sendWav(temp_entry, slot, 0x7F, 0, 0, true,
+                     /* show progress */ true);
     gfx.alert("Sample sent", temp_entry);
   }
 }
@@ -263,7 +253,7 @@ void SoundBrowserPage::start() {}
 void SoundBrowserPage::end() {}
 
 void SoundBrowserPage::end_immediate() {
-  DEBUG_PRINT_FN("begin pattern matching");
+  DEBUG_PRINT_FN();
   if (sysex->getByte(3) != 0x02)
     return;
   if (sysex->getByte(4) != 0x00)
@@ -272,14 +262,29 @@ void SoundBrowserPage::end_immediate() {
     return;
   if (sysex->getByte(6) != 0x34)
     return;
-  DEBUG_PRINT_FN("end pattern matching");
-  for (int i = 0; i < 4; ++i) {
-    s_samplename[i] = sysex->getByte(7 + i);
-    DEBUG_PRINT((int)s_samplename[i]);
-    DEBUG_PRINT(" ");
+  int s_sample_slot_count = sysex->getByte(7);
+  DEBUG_DUMP(s_sample_slot_count);
+  if (s_sample_slot_count > 48)
+    return;
+
+  char s_tmpbuf[5];
+  char temp_entry[16];
+
+  for (int i = 0, j = 7; i < s_sample_slot_count; ++i) {
+    for (int k = 0; k < 5; ++k) {
+      s_tmpbuf[k] = sysex->getByte(++j);
+    }
+    bool slot_occupied = s_tmpbuf[4];
+    s_tmpbuf[4] = 0;
+    if (slot_occupied) {
+      sprintf(temp_entry, "%02d - %s", i, s_tmpbuf);
+    } else {
+      sprintf(temp_entry, "%02d - [EMPTY]", i);
+    }
+    add_entry(temp_entry);
   }
-  DEBUG_PRINTLN();
-  s_samplename[4] = 0;
+
+  DEBUG_PRINTLN("sample slot query OK");
   s_query_returned = true;
 }
 
