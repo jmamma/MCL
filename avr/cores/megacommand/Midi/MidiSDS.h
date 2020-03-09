@@ -53,7 +53,6 @@ public:
   bool sendWav(const char *filename, uint16_t sample_number, uint8_t loop_type = 0x7F,
                uint32_t loop_start = 0, uint32_t loop_end = 0, bool handshake = true, bool show_progress = false);
   bool sendSamples(bool show_progress);
-  void setName(char* filename, uint16_t sample_number);
   void incPacketNumber();
   void cancel();
   void dump_header();
