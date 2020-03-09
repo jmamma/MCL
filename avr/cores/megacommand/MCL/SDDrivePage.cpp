@@ -332,6 +332,9 @@ void SDDrivePage::send_sample_pack(int start_slot) {
   while(slot < s_samplemgr_slot_count) {
     len = file.readBytesUntil('\n', temp_entry, sizeof(temp_entry) - 1);
     if (len <= 0) break;
+    if (temp_entry[len-1] == '\r') {
+      --len;
+    }
     temp_entry[len] = 0;
 #ifdef OLED_DISPLAY
     char line2[16];
