@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+static bool s_query_returned = false;
+
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -8,6 +10,7 @@ void FileBrowserPage::setup() {
   // strcpy(match, mcl);
 #endif
   strcpy(title, "Files");
+  sysex = &(Midi.midiSysex);
   DEBUG_PRINT_FN();
 }
 
@@ -24,9 +27,36 @@ bool FileBrowserPage::add_entry(const char *entry) {
   return true;
 }
 
-void FileBrowserPage::init() {
+void FileBrowserPage::query_sample_slots() {
   DEBUG_PRINT_FN();
+  encoders[1]->cur = 0;
+  encoders[1]->old = 0;
+  numEntries = 0;
+  cur_file = 255; // XXX why 255?
+  cur_row = 0;
+  uint8_t data[2] = {0x70, 0x34};
+  call_handle_filemenu = false;
+  s_query_returned = false;
 
+  sysex->addSysexListener(this);
+  MD.sendRequest(data, 2);
+  DEBUG_PRINTLN("slot query sent");
+  auto time_start = read_slowclock();
+  auto time_now = time_start;
+  do {
+    handleIncomingMidi();
+    time_now = read_slowclock();
+  } while(!s_query_returned && clock_diff(time_start, time_now) < 1000);
+
+  if (!s_query_returned) {
+    add_entry("ERROR");
+  }
+  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
+
+  sysex->removeSysexListener(this);
+}
+
+void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {
     if (filetype_idx > filetype_max) filetype_idx = filetype_max;
     if (filetype_idx < 0) filetype_idx = 0;
@@ -46,7 +76,6 @@ void FileBrowserPage::init() {
   file_menu_page.menu.enable_entry(4, true); // cancel
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
-  filemenu_active = false;
 
   //  reset directory pointer
   SD.vwd()->rewind();
@@ -109,6 +138,23 @@ void FileBrowserPage::init() {
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
   DEBUG_PRINTLN(F("finished list files"));
+}
+
+void FileBrowserPage::init() {
+  DEBUG_PRINT_FN();
+
+  filemenu_active = false;
+  if (show_samplemgr) {
+    show_dirs = false;
+    show_save = false;
+    show_filemenu = false;
+    show_new_folder = false;
+    show_overwrite = false;
+    show_filetypes = false;
+    query_sample_slots();
+  } else {
+    query_filesystem();
+  }
 }
 
 void FileBrowserPage::display() {
@@ -397,7 +443,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     return false;
   }
 #ifdef OLED_DISPLAY
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
     file_menu_page.cur_row = 0;
@@ -406,7 +452,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.init();
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
     encoders[0] = param1;
     encoders[1] = param2;
 
@@ -442,11 +488,11 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     DEBUG_DUMP(temp_entry);
-    file.open(temp_entry, O_READ);
-
     // chdir to child
-    if (!select_dirs) {
-      if (file.isDirectory()) {
+    if (!show_samplemgr) {
+      file.open(temp_entry, O_READ);
+      // chdir to child
+      if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
         return true;
       }
@@ -460,9 +506,59 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   // cancel
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    if (show_samplemgr) {
+      // on cancel, break out of sample manager
+      // and intercept cancel event
+      show_samplemgr = false;
+      init();
+      return true;
+    }
+
     on_cancel();
     return true;
   }
 
   return false;
 }
+
+// MidiSysexListenerClass implementation
+void FileBrowserPage::start() {}
+
+void FileBrowserPage::end() {}
+
+void FileBrowserPage::end_immediate() {
+  DEBUG_PRINT_FN();
+  if (sysex->getByte(3) != 0x02)
+    return;
+  if (sysex->getByte(4) != 0x00)
+    return;
+  if (sysex->getByte(5) != 0x72)
+    return;
+  if (sysex->getByte(6) != 0x34)
+    return;
+  int nr_samplecount = sysex->getByte(7);
+  DEBUG_DUMP(nr_samplecount);
+  if (nr_samplecount > 48)
+    return;
+
+  char s_tmpbuf[5];
+  char temp_entry[16];
+
+  for (int i = 0, j = 7; i < nr_samplecount; ++i) {
+    for (int k = 0; k < 5; ++k) {
+      s_tmpbuf[k] = sysex->getByte(++j);
+    }
+    bool slot_occupied = s_tmpbuf[4];
+    s_tmpbuf[4] = 0;
+    if (slot_occupied) {
+      sprintf(temp_entry, "%02d - %s", i, s_tmpbuf);
+    } else {
+      sprintf(temp_entry, "%02d - [EMPTY]", i);
+    }
+    add_entry(temp_entry);
+  }
+
+  DEBUG_PRINTLN("sample slot query OK");
+  s_query_returned = true;
+}
+

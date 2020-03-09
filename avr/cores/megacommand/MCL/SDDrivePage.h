@@ -20,7 +20,7 @@ public:
   void load_snapshot();
   void send_sysex();
   void recv_sysex();
-  void send_sample_pack();
+  void send_sample_pack(int start_slot);
   void recv_sample_pack();
   virtual void on_select(const char*);
   virtual void on_new();
