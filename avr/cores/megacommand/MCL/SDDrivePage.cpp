@@ -13,8 +13,9 @@ const char* c_snapshot_filetype_name = "Snapshot";
 const char* c_samplepack_filetype_name = "Sample";
 const char* c_sysex_filetype_name = "SYSEX";
 
-
 const char *c_snapshot_root = "/SDDrive/MD";
+
+static int s_samplemgr_slot_count = 48;
 
 #define FT_SNP 0
 #define FT_SPK 1
@@ -296,7 +297,7 @@ void SDDrivePage::recv_sysex()
   // TODO receive sysex dump
 }
 
-void SDDrivePage::send_sample_pack() {
+void SDDrivePage::send_sample_pack(int start_slot) {
   DEBUG_PRINT_FN();
 
   if (!file.isOpen()) {
@@ -326,9 +327,9 @@ void SDDrivePage::send_sample_pack() {
   gfx.display_text("Please Wait", "Loading samples");
 #endif
 
-  int slot = 0;
+  int slot = start_slot;
   int len = 0;
-  while(slot < 48) {
+  while(slot < s_samplemgr_slot_count) {
     len = file.readBytesUntil('\n', temp_entry, sizeof(temp_entry) - 1);
     if (len <= 0) break;
     temp_entry[len] = 0;
@@ -363,16 +364,26 @@ void SDDrivePage::on_new() {
 }
 
 void SDDrivePage::on_select(const char *__) { 
-  switch (filetype_idx) {
-    case FT_SNP: 
-      load_snapshot(); 
-      break;
-    case FT_SPK:
-      send_sample_pack();
-      break;
-    case FT_SYX:
-      send_sysex();
-      break;
+  if (show_samplemgr) {
+    // must be pending spk
+    auto slot = encoders[1]->cur;
+    s_samplemgr_slot_count = min(48, ((MCLEncoder *)encoders[1])->max + 1);
+    send_sample_pack(slot);
+    show_samplemgr = false;
+    init();
+  } else {
+    switch (filetype_idx) {
+      case FT_SNP: 
+        load_snapshot(); 
+        break;
+      case FT_SPK:
+        show_samplemgr = true;
+        init();
+        break;
+      case FT_SYX:
+        send_sysex();
+        break;
+    }
   }
 }
 

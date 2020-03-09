@@ -17,8 +17,6 @@ const char *c_wav_name = "WAV";
 #define PA_NEW 0
 #define PA_SELECT 1
 
-static bool s_query_returned = false;
-
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.chdir(c_sound_root);
@@ -28,7 +26,6 @@ void SoundBrowserPage::setup() {
   filetype_names[0] = c_snd_name;
   filetype_names[1] = c_wav_name;
   filetype_max = FT_WAV;
-  sysex = &(Midi.midiSysex);
   FileBrowserPage::setup();
 }
 
@@ -36,16 +33,9 @@ void SoundBrowserPage::init() {
   DEBUG_PRINT_FN();
   trig_interface.off();
 
-  if (samplemgr_show) {
-    show_dirs = false;
-    show_save = false;
-    show_filemenu = false;
-    show_new_folder = false;
-    show_overwrite = false;
-    show_filetypes = false;
+  if (show_samplemgr) {
     char *files = "MD-ROM";
     strcpy(title, files);
-    query_sample_slots();
   } else {
     show_dirs = true;
     // show_save = true;
@@ -56,37 +46,8 @@ void SoundBrowserPage::init() {
     show_filetypes = true;
     char *files = "Sounds";
     strcpy(title, files);
-    FileBrowserPage::init();
   }
-}
-
-void SoundBrowserPage::query_sample_slots() {
-  DEBUG_PRINT_FN();
-  encoders[1]->cur = 0;
-  encoders[1]->old = 0;
-  numEntries = 0;
-  cur_file = 255; // XXX why 255?
-  cur_row = 0;
-  uint8_t data[2] = {0x70, 0x34};
-  call_handle_filemenu = false;
-  s_query_returned = false;
-
-  sysex->addSysexListener(this);
-  MD.sendRequest(data, 2);
-  DEBUG_PRINTLN("slot query sent");
-  auto time_start = read_slowclock();
-  auto time_now = time_start;
-  do {
-    handleIncomingMidi();
-    time_now = read_slowclock();
-  } while(!s_query_returned && clock_diff(time_start, time_now) < 1000);
-
-  if (!s_query_returned) {
-    add_entry("ERROR");
-  }
-  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
-
-  sysex->removeSysexListener(this);
+  FileBrowserPage::init();
 }
 
 void SoundBrowserPage::save_sound() {
@@ -176,41 +137,42 @@ void SoundBrowserPage::recv_wav(int slot) {
 }
 
 void SoundBrowserPage::on_new() {
-  if (!samplemgr_show) {
+  if (!show_samplemgr) {
     switch (filetype_idx) {
     case FT_SND:
       save_sound();
       break;
     case FT_WAV:
       pending_action = PA_NEW;
-      samplemgr_show = true;
+      show_samplemgr = true;
       break;
     }
     init();
   } else {
     // shouldn't happen.
     // show_save = false for samplemgr.
-    samplemgr_show = false;
+    show_samplemgr = false;
     init();
   }
 }
 
 void SoundBrowserPage::on_cancel() {
-  if (samplemgr_show) {
-    // on cancel, break out of sample manager
-    samplemgr_show = false;
+  if (show_samplemgr) {
+    show_samplemgr = false;
+  } else {
+    // TODO cd .. ?
   }
 }
 
 void SoundBrowserPage::on_select(const char *__) {
-  if (!samplemgr_show) {
+  if (!show_samplemgr) {
     switch (filetype_idx) {
     case FT_SND:
       load_sound();
       break;
     case FT_WAV:
       pending_action = PA_SELECT;
-      samplemgr_show = true;
+      show_samplemgr = true;
       init();
       break;
     }
@@ -224,7 +186,7 @@ void SoundBrowserPage::on_select(const char *__) {
       send_wav(slot);
       break;
     }
-    samplemgr_show = false;
+    show_samplemgr = false;
     init();
   }
 }
@@ -235,57 +197,7 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    if (samplemgr_show) {
-      samplemgr_show = false;
-      init();
-    }
-    // intercept cancel event
-    return true;
-  }
-
   return FileBrowserPage::handleEvent(event);
-}
-
-// MidiSysexListenerClass implementation
-void SoundBrowserPage::start() {}
-
-void SoundBrowserPage::end() {}
-
-void SoundBrowserPage::end_immediate() {
-  DEBUG_PRINT_FN();
-  if (sysex->getByte(3) != 0x02)
-    return;
-  if (sysex->getByte(4) != 0x00)
-    return;
-  if (sysex->getByte(5) != 0x72)
-    return;
-  if (sysex->getByte(6) != 0x34)
-    return;
-  int s_sample_slot_count = sysex->getByte(7);
-  DEBUG_DUMP(s_sample_slot_count);
-  if (s_sample_slot_count > 48)
-    return;
-
-  char s_tmpbuf[5];
-  char temp_entry[16];
-
-  for (int i = 0, j = 7; i < s_sample_slot_count; ++i) {
-    for (int k = 0; k < 5; ++k) {
-      s_tmpbuf[k] = sysex->getByte(++j);
-    }
-    bool slot_occupied = s_tmpbuf[4];
-    s_tmpbuf[4] = 0;
-    if (slot_occupied) {
-      sprintf(temp_entry, "%02d - %s", i, s_tmpbuf);
-    } else {
-      sprintf(temp_entry, "%02d - [EMPTY]", i);
-    }
-    add_entry(temp_entry);
-  }
-
-  DEBUG_PRINTLN("sample slot query OK");
-  s_query_returned = true;
 }
 
 MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
