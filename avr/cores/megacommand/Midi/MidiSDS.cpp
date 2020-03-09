@@ -73,6 +73,38 @@ void MidiSDSClass::cancel() {
   state = SDS_READY;
 }
 
+static void _setName(char *filename, uint16_t slot) {
+  char name[5];
+  int len = strlen(filename);
+  int last = len - 1;
+  // trim '.wav'
+  while (last >= 0 && filename[last] != '.') {
+    --last;
+  }
+  if (last < 0)
+    last = len - 1;
+
+  if (last <= 4) {
+    for(int i=0;i<last;++i){
+      name[i] = filename[i];
+      name[last] = 0;
+    }
+  } else {
+    name[0] = filename[0];
+    name[1] = filename[1];
+    name[2] = filename[last - 2];
+    name[3] = filename[last - 1];
+    name[4] = 0;
+  }
+
+  for(int i=0;i<4;++i) {
+    name[i] = toupper(name[i]);
+  }
+
+  MD.setSampleName(slot, name);
+}
+
+
 bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
                            uint32_t loop_end, bool handshake,
@@ -112,38 +144,17 @@ wait:
     return false;
   } else if (rep == MIDI_SDS_WAIT) {
     goto wait;
+  } else {
+    // HandShake disabled.
+    hand_shake_state = false;
   }
-  // HandShake disabled.
+
+  _setName(filename, sample_number);
+
   bool ret = sendSamples(show_progress);
   wav_file.close();
   state = SDS_READY;
   return ret;
-}
-
-void MidiSDSClass::setName(char *filename, uint16_t slot) {
-  char name[5];
-  int len = strlen(filename);
-  int last = len - 1;
-  // trim '.wav'
-  while (last >= 0 && filename[last] != '.') {
-    --last;
-  }
-  if (last < 0)
-    last = len - 1;
-
-  if (last <= 4) {
-    for(int i=0;i<last;++i){
-      name[i] = filename[i];
-      name[last] = 0;
-    }
-  } else {
-    name[0] = filename[0];
-    name[1] = filename[1];
-    name[2] = filename[last - 2];
-    name[3] = filename[last - 1];
-    name[4] = 0;
-  }
-  MD.setSampleName(slot, name);
 }
 
 bool MidiSDSClass::sendSamples(bool show_progress) {
