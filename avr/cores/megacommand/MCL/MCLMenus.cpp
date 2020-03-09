@@ -17,7 +17,7 @@ void new_proj_handler() {
   proj.new_project();
 }
 
-const menu_t<7> system_menu_layout PROGMEM = {
+const menu_t<8> system_menu_layout PROGMEM = {
     "GLOBAL",
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, NULL, {}},
@@ -26,6 +26,7 @@ const menu_t<7> system_menu_layout PROGMEM = {
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, NULL, {}},
         {"CHAIN MODE", 0, 0, 0, (uint8_t *) NULL, (Page*) &chain_config_page, NULL, {}},
         {"AUX PAGES", 0, 0, 0, (uint8_t *) NULL, (Page*) &aux_config_page, NULL, {}},
+        {"SD DRIVE", 0, 0, 0, (uint8_t *) NULL, (Page*) &sddrive_page, NULL, {}},
         {"SYSTEM", 0, 0, 0, (uint8_t *) NULL, (Page*) &mcl_config_page, NULL, {}},
     },
      NULL,
@@ -62,14 +63,13 @@ const menu_t<5> midiconfig_menu_layout PROGMEM = {
     (&mclsys_apply_config),
 };
 
-const menu_t<5> mdconfig_menu_layout PROGMEM = {
+const menu_t<4> mdconfig_menu_layout PROGMEM = {
     "MD",
     {
         {"TRACK SELECT:",0, 2, 2, (uint8_t *) &mcl_cfg.track_select, (Page*) NULL, NULL, {{0, "MAN"},{1, "AUTO"}}},
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, NULL, {{0, "OFF"},{1, "AUTO"}}},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, NULL, {{0, "INT"},{17, "OMNI"}}},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, NULL, {}},
-        {"SD DRIVE", 0, 0, 0, (uint8_t *) NULL, (Page*) &sddrive_page, NULL, {}},
     },
     (&mclsys_apply_config),
 };
@@ -108,10 +108,10 @@ const menu_t<5> file_menu_layout PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
-MenuPage<7> system_page(&system_menu_layout, &options_param1, &options_param2);
+MenuPage<8> system_page(&system_menu_layout, &options_param1, &options_param2);
 MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
-MenuPage<5> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
+MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
 MenuPage<2> mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
