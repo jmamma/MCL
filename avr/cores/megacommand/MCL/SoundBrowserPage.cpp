@@ -69,6 +69,7 @@ void SoundBrowserPage::query_sample_slots() {
   cur_row = 0;
   uint8_t data[2] = {0x70, 0x34};
   call_handle_filemenu = false;
+  s_query_returned = false;
 
   sysex->addSysexListener(this);
   MD.sendRequest(data, 2);
