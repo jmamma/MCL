@@ -105,10 +105,7 @@ static void _setName(char *filename, uint16_t slot) {
 }
 
 
-bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
-                           uint8_t loop_type, uint32_t loop_start,
-                           uint32_t loop_end, bool handshake,
-                           bool show_progress) {
+bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number, bool show_progress) {
   if (state != SDS_READY) {
     DEBUG_PRINTLN("sds not in ready state");
     return false;
@@ -120,13 +117,19 @@ bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
   packetNumber = 0;
   samplesSoFar = 0;
   sampleNumber = sample_number;
-  setSampleRate(wav_file.header.sampleRate);
-  sampleLength = (wav_file.header.subchunk2Size / wav_file.header.numChannels) /
-                 (wav_file.header.bitRate / 8);
-  sampleFormat = wav_file.header.bitRate;
-  loopType = loop_type;
-  loopStart = loop_start;
-  loopEnd = loop_end;
+  setSampleRate(wav_file.header.fmt.sampleRate);
+  sampleLength = (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
+                 (wav_file.header.fmt.bitRate / 8);
+  sampleFormat = wav_file.header.fmt.bitRate;
+
+  if (wav_file.header.smpl.is_active()) {
+    wav_file.header.smpl.to_sds(wav_file.header.fmt, loopType, loopStart, loopEnd);
+  } else {
+    loopType = SDS_LOOP_OFF;
+    loopStart = 0;
+    loopEnd = 0;
+  }
+
   packetNumber = 0;
   DEBUG_PRINTLN("sending dump");
   DEBUG_PRINTLN(sampleLength);
