@@ -17,28 +17,22 @@ void MidiSDSClass::sendAckMessage() {
 }
 
 void MidiSDSClass::sendNakMessage() {
-  DEBUG_PRINT_FN();
   sendGeneralMessage(MIDI_SDS_NAK);
 }
 
 void MidiSDSClass::sendCancelMessage() {
-  DEBUG_PRINT_FN();
   sendGeneralMessage(MIDI_SDS_CANCEL);
 }
 
 void MidiSDSClass::sendWaitMessage() {
-  //  DEBUG_PRINT_FN();
   sendGeneralMessage(MIDI_SDS_WAIT);
 }
 
 void MidiSDSClass::sendEOFMessage() {
-  DEBUG_PRINT_FN();
   sendGeneralMessage(MIDI_SDS_EOF);
 }
 
 void MidiSDSClass::sendDumpRequest(uint16_t slot) {
-  DEBUG_PRINT_FN();
-
   sampleNumber = slot;
   uint8_t data[7] = {0xF0, 0x7E, 0x00, 0x03, 0x00, 0x00, 0xF7};
   data[2] = deviceID;
@@ -46,6 +40,7 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
   data[5] = (sampleNumber >> 7) & 0x7F;
   MidiUart.sendRaw(data, 7);
 }
+
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
   MidiSDSSysexListener.msgType = 255;
@@ -59,7 +54,6 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
-  DEBUG_DUMP(MidiSDSSysexListener.msgType);
   return MidiSDSSysexListener.msgType;
 }
 void MidiSDSClass::cancel() {
@@ -102,7 +96,6 @@ static void _setName(const char *filename, uint16_t slot) {
 
 bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool show_progress) {
   if (state != SDS_READY) {
-    DEBUG_PRINTLN("sds not in ready state");
     return false;
   }
   if (!wav_file.open(filename, false)) {
@@ -119,6 +112,9 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool sh
 
   if (wav_file.header.smpl.is_active()) {
     wav_file.header.smpl.to_sds(wav_file.header.fmt, loopType, loopStart, loopEnd);
+    DEBUG_DUMP(loopType);
+    DEBUG_DUMP(loopStart);
+    DEBUG_DUMP(loopEnd);
   } else {
     loopType = SDS_LOOP_OFF;
     loopStart = 0;

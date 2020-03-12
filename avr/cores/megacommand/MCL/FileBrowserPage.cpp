@@ -11,7 +11,6 @@ void FileBrowserPage::setup() {
 #endif
   strcpy(title, "Files");
   sysex = &(Midi.midiSysex);
-  DEBUG_PRINT_FN();
 }
 
 bool FileBrowserPage::add_entry(const char *entry) {
@@ -28,7 +27,6 @@ bool FileBrowserPage::add_entry(const char *entry) {
 }
 
 void FileBrowserPage::query_sample_slots() {
-  DEBUG_PRINT_FN();
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
   numEntries = 0;
@@ -40,7 +38,6 @@ void FileBrowserPage::query_sample_slots() {
 
   sysex->addSysexListener(this);
   MD.sendRequest(data, 2);
-  DEBUG_PRINTLN("slot query sent");
   auto time_start = read_slowclock();
   auto time_now = time_start;
   do {
@@ -86,7 +83,6 @@ void FileBrowserPage::query_filesystem() {
   }
 
   SD.vwd()->getName(temp_entry, 16);
-  DEBUG_DUMP(temp_entry);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
@@ -102,7 +98,6 @@ void FileBrowserPage::query_filesystem() {
     }
     file.getName(temp_entry, 16);
     bool is_match_file = false;
-    DEBUG_DUMP(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
@@ -110,7 +105,6 @@ void FileBrowserPage::query_filesystem() {
     } else {
       // XXX only 3char suffix
       char *arg1 = &temp_entry[strlen(temp_entry) - 4];
-      DEBUG_DUMP(arg1);
       if (strcmp(arg1, match) == 0) {
         is_match_file = true;
       }
@@ -128,7 +122,6 @@ void FileBrowserPage::query_filesystem() {
       }
     }
     file.close();
-    DEBUG_DUMP(numEntries);
   }
 
   if (numEntries <= 0) {
@@ -138,10 +131,10 @@ void FileBrowserPage::query_filesystem() {
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
   DEBUG_PRINTLN(F("finished list files"));
+  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
 }
 
 void FileBrowserPage::init() {
-  DEBUG_PRINT_FN();
 
   filemenu_active = false;
   if (show_samplemgr) {
@@ -299,8 +292,6 @@ void FileBrowserPage::_calcindices(int &saveidx) {
 }
 
 void FileBrowserPage::_cd_up() {
-  DEBUG_PRINT_FN();
-
   file.close();
 
   // don't cd up if we are at the root
@@ -328,8 +319,6 @@ void FileBrowserPage::_cd_up() {
     strcpy(lwd, "/");
   }
 
-  DEBUG_DUMP(lwd);
-
   SD.chdir(lwd);
   init();
 }
@@ -351,8 +340,6 @@ void FileBrowserPage::_cd(const char *child) {
     lwd[--len_lwd] = '\0';
   }
 
-  DEBUG_DUMP(lwd);
-  DEBUG_DUMP(child);
   init();
 }
 
@@ -436,9 +423,6 @@ void FileBrowserPage::on_rename(const char *from, const char *to) {
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
-
-  DEBUG_PRINT_FN();
-
   if (note_interface.is_event(event)) {
     return false;
   }
@@ -527,7 +511,6 @@ void FileBrowserPage::start() {}
 void FileBrowserPage::end() {}
 
 void FileBrowserPage::end_immediate() {
-  DEBUG_PRINT_FN();
   if (sysex->getByte(3) != 0x02)
     return;
   if (sysex->getByte(4) != 0x00)
@@ -537,7 +520,6 @@ void FileBrowserPage::end_immediate() {
   if (sysex->getByte(6) != 0x34)
     return;
   int nr_samplecount = sysex->getByte(7);
-  DEBUG_DUMP(nr_samplecount);
   if (nr_samplecount > 48)
     return;
 
@@ -558,7 +540,6 @@ void FileBrowserPage::end_immediate() {
     add_entry(temp_entry);
   }
 
-  DEBUG_PRINTLN("sample slot query OK");
   s_query_returned = true;
 }
 

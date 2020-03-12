@@ -5,9 +5,7 @@ bool WavDesigner::render() {
   float sample_rate = 44100;
   Wav wav_file;
 
-  bool overwrite = true;
-  // SDS_LOOP_FORWARD, loop_start, loop_end, 
-  if (!wav_file.open("render.wav", overwrite, 1, sample_rate, 16)) {
+  if (!wav_file.open("render.wav", true, 1, sample_rate, 16, true)) {
     return false;
   }
   // Work out lowest base frequency.
@@ -206,10 +204,9 @@ bool WavDesigner::render() {
     DEBUG_PRINTLN(F("could not close"));
   }
 }
+
 bool WavDesigner::send() {
-  bool ret = midi_sds.sendWav("render.wav", mixer.enc4.cur, true);
-  if (!ret) return false;
-  return true;
+  return midi_sds.sendWav("render.wav", mixer.enc4.cur, false);
 }
 
 WavDesigner wd;

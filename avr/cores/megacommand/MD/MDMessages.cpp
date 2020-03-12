@@ -9,7 +9,6 @@
 uint8_t lfo_statestore[31];
 
 void MDMachine::scale_vol(float scale) {
-  DEBUG_PRINT_FN();
   params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
   if (params[MODEL_VOL] > 127) {
     params[MODEL_VOL] = 127;
@@ -25,7 +24,6 @@ void MDMachine::scale_vol(float scale) {
 }
 
 float MDMachine::normalize_level() {
-  DEBUG_PRINT_FN();
   if (level == 127) {
     return 1.0;
   }

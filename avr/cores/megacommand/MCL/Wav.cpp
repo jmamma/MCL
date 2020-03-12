@@ -88,11 +88,15 @@ bool Wav::write_header() {
     return false;
   }
   chunk_offset += header.fmt.total_len();
+  DEBUG_DUMP(header.fmt.total_len());
+  DEBUG_DUMP(chunk_offset);
   if (header.smpl.is_active()) {
     if(!write_data(&header.smpl, header.smpl.total_len(), chunk_offset)) {
       return false;
     }
     chunk_offset += header.smpl.total_len();
+    DEBUG_DUMP(header.smpl.total_len());
+    DEBUG_DUMP(chunk_offset);
   }
   if (!write_data(&header.data, sizeof(datachunk_t), chunk_offset)) {
     return false;
@@ -100,6 +104,7 @@ bool Wav::write_header() {
   chunk_offset += sizeof(datachunk_t);
 
   data_offset = chunk_offset;
+  DEBUG_DUMP(data_offset);
   return true;
 }
 
@@ -128,12 +133,17 @@ bool Wav::read_header() {
     }
     if (pchunk->is<fmtchunk_t>()) {
       header.fmt = *(fmtchunk_t*)pchunk;
+      DEBUG_PRINTLN("parse fmt");
     } else if (pchunk->is<datachunk_t>()) {
       header.data = *(datachunk_t*)pchunk;
       data_offset = chunk_offset + sizeof(datachunk_t);
+      DEBUG_PRINTLN("parse data");
+      DEBUG_DUMP(data_offset);
     } else if (pchunk->is<smplchunk_t>()) {
       header.smpl = *(smplchunk_t*)pchunk;
       smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
+      DEBUG_PRINTLN("parse smpl");
+      DEBUG_DUMP(smpl_offset);
     } else {
       break;
     }
