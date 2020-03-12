@@ -254,7 +254,6 @@ void MidiSDSSysexListenerClass::data_packet() {
       num_of_samples++;
     }
 
-    bool ret = false;
     bool write_header = false;
     if (midi_sds.wav_file.write_samples(
             &samples, num_of_samples, midi_sds.samplesSoFar, 0, write_header)) {
@@ -269,7 +268,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
       DEBUG_PRINTLN(F("Sample receive finished"));
-      DEBUG_PRINTLN(midi_sds.wav_file.header.subchunk2Size);
+      DEBUG_PRINTLN(midi_sds.wav_file.header.data.chunk_size);
       bool write_header = true;
       midi_sds.wav_file.close(write_header);
       if (sds_name_rec) {

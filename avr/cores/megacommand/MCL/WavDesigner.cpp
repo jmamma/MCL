@@ -6,6 +6,7 @@ bool WavDesigner::render() {
   Wav wav_file;
 
   bool overwrite = true;
+  // SDS_LOOP_FORWARD, loop_start, loop_end, 
   if (!wav_file.open("render.wav", overwrite, 1, sample_rate, 16)) {
     return false;
   }
@@ -176,22 +177,11 @@ bool WavDesigner::render() {
       samples_so_far = 0;
     }
   }
-  // Normalise wav
 
-  float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
-  DEBUG_PRINTLN(F("gain:"));
-  DEBUG_PRINTLN(largest_sample_so_far);
-  DEBUG_PRINTLN(normalize_gain);
-  wav_file.file.sync();
-  wav_file.apply_gain(normalize_gain);
-  write_header = true;
-  if (!wav_file.close(write_header)) {
-    DEBUG_PRINTLN(F("could not close"));
-  }
   DEBUG_PRINTLN(F("wave stats:"));
   DEBUG_PRINTLN(n_cycle);
   DEBUG_PRINTLN(pos);
-  DEBUG_PRINTLN(wav_file.header.subchunk2Size);
+  DEBUG_PRINTLN(wav_file.header.data.chunk_size);
   DEBUG_PRINTLN(F("zero crossings"));
   DEBUG_PRINTLN(first_zero_crossing);
   DEBUG_PRINTLN(last_zero_crossing);
@@ -200,11 +190,24 @@ bool WavDesigner::render() {
   DEBUG_PRINTLN(n_cycle);
   loop_start = first_zero_crossing;
   loop_end = last_zero_crossing;
+
   // first_zero_crossing = 0;
+  // Normalise wav
+
+  float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
+  DEBUG_PRINTLN("gain:");
+  DEBUG_PRINTLN(largest_sample_so_far);
+  DEBUG_PRINTLN(normalize_gain);
+  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start, loop_end);
+  wav_file.file.sync();
+  wav_file.apply_gain(normalize_gain);
+  write_header = true;
+  if (!wav_file.close(write_header)) {
+    DEBUG_PRINTLN(F("could not close"));
+  }
 }
 bool WavDesigner::send() {
-  bool ret = midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD,
-                              loop_start, loop_end, true, true);
+  bool ret = midi_sds.sendWav("render.wav", mixer.enc4.cur, true);
   if (!ret) return false;
   return true;
 }
