@@ -23,8 +23,6 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   int32_t len;
   ret = proj.file.seekSet(offset);
   if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Seek failed");
     return false;
   }
   if (m > 0) {
@@ -34,8 +32,6 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
 
   if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Read failed");
     return false;
   }
   if (active == EMPTY_TRACK_TYPE) {
@@ -50,14 +46,12 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool 
   bool ret;
 
   int b = 0;
-  DEBUG_PRINT_FN();
   int32_t len;
 
   int32_t offset = (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
 
   ret = proj.file.seekSet(offset);
   if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
     return false;
   }
   #ifdef EXT_TRACKS
@@ -69,7 +63,6 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool 
 
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
-    DEBUG_PRINTLN("Write failed");
     return false;
   }
   uint8_t model = column;

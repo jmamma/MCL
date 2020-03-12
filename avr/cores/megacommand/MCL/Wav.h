@@ -131,8 +131,8 @@ struct smplchunk_t: public chunk_t {
     }
 
     SDS_loop_type = loops[0].dwType;
-    SDS_loop_start = loops[0].dwStart / fmt.numChannels / (fmt.bitRate / 8);
-    SDS_loop_end = loops[0].dwEnd / fmt.numChannels / (fmt.bitRate / 8);
+    SDS_loop_start = loops[0].dwStart /  /* fmt.numChannels / */ (fmt.bitRate / 8);
+    SDS_loop_end = loops[0].dwEnd / /* fmt.numChannels / */ (fmt.bitRate / 8);
   }
 
   static constexpr char* id = "smpl";
@@ -167,6 +167,7 @@ struct WavHeader {
   }
 
   void init(uint16_t numChannels, uint32_t sampleRate, uint8_t bitRate, uint8_t SDS_loop_type, uint32_t SDS_loop_start, uint32_t SDS_loop_end) {
+    DEBUG_PRINT_FN();
     fmt.init(numChannels, sampleRate, bitRate);
     data.init();
     smpl.init(fmt, SDS_loop_type, SDS_loop_start, SDS_loop_end);

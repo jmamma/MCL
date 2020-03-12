@@ -30,7 +30,6 @@ void SoundBrowserPage::setup() {
 }
 
 void SoundBrowserPage::init() {
-  DEBUG_PRINT_FN();
   trig_interface.off();
 
   if (show_samplemgr) {
@@ -51,7 +50,6 @@ void SoundBrowserPage::init() {
 }
 
 void SoundBrowserPage::save_sound() {
-  DEBUG_PRINT_FN();
 
   MDSound sound;
   char sound_name[] = "        ";
@@ -65,8 +63,6 @@ void SoundBrowserPage::save_sound() {
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[16];
     sprintf(temp_entry, "%s.snd", sound_name);
-    DEBUG_PRINTLN("creating new sound:");
-    DEBUG_PRINTLN(temp_entry);
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
     sound.fetch_sound(MD.currentTrack);
     sound.write_sound();
@@ -77,17 +73,13 @@ void SoundBrowserPage::save_sound() {
 
 void SoundBrowserPage::load_sound() {
 
-  DEBUG_PRINT_FN();
   grid_page.prepare();
   if (file.isOpen()) {
     char temp_entry[16];
     MDSound sound;
     file.getName(temp_entry, 16);
     file.close();
-    DEBUG_PRINTLN("loading sound");
-    DEBUG_PRINTLN(temp_entry);
     if (!sound.file.open(temp_entry, O_READ)) {
-      DEBUG_PRINTLN("error openning");
       gfx.alert("Error", "Opening");
       return;
     }
@@ -105,13 +97,10 @@ void SoundBrowserPage::load_sound() {
 
 // send current selected wav file to slot
 void SoundBrowserPage::send_wav(int slot) {
-  DEBUG_PRINT_FN();
   if (file.isOpen()) {
     char temp_entry[16];
     file.getName(temp_entry, 16);
     file.close();
-    DEBUG_PRINTLN("sending sample");
-    DEBUG_PRINTLN(temp_entry);
     // TODO loop stuff? do we have info?
     midi_sds.sendWav(temp_entry, slot, /* show progress */ true);
     gfx.alert("Sample sent", temp_entry);
@@ -119,8 +108,6 @@ void SoundBrowserPage::send_wav(int slot) {
 }
 
 void SoundBrowserPage::recv_wav(int slot) {
-  DEBUG_PRINT_FN();
-
   char wav_name[] = "        ";
 
 
@@ -128,8 +115,6 @@ void SoundBrowserPage::recv_wav(int slot) {
     char temp_entry[16];
     strcpy(temp_entry, wav_name);
     strcat(temp_entry, ".wav");
-    DEBUG_PRINTLN("Receiving new sample:");
-    DEBUG_PRINTLN(temp_entry);
     // TODO
     midi_sds.sendDumpRequest(slot);
     gfx.alert("Sample received", temp_entry);

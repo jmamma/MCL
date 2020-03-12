@@ -9,7 +9,6 @@
 uint8_t lfo_statestore[31];
 
 void MDMachine::scale_vol(float scale) {
-  DEBUG_PRINT_FN();
   params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
   if (params[MODEL_VOL] > 127) {
     params[MODEL_VOL] = 127;
@@ -25,7 +24,6 @@ void MDMachine::scale_vol(float scale) {
 }
 
 float MDMachine::normalize_level() {
-  DEBUG_PRINT_FN();
   if (level == 127) {
     return 1.0;
   }
@@ -295,8 +293,6 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
-    DEBUG_PRINTLN("kit wrong length");
-    DEBUG_DUMP(len);
     return false;
   }
 
@@ -349,7 +345,6 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
-  DEBUG_PRINTLN("kit okay");
   return true;
 }
 

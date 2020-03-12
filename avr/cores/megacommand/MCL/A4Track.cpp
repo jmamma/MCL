@@ -32,12 +32,10 @@ bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
 bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
   bool ret;
   int b = 0;
-  DEBUG_PRINT_FN();
   int32_t offset = grid.get_slot_offset(column, row);
   int32_t len;
   ret = proj.file.seekSet(offset);
   if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
     return false;
   }
   if (m > 0) {
@@ -46,7 +44,6 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
   }
   if (!ret) {
-    DEBUG_PRINTLN("Write failed");
     return false;
   }
   if (active == EMPTY_TRACK_TYPE) {
@@ -64,13 +61,10 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
 
   bool ret;
   int b = 0;
-  DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("storing a4 track");
   int32_t len;
   int32_t offset = grid.get_slot_offset(column, row);
   ret = proj.file.seekSet(offset);
   if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
     return false;
   }
 

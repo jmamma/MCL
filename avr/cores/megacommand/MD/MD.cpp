@@ -974,7 +974,6 @@ void MDClass::enter_global_edit() {
   if (global == 255) {
     return;
   }
-  DEBUG_DUMP(global);
   clear_all_windows_quick();
   delay(10);
   toggle_global_window();

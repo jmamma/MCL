@@ -189,8 +189,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     printf("WRONG LENGTH: %x\n", len);
 #endif
 
-    DEBUG_PRINTLN("WRONG LENGTH");
-    DEBUG_DUMP(len);
     return false;
   }
 
@@ -198,7 +196,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 
-    DEBUG_PRINTLN("bad checksum");
     return false;
   }
 
@@ -294,7 +291,6 @@ uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
-  DEBUG_PRINT_FN();
   isExtraPattern = patternLength > 32;
 
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
