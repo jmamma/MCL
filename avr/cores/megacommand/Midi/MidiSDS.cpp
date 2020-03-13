@@ -112,9 +112,6 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool sh
 
   if (wav_file.header.smpl.is_active()) {
     wav_file.header.smpl.to_sds(wav_file.header.fmt, loopType, loopStart, loopEnd);
-    DEBUG_DUMP(loopType);
-    DEBUG_DUMP(loopStart);
-    DEBUG_DUMP(loopEnd);
   } else {
     loopType = SDS_LOOP_OFF;
     loopStart = 0;
@@ -188,7 +185,6 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
     }
 
     ret = wav_file.read_samples(&samples, num_of_samples, samplesSoFar, 0);
-    DEBUG_PRINTLN(samplesSoFar);
     if (!ret) {
       DEBUG_PRINTLN(F("could not read"));
       return ret;
