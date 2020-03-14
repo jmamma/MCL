@@ -47,7 +47,7 @@ public:
 class MCLActions : public ChainModeData {
 public:
   uint8_t do_kit_reload;
-  int writepattern;
+  uint8_t writepattern;
   uint8_t write_original = 0;
 
   uint8_t patternswitch = PATTERN_UDEF;
@@ -64,16 +64,16 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
-  bool load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track);
+  bool load_track_from_ext(uint8_t curtrack, uint8_t column, uint8_t row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
+  bool load_track_from_md(uint8_t curtrack, uint8_t column, uint8_t row, EmptyTrack *empty_track);
 
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
-  void store_tracks_in_mem(int column, int row, uint8_t merge);
+  void store_tracks_in_mem(uint8_t column, uint8_t row, uint8_t merge);
 
-  void write_tracks(int column, int row);
+  void write_tracks(uint8_t column, uint8_t row);
   void send_tracks_to_devices();
-  void prepare_next_chain(int row);
+  void prepare_next_chain(uint8_t row);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
   void calc_latency(EmptyTrack *empty_track);

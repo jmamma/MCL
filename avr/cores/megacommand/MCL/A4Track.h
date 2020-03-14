@@ -15,12 +15,12 @@ class A4Track : public ExtTrack,
                 public Bank1Object<A4Track, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
 public:
   A4Sound sound;
-  void load_seq_data(int tracknumber);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool place_track_in_sysex(int tracknumber, uint8_t column,
+  void load_seq_data(uint8_t tracknumber);
+  bool get_track_from_sysex(uint8_t tracknumber, uint8_t column);
+  bool place_track_in_sysex(uint8_t tracknumber, uint8_t column,
                            A4Sound *analogfour_sound);
-  bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
+  bool load_track_from_grid(uint8_t column, uint8_t row, int m = 0);
+  bool store_track_in_grid(uint8_t column, uint8_t row, uint8_t track = 255, bool online = false);
 
 };
 

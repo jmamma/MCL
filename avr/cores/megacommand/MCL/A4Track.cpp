@@ -3,7 +3,7 @@
 #include "MCLSeq.h"
 //#include "MCLSd.h"
 
-void A4Track::load_seq_data(int tracknumber) {
+void A4Track::load_seq_data(uint8_t tracknumber) {
 #ifdef EXT_TRACKS
   if (seq_data.resolution == 0) { seq_data.resolution = 1; }
   if (active == EMPTY_TRACK_TYPE) {
@@ -15,11 +15,11 @@ void A4Track::load_seq_data(int tracknumber) {
 #endif
 }
 
-bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
+bool A4Track::get_track_from_sysex(uint8_t tracknumber, uint8_t column) {
 
   active = A4_TRACK_TYPE;
 }
-bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
+bool A4Track::place_track_in_sysex(uint8_t tracknumber, uint8_t column,
                                    A4Sound *analogfour_sound) {
   if (active == A4_TRACK_TYPE) {
     memcpy(analogfour_sound, &sound, sizeof(A4Sound));
@@ -29,12 +29,10 @@ bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
     return false;
   }
 }
-bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
+bool A4Track::load_track_from_grid(uint8_t column, uint8_t row, int m) {
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
   int32_t offset = grid.get_slot_offset(column, row);
-  int32_t len;
   ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("Seek failed");
@@ -55,7 +53,7 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
 
   return true;
 }
-bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
+bool A4Track::store_track_in_grid(uint8_t column, uint8_t row, uint8_t track,
                                   bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
@@ -63,10 +61,8 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
   active = A4_TRACK_TYPE;
 
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("storing a4 track");
-  int32_t len;
   int32_t offset = grid.get_slot_offset(column, row);
   ret = proj.file.seekSet(offset);
   if (!ret) {

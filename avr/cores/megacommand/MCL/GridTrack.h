@@ -11,10 +11,10 @@ public:
   uint8_t active = EMPTY_TRACK_TYPE;
   char trackName[17];
   GridChain chain;
-//  bool get_track_from_sysex(int tracknumber, uint8_t column);
-//  void place_track_in_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row);
-  bool store_track_in_grid(int32_t column, int32_t row);
+//  bool get_track_from_sysex(uint8_t tracknumber, uint8_t column);
+//  void place_track_in_sysex(uint8_t tracknumber, uint8_t column);
+  bool load_track_from_grid(uint8_t column, uint8_t row);
+  bool store_track_in_grid(uint8_t column, uint8_t row);
 
 };
 

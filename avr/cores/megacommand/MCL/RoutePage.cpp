@@ -7,7 +7,7 @@ void RoutePage::init() {
   note_interface.state = true;
 }
 void RoutePage::cleanup() { note_interface.state = false; }
-void RoutePage::set_level(int curtrack, int value) {
+void RoutePage::set_level(uint8_t curtrack, uint8_t value) {
   // in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
   // in_sysex = 0;
@@ -25,7 +25,7 @@ void RoutePage::draw_routes(uint8_t line_number) {
 
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (mcl_cfg.routing[i] != 6) {
       str[i] = (char)'A' + mcl_cfg.routing[i];
@@ -56,7 +56,7 @@ void RoutePage::draw_routes() {
 
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (mcl_cfg.routing[i] != 6) {
       cur = (char)'A' + mcl_cfg.routing[i];
@@ -81,7 +81,7 @@ void RoutePage::draw_routes() {
 }
 #endif
 
-void RoutePage::toggle_route(int i, uint8_t routing) {
+void RoutePage::toggle_route(uint8_t i, uint8_t routing) {
   if (mcl_cfg.routing[i] != 6) {
     mcl_cfg.routing[i] = 6;
   } else {

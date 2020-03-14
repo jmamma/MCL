@@ -5,9 +5,9 @@ void GridWritePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  encoders[0]->cur = (int)MD.currentPattern / (int)16;
+  encoders[0]->cur = MD.currentPattern / 16;
   encoders[1]->cur =
-      MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
+      MD.currentPattern - 16 * (MD.currentPattern / 16);
 
   patternswitch = 1;
   ((MCLEncoder *)encoders[3])->max = 6;
@@ -38,7 +38,7 @@ void GridWritePage::display() {
   GUI.setLine(GUI.LINE1);
   char strn[17] = "----------------";
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (note_interface.notes[i] != 0) {
 
@@ -164,7 +164,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     //  write the whole row
 
     trig_interface.off();
-    for (int i = 0; i < 20; i++) {
+    for (uint8_t i = 0; i < 20; i++) {
 
       note_interface.notes[i] = 3;
     }

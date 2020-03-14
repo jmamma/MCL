@@ -1,12 +1,12 @@
 #include "ExtTrack.h"
 #include "MCL.h"
 
-bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
+bool ExtTrack::get_track_from_sysex(uint8_t tracknumber, uint8_t column) {
 
  active = EXT_TRACK_TYPE;
   return true;
 }
-bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
+bool ExtTrack::place_track_in_sysex(uint8_t tracknumber, uint8_t column) {
 #ifdef EXT_TRACKS
   if (seq_data.resolution == 0) { seq_data.resolution = 1; }
   memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
@@ -14,13 +14,11 @@ bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
 #endif
   return true;
 }
-bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
+bool ExtTrack::load_track_from_grid(uint8_t column, uint8_t row, int m) {
   bool ret;
-  int b = 0;
 
   int32_t offset = grid.get_slot_offset(column, row);
 
-  int32_t len;
   ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINT_FN();
@@ -43,15 +41,13 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   }
   return true;
 }
-bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool online) {
+bool ExtTrack::store_track_in_grid(uint8_t track, uint8_t column, uint8_t row, bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
   bool ret;
 
-  int b = 0;
   DEBUG_PRINT_FN();
-  int32_t len;
 
   int32_t offset = (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
 

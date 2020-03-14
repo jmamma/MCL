@@ -87,7 +87,7 @@ void SDDrivePage::save_snapshot() {
   }
   //  Globals
   progress_max = 8;
-  for (int i = 0; i < 8; ++i) {
+  for (uint8_t i = 0; i < 8; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Saving global", i, 8);
     if (!MD.getBlockingGlobal(i)) {
@@ -101,7 +101,7 @@ void SDDrivePage::save_snapshot() {
   }
   //  Patterns
   progress_max = 128;
-  for (int i = 0; i < 128; ++i) {
+  for (uint8_t i = 0; i < 128; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Saving pattern", i, 128);
     DEBUG_PRINT(i);
@@ -116,7 +116,7 @@ void SDDrivePage::save_snapshot() {
   }
   //  Kits
   progress_max = 64;
-  for (int i = 0; i < 64; ++i) {
+  for (uint8_t i = 0; i < 64; ++i) {
     progress_i = 64;
     mcl_gui.draw_progress("Saving kit", i, 64);
     if (!MD.getBlockingKit(i)) {
@@ -129,7 +129,7 @@ void SDDrivePage::save_snapshot() {
     }
   }
   //  Songs
-  // for(int i=0;i<64;++i){
+  // for(uint8_t i=0;i<64;++i){
   // MD.getBlockingSong(i);
   // mcl_sd.write_data(&MD.song, sizeof(MD.song), &file); // <--- ??
   //}
@@ -187,7 +187,7 @@ void SDDrivePage::load_snapshot() {
 
   //  Globals
   progress_max = 8;
-  for (int i = 0; i < 8; ++i) {
+  for (uint8_t i = 0; i < 8; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading global", i, 8);
     if (!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file)) {
@@ -204,7 +204,7 @@ void SDDrivePage::load_snapshot() {
   }
   //  Patterns
   progress_max = 128;
-  for (int i = 0; i < 128; ++i) {
+  for (uint8_t i = 0; i < 128; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading pattern", i, 128);
     if (!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file)) {
@@ -218,7 +218,7 @@ void SDDrivePage::load_snapshot() {
   }
   //  Kits
   progress_max = 64;
-  for (int i = 0; i < 64; ++i) {
+  for (uint8_t i = 0; i < 64; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading kit", i, 64);
     if (!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file)) {

@@ -2,10 +2,9 @@
 #include "GridTrack.h"
 
 
-bool GridTrack::load_track_from_grid(int32_t column, int32_t row) {
+bool GridTrack::load_track_from_grid(uint8_t column, uint8_t row) {
 
   bool ret;
-  int b = 0;
 
 //  DEBUG_PRINT_FN();
   int32_t offset = grid.get_slot_offset(column, row);
@@ -31,13 +30,12 @@ bool GridTrack::load_track_from_grid(int32_t column, int32_t row) {
   return true;
 }
 
-bool GridTrack::store_track_in_grid(int32_t column, int32_t row) {
+bool GridTrack::store_track_in_grid(uint8_t column, uint8_t row) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
 
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
   int32_t len;
 

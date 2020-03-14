@@ -1,7 +1,7 @@
 #include "MCL.h"
 #include "MDTrack.h"
 
-void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
+void MDTrack::get_machine_from_kit(uint8_t tracknumber, uint8_t column) {
   //  trackName[0] = '\0';
   memcpy(machine.params, MD.kit.params[tracknumber], 24);
 
@@ -25,7 +25,7 @@ void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
 
-bool MDTrack::get_track_from_kit(int tracknumber, uint8_t column) {
+bool MDTrack::get_track_from_kit(uint8_t tracknumber, uint8_t column) {
   get_machine_from_kit(tracknumber, column);
   memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
   memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
@@ -34,7 +34,7 @@ bool MDTrack::get_track_from_kit(int tracknumber, uint8_t column) {
   origPosition = MD.kit.origPosition;
 }
 
-bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
+bool MDTrack::get_track_from_pattern(uint8_t tracknumber, uint8_t column) {
   trigPattern = MD.pattern.trigPatterns[tracknumber];
   accentPattern = MD.pattern.accentPatterns[tracknumber];
   slidePattern = MD.pattern.slidePatterns[tracknumber];
@@ -56,11 +56,11 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
 
   int n = 0;
   arraysize = 0;
-  for (int i = 0; i < 24; i++) {
+  for (uint8_t i = 0; i < 24; i++) {
     if (IS_BIT_SET32(MD.pattern.lockPatterns[tracknumber], i)) {
       int8_t idx = MD.pattern.paramLocks[tracknumber][i];
       if (idx >= 0) {
-        for (int s = 0; s < 64; s++) {
+        for (uint8_t s = 0; s < 64; s++) {
 
           if ((MD.pattern.locks[idx][s] <= 127) &&
               (MD.pattern.locks[idx][s] >= 0)) {
@@ -87,7 +87,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   patternOrigPosition = MD.pattern.origPosition;
 }
 
-bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
+bool MDTrack::get_track_from_sysex(uint8_t tracknumber, uint8_t column) {
 
   active = MD_TRACK_TYPE;
 
@@ -98,7 +98,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
   //  trackName[0] = '\0';
 }
 
-void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
+void MDTrack::place_track_in_kit(uint8_t tracknumber, uint8_t column, MDKit *kit,
                                  bool levels) {
   //  if (active != MD_TRACK_TYPE) {
   //   return;
@@ -156,13 +156,13 @@ void MDTrack::clear_track() {
   swingPattern = 0;
 }
 
-void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
+void MDTrack::place_track_in_pattern(uint8_t tracknumber, uint8_t column,
                                      MDPattern *pattern) {
   //  if (active != MD_TRACK_TYPE) {
   //   return;
   // }
 
-  for (int x = 0; x < 64; x++) {
+  for (uint8_t x = 0; x < 64; x++) {
     pattern->clear_step_locks(tracknumber, x);
   }
 
@@ -181,7 +181,7 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
     pattern->swingPatterns[tracknumber] |= swingPattern << a;
   }
 
-  for (int n = 0; n < arraysize; n++) {
+  for (uint8_t n = 0; n < arraysize; n++) {
     // DEBUG_PRINTLN();
     // DEBUG_PRINTLN("Adding");
     // DEBUG_PRINTLN(step[n]);
@@ -196,7 +196,7 @@ void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
   }
 }
 
-void MDTrack::load_seq_data(int tracknumber) {
+void MDTrack::load_seq_data(uint8_t tracknumber) {
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
@@ -208,13 +208,13 @@ void MDTrack::load_seq_data(int tracknumber) {
   }
 }
 
-void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
+void MDTrack::place_track_in_sysex(uint8_t tracknumber, uint8_t column) {
   place_track_in_pattern(tracknumber, column, &(MD.pattern));
   place_track_in_kit(tracknumber, column, &(MD.kit));
   load_seq_data(tracknumber);
 }
 
-bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
+bool MDTrack::load_track_from_grid(uint8_t column, uint8_t row, int32_t len) {
 
   bool ret;
   int b = 0;
@@ -241,10 +241,9 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
   return true;
 }
 
-bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
+bool MDTrack::load_track_from_grid(uint8_t column, uint8_t row) {
 
   bool ret;
-  int b = 0;
 
   //  DEBUG_PRINT_FN();
   int32_t offset = grid.get_slot_offset(column, row);
@@ -332,13 +331,12 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
+bool MDTrack::store_track_in_grid(uint8_t column, uint8_t row, uint8_t track,
                                   bool storepattern, uint8_t merge,
                                   bool online) {
   active = MD_TRACK_TYPE;
 
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
   int32_t len;
 

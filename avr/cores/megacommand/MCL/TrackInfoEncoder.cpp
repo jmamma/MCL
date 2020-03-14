@@ -1,6 +1,6 @@
 #include "TrackInfoEncoder.h"
 
-int TrackInfoEncoder::update(encoder_t *enc) {
+int16_t TrackInfoEncoder::update(encoder_t *enc) {
   uint8_t amount = abs(enc->normal);
   int inc = 0;
 

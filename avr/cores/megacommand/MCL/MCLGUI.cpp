@@ -208,7 +208,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
 
 //  ref: Design/infobox.png
 void MCLGUI::draw_infobox(const char *line1, const char *line2,
-                          const int line2_offset) {
+                          const int8_t line2_offset) {
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
 
@@ -546,7 +546,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         uint64_t pattern_mask, uint8_t step_count,
                         uint8_t length, uint64_t mute_mask) {
 #ifdef OLED_DISPLAY
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
     bool in_range = idx < length;
@@ -594,7 +594,7 @@ void MCLGUI::draw_ext_track(uint8_t x, uint8_t y, uint8_t offset,
 #ifdef EXT_TRACKS
   int8_t note_held = 0;
   auto &active_track = mcl_seq.ext_tracks[ext_trackid];
-  for (int i = 0; i < active_track.length; i++) {
+  for (uint8_t i = 0; i < active_track.length; i++) {
 
     uint8_t step_count = active_track.step_count;
     uint8_t noteson = 0;
@@ -649,7 +649,7 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
                        uint8_t step_count, uint8_t length,
                        bool show_current_step) {
 #ifdef OLED_DISPLAY
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
     bool in_range = idx < length;

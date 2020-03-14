@@ -22,7 +22,7 @@ struct menu_item_t {
   menu_option_t options[MAX_MENU_OPTIONS];
 };
 
-template <int N> struct menu_t {
+template <uint8_t N> struct menu_t {
   char name[11];
   menu_item_t items[N];
   void (*exit_function)();
@@ -59,7 +59,7 @@ protected:
 };
 
 // TODO raise error if N > MAX_MENU_ITEMS
-template <int N> class Menu : public MenuBase {
+template <uint8_t N> class Menu : public MenuBase {
 
 public:
   Menu() : MenuBase(){};

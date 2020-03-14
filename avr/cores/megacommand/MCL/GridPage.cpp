@@ -26,7 +26,7 @@ void GridPage::setup() {
   else { cur_row = MAX_VISIBLE_ROWS - 1; }
   */
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    active_slots[n] = -1;
+    active_slots[n] = 0xFF;
   }
 }
 void GridPage::cleanup() {
@@ -830,7 +830,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[0] = &param1;
     encoders[1] = &param2;
     auto col = getCol();
-    for (int i = 0; i < 20; ++i) {
+    for (uint8_t i = 0; i < 20; ++i) {
       note_interface.notes[i] = 0;
     }
     note_interface.notes[col] = 3;

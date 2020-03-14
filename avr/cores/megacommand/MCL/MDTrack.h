@@ -80,20 +80,20 @@ public:
 
   void clear_track();
 
-  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
+  void place_track_in_kit(uint8_t tracknumber, uint8_t column, MDKit *kit,
                           bool levels = true);
-  void load_seq_data(int tracknumber);
-  void place_track_in_pattern(int tracknumber, uint8_t column,
+  void load_seq_data(uint8_t tracknumber);
+  void place_track_in_pattern(uint8_t tracknumber, uint8_t column,
                               MDPattern *pattern);
-  void get_machine_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_pattern(int tracknumber, uint8_t column);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  void place_track_in_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
-  bool load_track_from_grid(int32_t column, int32_t row);
+  void get_machine_from_kit(uint8_t tracknumber, uint8_t column);
+  bool get_track_from_kit(uint8_t tracknumber, uint8_t column);
+  bool get_track_from_pattern(uint8_t tracknumber, uint8_t column);
+  bool get_track_from_sysex(uint8_t tracknumber, uint8_t column);
+  void place_track_in_sysex(uint8_t tracknumber, uint8_t column);
+  bool load_track_from_grid(uint8_t column, uint8_t row, int32_t len);
+  bool load_track_from_grid(uint8_t column, uint8_t row);
 
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
+  bool store_track_in_grid(uint8_t column, uint8_t row, uint8_t track = 255,
                            bool storepattern = false, uint8_t merge = 0,
                            bool online = false);
 

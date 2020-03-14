@@ -13,9 +13,9 @@ class GridEncoder : public Encoder {
 
 public:
   /** Minimum value of the encoder. **/
-  int min;
+  int16_t min;
   /** Maximum value of the encoder. **/
-  int max;
+  int16_t max;
 
   uint8_t fxparam;
   uint8_t effect;
@@ -27,9 +27,8 @@ public:
      will be called with the constructor arguments.
    **/
 
-  GridEncoder(int _max = 127, int _min = 0, int res = 1) {
-    initGridEncoder(_max, _min, (int)0, res,
-                    (encoder_handle_t)NULL);
+  GridEncoder(int16_t _max = 127, int16_t _min = 0, int16_t res = 1) {
+    initGridEncoder(_max, _min, 0, res, (encoder_handle_t)NULL);
   }
 
   /**
@@ -41,8 +40,8 @@ public:
 
      The initial value is called without calling the handling function.
    **/
-  void initGridEncoder(int _max = 128, int _min = 0,
-                       int init = 0, int res = 1,
+  void initGridEncoder(int16_t _max = 128, int16_t _min = 0,
+                       int16_t init = 0, int16_t res = 1,
                        encoder_handle_t _handler = NULL) {
     rot_res = res;
     handler = _handler;
@@ -60,8 +59,8 @@ public:
      Update the value of the encoder according to pressmode and
      fastmode, and limit the resulting value using limit_value().
    **/
-  virtual int update(encoder_t *enc);
-  virtual void displayAt(int i);
+  virtual int16_t update(encoder_t *enc);
+  virtual void displayAt(int16_t i);
 
   /* @} */
 };

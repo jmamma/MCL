@@ -40,7 +40,7 @@ public:
   void adjust_param(Encoder *enc, uint8_t param);
 
   void draw_levels();
-  void set_level(int curtrack, int value);
+  void set_level(uint8_t curtrack, uint8_t value);
   void set_display_mode(uint8_t param);
 
   virtual bool handleEvent(gui_event_t *event);

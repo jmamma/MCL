@@ -79,7 +79,7 @@ void OscPage::loop() {
   int dir = 0;
   int16_t newval;
   int8_t diff = enc_->cur - enc_->old;
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
       if (osc_waveform == SIN_OSC) {
         newval = sine_levels[i] + diff;
@@ -327,7 +327,7 @@ void OscPage::draw_levels() {
   uint8_t w = 128 - x;
   UsrOsc usr_osc(w);
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 #ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);

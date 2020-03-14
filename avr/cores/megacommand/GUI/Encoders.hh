@@ -50,7 +50,7 @@ class EncoderParent {
 
 public:
   /** Old value (before move), current value. **/
-  int old, cur;
+  int16_t old, cur;
 
   /** Counters for encoder pulses **/
   int8_t rot_counter_up = 0;
@@ -82,23 +82,23 @@ public:
   virtual bool hasChanged();
 
   /** Return the current value. **/
-  virtual int getValue() { return cur; }
+  virtual int16_t getValue() { return cur; }
   /** Return the old value. **/
-  virtual int getOldValue() { return old; }
+  virtual int16_t getOldValue() { return old; }
   /**
    * Set the value of the encoder to value. If handle is true,
    * checkHandle() is called after the modification of the encoder
    * value. This will make setValue() behave as if the user had moved
    * the encoder.
    **/
-  virtual void setValue(int value, bool handle = false);
+  virtual void setValue(int16_t value, bool handle = false);
 
   /**
    * Display the encoder at index i on the screen. The index is a
    * multiple of 4 characters.  This can be overloaded to implement
    * custom and fancy ways of displaying encoders.
    **/
-  virtual void displayAt(int i);
+  virtual void displayAt(int16_t i);
 
 #ifdef HOST_MIDIDUINO
   virtual ~Encoder() {}
@@ -141,7 +141,7 @@ public:
    * handler adds the normal increment, and handles pressing down the
    * encoder according to pressmode and fastmode.
    **/
-  virtual int update(encoder_t *enc);
+  virtual int16_t update(encoder_t *enc);
 };
 /** @} **/
 
@@ -159,17 +159,17 @@ class RangeEncoder : public Encoder {
 
 public:
   /** Minimum value of the encoder. **/
-  int min;
+  int16_t min;
   /** Maximum value of the encoder. **/
-  int max;
+  int16_t max;
 
   /**
    * Create a new range-limited encoder with max and min value, short
    * name, initial value, and handling function. The initRangeEncoder
    * will be called with the constructor arguments.
    **/
-  RangeEncoder(int _max = 127, int _min = 0, const char *_name = NULL,
-               int init = 0, encoder_handle_t _handler = NULL)
+  RangeEncoder(int16_t _max = 127, int16_t _min = 0, const char *_name = NULL,
+               int16_t init = 0, encoder_handle_t _handler = NULL)
       : Encoder(_name, _handler) {
     initRangeEncoder(_max, _min, _name, init, _handler);
   }
@@ -183,8 +183,8 @@ public:
    *
    * The initial value is called without calling the handling function.
    **/
-  void initRangeEncoder(int _max = 128, int _min = 0, const char *_name = NULL,
-                        int init = 0, encoder_handle_t _handler = NULL) {
+  void initRangeEncoder(int16_t _max = 128, int16_t _min = 0, const char *_name = NULL,
+                        int16_t init = 0, encoder_handle_t _handler = NULL) {
     setName(_name);
     handler = _handler;
     if (_min > _max) {
@@ -201,7 +201,7 @@ public:
    * Update the value of the encoder according to pressmode and
    * fastmode, and limit the resulting value using limit_value().
    **/
-  virtual int update(encoder_t *enc);
+  virtual int16_t update(encoder_t *enc);
 
   /* @} */
 };
@@ -237,8 +237,8 @@ public:
    * Create a variable-updating encoder storing its value in the
    * variable pointed to by _var.
    **/
-  VarRangeEncoder(uint8_t *_var, int _max = 127, int _min = 0,
-                  const char *_name = NULL, int init = 0)
+  VarRangeEncoder(uint8_t *_var, int16_t _max = 127, int16_t _min = 0,
+                  const char *_name = NULL, int16_t init = 0)
       : RangeEncoder(_max, _min, _name, init, VarRangeEncoderHandle) {
     var = _var;
     if (var != NULL) {
@@ -266,7 +266,7 @@ class EnumEncoder : public RangeEncoder {
 
 public:
   const char **enumStrings;
-  int cnt;
+  int16_t cnt;
 
   /**
    * Create an enumeration encoder allowing to choose between _cnt
@@ -274,16 +274,16 @@ public:
    * character string in the strings[] array. Turning the encoder will
    * display the correct name.
    **/
-  EnumEncoder(const char *strings[] = NULL, int _cnt = 0,
-              const char *_name = NULL, int init = 0,
+  EnumEncoder(const char *strings[] = NULL, int16_t _cnt = 0,
+              const char *_name = NULL, int16_t init = 0,
               encoder_handle_t _handler = NULL)
       : RangeEncoder(_cnt - 1, 0, _name, init, _handler) {
     enumStrings = strings;
     cnt = _cnt;
   }
 
-  void initEnumEncoder(const char *strings[], int _cnt,
-                       const char *_name = NULL, int init = 0) {
+  void initEnumEncoder(const char *strings[], int16_t _cnt,
+                       const char *_name = NULL, int16_t init = 0) {
     enumStrings = strings;
     cnt = _cnt;
     min = 0;
@@ -292,7 +292,7 @@ public:
     setName(_name);
   }
 
-  virtual void displayAt(int i);
+  virtual void displayAt(int16_t i);
 
   /* @} */
 };
@@ -305,11 +305,11 @@ class PEnumEncoder : public EnumEncoder {
    **/
 
 public:
-  PEnumEncoder(const char *strings[], int _cnt, const char *_name = NULL,
-               int init = 0, encoder_handle_t _handler = NULL)
+  PEnumEncoder(const char *strings[], int16_t _cnt, const char *_name = NULL,
+               int16_t init = 0, encoder_handle_t _handler = NULL)
       : EnumEncoder(strings, _cnt, _name, init, _handler) {}
 
-  virtual void displayAt(int i);
+  virtual void displayAt(int16_t i);
 
   /* @} */
 };
@@ -365,7 +365,7 @@ public:
   MidiTrackEncoder(char *_name = NULL, uint8_t init = 0)
       : RangeEncoder(15, 0, _name, init) {}
 
-  virtual void displayAt(int i);
+  virtual void displayAt(int16_t i);
 
   /* @} */
 };
@@ -402,7 +402,7 @@ public:
 
   /** Create a CC encoder sending CC messages with number _cc on _channel. **/
   CCEncoder(uint8_t _cc = 0, uint8_t _channel = 0, const char *_name = NULL,
-            int init = 0)
+            int16_t init = 0)
       : RangeEncoder(127, 0, _name, init) {
     initCCEncoder(_channel, _cc);
     handler = CCEncoderHandle;
@@ -433,7 +433,7 @@ class AutoNameCCEncoder : public CCEncoder {
 
 public:
   AutoNameCCEncoder(uint8_t _cc = 0, uint8_t _channel = 0,
-                    const char *_name = NULL, int init = 0)
+                    const char *_name = NULL, int16_t init = 0)
       : CCEncoder(_cc, _channel, _name, init) {
     if (_name == NULL) {
       setCCName();
@@ -526,7 +526,7 @@ class NotePitchEncoder : public RangeEncoder {
 public:
   NotePitchEncoder(char *_name = NULL);
 
-  void displayAt(int i);
+  void displayAt(int16_t i);
 
   /* @} */
 };

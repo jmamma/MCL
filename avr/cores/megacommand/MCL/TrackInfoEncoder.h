@@ -21,8 +21,8 @@ class TrackInfoEncoder : public Encoder {
        name, initial value, and handling function. The initRangeEncoder
        will be called with the constructor arguments.
      **/
-    TrackInfoEncoder(int _max = 127, int _min = 0, int res = 1) : Encoder() {
-      initTrackInfoEncoder(_max, _min, (int) 0, res, (encoder_handle_t) NULL);
+    TrackInfoEncoder(int8_t _max = 127, int8_t _min = 0, int8_t res = 1) : Encoder() {
+      initTrackInfoEncoder(_max, _min, (int8_t) 0, res, (encoder_handle_t) NULL);
     }
 
 
@@ -35,7 +35,7 @@ class TrackInfoEncoder : public Encoder {
 
        The initial value is called without calling the handling function.
      **/
-    void initTrackInfoEncoder(int _max = 128, int _min = 0, int init = 0, int res = 1, encoder_handle_t _handler = NULL) {
+    void initTrackInfoEncoder(int8_t _max = 128, int8_t _min = 0, int8_t init = 0, int8_t res = 1, encoder_handle_t _handler = NULL) {
       rot_res = res;
       //		setName(_name);
       handler = _handler;
@@ -53,8 +53,8 @@ class TrackInfoEncoder : public Encoder {
        Update the value of the encoder according to pressmode and
        fastmode, and limit the resulting value using limit_value().
      **/
-    virtual int update(encoder_t *enc);
-    //  virtual void displayAt(int i);
+    virtual int16_t update(encoder_t *enc);
+    //  virtual void displayAt(int16_t i);
 
     /* @} */
 };

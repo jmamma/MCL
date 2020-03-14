@@ -450,7 +450,7 @@ void MDSeqTrack::clear_track(bool locks, bool reset_params) {
 void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   DEBUG_PRINT_FN();
 
-  for (int n = 0; n < md_track->arraysize; n++) {
+  for (uint8_t n = 0; n < md_track->arraysize; n++) {
     set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,
                     md_track->locks[n].value);
     SET_BIT64(lock_mask, md_track->locks[n].step);

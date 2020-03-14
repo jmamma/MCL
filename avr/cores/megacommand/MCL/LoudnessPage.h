@@ -25,7 +25,7 @@ public:
   bool wait_for_sample();
   void scale_vol(float inc);
   float check_loudness();
-  void check_grid_loudness(int col, int row);
+  void check_grid_loudness(uint8_t col, uint8_t row);
 };
 
 extern MCLEncoder loudness_param1;

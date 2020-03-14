@@ -1,9 +1,9 @@
 #include "MCL.h"
 #include "MCLEncoder.h"
 
-int MCLEncoder::update(encoder_t *enc) {
+int16_t MCLEncoder::update(encoder_t *enc) {
   uint8_t amount = abs(enc->normal);
-  int inc = 0;
+  int16_t inc = 0;
 
   while (amount > 0) {
     if (enc->normal > 0) {

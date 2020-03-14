@@ -323,7 +323,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
          mcl_actions.start_clock32th / 2) /
         active_track.length)); */
   uint8_t step_count = active_track.step_count;
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (i + offset >= active_track.length) {
       str[i] = ' ';
@@ -364,7 +364,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
   if (device == DEVICE_MD) {
 
-    for (int i = 0; i < 16; i++) {
+    for (uint8_t i = 0; i < 16; i++) {
       if (device == DEVICE_MD) {
         // uint32_t new_count = MidiClock.div96th_counter;
 #ifdef OLED_DISPLAY
@@ -418,7 +418,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 #ifdef EXT_TRACKS
   else {
 
-    for (int i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
+    for (uint8_t i = 0; i < mcl_seq.ext_tracks[last_ext_track].length; i++) {
 
       /* uint8_t step_count =
            ((MidiClock.div32th_counter /
@@ -995,7 +995,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 #ifndef OLED_DISPLAY
 void SeqPage::display() {
   for (uint8_t i = 0; i < 2; i++) {
-    for (int j = 0; j < 16; j++) {
+    for (uint8_t j = 0; j < 16; j++) {
       if (GUI.lines[i].data[j] == 0) {
         GUI.lines[i].data[j] = ' ';
       }

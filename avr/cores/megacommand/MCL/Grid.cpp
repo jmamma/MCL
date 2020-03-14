@@ -3,7 +3,7 @@
 
 void Grid::setup() {}
 /*
-char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
+char* Grid::get_slot_kit(uint8_t column, uint8_t row, bool load, bool scroll) {
 
   A4Track track_buf;
   if (grid_page.grid_models[column] == EMPTY_TRACK_TYPE) {
@@ -50,7 +50,7 @@ char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
 }
 */
-bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
+bool Grid::copy_slot(uint8_t s_col, uint8_t s_row, uint8_t d_col, uint8_t d_row,
                      bool destination_same) {
   DEBUG_PRINT_FN();
   DEBUG_PRINT(s_col);
@@ -82,9 +82,9 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
         md_track->machine.lfo.destinationTrack = d_col;
       }
     } else {
-      int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
-      int trig_dest = md_track->machine.trigGroup - s_col;
-      int mute_dest = md_track->machine.muteGroup - s_col;
+      uint8_t lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
+      uint8_t trig_dest = md_track->machine.trigGroup - s_col;
+      uint8_t mute_dest = md_track->machine.muteGroup - s_col;
       if (range_check(d_col + lfo_dest, 0, 15)) {
         md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
       } else {
@@ -108,7 +108,7 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   }
 }
 
-uint8_t Grid::get_slot_model(int column, int row, bool load) {
+uint8_t Grid::get_slot_model(uint8_t column, uint8_t row, bool load) {
   EmptyTrack temp_track;
   MDTrack *md_track = (MDTrack *)&temp_track;
   A4Track *a4_track = (A4Track *)&temp_track;
@@ -137,24 +137,23 @@ uint8_t Grid::get_slot_model(int column, int row, bool load) {
   }
 }
 
-int32_t Grid::get_slot_offset(int16_t column, int16_t row) {
+int32_t Grid::get_slot_offset(uint8_t column, uint8_t row) {
   int32_t offset = (int32_t)GRID_SLOT_BYTES +
                    (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
                        (int32_t)GRID_SLOT_BYTES;
   return offset;
 }
 
-int32_t Grid::get_header_offset(int16_t row) {
+int32_t Grid::get_header_offset(uint8_t row) {
   int32_t offset =
       (int32_t)GRID_SLOT_BYTES +
       (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
   return offset;
 }
 
-bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
+bool Grid::clear_slot(uint8_t column, uint8_t row, bool update_header) {
 
   bool ret;
-  int b;
   GridTrack temp_track;
 
   if (update_header) {
@@ -191,10 +190,10 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   return true;
 }
 
-__attribute__((noinline)) bool Grid::clear_row(int16_t row) {
+__attribute__((noinline)) bool Grid::clear_row(uint8_t row) {
   GridRowHeader row_header;
   row_header.init();
-  for (int x = 0; x < GRID_WIDTH; x++) {
+  for (uint8_t x = 0; x < GRID_WIDTH; x++) {
     clear_slot(x, row, false);
   }
   return row_header.write(row);

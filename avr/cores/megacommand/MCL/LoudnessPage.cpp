@@ -53,7 +53,7 @@ float LoudnessPage::check_loudness() {
   MDTrack temp_track;
   temp_track.get_track_from_sysex(15, 15);
   // Clear track 15, and set step 1 to trig
-  for (int x = 0; x < 64; x++) {
+  for (uint8_t x = 0; x < 64; x++) {
     MD.pattern.clear_step_locks(15, x);
   }
   MD.pattern.trigPatterns[15] = 1;
@@ -235,7 +235,7 @@ bool LoudnessPage::wait_for_sample() {
   //    GUI.display();
 }
 
-void LoudnessPage::check_grid_loudness(int col, int row) {
+void LoudnessPage::check_grid_loudness(uint8_t col, uint8_t row) {
   DEBUG_PRINT_FN();
 
   setup_ram_rec();
