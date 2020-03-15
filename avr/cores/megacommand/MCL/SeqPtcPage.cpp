@@ -296,14 +296,14 @@ void SeqPtcPage::display() {
     dev_num = last_ext_track + 16;
   }
 #endif
-
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   draw_knob_frame();
   char buf1[4];
 
   // draw OCTAVE
   itoa(ptc_param_oct.getValue(), buf1, 10);
   draw_knob(0, "OCT", buf1);
-
+  
   // draw FREQ
   if (ptc_param_finetune.getValue() < 32) {
     strcpy(buf1, "-");
@@ -319,7 +319,7 @@ void SeqPtcPage::display() {
   // draw LEN
   if (midi_device == DEVICE_MD) {
     itoa(ptc_param_len.getValue(), buf1, 10);
-    if (mcl_cfg.poly_mask > 0) {
+    if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
       draw_knob(2, "PLEN", buf1);
     } else {
       draw_knob(2, "LEN", buf1);
@@ -342,7 +342,7 @@ void SeqPtcPage::display() {
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
   oled_display.setFont(&TomThumb);
-  if (mcl_cfg.poly_mask > 0) {
+  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
     oled_display.setCursor(107, 32);
     oled_display.print("POLY");
   }
