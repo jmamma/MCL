@@ -842,9 +842,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     seq_ptc_page.queue_redraw();
     recording = !recording;
+#ifdef OLED_DISPLAY
     if (recording) {
       oled_display.textbox("RECORDING", "");
     }
+#endif
     return true;
   }
   /*
