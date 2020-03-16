@@ -46,8 +46,8 @@ const PageSelectEntry Entries[] PROGMEM = {
 #endif
     {"DELAY", &fx_page_a, 12, 3, 24, 25, (uint8_t *)icon_rhytmecho},
     {"REVERB", &fx_page_b, 13, 3, 24, 25, (uint8_t *)icon_gatebox},
-    {"RAM-1", &ram_page_a, 14, 3, 19, 19, (uint8_t *)wheel_top},
-    {"RAM-2", &ram_page_b, 15, 3, 19, 19, (uint8_t *)wheel_angle},
+    {"RAM-1", &ram_page_a, 14, 3, 24, 25, (uint8_t *)icon_ram1},
+    {"RAM-2", &ram_page_b, 15, 3, 24, 25, (uint8_t *)icon_ram2},
 };
 
 constexpr uint8_t n_category = sizeof(Categories) / sizeof(PageCategory);

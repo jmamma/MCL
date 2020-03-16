@@ -31,7 +31,7 @@ const char *MDLFONames[8] = {
 
 #ifndef DISABLE_MACHINE_NAMES 
 
-md_machine_name_t_short const machine_names_short[134] PROGMEM = {
+md_machine_name_t_short const machine_names_short[135] PROGMEM = {
   { "GN","--", 0},
   { "GN", "SN", 1},
   { "GN", "NS", 2},
@@ -49,6 +49,7 @@ md_machine_name_t_short const machine_names_short[134] PROGMEM = {
   { "TR", "CL", 26},
   { "TR", "XC", 27},
   { "TR", "B2", 28},
+  { "TR", "S2", 29},
   { "FM", "BD", 32},
   { "FM", "SD", 33},
   { "FM", "XT", 34},
@@ -168,7 +169,7 @@ md_machine_name_t_short const machine_names_short[134] PROGMEM = {
   { "RO", "48", 191}
 };
 
-const md_machine_name_t machine_names[134] PROGMEM = {
+const md_machine_name_t machine_names[135] PROGMEM = {
   { "GND---", 0},
   { "GND-SN", 1},
   { "GND-NS", 2},
@@ -186,6 +187,7 @@ const md_machine_name_t machine_names[134] PROGMEM = {
   { "TRX-CL", 26},
   { "TRX-XC", 27},
   { "TRX-B2", 28},
+  { "TRX-S2", 29},
   { "EFM-BD", 32},
   { "EFM-SD", 33},
   { "EFM-XT", 34},
@@ -362,6 +364,14 @@ const model_param_name_t trx_b2_model_names[] PROGMEM = { { "PTC", 0},
 						    { "NS", 5},
 						    { "DRT", 6},
 						    { "DST", 7}, {"", 127} };
+const model_param_name_t trx_s2_model_names[] PROGMEM = { { "PTC", 0},
+						    { "DEC", 1},
+						    { "NS", 2},
+						    { "NDE", 3},
+						    { "PWR", 4},
+						    { "TUN", 5},
+						    { "NTU", 6},
+						    { "NTY", 7}, {"", 127} };
 const model_param_name_t trx_sd_model_names[] PROGMEM = { { "PTC", 0},
 						    { "DEC", 1},
 						    { "BMP", 2},
@@ -860,6 +870,7 @@ model_to_param_names_t model_param_names[] = {
   { TRX_MA_MODEL, trx_ma_model_names },
   { TRX_CL_MODEL, trx_cl_model_names },
   { TRX_XC_MODEL, trx_xc_model_names },
+  { TRX_S2_MODEL, trx_s2_model_names },
 
   { EFM_BD_MODEL, efm_bd_model_names },
   { EFM_SD_MODEL, efm_sd_model_names },
@@ -1047,6 +1058,11 @@ static const uint8_t trx_bd_tuning[] PROGMEM = {
   1, 7, 12, 17, 23, 28, 33, 39, 44, 49, 55, 60, 66, 71, 76, 82, 87, 92, 98, 103, 
   108, 114, 119, 124, 
 };
+
+static const uint8_t trx_s2_tuning[] PROGMEM = {
+  3, 7, 11, 15, 20, 24, 30, 35, 41, 47, 54, 60, 68, 76, 84, 92, 101, 111, 121
+};
+
 static const uint8_t rom_tuning[] PROGMEM = {
   0, 2, 5, 7, 9, 12, 14, 16, 19, 21, 23, 26, 28, 31, 34, 37, 40, 43, 46, 49, 52, 
   55, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 102, 105, 107, 
@@ -1114,6 +1130,7 @@ static const tuning_t tunings[] = {
   { GND_SN_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
   { TRX_B2_MODEL, MIDI_NOTE_A1, sizeof(trx_b2_tuning), 8, trx_b2_tuning },
   { TRX_RS_MODEL, MIDI_NOTE_F4, sizeof(trx_rs_tuning), 13, trx_rs_tuning },
+  { TRX_S2_MODEL, MIDI_NOTE_F2, sizeof(trx_s2_tuning), 0, trx_s2_tuning },
   { EFM_CB_MODEL, MIDI_NOTE_F3, sizeof(efm_cb_tuning), 5, efm_cb_tuning },
   { ROM_MODEL,    MIDI_NOTE_A3, sizeof(rom_tuning),    4, rom_tuning    },
   { EFM_CY_MODEL, MIDI_NOTE_B2, sizeof(efm_cy_tuning), 6, efm_cy_tuning },

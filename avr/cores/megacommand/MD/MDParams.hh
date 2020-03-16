@@ -88,6 +88,7 @@
 #define TRX_CL_MODEL 26
 #define TRX_XC_MODEL 27
 #define TRX_B2_MODEL 28
+#define TRX_S2_MODEL 29
 
 #define EFM_BD_MODEL 32
 #define EFM_SD_MODEL 33
@@ -355,6 +356,15 @@
 #define TRX_XC_DAMP 4
 #define TRX_XC_DIST 5
 #define TRX_XC_DTYP 6
+
+#define TRX_S2_PTCH 0
+#define TRX_S2_DEC 1
+#define TRX_S2_NOISE 2
+#define TRX_S2_NDEC 3
+#define TRX_S2_POWER 4
+#define TRX_S2_TUNE 5
+#define TRX_S2_NTUNE 6
+#define TRX_S2_NTYPE 7
 
 #define EFM_BD_PTCH 0
 #define EFM_BD_DEC 1
@@ -868,7 +878,7 @@
 PGM_P model_param_name(uint8_t model, uint8_t param);
 
 extern const char *MDLFONames[8];
-extern const md_machine_name_t machine_names[134] PROGMEM;
+extern const md_machine_name_t machine_names[135] PROGMEM;
 
 typedef struct md_machine_name_s_short {
   char name1[3];
@@ -876,7 +886,7 @@ typedef struct md_machine_name_s_short {
   uint8_t id;
 } md_machine_name_t_short;
 
-extern md_machine_name_t_short const machine_names_short[134] PROGMEM;
+extern md_machine_name_t_short const machine_names_short[135] PROGMEM;
 PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
 extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
 

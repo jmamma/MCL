@@ -156,7 +156,12 @@ public:
   }
   bool addSysexListener(MidiSysexListenerClass *listener) {
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
-      if (listeners[i] == NULL || listeners[i] == listener) {
+      if (listeners[i] == listener) {
+        return true;
+      }
+    }
+   for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+      if (listeners[i] == NULL) {
         listeners[i] = listener;
         listener->sysex = this;
         return true;

@@ -6,6 +6,7 @@
 #include "MCLEncoder.h"
 #include "MCLMemory.h"
 #include "MCLMenus.h"
+#include "ArpPage.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
@@ -51,10 +52,11 @@ extern MCLEncoder ptc_param_len;
 extern MCLEncoder ptc_param_scale;
 
 extern SeqPtcPage seq_ptc_page;
+extern ArpPage arp_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<8> seq_menu_page;
+extern MenuPage<9> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
 extern MCLEncoder step_menu_entry_encoder;

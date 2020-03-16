@@ -124,7 +124,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
       MD.triggerTrack(track, 127);
       if (MidiClock.state == 2) {
-        mcl_seq.md_tracks[last_md_track].record_track(track, 127);
+        mcl_seq.md_tracks[last_md_track].record_track(127);
 
         return true;
       }
