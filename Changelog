@@ -1,3 +1,20 @@
+MCL 2.61 16/03/2020
+
+Changes:
+
+  - Arpeggitaor added to Chromatic Page. Accessible from Track Select Menu.
+  - MIDI CC can be used to control MD Parms across poly tracks.
+    CC 16 to 40 controls MD Params 1 to 24.
+  - Added many more scales to Chromatic Page
+  - Chromatic Page now indicates when in POLY mode.
+  - Added support for TRX-S2
+
+Bug Fixes:
+
+  - Peering was broken in certain pages. Fixed
+  - Fixed PolyPage selection bugs.
+
+
 MCL 2.60 15/02/2019
 
 Note: MCL update 2.60, requires that you upgrade your Machinedrum to OS version 1.70.
