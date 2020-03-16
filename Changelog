@@ -2,7 +2,7 @@ MCL 2.61 16/03/2020
 
 Changes:
 
-  - Arpeggitaor added to Chromatic Page. Accessible from Track Select Menu.
+  - Arpeggiator added to Chromatic Page. Accessible from Track Select Menu.
   - MIDI CC can be used to control MD Parms across poly tracks.
     CC 16 to 40 controls MD Params 1 to 24.
   - Added many more scales to Chromatic Page
