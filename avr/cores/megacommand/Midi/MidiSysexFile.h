@@ -9,7 +9,7 @@ public:
   MidiUartClass *uart;
   File file;
 
-  MidiSysexFile(MidiClass *_midi) { uart = _midi->uart; }
+  MidiSysexFile(MidiClass *_midi) { uart = (MidiUartClass*)_midi->uart; }
 
   bool send(char *file_name) {
 

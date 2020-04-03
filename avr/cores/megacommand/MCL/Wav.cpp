@@ -301,17 +301,35 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   return true;
 }
 
-int16_t Wav::find_peak(uint8_t channel) {
+
+int16_t Wav::find_peak(uint8_t channel, uint32_t num_samples, uint32_t sample_index) {
+  int16_t min_value;
+  int16_t max_value;
+  find_peaks(channel, num_samples, sample_index, &max_value, &min_value);
+  if (abs(min_value) > max_value) { return abs(min_value); }
+  return max_value;
+}
+
+void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_index, int16_t *max_value, int16_t *min_value) {
   DEBUG_PRINT_FN();
-  int16_t peak_value = 0;
+  *max_value = 0;
+  *min_value = 0;
   int16_t current_sample = 0;
 
   uint8_t bytes_per_word = header.fmt.bitRate / 8;
   if (header.fmt.bitRate % 8 > 0) {
     bytes_per_word++;
   }
+  uint32_t num_of_samples;
+
+  if (num_samples > 0) {
+    num_of_samples = num_samples;
+  }
+
+  else {
   uint32_t num_of_samples =
       (header.data.chunk_size / header.fmt.numChannels) / bytes_per_word;
+  }
 
   int16_t buffer_size = 512;
 
@@ -323,27 +341,27 @@ int16_t Wav::find_peak(uint8_t channel) {
   DEBUG_PRINTLN(num_of_samples);
   DEBUG_PRINTLN(bytes_per_word);
   DEBUG_PRINTLN(buffer_size);
-  for (uint32_t n = 0; n < num_of_samples; n += read_size) {
+  for (uint32_t n = sample_index; n < sample_index + num_of_samples; n += read_size) {
     // Adjust read size if too large
-    if (n + read_size > num_of_samples) {
-      read_size = num_of_samples - n;
+    DEBUG_PRINTLN("hmm");
+    if (n + read_size > sample_index + num_of_samples) {
+      read_size = sample_index + num_of_samples - n;
     }
     // Read read_size samples.
-
     if (!read_samples(buffer, read_size, n, channel)) {
       DEBUG_PRINTLN(F("could not read"));
-      return false;
+      return;
     }
-    // Itterate through samples in buffer
+   // Itterate through samples in buffer
     for (uint16_t sample = 0; sample < read_size; sample += 1) {
-
       current_sample = buffer[sample];
-      if (peak_value < abs(current_sample)) { peak_value = current_sample; }
+      if (current_sample < *min_value) { *min_value = current_sample; }
+      if (current_sample > *max_value) { *max_value = current_sample; }
     }
   }
   DEBUG_PRINTLN(F("peak found"));
   DEBUG_PRINTLN(peak_value);
-  return peak_value;
+  return;
 }
 
 bool Wav::apply_gain(float gain, uint8_t channel) {

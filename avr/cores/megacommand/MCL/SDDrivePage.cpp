@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "MidiSysexFile.h"
 
 //  !note match only supports 3-char suffix
 const char *c_snapshot_suffix = ".snp";

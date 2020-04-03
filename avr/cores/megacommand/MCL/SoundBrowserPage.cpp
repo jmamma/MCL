@@ -1,5 +1,4 @@
 #include "MCL_impl.h"
-#include "MidiSDS.hh"
 
 const char *c_sound_root = "/Sounds/MD";
 const char *c_snd_suffix = ".snd";

@@ -9,7 +9,7 @@
 #include "SeqPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
-#include "Midisysex.hh"
+#include "MidiSysex.h"
 
 #define MAX_ENTRIES 1024
 
