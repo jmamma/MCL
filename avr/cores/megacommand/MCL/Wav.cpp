@@ -245,7 +245,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
 }
 
 bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
-                       uint8_t channel, uint8_t num_of_channels) {
+                       uint8_t channel) {
   uint8_t  sample_size = header.fmt.bitRate / 8;
   uint8_t  nch_sample_size = sample_size * header.fmt.numChannels;
   uint32_t position = sample_index * nch_sample_size;
@@ -268,8 +268,8 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   if (header.fmt.numChannels == 1) {
     return read_data(data, read_size, position + data_offset);
   }
-
-  if (num_of_channels > 1) {
+  // Read all channels, if channel exceeds number of channels
+  if (channel >= header.fmt.numChannels) {
     return read_data(data, nch_read_size, position + data_offset);
   }
   // DEBUG_PRINTLN(file.fileSize());
