@@ -4,6 +4,8 @@
 #include "MidiSDS.hh"
 #include "MidiSDSMessages.hh"
 #include "MidiSDSSysex.hh"
+#include "MD.h"
+#include "MCLGUI.h"
 
 void MidiSDSClass::sendGeneralMessage(uint8_t type) {
   uint8_t data[6] = {0xF0, 0x7E, 0x00, 0x00, 0x00, 0xF7};

@@ -72,6 +72,8 @@
 #include "DSP.h"
 #endif
 
+#include "WavEditPage.h"
+
 #include "PageSelectPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
