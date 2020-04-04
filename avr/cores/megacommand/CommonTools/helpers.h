@@ -231,7 +231,13 @@ extern uint16_t read_slowclock(void);
  * Return the difference between old_clock and new_clock, taking into
  * account overflow of the clock counter.
  **/
-uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+inline uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) {
+  if (new_clock >= old_clock)
+    return new_clock - old_clock;
+  else
+    return new_clock + (65536 - old_clock);
+}
+
 
 #ifdef HOST_MIDIDUINO
 #else
