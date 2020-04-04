@@ -8,3 +8,9 @@ sketch/*.elf
 sketch/*.hex
 sketch/build
 .vim
+avr/cores/megacommand/**/*.o
+avr/cores/megacommand/**/*.d
+avr/cores/megacommand/**/*.hex
+avr/cores/megacommand/**/*.elf
+avr/cores/megacommand/**/*.a
+
