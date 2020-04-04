@@ -14,6 +14,7 @@ public:
   Wav wav_file;
   uint32_t start;
   uint32_t end;
+  uint32_t offset;
   uint32_t samples_per_pixel;
   int8_t wav_buf[WAV_DRAW_WIDTH][2];
   WavEditPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -25,7 +26,7 @@ public:
   void setup();
   void init();
   void loop();
-  void render(uint32_t sample_start, uint32_t sample_end, uint32_t samples_per_pixel);
+  void render(uint32_t sample_start, uint32_t sample_end, uint32_t offset, uint32_t samples_per_pixel);
   void cleanup();
   void draw_wav();
 };
