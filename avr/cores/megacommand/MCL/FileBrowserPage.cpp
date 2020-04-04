@@ -50,6 +50,12 @@ void FileBrowserPage::query_sample_slots() {
 
   sysex->removeSysexListener(this);
 }
+#define FM_EDIT_WAV 0
+#define FM_NEW_FOLDER 1
+#define FM_DELETE 2
+#define FM_RENAME 3
+#define FM_OVERWRITE 4
+#define FM_CANCEL 5
 
 void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {
@@ -64,11 +70,12 @@ void FileBrowserPage::query_filesystem() {
   call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
-  file_menu_page.menu.enable_entry(0, show_new_folder);
-  file_menu_page.menu.enable_entry(1, true); // delete
-  file_menu_page.menu.enable_entry(2, true); // rename
-  file_menu_page.menu.enable_entry(3, show_overwrite);
-  file_menu_page.menu.enable_entry(4, true); // cancel
+  file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
+  file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
+  file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
+  file_menu_page.menu.enable_entry(FM_OVERWRITE, show_overwrite);
+  file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
+  file_menu_page.menu.enable_entry(FM_EDIT_WAV, show_edit_wav);
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
@@ -349,16 +356,20 @@ void FileBrowserPage::_handle_filemenu() {
   uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
-  case 0: // new folder
+  case FM_EDIT_WAV: // edit wav
+    wav_edit_page.open(buf1);
+    GUI.pushPage(&wav_edit_page);
+    break;
+  case FM_NEW_FOLDER: // new folder
     create_folder();
     break;
-  case 1: // delete
+  case FM_DELETE: // delete
     sprintf(buf2, "Delete %s?", buf1);
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
     break;
-  case 2: // rename
+  case FM_RENAME: // rename
     // trim the suffix is present, add back later
     strcat(buf2, buf1);
     if (suffix_pos != nullptr) {
@@ -375,7 +386,7 @@ void FileBrowserPage::_handle_filemenu() {
       on_rename(buf1, buf2);
     }
     break;
-  case 3: // overwrite
+  case FM_OVERWRITE: // overwrite
     sprintf(buf2, "Overwrite %s?", buf1);
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       // the derived class may expect the file to be open
