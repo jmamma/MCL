@@ -232,8 +232,8 @@ public:
   bool read_samples(void *data, uint32_t num_samples,
                     uint32_t sample_offset = 0, uint8_t channel = 0);
   bool rename(char *new_name);
-  int16_t find_peak(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
-  void find_peaks(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0, int16_t *max_value = NULL, int16_t *min_value = NULL);
+  int32_t find_peak(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
+  void find_peaks(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0, int32_t *max_value = NULL, int32_t *min_value = NULL);
   bool apply_gain(float gain, uint8_t channel = 0);
 };
 
