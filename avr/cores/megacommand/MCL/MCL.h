@@ -72,6 +72,8 @@
 #include "DSP.h"
 #endif
 
+#include "WavEditPage.h"
+
 #include "PageSelectPage.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
@@ -91,8 +93,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2060
-#define VERSION_STR "2.60"
+#define VERSION 2061
+#define VERSION_STR "2.61"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

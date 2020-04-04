@@ -704,7 +704,6 @@ void GridPage::apply_slot_changes() {
       }
       // If all slots are deleted then clear the row name
       if (header.is_empty() && (slot_clear == 1)) {
-        DEBUG_PRINTLN("clearing row name");
         char *str_tmp = "\0";
         header.active = false;
         strcpy(header.name, str_tmp);
@@ -750,8 +749,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
 
     show_slot_menu = true;
-    DEBUG_DUMP(getCol());
-    DEBUG_DUMP(getRow());
     slot.load_track_from_grid(getCol(), getRow());
     DEBUG_PRINTLN("what's in the slot");
     DEBUG_DUMP(slot.chain.loops);

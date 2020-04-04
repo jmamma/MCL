@@ -14,59 +14,57 @@ bool Wav::close(bool write) {
   headerRead = false;
   return file.close();
 }
-bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
-               uint32_t sampleRate, uint8_t bitRate) {
+
+bool Wav::open(char *file_name, bool write, uint16_t numChannels,
+               uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
-  bool ret;
-  m_strncpy(&filename, file_name, 16);
   DEBUG_PRINTLN(filename);
+  uint8_t file_mode = write ? (O_WRITE | O_CREAT) : (O_READ);
+  m_strncpy(filename, file_name, 16);
+  headerRead = false;
 
   if (file.isOpen()) {
     DEBUG_PRINTLN("file already open");
-    file.close();
+    goto failed;
   }
-//  bool create_new = !file.exists(filename);
-  bool create_new;
 
-  ret = file.open(file_name, O_RDWR | O_CREAT);
-  DEBUG_PRINTLN(file.fileSize());
-  if (file.fileSize() > sizeof(header)) {
-          create_new = false;
-  }
-  else {
-  create_new = true;
-  }
-  if (!ret) {
+  if (!file.open(file_name, file_mode)) {
     DEBUG_PRINTLN("could not open wave file");
+    goto failed;
   }
-  if ((overwrite) || create_new) {
+
+  DEBUG_PRINTLN(file.fileSize());
+  if (write) {
     DEBUG_PRINTLN("truncating");
-    ret = file.truncate(0);
-    if (!ret) {
+    if (!file.truncate(0)) {
       DEBUG_PRINTLN("truncate failed");
+      goto failed;
     }
 
-    header.init_header(numChannels, sampleRate, bitRate);
-    ret = write_header();
-    headerRead = true;
-    if (!ret) {
+    if (loop) {
+      header.init(numChannels, sampleRate, bitRate, SDS_LOOP_FORWARD, 0, 0);
+    } else {
+      header.init(numChannels, sampleRate, bitRate);
+    }
+    if (!write_header()) {
       DEBUG_PRINTLN("Write wave header failed");
-      return false;
+      goto failed;
     }
-    DEBUG_PRINTLN("offset");
-    DEBUG_PRINTLN(WAV_DATA_OFFSET);
-    DEBUG_PRINTLN(file.fileSize());
-    data_offset = WAV_DATA_OFFSET;
-  } else if (!headerRead) {
 
-    ret = read_header();
-    if (!ret) {
+    headerRead = true;
+    DEBUG_DUMP(data_offset);
+    DEBUG_DUMP(file.fileSize());
+  } else {
+    if (!read_header()) {
       DEBUG_PRINTLN("Could not read header");
-      return false;
+      goto failed;
     }
     headerRead = true;
   }
   return true;
+failed:
+  file.close();
+  return false;
 }
 
 bool Wav::rename(char *new_name) {
@@ -76,53 +74,92 @@ bool Wav::rename(char *new_name) {
   m_strncpy(&filename, new_name, 16);
 }
 
+/// write layout:
+/// RIFF head
+/// fmt
+/// smpl (optional)
+/// data
 bool Wav::write_header() {
   DEBUG_PRINT_FN();
-  bool ret;
-  ret = write_data(&header, sizeof(header), 0);
-  return ret;
+  uint32_t chunk_offset = 12;
+  // write RIFF chunk header
+  if (!write_data(&header, chunk_offset, 0)) {
+    return false;
+  }
+  if (!write_data(&header.fmt, header.fmt.total_len(), chunk_offset)) {
+    return false;
+  }
+  chunk_offset += header.fmt.total_len();
+  DEBUG_DUMP(header.fmt.total_len());
+  DEBUG_DUMP(chunk_offset);
+  if (header.smpl.is_active()) {
+    if (!write_data(&header.smpl, header.smpl.total_len(), chunk_offset)) {
+      return false;
+    }
+    chunk_offset += header.smpl.total_len();
+    DEBUG_DUMP(header.smpl.total_len());
+    DEBUG_DUMP(chunk_offset);
+  }
+  if (!write_data(&header.data, sizeof(datachunk_t), chunk_offset)) {
+    return false;
+  }
+  chunk_offset += sizeof(datachunk_t);
+
+  data_offset = chunk_offset;
+  DEBUG_DUMP(data_offset);
+  return true;
 }
 
 bool Wav::read_header() {
   DEBUG_PRINT_FN();
-  char header_buf[128];
-  bool ret;
-  uint32_t read_size;
+  char header_buf[72];
+  uint32_t file_size = file.fileSize();
+  uint32_t chunk_offset = 12;
+  chunk_t *pchunk = (chunk_t *)header_buf;
 
-  if (file.fileSize() < sizeof(header)) {
+  if (!read_data(&header, chunk_offset, 0)) {
     return false;
   }
-  if (file.fileSize() < sizeof(header_buf)) {
-    read_size = file.fileSize();
-  } else {
-    read_size = sizeof(header);
-  }
-
-  ret = read_data(&header_buf, read_size, 0);
-  if (ret == false) {
+  // check if it is a wav file
+  if (!header.check(file_size)) {
     return false;
   }
+  // deactivate all chunks
+  header.init();
 
-  char str_data[6] = "data";
-  uint8_t n = 0;
-  uint8_t x = 0;
-  for (x = 0; x < 128 && n < 3; x++) {
-    if (str_data[n] == header_buf[x]) {
-      n++;
-    } else {
-      n = 0;
+  // parse the subchunks
+  while (chunk_offset < file_size) {
+    uint32_t read_size = min(sizeof(header_buf), file_size - chunk_offset);
+    if (!read_data(&header_buf, read_size, chunk_offset)) {
+      return false;
     }
+    if (pchunk->is<fmtchunk_t>()) {
+      header.fmt = *(fmtchunk_t *)pchunk;
+      DEBUG_PRINTLN("parse fmt");
+    } else if (pchunk->is<datachunk_t>()) {
+      header.data = *(datachunk_t *)pchunk;
+      data_offset = chunk_offset + sizeof(datachunk_t);
+      DEBUG_PRINTLN("parse data");
+      DEBUG_DUMP(data_offset);
+    } else if (pchunk->is<smplchunk_t>()) {
+      header.smpl = *(smplchunk_t *)pchunk;
+      smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
+      DEBUG_PRINTLN("parse smpl");
+      DEBUG_DUMP(smpl_offset);
+    } else {
+      break;
+    }
+    chunk_offset += pchunk->total_len();
   }
-  if (n == 3) {
-    data_offset = x + 1 + 4;
-  } else {
+
+  // required subchunks
+  if (!header.fmt.is_active() || !header.data.is_active()) {
     return false;
   }
 
-  memcpy(&header, &header_buf, sizeof(header));
-  if ((header.bitRate > 28) || (header.bitRate < 8)) {
+  if ((header.fmt.bitRate > 28) || (header.fmt.bitRate < 8)) {
     DEBUG_PRINTLN("header bitRate is not valid:");
-    DEBUG_PRINTLN(header.bitRate);
+    DEBUG_PRINTLN(header.fmt.bitRate);
     return false;
   }
   return true;
@@ -173,10 +210,11 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
                         uint32_t sample_offset, uint8_t channel,
                         bool writeheader) {
   //  DEBUG_PRINTLN(channel);
-  uint32_t position = channel * (header.subchunk2Size / header.numChannels) +
-                      sample_offset * (header.bitRate / 8);
+  uint32_t position =
+      channel * (header.data.chunk_size / header.fmt.numChannels) +
+      sample_offset * (header.fmt.bitRate / 8);
 
-  uint32_t size = num_samples * (header.bitRate / 8);
+  uint32_t size = num_samples * (header.fmt.bitRate / 8);
   // DEBUG_PRINTLN(num_samples);
   //  DEBUG_PRINTLN(header.bitRate);
 
@@ -188,16 +226,16 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
     DEBUG_PRINTLN("write failed");
     return false;
   }
-  uint32_t new_subchunk2Size = (position + size) * header.numChannels;
+  uint32_t new_subchunk2Size = (position + size) * header.fmt.numChannels;
   // DEBUG_PRINT_FN();
   // DEBUG_PRINTLN(position);
   // DEBUG_PRINTLN(num_samples);
   // DEBUG_PRINTLN(sample_offset);
   /*Sample chunk exceeds size of original data chunk, we must extend*/
 
-  if (new_subchunk2Size > header.subchunk2Size) {
-    header.subchunk2Size = new_subchunk2Size;
-    header.chunkSize = 36 + header.subchunk2Size;
+  if (new_subchunk2Size > header.data.chunk_size) {
+    header.data.chunk_size = new_subchunk2Size;
+    header.chunk_size = header.total_len() - sizeof(chunk_t);
   }
   if (writeheader) {
     ret = write_header();
@@ -209,102 +247,202 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   return ret;
 }
 
-bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_offset,
+bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
                        uint8_t channel) {
-  DEBUG_PRINT_FN();
-  uint32_t position = channel * (header.subchunk2Size / header.numChannels) +
-                      sample_offset * (header.bitRate / 8);
-
-  //   DEBUG_PRINTLN(num_samples);
-  uint32_t size = num_samples * (header.bitRate / 8);
-  // DEBUG_PRINTLN(size);
-  // DEBUG_PRINTLN(header.bitRate);
-  uint32_t new_subchunk2Size = (position + size) * header.numChannels;
-
-  //  DEBUG_PRINTLN(header.subchunk2Size);
-  // If requested read size extends past channel size, then truncate read
-  if (position + size > header.subchunk2Size / header.numChannels) {
-    DEBUG_PRINTLN("read size is greater than file size, adjusting");
-    size = (header.subchunk2Size / header.numChannels) - position;
+  uint8_t sample_size = header.fmt.bitRate / 8;
+  if (header.fmt.bitRate % 8 > 0) {
+    sample_size++;
   }
-  //  DEBUG_PRINTLN(file.fileSize());
-  // DEBUG_PRINTLN(header.bitRate);
-  //  DEBUG_PRINTLN(position);
+
+  uint8_t nch_sample_size = sample_size * header.fmt.numChannels;
+  uint32_t position = sample_index * nch_sample_size;
+
+  uint32_t read_size = num_samples * sample_size;
+  uint32_t nch_read_size = read_size * header.fmt.numChannels;
+  uint32_t new_subchunk2Size = position + nch_read_size;
   // DEBUG_PRINTLN(size);
-  //  DEBUG_PRINTLN(data_offset);
-  bool ret = read_data(data, size, position + data_offset);
-  return ret;
+  // DEBUG_PRINTLN(header.bitRate);
+  // DEBUG_PRINTLN(num_samples);
+  // DEBUG_PRINTLN(header.subchunk2Size);
+
+  // If requested read size extends past channel size, then truncate read
+  if (new_subchunk2Size > header.data.chunk_size) {
+    DEBUG_PRINTLN("read size is greater than file size, adjusting");
+    read_size = (header.data.chunk_size - position) / header.fmt.numChannels;
+    nch_read_size = read_size * header.fmt.numChannels;
+  }
+
+  if (header.fmt.numChannels == 1) {
+    return read_data(data, read_size, position + data_offset);
+  }
+  // Read all channels, if channel exceeds number of channels
+  if (channel >= header.fmt.numChannels) {
+    return read_data(data, nch_read_size, position + data_offset);
+  }
+  // DEBUG_PRINTLN(file.fileSize());
+  // DEBUG_PRINTLN(header.bitRate);
+  // DEBUG_PRINTLN(position);
+  // DEBUG_PRINTLN(size);
+  // DEBUG_PRINTLN(data_offset);
+
+  // Sample data is interleaved.
+  // 2-channel interleaved data:
+  // [L R] [L R] [L R] ... [L R]    [L R] ... [L R]
+  // s0    s1    s2        s{n/2-1} s{n/2}    s{n-1}
+  char tmp_buf[80];
+  position += data_offset;
+  // 16-bit stereo full run = 20(L+R) = 80 bytes
+  // 24-bit stereo full run = 13(L+R) = 78 bytes
+  uint32_t full_run =
+      ((sizeof(tmp_buf) / header.fmt.numChannels) / sample_size) * sample_size *
+      header.fmt.numChannels;
+  while (read_size > 0) {
+    uint32_t current_run = min(full_run, read_size * header.fmt.numChannels);
+    bool ret = read_data(tmp_buf, current_run, position);
+    if (!ret)
+      return false;
+    position += current_run;
+    read_size -= current_run / header.fmt.numChannels;
+    for (uint32_t p = channel * sample_size; p < current_run;
+         p += nch_sample_size) {
+      memcpy(data, tmp_buf + p, sample_size);
+      data = (char *)data + sample_size;
+    }
+  }
+  return true;
 }
 
-int16_t Wav::find_peak(uint8_t channel = 0) {
-  DEBUG_PRINT_FN();
-  int16_t peak_value = 0;
-  int16_t current_sample = 0;
-
-  uint8_t bytes_per_word = header.bitRate / 8;
-  if (header.bitRate % 8 > 0) {
-    bytes_per_word++;
+int32_t Wav::find_peak(uint8_t channel, uint32_t num_samples,
+                       uint32_t sample_index) {
+  int32_t min_value;
+  int32_t max_value;
+  find_peaks(channel, num_samples, sample_index, &max_value, &min_value);
+  if (abs(min_value) > max_value) {
+    return abs(min_value);
   }
-  uint32_t num_of_samples =
-      (header.subchunk2Size / header.numChannels) / bytes_per_word;
+  return max_value;
+}
 
-  int16_t buffer_size = 512;
+void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
+                     uint32_t sample_index, int32_t *max_value,
+                     int32_t *min_value) {
+  DEBUG_PRINT_FN();
+  *max_value = 0;
+  *min_value = 0;
 
-  int16_t buffer[buffer_size];
-  int16_t read_size = buffer_size / bytes_per_word;
-  uint32_t sample_val = 0;
-  uint32_t sample_max = (pow(2, header.bitRate) / 2);
-  bool write_header = false;
+  int16_t min_value16;
+  int16_t max_value16;
+
+  int32_t sample_val = 0;
+  int16_t sample_val16 = 0;
+
+  uint8_t sample_size = header.fmt.bitRate / 8;
+  if (header.fmt.bitRate % 8 > 0) {
+    sample_size++;
+  }
+  uint32_t num_of_samples;
+
+  if (num_samples > 0) {
+    num_of_samples = num_samples;
+  }
+
+  else {
+    uint32_t num_of_samples =
+        (header.data.chunk_size / header.fmt.numChannels) / sample_size;
+  }
+
+  int16_t buffer_size = 1024;
+
+  uint8_t buffer[buffer_size];
+
+  int16_t read_size = buffer_size / sample_size;
+  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
 
   DEBUG_PRINTLN("read_size");
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
-  DEBUG_PRINTLN(bytes_per_word);
+  DEBUG_PRINTLN(sample_size);
   DEBUG_PRINTLN(buffer_size);
-  for (int32_t n = 0; n < num_of_samples; n += read_size) {
+
+  uint8_t word_offset = 4 - sample_size;
+
+  for (int32_t n = sample_index; n < sample_index + num_of_samples;
+       n += read_size) {
     // Adjust read size if too large
-    if (n + read_size > num_of_samples) {
-      read_size = num_of_samples - n;
+    if (n + read_size > sample_index + num_of_samples) {
+      read_size = sample_index + num_of_samples - n;
     }
     // Read read_size samples.
-
     if (!read_samples(buffer, read_size, n, channel)) {
       DEBUG_PRINTLN("could not read");
       return false;
     }
     // Itterate through samples in buffer
-    for (uint16_t sample = 0; sample < read_size; sample += 1) {
+    uint16_t byte_count = 0;
 
-      current_sample = buffer[sample];
-      if (peak_value < abs(current_sample)) { peak_value = current_sample; }
+    switch (sample_size) {
+    //16bit - fast mode.
+    case 2:
+
+      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+        sample_val16 = ((int16_t*)&buffer)[byte_count++];
+        if (sample_val16 < min_value16) {
+          min_value16 = sample_val16;
+        }
+        if (sample_val16 > max_value16) {
+          max_value16 = sample_val16;
+        }
+      }
+      break;
+
+    default:
+
+      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+        // Move byte stream in to 32bit MSBs.
+        for (uint8_t b = 0; b < sample_size; b++) {
+          ((uint8_t *)&sample_val)[b + word_offset] = buffer[byte_count++];
+        }
+        // Down shift to preserve sign.
+        sample_val = sample_val >> (word_offset * 8);
+
+        if (sample_val < *min_value) {
+          *min_value = sample_val;
+        }
+        if (sample_val > *max_value) {
+          *max_value = sample_val;
+        }
+      }
     }
   }
-  DEBUG_PRINTLN("peak found");
-  DEBUG_PRINTLN(peak_value);
-  return peak_value;
+
+  if (sample_size == 2) {
+  *min_value = (int32_t) min_value16;
+  *max_value = (int32_t) max_value16;
+  }
 }
 
-bool Wav::apply_gain(float gain, uint8_t channel = 0) {
+bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINT_FN();
 
-  uint8_t bytes_per_word = header.bitRate / 8;
-  if (header.bitRate % 8 > 0) {
-    bytes_per_word++;
+  uint8_t sample_size = header.fmt.bitRate / 8;
+  if (header.fmt.bitRate % 8 > 0) {
+    sample_size++;
   }
+
   uint32_t num_of_samples =
-      (header.subchunk2Size / header.numChannels) / bytes_per_word;
+      (header.data.chunk_size / header.fmt.numChannels) / sample_size;
 
   int16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
-  int16_t read_size = buffer_size / bytes_per_word;
+  int16_t read_size = buffer_size / sample_size;
   uint32_t sample_val = 0;
-  uint32_t sample_max = (pow(2, header.bitRate) / 2);
+  uint32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
   bool write_header = false;
   DEBUG_PRINTLN("read_size");
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
-  DEBUG_PRINTLN(bytes_per_word);
+  DEBUG_PRINTLN(sample_size);
   DEBUG_PRINTLN(buffer_size);
   DEBUG_PRINTLN(gain);
   for (int32_t n = 0; n < num_of_samples; n += read_size) {
@@ -319,23 +457,23 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
       return false;
     }
     // Itterate through samples in buffer
-    for (uint16_t byte_count = 0; byte_count < read_size * bytes_per_word;
-         byte_count += bytes_per_word) {
+    for (uint16_t byte_count = 0; byte_count < read_size * sample_size;
+         byte_count += sample_size) {
 
       sample_val = 0;
 
       // Decode samples from byte stream;
 
-      for (uint8_t b = 0; b < bytes_per_word; b++) {
+      for (uint8_t b = 0; b < sample_size; b++) {
         sample_val |= ((int32_t)buffer[byte_count]) << (b * 8);
         byte_count++;
       }
       // For signed formats, we need to remove the "sign" bit before
       // performing multiplication
 
-      if (header.bitRate > 8) {
+      if (header.fmt.bitRate > 8) {
 
-        bool is_signed = ((uint32_t)1 << header.bitRate - 1) & sample_val;
+        bool is_signed = ((uint32_t)1 << header.fmt.bitRate - 1) & sample_val;
 
         if (is_signed) {
           // Signed numbers are stored as 2's complement :'-(
@@ -344,9 +482,9 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
           // perform a comparator operation.
 
           sample_val = ~(sample_val - 1);
-          sample_val = sample_val << (32 - header.bitRate);
-          sample_val = sample_val >> (32 - header.bitRate);
-          sample_val &= ~((uint32_t)1 << (header.bitRate - 1));
+          sample_val = sample_val << (32 - header.fmt.bitRate);
+          sample_val = sample_val >> (32 - header.fmt.bitRate);
+          sample_val &= ~((uint32_t)1 << (header.fmt.bitRate - 1));
         }
 
         // Apply gain adjustment
@@ -356,7 +494,7 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
         }
         if (is_signed) {
           sample_val = ~(sample_val) + 1;
-          sample_val |= ((uint32_t)1 << header.bitRate - 1);
+          sample_val |= ((uint32_t)1 << header.fmt.bitRate - 1);
         }
       } else {
         // For 8 bit, convert to signed, then perform mult, then convert back.
@@ -375,10 +513,10 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
       // Check to see if gain adjustment is within range
       // otherwise limit.
 
-      byte_count -= bytes_per_word;
+      byte_count -= sample_size;
       // Convert modified sample back in to byte stream
 
-      for (uint8_t b = 0; b < bytes_per_word; b++) {
+      for (uint8_t b = 0; b < sample_size; b++) {
         buffer[byte_count + b] =
             (uint8_t)(sample_val >> (8 * (b))) & (uint8_t)0xFF;
       }

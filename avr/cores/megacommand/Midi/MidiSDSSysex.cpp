@@ -32,7 +32,6 @@ void MidiSDSSysexListenerClass::end() {
 
     case MIDI_SDS_DATAPACKET:
     if (midi_sds.state != SDS_REC) {
-      DEBUG_PRINTLN("not in sds rec mode");
       midi_sds.sendCancelMessage();
       midi_sds.cancel();
       return;
@@ -52,7 +51,6 @@ void MidiSDSSysexListenerClass::end_immediate() {
     sds_name[2] = sysex->getByte(9);
     sds_name[3] = sysex->getByte(10);
     sds_name_rec = true;
-    DEBUG_PRINTLN("sample name received");
 
     return;
   }
@@ -70,7 +68,6 @@ void MidiSDSSysexListenerClass::end_immediate() {
   case MIDI_SDS_DUMPHEADER:
 
     if (midi_sds.state != SDS_READY) {
-      DEBUG_PRINTLN("header received, not in ready");
       return;
     }
     midi_sds.state = SDS_REC;
@@ -80,7 +77,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
     break;
 
 
-          case MIDI_SDS_DUMPREQUEST:
+  case MIDI_SDS_DUMPREQUEST:
     dump_request();
     break;
 
@@ -269,7 +266,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
       DEBUG_PRINTLN("Sample receive finished");
-      DEBUG_PRINTLN(midi_sds.wav_file.header.subchunk2Size);
+      DEBUG_PRINTLN(midi_sds.wav_file.header.data.chunk_size);
       bool write_header = true;
       midi_sds.wav_file.close(write_header);
       if (sds_name_rec) {

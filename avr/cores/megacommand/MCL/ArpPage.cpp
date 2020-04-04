@@ -54,6 +54,40 @@ const arp_name_t arp_names[] PROGMEM = {
     "PU", "PD", "TU", "TD", "UPP", "DP", "U2",  "D2",  "RND",
 };
 
+#ifndef OLED_DISPLAY
+void ArpPage::display() {
+  uint8_t dev_num;
+  if (!redisplay) {
+    return true;
+  }
+ GUI.setLine(GUI.LINE1);
+
+  GUI.put_string_at(0, "ARP");
+  GUI.put_string_at(4, "MOD");
+  GUI.put_string_at(8, "SPD");
+  GUI.put_string_at(12,"OCT");
+
+  GUI.setLine(GUI.LINE2);
+  char str[5];
+
+  switch (encoders[0]->cur) {
+  case ARP_ON:
+    strcpy(str, "ON");
+    break;
+  case ARP_OFF:
+    strcpy(str, "--");
+    break;
+  case ARP_LATCH:
+    strcpy(str, "LAT");
+    break;
+  }
+  GUI.put_string_at(0, str);
+  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  GUI.put_string_at(4,str);
+  GUI.put_value_at2(8, encoders[2]->cur);
+  GUI.put_value_at2(12, encoders[3]->cur);
+}
+#else 
 void ArpPage::display() {
 
   if (!classic_display) {
@@ -99,6 +133,7 @@ void ArpPage::display() {
   oled_display.setFont(oldfont);
 }
 
+#endif
 bool ArpPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON3) ||

@@ -27,9 +27,9 @@ extern MCLEncoder config_param7;
 
 extern void new_proj_handler();
 
-extern MenuPage<7> system_page;
+extern MenuPage<8> system_page;
 extern MenuPage<5> midi_config_page;
-extern MenuPage<5> md_config_page;
+extern MenuPage<4> md_config_page;
 extern MenuPage<2> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
@@ -41,7 +41,7 @@ extern MCLEncoder input_encoder2;
 extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
-extern MenuPage<5> file_menu_page;
+extern MenuPage<6> file_menu_page;
 
 
 #endif /* MCLMENUS_H__ */

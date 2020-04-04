@@ -6,10 +6,20 @@ CORE = megacommand
 BASE_DIR=$(shell cd ../../../../; pwd)
 CORE_DIR=$(shell pwd)
 VARIENTS_DIR=$(shell cd ../../; pwd)/variants/mega
+
+AR=$(shell which avr-gcc-ar)
+CC=$(shell which avr-gcc)
+CXX=$(shell which avr-g++)
+OBJCOPY=$(shell which avr-objcopy)
+
+# fallback if system avr-gcc is not detected
+ifeq (${CC},)
 AR=${BASE_DIR}/tools/avr/bin/avr-gcc-ar
 CC=${BASE_DIR}/tools/avr/bin/avr-gcc
 CXX=${BASE_DIR}/tools/avr/bin/avr-g++
 OBJCOPY =${BASE_DIR}/tools/avr/bin/avr-objcopy
+endif
+
 UISP=uisp
 AVR_ARCH = atmega2560
 F_CPU = 16000000L
@@ -32,6 +42,7 @@ $(info    LDIRS is $(LDIRS))
 INCS = $(foreach dir,$(LDIRS),-I$(dir))
 OBJS = $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.cpp),$(subst .cpp,.o,$(file))))
 OBJS += $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.c),$(subst .c,.o,$(file))))
+DFILES += $(foreach obj,$(OBJS),$(subst .o,.d,$(obj)))
 $(info    OBJS is $(OBJS))
 
 CFLAGS += $(INCS)
@@ -93,6 +104,7 @@ core.a: $(OBJS) Makefile
 
 libclean:
 	rm -rf $(OBJS)
+	rm -rf $(DFILES)
 
 clean:
 	rm -rf *.os *.o *.elf *.elfs *.lst main.cxx

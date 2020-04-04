@@ -434,12 +434,10 @@ public:
   /** Clear the active page stack, and push page as the currentPage(). **/
   void setPage(Page *page) {
     if (currentPage() != NULL) {
-      DEBUG_PRINTLN("calling cleanup");
       currentPage()->cleanup();
     }
 
     else {
-      DEBUG_PRINTLN("Current Page is NULL");
     }
 
     pageStack.reset();
@@ -454,11 +452,9 @@ public:
    **/
   void pushPage(Page *page) {
     if (currentPage() == page) {
-      DEBUG_PRINTLN("can't push twice");
       // can't push the same page twice in a row
       return;
     }
-    DEBUG_PRINTLN("Pushing page");
     page->parent = this;
     if (!page->isSetup) {
       page->setup();
