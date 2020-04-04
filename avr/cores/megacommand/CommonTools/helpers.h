@@ -226,7 +226,12 @@ void m_trim_space(char* str);
 			
 extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
-ALWAYS_INLINE() uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+
+/**
+ * Return the difference between old_clock and new_clock, taking into
+ * account overflow of the clock counter.
+ **/
+uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 #ifdef HOST_MIDIDUINO
 #else

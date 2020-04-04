@@ -19,24 +19,6 @@ MidiClockClass::MidiClockClass() {
   useImmediateClock = true;
 }
 // global uint_32 mcl_16counter;
-void MidiClockClass::init() {
-  state = PAUSED;
-  counter = 10000;
-  rx_clock = rx_last_clock = 0;
-  div192th_counter_last = -1;
-  div192th_counter = 0;
-  div96th_counter_last = -1;
-  div96th_counter = 0;
-  div32th_counter = 0;
-  div16th_counter = 0;
-  clock_last_time = clock;
-  mod12_counter = 0;
-  mod6_counter = inmod6_counter = 0;
-  bar_counter = 1;
-  beat_counter = 1;
-  step_counter = 1;
-  isInit = false;
-}
 
 uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock,
                                            uint32_t new_clock) {

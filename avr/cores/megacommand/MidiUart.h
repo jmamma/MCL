@@ -2,10 +2,10 @@
 #define MIDI_UART_H__
 class MidiUartClass;
 
-#include <inttypes.h>
-#include <MidiUartParent.hh>
 #include "RingBuffer.h"
+#include <MidiUartParent.hh>
 #include <avr/io.h>
+#include <inttypes.h>
 //#define TXEN 3
 //#define RXEN 4
 //#define RXCIE 7
@@ -121,7 +121,50 @@ public:
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
-  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
+  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c) {
+    //  m_putc(c);
+    if (!IN_IRQ()) {
+      USE_LOCK();
+      SET_LOCK();
+      // block interrupts
+      while (!UART_CHECK_EMPTY_BUFFER()) {
+#ifdef MEGACOMMAND
+        if (TIMER1_CHECK_INT()) {
+          TCNT1 = 0;
+          clock++;
+          TIMER1_CLEAR_INT()
+        }
+        if (TIMER3_CHECK_INT()) {
+          TCNT2 = 0;
+          slowclock++;
+          TIMER3_CLEAR_INT()
+        }
+#endif
+      }
+
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      UART_WRITE_CHAR(c);
+      CLEAR_LOCK();
+    } else {
+      while (!UART_CHECK_EMPTY_BUFFER()) {
+#ifdef MEGACOMMAND
+        if (TIMER1_CHECK_INT()) {
+          TCNT1 = 0;
+          clock++;
+          TIMER1_CLEAR_INT()
+        }
+        if (TIMER3_CHECK_INT()) {
+          TCNT2 = 0;
+          slowclock++;
+          TIMER3_CLEAR_INT()
+        }
+#endif
+      }
+
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      UART_WRITE_CHAR(c);
+    }
+  }
 
   void set_speed(uint32_t speed, uint8_t port);
 
@@ -143,7 +186,7 @@ public:
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-  #ifdef UART2_TX
+#ifdef UART2_TX
     if (c == 0xF0) {
       uart_block = 1;
     }
@@ -152,14 +195,59 @@ public:
     }
     txRb.put_h(c);
     UART2_SET_ISR_TX_BIT();
-  #endif
+#endif
   }
 
-  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
+  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c) {
+#ifdef UART2_TX
+    if (!IN_IRQ()) {
+      USE_LOCK();
+      SET_LOCK();
+      // block interrupts
+      while (!UART2_CHECK_EMPTY_BUFFER()) {
+#ifdef MEGACOMMAND
+        if (TIMER1_CHECK_INT()) {
+          TCNT1 = 0;
+          clock++;
+          TIMER1_CLEAR_INT()
+        }
+        if (TIMER3_CHECK_INT()) {
+          TCNT2 = 0;
+          slowclock++;
+          TIMER3_CLEAR_INT()
+        }
+#endif
+      }
+
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      UART2_WRITE_CHAR(c);
+      CLEAR_LOCK();
+    } else {
+      while (!UART2_CHECK_EMPTY_BUFFER()) {
+#ifdef MEGACOMMAND
+        if (TIMER1_CHECK_INT()) {
+          TCNT1 = 0;
+          clock++;
+          TIMER1_CLEAR_INT()
+        }
+        if (TIMER3_CHECK_INT()) {
+          TCNT2 = 0;
+          slowclock++;
+          TIMER3_CLEAR_INT()
+        }
+#endif
+      }
+
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      UART2_WRITE_CHAR(c);
+    }
+#endif
+  }
+
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  #ifdef UART2_TX
+#ifdef UART2_TX
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-  #endif
+#endif
 };
 
 extern MidiUartClass2 MidiUart2;

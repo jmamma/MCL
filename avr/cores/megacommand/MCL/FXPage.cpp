@@ -2,6 +2,7 @@
 #include "MCL.h"
 #include "RAMPage.h"
 #include "MCLGUI.h"
+#include "MCLSeq.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1

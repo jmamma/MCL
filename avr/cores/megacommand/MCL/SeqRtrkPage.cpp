@@ -1,5 +1,6 @@
 #include "MCL.h"
 #include "SeqRtrkPage.h"
+#include "MCLSeq.h"
 
 void SeqRtrkPage::setup() { SeqPage::setup(); }
 

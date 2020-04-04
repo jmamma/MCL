@@ -49,3 +49,4 @@ void MidiSetup::cfg_ports() {
   MidiClock.start();
 
 }
+MidiSetup midi_setup;

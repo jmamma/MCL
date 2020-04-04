@@ -29,10 +29,10 @@ INOFILES=$(wildcard *.pde)
 
 OPTIM=-Os
 
-CFLAGS = -c -g -Os -Wextra -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+CFLAGS = -c -Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 
-CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
-CLDFLAGS = -Wall -Wextra -Os -flto -fuse-linker-plugin -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega2560
+CXXFLAGS = -c -Os -w -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+CLDFLAGS = -w -Os -flto -fuse-linker-plugin -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega2560
 
 DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD MNM
 

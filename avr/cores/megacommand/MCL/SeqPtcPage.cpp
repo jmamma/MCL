@@ -1,6 +1,7 @@
 #include "ArpPage.h"
 #include "MCL.h"
 #include "SeqPtcPage.h"
+#include "MCLSeq.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
@@ -113,13 +114,12 @@ void SeqPtcPage::config() {
 
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
-  char buf[len1] = {'\0'};
 
   char str_first[3] = "--";
   char str_second[3] = "--";
   if (midi_device == DEVICE_MD) {
-    char *str1;
-    char *str2;
+    const char *str1;
+    const char *str2;
     str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
     str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
 

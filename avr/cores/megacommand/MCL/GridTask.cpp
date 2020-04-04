@@ -1,6 +1,8 @@
+#include "MCLActions.h"
 #include "EmptyTrack.h"
 #include "GridTask.h"
 #include "MCL.h"
+#include "MCLSeq.h"
 
 #define DIV16_MARGIN 8
 #define HANDLE_GROUPS 1
@@ -344,7 +346,7 @@ void GridTask::run() {
       }
     }
     mcl_actions.calc_next_transition();
-    mcl_actions.calc_latency(&empty_track);
+    mcl_actions.calc_latency(&empty_track2);
   } else {
     mcl_actions.next_transition = (uint16_t)-1;
   }

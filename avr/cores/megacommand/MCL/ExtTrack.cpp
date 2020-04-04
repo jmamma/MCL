@@ -1,5 +1,6 @@
 #include "ExtTrack.h"
 #include "MCL.h"
+#include "MCLSeq.h"
 
 bool ExtTrack::get_track_from_sysex(uint8_t tracknumber, uint8_t column) {
 

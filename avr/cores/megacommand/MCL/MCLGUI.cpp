@@ -1,4 +1,5 @@
 #include "MCL.h"
+#include "MCLSeq.h"
 
 void MCLGUI::draw_textbox(char *text, char *text2) {
 #ifdef OLED_DISPLAY

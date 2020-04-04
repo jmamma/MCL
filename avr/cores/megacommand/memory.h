@@ -27,6 +27,7 @@
 #define VALUE(x) VALUE_TO_STRING(x)
 #define VAR_NAME_VALUE(var) #var "="  VALUE(var)
 
+/*
 #pragma message (VAR_NAME_VALUE(RX_BUF_SIZE))
 #pragma message (VAR_NAME_VALUE(TX_BUF_SIZE))
 #pragma message (VAR_NAME_VALUE(BANK1_UART1_RX_BUFFER_START))
@@ -41,6 +42,7 @@
 #pragma message (VAR_NAME_VALUE(SYSEX1_DATA_LEN))
 #pragma message (VAR_NAME_VALUE(BANK1_SYSEX2_DATA_START))
 #pragma message (VAR_NAME_VALUE(SYSEX2_DATA_LEN))
+*/
 
 #ifdef MEGACOMMAND
 

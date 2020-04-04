@@ -1,4 +1,5 @@
 #include "MCL.h"
+#include "MCLSeq.h"
 
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;

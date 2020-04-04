@@ -153,7 +153,7 @@ void MCLSeq::onMidiStopCallback() {
 
 #ifdef MEGACOMMAND
 #pragma GCC push_options
-#pragma GCC optimize("unroll-loops")
+//#pragma GCC optimize("unroll-loops")
 #endif
 void MCLSeq::seq() {
 

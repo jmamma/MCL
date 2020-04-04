@@ -3,6 +3,7 @@
 #include "MCL.h"
 #include "MCLClipBoard.h"
 #include "Shared.h"
+#include "MCLSeq.h"
 
 #define FILENAME_CLIPBOARD "clipboard.tmp"
 

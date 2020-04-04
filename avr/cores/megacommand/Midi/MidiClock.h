@@ -219,7 +219,25 @@ public:
     onClockCallbacks.remove(obj);
   }
 
-  ALWAYS_INLINE() void init();
+  ALWAYS_INLINE() void init() {
+    state = PAUSED;
+    counter = 10000;
+    rx_clock = rx_last_clock = 0;
+    div192th_counter_last = -1;
+    div192th_counter = 0;
+    div96th_counter_last = -1;
+    div96th_counter = 0;
+    div32th_counter = 0;
+    div16th_counter = 0;
+    clock_last_time = clock;
+    mod12_counter = 0;
+    mod6_counter = inmod6_counter = 0;
+    bar_counter = 1;
+    beat_counter = 1;
+    step_counter = 1;
+    isInit = false;
+  }
+
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
       return;
@@ -409,7 +427,6 @@ public:
 
     onMidiStartImmediateCallbacks.call(div96th_counter);
     state = STARTING;
-
   }
 
   ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiStop() {

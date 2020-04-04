@@ -26,7 +26,7 @@
  **/
 
 class MDCallback {
-  public:
+public:
   uint8_t type;
   uint8_t value;
   bool received;
@@ -50,7 +50,6 @@ class MDCallback {
   }
 
   virtual void onSysexReceived() { received = true; }
-
 };
 
 /**
@@ -73,8 +72,7 @@ typedef void (MDCallback::*md_status_callback_ptr_t)(uint8_t type,
 class MDBlockCurrentStatusCallback : public MDCallback {
 
 public:
-  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {
-  }
+  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {}
 
   /* @} */
 };
@@ -131,7 +129,6 @@ public:
   void onNoteOnCallback_Midi(uint8_t *msg);
 };
 
-
 /**
  * This is the main class used to communicate with a Machinedrum
  * connected to the Minicommand.
@@ -175,7 +172,7 @@ public:
   bool loadedGlobal;
 
   uint16_t mute_mask;
-  //uint32_t swing_last;
+  // uint32_t swing_last;
 
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).
@@ -215,7 +212,28 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value);
+  ALWAYS_INLINE()
+  void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value) {
+    uint8_t channel = track >> 2;
+    uint8_t b = track & 3;
+    uint8_t cc = 0;
+    if (param < 32) {
+      cc = param;
+      if (b < 2) {
+        cc += 16 + b * 24;
+      } else {
+        cc += 24 + b * 24;
+      }
+    } else if (param == 32) { // MUTE
+      cc = 12 + b;
+    } else if (param == 33) { // LEV
+      cc = 8 + b;
+    } else {
+      return;
+    }
+    MidiUart.sendCC(channel + global.baseChannel, cc, value);
+  }
+
   void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
 
   void setSampleName(uint8_t slot, char *name);

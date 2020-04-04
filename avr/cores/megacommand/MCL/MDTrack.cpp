@@ -1,5 +1,6 @@
 #include "MCL.h"
 #include "MDTrack.h"
+#include "MCLSeq.h"
 
 void MDTrack::get_machine_from_kit(uint8_t tracknumber, uint8_t column) {
   //  trackName[0] = '\0';

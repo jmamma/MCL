@@ -2,6 +2,7 @@
 #include "GridPage.h"
 #include "GridPages.h"
 #include "MCL.h"
+#include "MCLSeq.h"
 void GridPage::init() {
   show_slot_menu = false;
   reload_slot_models = false;

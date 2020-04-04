@@ -3,11 +3,11 @@
 #ifndef LFOOSC_H__
 #define LFOOSC_H__
 
-#include "MCL.h"
-#include "math.h"
-
 #define EXP_LFO 1
 #define LFO_LENGTH 96
+
+#include "MCL.h"
+#include "math.h"
 
 class LFO {
 public:

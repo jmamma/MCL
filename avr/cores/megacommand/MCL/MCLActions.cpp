@@ -1,6 +1,7 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "MCL.h"
 #include "MCLActions.h"
+#include "MCLSeq.h"
 
 #define MD_KIT_LENGTH 0x4D0
 #define A4_SOUND_LENGTH 0x19F

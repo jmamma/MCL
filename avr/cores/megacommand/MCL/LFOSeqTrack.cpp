@@ -1,4 +1,3 @@
-#include "LFO.h"
 #include "LFOSeqTrack.h"
 #include "MCL.h"
 
@@ -42,95 +41,6 @@ void LFOSeqTrack::load_wav_table(uint8_t table) {
     wav_table[table][n] = (float)lfo->get_sample(n);
   }
   wav_table_state[table] = true;
-}
-
-uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
-  int8_t offset = params[param].offset;
-  int8_t depth = params[param].depth;
-  int8_t sample = wav_table[param][sample_count];
-  uint16_t val;
-
-  switch (offset_behaviour) {
-  case LFO_OFFSET_CENTRE:
-    val = offset + (sample - (depth / 2));
-    if (val > 127) {
-      return 127;
-    }
-    if (val < 0) {
-      return 0;
-    } else {
-      return (uint8_t)val;
-    }
-    break;
-  case LFO_OFFSET_MAX:
-    // val = 127 - sample;
-    val = offset - depth + sample;
-    if (val > 127) {
-      return 127;
-    }
-    if (val < 0) {
-      return 0;
-    } else {
-      return (uint8_t)val;
-    }
-    break;
-  }
-  return offset;
-}
-
-void LFOSeqTrack::seq() {
-
-  if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&
-      IS_BIT_SET64(pattern_mask, step_count)) {
-    sample_count = 0;
-  }
-  if (enable && (MidiUart.uart_block == 0)) {
-    for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
-      uint8_t wav_value = get_wav_value(sample_count, i);
-      if (last_wav_value[i] != wav_value) {
-
-        if (params[i].dest > 0) {
-          // MD CC LFO
-          if (params[i].dest <= NUM_MD_TRACKS) {
-            MD.setTrackParam_inline(params[i].dest - 1, params[i].param,
-                                    wav_value);
-          }
-          // MD FX LFO
-          else {
-            MD.sendFXParam(params[i].param, wav_value,
-                           MD_FX_ECHO + params[i].dest - NUM_MD_TRACKS - 1);
-          }
-          last_wav_value[i] = wav_value;
-        }
-      }
-    }
-  }
-
-  if (speed == 0) {
-    sample_count += 2;
-  } else {
-    sample_hold += 1;
-    if (sample_hold >= speed - 1) {
-      sample_hold = 0;
-      sample_count += 1;
-    }
-  }
-  if (sample_count > LFO_LENGTH) {
-    // Free running LFO should reset, oneshot should hold at last value.
-    if (mode == LFO_MODE_ONE) {
-      sample_count = LFO_LENGTH - 1;
-    } else {
-      sample_count = 0;
-    }
-  }
-
-  if (MidiClock.mod12_counter == 11) {
-    if (step_count == length - 1) {
-      step_count = 0;
-    } else {
-      step_count++;
-    }
-  }
 }
 
 void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,

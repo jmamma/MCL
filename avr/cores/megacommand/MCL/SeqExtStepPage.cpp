@@ -1,5 +1,6 @@
 #include "SeqExtStepPage.h"
 #include "MCL.h"
+#include "MCLSeq.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
