@@ -21,6 +21,9 @@ void WavEditPage::init() {
       (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
       (wav_file.header.fmt.bitRate / 8);
 
+  start = 0;
+  end = sampleLength;
+
   offset = 0;
   encoders[0]->cur = 0;
   encoders[1]->cur = 127;
@@ -104,7 +107,26 @@ void WavEditPage::loop() {
     encoders[2]->cur = 64;
     encoders[2]->old = 64;
   }
+  if (encoders[3]->hasChanged()) {
+    uint32_t sampleLength =
+      (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
+      (wav_file.header.fmt.bitRate / 8);
 
+
+
+    samples_per_pixel = (((sampleLength) / pow(2,encoders[3]->cur)) / WAV_DRAW_WIDTH);
+    if (samples_per_pixel < 1) {
+    samples_per_pixel = 1;
+    encoders[3]->cur = encoders[3]->old;
+    }
+
+    start += samples_per_pixel / 2;
+    end -= samples_per_pixel / 2;
+
+    render(start, end, offset, samples_per_pixel);
+    //  encoders[0]->cur = 0;
+  //  encoders[1]->cur = 127;
+  }
 }
 
 void WavEditPage::display() {
