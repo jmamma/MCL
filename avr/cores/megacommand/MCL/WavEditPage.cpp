@@ -15,8 +15,11 @@ void WavEditPage::setup() {
 #endif
 }
 
+void WavEditPage::open(char *file) {
+  wav_file.open(file, false);
+}
+
 void WavEditPage::init() {
-  wav_file.open("test.wav", false);
   uint32_t sampleLength =
       (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
       (wav_file.header.fmt.bitRate / 8);
@@ -31,15 +34,15 @@ void WavEditPage::init() {
   encoders[2]->old = 64;
   samples_per_pixel = sampleLength / WAV_DRAW_WIDTH;
 
-  DEBUG_PRINTLN("seq extstep init");
+  render(start, end, offset, samples_per_pixel);
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
 }
 
-void WavEditPage::cleanup() { DEBUG_PRINT_FN(); }
+void WavEditPage::cleanup() { wav_file.close(); DEBUG_PRINT_FN(); }
 bool WavEditPage::handleEvent(gui_event_t *event) {
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     start = encoders[0]->cur * samples_per_pixel;
     end = encoders[1]->cur * samples_per_pixel;
     render(start, end, offset, samples_per_pixel);
@@ -50,7 +53,8 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    GUI.popPage();
     return true;
   }
 

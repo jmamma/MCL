@@ -24,6 +24,7 @@ public:
   virtual bool handleEvent(gui_event_t *event);
   void display();
   void setup();
+  void open(char *file);
   void init();
   void loop();
   void render(uint32_t sample_start, uint32_t sample_end, uint32_t offset, uint32_t samples_per_pixel);

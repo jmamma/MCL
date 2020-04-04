@@ -40,7 +40,7 @@ void SoundBrowserPage::init() {
     show_new_folder = true;
     show_overwrite = true;
     show_filetypes = true;
-    strcpy(title, "Sounds");
+    show_edit_wav = (filetype_idx == FT_WAV);
   }
   FileBrowserPage::init();
 }

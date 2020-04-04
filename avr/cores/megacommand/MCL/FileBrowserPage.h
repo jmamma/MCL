@@ -46,8 +46,8 @@ public:
   bool show_filemenu = true;
   bool show_overwrite = false;
   bool show_samplemgr = false;
-
   bool show_filetypes = false;
+  bool show_edit_wav = false;
   uint8_t filetype_idx = 0;
   uint8_t filetype_max = 0;
   const char* filetypes[MAX_FT_SELECT];

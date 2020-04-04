@@ -65,7 +65,7 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
-  GUI.setPage(&wav_edit_page);
+//  GUI.setPage(&wav_edit_page);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE

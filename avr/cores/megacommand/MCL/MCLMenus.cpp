@@ -142,9 +142,10 @@ const menu_t<1> mclconfig_menu_layout PROGMEM = {
     (&mclsys_apply_config),
 };
 
-const menu_t<5> file_menu_layout PROGMEM = {
+const menu_t<6> file_menu_layout PROGMEM = {
     "FILE",
     {
+        {"EDIT WAV", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"NEW DIR.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
@@ -171,6 +172,6 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
-MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<5> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
+MCLEncoder file_menu_encoder(0, 5, ENCODER_RES_PAT);
+MenuPage<6> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
 
