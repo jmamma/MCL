@@ -56,6 +56,8 @@ INCS = $(foreach dir,$(LDIRS),-I$(dir))
 OBJS = $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.cpp),$(subst .cpp,.o,$(file))))
 OBJS += $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.c),$(subst .c,.o,$(file))))
 $(info    OBJS is $(OBJS))
+DFILES = $(foreach obj,$(OBJS),$(subst .o,.d,$(obj)))
+
 
 CFLAGS += $(INCS)
 CXXFLAGS += $(INCS)
@@ -114,6 +116,7 @@ core.a: $(OBJS) Makefile
 
 libclean:
 	rm -rf $(OBJS)
+	rm -rf $(DFILES)
 
 clean:
 	find . -iname '*.d' -exec rm {} \; ; \
