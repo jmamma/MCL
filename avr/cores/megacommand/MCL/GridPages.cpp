@@ -11,16 +11,16 @@ const menu_t<
 slot_menu_layout PROGMEM = {
     "Slot",
     {
-        {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, NULL, {{1, "AUT"},{2,"MAN"},{3,"RND"}}},
-        {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, NULL, {}},
-        {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, NULL, {}},
+        {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, NULL, 19},
+        {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, NULL, 0},
+        {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, NULL, 0},
    #ifndef OLED_DISPLAY
-        {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, NULL, {{0," "}}},
+        {"APPLY:", 1, 21, 1, (uint8_t *) &grid_page.slot_apply, (Page*) NULL, NULL, 39},
    #endif
-        {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.slot_clear, (Page*) NULL, NULL, {{0,"--"},{1, "YES"}}},
-        {"COPY:", 0, 2, 2, (uint8_t *) &grid_page.slot_copy, (Page*) NULL, NULL, {{0,"--"},{1, "YES"}}},
-        {"PASTE:", 0, 2, 2, (uint8_t *) &grid_page.slot_paste, (Page*) NULL, NULL,{{0,"--"},{1, "YES"}}},
-        {"RENAME", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &rename_row, {}},
+        {"CLEAR:", 0, 2, 2, (uint8_t *) &grid_page.slot_clear, (Page*) NULL, NULL, 40},
+        {"COPY:", 0, 2, 2, (uint8_t *) &grid_page.slot_copy, (Page*) NULL, NULL, 40},
+        {"PASTE:", 0, 2, 2, (uint8_t *) &grid_page.slot_paste, (Page*) NULL, NULL, 40},
+        {"RENAME", 0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &rename_row, 0},
     },
     &apply_slot_changes_cb,
     (Page*)NULL,
