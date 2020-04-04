@@ -42,6 +42,7 @@ $(info    LDIRS is $(LDIRS))
 INCS = $(foreach dir,$(LDIRS),-I$(dir))
 OBJS = $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.cpp),$(subst .cpp,.o,$(file))))
 OBJS += $(foreach dir,$(LDIRS),$(foreach file,$(wildcard $(dir)/*.c),$(subst .c,.o,$(file))))
+DFILES += $(foreach obj,$(OBJS),$(subst .o,.d,$(obj)))
 $(info    OBJS is $(OBJS))
 
 CFLAGS += $(INCS)
@@ -103,6 +104,7 @@ core.a: $(OBJS) Makefile
 
 libclean:
 	rm -rf $(OBJS)
+	rm -rf $(DFILES)
 
 clean:
 	rm -rf *.os *.o *.elf *.elfs *.lst main.cxx
