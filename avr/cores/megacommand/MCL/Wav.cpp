@@ -247,6 +247,10 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
 bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
                        uint8_t channel) {
   uint8_t  sample_size = header.fmt.bitRate / 8;
+  if (header.fmt.bitRate % 8 > 0) {
+    sample_size++;
+  }
+
   uint8_t  nch_sample_size = sample_size * header.fmt.numChannels;
   uint32_t position = sample_index * nch_sample_size;
 
@@ -302,23 +306,24 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
 }
 
 
-int16_t Wav::find_peak(uint8_t channel, uint32_t num_samples, uint32_t sample_index) {
-  int16_t min_value;
-  int16_t max_value;
+int32_t Wav::find_peak(uint8_t channel, uint32_t num_samples, uint32_t sample_index) {
+  int32_t min_value;
+  int32_t max_value;
   find_peaks(channel, num_samples, sample_index, &max_value, &min_value);
   if (abs(min_value) > max_value) { return abs(min_value); }
   return max_value;
 }
 
-void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_index, int16_t *max_value, int16_t *min_value) {
+void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_index, int32_t *max_value, int32_t *min_value) {
   DEBUG_PRINT_FN();
   *max_value = 0;
   *min_value = 0;
-  int16_t current_sample = 0;
 
-  uint8_t bytes_per_word = header.fmt.bitRate / 8;
+  int32_t sample_val = 0;
+
+  uint8_t sample_size = header.fmt.bitRate / 8;
   if (header.fmt.bitRate % 8 > 0) {
-    bytes_per_word++;
+    sample_size++;
   }
   uint32_t num_of_samples;
 
@@ -328,22 +333,26 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_inde
 
   else {
   uint32_t num_of_samples =
-      (header.data.chunk_size / header.fmt.numChannels) / bytes_per_word;
+      (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 512;
+  int16_t buffer_size = 1024;
 
-  int16_t buffer[buffer_size];
-  int16_t read_size = buffer_size / bytes_per_word;
+  uint8_t buffer[buffer_size];
+
+  int16_t read_size = buffer_size / sample_size;
+  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
 
   DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
-  DEBUG_PRINTLN(bytes_per_word);
+  DEBUG_PRINTLN(sample_size);
   DEBUG_PRINTLN(buffer_size);
+
+  uint8_t word_offset = 4 - sample_size;
+
   for (uint32_t n = sample_index; n < sample_index + num_of_samples; n += read_size) {
     // Adjust read size if too large
-    DEBUG_PRINTLN("hmm");
     if (n + read_size > sample_index + num_of_samples) {
       read_size = sample_index + num_of_samples - n;
     }
@@ -353,11 +362,20 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_inde
       return;
     }
    // Itterate through samples in buffer
+    uint16_t byte_count = 0;
     for (uint16_t sample = 0; sample < read_size; sample += 1) {
-      current_sample = buffer[sample];
-      if (current_sample < *min_value) { *min_value = current_sample; }
-      if (current_sample > *max_value) { *max_value = current_sample; }
+
+      //Move byte stream in to 32bit MSBs.
+      for (uint8_t b = 0; b < sample_size; b++) {
+        ((uint8_t*)&sample_val)[b + word_offset] = buffer[byte_count++];
+      }
+      //Down shift to preserve sign.
+      sample_val = sample_val >> (word_offset * 8);
+
+      if (sample_val < *min_value) { *min_value = sample_val; }
+      if (sample_val > *max_value) { *max_value = sample_val; }
     }
+
   }
   DEBUG_PRINTLN(F("peak found"));
   DEBUG_PRINTLN(peak_value);
@@ -367,24 +385,25 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples, uint32_t sample_inde
 bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINT_FN();
 
-  uint8_t bytes_per_word = header.fmt.bitRate / 8;
+  uint8_t sample_size = header.fmt.bitRate / 8;
   if (header.fmt.bitRate % 8 > 0) {
-    bytes_per_word++;
+    sample_size++;
   }
+
   uint32_t num_of_samples =
-      (header.data.chunk_size / header.fmt.numChannels) / bytes_per_word;
+      (header.data.chunk_size / header.fmt.numChannels) / sample_size;
 
   int16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
-  int16_t read_size = buffer_size / bytes_per_word;
+  int16_t read_size = buffer_size / sample_size;
   uint32_t sample_val = 0;
   uint32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
   bool write_header = false;
   DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
-  DEBUG_PRINTLN(bytes_per_word);
+  DEBUG_PRINTLN(sample_size);
   DEBUG_PRINTLN(buffer_size);
   DEBUG_PRINTLN(gain);
   for (uint32_t n = 0; n < num_of_samples; n += read_size) {
@@ -399,14 +418,14 @@ bool Wav::apply_gain(float gain, uint8_t channel) {
       return false;
     }
     // Itterate through samples in buffer
-    for (uint16_t byte_count = 0; byte_count < read_size * bytes_per_word;
-         byte_count += bytes_per_word) {
+    for (uint16_t byte_count = 0; byte_count < read_size * sample_size;
+         byte_count += sample_size) {
 
       sample_val = 0;
 
       // Decode samples from byte stream;
 
-      for (uint8_t b = 0; b < bytes_per_word; b++) {
+      for (uint8_t b = 0; b < sample_size; b++) {
         sample_val |= ((int32_t)buffer[byte_count]) << (b * 8);
         byte_count++;
       }
@@ -427,6 +446,7 @@ bool Wav::apply_gain(float gain, uint8_t channel) {
           sample_val = sample_val << (32 - header.fmt.bitRate);
           sample_val = sample_val >> (32 - header.fmt.bitRate);
           sample_val &= ~((uint32_t)1 << (header.fmt.bitRate - 1));
+
         }
 
         // Apply gain adjustment
@@ -455,10 +475,10 @@ bool Wav::apply_gain(float gain, uint8_t channel) {
       // Check to see if gain adjustment is within range
       // otherwise limit.
 
-      byte_count -= bytes_per_word;
+      byte_count -= sample_size;
       // Convert modified sample back in to byte stream
 
-      for (uint8_t b = 0; b < bytes_per_word; b++) {
+      for (uint8_t b = 0; b < sample_size; b++) {
         buffer[byte_count + b] =
             (uint8_t)(sample_val >> (8 * (b))) & (uint8_t)0xFF;
       }

@@ -50,8 +50,8 @@ void WavEditPage::loop() {
   uint32_t sample_index = 0;
 
   uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
-  int16_t min_value;
-  int16_t max_value;
+  int32_t min_value;
+  int32_t max_value;
 
   float scalar =(float)  ( WAV_DRAW_HEIGHT / 2) / (float) sample_max;
 
