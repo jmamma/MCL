@@ -13,9 +13,13 @@
 class WavEditPage : public LightPage {
 public:
   Wav wav_file;
+  uint32_t selection_start;
+  uint32_t selection_end;
+
   uint32_t start;
   uint32_t end;
   int32_t offset;
+
   uint32_t samples_per_pixel;
   int8_t wav_buf[WAV_DRAW_WIDTH][2];
   WavEditPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -31,6 +35,10 @@ public:
               uint32_t samples_per_pixel);
   void cleanup();
   void draw_wav();
+
+  uint8_t get_selection_start();
+  uint8_t get_selection_end();
+  uint8_t get_selection_width();
 
   wav_sample_t get_selection_sample_start();
   wav_sample_t get_selection_sample_end();
