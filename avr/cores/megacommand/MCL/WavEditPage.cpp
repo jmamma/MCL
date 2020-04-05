@@ -78,37 +78,37 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
 #define BUF_SIZE 256;
 
 void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
-                         uint32_t offset, uint32_t samples_per_pixel) {
+                         int32_t offset, uint32_t samples_per_pixel) {
+
+  int32_t sampleLength =
+      (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
+      (wav_file.header.fmt.bitRate / 8);
+
 
   uint32_t sampleFormat = wav_file.header.fmt.bitRate;
 
-  int32_t sample_index = sample_start + offset;
   uint8_t pixel_offset = 0;
 
   uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
   int32_t min_value;
   int32_t max_value;
-  uint32_t start;
-  uint32_t length;
 
   float scalar = (float)(WAV_DRAW_HEIGHT / 2) / (float)sample_max;
 
+  int32_t sample_index = sample_start;
+
   DEBUG_PRINTLN("re-rendering");
-  for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
+  DEBUG_PRINTLN(sample_index + offset);
+  DEBUG_PRINTLN(sampleLength);
+  for (uint8_t n = 0; (n < WAV_DRAW_WIDTH) && (sample_index + offset < sampleLength); n++) {
     // Check that we're not searching for -ve sample index space.
-    if (sample_index < 0) {
+    if (sample_index + offset < 0) {
       min_value = 0;
       max_value = 0;
     } else {
-      start = sample_index;
-      length = samples_per_pixel;
-      wav_file.find_peaks(0, length, start, &max_value, &min_value);
+      wav_file.find_peaks(0, samples_per_pixel, sample_index + offset, &max_value, &min_value);
     }
 
-  // wav_buf[n][0] = ((float) max_value / (float)sample_max) * (float)
-  // (WAV_DRAW_HEIGHT / 2); wav_buf[n][1] = ((float) min_value /
-  // (float)sample_max) * (float) (WAV_DRAW_HEIGHT / 2);
-  next:
     wav_buf[n][0] = (float)max_value * scalar;
     wav_buf[n][1] = (float)min_value * scalar;
     sample_index += samples_per_pixel;
@@ -147,7 +147,6 @@ void WavEditPage::loop() {
       max_visible_length = sampleLength;
     }
 
-    // Don't allow for translation when entire waveform is visible.
     uint32_t visibleLength = (max_visible_length) / pow(2, encoders[3]->cur);
     samples_per_pixel = (visibleLength / WAV_DRAW_WIDTH);
     if (samples_per_pixel < 1) {
@@ -189,6 +188,7 @@ void WavEditPage::draw_wav() {
   uint8_t y = WAV_DRAW_HEIGHT / 2;
 
   uint8_t color = WHITE;
+
   for (uint8_t n = 0; n < 128; n++) {
     if ((n <= encoders[0]->cur) || (n >= encoders[1]->cur)) {
       color = WHITE;
@@ -209,7 +209,12 @@ void WavEditPage::draw_wav() {
         x = 0;
         y -= val;
       }
+      if (n % 2) { oled_display.drawPixel(x, (WAV_DRAW_HEIGHT / 2), color); }
+
       oled_display.drawLine(x, y, n, (WAV_DRAW_HEIGHT / 2) - val, color);
+      oled_display.drawLine(x, y - 1, n, (WAV_DRAW_HEIGHT / 2) - val - 1, color);
+      oled_display.drawLine(x, y + 1, n, (WAV_DRAW_HEIGHT / 2) - val + 1, color);
+      x = n;
       x = n;
       y = (WAV_DRAW_HEIGHT / 2) - val;
     }
