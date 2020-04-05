@@ -89,6 +89,11 @@ struct loop_t {
   uint32_t dwPlayCount;
 };
 
+struct wav_sample_t {
+  int32_t val;
+  uint32_t pos;
+};
+
 struct smplchunk_t: public chunk_t {
   uint32_t dwManufacturer;
   uint32_t dwProduct;
@@ -233,7 +238,7 @@ public:
                     uint32_t sample_offset = 0, uint8_t channel = 0);
   bool rename(char *new_name);
   int32_t find_peak(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
-  void find_peaks(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0, int32_t *max_value = NULL, int32_t *min_value = NULL);
+  void find_peaks(uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0, wav_sample_t *max_sample = NULL, wav_sample_t *min_sample = NULL);
   bool apply_gain(float gain, uint8_t channel = 0);
 };
 

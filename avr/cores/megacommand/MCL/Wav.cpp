@@ -314,24 +314,24 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
 
 int32_t Wav::find_peak(uint8_t channel, uint32_t num_samples,
                        uint32_t sample_index) {
-  int32_t min_value;
-  int32_t max_value;
-  find_peaks(channel, num_samples, sample_index, &max_value, &min_value);
-  if (abs(min_value) > max_value) {
-    return abs(min_value);
+  wav_sample_t min_sample;
+  wav_sample_t max_sample;
+  find_peaks(channel, num_samples, sample_index, &max_sample, &min_sample);
+  if (abs(min_sample.val) > max_sample.val) {
+    return abs(min_sample.val);
   }
-  return max_value;
+  return max_sample.val;
 }
 
 void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
-                     uint32_t sample_index, int32_t *max_value,
-                     int32_t *min_value) {
+                     uint32_t sample_index, wav_sample_t *max_sample,
+                     wav_sample_t *min_sample) {
   DEBUG_PRINT_FN();
-  *max_value = 0;
-  *min_value = 0;
+  max_sample->val = 0;
+  min_sample->val = 0;
 
-  int16_t min_value16;
-  int16_t max_value16;
+  int16_t min_sample16;
+  int16_t max_sample16;
 
   int32_t sample_val = 0;
   int16_t sample_val16 = 0;
@@ -386,11 +386,13 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
 
       for (uint16_t sample = 0; sample < read_size; sample += 1) {
         sample_val16 = ((int16_t*)&buffer)[byte_count++];
-        if (sample_val16 < min_value16) {
-          min_value16 = sample_val16;
+        if (sample_val16 < min_sample16) {
+          min_sample16 = sample_val16;
+          min_sample->pos = sample + sample_index;
         }
-        if (sample_val16 > max_value16) {
-          max_value16 = sample_val16;
+        if (sample_val16 > max_sample16) {
+          max_sample16 = sample_val16;
+          max_sample->pos = sample + sample_index;
         }
       }
       break;
@@ -405,19 +407,21 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
         // Down shift to preserve sign.
         sample_val = sample_val >> (word_offset * 8);
 
-        if (sample_val < *min_value) {
-          *min_value = sample_val;
+        if (sample_val < min_sample->val) {
+          min_sample->val = sample_val;
+          min_sample->pos = sample + sample_index;
         }
-        if (sample_val > *max_value) {
-          *max_value = sample_val;
+        if (sample_val > max_sample->val) {
+          max_sample->val = sample_val;
+          max_sample->pos = sample + sample_index;
         }
       }
     }
   }
 
   if (sample_size == 2) {
-  *min_value = (int32_t) min_value16;
-  *max_value = (int32_t) max_value16;
+  min_sample->val = (int32_t) min_sample16;
+  max_sample->val = (int32_t) max_sample16;
   }
 }
 
