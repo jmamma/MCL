@@ -89,8 +89,8 @@ void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
   uint8_t pixel_offset = 0;
 
   uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
-  int32_t min_value;
-  int32_t max_value;
+  wav_sample_t min_sample;
+  wav_sample_t max_sample;
 
   float scalar = (float)(WAV_DRAW_HEIGHT / 2) / (float)sample_max;
 
@@ -107,9 +107,9 @@ void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
         wav_buf[n][1] = 127;
       } else {
         wav_file.find_peaks(0, samples_per_pixel, sample_index + offset,
-                            &max_value, &min_value);
-        wav_buf[n][0] = (float)max_value * scalar;
-        wav_buf[n][1] = (float)min_value * scalar;
+                            &max_sample, &min_sample);
+        wav_buf[n][0] = (float)max_sample.val * scalar;
+        wav_buf[n][1] = (float)min_sample.val * scalar;
       }
     } else {
       wav_buf[n][0] = 127;
