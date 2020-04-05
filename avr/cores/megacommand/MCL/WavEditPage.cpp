@@ -250,31 +250,34 @@ void WavEditPage::display() {
   uint8_t selection_x1;
   uint8_t selection_x2;
 
-  uint8_t draw_selection = WHITE;
+  bool draw_selection = true;
 
   if (selection_start < start) {
     selection_x1 = 0;
   } else if (selection_start > end) {
-    draw_selection = BLACK;
+    draw_selection = false;
   } else {
     selection_x1 = (selection_start - start) / samples_per_pixel;
   }
 
-  if (selection_end > end) {
-    selection_x2 = WAV_DRAW_WIDTH;
+  if (selection_end < start) {
+    draw_selection = false;
   } else {
-    selection_x2 = (selection_end - start) / samples_per_pixel;
+    if (selection_end > end) {
+      selection_x2 = WAV_DRAW_WIDTH;
+    } else {
+      selection_x2 = (selection_end - start) / samples_per_pixel;
+      if (selection_x2 > WAV_DRAW_WIDTH) {
+        selection_x2 = WAV_DRAW_WIDTH;
+      }
+    }
   }
-  DEBUG_PRINTLN("Selections");
-  DEBUG_PRINTLN(selection_start);
-  DEBUG_PRINTLN(start);
-  DEBUG_PRINTLN(offset);
-  DEBUG_PRINTLN(selection_x1);
-  DEBUG_PRINTLN(selection_x2);
-  oled_display.fillRect(0, 0, selection_x1, 32, BLACK);
-  oled_display.fillRect(selection_x1, 0, selection_x2 - selection_x1, 32,
-                        draw_selection);
-  oled_display.fillRect(selection_x2, 0, 127 - selection_x2, 32, BLACK);
+  oled_display.clearDisplay();
+
+  if (draw_selection) {
+    oled_display.fillRect(selection_x1, 0, selection_x2 - selection_x1, 32,
+                          WHITE);
+  }
 
   uint8_t x = 0;
   uint8_t y = WAV_DRAW_HEIGHT / 2;
@@ -283,10 +286,10 @@ void WavEditPage::display() {
   bool first_val = false;
 
   for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
-    if ((n <= selection_x1) || (n >= selection_x2)) {
-      color = draw_selection;
-    } else {
+    if ((n >= selection_x1) && (n <= selection_x2) && (draw_selection)) {
       color = BLACK;
+    } else {
+      color = WHITE;
     }
 
     oled_display.drawPixel(n, (WAV_DRAW_HEIGHT / 2), color);
