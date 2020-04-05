@@ -196,8 +196,8 @@ void WavEditPage::draw_wav() {
       color = BLACK;
     }
     if (samples_per_pixel > 1) {
-      oled_display.drawLine(n, (WAV_DRAW_HEIGHT / 2) + wav_buf[n][0], n,
-                            (WAV_DRAW_HEIGHT / 2) + wav_buf[n][1], color);
+      oled_display.drawLine(n, (WAV_DRAW_HEIGHT / 2) - wav_buf[n][0], n,
+                            (WAV_DRAW_HEIGHT / 2) - wav_buf[n][1], color);
     } else {
       int8_t val = 0;
       if (abs(wav_buf[n][1]) > abs(wav_buf[n][0])) {
@@ -205,9 +205,13 @@ void WavEditPage::draw_wav() {
       } else {
         val = wav_buf[n][0];
       }
-      oled_display.drawLine(x, y, n, (WAV_DRAW_HEIGHT / 2) + val, color);
+      if (n == 0) {
+        x = 0;
+        y -= val;
+      }
+      oled_display.drawLine(x, y, n, (WAV_DRAW_HEIGHT / 2) - val, color);
       x = n;
-      y = (WAV_DRAW_HEIGHT / 2) + val;
+      y = (WAV_DRAW_HEIGHT / 2) - val;
     }
   }
 
