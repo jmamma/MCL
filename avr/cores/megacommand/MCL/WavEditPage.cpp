@@ -1,8 +1,8 @@
 #include "MCL.h"
 #include "WavEditPage.h"
 
-MCLEncoder wav_edit_param1(0, 127, ENCODER_RES_SYS);
-MCLEncoder wav_edit_param2(0, 127, ENCODER_RES_SYS);
+MCLEncoder wav_edit_param1(0, WAV_DRAW_WIDTH, ENCODER_RES_SYS);
+MCLEncoder wav_edit_param2(0, WAV_DRAW_WIDTH, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param3(0, 255, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param4(0, 255, ENCODER_RES_SYS);
 
@@ -34,7 +34,7 @@ void WavEditPage::init() {
 
   offset = 0;
   encoders[0]->cur = 0;
-  encoders[1]->cur = 127;
+  encoders[1]->cur = WAV_DRAW_WIDTH;
   encoders[2]->cur = 64;
   encoders[2]->old = 64;
   samples_per_pixel = max_visible_length / WAV_DRAW_WIDTH;
@@ -51,15 +51,15 @@ void WavEditPage::cleanup() {
 }
 bool WavEditPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    start = encoders[0]->cur * samples_per_pixel;
-    end = encoders[1]->cur * samples_per_pixel;
+    start = (encoders[0]->cur) * samples_per_pixel;
+    end = (encoders[1]->cur) * samples_per_pixel;
     render(start, end, offset, samples_per_pixel);
     samples_per_pixel = ((end - start) / WAV_DRAW_WIDTH);
     if (samples_per_pixel < 1) {
       samples_per_pixel = 1;
     }
     encoders[0]->cur = 0;
-    encoders[1]->cur = 127;
+    encoders[1]->cur = WAV_DRAW_WIDTH;
     return true;
   }
 
@@ -75,18 +75,16 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-#define BUF_SIZE 256;
+#define WAV_NO_VAL 127
 
 void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
-                         int32_t offset, uint32_t samples_per_pixel) {
+                         int32_t sample_offset, uint32_t samples_per_pixel) {
 
   int32_t sampleLength =
       (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
       (wav_file.header.fmt.bitRate / 8);
 
   uint32_t sampleFormat = wav_file.header.fmt.bitRate;
-
-  uint8_t pixel_offset = 0;
 
   uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
   wav_sample_t min_sample;
@@ -97,23 +95,23 @@ void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
   int32_t sample_index = sample_start;
 
   DEBUG_PRINTLN("re-rendering");
-  DEBUG_PRINTLN(sample_index + offset);
+  DEBUG_PRINTLN(sample_index + sample_offset);
   DEBUG_PRINTLN(sampleLength);
   for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
     // Check that we're not searching for -ve sample index space.
-    if (sample_index + offset < sampleLength) {
-      if (sample_index + offset < 0) {
-        wav_buf[n][0] = 127;
-        wav_buf[n][1] = 127;
+    if (sample_index + sample_offset < sampleLength) {
+      if (sample_index + sample_offset < 0) {
+          wav_buf[n][0] = WAV_NO_VAL;
+          wav_buf[n][1] = WAV_NO_VAL;
       } else {
-        wav_file.find_peaks(0, samples_per_pixel, sample_index + offset,
+        wav_file.find_peaks(0, samples_per_pixel, sample_index + sample_offset,
                             &max_sample, &min_sample);
         wav_buf[n][0] = (float)max_sample.val * scalar;
         wav_buf[n][1] = (float)min_sample.val * scalar;
       }
     } else {
-      wav_buf[n][0] = 127;
-      wav_buf[n][1] = 127;
+      wav_buf[n][0] = WAV_NO_VAL;
+      wav_buf[n][1] = WAV_NO_VAL;
     }
 
     sample_index += samples_per_pixel;
@@ -169,20 +167,47 @@ void WavEditPage::loop() {
   }
 }
 
-void WavEditPage::display() {
-  // oled_display.clearDisplay();
-  if (!classic_display) {
-#ifdef OLED_DISPLAY
-    oled_display.fillRect(0, 0, encoders[0]->cur, 32, BLACK);
-    oled_display.fillRect(encoders[0]->cur, 0,
-                          encoders[1]->cur - encoders[0]->cur, 32, WHITE);
-    oled_display.fillRect(encoders[1]->cur, 0, 128 - encoders[1]->cur, 32,
-                          BLACK);
-
-#endif
+wav_sample_t WavEditPage::get_selection_sample_start() {
+  wav_sample_t sample_start;
+  int32_t pos = ((encoders[0]->cur) * samples_per_pixel) + offset + start;
+  if (pos < 0) {
+    sample_start.pos = 0;
+  } else {
+    sample_start.pos = pos;
   }
-  draw_wav();
+  sample_start.val = wav_buf[encoders[0]->cur][1];
+  return sample_start;
+}
+
+wav_sample_t WavEditPage::get_selection_sample_end() {
+  uint32_t sampleLength =
+      (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
+      (wav_file.header.fmt.bitRate / 8);
+
+  wav_sample_t sample_end;
+  sample_end.pos = ((encoders[1]->cur) * samples_per_pixel) + offset + start;
+  if (sample_end.pos > sampleLength) {
+    sample_end.pos = sampleLength;
+  }
+  sample_end.val = wav_buf[encoders[1]->cur][1];
+  return sample_end;
+}
+
+void WavEditPage::display() {
+  // oled_display.clearDisplay()
+  //
+
 #ifdef OLED_DISPLAY
+
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+  oled_display.fillRect(0, 0, encoders[0]->cur, 32, BLACK);
+  oled_display.fillRect(encoders[0]->cur, 0,
+                        encoders[1]->cur - encoders[0]->cur, 32, WHITE);
+  oled_display.fillRect(encoders[1]->cur, 0, 128 - encoders[1]->cur, 32, BLACK);
+
+  draw_wav();
+  oled_display.setFont(oldfont);
   oled_display.display();
 #endif
 }
@@ -195,7 +220,7 @@ void WavEditPage::draw_wav() {
   uint8_t color = WHITE;
   bool first_val = false;
 
-  for (uint8_t n = 0; n < 128; n++) {
+  for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
     if ((n <= encoders[0]->cur) || (n >= encoders[1]->cur)) {
       color = WHITE;
     } else {
@@ -214,7 +239,7 @@ void WavEditPage::draw_wav() {
       } else {
         val = wav_buf[n][0];
       }
-      if (val != 127) {
+      if (val != WAV_NO_VAL) {
         if ((first_val == false)) {
           x = n;
           y -= val;
@@ -230,6 +255,9 @@ void WavEditPage::draw_wav() {
       x = n;
     }
   }
+  wav_sample_t current_sample = get_selection_sample_start();
 
+  oled_display.setCursor(100, 26);
+  oled_display.print(current_sample.pos);
 #endif
 }
