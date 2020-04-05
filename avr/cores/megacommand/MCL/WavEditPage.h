@@ -6,15 +6,13 @@
 #include "GUI.h"
 #include "Wav.h"
 
-#define WAV_SECONDS 1.0 // maximmum sample length to display on screen
-
 #define WAV_DRAW_STEREO 2
 #define WAV_DRAW_LEFT 0
 #define WAV_DRAW_RIGHT 1
 
-extern MCLEncoder wav_menu_value_encoder;
-extern MCLEncoder wav_menu_entry_encoder;
-extern MenuPage<4> wav_menu_page;
+#define WAV_DRAW_WIDTH 128
+#define WAV_DRAW_HEIGHT 32
+#define WAV_SECONDS 1.0 //maximmum sample length to display on screen
 
 class WavEditPage : public LightPage {
 public:
