@@ -6,9 +6,11 @@
 #include "GUI.h"
 #include "Wav.h"
 
-#define WAV_DRAW_WIDTH 96
-#define WAV_DRAW_HEIGHT 32
 #define WAV_SECONDS 1.0 // maximmum sample length to display on screen
+
+#define WAV_DRAW_STEREO 2
+#define WAV_DRAW_LEFT 0
+#define WAV_DRAW_RIGHT 1
 
 class WavEditPage : public LightPage {
 public:
@@ -21,7 +23,14 @@ public:
   int32_t offset;
 
   uint32_t samples_per_pixel;
-  int8_t wav_buf[WAV_DRAW_WIDTH][2];
+
+  static constexpr uint8_t draw_w = 96;
+  static constexpr uint8_t draw_h = 32;
+
+  int8_t wav_buf[2][draw_w][2];
+
+  uint8_t draw_mode = WAV_DRAW_STEREO;
+
   WavEditPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
@@ -42,6 +51,7 @@ public:
 
   wav_sample_t get_selection_sample_start();
   wav_sample_t get_selection_sample_end();
+
 };
 
 extern WavEditPage wav_edit_page;
