@@ -43,7 +43,7 @@ void WavEditPage::init() {
   encoders[2]->cur = 64;
   encoders[2]->old = 64;
 
-  samples_per_pixel = max_visible_length / WAV_DRAW_WIDTH;
+  samples_per_pixel = max_visible_length / draw_w;
 
   render(start, end, offset, samples_per_pixel);
 #ifdef OLED_DISPLAY
@@ -60,12 +60,12 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
     start = (encoders[0]->cur) * samples_per_pixel;
     end = (encoders[1]->cur) * samples_per_pixel;
     render(start, end, offset, samples_per_pixel);
-    samples_per_pixel = ((end - start) / WAV_DRAW_WIDTH);
+    samples_per_pixel = ((end - start) / draw_w);
     if (samples_per_pixel < 1) {
       samples_per_pixel = 1;
     }
     encoders[0]->cur = 0;
-    encoders[1]->cur = WAV_DRAW_WIDTH;
+    encoders[1]->cur = draw_w;
     return true;
   }
 
@@ -93,31 +93,50 @@ void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
   uint32_t sampleFormat = wav_file.header.fmt.bitRate;
 
   uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
-  wav_sample_t min_sample;
-  wav_sample_t max_sample;
+  wav_sample_t c0_min_sample;
+  wav_sample_t c0_max_sample;
+  wav_sample_t c1_min_sample;
+  wav_sample_t c1_max_sample;
 
-  float scalar = (float)(WAV_DRAW_HEIGHT / 2) / (float)sample_max;
+  float scalar = (float)(draw_h / 2) / (float)sample_max;
+
+  if (draw_mode == WAV_DRAW_STEREO) {
+    scalar /= 2;
+  }
 
   int32_t sample_index = sample_start;
 
   DEBUG_PRINTLN("re-rendering");
   DEBUG_PRINTLN(sample_index + sample_offset);
   DEBUG_PRINTLN(sampleLength);
-  for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
+  for (uint8_t n = 0; n < draw_w; n++) {
     // Check that we're not searching for -ve sample index space.
     if (sample_index + sample_offset < sampleLength) {
       if (sample_index + sample_offset < 0) {
-        wav_buf[n][0] = WAV_NO_VAL;
-        wav_buf[n][1] = WAV_NO_VAL;
+        wav_buf[0][n][0] = WAV_NO_VAL;
+        wav_buf[0][n][1] = WAV_NO_VAL;
+        wav_buf[1][n][0] = WAV_NO_VAL;
+        wav_buf[1][n][1] = WAV_NO_VAL;
+
       } else {
         wav_file.find_peaks(samples_per_pixel, sample_index + sample_offset,
-                            &max_sample, &min_sample);
-        wav_buf[n][0] = (float)max_sample.val * scalar;
-        wav_buf[n][1] = (float)min_sample.val * scalar;
+                            &c0_max_sample, &c0_min_sample, &c1_max_sample,
+                            &c1_min_sample);
+        wav_buf[0][n][0] = (float)c0_max_sample.val * scalar;
+        wav_buf[0][n][1] = (float)c0_min_sample.val * scalar;
+        if (wav_file.header.fmt.numChannels < 2) {
+          wav_buf[1][n][0] = WAV_NO_VAL;
+          wav_buf[1][n][1] = WAV_NO_VAL;
+        } else {
+          wav_buf[1][n][0] = (float)c1_max_sample.val * scalar;
+          wav_buf[1][n][1] = (float)c1_min_sample.val * scalar;
+        }
       }
     } else {
-      wav_buf[n][0] = WAV_NO_VAL;
-      wav_buf[n][1] = WAV_NO_VAL;
+      wav_buf[0][n][0] = WAV_NO_VAL;
+      wav_buf[0][n][1] = WAV_NO_VAL;
+      wav_buf[1][n][0] = WAV_NO_VAL;
+      wav_buf[1][n][1] = WAV_NO_VAL;
     }
 
     sample_index += samples_per_pixel;
@@ -186,7 +205,7 @@ void WavEditPage::loop() {
     }
 
     uint32_t visibleLength = (max_visible_length) / pow(2, encoders[3]->cur);
-    samples_per_pixel = (visibleLength / WAV_DRAW_WIDTH);
+    samples_per_pixel = (visibleLength / draw_w);
     if (samples_per_pixel < 1) {
       samples_per_pixel = 1;
       encoders[3]->cur = encoders[3]->old;
@@ -249,6 +268,7 @@ void WavEditPage::display() {
 
   uint8_t selection_x1;
   uint8_t selection_x2;
+  uint8_t y;
 
   bool draw_selection = true;
 
@@ -264,11 +284,11 @@ void WavEditPage::display() {
     draw_selection = false;
   } else {
     if (selection_end > end) {
-      selection_x2 = WAV_DRAW_WIDTH;
+      selection_x2 = draw_w;
     } else {
       selection_x2 = (selection_end - start) / samples_per_pixel;
-      if (selection_x2 > WAV_DRAW_WIDTH) {
-        selection_x2 = WAV_DRAW_WIDTH;
+      if (selection_x2 > draw_w) {
+        selection_x2 = draw_w;
       }
     }
   }
@@ -280,44 +300,60 @@ void WavEditPage::display() {
   }
 
   uint8_t x = 0;
-  uint8_t y = WAV_DRAW_HEIGHT / 2;
 
   uint8_t color = WHITE;
   bool first_val = false;
+  uint8_t n = 0;
+  uint8_t c = 0;
 
-  for (uint8_t n = 0; n < WAV_DRAW_WIDTH; n++) {
-    if ((n >= selection_x1) && (n <= selection_x2) && (draw_selection)) {
-      color = BLACK;
-    } else {
-      color = WHITE;
-    }
+  uint8_t channels;
 
-    oled_display.drawPixel(n, (WAV_DRAW_HEIGHT / 2), color);
-
-    if (samples_per_pixel > 1) {
-      oled_display.drawLine(n, (WAV_DRAW_HEIGHT / 2) - wav_buf[n][0], n,
-                            (WAV_DRAW_HEIGHT / 2) - wav_buf[n][1], color);
-    } else {
-      int8_t val = 0;
-      if (abs(wav_buf[n][1]) > abs(wav_buf[n][0])) {
-        val = wav_buf[n][1];
+  uint8_t axis_y = draw_h / 2;
+  if (draw_mode != WAV_DRAW_STEREO) {
+    c = draw_mode;
+    channels = 1;
+  } else {
+    axis_y /= 2;
+    channels = 2;
+  }
+  for (uint8_t a = 0; a < channels; a++) {
+    y = axis_y;
+    for (uint8_t n = 0; n < draw_w; n++) {
+      if ((n >= selection_x1) && (n <= selection_x2) && (draw_selection)) {
+        color = BLACK;
       } else {
-        val = wav_buf[n][0];
+        color = WHITE;
       }
-      if (val != WAV_NO_VAL) {
-        if ((first_val == false)) {
-          x = n;
-          y -= val;
-          first_val = true;
+
+      oled_display.drawPixel(n, axis_y, color);
+
+      if (samples_per_pixel > 1) {
+        oled_display.drawLine(n, axis_y - wav_buf[c][n][0], n,
+                              axis_y - wav_buf[c][n][1], color);
+      } else {
+        int8_t val = 0;
+        if (abs(wav_buf[c][n][1]) > abs(wav_buf[c][n][0])) {
+          val = wav_buf[c][n][1];
+        } else {
+          val = wav_buf[c][n][0];
         }
-        oled_display.drawLine(x, y, n, (WAV_DRAW_HEIGHT / 2) - val, color);
-        oled_display.drawLine(x, y - 1, n, (WAV_DRAW_HEIGHT / 2) - val - 1,
-                              color);
-        oled_display.drawLine(x, y + 1, n, (WAV_DRAW_HEIGHT / 2) - val + 1,
-                              color);
-        y = (WAV_DRAW_HEIGHT / 2) - val;
+        if (val != WAV_NO_VAL) {
+          if ((first_val == false)) {
+            x = n;
+            y -= val;
+            first_val = true;
+          }
+          oled_display.drawLine(x, y, n, axis_y - val, color);
+          oled_display.drawLine(x, y - 1, n, axis_y - val - 1, color);
+          oled_display.drawLine(x, y + 1, n, axis_y - val + 1, color);
+          y = axis_y - val;
+        }
+        x = n;
       }
-      x = n;
+    }
+    if (draw_mode == WAV_DRAW_STEREO) {
+      c += 1;
+      axis_y += draw_h / 2;
     }
   }
   wav_sample_t current_sample = get_selection_sample_start();
