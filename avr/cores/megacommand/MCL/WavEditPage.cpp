@@ -318,6 +318,7 @@ void WavEditPage::display() {
   }
   for (uint8_t a = 0; a < channels; a++) {
     y = axis_y;
+    first_val = false;
     for (uint8_t n = 0; n < draw_w; n++) {
       if ((n >= selection_x1) && (n <= selection_x2) && (draw_selection)) {
         color = BLACK;
