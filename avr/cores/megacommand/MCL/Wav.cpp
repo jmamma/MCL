@@ -136,6 +136,10 @@ bool Wav::read_header() {
     if (pchunk->is<fmtchunk_t>()) {
       header.fmt = *(fmtchunk_t *)pchunk;
       DEBUG_PRINTLN("parse fmt");
+      DEBUG_DUMP(header.fmt.audioFormat);
+      DEBUG_DUMP(header.fmt.sampleRate);
+      DEBUG_DUMP(header.fmt.bitRate);
+      DEBUG_DUMP(header.fmt.numChannels);
     } else if (pchunk->is<datachunk_t>()) {
       header.data = *(datachunk_t *)pchunk;
       data_offset = chunk_offset + sizeof(datachunk_t);
@@ -314,15 +318,184 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
 
 int32_t Wav::find_peak(uint8_t channel, uint32_t num_samples,
                        uint32_t sample_index) {
-  wav_sample_t min_sample;
-  wav_sample_t max_sample;
-  find_peaks(channel, num_samples, sample_index, &max_sample, &min_sample);
-  if (abs(min_sample.val) > max_sample.val) {
-    return abs(min_sample.val);
-  }
-  return max_sample.val;
-}
 
+  wav_sample_t c0_min_sample;
+  wav_sample_t c0_max_sample;
+  wav_sample_t c1_min_sample;
+  wav_sample_t c1_max_sample;
+
+  find_peaks(num_samples, sample_index, &c0_max_sample, &c0_min_sample,
+             &c1_max_sample, &c1_min_sample);
+  if (channel == 0) {
+
+    if (abs(c0_min_sample.val) > c0_max_sample.val) {
+      return abs(c0_min_sample.val);
+    }
+    return c0_max_sample.val;
+  }
+
+  if (abs(c1_min_sample.val) > c1_max_sample.val) {
+    return abs(c1_min_sample.val);
+  }
+  return c1_max_sample.val;
+}
+void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
+                     wav_sample_t *c0_max_sample, wav_sample_t *c0_min_sample,
+                     wav_sample_t *c1_max_sample, wav_sample_t *c1_min_sample) {
+  DEBUG_PRINT_FN();
+  // Stereo
+  bool is_stereo = (header.fmt.numChannels == 2);
+  bool ignore_second_chan = false;
+
+  if ((c1_max_sample == NULL) || (c1_min_sample == NULL) || (!is_stereo)) {
+    ignore_second_chan = true;
+  }
+
+  c0_max_sample->val = 0;
+  c0_min_sample->val = 0;
+
+  int16_t c0_min_sample16;
+  int16_t c0_max_sample16;
+
+  if (!ignore_second_chan) {
+  c1_max_sample->val = 0;
+  c1_min_sample->val = 0;
+  }
+  int16_t c1_min_sample16;
+  int16_t c1_max_sample16;
+
+  int32_t sample_val = 0;
+  int16_t sample_val16 = 0;
+
+  uint8_t sample_size = header.fmt.bitRate / 8;
+  if (header.fmt.bitRate % 8 > 0) {
+    sample_size++;
+  }
+  uint32_t num_of_samples;
+
+  if (num_samples > 0) {
+    num_of_samples = num_samples;
+  }
+
+  else {
+    uint32_t num_of_samples =
+        (header.data.chunk_size / header.fmt.numChannels) / sample_size;
+  }
+
+  int16_t buffer_size = 1024;
+
+  uint8_t buffer[buffer_size];
+
+  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
+
+  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
+
+  uint8_t word_offset = 4 - sample_size;
+
+  DEBUG_DUMP(sample_size);
+  DEBUG_DUMP(header.fmt.bitRate);
+  DEBUG_DUMP(header.fmt.numChannels);
+  DEBUG_PRINTLN(read_size);
+
+  for (int32_t n = sample_index; n < sample_index + num_of_samples;
+       n += read_size) {
+    // Adjust read size if too large
+    if (n + read_size > sample_index + num_of_samples) {
+      read_size = sample_index + num_of_samples - n;
+    }
+    // Read read_size samples.
+    if (!read_samples(buffer, read_size, n, header.fmt.numChannels)) {
+      DEBUG_PRINTLN("could not read");
+      return false;
+    }
+    // Itterate through samples in buffer
+    uint16_t buf_index = 0;
+
+    switch (sample_size) {
+    // 16bit - fast mode.
+    case 2:
+
+      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+
+        sample_val16 = ((int16_t *)&buffer)[buf_index++];
+
+        if (sample_val16 < c0_min_sample16) {
+          c0_min_sample16 = sample_val16;
+          c0_min_sample->pos = sample + sample_index;
+        }
+
+        if (sample_val16 > c0_max_sample16) {
+          c0_max_sample16 = sample_val16;
+          c0_max_sample->pos = sample + sample_index;
+        }
+        if (!ignore_second_chan) {
+          sample_val16 = ((int16_t *)&buffer)[buf_index++];
+          if (sample_val16 < c1_min_sample16) {
+            c1_min_sample16 = sample_val16;
+            c1_min_sample->pos = sample + sample_index;
+          }
+
+          if (sample_val16 > c1_max_sample16) {
+            c1_max_sample16 = sample_val16;
+            c1_max_sample->pos = sample + sample_index;
+          }
+        } else if (is_stereo) {
+          buf_index++;
+        }
+      }
+      break;
+
+    default:
+
+      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+        // Move byte stream in to 32bit MSBs.
+        for (uint8_t b = 0; b < sample_size; b++) {
+          ((uint8_t *)&sample_val)[b + word_offset] = buffer[buf_index++];
+        }
+        // Down shift to preserve sign.
+        sample_val = sample_val >> (word_offset * 8);
+
+        if (sample_val < c0_min_sample->val) {
+          c0_min_sample->val = sample_val;
+          c0_min_sample->pos = sample + sample_index;
+        }
+        if (sample_val > c0_max_sample->val) {
+          c0_max_sample->val = sample_val;
+          c0_max_sample->pos = sample + sample_index;
+        }
+        if (!ignore_second_chan) {
+          // Move byte stream in to 32bit MSBs.
+          for (uint8_t b = 0; b < sample_size; b++) {
+            ((uint8_t *)&sample_val)[b + word_offset] = buffer[buf_index++];
+          }
+          // Down shift to preserve sign.
+          sample_val = sample_val >> (word_offset * 8);
+
+          if (sample_val < c1_min_sample->val) {
+            c1_min_sample->val = sample_val;
+            c1_min_sample->pos = sample + sample_index;
+          }
+          if (sample_val > c1_max_sample->val) {
+            c1_max_sample->val = sample_val;
+            c1_max_sample->pos = sample + sample_index;
+          }
+        } else if (is_stereo) {
+          buf_index += sample_size;
+        }
+      }
+    }
+  }
+
+  if (sample_size == 2) {
+    c0_min_sample->val = (int32_t)c0_min_sample16;
+    c0_max_sample->val = (int32_t)c0_max_sample16;
+    if (!ignore_second_chan) {
+      c1_min_sample->val = (int32_t)c1_min_sample16;
+      c1_max_sample->val = (int32_t)c1_max_sample16;
+    }
+  }
+}
+/*
 void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
                      uint32_t sample_index, wav_sample_t *max_sample,
                      wav_sample_t *min_sample) {
@@ -358,12 +531,6 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
   int16_t read_size = buffer_size / sample_size;
   int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
 
-  DEBUG_PRINTLN("read_size");
-  DEBUG_PRINTLN(read_size);
-  DEBUG_PRINTLN(num_of_samples);
-  DEBUG_PRINTLN(sample_size);
-  DEBUG_PRINTLN(buffer_size);
-
   uint8_t word_offset = 4 - sample_size;
 
   for (int32_t n = sample_index; n < sample_index + num_of_samples;
@@ -381,11 +548,11 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
     uint16_t byte_count = 0;
 
     switch (sample_size) {
-    //16bit - fast mode.
+    // 16bit - fast mode.
     case 2:
 
       for (uint16_t sample = 0; sample < read_size; sample += 1) {
-        sample_val16 = ((int16_t*)&buffer)[byte_count++];
+        sample_val16 = ((int16_t *)&buffer)[byte_count++];
         if (sample_val16 < min_sample16) {
           min_sample16 = sample_val16;
           min_sample->pos = sample + sample_index;
@@ -420,11 +587,11 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
   }
 
   if (sample_size == 2) {
-  min_sample->val = (int32_t) min_sample16;
-  max_sample->val = (int32_t) max_sample16;
+    min_sample->val = (int32_t)min_sample16;
+    max_sample->val = (int32_t)max_sample16;
   }
 }
-
+*/
 bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINT_FN();
 
