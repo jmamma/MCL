@@ -315,7 +315,7 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   return true;
 }
 
-int32_t Wav::find_peak(uint8_t channel, uint32_t num_samples,
+__int24 Wav::find_peak(uint8_t channel, uint32_t num_samples,
                        uint32_t sample_index) {
 
   wav_sample_t c0_min_sample;
@@ -356,14 +356,19 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   int16_t c0_min_sample16;
   int16_t c0_max_sample16;
 
+  __int24 c0_min_sample24;
+  __int24 c0_max_sample24;
+  __int24 c1_min_sample24;
+  __int24 c1_max_sample24;
+
   if (!ignore_second_chan) {
-  c1_max_sample->val = 0;
-  c1_min_sample->val = 0;
+    c1_max_sample->val = 0;
+    c1_min_sample->val = 0;
   }
   int16_t c1_min_sample16;
   int16_t c1_max_sample16;
 
-  int32_t sample_val = 0;
+  __int24 sample_val = 0;
   int16_t sample_val16 = 0;
 
   uint8_t sample_size = header.fmt.bitRate / 8;
@@ -444,42 +449,33 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       }
       break;
 
-    default:
-
+    case 3:
       for (uint16_t sample = 0; sample < read_size; sample += 1) {
-        // Move byte stream in to 32bit MSBs.
-        for (uint8_t b = 0; b < sample_size; b++) {
-          ((uint8_t *)&sample_val)[b + word_offset] = buffer[buf_index++];
-        }
-        // Down shift to preserve sign.
-        sample_val = sample_val >> (word_offset * 8);
 
-        if (sample_val < c0_min_sample->val) {
-          c0_min_sample->val = sample_val;
+        sample_val = ((__int24 *)&buffer)[buf_index++];
+
+        if (sample_val < c0_min_sample24) {
+          c0_min_sample24 = sample_val;
           c0_min_sample->pos = sample + sample_index;
         }
-        if (sample_val > c0_max_sample->val) {
-          c0_max_sample->val = sample_val;
+
+        if (sample_val > c0_max_sample24) {
+          c0_max_sample24 = sample_val;
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          // Move byte stream in to 32bit MSBs.
-          for (uint8_t b = 0; b < sample_size; b++) {
-            ((uint8_t *)&sample_val)[b + word_offset] = buffer[buf_index++];
-          }
-          // Down shift to preserve sign.
-          sample_val = sample_val >> (word_offset * 8);
-
-          if (sample_val < c1_min_sample->val) {
-            c1_min_sample->val = sample_val;
+          sample_val = ((__int24 *)&buffer)[buf_index++];
+          if (sample_val < c1_min_sample24) {
+            c1_min_sample24 = sample_val;
             c1_min_sample->pos = sample + sample_index;
           }
-          if (sample_val > c1_max_sample->val) {
-            c1_max_sample->val = sample_val;
+
+          if (sample_val > c1_max_sample24) {
+            c1_max_sample24 = sample_val;
             c1_max_sample->pos = sample + sample_index;
           }
         } else if (is_stereo) {
-          buf_index += sample_size;
+          buf_index++;
         }
       }
     }
@@ -491,6 +487,13 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
     if (!ignore_second_chan) {
       c1_min_sample->val = (int32_t)c1_min_sample16;
       c1_max_sample->val = (int32_t)c1_max_sample16;
+    }
+  } else if (sample_size == 3) {
+    c0_min_sample->val = (int32_t)c0_min_sample24;
+    c0_max_sample->val = (int32_t)c0_max_sample24;
+    if (!ignore_second_chan) {
+      c1_min_sample->val = (int32_t)c1_min_sample24;
+      c1_max_sample->val = (int32_t)c1_max_sample24;
     }
   }
 }
