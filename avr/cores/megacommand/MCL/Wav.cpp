@@ -410,11 +410,10 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
     // Itterate through samples in buffer
     uint16_t buf_index = 0;
 
-    switch (sample_size) {
-    // 16bit - fast mode.
-    case 2:
-
-      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+    for (uint16_t sample = 0; sample < read_size; sample += 1) {
+      switch (sample_size) {
+      // 16bit - fast mode.
+      case 2:
 
         sample_val16 = ((int16_t *)&buffer)[buf_index++];
 
@@ -441,12 +440,10 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
         } else if (is_stereo) {
           buf_index++;
         }
-      }
-      break;
+        break;
 
-    case 3:
-    //24bit
-      for (uint16_t sample = 0; sample < read_size; sample += 1) {
+      case 3:
+        // 24bit
 
         sample_val24 = ((__int24 *)&buffer)[buf_index++];
 
@@ -486,24 +483,18 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
     }
   }
 }
-/*
-void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
-                     uint32_t sample_index, wav_sample_t *max_sample,
-                     wav_sample_t *min_sample) {
+
+bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
+                     uint32_t sample_index) {
   DEBUG_PRINT_FN();
-  max_sample->val = 0;
-  min_sample->val = 0;
-
-  int16_t min_sample16;
-  int16_t max_sample16;
-
-  int32_t sample_val = 0;
-  int16_t sample_val16 = 0;
 
   uint8_t sample_size = header.fmt.bitRate / 8;
   if (header.fmt.bitRate % 8 > 0) {
     sample_size++;
   }
+
+  bool is_stereo = (header.fmt.numChannels == 2);
+
   uint32_t num_of_samples;
 
   if (num_samples > 0) {
@@ -519,89 +510,11 @@ void Wav::find_peaks(uint8_t channel, uint32_t num_samples,
 
   uint8_t buffer[buffer_size];
 
-  int16_t read_size = buffer_size / sample_size;
-  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
+  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
 
-  uint8_t word_offset = 4 - sample_size;
+  uint16_t sample_val16 = 0;
+  __int24 sample_val24 = 0;
 
-  for (uint32_t n = sample_index; n < sample_index + num_of_samples;
-       n += read_size) {
-    // Adjust read size if too large
-    if (n + read_size > sample_index + num_of_samples) {
-      read_size = sample_index + num_of_samples - n;
-    }
-    // Read read_size samples.
-    if (!read_samples(buffer, read_size, n, channel)) {
-      DEBUG_PRINTLN(F("could not read"));
-      return;
-    }
-    // Itterate through samples in buffer
-    uint16_t byte_count = 0;
-
-    switch (sample_size) {
-    // 16bit - fast mode.
-    case 2:
-
-      for (uint16_t sample = 0; sample < read_size; sample += 1) {
-        sample_val16 = ((int16_t *)&buffer)[byte_count++];
-        if (sample_val16 < min_sample16) {
-          min_sample16 = sample_val16;
-          min_sample->pos = sample + sample_index;
-        }
-        if (sample_val16 > max_sample16) {
-          max_sample16 = sample_val16;
-          max_sample->pos = sample + sample_index;
-        }
-      }
-      break;
-
-    default:
-
-      for (uint16_t sample = 0; sample < read_size; sample += 1) {
-        // Move byte stream in to 32bit MSBs.
-        for (uint8_t b = 0; b < sample_size; b++) {
-          ((uint8_t *)&sample_val)[b + word_offset] = buffer[byte_count++];
-        }
-        // Down shift to preserve sign.
-        sample_val = sample_val >> (word_offset * 8);
-
-        if (sample_val < min_sample->val) {
-          min_sample->val = sample_val;
-          min_sample->pos = sample + sample_index;
-        }
-        if (sample_val > max_sample->val) {
-          max_sample->val = sample_val;
-          max_sample->pos = sample + sample_index;
-        }
-      }
-    }
-  }
-
-  if (sample_size == 2) {
-    min_sample->val = (int32_t)min_sample16;
-    max_sample->val = (int32_t)max_sample16;
-  }
-  DEBUG_PRINTLN(F("peak found"));
-  DEBUG_PRINTLN(peak_value);
-  return;
-}
-*/
-bool Wav::apply_gain(float gain, uint8_t channel) {
-  DEBUG_PRINT_FN();
-
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
-
-  uint32_t num_of_samples =
-      (header.data.chunk_size / header.fmt.numChannels) / sample_size;
-
-  int16_t buffer_size = 512;
-
-  uint8_t buffer[buffer_size];
-  int16_t read_size = buffer_size / sample_size;
-  uint32_t sample_val = 0;
   uint32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
   bool write_header = false;
   DEBUG_PRINTLN(F("read_size"));
@@ -610,89 +523,73 @@ bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINTLN(sample_size);
   DEBUG_PRINTLN(buffer_size);
   DEBUG_PRINTLN(gain);
-  for (uint32_t n = 0; n < num_of_samples; n += read_size) {
+
+  bool is_signed;
+
+  for (int32_t n = 0; n < sample_index + num_of_samples; n += read_size) {
     // Adjust read size if too large
-    if (n + read_size > num_of_samples) {
-      read_size = num_of_samples - n;
+    if (n + read_size > sample_index + num_of_samples) {
+      read_size = sample_index + num_of_samples - n;
     }
     // Read read_size samples.
 
-    if (!read_samples(buffer, read_size, n, channel)) {
-      DEBUG_PRINTLN(F("could not read"));
+    if (!read_samples(buffer, read_size, n, header.fmt.numChannels)) {
+      DEBUG_PRINTLN("could not read");
       return false;
     }
     // Itterate through samples in buffer
-    for (uint16_t byte_count = 0; byte_count < read_size * sample_size;
-         byte_count += sample_size) {
+    uint8_t current_channel = 0;
+    uint8_t buf_index = 0;
+    for (uint16_t sample = 0; sample < read_size; sample += 1) {
 
-      sample_val = 0;
+      if ((channel == current_channel) || (channel >= header.fmt.numChannels) ||
+          (!is_stereo)) {
+        switch (sample_size) {
+        case 2:
+          //16bit
+          sample_val16 = ((int16_t *)&buffer)[buf_index];
+          sample_val16 = (uint16_t)((float)sample_val16 * (float)gain);
+          is_signed = (sample_val16 < 0);
+          if (abs(sample_val16) > sample_max) {
+            sample_val16 = sample_max;
+            if (is_signed) {
+              sample_val16 *= -1;
+              sample_val16 -= 1;
+            }
+          }
 
-      // Decode samples from byte stream;
-
-      for (uint8_t b = 0; b < sample_size; b++) {
-        sample_val |= ((int32_t)buffer[byte_count]) << (b * 8);
-        byte_count++;
+          ((int16_t *)&buffer)[buf_index] = sample_val16;
+          break;
+        case 3:
+          //24bit
+          sample_val24 = ((__int24 *)&buffer)[buf_index];
+          sample_val24 = (__int24)((float)sample_val24 * (float)gain);
+          is_signed = (sample_val24 < 0);
+          if (abs(sample_val24) > sample_max) {
+            sample_val24 = sample_max;
+            if (is_signed) {
+              sample_val24 *= -1;
+              sample_val24 -= 1;
+            }
+          }
+          ((__int24 *)&buffer)[buf_index] = sample_val24;
+          break;
+        }
       }
-      // For signed formats, we need to remove the "sign" bit before
-      // performing multiplication
-
-      if (header.fmt.bitRate > 8) {
-
-        bool is_signed = ((uint32_t)1 << (header.fmt.bitRate - 1)) & sample_val;
-
-        if (is_signed) {
-          // Signed numbers are stored as 2's complement :'-(
-          // To perform any calculations we must first convert them to decimal
-          // We also need to shake off any unwanted higher bits if we need to
-          // perform a comparator operation.
-
-          sample_val = ~(sample_val - 1);
-          sample_val = sample_val << (32 - header.fmt.bitRate);
-          sample_val = sample_val >> (32 - header.fmt.bitRate);
-          sample_val &= ~((uint32_t)1 << (header.fmt.bitRate - 1));
-        }
-
-        // Apply gain adjustment
-        sample_val = (uint32_t)((float)sample_val * (float)gain);
-        if (sample_val > sample_max) {
-          sample_val = sample_max;
-        }
-        if (is_signed) {
-          sample_val = ~(sample_val) + 1;
-          sample_val |= ((uint32_t)1 << (header.fmt.bitRate - 1));
-        }
-      } else {
-        // For 8 bit, convert to signed, then perform mult, then convert back.
-        sample_val -= sample_max + 1;
-        // Apply gain adjustment
-        sample_val = (int32_t)((float)sample_val * (float)gain);
-        if (sample_val > sample_max) {
-          sample_val = sample_max;
-        }
-        if (sample_val < -sample_max) {
-          sample_val = -sample_max;
-        }
-        sample_val += sample_max + 1;
-      }
-
-      // Check to see if gain adjustment is within range
-      // otherwise limit.
-
-      byte_count -= sample_size;
-      // Convert modified sample back in to byte stream
-
-      for (uint8_t b = 0; b < sample_size; b++) {
-        buffer[byte_count + b] =
-            (uint8_t)(sample_val >> (8 * (b))) & (uint8_t)0xFF;
+      buf_index++;
+      current_channel++;
+      if (current_channel == header.fmt.numChannels) {
+        current_channel = 0;
       }
     }
     // Write back the adjusted samples
-    if (!write_samples(buffer, read_size, n, channel, write_header)) {
-      DEBUG_PRINTLN(F("could not write"));
+    if (!write_samples(buffer, read_size, n, header.fmt.numChannels,
+                       write_header)) {
+      DEBUG_PRINTLN("could not write");
       return false;
     }
     // loop
-  }
 
-  return true;
+    return true;
+  }
 }
