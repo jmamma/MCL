@@ -382,7 +382,7 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 1024;
+  int16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
@@ -507,7 +507,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 1024;
+  int16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
