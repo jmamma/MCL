@@ -177,6 +177,16 @@ size_t Print::println(long num, int base)
   return n;
 }
 
+size_t Print::println(__int24 num, int base)
+{
+  println((int32_t) num, base);
+}
+
+size_t Print::println(__uint24 num, int base)
+{
+  println((uint32_t) num, base);
+}
+
 size_t Print::println(unsigned long num, int base)
 {
   size_t n = print(num, base);
