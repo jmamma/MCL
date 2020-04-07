@@ -75,6 +75,8 @@ class Print
     size_t println(int, int = DEC);
     size_t println(unsigned int, int = DEC);
     size_t println(long, int = DEC);
+    size_t println(__int24, int = DEC);
+    size_t println(__uint24, int = DEC);
     size_t println(unsigned long, int = DEC);
     size_t println(double, int = 2);
     size_t println(const Printable&);
