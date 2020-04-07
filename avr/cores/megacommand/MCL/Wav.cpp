@@ -357,11 +357,6 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   int16_t c0_min_sample16;
   int16_t c0_max_sample16;
 
-  __int24 c0_min_sample24;
-  __int24 c0_max_sample24;
-  __int24 c1_min_sample24;
-  __int24 c1_max_sample24;
-
   if (!ignore_second_chan) {
     c1_max_sample->val = 0;
     c1_min_sample->val = 0;
@@ -369,7 +364,7 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   int16_t c1_min_sample16;
   int16_t c1_max_sample16;
 
-  __int24 sample_val = 0;
+  __int24 sample_val24 = 0;
   int16_t sample_val16 = 0;
 
   uint8_t sample_size = header.fmt.bitRate / 8;
@@ -451,28 +446,29 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       break;
 
     case 3:
+    //24bit
       for (uint16_t sample = 0; sample < read_size; sample += 1) {
 
-        sample_val = ((__int24 *)&buffer)[buf_index++];
+        sample_val24 = ((__int24 *)&buffer)[buf_index++];
 
-        if (sample_val < c0_min_sample24) {
-          c0_min_sample24 = sample_val;
+        if (sample_val24 < c0_min_sample->val) {
+          c0_min_sample->val = sample_val24;
           c0_min_sample->pos = sample + sample_index;
         }
 
-        if (sample_val > c0_max_sample24) {
-          c0_max_sample24 = sample_val;
+        if (sample_val24 > c0_max_sample->val) {
+          c0_max_sample->val = sample_val24;
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          sample_val = ((__int24 *)&buffer)[buf_index++];
-          if (sample_val < c1_min_sample24) {
-            c1_min_sample24 = sample_val;
+          sample_val24 = ((__int24 *)&buffer)[buf_index++];
+          if (sample_val24 < c1_min_sample->val) {
+            c1_min_sample->val = sample_val24;
             c1_min_sample->pos = sample + sample_index;
           }
 
-          if (sample_val > c1_max_sample24) {
-            c1_max_sample24 = sample_val;
+          if (sample_val24 > c1_max_sample->val) {
+            c1_max_sample->val = sample_val24;
             c1_max_sample->pos = sample + sample_index;
           }
         } else if (is_stereo) {
@@ -483,18 +479,11 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   }
 
   if (sample_size == 2) {
-    c0_min_sample->val = (int32_t)c0_min_sample16;
-    c0_max_sample->val = (int32_t)c0_max_sample16;
+    c0_min_sample->val = (__int24)c0_min_sample16;
+    c0_max_sample->val = (__int24)c0_max_sample16;
     if (!ignore_second_chan) {
-      c1_min_sample->val = (int32_t)c1_min_sample16;
-      c1_max_sample->val = (int32_t)c1_max_sample16;
-    }
-  } else if (sample_size == 3) {
-    c0_min_sample->val = (int32_t)c0_min_sample24;
-    c0_max_sample->val = (int32_t)c0_max_sample24;
-    if (!ignore_second_chan) {
-      c1_min_sample->val = (int32_t)c1_min_sample24;
-      c1_max_sample->val = (int32_t)c1_max_sample24;
+      c1_min_sample->val = (__int24)c1_min_sample16;
+      c1_max_sample->val = (__int24)c1_max_sample16;
     }
   }
 }
