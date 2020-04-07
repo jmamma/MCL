@@ -57,15 +57,13 @@ void WavEditPage::cleanup() {
 }
 bool WavEditPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    start = (encoders[0]->cur) * samples_per_pixel;
-    end = (encoders[1]->cur) * samples_per_pixel;
-    render(start, end, offset, samples_per_pixel);
+    start = selection_start;
+    end = selection_end;
     samples_per_pixel = ((end - start) / draw_w);
     if (samples_per_pixel < 1) {
       samples_per_pixel = 1;
     }
-    encoders[0]->cur = 0;
-    encoders[1]->cur = draw_w;
+    render(start, end, offset, samples_per_pixel);
     return true;
   }
 
