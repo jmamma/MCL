@@ -244,7 +244,7 @@ public:
                   wav_sample_t *c0_min_sample = NULL,
                   wav_sample_t *c1_max_sample = NULL,
                   wav_sample_t *c1_min_sample = NULL);
-  bool apply_gain(float gain, uint8_t channel = 0);
+  bool apply_gain(float gain, uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
 };
 
 #endif /* WAV_H__ */
