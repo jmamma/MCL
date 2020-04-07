@@ -42,7 +42,8 @@ void WavEditPage::init() {
   encoders[1]->old = 64;
   encoders[2]->cur = 64;
   encoders[2]->old = 64;
-
+  encoders[3]->cur = 64;
+  encoders[3]->old = 64;
   samples_per_pixel = max_visible_length / draw_w;
 
   render(start, end, offset, samples_per_pixel);
@@ -64,6 +65,7 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
       samples_per_pixel = 1;
     }
     render(start, end, offset, samples_per_pixel);
+
     return true;
   }
 
@@ -191,6 +193,9 @@ void WavEditPage::loop() {
   }
   if (encoders[3]->hasChanged()) {
     // ZOOM
+
+    int16_t diff = encoders[3]->cur - encoders[3]->old;
+
     uint32_t sampleLength =
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
         (wav_file.header.fmt.bitRate / 8);
@@ -201,21 +206,53 @@ void WavEditPage::loop() {
     if (sampleLength < max_visible_length) {
       max_visible_length = sampleLength;
     }
+   uint32_t old_start = start;
+   uint32_t old_end = end;
+   uint32_t old_length = (end - start);
+   uint32_t new_length = 0;
 
-    uint32_t visibleLength = (max_visible_length) / pow(2, encoders[3]->cur);
-    samples_per_pixel = (visibleLength / draw_w);
-    if (samples_per_pixel < 1) {
+   if (diff > 0) {
+   new_length = old_length / 2;
+   end = end - (new_length / 2);
+   start = start + (new_length / 2);
+   }
+   if (diff < 0) {
+   new_length = old_length * 2;
+   if (new_length > max_visible_length) { return; }
+   end = end + (new_length / 2);
+   start = start - (new_length / 2);
+   }
+   DEBUG_DUMP(diff);
+   DEBUG_DUMP(old_start);
+   DEBUG_DUMP(old_end);
+   DEBUG_DUMP(old_length);
+   DEBUG_DUMP(new_length);
+   DEBUG_DUMP(start);
+   DEBUG_DUMP(end);
+
+   if (start < 0) { start = 0; }
+   if (end > sampleLength) { end = sampleLength; }
+
+//    uint32_t visibleLength = (max_visible_length) / (2 * encoders[3]->cur);
+   uint32_t visibleLength = end - start;
+   samples_per_pixel = (visibleLength / draw_w);
+   DEBUG_DUMP(samples_per_pixel);
+   if (samples_per_pixel < 1) {
       samples_per_pixel = 1;
-      encoders[3]->cur = encoders[3]->old;
+      start = old_start;
+      end = old_end;
       return;
     }
 
-    start = (max_visible_length / 2) - (visibleLength / 2);
-    end = (max_visible_length / 2) + (visibleLength / 2);
+//    start = (max_visible_length / 2) - (visibleLength / 2);
+//    end = (max_visible_length / 2) + (visibleLength / 2);
 
     render(start, end, offset, samples_per_pixel);
     //  encoders[0]->cur = 0;
     //  encoders[1]->cur = 127;
+     encoders[3]->cur = 64;
+     encoders[3]->old = 64;
+
   }
 }
 
