@@ -84,7 +84,7 @@ struct loop_t {
 };
 
 struct wav_sample_t {
-  int32_t val;
+  __int24 val;
   uint32_t pos;
 };
 

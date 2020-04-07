@@ -92,7 +92,7 @@ void WavEditPage::render(uint32_t sample_start, uint32_t sample_end,
 
   uint32_t sampleFormat = wav_file.header.fmt.bitRate;
 
-  uint16_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
+  uint32_t sample_max = (pow(2, wav_file.header.fmt.bitRate) / 2);
   wav_sample_t c0_min_sample;
   wav_sample_t c0_max_sample;
   wav_sample_t c1_min_sample;
