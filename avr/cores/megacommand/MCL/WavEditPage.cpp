@@ -57,8 +57,8 @@ void WavEditPage::cleanup() {
 bool WavEditPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     uint32_t length = selection_end - selection_start;
-    uint32_t offset = selection_start + (length / 2);
-    render(length, offset);
+    fov_offset = selection_start + (length / 2);
+    render(length, fov_offset);
 
     return true;
   }
