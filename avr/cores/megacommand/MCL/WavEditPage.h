@@ -15,19 +15,19 @@
 class WavEditPage : public LightPage {
 public:
   Wav wav_file;
-  uint32_t selection_start;
-  uint32_t selection_end;
 
-  uint32_t start;
-  uint32_t end;
-  int32_t offset;
+  int32_t selection_start;
+  int32_t selection_end;
 
-  uint32_t samples_per_pixel;
+  int32_t  fov_offset;
+  uint32_t fov_length;
+  uint32_t fov_samples_per_pixel;
+  static constexpr uint8_t fov_w = 96;
+  static constexpr uint8_t fov_h = 32;
 
-  static constexpr uint8_t draw_w = 96;
-  static constexpr uint8_t draw_h = 32;
 
-  int8_t wav_buf[2][draw_w][2];
+  int8_t wav_buf[2][fov_w][2];
+
 
   uint8_t draw_mode = WAV_DRAW_STEREO;
 
@@ -40,8 +40,7 @@ public:
   void open(char *file);
   void init();
   void loop();
-  void render(uint32_t sample_start, uint32_t sample_end, int32_t sample_offset,
-              uint32_t samples_per_pixel);
+  void render(uint32_t length, int32_t sample_offset);
   void cleanup();
   void draw_wav();
 
