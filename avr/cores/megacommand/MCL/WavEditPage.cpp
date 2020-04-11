@@ -235,7 +235,7 @@ uint8_t WavEditPage::get_selection_width() { return encoders[1]->cur; }
 
 wav_sample_t WavEditPage::get_selection_sample_start() {
   wav_sample_t sample_start;
-  int32_t pos = selection_start + fov_offset - (fov_length / 2);
+  int32_t pos = selection_start;
   if (pos < 0) {
     sample_start.pos = 0;
   } else {
@@ -252,7 +252,7 @@ wav_sample_t WavEditPage::get_selection_sample_end() {
       (wav_file.header.fmt.bitRate / 8);
 
   wav_sample_t sample_end;
-  sample_end.pos = selection_end + fov_offset  - (fov_length / 2);
+  sample_end.pos = selection_end;
   if (sample_end.pos > sampleLength) {
     sample_end.pos = sampleLength;
   }
