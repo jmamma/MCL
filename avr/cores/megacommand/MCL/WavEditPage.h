@@ -22,7 +22,7 @@ public:
   int32_t  fov_offset;
   uint32_t fov_length;
   uint32_t fov_samples_per_pixel;
-  static constexpr uint8_t fov_w = 96;
+  static constexpr uint8_t fov_w = 86;
   static constexpr uint8_t fov_h = 32;
 
 

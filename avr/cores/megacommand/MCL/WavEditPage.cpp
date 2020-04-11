@@ -113,7 +113,7 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
   for (uint8_t n = 0; n < fov_w; n++) {
     // Check that we're not searching for -ve sample index space.
     if (sample_index < (fov_length / 2) + sample_offset) {
-      if (sample_index  < 0) {
+      if ((sample_index < 0) || (sample_index > sampleLength)) {
         wav_buf[0][n][0] = WAV_NO_VAL;
         wav_buf[0][n][1] = WAV_NO_VAL;
         wav_buf[1][n][0] = WAV_NO_VAL;
@@ -335,13 +335,16 @@ void WavEditPage::display() {
       } else {
         color = WHITE;
       }
+ 
+      //Draw axis
+      if (wav_buf[c][n][0] != WAV_NO_VAL) { oled_display.drawPixel(n, axis_y, color); }
 
-      oled_display.drawPixel(n, axis_y, color);
-
+      //Draw sampled waveform
       if (fov_samples_per_pixel > 1) {
         oled_display.drawLine(n, axis_y - wav_buf[c][n][0], n,
                               axis_y - wav_buf[c][n][1], color);
       } else {
+      //Draw real waveform.
         int8_t val = 0;
         if (abs(wav_buf[c][n][1]) > abs(wav_buf[c][n][0])) {
           val = wav_buf[c][n][1];
@@ -369,8 +372,40 @@ void WavEditPage::display() {
   }
   wav_sample_t current_sample = get_selection_sample_start();
 
-  oled_display.setCursor(100, 26);
+  float seconds = current_sample.pos / (float)wav_file.header.fmt.sampleRate;
+  int16_t minutes = seconds / 60;
+  int16_t ms = ((float) seconds - int(seconds)) * 1000;
+
+  char str[10];
+  str[9] = '\0';
+  strncpy(str,wav_file.filename,9);
+  oled_display.setCursor(90, 6);
+  oled_display.print(str);
+
+
+  oled_display.setCursor(90, 18);
+
+  uint16_t sample_rate = (wav_file.header.fmt.sampleRate / 1000);
+  oled_display.print(sample_rate);
+  oled_display.print(".");
+
+  uint8_t decimal = ((((float) wav_file.header.fmt.sampleRate / (float) 1000) - (float) sample_rate) * (float) 10.0) + 0.5;
+  oled_display.print(decimal);
+  oled_display.print("k ");
+  oled_display.print(wav_file.header.fmt.numChannels);
+  oled_display.print("CH");
+
+  oled_display.setCursor(90, 24);
   oled_display.print(current_sample.pos);
+
+  oled_display.setCursor(90, 30);
+
+  oled_display.print(minutes);
+  oled_display.print(":");
+  oled_display.print(int(seconds));
+  oled_display.print(":");
+  oled_display.print(ms);
+
   oled_display.setFont(oldfont);
   oled_display.display();
 
