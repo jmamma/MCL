@@ -34,7 +34,6 @@ void WavEditPage::init() {
   selection_start = fov_offset - max_visible_length / 2;
   selection_end = fov_offset + max_visible_length / 2;
 
-
   encoders[0]->cur = 64;
   encoders[0]->old = 64;
   encoders[1]->cur = 64;
@@ -90,15 +89,13 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
   wav_sample_t c1_min_sample;
   wav_sample_t c1_max_sample;
 
-
   fov_samples_per_pixel = length / fov_w;
 
   if (fov_samples_per_pixel < 1) {
-      fov_samples_per_pixel = 1;
-      fov_length = fov_w;
-  }
-  else {
-  fov_length = length;
+    fov_samples_per_pixel = 1;
+    fov_length = fov_w;
+  } else {
+    fov_length = length;
   }
 
   int32_t sample_index = sample_offset - (length / 2);
@@ -108,7 +105,6 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
   if (draw_mode == WAV_DRAW_STEREO) {
     scalar /= 2;
   }
-
 
   for (uint8_t n = 0; n < fov_w; n++) {
     // Check that we're not searching for -ve sample index space.
@@ -120,9 +116,8 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
         wav_buf[1][n][1] = WAV_NO_VAL;
 
       } else {
-        wav_file.find_peaks(fov_samples_per_pixel, sample_index,
-                            &c0_max_sample, &c0_min_sample, &c1_max_sample,
-                            &c1_min_sample);
+        wav_file.find_peaks(fov_samples_per_pixel, sample_index, &c0_max_sample,
+                            &c0_min_sample, &c1_max_sample, &c1_min_sample);
         wav_buf[0][n][0] = (float)c0_max_sample.val * scalar;
         wav_buf[0][n][1] = (float)c0_min_sample.val * scalar;
         if (wav_file.header.fmt.numChannels < 2) {
@@ -150,7 +145,8 @@ void WavEditPage::loop() {
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
         (wav_file.header.fmt.bitRate / 8);
 
-    int32_t diff = (encoders[0]->cur - encoders[0]->old) * fov_samples_per_pixel;
+    int32_t diff =
+        (encoders[0]->cur - encoders[0]->old) * fov_samples_per_pixel;
 
     if ((int32_t)selection_start + diff < 0) {
       selection_start = 0;
@@ -171,7 +167,8 @@ void WavEditPage::loop() {
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
         (wav_file.header.fmt.bitRate / 8);
 
-    int32_t diff = (encoders[1]->cur - encoders[1]->old) * fov_samples_per_pixel;
+    int32_t diff =
+        (encoders[1]->cur - encoders[1]->old) * fov_samples_per_pixel;
 
     if (selection_end + diff > sampleLength) {
       selection_end = sampleLength;
@@ -207,21 +204,24 @@ void WavEditPage::loop() {
     if (sampleLength < max_visible_length) {
       max_visible_length = sampleLength;
     }
-   uint32_t length;
+    uint32_t length;
 
-   if (diff < 0) {
-     length = fov_length * 2;
-   }
-   if (diff > 0) {
-     length = fov_length / 2;
-   }
+    if (diff < 0) {
+      length = fov_length * 2;
+    }
+    if (diff > 0) {
+      length = fov_length / 2;
+    }
 
-   if (length < fov_w) { length = fov_w; }
-   if (length > max_visible_length) { length = max_visible_length; }
-   render(length, fov_offset);
-   encoders[3]->cur = 64;
-   encoders[3]->old = 64;
-
+    if (length < fov_w) {
+      length = fov_w;
+    }
+    if (length > max_visible_length) {
+      length = max_visible_length;
+    }
+    render(length, fov_offset);
+    encoders[3]->cur = 64;
+    encoders[3]->old = 64;
   }
 }
 
@@ -276,8 +276,8 @@ void WavEditPage::display() {
 
   bool draw_selection = true;
 
-  int32_t start =(int32_t) fov_offset - (int32_t) (fov_length / 2);
-  int32_t end = (int32_t) fov_offset + (int32_t) (fov_length / 2);
+  int32_t start = (int32_t)fov_offset - (int32_t)(fov_length / 2);
+  int32_t end = (int32_t)fov_offset + (int32_t)(fov_length / 2);
 
   DEBUG_DUMP(selection_start);
   DEBUG_DUMP(start);
@@ -335,16 +335,18 @@ void WavEditPage::display() {
       } else {
         color = WHITE;
       }
- 
-      //Draw axis
-      if (wav_buf[c][n][0] != WAV_NO_VAL) { oled_display.drawPixel(n, axis_y, color); }
 
-      //Draw sampled waveform
+      // Draw axis
+      if (wav_buf[c][n][0] != WAV_NO_VAL) {
+        oled_display.drawPixel(n, axis_y, color);
+      }
+
+      // Draw sampled waveform
       if (fov_samples_per_pixel > 1) {
         oled_display.drawLine(n, axis_y - wav_buf[c][n][0], n,
                               axis_y - wav_buf[c][n][1], color);
       } else {
-      //Draw real waveform.
+        // Draw real waveform.
         int8_t val = 0;
         if (abs(wav_buf[c][n][1]) > abs(wav_buf[c][n][0])) {
           val = wav_buf[c][n][1];
@@ -374,31 +376,38 @@ void WavEditPage::display() {
 
   float seconds = current_sample.pos / (float)wav_file.header.fmt.sampleRate;
   int16_t minutes = seconds / 60;
-  int16_t ms = ((float) seconds - int(seconds)) * 1000;
+  int16_t ms = ((float)seconds - int(seconds)) * 1000;
 
   char str[10];
-  str[9] = '\0';
-  strncpy(str,wav_file.filename,9);
-  oled_display.setCursor(90, 6);
+  uint8_t i = 0;
+  for (i = 0; i < 10 && wav_file.filename[i] != '.'; i++) {
+    str[i] = wav_file.filename[i];
+  }
+  str[i] = '\0';
+  oled_display.setCursor(88, 6);
   oled_display.print(str);
 
-
-  oled_display.setCursor(90, 18);
+  oled_display.setCursor(88, 18);
 
   uint16_t sample_rate = (wav_file.header.fmt.sampleRate / 1000);
   oled_display.print(sample_rate);
   oled_display.print(".");
 
-  uint8_t decimal = ((((float) wav_file.header.fmt.sampleRate / (float) 1000) - (float) sample_rate) * (float) 10.0) + 0.5;
+  uint8_t decimal = ((((float)wav_file.header.fmt.sampleRate / (float)1000) -
+                      (float)sample_rate) *
+                     (float)10.0) +
+                    0.5;
   oled_display.print(decimal);
   oled_display.print("k ");
-  oled_display.print(wav_file.header.fmt.numChannels);
-  oled_display.print("CH");
 
-  oled_display.setCursor(90, 24);
+  oled_display.print(wav_file.header.fmt.bitRate);
+  oled_display.print("/");
+  oled_display.print(wav_file.header.fmt.numChannels);
+
+  oled_display.setCursor(88, 24);
   oled_display.print(current_sample.pos);
 
-  oled_display.setCursor(90, 30);
+  oled_display.setCursor(88, 30);
 
   oled_display.print(minutes);
   oled_display.print(":");
