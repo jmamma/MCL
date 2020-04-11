@@ -113,7 +113,7 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
   for (uint8_t n = 0; n < fov_w; n++) {
     // Check that we're not searching for -ve sample index space.
     if (sample_index < (fov_length / 2) + sample_offset) {
-      if ((sample_index < 0) || (sample_index > sampleLength)) {
+      if ((sample_index < 0) || (sample_index >= sampleLength)) {
         wav_buf[0][n][0] = WAV_NO_VAL;
         wav_buf[0][n][1] = WAV_NO_VAL;
         wav_buf[1][n][0] = WAV_NO_VAL;
