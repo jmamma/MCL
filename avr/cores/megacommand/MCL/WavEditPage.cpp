@@ -1,6 +1,21 @@
 #include "MCL.h"
 #include "WavEditPage.h"
 
+MCLEncoder wav_menu_value_encoder(0, 16, ENCODER_RES_PAT);
+MCLEncoder wav_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
+MenuPage<9> wav_menu_page(&wav_menu_layout, &wav_menu_value_encoder, &wav_menu_entry_encoder);
+
+const menu_t<4> wav_menu_layout PROGMEM = {
+    "STP",
+    {
+        {"CLEAR:", 0, 2, 2, (uint8_t *)&opt_clear_step, (Page *)NULL, opt_clear_step_locks_handler, { {0, "--",}, {1, "LCKS"}}},
+        {"COPY STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_copy_step_handler, {}},
+        {"PASTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_paste_step_handler, {}},
+        {"MUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_mute_step_handler, {}},
+    },
+    step_menu_handler,
+};
+
 MCLEncoder wav_edit_param1(0, 128, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param2(0, 128, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param3(0, 255, ENCODER_RES_SYS);
@@ -34,14 +49,10 @@ void WavEditPage::init() {
   selection_start = fov_offset - max_visible_length / 2;
   selection_end = fov_offset + max_visible_length / 2;
 
-  encoders[0]->cur = 64;
-  encoders[0]->old = 64;
-  encoders[1]->cur = 64;
-  encoders[1]->old = 64;
-  encoders[2]->cur = 64;
-  encoders[2]->old = 64;
-  encoders[3]->cur = 64;
-  encoders[3]->old = 64;
+  for (uint8_t i = 0; i < 4; i++) {
+  encoders[i]->cur = 64;
+  encoders[i]->old = 64;
+  }
 
   render(max_visible_length, fov_offset);
 #ifdef OLED_DISPLAY
@@ -140,13 +151,13 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
 }
 
 void WavEditPage::loop() {
-  if (encoders[0]->hasChanged()) {
+  if (wav_edit_param3.hasChanged()) {
     uint32_t sampleLength =
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
         (wav_file.header.fmt.bitRate / 8);
 
     int32_t diff =
-        (encoders[0]->cur - encoders[0]->old) * fov_samples_per_pixel;
+        (wav_edit_param3.cur - wav_edit_param3.old) * fov_samples_per_pixel;
 
     if ((int32_t)selection_start + diff < 0) {
       selection_start = 0;
@@ -158,17 +169,17 @@ void WavEditPage::loop() {
         selection_end += diff;
       }
     }
-    encoders[0]->cur = 64;
-    encoders[0]->old = 64;
+    wav_edit_param3.cur = 64;
+    wav_edit_param3.old = 64;
   }
 
-  if (encoders[1]->hasChanged()) {
+  if (wav_edit_param4.hasChanged()) {
     uint32_t sampleLength =
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
         (wav_file.header.fmt.bitRate / 8);
 
     int32_t diff =
-        (encoders[1]->cur - encoders[1]->old) * fov_samples_per_pixel;
+        (wav_edit_param4.cur - wav_edit_param4.old) * fov_samples_per_pixel;
 
     if (selection_end + diff > sampleLength) {
       selection_end = sampleLength;
@@ -177,22 +188,22 @@ void WavEditPage::loop() {
     } else {
       selection_end += diff;
     }
-    encoders[1]->cur = 64;
-    encoders[1]->old = 64;
+    wav_edit_param4.cur = 64;
+    wav_edit_param4.old = 64;
   }
 
-  if (encoders[2]->hasChanged()) {
+  if (wav_edit_param1.hasChanged()) {
     // Horizontal translation
-    int16_t diff = encoders[2]->cur - encoders[2]->old;
+    int16_t diff = wav_edit_param1.cur - wav_edit_param1.old;
     fov_offset += diff * fov_samples_per_pixel;
 
     render(fov_length, fov_offset);
-    encoders[2]->cur = 64;
-    encoders[2]->old = 64;
+    wav_edit_param1.cur = 64;
+    wav_edit_param1.old = 64;
   }
-  if (encoders[3]->hasChanged()) {
+  if (wav_edit_param2.hasChanged()) {
 
-    int16_t diff = encoders[3]->cur - encoders[3]->old;
+    int16_t diff = wav_edit_param2.cur - wav_edit_param2.old;
 
     uint32_t sampleLength =
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
@@ -220,18 +231,18 @@ void WavEditPage::loop() {
       length = max_visible_length;
     }
     render(length, fov_offset);
-    encoders[3]->cur = 64;
-    encoders[3]->old = 64;
+    wav_edit_param2.cur = 64;
+    wav_edit_param2.old = 64;
   }
 }
 
-uint8_t WavEditPage::get_selection_start() { return encoders[0]->cur; }
+uint8_t WavEditPage::get_selection_start() { return wav_edit_param3.cur; }
 
 uint8_t WavEditPage::get_selection_end() {
-  return encoders[0]->cur + encoders[1]->cur;
+  return wav_edit_param3.cur + wav_edit_param4.cur;
 }
 
-uint8_t WavEditPage::get_selection_width() { return encoders[1]->cur; }
+uint8_t WavEditPage::get_selection_width() { return wav_edit_param4.cur; }
 
 wav_sample_t WavEditPage::get_selection_sample_start() {
   wav_sample_t sample_start;
