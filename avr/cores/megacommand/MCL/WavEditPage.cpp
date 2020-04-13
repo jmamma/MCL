@@ -3,18 +3,23 @@
 
 MCLEncoder wav_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wav_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<9> wav_menu_page(&wav_menu_layout, &wav_menu_value_encoder, &wav_menu_entry_encoder);
 
-const menu_t<4> wav_menu_layout PROGMEM = {
-    "STP",
+const menu_t<1> wav_menu_layout PROGMEM = {
+    "WAV",
     {
-        {"CLEAR:", 0, 2, 2, (uint8_t *)&opt_clear_step, (Page *)NULL, opt_clear_step_locks_handler, { {0, "--",}, {1, "LCKS"}}},
-        {"COPY STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_copy_step_handler, {}},
-        {"PASTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_paste_step_handler, {}},
-        {"MUTE STEP", 0, 0, 0, (uint8_t *) NULL, (Page *)NULL, opt_mute_step_handler, {}},
+        {"CH:", 0, 3, 3, (uint8_t *)&wav_edit_page.draw_mode, (Page *)NULL, NULL,
+         {{
+              0,
+              "LEFT",
+          },
+          {1, "RIGHT"},
+          {2, "STEREO"}}},
     },
-    step_menu_handler,
+    NULL,
 };
+
+MenuPage<1> wav_menu_page(&wav_menu_layout, &wav_menu_value_encoder,
+                          &wav_menu_entry_encoder);
 
 MCLEncoder wav_edit_param1(0, 128, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param2(0, 128, ENCODER_RES_SYS);
@@ -50,8 +55,8 @@ void WavEditPage::init() {
   selection_end = fov_offset + max_visible_length / 2;
 
   for (uint8_t i = 0; i < 4; i++) {
-  encoders[i]->cur = 64;
-  encoders[i]->old = 64;
+    encoders[i]->cur = 64;
+    encoders[i]->old = 64;
   }
 
   render(max_visible_length, fov_offset);
@@ -79,6 +84,21 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    if (!show_wav_menu) {
+      encoders[0] = &wav_menu_value_encoder;
+      encoders[1] = &wav_menu_entry_encoder;
+      show_wav_menu = true;
+      wav_menu_page.init();
+    }
+    return true;
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    if (show_wav_menu) {
+      encoders[0] = &wav_edit_param1;
+      encoders[1] = &wav_edit_param2;
+      show_wav_menu = false;
+      wav_menu_page.enter();
+    }
     return true;
   }
 
@@ -151,6 +171,10 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
 }
 
 void WavEditPage::loop() {
+  if (show_wav_menu) {
+    wav_menu_page.loop();
+    return;
+  }
   if (wav_edit_param3.hasChanged()) {
     uint32_t sampleLength =
         (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
@@ -383,6 +407,7 @@ void WavEditPage::display() {
       axis_y += fov_h / 2;
     }
   }
+
   wav_sample_t current_sample = get_selection_sample_start();
 
   float seconds = current_sample.pos / (float)wav_file.header.fmt.sampleRate;
@@ -395,38 +420,44 @@ void WavEditPage::display() {
     str[i] = wav_file.filename[i];
   }
   str[i] = '\0';
-  oled_display.setCursor(88, 6);
-  oled_display.print(str);
 
-  oled_display.setCursor(88, 18);
+  if (show_wav_menu) {
+    wav_menu_page.draw_menu(128 - 40, 8, 40);
+  } else {
 
-  uint16_t sample_rate = (wav_file.header.fmt.sampleRate / 1000);
-  oled_display.print(sample_rate);
-  oled_display.print(".");
+    oled_display.setCursor(88, 6);
+    oled_display.print(str);
 
-  uint8_t decimal = ((((float)wav_file.header.fmt.sampleRate / (float)1000) -
-                      (float)sample_rate) *
-                     (float)10.0) +
-                    0.5;
-  oled_display.print(decimal);
-  oled_display.print("k ");
+    oled_display.setCursor(88, 18);
 
-  oled_display.print(wav_file.header.fmt.bitRate);
-  oled_display.print("/");
-  oled_display.print(wav_file.header.fmt.numChannels);
+    uint16_t sample_rate = (wav_file.header.fmt.sampleRate / 1000);
+    oled_display.print(sample_rate);
+    oled_display.print(".");
 
-  oled_display.setCursor(88, 24);
-  oled_display.print(current_sample.pos);
+    uint8_t decimal = ((((float)wav_file.header.fmt.sampleRate / (float)1000) -
+                        (float)sample_rate) *
+                       (float)10.0) +
+                      0.5;
+    oled_display.print(decimal);
+    oled_display.print("k ");
 
-  oled_display.setCursor(88, 30);
+    oled_display.print(wav_file.header.fmt.bitRate);
+    oled_display.print("/");
+    oled_display.print(wav_file.header.fmt.numChannels);
 
-  oled_display.print(minutes);
-  oled_display.print(":");
-  oled_display.print(int(seconds));
-  oled_display.print(":");
-  oled_display.print(ms);
+    oled_display.setCursor(88, 24);
+    oled_display.print(current_sample.pos);
 
+    oled_display.setCursor(88, 30);
+
+    oled_display.print(minutes);
+    oled_display.print(":");
+    oled_display.print(int(seconds));
+    oled_display.print(":");
+    oled_display.print(ms);
+  }
   oled_display.setFont(oldfont);
+
   oled_display.display();
 
 #endif

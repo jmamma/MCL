@@ -14,7 +14,7 @@
 
 extern MCLEncoder wav_menu_value_encoder;
 extern MCLEncoder wav_menu_entry_encoder;
-extern MenuPage<4> wav_menu_page;
+extern MenuPage<1> wav_menu_page;
 
 class WavEditPage : public LightPage {
 public:
