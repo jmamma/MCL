@@ -64,8 +64,6 @@ void MCL::setup() {
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
-  wav_edit_page.open("test24.wav");
-  GUI.setPage(&wav_edit_page);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
