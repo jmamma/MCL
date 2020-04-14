@@ -336,8 +336,8 @@ void WavEditPage::display() {
   byte_rate = 1;
   for (i = 0; i < wav_file.header.smpl.cSampleLoops; i++) {
 
-    uint32_t loop_start = wav_file.header.smpl.loops[i].dwStart / byte_rate;
-    uint32_t loop_end = wav_file.header.smpl.loops[i].dwEnd / byte_rate;
+    int32_t loop_start = wav_file.header.smpl.loops[i].dwStart / byte_rate;
+    int32_t loop_end = wav_file.header.smpl.loops[i].dwEnd / byte_rate;
 
     if ((loop_start >= start) && (loop_start <= end)) {
       uint8_t loop_x = (loop_start - start) / fov_samples_per_pixel;
