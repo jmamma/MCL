@@ -407,7 +407,31 @@ void WavEditPage::display() {
       axis_y += fov_h / 2;
     }
   }
+  uint8_t i = 0;
+  uint8_t byte_rate = wav_file.header.fmt.numChannels * (wav_file.header.fmt.bitRate / 8);
 
+  byte_rate = 1;
+  for (i = 0; i < wav_file.header.smpl.cSampleLoops; i++) {
+
+    uint32_t loop_start = wav_file.header.smpl.loops[i].dwStart / byte_rate;
+    uint32_t loop_end = wav_file.header.smpl.loops[i].dwEnd / byte_rate;
+
+    if ((loop_start >= start) && (loop_start <= end)) {
+      uint8_t loop_x = (loop_start - start) / fov_samples_per_pixel;
+      if ((loop_start >= selection_x1) || (loop_start <= selection_x2)) {
+        oled_display.drawLine(loop_x, 0, loop_x, 32, BLACK);
+      }
+      mcl_gui.draw_vertical_dashline(loop_x, 0 , 32);
+    }
+    if ((loop_end >= start) && (loop_end <= end)) {
+      uint8_t loop_x = (loop_end - start) / fov_samples_per_pixel;
+      if ((loop_end >= selection_x1) || (loop_end <= selection_x2)) {
+        oled_display.drawLine(loop_x, 0, loop_x, 32, BLACK);
+      }
+      mcl_gui.draw_vertical_dashline(loop_x, 0 , 32);
+    }
+
+  }
   wav_sample_t current_sample = get_selection_sample_start();
 
   float seconds = current_sample.pos / (float)wav_file.header.fmt.sampleRate;
@@ -415,11 +439,12 @@ void WavEditPage::display() {
   int16_t ms = ((float)seconds - int(seconds)) * 1000;
 
   char str[10];
-  uint8_t i = 0;
   for (i = 0; i < 10 && wav_file.filename[i] != '.'; i++) {
     str[i] = wav_file.filename[i];
   }
   str[i] = '\0';
+
+
 
   if (show_wav_menu) {
     wav_menu_page.draw_menu(128 - 40, 8, 40);
