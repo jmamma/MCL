@@ -62,7 +62,7 @@ void SoundBrowserPage::save_sound() {
   m_strncpy_p(&sound_name[5], tmp, 3);
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
-    char temp_entry[16];
+    char temp_entry[FILE_ENTRY_SIZE];
     sprintf(temp_entry, "%s.snd", sound_name);
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
     sound.fetch_sound(MD.currentTrack);
@@ -76,9 +76,9 @@ void SoundBrowserPage::load_sound() {
 
   grid_page.prepare();
   if (file.isOpen()) {
-    char temp_entry[16];
+    char temp_entry[FILE_ENTRY_SIZE];
     MDSound sound;
-    file.getName(temp_entry, 16);
+    file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
     if (!sound.file.open(temp_entry, O_READ)) {
       gfx.alert("Error", "Opening");
@@ -99,8 +99,8 @@ void SoundBrowserPage::load_sound() {
 // send current selected wav file to slot
 void SoundBrowserPage::send_wav(int slot) {
   if (file.isOpen()) {
-    char temp_entry[16];
-    file.getName(temp_entry, 16);
+    char temp_entry[FILE_ENTRY_SIZE];
+    file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
     // TODO loop stuff? do we have info?
     midi_sds.sendWav(temp_entry, slot, /* show progress */ true);
@@ -113,7 +113,7 @@ void SoundBrowserPage::recv_wav(int slot) {
 
 
   if (mcl_gui.wait_for_input(wav_name, "Sample Name", 8)) {
-    char temp_entry[16];
+    char temp_entry[FILE_ENTRY_SIZE];
     strcpy(temp_entry, wav_name);
     strcat(temp_entry, ".wav");
     // TODO
