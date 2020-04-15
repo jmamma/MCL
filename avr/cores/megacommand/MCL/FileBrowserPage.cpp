@@ -15,6 +15,12 @@ void FileBrowserPage::setup() {
   sysex = &(Midi.midiSysex);
 }
 
+void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
+  uint32_t pos = BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+  volatile uint8_t *ptr = pos;
+  memcpy_bank1(entry, ptr, FILE_ENTRY_SIZE);
+}
+
 void FileBrowserPage::add_entry(const char *entry) {
   char buf[FILE_ENTRY_SIZE];
   m_strncpy(buf, entry, sizeof(buf));
@@ -192,9 +198,7 @@ void FileBrowserPage::display() {
     }
     char temp_entry[FILE_ENTRY_SIZE];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    volatile uint8_t *ptr =
-        (uint8_t *)BANK1_FILE_ENTRIES_START + entry_num * FILE_ENTRY_SIZE;
-    memcpy_bank1(temp_entry, ptr, FILE_ENTRY_SIZE);
+    get_entry(entry_num, temp_entry);
     oled_display.println(temp_entry);
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
@@ -220,12 +224,11 @@ void FileBrowserPage::display() {
   } else {
     GUI.put_string_at_fill(0, " ");
   }
-  char temp_entry[17];
+  char temp_entry[FILE_ENTRY_SIZE];
   uint16_t entry_num = encoders[1]->cur;
-  uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * FILE_ENTRY_SIZE;
-  volatile uint8_t *ptr = pos;
-  memcpy_bank1(temp_entry, ptr, FILE_ENTRY_SIZE);
-  temp_entry[FILE_ENTRY_SIZE] = '\0';
+  get_entry(entry_num, tempy_entry);
+  temp_entry[FILE_ENTRY_SIZE - 1] = '\0';
+
   GUI.put_string_at(1, temp_entry);
 
 #endif
@@ -346,9 +349,8 @@ void FileBrowserPage::_cd(const char *child) {
 
 void FileBrowserPage::_handle_filemenu() {
   char buf1[FILE_ENTRY_SIZE];
-  volatile uint8_t *ptr =
-      (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * FILE_ENTRY_SIZE;
-  memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
+
+  get_entry(encoders[1]->getValue(), buf1);
 
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
