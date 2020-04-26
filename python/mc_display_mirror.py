@@ -109,7 +109,7 @@ def main():
             for y in range(32):
                 for x in range(128):
                     yd = 32 - y - 1
-                    bit = (buf[x + ((yd/8) * 128)] >> (yd % 8)) & 0x01
+                    bit = (buf[x + (int(yd/8) * 128)] >> (yd % 8)) & 0x01
                     if bit > 0:
                         pygame.draw.rect(
                             screen, FG, [(x + 1) * w, (y + 1) * w, w, w])
