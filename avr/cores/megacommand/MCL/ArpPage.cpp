@@ -41,7 +41,7 @@ void ArpPage::loop() {
     seq_ptc_page.render_arp();
     }
   }
-  if (encoders[1]->hasChanged() || encoders[2]->hasChanged() ||
+  if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
     seq_ptc_page.render_arp();
   }
