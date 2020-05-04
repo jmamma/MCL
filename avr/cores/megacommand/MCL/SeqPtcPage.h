@@ -69,11 +69,11 @@ public:
       : SeqPage(e1, e2, e3, e4) {}
   uint8_t calc_poly_count();
   uint8_t seq_ext_pitch(uint8_t note_num);
-  uint8_t get_machine_pitch(uint8_t track, uint8_t pitch);
+  uint8_t get_machine_pitch(uint8_t track, uint8_t note_num);
   uint8_t get_next_voice(uint8_t pitch);
-  uint8_t calc_pitch(uint8_t note_num);
+  uint8_t calc_scale_note(uint8_t note_num);
 
-  void trig_md(uint8_t pitch);
+  void trig_md(uint8_t note_num);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
