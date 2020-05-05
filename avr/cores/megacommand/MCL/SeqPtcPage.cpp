@@ -151,7 +151,9 @@ void SeqPtcPage::config() {
 
 void ptc_pattern_len_handler(Encoder *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if (SeqPage::midi_device == DEVICE_MD) {
+
 
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
@@ -159,7 +161,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
       }
     } else {
 
-      if (seq_ptc_page.poly_count > 1) {
+      if ((seq_ptc_page.poly_max > 1) && (is_poly)) {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_seq.md_tracks[c].set_length(enc_->cur);
@@ -381,7 +383,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
       }
     }
   }
-  // Reuse existing track for noew pitch
+  // Reuse existing track for new pitch
   for (uint8_t x = 0; x < 16 && voice == 255; x++) {
     if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
       if (count == poly_count) {
@@ -801,6 +803,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     queue_redraw();
   }
 
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -873,7 +877,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (midi_device == DEVICE_MD) {
 
-      if (poly_count > 1) {
+      if ((poly_max > 1) && (is_poly)) {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CLEAR ", "POLY TRACKS");
 #endif
