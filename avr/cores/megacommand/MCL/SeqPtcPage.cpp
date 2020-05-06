@@ -542,8 +542,7 @@ void SeqPtcPage::render_arp() {
   case ARP_RND:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[random(0, num_of_notes)];
-      arp_notes[arp_len++] =
-          calc_scale_note(note) + 12 * random(0, arp_oct.cur);
+      arp_notes[arp_len++] = note + 12 * random(0, arp_oct.cur);
     }
     break;
 
@@ -552,7 +551,7 @@ void SeqPtcPage::render_arp() {
   case ARP_UP:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     break;
@@ -561,7 +560,7 @@ void SeqPtcPage::render_arp() {
   case ARP_DOWN:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     break;
@@ -569,24 +568,24 @@ void SeqPtcPage::render_arp() {
   case ARP_UPDOWN:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     for (uint8_t i = 1; i < num_of_notes - 1; i++) {
       note = sort_down[i];
-      arp_notes[arp_len] = calc_scale_note(note);
+      arp_notes[arp_len] = note;
       arp_len++;
     }
     break;
   case ARP_DOWNUP:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     for (uint8_t i = 1; i < num_of_notes - 1; i++) {
       note = sort_up[i];
-      arp_notes[arp_len] = calc_scale_note(note);
+      arp_notes[arp_len] = note;
       arp_len++;
     }
 
@@ -594,24 +593,24 @@ void SeqPtcPage::render_arp() {
   case ARP_UPNDOWN:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[arp_len] = calc_scale_note(note);
+      arp_notes[arp_len] = note;
       arp_len++;
     }
     break;
   case ARP_DOWNNUP:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[i];
-      arp_notes[arp_len] = calc_scale_note(note);
+      arp_notes[arp_len] = note;
       arp_len++;
     }
     break;
@@ -623,7 +622,7 @@ void SeqPtcPage::render_arp() {
       } else {
         note = sort_up[b];
       }
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     break;
@@ -635,7 +634,7 @@ void SeqPtcPage::render_arp() {
       } else {
         note = sort_down[b];
       }
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     break;
@@ -647,7 +646,7 @@ void SeqPtcPage::render_arp() {
       } else {
         note = sort_up[b];
       }
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     b = 0;
@@ -658,20 +657,20 @@ void SeqPtcPage::render_arp() {
       } else {
         note = sort_up[b];
       }
-      arp_notes[i] = calc_scale_note(note);
+      arp_notes[i] = note;
       arp_len++;
     }
     break;
   case ARP_PINKUP:
     if (num_of_notes == 1) {
       note = sort_up[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
       note = sort_up[i];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
       note = sort_down[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
 
     break;
@@ -679,22 +678,22 @@ void SeqPtcPage::render_arp() {
   case ARP_PINKDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
       note = sort_down[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
     break;
 
   case ARP_THUMBUP:
     if (num_of_notes == 1) {
       note = sort_down[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
       note = sort_up[i];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
       note = sort_down[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
 
     break;
@@ -702,9 +701,9 @@ void SeqPtcPage::render_arp() {
   case ARP_THUMBDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
       note = sort_down[0];
-      arp_notes[arp_len++] = calc_scale_note(note);
+      arp_notes[arp_len++] = note;
     }
     break;
   }
