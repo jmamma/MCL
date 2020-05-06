@@ -88,6 +88,7 @@ void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
   seq_menu_page.menu.enable_entry(0, true);
+  seq_menu_page.menu.enable_entry(1, true);
   ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
   note_mask = 0;
@@ -153,7 +154,6 @@ void ptc_pattern_len_handler(Encoder *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if (SeqPage::midi_device == DEVICE_MD) {
-
 
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
       for (uint8_t c = 0; c < 16; c++) {
@@ -359,7 +359,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num) {
   uint8_t oct = note_num / size;
   note_num = note_num - oct * size;
 
-  return scales[ptc_param_scale.cur]->pitches[note_num] + oct * 12;
+  return scales[ptc_param_scale.cur]->pitches[note_num] + oct * 12 + key;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
@@ -955,8 +955,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t oct = 0;
   if (note_num >= NOTE_C2) {
     oct = (note_num / 12) - (NOTE_C2 / 12);
+  } else {
+    return;
   }
-  else { return; }
   uint8_t pitch = seq_ptc_page.calc_scale_note(note + oct * 12);
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
@@ -1019,8 +1020,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t oct = 0;
   if (note_num >= NOTE_C2) {
     oct = (note_num / 12) - (NOTE_C2 / 12);
-  }
-  else {
+  } else {
     return;
   }
   uint8_t pitch = seq_ptc_page.calc_scale_note(note + oct * 12);

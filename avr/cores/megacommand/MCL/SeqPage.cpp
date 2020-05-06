@@ -52,11 +52,12 @@ void SeqPage::init() {
 #endif
   toggle_device = true;
   seq_menu_page.menu.enable_entry(0, false);
-  if (mcl_cfg.track_select == 1) {
   seq_menu_page.menu.enable_entry(1, false);
+  if (mcl_cfg.track_select == 1) {
+  seq_menu_page.menu.enable_entry(2, false);
   }
   else {
-  seq_menu_page.menu.enable_entry(1, true);
+  seq_menu_page.menu.enable_entry(2, true);
   }
 }
 
@@ -912,14 +913,14 @@ void step_menu_handler() {
 
 void SeqPage::config_as_trackedit() {
 
-  seq_menu_page.menu.enable_entry(3, true);
-  seq_menu_page.menu.enable_entry(4, false);
+  seq_menu_page.menu.enable_entry(4, true);
+  seq_menu_page.menu.enable_entry(5, false);
 }
 
 void SeqPage::config_as_lockedit() {
 
-  seq_menu_page.menu.enable_entry(3, false);
-  seq_menu_page.menu.enable_entry(4, true);
+  seq_menu_page.menu.enable_entry(4, false);
+  seq_menu_page.menu.enable_entry(5, true);
 }
 
 void SeqPage::loop() {

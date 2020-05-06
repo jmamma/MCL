@@ -55,6 +55,7 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
+  uint8_t key = 0;
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
   uint8_t last_midi_state = 0;
