@@ -34,7 +34,7 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, (uint8_t *)icon_step},
     {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t *)icon_rec},
     {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
-    {"CHROMA", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
+    {"CHROMATIC", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
 #ifdef SOUND_PAGE
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, (uint8_t *)icon_sound},
 #endif
@@ -376,7 +376,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     trig_interface.off();
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
