@@ -1,3 +1,21 @@
+MCL 2.62 08/05/202
+
+Changes:
+
+  - Add transpose parameter to Chromatic Page. Accessible from Track Select Menu.
+
+Bug Fixes:
+
+  - Chromatic Page
+    * Note to PTC mapping was incorrect. (Wrong note displayed on keyboard,
+	machine base pitch not taken into consideration)
+    * Arpeggiator and Scales broken when using EXT MIDI. Fixed.
+    * Ext MIDI now responds from NOTE C2 and upwards. Scales are mapped across each note of keyboard and root is at C2.
+    * Poly config saved when exiting poly select page.
+    * Notes out of machine range, now result in silence, as opposed to playing highest note.
+    * Some tweaks to behaviour of the arpeggiator GUI.
+    * Clearing or adjusting length of poly tracks was broken.
+
 MCL 2.61 16/03/2020
 
 Changes:
