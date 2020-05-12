@@ -10,9 +10,9 @@ void MCLActions::setup() {
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
   for (uint8_t i = 0; i < NUM_TRACKS; i++) {
-     next_transitions[i] = 0;
-     send_machine[i] = 0;
-     transition_level[i] = 0;
+    next_transitions[i] = 0;
+    send_machine[i] = 0;
+    transition_level[i] = 0;
   }
 }
 
@@ -28,31 +28,32 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_ext(int curtrack, int column, int row,
+                                     A4Sound *analogfour_sound,
+                                     EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
   A4Track *a4_track = (A4Track *)empty_track;
   ExtTrack *ext_track = (ExtTrack *)empty_track;
-    if (Analog4.connected) {
+  if (Analog4.connected) {
 
-      if (a4_track->load_track_from_grid(column, row, 0)) {
-        memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
+    if (a4_track->load_track_from_grid(column, row, 0)) {
+      memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
 
-        grid_page.active_slots[column] = row;
-        return a4_track->place_track_in_sysex(curtrack, column,
-                                              analogfour_sound);
-      }
-    } else {
-      if (ext_track->load_track_from_grid(column, row, 0)) {
-        memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
-        grid_page.active_slots[column] = row;
-        return ext_track->place_track_in_sysex(curtrack, column);
-      }
+      grid_page.active_slots[column] = row;
+      return a4_track->place_track_in_sysex(curtrack, column, analogfour_sound);
     }
-
+  } else {
+    if (ext_track->load_track_from_grid(column, row, 0)) {
+      memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
+      grid_page.active_slots[column] = row;
+      return ext_track->place_track_in_sysex(curtrack, column);
+    }
+  }
 }
 
-bool MCLActions::load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_md(int curtrack, int column, int row,
+                                    EmptyTrack *empty_track) {
 
   MDTrack *md_track = (MDTrack *)empty_track;
   DEBUG_PRINT_FN();
@@ -64,7 +65,6 @@ bool MCLActions::load_track_from_md(int curtrack, int column, int row, EmptyTrac
       md_track->load_seq_data(curtrack);
     }
   }
-
 }
 
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
@@ -111,7 +111,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 #endif
   bool storepattern = false;
 
-  if (MidiClock.state == 2) { merge = 0; }
+  if (MidiClock.state == 2) {
+    merge = 0;
+  }
   if (save_md_tracks) {
     if (merge > 0) {
       DEBUG_PRINTLN("fetching pattern");
@@ -149,7 +151,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         first_note = i;
       }
       if (i < NUM_MD_TRACKS) {
-        md_track->store_track_in_grid(i, grid_page.getRow(), i, false, merge, true);
+        md_track->store_track_in_grid(i, grid_page.getRow(), i, false, merge,
+                                      true);
       }
 #ifdef EXT_TRACKS
       else {
@@ -190,7 +193,6 @@ void MCLActions::write_tracks(int column, int row) {
   MD.getBlockingKit(0x7F);
 
   send_tracks_to_devices();
-
 }
 
 void MCLActions::prepare_next_chain(int row) {
@@ -247,8 +249,8 @@ void MCLActions::prepare_next_chain(int row) {
 #ifdef EXT_TRACKS
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
-            DEBUG_PRINTLN("about to load");
-            DEBUG_PRINTLN(n);
+      DEBUG_PRINTLN("about to load");
+      DEBUG_PRINTLN(n);
       if (a4_track->load_track_from_grid(n, row, 0)) {
         a4_track->store_in_mem(n);
         DEBUG_PRINTLN("checking a4 load");
@@ -304,6 +306,7 @@ void MCLActions::send_tracks_to_devices() {
   A4Sound sound_array[4];
 #endif
 
+  MDTrack md_temp_track;
   int curtrack = last_md_track;
 
   uint8_t i = 0;
@@ -343,8 +346,7 @@ void MCLActions::send_tracks_to_devices() {
         track = track - NUM_MD_TRACKS;
         mcl_seq.ext_tracks[track].buffer_notesoff();
         if (load_track_from_ext(track, i, grid_page.getRow(),
-                                  (A4Sound *)&sound_array[track],
-                                  &empty_track)) {
+                                (A4Sound *)&sound_array[track], &empty_track)) {
           if (Analog4.connected) {
             sound_array[track].workSpace = true;
             a4_send[track] = 1;
@@ -372,11 +374,11 @@ void MCLActions::send_tracks_to_devices() {
   /*Send the encoded kit to the MD via sysex*/
   uint16_t myclock = slowclock;
 
-  //md_setsysex_recpos(4, MD.kit.origPosition);
+  // md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
 
   //  mcl_seq.disable();
-  //md_set_kit(&MD.kit);
+  // md_set_kit(&MD.kit);
 
   // Send Analog4
 #ifdef EXT_TRACKS
@@ -389,12 +391,15 @@ void MCLActions::send_tracks_to_devices() {
     }
   }
 #endif
-  uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float) MidiUart.speed);
-  md_latency_ms+= 10;
+  uint16_t md_latency_ms =
+      10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
+  md_latency_ms += 10;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(md_latency_ms);
 
-  while (clock_diff(myclock,slowclock) < md_latency_ms) { GUI.loop(); };
+  while (clock_diff(myclock, slowclock) < md_latency_ms) {
+    GUI.loop();
+  };
 
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
     mcl_seq.md_tracks[i].mute_state = mute_states[i];
@@ -403,7 +408,7 @@ void MCLActions::send_tracks_to_devices() {
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
   if ((mcl_cfg.chain_mode == 0) || (mcl_cfg.chain_mode == 2)) {
-    next_transition = (uint16_t) -1;
+    next_transition = (uint16_t)-1;
     return;
   }
 
@@ -418,17 +423,31 @@ void MCLActions::send_tracks_to_devices() {
                                            sizeof(GridTrack) +
                                                sizeof(MDSeqTrackData) +
                                                sizeof(MDMachine))) {
+          //md_temp_track.load_from_mem(n);
 
+          if ((md_track->active != EMPTY_TRACK_TYPE)) {
+        //   &&   (memcmp(&(md_temp_track.machine), &(md_track->machine),
+         //             sizeof(MDMachine)) != 0)) {
+            mcl_actions.send_machine[n] = 0;
+          } else {
+            mcl_actions.send_machine[n] = 1;
+            DEBUG_PRINTLN("machines match");
+          }
           md_track->store_in_mem(n);
         }
       }
-      #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
       else {
         if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
           a4_track->store_in_mem(n);
+          if (a4_track->active != EMPTY_TRACK_TYPE) {
+            send_machine[n] = 0;
+          } else {
+            send_machine[n] = 1;
+          }
         }
       }
-      #endif
+#endif
       //  }
     }
   }
@@ -454,12 +473,13 @@ void MCLActions::send_tracks_to_devices() {
 #ifdef EXT_TRACKS
       else {
         if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].resolution == 2) {
-        next_transitions[n] = MidiClock.div16th_counter -
-                              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count) ;
-        }
-        else {
-        next_transitions[n] = MidiClock.div16th_counter -
-                              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count * 2) ;
+          next_transitions[n] =
+              MidiClock.div16th_counter -
+              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count);
+        } else {
+          next_transitions[n] =
+              MidiClock.div16th_counter -
+              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count * 2);
         }
       }
 #endif
@@ -506,19 +526,19 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 }
 
 void MCLActions::calc_next_transition() {
-  next_transition = (uint16_t) -1;
+  next_transition = (uint16_t)-1;
   bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-   if (grid_page.active_slots[n] >= 0) {
+    if (grid_page.active_slots[n] >= 0) {
       if ((chains[n].loops > 0) &&
           (chains[n].row != grid_page.active_slots[n])) {
         if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
-     DEBUG_PRINTLN(n);
-    DEBUG_PRINTLN(grid_page.active_slots[n]);
-    DEBUG_PRINTLN(chains[n].row);
-    DEBUG_PRINTLN(next_transitions[n]);
-    DEBUG_PRINTLN(" ");
+          DEBUG_PRINTLN(n);
+          DEBUG_PRINTLN(grid_page.active_slots[n]);
+          DEBUG_PRINTLN(chains[n].row);
+          DEBUG_PRINTLN(next_transitions[n]);
+          DEBUG_PRINTLN(" ");
           next_transition = next_transitions[n];
         }
       }
@@ -549,9 +569,10 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
           md_track->load_from_mem(n);
           md_latency +=
               calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
-           if (transition_level[n] == TRANSITION_MUTE || transition_level[n] == TRANSITION_UNMUTE) {
-              md_latency += 3;
-           }
+          if (transition_level[n] == TRANSITION_MUTE ||
+              transition_level[n] == TRANSITION_UNMUTE) {
+            md_latency += 3;
+          }
         }
       }
 #ifdef EXT_TRACKS
@@ -567,11 +588,8 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
 
   float bytes_per_second_uart1 = (float)MidiUart.speed / (float)10;
 
-
   float md_latency_in_seconds =
       (float)mcl_actions.md_latency / bytes_per_second_uart1;
-
-
 
   float div32th_per_second =
       ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)2;
@@ -636,7 +654,9 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
     if ((kit_->params[track][i] != machine->params[i]) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
       //       (mcl_seq.md_tracks[track].is_param(i)))) {
-      if (machine->params[i] != 255) { bytes += 3; }
+      if (machine->params[i] != 255) {
+        bytes += 3;
+      }
     }
   }
 
@@ -648,18 +668,17 @@ void MCLActions::md_set_kit(MDKit *kit_) {
 
   MD.setKitName((kit_->name));
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-  temp_track.get_machine_from_kit(n,n);
-  md_set_machine(n, &(temp_track.machine), NULL, true);
+    temp_track.get_machine_from_kit(n, n);
+    md_set_machine(n, &(temp_track.machine), NULL, true);
     MD.setTrackParam(n, 33, temp_track.machine.level);
   }
   md_set_fxs(kit_);
 
   if ((mcl_cfg.auto_save == 1)) {
-      MD.saveCurrentKit(MD.currentKit);
-      MD.loadKit(MD.currentKit);
+    MD.saveCurrentKit(MD.currentKit);
+    MD.loadKit(MD.currentKit);
   }
 }
-
 
 void MCLActions::md_set_fxs(MDKit *kit_) {
   for (uint8_t n = 0; n < 8; n++) {
@@ -726,7 +745,9 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
           ((i < 8) && (kit_->models[track] != machine->model))) {
         //   (mcl_seq.md_tracks[track].is_param(i)))) {
         // mcl_seq.md_tracks[track].params[i] = machine->params[i];
-        if (machine->params[i] != 255) { MD.setTrackParam(track, i, machine->params[i]); }
+        if (machine->params[i] != 255) {
+          MD.setTrackParam(track, i, machine->params[i]);
+        }
       }
     }
   }
