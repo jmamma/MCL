@@ -100,9 +100,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
 void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
                                  bool levels) {
-  //  if (active != MD_TRACK_TYPE) {
-  //   return;
-  //  }
+
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
     kit->levels[tracknumber] = machine.level;
@@ -236,6 +234,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
 
   if (active == EMPTY_TRACK_TYPE) {
     seq_data.length = 16;
+    machine.init();
   }
 
   return true;
