@@ -5,7 +5,6 @@ void GridWritePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  encoders[0]->cur = (int)MD.currentPattern / (int)16;
   encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
@@ -54,19 +53,8 @@ void GridWritePage::display() {
   GUI.setLine(GUI.LINE2);
   if (mcl_cfg.chain_mode > 0) {
     GUI.put_string_at(0, "CHAIN");
-  } else {
-    GUI.put_string_at(0, "W");
-
-    char str[5];
-
-    if (encoders[1]->getValue() < 16) {
-      MD.getPatternName(encoders[0]->getValue() * 16 + encoders[1]->getValue(),
-                        str);
-      GUI.put_string_at(2, str);
-    } else {
-      GUI.put_string_at(2, "OG");
-    }
   }
+
   uint8_t step_count =
       (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
       (64 *
