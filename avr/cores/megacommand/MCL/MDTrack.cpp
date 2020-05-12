@@ -144,6 +144,7 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 void MDTrack::init() {
   clear_track();
   machine.init();
+  seq_data.length = 16;
 }
 
 void MDTrack::clear_track() {
@@ -233,8 +234,7 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
   }
 
   if (active == EMPTY_TRACK_TYPE) {
-    seq_data.length = 16;
-    machine.init();
+    init();
   }
 
   return true;
