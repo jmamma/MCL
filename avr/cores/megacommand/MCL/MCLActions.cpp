@@ -9,6 +9,11 @@ void MCLActions::setup() {
   DEBUG_PRINTLN("mcl actions setup");
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
+  for (uint8_t i = 0; i < NUM_TRACKS; i++) {
+     next_transitions[i] = 0;
+     send_machine[i] = 0;
+     transition_level[i] = 0;
+  }
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
@@ -405,7 +410,6 @@ void MCLActions::send_tracks_to_devices() {
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
       // if (chains[n].active > 0) {
-
       DEBUG_PRINTLN("about to load");
       DEBUG_PRINTLN(chains[n].row);
       DEBUG_PRINTLN(n);
@@ -442,6 +446,7 @@ void MCLActions::send_tracks_to_devices() {
           len = 4;
         } */
       //  next_transitions[n] = next_transitions_old[n];
+      transition_level[n] = 0;
       if (n < NUM_MD_TRACKS) {
         next_transitions[n] =
             MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
