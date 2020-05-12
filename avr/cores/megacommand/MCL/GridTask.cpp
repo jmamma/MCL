@@ -290,7 +290,7 @@ void GridTask::run() {
               //  DEBUG_PRINTLN("storing");
               md_temp_track->load_from_mem(n);
 
-              if ((md_track->active != EMPTY_TRACK_TYPE) &&
+              if ((md_temp_track->active != EMPTY_TRACK_TYPE) &&
                   (memcmp(&(md_temp_track->machine), &(md_track->machine),
                           sizeof(MDMachine)) != 0)) {
                 mcl_actions.send_machine[n] = 0;
