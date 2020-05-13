@@ -233,7 +233,10 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
     return false;
   }
 
-  if (active == EMPTY_TRACK_TYPE) {
+  //Remove active == 255, once project spec has changed. This is a hotfix
+  //for bad track type set when clearing header.
+
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
     init();
   }
 
@@ -266,10 +269,14 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-  if (active == EMPTY_TRACK_TYPE) {
+
+  //Remove active == 255, once project spec has changed. This is a hotfix
+  //for bad track type set when clearing header.
+
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
     init();
-    return true;
   }
+
   if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
     DEBUG_PRINTLN("lock array size is wrong");
     return false;

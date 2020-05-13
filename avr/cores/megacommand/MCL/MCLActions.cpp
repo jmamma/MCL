@@ -63,6 +63,7 @@ bool MCLActions::load_track_from_md(int curtrack, int column, int row,
       grid_page.active_slots[column] = row;
       md_track->place_track_in_kit(curtrack, column, &(MD.kit));
       md_track->load_seq_data(curtrack);
+      md_track->store_in_mem(column);
     }
   }
 }
@@ -423,11 +424,10 @@ void MCLActions::send_tracks_to_devices() {
                                            sizeof(GridTrack) +
                                                sizeof(MDSeqTrackData) +
                                                sizeof(MDMachine))) {
-          //md_temp_track.load_from_mem(n);
+         md_temp_track.load_from_mem(n);
 
-          if ((md_track->active != EMPTY_TRACK_TYPE)) {
-        //   &&   (memcmp(&(md_temp_track.machine), &(md_track->machine),
-         //             sizeof(MDMachine)) != 0)) {
+          if ((md_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(md_temp_track.machine), &(md_track->machine),
+                     sizeof(MDMachine)) != 0)) {
             mcl_actions.send_machine[n] = 0;
           } else {
             mcl_actions.send_machine[n] = 1;
