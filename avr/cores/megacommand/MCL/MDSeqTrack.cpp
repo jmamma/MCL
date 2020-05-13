@@ -26,6 +26,7 @@ void MDSeqTrack::seq() {
       step_count = 0;
       iterations = 1;
       mute_until_start = false;
+      oneshot_mask = 0;
     }
   }
   if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&

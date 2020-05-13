@@ -21,6 +21,7 @@ void ExtSeqTrack::seq() {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
       step_count = 0;
+      //oneshot_mask = 0;
       mute_until_start = false;
     }
   }
