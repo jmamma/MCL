@@ -695,10 +695,10 @@ void GridPage::apply_slot_changes() {
         if (slot_clear == 1) {
           // Delete slot(s)
           grid.clear_slot(x + getCol(), y + getRow());
-          header.update_model(x + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
+          header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot chain data
-          slot.active = header.model[x + getCol()];
+          slot.active = header.track_type[x + getCol()];
           slot.store_track_in_grid(x + getCol(), y + getRow());
         }
       }
