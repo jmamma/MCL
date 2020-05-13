@@ -698,7 +698,7 @@ void GridPage::apply_slot_changes() {
           header.update_model(x + getCol(), EMPTY_TRACK_TYPE, DEVICE_NULL);
         } else if (slot_update == 1) {
           // Save slot chain data
-          slot.active = header.track_type[x + getCol()];
+          slot.active = header.model[x + getCol()];
           slot.store_track_in_grid(x + getCol(), y + getRow());
         }
       }
