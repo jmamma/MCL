@@ -6,7 +6,7 @@ bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
  active = EXT_TRACK_TYPE;
   return true;
 }
-bool ExtTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
+bool ExtTrack::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
   if (seq_data.resolution == 0) { seq_data.resolution = 1; }
   memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,

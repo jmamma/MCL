@@ -28,9 +28,7 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(int curtrack, int column, int row,
-                                     A4Sound *analogfour_sound,
-                                     EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_ext(int curtrack, int column, int row, EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
   A4Track *a4_track = (A4Track *)empty_track;
@@ -39,15 +37,16 @@ bool MCLActions::load_track_from_ext(int curtrack, int column, int row,
 
     if (a4_track->load_track_from_grid(column, row, 0)) {
       memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
-
       grid_page.active_slots[column] = row;
-      return a4_track->place_track_in_sysex(curtrack, column, analogfour_sound);
+      a4_track->store_in_mem(column);
+      a4_track->load_seq_data(curtrack);
     }
   } else {
     if (ext_track->load_track_from_grid(column, row, 0)) {
       memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
       grid_page.active_slots[column] = row;
-      return ext_track->place_track_in_sysex(curtrack, column);
+      ext_track->store_in_mem(column);
+      ext_track->load_seq_data(curtrack);
     }
   }
 }
@@ -304,7 +303,6 @@ void MCLActions::send_tracks_to_devices() {
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
   // Used as a way of flaggin which A4 tracks are to be sent
   uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
-  A4Sound sound_array[4];
 #endif
 
   MDTrack md_temp_track;
@@ -346,10 +344,8 @@ void MCLActions::send_tracks_to_devices() {
       else {
         track = track - NUM_MD_TRACKS;
         mcl_seq.ext_tracks[track].buffer_notesoff();
-        if (load_track_from_ext(track, i, grid_page.getRow(),
-                                (A4Sound *)&sound_array[track], &empty_track)) {
+        if (load_track_from_ext(track, i, grid_page.getRow(), &empty_track)) {
           if (Analog4.connected) {
-            sound_array[track].workSpace = true;
             a4_send[track] = 1;
           }
         }
@@ -387,7 +383,9 @@ void MCLActions::send_tracks_to_devices() {
     uint8_t a4_kit_send = 0;
     for (i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
-        sound_array[i].toSysex();
+        a4_track->load_from_mem(i + NUM_MD_TRACKS);
+        a4_track->sound.workSpace = true;
+        a4_track->sound.toSysex();
       }
     }
   }
