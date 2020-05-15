@@ -40,6 +40,7 @@ bool MCLActions::load_track_from_ext(int curtrack, int column, int row, EmptyTra
       grid_page.active_slots[column] = row;
       a4_track->store_in_mem(column);
       a4_track->load_seq_data(curtrack);
+      return true;
     }
   } else {
     if (ext_track->load_track_from_grid(column, row, 0)) {
@@ -47,8 +48,10 @@ bool MCLActions::load_track_from_ext(int curtrack, int column, int row, EmptyTra
       grid_page.active_slots[column] = row;
       ext_track->store_in_mem(column);
       ext_track->load_seq_data(curtrack);
+      return true;
     }
   }
+  return false;
 }
 
 bool MCLActions::load_track_from_md(int curtrack, int column, int row,
@@ -346,6 +349,7 @@ void MCLActions::send_tracks_to_devices() {
         mcl_seq.ext_tracks[track].buffer_notesoff();
         if (load_track_from_ext(track, i, grid_page.getRow(), &empty_track)) {
           if (Analog4.connected) {
+            DEBUG_DUMP(a4_send[track]);
             a4_send[track] = 1;
           }
         }
