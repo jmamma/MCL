@@ -23,8 +23,12 @@
 #define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
 #define NUM_FILE_ENTRIES 256UL
 
-//#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
-//#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
+#include "MDSeqTrack.h"
+#include "ExtSeqTrack.h"
+#include "MD.h"
+
+#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
+#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
 
 //Use these to produce compiler errors that probes the sizes!
 //template<int X> struct __WOW;
@@ -34,8 +38,8 @@
 #pragma message("A4_TRACK_LEN = 1742")
 
 
-#define MD_TRACK_LEN (sizeof(MDTrackLight))
-#define A4_TRACK_LEN (sizeof(A4Track))
+//#define MD_TRACK_LEN (sizeof(MDTrackLight))
+//#define A4_TRACK_LEN (sizeof(A4Track))
 
 #ifdef EXT_TRACKS
 #define EMPTY_TRACK_LEN A4_TRACK_LEN

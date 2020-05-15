@@ -2,8 +2,6 @@
 #ifndef EXTTRACK_H__
 #define EXTTRACK_H__
 #include "ExtSeqTrack.h"
-#include "MDTrack.h"
-#include "A4Track.h"
 #include "GridTrack.h"
 #include "MCLMemory.h"
 #include "Bank1Object.h"
