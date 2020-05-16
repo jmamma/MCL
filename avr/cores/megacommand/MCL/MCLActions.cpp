@@ -85,9 +85,6 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   EmptyTrack empty_track;
 
-  empty_track.chain.row = row;
-  empty_track.chain.loops = 0;
-
   MDTrack *md_track = (MDTrack *)&empty_track;
 #ifdef EXT_TRACKS
   A4Track *a4_track = (A4Track *)&empty_track;
@@ -147,12 +144,24 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     max_notes = NUM_MD_TRACKS;
   }
 #endif
-
+  GridTrack grid_track;
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
       if (first_note == 255) {
         first_note = i;
       }
+
+      //If track is not empty, preserve chain settings on save
+
+      if (grid_page.row_headers[grid_page.cur_row].track_type[i] != EMPTY_TRACK_TYPE) {
+        grid_track.load_track_from_grid(i, row);
+        memcpy(&empty_track.chain, &grid_track.chain, sizeof(GridChain));
+      }
+      else {
+        empty_track.chain.row = row;
+        empty_track.chain.loops = 0;
+      }
+
       if (i < NUM_MD_TRACKS) {
         md_track->store_track_in_grid(i, grid_page.getRow(), i, false, merge,
                                       true);
@@ -222,6 +231,7 @@ void MCLActions::prepare_next_chain(int row) {
   //  }
   uint8_t slots_cached[NUM_TRACKS] = {0};
   int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
+
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
