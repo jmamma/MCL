@@ -45,15 +45,14 @@ void MDSeqTrack::seq() {
         ((timing[next_step] < 12) &&
          ((timing[current_step = next_step]) == MidiClock.mod12_counter))) {
 
-      if (IS_BIT_SET64(pattern_mask, current_step)) {
-        send_trig = trig_conditional(conditional[current_step]);
-      }
-      if (send_trig) {
-        send_parameter_locks(current_step);
-      }
+      send_trig = trig_conditional(conditional[current_step]);
 
       if (send_trig) {
-        send_trig_inline();
+
+        send_parameter_locks(current_step);
+        if (IS_BIT_SET64(pattern_mask, current_step)) {
+          send_trig_inline();
+        }
       }
     }
   }
