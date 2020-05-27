@@ -358,10 +358,9 @@ void MCLActions::send_tracks_to_devices() {
         track = track - NUM_MD_TRACKS;
         mcl_seq.ext_tracks[track].buffer_notesoff();
         if (load_track_from_ext(track, i, grid_page.getRow(), &empty_track)) {
-          if (Analog4.connected) {
-            DEBUG_DUMP(a4_send[track]);
+          if ((Analog4.connected) && (empty_track.active == A4_TRACK_TYPE)) {
             a4_send[track] = 1;
-          }
+            }
         }
       }
 #endif
