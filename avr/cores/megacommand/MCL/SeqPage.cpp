@@ -623,13 +623,13 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
 #ifdef OLED_DISPLAY
-        oled_display.textbox("CLEAR TRACK", "");
+        oled_display.textbox("CLEAR EXT ", "TRACKS");
 #endif
         mcl_seq.ext_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
 #ifdef OLED_DISPLAY
-      oled_display.textbox("CLEAR EXT ", "TRACKS");
+      oled_display.textbox("CLEAR EXT ", "TRACK");
 #endif
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
@@ -786,10 +786,10 @@ void opt_mute_step_handler() {
 }
 
 void opt_clear_step_locks_handler() {
+ if (opt_clear_step == 1) {
 #ifdef OLED_DISPLAY
   oled_display.textbox("CLEAR STEP: ", "LOCKS");
 #endif
-  if (opt_clear_step == 1) {
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
       if (note_interface.notes[n] == 1) {
 
