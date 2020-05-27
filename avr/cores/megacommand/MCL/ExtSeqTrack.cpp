@@ -21,7 +21,7 @@ void ExtSeqTrack::seq() {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
       step_count = 0;
-      //oneshot_mask = 0;
+      // oneshot_mask = 0;
       mute_until_start = false;
     }
   }
@@ -47,28 +47,18 @@ void ExtSeqTrack::seq() {
 
     uint8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
-      if ((timing[step_count] >= timing_mid) &&
-          ((timing[step_count] - timing_mid) ==
-           timing_counter)) {
+      uint8_t current_step;
+      if (((timing[step_count] >= timing_mid) &&
+           ((timing[current_step = step_count] - timing_mid) ==
+            timing_counter)) ||
+          ((timing[next_step] < timing_mid) &&
+           ((timing[current_step = next_step]) == timing_counter))) {
 
-        if (notes[c][step_count] < 0) {
-          note_off(abs(notes[c][step_count]) - 1);
-        }
-
-        else if (notes[c][step_count] > 0) {
-          noteon_conditional(conditional[step_count],
-                             abs(notes[c][step_count]) - 1);
-        }
-      }
-
-      if ((timing[next_step] < timing_mid) &&
-          ((timing[next_step]) == timing_counter)) {
-
-        if (notes[c][next_step] < 0) {
-          note_off(abs(notes[c][next_step]) - 1);
-        } else if (notes[c][next_step] > 0) {
-          noteon_conditional(conditional[next_step],
-                             abs(notes[c][next_step]) - 1);
+        if (notes[c][current_step] < 0) {
+          note_off(abs(notes[c][current_step]) - 1);
+        } else if (notes[c][current_step] > 0) {
+          noteon_conditional(conditional[current_step],
+                             abs(notes[c][current_step]) - 1);
         }
       }
     }
@@ -76,8 +66,7 @@ void ExtSeqTrack::seq() {
   if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) &&
       (resolution == 1)) {
     step_count++;
-  }
-  else if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
+  } else if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
     step_count++;
   }
   if (step_count == length) {
@@ -338,24 +327,27 @@ void ExtSeqTrack::rotate_left() {
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
   for (uint8_t a = 0; a < 4; a++) {
-  lock_masks[a] = 0;
+    lock_masks[a] = 0;
   }
-  //oneshot_mask = 0;
+  // oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
-     if (n == 0) { new_pos = length - 1; }
-     else { new_pos = n - 1; }
+    if (n == 0) {
+      new_pos = length - 1;
+    } else {
+      new_pos = n - 1;
+    }
 
-     for (uint8_t a = 0; a < 4; a++) {
-       notes[a][new_pos] = temp_data.notes[a][n];
-       locks[a][new_pos] = temp_data.locks[a][n];
-       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a],new_pos);
-       }
-     }
+    for (uint8_t a = 0; a < 4; a++) {
+      notes[a][new_pos] = temp_data.notes[a][n];
+      locks[a][new_pos] = temp_data.locks[a][n];
+      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a], new_pos);
+      }
+    }
 
-     conditional[new_pos] = temp_data.conditional[n];
-     timing[new_pos] = temp_data.timing[n];
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
   }
 }
 void ExtSeqTrack::rotate_right() {
@@ -367,24 +359,27 @@ void ExtSeqTrack::rotate_right() {
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
   for (uint8_t a = 0; a < 4; a++) {
-  lock_masks[a] = 0;
+    lock_masks[a] = 0;
   }
-  //oneshot_mask = 0;
+  // oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
-     if (n == length - 1) { new_pos = 0; }
-     else { new_pos = n + 1; }
+    if (n == length - 1) {
+      new_pos = 0;
+    } else {
+      new_pos = n + 1;
+    }
 
-     for (uint8_t a = 0; a < 4; a++) {
-       notes[a][new_pos] = temp_data.notes[a][n];
-       locks[a][new_pos] = temp_data.locks[0][n];
-       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a],new_pos);
-       }
-     }
+    for (uint8_t a = 0; a < 4; a++) {
+      notes[a][new_pos] = temp_data.notes[a][n];
+      locks[a][new_pos] = temp_data.locks[0][n];
+      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a], new_pos);
+      }
+    }
 
-     conditional[new_pos] = temp_data.conditional[n];
-     timing[new_pos] = temp_data.timing[n];
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
   }
 }
 
@@ -397,22 +392,22 @@ void ExtSeqTrack::reverse() {
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
   for (uint8_t a = 0; a < 4; a++) {
-  lock_masks[a] = 0;
+    lock_masks[a] = 0;
   }
-  //oneshot_mask = 0;
+  // oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
-     new_pos = length - n - 1;
+    new_pos = length - n - 1;
 
-     for (uint8_t a = 0; a < 4; a++) {
-       notes[a][new_pos] = temp_data.notes[a][n];
-       locks[a][new_pos] = temp_data.locks[0][n];
-       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a],new_pos);
-       }
-     }
+    for (uint8_t a = 0; a < 4; a++) {
+      notes[a][new_pos] = temp_data.notes[a][n];
+      locks[a][new_pos] = temp_data.locks[0][n];
+      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
+        SET_BIT64(temp_data.lock_masks[a], new_pos);
+      }
+    }
 
-     conditional[new_pos] = temp_data.conditional[n];
-     timing[new_pos] = temp_data.timing[n];
+    conditional[new_pos] = temp_data.conditional[n];
+    timing[new_pos] = temp_data.timing[n];
   }
 }
