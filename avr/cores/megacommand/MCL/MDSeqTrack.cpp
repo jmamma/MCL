@@ -39,16 +39,17 @@ void MDSeqTrack::seq() {
       next_step = step_count + 1;
     }
     bool send_trig = false;
+    uint8_t current_step;
     if (((timing[step_count] >= 12) &&
-         (timing[step_count] - 12 == MidiClock.mod12_counter)) ||
+         (timing[current_step = step_count] - 12 == MidiClock.mod12_counter)) ||
         ((timing[next_step] < 12) &&
-         ((timing[next_step]) == MidiClock.mod12_counter))) {
+         ((timing[current_step = next_step]) == MidiClock.mod12_counter))) {
 
-      if (IS_BIT_SET64(pattern_mask, next_step)) {
-        send_trig = trig_conditional(conditional[next_step]);
+      if (IS_BIT_SET64(pattern_mask, current_step)) {
+        send_trig = trig_conditional(conditional[current_step]);
       }
       if (send_trig) {
-        send_parameter_locks(next_step);
+        send_parameter_locks(current_step);
       }
 
       if (send_trig) {
