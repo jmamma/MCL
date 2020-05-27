@@ -38,24 +38,21 @@ void MDSeqTrack::seq() {
     } else {
       next_step = step_count + 1;
     }
-
-    if ((timing[step_count] >= 12) &&
-        (timing[step_count] - 12 == MidiClock.mod12_counter)) {
-
-      // Dont transmit locks if MDExploit is on.
-        send_parameter_locks(step_count);
-
-      if (IS_BIT_SET64(pattern_mask, step_count)) {
-        trig_conditional(conditional[step_count]);
-      }
-    }
-    if ((timing[next_step] < 12) &&
-        ((timing[next_step]) == MidiClock.mod12_counter)) {
-
-        send_parameter_locks(next_step);
+    bool send_trig = false;
+    if (((timing[step_count] >= 12) &&
+         (timing[step_count] - 12 == MidiClock.mod12_counter)) ||
+        ((timing[next_step] < 12) &&
+         ((timing[next_step]) == MidiClock.mod12_counter))) {
 
       if (IS_BIT_SET64(pattern_mask, next_step)) {
-        trig_conditional(conditional[next_step]);
+        send_trig = trig_conditional(conditional[next_step]);
+      }
+      if (send_trig) {
+        send_parameter_locks(next_step);
+      }
+
+      if (send_trig) {
+        send_trig_inline();
       }
     }
   }
@@ -177,7 +174,7 @@ void MDSeqTrack::send_trig_inline() {
   MD.triggerTrack(track_number, 127);
 }
 
-void MDSeqTrack::trig_conditional(uint8_t condition) {
+bool MDSeqTrack::trig_conditional(uint8_t condition) {
   bool send_trig = false;
   switch (condition) {
   case 0:
@@ -245,9 +242,7 @@ void MDSeqTrack::trig_conditional(uint8_t condition) {
       send_trig = true;
     }
   }
-  if (send_trig) {
-    send_trig_inline();
-  }
+  return send_trig;
 }
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {

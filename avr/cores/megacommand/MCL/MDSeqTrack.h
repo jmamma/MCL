@@ -41,7 +41,7 @@ public:
   ALWAYS_INLINE() void seq();
   void send_trig();
   ALWAYS_INLINE() void send_trig_inline();
-  ALWAYS_INLINE() void trig_conditional(uint8_t condition);
+  ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
