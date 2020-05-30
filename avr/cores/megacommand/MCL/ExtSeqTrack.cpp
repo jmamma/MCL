@@ -21,8 +21,12 @@ void ExtSeqTrack::seq() {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
       step_count = 0;
-      // oneshot_mask = 0;
+      oneshot_mask = 0;
       mute_until_start = false;
+      iterations_5 = 1;
+      iterations_6 = 1;
+      iterations_7 = 1;
+      iterations_8 = 1;
     }
   }
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
@@ -71,10 +75,15 @@ void ExtSeqTrack::seq() {
   }
   if (step_count == length) {
     step_count = 0;
-    iterations++;
-    if (iterations > 8) {
-      iterations = 1;
-    }
+    iterations_5++;
+    iterations_6++;
+    iterations_7++;
+    iterations_8++;
+
+    if (iterations_5 > 5) { iterations_5 = 1; }
+    if (iterations_6 > 6) { iterations_8 = 1; }
+    if (iterations_7 > 7) { iterations_7 = 1; }
+    if (iterations_8 > 8) { iterations_8 = 1; }
   }
 }
 void ExtSeqTrack::note_on(uint8_t note) {
@@ -103,36 +112,35 @@ void ExtSeqTrack::note_off(uint8_t note) {
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   switch (condition) {
   case 0:
-    note_on(note);
-    break;
   case 1:
-    note_on(note);
+    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+      note_on(note);
+    }
     break;
   case 2:
-    if (!IS_BIT_SET(iterations, 0)) {
-      note_on(note);
-    }
-  case 4:
-    if ((iterations == 4) || (iterations == 8)) {
-      note_on(note);
-    }
-  case 8:
-    if ((iterations == 8)) {
+    if (!IS_BIT_SET(iterations_8, 0)) {
       note_on(note);
     }
     break;
   case 3:
-    if ((iterations == 3) || (iterations == 6)) {
+  case 6:
+    if ((iterations_6 == 3) || (iterations_6 == 6)) {
       note_on(note);
     }
     break;
-  case 5:
-    if (iterations == 5) {
+  case 4:
+  case 8:
+    if ((iterations_8 == 4) || (iterations_8 == 8)) {
+      note_on(note);
+    }
+    break;
+ case 5:
+    if (iterations_5 == 5) {
       note_on(note);
     }
     break;
   case 7:
-    if (iterations == 7) {
+    if (iterations_7 == 7) {
       note_on(note);
     }
     break;
@@ -161,6 +169,11 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
       note_on(note);
     }
     break;
+  case 14:
+    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+      SET_BIT64(oneshot_mask, step_count);
+      note_on(note);
+    }
   }
 }
 
@@ -329,7 +342,7 @@ void ExtSeqTrack::rotate_left() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  // oneshot_mask = 0;
+  oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == 0) {
@@ -361,7 +374,7 @@ void ExtSeqTrack::rotate_right() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  // oneshot_mask = 0;
+  oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == length - 1) {
@@ -394,7 +407,7 @@ void ExtSeqTrack::reverse() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  // oneshot_mask = 0;
+  oneshot_mask = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     new_pos = length - n - 1;

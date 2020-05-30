@@ -35,10 +35,17 @@ public:
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t oneshot_mask;
+
   uint8_t step_count;
   uint32_t start_step;
-  uint8_t iterations;
   bool mute_until_start = false;
+
+  //Conditional counters
+  uint8_t iterations_5;
+  uint8_t iterations_6;
+  uint8_t iterations_7;
+  uint8_t iterations_8;
 
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
