@@ -6,12 +6,6 @@ void MDSeqTrack::set_length(uint8_t len) {
   if (step_count >= length) {
     step_count = (step_count % length);
   }
-  /*
-  step_count =
-      (MidiClock.div16th_counter - start_clock32th / 2) -
-      (length * ((MidiClock.div16th_counter - start_clock32th / 2) /
-                 length));
-*/
 }
 
 void MDSeqTrack::seq() {
@@ -23,8 +17,13 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(MidiClock.div16th_counter);
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
+
       step_count = 0;
-      iterations = 1;
+      iterations_5 = 1;
+      iterations_6 = 1;
+      iterations_7 = 1;
+      iterations_8 = 1;
+
       mute_until_start = false;
       oneshot_mask = 0;
     }
@@ -59,10 +58,17 @@ void MDSeqTrack::seq() {
   if (MidiClock.mod12_counter == 11) {
     if (step_count == length - 1) {
       step_count = 0;
-      iterations++;
-      if (iterations > 8) {
-        iterations = 1;
-      }
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) { iterations_5 = 1; }
+      if (iterations_6 > 6) { iterations_8 = 1; }
+      if (iterations_7 > 7) { iterations_7 = 1; }
+      if (iterations_8 > 8) { iterations_8 = 1; }
+
     } else {
       step_count++;
     }
@@ -184,30 +190,29 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
     }
     break;
   case 2:
-    if (!IS_BIT_SET(iterations, 0)) {
-      send_trig = true;
-    }
-  case 4:
-    if ((iterations == 4) || (iterations == 8)) {
-      send_trig = true;
-    }
-  case 8:
-    if ((iterations == 8)) {
+    if (!IS_BIT_SET(iterations_8, 0)) {
       send_trig = true;
     }
     break;
   case 3:
-    if ((iterations == 3) || (iterations == 6)) {
+  case 6:
+    if ((iterations_6 == 3) || (iterations_6 == 6)) {
+      send_trig = true;
+    }
+    break;
+  case 4:
+  case 8:
+    if ((iterations_8 == 4) || (iterations_8 == 8)) {
       send_trig = true;
     }
     break;
   case 5:
-    if (iterations == 5) {
+    if (iterations_5 == 5) {
       send_trig = true;
     }
     break;
   case 7:
-    if (iterations == 7) {
+    if (iterations_7 == 7) {
       send_trig = true;
     }
     break;
