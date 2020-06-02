@@ -241,14 +241,22 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
     }
     break;
   case 3:
-  case 6:
     if ((iterations_6 == 3) || (iterations_6 == 6)) {
       send_trig = true;
     }
     break;
+  case 6:
+    if (iterations_6 == 6) {
+      send_trig = true;
+    }
+    break;
   case 4:
-  case 8:
     if ((iterations_8 == 4) || (iterations_8 == 8)) {
+      send_trig = true;
+    }
+    break;
+  case 8:
+    if ((iterations_8 == 8)) {
       send_trig = true;
     }
     break;
