@@ -92,6 +92,16 @@ extern const uint32_t _bvmasks32[];
 #define IS_BIT_SET64(target, bit)           IS_BIT_SET_RADDR(target, bit)
 #define IS_BIT_CLEAR64(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
 
+/** 128-bit macros. **/
+#define SET_BIT128(target, bit)              SET_BIT_RADDR(target, bit)
+#define CLEAR_BIT128(target, bit)            CLEAR_BIT_RADDR(target, bit)
+#define TOGGLE_BIT128(target, bit)           TOGGLE_BIT_RADDR(target, bit)
+#define IS_BIT_SET128(target, bit)           IS_BIT_SET_RADDR(target, bit)
+#define IS_BIT_CLEAR128(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
+
+
+
+
 /** @} */
 
 /**

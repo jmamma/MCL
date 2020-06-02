@@ -107,7 +107,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   switch (condition) {
   case 0:
   case 1:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+    if (!IS_BIT_SET128(oneshot_mask, step_count)) {
       note_on(note);
     }
     break;
@@ -164,8 +164,8 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
     }
     break;
   case 14:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
-      SET_BIT64(oneshot_mask, step_count);
+    if (!IS_BIT_SET128(oneshot_mask, step_count)) {
+      SET_BIT128(oneshot_mask, step_count);
       note_on(note);
     }
   }
@@ -336,7 +336,8 @@ void ExtSeqTrack::rotate_left() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == 0) {
@@ -368,7 +369,8 @@ void ExtSeqTrack::rotate_right() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == length - 1) {
@@ -401,7 +403,8 @@ void ExtSeqTrack::reverse() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     new_pos = length - n - 1;

@@ -12,6 +12,12 @@
 
 #define UART2_PORT 2
 
+// EXT Track scale
+#define ext_scale_1x 0
+#define ext_scale_2x 1
+#define ext_scale_3_4x 2
+#define ext_scale_3_2x 3
+
 class ExtSeqTrackData {
 public:
   uint8_t length;
@@ -36,7 +42,7 @@ public:
 
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
-  uint64_t oneshot_mask;
+  uint64_t oneshot_mask[2];
 
   uint8_t step_count;
   uint32_t start_step;
@@ -50,7 +56,8 @@ public:
 
   ALWAYS_INLINE() void init() {
     step_count = 0;
-    oneshot_mask = 0;
+    oneshot_mask[0] = 0;
+    oneshot_mask[1] = 0;
     mute_until_start = false;
     iterations_5 = 1;
     iterations_6 = 1;
