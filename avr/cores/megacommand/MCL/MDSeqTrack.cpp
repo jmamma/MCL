@@ -56,15 +56,8 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(MidiClock.div16th_counter);
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
-      step_count = 0;
-      mod12_counter = 0;
-      iterations_5 = 1;
-      iterations_6 = 1;
-      iterations_7 = 1;
-      iterations_8 = 1;
 
-      mute_until_start = false;
-      oneshot_mask = 0;
+      init();
     }
   } else if ((MidiUart.uart_block == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
