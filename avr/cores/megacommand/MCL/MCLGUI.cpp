@@ -433,22 +433,22 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
 #endif
 }
 
-void MCLGUI::draw_microtiming(uint8_t resolution, uint8_t timing) {
+void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
   oled_display.setTextColor(WHITE);
-  if (resolution == 0) {
-    resolution = 1;
+  if (scale == 0) {
+    scale = 1;
   }
-  if (resolution > 2) {
-    resolution = 1;
+  if (scale > 2) {
+    scale = 1;
   }
-  uint8_t degrees = 24 / resolution;
+  uint8_t degrees = 24 / scale;
   uint8_t heights[12];
 
-  if (resolution == 1) {
+  if (scale == 1) {
     uint8_t heights_highres[12] = {12, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
     memcpy(&heights, &heights_highres, 12);
   } else {

@@ -18,7 +18,7 @@ extern void pattern_len_handler(Encoder *enc);
 
 
 extern uint8_t opt_trackid;
-extern uint8_t opt_resolution;
+extern uint8_t opt_scale;
 extern uint8_t opt_copy;
 extern uint8_t opt_paste;
 extern uint8_t opt_clear;
@@ -27,7 +27,7 @@ extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
 
 extern void opt_trackid_handler();
-extern void opt_resolution_handler();
+extern void opt_scale_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler();

@@ -1,6 +1,36 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
+
+float ExtSeqTrack::get_scale_multiplier(uint8_t scale) {
+    float multi;
+    switch (scale) {
+    default:
+    case EXT_SCALE_1X:
+      multi = 1;
+      break;
+    case EXT_SCALE_2X:
+      multi = 0.5;
+      break;
+    case EXT_SCALE_3_4X:
+      multi = (4.0/3.0);
+      break;
+    case EXT_SCALE_3_2X:
+      multi = (3.0/2.0);
+      break;
+    }
+    return multi;
+}
+
+void ExtSeqTrack::set_scale(uint8_t _scale) {
+    uint8_t old_scale = scale;
+    for (uint8_t i = 0; i < 128; i++) {
+       timing[i] = round(get_scale_multiplier(scale) * ((float) timing[i] / get_scale_multiplier(old_scale)));
+    }
+    scale = _scale;
+}
+
+
 void ExtSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {

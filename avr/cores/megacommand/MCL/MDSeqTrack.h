@@ -102,6 +102,26 @@ public:
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
+
+  ALWAYS_INLINE() uint8_t get_timing_mid() {
+    uint8_t timing_mid;
+    switch (scale) {
+    default:
+    case MD_SCALE_1X:
+      timing_mid = 12;
+      break;
+    case MD_SCALE_2X:
+      timing_mid = 6;
+      break;
+    case MD_SCALE_3_4X:
+      timing_mid = 16; // 12 * (4.0/3.0);
+      break;
+    case MD_SCALE_3_2X:
+      timing_mid = 8; // 12 * (2.0/3.0);
+      break;
+    }
+    return timing_mid;
+  }
 };
 
 #endif /* MDSEQTRACK_H__ */

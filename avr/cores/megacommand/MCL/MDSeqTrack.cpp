@@ -62,25 +62,9 @@ void MDSeqTrack::seq() {
 
     mod12_counter++;
 
-    uint8_t timing_mid;
+    uint8_t timing_mid = get_timing_mid();
 
-    switch (scale) {
-    default:
-    case MD_SCALE_1X:
-      timing_mid = 12;
-      break;
-    case MD_SCALE_2X:
-      timing_mid = 6;
-      break;
-    case MD_SCALE_3_4X:
-      timing_mid = 16 //12 * (4.0/3.0);
-      break;
-    case MD_SCALE_3_2X:
-      timing_mid = 8 //12 * (2.0/3.0);
-      break;
-    }
-
-     if (((timing[step_count] >= timing_mid) && (timing[step_count] - timing_mid == mod12_counter)) ||
+    if (((timing[step_count] >= timing_mid) && (timing[step_count] - timing_mid == mod12_counter)) ||
         ((timing[next_step] < timing_mid) && ((timing[next_step]) == mod12_counter))) {
       bool send_trig = false;
       send_trig = trig_conditional(conditional[current_step]);
@@ -97,7 +81,6 @@ void MDSeqTrack::seq() {
       mod12_counter = 0;
       step_count++;
     }
-    break;
   }
 
   if (step_count == length - 1) {

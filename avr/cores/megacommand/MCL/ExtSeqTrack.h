@@ -135,6 +135,9 @@ public:
   void rotate_left();
   void rotate_right();
   void reverse();
+
+  void set_scale(uint8_t _scale);
+  float get_scale_multiplier(uint8_t scale);
 };
 
 #endif /* EXTSEQTRACK_H__ */

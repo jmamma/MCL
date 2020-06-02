@@ -589,13 +589,13 @@ void opt_scale_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    (mcl_seq.md_tracks[last_md_track].set_scale(opt_scale);
-     seq_step_page.config_encoders(opt_scale);
+    mcl_seq.md_tracks[last_md_track].set_scale(opt_scale);
+    seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    (mcl_seq.ext_tracks[last_ext_track].set_scale(opt_scale);
-    seq_extstep_page.config_encoders(opt_scale);
+    mcl_seq.ext_tracks[last_ext_track].set_scale(opt_scale);
+    seq_extstep_page.config_encoders();
   }
 #endif
   opt_seqpage_capture->init();

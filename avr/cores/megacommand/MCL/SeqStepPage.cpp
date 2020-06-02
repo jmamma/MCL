@@ -29,8 +29,15 @@ void SeqStepPage::config() {
   strncat(info1, buf, len1);
   strcpy(info2, "STEP");
 
+  config_encoders();
   // config menu
   config_as_trackedit();
+}
+
+void SeqStepPage::config_encoders() {
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
+  seq_param2.cur = timing_mid;
+  seq_param2.max = timing_mid * 2 - 1;
 }
 
 void SeqStepPage::init() {
@@ -196,7 +203,7 @@ void SeqStepPage::display() {
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].resolution,
+      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].scale,
                                seq_param2.cur);
     }
   }

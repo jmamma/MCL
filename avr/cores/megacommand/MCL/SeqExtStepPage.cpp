@@ -10,7 +10,7 @@ void SeqExtStepPage::config() {
   constexpr uint8_t len1 = sizeof(info1);
 
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == EXT_SCALE_1X) {
+  if (mcl_seq.ext_tracks[last_ext_track].scale == EXT_SCALE_2X) {
     strcpy(info1, "HI-RES");
   } else {
     strcpy(info1, "LOW-RES");
@@ -25,7 +25,7 @@ void SeqExtStepPage::config() {
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == EXT_SCALE_1X) {
+  if (mcl_seq.ext_tracks[last_ext_track].scale == EXT_SCALE_2X) {
     seq_param2.cur = 6;
     seq_param2.max = 11;
   } else {
@@ -81,7 +81,7 @@ void SeqExtStepPage::display() {
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+  if (mcl_seq.ext_tracks[last_ext_track].scale == 1) {
     if (seq_param2.getValue() == 0) {
       GUI.put_string_at(2, "--");
     } else if ((seq_param2.getValue() < 6) &&
@@ -142,7 +142,7 @@ void SeqExtStepPage::display() {
     GUI.put_value_at(6, seq_param3.getValue());
 
     GUI.put_value_at(6, (seq_param3.getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
+                         (2 / mcl_seq.ext_tracks[last_ext_track].scale)));
     if (Analog4.connected) {
       GUI.put_string_at(10, "A4T");
     } else {
@@ -179,7 +179,7 @@ void SeqExtStepPage::display() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   strcpy(K, "--");
   K[3] = '\0';
-  if (active_track.resolution == 1) {
+  if (active_track.scale == 1) {
     if (seq_param2.getValue() == 0) {
     } else if ((seq_param2.getValue() < 6) &&
                (seq_param2.getValue() != 0)) {
@@ -210,7 +210,7 @@ void SeqExtStepPage::display() {
     }
   }
 
-  itoa(seq_param3.getValue() / (2 / active_track.resolution), K, 10);
+  itoa(seq_param3.getValue() / (2 / active_track.scale), K, 10);
   draw_knob(2, "LEN", K);
 
   if (notes_held > 0) {
@@ -292,7 +292,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         seq_param1.cur = condition;
         // Micro
         if (utiming == 0) {
-          if (active_track.resolution == 1) {
+          if (active_track.scale == EXT_SCALE_2X) {
             utiming = 6;
             seq_param2.max = 11;
           } else {
