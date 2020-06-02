@@ -117,18 +117,25 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
     }
     break;
   case 3:
-  case 6:
     if ((iterations_6 == 3) || (iterations_6 == 6)) {
       note_on(note);
     }
     break;
+  case 6:
+    if (iterations_6 == 6) {
+      note_on(note);
+    }
+    break;
   case 4:
-  case 8:
     if ((iterations_8 == 4) || (iterations_8 == 8)) {
       note_on(note);
     }
     break;
- case 5:
+  case 8:
+    if ((iterations_8 == 8)) {
+      note_on(note);
+    }
+  case 5:
     if (iterations_5 == 5) {
       note_on(note);
     }
