@@ -8,38 +8,43 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-// MD Pattern speed
+// MD Pattern scale
 //[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
 
-// MCL Track speed
-#define md_speed_1x 0
-#define md_speed_2x 1
-#define md_speed_3_4x 2
-#define md_speed_3_2x 3
+// MCL Track scale
+#define md_scale_1x 1
+#define md_scale_2x 0
+#define md_scale_3_4x 2
+#define md_scale_3_2x 3
 
-// uTiming 0 < x < 24
-//
 
-void MDSeqTrack::set_speed(uint8_t _speed) {
-    uint8_t old_speed = speed;
-for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-    switch (speed) {
+float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
+    float multi;
+    switch (scale) {
     default:
-    case md_speed_1x:
-      timing_mid = 12;
+    case md_scale_1x:
+      multi = 1;
       break;
-    case md_speed_2x:
-      timing_mid = 6;
+    case md_scale_2x:
+      multi = 0.5;
       break;
-    case md_speed_3_4x:
-      timing_mid = 12 * (4.0/3.0);
+    case md_scale_3_4x:
+      multi = (4.0/3.0);
       break;
-    case md_speed_3_2x:
-      timing_mid = 6 * (2.0/3.0);
+    case md_scale_3_2x:
+      multi = (3.0/2.0);
       break;
     }
+    return multi;
 }
 
+
+void MDSeqTrack::set_scale(uint8_t _scale) {
+    uint8_t old_scale = scale;
+    for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+       timing[i] = round(get_scale_multiplier(scale) * ((float) timing[i] / get_scale_multiplier(old_scale)));
+    }
+    scale = _scale;
 }
 
 void MDSeqTrack::seq() {
@@ -74,27 +79,25 @@ void MDSeqTrack::seq() {
     mod12_counter++;
 
     uint8_t timing_mid;
-    uint8_t timing = timing[step_count];
-    uint8_t timing_next = timing[next_step];
 
-    switch (speed) {
+    switch (scale) {
     default:
-    case md_speed_1x:
+    case md_scale_1x:
       timing_mid = 12;
       break;
-    case md_speed_2x:
-      timing_mid = 12 * 0.5;
+    case md_scale_2x:
+      timing_mid = 6;
       break;
-    case md_speed_3_4x:
-      timing_mid = 12 * (4.0/3.0);
+    case md_scale_3_4x:
+      timing_mid = 16 //12 * (4.0/3.0);
       break;
-    case md_speed_3_2x:
-      timing_mid = 6 * (2.0/3.0);
+    case md_scale_3_2x:
+      timing_mid = 8 //12 * (2.0/3.0);
       break;
     }
 
-     if (((timing >= timing_mid) && (timing - timing_mid == mod12_counter)) ||
-        ((timing_next < timing_mid) && ((timing_next) == mod12_counter))) {
+     if (((timing[step_count] >= timing_mid) && (timing[step_count] - timing_mid == mod12_counter)) ||
+        ((timing[next_step] < timing_mid) && ((timing[next_step]) == mod12_counter))) {
       bool send_trig = false;
       send_trig = trig_conditional(conditional[current_step]);
 
@@ -106,7 +109,7 @@ void MDSeqTrack::seq() {
         }
       }
     }
-    if (mod12_counter == timing_mid) {
+    if (mod12_counter == timing_mid - 1) {
       mod12_counter = 0;
       step_count++;
     }

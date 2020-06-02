@@ -78,6 +78,9 @@ public:
   void rotate_right();
   void reverse();
 
+  float get_scale_multiplier(uint8_t scale);
+  void set_scale(uint8_t _scale);
+
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
 };
