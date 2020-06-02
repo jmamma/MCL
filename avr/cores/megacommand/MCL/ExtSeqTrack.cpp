@@ -8,11 +8,11 @@ void ExtSeqTrack::set_length(uint8_t len) {
   }
   DEBUG_DUMP(step_count);
   /*uint8_t step_count =
-       ((MidiClock.div32th_counter / resolution) -
-        (mcl_actions.start_clock32th / resolution)) -
+       ((MidiClock.div32th_counter / scale) -
+        (mcl_actions.start_clock32th / scale)) -
        (length *
-        ((MidiClock.div32th_counter / resolution -
-          (mcl_actions.start_clock32th / resolution)) /
+        ((MidiClock.div32th_counter / scale -
+          (mcl_actions.start_clock32th / scale)) /
          (length)));
 */
 }
@@ -34,7 +34,7 @@ void ExtSeqTrack::seq() {
 
     uint8_t timing_counter = MidiClock.mod12_counter;
 
-    if ((resolution == 1)) {
+    if ((scale == 1)) {
       if (MidiClock.mod12_counter < 6) {
         timing_counter = MidiClock.mod12_counter;
       } else {
@@ -49,7 +49,7 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    uint8_t timing_mid = 6 * resolution;
+    uint8_t timing_mid = 6 * scale;
     for (uint8_t c = 0; c < 4; c++) {
       uint8_t current_step;
       if (((timing[step_count] >= timing_mid) &&
@@ -68,9 +68,9 @@ void ExtSeqTrack::seq() {
     }
   }
   if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) &&
-      (resolution == 1)) {
+      (scale == 1)) {
     step_count++;
-  } else if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
+  } else if ((MidiClock.mod12_counter == 11) && (scale == 2)) {
     step_count++;
   }
   if (step_count == length) {
@@ -224,16 +224,16 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
 }
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   /* uint8_t step_count =
-       ((MidiClock.div32th_counter / resolution) -
-        (mcl_actions.start_clock32th / resolution)) -
-       (length * ((MidiClock.div32th_counter / resolution -
+       ((MidiClock.div32th_counter / scale) -
+        (mcl_actions.start_clock32th / scale)) -
+       (length * ((MidiClock.div32th_counter / scale -
                                      (mcl_actions.start_clock32th /
-     resolution)) / (length)));
+     scale)) / (length)));
  */
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
-  if (resolution > 1) {
+  if (scale > 1) {
     utiming = (MidiClock.mod12_counter + 12);
   }
 
@@ -271,16 +271,16 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   /*uint8_t step_count =
-      ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions.start_clock32th / resolution)) -
-      (length * ((MidiClock.div32th_counter / resolution -
+      ((MidiClock.div32th_counter / scale) -
+       (mcl_actions.start_clock32th / scale)) -
+      (length * ((MidiClock.div32th_counter / scale -
                                     (mcl_actions.start_clock32th /
-     resolution)) / (length)));
+     scale)) / (length)));
 */
   uint8_t utiming =
       6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
-  if (resolution > 1) {
+  if (scale > 1) {
     utiming = (MidiClock.mod12_counter + 12);
   }
   uint8_t condition = 0;
