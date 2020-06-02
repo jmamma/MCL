@@ -59,7 +59,8 @@ void MDSeqTrack::seq() {
 
       init();
     }
-  } else if ((MidiUart.uart_block == 0) && (mute_state == SEQ_MUTE_OFF)) {
+  }
+  if ((MidiUart.uart_block == 0) && (mute_until_start == false) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
