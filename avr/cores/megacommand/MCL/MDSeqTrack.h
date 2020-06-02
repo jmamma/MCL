@@ -15,10 +15,10 @@
 //[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
 
 // MCL Track scale
-#define md_scale_1x 1
-#define md_scale_2x 0
-#define md_scale_3_4x 2
-#define md_scale_3_2x 3
+#define MD_SCALE_1X 1
+#define MD_SCALE_2X 0
+#define MD_SCALE_3_4X 2
+#define MD_SCALE_3_2X 3
 
 // forward declare MDTrack
 class MDTrack;

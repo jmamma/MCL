@@ -12,16 +12,16 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
     float multi;
     switch (scale) {
     default:
-    case md_scale_1x:
+    case MD_SCALE_1X:
       multi = 1;
       break;
-    case md_scale_2x:
+    case MD_SCALE_2X:
       multi = 0.5;
       break;
-    case md_scale_3_4x:
+    case MD_SCALE_3_4X:
       multi = (4.0/3.0);
       break;
-    case md_scale_3_2x:
+    case MD_SCALE_3_2X:
       multi = (3.0/2.0);
       break;
     }
@@ -66,16 +66,16 @@ void MDSeqTrack::seq() {
 
     switch (scale) {
     default:
-    case md_scale_1x:
+    case MD_SCALE_1X:
       timing_mid = 12;
       break;
-    case md_scale_2x:
+    case MD_SCALE_2X:
       timing_mid = 6;
       break;
-    case md_scale_3_4x:
+    case MD_SCALE_3_4X:
       timing_mid = 16 //12 * (4.0/3.0);
       break;
-    case md_scale_3_2x:
+    case MD_SCALE_3_2X:
       timing_mid = 8 //12 * (2.0/3.0);
       break;
     }

@@ -13,10 +13,10 @@
 #define UART2_PORT 2
 
 // EXT Track scale
-#define ext_scale_1x 0
-#define ext_scale_2x 1
-#define ext_scale_3_4x 2
-#define ext_scale_3_2x 3
+#define EXT_SCALE_1X 0
+#define EXT_SCALE_2X 1
+#define EXT_SCALE_3_4X 2
+#define EXT_SCALE_3_2X 3
 
 class ExtSeqTrackData {
 public:

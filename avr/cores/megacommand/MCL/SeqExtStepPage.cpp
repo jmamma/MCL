@@ -10,7 +10,7 @@ void SeqExtStepPage::config() {
   constexpr uint8_t len1 = sizeof(info1);
 
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+  if (mcl_seq.ext_tracks[last_ext_track].resolution == EXT_SCALE_1X) {
     strcpy(info1, "HI-RES");
   } else {
     strcpy(info1, "LOW-RES");
@@ -25,7 +25,7 @@ void SeqExtStepPage::config() {
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+  if (mcl_seq.ext_tracks[last_ext_track].resolution == EXT_SCALE_1X) {
     seq_param2.cur = 6;
     seq_param2.max = 11;
   } else {
