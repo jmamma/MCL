@@ -11,6 +11,15 @@
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
+// MD Pattern scale
+//[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
+
+// MCL Track scale
+#define md_scale_1x 1
+#define md_scale_2x 0
+#define md_scale_3_4x 2
+#define md_scale_3_2x 3
+
 // forward declare MDTrack
 class MDTrack;
 
