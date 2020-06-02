@@ -20,7 +20,7 @@ public:
   uint8_t track_number;
   uint8_t step_count;
 
-  //Conditional counters
+  // Conditional counters
   uint8_t iterations_5;
   uint8_t iterations_6;
   uint8_t iterations_7;
@@ -43,6 +43,16 @@ public:
   uint8_t mute_state = SEQ_MUTE_OFF;
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
+
+  ALWAYS_INLINE() void init() {
+    step_count = 0;
+    iterations_5 = 1;
+    iterations_6 = 1;
+    iterations_7 = 1;
+    iterations_8 = 1;
+    oneshot_mask = 0;
+    mute_until_start = false;
+  }
 
   ALWAYS_INLINE() void seq();
   void send_trig();

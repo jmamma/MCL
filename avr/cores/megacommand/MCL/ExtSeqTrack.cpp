@@ -20,13 +20,7 @@ void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      step_count = 0;
-      oneshot_mask = 0;
-      mute_until_start = false;
-      iterations_5 = 1;
-      iterations_6 = 1;
-      iterations_7 = 1;
-      iterations_8 = 1;
+      init();
     }
   }
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
