@@ -4,6 +4,7 @@
 #define MDSEQTRACKDATA_H__
 
 #define NUM_MD_LOCKS 4
+#define NUM_MD_STEPS 64
 
 class MDSeqStep {
 public:
@@ -18,23 +19,23 @@ public:
 class MDSeqTrackData {
 public:
   uint8_t length;
-  uint8_t resolution;
+  uint8_t speed;
   uint8_t reserved[4];
-  uint8_t locks[NUM_MD_LOCKS][64];
+  uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
   uint64_t pattern_mask;
   uint64_t lock_mask;
-  uint8_t conditional[64];
-  uint8_t timing[64];
+  uint8_t conditional[NUM_MD_STEPS];
+  uint8_t timing[NUM_MD_STEPS];
   void init() {
   length = 16;
   resolution = 1;
-  memset(&locks, 0, NUM_MD_LOCKS * 64);
+  memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
   memset(&locks_params, 0, NUM_MD_LOCKS);
   pattern_mask = 0;
   lock_mask = 0;
-  memset(&conditional, 0, 64);
-  memset(&timing, 12, 64);
+  memset(&conditional, 0, NUM_MD_STEPS);
+  memset(&timing, 12, NUM_MD_STEPS);
   }
 };
 

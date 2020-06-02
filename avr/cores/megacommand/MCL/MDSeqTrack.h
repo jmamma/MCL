@@ -19,6 +19,7 @@ class MDSeqTrack : public MDSeqTrackData {
 public:
   uint8_t track_number;
   uint8_t step_count;
+  uint8_t mod12_counter;
 
   //Conditional counters
   uint8_t iterations_5;

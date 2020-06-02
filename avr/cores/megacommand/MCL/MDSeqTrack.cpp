@@ -8,6 +8,40 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
+// MD Pattern speed
+//[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
+
+// MCL Track speed
+#define md_speed_1x 0
+#define md_speed_2x 1
+#define md_speed_3_4x 2
+#define md_speed_3_2x 3
+
+// uTiming 0 < x < 24
+//
+
+void MDSeqTrack::set_speed(uint8_t _speed) {
+    uint8_t old_speed = speed;
+for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+    switch (speed) {
+    default:
+    case md_speed_1x:
+      timing_mid = 12;
+      break;
+    case md_speed_2x:
+      timing_mid = 6;
+      break;
+    case md_speed_3_4x:
+      timing_mid = 12 * (4.0/3.0);
+      break;
+    case md_speed_3_2x:
+      timing_mid = 6 * (2.0/3.0);
+      break;
+    }
+}
+
+}
+
 void MDSeqTrack::seq() {
   if (mute_until_start) {
 
@@ -17,8 +51,8 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(MidiClock.div16th_counter);
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
-
       step_count = 0;
+      mod12_counter = 0;
       iterations_5 = 1;
       iterations_6 = 1;
       iterations_7 = 1;
@@ -27,9 +61,7 @@ void MDSeqTrack::seq() {
       mute_until_start = false;
       oneshot_mask = 0;
     }
-  }
-  if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
-      (mute_state == SEQ_MUTE_OFF)) {
+  } else if ((MidiUart.uart_block == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
@@ -37,13 +69,33 @@ void MDSeqTrack::seq() {
     } else {
       next_step = step_count + 1;
     }
-    bool send_trig = false;
     uint8_t current_step;
-    if (((timing[step_count] >= 12) &&
-         (timing[current_step = step_count] - 12 == MidiClock.mod12_counter)) ||
-        ((timing[next_step] < 12) &&
-         ((timing[current_step = next_step]) == MidiClock.mod12_counter))) {
 
+    mod12_counter++;
+
+    uint8_t timing_mid;
+    uint8_t timing = timing[step_count];
+    uint8_t timing_next = timing[next_step];
+
+    switch (speed) {
+    default:
+    case md_speed_1x:
+      timing_mid = 12;
+      break;
+    case md_speed_2x:
+      timing_mid = 12 * 0.5;
+      break;
+    case md_speed_3_4x:
+      timing_mid = 12 * (4.0/3.0);
+      break;
+    case md_speed_3_2x:
+      timing_mid = 6 * (2.0/3.0);
+      break;
+    }
+
+     if (((timing >= timing_mid) && (timing - timing_mid == mod12_counter)) ||
+        ((timing_next < timing_mid) && ((timing_next) == mod12_counter))) {
+      bool send_trig = false;
       send_trig = trig_conditional(conditional[current_step]);
 
       if (send_trig) {
@@ -54,26 +106,33 @@ void MDSeqTrack::seq() {
         }
       }
     }
-  }
-  if (MidiClock.mod12_counter == 11) {
-    if (step_count == length - 1) {
-      step_count = 0;
-
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) { iterations_5 = 1; }
-      if (iterations_6 > 6) { iterations_8 = 1; }
-      if (iterations_7 > 7) { iterations_7 = 1; }
-      if (iterations_8 > 8) { iterations_8 = 1; }
-
-    } else {
+    if (mod12_counter == timing_mid) {
+      mod12_counter = 0;
       step_count++;
     }
-    //       DEBUG_PRINT(step_count);
-    //       DEBUG_PRINT(" ");
+    break;
+  }
+
+  if (step_count == length - 1) {
+    step_count = 0;
+
+    iterations_5++;
+    iterations_6++;
+    iterations_7++;
+    iterations_8++;
+
+    if (iterations_5 > 5) {
+      iterations_5 = 1;
+    }
+    if (iterations_6 > 6) {
+      iterations_8 = 1;
+    }
+    if (iterations_7 > 7) {
+      iterations_7 = 1;
+    }
+    if (iterations_8 > 8) {
+      iterations_8 = 1;
+    }
   }
 }
 
