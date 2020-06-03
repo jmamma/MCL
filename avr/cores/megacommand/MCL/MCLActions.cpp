@@ -483,7 +483,7 @@ void MCLActions::send_tracks_to_devices() {
       }
 #ifdef EXT_TRACKS
       else {
-        if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].resolution == 2) {
+        if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].scale == 2) {
           next_transitions[n] =
               MidiClock.div16th_counter -
               (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count);

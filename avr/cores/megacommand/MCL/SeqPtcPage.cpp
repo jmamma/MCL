@@ -250,7 +250,7 @@ void SeqPtcPage::display() {
 #ifdef EXT_TRACKS
   else {
     GUI.put_value_at(5, (ptc_param_len.getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
+                         (2 / mcl_seq.ext_tracks[last_ext_track].scale)));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -330,7 +330,7 @@ void SeqPtcPage::display() {
 #ifdef EXT_TRACKS
   else {
     itoa(ptc_param_len.getValue() /
-             (2 / mcl_seq.ext_tracks[last_ext_track].resolution),
+             (2 / mcl_seq.ext_tracks[last_ext_track].scale),
          buf1, 10);
     draw_knob(2, "LEN", buf1);
   }
