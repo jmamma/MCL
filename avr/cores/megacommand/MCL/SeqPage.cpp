@@ -83,6 +83,15 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   GUI.currentPage()->config();
 }
 
+uint8_t SeqPage::get_md_scale(uint8_t scale_id) {
+        uint8_t md_scales[4] = { MD_SCALE_1X, MD_SCALE_2X, MD_SCALE_3_4X, MD_SCALE_3_2X };
+        uint8_t scale = 0;
+        for (uint8_t n = 0; n < sizeof(md_scales); n++) {
+           if (md_scales[n] == mcl_seq.md_tracks[last_md_track].scale) { scale = n; }
+        }
+        return scale;
+}
+
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
@@ -197,7 +206,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (opt_midi_device_capture == DEVICE_MD) {
         DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
-        opt_scale = (mcl_seq.md_tracks[last_md_track].scale);
+        opt_scale = get_md_scale(mcl_seq.md_tracks[last_md_track].scale);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
@@ -266,7 +275,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (opt_midi_device_capture == DEVICE_MD) {
         DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
-        opt_scale = (mcl_seq.md_tracks[last_md_track].scale);
+
+        opt_scale = get_md_scale(mcl_seq.md_tracks[last_md_track].scale);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
@@ -589,12 +599,14 @@ void opt_scale_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    mcl_seq.md_tracks[last_md_track].set_scale(opt_scale);
+    uint8_t md_scales[4] = { MD_SCALE_1X, MD_SCALE_2X, MD_SCALE_3_4X, MD_SCALE_3_2X };
+    mcl_seq.md_tracks[last_md_track].set_scale(md_scales[opt_scale]);
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    mcl_seq.ext_tracks[last_ext_track].set_scale(opt_scale);
+    uint8_t ext_scales[4] = { EXT_SCALE_1X, EXT_SCALE_2X, EXT_SCALE_3_4X, EXT_SCALE_3_2X };
+    mcl_seq.ext_tracks[last_ext_track].set_scale(ext_scales[opt_scale]);
     seq_extstep_page.config_encoders();
   }
 #endif
