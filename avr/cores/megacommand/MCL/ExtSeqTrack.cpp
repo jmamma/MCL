@@ -61,15 +61,8 @@ void ExtSeqTrack::set_length(uint8_t len) {
     step_count = length % step_count;
   }
   DEBUG_DUMP(step_count);
-  /*uint8_t step_count =
-       ((MidiClock.div32th_counter / scale) -
-        (mcl_actions.start_clock32th / scale)) -
-       (length *
-        ((MidiClock.div32th_counter / scale -
-          (mcl_actions.start_clock32th / scale)) /
-         (length)));
-*/
 }
+
 void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
@@ -255,14 +248,6 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   }
 }
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
-  /* uint8_t step_count =
-       ((MidiClock.div32th_counter / scale) -
-        (mcl_actions.start_clock32th / scale)) -
-       (length * ((MidiClock.div32th_counter / scale -
-                                     (mcl_actions.start_clock32th /
-     scale)) / (length)));
- */
-
   uint8_t utiming = (mod12_counter + get_timing_mid());
 
   uint8_t condition = 0;
