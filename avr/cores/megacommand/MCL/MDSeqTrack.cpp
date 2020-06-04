@@ -24,17 +24,31 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
   case MD_SCALE_3_4X:
     multi = (2.0 / 3.0);
     break;
+  case MD_SCALE_1_4X:
+    multi = 4.0;
+    break;
+  case MD_SCALE_1_8X:
+    multi = 8.0;
+    break;
   }
   return multi;
 }
 
 void MDSeqTrack::set_scale(uint8_t _scale) {
   uint8_t old_scale = scale;
+  float mult = get_scale_multiplier(_scale) / get_scale_multiplier(old_scale);
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-    timing[i] = round(get_scale_multiplier(_scale) * ((float)timing[i] / get_scale_multiplier(old_scale)));
+    timing[i] = round(mult * (float)timing[i]);
   }
   scale = _scale;
-  init();
+  uint8_t timing_mid = get_timing_mid();
+  USE_LOCK();
+  SET_LOCK();
+  if (mod12_counter > timing_mid) {
+  mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+  //step_count_inc();
+  }
+  CLEAR_LOCK();
 }
 
 void MDSeqTrack::seq() {
@@ -85,30 +99,7 @@ void MDSeqTrack::seq() {
 
   if (mod12_counter == timing_mid) {
     mod12_counter = 0;
-
-    if (step_count == length - 1) {
-      step_count = 0;
-
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_8 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
-    } else {
-      step_count++;
-    }
+    step_count_inc();
   }
 }
 

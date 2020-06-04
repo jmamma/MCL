@@ -84,10 +84,9 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
 }
 
 uint8_t SeqPage::get_md_scale(uint8_t scale_id) {
-        uint8_t md_scales[4] = { MD_SCALE_1X, MD_SCALE_2X, MD_SCALE_3_4X, MD_SCALE_3_2X };
         uint8_t scale = 0;
         for (uint8_t n = 0; n < sizeof(md_scales); n++) {
-           if (md_scales[n] == mcl_seq.md_tracks[last_md_track].scale) { scale = n; }
+           if (pgm_read_byte(&md_scales[n]) == mcl_seq.md_tracks[last_md_track].scale) { scale = n; }
         }
         return scale;
 }
@@ -599,8 +598,7 @@ void opt_scale_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    uint8_t md_scales[4] = { MD_SCALE_1X, MD_SCALE_2X, MD_SCALE_3_4X, MD_SCALE_3_2X };
-    mcl_seq.md_tracks[last_md_track].set_scale(md_scales[opt_scale]);
+    mcl_seq.md_tracks[last_md_track].set_scale(pgm_read_byte(&md_scales[opt_scale]));
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS

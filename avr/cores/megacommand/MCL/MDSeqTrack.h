@@ -19,7 +19,12 @@
 #define MD_SCALE_2X 65
 #define MD_SCALE_3_4X 66
 #define MD_SCALE_3_2X 67
+#define MD_SCALE_1_4X 68
+#define MD_SCALE_1_8X 69
 
+const uint8_t md_scales[6] PROGMEM = {MD_SCALE_1X,   MD_SCALE_2X,
+                                      MD_SCALE_3_4X, MD_SCALE_3_2X,
+                                      MD_SCALE_1_4X, MD_SCALE_1_8X};
 // forward declare MDTrack
 class MDTrack;
 
@@ -66,6 +71,31 @@ public:
   }
 
   ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) {
+        iterations_5 = 1;
+      }
+      if (iterations_6 > 6) {
+        iterations_8 = 1;
+      }
+      if (iterations_7 > 7) {
+        iterations_7 = 1;
+      }
+      if (iterations_8 > 8) {
+        iterations_8 = 1;
+      }
+    } else {
+      step_count++;
+    }
+  }
   void send_trig();
   ALWAYS_INLINE() void send_trig_inline();
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
@@ -119,6 +149,12 @@ public:
       break;
     case MD_SCALE_3_4X:
       timing_mid = 8; // 12 * (2.0/3.0);
+      break;
+    case MD_SCALE_1_4X:
+      timing_mid = 48;
+      break;
+    case MD_SCALE_1_8X:
+      timing_mid = 96;
       break;
     }
     return timing_mid;
