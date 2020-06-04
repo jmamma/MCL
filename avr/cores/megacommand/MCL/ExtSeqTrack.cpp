@@ -212,7 +212,6 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
 void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
                                      uint8_t velocity) {
-  DEBUG_PRINTLN("recording notes");
   uint8_t match = 255;
   // Look for matching note already on this step
   // If it's a note off, then disable the note
@@ -263,12 +262,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
                                      (mcl_actions.start_clock32th /
      scale)) / (length)));
  */
-  uint8_t utiming =
-      6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
-  if (scale > 1) {
-    utiming = (MidiClock.mod12_counter + 12);
-  }
+  uint8_t utiming = (mod12_counter + get_timing_mid());
 
   uint8_t condition = 0;
   uint8_t match = 255;
@@ -303,19 +298,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
-  /*uint8_t step_count =
-      ((MidiClock.div32th_counter / scale) -
-       (mcl_actions.start_clock32th / scale)) -
-      (length * ((MidiClock.div32th_counter / scale -
-                                    (mcl_actions.start_clock32th /
-     scale)) / (length)));
-*/
-  uint8_t utiming =
-      6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
-  if (scale > 1) {
-    utiming = (MidiClock.mod12_counter + 12);
-  }
+  uint8_t utiming = (mod12_counter + get_timing_mid());
   uint8_t condition = 0;
 
   uint8_t match = 255;
