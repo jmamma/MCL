@@ -28,7 +28,8 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(int curtrack, int column, int row, EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_ext(int curtrack, int column, int row,
+                                     EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
   A4Track *a4_track = (A4Track *)empty_track;
@@ -151,13 +152,13 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         first_note = i;
       }
 
-      //If track is not empty, preserve chain settings on save
+      // If track is not empty, preserve chain settings on save
 
-      if (grid_page.row_headers[grid_page.cur_row].track_type[i] != EMPTY_TRACK_TYPE) {
+      if (grid_page.row_headers[grid_page.cur_row].track_type[i] !=
+          EMPTY_TRACK_TYPE) {
         grid_track.load_track_from_grid(i, row);
         memcpy(&empty_track.chain, &grid_track.chain, sizeof(GridChain));
-      }
-      else {
+      } else {
         empty_track.chain.row = row;
         empty_track.chain.loops = 0;
       }
@@ -360,7 +361,7 @@ void MCLActions::send_tracks_to_devices() {
         if (load_track_from_ext(track, i, grid_page.getRow(), &empty_track)) {
           if ((Analog4.connected) && (empty_track.active == A4_TRACK_TYPE)) {
             a4_send[track] = 1;
-            }
+          }
         }
       }
 #endif
@@ -435,10 +436,11 @@ void MCLActions::send_tracks_to_devices() {
                                            sizeof(GridTrack) +
                                                sizeof(MDSeqTrackData) +
                                                sizeof(MDMachine))) {
-         md_temp_track.load_from_mem(n);
+          md_temp_track.load_from_mem(n);
 
-          if ((md_track->active != EMPTY_TRACK_TYPE) && (memcmp(&(md_temp_track.machine), &(md_track->machine),
-                     sizeof(MDMachine)) != 0)) {
+          if ((md_track->active != EMPTY_TRACK_TYPE) &&
+              (memcmp(&(md_temp_track.machine), &(md_track->machine),
+                      sizeof(MDMachine)) != 0)) {
             mcl_actions.send_machine[n] = 0;
           } else {
             mcl_actions.send_machine[n] = 1;
@@ -478,20 +480,16 @@ void MCLActions::send_tracks_to_devices() {
       //  next_transitions[n] = next_transitions_old[n];
       transition_level[n] = 0;
       if (n < NUM_MD_TRACKS) {
-        next_transitions[n] =
-            MidiClock.div16th_counter - mcl_seq.md_tracks[n].step_count;
+        next_transitions[n] = MidiClock.div16th_counter -
+                              (mcl_seq.md_tracks[n].step_count *
+                               mcl_seq.md_tracks[n].get_scale_multiplier());
       }
 #ifdef EXT_TRACKS
       else {
-        if (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].scale == 2) {
-          next_transitions[n] =
-              MidiClock.div16th_counter -
-              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count);
-        } else {
-          next_transitions[n] =
-              MidiClock.div16th_counter -
-              (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count * 2);
-        }
+        next_transitions[n] =
+            MidiClock.div16th_counter -
+            (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count *
+             mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_scale_multiplier());
       }
 #endif
       calc_next_slot_transition(n);
@@ -515,11 +513,17 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint16_t next_transitions_old = next_transitions[n];
 
   if (n < NUM_MD_TRACKS) {
-    len = chains[n].loops * mcl_seq.md_tracks[n].length;
-  }
+    uint8_t l = mcl_seq.md_tracks[n].length;
+    uint8_t m = mcl_seq.md_tracks[n].get_scale_multiplier();
+    len = chains[n].loops * l * m + ( l - m * l);
+
+   }
 #ifdef EXT_TRACKS
   else {
-    len = chains[n].loops * mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
+    uint8_t l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
+    uint8_t m = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_scale_multiplier();
+    len = chains[n].loops * l * m + ( l - m * l);
+
   }
 #endif
   if (len < 4) {

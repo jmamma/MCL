@@ -19,11 +19,13 @@
 #define MD_SCALE_2X 65
 #define MD_SCALE_3_4X 66
 #define MD_SCALE_3_2X 67
-#define MD_SCALE_1_4X 68
-#define MD_SCALE_1_8X 69
+#define MD_SCALE_1_2X 68
+#define MD_SCALE_1_4X 69
+#define MD_SCALE_1_8X 70
 
-const uint8_t md_scales[6] PROGMEM = {MD_SCALE_1X,   MD_SCALE_2X,
+const uint8_t md_scales[7] PROGMEM = {MD_SCALE_1X,   MD_SCALE_2X,
                                       MD_SCALE_3_4X, MD_SCALE_3_2X,
+                                      MD_SCALE_1_2X,
                                       MD_SCALE_1_4X, MD_SCALE_1_8X};
 // forward declare MDTrack
 class MDTrack;
@@ -128,7 +130,8 @@ public:
   void rotate_right();
   void reverse();
 
-  float get_scale_multiplier(uint8_t scale);
+  float get_scale_multiplier(bool inverse = false);
+  float get_scale_multiplier(uint8_t scale, bool inverse = false);
   void set_scale(uint8_t _scale);
 
   void copy_step(uint8_t n, MDSeqStep *step);
@@ -149,6 +152,9 @@ public:
       break;
     case MD_SCALE_3_4X:
       timing_mid = 8; // 12 * (2.0/3.0);
+      break;
+    case MD_SCALE_1_2X:
+      timing_mid = 16;
       break;
     case MD_SCALE_1_4X:
       timing_mid = 48;

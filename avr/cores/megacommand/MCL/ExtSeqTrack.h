@@ -13,10 +13,17 @@
 #define UART2_PORT 2
 
 // EXT Track scale
-#define EXT_SCALE_1X 0
+#define EXT_SCALE_1X 2
 #define EXT_SCALE_2X 1
-#define EXT_SCALE_3_4X 2
-#define EXT_SCALE_3_2X 3
+#define EXT_SCALE_3_4X 3
+#define EXT_SCALE_3_2X 4
+#define EXT_SCALE_1_2X 5
+#define EXT_SCALE_1_4X 6
+#define EXT_SCALE_1_8X 7
+
+const uint8_t ext_scales[7] PROGMEM = {
+    EXT_SCALE_1X,   EXT_SCALE_2X,   EXT_SCALE_3_4X, EXT_SCALE_3_2X,
+    EXT_SCALE_1_2X, EXT_SCALE_1_4X, EXT_SCALE_1_8X};
 
 class ExtSeqTrackData {
 public:
@@ -45,6 +52,7 @@ public:
   uint64_t oneshot_mask[2];
 
   uint8_t step_count;
+  uint8_t mod12_counter;
   uint32_t start_step;
   bool mute_until_start = false;
 
@@ -64,6 +72,31 @@ public:
     iterations_7 = 1;
     iterations_8 = 1;
   }
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) {
+        iterations_5 = 1;
+      } 
+      if (iterations_6 > 6) {
+        iterations_8 = 1;
+      } 
+      if (iterations_7 > 7) {
+        iterations_7 = 1;
+      } 
+      if (iterations_8 > 8) {
+        iterations_8 = 1;
+      } 
+    } else {
+      step_count++;
+    }
+  }
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE()
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
@@ -80,7 +113,34 @@ public:
   void clear_ext_notes();
   void clear_track();
   void set_length(uint8_t len);
-
+  ALWAYS_INLINE() uint8_t get_timing_mid() {
+    uint8_t timing_mid;
+    switch (scale) {
+    default:
+    case EXT_SCALE_1X:
+      timing_mid = 12;
+      break;
+    case EXT_SCALE_2X:
+      timing_mid = 6;
+      break;
+    case EXT_SCALE_3_2X:
+      timing_mid = 16; // 12 * (4.0/3.0);
+      break;
+    case EXT_SCALE_3_4X:
+      timing_mid = 8; // 12 * (2.0/3.0);
+      break;
+    case EXT_SCALE_1_2X:
+      timing_mid = 16;
+      break;
+    case EXT_SCALE_1_4X:
+      timing_mid = 48;
+      break;
+    case EXT_SCALE_1_8X:
+      timing_mid = 96;
+      break;
+    }
+    return timing_mid;
+  }
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
@@ -137,7 +197,8 @@ public:
   void reverse();
 
   void set_scale(uint8_t _scale);
-  float get_scale_multiplier(uint8_t scale);
+  float get_scale_multiplier(bool inverse = false);
+  float get_scale_multiplier(uint8_t scale, bool inverse = false);
 };
 
 #endif /* EXTSEQTRACK_H__ */

@@ -1,33 +1,57 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
+float ExtSeqTrack::get_scale_multiplier(bool inverse) {
+  return get_scale_multiplier(scale, inverse);
+}
 
-float ExtSeqTrack::get_scale_multiplier(uint8_t scale) {
-    float multi;
-    switch (scale) {
-    default:
-    case EXT_SCALE_1X:
-      multi = 1;
-      break;
-    case EXT_SCALE_2X:
-      multi = 0.5;
-      break;
-    case EXT_SCALE_3_4X:
-      multi = (4.0/3.0);
-      break;
-    case EXT_SCALE_3_2X:
-      multi = (3.0/2.0);
-      break;
-    }
-    return multi;
+float ExtSeqTrack::get_scale_multiplier(uint8_t scale, bool inverse) {
+  float multi;
+  switch (scale) {
+  default:
+  case EXT_SCALE_1X:
+    multi = 1;
+    break;
+  case EXT_SCALE_2X:
+    if (inverse) { multi = 2; }
+    else { multi = 0.5; }
+    break;
+  case EXT_SCALE_3_2X:
+    if (inverse) { multi = 3.0 / 4.0; }
+    else { multi = (4.0 / 3.0); }
+    break;
+  case EXT_SCALE_3_4X:
+    if (inverse) { multi = 3.0 / 2.0; }
+    else { multi = (2.0 / 3.0); }
+    break;
+  case EXT_SCALE_1_2X:
+    if (inverse) { multi = 1.0 / 2.0; }
+    else { multi = 2.0; }
+    break;
+  case EXT_SCALE_1_4X:
+    if (inverse) { multi = 1.0 / 4.0; }
+    else { multi = 4.0; }
+    break;
+  case EXT_SCALE_1_8X:
+    if (inverse) { multi = 1.0 / 8.0; }
+    else { multi = 8.0; }
+    break;
+  }
+  return multi;
 }
 
 void ExtSeqTrack::set_scale(uint8_t _scale) {
-    uint8_t old_scale = scale;
-    for (uint8_t i = 0; i < 128; i++) {
-       timing[i] = round(get_scale_multiplier(scale) * ((float) timing[i] / get_scale_multiplier(old_scale)));
-    }
-    scale = _scale;
+  uint8_t old_scale = scale;
+  float mult = get_scale_multiplier(_scale) / get_scale_multiplier(old_scale);
+  for (uint8_t i = 0; i < 128; i++) {
+    timing[i] = round(mult * (float)timing[i]);
+  }
+  scale = _scale;
+  uint8_t timing_mid = get_timing_mid();
+  if (mod12_counter > timing_mid) {
+  mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+  //step_count_inc();
+  }
 }
 
 
@@ -53,18 +77,10 @@ void ExtSeqTrack::seq() {
       init();
     }
   }
+  uint8_t timing_mid = get_timing_mid();
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
-    uint8_t timing_counter = MidiClock.mod12_counter;
-
-    if ((scale == 1)) {
-      if (MidiClock.mod12_counter < 6) {
-        timing_counter = MidiClock.mod12_counter;
-      } else {
-        timing_counter = MidiClock.mod12_counter - 6;
-      }
-    }
 
     uint8_t next_step = 0;
     if (step_count == length) {
@@ -73,14 +89,11 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    uint8_t timing_mid = 6 * scale;
     for (uint8_t c = 0; c < 4; c++) {
       uint8_t current_step;
       if (((timing[step_count] >= timing_mid) &&
-           ((timing[current_step = step_count] - timing_mid) ==
-            timing_counter)) ||
-          ((timing[next_step] < timing_mid) &&
-           ((timing[current_step = next_step]) == timing_counter))) {
+           ((timing[current_step = step_count] - timing_mid) == mod12_counter)) ||
+          ((timing[next_step] < timing_mid) && ((timing[current_step = next_step]) == mod12_counter))) {
 
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
@@ -91,24 +104,13 @@ void ExtSeqTrack::seq() {
       }
     }
   }
-  if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) &&
-      (scale == 1)) {
-    step_count++;
-  } else if ((MidiClock.mod12_counter == 11) && (scale == 2)) {
-    step_count++;
-  }
-  if (step_count == length) {
-    step_count = 0;
-    iterations_5++;
-    iterations_6++;
-    iterations_7++;
-    iterations_8++;
+    mod12_counter++;
 
-    if (iterations_5 > 5) { iterations_5 = 1; }
-    if (iterations_6 > 6) { iterations_8 = 1; }
-    if (iterations_7 > 7) { iterations_7 = 1; }
-    if (iterations_8 > 8) { iterations_8 = 1; }
+  if (mod12_counter == timing_mid) {
+    mod12_counter = 0;
+    step_count_inc();
   }
+
 }
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);

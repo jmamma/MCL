@@ -8,7 +8,11 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
+float MDSeqTrack::get_scale_multiplier(bool inverse) {
+  return get_scale_multiplier(scale, inverse);
+}
+
+float MDSeqTrack::get_scale_multiplier(uint8_t scale, bool inverse) {
   float multi;
   switch (scale) {
   default:
@@ -16,19 +20,28 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
     multi = 1;
     break;
   case MD_SCALE_2X:
-    multi = 0.5;
+    if (inverse) { multi = 2; }
+    else { multi = 0.5; }
     break;
   case MD_SCALE_3_2X:
-    multi = (4.0 / 3.0);
+    if (inverse) { multi = 3.0 / 4.0; }
+    else { multi = (4.0 / 3.0); }
     break;
   case MD_SCALE_3_4X:
-    multi = (2.0 / 3.0);
+    if (inverse) { multi = 3.0 / 2.0; }
+    else { multi = (2.0 / 3.0); }
+    break;
+  case MD_SCALE_1_2X:
+    if (inverse) { multi = 1.0 / 2.0; }
+    else { multi = 2.0; }
     break;
   case MD_SCALE_1_4X:
-    multi = 4.0;
+    if (inverse) { multi = 1.0 / 4.0; }
+    else { multi = 4.0; }
     break;
   case MD_SCALE_1_8X:
-    multi = 8.0;
+    if (inverse) { multi = 1.0 / 8.0; }
+    else { multi = 8.0; }
     break;
   }
   return multi;
@@ -42,13 +55,10 @@ void MDSeqTrack::set_scale(uint8_t _scale) {
   }
   scale = _scale;
   uint8_t timing_mid = get_timing_mid();
-  USE_LOCK();
-  SET_LOCK();
   if (mod12_counter > timing_mid) {
   mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
   //step_count_inc();
   }
-  CLEAR_LOCK();
 }
 
 void MDSeqTrack::seq() {

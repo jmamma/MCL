@@ -204,8 +204,7 @@ void SeqStepPage::display() {
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].scale,
-                               seq_param2.cur);
+      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].scale, seq_param2.cur);
     }
   }
   oled_display.display();

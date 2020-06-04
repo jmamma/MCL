@@ -91,6 +91,15 @@ uint8_t SeqPage::get_md_scale(uint8_t scale_id) {
         return scale;
 }
 
+uint8_t SeqPage::get_ext_scale(uint8_t scale_id) {
+        uint8_t scale = 0;
+        for (uint8_t n = 0; n < sizeof(md_scales); n++) {
+           if (pgm_read_byte(&ext_scales[n]) == mcl_seq.ext_tracks[last_ext_track].scale) { scale = n; }
+        }
+        return scale;
+}
+
+
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
@@ -209,7 +218,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_scale = (mcl_seq.ext_tracks[last_ext_track].scale);
+        opt_scale = get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale);
       #endif
       }
 
@@ -279,7 +288,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_scale = (mcl_seq.ext_tracks[last_ext_track].scale);
+        opt_scale = get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale);
       #endif
       }
       // capture current midi_device value
@@ -603,8 +612,7 @@ void opt_scale_handler() {
   }
 #ifdef EXT_TRACKS
   else {
-    uint8_t ext_scales[4] = { EXT_SCALE_1X, EXT_SCALE_2X, EXT_SCALE_3_4X, EXT_SCALE_3_2X };
-    mcl_seq.ext_tracks[last_ext_track].set_scale(ext_scales[opt_scale]);
+    mcl_seq.ext_tracks[last_ext_track].set_scale(pgm_read_byte(&ext_scales[opt_scale]));
     seq_extstep_page.config_encoders();
   }
 #endif

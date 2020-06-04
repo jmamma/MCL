@@ -78,6 +78,7 @@ public:
   void select_track(uint8_t device, uint8_t track);
 
   uint8_t get_md_scale(uint8_t scale_id);
+  uint8_t get_ext_scale(uint8_t scale_id);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();
