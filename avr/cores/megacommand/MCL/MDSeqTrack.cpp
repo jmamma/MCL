@@ -18,10 +18,10 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
   case MD_SCALE_2X:
     multi = 0.5;
     break;
-  case MD_SCALE_3_4X:
+  case MD_SCALE_3_2X:
     multi = (4.0 / 3.0);
     break;
-  case MD_SCALE_3_2X:
+  case MD_SCALE_3_4X:
     multi = (2.0 / 3.0);
     break;
   }

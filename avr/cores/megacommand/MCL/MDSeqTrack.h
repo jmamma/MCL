@@ -114,10 +114,10 @@ public:
     case MD_SCALE_2X:
       timing_mid = 6;
       break;
-    case MD_SCALE_3_4X:
+    case MD_SCALE_3_2X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
-    case MD_SCALE_3_2X:
+    case MD_SCALE_3_4X:
       timing_mid = 8; // 12 * (2.0/3.0);
       break;
     }
