@@ -48,9 +48,7 @@ void SeqStepPage::init() {
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   seq_param1.max = 14;
-  seq_param2.max = 23;
   seq_param2.min = 1;
-  seq_param2.cur = 12;
   seq_param2.old = 12;
   seq_param1.cur = 0;
   seq_param3.max = 64;
@@ -99,7 +97,7 @@ void SeqStepPage::display() {
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   if (seq_param2.getValue() == 0) {
     GUI.put_string_at(2, "--");
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
+  } else if ((seq_param2.getValue() < timing_mid) && (seq_param2.getValue() != 0)) {
     GUI.put_string_at(2, "-");
     GUI.put_value_at2(3, timing_mid - seq_param2.getValue());
 
@@ -160,7 +158,7 @@ void SeqStepPage::display() {
   K[3] = '\0';
 
   if (seq_param2.getValue() == 0) {
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
+  } else if ((seq_param2.getValue() < timing_mid) && (seq_param2.getValue() != 0)) {
     itoa(timing_mid - seq_param2.getValue(), K + 1, 10);
   } else {
     K[0] = '+';

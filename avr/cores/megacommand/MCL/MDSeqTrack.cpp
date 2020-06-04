@@ -22,7 +22,7 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
     multi = (4.0 / 3.0);
     break;
   case MD_SCALE_3_2X:
-    multi = (3.0 / 2.0);
+    multi = (2.0 / 3.0);
     break;
   }
   return multi;
@@ -31,10 +31,10 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale) {
 void MDSeqTrack::set_scale(uint8_t _scale) {
   uint8_t old_scale = scale;
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-    timing[i] = round(get_scale_multiplier(scale) *
-                      ((float)timing[i] / get_scale_multiplier(old_scale)));
+    timing[i] = round(get_scale_multiplier(_scale) * ((float)timing[i] / get_scale_multiplier(old_scale)));
   }
   scale = _scale;
+  init();
 }
 
 void MDSeqTrack::seq() {
