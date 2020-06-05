@@ -38,7 +38,7 @@ const menu_t<10> seq_menu_layout PROGMEM = {
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {1, "LCKS"}, {2, "ALL"}}},
         {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
-        {"TRACK RES:", 1, 3, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {1, "2x"}, {2, "1x"} }},
+        {"SPEED:", 0, 7, 7, (uint8_t *)&opt_speed, (Page *)NULL, opt_speed_handler, { {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"}}},
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "--",}, {1, "L"}, {2, "R"}, {3,"L>ALL"}, {4, "R>ALL"}}},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"} }},
     },

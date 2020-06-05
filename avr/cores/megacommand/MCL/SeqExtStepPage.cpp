@@ -1,5 +1,5 @@
-#include "SeqExtStepPage.h"
 #include "MCL.h"
+#include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
@@ -10,11 +10,13 @@ void SeqExtStepPage::config() {
   constexpr uint8_t len1 = sizeof(info1);
 
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
+/*
+  if (mcl_seq.ext_tracks[last_ext_track].speed == EXT_SPEED_2X) {
     strcpy(info1, "HI-RES");
   } else {
     strcpy(info1, "LOW-RES");
   }
+*/
 #endif
 
   strcpy(info2, "EXT");
@@ -25,13 +27,9 @@ void SeqExtStepPage::config() {
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    seq_param2.cur = 6;
-    seq_param2.max = 11;
-  } else {
-    seq_param2.cur = 12;
-    seq_param2.max = 23;
-  }
+  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+  seq_param2.cur = timing_mid;
+  seq_param2.max = timing_mid * 2 - 1;
   seq_param3.max = 128;
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
@@ -81,31 +79,17 @@ void SeqExtStepPage::display() {
   // 0  1   2  3  4  5  6  7  8  9  10  11
   //  -5  -4 -3 -2 -1 0
 #ifdef EXT_TRACKS
-  if (mcl_seq.ext_tracks[last_ext_track].resolution == 1) {
-    if (seq_param2.getValue() == 0) {
-      GUI.put_string_at(2, "--");
-    } else if ((seq_param2.getValue() < 6) &&
-               (seq_param2.getValue() != 0)) {
-      GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, seq_param2.getValue() - 6);
-    } else {
-      GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, seq_param2.getValue() - 6);
-    }
+  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+  if (seq_param2.getValue() == 0) {
+    GUI.put_string_at(2, "--");
+  } else if ((seq_param2.getValue() < timing_mid) &&
+             (seq_param2.getValue() != 0)) {
+    GUI.put_string_at(2, "-");
+    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
   } else {
-    if (seq_param2.getValue() == 0) {
-      GUI.put_string_at(2, "--");
-    } else if ((seq_param2.getValue() < 12) &&
-               (seq_param2.getValue() != 0)) {
-      GUI.put_string_at(2, "-");
-      GUI.put_value_at1(3, 12 - seq_param2.getValue());
-
-    } else {
-      GUI.put_string_at(2, "+");
-      GUI.put_value_at1(3, seq_param2.getValue() - 12);
-    }
+    GUI.put_string_at(2, "+");
+    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
   }
-
   MusicalNotes number_to_note;
   uint8_t notenum;
   uint8_t notes_held = 0;
@@ -141,8 +125,6 @@ void SeqExtStepPage::display() {
     GUI.put_value_at1(15, page_select + 1);
     GUI.put_value_at(6, seq_param3.getValue());
 
-    GUI.put_value_at(6, (seq_param3.getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
     if (Analog4.connected) {
       GUI.put_string_at(10, "A4T");
     } else {
@@ -179,25 +161,15 @@ void SeqExtStepPage::display() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   strcpy(K, "--");
   K[3] = '\0';
-  if (active_track.resolution == 1) {
-    if (seq_param2.getValue() == 0) {
-    } else if ((seq_param2.getValue() < 6) &&
-               (seq_param2.getValue() != 0)) {
-      itoa(6 - seq_param2.getValue(), K + 1, 10);
-    } else {
-      K[0] = '+';
-      itoa(seq_param2.getValue() - 6, K + 1, 10);
-    }
-  } else {
-    if (seq_param2.getValue() == 0) {
-    } else if ((seq_param2.getValue() < 12) &&
-               (seq_param2.getValue() != 0)) {
-      itoa(12 - seq_param2.getValue(), K + 1, 10);
 
-    } else {
-      K[0] = '+';
-      itoa(seq_param2.getValue() - 12, K + 1, 10);
-    }
+  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+  if (seq_param2.getValue() == 0) {
+  } else if ((seq_param2.getValue() < timing_mid) &&
+             (seq_param2.getValue() != 0)) {
+    itoa(timing_mid - seq_param2.getValue(), K + 1, 10);
+  } else {
+    K[0] = '+';
+    itoa(seq_param2.getValue() - timing_mid, K + 1, 10);
   }
   draw_knob(1, "UTIM", K);
 
@@ -210,7 +182,7 @@ void SeqExtStepPage::display() {
     }
   }
 
-  itoa(seq_param3.getValue() / (2 / active_track.resolution), K, 10);
+  itoa(seq_param3.getValue(), K, 10);
   draw_knob(2, "LEN", K);
 
   if (notes_held > 0) {
@@ -249,8 +221,12 @@ void SeqExtStepPage::display() {
   }
 
   draw_pattern_mask(page_select * 16, DEVICE_A4);
-
   SeqPage::display();
+  if (mcl_gui.show_encoder_value(&seq_param2) &&
+        (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
+        (!show_step_menu)) {
+      mcl_gui.draw_microtiming(get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed), seq_param2.cur);
+   }
   oled_display.display();
 #endif
 }
@@ -292,13 +268,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         seq_param1.cur = condition;
         // Micro
         if (utiming == 0) {
-          if (active_track.resolution == 1) {
-            utiming = 6;
-            seq_param2.max = 11;
-          } else {
-            seq_param2.max = 23;
-            utiming = 12;
-          }
+          utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
         }
         seq_param2.cur = utiming;
 

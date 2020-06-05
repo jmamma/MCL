@@ -1,40 +1,79 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
+float ExtSeqTrack::get_speed_multiplier(bool inverse) {
+  return get_speed_multiplier(speed, inverse);
+}
+
+float ExtSeqTrack::get_speed_multiplier(uint8_t speed, bool inverse) {
+  float multi;
+  switch (speed) {
+  default:
+  case EXT_SPEED_1X:
+    multi = 1;
+    break;
+  case EXT_SPEED_2X:
+    if (inverse) { multi = 2; }
+    else { multi = 0.5; }
+    break;
+  case EXT_SPEED_3_4X:
+    if (inverse) { multi = 3.0 / 4.0; }
+    else { multi = (4.0 / 3.0); }
+    break;
+  case EXT_SPEED_3_2X:
+    if (inverse) { multi = 3.0 / 2.0; }
+    else { multi = (2.0 / 3.0); }
+    break;
+  case EXT_SPEED_1_2X:
+    if (inverse) { multi = 1.0 / 2.0; }
+    else { multi = 2.0; }
+    break;
+  case EXT_SPEED_1_4X:
+    if (inverse) { multi = 1.0 / 4.0; }
+    else { multi = 4.0; }
+    break;
+  case EXT_SPEED_1_8X:
+    if (inverse) { multi = 1.0 / 8.0; }
+    else { multi = 8.0; }
+    break;
+  }
+  return multi;
+}
+
+void ExtSeqTrack::set_speed(uint8_t _speed) {
+  uint8_t old_speed = speed;
+  float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
+  for (uint8_t i = 0; i < 128; i++) {
+    timing[i] = round(mult * (float)timing[i]);
+  }
+  speed = _speed;
+  uint8_t timing_mid = get_timing_mid();
+  if (mod12_counter > timing_mid) {
+  mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+  //step_count_inc();
+  }
+}
+
+
 void ExtSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {
     step_count = length % step_count;
   }
   DEBUG_DUMP(step_count);
-  /*uint8_t step_count =
-       ((MidiClock.div32th_counter / resolution) -
-        (mcl_actions.start_clock32th / resolution)) -
-       (length *
-        ((MidiClock.div32th_counter / resolution -
-          (mcl_actions.start_clock32th / resolution)) /
-         (length)));
-*/
 }
+
 void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      init();
+      reset();
     }
   }
+  uint8_t timing_mid = get_timing_mid();
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
-    uint8_t timing_counter = MidiClock.mod12_counter;
-
-    if ((resolution == 1)) {
-      if (MidiClock.mod12_counter < 6) {
-        timing_counter = MidiClock.mod12_counter;
-      } else {
-        timing_counter = MidiClock.mod12_counter - 6;
-      }
-    }
 
     uint8_t next_step = 0;
     if (step_count == length) {
@@ -43,14 +82,11 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    uint8_t timing_mid = 6 * resolution;
     for (uint8_t c = 0; c < 4; c++) {
       uint8_t current_step;
       if (((timing[step_count] >= timing_mid) &&
-           ((timing[current_step = step_count] - timing_mid) ==
-            timing_counter)) ||
-          ((timing[next_step] < timing_mid) &&
-           ((timing[current_step = next_step]) == timing_counter))) {
+           ((timing[current_step = step_count] - timing_mid) == mod12_counter)) ||
+          ((timing[next_step] < timing_mid) && ((timing[current_step = next_step]) == mod12_counter))) {
 
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
@@ -61,24 +97,13 @@ void ExtSeqTrack::seq() {
       }
     }
   }
-  if (((MidiClock.mod12_counter == 11) || (MidiClock.mod12_counter == 5)) &&
-      (resolution == 1)) {
-    step_count++;
-  } else if ((MidiClock.mod12_counter == 11) && (resolution == 2)) {
-    step_count++;
-  }
-  if (step_count == length) {
-    step_count = 0;
-    iterations_5++;
-    iterations_6++;
-    iterations_7++;
-    iterations_8++;
+    mod12_counter++;
 
-    if (iterations_5 > 5) { iterations_5 = 1; }
-    if (iterations_6 > 6) { iterations_8 = 1; }
-    if (iterations_7 > 7) { iterations_7 = 1; }
-    if (iterations_8 > 8) { iterations_8 = 1; }
+  if (mod12_counter == timing_mid) {
+    mod12_counter = 0;
+    step_count_inc();
   }
+
 }
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
@@ -107,7 +132,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   switch (condition) {
   case 0:
   case 1:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
+    if (!IS_BIT_SET128(oneshot_mask, step_count)) {
       note_on(note);
     }
     break;
@@ -171,8 +196,8 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
     }
     break;
   case 14:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
-      SET_BIT64(oneshot_mask, step_count);
+    if (!IS_BIT_SET128(oneshot_mask, step_count)) {
+      SET_BIT128(oneshot_mask, step_count);
       note_on(note);
     }
   }
@@ -180,7 +205,6 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
 void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
                                      uint8_t velocity) {
-  DEBUG_PRINTLN("recording notes");
   uint8_t match = 255;
   // Look for matching note already on this step
   // If it's a note off, then disable the note
@@ -224,19 +248,7 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   }
 }
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
-  /* uint8_t step_count =
-       ((MidiClock.div32th_counter / resolution) -
-        (mcl_actions.start_clock32th / resolution)) -
-       (length * ((MidiClock.div32th_counter / resolution -
-                                     (mcl_actions.start_clock32th /
-     resolution)) / (length)));
- */
-  uint8_t utiming =
-      6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
-
-  if (resolution > 1) {
-    utiming = (MidiClock.mod12_counter + 12);
-  }
+  uint8_t utiming = (mod12_counter + get_timing_mid());
 
   uint8_t condition = 0;
   uint8_t match = 255;
@@ -271,19 +283,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
-  /*uint8_t step_count =
-      ((MidiClock.div32th_counter / resolution) -
-       (mcl_actions.start_clock32th / resolution)) -
-      (length * ((MidiClock.div32th_counter / resolution -
-                                    (mcl_actions.start_clock32th /
-     resolution)) / (length)));
-*/
-  uint8_t utiming =
-      6 + MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
 
-  if (resolution > 1) {
-    utiming = (MidiClock.mod12_counter + 12);
-  }
+  uint8_t utiming = (mod12_counter + get_timing_mid());
   uint8_t condition = 0;
 
   uint8_t match = 255;
@@ -343,7 +344,8 @@ void ExtSeqTrack::rotate_left() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == 0) {
@@ -375,7 +377,8 @@ void ExtSeqTrack::rotate_right() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     if (n == length - 1) {
@@ -408,7 +411,8 @@ void ExtSeqTrack::reverse() {
   for (uint8_t a = 0; a < 4; a++) {
     lock_masks[a] = 0;
   }
-  oneshot_mask = 0;
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
     new_pos = length - n - 1;

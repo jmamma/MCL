@@ -18,7 +18,7 @@ extern void pattern_len_handler(Encoder *enc);
 
 
 extern uint8_t opt_trackid;
-extern uint8_t opt_resolution;
+extern uint8_t opt_speed;
 extern uint8_t opt_copy;
 extern uint8_t opt_paste;
 extern uint8_t opt_clear;
@@ -27,7 +27,7 @@ extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
 
 extern void opt_trackid_handler();
-extern void opt_resolution_handler();
+extern void opt_speed_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler();
@@ -76,6 +76,9 @@ public:
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(uint8_t device, uint8_t track);
+
+  uint8_t get_md_speed(uint8_t speed_id);
+  uint8_t get_ext_speed(uint8_t speed_id);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

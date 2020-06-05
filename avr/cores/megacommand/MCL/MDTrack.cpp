@@ -45,6 +45,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   kitextra.patternLength = MD.pattern.patternLength;
   kitextra.doubleTempo = MD.pattern.doubleTempo;
   kitextra.scale = MD.pattern.scale;
+  DEBUG_DUMP(MD.pattern.scale);
 
   kitextra.accentEditAll = MD.pattern.accentEditAll;
   kitextra.slideEditAll = MD.pattern.slideEditAll;
@@ -200,6 +201,7 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+    if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) { mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X; }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
@@ -372,7 +374,9 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       }
       if (merge == SAVE_MD) {
         md_seq_track.init();
-        seq_data.length = length;
+        md_seq_track.length = length;
+        md_seq_track.speed = MD_SPEED_1X + kitextra.doubleTempo;
+        DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
       md_seq_track.merge_from_md(this);
@@ -412,7 +416,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
                                                         MD_TRACK_TYPE);
-
+  DEBUG_DUMP(seq_data.length);
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(column);
   DEBUG_PRINT(" ");

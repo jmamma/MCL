@@ -29,8 +29,15 @@ void SeqStepPage::config() {
   strncat(info1, buf, len1);
   strcpy(info2, "STEP");
 
+  config_encoders();
   // config menu
   config_as_trackedit();
+}
+
+void SeqStepPage::config_encoders() {
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
+  seq_param2.cur = timing_mid;
+  seq_param2.max = timing_mid * 2 - 1;
 }
 
 void SeqStepPage::init() {
@@ -41,9 +48,7 @@ void SeqStepPage::init() {
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   seq_param1.max = 14;
-  seq_param2.max = 23;
   seq_param2.min = 1;
-  seq_param2.cur = 12;
   seq_param2.old = 12;
   seq_param1.cur = 0;
   seq_param3.max = 64;
@@ -89,16 +94,16 @@ void SeqStepPage::display() {
   else if (seq_param1.getValue() == 14) {
     GUI.put_string_at(0, "1S");
   }
-
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   if (seq_param2.getValue() == 0) {
     GUI.put_string_at(2, "--");
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
+  } else if ((seq_param2.getValue() < timing_mid) && (seq_param2.getValue() != 0)) {
     GUI.put_string_at(2, "-");
-    GUI.put_value_at2(3, 12 - seq_param2.getValue());
+    GUI.put_value_at2(3, timing_mid - seq_param2.getValue());
 
   } else {
     GUI.put_string_at(2, "+");
-    GUI.put_value_at2(3, seq_param2.getValue() - 12);
+    GUI.put_value_at2(3, seq_param2.getValue() - timing_mid);
   }
 
   if (show_pitch) {
@@ -131,8 +136,9 @@ void SeqStepPage::display() {
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
   draw_knob_frame();
-
   char K[4];
+
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   if (seq_param1.getValue() == 0) {
     strcpy(K, "L1");
   } else if (seq_param1.getValue() <= 8) {
@@ -149,12 +155,13 @@ void SeqStepPage::display() {
 
   strcpy(K, "--");
   K[3] = '\0';
+
   if (seq_param2.getValue() == 0) {
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
-    itoa(12 - seq_param2.getValue(), K + 1, 10);
+  } else if ((seq_param2.getValue() < timing_mid) && (seq_param2.getValue() != 0)) {
+    itoa(timing_mid - seq_param2.getValue(), K + 1, 10);
   } else {
     K[0] = '+';
-    itoa(seq_param2.getValue() - 12, K + 1, 10);
+    itoa(seq_param2.getValue() - timing_mid, K + 1, 10);
   }
   draw_knob(1, "UTIM", K);
 
@@ -196,8 +203,7 @@ void SeqStepPage::display() {
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].resolution,
-                               seq_param2.cur);
+      mcl_gui.draw_microtiming(get_md_speed(mcl_seq.md_tracks[last_md_track].speed), seq_param2.cur);
     }
   }
   oled_display.display();
@@ -281,7 +287,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      seq_param2.max = 23;
+      seq_param2.max = mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
       int8_t utiming = active_track.timing[step];         // upper
       uint8_t condition = active_track.conditional[step]; // lower
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
@@ -307,7 +313,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       // Micro
       if (utiming == 0) {
-        utiming = 12;
+        utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
@@ -380,7 +386,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(active_track.pattern_mask, step);
           active_track.conditional[step] = 0;
-          active_track.timing[step] = 12; // upper
+          active_track.timing[step] = active_track.get_timing_mid(); // upper
         }
       }
       // Cond

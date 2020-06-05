@@ -12,7 +12,7 @@ bool SeqPage::toggle_device = true;
 
 uint8_t SeqPage::step_select = 255;
 
-uint8_t opt_resolution = 1;
+uint8_t opt_speed = 1;
 uint8_t opt_trackid = 1;
 uint8_t opt_copy = 0;
 uint8_t opt_paste = 0;
@@ -82,6 +82,23 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   GUI.currentPage()->redisplay = true;
   GUI.currentPage()->config();
 }
+
+uint8_t SeqPage::get_md_speed(uint8_t speed_id) {
+        uint8_t speed = 0;
+        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+           if (pgm_read_byte(&md_speeds[n]) == mcl_seq.md_tracks[last_md_track].speed) { speed = n; }
+        }
+        return speed;
+}
+
+uint8_t SeqPage::get_ext_speed(uint8_t speed_id) {
+        uint8_t speed = 0;
+        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+           if (pgm_read_byte(&ext_speeds[n]) == mcl_seq.ext_tracks[last_ext_track].speed) { speed = n; }
+        }
+        return speed;
+}
+
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
@@ -195,13 +212,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       opt_seqpage_capture = this;
 
       if (opt_midi_device_capture == DEVICE_MD) {
-        DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
-        opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
       #endif
       }
 
@@ -266,11 +282,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (opt_midi_device_capture == DEVICE_MD) {
         DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
-        opt_resolution = (mcl_seq.md_tracks[last_md_track].resolution);
+
+        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_resolution = (mcl_seq.ext_tracks[last_ext_track].resolution);
+        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
       #endif
       }
       // capture current midi_device value
@@ -423,14 +440,14 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
       /* uint8_t step_count =
            ((MidiClock.div32th_counter /
-             mcl_seq.ext_tracks[last_ext_track].resolution) -
+             mcl_seq.ext_tracks[last_ext_track].speed) -
             (mcl_actions.start_clock32th /
-             mcl_seq.ext_tracks[last_ext_track].resolution)) -
+             mcl_seq.ext_tracks[last_ext_track].speed)) -
            (mcl_seq.ext_tracks[last_ext_track].length *
             ((MidiClock.div32th_counter /
-                  mcl_seq.ext_tracks[last_ext_track].resolution -
+                  mcl_seq.ext_tracks[last_ext_track].speed -
               (mcl_actions.start_clock32th /
-               mcl_seq.ext_tracks[last_ext_track].resolution)) /
+               mcl_seq.ext_tracks[last_ext_track].speed)) /
              (mcl_seq.ext_tracks[last_ext_track].length)));
        */
       uint8_t step_count = mcl_seq.ext_tracks[last_ext_track].step_count;
@@ -585,15 +602,16 @@ void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }
 
-void opt_resolution_handler() {
+void opt_speed_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    (mcl_seq.md_tracks[last_md_track].resolution) = opt_resolution;
+    mcl_seq.md_tracks[last_md_track].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
+    seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    (mcl_seq.ext_tracks[last_ext_track].resolution) = opt_resolution;
+    mcl_seq.ext_tracks[last_ext_track].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
     seq_extstep_page.config_encoders();
   }
 #endif
