@@ -200,7 +200,7 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
-    if (mcl_seq.md_tracks[tracknumber].scale < 64) { mcl_seq.md_tracks[tracknumber].scale = MD_SCALE_1X; }
+    if (mcl_seq.md_tracks[tracknumber].scale < MD_SCALE_1X) { mcl_seq.md_tracks[tracknumber].scale = MD_SCALE_1X; }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);

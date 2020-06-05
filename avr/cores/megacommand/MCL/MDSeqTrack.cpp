@@ -71,7 +71,7 @@ void MDSeqTrack::seq() {
       DEBUG_PRINTLN(start_step);
       DEBUG_PRINTLN(MidiClock.mod12_counter);
 
-      init();
+      reset();
     }
   }
 
@@ -496,6 +496,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   float swing = (float)md_track->kitextra.swingAmount / 16385.0;
 
   uint64_t swingpattern;
+  uint8_t timing_mid = get_timing_mid();
   if (md_track->kitextra.swingEditAll > 0) {
     swingpattern |= md_track->kitextra.swingPattern;
   } else {
@@ -504,10 +505,10 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   for (uint8_t a = 0; a < length; a++) {
     if (IS_BIT_SET64(md_track->trigPattern, a)) {
       conditional[a] = 0;
-      timing[a] = 12;
+      timing[a] = timing_mid;
     }
     if (IS_BIT_SET64(swingpattern, a)) {
-      timing[a] = round(swing * 12.0) + 12;
+      timing[a] = round(swing * timing_mid) + timing_mid;
     }
   }
 }

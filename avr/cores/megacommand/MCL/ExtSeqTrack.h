@@ -63,7 +63,7 @@ public:
   uint8_t iterations_7;
   uint8_t iterations_8;
 
-  ALWAYS_INLINE() void init() {
+  ALWAYS_INLINE() void reset() {
     step_count = 0;
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;

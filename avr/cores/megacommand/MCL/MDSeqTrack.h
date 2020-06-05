@@ -61,7 +61,7 @@ public:
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
-  ALWAYS_INLINE() void init() {
+  ALWAYS_INLINE() void reset() {
     step_count = 0;
     iterations_5 = 1;
     iterations_6 = 1;

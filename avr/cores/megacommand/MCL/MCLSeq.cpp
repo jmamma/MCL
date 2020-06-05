@@ -102,11 +102,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
-    ext_tracks[i].init();
+    ext_tracks[i].reset();
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].init();
+    md_tracks[i].reset();
   }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
