@@ -374,6 +374,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       if (merge == SAVE_MD) {
         md_seq_track.init();
         seq_data.length = length;
+        seq_data.scale = MD_SCALE_1X + kitextra.scale;
       }
       // merge md pattern data with seq_data
       md_seq_track.merge_from_md(this);
