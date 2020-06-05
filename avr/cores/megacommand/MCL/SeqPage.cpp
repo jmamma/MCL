@@ -12,7 +12,7 @@ bool SeqPage::toggle_device = true;
 
 uint8_t SeqPage::step_select = 255;
 
-uint8_t opt_scale = 1;
+uint8_t opt_speed = 1;
 uint8_t opt_trackid = 1;
 uint8_t opt_copy = 0;
 uint8_t opt_paste = 0;
@@ -83,20 +83,20 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   GUI.currentPage()->config();
 }
 
-uint8_t SeqPage::get_md_scale(uint8_t scale_id) {
-        uint8_t scale = 0;
-        for (uint8_t n = 0; n < sizeof(md_scales); n++) {
-           if (pgm_read_byte(&md_scales[n]) == mcl_seq.md_tracks[last_md_track].scale) { scale = n; }
+uint8_t SeqPage::get_md_speed(uint8_t speed_id) {
+        uint8_t speed = 0;
+        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+           if (pgm_read_byte(&md_speeds[n]) == mcl_seq.md_tracks[last_md_track].speed) { speed = n; }
         }
-        return scale;
+        return speed;
 }
 
-uint8_t SeqPage::get_ext_scale(uint8_t scale_id) {
-        uint8_t scale = 0;
-        for (uint8_t n = 0; n < sizeof(md_scales); n++) {
-           if (pgm_read_byte(&ext_scales[n]) == mcl_seq.ext_tracks[last_ext_track].scale) { scale = n; }
+uint8_t SeqPage::get_ext_speed(uint8_t speed_id) {
+        uint8_t speed = 0;
+        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+           if (pgm_read_byte(&ext_speeds[n]) == mcl_seq.ext_tracks[last_ext_track].speed) { speed = n; }
         }
-        return scale;
+        return speed;
 }
 
 
@@ -213,11 +213,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
       if (opt_midi_device_capture == DEVICE_MD) {
         opt_trackid = last_md_track + 1;
-        opt_scale = get_md_scale(mcl_seq.md_tracks[last_md_track].scale);
+        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_scale = get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale);
+        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
       #endif
       }
 
@@ -283,11 +283,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
 
-        opt_scale = get_md_scale(mcl_seq.md_tracks[last_md_track].scale);
+        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
       #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_scale = get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale);
+        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
       #endif
       }
       // capture current midi_device value
@@ -440,14 +440,14 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
 
       /* uint8_t step_count =
            ((MidiClock.div32th_counter /
-             mcl_seq.ext_tracks[last_ext_track].scale) -
+             mcl_seq.ext_tracks[last_ext_track].speed) -
             (mcl_actions.start_clock32th /
-             mcl_seq.ext_tracks[last_ext_track].scale)) -
+             mcl_seq.ext_tracks[last_ext_track].speed)) -
            (mcl_seq.ext_tracks[last_ext_track].length *
             ((MidiClock.div32th_counter /
-                  mcl_seq.ext_tracks[last_ext_track].scale -
+                  mcl_seq.ext_tracks[last_ext_track].speed -
               (mcl_actions.start_clock32th /
-               mcl_seq.ext_tracks[last_ext_track].scale)) /
+               mcl_seq.ext_tracks[last_ext_track].speed)) /
              (mcl_seq.ext_tracks[last_ext_track].length)));
        */
       uint8_t step_count = mcl_seq.ext_tracks[last_ext_track].step_count;
@@ -602,16 +602,16 @@ void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }
 
-void opt_scale_handler() {
+void opt_speed_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    mcl_seq.md_tracks[last_md_track].set_scale(pgm_read_byte(&md_scales[opt_scale]));
+    mcl_seq.md_tracks[last_md_track].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    mcl_seq.ext_tracks[last_ext_track].set_scale(pgm_read_byte(&ext_scales[opt_scale]));
+    mcl_seq.ext_tracks[last_ext_track].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
     seq_extstep_page.config_encoders();
   }
 #endif

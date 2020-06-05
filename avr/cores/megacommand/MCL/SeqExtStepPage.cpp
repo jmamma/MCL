@@ -11,7 +11,7 @@ void SeqExtStepPage::config() {
 
 #ifdef EXT_TRACKS
 /*
-  if (mcl_seq.ext_tracks[last_ext_track].scale == EXT_SCALE_2X) {
+  if (mcl_seq.ext_tracks[last_ext_track].speed == EXT_SPEED_2X) {
     strcpy(info1, "HI-RES");
   } else {
     strcpy(info1, "LOW-RES");
@@ -225,7 +225,7 @@ void SeqExtStepPage::display() {
   if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
-      mcl_gui.draw_microtiming(get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale), seq_param2.cur);
+      mcl_gui.draw_microtiming(get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed), seq_param2.cur);
    }
   oled_display.display();
 #endif

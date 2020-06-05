@@ -201,7 +201,7 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
-    if (mcl_seq.md_tracks[tracknumber].scale < MD_SCALE_1X) { mcl_seq.md_tracks[tracknumber].scale = MD_SCALE_1X; }
+    if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) { mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X; }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
@@ -375,7 +375,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       if (merge == SAVE_MD) {
         md_seq_track.init();
         md_seq_track.length = length;
-        md_seq_track.scale = MD_SCALE_1X + kitextra.doubleTempo;
+        md_seq_track.speed = MD_SPEED_1X + kitextra.doubleTempo;
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data

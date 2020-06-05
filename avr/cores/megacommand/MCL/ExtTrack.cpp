@@ -8,7 +8,7 @@ bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 }
 bool ExtTrack::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
-  if (seq_data.scale == 0) { seq_data.scale = 1; }
+  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
   memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
            sizeof(seq_data));
 #endif

@@ -8,38 +8,38 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-float MDSeqTrack::get_scale_multiplier(bool inverse) {
-  return get_scale_multiplier(scale, inverse);
+float MDSeqTrack::get_speed_multiplier(bool inverse) {
+  return get_speed_multiplier(speed, inverse);
 }
 
-float MDSeqTrack::get_scale_multiplier(uint8_t scale, bool inverse) {
+float MDSeqTrack::get_speed_multiplier(uint8_t speed, bool inverse) {
   float multi;
-  switch (scale) {
+  switch (speed) {
   default:
-  case MD_SCALE_1X:
+  case MD_SPEED_1X:
     multi = 1;
     break;
-  case MD_SCALE_2X:
+  case MD_SPEED_2X:
     if (inverse) { multi = 2; }
     else { multi = 0.5; }
     break;
-  case MD_SCALE_3_4X:
+  case MD_SPEED_3_4X:
     if (inverse) { multi = 3.0 / 4.0; }
     else { multi = (4.0 / 3.0); }
     break;
-  case MD_SCALE_3_2X:
+  case MD_SPEED_3_2X:
     if (inverse) { multi = 3.0 / 2.0; }
     else { multi = (2.0 / 3.0); }
     break;
-  case MD_SCALE_1_2X:
+  case MD_SPEED_1_2X:
     if (inverse) { multi = 1.0 / 2.0; }
     else { multi = 2.0; }
     break;
-  case MD_SCALE_1_4X:
+  case MD_SPEED_1_4X:
     if (inverse) { multi = 1.0 / 4.0; }
     else { multi = 4.0; }
     break;
-  case MD_SCALE_1_8X:
+  case MD_SPEED_1_8X:
     if (inverse) { multi = 1.0 / 8.0; }
     else { multi = 8.0; }
     break;
@@ -47,13 +47,13 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale, bool inverse) {
   return multi;
 }
 
-void MDSeqTrack::set_scale(uint8_t _scale) {
-  uint8_t old_scale = scale;
-  float mult = get_scale_multiplier(_scale) / get_scale_multiplier(old_scale);
+void MDSeqTrack::set_speed(uint8_t _speed) {
+  uint8_t old_speed = speed;
+  float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
     timing[i] = round(mult * (float)timing[i]);
   }
-  scale = _scale;
+  speed = _speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
   mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;

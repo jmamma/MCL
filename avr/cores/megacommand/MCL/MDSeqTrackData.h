@@ -19,7 +19,7 @@ public:
 class MDSeqTrackData {
 public:
   uint8_t length;
-  uint8_t scale;
+  uint8_t speed;
   uint8_t reserved[4];
   uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
@@ -29,7 +29,7 @@ public:
   uint8_t timing[NUM_MD_STEPS];
   void init() {
   length = 16;
-  scale = 1;
+  speed = 1;
   memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
   memset(&locks_params, 0, NUM_MD_LOCKS);
   pattern_mask = 0;

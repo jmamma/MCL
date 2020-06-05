@@ -11,22 +11,22 @@
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
-// MD Pattern scale
+// MD Pattern speed
 //[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
 
-// MCL Track scale
-#define MD_SCALE_1X 64
-#define MD_SCALE_2X 65
-#define MD_SCALE_3_4X 66
-#define MD_SCALE_3_2X 67
-#define MD_SCALE_1_2X 68
-#define MD_SCALE_1_4X 69
-#define MD_SCALE_1_8X 70
+// MCL Track speed
+#define MD_SPEED_1X 64
+#define MD_SPEED_2X 65
+#define MD_SPEED_3_4X 66
+#define MD_SPEED_3_2X 67
+#define MD_SPEED_1_2X 68
+#define MD_SPEED_1_4X 69
+#define MD_SPEED_1_8X 70
 
-const uint8_t md_scales[7] PROGMEM = {MD_SCALE_1X,   MD_SCALE_2X,
-                                      MD_SCALE_3_4X, MD_SCALE_3_2X,
-                                      MD_SCALE_1_2X,
-                                      MD_SCALE_1_4X, MD_SCALE_1_8X};
+const uint8_t md_speeds[7] PROGMEM = {MD_SPEED_1X,   MD_SPEED_2X,
+                                      MD_SPEED_3_4X, MD_SPEED_3_2X,
+                                      MD_SPEED_1_2X,
+                                      MD_SPEED_1_4X, MD_SPEED_1_8X};
 // forward declare MDTrack
 class MDTrack;
 
@@ -130,36 +130,36 @@ public:
   void rotate_right();
   void reverse();
 
-  float get_scale_multiplier(bool inverse = false);
-  float get_scale_multiplier(uint8_t scale, bool inverse = false);
-  void set_scale(uint8_t _scale);
+  float get_speed_multiplier(bool inverse = false);
+  float get_speed_multiplier(uint8_t speed, bool inverse = false);
+  void set_speed(uint8_t _speed);
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
 
   ALWAYS_INLINE() uint8_t get_timing_mid() {
     uint8_t timing_mid;
-    switch (scale) {
+    switch (speed) {
     default:
-    case MD_SCALE_1X:
+    case MD_SPEED_1X:
       timing_mid = 12;
       break;
-    case MD_SCALE_2X:
+    case MD_SPEED_2X:
       timing_mid = 6;
       break;
-    case MD_SCALE_3_4X:
+    case MD_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
-    case MD_SCALE_3_2X:
+    case MD_SPEED_3_2X:
       timing_mid = 8; // 12 * (2.0/3.0);
       break;
-    case MD_SCALE_1_2X:
+    case MD_SPEED_1_2X:
       timing_mid = 24;
       break;
-    case MD_SCALE_1_4X:
+    case MD_SPEED_1_4X:
       timing_mid = 48;
       break;
-    case MD_SCALE_1_8X:
+    case MD_SPEED_1_8X:
       timing_mid = 96;
       break;
     }

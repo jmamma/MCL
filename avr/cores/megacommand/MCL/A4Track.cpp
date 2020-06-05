@@ -5,7 +5,7 @@
 
 void A4Track::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
-  if (seq_data.scale == 0) { seq_data.scale = 1; }
+  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.ext_tracks[tracknumber].clear_track();
   } else {

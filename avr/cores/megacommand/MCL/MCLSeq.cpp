@@ -22,7 +22,7 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
-    md_tracks[i].scale = 1;
+    md_tracks[i].speed = MD_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
 #ifdef LFO_TRACKS
@@ -40,7 +40,7 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
-    ext_tracks[i].scale = 1;
+    ext_tracks[i].speed = EXT_SPEED_2X;
   }
 #endif
   //   MidiClock.addOnClockCallback(this,

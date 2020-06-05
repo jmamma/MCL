@@ -13,23 +13,23 @@
 
 #define UART2_PORT 2
 
-// EXT Track scale
-#define EXT_SCALE_1X 2
-#define EXT_SCALE_2X 1
-#define EXT_SCALE_3_4X 3
-#define EXT_SCALE_3_2X 4
-#define EXT_SCALE_1_2X 5
-#define EXT_SCALE_1_4X 6
-#define EXT_SCALE_1_8X 7
+// EXT Track speed
+#define EXT_SPEED_1X 2
+#define EXT_SPEED_2X 1
+#define EXT_SPEED_3_4X 3
+#define EXT_SPEED_3_2X 4
+#define EXT_SPEED_1_2X 5
+#define EXT_SPEED_1_4X 6
+#define EXT_SPEED_1_8X 7
 
-const uint8_t ext_scales[7] PROGMEM = {
-    EXT_SCALE_1X,   EXT_SCALE_2X,   EXT_SCALE_3_4X, EXT_SCALE_3_2X,
-    EXT_SCALE_1_2X, EXT_SCALE_1_4X, EXT_SCALE_1_8X};
+const uint8_t ext_speeds[7] PROGMEM = {
+    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
+    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X};
 
 class ExtSeqTrackData {
 public:
   uint8_t length;
-  uint8_t scale; // Resolution = 2 / ExtPatternResolution
+  uint8_t speed; // Resolution = 2 / ExtPatternResolution
   uint8_t reserved[4];
   int8_t notes[4][128]; // 128 steps, up to 4 notes per step
   uint8_t locks[4][128];
@@ -116,27 +116,27 @@ public:
   void set_length(uint8_t len);
   ALWAYS_INLINE() uint8_t get_timing_mid() {
     uint8_t timing_mid;
-    switch (scale) {
+    switch (speed) {
     default:
-    case EXT_SCALE_1X:
+    case EXT_SPEED_1X:
       timing_mid = 12;
       break;
-    case EXT_SCALE_2X:
+    case EXT_SPEED_2X:
       timing_mid = 6;
       break;
-    case EXT_SCALE_3_4X:
+    case EXT_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
-    case EXT_SCALE_3_2X:
+    case EXT_SPEED_3_2X:
       timing_mid = 8; // 12 * (2.0/3.0);
       break;
-    case EXT_SCALE_1_2X:
+    case EXT_SPEED_1_2X:
       timing_mid = 24;
       break;
-    case EXT_SCALE_1_4X:
+    case EXT_SPEED_1_4X:
       timing_mid = 48;
       break;
-    case EXT_SCALE_1_8X:
+    case EXT_SPEED_1_8X:
       timing_mid = 96;
       break;
     }
@@ -197,9 +197,9 @@ public:
   void rotate_right();
   void reverse();
 
-  void set_scale(uint8_t _scale);
-  float get_scale_multiplier(bool inverse = false);
-  float get_scale_multiplier(uint8_t scale, bool inverse = false);
+  void set_speed(uint8_t _speed);
+  float get_speed_multiplier(bool inverse = false);
+  float get_speed_multiplier(uint8_t speed, bool inverse = false);
 };
 
 #endif /* EXTSEQTRACK_H__ */
