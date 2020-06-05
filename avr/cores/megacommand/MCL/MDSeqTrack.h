@@ -154,7 +154,7 @@ public:
       timing_mid = 8; // 12 * (2.0/3.0);
       break;
     case MD_SCALE_1_2X:
-      timing_mid = 16;
+      timing_mid = 24;
       break;
     case MD_SCALE_1_4X:
       timing_mid = 48;

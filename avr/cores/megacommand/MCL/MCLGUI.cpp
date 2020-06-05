@@ -444,24 +444,22 @@ void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
   uint8_t heights_len;
   uint8_t degrees = timing_mid * 2;
   uint8_t heights[16];
-  //Triplets
-
+  // Triplets
   if (scale == SEQ_SCALE_2X) {
-    uint8_t heights_lowres[6] = {12, 4, 6, 10, 4, 8};
+    uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
     memcpy(&heights, &heights_lowres, 6);
     heights_len = 6;
-  }
-  if (scale == SEQ_SCALE_3_4X) {
-    uint8_t heights_triplets[16] = {12, 2, 4, 8, 6, 10, 6, 2, 10, 2, 6, 8, 10, 4, 6, 2};
+  } else if (scale == SEQ_SCALE_3_4X) {
+    uint8_t heights_triplets[16] = {11, 2, 4, 8, 6,  10, 6, 2,
+                                    10, 2, 6, 8, 10, 4,  6, 2};
     memcpy(&heights, &heights_triplets, 16);
     heights_len = 16;
-  }
-  if (scale == SEQ_SCALE_3_2X) {
-    uint8_t heights_triplets[8] = {12, 4, 8, 10, 2, 8, 4, 2};
-    memcpy(&heights, &heights_triplets, 8);
+  } else if (scale == SEQ_SCALE_3_2X) {
+    uint8_t heights_triplets2[8] = {11, 4, 8, 10, 2, 8, 4, 2};
+    memcpy(&heights, &heights_triplets2, 8);
     heights_len = 8;
   } else {
-    uint8_t heights_highres[12] = {12, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+    uint8_t heights_highres[12] = {11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
     memcpy(&heights, &heights_highres, 12);
     heights_len = 12;
   }
@@ -470,20 +468,39 @@ void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
   uint8_t w = 96;
   uint8_t x_pos = 64 - (w / 2);
   uint8_t x_w = (w / (degrees));
-  uint8_t x = x_pos;
+  bool degree_scalar = false;
+  if (x_w == 0) {
+    x_w = 1;
+    degree_scalar = true;
+  }
 
-  oled_display.fillRect(8, 2, 128 - 16, 32 - 2, BLACK);
-  oled_display.drawRect(8 + 1, 2 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
+  uint8_t x = x_pos;
+  char K[4];
+  strcpy(K, "--");
+  K[3] = '\0';
+
+   if (timing == 0) {
+   } else if ((timing < timing_mid) && (timing != 0)) {
+     itoa(timing_mid - timing, K + 1, 10);
+   } else {
+     K[0] = '+';
+     itoa(timing - timing_mid, K + 1, 10);
+   }
+
+
+  oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);
+  oled_display.drawRect(8 + 1, 1 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
 
   oled_display.setCursor(x_pos + 34, 10);
-  oled_display.print("uTIMING");
-
+  oled_display.print("uTIMING: ");
+  oled_display.print(K);
   oled_display.drawLine(x, y_pos + heights[0], x + w, y_pos + heights[0],
                         WHITE);
   for (uint8_t n = 0; n <= degrees; n++) {
     oled_display.drawLine(x, y_pos + heights[0], x,
                           y_pos + heights[0] - heights[a], WHITE);
     a++;
+
     if (n == timing) {
       oled_display.fillRect(x - 1, y_pos + heights[0] + 3, 3, 3, WHITE);
       oled_display.drawPixel(x, y_pos + heights[0] + 2, WHITE);
@@ -492,7 +509,13 @@ void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
     if (a == heights_len) {
       a = 0;
     }
-    x += x_w;
+    if (degree_scalar) {
+      if (n % 2 == 0) {
+        x += x_w;
+      }
+    } else {
+      x += x_w;
+    }
   }
   oled_display.setFont(oldfont);
 #endif

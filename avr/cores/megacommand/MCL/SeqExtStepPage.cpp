@@ -10,11 +10,13 @@ void SeqExtStepPage::config() {
   constexpr uint8_t len1 = sizeof(info1);
 
 #ifdef EXT_TRACKS
+/*
   if (mcl_seq.ext_tracks[last_ext_track].scale == EXT_SCALE_2X) {
     strcpy(info1, "HI-RES");
   } else {
     strcpy(info1, "LOW-RES");
   }
+*/
 #endif
 
   strcpy(info2, "EXT");
