@@ -221,8 +221,12 @@ void SeqExtStepPage::display() {
   }
 
   draw_pattern_mask(page_select * 16, DEVICE_A4);
-
   SeqPage::display();
+  if (mcl_gui.show_encoder_value(&seq_param2) &&
+        (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
+        (!show_step_menu)) {
+      mcl_gui.draw_microtiming(get_ext_scale(mcl_seq.ext_tracks[last_ext_track].scale), seq_param2.cur);
+   }
   oled_display.display();
 #endif
 }
