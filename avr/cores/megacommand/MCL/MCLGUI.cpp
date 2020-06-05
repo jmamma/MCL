@@ -439,21 +439,31 @@ void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
   oled_display.setFont(&TomThumb);
 
   oled_display.setTextColor(WHITE);
-  if (scale == 0) {
-    scale = 1;
-  }
-  if (scale > 2) {
-    scale = 1;
-  }
-  uint8_t degrees = 24 / scale;
-  uint8_t heights[12];
+  SeqTrack seq_track;
+  uint8_t timing_mid = seq_track.get_timing_mid(scale);
+  uint8_t heights_len;
+  uint8_t degrees = timing_mid * 2;
+  uint8_t heights[16];
+  //Triplets
 
-  if (scale == 1) {
-    uint8_t heights_highres[12] = {12, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
-    memcpy(&heights, &heights_highres, 12);
-  } else {
+  if (scale == SEQ_SCALE_2X) {
     uint8_t heights_lowres[6] = {12, 4, 6, 10, 4, 8};
     memcpy(&heights, &heights_lowres, 6);
+    heights_len = 6;
+  }
+  if (scale == SEQ_SCALE_3_4X) {
+    uint8_t heights_triplets[16] = {12, 2, 4, 8, 6, 10, 6, 2, 10, 2, 6, 8, 10, 4, 6, 2};
+    memcpy(&heights, &heights_triplets, 16);
+    heights_len = 16;
+  }
+  if (scale == SEQ_SCALE_3_2X) {
+    uint8_t heights_triplets[8] = {12, 4, 8, 10, 2, 8, 4, 2};
+    memcpy(&heights, &heights_triplets, 8);
+    heights_len = 8;
+  } else {
+    uint8_t heights_highres[12] = {12, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+    memcpy(&heights, &heights_highres, 12);
+    heights_len = 12;
   }
   uint8_t y_pos = 11;
   uint8_t a = 0;
@@ -479,7 +489,7 @@ void MCLGUI::draw_microtiming(uint8_t scale, uint8_t timing) {
       oled_display.drawPixel(x, y_pos + heights[0] + 2, WHITE);
     }
 
-    if (a == degrees / 2) {
+    if (a == heights_len) {
       a = 0;
     }
     x += x_w;

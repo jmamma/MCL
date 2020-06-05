@@ -212,7 +212,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       opt_seqpage_capture = this;
 
       if (opt_midi_device_capture == DEVICE_MD) {
-        DEBUG_PRINTLN("okay using MD for length update");
         opt_trackid = last_md_track + 1;
         opt_scale = get_md_scale(mcl_seq.md_tracks[last_md_track].scale);
       } else {

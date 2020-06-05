@@ -23,11 +23,11 @@ float MDSeqTrack::get_scale_multiplier(uint8_t scale, bool inverse) {
     if (inverse) { multi = 2; }
     else { multi = 0.5; }
     break;
-  case MD_SCALE_3_2X:
+  case MD_SCALE_3_4X:
     if (inverse) { multi = 3.0 / 4.0; }
     else { multi = (4.0 / 3.0); }
     break;
-  case MD_SCALE_3_4X:
+  case MD_SCALE_3_2X:
     if (inverse) { multi = 3.0 / 2.0; }
     else { multi = (2.0 / 3.0); }
     break;

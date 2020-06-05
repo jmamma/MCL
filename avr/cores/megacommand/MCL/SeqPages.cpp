@@ -38,7 +38,7 @@ const menu_t<10> seq_menu_layout PROGMEM = {
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {1, "LCKS"}, {2, "ALL"}}},
         {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
-        {"SCALE:", 0, 7, 7, (uint8_t *)&opt_scale, (Page *)NULL, opt_scale_handler, { {0, "1x"}, {1, "2x"}, {2, "3/2x"}, {3, "3/4x"}, {4, "1/2x"}, {5, "1/4x"}, {6, "1/8x"}}},
+        {"SCALE:", 0, 7, 7, (uint8_t *)&opt_scale, (Page *)NULL, opt_scale_handler, { {SEQ_SCALE_1X, "1x"}, {SEQ_SCALE_2X , "2x"}, {SEQ_SCALE_3_2X, "3/2x"}, {SEQ_SCALE_3_4X,"3/4x"}, { SEQ_SCALE_1_2X, "1/2x"}, {SEQ_SCALE_1_4X, "1/4x"}, {SEQ_SCALE_1_8X, "1/8x"}}},
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "--",}, {1, "L"}, {2, "R"}, {3,"L>ALL"}, {4, "R>ALL"}}},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"} }},
     },

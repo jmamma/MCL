@@ -5,6 +5,7 @@
 
 #include "MidiUartParent.hh"
 //#include "MidiUart.h"
+#include "SeqTrack.h"
 #include "WProgram.h"
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -123,10 +124,10 @@ public:
     case EXT_SCALE_2X:
       timing_mid = 6;
       break;
-    case EXT_SCALE_3_2X:
+    case EXT_SCALE_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
-    case EXT_SCALE_3_4X:
+    case EXT_SCALE_3_2X:
       timing_mid = 8; // 12 * (2.0/3.0);
       break;
     case EXT_SCALE_1_2X:

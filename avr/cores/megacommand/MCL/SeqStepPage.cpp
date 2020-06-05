@@ -139,7 +139,6 @@ void SeqStepPage::display() {
   char K[4];
 
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
-
   if (seq_param1.getValue() == 0) {
     strcpy(K, "L1");
   } else if (seq_param1.getValue() <= 8) {
@@ -204,7 +203,7 @@ void SeqStepPage::display() {
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].scale, seq_param2.cur);
+      mcl_gui.draw_microtiming(get_md_scale(mcl_seq.md_tracks[last_md_track].scale), seq_param2.cur);
     }
   }
   oled_display.display();
@@ -288,7 +287,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      seq_param2.max = 23;
+      seq_param2.max = mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
       int8_t utiming = active_track.timing[step];         // upper
       uint8_t condition = active_track.conditional[step]; // lower
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
