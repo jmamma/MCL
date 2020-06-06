@@ -29,6 +29,7 @@ void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
   seq_param2.cur = timing_mid;
+  seq_param2.old = timing_mid;
   seq_param2.max = timing_mid * 2 - 1;
   seq_param3.max = 128;
   config();

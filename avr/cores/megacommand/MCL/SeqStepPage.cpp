@@ -37,6 +37,7 @@ void SeqStepPage::config() {
 void SeqStepPage::config_encoders() {
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   seq_param2.cur = timing_mid;
+  seq_param2.old = timing_mid;
   seq_param2.max = timing_mid * 2 - 1;
 }
 
@@ -333,29 +334,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      /*      uint8_t utiming = (seq_param2.cur + 0);
-            uint8_t condition = seq_param1.cur;
-
-            uint8_t step = track + (page_select * 16);
-            //  timing = 3;
-            // condition = 3;
-            active_track.conditional[step] = condition;
-            active_track.timing[step] = utiming; // upper
-            if ((seq_param4.cur > 0) && (last_md_track < 15)) {
-              tuning_t const *tuning =
-                  MD.getModelTuning(MD.kit.models[last_md_track]);
-              if (tuning != NULL) {
-                uint8_t base = tuning->base;
-                uint8_t note_num = seq_param4.cur;
-                uint8_t machine_pitch =
-         pgm_read_byte(&tuning->tuning[note_num]);
-                active_track.set_track_pitch(step,
-         machine_pitch);
-              }
-            }*/
-      //   conditional_timing[cur_col][(track + (seq_param2.cur * 16))] =
-      //   condition; //lower
-      if (note_interface.notes_all_off_md()) {
+     if (note_interface.notes_all_off_md()) {
         mcl_gui.init_encoders_used_clock();
         active_track.reset_params();
         mcl_seq.midi_events.update_params = true;
