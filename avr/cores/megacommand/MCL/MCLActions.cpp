@@ -517,8 +517,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
             //( l - lm);
   }
 #endif
-  if (len < 4) {
-    len = 4;
+  while (len < 4) {
+    if (len < 1) { len = 4; transition_offsets[n] = 0; }
+    else { len = len * 2; }
   }
 
   //Last offset must be carried over to new offset.
