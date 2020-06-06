@@ -514,15 +514,19 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   if (n < NUM_MD_TRACKS) {
     uint8_t l = mcl_seq.md_tracks[n].length;
-    float m = mcl_seq.md_tracks[n].get_speed_multiplier();
-    len = chains[n].loops * l * m + ( l - m * l);
-
+    uint8_t lm = (float) l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
+    len = chains[n].loops * lm;
+            //+ ( l - lm);
+    DEBUG_DUMP(l);
+    DEBUG_DUMP(lm);
+    DEBUG_DUMP(len);
    }
 #ifdef EXT_TRACKS
   else {
     uint8_t l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
-    float m = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
-    len = chains[n].loops * l * m + ( l - m * l);
+    uint8_t lm = (float) l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
+    len = chains[n].loops * lm;
+            //( l - lm);
   }
 #endif
   if (len < 4) {
