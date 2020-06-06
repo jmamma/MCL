@@ -54,8 +54,10 @@ public:
   //  uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
+  uint8_t start_step_offset;
 
   bool mute_until_start = false;
+  bool mute_hold = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
   void mute() { mute_state = SEQ_MUTE_ON; }
@@ -70,6 +72,7 @@ public:
     oneshot_mask = 0;
     mod12_counter = 0;
     mute_until_start = false;
+    mute_hold = false;
   }
 
   ALWAYS_INLINE() void seq();

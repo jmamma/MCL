@@ -61,7 +61,9 @@ void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      reset();
+      if (MidiClock.mod12_counter == start_step_offset) {
+        reset();
+      }
     }
   }
   uint8_t timing_mid = get_timing_mid();

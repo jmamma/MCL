@@ -39,6 +39,7 @@ void MCLActionsCallbacks::onMidiStartCallback() {
   for (uint8_t n = 0; n < 20; n++) {
     if (grid_page.active_slots[n] >= 0) {
       mcl_actions.next_transitions[n] = 0;
+      mcl_actions.transition_offsets[n] = 0;
       if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
     }
   }

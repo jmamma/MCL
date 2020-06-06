@@ -30,6 +30,7 @@ public:
   uint8_t nearest_beat;
 
   uint16_t next_transitions[NUM_TRACKS];
+  uint8_t transition_offsets[NUM_TRACKS];
   uint8_t send_machine[NUM_TRACKS];
   uint8_t transition_level[NUM_TRACKS];
 
