@@ -8,9 +8,7 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-float MDSeqTrack::get_speed_multiplier() {
-  return get_speed_multiplier(speed);
-}
+float MDSeqTrack::get_speed_multiplier() { return get_speed_multiplier(speed); }
 
 float MDSeqTrack::get_speed_multiplier(uint8_t speed) {
   float multi;
@@ -50,8 +48,8 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
   speed = _speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
-  mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
-  //step_count_inc();
+    mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+    // step_count_inc();
   }
 }
 
@@ -364,7 +362,7 @@ void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
 
 void MDSeqTrack::record_track_pitch(uint8_t pitch) {
 
- if (step_count >= length) {
+  if (step_count >= length) {
     return;
   }
   set_track_pitch(step_count, pitch);
@@ -502,9 +500,9 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     if (IS_BIT_SET64(md_track->trigPattern, a)) {
       conditional[a] = 0;
       timing[a] = timing_mid;
-    }
-    if (IS_BIT_SET64(swingpattern, a)) {
-      timing[a] = round(swing * timing_mid) + timing_mid;
+      if (IS_BIT_SET64(swingpattern, a)) {
+        timing[a] = round(swing * timing_mid) + timing_mid;
+      }
     }
   }
 }

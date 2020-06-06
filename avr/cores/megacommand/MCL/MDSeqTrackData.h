@@ -35,7 +35,7 @@ public:
   pattern_mask = 0;
   lock_mask = 0;
   memset(&conditional, 0, NUM_MD_STEPS);
-  memset(&timing, 12, NUM_MD_STEPS);
+  memset(&timing, 0, NUM_MD_STEPS);
   }
 };
 
