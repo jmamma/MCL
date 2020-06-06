@@ -56,9 +56,12 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 void MDSeqTrack::seq() {
   if (mute_until_start) {
 
-    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      if (start_step_offset > 0) { start_step_offset--; }
-      else { reset(); }
+    if ((clock_diff(MidiClock.div16th_counter, start_step) == 0)) {
+      if (start_step_offset > 0) {
+        start_step_offset--;
+      } else {
+        reset();
+      }
     }
   }
 

@@ -507,22 +507,26 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   float len;
 
   if (n < NUM_MD_TRACKS) {
-    uint8_t l = mcl_seq.md_tracks[n].length;
-    len = chains[n].loops * (float) l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
+    float l = mcl_seq.md_tracks[n].length;
+    len = (float) chains[n].loops * l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
    }
 #ifdef EXT_TRACKS
   else {
-    uint8_t l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
-    len = chains[n].loops * (float) l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
+    float l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
+    len = (float) chains[n].loops * l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
             //( l - lm);
   }
 #endif
-
-  transition_offsets[n] = (float) (len - floor(len)) * 12;
-  DEBUG_DUMP(transition_offsets[n]);
   if (len < 4) {
     len = 4;
   }
+
+  //Last offset must be carried over to new offset.
+  transition_offsets[n] += (float) (len - floor(len)) * 12;
+  if (transition_offsets[n] >= 12) { transition_offsets[n] = transition_offsets[n] - 12; len++; }
+
+  DEBUG_DUMP(len - floor(len));
+  DEBUG_DUMP(transition_offsets[n]);
   next_transitions[n] += (uint16_t) len;
 
   // check for overflow and make sure next nearest step is greater than

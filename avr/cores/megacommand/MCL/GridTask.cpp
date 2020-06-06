@@ -38,13 +38,14 @@ void GridTask::run() {
     return;
   }
 
+  //Get within four 16th notes of the next transition.
   if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                  (uint32_t)mcl_actions.next_transition * 2)) {
 
     DEBUG_PRINTLN("Preparing for next transition:");
     DEBUG_DUMP(MidiClock.div16th_counter);
     DEBUG_DUMP(mcl_actions.next_transition);
-
+    //Transition window
     div32th_counter = MidiClock.div32th_counter + div32th_margin;
   } else {
     return;
@@ -55,9 +56,9 @@ void GridTask::run() {
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
-      // mark slot as changed in case next statement doesnt pass
       uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
 
+      //If next_transition[n] is less than or equal to transition window, then flag track for transition.
       if (!MidiClock.clock_less_than(div32th_counter, next_transition)) {
 
         slots_changed[n] = mcl_actions.chains[n].row;
