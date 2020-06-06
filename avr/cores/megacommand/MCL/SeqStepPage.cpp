@@ -313,11 +313,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         seq_param4.old = seq_param4.cur;
       }
       // Micro
-      if (utiming == 0) {
-        utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
-      }
-      seq_param2.cur = utiming;
-      seq_param2.old = utiming;
+//      if (note_interface.notes_count_on() <= 1) {
+        if (utiming == 0) {
+          utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
+        }
+        seq_param2.cur = utiming;
+        seq_param2.old = utiming;
+//      }
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
