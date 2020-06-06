@@ -8,11 +8,11 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-float MDSeqTrack::get_speed_multiplier(bool inverse) {
-  return get_speed_multiplier(speed, inverse);
+float MDSeqTrack::get_speed_multiplier() {
+  return get_speed_multiplier(speed);
 }
 
-float MDSeqTrack::get_speed_multiplier(uint8_t speed, bool inverse) {
+float MDSeqTrack::get_speed_multiplier(uint8_t speed) {
   float multi;
   switch (speed) {
   default:
@@ -20,28 +20,22 @@ float MDSeqTrack::get_speed_multiplier(uint8_t speed, bool inverse) {
     multi = 1;
     break;
   case MD_SPEED_2X:
-    if (inverse) { multi = 2; }
-    else { multi = 0.5; }
+    multi = 0.5;
     break;
   case MD_SPEED_3_4X:
-    if (inverse) { multi = 3.0 / 4.0; }
-    else { multi = (4.0 / 3.0); }
+    multi = (4.0 / 3.0);
     break;
   case MD_SPEED_3_2X:
-    if (inverse) { multi = 3.0 / 2.0; }
-    else { multi = (2.0 / 3.0); }
+    multi = (2.0 / 3.0);
     break;
   case MD_SPEED_1_2X:
-    if (inverse) { multi = 1.0 / 2.0; }
-    else { multi = 2.0; }
+    multi = 2.0;
     break;
   case MD_SPEED_1_4X:
-    if (inverse) { multi = 1.0 / 4.0; }
-    else { multi = 4.0; }
+    multi = 4.0;
     break;
   case MD_SPEED_1_8X:
-    if (inverse) { multi = 1.0 / 8.0; }
-    else { multi = 8.0; }
+    multi = 8.0;
     break;
   }
   return multi;
@@ -438,6 +432,7 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
   }
   CLEAR_BIT64(lock_mask, step);
 }
+
 void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < 64; c++) {
     conditional[c] = 0;
@@ -445,6 +440,7 @@ void MDSeqTrack::clear_conditional() {
   }
   oneshot_mask = 0;
 }
+
 void MDSeqTrack::clear_locks(bool reset_params) {
   uint8_t locks_params_buf[4];
 

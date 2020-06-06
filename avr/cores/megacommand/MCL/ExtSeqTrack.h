@@ -198,8 +198,8 @@ public:
   void reverse();
 
   void set_speed(uint8_t _speed);
-  float get_speed_multiplier(bool inverse = false);
-  float get_speed_multiplier(uint8_t speed, bool inverse = false);
+  float get_speed_multiplier();
+  float get_speed_multiplier(uint8_t speed);
 };
 
 #endif /* EXTSEQTRACK_H__ */

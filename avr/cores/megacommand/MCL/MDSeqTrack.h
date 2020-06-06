@@ -130,8 +130,8 @@ public:
   void rotate_right();
   void reverse();
 
-  float get_speed_multiplier(bool inverse = false);
-  float get_speed_multiplier(uint8_t speed, bool inverse = false);
+  float get_speed_multiplier();
+  float get_speed_multiplier(uint8_t speed);
   void set_speed(uint8_t _speed);
 
   void copy_step(uint8_t n, MDSeqStep *step);
