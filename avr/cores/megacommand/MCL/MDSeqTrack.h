@@ -54,6 +54,7 @@ public:
   //  uint8_t params[24];
   uint8_t trigGroup;
   uint32_t start_step;
+  uint8_t start_step_offset;
 
   bool mute_until_start = false;
 

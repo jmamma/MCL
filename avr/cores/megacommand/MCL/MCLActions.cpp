@@ -11,6 +11,7 @@ void MCLActions::setup() {
   mcl_actions_midievents.setup_callbacks();
   for (uint8_t i = 0; i < NUM_TRACKS; i++) {
     next_transitions[i] = 0;
+    transition_offsets[i] = 0;
     send_machine[i] = 0;
     transition_level[i] = 0;
   }
@@ -469,16 +470,9 @@ void MCLActions::send_tracks_to_devices() {
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       uint32_t len;
-      /*  if (n < 16) {
-          len = chains[n].loops * mcl_seq.md_tracks[n].length;
-        } else {
-          len = chains[n].loops * mcl_seq.ext_tracks[n - 16].length;
-        }
-        if (len < 4) {
-          len = 4;
-        } */
-      //  next_transitions[n] = next_transitions_old[n];
+
       transition_level[n] = 0;
+
       if (n < NUM_MD_TRACKS) {
         next_transitions[n] = MidiClock.div16th_counter -
                               (mcl_seq.md_tracks[n].step_count *
@@ -502,7 +496,6 @@ void MCLActions::send_tracks_to_devices() {
 void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   DEBUG_PRINT_FN();
-  uint16_t len;
   DEBUG_PRINTLN(n);
   //  DEBUG_PRINTLN(next_transitions[n]);
   if ((chains[n].loops == 0)) {
@@ -511,34 +504,32 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   }
 
   uint16_t next_transitions_old = next_transitions[n];
+  float len;
 
   if (n < NUM_MD_TRACKS) {
     uint8_t l = mcl_seq.md_tracks[n].length;
-    uint8_t lm = (float) l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
-    len = chains[n].loops * lm;
-            //+ ( l - lm);
-    DEBUG_DUMP(l);
-    DEBUG_DUMP(lm);
-    DEBUG_DUMP(len);
+    len = chains[n].loops * (float) l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
    }
 #ifdef EXT_TRACKS
   else {
     uint8_t l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
-    uint8_t lm = (float) l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
-    len = chains[n].loops * lm;
+    len = chains[n].loops * (float) l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
             //( l - lm);
   }
 #endif
+
+  transition_offsets[n] = (float) (len - floor(len)) * 12;
+  DEBUG_DUMP(transition_offsets[n]);
   if (len < 4) {
     len = 4;
   }
-  next_transitions[n] += len;
+  next_transitions[n] += (uint16_t) len;
 
   // check for overflow and make sure next nearest step is greater than
   // midiclock counter
   while ((next_transitions[n] >= next_transitions_old) &&
          (next_transitions[n] < MidiClock.div16th_counter)) {
-    next_transitions[n] += len;
+    next_transitions[n] += (uint16_t) len;
   }
   DEBUG_PRINTLN(next_transitions[n]);
 }

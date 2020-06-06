@@ -55,6 +55,7 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
   uint32_t start_step;
+  uint8_t start_step_offset;
   bool mute_until_start = false;
 
   // Conditional counters

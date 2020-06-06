@@ -57,13 +57,8 @@ void MDSeqTrack::seq() {
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      DEBUG_PRINTLN("unmuting");
-      DEBUG_PRINTLN(track_number);
-      DEBUG_PRINTLN(MidiClock.div16th_counter);
-      DEBUG_PRINTLN(start_step);
-      DEBUG_PRINTLN(MidiClock.mod12_counter);
-
-      reset();
+      if (start_step_offset > 0) { start_step_offset--; }
+      else { reset(); }
     }
   }
 

@@ -139,6 +139,7 @@ void GridTask::run() {
 
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step =
               mcl_actions.next_transition;
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step_offset = mcl_actions.transition_offsets[n];
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
           a4_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
@@ -240,6 +241,7 @@ void GridTask::run() {
           }
 
           mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
+          mcl_seq.md_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
           mcl_seq.md_tracks[n].mute_until_start = true;
 
           md_track->load_seq_data(n);
