@@ -523,10 +523,10 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   }
 
   //Last offset must be carried over to new offset.
-  transition_offsets[n] += (float) (len - floor(len)) * 12;
+  transition_offsets[n] += (float) (len - (uint16_t)(len)) * 12;
   if (transition_offsets[n] >= 12) { transition_offsets[n] = transition_offsets[n] - 12; len++; }
 
-  DEBUG_DUMP(len - floor(len));
+  DEBUG_DUMP(len - (uint16_t)(len));
   DEBUG_DUMP(transition_offsets[n]);
   next_transitions[n] += (uint16_t) len;
 
