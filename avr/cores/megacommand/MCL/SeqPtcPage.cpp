@@ -328,7 +328,7 @@ void SeqPtcPage::display() {
   }
 #ifdef EXT_TRACKS
   else {
-    itoa(ptc_param_len.getValue(),buf1, 10);
+    itoa(ptc_param_len.getValue(), buf1, 10);
     draw_knob(2, "LEN", buf1);
   }
 #endif
@@ -464,9 +464,12 @@ void SeqPtcPage::setup_arp() {
   arp_enabled = true;
   arp_len = 0;
   arp_idx = 0;
+  arp_count = 0;
   render_arp();
-  MidiClock.addOn16Callback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
+  MidiClock.addOn192Callback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
+  MidiClock.addOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);
 }
 
 void SeqPtcPage::remove_arp() {
@@ -474,8 +477,10 @@ void SeqPtcPage::remove_arp() {
     return;
   }
   arp_enabled = false;
-  MidiClock.removeOn16Callback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_16_callback);
+  MidiClock.removeOn192Callback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
+  MidiClock.removeOnMidiStopCallback(
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);
 }
 
 uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {}
@@ -735,48 +740,42 @@ void SeqPtcPage::render_arp() {
     arp_idx = arp_len - 1;
   }
 }
-void SeqPtcPage::on_16_callback() {
+
+void SeqPtcPage::onMidiStopCallback() {
+  arp_mod12_counter = 0;
+  arp_count = 0;
+}
+
+void SeqPtcPage::on_192_callback() {
+
+  uint8_t timing_mid = 6;
   bool trig = false;
-  uint8_t note;
 
-  switch (arp_speed.cur) {
-  case 0:
-    trig = true;
-    break;
-  case 1:
-    if ((arp_count == 0) || (arp_count == 2) || (arp_count == 4) ||
-        (arp_count == 6)) {
-      trig = true;
-    }
-    break;
-  case 2:
-    if ((arp_count == 0) || (arp_count == 4)) {
-      trig = true;
-    }
-    break;
-  case 3:
-    if (arp_count == 0) {
-      trig = true;
-    }
-    break;
+  if ((mcl_seq.md_tracks[last_md_track].speed == MD_SPEED_3_4X) ||
+      (mcl_seq.md_tracks[last_md_track].speed == MD_SPEED_3_2X)) {
+    timing_mid = 8;
   }
+  if (arp_mod12_counter == 0) {
+      if (arp_count % (1 << arp_speed.cur) == 0) {
+      trig = true;
+      }
 
-  bool ignore_base = false;
-
-  if (trig == true) {
-    if (arp_len > 0) {
+    if ((arp_len > 0) && (trig)) {
       trig_md(arp_notes[arp_idx]);
       arp_idx++;
       if (arp_idx == arp_len) {
         arp_idx = 0;
       }
     }
-  }
 
-  arp_count++;
-  if (arp_count > 7) {
-    arp_count = 0;
+   arp_count++;
+    if (arp_count > 15) {
+      arp_count = 0;
+    }
   }
+    arp_mod12_counter++;
+    if (arp_mod12_counter == timing_mid) { arp_mod12_counter = 0; }
+
 }
 
 void SeqPtcPage::recalc_notemask() {

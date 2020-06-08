@@ -90,6 +90,7 @@ public:
   uint8_t arp_base;
   uint8_t arp_dir;
   uint8_t arp_count;
+  uint8_t arp_mod12_counter;
 
   void setup_arp();
   void remove_arp();
@@ -99,7 +100,8 @@ public:
 
   uint8_t arp_get_next_note_up(int8_t);
   uint8_t arp_get_next_note_down(uint8_t);
-  void on_16_callback();
+  void on_192_callback();
+  void onMidiStopCallback();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
