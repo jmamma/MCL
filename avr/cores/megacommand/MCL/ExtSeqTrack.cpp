@@ -244,7 +244,9 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   }
 }
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
-  uint8_t utiming = (mod12_counter + get_timing_mid());
+
+  uint8_t timing_mid = get_timing_mid() - 1;
+  uint8_t utiming = (mod12_counter + timing_mid);
 
   uint8_t condition = 0;
   uint8_t match = 255;
@@ -259,7 +261,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
         if (step_count > length) {
           step_count = 0;
         }
-        utiming = MidiClock.mod12_counter - (6 * (MidiClock.mod12_counter / 6));
+        utiming = (timing_mid - mod12_counter);
         // timing = 0;
       }
     }
@@ -280,7 +282,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
 
-  uint8_t utiming = (mod12_counter + get_timing_mid());
+  uint8_t utiming = (mod12_counter + get_timing_mid() - 1);
   uint8_t condition = 0;
 
   uint8_t match = 255;

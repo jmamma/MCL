@@ -373,7 +373,7 @@ void MDSeqTrack::record_track(uint8_t velocity) {
   if (step_count >= length) {
     return;
   }
-  uint8_t utiming = mod12_counter + get_timing_mid();
+  uint8_t utiming = mod12_counter + get_timing_mid() - 1;
   set_track_step(step_count, utiming, velocity);
 }
 
