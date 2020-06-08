@@ -466,10 +466,10 @@ void SeqPtcPage::setup_arp() {
   arp_idx = 0;
   arp_count = 0;
   render_arp();
-  MidiClock.addOn192Callback(
+  /*MidiClock.addOn192Callback(
       this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
   MidiClock.addOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);*/
 }
 
 void SeqPtcPage::remove_arp() {
@@ -477,10 +477,11 @@ void SeqPtcPage::remove_arp() {
     return;
   }
   arp_enabled = false;
+  /*
   MidiClock.removeOn192Callback(
       this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
   MidiClock.removeOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);
+      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);*/
 }
 
 uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {}

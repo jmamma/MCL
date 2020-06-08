@@ -137,6 +137,7 @@ void MCLSeq::onMidiStopCallback() {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
   }
+  seq_ptc_page.onMidiStopCallback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
@@ -153,6 +154,8 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
+  //Arp
+  seq_ptc_page.on_192_callback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq();
