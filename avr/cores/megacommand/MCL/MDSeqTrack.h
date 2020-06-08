@@ -146,7 +146,8 @@ public:
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
 
-  ALWAYS_INLINE() uint8_t get_timing_mid() {
+  uint8_t get_timing_mid() { get_timing_mid_inline(); }
+  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
     uint8_t timing_mid;
     switch (speed) {
     default:

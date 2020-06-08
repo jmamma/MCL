@@ -85,16 +85,16 @@ public:
 
       if (iterations_5 > 5) {
         iterations_5 = 1;
-      } 
+      }
       if (iterations_6 > 6) {
         iterations_8 = 1;
-      } 
+      }
       if (iterations_7 > 7) {
         iterations_7 = 1;
-      } 
+      }
       if (iterations_8 > 8) {
         iterations_8 = 1;
-      } 
+      }
     } else {
       step_count++;
     }
@@ -115,7 +115,10 @@ public:
   void clear_ext_notes();
   void clear_track();
   void set_length(uint8_t len);
-  ALWAYS_INLINE() uint8_t get_timing_mid() {
+
+  uint8_t get_timing_mid() { get_timing_mid_inline(); }
+
+  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
     uint8_t timing_mid;
     switch (speed) {
     default:
@@ -193,9 +196,9 @@ public:
     }
     *buf = 0;
   }
-  #define DIR_LEFT 0
-  #define DIR_RIGHT 1
-  #define DIR_REVERSE 2
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+#define DIR_REVERSE 2
 
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }

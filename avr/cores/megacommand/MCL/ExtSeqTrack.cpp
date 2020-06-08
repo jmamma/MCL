@@ -65,7 +65,7 @@ void ExtSeqTrack::seq() {
       }
     }
   }
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t timing_mid = get_timing_mid_inline();
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
