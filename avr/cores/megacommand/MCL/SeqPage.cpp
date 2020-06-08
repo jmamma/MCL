@@ -54,10 +54,9 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(0, false);
   seq_menu_page.menu.enable_entry(1, false);
   if (mcl_cfg.track_select == 1) {
-  seq_menu_page.menu.enable_entry(2, false);
-  }
-  else {
-  seq_menu_page.menu.enable_entry(2, true);
+    seq_menu_page.menu.enable_entry(2, false);
+  } else {
+    seq_menu_page.menu.enable_entry(2, true);
   }
 }
 
@@ -84,21 +83,26 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
 }
 
 uint8_t SeqPage::get_md_speed(uint8_t speed_id) {
-        uint8_t speed = 0;
-        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-           if (pgm_read_byte(&md_speeds[n]) == mcl_seq.md_tracks[last_md_track].speed) { speed = n; }
-        }
-        return speed;
+  uint8_t speed = 0;
+  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+    if (pgm_read_byte(&md_speeds[n]) ==
+        mcl_seq.md_tracks[last_md_track].speed) {
+      speed = n;
+    }
+  }
+  return speed;
 }
 
 uint8_t SeqPage::get_ext_speed(uint8_t speed_id) {
-        uint8_t speed = 0;
-        for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-           if (pgm_read_byte(&ext_speeds[n]) == mcl_seq.ext_tracks[last_ext_track].speed) { speed = n; }
-        }
-        return speed;
+  uint8_t speed = 0;
+  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
+    if (pgm_read_byte(&ext_speeds[n]) ==
+        mcl_seq.ext_tracks[last_ext_track].speed) {
+      speed = n;
+    }
+  }
+  return speed;
 }
-
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
@@ -133,6 +137,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       //  Further, if SHIFT2 is pressed, set all tracks.
       if (SeqPage::midi_device == DEVICE_MD) {
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          char str[4];
+          itoa(step, str, 10);
+          oled_display.textbox("MD TRACK LEN:", str);
+          GUI.ignoreNextEvent(Buttons.BUTTON3);
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
             mcl_seq.md_tracks[n].length = step;
           }
@@ -215,10 +223,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = last_md_track + 1;
         opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
-      #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
-      #endif
+#endif
       }
 
       opt_param1_capture = (MCLEncoder *)encoders[0];
@@ -285,10 +293,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
         opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
       } else {
-      #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
-      #endif
+#endif
       }
       // capture current midi_device value
       opt_midi_device_capture = midi_device;
@@ -576,6 +584,10 @@ void pattern_len_handler(Encoder *enc) {
   if (SeqPage::midi_device == DEVICE_MD) {
     DEBUG_PRINTLN("under 16");
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
+      char str[4];
+      itoa(enc_->cur, str, 10);
+      oled_display.textbox("MD TRACKS LEN: ", str);
+       GUI.ignoreNextEvent(Buttons.BUTTON4);
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
@@ -587,6 +599,10 @@ void pattern_len_handler(Encoder *enc) {
   else {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
+        char str[4];
+        itoa(enc_->cur, str, 10);
+         GUI.ignoreNextEvent(Buttons.BUTTON4);
+        oled_display.textbox("EXT TRACKS LEN: ", str);
         mcl_seq.ext_tracks[c].buffer_notesoff();
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
@@ -606,12 +622,14 @@ void opt_speed_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    mcl_seq.md_tracks[last_md_track].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
+    mcl_seq.md_tracks[last_md_track].set_speed(
+        pgm_read_byte(&md_speeds[opt_speed]));
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    mcl_seq.ext_tracks[last_ext_track].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
+    mcl_seq.ext_tracks[last_ext_track].set_speed(
+        pgm_read_byte(&ext_speeds[opt_speed]));
     seq_extstep_page.config_encoders();
   }
 #endif
@@ -804,9 +822,9 @@ void opt_mute_step_handler() {
 }
 
 void opt_clear_step_locks_handler() {
- if (opt_clear_step == 1) {
+  if (opt_clear_step == 1) {
 #ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR STEP: ", "LOCKS");
+    oled_display.textbox("CLEAR STEP: ", "LOCKS");
 #endif
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
       if (note_interface.notes[n] == 1) {
@@ -882,7 +900,7 @@ void opt_reverse_track_handler() {
   if (opt_reverse == 2) {
     if (opt_midi_device_capture == DEVICE_MD) {
 #ifdef OLED_DISPLAY
-      //oled_display.textbox("REVERSE ", "MD TRACKS");
+      // oled_display.textbox("REVERSE ", "MD TRACKS");
 #endif
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].reverse();
@@ -891,7 +909,7 @@ void opt_reverse_track_handler() {
 #ifdef EXT_TRACKS
     else {
 #ifdef OLED_DISPLAY
-      //oled_display.textbox("REVERSE ", "EXT TRACKS");
+      // oled_display.textbox("REVERSE ", "EXT TRACKS");
 #endif
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
         mcl_seq.ext_tracks[n].reverse();
@@ -903,14 +921,14 @@ void opt_reverse_track_handler() {
   if (opt_reverse == 1) {
     if (opt_midi_device_capture == DEVICE_MD) {
 #ifdef OLED_DISPLAY
-      //oled_display.textbox("REVERSE ", "TRACK");
+      // oled_display.textbox("REVERSE ", "TRACK");
 #endif
       mcl_seq.md_tracks[last_md_track].reverse();
     }
 #ifdef EXT_TRACKS
     else {
 #ifdef OLED_DISPLAY
-      //oled_display.textbox("REVERSE ", "EXT TRACK");
+      // oled_display.textbox("REVERSE ", "EXT TRACK");
 #endif
       mcl_seq.ext_tracks[last_ext_track].reverse();
     }
@@ -943,7 +961,7 @@ void SeqPage::config_as_lockedit() {
 
 void SeqPage::loop() {
   if (last_md_track != MD.currentTrack) {
-  select_track(midi_device, MD.currentTrack);
+    select_track(midi_device, MD.currentTrack);
   }
   if (show_seq_menu) {
     seq_menu_page.loop();

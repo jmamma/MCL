@@ -108,7 +108,7 @@ public:
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
-  void set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
+  bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
   uint8_t get_track_lock(uint8_t step, uint8_t track_param);
 
   void record_track(uint8_t velocity);

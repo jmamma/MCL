@@ -299,7 +299,7 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
   return 255;
 }
 
-void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
+bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
   uint8_t match = 255;
   uint8_t c = 0;
@@ -322,10 +322,13 @@ void MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   }
   if (match != 255) {
     locks[match][step] = value + 1;
+    if (MidiClock.state == 2) {
+      SET_BIT64(lock_mask, step);
+    }
+  return true;
   }
-  if (MidiClock.state == 2) {
-    SET_BIT64(lock_mask, step);
-  }
+
+  return false;
 }
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 
