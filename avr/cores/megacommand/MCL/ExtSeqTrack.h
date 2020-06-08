@@ -193,10 +193,15 @@ public:
     }
     *buf = 0;
   }
+  #define DIR_LEFT 0
+  #define DIR_RIGHT 1
+  #define DIR_REVERSE 2
 
-  void rotate_left();
-  void rotate_right();
-  void reverse();
+  void rotate_left() { modify_track(DIR_LEFT); }
+  void rotate_right() { modify_track(DIR_RIGHT); }
+  void reverse() { modify_track(DIR_REVERSE); }
+
+  void modify_track(uint8_t dir);
 
   void set_speed(uint8_t _speed);
   float get_speed_multiplier();

@@ -43,11 +43,10 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
   speed = _speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
-  mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
-  //step_count_inc();
+    mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+    // step_count_inc();
   }
 }
-
 
 void ExtSeqTrack::set_length(uint8_t len) {
   length = len;
@@ -70,7 +69,6 @@ void ExtSeqTrack::seq() {
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
-
     uint8_t next_step = 0;
     if (step_count == length) {
       next_step = 0;
@@ -81,8 +79,10 @@ void ExtSeqTrack::seq() {
     for (uint8_t c = 0; c < 4; c++) {
       uint8_t current_step;
       if (((timing[step_count] >= timing_mid) &&
-           ((timing[current_step = step_count] - timing_mid) == mod12_counter)) ||
-          ((timing[next_step] < timing_mid) && ((timing[current_step = next_step]) == mod12_counter))) {
+           ((timing[current_step = step_count] - timing_mid) ==
+            mod12_counter)) ||
+          ((timing[next_step] < timing_mid) &&
+           ((timing[current_step = next_step]) == mod12_counter))) {
 
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
@@ -93,13 +93,12 @@ void ExtSeqTrack::seq() {
       }
     }
   }
-    mod12_counter++;
+  mod12_counter++;
 
   if (mod12_counter == timing_mid) {
     mod12_counter = 0;
     step_count_inc();
   }
-
 }
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
@@ -331,7 +330,7 @@ void ExtSeqTrack::clear_track() {
   buffer_notesoff();
 }
 
-void ExtSeqTrack::rotate_left() {
+void ExtSeqTrack::modify_track(uint8_t dir) {
 
   int8_t new_pos = 0;
 
@@ -346,78 +345,29 @@ void ExtSeqTrack::rotate_left() {
   oneshot_mask[1] = 0;
 
   for (uint8_t n = 0; n < length; n++) {
-    if (n == 0) {
-      new_pos = length - 1;
-    } else {
-      new_pos = n - 1;
+    switch (dir) {
+    case DIR_LEFT:
+      if (n == 0) {
+        new_pos = length - 1;
+      } else {
+        new_pos = n - 1;
+      }
+      break;
+    case DIR_RIGHT:
+      if (n == length - 1) {
+        new_pos = 0;
+      } else {
+        new_pos = n + 1;
+      }
+      break;
+    case DIR_REVERSE:
+      new_pos = length - n - 1;
+      break;
     }
 
     for (uint8_t a = 0; a < 4; a++) {
       notes[a][new_pos] = temp_data.notes[a][n];
       locks[a][new_pos] = temp_data.locks[a][n];
-      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a], new_pos);
-      }
-    }
-
-    conditional[new_pos] = temp_data.conditional[n];
-    timing[new_pos] = temp_data.timing[n];
-  }
-}
-void ExtSeqTrack::rotate_right() {
-
-  int8_t new_pos = 0;
-
-  ExtSeqTrackData temp_data;
-
-  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
-
-  for (uint8_t a = 0; a < 4; a++) {
-    lock_masks[a] = 0;
-  }
-  oneshot_mask[0] = 0;
-  oneshot_mask[1] = 0;
-
-  for (uint8_t n = 0; n < length; n++) {
-    if (n == length - 1) {
-      new_pos = 0;
-    } else {
-      new_pos = n + 1;
-    }
-
-    for (uint8_t a = 0; a < 4; a++) {
-      notes[a][new_pos] = temp_data.notes[a][n];
-      locks[a][new_pos] = temp_data.locks[0][n];
-      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a], new_pos);
-      }
-    }
-
-    conditional[new_pos] = temp_data.conditional[n];
-    timing[new_pos] = temp_data.timing[n];
-  }
-}
-
-void ExtSeqTrack::reverse() {
-
-  int8_t new_pos = 0;
-
-  ExtSeqTrackData temp_data;
-
-  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
-
-  for (uint8_t a = 0; a < 4; a++) {
-    lock_masks[a] = 0;
-  }
-  oneshot_mask[0] = 0;
-  oneshot_mask[1] = 0;
-
-  for (uint8_t n = 0; n < length; n++) {
-    new_pos = length - n - 1;
-
-    for (uint8_t a = 0; a < 4; a++) {
-      notes[a][new_pos] = temp_data.notes[a][n];
-      locks[a][new_pos] = temp_data.locks[0][n];
       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
         SET_BIT64(temp_data.lock_masks[a], new_pos);
       }
