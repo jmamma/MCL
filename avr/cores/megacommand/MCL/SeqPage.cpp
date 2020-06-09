@@ -594,7 +594,7 @@ void pattern_len_handler(Encoder *enc) {
       char str[4];
       itoa(enc_->cur, str, 10);
       oled_display.textbox("MD TRACKS LEN: ", str);
-       GUI.ignoreNextEvent(Buttons.BUTTON4);
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
@@ -608,7 +608,7 @@ void pattern_len_handler(Encoder *enc) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         char str[4];
         itoa(enc_->cur, str, 10);
-         GUI.ignoreNextEvent(Buttons.BUTTON4);
+        GUI.ignoreNextEvent(Buttons.BUTTON4);
         oled_display.textbox("EXT TRACKS LEN: ", str);
         mcl_seq.ext_tracks[c].buffer_notesoff();
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
@@ -629,15 +629,29 @@ void opt_speed_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
     DEBUG_PRINTLN("okay using MD for length update");
-    mcl_seq.md_tracks[last_md_track].set_speed(
-        pgm_read_byte(&md_speeds[opt_speed]));
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
+      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        mcl_seq.md_tracks[n].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
+      }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
+    } else {
+      mcl_seq.md_tracks[last_md_track].set_speed(
+          pgm_read_byte(&md_speeds[opt_speed]));
+    }
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    mcl_seq.ext_tracks[last_ext_track].set_speed(
-        pgm_read_byte(&ext_speeds[opt_speed]));
-    seq_extstep_page.config_encoders();
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
+      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+        mcl_seq.ext_tracks[n].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
+      }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].set_speed(
+          pgm_read_byte(&ext_speeds[opt_speed]));
+      seq_extstep_page.config_encoders();
+    }
   }
 #endif
   opt_seqpage_capture->init();
