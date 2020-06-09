@@ -115,6 +115,7 @@ public:
   void clear_ext_notes();
   void clear_track();
   void set_length(uint8_t len);
+  void re_sync();
 
   uint8_t get_timing_mid() { return get_timing_mid_inline(); }
 

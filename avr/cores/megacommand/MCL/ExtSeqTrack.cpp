@@ -56,6 +56,13 @@ void ExtSeqTrack::set_length(uint8_t len) {
   DEBUG_DUMP(step_count);
 }
 
+void ExtSeqTrack::re_sync() {
+  uint16_t q = length;
+  start_step = (MidiClock.div16th_counter / q) * q + q;
+  start_step_offset = 0;
+  mute_until_start = true;
+}
+
 void ExtSeqTrack::seq() {
   if (mute_until_start) {
 

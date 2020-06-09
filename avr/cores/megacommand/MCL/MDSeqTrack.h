@@ -128,6 +128,7 @@ public:
   void merge_from_md(MDTrack *md_track);
 
   void set_length(uint8_t len);
+  void re_sync();
 
   #define DIR_LEFT 0
   #define DIR_RIGHT 1

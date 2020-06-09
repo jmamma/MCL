@@ -53,6 +53,13 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
   }
 }
 
+void MDSeqTrack::re_sync() {
+  uint16_t q = length;
+  start_step = (MidiClock.div16th_counter / q) * q + q;
+  start_step_offset = 0;
+  mute_until_start = true;
+}
+
 void MDSeqTrack::seq() {
   if (mute_until_start) {
 
