@@ -135,18 +135,24 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       uint8_t step = track;
       step += 1 + page_select * 16;
       //  Further, if SHIFT2 is pressed, set all tracks.
+      /* not required. pattern_len_handler will detect change when
+       * encoder is updated below */
+      /*
       if (SeqPage::midi_device == DEVICE_MD) {
+        char str[4];
+        itoa(step, str, 10);
+
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          char str[4];
-          itoa(step, str, 10);
-          oled_display.textbox("MD TRACK LEN:", str);
+          oled_display.textbox("MD TRACKS LEN:", str);
           GUI.ignoreNextEvent(Buttons.BUTTON3);
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
             mcl_seq.md_tracks[n].length = step;
           }
         }
+        else {
+        oled_display.textbox("MD TRACK LEN:", str);
         mcl_seq.md_tracks[last_md_track].length = step;
-
+        }
       }
 #ifdef EXT_TRACKS
       else {
@@ -158,6 +164,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         mcl_seq.ext_tracks[last_ext_track].length = step;
       }
 #endif
+*/
       encoders[2]->cur = step;
       note_interface.ignoreNextEvent(track);
       if (event->mask == EVENT_BUTTON_RELEASED) {
