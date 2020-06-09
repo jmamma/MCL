@@ -32,11 +32,13 @@ class MDTrack;
 
 class SlideData {
 public:
-  int8_t err;
-  int8_t ystep;
-  int8_t dx;
-  int8_t dy;
-  uint8_t val;
+  int16_t err;
+  int16_t ystep;
+  int16_t dx;
+  int16_t dy;
+  uint16_t x0;
+  uint16_t y0;
+  uint16_t steep;
   uint8_t target_val;
   void init() {
     dy = 0;
@@ -123,8 +125,10 @@ public:
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
-  ALWAYS_INLINE() void send_slides();
-  ALWAYS_INLINE() void recalc_slides();
+  //ALWAYS_INLINE() void send_slides();
+  //ALWAYS_INLINE() void recalc_slides();
+  void recalc_slides();
+  void send_slides();
   uint8_t find_next_lock(uint8_t step, uint8_t param);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
