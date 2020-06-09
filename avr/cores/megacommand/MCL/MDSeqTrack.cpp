@@ -87,6 +87,8 @@ void MDSeqTrack::seq() {
     }
     uint8_t current_step;
 
+    send_slides();
+
     if (((timing[step_count] >= timing_mid) &&
          (timing[current_step = step_count] - timing_mid == mod12_counter)) ||
         ((timing[next_step] < timing_mid) &&
@@ -104,9 +106,8 @@ void MDSeqTrack::seq() {
           locks_slides_recalc = true;
         }
       }
-    } else {
-      send_slides();
     }
+
   }
 
   mod12_counter++;
