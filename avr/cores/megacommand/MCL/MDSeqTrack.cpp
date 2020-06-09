@@ -4,7 +4,7 @@
 void MDSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {
- // re_sync();
+    // re_sync();
     step_count = (step_count % length);
   }
 }
@@ -100,7 +100,12 @@ void MDSeqTrack::seq() {
         if (IS_BIT_SET64(pattern_mask, current_step)) {
           send_trig_inline();
         }
+        if (IS_BIT_SET64(slide_mask, step_count)) {
+          locks_slides_recalc = true;
+        }
       }
+    } else {
+      send_slides();
     }
   }
 
@@ -163,6 +168,95 @@ void MDSeqTrack::reset_params() {
       //                   MD.kit.params[track_number][locks_params[c] - 1]);
     }
   }
+}
+#define _swap_int8_t(a, b)                                                     \
+  {                                                                            \
+    int8_t t = a;                                                              \
+    a = b;                                                                     \
+    b = t;                                                                     \
+  }
+
+void MDSeqTrack::send_slides() {
+  for (uint8_t c = 0; c < 4; c++) {
+    if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
+
+      locks_slide_data[c].err -= locks_slide_data[c].dy;
+      if (locks_slide_data[c].err < 0) {
+        locks_slide_data[c].val += locks_slide_data[c].ystep;
+        locks_slide_data[c].err += locks_slide_data[c].dx;
+      }
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, locks_slide_data[c].val);
+      if (locks_slide_data[c].val == locks_slide_data[c].target_val) {
+        locks_slide_data[c].init();
+      }
+    }
+  }
+}
+
+void MDSeqTrack::recalc_slides() {
+  if (!locks_slides_recalc) {
+    return;
+  }
+  int8_t x0, x1, y0, y1;
+  uint8_t timing_mid = get_timing_mid_inline();
+  for (uint8_t c = 0; c < 4; c++) {
+    if (locks_params[c] > 0) {
+      if (locks[c][step_count] > 0) {
+        x0 = step_count;
+        x1 = find_next_lock(step_count, c);
+        if (x0 != x1) {
+          y0 = locks[c][x0] - 1;
+          y1 = locks[c][x1] - 1;
+
+          int8_t steep = abs(y1 - y0) > abs(x1 - x0);
+
+          if (steep) {
+            _swap_int8_t(x0, y0);
+            _swap_int8_t(x1, y1);
+          }
+          locks_slide_data[c].dx =
+              (x1 - x0) * timing_mid - timing[x0] + timing[x1];
+          locks_slide_data[c].dy = abs(y1 - y0);
+          locks_slide_data[c].err = locks_slide_data[c].dx / 2;
+          locks_slide_data[c].val = y0;
+          locks_slide_data[c].target_val = y1;
+          if (y0 < y1) {
+            locks_slide_data[c].ystep = 1;
+          } else {
+            locks_slide_data[c].ystep = -1;
+          }
+        } else {
+          locks_slide_data[c].init();
+        }
+      }
+    }
+  }
+
+  locks_slides_recalc = false;
+}
+
+uint8_t MDSeqTrack::find_next_lock(uint8_t step, uint8_t param) {
+  uint8_t next_step = step + 1;
+  uint8_t max_len = length;
+again:
+  for (uint8_t next_step; next_step < max_len; next_step++) {
+    if (locks[param][next_step] > 0) {
+      if (IS_BIT_SET64(next_step, lock_mask)) {
+        return next_step;
+      }
+      if (next_step % 8 == 0) {
+        if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
+          next_step += 8;
+        }
+      }
+    }
+  }
+  if (next_step != step) {
+    next_step = 0;
+    max_len = step;
+    goto again;
+  }
+  return step;
 }
 
 void MDSeqTrack::send_parameter_locks(uint8_t step) {

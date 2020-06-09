@@ -167,6 +167,10 @@ void MCLSeq::seq() {
     ext_tracks[i].seq();
   }
 #endif
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].recalc_slides();
+  }
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options

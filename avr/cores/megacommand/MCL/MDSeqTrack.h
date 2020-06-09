@@ -30,6 +30,19 @@ const uint8_t md_speeds[7] PROGMEM = {MD_SPEED_1X,   MD_SPEED_2X,
 // forward declare MDTrack
 class MDTrack;
 
+class SlideData {
+public:
+  int8_t err;
+  int8_t ystep;
+  int8_t dx;
+  int8_t dy;
+  uint8_t val;
+  uint8_t target_val;
+  void init() {
+    dy = 0;
+  }
+};
+
 class MDSeqTrack : public MDSeqTrackData {
 
 public:
@@ -50,6 +63,8 @@ public:
   MidiUartParent *uart = &MidiUart;
 
   uint8_t locks_params_orig[4];
+  SlideData locks_slide_data[4];
+
   bool load = false;
   //  uint8_t params[24];
   uint8_t trigGroup;
@@ -58,6 +73,8 @@ public:
 
   bool mute_until_start = false;
   bool mute_hold = false;
+
+  bool locks_slides_recalc = false;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
   void mute() { mute_state = SEQ_MUTE_ON; }
@@ -105,6 +122,10 @@ public:
   ALWAYS_INLINE() void send_trig_inline();
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
+
+  ALWAYS_INLINE() void send_slides();
+  ALWAYS_INLINE() void recalc_slides();
+  uint8_t find_next_lock(uint8_t step, uint8_t param);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
