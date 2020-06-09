@@ -102,12 +102,11 @@ void MDSeqTrack::seq() {
         if (IS_BIT_SET64(pattern_mask, current_step)) {
           send_trig_inline();
         }
-        if (IS_BIT_SET64(slide_mask, step_count)) {
+        if (IS_BIT_SET64(lock_mask, step_count)) {
           locks_slides_recalc = true;
         }
       }
     }
-
   }
 
   mod12_counter++;
@@ -186,7 +185,8 @@ void MDSeqTrack::send_slides() {
         locks_slide_data[c].val += locks_slide_data[c].ystep;
         locks_slide_data[c].err += locks_slide_data[c].dx;
       }
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, locks_slide_data[c].val);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1,
+                              locks_slide_data[c].val);
       if (locks_slide_data[c].val == locks_slide_data[c].target_val) {
         locks_slide_data[c].init();
       }
@@ -198,6 +198,7 @@ void MDSeqTrack::recalc_slides() {
   if (!locks_slides_recalc) {
     return;
   }
+  DEBUG_PRINT_FN();
   int8_t x0, x1, y0, y1;
   uint8_t timing_mid = get_timing_mid_inline();
   for (uint8_t c = 0; c < 4; c++) {
@@ -237,26 +238,31 @@ void MDSeqTrack::recalc_slides() {
 }
 
 uint8_t MDSeqTrack::find_next_lock(uint8_t step, uint8_t param) {
+  DEBUG_PRINT_FN();
   uint8_t next_step = step + 1;
   uint8_t max_len = length;
-again:
-  for (uint8_t next_step; next_step < max_len; next_step++) {
+
+  again:
+    for (; next_step < max_len; next_step++) {
     if (locks[param][next_step] > 0) {
-      if (IS_BIT_SET64(next_step, lock_mask)) {
+      if (IS_BIT_SET64(lock_mask, next_step)) {
+        DEBUG_DUMP(next_step);
         return next_step;
       }
       if (next_step % 8 == 0) {
         if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
-          next_step += 8;
+         next_step += 8;
         }
       }
     }
   }
-  if (next_step != step) {
+  if ((next_step != step) || (next_step > length)) {
     next_step = 0;
     max_len = step;
     goto again;
   }
+  DEBUG_DUMP(step);
+  DEBUG_PRINTLN("exit");
   return step;
 }
 
