@@ -136,6 +136,9 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
+    for (uint8_t c = 0; c < 4; c++) {
+    md_tracks[i].locks_slide_data[c].init();
+    }
   }
   seq_ptc_page.onMidiStopCallback();
 #ifdef LFO_TRACKS

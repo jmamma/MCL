@@ -33,14 +33,14 @@ class MDTrack;
 class SlideData {
 public:
   int16_t err;
-  int16_t ystep;
+  int8_t ystep;
   int16_t dx;
   int16_t dy;
-  uint16_t x0;
-  uint16_t y0;
-  uint16_t steep;
-  uint8_t target_val;
-  void init() {
+  int16_t x0;
+  int16_t y0;
+  int16_t steep;
+  int16_t x1;
+  ALWAYS_INLINE() void init() {
     dy = 0;
   }
 };
