@@ -175,13 +175,12 @@ void MDSeqTrack::reset_params() {
     a = b;                                                                     \
     b = t;                                                                     \
   }
-#define _swap_int8_t(a, b)                                                    \
+#define _swap_int8_t(a, b)                                                     \
   {                                                                            \
-    int8_t t = a;                                                             \
+    int8_t t = a;                                                              \
     a = b;                                                                     \
     b = t;                                                                     \
   }
-
 
 void MDSeqTrack::send_slides() {
   for (uint8_t c = 0; c < 4; c++) {
@@ -190,8 +189,7 @@ void MDSeqTrack::send_slides() {
       uint8_t val;
       val = 0x7F & locks_slide_data[c].y0;
       if (locks_slide_data[c].steep) {
-              uint16_t y0_old = locks_slide_data[c].y0;
-      while (locks_slide_data[c].y0 == y0_old) {
+        uint16_t y0_old = locks_slide_data[c].y0;
         if (locks_slide_data[c].err > 0) {
           locks_slide_data[c].y0 += locks_slide_data[c].inc;
           locks_slide_data[c].err -= 2 * locks_slide_data[c].dx;
@@ -201,21 +199,22 @@ void MDSeqTrack::send_slides() {
         if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
           locks_slide_data[c].init();
         }
- }
       } else {
         uint16_t x0_old = locks_slide_data[c].x0;
         while (locks_slide_data[c].x0 == x0_old) {
-        if (locks_slide_data[c].err > 0) {
-          locks_slide_data[c].x0 += locks_slide_data[c].inc;
-          locks_slide_data[c].err -= 2 * locks_slide_data[c].dy;
+          if (locks_slide_data[c].err > 0) {
+            locks_slide_data[c].x0 += locks_slide_data[c].inc;
+            locks_slide_data[c].err -= 2 * locks_slide_data[c].dy;
+          }
+          locks_slide_data[c].err += 2 * locks_slide_data[c].dx;
+          locks_slide_data[c].y0++;
+          if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
+            locks_slide_data[c].init();
+          }
         }
-        locks_slide_data[c].err += 2 * locks_slide_data[c].dx;
-        locks_slide_data[c].y0++;
-        if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
-          locks_slide_data[c].init();
+        if (locks_slide_data[c].yflip != 255) {
+          val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
         }
-       }
-        if (locks_slide_data[c].yflip > 0) { val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip; }
       }
 
       MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
@@ -240,8 +239,8 @@ void MDSeqTrack::recalc_slides() {
         if (step != next_step) {
           x0 = step * timing_mid + timing[step] - timing_mid + 1;
           if (next_step < step) {
-            x1 =
-                (length + next_step) * timing_mid + timing[next_step] - timing_mid - 1;
+            x1 = (length + next_step) * timing_mid + timing[next_step] -
+                 timing_mid - 1;
           } else {
             x1 = next_step * timing_mid + timing[next_step] - timing_mid - 1;
           }
@@ -252,41 +251,42 @@ void MDSeqTrack::recalc_slides() {
           y1 = locks[c][next_step] - 1;
 
           locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
-          locks_slide_data[c].yflip = 0;
+          locks_slide_data[c].yflip = 255;
           if (locks_slide_data[c].steep) {
-             /* Disable as this use case will not exist.
-             if (x0 > x1) {
-                   _swap_int16_t(x0, x1);
-                  _swap_int16_t(y0, y1);
-             }
-             */
-          }
-          else {
-             if (y0 > y1) {
+            /* Disable as this use case will not exist.
+            if (x0 > x1) {
+                  _swap_int16_t(x0, x1);
+                 _swap_int16_t(y0, y1);
+            }
+            */
+          } else {
+            if (y0 > y1) {
               _swap_int16_t(y0, y1);
               _swap_int16_t(x0, x1);
               locks_slide_data[c].yflip = y0;
-             }
+            }
           }
-            locks_slide_data[c].dx = x1 - x0;
-            locks_slide_data[c].dy = y1 - y0;
-            locks_slide_data[c].inc = 1;
+          locks_slide_data[c].dx = x1 - x0;
+          locks_slide_data[c].dy = y1 - y0;
+          locks_slide_data[c].inc = 1;
 
           if (locks_slide_data[c].steep) {
             if (locks_slide_data[c].dy < 0) {
-                locks_slide_data[c].inc = -1;
-                locks_slide_data[c].dy = -1 * locks_slide_data[c].dy;
+              locks_slide_data[c].inc = -1;
+              locks_slide_data[c].dy = -1 * locks_slide_data[c].dy;
             }
 
-            locks_slide_data[c].err = 2 * locks_slide_data[c].dy - locks_slide_data[c].dx;
+            locks_slide_data[c].err =
+                2 * locks_slide_data[c].dy - locks_slide_data[c].dx;
 
           } else {
             if (locks_slide_data[c].dx < 0) {
-                locks_slide_data[c].inc = -1;
-                locks_slide_data[c].dx = -1 * locks_slide_data[c].dx;
+              locks_slide_data[c].inc = -1;
+              locks_slide_data[c].dx = -1 * locks_slide_data[c].dx;
             }
 
-            locks_slide_data[c].err = 2 * locks_slide_data[c].dx - locks_slide_data[c].dy;
+            locks_slide_data[c].err =
+                2 * locks_slide_data[c].dx - locks_slide_data[c].dy;
           }
           locks_slide_data[c].y0 = y0;
           locks_slide_data[c].x0 = x0;
@@ -302,6 +302,7 @@ void MDSeqTrack::recalc_slides() {
           DEBUG_DUMP(locks_slide_data[c].dy);
           DEBUG_DUMP(locks_slide_data[c].steep);
           DEBUG_DUMP(locks_slide_data[c].inc);
+          DEBUG_DUMP(locks_slide_data[c].yflip);
         } else {
           locks_slide_data[c].init();
         }
