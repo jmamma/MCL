@@ -187,29 +187,30 @@ void MDSeqTrack::send_slides() {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
       uint8_t val;
-      val = 0x7F & locks_slide_data[c].y0;
+      val = locks_slide_data[c].y0;
       if (locks_slide_data[c].steep) {
-        uint16_t y0_old = locks_slide_data[c].y0;
         if (locks_slide_data[c].err > 0) {
           locks_slide_data[c].y0 += locks_slide_data[c].inc;
-          locks_slide_data[c].err -= 2 * locks_slide_data[c].dx;
+          locks_slide_data[c].err -= locks_slide_data[c].dx;
         }
-        locks_slide_data[c].err += 2 * locks_slide_data[c].dy;
+        locks_slide_data[c].err += locks_slide_data[c].dy;
         locks_slide_data[c].x0++;
         if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
           locks_slide_data[c].init();
+          break;
         }
       } else {
         uint16_t x0_old = locks_slide_data[c].x0;
         while (locks_slide_data[c].x0 == x0_old) {
           if (locks_slide_data[c].err > 0) {
             locks_slide_data[c].x0 += locks_slide_data[c].inc;
-            locks_slide_data[c].err -= 2 * locks_slide_data[c].dy;
+            locks_slide_data[c].err -= locks_slide_data[c].dy;
           }
-          locks_slide_data[c].err += 2 * locks_slide_data[c].dx;
+          locks_slide_data[c].err += locks_slide_data[c].dx;
           locks_slide_data[c].y0++;
           if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
             locks_slide_data[c].init();
+            break;
           }
         }
         if (locks_slide_data[c].yflip != 255) {
@@ -217,7 +218,7 @@ void MDSeqTrack::send_slides() {
         }
       }
 
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val);
     }
   }
 }
@@ -228,7 +229,7 @@ void MDSeqTrack::recalc_slides() {
   }
   DEBUG_PRINT_FN();
   int16_t x0, x1;
-  int16_t y0, y1;
+  int8_t y0, y1;
   uint8_t step, next_step;
   uint8_t timing_mid = get_timing_mid_inline();
   for (uint8_t c = 0; c < 4; c++) {
@@ -261,7 +262,7 @@ void MDSeqTrack::recalc_slides() {
             */
           } else {
             if (y0 > y1) {
-              _swap_int16_t(y0, y1);
+              _swap_int8_t(y0, y1);
               _swap_int16_t(x0, x1);
               locks_slide_data[c].yflip = y0;
             }
@@ -273,20 +274,22 @@ void MDSeqTrack::recalc_slides() {
           if (locks_slide_data[c].steep) {
             if (locks_slide_data[c].dy < 0) {
               locks_slide_data[c].inc = -1;
-              locks_slide_data[c].dy = -1 * locks_slide_data[c].dy;
+              locks_slide_data[c].dy *= -1;
             }
-
+            locks_slide_data[c].dy *= 2;
             locks_slide_data[c].err =
-                2 * locks_slide_data[c].dy - locks_slide_data[c].dx;
-
+                locks_slide_data[c].dy - locks_slide_data[c].dx;
+            locks_slide_data[c].dx *= 2;
           } else {
             if (locks_slide_data[c].dx < 0) {
               locks_slide_data[c].inc = -1;
-              locks_slide_data[c].dx = -1 * locks_slide_data[c].dx;
+              locks_slide_data[c].dx *= -1;
             }
 
+            locks_slide_data[c].dx *= 2;
             locks_slide_data[c].err =
-                2 * locks_slide_data[c].dx - locks_slide_data[c].dy;
+                locks_slide_data[c].dx - locks_slide_data[c].dy;
+            locks_slide_data[c].dy *= 2;
           }
           locks_slide_data[c].y0 = y0;
           locks_slide_data[c].x0 = x0;
@@ -322,15 +325,15 @@ uint8_t MDSeqTrack::find_next_lock(uint8_t step, uint8_t param) {
 again:
   for (; next_step < max_len; next_step++) {
     if (locks[param][next_step] > 0) {
-      if (IS_BIT_SET64(lock_mask, next_step)) {
+     if (IS_BIT_SET64(lock_mask, next_step)) {
         DEBUG_DUMP(next_step);
         return next_step;
       }
-      // if (next_step % 8 == 0) {
-      // if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
-      //  next_step += 8;
-      // }
-      // }
+      if (next_step % 8 == 0) {
+          if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
+            next_step += 8;
+          }
+      }
     }
   }
   if ((next_step != step) || (next_step > length)) {

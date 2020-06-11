@@ -37,11 +37,11 @@ public:
   int16_t dx;
   int16_t dy;
   int16_t x0;
-  int16_t y0;
+  int8_t y0;
+  int8_t y1;
   bool steep;
   int16_t x1;
-  int16_t y1;
-  int16_t yflip;
+  uint8_t yflip;
   ALWAYS_INLINE() void init() {
     dy = 0;
     dx = 0;
@@ -128,11 +128,9 @@ public:
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   ALWAYS_INLINE() void send_parameter_locks(uint8_t step);
 
-  //ALWAYS_INLINE() void send_slides();
-  //ALWAYS_INLINE() void recalc_slides();
-  void recalc_slides();
-  void send_slides();
-  uint8_t find_next_lock(uint8_t step, uint8_t param);
+  ALWAYS_INLINE() void send_slides();
+  ALWAYS_INLINE() void recalc_slides();
+  ALWAYS_INLINE() uint8_t find_next_lock(uint8_t step, uint8_t param);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
