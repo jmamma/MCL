@@ -441,6 +441,12 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         store_lock = 1;
       }
       if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+        uint8_t utiming = (seq_param2.cur + 0);
+        uint8_t condition = seq_param1.cur;
+
+        active_track.conditional[step] = condition;
+        active_track.timing[step] = utiming;
+
         SET_BIT64(active_track.pattern_mask, step);
         SET_BIT64(active_track.lock_mask, step);
       } else {
@@ -456,8 +462,8 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     if (modelname != NULL) {
       m_strncpy_p(str, modelname, 3);
       if (strlen(str) == 2) {
-      str[2] = ' ';
-      str[3] = '\0';
+        str[2] = ' ';
+        str[3] = '\0';
       }
     }
     itoa(value, str2, 10);
