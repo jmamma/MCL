@@ -133,7 +133,7 @@ void SeqExtStepPage::display() {
     }
     GUI.put_value_at1(13, last_ext_track + 1);
   }
-  draw_pattern_mask((page_select * 16), DEVICE_A4);
+  draw_mask((page_select * 16), DEVICE_A4);
 #endif
   SeqPage::display();
 }
@@ -221,7 +221,7 @@ void SeqExtStepPage::display() {
     oled_display.setFont(oldfont);
   }
 
-  draw_pattern_mask(page_select * 16, DEVICE_A4);
+  draw_mask(page_select * 16, DEVICE_A4);
   SeqPage::display();
   if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&

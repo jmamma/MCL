@@ -27,8 +27,15 @@ void SeqStepPage::config() {
   strncat(info1, ">", len1);
   m_strncpy_p(buf, str2, len1);
   strncat(info1, buf, len1);
-  strcpy(info2, "STEP");
 
+  switch (mask_type) {
+  case MASK_PATTERN:
+    strcpy(info2, "STEP");
+    break;
+  case MASK_SLIDE:
+    strcpy(info2, "SLIDE");
+    break;
+  }
   config_encoders();
   // config menu
   config_as_trackedit();
@@ -45,7 +52,7 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
-
+  seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   seq_param1.max = 14;
@@ -129,7 +136,7 @@ void SeqStepPage::display() {
   }
   GUI.put_value_at(6, seq_param3.getValue());
   GUI.put_value_at1(15, page_select + 1);
-  draw_pattern_mask((page_select * 16), DEVICE_MD);
+  draw_mask((page_select * 16), DEVICE_MD);
 
   SeqPage::display();
 }
@@ -200,7 +207,7 @@ void SeqStepPage::display() {
 
   else {
     draw_lock_mask((page_select * 16), DEVICE_MD);
-    draw_pattern_mask((page_select * 16), DEVICE_MD);
+    draw_mask((page_select * 16), DEVICE_MD);
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
@@ -272,13 +279,30 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     uint8_t trackid = event->source - 128;
     uint8_t step = trackid + (page_select * 16);
+    if (device == DEVICE_A4) {
+      return true;
+    }
+
+    if (mask_type == MASK_SLIDE) {
+
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+      }
+
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+        if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+          SET_BIT64(active_track.slide_mask, step);
+        } else {
+          if (clock_diff(note_interface.note_hold, slowclock) <
+              TRIG_HOLD_TIME) {
+            CLEAR_BIT64(active_track.slide_mask, step);
+          }
+        }
+      }
+
+      return;
+    }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device == DEVICE_A4) {
-        //        GUI.setPage(&seq_extstep_page);
-
-        return true;
-      }
       mcl_seq.midi_events.update_params = false;
       MD.midi_events.disable_live_kit_update();
 
@@ -300,7 +324,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = condition;
       uint8_t note_num = 255;
 
-      // SET_BIT64(active_track.pattern_mask, step);
       tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
       if (tuning) {
         for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
@@ -328,11 +351,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
 
-      if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
-        return true;
-      }
-
       if (last_md_track < 15) {
         show_pitch = false;
       }
@@ -359,26 +377,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         SET_BIT64(active_track.pattern_mask, step);
       } else {
         DEBUG_PRINTLN("clear step");
-        /*
-        DEBUG_DUMP(step);
-        Serial.println();
-#       for (uint8_t n = 0; n < 64; n++) {
-        if (IS_BIT_SET64(active_track.pattern_mask, n)) { Serial.print(1); }
-        else { Serial.print(0); }
-        }
-        Serial.println();
-        */
+
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(active_track.pattern_mask, step);
           active_track.conditional[step] = 0;
           active_track.timing[step] = active_track.get_timing_mid(); // upper
         }
       }
-      // Cond
-      // seq_param4.cur = condition;
-      // Microƒ
-      // encoders[4]->cur = timing;
-      // draw_notes(1);
       return true;
     }
     return true;
