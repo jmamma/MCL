@@ -40,6 +40,7 @@ void SeqRtrkPage::init() {
   recording = true;
   config();
   trig_interface.on();
+  SeqPage::mask_type = MASK_PATTERN;
 }
 
 void SeqRtrkPage::cleanup() {
@@ -74,7 +75,7 @@ void SeqRtrkPage::display() {
   }
 #endif
   bool show_current_step = false;
-  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  draw_mask(page_select * 16, DEVICE_MD, show_current_step);
   SeqPage::display();
 }
 #else
@@ -99,7 +100,7 @@ void SeqRtrkPage::display() {
 
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
-  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  draw_mask(page_select * 16, DEVICE_MD, show_current_step);
 
   SeqPage::display();
   oled_display.display();

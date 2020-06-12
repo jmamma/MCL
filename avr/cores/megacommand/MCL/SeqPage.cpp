@@ -6,6 +6,9 @@ uint8_t SeqPage::page_select = 0;
 uint8_t SeqPage::midi_device = DEVICE_MD;
 
 uint8_t SeqPage::page_count = 4;
+
+uint8_t SeqPage::mask_type = MASK_PATTERN;
+
 bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
 bool SeqPage::toggle_device = true;
@@ -51,12 +54,13 @@ void SeqPage::init() {
   oled_display.clearDisplay();
 #endif
   toggle_device = true;
-  seq_menu_page.menu.enable_entry(0, false);
-  seq_menu_page.menu.enable_entry(1, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
   if (mcl_cfg.track_select == 1) {
-    seq_menu_page.menu.enable_entry(2, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {
-    seq_menu_page.menu.enable_entry(2, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   }
 }
 
@@ -384,9 +388,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   }
   GUI.put_string_at(0, str);
 }
-
-void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
-                                bool show_current_step) {
+void SeqPage::draw_mask(uint8_t offset, uint8_t device,
+                                bool show_current_step, uint8_t mask_type) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -558,19 +561,35 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
                  active_track.length, show_current_step);
 }
 
-void SeqPage::draw_pattern_mask(uint8_t offset, uint64_t pattern_mask,
+void SeqPage::draw_mask(uint8_t offset, uint64_t pattern_mask,
                                 uint8_t step_count, uint8_t length,
                                 bool show_current_step, uint64_t mute_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
                      step_count, length, mute_mask);
 }
 
-void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
+void SeqPage::draw_mask(uint8_t offset, uint8_t device,
                                 bool show_current_step) {
-  if (device == DEVICE_MD) {
+
+ if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    draw_pattern_mask(offset, active_track.pattern_mask,
-                      active_track.step_count, active_track.length,
+    uint64_t mask;
+    switch (mask_type) {
+    case MASK_PATTERN:
+    mask = active_track.pattern_mask;
+    break;
+    case MASK_LOCK:
+    mask = active_track.lock_mask;
+    break;
+    case MASK_MUTE:
+    mask = active_track.oneshot_mask;
+    break;
+    case MASK_SLIDE:
+    mask = active_track.slide_mask;
+    break;
+    }
+
+    draw_mask(offset, mask, active_track.step_count, active_track.length,
                       show_current_step, active_track.oneshot_mask);
   }
 #ifdef EXT_TRACKS
@@ -970,14 +989,14 @@ void step_menu_handler() {
 
 void SeqPage::config_as_trackedit() {
 
-  seq_menu_page.menu.enable_entry(4, true);
-  seq_menu_page.menu.enable_entry(5, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
 }
 
 void SeqPage::config_as_lockedit() {
 
-  seq_menu_page.menu.enable_entry(4, false);
-  seq_menu_page.menu.enable_entry(5, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
 }
 
 void SeqPage::loop() {
