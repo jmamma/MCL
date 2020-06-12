@@ -72,6 +72,17 @@ void SeqPage::cleanup() {
   note_interface.init_notes();
 }
 
+void SeqPage::config_mask_info() {
+  switch (mask_type) {
+  case MASK_PATTERN:
+    strcpy(info2, "PATTERN");
+    break;
+  case MASK_SLIDE:
+    strcpy(info2, "SLIDE");
+    break;
+  }
+}
+
 void SeqPage::select_track(uint8_t device, uint8_t track) {
   if (device == DEVICE_MD) {
 
@@ -640,6 +651,9 @@ void pattern_len_handler(Encoder *enc) {
 #endif
 }
 
+void opt_mask_handler() {
+  seq_step_page.config_mask_info();
+}
 void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }

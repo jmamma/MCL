@@ -38,6 +38,7 @@ extern void opt_paste_step_handler();
 extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
 extern void opt_clear_step_locks_handler();
+extern void opt_mask_handler();
 
 extern void seq_menu_handler();
 extern void step_menu_handler();
@@ -73,6 +74,7 @@ public:
   }
   void config_as_trackedit();
   void config_as_lockedit();
+  void config_mask_info();
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
