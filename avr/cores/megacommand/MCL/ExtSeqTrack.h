@@ -7,6 +7,11 @@
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+
+#define NUM_EXT_STEPS 128
+#define NUM_EXT_NOTES 4
+#define NUM_EXT_LOCKS 4
+
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -30,14 +35,14 @@ class ExtSeqTrackData {
 public:
   uint8_t length;
   uint8_t speed; // Resolution = 2 / ExtPatternResolution
-  uint8_t reserved[4];
-  int8_t notes[4][128]; // 128 steps, up to 4 notes per step
-  uint8_t locks[4][128];
-  uint8_t locks_params[4];
-  uint64_t lock_masks[4];
+  uint8_t reserved[NUM_EXT_NOTES];
+  int8_t notes[NUM_EXT_NOTES][NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
+  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
+  uint8_t locks_params[NUM_EXT_LOCKS];
+  uint64_t lock_masks[NUM_EXT_LOCKS];
 
-  uint8_t conditional[128];
-  uint8_t timing[128];
+  uint8_t conditional[NUM_EXT_STEPS];
+  uint8_t timing[NUM_EXT_STEPS];
 };
 class ExtSeqTrack : public ExtSeqTrackData {
 

@@ -37,7 +37,7 @@ float ExtSeqTrack::get_speed_multiplier(uint8_t speed) {
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint8_t i = 0; i < 128; i++) {
+  for (uint8_t i = 0; i < NUM_EXT_STEPS; i++) {
     timing[i] = round(mult * (float)timing[i]);
   }
   speed = _speed;
@@ -83,7 +83,7 @@ void ExtSeqTrack::seq() {
       next_step = step_count + 1;
     }
 
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
       uint8_t current_step;
       if (((timing[step_count] >= timing_mid) &&
            ((timing[current_step = step_count] - timing_mid) ==
@@ -211,7 +211,7 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   // Look for matching note already on this step
   // If it's a note off, then disable the note
   // If it's a note on, set the note note-off.
-  for (uint8_t c = 0; c < 4 && match == 255; c++) {
+  for (uint8_t c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (notes[c][step] == -(1 * (note_num + 1))) {
       notes[c][step] = 0;
       buffer_notesoff();
@@ -224,7 +224,7 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   }
   // No matches are found, we count number of on and off to determine next
   // note type.
-  for (uint8_t c = 0; c < 4 && match == 255; c++) {
+  for (uint8_t c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (notes[c][step] == 0) {
       match = c;
       int8_t ons_and_offs = 0;
@@ -232,7 +232,7 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
       // If there are more note ons for given note, the next note entered
       // should be a note off.
       for (uint8_t a = 0; a < length; a++) {
-        for (uint8_t b = 0; b < 4; b++) {
+        for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
           if (notes[b][a] == -(1 * (note_num + 1))) {
             ons_and_offs -= 1;
           }
@@ -258,7 +258,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint8_t match = 255;
   uint8_t c = 0;
 
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (abs(notes[c][step_count]) == note_num + 1) {
       match = c;
 
@@ -272,7 +272,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
       }
     }
   }
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (notes[c][step_count] == 0) {
       match = c;
     }
@@ -295,12 +295,12 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t c = 0;
   // Let's try and find an existing param
 
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (notes[c][step_count] == note_num + 1) {
       match = c;
     }
   }
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
     if (notes[c][step_count] == 0) {
       match = c;
     }
@@ -317,14 +317,14 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
-  for (uint8_t c = 0; c < 128; c++) {
+  for (uint8_t c = 0; c < NUM_EXT_STEPS; c++) {
     conditional[c] = 0;
     timing[c] = 0;
   }
 }
 void ExtSeqTrack::clear_ext_notes() {
-  for (uint8_t c = 0; c < 4; c++) {
-    for (uint8_t x = 0; x < 128; x++) {
+  for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
+    for (uint8_t x = 0; x < NUM_EXT_STEPS; x++) {
       notes[c][x] = 0;
     }
     // ExtPatternNotesParams[i][c] = 0;
@@ -345,7 +345,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
-  for (uint8_t a = 0; a < 4; a++) {
+  for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
     lock_masks[a] = 0;
   }
   oneshot_mask[0] = 0;
@@ -372,7 +372,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       break;
     }
 
-    for (uint8_t a = 0; a < 4; a++) {
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
       notes[a][new_pos] = temp_data.notes[a][n];
       locks[a][new_pos] = temp_data.locks[a][n];
       if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {

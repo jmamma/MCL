@@ -311,11 +311,11 @@ void MDTrack::scale_seq_vol(float scale) {
     }
   }
 
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (seq_data.locks_params[c] > 0) {
       if ((seq_data.locks_params[c] - 1 == MODEL_LFOD) ||
           (seq_data.locks_params[c] - 1 == MODEL_VOL)) {
-        for (uint8_t n = 0; n < 64; n++) {
+        for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
           if (seq_data.locks[c][n] > 0) {
             seq_data.locks[c][n] =
                 (uint8_t)(scale * (float)(seq_data.locks[c][n] - 1)) + 1;
