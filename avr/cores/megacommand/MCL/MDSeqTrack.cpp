@@ -103,7 +103,7 @@ void MDSeqTrack::seq() {
           send_trig_inline();
         }
       }
-      if (IS_BIT_SET64(lock_mask, step_count)) {
+      if (IS_BIT_SET64(slide_mask, step_count)) {
         locks_slides_recalc = true;
       }
     }

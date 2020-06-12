@@ -31,7 +31,7 @@ ArpPage arp_page(&arp_und, &arp_mode, &arp_speed, &arp_oct);
 const menu_t<11> seq_menu_layout PROGMEM = {
     "SEQ",
     {
-        {"", 0,2, 2, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, NULL, { {MASK_PATTERN,"PATTERN"}, {MASK_SLIDE,"SLIDE"}} },
+        {"", 0,2, 2, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, { {MASK_PATTERN,"PATTERN"}, {MASK_SLIDE,"SLIDE"}} },
         {"ARPEGGIATOR", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, {}},
         {"TRANSPOSE:", 0, 12, 0, (uint8_t *)&seq_ptc_page.key, (Page *) NULL, NULL, {}},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},

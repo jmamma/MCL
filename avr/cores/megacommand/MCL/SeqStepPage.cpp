@@ -28,14 +28,7 @@ void SeqStepPage::config() {
   m_strncpy_p(buf, str2, len1);
   strncat(info1, buf, len1);
 
-  switch (mask_type) {
-  case MASK_PATTERN:
-    strcpy(info2, "STEP");
-    break;
-  case MASK_SLIDE:
-    strcpy(info2, "SLIDE");
-    break;
-  }
+  config_mask_info();
   config_encoders();
   // config menu
   config_as_trackedit();
@@ -289,7 +282,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
 
       if (event->mask == EVENT_BUTTON_RELEASED) {
-        if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+        if (!IS_BIT_SET64(active_track.slide_mask, step)) {
           SET_BIT64(active_track.slide_mask, step);
         } else {
           if (clock_diff(note_interface.note_hold, slowclock) <
