@@ -469,7 +469,7 @@ void SeqPage::draw_pattern_mask(uint8_t offset, uint8_t device,
       uint8_t noteson = 0;
       uint8_t notesoff = 0;
 
-      for (uint8_t a = 0; a < 4; a++) {
+      for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
 
         if (mcl_seq.ext_tracks[last_ext_track].notes[a][i] > 0) {
 

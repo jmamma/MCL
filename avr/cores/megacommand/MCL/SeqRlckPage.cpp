@@ -133,7 +133,7 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (MD.getCurrentTrack(CALLBACK_TIMEOUT) != last_md_track) {
-     for (uint8_t c = 0; c < 4; c++) {
+     for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
       if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
         last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
       }
@@ -141,7 +141,7 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
     last_md_track = MD.currentTrack;
     }
     mcl_seq.md_tracks[last_md_track].clear_param_locks(last_param_id);
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
       if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
         last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
       }

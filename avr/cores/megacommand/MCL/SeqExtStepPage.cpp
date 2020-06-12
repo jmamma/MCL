@@ -102,7 +102,7 @@ void SeqExtStepPage::display() {
   }
 
   if (notes_held > 0) {
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < NUM_EXT_NOTES; i++) {
 
       notenum = mcl_seq.ext_tracks[last_ext_track]
                     .notes[i][note_interface.last_note + page_select * 16];
@@ -288,7 +288,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         //  timing = 3;
         // condition = 3;
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          for (uint8_t c = 0; c < 4; c++) {
+          for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
             if (active_track.notes[c][track + page_select * 16] > 0) {
               MidiUart2.sendNoteOff(
                   last_ext_track,

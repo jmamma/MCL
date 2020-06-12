@@ -114,7 +114,7 @@ void MDSeqTrack::seq() {
 
 bool MDSeqTrack::is_param(uint8_t param_id) {
   bool match = false;
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] - 1 == param_id) {
         return true;
@@ -126,7 +126,7 @@ bool MDSeqTrack::is_param(uint8_t param_id) {
 
 void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   bool match = false;
-  for (uint8_t c = 0; c < 4 && match == false; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS && match == false; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] - 1 == param_id) {
         locks_params_orig[c] = value;
@@ -137,7 +137,7 @@ void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
 }
 
 void MDSeqTrack::update_kit_params() {
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
       uint8_t param_id = locks_params[c] - 1;
       MD.kit.params[track_number][param_id] = locks_params_orig[c];
@@ -147,7 +147,7 @@ void MDSeqTrack::update_kit_params() {
 
 void MDSeqTrack::update_params() {
 
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
       uint8_t param_id = locks_params[c] - 1;
       locks_params_orig[c] = MD.kit.params[track_number][param_id];
@@ -156,7 +156,7 @@ void MDSeqTrack::update_params() {
 }
 
 void MDSeqTrack::reset_params() {
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
       MD.setTrackParam(track_number, locks_params[c] - 1, locks_params_orig[c]);
       //    MD.setTrackParam(track_number, locks_params[c] - 1,
@@ -172,7 +172,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
   uint8_t send_param = 255;
 
   if (lock_mask_step && pattern_mask_step) {
-    for (c = 0; c < 4; c++) {
+    for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks_params[c] > 0) {
         if (locks[c][step] > 0) {
           send_param = locks[c][step] - 1;
@@ -185,7 +185,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
   }
 
   else if (lock_mask_step) {
-    for (c = 0; c < 4; c++) {
+    for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks[c][step] > 0 && locks_params[c] > 0) {
         send_param = locks[c][step] - 1;
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
@@ -195,7 +195,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step) {
 
   else if (pattern_mask_step) {
 
-    for (c = 0; c < 4; c++) {
+    for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks_params[c] > 0) {
         send_param = locks_params_orig[c];
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
@@ -297,7 +297,7 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
   uint8_t match = 255;
   uint8_t c = 0;
   // Let's try and find an existing param
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == (track_param + 1)) {
       match = c;
     }
@@ -313,7 +313,7 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   uint8_t match = 255;
   uint8_t c = 0;
   // Let's try and find an existing param
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == (track_param + 1)) {
       match = c;
     }
@@ -321,8 +321,8 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   //  locks_params[0] = track_param + 1;
   // locks_params[0] = track_param + 1;
   // match = 0;
-  // We learn first 4 params then stop.
-  for (c = 0; c < 4 && match == 255; c++) {
+  // We learn first NUM_MD_LOCKS params then stop.
+  for (c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
       locks_params_orig[c] = MD.kit.params[track_number][track_param];
@@ -351,13 +351,13 @@ void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
   uint8_t match = 255;
   uint8_t c = 0;
   // Let's try and find an existing param
-  for (c = 0; c < 4 && match == 255; c++) {
+  for (c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 1) {
       match = c;
     }
   }
-  // We learn first 4 params then stop.
-  for (c = 0; c < 4 && match == 255; c++) {
+  // We learn first NUM_MD_LOCKS params then stop.
+  for (c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = 1;
       locks_params_orig[c] = MD.kit.params[track_number][0];
@@ -404,7 +404,7 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
 
 bool MDSeqTrack::is_locks(uint8_t step) {
   bool match = false;
-  for (uint8_t c = 0; c < 4 && match == false; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS && match == false; c++) {
     if (locks[c][step] > 0) {
       match = true;
     }
@@ -414,7 +414,7 @@ bool MDSeqTrack::is_locks(uint8_t step) {
 
 void MDSeqTrack::clear_param_locks(uint8_t param_id) {
   uint8_t match = 255;
-  for (uint8_t c = 0; c < 4 && match == 255; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] - 1 == param_id) {
         match = c;
@@ -423,7 +423,7 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
   }
 
   if (match != 255) {
-    for (uint8_t x = 0; x < 64; x++) {
+    for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
       locks[match][x] = 0;
       if (!is_locks(x)) {
         CLEAR_BIT64(lock_mask, x);
@@ -435,14 +435,14 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
 }
 
 void MDSeqTrack::clear_step_locks(uint8_t step) {
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     locks[c][step] = 0;
   }
   CLEAR_BIT64(lock_mask, step);
 }
 
 void MDSeqTrack::clear_conditional() {
-  for (uint8_t c = 0; c < 64; c++) {
+  for (uint8_t c = 0; c < NUM_MD_STEPS; c++) {
     conditional[c] = 0;
     timing[c] = 0;
   }
@@ -450,13 +450,13 @@ void MDSeqTrack::clear_conditional() {
 }
 
 void MDSeqTrack::clear_locks(bool reset_params) {
-  uint8_t locks_params_buf[4];
+  uint8_t locks_params_buf[NUM_MD_LOCKS];
 
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
 
-  for (uint8_t c = 0; c < 4; c++) {
-    for (uint8_t x = 0; x < 64; x++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+    for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
       locks[c][x] = 0;
     }
 
@@ -465,7 +465,7 @@ void MDSeqTrack::clear_locks(bool reset_params) {
   }
   lock_mask = 0;
   if (reset_params) {
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks_params_buf[c] > 0) {
         MD.setTrackParam(track_number, locks_params_buf[c] - 1,
                          locks_params_orig[c]);
