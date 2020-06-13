@@ -78,7 +78,7 @@ public:
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
-  void draw_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true, uint64_t mute_mask = 0);
+  void draw_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
   void draw_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);

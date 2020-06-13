@@ -580,9 +580,9 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
 void SeqPage::draw_mask(uint8_t offset, uint64_t pattern_mask,
                         uint8_t step_count, uint8_t length,
-                        bool show_current_step, uint64_t mute_mask) {
+                        bool show_current_step, uint64_t mute_mask, uint64_t slide_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
-                     step_count, length, mute_mask);
+                     step_count, length, mute_mask, slide_mask);
 }
 
 void SeqPage::draw_mask(uint8_t offset, uint8_t device,
@@ -590,24 +590,25 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 
   if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t mask;
+    uint64_t mask = active_track.pattern_mask;
+    uint64_t oneshot_mask = 0;
+    uint64_t slide_mask = 0;
+
     switch (mask_type) {
     case MASK_PATTERN:
-      mask = active_track.pattern_mask;
       break;
     case MASK_LOCK:
-      mask = active_track.lock_mask;
       break;
     case MASK_MUTE:
-      mask = active_track.oneshot_mask;
+      oneshot_mask = active_track.oneshot_mask;
       break;
     case MASK_SLIDE:
-      mask = active_track.slide_mask;
+      slide_mask = active_track.slide_mask;
       break;
     }
 
     draw_mask(offset, mask, active_track.step_count, active_track.length,
-              show_current_step, active_track.oneshot_mask);
+              show_current_step, oneshot_mask, slide_mask);
   }
 #ifdef EXT_TRACKS
   else {

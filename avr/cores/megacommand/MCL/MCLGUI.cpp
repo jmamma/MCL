@@ -479,14 +479,13 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   strcpy(K, "--");
   K[3] = '\0';
 
-   if (timing == 0) {
-   } else if ((timing < timing_mid) && (timing != 0)) {
-     itoa(timing_mid - timing, K + 1, 10);
-   } else {
-     K[0] = '+';
-     itoa(timing - timing_mid, K + 1, 10);
-   }
-
+  if (timing == 0) {
+  } else if ((timing < timing_mid) && (timing != 0)) {
+    itoa(timing_mid - timing, K + 1, 10);
+  } else {
+    K[0] = '+';
+    itoa(timing - timing_mid, K + 1, 10);
+  }
 
   oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);
   oled_display.drawRect(8 + 1, 1 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
@@ -577,7 +576,8 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         uint64_t pattern_mask, uint8_t step_count,
-                        uint8_t length, uint64_t mute_mask) {
+                        uint8_t length, uint64_t mute_mask,
+                        uint64_t slide_mask) {
 #ifdef OLED_DISPLAY
   for (int i = 0; i < 16; i++) {
 
@@ -591,29 +591,25 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     } else if (!in_range) {
       // don't draw
     } else {
-      if (IS_BIT_SET64(pattern_mask, i + offset) &&
-          ((i + offset != step_count) || (MidiClock.state != 2))) {
+      if (((i + offset != step_count) || (MidiClock.state != 2))) {
+
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-        if (IS_BIT_SET64(mute_mask, i + offset)) {
+        if (IS_BIT_SET64(slide_mask, i + offset)) {
           oled_display.drawPixel(x + 1, y + 1, WHITE);
           oled_display.drawPixel(x + 2, y + 2, WHITE);
           oled_display.drawPixel(x + 3, y + 3, WHITE);
         }
-        /*If the bit is set, there is a trigger at this position. */
-        else {
-          oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+        else if (IS_BIT_SET64(mute_mask, i + offset)) {
+          oled_display.drawPixel(x + 2, y + 1, WHITE);
+          oled_display.drawPixel(x + 1, y + 2, WHITE);
+          oled_display.drawPixel(x + 3, y + 2, WHITE);
+          oled_display.drawPixel(x + 2, y + 3, WHITE);
         }
-        /*
-        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-        oled_display.drawPixel(x + 1, y + 1, WHITE);
-        oled_display.drawPixel(x + 3, y + 1, WHITE);
-        oled_display.drawPixel(x + 1, y + 3, WHITE);
-        oled_display.drawPixel(x + 3, y + 3, WHITE);
-        oled_display.drawPixel(x + 2, y + 2, WHITE);
-       */
-      } else {
-        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-      }
+        else if (IS_BIT_SET64(pattern_mask, i + offset)) {
+          oled_display.fillRect(x + 1, y + 1, seq_w - 1, trig_h - 1, WHITE);
+        }
+
+    }
     }
 
     x += seq_w + 1;
