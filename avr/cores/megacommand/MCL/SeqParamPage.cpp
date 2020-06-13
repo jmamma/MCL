@@ -28,6 +28,7 @@ void SeqParamPage::config() {
 }
 
 void SeqParamPage::init() {
+  SeqPage::init();
   config();
   trig_interface.on();
   toggle_device = false;

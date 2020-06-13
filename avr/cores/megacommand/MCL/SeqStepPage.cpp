@@ -422,6 +422,8 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         store_lock = 1;
       }
       uint64_t *mask = seq_step_page.get_mask();
+
+      if (seq_step_page.mask_type != MASK_LOCK) { SET_BIT64(active_track.lock_mask, step); }
       if (!IS_BIT_SET64_P(mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_param1.cur;
@@ -431,7 +433,6 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
         SET_BIT64_P(mask, step);
 
-        SET_BIT64(active_track.lock_mask, step);
       } else {
         SET_BIT64_P(mask, step);
       }

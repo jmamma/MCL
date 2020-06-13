@@ -87,8 +87,8 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
-  seq_menu_page.menu.enable_entry(0, true);
-  seq_menu_page.menu.enable_entry(1, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
   ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
   note_mask = 0;
