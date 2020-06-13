@@ -595,9 +595,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 
         oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
         if (IS_BIT_SET64(slide_mask, i + offset)) {
-          oled_display.drawPixel(x + 1, y + 1, WHITE);
           oled_display.drawPixel(x + 2, y + 2, WHITE);
-          oled_display.drawPixel(x + 3, y + 3, WHITE);
         }
         else if (IS_BIT_SET64(mute_mask, i + offset)) {
           oled_display.drawPixel(x + 2, y + 1, WHITE);
