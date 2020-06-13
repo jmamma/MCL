@@ -591,9 +591,10 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     } else if (!in_range) {
       // don't draw
     } else {
+
+      oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
       if (((i + offset != step_count) || (MidiClock.state != 2))) {
 
-        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
         if (IS_BIT_SET64(slide_mask, i + offset)) {
           oled_display.drawPixel(x + 2, y + 2, WHITE);
         }
