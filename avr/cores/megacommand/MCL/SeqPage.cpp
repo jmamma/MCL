@@ -75,10 +75,16 @@ void SeqPage::cleanup() {
 void SeqPage::config_mask_info() {
   switch (mask_type) {
   case MASK_PATTERN:
-    strcpy(info2, "PATTERN");
+    strcpy(info2, "TRIG");
+    break;
+  case MASK_LOCK:
+    strcpy(info2, "LOCK");
     break;
   case MASK_SLIDE:
     strcpy(info2, "SLIDE");
+    break;
+  case MASK_MUTE:
+    strcpy(info2, "MUTE");
     break;
   }
 }

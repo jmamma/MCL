@@ -44,8 +44,8 @@ extern void seq_menu_handler();
 extern void step_menu_handler();
 
 #define MASK_PATTERN 0
-#define MASK_SLIDE 1
-#define MASK_LOCK 2
+#define MASK_LOCK 1
+#define MASK_SLIDE 2
 #define MASK_MUTE 3
 
 class SeqPage : public LightPage {
