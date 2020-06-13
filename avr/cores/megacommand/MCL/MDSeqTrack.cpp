@@ -664,6 +664,7 @@ void MDSeqTrack::clear_track(bool locks, bool reset_params) {
   }
   lock_mask = 0;
   pattern_mask = 0;
+  slide_mask = 0;
 }
 
 void MDSeqTrack::merge_from_md(MDTrack *md_track) {
@@ -679,6 +680,12 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   // MD sysex docs are not clear on this one so i had to hax it.
 
   float swing = (float)md_track->kitextra.swingAmount / 16385.0;
+
+  if (md_track->kitextra.slideEditAll > 0) {
+    slide_mask |= md_track->kitextra.slidePattern;
+  } else {
+    slide_mask |= md_track->slidePattern;
+  }
 
   uint64_t swingpattern;
   uint8_t timing_mid = get_timing_mid();
