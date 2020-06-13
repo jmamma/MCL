@@ -399,8 +399,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   }
   GUI.put_string_at(0, str);
 }
-void SeqPage::draw_mask(uint8_t offset, uint8_t device,
-                                bool show_current_step, uint8_t mask_type) {
+void SeqPage::draw_mask(uint8_t offset, uint8_t device, bool show_current_step,
+                        uint8_t mask_type) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -573,35 +573,35 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 }
 
 void SeqPage::draw_mask(uint8_t offset, uint64_t pattern_mask,
-                                uint8_t step_count, uint8_t length,
-                                bool show_current_step, uint64_t mute_mask) {
+                        uint8_t step_count, uint8_t length,
+                        bool show_current_step, uint64_t mute_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
                      step_count, length, mute_mask);
 }
 
 void SeqPage::draw_mask(uint8_t offset, uint8_t device,
-                                bool show_current_step) {
+                        bool show_current_step) {
 
- if (device == DEVICE_MD) {
+  if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint64_t mask;
     switch (mask_type) {
     case MASK_PATTERN:
-    mask = active_track.pattern_mask;
-    break;
+      mask = active_track.pattern_mask;
+      break;
     case MASK_LOCK:
-    mask = active_track.lock_mask;
-    break;
+      mask = active_track.lock_mask;
+      break;
     case MASK_MUTE:
-    mask = active_track.oneshot_mask;
-    break;
+      mask = active_track.oneshot_mask;
+      break;
     case MASK_SLIDE:
-    mask = active_track.slide_mask;
-    break;
+      mask = active_track.slide_mask;
+      break;
     }
 
     draw_mask(offset, mask, active_track.step_count, active_track.length,
-                      show_current_step, active_track.oneshot_mask);
+              show_current_step, active_track.oneshot_mask);
   }
 #ifdef EXT_TRACKS
   else {
@@ -654,6 +654,48 @@ void pattern_len_handler(Encoder *enc) {
 void opt_mask_handler() {
   seq_step_page.config_mask_info();
 }
+
+uint64_t *SeqPage::get_mask() {
+  uint64_t *mask;
+  if (opt_midi_device_capture == DEVICE_MD) {
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
+    switch (mask_type) {
+    case MASK_PATTERN:
+      mask = (uint64_t*) &(active_track.pattern_mask);
+      break;
+    case MASK_LOCK:
+      mask = (uint64_t*) &(active_track.lock_mask);
+      break;
+    case MASK_SLIDE:
+      mask = (uint64_t*) &(active_track.slide_mask);
+      break;
+    case MASK_MUTE:
+      mask = (uint64_t*) &(active_track.oneshot_mask);
+      break;
+    }
+
+  }
+  /*
+#ifdef EXT_TRACKS
+  else {
+    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+    switch (mask_type) {
+    case MASK_LOCK:
+      mask = (uint8_t*) &(active_track.lock_mask);
+      break;
+    case MASK_SLIDE:
+      mask = (uint8_t*) &(active_track.slide_mask);
+      break;
+    case MASK_MUTE:
+      mask = (uint8_t*) &(active_track.oneshot_mask);
+      break;
+    }
+  }
+#endif
+*/
+  return mask;
+}
+
 void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }

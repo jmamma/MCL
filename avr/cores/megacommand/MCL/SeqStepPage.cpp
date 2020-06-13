@@ -237,9 +237,9 @@ void SeqStepPage::loop() {
           // condition = 3;
           active_track.conditional[step] = condition;
           active_track.timing[step] = utiming; // upper
-
-          if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
-            SET_BIT64(active_track.pattern_mask, step);
+          uint64_t *mask = get_mask();
+          if (!IS_BIT_SET64_P(mask, step)) {
+            SET_BIT64_P(mask, step);
           }
           if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
               (tuning != NULL)) {
@@ -276,24 +276,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    if (mask_type == MASK_SLIDE) {
-
-      if (event->mask == EVENT_BUTTON_PRESSED) {
-      }
-
-      if (event->mask == EVENT_BUTTON_RELEASED) {
-        if (!IS_BIT_SET64(active_track.slide_mask, step)) {
-          SET_BIT64(active_track.slide_mask, step);
-        } else {
-          if (clock_diff(note_interface.note_hold, slowclock) <
-              TRIG_HOLD_TIME) {
-            CLEAR_BIT64(active_track.slide_mask, step);
-          }
-        }
-      }
-
-      return;
-    }
+    uint64_t *seq_mask = get_mask();
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
@@ -357,7 +340,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         mcl_seq.midi_events.update_params = true;
         MD.midi_events.enable_live_kit_update();
       }
-      if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+      if (!IS_BIT_SET64_P(seq_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_param1.cur;
 
@@ -367,12 +350,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         active_track.timing[step] = utiming; // upper
         // active_track.clear_step_locks(step);
         CLEAR_BIT64(active_track.oneshot_mask, step);
-        SET_BIT64(active_track.pattern_mask, step);
+        SET_BIT64_P(seq_mask, step);
       } else {
         DEBUG_PRINTLN("clear step");
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64(active_track.pattern_mask, step);
+          CLEAR_BIT64_P(seq_mask, step);
           active_track.conditional[step] = 0;
           active_track.timing[step] = active_track.get_timing_mid(); // upper
         }
@@ -438,17 +421,19 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       } else {
         store_lock = 1;
       }
-      if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+      uint64_t *mask = seq_step_page.get_mask();
+      if (!IS_BIT_SET64_P(mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_param1.cur;
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming;
 
-        SET_BIT64(active_track.pattern_mask, step);
+        SET_BIT64_P(mask, step);
+
         SET_BIT64(active_track.lock_mask, step);
       } else {
-        SET_BIT64(active_track.lock_mask, step);
+        SET_BIT64_P(mask, step);
       }
     }
   }

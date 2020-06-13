@@ -88,6 +88,7 @@ public:
 
   uint8_t get_md_speed(uint8_t speed_id);
   uint8_t get_ext_speed(uint8_t speed_id);
+  uint64_t *get_mask();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

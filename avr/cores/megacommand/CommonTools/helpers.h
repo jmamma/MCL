@@ -71,6 +71,12 @@ extern const uint32_t _bvmasks32[];
 #define IS_BIT_SET_RADDR(target, bit)    ((bool)(((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
 #define IS_BIT_CLEAR_RADDR(target, bit) (!(bool)(((uint8_t*)&(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
 
+#define SET_BIT_RADDR_P(target, bit)          do { ((uint8_t*)(target))[((uint8_t)(bit)) / 0b00001000] |=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
+#define CLEAR_BIT_RADDR_P(target, bit)        do { ((uint8_t*)(target))[((uint8_t)(bit)) / 0b00001000] &= _ibvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
+#define TOGGLE_BIT_RADDR_P(target, bit)       do { ((uint8_t*)(target))[((uint8_t)(bit)) / 0b00001000] ^=  _bvmasks[((uint8_t)(bit)) & 0b00000111]; } while (false)
+#define IS_BIT_SET_RADDR_P(target, bit)    ((bool)(((uint8_t*)(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
+#define IS_BIT_CLEAR_RADDR_P(target, bit) (!(bool)(((uint8_t*)(target))[((uint8_t)(bit)) / 0b00001000] &   _bvmasks[((uint8_t)(bit)) & 0b00000111]))
+
 /** 16-bit macros. **/
 #define SET_BIT16(target, bit)              SET_BIT_RADDR(target, bit)
 #define CLEAR_BIT16(target, bit)            CLEAR_BIT_RADDR(target, bit)
@@ -91,6 +97,12 @@ extern const uint32_t _bvmasks32[];
 #define TOGGLE_BIT64(target, bit)           TOGGLE_BIT_RADDR(target, bit)
 #define IS_BIT_SET64(target, bit)           IS_BIT_SET_RADDR(target, bit)
 #define IS_BIT_CLEAR64(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
+
+#define SET_BIT64_P(target, bit)              SET_BIT_RADDR_P(target, bit)
+#define CLEAR_BIT64_P(target, bit)            CLEAR_BIT_RADDR_P(target, bit)
+#define TOGGLE_BIT64_P(target, bit)           TOGGLE_BIT_RADDR_P(target, bit)
+#define IS_BIT_SET64_P(target, bit)           IS_BIT_SET_RADDR_P(target, bit)
+#define IS_BIT_CLEAR64_P(target, bit)         IS_BIT_CLEAR_RADDR_P(target, bit)
 
 /** 128-bit macros. **/
 #define SET_BIT128(target, bit)              SET_BIT_RADDR(target, bit)
