@@ -74,8 +74,7 @@ void SeqRlckPage::display() {
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (seq_param3.getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
+    GUI.put_value_at(5, seq_param3.getValue());
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -103,7 +102,7 @@ void SeqRlckPage::display() {
 /*
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
-    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
+    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].speed);
   }
 #endif
 */

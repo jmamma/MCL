@@ -451,10 +451,14 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       }
     }
     itoa(value, str2, 10);
+#ifdef OLED_DISPLAY
     oled_display.textbox(str, str2);
+#endif
   }
   if (store_lock == 1) {
+#ifdef OLED_DISPLAY
     oled_display.textbox("LOCK PARAMS ", "FULL");
+#endif
   }
 }
 

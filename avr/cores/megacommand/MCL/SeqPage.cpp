@@ -405,8 +405,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   }
   GUI.put_string_at(0, str);
 }
-void SeqPage::draw_mask(uint8_t offset, uint8_t device, bool show_current_step,
-                        uint8_t mask_type) {
+
+void SeqPage::draw_mask(uint8_t offset, uint8_t device, bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -630,7 +630,9 @@ void pattern_len_handler(Encoder *enc) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       char str[4];
       itoa(enc_->cur, str, 10);
+#ifdef OLED_DISPLAY
       oled_display.textbox("MD TRACKS LEN: ", str);
+#endif
       GUI.ignoreNextEvent(Buttons.BUTTON4);
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
@@ -646,7 +648,9 @@ void pattern_len_handler(Encoder *enc) {
         char str[4];
         itoa(enc_->cur, str, 10);
         GUI.ignoreNextEvent(Buttons.BUTTON4);
+#ifdef OLED_DISPLAY
         oled_display.textbox("EXT TRACKS LEN: ", str);
+#endif
         mcl_seq.ext_tracks[c].buffer_notesoff();
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
