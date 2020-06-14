@@ -14,6 +14,7 @@ public:
   uint8_t timing;
   bool lock_mask;
   bool pattern_mask;
+  bool slide_mask;
 };
 
 class MDSeqTrackData {
