@@ -760,6 +760,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->timing = timing[n];
   step->lock_mask = IS_BIT_SET64(lock_mask, n);
   step->pattern_mask = IS_BIT_SET64(pattern_mask, n);
+  step->slide_mask = IS_BIT_SET64(slide_mask, n);
 }
 
 void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
@@ -773,5 +774,8 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   }
   if (step->pattern_mask) {
     SET_BIT64(pattern_mask, n);
+  }
+  if (step->slide_mask) {
+    SET_BIT64(slide_mask, n);
   }
 }
