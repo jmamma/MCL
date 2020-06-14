@@ -47,14 +47,14 @@ void SeqPtcPage::cleanup() {
   // trig_interface.off();
   recording = false;
   if (MidiClock.state != 2) {
-    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+    MD.setTrackParam(focus_track, 0, MD.kit.params[focus_track][0]);
   }
   //  midi_events.remove_callbacks();
 }
 void SeqPtcPage::config_encoders() {
   if (midi_device == DEVICE_MD) {
     ptc_param_len.max = 64;
-    ptc_param_len.cur = mcl_seq.md_tracks[last_md_track].length;
+    ptc_param_len.cur = mcl_seq.md_tracks[focus_track].length;
   }
 #ifdef EXT_TRACKS
   else {
@@ -100,10 +100,9 @@ void SeqPtcPage::init() {
     note_interface.state = true;
   } else {
     trig_interface.off();
-    last_md_track = MD.currentTrack;
   }
   curpage = SEQ_PTC_PAGE;
-
+  if (focus_track == 255) { focus_track = last_md_track; }
   config();
   re_init = false;
 }
@@ -121,8 +120,8 @@ void SeqPtcPage::config() {
   if (midi_device == DEVICE_MD) {
     char *str1;
     char *str2;
-    str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-    str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+    str1 = getMachineNameShort(MD.kit.models[focus_track], 1);
+    str2 = getMachineNameShort(MD.kit.models[focus_track], 2);
 
     m_strncpy_p(str_first, str1, len1);
 
@@ -152,7 +151,8 @@ void SeqPtcPage::config() {
 
 void ptc_pattern_len_handler(Encoder *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  uint8_t focus_track = seq_ptc_page.focus_track;
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, focus_track);
   if (SeqPage::midi_device == DEVICE_MD) {
 
     if (BUTTON_DOWN(Buttons.BUTTON3)) {
@@ -168,7 +168,7 @@ void ptc_pattern_len_handler(Encoder *enc) {
           }
         }
       } else {
-        mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
+        mcl_seq.md_tracks[focus_track].set_length(enc_->cur);
       }
     }
 
@@ -226,7 +226,7 @@ void SeqPtcPage::display() {
     return true;
   }
   if (midi_device == DEVICE_MD) {
-    dev_num = last_md_track;
+    dev_num = focus_track;
   }
 #ifdef EXT_TRACKS
   else {
@@ -290,14 +290,14 @@ void SeqPtcPage::display() {
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
   if (midi_device == DEVICE_MD) {
-    dev_num = last_md_track;
+    dev_num = focus_track;
   }
 #ifdef EXT_TRACKS
   else {
     dev_num = last_ext_track + 16;
   }
 #endif
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, focus_track);
   draw_knob_frame();
   char buf1[4];
 
@@ -363,9 +363,9 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t voice = 255;
   uint8_t count = 0;
 
-  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track) &&
+  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, focus_track) &&
                         (mcl_cfg.uart2_ctrl_mode == 0))) {
-    return last_md_track;
+    return focus_track;
   }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
@@ -752,8 +752,8 @@ void SeqPtcPage::on_192_callback() {
   uint8_t timing_mid = 6;
   bool trig = false;
 
-  if ((mcl_seq.md_tracks[last_md_track].speed == MD_SPEED_3_4X) ||
-      (mcl_seq.md_tracks[last_md_track].speed == MD_SPEED_3_2X)) {
+  if ((mcl_seq.md_tracks[focus_track].speed == MD_SPEED_3_4X) ||
+      (mcl_seq.md_tracks[focus_track].speed == MD_SPEED_3_2X)) {
     timing_mid = 8;
   }
   if (arp_mod12_counter == 0) {
@@ -799,7 +799,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     queue_redraw();
   }
 
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, focus_track);
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -822,7 +822,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       if (midi_device != DEVICE_MD) {
         midi_device = device;
         config();
-      } else {
+      } else { 
+        focus_track = last_md_track;
         config_encoders();
       }
       midi_device = device;
@@ -886,7 +887,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CLEAR ", "TRACK");
 #endif
-        mcl_seq.md_tracks[last_md_track].clear_track();
+        mcl_seq.md_tracks[focus_track].clear_track();
       }
     }
 #ifdef EXT_TRACKS
@@ -961,6 +962,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    if (GUI.currentPage() == &seq_ptc_page) {
+    seq_ptc_page.focus_track = last_md_track;
+    }
     if (!seq_ptc_page.arp_enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
