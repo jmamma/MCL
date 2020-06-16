@@ -21,6 +21,7 @@
 */
 
 #include "wiring_private.h"
+#include "MCLMemoryBank.h"
 
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
@@ -50,6 +51,8 @@ ISR(TIMER0_OVF_vect)
 	unsigned long m = timer0_millis;
 	unsigned char f = timer0_fract;
 
+  uint8_t old_bank = switch_ram_bank(0);
+
 	m += MILLIS_INC;
 	f += FRACT_INC;
 	if (f >= FRACT_MAX) {
@@ -60,6 +63,8 @@ ISR(TIMER0_OVF_vect)
 	timer0_fract = f;
 	timer0_millis = m;
 	timer0_overflow_count++;
+
+  switch_ram_bank(old_bank);
 }
 
 unsigned long millis()
