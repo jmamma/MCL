@@ -42,7 +42,7 @@
 #pragma message (VAR_NAME_VALUE(BANK1_SYSEX2_DATA_START))
 #pragma message (VAR_NAME_VALUE(SYSEX2_DATA_LEN))
 
-#include "MCLMemoryBank.h"
+#include "memorybank.h"
 
 #ifdef __cplusplus
 

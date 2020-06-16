@@ -25,7 +25,7 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 #include "HardwareSerial_private.h"
-
+#include "memorybank.h"
 // Each HardwareSerial is defined in its own file, sine the linker pulls
 // in the entire file when any element inside is used. --gc-sections can
 // additionally cause unused symbols to be dropped, but ISRs have the
@@ -38,12 +38,16 @@
 
 ISR(USART3_RX_vect)
 {
+  uint8_t old_bank = switch_ram_bank(0);
   Serial3._rx_complete_irq();
+  switch_ram_bank(old_bank);
 }
 
 ISR(USART3_UDRE_vect)
 {
+  uint8_t old_bank = switch_ram_bank(0);
   Serial3._tx_udr_empty_irq();
+  switch_ram_bank(old_bank);
 }
 
 HardwareSerial Serial3(&UBRR3H, &UBRR3L, &UCSR3A, &UCSR3B, &UCSR3C, &UDR3);
