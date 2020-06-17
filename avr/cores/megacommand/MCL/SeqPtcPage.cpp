@@ -361,9 +361,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num) {
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
   uint8_t voice = 255;
   uint8_t count = 0;
-
-  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, focus_track) &&
-                        (mcl_cfg.uart2_ctrl_mode == 0))) {
+  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, focus_track))) {
     return focus_track;
   }
   // If track previously played pitch, re-use this track
@@ -873,7 +871,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (midi_device == DEVICE_MD) {
 
-      if ((poly_max > 1) && (is_poly)) {
+      if ((poly_max > 1) && (is_poly))  {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CLEAR ", "POLY TRACKS");
 #endif
