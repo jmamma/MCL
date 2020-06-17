@@ -356,8 +356,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64_P(seq_mask, step);
-          active_track.conditional[step] = 0;
-          active_track.timing[step] = active_track.get_timing_mid(); // upper
+          if (mask_type == MASK_PATTERN) {
+            active_track.conditional[step] = 0;
+            active_track.timing[step] = active_track.get_timing_mid(); // upper
+          }
         }
       }
       return true;
