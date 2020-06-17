@@ -183,7 +183,7 @@ void MDSeqTrack::reset_params() {
   }
 
 void MDSeqTrack::send_slides() {
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
       uint8_t val;
@@ -232,7 +232,7 @@ void MDSeqTrack::recalc_slides() {
   int8_t y0, y1;
   uint8_t step, next_step;
   uint8_t timing_mid = get_timing_mid_inline();
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
       if (locks[c][step_count] > 0) {
         step = step_count;

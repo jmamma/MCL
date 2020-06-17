@@ -68,8 +68,8 @@ public:
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
 
-  uint8_t locks_params_orig[4];
-  SlideData locks_slide_data[4];
+  uint8_t locks_params_orig[NUM_MD_LOCKS];
+  SlideData locks_slide_data[NUM_MD_LOCKS];
 
   bool load = false;
   //  uint8_t params[24];
