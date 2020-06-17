@@ -173,6 +173,7 @@ void MidiActivePeering::run() {
   } else if (uart1_device == DEVICE_NULL) {
     if (MidiUart.recvActiveSenseTimer < 100) {
       md_setup();
+      GUI.currentPage()->redisplay = true;
     }
   }
 #ifdef EXT_TRACKS
@@ -189,6 +190,7 @@ void MidiActivePeering::run() {
   } else if ((Analog4.connected == false) && (uart2_device == DEVICE_NULL)) {
     if (MidiUart2.recvActiveSenseTimer < 100) {
       a4_setup();
+      GUI.currentPage()->redisplay = true;
     }
   }
 #endif
