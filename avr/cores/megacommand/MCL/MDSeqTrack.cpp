@@ -103,8 +103,8 @@ void MDSeqTrack::seq() {
           send_trig_inline();
         }
       }
-      if (IS_BIT_SET64(slide_mask, step_count)) {
-        locks_slides_recalc = true;
+      if (IS_BIT_SET64(slide_mask, current_step)) {
+        locks_slides_recalc = current_step;
       }
     }
   }
@@ -224,7 +224,7 @@ void MDSeqTrack::send_slides() {
 }
 
 void MDSeqTrack::recalc_slides() {
-  if (!locks_slides_recalc) {
+  if (locks_slides_recalc == 255) {
     return;
   }
   DEBUG_PRINT_FN();
@@ -232,11 +232,12 @@ void MDSeqTrack::recalc_slides() {
   int8_t y0, y1;
   uint8_t step, next_step;
   uint8_t timing_mid = get_timing_mid_inline();
+
+  step = locks_slides_recalc;
   for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] > 0) {
-      if (locks[c][step_count] > 0) {
-        step = step_count;
-        next_step = find_next_lock(step_count, c);
+      if (locks[c][step] > 0) {
+        next_step = find_next_lock(step, c);
         if (step != next_step) {
           x0 = step * timing_mid + timing[step] - timing_mid + 1;
           if (next_step < step) {
@@ -313,7 +314,7 @@ void MDSeqTrack::recalc_slides() {
     }
   }
 
-  locks_slides_recalc = false;
+  locks_slides_recalc = 255;
 }
 
 uint8_t MDSeqTrack::find_next_lock(uint8_t step, uint8_t param) {
@@ -325,14 +326,14 @@ uint8_t MDSeqTrack::find_next_lock(uint8_t step, uint8_t param) {
 again:
   for (; next_step < max_len; next_step++) {
     if (locks[param][next_step] > 0) {
-     if (IS_BIT_SET64(lock_mask, next_step)) {
+      if (IS_BIT_SET64(lock_mask, next_step)) {
         DEBUG_DUMP(next_step);
         return next_step;
       }
       if (next_step % 8 == 0) {
-          if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
-            next_step += 8;
-          }
+        if (((uint8_t *)&(lock_mask))[((uint8_t)(next_step)) / 8] == 0) {
+          next_step += 8;
+        }
       }
     }
   }

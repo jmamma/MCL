@@ -80,7 +80,7 @@ public:
   bool mute_until_start = false;
   bool mute_hold = false;
 
-  bool locks_slides_recalc = false;
+  uint8_t locks_slides_recalc = 255;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
   void mute() { mute_state = SEQ_MUTE_ON; }
