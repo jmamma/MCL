@@ -203,6 +203,7 @@ void MDTrack::load_seq_data(int tracknumber) {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
     if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) { mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X; }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
+    mcl_seq.md_tracks[tracknumber].slide_mask = 0;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
     mcl_seq.md_tracks[tracknumber].update_params();
