@@ -687,7 +687,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
     slide_mask |= md_track->slidePattern;
   }
 
-  uint64_t swingpattern;
+  uint64_t swingpattern = 0;
   uint8_t timing_mid = get_timing_mid();
   if (md_track->kitextra.swingEditAll > 0) {
     swingpattern |= md_track->kitextra.swingPattern;

@@ -1,7 +1,6 @@
 MCL 2.70 14/07/2020
 
 Changes:
-
   - Sequencer:
     * Added sequencer support for track speeds 1x, 2x, 2/3x, 4/3x, 1/2x, 1/4x, 1/8x
     * Added sequencer support for parameter slides.^
@@ -32,6 +31,10 @@ Changes:
     * Grid copy/paste of slots now translates chain ROW positions such
       that new ROW position is offset relative to the paste position.
     * A slot's Chain ROW and LOOP settings are retained when saving a slot in SavePage.
+
+  - Main:
+    * Allow simultaneously send & receive of MIDICLOCK on port 2. (Previously
+	silently disabled to prevent feedback loop).
 
 Bug Fixes:
 
