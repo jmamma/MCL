@@ -112,7 +112,7 @@ public:
         iterations_5 = 1;
       }
       if (iterations_6 > 6) {
-        iterations_8 = 1;
+        iterations_6 = 1;
       }
       if (iterations_7 > 7) {
         iterations_7 = 1;
