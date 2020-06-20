@@ -93,12 +93,19 @@ void MDSeqTrack::seq() {
          (timing[current_step = step_count] - timing_mid == mod12_counter)) ||
         ((timing[next_step] < timing_mid) &&
          ((timing[current_step = next_step]) == mod12_counter))) {
+
       bool send_trig = false;
-      send_trig = trig_conditional(conditional[current_step]);
+      bool send_lock = false;
+
+      uint8_t cond = conditional[current_step];
+
+      if (cond > 14) { cond -= 14; send_lock = true; }
+      else { send_parameter_locks(current_step); }
+
+      send_trig = trig_conditional(cond);
 
       if (send_trig) {
-
-        send_parameter_locks(current_step);
+        if (send_lock) { send_parameter_locks(current_step); }
         if (IS_BIT_SET64(pattern_mask, current_step)) {
           send_trig_inline();
         }

@@ -48,7 +48,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-  seq_param1.max = 14;
+  seq_param1.max = 28;
   seq_param2.min = 1;
   seq_param2.old = 12;
   seq_param1.cur = 0;
@@ -138,36 +138,13 @@ void SeqStepPage::display() {
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
   draw_knob_frame();
-  char K[4];
 
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
-  if (seq_param1.getValue() == 0) {
-    strcpy(K, "L1");
-  } else if (seq_param1.getValue() <= 8) {
-    strcpy(K, "L ");
-    K[1] = seq_param1.getValue() + '0';
-  } else if (seq_param1.getValue() <= 13) {
-    strcpy(K, "P ");
-    uint8_t prob[5] = {1, 2, 5, 7, 9};
-    K[1] = prob[seq_param1.getValue() - 9] + '0';
-  } else if (seq_param1.getValue() == 14) {
-    strcpy(K, "1S");
-  }
-  draw_knob(0, "COND", K);
 
-  strcpy(K, "--");
-  K[3] = '\0';
+  draw_knob_conditional(seq_param1.getValue());
+  draw_knob_timing(seq_param2.getValue(), timing_mid);
 
-  if (seq_param2.getValue() == 0) {
-  } else if ((seq_param2.getValue() < timing_mid) &&
-             (seq_param2.getValue() != 0)) {
-    itoa(timing_mid - seq_param2.getValue(), K + 1, 10);
-  } else {
-    K[0] = '+';
-    itoa(seq_param2.getValue() - timing_mid, K + 1, 10);
-  }
-  draw_knob(1, "UTIM", K);
-
+  char K[4];
   itoa(seq_param3.getValue(), K, 10);
   draw_knob(2, "LEN", K);
 

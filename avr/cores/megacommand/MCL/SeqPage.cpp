@@ -406,7 +406,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   GUI.put_string_at(0, str);
 }
 
-void SeqPage::draw_mask(uint8_t offset, uint8_t device, bool show_current_step) {
+void SeqPage::draw_mask(uint8_t offset, uint8_t device,
+                        bool show_current_step) {
   GUI.setLine(GUI.LINE2);
 
   char mystr[17] = "                ";
@@ -580,7 +581,8 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
 void SeqPage::draw_mask(uint8_t offset, uint64_t pattern_mask,
                         uint8_t step_count, uint8_t length,
-                        bool show_current_step, uint64_t mute_mask, uint64_t slide_mask) {
+                        bool show_current_step, uint64_t mute_mask,
+                        uint64_t slide_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
                      step_count, length, mute_mask, slide_mask);
 }
@@ -618,6 +620,48 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 #endif
 }
 
+void SeqPage::draw_knob_conditional(uint8_t cond) {
+  char K[4];
+  if (cond == 0) {
+    strcpy(K, "L1");
+  } else {
+    if (cond > 14) {
+      cond = cond - 14;
+    }
+
+    if (cond <= 8) {
+      strcpy(K, "L  ");
+      K[1] = cond + '0';
+    } else if (cond <= 13) {
+      strcpy(K, "P  ");
+      uint8_t prob[5] = {1, 2, 5, 7, 9};
+      K[1] = prob[cond - 9] + '0';
+    } else if (cond == 14) {
+      strcpy(K, "1S ");
+    }
+    if (seq_param1.getValue() > 14) {
+      K[2] = '^';
+    }
+  }
+  draw_knob(0, "COND", K);
+}
+
+void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
+  char K[4];
+  strcpy(K, "--");
+  K[3] = '\0';
+
+  if (timing == 0) {
+  } else if ((timing < timing_mid) &&
+             (timing != 0)) {
+    itoa(timing_mid - timing, K + 1, 10);
+  } else {
+    K[0] = '+';
+    itoa(timing - timing_mid, K + 1, 10);
+  }
+  draw_knob(1, "UTIM", K);
+
+}
 #endif // OLED_DISPLAY
 
 void pattern_len_handler(Encoder *enc) {
@@ -662,9 +706,7 @@ void pattern_len_handler(Encoder *enc) {
 #endif
 }
 
-void opt_mask_handler() {
-  seq_step_page.config_mask_info();
-}
+void opt_mask_handler() { seq_step_page.config_mask_info(); }
 
 uint64_t *SeqPage::get_mask() {
   uint64_t *mask;
@@ -672,19 +714,18 @@ uint64_t *SeqPage::get_mask() {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     switch (mask_type) {
     case MASK_PATTERN:
-      mask = (uint64_t*) &(active_track.pattern_mask);
+      mask = (uint64_t *)&(active_track.pattern_mask);
       break;
     case MASK_LOCK:
-      mask = (uint64_t*) &(active_track.lock_mask);
+      mask = (uint64_t *)&(active_track.lock_mask);
       break;
     case MASK_SLIDE:
-      mask = (uint64_t*) &(active_track.slide_mask);
+      mask = (uint64_t *)&(active_track.slide_mask);
       break;
     case MASK_MUTE:
-      mask = (uint64_t*) &(active_track.oneshot_mask);
+      mask = (uint64_t *)&(active_track.oneshot_mask);
       break;
     }
-
   }
   /*
 #ifdef EXT_TRACKS
