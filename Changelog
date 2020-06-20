@@ -6,7 +6,7 @@ Changes:
     * Added sequencer support for parameter slides. $
     * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or
 	* Added ^ trig conditions (L1^, L2^, L3^.. etc), when selected the step's
-	parameter locks will only be sent if the trig conditions match.
+	parameter locks or slides will only be sent if the trig conditions match.
       Mutes. The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
     * Sequencer step glyphs have been improved for each of the edit modes.
     * Added visual feedback when setting parameter slides using MD encoders.
