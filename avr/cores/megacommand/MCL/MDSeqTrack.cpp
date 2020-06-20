@@ -693,9 +693,9 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   float swing = (float)md_track->kitextra.swingAmount / 16385.0;
 
   if (md_track->kitextra.slideEditAll > 0) {
-    slide_mask |= md_track->kitextra.slidePattern;
+    slide_mask32 |= (uint32_t) md_track->kitextra.slidePattern;
   } else {
-    slide_mask |= md_track->slidePattern;
+    slide_mask32 |= (uint32_t) md_track->slidePattern;
   }
 
   uint64_t swingpattern = 0;
@@ -705,6 +705,7 @@ void MDSeqTrack::merge_from_md(MDTrack *md_track) {
   } else {
     swingpattern |= md_track->swingPattern;
   }
+
   for (uint8_t a = 0; a < length; a++) {
     if (IS_BIT_SET64(md_track->trigPattern, a)) {
       conditional[a] = 0;
