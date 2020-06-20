@@ -99,19 +99,30 @@ void MDSeqTrack::seq() {
 
       uint8_t cond = conditional[current_step];
 
-      if (cond > 64) { cond -= 64; send_lock = true; }
-      else { send_parameter_locks(current_step); }
+      if (cond > 64) {
+        // Locks only sent if trig_condition matches
+        cond -= 64;
+        send_lock = true;
+      } else {
+        // Locks sent regardless of trig_condition
+        send_parameter_locks(current_step);
+        if (IS_BIT_SET64(slide_mask, current_step)) {
+          locks_slides_recalc = current_step;
+        }
+      }
 
       send_trig = trig_conditional(cond);
 
       if (send_trig) {
-        if (send_lock) { send_parameter_locks(current_step); }
+        if (send_lock) {
+          send_parameter_locks(current_step);
+          if (IS_BIT_SET64(slide_mask, current_step)) {
+            locks_slides_recalc = current_step;
+          }
+        }
         if (IS_BIT_SET64(pattern_mask, current_step)) {
           send_trig_inline();
         }
-      }
-      if (IS_BIT_SET64(slide_mask, current_step)) {
-        locks_slides_recalc = current_step;
       }
     }
   }
