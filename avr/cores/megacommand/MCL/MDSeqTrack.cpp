@@ -95,43 +95,36 @@ void MDSeqTrack::seq() {
          ((timing[current_step = next_step]) == mod12_counter))) {
 
       bool send_trig = false;
-      bool send_lock = false;
+      bool lock_obey_cond = false;
 
       uint8_t cond = conditional[current_step];
 
       if (cond > 64) {
         // Locks only sent if trig_condition matches
         cond -= 64;
-        send_lock = true;
-      } else {
-        // Locks sent regardless of trig_condition
-        send_parameter_locks(current_step);
-        if (IS_BIT_SET64(slide_mask, current_step)) {
-          locks_slides_recalc = current_step;
-        }
+        lock_obey_cond = true;
       }
 
       send_trig = trig_conditional(cond);
 
-      if (send_trig) {
-        if (send_lock) {
-          send_parameter_locks(current_step);
-          if (IS_BIT_SET64(slide_mask, current_step)) {
-            locks_slides_recalc = current_step;
-          }
+      if (send_trig || lock_obey_cond == false) {
+        bool pattern_mask_step = IS_BIT_SET64(pattern_mask, current_step);
+        send_parameter_locks(current_step, pattern_mask_step);
+        if (IS_BIT_SET64(slide_mask, current_step)) {
+          locks_slides_recalc = current_step;
         }
-        if (IS_BIT_SET64(pattern_mask, current_step)) {
+        if (send_trig && pattern_mask_step) {
           send_trig_inline();
         }
       }
     }
-  }
 
-  mod12_counter++;
+    mod12_counter++;
 
-  if (mod12_counter == timing_mid) {
-    mod12_counter = 0;
-    step_count_inc();
+    if (mod12_counter == timing_mid) {
+      mod12_counter = 0;
+      step_count_inc();
+    }
   }
 }
 
@@ -365,10 +358,9 @@ again:
   return step;
 }
 
-void MDSeqTrack::send_parameter_locks(uint8_t step) {
+void MDSeqTrack::send_parameter_locks(uint8_t step, bool pattern_mask_step) {
   uint8_t c;
   bool lock_mask_step = IS_BIT_SET64(lock_mask, step);
-  bool pattern_mask_step = IS_BIT_SET64(pattern_mask, step);
   uint8_t send_param = 255;
 
   if (lock_mask_step && pattern_mask_step) {
