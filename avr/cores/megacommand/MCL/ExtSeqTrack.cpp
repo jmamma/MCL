@@ -131,6 +131,10 @@ void ExtSeqTrack::note_off(uint8_t note) {
 }
 
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
+  if (condition > 64) {
+    condition -= 64;
+  }
+
   switch (condition) {
   case 0:
   case 1:

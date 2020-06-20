@@ -22,6 +22,8 @@
 #define SEQ_SCALE_1_4X 5
 #define SEQ_SCALE_1_8X 6
 
+#define NUM_TRIG_CONDITIONS 14
+
 class MCLSeqMidiEvents : public MidiCallback {
 public:
   bool state;

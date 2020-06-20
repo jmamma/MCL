@@ -28,7 +28,7 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  seq_param1.max = 28;
+  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.cur = timing_mid;
   seq_param2.old = timing_mid;
   seq_param2.max = timing_mid * 2 - 1;
@@ -60,19 +60,21 @@ void SeqExtStepPage::display() {
   GUI.put_string_at(0, "                ");
 
   char c[3] = "--";
+  uint8_t cond = seq_param1.getValue();
+  if (cond > NUM_TRIG_CONDTIONS) { cond -= NUM_TRIG_CONDTIONS; }
 
-  if (seq_param1.getValue() == 0) {
+  if (cond == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (seq_param1.getValue() <= 8) {
+  } else if (cond <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, seq_param1.getValue());
+    GUI.put_value_at1(1, cond);
 
   } else {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
+    GUI.put_value_at1(1, prob[cond - 9]);
   }
 
   // Cond
@@ -244,7 +246,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             active_track.timing[(track + (page_select * 16))]; // upper
         uint8_t condition =
             active_track.conditional[(track + (page_select * 16))]; // lower
-        seq_param1.cur = condition;
+        seq_param1.cur = translate_to_knob_conditional(condition);
         // Micro
         if (utiming == 0) {
           utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
@@ -258,7 +260,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (device == DEVICE_MD) {
 
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = seq_param1.cur;
+        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
         if ((track + (page_select * 16)) >= active_track.length) {
           return true;
         }

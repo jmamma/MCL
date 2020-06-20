@@ -48,7 +48,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-  seq_param1.max = 28;
+  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
   seq_param2.old = 12;
   seq_param1.cur = 0;
@@ -77,22 +77,23 @@ void SeqStepPage::display() {
   const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
-
-  if (seq_param1.getValue() == 0) {
+  uint8_t cond = seq_param1.getValue();
+  if (cond > NUM_TRIG_CONDITITONS) { cond -= NUM_TRIG_CONDITIONS; }
+  if (cond == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (seq_param1.getValue() <= 8) {
+  } else if (cond <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, seq_param1.getValue());
+    GUI.put_value_at1(1, cond);
 
-  } else if (seq_param1.getValue() <= 13) {
+  } else if (cond <= 13) {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
+    GUI.put_value_at1(1, prob[cond - 9]);
   }
 
-  else if (seq_param1.getValue() == 14) {
+  else if (cond == 14) {
     GUI.put_string_at(0, "1S");
   }
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
@@ -208,7 +209,7 @@ void SeqStepPage::loop() {
         if (step < active_track.length) {
 
           uint8_t utiming = (seq_param2.cur + 0);
-          uint8_t condition = seq_param1.cur;
+          uint8_t condition = translate_to_step_conditional(seq_param1.cur);
 
           //  timing = 3;
           // condition = 3;
@@ -270,10 +271,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       seq_param2.max =
           mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
-      int8_t utiming = active_track.timing[step];         // upper
-      uint8_t condition = active_track.conditional[step]; // lower
+      int8_t utiming = active_track.timing[step];
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
       // Cond
+      uint8_t condition = translate_to_knob_conditional(active_track.conditional[step]); 
       seq_param1.cur = condition;
       uint8_t note_num = 255;
 
@@ -319,13 +320,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       if (!IS_BIT_SET64_P(seq_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = seq_param1.cur;
+        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
 
         DEBUG_PRINTLN("settting");
 
         active_track.conditional[step] = condition;
-        active_track.timing[step] = utiming; // upper
-        // active_track.clear_step_locks(step);
+        active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
         SET_BIT64_P(seq_mask, step);
       } else {
@@ -335,7 +335,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           CLEAR_BIT64_P(seq_mask, step);
           if (mask_type == MASK_PATTERN) {
             active_track.conditional[step] = 0;
-            active_track.timing[step] = active_track.get_timing_mid(); // upper
+            active_track.timing[step] = active_track.get_timing_mid();
           }
         }
       }
@@ -405,7 +405,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       if (seq_step_page.mask_type != MASK_LOCK) { SET_BIT64(active_track.lock_mask, step); }
       if (!IS_BIT_SET64_P(mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = seq_param1.cur;
+        uint8_t condition = seq_step_page.translate_to_step_conditional(seq_param1.cur);
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming;

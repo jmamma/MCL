@@ -89,6 +89,9 @@ public:
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(uint8_t device, uint8_t track);
 
+  uint8_t translate_to_step_conditional(uint8_t condition);
+  uint8_t translate_to_knob_conditional(uint8_t condition);
+
   uint8_t get_md_speed(uint8_t speed_id);
   uint8_t get_ext_speed(uint8_t speed_id);
   uint64_t *get_mask();

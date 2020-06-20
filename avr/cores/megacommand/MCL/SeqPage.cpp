@@ -620,13 +620,30 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 #endif
 }
 
+//from knob value to step value
+uint8_t SeqPage::translate_to_step_conditional(uint8_t condition) {
+  if (condition > NUM_TRIG_CONDITIONS) {
+  condition = condition - NUM_TRIG_CONDITIONS + 64;
+  }
+  return condition;
+}
+
+//from step value to knob value
+uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition) {
+  if (condition > 64) {
+  condition = condition - 64 + NUM_TRIG_CONDITIONS;
+  }
+  return condition;
+}
+
+
 void SeqPage::draw_knob_conditional(uint8_t cond) {
   char K[4];
   if (cond == 0) {
     strcpy(K, "L1");
   } else {
-    if (cond > 14) {
-      cond = cond - 14;
+    if (cond > NUM_TRIG_CONDITIONS) {
+      cond = cond - NUM_TRIG_CONDITIONS;
     }
 
     if (cond <= 8) {
@@ -639,7 +656,7 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
     } else if (cond == 14) {
       strcpy(K, "1S ");
     }
-    if (seq_param1.getValue() > 14) {
+    if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
       K[2] = '^';
     }
   }

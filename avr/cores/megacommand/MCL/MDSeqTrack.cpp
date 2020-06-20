@@ -99,7 +99,7 @@ void MDSeqTrack::seq() {
 
       uint8_t cond = conditional[current_step];
 
-      if (cond > 14) { cond -= 14; send_lock = true; }
+      if (cond > 64) { cond -= 64; send_lock = true; }
       else { send_parameter_locks(current_step); }
 
       send_trig = trig_conditional(cond);
