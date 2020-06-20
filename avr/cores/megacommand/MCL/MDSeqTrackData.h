@@ -21,7 +21,7 @@ class MDSeqTrackData {
 public:
   uint8_t length;
   uint8_t speed;
-  uint8_t reserved[4];
+  uint32_t slide_mask32; //to be increased to 64bits
   uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
   uint64_t pattern_mask;
