@@ -211,13 +211,14 @@ void SeqStepPage::loop() {
           uint8_t utiming = (seq_param2.cur + 0);
           uint8_t condition = translate_to_step_conditional(seq_param1.cur);
 
-          //  timing = 3;
-          // condition = 3;
           active_track.conditional[step] = condition;
-          active_track.timing[step] = utiming; // upper
+          active_track.timing[step] = utiming;
           uint64_t *mask = get_mask();
-          if (!IS_BIT_SET64_P(mask, step)) {
-            SET_BIT64_P(mask, step);
+
+          if ((mask_type != MASK_SLIDE) && (mask_type != MASK_MUTE)) {
+            if (!IS_BIT_SET64_P(mask, step)) {
+              SET_BIT64_P(mask, step);
+            }
           }
           if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
               (tuning != NULL)) {
@@ -326,8 +327,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming;
+        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
         CLEAR_BIT64(active_track.oneshot_mask, step);
         SET_BIT64_P(seq_mask, step);
+        }
       } else {
         DEBUG_PRINTLN("clear step");
 
@@ -402,18 +405,17 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       }
       uint64_t *mask = seq_step_page.get_mask();
 
-      if (seq_step_page.mask_type != MASK_LOCK) { SET_BIT64(active_track.lock_mask, step); }
-      if (!IS_BIT_SET64_P(mask, step)) {
+      SET_BIT64(active_track.lock_mask, step);
+      if (seq_step_page.mask_type == MASK_PATTERN) {
         uint8_t utiming = (seq_param2.cur + 0);
         uint8_t condition = seq_step_page.translate_to_step_conditional(seq_param1.cur);
 
         active_track.conditional[step] = condition;
         active_track.timing[step] = utiming;
-
-        SET_BIT64_P(mask, step);
+        SET_BIT64(active_track.pattern_mask, step);
 
       } else {
-        SET_BIT64_P(mask, step);
+       // SET_BIT64_P(mask, step);
       }
     }
   }
