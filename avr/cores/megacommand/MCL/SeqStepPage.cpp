@@ -262,7 +262,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       MD.midi_events.disable_live_kit_update();
 
       if (MidiClock.state != 2) {
-        active_track.send_parameter_locks(step);
+        active_track.send_parameter_locks(step, true);
       }
       show_pitch = true;
 
