@@ -5,13 +5,13 @@ Changes:
     * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
     * Added sequencer support for parameter slides. (Slide data is only retained for first 32 steps)
     * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or Mutes. 
-      The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
+      The "Edit" parameter controlling the edit mode is accessible from the StepEdit page's Track Menu.
     * Added ^ trig conditions (L1^, L2^, L3^.. etc). 
       When chosen the step's parameter locks or slides must also obey the trig condition.
     * Sequencer step glyphs have been improved for each of the edit modes.
     * Added visual feedback when setting parameter slides using MD encoders.
     * uTiming window is now improved and supports various track speeds.
-    * MD pattern speed + slides now imported to sequencer tracks when Saving from MD.
+    * MD pattern speed + slides now imported to sequencer tracks when saving from the MD.
 
   - Chromatic/Arpeggiator:
 
@@ -30,7 +30,7 @@ Changes:
     * A slot's Chain ROW and LOOP settings are retained when saving a slot in SavePage.
 
   - Main:
-    * Allow simultaneously send & receive of MIDICLOCK on port 2. (Previously silently disabled to prevent feedback loop).
+    * Allow simultaneously send & receive of MIDI_CLOCK on port 2. (Previously silently disabled to prevent feedback loop).
 
 Bug Fixes:
 
