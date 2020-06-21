@@ -48,7 +48,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
   int8_t offset = params[param].offset;
   int8_t depth = params[param].depth;
   int8_t sample = wav_table[param][sample_count];
-  uint16_t val;
+  int16_t val;
 
   switch (offset_behaviour) {
   case LFO_OFFSET_CENTRE:

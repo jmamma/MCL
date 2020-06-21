@@ -5,7 +5,7 @@
 
 void A4Track::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
-  if (seq_data.resolution == 0) { seq_data.resolution = 1; }
+  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.ext_tracks[tracknumber].clear_track();
   } else {
@@ -19,16 +19,7 @@ bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
 
   active = A4_TRACK_TYPE;
 }
-bool A4Track::place_track_in_sysex(int tracknumber, uint8_t column,
-                                   A4Sound *analogfour_sound) {
-  if (active == A4_TRACK_TYPE) {
-    memcpy(analogfour_sound, &sound, sizeof(A4Sound));
-    load_seq_data(tracknumber);
-    return true;
-  } else {
-    return false;
-  }
-}
+
 bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
   bool ret;
   int b = 0;

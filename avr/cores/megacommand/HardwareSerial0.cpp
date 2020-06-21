@@ -25,7 +25,7 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 #include "HardwareSerial_private.h"
-
+#include "memorybank.h"
 // Each HardwareSerial is defined in its own file, sine the linker pulls
 // in the entire file when any element inside is used. --gc-sections can
 // additionally cause unused symbols to be dropped, but ISRs have the
@@ -45,7 +45,9 @@
   #error "Don't know what the Data Received vector is called for Serial"
 #endif
   {
+    uint8_t old_bank = switch_ram_bank(0);
     Serial._rx_complete_irq();
+    switch_ram_bank(old_bank);
   }
 
 #if defined(UART0_UDRE_vect)
@@ -59,9 +61,11 @@ ISR(USART_UDRE_vect)
 #else
   #error "Don't know what the Data Register Empty vector is called for Serial"
 #endif
-{
-  Serial._tx_udr_empty_irq();
-}
+  {
+    uint8_t old_bank = switch_ram_bank(0);
+    Serial._tx_udr_empty_irq();
+    switch_ram_bank(old_bank);
+  }
 #endif
 #if defined(UBRRH) && defined(UBRRL)
   HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR);

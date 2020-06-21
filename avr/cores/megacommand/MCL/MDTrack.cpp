@@ -45,6 +45,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   kitextra.patternLength = MD.pattern.patternLength;
   kitextra.doubleTempo = MD.pattern.doubleTempo;
   kitextra.scale = MD.pattern.scale;
+  DEBUG_DUMP(MD.pattern.scale);
 
   kitextra.accentEditAll = MD.pattern.accentEditAll;
   kitextra.slideEditAll = MD.pattern.slideEditAll;
@@ -100,9 +101,7 @@ bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
 void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
                                  bool levels) {
-  //  if (active != MD_TRACK_TYPE) {
-  //   return;
-  //  }
+
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
     kit->levels[tracknumber] = machine.level;
@@ -146,6 +145,7 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 void MDTrack::init() {
   clear_track();
   machine.init();
+  seq_data.length = 16;
 }
 
 void MDTrack::clear_track() {
@@ -201,7 +201,12 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+    if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) { 
+        mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X; 
+        mcl_seq.md_tracks[tracknumber].slide_mask32 = 0;
+      }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
+    mcl_seq.md_tracks[tracknumber].slide_mask = mcl_seq.md_tracks[tracknumber].slide_mask32;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
     mcl_seq.md_tracks[tracknumber].update_params();
@@ -234,8 +239,11 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
     return false;
   }
 
-  if (active == EMPTY_TRACK_TYPE) {
-    seq_data.length = 16;
+  //Remove active == 255, once project spec has changed. This is a hotfix
+  //for bad track type set when clearing header.
+
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
+    init();
   }
 
   return true;
@@ -267,10 +275,14 @@ bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-  if (active == EMPTY_TRACK_TYPE) {
+
+  //Remove active == 255, once project spec has changed. This is a hotfix
+  //for bad track type set when clearing header.
+
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
     init();
-    return true;
   }
+
   if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
     DEBUG_PRINTLN("lock array size is wrong");
     return false;
@@ -303,11 +315,11 @@ void MDTrack::scale_seq_vol(float scale) {
     }
   }
 
-  for (uint8_t c = 0; c < 4; c++) {
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (seq_data.locks_params[c] > 0) {
       if ((seq_data.locks_params[c] - 1 == MODEL_LFOD) ||
           (seq_data.locks_params[c] - 1 == MODEL_VOL)) {
-        for (uint8_t n = 0; n < 64; n++) {
+        for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
           if (seq_data.locks[c][n] > 0) {
             seq_data.locks[c][n] =
                 (uint8_t)(scale * (float)(seq_data.locks[c][n] - 1)) + 1;
@@ -355,7 +367,8 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       get_track_from_pattern(track, column);
     }
     get_track_from_kit(track, column);
-
+    //h4x0r, remove me when we get more memory for slide_mask
+    mcl_seq.md_tracks[track].slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
     if (merge > 0) {
       DEBUG_PRINTLN("auto merge");
       MDSeqTrack md_seq_track;
@@ -366,7 +379,9 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       }
       if (merge == SAVE_MD) {
         md_seq_track.init();
-        seq_data.length = length;
+        md_seq_track.length = length;
+        md_seq_track.speed = MD_SPEED_1X + kitextra.doubleTempo;
+        DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
       md_seq_track.merge_from_md(this);
@@ -406,7 +421,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
                                                         MD_TRACK_TYPE);
-
+  DEBUG_DUMP(seq_data.length);
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(column);
   DEBUG_PRINT(" ");

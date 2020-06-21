@@ -22,7 +22,7 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
-    md_tracks[i].resolution = 1;
+    md_tracks[i].speed = MD_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
 #ifdef LFO_TRACKS
@@ -40,7 +40,7 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
-    ext_tracks[i].resolution = 1;
+    ext_tracks[i].speed = EXT_SPEED_2X;
   }
 #endif
   //   MidiClock.addOnClockCallback(this,
@@ -102,18 +102,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
-    ext_tracks[i].step_count = 0;
-    ext_tracks[i].iterations = 1;
-    ext_tracks[i].mute_until_start = false;
+    ext_tracks[i].reset();
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-
-    // md_tracks[i].start_clock32th = 0;
-    md_tracks[i].step_count = 0;
-    md_tracks[i].iterations = 1;
-    md_tracks[i].oneshot_mask = 0;
-    md_tracks[i].mute_until_start = false;
+    md_tracks[i].reset();
   }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -143,7 +136,12 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
+    md_tracks[i].locks_slides_recalc = 255;
+    for (uint8_t c = 0; c < 4; c++) {
+    md_tracks[i].locks_slide_data[c].init();
+    }
   }
+  seq_ptc_page.onMidiStopCallback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
@@ -160,6 +158,8 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
+  //Arp
+  seq_ptc_page.on_192_callback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq();
@@ -171,6 +171,10 @@ void MCLSeq::seq() {
     ext_tracks[i].seq();
   }
 #endif
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].recalc_slides();
+  }
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options

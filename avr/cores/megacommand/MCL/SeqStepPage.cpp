@@ -27,23 +27,29 @@ void SeqStepPage::config() {
   strncat(info1, ">", len1);
   m_strncpy_p(buf, str2, len1);
   strncat(info1, buf, len1);
-  strcpy(info2, "STEP");
 
+  config_mask_info();
+  config_encoders();
   // config menu
   config_as_trackedit();
+}
+
+void SeqStepPage::config_encoders() {
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
+  seq_param2.cur = timing_mid;
+  seq_param2.old = timing_mid;
+  seq_param2.max = timing_mid * 2 - 1;
 }
 
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
-
+  seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-  seq_param1.max = 14;
-  seq_param2.max = 23;
+  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
-  seq_param2.cur = 12;
   seq_param2.old = 12;
   seq_param1.cur = 0;
   seq_param3.max = 64;
@@ -71,34 +77,36 @@ void SeqStepPage::display() {
   const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
-
-  if (seq_param1.getValue() == 0) {
+  uint8_t cond = seq_param1.getValue();
+  if (cond > NUM_TRIG_CONDITITONS) { cond -= NUM_TRIG_CONDITIONS; }
+  if (cond == 0) {
     GUI.put_string_at(0, "L1");
 
-  } else if (seq_param1.getValue() <= 8) {
+  } else if (cond <= 8) {
     GUI.put_string_at(0, "L");
 
-    GUI.put_value_at1(1, seq_param1.getValue());
+    GUI.put_value_at1(1, cond);
 
-  } else if (seq_param1.getValue() <= 13) {
+  } else if (cond <= 13) {
     GUI.put_string_at(0, "P");
     uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[seq_param1.getValue() - 9]);
+    GUI.put_value_at1(1, prob[cond - 9]);
   }
 
-  else if (seq_param1.getValue() == 14) {
+  else if (cond == 14) {
     GUI.put_string_at(0, "1S");
   }
-
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   if (seq_param2.getValue() == 0) {
     GUI.put_string_at(2, "--");
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
+  } else if ((seq_param2.getValue() < timing_mid) &&
+             (seq_param2.getValue() != 0)) {
     GUI.put_string_at(2, "-");
-    GUI.put_value_at2(3, 12 - seq_param2.getValue());
+    GUI.put_value_at2(3, timing_mid - seq_param2.getValue());
 
   } else {
     GUI.put_string_at(2, "+");
-    GUI.put_value_at2(3, seq_param2.getValue() - 12);
+    GUI.put_value_at2(3, seq_param2.getValue() - timing_mid);
   }
 
   if (show_pitch) {
@@ -122,7 +130,7 @@ void SeqStepPage::display() {
   }
   GUI.put_value_at(6, seq_param3.getValue());
   GUI.put_value_at1(15, page_select + 1);
-  draw_pattern_mask((page_select * 16), DEVICE_MD);
+  draw_mask((page_select * 16), DEVICE_MD);
 
   SeqPage::display();
 }
@@ -132,32 +140,12 @@ void SeqStepPage::display() {
   auto *oldfont = oled_display.getFont();
   draw_knob_frame();
 
+  uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
+
+  draw_knob_conditional(seq_param1.getValue());
+  draw_knob_timing(seq_param2.getValue(), timing_mid);
+
   char K[4];
-  if (seq_param1.getValue() == 0) {
-    strcpy(K, "L1");
-  } else if (seq_param1.getValue() <= 8) {
-    strcpy(K, "L ");
-    K[1] = seq_param1.getValue() + '0';
-  } else if (seq_param1.getValue() <= 13) {
-    strcpy(K, "P ");
-    uint8_t prob[5] = {1, 2, 5, 7, 9};
-    K[1] = prob[seq_param1.getValue() - 9] + '0';
-  } else if (seq_param1.getValue() == 14) {
-    strcpy(K, "1S");
-  }
-  draw_knob(0, "COND", K);
-
-  strcpy(K, "--");
-  K[3] = '\0';
-  if (seq_param2.getValue() == 0) {
-  } else if ((seq_param2.getValue() < 12) && (seq_param2.getValue() != 0)) {
-    itoa(12 - seq_param2.getValue(), K + 1, 10);
-  } else {
-    K[0] = '+';
-    itoa(seq_param2.getValue() - 12, K + 1, 10);
-  }
-  draw_knob(1, "UTIM", K);
-
   itoa(seq_param3.getValue(), K, 10);
   draw_knob(2, "LEN", K);
 
@@ -190,14 +178,14 @@ void SeqStepPage::display() {
 
   else {
     draw_lock_mask((page_select * 16), DEVICE_MD);
-    draw_pattern_mask((page_select * 16), DEVICE_MD);
+    draw_mask((page_select * 16), DEVICE_MD);
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].resolution,
-                               seq_param2.cur);
+      mcl_gui.draw_microtiming(
+          get_md_speed(mcl_seq.md_tracks[last_md_track].speed), seq_param2.cur);
     }
   }
   oled_display.display();
@@ -221,15 +209,16 @@ void SeqStepPage::loop() {
         if (step < active_track.length) {
 
           uint8_t utiming = (seq_param2.cur + 0);
-          uint8_t condition = seq_param1.cur;
+          uint8_t condition = translate_to_step_conditional(seq_param1.cur);
 
-          //  timing = 3;
-          // condition = 3;
           active_track.conditional[step] = condition;
-          active_track.timing[step] = utiming; // upper
+          active_track.timing[step] = utiming;
+          uint64_t *mask = get_mask();
 
-          if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
-            SET_BIT64(active_track.pattern_mask, step);
+          if ((mask_type != MASK_SLIDE) && (mask_type != MASK_MUTE)) {
+            if (!IS_BIT_SET64_P(mask, step)) {
+              SET_BIT64_P(mask, step);
+            }
           }
           if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
               (tuning != NULL)) {
@@ -262,18 +251,18 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     uint8_t trackid = event->source - 128;
     uint8_t step = trackid + (page_select * 16);
+    if (device == DEVICE_A4) {
+      return true;
+    }
+
+    uint64_t *seq_mask = get_mask();
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device == DEVICE_A4) {
-        //        GUI.setPage(&seq_extstep_page);
-
-        return true;
-      }
       mcl_seq.midi_events.update_params = false;
       MD.midi_events.disable_live_kit_update();
 
       if (MidiClock.state != 2) {
-        active_track.send_parameter_locks(step);
+        active_track.send_parameter_locks(step, true);
       }
       show_pitch = true;
 
@@ -281,15 +270,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      seq_param2.max = 23;
-      int8_t utiming = active_track.timing[step];         // upper
-      uint8_t condition = active_track.conditional[step]; // lower
+      seq_param2.max =
+          mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
+      int8_t utiming = active_track.timing[step];
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
       // Cond
+      uint8_t condition = translate_to_knob_conditional(active_track.conditional[step]); 
       seq_param1.cur = condition;
       uint8_t note_num = 255;
 
-      // SET_BIT64(active_track.pattern_mask, step);
       tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
       if (tuning) {
         for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
@@ -306,19 +295,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         seq_param4.old = seq_param4.cur;
       }
       // Micro
+      //      if (note_interface.notes_count_on() <= 1) {
       if (utiming == 0) {
-        utiming = 12;
+        utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
+      //      }
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
-
-      if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
-        return true;
-      }
 
       if (last_md_track < 15) {
         show_pitch = false;
@@ -327,67 +313,35 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      /*      uint8_t utiming = (seq_param2.cur + 0);
-            uint8_t condition = seq_param1.cur;
-
-            uint8_t step = track + (page_select * 16);
-            //  timing = 3;
-            // condition = 3;
-            active_track.conditional[step] = condition;
-            active_track.timing[step] = utiming; // upper
-            if ((seq_param4.cur > 0) && (last_md_track < 15)) {
-              tuning_t const *tuning =
-                  MD.getModelTuning(MD.kit.models[last_md_track]);
-              if (tuning != NULL) {
-                uint8_t base = tuning->base;
-                uint8_t note_num = seq_param4.cur;
-                uint8_t machine_pitch =
-         pgm_read_byte(&tuning->tuning[note_num]);
-                active_track.set_track_pitch(step,
-         machine_pitch);
-              }
-            }*/
-      //   conditional_timing[cur_col][(track + (seq_param2.cur * 16))] =
-      //   condition; //lower
       if (note_interface.notes_all_off_md()) {
         mcl_gui.init_encoders_used_clock();
         active_track.reset_params();
         mcl_seq.midi_events.update_params = true;
         MD.midi_events.enable_live_kit_update();
       }
-      if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+      if (!IS_BIT_SET64_P(seq_mask, step)) {
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = seq_param1.cur;
+        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
 
         DEBUG_PRINTLN("settting");
 
         active_track.conditional[step] = condition;
-        active_track.timing[step] = utiming; // upper
-        // active_track.clear_step_locks(step);
+        active_track.timing[step] = utiming;
+        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
         CLEAR_BIT64(active_track.oneshot_mask, step);
-        SET_BIT64(active_track.pattern_mask, step);
+        SET_BIT64_P(seq_mask, step);
+        }
       } else {
         DEBUG_PRINTLN("clear step");
-        /*
-        DEBUG_DUMP(step);
-        Serial.println();
-#       for (uint8_t n = 0; n < 64; n++) {
-        if (IS_BIT_SET64(active_track.pattern_mask, n)) { Serial.print(1); }
-        else { Serial.print(0); }
-        }
-        Serial.println();
-        */
+
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64(active_track.pattern_mask, step);
-          active_track.conditional[step] = 0;
-          active_track.timing[step] = 12; // upper
+          CLEAR_BIT64_P(seq_mask, step);
+          if (mask_type == MASK_PATTERN) {
+            active_track.conditional[step] = 0;
+            active_track.timing[step] = active_track.get_timing_mid();
+          }
         }
       }
-      // Cond
-      // seq_param4.cur = condition;
-      // Microƒ
-      // encoders[4]->cur = timing;
-      // draw_notes(1);
       return true;
     }
     return true;
@@ -440,16 +394,52 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param > 23) {
     return;
   }
-
+  uint8_t store_lock = 255;
   for (int i = 0; i < 16; i++) {
     if ((note_interface.notes[i] == 1)) {
       step = i + (SeqPage::page_select * 16);
-      active_track.set_track_locks(step, track_param, value);
-      if (!IS_BIT_SET64(active_track.pattern_mask, step)) {
+      if (active_track.set_track_locks(step, track_param, value)) {
+        store_lock = 0;
+      } else {
+        store_lock = 1;
+      }
+      uint64_t *mask = seq_step_page.get_mask();
+
+      SET_BIT64(active_track.lock_mask, step);
+      if (seq_step_page.mask_type == MASK_PATTERN) {
+        uint8_t utiming = (seq_param2.cur + 0);
+        uint8_t condition = seq_step_page.translate_to_step_conditional(seq_param1.cur);
+
+        active_track.conditional[step] = condition;
+        active_track.timing[step] = utiming;
         SET_BIT64(active_track.pattern_mask, step);
-        SET_BIT64(active_track.lock_mask, step);
+
+      } else {
+       // SET_BIT64_P(mask, step);
       }
     }
+  }
+  if (store_lock == 0) {
+    char str[5] = "--  ";
+    char str2[4] = "-- ";
+    PGM_P modelname = NULL;
+    modelname = model_param_name(MD.kit.models[last_md_track], track_param);
+    if (modelname != NULL) {
+      m_strncpy_p(str, modelname, 3);
+      if (strlen(str) == 2) {
+        str[2] = ' ';
+        str[3] = '\0';
+      }
+    }
+    itoa(value, str2, 10);
+#ifdef OLED_DISPLAY
+    oled_display.textbox(str, str2);
+#endif
+  }
+  if (store_lock == 1) {
+#ifdef OLED_DISPLAY
+    oled_display.textbox("LOCK PARAMS ", "FULL");
+#endif
   }
 }
 

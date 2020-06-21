@@ -1,8 +1,70 @@
-MCL 2.62 08/05/202
+MCL 2.70 21/07/2020
+
+Changes:
+  - Sequencer:
+    * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
+    * Added sequencer support for parameter slides. (Slide data is only
+	retained for first 32 steps)
+    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides
+	or Mutes. The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
+	* Added ^ trig conditions (L1^, L2^, L3^.. etc). When chosen the step's parameter locks or slides must also obey the trig condition.
+    * Sequencer step glyphs have been improved for each of the edit modes.
+    * Added visual feedback when setting parameter slides using MD encoders.
+    * uTiming window is now improved and supports various track speeds.
+    * MD pattern speed + slides now imported to sequencer tracks when Saving from MD.
+
+  - Chromatic/Arpeggiator:
+
+    * The focused chromatic voice is now selected when notes are played in the chromatic page.
+      This prevents the voice unintentionally changing outside of the chromtic page when changing
+      track on the MD.
+      Similarly when playing from Ext Keyboard, you can only change the
+	  focused chromatic voice(s) from within the Chromatic Page.
+    * Arpeggiator now runs in either standard or triplet time depending on track
+      speed.
+    * Arpeggiator max speed is now doubled. Use 2x track speed to record at this rate.
+
+  - Chain mode:
+    * Transitions now support all new track speeds.
+    * Grid copy/paste of slots now translates chain ROW positions such
+      that new ROW position is offset relative to the paste position.
+    * A slot's Chain ROW and LOOP settings are retained when saving a slot in SavePage.
+
+  - Main:
+    * Allow simultaneously send & receive of MIDICLOCK on port 2. (Previously
+	silently disabled to prevent feedback loop).
+
+Bug Fixes:
+
+  - Write/Save Pages
+    * Entering write page would incorrectly change SavePage mode.
+    * Swing would be applied to wrong trigs when saving from MD.
+
+  - Sequencer:
+    * Trig Conditions L3, L5, L6, L7 were all broken. Fixed.
+    * Fixed an SRAM issue causing sequencer corruption on track 9.
+    * Improved sequencer editing
+
+  - Chain Mode:
+    * In some circumstances chaining an empty track would result in unpredicatable behaviour.
+    * Updating chain ROW/LOOP settings could resurrect a previously cleared slot.
+    * Oneshot masks are now cleared on chain transition
+    * When chaining slots, only send machine parameters if track's sound is
+	not equal to current track. (This was previously broken in some scenarios, resulting in no sound transition)
+
+  - LFOs:
+    * LFOs would incorrectly wrap around to 0 when they exceeded 127 in amplitude. Fixed.
+
+  - Chromatic/Arpeggiator:
+
+    * When connecting device to MIDI port 2, active "Peering" notification would appear frozen on chromatic page.
+
+
+MCL 2.62 08/05/2020
 
 Changes:
 
-  - Add transpose parameter to Chromatic Page. Accessible from Track Select Menu.
+  - Add transpose parameter to Chromatic Page. Accessible from the Track Menu.
 
 Bug Fixes:
 
@@ -20,7 +82,7 @@ MCL 2.61 16/03/2020
 
 Changes:
 
-  - Arpeggiator added to Chromatic Page. Accessible from Track Select Menu.
+  - Arpeggiator added to Chromatic Page. Accessible from the Track Menu.
   - MIDI CC can be used to control MD Parms across poly tracks.
     CC 16 to 40 controls MD Params 1 to 24.
   - Added many more scales to Chromatic Page

@@ -284,7 +284,7 @@ void PageSelectPage::display() {
   }
 
   oled_display.fillRect(28, 7, 100, 16, BLACK);
-  oled_display.fillRect(0, 7, 25, 25, BLACK);
+  oled_display.fillRect(0, 7, 28, 25, BLACK);
 
   // 4x trig groups
   uint8_t group_x = 28;

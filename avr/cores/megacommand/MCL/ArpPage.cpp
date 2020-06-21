@@ -3,10 +3,12 @@
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
-MCLEncoder arp_speed(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_und(0, 2, ENCODER_RES_SEQ);
 
-void ArpPage::setup() {}
+void ArpPage::setup() {
+  arp_speed.cur = 1;
+}
 
 void ArpPage::init() {
 
@@ -45,6 +47,7 @@ void ArpPage::loop() {
       encoders[3]->hasChanged()) {
     seq_ptc_page.render_arp();
   }
+
 }
 
 typedef char arp_name_t[4];

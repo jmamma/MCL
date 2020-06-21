@@ -6,7 +6,7 @@
 
 #include "GUI.h"
 
-#define TRIG_HOLD_TIME 200
+#define TRIG_HOLD_TIME 450
 
 #define NI_MAX_NOTES 20
 

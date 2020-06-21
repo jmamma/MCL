@@ -151,6 +151,7 @@ int32_t Grid::get_header_offset(int16_t row) {
   return offset;
 }
 
+
 bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   bool ret;
@@ -160,7 +161,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   if (update_header) {
     GridRowHeader row_header;
     row_header.read(row);
-    row_header.update_model(column, EMPTY_TRACK_TYPE, DEVICE_NULL);
+    row_header.update_model(column, 0, EMPTY_TRACK_TYPE);
     row_header.write(row);
   }
 

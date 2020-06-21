@@ -28,10 +28,12 @@ void SeqParamPage::config() {
 }
 
 void SeqParamPage::init() {
+  SeqPage::init();
   config();
   trig_interface.on();
   toggle_device = false;
   note_interface.state = true;
+  SeqPage::mask_type = MASK_PATTERN;
 
   seq_param1.max = 24;
   seq_lock1.max = 128;
@@ -150,7 +152,7 @@ void SeqParamPage::display() {
 
   draw_knob(1, &seq_lock1, "VAL");
   draw_knob(3, &seq_lock2, "VAL");
-  draw_pattern_mask(page_select * 16, DEVICE_MD);
+  draw_mask(page_select * 16, DEVICE_MD);
   draw_lock_mask(page_select * 16);
 
   SeqPage::display();

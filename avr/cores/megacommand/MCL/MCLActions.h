@@ -29,10 +29,10 @@ public:
   uint16_t nearest_bar;
   uint8_t nearest_beat;
 
-  uint16_t next_transitions[NUM_TRACKS] = { 0 };
-
-  uint8_t send_machine[NUM_TRACKS] = { 0 };
-  uint8_t transition_level[NUM_TRACKS] = { 0 };
+  uint16_t next_transitions[NUM_TRACKS];
+  uint8_t transition_offsets[NUM_TRACKS];
+  uint8_t send_machine[NUM_TRACKS];
+  uint8_t transition_level[NUM_TRACKS];
 
   uint8_t md_div32th_latency;
 
@@ -64,7 +64,7 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track);
+  bool load_track_from_ext(int curtrack, int column, int row, EmptyTrack *empty_track);
   bool load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track);
 
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);

@@ -40,6 +40,7 @@ void SeqRtrkPage::init() {
   recording = true;
   config();
   trig_interface.on();
+  SeqPage::mask_type = MASK_PATTERN;
 }
 
 void SeqRtrkPage::cleanup() {
@@ -63,8 +64,7 @@ void SeqRtrkPage::display() {
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (seq_param3.getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
+    GUI.put_value_at(5, (seq_param3.getValue()));
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -74,7 +74,7 @@ void SeqRtrkPage::display() {
   }
 #endif
   bool show_current_step = false;
-  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  draw_mask(page_select * 16, DEVICE_MD, show_current_step);
   SeqPage::display();
 }
 #else
@@ -89,7 +89,7 @@ void SeqRtrkPage::display() {
 /*
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
-    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
+    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].speed);
   }
 #endif
 */
@@ -99,7 +99,7 @@ void SeqRtrkPage::display() {
 
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
-  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  draw_mask(page_select * 16, DEVICE_MD, show_current_step);
 
   SeqPage::display();
   oled_display.display();

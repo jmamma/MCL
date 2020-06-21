@@ -29,6 +29,7 @@ public:
   virtual void setup();
   virtual void init();
   virtual void config();
+  virtual void config_encoders();
   virtual void loop();
   virtual void cleanup();
 };

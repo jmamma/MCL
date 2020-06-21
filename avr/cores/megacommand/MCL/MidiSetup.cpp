@@ -4,7 +4,7 @@
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();
   MidiClock.stop();
- 
+
   if (mcl_cfg.midi_forward == 1) {
     Midi.forward = true;
   } else {
@@ -26,7 +26,7 @@ void MidiSetup::cfg_ports() {
 
   } else {
     MidiClock.transmit_uart1 = true;
-    MidiClock.transmit_uart2 = false;
+    //MidiClock.transmit_uart2 = false;
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
 

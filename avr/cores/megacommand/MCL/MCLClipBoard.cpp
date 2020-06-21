@@ -80,6 +80,8 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track, track);
+    //h4x0r, remove me when we get more memory for slide_mask
+    md_track->seq_data.slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
     ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
   }
 #ifdef EXT_TRACKS
@@ -144,7 +146,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN("loading seq track");
     memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
            sizeof(md_track->seq_data));
-
+    //h4x0r, remove me when we get more memory for slide_mask
+    mcl_seq.md_tracks[track].slide_mask = mcl_seq.md_tracks[track].slide_mask32;
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
     }
@@ -243,9 +246,19 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
       ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
+
+      int16_t chain_row_offset = temp_track.chain.row - t_row;
+
+      uint8_t new_chain_row = row + chain_row_offset;
+      if (new_chain_row >= GRID_LENGTH) { new_chain_row = y + row; }
+      else if (new_chain_row < 0) { new_chain_row = y + row; }
+      temp_track.chain.row = new_chain_row;
+
       switch (temp_track.active) {
       case EMPTY_TRACK_TYPE:
         header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
+        ret = proj.file.seekSet(offset);
+        ret = mcl_sd.write_data(&temp_track, sizeof(GridTrack), &proj.file);
         break;
 
       case EXT_TRACK_TYPE:

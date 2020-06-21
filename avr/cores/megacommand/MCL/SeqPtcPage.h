@@ -55,6 +55,7 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
+  uint8_t focus_track = 255;
   uint8_t key = 0;
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
@@ -90,6 +91,7 @@ public:
   uint8_t arp_base;
   uint8_t arp_dir;
   uint8_t arp_count;
+  uint8_t arp_mod12_counter;
 
   void setup_arp();
   void remove_arp();
@@ -99,7 +101,8 @@ public:
 
   uint8_t arp_get_next_note_up(int8_t);
   uint8_t arp_get_next_note_down(uint8_t);
-  void on_16_callback();
+  ALWAYS_INLINE() void on_192_callback();
+  ALWAYS_INLINE() void onMidiStopCallback();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

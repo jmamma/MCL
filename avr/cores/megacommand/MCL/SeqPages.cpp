@@ -28,9 +28,10 @@ SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &pt
 
 ArpPage arp_page(&arp_und, &arp_mode, &arp_speed, &arp_oct);
 
-const menu_t<10> seq_menu_layout PROGMEM = {
+const menu_t<11> seq_menu_layout PROGMEM = {
     "SEQ",
     {
+        {"EDIT:", 0,4, 4, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, { {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"}} },
         {"ARPEGGIATOR", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, {}},
         {"TRANSPOSE:", 0, 12, 0, (uint8_t *)&seq_ptc_page.key, (Page *) NULL, NULL, {}},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, {}},
@@ -38,7 +39,7 @@ const menu_t<10> seq_menu_layout PROGMEM = {
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, { {0, "--",}, {1, "LCKS"}, {2, "ALL"}}},
         {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"}}},
-        {"TRACK RES:", 1, 3, 2, (uint8_t *)&opt_resolution, (Page *)NULL, opt_resolution_handler, { {1, "2x"}, {2, "1x"} }},
+        {"SPEED:", 0, 7, 7, (uint8_t *)&opt_speed, (Page *)NULL, opt_speed_handler, { {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"}}},
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, { {0, "--",}, {1, "L"}, {2, "R"}, {3,"L>ALL"}, {4, "R>ALL"}}},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, { {0, "--",}, {1, "TRK"}, {2, "ALL"} }},
     },
@@ -47,7 +48,7 @@ const menu_t<10> seq_menu_layout PROGMEM = {
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<10> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<11> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 const menu_t<4> step_menu_layout PROGMEM = {
     "STP",

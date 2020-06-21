@@ -25,6 +25,7 @@
 #include "Arduino.h"
 #include "HardwareSerial.h"
 #include "HardwareSerial_private.h"
+#include "memorybank.h"
 
 // Each HardwareSerial is defined in its own file, sine the linker pulls
 // in the entire file when any element inside is used. --gc-sections can
@@ -46,7 +47,9 @@ ISR(USART1_RX_vect)
 #error "Don't know what the Data Register Empty vector is called for Serial1"
 #endif
 {
+  uint8_t old_bank = switch_ram_bank(0);
   Serial1._rx_complete_irq();
+  switch_ram_bank(old_bank);
 }
 
 #if defined(UART1_UDRE_vect)
@@ -57,7 +60,9 @@ ISR(USART1_UDRE_vect)
 #error "Don't know what the Data Register Empty vector is called for Serial1"
 #endif
 {
+  uint8_t old_bank = switch_ram_bank(0);
   Serial1._tx_udr_empty_irq();
+  switch_ram_bank(old_bank);
 }
 
 HardwareSerial Serial1(&UBRR1H, &UBRR1L, &UCSR1A, &UCSR1B, &UCSR1C, &UDR1);
