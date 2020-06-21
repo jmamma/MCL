@@ -2,7 +2,7 @@ MCL 2.70 21/07/2020
 
 Changes:
   - Sequencer:
-    * Added sequencer support for track speeds 1x, 2x, 2/3x, 4/3x, 1/2x, 1/4x, 1/8x
+    * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
     * Added sequencer support for parameter slides. (Slide data is only
 	retained for first 32 steps)
     * StepEdit page can now be toggled to edit either Trigs, Locks, Slides
