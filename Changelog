@@ -16,8 +16,7 @@ Changes:
   - Chromatic/Arpeggiator:
 
     * The focused chromatic voice is now selected when notes are played in the chromatic page.
-      This prevents the voice unintentionally changing outside of the chromtic page when changing
-      track on the MD.
+      This prevents the chromatic voice changing uintentionally when switching tracks on the MD.
       Similarly when playing from Ext Keyboard, you can only change the focused chromatic voice(s) 
       from within the Chromatic Page.
     * Arpeggiator now runs in either standard or triplet time depending on track
