@@ -1,29 +1,25 @@
-MCL 2.70 14/07/2020
+MCL 2.70 21/07/2020
 
 Changes:
   - Sequencer:
     * Added sequencer support for track speeds 1x, 2x, 2/3x, 4/3x, 1/2x, 1/4x, 1/8x
-    * Added sequencer support for parameter slides. $
-    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or
-	* Added ^ trig conditions (L1^, L2^, L3^.. etc), when selected the step's
-	parameter locks or slides will only be sent if the trig conditions match.
-      Mutes. The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
+    * Added sequencer support for parameter slides. (Slide data is only
+	retained for first 32 steps)
+    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides
+	or Mutes. The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
+	* Added ^ trig conditions (L1^, L2^, L3^.. etc). When chosen the step's parameter locks or slides must also obey the trig condition.
     * Sequencer step glyphs have been improved for each of the edit modes.
     * Added visual feedback when setting parameter slides using MD encoders.
     * uTiming window is now improved and supports various track speeds.
-    * MD pattern speed is now applied to sequencer tracks when Saving from MD.
-
-  $ Due to project memory constraints, slide data will only be saved for the
-  first 32 steps. This will change in version 3.0 when the project memory
-  layout is enhanced.
+    * MD pattern speed + slides now imported to sequencer tracks when Saving from MD.
 
   - Chromatic/Arpeggiator:
 
-    * The chromatic voice is now selected when notes are played in the chromatic page.
+    * The focused chromatic voice is now selected when notes are played in the chromatic page.
       This prevents the voice unintentionally changing outside of the chromtic page when changing
       track on the MD.
-      Similarly when playing from Ext Keyboard, you can only change the chromatic
-      voice(s) from within the Chromatic Page.
+      Similarly when playing from Ext Keyboard, you can only change the
+	  focused chromatic voice(s) from within the Chromatic Page.
     * Arpeggiator now runs in either standard or triplet time depending on track
       speed.
     * Arpeggiator max speed is now doubled. Use 2x track speed to record at this rate.
@@ -47,14 +43,14 @@ Bug Fixes:
   - Sequencer:
     * Trig Conditions L3, L5, L6, L7 were all broken. Fixed.
     * Fixed an SRAM issue causing sequencer corruption on track 9.
+    * Improved sequencer editing
 
   - Chain Mode:
     * In some circumstances chaining an empty track would result in unpredicatable behaviour.
     * Updating chain ROW/LOOP settings could resurrect a previously cleared slot.
     * Oneshot masks are now cleared on chain transition
-    * When chaining slots, only send machine parameters if track's sound is not
-      equal to current track. (This was previously broken in some scenarios,
-      resulting in no sound transition)
+    * When chaining slots, only send machine parameters if track's sound is
+	not equal to current track. (This was previously broken in some scenarios, resulting in no sound transition)
 
   - LFOs:
     * LFOs would incorrectly wrap around to 0 when they exceeded 127 in amplitude. Fixed.
