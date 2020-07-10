@@ -608,7 +608,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
           oled_display.fillRect(x + 1, y + 1, seq_w - 1, trig_h - 1, WHITE);
         }
 
-    }
+      }
     }
 
     x += seq_w + 1;

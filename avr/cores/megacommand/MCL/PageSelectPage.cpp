@@ -334,6 +334,12 @@ void PageSelectPage::display() {
   get_page(get_pageidx(page_select), str);
   GUI.put_string_at_fill(0, str);
 #endif
+
+  uint16_t led_mask = 1 << page_select;
+  if (trigled_mask != led_mask) {
+    trigled_mask = led_mask;
+    MD.set_trigleds(trigled_mask, false);
+  }
 }
 
 bool PageSelectPage::handleEvent(gui_event_t *event) {
