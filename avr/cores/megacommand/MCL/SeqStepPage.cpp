@@ -275,7 +275,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       int8_t utiming = active_track.timing[step];
       uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
       // Cond
-      uint8_t condition = translate_to_knob_conditional(active_track.conditional[step]); 
+      uint8_t condition = translate_to_knob_conditional(active_track.conditional[step]);
       seq_param1.cur = condition;
       uint8_t note_num = 255;
 
@@ -301,6 +301,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
+      if (!IS_BIT_SET64_P(seq_mask, step)) {
+        active_track.conditional[step] = condition;
+        active_track.timing[step] = utiming;
+        CLEAR_BIT64(active_track.oneshot_mask, step);
+        SET_BIT64_P(seq_mask, step);
+        note_interface.ignoreNextEvent(trackid);
+      }
       //      }
     }
 
