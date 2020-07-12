@@ -145,6 +145,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   }
 
   if (note_interface.is_event(event)) {
+    trig_interface.send_md_leds();
     if (note_interface.notes_all_off()) {
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
         return true;

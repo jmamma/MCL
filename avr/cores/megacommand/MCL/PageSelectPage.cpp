@@ -177,6 +177,7 @@ void PageSelectPage::cleanup() {
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
 #endif
   note_interface.init_notes();
+  MD.set_trigleds(0, false);
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {

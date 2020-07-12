@@ -23,6 +23,7 @@ public:
   virtual void start();
   virtual void end();
   virtual void end_immediate();
+  void send_md_leds();
   void cleanup();
   /* @} */
 };

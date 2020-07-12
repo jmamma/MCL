@@ -7,6 +7,16 @@ void TrigInterface::start() {
 
 }
 
+void TrigInterface::send_md_leds() {
+    uint16_t led_mask = 0;
+    for (uint8_t i = 0; i < 16; i++) {
+      if (note_interface.notes[i] == 1) {
+        SET_BIT16(led_mask, i);
+      }
+    }
+    MD.set_trigleds(led_mask, false);
+}
+
 bool TrigInterface::on() {
 
   if (state) {
