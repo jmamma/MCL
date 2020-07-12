@@ -136,6 +136,8 @@ void PageSelectPage::init() {
   classic_display = false;
 #endif
   loop_init = true;
+  // clear trigled so it's always sent on first run
+  trigled_mask = 0;
   display();
 }
 
@@ -177,7 +179,7 @@ void PageSelectPage::cleanup() {
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
 #endif
   note_interface.init_notes();
-  MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+  MD.set_trigleds(0, TRIGLED_OVERLAY);
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
