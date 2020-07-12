@@ -247,8 +247,6 @@ if (utiming == 0) {
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64_P(seq_mask, step);
         }
-      } else {
-        SET_BIT64_P(seq_mask, step);
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =

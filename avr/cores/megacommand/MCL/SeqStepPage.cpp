@@ -326,19 +326,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         mcl_seq.midi_events.update_params = true;
         MD.midi_events.enable_live_kit_update();
       }
-      if (!IS_BIT_SET64_P(seq_mask, step)) {
-        uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
-
-        DEBUG_PRINTLN("settting");
-
-        active_track.conditional[step] = condition;
-        active_track.timing[step] = utiming;
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-        CLEAR_BIT64(active_track.oneshot_mask, step);
-        SET_BIT64_P(seq_mask, step);
-        }
-      } else {
+      if (IS_BIT_SET64_P(seq_mask, step)) {
         DEBUG_PRINTLN("clear step");
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
