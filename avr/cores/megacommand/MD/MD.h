@@ -131,6 +131,11 @@ public:
   void onNoteOnCallback_Midi(uint8_t *msg);
 };
 
+enum TrigLEDMode {
+  TRIGLED_OVERLAY = 0,
+  TRIGLED_STEPEDIT = 1,
+  TRIGLED_EXCLUSIVE = 2
+};
 
 /**
  * This is the main class used to communicate with a Machinedrum
@@ -256,7 +261,7 @@ public:
   void activate_track_select();
   void deactivate_track_select();
 
-  void set_trigleds(uint16_t bitmask, bool recmode);
+  void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH

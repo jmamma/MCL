@@ -177,7 +177,7 @@ void PageSelectPage::cleanup() {
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
 #endif
   note_interface.init_notes();
-  MD.set_trigleds(0, false);
+  MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
@@ -339,7 +339,7 @@ void PageSelectPage::display() {
   uint16_t led_mask = 1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;
-    MD.set_trigleds(trigled_mask, false);
+    MD.set_trigleds(trigled_mask, TRIGLED_EXCLUSIVE);
   }
 }
 

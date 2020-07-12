@@ -14,7 +14,7 @@ void TrigInterface::send_md_leds() {
         SET_BIT16(led_mask, i);
       }
     }
-    MD.set_trigleds(led_mask, false);
+    MD.set_trigleds(led_mask, TRIGLED_OVERLAY);
 }
 
 bool TrigInterface::on() {

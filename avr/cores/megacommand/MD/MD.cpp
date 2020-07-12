@@ -204,15 +204,14 @@ void MDClass::deactivate_track_select() {
   sendRequest(data, sizeof(data));
 }
 
-void MDClass::set_trigleds(uint16_t bitmask, bool recmode) {
+void MDClass::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
   // trigleds[0..6]
   data[2] = bitmask & 0x7F;
   // trigleds[7..13]
   data[3] = (bitmask >> 7) & 0x7F;
   // trigleds[14..15]
-  data[4] = (bitmask >> 14) ;
-  if (recmode) { data[4] |= 0x4; }
+  data[4] = (bitmask >> 14) | (mode << 2);
   sendRequest(data, sizeof(data));
 }
 

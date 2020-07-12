@@ -619,7 +619,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 
     if (led_mask != trigled_mask) {
       trigled_mask = led_mask;
-      MD.set_trigleds(trigled_mask, true);
+      MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
     }
   }
 #ifdef EXT_TRACKS
