@@ -43,5 +43,6 @@ public:
 };
 
 extern PageSelectPage page_select_page;
+extern uint16_t trigled_mask;
 
 #endif /* PageSelectPAGE_H__ */

@@ -26,6 +26,8 @@ extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
 
+extern uint16_t trigled_mask;
+
 extern void opt_trackid_handler();
 extern void opt_speed_handler();
 extern void opt_clear_track_handler();

@@ -136,6 +136,8 @@ void PageSelectPage::init() {
   classic_display = false;
 #endif
   loop_init = true;
+  // clear trigled so it's always sent on first run
+  trigled_mask = 0;
   display();
 }
 
@@ -177,6 +179,7 @@ void PageSelectPage::cleanup() {
   MDSysexListener.removeOnKitMessageCallback(&kit_cb);
 #endif
   note_interface.init_notes();
+  MD.set_trigleds(0, TRIGLED_OVERLAY);
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
@@ -334,6 +337,12 @@ void PageSelectPage::display() {
   get_page(get_pageidx(page_select), str);
   GUI.put_string_at_fill(0, str);
 #endif
+
+  uint16_t led_mask = 1 << page_select;
+  if (trigled_mask != led_mask) {
+    trigled_mask = led_mask;
+    MD.set_trigleds(trigled_mask, TRIGLED_EXCLUSIVE);
+  }
 }
 
 bool PageSelectPage::handleEvent(gui_event_t *event) {

@@ -204,24 +204,14 @@ void MDClass::deactivate_track_select() {
   sendRequest(data, sizeof(data));
 }
 
-void MDClass::set_leds_batch(uint16_t bitmask) {
+void MDClass::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
-  data[2] = bitmask >> 9;
-  data[3] = (bitmask >> 3) & 0x7F;
-  data[4] = (bitmask << 5) & 0x7F;
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::set_led(uint8_t idx) {
-
-  uint8_t data[3] = {0x70, 0x34, 0x00};
-  data[2] = idx + 0x40;
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::clear_led(uint8_t idx) {
-  uint8_t data[3] = {0x70, 0x34, 0x00};
-  data[2] = idx;
+  // trigleds[0..6]
+  data[2] = bitmask & 0x7F;
+  // trigleds[7..13]
+  data[3] = (bitmask >> 7) & 0x7F;
+  // trigleds[14..15]
+  data[4] = (bitmask >> 14) | (mode << 2);
   sendRequest(data, sizeof(data));
 }
 

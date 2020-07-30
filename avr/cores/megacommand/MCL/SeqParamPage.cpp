@@ -208,7 +208,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-
+    uint64_t *seq_mask = &(mcl_seq.md_tracks[last_md_track].lock_mask);
     if (device == DEVICE_A4) {
       return true;
     }
@@ -221,6 +221,11 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
 
       seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step] - 1;
       seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step] - 1;
+
+      if (!IS_BIT_SET64_P(seq_mask, step)) {
+        SET_BIT64_P(seq_mask, step);
+        note_interface.ignoreNextEvent(track);
+      }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
@@ -238,12 +243,10 @@ if (utiming == 0) {
   mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
   mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
 }*/
-      if (IS_BIT_SET64(mcl_seq.md_tracks[last_md_track].lock_mask, step)) {
+      if (IS_BIT_SET64_P(seq_mask, step)) {
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
+          CLEAR_BIT64_P(seq_mask, step);
         }
-      } else {
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =

@@ -24,6 +24,8 @@ uint8_t opt_shift = 0;
 uint8_t opt_reverse = 0;
 uint8_t opt_clear_step = 0;
 
+uint16_t trigled_mask = 0;
+
 static uint8_t opt_midi_device_capture = DEVICE_MD;
 static SeqPage *opt_seqpage_capture = nullptr;
 static MCLEncoder *opt_param1_capture = nullptr;
@@ -272,15 +274,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     oled_display.clearDisplay();
     void (*row_func)();
     if (show_seq_menu) {
-      void (*row_func)() =
-          seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
-
+      row_func = seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
     } else if (show_step_menu) {
-      void (*row_func)() =
-          step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
+      row_func = step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
     }
     if (row_func != NULL) {
-      (*row_func)();
+      row_func();
       show_seq_menu = false;
       show_step_menu = false;
       return true;
@@ -595,22 +594,33 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     uint64_t mask = active_track.pattern_mask;
     uint64_t oneshot_mask = 0;
     uint64_t slide_mask = 0;
+    uint16_t led_mask = 0; 
+
 
     switch (mask_type) {
     case MASK_PATTERN:
+      led_mask = mask >> offset;
       break;
     case MASK_LOCK:
+      led_mask = active_track.lock_mask >> offset;
       break;
     case MASK_MUTE:
       oneshot_mask = active_track.oneshot_mask;
+      led_mask = oneshot_mask >> offset;
       break;
     case MASK_SLIDE:
       slide_mask = active_track.slide_mask;
+      led_mask = slide_mask >> offset;
       break;
     }
 
     draw_mask(offset, mask, active_track.step_count, active_track.length,
               show_current_step, oneshot_mask, slide_mask);
+
+    if (led_mask != trigled_mask) {
+      trigled_mask = led_mask;
+      MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
+    }
   }
 #ifdef EXT_TRACKS
   else {
