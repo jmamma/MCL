@@ -32,7 +32,6 @@ POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "Adafruit_GFX.h"
-#include "glcdfont.c"
 #ifdef __AVR__
 #include <avr/pgmspace.h>
 #elif defined(ESP8266) || defined(ESP32)
@@ -779,42 +778,7 @@ void Adafruit_GFX::drawRGBBitmap(int16_t x, int16_t y, uint16_t *bitmap,
 void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
                             uint16_t color, uint16_t bg, uint8_t size) {
 
-  if (!gfxFont) { // 'Classic' built-in font
-
-    if ((x >= _width) ||            // Clip right
-        (y >= _height) ||           // Clip bottom
-        ((x + 6 * size - 1) < 0) || // Clip left
-        ((y + 8 * size - 1) < 0))   // Clip top
-      return;
-
-    if (!_cp437 && (c >= 176))
-      c++; // Handle 'classic' charset behavior
-
-    startWrite();
-    for (int8_t i = 0; i < 5; i++) { // Char bitmap = 5 columns
-      uint8_t line = pgm_read_byte(&font[c * 5 + i]);
-      for (int8_t j = 0; j < 8; j++, line >>= 1) {
-        if (line & 1) {
-          if (size == 1)
-            writePixel(x + i, y + j, color);
-          else
-            writeFillRect(x + i * size, y + j * size, size, size, color);
-        } else if (bg != color) {
-          if (size == 1)
-            writePixel(x + i, y + j, bg);
-          else
-            writeFillRect(x + i * size, y + j * size, size, size, bg);
-        }
-      }
-    }
-    if (bg != color) { // If opaque, draw vertical line for last column
-      if (size == 1)
-        writeFastVLine(x + 5, y, 8, bg);
-      else
-        writeFillRect(x + 5 * size, y, size, 8 * size, bg);
-    }
-    endWrite();
-
+  if (!gfxFont) { // 'Classic' built-in font removed
   } else { // Custom font
 
     // Character is assumed previously filtered by write() to eliminate
@@ -882,19 +846,7 @@ size_t Adafruit_GFX::write(uint8_t c) {
 #else
 void Adafruit_GFX::write(uint8_t c) {
 #endif
-  if (!gfxFont) { // 'Classic' built-in font
-
-    if (c == '\n') {            // Newline?
-      cursor_x = 0;             // Reset x to zero,
-      cursor_y += textsize * 8; // advance y one line
-    } else if (c != '\r') {     // Ignore carriage returns
-      if (wrap && ((cursor_x + textsize * 6) > _width)) { // Off right?
-        cursor_x = 0;                                     // Reset x to zero,
-        cursor_y += textsize * 8;                         // advance y one line
-      }
-      drawChar(cursor_x, cursor_y, c, textcolor, textbgcolor, textsize);
-      cursor_x += textsize * 6; // Advance x one char
-    }
+  if (!gfxFont) { // 'Classic' built-in font removed
 
   } else { // Custom font
 
@@ -996,9 +948,7 @@ void Adafruit_GFX::cp437(boolean x) { _cp437 = x; }
 void Adafruit_GFX::setFont(const GFXfont *f) {
   if (f) {          // Font struct pointer passed in?
     if (!gfxFont) { // And no current font struct?
-      // Switching from classic to new font behavior.
-      // Move cursor pos down 6 pixels so it's on baseline.
-      cursor_y += 6;
+      // disabled
     }
   } else if (gfxFont) { // NULL passed.  Current font struct defined?
     // Switching from new to classic font behavior.
