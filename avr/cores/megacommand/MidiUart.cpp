@@ -1,3 +1,5 @@
+#define IS_ISR_ROUTINE
+
 #include "WProgram.h"
 
 #include <avr/interrupt.h>

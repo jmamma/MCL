@@ -48,7 +48,7 @@
 
 #define PL6_MASK (1 << PL6)
 
-ALWAYS_INLINE() extern inline uint8_t switch_ram_bank(uint8_t x) {
+FORCED_INLINE() extern inline uint8_t switch_ram_bank(uint8_t x) {
   uint8_t old_bank = (uint8_t) (PORTL & PL6_MASK);
 
   if (x != old_bank) {
@@ -62,7 +62,7 @@ ALWAYS_INLINE() extern inline uint8_t switch_ram_bank(uint8_t x) {
 
 #define PB0_MASK (1 << PB0)
 
-ALWAYS_INLINE() extern inline uint8_t switch_ram_bank(uint8_t x) {
+FORCED_INLINE() extern inline uint8_t switch_ram_bank(uint8_t x) {
   uint8_t old_bank = (uint8_t) (PORTB & PB0_MASK);
 
   if (x != old_bank) {
@@ -81,38 +81,38 @@ class RamBankSelector {
   private:
   uint8_t m_oldbank;
   public:
-  ALWAYS_INLINE() RamBankSelector(uint8_t bank) { m_oldbank = switch_ram_bank(bank); }
-  ALWAYS_INLINE() ~RamBankSelector() { switch_ram_bank(m_oldbank); }
+  FORCED_INLINE() RamBankSelector(uint8_t bank) { m_oldbank = switch_ram_bank(bank); }
+  FORCED_INLINE() ~RamBankSelector() { switch_ram_bank(m_oldbank); }
 };
 
 #define select_bank(x) RamBankSelector __bank_selector(x)
 
 template<typename T>
-ALWAYS_INLINE() extern inline T get_bank1(volatile T *dst) {
+FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {
   select_bank(1);
   T c = *dst;
   return c;
 }
 
 template<typename T>
-ALWAYS_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
+FORCED_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
   select_bank(1);
   *dst = data;
 }
 
 #endif// __cplusplus
 
-ALWAYS_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint32_t len) {
+FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint32_t len) {
   select_bank(1);
   memcpy(dst, src, len);
 }
 
-ALWAYS_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
+FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
   select_bank(1);
   *dst = byte;
 }
 
-ALWAYS_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
+FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   select_bank(1);
   uint8_t c = *dst;
   return c;
@@ -120,7 +120,7 @@ ALWAYS_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
 
 extern volatile uint8_t *rand_ptr;
 
-ALWAYS_INLINE() extern inline uint8_t get_random_byte() {
+FORCED_INLINE() extern inline uint8_t get_random_byte() {
     return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock) & 0x7F;
 }
 
