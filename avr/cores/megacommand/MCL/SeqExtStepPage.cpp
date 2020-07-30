@@ -53,92 +53,56 @@ void SeqExtStepPage::cleanup() {
   midi_events.remove_callbacks();
 }
 
+
+#define MAX_FOV_W 96
+
+void SeqExtStepPage::draw_pianoroll() {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+
+  uint16_t ticks_per_step = active_track.get_speed_multiplier() * get_timing_mid();
+
+  int16_t roll_width = active_track.length * ticks_per_step;
+  uint8_t roll_height = 127; //127, Notes.
+
+  uint8_t fov_x = 0
+
+  uint8_t zoom = 16;
+
+  uint8_t fov_w = min(zoom * ticks_per_step, MAX_FOV_W);
+  uint8_t fov_y = 64;
+  uint8_t fov_h = 8;
+
+  uint8_t fov_start_step = fov_x / (ticks_per_step);
+  uint8_t fov_end_step = fov_start_step + fov_w / ticks_per_step;
+
+
+  for (int i = 0; i < active_track.length; i++) {
+     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+        int8_t note = active_track.notes[a][i];
+        //Check if note is visible with fov vertical range.
+        if ((abs(note) >= fov_y) && (abs(note) < fov_y + fov_h)) {
+        //Determine note start and end positions
+           uint8_t match = 255;
+           for (uint8_t j = i; j < active_track.length && match == 255; j++) {
+
+           }
+
+        }
+        if (active_track.notes[a][i] > 0) {
+          noteson++;
+        }
+        if (active_track.notes[a][i] < 0) {
+          notesoff++;
+        }
+     }
+
+  }
+
+}
+
 #ifndef OLED_DISPLAY
 void SeqExtStepPage::display() {
-
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "                ");
-
-  char c[3] = "--";
-  uint8_t cond = seq_param1.getValue();
-  if (cond > NUM_TRIG_CONDTIONS) { cond -= NUM_TRIG_CONDTIONS; }
-
-  if (cond == 0) {
-    GUI.put_string_at(0, "L1");
-
-  } else if (cond <= 8) {
-    GUI.put_string_at(0, "L");
-
-    GUI.put_value_at1(1, cond);
-
-  } else {
-    GUI.put_string_at(0, "P");
-    uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[cond - 9]);
-  }
-
-  // Cond
-  //    GUI.put_value_at2(0, seq_param2.getValue());
-  // Pos
-  // 0  1   2  3  4  5  6  7  8  9  10  11
-  //  -5  -4 -3 -2 -1 0
-#ifdef EXT_TRACKS
-  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  if (seq_param2.getValue() == 0) {
-    GUI.put_string_at(2, "--");
-  } else if ((seq_param2.getValue() < timing_mid) &&
-             (seq_param2.getValue() != 0)) {
-    GUI.put_string_at(2, "-");
-    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
-  } else {
-    GUI.put_string_at(2, "+");
-    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
-  }
-  MusicalNotes number_to_note;
-  uint8_t notenum;
-  uint8_t notes_held = 0;
-  uint8_t i;
-  for (i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 1) {
-      notes_held += 1;
-    }
-  }
-
-  if (notes_held > 0) {
-    for (i = 0; i < NUM_EXT_NOTES; i++) {
-
-      notenum = mcl_seq.ext_tracks[last_ext_track]
-                    .notes[i][note_interface.last_note + page_select * 16];
-      if (notenum != 0) {
-        notenum = notenum - 1;
-        uint8_t oct = notenum / 12;
-        uint8_t note = notenum - 12 * (notenum / 12);
-        if (mcl_seq.ext_tracks[last_ext_track]
-                .notes[i][note_interface.last_note + page_select * 16] > 0) {
-
-          GUI.put_string_at(4 + i * 3, number_to_note.notes_upper[note]);
-          GUI.put_value_at1(4 + i * 3 + 2, oct);
-
-        } else {
-          GUI.put_string_at(4 + i * 3, number_to_note.notes_lower[note]);
-          GUI.put_value_at1(4 + i * 3 + 2, oct);
-        }
-      }
-    }
-  } else {
-    GUI.put_value_at1(15, page_select + 1);
-    GUI.put_value_at(6, seq_param3.getValue());
-
-    if (Analog4.connected) {
-      GUI.put_string_at(10, "A4T");
-    } else {
-      GUI.put_string_at(10, "MID");
-    }
-    GUI.put_value_at1(13, last_ext_track + 1);
-  }
-  draw_mask((page_select * 16), DEVICE_A4);
-#endif
-  SeqPage::display();
+ SeqPage::display();
 }
 #else
 void SeqExtStepPage::display() {
@@ -146,13 +110,13 @@ void SeqExtStepPage::display() {
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
 
-  draw_knob_frame();
 
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  draw_knob_conditional(seq_param1.getValue());
-  draw_knob_timing(seq_param2.getValue(),timing_mid);
+
+  //draw_knob_conditional(seq_param1.getValue());
+  //draw_knob_timing(seq_param2.getValue(),timing_mid);
 
   MusicalNotes number_to_note;
   uint8_t notes_held = 0;
@@ -201,7 +165,7 @@ void SeqExtStepPage::display() {
     oled_display.setFont(oldfont);
   }
 
-  draw_mask(page_select * 16, DEVICE_A4);
+
   SeqPage::display();
   if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
