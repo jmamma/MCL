@@ -111,8 +111,12 @@ void SeqExtStepPage::draw_pianoroll() {
               i * timing_mid + active_track.timing[i] - timing_mid;
           uint16_t note_end =
               j * timing_mid + active_track.timing[j] - timing_mid;
+
+          //Wrap around.
+          if (note_end < note_start) { note_end = roll_width; }
           // Check if note is visible within fov horizontal range.
-          if ((note_start >= fov_x) && (note_end < fov_x + fov_w)) {
+          // Notes must still be drawn if they start or end outside of fov
+          if ((note_end > fov_x) && (note_start < fov_x + fov_w)) {
             draw_note(note_val, note_start, note_end);
           }
         }
