@@ -40,7 +40,7 @@ public:
   bool show_slot_menu = false;
   bool write_cfg = false;
 
-  uint8_t active_slots[20];
+  int active_slots[20];
   uint8_t slot_apply;
   uint8_t slot_clear;
   uint8_t merge_md = 0;

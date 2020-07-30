@@ -32,6 +32,7 @@ void mclsys_apply_config() {
 
 bool MCLSysConfig::write_cfg() {
   bool ret;
+  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Writing cfg");
@@ -54,6 +55,7 @@ bool MCLSysConfig::write_cfg() {
 
 bool MCLSysConfig::cfg_init() {
   bool ret;
+  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Initialising cfgfile");

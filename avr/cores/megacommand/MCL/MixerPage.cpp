@@ -28,7 +28,7 @@ void MixerPage::set_display_mode(uint8_t param) {
 
 #ifdef OLED_DISPLAY
 static void oled_draw_routing() {
-  for (uint8_t i = 0; i < 16; ++i) {
+  for (int i = 0; i < 16; ++i) {
     // draw routing
     if (note_interface.notes[i] > 0) {
 
@@ -103,7 +103,7 @@ void MixerPage::cleanup() {
   midi_events.remove_callbacks();
 }
 
-void MixerPage::set_level(uint8_t curtrack, uint8_t value) {
+void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 1;
   MD.kit.levels[curtrack] = value;
   USE_LOCK();
@@ -121,7 +121,7 @@ void MixerPage::draw_levels() {
   uint8_t scaled_level2;
   char str[17] = "                ";
   uint8_t fader_level;
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
 
     if (display_mode == MODEL_LEVEL) {
       fader_level = MD.kit.levels[i];
@@ -156,10 +156,10 @@ void encoder_level_handle(Encoder *enc) {
 
   mixer_page.set_display_mode(MODEL_LEVEL);
 
-  int16_t dir = enc->getValue() - enc->old;
-  int16_t track_newval;
+  int dir = enc->getValue() - enc->old;
+  int track_newval;
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
       track_newval = MD.kit.levels[i] + dir;
       if (track_newval < 0) {
@@ -212,10 +212,10 @@ void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
 
   set_display_mode(param);
 
-  int16_t dir = enc->getValue() - enc->old;
-  int16_t newval;
+  int dir = enc->getValue() - enc->old;
+  int newval;
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
     if (note_interface.notes[i] == 1) {
       newval = MD.kit.params[i][param] + dir;
       if (newval < 0) {
@@ -268,7 +268,7 @@ void MixerPage::display() {
   uint8_t scaled_level;
   uint8_t scaled_level2;
   char str[17] = "                ";
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
     str[i] = (char)219;
 
     if (mcl_cfg.routing[i] == 6) {
@@ -292,7 +292,7 @@ void MixerPage::display() {
   uint8_t fader_level;
   uint8_t meter_level;
   uint8_t fader_x = 0;
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
 
     if (display_mode == MODEL_LEVEL) {
       fader_level = MD.kit.levels[i];
@@ -481,7 +481,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   MD.parseCC(channel, param, &track, &track_param);
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
     if ((note_interface.notes[i] == 1) && (i != track)) {
       USE_LOCK();
       SET_LOCK();

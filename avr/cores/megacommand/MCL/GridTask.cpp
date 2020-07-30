@@ -26,7 +26,7 @@ void GridTask::run() {
   A4Track *a4_track = (A4Track *)&empty_track;
   ExtTrack *ext_track = (ExtTrack *)&empty_track;
 #endif
-  uint8_t slots_changed[NUM_TRACKS];
+  int slots_changed[NUM_TRACKS];
   uint8_t slots_loaded[NUM_MD_TRACKS] = { 0 };
 
   bool send_ext_slots = false;
@@ -55,7 +55,7 @@ void GridTask::run() {
   GUI.removeTask(&grid_task);
 
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    slots_changed[n] = 0xFF;
+    slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       // mark slot as changed in case next statement doesnt pass
       uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
@@ -120,7 +120,7 @@ void GridTask::run() {
       // in_sysex2 = 1;
     }
     for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
-      if (slots_changed[n] != 0xFF) {
+      if (slots_changed[n] >= 0) {
         a4_track->load_from_mem(n);
         DEBUG_DUMP(mcl_actions.a4_latency);
 
@@ -174,7 +174,7 @@ void GridTask::run() {
     uint32_t div192th_counter_old = MidiClock.div192th_counter;
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
-      if (slots_changed[n] != 0xFF) {
+      if (slots_changed[n] >= 0) {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
           if (mcl_actions.send_machine[n] == 0) {
@@ -270,7 +270,7 @@ void GridTask::run() {
 #endif
   if (mcl_cfg.chain_mode != 2) {
     for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-      if (slots_changed[n] != 0xFF) {
+      if (slots_changed[n] >= 0) {
 
         handleIncomingMidi();
         if (count % 8 == 0) {

@@ -24,7 +24,7 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(uint8_t curtrack, uint8_t column, uint8_t row, A4Sound *analogfour_sound, EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_ext(int curtrack, int column, int row, A4Sound *analogfour_sound, EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
   A4Track *a4_track = (A4Track *)empty_track;
@@ -48,7 +48,7 @@ bool MCLActions::load_track_from_ext(uint8_t curtrack, uint8_t column, uint8_t r
 
 }
 
-bool MCLActions::load_track_from_md(uint8_t curtrack, uint8_t column, uint8_t row, EmptyTrack *empty_track) {
+bool MCLActions::load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track) {
 
   MDTrack *md_track = (MDTrack *)empty_track;
   DEBUG_PRINT_FN();
@@ -66,14 +66,14 @@ bool MCLActions::load_track_from_md(uint8_t curtrack, uint8_t column, uint8_t ro
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   DEBUG_PRINT_FN();
 
-  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position,
+  uint8_t data[] = {0x6b, (uint8_t)rec_type & 0x7F, position,
                     (uint8_t)1 & 0x7f};
   MD.sendSysex(data, countof(data));
 
   //  MD.sendRequest(0x6b,00000011);
 }
 
-void MCLActions::store_tracks_in_mem(uint8_t column, uint8_t row, uint8_t merge) {
+void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -174,7 +174,7 @@ void MCLActions::store_tracks_in_mem(uint8_t column, uint8_t row, uint8_t merge)
   proj.file.sync();
 }
 
-void MCLActions::write_tracks(uint8_t column, uint8_t row) {
+void MCLActions::write_tracks(int column, int row) {
   DEBUG_PRINT_FN();
   if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
     if (MD.currentKit != MD.kit.origPosition) {
@@ -189,7 +189,7 @@ void MCLActions::write_tracks(uint8_t column, uint8_t row) {
 
 }
 
-void MCLActions::prepare_next_chain(uint8_t row) {
+void MCLActions::prepare_next_chain(int row) {
   DEBUG_PRINT_FN();
   EmptyTrack empty_track;
   MDTrack *md_track = (MDTrack *)&empty_track;
@@ -300,10 +300,10 @@ void MCLActions::send_tracks_to_devices() {
   A4Sound sound_array[4];
 #endif
 
-  uint8_t curtrack = last_md_track;
+  int curtrack = last_md_track;
 
   uint8_t i = 0;
-  uint8_t track = 0;
+  int track = 0;
   uint8_t note_count = 0;
   uint8_t first_note = 254;
 

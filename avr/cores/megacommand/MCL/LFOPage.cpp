@@ -289,7 +289,7 @@ void LFOPage::display() {
       case LFO_MODE_ONE:
         char str[17] = "----------------";
 
-        for (uint8_t i = 0; i < 16; i++) {
+        for (int i = 0; i < 16; i++) {
           if (IS_BIT_SET64(lfo_track->pattern_mask, i)) {
 
             str[i] = (char)219;

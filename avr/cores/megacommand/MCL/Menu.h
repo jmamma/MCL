@@ -61,7 +61,7 @@ protected:
 };
 
 // TODO raise error if N > MAX_MENU_ITEMS
-template <uint8_t N> class Menu : public MenuBase {
+template <int N> class Menu : public MenuBase {
 
 public:
   Menu() : MenuBase(){};

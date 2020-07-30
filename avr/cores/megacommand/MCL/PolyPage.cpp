@@ -33,7 +33,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
   /*Initialise the string with blank steps*/
   char str[17] = "----------------";
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
 
 #ifdef OLED_DISPLAY
     if (note_interface.notes[i] > 0) {

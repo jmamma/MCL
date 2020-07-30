@@ -17,16 +17,16 @@
 
 class Grid {
 public:
-  uint8_t get_slot_model(uint8_t column, uint8_t row, bool load);
+  uint8_t get_slot_model(int column, int row, bool load);
 
   void setup();
-  int32_t get_slot_offset(uint8_t column, uint8_t row);
-  int32_t get_header_offset(uint8_t row);
-  bool copy_slot(uint8_t s_col, uint8_t s_row, uint8_t d_col, uint8_t d_row, bool destination_same);
-  bool clear_slot(uint8_t column, uint8_t row, bool update_header = true);
-  bool clear_row(uint8_t row);
-  bool clear_model(uint8_t column, uint8_t row);
-  //  char *get_slot_kit(uint8_t column, uint8_t row, bool load, bool scroll);
+  int32_t get_slot_offset(int16_t column, int16_t row);
+  int32_t get_header_offset(int16_t row);
+  bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row, bool destination_same);
+  bool clear_slot(int16_t column, int16_t row, bool update_header = true);
+  bool clear_row(int16_t row);
+  bool clear_model(int16_t column, uint16_t row);
+  //  char *get_slot_kit(int column, int row, bool load, bool scroll);
 };
 
 extern Grid grid;

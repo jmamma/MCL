@@ -20,9 +20,9 @@ class RoutePage : public LightPage {
  virtual void init();
  virtual void cleanup();
 
- void toggle_route(uint8_t i, uint8_t routing);
+ void toggle_route(int i, uint8_t routing);
  void toggle_routes_batch(bool solo = false);
- void set_level(uint8_t curtrack, uint8_t value);
+ void set_level(int curtrack, int value);
 #ifndef OLED_DISPLAY
  void draw_routes(uint8_t line_number);
 #else

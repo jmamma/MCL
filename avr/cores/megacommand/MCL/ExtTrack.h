@@ -10,10 +10,10 @@ class ExtTrack : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
 
-  bool get_track_from_sysex(uint8_t tracknumber, uint8_t column);
-  bool place_track_in_sysex(uint8_t tracknumber, uint8_t column);
-  bool load_track_from_grid(uint8_t column, uint8_t row, int m);
-  bool store_track_in_grid(uint8_t track, uint8_t column, uint8_t row, bool online = false);
+  bool get_track_from_sysex(int tracknumber, uint8_t column);
+  bool place_track_in_sysex(int tracknumber, uint8_t column);
+  bool load_track_from_grid(int32_t column, int32_t row, int m);
+  bool store_track_in_grid(int track, int32_t column, int32_t row, bool online = false);
 };
 
 #endif /* EXTTRACK_H__ */

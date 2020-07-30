@@ -79,7 +79,7 @@ void FileBrowserPage::query_filesystem() {
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
-  int16_t index = 0;
+  int index = 0;
   //  reset directory pointer
   SD.vwd()->rewind();
   numEntries = 0;
@@ -286,7 +286,7 @@ bool FileBrowserPage::create_folder() {
   return true;
 }
 
-void FileBrowserPage::_calcindices(int16_t &saveidx) {
+void FileBrowserPage::_calcindices(int &saveidx) {
   saveidx = show_save ? 0 : -1;
 }
 
@@ -294,7 +294,7 @@ void FileBrowserPage::_cd_up() {
   file.close();
 
   // don't cd up if we are at the root
-  uint8_t len_lwd = strlen(lwd);
+  auto len_lwd = strlen(lwd);
   if (len_lwd < 2) {
     init();
     return;
@@ -306,7 +306,7 @@ void FileBrowserPage::_cd_up() {
   }
 
   // find parent path separator and trim it
-  for (uint8_t i = len_lwd - 1; i >= 0; --i) {
+  for (int i = len_lwd - 1; i >= 0; --i) {
     if (lwd[i] == '/') {
       lwd[i] = '\0';
       break;
@@ -455,7 +455,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 #endif
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
-    int16_t i_save;
+    int i_save;
     _calcindices(i_save);
 
     if (encoders[1]->getValue() == i_save) {

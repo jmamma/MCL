@@ -13,17 +13,17 @@ class MCLEncoder : public Encoder {
 
   public:
     /** Minimum value of the encoder. **/
-    int16_t min;
+    int min;
     /** Maximum value of the encoder. **/
-    int16_t max;
+    int max;
 
     /**
        Create a new range-limited encoder with max and min value, short
        name, initial value, and handling function. The initRangeEncoder
        will be called with the constructor arguments.
      **/
-    MCLEncoder(int16_t _max = 127, int16_t _min = 0, int16_t res = 1) : Encoder() {
-      initMCLEncoder(_max, _min, 0, res, (encoder_handle_t) NULL);
+    MCLEncoder(int _max = 127, int _min = 0, int res = 1) : Encoder() {
+      initMCLEncoder(_max, _min, (int) 0, res, (encoder_handle_t) NULL);
     }
 
 
@@ -36,7 +36,7 @@ class MCLEncoder : public Encoder {
 
        The initial value is called without calling the handling function.
      **/
-    void initMCLEncoder(int16_t _max = 128, int16_t _min = 0, int16_t init = 0, int16_t res = 1, encoder_handle_t _handler = NULL) {
+    void initMCLEncoder(int _max = 128, int _min = 0, int init = 0, int res = 1, encoder_handle_t _handler = NULL) {
       rot_res = res;
       //		setName(_name);
       handler = _handler;
@@ -54,8 +54,8 @@ class MCLEncoder : public Encoder {
        Update the value of the encoder according to pressmode and
        fastmode, and limit the resulting value using limit_value().
      **/
-    virtual int16_t update(encoder_t *enc);
-    //  virtual void displayAt(int16_t i);
+    virtual int update(encoder_t *enc);
+    //  virtual void displayAt(int i);
 
     /* @} */
 };

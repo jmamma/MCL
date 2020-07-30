@@ -29,6 +29,8 @@ bool MCLSd::sd_init() {
   return true;
 }
 bool MCLSd::load_init() {
+  bool ret = false;
+  int b;
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
 #ifdef OLED_DISPLAY

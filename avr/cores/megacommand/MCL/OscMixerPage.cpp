@@ -218,7 +218,7 @@ void OscMixerPage::draw_levels() {
   GUI.setLine(GUI.LINE2);
   uint8_t scaled_level;
   char str[17] = "                ";
-  for (uint8_t i = 0; i < 3; i++) {
+  for (int i = 0; i < 3; i++) {
 #ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);

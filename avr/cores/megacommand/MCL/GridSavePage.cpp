@@ -33,7 +33,7 @@ void GridSavePage::display() {
   GUI.setLine(GUI.LINE1);
   char strn[17] = "----------------";
 
-  for (uint8_t i = 0; i < 16; i++) {
+  for (int i = 0; i < 16; i++) {
 
     if (note_interface.notes[i] != 0) {
 
@@ -187,7 +187,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("notes");
     DEBUG_DUMP(note_interface.notes_all_off());
 
-    for (uint8_t i = 0; i < 20; i++) {
+    for (int i = 0; i < 20; i++) {
 
       note_interface.notes[i] = 3;
     }

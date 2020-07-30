@@ -28,7 +28,7 @@ class FileBrowserPage : public LightPage, public MidiSysexListenerClass {
 public:
   File file;
   //  char file_entries[NUM_FILE_ENTRIES][16];
-  int16_t numEntries;
+  int numEntries;
 
   char match[5];
   char lwd[128];
@@ -93,7 +93,7 @@ public:
 private:
 
   void _handle_filemenu();
-  void _calcindices(int16_t &);
+  void _calcindices(int &);
   void _cd_up();
   void _cd(const char *);
 

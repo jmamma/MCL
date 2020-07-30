@@ -1,9 +1,9 @@
 #include "GridEncoder.h"
 #include "MCL.h"
 
-int16_t GridEncoder::update(encoder_t *enc) {
+int GridEncoder::update(encoder_t *enc) {
   uint8_t amount = abs(enc->normal);
-  int16_t inc = 0;
+  int inc = 0;
 
   while (amount > 0) {
     if (enc->normal > 0) {
@@ -31,4 +31,4 @@ int16_t GridEncoder::update(encoder_t *enc) {
   return cur;
 }
 
-void GridEncoder::displayAt(int16_t i) {}
+void GridEncoder::displayAt(int i) {}
