@@ -27,6 +27,10 @@ public:
       : SeqPage(e1, e2, e3, e4) {}
   void config_encoders();
 
+  void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
+  void draw_pianoroll();
+  uint8_t find_note_off(uint8_t note_val, uint8_t step);
+
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void setup();

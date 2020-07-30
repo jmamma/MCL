@@ -53,71 +53,94 @@ void SeqExtStepPage::cleanup() {
   midi_events.remove_callbacks();
 }
 
-
 #define MAX_FOV_W 96
+
+uint8_t SeqExtStepPage::find_note_off(uint8_t note_val, uint8_t step) {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t match = 255;
+  // Scan for matching note off;
+  for (uint8_t j = step; j < active_track.length && match == 255; j++) {
+    for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
+      if (active_track.notes[b][j] == -1 * note_val) {
+        match = j;
+      }
+    }
+  }
+  // Wrap around
+  for (uint8_t j = 0; j < step && match == 255; j++) {
+    for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
+      if (active_track.notes[b][j] == -1 * note_val) {
+        match = j;
+      }
+    }
+  }
+  if (match == 255) {
+    return step;
+  }
+  return match;
+}
 
 void SeqExtStepPage::draw_pianoroll() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
 
-  uint16_t ticks_per_step = active_track.get_speed_multiplier() * get_timing_mid();
+  // Absolute piano roll dimensions
+  int16_t roll_width = active_track.length * timing_mid;
+  uint8_t roll_height = 127; // 127, Notes.
 
-  int16_t roll_width = active_track.length * ticks_per_step;
-  uint8_t roll_height = 127; //127, Notes.
-
-  uint8_t fov_x = 0
-
-  uint8_t zoom = 16;
-
-  uint8_t fov_w = min(zoom * ticks_per_step, MAX_FOV_W);
+  // FOV offsets
+  uint16_t fov_x = 0;
   uint8_t fov_y = 64;
-  uint8_t fov_h = 8;
 
-  uint8_t fov_start_step = fov_x / (ticks_per_step);
-  uint8_t fov_end_step = fov_start_step + fov_w / ticks_per_step;
+  // FOV window
+  uint8_t fov_zoom = 16;
+  uint8_t fov_w = min(fov_zoom * timing_mid, MAX_FOV_W);
+  uint8_t fov_h = 8; // number of visible notes to display on screen ?
 
+  uint8_t fov_start_step = fov_x / (timing_mid);
+  uint8_t fov_end_step = fov_start_step + fov_w / timing_mid;
 
   for (int i = 0; i < active_track.length; i++) {
-     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-        int8_t note = active_track.notes[a][i];
-        //Check if note is visible with fov vertical range.
-        if ((abs(note) >= fov_y) && (abs(note) < fov_y + fov_h)) {
-        //Determine note start and end positions
-           uint8_t match = 255;
-           for (uint8_t j = i; j < active_track.length && match == 255; j++) {
-
-           }
-
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+      if (active_track.notes[a][i] > 0) {
+        int8_t note_val = active_track.notes[a][i];
+        // Check if note is visible within fov vertical range.
+        if ((note_val >= fov_y) && (note_val < fov_y + fov_h)) {
+          uint8_t j = find_note_off(note_val, i);
+          uint16_t note_start =
+              i * timing_mid + active_track.timing[i] - timing_mid;
+          uint16_t note_end =
+              j * timing_mid + active_track.timing[j] - timing_mid;
+          // Check if note is visible within fov horizontal range.
+          if ((note_start >= fov_x) && (note_end < fov_x + fov_w)) {
+            draw_note(note_val, note_start, note_end);
+          }
         }
-        if (active_track.notes[a][i] > 0) {
-          noteson++;
-        }
-        if (active_track.notes[a][i] < 0) {
-          notesoff++;
-        }
-     }
-
+      }
+    }
   }
+}
+
+void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end) {
 
 }
 
 #ifndef OLED_DISPLAY
-void SeqExtStepPage::display() {
- SeqPage::display();
-}
+void SeqExtStepPage::display() { SeqPage::display(); }
 #else
 void SeqExtStepPage::display() {
 
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
 
-
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
-  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+  draw_pianoroll();
 
-  //draw_knob_conditional(seq_param1.getValue());
-  //draw_knob_timing(seq_param2.getValue(),timing_mid);
+  // draw_knob_conditional(seq_param1.getValue());
+  // draw_knob_timing(seq_param2.getValue(),timing_mid);
 
+  /*
   MusicalNotes number_to_note;
   uint8_t notes_held = 0;
   uint8_t i, j;
@@ -164,14 +187,15 @@ void SeqExtStepPage::display() {
     }
     oled_display.setFont(oldfont);
   }
-
-
+  */
   SeqPage::display();
   if (mcl_gui.show_encoder_value(&seq_param2) &&
-        (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-        (!show_step_menu)) {
-      mcl_gui.draw_microtiming(get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed), seq_param2.cur);
-   }
+      (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
+      (!show_step_menu)) {
+    mcl_gui.draw_microtiming(
+        get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed),
+        seq_param2.cur);
+  }
   oled_display.display();
 #endif
 }
