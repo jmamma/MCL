@@ -109,15 +109,15 @@ void SeqExtStepPage::draw_pianoroll() {
     fov_ticks_per_pixel = 1;
     fov_length = fov_w;
   }
-
   // uint8_t fov_start_step = fov_offset / (timing_mid);
   // uint8_t fov_end_step = fov_start_step + fov_w / timing_mid;
   uint16_t cur_tick_x = active_track.step_count * timing_mid + active_track.mod12_counter;
 
   //Draw sequencer cursor..
   if ((cur_tick_x > fov_offset) && (cur_tick_x < fov_offset + fov_length)) {
-  uint8_t cur_tick_fov_x = fov_ticks_per_pixel * (cur_tick_x - fov_offset);
-  oled_display.drawLine(cur_tick_fov_x + 36, 0, cur_tick_fov_x + 36, 32,WHITE);
+
+  uint8_t cur_tick_fov_x = min(127, 36 + fov_ticks_per_pixel * (cur_tick_x - fov_offset));
+  oled_display.drawLine(cur_tick_fov_x, 0, cur_tick_fov_x, 32,WHITE);
   }
 
   for (int i = 0; i < active_track.length; i++) {

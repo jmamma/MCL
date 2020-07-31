@@ -23,7 +23,7 @@ class SeqExtStepPage : public SeqPage {
 public:
   static constexpr uint8_t fov_w = 86;
   static constexpr uint8_t fov_h = 32;
-  uint16_t fov_offset = 0;
+  int16_t fov_offset = 0;
   float fov_ticks_per_pixel;
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
