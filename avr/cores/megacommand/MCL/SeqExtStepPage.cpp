@@ -120,6 +120,11 @@ void SeqExtStepPage::draw_pianoroll() {
   oled_display.drawLine(cur_tick_fov_x, 0, cur_tick_fov_x, 32,WHITE);
   }
 
+  uint16_t pattern_end_x = active_track.length * timing_mid;
+  uint8_t pattern_end_fov_x = 127;
+  if ((pattern_end_x > fov_offset) && (pattern_end_x < fov_offset + fov_length)) {
+  pattern_end_fov_x = min(127, 36 + fov_ticks_per_pixel * (pattern_end_x - fov_offset));
+  }
   for (int i = 0; i < active_track.length; i++) {
     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
       int8_t note_val = active_track.notes[a][i];
@@ -131,9 +136,6 @@ void SeqExtStepPage::draw_pianoroll() {
         uint16_t note_end =
             j * timing_mid + active_track.timing[j] - timing_mid;
 
-        // Wrap around.
-        // Check if note is visible within fov horizontal range.
-        // Notes must still be drawn if they start or end outside of fov
         if ((note_end > fov_offset) && (note_start < fov_offset + fov_length)) {
           uint8_t note_fov_start, note_fov_end;
 
@@ -158,7 +160,7 @@ void SeqExtStepPage::draw_pianoroll() {
           //Wrap around
           if (note_end < note_start) {
            oled_display.fillRect(note_fov_start + 36, note_fov_y,
-                                fov_w - note_fov_start, (32 / fov_h), WHITE);
+                                pattern_end_fov_x - note_fov_start - 36, (32 / fov_h), WHITE);
            oled_display.fillRect(36, note_fov_y,
                                 note_fov_end, (32 / fov_h), WHITE);
 
