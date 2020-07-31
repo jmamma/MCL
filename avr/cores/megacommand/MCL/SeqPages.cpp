@@ -31,18 +31,15 @@ ArpPage arp_page(&arp_und, &arp_mode, &arp_speed, &arp_oct);
 const menu_t<11> seq_menu_layout PROGMEM = {
     "SEQ",
     {
+        {"EDIT:", 0,4, 4, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, 47},
         {"ARPEGGIATOR", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, 0},
+        {"TRANSPOSE:", 0, 12, 0, (uint8_t *)&seq_ptc_page.key, (Page *) NULL, NULL, 0},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, 0},
         {"COPY:", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, 26},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, 26},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, 29},
         {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, 26},
-
         {"SPEED:", 0, 7, 7, (uint8_t *)&opt_speed, (Page *)NULL, opt_speed_handler, 40},
-
-        {"EDIT:", 0,4, 4, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, 47},
-        {"TRANSPOSE:", 0, 12, 0, (uint8_t *)&seq_ptc_page.key, (Page *) NULL, NULL, 0},
-
         {"SHIFT:", 0, 5, 5, (uint8_t *)&opt_shift, (Page *)NULL, opt_shift_track_handler, 34},
         {"REVERSE:", 0, 3, 3, (uint8_t *)&opt_reverse, (Page *)NULL, opt_reverse_track_handler, 26},
     },
