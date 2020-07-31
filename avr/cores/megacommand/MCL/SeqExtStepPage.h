@@ -21,6 +21,10 @@ public:
 class SeqExtStepPage : public SeqPage {
 
 public:
+  static constexpr uint8_t fov_w = 86;
+  static constexpr uint8_t fov_h = 32;
+  uint16_t fov_offset = 0;
+  float fov_ticks_per_pixel;
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
@@ -29,10 +33,11 @@ public:
 
   void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
   void draw_pianoroll();
-  uint8_t find_note_off(uint8_t note_val, uint8_t step);
+  uint8_t find_note_off(int8_t note_val, uint8_t step);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
+  virtual void loop();
   virtual void setup();
   virtual void init();
   virtual void config();

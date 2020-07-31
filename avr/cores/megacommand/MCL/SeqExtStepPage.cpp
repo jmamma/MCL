@@ -28,11 +28,15 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
-  seq_param2.cur = timing_mid;
-  seq_param2.old = timing_mid;
-  seq_param2.max = timing_mid * 2 - 1;
-  seq_param3.max = 128;
+  seq_param1.max = 127;
+  seq_param1.cur = 64;
+  seq_param1.old = 64;
+  seq_param2.cur = 48;
+  seq_param2.old = 48;
+  seq_param2.max = 127;
+  seq_param4.max = 128;
+  seq_param4.cur = 16;
+  seq_param4.min = 1;
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 #endif
@@ -46,6 +50,7 @@ void SeqExtStepPage::init() {
   note_interface.state = true;
   config_encoders();
   midi_events.setup_callbacks();
+  fov_offset = 0;
 }
 
 void SeqExtStepPage::cleanup() {
@@ -55,11 +60,11 @@ void SeqExtStepPage::cleanup() {
 
 #define MAX_FOV_W 96
 
-uint8_t SeqExtStepPage::find_note_off(uint8_t note_val, uint8_t step) {
+uint8_t SeqExtStepPage::find_note_off(int8_t note_val, uint8_t step) {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t match = 255;
   // Scan for matching note off;
-  for (uint8_t j = step; j < active_track.length && match == 255; j++) {
+  for (uint8_t j = step + 1; j < active_track.length && match == 255; j++) {
     for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
       if (active_track.notes[b][j] == -1 * note_val) {
         match = j;
@@ -85,53 +90,109 @@ void SeqExtStepPage::draw_pianoroll() {
   uint8_t timing_mid = active_track.get_timing_mid();
 
   // Absolute piano roll dimensions
-  int16_t roll_width = active_track.length * timing_mid;
-  uint8_t roll_height = 127; // 127, Notes.
+  int16_t roll_length = active_track.length * timing_mid; // in ticks
+  uint8_t roll_height = 127;                              // 127, Notes.
 
   // FOV offsets
-  uint16_t fov_x = 0;
-  uint8_t fov_y = 64;
 
-  // FOV window
-  uint8_t fov_zoom = 16;
-  uint8_t fov_w = min(fov_zoom * timing_mid, MAX_FOV_W);
-  uint8_t fov_h = 8; // number of visible notes to display on screen ?
 
-  uint8_t fov_start_step = fov_x / (timing_mid);
-  uint8_t fov_end_step = fov_start_step + fov_w / timing_mid;
+  uint8_t fov_y = seq_param2.cur;
+
+  uint8_t fov_zoom = seq_param4.cur;
+
+  uint8_t fov_length =
+      fov_zoom * timing_mid; // how many ticks to display on screen.
+
+  fov_ticks_per_pixel = fov_length / fov_w;
+
+  if (fov_ticks_per_pixel < 1) {
+    fov_ticks_per_pixel = 1;
+    fov_length = fov_w;
+  }
+
+  // uint8_t fov_start_step = fov_offset / (timing_mid);
+  // uint8_t fov_end_step = fov_start_step + fov_w / timing_mid;
+  uint16_t cur_tick_x = active_track.step_count * timing_mid + active_track.mod12_counter;
+
+  //Draw sequencer cursor..
+  if ((cur_tick_x > fov_offset) && (cur_tick_x < fov_offset + fov_length)) {
+  uint8_t cur_tick_fov_x = fov_ticks_per_pixel * cur_tick_x;
+  oled_display.drawLine(cur_tick_fov_x + 36, 0, cur_tick_fov_x + 36, 32,WHITE);
+  }
 
   for (int i = 0; i < active_track.length; i++) {
     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-      if (active_track.notes[a][i] > 0) {
-        int8_t note_val = active_track.notes[a][i];
-        // Check if note is visible within fov vertical range.
-        if ((note_val >= fov_y) && (note_val < fov_y + fov_h)) {
-          uint8_t j = find_note_off(note_val, i);
-          uint16_t note_start =
-              i * timing_mid + active_track.timing[i] - timing_mid;
-          uint16_t note_end =
-              j * timing_mid + active_track.timing[j] - timing_mid;
+      int8_t note_val = active_track.notes[a][i];
+      // Check if note is note_on (positive) and is visible within fov vertical range.
+      if ((note_val >= fov_y) && (note_val < fov_y + fov_h)) {
+        uint8_t j = find_note_off(abs(note_val), i);
+        uint16_t note_start =
+            i * timing_mid + active_track.timing[i] - timing_mid;
+        uint16_t note_end =
+            j * timing_mid + active_track.timing[j] - timing_mid;
 
-          //Wrap around.
-          if (note_end < note_start) { note_end = roll_width; }
-          // Check if note is visible within fov horizontal range.
-          // Notes must still be drawn if they start or end outside of fov
-          if ((note_end > fov_x) && (note_start < fov_x + fov_w)) {
-            draw_note(note_val, note_start, note_end);
+        // Wrap around.
+        // Check if note is visible within fov horizontal range.
+        // Notes must still be drawn if they start or end outside of fov
+        if ((note_end > fov_offset) && (note_start < fov_offset + fov_length)) {
+          uint8_t note_fov_start, note_fov_end;
+
+          if (note_start < fov_offset) {
+            note_fov_start = 0;
+          } else {
+            note_fov_start = (note_start - fov_offset) * fov_ticks_per_pixel;
           }
-        }
+          if (note_end >= fov_offset + fov_length) {
+            note_fov_end = fov_w;
+          } else {
+            note_fov_end = (note_end - fov_offset) * fov_ticks_per_pixel;
+          }
+
+          uint8_t note_fov_y = 32 - ((note_val - fov_y) * (32 / fov_h));
+          DEBUG_DUMP("Found note");
+          DEBUG_DUMP(note_start);
+          DEBUG_DUMP(note_end);
+          DEBUG_DUMP(note_fov_start);
+          DEBUG_DUMP(note_fov_end);
+          DEBUG_DUMP(note_fov_y);
+          //Wrap around
+          if (note_end < note_start) {
+           oled_display.fillRect(note_fov_start + 36, note_fov_y,
+                                fov_w - note_fov_start, (32 / fov_h), WHITE);
+           oled_display.fillRect(36, note_fov_y,
+                                note_fov_end, (32 / fov_h), WHITE);
+
+          }
+          else {
+          oled_display.fillRect(note_fov_start + 36, note_fov_y,
+                                note_fov_end - note_fov_start, (32 / fov_h), WHITE);
+           }
+          }
       }
     }
   }
 }
 
-void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end) {
-
-}
+void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
+                               uint16_t note_end) {}
 
 #ifndef OLED_DISPLAY
 void SeqExtStepPage::display() { SeqPage::display(); }
 #else
+
+void SeqExtStepPage::loop() {
+  if (seq_param1.hasChanged()) {
+    // Horizontal translation
+    int16_t diff = seq_param1.cur - seq_param1.old;
+
+    DEBUG_DUMP(diff);
+    fov_offset += diff * fov_ticks_per_pixel;
+    if (fov_offest < 0) { fov_offset = 0; }
+    seq_param1.cur = 64;
+    seq_param1.old = 64;
+  }
+}
+
 void SeqExtStepPage::display() {
 
 #ifdef EXT_TRACKS
@@ -238,7 +299,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             active_track.timing[(track + (page_select * 16))]; // upper
         uint8_t condition =
             active_track.conditional[(track + (page_select * 16))]; // lower
-        seq_param1.cur = translate_to_knob_conditional(condition);
+        //seq_param1.cur = translate_to_knob_conditional(condition);
         // Micro
         if (utiming == 0) {
           utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
