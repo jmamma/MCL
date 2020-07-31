@@ -27,6 +27,7 @@ redistribution
 
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1305.h"
+#include "glcdfont.c"
 #include <SPI.h>
 #include <Wire.h>
 #include <stdlib.h>
@@ -40,6 +41,9 @@ SPISettings oledspi = SPISettings(16000000, MSBFIRST, SPI_MODE0);
 #ifndef _BV
 #define _BV(bit) (1 << (bit))
 #endif
+
+// a 5x7 font table
+extern const uint8_t PROGMEM font[];
 
 // the memory buffer for the LCD
 
