@@ -51,6 +51,7 @@ void SeqExtStepPage::init() {
   config_encoders();
   midi_events.setup_callbacks();
   fov_offset = 0;
+  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
 }
 
 void SeqExtStepPage::cleanup() {
