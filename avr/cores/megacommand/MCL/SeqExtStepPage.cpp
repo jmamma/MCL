@@ -207,23 +207,23 @@ void SeqExtStepPage::draw_pianoroll() {
           if (note_end < note_start) {
             // Wrap around note
             if (note_start < fov_offset + fov_length) {
-              oled_display.drawRect(note_fov_start + draw_x, fov_h + 1,
-                                    pattern_end_fov_x - note_fov_start, 2,
+              oled_display.drawRect(note_fov_start + draw_x, fov_h + 2,
+                                    pattern_end_fov_x - note_fov_start, 1,
                                     WHITE);
             }
 
             if (note_end > fov_offset) {
-              oled_display.drawRect(draw_x, fov_h + 1, note_fov_end, 2, WHITE);
+              oled_display.drawRect(draw_x, fov_h + 2, note_fov_end, 1, WHITE);
             }
 
           } else {
             // Standard note.
-            oled_display.drawRect(note_fov_start + draw_x, fov_h + 1,
-                                  note_fov_end - note_fov_start, 2, WHITE);
+            oled_display.drawRect(note_fov_start + draw_x, fov_h + 2,
+                                  note_fov_end - note_fov_start, 1, WHITE);
           }
 
           // Draw notes
-          if ((note_val >= fov_y) && (note_val <= fov_y + fov_notes)) {
+          if ((note_val > fov_y) && (note_val <= fov_y + fov_notes)) {
             if (note_end < note_start) {
               // Wrap around note
               if (note_start < fov_offset + fov_length) {
