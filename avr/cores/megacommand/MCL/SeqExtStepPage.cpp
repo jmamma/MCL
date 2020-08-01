@@ -113,15 +113,22 @@ void SeqExtStepPage::draw_pianoroll() {
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
-  //Hack to create 2 pixel partition, remove me when we compress SeqPage::display
-  oled_display.fillRect(draw_x - keyboard_w - 1 - 2, 0, draw_x - keyboard_w - 1 - 2, fov_h - 1, BLACK);
+  // Hack to create 2 pixel partition, remove me when we compress
+  // SeqPage::display
+  oled_display.fillRect(draw_x - keyboard_w - 1 - 2, 0,
+                        draw_x - keyboard_w - 1 - 2, fov_h - 1, BLACK);
   // Draw vertical keyboard
   const uint16_t chromatic = 0b0000010101001010;
   for (uint8_t k = 0; k < fov_notes; k++) {
-    uint8_t scale_pos = (fov_y + fov_notes - k) -( ((fov_y + fov_notes - k) / 12) * 12);
-    if (!IS_BIT_SET16(chromatic, scale_pos)) { oled_display.fillRect(draw_x - keyboard_w - 1, k * (fov_h / fov_notes), keyboard_w, (fov_h / fov_notes), WHITE); }
+    uint8_t scale_pos =
+        (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
+    if (!IS_BIT_SET16(chromatic, scale_pos)) {
+      oled_display.fillRect(draw_x - keyboard_w - 1, k * (fov_h / fov_notes),
+                            keyboard_w, (fov_h / fov_notes), WHITE);
+    }
   }
-  //oled_display.drawLine(draw_x + keyboard_w, 0, draw_x + keyboard_w, fov_h, WHITE);
+  // oled_display.drawLine(draw_x + keyboard_w, 0, draw_x + keyboard_w, fov_h,
+  // WHITE);
 
   // Draw sequencer cursor..
   if (is_within_fov(cur_tick_x)) {
@@ -140,24 +147,25 @@ void SeqExtStepPage::draw_pianoroll() {
   }
 
   for (int i = 0; i < active_track.length; i++) {
-    //Draw grid.
+    // Draw grid.
     uint16_t grid_tick_x = i * timing_mid;
     if (is_within_fov(grid_tick_x)) {
-      uint8_t grid_fov_x = draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
+      uint8_t grid_fov_x =
+          draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
 
       for (uint8_t k = 0; k < fov_notes; k += 1) {
-        //draw crisscross
-        //if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel( grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
-        oled_display.drawPixel( grid_fov_x, (k * (fov_h / fov_notes)), WHITE);
+        // draw crisscross
+        // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel( grid_fov_x,
+        // (k * (fov_h / fov_notes)), WHITE); }
+        oled_display.drawPixel(grid_fov_x, (k * (fov_h / fov_notes)), WHITE);
       }
     }
-
 
     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
       int8_t note_val = active_track.notes[a][i];
       // Check if note is note_on (positive) and is visible within fov vertical
       // range.
-      if ((note_val >= fov_y) && (note_val <= fov_y + fov_notes)) {
+      if (note_val > 0) {
         uint8_t j = find_note_off(abs(note_val), i);
         uint16_t note_start =
             i * timing_mid + active_track.timing[i] - timing_mid;
@@ -171,8 +179,7 @@ void SeqExtStepPage::draw_pianoroll() {
 
           if (note_start < fov_offset) {
             note_fov_start = 0;
-          }
-          else {
+          } else {
             note_fov_start =
                 (float)(note_start - fov_offset) * fov_pixels_per_tick;
           }
@@ -180,12 +187,12 @@ void SeqExtStepPage::draw_pianoroll() {
           if (note_end >= fov_offset + fov_length) {
             note_fov_end = fov_w;
 
-          }
-          else {
+          } else {
             note_fov_end = (float)(note_end - fov_offset) * fov_pixels_per_tick;
           }
 
-          uint8_t note_fov_y = fov_h - ((note_val - fov_y) * (fov_h / fov_notes));
+          uint8_t note_fov_y =
+              fov_h - ((note_val - fov_y) * (fov_h / fov_notes));
           /*
                     DEBUG_DUMP("Found note");
                     DEBUG_DUMP(note_start);
@@ -195,24 +202,47 @@ void SeqExtStepPage::draw_pianoroll() {
                     DEBUG_DUMP(note_fov_y);
                     DEBUG_DUMP(fov_pixels_per_tick);
           */
+
+          // Draw vertical projection
           if (note_end < note_start) {
             // Wrap around note
             if (note_start < fov_offset + fov_length) {
-              oled_display.drawRect(note_fov_start + draw_x, note_fov_y,
-                                    pattern_end_fov_x - note_fov_start,
-                                    (fov_h / fov_notes), WHITE);
-            }
-
-            if (note_end > fov_offset) {
-              oled_display.drawRect(draw_x, note_fov_y, note_fov_end, (fov_h / fov_notes),
+              oled_display.drawRect(note_fov_start + draw_x, fov_h + 1,
+                                    pattern_end_fov_x - note_fov_start, 2,
                                     WHITE);
             }
 
+            if (note_end > fov_offset) {
+              oled_display.drawRect(draw_x, fov_h + 1, note_fov_end, 2, WHITE);
+            }
+
           } else {
-            //Standard note.
-            oled_display.drawRect(note_fov_start + draw_x, note_fov_y,
-                                  note_fov_end - note_fov_start, (fov_h / fov_notes),
-                                  WHITE);
+            // Standard note.
+            oled_display.drawRect(note_fov_start + draw_x, fov_h + 1,
+                                  note_fov_end - note_fov_start, 2, WHITE);
+          }
+
+          // Draw notes
+          if ((note_val >= fov_y) && (note_val <= fov_y + fov_notes)) {
+            if (note_end < note_start) {
+              // Wrap around note
+              if (note_start < fov_offset + fov_length) {
+                oled_display.drawRect(note_fov_start + draw_x, note_fov_y,
+                                      pattern_end_fov_x - note_fov_start,
+                                      (fov_h / fov_notes), WHITE);
+              }
+
+              if (note_end > fov_offset) {
+                oled_display.drawRect(draw_x, note_fov_y, note_fov_end,
+                                      (fov_h / fov_notes), WHITE);
+              }
+
+            } else {
+              // Standard note.
+              oled_display.drawRect(note_fov_start + draw_x, note_fov_y,
+                                    note_fov_end - note_fov_start,
+                                    (fov_h / fov_notes), WHITE);
+            }
           }
         }
       }
@@ -235,7 +265,7 @@ void SeqExtStepPage::loop() {
 
     DEBUG_DUMP(diff);
     fov_offset += diff;
-           // / fov_pixels_per_tick;
+    // / fov_pixels_per_tick;
     if (fov_offset < 0) {
       fov_offset = 0;
     }
