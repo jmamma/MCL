@@ -1,4 +1,4 @@
-:#include "MCL.h"
+#include "MCL.h"
 #include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
@@ -257,7 +257,8 @@ void SeqExtStepPage::draw_pianoroll() {
   // Draw interactive cursor
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * (fov_h / fov_notes));
   uint8_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-  oled_display.fillRect(draw_x + fov_cur_x, fov_cur_y, cur_w,
+  uint8_t fov_cur_w = (float)(cur_w) * fov_pixels_per_tick;
+  oled_display.fillRect(draw_x + fov_cur_x, fov_cur_y, fov_cur_w,
                         (fov_h / fov_notes), WHITE);
 }
 
@@ -282,6 +283,7 @@ void SeqExtStepPage::loop() {
         if (fov_offset < 0) {
           fov_offset = 0;
         }
+        cur_x = fov_offset;
       }
       else {
         cur_x += diff;
@@ -291,6 +293,7 @@ void SeqExtStepPage::loop() {
     } else {
       if (cur_x >= fov_offset + fov_length - cur_w) {
         fov_offset += diff;
+        cur_x = fov_offset + fov_length - cur_w;
       }
       else {
          cur_x += diff;
@@ -304,26 +307,28 @@ void SeqExtStepPage::loop() {
 
   if (seq_param2.hasChanged()) {
     // Horizontal translation
-    int16_t diff = seq_param2.cur - seq_param2.old;
+    int16_t diff = seq_param2.old - seq_param2.cur; //reverse dir for sanity.
 
     DEBUG_DUMP(diff);
     if (diff < 0) {
       if (cur_y <= fov_y) {
         fov_y += diff;
         if (fov_y < 0) { fov_y = 0; }
+        cur_y = fov_y;
       }
       else {
         cur_y += diff;
         if (cur_y < fov_y) { cur_y = fov_y; }
       }
    } else {
-        if (cur_y >= fov_y + fov_h) {
+        if (cur_y >= fov_y + fov_notes) {
           fov_y += diff;
-          if (fov_y + fov_h > 127) { fov_y = 127 - fov_h; }
+          if (fov_y + fov_notes > 127) { fov_y = 127 - fov_notes; }
+          cur_y = fov_y + fov_notes;
         }
         else {
           cur_y += diff;
-          if (cur_y > fov_y + fov_h) { cur_y = fov_y + fov_h; }
+          if (cur_y > fov_y + fov_notes) { cur_y = fov_y + fov_notes; }
         }
     }
     seq_param2.cur = 64;
