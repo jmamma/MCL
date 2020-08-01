@@ -1,4 +1,4 @@
-#include "MCL.h"
+:#include "MCL.h"
 #include "SeqExtStepPage.h"
 
 void SeqExtStepPage::setup() { SeqPage::setup(); }
@@ -31,8 +31,16 @@ void SeqExtStepPage::config_encoders() {
   seq_param1.max = 127;
   seq_param1.cur = 64;
   seq_param1.old = 64;
-  seq_param2.cur = 48;
-  seq_param2.old = 48;
+
+  seq_param2.cur = 64;
+  seq_param2.old = 64;
+
+  fov_offset = 0;
+  cur_x = 0;
+  cur_y = 64;
+  fov_y = 64;
+  cur_w = timing_mid;
+
   seq_param2.max = 127;
   seq_param4.max = 128;
   seq_param4.cur = 16;
@@ -50,7 +58,6 @@ void SeqExtStepPage::init() {
   note_interface.state = true;
   config_encoders();
   midi_events.setup_callbacks();
-  fov_offset = 0;
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
 }
 
@@ -96,8 +103,6 @@ void SeqExtStepPage::draw_pianoroll() {
 
   // FOV offsets
 
-  uint8_t fov_y = seq_param2.cur;
-
   uint8_t fov_zoom = seq_param4.cur;
   DEBUG_DUMP(fov_zoom);
   fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
@@ -131,7 +136,7 @@ void SeqExtStepPage::draw_pianoroll() {
   // oled_display.drawLine(draw_x + keyboard_w, 0, draw_x + keyboard_w, fov_h,
   // WHITE);
 
-  // Draw sequencer cursor..
+  // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
 
     uint8_t cur_tick_fov_x =
@@ -249,6 +254,11 @@ void SeqExtStepPage::draw_pianoroll() {
       }
     }
   }
+  // Draw interactive cursor
+  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * (fov_h / fov_notes));
+  uint8_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
+  oled_display.fillRect(draw_x + fov_cur_x, fov_cur_y, cur_w,
+                        (fov_h / fov_notes), WHITE);
 }
 
 void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
@@ -261,17 +271,63 @@ void SeqExtStepPage::display() { SeqPage::display(); }
 void SeqExtStepPage::loop() {
   SeqPage::loop();
   if (seq_param1.hasChanged()) {
-    // Horizontal translation
+    // Vertical translation
     int16_t diff = seq_param1.cur - seq_param1.old;
 
     DEBUG_DUMP(diff);
-    fov_offset += diff;
-    // / fov_pixels_per_tick;
-    if (fov_offset < 0) {
-      fov_offset = 0;
+    if (diff < 0) {
+      if (cur_x <= fov_offset) {
+        fov_offset += diff;
+        // / fov_pixels_per_tick;
+        if (fov_offset < 0) {
+          fov_offset = 0;
+        }
+      }
+      else {
+        cur_x += diff;
+        if (cur_x < fov_offset) { cur_x = fov_offset; }
+      }
+
+    } else {
+      if (cur_x >= fov_offset + fov_length - cur_w) {
+        fov_offset += diff;
+      }
+      else {
+         cur_x += diff;
+         if (cur_x >  fov_offset + fov_length - cur_w) { cur_x = fov_offset + fov_length - cur_w; }
+      }
     }
+
     seq_param1.cur = 64;
     seq_param1.old = 64;
+  }
+
+  if (seq_param2.hasChanged()) {
+    // Horizontal translation
+    int16_t diff = seq_param2.cur - seq_param2.old;
+
+    DEBUG_DUMP(diff);
+    if (diff < 0) {
+      if (cur_y <= fov_y) {
+        fov_y += diff;
+        if (fov_y < 0) { fov_y = 0; }
+      }
+      else {
+        cur_y += diff;
+        if (cur_y < fov_y) { cur_y = fov_y; }
+      }
+   } else {
+        if (cur_y >= fov_y + fov_h) {
+          fov_y += diff;
+          if (fov_y + fov_h > 127) { fov_y = 127 - fov_h; }
+        }
+        else {
+          cur_y += diff;
+          if (cur_y > fov_y + fov_h) { cur_y = fov_y + fov_h; }
+        }
+    }
+    seq_param2.cur = 64;
+    seq_param2.old = 64;
   }
 }
 

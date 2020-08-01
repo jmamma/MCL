@@ -24,6 +24,8 @@ public:
   static constexpr uint8_t fov_w = 96;
   static constexpr uint8_t fov_notes = 7;
   static constexpr uint8_t fov_h = 28;
+  int16_t fov_y;
+
   int16_t fov_offset = 0;
   uint16_t fov_length;
 
@@ -31,6 +33,11 @@ public:
   static constexpr uint8_t keyboard_w = 4;
 
   float fov_pixels_per_tick;
+
+  int16_t cur_x;
+  int16_t cur_y;
+  uint16_t cur_w;
+
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
