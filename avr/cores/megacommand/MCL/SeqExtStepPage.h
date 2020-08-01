@@ -21,10 +21,14 @@ public:
 class SeqExtStepPage : public SeqPage {
 
 public:
-  static constexpr uint8_t fov_w = 86;
-  static constexpr uint8_t fov_h = 16;
+  static constexpr uint8_t fov_w = 96;
+  static constexpr uint8_t fov_notes = 7;
+  static constexpr uint8_t fov_h = 28;
   int16_t fov_offset = 0;
   uint16_t fov_length;
+
+  static constexpr uint8_t draw_x = 128 - fov_w;
+  static constexpr uint8_t keyboard_w = 4;
 
   float fov_pixels_per_tick;
   SeqExtStepMidiEvents midi_events;
