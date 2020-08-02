@@ -238,7 +238,7 @@ void SeqExtStepPage::draw_pianoroll() {
           }
 
           // Draw notes
-          if ((note_val > fov_y) && (note_val <= fov_y + fov_notes)) {
+          if ((note_val >= fov_y) && (note_val < fov_y + fov_notes)) {
             if (note_end < note_start) {
               // Wrap around note
               if (note_start < fov_offset + fov_length) {
@@ -265,7 +265,7 @@ void SeqExtStepPage::draw_pianoroll() {
   }
   // Draw interactive cursor
   DEBUG_DUMP(cur_w);
-  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * (fov_h / fov_notes));
+  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y + 1) * (fov_h / fov_notes));
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
   uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
   if (fov_cur_x < 0) { fov_cur_x = 0; }
@@ -340,16 +340,16 @@ void SeqExtStepPage::loop() {
         }
       }
     } else {
-      if (cur_y >= fov_y + fov_notes) {
+      if (cur_y >= fov_y + fov_notes - 1) {
         fov_y += diff;
         if (fov_y + fov_notes > 127) {
           fov_y = 127 - fov_notes;
         }
-        cur_y = fov_y + fov_notes;
+        cur_y = fov_y + fov_notes - 1;
       } else {
         cur_y += diff;
-        if (cur_y > fov_y + fov_notes) {
-          cur_y = fov_y + fov_notes;
+        if (cur_y > fov_y + fov_notes - 1) {
+          cur_y = fov_y + fov_notes - 1;
         }
       }
     }
