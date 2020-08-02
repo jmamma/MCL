@@ -4,7 +4,7 @@
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
-  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
+//  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
 #endif
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
@@ -34,6 +34,11 @@ void SeqExtStepPage::config_encoders() {
 
   seq_param2.cur = 64;
   seq_param2.old = 64;
+
+  seq_param3.handler = NULL;
+  seq_param3.cur = 64;
+  seq_param3.old = 64;
+  seq_param3.max = 128;
 
   fov_offset = 0;
   cur_x = 0;
@@ -98,12 +103,16 @@ void SeqExtStepPage::draw_pianoroll() {
   uint8_t timing_mid = active_track.get_timing_mid();
 
   // Absolute piano roll dimensions
-  int16_t roll_length = active_track.length * timing_mid; // in ticks
-  uint8_t roll_height = 127;                              // 127, Notes.
+  roll_length = active_track.length * timing_mid; // in ticks
+  uint8_t roll_height = 127;                      // 127, Notes.
 
   // FOV offsets
 
+  if (seq_param4.cur > active_track.length) {
+    seq_param4.cur = active_track.length;
+  }
   uint8_t fov_zoom = seq_param4.cur;
+
   DEBUG_DUMP(fov_zoom);
   fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
 
@@ -255,9 +264,12 @@ void SeqExtStepPage::draw_pianoroll() {
     }
   }
   // Draw interactive cursor
+  DEBUG_DUMP(cur_w);
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * (fov_h / fov_notes));
-  uint8_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-  uint8_t fov_cur_w = (float)(cur_w) * fov_pixels_per_tick;
+  int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
+  uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
+  if (fov_cur_x < 0) { fov_cur_x = 0; }
+  if (fov_cur_x + fov_cur_w > fov_w) { fov_cur_w = fov_w - fov_cur_x; }
   oled_display.fillRect(draw_x + fov_cur_x, fov_cur_y, fov_cur_w,
                         (fov_h / fov_notes), WHITE);
 }
@@ -284,20 +296,24 @@ void SeqExtStepPage::loop() {
           fov_offset = 0;
         }
         cur_x = fov_offset;
-      }
-      else {
+      } else {
         cur_x += diff;
-        if (cur_x < fov_offset) { cur_x = fov_offset; }
+        if (cur_x < fov_offset) {
+          cur_x = fov_offset;
+        }
       }
 
     } else {
       if (cur_x >= fov_offset + fov_length - cur_w) {
-        fov_offset += diff;
-        cur_x = fov_offset + fov_length - cur_w;
-      }
-      else {
-         cur_x += diff;
-         if (cur_x >  fov_offset + fov_length - cur_w) { cur_x = fov_offset + fov_length - cur_w; }
+        if (fov_offset + fov_length + diff < roll_length) {
+          fov_offset += diff;
+          cur_x = fov_offset + fov_length - cur_w;
+        }
+      } else {
+        cur_x += diff;
+        if (cur_x > fov_offset + fov_length - cur_w) {
+          cur_x = fov_offset + fov_length - cur_w;
+        }
       }
     }
 
@@ -307,32 +323,61 @@ void SeqExtStepPage::loop() {
 
   if (seq_param2.hasChanged()) {
     // Horizontal translation
-    int16_t diff = seq_param2.old - seq_param2.cur; //reverse dir for sanity.
+    int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
 
     DEBUG_DUMP(diff);
     if (diff < 0) {
       if (cur_y <= fov_y) {
         fov_y += diff;
-        if (fov_y < 0) { fov_y = 0; }
+        if (fov_y < 0) {
+          fov_y = 0;
+        }
         cur_y = fov_y;
-      }
-      else {
+      } else {
         cur_y += diff;
-        if (cur_y < fov_y) { cur_y = fov_y; }
+        if (cur_y < fov_y) {
+          cur_y = fov_y;
+        }
       }
-   } else {
-        if (cur_y >= fov_y + fov_notes) {
-          fov_y += diff;
-          if (fov_y + fov_notes > 127) { fov_y = 127 - fov_notes; }
+    } else {
+      if (cur_y >= fov_y + fov_notes) {
+        fov_y += diff;
+        if (fov_y + fov_notes > 127) {
+          fov_y = 127 - fov_notes;
+        }
+        cur_y = fov_y + fov_notes;
+      } else {
+        cur_y += diff;
+        if (cur_y > fov_y + fov_notes) {
           cur_y = fov_y + fov_notes;
         }
-        else {
-          cur_y += diff;
-          if (cur_y > fov_y + fov_notes) { cur_y = fov_y + fov_notes; }
-        }
+      }
     }
     seq_param2.cur = 64;
     seq_param2.old = 64;
+  }
+
+  if (seq_param3.hasChanged()) {
+
+    int16_t diff = seq_param3.cur - seq_param3.old;
+
+    if (diff < 0) {
+      cur_w += diff;
+      if (cur_w < cur_w_min) {
+        cur_w = cur_w_min;
+      }
+    } else {
+      if (cur_x >= fov_offset + fov_length - cur_w - diff) {
+        if (fov_offset + fov_length + diff < roll_length) {
+          cur_w += diff;
+          fov_offset += diff;
+        }
+      } else {
+        cur_w += diff;
+      }
+    }
+    seq_param3.cur = 64;
+    seq_param3.old = 64;
   }
 }
 

@@ -36,7 +36,10 @@ public:
 
   int16_t cur_x;
   int16_t cur_y;
-  uint16_t cur_w;
+  int16_t cur_w;
+  static constexpr int16_t cur_w_min = 2;
+
+  int16_t roll_length;
 
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
