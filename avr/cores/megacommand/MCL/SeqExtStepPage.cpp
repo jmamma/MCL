@@ -23,6 +23,9 @@ void SeqExtStepPage::config() {
 
   // config menu
   config_as_trackedit();
+
+  // use continuous page index display
+  display_page_index = false;
 }
 
 void SeqExtStepPage::config_encoders() {
@@ -128,23 +131,18 @@ void SeqExtStepPage::draw_pianoroll() {
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
-  // Hack to create 2 pixel partition, remove me when we compress
-  // SeqPage::display
-  oled_display.fillRect(draw_x - keyboard_w - 1 - 2, 0,
-                        draw_x - keyboard_w - 1 - 2, fov_h - 1, BLACK);
   // Draw vertical keyboard
   const uint16_t chromatic = 0b0000010101001010;
   for (uint8_t k = 0; k < fov_notes; k++) {
     uint8_t scale_pos =
         (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
     if (!IS_BIT_SET16(chromatic, scale_pos)) {
-      oled_display.fillRect(draw_x - keyboard_w - 1,
+      oled_display.fillRect(draw_x - keyboard_w,
                             draw_y + k * (fov_h / fov_notes), keyboard_w,
                             (fov_h / fov_notes), WHITE);
     }
   }
-  // oled_display.drawLine(draw_x + keyboard_w, 0, draw_x + keyboard_w, fov_h,
-  // WHITE);
+  oled_display.drawLine(draw_x-1 , 0, draw_x-1 , fov_h, WHITE);
 
   // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
@@ -290,6 +288,27 @@ void SeqExtStepPage::draw_pianoroll() {
                         (fov_h / fov_notes), WHITE);
 }
 
+void SeqExtStepPage::draw_viewport_minimap() {
+#ifdef OLED_DISPLAY
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
+  constexpr uint16_t width = pidx_w*4+3;
+  uint16_t pattern_end = active_track.length * timing_mid;
+  uint16_t cur_tick_x = active_track.step_count * timing_mid + active_track.mod12_counter;
+
+  oled_display.drawRect(pidx_x0, pidx_y, width, pidx_h, WHITE);
+
+  // viewport is [fov_offset, fov_offset+fov_length] out of [0, pattern_end]
+
+  uint16_t s = fov_offset * (width-1) / pattern_end;
+  uint16_t w = fov_length * (width-2) / pattern_end;
+  uint16_t p = cur_tick_x * (width-1) / pattern_end;
+  oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
+  oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
+#endif
+}
+
+
 void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
                                uint16_t note_end) {}
 
@@ -404,7 +423,7 @@ void SeqExtStepPage::display() {
 
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
-  SeqPage::display();
+  draw_viewport_minimap();
   draw_pianoroll();
 
   // draw_knob_conditional(seq_param1.getValue());
@@ -465,15 +484,14 @@ void SeqExtStepPage::display() {
         get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed),
         seq_param2.cur);
   }
+
+  SeqPage::display();
   oled_display.display();
 #endif
 }
 #endif
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
 
 #ifdef EXT_TRACKS
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
@@ -539,8 +557,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
         else {
           active_track.timing[(track + (page_select * 16))] = utiming; // upper
-          active_track.conditional[(track + (page_select * 16))] =
-              condition; // upper
+          active_track.conditional[(track + (page_select * 16))] = condition; // upper
         }
       }
       return true;
@@ -554,7 +571,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
 #endif
-  return false;
+
+  return SeqPage::handleEvent(event);
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {

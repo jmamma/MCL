@@ -616,63 +616,6 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 #endif
 }
 
-void MCLGUI::draw_ext_track(uint8_t x, uint8_t y, uint8_t offset,
-                            uint8_t ext_trackid, bool show_current_step) {
-#ifdef OLED_DISPLAY
-#ifdef EXT_TRACKS
-  int8_t note_held = 0;
-  auto &active_track = mcl_seq.ext_tracks[ext_trackid];
-  for (int i = 0; i < active_track.length; i++) {
-
-    uint8_t step_count = active_track.step_count;
-    uint8_t noteson = 0;
-    uint8_t notesoff = 0;
-    bool in_range = (i >= offset) && (i < offset + 16);
-    bool right_most = (i == active_track.length - 1);
-
-    for (uint8_t a = 0; a < 4; a++) {
-      if (active_track.notes[a][i] > 0) {
-        noteson++;
-      }
-      if (active_track.notes[a][i] < 0) {
-        notesoff++;
-      }
-    }
-
-    note_held += noteson;
-    note_held -= notesoff;
-
-    if (!in_range) {
-      continue;
-    }
-
-    if (note_interface.notes[i - offset] == 1) {
-      oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
-    } else if (!note_held) { // --
-      oled_display.drawFastHLine(x - 1, y + 2, seq_w + 2, WHITE);
-    } else { // draw top, bottom
-      oled_display.drawFastHLine(x - 1, y, seq_w + 2, WHITE);
-      oled_display.drawFastHLine(x - 1, y + trig_h - 1, seq_w + 2, WHITE);
-    }
-
-    if (noteson > 0 || notesoff > 0) { // left |
-      oled_display.drawFastVLine(x - 1, y, trig_h, WHITE);
-    }
-
-    if (right_most && note_held) { // right |
-      oled_display.drawFastVLine(x + seq_w, y, trig_h, WHITE);
-    }
-
-    if ((step_count == i) && (MidiClock.state == 2) && show_current_step) {
-      oled_display.fillRect(x, y, seq_w, trig_h, INVERT);
-    }
-
-    x += seq_w + 1;
-  }
-#endif // EXT_TRACKS
-#endif
-}
-
 void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
                        uint8_t step_count, uint8_t length,
                        bool show_current_step) {

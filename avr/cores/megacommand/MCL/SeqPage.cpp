@@ -622,12 +622,6 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
     }
   }
-#ifdef EXT_TRACKS
-  else {
-    mcl_gui.draw_ext_track(MCLGUI::seq_x0, MCLGUI::trig_y, offset,
-                           last_ext_track, show_current_step);
-  }
-#endif
 }
 
 //from knob value to step value
@@ -1177,10 +1171,6 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
     playing_idx = _playing_idx;
   }
   uint8_t w = pidx_w;
-  if (page_count == 8) {
-    w /= 2;
-    pidx_x -= 1;
-  }
 
   for (uint8_t i = 0; i < page_count; ++i) {
     oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
