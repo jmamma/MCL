@@ -477,6 +477,9 @@ void SeqExtStepPage::display() {
     oled_display.setFont(oldfont);
   }
   */
+
+  SeqPage::display();
+
   if (mcl_gui.show_encoder_value(&seq_param2) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu)) {
@@ -485,7 +488,6 @@ void SeqExtStepPage::display() {
         seq_param2.cur);
   }
 
-  SeqPage::display();
   oled_display.display();
 #endif
 }
