@@ -8,6 +8,7 @@
 
 #include "A4.h"
 #include "MD.h"
+#include "MNM.h"
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND

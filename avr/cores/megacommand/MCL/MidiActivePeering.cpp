@@ -125,6 +125,22 @@ static bool a4_setup(uint8_t port) {
   return Analog4.connected;
 }
 
+static bool mnm_setup(uint8_t port) {
+  uint16_t myclock = slowclock;
+  if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
+    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
+    // calculated before proceeding.
+    myclock = slowclock;
+
+    delay_progress(400);
+    // TODO mnm setup here
+    return true;
+  }
+
+  return false;
+}
+
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
 
@@ -132,13 +148,16 @@ static void md_disconnect() { MD.connected = false; }
 
 static void a4_disconnect() { Analog4.connected = false; }
 
+static void mnm_disconnect() { }
+
 static midi_peer_driver_t port1_drivers[] = {
-    {DEVICE_MD, "MD", md_setup, md_disconnect, icon_md},
+  {DEVICE_MD, "MD", md_setup, md_disconnect, icon_md},
 };
 
 static midi_peer_driver_t port2_drivers[] = {
-    {DEVICE_A4, "A4", a4_setup, a4_disconnect, icon_a4},
-    {DEVICE_MIDI, "MIDI Device", midi_device_setup, nullptr, nullptr},
+  {DEVICE_MNM, "MM", mnm_setup, mnm_disconnect, nullptr },
+  {DEVICE_A4, "A4", a4_setup, a4_disconnect, icon_a4},
+  {DEVICE_MIDI, "MIDI Device", midi_device_setup, nullptr, nullptr},
 };
 
 static void probePort(uint8_t port, midi_peer_driver_t drivers[],
@@ -152,8 +171,7 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
       pmidi->speed > 31250) {
     MidiUart.set_speed((uint32_t)31250, port);
     for (size_t i = 0; i < nr_drivers; ++i) {
-      if (drivers[i].disconnect)
-        drivers[i].disconnect();
+      if (drivers[i].disconnect) drivers[i].disconnect();
     }
 #ifndef OLED_DISPLAY
     char str[16];

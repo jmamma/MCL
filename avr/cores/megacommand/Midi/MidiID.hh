@@ -5,6 +5,7 @@
 //#include "MidiIDSysex.hh"
 
 #define DEVICE_MD 0x02
+#define DEVICE_MNM 0x03
 #define DEVICE_A4 0x06
 #define DEVICE_NULL 0xFF
 #define DEVICE_MIDI 0xFE

@@ -10,77 +10,77 @@ MNMClass::MNMClass() {
 }
 
 void MNMClass::sendNoteOn(uint8_t track, uint8_t note, uint8_t velocity) {
-  MidiUart.sendNoteOn(track + global.baseChannel, note, velocity);
+  midiuart->sendNoteOn(track + global.baseChannel, note, velocity);
 }
 
 void MNMClass::sendNoteOff(uint8_t track, uint8_t note) {
-  MidiUart.sendNoteOff(track + global.baseChannel, note);
+  midiuart->sendNoteOff(track + global.baseChannel, note);
 }
 
 void MNMClass::sendMultiTrigNoteOn(uint8_t note, uint8_t velocity) {
-  MidiUart.sendNoteOn(global.multitrigChannel, note, velocity);
+  midiuart->sendNoteOn(global.multitrigChannel, note, velocity);
 }
 
 void MNMClass::sendMultiTrigNoteOff(uint8_t note) {
-  MidiUart.sendNoteOff(global.multitrigChannel, note);
+  midiuart->sendNoteOff(global.multitrigChannel, note);
 }
 
 void MNMClass::sendMultiMapNoteOn(uint8_t note, uint8_t velocity) {
-  MidiUart.sendNoteOn(global.multimapChannel, note, velocity);
+  midiuart->sendNoteOn(global.multimapChannel, note, velocity);
 }
 
 void MNMClass::sendMultiMapNoteOff(uint8_t note) {
-  MidiUart.sendNoteOff(global.multimapChannel, note);
+  midiuart->sendNoteOff(global.multimapChannel, note);
 }
 
 void MNMClass::sendAutoNoteOn(uint8_t note, uint8_t velocity) {
-  MidiUart.sendNoteOn(global.autotrackChannel, note, velocity);
+  midiuart->sendNoteOn(global.autotrackChannel, note, velocity);
 }
 
 void MNMClass::sendAutoNoteOff(uint8_t note) {
-  MidiUart.sendNoteOff(global.autotrackChannel, note);
+  midiuart->sendNoteOff(global.autotrackChannel, note);
 }
 
 void MNMClass::triggerTrack(uint8_t track, bool amp, bool lfo, bool filter) {
-  MidiUart.sendNRPN(global.baseChannel,
+  midiuart->sendNRPN(global.baseChannel,
 		    (uint16_t)(0x7F << 7),
 		    (uint8_t)((track << 3) | (amp ? 4 : 0) | (lfo ? 2 : 0) | (filter ? 1 : 0)));
 }
 
 void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
-  MidiUart.sendNRPN(global.baseChannel, 0x40 + param, value);
+  midiuart->sendNRPN(global.baseChannel, 0x40 + param, value);
 }
 
 void MNMClass::setMute(uint8_t track, bool mute) {
-  MidiUart.sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
+  midiuart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
 }
 
 void MNMClass::setAutoMute(bool mute) {
-  MidiUart.sendCC(global.autotrackChannel, 3, mute ? 0 : 1);
+  midiuart->sendCC(global.autotrackChannel, 3, mute ? 0 : 1);
 }
 
 void MNMClass::setMidiParam(uint8_t track, uint8_t param, uint8_t value) {
-  MidiUart.sendNRPN(global.baseChannel, (track << 7) | (0x38 + param), value);
+  midiuart->sendNRPN(global.baseChannel, (track << 7) | (0x38 + param), value);
 }
 
 void MNMClass::setTrackPitch(uint8_t track, uint8_t pitch) {
-  MidiUart.sendNRPN(global.baseChannel, (112 + track) << 7, pitch);
+  midiuart->sendNRPN(global.baseChannel, (112 + track) << 7, pitch);
 }
 
 void MNMClass::setTrackLevel(uint8_t track, uint8_t level) {
-  MidiUart.sendCC(global.baseChannel + track, 7, level);
+  midiuart->sendCC(global.baseChannel + track, 7, level);
 }
 
 void MNMClass::setAutoParam(uint8_t param, uint8_t value) {
   if (param < 0x30) {
-    MidiUart.sendCC(global.autotrackChannel, param + 0x30, value);
+    midiuart->sendCC(global.autotrackChannel, param + 0x30, value);
   } else {
-    MidiUart.sendCC(global.autotrackChannel, param + 0x38, value);
+    midiuart->sendCC(global.autotrackChannel, param + 0x38, value);
   }
 }
 
 void MNMClass::setAutoLevel(uint8_t level) {
-  MidiUart.sendCC(global.autotrackChannel, 7, level);
+  midiuart->sendCC(global.autotrackChannel, 7, level);
 }
 
 void MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value) {
@@ -96,7 +96,7 @@ void MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value) {
   } else {
     cc = param + 0x40;
   }
-  MidiUart.sendCC(global.baseChannel + track, cc, value);
+  midiuart->sendCC(global.baseChannel + track, cc, value);
 }
 
 bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *param) {
@@ -124,10 +124,13 @@ bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *par
 }
 
 void MNMClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  MidiUart.sendRaw(bytes, cnt);
-  MidiUart.m_putc(0xF7);
+  USE_LOCK();
+  SET_LOCK();
+  midiuart->m_putc(0xF0);
+  midiuart->sendRaw(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+  midiuart->sendRaw(bytes, cnt);
+  midiuart->m_putc(0xF7);
+  CLEAR_LOCK();
 }
 
 void MNMClass::setStatus(uint8_t id, uint8_t value) {
@@ -264,7 +267,7 @@ public:
 
 uint8_t MNMClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
   uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;;
+  uint16_t current_clock = start_clock;
   BlockCurrentStatusCallback cb(type);
 
   MNMSysexListener.addOnStatusResponseCallback

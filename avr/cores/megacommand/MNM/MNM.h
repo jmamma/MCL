@@ -13,7 +13,8 @@
 class MNMClass {
  public:
   MNMClass();
-  MidiClass *midi = &Midi;
+  MidiClass *midi = &Midi2;
+  MidiUartClass2* midiuart = &MidiUart2;
   uint8_t currentTrack;
   
   int currentGlobal;
