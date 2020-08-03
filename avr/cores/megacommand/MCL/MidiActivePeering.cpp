@@ -164,34 +164,36 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
     bool probe_success = false;
     for (size_t i = 0; i < nr_drivers; ++i) {
-      for (int probe_retry = 0; probe_retry < 3 && !probe_success;
-           ++probe_retry) {
-        MidiIDSysexListener.setup(pmidi_class);
-        MidiUart.set_speed((uint32_t)31250, port);
+
+      MidiIDSysexListener.setup(pmidi_class);
+      MidiUart.set_speed((uint32_t)31250, port);
 #ifdef OLED_DISPLAY
-        auto oldfont = oled_display.getFont();
-        prepare_display();
-        if (drivers[i].icon) {
-          oled_display.drawBitmap(14, 8, drivers[i].icon, 34, 42, WHITE);
-        }
-        oled_display.display();
+      auto oldfont = oled_display.getFont();
+      prepare_display();
+      if (drivers[i].icon) {
+        oled_display.drawBitmap(14, 8, drivers[i].icon, 34, 42, WHITE);
+      }
+      oled_display.display();
 #else
-        GUI.clearLines();
-        GUI.setLine(GUI.LINE1);
-        GUI.put_string_at_fill(0, "Peering...");
-        LCD.goLine(0);
-        LCD.puts(GUI.lines[0].data);
-        LCD.goLine(1);
-        LCD.puts(GUI.lines[1].data);
+      GUI.clearLines();
+      GUI.setLine(GUI.LINE1);
+      GUI.put_string_at_fill(0, "Peering...");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+      LCD.goLine(1);
+      LCD.puts(GUI.lines[1].data);
 #endif
 
+      for (int probe_retry = 0; probe_retry < 3 && !probe_success; ++probe_retry) {
         probe_success = drivers[i].probe(port);
-        MidiIDSysexListener.cleanup();
-        GUI.currentPage()->redisplay = true;
-#ifdef OLED_DISPLAY
-        oled_display.setFont(oldfont);
-#endif
       } // for retries
+
+      MidiIDSysexListener.cleanup();
+      GUI.currentPage()->redisplay = true;
+#ifdef OLED_DISPLAY
+      oled_display.setFont(oldfont);
+#endif
+
       if (probe_success) {
         pmidi->device.set_id(drivers[i].id);
         pmidi->device.set_name(drivers[i].name);
@@ -210,7 +212,7 @@ uint8_t MidiActivePeering::get_device(uint8_t port) {
   if (pmidi)
     return pmidi->device.get_id();
   else
-    return 255;
+    return DEVICE_NULL;
 }
 
 void MidiActivePeering::run() {
