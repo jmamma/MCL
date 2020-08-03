@@ -1,4 +1,5 @@
 #include "MNM.h"
+#include "MCL.h"
 
 MNMClass::MNMClass() {
   currentGlobal = -1;
