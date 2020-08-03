@@ -162,7 +162,6 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
     // reset MidiID to none
     pmidi->device.init();
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
-    // Interleaved probing
     bool probe_success = false;
     for (size_t i = 0; i < nr_drivers; ++i) {
       for (int probe_retry = 0; probe_retry < 3 && !probe_success;
