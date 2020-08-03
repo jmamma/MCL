@@ -164,9 +164,9 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
     // Interleaved probing
     bool probe_success = false;
-    for (int probe_retry = 0; probe_retry < 3 && !probe_success;
-         ++probe_retry) {
-      for (size_t i = 0; i < nr_drivers; ++i) {
+    for (size_t i = 0; i < nr_drivers; ++i) {
+      for (int probe_retry = 0; probe_retry < 3 && !probe_success;
+           ++probe_retry) {
         MidiIDSysexListener.setup(pmidi_class);
         MidiUart.set_speed((uint32_t)31250, port);
 #ifdef OLED_DISPLAY
@@ -192,17 +192,16 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
 #ifdef OLED_DISPLAY
         oled_display.setFont(oldfont);
 #endif
-
-        if (probe_success) {
-          pmidi->device.set_id(drivers[i].id);
-          pmidi->device.set_name(drivers[i].name);
+      } // for retries
+      if (probe_success) {
+        pmidi->device.set_id(drivers[i].id);
+        pmidi->device.set_name(drivers[i].name);
 #ifndef OLED_DISPLAY
-          GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
+        GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
 #endif
-          break;
-        }
-      } // for drivers
-    }   // for retries
+        break;
+      }
+    } // for drivers
     GUI.currentPage()->redisplay = true;
   }
 }
