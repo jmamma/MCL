@@ -17,7 +17,10 @@ void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uart->sendRaw(data, sizeof(data));
 }
 
-void MidiID::init() { set_id(DEVICE_NULL); }
+void MidiID::init() { 
+  set_id(DEVICE_NULL); 
+  set_name("");
+}
 
 bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   DEBUG_PRINT_FN();
