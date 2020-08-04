@@ -34,8 +34,8 @@
 //template<int X> struct __WOW;
 //__WOW<sizeof(MDTrackLight)> szmd;
 //__WOW<sizeof(A4Track)> sza4;
-#pragma message("MD_TRACK_LEN = 501")
-#pragma message("A4_TRACK_LEN = 1742")
+//#pragma message("MD_TRACK_LEN = 501")
+//#pragma message("A4_TRACK_LEN = 1742")
 
 
 //#define MD_TRACK_LEN (sizeof(MDTrackLight))

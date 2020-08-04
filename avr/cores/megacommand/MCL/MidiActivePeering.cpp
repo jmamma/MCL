@@ -155,7 +155,7 @@ static midi_peer_driver_t port1_drivers[] = {
 };
 
 static midi_peer_driver_t port2_drivers[] = {
-  {DEVICE_MNM, "MM", mnm_setup, mnm_disconnect, nullptr },
+  {DEVICE_MNM, "MM", mnm_setup, mnm_disconnect, icon_mnm },
   {DEVICE_A4, "A4", a4_setup, a4_disconnect, icon_a4},
   {DEVICE_MIDI, "MIDI Device", midi_device_setup, nullptr, nullptr},
 };

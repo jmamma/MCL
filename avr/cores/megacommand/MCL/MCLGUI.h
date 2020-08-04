@@ -245,5 +245,7 @@ extern const unsigned char icon_sound[];
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px
 extern const unsigned char icon_a4[];
+// 'mnm_rev', 34x24px
+extern const unsigned char icon_mnm[];
 
 #endif /* MCLGUI_H__ */
