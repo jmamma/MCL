@@ -132,6 +132,7 @@ void SeqExtStepPage::draw_pianoroll() {
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
   // Draw vertical keyboard
+  /*
   const uint16_t chromatic = 0b0000010101001010;
   for (uint8_t k = 0; k < fov_notes; k++) {
     uint8_t scale_pos =
@@ -143,7 +144,7 @@ void SeqExtStepPage::draw_pianoroll() {
     }
   }
   oled_display.drawLine(draw_x-1 , 0, draw_x-1 , fov_h, WHITE);
-
+  */
   // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
 
@@ -183,9 +184,9 @@ void SeqExtStepPage::draw_pianoroll() {
       if (note_val > 0) {
         uint8_t j = find_note_off(abs(note_val), i);
         uint16_t note_start =
-            i * timing_mid + active_track.timing[i] - timing_mid;
+            i * timing_mid + active_track.notes_timing[a][i] - timing_mid;
         uint16_t note_end =
-            j * timing_mid + active_track.timing[j] - timing_mid;
+            j * timing_mid + active_track.notes_timing[a][j] - timing_mid;
 
         if (is_within_fov(note_start) || is_within_fov(note_end) ||
             ((note_start < fov_offset) &&
@@ -519,17 +520,19 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
 
-        int8_t utiming =
-            active_track.timing[(track + (page_select * 16))]; // upper
-        uint8_t condition =
-            active_track.conditional[(track + (page_select * 16))]; // lower
+     //   int8_t utiming =
+       //     active_track.timing[(track + (page_select * 16))]; // upper
+       // uint8_t condition =
+         //   active_track.conditional[(track + (page_select * 16))]; // lower
         // seq_param1.cur = translate_to_knob_conditional(condition);
         // Micro
+        /*
         if (utiming == 0) {
           utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
         }
-        seq_param2.cur = utiming;
 
+        seq_param2.cur = utiming;
+        */
         note_interface.last_note = track;
       }
     }
@@ -553,13 +556,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             }
             active_track.notes[c][track + page_select * 16] = 0;
           }
-          active_track.timing[(track + (page_select * 16))] = 0;
-          active_track.conditional[(track + (page_select * 16))] = 0;
+         // active_track.timing[(track + (page_select * 16))] = 0;
+         // active_track.conditional[(track + (page_select * 16))] = 0;
         }
 
         else {
-          active_track.timing[(track + (page_select * 16))] = utiming; // upper
-          active_track.conditional[(track + (page_select * 16))] = condition; // upper
+          //active_track.timing[(track + (page_select * 16))] = utiming; // upper
+          //active_track.conditional[(track + (page_select * 16))] = condition; // upper
         }
       }
       return true;

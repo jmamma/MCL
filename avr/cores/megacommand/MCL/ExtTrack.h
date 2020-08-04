@@ -8,6 +8,11 @@
 
 #define EMPTY_TRACK_TYPE 0
 
+class ExtTrack_270 : public GridTrack {
+public:
+  ExtSeqTrackData_270 seq_data;
+};
+
 class ExtTrack : public GridTrack,
                  public Bank1Object<ExtTrack, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
 public:
@@ -16,6 +21,10 @@ public:
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   bool load_track_from_grid(int32_t column, int32_t row, int m);
   bool store_track_in_grid(int track, int32_t column, int32_t row, bool online = false);
+  bool convert(ExtTrack_270* old) {
+    seq_data.convert(&(old->seq_data));
+    return false;
+  }
 };
 
 #endif /* EXTTRACK_H__ */

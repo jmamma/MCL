@@ -19,30 +19,79 @@
 #define UART2_PORT 2
 
 // EXT Track speed
-#define EXT_SPEED_1X 2
-#define EXT_SPEED_2X 1
-#define EXT_SPEED_3_4X 3
-#define EXT_SPEED_3_2X 4
-#define EXT_SPEED_1_2X 5
-#define EXT_SPEED_1_4X 6
-#define EXT_SPEED_1_8X 7
+#define EXT_SPEED_270_1X 2
+#define EXT_SPEED_270_2X 1
+#define EXT_SPEED_270_3_4X 3
+#define EXT_SPEED_270_3_2X 4
+#define EXT_SPEED_270_1_2X 5
+#define EXT_SPEED_270_1_4X 6
+#define EXT_SPEED_270_1_8X 7
+#define NUM_EXT_NOTES_270 4
+#define NUM_EXT_LOCKS_270 4
+#define NUM_EXT_STEPS_270 128
+
+#define EXT_SPEED_1X 2 + 64
+#define EXT_SPEED_2X 1 + 64
+#define EXT_SPEED_3_4X 3 + 64
+#define EXT_SPEED_3_2X 4 + 64
+#define EXT_SPEED_1_2X 5 + 64
+#define EXT_SPEED_1_4X 6 + 64
+#define EXT_SPEED_1_8X 7 + 64
+
+#define EXTSEQTRACKDATA_VERSION 30
 
 const uint8_t ext_speeds[7] PROGMEM = {
     EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
     EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X};
 
-class ExtSeqTrackData {
+class ExtSeqTrackData_270 {
 public:
   uint8_t length;
-  uint8_t speed; // Resolution = 2 / ExtPatternResolution
-  uint8_t reserved[NUM_EXT_NOTES];
-  int8_t notes[NUM_EXT_NOTES][NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
-  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
-  uint8_t locks_params[NUM_EXT_LOCKS];
-  uint64_t lock_masks[NUM_EXT_LOCKS];
+  uint8_t speed;
+  uint8_t reserved[NUM_EXT_NOTES_270];
+  int8_t notes[NUM_EXT_NOTES_270]
+              [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
+  uint8_t locks[NUM_EXT_LOCKS_270][NUM_EXT_STEPS_270];
+  uint8_t locks_params[NUM_EXT_LOCKS_270];
+  uint64_t lock_masks[NUM_EXT_LOCKS_270];
 
-  uint8_t conditional[NUM_EXT_STEPS];
-  uint8_t timing[NUM_EXT_STEPS];
+  uint8_t conditional[NUM_EXT_STEPS_270];
+  uint8_t timing[NUM_EXT_STEPS_270];
+};
+
+class ExtSeqTrackData {
+public:
+  uint8_t version;
+  uint8_t length;
+  uint8_t speed;
+  int8_t notes[NUM_EXT_NOTES]
+              [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
+
+  uint8_t notes_timing[NUM_EXT_NOTES][NUM_EXT_STEPS];
+  uint8_t notes_conditional[NUM_EXT_NOTES][NUM_EXT_STEPS];
+
+  uint8_t locks_params[NUM_EXT_LOCKS];
+  uint64_t locks_masks[NUM_EXT_LOCKS][2]; // 128bit
+
+  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
+  bool convert(ExtSeqTrackData_270 *old) {
+    if (old->speed < EXT_SPEED_1X) {
+      /*ordering of these statements is important to ensure memory
+       * is copied before being overwritten*/
+      speed = old->speed + 64;
+      length = old->length;
+      version = EXTSEQTRACKDATA_VERSION;
+      memcpy(&notes, old->notes,  NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
+      for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+      memcpy(&notes_timing[a][0], old->timing, NUM_EXT_STEPS_270);
+      memcpy(&notes_conditional[a][0], old->conditional, NUM_EXT_STEPS_270);
+      }
+      memset(&locks_params, 0, NUM_EXT_LOCKS);
+      memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
+      return true;
+    }
+    return false;
+  }
 };
 class ExtSeqTrack : public ExtSeqTrackData {
 

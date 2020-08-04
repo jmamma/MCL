@@ -5,7 +5,9 @@
 
 void A4Track::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
-  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
+  if (seq_data.speed == 0) {
+    seq_data.speed = EXT_SPEED_2X;
+  }
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.ext_tracks[tracknumber].clear_track();
   } else {
@@ -13,6 +15,7 @@ void A4Track::load_seq_data(int tracknumber) {
     memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
   }
 #endif
+  return true;
 }
 
 bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
@@ -41,8 +44,14 @@ bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
     return false;
   }
   if (active == EMPTY_TRACK_TYPE) {
-  seq_data.length = 16;
+    seq_data.length = 16;
   }
+  else {
+    //Detect and convert old project.
+    if (convert((A4Track_270*)this)) { DEBUG_PRINTLN("conv 270"); }
+
+  }
+
 
   return true;
 }

@@ -3,17 +3,25 @@
 
 bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
- active = EXT_TRACK_TYPE;
+  active = EXT_TRACK_TYPE;
   return true;
 }
+
 bool ExtTrack::load_seq_data(int tracknumber) {
 #ifdef EXT_TRACKS
-  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
-  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data,
-           sizeof(seq_data));
+  if (seq_data.speed == 0) {
+    seq_data.speed = EXT_SPEED_2X;
+  }
+  if (active == EMPTY_TRACK_TYPE) {
+    mcl_seq.ext_tracks[tracknumber].clear_track();
+  } else {
+    mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
+    memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+ }
 #endif
   return true;
 }
+
 bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
   bool ret;
   int b = 0;
@@ -39,11 +47,15 @@ bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
     return false;
   }
   if (active == EMPTY_TRACK_TYPE) {
-  seq_data.length = 16;
+    seq_data.length = 16;
+  }
+  else {
+    if (convert((ExtTrack_270*) this)) { DEBUG_PRINTLN("conv 270"); }
   }
   return true;
 }
-bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool online) {
+bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
+                                   bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -53,19 +65,20 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool 
   DEBUG_PRINT_FN();
   int32_t len;
 
-  int32_t offset = (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+  int32_t offset =
+      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
 
   ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("Seek failed");
     return false;
   }
-  #ifdef EXT_TRACKS
+#ifdef EXT_TRACKS
   if (online) {
     get_track_from_sysex(track - 16, column - 16);
-    memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16],sizeof(seq_data));
+    memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
   }
-  #endif
+#endif
 
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
@@ -73,7 +86,8 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row, bool 
     return false;
   }
   uint8_t model = column;
-  grid_page.row_headers[grid_page.cur_row].update_model(column, model, EXT_TRACK_TYPE);
+  grid_page.row_headers[grid_page.cur_row].update_model(column, model,
+                                                        EXT_TRACK_TYPE);
 
   return true;
 }
