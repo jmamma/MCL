@@ -13,16 +13,21 @@ public:
   ExtSeqTrackData_270 seq_data;
 };
 
-class ExtTrack : public GridTrack,
-                 public Bank1Object<ExtTrack, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
+class ExtTrack
+    : public GridTrack,
+      public Bank1Object<ExtTrack, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
 public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(int tracknumber);
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   bool load_track_from_grid(int32_t column, int32_t row, int m);
-  bool store_track_in_grid(int track, int32_t column, int32_t row, bool online = false);
-  bool convert(ExtTrack_270* old) {
-    seq_data.convert(&(old->seq_data));
+  bool store_track_in_grid(int track, int32_t column, int32_t row,
+                           bool online = false);
+  bool convert(ExtTrack_270 *old) {
+    if (active == EXT_TRACK_TYPE_270) {
+      seq_data.convert(&(old->seq_data));
+      active = EXT_TRACK_TYPE;
+    }
     return false;
   }
 };

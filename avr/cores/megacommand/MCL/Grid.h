@@ -10,11 +10,6 @@
 #define GRID_WIDTH 20
 #define GRID_SLOT_BYTES 4096
 
-#define A4_TRACK_TYPE 2
-#define MD_TRACK_TYPE 1
-#define EXT_TRACK_TYPE 3
-#define EMPTY_TRACK_TYPE 0
-
 class Grid {
 public:
   uint8_t get_slot_model(int column, int row, bool load);

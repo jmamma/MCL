@@ -29,9 +29,10 @@ public:
   bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
   bool convert(A4Track_270 *old) {
-    if (seq_data.speed < EXT_SPEED_1X)  {
+    if (active == A4_TRACK_TYPE_270) {
       memcpy(&sound, &(old->sound), sizeof(old->sound));
       seq_data.convert(&(old->seq_data));
+      active = A4_TRACK_TYPE;
       return true;
     }
    return false;

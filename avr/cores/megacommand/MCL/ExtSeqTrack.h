@@ -75,22 +75,19 @@ public:
 
   uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
   bool convert(ExtSeqTrackData_270 *old) {
-    if (old->speed < EXT_SPEED_1X) {
-      /*ordering of these statements is important to ensure memory
-       * is copied before being overwritten*/
-      speed = old->speed + 64;
-      length = old->length;
-      version = EXTSEQTRACKDATA_VERSION;
-      memcpy(&notes, old->notes,  NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
-      for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+    /*ordering of these statements is important to ensure memory
+     * is copied before being overwritten*/
+    speed = old->speed;
+    length = old->length;
+    version = EXTSEQTRACKDATA_VERSION;
+    memcpy(&notes, old->notes, NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
       memcpy(&notes_timing[a][0], old->timing, NUM_EXT_STEPS_270);
       memcpy(&notes_conditional[a][0], old->conditional, NUM_EXT_STEPS_270);
-      }
-      memset(&locks_params, 0, NUM_EXT_LOCKS);
-      memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
-      return true;
     }
-    return false;
+    memset(&locks_params, 0, NUM_EXT_LOCKS);
+    memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
+    return true;
   }
 };
 class ExtSeqTrack : public ExtSeqTrackData {

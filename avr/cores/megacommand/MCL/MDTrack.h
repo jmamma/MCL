@@ -11,7 +11,6 @@
 #include "MDSeqTrackData.h"
 
 #define LOCK_AMOUNT 256
-#define MD_TRACK_TYPE 1
 
 #define SAVE_SEQ 0
 #define SAVE_MD 1
@@ -55,6 +54,32 @@ class MDTrackLight
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+};
+
+class MDTrackLight_270
+    : public GridTrack,
+      public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
+public:
+  MDSeqTrackData_270 seq_data;
+  MDMachine machine;
+};
+
+
+class MDTrack_270 : public MDTrackLight_270 {
+public:
+  uint8_t origPosition;
+  uint8_t patternOrigPosition;
+  uint8_t length;
+  uint64_t trigPattern;
+  uint64_t accentPattern;
+  uint64_t slidePattern;
+  uint64_t swingPattern;
+
+  KitExtra kitextra;
+
+  int arraysize;
+  ParameterLock locks[LOCK_AMOUNT];
+
 };
 
 class MDTrack : public MDTrackLight {
