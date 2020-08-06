@@ -324,7 +324,7 @@ void MCLActions::send_tracks_to_devices() {
   uint8_t i = 0;
   int track = 0;
   uint8_t note_count = 0;
-  uint8_t first_note = 254;
+  uint8_t first_note = 255;
 
   KitExtra kit_extra;
   volatile uint8_t *ptr;
@@ -335,14 +335,16 @@ void MCLActions::send_tracks_to_devices() {
     mute_states[i] = mcl_seq.md_tracks[i].mute_state;
     mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
     if ((note_interface.notes[i] > 1)) {
-      if (first_note == 254) {
+      if (first_note == 255) {
         first_note = i;
       }
-      //  if (grid_page.encoders[0]->cur > 0) {
 
-      if (i < NUM_MD_TRACKS) {
-        load_track_from_md(i, grid_page.getRow(), &empty_track);
+      empty_track.load_from_grid(i, grid_page.getRow());
 
+      if (md_track->is()) {
+        md_track->chain.store_in_mem(chains);
+        md_track.load_immediate(tracknumber);
+        grid_page.active_slots[tracknumber] = row;
         if (i == first_note) {
           // Use first track's original kit values for write orig
           if (md_track->active != EMPTY_TRACK_TYPE) {
@@ -351,18 +353,16 @@ void MCLActions::send_tracks_to_devices() {
             write_original = 0;
           }
         }
-      }
-#ifdef EXT_TRACKS
-      else {
+
+      } else if (ext_track->is() || a4_track->is()) {
         track = track - NUM_MD_TRACKS;
-        mcl_seq.ext_tracks[track].buffer_notesoff();
-        if (load_track_from_ext(track, i, grid_page.getRow(), &empty_track)) {
-          if ((Analog4.connected) && (empty_track.active == A4_TRACK_TYPE)) {
-            a4_send[track] = 1;
-          }
+        ext_track->chain.store_in_mem(chains);
+        ext_track.load_immediate(tracknumber);
+        grid_page.active_slots[tracknumber] = row;
+        if ((Analog4.connected) && (a4_track->is())) {
+          a4_send[track] = 1;
         }
       }
-#endif
     }
   }
   if ((write_original == 1)) {

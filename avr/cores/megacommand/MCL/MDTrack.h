@@ -54,6 +54,9 @@ class MDTrackLight
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+  bool is() {
+    return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270);
+  }
 };
 
 class MDTrackLight_270
@@ -63,7 +66,6 @@ public:
   MDSeqTrackData_270 seq_data;
   MDMachine machine;
 };
-
 
 class MDTrack_270 : public MDTrackLight_270 {
 public:
@@ -79,7 +81,6 @@ public:
 
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
-
 };
 
 class MDTrack : public MDTrackLight {
@@ -97,9 +98,7 @@ public:
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
 
-  MDTrack() {
-  arraysize = 0;
-  }
+  MDTrack() { arraysize = 0; }
 
   void init();
 

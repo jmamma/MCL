@@ -36,7 +36,9 @@ public:
   virtual void load_immediate() {
 
   };
-
+  virtual bool is() {
+    return false;
+  }
   void init() {
     chain.length = 16;
     chain.speed = SEQ_SPEED_1X;
