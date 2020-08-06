@@ -17,9 +17,32 @@
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
 
+class SeqTrack_270 {
+
+};
+
 class SeqTrack {
 
 public:
+  uint8_t length;
+  uint8_t speed;
+  uint8_t track_number;
+  uint8_t step_count;
+  uint8_t mod12_counter;
+
+  // Conditional counters
+  uint8_t iterations_5;
+  uint8_t iterations_6;
+  uint8_t iterations_7;
+  uint8_t iterations_8;
+
+  uint32_t start_clock32th;
+  uint64_t oneshot_mask;
+  uint64_t slide_mask;
+
+  uint8_t port = UART1_PORT;
+  MidiUartParent *uart = &MidiUart;
+
   ALWAYS_INLINE() virtual uint8_t get_timing_mid(uint8_t speed) {
     uint8_t timing_mid;
     switch (speed) {
@@ -48,6 +71,7 @@ public:
     }
     return timing_mid;
   }
+
 };
 
 #endif /* SEQTRACK_H__ */

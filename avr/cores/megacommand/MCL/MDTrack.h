@@ -115,8 +115,6 @@ public:
   bool get_track_from_pattern(int tracknumber, uint8_t column);
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
-  bool load_track_from_grid(int32_t column, int32_t row);
 
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
                            bool storepattern = false, uint8_t merge = 0,

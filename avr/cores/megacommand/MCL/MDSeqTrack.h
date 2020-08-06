@@ -48,25 +48,11 @@ public:
   }
 };
 
-class MDSeqTrack : public MDSeqTrackData {
+class MDSeqTrack : public MDSeqTrackData, SeqTrack {
 
 public:
-  uint8_t track_number;
-  uint8_t step_count;
-  uint8_t mod12_counter;
-
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
-
-  uint32_t start_clock32th;
   uint64_t oneshot_mask;
   uint64_t slide_mask;
-
-  uint8_t port = UART1_PORT;
-  MidiUartParent *uart = &MidiUart;
 
   uint8_t locks_params_orig[NUM_MD_LOCKS];
   SlideData locks_slide_data[NUM_MD_LOCKS];

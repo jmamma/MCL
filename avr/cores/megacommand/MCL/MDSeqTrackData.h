@@ -5,6 +5,7 @@
 
 #define NUM_MD_LOCKS 4
 #define NUM_MD_STEPS 64
+#include "SeqTrackData.h"
 
 class MDSeqStep {
 public:
@@ -19,9 +20,7 @@ public:
 
 class MDSeqTrackData_270 {
 public:
-  uint8_t length;
-  uint8_t speed;
-  uint32_t slide_mask32; //to be increased to 64bits
+  uint32_t slide_mask32; // to be increased to 64bits
   uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
   uint64_t pattern_mask;
@@ -29,23 +28,20 @@ public:
   uint8_t conditional[NUM_MD_STEPS];
   uint8_t timing[NUM_MD_STEPS];
   void init() {
-  length = 16;
-  speed = 1;
-  memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
-  memset(&locks_params, 0, NUM_MD_LOCKS);
-  pattern_mask = 0;
-  lock_mask = 0;
-  memset(&conditional, 0, NUM_MD_STEPS);
-  memset(&timing, 0, NUM_MD_STEPS);
+    length = 16;
+    speed = 1;
+    memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
+    memset(&locks_params, 0, NUM_MD_LOCKS);
+    pattern_mask = 0;
+    lock_mask = 0;
+    memset(&conditional, 0, NUM_MD_STEPS);
+    memset(&timing, 0, NUM_MD_STEPS);
   }
 };
 
-
 class MDSeqTrackData {
 public:
-  uint8_t length;
-  uint8_t speed;
-  uint32_t slide_mask32; //to be increased to 64bits
+  uint32_t slide_mask32; // to be increased to 64bits
   uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
   uint64_t pattern_mask;
@@ -53,14 +49,14 @@ public:
   uint8_t conditional[NUM_MD_STEPS];
   uint8_t timing[NUM_MD_STEPS];
   void init() {
-  length = 16;
-  speed = 1;
-  memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
-  memset(&locks_params, 0, NUM_MD_LOCKS);
-  pattern_mask = 0;
-  lock_mask = 0;
-  memset(&conditional, 0, NUM_MD_STEPS);
-  memset(&timing, 0, NUM_MD_STEPS);
+    length = 16;
+    speed = 1;
+    memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
+    memset(&locks_params, 0, NUM_MD_LOCKS);
+    pattern_mask = 0;
+    lock_mask = 0;
+    memset(&conditional, 0, NUM_MD_STEPS);
+    memset(&timing, 0, NUM_MD_STEPS);
   }
 };
 

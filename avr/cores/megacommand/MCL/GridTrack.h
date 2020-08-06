@@ -13,18 +13,29 @@
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridChain.h"
+#include "SeqTrack.h"
+
+class GridTrack_270 {
+public:
+  uint8_t active = EMPTY_TRACK_TYPE;
+  char trackName[17];
+  GridChain_270 chain;
+};
 
 class GridTrack {
 public:
   uint8_t active = EMPTY_TRACK_TYPE;
-  char trackName[17];
   GridChain chain;
-//  bool get_track_from_sysex(int tracknumber, uint8_t column);
-//  void place_track_in_sysex(int tracknumber, uint8_t column);
+  //  bool get_track_from_sysex(int tracknumber, uint8_t column);
+  //  void place_track_in_sysex(int tracknumber, uint8_t column);
 
   uint16_t get_track_size();
   bool load_track_from_grid(uint8_t column, uint16_t row);
-  bool store_track_in_grid(uint8_t column, uint16_t row);
+  virtual bool store_track_in_grid(uint8_t column, uint16_t row);
+  void init() {
+    chain.length = 16;
+    chain.speed = SEQ_SPEED_1X;
+  }
 };
 
 #endif /* GRIDTRACK_H__ */

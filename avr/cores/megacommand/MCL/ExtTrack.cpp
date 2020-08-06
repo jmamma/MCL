@@ -17,43 +17,13 @@ bool ExtTrack::load_seq_data(int tracknumber) {
   } else {
     mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
     memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
- }
+    mcl_seq.ext_tracks[tracknumber].speed = chain.speed;
+    mcl_seq.ext_tracks[tracknumber].length = chain.length;
+}
 #endif
   return true;
 }
 
-bool ExtTrack::load_track_from_grid(int32_t column, int32_t row, int m) {
-  bool ret;
-  int b = 0;
-
-  int32_t offset = grid.get_slot_offset(column, row);
-
-  int32_t len;
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
-  if (m > 0) {
-    ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
-  } else {
-    ret = mcl_sd.read_data((uint8_t *)(this), sizeof(ExtTrack), &proj.file);
-  }
-
-  if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Read failed");
-    return false;
-  }
-  if (active == EMPTY_TRACK_TYPE) {
-    seq_data.length = 16;
-  }
-  else {
-    if (convert((ExtTrack_270*) this)) { DEBUG_PRINTLN("conv 270"); }
-  }
-  return true;
-}
 bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
                                    bool online) {
   /*Assign a track to Grid i*/
@@ -76,6 +46,8 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
 #ifdef EXT_TRACKS
   if (online) {
     get_track_from_sysex(track - 16, column - 16);
+    chain.length = seq_data.legnth;
+    chain.speed = seq_data.speed;
     memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
   }
 #endif

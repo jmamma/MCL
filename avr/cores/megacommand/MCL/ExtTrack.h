@@ -20,7 +20,6 @@ public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(int tracknumber);
   bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row, int m);
   bool store_track_in_grid(int track, int32_t column, int32_t row,
                            bool online = false);
   bool convert(ExtTrack_270 *old) {

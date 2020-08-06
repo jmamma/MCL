@@ -201,8 +201,10 @@ void MDTrack::load_seq_data(int tracknumber) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
     memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
-    if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) { 
-        mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X; 
+    mcl_seq.md_tracks[tracknumber].speed = chain.speed;
+    mcl_seq.md_tracks[tracknumber].length = chain.length;
+    if (mcl_seq.md_tracks[tracknumber].speed < MD_SPEED_1X) {
+        mcl_seq.md_tracks[tracknumber].speed = MD_SPEED_1X;
         mcl_seq.md_tracks[tracknumber].slide_mask32 = 0;
       }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
@@ -217,83 +219,6 @@ void MDTrack::place_track_in_sysex(int tracknumber, uint8_t column) {
   place_track_in_pattern(tracknumber, column, &(MD.pattern));
   place_track_in_kit(tracknumber, column, &(MD.kit));
   load_seq_data(tracknumber);
-}
-
-bool MDTrack::load_track_from_grid(int32_t column, int32_t row, int32_t len) {
-
-  bool ret;
-  int b = 0;
-
-  int32_t offset = grid.get_slot_offset(column, row);
-
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
-
-  ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
-
-  if (!ret) {
-    DEBUG_PRINTLN("read failed");
-    return false;
-  }
-
-  //Remove active == 255, once project spec has changed. This is a hotfix
-  //for bad track type set when clearing header.
-
-  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
-    init();
-  }
-
-  return true;
-}
-
-bool MDTrack::load_track_from_grid(int32_t column, int32_t row) {
-
-  bool ret;
-  int b = 0;
-
-  //  DEBUG_PRINT_FN();
-  int32_t offset = grid.get_slot_offset(column, row);
-
-  int32_t len;
-
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
-
-  len = (sizeof(MDTrack) - (LOCK_AMOUNT * 3));
-
-  // len = (sizeof(MDTrack)  - (LOCK_AMOUNT * 3));
-
-  ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
-
-  if (!ret) {
-    DEBUG_PRINTLN("read failed");
-    return false;
-  }
-
-  //Remove active == 255, once project spec has changed. This is a hotfix
-  //for bad track type set when clearing header.
-
-  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
-    init();
-  }
-
-  if ((arraysize < 0) || (arraysize > LOCK_AMOUNT)) {
-    DEBUG_PRINTLN("lock array size is wrong");
-    return false;
-  }
-  ret =
-      mcl_sd.read_data((uint8_t *)&(this->locks[0]), arraysize * 3, &proj.file);
-  if (!ret) {
-    DEBUG_PRINTLN("read failed");
-    return false;
-  }
-  return true;
 }
 
 void MDTrack::scale_seq_vol(float scale) {
@@ -369,6 +294,10 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
     get_track_from_kit(track, column);
     //h4x0r, remove me when we get more memory for slide_mask
     mcl_seq.md_tracks[track].slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
+
+    chain.length = seq_data.legnth;
+    chain.speed = seq_data.speed;
+
     if (merge > 0) {
       DEBUG_PRINTLN("auto merge");
       MDSeqTrack md_seq_track;
@@ -379,8 +308,8 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       }
       if (merge == SAVE_MD) {
         md_seq_track.init();
-        md_seq_track.length = length;
-        md_seq_track.speed = MD_SPEED_1X + kitextra.doubleTempo;
+        chain.length = length;
+        chain.speed = MD_SPEED_1X + kitextra.doubleTempo;
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
@@ -390,6 +319,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
     } else {
       memcpy(&(this->seq_data), &(mcl_seq.md_tracks[track]),
              sizeof(MDSeqTrackData));
+
     }
     // Legacy, we no longer store the MD data.
     if (!storepattern) {

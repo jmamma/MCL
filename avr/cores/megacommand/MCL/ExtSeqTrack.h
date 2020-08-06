@@ -7,6 +7,7 @@
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+#include "SeqTrackData.h"
 
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_NOTES 4
@@ -46,8 +47,6 @@ const uint8_t ext_speeds[7] PROGMEM = {
 
 class ExtSeqTrackData_270 {
 public:
-  uint8_t length;
-  uint8_t speed;
   uint8_t reserved[NUM_EXT_NOTES_270];
   int8_t notes[NUM_EXT_NOTES_270]
               [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
@@ -59,7 +58,7 @@ public:
   uint8_t timing[NUM_EXT_STEPS_270];
 };
 
-class ExtSeqTrackData {
+class ExtSeqTrackData : public SeqTrack {
 public:
   uint8_t version;
   uint8_t length;

@@ -23,38 +23,6 @@ bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
   active = A4_TRACK_TYPE;
 }
 
-bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  int32_t offset = grid.get_slot_offset(column, row);
-  int32_t len;
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
-  if (m > 0) {
-    ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
-  } else {
-    ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
-  }
-  if (!ret) {
-    DEBUG_PRINTLN("Write failed");
-    return false;
-  }
-  if (active == EMPTY_TRACK_TYPE) {
-    seq_data.length = 16;
-  }
-  else {
-    //Detect and convert old project.
-    if (convert((A4Track_270*)this)) { DEBUG_PRINTLN("conv 270"); }
-
-  }
-
-
-  return true;
-}
 bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
                                   bool online) {
   /*Assign a track to Grid i*/
@@ -83,6 +51,9 @@ bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
       }
     }
     memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
+
+    chain.length = seq_data.legnth;
+    chain.speed = seq_data.speed;
   }
 #endif
   ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);

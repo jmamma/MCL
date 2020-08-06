@@ -56,6 +56,10 @@ bool GridTrack::load_track_from_grid(uint8_t column, uint16_t row) {
     return false;
   }
 
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
+  init();
+  }
+
   return true;
 }
 

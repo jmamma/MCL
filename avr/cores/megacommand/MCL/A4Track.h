@@ -26,7 +26,6 @@ public:
   A4Sound sound;
   void load_seq_data(int tracknumber);
   bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
   bool convert(A4Track_270 *old) {
     if (active == A4_TRACK_TYPE_270) {
