@@ -20,6 +20,8 @@ void MCLSeq::setup() {
               //(uint8_t) (((float) n / (float)48) * (float)96);
       }    } */
   for (uint8_t i = 0; i < num_md_tracks; i++) {
+    add_track(i, MD_TRACK_TYPE,&md_tracks[i]);
+
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
     md_tracks[i].speed = MD_SPEED_1X;
@@ -38,6 +40,7 @@ void MCLSeq::setup() {
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    add_track(i, EXT_TRACK_TYPE,&ext_tracks[i]);
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
     ext_tracks[i].speed = EXT_SPEED_2X;

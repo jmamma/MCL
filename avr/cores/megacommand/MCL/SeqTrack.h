@@ -24,6 +24,7 @@ class SeqTrack_270 {
 class SeqTrack {
 
 public:
+  uint8_t active;
   uint8_t length;
   uint8_t speed;
   uint8_t track_number;
@@ -35,10 +36,6 @@ public:
   uint8_t iterations_6;
   uint8_t iterations_7;
   uint8_t iterations_8;
-
-  uint32_t start_clock32th;
-  uint64_t oneshot_mask;
-  uint64_t slide_mask;
 
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
