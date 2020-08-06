@@ -57,7 +57,7 @@ public:
 };
 
 class MDTrackLight_270
-    : public GridTrack,
+    : public GridTrack_270,
       public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
 public:
   MDSeqTrackData_270 seq_data;

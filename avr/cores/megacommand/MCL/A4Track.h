@@ -11,7 +11,7 @@
 #include "MCLMemory.h"
 #include "Bank1Object.h"
 
-class A4Track_270 : public GridTrack {
+class A4Track_270 : public GridTrack_270 {
 public:
   ExtSeqTrackData_270 seq_data;
   A4Sound sound;

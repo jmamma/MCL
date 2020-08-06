@@ -8,7 +8,7 @@
 
 #define EMPTY_TRACK_TYPE 0
 
-class ExtTrack_270 : public GridTrack {
+class ExtTrack_270 : public GridTrack_270 {
 public:
   ExtSeqTrackData_270 seq_data;
 };
