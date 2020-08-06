@@ -1,6 +1,12 @@
 #include "MCL.h"
 #include "MDTrack.h"
 
+void MDTrack::load_immediate(uint8_t tracknumber) {
+  place_track_in_kit(tracknumber, &(MD.kit));
+  load_seq_data(tracknumber);
+  store_in_mem(tracknumber);
+}
+
 void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
   //  trackName[0] = '\0';
   memcpy(machine.params, MD.kit.params[tracknumber], 24);

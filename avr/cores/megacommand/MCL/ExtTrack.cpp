@@ -1,6 +1,11 @@
 #include "ExtTrack.h"
 #include "MCL.h"
 
+void ExtTrack::load_immediate(uint8_t tracknumber) {
+      store_in_mem(tracknumber);
+      load_seq_data(tracknumber);
+}
+
 bool ExtTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
 
   active = EXT_TRACK_TYPE;

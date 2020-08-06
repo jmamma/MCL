@@ -32,6 +32,11 @@ public:
   uint16_t get_track_size();
   bool load_track_from_grid(uint8_t column, uint16_t row);
   virtual bool store_track_in_grid(uint8_t column, uint16_t row);
+  /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
+  virtual void load_immediate() {
+
+  };
+
   void init() {
     chain.length = 16;
     chain.speed = SEQ_SPEED_1X;

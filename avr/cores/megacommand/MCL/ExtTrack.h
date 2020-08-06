@@ -22,6 +22,7 @@ public:
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   bool store_track_in_grid(int track, int32_t column, int32_t row,
                            bool online = false);
+  void load_immediate(uint8_t tracknumber);
   bool convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       seq_data.convert(&(old->seq_data));

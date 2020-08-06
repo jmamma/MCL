@@ -29,45 +29,43 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(int curtrack, int column, int row,
+bool MCLActions::load_track_from_ext(uint16_t tracknumber, uint16_t row,
                                      EmptyTrack *empty_track) {
 
   DEBUG_PRINT_FN();
+
   A4Track *a4_track = (A4Track *)empty_track;
   ExtTrack *ext_track = (ExtTrack *)empty_track;
   if (Analog4.connected) {
 
-    if (a4_track->load_track_from_grid(column, row, 0)) {
-      memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
-      grid_page.active_slots[column] = row;
-      a4_track->store_in_mem(column);
-      a4_track->load_seq_data(curtrack);
+    if (a4_track->load_track_from_grid(tracknumber row, 0)) {
+      a4_track->chain.store_in_mem(chains);
+      a4_track.load_immediate(tracknumber);
+      grid_page.active_slots[tracknumber] = row;
+
       return true;
     }
   } else {
-    if (ext_track->load_track_from_grid(column, row, 0)) {
-      memcpy(&(chains[column]), &(a4_track->chain), sizeof(GridChain));
-      grid_page.active_slots[column] = row;
-      ext_track->store_in_mem(column);
-      ext_track->load_seq_data(curtrack);
+    if (ext_track->load_track_from_grid(tracknumber, row, 0)) {
+      ext_track->chain.store_in_mem(chains);
+      ext_track.load_immediate(tracknumber);
+      grid_page.active_slots[tracknumber] = row;
       return true;
     }
   }
   return false;
 }
 
-bool MCLActions::load_track_from_md(int curtrack, int column, int row,
+bool MCLActions::load_track_from_md(uint8_t tracknumber, uint16_t row,
                                     EmptyTrack *empty_track) {
 
   MDTrack *md_track = (MDTrack *)empty_track;
   DEBUG_PRINT_FN();
-  if (column < NUM_MD_TRACKS) {
+  if (tracknumber < NUM_MD_TRACKS) {
     if (md_track->load_track_from_grid(column, row)) {
-      memcpy(&(chains[column]), &(md_track->chain), sizeof(GridChain));
-      grid_page.active_slots[column] = row;
-      md_track->place_track_in_kit(curtrack, column, &(MD.kit));
-      md_track->load_seq_data(curtrack);
-      md_track->store_in_mem(column);
+      md_track->chain.store_in_mem(chains);
+      md_track.load_immediate(tracknumber);
+      grid_page.active_slots[tracknumber] = row;
     }
   }
 }
@@ -341,10 +339,9 @@ void MCLActions::send_tracks_to_devices() {
         first_note = i;
       }
       //  if (grid_page.encoders[0]->cur > 0) {
-      track = i;
 
       if (i < NUM_MD_TRACKS) {
-        load_track_from_md(track, i, grid_page.getRow(), &empty_track);
+        load_track_from_md(i, grid_page.getRow(), &empty_track);
 
         if (i == first_note) {
           // Use first track's original kit values for write orig
@@ -508,33 +505,42 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   if (n < NUM_MD_TRACKS) {
     float l = mcl_seq.md_tracks[n].length;
-    len = (float) chains[n].loops * l * (float) mcl_seq.md_tracks[n].get_speed_multiplier();
-   }
+    len = (float)chains[n].loops * l *
+          (float)mcl_seq.md_tracks[n].get_speed_multiplier();
+  }
 #ifdef EXT_TRACKS
   else {
     float l = mcl_seq.ext_tracks[n - NUM_MD_TRACKS].length;
-    len = (float) chains[n].loops * l * (float) mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
-            //( l - lm);
+    len = (float)chains[n].loops * l *
+          (float)mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
+    //( l - lm);
   }
 #endif
   while (len < 4) {
-    if (len < 1) { len = 4; transition_offsets[n] = 0; }
-    else { len = len * 2; }
+    if (len < 1) {
+      len = 4;
+      transition_offsets[n] = 0;
+    } else {
+      len = len * 2;
+    }
   }
 
-  //Last offset must be carried over to new offset.
-  transition_offsets[n] += (float) (len - (uint16_t)(len)) * 12;
-  if (transition_offsets[n] >= 12) { transition_offsets[n] = transition_offsets[n] - 12; len++; }
+  // Last offset must be carried over to new offset.
+  transition_offsets[n] += (float)(len - (uint16_t)(len)) * 12;
+  if (transition_offsets[n] >= 12) {
+    transition_offsets[n] = transition_offsets[n] - 12;
+    len++;
+  }
 
   DEBUG_DUMP(len - (uint16_t)(len));
   DEBUG_DUMP(transition_offsets[n]);
-  next_transitions[n] += (uint16_t) len;
+  next_transitions[n] += (uint16_t)len;
 
   // check for overflow and make sure next nearest step is greater than
   // midiclock counter
   while ((next_transitions[n] >= next_transitions_old) &&
          (next_transitions[n] < MidiClock.div16th_counter)) {
-    next_transitions[n] += (uint16_t) len;
+    next_transitions[n] += (uint16_t)len;
   }
   DEBUG_PRINTLN(next_transitions[n]);
 }
