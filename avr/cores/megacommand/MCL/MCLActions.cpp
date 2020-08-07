@@ -285,7 +285,6 @@ void MCLActions::send_tracks_to_devices() {
   uint8_t note_count = 0;
   uint8_t first_note = 255;
 
-  KitExtra kit_extra;
   volatile uint8_t *ptr;
 
   uint8_t mute_states[16];
@@ -304,15 +303,6 @@ void MCLActions::send_tracks_to_devices() {
         md_track->chain.store_in_mem(chains);
         md_track.load_immediate(tracknumber);
         grid_page.active_slots[tracknumber] = row;
-        if (i == first_note) {
-          // Use first track's original kit values for write orig
-          if (md_track->active != EMPTY_TRACK_TYPE) {
-            memcpy(&kit_extra, &(md_track->kitextra), sizeof(kit_extra));
-          } else {
-            write_original = 0;
-          }
-        }
-
       } else if (ext_track->is() || a4_track->is()) {
         track = track - NUM_MD_TRACKS;
         ext_track->chain.store_in_mem(chains);
@@ -331,10 +321,6 @@ void MCLActions::send_tracks_to_devices() {
       MD.kit.name[c] =
           toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
     }
-    memcpy(&MD.kit.reverb[0], kit_extra.reverb, sizeof(kit_extra.reverb));
-    memcpy(&MD.kit.delay[0], kit_extra.delay, sizeof(kit_extra.delay));
-    memcpy(&MD.kit.eq[0], kit_extra.eq, sizeof(kit_extra.eq));
-    memcpy(&MD.kit.dynamics[0], kit_extra.dynamics, sizeof(kit_extra.dynamics));
   }
 
   MD.kit.origPosition = 0x7F;
@@ -429,8 +415,8 @@ void MCLActions::send_tracks_to_devices() {
 
       transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
-                              (mcl_seq.seq_tracks[n]->tp.step_count *
-                               mcl_seq.seq_tracks[n]->tp.get_speed_multiplier());
+                            (mcl_seq.seq_tracks[n]->tp.step_count *
+                             mcl_seq.seq_tracks[n]->tp.get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -451,9 +437,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint16_t next_transitions_old = next_transitions[n];
   float len;
 
-    float l = chains[n].length;
-    len = (float)chains[n].loops * l *
-          (float)mcl_seq.seq_tracks[n]->tp.get_speed_multiplier();
+  float l = chains[n].length;
+  len = (float)chains[n].loops * l *
+        (float)mcl_seq.seq_tracks[n]->tp.get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;
