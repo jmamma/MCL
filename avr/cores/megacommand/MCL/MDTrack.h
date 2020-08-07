@@ -48,18 +48,9 @@ public:
   uint32_t swingEditAll;
 };
 
-class MDTrackLight
-    : public GridTrack,
-      public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
-public:
-  MDSeqTrackData seq_data;
-  MDMachine machine;
-  bool is() { return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270); }
-};
-
 class MDTrackLight_270
     : public GridTrack_270,
-      public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
+      public Bank1Object<MDTrackLight_270, 0, BANK1_MD_TRACKS_START> {
 public:
   MDSeqTrackData_270 seq_data;
   MDMachine machine;
@@ -81,23 +72,12 @@ public:
   ParameterLock locks[LOCK_AMOUNT];
 };
 
-class MDTrack : public MDTrackLight {
+class MDTrack : public GridTrack,
+                public Bank1Object<MDTrack, 0, BANK1_MD_TRACKS_START> {
 public:
-  uint8_t origPosition;
-  uint8_t patternOrigPosition;
-  uint8_t length;
-  uint64_t trigPattern;
-  uint64_t accentPattern;
-  uint64_t slidePattern;
-  uint64_t swingPattern;
-
-  KitExtra kitextra;
-
-  int arraysize;
-  ParameterLock locks[LOCK_AMOUNT];
-
-  MDTrack() { arraysize = 0; }
-
+  MDSeqTrackData seq_data;
+  MDMachine machine;
+  bool is() { return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270); }
   void init();
 
   void clear_track();
@@ -129,8 +109,11 @@ public:
 
   bool convert(MDTrack_270 *old) {
     if (active == MD_TRACK_TYPE_270) {
-      if (old->speed < 64) { chain.speed = SEQ_SPEED_1X; }
-      else { chain.speed = old->speed - 64; }
+      if (old->speed < 64) {
+        chain.speed = SEQ_SPEED_1X;
+      } else {
+        chain.speed = old->speed - 64;
+      }
 
       seq_data.convert(&(old->seq_data));
       active = MD_TRACK_TYPE;
