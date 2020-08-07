@@ -469,20 +469,9 @@ void MCLActions::send_tracks_to_devices() {
       uint32_t len;
 
       transition_level[n] = 0;
-
-      if (n < NUM_MD_TRACKS) {
-        next_transitions[n] = MidiClock.div16th_counter -
-                              (mcl_seq.md_tracks[n].step_count *
-                               mcl_seq.md_tracks[n].get_speed_multiplier());
-      }
-#ifdef EXT_TRACKS
-      else {
-        next_transitions[n] =
-            MidiClock.div16th_counter -
-            (mcl_seq.ext_tracks[n - NUM_MD_TRACKS].step_count *
-             mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier());
-      }
-#endif
+      next_transitions[n] = MidiClock.div16th_counter -
+                              (mcl_seq.seq_tracks[n]->tp.step_count *
+                               mcl_seq.seq_tracks[n]->tp.get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -503,19 +492,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint16_t next_transitions_old = next_transitions[n];
   float len;
 
-  if (n < NUM_MD_TRACKS) {
     float l = chains[n].length;
     len = (float)chains[n].loops * l *
-          (float)mcl_seq.md_tracks[n].get_speed_multiplier();
-  }
-#ifdef EXT_TRACKS
-  else {
-    float l = chains[n].length;
-    len = (float)chains[n].loops * l *
-          (float)mcl_seq.ext_tracks[n - NUM_MD_TRACKS].get_speed_multiplier();
-    //( l - lm);
-  }
-#endif
+          (float)mcl_seq.seq_tracks[n]->tp.get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;
