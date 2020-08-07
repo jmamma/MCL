@@ -285,7 +285,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
     //h4x0r, remove me when we get more memory for slide_mask
     mcl_seq.md_tracks[track].slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
 
-    chain.length = seq_data.legnth;
+    chain.length = seq_data.length;
     chain.speed = seq_data.speed;
 
     if (merge > 0) {
@@ -298,8 +298,8 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
       }
       if (merge == SAVE_MD) {
         md_seq_track.init();
-        chain.length = length;
-        chain.speed = MD_SPEED_1X + kitextra.doubleTempo;
+        chain.length = MD.pattern.length;
+        chain.speed = MD_SPEED_1X + MD.kit.doubleTempo;
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
