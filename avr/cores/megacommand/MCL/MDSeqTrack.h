@@ -121,7 +121,7 @@ public:
   void update_params();
   void update_param(uint8_t param_id, uint8_t value);
   void reset_params();
-  void merge_from_md(MDTrack *md_track);
+  void merge_from_md(uint8_t track_number, MDPattern *pattern, MDKit *kit);
 
   void set_length(uint8_t len);
   void re_sync();

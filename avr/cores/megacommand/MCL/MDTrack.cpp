@@ -31,21 +31,14 @@ void MDTrack::get_machine_from_kit(int tracknumber, uint8_t column) {
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
 
-bool MDTrack::get_track_from_kit(int tracknumber, uint8_t column) {
-  get_machine_from_kit(tracknumber, column);
-  memcpy(&kitextra.reverb, &MD.kit.reverb, sizeof(kitextra.reverb));
-  memcpy(&kitextra.delay, &MD.kit.delay, sizeof(kitextra.delay));
-  memcpy(&kitextra.eq, &MD.kit.eq, sizeof(kitextra.eq));
-  memcpy(&kitextra.dynamics, &MD.kit.dynamics, sizeof(kitextra.dynamics));
-  origPosition = MD.kit.origPosition;
-}
-
 bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
+
   trigPattern = MD.pattern.trigPatterns[tracknumber];
   accentPattern = MD.pattern.accentPatterns[tracknumber];
   slidePattern = MD.pattern.slidePatterns[tracknumber];
   swingPattern = MD.pattern.swingPatterns[tracknumber];
   length = MD.pattern.patternLength;
+  /*
   kitextra.swingAmount = MD.pattern.swingAmount;
   kitextra.accentAmount = MD.pattern.accentAmount;
   kitextra.patternLength = MD.pattern.patternLength;
@@ -60,6 +53,7 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   kitextra.accentPattern = MD.pattern.accentPattern;
   kitextra.slidePattern = MD.pattern.slidePattern;
   kitextra.swingPattern = MD.pattern.swingPattern;
+*/
 
   int n = 0;
   arraysize = 0;
@@ -91,18 +85,11 @@ bool MDTrack::get_track_from_pattern(int tracknumber, uint8_t column) {
   arraysize = n;
   DEBUG_PRINTLN(arraysize);
 
-  patternOrigPosition = MD.pattern.origPosition;
-}
-
-bool MDTrack::get_track_from_sysex(int tracknumber, uint8_t column) {
-
-  active = MD_TRACK_TYPE;
-
-  get_track_from_pattern(tracknumber, column);
-  get_track_from_kit(tracknumber, column);
-
-  memcpy(&seq_data, &mcl_seq.md_tracks[tracknumber], sizeof(seq_data));
-  //  trackName[0] = '\0';
+  trigPattern = MD.pattern.trigPatterns[tracknumber];
+  accentPattern = MD.pattern.accentPatterns[tracknumber];
+  slidePattern = MD.pattern.slidePatterns[tracknumber];
+  swingPattern = MD.pattern.swingPatterns[tracknumber];
+  length = MD.pattern.patternLength;  patternOrigPosition = MD.pattern.origPosition;
 }
 
 void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
@@ -294,10 +281,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   }
 
   if (track != 255 && online == true) {
-    if ((storepattern) || (merge > 0)) {
-      get_track_from_pattern(track, column);
-    }
-    get_track_from_kit(track, column);
+    get_machine_from_kit(track, column);
     //h4x0r, remove me when we get more memory for slide_mask
     mcl_seq.md_tracks[track].slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
 
@@ -319,7 +303,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
-      md_seq_track.merge_from_md(this);
+      md_seq_track.merge_from_md(track, &(MD.pattern), &(MD.kit));
       // copy merged data in to this track object's seq data for writing to SD
       memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
     } else {

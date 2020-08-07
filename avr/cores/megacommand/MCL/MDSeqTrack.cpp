@@ -678,36 +678,49 @@ void MDSeqTrack::clear_track(bool locks, bool reset_params) {
   slide_mask = 0;
 }
 
-void MDSeqTrack::merge_from_md(MDTrack *md_track) {
+void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern,
+                               MDKit *kit) {
   DEBUG_PRINT_FN();
+  for (int i = 0; i < 24; i++) {
+    if (IS_BIT_SET32(pattern->lockPatterns[tracknumber], i)) {
+      int8_t idx = pattern->paramLocks[tracknumber][i];
+      if (idx >= 0) {
+        for (int s = 0; s < 64; s++) {
 
-  for (int n = 0; n < md_track->arraysize; n++) {
-    set_track_locks(md_track->locks[n].step, md_track->locks[n].param_number,
-                    md_track->locks[n].value);
-    SET_BIT64(lock_mask, md_track->locks[n].step);
+          if ((pattern->locks[idx][s] <= 127) &&
+              (pattern->locks[idx][s] >= 0)) {
+            if (IS_BIT_SET64(trigPattern, s)) {
+              set_track_locks(s, i, pattern->locks[idx][s]);
+              SET_BIT64(lock_mask, s);
+            }
+          }
+        }
+      }
+    }
   }
-  pattern_mask |= md_track->trigPattern;
+
+  pattern_mask |= pattern->trigPattern;
   // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float)md_track->kitextra.swingAmount / 16385.0;
+  float swing = (float)kit->swingAmount / 16385.0;
 
-  if (md_track->kitextra.slideEditAll > 0) {
-    slide_mask32 |= (uint32_t) md_track->kitextra.slidePattern;
+  if (kit->slideEditAll > 0) {
+    slide_mask32 |= (uint32_t)kit->slidePattern;
   } else {
-    slide_mask32 |= (uint32_t) md_track->slidePattern;
+    slide_mask32 |= (uint32_t)pattern->slidePattern;
   }
 
   uint64_t swingpattern = 0;
   uint8_t timing_mid = get_timing_mid();
-  if (md_track->kitextra.swingEditAll > 0) {
-    swingpattern |= md_track->kitextra.swingPattern;
+  if (kit->swingEditAll > 0) {
+    swingpattern |= kit->swingPattern;
   } else {
-    swingpattern |= md_track->swingPattern;
+    swingpattern |= pattern->swingPattern;
   }
 
   for (uint8_t a = 0; a < length; a++) {
-    if (IS_BIT_SET64(md_track->trigPattern, a)) {
+    if (IS_BIT_SET64(pattern->trigPattern, a)) {
       conditional[a] = 0;
       timing[a] = timing_mid;
       if (IS_BIT_SET64(swingpattern, a)) {
