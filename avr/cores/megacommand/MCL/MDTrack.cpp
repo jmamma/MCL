@@ -136,17 +136,8 @@ void MDTrack::place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
 }
 
 void MDTrack::init() {
-  clear_track();
   machine.init();
-  seq_data.length = 16;
-}
-
-void MDTrack::clear_track() {
-  arraysize = 0;
-  trigPattern = 0;
-  accentPattern = 0;
-  slidePattern = 0;
-  swingPattern = 0;
+  seq_data.init();
 }
 
 void MDTrack::place_track_in_pattern(int tracknumber, uint8_t column,
@@ -263,7 +254,7 @@ void MDTrack::normalize() {
 }
 
 bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
-                                  bool storepattern, uint8_t merge,
+                                  uint8_t merge,
                                   bool online) {
   active = MD_TRACK_TYPE;
 
@@ -311,11 +302,6 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
              sizeof(MDSeqTrackData));
 
     }
-    // Legacy, we no longer store the MD data.
-    if (!storepattern) {
-      clear_track();
-    }
-
     // Normalise track levels
     if (mcl_cfg.auto_normalize == 1) {
       normalize();

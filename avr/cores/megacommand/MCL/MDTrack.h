@@ -94,8 +94,7 @@ public:
   void place_track_in_sysex(int tracknumber, uint8_t column);
 
   bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
-                           bool storepattern = false, uint8_t merge = 0,
-                           bool online = false);
+                           uint8_t merge = 0, bool online = false);
   void load_immediate(uint8_t tracknumber);
 
   // scale machine track vol by percentage

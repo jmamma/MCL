@@ -122,7 +122,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        md_track->store_track_in_grid(i, grid_page.getRow(), i, false, merge,
+        md_track->store_track_in_grid(i, grid_page.getRow(), i, merge,
                                       true);
       }
 #ifdef EXT_TRACKS

@@ -29,16 +29,6 @@ public:
   uint64_t lock_mask;
   uint8_t conditional[NUM_MD_STEPS];
   uint8_t timing[NUM_MD_STEPS];
-  void init() {
-    length = 16;
-    speed = 1;
-    memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
-    memset(&locks_params, 0, NUM_MD_LOCKS);
-    pattern_mask = 0;
-    lock_mask = 0;
-    memset(&conditional, 0, NUM_MD_STEPS);
-    memset(&timing, 0, NUM_MD_STEPS);
-  }
   bool convert(MDSeqTrackData_270 *old) {
     /*ordering of these statements is important to ensure memory
      * is copied before being overwritten*/
