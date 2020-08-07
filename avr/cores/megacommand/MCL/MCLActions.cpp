@@ -29,47 +29,6 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-bool MCLActions::load_track_from_ext(uint16_t tracknumber, uint16_t row,
-                                     EmptyTrack *empty_track) {
-
-  DEBUG_PRINT_FN();
-
-  A4Track *a4_track = (A4Track *)empty_track;
-  ExtTrack *ext_track = (ExtTrack *)empty_track;
-  if (Analog4.connected) {
-
-    if (a4_track->load_track_from_grid(tracknumber row, 0)) {
-      a4_track->chain.store_in_mem(chains);
-      a4_track.load_immediate(tracknumber);
-      grid_page.active_slots[tracknumber] = row;
-
-      return true;
-    }
-  } else {
-    if (ext_track->load_track_from_grid(tracknumber, row, 0)) {
-      ext_track->chain.store_in_mem(chains);
-      ext_track.load_immediate(tracknumber);
-      grid_page.active_slots[tracknumber] = row;
-      return true;
-    }
-  }
-  return false;
-}
-
-bool MCLActions::load_track_from_md(uint8_t tracknumber, uint16_t row,
-                                    EmptyTrack *empty_track) {
-
-  MDTrack *md_track = (MDTrack *)empty_track;
-  DEBUG_PRINT_FN();
-  if (tracknumber < NUM_MD_TRACKS) {
-    if (md_track->load_track_from_grid(column, row)) {
-      md_track->chain.store_in_mem(chains);
-      md_track.load_immediate(tracknumber);
-      grid_page.active_slots[tracknumber] = row;
-    }
-  }
-}
-
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   DEBUG_PRINT_FN();
 

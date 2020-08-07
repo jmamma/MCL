@@ -64,9 +64,6 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  bool load_track_from_ext(int curtrack, int column, int row, EmptyTrack *empty_track);
-  bool load_track_from_md(int curtrack, int column, int row, EmptyTrack *empty_track);
-
   void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
 
   void store_tracks_in_mem(int column, int row, uint8_t merge);
