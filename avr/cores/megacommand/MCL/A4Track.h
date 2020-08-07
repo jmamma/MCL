@@ -32,6 +32,8 @@ public:
   }
   bool convert(A4Track_270 *old) {
     if (active == A4_TRACK_TYPE_270) {
+      chain.speed = old->speed;
+      chain.length = old->length;
       memcpy(&sound, &(old->sound), sizeof(old->sound));
       seq_data.convert(&(old->seq_data));
       active = A4_TRACK_TYPE;

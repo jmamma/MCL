@@ -20,6 +20,8 @@ public:
 
 class MDSeqTrackData_270 {
 public:
+  uint8_t length;
+  uint8_t speed;
   uint32_t slide_mask32; // to be increased to 64bits
   uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
@@ -37,6 +39,11 @@ public:
     memset(&conditional, 0, NUM_MD_STEPS);
     memset(&timing, 0, NUM_MD_STEPS);
   }
+  bool convert(MDSeqTrackData_270 *old) {
+    /*ordering of these statements is important to ensure memory
+     * is copied before being overwritten*/
+  }
+
 };
 
 class MDSeqTrackData {

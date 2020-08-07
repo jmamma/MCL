@@ -28,6 +28,8 @@ public:
   }
   bool convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
+      chain.speed = old->speed;
+      chain.length = old->length;
       seq_data.convert(&(old->seq_data));
       active = EXT_TRACK_TYPE;
     }

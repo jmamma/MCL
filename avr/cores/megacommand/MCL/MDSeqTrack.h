@@ -11,23 +11,6 @@
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
-// MD Pattern speed
-//[0 = 1x, 1=2x, 2=3/4x, 3=3/2x]
-
-// MCL Track speed
-#define MD_SPEED_1X 64
-#define MD_SPEED_2X 65
-#define MD_SPEED_3_4X 66
-#define MD_SPEED_3_2X 67
-#define MD_SPEED_1_2X 68
-#define MD_SPEED_1_4X 69
-#define MD_SPEED_1_8X 70
-
-const uint8_t md_speeds[7] PROGMEM = {MD_SPEED_1X,   MD_SPEED_2X,
-                                      MD_SPEED_3_4X, MD_SPEED_3_2X,
-                                      MD_SPEED_1_2X,
-                                      MD_SPEED_1_4X, MD_SPEED_1_8X};
-// forward declare MDTrack
 class MDTrack;
 
 class SlideData {
@@ -160,35 +143,6 @@ public:
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
 
-  uint8_t get_timing_mid() { return get_timing_mid_inline(); }
-  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
-    uint8_t timing_mid;
-    switch (speed) {
-    default:
-    case MD_SPEED_1X:
-      timing_mid = 12;
-      break;
-    case MD_SPEED_2X:
-      timing_mid = 6;
-      break;
-    case MD_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
-      break;
-    case MD_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
-      break;
-    case MD_SPEED_1_2X:
-      timing_mid = 24;
-      break;
-    case MD_SPEED_1_4X:
-      timing_mid = 48;
-      break;
-    case MD_SPEED_1_8X:
-      timing_mid = 96;
-      break;
-    }
-    return timing_mid;
-  }
 };
 
 #endif /* MDSEQTRACK_H__ */

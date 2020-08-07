@@ -76,8 +76,6 @@ public:
   bool convert(ExtSeqTrackData_270 *old) {
     /*ordering of these statements is important to ensure memory
      * is copied before being overwritten*/
-    speed = old->speed;
-    length = old->length;
     version = EXTSEQTRACKDATA_VERSION;
     memcpy(&notes, old->notes, NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {

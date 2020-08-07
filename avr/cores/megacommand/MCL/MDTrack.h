@@ -54,9 +54,7 @@ class MDTrackLight
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
-  bool is() {
-    return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270);
-  }
+  bool is() { return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270); }
 };
 
 class MDTrackLight_270
@@ -128,6 +126,18 @@ public:
 
   // normalize track level
   void normalize();
+
+  bool convert(MDTrack_270 *old) {
+    if (active == MD_TRACK_TYPE_270) {
+      if (old->speed < 64) { chain.speed = SEQ_SPEED_1X; }
+      else { chain.speed = old->speed - 64; }
+
+      seq_data.convert(&(old->seq_data));
+      active = MD_TRACK_TYPE;
+      return true;
+    }
+    return false;
+  }
 };
 
 #endif /* MDTRACK_H__ */

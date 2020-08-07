@@ -1,39 +1,6 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
-float ExtSeqTrack::get_speed_multiplier() {
-  return get_speed_multiplier(speed);
-}
-
-float ExtSeqTrack::get_speed_multiplier(uint8_t speed) {
-  float multi;
-  switch (speed) {
-  default:
-  case EXT_SPEED_1X:
-    multi = 1;
-    break;
-  case EXT_SPEED_2X:
-    multi = 0.5;
-    break;
-  case EXT_SPEED_3_4X:
-    multi = (4.0 / 3.0);
-    break;
-  case EXT_SPEED_3_2X:
-    multi = (2.0 / 3.0);
-    break;
-  case EXT_SPEED_1_2X:
-    multi = 2.0;
-    break;
-  case EXT_SPEED_1_4X:
-    multi = 4.0;
-    break;
-  case EXT_SPEED_1_8X:
-    multi = 8.0;
-    break;
-  }
-  return multi;
-}
-
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);

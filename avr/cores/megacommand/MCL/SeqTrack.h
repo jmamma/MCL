@@ -17,9 +17,12 @@
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
 
-class SeqTrack_270 {
-
+const uint8_t seq_speeds[7] PROGMEM = {
+    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
+    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X
 };
+
+class SeqTrack_270 {};
 
 class SeqTrack {
 
@@ -69,6 +72,36 @@ public:
     return timing_mid;
   }
 
+  virtual float set_speed_multiplier() { return get_speed_multiplier(speed); }
+
+  virtual float get_speed_multiplier(uint8_t speed) {
+    float multi;
+    switch (speed) {
+    default:
+    case SEQ_SPEED_1X:
+      multi = 1;
+      break;
+    case SEQ_SPEED_2X:
+      multi = 0.5;
+      break;
+    case SEQ_SPEED_3_4X:
+      multi = (4.0 / 3.0);
+      break;
+    case SEQ_SPEED_3_2X:
+      multi = (2.0 / 3.0);
+      break;
+    case SEQ_SPEED_1_2X:
+      multi = 2.0;
+      break;
+    case SEQ_SPEED_1_4X:
+      multi = 4.0;
+      break;
+    case SEQ_SPEED_1_8X:
+      multi = 8.0;
+      break;
+    }
+    return multi;
+  }
 };
 
 #endif /* SEQTRACK_H__ */
