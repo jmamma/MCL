@@ -3,7 +3,6 @@
 #include "MCL.h"
 
 #define DIV16_MARGIN 8
-#define HANDLE_GROUPS 1
 
 void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
@@ -178,42 +177,7 @@ void GridTask::run() {
         md_track->load_from_mem(n);
         if (md_track->active == MD_TRACK_TYPE) {
           if (mcl_actions.send_machine[n] == 0) {
-#ifdef HANDLE_GROUPS
-            uint8_t trigGroup = md_track->machine.trigGroup;
-            if ((trigGroup < 16) && (trigGroup != n) &&
-                (slots_loaded[trigGroup] == 0) && (slots_changed[n] == 0)) {
-              md_track->load_from_mem(trigGroup);
-              if (md_track->active == MD_TRACK_TYPE) {
-
-                bool set_level = false;
-                switch (mcl_actions.transition_level[n]) {
-                case 1:
-                  set_level = true;
-                  md_track->machine.level = 0;
-                  break;
-                case TRANSITION_UNMUTE:
-                  DEBUG_PRINTLN("unmuting");
-                  DEBUG_DUMP(trigGroup);
-                  MD.muteTrack(trigGroup, false);
-                  break;
-                case TRANSITION_MUTE:
-                  DEBUG_PRINTLN("muting");
-                  DEBUG_DUMP(trigGroup);
-                  MD.muteTrack(trigGroup, true);
-                  break;
-                default:
-                  break;
-                }
-                mcl_actions.md_set_machine(trigGroup, &(md_track->machine),
-                                           &(MD.kit), set_level);
-                md_track->place_track_in_kit(trigGroup, trigGroup, &(MD.kit),
-                                             set_level);
-              }
-              md_track->load_from_mem(n);
-              slots_loaded[trigGroup] = 1;
-            }
-#endif
-            if (slots_loaded[n] == 0) {
+           if (slots_loaded[n] == 0) {
               bool set_level = false;
               switch (mcl_actions.transition_level[n]) {
               case 1:
@@ -305,20 +269,7 @@ void GridTask::run() {
               md_track->store_in_mem(n);
               slots_cached[n] = 1;
 
-#ifdef HANDLE_GROUPS
-              uint8_t trigGroup = md_track->machine.trigGroup;
-              if ((trigGroup < 16) && (trigGroup != n) &&
-                  (slots_cached[trigGroup] == 0)) {
-                if (md_track->load_track_from_grid(
-                        trigGroup, mcl_actions.chains[n].row, len)) {
-                  md_track->store_in_mem(trigGroup);
-                  mcl_actions.send_machine[trigGroup] =
-                      mcl_actions.send_machine[n];
-                  slots_cached[trigGroup] = 1;
-                }
-              }
-#endif
-            } else {
+           } else {
               DEBUG_PRINTLN("failed");
             }
           }
