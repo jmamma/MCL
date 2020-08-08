@@ -19,8 +19,7 @@ public:
 };
 
 
-class A4Track : public GridTrack,
-                public Bank1Object<A4Track, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
+class A4Track : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
   A4Sound sound;

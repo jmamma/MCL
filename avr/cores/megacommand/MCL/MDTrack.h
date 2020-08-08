@@ -49,8 +49,7 @@ public:
 };
 
 class MDTrackLight_270
-    : public GridTrack_270,
-      public Bank1Object<MDTrackLight_270, 0, BANK1_MD_TRACKS_START> {
+    : public GridTrack_270 {
 public:
   MDSeqTrackData_270 seq_data;
   MDMachine machine;
@@ -72,8 +71,7 @@ public:
   ParameterLock locks[LOCK_AMOUNT];
 };
 
-class MDTrack : public GridTrack,
-                public Bank1Object<MDTrack, 0, BANK1_MD_TRACKS_START> {
+class MDTrack : public GridTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;

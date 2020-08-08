@@ -14,8 +14,7 @@ public:
 };
 
 class ExtTrack
-    : public GridTrack,
-      public Bank1Object<ExtTrack, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
+    : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(int tracknumber);
