@@ -122,8 +122,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        md_track->store_track_in_grid(i, grid_page.getRow(), i, merge,
-                                      true);
+        md_track->store_track_in_grid(i, grid_page.getRow(), i, merge, true);
       }
 #ifdef EXT_TRACKS
       else {
@@ -298,18 +297,19 @@ void MCLActions::send_tracks_to_devices() {
       }
 
       empty_track.load_from_grid(i, grid_page.getRow());
-
-      if (md_track->is()) {
-        md_track->chain.store_in_mem(chains);
-        md_track.load_immediate(tracknumber);
-        grid_page.active_slots[tracknumber] = row;
-      } else if (ext_track->is() || a4_track->is()) {
-        track = track - NUM_MD_TRACKS;
-        ext_track->chain.store_in_mem(chains);
-        ext_track.load_immediate(tracknumber);
-        grid_page.active_slots[tracknumber] = row;
-        if ((Analog4.connected) && (a4_track->is())) {
-          a4_send[track] = 1;
+      if (empty_track.is_active()) {
+        empty_track->chain.store_in_mem(chains);
+        switch (empty_track.active) {
+        case MD_TRACK_TYPE:
+          md_track->load_immediate(i);
+          break;
+        case A4_TRACK_TYPE:
+        case EXT_TRACK_TYPE:
+          ext_track->load_immediate(i - NUM_MD_TRACKS);
+          if ((Analog4.connected) && (a4_track->is())) {
+            a4_send[track] = 1;
+          }
+          break;
         }
       }
     }

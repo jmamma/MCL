@@ -28,7 +28,7 @@ uint16_t GridTrack::get_track_size() {
   return 0;
 }
 
-bool GridTrack::load_track_from_grid(uint8_t column, uint16_t row) {
+bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
   uint32_t offset = grid.get_slot_offset(column, row);
@@ -63,7 +63,7 @@ bool GridTrack::load_track_from_grid(uint8_t column, uint16_t row) {
   return true;
 }
 
-bool GridTrack::store_track_in_grid(uint8_t column, uint16_t row) {
+bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
 
   DEBUG_PRINT_FN();
   bool ret;

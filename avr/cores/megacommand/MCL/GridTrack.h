@@ -29,6 +29,8 @@ public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
 
+  bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
+
   uint16_t get_track_size();
   uint32_t get_region() {
     switch (active) {
@@ -42,8 +44,8 @@ public:
       break;
     }
   }
-  bool load_track_from_grid(uint8_t column, uint16_t row);
-  virtual bool store_track_in_grid(uint8_t column, uint16_t row);
+  bool load_from_grid(uint8_t column, uint16_t row);
+  virtual bool store_in_grid(uint8_t column, uint16_t row);
 
   bool store_in_mem(uint8_t column, uint32_t region = p_addr_base) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
