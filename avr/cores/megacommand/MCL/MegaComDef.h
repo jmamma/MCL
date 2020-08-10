@@ -6,6 +6,8 @@ typedef RingBuffer<0, uint16_t> combuf_t;
 
 #define COMCHANNEL_BUFSIZE 1024
 
+#define COMSYNC_TOKEN 0x5a
+
 #define COMSTATE_SYNC     0
 #define COMSTATE_TYPE     1
 #define COMSTATE_LEN1     2

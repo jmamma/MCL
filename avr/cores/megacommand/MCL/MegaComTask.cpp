@@ -43,7 +43,7 @@ bool comchannel_t::tx_isempty_isr() { return tx_buf.isEmpty_isr(); }
 void comchannel_t::rx_isr(uint8_t data) {
   switch (rx_state) {
   case COMSTATE_SYNC:
-    if (data == 0x00) {
+    if (data == COMSYNC_TOKEN) {
       rx_state = COMSTATE_TYPE;
       rx_chksum = 0;
     }
@@ -121,7 +121,7 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
   }
 
   // SYNC
-  tx_buf.put_h_isr(0x00);
+  tx_buf.put_h_isr(COMSYNC_TOKEN);
   // TYPE
   tx_chksum += type;
   tx_buf.put_h_isr(type);
