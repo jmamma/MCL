@@ -59,38 +59,14 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
     ;
 #endif
 
-  uint32_t cpu = (F_CPU / 16);
-  cpu /= speed;
-  cpu--;
+  uart_set_speed(speed, port);
 
-  // uint32_t cpu = (F_CPU / 16);
-  // cpu /= speed;
-  // cpu--;
-  // UBRR0H = ((cpu >> 8));
-#ifdef MEGACOMMAND
   if (port == 1) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
     MidiUart.speed = speed;
   }
   if (port == 2) {
-    UBRR2H = ((cpu >> 8) & 0xFF);
-    UBRR2L = (cpu & 0xFF);
     MidiUart2.speed = speed;
   }
-#else
-  if (port == 1) {
-    UBRR0H = ((cpu >> 8) & 0xFF);
-    UBRR0L = (cpu & 0xFF);
-    MidiUart.speed = speed;
-  }
-  if (port == 2) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
-    MidiUart2.speed = speed;
-  }
-
-#endif
 }
 
 

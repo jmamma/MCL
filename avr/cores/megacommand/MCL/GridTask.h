@@ -17,7 +17,6 @@ public:
   virtual void run();
 
   virtual void destroy();
-  void init();
   /* @} */
 };
 

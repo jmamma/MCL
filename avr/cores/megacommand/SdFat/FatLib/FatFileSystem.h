@@ -64,7 +64,8 @@ class FatFileSystem : public  FatVolume {
    * LS_R - Recursive list of subdirectories.
    */
   void ls(uint8_t flags = 0) {
-    ls(&Serial, flags);
+    // TODO Serial
+    // ls(&Serial, flags);
   }
   /** List the directory contents of a directory to Serial.
    *
@@ -79,7 +80,8 @@ class FatFileSystem : public  FatVolume {
    * LS_R - Recursive list of subdirectories.
    */
   void ls(const char* path, uint8_t flags = 0) {
-    ls(&Serial, path, flags);
+    // TODO Serial
+    // ls(&Serial, path, flags);
   }
   /** open a file
    *

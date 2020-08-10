@@ -7,14 +7,11 @@ void mclsys_apply_config() {
   midi_setup.cfg_ports();
 #ifndef DEBUGMODE
 #ifdef MEGACOMMAND
-  if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
+  if (mcl_cfg.display_mirror == 1) {
     GUI.display_mirror = true;
-
-    Serial.begin(SERIAL_SPEED);
   }
-  if ((Serial) && (mcl_cfg.display_mirror == 0)) {
+  if (mcl_cfg.display_mirror == 0) {
     GUI.display_mirror = false;
-    Serial.end();
   }
 #endif
 #endif

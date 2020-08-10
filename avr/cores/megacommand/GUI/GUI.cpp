@@ -194,6 +194,7 @@ void GuiClass::display() {
 #ifndef DEBUGMODE
   if (display_mirror) {
     // 7bit encode
+    // TODO display_mirror frame header
     while (!UART_USB_CHECK_EMPTY_BUFFER())
       ;
     UART_USB_WRITE_CHAR(0);

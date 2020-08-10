@@ -26,6 +26,7 @@
 #include "MDSeqTrack.h"
 #include "ExtSeqTrack.h"
 #include "MD.h"
+#include "MegaComDef.h"
 
 #define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
 #define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
@@ -57,15 +58,24 @@
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
 #define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
 
+// 4x COMSRC rx/tx buffers
+#define NUM_COMCHANNEL_BUFFER 4
+#define COMCHANNEL_BUFFER_START (BANK1_FILE_ENTRIES_END)
+#define COMCHANNEL_BUFFER_END (COMCHANNEL_BUFFER_START + NUM_COMCHANNEL_BUFFER * 2 * COMCHANNEL_BUFSIZE)
 
-#pragma message (VAR_NAME_VALUE(NUM_MD_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_A4_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_EXT_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_LFO_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_TRACKS))
-#pragma message (VAR_NAME_VALUE(BANK1_MD_TRACKS_START))
-#pragma message (VAR_NAME_VALUE(BANK1_A4_TRACKS_START))
-#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_START))
-#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_END))
+// 16x COMMSG slots
+#define NUM_COMMSG_SLOTS 16
+#define COMMSG_SLOTS_START (COMCHANNEL_BUFFER_END)
+#define COMMSG_SLOTS_END (COMMSG_SLOTS_START + sizeof(commsg_t) * NUM_COMMSG_SLOTS)
+
+//#pragma message (VAR_NAME_VALUE(NUM_MD_TRACKS))
+//#pragma message (VAR_NAME_VALUE(NUM_A4_TRACKS))
+//#pragma message (VAR_NAME_VALUE(NUM_EXT_TRACKS))
+//#pragma message (VAR_NAME_VALUE(NUM_LFO_TRACKS))
+//#pragma message (VAR_NAME_VALUE(NUM_TRACKS))
+//#pragma message (VAR_NAME_VALUE(BANK1_MD_TRACKS_START))
+//#pragma message (VAR_NAME_VALUE(BANK1_A4_TRACKS_START))
+//#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_START))
+//#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_END))
 
 #endif /* MCLMEMORY_H__ */

@@ -59,12 +59,16 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
+#ifdef MEGACOMMAND
+  megacom_task.init();
+  GUI.addTask(&megacom_task);
+#endif
+
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
 #ifdef OLED_DISPLAY
     oled_display.textbox("DISPLAY ","MIRROR");
 #endif
-    Serial.begin(250000);
     GUI.display_mirror = true;
 #endif
   }

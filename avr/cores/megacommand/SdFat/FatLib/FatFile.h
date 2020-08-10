@@ -143,7 +143,8 @@ class FatFile {
    * LS_R - Recursive list of subdirectories.
    */
   void ls(uint8_t flags = 0) {
-    ls(&Serial, flags);
+    // TODO Serial
+    // ls(&Serial, flags);
   }
   /** %Print a directory date field.
    *
@@ -152,7 +153,8 @@ class FatFile {
    * \param[in] fatDate The date field from a directory entry.
    */
   static void printFatDate(uint16_t fatDate) {
-    printFatDate(&Serial, fatDate);
+    // TODO Serial
+    // printFatDate(&Serial, fatDate);
   }
   /** %Print a directory time field.
    *
@@ -161,7 +163,8 @@ class FatFile {
    * \param[in] fatTime The time field from a directory entry.
    */
   static void printFatTime(uint16_t fatTime) {
-    printFatTime(&Serial, fatTime);
+    // TODO Serial
+    // printFatTime(&Serial, fatTime);
   }
   /** Print a file's name.
    *
@@ -169,7 +172,8 @@ class FatFile {
    * the value false is returned for failure.
    */
   size_t printName() {
-    return FatFile::printName(&Serial);
+    // TODO Serial
+    // return FatFile::printName(&Serial);
   }
 #endif  // ENABLE_ARDUINO_FEATURES
 

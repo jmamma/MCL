@@ -32,6 +32,8 @@
 #include "GridRowHeader.h"
 #include "GridTask.h"
 
+#include "MegaComTask.h"
+
 #ifdef LOUDNESS_PAGE
 #include "LoudnessPage.h"
 #endif

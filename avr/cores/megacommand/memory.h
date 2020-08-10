@@ -59,8 +59,7 @@ class RamBankSelector {
 template<typename T>
 ALWAYS_INLINE() extern inline T get_bank1(volatile T *dst) {
   select_bank(1);
-  T c = *dst;
-  return c;
+  return *dst;
 }
 
 template<typename T>
