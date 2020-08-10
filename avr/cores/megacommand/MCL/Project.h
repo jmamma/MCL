@@ -47,6 +47,21 @@ public:
   bool read_grid(void *data, size_t len) {
     read_grid(data, len, grid_select_;
   }
+  //Seek to position in grid.
+  bool seek_grid(uint32_t offset, uint8_t grid) {
+
+    int32_t offset = grid.get_header_offset(row);
+    ret = grids[grid].file.seekSet(offset);
+    if (!ret) {
+    DEBUG_PRINTLN("could not seek");
+    }
+    return ret;
+  }
+
+  bool seek_grid(uint32_t offset) {
+    return seek_grid(offest, grid_select);
+  }
+
 
 
 };

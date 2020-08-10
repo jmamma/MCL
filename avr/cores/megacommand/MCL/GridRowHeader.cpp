@@ -8,32 +8,33 @@ void GridRowHeader::update_model(int16_t column, uint8_t model_, uint8_t track_t
 
 bool GridRowHeader::write(int16_t row) {
   bool ret;
-  int32_t offset = grid.get_header_offset(row);
+  uint32_t offset = grid.get_header_offset(row);
 
-  ret = proj.file.seekSet(offset);
+  ret = proj.seek_grid(offset);
+
   if (!ret) {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("write row header fail; ");
     return false;
   }
 
-  ret = mcl_sd.write_data((uint8_t *)(this), sizeof(GridRowHeader), &proj.file);
+  ret = proj.write_grid((uint8_t *)(this), sizeof(GridRowHeader));
 
   return ret;
 }
 
 bool GridRowHeader::read(int16_t row) {
   bool ret;
-  int32_t offset = grid.get_header_offset(row);
+  uint32_t offset = grid.get_header_offset(row);
 
-  ret = proj.file.seekSet(offset);
+  ret = proj.seek_grid(offset);
   if (!ret) {
     DEBUG_PRINT_FN();
     DEBUG_PRINTLN("read row header fail; ");
     return false;
   }
 
-  ret = mcl_sd.read_data((uint8_t *)(this), sizeof(GridRowHeader), &proj.file);
+  ret = proj.read_grid((uint8_t *)(this), sizeof(GridRowHeader));
 
   return ret;
 }

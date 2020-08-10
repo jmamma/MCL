@@ -192,15 +192,15 @@ uint8_t Grid::get_slot_model(int column, int row, bool load) {
   }
 }
 
-int32_t Grid::get_slot_offset(int16_t column, int16_t row) {
-  int32_t offset = (int32_t)GRID_SLOT_BYTES +
+uint32_t Grid::get_slot_offset(int16_t column, int16_t row) {
+  uint32_t offset = (int32_t)GRID_SLOT_BYTES +
                    (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
                        (int32_t)GRID_SLOT_BYTES;
   return offset;
 }
 
-int32_t Grid::get_header_offset(int16_t row) {
-  int32_t offset =
+uint32_t Grid::get_header_offset(int16_t row) {
+  uint32_t offset =
       (int32_t)GRID_SLOT_BYTES +
       (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
   return offset;
@@ -256,4 +256,3 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   return row_header.write(row);
 }
 
-Grid grid;
