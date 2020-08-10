@@ -310,7 +310,9 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   // Write data to sd
   len = sizeof(MDTrack);
   DEBUG_PRINTLN(len);
-  ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
+
+  ret = proj.write_grid((uint8_t *)(this), len, &proj.file);
+
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;

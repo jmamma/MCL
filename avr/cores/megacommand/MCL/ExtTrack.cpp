@@ -57,7 +57,7 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
   }
 #endif
 
-  ret = mcl_sd.write_data((uint8_t *)this, sizeof(ExtTrack), &proj.file);
+  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;
