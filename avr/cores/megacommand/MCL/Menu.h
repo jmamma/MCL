@@ -60,7 +60,6 @@ protected:
   virtual uint8_t get_entry_count() = 0;
 };
 
-// TODO raise error if N > MAX_MENU_ITEMS
 template <int N> class Menu : public MenuBase {
 
 public:
