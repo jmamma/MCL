@@ -4,7 +4,9 @@
 #define PROJECT_H__
 #include "ProjectPages.h"
 #include "MCLSysConfig.h"
+#include "MCLMemory.h"
 #define PROJ_VERSION 2025
+
 
 class ProjectHeader {
 public:
@@ -17,6 +19,8 @@ public:
 class Project : public ProjectHeader {
 public:
   File file;
+  Grid grids[NUM_GRIDS];
+
   bool project_loaded = false;
   void setup();
   bool new_project();

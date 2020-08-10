@@ -8,6 +8,8 @@
 #define LFO_TRACKS
 #endif
 
+#define NUM_GRIDS 2
+
 #define NUM_MD_TRACKS    16UL
 
 #ifdef EXT_TRACKS

@@ -2,54 +2,109 @@
 #include "MCL.h"
 
 void Grid::setup() {}
-/*
-char* Grid::get_slot_kit(int column, int row, bool load, bool scroll) {
 
-  A4Track track_buf;
-  if (grid_page.grid_models[column] == EMPTY_TRACK_TYPE) {
-    return "----";
+bool Grid::write_header() {
+  bool ret;
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("Writing grid header");
+
+  version = GRID_VERSION;
+  hash = 0;
+
+  ret = file.seekSet(0);
+
+  if (!ret) {
+
+    DEBUG_PRINTLN("Seek failed");
+
+    return false;
   }
 
+  ret = mcl_sd.write_data((uint8_t *)this, sizeof(GridHeader), &file);
 
-  uint8_t char_position = 0;
-  //if ((slowclock % 50) == 0) { row_name_offset++; }
-  if (row_name_offset > 15) {
-    row_name_offset = 0;
+  if (!ret) {
+    DEBUG_PRINTLN("Write header failed");
+    return false;
   }
-  if (scroll) {
-
-    for (uint8_t c = 0; c < 4; c++) {
-
-      if (c + (uint8_t)row_name_offset > 15) {
-        char_position =  c + (uint8_t)row_name_offset - 16;
-      }
-      else {
-        char_position =  c + (uint8_t)row_name_offset;
-      }
-      //  char some_string[] = "hello my baby";
-      //row_name[c] = some_string[char_position];
-      if (char_position < 5) {
-        row_name[c] = ' ';
-      }
-      else {
-        row_name[c] = grid_page.currentkitName[char_position - 5];
-      }
-    }
-    row_name[4] = '\0';
-
-  }
-  else {
-    for (uint8_t a = 0; a < 16; a++) {
-      row_name[a] = grid_page.currentkitName[a];
-    }
-    row_name[16] = '\0';
-
-  }
-
-  return row_name;
-
+  DEBUG_PRINTLN("Write header success");
+  return true;
 }
-*/
+
+bool Grid::new(const char *gridname) {
+
+  bool ret;
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("Creating new grid");
+
+  file.close();
+
+  DEBUG_PRINTLN("Attempting to extend grid file");
+
+  ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
+                                               (uint32_t)GRID_SLOT_BYTES *
+                                                   (uint32_t)GRID_LENGTH *
+                                                   (uint32_t)(GRID_WIDTH + 1));
+
+  if (!ret) {
+    file.close();
+    DEBUG_PRINTLN("Could not extend file");
+    return false;
+  }
+  DEBUG_PRINTLN("extension succeeded, trying to close");
+  file.close();
+
+  ret = file.open(gridname, O_RDWR);
+
+  if (!ret) {
+    file.close();
+    DEBUG_PRINTLN("Could not open file");
+    return false;
+  }
+
+  DEBUG_PRINTLN("Initializing project.. please wait");
+#ifdef OLED_DISPLAY
+  oled_display.drawRect(15, 23, 98, 6, WHITE);
+#endif
+  // Initialise the project file by filling the grid with blank data.
+  for (int32_t i = 0; i < GRID_LENGTH; i++) {
+
+#ifdef OLED_DISPLAY
+      mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
+#endif
+    if (i % 2 == 0) {
+      if (ledstatus == 0) {
+        setLed2();
+        ledstatus = 1;
+      } else {
+        clearLed2();
+        ledstatus = 0;
+      }
+    }
+
+    ret = grid.clear_row(i);
+    if (!ret) {
+      DEBUG_PRINTLN("coud not clear row");
+      return false;
+    }
+  }
+  clearLed2();
+  ret = file.seekSet(0);
+
+  if (!ret) {
+    DEBUG_PRINTLN("Could not seek");
+    return false;
+  }
+
+  if (!write_header()) {
+    return false;
+  }
+
+  file.close();
+  return true;
+}
+
 bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
                      bool destination_same) {
   DEBUG_PRINT_FN();
@@ -171,7 +226,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   int32_t offset = get_slot_offset(column, row);
 
-  ret = proj.file.seekSet(offset);
+  ret = file.seekSet(offset);
 
   if (!ret) {
     DEBUG_PRINT_FN();
@@ -184,7 +239,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   // DEBUG_DUMP(sizeof(temptrack.active));
 
   ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track),
-                          &proj.file);
+                          &file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;

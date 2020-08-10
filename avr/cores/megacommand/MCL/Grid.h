@@ -7,14 +7,28 @@
 #include "A4Track.h"
 
 #define GRID_LENGTH 128
-#define GRID_WIDTH 20
+#define GRID_WIDTH 16
 #define GRID_SLOT_BYTES 4096
 
-class Grid {
+#define GRID_VERSION 3000
+
+class GridHeader {
 public:
-  uint8_t get_slot_model(int column, int row, bool load);
+  uint32_t version;
+  uint8_t id;
+  uint32_t hash;
+};
+
+class Grid : public GridHeader {
+public:
+
+  File file;
+  bool new(const char *gridname);
+  bool write_header();
 
   void setup();
+
+  uint8_t get_slot_model(int column, int row, bool load);
   int32_t get_slot_offset(int16_t column, int16_t row);
   int32_t get_header_offset(int16_t row);
   bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row, bool destination_same);
