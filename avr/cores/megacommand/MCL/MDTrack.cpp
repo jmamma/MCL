@@ -308,21 +308,12 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
     }
   }
   // Write data to sd
-  len = sizeof(MDTrack) - (LOCK_AMOUNT * 3);
+  len = sizeof(MDTrack);
   DEBUG_PRINTLN(len);
   ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;
-  }
-  if (storepattern) {
-    ret = mcl_sd.write_data((uint8_t *)&(this->locks[0]), arraysize * 3,
-                            &proj.file);
-
-    if (!ret) {
-      DEBUG_PRINTLN("write failed");
-      return false;
-    }
   }
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(column, model,
