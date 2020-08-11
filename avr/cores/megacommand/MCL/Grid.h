@@ -31,7 +31,9 @@ public:
 
   uint8_t get_slot_model(int column, int row, bool load);
   uint32_t get_slot_offset(int16_t column, int16_t row);
-  uint32_t get_header_offset(int16_t row);
+  uint32_t get_row_header_offset(int16_t row);
+
+
   bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row, bool destination_same);
   bool clear_slot(int16_t column, int16_t row, bool update_header = true);
   bool clear_row(int16_t row);
@@ -39,6 +41,11 @@ public:
 
   bool write(void *data, size_t len, uint8_t col, uint16_t row);
   bool read(void *data, size_t len, uint8_t col, uint16_t row);
+  bool write_row_header(void *data, size_t len, uint16_t row);
+  bool read_row_header(void *data, size_t len, uint16_t row);
+
+  bool seek(uint8_t col, uint16_t row);
+  bool seek_row_header(uint16_t row);
 
 };
 

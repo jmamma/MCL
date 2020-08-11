@@ -88,7 +88,7 @@ bool Grid::new(const char *gridname) {
       }
     }
 
-    ret = grid.clear_row(i);
+    ret = clear_row(i);
     if (!ret) {
       DEBUG_PRINTLN("coud not clear row");
       return false;
@@ -204,7 +204,7 @@ uint32_t Grid::get_slot_offset(int16_t column, int16_t row) {
   return offset;
 }
 
-uint32_t Grid::get_header_offset(int16_t row) {
+uint32_t Grid::get_row_header_offset(int16_t row) {
   uint32_t offset =
       (int32_t)GRID_SLOT_BYTES +
       (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
@@ -262,7 +262,29 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
 }
 
 bool Grid::seek(uint8_t col, uint16_t row) {
-  return file.seekSet(get_slot_offset(int16_t col, int16_t row));
+  return file.seekSet(get_slot_offset(col, row));
+}
+
+bool Grid::seek_row_header(uint16_t row) {
+  return file.seekSet(get_row_header_offset(row));
+}
+
+
+bool Grid::write_row_header(void *data, size_t len, uint16_t row) {
+   bool ret = seek_header(row);
+   if (ret) {
+      ret = mcl_sd.write_data((uint8_t *)(data), len, &file);
+   }
+   return ret;
+}
+
+
+bool Grid::read_row_header(void *data, size_t len, uint16_t row) {
+   bool ret = seek_header(row);
+   if (ret) {
+      ret = mcl_sd.read_data((uint8_t *)(data), len, &file);
+   }
+   return ret;
 }
 
 bool Grid::write(void *data, size_t len, uint8_t col, uint16_t row) {
