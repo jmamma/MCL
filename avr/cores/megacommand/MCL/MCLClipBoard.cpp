@@ -4,7 +4,7 @@
 #include "MCLClipBoard.h"
 #include "Shared.h"
 
-#define FILENAME_CLIPBOARD "clipboard.tmp"
+#define FILENAME_CLIPBOARD "/clipboard.tmp"
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
@@ -15,20 +15,14 @@
 
 bool MCLClipBoard::init() {
   DEBUG_PRINTLN("Creating clipboard");
-  bool ret = file.createContiguous(FILENAME_CLIPBOARD, CLIPBOARD_FILE_SIZE);
-  if (ret) {
-    file.close();
-  } else {
-    DEBUG_PRINTLN("failed to create contiguous file");
-    return false;
-  }
+  return grid.new_file(FILENAME_CLIPBOARD);
 }
 
 bool MCLClipBoard::open() {
   DEBUG_PRINT_FN();
-  if (!file.open(FILENAME_CLIPBOARD, O_RDWR)) {
+  if (!grid.file.open(FILENAME_CLIPBOARD, O_RDWR)) {
     init();
-    return file.open(FILENAME_CLIPBOARD, O_RDWR);
+    return grid.file.open(FILENAME_CLIPBOARD, O_RDWR);
   }
   return true;
   /*
@@ -41,7 +35,7 @@ bool MCLClipBoard::open() {
     } */
 }
 
-bool MCLClipBoard::close() { return file.close(); }
+bool MCLClipBoard::close() { return grid.file.close(); }
 
 bool MCLClipBoard::copy_sequencer(uint8_t offset) {
   if (offset < NUM_MD_TRACKS) {
@@ -64,31 +58,26 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   DEBUG_PRINT_FN();
   bool ret;
   EmptyTrack temp_track;
+
   MDTrack *md_track = (MDTrack *)(&temp_track);
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return;
   }
-  int32_t offset = grid.get_slot_offset(track, GRID_LENGTH);
-  ret = file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("failed seek");
-    close();
-    return false;
-  }
+
   if (track < NUM_MD_TRACKS) {
     memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track, track);
     //h4x0r, remove me when we get more memory for slide_mask
     md_track->seq_data.slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
-    ret = mcl_sd.write_data(&temp_track, sizeof(MDTrackLight), &file);
+    ret = grid.write(&temp_track, sizeof(MDTrackLight), track, GRID_LENGTH);
   }
 #ifdef EXT_TRACKS
   else {
     memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],
            sizeof(ExtSeqTrackData));
-    ret = mcl_sd.write_data(&temp_track, sizeof(ExtSeqTrack), &file);
+    ret = grid.write(&temp_track, sizeof(ExtSeqTrack), track, GRID_LENGTH);
   }
 #endif
   close();
@@ -118,30 +107,24 @@ bool MCLClipBoard::paste_sequencer(uint8_t offset) {
 bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   DEBUG_PRINT_FN();
   bool ret;
+
   EmptyTrack temp_track;
   MDTrack *md_track = (MDTrack *)(&temp_track);
+
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return;
   }
-  int32_t offset = grid.get_slot_offset(source_track, GRID_LENGTH);
-  ret = file.seekSet(offset);
-  if (ret) {
     if (source_track < NUM_MD_TRACKS) {
-      ret = mcl_sd.read_data(&temp_track, sizeof(MDTrackLight), &file);
+      ret = grid.read(&temp_track, sizeof(MDTrackLight), source_track, GRID_LENGTH);
     } else {
-      ret = mcl_sd.read_data(&temp_track, sizeof(ExtSeqTrackData), &file);
+      ret = grid.read(&temp_track, sizeof(ExtSeqTrackData), source_track, GRID_LENGTH);
     }
     if (!ret) {
       DEBUG_PRINTLN("failed read");
       close();
       return false;
     }
-  } else {
-    close();
-    DEBUG_PRINTLN("failed seek");
-    return false;
-  }
   if (source_track < NUM_MD_TRACKS) {
     DEBUG_PRINTLN("loading seq track");
     memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
@@ -188,19 +171,12 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
 
   for (int y = 0; y < h; y++) {
     header.read(y + row);
-    offset = grid.get_header_offset(y + row);
-    ret = file.seekSet(offset);
-    ret = mcl_sd.write_data((uint8_t *)(&header), sizeof(GridRowHeader), &file);
+    ret = grid.write_row_header((uint8_t *)(&header), sizeof(GridRowHeader), y + row);
     DEBUG_PRINTLN(header.name);
     for (int x = 0; x < w; x++) {
-      offset = grid.get_slot_offset(x + col, y + row);
-      ret = proj.file.seekSet(offset);
-      ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &proj.file);
+      ret = proj.read_grid(&temp_track, sizeof(temp_track), x + col, y + row);
       if (ret) {
-
-        offset = grid.get_slot_offset(x, y);
-        ret = file.seekSet(offset);
-        ret = mcl_sd.write_data(&temp_track, sizeof(temp_track), &file);
+        ret = grid.write(&temp_track, sizeof(temp_track), x, y);
       }
     }
   }
@@ -232,18 +208,13 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
 
     if ((strlen(header.name) == 0) || (!header.active) ||
         (t_w == GRID_WIDTH && col == 0)) {
-      offset = grid.get_header_offset(y + t_row);
-      ret = file.seekSet(offset);
-      ret = mcl_sd.read_data((uint8_t *)(&header_copy), sizeof(GridRowHeader),
-                             &file);
+      grid.read_row_header((uint8_t *)(&header_copy), sizeof(GridRowHeader, y + t_row));
       header.active = true;
       strcpy(&(header.name[0]), &(header_copy.name[0]));
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      offset = grid.get_slot_offset(x, y);
-      ret = file.seekSet(offset);
-      ret = mcl_sd.read_data(&temp_track, sizeof(temp_track), &file);
+      ret = grid.read(&temp_track, sizeof(temp_track), &file, x, y);
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
 
