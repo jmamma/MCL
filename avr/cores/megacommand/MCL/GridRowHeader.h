@@ -13,8 +13,6 @@ class GridRowHeader {
   uint8_t model[GRID_WIDTH];
 
   void update_model(int16_t column, uint8_t model_, uint8_t track_type_);
-  bool write(int16_t row, uint8_t grid = 255);
-  bool read(int16_t row, uint8_t grid = 255);
   bool is_empty();
   void init();
 };

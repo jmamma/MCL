@@ -58,8 +58,34 @@ public:
     read_grid(data, len, col, row, grid_select);
   }
 
+  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row, uint8_t grid_select) {
+    if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].write_row_header(row_header, row);
+    return ret;
+
+  }
+
+  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row) {
+    write_grid_row_header(row_header, row, grid_slect);
+  }
+
+  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row, uint8_t grid_select) {
+    if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].read_row_header(row_header, row);
+    return ret;
+
+  }
+
+  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row) {
+    read_grid_row_header(row_header, row, grid_slect);
+  }
+
   bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
-  bool sync_grid() { return sink_grid(grid_select); }
+  bool sync_grid() { return sync_grid(grid_select); }
 };
 
 extern Project proj;

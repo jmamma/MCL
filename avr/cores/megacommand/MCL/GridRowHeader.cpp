@@ -6,39 +6,6 @@ void GridRowHeader::update_model(int16_t column, uint8_t model_, uint8_t track_t
   track_type[column] = track_type_;
 }
 
-bool GridRowHeader::write(int16_t row, uint8_t grid) {
-  bool ret;
-  uint32_t offset = grid.get_header_offset(row);
-
-  ret = proj.seek_grid(offset, grid);
-
-  if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("write row header fail; ");
-    return false;
-  }
-
-  ret = proj.write_grid((uint8_t *)(this), sizeof(GridRowHeader), grid);
-
-  return ret;
-}
-
-bool GridRowHeader::read(int16_t row, uint8_t grid) {
-  bool ret;
-  uint32_t offset = grid.get_header_offset(row);
-
-  ret = proj.seek_grid(offset);
-  if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("read row header fail; ");
-    return false;
-  }
-
-  ret = proj.read_grid((uint8_t *)(this), sizeof(GridRowHeader), grid);
-
-  return ret;
-}
-
 bool GridRowHeader::is_empty() {
   DEBUG_PRINT_FN();
   uint8_t count = 0;

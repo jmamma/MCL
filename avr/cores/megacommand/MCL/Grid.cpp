@@ -270,19 +270,19 @@ bool Grid::seek_row_header(uint16_t row) {
 }
 
 
-bool Grid::write_row_header(void *data, size_t len, uint16_t row) {
+bool Grid::write_row_header(GridRowHeader *row_header, uint16_t row) {
    bool ret = seek_header(row);
    if (ret) {
-      ret = mcl_sd.write_data((uint8_t *)(data), len, &file);
+      ret = mcl_sd.write_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
    }
    return ret;
 }
 
 
-bool Grid::read_row_header(void *data, size_t len, uint16_t row) {
+bool Grid::read_row_header(GridRowHeader *row_header, uint16_t row) {
    bool ret = seek_header(row);
    if (ret) {
-      ret = mcl_sd.read_data((uint8_t *)(data), len, &file);
+      ret = mcl_sd.read_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
    }
    return ret;
 }

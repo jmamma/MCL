@@ -41,8 +41,9 @@ public:
 
   bool write(void *data, size_t len, uint8_t col, uint16_t row);
   bool read(void *data, size_t len, uint8_t col, uint16_t row);
-  bool write_row_header(void *data, size_t len, uint16_t row);
-  bool read_row_header(void *data, size_t len, uint16_t row);
+
+  bool write_row_header(GridRowHeader *row_header, uint16_t row);
+  bool read_row_header(GridRowHeader *row_header, uint16_t row);
 
   bool seek(uint8_t col, uint16_t row);
   bool seek_row_header(uint16_t row);
