@@ -225,31 +225,23 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
       else if (new_chain_row < 0) { new_chain_row = y + row; }
       temp_track.chain.row = new_chain_row;
 
+      temp_track.store_track_in_grid
       switch (temp_track.active) {
       case EMPTY_TRACK_TYPE:
         header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
-        ret = proj.file.seekSet(offset);
-        ret = mcl_sd.write_data(&temp_track, sizeof(GridTrack), &proj.file);
         break;
 
       case EXT_TRACK_TYPE:
         if (x + col >= NUM_MD_TRACKS) {
           header.update_model(x + col, x + col, EXT_TRACK_TYPE);
-          offset = grid.get_slot_offset(x + col, y + row);
-          ret = proj.file.seekSet(offset);
-          ret = mcl_sd.write_data(ext_track, sizeof(ExtTrack), &proj.file);
         }
         break;
 
       case A4_TRACK_TYPE:
         if (x + col >= NUM_MD_TRACKS) {
           header.update_model(x + col, x + col, A4_TRACK_TYPE);
-          offset = grid.get_slot_offset(x + col, y + row);
-          ret = proj.file.seekSet(offset);
-          ret = mcl_sd.write_data(a4_track, sizeof(A4Track), &proj.file);
         }
         break;
-
       case MD_TRACK_TYPE:
         if (x + col < NUM_MD_TRACKS) {
           header.update_model(x + col, md_track->machine.model, MD_TRACK_TYPE);
@@ -283,14 +275,12 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
               md_track->machine.muteGroup = 255;
             }
           }
-          offset = grid.get_slot_offset(x + col, y + row);
-          ret = proj.file.seekSet(offset);
-          ret = mcl_sd.write_data(md_track, sizeof(MDTrack), &proj.file);
         }
         break;
       default:
         break;
       }
+        temp_track.store_in_grid(x + col, x + col);
     }
     header.write(y + row);
   }

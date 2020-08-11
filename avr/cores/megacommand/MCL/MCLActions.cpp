@@ -112,7 +112,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     row_headers[n].read(grid_page.getRow(),n);
   }
 
-  uint8_t grid = 0;
+  uint8_t grid_num = 0;
 
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
@@ -122,7 +122,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
       // If track is not empty, preserve chain settings on save
 
-      if (row_headers[grid].track_type[i] !=
+      if (row_headers[grid_num].track_type[i] !=
           EMPTY_TRACK_TYPE) {
         grid_track.load_from_grid(i, row);
         empty_track.chain.loops = grid_track.chain.loops;
@@ -149,9 +149,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   }
 
   // Only update row name if, the current row is not active.
-  if (!row_headers[grid].active) {
+  if (!row_headers[grid_num].active) {
     for (uint8_t c = 0; c < 17; c++) {
-      row_headers[grid].name[c] = MD.kit.name[c];
+      row_headers[grid_num].name[c] = MD.kit.name[c];
     }
   }
 

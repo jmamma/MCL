@@ -601,7 +601,7 @@ void rename_row() {
     if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
                              my_title, 8)) {
       grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
-      proj.grid_sync();
+      proj.sync_grid();
     }
   }
   else {

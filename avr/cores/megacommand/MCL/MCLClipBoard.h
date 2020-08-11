@@ -17,7 +17,7 @@ public:
 
   uint8_t copy_track;
 
-  File file;
+  Grid grid;
 
   MDSeqStep step;
 
