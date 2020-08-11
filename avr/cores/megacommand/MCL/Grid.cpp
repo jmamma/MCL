@@ -31,16 +31,10 @@ bool Grid::write_header() {
   return true;
 }
 
-bool Grid::new(const char *gridname) {
-
-  bool ret;
-
-  DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Creating new grid");
-
+bool Grid::new_file(const char *gridname) {
   file.close();
 
-  DEBUG_PRINTLN("Attempting to extend grid file");
+  DEBUG_PRINTLN("Attempting to create grid file");
 
   ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
@@ -62,6 +56,17 @@ bool Grid::new(const char *gridname) {
     DEBUG_PRINTLN("Could not open file");
     return false;
   }
+
+
+}
+
+bool Grid::new(const char *gridname) {
+
+  bool ret;
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("Creating new grid");
+  if (!new_file(gridname)) { return false; }
 
   DEBUG_PRINTLN("Initializing project.. please wait");
 #ifdef OLED_DISPLAY
@@ -256,3 +261,26 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   return row_header.write(row);
 }
 
+bool Grid::seek(uint8_t col, uint16_t row) {
+  return file.seekSet(get_slot_offset(int16_t col, int16_t row));
+}
+
+bool Grid::write(void *data, size_t len, uint8_t col, uint16_t row) {
+   bool ret = seek(col, row);
+   if (ret) {
+      ret = mcl_sd.write_data((uint8_t *)(data), len, &file);
+   }
+   return ret;
+}
+
+bool Grid::read(void *data, size_t len, uint8_t col, uint16_t row) {
+   bool ret = seek(col, row);
+   if (ret) {
+      ret = mcl_sd.read_data((uint8_t *)(data), len, &file);
+   }
+   return ret;
+}
+
+bool Grid::sync() {
+   return file.sync();
+}

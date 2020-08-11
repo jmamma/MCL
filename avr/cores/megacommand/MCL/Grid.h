@@ -23,6 +23,7 @@ class Grid : public GridHeader {
 public:
 
   File file;
+  bool new_file(const char *gridname);
   bool new(const char *gridname);
   bool write_header();
 
@@ -35,6 +36,10 @@ public:
   bool clear_slot(int16_t column, int16_t row, bool update_header = true);
   bool clear_row(int16_t row);
   bool clear_model(int16_t column, uint16_t row);
+
+  bool write(void *data, size_t len, uint8_t col, uint16_t row);
+  bool read(void *data, size_t len, uint8_t col, uint16_t row);
+
 };
 
 #endif /* GRID_H__ */

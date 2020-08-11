@@ -36,56 +36,30 @@ public:
     if (grid == 255) {
       grid = grid_select;
     }
-    bool ret = seek_grid(col, row, grid);
-    if (ret) {
-      ret = mcl_sd.write_data((uint8_t *)(this), len, &(grids[grid].file));
-    }
+    bool ret = grids[grid].write(data, len, col, row);
     return ret;
   }
   // Write data to current grid;
   bool write_grid(void *data, size_t len, uint8_t col, uint16_t row) {
-    write_grid(data, len, grid_select);
+    write_grid(data, len, col, row, grid_select);
   }
+
   // Read data from a specific grid
   bool read_grid(void *data, size_t len, uint8_t col, uint16_t row,
                  uint8_t grid) {
     if (grid == 255) {
       grid = grid_select;
     }
-    bool ret = seek_grid(col, row, grid);
-    if (ret) {
-      ret = mcl_sd.read_data((uint8_t *)(this), len, &(grids[grid].file));
-    }
+    bool ret = grids[grid].read(data, len, col, row);
     return ret;
   }
   // Read data from current grid;
   bool read_grid(void *data, size_t len, uint8_t col, uint16_t row) {
-    read_grid(data, len, grid_select);
-  }
-  // Seek to position in grid.
-  bool seek_grid(uint8_t col, uint16_t row, uint8_t grid) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    uint32_t offset = grids[grid].get_slot_offset(col, row);
-    return grids[grid].file.seekSet(offset);
+    read_grid(data, len, col, row, grid_select);
   }
 
-  bool seek_grid(uint32_t offset, uint8_t grid) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].file.seekSet(offset);
-    if (!ret) {
-      DEBUG_PRINTLN("could not seek");
-    }
-    return ret;
-  }
-
-  bool seek_grid(uint32_t offset) { return seek_grid(offest, grid_select); }
-
-  bool sink_grid(uint8_t grid) { return grids[grid].file.sync(); }
-  bool sink() { return sink_grid(grid_select); }
+  bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
+  bool sync_grid() { return sink_grid(grid_select); }
 };
 
 extern Project proj;
