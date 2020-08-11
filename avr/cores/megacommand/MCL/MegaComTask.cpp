@@ -5,6 +5,7 @@
 #ifdef MEGACOMMAND
 
 ISR(USART0_RX_vect) {
+  select_bank(0);
   uint8_t data = UART_USB_READ_CHAR();
   megacom_task.rx_isr(COMCHANNEL_UART_USB, data);
 }
@@ -41,6 +42,9 @@ uint8_t comchannel_t::tx_get_isr() { return tx_buf.get_h_isr(); }
 bool comchannel_t::tx_isempty_isr() { return tx_buf.isEmpty_isr(); }
 
 void comchannel_t::rx_isr(uint8_t data) {
+
+  toggleLed2();
+
   switch (rx_state) {
   case COMSTATE_SYNC:
     if (data == COMSYNC_TOKEN) {
@@ -212,17 +216,33 @@ void MegaComTask::init() {
   suspended_state = 0;
 
   // COMCHANNEL_UART_USB init
-
-  uart_set_speed(SERIAL_SPEED, 0);
-  UCSR0C = (3 << UCSZ00);
-  /** enable receive, transmit and receive and transmit interrupts. **/
-  UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+  {
+    USE_LOCK();
+    SET_LOCK();
+    uart_set_speed(SERIAL_SPEED, 0);
+    UCSR0C = (3 << UCSZ00);
+    /** enable receive, transmit and receive and transmit interrupts. **/
+    UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+    CLEAR_LOCK();
+  }
 
   channels[COMCHANNEL_UART_USB].tx_set_data_available_callback(
       uart0_tx_available_cb);
 
   // COMSERVER_FILESERVER init
   servers[COMSERVER_FILESERVER] = &megacom_fileserver;
+
+  //while(true) {
+    //tx_begin(COMCHANNEL_UART_USB, 'A', 6);
+    //tx_data(COMCHANNEL_UART_USB, 'B');
+    //tx_data(COMCHANNEL_UART_USB, 'C');
+    //tx_data(COMCHANNEL_UART_USB, 'D');
+    //tx_data(COMCHANNEL_UART_USB, 'E');
+    //tx_data(COMCHANNEL_UART_USB, 'F');
+    //tx_data(COMCHANNEL_UART_USB, 'G');
+    //tx_end(COMCHANNEL_UART_USB);
+    //delay(100);
+  //}
 }
 
 void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
