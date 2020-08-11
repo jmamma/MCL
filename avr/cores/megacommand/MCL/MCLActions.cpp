@@ -103,7 +103,11 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     max_notes = NUM_MD_TRACKS;
   }
 #endif
+
+  GridRowHeader row_headers[MAX_VISIBLE_ROWS];
   GridTrack grid_track;
+
+
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
       if (first_note == 255) {

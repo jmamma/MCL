@@ -33,6 +33,7 @@ public:
   void uint8_t select_grid(uint8_t i) { grid_select = i; }
   //Write data to a specific grid
   bool write_grid(void *data, size_t len, uint8_t grid) {
+    if (grid == 255) { grid = grid_select; }
     mcl_sd.write_data((uint8_t *)(this), len, &(grids[grid].file));
   }
   //Write data to current grid;
@@ -41,15 +42,16 @@ public:
   }
   //Read data from a specific grid
   bool read_grid(void *data, size_t len, uint8_t grid) {
+    if (grid == 255) { grid = grid_select; }
     mcl_sd.read_data((uint8_t *)(this), len, &(grids[grid].file));
   }
   //Read data from current grid;
   bool read_grid(void *data, size_t len) {
-    read_grid(data, len, grid_select_;
+    read_grid(data, len, grid_select);
   }
   //Seek to position in grid.
   bool seek_grid(uint32_t offset, uint8_t grid) {
-
+    if (grid == 255) { grid = grid_select; }
     int32_t offset = grid.get_header_offset(row);
     ret = grids[grid].file.seekSet(offset);
     if (!ret) {

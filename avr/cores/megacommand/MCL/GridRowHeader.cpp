@@ -6,11 +6,11 @@ void GridRowHeader::update_model(int16_t column, uint8_t model_, uint8_t track_t
   track_type[column] = track_type_;
 }
 
-bool GridRowHeader::write(int16_t row) {
+bool GridRowHeader::write(int16_t row, uint8_t grid) {
   bool ret;
   uint32_t offset = grid.get_header_offset(row);
 
-  ret = proj.seek_grid(offset);
+  ret = proj.seek_grid(offset, grid);
 
   if (!ret) {
     DEBUG_PRINT_FN();
@@ -18,12 +18,12 @@ bool GridRowHeader::write(int16_t row) {
     return false;
   }
 
-  ret = proj.write_grid((uint8_t *)(this), sizeof(GridRowHeader));
+  ret = proj.write_grid((uint8_t *)(this), sizeof(GridRowHeader), grid);
 
   return ret;
 }
 
-bool GridRowHeader::read(int16_t row) {
+bool GridRowHeader::read(int16_t row, uint8_t grid) {
   bool ret;
   uint32_t offset = grid.get_header_offset(row);
 
@@ -34,7 +34,7 @@ bool GridRowHeader::read(int16_t row) {
     return false;
   }
 
-  ret = proj.read_grid((uint8_t *)(this), sizeof(GridRowHeader));
+  ret = proj.read_grid((uint8_t *)(this), sizeof(GridRowHeader), grid);
 
   return ret;
 }
