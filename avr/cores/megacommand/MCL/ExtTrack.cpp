@@ -38,10 +38,7 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
 
   int b = 0;
   DEBUG_PRINT_FN();
-  int32_t len;
-
-  int32_t offset =
-      (column + (row * (int32_t)GRID_WIDTH)) * (int32_t)GRID_SLOT_BYTES;
+  uint32_t len;
 
   ret = proj.file.seekSet(offset);
   if (!ret) {
@@ -57,7 +54,7 @@ bool ExtTrack::store_track_in_grid(int track, int32_t column, int32_t row,
   }
 #endif
 
-  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), &proj.file);
+  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), col, row);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;

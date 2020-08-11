@@ -261,11 +261,8 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   bool ret;
   int b = 0;
   DEBUG_PRINT_FN();
-  int32_t len;
+  uint32_t len;
 
-  int32_t offset = grid.get_slot_offset(column, row);
-
-  ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("seek failed");
     return false;
@@ -311,7 +308,7 @@ bool MDTrack::store_track_in_grid(int32_t column, int32_t row, int track,
   len = sizeof(MDTrack);
   DEBUG_PRINTLN(len);
 
-  ret = proj.write_grid((uint8_t *)(this), len, &proj.file);
+  ret = proj.write_grid((uint8_t *)(this), len, column, row);
 
   if (!ret) {
     DEBUG_PRINTLN("write failed");
