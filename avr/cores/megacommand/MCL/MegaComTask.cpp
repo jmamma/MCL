@@ -1,6 +1,7 @@
 #define IS_ISR_ROUTINE
 
 #include "MegaComTask.h"
+#include "MegaComFileServer.h"
 
 #ifdef MEGACOMMAND
 
@@ -42,9 +43,6 @@ uint8_t comchannel_t::tx_get_isr() { return tx_buf.get_h_isr(); }
 bool comchannel_t::tx_isempty_isr() { return tx_buf.isEmpty_isr(); }
 
 void comchannel_t::rx_isr(uint8_t data) {
-
-  toggleLed2();
-
   switch (rx_state) {
   case COMSTATE_SYNC:
     if (data == COMSYNC_TOKEN) {
@@ -86,15 +84,25 @@ void comchannel_t::rx_isr(uint8_t data) {
       if (rx_type == COMSERVER_REQUEST_RESEND) {
         // should be 0
         rx_buf.skip(rx_len);
-        tx_resend = true;
+        tx_status = CS_RESEND;
       } else if (rx_type == COMSERVER_ACK) { 
         // should be 0
         rx_buf.skip(rx_len);
-        tx_ack = true;
+        tx_status = CS_ACK;
+      } else if (rx_type == COMSERVER_UNSUPPORTED) {
+        // should be 0
+        rx_buf.skip(rx_len);
+        tx_status = CS_UNSUPPORTED;
       } else {
-        if (megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len)) {
+        auto status = megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len);
+        if (status == CS_ACK) {
           // ack it
           tx_begin(true, COMSERVER_ACK, 0);
+          tx_end_isr();
+        } else if (status == CS_UNSUPPORTED) {
+          // reject it
+          tx_begin(true, COMSERVER_UNSUPPORTED, 1);
+          tx_data_isr(rx_type);
           tx_end_isr();
         } else {
           goto request_resend;
@@ -124,6 +132,8 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
     SET_LOCK();
   }
 
+  tx_chksum = 0;
+
   // SYNC
   tx_buf.put_h_isr(COMSYNC_TOKEN);
   // TYPE
@@ -144,10 +154,7 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
   // the other end will not start a tx until we finish sending this one
 
   tx_active = true;
-  tx_ack = false;
-  tx_resend = false;
-  tx_chksum = 0;
-
+  tx_status = CS_TIMEOUT;
 
   if (!isr) {
     CLEAR_LOCK();
@@ -163,8 +170,15 @@ void comchannel_t::tx_data(uint8_t data) {
     tx_available_callback();
 }
 
+void comchannel_t::tx_data_isr(uint8_t data) {
+  tx_chksum += data;
+  tx_buf.put_h_isr(data);
+  if (tx_available_callback)
+    tx_available_callback();
+}
+
 // tx_end check for ACK
-comtxstatus_t comchannel_t::tx_end() {
+comstatus_t comchannel_t::tx_end() {
   // free tx state first so that once we send out the checksum, the rx isr
   // can listen to ACK/RESEND
   tx_active = false;
@@ -177,15 +191,12 @@ comtxstatus_t comchannel_t::tx_end() {
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
   do {
-
-    if (tx_ack) return COMTX_ACK;
-    if (tx_resend) return COMTX_RESEND;
-
+    if (tx_status != CS_TIMEOUT) break;
     current_clock = read_slowclock();
     handleIncomingMidi();
   } while (clock_diff(start_clock, current_clock) < timeout);
 
-  return COMTX_TIMEOUT;
+  return tx_status;
 }
 
 // tx_end_isr doesn't check for ACK
@@ -231,18 +242,6 @@ void MegaComTask::init() {
 
   // COMSERVER_FILESERVER init
   servers[COMSERVER_FILESERVER] = &megacom_fileserver;
-
-  //while(true) {
-    //tx_begin(COMCHANNEL_UART_USB, 'A', 6);
-    //tx_data(COMCHANNEL_UART_USB, 'B');
-    //tx_data(COMCHANNEL_UART_USB, 'C');
-    //tx_data(COMCHANNEL_UART_USB, 'D');
-    //tx_data(COMCHANNEL_UART_USB, 'E');
-    //tx_data(COMCHANNEL_UART_USB, 'F');
-    //tx_data(COMCHANNEL_UART_USB, 'G');
-    //tx_end(COMCHANNEL_UART_USB);
-    //delay(100);
-  //}
 }
 
 void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
@@ -261,19 +260,10 @@ void MegaComTask::run() {
   } else if (rx_msgs.size()) {
     // handle rx messages here
     auto cur_msg = rx_msgs.get_h();
-    if (cur_msg.type >= COMSERVER_MAX) {
-      cur_msg.pbuf->skip(cur_msg.len);
-    } else {
-      auto pserver = servers[cur_msg.type];
-      if (pserver != nullptr) {
-        pserver->msg = cur_msg;
-        int state = pserver->run();
-        update_server_state(pserver, state);
-      } else {
-        // unsupported message
-        cur_msg.pbuf->skip(cur_msg.len);
-      }
-    }
+    auto pserver = servers[cur_msg.type];
+    pserver->msg = cur_msg;
+    int state = pserver->run();
+    update_server_state(pserver, state);
   }
   // TODO uart_usb is async I/O so we don't worry about tx here. but there could
   // be sync I/O that needs some manual driving...
@@ -282,12 +272,20 @@ void MegaComTask::run() {
 }
 
 ALWAYS_INLINE()
-bool MegaComTask::recv_msg_isr(uint8_t channel, uint8_t type, combuf_t *pbuf,
+comstatus_t MegaComTask::recv_msg_isr(uint8_t channel, uint8_t type, combuf_t *pbuf,
                                uint16_t len) {
-  if (rx_msgs.isFull_isr()) return false;
+  if (rx_msgs.isFull_isr()) {
+    pbuf->skip(len);
+    return CS_RESEND;
+  }
+  if (type >= COMSERVER_MAX || servers[type] == nullptr){
+    // unsupported message
+    pbuf->skip(len);
+    return CS_UNSUPPORTED;
+  }
   commsg_t msg{pbuf, len, channel, type};
   rx_msgs.put_h_isr(msg);
-  return true;
+  return CS_ACK;
 }
 
 ALWAYS_INLINE() void MegaComTask::rx_isr(uint8_t channel, uint8_t data) {
@@ -310,15 +308,31 @@ void MegaComTask::tx_data(uint8_t channel, uint8_t data) {
   channels[channel].tx_data(data);
 }
 
-comtxstatus_t MegaComTask::tx_end(uint8_t channel) { return channels[channel].tx_end(); }
-
-int MCFileServer::run() {
+void MegaComTask::tx_word(uint8_t channel, int data) {
+  channels[channel].tx_data(data >> 8);
+  channels[channel].tx_data(data & 0xFF);
 }
 
-int MCFileServer::resume(int state) {
+void MegaComTask::tx_vec(uint8_t channel, char* vec, int len) {
+  USE_LOCK();
+  SET_LOCK();
+  for(int i=0;i<len;++i) {
+    channels[channel].tx_data_isr(vec[i]);
+  }
+  CLEAR_LOCK();
+}
+
+comstatus_t MegaComTask::tx_end(uint8_t channel) { return channels[channel].tx_end(); }
+
+uint8_t MegaComServer::get() {
+  --msg.len;
+  return msg.pbuf->get_h();
+}
+
+uint16_t MegaComServer::pending() {
+  return msg.len;
 }
 
 MegaComTask megacom_task(0);
-MCFileServer megacom_fileserver;
 
 #endif // MEGACOMMAND

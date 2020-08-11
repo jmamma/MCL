@@ -27,14 +27,16 @@ enum comserver_id_t {
   COMSERVER_FILESERVER, // simple FTP-ish protocol
   COMSERVER_EXTMIDI, // note in, CV out etc.
   COMSERVER_MAX,
+  COMSERVER_UNSUPPORTED = 0xFD,
   COMSERVER_ACK = 0xFE,
   COMSERVER_REQUEST_RESEND = 0xFF
 };
 
-enum comtxstatus_t {
-  COMTX_ACK,
-  COMTX_RESEND,
-  COMTX_TIMEOUT
+enum comstatus_t {
+  CS_ACK,
+  CS_RESEND,
+  CS_UNSUPPORTED,
+  CS_TIMEOUT
 };
 
 class comchannel_t {
@@ -51,8 +53,7 @@ private:
   combuf_t tx_buf;
   uint8_t tx_chksum;
   bool tx_active;
-  bool tx_ack;
-  bool tx_resend;
+  comstatus_t tx_status;
   void (*tx_available_callback)();
 
 public:
@@ -62,7 +63,8 @@ public:
   bool tx_isempty_isr();
   bool tx_begin(bool isr, uint8_t type, uint16_t len);
   void tx_data(uint8_t data);
-  comtxstatus_t tx_end();
+  void tx_data_isr(uint8_t data);
+  comstatus_t tx_end();
   void tx_end_isr();
   void tx_set_data_available_callback(void(*cb)());
 };

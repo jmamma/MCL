@@ -9,6 +9,8 @@ class MegaComServer {
 public:
   // set by the task, a local copy
   commsg_t msg;
+  uint8_t get();
+  uint16_t pending();
   virtual int run() = 0;
   virtual int resume(int state) = 0;
 };
@@ -27,23 +29,18 @@ public:
   MegaComTask(uint16_t interval) : Task(interval) {}
   void init();
   void update_server_state(MegaComServer* pserver, int state);
-  ALWAYS_INLINE() bool recv_msg_isr(uint8_t channel, uint8_t type, combuf_t* pbuf, uint16_t len);
+  ALWAYS_INLINE() comstatus_t recv_msg_isr(uint8_t channel, uint8_t type, combuf_t* pbuf, uint16_t len);
   ALWAYS_INLINE() void rx_isr(uint8_t channel, uint8_t data);
   ALWAYS_INLINE() uint8_t tx_get_isr(uint8_t channel);
   ALWAYS_INLINE() bool tx_isempty_isr(uint8_t channel);
   bool tx_begin(uint8_t channel, uint8_t type, uint16_t len);
   void tx_data(uint8_t channel, uint8_t data);
-  comtxstatus_t tx_end(uint8_t channel);
+  void tx_word(uint8_t channel, int data);
+  void tx_vec(uint8_t channel, char* vec, int len);
+  comstatus_t tx_end(uint8_t channel);
   virtual void run();
   virtual void destroy() {}
 };
 
-class MCFileServer: public MegaComServer {
-public:
-  virtual int run();
-  virtual int resume(int);
-};
-
 extern MegaComTask megacom_task;
-extern MCFileServer megacom_fileserver;
 #endif // MEGACOMMAND
