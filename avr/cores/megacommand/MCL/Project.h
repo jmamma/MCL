@@ -64,7 +64,12 @@ public:
     return seek_grid(offest, grid_select);
   }
 
-
+  bool sink_grid(uint8_t grid) {
+    return grids[grid].file.sync();
+  }
+  bool sink() {
+    return sink_grid(grid_select);
+  }
 
 };
 

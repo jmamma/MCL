@@ -104,9 +104,15 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   }
 #endif
 
-  GridRowHeader row_headers[MAX_VISIBLE_ROWS];
+  GridRowHeader row_headers[NUM_GRIDS];
   GridTrack grid_track;
 
+
+  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+    row_headers[n].read(grid_page.getRow(),n);
+  }
+
+  uint8_t grid = 0;
 
   for (i = 0; i < max_notes; i++) {
     if (note_interface.notes[i] == 3) {
@@ -116,7 +122,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
       // If track is not empty, preserve chain settings on save
 
-      if (grid_page.row_headers[grid_page.cur_row].track_type[i] !=
+      if (row_headers[grid].track_type[i] !=
           EMPTY_TRACK_TYPE) {
         grid_track.load_from_grid(i, row);
         empty_track.chain.loops = grid_track.chain.loops;
@@ -143,17 +149,20 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   }
 
   // Only update row name if, the current row is not active.
-  if (!grid_page.row_headers[grid_page.cur_row].active) {
+  if (!row_headers[grid].active) {
     for (uint8_t c = 0; c < 17; c++) {
-      grid_page.row_headers[grid_page.cur_row].name[c] = MD.kit.name[c];
+      row_headers[grid].name[c] = MD.kit.name[c];
     }
   }
 
-  grid_page.row_headers[grid_page.cur_row].active = true;
-  grid_page.row_headers[grid_page.cur_row].write(grid_page.getRow());
+  row_headers[grid].active = true;
+  row_headers[grid].write(grid_page.getRow());
 
   // Sync project file to SD Card
-  proj.file.sync();
+  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+  proj.sync_grid(n);
+  }
+
 }
 
 void MCLActions::write_tracks(int column, int row) {

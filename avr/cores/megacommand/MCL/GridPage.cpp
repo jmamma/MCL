@@ -601,7 +601,7 @@ void rename_row() {
     if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
                              my_title, 8)) {
       grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
-      proj.file.sync();
+      proj.grid_sync();
     }
   }
   else {
@@ -694,7 +694,7 @@ void GridPage::apply_slot_changes() {
       for (uint8_t x = 0; x < width && x + getCol() < GRID_WIDTH; x++) {
         if (slot_clear == 1) {
           // Delete slot(s)
-          grid.clear_slot(x + getCol(), y + getRow());
+          proj.grids[grid_select].clear_slot(x + getCol(), y + getRow());
           header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot chain data
@@ -713,7 +713,7 @@ void GridPage::apply_slot_changes() {
     }
   }
   if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
-    proj.file.sync();
+    proj.sync_grid();
     load_slot_models();
   }
 
