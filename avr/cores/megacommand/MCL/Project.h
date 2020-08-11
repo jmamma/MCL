@@ -32,56 +32,40 @@ public:
   void uint8_t select_grid(uint8_t i) { grid_select = i; }
   // Write data to a specific grid
   bool write_grid(void *data, size_t len, uint8_t col, uint16_t row,
-                  uint8_t grid) {
+                  uint8_t grid = 255) {
     if (grid == 255) {
       grid = grid_select;
     }
     bool ret = grids[grid].write(data, len, col, row);
     return ret;
   }
-  // Write data to current grid;
-  bool write_grid(void *data, size_t len, uint8_t col, uint16_t row) {
-    write_grid(data, len, col, row, grid_select);
-  }
 
   // Read data from a specific grid
   bool read_grid(void *data, size_t len, uint8_t col, uint16_t row,
-                 uint8_t grid) {
+                 uint8_t grid = 255) {
     if (grid == 255) {
       grid = grid_select;
     }
     bool ret = grids[grid].read(data, len, col, row);
     return ret;
   }
-  // Read data from current grid;
-  bool read_grid(void *data, size_t len, uint8_t col, uint16_t row) {
-    read_grid(data, len, col, row, grid_select);
-  }
 
-  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row, uint8_t grid_select) {
+  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row,
+                             uint8_t grid_select = 255) {
     if (grid == 255) {
       grid = grid_select;
     }
     bool ret = grids[grid].write_row_header(row_header, row);
     return ret;
-
   }
 
-  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row) {
-    write_grid_row_header(row_header, row, grid_slect);
-  }
-
-  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row, uint8_t grid_select) {
+  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row,
+                            uint8_t grid_select = 255) {
     if (grid == 255) {
       grid = grid_select;
     }
     bool ret = grids[grid].read_row_header(row_header, row);
     return ret;
-
-  }
-
-  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row) {
-    read_grid_row_header(row_header, row, grid_slect);
   }
 
   bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
