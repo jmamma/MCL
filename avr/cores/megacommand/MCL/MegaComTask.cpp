@@ -308,8 +308,15 @@ void MegaComTask::tx_data(uint8_t channel, uint8_t data) {
   channels[channel].tx_data(data);
 }
 
-void MegaComTask::tx_word(uint8_t channel, int data) {
+void MegaComTask::tx_word(uint8_t channel, uint16_t data) {
   channels[channel].tx_data(data >> 8);
+  channels[channel].tx_data(data & 0xFF);
+}
+
+void MegaComTask::tx_dword(uint8_t channel, uint32_t data) {
+  channels[channel].tx_data(data >> 24);
+  channels[channel].tx_data((data >> 16) & 0xFF);
+  channels[channel].tx_data((data >> 8) & 0xFF);
   channels[channel].tx_data(data & 0xFF);
 }
 

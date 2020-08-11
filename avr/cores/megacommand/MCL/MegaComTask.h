@@ -35,7 +35,8 @@ public:
   ALWAYS_INLINE() bool tx_isempty_isr(uint8_t channel);
   bool tx_begin(uint8_t channel, uint8_t type, uint16_t len);
   void tx_data(uint8_t channel, uint8_t data);
-  void tx_word(uint8_t channel, int data);
+  void tx_word(uint8_t channel, uint16_t data);
+  void tx_dword(uint8_t channel, uint32_t data);
   void tx_vec(uint8_t channel, char* vec, int len);
   comstatus_t tx_end(uint8_t channel);
   virtual void run();

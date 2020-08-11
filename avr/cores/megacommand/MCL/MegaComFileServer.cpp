@@ -78,15 +78,18 @@ int MCFileServer::ls() {
   char path[128];
   bool isdir;
   int len;
+  unsigned long fsize;
   if (file.openNext(SD.vwd(), O_READ)) {
     isdir = file.isDirectory();
     file.getName(path, sizeof(path));
     len = strlen(path);
     file.close();
-    // payload size: cmd_type(1) + is_dir(1) + filename(len)
-    megacom_task.tx_begin(msg.channel, msg.type, 2 + len);
+    fsize = file.size();
+    // payload size: cmd_type(1) + is_dir(1) + size(4) + filename(len)
+    megacom_task.tx_begin(msg.channel, msg.type, 6 + len);
     megacom_task.tx_data(msg.channel, FC_RSP_DATA);
     megacom_task.tx_data(msg.channel, isdir);
+    megacom_task.tx_dword(msg.channel, fsize);
     megacom_task.tx_vec(msg.channel, path, len);
     megacom_task.tx_end(msg.channel);
 
