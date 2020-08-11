@@ -8,7 +8,7 @@ MCFileServer::MCFileServer() {
 uint16_t MCFileServer::readstr(char* pstr) {
   uint16_t len = 0;
   while(pending()) {
-    auto data = get();
+    auto data = msg_getch();
     *pstr++ = data;
     if (data == 0) break;
     ++len;
@@ -22,6 +22,8 @@ int MCFileServer::dispatch() {
       return cwd();
     case FC_LS:
       return ls();
+    case FC_GET:
+      return get();
     default:
       return -1;
   }
@@ -29,7 +31,7 @@ int MCFileServer::dispatch() {
 
 int MCFileServer::run() {
   state = 0;
-  cmd = (filecommand_t) get();
+  cmd = (filecommand_t) msg_getch();
   return dispatch();
 }
 
@@ -95,6 +97,32 @@ int MCFileServer::ls() {
 
     return 1;
   } else {
+    reply_ok();
+    return -1;
+  }
+}
+
+static uint32_t _fsize;
+
+int MCFileServer::get() {
+  char buf[513];
+  if (state == 0) {
+    file.close();
+    readstr(buf);
+    file.open(buf, O_READ);
+    _fsize = file.size();
+  }
+
+  if (file.isOpen() && file.isFile() && file.position() != _fsize) {
+    uint16_t len = file.read(buf, 512);
+    // payload size: cmd_type(1) + data(read_size)
+    megacom_task.tx_begin(msg.channel, msg.type, 1 + len);
+    megacom_task.tx_data(msg.channel, FC_RSP_DATA);
+    megacom_task.tx_vec(msg.channel, buf, len);
+    megacom_task.tx_end(msg.channel);
+    return 1;
+  } else {
+    file.close();
     reply_ok();
     return -1;
   }

@@ -25,6 +25,7 @@ public:
   MCFileServer();
   int cwd();
   int ls();
+  int get();
   void reply_ok();
   void reply_error(char*, char*);
   int dispatch();

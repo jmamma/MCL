@@ -331,7 +331,7 @@ void MegaComTask::tx_vec(uint8_t channel, char* vec, int len) {
 
 comstatus_t MegaComTask::tx_end(uint8_t channel) { return channels[channel].tx_end(); }
 
-uint8_t MegaComServer::get() {
+uint8_t MegaComServer::msg_getch() {
   --msg.len;
   return msg.pbuf->get_h();
 }

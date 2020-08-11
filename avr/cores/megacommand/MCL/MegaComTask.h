@@ -9,7 +9,7 @@ class MegaComServer {
 public:
   // set by the task, a local copy
   commsg_t msg;
-  uint8_t get();
+  uint8_t msg_getch();
   uint16_t pending();
   virtual int run() = 0;
   virtual int resume(int state) = 0;
