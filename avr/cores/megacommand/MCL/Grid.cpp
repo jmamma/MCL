@@ -287,18 +287,26 @@ bool Grid::read_row_header(GridRowHeader *row_header, uint16_t row) {
    return ret;
 }
 
+bool Grid::write(void *data, size_t len) {
+   return mcl_sd.write_data((uint8_t *)(data), len, &file);
+}
+
 bool Grid::write(void *data, size_t len, uint8_t col, uint16_t row) {
    bool ret = seek(col, row);
    if (ret) {
-      ret = mcl_sd.write_data((uint8_t *)(data), len, &file);
+      ret = write((uint8_t *)(data), len);
    }
    return ret;
+}
+
+bool Grid::read(void *data, size_t len) {
+   return mcl_sd.read_data((uint8_t *)(data), len, &file);
 }
 
 bool Grid::read(void *data, size_t len, uint8_t col, uint16_t row) {
    bool ret = seek(col, row);
    if (ret) {
-      ret = mcl_sd.read_data((uint8_t *)(data), len, &file);
+      ret = read((uint8_t *)(data), len);
    }
    return ret;
 }

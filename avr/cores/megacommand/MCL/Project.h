@@ -39,6 +39,15 @@ public:
     bool ret = grids[grid].write(data, len, col, row);
     return ret;
   }
+  // Write without seek.
+  bool write_grid(void *data, size_t len,
+                 uint8_t grid = 255) {
+    if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].write(data, len);
+    return ret;
+  }
 
   // Read data from a specific grid
   bool read_grid(void *data, size_t len, uint8_t col, uint16_t row,
@@ -49,6 +58,16 @@ public:
     bool ret = grids[grid].read(data, len, col, row);
     return ret;
   }
+  // Read without seek.
+  bool read_grid(void *data, size_t len,
+                 uint8_t grid = 255) {
+    if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].read(data, len);
+    return ret;
+  }
+
 
   bool write_grid_row_header(GridRowHeader *row_header, uint16_t row,
                              uint8_t grid_select = 255) {

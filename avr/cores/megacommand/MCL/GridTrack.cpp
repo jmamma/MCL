@@ -43,14 +43,14 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   DEBUG_PRINTLN("reading grid track");
 
-  ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
+  ret = proj.read_grid((uint8_t *)this, len, column, row);
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
 
   len = get_track_size() - len;
-  ret = mcl_sd.read_data((uint8_t *)this, len, &proj.file);
+  ret = proj.read_grid((uint8_t *)(this), len);
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
@@ -67,16 +67,14 @@ bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
 
   DEBUG_PRINT_FN();
   bool ret;
-  uint32_t offset = grid.get_slot_offset(column, row);
 
-  ret = proj.file.seekSet(offset);
   if (!ret) {
     DEBUG_PRINTLN("seek failed");
     return false;
   }
 
   uint32_t len = get_track_size();
-  ret = mcl_sd.write_data((uint8_t *)(this), len, &proj.file);
+  ret = proj.write_grid((uint8_t *)(this), len, column,row);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;
