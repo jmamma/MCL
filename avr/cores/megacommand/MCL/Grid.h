@@ -3,12 +3,9 @@
 #ifndef GRID_H__
 #define GRID_H__
 
-#include "GridPages.h"
 #include "A4Track.h"
-
-#define GRID_LENGTH 128
-#define GRID_WIDTH 16
-#define GRID_SLOT_BYTES 4096
+#include "SdFat.h"
+#include "GridRowHeader.h"
 
 #define GRID_VERSION 3000
 
@@ -24,7 +21,7 @@ public:
 
   File file;
   bool new_file(const char *gridname);
-  bool new(const char *gridname);
+  bool new_grid(const char *gridname);
   bool write_header();
 
   void setup();

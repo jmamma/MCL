@@ -60,7 +60,7 @@ bool Grid::new_file(const char *gridname) {
 
 }
 
-bool Grid::new(const char *gridname) {
+bool Grid::new_grid(const char *gridname) {
 
   bool ret;
 

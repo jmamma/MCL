@@ -9,6 +9,9 @@
 #endif
 
 #define NUM_GRIDS 2
+#define GRID_WIDTH 16
+#define GRID_LENGTH 128
+#define GRID_SLOT_BYTES 4096
 
 #define NUM_MD_TRACKS    16UL
 

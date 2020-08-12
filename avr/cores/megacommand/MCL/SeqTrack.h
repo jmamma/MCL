@@ -3,9 +3,9 @@
 #ifndef SEQTRACK_H__
 #define SEQTRACK_H__
 
+#include "MidiActivePeering.h"
 #include "MidiUartParent.hh"
 #include "WProgram.h"
-#include "MidiActivePeering.h"
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -19,6 +19,8 @@
 #define SEQ_SPEED_1_8X 6
 
 class SeqTrack_270 {};
+
+// ephemeral data.
 
 class SeqTrack {
 
@@ -37,9 +39,56 @@ public:
   uint8_t iterations_8;
 
   uint8_t port = UART1_PORT;
+  uint8_t channel;
   MidiUartParent *uart = &MidiUart;
 
-  ALWAYS_INLINE() virtual uint8_t get_timing_mid(uint8_t speed) {
+  bool mute_until_start = false;
+
+  uint8_t locks_slides_recalc = 255;
+
+  uint8_t mute_state = SEQ_MUTE_OFF;
+
+  uint32_t start_step;
+  uint8_t start_step_offset;
+
+  ALWAYS_INLINE() virtual void reset() {
+    step_count = 0;
+    iterations_5 = 1;
+    iterations_6 = 1;
+    iterations_7 = 1;
+    iterations_8 = 1;
+    mod12_counter = 0;
+    mute_until_start = false;
+  }
+
+  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) {
+        iterations_5 = 1;
+      }
+      if (iterations_6 > 6) {
+        iterations_6 = 1;
+      }
+      if (iterations_7 > 7) {
+        iterations_7 = 1;
+      }
+      if (iterations_8 > 8) {
+        iterations_8 = 1;
+      }
+    } else {
+      step_count++;
+    }
+  }
+
+  ALWAYS_INLINE() uint8_t get_timing_mid(uint8_t speed) {
     uint8_t timing_mid;
     switch (speed) {
     default:
@@ -68,9 +117,9 @@ public:
     return timing_mid;
   }
 
-  virtual float set_speed_multiplier() { return get_speed_multiplier(speed); }
+  float set_speed_multiplier() { return get_speed_multiplier(speed); }
 
-  virtual float get_speed_multiplier(uint8_t speed) {
+  float get_speed_multiplier(uint8_t speed) {
     float multi;
     switch (speed) {
     default:

@@ -3,7 +3,8 @@
 #ifndef GRIDROW_H__
 #define GRIDROW_H__
 
-#define GRID_WIDTH 22
+#include "MCLMemory.h"
+#include "Project.h"
 
 class GridRowHeader {
  public:

@@ -34,6 +34,8 @@
 
 class ExtSeqTrackData_270 {
 public:
+  uint8_t length; // Resolution = 2 / ExtPatternResolution
+  uint8_t speed;
   uint8_t reserved[NUM_EXT_NOTES_270];
   int8_t notes[NUM_EXT_NOTES_270]
               [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
@@ -45,11 +47,9 @@ public:
   uint8_t timing[NUM_EXT_STEPS_270];
 };
 
-class ExtSeqTrackData : public SeqTrack {
+class ExtSeqTrackData {
 public:
   uint8_t version;
-  uint8_t length;
-  uint8_t speed;
   int8_t notes[NUM_EXT_NOTES]
               [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
 
@@ -74,66 +74,19 @@ public:
     return true;
   }
 };
-class ExtSeqTrack : public ExtSeqTrackData {
+class ExtSeqTrack : public ExtSeqTrackData, SeqTrack {
 
 public:
-  uint8_t channel;
-  uint8_t port = UART2_PORT;
-  MidiUartParent *uart = &MidiUart2;
-
-  uint8_t mute_state = SEQ_MUTE_OFF;
-
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  uint8_t step_count;
-  uint8_t mod12_counter;
-  uint32_t start_step;
-  uint8_t start_step_offset;
-  bool mute_until_start = false;
-
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
-
   ALWAYS_INLINE() void reset() {
-    step_count = 0;
+    SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
-    mute_until_start = false;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
   }
-  ALWAYS_INLINE() void step_count_inc() {
-    if (step_count == length - 1) {
-      step_count = 0;
 
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
-    } else {
-      step_count++;
-    }
-  }
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE()
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);

@@ -43,7 +43,7 @@ again:
       grid_filename[sizeof(newprj) + 1] = '.';
       grid_filename[sizeof(newprj) + 2] = i + '0';
       if (!SD.exists(grid_filename)) {
-        if (!grids[i].new(grid_filename)) {
+        if (!grids[i].new_grid(grid_filename)) {
           gfx.alert("ERROR", "SD ERROR");
           goto again;
         }

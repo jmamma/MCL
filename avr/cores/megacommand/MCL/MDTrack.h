@@ -106,10 +106,10 @@ public:
 
   bool convert(MDTrack_270 *old) {
     if (active == MD_TRACK_TYPE_270) {
-      if (old->speed < 64) {
+      if (old->seq_data.speed < 64) {
         chain.speed = SEQ_SPEED_1X;
       } else {
-        chain.speed = old->speed - 64;
+        chain.speed = old->seq_data.speed - 64;
       }
 
       seq_data.convert(&(old->seq_data));
