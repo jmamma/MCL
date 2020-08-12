@@ -2,9 +2,12 @@
 
 #ifndef PROJECT_H__
 #define PROJECT_H__
+
+#include "Grid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
+
 #define PROJ_VERSION 2025
 
 class ProjectHeader {

@@ -13,6 +13,7 @@
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridChain.h"
+#include "MCLMemory.h"
 #include "SeqTrack.h"
 
 class GridTrack_270 {
@@ -34,7 +35,7 @@ public:
   uint16_t get_track_size();
   uint32_t get_region() {
     switch (active) {
-    case default:
+    default:
     case MD_TRACK_TYPE:
       return BANK1_MD_TRACKS_START;
       break;
@@ -47,7 +48,7 @@ public:
   bool load_from_grid(uint8_t column, uint16_t row);
   virtual bool store_in_grid(uint8_t column, uint16_t row);
 
-  bool store_in_mem(uint8_t column, uint32_t region = p_addr_base) {
+  bool store_in_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(ptr, this, get_track_size());

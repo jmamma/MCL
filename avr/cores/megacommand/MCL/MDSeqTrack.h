@@ -5,6 +5,8 @@
 
 #include "MDSeqTrackData.h"
 #include "SeqTrack.h"
+#include "MD.h"
+
 #define UART1_PORT 1
 
 #define SEQ_NOTEBUF_SIZE 8

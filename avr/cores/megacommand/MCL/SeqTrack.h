@@ -5,6 +5,7 @@
 
 #include "MidiUartParent.hh"
 #include "WProgram.h"
+#include "MidiActivePeering.h"
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -16,11 +17,6 @@
 #define SEQ_SPEED_1_2X 4
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
-
-const uint8_t seq_speeds[7] PROGMEM = {
-    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
-    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X
-};
 
 class SeqTrack_270 {};
 

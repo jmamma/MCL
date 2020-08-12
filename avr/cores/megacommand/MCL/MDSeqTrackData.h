@@ -5,7 +5,6 @@
 
 #define NUM_MD_LOCKS 4
 #define NUM_MD_STEPS 64
-#include "SeqTrackData.h"
 
 class MDSeqStep {
 public:
@@ -46,8 +45,6 @@ public:
   uint8_t conditional[NUM_MD_STEPS];
   uint8_t timing[NUM_MD_STEPS];
   void init() {
-    length = 16;
-    speed = 1;
     memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
     memset(&locks_params, 0, NUM_MD_LOCKS);
     pattern_mask = 0;

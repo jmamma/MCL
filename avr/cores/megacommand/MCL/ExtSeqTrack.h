@@ -7,7 +7,6 @@
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
-#include "SeqTrackData.h"
 
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_NOTES 4
@@ -31,19 +30,7 @@
 #define NUM_EXT_LOCKS_270 4
 #define NUM_EXT_STEPS_270 128
 
-#define EXT_SPEED_1X 2 + 64
-#define EXT_SPEED_2X 1 + 64
-#define EXT_SPEED_3_4X 3 + 64
-#define EXT_SPEED_3_2X 4 + 64
-#define EXT_SPEED_1_2X 5 + 64
-#define EXT_SPEED_1_4X 6 + 64
-#define EXT_SPEED_1_8X 7 + 64
-
 #define EXTSEQTRACKDATA_VERSION 30
-
-const uint8_t ext_speeds[7] PROGMEM = {
-    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
-    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X};
 
 class ExtSeqTrackData_270 {
 public:
@@ -165,36 +152,6 @@ public:
   void set_length(uint8_t len);
   void re_sync();
 
-  uint8_t get_timing_mid() { return get_timing_mid_inline(); }
-
-  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
-    uint8_t timing_mid;
-    switch (speed) {
-    default:
-    case EXT_SPEED_1X:
-      timing_mid = 12;
-      break;
-    case EXT_SPEED_2X:
-      timing_mid = 6;
-      break;
-    case EXT_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
-      break;
-    case EXT_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
-      break;
-    case EXT_SPEED_1_2X:
-      timing_mid = 24;
-      break;
-    case EXT_SPEED_1_4X:
-      timing_mid = 48;
-      break;
-    case EXT_SPEED_1_8X:
-      timing_mid = 96;
-      break;
-    }
-    return timing_mid;
-  }
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
@@ -256,8 +213,6 @@ public:
   void modify_track(uint8_t dir);
 
   void set_speed(uint8_t _speed);
-  float get_speed_multiplier();
-  float get_speed_multiplier(uint8_t speed);
 };
 
 #endif /* EXTSEQTRACK_H__ */
