@@ -337,6 +337,11 @@ void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
   SET_LOCK();
   for (int i = 0; i < len; ++i) {
     channels[channel].tx_data_isr(vec[i]);
+    // for every 32 bytes, yield to other ISRs
+    if ((i & 0x1F) == 0) {
+      CLEAR_LOCK();
+      SET_LOCK();
+    }
   }
   CLEAR_LOCK();
 }
