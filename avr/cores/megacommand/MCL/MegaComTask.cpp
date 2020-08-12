@@ -85,7 +85,7 @@ void comchannel_t::rx_isr(uint8_t data) {
         // should be 0
         rx_buf.skip(rx_len);
         tx_status = CS_RESEND;
-      } else if (rx_type == COMSERVER_ACK) { 
+      } else if (rx_type == COMSERVER_ACK) {
         // should be 0
         rx_buf.skip(rx_len);
         tx_status = CS_ACK;
@@ -109,9 +109,8 @@ void comchannel_t::rx_isr(uint8_t data) {
           // request a resend, buy us some time to process the messages...
         }
       }
-    }
-    else {
-request_resend:
+    } else {
+    request_resend:
       // wrong data in buffer, drain and request a resend
       rx_buf.skip(rx_len);
       // must be true here because we just unlocked rx state
@@ -186,12 +185,13 @@ comstatus_t comchannel_t::tx_end() {
   if (tx_available_callback)
     tx_available_callback();
 
-  constexpr uint16_t timeout = 200; //ms
+  constexpr uint16_t timeout = 200; // ms
 
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
   do {
-    if (tx_status != CS_TIMEOUT) break;
+    if (tx_status != CS_TIMEOUT)
+      break;
     current_clock = read_slowclock();
     handleIncomingMidi();
   } while (clock_diff(start_clock, current_clock) < timeout);
@@ -254,31 +254,43 @@ void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
 }
 
 void MegaComTask::run() {
-  if (suspended_server != nullptr) {
-    int state = suspended_server->resume(suspended_state);
-    update_server_state(suspended_server, state);
-  } else if (rx_msgs.size()) {
-    // handle rx messages here
-    auto cur_msg = rx_msgs.get_h();
-    auto pserver = servers[cur_msg.type];
-    pserver->msg = cur_msg;
-    int state = pserver->run();
-    update_server_state(pserver, state);
+
+  // 5ms time budget, but execute at least once
+  auto start_time = read_slowclock();
+  auto cur_time = start_time;
+
+  while (clock_diff(start_time, cur_time) < 5) {
+    if (suspended_server != nullptr) {
+      int state = suspended_server->resume(suspended_state);
+      update_server_state(suspended_server, state);
+    } else if (rx_msgs.size()) {
+      // handle rx messages here
+      auto cur_msg = rx_msgs.get_h();
+      auto pserver = servers[cur_msg.type];
+      pserver->msg = cur_msg;
+      int state = pserver->run();
+      update_server_state(pserver, state);
+    } else {
+      // time's wasting
+      break;
+    }
+    // TODO uart_usb is async I/O so we don't worry about tx here. but there
+    // could be sync I/O that needs some manual driving...
+    cur_time = read_slowclock();
   }
-  // TODO uart_usb is async I/O so we don't worry about tx here. but there could
-  // be sync I/O that needs some manual driving...
+
   // TODO we can also implement comm. indicators in the GUI. Arrows for
   // uplink/downlink
 }
 
 ALWAYS_INLINE()
-comstatus_t MegaComTask::recv_msg_isr(uint8_t channel, uint8_t type, combuf_t *pbuf,
-                               uint16_t len) {
+comstatus_t MegaComTask::recv_msg_isr(uint8_t channel, uint8_t type,
+                                      combuf_t *pbuf, uint16_t len) {
   if (rx_msgs.isFull_isr()) {
     pbuf->skip(len);
     return CS_RESEND;
   }
-  if (type >= COMSERVER_MAX || servers[type] == nullptr){
+  if (type >= COMSERVER_MAX || servers[type] == nullptr) {
     // unsupported message
     pbuf->skip(len);
     return CS_UNSUPPORTED;
@@ -320,25 +332,25 @@ void MegaComTask::tx_dword(uint8_t channel, uint32_t data) {
   channels[channel].tx_data(data & 0xFF);
 }
 
-void MegaComTask::tx_vec(uint8_t channel, char* vec, int len) {
+void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
   USE_LOCK();
   SET_LOCK();
-  for(int i=0;i<len;++i) {
+  for (int i = 0; i < len; ++i) {
     channels[channel].tx_data_isr(vec[i]);
   }
   CLEAR_LOCK();
 }
 
-comstatus_t MegaComTask::tx_end(uint8_t channel) { return channels[channel].tx_end(); }
+comstatus_t MegaComTask::tx_end(uint8_t channel) {
+  return channels[channel].tx_end();
+}
 
 uint8_t MegaComServer::msg_getch() {
   --msg.len;
   return msg.pbuf->get_h();
 }
 
-uint16_t MegaComServer::pending() {
-  return msg.len;
-}
+uint16_t MegaComServer::pending() { return msg.len; }
 
 MegaComTask megacom_task(0);
 
