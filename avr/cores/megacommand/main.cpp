@@ -1,3 +1,4 @@
+#define IS_ISR_ROUTINE
 
 #include <Arduino.h>
 #include <WProgram.h>
