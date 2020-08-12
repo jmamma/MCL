@@ -405,6 +405,13 @@ void uart_set_speed(uint32_t speed, uint8_t port) {
 
 #ifdef MEGACOMMAND
   if (port == 0) {
+
+    if(speed >= 250000) {
+      // use u2x mode
+      cpu = (F_CPU / 4 / speed - 1) / 2;
+      UCSR0A = 1 << U2X0;
+    }
+
     UBRR0H = ((cpu >> 8) & 0xFF);
     UBRR0L = (cpu & 0xFF);
   }
