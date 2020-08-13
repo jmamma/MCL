@@ -4,7 +4,7 @@ typedef RingBuffer<0, uint16_t> combuf_t;
 
 #include "RingBuffer.h"
 
-#define COMCHANNEL_BUFSIZE 1024
+#define COMCHANNEL_BUFSIZE 600
 
 #define COMSYNC_TOKEN 0x5a
 
@@ -26,6 +26,7 @@ enum comserver_id_t {
   COMSERVER_EXTUI, // button input, ext screen etc.
   COMSERVER_FILESERVER, // simple FTP-ish protocol
   COMSERVER_EXTMIDI, // note in, CV out etc.
+  COMSERVER_DEBUG, // plain text messages or breakpoint information
   COMSERVER_MAX,
   COMSERVER_UNSUPPORTED = 0xFD,
   COMSERVER_ACK = 0xFE,
@@ -36,7 +37,9 @@ enum comstatus_t {
   CS_ACK,
   CS_RESEND,
   CS_UNSUPPORTED,
-  CS_TIMEOUT
+  CS_TIMEOUT,
+  CS_REALTIME_MESSAGE,
+  CS_BUFFER_FULL,
 };
 
 class comchannel_t {
@@ -52,8 +55,8 @@ private:
 
   combuf_t tx_buf;
   uint8_t tx_chksum;
-  bool tx_active;
   comstatus_t tx_status;
+  uint8_t tx_irqlock;
   void (*tx_available_callback)();
 
 public:
@@ -61,9 +64,8 @@ public:
   void rx_isr(uint8_t data);
   uint8_t tx_get_isr();
   bool tx_isempty_isr();
-  bool tx_begin(bool isr, uint8_t type, uint16_t len);
+  void tx_begin(bool isr, uint8_t type, uint16_t len);
   void tx_data(uint8_t data);
-  void tx_data_isr(uint8_t data);
   comstatus_t tx_end();
   void tx_end_isr();
   void tx_set_data_available_callback(void(*cb)());
@@ -75,10 +77,6 @@ public:
   commsg_t(combuf_t* _pbuf, uint16_t _len, uint8_t _channel, uint8_t _type): pbuf(_pbuf), len(_len), channel(_channel), type(_type) {}
   commsg_t(const volatile commsg_t& that): commsg_t(that.pbuf, that.len, that.channel, that.type) {}
   commsg_t(const commsg_t& that): commsg_t(that.pbuf, that.len, that.channel, that.type) {}
-  // commsg_t& operator=(commsg_t msg){
-  //   auto ret = commsg_t(msg.pbuf, msg.len, msg.channel, msg.type);
-  //   return ret;
-  // }
   combuf_t* pbuf;
   uint16_t len;
   uint8_t channel;

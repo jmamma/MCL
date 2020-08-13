@@ -1,6 +1,6 @@
 #include "MegaComFileServer.h"
 
-MCFileServer::MCFileServer() {
+MCFileServer::MCFileServer(): MegaComServer(false) {
   file.close();
   SD.chdir(true);
 }
@@ -53,9 +53,7 @@ int MCFileServer::cwd() {
 }
 
 void MCFileServer::reply_ok() {
-  if (!megacom_task.tx_begin(msg.channel, msg.type, 1)) {
-    return;
-  }
+  megacom_task.tx_begin(msg.channel, msg.type, 1);
   megacom_task.tx_data(msg.channel, FC_RSP_OK);
   megacom_task.tx_end(msg.channel);
 }
@@ -64,9 +62,7 @@ void MCFileServer::reply_error(char* errmsg, char* more) {
   int len1 = strlen(errmsg);
   int len2 = 0;
   if(more != nullptr) len2 = strlen(more);
-  if (!megacom_task.tx_begin(msg.channel, msg.type, 1 + len1 + len2)) {
-    return;
-  }
+  megacom_task.tx_begin(msg.channel, msg.type, 1 + len1 + len2);
   megacom_task.tx_data(msg.channel, FC_RSP_ERROR);
   megacom_task.tx_vec(msg.channel, errmsg, len1);
   megacom_task.tx_vec(msg.channel, more, len2);

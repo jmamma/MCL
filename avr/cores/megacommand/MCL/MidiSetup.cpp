@@ -29,7 +29,20 @@ void MidiSetup::cfg_ports() {
     //MidiClock.transmit_uart2 = false;
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
-
+  if (mcl_cfg.extmidi & 1) {
+    Midi.ext_in = true;
+    Midi2.ext_in = true;
+  } else {
+    Midi.ext_in = false;
+    Midi2.ext_in = false;
+  }
+  if (mcl_cfg.extmidi & 2) {
+    Midi.ext_out = true;
+    Midi2.ext_out = true;
+  } else {
+    Midi.ext_out = false;
+    Midi2.ext_out = false;
+  }
 
   if (MD.connected) {
     md_exploit.send_globals();

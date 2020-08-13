@@ -40,6 +40,9 @@ public:
   uint8_t auto_normalize;
   uint8_t ram_page_mode;
   uint8_t track_select;
+  // bit0 = USB  -> PORT
+  // bit1 = PORT -> USB
+  uint8_t extmidi;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

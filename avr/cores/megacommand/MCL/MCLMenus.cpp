@@ -50,6 +50,8 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"},
   // 47: SEQ EDIT
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
+  // 51: EXT MIDI
+  {0, "OFF"}, {1, "IN"}, {2, "OUT"}, {3, "IN+OUT"},
 };
 
 void new_proj_handler() {
@@ -87,7 +89,7 @@ const menu_t<1> rampage1_menu_layout PROGMEM = {
      NULL,
 };
 
-const menu_t<5> midiconfig_menu_layout PROGMEM = {
+const menu_t<6> midiconfig_menu_layout PROGMEM = {
     "MIDI",
     {
         {"TURBO 1:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart1_turbo, (Page*) NULL, NULL, 2},
@@ -97,6 +99,7 @@ const menu_t<5> midiconfig_menu_layout PROGMEM = {
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},
 
         {"MIDI FWD:", 0, 3, 3, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, NULL, 10},
+        {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 51},
    },
 
     (&mclsys_apply_config),
@@ -148,7 +151,7 @@ const menu_t<5> file_menu_layout PROGMEM = {
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
 MenuPage<8> system_page(&system_menu_layout, &options_param1, &options_param2);
-MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
+MenuPage<6> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);

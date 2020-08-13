@@ -69,6 +69,9 @@ public:
   MidiUartParent *uart;
 
   bool forward = false;
+
+  bool ext_in = false;
+  bool ext_out = false;
   uint8_t callback;
   //  midi_callback_t callbacks[7];
   CallbackVector1<MidiCallback, 8, uint8_t *> midiCallbacks[7];

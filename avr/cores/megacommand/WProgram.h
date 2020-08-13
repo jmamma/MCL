@@ -19,7 +19,7 @@
   #define SD_CS 9  //PE7
 #endif
 
-#define SERIAL_SPEED 500000
+#define SERIAL_SPEED 250000
 
 #ifdef DEBUGMODE
 

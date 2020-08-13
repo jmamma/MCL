@@ -45,6 +45,7 @@ public:
   volatile uint8_t overflow;
   #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
+  CRingBuffer(const CRingBuffer<C,N,T>& other);
   /** Add a new element c to the ring buffer. **/
   ALWAYS_INLINE() bool put(C c) volatile;
   /** A slightly more efficient version of put, if ptr == NULL */
@@ -55,6 +56,8 @@ public:
   ALWAYS_INLINE() bool putp(C *c) volatile;
   /** Drop _at most_ the next n element in the ring buffer. **/
   ALWAYS_INLINE() void skip(T n) volatile;
+  /** Drop _at most_ the most recent n element in the ring buffer. **/
+  ALWAYS_INLINE() void undo(T n) volatile;
   /** Return the next element in the ring buffer. **/
   ALWAYS_INLINE() C get() volatile;
   /** A slightly more efficient version of get, if ptr == NULL */
@@ -92,6 +95,16 @@ CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
   wr = 0;
   #ifdef CHECKING
   overflow = 0;
+  #endif
+}
+
+template <class C, int N, class T>
+CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
+  ptr = other.ptr;
+  rd = other.rd;
+  wr = other.wr;
+  #ifdef CHECKING
+  overflow = other.overflow;
   #endif
 }
 
@@ -229,6 +242,20 @@ template <class C, int N, class T> void CRingBuffer<C, N, T>::skip(T n) volatile
     rd_new -= len;
   }
   rd = rd_new;
+  CLEAR_LOCK();
+}
+
+template <class C, int N, class T> void CRingBuffer<C, N, T>::undo(T n) volatile {
+  USE_LOCK();
+  SET_LOCK();
+  auto sz = size();
+  if (n > sz) n = sz;
+  int wr_new = wr;
+  wr_new -= n;
+  if(wr_new < 0) {
+    wr_new += len;
+  }
+  wr = wr_new;
   CLEAR_LOCK();
 }
 

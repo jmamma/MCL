@@ -95,6 +95,7 @@ bool MCLSysConfig::cfg_init() {
   chain_rand_max = 1;
   ram_page_mode = 0;
   track_select = 1;
+  extmidi = 0;
   cfgfile.close();
 
   ret = write_cfg();
