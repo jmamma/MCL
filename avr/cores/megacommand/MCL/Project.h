@@ -8,7 +8,7 @@
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 
-#define PROJ_VERSION 2025
+#define PROJ_VERSION 3000
 
 class ProjectHeader {
 public:
