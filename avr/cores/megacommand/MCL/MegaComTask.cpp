@@ -8,6 +8,7 @@
 
 ISR(USART0_RX_vect) {
   select_bank(0);
+  if(UART_USB_CHECK_OVERRUN()) {setLed2();}
   uint8_t data = UART_USB_READ_CHAR();
   megacom_task.rx_isr(COMCHANNEL_UART_USB, data);
 }

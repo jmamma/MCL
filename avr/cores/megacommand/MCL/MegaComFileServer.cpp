@@ -44,7 +44,6 @@ int MCFileServer::cwd() {
   char path[128];
   uint16_t len = readstr(path);
   if (!SD.chdir(path, true)){
-    toggleLed2();
     reply_error("cwd failed. path = ", path);
   } else {
     reply_ok();

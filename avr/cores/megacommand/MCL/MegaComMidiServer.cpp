@@ -3,6 +3,7 @@
 
 // IN ISR
 int MCMidiServer::run(){
+  clearLed2();
   uint8_t port = msg_getch();
   MidiUartParent* device;
   if (port == 0) {
