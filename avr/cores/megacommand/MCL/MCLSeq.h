@@ -38,15 +38,8 @@ public:
   void onControlChangeCallback_Midi2(uint8_t *msg);
 };
 
-class TrackCatalog {
-  uint8_t type;
-  SeqTrack *tp;
-};
-
 class MCLSeq : public ClockCallback {
 public:
-
-
   uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
 
@@ -60,7 +53,7 @@ public:
   uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
 
-  TrackCatalog seq_tracks[NUM_MD_TRACKS + NUM_EXT_TRACKS];
+  SeqTrack *seq_tracks[NUM_MD_TRACKS + NUM_EXT_TRACKS];
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -69,9 +62,9 @@ public:
   void enable();
   void disable();
 
-  void add_track(associate_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
-     seq_tracks[track_number].type = type;
-     seq_tracks[track_number].tp = tp;
+  void add_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
+    seq_tracks[track_number] = tp;
+    seq_tracks[track_number]->active = type;
   }
 
   void update_kit_params();

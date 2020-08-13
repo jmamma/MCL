@@ -74,7 +74,7 @@ public:
     return true;
   }
 };
-class ExtSeqTrack : public ExtSeqTrackData, SeqTrack {
+class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 
 public:
   uint64_t note_buffer[2] = {

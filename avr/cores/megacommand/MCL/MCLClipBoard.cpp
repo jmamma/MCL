@@ -68,10 +68,10 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   if (track < NUM_MD_TRACKS) {
     memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
            sizeof(md_track->seq_data));
-    md_track->get_machine_from_kit(track, track);
+    md_track->get_machine_from_kit(track);
     //h4x0r, remove me when we get more memory for slide_mask
     md_track->seq_data.slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
-    ret = grid.write(&temp_track, sizeof(MDTrackLight), track, GRID_LENGTH);
+    ret = grid.write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
   }
 #ifdef EXT_TRACKS
   else {
@@ -116,7 +116,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     return;
   }
     if (source_track < NUM_MD_TRACKS) {
-      ret = grid.read(&temp_track, sizeof(MDTrackLight), source_track, GRID_LENGTH);
+      ret = grid.read(&temp_track, sizeof(MDTrack), source_track, GRID_LENGTH);
     } else {
       ret = grid.read(&temp_track, sizeof(ExtSeqTrackData), source_track, GRID_LENGTH);
     }
@@ -141,7 +141,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
       md_track->machine.lfo.destinationTrack = track;
     }
     DEBUG_PRINTLN("sending seq track");
-    md_track->place_track_in_kit(track, track, &(MD.kit), true);
+    md_track->place_track_in_kit(track, &(MD.kit), true);
     MD.setMachine(track, &(md_track->machine));
   }
 #ifdef EXT_TRACKS
@@ -170,8 +170,8 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   GridRowHeader header;
 
   for (int y = 0; y < h; y++) {
-    header.read(y + row);
-    ret = grid.write_row_header((uint8_t *)(&header), sizeof(GridRowHeader), y + row);
+    proj.read_grid_row_header(&header, y + row);
+    ret = grid.write_row_header(&header, y + row);
     DEBUG_PRINTLN(header.name);
     for (int x = 0; x < w; x++) {
       ret = proj.read_grid(&temp_track, sizeof(temp_track), x + col, y + row);
@@ -204,17 +204,17 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
   GridRowHeader header;
   GridRowHeader header_copy;
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
-    header.read(y + row);
+    proj.read_grid_row_header(&header, y + row);
 
     if ((strlen(header.name) == 0) || (!header.active) ||
         (t_w == GRID_WIDTH && col == 0)) {
-      grid.read_row_header((uint8_t *)(&header_copy), sizeof(GridRowHeader, y + t_row));
+      grid.read_row_header(&header_copy, y + t_row);
       header.active = true;
       strcpy(&(header.name[0]), &(header_copy.name[0]));
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      ret = grid.read(&temp_track, sizeof(temp_track), &file, x, y);
+      ret = grid.read(&temp_track, sizeof(temp_track), x, y);
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
 
@@ -225,7 +225,6 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
       else if (new_chain_row < 0) { new_chain_row = y + row; }
       temp_track.chain.row = new_chain_row;
 
-      temp_track.store_track_in_grid
       switch (temp_track.active) {
       case EMPTY_TRACK_TYPE:
         header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
@@ -282,7 +281,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
       }
         temp_track.store_in_grid(x + col, x + col);
     }
-    header.write(y + row);
+    proj.write_grid_row_header(&header, y + row);
   }
   close();
 }

@@ -4,7 +4,6 @@
 #include "ExtSeqTrack.h"
 #include "GridTrack.h"
 #include "MCLMemory.h"
-#include "Bank1Object.h"
 
 #define EMPTY_TRACK_TYPE 0
 
@@ -17,15 +16,15 @@ class ExtTrack
     : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
-  bool load_seq_data(int tracknumber);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool store_track_in_grid(int track, int32_t column, int32_t row,
+  bool load_seq_data(uint8_t tracknumber);
+  virtual bool get_track_from_sysex(uint8_t tracknumber);
+  virtual bool store_track_in_grid(uint8_t tracknumber, uint16_t row,
                            bool online = false);
-  void load_immediate(uint8_t tracknumber);
+  virtual void load_immediate(uint8_t tracknumber);
   virtual bool is() {
     return (active == EXT_TRACK_TYPE);
   }
-  bool convert(ExtTrack_270 *old) {
+  bool virtual convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
       chain.length = old->seq_data.length;

@@ -31,13 +31,6 @@ uint16_t GridTrack::get_track_size() {
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
-  uint32_t offset = grid.get_slot_offset(column, row);
-
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
 
   uint32_t len = (sizeof(GridTrack));
 

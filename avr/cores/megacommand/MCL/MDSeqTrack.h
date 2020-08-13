@@ -33,7 +33,7 @@ public:
   }
 };
 
-class MDSeqTrack : public MDSeqTrackData, SeqTrack {
+class MDSeqTrack : public MDSeqTrackData, public SeqTrack {
 
 public:
   uint64_t oneshot_mask;
@@ -47,6 +47,8 @@ public:
   oneshot_mask = 0;
   slide_mask = 0;
   }
+
+  void seq();
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
@@ -79,7 +81,7 @@ public:
   void update_params();
   void update_param(uint8_t param_id, uint8_t value);
   void reset_params();
-  void merge_from_md(uint8_t track_number, MDPattern *pattern, MDKit *kit);
+  void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
   void set_length(uint8_t len);
   void re_sync();
@@ -94,8 +96,6 @@ public:
 
   void modify_track(uint8_t dir);
 
-  float get_speed_multiplier();
-  float get_speed_multiplier(uint8_t speed);
   void set_speed(uint8_t _speed);
 
   void copy_step(uint8_t n, MDSeqStep *step);

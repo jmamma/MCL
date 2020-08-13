@@ -23,13 +23,13 @@ public:
   bool new_file(const char *gridname);
   bool new_grid(const char *gridname);
   bool write_header();
+  bool sync();
 
   void setup();
 
   uint8_t get_slot_model(int column, int row, bool load);
   uint32_t get_slot_offset(int16_t column, int16_t row);
   uint32_t get_row_header_offset(int16_t row);
-
 
   bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row, bool destination_same);
   bool clear_slot(int16_t column, int16_t row, bool update_header = true);

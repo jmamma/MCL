@@ -2,7 +2,6 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
-#include "Bank1Object.h"
 #include "Grid.h"
 #include "GridTrack.h"
 #include "MCLMemory.h"
@@ -48,8 +47,7 @@ public:
   uint32_t swingEditAll;
 };
 
-class MDTrackLight_270
-    : public GridTrack_270 {
+class MDTrackLight_270 : public GridTrack_270 {
 public:
   MDSeqTrackData_270 seq_data;
   MDMachine machine;
@@ -80,19 +78,15 @@ public:
 
   void clear_track();
 
-  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
-                          bool levels = true);
-  void load_seq_data(int tracknumber);
-  void place_track_in_pattern(int tracknumber, uint8_t column,
-                              MDPattern *pattern);
-  void get_machine_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_pattern(int tracknumber, uint8_t column);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  void place_track_in_sysex(int tracknumber, uint8_t column);
+  void place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels = true);
+  void load_seq_data(uint8_t tracknumber);
+  void get_machine_from_kit(uint8_t tracknumber);
+  bool get_track_from_kit(uint8_t tracknumber);
+  bool get_track_from_sysex(uint8_t tracknumber);
+  void place_track_in_sysex(uint8_t tracknumber);
 
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
-                           uint8_t merge = 0, bool online = false);
+  bool store_track_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
+                           bool online = false);
   void load_immediate(uint8_t tracknumber);
 
   // scale machine track vol by percentage

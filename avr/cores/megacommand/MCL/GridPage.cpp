@@ -203,11 +203,11 @@ void GridPage::load_slot_models() {
   }
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    row_headers[n].read(getRow() - cur_row + n + row_shift);
+    proj.read_grid_row_header(&row_headers[n],getRow() - cur_row + n + row_shift);
   }
 #else
 
-  row_headers[0].read(getRow());
+  proj.read_grid_row_header(&row_headers[0], getRow());
 
 #endif
 }
@@ -600,7 +600,7 @@ void rename_row() {
   if (grid_page.row_headers[grid_page.cur_row].active) {
     if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
                              my_title, 8)) {
-      grid_page.row_headers[grid_page.cur_row].write(grid_page.encoders[1]->cur);
+      proj.write_grid_row_header(&(grid_page.row_headers[grid_page.cur_row]), grid_page.encoders[1]->cur);
       proj.sync_grid();
     }
   }
@@ -625,7 +625,7 @@ void GridPage::apply_slot_changes() {
   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   GridTrack temp_slot;
-  temp_slot.load_track_from_grid(getCol(), getRow());
+  temp_slot.load_from_grid(getCol(), getRow());
 
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
@@ -689,17 +689,17 @@ void GridPage::apply_slot_changes() {
     }
 #endif
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
-      header.read(y + getRow());
+      proj.read_grid_row_header(&header, y + getRow());
 
       for (uint8_t x = 0; x < width && x + getCol() < GRID_WIDTH; x++) {
         if (slot_clear == 1) {
           // Delete slot(s)
-          proj.grids[grid_select].clear_slot(x + getCol(), y + getRow());
+          proj.clear_slot_grid(x + getCol(), y + getRow());
           header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot chain data
           slot.active = header.track_type[x + getCol()];
-          slot.store_track_in_grid(x + getCol(), y + getRow());
+          slot.store_in_grid(x + getCol(), y + getRow());
         }
       }
       // If all slots are deleted then clear the row name
@@ -708,7 +708,7 @@ void GridPage::apply_slot_changes() {
         char *str_tmp = "\0";
         header.active = false;
         strcpy(header.name, str_tmp);
-        header.write(y + getRow());
+        proj.write_grid_row_header(&header, y + getRow());
       }
     }
   }
@@ -752,7 +752,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     show_slot_menu = true;
     DEBUG_DUMP(getCol());
     DEBUG_DUMP(getRow());
-    slot.load_track_from_grid(getCol(), getRow());
+    slot.load_from_grid(getCol(), getRow());
     DEBUG_PRINTLN("what's in the slot");
     DEBUG_DUMP(slot.chain.loops);
     DEBUG_DUMP(slot.chain.row);

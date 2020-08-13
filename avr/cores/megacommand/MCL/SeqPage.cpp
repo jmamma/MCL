@@ -105,28 +105,6 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   GUI.currentPage()->config();
 }
 
-uint8_t SeqPage::get_md_speed(uint8_t speed_id) {
-  uint8_t speed = 0;
-  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-    if (pgm_read_byte(&md_speeds[n]) ==
-        mcl_seq.md_tracks[last_md_track].speed) {
-      speed = n;
-    }
-  }
-  return speed;
-}
-
-uint8_t SeqPage::get_ext_speed(uint8_t speed_id) {
-  uint8_t speed = 0;
-  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-    if (pgm_read_byte(&ext_speeds[n]) ==
-        mcl_seq.ext_tracks[last_ext_track].speed) {
-      speed = n;
-    }
-  }
-  return speed;
-}
-
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
@@ -251,11 +229,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
       if (opt_midi_device_capture == DEVICE_MD) {
         opt_trackid = last_md_track + 1;
-        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
+        opt_speed = mcl_seq.md_tracks[last_md_track].speed;
       } else {
 #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
+        opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
 #endif
       }
 
@@ -779,12 +757,11 @@ void opt_speed_handler() {
     DEBUG_PRINTLN("okay using MD for length update");
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
+        mcl_seq.md_tracks[n].set_speed(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      mcl_seq.md_tracks[last_md_track].set_speed(
-          pgm_read_byte(&md_speeds[opt_speed]));
+      mcl_seq.md_tracks[last_md_track].set_speed(opt_speed);
     }
     seq_step_page.config_encoders();
   }
@@ -792,12 +769,11 @@ void opt_speed_handler() {
   else {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
+        mcl_seq.ext_tracks[n].set_speed(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      mcl_seq.ext_tracks[last_ext_track].set_speed(
-          pgm_read_byte(&ext_speeds[opt_speed]));
+      mcl_seq.ext_tracks[last_ext_track].set_speed(opt_speed);
       seq_extstep_page.config_encoders();
     }
   }

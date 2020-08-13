@@ -109,7 +109,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
 
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    row_headers[n].read(grid_page.getRow(),n);
+    proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
 
   uint8_t grid_num = 0;
@@ -133,7 +133,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        md_track->store_track_in_grid(i, grid_page.getRow(), i, merge, true);
+        md_track->store_track_in_grid(i, grid_page.getRow(), merge, true);
       }
 #ifdef EXT_TRACKS
       else {
@@ -142,7 +142,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
           Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
           a4_track->sound.fromSysex(Analog4.midi);
         }
-        a4_track->store_track_in_grid(i, grid_page.getRow(), i, true);
+        a4_track->store_track_in_grid(i, grid_page.getRow(), true);
       }
 #endif
     }
@@ -155,12 +155,11 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     }
   }
 
-  row_headers[grid].active = true;
-  row_headers[grid].write(grid_page.getRow());
-
   // Sync project file to SD Card
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-  proj.sync_grid(n);
+    row_headers[n].active = true;
+    proj.write_grid_row_header(&row_headers[n], grid_page.getRow());
+    proj.sync_grid(n);
   }
 
 }
@@ -202,12 +201,11 @@ void MCLActions::prepare_next_chain(int row) {
   }
   //  }
   uint8_t slots_cached[NUM_TRACKS] = {0};
-  int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
 
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      if (md_track->load_track_from_grid(n, row, len)) {
+      if (md_track->load_from_grid(n, row)) {
         md_track->store_in_mem(n);
         slots_cached[n] = 1;
       }
@@ -217,26 +215,14 @@ void MCLActions::prepare_next_chain(int row) {
         send_machine[n] = 1;
       }
 
-      uint8_t trigGroup = md_track->machine.trigGroup;
-
-      if ((trigGroup < 16) && (trigGroup != n) &&
-          (slots_cached[trigGroup] == 0)) {
-        DEBUG_PRINTLN("caching trig group");
-        DEBUG_PRINTLN(n);
-        DEBUG_PRINTLN(trigGroup);
-        if (md_track->load_track_from_grid(trigGroup, row, len)) {
-          md_track->store_in_mem(trigGroup);
-          slots_cached[n] = 1;
-        }
-      }
-    }
+   }
   }
 #ifdef EXT_TRACKS
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
       DEBUG_PRINTLN("about to load");
       DEBUG_PRINTLN(n);
-      if (a4_track->load_track_from_grid(n, row, 0)) {
+      if (a4_track->load_from_grid(n, row)) {
         a4_track->store_in_mem(n);
         DEBUG_PRINTLN("checking a4 load");
         DEBUG_PRINTLN(a4_track->chain.row);
@@ -312,7 +298,7 @@ void MCLActions::send_tracks_to_devices() {
 
       empty_track.load_from_grid(i, grid_page.getRow());
       if (empty_track.is_active()) {
-        empty_track->chain.store_in_mem(chains);
+        empty_track.chain.store_in_mem(i, &(chains[0]));
         switch (empty_track.active) {
         case MD_TRACK_TYPE:
           md_track->load_immediate(i);
@@ -389,10 +375,7 @@ void MCLActions::send_tracks_to_devices() {
       DEBUG_PRINTLN(chains[n].row);
       DEBUG_PRINTLN(n);
       if ((n < NUM_MD_TRACKS)) {
-        if (md_track->load_track_from_grid(n, chains[n].row,
-                                           sizeof(GridTrack) +
-                                               sizeof(MDSeqTrackData) +
-                                               sizeof(MDMachine))) {
+        if (md_track->load_from_grid(n, chains[n].row)) {
           md_temp_track.load_from_mem(n);
 
           if ((md_track->active != EMPTY_TRACK_TYPE) &&
@@ -408,7 +391,7 @@ void MCLActions::send_tracks_to_devices() {
       }
 #ifdef EXT_TRACKS
       else {
-        if (a4_track->load_track_from_grid(n, chains[n].row, 0)) {
+        if (a4_track->load_from_grid(n, chains[n].row)) {
           a4_track->store_in_mem(n);
           if (a4_track->active != EMPTY_TRACK_TYPE) {
             send_machine[n] = 0;
@@ -429,8 +412,8 @@ void MCLActions::send_tracks_to_devices() {
 
       transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
-                            (mcl_seq.seq_tracks[n]->tp.step_count *
-                             mcl_seq.seq_tracks[n]->tp.get_speed_multiplier());
+                            (mcl_seq.seq_tracks[n]->step_count *
+                             mcl_seq.seq_tracks[n]->get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -453,7 +436,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   float l = chains[n].length;
   len = (float)chains[n].loops * l *
-        (float)mcl_seq.seq_tracks[n]->tp.get_speed_multiplier();
+        (float)mcl_seq.seq_tracks[n]->get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;
@@ -626,7 +609,7 @@ void MCLActions::md_set_kit(MDKit *kit_) {
 
   MD.setKitName((kit_->name));
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    temp_track.get_machine_from_kit(n, n);
+    temp_track.get_machine_from_kit(n);
     md_set_machine(n, &(temp_track.machine), NULL, true);
     MD.setTrackParam(n, 33, temp_track.machine.level);
   }

@@ -484,8 +484,7 @@ void SeqExtStepPage::display() {
   if (mcl_gui.show_encoder_value(&seq_param2) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu)) {
-    mcl_gui.draw_microtiming(
-        get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed),
+    mcl_gui.draw_microtiming(mcl_seq.ext_tracks[last_ext_track].speed,
         seq_param2.cur);
   }
 

@@ -32,7 +32,7 @@ public:
   bool new_project(const char *projectname);
   bool write_header();
 
-  void uint8_t select_grid(uint8_t i) { grid_select = i; }
+  void select_grid(uint8_t i) { grid_select = i; }
   // Write data to a specific grid
   bool write_grid(void *data, size_t len, uint8_t col, uint16_t row,
                   uint8_t grid = 255) {
@@ -71,9 +71,16 @@ public:
     return ret;
   }
 
+  bool clear_slot_grid(uint8_t col, uint16_t row, uint8_t grid = 255) {
+     if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].clear_slot(col, row);
+    return ret;
+  }
 
   bool write_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                             uint8_t grid_select = 255) {
+                             uint8_t grid = 255) {
     if (grid == 255) {
       grid = grid_select;
     }
@@ -82,7 +89,7 @@ public:
   }
 
   bool read_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                            uint8_t grid_select = 255) {
+                            uint8_t grid = 255) {
     if (grid == 255) {
       grid = grid_select;
     }

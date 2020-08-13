@@ -26,7 +26,7 @@ again:
     SD.mkdir(newprj, true);
     SD.chdir(newprj);
 
-    char proj_file_name[sizeof(newprj) + 5] = {'\0'};
+    char proj_filename[sizeof(newprj) + 5] = {'\0'};
     strcat(proj_filename, newprj);
     strcat(proj_filename, ".mcl");
 
@@ -50,9 +50,9 @@ again:
       }
     }
 
-    bool ret = proj.new_project(proj_file_name);
+    bool ret = proj.new_project(proj_filename);
     if (ret) {
-      if (proj.load_project(proj_file_name)) {
+      if (proj.load_project(proj_filename)) {
         grid_page.reload_slot_models = false;
         DEBUG_PRINTLN("project loaded, setting page to grid");
         GUI.setPage(&grid_page);
@@ -173,9 +173,9 @@ bool Project::new_project(const char *projectname) {
 
   DEBUG_PRINTLN("Attempting to extend project file");
 
-  ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES)
+  ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
 
-            if (!ret) {
+  if (!ret) {
     file.close();
     DEBUG_PRINTLN("Could not extend file");
     return false;
@@ -206,10 +206,6 @@ bool Project::new_project(const char *projectname) {
 
   // m_strncpy(mcl_cfg.project, projectname, 16);
   file.close();
-
-  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    grids[i].new("");
-  }
 
   mcl_cfg.number_projects++;
   mcl_cfg.write_cfg();

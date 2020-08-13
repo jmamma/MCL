@@ -88,7 +88,38 @@ public:
     }
   }
 
-  ALWAYS_INLINE() uint8_t get_timing_mid(uint8_t speed) {
+  uint8_t get_timing_mid(uint8_t speed_) {
+    uint8_t timing_mid;
+    switch (speed_) {
+    default:
+    case SEQ_SPEED_1X:
+      timing_mid = 12;
+      break;
+    case SEQ_SPEED_2X:
+      timing_mid = 6;
+      break;
+    case SEQ_SPEED_3_4X:
+      timing_mid = 16; // 12 * (4.0/3.0);
+      break;
+    case SEQ_SPEED_3_2X:
+      timing_mid = 8; // 12 * (2.0/3.0);
+      break;
+    case SEQ_SPEED_1_2X:
+      timing_mid = 24;
+      break;
+    case SEQ_SPEED_1_4X:
+      timing_mid = 48;
+      break;
+    case SEQ_SPEED_1_8X:
+      timing_mid = 96;
+      break;
+    }
+    return timing_mid;
+  }
+
+  uint8_t get_timing_mid() { get_timing_mid(speed); }
+
+  FORCED_INLINE() uint8_t get_timing_mid_inline() {
     uint8_t timing_mid;
     switch (speed) {
     default:
@@ -117,11 +148,11 @@ public:
     return timing_mid;
   }
 
-  float set_speed_multiplier() { return get_speed_multiplier(speed); }
+  float get_speed_multiplier() { return get_speed_multiplier(speed); }
 
-  float get_speed_multiplier(uint8_t speed) {
+  float get_speed_multiplier(uint8_t speed_) {
     float multi;
-    switch (speed) {
+    switch (speed_) {
     default:
     case SEQ_SPEED_1X:
       multi = 1;

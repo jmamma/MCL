@@ -200,7 +200,7 @@ void GridTask::run() {
               }
               mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
                                          set_level);
-              md_track->place_track_in_kit(n, n, &(MD.kit), set_level);
+              md_track->place_track_in_kit(n, &(MD.kit), set_level);
               slots_loaded[n] = 1;
             }
           }
@@ -250,10 +250,7 @@ void GridTask::run() {
             //          DEBUG_PRINTLN("trying to cache MD track");
             //         DEBUG_DUMP(n);
             //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-            int32_t len =
-                sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-            if (md_track->load_track_from_grid(n, mcl_actions.chains[n].row,
-                                               len)) {
+            if (md_track->load_from_grid(n, mcl_actions.chains[n].row)) {
               //  DEBUG_PRINTLN("storing");
               md_temp_track->load_from_mem(n);
 
@@ -278,8 +275,7 @@ void GridTask::run() {
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_DUMP(n);
             DEBUG_DUMP(mcl_actions.chains[n].row);
-            if (a4_track->load_track_from_grid(n, mcl_actions.chains[n].row,
-                                               0)) {
+            if (a4_track->load_from_grid(n, mcl_actions.chains[n].row)) {
               a4_temp_track->load_from_mem(n);
               if ((a4_track->active != EMPTY_TRACK_TYPE) &&
                   (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=

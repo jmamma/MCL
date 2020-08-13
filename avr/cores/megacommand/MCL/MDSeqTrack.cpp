@@ -9,37 +9,6 @@ void MDSeqTrack::set_length(uint8_t len) {
   }
 }
 
-float MDSeqTrack::get_speed_multiplier() { return get_speed_multiplier(speed); }
-
-float MDSeqTrack::get_speed_multiplier(uint8_t speed) {
-  float multi;
-  switch (speed) {
-  default:
-  case MD_SPEED_1X:
-    multi = 1;
-    break;
-  case MD_SPEED_2X:
-    multi = 0.5;
-    break;
-  case MD_SPEED_3_4X:
-    multi = (4.0 / 3.0);
-    break;
-  case MD_SPEED_3_2X:
-    multi = (2.0 / 3.0);
-    break;
-  case MD_SPEED_1_2X:
-    multi = 2.0;
-    break;
-  case MD_SPEED_1_4X:
-    multi = 4.0;
-    break;
-  case MD_SPEED_1_8X:
-    multi = 8.0;
-    break;
-  }
-  return multi;
-}
-
 void MDSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
@@ -678,18 +647,17 @@ void MDSeqTrack::clear_track(bool locks, bool reset_params) {
   slide_mask = 0;
 }
 
-void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern,
-                               MDKit *kit) {
+void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   DEBUG_PRINT_FN();
   for (int i = 0; i < 24; i++) {
-    if (IS_BIT_SET32(pattern->lockPatterns[tracknumber], i)) {
-      int8_t idx = pattern->paramLocks[tracknumber][i];
+    if (IS_BIT_SET32(pattern->lockPatterns[track_number], i)) {
+      int8_t idx = pattern->paramLocks[track_number][i];
       if (idx >= 0) {
         for (int s = 0; s < 64; s++) {
 
           if ((pattern->locks[idx][s] <= 127) &&
               (pattern->locks[idx][s] >= 0)) {
-            if (IS_BIT_SET64(trigPattern, s)) {
+            if (IS_BIT_SET64(pattern->trigPatterns[track_number], s)) {
               set_track_locks(s, i, pattern->locks[idx][s]);
               SET_BIT64(lock_mask, s);
             }
@@ -699,28 +667,28 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern,
     }
   }
 
-  pattern_mask |= pattern->trigPattern;
+  pattern_mask |= pattern->trigPatterns[track_number];
   // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float)kit->swingAmount / 16385.0;
+  float swing = (float)pattern->swingAmount / 16385.0;
 
-  if (kit->slideEditAll > 0) {
-    slide_mask32 |= (uint32_t)kit->slidePattern;
-  } else {
+  if (pattern->slideEditAll > 0) {
     slide_mask32 |= (uint32_t)pattern->slidePattern;
+  } else {
+    slide_mask32 |= (uint32_t)pattern->slidePatterns[track_number];
   }
 
   uint64_t swingpattern = 0;
   uint8_t timing_mid = get_timing_mid();
-  if (kit->swingEditAll > 0) {
-    swingpattern |= kit->swingPattern;
-  } else {
+  if (pattern->swingEditAll > 0) {
     swingpattern |= pattern->swingPattern;
+  } else {
+    swingpattern |= pattern->swingPatterns[track_number];
   }
 
   for (uint8_t a = 0; a < length; a++) {
-    if (IS_BIT_SET64(pattern->trigPattern, a)) {
+    if (IS_BIT_SET64(pattern->trigPatterns[track_number], a)) {
       conditional[a] = 0;
       timing[a] = timing_mid;
       if (IS_BIT_SET64(swingpattern, a)) {

@@ -35,7 +35,7 @@ bool Grid::new_file(const char *gridname) {
   file.close();
 
   DEBUG_PRINTLN("Attempting to create grid file");
-
+  bool ret;
   ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
                                                    (uint32_t)GRID_LENGTH *
@@ -73,6 +73,7 @@ bool Grid::new_grid(const char *gridname) {
   oled_display.drawRect(15, 23, 98, 6, WHITE);
 #endif
   // Initialise the project file by filling the grid with blank data.
+  uint8_t ledstatus;
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
@@ -129,7 +130,7 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   if (s_col < 16) {
-    md_track->load_track_from_grid(s_col, s_row);
+    md_track->load_from_grid(s_col, s_row);
     // bit of a hack to keep lfos modulating the same track.
     if (destination_same) {
       if (md_track->machine.trigGroup == s_col) {
@@ -163,38 +164,15 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
     }
     md_track->store_track_in_grid(d_col, d_row);
   } else {
-    a4_track->load_track_from_grid(s_col, s_row);
+    a4_track->load_from_grid(s_col, s_row);
     a4_track->store_track_in_grid(d_col, d_row);
   }
 }
 
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
-  EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack *)&temp_track;
-  A4Track *a4_track = (A4Track *)&temp_track;
-  ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  int32_t len = sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine);
-  if (column < 16) {
-    if (load == true) {
-      if (!md_track->load_track_from_grid(column, row, len)) {
-        return NULL;
-      }
-    }
-    if (md_track->active == EMPTY_TRACK_TYPE) {
-      return NULL;
-    } else {
-      return md_track->machine.model;
-    }
-  }
-
-  else {
-    if (load == true) {
-      if (!a4_track->load_track_from_grid(column, row, 50)) {
-        return NULL;
-      }
-    }
-    return md_track->active;
-  }
+  GridTrack temp_track;
+  temp_track.load_from_grid(column, row);
+  return temp_track.active;
 }
 
 uint32_t Grid::get_slot_offset(int16_t column, int16_t row) {
@@ -220,9 +198,9 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   if (update_header) {
     GridRowHeader row_header;
-    row_header.read(row);
+    read_row_header(&row_header, row);
     row_header.update_model(column, 0, EMPTY_TRACK_TYPE);
-    row_header.write(row);
+    write_row_header(&row_header, row);
   }
 
   temp_track.active = EMPTY_TRACK_TYPE;
@@ -258,7 +236,7 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   for (int x = 0; x < GRID_WIDTH; x++) {
     clear_slot(x, row, false);
   }
-  return row_header.write(row);
+  return write_row_header(&row_header, row);
 }
 
 bool Grid::seek(uint8_t col, uint16_t row) {
@@ -271,7 +249,7 @@ bool Grid::seek_row_header(uint16_t row) {
 
 
 bool Grid::write_row_header(GridRowHeader *row_header, uint16_t row) {
-   bool ret = seek_header(row);
+   bool ret = seek_row_header(row);
    if (ret) {
       ret = mcl_sd.write_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
    }
@@ -280,7 +258,7 @@ bool Grid::write_row_header(GridRowHeader *row_header, uint16_t row) {
 
 
 bool Grid::read_row_header(GridRowHeader *row_header, uint16_t row) {
-   bool ret = seek_header(row);
+   bool ret = seek_row_header(row);
    if (ret) {
       ret = mcl_sd.read_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
    }

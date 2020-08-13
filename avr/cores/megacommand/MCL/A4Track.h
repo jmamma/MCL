@@ -7,9 +7,7 @@
 // include full MDTrack specification to calculate size
 #include "MDTrack.h"
 #include "A4.h"
-#include "Project.h"
 #include "MCLMemory.h"
-#include "Bank1Object.h"
 
 class A4Track_270 : public GridTrack_270 {
 public:
@@ -19,13 +17,11 @@ public:
 };
 
 
-class A4Track : public GridTrack {
+class A4Track : public ExtTrack {
 public:
-  ExtSeqTrackData seq_data;
   A4Sound sound;
-  void load_seq_data(int tracknumber);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
+  bool get_track_from_sysex(uint8_t tracknumber);
+  bool store_track_in_grid(uint8_t tracknumber, uint16_t row, bool online = false);
   bool is() {
     return (active == A4_TRACK_TYPE);
   }
