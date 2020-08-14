@@ -33,7 +33,7 @@ bool Grid::write_header() {
 
 
 bool Grid::open_file(const char *gridname) {
-  return file.open(gridname);
+  return file.open(gridname, O_RDWR);
 }
 
 bool Grid::close_file() {

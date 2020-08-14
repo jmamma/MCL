@@ -123,7 +123,7 @@ bool Project::load_project(const char *projectname) {
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
-  }
+ }
 
   strncpy(mcl_cfg.project, projectname, 16);
 
@@ -133,7 +133,6 @@ bool Project::load_project(const char *projectname) {
     DEBUG_PRINTLN("could not write cfg");
     return false;
   }
-
   return true;
 }
 
