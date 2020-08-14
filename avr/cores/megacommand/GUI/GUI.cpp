@@ -1,6 +1,7 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
+#include "MegaComUIServer.h"
 
 #define SCREEN_SAVER_TIME 5
 
@@ -193,38 +194,7 @@ void GuiClass::display() {
 #ifdef OLED_DISPLAY
 #ifndef DEBUGMODE
   if (display_mirror) {
-    // 7bit encode
-    // TODO display_mirror frame header
-    while (!UART_USB_CHECK_EMPTY_BUFFER())
-      ;
-    UART_USB_WRITE_CHAR(0);
-
-    //  Serial.write(0);
-
-    uint8_t buf[8];
-
-    uint16_t n = 0;
-
-    while (n < 512) {
-      buf[0] = 0x80;
-      for (uint8_t c = 0; c < 7; c++) {
-
-        buf[c + 1] = 0x80;
-        if (n + c < 512) {
-          buf[c + 1] |= oled_display.getBuffer(n + c);
-        }
-        uint8_t msb = oled_display.getBuffer(n + c) >> 7;
-        buf[0] |= msb << c;
-      }
-      for (uint8_t c = 0; c < 8; c++) {
-        while (!UART_USB_CHECK_EMPTY_BUFFER())
-          ;
-        UART_USB_WRITE_CHAR(buf[c]);
-      }
-      // Serial.write(buf, 8);
-
-      n = n + 7;
-    }
+    megacom_uiserver.update();
   }
 #endif
   if (page->classic_display) {

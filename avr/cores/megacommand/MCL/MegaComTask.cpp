@@ -1,6 +1,7 @@
 #define IS_ISR_ROUTINE
 
 #include "MegaComTask.h"
+#include "MegaComDisplayServer.h"
 #include "MegaComFileServer.h"
 #include "MegaComMidiServer.h"
 
@@ -8,7 +9,9 @@
 
 ISR(USART0_RX_vect) {
   select_bank(0);
-  if(UART_USB_CHECK_OVERRUN()) {setLed2();}
+  if (UART_USB_CHECK_OVERRUN()) {
+    setLed2();
+  }
   uint8_t data = UART_USB_READ_CHAR();
   megacom_task.rx_isr(COMCHANNEL_UART_USB, data);
 }
@@ -93,7 +96,8 @@ void comchannel_t::rx_isr(uint8_t data) {
       tx_status = CS_ACK;
     } else if (rx_type == COMSERVER_UNSUPPORTED) {
       tx_status = CS_UNSUPPORTED;
-    } else if (rx_chksum == data) { // incoming message, check chksum and request resend if not match
+    } else if (rx_chksum == data) { // incoming message, check chksum and
+                                    // request resend if not match
 
       auto status = megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len);
       if (status == CS_ACK) {
@@ -219,6 +223,9 @@ void MegaComTask::init() {
   // COMSERVER_EXTMIDI init
   servers[COMSERVER_EXTMIDI] = &megacom_midiserver;
 
+  // COMSERVER_EXTUI init
+  servers[COMSERVER_EXTUI] = &megacom_displayserver;
+
   // COMCHANNEL_UART_USB init
   {
     USE_LOCK();
@@ -229,7 +236,6 @@ void MegaComTask::init() {
     UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
     CLEAR_LOCK();
   }
-
 }
 
 void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
@@ -336,8 +342,26 @@ void MegaComTask::tx_dword(uint8_t channel, uint32_t data) {
 }
 
 void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
-  for (int i = 0; i < len; ++i) {
+  if (len) {
+    channels[channel].tx_data(vec[0]);
+  }
+  for (int i = 1; i < len; ++i) {
     channels[channel].tx_data(vec[i]);
+    // maintain steady clock cooperatively
+#ifdef MEGACOMMAND
+    if ((i & 0x3F) == 0) {
+      if (TIMER1_CHECK_INT()) {
+        TCNT1 = 0;
+        clock++;
+        TIMER1_CLEAR_INT()
+      }
+      if (TIMER3_CHECK_INT()) {
+        TCNT2 = 0;
+        slowclock++;
+        TIMER3_CLEAR_INT()
+      }
+    }
+#endif
   }
 }
 
@@ -349,7 +373,7 @@ void MegaComTask::tx_end_isr(uint8_t channel) {
   channels[channel].tx_end_isr();
 }
 
-void MegaComTask::debug(char* pmsg) {
+void MegaComTask::debug(char *pmsg) {
   USE_LOCK();
   SET_LOCK();
 

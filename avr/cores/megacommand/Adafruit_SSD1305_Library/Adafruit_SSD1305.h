@@ -121,6 +121,8 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   void invertDisplay(uint8_t i);
   void setBrightness(uint8_t i);
   uint8_t getBuffer(uint16_t i);
+  // get the pointer to the raw buffer
+  uint8_t* getBuffer();
   bool redisplay = true;
 
   void textbox(char *text, char *text2, uint16_t delay = 800);
