@@ -150,8 +150,7 @@ void comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
   tx_chksum += l;
   tx_buf.put_h_isr(l);
 
-  if (tx_available_callback)
-    tx_available_callback();
+  tx_available_callback();
 
   tx_status = CS_TIMEOUT;
 }
@@ -160,8 +159,7 @@ void comchannel_t::tx_data(uint8_t data) {
   tx_chksum += data;
   tx_buf.put_h_isr(data);
 
-  if (tx_available_callback)
-    tx_available_callback();
+  tx_available_callback();
 }
 
 // tx_end check for ACK
@@ -171,8 +169,7 @@ comstatus_t comchannel_t::tx_end() {
   // release IRQ lock
   SREG = tx_irqlock;
 
-  if (tx_available_callback)
-    tx_available_callback();
+  tx_available_callback();
 
   constexpr uint16_t timeout = 200; // ms
 
@@ -191,8 +188,7 @@ comstatus_t comchannel_t::tx_end() {
 // tx_end_isr doesn't check for ACK
 void comchannel_t::tx_end_isr() {
   tx_buf.put_h_isr(tx_chksum);
-  if (tx_available_callback)
-    tx_available_callback();
+  tx_available_callback();
 }
 
 void MegaComTask::init() {
@@ -214,6 +210,15 @@ void MegaComTask::init() {
   suspended_server = nullptr;
   suspended_state = 0;
 
+  channels[COMCHANNEL_UART_USB].tx_set_data_available_callback(
+      uart0_tx_available_cb);
+
+  // COMSERVER_FILESERVER init
+  servers[COMSERVER_FILESERVER] = &megacom_fileserver;
+
+  // COMSERVER_EXTMIDI init
+  servers[COMSERVER_EXTMIDI] = &megacom_midiserver;
+
   // COMCHANNEL_UART_USB init
   {
     USE_LOCK();
@@ -225,14 +230,6 @@ void MegaComTask::init() {
     CLEAR_LOCK();
   }
 
-  channels[COMCHANNEL_UART_USB].tx_set_data_available_callback(
-      uart0_tx_available_cb);
-
-  // COMSERVER_FILESERVER init
-  servers[COMSERVER_FILESERVER] = &megacom_fileserver;
-
-  // COMSERVER_EXTMIDI init
-  servers[COMSERVER_EXTMIDI] = &megacom_midiserver;
 }
 
 void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
@@ -344,26 +341,24 @@ void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
   }
 }
 
-void MegaComTask::debug_isr(char *pmsg) {
-  auto len = strlen(pmsg);
-  tx_begin_isr(COMCHANNEL_UART_USB, COMSERVER_DEBUG, len + 1);
-  tx_vec(COMCHANNEL_UART_USB, pmsg, len + 1);
-  tx_end_isr(COMCHANNEL_UART_USB);
-}
-
-void MegaComTask::debug(char *pmsg) {
-  USE_LOCK();
-  SET_LOCK();
-  debug_isr(pmsg);
-  CLEAR_LOCK();
-}
-
 comstatus_t MegaComTask::tx_end(uint8_t channel) {
   return channels[channel].tx_end();
 }
 
 void MegaComTask::tx_end_isr(uint8_t channel) {
   channels[channel].tx_end_isr();
+}
+
+void MegaComTask::debug(char* pmsg) {
+  USE_LOCK();
+  SET_LOCK();
+
+  int len = strlen(pmsg);
+
+  tx_begin_isr(COMCHANNEL_UART_USB, COMSERVER_DEBUG, len + 1);
+  tx_vec(COMCHANNEL_UART_USB, pmsg, len + 1);
+  tx_end_isr(COMCHANNEL_UART_USB);
+  CLEAR_LOCK();
 }
 
 uint8_t MegaComServer::msg_getch() {

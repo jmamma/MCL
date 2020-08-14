@@ -4,8 +4,15 @@ int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
 void MCL::setup() {
-  DEBUG_PRINTLN("Welcome to MegaCommand Live");
-  DEBUG_PRINTLN(VERSION);
+
+#ifdef MEGACOMMAND
+  megacom_task.init();
+  GUI.addTask(&megacom_task);
+#else
+  // TODO serial begin?
+#endif
+
+  DEBUG_PRINTLN("Welcome to MegaCommand Live ver. ", VERSION);
 
   bool ret = false;
   delay(100);
@@ -58,11 +65,6 @@ void MCL::setup() {
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
-
-#ifdef MEGACOMMAND
-  megacom_task.init();
-  GUI.addTask(&megacom_task);
-#endif
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE

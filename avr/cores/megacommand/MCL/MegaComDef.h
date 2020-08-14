@@ -1,8 +1,8 @@
 #pragma once
 
-typedef RingBuffer<0, uint16_t> combuf_t;
-
 #include "RingBuffer.h"
+
+typedef RingBuffer<0, uint16_t> combuf_t;
 
 #define COMCHANNEL_BUFSIZE 600
 

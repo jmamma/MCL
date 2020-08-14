@@ -36,6 +36,8 @@ private:
   MegaComServer* servers[COMSERVER_MAX];
   MegaComServer* suspended_server;
   int suspended_state;
+
+private:
 public:
   MegaComTask(uint16_t interval) : Task(interval) {}
   void init();
@@ -54,7 +56,6 @@ public:
   void tx_end_isr(uint8_t channel);
 
   void debug(char* pmsg);
-  void debug_isr(char* pmsg);
 
   virtual void run();
   virtual void destroy() {}
