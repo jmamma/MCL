@@ -32,7 +32,7 @@ public:
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 
-  uint16_t get_track_size();
+  virtual uint16_t get_track_size();
   uint32_t get_region() {
     switch (active) {
     default:
