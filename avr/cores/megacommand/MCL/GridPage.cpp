@@ -627,6 +627,12 @@ void GridPage::apply_slot_changes() {
   GridTrack temp_slot;
   temp_slot.load_from_grid(getCol(), getRow());
 
+  if (grid_select_apply != proj.grid_select) {
+    proj.grid_select = grid_select_apply;
+    load_slot_models();
+    return;
+  }
+
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
@@ -688,6 +694,7 @@ void GridPage::apply_slot_changes() {
   oled_display.textbox("CHAIN ", "UPDATE");
     }
 #endif
+    bool activate_header = false;
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       proj.read_grid_row_header(&header, y + getRow());
 
@@ -698,15 +705,15 @@ void GridPage::apply_slot_changes() {
           header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot chain data
+          activate_header = true;
           slot.active = header.track_type[x + getCol()];
           slot.store_in_grid(x + getCol(), y + getRow());
         }
       }
       // If all slots are deleted then clear the row name
-      if (header.is_empty() && (slot_clear == 1)) {
-        DEBUG_PRINTLN("clearing row name");
+      if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
         char *str_tmp = "\0";
-        header.active = false;
+        header.active = activate_header;
         strcpy(header.name, str_tmp);
         proj.write_grid_row_header(&header, y + getRow());
       }

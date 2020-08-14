@@ -40,6 +40,7 @@ public:
     if (grid == 255) {
       grid = grid_select;
     }
+    DEBUG_DUMP(grid);
     bool ret = grids[grid].write(data, len, col, row);
     return ret;
   }

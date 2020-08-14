@@ -41,6 +41,7 @@ public:
   bool write_cfg = false;
 
   int active_slots[20];
+  uint8_t grid_select_apply;
   uint8_t slot_apply;
   uint8_t slot_clear;
   uint8_t merge_md = 0;

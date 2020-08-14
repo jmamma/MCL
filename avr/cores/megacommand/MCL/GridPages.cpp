@@ -11,7 +11,7 @@ const menu_t<
 slot_menu_layout PROGMEM = {
     "Slot",
     {
-        {"GRID:", 0, 2, 0, (uint8_t *) &proj.grid_select, (Page*) NULL, NULL, 0},
+        {"GRID:", 0, 2, 0, (uint8_t *) &grid_page.grid_select_apply, (Page*) NULL, NULL, 0},
         {"CHAIN:", 1, 4, 3, (uint8_t *) &mcl_cfg.chain_mode, (Page*) NULL, NULL, 19},
         {"LOOP:  ", 0, 64, 0, (uint8_t *) &slot.chain.loops,  (Page*) NULL, NULL, 0},
         {"ROW:    ", 0, 128, 0, (uint8_t*) &slot.chain.row, (Page*) NULL, NULL, 0},
