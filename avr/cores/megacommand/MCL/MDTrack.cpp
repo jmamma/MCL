@@ -143,11 +143,6 @@ bool MDTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
   DEBUG_PRINT_FN();
   uint32_t len;
 
-  if (!ret) {
-    DEBUG_PRINTLN("seek failed");
-    return false;
-  }
-
   if (tracknumber != 255 && online == true) {
     get_machine_from_kit(tracknumber);
     //h4x0r, remove me when we get more memory for slide_mask
