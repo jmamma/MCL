@@ -197,7 +197,7 @@ bool MDTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
   uint8_t model = machine.model;
   grid_page.row_headers[grid_page.cur_row].update_model(tracknumber, model,
                                                         MD_TRACK_TYPE);
-  DEBUG_DUMP(seq_data.length);
+  DEBUG_DUMP(chain.length);
   DEBUG_PRINTLN("Track stored in grid");
   DEBUG_PRINT(tracknumber);
   DEBUG_PRINT(" ");

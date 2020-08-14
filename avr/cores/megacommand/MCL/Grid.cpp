@@ -35,6 +35,7 @@ bool Grid::new_file(const char *gridname) {
   file.close();
 
   DEBUG_PRINTLN("Attempting to create grid file");
+  DEBUG_PRINTLN(gridname);
   bool ret;
   ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
@@ -68,7 +69,7 @@ bool Grid::new_grid(const char *gridname) {
   DEBUG_PRINTLN("Creating new grid");
   if (!new_file(gridname)) { return false; }
 
-  DEBUG_PRINTLN("Initializing project.. please wait");
+  DEBUG_PRINTLN("Initializing grid.. please wait");
 #ifdef OLED_DISPLAY
   oled_display.drawRect(15, 23, 98, 6, WHITE);
 #endif

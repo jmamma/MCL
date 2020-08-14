@@ -17,7 +17,7 @@ bool Project::new_project() {
   my_string[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
   my_string[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
 
-  m_strncpy(newprj, my_string, sizeof(newprj));
+  strncpy(newprj, my_string, sizeof(newprj));
 again:
 
   if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
@@ -38,10 +38,15 @@ again:
       goto again;
     }
 
-    char grid_filename[sizeof(newprj) + 3] = {'\0'};
+    //Initialise Grid Files.
+    //
+    char grid_filename[sizeof(newprj) + 2];
+    strncpy(grid_filename, newprj, sizeof(newprj));
+    uint8_t l = strlen(grid_filename);
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      grid_filename[sizeof(newprj) + 1] = '.';
-      grid_filename[sizeof(newprj) + 2] = i + '0';
+      grid_filename[l] = '.';
+      grid_filename[l + 1] = i + '0';
+      grid_filename[l + 2] = '\0';
       if (!SD.exists(grid_filename)) {
         if (!grids[i].new_grid(grid_filename)) {
           gfx.alert("ERROR", "SD ERROR");
@@ -49,7 +54,8 @@ again:
         }
       }
     }
-
+    //Initialiase Project File.
+    //
     bool ret = proj.new_project(proj_filename);
     if (ret) {
       if (proj.load_project(proj_filename)) {
@@ -93,7 +99,7 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
 
-  m_strncpy(mcl_cfg.project, projectname, 16);
+  strncpy(mcl_cfg.project, projectname, 16);
 
   ret = mcl_cfg.write_cfg();
 
