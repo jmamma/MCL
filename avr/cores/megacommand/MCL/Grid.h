@@ -22,6 +22,9 @@ public:
   File file;
   bool new_file(const char *gridname);
   bool new_grid(const char *gridname);
+  bool open_file(const char *gridname);
+  bool close_file();
+
   bool write_header();
   bool sync();
 

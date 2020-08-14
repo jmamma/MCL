@@ -61,11 +61,6 @@ bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
   DEBUG_PRINT_FN();
   bool ret;
 
-  if (!ret) {
-    DEBUG_PRINTLN("seek failed");
-    return false;
-  }
-
   uint32_t len = get_track_size();
   ret = proj.write_grid((uint8_t *)(this), len, column,row);
   if (!ret) {

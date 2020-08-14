@@ -24,6 +24,7 @@ public:
   uint8_t grid_select;
   Grid grids[NUM_GRIDS];
 
+  void chdir_projects();
   bool project_loaded = false;
   void setup();
   bool new_project();

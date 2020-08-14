@@ -31,6 +31,16 @@ bool Grid::write_header() {
   return true;
 }
 
+
+bool Grid::open_file(const char *gridname) {
+  return file.open(gridname);
+}
+
+bool Grid::close_file() {
+  return file.close();
+}
+
+
 bool Grid::new_file(const char *gridname) {
   file.close();
 
@@ -267,6 +277,8 @@ bool Grid::read_row_header(GridRowHeader *row_header, uint16_t row) {
 }
 
 bool Grid::write(void *data, size_t len) {
+        DEBUG_DUMP("writing");
+        DEBUG_DUMP(len);
    return mcl_sd.write_data((uint8_t *)(data), len, &file);
 }
 

@@ -1,15 +1,13 @@
 #include "MCL.h"
 #include "Project.h"
 
+#define PRJ_NAME_LEN 14
+#define PRJ_DIR "/Projects"
+
 void Project::setup() {}
 
 bool Project::new_project() {
-  char newprj[14];
-
-  const char *c_project_root = "/Projects";
-
-  SD.mkdir(c_project_root, true);
-  SD.chdir(c_project_root);
+  char newprj[PRJ_NAME_LEN];
 
   char my_string[sizeof(newprj)] = "project___";
 
@@ -23,8 +21,7 @@ again:
   if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
 
     // Create project directory
-    SD.mkdir(newprj, true);
-    SD.chdir(newprj);
+    chdir_projects();
 
     char proj_filename[sizeof(newprj) + 5] = {'\0'};
     strcat(proj_filename, newprj);
@@ -38,7 +35,7 @@ again:
       goto again;
     }
 
-    //Initialise Grid Files.
+    // Initialise Grid Files.
     //
     char grid_filename[sizeof(newprj) + 2];
     strncpy(grid_filename, newprj, sizeof(newprj));
@@ -54,7 +51,7 @@ again:
         }
       }
     }
-    //Initialiase Project File.
+    // Initialiase Project File.
     //
     bool ret = proj.new_project(proj_filename);
     if (ret) {
@@ -75,6 +72,12 @@ again:
   }
 }
 
+void Project::chdir_projects() {
+  const char *c_project_root = PRJ_DIR;
+  SD.mkdir(c_project_root, true);
+  SD.chdir(c_project_root);
+}
+
 bool Project::load_project(const char *projectname) {
 
   bool ret;
@@ -82,8 +85,16 @@ bool Project::load_project(const char *projectname) {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Loading project");
   DEBUG_PRINTLN(projectname);
-
   file.close();
+
+  char name[PRJ_NAME_LEN + 2];
+  uint8_t l = strlen(projectname) - 4;
+  strncpy(name, projectname, l);
+
+  const char *c_project_root = PRJ_DIR;
+  chdir_projects();
+  //Open project directory.
+  SD.chdir(name);
 
   ret = file.open(projectname, O_RDWR);
   if (!ret) {
@@ -97,6 +108,21 @@ bool Project::load_project(const char *projectname) {
     DEBUG_PRINTLN("Project version incompatible");
     file.close();
     return false;
+  }
+
+ for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+    grids[i].close_file();
+
+    name[l] = '.';
+    name[l + 1] = i + '0';
+    name[l + 2] = '\0';
+    DEBUG_PRINTLN("opening grid");
+    DEBUG_PRINTLN(name);
+    if (!grids[i].open_file(name)) {
+      DEBUG_PRINTLN("could not open grid");
+      gfx.alert("ERROR", "OPEN GRID");
+      return false;
+    }
   }
 
   strncpy(mcl_cfg.project, projectname, 16);
