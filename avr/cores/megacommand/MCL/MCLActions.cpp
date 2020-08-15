@@ -155,10 +155,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     }
   }
 
-  // Sync project file to SD Card
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
     row_headers[n].active = true;
-    proj.write_grid_row_header(&row_headers[n], grid_page.getRow());
+    proj.write_grid_row_header(&row_headers[n], grid_page.getRow(),n);
     proj.sync_grid(n);
   }
 
