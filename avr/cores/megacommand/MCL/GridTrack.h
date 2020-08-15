@@ -51,14 +51,14 @@ public:
   bool store_in_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(ptr, this, get_track_size());
+    memcpy_bank1(ptr, &(this->active), get_track_size());
     return true;
   }
 
   bool load_from_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(this, ptr, get_track_size());
+    memcpy_bank1(&(this->active), ptr, get_track_size());
     return true;
   }
   /* Load track from Grid in to sequencer, place in payload to be transmitted to

@@ -7,19 +7,16 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
 
-  uint32_t len = (sizeof(GridTrack));
-
-  DEBUG_PRINTLN("reading grid track");
-
-  ret = proj.read_grid((uint8_t *)this, len, column, row);
+  ret = proj.read_grid(&(this->active), sizeof(GridTrack), column, row);
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
 
-  len = get_track_size() - len;
-  if (len > 0) {
-    ret = proj.read_grid((uint8_t *)(this), len);
+  uint32_t len = get_track_size();
+
+  if (len > sizeof(GridTrack)) {
+    ret = proj.read_grid(&(this->active), len, column, row);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
@@ -38,7 +35,7 @@ bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
   bool ret;
 
   uint32_t len = get_track_size();
-  ret = proj.write_grid((uint8_t *)(this), len, column, row);
+  ret = proj.write_grid(&(this->active), len, column, row);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;
