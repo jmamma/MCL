@@ -1,7 +1,7 @@
 #include "MCL.h"
 #include "GridTrack.h"
 
-uint16_t GridTrack::get_track_size() { return sizeof(GridTrack); }
+uint16_t GridTrack::get_track_size() { return sizeof(GridTrack) - 2; }
 
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 

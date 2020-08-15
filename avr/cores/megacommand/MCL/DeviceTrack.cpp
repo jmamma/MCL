@@ -2,28 +2,29 @@
 #include "DeviceTrack.h"
 
 uint16_t DeviceTrack::get_track_size() {
+  uint16_t size = 0;
   switch (active) {
   case EMPTY_TRACK_TYPE:
-    return sizeof(GridTrack);
+    size = sizeof(GridTrack);
     break;
   case MD_TRACK_TYPE:
-    return sizeof(MDTrack);
+    size = sizeof(MDTrack);
     break;
   case A4_TRACK_TYPE:
-    return sizeof(A4Track);
+    size = sizeof(A4Track);
     break;
   case EXT_TRACK_TYPE:
-    return sizeof(ExtTrack);
+    size = sizeof(ExtTrack);
     break;
   case A4_TRACK_TYPE_270:
-    return sizeof(A4Track_270);
+    size = sizeof(A4Track_270);
     break;
   case MD_TRACK_TYPE_270:
-    return sizeof(MDTrack_270);
+    size = sizeof(MDTrack_270);
     break;
   case EXT_TRACK_TYPE_270:
-    return sizeof(ExtTrack_270);
+    size = sizeof(ExtTrack_270);
     break;
   }
-  return 0;
+  return size - 2;
 }
