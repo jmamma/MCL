@@ -32,15 +32,6 @@ bool Grid::write_header() {
 }
 
 
-bool Grid::open_file(const char *gridname) {
-  return file.open(gridname, O_RDWR);
-}
-
-bool Grid::close_file() {
-  return file.close();
-}
-
-
 bool Grid::new_file(const char *gridname) {
   file.close();
 
@@ -186,21 +177,6 @@ uint8_t Grid::get_slot_model(int column, int row, bool load) {
   return temp_track.active;
 }
 
-uint32_t Grid::get_slot_offset(int16_t column, int16_t row) {
-  uint32_t offset = (int32_t)GRID_SLOT_BYTES +
-                   (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
-                       (int32_t)GRID_SLOT_BYTES;
-  return offset;
-}
-
-uint32_t Grid::get_row_header_offset(int16_t row) {
-  uint32_t offset =
-      (int32_t)GRID_SLOT_BYTES +
-      (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
-  return offset;
-}
-
-
 bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   bool ret;
@@ -250,58 +226,4 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   return write_row_header(&row_header, row);
 }
 
-bool Grid::seek(uint8_t col, uint16_t row) {
-  return file.seekSet(get_slot_offset(col, row));
-}
 
-bool Grid::seek_row_header(uint16_t row) {
-  return file.seekSet(get_row_header_offset(row));
-}
-
-
-bool Grid::write_row_header(GridRowHeader *row_header, uint16_t row) {
-   bool ret = seek_row_header(row);
-   if (ret) {
-      ret = mcl_sd.write_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
-   }
-   return ret;
-}
-
-
-bool Grid::read_row_header(GridRowHeader *row_header, uint16_t row) {
-   bool ret = seek_row_header(row);
-   if (ret) {
-      ret = mcl_sd.read_data((uint8_t *)(row_header), sizeof(GridRowHeader), &file);
-   }
-   return ret;
-}
-
-bool Grid::write(void *data, size_t len) {
-        DEBUG_DUMP("writing");
-        DEBUG_DUMP(len);
-   return mcl_sd.write_data((uint8_t *)(data), len, &file);
-}
-
-bool Grid::write(void *data, size_t len, uint8_t col, uint16_t row) {
-   bool ret = seek(col, row);
-   if (ret) {
-      ret = write((uint8_t *)(data), len);
-   }
-   return ret;
-}
-
-bool Grid::read(void *data, size_t len) {
-   return mcl_sd.read_data((uint8_t *)(data), len, &file);
-}
-
-bool Grid::read(void *data, size_t len, uint8_t col, uint16_t row) {
-   bool ret = seek(col, row);
-   if (ret) {
-      ret = read((uint8_t *)(data), len);
-   }
-   return ret;
-}
-
-bool Grid::sync() {
-   return file.sync();
-}
