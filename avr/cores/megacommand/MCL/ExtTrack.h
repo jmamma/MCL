@@ -2,7 +2,7 @@
 #ifndef EXTTRACK_H__
 #define EXTTRACK_H__
 #include "ExtSeqTrack.h"
-#include "DeviceTrack.h"
+#include "GridTrack.h"
 #include "MCLMemory.h"
 
 #define EMPTY_TRACK_TYPE 0
@@ -13,7 +13,7 @@ public:
 };
 
 class ExtTrack
-    : public DeviceTrack {
+    : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(uint8_t tracknumber);
@@ -21,9 +21,7 @@ public:
   virtual bool store_track_in_grid(uint8_t tracknumber, uint16_t row,
                            bool online = false);
   virtual void load_immediate(uint8_t tracknumber);
-  virtual bool is() {
-    return (active == EXT_TRACK_TYPE);
-  }
+  bool is() { return (active == EXT_TRACK_TYPE); }
   bool virtual convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
@@ -33,6 +31,8 @@ public:
     }
     return false;
   }
+  virtual uint16_t get_track_size() { return sizeof(ExtTrack); }
+  virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
 };
 
 #endif /* EXTTRACK_H__ */

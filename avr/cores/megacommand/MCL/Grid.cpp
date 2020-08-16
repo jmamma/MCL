@@ -126,54 +126,21 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   if (s_col > 15 && d_col < 16) {
     return false;
   }
-  EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack *)&temp_track;
-  A4Track *a4_track = (A4Track *)&temp_track;
-  ExtTrack *ext_track = (ExtTrack *)&temp_track;
+  // setup a buffer frame for the tracks.
+  uint8_t _track_buf[sizeof(EmptyTrack)];
+  GridTrack* ptrack = (GridTrack*)_track_buf;
+  ptrack->load_from_grid(s_col, s_row, true);
+  // at this point, the vtable of ptrack should be repaired
+  ptrack->on_copy(s_col, d_col, destination_same);
+  // XXX what's the difference between store_in_grid and store_track_in_grid [offline, no merge] ?
+  ptrack->store_in_grid(d_col, d_row, true);
 
-  if (s_col < 16) {
-    md_track->load_from_grid(s_col, s_row);
-    // bit of a hack to keep lfos modulating the same track.
-    if (destination_same) {
-      if (md_track->machine.trigGroup == s_col) {
-        md_track->machine.trigGroup = 255;
-      }
-      if (md_track->machine.muteGroup == s_col) {
-        md_track->machine.muteGroup = 255;
-      }
-      if (md_track->machine.lfo.destinationTrack == s_col) {
-        md_track->machine.lfo.destinationTrack = d_col;
-      }
-    } else {
-      int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
-      int trig_dest = md_track->machine.trigGroup - s_col;
-      int mute_dest = md_track->machine.muteGroup - s_col;
-      if (range_check(d_col + lfo_dest, 0, 15)) {
-        md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
-      } else {
-        md_track->machine.lfo.destinationTrack = 255;
-      }
-      if (range_check(d_col + trig_dest, 0, 15)) {
-        md_track->machine.trigGroup = d_col + trig_dest;
-      } else {
-        md_track->machine.trigGroup = 255;
-      }
-      if (range_check(d_col + mute_dest, 0, 15)) {
-        md_track->machine.muteGroup = d_col + mute_dest;
-      } else {
-        md_track->machine.muteGroup = 255;
-      }
-    }
-    md_track->store_track_in_grid(d_col, d_row);
-  } else {
-    a4_track->load_from_grid(s_col, s_row);
-    a4_track->store_track_in_grid(d_col, d_row);
-  }
 }
 
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
   GridTrack temp_track;
-  temp_track.load_from_grid(column, row);
+  temp_track.load_from_grid(column, row, false);
+  // XXX why active, not the actual model?
   return temp_track.active;
 }
 

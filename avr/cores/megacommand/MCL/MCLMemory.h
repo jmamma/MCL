@@ -39,17 +39,11 @@
 //template<int X> struct __WOW;
 //__WOW<sizeof(MDTrackLight)> szmd;
 //__WOW<sizeof(A4Track)> sza4;
-#pragma message("MD_TRACK_LEN = 501")
-#pragma message("A4_TRACK_LEN = 1742")
 
-
-//#define MD_TRACK_LEN (sizeof(MDTrackLight))
-//#define A4_TRACK_LEN (sizeof(A4Track))
 
 #ifdef EXT_TRACKS
 #define EMPTY_TRACK_LEN A4_TRACK_LEN
 #else
-#pragma message("EMPTY_TRACK_LEN == MD_TRACK_LEN")
 #define EMPTY_TRACK_LEN MD_TRACK_LEN
 #endif
 
@@ -61,16 +55,5 @@
 // 1024x FILE entries
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
 #define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
-
-
-#pragma message (VAR_NAME_VALUE(NUM_MD_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_A4_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_EXT_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_LFO_TRACKS))
-#pragma message (VAR_NAME_VALUE(NUM_TRACKS))
-#pragma message (VAR_NAME_VALUE(BANK1_MD_TRACKS_START))
-#pragma message (VAR_NAME_VALUE(BANK1_A4_TRACKS_START))
-#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_START))
-#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_END))
 
 #endif /* MCLMEMORY_H__ */

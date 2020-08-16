@@ -625,7 +625,7 @@ void GridPage::apply_slot_changes() {
   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   GridTrack temp_slot;
-  temp_slot.load_from_grid(getCol(), getRow());
+  temp_slot.load_from_grid(getCol(), getRow(), false);
 
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
@@ -707,7 +707,7 @@ void GridPage::apply_slot_changes() {
           // Save slot chain data
           activate_header = true;
           slot.active = header.track_type[x + getCol()];
-          slot.store_in_grid(x + getCol(), y + getRow());
+          slot.store_in_grid(x + getCol(), y + getRow(), false);
         }
       }
       // If all slots are deleted then clear the row name
@@ -759,7 +759,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     show_slot_menu = true;
     DEBUG_DUMP(getCol());
     DEBUG_DUMP(getRow());
-    slot.load_from_grid(getCol(), getRow());
+    slot.load_from_grid(getCol(), getRow(), false);
     DEBUG_PRINTLN("what's in the slot");
     DEBUG_DUMP(slot.chain.loops);
     DEBUG_DUMP(slot.chain.row);

@@ -22,9 +22,7 @@ public:
   A4Sound sound;
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_track_in_grid(uint8_t tracknumber, uint16_t row, bool online = false);
-  bool is() {
-    return (active == A4_TRACK_TYPE);
-  }
+  bool is() { return (active == A4_TRACK_TYPE); }
   bool convert(A4Track_270 *old) {
     if (active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
@@ -36,6 +34,9 @@ public:
     }
    return false;
   }
+  virtual uint16_t get_track_size() { return sizeof(A4Track); }
+  virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
+  virtual uint8_t get_device_type() { return A4_TRACK_TYPE; }
 };
 
 #endif /* A4TRACK_H__ */
