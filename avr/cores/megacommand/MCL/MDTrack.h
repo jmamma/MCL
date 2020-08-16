@@ -3,7 +3,7 @@
 #define MDTRACK_H__
 
 #include "Grid.h"
-#include "DeviceTrack.h"
+#include "GridTrack.h"
 #include "MCLMemory.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
@@ -69,7 +69,7 @@ public:
   ParameterLock locks[LOCK_AMOUNT];
 };
 
-class MDTrack : public DeviceTrack {
+class MDTrack : public GridTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;

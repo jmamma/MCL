@@ -6,7 +6,7 @@
 #include "GridTrack.h"
 #include "MCLMemory.h"
 
-class EmptyTrack : public DeviceTrack {
+class EmptyTrack : public GridTrack {
 public:
   //Assume A4Track consume most data size out
   //of all the tracktypes

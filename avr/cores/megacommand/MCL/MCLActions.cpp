@@ -204,7 +204,7 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      if (md_track->load_from_grid(n, row)) {
+      if (md_track->load_from_grid(n, row, true)) {
         md_track->store_in_mem(n);
         slots_cached[n] = 1;
       }
@@ -221,7 +221,7 @@ void MCLActions::prepare_next_chain(int row) {
     if (note_interface.notes[n] > 0) {
       DEBUG_PRINTLN("about to load");
       DEBUG_PRINTLN(n);
-      if (a4_track->load_from_grid(n, row)) {
+      if (a4_track->load_from_grid(n, row, true)) {
         a4_track->store_in_mem(n);
         DEBUG_PRINTLN("checking a4 load");
         DEBUG_PRINTLN(a4_track->chain.row);
@@ -295,7 +295,7 @@ void MCLActions::send_tracks_to_devices() {
         first_note = i;
       }
 
-      empty_track.load_from_grid(i, grid_page.getRow());
+      empty_track.load_from_grid(i, grid_page.getRow(), true);
       if (empty_track.is_active()) {
         empty_track.chain.store_in_mem(i, &(chains[0]));
         switch (empty_track.active) {
@@ -374,7 +374,7 @@ void MCLActions::send_tracks_to_devices() {
       DEBUG_PRINTLN(chains[n].row);
       DEBUG_PRINTLN(n);
       if ((n < NUM_MD_TRACKS)) {
-        if (md_track->load_from_grid(n, chains[n].row)) {
+        if (md_track->load_from_grid(n, chains[n].row, true)) {
           md_temp_track.load_from_mem(n);
 
           if ((md_track->active != EMPTY_TRACK_TYPE) &&
@@ -390,7 +390,7 @@ void MCLActions::send_tracks_to_devices() {
       }
 #ifdef EXT_TRACKS
       else {
-        if (a4_track->load_from_grid(n, chains[n].row)) {
+        if (a4_track->load_from_grid(n, chains[n].row, true)) {
           a4_track->store_in_mem(n);
           if (a4_track->active != EMPTY_TRACK_TYPE) {
             send_machine[n] = 0;

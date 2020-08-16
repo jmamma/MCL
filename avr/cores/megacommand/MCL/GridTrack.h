@@ -32,7 +32,8 @@ public:
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 
-  virtual uint16_t get_track_size();
+  uint16_t get_track_size();
+
   uint32_t get_region() {
     switch (active) {
     default:
@@ -45,8 +46,9 @@ public:
       break;
     }
   }
-  bool load_from_grid(uint8_t column, uint16_t row);
-  virtual bool store_in_grid(uint8_t column, uint16_t row);
+
+  bool load_from_grid(uint8_t column, uint16_t row, bool full_load = false);
+  bool store_in_grid(uint8_t column, uint16_t row);
 
   bool store_in_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
@@ -63,10 +65,6 @@ public:
   }
   /* Load track from Grid in to sequencer, place in payload to be transmitted to
    * device*/
-  virtual void load_immediate(){
-
-  };
-  virtual bool is() { return false; }
   void init() {
     chain.length = 16;
     chain.speed = SEQ_SPEED_1X;

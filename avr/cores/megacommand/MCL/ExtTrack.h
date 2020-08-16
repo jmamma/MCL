@@ -2,8 +2,8 @@
 #ifndef EXTTRACK_H__
 #define EXTTRACK_H__
 #include "ExtSeqTrack.h"
-#include "DeviceTrack.h"
 #include "MCLMemory.h"
+#include "GridTrack.h"
 
 #define EMPTY_TRACK_TYPE 0
 
@@ -13,7 +13,7 @@ public:
 };
 
 class ExtTrack
-    : public DeviceTrack {
+    : public GridTrack {
 public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(uint8_t tracknumber);

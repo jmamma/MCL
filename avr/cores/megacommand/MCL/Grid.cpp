@@ -132,7 +132,7 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   if (s_col < 16) {
-    md_track->load_from_grid(s_col, s_row);
+    md_track->load_from_grid(s_col, s_row, true);
     // bit of a hack to keep lfos modulating the same track.
     if (destination_same) {
       if (md_track->machine.trigGroup == s_col) {
@@ -166,7 +166,7 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
     }
     md_track->store_track_in_grid(d_col, d_row);
   } else {
-    a4_track->load_from_grid(s_col, s_row);
+    a4_track->load_from_grid(s_col, s_row, true);
     a4_track->store_track_in_grid(d_col, d_row);
   }
 }
