@@ -107,7 +107,6 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   GridRowHeader row_headers[NUM_GRIDS];
   GridTrack grid_track;
 
-
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
     proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
@@ -120,10 +119,13 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         first_note = i;
       }
 
-      // If track is not empty, preserve chain settings on save
+      if (i < NUM_MD_TRACKS) {
+        grid_num = 0;
+      } else {
+        grid_num = 1;
+      }
 
-      if (row_headers[grid_num].track_type[i] !=
-          EMPTY_TRACK_TYPE) {
+      if (row_headers[grid_num].track_type[i] != EMPTY_TRACK_TYPE) {
         grid_track.load_from_grid(i, row);
         empty_track.chain.loops = grid_track.chain.loops;
         empty_track.chain.row = grid_track.chain.row;
@@ -134,33 +136,36 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
       if (i < NUM_MD_TRACKS) {
         md_track->store_track_in_grid(i, grid_page.getRow(), merge, true);
+        row_headers[grid_num].update_model(i, md_track->machine.model,
+                                           MD_TRACK_TYPE);
       }
 #ifdef EXT_TRACKS
       else {
+
+        uint8_t track_num = i - NUM_MD_TRACKS;
         if (Analog4.connected) {
           DEBUG_PRINTLN("a4 get sound");
-          Analog4.getBlockingSoundX(i - NUM_MD_TRACKS);
+          Analog4.getBlockingSoundX(track_num);
           a4_track->sound.fromSysex(Analog4.midi);
         }
-        a4_track->store_track_in_grid(i, grid_page.getRow(), true);
+        a4_track->store_track_in_grid(track_num, grid_page.getRow(), true);
+        row_headers[grid_num].update_model(track_num, track_num, A4_TRACK_TYPE);
       }
 #endif
     }
   }
 
   // Only update row name if, the current row is not active.
-  if (!row_headers[grid_num].active) {
-    for (uint8_t c = 0; c < 17; c++) {
-      row_headers[grid_num].name[c] = MD.kit.name[c];
-    }
-  }
-
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    row_headers[n].active = true;
-    proj.write_grid_row_header(&row_headers[n], grid_page.getRow(),n);
+    if (!row_headers[n].active) {
+      for (uint8_t c = 0; c < 17; c++) {
+        row_headers[n].name[c] = MD.kit.name[c];
+      }
+      row_headers[n].active = true;
+    }
+    proj.write_grid_row_header(&row_headers[n], grid_page.getRow(), n);
     proj.sync_grid(n);
   }
-
 }
 
 void MCLActions::write_tracks(int column, int row) {
@@ -213,8 +218,7 @@ void MCLActions::prepare_next_chain(int row) {
       } else {
         send_machine[n] = 1;
       }
-
-   }
+    }
   }
 #ifdef EXT_TRACKS
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {

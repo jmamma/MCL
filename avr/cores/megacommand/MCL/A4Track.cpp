@@ -36,7 +36,5 @@ bool A4Track::store_track_in_grid(uint8_t tracknumber, uint16_t row,
   if (!ret) {
     return false;
   }
-  grid_page.row_headers[grid_page.cur_row].update_model(tracknumber, tracknumber,
-                                                        A4_TRACK_TYPE);
   return true;
 }

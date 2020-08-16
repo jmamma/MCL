@@ -196,6 +196,7 @@ uint8_t GridPage::getRow() { return param2.cur; }
 uint8_t GridPage::getCol() { return param1.cur; }
 
 void GridPage::load_slot_models() {
+  DEBUG_PRINT_FN();
 #ifdef OLED_DISPLAY
   uint8_t row_shift = 0;
   if ((cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1)) {

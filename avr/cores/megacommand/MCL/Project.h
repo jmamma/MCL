@@ -95,6 +95,8 @@ public:
     if (grid == 255) {
       grid = grid_select;
     }
+    DEBUG_PRINT_FN();
+    DEBUG_DUMP(grid);
     bool ret = grids[grid].read_row_header(row_header, row);
     return ret;
   }
