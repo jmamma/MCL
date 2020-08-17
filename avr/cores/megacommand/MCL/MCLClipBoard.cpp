@@ -62,7 +62,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   MDTrack *md_track = (MDTrack *)(&temp_track);
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
-    return;
+    return false;
   }
 
   if (track < NUM_MD_TRACKS) {
@@ -113,7 +113,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
 
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
-    return;
+    return false;
   }
     if (source_track < NUM_MD_TRACKS) {
       ret = grid.read(&temp_track, sizeof(MDTrack), source_track, GRID_LENGTH);
@@ -162,7 +162,7 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   t_h = h;
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
-    return;
+    return false;
   }
   EmptyTrack temp_track;
   int32_t offset;
@@ -186,20 +186,17 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
   DEBUG_PRINT_FN();
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
-    return;
+    return false;
   }
 
   bool destination_same = (col == t_col);
   if (t_w == 1) {
     destination_same = true;
   }
-  EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack *)&temp_track;
-  A4Track *a4_track = (A4Track *)&temp_track;
-  ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
-  int32_t offset;
-  bool ret;
+  // setup buffer frame
+  uint8_t _track_buf[sizeof(EmptyTrack)];
+  GridTrack *track = (GridTrack*)_track_buf;
 
   GridRowHeader header;
   GridRowHeader header_copy;
@@ -214,72 +211,20 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      ret = grid.read(&temp_track, sizeof(temp_track), x, y);
+      track->load_from_grid(x, y, true);
+      // track now has full data and correct type
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
 
-      int16_t chain_row_offset = temp_track.chain.row - t_row;
+      int16_t chain_row_offset = track->chain.row - t_row;
 
       uint8_t new_chain_row = row + chain_row_offset;
       if (new_chain_row >= GRID_LENGTH) { new_chain_row = y + row; }
       else if (new_chain_row < 0) { new_chain_row = y + row; }
-      temp_track.chain.row = new_chain_row;
-
-      switch (temp_track.active) {
-      case EMPTY_TRACK_TYPE:
-        header.update_model(x + col, EMPTY_TRACK_TYPE, DEVICE_NULL);
-        break;
-
-      case EXT_TRACK_TYPE:
-        if (x + col >= NUM_MD_TRACKS) {
-          header.update_model(x + col, x + col, EXT_TRACK_TYPE);
-        }
-        break;
-
-      case A4_TRACK_TYPE:
-        if (x + col >= NUM_MD_TRACKS) {
-          header.update_model(x + col, x + col, A4_TRACK_TYPE);
-        }
-        break;
-      case MD_TRACK_TYPE:
-        if (x + col < NUM_MD_TRACKS) {
-          header.update_model(x + col, md_track->machine.model, MD_TRACK_TYPE);
-          if ((destination_same)) {
-            if (md_track->machine.trigGroup == s_col) {
-              md_track->machine.trigGroup = 255;
-            }
-            if (md_track->machine.muteGroup == s_col) {
-              md_track->machine.muteGroup = 255;
-            }
-            if (md_track->machine.lfo.destinationTrack == s_col) {
-              md_track->machine.lfo.destinationTrack = d_col;
-            }
-          } else {
-            int lfo_dest = md_track->machine.lfo.destinationTrack - s_col;
-            int trig_dest = md_track->machine.trigGroup - s_col;
-            int mute_dest = md_track->machine.muteGroup - s_col;
-            if (range_check(d_col + lfo_dest, 0, 15)) {
-              md_track->machine.lfo.destinationTrack = d_col + lfo_dest;
-            } else {
-              md_track->machine.lfo.destinationTrack = 255;
-            }
-            if (range_check(d_col + trig_dest, 0, 15)) {
-              md_track->machine.trigGroup = d_col + trig_dest;
-            } else {
-              md_track->machine.trigGroup = 255;
-            }
-            if (range_check(d_col + mute_dest, 0, 15)) {
-              md_track->machine.muteGroup = d_col + mute_dest;
-            } else {
-              md_track->machine.muteGroup = 255;
-            }
-          }
-        }
-        break;
-      default:
-        break;
-      }
-        temp_track.store_in_grid(x + col, x + col);
+      track->chain.row = new_chain_row;
+      header.update_model(x + col, track->get_model(), track->get_device_type());
+      track->on_copy(s_col, d_col, destination_same);
+      track->store_in_grid(x + col, y + row, true);
     }
     proj.write_grid_row_header(&header, y + row);
   }

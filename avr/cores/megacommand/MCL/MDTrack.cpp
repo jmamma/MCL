@@ -197,3 +197,37 @@ bool MDTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
   DEBUG_PRINT("model");
   return true;
 }
+
+void MDTrack::on_copy(int16_t s_col, int16_t d_col, bool destination_same) {
+  // bit of a hack to keep lfos modulating the same track.
+  if (destination_same) {
+    if (machine.trigGroup == s_col) {
+      machine.trigGroup = 255;
+    }
+    if (machine.muteGroup == s_col) {
+      machine.muteGroup = 255;
+    }
+    if (machine.lfo.destinationTrack == s_col) {
+      machine.lfo.destinationTrack = d_col;
+    }
+  } else {
+    int lfo_dest = machine.lfo.destinationTrack - s_col;
+    int trig_dest = machine.trigGroup - s_col;
+    int mute_dest = machine.muteGroup - s_col;
+    if (range_check(d_col + lfo_dest, 0, 15)) {
+      machine.lfo.destinationTrack = d_col + lfo_dest;
+    } else {
+      machine.lfo.destinationTrack = 255;
+    }
+    if (range_check(d_col + trig_dest, 0, 15)) {
+      machine.trigGroup = d_col + trig_dest;
+    } else {
+      machine.trigGroup = 255;
+    }
+    if (range_check(d_col + mute_dest, 0, 15)) {
+      machine.muteGroup = d_col + mute_dest;
+    } else {
+      machine.muteGroup = 255;
+    }
+  }
+}

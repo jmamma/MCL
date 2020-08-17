@@ -1,47 +1,52 @@
-#include "MCL.h"
 #include "GridTrack.h"
+#include "MCL.h"
+#include "new.h"
 
-uint16_t GridTrack::get_track_size() {
-  uint16_t size = 0;
-  switch (active) {
-  case EMPTY_TRACK_TYPE:
-    size = sizeof(GridTrack);
-    break;
-  case MD_TRACK_TYPE:
-    size = sizeof(MDTrack);
-    break;
-  case A4_TRACK_TYPE:
-    size = sizeof(A4Track);
-    break;
-  case EXT_TRACK_TYPE:
-    size = sizeof(ExtTrack);
-    break;
-  case A4_TRACK_TYPE_270:
-    size = sizeof(A4Track_270);
-    break;
-  case MD_TRACK_TYPE_270:
-    size = sizeof(MDTrack_270);
-    break;
-  case EXT_TRACK_TYPE_270:
-    size = sizeof(ExtTrack_270);
-    break;
-  }
-  return size;
-}
-
-bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool full_load) {
+bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
 
   bool ret;
 
-  ret = proj.read_grid(&(this->active), sizeof(GridTrack), column, row);
-
+  ret = proj.read_grid(this, sizeof(GridTrack), column, row);
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
 
-  if (full_load) {
-    ret = proj.read_grid(&(this->active), get_track_size(), column, row);
+  switch (active) {
+  case A4_TRACK_TYPE_270:
+  case MD_TRACK_TYPE_270:
+  case EXT_TRACK_TYPE_270:
+    if (!data) {
+      // no space for track upgrade
+      return false;
+    } else {
+      // TODO upgrade right here
+      return true;
+    }
+    break;
+  case EMPTY_TRACK_TYPE:
+    ::new(this) EmptyTrack;
+    break;
+  case MD_TRACK_TYPE:
+    ::new(this) MDTrack;
+    break;
+  case A4_TRACK_TYPE:
+    ::new(this) A4Track;
+    break;
+  case EXT_TRACK_TYPE:
+    ::new(this) ExtTrack;
+    break;
+  default:
+    // unrecognized track type
+    return false;
+  }
+
+  if (!data) return true;
+
+  uint32_t len = get_track_size();
+
+  if (len > sizeof(GridTrack)) {
+    ret = proj.read_grid(this, len, column, row);
     if (!ret) {
       DEBUG_PRINTLN("read failed");
       return false;
@@ -55,13 +60,13 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool full_load) {
   return true;
 }
 
-bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
+bool GridTrack::store_in_grid(uint8_t column, uint16_t row, bool data) {
 
   DEBUG_PRINT_FN();
   bool ret;
 
-  uint32_t len = get_track_size();
-  ret = proj.write_grid(&(this->active), len, column, row);
+  uint32_t len = data ? get_track_size() : sizeof(GridTrack);
+  ret = proj.write_grid(this, len, column, row);
   if (!ret) {
     DEBUG_PRINTLN("write failed");
     return false;

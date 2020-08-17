@@ -125,8 +125,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         grid_num = 1;
       }
 
-      if (row_headers[grid_num].track_type[i] != EMPTY_TRACK_TYPE) {
-        grid_track.load_from_grid(i, row);
+      if (row_headers[grid_num].track_type[i] !=
+          EMPTY_TRACK_TYPE) {
+        grid_track.load_from_grid(i, row, false);
         empty_track.chain.loops = grid_track.chain.loops;
         empty_track.chain.row = grid_track.chain.row;
       } else {
