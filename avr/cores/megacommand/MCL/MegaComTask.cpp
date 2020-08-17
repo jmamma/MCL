@@ -1,7 +1,7 @@
 #define IS_ISR_ROUTINE
 
 #include "MegaComTask.h"
-#include "MegaComDisplayServer.h"
+#include "MegaComUIServer.h"
 #include "MegaComFileServer.h"
 #include "MegaComMidiServer.h"
 
@@ -132,10 +132,17 @@ void comchannel_t::rx_isr(uint8_t data) {
   }
 }
 
-void comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
+bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
   if (!isr) {
     tx_irqlock = SREG;
     cli();
+  }
+
+  if(tx_buf.len - tx_buf.size() < len) {
+    if (!isr) {
+      SREG = tx_irqlock;
+    }
+    return false;
   }
 
   tx_chksum = 0;
@@ -224,7 +231,7 @@ void MegaComTask::init() {
   servers[COMSERVER_EXTMIDI] = &megacom_midiserver;
 
   // COMSERVER_EXTUI init
-  servers[COMSERVER_EXTUI] = &megacom_displayserver;
+  servers[COMSERVER_EXTUI] = &megacom_uiserver;
 
   // COMCHANNEL_UART_USB init
   {
@@ -270,6 +277,8 @@ void MegaComTask::run() {
     }
     // TODO uart_usb is async I/O so we don't worry about tx here. but there
     // could be sync I/O that needs some manual driving...
+    // For example, the loopback:
+
     cur_time = read_slowclock();
   }
 
@@ -317,12 +326,12 @@ ALWAYS_INLINE() bool MegaComTask::tx_isempty_isr(uint8_t channel) {
   return channels[channel].tx_isempty_isr();
 }
 
-void MegaComTask::tx_begin(uint8_t channel, uint8_t type, uint16_t len) {
-  channels[channel].tx_begin(false, type, len);
+bool MegaComTask::tx_begin(uint8_t channel, uint8_t type, uint16_t len) {
+  return channels[channel].tx_begin(false, type, len);
 }
 
-void MegaComTask::tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len) {
-  channels[channel].tx_begin(true, type, len);
+bool MegaComTask::tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len) {
+  return channels[channel].tx_begin(true, type, len);
 }
 
 void MegaComTask::tx_data(uint8_t channel, uint8_t data) {

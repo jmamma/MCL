@@ -46,12 +46,12 @@ public:
   ALWAYS_INLINE() void rx_isr(uint8_t channel, uint8_t data);
   ALWAYS_INLINE() uint8_t tx_get_isr(uint8_t channel);
   ALWAYS_INLINE() bool tx_isempty_isr(uint8_t channel);
-  void tx_begin(uint8_t channel, uint8_t type, uint16_t len);
+  bool tx_begin(uint8_t channel, uint8_t type, uint16_t len);
   void tx_data(uint8_t channel, uint8_t data);
   void tx_word(uint8_t channel, uint16_t data);
   void tx_dword(uint8_t channel, uint32_t data);
   void tx_vec(uint8_t channel, char* vec, int len);
-  void tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len);
+  bool tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len);
   comstatus_t tx_end(uint8_t channel);
   void tx_end_isr(uint8_t channel);
 

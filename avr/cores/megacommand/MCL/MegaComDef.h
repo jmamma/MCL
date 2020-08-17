@@ -19,6 +19,7 @@ enum comchannel_id_t {
   COMCHANNEL_UART_USB,
   // COMCHANNEL_EXPANSION_L,
   // COMCHANNEL_EXPANSION_R,
+  COMCHANNEL_LOOPBACK,
   COMCHANNEL_MAX
 };
 
@@ -64,7 +65,7 @@ public:
   void rx_isr(uint8_t data);
   uint8_t tx_get_isr();
   bool tx_isempty_isr();
-  void tx_begin(bool isr, uint8_t type, uint16_t len);
+  bool tx_begin(bool isr, uint8_t type, uint16_t len);
   void tx_data(uint8_t data);
   comstatus_t tx_end();
   void tx_end_isr();

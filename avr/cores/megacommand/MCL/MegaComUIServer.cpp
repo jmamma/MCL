@@ -13,7 +13,13 @@ int MCUIServer::resume(int state) {
 }
 
 void MCUIServer::update() {
-  megacom_task.tx_begin(COMCHANNEL_UART_USB, COMSERVER_EXTUI, 513);
+  if (!m_update) {
+    m_update = true;
+  }
+  if (! megacom_task.tx_begin(COMCHANNEL_UART_USB, COMSERVER_EXTUI, 513)) {
+    // buffer full
+    return;
+  }
   megacom_task.tx_data(COMCHANNEL_UART_USB, USC_DRAW);
   megacom_task.tx_vec(COMCHANNEL_UART_USB, (char*)oled_display.getBuffer(), 512);
   megacom_task.tx_end(COMCHANNEL_UART_USB);
