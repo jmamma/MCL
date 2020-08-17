@@ -42,10 +42,10 @@ bool ExtTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
 
 #ifdef EXT_TRACKS
   if (online) {
-    get_track_from_sysex(tracknumber - 16);
-    chain.length = mcl_seq.ext_tracks[tracknumber - 16].length;
-    chain.speed = mcl_seq.ext_tracks[tracknumber - 16].speed;
-    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber - 16], sizeof(seq_data));
+    get_track_from_sysex(tracknumber);
+    chain.length = mcl_seq.ext_tracks[tracknumber].length;
+    chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
+    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
   }
 #endif
 
