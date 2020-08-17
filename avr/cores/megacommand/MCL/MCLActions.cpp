@@ -53,9 +53,12 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   patternswitch = PATTERN_STORE;
 
+  uint8_t old_grid = proj.get_grid();
+
   bool save_md_tracks = false;
   bool save_a4_tracks = false;
   uint8_t i = 0;
+
   for (i = 0; i < NUM_MD_TRACKS; i++) {
     if (note_interface.notes[i] == 3) {
       save_md_tracks = true;
@@ -124,6 +127,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       } else {
         grid_num = 1;
       }
+      proj.select_grid(grid_num);
 
       if (row_headers[grid_num].track_type[i] !=
           EMPTY_TRACK_TYPE) {
@@ -167,6 +171,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     proj.write_grid_row_header(&row_headers[n], grid_page.getRow(), n);
     proj.sync_grid(n);
   }
+
+  proj.select_grid(old_grid);
 }
 
 void MCLActions::write_tracks(int column, int row) {

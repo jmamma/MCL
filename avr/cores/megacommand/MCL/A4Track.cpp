@@ -23,13 +23,13 @@ bool A4Track::store_track_in_grid(uint8_t tracknumber, uint16_t row,
   if (online) {
     if (Analog4.connected) {
       if (tracknumber != 255) {
-        get_track_from_sysex(tracknumber - 16);
+        get_track_from_sysex(tracknumber);
       }
     }
-    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber - 16], sizeof(seq_data));
+    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
 
-    chain.length = mcl_seq.ext_tracks[tracknumber - 16].length;
-    chain.speed = mcl_seq.ext_tracks[tracknumber - 16].speed;
+    chain.length = mcl_seq.ext_tracks[tracknumber].length;
+    chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
   }
 #endif
   ret = proj.write_grid((uint8_t *)this, A4_TRACK_LEN, tracknumber, row);
