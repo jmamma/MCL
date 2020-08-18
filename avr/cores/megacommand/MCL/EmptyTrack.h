@@ -15,7 +15,7 @@ public:
   bool is() { return (active == EMPTY_TRACK_TYPE || active == 255); }
   // despite having a huge chunk of member data, it reports the base size.
   // so when we pull out an empty track from the grid, it doesn't read that much
-  uint16_t get_track_size() { return sizeof(GridTrack); }
+  uint16_t get_track_size() { return sizeof(EmptyTrack); }
 
   /*
   bool get_track_from_sysex(int tracknumber, uint8_t column);
