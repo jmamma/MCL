@@ -4,6 +4,7 @@
 
 bool GridTrack::init_track_type(uint8_t track_type) {
    ::new(this) GridTrack;
+   return true;
 }
 
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
@@ -19,6 +20,8 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
  if (!init_track_type(active)) return false;
 
   uint32_t len = get_track_size();
+
+  DEBUG_PRINTLN(len);
 
   if (len > sizeof(GridTrack)) {
     ret = proj.read_grid(this, len, column, row);
