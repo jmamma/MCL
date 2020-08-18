@@ -109,12 +109,28 @@ int MCFileServer::get() {
   }
 
   if (file.isOpen() && file.isFile() && file.position() != _fsize) {
-    uint16_t len = file.read(buf, 512);
+    int16_t len = file.read(buf, 512);
     // payload size: cmd_type(1) + data(read_size)
-    megacom_task.tx_begin(msg.channel, msg.type, 1 + len);
+    comstatus_t status = megacom_task.tx_checkstatus(COMCHANNEL_UART_USB, COMSERVER_FILESERVER);
+    if (status == CS_TX_ACTIVE) {
+      // previous tx still on-wire
+      goto rollback;
+    }
+    if (status == CS_RESEND) {
+      // the previosu tx failed. prepare to resend.
+      file.seekCur(-512);
+      goto rollback;
+    }
+    if (!megacom_task.tx_begin(msg.channel, msg.type, 1 + len)) {
+      // buffer full
+      goto rollback;
+    }
     megacom_task.tx_data(msg.channel, FC_RSP_DATA);
     megacom_task.tx_vec(msg.channel, buf, len);
     megacom_task.tx_end(msg.channel);
+    return 1;
+rollback:
+    file.seekCur(-len);
     return 1;
   } else {
     file.close();

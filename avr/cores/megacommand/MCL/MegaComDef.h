@@ -35,6 +35,7 @@ enum comserver_id_t {
 };
 
 enum comstatus_t {
+  CS_TX_ACTIVE,
   CS_ACK,
   CS_RESEND,
   CS_UNSUPPORTED,
@@ -56,7 +57,8 @@ private:
 
   combuf_t tx_buf;
   uint8_t tx_chksum;
-  comstatus_t tx_status;
+  comstatus_t tx_status[COMSERVER_MAX];
+  uint16_t tx_timestamp[COMSERVER_MAX];
   uint8_t tx_irqlock;
   void (*tx_available_callback)();
 
@@ -66,8 +68,9 @@ public:
   uint8_t tx_get_isr();
   bool tx_isempty_isr();
   bool tx_begin(bool isr, uint8_t type, uint16_t len);
+  comstatus_t tx_checkstatus(uint8_t type);
   void tx_data(uint8_t data);
-  comstatus_t tx_end();
+  void tx_end();
   void tx_end_isr();
   void tx_set_data_available_callback(void(*cb)());
 };

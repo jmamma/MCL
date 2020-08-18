@@ -16,7 +16,13 @@ void MCUIServer::update() {
   if (!m_update) {
     m_update = true;
   }
-  if (! megacom_task.tx_begin(COMCHANNEL_UART_USB, COMSERVER_EXTUI, 513)) {
+
+  if (megacom_task.tx_checkstatus(COMCHANNEL_UART_USB, COMSERVER_EXTUI) == CS_TX_ACTIVE) {
+    // previous tx still on-wire
+    return;
+  }
+
+  if (!megacom_task.tx_begin(COMCHANNEL_UART_USB, COMSERVER_EXTUI, 513)) {
     // buffer full
     return;
   }

@@ -52,7 +52,8 @@ public:
   void tx_dword(uint8_t channel, uint32_t data);
   void tx_vec(uint8_t channel, char* vec, int len);
   bool tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len);
-  comstatus_t tx_end(uint8_t channel);
+  void tx_end(uint8_t channel);
+  comstatus_t tx_checkstatus(uint8_t channel, uint8_t type);
   void tx_end_isr(uint8_t channel);
 
   void debug(char* pmsg);

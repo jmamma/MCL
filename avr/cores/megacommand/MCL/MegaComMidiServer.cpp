@@ -23,7 +23,9 @@ int MCMidiServer::run(){
 
 void MCMidiServer::send_isr(uint8_t port, uint8_t data) {
   // TODO hard coded
-  megacom_task.tx_begin_isr(COMCHANNEL_UART_USB, COMSERVER_EXTMIDI, 2);
+  if (!megacom_task.tx_begin_isr(COMCHANNEL_UART_USB, COMSERVER_EXTMIDI, 2)) {
+    return;
+  }
   megacom_task.tx_data(COMCHANNEL_UART_USB, port);
   megacom_task.tx_data(COMCHANNEL_UART_USB, data);
   megacom_task.tx_end_isr(COMCHANNEL_UART_USB);

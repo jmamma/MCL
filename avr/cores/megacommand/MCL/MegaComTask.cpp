@@ -1,9 +1,9 @@
 #define IS_ISR_ROUTINE
 
 #include "MegaComTask.h"
-#include "MegaComUIServer.h"
 #include "MegaComFileServer.h"
 #include "MegaComMidiServer.h"
+#include "MegaComUIServer.h"
 
 #ifdef MEGACOMMAND
 
@@ -68,7 +68,7 @@ void comchannel_t::rx_isr(uint8_t data) {
   case COMSTATE_LEN2:
     rx_len = (rx_len << 8) + data;
     rx_pending = rx_len;
-    if (!rx_len) {
+    if (!rx_len || rx_type >= COMSERVER_UNSUPPORTED) {
       rx_state = COMSTATE_CHECKSUM;
     } else if (rx_len >= COMCHANNEL_BUFSIZE) {
       rx_state = COMSTATE_SYNC;
@@ -88,33 +88,30 @@ void comchannel_t::rx_isr(uint8_t data) {
   case COMSTATE_CHECKSUM:
 
     rx_state = COMSTATE_SYNC;
-
-    // for these data types, do not send back REQUEST_RESEND
+    // for these data types, do not send back REQUEST_RESEND, just update tx status.
     if (rx_type == COMSERVER_REQUEST_RESEND) {
-      tx_status = CS_RESEND;
+      if (rx_chksum == data) tx_status[rx_len] = CS_RESEND;
     } else if (rx_type == COMSERVER_ACK) {
-      tx_status = CS_ACK;
+      if (rx_chksum == data) tx_status[rx_len] = CS_ACK;
     } else if (rx_type == COMSERVER_UNSUPPORTED) {
-      tx_status = CS_UNSUPPORTED;
+      if (rx_chksum == data) tx_status[rx_len] = CS_UNSUPPORTED;
     } else if (rx_chksum == data) { // incoming message, check chksum and
                                     // request resend if not match
-
       auto status = megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len);
       if (status == CS_ACK) {
         // ack it
-        tx_begin(true, COMSERVER_ACK, 0);
+        tx_begin(true, COMSERVER_ACK, rx_type);
         tx_end_isr();
       } else if (status == CS_UNSUPPORTED) {
         // reject it
         rx_buf.undo(rx_len);
-        tx_begin(true, COMSERVER_UNSUPPORTED, 1);
-        tx_data(rx_type);
+        tx_begin(true, COMSERVER_UNSUPPORTED, rx_type);
         tx_end_isr();
       } else if (status == CS_REALTIME_MESSAGE) {
         // undo the buffer
         rx_buf.undo(rx_len);
         // ack it
-        tx_begin(true, COMSERVER_ACK, 0);
+        tx_begin(true, COMSERVER_ACK, rx_type);
         tx_end_isr();
       } else {
         goto request_resend;
@@ -124,25 +121,49 @@ void comchannel_t::rx_isr(uint8_t data) {
     request_resend:
       // wrong data in buffer, drain and request a resend
       rx_buf.undo(rx_len);
-      // must be true here because we just unlocked rx state
-      tx_begin(true, COMSERVER_REQUEST_RESEND, 0);
+      tx_begin(true, COMSERVER_REQUEST_RESEND, rx_type);
       tx_end_isr();
     }
     break;
   }
 }
 
+comstatus_t comchannel_t::tx_checkstatus(uint8_t type) {
+  if (type < COMSERVER_MAX) {
+    comstatus_t status = tx_status[type];
+    constexpr uint16_t timeout = 200; // ms
+    if (status == CS_TX_ACTIVE) {
+      uint16_t cur_time = read_slowclock();
+      if (clock_diff(tx_timestamp[type], cur_time) >= timeout) {
+        tx_status[type] = status = CS_TIMEOUT;
+      }
+    }
+    return status;
+  } else {
+    return CS_REALTIME_MESSAGE;
+  }
+}
+
 bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
-  if (!isr) {
-    tx_irqlock = SREG;
-    cli();
+  if (tx_buf.len - tx_buf.size() < len) {
+    return false;
   }
 
-  if(tx_buf.len - tx_buf.size() < len) {
-    if (!isr) {
-      SREG = tx_irqlock;
+  if (!isr) {
+    // wait until the previous tx is acked
+    constexpr uint16_t timeout = 200; // ms
+    uint16_t new_time = read_slowclock();
+    uint16_t old_time = tx_timestamp[type];
+    do {
+      if (tx_status[type] != CS_TX_ACTIVE) break;
+      new_time = read_slowclock();
+    } while (clock_diff(old_time, new_time) < timeout);
+    if (tx_status[type] == CS_TX_ACTIVE) {
+      tx_status[type] = CS_TIMEOUT;
     }
-    return false;
+
+    tx_irqlock = SREG;
+    cli();
   }
 
   tx_chksum = 0;
@@ -163,7 +184,10 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
 
   tx_available_callback();
 
-  tx_status = CS_TIMEOUT;
+  if (!isr && type < COMSERVER_MAX) {
+    tx_status[type] = CS_TX_ACTIVE;
+    tx_timestamp[type] = read_slowclock();
+  }
 }
 
 void comchannel_t::tx_data(uint8_t data) {
@@ -173,27 +197,13 @@ void comchannel_t::tx_data(uint8_t data) {
   tx_available_callback();
 }
 
-// tx_end check for ACK
-comstatus_t comchannel_t::tx_end() {
+void comchannel_t::tx_end() {
   tx_buf.put_h_isr(tx_chksum);
 
   // release IRQ lock
   SREG = tx_irqlock;
 
   tx_available_callback();
-
-  constexpr uint16_t timeout = 200; // ms
-
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  do {
-    if (tx_status != CS_TIMEOUT)
-      break;
-    current_clock = read_slowclock();
-    handleIncomingMidi();
-  } while (clock_diff(start_clock, current_clock) < timeout);
-
-  return tx_status;
 }
 
 // tx_end_isr doesn't check for ACK
@@ -374,8 +384,10 @@ void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
   }
 }
 
-comstatus_t MegaComTask::tx_end(uint8_t channel) {
-  return channels[channel].tx_end();
+void MegaComTask::tx_end(uint8_t channel) { channels[channel].tx_end(); }
+
+comstatus_t MegaComTask::tx_checkstatus(uint8_t channel, uint8_t type) {
+  return channels[channel].tx_checkstatus(type);
 }
 
 void MegaComTask::tx_end_isr(uint8_t channel) {
