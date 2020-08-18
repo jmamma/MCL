@@ -20,6 +20,10 @@ public:
   GridChain chain;
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
+  virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
+                           bool online = false) {
+     GridTrack::store_in_grid(column,row);
+  }
   bool init_track_type(uint8_t track_type);
 
 };
