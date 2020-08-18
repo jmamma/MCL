@@ -28,6 +28,13 @@ ISR(USART0_UDRE_vect) {
 
 void uart0_tx_available_cb() { UART_USB_SET_ISR_TX_BIT(); }
 
+comchannel_t* ploopback;
+void loopback_tx_available_cb() {
+  while (!ploopback->tx_isempty_isr()) {
+    ploopback->rx_isr(ploopback->tx_get_isr());
+  }
+}
+
 void comchannel_t::init(int id, uint8_t *p_rxbuf, uint16_t sz_rxbuf,
                         uint8_t *p_txbuf, uint16_t sz_txbuf) {
   this->id = id;
@@ -37,6 +44,7 @@ void comchannel_t::init(int id, uint8_t *p_rxbuf, uint16_t sz_rxbuf,
   this->tx_buf.ptr = p_txbuf;
   this->tx_buf.len = sz_txbuf;
   this->tx_available_callback = nullptr;
+  memset(this->tx_status, CS_ACK, COMSERVER_MAX);
 }
 
 void comchannel_t::tx_set_data_available_callback(void (*cb)()) {
@@ -88,13 +96,17 @@ void comchannel_t::rx_isr(uint8_t data) {
   case COMSTATE_CHECKSUM:
 
     rx_state = COMSTATE_SYNC;
-    // for these data types, do not send back REQUEST_RESEND, just update tx status.
+    // for these data types, do not send back REQUEST_RESEND, just update tx
+    // status.
     if (rx_type == COMSERVER_REQUEST_RESEND) {
-      if (rx_chksum == data) tx_status[rx_len] = CS_RESEND;
+      if (rx_chksum == data)
+        tx_status[rx_len] = CS_RESEND;
     } else if (rx_type == COMSERVER_ACK) {
-      if (rx_chksum == data) tx_status[rx_len] = CS_ACK;
+      if (rx_chksum == data)
+        tx_status[rx_len] = CS_ACK;
     } else if (rx_type == COMSERVER_UNSUPPORTED) {
-      if (rx_chksum == data) tx_status[rx_len] = CS_UNSUPPORTED;
+      if (rx_chksum == data)
+        tx_status[rx_len] = CS_UNSUPPORTED;
     } else if (rx_chksum == data) { // incoming message, check chksum and
                                     // request resend if not match
       auto status = megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len);
@@ -155,7 +167,8 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
     uint16_t new_time = read_slowclock();
     uint16_t old_time = tx_timestamp[type];
     do {
-      if (tx_status[type] != CS_TX_ACTIVE) break;
+      if (tx_status[type] != CS_TX_ACTIVE)
+        break;
       new_time = read_slowclock();
     } while (clock_diff(old_time, new_time) < timeout);
     if (tx_status[type] == CS_TX_ACTIVE) {
@@ -193,17 +206,15 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
 void comchannel_t::tx_data(uint8_t data) {
   tx_chksum += data;
   tx_buf.put_h_isr(data);
-
   tx_available_callback();
 }
 
 void comchannel_t::tx_end() {
   tx_buf.put_h_isr(tx_chksum);
+  tx_available_callback();
 
   // release IRQ lock
   SREG = tx_irqlock;
-
-  tx_available_callback();
 }
 
 // tx_end_isr doesn't check for ACK
@@ -213,6 +224,9 @@ void comchannel_t::tx_end_isr() {
 }
 
 void MegaComTask::init() {
+  USE_LOCK();
+  SET_LOCK();
+
   rx_msgs.len = NUM_COMMSG_SLOTS;
   rx_msgs.ptr = COMMSG_SLOTS_START;
 
@@ -231,9 +245,6 @@ void MegaComTask::init() {
   suspended_server = nullptr;
   suspended_state = 0;
 
-  channels[COMCHANNEL_UART_USB].tx_set_data_available_callback(
-      uart0_tx_available_cb);
-
   // COMSERVER_FILESERVER init
   servers[COMSERVER_FILESERVER] = &megacom_fileserver;
 
@@ -244,15 +255,20 @@ void MegaComTask::init() {
   servers[COMSERVER_EXTUI] = &megacom_uiserver;
 
   // COMCHANNEL_UART_USB init
-  {
-    USE_LOCK();
-    SET_LOCK();
-    uart_set_speed(SERIAL_SPEED, 0);
-    UCSR0C = (3 << UCSZ00);
-    /** enable receive, transmit and receive and transmit interrupts. **/
-    UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-    CLEAR_LOCK();
-  }
+  channels[COMCHANNEL_UART_USB].tx_set_data_available_callback(
+      uart0_tx_available_cb);
+
+  uart_set_speed(SERIAL_SPEED, 0);
+  UCSR0C = (3 << UCSZ00);
+  /** enable receive, transmit and receive and transmit interrupts. **/
+  UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+
+  // COMCHANNEL_LOOPBACK init
+  ploopback = &channels[COMCHANNEL_LOOPBACK];
+  channels[COMCHANNEL_LOOPBACK].tx_set_data_available_callback(
+      loopback_tx_available_cb);
+
+  CLEAR_LOCK();
 }
 
 void MegaComTask::update_server_state(MegaComServer *pserver, int state) {
@@ -271,6 +287,8 @@ void MegaComTask::run() {
   auto cur_time = start_time;
 
   while (clock_diff(start_time, cur_time) < 5) {
+
+    // handle messages
     if (suspended_server != nullptr) {
       int state = suspended_server->resume(suspended_state);
       update_server_state(suspended_server, state);
@@ -285,10 +303,6 @@ void MegaComTask::run() {
       // time's wasting
       break;
     }
-    // TODO uart_usb is async I/O so we don't worry about tx here. but there
-    // could be sync I/O that needs some manual driving...
-    // For example, the loopback:
-
     cur_time = read_slowclock();
   }
 
