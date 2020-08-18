@@ -140,7 +140,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        md_track->store_in_grid(i, grid_page.getRow(), merge);
+        md_track->store_in_grid(i, grid_page.getRow(), merge, true);
         row_headers[grid_num].update_model(i, md_track->machine.model,
                                            MD_TRACK_TYPE);
       }
@@ -153,7 +153,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
           Analog4.getBlockingSoundX(track_num);
           a4_track->sound.fromSysex(Analog4.midi);
         }
-        a4_track->store_in_grid(track_num, grid_page.getRow(), merge);
+        a4_track->store_in_grid(track_num, grid_page.getRow(), merge, true);
         row_headers[grid_num].update_model(track_num, track_num, A4_TRACK_TYPE);
       }
 #endif
