@@ -2,27 +2,19 @@
 #include "MCL.h"
 #include "new.h"
 
-bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
-
-  bool ret;
-
-  ret = proj.read_grid(this, sizeof(GridTrack), column, row);
-  if (!ret) {
-    DEBUG_PRINTLN("read failed");
-    return false;
-  }
-
-  switch (active) {
+bool GridTrack::init_track_type(uint8_t track_type) {
+  switch (track_type) {
   case A4_TRACK_TYPE_270:
   case MD_TRACK_TYPE_270:
   case EXT_TRACK_TYPE_270:
-    if (!data) {
+/*    if (!data) {
       // no space for track upgrade
       return false;
     } else {
       // TODO upgrade right here
       return true;
-    }
+    } */
+    return false;
     break;
   case EMPTY_TRACK_TYPE:
     ::new(this) EmptyTrack;
@@ -36,12 +28,22 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
   case EXT_TRACK_TYPE:
     ::new(this) ExtTrack;
     break;
-  default:
-    // unrecognized track type
+  }
+  return true;
+}
+
+bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
+
+  bool ret;
+
+  ret = proj.read_grid(this, sizeof(GridTrack), column, row);
+  if (!ret) {
+    DEBUG_PRINTLN("read failed");
     return false;
   }
 
-  if (!data) return true;
+ if (!data) return true;
+ if (!init_track_type(active)) return false;
 
   uint32_t len = get_track_size();
 

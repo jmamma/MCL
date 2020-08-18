@@ -133,7 +133,7 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
+bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row,
                                   uint8_t merge,
                                   bool online) {
   active = MD_TRACK_TYPE;

@@ -29,7 +29,7 @@ bool ExtTrack::load_seq_data(uint8_t tracknumber) {
   return true;
 }
 
-bool ExtTrack::store_track_in_grid(uint8_t tracknumber, uint16_t row,
+bool ExtTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
                                    bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track

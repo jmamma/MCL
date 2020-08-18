@@ -29,6 +29,7 @@ public:
   GridChain chain;
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
+  bool init_track_type(uint8_t track_type);
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 

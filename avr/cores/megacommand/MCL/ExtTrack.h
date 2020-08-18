@@ -19,7 +19,7 @@ public:
   ExtSeqTrackData seq_data;
   bool load_seq_data(uint8_t tracknumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
-  bool store_track_in_grid(uint8_t tracknumber, uint16_t row,
+  bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
                            bool online = false);
   virtual void load_immediate(uint8_t tracknumber);
   bool is() { return (active == EXT_TRACK_TYPE); }

@@ -85,7 +85,7 @@ public:
   bool get_track_from_sysex(uint8_t tracknumber);
   void place_track_in_sysex(uint8_t tracknumber);
 
-  bool store_track_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
+  bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
                            bool online = false);
   void load_immediate(uint8_t tracknumber);
 
