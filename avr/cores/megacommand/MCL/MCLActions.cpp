@@ -44,11 +44,6 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   EmptyTrack empty_track;
 
-  MDTrack *md_track = (MDTrack *)&empty_track;
-#ifdef EXT_TRACKS
-  A4Track *a4_track = (A4Track *)&empty_track;
-  ExtTrack *ext_track = (ExtTrack *)&empty_track;
-#endif
   uint8_t readpattern = MD.currentPattern;
 
   patternswitch = PATTERN_STORE;
@@ -140,21 +135,24 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        md_track->store_in_grid(i, grid_page.getRow(), merge, true);
-        row_headers[grid_num].update_model(i, md_track->machine.model,
+        empty_track.init_track_type(MD_TRACK_TYPE);
+        empty_track.store_in_grid(i, grid_page.getRow(), merge, true);
+        row_headers[grid_num].update_model(i, empty_track.get_model(),
                                            MD_TRACK_TYPE);
       }
 #ifdef EXT_TRACKS
       else {
 
         uint8_t track_num = i - NUM_MD_TRACKS;
+        uint8_t track_type = EXT_TRACK_TYPE;
+        bool online = false;
         if (Analog4.connected) {
-          DEBUG_PRINTLN("a4 get sound");
-          Analog4.getBlockingSoundX(track_num);
-          a4_track->sound.fromSysex(Analog4.midi);
+          online = true;
+          track_type = A4_TRACK_TYPE;
         }
-        a4_track->store_in_grid(track_num, grid_page.getRow(), merge, true);
-        row_headers[grid_num].update_model(track_num, track_num, A4_TRACK_TYPE);
+        empty_track.init_track_type(track_type);
+        empty_track.store_in_grid(track_num, grid_page.getRow(), merge, true);
+        row_headers[grid_num].update_model(track_num, track_num, track_type);
       }
 #endif
     }

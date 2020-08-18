@@ -4,8 +4,8 @@
 //#include "MCLSd.h"
 
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
-
-  active = A4_TRACK_TYPE;
+  Analog4.getBlockingSoundX(tracknumber);
+  sound.fromSysex(Analog4.midi);
 }
 
 bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
