@@ -3,10 +3,10 @@
 #define EMPTYTRACK_H__
 
 #include "Grid.h"
-#include "GridTrack.h"
+#include "DeviceTrack.h"
 #include "MCLMemory.h"
 
-class EmptyTrack : public GridTrack {
+class EmptyTrack : public DeviceTrack {
 public:
   //Assume A4Track consume most data size out
   //of all the tracktypes

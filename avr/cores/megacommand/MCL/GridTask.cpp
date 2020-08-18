@@ -250,7 +250,7 @@ void GridTask::run() {
             //          DEBUG_PRINTLN("trying to cache MD track");
             //         DEBUG_DUMP(n);
             //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-            if (md_track->load_from_grid(n, mcl_actions.chains[n].row, true)) {
+            if (md_track->load_from_grid(n, mcl_actions.chains[n].row)) {
               //  DEBUG_PRINTLN("storing");
               md_temp_track->load_from_mem(n);
 
@@ -275,7 +275,7 @@ void GridTask::run() {
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_DUMP(n);
             DEBUG_DUMP(mcl_actions.chains[n].row);
-            if (a4_track->load_from_grid(n, mcl_actions.chains[n].row, true)) {
+            if (a4_track->load_from_grid(n, mcl_actions.chains[n].row)) {
               a4_temp_track->load_from_mem(n);
               if ((a4_track->active != EMPTY_TRACK_TYPE) &&
                   (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=

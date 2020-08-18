@@ -3,36 +3,10 @@
 #include "new.h"
 
 bool GridTrack::init_track_type(uint8_t track_type) {
-  switch (track_type) {
-  case A4_TRACK_TYPE_270:
-  case MD_TRACK_TYPE_270:
-  case EXT_TRACK_TYPE_270:
-/*    if (!data) {
-      // no space for track upgrade
-      return false;
-    } else {
-      // TODO upgrade right here
-      return true;
-    } */
-    return false;
-    break;
-  case EMPTY_TRACK_TYPE:
-    ::new(this) EmptyTrack;
-    break;
-  case MD_TRACK_TYPE:
-    ::new(this) MDTrack;
-    break;
-  case A4_TRACK_TYPE:
-    ::new(this) A4Track;
-    break;
-  case EXT_TRACK_TYPE:
-    ::new(this) ExtTrack;
-    break;
-  }
-  return true;
+   ::new(this) GridTrack;
 }
 
-bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
+bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
 
@@ -42,7 +16,6 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
     return false;
   }
 
- if (!data) return true;
  if (!init_track_type(active)) return false;
 
   uint32_t len = get_track_size();
@@ -62,12 +35,12 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row, bool data) {
   return true;
 }
 
-bool GridTrack::store_in_grid(uint8_t column, uint16_t row, bool data) {
+bool GridTrack::store_in_grid(uint8_t column, uint16_t row) {
 
   DEBUG_PRINT_FN();
   bool ret;
 
-  uint32_t len = data ? get_track_size() : sizeof(GridTrack);
+  uint32_t len = get_track_size();
   ret = proj.write_grid(this, len, column, row);
   if (!ret) {
     DEBUG_PRINTLN("write failed");

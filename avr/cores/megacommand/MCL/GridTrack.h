@@ -29,18 +29,16 @@ public:
   GridChain chain;
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
-  bool init_track_type(uint8_t track_type);
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 
-  ///  bool data:
-  ///  when false, only load the GridTrack metadata (active and chain) and reconstruct the correct type
-  ///  when true, load the full track including sound and sequence data
-  bool load_from_grid(uint8_t column, uint16_t row, bool data = false);
+  /// For GridTrack type this will load only the header (type and chain)
+  /// For derivative types this will load the full data.
+  bool load_from_grid(uint8_t column, uint16_t row);
   ///  bool data:
   ///  when false, only save the GridTrack metadata (type and chain)
   ///  when true, save the full track including sound and sequence data
-  bool store_in_grid(uint8_t column, uint16_t row, bool data = false);
+  bool store_in_grid(uint8_t column, uint16_t row);
 
   ///  caller guarantees that the type is reconstructed correctly
   bool store_in_mem(uint8_t column) {
@@ -64,6 +62,7 @@ public:
   }
 
 
+  virtual bool init_track_type(uint8_t track_type);
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
   virtual void load_immediate(uint8_t track_number) {}
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }

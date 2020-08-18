@@ -127,19 +127,19 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
     return false;
   }
  // setup a buffer frame for the tracks.
-  uint8_t _track_buf[sizeof(EmptyTrack)];
-  GridTrack* ptrack = (GridTrack*)_track_buf;
-  ptrack->load_from_grid(s_col, s_row, true);
+ //
+  EmptyTrack empty_track;
+  empty_track.load_from_grid(s_col, s_row);
   // at this point, the vtable of ptrack should be repaired
-  ptrack->on_copy(s_col, d_col, destination_same);
+  empty_track.on_copy(s_col, d_col, destination_same);
   // XXX what's the difference between store_in_grid and store_track_in_grid [offline, no merge] ?
-  ptrack->store_in_grid(d_col, d_row, true);
+  empty_track.store_in_grid(d_col, d_row);
 
 }
 
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
   GridTrack temp_track;
-  temp_track.load_from_grid(column, row, false);
+  temp_track.load_from_grid(column, row);
   // XXX why active, not the actual model?
   return temp_track.active;
 }
