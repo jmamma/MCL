@@ -58,7 +58,7 @@ public:
       }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  void add_entry(const char *entry);
+  bool add_entry(const char *entry);
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();
   virtual void loop();
