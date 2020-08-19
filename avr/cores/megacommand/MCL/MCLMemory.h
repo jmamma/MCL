@@ -16,7 +16,7 @@
 #define NUM_MD_TRACKS    16UL
 
 #ifdef EXT_TRACKS
-#define NUM_A4_TRACKS    4UL
+#define NUM_A4_TRACKS    6UL
 #else
 #pragma message("EXT TRACKS DISABLED")
 #define NUM_A4_TRACKS    0UL
@@ -48,12 +48,18 @@
 #endif
 
 // 16x MD tracks
+// GRID1 tracks start at 0x9330
 #define BANK1_MD_TRACKS_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
 
-// 4x A4 tracks
+// 6x A4 tracks
+// GRID2 tracks start at 0xB190
 #define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
-// 1024x FILE entries
+
+// 256x file entries (16 bytes each)
+// Start at 0xECB8
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
 #define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
+
+// At 0xFCB8
 
 #endif /* MCLMEMORY_H__ */

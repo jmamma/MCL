@@ -32,7 +32,7 @@ MCLActions mcl_actions;
 void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
   DEBUG_PRINT_FN();
 
-  uint8_t data[] = {0x6b, (uint8_t)rec_type & 0x7F, position,
+  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position,
                     (uint8_t)1 & 0x7f};
   MD.sendSysex(data, countof(data));
 
