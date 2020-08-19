@@ -12,11 +12,9 @@ public:
   //of all the tracktypes
 
   uint8_t data[EMPTY_TRACK_LEN];
-  bool is() { return (active == EMPTY_TRACK_TYPE || active == 255); }
-  // despite having a huge chunk of member data, it reports the base size.
-  // so when we pull out an empty track from the grid, it doesn't read that much
   uint16_t get_track_size() { return sizeof(EmptyTrack); }
   virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0, bool online = false) {
+    // should not reach here
     DEBUG_PRINT_FN();
     GridTrack::store_in_grid(column, row);
   }

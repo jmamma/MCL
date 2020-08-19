@@ -35,7 +35,7 @@ private:
     _dynamik_kast_impl(p, &ret); 
     return ret;
   }
-  __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255)
   __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE)
