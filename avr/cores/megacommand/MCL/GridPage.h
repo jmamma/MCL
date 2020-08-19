@@ -40,7 +40,7 @@ public:
   bool show_slot_menu = false;
   bool write_cfg = false;
 
-  int active_slots[20];
+  int active_slots[NUM_TRACKS];
   uint8_t grid_select_apply;
   uint8_t slot_apply;
   uint8_t slot_clear;

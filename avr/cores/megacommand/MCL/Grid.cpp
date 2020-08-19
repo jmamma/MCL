@@ -129,11 +129,11 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
  // setup a buffer frame for the tracks.
  //
   EmptyTrack empty_track;
-  empty_track.load_from_grid(s_col, s_row);
+  // TODO grid id?
+  auto *track = empty_track.load_from_grid(s_col, s_row);
   // at this point, the vtable of ptrack should be repaired
-  empty_track.on_copy(s_col, d_col, destination_same);
-  // XXX what's the difference between store_in_grid and store_track_in_grid [offline, no merge] ?
-  empty_track.store_in_grid(d_col, d_row);
+  track->on_copy(s_col, d_col, destination_same);
+  track->store_in_grid(d_col, d_row);
 
 }
 
