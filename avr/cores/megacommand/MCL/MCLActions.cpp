@@ -135,9 +135,9 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       }
 
       if (i < NUM_MD_TRACKS) {
-        empty_track.init_track_type(MD_TRACK_TYPE);
-        empty_track.store_in_grid(i, grid_page.getRow(), merge, true);
-        row_headers[grid_num].update_model(i, empty_track.get_model(),
+        auto pdevice_track = empty_track.init_track_type(MD_TRACK_TYPE);
+        pdevice_track->store_in_grid(i, grid_page.getRow(), merge, true);
+        row_headers[grid_num].update_model(i, pdevice_track->get_model(),
                                            MD_TRACK_TYPE);
       }
 #ifdef EXT_TRACKS
@@ -150,8 +150,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
           online = true;
           track_type = A4_TRACK_TYPE;
         }
-        empty_track.init_track_type(track_type);
-        empty_track.store_in_grid(track_num, grid_page.getRow(), merge, true);
+        auto pdevice_track = empty_track.init_track_type(track_type);
+        pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge, true);
         row_headers[grid_num].update_model(track_num, track_num, track_type);
       }
 #endif

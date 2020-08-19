@@ -16,6 +16,10 @@ public:
   // despite having a huge chunk of member data, it reports the base size.
   // so when we pull out an empty track from the grid, it doesn't read that much
   uint16_t get_track_size() { return sizeof(EmptyTrack); }
+  virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0, bool online = false) {
+    DEBUG_PRINT_FN();
+    GridTrack::store_in_grid(column, row);
+  }
 
   /*
   bool get_track_from_sysex(int tracknumber, uint8_t column);

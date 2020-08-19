@@ -2,7 +2,8 @@
 #include "MCL.h"
 #include "new.h"
 
-bool DeviceTrack::init_track_type(uint8_t track_type) {
+DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
+  DEBUG_PRINT_FN();
   switch (track_type) {
   case A4_TRACK_TYPE_270:
   case MD_TRACK_TYPE_270:
@@ -14,7 +15,7 @@ bool DeviceTrack::init_track_type(uint8_t track_type) {
       // TODO upgrade right here
       return true;
     } */
-    return false;
+    return nullptr;
     break;
   case EMPTY_TRACK_TYPE:
     ::new(this) EmptyTrack;
@@ -29,5 +30,5 @@ bool DeviceTrack::init_track_type(uint8_t track_type) {
     ::new(this) ExtTrack;
     break;
   }
-  return true;
+  return this;
 }
