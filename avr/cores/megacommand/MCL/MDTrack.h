@@ -73,7 +73,6 @@ class MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
-  bool is() { return (active == MD_TRACK_TYPE || active == MD_TRACK_TYPE_270); }
   void init();
 
   void clear_track();

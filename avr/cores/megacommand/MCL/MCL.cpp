@@ -7,6 +7,11 @@ void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
 
+  DEBUG_DUMP(sizeof(MDTrack));
+  DEBUG_DUMP(sizeof(A4Track));
+  DEBUG_DUMP(sizeof(ExtTrack));
+  DEBUG_DUMP(sizeof(EmptyTrack));
+
   bool ret = false;
   delay(100);
   ret = mcl_sd.sd_init();

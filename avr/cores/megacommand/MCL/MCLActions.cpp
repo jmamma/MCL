@@ -284,7 +284,16 @@ void MCLActions::send_tracks_to_devices() {
   volatile uint8_t *ptr;
 
   uint8_t mute_states[16];
+
+  uint8_t prev_selected_grid = proj.get_grid();
+
   for (i = 0; i < NUM_TRACKS; i++) {
+
+    if (i < NUM_MD_TRACKS) {
+      proj.select_grid(0);
+    } else {
+      proj.select_grid(1);
+    }
 
     mute_states[i] = mcl_seq.md_tracks[i].mute_state;
     mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
@@ -311,6 +320,9 @@ void MCLActions::send_tracks_to_devices() {
       }
     }
   }
+
+  proj.select_grid(prev_selected_grid);
+
   if ((write_original == 1)) {
     DEBUG_PRINTLN("write original");
     //     MD.kit.origPosition = md_track->origPosition;
