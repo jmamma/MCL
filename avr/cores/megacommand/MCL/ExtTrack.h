@@ -22,7 +22,6 @@ public:
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
                            bool online = false);
   virtual void load_immediate(uint8_t tracknumber);
-  bool is() { return (active == EXT_TRACK_TYPE); }
   bool virtual convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;

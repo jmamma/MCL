@@ -18,11 +18,6 @@ void GridTask::run() {
 
   EmptyTrack empty_track;
 
-  MDTrack *md_track = (MDTrack *)&empty_track;
-#ifdef EXT_TRACKS
-  A4Track *a4_track = (A4Track *)&empty_track;
-  ExtTrack *ext_track = (ExtTrack *)&empty_track;
-#endif
   int slots_changed[NUM_TRACKS];
   uint8_t slots_loaded[NUM_MD_TRACKS] = { 0 };
 
@@ -66,18 +61,22 @@ void GridTask::run() {
 
           if (n < NUM_MD_TRACKS) {
 
-            md_track->load_from_mem(n);
+            auto md_track = empty_track.load_from_mem<MDTrack>(n);
+            if (md_track) {
+              slots_changed[n] = mcl_actions.chains[n].row;
+              memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
+              send_md_slots = true;
+            }
 
-            slots_changed[n] = mcl_actions.chains[n].row;
-            memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
-            send_md_slots = true;
           }
 #ifdef EXT_TRACKS
           else {
-            a4_track->load_from_mem(n);
-            slots_changed[n] = mcl_actions.chains[n].row;
-            memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
-            send_ext_slots = true;
+            auto a4_track = empty_track.load_from_mem<A4Track>(n);
+            if (a4_track) {
+              slots_changed[n] = mcl_actions.chains[n].row;
+              memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
+              send_ext_slots = true;
+            }
           }
 #endif
           //Override chain data if in manual or random mode
@@ -119,29 +118,27 @@ void GridTask::run() {
     }
     for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
-        a4_track->load_from_mem(n);
+        auto ext_track = empty_track.load_from_mem<ExtTrack>(n);
         DEBUG_DUMP(mcl_actions.a4_latency);
 
-        if (a4_track->active == A4_TRACK_TYPE) {
+        if (ext_track->is<A4Track>()) {
           if ((mcl_actions.a4_latency > 0) &&
               (mcl_actions.send_machine[n] == 0)) {
             DEBUG_PRINTLN("here");
-            if (a4_track->active == A4_TRACK_TYPE) {
-              DEBUG_PRINTLN("send a4 sound");
-              a4_track->sound.toSysex();
-            }
+            DEBUG_PRINTLN("send a4 sound");
+            ext_track->as<A4Track>()->sound.toSysex();
           }
         }
 
         grid_page.active_slots[n] = slots_changed[n];
-        if (a4_track->active != EMPTY_TRACK_TYPE) {
+        if (ext_track->active != EMPTY_TRACK_TYPE) {
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].buffer_notesoff();
 
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step =
               mcl_actions.next_transition;
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step_offset = mcl_actions.transition_offsets[n];
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
-          a4_track->load_seq_data(n - NUM_MD_TRACKS);
+          ext_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
           DEBUG_PRINTLN("clearing ext track");
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].clear_track();
@@ -174,8 +171,8 @@ void GridTask::run() {
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
       if (slots_changed[n] >= 0) {
-        md_track->load_from_mem(n);
-        if (md_track->active == MD_TRACK_TYPE) {
+        auto md_track = empty_track.load_from_mem<MDTrack>(n);
+        if (md_track) {
           if (mcl_actions.send_machine[n] == 0) {
            if (slots_loaded[n] == 0) {
               bool set_level = false;
@@ -229,10 +226,6 @@ void GridTask::run() {
   uint8_t slots_cached[NUM_TRACKS] = {0};
 
   EmptyTrack empty_track2;
-  MDTrack *md_temp_track = (MDTrack *)&empty_track2;
-#ifdef EXT_TRACKS
-  A4Track *a4_temp_track = (A4Track *)&empty_track2;
-#endif
   if (mcl_cfg.chain_mode != 2) {
     for (uint8_t n = 0; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
@@ -250,13 +243,12 @@ void GridTask::run() {
             //          DEBUG_PRINTLN("trying to cache MD track");
             //         DEBUG_DUMP(n);
             //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-            if (md_track->load_from_grid(n, mcl_actions.chains[n].row)) {
-              //  DEBUG_PRINTLN("storing");
-              md_temp_track->load_from_mem(n);
+            auto md_track = empty_track.load_from_grid<MDTrack>(n, mcl_actions.chains[n].row);
+            if (md_track) {
+              auto mem_track = empty_track2.load_from_mem<MDTrack>(n);
 
-              if ((md_track->active != EMPTY_TRACK_TYPE) &&
-                  (memcmp(&(md_temp_track->machine), &(md_track->machine),
-                          sizeof(MDMachine)) != 0)) {
+              if (md_track 
+                  && (memcmp(&mem_track->machine, &md_track->machine, sizeof(MDMachine)) != 0)) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;
@@ -275,11 +267,11 @@ void GridTask::run() {
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_DUMP(n);
             DEBUG_DUMP(mcl_actions.chains[n].row);
-            if (a4_track->load_from_grid(n, mcl_actions.chains[n].row)) {
-              a4_temp_track->load_from_mem(n);
+            auto a4_track = empty_track.load_from_grid(n, mcl_actions.chains[n].row);
+            if (a4_track) {
+              auto a4_temp_track = empty_track2.load_from_mem(n);
               if ((a4_track->active != EMPTY_TRACK_TYPE) &&
-                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=
-                   0)) {
+                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0)) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;
