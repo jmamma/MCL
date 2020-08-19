@@ -5,11 +5,26 @@
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
+  bool data = true;
+
+  if (get_track_size() == sizeof(GridTrack)) {
+  data = false;
+  }
 
   ret = proj.read_grid(this, sizeof(GridTrack), column, row);
   if (!ret) {
     DEBUG_PRINTLN("read failed");
     return false;
+  }
+
+  DEBUG_PRINTLN(get_track_size());
+
+  if (data) {
+    ret = proj.read_grid(this, get_track_size(), column, row);
+    if (!ret) {
+      DEBUG_PRINTLN("read failed");
+      return false;
+    }
   }
 
   if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
