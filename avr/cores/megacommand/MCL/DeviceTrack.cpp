@@ -39,7 +39,9 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   }
 
   // header read successfully. now reconstruct the object.
+  auto tmp = active;
   auto ptrack = init_track_type(active);
+  active = tmp;
 
   // virtual functions are ready
   uint32_t len = ptrack->get_track_size();
@@ -51,6 +53,9 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
     return nullptr;
   }
 
-  return ptrack->init_track_type(active);
+  auto ptrack2 = ptrack->init_track_type(active);
+  active = tmp;
+
+  return ptrack2;
 }
 
