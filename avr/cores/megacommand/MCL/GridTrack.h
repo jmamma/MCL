@@ -61,8 +61,6 @@ public:
     chain.speed = SEQ_SPEED_1X;
   }
 
-
-  bool init_track_type(uint8_t track_type);
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
   virtual void load_immediate(uint8_t track_number) {}
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }

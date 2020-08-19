@@ -2,11 +2,6 @@
 #include "MCL.h"
 #include "new.h"
 
-bool GridTrack::init_track_type(uint8_t track_type) {
-   ::new(this) GridTrack;
-   return true;
-}
-
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   bool ret;
@@ -16,8 +11,6 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
     DEBUG_PRINTLN("read failed");
     return false;
   }
-
- if (!init_track_type(active)) return false;
 
   uint32_t len = get_track_size();
 
