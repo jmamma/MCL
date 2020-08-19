@@ -57,12 +57,15 @@ public:
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T* as() { return _dynamik_kast<T>(this); }
 
+  ///  downloads from BANK1 to the runtime object
   DeviceTrack* load_from_mem(uint8_t col) {
     if (!GridTrack::load_from_mem(col)) {
       return nullptr;
     }
     return this;
   }
+
+  ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
     if (!GridTrack::load_from_mem(col)) {
       return nullptr;
