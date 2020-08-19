@@ -7,6 +7,7 @@ void GridPage::init() {
   reload_slot_models = false;
   trig_interface.off();
   load_slot_models();
+  ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
@@ -95,7 +96,7 @@ void GridPage::loop() {
   }
   encoders[2]->cur = 1;
   encoders[3]->cur = 1;
-  ((MCLEncoder *)encoders[2])->max = GRID_WIDTH - getCol();
+  ((MCLEncoder *)encoders[2])->max = getWidth() - getCol();
   ((MCLEncoder *)encoders[3])->max = GRID_LENGTH - getRow();
 
 #else
@@ -194,6 +195,17 @@ void encoder_fx_handle(Encoder *enc) {
 uint8_t GridPage::getRow() { return param2.cur; }
 
 uint8_t GridPage::getCol() { return param1.cur; }
+
+uint8_t GridPage::getWidth() {
+  switch(proj.get_grid()){
+    case 0:
+    return NUM_MD_TRACKS;
+    case 1:
+    return NUM_EXT_TRACKS;
+    default:
+    return 0;
+  }
+}
 
 void GridPage::load_slot_models() {
   DEBUG_PRINT_FN();
@@ -351,7 +363,9 @@ void GridPage::display_grid_info() {
   dev2[2] = '\0';
   oled_display.print(dev2);
 
-  oled_display.setCursor(16, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
+  oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
+  oled_display.print((int)proj.get_grid());
+  oled_display.print(':');
 
   char val[4];
   val[0] = (encoders[0]->cur % 100) / 10 + '0';
@@ -412,7 +426,8 @@ void GridPage::display_grid() {
 
     auto cur_posx = x_offset;
     auto cur_posy = y_offset + y * 8;
-    for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift; x++) {
+    auto w = getWidth();
+    for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < w; x++) {
       oled_display.setCursor(cur_posx, cur_posy);
 
       auto track_idx = x + getCol() - cur_col;
@@ -464,7 +479,7 @@ void GridPage::display_grid() {
       }
 
       // tomThumb is 4x6
-      if (track_idx % 4 == 3) {
+      if (track_idx % 4 == 3 && w >= 8 ) {
         if (y == 0) {
           // draw vertical separator
           mcl_gui.draw_vertical_dashline(cur_posx + 9, 3);
@@ -625,6 +640,7 @@ void GridPage::apply_slot_changes() {
 
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
+    ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
     load_slot_models();
     return;
   }
@@ -694,7 +710,7 @@ void GridPage::apply_slot_changes() {
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       proj.read_grid_row_header(&header, y + getRow());
 
-      for (uint8_t x = 0; x < width && x + getCol() < GRID_WIDTH; x++) {
+      for (uint8_t x = 0; x < width && x + getCol() < getWidth(); x++) {
         if (slot_clear == 1) {
           // Delete slot(s)
           proj.clear_slot_grid(x + getCol(), y + getRow());

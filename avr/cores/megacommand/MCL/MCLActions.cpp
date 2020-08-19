@@ -51,7 +51,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   uint8_t old_grid = proj.get_grid();
 
   bool save_md_tracks = false;
-  bool save_a4_tracks = false;
+  bool save_grid2_tracks = false;
   uint8_t i = 0;
 
   for (i = 0; i < NUM_MD_TRACKS; i++) {
@@ -62,7 +62,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 #ifdef EXT_TRACKS
   for (i = NUM_MD_TRACKS; i < NUM_TRACKS; i++) {
     if (note_interface.notes[i] == 3) {
-      save_a4_tracks = true;
+      save_grid2_tracks = true;
     }
   }
 #endif
@@ -97,6 +97,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 #ifndef EXT_TRACKS
   max_notes = NUM_MD_TRACKS;
 #else
+  // TODO other devices?
   if (!Analog4.connected) {
     max_notes = NUM_MD_TRACKS;
   }

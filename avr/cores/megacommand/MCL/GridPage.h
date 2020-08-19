@@ -59,6 +59,7 @@ public:
   void toggle_fx1();
   void toggle_fx2();
   void displayScroll(uint8_t i);
+  uint8_t getWidth();
   uint8_t getCol();
   uint8_t getRow();
   void load_slot_models();
