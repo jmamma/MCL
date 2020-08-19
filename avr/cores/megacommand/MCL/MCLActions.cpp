@@ -190,11 +190,6 @@ void MCLActions::write_tracks(int column, int row) {
 void MCLActions::prepare_next_chain(int row) {
   DEBUG_PRINT_FN();
   EmptyTrack empty_track;
-  MDTrack *md_track = (MDTrack *)&empty_track;
-#ifdef EXT_TRACKS
-  A4Track *a4_track = (A4Track *)&empty_track;
-  ExtTrack *ext_track = (ExtTrack *)&empty_track;
-#endif
   uint8_t q;
 
   //  if (MidiClock.state != 2) {
@@ -214,6 +209,7 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
+      auto md_track = empty_track.init_track_type(MD_TRACK_TYPE);
       if (md_track->load_from_grid(n, row)) {
         md_track->store_in_mem(n);
         slots_cached[n] = 1;
@@ -230,6 +226,7 @@ void MCLActions::prepare_next_chain(int row) {
     if (note_interface.notes[n] > 0) {
       DEBUG_PRINTLN("about to load");
       DEBUG_PRINTLN(n);
+      auto a4_track = empty_track.init_track_type(A4_TRACK_TYPE);
       if (a4_track->load_from_grid(n, row)) {
         a4_track->store_in_mem(n);
         DEBUG_PRINTLN("checking a4 load");
