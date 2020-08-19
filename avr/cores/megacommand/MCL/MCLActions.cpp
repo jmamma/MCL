@@ -209,8 +209,8 @@ void MCLActions::prepare_next_chain(int row) {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
     if (note_interface.notes[n] > 0) {
-      auto md_track = empty_track.init_track_type(MD_TRACK_TYPE);
-      if (md_track->load_from_grid(n, row)) {
+      auto md_track = empty_track.load_from_grid<MDTrack>(n, row);
+      if (md_track) {
         md_track->store_in_mem(n);
         slots_cached[n] = 1;
       }
@@ -224,14 +224,9 @@ void MCLActions::prepare_next_chain(int row) {
 #ifdef EXT_TRACKS
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
-      DEBUG_PRINTLN("about to load");
-      DEBUG_PRINTLN(n);
-      auto a4_track = empty_track.init_track_type(A4_TRACK_TYPE);
-      if (a4_track->load_from_grid(n, row)) {
+      auto a4_track = empty_track.load_from_grid<A4Track>(n, row);
+      if (a4_track) {
         a4_track->store_in_mem(n);
-        DEBUG_PRINTLN("checking a4 load");
-        DEBUG_PRINTLN(a4_track->chain.row);
-        DEBUG_PRINTLN(a4_track->chain.loops);
       }
       if (a4_track->active != EMPTY_TRACK_TYPE) {
         send_machine[n] = 0;
@@ -273,10 +268,7 @@ void MCLActions::send_tracks_to_devices() {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
-  MDTrack *md_track = (MDTrack *)&empty_track;
 #ifdef EXT_TRACKS
-  A4Track *a4_track = (A4Track *)&empty_track;
-  ExtTrack *ext_track = (ExtTrack *)&empty_track;
   // Used as a way of flaggin which A4 tracks are to be sent
   uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
 #endif
@@ -301,17 +293,17 @@ void MCLActions::send_tracks_to_devices() {
         first_note = i;
       }
 
-      empty_track.load_from_grid(i, grid_page.getRow());
-      if (empty_track.is_active()) {
-        empty_track.chain.store_in_mem(i, &(chains[0]));
-        switch (empty_track.active) {
+      auto *ptrack = empty_track.load_from_grid(i, grid_page.getRow());
+      if (ptrack->is_active()) {
+        ptrack->chain.store_in_mem(i, &(chains[0]));
+        switch (ptrack->active) {
         case MD_TRACK_TYPE:
-          md_track->load_immediate(i);
+          ptrack->load_immediate(i);
           break;
         case A4_TRACK_TYPE:
         case EXT_TRACK_TYPE:
-          ext_track->load_immediate(i - NUM_MD_TRACKS);
-          if ((Analog4.connected) && (a4_track->is())) {
+          ptrack->load_immediate(i - NUM_MD_TRACKS);
+          if (Analog4.connected && ptrack->is<A4Track>()) {
             a4_send[track] = 1;
           }
           break;
@@ -345,9 +337,11 @@ void MCLActions::send_tracks_to_devices() {
     uint8_t a4_kit_send = 0;
     for (i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
-        a4_track->load_from_mem(i + NUM_MD_TRACKS);
-        a4_track->sound.workSpace = true;
-        a4_track->sound.toSysex();
+        auto a4_track = empty_track.load_from_mem<A4Track>(i + NUM_MD_TRACKS);
+        if (a4_track) {
+          a4_track->sound.workSpace = true;
+          a4_track->sound.toSysex();
+        }
       }
     }
   }
@@ -380,23 +374,28 @@ void MCLActions::send_tracks_to_devices() {
       DEBUG_PRINTLN(chains[n].row);
       DEBUG_PRINTLN(n);
       if ((n < NUM_MD_TRACKS)) {
-        if (md_track->load_from_grid(n, chains[n].row)) {
-          md_temp_track.load_from_mem(n);
-
-          if ((md_track->active != EMPTY_TRACK_TYPE) &&
-              (memcmp(&(md_temp_track.machine), &(md_track->machine),
-                      sizeof(MDMachine)) != 0)) {
-            mcl_actions.send_machine[n] = 0;
-          } else {
-            mcl_actions.send_machine[n] = 1;
-            DEBUG_PRINTLN("machines match");
+        MDTrack *md_track, *mem_track;
+        md_track = empty_track.load_from_grid<MDTrack>(n, chains[n].row);
+        if (md_track) {
+          mem_track = md_temp_track.load_from_mem<MDTrack>(n);
+          if (mem_track) {
+            if ((md_track->active != EMPTY_TRACK_TYPE) &&
+                (memcmp(&(md_temp_track.machine), &(md_track->machine),
+                        sizeof(MDMachine)) != 0)) {
+              mcl_actions.send_machine[n] = 0;
+            } else {
+              mcl_actions.send_machine[n] = 1;
+              DEBUG_PRINTLN("machines match");
+            }
+            md_track->store_in_mem(n);
           }
-          md_track->store_in_mem(n);
         }
       }
 #ifdef EXT_TRACKS
       else {
-        if (a4_track->load_from_grid(n, chains[n].row)) {
+        A4Track *a4_track;
+        a4_track = empty_track.load_from_grid<A4Track>(n, chains[n].row);
+        if (a4_track) {
           a4_track->store_in_mem(n);
           if (a4_track->active != EMPTY_TRACK_TYPE) {
             send_machine[n] = 0;
@@ -500,11 +499,9 @@ void MCLActions::calc_next_transition() {
   DEBUG_PRINTLN(next_transition);
 }
 
-void MCLActions::calc_latency(EmptyTrack *empty_track) {
-  MDTrack *md_track = (MDTrack *)empty_track;
+void MCLActions::calc_latency(DeviceTrack *empty_track) {
   md_latency = 0;
 #ifdef EXT_TRACKS
-  A4Track *a4_track = (A4Track *)empty_track;
   a4_latency = 0;
 #endif
 
@@ -512,9 +509,8 @@ void MCLActions::calc_latency(EmptyTrack *empty_track) {
     if ((grid_page.active_slots[n] >= 0) && (send_machine[n] == 0)) {
       if (n < NUM_MD_TRACKS) {
         if (next_transitions[n] == next_transition) {
-          md_track->load_from_mem(n);
-          md_latency +=
-              calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
+          auto md_track = empty_track->load_from_mem<MDTrack>(n);
+          if (md_track) { md_latency += calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit)); }
           if (transition_level[n] == TRANSITION_MUTE ||
               transition_level[n] == TRANSITION_UNMUTE) {
             md_latency += 3;

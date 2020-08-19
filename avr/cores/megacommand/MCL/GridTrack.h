@@ -32,27 +32,24 @@ public:
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 
-  /// For GridTrack type this will load only the header (type and chain)
-  /// For derivative types this will load the full data.
   bool load_from_grid(uint8_t column, uint16_t row);
-  ///  bool data:
-  ///  when false, only save the GridTrack metadata (type and chain)
-  ///  when true, save the full track including sound and sequence data
   bool store_in_grid(uint8_t column, uint16_t row);
 
   ///  caller guarantees that the type is reconstructed correctly
+  ///  uploads from the runtime object to BANK1
   bool store_in_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(ptr, &(this->active), get_track_size());
+    memcpy_bank1(ptr, this, get_track_size());
     return true;
   }
 
   ///  caller guarantees that the type is reconstructed correctly
+  ///  downloads from BANK1 to the runtime object
   bool load_from_mem(uint8_t column) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(&(this->active), ptr, get_track_size());
+    memcpy_bank1(this, ptr, get_track_size());
     return true;
   }
 

@@ -32,3 +32,25 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   }
   return this;
 }
+
+DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
+  if (!GridTrack::load_from_grid(column, row)) {
+    return nullptr;
+  }
+
+  // header read successfully. now reconstruct the object.
+  auto ptrack = init_track_type(active);
+
+  // virtual functions are ready
+  uint32_t len = ptrack->get_track_size();
+
+  DEBUG_PRINTLN(len);
+
+  if(!proj.read_grid(ptrack, len, column, row)) {
+    DEBUG_PRINTLN("read failed");
+    return nullptr;
+  }
+
+  return ptrack->init_track_type(active);
+}
+
