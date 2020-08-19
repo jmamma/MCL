@@ -32,7 +32,9 @@ public:
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
 
+  // load header without data from grid
   bool load_from_grid(uint8_t column, uint16_t row);
+  // save header without data to grid
   bool store_in_grid(uint8_t column, uint16_t row);
 
   ///  caller guarantees that the type is reconstructed correctly
