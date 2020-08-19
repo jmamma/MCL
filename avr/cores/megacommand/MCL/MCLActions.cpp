@@ -191,6 +191,7 @@ void MCLActions::prepare_next_chain(int row) {
   DEBUG_PRINT_FN();
   EmptyTrack empty_track;
   uint8_t q;
+  uint8_t old_grid = proj.get_grid();
 
   //  if (MidiClock.state != 2) {
   //  q = 0;
@@ -205,6 +206,8 @@ void MCLActions::prepare_next_chain(int row) {
   }
   //  }
   uint8_t slots_cached[NUM_TRACKS] = {0};
+
+  proj.select_grid(0);
 
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
 
@@ -222,6 +225,7 @@ void MCLActions::prepare_next_chain(int row) {
     }
   }
 #ifdef EXT_TRACKS
+  proj.select_grid(1);
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
       auto a4_track = empty_track.load_from_grid<A4Track>(n, row);
@@ -262,6 +266,8 @@ void MCLActions::prepare_next_chain(int row) {
   }
   calc_next_transition();
   calc_latency(&empty_track);
+
+  proj.select_grid(old_grid);
 }
 
 void MCLActions::send_tracks_to_devices() {
@@ -285,7 +291,7 @@ void MCLActions::send_tracks_to_devices() {
 
   uint8_t mute_states[16];
 
-  uint8_t prev_selected_grid = proj.get_grid();
+  uint8_t old_grid = proj.get_grid();
 
   for (i = 0; i < NUM_TRACKS; i++) {
 
@@ -320,8 +326,6 @@ void MCLActions::send_tracks_to_devices() {
       }
     }
   }
-
-  proj.select_grid(prev_selected_grid);
 
   if ((write_original == 1)) {
     DEBUG_PRINTLN("write original");
@@ -386,6 +390,7 @@ void MCLActions::send_tracks_to_devices() {
       DEBUG_PRINTLN(chains[n].row);
       DEBUG_PRINTLN(n);
       if ((n < NUM_MD_TRACKS)) {
+        proj.select_grid(0);
         MDTrack *md_track, *mem_track;
         md_track = empty_track.load_from_grid<MDTrack>(n, chains[n].row);
         if (md_track) {
@@ -405,6 +410,7 @@ void MCLActions::send_tracks_to_devices() {
       }
 #ifdef EXT_TRACKS
       else {
+        proj.select_grid(1);
         A4Track *a4_track;
         a4_track = empty_track.load_from_grid<A4Track>(n, chains[n].row);
         if (a4_track) {
@@ -435,6 +441,8 @@ void MCLActions::send_tracks_to_devices() {
   }
   calc_next_transition();
   calc_latency(&empty_track);
+
+  proj.select_grid(old_grid);
 }
 
 void MCLActions::calc_next_slot_transition(uint8_t n) {
