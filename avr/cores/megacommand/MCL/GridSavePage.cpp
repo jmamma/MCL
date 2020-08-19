@@ -188,7 +188,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("notes");
     DEBUG_DUMP(note_interface.notes_all_off());
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NI_MAX_NOTES; i++) {
 
       note_interface.notes[i] = 3;
     }

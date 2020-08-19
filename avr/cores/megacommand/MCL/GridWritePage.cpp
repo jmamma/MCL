@@ -153,7 +153,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     //  write the whole row
 
     trig_interface.off();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NI_MAX_NOTES; i++) {
 
       note_interface.notes[i] = 3;
     }

@@ -620,11 +620,6 @@ void GridPage::apply_slot_changes() {
   uint8_t width;
   uint8_t height;
 
-  EmptyTrack temp_track;
-  MDTrack *md_track = (MDTrack *)&temp_track;
-  A4Track *a4_track = (A4Track *)&temp_track;
-  ExtTrack *ext_track = (ExtTrack *)&temp_track;
-
   GridTrack temp_slot;
   temp_slot.load_from_grid(getCol(), getRow());
 
@@ -764,16 +759,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("what's in the slot");
     DEBUG_DUMP(slot.chain.loops);
     DEBUG_DUMP(slot.chain.row);
-    /*
-          if (slot.active == EMPTY_TRACK_TYPE) {
-            DEBUG_PRINTLN("empty track");
-            slot.chain.loops = 1;
-            if (getRow() > 128) {
-              slot.chain.row = 0;
-            } else {
-              slot.chain.row = getRow() + 1;
-            }
-          }*/
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
     grid_slot_page.init();
@@ -827,64 +812,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     return true;
   }
 #endif
-
-/*
-  if (BUTTON_DOWN(Buttons.BUTTON3) &&
-      (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-       EVENT_PRESSED(event, Buttons.ENCODER2) ||
-       EVENT_PRESSED(event, Buttons.ENCODER3) ||
-       EVENT_PRESSED(event, Buttons.ENCODER4))) {
-    show_slot_menu = false;
-    encoders[0] = &param1;
-    encoders[1] = &param2;
-    auto col = getCol();
-    for (int i = 0; i < 20; ++i) {
-      note_interface.notes[i] = 0;
-    }
-    note_interface.notes[col] = 3;
-    mcl_actions.write_tracks(0, getRow());
-    if (col < 16) {
-      last_md_track = col;
-      trackselect_enc.cur = trackselect_enc.old = col;
-    }
-#ifdef EXT_TRACKS
-    else {
-      last_ext_track = col - 16;
-      trackselect_enc.cur = trackselect_enc.old = col - 16;
-    }
-#endif
-    md_exploit.ignore_last_track_once = true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    seq_step_page.isSetup = false;
-    prepare();
-    GUI.setPage(&seq_step_page);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    seq_rtrk_page.isSetup = false;
-    prepare();
-    GUI.setPage(&seq_rtrk_page);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    seq_param_page[0].isSetup = false;
-    prepare();
-    GUI.setPage(&seq_param_page[0]);
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    seq_ptc_page.isSetup = false;
-    prepare();
-    GUI.setPage(&seq_ptc_page);
-
-    return true;
-  }
-*/
 
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {

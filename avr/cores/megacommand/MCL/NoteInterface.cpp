@@ -5,7 +5,7 @@
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     notes[i] = 0;
     // notes_off[i] = 0;
   }
@@ -101,7 +101,7 @@ bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
   uint8_t a = 0;
   uint8_t b = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] == 1) {
       a++;
     }
@@ -119,7 +119,7 @@ bool NoteInterface::notes_all_off() {
 
 uint8_t NoteInterface::notes_count_on() {
   uint8_t a = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] == 1) {
       a++;
     }
@@ -129,7 +129,7 @@ uint8_t NoteInterface::notes_count_on() {
 
 uint8_t NoteInterface::notes_count_off() {
   uint8_t a = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] == 3) {
       a++;
     }
@@ -138,7 +138,7 @@ uint8_t NoteInterface::notes_count_off() {
 }
 uint8_t NoteInterface::notes_count() {
   uint8_t a = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] > 0) {
       a++;
     }
