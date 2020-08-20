@@ -19,7 +19,7 @@ void GridTask::run() {
   EmptyTrack empty_track;
 
   int slots_changed[NUM_TRACKS];
-  uint8_t slots_loaded[NUM_MD_TRACKS] = { 0 };
+  uint8_t slots_loaded[NUM_MD_TRACKS] = {0};
 
   bool send_ext_slots = false;
   bool send_md_slots = false;
@@ -32,14 +32,14 @@ void GridTask::run() {
     return;
   }
 
-  //Get within four 16th notes of the next transition.
+  // Get within four 16th notes of the next transition.
   if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                  (uint32_t)mcl_actions.next_transition * 2)) {
 
     DEBUG_PRINTLN("Preparing for next transition:");
     DEBUG_DUMP(MidiClock.div16th_counter);
     DEBUG_DUMP(mcl_actions.next_transition);
-    //Transition window
+    // Transition window
     div32th_counter = MidiClock.div32th_counter + div32th_margin;
   } else {
     return;
@@ -52,7 +52,8 @@ void GridTask::run() {
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
 
-      //If next_transition[n] is less than or equal to transition window, then flag track for transition.
+      // If next_transition[n] is less than or equal to transition window, then
+      // flag track for transition.
       if (!MidiClock.clock_less_than(div32th_counter, next_transition)) {
 
         slots_changed[n] = mcl_actions.chains[n].row;
@@ -64,22 +65,25 @@ void GridTask::run() {
             auto md_track = empty_track.load_from_mem<MDTrack>(n);
             if (md_track) {
               slots_changed[n] = mcl_actions.chains[n].row;
-              memcpy(&mcl_actions.chains[n], &md_track->chain, sizeof(GridChain));
+              memcpy(&mcl_actions.chains[n], &md_track->chain,
+                     sizeof(GridChain));
               send_md_slots = true;
             }
 
           }
 #ifdef EXT_TRACKS
           else {
-            auto a4_track = empty_track.load_from_mem<A4Track>(n);
+            auto a4_track =
+                empty_track.load_from_mem<A4Track>(n - NUM_MD_TRACKS);
             if (a4_track) {
               slots_changed[n] = mcl_actions.chains[n].row;
-              memcpy(&mcl_actions.chains[n], &a4_track->chain, sizeof(GridChain));
+              memcpy(&mcl_actions.chains[n], &a4_track->chain,
+                     sizeof(GridChain));
               send_ext_slots = true;
             }
           }
 #endif
-          //Override chain data if in manual or random mode
+          // Override chain data if in manual or random mode
           if (mcl_cfg.chain_mode == 2) {
             mcl_actions.chains[n].loops = 0;
           } else if (mcl_cfg.chain_mode == 3) {
@@ -118,7 +122,7 @@ void GridTask::run() {
     }
     for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
-        auto ext_track = empty_track.load_from_mem<ExtTrack>(n);
+        auto ext_track = empty_track.load_from_mem<ExtTrack>(n - NUM_MD_TRACKS);
         DEBUG_DUMP(mcl_actions.a4_latency);
 
         if (ext_track->is<A4Track>()) {
@@ -136,7 +140,8 @@ void GridTask::run() {
 
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step =
               mcl_actions.next_transition;
-          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step_offset = mcl_actions.transition_offsets[n];
+          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step_offset =
+              mcl_actions.transition_offsets[n];
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
           ext_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
@@ -150,7 +155,7 @@ void GridTask::run() {
   if (send_md_slots) {
     DEBUG_DUMP(MidiClock.div192th_counter);
     DEBUG_DUMP(mcl_actions.next_transition * 12 -
-                  mcl_actions.md_div192th_latency);
+               mcl_actions.md_div192th_latency);
     uint32_t go_step =
         mcl_actions.next_transition * 12 - mcl_actions.md_div192th_latency;
     uint32_t diff;
@@ -174,7 +179,7 @@ void GridTask::run() {
         auto md_track = empty_track.load_from_mem<MDTrack>(n);
         if (md_track) {
           if (mcl_actions.send_machine[n] == 0) {
-           if (slots_loaded[n] == 0) {
+            if (slots_loaded[n] == 0) {
               bool set_level = false;
               switch (mcl_actions.transition_level[n]) {
               case 1:
@@ -203,7 +208,8 @@ void GridTask::run() {
           }
 
           mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
-          mcl_seq.md_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
+          mcl_seq.md_tracks[n].start_step_offset =
+              mcl_actions.transition_offsets[n];
           mcl_seq.md_tracks[n].mute_until_start = true;
 
           md_track->load_seq_data(n);
@@ -226,7 +232,11 @@ void GridTask::run() {
   uint8_t slots_cached[NUM_TRACKS] = {0};
 
   EmptyTrack empty_track2;
+
+  uint8_t old_grid = proj.get_grid();
+
   if (mcl_cfg.chain_mode != 2) {
+
     for (uint8_t n = 0; n < NUM_TRACKS; n++) {
       if (slots_changed[n] >= 0) {
 
@@ -240,15 +250,17 @@ void GridTask::run() {
 
           count++;
           if (n < NUM_MD_TRACKS) {
+            proj.select_grid(0);
             //          DEBUG_PRINTLN("trying to cache MD track");
             //         DEBUG_DUMP(n);
             //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-            auto md_track = empty_track.load_from_grid<MDTrack>(n, mcl_actions.chains[n].row);
+            auto md_track = empty_track.load_from_grid<MDTrack>(
+                n, mcl_actions.chains[n].row);
             if (md_track) {
               auto mem_track = empty_track2.load_from_mem<MDTrack>(n);
 
-              if (md_track 
-                  && (memcmp(&mem_track->machine, &md_track->machine, sizeof(MDMachine)) != 0)) {
+              if (md_track && (memcmp(&mem_track->machine, &md_track->machine,
+                                      sizeof(MDMachine)) != 0)) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;
@@ -258,20 +270,23 @@ void GridTask::run() {
               md_track->store_in_mem(n);
               slots_cached[n] = 1;
 
-           } else {
+            } else {
               DEBUG_PRINTLN("failed");
             }
           }
 #ifdef EXT_TRACKS
           else {
+            proj.select_grid(1);
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_DUMP(n);
             DEBUG_DUMP(mcl_actions.chains[n].row);
-            auto a4_track = empty_track.load_from_grid(n, mcl_actions.chains[n].row);
+            auto a4_track =
+                empty_track.load_from_grid(n, mcl_actions.chains[n].row);
             if (a4_track) {
               auto a4_temp_track = empty_track2.load_from_mem(n);
               if ((a4_track->active != EMPTY_TRACK_TYPE) &&
-                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) != 0)) {
+                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=
+                   0)) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;
@@ -281,6 +296,7 @@ void GridTask::run() {
             }
           }
 #endif
+          proj.select_grid(old_grid);
         }
         mcl_actions.calc_next_slot_transition(n);
       }

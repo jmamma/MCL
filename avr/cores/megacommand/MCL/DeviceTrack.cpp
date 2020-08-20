@@ -4,6 +4,7 @@
 
 DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   DEBUG_PRINT_FN();
+  auto tmp = active;
   switch (track_type) {
   case A4_TRACK_TYPE_270:
   case MD_TRACK_TYPE_270:
@@ -30,6 +31,7 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
     ::new(this) ExtTrack;
     break;
   }
+  active = tmp;
   return this;
 }
 
@@ -39,9 +41,7 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   }
 
   // header read successfully. now reconstruct the object.
-  auto tmp = active;
   auto ptrack = init_track_type(active);
-  active = tmp;
 
   // virtual functions are ready
   uint32_t len = ptrack->get_track_size();
@@ -54,7 +54,6 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   }
 
   auto ptrack2 = ptrack->init_track_type(active);
-  active = tmp;
 
   return ptrack2;
 }

@@ -197,14 +197,7 @@ uint8_t GridPage::getRow() { return param2.cur; }
 uint8_t GridPage::getCol() { return param1.cur; }
 
 uint8_t GridPage::getWidth() {
-  switch(proj.get_grid()){
-    case 0:
-    return NUM_MD_TRACKS;
-    case 1:
-    return NUM_EXT_TRACKS;
-    default:
-    return 0;
-  }
+  return GRID_WIDTH;
 }
 
 void GridPage::load_slot_models() {

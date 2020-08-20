@@ -117,7 +117,7 @@ public:
     return timing_mid;
   }
 
-  uint8_t get_timing_mid() { get_timing_mid(speed); }
+  uint8_t get_timing_mid() { return get_timing_mid(speed); }
 
   FORCED_INLINE() uint8_t get_timing_mid_inline() {
     uint8_t timing_mid;
