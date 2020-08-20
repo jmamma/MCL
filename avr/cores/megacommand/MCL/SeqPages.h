@@ -4,8 +4,9 @@
 #define SEQPAGES_H__
 
 #include "MCLEncoder.h"
-#include "MCLMenus.h"
 #include "MCLMemory.h"
+#include "MCLMenus.h"
+#include "ArpPage.h"
 
 #ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
@@ -17,15 +18,25 @@
 
 #define NUM_PARAM_PAGES 2
 
+#define SEQ_MENU_MASK 0
+#define SEQ_MENU_ARP 1
+#define SEQ_MENU_TRANSPOSE 2
+#define SEQ_MENU_TRACK 3
+#define SEQ_MENU_COPY 4
+#define SEQ_MENU_CLEAR_TRACK 5
+#define SEQ_MENU_CLEAR_LOCKS 6
+#define SEQ_MENU_PASTE 7
+#define SEQ_MENU_SPEED 8
+#define SEQ_MENU_SHIFT 9
+#define SEQ_MENU_REVERSE 10
+
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
-extern MCLEncoder trackselect_enc;
 
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
-
 
 #include "SeqParamPage.h"
 #include "SeqPtcPage.h"
@@ -47,11 +58,21 @@ extern SeqRlckPage seq_rlck_page;
 extern SeqExtStepPage seq_extstep_page;
 #endif
 
-extern SeqPtcPage seq_ptc_page;
+extern MCLEncoder ptc_param_oct;
+extern MCLEncoder ptc_param_finetune;
+extern MCLEncoder ptc_param_len;
+extern MCLEncoder ptc_param_scale;
 
-extern MCLEncoder track_menu_param1;
-extern MCLEncoder track_menu_param2;
-extern MenuPage<5> track_menu_page;
+extern SeqPtcPage seq_ptc_page;
+extern ArpPage arp_page;
+
+extern MCLEncoder seq_menu_value_encoder;
+extern MCLEncoder seq_menu_entry_encoder;
+extern MenuPage<11> seq_menu_page;
+
+extern MCLEncoder step_menu_value_encoder;
+extern MCLEncoder step_menu_entry_encoder;
+extern MenuPage<4> step_menu_page;
 
 extern void mcl_save_sound();
 extern void mcl_load_sound();

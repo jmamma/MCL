@@ -146,7 +146,7 @@ public:
   shape1 = 0;
   shape2 = 0;
   type = 0;
-  for (uint8_t i = 0; i > 31; i++) {
+  for (uint8_t i = 0; i < 31; i++) {
   state[i] = i;
   }
   speed = 64;

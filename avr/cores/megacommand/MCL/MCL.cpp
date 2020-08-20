@@ -7,6 +7,11 @@ void MCL::setup() {
   DEBUG_PRINTLN("Welcome to MegaCommand Live");
   DEBUG_PRINTLN(VERSION);
 
+  DEBUG_DUMP(sizeof(MDTrack));
+  DEBUG_DUMP(sizeof(A4Track));
+  DEBUG_DUMP(sizeof(ExtTrack));
+  DEBUG_DUMP(sizeof(EmptyTrack));
+
   bool ret = false;
   delay(100);
   ret = mcl_sd.sd_init();
@@ -27,21 +32,26 @@ void MCL::setup() {
 
   gfx.splashscreen();
   // if (!ret) { }
-
+  text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
+  text_input_page.no_escape = false;
+  if (ret) { GUI.setPage(&grid_page); }
+
   DEBUG_PRINTLN("tempo:");
   DEBUG_PRINTLN(mcl_cfg.tempo);
   MidiClock.setTempo(mcl_cfg.tempo);
 
   note_interface.setup();
-  md_exploit.setup();
+  //md_exploit.setup();
 
   MD.midi_events.enable_live_kit_update();
 
   mcl_actions.setup();
   mcl_seq.setup();
-  MDSysexListener.setup(&Midi);
 
+  MDSysexListener.setup(&Midi);
+  trig_interface.setup(&Midi);
+  md_track_select.setup(&Midi);
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
 #endif
@@ -56,6 +66,9 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
+#ifdef OLED_DISPLAY
+    oled_display.textbox("DISPLAY ","MIRROR");
+#endif
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif

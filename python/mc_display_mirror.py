@@ -6,7 +6,7 @@
 
 import serial
 import pygame
-
+import os
 
 def main():
 
@@ -23,7 +23,7 @@ def main():
     size = [(128 + 2) * 7, (32 + 2) * 7]
     screen = pygame.display.set_mode(size)
     done = False
-
+    file_count = 0;
     BG = WHITE
     FG = BLACK
     import serial.tools.list_ports
@@ -79,16 +79,6 @@ def main():
     y = 0
     # 7bit decode, 0 command bytes, 1 data bytes.
     while not done:
-        for event in pygame.event.get():  # User did something
-            if event.type == pygame.QUIT:  # If user clicked close
-                done = True  # Flag that we are done so we exit this loop
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_2:
-                    BG = BLACK
-                    FG = WHITE
-                if event.key == pygame.K_1:
-                    FG = BLACK
-                    BG = WHITE
         draw = True
         n = 0
         c = 255
@@ -119,11 +109,24 @@ def main():
             for y in range(32):
                 for x in range(128):
                     yd = 32 - y - 1
-                    bit = (buf[x + ((yd/8) * 128)] >> (yd % 8)) & 0x01
+                    bit = (buf[x + (int(yd/8) * 128)] >> (yd % 8)) & 0x01
                     if bit > 0:
                         pygame.draw.rect(
                             screen, FG, [(x + 1) * w, (y + 1) * w, w, w])
         pygame.display.flip()
+        for event in pygame.event.get():  # User did something
+            if event.type == pygame.QUIT:  # If user clicked close
+                done = True  # Flag that we are done so we exit this loop
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_2:
+                    BG = BLACK
+                    FG = WHITE
+                if event.key == pygame.K_1:
+                    FG = BLACK
+                    BG = WHITE
+                if event.key == pygame.K_9:
+                    pygame.image.save(screen, os.path.expanduser("~/Desktop/") + "mcl_screenshot" + str(file_count) + ".png");
+                    file_count += 1
         screen.fill(BG)
 
 

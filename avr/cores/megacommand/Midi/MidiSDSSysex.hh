@@ -4,7 +4,7 @@
 
 #include "Midi.h"
 #include "MidiSDSMessages.hh"
-#include "MidiSds.hh"
+#include "MidiSDS.hh"
 #include "MidiSysex.hh"
 #include "WProgram.h"
 #include "Wav.h"

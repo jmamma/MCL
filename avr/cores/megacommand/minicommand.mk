@@ -30,7 +30,7 @@ OPTIM=-Os
 #CLDFLAGS =  $(OPTIM) -Wl,---gc-sections -mmcu=atmega64 -o /Users/manuel/mididuino/minicommand-sketches/profileTest/applet/profileTest.elf -Wl,--section-start=.bss=0x802000,--defsym=__heap_end=0x80ffff
 CFLAGS = -c -g -Os -Wextra -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -Wl,--gc-sections,--defsym=__stack=0x8010ff,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff -mmcu=atmega64 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA64 -DARDUINO_ARCH_AVR
 
-CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-sections,--defsym=__stack=0x8010ff,--section-start,.data=0x81100,--defsym=__heap_end=0x80ffff -mmcu=atmega64 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA64 -DARDUINO_ARCH_AVR
+CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-sections,--defsym=__stack=0x8010ff,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff -mmcu=atmega64 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA64 -DARDUINO_ARCH_AVR
 
 CLDFLAGS = -Wall -Wextra -Os -flto -fuse-linker-plugin -Wl,--gc-sections,--defsym=__stack=0x8010ff,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega64
 

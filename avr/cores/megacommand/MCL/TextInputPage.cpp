@@ -12,8 +12,7 @@ inline char _getchar(uint8_t i) {
 }
 
 // chr -> idx
-uint8_t _findchar(char chr)
-{
+uint8_t _findchar(char chr) {
   // Check to see that the character chosen is in the list of allowed
   // characters
   for (auto x = 0; x < sz_allowedchar; ++x) {
@@ -34,7 +33,6 @@ void TextInputPage::init() {
   GUI.lines[0].flashActive = false;
   GUI.lines[1].flashActive = false;
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setFont();
 #endif
 }
 
@@ -96,10 +94,9 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
 // E0 -> x axis [0..17]
 // E1 -> y axis [0..3]
 void TextInputPage::config_charpane() {
-#ifndef OLED_DISPLAY
+#ifdef OLED_DISPLAY
   // char pane not supported on 1602 displays
-  return;
-#endif
+
   ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
   ((MCLEncoder *)encoders[1])->max = charpane_h - 1;
   normal_mode = false;
@@ -130,6 +127,7 @@ void TextInputPage::config_charpane() {
   calc_charpane_coord(sx, sy);
   oled_display.fillRect(sx, sy, 7, 7, INVERT);
   oled_display.display();
+#endif
 }
 
 void TextInputPage::display_normal() {
@@ -151,11 +149,11 @@ void TextInputPage::display_normal() {
     encoders[1]->old = encoders[1]->cur;
     text[cursor_position] = _getchar(encoders[1]->getValue());
   }
-
   auto time = clock_diff(last_clock, slowclock);
 
 #ifdef OLED_DISPLAY
-  //mcl_gui.clear_popup(); <-- E_TOOSLOW
+  // mcl_gui.clear_popup(); <-- E_TOOSLOW
+  auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
   oled_display.setFont();
   oled_display.setCursor(s_text_x, s_text_y);
@@ -163,8 +161,7 @@ void TextInputPage::display_normal() {
   if (time < FLASH_SPEED) {
     // the default font is 6x8
     auto tx = s_text_x + 6 * cursor_position;
-    oled_display.fillRect(tx, s_text_y, 6, 8,
-                          WHITE);
+    oled_display.fillRect(tx, s_text_y, 6, 8, WHITE);
     oled_display.setCursor(s_text_x + 6 * cursor_position, s_text_y);
     oled_display.setTextColor(BLACK);
     oled_display.print(text[cursor_position]);
@@ -173,7 +170,7 @@ void TextInputPage::display_normal() {
   if (time > FLASH_SPEED * 2) {
     last_clock = slowclock;
   }
-
+  oled_display.setFont(oldfont);
   oled_display.display();
 #else
   GUI.setLine(GUI.LINE1);
@@ -193,14 +190,15 @@ void TextInputPage::display_normal() {
 }
 
 void TextInputPage::display_charpane() {
-
+#ifdef OLED_DISPLAY
   if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
     // clear old highlight
     uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
     calc_charpane_coord(sx, sy);
     oled_display.fillRect(sx, sy, 7, 7, INVERT);
     // draw new highlight
-    sx = encoders[0]->cur; sy = encoders[1]->cur;
+    sx = encoders[0]->cur;
+    sy = encoders[1]->cur;
     calc_charpane_coord(sx, sy);
     oled_display.fillRect(sx, sy, 7, 7, INVERT);
     // update text. in charpane mode, cursor_position remains constant
@@ -213,6 +211,7 @@ void TextInputPage::display_charpane() {
 
   last_clock = slowclock;
   oled_display.display();
+#endif
 }
 
 void TextInputPage::display() {
@@ -226,7 +225,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
-
+  #ifdef OLED_DISPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
   if (!normal_mode) {
@@ -234,7 +233,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
       oled_display.clearDisplay();
       // before exiting charpane, advance current cursor to the next.
       ++cursor_position;
-      if(cursor_position >= length) {
+      if (cursor_position >= length) {
         cursor_position = length - 1;
       }
       // then, config normal input line
@@ -243,42 +242,13 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    return_state = true;
-    uint8_t cpy_len = length;
-    for (uint8_t n = length - 1;
-         n > 0 && text[n] == ' '; n--) {
-      cpy_len -= 1;
-    }
-    m_strncpy(textp, text, cpy_len);
-    textp[cpy_len] = '\0';
+  #endif
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    if (!no_escape) {
+    return_state = false;
+    GUI.ignoreNextEvent(event->source);
     GUI.popPage();
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    // Toggle upper + lower case
-    if (encoders[1]->cur <= 25) {
-      encoders[1]->cur += 26;
-    } else if (encoders[1]->cur <= 51) {
-      encoders[1]->cur -= 26;
     }
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    // Clear text
-    for (uint8_t n = 1; n < length; n++) {
-      text[n] = ' ';
-    }
-    text[0] = 'a';
-    encoders[0]->cur = 0;
-    DEBUG_PRINTLN(text);
-    update_char();
     return true;
   }
 
@@ -287,9 +257,61 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    return_state = false;
-    GUI.popPage();
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+
+    if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
+      // delete last
+      text[cursor_position] = ' ';
+    } else {
+      if (cursor_position == 0) {
+        // move the cursor, and delete first
+        cursor_position = 1;
+      }
+      // backspace
+      for (uint8_t i = cursor_position - 1; i < length - 1; ++i) {
+        text[i] = text[i + 1];
+      }
+      text[length - 1] = ' ';
+      --cursor_position;
+    }
+    config_normal();
+    return true;
   }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    return_state = true;
+    uint8_t cpy_len = length;
+    for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {
+      cpy_len -= 1;
+    }
+    m_strncpy(textp, text, cpy_len);
+    textp[cpy_len] = '\0';
+    GUI.ignoreNextEvent(event->source);
+    GUI.popPage();
+    return true;
+  }
+
+  // if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  // Toggle upper + lower case
+  // if (encoders[1]->cur <= 25) {
+  // encoders[1]->cur += 26;
+  //} else if (encoders[1]->cur <= 51) {
+  // encoders[1]->cur -= 26;
+  //}
+  // return true;
+  //}
+
+  // if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  // Clear text
+  // for (uint8_t n = 1; n < length; n++) {
+  // text[n] = ' ';
+  //}
+  // text[0] = 'a';
+  // encoders[0]->cur = 0;
+  // DEBUG_PRINTLN(text);
+  // update_char();
+  // return true;
+  //}
+
   return false;
 }

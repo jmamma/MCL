@@ -8,12 +8,13 @@
 
 class QuestionDialogPage : public LightPage {
 public:
-
+  char *title;
+  char *text;
   QuestionDialogPage() : LightPage() { }
 
   bool handleEvent(gui_event_t *event);
-  void init(const char* title, const char* text);
-  void display() {}
+  void init(const char* title_, const char* text_);
+  void display();
   void setup() {}
 
   bool return_state = false;

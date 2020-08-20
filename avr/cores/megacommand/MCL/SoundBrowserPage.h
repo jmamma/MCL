@@ -14,6 +14,7 @@ class SoundBrowserPage : public FileBrowserPage {
   virtual void on_new();
   virtual void on_select(const char*);
   virtual void on_cancel();
+  virtual bool handleEvent(gui_event_t *event);
   void add_entry(char *entry);
   void draw_scrollbar(uint8_t x_offset);
   void init();

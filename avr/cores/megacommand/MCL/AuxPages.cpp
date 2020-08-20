@@ -17,7 +17,7 @@ extern MCLEncoder fx_param4(0, 127);
 
 MixerPage mixer_page(&mixer_param1, &mixer_param2, &mixer_param3,
                      &mixer_param4);
-RoutePage route_page(&route_param1, &route_param2, &route_param2);
+RoutePage route_page(&route_param1, &route_param2);
 
 fx_param_t fx_echo_params[8] = {
     {MD_FX_ECHO, MD_ECHO_TIME},
@@ -32,8 +32,8 @@ fx_param_t fx_echo_params[8] = {
 fx_param_t fx_reverb_params[8] = {
     {MD_FX_REV, MD_REV_DVOL},
     {MD_FX_REV, MD_REV_DEC},
-    {MD_FX_REV, MD_REV_LP},
     {MD_FX_REV, MD_REV_HP},
+    {MD_FX_REV, MD_REV_LP},
     {MD_FX_REV, MD_REV_DAMP},
     {MD_FX_REV, MD_REV_GATE},
     {MD_FX_REV, MD_REV_PRED},

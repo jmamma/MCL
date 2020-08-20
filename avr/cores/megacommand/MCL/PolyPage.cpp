@@ -7,24 +7,21 @@ void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;
   DEBUG_PRINT_FN();
-  md_exploit.on();
-  note_interface.state = true;
+  trig_interface.on();
+  note_interface.init_notes();
 #ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-
 }
 
 void PolyPage::cleanup() {
-  //  md_exploit.off();
   seq_ptc_page.init_poly();
-  note_interface.state = false;
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
-  md_exploit.off();
+  trig_interface.off();
 }
 
 void PolyPage::draw_mask(uint8_t line_number) {
@@ -96,7 +93,6 @@ void PolyPage::display() {
   // GUI.put_string_at(12,"Poly");
   GUI.put_string_at(0, "VOICE SELECT ");
 
-
   draw_mask(0);
 #ifdef OLED_DISPLAY
   LCD.goLine(1);
@@ -122,26 +118,18 @@ bool PolyPage::handleEvent(gui_event_t *event) {
       toggle_mask(track);
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-     note_interface.notes[track] = 0;
+      note_interface.notes[track] = 0;
     }
     //  }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
-    return true;
-  }
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    mcl_cfg.write_cfg();
+    GUI.ignoreNextEvent(event->source);
     GUI.popPage();
     return true;
   }
-
 
   return false;
 }

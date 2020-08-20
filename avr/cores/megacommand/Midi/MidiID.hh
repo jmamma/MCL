@@ -16,7 +16,7 @@ public:
   uint8_t family_code[2] = {DEVICE_NULL, DEVICE_NULL};
   uint8_t family_member[2];
   char software_revision[4];
-  MidiId() { init(); }
+  MidiID() { init(); }
   void init();
   void send_id_request(uint8_t id, uint8_t port);
   bool getBlockingId(uint8_t id, uint8_t port, uint16_t timeout);

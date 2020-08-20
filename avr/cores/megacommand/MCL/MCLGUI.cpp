@@ -1,5 +1,24 @@
 #include "MCL.h"
 
+void MCLGUI::draw_textbox(char *text, char *text2) {
+#ifdef OLED_DISPLAY
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont();
+  uint8_t font_width = 6;
+  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t x = 64 - w / 2;
+  uint8_t y = 8;
+
+  oled_display.fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, BLACK);
+  oled_display.drawRect(x, y, w, 8 * 2, WHITE);
+  oled_display.setCursor(x + font_width, y + 4);
+  oled_display.print(text);
+  oled_display.print(text2);
+  oled_display.display();
+  oled_display.setFont(oldfont);
+#endif
+}
+
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
   text_input_page.init_text(dst, title, len);
@@ -21,24 +40,31 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
 }
 
 void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from, uint8_t to) {
+#ifdef OLED_DISPLAY
   for (uint8_t y = from; y < to; y += 2) {
     oled_display.drawPixel(x, y, WHITE);
   }
+#endif
 }
 
 void MCLGUI::draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to) {
+#ifdef OLED_DISPLAY
   for (uint8_t x = from; x < to; x += 2) {
     oled_display.drawPixel(x, y, WHITE);
   }
+#endif
 }
 
 void MCLGUI::draw_horizontal_arrow(uint8_t x, uint8_t y, uint8_t w) {
+#ifdef OLED_DISPLAY
   oled_display.drawFastHLine(x, y, w, WHITE);
   oled_display.drawFastVLine(x + w - 2, y - 1, 3, WHITE);
   oled_display.drawFastVLine(x + w - 3, y - 2, 5, WHITE);
+#endif
 }
 
 void MCLGUI::draw_vertical_separator(uint8_t x) {
+#ifdef OLED_DISPLAY
   auto x_ = x + 2;
   for (uint8_t y = 0; y < 32; y += 2) {
     oled_display.drawPixel(x, y, WHITE);
@@ -48,24 +74,29 @@ void MCLGUI::draw_vertical_separator(uint8_t x) {
   for (uint8_t y = 1; y < 32; y += 2) {
     oled_display.drawPixel(x_, y, WHITE);
   }
+#endif
 }
 
 void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
                                      uint8_t n_window, uint8_t n_current) {
+#ifdef OLED_DISPLAY
   uint8_t length = round(((float)(n_window - 1) / (float)(n_items - 1)) * 32);
   uint8_t y = round(((float)(n_current) / (float)(n_items - 1)) * 32);
   mcl_gui.draw_vertical_separator(x + 1);
   oled_display.fillRect(x + 1, y + 1, 3, length - 2, BLACK);
   oled_display.drawRect(x, y, 5, length, WHITE);
+#endif
 }
 
 void MCLGUI::draw_knob_frame() {
+#ifdef OLED_DISPLAY
   for (uint8_t x = knob_x0; x <= knob_xend; x += knob_w) {
     mcl_gui.draw_vertical_dashline(x, 0, knob_y);
     oled_display.drawPixel(x, knob_y, WHITE);
     oled_display.drawPixel(x, knob_y + 1, WHITE);
   }
   mcl_gui.draw_horizontal_dashline(knob_y, knob_x0 + 1, knob_xend + 1);
+#endif
 }
 
 void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text) {
@@ -82,7 +113,7 @@ static char title_buf[16];
 
 //  ref: Design/popup_menu.png
 void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
-
+#ifdef OLED_DISPLAY
   strcpy(title_buf, title);
   m_toupper(title_buf);
 
@@ -111,13 +142,16 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   if (!deferred_display) {
     oled_display.display();
   }
+#endif
 }
 
 void MCLGUI::clear_popup(uint8_t h) {
+#ifdef OLED_DISPLAY
   if (h == 0) {
     h = s_menu_h;
   }
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, h - 5, BLACK);
+#endif
 }
 
 void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
@@ -129,7 +163,7 @@ void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
 }
 void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
                                uint8_t x_pos, uint8_t y_pos) {
-
+#ifdef OLED_DISPLAY
   oled_display.fillRect(x_pos + 1, y_pos + 1, s_progress_w - 2,
                         s_progress_h - 2, BLACK);
 
@@ -156,11 +190,12 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
         oled_display.drawPixel(i, y_pos + 1 + n, BLACK);
       }
     }
-    temp_bitmask = (temp_bitmask >> shift) | (temp_bitmask << (8 - shift));
+    ROTATE_LEFT(temp_bitmask, 8);
   }
   if (s_progress_count == s_progress_speed) {
-  s_progress_cookie = (bitmask >> shift) | (bitmask << (8 - shift));
-  s_progress_count = 0;
+    s_progress_cookie = bitmask;
+    ROTATE_LEFT(s_progress_cookie, 8);
+    s_progress_count = 0;
   }
   s_progress_count++;
   oled_display.drawRect(x_pos, y_pos, s_progress_w, s_progress_h, WHITE);
@@ -168,11 +203,13 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
   if (!deferred_display) {
     oled_display.display();
   }
+#endif
 }
 
 //  ref: Design/infobox.png
 void MCLGUI::draw_infobox(const char *line1, const char *line2,
                           const int line2_offset) {
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
 
   oled_display.fillRect(dlg_info_x1 - 1, dlg_info_y1 - 1, dlg_info_w + 3,
@@ -187,8 +224,8 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
                         WHITE);
 
   oled_display.fillCircle(dlg_circle_x, dlg_circle_y, 6, WHITE);
-  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 2, 4, BLACK);
-  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 2, 2, BLACK);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 3, 4, BLACK);
+  oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 3, 2, BLACK);
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
@@ -198,14 +235,15 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
-  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 17 + line2_offset);
+  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 16 + line2_offset);
   oled_display.println(line2);
 
   oled_display.setFont(oldfont);
+#endif
 }
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
-
+#ifdef OLED_DISPLAY
   bool vert_flip = false;
   bool horiz_flip = false;
   uint8_t image_w = 11;
@@ -259,6 +297,7 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
     oled_display.drawBitmap(x, y, encoder_small_6, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
   }
+#endif
 }
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
@@ -289,6 +328,7 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
 
 void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
                                const char *value) {
+#ifdef OLED_DISPLAY
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(x + 4, y + 6);
@@ -297,6 +337,7 @@ void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
   oled_display.setFont();
   oled_display.setCursor(x + 4, y + 8);
   oled_display.print(value);
+#endif
 }
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
@@ -307,7 +348,7 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
                              const char *name, bool show_value) {
-
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
 
   uint8_t image_w = 11;
@@ -346,6 +387,7 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
   }
 
   oled_display.setFont(oldfont);
+#endif
 }
 
 void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
@@ -356,6 +398,7 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
 
 void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
                                 const char *name, bool show_value) {
+#ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
@@ -387,11 +430,100 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   draw_encoder(x, y, value);
 
   oled_display.setFont(oldfont);
+#endif
+}
+
+void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
+#ifdef OLED_DISPLAY
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+
+  oled_display.setTextColor(WHITE);
+  SeqTrack seq_track;
+  uint8_t timing_mid = seq_track.get_timing_mid(speed);
+  uint8_t heights_len;
+  uint8_t degrees = timing_mid * 2;
+  uint8_t heights[16];
+  // Triplets
+  if (speed == SEQ_SPEED_2X) {
+    uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
+    memcpy(&heights, &heights_lowres, 6);
+    heights_len = 6;
+  } else if (speed == SEQ_SPEED_3_4X) {
+    uint8_t heights_triplets[16] = {11, 2, 4, 8, 6,  10, 6, 2,
+                                    10, 2, 6, 8, 10, 4,  6, 2};
+    memcpy(&heights, &heights_triplets, 16);
+    heights_len = 16;
+  } else if (speed == SEQ_SPEED_3_2X) {
+    uint8_t heights_triplets2[8] = {11, 4, 8, 10, 2, 8, 4, 2};
+    memcpy(&heights, &heights_triplets2, 8);
+    heights_len = 8;
+  } else {
+    uint8_t heights_highres[12] = {11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+    memcpy(&heights, &heights_highres, 12);
+    heights_len = 12;
+  }
+  uint8_t y_pos = 11;
+  uint8_t a = 0;
+  uint8_t w = 96;
+  uint8_t x_pos = 64 - (w / 2);
+  uint8_t x_w = (w / (degrees));
+  bool degree_scalar = false;
+  if (x_w == 0) {
+    x_w = 1;
+    degree_scalar = true;
+  }
+
+  uint8_t x = x_pos;
+  char K[4];
+  strcpy(K, "--");
+  K[3] = '\0';
+
+  if (timing == 0) {
+  } else if ((timing < timing_mid) && (timing != 0)) {
+    itoa(timing_mid - timing, K + 1, 10);
+  } else {
+    K[0] = '+';
+    itoa(timing - timing_mid, K + 1, 10);
+  }
+
+  oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);
+  oled_display.drawRect(8 + 1, 1 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
+
+  oled_display.setCursor(x_pos + 34, 10);
+  oled_display.print("uTIMING: ");
+  oled_display.print(K);
+  oled_display.drawLine(x, y_pos + heights[0], x + w, y_pos + heights[0],
+                        WHITE);
+  for (uint8_t n = 0; n <= degrees; n++) {
+    oled_display.drawLine(x, y_pos + heights[0], x,
+                          y_pos + heights[0] - heights[a], WHITE);
+    a++;
+
+    if (n == timing) {
+      oled_display.fillRect(x - 1, y_pos + heights[0] + 3, 3, 3, WHITE);
+      oled_display.drawPixel(x, y_pos + heights[0] + 2, WHITE);
+    }
+
+    if (a == heights_len) {
+      a = 0;
+    }
+    if (degree_scalar) {
+      if (n % 2 == 0) {
+        x += x_w;
+      }
+    } else {
+      x += x_w;
+    }
+  }
+  oled_display.setFont(oldfont);
+#endif
 }
 
 void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                            uint8_t note_height, uint8_t num_of_notes,
                            uint64_t note_mask) {
+#ifdef OLED_DISPLAY
   const uint16_t chromatic = 0b0000010101001010;
   const uint8_t half = note_height / 2;
   const uint8_t y2 = y + note_height - 1;
@@ -439,11 +571,14 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
       note_type = 0;
     }
   }
+#endif
 }
 
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         uint64_t pattern_mask, uint8_t step_count,
-                        uint8_t length) {
+                        uint8_t length, uint64_t mute_mask,
+                        uint64_t slide_mask) {
+#ifdef OLED_DISPLAY
   for (int i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
@@ -456,85 +591,35 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     } else if (!in_range) {
       // don't draw
     } else {
-      if (IS_BIT_SET64(pattern_mask, i + offset) &&
-          ((i + offset != step_count) || (MidiClock.state != 2))) {
-        /*If the bit is set, there is a trigger at this position. */
-        oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
-        /*
-        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-        oled_display.drawPixel(x + 1, y + 1, WHITE);
-        oled_display.drawPixel(x + 3, y + 1, WHITE);
-        oled_display.drawPixel(x + 1, y + 3, WHITE);
-        oled_display.drawPixel(x + 3, y + 3, WHITE);
-        oled_display.drawPixel(x + 2, y + 2, WHITE);
-       */
-      } else {
-        oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+
+      oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+      if (((i + offset != step_count) || (MidiClock.state != 2))) {
+
+        if (IS_BIT_SET64(slide_mask, i + offset)) {
+          oled_display.drawPixel(x + 2, y + 2, WHITE);
+        }
+        else if (IS_BIT_SET64(mute_mask, i + offset)) {
+          oled_display.drawPixel(x + 2, y + 1, WHITE);
+          oled_display.drawPixel(x + 1, y + 2, WHITE);
+          oled_display.drawPixel(x + 3, y + 2, WHITE);
+          oled_display.drawPixel(x + 2, y + 3, WHITE);
+        }
+        else if (IS_BIT_SET64(pattern_mask, i + offset)) {
+          oled_display.fillRect(x + 1, y + 1, seq_w - 1, trig_h - 1, WHITE);
+        }
+
       }
     }
 
     x += seq_w + 1;
   }
-}
-
-void MCLGUI::draw_ext_track(uint8_t x, uint8_t y, uint8_t offset,
-                            uint8_t ext_trackid, bool show_current_step) {
-#ifdef EXT_TRACKS
-  int8_t note_held = 0;
-  auto &active_track = mcl_seq.ext_tracks[ext_trackid];
-  for (int i = 0; i < active_track.length; i++) {
-
-    uint8_t step_count = active_track.step_count;
-    uint8_t noteson = 0;
-    uint8_t notesoff = 0;
-    bool in_range = (i >= offset) && (i < offset + 16);
-    bool right_most = (i == active_track.length - 1);
-
-    for (uint8_t a = 0; a < 4; a++) {
-      if (active_track.notes[a][i] > 0) {
-        noteson++;
-      }
-      if (active_track.notes[a][i] < 0) {
-        notesoff++;
-      }
-    }
-
-    note_held += noteson;
-    note_held -= notesoff;
-
-    if (!in_range) {
-      continue;
-    }
-
-    if (note_interface.notes[i - offset] == 1) {
-      oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
-    } else if (!note_held) { // --
-      oled_display.drawFastHLine(x - 1, y + 2, seq_w + 2, WHITE);
-    } else { // draw top, bottom
-      oled_display.drawFastHLine(x - 1, y, seq_w + 2, WHITE);
-      oled_display.drawFastHLine(x - 1, y + trig_h - 1, seq_w + 2, WHITE);
-    }
-
-    if (noteson > 0 || notesoff > 0) { // left |
-      oled_display.drawFastVLine(x - 1, y, trig_h, WHITE);
-    }
-
-    if (right_most && note_held) { // right |
-      oled_display.drawFastVLine(x + seq_w, y, trig_h, WHITE);
-    }
-
-    if ((step_count == i) && (MidiClock.state == 2) && show_current_step) {
-      oled_display.fillRect(x, y, seq_w, trig_h, INVERT);
-    }
-
-    x += seq_w + 1;
-  }
-#endif // EXT_TRACKS
+#endif
 }
 
 void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
                        uint8_t step_count, uint8_t length,
                        bool show_current_step) {
+#ifdef OLED_DISPLAY
   for (int i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
@@ -543,10 +628,10 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
         show_current_step && step_count == idx && MidiClock.state == 2;
     bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
 
-    if (note_interface.notes[i] == 1) {
-      // TI feedback
-      oled_display.fillRect(x, y, seq_w, led_h, WHITE);
-    } else if (!in_range) {
+    //    if (note_interface.notes[i] == 1) {
+    // TI feedback
+    //     oled_display.drawRect(x, y, seq_w, led_h, WHITE);
+    if (!in_range) {
       // don't draw
     } else if (current ^ locked) {
       // highlight
@@ -558,9 +643,11 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
 
     x += seq_w + 1;
   }
+#endif
 }
 
 void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
+#ifdef OLED_DISPLAY
   oled_display.setFont(&TomThumb);
   if (s1_active) {
     oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w,
@@ -580,9 +667,11 @@ void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
   oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
   oled_display.print(s2);
   oled_display.setTextColor(WHITE);
+#endif
 }
 
 void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {
+#ifdef OLED_DISPLAY
   oled_display.setFont(&TomThumb);
   oled_display.fillRect(0, pane_info1_y, pane_w, pane_info_h, WHITE);
   oled_display.setTextColor(BLACK);
@@ -592,9 +681,11 @@ void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(1, pane_info2_y + 6);
   oled_display.print(info2);
+#endif
 }
 
 void MCLGUI::draw_panel_status(bool recording, bool playing) {
+#ifdef OLED_DISPLAY
   if (recording) {
     oled_display.fillRect(pane_cir_x1, pane_tri_y, 4, 5, WHITE);
     oled_display.drawPixel(pane_cir_x1, pane_tri_y, BLACK);
@@ -610,17 +701,23 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
   }
+#endif
 }
 
 void MCLGUI::clear_leftpane() {
+#ifdef OLED_DISPLAY
   oled_display.fillRect(0, 0, pane_w, 32, BLACK);
+#endif
 }
 
 void MCLGUI::clear_rightpane() {
+#ifdef OLED_DISPLAY
   oled_display.fillRect(pane_w, 0, 128 - pane_w, 32, BLACK);
+#endif
 }
 
 void MCLGUI::draw_panel_number(uint8_t number) {
+#ifdef OLED_DISPLAY
   oled_display.setTextColor(WHITE);
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(pane_trackid_x, pane_trackid_y);
@@ -628,6 +725,7 @@ void MCLGUI::draw_panel_number(uint8_t number) {
     oled_display.print('0');
   }
   oled_display.print(number);
+#endif
 }
 
 //  ================ SPRITES ================
@@ -660,6 +758,104 @@ const unsigned char encoder_small_6[] PROGMEM = {
     0x0e, 0x00, 0x31, 0x80, 0x40, 0x40, 0x40, 0x40, 0xb0, 0x20, 0xb0,
     0x20, 0xb0, 0x20, 0x40, 0x40, 0x40, 0x40, 0x31, 0x80, 0x0e, 0x00};
 
+// 'wheel1', 19x19px
+const unsigned char wheel_top[] PROGMEM = {
+    0x03, 0xf8, 0x00, 0x0e, 0x0e, 0x00, 0x1e, 0x0f, 0x00, 0x3e, 0x0f, 0x80,
+    0x7f, 0x1f, 0xc0, 0x7f, 0x1f, 0xc0, 0xff, 0xbf, 0xe0, 0xff, 0xff, 0xe0,
+    0xff, 0xbf, 0xe0, 0xff, 0x5f, 0xe0, 0xff, 0xbf, 0xe0, 0xf8, 0xe3, 0xe0,
+    0x60, 0xe0, 0xe0, 0x40, 0xe0, 0x40, 0x61, 0xf0, 0xc0, 0x31, 0xf1, 0x80,
+    0x1b, 0xf7, 0x00, 0x0f, 0xfe, 0x00, 0x03, 0xf8, 0x00};
+// 'wheel2', 19x19px
+const unsigned char wheel_angle[] PROGMEM = {
+    0x03, 0xf8, 0x00, 0x0f, 0xfe, 0x00, 0x1f, 0xfb, 0x00, 0x3f, 0xf1, 0x80,
+    0x7f, 0xf0, 0xc0, 0x7f, 0xe0, 0x40, 0xff, 0xe0, 0xe0, 0x8f, 0xe3, 0xe0,
+    0x83, 0xbf, 0xe0, 0x81, 0x5f, 0xe0, 0x83, 0xbf, 0xe0, 0x8f, 0xff, 0xe0,
+    0xff, 0xbf, 0xe0, 0x7f, 0x1f, 0xc0, 0x7f, 0x1f, 0xc0, 0x3e, 0x0f, 0x80,
+    0x1e, 0x0f, 0x00, 0x0e, 0x0e, 0x00, 0x03, 0xf8, 0x00};
+// 'wheel3', 19x19px
+const unsigned char wheel_side[] PROGMEM = {
+    0x03, 0xf8, 0x00, 0x0f, 0xfe, 0x00, 0x1b, 0xff, 0x00, 0x31, 0xff, 0x80,
+    0x61, 0xff, 0xc0, 0x40, 0xff, 0xc0, 0xe0, 0xff, 0xe0, 0xf8, 0xfe, 0x20,
+    0xff, 0xb8, 0x20, 0xff, 0x50, 0x20, 0xff, 0xb8, 0x20, 0xf8, 0xfe, 0x20,
+    0xe0, 0xff, 0xe0, 0x40, 0xff, 0xc0, 0x61, 0xff, 0xc0, 0x31, 0xff, 0x80,
+    0x1b, 0xff, 0x00, 0x0f, 0xfe, 0x00, 0x03, 0xf8, 0x00};
+
+// 'chroma', 24x25px
+const unsigned char icon_chroma[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x75, 0x77, 0x00, 0x45, 0x55, 0x03, 0x47, 0x65,
+    0x0f, 0x75, 0x57, 0x39, 0x00, 0x00, 0xe7, 0x00, 0x03, 0x9c, 0x00,
+    0x0f, 0xf1, 0x00, 0x3f, 0xc2, 0x00, 0xff, 0x09, 0x03, 0xfc, 0x64,
+    0x0f, 0xf0, 0xb2, 0x37, 0xc2, 0x59, 0xd7, 0x09, 0x2d, 0xdc, 0x64,
+    0x96, 0x70, 0xb2, 0x59, 0x82, 0x59, 0x67, 0xc9, 0x2d, 0x9e, 0xec,
+    0x96, 0x78, 0x76, 0x59, 0xe0, 0x3b, 0x67, 0x80, 0x1d, 0x9e, 0x00,
+    0x0e, 0x78, 0x00, 0x06, 0xe0, 0x00, 0x02, 0x80, 0x00};
+
+// 'rec', 24x15px
+const unsigned char icon_rec[] PROGMEM = {
+    0x3f, 0xff, 0xfc, 0x40, 0x00, 0x02, 0x40, 0x00, 0x02, 0x80, 0x00, 0x01,
+    0xb9, 0xe7, 0x39, 0xa5, 0x08, 0x7d, 0xa5, 0x08, 0x7d, 0xbd, 0xc8, 0x7d,
+    0xa5, 0x08, 0x7d, 0xa5, 0x08, 0x7d, 0xa5, 0xe7, 0x39, 0x80, 0x00, 0x01,
+    0x40, 0x00, 0x02, 0x40, 0x00, 0x02, 0x3f, 0xff, 0xfc};
+
+// 'grid', 24x15px
+const unsigned char icon_grid[] PROGMEM = {
+    0xc0, 0x00, 0x00, 0x80, 0x00, 0x00, 0x36, 0xdb, 0x6c, 0x36, 0xdb, 0x6c,
+    0x00, 0x00, 0x00, 0x36, 0xdb, 0x6c, 0x36, 0xdb, 0x6c, 0x00, 0x00, 0x00,
+    0x36, 0xdb, 0x6c, 0x36, 0xdb, 0x6c, 0x00, 0x00, 0x00, 0x36, 0xdb, 0x6c,
+    0x36, 0xdb, 0x6c, 0x00, 0x00, 0x01, 0x00, 0x00, 0x03};
+
+// 'lfo', 24x24px
+const unsigned char icon_lfo[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x01, 0xff, 0x10, 0x1e, 0x00,
+    0x08, 0x60, 0x00, 0x08, 0x80, 0x00, 0x09, 0x00, 0x00, 0xaa, 0xaa, 0xaa,
+    0x0c, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x08, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x3e, 0x1c, 0xc0, 0x7e, 0x3e,
+    0xc0, 0x60, 0x63, 0xc0, 0x60, 0x63, 0xc0, 0x7c, 0x63, 0xe0, 0x7c, 0x63,
+    0x70, 0x60, 0x63, 0x3e, 0x60, 0x3e, 0x0e, 0x60, 0x1c, 0x00, 0x00, 0x00};
+
+// 'loudness', 24x16px
+const unsigned char icon_loudness[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x11, 0xff, 0x88, 0x25,
+    0xc3, 0xa4, 0x29, 0x99, 0x94, 0x29, 0xa5, 0x94, 0x29, 0xb5,
+    0x94, 0x29, 0x99, 0x94, 0x25, 0xc3, 0xa4, 0x11, 0xff, 0x88,
+    0x01, 0xff, 0x80, 0x01, 0xe7, 0x80, 0x01, 0xe7, 0x80, 0x01,
+    0xff, 0x80, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00
+
+};
+
+// 'wavd', 24x19px
+const unsigned char icon_wavd[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x88, 0x00, 0x00, 0xcc, 0x00, 0x00, 0xaa, 0x70, 0x00,
+    0x99, 0x11, 0x10, 0x00, 0x12, 0xa8, 0x00, 0x12, 0xa8, 0x20, 0x12, 0xa8,
+    0x51, 0x12, 0xa8, 0x8a, 0x74, 0xa9, 0x04, 0x10, 0xaa, 0x00, 0x10, 0xaa,
+    0x00, 0x10, 0xaa, 0xee, 0x10, 0xaa, 0xaa, 0x10, 0x44, 0xaa, 0x70, 0x00,
+    0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// 'para', 24x19px
+const unsigned char icon_para[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x70, 0x00, 0x00, 0x60, 0x00, 0x1c, 0x50,
+    0x00, 0x63, 0x08, 0x00, 0x63, 0x08, 0x00, 0xff, 0x84, 0x10, 0xff, 0x84,
+    0x10, 0xff, 0x80, 0x08, 0x7f, 0x00, 0x08, 0x7f, 0x00, 0x05, 0x1c, 0x00,
+    0x03, 0x00, 0x00, 0x07, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x01, 0xdd, 0xc0,
+    0x01, 0xdd, 0xc0, 0x01, 0xdd, 0xc0, 0x00, 0x00, 0x00};
+
+// 'step', 24x25px
+const unsigned char icon_step[] PROGMEM = {
+    0x00, 0x00, 0xd7, 0x00, 0x03, 0xdd, 0x00, 0x0c, 0xf5, 0x00, 0x38,
+    0x77, 0x00, 0xe0, 0x3c, 0x03, 0x80, 0x7f, 0x0f, 0x01, 0xde, 0x39,
+    0x87, 0x38, 0xd6, 0xcc, 0xe1, 0xd9, 0xfb, 0x86, 0x7f, 0xfe, 0x19,
+    0xa7, 0x98, 0x67, 0xde, 0x61, 0x9e, 0xe9, 0x86, 0x78, 0x76, 0x19,
+    0xe0, 0x3a, 0x67, 0x80, 0x1d, 0x9e, 0x00, 0x0e, 0x78, 0x00, 0x06,
+    0xe0, 0x00, 0x02, 0x80, 0x00, 0x00, 0x77, 0x77, 0x00, 0x42, 0x45,
+    0x00, 0x72, 0x67, 0x00, 0x12, 0x44, 0x00, 0x72, 0x74};
+
+// 'mixer', 24x16px
+const unsigned char icon_mixer[] PROGMEM = {
+    0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x0e, 0x00, 0x00, 0xee, 0x00, 0x0e,
+    0xee, 0x00, 0x0e, 0xee, 0x00, 0xee, 0xee, 0xe0, 0xee, 0xee, 0xe0, 0xee,
+    0xee, 0xee, 0xee, 0xee, 0xee, 0xee, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 // 'gateboxlarge', 24x25px
 const unsigned char icon_gatebox[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x1e, 0x80, 0x00, 0x7e,
@@ -682,12 +878,37 @@ const unsigned char icon_rhytmecho[] PROGMEM = {
 
 // 'route', 24x16px
 const unsigned char icon_route[] PROGMEM = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xf1, 0xf8, 0x07,
-    0xe3, 0xf0, 0x06, 0x03, 0x00, 0x06, 0x03, 0x00, 0x1f, 0x8f,
-    0xc0, 0x0f, 0x07, 0x80, 0x06, 0x03, 0x00, 0x00, 0x00, 0x00,
-    0x0f, 0x07, 0x80, 0x19, 0x8c, 0xc0, 0x0f, 0x07, 0x80, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0xf1, 0xf8, 0x07, 0xe3, 0xf0,
+    0x06, 0x03, 0x00, 0x06, 0x03, 0x00, 0x1f, 0x8f, 0xc0, 0x0f, 0x07, 0x80,
+    0x06, 0x03, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x07, 0x80, 0x19, 0x8c, 0xc0,
+    0x0f, 0x07, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// 'sound', 24x19px
+const unsigned char icon_sound[] PROGMEM = {
+    0x00, 0x03, 0xe0, 0x00, 0x3f, 0xe0, 0x01, 0xff, 0xe0, 0x01, 0xfc, 0xe0,
+    0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0,
+    0x01, 0xc0, 0xe0, 0x01, 0xc0, 0xe0, 0x01, 0xc3, 0xe0, 0x01, 0xc7, 0xe0,
+    0x01, 0xc7, 0xe0, 0x07, 0xc7, 0xc0, 0x0f, 0xc3, 0x80, 0x0f, 0xc0, 0x00,
+    0x0f, 0x80, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+// 'ram_2_icon2', 24x25px
+const unsigned char icon_ram2[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0xff, 0xf8, 0x20, 0x00,
+    0x04, 0x20, 0x00, 0x04, 0x20, 0x00, 0x04, 0x23, 0xff, 0xc4, 0x26,
+    0x43, 0x24, 0x25, 0x42, 0xa4, 0x24, 0xc2, 0x64, 0x23, 0x81, 0xc4,
+    0x20, 0x00, 0x04, 0x20, 0x00, 0x04, 0x20, 0xff, 0x04, 0x1f, 0xff,
+    0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x6c, 0xe0, 0x0f,
+    0x6d, 0xf0, 0x06, 0x6d, 0xb0, 0x06, 0x7d, 0xb0, 0x06, 0x7d, 0xb0,
+    0x06, 0x7d, 0xf0, 0x06, 0x38, 0xe0, 0x00, 0x00, 0x00};
+// 'ram_1_icon', 24x25px
+const unsigned char icon_ram1[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1f, 0xff, 0xf8, 0x20, 0x00,
+    0x04, 0x20, 0x00, 0x04, 0x20, 0x00, 0x04, 0x23, 0xff, 0xc4, 0x24,
+    0xc2, 0x64, 0x25, 0x42, 0xa4, 0x26, 0x43, 0x24, 0x23, 0x81, 0xc4,
+    0x20, 0x00, 0x04, 0x20, 0x00, 0x04, 0x20, 0xff, 0x04, 0x1f, 0xff,
+    0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x38, 0x70, 0x0f,
+    0xbc, 0xf0, 0x0d, 0xb6, 0xc0, 0x0d, 0xb6, 0xf0, 0x0d, 0xb6, 0xc0,
+    0x0f, 0xb6, 0xf0, 0x07, 0x36, 0x70, 0x00, 0x00, 0x00};
 
 // 'md_rev', 34x24px
 const unsigned char icon_md[] PROGMEM = {

@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2028
+#define CONFIG_VERSION 2030
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -39,6 +39,7 @@ public:
   uint8_t chain_rand_max;
   uint8_t auto_normalize;
   uint8_t ram_page_mode;
+  uint8_t track_select;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

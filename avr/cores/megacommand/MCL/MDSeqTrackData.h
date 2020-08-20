@@ -4,19 +4,53 @@
 #define MDSEQTRACKDATA_H__
 
 #define NUM_MD_LOCKS 4
+#define NUM_MD_STEPS 64
 
-class MDSeqTrackData {
+class MDSeqStep {
+public:
+  bool active;
+  uint8_t locks[NUM_MD_LOCKS];
+  uint8_t conditional;
+  uint8_t timing;
+  bool lock_mask;
+  bool pattern_mask;
+  bool slide_mask;
+};
+
+class MDSeqTrackData_270 {
 public:
   uint8_t length;
-  uint8_t resolution;
-  uint8_t reserved[4];
-  uint8_t locks[NUM_MD_LOCKS][64];
+  uint8_t speed;
+  uint32_t slide_mask32; // to be increased to 64bits
+  uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
   uint8_t locks_params[NUM_MD_LOCKS];
   uint64_t pattern_mask;
   uint64_t lock_mask;
-  uint8_t conditional[64];
-  uint8_t timing[64];
+  uint8_t conditional[NUM_MD_STEPS];
+  uint8_t timing[NUM_MD_STEPS];
+};
 
+class MDSeqTrackData {
+public:
+  uint32_t slide_mask32; // to be increased to 64bits
+  uint8_t locks[NUM_MD_LOCKS][NUM_MD_STEPS];
+  uint8_t locks_params[NUM_MD_LOCKS];
+  uint64_t pattern_mask;
+  uint64_t lock_mask;
+  uint8_t conditional[NUM_MD_STEPS];
+  uint8_t timing[NUM_MD_STEPS];
+  void init() {
+    memset(&locks, 0, NUM_MD_LOCKS * NUM_MD_STEPS);
+    memset(&locks_params, 0, NUM_MD_LOCKS);
+    pattern_mask = 0;
+    lock_mask = 0;
+    memset(&conditional, 0, NUM_MD_STEPS);
+    memset(&timing, 0, NUM_MD_STEPS);
+  }
+  bool convert(MDSeqTrackData_270 *old) {
+    /*ordering of these statements is important to ensure memory
+     * is copied before being overwritten*/
+  }
 };
 
 #endif /* MDSEQTRACKDATA_H__ */

@@ -4,7 +4,7 @@
 #define DSP_H__
 
 #include "MCL.h"
-#include "Math.h"
+#include "math.h"
 
 #define FULL_SCALE 0xFFFF
 #define HALF_FULL_SCALE 0x8000

@@ -33,7 +33,7 @@ $OBJ_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\obj")
 $SKETCH_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\sketch")
 
 $buildOutput = & {
-  arduino compile `
+  arduino-cli compile `
       --warnings default `
       --build-path $BIN_PATH `
       --build-cache-path $OBJ_PATH `
@@ -84,6 +84,6 @@ if ($ShowStats) {
 
 if ($Upload) {
   Write-Host "==============> Uploading..." -ForegroundColor Yellow
-  arduino upload -b MIDICtrl20_MegaCommand:avr:mega .\sketch\ -pCOM4
+  arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega .\sketch\ -pCOM4
   Write-Host "==============> Finished." -ForegroundColor Green
 }

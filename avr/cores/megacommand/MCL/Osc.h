@@ -4,7 +4,7 @@
 #define OSC_H__
 
 #include "MCL.h"
-#include "Math.h"
+#include "math.h"
 
 #define SIN_OSC 1
 #define TRI_OSC 2

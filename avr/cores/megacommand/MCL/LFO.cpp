@@ -1,7 +1,7 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
 #include "LFO.h"
-#include "Math.h"
+#include "math.h"
 #define DIV_1_127 (1.00 / MAX)
 // Exponential Rise Formua:
 // y = M * (1-e^(-x/a));

@@ -4,19 +4,21 @@
 void MenuPageBase::init() {
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
-   ((MCLEncoder *)encoders[1])->cur = 0;
+    ((MCLEncoder *)encoders[1])->cur = 0;
   }
-   ((MCLEncoder *)encoders[0])->max =
+  ((MCLEncoder *)encoders[0])->max =
       get_menu()->get_option_range(encoders[1]->cur) - 1;
-  ((MCLEncoder *)encoders[0])->min = get_menu()->get_option_min(encoders[1]->cur);
+  ((MCLEncoder *)encoders[0])->min =
+      get_menu()->get_option_min(encoders[1]->cur);
 
- uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+  uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
     encoders[0]->setValue(*dest_var);
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
 }
+
 void MenuPageBase::setup() {
 #ifdef OLED_DISPLAY
   classic_display = false;
@@ -25,11 +27,11 @@ void MenuPageBase::setup() {
 
 void MenuPageBase::loop() {
 
-    if (encoders[1]->hasChanged()) {
-  ((MCLEncoder *)encoders[0])->max =
-      get_menu()->get_option_range(encoders[1]->cur) - 1;
-  ((MCLEncoder *)encoders[0])->min = get_menu()->get_option_min(encoders[1]->cur);
-
+  if (encoders[1]->hasChanged()) {
+    ((MCLEncoder *)encoders[0])->max =
+        get_menu()->get_option_range(encoders[1]->cur) - 1;
+    ((MCLEncoder *)encoders[0])->min =
+        get_menu()->get_option_min(encoders[1]->cur);
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
@@ -83,9 +85,10 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   if (get_menu()->get_option_range(item_n) > 0) {
 
     oled_display.print(" ");
-    pgp = get_menu()->get_option_name(item_n, *(get_menu()->get_dest_variable(item_n)));
+    uint8_t *pdest = get_menu()->get_dest_variable(item_n);
+    pgp = get_menu()->get_option_name(item_n, *pdest);
     if (pgp == NULL) {
-      oled_display.println(*(get_menu()->get_dest_variable(item_n)));
+      oled_display.println(*pdest);
     } else {
       m_strncpy_p(str, pgp, 11);
       oled_display.println(str);
@@ -94,7 +97,8 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 #endif
 }
 
-void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset, uint8_t width) {
+void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
+                             uint8_t width) {
 #ifdef OLED_DISPLAY
   oled_display.setCursor(x_offset, y_offset);
   uint8_t number_of_items = get_menu()->get_number_of_items();
@@ -169,7 +173,8 @@ void MenuPageBase::display() {
   uint8_t number_of_options = get_menu()->get_number_of_options(cur_row);
   if (get_menu()->get_option_range(cur_row) > 0) {
 
-    pgp = get_menu()->get_option_name(cur_row, *(get_menu()->get_dest_variable(cur_row)));
+    pgp = get_menu()->get_option_name(
+        cur_row, *(get_menu()->get_dest_variable(cur_row)));
     if (pgp == NULL) {
       GUI.put_value_at(10, *(get_menu()->get_dest_variable(cur_row)));
     } else {
@@ -214,18 +219,13 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     enter();
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    GUI.ignoreNextEvent(event->source);
     exit();
     return true;
   }

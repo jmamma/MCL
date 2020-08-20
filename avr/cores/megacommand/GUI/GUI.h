@@ -174,7 +174,9 @@ public:
   void removeEventHandler(event_handler_t handler) {
     eventHandlers.remove(handler);
   }
-
+  void ignoreNextEvent(uint8_t i) {
+  SET_BIT(event_ignore_next_mask, i);
+  }
   /**
    * Add a new task to be periodically polled (max 8).
    **/
@@ -238,6 +240,10 @@ public:
    * It then handles the displaying of "flash" messages, by checking
    * how long the active flash message has been running.
    **/
+
+  /** update hd44780 **/
+  void display_lcd();
+
   void display();
 
   /**

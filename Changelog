@@ -1,3 +1,255 @@
+MCL 2.70 21/07/2020
+
+Changes:
+  - Sequencer:
+    * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
+    * Added sequencer support for parameter slides. (Slide data is only
+	retained for first 32 steps)
+    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides
+	or Mutes. The "Edit" parameter controlling the edit mode is Accessible from the StepEdit page's Track Menu.
+	* Added ^ trig conditions (L1^, L2^, L3^.. etc). When chosen the step's parameter locks or slides must also obey the trig condition.
+    * Sequencer step glyphs have been improved for each of the edit modes.
+    * Added visual feedback when setting parameter slides using MD encoders.
+    * uTiming window is now improved and supports various track speeds.
+    * MD pattern speed + slides now imported to sequencer tracks when Saving from MD.
+
+  - Chromatic/Arpeggiator:
+
+    * The focused chromatic voice is now selected when notes are played in the chromatic page.
+      This prevents the voice unintentionally changing outside of the chromtic page when changing
+      track on the MD.
+      Similarly when playing from Ext Keyboard, you can only change the
+	  focused chromatic voice(s) from within the Chromatic Page.
+    * Arpeggiator now runs in either standard or triplet time depending on track
+      speed.
+    * Arpeggiator max speed is now doubled. Use 2x track speed to record at this rate.
+
+  - Chain mode:
+    * Transitions now support all new track speeds.
+    * Grid copy/paste of slots now translates chain ROW positions such
+      that new ROW position is offset relative to the paste position.
+    * A slot's Chain ROW and LOOP settings are retained when saving a slot in SavePage.
+
+  - Main:
+    * Allow simultaneously send & receive of MIDICLOCK on port 2. (Previously
+	silently disabled to prevent feedback loop).
+
+Bug Fixes:
+
+  - Write/Save Pages
+    * Entering write page would incorrectly change SavePage mode.
+    * Swing would be applied to wrong trigs when saving from MD.
+
+  - Sequencer:
+    * Trig Conditions L3, L5, L6, L7 were all broken. Fixed.
+    * Fixed an SRAM issue causing sequencer corruption on track 9.
+    * Improved sequencer editing
+
+  - Chain Mode:
+    * In some circumstances chaining an empty track would result in unpredicatable behaviour.
+    * Updating chain ROW/LOOP settings could resurrect a previously cleared slot.
+    * Oneshot masks are now cleared on chain transition
+    * When chaining slots, only send machine parameters if track's sound is
+	not equal to current track. (This was previously broken in some scenarios, resulting in no sound transition)
+
+  - LFOs:
+    * LFOs would incorrectly wrap around to 0 when they exceeded 127 in amplitude. Fixed.
+
+  - Chromatic/Arpeggiator:
+
+    * When connecting device to MIDI port 2, active "Peering" notification would appear frozen on chromatic page.
+
+
+MCL 2.62 08/05/2020
+
+Changes:
+
+  - Add transpose parameter to Chromatic Page. Accessible from the Track Menu.
+
+Bug Fixes:
+
+  - Chromatic Page
+    * Note to PTC mapping was incorrect. (Wrong note displayed on keyboard,
+	machine base pitch not taken into consideration)
+    * Arpeggiator and Scales broken when using EXT MIDI. Fixed.
+    * Ext MIDI now responds from NOTE C2 and upwards. Scales are mapped across each note of keyboard and root is at C2.
+    * Poly config saved when exiting poly select page.
+    * Notes out of machine range, now result in silence, as opposed to playing highest note.
+    * Some tweaks to behaviour of the arpeggiator GUI.
+    * Clearing or adjusting length of poly tracks was broken.
+
+MCL 2.61 16/03/2020
+
+Changes:
+
+  - Arpeggiator added to Chromatic Page. Accessible from the Track Menu.
+  - MIDI CC can be used to control MD Parms across poly tracks.
+    CC 16 to 40 controls MD Params 1 to 24.
+  - Added many more scales to Chromatic Page
+  - Chromatic Page now indicates when in POLY mode.
+  - Added support for TRX-S2
+
+Bug Fixes:
+
+  - Peering was broken in certain pages. Fixed
+  - Fixed PolyPage selection bugs.
+
+
+MCL 2.60 15/02/2019
+
+Note: MCL update 2.60, requires that you upgrade your Machinedrum to OS version 1.70.
+
+Changes:
+
+  - The Trigger Interface is now supported natively, removing all limitations associated
+    with the original exploit.
+
+    You can now freely manipulate the MD GUI and parameters when using pages
+	that use the trigger interface.
+
+	Tracks will no longer switch when the TI mode is enabled.
+
+  - Track Select: Track selection is now synced with the MD.
+
+    To change tracks in the sequencer pages, simply change track on the MD.
+    A new Global->Machinedrum menu item "Track Select" has been added.
+	Default is Auto. "Man" will disable the track synchronization between the MD and MCL.
+
+  - Auto save option is now deprecated.
+
+    MCL will no longer save/overwrite your kit data.
+
+    MCL no longer auto-saves the current kit to get the active kit data.
+    Similarly, writing/chaining tracks to the MD will no longer auto-save the
+    kit and instead will only modify the loaded kit data.
+
+- Step Edit
+
+  Parameter locks can now be added from the Step page by holding a trig and
+  rotating a MD parameter.
+
+- Mixer Page:
+
+    CTRL All. Select multiple tracks in the Mixer Page, adjusting any MD parameter
+    will change the same parameter across the selected tracks.
+
+- Wav Designer.
+
+    The MD's buttons and encoders will no longer become unresponsive after transmitting samples.
+
+MCL 2.51 05/01/2019
+
+Bug fix release:
+
+   - Poly mode would not work unless MD was restarted, fixed.
+
+   - Poly voice select is now accessible from Chromatic Page by pressing [
+   Save + Write|Chain ]
+
+   - Chromatic Page: Changes to voice selection.
+
+       If current track is a poly track, then select voices from the poly
+       tracks. Otherwise if current track is not a poly track use the current track
+       as a monophonic voice.
+
+       When MD is set to be controlled by external midi, only the poly voices
+       will be playable.
+
+   - Check parameter lock destinations more carefully before sending.
+
+   - Prevent MCL from sending bogus LFO destination track which could cause MD
+     lockup.
+
+   - Sequencer notes would occasionally drop out when using page_select page.
+   fixed.
+
+   - Chaining an entire row, and then immediately pressing play on the MD
+     could cause corrupt sysex data to be sent to the MD, causing loud noises
+	 and an abrupt pattern change. fixed.
+
+MCL 2.50 01/12/2019
+
+Complete GUI overhaul:
+
+Button assignment has been improved to provide consistency across all pages.
+
+    [ Save ] button: Cancel/Exit/No
+    [ Write ] button: Confirm/Enter/Yes
+    [ Shift1 ] button now opens PageSelect menu in all sub-pages.
+    [ Shift2 ] button opens an options menu on sequencer pages.
+
+    Encoder buttons no are no longer used for navigating the GUI and instead
+    work as fast rotate mode, as per the Elektron devices.
+
+    PageSelect layout has been improved:
+	   [ Encoder 1] to scroll through all available pages
+	   [ Encoder 2] to scroll through page categories
+	   [ Save ] to exit back to grid
+
+Enahanced Graphics:
+    New graphics for Sequencer Pages.
+	Visual Chromatic Keyboard + Visual uTIMING.
+	Graphical icons for PageSelect.
+    Trimetric Spites.
+	GUI popups.
+	Loading screens.
+	Graphical Encoders.
+    User action feedback textboxes for almost all user actions.
+
+Improved Project and File navigation.
+    Abiltiy to rename/delete files/projects
+
+Improved Text Input:
+    Text input page now features a Char Select Pane.
+
+Sequencer Track Menu and Trig Menu.
+    Track menu accessible by holding shift 2.
+	   Allows for changing current tracks.
+       Copying/pasting/deleting/shifting/reversing tracks.
+
+
+    Trig menu accessible by pressing a trig and then holding shift 2. Allows
+	copying/pasting of trigs, adding/remove trig mutes clearing locks.
+
+Save/Chain Pages:
+    3 Save modes now: SEQ, MD, MERGE. (MD and MERGE only available when
+	sequencer is stopped and are used for copying MD pattern data)
+
+	New GUI popup menu.
+
+Grid Page:
+  Slot menu, provides copy + paste options. Encoders 3 and 4 are used to
+  select a rectangular region of tracks/slots to be copied.
+  They can be pasted between projects.
+
+SD Drive:
+  Poor man's plus drive. Backup/restore MD's entire memory including pattern +
+  kits + globals. All stored on the SD Card for retrieval.
+
+RAM Pages:
+  Two RAM pages are provided Page Select pages 15 + 16.
+  These machines take the hastle out of RAM record + playback by automating RAM machine sampling of the MD output or external input.
+  Recordings can be sliced, and maniputated using a variety of effects.
+
+FX Pages:
+  Two FX pages used to control Delay or Reverb.
+
+LFO Page:
+  A single global LFO (Lower frequency oscillator) page is provided which can
+  be used to manipulate any MD parameter, either a Track Param or Global FX.
+  Two destinations are selectable and a variatey of wave shapes available.
+  The LFO can be triggered by a dedicated 16 step sequencer track, or be set
+  to run freely.
+
+Firmware Performance & MIDI Timing :
+  Improvements to the low level MIDI interrupt code means reduced latency and
+  tighter sequencer performance.
+  Faster GUI routines, means higher framerate and snappier performance.
+  Improved latency coompensation for realtime recording on Chromatic and
+  Record pages.
+  Device peering now works from any page.
+  Numerous bug and workflow fixes.
+
 MCL 2.40 25/06/2019
 
 Important:

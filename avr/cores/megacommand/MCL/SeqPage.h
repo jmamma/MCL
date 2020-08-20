@@ -16,17 +16,52 @@ public:
 
 extern void pattern_len_handler(Encoder *enc);
 
+
+extern uint8_t opt_trackid;
+extern uint8_t opt_speed;
+extern uint8_t opt_copy;
+extern uint8_t opt_paste;
+extern uint8_t opt_clear;
+extern uint8_t opt_shift;
+extern uint8_t opt_reverse;
+extern uint8_t opt_clear_step;
+
+extern uint16_t trigled_mask;
+
+extern void opt_trackid_handler();
+extern void opt_speed_handler();
+extern void opt_clear_track_handler();
+extern void opt_clear_locks_handler();
+extern void opt_copy_track_handler();
+extern void opt_paste_track_handler();
+extern void opt_shift_track_handler();
+extern void opt_reverse_track_handler();
+extern void opt_paste_step_handler();
+extern void opt_copy_step_handler();
+extern void opt_mute_step_handler();
+extern void opt_clear_step_locks_handler();
+extern void opt_mask_handler();
+
+extern void seq_menu_handler();
+extern void step_menu_handler();
+
+#define MASK_PATTERN 0
+#define MASK_LOCK 1
+#define MASK_SLIDE 2
+#define MASK_MUTE 3
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
   static uint8_t page_count;
   static uint8_t midi_device;
-  static uint8_t length;
-  static uint8_t resolution;
-  static uint8_t apply;
-  static uint8_t ignore_button_release;
-  static bool show_track_menu;
+  static uint8_t step_select;
+  static uint8_t mask_type;
+
+  static bool show_seq_menu;
+  static bool show_step_menu;
+  static bool toggle_device;
 
   bool recording = false;
   bool display_page_index = true;
@@ -39,16 +74,27 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
+  void config_as_trackedit();
+  void config_as_lockedit();
+  void config_mask_info();
   void create_chars_seq();
   void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
   void draw_lock_mask(uint8_t offset, bool show_current_step = true);
-  void draw_pattern_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
-  void draw_pattern_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
+  void draw_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
+  void draw_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
-  void draw_page_index(bool show_page_index = true);
+  void draw_knob_conditional(uint8_t cond);
+  void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
+
+  void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(uint8_t device, uint8_t track);
+
+  uint8_t translate_to_step_conditional(uint8_t condition);
+  uint8_t translate_to_knob_conditional(uint8_t condition);
+
+  uint64_t *get_mask();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

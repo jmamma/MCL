@@ -1,6 +1,6 @@
 #include "MCL.h"
-#include "OscPage.h"
 #include "Osc.h"
+#include "OscPage.h"
 #include "WavDesigner.h"
 
 void osc_mod_handler(Encoder *enc) {}
@@ -38,10 +38,7 @@ void OscPage::init() {
 void OscPage::cleanup() { DEBUG_PRINT_FN(); }
 bool OscPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    osc_waveform++;
-    if (osc_waveform > 5) {
-      osc_waveform = 0;
-    }
+    wd.load_next_page(id);
     return true;
   }
 
@@ -49,43 +46,11 @@ bool OscPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    // md_exploit.off();
-    // wd.render();
-    // wd.send();
-    //  exploit_delay_clock = slowclock;
-    return true;
-  }
 
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    if (id == 0) {
-      GUI.setPage(&grid_page);
-    } else {
-      GUI.setPage(&(wd.pages[0]));
-    }
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    if (id == 1) {
-      GUI.setPage(&grid_page);
-    } else {
-      GUI.setPage(&(wd.pages[1]));
-    }
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    if (id == 2) {
-      GUI.setPage(&grid_page);
-    } else {
-      GUI.setPage(&(wd.pages[2]));
-    }
-
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-    GUI.setPage(&(wd.mixer));
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    osc_waveform++;
+    if (osc_waveform > 5) {
+      osc_waveform = 0;
     }
     return true;
   }
@@ -103,6 +68,13 @@ void OscPage::calc_largest_sine_peak() {
 void OscPage::loop() {
   MCLEncoder *enc_ = &enc4;
   // largest_sine_peak = 1.0 / 16.00;
+  if (encoders[0]->hasChanged()) {
+    show_freq = false;
+  }
+  if (encoders[1]->hasChanged()) {
+    show_freq = true;
+  }
+
   calc_largest_sine_peak();
   int dir = 0;
   int16_t newval;
@@ -136,26 +108,21 @@ void OscPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
-    if (!md_exploit.state) {
-      md_exploit.on();
+      trig_interface.on();
       note_interface.state = true;
-    }
   }
 
   else {
-    if (md_exploit.state) {
-      md_exploit.off();
-    }
+      trig_interface.off();
   }
 }
 void OscPage::display() {
   // oled_display.clearDisplay();
   if (!classic_display) {
-    #ifdef OLED_DISPLAY
+#ifdef OLED_DISPLAY
     oled_display.fillRect(0, 0, 64, 32, BLACK);
-    #endif
-  }
-  else {
+#endif
+  } else {
     GUI.setLine(GUI.LINE2);
     GUI.put_string_at(0, "                ");
   }
@@ -208,7 +175,7 @@ void OscPage::display() {
   }
 
   GUI.setLine(GUI.LINE1);
-  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+  if (show_freq) {
     float freq = get_freq();
     float upper = floor(freq / 1000);
     float lower = floor(freq - (upper * 1000));

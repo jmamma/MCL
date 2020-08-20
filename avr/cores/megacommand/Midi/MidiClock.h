@@ -34,6 +34,7 @@ class MidiClockClass {
    **/
 protected:
   float tempo;
+
 public:
   volatile uint32_t div192th_counter_last;
   volatile uint32_t div192th_counter;
@@ -219,11 +220,9 @@ public:
   }
 
   ALWAYS_INLINE() void init();
-  ALWAYS_INLINE() void callCallbacks() {
+  ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
       return;
-
-    // Moved MidiClock callbacks to Main Loop
 
     static bool inCallback = false;
     if (inCallback) {
@@ -236,17 +235,19 @@ public:
 #ifndef HOST_MIDIDUINO
     sei();
 #endif
-    // HOST_MIDIDUINO/
 
     on192Callbacks.call(div192th_counter);
 
-    if (mod6_counter == 0) {
-      on16Callbacks.call(div16th_counter);
-      on32Callbacks.call(div32th_counter);
-      // mcl_16counter++;
-    }
-    if (mod6_counter == 3) {
-      on32Callbacks.call(div32th_counter);
+    if (isMidiEvent) {
+      on96Callbacks.call(div96th_counter);
+
+      if (mod6_counter == 0) {
+        on16Callbacks.call(div16th_counter);
+        on32Callbacks.call(div32th_counter);
+      }
+      if (mod6_counter == 3) {
+        on32Callbacks.call(div32th_counter);
+      }
     }
 
     inCallback = false;
@@ -301,7 +302,7 @@ public:
   }
 
   void calc_tempo() {
-    DEBUG_PRINTLN(diff_clock8);
+    // DEBUG_PRINTLN(diff_clock8);
     if (last_diff_clock8 != diff_clock8) {
       tempo = 100000.0f / diff_clock8;
       last_diff_clock8 = diff_clock8;
@@ -313,16 +314,18 @@ public:
     return tempo;
   }
 
-  /* in interrupt, called on receiving MIDI_CLOCK 
+  /* in interrupt, called on receiving MIDI_CLOCK
    *
-   * MIDI_CLOCK is sent at 24PPQN, that is, 6 pulses per step, or 96 pulses per bar.
+   * MIDI_CLOCK is sent at 24PPQN, that is, 6 pulses per step, or 96 pulses per
+   * bar.
    *
    * clock: incrementing at 5KHz.
    * mod8_free_counter: divides 24PPQN to 3PPQN, that is, 3/4 pulses per step
    * diff_clock8: measures clock ticks between two mod8.
    *  - because mod6 is div16th, mod8 is div12th.
-   * div192_time: clock ticks for what divides 3PPQN time by 16, that is, 48PPQN.
-   * div192th_countdown: incrementing at 5KHz, and triggers increment192Counter.
+   * div192_time: clock ticks for what divides 3PPQN time by 16, that is,
+   * 48PPQN. div192th_countdown: incrementing at 5KHz, and triggers
+   * increment192Counter.
    *
    * For example, assume BPM=120:
    * - 8 steps per second
@@ -339,10 +342,9 @@ public:
    * mod6_counter: divides 24PPQN to 4PPQN, that is, 1 pulse per step.
    * mod12_counter: divides 24PPQN to 2PPQN, that is, 1/2 pulses per step.
    * step_counter: a single step [1..4], reset at 5
-   * div16th_counter: same speed as step_counter, only reset at init or overflow.
-   * div32th_counter: 1/2 step.
-   * div96th_counter: 1/6 step, one MIDI_CLOCK pulse.
-   * div192th_counter: 1/12 step, half MIDI_CLOCK pulse.
+   * div16th_counter: same speed as step_counter, only reset at init or
+   * overflow. div32th_counter: 1/2 step. div96th_counter: 1/6 step, one
+   * MIDI_CLOCK pulse. div192th_counter: 1/12 step, half MIDI_CLOCK pulse.
    */
   ALWAYS_INLINE() void incrementCounters() {
     mod8_free_counter++;
@@ -389,7 +391,6 @@ public:
     } else if (state == STARTING &&
                (mode == INTERNAL_MIDI || useImmediateClock)) {
       state = STARTED;
-      callCallbacks();
     }
   }
 

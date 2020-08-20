@@ -1,7 +1,7 @@
 #include "WProgram.h"
 
 #include "MCLSd.h"
-#include "Math.h"
+#include "math.h"
 #include "MidiSDSMessages.hh"
 #include "MidiSDSSysex.hh"
 #include "helpers.h"

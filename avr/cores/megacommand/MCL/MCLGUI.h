@@ -15,6 +15,7 @@ public:
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
+  void draw_textbox(char *text, char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
@@ -40,6 +41,7 @@ public:
                      uint8_t x_pos = s_progress_x,
                      uint8_t y_pos = s_progress_y);
 
+  void draw_microtiming(uint8_t resolution, uint8_t timing);
   void clear_leftpane();
   void clear_rightpane();
 
@@ -62,9 +64,7 @@ public:
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t note_mask);
   void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask,
-                  uint8_t step_count, uint8_t length);
-  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid,
-                      bool show_current_step);
+                  uint8_t step_count, uint8_t length, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
   void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
                  uint8_t step_count, uint8_t length, bool show_current_step);
 
@@ -77,6 +77,13 @@ public:
   void draw_knob(uint8_t i, const char *title, const char *text);
   void draw_knob(uint8_t i, Encoder *enc, const char *name);
 
+  void init_encoders_used_clock() {
+
+    for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+      ((LightPage *)GUI.currentPage())->encoders_used_clock[n] =
+          slowclock - SHOW_VALUE_TIMEOUT - 1;
+    }
+  }
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;
@@ -194,12 +201,44 @@ extern const unsigned char encoder_small_4[];
 extern const unsigned char encoder_small_5[];
 // 'encoder6', 11x11px
 extern const unsigned char encoder_small_6[];
+
+// 'wheel1', 19x19px
+extern const unsigned char wheel_top [];
+// 'wheel2', 19x19px
+extern const unsigned char wheel_angle [];
+// 'wheel3', 19x19px
+extern const unsigned char wheel_side [];
+
+// 'chroma', 24x25px 
+extern const unsigned char icon_chroma[];
+// 'rec', 24x15px
+extern const unsigned char icon_rec[];
+// 'grid', 24x15px
+extern const unsigned char icon_grid[];
+// 'lfo', 24x24px
+extern const unsigned char icon_lfo[];
+// 'loudness', 24x16px
+extern const unsigned char icon_loudness[];
+// 'wavd', 24x19px
+extern const unsigned char icon_wavd[];
+// 'mixer', 24x16px
+extern const unsigned char icon_mixer[];
+// 'para', 24x19px
+extern const unsigned char icon_para[];
+// 'step', 24x25px
+extern const unsigned char icon_step[];
 // 'gatebox', 24x25px
 extern const unsigned char icon_gatebox[];
+// 'ram1', 24x25px
+extern const unsigned char icon_ram1[];
+// 'ram2', 24x25px
+extern const unsigned char icon_ram2[];
 // 'rythmecho', 24x25px
 extern const unsigned char icon_rhytmecho [];
 // 'route', 24x16px
 extern const unsigned char icon_route [];
+// 'sound', 24x19px
+extern const unsigned char icon_sound[];
 // 'md_rev', 34x24px
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px

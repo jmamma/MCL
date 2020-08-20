@@ -7,21 +7,35 @@
 // include full MDTrack specification to calculate size
 #include "MDTrack.h"
 #include "A4.h"
-#include "Project.h"
 #include "MCLMemory.h"
-#include "Bank1Object.h"
 
-class A4Track : public ExtTrack, 
-                public Bank1Object<A4Track, NUM_MD_TRACKS, BANK1_A4_TRACKS_START> {
+class A4Track_270 : public GridTrack_270 {
+public:
+  ExtSeqTrackData_270 seq_data;
+  A4Sound sound;
+
+};
+
+
+class A4Track : public ExtTrack {
 public:
   A4Sound sound;
-  void load_seq_data(int tracknumber);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  bool place_track_in_sysex(int tracknumber, uint8_t column,
-                           A4Sound *analogfour_sound);
-  bool load_track_from_grid(int32_t column, int32_t row, int m = 0);
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255, bool online = false);
-
+  bool get_track_from_sysex(uint8_t tracknumber);
+  bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
+  bool convert(A4Track_270 *old) {
+    if (active == A4_TRACK_TYPE_270) {
+      chain.speed = old->seq_data.speed;
+      chain.length = old->seq_data.length;
+      memcpy(&sound, &(old->sound), sizeof(old->sound));
+      seq_data.convert(&(old->seq_data));
+      active = A4_TRACK_TYPE;
+      return true;
+    }
+   return false;
+  }
+  virtual uint16_t get_track_size() { return sizeof(A4Track); }
+  virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
+  virtual uint8_t get_device_type() { return A4_TRACK_TYPE; }
 };
 
 #endif /* A4TRACK_H__ */

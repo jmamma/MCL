@@ -483,6 +483,7 @@ public:
    * method of the new topmost page.
    **/
   void popPage() {
+    currentPage()->cleanup();
     Page *page;
     pageStack.pop(&page);
     if (page != NULL) {

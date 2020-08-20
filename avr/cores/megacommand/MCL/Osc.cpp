@@ -1,6 +1,6 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#include "Math.h"
+#include "math.h"
 #include "Osc.h"
 
 float Osc::get_sample(uint32_t sample_number, float freq, float phase) {

@@ -5,7 +5,7 @@
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     notes[i] = 0;
     // notes_off[i] = 0;
   }
@@ -23,7 +23,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     DEBUG_PRINTLN("note interface disabled");
     return;
   }
-  if (note_num > 20) {
+ if (note_num > 20) {
     return;
   }
   if (notes[note_num] != 1) {
@@ -32,7 +32,10 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   if (note_num < 16) {
     note_hold = slowclock;
   }
-
+  if (IS_BIT_SET64(ignore_next_mask, note_num)) {
+     CLEAR_BIT64(ignore_next_mask, note_num);
+     return;
+  }
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = EVENT_BUTTON_PRESSED;
@@ -43,8 +46,13 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
-  DEBUG_PRINTLN(note_num);
+ DEBUG_PRINTLN(note_num);
   notes[note_num] = 3;
+  if (IS_BIT_SET64(ignore_next_mask, note_num)) {
+     CLEAR_BIT64(ignore_next_mask, note_num);
+     return;
+  }
+
   DEBUG_PRINTLN("note off");
   gui_event_t event;
   event.source = note_num + 128;
@@ -93,7 +101,7 @@ bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
   uint8_t a = 0;
   uint8_t b = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] == 1) {
       a++;
     }
@@ -109,9 +117,19 @@ bool NoteInterface::notes_all_off() {
   return all_notes_off;
 }
 
+uint8_t NoteInterface::notes_count_on() {
+  uint8_t a = 0;
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
+    if (notes[i] == 1) {
+      a++;
+    }
+  }
+ return a;
+}
+
 uint8_t NoteInterface::notes_count_off() {
   uint8_t a = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] == 3) {
       a++;
     }
@@ -120,7 +138,7 @@ uint8_t NoteInterface::notes_count_off() {
 }
 uint8_t NoteInterface::notes_count() {
   uint8_t a = 0;
-  for (uint8_t i = 0; i < 20; i++) {
+  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
     if (notes[i] > 0) {
       a++;
     }

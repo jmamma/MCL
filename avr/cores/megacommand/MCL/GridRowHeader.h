@@ -3,7 +3,7 @@
 #ifndef GRIDROW_H__
 #define GRIDROW_H__
 
-#define GRID_WIDTH 22
+#include "MCLMemory.h"
 
 class GridRowHeader {
  public:
@@ -13,10 +13,9 @@ class GridRowHeader {
   uint8_t model[GRID_WIDTH];
 
   void update_model(int16_t column, uint8_t model_, uint8_t track_type_);
-  bool write(int16_t row);
-  bool read(int16_t row);
   bool is_empty();
   void init();
+
 };
 
 #endif /* GRIDROW_H__ */

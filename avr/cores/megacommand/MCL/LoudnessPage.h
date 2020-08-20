@@ -20,12 +20,7 @@ public:
   void setup();
   void init();
   void cleanup();
-  void setup_ram_rec_in_kit();
-  void setup_ram_rec();
-  bool wait_for_sample();
   void scale_vol(float inc);
-  float check_loudness();
-  void check_grid_loudness(int col, int row);
 };
 
 extern MCLEncoder loudness_param1;

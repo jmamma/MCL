@@ -19,26 +19,32 @@ void SeqRlckPage::config() {
 
   strcpy(info2, "RLCK");
   display_page_index = false;
+
+  // config menu
+  config_as_lockedit();
 }
 
 void SeqRlckPage::init() {
   SeqPage::init();
+  toggle_device = false;
   if (MidiClock.state == 2) {
     MD.midi_events.disable_live_kit_update();
   }
-  md_exploit.off();
+  trig_interface.off();
   note_interface.state = false;
   recording = true;
   config();
 
-  ((MCLEncoder *)encoders[0])->max = 4;
-  ((MCLEncoder *)encoders[1])->max = 64;
-  ((MCLEncoder *)encoders[2])->max = 64;
-  ((MCLEncoder *)encoders[3])->max = 11;
-  encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  seq_param1.max = 4;
+  seq_param2.max = 64;
+  seq_param3.max = 64;
+  seq_param4.max = 11;
+  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
 
   curpage = SEQ_RTRK_PAGE;
   midi_events.setup_callbacks();
+
+  SeqPage::mask_type = MASK_PATTERN;
 }
 
 void SeqRlckPage::cleanup() {
@@ -64,12 +70,11 @@ void SeqRlckPage::display() {
   if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
-    GUI.put_value_at(5, encoders[2]->getValue());
+    GUI.put_value_at(5, seq_param3.getValue());
   }
 #ifdef EXT_TRACKS
   else {
-    GUI.put_value_at(5, (encoders[2]->getValue() /
-                         (2 / mcl_seq.ext_tracks[last_ext_track].resolution)));
+    GUI.put_value_at(5, seq_param3.getValue());
     if (Analog4.connected) {
       GUI.put_string_at(9, "A4T");
     } else {
@@ -87,26 +92,31 @@ void SeqRlckPage::display() {
   if ((!redisplay) && (MidiClock.state == 2)) {
     return;
   }
-  SeqPage::display();
+
+  oled_display.clearDisplay();
+  auto *oldfont = oled_display.getFont();
 
   draw_knob_frame();
 
-  uint8_t len = encoders[2]->getValue();
+  uint8_t len = seq_param3.getValue();
+/*
 #ifdef EXT_TRACKS
   if (SeqPage::midi_device != DEVICE_MD) {
-    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].resolution);
+    len = len / (2 / mcl_seq.ext_tracks[last_ext_track].speed);
   }
 #endif
-
+*/
   char K[4];
   itoa(len, K, 10);
   draw_knob(2, "LEN", K);
 
   bool show_current_step = false;
   draw_lock_mask(page_select * 16, show_current_step);
-  draw_pattern_mask(page_select * 16, DEVICE_MD, show_current_step);
+  draw_mask(page_select * 16, DEVICE_MD, show_current_step);
 
+  SeqPage::display();
   oled_display.display();
+  oled_display.setFont(oldfont);
 }
 #endif
 
@@ -122,17 +132,9 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if ((EVENT_PRESSED(event, Buttons.BUTTON3) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON3))) {
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].clear_locks();
-    }
-    return true;
-  }
-
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (MD.getCurrentTrack(CALLBACK_TIMEOUT) != last_md_track) {
-     for (uint8_t c = 0; c < 4; c++) {
+     for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
       if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
         last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
       }
@@ -140,7 +142,7 @@ bool SeqRlckPage::handleEvent(gui_event_t *event) {
     last_md_track = MD.currentTrack;
     }
     mcl_seq.md_tracks[last_md_track].clear_param_locks(last_param_id);
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
       if (mcl_seq.md_tracks[last_md_track].locks_params[c] > 0) {
         last_param_id = mcl_seq.md_tracks[last_md_track].locks_params[c] - 1;
       }
@@ -171,7 +173,7 @@ void SeqRlckPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   last_md_track = track;
   //ignore level
   if (track_param > 31) { return; }
-  seq_rlck_page.encoders[2]->cur = mcl_seq.md_tracks[last_md_track].length;
+  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
 
   mcl_seq.md_tracks[track].update_param(track_param, value);
 

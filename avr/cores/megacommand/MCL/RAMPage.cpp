@@ -29,7 +29,7 @@ void RAMPage::init() {
   oled_display.clearDisplay();
   oled_display.setFont();
 #endif
-  md_exploit.off();
+  trig_interface.off();
   if (mcl_cfg.ram_page_mode == MONO) {
     ((MCLEncoder *)encoders[0])->max = 2;
   } else {
@@ -67,7 +67,7 @@ void RAMPage::setup_sequencer(uint8_t track) {
 void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
                             uint8_t source, uint8_t len, uint8_t rate,
                             uint8_t pan, uint8_t linked_track) {
-  MDTrackLight md_track;
+  MDTrack md_track;
 
   memset(&(md_track.seq_data), 0, sizeof(MDSeqTrackData));
   memset(&(md_track.machine.params), 255, 24);
@@ -130,7 +130,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   }
 
   md_track.machine.muteGroup = 127;
-  md_track.seq_data.length = (uint8_t)steps;
+  md_track.chain.length = (uint8_t)steps;
+  md_track.chain.speed = SEQ_SPEED_1X;
   md_track.chain.loops = 0;
   md_track.chain.row = mcl_actions.chains[track].row;
 
@@ -296,7 +297,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
 
 void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
                              uint8_t linked_track) {
-  MDTrackLight md_track;
+  MDTrack md_track;
 
   memset(&(md_track.seq_data), 0, sizeof(MDSeqTrackData));
   memset(&(md_track.machine.params), 255, 24);
@@ -349,7 +350,8 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   }
   md_track.machine.muteGroup = 127;
 
-  md_track.seq_data.length = (uint8_t)steps;
+  md_track.chain.length = (uint8_t)steps;
+  md_track.chain.speed = SEQ_SPEED_1X;
   uint8_t magic = encoders[1]->cur;
   md_track.chain.loops = 0;
   md_track.chain.row = mcl_actions.chains[track].row;

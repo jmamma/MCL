@@ -9,6 +9,7 @@ class SeqStepMidiEvents : public MidiCallback {
 public:
   bool state;
   void onNoteOnCallback_Midi2(uint8_t *msg);
+  void onControlChangeCallback_Midi(uint8_t *msg);
   void setup_callbacks();
   void remove_callbacks();
 
@@ -28,6 +29,7 @@ public:
   virtual void setup();
   virtual void init();
   virtual void config();
+  virtual void config_encoders();
   virtual void loop();
   virtual void cleanup();
 };

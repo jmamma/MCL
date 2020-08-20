@@ -95,7 +95,7 @@ void RoutePage::toggle_routes_batch(bool solo) {
   quantize_mute = 1 << encoders[1]->getValue();
   uint8_t i;
   hasChanged = true;
-  if ((encoders[2]->getValue() < 7) && (encoders[2]->getValue() > 0)) {
+  if ((encoders[1]->getValue() < 7) && (encoders[1]->getValue() > 0)) {
     while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
              (quantize_mute * 2)) != 0) &&
            (MidiClock.state == 2)) {
@@ -241,21 +241,18 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    update_globals();
-    md_exploit.off();
-    md_exploit.on();
-    GUI.setPage(&mixer_page);
-    return true;
-  }
+  //if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    //update_globals();
+    //md_exploit.off();
+    //md_exploit.on();
+    //GUI.setPage(&mixer_page);
+    //return true;
+  //}
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    update_globals();
-    md_exploit.off();
-    md_exploit.on();
     GUI.setPage(&page_select_page);
     return true;
   }
-
+/*
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -265,5 +262,6 @@ bool RoutePage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+*/
   return false;
 }

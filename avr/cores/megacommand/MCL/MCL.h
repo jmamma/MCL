@@ -29,7 +29,7 @@
 
 #include "Grid.h"
 #include "GridChain.h"
-#include "GridRowHeader.h"
+//#include "GridRowHeader.h"
 #include "GridTask.h"
 
 #ifdef LOUDNESS_PAGE
@@ -43,6 +43,7 @@
 #include "MCLSeq.h"
 #include "MDExploit.h"
 #include "MDSound.h"
+#include "MDTrackSelect.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"
@@ -82,6 +83,7 @@
 //#include "EmptyTrack.h"
 
 #include "Shared.h"
+#include "TrigInterface.h"
 
 //MCL Fonts
 #ifdef OLED_DISPLAY
@@ -89,8 +91,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2040
-#define VERSION_STR "2.40"
+#define VERSION 3000
+#define VERSION_STR "3.00"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

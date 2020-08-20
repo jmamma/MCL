@@ -132,15 +132,10 @@ void GuiClass::loop() {
     }
   }
 }
-
-void GuiClass::display() {
+void GuiClass::display_lcd() {
   PageParent *page = NULL;
   if (sketch != NULL) {
     page = sketch->currentPage();
-    if (page != NULL) {
-      page->display();
-      page->redisplay = false;
-    }
   }
 
   for (uint8_t i = 0; i < 2; i++) {
@@ -181,6 +176,19 @@ void GuiClass::display() {
   GUI.setLine(GUI.LINE2);
   GUI.clearFlashLine();
 
+
+}
+
+void GuiClass::display() {
+  PageParent *page = NULL;
+  if (sketch != NULL) {
+    page = sketch->currentPage();
+    if (page != NULL) {
+      page->display();
+      page->redisplay = false;
+    }
+  }
+  display_lcd();
 #ifdef UART_USB
 #ifdef OLED_DISPLAY
 #ifndef DEBUGMODE
@@ -218,10 +226,10 @@ void GuiClass::display() {
     }
   }
 #endif
-#endif
   if (page->classic_display) {
     oled_display.display();
   }
+#endif
 #endif
 }
 

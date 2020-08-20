@@ -14,7 +14,7 @@ void SDDrivePage::setup() {
 void SDDrivePage::init() {
 
   DEBUG_PRINT_FN();
-  md_exploit.off();
+  trig_interface.off();
   //  !note match only supports 3-char suffix
   strcpy(match, c_snapshot_suffix);
   strcpy(title, "SD-Drive");
@@ -74,6 +74,9 @@ void SDDrivePage::save_snapshot() {
       return;
     }
   }
+  #ifndef OLED_DISPLAY
+  gfx.display_text("Please Wait", "Saving Snap");
+  #endif
 
   DEBUG_PRINTLN("creating new snapshot:");
   DEBUG_PRINTLN(temp_entry);
@@ -173,6 +176,9 @@ void SDDrivePage::load_snapshot() {
     gfx.alert("Error", "Cannot open file for read");
     return;
   }
+  #ifndef OLED_DISPLAY
+  gfx.display_text("Please Wait", "Restoring Snap");
+  #endif
 
   MidiUart.sendRaw(MIDI_STOP);
   MidiClock.handleImmediateMidiStop();
@@ -190,7 +196,11 @@ void SDDrivePage::load_snapshot() {
     mcl_actions.md_setsysex_recpos(2, i);
     {
       ElektronDataToSysexEncoder encoder(&MidiUart);
+      delay(20);
       MD.global.toSysex(encoder);
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
     }
   }
   //  Patterns
@@ -202,7 +212,11 @@ void SDDrivePage::load_snapshot() {
       goto load_error;
     }
     mcl_actions.md_setsysex_recpos(8, i);
+    delay(20);
     MD.pattern.toSysex();
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
   }
   //  Kits
   progress_max = 64;
@@ -213,7 +227,12 @@ void SDDrivePage::load_snapshot() {
       goto load_error;
     }
     mcl_actions.md_setsysex_recpos(4, i);
+    delay(20);
     MD.kit.toSysex();
+      #ifndef OLED_DISPLAY
+      delay(20);
+      #endif
+
   }
   //  Load complete
   progress_max = 0;

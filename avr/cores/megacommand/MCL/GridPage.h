@@ -40,7 +40,8 @@ public:
   bool show_slot_menu = false;
   bool write_cfg = false;
 
-  int active_slots[20];
+  int active_slots[NUM_TRACKS];
+  uint8_t grid_select_apply;
   uint8_t slot_apply;
   uint8_t slot_clear;
   uint8_t merge_md = 0;
@@ -58,6 +59,7 @@ public:
   void toggle_fx1();
   void toggle_fx2();
   void displayScroll(uint8_t i);
+  uint8_t getWidth();
   uint8_t getCol();
   uint8_t getRow();
   void load_slot_models();

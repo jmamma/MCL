@@ -1,3 +1,5 @@
+#define IS_ISR_ROUTINE
+
 #include "WProgram.h"
 
 #include <avr/interrupt.h>
@@ -102,7 +104,8 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
     SET_LOCK();
     // block interrupts
     while (!UART2_CHECK_EMPTY_BUFFER()) {
-      if (TIMER1_CHECK_INT()) {
+    #ifdef MEGACOMMAND
+    if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
         TIMER1_CLEAR_INT()
@@ -112,6 +115,7 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
+    #endif
     }
 
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -119,6 +123,7 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
     CLEAR_LOCK();
   } else {
     while (!UART2_CHECK_EMPTY_BUFFER()) {
+    #ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -129,6 +134,7 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
+    #endif
     }
 
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -144,6 +150,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
     SET_LOCK();
     // block interrupts
     while (!UART_CHECK_EMPTY_BUFFER()) {
+    #ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -154,6 +161,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
+    #endif
     }
 
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
@@ -161,7 +169,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
     CLEAR_LOCK();
   } else {
     while (!UART_CHECK_EMPTY_BUFFER()) {
-
+    #ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -172,6 +180,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
+    #endif
     }
 
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
@@ -192,7 +201,7 @@ ISR(USART0_RX_vect) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();
-        MidiClock.callCallbacks();
+        MidiClock.callCallbacks(true);
       } else {
         switch (c) {
         case MIDI_START:
@@ -283,7 +292,7 @@ ISR(USART1_RX_vect) {
 
       if (c == MIDI_CLOCK) {
         MidiClock.handleClock();
-        MidiClock.callCallbacks();
+        MidiClock.callCallbacks(true);
       } else {
         switch (c) {
         case MIDI_START:

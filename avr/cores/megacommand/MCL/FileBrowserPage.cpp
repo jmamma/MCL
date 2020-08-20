@@ -13,19 +13,24 @@ void FileBrowserPage::setup() {
   DEBUG_PRINT_FN();
 }
 
-void FileBrowserPage::add_entry(const char *entry) {
+bool FileBrowserPage::add_entry(const char *entry) {
+  if (numEntries >= NUM_FILE_ENTRIES) {
+    return false;
+  }
   char buf[16];
   m_strncpy(buf, entry, sizeof(buf));
   buf[15] = '\0';
   volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
   memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
+  return true;
 }
 
 void FileBrowserPage::init() {
   DEBUG_PRINT_FN();
-  char temp_entry[16];
 
+  char temp_entry[16];
+  call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
   file_menu_page.menu.enable_entry(0, show_new_folder);
@@ -37,7 +42,6 @@ void FileBrowserPage::init() {
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
-  int index = 0;
   //  reset directory pointer
   SD.vwd()->rewind();
   numEntries = 0;
@@ -52,8 +56,9 @@ void FileBrowserPage::init() {
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
   }
-
   encoders[1]->cur = 1;
+  encoders[1]->old = 1;
+  cur_row = 1;
 
   //  iterate through the files
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
@@ -77,16 +82,16 @@ void FileBrowserPage::init() {
     }
     if (is_match_file) {
       DEBUG_PRINTLN("file matched");
-      add_entry(temp_entry);
-      if (strcmp(temp_entry, mcl_cfg.project) == 0) {
-        DEBUG_DUMP(temp_entry);
-        DEBUG_DUMP(mcl_cfg.project);
+      if (add_entry(temp_entry)) {
+        if (strcmp(temp_entry, mcl_cfg.project) == 0) {
+          DEBUG_DUMP(temp_entry);
+          DEBUG_DUMP(mcl_cfg.project);
 
-        cur_file = numEntries - 1;
-        encoders[1]->cur = numEntries - 1;
+          cur_file = numEntries - 1;
+          encoders[1]->cur = numEntries - 1;
+        }
       }
     }
-    index++;
     file.close();
     DEBUG_DUMP(numEntries);
   }
@@ -94,8 +99,9 @@ void FileBrowserPage::init() {
   if (numEntries <= 0) {
     numEntries = 0;
     ((MCLEncoder *)encoders[1])->max = 0;
+  } else {
+    ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
-  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   DEBUG_PRINTLN("finished list files");
 }
 
@@ -179,6 +185,12 @@ void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
 }
 
 void FileBrowserPage::loop() {
+#ifndef OLED_DISPLAY
+  if (call_handle_filemenu) {
+    call_handle_filemenu = false;
+    _handle_filemenu();
+  }
+#endif
 
   if (filemenu_active) {
     file_menu_page.loop();
@@ -278,8 +290,12 @@ void FileBrowserPage::_handle_filemenu() {
   volatile uint8_t *ptr =
       (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
   memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
+
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
+  for (uint8_t n = 1; n < 32; n++) {
+    buf2[n] = ' ';
+  }
   uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
@@ -359,7 +375,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return false;
   }
-
+#ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
@@ -369,19 +385,21 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.init();
     return false;
   }
-
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[0] = param1;
     encoders[1] = param2;
+
     _handle_filemenu();
     init();
     return false;
   }
-
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
+#else
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    call_handle_filemenu = true;
+    GUI.pushPage(&file_menu_page);
+  }
+#endif
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     int i_save;
     _calcindices(i_save);
@@ -412,14 +430,13 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     // select an entry
+    GUI.ignoreNextEvent(event->source);
     on_select(temp_entry);
     return true;
   }
 
   // cancel
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_RELEASED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     on_cancel();
     return true;
   }

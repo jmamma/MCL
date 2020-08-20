@@ -14,10 +14,20 @@
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
+#define SEQ_SCALE_1X 0
+#define SEQ_SCALE_2X 1
+#define SEQ_SCALE_3_4X 2
+#define SEQ_SCALE_3_2X 3
+#define SEQ_SCALE_1_2X 4
+#define SEQ_SCALE_1_4X 5
+#define SEQ_SCALE_1_8X 6
+
+#define NUM_TRIG_CONDITIONS 14
+
 class MCLSeqMidiEvents : public MidiCallback {
 public:
   bool state;
-
+  bool update_params;
   void setup_callbacks();
   void remove_callbacks();
 
@@ -38,8 +48,12 @@ public:
   uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 
+#ifdef LFO_TRACKS
   LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
   uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
+#endif
+
+  SeqTrack *seq_tracks[NUM_MD_TRACKS + NUM_EXT_TRACKS];
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -48,6 +62,13 @@ public:
   void enable();
   void disable();
 
+  void add_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
+    seq_tracks[track_number] = tp;
+    seq_tracks[track_number]->active = type;
+  }
+
+  void update_kit_params();
+  void update_params();
   void onMidiStartCallback();
   void onMidiStartImmediateCallback();
   void onMidiContinueCallback();

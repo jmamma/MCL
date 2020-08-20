@@ -24,7 +24,34 @@
  * MD Callback class, inherit from this class if you want to use callbacks on MD
  *events.
  **/
-class MDCallback {};
+
+class MDCallback {
+  public:
+  uint8_t type;
+  uint8_t value;
+  bool received;
+
+  MDCallback(uint8_t _type = 0) {
+    type = _type;
+    init();
+  }
+
+  void init() {
+    received = false;
+    value = 255;
+  }
+  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
+
+    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
+    if (type == _type) {
+      value = param;
+      received = true;
+    }
+  }
+
+  virtual void onSysexReceived() { received = true; }
+
+};
 
 /**
  * Standard method prototype for argument-less MD callbacks.
@@ -44,33 +71,10 @@ typedef void (MDCallback::*md_status_callback_ptr_t)(uint8_t type,
  * from the MachineDrum.
  **/
 class MDBlockCurrentStatusCallback : public MDCallback {
-  /**
-   * \addtogroup md_callbacks
-   * @{
-   **/
 
 public:
-
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  MDBlockCurrentStatusCallback(uint8_t _type = 0) {
-    type = _type;
-    received = false;
-    value = 255;
+  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {
   }
-
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-
-    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-
-  void onSysexReceived() { received = true; }
 
   /* @} */
 };
@@ -127,6 +131,11 @@ public:
   void onNoteOnCallback_Midi(uint8_t *msg);
 };
 
+enum TrigLEDMode {
+  TRIGLED_OVERLAY = 0,
+  TRIGLED_STEPEDIT = 1,
+  TRIGLED_EXCLUSIVE = 2
+};
 
 /**
  * This is the main class used to communicate with a Machinedrum
@@ -151,6 +160,7 @@ class MDClass {
 
 public:
   MDClass();
+  uint64_t fw_caps;
   bool connected = false;
   MidiClass *midi = &Midi;
   MDMidiEvents midi_events;
@@ -240,8 +250,18 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
+  void sendRequest(uint8_t *data, uint8_t len);
   void sendRequest(uint8_t type, uint8_t param);
 
+  bool get_fw_caps();
+
+  void activate_trig_interface();
+  void deactivate_trig_interface();
+
+  void activate_track_select();
+  void deactivate_track_select();
+
+  void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH
@@ -332,6 +352,7 @@ public:
 
   void setMachine(uint8_t track, MDMachine *machine);
 
+  void setKitName(char *name);
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
@@ -385,6 +406,7 @@ public:
   /**
    * Send a sysex message to load the given global.
    **/
+  void setGlobal(uint8_t id);
   void loadGlobal(uint8_t id);
   /**
    * Send a sysex message to load the given kit.
@@ -466,6 +488,8 @@ public:
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/
+  uint8_t waitBlocking(uint16_t timeout = 1000);
+
   bool waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
   /**
    * Get the status answer from the machinedrum, blocking until either
