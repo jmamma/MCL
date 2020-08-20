@@ -303,7 +303,11 @@ void MCLActions::send_tracks_to_devices() {
 
     mute_states[i] = mcl_seq.md_tracks[i].mute_state;
     mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
+
     if ((note_interface.notes[i] > 1)) {
+
+      grid_page.active_slots[grid_col] = grid_page.getRow();
+
       if (first_note == 255) {
         first_note = i;
       }
