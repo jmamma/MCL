@@ -13,6 +13,8 @@
 #define GRID_LENGTH 128
 #define GRID_SLOT_BYTES 4096
 
+#define NUM_SLOTS GRID_WIDTH * NUM_GRIDS
+
 #define NUM_MD_TRACKS    16UL
 
 #ifdef EXT_TRACKS

@@ -20,7 +20,7 @@
 
 class ChainModeData {
 public:
-  GridChain chains[NUM_TRACKS];
+  GridChain chains[NUM_SLOTS];
 
   uint16_t md_latency;
 
@@ -29,10 +29,10 @@ public:
   uint16_t nearest_bar;
   uint8_t nearest_beat;
 
-  uint16_t next_transitions[NUM_TRACKS];
-  uint8_t transition_offsets[NUM_TRACKS];
-  uint8_t send_machine[NUM_TRACKS];
-  uint8_t transition_level[NUM_TRACKS];
+  uint16_t next_transitions[NUM_SLOTS];
+  uint8_t transition_offsets[NUM_SLOTS];
+  uint8_t send_machine[NUM_SLOTS];
+  uint8_t transition_level[NUM_SLOTS];
 
   uint8_t md_div32th_latency;
 
