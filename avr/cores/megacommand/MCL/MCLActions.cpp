@@ -102,46 +102,55 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   uint8_t grid_num = 0;
 
+  DEBUG_DUMP(Analog4.connected);
+  uint8_t track_type, track_num;
+  bool online;
+
   for (i = 0; i < NI_MAX_NOTES; i++) {
     if (note_interface.notes[i] == 3) {
       if (first_note == 255) {
         first_note = i;
       }
-      uint8_t track_type;
-      uint8_t track_num;
-      bool online;
+      track_type = 255;
+      online = false;
 
       if (i < GRID_WIDTH) {
         grid_num = 0;
         track_type = MD_TRACK_TYPE;
         track_num = i;
-        if (MD.connected) { online = true; }
+        if (MD.connected) {
+          online = true;
+        }
       } else {
         grid_num = 1;
-        track_type = EXT_TRACK_TYPE;
-        if (Analog4.connected) {
-          online = true;
-          track_type = A4_TRACK_TYPE;
-        }
         track_num = i - GRID_WIDTH;
+        if (track_num < NUM_EXT_TRACKS) {
+          track_type = EXT_TRACK_TYPE;
+          if (Analog4.connected) {
+            online = true;
+            track_type = A4_TRACK_TYPE;
+          }
+        }
       }
-      proj.select_grid(grid_num);
+      if (track_type != 255) {
+        proj.select_grid(grid_num);
 
-      // Preserve existing chain settings before save.
-      if (row_headers[grid_num].track_type[track_num] != EMPTY_TRACK_TYPE) {
-        grid_track.load_from_grid(track_num, row);
-        empty_track.chain.loops = grid_track.chain.loops;
-        empty_track.chain.row = grid_track.chain.row;
-      } else {
-        empty_track.chain.row = row;
-        empty_track.chain.loops = 0;
+        // Preserve existing chain settings before save.
+        if (row_headers[grid_num].track_type[track_num] != EMPTY_TRACK_TYPE) {
+          grid_track.load_from_grid(track_num, row);
+          empty_track.chain.loops = grid_track.chain.loops;
+          empty_track.chain.row = grid_track.chain.row;
+        } else {
+          empty_track.chain.row = row;
+          empty_track.chain.loops = 0;
+        }
+        DEBUG_DUMP(track_type);
+        auto pdevice_track = empty_track.init_track_type(track_type);
+        pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge,
+                                     online);
+        row_headers[grid_num].update_model(
+            track_num, pdevice_track->get_model(), track_type);
       }
-
-      auto pdevice_track = empty_track.init_track_type(track_type);
-      pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge,
-                                   online);
-      row_headers[grid_num].update_model(
-          track_num, pdevice_track->get_model(), track_type);
     }
   }
 
