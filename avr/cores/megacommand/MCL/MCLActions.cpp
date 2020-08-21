@@ -93,16 +93,6 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   uint8_t first_note = 255;
 
-  uint8_t max_notes = NUM_TRACKS;
-#ifndef EXT_TRACKS
-  max_notes = NUM_MD_TRACKS;
-#else
-  // TODO other devices?
-  if (!Analog4.connected) {
-    max_notes = NUM_MD_TRACKS;
-  }
-#endif
-
   GridRowHeader row_headers[NUM_GRIDS];
   GridTrack grid_track;
 
@@ -112,7 +102,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   uint8_t grid_num = 0;
 
-  for (i = 0; i < max_notes; i++) {
+  for (i = 0; i < NI_MAX_NOTES; i++) {
     if (note_interface.notes[i] == 3) {
       if (first_note == 255) {
         first_note = i;
