@@ -10,6 +10,8 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
 
 bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
                                   bool online) {
+
+
   active = A4_TRACK_TYPE;
 
   bool ret;
@@ -18,7 +20,7 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   DEBUG_PRINTLN("storing a4 track");
   uint32_t len;
 
-  /*analog 4 tracks*/
+  // [>analog 4 tracks<]
 #ifdef EXT_TRACKS
   if (online) {
     if (Analog4.connected) {
@@ -38,3 +40,8 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   }
   return true;
 }
+
+ //#include "MCLMemory.h"
+//__WOW<sizeof(a4sound_t)> sza4t;
+//__WOW<sizeof(A4Track)> sza4;
+//__WOW<sizeof(MDTrackLight)> szmd;

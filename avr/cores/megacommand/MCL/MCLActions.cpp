@@ -346,7 +346,7 @@ void MCLActions::send_tracks_to_devices() {
       if (a4_send[i] == 1) {
         auto a4_track = empty_track.load_from_mem<A4Track>(i + NUM_MD_TRACKS);
         if (a4_track) {
-          a4_track->sound.workSpace = true;
+          a4_track->sound.soundpool = true;
           a4_track->sound.toSysex();
         }
       }
