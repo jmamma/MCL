@@ -107,16 +107,28 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       if (first_note == 255) {
         first_note = i;
       }
+      uint8_t track_type;
+      uint8_t track_num;
+      bool online;
 
-      if (i < NUM_MD_TRACKS) {
+      if (i < GRID_WIDTH) {
         grid_num = 0;
+        track_type = MD_TRACK_TYPE;
+        track_num = i;
+        if (MD.connected) { online = true; }
       } else {
         grid_num = 1;
+        track_type = EXT_TRACK_TYPE;
+        if (Analog4.connected) {
+          online = true;
+          track_type = A4_TRACK_TYPE;
+        }
+        track_num = i - GRID_WIDTH;
       }
       proj.select_grid(grid_num);
 
-      if (row_headers[grid_num].track_type[i] !=
-          EMPTY_TRACK_TYPE) {
+      // Preserve existing chain settings before save.
+      if (row_headers[grid_num].track_type[i] != EMPTY_TRACK_TYPE) {
         grid_track.load_from_grid(i, row);
         empty_track.chain.loops = grid_track.chain.loops;
         empty_track.chain.row = grid_track.chain.row;
@@ -124,25 +136,12 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         empty_track.chain.row = row;
         empty_track.chain.loops = 0;
       }
-      if (i < NUM_MD_TRACKS) {
-        auto pdevice_track = empty_track.init_track_type(MD_TRACK_TYPE);
-        pdevice_track->store_in_grid(i, grid_page.getRow(), merge, MD.connected);
-        row_headers[grid_num].update_model(i, pdevice_track->get_model(),
-                                           MD_TRACK_TYPE);
-      }
-#ifdef EXT_TRACKS
-      else {
 
-        uint8_t track_num = i - NUM_MD_TRACKS;
-        uint8_t track_type = EXT_TRACK_TYPE;
-        if (Analog4.connected) {
-          track_type = A4_TRACK_TYPE;
-        }
-        auto pdevice_track = empty_track.init_track_type(track_type);
-        pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge, Analog4.connected);
-        row_headers[grid_num].update_model(track_num, track_num, track_type);
-      }
-#endif
+      auto pdevice_track = empty_track.init_track_type(track_type);
+      pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge,
+                                   online);
+      row_headers[grid_num].update_model(
+          track_num, pdevice_track->get_model(), track_type);
     }
   }
 
@@ -514,7 +513,10 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       if (n < NUM_MD_TRACKS) {
         if (next_transitions[n] == next_transition) {
           auto md_track = empty_track->load_from_mem<MDTrack>(n);
-          if (md_track) { md_latency += calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit)); }
+          if (md_track) {
+            md_latency +=
+                calc_md_set_machine_latency(n, &(md_track->machine), &(MD.kit));
+          }
           if (transition_level[n] == TRANSITION_MUTE ||
               transition_level[n] == TRANSITION_UNMUTE) {
             md_latency += 3;
