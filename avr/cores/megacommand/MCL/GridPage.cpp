@@ -431,11 +431,12 @@ void GridPage::display_grid() {
       bool blink = false;
       auto active_cue_color = WHITE;
 
+      strcpy(str, "--");
       //  Set cell label
       switch (track_type) {
       case MD_TRACK_TYPE:
         tmp = getMachineNameShort(model, 2);
-        m_strncpy_p(str, tmp, 3);
+        if (tmp) { m_strncpy_p(str, tmp, 3); }
         break;
       case A4_TRACK_TYPE:
         str[0] = 'A';
@@ -461,8 +462,6 @@ void GridPage::display_grid() {
       if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_grid_idx]) {
         // blink, don't print
         blink = true;
-      } else if (model == 0) {
-        oled_display.print("--");
       } else {
         oled_display.print(str);
       }

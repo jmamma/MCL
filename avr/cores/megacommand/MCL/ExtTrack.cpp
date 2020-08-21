@@ -54,9 +54,6 @@ bool ExtTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
     DEBUG_PRINTLN("Write failed");
     return false;
   }
-  uint8_t model = tracknumber;
-  grid_page.row_headers[grid_page.cur_row].update_model(tracknumber, model,
-                                                        EXT_TRACK_TYPE);
 
   return true;
 }

@@ -31,6 +31,7 @@ public:
     }
     return false;
   }
+  virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return sizeof(ExtTrack); }
   virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
 };
