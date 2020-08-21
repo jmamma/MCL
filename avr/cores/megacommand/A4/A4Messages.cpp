@@ -65,18 +65,12 @@ static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
 static constexpr size_t a4sound_checksum_startidx = a4sound_origpos_idx + 1;
 static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + sizeof(a4sound_header);
 
-bool A4Sound::is_legacy_format() {
-  uint8_t* payload = this->tags;
-  return !memcmp(payload, a4sound_header + 2, 6);
-}
-
-void A4Sound::fromLegacySysexDump() {
-  toggleLed2();
+void A4Sound::convert(A4Sound_270* old) {
   // legacy payload len = 398
-  uint8_t* payload = this->tags;
+  uint8_t* payload = old->payload;
   // skip the partial header 
   payload += 6;
-  // getting data from itself. always a few steps behind.
+  // getting data from old payload.
   ElektronSysexDecoder decoder(DATA_ENCODER_INIT(payload, 392));
   fromSysex_impl(decoder);
 }

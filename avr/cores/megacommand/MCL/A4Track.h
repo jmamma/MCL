@@ -12,8 +12,7 @@
 class A4Track_270 : public GridTrack_270 {
 public:
   ExtSeqTrackData_270 seq_data;
-  A4Sound sound;
-
+  A4Sound_270 sound;
 };
 
 
@@ -26,8 +25,8 @@ public:
     if (active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
       chain.length = old->seq_data.length;
-      memcpy(&sound, &(old->sound), sizeof(old->sound));
-      seq_data.convert(&(old->seq_data));
+      sound.convert(&old->sound);
+      seq_data.convert(&old->seq_data);
       active = A4_TRACK_TYPE;
       return true;
     }
