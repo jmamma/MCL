@@ -50,16 +50,21 @@ public:
 class ExtSeqTrackData {
 public:
   uint8_t version;
+  // 7-bit midi note + 1-bit on/off
   int8_t notes[NUM_EXT_NOTES]
               [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
 
+  // range max [0..191]
   uint8_t notes_timing[NUM_EXT_NOTES][NUM_EXT_STEPS];
+  // 15 conditional types, 1 bit p-lock affecting
   uint8_t notes_conditional[NUM_EXT_NOTES][NUM_EXT_STEPS];
 
   uint8_t locks_params[NUM_EXT_LOCKS];
   uint64_t locks_masks[NUM_EXT_LOCKS][2]; // 128bit
 
+  // 8-bit lock values
   uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
+
   bool convert(ExtSeqTrackData_270 *old) {
     /*ordering of these statements is important to ensure memory
      * is copied before being overwritten*/
