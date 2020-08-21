@@ -60,7 +60,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     }
   }
 #ifdef EXT_TRACKS
-  for (i = NUM_MD_TRACKS; i < NUM_TRACKS; i++) {
+  for (i = GRID_WIDTH; i < NUM_SLOTS; i++) {
     if (note_interface.notes[i] == 3) {
       save_grid2_tracks = true;
     }
@@ -128,8 +128,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       proj.select_grid(grid_num);
 
       // Preserve existing chain settings before save.
-      if (row_headers[grid_num].track_type[i] != EMPTY_TRACK_TYPE) {
-        grid_track.load_from_grid(i, row);
+      if (row_headers[grid_num].track_type[track_num] != EMPTY_TRACK_TYPE) {
+        grid_track.load_from_grid(track_num, row);
         empty_track.chain.loops = grid_track.chain.loops;
         empty_track.chain.row = grid_track.chain.row;
       } else {
