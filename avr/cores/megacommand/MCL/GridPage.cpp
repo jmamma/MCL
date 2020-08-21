@@ -457,7 +457,8 @@ void GridPage::display_grid() {
         oled_display.setTextColor(WHITE, BLACK);
       }
 
-      if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_idx]) {
+      uint8_t track_grid_idx = track_idx + GRID_WIDTH * proj.get_grid();
+      if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_grid_idx]) {
         // blink, don't print
         blink = true;
       } else if (model == 0) {
@@ -466,7 +467,7 @@ void GridPage::display_grid() {
         oled_display.print(str);
       }
 
-      if (row_idx == active_slots[track_idx] && !blink) {
+      if (row_idx == active_slots[track_grid_idx] && !blink) {
         // a gentle visual cue for active slots
         oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
       }

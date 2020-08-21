@@ -18,7 +18,7 @@ void GridTask::run() {
 
   EmptyTrack empty_track;
 
-  int slots_changed[NUM_TRACKS];
+  int slots_changed[NUM_SLOTS];
   uint8_t slots_loaded[NUM_MD_TRACKS] = {0};
 
   bool send_ext_slots = false;
@@ -47,7 +47,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
-  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
     if ((grid_page.active_slots[n] >= 0) && (mcl_actions.chains[n].loops > 0)) {
       uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
@@ -120,7 +120,7 @@ void GridTask::run() {
       }
       // in_sysex2 = 1;
     }
-    for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
+    for (uint8_t n = NUM_MD_TRACKS; n < NUM_SLOTS; n++) {
       if (slots_changed[n] >= 0) {
         auto ext_track = empty_track.load_from_mem<ExtTrack>(n - NUM_MD_TRACKS);
         DEBUG_DUMP(mcl_actions.a4_latency);
@@ -229,7 +229,7 @@ void GridTask::run() {
     }
   }
   uint8_t count = 0;
-  uint8_t slots_cached[NUM_TRACKS] = {0};
+  uint8_t slots_cached[NUM_SLOTS] = {0};
 
   EmptyTrack empty_track2;
 
@@ -237,7 +237,7 @@ void GridTask::run() {
 
   if (mcl_cfg.chain_mode != 2) {
 
-    for (uint8_t n = 0; n < NUM_TRACKS; n++) {
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       if (slots_changed[n] >= 0) {
 
         handleIncomingMidi();
