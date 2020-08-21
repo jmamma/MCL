@@ -38,9 +38,7 @@
 #define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
 
 //Use these to produce compiler errors that probes the sizes!
-//template<int X> struct __WOW;
-//#pragma message("MD_TRACK_LEN = 520")
-//#pragma message("A4_TRACK_LEN = 1752")
+template<int X> struct __WOW;
 
 
 #ifdef EXT_TRACKS
@@ -54,7 +52,7 @@
 #define BANK1_MD_TRACKS_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
 
 // 6x A4 tracks
-// GRID2 tracks start at 0xB190
+// GRID2 tracks start at 0xB270
 #define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
 
 // 256x file entries (16 bytes each)
@@ -62,6 +60,6 @@
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
 #define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
 
-// At 0xFCB8
+// At 0xFC78
 
 #endif /* MCLMEMORY_H__ */

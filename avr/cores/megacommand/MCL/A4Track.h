@@ -4,10 +4,7 @@
 #define A4TRACK_H__
 
 #include "ExtTrack.h"
-// include full MDTrack specification to calculate size
-#include "MDTrack.h"
 #include "A4.h"
-#include "MCLMemory.h"
 
 class A4Track_270 : public GridTrack_270 {
 public:
