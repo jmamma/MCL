@@ -565,8 +565,8 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
     memmove(locks + idx + nlock + 1, locks + idx + nlock,
             NUM_MD_LOCK_SLOTS - idx - nlock - 1);
     locks[idx + nlock] = value + 1;
+    steps[step].locks |= (1 << lockidx);
   }
-  steps[step].locks |= (1 << lockidx);
   return true;
 }
 
