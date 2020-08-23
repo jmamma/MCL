@@ -238,7 +238,9 @@ if (utiming == 0) {
   mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
 }*/
       if (active_track.steps[step].locks) {
-        active_track.clear_step_locks(step);
+        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+          active_track.clear_step_locks(step);
+        }
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =
