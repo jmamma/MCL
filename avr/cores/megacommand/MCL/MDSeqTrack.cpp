@@ -659,6 +659,7 @@ void MDSeqTrack::clear_track(bool locks, bool reset_params) {
   if (locks) {
     clear_locks(reset_params);
   }
+  memset(steps, 0, sizeof(steps));
 }
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
