@@ -329,6 +329,73 @@ again:
   }
 }
 
+
+      //if constexpr (mask_type == MASK_LOCK) {
+      //} else if constexpr (mask_type == MASK_PATTERN) {
+      //} else if constexpr (mask_type == MASK_MUTE) {
+        //// TODO just get oneshot mask...
+      //} else if constexpr (mask_type == MASK_SLIDE) {
+      //}
+
+
+void MDSeqTrack::get_pattern_mask(uint64_t *_pmask) const
+{
+    uint8_t idx = 0;
+    uint8_t* pmask = (uint8_t*)_pmask;
+    for(int i=0;i<NUM_MD_STEPS/8;++i) {
+      uint8_t mask = 0;
+      if (steps[idx++].trig) { mask |= 1; }
+      if (steps[idx++].trig) { mask |= 2; }
+      if (steps[idx++].trig) { mask |= 4; }
+      if (steps[idx++].trig) { mask |= 8; }
+      if (steps[idx++].trig) { mask |= 16; }
+      if (steps[idx++].trig) { mask |= 32; }
+      if (steps[idx++].trig) { mask |= 64; }
+      if (steps[idx++].trig) { mask |= 128; }
+
+      *pmask++ = mask;
+    }
+}
+
+void MDSeqTrack::get_lock_mask(uint64_t *_pmask) const
+{
+    uint8_t idx = 0;
+    uint8_t* pmask = (uint8_t*)_pmask;
+    for(int i=0;i<NUM_MD_STEPS/8;++i) {
+      uint8_t mask = 0;
+      if (steps[idx++].locks) { mask |= 1; }
+      if (steps[idx++].locks) { mask |= 2; }
+      if (steps[idx++].locks) { mask |= 4; }
+      if (steps[idx++].locks) { mask |= 8; }
+      if (steps[idx++].locks) { mask |= 16; }
+      if (steps[idx++].locks) { mask |= 32; }
+      if (steps[idx++].locks) { mask |= 64; }
+      if (steps[idx++].locks) { mask |= 128; }
+
+      *pmask++ = mask;
+    }
+}
+
+void MDSeqTrack::get_slide_mask(uint64_t *_pmask) const
+{
+    uint8_t idx = 0;
+    uint8_t* pmask = (uint8_t*)_pmask;
+    for(int i=0;i<NUM_MD_STEPS/8;++i) {
+      uint8_t mask = 0;
+      if (steps[idx++].slide) { mask |= 1; }
+      if (steps[idx++].slide) { mask |= 2; }
+      if (steps[idx++].slide) { mask |= 4; }
+      if (steps[idx++].slide) { mask |= 8; }
+      if (steps[idx++].slide) { mask |= 16; }
+      if (steps[idx++].slide) { mask |= 32; }
+      if (steps[idx++].slide) { mask |= 64; }
+      if (steps[idx++].slide) { mask |= 128; }
+
+      *pmask++ = mask;
+    }
+}
+
+
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
   uint8_t c;
   bool lock_mask_step = steps[step].locks;

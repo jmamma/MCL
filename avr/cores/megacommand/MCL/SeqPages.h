@@ -16,7 +16,7 @@
 #define ENCODER_RES_PARAM 2
 #endif
 
-#define NUM_PARAM_PAGES 2
+#define NUM_PARAM_PAGES 4
 
 #define SEQ_MENU_MASK 0
 #define SEQ_MENU_ARP 1

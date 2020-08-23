@@ -17,11 +17,8 @@ void SeqParamPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "PARAM-");
-  if (page_id == 0) {
-    strcat(info2, "A");
-  } else {
-    strcat(info2, "B");
-  }
+  info2[6] = 'A' + page_id;
+  info2[7] = 0;
 
   // config menu
   config_as_lockedit();

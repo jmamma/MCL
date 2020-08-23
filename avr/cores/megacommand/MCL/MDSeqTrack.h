@@ -48,46 +48,9 @@ public:
     oneshot_mask = 0;
   }
 
-  template<uint8_t mask_type>
-    void get_mask(uint64_t* _pmask) const {
-      uint8_t idx = 0;
-      uint8_t* pmask = (uint8_t*)_pmask;
-      for(int i=0;i<NUM_MD_STEPS/8;++i) {
-        uint8_t mask = 0;
-        if constexpr (mask_type == MASK_LOCK) {
-          if (steps[idx++].locks) { mask |= 1; }
-          if (steps[idx++].locks) { mask |= 2; }
-          if (steps[idx++].locks) { mask |= 4; }
-          if (steps[idx++].locks) { mask |= 8; }
-          if (steps[idx++].locks) { mask |= 16; }
-          if (steps[idx++].locks) { mask |= 32; }
-          if (steps[idx++].locks) { mask |= 64; }
-          if (steps[idx++].locks) { mask |= 128; }
-        } else if constexpr (mask_type == MASK_PATTERN) {
-          if (steps[idx++].trig) { mask |= 1; }
-          if (steps[idx++].trig) { mask |= 2; }
-          if (steps[idx++].trig) { mask |= 4; }
-          if (steps[idx++].trig) { mask |= 8; }
-          if (steps[idx++].trig) { mask |= 16; }
-          if (steps[idx++].trig) { mask |= 32; }
-          if (steps[idx++].trig) { mask |= 64; }
-          if (steps[idx++].trig) { mask |= 128; }
-        } else if constexpr (mask_type == MASK_MUTE) {
-          // TODO just get oneshot mask...
-        } else if constexpr (mask_type == MASK_SLIDE) {
-          if (steps[idx++].slide) { mask |= 1; }
-          if (steps[idx++].slide) { mask |= 2; }
-          if (steps[idx++].slide) { mask |= 4; }
-          if (steps[idx++].slide) { mask |= 8; }
-          if (steps[idx++].slide) { mask |= 16; }
-          if (steps[idx++].slide) { mask |= 32; }
-          if (steps[idx++].slide) { mask |= 64; }
-          if (steps[idx++].slide) { mask |= 128; }
-        }
-
-        *pmask++ = mask;
-      }
-    }
+  void get_pattern_mask(uint64_t* _pmask) const;
+  void get_lock_mask(uint64_t* _pmask) const;
+  void get_slide_mask(uint64_t* _pmask) const;
 
   void seq();
 
