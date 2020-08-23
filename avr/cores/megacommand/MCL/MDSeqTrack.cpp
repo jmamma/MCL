@@ -224,8 +224,8 @@ void MDSeqTrack::recalc_slides() {
     }
     x0 = step * timing_mid + timing[step] - timing_mid + 1;
     if (next_lockstep < step) {
-      x1 = (length + next_lockstep) * timing_mid + timing[next_lockstep] - timing_mid -
-           1;
+      x1 = (length + next_lockstep) * timing_mid + timing[next_lockstep] -
+           timing_mid - 1;
     } else {
       x1 = next_lockstep * timing_mid + timing[next_lockstep] - timing_mid - 1;
     }
@@ -288,7 +288,6 @@ void MDSeqTrack::recalc_slides() {
     DEBUG_DUMP(locks_slide_data[c].steep);
     DEBUG_DUMP(locks_slide_data[c].inc);
     DEBUG_DUMP(locks_slide_data[c].yflip);
-
   }
 
   locks_slides_recalc = 255;
@@ -305,7 +304,7 @@ again:
   for (; next_step < max_len; next_step++) {
     uint8_t cur_mask = 1;
     auto lcks = steps[next_step].locks;
-    for(uint8_t i = 0; i < NUM_MD_LOCKS; ++i) {
+    for (uint8_t i = 0; i < NUM_MD_LOCKS; ++i) {
       auto step_is_lock = lcks & cur_mask;
       if (step_is_lock) {
         if (step_is_lock & mask) {
@@ -313,7 +312,8 @@ again:
           locks_slide_next_lock_idx[i] = curidx;
           locks_slide_next_lock_step[i] = next_step;
           // all targets hit?
-          if (!mask) return;
+          if (!mask)
+            return;
         }
         ++curidx;
       }
@@ -347,16 +347,14 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
     }
-  }
-  else if (lock_mask_step) {
+  } else if (lock_mask_step) {
     for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (steps[step].is_lock(c) && locks_params[c]) {
         send_param = locks[idx++] - 1;
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
     }
-  }
-  else if (trig) {
+  } else if (trig) {
     for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks_params[c]) {
         send_param = locks_params_orig[c];
@@ -469,8 +467,6 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
   // Let's try and find an existing param
   uint8_t match = find_param(track_param);
-  // no existing param, or not locked at current step
-  bool add_new = (match == 255) || !steps[step].is_lock(match);
   // Then, we learn first NUM_MD_LOCKS params then stop.
   for (uint8_t c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
@@ -481,22 +477,30 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   }
 
   if (match != 255) {
-    if (add_new) {
-      auto idx = get_lockidx(step);
-      auto nlock = popcount(steps[step].locks);
-      memmove(locks+idx+nlock+1, locks+idx+nlock, NUM_MD_LOCK_SLOTS - idx - nlock - 1);
-      locks[idx+nlock] = value+1;
-    } else {
-      locks[get_lockidx(step, match)] = value + 1;
-    }
-    return true;
+    return set_track_locks_i(step, match, value);
+  } else {
+    return false;
   }
-
-  return false;
 }
 
-bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity) {
-  return set_track_locks(step, locks_params[lockidx], velocity);
+bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
+                                   uint8_t value) {
+  if (steps[step].is_lock(lockidx)) {
+    locks[get_lockidx(step, lockidx)] = value + 1;
+  } else {
+    auto idx = get_lockidx(step);
+    auto nlock = popcount(steps[step].locks);
+
+    if (idx + nlock >= NUM_MD_LOCK_SLOTS) {
+      return false; // memory full!
+    }
+
+    memmove(locks + idx + nlock + 1, locks + idx + nlock,
+            NUM_MD_LOCK_SLOTS - idx - nlock - 1);
+    locks[idx + nlock] = value + 1;
+  }
+  steps[step].locks |= (1 << lockidx);
+  return true;
 }
 
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
@@ -548,7 +552,7 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
 }
 
 void MDSeqTrack::clear_slide_data() {
-  for(uint8_t i = 0; i < NUM_MD_STEPS; ++i) {
+  for (uint8_t i = 0; i < NUM_MD_STEPS; ++i) {
     steps[i].slide = false;
   }
 }

@@ -36,9 +36,9 @@ void SeqParamPage::init() {
   SeqPage::mask_type = MASK_PATTERN;
 
   seq_param1.max = 24;
-  seq_lock1.max = 128;
+  seq_lock1.max = 127;
   seq_param3.max = 24;
-  seq_lock2.max = 128;
+  seq_lock2.max = 127;
 
   seq_param3.handler = NULL;
 
@@ -212,7 +212,6 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t step = track + (page_select * 16);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      uint8_t param_offset;
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
