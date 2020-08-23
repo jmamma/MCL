@@ -575,9 +575,9 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 }
 
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
-                        uint64_t pattern_mask, uint8_t step_count,
-                        uint8_t length, uint64_t mute_mask,
-                        uint64_t slide_mask) {
+                        const uint64_t &pattern_mask, uint8_t step_count,
+                        uint8_t length, const uint64_t &mute_mask,
+                        const uint64_t &slide_mask) {
 #ifdef OLED_DISPLAY
   for (int i = 0; i < 16; i++) {
 
@@ -616,7 +616,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 #endif
 }
 
-void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
+void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
                        uint8_t step_count, uint8_t length,
                        bool show_current_step) {
 #ifdef OLED_DISPLAY

@@ -539,7 +539,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (device == DEVICE_MD) {
 
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
+        bool cond_plock; // TODO not used
+        uint8_t condition = translate_to_step_conditional(seq_param1.cur, &cond_plock);
         if ((track + (page_select * 16)) >= active_track.length) {
           return true;
         }

@@ -18,6 +18,11 @@
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
 
+#define MASK_PATTERN 0
+#define MASK_LOCK 1
+#define MASK_SLIDE 2
+#define MASK_MUTE 3
+
 class SeqTrack_270 {};
 
 // ephemeral data.

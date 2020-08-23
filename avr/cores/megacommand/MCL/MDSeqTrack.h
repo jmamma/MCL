@@ -44,9 +44,50 @@ public:
   uint8_t locks_slide_next_lock_step[NUM_MD_LOCKS];
 
   ALWAYS_INLINE() void reset() {
-  SeqTrack::reset();
-  oneshot_mask = 0;
+    SeqTrack::reset();
+    oneshot_mask = 0;
   }
+
+  template<uint8_t mask_type>
+    void get_mask(uint64_t* _pmask) const {
+      uint8_t idx = 0;
+      uint8_t* pmask = (uint8_t*)_pmask;
+      for(int i=0;i<NUM_MD_STEPS/8;++i) {
+        uint8_t mask = 0;
+        if constexpr (mask_type == MASK_LOCK) {
+          if (steps[idx++].locks) { mask |= 1; }
+          if (steps[idx++].locks) { mask |= 2; }
+          if (steps[idx++].locks) { mask |= 4; }
+          if (steps[idx++].locks) { mask |= 8; }
+          if (steps[idx++].locks) { mask |= 16; }
+          if (steps[idx++].locks) { mask |= 32; }
+          if (steps[idx++].locks) { mask |= 64; }
+          if (steps[idx++].locks) { mask |= 128; }
+        } else if constexpr (mask_type == MASK_PATTERN) {
+          if (steps[idx++].trig) { mask |= 1; }
+          if (steps[idx++].trig) { mask |= 2; }
+          if (steps[idx++].trig) { mask |= 4; }
+          if (steps[idx++].trig) { mask |= 8; }
+          if (steps[idx++].trig) { mask |= 16; }
+          if (steps[idx++].trig) { mask |= 32; }
+          if (steps[idx++].trig) { mask |= 64; }
+          if (steps[idx++].trig) { mask |= 128; }
+        } else if constexpr (mask_type == MASK_MUTE) {
+          // TODO just get oneshot mask...
+        } else if constexpr (mask_type == MASK_SLIDE) {
+          if (steps[idx++].slide) { mask |= 1; }
+          if (steps[idx++].slide) { mask |= 2; }
+          if (steps[idx++].slide) { mask |= 4; }
+          if (steps[idx++].slide) { mask |= 8; }
+          if (steps[idx++].slide) { mask |= 16; }
+          if (steps[idx++].slide) { mask |= 32; }
+          if (steps[idx++].slide) { mask |= 64; }
+          if (steps[idx++].slide) { mask |= 128; }
+        }
+
+        *pmask++ = mask;
+      }
+    }
 
   void seq();
 
@@ -56,7 +97,7 @@ public:
   void send_trig();
   ALWAYS_INLINE() void send_trig_inline();
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
-  ALWAYS_INLINE() void send_parameter_locks(uint8_t step, bool pattern_mask_step);
+  ALWAYS_INLINE() void send_parameter_locks(uint8_t step, bool trig);
 
   ALWAYS_INLINE() void send_slides();
   ALWAYS_INLINE() void recalc_slides();
@@ -64,8 +105,12 @@ public:
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
+  // !! Note lockidx is lock index, not param id
+  bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity);
+  // !! Note track_param is param_id, not lock index
   bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
-  uint8_t get_track_lock(uint8_t step, uint8_t track_param);
+  // !! Note lockidx is lock index, not param_id
+  uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
 
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);

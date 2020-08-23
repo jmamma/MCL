@@ -169,20 +169,17 @@ void SeqParamPage::loop() {
 
       if (note_interface.notes[n] == 1) {
         uint8_t step = n + (page_select * 16);
-        int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; // upper
-        uint8_t condition =
-            mcl_seq.md_tracks[last_md_track].conditional[step]; // lower
+        auto &active_track = mcl_seq.md_tracks[last_md_track];
+        int8_t utiming = active_track.timing[step]; // upper
 
         // Fudge timing info if it's not there
         if (utiming == 0) {
           utiming = 12;
-          mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
           mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
         }
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
 
-        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_lock1.cur + 1;
-        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_lock2.cur + 1;
+        active_track.set_track_locks_i(step, p1, seq_lock1.cur);
+        active_track.set_track_locks_i(step, p2, seq_lock2.cur);
       }
     }
     if (seq_param1.hasChanged() || seq_param3.hasChanged()) {
@@ -208,10 +205,10 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    uint64_t *seq_mask = &(mcl_seq.md_tracks[last_md_track].lock_mask);
     if (device == DEVICE_A4) {
       return true;
     }
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint8_t step = track + (page_select * 16);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -219,11 +216,12 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step] - 1;
-      seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step] - 1;
+      seq_lock1.cur = active_track.get_track_lock(step, p1);
+      seq_lock2.cur = active_track.get_track_lock(step, p2);
 
-      if (!IS_BIT_SET64_P(seq_mask, step)) {
-        SET_BIT64_P(seq_mask, step);
+      if (!active_track.steps[step].locks) {
+        active_track.set_track_locks_i(step, p1, seq_lock1.cur);
+        active_track.set_track_locks_i(step, p2, seq_lock2.cur);
         note_interface.ignoreNextEvent(track);
       }
     }
@@ -243,10 +241,8 @@ if (utiming == 0) {
   mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
   mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
 }*/
-      if (IS_BIT_SET64_P(seq_mask, step)) {
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64_P(seq_mask, step);
-        }
+      if (active_track.steps[step].locks) {
+        active_track.clear_step_locks(step);
       }
       /*
             mcl_seq.md_tracks[last_md_track].locks[p1][step] =

@@ -45,11 +45,6 @@ extern void opt_mask_handler();
 extern void seq_menu_handler();
 extern void step_menu_handler();
 
-#define MASK_PATTERN 0
-#define MASK_LOCK 1
-#define MASK_SLIDE 2
-#define MASK_MUTE 3
-
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
@@ -78,10 +73,10 @@ public:
   void config_as_lockedit();
   void config_mask_info();
   void create_chars_seq();
-  void draw_lock_mask(uint8_t offset, uint64_t lock_mask, uint8_t step_count, uint8_t length, bool show_current_step = true);
-  void draw_lock_mask(uint8_t offset, bool show_current_step = true);
-  void draw_mask(uint8_t offset, uint64_t pattern_mask, uint8_t step_count, uint8_t length, bool show_current_step = true, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
-  void draw_mask(uint8_t offset, uint8_t device, bool show_current_step = true);
+  void draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask, const uint8_t step_count, const uint8_t length, const bool show_current_step = true);
+  void draw_lock_mask(const uint8_t offset, const bool show_current_step = true);
+  void draw_mask(const uint8_t offset, const uint64_t &pattern_mask, const uint8_t step_count, const uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask, const bool show_current_step = true);
+  void draw_mask(const uint8_t offset, const uint8_t device, const bool show_current_step = true);
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
@@ -91,8 +86,8 @@ public:
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(uint8_t device, uint8_t track);
 
-  uint8_t translate_to_step_conditional(uint8_t condition);
-  uint8_t translate_to_knob_conditional(uint8_t condition);
+  uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);
+  uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
 
   uint64_t *get_mask();
 

@@ -455,13 +455,12 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
   return send_trig;
 }
 
-uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t track_param) {
-  uint8_t match = find_param(track_param);
-  if (match != 255) {
-    auto idx = get_lockidx(step, match);
-    if (idx < NUM_MD_LOCK_SLOTS) {
-      return locks[idx];
-    }
+uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
+  auto idx = get_lockidx(step, lock_idx);
+  if (idx < NUM_MD_LOCK_SLOTS) {
+    return locks[idx] - 1;
+  } else {
+    return locks_params_orig[lock_idx];
   }
   return 255;
 }
@@ -494,6 +493,10 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   }
 
   return false;
+}
+
+bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity) {
+  return set_track_locks(step, locks_params[lockidx], velocity);
 }
 
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {

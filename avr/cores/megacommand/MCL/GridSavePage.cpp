@@ -71,7 +71,10 @@ void GridSavePage::display() {
 
   mcl_gui.clear_popup(28);
 
-  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
+  const uint64_t slide_mask = 0;
+  const uint64_t mute_mask = 0;
+
+  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16, mute_mask, slide_mask);
 
   const char *modestr = "SEQ";
   if (MidiClock.state != 2) {
