@@ -595,7 +595,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     }
 
     draw_mask(offset, mask, active_track.step_count, active_track.length,
-              show_current_step, oneshot_mask, slide_mask);
+              oneshot_mask, slide_mask, show_current_step);
 
     if (led_mask != trigled_mask) {
       trigled_mask = led_mask;
