@@ -35,11 +35,6 @@ public:
 
 class MDSeqTrack : public MDSeqTrackData, public SeqTrack {
 
-private:
-  FORCED_INLINE() uint8_t find_param(uint8_t param_id) const;
-  FORCED_INLINE() uint16_t get_lockidx(uint8_t step) const;
-  FORCED_INLINE() uint8_t get_lockidx(uint8_t step, uint8_t lock_idx) const;
-
 public:
   uint64_t oneshot_mask;
 
@@ -75,6 +70,7 @@ public:
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
+  void clear_slide_data();
   void clear_step_locks(uint8_t step);
   void clear_conditional();
   void clear_locks(bool reset_params = true);

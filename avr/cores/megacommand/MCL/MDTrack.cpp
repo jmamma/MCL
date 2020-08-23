@@ -1,5 +1,5 @@
-#include "MCL.h"
 #include "MDTrack.h"
+#include "MCL.h"
 
 void MDTrack::load_immediate(uint8_t tracknumber) {
   place_track_in_kit(tracknumber, &(MD.kit));
@@ -19,7 +19,7 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   /*IF it is then we need to make sure that the LFO destination is updated to
    * the new row posiiton*/
 
- /*Copies Lfo data from the kit object into the machine object*/
+  /*Copies Lfo data from the kit object into the machine object*/
   memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
 
   if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
@@ -31,8 +31,7 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
 
-void MDTrack::place_track_in_kit(uint8_t tracknumber, MDKit *kit,
-                                 bool levels) {
+void MDTrack::place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels) {
 
   memcpy(kit->params[tracknumber], &(machine.params), 24);
   if (levels) {
@@ -44,10 +43,10 @@ void MDTrack::place_track_in_kit(uint8_t tracknumber, MDKit *kit,
 
     machine.lfo.destinationTrack = tracknumber;
   }
-  //sanity check.
+  // sanity check.
   if (machine.lfo.destinationTrack > 15) {
-   DEBUG_PRINTLN("warning: lfo dest was out of bounds");
-   machine.lfo.destinationTrack = tracknumber;
+    DEBUG_PRINTLN("warning: lfo dest was out of bounds");
+    machine.lfo.destinationTrack = tracknumber;
   }
   memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
   /*
@@ -83,15 +82,15 @@ void MDTrack::load_seq_data(uint8_t tracknumber) {
   if (active == EMPTY_TRACK_TYPE) {
     mcl_seq.md_tracks[tracknumber].clear_track();
   } else {
-    memcpy(&mcl_seq.md_tracks[tracknumber], &seq_data, sizeof(seq_data));
+    memcpy(mcl_seq.md_tracks[tracknumber].data(), seq_data.data(),
+           sizeof(seq_data));
     mcl_seq.md_tracks[tracknumber].speed = chain.speed;
     mcl_seq.md_tracks[tracknumber].length = chain.length;
     if (mcl_seq.md_tracks[tracknumber].speed < SEQ_SPEED_1X) {
-        mcl_seq.md_tracks[tracknumber].speed = SEQ_SPEED_1X;
-        mcl_seq.md_tracks[tracknumber].slide_mask32 = 0;
-      }
+      mcl_seq.md_tracks[tracknumber].speed = SEQ_SPEED_1X;
+      mcl_seq.md_tracks[tracknumber].clear_slide_data();
+    }
     mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
-    mcl_seq.md_tracks[tracknumber].slide_mask = mcl_seq.md_tracks[tracknumber].slide_mask32;
     mcl_seq.md_tracks[tracknumber].set_length(
         mcl_seq.md_tracks[tracknumber].length);
     mcl_seq.md_tracks[tracknumber].update_params();
@@ -104,19 +103,19 @@ void MDTrack::place_track_in_sysex(uint8_t tracknumber) {
 }
 
 void MDTrack::scale_seq_vol(float scale) {
-  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-    if (seq_data.locks_params[c] > 0) {
-      if ((seq_data.locks_params[c] - 1 == MODEL_LFOD) ||
-          (seq_data.locks_params[c] - 1 == MODEL_VOL)) {
-        for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-          if (seq_data.locks[c][n] > 0) {
-            seq_data.locks[c][n] =
-                (uint8_t)(scale * (float)(seq_data.locks[c][n] - 1)) + 1;
-            if (seq_data.locks[c][n] > 127) {
-              seq_data.locks[c][n] = 127;
-            }
+  for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+    auto idx = seq_data.get_lockidx(n);
+    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+      if (seq_data.steps[n].is_lock(c)) {
+        if ((seq_data.locks_params[c] == MODEL_LFOD + 1) ||
+            (seq_data.locks_params[c] == MODEL_VOL + 1)) {
+          seq_data.locks[idx] =
+              (uint8_t)(scale * (float)(seq_data.locks[idx] - 1)) + 1;
+          if (seq_data.locks[idx] > 128) {
+            seq_data.locks[idx] = 128;
           }
         }
+        ++idx;
       }
     }
   }
@@ -133,9 +132,8 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row,
-                                  uint8_t merge,
-                                  bool online) {
+bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+                            bool online) {
   active = MD_TRACK_TYPE;
 
   bool ret;
@@ -145,8 +143,6 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row,
 
   if (tracknumber != 255 && online == true) {
     get_machine_from_kit(tracknumber);
-    //h4x0r, remove me when we get more memory for slide_mask
-    mcl_seq.md_tracks[tracknumber].slide_mask32 = (uint32_t) mcl_seq.md_tracks[tracknumber].slide_mask;
 
     chain.length = mcl_seq.md_tracks[tracknumber].length;
     chain.speed = mcl_seq.md_tracks[tracknumber].speed;
@@ -156,7 +152,7 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row,
       MDSeqTrack md_seq_track;
       if (merge == SAVE_MERGE) {
         // Load up internal sequencer data
-        memcpy(&(md_seq_track), &(mcl_seq.md_tracks[tracknumber]),
+        memcpy(md_seq_track.data(), mcl_seq.md_tracks[tracknumber].data(),
                sizeof(MDSeqTrackData));
       }
       if (merge == SAVE_MD) {
@@ -168,11 +164,11 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row,
       // merge md pattern data with seq_data
       md_seq_track.merge_from_md(tracknumber, &(MD.pattern));
       // copy merged data in to this track object's seq data for writing to SD
-      memcpy(&(this->seq_data), &(md_seq_track), sizeof(MDSeqTrackData));
-    } else {
-      memcpy(&(this->seq_data), &(mcl_seq.md_tracks[tracknumber]),
+      memcpy(this->seq_data.data(), md_seq_track.data(),
              sizeof(MDSeqTrackData));
-
+    } else {
+      memcpy(this->seq_data.data(), mcl_seq.md_tracks[tracknumber].data(),
+             sizeof(MDSeqTrackData));
     }
     // Normalise track levels
     if (mcl_cfg.auto_normalize == 1) {
