@@ -397,6 +397,41 @@ void MDSeqTrack::get_slide_mask(uint64_t *_pmask) const
     }
 }
 
+bool MDSeqTrack::get_step(uint8_t step, uint8_t mask_type) const {
+  switch(mask_type) {
+    case MASK_PATTERN:
+      return steps[step].trig;
+    case MASK_LOCK:
+      return (steps[step].locks && steps[step].locks_enabled);
+    case MASK_MUTE:
+      return IS_BIT_SET64_P(oneshot_mask, step);
+    case MASK_SLIDE:
+      return steps[step].slide;
+    default:
+      return false;
+  }
+}
+
+void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
+  switch(mask_type) {
+    case MASK_PATTERN:
+      steps[step].trig = val;
+      break;
+    case MASK_LOCK:
+      steps[step].locks_enabled = val;
+      break;
+    case MASK_MUTE:
+      if (val) {
+        SET_BIT64_P(oneshot_mask, step);
+      } else {
+        CLEAR_BIT64_P(oneshot_mask, step);
+      }
+      break;
+    case MASK_SLIDE:
+      steps[step].slide = val;
+      break;
+  }
+}
 
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
   auto idx = get_lockidx(step);

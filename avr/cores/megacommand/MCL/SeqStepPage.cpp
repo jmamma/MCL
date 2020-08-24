@@ -222,8 +222,6 @@ void SeqStepPage::loop() {
             case MASK_PATTERN:
               active_track.steps[step].trig = true;
               break;
-            default:
-              break;
           }
 
           if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
@@ -305,19 +303,17 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
-      if (!active_track.steps[step].trig) {
+      if (!active_track.get_step(step, mask_type)) {
         bool cond_plock;
         active_track.steps[step].cond_id = translate_to_step_conditional(condition, &cond_plock);
         active_track.steps[step].cond_plock = cond_plock;
-        active_track.steps[step].trig = true;
+        active_track.set_step(step, mask_type, true);
         active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
         note_interface.ignoreNextEvent(trackid);
       }
       //      }
-    }
-
-    if (event->mask == EVENT_BUTTON_RELEASED) {
+    } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
       if (last_md_track < 15) {
         show_pitch = false;
@@ -332,10 +328,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         mcl_seq.midi_events.update_params = true;
         MD.midi_events.enable_live_kit_update();
       }
-      if (active_track.steps[step].trig) {
+      if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN("clear step");
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+          active_track.set_step(step, mask_type, false);
           active_track.steps[step].trig = false;
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;
@@ -406,6 +403,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         store_lock = 1;
       }
 
+      active_track.enable_step_locks(step);
       if (seq_step_page.mask_type == MASK_PATTERN) {
         uint8_t utiming = (seq_param2.cur + 0);
         bool cond_plock;

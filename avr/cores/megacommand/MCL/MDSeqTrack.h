@@ -52,6 +52,9 @@ public:
   void get_lock_mask(uint64_t* _pmask) const;
   void get_slide_mask(uint64_t* _pmask) const;
 
+  bool get_step(uint8_t step, uint8_t mask_type) const;
+  void set_step(uint8_t step, uint8_t mask_type, bool val);
+
   void seq();
 
   void mute() { mute_state = SEQ_MUTE_ON; }
