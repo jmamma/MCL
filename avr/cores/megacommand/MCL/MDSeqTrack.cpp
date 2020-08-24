@@ -523,7 +523,7 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   auto idx = get_lockidx(step, lock_idx);
   if (idx < NUM_MD_LOCK_SLOTS) {
-    return locks[idx] - 1;
+    return locks[idx];
   } else {
     return locks_params_orig[lock_idx];
   }
@@ -537,7 +537,7 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   // Then, we learn first NUM_MD_LOCKS params then stop.
   for (uint8_t c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
-      locks_params[c] = track_param + 1;
+      locks_params[c] = track_param;
       locks_params_orig[c] = MD.kit.params[track_number][track_param];
       match = c;
     }
@@ -564,7 +564,7 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
 
     memmove(locks + idx + nlock + 1, locks + idx + nlock,
             NUM_MD_LOCK_SLOTS - idx - nlock - 1);
-    locks[idx + nlock] = value + 1;
+    locks[idx + nlock] = value;
     steps[step].locks |= (1 << lockidx);
   }
   return true;
