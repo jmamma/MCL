@@ -202,7 +202,7 @@ void MDSeqTrack::recalc_slides() {
   uint8_t find_mask = 0;
   uint8_t cur_mask = 1;
   for (uint8_t i = 0; i < NUM_MD_LOCKS; i++) {
-    if (locks_params[i] && (steps[i].locks & cur_mask)) {
+    if (locks_params[i] && (steps[step].locks & cur_mask)) {
       find_mask |= cur_mask;
     }
     cur_mask <<= 1;
@@ -235,8 +235,8 @@ void MDSeqTrack::recalc_slides() {
     DEBUG_DUMP(timing[step]);
     DEBUG_DUMP(timing[next_step]);
     DEBUG_DUMP(timing_mid);
-    y0 = locks[cur_lockidx] - 1;
-    y1 = locks[next_lockidx] - 1;
+    y0 = locks[cur_lockidx];
+    y1 = locks[next_lockidx];
 
     locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
     locks_slide_data[c].yflip = 255;
@@ -302,6 +302,7 @@ void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
   // caller ensures step < length
   uint8_t next_step = step + 1;
   uint8_t max_len = length;
+  curidx += popcount(steps[step].locks);
 
 again:
   for (; next_step < max_len; next_step++) {
