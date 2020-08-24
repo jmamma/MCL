@@ -333,7 +333,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           active_track.set_step(step, mask_type, false);
-          active_track.steps[step].trig = false;
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;
             active_track.steps[step].cond_plock = false;
