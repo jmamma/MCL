@@ -552,21 +552,21 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
 
 bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
                                    uint8_t value) {
-  if (steps[step].is_lock(lockidx)) {
-    locks[get_lockidx(step, lockidx)] = value;
-  } else {
+  auto lock_slot = get_lockidx(step, lockidx);
+  if (lock_slot == NUM_MD_LOCK_SLOTS) {
     auto idx = get_lockidx(step);
     auto nlock = popcount(steps[step].locks);
+    lock_slot = idx + nlock;
 
-    if (idx + nlock >= NUM_MD_LOCK_SLOTS) {
+    if (lock_slot >= NUM_MD_LOCK_SLOTS) {
       return false; // memory full!
     }
 
-    memmove(locks + idx + nlock + 1, locks + idx + nlock,
-            NUM_MD_LOCK_SLOTS - idx - nlock - 1);
-    locks[idx + nlock] = value;
+    memmove(locks + lock_slot + 1, locks + lock_slot,
+            NUM_MD_LOCK_SLOTS - lock_slot - 1);
     steps[step].locks |= (1 << lockidx);
   }
+  locks[lock_slot] = value;
   return true;
 }
 
