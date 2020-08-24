@@ -329,15 +329,6 @@ again:
   }
 }
 
-
-      //if constexpr (mask_type == MASK_LOCK) {
-      //} else if constexpr (mask_type == MASK_PATTERN) {
-      //} else if constexpr (mask_type == MASK_MUTE) {
-        //// TODO just get oneshot mask...
-      //} else if constexpr (mask_type == MASK_SLIDE) {
-      //}
-
-
 void MDSeqTrack::get_pattern_mask(uint64_t *_pmask) const
 {
     uint8_t idx = 0;
@@ -363,14 +354,22 @@ void MDSeqTrack::get_lock_mask(uint64_t *_pmask) const
     uint8_t* pmask = (uint8_t*)_pmask;
     for(int i=0;i<NUM_MD_STEPS/8;++i) {
       uint8_t mask = 0;
-      if (steps[idx++].locks) { mask |= 1; }
-      if (steps[idx++].locks) { mask |= 2; }
-      if (steps[idx++].locks) { mask |= 4; }
-      if (steps[idx++].locks) { mask |= 8; }
-      if (steps[idx++].locks) { mask |= 16; }
-      if (steps[idx++].locks) { mask |= 32; }
-      if (steps[idx++].locks) { mask |= 64; }
-      if (steps[idx++].locks) { mask |= 128; }
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 1; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 2; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 4; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 8; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 16; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 32; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 64; }
+      ++idx;
+      if (steps[idx].locks && steps[idx].locks_enabled) { mask |= 128; }
+      ++idx;
 
       *pmask++ = mask;
     }
@@ -522,7 +521,7 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
 
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   auto idx = get_lockidx(step, lock_idx);
-  if (idx < NUM_MD_LOCK_SLOTS) {
+  if (idx < NUM_MD_LOCK_SLOTS && steps[step].locks_enabled) {
     return locks[idx];
   } else {
     return locks_params_orig[lock_idx];
@@ -567,6 +566,7 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
     steps[step].locks |= (1 << lockidx);
   }
   locks[lock_slot] = value;
+  steps[step].locks_enabled = true;
   return true;
 }
 
@@ -678,6 +678,14 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
     memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
   }
   steps[step].locks = 0;
+}
+
+void MDSeqTrack::disable_step_locks(uint8_t step) {
+  steps[step].locks_enabled = false;
+}
+
+void MDSeqTrack::enable_step_locks(uint8_t step) {
+  steps[step].locks_enabled = true;
 }
 
 void MDSeqTrack::clear_conditional() {

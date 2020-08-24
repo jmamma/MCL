@@ -38,8 +38,8 @@ public:
 
 class MDSeqStepDescriptor {
 public:
-  uint8_t
-      locks; // <-- bitfield of 8 locks in the current step, first lock is lsb
+  uint8_t locks; // <-- bitfield of 8 locks in the current step, first lock is lsb
+  bool locks_enabled : 1; // true: locks are enabled. false: locks are disabled, but still occupy lock slots
   bool trig : 1;
   bool slide : 1;
   bool cond_plock : 1;

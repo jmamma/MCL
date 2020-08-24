@@ -217,7 +217,7 @@ void SeqStepPage::loop() {
 
           switch(mask_type) {
             case MASK_LOCK:
-              // TODO what does it mean to "set lock mask"?
+              active_track.enable_step_locks(step);
               break;
             case MASK_PATTERN:
               active_track.steps[step].trig = true;

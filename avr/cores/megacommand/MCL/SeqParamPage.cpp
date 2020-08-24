@@ -212,56 +212,32 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
+      if (!active_track.steps[step].locks_enabled) {
+        // ignore next track event to prevent it being cleared on release
+        note_interface.ignoreNextEvent(track);
+        // enable here so we can access the lock values below
+        active_track.enable_step_locks(step);
+      }
+
+      // get the values. if no values, load up the orig.
       seq_lock1.cur = active_track.get_track_lock(step, p1);
       seq_lock2.cur = active_track.get_track_lock(step, p2);
 
-      if (!active_track.steps[step].locks) {
-        active_track.set_track_locks_i(step, p1, seq_lock1.cur);
-        active_track.set_track_locks_i(step, p2, seq_lock2.cur);
-        note_interface.ignoreNextEvent(track);
-      }
-    }
-    if (event->mask == EVENT_BUTTON_RELEASED) {
+      active_track.set_track_locks_i(step, p1, seq_lock1.cur);
+      active_track.set_track_locks_i(step, p2, seq_lock2.cur);
+    } else if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
         return true;
       }
 
-      /*      int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; //
-upper uint8_t condition = mcl_seq.md_tracks[last_md_track].conditional[step]; //
-lower
-
-// Fudge timing info if it's not there
-if (utiming == 0) {
-  utiming = 12;
-  mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
-  mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
-}*/
-      if (active_track.steps[step].locks) {
+      if (active_track.steps[step].locks_enabled) {
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          active_track.clear_step_locks(step);
+          active_track.disable_step_locks(step);
         }
       }
-      /*
-            mcl_seq.md_tracks[last_md_track].locks[p1][step] =
-                seq_lock1.cur;
-            mcl_seq.md_tracks[last_md_track].locks[p2][step] =
-                seq_lock2.cur;
-
-            mcl_seq.md_tracks[last_md_track].locks_params[p1] =
-         seq_param1.cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =
-         seq_param3.cur;
-        */
     }
     return true;
   }
-/*  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-      GUI.setPage(&grid_page);
-    }
-    return true;
-  }
-*/
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     uint8_t page_depth = page_id;

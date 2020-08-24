@@ -80,6 +80,9 @@ public:
   void record_track_pitch(uint8_t pitch);
   void clear_slide_data();
   void clear_step_locks(uint8_t step);
+  // disable the step locks, but not remove them. so later can be re-activated.
+  void disable_step_locks(uint8_t step);
+  void enable_step_locks(uint8_t step);
   void clear_conditional();
   void clear_locks(bool reset_params = true);
   void clear_track(bool locks = true, bool reset_params = true);
