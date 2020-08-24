@@ -580,7 +580,7 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 }
 
 void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
-  set_track_locks(step, 1, pitch);
+  set_track_locks(step, 0, pitch);
 }
 
 void MDSeqTrack::record_track_pitch(uint8_t pitch) {
