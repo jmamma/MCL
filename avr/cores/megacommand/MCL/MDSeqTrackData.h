@@ -81,7 +81,7 @@ public:
 
   FORCED_INLINE() uint16_t get_lockidx(uint8_t step, uint8_t lock_idx) const {
     uint8_t mask = 1 << lock_idx;
-    uint8_t rmask = ~(mask - 1);
+    uint8_t rmask = (mask - 1);
     if (steps[step].is_lock_bit(lock_idx)) {
       auto idx = get_lockidx(step) + popcount(steps[step].locks & rmask);
       return idx;
