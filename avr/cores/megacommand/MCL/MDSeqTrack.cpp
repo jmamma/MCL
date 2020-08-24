@@ -553,7 +553,7 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
 bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
                                    uint8_t value) {
   if (steps[step].is_lock(lockidx)) {
-    locks[get_lockidx(step, lockidx)] = value + 1;
+    locks[get_lockidx(step, lockidx)] = value;
   } else {
     auto idx = get_lockidx(step);
     auto nlock = popcount(steps[step].locks);
