@@ -212,7 +212,7 @@ void MDSeqTrack::recalc_slides() {
   find_next_locks(lockidx, step, find_mask);
 
   for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-    if (!locks_params[c] || !steps[c].is_lock(c)) {
+    if (!locks_params[c] || !steps[step].is_lock(c)) {
       continue;
     }
     auto cur_lockidx = lockidx++;
@@ -303,7 +303,7 @@ void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
 again:
   for (; next_step < max_len; next_step++) {
     uint8_t cur_mask = 1;
-    auto lcks = steps[next_step].locks;
+    auto lcks = get_step_locks(next_step);
     for (uint8_t i = 0; i < NUM_MD_LOCKS; ++i) {
       auto step_is_lock = lcks & cur_mask;
       if (step_is_lock) {
@@ -397,7 +397,7 @@ void MDSeqTrack::get_slide_mask(uint64_t *_pmask) const
 
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
   uint8_t c;
-  bool lock_mask_step = steps[step].locks;
+  bool lock_mask_step = steps[step].locks && steps[step].locks_enabled;
   uint8_t send_param = 255;
 
   auto idx = get_lockidx(step);
@@ -406,7 +406,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
     for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (locks_params[c] > 0) {
         if (steps[step].is_lock(c)) {
-          send_param = locks[idx++] - 1;
+          send_param = locks[idx++];
         } else {
           send_param = locks_params_orig[c];
         }
@@ -416,7 +416,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
   } else if (lock_mask_step) {
     for (c = 0; c < NUM_MD_LOCKS; c++) {
       if (steps[step].is_lock(c) && locks_params[c]) {
-        send_param = locks[idx++] - 1;
+        send_param = locks[idx++];
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
       }
     }
@@ -686,6 +686,10 @@ void MDSeqTrack::disable_step_locks(uint8_t step) {
 
 void MDSeqTrack::enable_step_locks(uint8_t step) {
   steps[step].locks_enabled = true;
+}
+
+uint8_t MDSeqTrack::get_step_locks(uint8_t step) {
+  return steps[step].locks_enabled ? steps[step].locks : 0;
 }
 
 void MDSeqTrack::clear_conditional() {

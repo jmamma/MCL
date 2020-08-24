@@ -44,7 +44,8 @@ public:
   bool slide : 1;
   bool cond_plock : 1;
   uint8_t cond_id : 4;
-  bool is_lock(const uint8_t idx) const { return locks & (1 << idx); }
+  bool is_lock_bit(const uint8_t idx) const { return locks & (1 << idx); }
+  bool is_lock(const uint8_t idx) const { return is_lock_bit(idx) && locks_enabled; }
 };
 
 class MDSeqTrackData {
@@ -81,7 +82,7 @@ public:
   FORCED_INLINE() uint16_t get_lockidx(uint8_t step, uint8_t lock_idx) const {
     uint8_t mask = 1 << lock_idx;
     uint8_t rmask = ~(mask - 1);
-    if (steps[step].is_lock(lock_idx)) {
+    if (steps[step].is_lock_bit(lock_idx)) {
       auto idx = get_lockidx(step) + popcount(steps[step].locks & rmask);
       return idx;
     } else {

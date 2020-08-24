@@ -83,6 +83,8 @@ public:
   // disable the step locks, but not remove them. so later can be re-activated.
   void disable_step_locks(uint8_t step);
   void enable_step_locks(uint8_t step);
+  // access the step lock bitmap, masked by locks_enable bit.
+  uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
   void clear_locks(bool reset_params = true);
   void clear_track(bool locks = true, bool reset_params = true);
