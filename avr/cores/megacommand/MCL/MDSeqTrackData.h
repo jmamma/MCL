@@ -12,17 +12,6 @@
 #define NUM_MD_STEPS 64
 #define NUM_MD_LOCKS 8
 
-class MDSeqStep {
-public:
-  bool active;
-  uint8_t locks[NUM_MD_LOCKS];
-  uint8_t timing;
-  uint8_t conditional;
-  bool conditional_plock;
-  bool pattern_mask;
-  bool slide_mask;
-};
-
 class MDSeqTrackData_270 {
 public:
   uint8_t length;
@@ -48,6 +37,14 @@ public:
   bool is_lock(const uint8_t idx) const { return is_lock_bit(idx) && locks_enabled; }
 };
 
+class MDSeqStep {
+public:
+  bool active;
+  uint8_t locks[NUM_MD_LOCKS];
+  uint8_t timing;
+  MDSeqStepDescriptor data;
+};
+
 class MDSeqTrackData {
 public:
   uint8_t locks[NUM_MD_LOCK_SLOTS];
@@ -57,7 +54,7 @@ public:
 
   // get the pointer to the data chunk.
   // useful to skip the vtable
-  void* data() const { return locks; }
+  void* data() const { return (void*) &locks; }
 
   FORCED_INLINE() uint8_t find_param(uint8_t param_id) const {
     param_id += 1;

@@ -853,6 +853,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->active = true;
+  step->timing = timing[n];
+
   uint8_t idx = get_lockidx(n);
   uint8_t lcks = steps[n].locks;
   uint8_t mask = 1;
@@ -864,40 +866,17 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
     }
     mask <<= 1;
   }
-  step->conditional = steps[n].cond_id;
-  step->conditional_plock = steps[n].cond_plock;
-  step->timing = timing[n];
-  step->pattern_mask = steps[n].trig;
-  step->slide_mask = steps[n].slide;
-  step->locks_enabled = steps[n].locks_enabled;
+
+  memcpy(&step->data, &(steps[n]), sizeof(MDSeqStepDescriptor));
 }
 
 void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
-  uint8_t idx = get_lockidx(n);
-  uint8_t nlock = popcount(steps[n].locks);
-  int8_t delta = -nlock;
-  uint8_t new_locks = 0;
+  timing[n] = step->timing;
 
   for (uint8_t a = 0; a < NUM_MD_LOCKS; a++) {
     if (step->locks[a]) {
-      ++delta;
-      new_locks |= 1;
+      set_track_locks(n, locks_params[a] - 1, step->locks[a]);
     }
-    new_locks <<= 1;
   }
-
-  if (delta < 0) { // shrink
-    memmove(locks + idx + nlock + delta, locks + idx + nlock,
-            NUM_MD_LOCK_SLOTS - idx - nlock);
-  } else if (delta > 0) { // grow
-    memmove(locks + idx + nlock + delta, locks + idx + nlock,
-            NUM_MD_LOCK_SLOTS - idx - nlock - delta);
-  }
-
-  steps[n].cond_id = step->conditional;
-  steps[n].cond_plock = step->conditional_plock;
-  timing[n] = step->timing;
-  steps[n].trig = step->pattern_mask;
-  steps[n].slide = step->slide_mask;
-  steps[n].locks_enabled = step->locks_enabled;
+  memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
 }
