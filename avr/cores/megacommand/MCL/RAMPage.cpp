@@ -204,8 +204,8 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   auto &ln_trk = mcl_seq.md_tracks[linked_track];
   trk.clear_track(clear_locks, send_params);
 
-  trk.locks_params[0] = ROM_STRT + 1;
-  trk.locks_params[1] = ROM_END + 1;
+  trk.locks_params[0] = ROM_STRT;
+  trk.locks_params[1] = ROM_END;
   uint8_t mode = encoders[1]->cur;
 
   for (uint8_t s = 0; s < slices; s++) {
