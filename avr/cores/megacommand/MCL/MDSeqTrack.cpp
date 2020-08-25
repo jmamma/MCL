@@ -869,6 +869,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->timing = timing[n];
   step->pattern_mask = steps[n].trig;
   step->slide_mask = steps[n].slide;
+  step->locks_enabled = steps[n].locks_enabled;
 }
 
 void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
@@ -898,4 +899,5 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   timing[n] = step->timing;
   steps[n].trig = step->pattern_mask;
   steps[n].slide = step->slide_mask;
+  steps[n].locks_enabled = step->locks_enabled;
 }
