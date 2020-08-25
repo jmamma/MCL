@@ -231,7 +231,6 @@ void MDSeqTrack::recalc_slides() {
       x1 = next_lockstep * timing_mid + timing[next_lockstep] - timing_mid - 1;
     }
     DEBUG_DUMP(timing[step]);
-    DEBUG_DUMP(timing[next_step]);
     DEBUG_DUMP(timing_mid);
     y0 = locks[cur_lockidx];
     y1 = locks[next_lockidx];
@@ -279,7 +278,6 @@ void MDSeqTrack::recalc_slides() {
     locks_slide_data[c].x1 = x1;
     locks_slide_data[c].y1 = y1;
     DEBUG_DUMP(step);
-    DEBUG_DUMP(next_step);
     DEBUG_DUMP(locks_slide_data[c].x0);
     DEBUG_DUMP(locks_slide_data[c].y0);
     DEBUG_DUMP(x1);

@@ -307,9 +307,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         bool cond_plock;
         active_track.steps[step].cond_id = translate_to_step_conditional(condition, &cond_plock);
         active_track.steps[step].cond_plock = cond_plock;
-        active_track.set_step(step, mask_type, true);
         active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
+        active_track.set_step(step, mask_type, true);
         note_interface.ignoreNextEvent(trackid);
       }
       //      }
