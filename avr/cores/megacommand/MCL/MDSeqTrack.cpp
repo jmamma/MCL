@@ -670,6 +670,7 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
     memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
   }
   steps[step].locks = 0;
+  steps[step].enabled = false;
 }
 
 void MDSeqTrack::disable_step_locks(uint8_t step) {
