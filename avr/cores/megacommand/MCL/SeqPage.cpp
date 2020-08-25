@@ -553,7 +553,7 @@ void SeqPage::draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask,
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   uint64_t mask;
-  active_track.get_lock_mask(&mask);
+  active_track.get_mask(&mask, MASK_LOCK);
   draw_lock_mask(offset, mask, active_track.step_count,
                  active_track.length, show_current_step);
 }
@@ -571,9 +571,9 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 
   if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t mask, lock_mask, oneshot_mask=0, slide_mask=0; 
-    active_track.get_pattern_mask(&mask);
-    uint16_t led_mask = 0; 
+    uint64_t mask, lock_mask, oneshot_mask=0, slide_mask=0;
+    active_track.get_mask(&mask, MASK_PATTERN);
+    uint16_t led_mask = 0;
 
 
     switch (mask_type) {
@@ -581,7 +581,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       led_mask = mask >> offset;
       break;
     case MASK_LOCK:
-      active_track.get_lock_mask(&lock_mask);
+      active_track.get_mask(&lock_mask, MASK_LOCK);
       led_mask = lock_mask >> offset;
       break;
     case MASK_MUTE:
@@ -589,7 +589,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       led_mask = oneshot_mask >> offset;
       break;
     case MASK_SLIDE:
-      active_track.get_slide_mask(&slide_mask);
+      active_track.get_mask(&slide_mask, MASK_SLIDE);
       led_mask = slide_mask >> offset;
       break;
     }

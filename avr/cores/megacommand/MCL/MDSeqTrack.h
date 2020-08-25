@@ -48,9 +48,7 @@ public:
     oneshot_mask = 0;
   }
 
-  void get_pattern_mask(uint64_t* _pmask) const;
-  void get_lock_mask(uint64_t* _pmask) const;
-  void get_slide_mask(uint64_t* _pmask) const;
+  void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
 
   bool get_step(uint8_t step, uint8_t mask_type) const;
   void set_step(uint8_t step, uint8_t mask_type, bool val);
