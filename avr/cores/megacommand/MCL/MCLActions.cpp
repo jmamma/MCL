@@ -268,7 +268,7 @@ void MCLActions::send_tracks_to_devices() {
   EmptyTrack empty_track;
 #ifdef EXT_TRACKS
   // Used as a way of flaggin which A4 tracks are to be sent
-  uint8_t a4_send[6] = {0, 0, 0, 0, 0, 0};
+  uint8_t a4_send[4] = {0, 0, 0, 0};
 #endif
 
   MDTrack md_temp_track;
@@ -344,7 +344,7 @@ void MCLActions::send_tracks_to_devices() {
     uint8_t a4_kit_send = 0;
     for (i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
-        auto a4_track = empty_track.load_from_mem<A4Track>(i + NUM_MD_TRACKS);
+        auto a4_track = empty_track.load_from_mem<A4Track>(i);
         if (a4_track) {
           a4_track->sound.soundpool = true;
           a4_track->sound.toSysex();
