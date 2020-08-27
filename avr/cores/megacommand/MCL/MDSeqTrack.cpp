@@ -523,6 +523,8 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
 
 bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
+  Stopwatch sw;
+
   // Let's try and find an existing param
   uint8_t match = find_param(track_param);
   // Then, we learn first NUM_MD_LOCKS params then stop.
@@ -535,7 +537,10 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   }
 
   if (match != 255) {
-    return set_track_locks_i(step, match, value);
+    auto ret = set_track_locks_i(step, match, value);
+    auto set_lock = sw.elapsed();
+    DIAG_DUMP(1, set_lock);
+    return ret;
   } else {
     return false;
   }

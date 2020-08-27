@@ -159,7 +159,7 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
-  auto t1 = read_clock();
+  Stopwatch sw;
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
@@ -182,7 +182,7 @@ void MCLSeq::seq() {
     md_tracks[i].recalc_slides();
   }
 
-  auto seq_time = clock_diff(t1, read_clock());
+  auto seq_time = sw.elapsed();
   DIAG_DUMP(0, seq_time);
 }
 #ifdef MEGACOMMAND

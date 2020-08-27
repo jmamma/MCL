@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
+#include "CommonTools/Stopwatch.hh"
 
 #define DIAGNOSTIC_NUM_COUNTER 4
 #define DIAGNOSTIC_NUM_LOG 5
@@ -17,7 +18,7 @@ private:
   uint16_t last_clock;
   bool active;
 
-  uint16_t perf_counters[DIAGNOSTIC_NUM_COUNTER];
+  unsigned long perf_counters[DIAGNOSTIC_NUM_COUNTER];
   char perf_name[DIAGNOSTIC_NUM_COUNTER][9];
   char log_buf[DIAGNOSTIC_NUM_LOG][17];
 
@@ -34,7 +35,7 @@ public:
         log_head = DIAGNOSTIC_NUM_LOG - 1;
   }
 
-  void set_perfcounter(uint8_t idx, const char* name, uint16_t val) {
+  void set_perfcounter(uint8_t idx, const char* name, uint32_t val) {
     strncpy(perf_name[idx], name, 8);
     perf_counters[idx] = val;
     active = true;
