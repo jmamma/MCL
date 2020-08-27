@@ -3,6 +3,7 @@
 #include "GUI.h"
 #include "Pages.hh"
 #include "WProgram.h"
+#include "DiagnosticPage.h"
 
 /**
  * \addtogroup GUI
@@ -18,6 +19,26 @@
  **/
 
 void Page::update() {}
+
+void PageContainer::pushPage(Page* page) {
+  if (currentPage() == page) {
+    DEBUG_PRINTLN("can't push twice");
+    // can't push the same page twice in a row
+    return;
+  }
+  DEBUG_PRINTLN("Pushing page");
+  page->parent = this;
+  if (!page->isSetup) {
+    page->setup();
+    page->isSetup = true;
+  }
+  page->init();
+  page->redisplayPage();
+  page->show();
+  pageStack.push(page);
+  // deactivate diagnostic page on pushPage
+  diag_page.deactivate();
+}
 
 void PageParent::redisplayPage() {
   if (displaymode == DISPLAY_TEXT_MODE0) {

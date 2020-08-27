@@ -1,81 +1,65 @@
 #include "MCL.h"
 
-void DiagnosticPage::setup() { DEBUG_PRINT_FN(); }
-
-void DiagnosticPage::init() {
-  DEBUG_PRINT_FN();
 #ifdef OLED_DISPLAY
-  classic_display = false;
-  oled_display.clearDisplay();
-  oled_display.setFont();
-#endif
-}
-void DiagnosticPage::cleanup() {
-#ifdef OLED_DISPLAY
-  oled_display.clearDisplay();
-#endif
-}
+void DiagnosticPage::draw() {
 
-void DiagnosticPage::loop() {
-  if (clock_diff(last_clock,slowclock) >= 1000) {
-  USE_LOCK();
-  SET_LOCK();
-  if (uart_tx_wr_old > MidiUart.txRb.wr) { uart_tx_wr_old = 0xFFFF - uart_tx_wr_old; }
-  uart_tx_wr_rate =  (MidiUart.txRb.wr - uart_tx_wr_old);
-  uart_tx_wr_old = MidiUart.txRb.wr;
+  auto clock = read_slowclock();
 
-  if (uart_rx_wr_old > MidiUart.rxRb.wr) { uart_rx_wr_old = 0xFFFF - uart_rx_wr_old; }
-  uart_rx_wr_rate =  (MidiUart.rxRb.wr - uart_rx_wr_old);
-  uart_rx_wr_old = MidiUart.rxRb.wr;
-
-  last_clock = slowclock;
-  CLEAR_LOCK();
+  ++cycle;
+  // assume 25fps
+  if (cycle > 25) {
+    cycle = 0;
+    last_clock = clock;
+    return;
   }
 
+  if (cycle > 20) {
+    return;
+  }
+
+  oled_display.clearDisplay();
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+
+
+  oled_display.setCursor(0, 6);
+  oled_display.print("GUI loop");
+  oled_display.setCursor(34, 6);
+  oled_display.print(clock_diff(last_clock, clock));
+
+  uint8_t y = 12;
+  for(int i=0;i<DIAGNOSTIC_NUM_COUNTER;++i) {
+    oled_display.setCursor(0, y);
+    oled_display.print(perf_name[i]);
+    oled_display.setCursor(34, y);
+    oled_display.print(perf_counters[i]);
+    y += 6;
+  }
+
+  y = 6;
+  uint8_t log_idx = log_head + 1;
+  for(int i=0;i<DIAGNOSTIC_NUM_LOG;++i) {
+    if (log_idx >= DIAGNOSTIC_NUM_LOG) {
+      log_idx = 0;
+    }
+    oled_display.setCursor(64, y);
+    oled_display.print(log_buf[log_idx++]);
+    y = y + 6;
+  }
+
+  oled_display.setFont(oldfont);
+  last_clock = clock;
 }
+#else
+void DiagnosticPage::draw() { }
+#endif
 
 void DiagnosticPage::display() {
-
-  if (!classic_display) {
-#ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-#endif
-  }
-#ifndef OLED_DISPLAY
-  GUI.clearLines();
-  GUI.setLine(GUI.LINE1);
-  uint8_t x;
-
-  GUI.put_string_at(0, "Diagnostic");
-  GUI.put_value_at1(4, page_mode ? 1 : 0);
-  GUI.setLine(GUI.LINE2);
-  /*
-    if (mcl_cfg.ram_page_mode == 0) {
-      GUI.put_string_at(0, "MON");
-    } else {
-      GUI.put_string_at(0, "LNK");
-    }
-  */
-
-#endif
-#ifdef OLED_DISPLAY
-  oled_display.setFont();
-  oled_display.setCursor(0, 0);
-
-  oled_display.print("DIAG ");
-  // oled_display.print(page_mode ? 1 : 0);
-  oled_display.print(" ");
-  oled_display.print(uart_tx_wr_rate);
-  oled_display.setCursor(70, 0);
-  oled_display.print(MidiUart.txRb.size());
-  
-  oled_display.setCursor(0, 15);
-  oled_display.print(uart_rx_wr_rate);
-  oled_display.setCursor(70, 15);
-  oled_display.print(MidiUart.rxRb.size());
+  // if DiagnosticPage is pushed to the pages stack, we have to cancel
+  // the active state so that draw() is not called in oled_display.display()
+  draw();
+  active = false;
   oled_display.display();
-
-#endif
 }
 
 bool DiagnosticPage::handleEvent(gui_event_t *event) {
@@ -90,9 +74,6 @@ bool DiagnosticPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
     GUI.setPage(&grid_page);
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    page_mode = !(page_mode);
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {

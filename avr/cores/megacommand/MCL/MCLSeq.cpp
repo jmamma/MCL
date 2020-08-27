@@ -1,6 +1,7 @@
 #include "LFO.h"
 #include "MCL.h"
 #include "MCLSeq.h"
+#include "DiagnosticPage.h"
 
 void MCLSeq::setup() {
 
@@ -158,6 +159,8 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
+  auto t1 = read_clock();
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
@@ -178,6 +181,9 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].recalc_slides();
   }
+
+  auto seq_time = clock_diff(t1, read_clock());
+  DIAG_DUMP(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options

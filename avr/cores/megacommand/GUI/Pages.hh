@@ -452,23 +452,7 @@ public:
    * set to true. It will then call the redisplayPage() method, and
    * then the show() method of the page.
    **/
-  void pushPage(Page *page) {
-    if (currentPage() == page) {
-      DEBUG_PRINTLN("can't push twice");
-      // can't push the same page twice in a row
-      return;
-    }
-    DEBUG_PRINTLN("Pushing page");
-    page->parent = this;
-    if (!page->isSetup) {
-      page->setup();
-      page->isSetup = true;
-    }
-    page->init();
-    page->redisplayPage();
-    page->show();
-    pageStack.push(page);
-  }
+  void pushPage(Page *page); 
 
   /** This will pop the page if it is the topmost page of the stack. **/
   void popPage(Page *page) {
