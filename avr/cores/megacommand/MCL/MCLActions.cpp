@@ -309,7 +309,7 @@ void MCLActions::send_tracks_to_devices() {
 
       auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
       if (ptrack->is_active()) {
-        ptrack->chain.store_in_mem(grid_col, &(chains[0]));
+        ptrack->chain.store_in_mem(i, &(chains[0]));
         ptrack->load_immediate(grid_col);
         if (Analog4.connected && ptrack->is<A4Track>()) {
           a4_send[track] = 1;
@@ -373,6 +373,8 @@ void MCLActions::send_tracks_to_devices() {
     next_transition = (uint16_t)-1;
     return;
   }
+
+  //Cache
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.notes[n] > 0) {
