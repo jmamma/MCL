@@ -1,42 +1,34 @@
 #include "MCL.h"
 
 #ifdef OLED_DISPLAY
-void DiagnosticPage::draw() {
 
-  auto clock = read_slowclock();
+void _draw_frame(uint8_t w) {
+  oled_display.fillRect(60, 0, w + 2, 32, BLACK);
+  oled_display.drawRect(61, 0, w, 32, WHITE);
+}
 
-  ++cycle;
-  // assume 25fps
-  if (cycle > 25) {
-    cycle = 0;
-    last_clock = clock;
-    return;
-  }
+void DiagnosticPage::draw_perfcounter() {
+  _draw_frame(52);
 
-  if (cycle > 20) {
-    return;
-  }
-
-  oled_display.clearDisplay();
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont(&TomThumb);
-
-
-  oled_display.setCursor(0, 6);
+  oled_display.setCursor(64, 7);
   oled_display.print("GUI loop");
-  oled_display.setCursor(34, 6);
+  oled_display.setCursor(97, 7);
   oled_display.print(clock_diff(last_clock, clock));
 
-  uint8_t y = 12;
+  uint8_t y = 13;
   for(int i=0;i<DIAGNOSTIC_NUM_COUNTER;++i) {
-    oled_display.setCursor(0, y);
+    oled_display.setCursor(64, y);
     oled_display.print(perf_name[i]);
-    oled_display.setCursor(34, y);
+    oled_display.setCursor(97, y);
     oled_display.print(perf_counters[i]);
     y += 6;
   }
+}
 
-  y = 6;
+void DiagnosticPage::draw_log() {
+  _draw_frame(66);
+
+  uint8_t y = 7;
   uint8_t log_idx = log_head + 1;
   for(int i=0;i<DIAGNOSTIC_NUM_LOG;++i) {
     if (log_idx >= DIAGNOSTIC_NUM_LOG) {
@@ -46,12 +38,29 @@ void DiagnosticPage::draw() {
     oled_display.print(log_buf[log_idx++]);
     y = y + 6;
   }
+}
+
+void DiagnosticPage::draw() {
+
+  auto clock = read_slowclock();
+
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+
+  if (mode == 0) {
+    draw_perfcounter();
+  } else {
+    draw_log();
+  }
 
   oled_display.setFont(oldfont);
   last_clock = clock;
 }
 #else
 void DiagnosticPage::draw() { }
+void DiagnosticPage::draw_perfcounter() { }
+void DiagnosticPage::draw_log() { }
+
 #endif
 
 void DiagnosticPage::display() {

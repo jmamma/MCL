@@ -17,18 +17,21 @@ class DiagnosticPage : public LightPage, MidiCallback {
 private:
   uint16_t last_clock;
   bool active;
+  uint8_t mode;
 
   unsigned long perf_counters[DIAGNOSTIC_NUM_COUNTER];
   char perf_name[DIAGNOSTIC_NUM_COUNTER][9];
   char log_buf[DIAGNOSTIC_NUM_LOG][17];
 
   uint8_t log_head;
-  uint8_t cycle;
+
+  void draw_perfcounter();
+  void draw_log();
 
 public:
   DiagnosticPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4), active(false), last_clock(0), cycle(0) {
+      : LightPage(e1, e2, e3, e4), active(false), last_clock(0), mode(0) {
         memset(perf_counters, 0, sizeof(perf_counters));
         memset(perf_name, 0, sizeof(perf_name));
         memset(log_buf, 0, sizeof(log_buf));
@@ -39,10 +42,12 @@ public:
     strncpy(perf_name[idx], name, 8);
     perf_counters[idx] = val;
     active = true;
+    mode = 0;
   }
 
   void println(const char* msg) {
     strncpy(log_buf[log_head++], msg, 16);
+    mode = 1;
     if (log_head >= DIAGNOSTIC_NUM_LOG) {
       log_head = 0;
     }
