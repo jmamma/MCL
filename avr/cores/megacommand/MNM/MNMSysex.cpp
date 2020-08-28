@@ -1,6 +1,6 @@
-#include "MNMMessages.hh"
-#include "MNMParams.hh"
-#include "MNMSysex.hh"
+#include "MNMMessages.h"
+#include "MNMParams.h"
+#include "MNMSysex.h"
 #include "WProgram.h"
 #include "helpers.h"
 

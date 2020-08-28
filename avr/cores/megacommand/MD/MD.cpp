@@ -387,7 +387,7 @@ bool MDClass::isMelodicTrack(uint8_t track) {
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
-  uint8_t data[3] = {0x62, track << 3 | param, value};
+  uint8_t data[3] = {0x62, (uint8_t)(track << 3 | param), value};
   MD.sendSysex(data, countof(data));
 }
 
@@ -420,7 +420,7 @@ void MDClass::setTrackRouting(uint8_t track, uint8_t output) {
 }
 
 void MDClass::setTempo(uint16_t tempo) {
-  uint8_t data[3] = {0x61, tempo >> 7, tempo & 0x7F};
+  uint8_t data[3] = {0x61, (uint8_t)(tempo >> 7), (uint8_t)(tempo & 0x7F)};
   MD.sendSysex(data, countof(data));
 }
 
@@ -440,9 +440,6 @@ void MDClass::setKitName(char *name) {
   MidiUart.m_putc(0xF0);
   MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   MidiUart.sendRaw(0x55);
-  uint8_t buf[8];
-  uint8_t send_limit = 8;
-  uint8_t n = 0;
   for (uint8_t i = 0; i < 16; i++) {
     MidiUart.sendRaw(name[i] & 0x7F);
   }
@@ -451,7 +448,7 @@ void MDClass::setKitName(char *name) {
 }
 
 void MDClass::saveCurrentKit(uint8_t pos) {
-  uint8_t data[2] = {0x59, pos & 0x7F};
+  uint8_t data[2] = {0x59, (uint8_t)(pos & 0x7F)};
   MD.sendSysex(data, countof(data));
 }
 
@@ -519,12 +516,12 @@ void MDClass::muteTrack(uint8_t track, bool mute) {
 
 void MDClass::setStatus(uint8_t id, uint8_t value) {
 
-  uint8_t data[] = {0x71, id & 0x7F, value & 0x7F};
+  uint8_t data[] = {0x71, (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F)};
   MD.sendSysex(data, countof(data));
 }
 
 void MDClass::setGlobal(uint8_t id) {
-  uint8_t data[] = {0x56, (uint8_t)id & 0x7F};
+  uint8_t data[] = {0x56, (uint8_t)(id & 0x7F)};
   MD.sendSysex(data, countof(data));
 }
 
@@ -582,7 +579,6 @@ uint8_t MDClass::waitBlocking(uint16_t timeout) {
   // init MDSysexListener Class
   //
   MDSysexListener.start();
-  uint8_t msgtype = 255;
   do {
     current_clock = read_slowclock();
 

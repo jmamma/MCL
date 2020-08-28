@@ -1,5 +1,5 @@
-#include "MNMMessages.hh"
-#include "MNMParams.hh"
+#include "MNMMessages.h"
+#include "MNMParams.h"
 #include "helpers.h"
 #include "Elektron.hh"
 
@@ -55,6 +55,7 @@ bool MNMGlobal::fromSysex(uint8_t *data, uint16_t len) {
 
   return true;
 }
+
 bool MNMGlobal::fromSysex(MidiClass *midi) {
     uint16_t offset = 0;
     uint16_t len = midi->midiSysex.recordLen;

@@ -1,6 +1,6 @@
 #include "WProgram.h"
 #include "helpers.h"
-#include "MNMParams.hh"
+#include "MNMParams.h"
 #include "Elektron.hh"
 #include "MNM.h"
 

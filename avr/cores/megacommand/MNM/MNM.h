@@ -4,10 +4,9 @@
 #include <inttypes.h>
 
 #include "WProgram.h"
-#include "MNMMessages.hh"
-#include "MNMPattern.hh"
-#include "MNMParams.hh"
-
+#include "MNMMessages.h"
+#include "MNMPattern.h"
+#include "MNMParams.h"
 #include "MNMEncoders.h"
 
 class MNMClass {
@@ -15,6 +14,7 @@ class MNMClass {
   MNMClass();
   MidiClass *midi = &Midi2;
   MidiUartClass2* midiuart = &MidiUart2;
+  bool connected = false;
   uint8_t currentTrack;
   
   int currentGlobal;
@@ -172,8 +172,8 @@ class MNMClass {
 
 extern MNMClass MNM;
 
-#include "MNMSysex.hh"
+#include "MNMSysex.h"
 
-#include "MNMTask.hh"
+#include "MNMTask.h"
 
 #endif /* MNM_H__ */
