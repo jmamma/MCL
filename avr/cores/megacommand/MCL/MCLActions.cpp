@@ -66,7 +66,6 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     }
   }
 #endif
-  bool storepattern = false;
 
   if (MidiClock.state == 2) {
     merge = 0;
@@ -222,9 +221,9 @@ void MCLActions::prepare_next_chain(int row) {
   proj.select_grid(1);
   for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
     if (note_interface.notes[n] > 0) {
-      auto a4_track = empty_track.load_from_grid<A4Track>(n, row);
+      auto a4_track = empty_track.load_from_grid<A4Track>(n - NUM_MD_TRACKS, row);
       if (a4_track) {
-        a4_track->store_in_mem(n);
+        a4_track->store_in_mem(n - NUM_MD_TRACKS);
         send_machine[n] = 0;
       } else {
         send_machine[n] = 1;
@@ -272,34 +271,27 @@ void MCLActions::send_tracks_to_devices() {
 #endif
 
   MDTrack md_temp_track;
-  int curtrack = last_md_track;
 
-  uint8_t i = 0;
-  int track = 0;
-  uint8_t note_count = 0;
   uint8_t first_note = 255;
-
-  volatile uint8_t *ptr;
 
   uint8_t mute_states[16];
 
   uint8_t old_grid = proj.get_grid();
 
-  for (i = 0; i < NUM_SLOTS; i++) {
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     uint8_t grid_col = i;
 
     if (i < NUM_MD_TRACKS) {
       proj.select_grid(0);
+      mute_states[i] = mcl_seq.md_tracks[i].mute_state;
+      mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
     } else {
       proj.select_grid(1);
       grid_col -= NUM_MD_TRACKS;
     }
 
-    mute_states[i] = mcl_seq.md_tracks[i].mute_state;
-    mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
-
-    if ((note_interface.notes[i] > 1)) {
+    if (note_interface.notes[i] > 1) {
 
       grid_page.active_slots[grid_col] = grid_page.getRow();
 
@@ -312,13 +304,13 @@ void MCLActions::send_tracks_to_devices() {
         ptrack->chain.store_in_mem(i, &(chains[0]));
         ptrack->load_immediate(grid_col);
         if (Analog4.connected && ptrack->is<A4Track>()) {
-          a4_send[track] = 1;
+          a4_send[grid_col] = 1;
         }
       }
     }
   }
 
-  if ((write_original == 1)) {
+  if (write_original == 1) {
     DEBUG_PRINTLN("write original");
     //     MD.kit.origPosition = md_track->origPosition;
     for (uint8_t c = 0; c < 17; c++) {
@@ -341,8 +333,7 @@ void MCLActions::send_tracks_to_devices() {
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
-    uint8_t a4_kit_send = 0;
-    for (i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < 4; i++) {
       if (a4_send[i] == 1) {
         auto a4_track = empty_track.load_from_mem<A4Track>(i);
         if (a4_track) {
@@ -387,20 +378,16 @@ void MCLActions::send_tracks_to_devices() {
       if ((n < NUM_MD_TRACKS)) {
         proj.select_grid(0);
         MDTrack *md_track, *mem_track;
-        md_track = empty_track.load_from_grid<MDTrack>(grid_col, chains[n].row);
-        if (md_track) {
-          mem_track = md_temp_track.load_from_mem<MDTrack>(grid_col);
-          if (mem_track) {
-            if ((md_track->active != EMPTY_TRACK_TYPE) &&
-                (memcmp(&(md_temp_track.machine), &(md_track->machine),
-                        sizeof(MDMachine)) != 0)) {
-              mcl_actions.send_machine[n] = 0;
-            } else {
-              mcl_actions.send_machine[n] = 1;
-              DEBUG_PRINTLN("machines match");
-            }
-            md_track->store_in_mem(grid_col);
+        if ((md_track = empty_track.load_from_grid<MDTrack>(grid_col, chains[n].row))
+            &&
+            (mem_track = md_temp_track.load_from_mem<MDTrack>(grid_col))) {
+          if (memcmp(&md_temp_track.machine, &md_track->machine, sizeof(MDMachine)) != 0) {
+            send_machine[n] = 0;
+          } else {
+            send_machine[n] = 1;
+            DEBUG_PRINTLN("machines match");
           }
+          md_track->store_in_mem(grid_col);
         }
       }
 #ifdef EXT_TRACKS
@@ -424,8 +411,6 @@ void MCLActions::send_tracks_to_devices() {
   // in_sysex = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
-      uint32_t len;
-
       transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
                             (mcl_seq.seq_tracks[n]->step_count *
@@ -444,7 +429,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(n);
   //  DEBUG_PRINTLN(next_transitions[n]);
-  if ((chains[n].loops == 0)) {
+  if (chains[n].loops == 0) {
     next_transitions[n] = -1;
     return;
   }
@@ -486,7 +471,6 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
 void MCLActions::calc_next_transition() {
   next_transition = (uint16_t)-1;
-  bool first_step = false;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (grid_page.active_slots[n] >= 0) {
@@ -633,7 +617,7 @@ void MCLActions::md_set_kit(MDKit *kit_) {
   }
   md_set_fxs(kit_);
 
-  if ((mcl_cfg.auto_save == 1)) {
+  if (mcl_cfg.auto_save == 1) {
     MD.saveCurrentKit(MD.currentKit);
     MD.loadKit(MD.currentKit);
   }

@@ -276,9 +276,9 @@ void GridTask::run() {
             DEBUG_DUMP(mcl_actions.chains[n].row);
             A4Track* a4_track;
             A4Track* a4_temp_track;
-            if((a4_track = empty_track.load_from_grid<A4Track>(n, mcl_actions.chains[n].row))
+            if((a4_track = empty_track.load_from_grid<A4Track>(n - NUM_MD_TRACKS, mcl_actions.chains[n].row))
                && 
-               (a4_temp_track = empty_track2.load_from_mem<A4Track>(n))) {
+               (a4_temp_track = empty_track2.load_from_mem<A4Track>(n - NUM_MD_TRACKS))) {
               // both are a4 track
               if (memcmp(&a4_temp_track->sound, &a4_track->sound, sizeof(A4Sound)) != 0) {
                 mcl_actions.send_machine[n] = 0;
@@ -286,7 +286,7 @@ void GridTask::run() {
                 mcl_actions.send_machine[n] = 1;
                 DEBUG_PRINTLN("sounds match");
               }
-              a4_track->store_in_mem(n);
+              a4_track->store_in_mem(n - NUM_MD_TRACKS);
             }
           }
 #endif
