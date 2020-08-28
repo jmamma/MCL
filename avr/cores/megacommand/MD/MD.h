@@ -81,7 +81,6 @@ public:
 
 /* @} */
 
-#include "MDEncoders.hh"
 #include "MDMessages.hh"
 #include "MDParams.hh"
 #include "MDSysex.hh"
@@ -608,7 +607,5 @@ public:
 extern MDClass MD;
 
 /* @} */
-
-#include "MDTask.hh"
 
 #endif /* MD_H__ */
