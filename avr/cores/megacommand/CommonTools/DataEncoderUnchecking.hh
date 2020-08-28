@@ -55,24 +55,33 @@ public:
     data = _data;
     ptr = data;
   }
+
   virtual void init(MidiClass *_midi, uint16_t _offset) {
         offset = _offset;
         n = offset;
         midi = _midi;
         data = ptr = NULL;
  }
+  
+  template <typename T>
+  DATA_ENCODER_RETURN_TYPE pack(const T &in) {
+		uint8_t *inb = (uint8_t *)&in;
+		for (uint16_t i = 0; i < sizeof(T); i++)
+		{
+			pack8(inb[i]);
+		}
+	}
+  
 	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
-		for (uint16_t i = 0; i < len; i++) {
+		for (uint16_t i = 0; i < len; i++)
+		{
 			pack8(inb[i]);
 		}
 	}
 
 	virtual DATA_ENCODER_RETURN_TYPE packb(bool inb) {
-		if (inb)
-			pack8(1);
-		else
-			pack8(0);
-  }
+		pack8((uint8_t)inb);
+	}
 
 	uint16_t getIdx() {
 		return ptr - data;
@@ -256,8 +265,19 @@ public:
 			get64(&c[i]);
 		}
 	}
-    uint16_t get(uint8_t *data, uint16_t len) {
- 	    uint16_t i;
+  
+	template<typename T>
+	uint16_t get(const T& data) {
+		uint16_t i;
+		uint8_t* pdata = (uint8_t *) &data;
+		for (i = 0; i < sizeof(data); i++) {
+			get8(pdata + i);
+		}
+		return i;
+	}
+
+	uint16_t get(uint8_t *data, uint16_t len) {
+		uint16_t i;
 		for (i = 0; i < len; i++) {
 			get8(data + i);
 		}

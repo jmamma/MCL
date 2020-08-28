@@ -1,6 +1,7 @@
 #include "LFO.h"
 #include "MCL.h"
 #include "MCLSeq.h"
+#include "DiagnosticPage.h"
 
 void MCLSeq::setup() {
 
@@ -20,9 +21,11 @@ void MCLSeq::setup() {
               //(uint8_t) (((float) n / (float)48) * (float)96);
       }    } */
   for (uint8_t i = 0; i < num_md_tracks; i++) {
+    add_track(i, MD_TRACK_TYPE,&md_tracks[i]);
+
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
-    md_tracks[i].speed = MD_SPEED_1X;
+    md_tracks[i].speed = SEQ_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
   }
 #ifdef LFO_TRACKS
@@ -38,9 +41,10 @@ void MCLSeq::setup() {
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    add_track(i, EXT_TRACK_TYPE,&ext_tracks[i]);
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
-    ext_tracks[i].speed = EXT_SPEED_2X;
+    ext_tracks[i].speed = SEQ_SPEED_2X;
   }
 #endif
   //   MidiClock.addOnClockCallback(this,
@@ -155,6 +159,8 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
+  Stopwatch sw;
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
@@ -175,6 +181,9 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].recalc_slides();
   }
+
+  auto seq_time = sw.elapsed();
+  DIAG_DUMP(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options

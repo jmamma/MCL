@@ -19,91 +19,79 @@
 #define UART2_PORT 2
 
 // EXT Track speed
-#define EXT_SPEED_1X 2
-#define EXT_SPEED_2X 1
-#define EXT_SPEED_3_4X 3
-#define EXT_SPEED_3_2X 4
-#define EXT_SPEED_1_2X 5
-#define EXT_SPEED_1_4X 6
-#define EXT_SPEED_1_8X 7
+#define EXT_SPEED_270_1X 2
+#define EXT_SPEED_270_2X 1
+#define EXT_SPEED_270_3_4X 3
+#define EXT_SPEED_270_3_2X 4
+#define EXT_SPEED_270_1_2X 5
+#define EXT_SPEED_270_1_4X 6
+#define EXT_SPEED_270_1_8X 7
+#define NUM_EXT_NOTES_270 4
+#define NUM_EXT_LOCKS_270 4
+#define NUM_EXT_STEPS_270 128
 
-const uint8_t ext_speeds[7] PROGMEM = {
-    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
-    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X};
+#define EXTSEQTRACKDATA_VERSION 30
+
+class ExtSeqTrackData_270 {
+public:
+  uint8_t length; // Resolution = 2 / ExtPatternResolution
+  uint8_t speed;
+  uint8_t reserved[NUM_EXT_NOTES_270];
+  int8_t notes[NUM_EXT_NOTES_270]
+              [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
+  uint8_t locks[NUM_EXT_LOCKS_270][NUM_EXT_STEPS_270];
+  uint8_t locks_params[NUM_EXT_LOCKS_270];
+  uint64_t lock_masks[NUM_EXT_LOCKS_270];
+
+  uint8_t conditional[NUM_EXT_STEPS_270];
+  uint8_t timing[NUM_EXT_STEPS_270];
+};
 
 class ExtSeqTrackData {
 public:
-  uint8_t length;
-  uint8_t speed; // Resolution = 2 / ExtPatternResolution
-  uint8_t reserved[NUM_EXT_NOTES];
-  int8_t notes[NUM_EXT_NOTES][NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
-  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
-  uint8_t locks_params[NUM_EXT_LOCKS];
-  uint64_t lock_masks[NUM_EXT_LOCKS];
+  uint8_t version;
+  // 7-bit midi note + 1-bit on/off
+  int8_t notes[NUM_EXT_NOTES]
+              [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
 
-  uint8_t conditional[NUM_EXT_STEPS];
-  uint8_t timing[NUM_EXT_STEPS];
+  // range max [0..191]
+  uint8_t notes_timing[NUM_EXT_NOTES][NUM_EXT_STEPS];
+  // 15 conditional types, 1 bit p-lock affecting
+  uint8_t notes_conditional[NUM_EXT_NOTES][NUM_EXT_STEPS];
+
+  uint8_t locks_params[NUM_EXT_LOCKS];
+  uint64_t locks_masks[NUM_EXT_LOCKS][2]; // 128bit
+
+  // 8-bit lock values
+  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
+
+  bool convert(ExtSeqTrackData_270 *old) {
+    /*ordering of these statements is important to ensure memory
+     * is copied before being overwritten*/
+    version = EXTSEQTRACKDATA_VERSION;
+    memcpy(&notes, old->notes, NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+      memcpy(&notes_timing[a][0], old->timing, NUM_EXT_STEPS_270);
+      memcpy(&notes_conditional[a][0], old->conditional, NUM_EXT_STEPS_270);
+    }
+    memset(&locks_params, 0, NUM_EXT_LOCKS);
+    memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
+    return true;
+  }
 };
-class ExtSeqTrack : public ExtSeqTrackData {
+class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 
 public:
-  uint8_t channel;
-  uint8_t port = UART2_PORT;
-  MidiUartParent *uart = &MidiUart2;
-
-  uint8_t mute_state = SEQ_MUTE_OFF;
-
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  uint8_t step_count;
-  uint8_t mod12_counter;
-  uint32_t start_step;
-  uint8_t start_step_offset;
-  bool mute_until_start = false;
-
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
-
   ALWAYS_INLINE() void reset() {
-    step_count = 0;
+    SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
-    mute_until_start = false;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
   }
-  ALWAYS_INLINE() void step_count_inc() {
-    if (step_count == length - 1) {
-      step_count = 0;
 
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
-    } else {
-      step_count++;
-    }
-  }
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE()
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
@@ -122,36 +110,6 @@ public:
   void set_length(uint8_t len);
   void re_sync();
 
-  uint8_t get_timing_mid() { return get_timing_mid_inline(); }
-
-  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
-    uint8_t timing_mid;
-    switch (speed) {
-    default:
-    case EXT_SPEED_1X:
-      timing_mid = 12;
-      break;
-    case EXT_SPEED_2X:
-      timing_mid = 6;
-      break;
-    case EXT_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
-      break;
-    case EXT_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
-      break;
-    case EXT_SPEED_1_2X:
-      timing_mid = 24;
-      break;
-    case EXT_SPEED_1_4X:
-      timing_mid = 48;
-      break;
-    case EXT_SPEED_1_8X:
-      timing_mid = 96;
-      break;
-    }
-    return timing_mid;
-  }
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
@@ -213,8 +171,6 @@ public:
   void modify_track(uint8_t dir);
 
   void set_speed(uint8_t _speed);
-  float get_speed_multiplier();
-  float get_speed_multiplier(uint8_t speed);
 };
 
 #endif /* EXTSEQTRACK_H__ */

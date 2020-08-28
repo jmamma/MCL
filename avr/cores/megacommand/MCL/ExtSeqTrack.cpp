@@ -1,44 +1,13 @@
 #include "ExtSeqTrack.h"
 #include "MCL.h"
 
-float ExtSeqTrack::get_speed_multiplier() {
-  return get_speed_multiplier(speed);
-}
-
-float ExtSeqTrack::get_speed_multiplier(uint8_t speed) {
-  float multi;
-  switch (speed) {
-  default:
-  case EXT_SPEED_1X:
-    multi = 1;
-    break;
-  case EXT_SPEED_2X:
-    multi = 0.5;
-    break;
-  case EXT_SPEED_3_4X:
-    multi = (4.0 / 3.0);
-    break;
-  case EXT_SPEED_3_2X:
-    multi = (2.0 / 3.0);
-    break;
-  case EXT_SPEED_1_2X:
-    multi = 2.0;
-    break;
-  case EXT_SPEED_1_4X:
-    multi = 4.0;
-    break;
-  case EXT_SPEED_1_8X:
-    multi = 8.0;
-    break;
-  }
-  return multi;
-}
-
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
   for (uint8_t i = 0; i < NUM_EXT_STEPS; i++) {
-    timing[i] = round(mult * (float)timing[i]);
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+      notes_timing[a][i] = round(mult * (float)notes_timing[a][i]);
+    }
   }
   speed = _speed;
   uint8_t timing_mid = get_timing_mid();
@@ -85,16 +54,16 @@ void ExtSeqTrack::seq() {
 
     for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
       uint8_t current_step;
-      if (((timing[step_count] >= timing_mid) &&
-           ((timing[current_step = step_count] - timing_mid) ==
+      if (((notes_timing[c][step_count] >= timing_mid) &&
+           ((notes_timing[c][current_step = step_count] - timing_mid) ==
             mod12_counter)) ||
-          ((timing[next_step] < timing_mid) &&
-           ((timing[current_step = next_step]) == mod12_counter))) {
+          ((notes_timing[c][next_step] < timing_mid) &&
+           ((notes_timing[c][current_step = next_step]) == mod12_counter))) {
 
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
         } else if (notes[c][current_step] > 0) {
-          noteon_conditional(conditional[current_step],
+          noteon_conditional(notes_conditional[c][current_step],
                              abs(notes[c][current_step]) - 1);
         }
       }
@@ -262,14 +231,17 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint8_t match = 255;
   uint8_t c = 0;
 
+  uint8_t step = step_count;
+
   for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (abs(notes[c][step_count]) == note_num + 1) {
+    //if current step already has this note, then we'll use the next step over
+    if (abs(notes[c][step]) == note_num + 1) {
       match = c;
 
-      if (notes[c][step_count] > 0) {
-        step_count = step_count + 1;
-        if (step_count > length) {
-          step_count = 0;
+      if (notes[c][step] > 0) {
+        step = step + 1;
+        if (step > length) {
+          step = 0;
         }
         utiming = (timing_mid - mod12_counter);
         // timing = 0;
@@ -283,11 +255,12 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   }
 
   if (match != 255) {
-    notes[match][step_count] = -1 * (note_num + 1);
+    notes[match][step] = -1 * (note_num + 1);
     // SET_BIT64(ExtLockMasks[track], step_count);
   }
-  conditional[step_count] = condition;
-  timing[step_count] = utiming;
+  notes_conditional[match][step] = condition;
+  notes_timing[match][step_count] = utiming;
+
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
@@ -315,15 +288,17 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
     notes[match][step_count] = note_num + 1;
     // SET_BIT64(ExtLockMasks[track], step_count);
 
-    conditional[step_count] = condition;
-    timing[step_count] = utiming;
+    notes_conditional[match][step_count] = condition;
+    notes_timing[match][step_count] = utiming;
   }
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
-  for (uint8_t c = 0; c < NUM_EXT_STEPS; c++) {
-    conditional[c] = 0;
-    timing[c] = 0;
+  for (uint8_t x = 0; x < NUM_EXT_STEPS; x++) {
+    for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
+       notes_conditional[c][x] = 0;
+       notes_timing[c][x] = 0;
+    }
   }
 }
 void ExtSeqTrack::clear_ext_notes() {
@@ -350,7 +325,8 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
 
   for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-    lock_masks[a] = 0;
+    locks_masks[a][0] = 0;
+    locks_masks[a][1] = 0;
   }
   oneshot_mask[0] = 0;
   oneshot_mask[1] = 0;
@@ -378,13 +354,12 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
     for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
       notes[a][new_pos] = temp_data.notes[a][n];
-      locks[a][new_pos] = temp_data.locks[a][n];
-      if (IS_BIT_SET64(temp_data.lock_masks[a], n)) {
-        SET_BIT64(temp_data.lock_masks[a], new_pos);
+      notes_timing[a][new_pos] = temp_data.notes_timing[a][n];
+      notes_conditional[a][new_pos] = temp_data.notes_conditional[a][n];
+      if (IS_BIT_SET128(temp_data.locks_masks[a], n)) {
+        SET_BIT128(temp_data.locks_masks[a], new_pos);
       }
     }
 
-    conditional[new_pos] = temp_data.conditional[n];
-    timing[new_pos] = temp_data.timing[n];
   }
 }

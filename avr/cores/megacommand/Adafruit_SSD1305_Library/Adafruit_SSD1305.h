@@ -15,6 +15,8 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
+#pragma once
+
 #if ARDUINO >= 100
  #include "Arduino.h"
 #else
@@ -123,7 +125,7 @@ class Adafruit_SSD1305 : public Adafruit_GFX {
   uint8_t getBuffer(uint16_t i);
   bool redisplay = true;
 
-  void textbox(char *text, char *text2, uint16_t delay = 800);
+  void textbox(const char *text, const char *text2, uint16_t delay = 800);
   void display();
 
   void drawPixel(int16_t x, int16_t y, uint16_t color);

@@ -184,8 +184,7 @@ void SeqStepPage::display() {
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!show_step_menu)) {
 
-      mcl_gui.draw_microtiming(
-          get_md_speed(mcl_seq.md_tracks[last_md_track].speed), seq_param2.cur);
+      mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].speed, seq_param2.cur);
     }
   }
   oled_display.display();
@@ -209,17 +208,22 @@ void SeqStepPage::loop() {
         if (step < active_track.length) {
 
           uint8_t utiming = (seq_param2.cur + 0);
-          uint8_t condition = translate_to_step_conditional(seq_param1.cur);
+          bool cond_plock;
+          uint8_t condition = translate_to_step_conditional(seq_param1.cur, &cond_plock);
 
-          active_track.conditional[step] = condition;
+          active_track.steps[step].cond_id = condition;
+          active_track.steps[step].cond_plock = cond_plock;
           active_track.timing[step] = utiming;
-          uint64_t *mask = get_mask();
 
-          if ((mask_type != MASK_SLIDE) && (mask_type != MASK_MUTE)) {
-            if (!IS_BIT_SET64_P(mask, step)) {
-              SET_BIT64_P(mask, step);
-            }
+          switch(mask_type) {
+            case MASK_LOCK:
+              active_track.enable_step_locks(step);
+              break;
+            case MASK_PATTERN:
+              active_track.steps[step].trig = true;
+              break;
           }
+
           if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
               (tuning != NULL)) {
             uint8_t base = tuning->base;
@@ -255,8 +259,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    uint64_t *seq_mask = get_mask();
-
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
       MD.midi_events.disable_live_kit_update();
@@ -273,9 +275,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.max =
           mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
       int8_t utiming = active_track.timing[step];
-      uint8_t pitch = active_track.get_track_lock(step, 0) - 1;
+      uint8_t pitch = active_track.get_track_lock(step, 0);
       // Cond
-      uint8_t condition = translate_to_knob_conditional(active_track.conditional[step]);
+      uint8_t condition = translate_to_knob_conditional(active_track.steps[step].cond_id, active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
       uint8_t note_num = 255;
 
@@ -301,17 +303,17 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
-      if (!IS_BIT_SET64_P(seq_mask, step)) {
-        active_track.conditional[step] = condition;
+      if (!active_track.get_step(step, mask_type)) {
+        bool cond_plock;
+        active_track.steps[step].cond_id = translate_to_step_conditional(condition, &cond_plock);
+        active_track.steps[step].cond_plock = cond_plock;
         active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
-        SET_BIT64_P(seq_mask, step);
+        active_track.set_step(step, mask_type, true);
         note_interface.ignoreNextEvent(trackid);
       }
       //      }
-    }
-
-    if (event->mask == EVENT_BUTTON_RELEASED) {
+    } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
       if (last_md_track < 15) {
         show_pitch = false;
@@ -326,13 +328,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         mcl_seq.midi_events.update_params = true;
         MD.midi_events.enable_live_kit_update();
       }
-      if (IS_BIT_SET64_P(seq_mask, step)) {
+      if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN("clear step");
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64_P(seq_mask, step);
+          active_track.set_step(step, mask_type, false);
           if (mask_type == MASK_PATTERN) {
-            active_track.conditional[step] = 0;
+            active_track.steps[step].cond_id = 0;
+            active_track.steps[step].cond_plock = false;
             active_track.timing[step] = active_track.get_timing_mid();
           }
         }
@@ -398,16 +401,17 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       } else {
         store_lock = 1;
       }
-      uint64_t *mask = seq_step_page.get_mask();
 
-      SET_BIT64(active_track.lock_mask, step);
+      active_track.enable_step_locks(step);
       if (seq_step_page.mask_type == MASK_PATTERN) {
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = seq_step_page.translate_to_step_conditional(seq_param1.cur);
+        bool cond_plock;
+        uint8_t condition = seq_step_page.translate_to_step_conditional(seq_param1.cur, &cond_plock);
 
-        active_track.conditional[step] = condition;
+        active_track.steps[step].trig = true;
+        active_track.steps[step].cond_id = condition;
+        active_track.steps[step].cond_plock = cond_plock;
         active_track.timing[step] = utiming;
-        SET_BIT64(active_track.pattern_mask, step);
 
       } else {
        // SET_BIT64_P(mask, step);

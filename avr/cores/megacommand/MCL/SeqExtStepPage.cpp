@@ -4,7 +4,7 @@
 void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
-  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
+//  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
 #endif
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
@@ -23,16 +23,36 @@ void SeqExtStepPage::config() {
 
   // config menu
   config_as_trackedit();
+
+  // use continuous page index display
+  display_page_index = false;
 }
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
-  seq_param2.cur = timing_mid;
-  seq_param2.old = timing_mid;
-  seq_param2.max = timing_mid * 2 - 1;
+  seq_param1.max = 127;
+  seq_param1.cur = 64;
+  seq_param1.old = 64;
+
+  seq_param2.cur = 64;
+  seq_param2.old = 64;
+
+  seq_param3.handler = NULL;
+  seq_param3.cur = 64;
+  seq_param3.old = 64;
   seq_param3.max = 128;
+
+  fov_offset = 0;
+  cur_x = 0;
+  cur_y = 64;
+  fov_y = 64;
+  cur_w = timing_mid;
+
+  seq_param2.max = 127;
+  seq_param4.max = 128;
+  seq_param4.cur = 16;
+  seq_param4.min = 4;
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 #endif
@@ -46,6 +66,7 @@ void SeqExtStepPage::init() {
   note_interface.state = true;
   config_encoders();
   midi_events.setup_callbacks();
+  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
 }
 
 void SeqExtStepPage::cleanup() {
@@ -53,107 +74,363 @@ void SeqExtStepPage::cleanup() {
   midi_events.remove_callbacks();
 }
 
-#ifndef OLED_DISPLAY
-void SeqExtStepPage::display() {
+#define MAX_FOV_W 96
 
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "                ");
-
-  char c[3] = "--";
-  uint8_t cond = seq_param1.getValue();
-  if (cond > NUM_TRIG_CONDTIONS) { cond -= NUM_TRIG_CONDTIONS; }
-
-  if (cond == 0) {
-    GUI.put_string_at(0, "L1");
-
-  } else if (cond <= 8) {
-    GUI.put_string_at(0, "L");
-
-    GUI.put_value_at1(1, cond);
-
-  } else {
-    GUI.put_string_at(0, "P");
-    uint8_t prob[5] = {1, 2, 5, 7, 9};
-    GUI.put_value_at1(1, prob[cond - 9]);
-  }
-
-  // Cond
-  //    GUI.put_value_at2(0, seq_param2.getValue());
-  // Pos
-  // 0  1   2  3  4  5  6  7  8  9  10  11
-  //  -5  -4 -3 -2 -1 0
-#ifdef EXT_TRACKS
-  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  if (seq_param2.getValue() == 0) {
-    GUI.put_string_at(2, "--");
-  } else if ((seq_param2.getValue() < timing_mid) &&
-             (seq_param2.getValue() != 0)) {
-    GUI.put_string_at(2, "-");
-    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
-  } else {
-    GUI.put_string_at(2, "+");
-    GUI.put_value_at1(3, seq_param2.getValue() - timing_mid);
-  }
-  MusicalNotes number_to_note;
-  uint8_t notenum;
-  uint8_t notes_held = 0;
-  uint8_t i;
-  for (i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 1) {
-      notes_held += 1;
+uint8_t SeqExtStepPage::find_note_off(int8_t note_val, uint8_t step) {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t match = 255;
+  // Scan for matching note off;
+  for (uint8_t j = step + 1; j < active_track.length && match == 255; j++) {
+    for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
+      if (active_track.notes[b][j] == -1 * note_val) {
+        match = j;
+      }
     }
   }
+  // Wrap around
+  for (uint8_t j = 0; j < step && match == 255; j++) {
+    for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
+      if (active_track.notes[b][j] == -1 * note_val) {
+        match = j;
+      }
+    }
+  }
+  if (match == 255) {
+    return step;
+  }
+  return match;
+}
 
-  if (notes_held > 0) {
-    for (i = 0; i < NUM_EXT_NOTES; i++) {
+void SeqExtStepPage::draw_pianoroll() {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
 
-      notenum = mcl_seq.ext_tracks[last_ext_track]
-                    .notes[i][note_interface.last_note + page_select * 16];
-      if (notenum != 0) {
-        notenum = notenum - 1;
-        uint8_t oct = notenum / 12;
-        uint8_t note = notenum - 12 * (notenum / 12);
-        if (mcl_seq.ext_tracks[last_ext_track]
-                .notes[i][note_interface.last_note + page_select * 16] > 0) {
+  // Absolute piano roll dimensions
+  roll_length = active_track.length * timing_mid; // in ticks
+  uint8_t roll_height = 127;                      // 127, Notes.
 
-          GUI.put_string_at(4 + i * 3, number_to_note.notes_upper[note]);
-          GUI.put_value_at1(4 + i * 3 + 2, oct);
+  // FOV offsets
 
-        } else {
-          GUI.put_string_at(4 + i * 3, number_to_note.notes_lower[note]);
-          GUI.put_value_at1(4 + i * 3 + 2, oct);
+  if (seq_param4.cur > active_track.length) {
+    seq_param4.cur = active_track.length;
+  }
+  uint8_t fov_zoom = seq_param4.cur;
+
+  DEBUG_DUMP(fov_zoom);
+  fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
+
+  fov_pixels_per_tick = (float)fov_w / (float)fov_length;
+
+  // if ((1.00 / fov_pixels_per_tick) < 1) {
+  //    fov_pixels_per_tick = 1;
+  //   fov_length = fov_w;
+  // }
+  DEBUG_DUMP(fov_zoom);
+  DEBUG_DUMP(fov_length);
+  DEBUG_DUMP(fov_pixels_per_tick);
+  uint16_t cur_tick_x =
+      active_track.step_count * timing_mid + active_track.mod12_counter;
+
+  // Draw vertical keyboard
+  /*
+  const uint16_t chromatic = 0b0000010101001010;
+  for (uint8_t k = 0; k < fov_notes; k++) {
+    uint8_t scale_pos =
+        (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
+    if (!IS_BIT_SET16(chromatic, scale_pos)) {
+      oled_display.fillRect(draw_x - keyboard_w,
+                            draw_y + k * (fov_h / fov_notes), keyboard_w,
+                            (fov_h / fov_notes), WHITE);
+    }
+  }
+  oled_display.drawLine(draw_x-1 , 0, draw_x-1 , fov_h, WHITE);
+  */
+  // Draw sequencer position..
+  if (is_within_fov(cur_tick_x)) {
+
+    uint8_t cur_tick_fov_x =
+        min(127, draw_x + fov_pixels_per_tick * (cur_tick_x - fov_offset));
+    oled_display.drawLine(cur_tick_fov_x, 0, cur_tick_fov_x, fov_h - 1, WHITE);
+  }
+
+  uint16_t pattern_end_x = active_track.length * timing_mid;
+  uint8_t pattern_end_fov_x = fov_w;
+
+  if (is_within_fov(pattern_end_x)) {
+    pattern_end_fov_x =
+        min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
+  }
+
+  for (int i = 0; i < active_track.length; i++) {
+    // Draw grid.
+    uint16_t grid_tick_x = i * timing_mid;
+    if (is_within_fov(grid_tick_x)) {
+      uint8_t grid_fov_x =
+          draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
+
+      for (uint8_t k = 0; k < fov_notes; k += 1) {
+        // draw crisscross
+        // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel( grid_fov_x,
+        // (k * (fov_h / fov_notes)), WHITE); }
+        oled_display.drawPixel(grid_fov_x, draw_y + (k * (fov_h / fov_notes)),
+                               WHITE);
+      }
+    }
+
+    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
+      int8_t note_val = active_track.notes[a][i];
+      // Check if note is note_on (positive) and is visible within fov vertical
+      // range.
+      if (note_val > 0) {
+        uint8_t j = find_note_off(abs(note_val), i);
+        uint16_t note_start =
+            i * timing_mid + active_track.notes_timing[a][i] - timing_mid;
+        uint16_t note_end =
+            j * timing_mid + active_track.notes_timing[a][j] - timing_mid;
+
+        if (is_within_fov(note_start) || is_within_fov(note_end) ||
+            ((note_start < fov_offset) &&
+             (note_end >= fov_offset + fov_length))) {
+          uint8_t note_fov_start, note_fov_end;
+
+          if (note_start < fov_offset) {
+            note_fov_start = 0;
+          } else {
+            note_fov_start =
+                (float)(note_start - fov_offset) * fov_pixels_per_tick;
+          }
+
+          if (note_end >= fov_offset + fov_length) {
+            note_fov_end = fov_w;
+
+          } else {
+            note_fov_end = (float)(note_end - fov_offset) * fov_pixels_per_tick;
+          }
+
+          uint8_t note_fov_y =
+              fov_h - ((note_val - fov_y) * (fov_h / fov_notes));
+          /*
+                    DEBUG_DUMP("Found note");
+                    DEBUG_DUMP(note_start);
+                    DEBUG_DUMP(note_end);
+                    DEBUG_DUMP(note_fov_start);
+                    DEBUG_DUMP(note_fov_end);
+                    DEBUG_DUMP(note_fov_y);
+                    DEBUG_DUMP(fov_pixels_per_tick);
+          */
+
+          // Draw vertical projection
+          uint8_t proj_y = 255;
+          if ((note_val >= fov_y + fov_notes) && (cur_y == fov_y + fov_notes - 1)) {
+            proj_y = 0;
+          }
+          if ((note_val < fov_y) && (cur_y == fov_y)) {
+            proj_y = draw_y + fov_h + 1;
+          }
+          if (proj_y != 255) {
+            if (note_end < note_start) {
+              // Wrap around note
+
+              if (note_start < fov_offset + fov_length) {
+                oled_display.drawRect(note_fov_start + draw_x, proj_y,
+                                      pattern_end_fov_x - note_fov_start, 1,
+                                      WHITE);
+              }
+
+              if (note_end > fov_offset) {
+                oled_display.drawRect(draw_x, proj_y, note_fov_end, 1, WHITE);
+              }
+
+            } else {
+              // Standard note.
+              oled_display.drawRect(note_fov_start + draw_x, proj_y,
+                                    note_fov_end - note_fov_start, 1, WHITE);
+            }
+          }
+          // Draw notes
+          if ((note_val >= fov_y) && (note_val < fov_y + fov_notes)) {
+            if (note_end < note_start) {
+              // Wrap around note
+              if (note_start < fov_offset + fov_length) {
+                oled_display.drawRect(note_fov_start + draw_x,
+                                      draw_y + note_fov_y,
+                                      pattern_end_fov_x - note_fov_start,
+                                      (fov_h / fov_notes), WHITE);
+              }
+
+              if (note_end > fov_offset) {
+                oled_display.drawRect(draw_x, draw_y + note_fov_y, note_fov_end,
+                                      (fov_h / fov_notes), WHITE);
+              }
+
+            } else {
+              // Standard note.
+              oled_display.drawRect(
+                  note_fov_start + draw_x, draw_y + note_fov_y,
+                  note_fov_end - note_fov_start, (fov_h / fov_notes), WHITE);
+            }
+          }
         }
       }
     }
-  } else {
-    GUI.put_value_at1(15, page_select + 1);
-    GUI.put_value_at(6, seq_param3.getValue());
-
-    if (Analog4.connected) {
-      GUI.put_string_at(10, "A4T");
-    } else {
-      GUI.put_string_at(10, "MID");
-    }
-    GUI.put_value_at1(13, last_ext_track + 1);
   }
-  draw_mask((page_select * 16), DEVICE_A4);
-#endif
-  SeqPage::display();
+  // Draw interactive cursor
+  DEBUG_DUMP(cur_w);
+  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y + 1) * (fov_h / fov_notes));
+  int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
+  uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
+  if (fov_cur_x < 0) {
+    fov_cur_x = 0;
+  }
+  if (fov_cur_x + fov_cur_w > fov_w) {
+    fov_cur_w = fov_w - fov_cur_x;
+  }
+  oled_display.fillRect(draw_x + fov_cur_x, draw_y + fov_cur_y, fov_cur_w,
+                        (fov_h / fov_notes), WHITE);
 }
+
+void SeqExtStepPage::draw_viewport_minimap() {
+#ifdef OLED_DISPLAY
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
+  constexpr uint16_t width = pidx_w*4+3;
+  uint16_t pattern_end = active_track.length * timing_mid;
+  uint16_t cur_tick_x = active_track.step_count * timing_mid + active_track.mod12_counter;
+
+  oled_display.drawRect(pidx_x0, pidx_y, width, pidx_h, WHITE);
+
+  // viewport is [fov_offset, fov_offset+fov_length] out of [0, pattern_end]
+
+  uint16_t s = fov_offset * (width-1) / pattern_end;
+  uint16_t w = fov_length * (width-2) / pattern_end;
+  uint16_t p = cur_tick_x * (width-1) / pattern_end;
+  oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
+  oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
+#endif
+}
+
+
+void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
+                               uint16_t note_end) {}
+
+#ifndef OLED_DISPLAY
+void SeqExtStepPage::display() { SeqPage::display(); }
 #else
+
+void SeqExtStepPage::loop() {
+  SeqPage::loop();
+  if (seq_param1.hasChanged()) {
+    // Vertical translation
+    int16_t diff = seq_param1.cur - seq_param1.old;
+
+    DEBUG_DUMP(diff);
+    if (diff < 0) {
+      if (cur_x <= fov_offset) {
+        fov_offset += diff;
+        // / fov_pixels_per_tick;
+        if (fov_offset < 0) {
+          fov_offset = 0;
+        }
+        cur_x = fov_offset;
+      } else {
+        cur_x += diff;
+        if (cur_x < fov_offset) {
+          cur_x = fov_offset;
+        }
+      }
+
+    } else {
+      if (cur_x >= fov_offset + fov_length - cur_w) {
+        if (fov_offset + fov_length + diff < roll_length) {
+          fov_offset += diff;
+          cur_x = fov_offset + fov_length - cur_w;
+        }
+      } else {
+        cur_x += diff;
+        if (cur_x > fov_offset + fov_length - cur_w) {
+          cur_x = fov_offset + fov_length - cur_w;
+        }
+      }
+    }
+
+    seq_param1.cur = 64;
+    seq_param1.old = 64;
+  }
+
+  if (seq_param2.hasChanged()) {
+    // Horizontal translation
+    int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
+
+    DEBUG_DUMP(diff);
+    if (diff < 0) {
+      if (cur_y <= fov_y) {
+        fov_y += diff;
+        if (fov_y < 0) {
+          fov_y = 0;
+        }
+        cur_y = fov_y;
+      } else {
+        cur_y += diff;
+        if (cur_y < fov_y) {
+          cur_y = fov_y;
+        }
+      }
+    } else {
+      if (cur_y >= fov_y + fov_notes - 1) {
+        fov_y += diff;
+        if (fov_y + fov_notes > 127) {
+          fov_y = 127 - fov_notes;
+        }
+        cur_y = fov_y + fov_notes - 1;
+      } else {
+        cur_y += diff;
+        if (cur_y > fov_y + fov_notes - 1) {
+          cur_y = fov_y + fov_notes - 1;
+        }
+      }
+    }
+    seq_param2.cur = 64;
+    seq_param2.old = 64;
+  }
+
+  if (seq_param3.hasChanged()) {
+
+    int16_t diff = seq_param3.cur - seq_param3.old;
+
+    if (diff < 0) {
+      cur_w += diff;
+      if (cur_w < cur_w_min) {
+        cur_w = cur_w_min;
+      }
+    } else {
+      if (cur_x >= fov_offset + fov_length - cur_w - diff) {
+        if (fov_offset + fov_length + diff < roll_length) {
+          cur_w += diff;
+          fov_offset += diff;
+        }
+      } else {
+        cur_w += diff;
+      }
+    }
+    seq_param3.cur = 64;
+    seq_param3.old = 64;
+  }
+}
+
 void SeqExtStepPage::display() {
 
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
 
-  draw_knob_frame();
-
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
-  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-  draw_knob_conditional(seq_param1.getValue());
-  draw_knob_timing(seq_param2.getValue(),timing_mid);
+  draw_viewport_minimap();
+  draw_pianoroll();
 
+  // draw_knob_conditional(seq_param1.getValue());
+  // draw_knob_timing(seq_param2.getValue(),timing_mid);
+
+  /*
   MusicalNotes number_to_note;
   uint8_t notes_held = 0;
   uint8_t i, j;
@@ -200,23 +477,23 @@ void SeqExtStepPage::display() {
     }
     oled_display.setFont(oldfont);
   }
+  */
 
-  draw_mask(page_select * 16, DEVICE_A4);
   SeqPage::display();
+
   if (mcl_gui.show_encoder_value(&seq_param2) &&
-        (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-        (!show_step_menu)) {
-      mcl_gui.draw_microtiming(get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed), seq_param2.cur);
-   }
+      (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
+      (!show_step_menu)) {
+    mcl_gui.draw_microtiming(mcl_seq.ext_tracks[last_ext_track].speed,
+        seq_param2.cur);
+  }
+
   oled_display.display();
 #endif
 }
 #endif
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
 
 #ifdef EXT_TRACKS
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
@@ -242,17 +519,19 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
 
-        int8_t utiming =
-            active_track.timing[(track + (page_select * 16))]; // upper
-        uint8_t condition =
-            active_track.conditional[(track + (page_select * 16))]; // lower
-        seq_param1.cur = translate_to_knob_conditional(condition);
+     //   int8_t utiming =
+       //     active_track.timing[(track + (page_select * 16))]; // upper
+       // uint8_t condition =
+         //   active_track.conditional[(track + (page_select * 16))]; // lower
+        // seq_param1.cur = translate_to_knob_conditional(condition);
         // Micro
+        /*
         if (utiming == 0) {
           utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
         }
-        seq_param2.cur = utiming;
 
+        seq_param2.cur = utiming;
+        */
         note_interface.last_note = track;
       }
     }
@@ -260,7 +539,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (device == DEVICE_MD) {
 
         uint8_t utiming = (seq_param2.cur + 0);
-        uint8_t condition = translate_to_step_conditional(seq_param1.cur);
+        bool cond_plock; // TODO not used
+        uint8_t condition = translate_to_step_conditional(seq_param1.cur, &cond_plock);
         if ((track + (page_select * 16)) >= active_track.length) {
           return true;
         }
@@ -276,14 +556,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             }
             active_track.notes[c][track + page_select * 16] = 0;
           }
-          active_track.timing[(track + (page_select * 16))] = 0;
-          active_track.conditional[(track + (page_select * 16))] = 0;
+         // active_track.timing[(track + (page_select * 16))] = 0;
+         // active_track.conditional[(track + (page_select * 16))] = 0;
         }
 
         else {
-          active_track.timing[(track + (page_select * 16))] = utiming; // upper
-          active_track.conditional[(track + (page_select * 16))] =
-              condition; // upper
+          //active_track.timing[(track + (page_select * 16))] = utiming; // upper
+          //active_track.conditional[(track + (page_select * 16))] = condition; // upper
         }
       }
       return true;
@@ -297,7 +576,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
 #endif
-  return false;
+
+  return SeqPage::handleEvent(event);
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {

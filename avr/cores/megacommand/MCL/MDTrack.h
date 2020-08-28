@@ -2,16 +2,14 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
-#include "Bank1Object.h"
 #include "Grid.h"
-#include "GridTrack.h"
+#include "DeviceTrack.h"
 #include "MCLMemory.h"
 #include "MD.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
 
 #define LOCK_AMOUNT 256
-#define MD_TRACK_TYPE 1
 
 #define SAVE_SEQ 0
 #define SAVE_MD 1
@@ -49,15 +47,13 @@ public:
   uint32_t swingEditAll;
 };
 
-class MDTrackLight
-    : public GridTrack,
-      public Bank1Object<MDTrackLight, 0, BANK1_MD_TRACKS_START> {
+class MDTrackLight_270 : public GridTrack_270 {
 public:
-  MDSeqTrackData seq_data;
+  MDSeqTrackData_270 seq_data;
   MDMachine machine;
 };
 
-class MDTrack : public MDTrackLight {
+class MDTrack_270 : public MDTrackLight_270 {
 public:
   uint8_t origPosition;
   uint8_t patternOrigPosition;
@@ -71,31 +67,26 @@ public:
 
   int arraysize;
   ParameterLock locks[LOCK_AMOUNT];
+};
 
-  MDTrack() {
-  arraysize = 0;
-  }
-
+class MDTrack : public DeviceTrack {
+public:
+  MDSeqTrackData seq_data;
+  MDMachine machine;
   void init();
 
   void clear_track();
 
-  void place_track_in_kit(int tracknumber, uint8_t column, MDKit *kit,
-                          bool levels = true);
-  void load_seq_data(int tracknumber);
-  void place_track_in_pattern(int tracknumber, uint8_t column,
-                              MDPattern *pattern);
-  void get_machine_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_kit(int tracknumber, uint8_t column);
-  bool get_track_from_pattern(int tracknumber, uint8_t column);
-  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  void place_track_in_sysex(int tracknumber, uint8_t column);
-  bool load_track_from_grid(int32_t column, int32_t row, int32_t len);
-  bool load_track_from_grid(int32_t column, int32_t row);
+  void place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels = true);
+  void load_seq_data(uint8_t tracknumber);
+  void get_machine_from_kit(uint8_t tracknumber);
+  bool get_track_from_kit(uint8_t tracknumber);
+  bool get_track_from_sysex(uint8_t tracknumber);
+  void place_track_in_sysex(uint8_t tracknumber);
 
-  bool store_track_in_grid(int32_t column, int32_t row, int track = 255,
-                           bool storepattern = false, uint8_t merge = 0,
+  bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
                            bool online = false);
+  void load_immediate(uint8_t tracknumber);
 
   // scale machine track vol by percentage
   void scale_vol(float scale);
@@ -105,6 +96,27 @@ public:
 
   // normalize track level
   void normalize();
+
+  bool convert(MDTrack_270 *old) {
+    if (active == MD_TRACK_TYPE_270) {
+      if (old->seq_data.speed < 64) {
+        chain.speed = SEQ_SPEED_1X;
+      } else {
+        chain.speed = old->seq_data.speed - 64;
+      }
+
+      seq_data.convert(&(old->seq_data));
+      active = MD_TRACK_TYPE;
+      return true;
+    }
+    return false;
+  }
+
+  virtual uint16_t get_track_size() { return sizeof(MDTrack); }
+  virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
+  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
+  virtual uint8_t get_model() { return machine.model; }
+  virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
 };
 
 #endif /* MDTRACK_H__ */

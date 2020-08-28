@@ -105,28 +105,6 @@ void SeqPage::select_track(uint8_t device, uint8_t track) {
   GUI.currentPage()->config();
 }
 
-uint8_t SeqPage::get_md_speed(uint8_t speed_id) {
-  uint8_t speed = 0;
-  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-    if (pgm_read_byte(&md_speeds[n]) ==
-        mcl_seq.md_tracks[last_md_track].speed) {
-      speed = n;
-    }
-  }
-  return speed;
-}
-
-uint8_t SeqPage::get_ext_speed(uint8_t speed_id) {
-  uint8_t speed = 0;
-  for (uint8_t n = 0; n < sizeof(md_speeds); n++) {
-    if (pgm_read_byte(&ext_speeds[n]) ==
-        mcl_seq.ext_tracks[last_ext_track].speed) {
-      speed = n;
-    }
-  }
-  return speed;
-}
-
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
@@ -251,11 +229,11 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
       if (opt_midi_device_capture == DEVICE_MD) {
         opt_trackid = last_md_track + 1;
-        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
+        opt_speed = mcl_seq.md_tracks[last_md_track].speed;
       } else {
 #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
-        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
+        opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
 #endif
       }
 
@@ -565,23 +543,25 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 }
 #else
 
-void SeqPage::draw_lock_mask(uint8_t offset, uint64_t lock_mask,
-                             uint8_t step_count, uint8_t length,
-                             bool show_current_step) {
+void SeqPage::draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask,
+                             const uint8_t step_count, const uint8_t length,
+                             const bool show_current_step) {
   mcl_gui.draw_leds(MCLGUI::seq_x0, MCLGUI::led_y, offset, lock_mask,
                     step_count, length, show_current_step);
 }
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
-  draw_lock_mask(offset, active_track.lock_mask, active_track.step_count,
+  uint64_t mask;
+  active_track.get_mask(&mask, MASK_LOCK);
+  draw_lock_mask(offset, mask, active_track.step_count,
                  active_track.length, show_current_step);
 }
 
-void SeqPage::draw_mask(uint8_t offset, uint64_t pattern_mask,
-                        uint8_t step_count, uint8_t length,
-                        bool show_current_step, uint64_t mute_mask,
-                        uint64_t slide_mask) {
+void SeqPage::draw_mask(const uint8_t offset, const uint64_t &pattern_mask,
+                        const uint8_t step_count, const uint8_t length,
+                        const uint64_t &mute_mask, const uint64_t &slide_mask,
+                        const bool show_current_step) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
                      step_count, length, mute_mask, slide_mask);
 }
@@ -591,10 +571,9 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 
   if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t mask = active_track.pattern_mask;
-    uint64_t oneshot_mask = 0;
-    uint64_t slide_mask = 0;
-    uint16_t led_mask = 0; 
+    uint64_t mask, lock_mask, oneshot_mask=0, slide_mask=0;
+    active_track.get_mask(&mask, MASK_PATTERN);
+    uint16_t led_mask = 0;
 
 
     switch (mask_type) {
@@ -602,46 +581,44 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       led_mask = mask >> offset;
       break;
     case MASK_LOCK:
-      led_mask = active_track.lock_mask >> offset;
+      active_track.get_mask(&lock_mask, MASK_LOCK);
+      led_mask = lock_mask >> offset;
       break;
     case MASK_MUTE:
       oneshot_mask = active_track.oneshot_mask;
       led_mask = oneshot_mask >> offset;
       break;
     case MASK_SLIDE:
-      slide_mask = active_track.slide_mask;
+      active_track.get_mask(&slide_mask, MASK_SLIDE);
       led_mask = slide_mask >> offset;
       break;
     }
 
     draw_mask(offset, mask, active_track.step_count, active_track.length,
-              show_current_step, oneshot_mask, slide_mask);
+              oneshot_mask, slide_mask, show_current_step);
 
     if (led_mask != trigled_mask) {
       trigled_mask = led_mask;
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
     }
   }
-#ifdef EXT_TRACKS
-  else {
-    mcl_gui.draw_ext_track(MCLGUI::seq_x0, MCLGUI::trig_y, offset,
-                           last_ext_track, show_current_step);
-  }
-#endif
 }
 
 //from knob value to step value
-uint8_t SeqPage::translate_to_step_conditional(uint8_t condition) {
-  if (condition > NUM_TRIG_CONDITIONS) {
-  condition = condition - NUM_TRIG_CONDITIONS + 64;
+uint8_t SeqPage::translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock) {
+  if (condition >= NUM_TRIG_CONDITIONS) {
+    condition = condition - NUM_TRIG_CONDITIONS;
+    *plock = true;
+  } else {
+    *plock = false;
   }
   return condition;
 }
 
 //from step value to knob value
-uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition) {
-  if (condition > 64) {
-  condition = condition - 64 + NUM_TRIG_CONDITIONS;
+uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock) {
+  if (plock) {
+    condition = condition + NUM_TRIG_CONDITIONS;
   }
   return condition;
 }
@@ -735,46 +712,6 @@ void pattern_len_handler(Encoder *enc) {
 
 void opt_mask_handler() { seq_step_page.config_mask_info(); }
 
-uint64_t *SeqPage::get_mask() {
-  uint64_t *mask;
-  if (opt_midi_device_capture == DEVICE_MD) {
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    switch (mask_type) {
-    case MASK_PATTERN:
-      mask = (uint64_t *)&(active_track.pattern_mask);
-      break;
-    case MASK_LOCK:
-      mask = (uint64_t *)&(active_track.lock_mask);
-      break;
-    case MASK_SLIDE:
-      mask = (uint64_t *)&(active_track.slide_mask);
-      break;
-    case MASK_MUTE:
-      mask = (uint64_t *)&(active_track.oneshot_mask);
-      break;
-    }
-  }
-  /*
-#ifdef EXT_TRACKS
-  else {
-    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-    switch (mask_type) {
-    case MASK_LOCK:
-      mask = (uint8_t*) &(active_track.lock_mask);
-      break;
-    case MASK_SLIDE:
-      mask = (uint8_t*) &(active_track.slide_mask);
-      break;
-    case MASK_MUTE:
-      mask = (uint8_t*) &(active_track.oneshot_mask);
-      break;
-    }
-  }
-#endif
-*/
-  return mask;
-}
-
 void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);
 }
@@ -785,12 +722,11 @@ void opt_speed_handler() {
     DEBUG_PRINTLN("okay using MD for length update");
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].set_speed(pgm_read_byte(&md_speeds[opt_speed]));
+        mcl_seq.md_tracks[n].set_speed(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      mcl_seq.md_tracks[last_md_track].set_speed(
-          pgm_read_byte(&md_speeds[opt_speed]));
+      mcl_seq.md_tracks[last_md_track].set_speed(opt_speed);
     }
     seq_step_page.config_encoders();
   }
@@ -798,12 +734,11 @@ void opt_speed_handler() {
   else {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].set_speed(pgm_read_byte(&ext_speeds[opt_speed]));
+        mcl_seq.ext_tracks[n].set_speed(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      mcl_seq.ext_tracks[last_ext_track].set_speed(
-          pgm_read_byte(&ext_speeds[opt_speed]));
+      mcl_seq.ext_tracks[last_ext_track].set_speed(opt_speed);
       seq_extstep_page.config_encoders();
     }
   }
@@ -1177,10 +1112,6 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
     playing_idx = _playing_idx;
   }
   uint8_t w = pidx_w;
-  if (page_count == 8) {
-    w /= 2;
-    pidx_x -= 1;
-  }
 
   for (uint8_t i = 0; i < page_count; ++i) {
     oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);

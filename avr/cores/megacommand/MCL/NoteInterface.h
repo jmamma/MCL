@@ -5,10 +5,11 @@
 #define NOTEINTERFACE_H__
 
 #include "GUI.h"
+#include "MCLMemory.h"
 
 #define TRIG_HOLD_TIME 450
 
-#define NI_MAX_NOTES 20
+#define NI_MAX_NOTES NUM_SLOTS
 
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:

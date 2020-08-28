@@ -30,7 +30,7 @@
 
 #include "Grid.h"
 #include "GridChain.h"
-#include "GridRowHeader.h"
+//#include "GridRowHeader.h"
 #include "GridTask.h"
 
 #ifdef LOUDNESS_PAGE
@@ -92,8 +92,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 2070
-#define VERSION_STR "2.70"
+#define VERSION 3000
+#define VERSION_STR "3.00"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

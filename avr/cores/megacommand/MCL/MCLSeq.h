@@ -53,12 +53,19 @@ public:
   uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
 
+  SeqTrack *seq_tracks[NUM_MD_TRACKS + NUM_EXT_TRACKS];
+
   MCLSeqMidiEvents midi_events;
   bool state = false;
 
   void setup();
   void enable();
   void disable();
+
+  void add_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
+    seq_tracks[track_number] = tp;
+    seq_tracks[track_number]->active = type;
+  }
 
   void update_kit_params();
   void update_params();

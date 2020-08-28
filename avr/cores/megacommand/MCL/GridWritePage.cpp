@@ -79,7 +79,8 @@ void GridWritePage::display() {
 
   mcl_gui.clear_popup(28);
 
-  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16);
+  const uint64_t mute_mask = 0, slide_mask = 0;
+  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16, mute_mask, slide_mask);
 
   char K[4] = {'\0'};
 
@@ -153,7 +154,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     //  write the whole row
 
     trig_interface.off();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NI_MAX_NOTES; i++) {
 
       note_interface.notes[i] = 3;
     }

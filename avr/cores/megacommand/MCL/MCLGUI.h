@@ -63,11 +63,9 @@ public:
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t note_mask);
-  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask,
-                  uint8_t step_count, uint8_t length, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
-  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid,
-                      bool show_current_step);
-  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
+  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &pattern_mask,
+                  uint8_t step_count, uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask);
+  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
                  uint8_t step_count, uint8_t length, bool show_current_step);
 
   void draw_panel_toggle(const char *s1, const char *s2, bool s1_active);

@@ -749,8 +749,8 @@ void SeqPtcPage::on_192_callback() {
   uint8_t timing_mid = 6;
   bool trig = false;
 
-  if ((mcl_seq.md_tracks[focus_track].speed == MD_SPEED_3_4X) ||
-      (mcl_seq.md_tracks[focus_track].speed == MD_SPEED_3_2X)) {
+  if ((mcl_seq.md_tracks[focus_track].speed == SEQ_SPEED_3_4X) ||
+      (mcl_seq.md_tracks[focus_track].speed == SEQ_SPEED_3_2X)) {
     timing_mid = 8;
   }
   if (arp_mod12_counter == 0) {

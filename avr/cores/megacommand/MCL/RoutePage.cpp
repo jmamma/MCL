@@ -48,7 +48,9 @@ void RoutePage::draw_routes(uint8_t line_number) {
 }
 #else
 void RoutePage::draw_routes() {
-  mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, 0, 0, -1, 16);
+  const uint64_t slide_mask = 0, mute_mask = 0;
+
+  mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, 0, 0, -1, 16, mute_mask, slide_mask);
 
   char cur;
 
