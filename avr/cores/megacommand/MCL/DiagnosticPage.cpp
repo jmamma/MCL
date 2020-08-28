@@ -10,6 +10,8 @@ void _draw_frame(uint8_t w) {
 void DiagnosticPage::draw_perfcounter() {
   _draw_frame(52);
 
+  auto clock = read_slowclock();
+
   oled_display.setCursor(64, 7);
   oled_display.print("GUI loop");
   oled_display.setCursor(97, 7);
@@ -23,6 +25,8 @@ void DiagnosticPage::draw_perfcounter() {
     oled_display.print(perf_counters[i]);
     y += 6;
   }
+
+  last_clock = clock;
 }
 
 void DiagnosticPage::draw_log() {
@@ -42,8 +46,6 @@ void DiagnosticPage::draw_log() {
 
 void DiagnosticPage::draw() {
 
-  auto clock = read_slowclock();
-
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
@@ -54,7 +56,6 @@ void DiagnosticPage::draw() {
   }
 
   oled_display.setFont(oldfont);
-  last_clock = clock;
 }
 #else
 void DiagnosticPage::draw() { }
