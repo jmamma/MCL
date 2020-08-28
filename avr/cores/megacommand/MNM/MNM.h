@@ -7,7 +7,6 @@
 #include "MNMMessages.h"
 #include "MNMPattern.h"
 #include "MNMParams.h"
-#include "MNMEncoders.h"
 
 class MNMClass {
  public:
@@ -173,7 +172,5 @@ class MNMClass {
 extern MNMClass MNM;
 
 #include "MNMSysex.h"
-
-#include "MNMTask.h"
 
 #endif /* MNM_H__ */
