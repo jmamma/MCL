@@ -528,28 +528,22 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
     }
   }
   grid_task.active = true;
+  float tempo = MidiClock.get_tempo();
+  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
+  float div32th_per_second = tempo * 0.133333333333f;
+  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
+  float div192th_per_second = tempo * 0.8f;
 
-  float bytes_per_second_uart1 = (float)MidiUart.speed / (float)10;
-
-  float md_latency_in_seconds =
-      (float)mcl_actions.md_latency / bytes_per_second_uart1;
-
-  float div32th_per_second =
-      ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)2;
-  // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
-  float div192th_per_second = div32th_per_second * 6;
-  //  ((float)MidiClock.get_tempo() / (float)60) * (float)4 * (float)12;
-  // DEBUG_PRINTLN(div32th_per_second * latency_in_seconds);
+  float bytes_per_second_uart1 = MidiUart.speed / 10.0f;
+  float md_latency_in_seconds = mcl_actions.md_latency / bytes_per_second_uart1;
   md_div32th_latency = round(div32th_per_second * md_latency_in_seconds) + 1;
-
   md_div192th_latency = round(div192th_per_second * md_latency_in_seconds) + 3;
 
 #ifdef EXT_TRACKS
-  float bytes_per_second_uart2 = (float)MidiUart2.speed / (float)10;
-  float a4_latency_in_seconds =
-      (float)mcl_actions.a4_latency / bytes_per_second_uart2;
-  a4_div192th_latency = round(div192th_per_second * a4_latency_in_seconds) + 3;
+  float bytes_per_second_uart2 = MidiUart2.speed / 10.0f;
+  float a4_latency_in_seconds = mcl_actions.a4_latency / bytes_per_second_uart2;
   a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
+  a4_div192th_latency = round(div192th_per_second * a4_latency_in_seconds) + 3;
 #endif
 }
 
