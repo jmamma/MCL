@@ -3,6 +3,7 @@
 #define DEVICETRACK_H__
 
 #include "GridTrack.h"
+#include "new.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1
@@ -58,19 +59,12 @@ public:
   template <class T> T* as() { return _dynamik_kast<T>(this); }
 
   ///  downloads from BANK1 to the runtime object
-  DeviceTrack* load_from_mem(uint8_t col) {
-    if (!GridTrack::load_from_mem(col)) {
-      return nullptr;
-    }
-    return this;
-  }
-
-  ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
-    if (!GridTrack::load_from_mem(col)) {
+    auto that = ::new(this) T;
+    if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
-    return _dynamik_kast<T>(this);
+    return _dynamik_kast<T>(that);
   }
 };
 

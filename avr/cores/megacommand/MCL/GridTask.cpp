@@ -251,25 +251,19 @@ void GridTask::run() {
           count++;
           if (n < NUM_MD_TRACKS) {
             proj.select_grid(0);
-            //          DEBUG_PRINTLN("trying to cache MD track");
-            //         DEBUG_DUMP(n);
-            //       DEBUG_PRINTLN(mcl_actions.chains[n].row);
-            auto md_track = empty_track.load_from_grid<MDTrack>(
-                n, mcl_actions.chains[n].row);
-            if (md_track) {
-              auto mem_track = empty_track2.load_from_mem<MDTrack>(n);
-
-              if (md_track && (memcmp(&mem_track->machine, &md_track->machine,
-                                      sizeof(MDMachine)) != 0)) {
+            MDTrack* md_track;
+            MDTrack* mem_track;
+            if ((md_track = empty_track.load_from_grid<MDTrack>(n, mcl_actions.chains[n].row))
+                &&
+                (mem_track = empty_track2.load_from_mem<MDTrack>(n))) {
+              if (memcmp(&mem_track->machine, &md_track->machine, sizeof(MDMachine)) != 0) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;
                 DEBUG_PRINTLN("machines match");
               }
-
               md_track->store_in_mem(n);
               slots_cached[n] = 1;
-
             } else {
               DEBUG_PRINTLN("failed");
             }
@@ -280,13 +274,13 @@ void GridTask::run() {
             DEBUG_PRINTLN("trying to load a4 track");
             DEBUG_DUMP(n);
             DEBUG_DUMP(mcl_actions.chains[n].row);
-            auto a4_track =
-                empty_track.load_from_grid(n, mcl_actions.chains[n].row);
-            if (a4_track) {
-              auto a4_temp_track = empty_track2.load_from_mem(n);
-              if ((a4_track->active != EMPTY_TRACK_TYPE) &&
-                  (memcmp(&(a4_temp_track), &(a4_track), sizeof(A4Track)) !=
-                   0)) {
+            A4Track* a4_track;
+            A4Track* a4_temp_track;
+            if((a4_track = empty_track.load_from_grid<A4Track>(n, mcl_actions.chains[n].row))
+               && 
+               (a4_temp_track = empty_track2.load_from_mem<A4Track>(n))) {
+              // both are a4 track
+              if (memcmp(&a4_temp_track->sound, &a4_track->sound, sizeof(A4Sound)) != 0) {
                 mcl_actions.send_machine[n] = 0;
               } else {
                 mcl_actions.send_machine[n] = 1;

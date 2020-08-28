@@ -1,6 +1,5 @@
 #include "DeviceTrack.h"
 #include "MCL.h"
-#include "new.h"
 
 DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   DEBUG_PRINT_FN();
