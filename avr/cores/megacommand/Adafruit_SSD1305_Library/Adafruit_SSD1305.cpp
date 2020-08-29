@@ -535,7 +535,7 @@ void Adafruit_SSD1305::data(uint8_t c) {
   }
 }
 
-void Adafruit_SSD1305::textbox(char *text, char *text2, uint16_t delay) {
+void Adafruit_SSD1305::textbox(const char *text, const char *text2, uint16_t delay) {
   textbox_clock = slowclock;
   strncpy(textbox_str, text, sizeof(textbox_str));
   strncpy(textbox_str2, text2, sizeof(textbox_str2));

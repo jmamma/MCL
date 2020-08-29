@@ -4,7 +4,6 @@
 #define PAGES_H__
 
 #include "Encoders.h"
-#include "ModalGui.h"
 #include "Stack.h"
 
 class Sketch;

@@ -12,7 +12,7 @@
 
 extern scale_t *scales[24];
 
-void ptc_pattern_len_handler(Encoder *enc);
+void ptc_pattern_len_handler(EncoderParent *enc);
 
 class SeqPtcMidiEvents : public MidiCallback {
 public:

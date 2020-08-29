@@ -35,7 +35,7 @@ void MDPattern::clearPattern() {
   //	doubleTempo = 0;
 
   patternLength = 16;
-  swingAmount = 50 << 14;
+  swingAmount = 50ULL << 14;
   //	origPosition = 0;
   //	kit = 0;
   //	scale = 0;

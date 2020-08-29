@@ -6,15 +6,15 @@
 #include "MD.h"
 
 #ifdef MEGACOMMAND
-#include "MidiSDS.hh"
-#include "MidiSDSSysex.hh"
+#include "MidiSDS.h"
+#include "MidiSDSSysex.h"
 #endif
 
 #include "Shared.h"
 #include "MidiSetup.h"
 #include "MidiActivePeering.h"
-#include "MidiID.hh"
-#include "MidiIDSysex.hh"
+#include "MidiID.h"
+#include "MidiIDSysex.h"
 #include "TurboLight.h"
 #include "NoteInterface.h"
 #include "TrigInterface.h"

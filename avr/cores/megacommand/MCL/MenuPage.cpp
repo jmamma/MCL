@@ -188,7 +188,7 @@ void MenuPageBase::display() {
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  Page *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  LightPage *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
   if (page_callback != NULL) {
     DEBUG_PRINTLN("setting page");
     DEBUG_PRINTLN((uint16_t)page_callback);

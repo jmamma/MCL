@@ -1,8 +1,8 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
-#include "Sketch.hh"
-#include "Pages.hh"
+#include "Sketch.h"
+#include "Pages.h"
 
 #define SCREEN_SAVER_TIME 5
 

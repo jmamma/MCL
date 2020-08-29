@@ -1,5 +1,5 @@
-#include "MNMMessages.hh"
-#include "MNMParams.hh"
+#include "MNMMessages.h"
+#include "MNMParams.h"
 #include "helpers.h"
 #include "Elektron.h"
 

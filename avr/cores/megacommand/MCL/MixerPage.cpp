@@ -149,7 +149,7 @@ void MixerPage::draw_levels() {
   }
 }
 
-void encoder_level_handle(Encoder *enc) {
+void encoder_level_handle(EncoderParent *enc) {
 
   bool redraw_frame = (mixer_page.display_mode != MODEL_LEVEL);
 
@@ -191,23 +191,23 @@ void encoder_level_handle(Encoder *enc) {
   enc->old = 64;
 }
 
-void encoder_filtf_handle(Encoder *enc) {
+void encoder_filtf_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTF);
 }
 
-void encoder_filtw_handle(Encoder *enc) {
+void encoder_filtw_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTW);
 }
 
-void encoder_filtq_handle(Encoder *enc) {
+void encoder_filtq_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTQ);
 }
 
-void encoder_lastparam_handle(Encoder *enc) {
+void encoder_lastparam_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
 }
 
-void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
+void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
   set_display_mode(param);
 

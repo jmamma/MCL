@@ -53,7 +53,7 @@ void MNMPattern::clearPattern() {
 
   //  accentAmount = 0;
 
-	swingAmount = 50 << 14;
+	swingAmount = 50ULL << 14;
   patternLength = 16;
   kit = 0;
   origPosition = 0;

@@ -56,9 +56,9 @@ protected:
 	/** Go to the first line. **/
   void line1();
 	/** Go to the first line and display the given string. **/
-  void line1(char *s);
+  void line1(const char *s);
 	/** Go to the first line and display the given string, filling up with whitespace. **/
-  void line1_fill(char *s);
+  void line1_fill(const char *s);
 	/** Go to the first line and display the given program-space string. **/
   void line1_p(PGM_P s);
 	/** Go to the first line and display the given program-space string, filling up with whitespace. **/
@@ -66,9 +66,9 @@ protected:
 	/** Go to the second line. **/
   void line2();
 	/** Go to the second line and display the given string. **/
-  void line2(char *s);
+  void line2(const char *s);
 	/** Go to the second line and display the given string, filling up with whitespace. **/
-  void line2_fill(char *s);
+  void line2_fill(const char *s);
 	/** Go to the second line and display the given program-space string. **/
   void line2_p(PGM_P s);
 	/** Go to the second line and display the given program-space string, filling up with whitespace. **/
@@ -90,11 +90,11 @@ protected:
   void clearLine();
 
 	/** Put the given string at the current position on the display. **/
-  void puts(char *s);
+  void puts(const char *s);
 	/** Put the given string at the current position on the display and fill up to i with whitespace. **/
-  void puts_fill(char *s, uint8_t i);
+  void puts_fill(const char *s, uint8_t i);
 	/** Put the given string at the current position on the display and fill up to the line length with whitespace. **/
-  void puts_fill(char *s);
+  void puts_fill(const char *s);
 	/** Put the given program-space string at the current position on the display. **/
   void puts_p(PGM_P s);
 	/**
@@ -109,7 +109,7 @@ protected:
   void puts_p_fill(PGM_P s);
 
 	/** Put the given data to the display. **/
-  void put(char *data, uint8_t cnt);
+  void put(const char *data, uint8_t cnt);
 
 	/** Put the number in base 10 to the display. **/
   void putnumber(uint8_t num);
