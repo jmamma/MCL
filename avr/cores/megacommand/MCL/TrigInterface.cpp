@@ -1,7 +1,4 @@
-#include "TrigInterface.h"
-#include "MD.h"
-#include "NoteInterface.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void TrigInterface::start() {
 

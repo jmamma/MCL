@@ -1,10 +1,7 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-#ifndef EMPTYTRACK_H__
-#define EMPTYTRACK_H__
+#pragma once
 
-#include "Grid.h"
 #include "DeviceTrack.h"
-#include "MCLMemory.h"
 
 class EmptyTrack : public DeviceTrack {
 public:
@@ -27,4 +24,3 @@ public:
 */
 };
 
-#endif /* EMPTYTRACK_H__ */

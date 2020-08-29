@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "Menu.h"
+#include "MCL_impl.h"
 
 void MenuBase::enable_entry(uint8_t entry_index, bool en) {
   auto midx = entry_index / 8;

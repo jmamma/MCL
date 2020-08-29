@@ -1,6 +1,5 @@
-#include "MCL.h"
-#include "PageSelectPage.h"
 #include <avr/pgmspace.h>
+#include "MCL_impl.h"
 
 struct PageCategory {
   char Name[8];

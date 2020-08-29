@@ -1,7 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL.h"
-#include "MCLActions.h"
-#include "MCLActionsEvents.h"
+#include "MCL_impl.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;

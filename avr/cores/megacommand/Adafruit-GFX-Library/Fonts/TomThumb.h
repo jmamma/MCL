@@ -47,8 +47,7 @@
 ** Sept 7, 2018: Glyph changes for MCL (Justin Mammarella)
 */
 
-#ifndef _TOMTHUMB_H__
-#define _TOMTHUMB_H__
+#pragma once
 
 #include <stdio.h>
 #include "gfxfont.h"
@@ -60,4 +59,3 @@ extern const GFXglyph TomThumbGlyphs[];
 
 extern const GFXfont TomThumb; 
 
-#endif //_TOMTHUMB_H__

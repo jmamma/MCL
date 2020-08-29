@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLEncoder.h"
+#include "MCL_impl.h"
 
 int MCLEncoder::update(encoder_t *enc) {
   uint8_t amount = abs(enc->normal);

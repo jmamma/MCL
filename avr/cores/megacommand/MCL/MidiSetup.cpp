@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MidiSetup.h"
+#include "MCL_impl.h"
 
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();

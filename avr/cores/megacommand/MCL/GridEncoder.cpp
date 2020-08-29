@@ -1,5 +1,4 @@
-#include "GridEncoder.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 int GridEncoder::update(encoder_t *enc) {
   uint8_t amount = abs(enc->normal);

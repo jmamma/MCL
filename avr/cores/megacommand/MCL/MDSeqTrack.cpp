@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLSeq.h"
+#include "MCL_impl.h"
 
 void MDSeqTrack::set_length(uint8_t len) {
   length = len;

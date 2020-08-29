@@ -1,5 +1,4 @@
-#include "MenuPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void MenuPageBase::init() {
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;

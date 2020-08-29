@@ -1,6 +1,4 @@
-#include "LFO.h"
-#include "MCL.h"
-#include "MCLSeq.h"
+#include "MCL_impl.h"
 
 void MCLSeq::setup() {
 

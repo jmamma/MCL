@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "SeqPage.h"
+#include "MCL_impl.h"
 
 uint8_t SeqPage::page_select = 0;
 

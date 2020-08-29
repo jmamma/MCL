@@ -1,7 +1,4 @@
-#include "MCL.h"
-#include "Osc.h"
-#include "OscPage.h"
-#include "WavDesigner.h"
+#include "MCL_impl.h"
 
 void osc_mod_handler(Encoder *enc) {}
 

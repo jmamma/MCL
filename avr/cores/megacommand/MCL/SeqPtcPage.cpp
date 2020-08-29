@@ -1,6 +1,4 @@
-#include "ArpPage.h"
-#include "MCL.h"
-#include "SeqPtcPage.h"
+#include "MCL_impl.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24

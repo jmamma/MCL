@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MDTrack.h"
+#include "MCL_impl.h"
 
 void MDTrack::load_immediate(uint8_t tracknumber) {
   place_track_in_kit(tracknumber, &(MD.kit));

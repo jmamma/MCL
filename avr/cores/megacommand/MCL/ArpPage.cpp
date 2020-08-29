@@ -1,5 +1,4 @@
-#include "ArpPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);

@@ -1,6 +1,4 @@
-#include "LFO.h"
-#include "LFOSeqTrack.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void LFOSeqTrack::load_wav_table(uint8_t table) {
   SinLFO sin_lfo;

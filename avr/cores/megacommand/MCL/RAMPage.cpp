@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "RAMPage.h"
+#include "MCL_impl.h"
 
 #define STATE_NOSTATE 0
 #define STATE_QUEUE 1

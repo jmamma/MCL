@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MixerPage.h"
+#include "MCL_impl.h"
 
 #define FADER_LEN 16
 #define FADE_RATE 16

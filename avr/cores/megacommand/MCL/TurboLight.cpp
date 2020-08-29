@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "TurboLight.h"
+#include "MCL_impl.h"
 
 uint8_t TurboLight::lookup_speed(uint8_t speed) {
   switch (speed) {

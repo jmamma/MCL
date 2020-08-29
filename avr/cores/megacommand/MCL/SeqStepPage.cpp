@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "SeqStepPage.h"
+#include "MCL_impl.h"
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24

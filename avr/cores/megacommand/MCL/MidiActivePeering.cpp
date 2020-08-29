@@ -1,6 +1,4 @@
-//#include "MidiActivePeering.h"
-#include "MCL.h"
-#include "MidiActivePeering.h"
+#include "MCL_impl.h"
 
 uint8_t MidiActivePeering::get_device(uint8_t port) {
   if (port == UART1_PORT) {
