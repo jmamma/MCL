@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "SeqPage.h"
+#include "MCL_impl.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -668,7 +667,7 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 }
 #endif // OLED_DISPLAY
 
-void pattern_len_handler(Encoder *enc) {
+void pattern_len_handler(EncoderParent *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
   if (!enc_->hasChanged()) {
     return;

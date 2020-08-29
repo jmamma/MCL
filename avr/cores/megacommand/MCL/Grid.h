@@ -27,11 +27,11 @@ public:
   bool new_grid(const char *gridname);
   bool write_header();
 
-  bool Grid::open_file(const char *gridname) {
+  bool open_file(const char *gridname) {
     return file.open(gridname, O_RDWR);
   }
 
-  bool Grid::close_file() { return file.close(); }
+  bool close_file() { return file.close(); }
 
   uint8_t get_slot_model(int column, int row, bool load);
 

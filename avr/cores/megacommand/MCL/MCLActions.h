@@ -1,13 +1,8 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 
-#ifndef MCLACTIONS_H__
-#define MCLACTIONS_H__
+#pragma once
 
-#include "A4.h"
-#include "EmptyTrack.h"
 #include "MCLActionsEvents.h"
-#include "MD.h"
-#include "MCLMemory.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -87,4 +82,3 @@ extern MCLActionsMidiEvents mcl_actions_midievents;
 
 extern MCLActions mcl_actions;
 
-#endif /* MCLACTIONS_H__ */

@@ -4,7 +4,7 @@
 #define SEQPAGE_H__
 
 #include "GUI.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 
 class SeqPageMidiEvents : public MidiCallback {
 public:
@@ -14,7 +14,7 @@ public:
 };
 
 
-extern void pattern_len_handler(Encoder *enc);
+extern void pattern_len_handler(EncoderParent *enc);
 
 
 extern uint8_t opt_trackid;

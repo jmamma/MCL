@@ -1,8 +1,6 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 
-#include "MCL.h"
-#include "MCLClipBoard.h"
-#include "Shared.h"
+#include "MCL_impl.h"
 
 #define FILENAME_CLIPBOARD "/clipboard.tmp"
 

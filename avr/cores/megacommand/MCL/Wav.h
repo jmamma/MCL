@@ -4,6 +4,7 @@
 #define WAV_H__
 
 #include "MCL.h"
+#include "MCLSd.h"
 #define WAV_DATA_OFFSET 44
 
 class WavHeader {

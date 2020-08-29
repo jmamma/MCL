@@ -2,8 +2,8 @@
 
 #include "MCLSd.h"
 #include "math.h"
-#include "MidiSDSMessages.hh"
-#include "MidiSDSSysex.hh"
+#include "MidiSDSMessages.h"
+#include "MidiSDSSysex.h"
 #include "helpers.h"
 MidiSDSSysexListenerClass MidiSDSSysexListener;
 

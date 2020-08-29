@@ -1,15 +1,10 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 
-#ifndef MCLSEQUENCER_H__
-#define MCLSEQUENCER_H__
+#pragma once
 
-#include "ExtSeqTrack.h"
 #include "LFOSeqTrack.h"
-#include "MCLMemory.h"
 #include "MDSeqTrack.h"
-#include "SeqPages.h"
-#include "midi-common.hh"
-
+#include "ExtSeqTrack.h"
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -78,4 +73,3 @@ public:
 
 extern MCLSeq mcl_seq;
 
-#endif /* MCLSEQUENCER_H__ */

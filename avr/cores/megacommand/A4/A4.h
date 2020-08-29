@@ -3,7 +3,7 @@
 
 #include "WProgram.h"
 
-#include "Elektron.hh"
+#include "Elektron.h"
 
 /**
  * \addtogroup a4_callbacks
@@ -50,9 +50,9 @@ public:
   /* @} */
 };
 
-#include "A4Messages.hh"
-#include "A4Params.hh"
-#include "A4Sysex.hh"
+#include "A4Messages.h"
+#include "A4Params.h"
+#include "A4Sysex.h"
 
 /**
  * \addtogroup a4_a4

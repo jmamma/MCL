@@ -1,6 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL.h"
-#include "NoteInterface.h"
+#include "MCL_impl.h"
 
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 

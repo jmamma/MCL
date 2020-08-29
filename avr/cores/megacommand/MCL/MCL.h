@@ -1,13 +1,10 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef MCL_H__
-#define MCL_H__
+#pragma once
 
-#include <midi-common.hh>
+#include <midi-common.h>
 #include <string.h>
 
-#include "A4.h"
-#include "MD.h"
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND
@@ -15,75 +12,6 @@
   #define LOUDNESS_PAGE
   #define SOUND_PAGE
 #endif
-
-#include "MCLGfx.h"
-#include "MCLSd.h"
-#include "MCLSysConfig.h"
-
-#include "PolyPage.h"
-#include "Project.h"
-
-#ifdef SOUND_PAGE
-#include "SoundBrowserPage.h"
-#endif
-
-#include "Grid.h"
-#include "GridChain.h"
-//#include "GridRowHeader.h"
-#include "GridTask.h"
-
-#ifdef LOUDNESS_PAGE
-#include "LoudnessPage.h"
-#endif
-
-#include "MCLActions.h"
-#include "MCLGUI.h"
-#include "MCLMemory.h"
-#include "MCLClipBoard.h"
-#include "MCLSeq.h"
-#include "MDExploit.h"
-#include "MDSound.h"
-#include "MDTrackSelect.h"
-#include "Menu.h"
-#include "MenuPage.h"
-#include "MidiActivePeering.h"
-#include "MidiID.hh"
-#include "MidiIDSysex.hh"
-
-#ifdef MEGACOMMAND
-#include "MidiSDS.hh"
-#include "MidiSDSSysex.hh"
-#endif
-
-#include "MidiSetup.h"
-#include "NoteInterface.h"
-#include "TurboLight.h"
-
-#include "AuxPages.h"
-#include "GridPages.h"
-#include "MCLMenus.h"
-
-#ifdef WAV_DESIGNER
-#include "Osc.h"
-#include "OscMixerPage.h"
-#include "OscPage.h"
-#include "Wav.h"
-#include "WavDesigner.h"
-#include "DSP.h"
-#endif
-
-#include "PageSelectPage.h"
-#include "ProjectPages.h"
-#include "SeqPages.h"
-
-#include "GridEncoder.h"
-#include "MCLEncoder.h"
-
-#include "MDTrack.h"
-//#include "EmptyTrack.h"
-
-#include "Shared.h"
-#include "TrigInterface.h"
 
 //MCL Fonts
 #ifdef OLED_DISPLAY
@@ -126,4 +54,3 @@ public:
 
 extern MCL mcl;
 
-#endif /* MCL_H__ */

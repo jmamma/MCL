@@ -7,8 +7,8 @@
 #include <util/delay.h>
 
 #include <MidiUart.h>
-#include <MidiUartParent.hh>
-#include <midi-common.hh>
+#include <MidiUartParent.h>
+#include <midi-common.h>
 
 #include <MidiClock.h>
 MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,

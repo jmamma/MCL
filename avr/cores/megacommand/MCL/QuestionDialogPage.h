@@ -3,7 +3,7 @@
 #ifndef QUESTIONDIALOGPAGE_H__
 #define QUESTIONDIALOGPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "GUI.h"
 
 class QuestionDialogPage : public LightPage {

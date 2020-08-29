@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "Wav.h"
+#include "MCL_impl.h"
 
 bool Wav::close(bool write) {
   DEBUG_PRINT_FN();
@@ -14,7 +13,7 @@ bool Wav::close(bool write) {
   headerRead = false;
   return file.close();
 }
-bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
+bool Wav::open(char *file_name, bool overwrite, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate) {
   DEBUG_PRINT_FN();
   bool ret;
@@ -236,7 +235,7 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_offset,
   return ret;
 }
 
-int16_t Wav::find_peak(uint8_t channel = 0) {
+int16_t Wav::find_peak(uint8_t channel) {
   DEBUG_PRINT_FN();
   int16_t peak_value = 0;
   int16_t current_sample = 0;
@@ -284,7 +283,7 @@ int16_t Wav::find_peak(uint8_t channel = 0) {
   return peak_value;
 }
 
-bool Wav::apply_gain(float gain, uint8_t channel = 0) {
+bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINT_FN();
 
   uint8_t bytes_per_word = header.bitRate / 8;

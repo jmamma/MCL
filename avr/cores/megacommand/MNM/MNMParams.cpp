@@ -1,7 +1,7 @@
 #include "WProgram.h"
 #include "helpers.h"
-#include "MNMParams.hh"
-#include "Elektron.hh"
+#include "MNMParams.h"
+#include "Elektron.h"
 #include "MNM.h"
 
 uint8_t monomachine_sysex_hdr[5] = {
@@ -278,7 +278,7 @@ model_to_param_names_t mnm_model_param_names[] = {
   { MNM_FX_RINGMOD_MODEL, mnm_fx_ringmod_model_names }
 };
 
-static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
+static PGM_P get_param_name(const model_param_name_t *names, uint8_t param) {
   uint8_t i = 0;
   uint8_t id;
   if (names == NULL)
@@ -293,7 +293,7 @@ static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
   return NULL;
 }
 
-static model_param_name_t *get_model_param_names(uint8_t model) {
+static const model_param_name_t *get_model_param_names(uint8_t model) {
   for (uint16_t i = 0; i < countof(mnm_model_param_names); i++) {
     if (model == mnm_model_param_names[i].model) {
       return mnm_model_param_names[i].names;

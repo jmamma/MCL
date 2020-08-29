@@ -13,8 +13,8 @@
  * Elektron data encoders and decoders
  **/
 
-#include "Elektron.hh"
-#include "ElektronDataEncoder.hh"
+#include "Elektron.h"
+#include "ElektronDataEncoder.h"
 
 void ElektronDataToSysexEncoder::init(DATA_ENCODER_INIT(uint8_t *_sysex,
                                                         uint16_t _sysexLen),
@@ -259,7 +259,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
     cnt7++;
   } else {
     if (data) {
-      c = *(ptr++);
+      *c = *(ptr++);
     } else {
       *c = midi->midiSysex.getByte(n++);
     }

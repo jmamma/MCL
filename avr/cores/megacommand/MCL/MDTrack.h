@@ -2,10 +2,8 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
-#include "Grid.h"
 #include "DeviceTrack.h"
 #include "MCLMemory.h"
-#include "MD.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
 
@@ -73,6 +71,9 @@ class MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+  MDTrack() {
+  active = MD_TRACK_TYPE;
+  }
   void init();
 
   void clear_track();

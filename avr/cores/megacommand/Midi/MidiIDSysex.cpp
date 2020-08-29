@@ -1,6 +1,6 @@
 #include "WProgram.h"
 
-#include "MidiIDSysex.hh"
+#include "MidiIDSysex.h"
 #include "helpers.h"
 
 MidiIDSysexListenerClass MidiIDSysexListener;

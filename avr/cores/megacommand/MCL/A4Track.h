@@ -16,6 +16,9 @@ public:
 class A4Track : public ExtTrack {
 public:
   A4Sound sound;
+  A4Track() {
+  active = A4_TRACK_TYPE;
+  }
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
   bool convert(A4Track_270 *old) {

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <WProgram.h>
 #include <wiring_private.h>
-//#include <Events.hh>
+//#include <Events.h>
 extern "C" {
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
@@ -272,8 +272,8 @@ uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 */
 
-MidiClass Midi(&MidiUart, NULL, SYSEX1_DATA_LEN, BANK1_SYSEX1_DATA_START);
-MidiClass Midi2(&MidiUart2, NULL, SYSEX2_DATA_LEN, BANK1_SYSEX2_DATA_START);
+MidiClass Midi(&MidiUart, NULL, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
+MidiClass Midi2(&MidiUart2, NULL, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
 
 bool enable_clock_callbacks = true;
 

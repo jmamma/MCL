@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "Project.h"
+#include "MCL_impl.h"
 
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"

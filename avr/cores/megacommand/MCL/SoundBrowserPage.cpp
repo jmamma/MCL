@@ -1,6 +1,4 @@
-#include "SoundBrowserPage.h"
-#include "MCL.h"
-#include "MDSound.h"
+#include "MCL_impl.h"
 
 const char* c_sound_root = "/Sounds/MD";
 

@@ -1,8 +1,8 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "Elektron.hh"
-#include "MDMessages.hh"
-#include "MDParams.hh"
+#include "Elektron.h"
+#include "MDMessages.h"
+#include "MDParams.h"
 #include "helpers.h"
 
 #include "MD.h"

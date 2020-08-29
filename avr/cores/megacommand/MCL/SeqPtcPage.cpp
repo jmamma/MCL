@@ -1,6 +1,4 @@
-#include "ArpPage.h"
-#include "MCL.h"
-#include "SeqPtcPage.h"
+#include "MCL_impl.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
@@ -118,8 +116,8 @@ void SeqPtcPage::config() {
   char str_first[3] = "--";
   char str_second[3] = "--";
   if (midi_device == DEVICE_MD) {
-    char *str1;
-    char *str2;
+    const char *str1;
+    const char *str2;
     str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
     str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
 
@@ -149,7 +147,7 @@ void SeqPtcPage::config() {
   config_as_trackedit();
 }
 
-void ptc_pattern_len_handler(Encoder *enc) {
+void ptc_pattern_len_handler(EncoderParent *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if (SeqPage::midi_device == DEVICE_MD) {

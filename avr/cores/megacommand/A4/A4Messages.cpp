@@ -1,7 +1,7 @@
 
-#include "A4Messages.hh"
-#include "A4Params.hh"
-#include "Elektron.hh"
+#include "A4Messages.h"
+#include "A4Params.h"
+#include "Elektron.h"
 #include "helpers.h"
 
 #include "A4.h"
