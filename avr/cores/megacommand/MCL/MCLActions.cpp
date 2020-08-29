@@ -267,7 +267,7 @@ void MCLActions::send_tracks_to_devices() {
   EmptyTrack empty_track;
 #ifdef EXT_TRACKS
   // Used as a way of flaggin which A4 tracks are to be sent
-  uint8_t a4_send[NUM_A4_SOUND_TRACKS];
+  uint8_t a4_send[NUM_A4_SOUND_TRACKS] = {0};
 #endif
 
   MDTrack md_temp_track;
