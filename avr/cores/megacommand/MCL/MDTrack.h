@@ -73,6 +73,9 @@ class MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+  MDTrack() {
+  active = MD_TRACK_TYPE;
+  }
   void init();
 
   void clear_track();
