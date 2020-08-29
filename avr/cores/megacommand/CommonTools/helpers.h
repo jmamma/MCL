@@ -274,7 +274,6 @@ extern volatile uint16_t clock_minutes;
 #ifdef __cplusplus
 }
 
-#include "BitArray.hh"
 #include "Task.hh"
 #endif
 

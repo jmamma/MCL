@@ -5,7 +5,7 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
-#include "CommonTools/Stopwatch.hh"
+#include "CommonTools/Stopwatch.h"
 
 #define DIAGNOSTIC_NUM_COUNTER 4
 #define DIAGNOSTIC_NUM_LOG 5
