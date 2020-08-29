@@ -1,10 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
-#include "Elektron.hh"
+#include "Elektron.h"
 #include "GUI.h"
 #include "MD.h"
-#include "MDMessages.hh"
-#include "MDParams.hh"
-#include "MDPattern.hh"
+#include "MDMessages.h"
+#include "MDParams.h"
+#include "MDPattern.h"
 #include "helpers.h"
 
 #ifdef HOST_MIDIDUINO
@@ -35,7 +35,7 @@ void MDPattern::clearPattern() {
   //	doubleTempo = 0;
 
   patternLength = 16;
-  swingAmount = 50 << 14;
+  swingAmount = 50ULL << 14;
   //	origPosition = 0;
   //	kit = 0;
   //	scale = 0;

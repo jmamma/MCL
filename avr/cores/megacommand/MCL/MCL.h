@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <midi-common.hh>
+#include <midi-common.h>
 #include <string.h>
 
 #include "WProgram.h"

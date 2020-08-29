@@ -67,7 +67,7 @@ static LightPage *get_page(uint8_t pageidx, char *str) {
     if (str) {
       m_strncpy_p(str, (PGM_P) & (Entries[pageidx].Name), 16);
     }
-    return pgm_read_word(&Entries[pageidx].Page);
+    return (LightPage*)pgm_read_word(&Entries[pageidx].Page);
   } else {
     if (str) {
       strncpy(str, "----", 5);
@@ -79,7 +79,7 @@ static LightPage *get_page(uint8_t pageidx, char *str) {
 static void get_page_icon(uint8_t pageidx, const uint8_t *&icon, uint8_t &w,
                           uint8_t &h) {
   if (pageidx < n_entry) {
-    icon = pgm_read_word(&Entries[pageidx].IconData);
+    icon = (const uint8_t*)pgm_read_word(&Entries[pageidx].IconData);
     w = pgm_read_byte(&Entries[pageidx].IconWidth);
     h = pgm_read_byte(&Entries[pageidx].IconHeight);
   } else {

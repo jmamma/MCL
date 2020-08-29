@@ -1,7 +1,7 @@
-#include "MNMMessages.hh"
-#include "MNMParams.hh"
+#include "MNMMessages.h"
+#include "MNMParams.h"
 #include "helpers.h"
-#include "Elektron.hh"
+#include "Elektron.h"
 
 #ifdef HOST_MIDIDUINO
 #include <stdio.h>

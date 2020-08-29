@@ -4,11 +4,9 @@
 #include <inttypes.h>
 
 #include "WProgram.h"
-#include "MNMMessages.hh"
-#include "MNMPattern.hh"
-#include "MNMParams.hh"
-
-#include "MNMEncoders.h"
+#include "MNMMessages.h"
+#include "MNMPattern.h"
+#include "MNMParams.h"
 
 class MNMClass {
  public:
@@ -171,8 +169,6 @@ class MNMClass {
 
 extern MNMClass MNM;
 
-#include "MNMSysex.hh"
-
-#include "MNMTask.hh"
+#include "MNMSysex.h"
 
 #endif /* MNM_H__ */

@@ -19,7 +19,7 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
 
 FP MenuBase::get_row_function(uint8_t item_n) {
   const menu_item_t *item = get_item(item_n);
-  return pgm_read_word(&(item->row_function));
+  return (FP)pgm_read_word(&(item->row_function));
 }
 
 uint8_t MenuBase::get_number_of_items() {
@@ -57,14 +57,14 @@ PGM_P MenuBase::get_item_name(uint8_t item_n) {
   return item->name;
 }
 
-Page *MenuBase::get_page_callback(uint8_t item_n) {
+LightPage *MenuBase::get_page_callback(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_word(&(item->page_callback));
+  return (LightPage*)pgm_read_word(&(item->page_callback));
 }
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_word(&(item->destination_var));
+  return (uint8_t*)pgm_read_word(&(item->destination_var));
 }
 
 uint8_t MenuBase::get_option_range(uint8_t item_n) {

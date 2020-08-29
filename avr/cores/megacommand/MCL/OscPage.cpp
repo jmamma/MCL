@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-void osc_mod_handler(Encoder *enc) {}
+void osc_mod_handler(EncoderParent *enc) {}
 
 uint32_t OscPage::exploit_delay_clock = 0;
 

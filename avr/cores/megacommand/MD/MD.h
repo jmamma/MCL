@@ -5,7 +5,7 @@
 
 #include "WProgram.h"
 
-#include "Elektron.hh"
+#include "Elektron.h"
 
 /**
  * \addtogroup MD Elektron MachineDrum
@@ -81,10 +81,9 @@ public:
 
 /* @} */
 
-#include "MDEncoders.hh"
-#include "MDMessages.hh"
-#include "MDParams.hh"
-#include "MDSysex.hh"
+#include "MDMessages.h"
+#include "MDParams.h"
+#include "MDSysex.h"
 
 /**
  * \addtogroup md_md
@@ -608,7 +607,5 @@ public:
 extern MDClass MD;
 
 /* @} */
-
-#include "MDTask.hh"
 
 #endif /* MD_H__ */

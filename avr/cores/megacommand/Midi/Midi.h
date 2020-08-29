@@ -7,15 +7,15 @@
 
 #include <inttypes.h>
 
-// #include "MidiSDS.hh"
-#include "Callback.hh"
-#include "ListPool.hh"
-#include "Vector.hh"
+// #include "MidiSDS.h"
+#include "Callback.h"
+#include "ListPool.h"
+#include "Vector.h"
 
 class MidiUartParent;
 
 extern "C" {
-#include "midi-common.hh"
+#include "midi-common.h"
 }
 
 /**
@@ -48,7 +48,7 @@ class MidiSysexClass;
 typedef void (MidiCallback::*midi_callback_ptr_t)(uint8_t *msg);
 typedef void (MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
 
-#include "MidiSysex.hh"
+#include "MidiSysex.h"
 
 class MidiClass {
   /**
@@ -202,6 +202,6 @@ extern MidiClass USBMidi;
 
 /* @} @} */
 
-#include <MidiUartParent.hh>
+#include <MidiUartParent.h>
 
 #endif /* MIDI_H__ */

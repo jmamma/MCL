@@ -4,7 +4,7 @@
 #define SEQTRACK_H__
 
 #include "MidiActivePeering.h"
-#include "MidiUartParent.hh"
+#include "MidiUartParent.h"
 #include "WProgram.h"
 
 #define SEQ_MUTE_ON 1

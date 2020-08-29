@@ -1,6 +1,8 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
+#include "Sketch.h"
+#include "Pages.h"
 
 #define SCREEN_SAVER_TIME 5
 
@@ -32,17 +34,17 @@ void GuiClass::setSketch(Sketch *_sketch) {
     currentPage()->redisplayPage();
 }
 
-void GuiClass::setPage(PageParent *page) {
+void GuiClass::setPage(LightPage *page) {
   if (sketch != NULL)
     sketch->setPage(page);
 }
 
-void GuiClass::pushPage(PageParent *page) {
+void GuiClass::pushPage(LightPage *page) {
   if (sketch != NULL)
     sketch->pushPage(page);
 }
 
-void GuiClass::popPage(PageParent *page) {
+void GuiClass::popPage(LightPage *page) {
   if (sketch != NULL)
     sketch->popPage(page);
 }
@@ -52,7 +54,7 @@ void GuiClass::popPage() {
     sketch->popPage();
 }
 
-PageParent *GuiClass::currentPage() {
+LightPage *GuiClass::currentPage() {
   if (sketch != NULL)
     return sketch->currentPage();
   else
