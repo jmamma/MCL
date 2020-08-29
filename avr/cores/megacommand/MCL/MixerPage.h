@@ -3,7 +3,7 @@
 #ifndef MIXERPAGE_H__
 #define MIXERPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "GUI.h"
 
 

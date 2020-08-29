@@ -13,7 +13,7 @@
  * Elektron helper routines and data structures
  **/
 
-#include "Elektron.hh"
+#include "Elektron.h"
 
 uint16_t ElektronHelper::ElektronDataToSysex(uint8_t *data, uint8_t *sysex, uint16_t len) {
   uint16_t retlen = 0;

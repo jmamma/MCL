@@ -3,11 +3,11 @@
 #ifndef MDSYSEX_H__
 #define MDSYSEX_H__
 
-#include "Callback.hh"
+#include "Callback.h"
 #include "MD.h"
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "Vector.hh"
+#include "MidiSysex.h"
+#include "Vector.h"
 #include "WProgram.h"
 
 /**
@@ -157,7 +157,7 @@ public:
   /* @} */
 };
 
-#include "MDMessages.hh"
+#include "MDMessages.h"
 
 extern MDSysexListenerClass MDSysexListener;
 

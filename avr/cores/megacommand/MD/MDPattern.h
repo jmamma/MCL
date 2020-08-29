@@ -3,7 +3,7 @@
 #ifndef MDPATTERN_H__
 #define MDPATTERN_H__
 
-#include "ElektronPattern.hh"
+#include "ElektronPattern.h"
 #include <inttypes.h>
 
 /**

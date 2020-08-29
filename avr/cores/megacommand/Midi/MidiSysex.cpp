@@ -1,7 +1,7 @@
 #include "WProgram.h"
 
 #include "Midi.h"
-#include "MidiSysex.hh"
+#include "MidiSysex.h"
 
 void MidiSysexClass::end() {
   callSysexCallBacks = false;

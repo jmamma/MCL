@@ -3,7 +3,7 @@
 class MidiUartClass;
 
 #include <inttypes.h>
-#include <MidiUartParent.hh>
+#include <MidiUartParent.h>
 #include "RingBuffer.h"
 #include <avr/io.h>
 //#define TXEN 3

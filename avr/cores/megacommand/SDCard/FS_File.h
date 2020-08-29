@@ -1,7 +1,7 @@
 #ifndef FS_FILE_H__
 #define FS_FILE_H__
 
-#include "FS_FileSystem.hh"
+#include "FS_FileSystem.h"
 
 class FS_File {
   public:

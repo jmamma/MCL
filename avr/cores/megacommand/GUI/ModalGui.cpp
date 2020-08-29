@@ -2,9 +2,9 @@
 
 #include "WProgram.h"
 
-#include "Events.hh"
+#include "Events.h"
 #include "GUI.h"
-#include "ModalGui.hh"
+#include "ModalGui.h"
 
 /**
  * \addtogroup GUI

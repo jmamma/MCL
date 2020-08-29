@@ -2,7 +2,7 @@
 #include "WProgram.h"
 #include "helpers.h"
 
-#include "MidiUartParent.hh"
+#include "MidiUartParent.h"
 
 #define SYSEX_RETRIES 1
 

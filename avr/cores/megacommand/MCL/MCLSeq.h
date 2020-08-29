@@ -8,7 +8,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "SeqPages.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1

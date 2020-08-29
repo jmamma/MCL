@@ -3,7 +3,7 @@
 #ifndef MCL_H__
 #define MCL_H__
 
-#include <midi-common.hh>
+#include <midi-common.h>
 #include <string.h>
 
 #include "A4.h"
@@ -48,12 +48,12 @@
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MidiActivePeering.h"
-#include "MidiID.hh"
-#include "MidiIDSysex.hh"
+#include "MidiID.h"
+#include "MidiIDSysex.h"
 
 #ifdef MEGACOMMAND
-#include "MidiSDS.hh"
-#include "MidiSDSSysex.hh"
+#include "MidiSDS.h"
+#include "MidiSDSSysex.h"
 #endif
 
 #include "MidiSetup.h"

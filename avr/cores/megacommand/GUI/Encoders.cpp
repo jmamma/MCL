@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "Encoders.hh"
+#include "Encoders.h"
 
 #include "MidiTools.h"
 #include "Midi.h"

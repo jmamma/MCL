@@ -81,7 +81,7 @@ public:
 
 };
 
-#include "MNMDataEncoder.hh"
-#include "ElektronDataEncoder.hh"
+#include "MNMDataEncoder.h"
+#include "ElektronDataEncoder.h"
 
 #endif /* ELEKTRON_H__ */

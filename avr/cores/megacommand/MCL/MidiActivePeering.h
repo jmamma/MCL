@@ -3,8 +3,8 @@
 #ifndef MIDIACTIVEPEERING_H__
 #define MIDIACTIVEPEERING_H__
 
-#include "MidiID.hh"
-#include "Task.hh"
+#include "MidiID.h"
+#include "Task.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2

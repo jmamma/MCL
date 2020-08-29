@@ -1,10 +1,10 @@
 
 #include "A4.h"
-#include "A4Pattern.hh"
-#include "Elektron.hh"
-#include "A4Messages.hh"
+#include "A4Pattern.h"
+#include "Elektron.h"
+#include "A4Messages.h"
 #include "helpers.h"
-#include "A4Params.hh"
+#include "A4Params.h"
 #include "GUI.h"
 
 #ifdef HOST_MIDIDUINO

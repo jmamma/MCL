@@ -2,7 +2,7 @@
 #define MIDIID_H__
 
 #include <inttypes.h>
-//#include "MidiIDSysex.hh"
+//#include "MidiIDSysex.h"
 
 #define DEVICE_MD 0x02
 #define DEVICE_MNM 0x03

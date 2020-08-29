@@ -2,7 +2,7 @@
 
 #include "WProgram.h"
 #include "helpers.h"
-#include "Arpeggiator.hh"
+#include "Arpeggiator.h"
 
 /**
  * \addtogroup Midi

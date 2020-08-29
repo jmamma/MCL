@@ -1,6 +1,6 @@
 #include "LoudnessPage.h"
 #include "MCL.h"
-#include "MidiSDS.hh"
+#include "MidiSDS.h"
 
 void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 

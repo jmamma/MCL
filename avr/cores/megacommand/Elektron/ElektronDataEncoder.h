@@ -3,7 +3,7 @@
 #ifndef ELEKTRON_DATA_ENCODER_H__
 #define ELEKTRON_DATA_ENCODER_H__
 
-#include "DataEncoder.hh"
+#include "DataEncoder.h"
 #include "Midi.h"
 #include "WProgram.h"
 

@@ -2,8 +2,8 @@
 #define MNMPATTERN_H__
 
 #include <inttypes.h>
-#include "MNMDataEncoder.hh"
-#include "ElektronPattern.hh"
+#include "MNMDataEncoder.h"
+#include "ElektronPattern.h"
 
 typedef struct mnm_note_s {
   unsigned note : 7;

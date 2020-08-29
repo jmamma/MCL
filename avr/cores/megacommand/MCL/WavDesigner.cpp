@@ -3,7 +3,7 @@
 #include "DSP.h"
 #include "Osc.h"
 #include "Wav.h"
-#include "MidiSDS.hh"
+#include "MidiSDS.h"
 
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();

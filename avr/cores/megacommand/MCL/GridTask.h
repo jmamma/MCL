@@ -2,7 +2,7 @@
 #define GRID_TASK_H__
 
 #include "MCL.h"
-#include "Task.hh"
+#include "Task.h"
 #include "EmptyTrack.h"
 
 class GridTask : public Task {

@@ -3,10 +3,10 @@
 #define A4SYSEX_H__
 
 #include "A4.h"
-#include "Callback.hh"
+#include "Callback.h"
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "Vector.hh"
+#include "MidiSysex.h"
+#include "Vector.h"
 #include "WProgram.h"
 
 class A4SysexListenerClass : public MidiSysexListenerClass {
@@ -121,7 +121,7 @@ public:
   /* @} */
 };
 
-#include "A4Messages.hh"
+#include "A4Messages.h"
 
 extern A4SysexListenerClass A4SysexListener;
 

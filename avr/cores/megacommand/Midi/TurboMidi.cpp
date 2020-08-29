@@ -1,8 +1,8 @@
 #include "WProgram.h"
 
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "TurboMidi.hh"
+#include "MidiSysex.h"
+#include "TurboMidi.h"
 
 #ifndef HOST_MIDIDUINO
 

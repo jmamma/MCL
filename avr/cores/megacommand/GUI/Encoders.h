@@ -531,7 +531,7 @@ public:
   /* @} */
 };
 
-#include "RecordingEncoder.hh"
+#include "RecordingEncoder.h"
 
 /** @} @} @} **/
 

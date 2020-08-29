@@ -1,8 +1,8 @@
 #include "WProgram.h"
 
 #include "MD.h"
-#include "MDMessages.hh"
-#include "MDSysex.hh"
+#include "MDMessages.h"
+#include "MDSysex.h"
 #include "helpers.h"
 
 MDSysexListenerClass MDSysexListener;

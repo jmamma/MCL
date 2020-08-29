@@ -5,7 +5,7 @@
 
 #include "WProgram.h"
 
-#include "Elektron.hh"
+#include "Elektron.h"
 
 /**
  * \addtogroup MD Elektron MachineDrum
@@ -81,9 +81,9 @@ public:
 
 /* @} */
 
-#include "MDMessages.hh"
-#include "MDParams.hh"
-#include "MDSysex.hh"
+#include "MDMessages.h"
+#include "MDParams.h"
+#include "MDSysex.h"
 
 /**
  * \addtogroup md_md

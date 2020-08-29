@@ -1,7 +1,7 @@
 #include "WProgram.h"
 #include "helpers.h"
 
-#include "Elektron.hh"
+#include "Elektron.h"
 #include "MNMMessages.h"
 #include "MNMPattern.h"
 #include "MNMParams.h"

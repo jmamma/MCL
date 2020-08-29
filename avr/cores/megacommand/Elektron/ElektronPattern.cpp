@@ -1,5 +1,5 @@
 #include "WProgram.h"
-#include "ElektronPattern.hh"
+#include "ElektronPattern.h"
 
 bool ElektronPattern::isParamLocked(uint8_t track, uint8_t param) {
 	return getLockIdx(track, param) != -1;

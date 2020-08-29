@@ -1,6 +1,6 @@
-#include "MidiID.hh"
+#include "MidiID.h"
 #include "WProgram.h"
-#include "MidiIDSysex.hh"
+#include "MidiIDSysex.h"
 #include "helpers.h"
 #define UART1_PORT 1
 #define UART2_PORT 2
