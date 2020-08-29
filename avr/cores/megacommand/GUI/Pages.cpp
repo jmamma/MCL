@@ -1,7 +1,7 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #include "GUI.h"
-#include "Pages.hh"
+#include "Pages.h"
 #include "WProgram.h"
 
 /**

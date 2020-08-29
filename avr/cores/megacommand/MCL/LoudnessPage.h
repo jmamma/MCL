@@ -3,7 +3,7 @@
 #ifndef LOUDNESSPAGE_H__
 #define LOUDNESSPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "MCLEncoder.h"
 #include "GUI.h"
 

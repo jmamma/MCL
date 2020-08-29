@@ -3,8 +3,8 @@
 #ifndef MNM_DATA_ENCODER_H__
 #define MNM_DATA_ENCODER_H__
 
-#include "DataEncoder.hh"
-#include "ElektronDataEncoder.hh"
+#include "DataEncoder.h"
+#include "ElektronDataEncoder.h"
 #include "WProgram.h"
 
 /**

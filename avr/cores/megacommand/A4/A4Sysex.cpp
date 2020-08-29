@@ -1,8 +1,8 @@
 #include "WProgram.h"
 
 #include "A4.h"
-#include "A4Messages.hh"
-#include "A4Sysex.hh"
+#include "A4Messages.h"
+#include "A4Sysex.h"
 #include "helpers.h"
 
 A4SysexListenerClass A4SysexListener;

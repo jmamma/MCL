@@ -2,9 +2,9 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #include "MidiClock.h"
-#include "MidiUartParent.hh"
+#include "MidiUartParent.h"
 #include "helpers.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 
 // #include "MidiUart.h"
 

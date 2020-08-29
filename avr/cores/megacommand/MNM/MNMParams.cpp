@@ -1,7 +1,7 @@
 #include "WProgram.h"
 #include "helpers.h"
-#include "MNMParams.hh"
-#include "Elektron.hh"
+#include "MNMParams.h"
+#include "Elektron.h"
 #include "MNM.h"
 
 uint8_t monomachine_sysex_hdr[5] = {

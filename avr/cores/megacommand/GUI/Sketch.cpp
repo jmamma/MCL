@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "Sketch.hh"
+#include "Sketch.h"
 
 /**
  * \addtogroup GUI

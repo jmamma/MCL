@@ -1,10 +1,10 @@
 #include "WProgram.h"
 #include "helpers.h"
 
-#include "Elektron.hh"
-#include "MNMMessages.hh"
-#include "MNMPattern.hh"
-#include "MNMParams.hh"
+#include "Elektron.h"
+#include "MNMMessages.h"
+#include "MNMPattern.h"
+#include "MNMParams.h"
 
 void MNMPattern::clearPattern() {
   for (uint8_t i = 0; i < 6; i++) {

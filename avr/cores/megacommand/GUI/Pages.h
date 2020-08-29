@@ -3,8 +3,8 @@
 #ifndef PAGES_H__
 #define PAGES_H__
 
-#include "Encoders.hh"
-#include "ModalGui.hh"
+#include "Encoders.h"
+#include "ModalGui.h"
 #include "Stack.h"
 
 class Sketch;

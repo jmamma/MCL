@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <WProgram.h>
 #include <wiring_private.h>
-//#include <Events.hh>
+//#include <Events.h>
 extern "C" {
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>

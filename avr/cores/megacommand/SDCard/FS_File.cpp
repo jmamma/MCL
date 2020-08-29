@@ -1,5 +1,5 @@
-#include "FS_FileSystem.hh"
-#include "FS_File.hh"
+#include "FS_FileSystem.h"
+#include "FS_File.h"
 
 bool FS_File::seek(uintptr_t pos) {
     if (entry.active == FS_ENTRY_DISABLED) { return 0; }

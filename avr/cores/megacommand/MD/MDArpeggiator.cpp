@@ -1,6 +1,6 @@
 #include "WProgram.h"
 #include "helpers.h"
-#include "Arpeggiator.hh"
+#include "Arpeggiator.h"
 #include <MD.h>
 
 void MDArpeggiatorClass::recordNote(int pos, uint8_t track, uint8_t note, uint8_t velocity) {

@@ -2,7 +2,7 @@
 #define MNM_MESSAGES_H__
 
 #include <inttypes.h>
-#include "MNMDataEncoder.hh"
+#include "MNMDataEncoder.h"
 
 /*
 class MNMMidiMap {

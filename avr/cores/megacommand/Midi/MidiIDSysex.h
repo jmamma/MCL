@@ -3,7 +3,7 @@
 #define MIDIIDSYSEX_H__
 
 #include "Midi.h"
-#include "MidiSysex.hh"
+#include "MidiSysex.h"
 #include "WProgram.h"
 
 class MidiIDSysexListenerClass : public MidiSysexListenerClass {

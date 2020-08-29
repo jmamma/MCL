@@ -3,7 +3,7 @@
 #define A4PATTERN_H__
 
 #include <inttypes.h>
-#include "ElektronPattern.hh"
+#include "ElektronPattern.h"
 
 class A4PatternShort {
 	/**

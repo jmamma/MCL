@@ -2,7 +2,7 @@
 #define MIDIID_H__
 
 #include <inttypes.h>
-//#include "MidiIDSysex.hh"
+//#include "MidiIDSysex.h"
 
 #define DEVICE_NULL 0xFF
 #define DEVICE_MIDI 0xFE

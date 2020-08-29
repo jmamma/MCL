@@ -3,7 +3,7 @@
 #ifndef EXTSEQTRACK_H__
 #define EXTSEQTRACK_H__
 
-#include "MidiUartParent.hh"
+#include "MidiUartParent.h"
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"

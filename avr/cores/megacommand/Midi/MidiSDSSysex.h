@@ -3,9 +3,9 @@
 #define MidiSDSSYSEX_H__
 
 #include "Midi.h"
-#include "MidiSDSMessages.hh"
-#include "MidiSDS.hh"
-#include "MidiSysex.hh"
+#include "MidiSDSMessages.h"
+#include "MidiSDS.h"
+#include "MidiSysex.h"
 #include "WProgram.h"
 #include "Wav.h"
 

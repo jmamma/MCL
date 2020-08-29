@@ -1,8 +1,8 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "Elektron.hh"
-#include "ElektronDataEncoder.hh"
-#include "MNMDataEncoder.hh"
+#include "Elektron.h"
+#include "ElektronDataEncoder.h"
+#include "MNMDataEncoder.h"
 
 /**
  * \addtogroup Elektron

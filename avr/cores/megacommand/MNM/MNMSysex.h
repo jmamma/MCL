@@ -1,11 +1,11 @@
 #ifndef MNM_SYSEX_H__
 #define MNM_SYSEX_H__
 
-#include "Circular.hh"
-#include "Elektron.hh"
+#include "Circular.h"
+#include "Elektron.h"
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "Vector.hh"
+#include "MidiSysex.h"
+#include "Vector.h"
 #include "WProgram.h"
 
 typedef void (MNMCallback::*mnm_callback_ptr_t)();

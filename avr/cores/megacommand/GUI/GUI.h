@@ -5,17 +5,17 @@
 
 #include <stdlib.h>
 
-#include "Task.hh"
-#include "Vector.hh"
+#include "Task.h"
+#include "Vector.h"
 #include "WProgram.h"
 
 #if defined(MIDIDUINO_USE_GUI) || defined(HOST_MIDIDUINO)
 
 #define MIDIDUINO_GUI_ACTIVE 1
 
-#include "Encoders.hh"
-#include "Events.hh"
-#include "Pages.hh"
+#include "Encoders.h"
+#include "Events.h"
+#include "Pages.h"
 
 /**
  * \addtogroup GUI
@@ -460,9 +460,9 @@ extern GuiClass GUI;
 
 char hex2c(uint8_t hex);
 
-#include "Encoders.hh"
-#include "Pages.hh"
-#include "Sketch.hh"
+#include "Encoders.h"
+#include "Pages.h"
+#include "Sketch.h"
 
 #endif
 

@@ -1,9 +1,9 @@
 #include "WProgram.h"
 
 #include "Midi.h"
-#include "MidiSDS.hh"
-#include "MidiSDSMessages.hh"
-#include "MidiSDSSysex.hh"
+#include "MidiSDS.h"
+#include "MidiSDSMessages.h"
+#include "MidiSDSSysex.h"
 
 void MidiSDSClass::sendGeneralMessage(uint8_t type) {
   uint8_t data[6] = {0xF0, 0x7E, 0x00, 0x00, 0x00, 0xF7};

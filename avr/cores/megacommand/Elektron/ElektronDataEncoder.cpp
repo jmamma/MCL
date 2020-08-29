@@ -13,8 +13,8 @@
  * Elektron data encoders and decoders
  **/
 
-#include "Elektron.hh"
-#include "ElektronDataEncoder.hh"
+#include "Elektron.h"
+#include "ElektronDataEncoder.h"
 
 void ElektronDataToSysexEncoder::init(DATA_ENCODER_INIT(uint8_t *_sysex,
                                                         uint16_t _sysexLen),

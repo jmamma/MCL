@@ -3,10 +3,10 @@
 #ifndef MIDIUARTPARENT_H__
 #define MIDIUARTPARENT_H__
 
-#include "Callback.hh"
-#include "Vector.hh"
-#include <midi-common.hh>
-#include "MidiID.hh"
+#include "Callback.h"
+#include "Vector.h"
+#include <midi-common.h>
+#include "MidiID.h"
 #include "Core.h"
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS

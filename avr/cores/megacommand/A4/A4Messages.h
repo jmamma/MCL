@@ -1,9 +1,9 @@
 #ifndef A4MESSAGES_H__
 #define A4MESSAGES_H__
 
-#include "A4Pattern.hh"
+#include "A4Pattern.h"
 #include "helpers.h"
-#include "Elektron.hh"
+#include "Elektron.h"
 
 extern uint8_t a4_sysex_hdr[5];
 

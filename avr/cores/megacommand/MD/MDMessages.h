@@ -3,8 +3,8 @@
 #ifndef MDMESSAGES_H__
 #define MDMESSAGES_H__
 
-#include "MDPattern.hh"
-#include "MDParams.hh"
+#include "MDPattern.h"
+#include "MDParams.h"
 
 extern uint8_t machinedrum_sysex_hdr[5];
 

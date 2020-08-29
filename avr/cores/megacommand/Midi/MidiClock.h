@@ -4,10 +4,10 @@
 #ifndef MIDICLOCK_H__
 #define MIDICLOCK_H__
 
-#include "Callback.hh"
-#include "Vector.hh"
+#include "Callback.h"
+#include "Vector.h"
 #include "WProgram.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 #include <inttypes.h>
 
 /**

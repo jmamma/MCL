@@ -7,10 +7,10 @@
 #include "Midi.h"
 
 #ifdef HOST_MIDIDUINO
-#include "DataEncoderUnchecking.hh"
-//#include "DataEncoderChecking.hh"
+#include "DataEncoderUnchecking.h"
+//#include "DataEncoderChecking.h"
 #else
-#include "DataEncoderUnchecking.hh"
+#include "DataEncoderUnchecking.h"
 #endif
 
 /**

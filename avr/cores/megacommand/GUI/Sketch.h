@@ -3,7 +3,7 @@
 #ifndef SKETCH_H__
 #define SKETCH_H__
 
-#include "Pages.hh"
+#include "Pages.h"
 #include "Stack.h"
 
 /**

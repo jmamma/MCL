@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#include "LCDParent.hh"
+#include "LCDParent.h"
 #include <string.h>
 #include "OLED.h"
 //#include <Wire.h>
