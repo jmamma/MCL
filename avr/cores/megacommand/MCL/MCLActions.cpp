@@ -267,7 +267,7 @@ void MCLActions::send_tracks_to_devices() {
   EmptyTrack empty_track;
 #ifdef EXT_TRACKS
   // Used as a way of flaggin which A4 tracks are to be sent
-  uint8_t a4_send[4] = {0, 0, 0, 0};
+  uint8_t a4_send[NUM_A4_SOUND_TRACKS];
 #endif
 
   MDTrack md_temp_track;
@@ -303,7 +303,7 @@ void MCLActions::send_tracks_to_devices() {
       if (ptrack->is_active()) {
         ptrack->chain.store_in_mem(i, &(chains[0]));
         ptrack->load_immediate(grid_col);
-        if (Analog4.connected && ptrack->is<A4Track>()) {
+        if (Analog4.connected && ptrack->is<A4Track>() && grid_col < NUM_A4_SOUND_TRACKS) {
           a4_send[grid_col] = 1;
         }
       }
@@ -333,7 +333,7 @@ void MCLActions::send_tracks_to_devices() {
   // Send Analog4
 #ifdef EXT_TRACKS
   if (Analog4.connected) {
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
       if (a4_send[i] == 1) {
         auto a4_track = empty_track.load_from_mem<A4Track>(i);
         if (a4_track) {

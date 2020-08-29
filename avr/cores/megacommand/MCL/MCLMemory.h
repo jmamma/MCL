@@ -19,9 +19,11 @@
 
 #ifdef EXT_TRACKS
 #define NUM_A4_TRACKS    6UL
+#define NUM_A4_SOUND_TRACKS 4UL
 #else
 #pragma message("EXT TRACKS DISABLED")
 #define NUM_A4_TRACKS    0UL
+#define NUM_A4_SOUND_TRACKS 0UL
 #endif
 
 #define NUM_EXT_TRACKS   NUM_A4_TRACKS
