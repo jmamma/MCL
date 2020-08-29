@@ -394,7 +394,7 @@ public:
     }
   }
 
-  void pushLastValue(C *c) {
+  bool pushLastValue(C *c) {
     ListElt<C> *elt = pool.alloc(c);
     if (elt == NULL) {
       return false;
@@ -404,7 +404,7 @@ public:
     }
   }
 
-  void pushLastValue(C c) {
+  bool pushLastValue(C c) {
     ListElt<C> *elt = pool.alloc(c);
     if (elt == NULL) {
       return false;

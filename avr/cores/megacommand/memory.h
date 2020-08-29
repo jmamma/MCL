@@ -75,7 +75,7 @@ FORCED_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
 
 FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint32_t len) {
   select_bank(1);
-  memcpy(dst, src, len);
+  memcpy((void*)dst, (void*)src, len);
 }
 
 FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {

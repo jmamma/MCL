@@ -180,7 +180,7 @@ DATA_ENCODER_RETURN_TYPE MNMSysexDecoder::getNextByte(uint8_t *c) {
 	}
 	bits <<= 1;
 	if (data) { *c = *(ptr++) | (bits & 0x80); }
-    else { c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
+  else { *c = midi->midiSysex.getByte(n++) | (bits & 0x80); }
 	DATA_ENCODER_TRUE();
 }
 

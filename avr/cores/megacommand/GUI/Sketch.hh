@@ -106,7 +106,7 @@ public:
 	 * event, the sketch-wide handleEvent() method is called.
 	 **/
   bool handleTopEvent(gui_event_t *event) {
-    Page *curPage = currentPage();
+    LightPage *curPage = currentPage();
     if (curPage != NULL) {
       if (curPage->handleEvent(event)) {
 				return true;
