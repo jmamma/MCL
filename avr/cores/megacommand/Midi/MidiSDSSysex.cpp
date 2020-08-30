@@ -186,11 +186,11 @@ void MidiSDSSysexListenerClass::data_packet() {
     midi_sds.sendNakMessage();
     return;
   }
-  for (uint16_t b = 0; b < sysex->len - 1; b++) {
+  for (uint16_t b = 0; b < sysex->recordLen - 1; b++) {
     checksum ^= sysex->getByte(b);
   }
-  if ((sysex->len == 125) &&
-      (sysex->getByte(sysex->len - 1) == checksum)) {
+  if ((sysex->recordLen == 125) &&
+      (sysex->getByte(sysex->recordLen - 1) == checksum)) {
     // 120 byte data stream divided in to m words.
     // 7bits per data midi data byte.
     // For an 8bit sample (smallest bit rate), 2 midi data bytes are required.

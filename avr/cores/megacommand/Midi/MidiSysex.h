@@ -6,10 +6,6 @@
 #include "MidiUart.h"
 #include <inttypes.h>
 
-#ifndef SYSEX_BUF_SIZE
-#define SYSEX_BUF_SIZE 1024
-#endif
-
 class MidiSysexClass;
 
 /**
@@ -69,29 +65,33 @@ protected:
   bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
-  uint8_t *data;
-  uint8_t *recordBuf;
   volatile uint8_t *sysex_highmem_buf;
+  uint16_t sysex_bufsize;
 
 public:
-  ALWAYS_INLINE() void startRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
-    resetRecord(buf, maxLen);
+
+  bool callSysexCallBacks;
+  uint16_t recordLen;
+  MidiUartParent *uart;
+  MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
+
+  MidiSysexClass(MidiUartParent *_uart, uint16_t size, volatile uint8_t *ptr) {
+    uart = _uart;
+    sysex_highmem_buf = ptr;
+    sysex_bufsize = size;
+    aborted = false;
+    recording = false;
+    sysexLongId = false;
+  }
+
+  ALWAYS_INLINE() void startRecord() {
     recording = true;
+    recordLen = 0;
   }
 
   ALWAYS_INLINE() void stopRecord() { recording = false; }
 
-  ALWAYS_INLINE() void resetRecord(uint8_t *buf = NULL, uint16_t maxLen = 0) {
-    if ((buf == NULL) && (data != NULL)) {
-      recordBuf = data;
-      maxRecordLen = max_len;
-    } else if (buf) {
-      recordBuf = buf;
-      maxRecordLen = maxLen;
-    } else {
-      recordBuf = NULL;
-      maxRecordLen = max_len;
-    }
+  ALWAYS_INLINE() void resetRecord(uint16_t maxLen = 0) {
     recording = false;
     recordLen = 0;
   }
@@ -101,53 +101,22 @@ public:
   }
 
   uint8_t getByte(uint16_t n) {
-    if (n < maxRecordLen) {
+    if (n < sysex_bufsize) {
       // Retrieve data from specified memory buffer
-      if (recordBuf != NULL) {
-        return recordBuf[n];
-
-      } else {
-        // Read from sysex buffers in HIGH membank
-        return get_byte_bank1(sysex_highmem_buf + n);
-      }
+      // Read from sysex buffers in HIGH membank
+      return get_byte_bank1(sysex_highmem_buf + n);
     }
     return 255;
   }
 
   ALWAYS_INLINE() bool recordByte(uint8_t c) {
-    if (recordLen < maxRecordLen) {
+    if (recordLen < sysex_bufsize) {
       // Record data to specified memory buffer
-      if (recordBuf != NULL) {
-        recordBuf[recordLen++] = c;
-      } else {
-        // Write to sysex buffers in HIGH membank
-        putByte(recordLen++, c);
-      }
+      // Write to sysex buffers in HIGH membank
+      putByte(recordLen++, c);
       return true;
     }
     return false;
-  }
-  bool callSysexCallBacks;
-  uint16_t max_len;
-  uint16_t recordLen;
-  uint16_t maxRecordLen;
-
-  uint16_t len;
-
-  MidiUartParent *uart;
-
-  MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
-
-  MidiSysexClass(uint8_t *_data, uint16_t size, volatile uint8_t *ptr) {
-    sysex_highmem_buf = ptr;
-    data = _data;
-    max_len = size;
-    len = 0;
-    aborted = false;
-    recording = false;
-    recordBuf = NULL;
-    maxRecordLen = 0;
-    sysexLongId = false;
   }
 
   void initSysexListeners() {
@@ -196,7 +165,6 @@ public:
   }
 
   ALWAYS_INLINE() void reset() {
-    len = 0;
     aborted = false;
     recording = false;
     recordLen = 0;
@@ -227,10 +195,20 @@ public:
         listeners[i]->abort();
     }
   }
+
   // Handled by main loop
-  void end();
+  void end() {
+    callSysexCallBacks = false;
+    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+      if (isListenerActive(listeners[i])) {
+        listeners[i]->end();
+      }
+    }
+  }
+
   // Handled by interrupts
   ALWAYS_INLINE() void end_immediate() {
+    stopRecord();
     recvIds[0] = getByte(0);
     if (recvIds[0] == 0x00) {
       sysexLongId = true;
@@ -250,28 +228,10 @@ public:
 
   ALWAYS_INLINE() void handleByte(uint8_t byte) {
     if (recording) {
-      len++;
       recordByte(byte);
     }
+    // XXX listener handleByte ignored
   }
-
-  /* @} */
-};
-
-class MididuinoSysexListenerClass : public MidiSysexListenerClass {
-  /**
-   * \addtogroup midi_sysex
-   *
-   * @{
-   **/
-
-public:
-  MididuinoSysexListenerClass();
-  virtual void handleByte(uint8_t byte);
-
-#ifdef HOST_MIDIDUINO
-  virtual ~MididuinoSysexListenerClass() {}
-#endif
 
   /* @} */
 };
@@ -280,7 +240,6 @@ public:
 // extern MidiSysexClass MidiSysex2;
 #define MidiSysex Midi.midiSysex
 #define MidiSysex2 Midi2.midiSysex
-extern MididuinoSysexListenerClass MididuinoSysexListener;
 
 /* @} @} */
 

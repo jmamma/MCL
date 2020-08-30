@@ -272,8 +272,8 @@ uint8_t sysexBuf2[2800];
 MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
 */
 
-MidiClass Midi(&MidiUart, NULL, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
-MidiClass Midi2(&MidiUart2, NULL, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
+MidiClass Midi(&MidiUart, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
+MidiClass Midi2(&MidiUart2, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
 
 bool enable_clock_callbacks = true;
 
