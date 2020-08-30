@@ -1,5 +1,11 @@
 #include "MCL_impl.h"
 
+// template specializations
+template<> DeviceTrack* DeviceTrack::init_track_type<EmptyTrack>() { return init_track_type(EMPTY_TRACK_TYPE); }
+template<> DeviceTrack* DeviceTrack::init_track_type<ExtTrack>() { return init_track_type(EXT_TRACK_TYPE); }
+template<> DeviceTrack* DeviceTrack::init_track_type<MDTrack>() { return init_track_type(MD_TRACK_TYPE); }
+template<> DeviceTrack* DeviceTrack::init_track_type<A4Track>() { return init_track_type(A4_TRACK_TYPE); }
+
 DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   DEBUG_PRINT_FN();
   auto tmp = active;

@@ -49,6 +49,8 @@ public:
   virtual uint16_t get_track_size() = 0;
   DeviceTrack *init_track_type(uint8_t track_type);
 
+  template<class T> DeviceTrack* init_track_type() { return nullptr; }
+
   DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
   template <class T> T *load_from_grid(uint8_t col, uint16_t row) {
     auto *p = load_from_grid(col, row);
@@ -61,8 +63,7 @@ public:
   ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
     DEBUG_PRINT_FN();
-    T* tmp = ::new(this) T;
-    DeviceTrack* that = init_track_type(tmp->active);
+    DeviceTrack* that = init_track_type<T>();
     /*
     DEBUG_DUMP((uint16_t)this);
     DEBUG_DUMP((uint16_t)that);
