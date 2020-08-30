@@ -295,7 +295,7 @@ uint16_t MNMPattern::toSysex(MNMDataToSysexEncoder &encoder) {
 
 	encoder.stop7Bit();
 	encoder.begin();
-    encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+  encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
 	encoder.pack8(MNM_PATTERN_MESSAGE_ID);
 	encoder.pack8(0x05); // version
 	encoder.pack8(0x01); // revision

@@ -144,7 +144,7 @@ static bool mnm_setup(uint8_t port) {
       return false;
     }
 
-    DIAG_PRINTLN("mnm getglobal ok");
+    //DIAG_PRINTLN("mnm getglobal ok");
     MNM.connected = MNM.global.fromSysex(MNM.midi);
 
     return MNM.connected;
