@@ -44,7 +44,7 @@ void DiagnosticPage::draw_log() {
     y = y + 6;
   }
 
-  if(++log_disp_frame > 5) {
+  if(++log_disp_frame > 3) {
     log_disp_frame = 0;
     if(log_disp_head != log_head && ++log_disp_head >= DIAGNOSTIC_NUM_LOG) {
       log_disp_head = 0;
