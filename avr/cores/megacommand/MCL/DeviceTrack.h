@@ -4,6 +4,7 @@
 
 #include "GridTrack.h"
 #include "new.h"
+#include "DiagnosticPage.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1
@@ -71,12 +72,9 @@ public:
     DEBUG_PRINT_FN();
     DeviceTrack* that = init_track_type<T>();
     /*
-    DEBUG_DUMP((uint16_t)this);
-    DEBUG_DUMP((uint16_t)that);
-    uint32_t get = this->get_region();
-    DEBUG_DUMP(get);
-    get = that->get_region();
-    DEBUG_DUMP(get);
+    diag_page.println("load", (uint16_t)that);
+    diag_page.println("this", (uint16_t)this);
+    diag_page.println("region", (uint16_t)that->get_region());
     */
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;

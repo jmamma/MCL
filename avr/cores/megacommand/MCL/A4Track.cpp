@@ -39,7 +39,8 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   return true;
 }
 
-//#include "MCLMemory.h"
+#include "MCLMemory.h"
+//__WOW<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__WOW<BANK1_FILE_ENTRIES_END> addr_end;
 //__WOW<BANK1_A4_TRACKS_START> addr_a4;
 //__WOW<BANK1_MD_TRACKS_START> addr_md;

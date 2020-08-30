@@ -64,11 +64,9 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   }
 
   if (track < NUM_MD_TRACKS) {
-    memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[track],
+    memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[track].data(),
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track);
-    //h4x0r, remove me when we get more memory for slide_mask
-    md_track->seq_data.slide_mask32 = (uint32_t) mcl_seq.md_tracks[track].slide_mask;
     ret = grid.write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
   }
 #ifdef EXT_TRACKS
@@ -125,10 +123,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     }
   if (source_track < NUM_MD_TRACKS) {
     DEBUG_PRINTLN("loading seq track");
-    memcpy(&mcl_seq.md_tracks[track], &(md_track->seq_data),
+    memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
            sizeof(md_track->seq_data));
-    //h4x0r, remove me when we get more memory for slide_mask
-    mcl_seq.md_tracks[track].slide_mask = mcl_seq.md_tracks[track].slide_mask32;
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
     }

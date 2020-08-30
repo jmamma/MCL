@@ -15,6 +15,8 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
+#pragma once
+
 #if ARDUINO >= 100
  #include "Arduino.h"
 #else

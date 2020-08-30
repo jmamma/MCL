@@ -31,6 +31,7 @@ redistribution
 #include <SPI.h>
 #include <Wire.h>
 #include <stdlib.h>
+#include "DiagnosticPage.h"
 
 #ifdef SPI_HAS_TRANSACTION
 SPISettings oledspi = SPISettings(16000000, MSBFIRST, SPI_MODE0);
@@ -551,6 +552,11 @@ void Adafruit_SSD1305::display(void) {
       textbox_enabled = false;
     }
   }
+
+  if (diag_page.is_active()) {
+    diag_page.draw();
+  }
+
   uint16_t i = 0;
   uint8_t page;
   if (SSD1305_LCDHEIGHT == 64)

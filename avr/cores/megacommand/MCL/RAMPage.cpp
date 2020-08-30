@@ -58,7 +58,8 @@ void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();
   SET_LOCK();
-  mcl_seq.md_tracks[track].pattern_mask = 1;
+  mcl_seq.md_tracks[track].clear_track();
+  mcl_seq.md_tracks[track].steps[0].trig = true;
   mcl_seq.md_tracks[track].length = encoders[3]->cur * 4;
   CLEAR_LOCK();
 }
@@ -116,16 +117,16 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 1;
+    md_track.seq_data.steps[0].trig = true;
     // md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_track.seq_data.pattern_mask = 1;
+    md_track.seq_data.steps[0].trig = true;
     // oneshot
     // md_track.seq_data.conditional[0] = 14;
   } else {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 0;
+    md_track.seq_data.steps[0].trig = false;
   }
 
   md_track.machine.muteGroup = 127;
@@ -197,61 +198,64 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   uint8_t step_inc = track_length / slices;
   bool clear_locks = true;
   bool send_params = false;
-  mcl_seq.md_tracks[track].clear_track(clear_locks, send_params);
 
-  mcl_seq.md_tracks[track].locks_params[0] = ROM_STRT + 1;
-  mcl_seq.md_tracks[track].locks_params[1] = ROM_END + 1;
+  auto &trk = mcl_seq.md_tracks[track];
+  auto &ln_trk = mcl_seq.md_tracks[linked_track];
+  trk.clear_track(clear_locks, send_params);
+
+  trk.locks_params[0] = ROM_STRT + 1;
+  trk.locks_params[1] = ROM_END + 1;
   uint8_t mode = encoders[1]->cur;
 
   for (uint8_t s = 0; s < slices; s++) {
     uint8_t n = s * step_inc;
 
     if ((linked_track < track) || (linked_track == 255)) {
-      SET_BIT64(mcl_seq.md_tracks[track].pattern_mask, n);
+      trk.steps[n].trig = true;
     }
-    SET_BIT64(mcl_seq.md_tracks[track].lock_mask, n);
     if (linked_track < track) {
-      mcl_seq.md_tracks[track].locks[0][n] =
-          mcl_seq.md_tracks[linked_track].locks[0][n];
-      mcl_seq.md_tracks[track].locks[1][n] =
-          mcl_seq.md_tracks[linked_track].locks[1][n];
+      trk.set_track_locks_i(n, 0, ln_trk.get_track_lock(n, 0));
+      trk.set_track_locks_i(n, 1, ln_trk.get_track_lock(n, 1));
     } else if (RAMPage::slice_modes[page_id] == 0) {
-      mcl_seq.md_tracks[track].locks[0][n] = sample_inc * s + 1;
-      mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (s + 1) + 1;
-      if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-        mcl_seq.md_tracks[track].locks[1][n] = 128;
-      }
+      trk.set_track_locks_i(n, 0, sample_inc * s + 1);
+      auto val = (sample_inc) * (s + 1) + 1;
+      if (val > 128)
+        val = 128;
+      trk.set_track_locks_i(n, 1, val);
     } else {
       switch (mode) {
-      default:
+      default: {
         // Reverse
-        mcl_seq.md_tracks[track].locks[1][n] = sample_inc * s + 1;
-        mcl_seq.md_tracks[track].locks[0][n] = (sample_inc) * (s + 1) + 1;
-        if (mcl_seq.md_tracks[track].locks[0][n] > 128) {
-          mcl_seq.md_tracks[track].locks[0][n] = 128;
+        trk.set_track_locks_i(n, 1, sample_inc * s + 1);
+        auto val = (sample_inc) * (s + 1) + 1;
+        if (val > 128) {
+          val = 128;
         }
+        trk.set_track_locks_i(n, 0, val);
         break;
-      case 5:
-
-        mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (slices - s) + 1;
-        mcl_seq.md_tracks[track].locks[1][n] =
-            (sample_inc) * (slices - s + 1) + 1;
-        if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-          mcl_seq.md_tracks[track].locks[1][n] = 128;
+      }
+      case 5: {
+        trk.set_track_locks_i(n, 0, sample_inc * (slices - s) + 1);
+        auto val = (sample_inc) * (slices - s + 1) + 1;
+        if (val > 128) {
+          val = 128;
         }
+        trk.set_track_locks_i(n, 1, val);
 
         break;
-      case 6:
-
+      }
+      case 6: {
         uint8_t t;
         t = random(0, slices);
-        mcl_seq.md_tracks[track].locks[0][n] = sample_inc * (t) + 1;
-        mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (t + 1) + 1;
-        if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-          mcl_seq.md_tracks[track].locks[1][n] = 128;
+        trk.set_track_locks_i(n, 0, sample_inc * (t) + 1);
+        auto val = (sample_inc) * (t + 1) + 1;
+        if (val > 128) {
+          val = 128;
         }
+        trk.set_track_locks_i(n, 1, val);
 
         break;
+      }
       case 4:
       case 3:
       case 2:
@@ -275,17 +279,19 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           }
         }
         if (s % m == 0) {
-          mcl_seq.md_tracks[track].locks[1][n] = sample_inc * s + 1;
-          mcl_seq.md_tracks[track].locks[0][n] = (sample_inc) * (s + 1) + 1;
-          if (mcl_seq.md_tracks[track].locks[0][n] > 128) {
-            mcl_seq.md_tracks[track].locks[0][n] = 128;
+          trk.set_track_locks_i(n, 1, sample_inc * s + 1);
+          auto val = (sample_inc) * (s + 1) + 1;
+          if (val > 128) {
+            val = 128;
           }
+          trk.set_track_locks_i(n, 0, val);
         } else {
-          mcl_seq.md_tracks[track].locks[0][n] = sample_inc * s + 1;
-          mcl_seq.md_tracks[track].locks[1][n] = (sample_inc) * (s + 1) + 1;
-          if (mcl_seq.md_tracks[track].locks[1][n] > 128) {
-            mcl_seq.md_tracks[track].locks[1][n] = 128;
+          trk.set_track_locks_i(n, 0, sample_inc * s + 1);
+          auto val = (sample_inc) * (s + 1) + 1;
+          if (val > 128) {
+            val = 128;
           }
+          trk.set_track_locks_i(n, 1, val);
         }
         break;
       }
@@ -339,13 +345,13 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 1;
+    md_track.seq_data.steps[0].trig = true;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_track.seq_data.pattern_mask = 1;
+    md_track.seq_data.steps[0].trig = true;
   } else {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.pattern_mask = 0;
+    md_track.seq_data.steps[0].trig = false;
   }
   md_track.machine.muteGroup = 127;
 
@@ -622,7 +628,6 @@ void RAMPage::display() {
   */
   mcl_gui.draw_knob_frame();
   mcl_gui.draw_knob(0, "SRC", source);
-
 
   char val[4];
 

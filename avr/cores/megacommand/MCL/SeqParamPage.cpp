@@ -16,11 +16,8 @@ void SeqParamPage::config() {
   strncat(info1, buf, len1);
 
   strcpy(info2, "PARAM-");
-  if (page_id == 0) {
-    strcat(info2, "A");
-  } else {
-    strcat(info2, "B");
-  }
+  info2[6] = 'A' + page_id;
+  info2[7] = 0;
 
   // config menu
   config_as_lockedit();
@@ -35,9 +32,9 @@ void SeqParamPage::init() {
   SeqPage::mask_type = MASK_PATTERN;
 
   seq_param1.max = 24;
-  seq_lock1.max = 128;
+  seq_lock1.max = 127;
   seq_param3.max = 24;
-  seq_lock2.max = 128;
+  seq_lock2.max = 127;
 
   seq_param3.handler = NULL;
 
@@ -168,20 +165,17 @@ void SeqParamPage::loop() {
 
       if (note_interface.notes[n] == 1) {
         uint8_t step = n + (page_select * 16);
-        int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; // upper
-        uint8_t condition =
-            mcl_seq.md_tracks[last_md_track].conditional[step]; // lower
+        auto &active_track = mcl_seq.md_tracks[last_md_track];
+        int8_t utiming = active_track.timing[step]; // upper
 
         // Fudge timing info if it's not there
         if (utiming == 0) {
           utiming = 12;
-          mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
           mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
         }
-        SET_BIT64(mcl_seq.md_tracks[last_md_track].lock_mask, step);
 
-        mcl_seq.md_tracks[last_md_track].locks[p1][step] = seq_lock1.cur + 1;
-        mcl_seq.md_tracks[last_md_track].locks[p2][step] = seq_lock2.cur + 1;
+        active_track.set_track_locks_i(step, p1, seq_lock1.cur);
+        active_track.set_track_locks_i(step, p2, seq_lock2.cur);
       }
     }
     if (seq_param1.hasChanged() || seq_param3.hasChanged()) {
@@ -207,66 +201,42 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     uint8_t device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    uint64_t *seq_mask = &(mcl_seq.md_tracks[last_md_track].lock_mask);
     if (device == DEVICE_A4) {
       return true;
     }
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint8_t step = track + (page_select * 16);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      uint8_t param_offset;
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];
 
-      seq_lock1.cur = mcl_seq.md_tracks[last_md_track].locks[p1][step] - 1;
-      seq_lock2.cur = mcl_seq.md_tracks[last_md_track].locks[p2][step] - 1;
-
-      if (!IS_BIT_SET64_P(seq_mask, step)) {
-        SET_BIT64_P(seq_mask, step);
+      if (!active_track.steps[step].locks_enabled) {
+        // ignore next track event to prevent it being cleared on release
         note_interface.ignoreNextEvent(track);
+        // enable here so we can access the lock values below
+        active_track.enable_step_locks(step);
       }
-    }
-    if (event->mask == EVENT_BUTTON_RELEASED) {
+
+      // get the values. if no values, load up the orig.
+      seq_lock1.cur = active_track.get_track_lock(step, p1);
+      seq_lock2.cur = active_track.get_track_lock(step, p2);
+
+      active_track.set_track_locks_i(step, p1, seq_lock1.cur);
+      active_track.set_track_locks_i(step, p2, seq_lock2.cur);
+    } else if (event->mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_A4) {
-        // GUI.setPage(&seq_extstep_page);
         return true;
       }
 
-      /*      int8_t utiming = mcl_seq.md_tracks[last_md_track].timing[step]; //
-upper uint8_t condition = mcl_seq.md_tracks[last_md_track].conditional[step]; //
-lower
-
-// Fudge timing info if it's not there
-if (utiming == 0) {
-  utiming = 12;
-  mcl_seq.md_tracks[last_md_track].conditional[step] = condition;
-  mcl_seq.md_tracks[last_md_track].timing[step] = utiming;
-}*/
-      if (IS_BIT_SET64_P(seq_mask, step)) {
+      if (active_track.steps[step].locks_enabled) {
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          CLEAR_BIT64_P(seq_mask, step);
+          active_track.disable_step_locks(step);
         }
       }
-      /*
-            mcl_seq.md_tracks[last_md_track].locks[p1][step] =
-                seq_lock1.cur;
-            mcl_seq.md_tracks[last_md_track].locks[p2][step] =
-                seq_lock2.cur;
-
-            mcl_seq.md_tracks[last_md_track].locks_params[p1] =
-         seq_param1.cur; mcl_seq.md_tracks[last_md_track].locks_params[p2] =
-         seq_param3.cur;
-        */
     }
     return true;
   }
-/*  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-      GUI.setPage(&grid_page);
-    }
-    return true;
-  }
-*/
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     uint8_t page_depth = page_id;

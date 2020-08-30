@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "DiagnosticPage.h"
 
 void MCLSeq::setup() {
 
@@ -156,6 +157,8 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
+  Stopwatch sw;
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
@@ -176,6 +179,9 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].recalc_slides();
   }
+
+  auto seq_time = sw.elapsed();
+  //DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
