@@ -76,7 +76,9 @@ void GuiClass::loop() {
   if (!EventRB.isEmpty()) {
     clock_minutes = 0;
     minuteclock = 0;
-    screen_saver = false;
+#ifdef OLED_DISPLAY
+    oled_display.screen_saver = false;
+#endif
   }
 
   while (!EventRB.isEmpty()) {
@@ -117,16 +119,12 @@ void GuiClass::loop() {
 #ifndef HOST_MIDIDUINO
   ::loop();
 #endif
-  if ((use_screen_saver) && (!screen_saver) && (clock_minutes >= SCREEN_SAVER_TIME)) {
-    screen_saver = true;
+  if (use_screen_saver && clock_minutes >= SCREEN_SAVER_TIME) {
 #ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-    oled_display.display();
+    oled_display.screen_saver = true;
 #endif
   }
-  if (screen_saver == false) {
-    display();
-  }
+  display();
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {

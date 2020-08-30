@@ -66,7 +66,9 @@ void LightPage::update() {
     if (encoders[i] != NULL) {
       encoders[i]->update(_encoders + i);
       if (encoders[i]->hasChanged()) {
-        GUI.screen_saver = false;
+#ifdef OLED_DISPLAY
+        oled_display.screen_saver = false;
+#endif
         clock_minutes = 0;
         minuteclock = 0;
         encoders_used_clock[i] = slowclock;
