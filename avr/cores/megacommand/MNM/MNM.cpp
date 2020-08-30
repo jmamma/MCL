@@ -135,7 +135,7 @@ void MNMClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
 }
 
 void MNMClass::setStatus(uint8_t id, uint8_t value) {
-  uint8_t data[] = { 0x71, id & 0x7F, value & 0x7F };
+  uint8_t data[] = { 0x71, (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F) };
   MNM.sendSysex(data, countof(data));
 }
 
@@ -246,44 +246,27 @@ void MNMClass::setMachine(uint8_t track, uint8_t idx) {
   setTrackLevel(track, kit.levels[idx]);
 }
 
-class BlockCurrentStatusCallback : public MNMCallback {
-public:
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  BlockCurrentStatusCallback(uint8_t _type) {
-    type = _type;
-    received = false;
-    value = 255;
-  }
-
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-};
-
 uint8_t MNMClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  BlockCurrentStatusCallback cb(type);
+  SysexCallback cb(type);
 
   MNMSysexListener.addOnStatusResponseCallback
-    (&cb, (mnm_status_callback_ptr_t)&BlockCurrentStatusCallback::onStatusResponseCallback);
+    (&cb, (sysex_status_callback_ptr_t)&SysexCallback::onStatusResponse);
   MNM.sendRequest(MNM_STATUS_REQUEST_ID, type);
-  do {
-    current_clock = read_slowclock();
-    handleIncomingMidi();
-  } while ((clock_diff(start_clock, current_clock) < timeout) && !cb.received);
+  connected = cb.waitBlocking(timeout);
   MNMSysexListener.removeOnStatusResponseCallback(&cb);
 
   return cb.value;
 }
   
-
+bool MNMClass::getBlockingGlobal(uint8_t idx, uint16_t timeout) {
+  SysexCallback cb;
+  MNMSysexListener.addOnGlobalMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+  MNM.sendRequest(MNM_GLOBAL_REQUEST_ID, idx);
+  connected = cb.waitBlocking(timeout);
+  MNMSysexListener.removeOnGlobalMessageCallback(&cb);
+  return connected;
+}
+  
 uint8_t MNMClass::getCurrentTrack(uint16_t timeout) {
   uint8_t value = getBlockingStatus(MNM_CURRENT_AUDIO_TRACK_REQUEST, timeout);
   if (value == 255) {

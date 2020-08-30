@@ -1,8 +1,4 @@
-#ifndef MNM_PARAMS_H__
-#define MNM_PARAMS_H__
-
-class MNMCallback {
-};
+#pragma once
 
 extern uint8_t monomachine_sysex_hdr[5];
 
@@ -351,4 +347,3 @@ extern uint8_t monomachine_sysex_hdr[5];
 #define MNM_MODEL_LFO3_INTL 0x36
 #define MNM_MODEL_LFO3_DPTH 0x37
 
-#endif /* MNM_PARAMS_H__ */

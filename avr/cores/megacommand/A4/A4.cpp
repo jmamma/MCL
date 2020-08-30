@@ -77,131 +77,114 @@ void A4Class::requestGlobalX(uint8_t global) {
   sendRequest(A4_GLOBALX_REQUEST_ID, global);
 }
 
-bool A4Class::waitBlocking(A4BlockCurrentStatusCallback *cb, uint16_t timeout) {
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  do {
-    current_clock = read_slowclock();
-    // MCL Code, trying to replicate main loop
-    //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-    //                           MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    //      MidiClock.updateClockInterval();
-    // }
-    handleIncomingMidi();
-    //		GUI.display();
-  } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
-  connected = cb->received;
-  return cb->received;
-}
-
 bool A4Class::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnKitMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestKit(kit);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnKitMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnPatternMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestPattern(pattern);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnPatternMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnGlobalMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestGlobal(global);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnGlobalMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingSound(uint8_t sound, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnSoundMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestSound(sound);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSoundMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingSettings(uint8_t settings, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnSettingsMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestSettings(settings);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSettingsMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingKitX(uint8_t kit, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnKitMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestKitX(kit);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnKitMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingPatternX(uint8_t pattern, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnPatternMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestPatternX(pattern);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnPatternMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingGlobalX(uint8_t global, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnGlobalMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestGlobalX(global);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnGlobalMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingSoundX(uint8_t sound, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnSoundMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestSoundX(sound);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSoundMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
-  A4BlockCurrentStatusCallback cb;
+  SysexCallback cb;
   A4SysexListener.addOnSettingsMessageCallback(
-      &cb, (A4_callback_ptr_t)&A4BlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   Analog4.requestSettingsX(settings);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSettingsMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 void A4Class::muteTrack(uint8_t track, bool mute) {

@@ -118,6 +118,7 @@ static bool a4_setup(uint8_t port) {
   delay_progress(300);
   if (Analog4.getBlockingSettings(0)) {
     Analog4.connected = true;
+    DIAG_PRINTLN("a4 drv ok");
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   }
   return Analog4.connected;
@@ -132,8 +133,21 @@ static bool mnm_setup(uint8_t port) {
     myclock = slowclock;
 
     delay_progress(400);
-    // TODO mnm setup here
-    return true;
+
+    //MNM.global.origPosition = 7;
+    //MNM.global.arpOut = true;
+    //MNM.global.autotrackChannel = 9;
+    //MNM.global.baseFreq = 440;
+
+    //MNM.loadGlobal(7);
+    if (!MNM.getBlockingGlobal(7)) {
+      return false;
+    }
+
+    DIAG_PRINTLN("mnm getglobal ok");
+    MNM.connected = MNM.global.fromSysex(MNM.midi);
+
+    return MNM.connected;
   }
 
   return false;
@@ -146,7 +160,7 @@ static void md_disconnect() { MD.connected = false; }
 
 static void a4_disconnect() { Analog4.connected = false; }
 
-static void mnm_disconnect() { }
+static void mnm_disconnect() { MNM.connected = false; }
 
 static midi_peer_driver_t port1_drivers[] = {
   {DEVICE_MD, "MD", md_setup, md_disconnect, icon_md},

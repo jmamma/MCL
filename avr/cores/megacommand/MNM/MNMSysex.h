@@ -8,28 +8,17 @@
 #include "Vector.h"
 #include "WProgram.h"
 
-typedef void (MNMCallback::*mnm_callback_ptr_t)();
-typedef void (MNMCallback::*mnm_status_callback_ptr_t)(uint8_t p1, uint8_t p2);
-
 class MNMSysexListenerClass : public MidiSysexListenerClass {
 public:
-  CallbackVector<MNMCallback, 8> onGlobalMessageCallbacks;
-  CallbackVector<MNMCallback, 8> onKitMessageCallbacks;
-  CallbackVector<MNMCallback, 8> onSongMessageCallbacks;
-  CallbackVector<MNMCallback, 8> onPatternMessageCallbacks;
+  CallbackVector<SysexCallback, 8> onGlobalMessageCallbacks;
+  CallbackVector<SysexCallback, 8> onKitMessageCallbacks;
+  CallbackVector<SysexCallback, 8> onSongMessageCallbacks;
+  CallbackVector<SysexCallback, 8> onPatternMessageCallbacks;
 
-  CallbackVector2<MNMCallback, 8, uint8_t, uint8_t> onStatusResponseCallbacks;
+  CallbackVector2<SysexCallback, 8, uint8_t, uint8_t> onStatusResponseCallbacks;
 
   bool isMNMMessage;
-  bool isMNMEncodedMessage;
   uint8_t msgType;
-
-  CircularBuffer<uint8_t, 4> sysexCirc;
-  MNMSysexToDataEncoder encoder;
-  uint16_t msgLen;
-  uint16_t msgCksum;
-
-  MidiClass *midi;
 
   MNMSysexListenerClass() : MidiSysexListenerClass() {
     ids[0] = 0;
@@ -44,57 +33,57 @@ public:
 
   void setup(MidiClass *_midi);
 
-  void addOnStatusResponseCallback(MNMCallback *obj,
-                                   mnm_status_callback_ptr_t func) {
+  void addOnStatusResponseCallback(SysexCallback *obj,
+                                   sysex_status_callback_ptr_t func) {
     onStatusResponseCallbacks.add(obj, func);
   }
-  void removeOnStatusResponseCallback(MNMCallback *obj,
-                                      mnm_status_callback_ptr_t func) {
+  void removeOnStatusResponseCallback(SysexCallback *obj,
+                                      sysex_status_callback_ptr_t func) {
     onStatusResponseCallbacks.remove(obj, func);
   }
-  void removeOnStatusResponseCallback(MNMCallback *obj) {
+  void removeOnStatusResponseCallback(SysexCallback *obj) {
     onStatusResponseCallbacks.remove(obj);
   }
 
-  void addOnGlobalMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void addOnGlobalMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onGlobalMessageCallbacks.add(obj, func);
   }
-  void removeOnGlobalMessageCallback(MNMCallback *obj,
-                                     mnm_callback_ptr_t func) {
+  void removeOnGlobalMessageCallback(SysexCallback *obj,
+                                     sysex_callback_ptr_t func) {
     onGlobalMessageCallbacks.remove(obj, func);
   }
-  void removeOnGlobalMessageCallback(MNMCallback *obj) {
+  void removeOnGlobalMessageCallback(SysexCallback *obj) {
     onGlobalMessageCallbacks.remove(obj);
   }
 
-  void addOnKitMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void addOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onKitMessageCallbacks.add(obj, func);
   }
-  void removeOnKitMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void removeOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onKitMessageCallbacks.remove(obj, func);
   }
-  void removeOnKitMessageCallback(MNMCallback *obj) {
+  void removeOnKitMessageCallback(SysexCallback *obj) {
     onKitMessageCallbacks.remove(obj);
   }
 
-  void addOnPatternMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void addOnPatternMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onPatternMessageCallbacks.add(obj, func);
   }
-  void removeOnPatternMessageCallback(MNMCallback *obj,
-                                      mnm_callback_ptr_t func) {
+  void removeOnPatternMessageCallback(SysexCallback *obj,
+                                      sysex_callback_ptr_t func) {
     onPatternMessageCallbacks.remove(obj, func);
   }
-  void removeOnPatternMessageCallback(MNMCallback *obj) {
+  void removeOnPatternMessageCallback(SysexCallback *obj) {
     onPatternMessageCallbacks.remove(obj);
   }
 
-  void addOnSongMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void addOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onSongMessageCallbacks.add(obj, func);
   }
-  void removeOnSongMessageCallback(MNMCallback *obj, mnm_callback_ptr_t func) {
+  void removeOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
     onSongMessageCallbacks.remove(obj, func);
   }
-  void removeOnSongMessageCallback(MNMCallback *obj) {
+  void removeOnSongMessageCallback(SysexCallback *obj) {
     onSongMessageCallbacks.remove(obj);
   }
 };

@@ -164,6 +164,7 @@ class MNMClass {
   }
   void revertToTrack(uint8_t track, bool reloadKit = false);
 
+  bool getBlockingGlobal(uint8_t index, uint16_t timeout = 1000);
   uint8_t getBlockingStatus(uint8_t type, uint16_t timeout = 1000);
   uint8_t getCurrentTrack(uint16_t timeout = 1000);
   uint8_t getCurrentKit(uint16_t timeout = 1000);

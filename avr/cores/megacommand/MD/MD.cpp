@@ -576,56 +576,26 @@ bool MDClass::checkClockSettings() { return false; }
 uint8_t MDClass::waitBlocking(uint16_t timeout) {
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
-  // init MDSysexListener Class
-  //
   MDSysexListener.start();
   do {
     current_clock = read_slowclock();
-
-    // MCl Code, trying to replicate main loop
-
-    //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-    //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    //     MidiClock.updateClockInterval();
-    //   }
     handleIncomingMidi();
-    //    GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (MDSysexListener.msgType == 255));
   return MDSysexListener.msgType;
-}
-
-bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  do {
-    current_clock = read_slowclock();
-
-    // MCl Code, trying to replicate main loop
-
-    //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-    //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    //     MidiClock.updateClockInterval();
-    //   }
-    handleIncomingMidi();
-    //    GUI.display();
-  } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
-  connected = cb->received;
-  return cb->received;
 }
 
 // Perform checks on current sysex buffer to see if it Sysex.
 //
 
 uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb(type);
+  SysexCallback cb(type);
 
   MDSysexListener.addOnStatusResponseCallback(
-      &cb, (md_status_callback_ptr_t)&MDBlockCurrentStatusCallback::
-               onStatusResponseCallback);
+      &cb, (sysex_status_callback_ptr_t)&SysexCallback::onStatusResponse);
   MD.sendRequest(MD_STATUS_REQUEST_ID, type);
 
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
 
   MDSysexListener.removeOnStatusResponseCallback(&cb);
 
@@ -633,18 +603,18 @@ uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
 }
 
 bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
+  SysexCallback cb;
   uint8_t count = SYSEX_RETRIES;
   while ((MidiClock.state == 2) &&
          ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
     ;
   while (count) {
     MDSysexListener.addOnKitMessageCallback(
-        &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
+        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
     MD.requestKit(kit);
-    bool ret = waitBlocking(&cb, timeout);
+    connected = cb.waitBlocking(timeout);
     MDSysexListener.removeOnKitMessageCallback(&cb);
-    if (ret) {
+    if (connected) {
       if (MD.kit.fromSysex(midi)) {
         return true;
       }
@@ -655,18 +625,18 @@ bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
 }
 
 bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
+  SysexCallback cb;
   uint8_t count = SYSEX_RETRIES;
   while ((MidiClock.state == 2) &&
          ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
     ;
   while (count) {
     MDSysexListener.addOnPatternMessageCallback(
-        &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
+        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
     MD.requestPattern(pattern);
-    bool ret = waitBlocking(&cb, timeout);
+    connected = cb.waitBlocking(timeout);
     MDSysexListener.removeOnPatternMessageCallback(&cb);
-    if (ret) {
+    if (connected) {
       if (MD.pattern.fromSysex(midi)) {
         return true;
       }
@@ -677,14 +647,14 @@ bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
 }
 
 bool MDClass::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
+  SysexCallback cb;
   MDSysexListener.addOnGlobalMessageCallback(
-      &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
   MD.requestGlobal(global);
-  bool ret = waitBlocking(&cb, timeout);
+  connected = cb.waitBlocking(timeout);
   MDSysexListener.removeOnGlobalMessageCallback(&cb);
 
-  return ret;
+  return connected;
 }
 
 uint8_t MDClass::getCurrentTrack(uint16_t timeout) {

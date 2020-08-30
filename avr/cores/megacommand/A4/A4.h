@@ -5,51 +5,6 @@
 
 #include "Elektron.h"
 
-/**
- * \addtogroup a4_callbacks
- *
- * @{
- * A4 Callback class, inherit from this class if you want to use callbacks on A4
- *events.
- **/
-class A4Callback {};
-
-/**
- * Standard method prototype for argument-less A4 callbacks.
- **/
-typedef void (A4Callback::*A4_callback_ptr_t)();
-
-class A4BlockCurrentStatusCallback : public A4Callback {
-  /**
-   * \addtogroup md_callbacks
-   * @{
-   **/
-
-public:
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  A4BlockCurrentStatusCallback(uint8_t _type = 0) {
-    type = _type;
-    received = false;
-    value = 255;
-  }
-
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-
-    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-
-  void onSysexReceived() { received = true; }
-
-  /* @} */
-};
-
 #include "A4Messages.h"
 #include "A4Params.h"
 #include "A4Sysex.h"
@@ -106,12 +61,6 @@ public:
 
   void requestGlobal(uint8_t global);
   void requestGlobalX(uint8_t global);
-
-  /* requests */
-  /**
-   * Wait for a blocking answer to a status request. Timeout is in clock ticks.
-   **/
-  bool waitBlocking(A4BlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
 
   bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000);
   bool getBlockingPattern(uint8_t pattern, uint16_t timeout = 3000);

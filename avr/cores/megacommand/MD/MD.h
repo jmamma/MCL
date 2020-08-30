@@ -7,80 +7,6 @@
 
 #include "Elektron.h"
 
-/**
- * \addtogroup MD Elektron MachineDrum
- *
- * @{
- *
- * \defgroup md_md Elektron Machinedrum Class
- * \defgroup md_callbacks Elektron MachineDrum Callbacks
- *
- **/
-
-/**
- * \addtogroup md_callbacks
- *
- * @{
- * MD Callback class, inherit from this class if you want to use callbacks on MD
- *events.
- **/
-
-class MDCallback {
-  public:
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  MDCallback(uint8_t _type = 0) {
-    type = _type;
-    init();
-  }
-
-  void init() {
-    received = false;
-    value = 255;
-  }
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-
-    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-
-  virtual void onSysexReceived() { received = true; }
-
-};
-
-/**
- * Standard method prototype for argument-less MD callbacks.
- **/
-typedef void (MDCallback::*md_callback_ptr_t)();
-/**
- * Standard method prototype for MD status callbacks, called with the
- * status type and the status parameter. This is used to get the
- * current kit, current pattern, current global, etc...
- **/
-typedef void (MDCallback::*md_status_callback_ptr_t)(uint8_t type,
-                                                     uint8_t param);
-
-/**
- * Helper class storing the status and type of a Machinedrum
- * request. This is used to have a blocking call waiting for an answer
- * from the MachineDrum.
- **/
-class MDBlockCurrentStatusCallback : public MDCallback {
-
-public:
-  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {
-  }
-
-  /* @} */
-};
-
-/* @} */
-
 #include "MDMessages.h"
 #include "MDParams.h"
 #include "MDSysex.h"
@@ -489,7 +415,6 @@ public:
    **/
   uint8_t waitBlocking(uint16_t timeout = 1000);
 
-  bool waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
   /**
    * Get the status answer from the machinedrum, blocking until either
    * a message is received or the timeout has run out.
