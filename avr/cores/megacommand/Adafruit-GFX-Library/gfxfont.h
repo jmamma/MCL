@@ -4,8 +4,7 @@
 // file and pass address of GFXfont struct to setFont().  Pass NULL to
 // revert to 'classic' fixed-space bitmap font.
 
-#ifndef _GFXFONT_H_
-#define _GFXFONT_H_
+#pragma once
 
 typedef struct { // Data stored PER GLYPH
 	uint16_t bitmapOffset;     // Pointer into GFXfont->bitmap
@@ -21,4 +20,3 @@ typedef struct { // Data stored for FONT AS A WHOLE:
 	uint8_t   yAdvance;    // Newline distance (y axis)
 } GFXfont;
 
-#endif // _GFXFONT_H_

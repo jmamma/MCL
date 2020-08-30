@@ -1,6 +1,4 @@
-#include "LoudnessPage.h"
-#include "MCL.h"
-#include "MidiSDS.h"
+#include "MCL_impl.h"
 
 void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 
@@ -43,7 +41,7 @@ void LoudnessPage::scale_vol(float inc) {
            sizeof(md_track->seq_data));
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
     //    md_track->place_track_in_pattern(n, n, &MD.pattern);
-    md_track->place_track_in_kit(n, n, &MD.kit);
+    md_track->place_track_in_kit(n, &MD.kit);
     MD.setMachine(n, &(md_track->machine));
   }
 

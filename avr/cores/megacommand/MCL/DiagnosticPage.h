@@ -8,10 +8,11 @@
 #include "CommonTools/Stopwatch.h"
 
 #define DIAGNOSTIC_NUM_COUNTER 4
-#define DIAGNOSTIC_NUM_LOG 5
+#define DIAGNOSTIC_NUM_LOG 40
 
-#define DIAG_DUMP(i, x) diag_page.set_perfcounter(i, #x, x)
+#define DIAG_MEASURE(i, x) diag_page.set_perfcounter(i, #x, x)
 #define DIAG_PRINTLN(x) diag_page.println(x)
+#define DIAG_DUMP(x) diag_page.println(#x, x)
 
 class DiagnosticPage : public LightPage, MidiCallback {
 private:
@@ -24,9 +25,20 @@ private:
   char log_buf[DIAGNOSTIC_NUM_LOG][17];
 
   uint8_t log_head;
+  uint8_t log_disp_frame;
+  uint8_t log_disp_head;
 
   void draw_perfcounter();
   void draw_log();
+
+  void advance_log_head() {
+    ++log_head;
+    mode = 1;
+    active = true;
+    if (log_head >= DIAGNOSTIC_NUM_LOG) {
+      log_head = 0;
+    }
+  }
 
 public:
   DiagnosticPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
@@ -36,6 +48,8 @@ public:
         memset(perf_name, 0, sizeof(perf_name));
         memset(log_buf, 0, sizeof(log_buf));
         log_head = DIAGNOSTIC_NUM_LOG - 1;
+        log_disp_frame = 0;
+        log_disp_head = log_head;
   }
 
   void set_perfcounter(uint8_t idx, const char* name, uint32_t val) {
@@ -46,15 +60,20 @@ public:
   }
 
   void println(const char* msg) {
-    strncpy(log_buf[log_head++], msg, 16);
-    mode = 1;
-    if (log_head >= DIAGNOSTIC_NUM_LOG) {
-      log_head = 0;
-    }
+    strncpy(log_buf[log_head], msg, 16);
+    advance_log_head();
+  }
+
+  void println(const char* msg, uint16_t val) {
+    char buf[17];
+    strncpy(log_buf[log_head], msg, 16);
+    snprintf(buf, 16, "%u", val);
+    strncat(log_buf[log_head], buf, 16);
+    advance_log_head();
   }
 
   // -------- Diagnostic interfaces ----------
-  void deactivate() { active = false; }
+  void deactivate() { if (mode == 0) {active = false; } }
   bool is_active() { return active; }
 
   // -------- Page interfaces -----------

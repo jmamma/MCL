@@ -10,7 +10,7 @@
 // Encoder 3: Phase
 // Encoder 4: Mod (Width, Skew, Paramter Level etc)
 
-void osc_mod_handler(Encoder *enc);
+void osc_mod_handler(EncoderParent *enc);
 
 
 

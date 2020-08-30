@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLGfx.h"
+#include "MCL_impl.h"
 
 void MCLGfx::init_oled() {
 #ifdef OLED_DISPLAY

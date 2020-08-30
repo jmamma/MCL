@@ -1,5 +1,4 @@
-#include "SeqParamPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void SeqParamPage::setup() { SeqPage::setup(); }
 void SeqParamPage::config() {

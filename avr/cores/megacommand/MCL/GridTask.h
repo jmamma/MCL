@@ -3,7 +3,6 @@
 
 #include "MCL.h"
 #include "Task.h"
-#include "EmptyTrack.h"
 
 class GridTask : public Task {
 

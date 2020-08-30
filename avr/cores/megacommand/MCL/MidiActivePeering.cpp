@@ -1,6 +1,4 @@
-//#include "MidiActivePeering.h"
-#include "MidiActivePeering.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartParent *_getMidiUart(uint8_t port) {

@@ -32,7 +32,7 @@ void LCDParentClass::puts_p(PGM_P s) {
   }  
 }
 
-void LCDParentClass::puts(char *s) {
+void LCDParentClass::puts(const char *s) {
   uint8_t len = 0;
   while (*s != 0 && (len++ < LINE_LENGTH)) {
 #ifndef OLED_DISPLAY  
@@ -52,7 +52,7 @@ void LCDParentClass::line1() {
 #endif
 }
 
-void LCDParentClass::line1(char *s) {
+void LCDParentClass::line1(const char *s) {
   line1();
   puts(s);
 }
@@ -62,7 +62,7 @@ void LCDParentClass::line1_p(PGM_P s) {
   puts_p(s);
 }
 
-void LCDParentClass::line1_fill(char *s) {
+void LCDParentClass::line1_fill(const char *s) {
   line1();
   puts_fill(s);
 }
@@ -80,7 +80,7 @@ void LCDParentClass::line2() {
 #endif
 }
 
-void LCDParentClass::line2(char *s) {
+void LCDParentClass::line2(const char *s) {
   line2();
   puts(s);
 }
@@ -90,7 +90,7 @@ void LCDParentClass::line2_p(PGM_P s) {
   puts_p(s);
 }
 
-void LCDParentClass::line2_fill(char *s) {
+void LCDParentClass::line2_fill(const char *s) {
   line2();
   puts_fill(s);
 }
@@ -111,7 +111,7 @@ void LCDParentClass::clearLine() {
   }
 }
 
-void LCDParentClass::puts_fill(char *s, uint8_t i) {
+void LCDParentClass::puts_fill(const char *s, uint8_t i) {
   while (*s != 0) {
 #ifndef OLED_DISPLAY
     putdata(*s);
@@ -130,7 +130,7 @@ void LCDParentClass::puts_fill(char *s, uint8_t i) {
   }
 }
 
-void LCDParentClass::puts_fill(char *s) {
+void LCDParentClass::puts_fill(const char *s) {
   puts_fill(s, LINE_LENGTH);
 }
 
@@ -158,7 +158,7 @@ void LCDParentClass::puts_p_fill(PGM_P s) {
   puts_p_fill(s, LINE_LENGTH);
 }
 
-void LCDParentClass::put(char *data, uint8_t cnt) {
+void LCDParentClass::put(const char *data, uint8_t cnt) {
   while (cnt--)
     putdata(*data++);
 }

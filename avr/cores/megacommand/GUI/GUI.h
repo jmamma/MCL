@@ -59,7 +59,6 @@ typedef struct line_s {
 /* @} */
 
 class Page;
-class PageParent;
 class Sketch;
 
 /** The default sketch that is always available. **/
@@ -135,7 +134,7 @@ public:
    **/
   void setSketch(Sketch *_sketch);
   /** Returns a pointer to the current sketches currentPage(). **/
-  PageParent *currentPage();
+  LightPage *currentPage();
 
   /**
    * Set the current page of the active sketch (all the page stack will be
@@ -143,13 +142,13 @@ public:
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void setPage(PageParent *page);
+  void setPage(LightPage *page);
   /**
    * Push a new page on top of the currently active one.
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void pushPage(PageParent *page);
+  void pushPage(LightPage *page);
   /**
    * Pop the top page.
    *
@@ -161,7 +160,7 @@ public:
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void popPage(PageParent *page);
+  void popPage(LightPage *page);
 
   /**
    * Add a new event handler to the event handler vector (max 4). The

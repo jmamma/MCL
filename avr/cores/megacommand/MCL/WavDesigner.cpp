@@ -1,9 +1,4 @@
-#include "MCL.h"
-#include "WavDesigner.h"
-#include "DSP.h"
-#include "Osc.h"
-#include "Wav.h"
-#include "MidiSDS.h"
+#include "MCL_impl.h"
 
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();

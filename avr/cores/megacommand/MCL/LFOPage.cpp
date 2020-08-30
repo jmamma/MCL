@@ -1,9 +1,4 @@
-#include "LFO.h"
-#include "LFOPage.h"
-#include "MCL.h"
-#include "MCLGUI.h"
-#include "MCLSeq.h"
-#include "MD.h"
+#include "MCL_impl.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1

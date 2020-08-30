@@ -4,7 +4,6 @@
 #define PAGES_H__
 
 #include "Encoders.h"
-#include "ModalGui.h"
 #include "Stack.h"
 
 class Sketch;
@@ -236,174 +235,12 @@ public:
       shortName[0] = '\0';
     }
   }
-  void Page::update();
+  void update();
 };
 
 /* @} */
 
 class Encoder;
-
-/**
- * \addtogroup gui_encoder_page EncoderPage Class
- *
- * @{
- *
- * The EncoderPage is one of the most used subclasses of the Page
- * class. It groups 4 encoders and displays them.
- *
- * It is also the standard class used as a parent class when creating a custom
- *Page.
- **/
-class EncoderPage : public Page {
-  /**
-   * \addtogroup gui_encoder_page
-   * @{
-   **/
-
-public:
-  Encoder *encoders[GUI_NUM_ENCODERS];
-  /**
-   * Create an EncoderPage with one or more encoders. The argument
-   * order determines which encoder will be used. Unused encoders can
-   * be passed as NULL pointers.
-   **/
-  EncoderPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-              Encoder *e4 = NULL) {
-    setEncoders(e1, e2, e3, e4);
-  }
-
-  /**
-   * Set the encoders used by the page later on.
-   **/
-  void setEncoders(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-                   Encoder *e4 = NULL) {
-    encoders[0] = e1;
-    encoders[1] = e2;
-    encoders[2] = e3;
-    encoders[3] = e4;
-  }
-  /** This method will update the encoders according to the hardware moves. **/
-  virtual void update();
-  /** This will clear the encoder movements. **/
-  virtual void clear();
-  /** Display the encoders using their short name and their value (as base 10).
-   * **/
-  virtual void display();
-  /** Executes the encoder actions by calling checkHandle() on each encoder. **/
-  virtual void finalize();
-
-  /**
-   * Used to display the names of the encoders on its own (useful if
-   * the encoders can update their name, for example when
-   * autolearning.
-   **/
-  void displayNames();
-
-  /* @} */
-};
-
-/* @} */
-
-/**
- * \addtogroup gui_switch_page Switch Page Classes
- *
- * @{
- *
- * This class is used to switch between different page by pressing the
- * encoder underneath the displayed name. It uses the short name of the page
- * to display it.
- */
-class SwitchPage : public Page {
-  /**
-   * \addtogroup gui_switch_page
-   * @{
-   **/
-
-public:
-  Page *pages[4];
-
-  /**
-   * Create a Switchpage allowing to switch between different
-   * pages. The position of the page is given by the argument
-   * position, unused pages can be passed as NULL pointer.
-   **/
-  SwitchPage(const char *_name = "SELECT PAGE:", Page *p1 = NULL,
-             Page *p2 = NULL, Page *p3 = NULL, Page *p4 = NULL)
-      : Page(_name) {
-    initPages(p1, p2, p3, p4);
-  }
-
-  /**
-   * Initialize the pages to be switched later on.
-   **/
-  void initPages(Page *p1 = NULL, Page *p2 = NULL, Page *p3 = NULL,
-                 Page *p4 = NULL) {
-    pages[0] = p1;
-    pages[1] = p2;
-    pages[2] = p3;
-    pages[3] = p4;
-  }
-
-  virtual void display();
-  virtual bool handleEvent(gui_event_t *event);
-
-  /* @} */
-};
-
-/**
- * This class is used to switch between different page by pressing the
- * button next to the displayed name (not the encoders). It uses the short name
- * of the page to display it.
- */
-class EncoderSwitchPage : public SwitchPage {
-  /**
-   * \addtogroup gui_switch_page
-   * @{
-   **/
-
-public:
-  EncoderSwitchPage(Page *p1 = NULL, Page *p2 = NULL, Page *p3 = NULL,
-                    Page *p4 = NULL)
-      : SwitchPage(NULL, p1, p2, p3, p4) {}
-
-  virtual void display();
-  virtual bool handleEvent(gui_event_t *event);
-
-  /* @} */
-};
-
-/**
- * This class is used to switch between different pages by scrolling
- * through the pages using the first encoder.  The page displays the
- * long name of the selected page. This is useful if you want to
- * switch between different pages in a "menu" kind of way.
- **/
-class ScrollSwitchPage : public EncoderPage {
-  /**
-   * \addtogroup gui_switch_page
-   * @{
-   **/
-
-public:
-  Vector<Page *, 8> pages;
-  RangeEncoder pageEncoder;
-
-  ScrollSwitchPage() : pageEncoder(0, 0) {
-    pageEncoder.pressmode = true;
-    encoders[0] = &pageEncoder;
-  }
-
-  void addPage(Page *page);
-
-  bool setSelectedPage();
-  virtual void display();
-  virtual void loop();
-  virtual bool handleEvent(gui_event_t *event);
-
-  /* @} */
-};
-
-/* @} */
 
 /**
  * \addtogroup gui_page_container GUI Page Container
@@ -421,7 +258,7 @@ class PageContainer {
 
 public:
   /** Stores the active pages in a stack (max 8 pages). **/
-  Stack<Page *, 8> pageStack;
+  Stack<LightPage *, 8> pageStack;
 
   /**
    * This needs to be overriden by the child class to describe how to
@@ -432,7 +269,7 @@ public:
   virtual bool handleTopEvent(gui_event_t *event) { return false; }
 
   /** Clear the active page stack, and push page as the currentPage(). **/
-  void setPage(Page *page) {
+  void setPage(LightPage *page) {
     if (currentPage() != NULL) {
       DEBUG_PRINTLN("calling cleanup");
       currentPage()->cleanup();
@@ -452,10 +289,11 @@ public:
    * set to true. It will then call the redisplayPage() method, and
    * then the show() method of the page.
    **/
-  void pushPage(Page *page); 
+  void pushPage(LightPage *page);
+
 
   /** This will pop the page if it is the topmost page of the stack. **/
-  void popPage(Page *page) {
+  void popPage(LightPage *page) {
     if (currentPage() == page) {
       popPage();
     }
@@ -468,7 +306,7 @@ public:
    **/
   void popPage() {
     currentPage()->cleanup();
-    Page *page;
+    LightPage *page;
     pageStack.pop(&page);
     if (page != NULL) {
       page->parent = NULL;
@@ -482,8 +320,8 @@ public:
   }
 
   /** Returns the topmost page of the stack. **/
-  virtual Page *currentPage() {
-    Page *page = NULL;
+  virtual LightPage *currentPage() {
+    LightPage *page = NULL;
     pageStack.peek(&page);
     return page;
   }

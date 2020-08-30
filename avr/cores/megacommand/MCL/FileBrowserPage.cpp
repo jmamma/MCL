@@ -1,6 +1,4 @@
-#include "FileBrowserPage.h"
-#include "MCL.h"
-#include "MCLMenus.h"
+#include "MCL_impl.h"
 
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY

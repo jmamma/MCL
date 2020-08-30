@@ -4,6 +4,7 @@
 
 #include "GridTrack.h"
 #include "new.h"
+#include "DiagnosticPage.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1
@@ -46,6 +47,7 @@ public:
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
   virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
                              bool online = false) = 0;
+  virtual uint16_t get_track_size() = 0;
   DeviceTrack *init_track_type(uint8_t track_type);
 
   DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
@@ -60,7 +62,10 @@ public:
 
   ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
-    auto that = ::new(this) T;
+    T* that = ::new(this) T;
+    diag_page.println("load", (uint16_t)that);
+    diag_page.println("this", (uint16_t)this);
+    diag_page.println("region", (uint16_t)that->get_region());
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }

@@ -1,6 +1,4 @@
-#include "AuxPages.h"
-#include "MCL.h"
-#include "MCLSeq.h"
+#include "MCL_impl.h"
 
 extern MCLEncoder mixer_param1(0, 127);
 extern MCLEncoder mixer_param2(0, 127);

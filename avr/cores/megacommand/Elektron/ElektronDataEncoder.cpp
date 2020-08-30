@@ -259,7 +259,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
     cnt7++;
   } else {
     if (data) {
-      c = *(ptr++);
+      *c = *(ptr++);
     } else {
       *c = midi->midiSysex.getByte(n++);
     }

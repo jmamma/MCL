@@ -41,7 +41,7 @@ typedef struct model_param_name_s {
 /** Data structure holding the parameter names for a machine model. **/
 typedef struct model_to_param_names_s {
   uint8_t model;
-  model_param_name_t *names;
+  const model_param_name_t *names;
 } model_to_param_names_t;
 
 /**

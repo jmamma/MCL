@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLSysConfig.h"
+#include "MCL_impl.h"
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();

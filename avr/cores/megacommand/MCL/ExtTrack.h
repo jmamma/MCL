@@ -17,6 +17,9 @@ class ExtTrack
     : public DeviceTrack {
 public:
   ExtSeqTrackData seq_data;
+  ExtTrack() {
+  active = EXT_TRACK_TYPE;
+  }
   bool load_seq_data(uint8_t tracknumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,

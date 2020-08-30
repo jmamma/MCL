@@ -2,12 +2,11 @@
 #ifndef MDTRACK_H__
 #define MDTRACK_H__
 
-#include "Grid.h"
 #include "DeviceTrack.h"
 #include "MCLMemory.h"
-#include "MD.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
+#include "DiagnosticPage.h"
 
 #define LOCK_AMOUNT 256
 
@@ -73,6 +72,10 @@ class MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+  MDTrack() {
+  active = MD_TRACK_TYPE;
+    DIAG_PRINTLN("MDTrack ctor");
+  }
   void init();
 
   void clear_track();
