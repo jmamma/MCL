@@ -2,7 +2,6 @@
 
 DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   DEBUG_PRINT_FN();
-  auto tmp = active;
   switch (track_type) {
   case A4_TRACK_TYPE_270:
   case MD_TRACK_TYPE_270:
@@ -29,7 +28,6 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
     ::new(this) ExtTrack;
     break;
   }
-  active = tmp;
   return this;
 }
 

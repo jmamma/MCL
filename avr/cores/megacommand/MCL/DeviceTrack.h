@@ -20,13 +20,16 @@ class A4Track;
 class MDTrack;
 
 
-#define __IMPL_DYNAMIK_KAST(klass, aktive) \
+#define __IMPL_DYNAMIK_KAST(klass, pred, aktive) \
   void _dynamik_kast_impl(DeviceTrack* p, klass** pp) { \
-    if (p->active == aktive) { \
+    if (p->active == pred) { \
       *pp = (klass*)p; \
     } else { \
       *pp = nullptr; \
     } \
+  } \
+  void _init_track_type_impl(klass** p) { \
+    *p = (klass*)init_track_type(aktive); \
   }
 
 class DeviceTrack : public GridTrack {
@@ -37,10 +40,10 @@ private:
     _dynamik_kast_impl(p, &ret); 
     return ret;
   }
-  __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255)
-  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255, EMPTY_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE, EXT_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE, MD_TRACK_TYPE)
 
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
@@ -49,6 +52,11 @@ public:
                              bool online = false) = 0;
   virtual uint16_t get_track_size() = 0;
   DeviceTrack *init_track_type(uint8_t track_type);
+  template<class T> DeviceTrack* init_track_type() { 
+    T* p; 
+    _init_track_type_impl(&p); 
+    return p; 
+  }
 
   DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
   template <class T> T *load_from_grid(uint8_t col, uint16_t row) {
@@ -59,13 +67,15 @@ public:
 
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T* as() { return _dynamik_kast<T>(this); }
-
   ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
-    T* that = ::new(this) T;
+    DEBUG_PRINT_FN();
+    DeviceTrack* that = init_track_type<T>();
+    /*
     diag_page.println("load", (uint16_t)that);
     diag_page.println("this", (uint16_t)this);
     diag_page.println("region", (uint16_t)that->get_region());
+    */
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
