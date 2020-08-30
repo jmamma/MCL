@@ -4,6 +4,7 @@
 
 #include "GridTrack.h"
 #include "new.h"
+#include "DiagnosticPage.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1
@@ -62,6 +63,7 @@ public:
   ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
     T* that = ::new(this) T;
+    diag_page.println("load", (uint16_t)that);
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }

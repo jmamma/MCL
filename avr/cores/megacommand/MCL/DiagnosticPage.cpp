@@ -33,14 +33,22 @@ void DiagnosticPage::draw_log() {
   _draw_frame(66);
 
   uint8_t y = 7;
-  uint8_t log_idx = log_head + 1;
-  for(int i=0;i<DIAGNOSTIC_NUM_LOG;++i) {
+  int8_t log_idx = log_disp_head - 4;
+  if(log_idx < 0) { log_idx += DIAGNOSTIC_NUM_LOG; }
+  for(int i=0;i<5;++i) {
     if (log_idx >= DIAGNOSTIC_NUM_LOG) {
       log_idx = 0;
     }
     oled_display.setCursor(64, y);
     oled_display.print(log_buf[log_idx++]);
     y = y + 6;
+  }
+
+  if(++log_disp_frame > 5) {
+    log_disp_frame = 0;
+    if(log_disp_head != log_head && ++log_disp_head >= DIAGNOSTIC_NUM_LOG) {
+      log_disp_head = 0;
+    }
   }
 }
 

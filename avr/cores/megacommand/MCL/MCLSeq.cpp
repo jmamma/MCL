@@ -181,7 +181,7 @@ void MCLSeq::seq() {
   }
 
   auto seq_time = sw.elapsed();
-  //DIAG_DUMP(0, seq_time);
+  //DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options

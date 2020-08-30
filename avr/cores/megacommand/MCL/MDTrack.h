@@ -6,6 +6,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
+#include "DiagnosticPage.h"
 
 #define LOCK_AMOUNT 256
 
@@ -73,6 +74,7 @@ public:
   MDMachine machine;
   MDTrack() {
   active = MD_TRACK_TYPE;
+    DIAG_PRINTLN("MDTrack ctor");
   }
   void init();
 
