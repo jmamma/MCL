@@ -64,10 +64,10 @@ public:
     advance_log_head();
   }
 
-  void println(const char* msg, uint32_t val) {
+  void println(const char* msg, uint16_t val) {
     char buf[17];
     strncpy(log_buf[log_head], msg, 16);
-    itoa(val, buf, 10);
+    snprintf(buf, 16, "%u", val);
     strncat(log_buf[log_head], buf, 16);
     advance_log_head();
   }

@@ -64,6 +64,8 @@ public:
   template <class T> T *load_from_mem(uint8_t col) {
     T* that = ::new(this) T;
     diag_page.println("load", (uint16_t)that);
+    diag_page.println("this", (uint16_t)this);
+    diag_page.println("region", (uint16_t)that->get_region());
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
