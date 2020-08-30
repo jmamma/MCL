@@ -20,7 +20,7 @@
 
 void Page::update() {}
 
-void PageContainer::pushPage(Page* page) {
+void PageContainer::pushPage(LightPage* page) {
   if (currentPage() == page) {
     DEBUG_PRINTLN("can't push twice");
     // can't push the same page twice in a row
