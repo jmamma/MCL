@@ -58,10 +58,19 @@ public:
 
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T* as() { return _dynamik_kast<T>(this); }
-
   ///  downloads from BANK1 to the runtime object
   template <class T> T *load_from_mem(uint8_t col) {
-    T* that = ::new(this) T;
+    DEBUG_PRINT_FN();
+    T* tmp = ::new(this) T;
+    DeviceTrack* that = init_track_type(tmp->active);
+    /*
+    DEBUG_DUMP((uint16_t)this);
+    DEBUG_DUMP((uint16_t)that);
+    uint32_t get = this->get_region();
+    DEBUG_DUMP(get);
+    get = that->get_region();
+    DEBUG_DUMP(get);
+    */
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
