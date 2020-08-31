@@ -18,7 +18,8 @@ class ExtTrack
 public:
   ExtSeqTrackData seq_data;
   ExtTrack() {
-  active = EXT_TRACK_TYPE;
+    active = EXT_TRACK_TYPE;
+    static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
   bool load_seq_data(uint8_t tracknumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);

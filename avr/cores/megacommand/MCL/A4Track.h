@@ -19,7 +19,7 @@ public:
   A4Sound sound;
   A4Track() {
     active = A4_TRACK_TYPE;
-    DIAG_PRINTLN("A4 ctor");
+    static_assert(sizeof(A4Track) <= GRID2_TRACK_LEN);
   }
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);

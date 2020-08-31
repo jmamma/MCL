@@ -32,18 +32,27 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
     chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
   }
 #endif
-  ret = proj.write_grid((uint8_t *)this, A4_TRACK_LEN, tracknumber, row);
+  ret = proj.write_grid((uint8_t *)this, sizeof(A4Track), tracknumber, row);
   if (!ret) {
     return false;
   }
   return true;
 }
 
-#include "MCLMemory.h"
-//__WOW<sizeof(MDSeqTrackData)> mdseqtrackdata;
-//__WOW<BANK1_FILE_ENTRIES_END> addr_end;
-//__WOW<BANK1_A4_TRACKS_START> addr_a4;
-//__WOW<BANK1_MD_TRACKS_START> addr_md;
-//__WOW<sizeof(a4sound_t)> sza4t;
-//__WOW<sizeof(A4Track)> sza4;
-//__WOW<sizeof(MDTrack)> szmd;
+// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes
+// Do compile with avr-gcc and observe the error messages
+
+//__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
+//__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
+//__SIZE_PROBE<sizeof(a4sound_t)> sza4t;
+
+//__SIZE_PROBE<sizeof(A4Track)> sza4;
+//__SIZE_PROBE<sizeof(MDTrack)> szmd;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmd_2;
+//__SIZE_PROBE<sizeof(EmptyTrack)> szempty;
+//__SIZE_PROBE<FX_TRACK_LEN> szfx;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;
+
+//__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
+//__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
+//__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;

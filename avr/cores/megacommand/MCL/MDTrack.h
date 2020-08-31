@@ -73,8 +73,8 @@ public:
   MDSeqTrackData seq_data;
   MDMachine machine;
   MDTrack() {
-  active = MD_TRACK_TYPE;
-    DIAG_PRINTLN("MDTrack ctor");
+    active = MD_TRACK_TYPE;
+    static_assert(sizeof(MDTrack) <= GRID1_TRACK_LEN);
   }
   void init();
 
