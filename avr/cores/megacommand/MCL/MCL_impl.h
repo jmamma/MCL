@@ -70,6 +70,7 @@
 
 #include "LFO.h"
 #include "MDTrack.h"
+#include "MDFXTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
 

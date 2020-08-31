@@ -48,8 +48,7 @@ private:
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
-  virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
-                             bool online = false) = 0;
+  virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0, bool online = false) = 0;
   virtual uint16_t get_track_size() = 0;
   DeviceTrack *init_track_type(uint8_t track_type);
   template<class T> DeviceTrack* init_track_type() { 

@@ -112,21 +112,33 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       track_type = 255;
       online = false;
 
+      //GRID 0
       if (i < GRID_WIDTH) {
         grid_num = 0;
+        //MD TRACKS
         track_type = MD_TRACK_TYPE;
         track_num = i;
         if (MD.connected) {
           online = true;
         }
-      } else {
+      }
+      //GRID 1
+      else {
         grid_num = 1;
         track_num = i - GRID_WIDTH;
+        //EXT | A4 TRACKS
         if (track_num < NUM_EXT_TRACKS) {
           track_type = EXT_TRACK_TYPE;
           if (Analog4.connected) {
             online = true;
             track_type = A4_TRACK_TYPE;
+          }
+        }
+        //FX TRACKS
+        if (track_num == MDFX_TRACK_NUM) {
+          if (MD.connected) {
+          track_type = MDFX_TRACK_TYPE;
+          online = true;
           }
         }
       }
@@ -280,16 +292,19 @@ void MCLActions::send_tracks_to_devices() {
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     uint8_t grid_col = i;
-
+    uint8_t grid = 0;
+    //GRID 0
     if (i < NUM_MD_TRACKS) {
-      proj.select_grid(0);
+      grid = 0;
       mute_states[i] = mcl_seq.md_tracks[i].mute_state;
       mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
-    } else {
-      proj.select_grid(1);
+    }
+    //GRID 1
+    else {
+      grid = 1;
       grid_col -= NUM_MD_TRACKS;
     }
-
+    proj.select_grid(grid);
     if (note_interface.notes[i] > 1) {
 
       grid_page.active_slots[grid_col] = grid_page.getRow();
