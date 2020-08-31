@@ -26,6 +26,9 @@
 #define NUM_A4_SOUND_TRACKS 0UL
 #endif
 
+#define NUM_FX_TRACKS 1UL
+#define MDFX_TRACK_NUM 16UL //position of MDFX track in grid
+
 #define NUM_EXT_TRACKS   NUM_A4_TRACKS
 
 #define NUM_LFO_TRACKS   2UL
@@ -35,9 +38,11 @@
 #include "MDSeqTrack.h"
 #include "ExtSeqTrack.h"
 #include "MD.h"
+#include "MDFXData.h"
 
 #define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
 #define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
+#define FX_TRACK_LEN (sizeof(GridTrack) + sizeof(MDFXData))
 
 //Use these to produce compiler errors that probes the sizes!
 template<int X> struct __WOW;
@@ -52,16 +57,16 @@ template<int X> struct __WOW;
 // 16x MD tracks
 // GRID1 tracks start at 0x9330
 #define BANK1_MD_TRACKS_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
-
+#define BANK1_FX_TRACKS_START ((BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS))
 // 6x A4 tracks
-// GRID2 tracks start at 0xB270
-#define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
+// GRID2 tracks start at //TODO
+#define BANK1_A4_TRACKS_START (BANK1_FX_TRACKS_START + FX_TRACK_LEN * NUM_FX_TRACKS)
 
 // 256x file entries (16 bytes each)
-// Start at 0xECB8
+// Start at //TODO
 #define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
 #define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
 
-// At 0xFC78
+// At //TODO
 
 #endif /* MCLMEMORY_H__ */
