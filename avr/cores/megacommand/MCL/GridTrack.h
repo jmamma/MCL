@@ -10,6 +10,8 @@
 #define A4_TRACK_TYPE 5
 #define EXT_TRACK_TYPE 6
 
+#define MDFX_TRACK_TYPE 7
+
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridChain.h"
