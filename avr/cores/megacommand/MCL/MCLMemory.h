@@ -27,7 +27,7 @@ constexpr size_t NUM_A4_SOUND_TRACKS = 0;
 #endif
 
 constexpr size_t NUM_FX_TRACKS = 1;
-constexpr size_t MDFX_TRACK_NUM = 16; //position of MDFX track in grid
+constexpr size_t MDFX_TRACK_NUM = 15; //position of MDFX track in grid
 
 constexpr size_t NUM_EXT_TRACKS = NUM_A4_TRACKS;
 
