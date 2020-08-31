@@ -30,8 +30,6 @@ public:
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
   virtual uint32_t get_region() { return BANK1_FX_TRACKS_START; }
 
-  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
-
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }
 };
