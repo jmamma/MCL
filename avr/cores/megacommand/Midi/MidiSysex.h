@@ -113,7 +113,8 @@ public:
     if (recordLen < sysex_bufsize) {
       // Record data to specified memory buffer
       // Write to sysex buffers in HIGH membank
-      putByte(recordLen++, c);
+      putByte(recordLen, c);
+      ++recordLen;
       return true;
     }
     return false;

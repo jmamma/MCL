@@ -81,8 +81,10 @@ public:
   virtual void initSerial() { running_status = 0; }
 
   ALWAYS_INLINE() virtual void puts(uint8_t *data, uint16_t cnt) {
-    while (cnt--)
-      m_putc(*(data++));
+    while (cnt--) {
+      m_putc(*data);
+      ++data;
+    }
   }
   virtual uint8_t m_getc() {}
   virtual void m_putc(uint8_t c) {}

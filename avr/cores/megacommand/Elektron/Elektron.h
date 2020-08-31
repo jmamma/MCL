@@ -108,7 +108,7 @@ public:
   bool waitBlocking(uint16_t timeout) {
     uint16_t start_clock = read_slowclock();
     uint16_t current_clock = start_clock;
-    while(!received && clock_diff(start_clock, current_clock) < timeout) {
+    do {
       // MCl Code, trying to replicate main loop
 
       //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
@@ -118,7 +118,7 @@ public:
       //    GUI.display();
       current_clock = read_slowclock();
       handleIncomingMidi();
-    }
+    } while(clock_diff(start_clock, current_clock) < timeout && !received);
     return received;
   }
 };

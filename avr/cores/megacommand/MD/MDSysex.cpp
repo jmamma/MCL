@@ -26,7 +26,7 @@ void MDSysexListenerClass::end() {
   msgType = sysex->getByte(sizeof(machinedrum_sysex_hdr));
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
-   onStatusResponseCallbacks.call(sysex->getByte(6), sysex->getByte(7));
+    onStatusResponseCallbacks.call(sysex->getByte(6), sysex->getByte(7));
     break;
 
   case MD_GLOBAL_MESSAGE_ID:

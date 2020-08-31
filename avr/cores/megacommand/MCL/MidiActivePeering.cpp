@@ -93,6 +93,8 @@ static bool md_setup(uint8_t port) {
       while (1)
         ;
     }
+    // XXX another 0x72 message is received after get_fw_caps, and getBlockingKit accepts the wrong message
+    delay_progress(1000);
     MD.getBlockingKit(0xF7);
   }
 

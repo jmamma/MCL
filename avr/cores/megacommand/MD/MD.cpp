@@ -174,10 +174,13 @@ bool MDClass::get_fw_caps() {
   ((uint8_t *)&(fw_caps))[0] = 0;
   ((uint8_t *)&(fw_caps))[1] = 1;
 
+  constexpr uint8_t begin = sizeof(machinedrum_sysex_hdr)+1;
+
   if (msgType == 0x72) {
-    if (MDSysexListener.sysex->getByte(1) == 0x30) {
-      ((uint8_t *)&(fw_caps))[0] = MDSysexListener.sysex->getByte(2);
-      ((uint8_t *)&(fw_caps))[1] = MDSysexListener.sysex->getByte(3);
+    // XXX wrong reply. fix the firmware!
+    if (MDSysexListener.sysex->getByte(begin) == 0x30) {
+      ((uint8_t *)&(fw_caps))[0] = MDSysexListener.sysex->getByte(begin+1);
+      ((uint8_t *)&(fw_caps))[1] = MDSysexListener.sysex->getByte(begin+2);
     }
   return true;
   }
@@ -187,21 +190,25 @@ bool MDClass::get_fw_caps() {
 void MDClass::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));
+  waitBlocking();
 }
 
 void MDClass::deactivate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x00};
   sendRequest(data, sizeof(data));
+  waitBlocking();
 }
 
 void MDClass::activate_track_select() {
   uint8_t data[3] = {0x70, 0x32, 0x01};
   sendRequest(data, sizeof(data));
+  waitBlocking();
 }
 
 void MDClass::deactivate_track_select() {
   uint8_t data[3] = {0x70, 0x32, 0x00};
   sendRequest(data, sizeof(data));
+  waitBlocking();
 }
 
 void MDClass::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
@@ -213,6 +220,7 @@ void MDClass::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
   // trigleds[14..15]
   data[4] = (bitmask >> 14) | (mode << 2);
   sendRequest(data, sizeof(data));
+  waitBlocking();
 }
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {

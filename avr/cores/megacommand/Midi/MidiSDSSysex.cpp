@@ -281,8 +281,8 @@ void MidiSDSSysexListenerClass::data_packet() {
   } else {
     DEBUG_PRINTLN("sds packet checksum error");
     DEBUG_PRINTLN(midi_sds.packetNumber);
-    DEBUG_PRINTLN(sysex->len);
-    DEBUG_PRINTLN(sysex->getByte(sysex->len - 1));
+    DEBUG_PRINTLN(sysex->recordLen);
+    DEBUG_PRINTLN(sysex->getByte(sysex->recordLen - 1));
     DEBUG_PRINT(" ");
     DEBUG_PRINT(checksum);
     midi_sds.sendNakMessage();
