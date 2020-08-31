@@ -20,7 +20,7 @@
 #define SYSEX1_DATA_LEN 0x1830UL //6KB
 
 #define BANK1_SYSEX2_DATA_START (BANK1_SYSEX1_DATA_START + SYSEX1_DATA_LEN)
-#define SYSEX2_DATA_LEN 0x4000UL //16KB
+#define SYSEX2_DATA_LEN 0x2000UL //16KB
 
 /* definition to expand macro then apply to pragma message */
 #define VALUE_TO_STRING(x) #x
