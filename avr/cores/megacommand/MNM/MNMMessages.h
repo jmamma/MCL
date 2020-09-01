@@ -33,15 +33,15 @@ public:
   bool ctrlIn;
   bool ctrlOut;
 
-  bool transportIn;
-  bool sequencerOut;
-  bool arpOut;
+  uint8_t transportIn;
+  uint8_t sequencerOut;
+  uint8_t arpOut;
 
-  bool transportOut;
+  uint8_t transportOut;
   
-  bool keyboardOut;
-  bool midiClockOut;
-  bool pgmChangeOut;
+  uint8_t keyboardOut;
+  uint8_t midiClockOut;
+  uint8_t pgmChangeOut;
 
   uint8_t note; /* not used */
   uint8_t gate; /* not used */
@@ -64,7 +64,7 @@ public:
 
   uint8_t globalRouting;
 	bool pgmChangeIn;
-	uint8_t unused[5];
+	uint8_t unused[6];
 
   uint32_t baseFreq;
 

@@ -62,9 +62,6 @@ public:
    * data. **/
   static uint16_t MNMDataToSysex(uint8_t *data, uint8_t *sysex, uint16_t len,
                                  uint16_t maxLen);
-  /** Convert compressed monomachine sysex data into normal 8-bit data. **/
-  static uint16_t MNMSysexToData(uint8_t *sysex, uint8_t *data, uint16_t len,
-                                 uint16_t maxLen);
 
   static uint16_t to16Bit7(uint8_t b1, uint8_t b2);
   static uint16_t to16Bit(uint8_t b1, uint8_t b2);

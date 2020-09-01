@@ -13,17 +13,15 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
 
   //DEBUG_PRINT_FN();
-  DIAG_DUMP(offset);
-  DIAG_DUMP(len);
-
-  if (len != 94) {
-    return false;
-  }
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
-    DIAG_PRINTLN("mnm fromSysex fail");
     return false;
   }
+
+  //DEBUG_PRINT_FN();
+  //for(int i=0;i<midi->midiSysex.recordLen; ++i) {
+    //DEBUG_PRINTLN(midi->midiSysex.getByte(i));
+  //}
 
   origPosition = midi->midiSysex.getByte(offset+3);
   MNMSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
@@ -45,13 +43,13 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   ctrlIn = IS_BIT_SET(byte, 4);
   ctrlOut = IS_BIT_SET(byte, 6);
 
-  decoder.getb(&transportIn);
-  decoder.getb(&sequencerOut);
-  decoder.getb(&arpOut);
-  decoder.getb(&keyboardOut);
-  decoder.getb(&transportOut);
-  decoder.getb(&midiClockOut);
-  decoder.getb(&pgmChangeOut);
+  decoder.get8(&transportIn);
+  decoder.get8(&sequencerOut);
+  decoder.get8(&arpOut);
+  decoder.get8(&keyboardOut);
+  decoder.get8(&transportOut);
+  decoder.get8(&midiClockOut);
+  decoder.get8(&pgmChangeOut);
 
   decoder.get(&note, 5); // note, gate, sense, minvel, maxvel
 
@@ -63,20 +61,20 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   decoder.get(mapRange, 32 * 6);
   decoder.get8(&globalRouting);
   decoder.getb(&pgmChangeIn);
-  decoder.get(unused, 5);
+  decoder.get(unused, 6);
   decoder.get32(&baseFreq);
 
   return true;
 }
 
 uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
+
   encoder.stop7Bit();
   encoder.begin();
   encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
   encoder.pack8(MNM_GLOBAL_MESSAGE_ID);
-  encoder.pack8(0x02); // version
+  encoder.pack8(0x03); // version
   encoder.pack8(0x01); // revision
-
   encoder.startChecksum();
   encoder.pack8(origPosition);
   encoder.start7Bit();
@@ -86,21 +84,21 @@ uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
   uint8_t byte = 0;
   if (clockIn)
     SET_BIT(byte, 0);
-  if (clockOut)
-    SET_BIT(byte, 5);
   if (ctrlIn)
     SET_BIT(byte, 4);
+  if (clockOut)
+    SET_BIT(byte, 5);
   if (ctrlOut)
     SET_BIT(byte, 6);
   encoder.pack8(byte);
 
-  encoder.packb(transportIn);
-  encoder.packb(sequencerOut);
-  encoder.packb(arpOut);
-  encoder.packb(keyboardOut);
-  encoder.packb(transportOut);
-  encoder.packb(midiClockOut);
-  encoder.packb(pgmChangeOut);
+  encoder.pack8(transportIn);
+  encoder.pack8(sequencerOut);
+  encoder.pack8(arpOut);
+  encoder.pack8(keyboardOut);
+  encoder.pack8(transportOut);
+  encoder.pack8(midiClockOut);
+  encoder.pack8(pgmChangeOut);
 
   encoder.pack(&note, 5);
 
@@ -112,7 +110,7 @@ uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
   encoder.pack(mapRange, 32 * 6);
   encoder.pack8(globalRouting);
   encoder.packb(pgmChangeIn);
-  encoder.pack(unused, 5);
+  encoder.pack(unused, 6);
   encoder.pack32(baseFreq);
 
   uint16_t enclen = encoder.finish();

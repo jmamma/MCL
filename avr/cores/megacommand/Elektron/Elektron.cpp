@@ -59,13 +59,6 @@ uint16_t ElektronHelper::MNMDataToSysex(uint8_t *data, uint8_t *sysex,
   return encoder.finish();
 }
 
-uint16_t ElektronHelper::MNMSysexToData(uint8_t *sysex, uint8_t *data,
-					uint16_t len, uint16_t maxLen) {
-  MNMSysexToDataEncoder encoder(DATA_ENCODER_INIT(data, maxLen));
-	encoder.pack(sysex, len);
-  return encoder.finish();
-}
-
 uint16_t ElektronHelper::to16Bit7(uint8_t b1, uint8_t b2) {
   return (b1 << 7) | b2; 
 }

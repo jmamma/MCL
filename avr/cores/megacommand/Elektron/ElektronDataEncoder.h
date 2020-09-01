@@ -84,6 +84,7 @@ public:
                                       uint16_t _sysexLen = 0),
                     MidiUartParent *_uart = NULL);
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
+
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
 };
 

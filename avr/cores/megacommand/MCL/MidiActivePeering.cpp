@@ -118,7 +118,6 @@ static bool a4_setup(uint8_t port) {
   delay_progress(300);
   if (Analog4.getBlockingSettings(0)) {
     Analog4.connected = true;
-    DIAG_PRINTLN("a4 drv ok");
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   }
   return Analog4.connected;
@@ -128,7 +127,7 @@ static bool mnm_setup(uint8_t port) {
   uint16_t myclock = slowclock;
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
-    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
+    // wait 400 ms, shoul be enought time to allow midiclock tempo to be
     // calculated before proceeding.
     myclock = slowclock;
 
@@ -145,7 +144,50 @@ static bool mnm_setup(uint8_t port) {
     }
 
     //DIAG_PRINTLN("mnm getglobal ok");
-    MNM.connected = MNM.global.fromSysex(MNM.midi);
+
+    auto &g = MNM.global;
+    MNM.connected = g.fromSysex(MNM.midi);
+    if (!MNM.connected) {
+      DEBUG_PRINTLN("MNM fromSysex failed");
+      return false;
+    }
+
+    DEBUG_DUMP(g.arpOut);
+    DEBUG_DUMP(g.autotrackChannel);
+    DEBUG_DUMP(g.baseChannel);
+    DEBUG_DUMP(g.channelSpan);
+    DEBUG_DUMP(g.clockIn);
+    DEBUG_DUMP(g.clockOut);
+    DEBUG_DUMP(g.ctrlIn);
+    DEBUG_DUMP(g.ctrlOut);
+    DEBUG_DUMP(g.keyboardOut);
+    DEBUG_DUMP(g.midiClockOut);
+    DEBUG_DUMP(g.transportIn);
+    DEBUG_DUMP(g.transportOut);
+    DEBUG_DUMP(g.origPosition);
+
+    g.arpOut = true;
+    g.autotrackChannel = 9;
+    g.baseChannel = 1;
+    g.channelSpan = 6;
+    g.clockIn = true;
+    g.clockOut = true;
+    g.ctrlIn = true;
+    g.ctrlOut = true;
+    g.keyboardOut = 2;
+    g.midiClockOut = 1;
+    g.transportIn = true;
+    g.transportOut = true;
+    g.origPosition = 7;
+
+    delay_progress(400);
+
+    MNMDataToSysexEncoder encoder(MNM.midi->uart);
+    g.toSysex(encoder);
+
+    delay_progress(400);
+
+    MNM.loadGlobal(7);
 
     return MNM.connected;
   }
