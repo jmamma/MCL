@@ -93,7 +93,7 @@ public:
   uint8_t value;
   bool received;
 
-  SysexCallback(uint8_t _type = 0) { type = _type; }
+  SysexCallback(uint8_t _type = 0) { type = _type; received = false; }
 
   void onSysexReceived() { received = true; }
 
