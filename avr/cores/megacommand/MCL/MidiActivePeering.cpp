@@ -133,17 +133,11 @@ static bool mnm_setup(uint8_t port) {
 
     delay_progress(400);
 
-    //MNM.global.origPosition = 7;
-    //MNM.global.arpOut = true;
-    //MNM.global.autotrackChannel = 9;
-    //MNM.global.baseFreq = 440;
-
-    //MNM.loadGlobal(7);
     if (!MNM.getBlockingGlobal(7)) {
       return false;
     }
 
-    //DIAG_PRINTLN("mnm getglobal ok");
+    // TODO MNM Global: fromSysex works, but toSysex doesn't
 
     auto &g = MNM.global;
     MNM.connected = g.fromSysex(MNM.midi);
@@ -152,40 +146,23 @@ static bool mnm_setup(uint8_t port) {
       return false;
     }
 
-    DEBUG_DUMP(g.arpOut);
-    DEBUG_DUMP(g.autotrackChannel);
-    DEBUG_DUMP(g.baseChannel);
-    DEBUG_DUMP(g.channelSpan);
-    DEBUG_DUMP(g.clockIn);
-    DEBUG_DUMP(g.clockOut);
-    DEBUG_DUMP(g.ctrlIn);
-    DEBUG_DUMP(g.ctrlOut);
-    DEBUG_DUMP(g.keyboardOut);
-    DEBUG_DUMP(g.midiClockOut);
-    DEBUG_DUMP(g.transportIn);
-    DEBUG_DUMP(g.transportOut);
-    DEBUG_DUMP(g.origPosition);
-
-    g.arpOut = true;
-    g.autotrackChannel = 9;
-    g.baseChannel = 1;
-    g.channelSpan = 6;
     g.clockIn = true;
     g.clockOut = true;
     g.ctrlIn = true;
     g.ctrlOut = true;
+
+    g.arpOut = 2;
+    g.autotrackChannel = 9;
+    g.baseChannel = 0;
+    g.channelSpan = 6;
     g.keyboardOut = 2;
     g.midiClockOut = 1;
     g.transportIn = true;
     g.transportOut = true;
     g.origPosition = 7;
 
-    delay_progress(400);
-
     MNMDataToSysexEncoder encoder(MNM.midi->uart);
     g.toSysex(encoder);
-
-    delay_progress(400);
 
     MNM.loadGlobal(7);
 
