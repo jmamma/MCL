@@ -235,64 +235,26 @@ void GridTask::run() {
 
   if (mcl_cfg.chain_mode != 2) {
 
+    uint8_t track_select_array[NUM_SLOTS];
+
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (slots_changed[n] >= 0) {
+      if ((slots_changed[n] >= 0) &&
+          (slots_changed[n] != mcl_actions.chains[n].row)) {
+        track_select_array[n] = 1;
+      } else {
+        track_select_array[n] = 0;
+      }
+    }
+    bool update_gui = true;
+    mcl_actions.cache_next_tracks(track_select_array, &empty_track, &empty_track2, update_gui);
 
-        handleIncomingMidi();
-        if (count % 8 == 0) {
-          if (GUI.currentPage() != &grid_write_page) {
-            GUI.loop();
-          }
-        }
-        if ((slots_changed[n] != mcl_actions.chains[n].row)) {
-
-          count++;
-          if (n < NUM_MD_TRACKS) {
-            proj.select_grid(0);
-            MDTrack* md_track;
-            MDTrack* mem_track;
-            if ((md_track = empty_track.load_from_grid<MDTrack>(n, mcl_actions.chains[n].row))
-                &&
-                (mem_track = empty_track2.load_from_mem<MDTrack>(n))) {
-              if (memcmp(&mem_track->machine, &md_track->machine, sizeof(MDMachine)) != 0) {
-                mcl_actions.send_machine[n] = 0;
-              } else {
-                mcl_actions.send_machine[n] = 1;
-                DEBUG_PRINTLN("machines match");
-              }
-              md_track->store_in_mem(n);
-              slots_cached[n] = 1;
-            } else {
-              DEBUG_PRINTLN("failed");
-            }
-          }
-#ifdef EXT_TRACKS
-          else {
-            proj.select_grid(1);
-            DEBUG_PRINTLN("trying to load a4 track");
-            DEBUG_DUMP(n);
-            DEBUG_DUMP(mcl_actions.chains[n].row);
-            A4Track* a4_track;
-            A4Track* a4_temp_track;
-            if((a4_track = empty_track.load_from_grid<A4Track>(n - NUM_MD_TRACKS, mcl_actions.chains[n].row))
-               && 
-               (a4_temp_track = empty_track2.load_from_mem<A4Track>(n - NUM_MD_TRACKS))) {
-              // both are a4 track
-              if (memcmp(&a4_temp_track->sound, &a4_track->sound, sizeof(A4Sound)) != 0) {
-                mcl_actions.send_machine[n] = 0;
-              } else {
-                mcl_actions.send_machine[n] = 1;
-                DEBUG_PRINTLN("sounds match");
-              }
-              a4_track->store_in_mem(n - NUM_MD_TRACKS);
-            }
-          }
-#endif
-          proj.select_grid(old_grid);
-        }
+    //Once tracks are cached, we can calculate their next transition
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (track_select_array[n] > 0) {
         mcl_actions.calc_next_slot_transition(n);
       }
     }
+
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency(&empty_track);
   } else {

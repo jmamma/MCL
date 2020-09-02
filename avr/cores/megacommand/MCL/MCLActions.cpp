@@ -277,6 +277,8 @@ void MCLActions::send_tracks_to_devices() {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
+  EmptyTrack empty_track2;
+
 #ifdef EXT_TRACKS
   // Used as a way of flaggin which A4 tracks are to be sent
   uint8_t a4_send[NUM_A4_SOUND_TRACKS] = {0};
@@ -382,7 +384,7 @@ void MCLActions::send_tracks_to_devices() {
 
   // Cache
 
-  cache_next_tracks(note_interface.notes);
+  cache_next_tracks(note_interface.notes, &empty_track, &empty_track2);
 
   // in_sysex = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -400,19 +402,27 @@ void MCLActions::send_tracks_to_devices() {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::cache_next_tracks(uint8_t *track_select_array) {
+void MCLActions::cache_next_tracks(uint8_t *track_select_array,
+                                   EmptyTrack *empty_track,
+                                   EmptyTrack *empty_track2, bool gui_update) {
+  DEBUG_PRINT_FN();
 
-  MDTrack md_temp_track;
-  EmptyTrack empty_track;
+  MDTrack *md_mem_track;
+  A4Track *a4_mem_track;
 
   uint8_t old_grid = proj.get_grid();
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (track_select_array[n] > 0) {
-      DEBUG_PRINTLN("about to load");
-      DEBUG_PRINTLN(chains[n].row);
-      DEBUG_PRINTLN(n);
 
+      if (gui_update) {
+        handleIncomingMidi();
+        if (n % 8 == 0) {
+          if (GUI.currentPage() != &grid_write_page) {
+            GUI.loop();
+          }
+        }
+      }
       uint8_t grid_col = n;
       uint8_t grid = 0;
       // GRID 0
@@ -426,13 +436,12 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array) {
       }
       proj.select_grid(grid);
 
-      auto *ptrack = empty_track.load_from_grid(grid_col, chains[n].row);
-      MDTrack *mem_track;
+      auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
 
       if (ptrack->is_active()) {
-        if ((ptrack->is<MDTrack>() && grid_col < NUM_MD_TRACKS) &&
-            (mem_track = md_temp_track.load_from_mem<MDTrack>(grid_col))) {
-          if (memcmp(&md_temp_track.machine, &(((MDTrack *)ptrack)->machine),
+        if ((ptrack->is<MDTrack>()) &&
+            (md_mem_track = empty_track2->load_from_mem<MDTrack>(grid_col))) {
+          if (memcmp(&md_mem_track->machine, &(((MDTrack *)ptrack)->machine),
                      sizeof(MDMachine)) != 0) {
             send_machine[n] = 0;
           } else {
@@ -440,13 +449,16 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array) {
             DEBUG_PRINTLN("machines match");
           }
         } else {
-          if (ptrack->is<A4Track>()) {
-            send_machine[n] = 0;
-          } else {
-            send_machine[n] = 1;
+          if ((ptrack->is<A4Track>()) &&
+              (a4_mem_track = empty_track2->load_from_mem<A4Track>(grid_col))) {
+            if (memcmp(&a4_mem_track->sound, &((A4Track *)ptrack)->sound,
+                       sizeof(A4Sound)) != 0) {
+              send_machine[n] = 0;
+            } else {
+              send_machine[n] = 1;
+            }
           }
         }
-
         ptrack->store_in_mem(grid_col);
       }
     }

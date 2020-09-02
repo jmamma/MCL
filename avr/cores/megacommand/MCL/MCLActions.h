@@ -67,7 +67,7 @@ public:
   void send_tracks_to_devices();
   void prepare_next_chain(int row);
 
-  void cache_next_tracks(uint8_t *track_select_array);
+  void cache_next_tracks(uint8_t *track_select_array, EmptyTrack *empty_track, EmptyTrack *empty_track2, bool update_gui = false);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
   void calc_latency(DeviceTrack *empty_track);
