@@ -9,7 +9,6 @@ class MDFXTrack : public DeviceTrack, public MDFXData {
 public:
   MDFXTrack() {
     active = MDFX_TRACK_TYPE;
-    DIAG_PRINTLN("MDFXTrack ctor");
   }
 
   void init() {
