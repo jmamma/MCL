@@ -22,10 +22,10 @@
 #define DATA_ENCODER_FALSE() return
 
 //Required for Macro argument overloading
-#define GET_MACRO(_1,_2,_3,NAME,...) NAME
-#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
-#define DATA_ENCODER_INIT2(data, length) data
-#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
+//#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+//#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
+//#define DATA_ENCODER_INIT2(data, length) data
+//#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
 
 #define DATA_ENCODER_UNCHECKING 1
 

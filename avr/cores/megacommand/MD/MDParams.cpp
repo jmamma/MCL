@@ -311,7 +311,7 @@ const md_machine_name_t machine_names[135] PROGMEM = {
 
 PGM_P getMachineNameShort(uint8_t machine, uint8_t type) {
 
-  if (machine == NULL) {
+  if (machine == 0) {
     if (type == 1) {
       return machine_names_short[0].name2;
     }

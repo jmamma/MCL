@@ -24,7 +24,7 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   //}
 
   origPosition = midi->midiSysex.getByte(offset+3);
-  MNMSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+  MNMSysexDecoder decoder(midi, offset + 4);
 
   decoder.get(&autotrackChannel, 5);
   /*
@@ -67,19 +67,24 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   return true;
 }
 
-uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
+bool MNMGlobal::fromSysex(uint8_t* buf, uint16_t len) {
+  // XXX not implemented
+  return false;
+}
 
-  encoder.stop7Bit();
-  encoder.begin();
-  encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  encoder.pack8(MNM_GLOBAL_MESSAGE_ID);
-  encoder.pack8(0x03); // version
-  encoder.pack8(0x01); // revision
-  encoder.startChecksum();
-  encoder.pack8(origPosition);
-  encoder.start7Bit();
+uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
 
-  encoder.pack(&autotrackChannel, 5);
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+  encoder->pack8(MNM_GLOBAL_MESSAGE_ID);
+  encoder->pack8(0x03); // version
+  encoder->pack8(0x01); // revision
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
+  encoder->start7Bit();
+
+  encoder->pack(&autotrackChannel, 5);
 
   uint8_t byte = 0;
   if (clockIn)
@@ -90,33 +95,38 @@ uint16_t MNMGlobal::toSysex(MNMDataToSysexEncoder &encoder) {
     SET_BIT(byte, 5);
   if (ctrlOut)
     SET_BIT(byte, 6);
-  encoder.pack8(byte);
+  encoder->pack8(byte);
 
-  encoder.pack8(transportIn);
-  encoder.pack8(sequencerOut);
-  encoder.pack8(arpOut);
-  encoder.pack8(keyboardOut);
-  encoder.pack8(transportOut);
-  encoder.pack8(midiClockOut);
-  encoder.pack8(pgmChangeOut);
+  encoder->pack8(transportIn);
+  encoder->pack8(sequencerOut);
+  encoder->pack8(arpOut);
+  encoder->pack8(keyboardOut);
+  encoder->pack8(transportOut);
+  encoder->pack8(midiClockOut);
+  encoder->pack8(pgmChangeOut);
 
-  encoder.pack(&note, 5);
+  encoder->pack(&note, 5);
 
-  encoder.pack(midiMachineChannels, 6);
-  encoder.pack((uint8_t *)ccDestinations, 6 * 4);
-  encoder.pack(midiSeqLegato, 6);
-  encoder.pack(legato, 6);
+  encoder->pack(midiMachineChannels, 6);
+  encoder->pack((uint8_t *)ccDestinations, 6 * 4);
+  encoder->pack(midiSeqLegato, 6);
+  encoder->pack(legato, 6);
 
-  encoder.pack(mapRange, 32 * 6);
-  encoder.pack8(globalRouting);
-  encoder.packb(pgmChangeIn);
-  encoder.pack(unused, 6);
-  encoder.pack32(baseFreq);
+  encoder->pack(mapRange, 32 * 6);
+  encoder->pack8(globalRouting);
+  encoder->packb(pgmChangeIn);
+  encoder->pack(unused, 6);
+  encoder->pack32(baseFreq);
 
-  uint16_t enclen = encoder.finish();
-  encoder.finishChecksum();
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
 
   return enclen + 5;
+}
+
+uint16_t MNMGlobal::toSysex(uint8_t *sysex, uint16_t len) {
+  // TODO not implemented
+  return 0;
 }
 
 bool MNMKit::fromSysex(MidiClass *midi) {
@@ -131,7 +141,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   }
 
   origPosition = midi->midiSysex.getByte(3);
-  MNMSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+  MNMSysexDecoder decoder(midi, offset + 4);
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
 
@@ -178,7 +188,7 @@ bool MNMKit::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   origPosition = data[3];
-  MNMSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+  MNMSysexDecoder decoder(data + 4);
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
 
@@ -217,46 +227,46 @@ bool MNMKit::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MNMKit::toSysex(uint8_t *data, uint16_t len) {
-  MNMDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
-  return toSysex(encoder);
+  MNMDataToSysexEncoder encoder(data);
+  return toSysex(&encoder);
 }
 
-uint16_t MNMKit::toSysex(MNMDataToSysexEncoder &encoder) {
-  encoder.stop7Bit();
-  encoder.begin();
-  encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  encoder.pack8(MNM_KIT_MESSAGE_ID);
-  encoder.pack8(0x02); // version
-  encoder.pack8(0x01); // revision
+uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+  encoder->pack8(MNM_KIT_MESSAGE_ID);
+  encoder->pack8(0x02); // version
+  encoder->pack8(0x01); // revision
 
-  encoder.startChecksum();
-  encoder.pack8(origPosition);
-  encoder.start7Bit();
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
+  encoder->start7Bit();
 
-  encoder.pack((uint8_t *)name, 16);
+  encoder->pack((uint8_t *)name, 16);
   name[16] = '\0';
 
-  encoder.pack(levels, 6);
-  encoder.pack((uint8_t *)parameters, 6 * 72);
-  encoder.pack(models, 6);
-  encoder.pack(types, 6);
-  encoder.pack16(patchBusIn);
-  encoder.pack8(mirrorLR);
-  encoder.pack8(mirrorUD);
+  encoder->pack(levels, 6);
+  encoder->pack((uint8_t *)parameters, 6 * 72);
+  encoder->pack(models, 6);
+  encoder->pack(types, 6);
+  encoder->pack16(patchBusIn);
+  encoder->pack8(mirrorLR);
+  encoder->pack8(mirrorUD);
 
-  encoder.pack((uint8_t *)destPages, 6 * 6 * 2);
-  encoder.pack((uint8_t *)destParams, 6 * 6 * 2);
-  encoder.pack((uint8_t *)destRanges, 6 * 6 * 2);
-  encoder.pack8(lpKeyTrack);
-  encoder.pack8(hpKeyTrack);
+  encoder->pack((uint8_t *)destPages, 6 * 6 * 2);
+  encoder->pack((uint8_t *)destParams, 6 * 6 * 2);
+  encoder->pack((uint8_t *)destRanges, 6 * 6 * 2);
+  encoder->pack8(lpKeyTrack);
+  encoder->pack8(hpKeyTrack);
 
-  encoder.pack8(trigPortamento);
-  encoder.pack(trigTracks, 6);
-  encoder.pack8(trigLegatoAmp);
-  encoder.pack8(trigLegatoFilter);
-  encoder.pack8(trigLegatoLFO);
+  encoder->pack8(trigPortamento);
+  encoder->pack(trigTracks, 6);
+  encoder->pack8(trigLegatoAmp);
+  encoder->pack8(trigLegatoFilter);
+  encoder->pack8(trigLegatoLFO);
 
-  encoder.pack8(commonMultimode);
+  encoder->pack8(commonMultimode);
   uint8_t byte = 0;
   for (uint8_t j = 0; j < 6; j++) {
     if (IS_BIT_SET(commonTiming, j)) {
@@ -264,12 +274,12 @@ uint16_t MNMKit::toSysex(MNMDataToSysexEncoder &encoder) {
       break;
     }
   }
-  encoder.pack8(byte);
-  encoder.pack8(splitKey);
-  encoder.pack8(splitRange);
+  encoder->pack8(byte);
+  encoder->pack8(splitKey);
+  encoder->pack8(splitRange);
 
-  uint16_t enclen = encoder.finish();
-  encoder.finishChecksum();
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
 
   return enclen + 5;
 }
@@ -280,7 +290,7 @@ bool MNMSong::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   //	origPosition = data[3];
-  MNMSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+  MNMSysexDecoder decoder(data + 4);
 
   return false;
 }
@@ -294,27 +304,27 @@ bool MNMSong::fromSysex(MidiClass *midi) {
   }
 
   //	origPosition = data[3];
-  MNMSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+  MNMSysexDecoder decoder(midi, offset + 4);
 
   return false;
 }
 
 uint16_t MNMSong::toSysex(uint8_t *sysex, uint16_t len) {
-  MNMDataToSysexEncoder encoder(DATA_ENCODER_INIT(sysex, len));
-  return toSysex(encoder);
+  MNMDataToSysexEncoder encoder(sysex);
+  return toSysex(&encoder);
 }
 
-uint16_t MNMSong::toSysex(MNMDataToSysexEncoder &encoder) {
-  encoder.stop7Bit();
-  encoder.begin();
-  encoder.pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  encoder.pack8(MNM_KIT_MESSAGE_ID);
-  encoder.pack8(0x02); // version
-  encoder.pack8(0x01); // revision
+uint16_t MNMSong::toSysex(ElektronDataToSysexEncoder *encoder) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
+  encoder->pack8(MNM_KIT_MESSAGE_ID);
+  encoder->pack8(0x02); // version
+  encoder->pack8(0x01); // revision
 
-  encoder.startChecksum();
-  //	encoder.pack8(origPosition);
-  encoder.start7Bit();
+  encoder->startChecksum();
+  //	encoder->pack8(origPosition);
+  encoder->start7Bit();
 
   return 0;
 }

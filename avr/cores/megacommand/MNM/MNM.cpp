@@ -1,13 +1,63 @@
-#include "MNM.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
-MNMClass::MNMClass() {
-  currentGlobal = -1;
-  currentKit = -1;
-  currentPattern = -1;
+const ElektronSysexProtocol mnm_protocol = {
+  monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr),
+  MNM_KIT_REQUEST_ID, 
+  MNM_PATTERN_REQUEST_ID, 
+  MNM_SONG_REQUEST_ID, 
+  MNM_GLOBAL_REQUEST_ID,
+  MNM_STATUS_REQUEST_ID,
+
+  MNM_CURRENT_AUDIO_TRACK_REQUEST,
+  MNM_CURRENT_KIT_REQUEST,
+  MNM_CURRENT_PATTERN_REQUEST,
+  MNM_CURRENT_SONG_REQUEST,
+  MNM_CURRENT_GLOBAL_SLOT_REQUEST,
+};
+
+MNMClass::MNMClass()
+  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, mnm_protocol) {
   global.baseChannel = 0;
-  loadedKit = loadedGlobal = false;
-  currentTrack = 0;
+  midiuart = &MidiUart2;
+}
+
+bool MNMClass::probe() {
+  uint16_t myclock = slowclock;
+  if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
+    // wait 400 ms, shoul be enought time to allow midiclock tempo to be
+    // calculated before proceeding.
+    mcl_gui.delay_progress(400);
+
+    // TODO MNM Global: fromSysex works, but toSysex doesn't
+    if (!MNM.getBlockingGlobal(7)) {
+      return false;
+    }
+
+    global.clockIn = true;
+    global.clockOut = true;
+    global.ctrlIn = true;
+    global.ctrlOut = true;
+
+    global.arpOut = 2;
+    global.autotrackChannel = 9;
+    global.baseChannel = 0;
+    global.channelSpan = 6;
+    global.keyboardOut = 2;
+    global.midiClockOut = 1;
+    global.transportIn = true;
+    global.transportOut = true;
+    global.origPosition = 7;
+
+    MNMDataToSysexEncoder encoder(midi->uart);
+    global.toSysex(&encoder);
+
+    loadGlobal(7);
+
+    return MNM.connected;
+  }
+
+  return false;
 }
 
 void MNMClass::sendNoteOn(uint8_t track, uint8_t note, uint8_t velocity) {
@@ -124,19 +174,9 @@ bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *par
   return false;
 }
 
-void MNMClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
-  USE_LOCK();
-  SET_LOCK();
-  midiuart->m_putc(0xF0);
-  midiuart->sendRaw(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  midiuart->sendRaw(bytes, cnt);
-  midiuart->m_putc(0xF7);
-  CLEAR_LOCK();
-}
-
 void MNMClass::setStatus(uint8_t id, uint8_t value) {
   uint8_t data[] = { 0x71, (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F) };
-  MNM.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MNMClass::loadGlobal(uint8_t id) {
@@ -183,11 +223,6 @@ void MNMClass::saveCurrentKit(uint8_t id) {
   // XXX
 }
 
-void MNMClass::sendRequest(uint8_t type, uint8_t param) {
-  uint8_t data[] = { type, param };
-  MNM.sendSysex(data, countof(data));
-}
-
 void MNMClass::revertToCurrentKit(bool reloadKit) {
   if (!reloadKit) {
     if (loadedKit) {
@@ -210,22 +245,6 @@ void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   }
 }
 
-void MNMClass::requestKit(uint8_t _kit) {
-  sendRequest(MNM_KIT_REQUEST_ID, _kit);
-}
-
-void MNMClass::requestPattern(uint8_t _pattern) {
-  sendRequest(MNM_PATTERN_REQUEST_ID, _pattern);
-}
-
-void MNMClass::requestSong(uint8_t _song) {
-  sendRequest(MNM_SONG_REQUEST_ID, _song);
-}
-
-void MNMClass::requestGlobal(uint8_t _global) {
-  sendRequest(MNM_GLOBAL_REQUEST_ID, _global);
-}
-
 void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll, bool initSynth) {
   uint8_t data[] = { MNM_LOAD_GLOBAL_ID, track, model, 0x00 };
   if (initAll) {
@@ -235,7 +254,7 @@ void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll, bool in
   } else {
     data[3] = 0x00;
   }
-  MNM.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MNMClass::setMachine(uint8_t track, uint8_t idx) {
@@ -244,47 +263,6 @@ void MNMClass::setMachine(uint8_t track, uint8_t idx) {
     setParam(track, i, kit.parameters[idx][i]);
   }
   setTrackLevel(track, kit.levels[idx]);
-}
-
-uint8_t MNMClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
-  SysexCallback cb(type);
-
-  MNMSysexListener.addOnStatusResponseCallback
-    (&cb, (sysex_status_callback_ptr_t)&SysexCallback::onStatusResponse);
-  MNM.sendRequest(MNM_STATUS_REQUEST_ID, type);
-  connected = cb.waitBlocking(timeout);
-  MNMSysexListener.removeOnStatusResponseCallback(&cb);
-
-  return cb.value;
-}
-  
-bool MNMClass::getBlockingGlobal(uint8_t idx, uint16_t timeout) {
-  SysexCallback cb;
-  MNMSysexListener.addOnGlobalMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  MNM.sendRequest(MNM_GLOBAL_REQUEST_ID, idx);
-  connected = cb.waitBlocking(timeout);
-  MNMSysexListener.removeOnGlobalMessageCallback(&cb);
-  return connected;
-}
-  
-uint8_t MNMClass::getCurrentTrack(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(MNM_CURRENT_AUDIO_TRACK_REQUEST, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MNM.currentTrack = value;
-    return value;
-  }
-}
-
-uint8_t MNMClass::getCurrentKit(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(MNM_CURRENT_KIT_REQUEST, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MNM.currentKit = value;
-    return value;
-  }
 }
 
 MNMClass MNM;

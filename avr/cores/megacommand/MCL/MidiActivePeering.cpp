@@ -33,165 +33,30 @@ static void prepare_display() {
 #endif
 }
 
-static void delay_progress(uint16_t clock_) {
-  uint16_t myclock = slowclock;
-  while (clock_diff(myclock, slowclock) < clock_) {
-    mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-  }
-}
+class GenericMidiDevice : public MidiDevice {
+public:
+  GenericMidiDevice()
+    : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr) {}
 
-// TODO port is ignored
-static bool md_setup(uint8_t port) {
-  DEBUG_PRINT_FN();
+  virtual bool probe() { return true; }
+};
 
-  bool ts = md_track_select.state;
-  bool ti = trig_interface.state;
-
-  if (ts) {
-    md_track_select.off();
-  }
-  if (ti) {
-    trig_interface.off();
-  }
-
-  // Hack to prevent unnecessary delay on MC boot
-  MD.connected = false;
-  uint16_t myclock = slowclock;
-
-  if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
-    delay_progress(4600);
-  }
-
-  // Begin main probe sequence
-  if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
-    DEBUG_PRINTLN("Midi ID: success");
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
-    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
-    // calculated before proceeding.
-    myclock = slowclock;
-
-    delay_progress(400);
-    md_exploit.send_globals();
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
-    for (uint8_t x = 0; x < 2; x++) {
-      for (uint8_t y = 0; y < 16; y++) {
-        mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-        MD.setStatus(0x22, y);
-      }
-    }
-    MD.setStatus(0x22, MD.currentTrack);
-    MD.connected = true;
-    MD.setGlobal(7);
-    MD.global.baseChannel = 9;
-    if (!MD.get_fw_caps()) {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-      oled_display.display();
-#else
-      gfx.display_text("UPGRADE", "MACHINEDRUM");
-#endif
-      while (1)
-        ;
-    }
-    MD.getBlockingKit(0xF7);
-  }
-
-  if (MD.connected == false) {
-    DEBUG_PRINTLN("delay");
-    delay_progress(250);
-  }
-
-  if (ts) {
-    md_track_select.on();
-  }
-  if (ti) {
-    trig_interface.on();
-  }
-
-  return MD.connected;
-}
-
-// TODO port is ignored
-static bool a4_setup(uint8_t port) {
-  DEBUG_PRINT_FN();
-
-  delay_progress(300);
-  if (Analog4.getBlockingSettings(0)) {
-    Analog4.connected = true;
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
-  }
-  return Analog4.connected;
-}
-
-static bool mnm_setup(uint8_t port) {
-  uint16_t myclock = slowclock;
-  if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
-    // wait 400 ms, shoul be enought time to allow midiclock tempo to be
-    // calculated before proceeding.
-    myclock = slowclock;
-
-    delay_progress(400);
-
-    if (!MNM.getBlockingGlobal(7)) {
-      return false;
-    }
-
-    // TODO MNM Global: fromSysex works, but toSysex doesn't
-
-    auto &g = MNM.global;
-    MNM.connected = g.fromSysex(MNM.midi);
-    if (!MNM.connected) {
-      DEBUG_PRINTLN("MNM fromSysex failed");
-      return false;
-    }
-
-    g.clockIn = true;
-    g.clockOut = true;
-    g.ctrlIn = true;
-    g.ctrlOut = true;
-
-    g.arpOut = 2;
-    g.autotrackChannel = 9;
-    g.baseChannel = 0;
-    g.channelSpan = 6;
-    g.keyboardOut = 2;
-    g.midiClockOut = 1;
-    g.transportIn = true;
-    g.transportOut = true;
-    g.origPosition = 7;
-
-    MNMDataToSysexEncoder encoder(MNM.midi->uart);
-    g.toSysex(encoder);
-
-    MNM.loadGlobal(7);
-
-    return MNM.connected;
-  }
-
-  return false;
-}
+static GenericMidiDevice generic_midi_device;
 
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
 
-static void md_disconnect() { MD.connected = false; }
-
-static void a4_disconnect() { Analog4.connected = false; }
-
-static void mnm_disconnect() { MNM.connected = false; }
-
-static midi_peer_driver_t port1_drivers[] = {
-  {DEVICE_MD, "MD", md_setup, md_disconnect, icon_md},
+static MidiDevice* port1_drivers[] = {
+  &MD
 };
 
-static midi_peer_driver_t port2_drivers[] = {
-  {DEVICE_MNM, "MM", mnm_setup, mnm_disconnect, icon_mnm },
-  {DEVICE_A4, "A4", a4_setup, a4_disconnect, icon_a4},
-  {DEVICE_MIDI, "MIDI Device", midi_device_setup, nullptr, nullptr},
+static MidiDevice* port2_drivers[] = {
+  &MNM,
+  &Analog4,
+  &generic_midi_device,
 };
 
-static void probePort(uint8_t port, midi_peer_driver_t drivers[],
+static void probePort(uint8_t port, MidiDevice* drivers[],
                       size_t nr_drivers) {
   auto *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
@@ -202,7 +67,7 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
       pmidi->speed > 31250) {
     MidiUart.set_speed((uint32_t)31250, port);
     for (size_t i = 0; i < nr_drivers; ++i) {
-      if (drivers[i].disconnect) drivers[i].disconnect();
+      if (drivers[i]->connected) drivers[i]->disconnect();
     }
 #ifndef OLED_DISPLAY
     char str[16];
@@ -219,8 +84,8 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
 #ifdef OLED_DISPLAY
       auto oldfont = oled_display.getFont();
       prepare_display();
-      if (drivers[i].icon) {
-        oled_display.drawBitmap(14, 8, drivers[i].icon, 34, 42, WHITE);
+      if (drivers[i]->icon) {
+        oled_display.drawBitmap(14, 8, drivers[i]->icon, 34, 42, WHITE);
       }
       oled_display.display();
 #else
@@ -234,7 +99,7 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
 #endif
 
       for (int probe_retry = 0; probe_retry < 3 && !probe_success; ++probe_retry) {
-        probe_success = drivers[i].probe(port);
+        probe_success = drivers[i]->probe();
       } // for retries
 
       MidiIDSysexListener.cleanup();
@@ -244,8 +109,8 @@ static void probePort(uint8_t port, midi_peer_driver_t drivers[],
 #endif
 
       if (probe_success) {
-        pmidi->device.set_id(drivers[i].id);
-        pmidi->device.set_name(drivers[i].name);
+        pmidi->device.set_id(drivers[i]->id);
+        pmidi->device.set_name(drivers[i]->name);
 #ifndef OLED_DISPLAY
         GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
 #endif

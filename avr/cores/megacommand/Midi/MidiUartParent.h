@@ -80,7 +80,7 @@ public:
 
   virtual void initSerial() { running_status = 0; }
 
-  ALWAYS_INLINE() virtual void puts(uint8_t *data, uint16_t cnt) {
+  ALWAYS_INLINE() virtual void puts(const uint8_t *data, uint16_t cnt) {
     while (cnt--) {
       m_putc(*data);
       ++data;
@@ -237,7 +237,7 @@ public:
       return;
     #endif
 
-    uint8_t msg[3] = {MIDI_NOTE_ON | channel, note, velocity};
+    uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_ON | channel), note, velocity};
     //noteOnCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
@@ -248,7 +248,7 @@ public:
       return;
     #endif
 
-    uint8_t msg[3] = {MIDI_NOTE_OFF | channel, note, velocity};
+    uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_OFF | channel), note, velocity};
     //noteOffCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
@@ -259,7 +259,7 @@ public:
       return;
     #endif
 
-    uint8_t msg[3] = {MIDI_CONTROL_CHANGE | channel, cc, value};
+    uint8_t msg[3] = {(uint8_t)(MIDI_CONTROL_CHANGE | channel), cc, value};
     //ccCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
@@ -270,7 +270,7 @@ public:
       return;
     #endif
 
-    sendMessage(MIDI_PROGRAM_CHANGE | channel, program);
+    sendMessage((uint8_t)(MIDI_PROGRAM_CHANGE | channel), program);
   }
 
   void sendPolyKeyPressure(uint8_t channel, uint8_t note, uint8_t pressure) {
@@ -279,7 +279,7 @@ public:
       return;
     #endif
 
-    sendMessage(MIDI_AFTER_TOUCH | channel, note, pressure);
+    sendMessage((uint8_t)(MIDI_AFTER_TOUCH | channel), note, pressure);
   }
 
   void sendChannelPressure(uint8_t channel, uint8_t pressure) {
@@ -288,12 +288,12 @@ public:
       return;
     #endif
 
-   sendMessage(MIDI_CHANNEL_PRESSURE | channel, pressure);
+   sendMessage((uint8_t)(MIDI_CHANNEL_PRESSURE | channel), pressure);
   }
 
   void sendPitchBend(uint8_t channel, int16_t pitchbend) {
     pitchbend += 8192;
-    sendMessage(MIDI_PITCH_WHEEL | channel, pitchbend & 0x7F,
+    sendMessage((uint8_t)(MIDI_PITCH_WHEEL | channel), pitchbend & 0x7F,
                 (pitchbend >> 7) & 0x7F);
   }
 
@@ -321,12 +321,12 @@ public:
     sendCC(channel, 38, (value & 0x7F));
   }
 
-  virtual void sendSysex(uint8_t *data, uint8_t cnt) {
+  virtual void sendSysex(const uint8_t *data, uint8_t cnt) {
     sendCommandByte(0xF0);
     puts(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
+  ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }

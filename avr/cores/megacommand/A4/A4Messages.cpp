@@ -19,13 +19,13 @@ bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   //	origPosition = data[3];
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+  ElektronSysexDecoder decoder(data + 4);
 
   return true;
 }
 
 uint16_t A4Global::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   return toSysex(encoder);
   if (len < 0xC5)
     return 0;
@@ -71,7 +71,7 @@ void A4Sound::convert(A4Sound_270* old) {
   // skip the partial header 
   payload += 6;
   // getting data from old payload.
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(payload, 392));
+  ElektronSysexDecoder decoder(payload);
   fromSysex_impl(decoder);
 }
 
@@ -124,10 +124,7 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   origPosition = data[a4sound_origpos_idx];
-  ElektronSysexDecoder decoder(
-    DATA_ENCODER_INIT(
-      data + a4sound_encoding_startidx,
-      len - a4sound_encoding_startidx - 4));
+  ElektronSysexDecoder decoder(data + a4sound_encoding_startidx);
 
   return fromSysex_impl(decoder);
 }
@@ -155,7 +152,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
   }
 
   origPosition = midi->midiSysex.getByte(a4sound_origpos_idx);
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset, len - 4));
+  ElektronSysexDecoder decoder(midi, offset);
 
   return fromSysex_impl(decoder);
 }
@@ -166,7 +163,7 @@ uint16_t A4Sound::toSysex() {
 }
 
 uint16_t A4Sound::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   if (len < 0xC5) // what is 0xC5?
     return 0;
   return toSysex(encoder);
@@ -204,7 +201,7 @@ bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
+  ElektronSysexDecoder decoder(data);
   decoder.stop7Bit();
   decoder.get8(&origPosition);
   //    decoder.skip(2);
@@ -224,7 +221,7 @@ uint16_t A4Kit::toSysex() {
   return toSysex(encoder);
 }
 uint16_t A4Kit::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   if (len < 0xC5)
     return 0;
   return toSysex(encoder);

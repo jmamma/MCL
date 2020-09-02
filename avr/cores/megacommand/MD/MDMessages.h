@@ -31,7 +31,7 @@ extern uint8_t machinedrum_sysex_hdr[5];
  * - routing of the individual tracks to the audio outputs
  * - gate, sensitivity and levels of the audio inputs
  **/
-class MDGlobal {
+class MDGlobal: public ElektronSysexObject {
   /**
    * \addtogroup md_sysex_global
    * @{
@@ -87,18 +87,10 @@ public:
   MDGlobal() {
   }
 
-  /** Read in a global message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-
-  /** Convert the global object into a sysex buffer to be sent to the
-   * machinedrum. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  /**
-   * Convert the global object and encode it into a sysex encoder,
-   * for example to send directly to the UAR.
-   **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   /* @} */
 };
 
@@ -194,34 +186,10 @@ public:
 };
 
 /**
- * This class is a short version of the full kit class to store just
- * the models, names and position of a kit for studio firmwares.
- **/
-
-class MDKitShort {
-  /**
-   * \addtogroup md_sysex_kit
-   * @{
-   **/
-
-public:
-  uint8_t origPosition;
-  char name[17];
-  uint32_t models[16];
-
-  MDKitShort() {}
-
-  /** Read in a kit message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-
-  /* @} */
-};
-
-/**
  * This class stores the settings for a complete kit on the
  * machinedrum, including effect and machine settings.
  **/
-class MDKit {
+class MDKit: public ElektronSysexObject {
   /**
    * \addtogroup md_sysex_kit
    * @{
@@ -254,19 +222,12 @@ public:
   /** The mute group selected for each track (255: OFF). **/
   uint8_t muteGroups[16];
 
-  /** Read in a kit message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  /** Encode and send a kit **/
-  uint16_t toSysex();
-  /** Convert a kit object to a sysex buffer ready to be sent to the MD. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  /**
-   * Convert the global object and encode it into a sysex encoder,
-   * for example to send directly to the UAR.
-   **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
+  uint16_t toSysex();
   /**
    * Swap two machines.
    **/
@@ -309,7 +270,7 @@ public:
 /**
  * This class stores a song of the MachineDrum.
  **/
-class MDSong {
+class MDSong: ElektronSysexObject {
   /**
    * \addtogroup md_sysex_song
    * @{
@@ -321,16 +282,10 @@ public:
   MDRow rows[256];
   uint8_t numRows;
 
-  /** Read in a song message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  /** Convert a song object to a sysex buffer ready to be sent to the MD. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  /**
-   * Convert the global object and encode it into a sysex encoder,
-   * for example to send directly to the UAR.
-   **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   /* @} */
 };

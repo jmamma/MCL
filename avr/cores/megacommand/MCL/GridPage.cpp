@@ -603,7 +603,7 @@ void GridPage::prepare() {
 }
 
 void rename_row() {
-  char *my_title = "Row Name:";
+  const char *my_title = "Row Name:";
   if (grid_page.row_headers[grid_page.cur_row].active) {
     if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
                              my_title, 8)) {
@@ -715,9 +715,8 @@ void GridPage::apply_slot_changes() {
       }
       // If all slots are deleted then clear the row name
       if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
-        char *str_tmp = "\0";
         header.active = activate_header;
-        strcpy(header.name, str_tmp);
+        strcpy(header.name, "\0");
         proj.write_grid_row_header(&header, y + getRow());
       }
     }

@@ -7,27 +7,24 @@
 #include "MNMMessages.h"
 #include "MNMPattern.h"
 #include "MNMParams.h"
+#include "MNMSysex.h"
 
-class MNMClass {
+class MNMClass: public ElektronDevice {
  public:
   MNMClass();
-  MidiClass *midi = &Midi2;
-  MidiUartClass2* midiuart = &MidiUart2;
-  bool connected = false;
-  uint8_t currentTrack;
-  
-  int currentGlobal;
-  bool loadedGlobal;
+  MidiUartClass2* midiuart;
   MNMGlobal global;
   
-  int currentKit;
-  bool loadedKit;
   MNMKit kit;
 
-  int currentPattern;
+  virtual bool probe();
 
-  void sendSysex(uint8_t *bytes, uint8_t cnt);
-  
+  virtual ElektronSysexObject* getKit() { return &kit; }
+  // TODO MNM pattern not placed in class
+  virtual ElektronSysexObject* getPattern() { return nullptr; }
+  virtual ElektronSysexObject* getGlobal() { return &global; }
+  virtual ElektronSysexListenerClass* getSysexListener() { return &MNMSysexListener; }
+
   void sendMultiTrigNoteOn(uint8_t note, uint8_t velocity);
   void sendMultiTrigNoteOff(uint8_t note);
   void sendMultiMapNoteOn(uint8_t note, uint8_t velocity);
@@ -106,12 +103,6 @@ class MNMClass {
   void setCurrentKitName(char *name);
   void saveCurrentKit(uint8_t id);
 
-  void sendRequest(uint8_t type, uint8_t param);
-  void requestKit(uint8_t kit);
-  void requestPattern(uint8_t pattern);
-  void requestSong(uint8_t song);
-  void requestGlobal(uint8_t global);
-
   void assignMachine(uint8_t model, bool initAll = false, bool initSynth = false) {
     assignMachine(currentTrack, model, initAll, initSynth);
   }
@@ -163,14 +154,10 @@ class MNMClass {
     }
   }
   void revertToTrack(uint8_t track, bool reloadKit = false);
-
-  bool getBlockingGlobal(uint8_t index, uint16_t timeout = 1000);
-  uint8_t getBlockingStatus(uint8_t type, uint16_t timeout = 1000);
-  uint8_t getCurrentTrack(uint16_t timeout = 1000);
-  uint8_t getCurrentKit(uint16_t timeout = 1000);
 };
 
 extern MNMClass MNM;
+extern const ElektronSysexProtocol mnm_protocol;
 
 #include "MNMSysex.h"
 

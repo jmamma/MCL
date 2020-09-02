@@ -21,10 +21,10 @@
 #define DATA_ENCODER_TRUE() { return true; }
 #define DATA_ENCODER_FALSE() { return true; }
 
-#define GET_MACRO(_1,_2,_3,NAME,...) NAME
-#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
-#define DATA_ENCODER_INIT2(data, length) data, length
-#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset, length
+//#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+//#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
+//#define DATA_ENCODER_INIT2(data, length) data, length
+//#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset, length
 
 #define DATA_ENCODER_CHECKING 1
 

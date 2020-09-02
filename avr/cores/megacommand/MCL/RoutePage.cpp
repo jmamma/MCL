@@ -144,7 +144,7 @@ void RoutePage::update_globals() {
       ;
     USE_LOCK();
     SET_LOCK();
-    MD.global.toSysex(encoder2);
+    MD.global.toSysex(&encoder2);
     CLEAR_LOCK();
     hasChanged = false;
   }

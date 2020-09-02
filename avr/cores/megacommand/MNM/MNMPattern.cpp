@@ -65,7 +65,7 @@ bool MNMPattern::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   origPosition = data[3];
-	MNMSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+	MNMSysexDecoder decoder(data + 4);
 
 	decoder.get64(ampTrigs, 6 * 13);
 	/*
@@ -176,7 +176,7 @@ bool MNMPattern::fromSysex(MidiClass *midi) {
   }
 
   origPosition = midi->midiSysex.getByte(3);
-	MNMSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 4, len - 4));
+	MNMSysexDecoder decoder(midi, offset + 4);
 
 	decoder.get64(ampTrigs, 6 * 13);
 	/*
@@ -284,7 +284,7 @@ bool MNMPattern::fromSysex(MidiClass *midi) {
 #endif
 
 uint16_t MNMPattern::toSysex(uint8_t *data, uint16_t len) {
-	MNMDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+	MNMDataToSysexEncoder encoder(data);
 
 	return toSysex(encoder);
 }

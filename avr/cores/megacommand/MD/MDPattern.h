@@ -21,27 +21,6 @@
  * @{
  **/
 
-/**
- * This class stores just a few data of a pattern message, for studio
- * firmwares that need to manipulate all the patterns on the MD.
- **/
-class MDPatternShort {
-  /**
-   * \addtogroup md_pattern_global
-   * @{
-   **/
-public:
-  uint8_t origPosition;
-  uint8_t kit;
-  uint8_t patternLength;
-
-  MDPatternShort() {}
-
-  /** Read in a pattern message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  /* @} */
-};
-
 class MDPattern : public ElektronPattern {
   /**
    * \addtogroup md_pattern_global
@@ -121,24 +100,11 @@ public:
 
   /* XXX TODO extra pattern 64 */
 
-  /** Read in a pattern message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-
-  bool fromSysex(MidiClass *midi);
-
-  /** Encode and send a pattern **/
-
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   uint16_t toSysex();
-  /** Convert the pattern object into a sysex buffer to be sent to the
-   * machinedrum. **/
-
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  /**
-   * Convert the pattern object by using the specified encoder. This
-   * allows the pattern to be sent directly to uart without rendering
-   * it into a big intermediary buffer.
-   **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
 
   bool isTrackEmpty(uint8_t track);
 

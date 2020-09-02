@@ -580,7 +580,7 @@ void RAMPage::display() {
   oled_display.setFont();
   oled_display.setCursor(0, 24);
 
-  char *source;
+  const char *source;
 
   switch (encoders[0]->cur) {
   case SOURCE_MAIN:

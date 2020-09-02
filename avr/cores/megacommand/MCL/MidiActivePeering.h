@@ -9,19 +9,6 @@
 #define UART1_PORT 1
 #define UART2_PORT 2
 
-struct midi_peer_driver_t {
-  // mandatory
-  uint8_t id;
-  // mandatory
-  const char* name;
-  // mandatory
-  bool (*probe)(uint8_t port);
-  // optional. can be NULL
-  void (*disconnect)();
-  // optional. can be NULL
-  const uint8_t* icon;
-};
-
 class MidiActivePeering : public Task {
 public:
   MidiActivePeering(uint16_t _interval = 0) : Task(_interval) { setup(_interval); }

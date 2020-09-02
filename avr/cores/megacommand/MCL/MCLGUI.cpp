@@ -161,6 +161,16 @@ void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
   draw_popup(msg, true);
   draw_progress_bar(cur, _max, deferred_display, x_pos, y_pos);
 }
+
+
+void MCLGUI::delay_progress(uint16_t clock_) {
+  uint16_t myclock = slowclock;
+  while (clock_diff(myclock, slowclock) < clock_) {
+    mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+  }
+}
+
+
 void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
                                uint8_t x_pos, uint8_t y_pos) {
 #ifdef OLED_DISPLAY

@@ -30,12 +30,14 @@ class MidiSysexListenerClass {
 public:
   uint8_t ids[3];
   MidiSysexClass *sysex;
+  uint8_t msgType;
 
   MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
     sysex = _sysex;
     ids[0] = 0;
     ids[1] = 0;
     ids[2] = 0;
+    msgType = 255;
   };
 
   virtual void start() {}

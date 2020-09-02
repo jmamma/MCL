@@ -15,7 +15,6 @@ class MidiIDSysexListenerClass : public MidiSysexListenerClass {
 
 public:
   bool isIDMessage;
-  uint8_t msgType;
   MidiIDSysexListenerClass() : MidiSysexListenerClass() {
     ids[0] = 0x7E;
     ids[1] = 0x06;

@@ -1,8 +1,4 @@
-#include "A4.h"
-#include "WProgram.h"
-#include "helpers.h"
-
-#include "MidiUartParent.h"
+#include "MCL_impl.h"
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
@@ -10,7 +6,23 @@ uint8_t a4_sysex_proto_version[2] = {0x01, 0x01};
 
 uint8_t a4_sysex_ftr[4]{0x00, 0x00, 0x00, 0x05};
 
-A4Class::A4Class() {}
+const ElektronSysexProtocol a4_protocol = {
+  a4_sysex_hdr, sizeof(a4_sysex_hdr), 
+  A4_KIT_REQUEST_ID, 
+  A4_PATTERN_REQUEST_ID, 
+  A4_SONG_REQUEST_ID, 
+  A4_GLOBAL_REQUEST_ID,
+
+  // status request: not applicable to A4
+  0,
+  // get index: not applicable/unknown to A4
+  0, 0, 0, 0, 0
+};
+
+A4Class::A4Class(): ElektronDevice(
+    &Midi2, "A4", DEVICE_A4, icon_a4,
+    a4_protocol){}
+
 void A4Class::sendRequest(uint8_t type, uint8_t param) {
   USE_LOCK();
   SET_LOCK();
@@ -24,17 +36,16 @@ void A4Class::sendRequest(uint8_t type, uint8_t param) {
   CLEAR_LOCK();
 }
 
-void A4Class::sendSysex(uint8_t *bytes, uint8_t cnt) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart2.m_putc(0xF0);
-  MidiUart2.sendRaw(a4_sysex_hdr, sizeof(a4_sysex_hdr));
-  MidiUart2.sendRaw(bytes, cnt);
-  MidiUart2.m_putc(0xf7);
-  CLEAR_LOCK();
-}
+bool A4Class::probe() {
+  DEBUG_PRINT_FN();
 
-void A4Class::requestKit(uint8_t kit) { sendRequest(A4_KIT_REQUEST_ID, kit); }
+  mcl_gui.delay_progress(300);
+  if (getBlockingSettings(0)) {
+    connected = true;
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
+  }
+  return connected;
+}
 
 void A4Class::requestKitX(uint8_t kit) { sendRequest(A4_KITX_REQUEST_ID, kit); }
 
@@ -45,16 +56,8 @@ void A4Class::requestSoundX(uint8_t sound) {
   sendRequest(A4_SOUNDX_REQUEST_ID, sound);
 }
 
-void A4Class::requestSong(uint8_t song) {
-  sendRequest(A4_SONG_REQUEST_ID, song);
-}
-
 void A4Class::requestSongX(uint8_t song) {
   sendRequest(A4_SONGX_REQUEST_ID, song);
-}
-
-void A4Class::requestPattern(uint8_t pattern) {
-  sendRequest(A4_PATTERN_REQUEST_ID, pattern);
 }
 
 void A4Class::requestPatternX(uint8_t pattern) {
@@ -69,52 +72,15 @@ void A4Class::requestSettingsX(uint8_t setting) {
   sendRequest(A4_SETTINGSX_REQUEST_ID, setting);
 }
 
-void A4Class::requestGlobal(uint8_t global) {
-  sendRequest(A4_GLOBAL_REQUEST_ID, global);
-}
-
 void A4Class::requestGlobalX(uint8_t global) {
   sendRequest(A4_GLOBALX_REQUEST_ID, global);
-}
-
-bool A4Class::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  SysexCallback cb;
-  A4SysexListener.addOnKitMessageCallback(
-      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestKit(kit);
-  connected = cb.waitBlocking(timeout);
-  A4SysexListener.removeOnKitMessageCallback(&cb);
-
-  return connected;
-}
-
-bool A4Class::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  SysexCallback cb;
-  A4SysexListener.addOnPatternMessageCallback(
-      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestPattern(pattern);
-  connected = cb.waitBlocking(timeout);
-  A4SysexListener.removeOnPatternMessageCallback(&cb);
-
-  return connected;
-}
-
-bool A4Class::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  SysexCallback cb;
-  A4SysexListener.addOnGlobalMessageCallback(
-      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestGlobal(global);
-  connected = cb.waitBlocking(timeout);
-  A4SysexListener.removeOnGlobalMessageCallback(&cb);
-
-  return connected;
 }
 
 bool A4Class::getBlockingSound(uint8_t sound, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnSoundMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestSound(sound);
+  requestSound(sound);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSoundMessageCallback(&cb);
 
@@ -125,7 +91,7 @@ bool A4Class::getBlockingSettings(uint8_t settings, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnSettingsMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestSettings(settings);
+  requestSettings(settings);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSettingsMessageCallback(&cb);
 
@@ -136,7 +102,7 @@ bool A4Class::getBlockingKitX(uint8_t kit, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnKitMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestKitX(kit);
+  requestKitX(kit);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnKitMessageCallback(&cb);
 
@@ -147,7 +113,7 @@ bool A4Class::getBlockingPatternX(uint8_t pattern, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnPatternMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestPatternX(pattern);
+  requestPatternX(pattern);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnPatternMessageCallback(&cb);
 
@@ -158,7 +124,7 @@ bool A4Class::getBlockingGlobalX(uint8_t global, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnGlobalMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestGlobalX(global);
+  requestGlobalX(global);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnGlobalMessageCallback(&cb);
 
@@ -169,7 +135,7 @@ bool A4Class::getBlockingSoundX(uint8_t sound, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnSoundMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestSoundX(sound);
+  requestSoundX(sound);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSoundMessageCallback(&cb);
 
@@ -180,7 +146,7 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
   SysexCallback cb;
   A4SysexListener.addOnSettingsMessageCallback(
       &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  Analog4.requestSettingsX(settings);
+  requestSettingsX(settings);
   connected = cb.waitBlocking(timeout);
   A4SysexListener.removeOnSettingsMessageCallback(&cb);
 

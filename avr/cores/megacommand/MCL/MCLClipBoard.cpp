@@ -2,8 +2,6 @@
 
 #include "MCL_impl.h"
 
-#define FILENAME_CLIPBOARD "/clipboard.tmp"
-
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
 #define CLIPBOARD_FILE_SIZE                                                    \

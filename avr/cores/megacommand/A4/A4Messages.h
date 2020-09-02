@@ -91,7 +91,9 @@ public:
   /* @} */
 };
 
-class a4time_t {
+class
+__attribute__((packed))
+a4time_t {
   uint8_t data;
 public:
   a4time_t() {};
@@ -99,7 +101,9 @@ public:
   float decode() { return .0f; }
 };
 
-class a4notelen_t {
+class
+__attribute__((packed))
+a4notelen_t {
   uint8_t data;
 public:
   a4notelen_t() {};
@@ -110,7 +114,9 @@ public:
 /**
  * Two-byte unsigned floating numbers
  **/
-class a4ufloat_t {
+class 
+__attribute__((packed))
+a4ufloat_t {
   uint8_t data[2];
 public:
   a4ufloat_t() {};
@@ -121,7 +127,9 @@ public:
 /**
  * Two-byte signed floating numbers
  **/
-class a4sfloat_t {
+class 
+__attribute__((packed))
+a4sfloat_t {
   uint8_t data[2];
 public:
   a4sfloat_t() {};
@@ -129,8 +137,9 @@ public:
   float decode() { return .0f; }
 };
 
+struct 
 __attribute__((packed))
-struct a4flt_t{
+a4flt_t{
   a4ufloat_t freq;
   uint8_t    res;
   uint8_t    res_pad;
@@ -143,8 +152,9 @@ struct a4flt_t{
 };
 
 // XXX to be studied further
+struct 
 __attribute__((packed))
-struct a4mod_t {
+a4mod_t {
   uint8_t dest1[2];
   int8_t  depth1[2];
   uint8_t dest2[2];
@@ -157,8 +167,9 @@ struct a4mod_t {
   int8_t  depth5[2];
 };
 
+struct 
 __attribute__((packed))
-struct a4sound_t {
+a4sound_t {
   // 0x2b
   int8_t      osc1_tuning;
   int8_t      osc1_fine;
@@ -375,8 +386,9 @@ public:
   uint8_t payload[415 - 10 - 2 - 4 - 1];
 };
 
+class 
 __attribute__((packed))
-class A4Sound {
+A4Sound {
   /**
    * \addtogroup md_sysex_kit
    * @{

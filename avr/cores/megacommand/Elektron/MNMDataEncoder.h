@@ -35,8 +35,8 @@ private:
   uint8_t repeatByte;
   uint8_t repeatCount;
 public:
-  MNMDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL, uint16_t _sysexLen = 0))
-  : ElektronDataToSysexEncoder(DATA_ENCODER_INIT(_sysex, _sysexLen)) {
+  MNMDataToSysexEncoder(uint8_t *_sysex = nullptr)
+  : ElektronDataToSysexEncoder(_sysex) {
     mnm_encoder_init();
   }
 
@@ -67,12 +67,12 @@ public:
   uint8_t repeatByte;
 
 public:
-  MNMSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL, uint16_t _maxLen = 0))
-    : ElektronSysexDecoder(DATA_ENCODER_INIT(_data, _maxLen)) { 
+  MNMSysexDecoder(uint8_t *_data = nullptr)
+    : ElektronSysexDecoder(_data) { 
       mnm_decoder_init();
   }
-  MNMSysexDecoder(DATA_ENCODER_INIT(MidiClass *_midi = NULL, uint16_t _offset = NULL, uint16_t _maxLen = 0))
-    : ElektronSysexDecoder(DATA_ENCODER_INIT(_midi, _offset, _maxLen)) {
+  MNMSysexDecoder(MidiClass *_midi = nullptr, uint16_t _offset = 0)
+    : ElektronSysexDecoder(_midi, _offset) {
       mnm_decoder_init();
   }
 

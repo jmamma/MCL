@@ -41,6 +41,8 @@ public:
                      uint8_t x_pos = s_progress_x,
                      uint8_t y_pos = s_progress_y);
 
+  void delay_progress(uint16_t clock_);
+
   void draw_microtiming(uint8_t resolution, uint8_t timing);
   void clear_leftpane();
   void clear_rightpane();

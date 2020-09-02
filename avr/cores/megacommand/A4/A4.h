@@ -19,12 +19,13 @@
 extern uint8_t a4_sysex_hdr[5];
 extern uint8_t a4_sysex_proto_version[2];
 extern uint8_t a4_sysex_ftr[4];
+extern const ElektronSysexProtocol a4_protocol;
 /**
  * This is the main class used to communicate with an A4
  * connected to the Minicommand.
  *
  **/
-class A4Class {
+class A4Class : public ElektronDevice {
   /**
    * \addtogroup a4_a4
    *
@@ -33,38 +34,34 @@ class A4Class {
 
 public:
   A4Class();
-  bool connected = false;
-  MidiClass *midi = &Midi2;
-  /** Send the given sysex buffer to the A4. **/
-  void sendSysex(uint8_t *bytes, uint8_t cnt);
-  /**
-   * Send a sysex request to the MachineDrum. All the request calls
-   * are wrapped in appropriate methods like requestKit,
-   * requestPattern, etc...
-   **/
-  void sendRequest(uint8_t type, uint8_t param);
 
-  void requestKit(uint8_t kit);
+  virtual bool probe();
+
+  // Overriden for A4 proto version and footer injection
+  virtual void sendRequest(uint8_t, uint8_t);
+
+  virtual ElektronSysexListenerClass* getSysexListener() { return &A4SysexListener; }
+  // TODO A4 kit not placed in class
+  virtual ElektronSysexObject* getKit() { return nullptr; }
+  // TODO A4 pattern not placed in class
+  virtual ElektronSysexObject* getPattern() { return nullptr; }
+  // TODO A4 global not placed in class
+  virtual ElektronSysexObject* getGlobal() { return nullptr; }
+
   void requestKitX(uint8_t kit);
 
   void requestSound(uint8_t sound);
   void requestSoundX(uint8_t sound);
 
-  void requestPattern(uint8_t pattern);
   void requestPatternX(uint8_t pattern);
 
-  void requestSong(uint8_t song);
   void requestSongX(uint8_t song);
 
   void requestSettings(uint8_t setting);
   void requestSettingsX(uint8_t setting);
 
-  void requestGlobal(uint8_t global);
   void requestGlobalX(uint8_t global);
 
-  bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000);
-  bool getBlockingPattern(uint8_t pattern, uint16_t timeout = 3000);
-  bool getBlockingGlobal(uint8_t global, uint16_t timeout = 3000);
   bool getBlockingSound(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettings(uint8_t global, uint16_t timeout = 3000);
 

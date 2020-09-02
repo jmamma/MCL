@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "MNMDataEncoder.h"
+#include "Elektron.h"
 
 /*
 class MNMMidiMap {
@@ -16,7 +17,7 @@ public:
 };
 */
 
-class MNMGlobal {
+class MNMGlobal : public ElektronSysexObject {
 public:
   uint8_t origPosition;
 
@@ -71,8 +72,10 @@ public:
   MNMGlobal() {
   }
 
-  bool fromSysex(MidiClass *midi);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 };
 
 class MNMTrackModifier {
@@ -113,7 +116,7 @@ public:
   MNMTrackModifier modifier;
 };
 
-class MNMKit {
+class MNMKit: public ElektronSysexObject {
 public:
   uint8_t origPosition;
   char name[17];
@@ -149,10 +152,10 @@ public:
   MNMKit() {
   }
   
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 };
 
 class MNMRow {
@@ -171,7 +174,7 @@ public:
   uint16_t tempo;
 };
 
-class MNMSong {
+class MNMSong: public ElektronSysexObject {
 public:
   uint8_t origposition;
   char name[17];
@@ -180,10 +183,10 @@ public:
   MNMSong() {
   }
   
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 };
 
 

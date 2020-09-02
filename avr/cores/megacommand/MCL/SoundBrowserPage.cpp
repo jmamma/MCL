@@ -12,10 +12,8 @@ void SoundBrowserPage::init() {
 
   DEBUG_PRINT_FN();
   trig_interface.off();
-  char *snd = ".snd";
-  strcpy(match, snd);
-  char *files = "Sounds";
-  strcpy(title, files);
+  strcpy(match, ".snd");
+  strcpy(title, "Sounds");
 
   show_dirs = true;
   show_save = true;
