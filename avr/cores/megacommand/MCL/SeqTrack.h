@@ -56,7 +56,7 @@ public:
   uint32_t start_step;
   uint8_t start_step_offset;
 
-  ALWAYS_INLINE() virtual void reset() {
+  ALWAYS_INLINE() void reset() {
     step_count = 0;
     iterations_5 = 1;
     iterations_6 = 1;

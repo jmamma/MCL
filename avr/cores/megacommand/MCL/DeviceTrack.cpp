@@ -27,6 +27,9 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   case EXT_TRACK_TYPE:
     ::new(this) ExtTrack;
     break;
+  case MDFX_TRACK_TYPE:
+    ::new(this) MDFXTrack;
+    break;
   }
   return this;
 }

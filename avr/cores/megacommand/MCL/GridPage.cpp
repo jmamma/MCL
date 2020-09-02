@@ -444,8 +444,11 @@ void GridPage::display_grid() {
         str[0] = 'M';
         str[1] = (x + getCol() - cur_col) + '0';
         break;
+      case MDFX_TRACK_TYPE:
+        str[0] = 'F';
+        str[1] = 'X';
+        break;
       }
-
       //  Highlight the current cursor position + slot menu apply range
       if (in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
                   encoders[3]->cur - 1)) {
