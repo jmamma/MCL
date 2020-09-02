@@ -233,13 +233,13 @@ void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
 void ElektronDevice::setKitName(const char *name) {
   USE_LOCK();
   SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(sysex_protocol.header, sysex_protocol.header_size);
-  MidiUart.sendRaw(sysex_protocol.kitname_set_id);
+  uart->m_putc(0xF0);
+  uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
+  uart->sendRaw(sysex_protocol.kitname_set_id);
   for (uint8_t i = 0; i < sysex_protocol.kitname_length; i++) {
-    MidiUart.sendRaw(name[i] & 0x7F);
+    uart->sendRaw(name[i] & 0x7F);
   }
-  MidiUart.m_putc(0xf7);
+  uart->m_putc(0xf7);
   CLEAR_LOCK();
 }
 

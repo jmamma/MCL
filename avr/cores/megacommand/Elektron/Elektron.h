@@ -313,7 +313,7 @@ public:
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const uint8_t _track_type,
       const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, _icon, true, track_type), sysex_protocol(protocol) {
+    : MidiDevice(_midi, _name, _id, _icon, true, _track_type), sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;
