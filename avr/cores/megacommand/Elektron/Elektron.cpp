@@ -225,4 +225,51 @@ uint8_t ElektronDevice::getCurrentGlobal(uint16_t timeout) {
   }
 }
 
+void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
+  uint8_t data[] = { sysex_protocol.status_set_id , (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F) };
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::setKitName(const char *name) {
+  USE_LOCK();
+  SET_LOCK();
+  MidiUart.m_putc(0xF0);
+  MidiUart.sendRaw(sysex_protocol.header, sysex_protocol.header_size);
+  MidiUart.sendRaw(sysex_protocol.kitname_set_id);
+  for (uint8_t i = 0; i < sysex_protocol.kitname_length; i++) {
+    MidiUart.sendRaw(name[i] & 0x7F);
+  }
+  MidiUart.m_putc(0xf7);
+  CLEAR_LOCK();
+}
+
+void ElektronDevice::setTempo(float tempo) {
+  uint16_t qtempo = tempo * 24;
+  uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7), (uint8_t)(qtempo & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::loadGlobal(uint8_t id) { 
+  uint8_t data[] = {sysex_protocol.load_global_id, (uint8_t)(id & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::loadKit(uint8_t kit) {
+  uint8_t data[] = {sysex_protocol.load_kit_id, (uint8_t)(kit & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::loadPattern(uint8_t pattern) {
+  uint8_t data[] = {sysex_protocol.load_pattern_id, (uint8_t)(pattern & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::saveCurrentKit(uint8_t pos) {
+  uint8_t data[2] = {sysex_protocol.save_kit_id, (uint8_t)(pos & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+PGM_P ElektronDevice::getMachineName(uint8_t machine) {
+  return nullptr;
+}
 

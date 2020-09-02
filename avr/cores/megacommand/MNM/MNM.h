@@ -87,11 +87,6 @@ class MNMClass: public ElektronDevice {
   
   bool parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *param);
 
-  void setStatus(uint8_t id, uint8_t value);
-
-  void loadGlobal(uint8_t id);
-  void loadKit(uint8_t id);
-  void loadPattern(uint8_t id);
   void loadSong(uint8_t id);
 
   void setSequencerMode(bool songMode);
@@ -99,9 +94,6 @@ class MNMClass: public ElektronDevice {
   void setSequencerModeMode(bool midiMode);
   void setAudioTrack(uint8_t track);
   void setMidiTrack(uint8_t track);
-
-  void setCurrentKitName(char *name);
-  void saveCurrentKit(uint8_t id);
 
   void assignMachine(uint8_t model, bool initAll = false, bool initSynth = false) {
     assignMachine(currentTrack, model, initAll, initSynth);
@@ -136,7 +128,7 @@ class MNMClass: public ElektronDevice {
     setAutoMute(false);
   }
   
-  PGM_P getMachineName(uint8_t machine);
+  virtual PGM_P getMachineName(uint8_t machine);
   PGM_P getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 

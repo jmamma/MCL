@@ -4,6 +4,7 @@
 #define MIDIACTIVEPEERING_H__
 
 #include "MidiID.h"
+#include "Elektron.h"
 #include "Task.h"
 
 #define UART1_PORT 1
@@ -18,7 +19,7 @@ public:
   virtual void run();
   virtual void destroy() {};
 
-  uint8_t get_device(uint8_t port);
+  MidiDevice* get_device(uint8_t port);
 };
 
 extern MidiActivePeering midi_active_peering;

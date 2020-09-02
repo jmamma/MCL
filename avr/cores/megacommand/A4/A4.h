@@ -65,6 +65,16 @@ public:
   bool getBlockingSound(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettings(uint8_t global, uint16_t timeout = 3000);
 
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
+    // XXX A4 get pattern is disabled.
+    return false;
+  }
+
+  virtual bool getBlockingKit(uint8_t kit, uint16_t timeout) {
+    // XXX A4 get kit is disabled.
+    return false;
+  }
+
   /*X denotes get from RAM/unsaved  */
   bool getBlockingKitX(uint8_t kit, uint16_t timeout = 3000);
   bool getBlockingPatternX(uint8_t pattern, uint16_t timeout = 3000);

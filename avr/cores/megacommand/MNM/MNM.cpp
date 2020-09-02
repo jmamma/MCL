@@ -13,16 +13,25 @@ const ElektronSysexProtocol mnm_protocol = {
   MNM_CURRENT_PATTERN_REQUEST,
   MNM_CURRENT_SONG_REQUEST,
   MNM_CURRENT_GLOBAL_SLOT_REQUEST,
+
+  MNM_SET_STATUS_ID,
+  MNM_SET_TEMPO_ID,
+  MNM_SET_CURRENT_KIT_NAME_ID, 11,
+
+  MNM_LOAD_GLOBAL_ID,
+  MNM_LOAD_PATTERN_ID,
+  MNM_LOAD_KIT_ID,
+
+  MNM_SAVE_KIT_ID,
 };
 
 MNMClass::MNMClass()
-  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, mnm_protocol) {
+  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, EXT_TRACK_TYPE, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
 }
 
 bool MNMClass::probe() {
-  uint16_t myclock = slowclock;
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
     // wait 400 ms, shoul be enought time to allow midiclock tempo to be
@@ -174,23 +183,6 @@ bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *par
   return false;
 }
 
-void MNMClass::setStatus(uint8_t id, uint8_t value) {
-  uint8_t data[] = { 0x71, (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F) };
-  sendRequest(data, countof(data));
-}
-
-void MNMClass::loadGlobal(uint8_t id) {
-  setStatus(1, id);
-}
-
-void MNMClass::loadKit(uint8_t id) {
-  setStatus(2, id);
-}
-
-void MNMClass::loadPattern(uint8_t id) {
-  setStatus(4, id);
-}
-
 void MNMClass::loadSong(uint8_t id) {
   setStatus(8, id);
 }
@@ -213,14 +205,6 @@ void MNMClass::setAudioTrack(uint8_t track) {
 
 void MNMClass::setMidiTrack(uint8_t track) {
   setStatus(0x23, track);
-}
-
-void MNMClass::setCurrentKitName(char *name) {
-  // XXX
-}
-
-void MNMClass::saveCurrentKit(uint8_t id) {
-  // XXX
 }
 
 void MNMClass::revertToCurrentKit(bool reloadKit) {

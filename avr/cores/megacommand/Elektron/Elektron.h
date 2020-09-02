@@ -137,6 +137,9 @@ typedef void (SysexCallback::*sysex_status_callback_ptr_t)(uint8_t type,
 #include "ElektronDataEncoder.h"
 #include "MNMDataEncoder.h"
 
+/// forward declaration
+class ElektronDevice;
+
 /// Base class for MIDI-compatible devices
 /// Defines basic device description data and driver interfaces.
 class MidiDevice {
@@ -147,13 +150,20 @@ public:
   const char* const name;
   const uint8_t id; // Device identifier
   const uint8_t* const icon;
+  const bool isElektronDevice;
+  const uint8_t track_type; // Track type identifier
 
-  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon)
-    : name(_name), id(_id), icon(_icon)
+  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice, const uint8_t _track_type)
+    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice), track_type(_track_type)
   {
     midi = _midi;
-    uart = midi->uart;
+    uart = midi ? midi->uart : nullptr;
     connected = false;
+  }
+
+  ElektronDevice* asElektronDevice() {
+    if (!isElektronDevice) return nullptr;
+    return (ElektronDevice*) this;
   }
 
   virtual void disconnect() { connected = false; }
@@ -256,6 +266,16 @@ public:
   const uint8_t pattern_index_request_id;
   const uint8_t song_index_request_id;
   const uint8_t global_index_request_id;
+
+  const uint8_t status_set_id;
+  const uint8_t tempo_set_id;
+  const uint8_t kitname_set_id;
+  const uint8_t kitname_length;
+
+  const uint8_t load_global_id;
+  const uint8_t load_pattern_id;
+  const uint8_t load_kit_id;
+  const uint8_t save_kit_id;
 };
 
 /// Base class for objects that can be transferred via Elektron sysex protocols.
@@ -291,9 +311,9 @@ public:
   bool loadedGlobal;
 
   ElektronDevice(
-      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon,
+      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const uint8_t _track_type,
       const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, _icon), sysex_protocol(protocol) {
+    : MidiDevice(_midi, _name, _id, _icon, true, track_type), sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;
@@ -368,12 +388,12 @@ public:
    * Get the given kit of the device, blocking for an answer.
    * The sysex message will be stored in the Sysex receive buffer.
    **/
-  bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000);
+  virtual bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000);
   /**
    * Get the given pattern of the device, blocking for an answer.
    * The sysex message will be stored in the Sysex receive buffer.
    **/
-  bool getBlockingPattern(uint8_t pattern, uint16_t timeout = 3000);
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout = 3000);
   /**
    * Get the given song of the device, blocking for an answer.
    * The sysex message will be stored in the Sysex receive buffer.
@@ -393,10 +413,42 @@ public:
    **/
   uint8_t getCurrentPattern(uint16_t timeout = 3000);
 
-  /* @} */
   uint8_t getCurrentTrack(uint16_t timeout = 3000);
 
   uint8_t getCurrentGlobal(uint16_t timeout = 3000);
+
+  /**
+   * Send a sysex message to set the type id to the given value. This
+   * is used by more specific methods and there should be no need to
+   * use this method directly.
+   **/
+  virtual void setStatus(uint8_t id, uint8_t value);
+  virtual void setKitName(const char* name);
+  /**
+   * Set the tempo.
+   **/
+  virtual void setTempo(float tempo);
+  /**
+   * Send a sysex message to load the given global.
+   **/
+  virtual void loadGlobal(uint8_t id);
+  /**
+   * Send a sysex message to load the given kit.
+   **/
+  virtual void loadKit(uint8_t kit);
+  /**
+   * Send a sysex message to load the given pattern.
+   **/
+  virtual void loadPattern(uint8_t pattern);
+  /**
+   * Save the current kit at the given position.
+   **/
+  virtual void saveCurrentKit(uint8_t pos);
+  /**
+   * Return a pointer to a program-space string representing the name of the
+   *given machine.
+   **/
+  virtual PGM_P getMachineName(uint8_t machine);
 
 };
 

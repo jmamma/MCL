@@ -35,13 +35,18 @@ static void prepare_display() {
 
 class GenericMidiDevice : public MidiDevice {
 public:
-  GenericMidiDevice()
-    : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr) {}
-
+  GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE) {}
   virtual bool probe() { return true; }
 };
 
+class NullMidiDevice : public MidiDevice {
+public:
+  NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255) {}
+  virtual bool probe() { return false; }
+};
+
 static GenericMidiDevice generic_midi_device;
+static NullMidiDevice null_midi_device;
 
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
@@ -56,8 +61,13 @@ static MidiDevice* port2_drivers[] = {
   &generic_midi_device,
 };
 
+static MidiDevice* connected_midi_devices[2] = {
+  &null_midi_device,
+  &null_midi_device
+};
+
 static void probePort(uint8_t port, MidiDevice* drivers[],
-                      size_t nr_drivers) {
+                      size_t nr_drivers, MidiDevice** active_device) {
   auto *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -75,6 +85,8 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
 #endif
     // reset MidiID to none
     pmidi->device.init();
+    // reset connected device to /dev/null
+    *active_device = &null_midi_device;
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
     bool probe_success = false;
     for (size_t i = 0; i < nr_drivers; ++i) {
@@ -111,6 +123,7 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
+        *active_device = drivers[i];
 #ifndef OLED_DISPLAY
         GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
 #endif
@@ -121,18 +134,20 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
   }
 }
 
-uint8_t MidiActivePeering::get_device(uint8_t port) {
-  auto pmidi = _getMidiUart(port);
-  if (pmidi)
-    return pmidi->device.get_id();
-  else
-    return DEVICE_NULL;
+MidiDevice* MidiActivePeering::get_device(uint8_t port) {
+  if (port == 1) {
+    return connected_midi_devices[0];
+  } else if (port == 2) {
+    return connected_midi_devices[1];
+  } else {
+    return &null_midi_device;
+  }
 }
 
 void MidiActivePeering::run() {
-  probePort(UART1_PORT, port1_drivers, countof(port1_drivers));
+  probePort(UART1_PORT, port1_drivers, countof(port1_drivers), &connected_midi_devices[0]);
 #ifdef EXT_TRACKS
-  probePort(UART2_PORT, port2_drivers, countof(port2_drivers));
+  probePort(UART2_PORT, port2_drivers, countof(port2_drivers), &connected_midi_devices[1]);
 #endif
 }
 

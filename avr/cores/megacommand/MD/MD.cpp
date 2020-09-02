@@ -94,9 +94,19 @@ const ElektronSysexProtocol md_protocol = {
   MD_CURRENT_PATTERN_REQUEST,
   MD_CURRENT_SONG_REQUEST,
   MD_CURRENT_GLOBAL_SLOT_REQUEST,
+
+  MD_SET_STATUS_ID,
+  MD_SET_TEMPO_ID,
+  MD_SET_CURRENT_KIT_NAME_ID, 16,
+
+  MD_LOAD_GLOBAL_ID,
+  MD_LOAD_PATTERN_ID,
+  MD_LOAD_KIT_ID,
+
+  MD_SAVE_KIT_ID,
 };
 
-MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, md_protocol)
+MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE, md_protocol)
 {
   uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
                                      50, 52, 53, 55, 57, 59, 60, 62};
@@ -408,11 +418,6 @@ void MDClass::setTrackRouting(uint8_t track, uint8_t output) {
   sendRequest(data, countof(data));
 }
 
-void MDClass::setTempo(uint16_t tempo) {
-  uint8_t data[3] = {0x61, (uint8_t)(tempo >> 7), (uint8_t)(tempo & 0x7F)};
-  sendRequest(data, countof(data));
-}
-
 void MDClass::setTrigGroup(uint8_t srcTrack, uint8_t trigTrack) {
   uint8_t data[3] = {0x65, srcTrack, trigTrack};
   sendRequest(data, countof(data));
@@ -420,24 +425,6 @@ void MDClass::setTrigGroup(uint8_t srcTrack, uint8_t trigTrack) {
 
 void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
   uint8_t data[3] = {0x66, srcTrack, muteTrack};
-  sendRequest(data, countof(data));
-}
-
-void MDClass::setKitName(char *name) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  MidiUart.sendRaw(0x55);
-  for (uint8_t i = 0; i < 16; i++) {
-    MidiUart.sendRaw(name[i] & 0x7F);
-  }
-  MidiUart.m_putc(0xf7);
-  CLEAR_LOCK();
-}
-
-void MDClass::saveCurrentKit(uint8_t pos) {
-  uint8_t data[2] = {0x59, (uint8_t)(pos & 0x7F)};
   sendRequest(data, countof(data));
 }
 
@@ -503,22 +490,10 @@ void MDClass::muteTrack(uint8_t track, bool mute) {
   MidiUart.sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
 }
 
-void MDClass::setStatus(uint8_t id, uint8_t value) {
-
-  uint8_t data[] = {0x71, (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F)};
-  sendRequest(data, countof(data));
-}
-
 void MDClass::setGlobal(uint8_t id) {
   uint8_t data[] = {0x56, (uint8_t)(id & 0x7F)};
   sendRequest(data, countof(data));
 }
-
-void MDClass::loadGlobal(uint8_t id) { setStatus(1, id); }
-
-void MDClass::loadKit(uint8_t kit) { setStatus(2, kit); }
-
-void MDClass::loadPattern(uint8_t pattern) { setStatus(4, pattern); }
 
 void MDClass::loadSong(uint8_t song) { setStatus(8, song); }
 

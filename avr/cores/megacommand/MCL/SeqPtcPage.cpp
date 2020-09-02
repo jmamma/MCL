@@ -799,7 +799,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     // do not route EXT TI events to MD.
     if (device != DEVICE_MD) {
@@ -964,21 +964,21 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
     seq_ptc_page.render_arp();
-    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT)->id;
     seq_ptc_page.queue_redraw();
     return;
   }
 
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
-  if (SeqPage::midi_device != midi_active_peering.get_device(UART2_PORT) ||
+  if (SeqPage::midi_device != midi_active_peering.get_device(UART2_PORT)->id ||
       (last_ext_track != channel)) {
 
-    SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+    SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT)->id;
     last_ext_track = channel;
     seq_ptc_page.config();
   }
-  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT)->id;
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
   }
@@ -1034,7 +1034,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     return;
   }
 #ifdef EXT_TRACKS
-  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT)->id;
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
   }

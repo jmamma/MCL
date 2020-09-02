@@ -111,7 +111,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t track = event->source - 128;
     midi_device = device;

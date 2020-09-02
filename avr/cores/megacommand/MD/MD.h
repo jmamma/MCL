@@ -86,6 +86,7 @@ public:
   virtual ElektronSysexObject* getGlobal() { return &global; }
   virtual ElektronSysexListenerClass* getSysexListener() { return &MDSysexListener; }
 
+  virtual PGM_P getMachineName(uint8_t machine);
   /**
    * When given the channel and the cc of an incoming CC messages,
    * this returns the track and the parameter controller by the
@@ -228,7 +229,6 @@ public:
 
   void setMachine(uint8_t track, MDMachine *machine);
 
-  void setKitName(char *name);
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
@@ -259,10 +259,6 @@ public:
    * Send a sysex message to route the track (0 to 15) to the given output.
    **/
   void setTrackRouting(uint8_t track, uint8_t output);
-  /**
-   * Set the machinedrum tempo.
-   **/
-  void setTempo(uint16_t tempo);
 
   /**
    * Set the trigger group of srcTrack to trigger trigTrack.
@@ -274,24 +270,9 @@ public:
   void setMuteGroup(uint8_t srcTrack, uint8_t muteTrack);
 
   /**
-   * Send a sysex message to set the type id to the given value. This
-   * is used by more specific methods and there should be no need to
-   * use this method directly.
-   **/
-  void setStatus(uint8_t id, uint8_t value);
-  /**
    * Send a sysex message to load the given global.
    **/
   void setGlobal(uint8_t id);
-  void loadGlobal(uint8_t id);
-  /**
-   * Send a sysex message to load the given kit.
-   **/
-  void loadKit(uint8_t kit);
-  /**
-   * Send a sysex message to load the given pattern.
-   **/
-  void loadPattern(uint8_t pattern);
   /**
    * Send a sysex message to load the given song.
    **/
@@ -305,17 +286,6 @@ public:
    * Send a sysex message to load the given global.
    **/
   void setLockMode(uint8_t mode);
-
-  /**
-   * Save the current kit at the given position.
-   **/
-  void saveCurrentKit(uint8_t pos);
-
-  /**
-   * Return a pointer to a program-space string representing the name of the
-   *given machine.
-   **/
-  PGM_P getMachineName(uint8_t machine);
   /**
    * Copy the name of the given pattern into the string str.
    **/

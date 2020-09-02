@@ -45,7 +45,7 @@ void SeqStepPage::init() {
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
-  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT)->id;
 
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
@@ -250,7 +250,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t trackid = event->source - 128;
     uint8_t step = trackid + (page_select * 16);

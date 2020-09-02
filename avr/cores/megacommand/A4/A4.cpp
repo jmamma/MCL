@@ -15,12 +15,20 @@ const ElektronSysexProtocol a4_protocol = {
 
   // status request: not applicable to A4
   0,
-  // get index: not applicable/unknown to A4
-  0, 0, 0, 0, 0
+  // get current index: not applicable/unknown to A4
+  0, 0, 0, 0, 0,
+  // set status: not applicable/unknown to A4
+  0,
+  // set tempo: not applicable/unknown to A4
+  0,
+  // set kit name: not applicable/unknown to A4
+  0, 0,
+  // various load/save: unknown to A4
+  0, 0, 0, 0,
 };
 
 A4Class::A4Class(): ElektronDevice(
-    &Midi2, "A4", DEVICE_A4, icon_a4,
+    &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE,
     a4_protocol){}
 
 void A4Class::sendRequest(uint8_t type, uint8_t param) {
