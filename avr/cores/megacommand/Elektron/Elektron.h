@@ -165,19 +165,19 @@ class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
-  CallbackVector<SysexCallback, 8> onGlobalMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onGlobalMessageCallbacks;
   /** Vector storing the onKitMessage callbacks (called when a kit message is
    * received). **/
-  CallbackVector<SysexCallback, 8> onKitMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onKitMessageCallbacks;
   /** Vector storing the onSongMessage callbacks (called when a song messages is
    * received). **/
-  CallbackVector<SysexCallback, 8> onSongMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onSongMessageCallbacks;
   /** Vector storing the onPatternMessage callbacks (called when a pattern
    * message is received). **/
-  CallbackVector<SysexCallback, 8> onPatternMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onPatternMessageCallbacks;
   /** Vector storing the onStatusResponse callbacks (when a status response is
    * received). **/
-  CallbackVector2<SysexCallback, 8, uint8_t, uint8_t> onStatusResponseCallbacks;
+  CallbackVector2<SysexCallback, 1, uint8_t, uint8_t> onStatusResponseCallbacks;
 
   void addOnStatusResponseCallback(SysexCallback *obj,
                                    sysex_status_callback_ptr_t func) {
