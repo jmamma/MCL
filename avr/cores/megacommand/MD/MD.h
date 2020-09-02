@@ -11,23 +11,12 @@
 #include "MDParams.h"
 #include "MDSysex.h"
 
-/**
- * \addtogroup md_md
- *
- * @{
- */
-
 /** Standard elektron sysex header for communicating with the machinedrum. **/
 extern uint8_t machinedrum_sysex_hdr[5];
 
 /** This structure stores the tuning information of a melodic machine on the
  * machinedrum. **/
 typedef struct tuning_s {
-  /**
-   * \addtogroup md_md
-   *
-   * @{
-   **/
 
   /** Model of the melodic machine. **/
   uint8_t model;
@@ -71,11 +60,6 @@ public:
  * MachineDrum by doing lookups of pitch information.
  **/
 class MDClass: public ElektronDevice {
-  /**
-   * \addtogroup md_md
-   *
-   * @{
-   */
 
 public:
   MDClass();
@@ -416,6 +400,8 @@ public:
   void rec_sample(uint8_t pos = 255);
   void send_sample(uint8_t pos = 255);
   void preview_sample(uint8_t pos);
+
+  void setSysexRecPos(uint8_t rec_type, uint8_t position);
 };
 
 /**

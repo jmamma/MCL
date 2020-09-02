@@ -413,17 +413,17 @@ public:
 
   void convert(A4Sound_270* old);
 
-  bool fromSysex_impl(ElektronSysexDecoder &decoder);
+  bool fromSysex_impl(ElektronSysexDecoder *decoder);
   /** Convert the sound object into a sysex buffer to be sent to the
    * AnalogFour. **/
-  void toSysex_impl(ElektronDataToSysexEncoder &encoder);
+  void toSysex_impl(ElektronDataToSysexEncoder *encoder);
   bool fromSysex(MidiClass *midi);
   bool fromSysex(uint8_t *data, uint16_t len);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   uint16_t toSysex();
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
 };
 
 /**
@@ -437,7 +437,7 @@ public:
 
 // 2679 - 10 /*header/  - 4 /len check/ - 1 /F7 = 2664
 // 398 * 4
-class A4Kit {
+class A4Kit : ElektronSysexObject {
   /**
    * \addtogroup md_sysex_kit
    * @{
@@ -452,16 +452,14 @@ public:
   // Unknown data strucutre, probably includes CV and FX settings.
   uint8_t payload_end[1034]; // 2664-398*4-38
 
-  /** Read in a kit message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  /** Convert a kit object to a sysex buffer ready to be sent to the A4. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   /**
    * Convert the global object and encode it into a sysex encoder,
    * for example to send directly to the UAR.
    **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   /**
    * Swap two machines.

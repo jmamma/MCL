@@ -192,7 +192,7 @@ void SDDrivePage::load_snapshot() {
     if (!mcl_sd.read_data_v<MDGlobal>(&MD.global, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(2, i);
+    MD.setSysexRecPos(2, i);
     {
       ElektronDataToSysexEncoder encoder(&MidiUart);
       delay(20);
@@ -210,7 +210,7 @@ void SDDrivePage::load_snapshot() {
     if (!mcl_sd.read_data_v<MDPattern>(&MD.pattern, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(8, i);
+    MD.setSysexRecPos(8, i);
     delay(20);
     MD.pattern.toSysex();
       #ifndef OLED_DISPLAY
@@ -225,7 +225,7 @@ void SDDrivePage::load_snapshot() {
     if (!mcl_sd.read_data_v<MDKit>(&MD.kit, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(4, i);
+    MD.setSysexRecPos(4, i);
     delay(20);
     MD.kit.toSysex();
       #ifndef OLED_DISPLAY

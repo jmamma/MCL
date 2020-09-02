@@ -28,16 +28,6 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 MCLActions mcl_actions;
 
-void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
-  DEBUG_PRINT_FN();
-
-  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position,
-                    (uint8_t)1 & 0x7f};
-  MD.sendRequest(data, countof(data));
-
-  //  MD.sendRequest(0x6b,00000011);
-}
-
 void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   DEBUG_PRINT_FN();
 

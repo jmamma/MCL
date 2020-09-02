@@ -16,11 +16,11 @@ class MNMClass: public ElektronDevice {
   MNMGlobal global;
   
   MNMKit kit;
+  //MNMPattern pattern;
 
   virtual bool probe();
 
   virtual ElektronSysexObject* getKit() { return &kit; }
-  // TODO MNM pattern not placed in class
   virtual ElektronSysexObject* getPattern() { return nullptr; }
   virtual ElektronSysexObject* getGlobal() { return &global; }
   virtual ElektronSysexListenerClass* getSysexListener() { return &MNMSysexListener; }

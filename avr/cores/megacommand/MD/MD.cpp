@@ -858,4 +858,12 @@ void MDClass::send_sample(uint8_t pos) {
   }
 }
 
+void MDClass::setSysexRecPos(uint8_t rec_type, uint8_t position) {
+  DEBUG_PRINT_FN();
+
+  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position, (uint8_t)1 & 0x7f};
+  sendRequest(data, countof(data));
+}
+
+
 MDClass MD;
