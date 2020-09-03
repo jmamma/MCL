@@ -308,7 +308,7 @@ void MCLActions::send_tracks_to_devices() {
     proj.select_grid(grid);
     if (note_interface.notes[i] > 1) {
 
-      grid_page.active_slots[grid_col] = grid_page.getRow();
+      grid_page.active_slots[i] = grid_page.getRow();
 
       if (first_note == 255) {
         first_note = i;
