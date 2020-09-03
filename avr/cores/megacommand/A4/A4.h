@@ -66,13 +66,13 @@ public:
   bool getBlockingSettings(uint8_t global, uint16_t timeout = 3000);
 
   virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-    // XXX A4 get pattern is disabled.
-    return false;
+    // TODO A4 get pattern is disabled, but reports success.
+    return true;
   }
 
   virtual bool getBlockingKit(uint8_t kit, uint16_t timeout) {
-    // XXX A4 get kit is disabled.
-    return false;
+    // TODO A4 get kit is disabled, but reports success.
+    return true;
   }
 
   /*X denotes get from RAM/unsaved  */

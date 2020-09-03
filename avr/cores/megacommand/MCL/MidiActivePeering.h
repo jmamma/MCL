@@ -19,6 +19,10 @@ public:
   virtual void run();
   virtual void destroy() {};
 
+  /**
+   * Gets the device connected to the port.
+   * Always return a non-null pointer (could be a NullMidiDevice*).
+   **/
   MidiDevice* get_device(uint8_t port);
 };
 

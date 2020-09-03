@@ -76,6 +76,9 @@ public:
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 class MNMTrackModifier {
@@ -156,6 +159,9 @@ public:
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 class MNMRow {
@@ -176,7 +182,7 @@ public:
 
 class MNMSong: public ElektronSysexObject {
 public:
-  uint8_t origposition;
+  uint8_t origPosition;
   char name[17];
   MNMRow rows[200];
 
@@ -187,6 +193,9 @@ public:
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 

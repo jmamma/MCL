@@ -106,7 +106,7 @@ const ElektronSysexProtocol md_protocol = {
   MD_SAVE_KIT_ID,
 };
 
-MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE, md_protocol)
+MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE, NUM_MD_TRACKS, md_protocol)
 {
   uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
                                      50, 52, 53, 55, 57, 59, 60, 62};
@@ -840,5 +840,10 @@ void MDClass::setSysexRecPos(uint8_t rec_type, uint8_t position) {
   sendRequest(data, countof(data));
 }
 
+void MDClass::updateKitParams() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_kit_params();
+  }
+}
 
 MDClass MD;

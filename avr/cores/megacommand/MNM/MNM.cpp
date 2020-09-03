@@ -26,7 +26,7 @@ const ElektronSysexProtocol mnm_protocol = {
 };
 
 MNMClass::MNMClass()
-  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, EXT_TRACK_TYPE, mnm_protocol) {
+  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, EXT_TRACK_TYPE, NUM_MNM_TRACKS, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
 }

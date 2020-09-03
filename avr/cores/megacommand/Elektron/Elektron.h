@@ -152,9 +152,10 @@ public:
   const uint8_t* const icon;
   const bool isElektronDevice;
   const uint8_t track_type; // Track type identifier
+  const uint8_t track_count; // Specifies the maximum number of tracks that can be hosted
 
-  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice, const uint8_t _track_type)
-    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice), track_type(_track_type)
+  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice, const uint8_t _track_type, const uint8_t _track_count)
+    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice), track_type(_track_type), track_count(_track_count)
   {
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
@@ -281,6 +282,8 @@ public:
 /// Base class for objects that can be transferred via Elektron sysex protocols.
 class ElektronSysexObject {
 public:
+  virtual uint8_t getPosition() = 0;
+  virtual void setPosition(uint8_t) = 0;
   /** Read in a global message from a sysex buffer. **/
   virtual bool fromSysex(uint8_t *sysex, uint16_t len) = 0;
   /** Read in a global message from a sysex buffer. **/
@@ -290,6 +293,15 @@ public:
   /** Convert the global object and encode it into a sysex encoder, for example to send directly to the UART.  **/
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };
+
+/// !Note, should be synced with fw.c
+#define FW_CAP(x) (1 << x)
+
+//#define FW_CAP_DEBUG          FW_CAP(0)
+#define FW_CAP_TRIG_INTERFACE FW_CAP(1)
+#define FW_CAP_MUTE_STATE     FW_CAP(2)
+#define FW_CAP_SAMPLE         FW_CAP(3)
+#define FW_CAP_TRIG_LEDS      FW_CAP(4)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -311,9 +323,9 @@ public:
   bool loadedGlobal;
 
   ElektronDevice(
-      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const uint8_t _track_type,
+      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const uint8_t _track_type, const uint8_t _track_count,
       const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, _icon, true, _track_type), sysex_protocol(protocol) {
+    : MidiDevice(_midi, _name, _id, _icon, true, _track_type, _track_count), sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;
@@ -323,10 +335,28 @@ public:
       loadedGlobal = false;
     }
 
+  virtual bool canReadWorkspaceKit() {
+    // TODO fw cap for live kit access
+    //return fw_caps & FW_CAP
+    return false;
+  }
+
   virtual ElektronSysexObject* getKit() = 0;
   virtual ElektronSysexObject* getPattern() = 0;
   virtual ElektronSysexObject* getGlobal() = 0;
   virtual ElektronSysexListenerClass* getSysexListener() = 0;
+
+  /**
+   * Device-specific kit parameter update routine.
+   * This will be called when we want to merge P-locked params' default
+   * values back into the kit.
+   **/
+  virtual void updateKitParams() {}
+  /**
+   * Return a pointer to a program-space string representing the name of the
+   *given machine.
+   **/
+  virtual PGM_P getMachineName(uint8_t machine) { return nullptr; }
 
   bool get_fw_caps();
 
@@ -444,11 +474,6 @@ public:
    * Save the current kit at the given position.
    **/
   virtual void saveCurrentKit(uint8_t pos);
-  /**
-   * Return a pointer to a program-space string representing the name of the
-   *given machine.
-   **/
-  virtual PGM_P getMachineName(uint8_t machine);
 
 };
 

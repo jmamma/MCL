@@ -269,7 +269,3 @@ void ElektronDevice::saveCurrentKit(uint8_t pos) {
   sendRequest(data, countof(data));
 }
 
-PGM_P ElektronDevice::getMachineName(uint8_t machine) {
-  return nullptr;
-}
-

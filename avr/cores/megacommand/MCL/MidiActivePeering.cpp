@@ -35,13 +35,13 @@ static void prepare_display() {
 
 class GenericMidiDevice : public MidiDevice {
 public:
-  GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE) {}
+  GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE, NUM_EXT_TRACKS) {}
   virtual bool probe() { return true; }
 };
 
 class NullMidiDevice : public MidiDevice {
 public:
-  NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255) {}
+  NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255, 0) {}
   virtual bool probe() { return false; }
 };
 

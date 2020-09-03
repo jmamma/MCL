@@ -87,6 +87,8 @@ public:
   MDGlobal() {
   }
 
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
   virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -235,6 +237,9 @@ public:
 
   void init_eq();
   void init_dynamix();
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
   /* @} */
 };
 
@@ -270,7 +275,7 @@ public:
 /**
  * This class stores a song of the MachineDrum.
  **/
-class MDSong: ElektronSysexObject {
+class MDSong: public ElektronSysexObject {
   /**
    * \addtogroup md_sysex_song
    * @{
@@ -286,6 +291,9 @@ public:
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 
   /* @} */
 };

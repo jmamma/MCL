@@ -437,7 +437,7 @@ public:
 
 // 2679 - 10 /*header/  - 4 /len check/ - 1 /F7 = 2664
 // 398 * 4
-class A4Kit : ElektronSysexObject {
+class A4Kit : public ElektronSysexObject {
   /**
    * \addtogroup md_sysex_kit
    * @{

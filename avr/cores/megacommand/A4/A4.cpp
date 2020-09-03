@@ -28,7 +28,7 @@ const ElektronSysexProtocol a4_protocol = {
 };
 
 A4Class::A4Class(): ElektronDevice(
-    &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE,
+    &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE, NUM_A4_TRACKS,
     a4_protocol){}
 
 void A4Class::sendRequest(uint8_t type, uint8_t param) {

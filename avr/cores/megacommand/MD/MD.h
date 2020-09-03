@@ -80,13 +80,16 @@ public:
   MDGlobal global;
 
   virtual bool probe();
-
+  // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
+  virtual bool canReadWorkspaceKit() { return true; }
   virtual ElektronSysexObject* getKit() { return &kit; }
   virtual ElektronSysexObject* getPattern() { return &pattern; }
   virtual ElektronSysexObject* getGlobal() { return &global; }
   virtual ElektronSysexListenerClass* getSysexListener() { return &MDSysexListener; }
 
+  virtual void updateKitParams();
   virtual PGM_P getMachineName(uint8_t machine);
+
   /**
    * When given the channel and the cc of an incoming CC messages,
    * this returns the track and the parameter controller by the

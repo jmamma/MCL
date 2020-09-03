@@ -73,27 +73,29 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
     merge = 0;
   }
 
-  if (save_grid_tracks[0] && elektron_devs[0] != nullptr) {
-    if (merge > 0) {
-      DEBUG_PRINTLN("fetching pattern");
-      if (elektron_devs[0]->getBlockingPattern(readpattern)) {
-        DEBUG_PRINTLN("could not receive pattern");
-        return;
+  for(i=0;i<2;++i) {
+    if (save_grid_tracks[i] && elektron_devs[i] != nullptr) {
+      if (merge > 0) {
+        DEBUG_PRINTLN("fetching pattern");
+        if (elektron_devs[i]->getBlockingPattern(readpattern)) {
+          DEBUG_PRINTLN("could not receive pattern");
+          save_grid_tracks[i] = false;
+          continue;
+        }
       }
-    }
 
-    if (!elektron_devs[0]->getBlockingKit(0x7F)) {
-      DEBUG_PRINTLN("could not receive kit");
-      return;
-    }
-    if (MidiClock.state == 2) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].update_kit_params();
+      if (!elektron_devs[i]->getBlockingKit(0x7F)) {
+        DEBUG_PRINTLN("could not receive kit");
+        save_grid_tracks[i] = false;
+        continue;
       }
+
+      if (MidiClock.state == 2) {
+        elektron_devs[i]->updateKitParams();
+      }
+
     }
   }
-
-  // TODO save_grid_tracks[1]?
 
   uint8_t first_note = 255;
 
@@ -129,6 +131,11 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       if (grid_num == 0 || track_num < NUM_EXT_TRACKS) {
         track_type = devs[grid_num]->track_type;
         online = (elektron_devs[grid_num] != nullptr);
+        // If save_grid_tracks[grid_num] turns false, it means getBlockingKit has failed,
+        // so we just skip this device.
+        if (!save_grid_tracks[grid_num]) {
+          continue;
+        }
       } else if (track_num == MDFX_TRACK_NUM && MD.connected) {
         track_type = MDFX_TRACK_TYPE;
         online = true;
@@ -171,14 +178,27 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
 void MCLActions::write_tracks(int column, int row) {
   DEBUG_PRINT_FN();
+  ElektronDevice* elektron_devs[2] = {
+    midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+    midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+  };
   if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
-    if (MD.currentKit != MD.kit.origPosition) {
-      MD.getBlockingKit(0x7F);
+    for (int i=0; i<2; ++i) {
+      if (elektron_devs[i] != nullptr && elektron_devs[i]->canReadWorkspaceKit()) {
+        auto kit = elektron_devs[i]->getKit();
+        if (kit != nullptr && elektron_devs[i]->currentKit != kit->getPosition()) {
+          elektron_devs[i]->getBlockingKit(0x7F);
+        }
+      }
     }
     prepare_next_chain(row);
     return;
   }
-  MD.getBlockingKit(0x7F);
+  for (int i=0; i<2; ++i) {
+    if (elektron_devs[i] != nullptr && elektron_devs[i]->canReadWorkspaceKit()) {
+      elektron_devs[i]->getBlockingKit(0x7F);
+    }
+  }
 
   send_tracks_to_devices();
 }
@@ -188,6 +208,11 @@ void MCLActions::prepare_next_chain(int row) {
   EmptyTrack empty_track;
   uint8_t q;
   uint8_t old_grid = proj.get_grid();
+
+  MidiDevice* devs[2] = {
+    midi_active_peering.get_device(UART1_PORT),
+    midi_active_peering.get_device(UART2_PORT),
+  };
 
   //  if (MidiClock.state != 2) {
   //  q = 0;
@@ -203,36 +228,30 @@ void MCLActions::prepare_next_chain(int row) {
   //  }
   uint8_t slots_cached[NUM_SLOTS] = {0};
 
-  proj.select_grid(0);
+  for (uint8_t n = 0; n < NUM_TRACKS; ++n) {
+    uint8_t grid_num = (n < GRID_WIDTH) ? 0 : 1;
+    uint8_t track_num = (n < GRID_WIDTH) ? n : (n - GRID_WIDTH);
+    proj.select_grid(grid_num);
 
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-
-    if (note_interface.notes[n] > 0) {
-      auto md_track = empty_track.load_from_grid<MDTrack>(n, row);
-      if (md_track) {
-        md_track->store_in_mem(n);
-        slots_cached[n] = 1;
-        send_machine[n] = 0;
-      } else {
-        send_machine[n] = 1;
-      }
+    if (note_interface.notes[n] == 0 || track_num >= devs[grid_num]->track_count) {
+      continue;
     }
-  }
-#ifdef EXT_TRACKS
-  proj.select_grid(1);
-  for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
-    if (note_interface.notes[n] > 0) {
-      auto a4_track =
-          empty_track.load_from_grid<A4Track>(n - NUM_MD_TRACKS, row);
-      if (a4_track) {
-        a4_track->store_in_mem(n - NUM_MD_TRACKS);
-        send_machine[n] = 0;
-      } else {
-        send_machine[n] = 1;
-      }
+#ifndef EXT_TRACKS
+    if (n >= GRID_WIDTH) {
+      break;
     }
-  }
 #endif
+
+    auto device_track = empty_track.load_from_grid(track_num, row);
+    if(device_track == nullptr || device_track->active != devs[grid_num]->track_type) {
+      send_machine[n] = 1;
+    } else {
+      device_track->store_in_mem(track_num);
+      send_machine[n] = 0;
+      slots_cached[n] = 1;
+    }
+  }
+
   uint16_t next_step;
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
