@@ -361,6 +361,7 @@ void MCLActions::send_tracks_to_devices() {
     }
 
     auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
+
     if (ptrack->is_active()) {
       DEBUG_DUMP(i);
       ptrack->chain.store_in_mem(i, &(chains[0]));
@@ -382,7 +383,6 @@ void MCLActions::send_tracks_to_devices() {
 
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = slowclock;
-
   uint16_t latency_ms = 0;
   for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
 #ifndef EXT_TRACKS
@@ -398,9 +398,12 @@ void MCLActions::send_tracks_to_devices() {
 
   // switch back to old grid before driving the GUI loop
   proj.select_grid(old_grid);
+  // note, do not re-enter grid_task -- stackoverflow
+  GUI.removeTask(&grid_task);
   while (clock_diff(myclock, slowclock) < latency_ms) {
     GUI.loop();
   }
+  GUI.addTask(&grid_task);
 
   for (uint8_t i=0; i < NUM_SLOTS; ++i) {
 
@@ -433,7 +436,9 @@ void MCLActions::send_tracks_to_devices() {
 
   cache_next_tracks(note_interface.notes, &empty_track, &empty_track2);
 
+
   // in_sysex = 0;
+  
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       transition_level[n] = 0;
@@ -445,6 +450,7 @@ void MCLActions::send_tracks_to_devices() {
   }
   calc_next_transition();
   calc_latency(&empty_track);
+  
 }
 
 void MCLActions::cache_next_tracks(uint8_t *track_select_array,
@@ -456,7 +462,6 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
-
 
   uint8_t old_grid = proj.get_grid();
 
