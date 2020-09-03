@@ -37,6 +37,8 @@ public:
 
   virtual bool probe();
 
+  virtual uint16_t sendKitParams(uint8_t* masks, void* scratchpad);
+
   // Overriden for A4 proto version and footer injection
   virtual void sendRequest(uint8_t, uint8_t);
 

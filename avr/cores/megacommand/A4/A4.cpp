@@ -28,8 +28,24 @@ const ElektronSysexProtocol a4_protocol = {
 };
 
 A4Class::A4Class(): ElektronDevice(
-    &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE, NUM_A4_TRACKS,
+    &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE, NUM_A4_SOUND_TRACKS,
     a4_protocol){}
+
+uint16_t A4Class::sendKitParams(uint8_t* masks, void* scratchpad) {
+  auto empty_track = (EmptyTrack*)scratchpad;
+  for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
+    if (masks[i] == 1) {
+      auto a4_track = empty_track->load_from_mem<A4Track>(i);
+      if (a4_track) {
+        a4_track->sound.soundpool = true;
+        a4_track->sound.toSysex();
+      }
+    }
+  }
+
+  // TODO latency?
+  return 0;
+}
 
 void A4Class::sendRequest(uint8_t type, uint8_t param) {
   USE_LOCK();

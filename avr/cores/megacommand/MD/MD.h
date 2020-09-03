@@ -88,6 +88,7 @@ public:
   virtual ElektronSysexListenerClass* getSysexListener() { return &MDSysexListener; }
 
   virtual void updateKitParams();
+  virtual uint16_t sendKitParams(uint8_t* mask, void*);
   virtual PGM_P getMachineName(uint8_t machine);
 
   /**

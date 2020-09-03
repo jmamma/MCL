@@ -846,4 +846,19 @@ void MDClass::updateKitParams() {
   }
 }
 
+uint16_t MDClass::sendKitParams(uint8_t *masks, void* scratchpad) {
+  /// Ignores masks and scratchpad, and send the whole kit.
+  MD.kit.origPosition = 0x7F;
+  // md_setsysex_recpos(4, MD.kit.origPosition);
+  MD.kit.toSysex();
+  //  mcl_seq.disable();
+  // md_set_kit(&MD.kit);
+  uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
+  md_latency_ms += 10;
+  DEBUG_PRINTLN("latency");
+  DEBUG_PRINTLN(md_latency_ms);
+
+  return md_latency_ms;
+}
+
 MDClass MD;

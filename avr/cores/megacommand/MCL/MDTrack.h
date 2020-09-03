@@ -120,6 +120,9 @@ public:
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
   virtual uint8_t get_model() { return machine.model; }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
+
+  virtual void* get_sound_data_ptr() { return &machine; }
+  virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
 };
 
 #endif /* MDTRACK_H__ */
