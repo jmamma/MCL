@@ -374,10 +374,11 @@ void MCLActions::send_tracks_to_devices() {
     }
 
     auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
+    if (!ptrack) { continue; } // read failure
 
+    ptrack->chain.store_in_mem(i, &(chains[0]));
     if (ptrack->is_active()) {
       DEBUG_DUMP(i);
-      ptrack->chain.store_in_mem(i, &(chains[0]));
       ptrack->load_immediate(grid_col);
       if (grid_col < devs[grid]->track_count) {
         send_masks[i] = 1;

@@ -17,7 +17,7 @@ public:
 
   uint8_t copy_track;
 
-  Grid grid;
+  Grid grids[NUM_GRIDS];
 
   MDSeqStep step;
 
