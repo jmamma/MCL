@@ -352,7 +352,9 @@ void MCLActions::send_tracks_to_devices() {
       continue;
     }
 
+
     grid_page.active_slots[i] = grid_page.getRow();
+
 
     if (first_note == 255) {
       first_note = i;
