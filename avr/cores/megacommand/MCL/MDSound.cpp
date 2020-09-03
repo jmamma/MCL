@@ -71,13 +71,13 @@ bool MDSound::load_sound(uint8_t track) {
 
   PGM_P tmp;
   char str[3] = "  ";
-  tmp = getMachineNameShort(machine1.model, 2);
+  tmp = getMDMachineNameShort(machine1.model, 2);
   m_strncpy_p(str, tmp, 3);
   DEBUG_PRINTLN(str);
 
   if ((machine_count > 1) && (track != 15)) {
     DEBUG_PRINTLN("loading second machine");
-    tmp = getMachineNameShort(machine2.model, 2);
+    tmp = getMDMachineNameShort(machine2.model, 2);
      m_strncpy_p(str, tmp, 3);
     DEBUG_PRINTLN(str);
 

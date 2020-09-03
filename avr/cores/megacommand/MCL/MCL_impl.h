@@ -73,6 +73,7 @@
 #include "MDFXTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
+#include "MNMTrack.h"
 
 #include "MCLActions.h"
 #include "MCLSeq.h"

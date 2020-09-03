@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Elektron.h"
+
 extern uint8_t monomachine_sysex_hdr[5];
 
 #define MNM_GLOBAL_MESSAGE_ID   0x50
@@ -347,3 +349,5 @@ extern uint8_t monomachine_sysex_hdr[5];
 #define MNM_MODEL_LFO3_INTL 0x36
 #define MNM_MODEL_LFO3_DPTH 0x37
 
+extern short_machine_name_t const mnm_machine_names_short[] PROGMEM;
+extern PGM_P getMNMMachineNameShort(uint8_t machine, uint8_t type);

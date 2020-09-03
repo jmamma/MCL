@@ -122,7 +122,7 @@ public:
 class MNMKit: public ElektronSysexObject {
 public:
   uint8_t origPosition;
-  char name[17];
+  char name[12];
 	uint8_t levels[6];
 	uint8_t parameters[6][72];
 	uint8_t models[6];

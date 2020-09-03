@@ -118,8 +118,8 @@ void SeqPtcPage::config() {
   if (midi_device == DEVICE_MD) {
     const char *str1;
     const char *str2;
-    str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-    str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+    str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+    str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
     m_strncpy_p(str_first, str1, len1);
 
@@ -230,8 +230,8 @@ void SeqPtcPage::display() {
     dev_num = last_ext_track + 16;
   }
 #endif
-  const char *str1 = getMachineNameShort(MD.kit.models[dev_num], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[dev_num], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[dev_num], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[dev_num], 2);
   GUI.setLine(GUI.LINE1);
 
   if (recording) {

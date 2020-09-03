@@ -403,6 +403,8 @@ void GridPage::display_grid() {
   encoders[1]->handler = NULL;
   uint8_t row_shift = 0;
   uint8_t col_shift = 0;
+  auto grid_id = proj.get_grid();
+  auto *device = midi_active_peering.get_device(grid_id + 1);
   if (show_slot_menu) {
     if (cur_col + encoders[2]->cur > MAX_VISIBLE_COLS - 1) {
 
@@ -433,7 +435,7 @@ void GridPage::display_grid() {
       //  Set cell label
       switch (track_type) {
       case MD_TRACK_TYPE:
-        tmp = getMachineNameShort(model, 2);
+        tmp = getMDMachineNameShort(model, 2);
         if (tmp) { m_strncpy_p(str, tmp, 3); }
         break;
       case A4_TRACK_TYPE:
@@ -447,6 +449,10 @@ void GridPage::display_grid() {
       case MDFX_TRACK_TYPE:
         str[0] = 'F';
         str[1] = 'X';
+        break;
+      case MNM_TRACK_TYPE:
+        tmp = getMNMMachineNameShort(model, 2);
+        if (tmp) { m_strncpy_p(str, tmp, 3); }
         break;
       }
       //  Highlight the current cursor position + slot menu apply range
@@ -541,9 +547,9 @@ void GridPage::display() {
       str2[1] = '-';
 
       if (track_type == MD_TRACK_TYPE) {
-        tmp = getMachineNameShort(model, 1);
+        tmp = getMDMachineNameShort(model, 1);
         m_strncpy_p(str, tmp, 3);
-        tmp = getMachineNameShort(model, 2);
+        tmp = getMDMachineNameShort(model, 2);
         m_strncpy_p(str2, tmp, 3);
       }
       if (track_type == A4_TRACK_TYPE) {

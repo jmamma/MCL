@@ -15,8 +15,8 @@ void SeqStepPage::config() {
     seq_param4.max = 1;
   }
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -72,8 +72,8 @@ void SeqStepPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
   GUI.put_value_at1(15, page_select + 1);
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
   uint8_t cond = seq_param1.getValue();

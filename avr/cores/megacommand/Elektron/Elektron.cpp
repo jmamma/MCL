@@ -269,3 +269,17 @@ void ElektronDevice::saveCurrentKit(uint8_t pos) {
   sendRequest(data, countof(data));
 }
 
+PGM_P getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t length) {
+  for (uint8_t i = 0; i < length; i++) {
+    if (pgm_read_byte(&table[i].id) == machine) {
+      if (type == 1) {
+        return table[i].name1;
+      }
+      else {
+        return table[i].name2;
+      }
+
+    }
+  }
+}
+

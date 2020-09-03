@@ -25,6 +25,15 @@ class MNMClass: public ElektronDevice {
   virtual ElektronSysexObject* getGlobal() { return &global; }
   virtual ElektronSysexListenerClass* getSysexListener() { return &MNMSysexListener; }
 
+  virtual void updateKitParams();
+  virtual uint16_t sendKitParams(uint8_t* mask, void*);
+  virtual PGM_P getMachineName(uint8_t machine);
+
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) { 
+    // TODO MNM does not get the pattern but reports success.
+    return true; 
+  }
+
   void sendMultiTrigNoteOn(uint8_t note, uint8_t velocity);
   void sendMultiTrigNoteOff(uint8_t note);
   void sendMultiMapNoteOn(uint8_t note, uint8_t velocity);
@@ -128,7 +137,6 @@ class MNMClass: public ElektronDevice {
     setAutoMute(false);
   }
   
-  virtual PGM_P getMachineName(uint8_t machine);
   PGM_P getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 

@@ -1,9 +1,4 @@
-#include "MNMMessages.h"
-#include "Elektron.h"
-#include "MNMParams.h"
-#include "helpers.h"
-#include "DiagnosticPage.h"
-
+#include "MCL_impl.h"
 #ifdef HOST_MIDIDUINO
 #include <stdio.h>
 #endif
@@ -130,8 +125,9 @@ uint16_t MNMGlobal::toSysex(uint8_t *sysex, uint16_t len) {
 }
 
 bool MNMKit::fromSysex(MidiClass *midi) {
-  uint16_t offset = 0;
-  uint16_t len = midi->midiSysex.recordLen;
+  DEBUG_PRINT_FN();
+  uint16_t offset = 5;
+  uint16_t len = midi->midiSysex.recordLen - 5;
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 #ifdef MIDIDUINO
@@ -140,15 +136,16 @@ bool MNMKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(3);
+  origPosition = midi->midiSysex.getByte(3 + offset);
   MNMSysexDecoder decoder(midi, offset + 4);
-  decoder.get((uint8_t *)name, 16);
-  name[16] = '\0';
+  decoder.get((uint8_t *)name, 11);
+  name[11] = '\0';
 
   decoder.get(levels, 6);
   decoder.get((uint8_t *)parameters, 6 * 72);
   decoder.get(models, 6);
   decoder.get(types, 6);
+  decoder.get8((uint8_t*)&patchBusIn); // unused byte
   decoder.get16(&patchBusIn);
   decoder.get8(&mirrorLR);
   decoder.get8(&mirrorUD);
@@ -175,7 +172,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   }
   decoder.get8(&splitKey);
   decoder.get8(&splitRange);
-
+  DEBUG_PRINTLN("mnm kit okay");
   return true;
 }
 
@@ -232,6 +229,9 @@ uint16_t MNMKit::toSysex(uint8_t *data, uint16_t len) {
 }
 
 uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
+  if ((MidiClock.state == 2) && (MNM.midi->uart->speed > 62500)) {
+    encoder->throttle = true;
+  }
   encoder->stop7Bit();
   encoder->begin();
   encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
@@ -243,13 +243,14 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack8(origPosition);
   encoder->start7Bit();
 
-  encoder->pack((uint8_t *)name, 16);
-  name[16] = '\0';
+  encoder->pack((uint8_t *)name, 11);
+  name[11] = '\0';
 
   encoder->pack(levels, 6);
   encoder->pack((uint8_t *)parameters, 6 * 72);
   encoder->pack(models, 6);
   encoder->pack(types, 6);
+  encoder->pack8(0); // unused
   encoder->pack16(patchBusIn);
   encoder->pack8(mirrorLR);
   encoder->pack8(mirrorUD);

@@ -324,7 +324,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
-  DEBUG_PRINTLN("kit okay");
+  DEBUG_PRINTLN("md kit okay");
   return true;
 }
 

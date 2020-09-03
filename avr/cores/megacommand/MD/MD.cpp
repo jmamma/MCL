@@ -855,8 +855,7 @@ uint16_t MDClass::sendKitParams(uint8_t *masks, void* scratchpad) {
   // md_set_kit(&MD.kit);
   uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
   md_latency_ms += 10;
-  DEBUG_PRINTLN("latency");
-  DEBUG_PRINTLN(md_latency_ms);
+  DEBUG_DUMP(md_latency_ms);
 
   return md_latency_ms;
 }

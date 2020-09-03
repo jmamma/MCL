@@ -9,19 +9,6 @@
 #include "MidiID.h"
 #include "MidiSysex.h"
 
-/**
- * \addtogroup Elektron
- *
- * @{
- *
- * \addtogroup elektron_helpers Elektron Helpers
- *
- * @{
- *
- * \file
- * Elektron helper routines and data structures
- **/
-
 /** Store the name of a monomachine machine. **/
 typedef struct mnm_machine_name_s {
   char name[11];
@@ -45,6 +32,12 @@ typedef struct model_to_param_names_s {
   uint8_t model;
   const model_param_name_t *names;
 } model_to_param_names_t;
+
+typedef struct short_machine_name_s {
+  char name1[3];
+  char name2[3];
+  uint8_t id;
+} short_machine_name_t;
 
 /**
  * Class grouping various helper functions to convert elektron sysex
@@ -482,5 +475,7 @@ public:
   virtual void saveCurrentKit(uint8_t pos);
 
 };
+
+extern PGM_P getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t size);
 
 #endif /* ELEKTRON_H__ */

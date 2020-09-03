@@ -26,7 +26,7 @@ const ElektronSysexProtocol mnm_protocol = {
 };
 
 MNMClass::MNMClass()
-  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, EXT_TRACK_TYPE, NUM_MNM_TRACKS, mnm_protocol) {
+  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, MNM_TRACK_TYPE, NUM_MNM_TRACKS, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
 }
@@ -247,6 +247,30 @@ void MNMClass::setMachine(uint8_t track, uint8_t idx) {
     setParam(track, i, kit.parameters[idx][i]);
   }
   setTrackLevel(track, kit.levels[idx]);
+}
+
+void MNMClass::updateKitParams() {
+  for (uint8_t n = 0; n < NUM_MNM_TRACKS; n++) {
+    //mcl_seq.ext_tracks[n].update_kit_params(); // huh.
+  }
+}
+
+uint16_t MNMClass::sendKitParams(uint8_t *masks, void* scratchpad) {
+  DEBUG_PRINT_FN();
+  /// Ignores masks and scratchpad, and send the whole kit.
+  auto kit = getCurrentKit();
+  MNM.kit.origPosition = kit;
+  // md_setsysex_recpos(4, MNM.kit.origPosition);
+  MNMDataToSysexEncoder encoder(&MidiUart2);
+  MNM.kit.toSysex(&encoder);
+  MNM.loadKit(kit);
+  //  mcl_seq.disable();
+  // md_set_kit(&MNM.kit);
+  uint16_t mnm_latency_ms = 10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
+  mnm_latency_ms += 10;
+  DEBUG_DUMP(mnm_latency_ms);
+
+  return mnm_latency_ms;
 }
 
 MNMClass MNM;

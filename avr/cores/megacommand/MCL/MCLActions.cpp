@@ -107,10 +107,20 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         }
       }
 
-      if (!elektron_devs[i]->getBlockingKit(0x7F)) {
-        DEBUG_PRINTLN("could not receive kit");
-        save_grid_tracks[i] = false;
-        continue;
+      if (elektron_devs[i]->canReadWorkspaceKit() ) {
+        if (!elektron_devs[i]->getBlockingKit(0x7F)) {
+          DEBUG_PRINTLN("could not receive kit");
+          save_grid_tracks[i] = false;
+          continue;
+        }
+      } else {
+        auto kit = elektron_devs[i]->getCurrentKit();
+        elektron_devs[i]->saveCurrentKit(kit);
+        if (!elektron_devs[i]->getBlockingKit(kit)) {
+          DEBUG_PRINTLN("could not receive kit");
+          save_grid_tracks[i] = false;
+          continue;
+        }
       }
 
       if (MidiClock.state == 2) {
@@ -148,11 +158,14 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
         track_num = i - GRID_WIDTH;
       }
 
+      track_type = 255;
+
       // Sound tracks
       // If devs[grid_num] is a NullMidiDevice, track type will be 255
       if (grid_num == 0 || track_num < NUM_EXT_TRACKS) {
         track_type = devs[grid_num]->track_type;
         online = (elektron_devs[grid_num] != nullptr);
+        DEBUG_DUMP(track_type);
         // If save_grid_tracks[grid_num] turns false, it means getBlockingKit
         // has failed, so we just skip this device.
         if (!save_grid_tracks[grid_num]) {
