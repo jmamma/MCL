@@ -58,7 +58,7 @@ bool Grid::new_file(const char *gridname) {
     return false;
   }
 
-
+  return true;
 }
 
 bool Grid::new_grid(const char *gridname) {
