@@ -733,7 +733,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
       continue;
     }
     int8_t idx = pattern->paramLocks[track_number][i];
-    if (idx == 0) {
+    if (idx < 0) {
       continue;
     }
     for (int s = 0; s < 64; s++) {
