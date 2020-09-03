@@ -399,15 +399,8 @@ void MCLActions::send_tracks_to_devices() {
   // switch back to old grid before driving the GUI loop
   proj.select_grid(old_grid);
   while (clock_diff(myclock, slowclock) < latency_ms) {
-    DEBUG_PRINTLN("BEFORE GUI LOOP");
     GUI.loop();
-    DEBUG_PRINTLN("AFTER GUI LOOP");
-  };
-
-  // XXX crashes before this
-
-  DEBUG_PRINTLN("HIT HERE");
-  delay(1000);
+  }
 
   for (uint8_t i=0; i < NUM_SLOTS; ++i) {
 
@@ -459,8 +452,11 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
                                    EmptyTrack *empty_track2, bool gui_update) {
   DEBUG_PRINT_FN();
 
-  MDTrack *md_mem_track;
-  A4Track *a4_mem_track;
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+
 
   uint8_t old_grid = proj.get_grid();
 
@@ -486,33 +482,35 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
         grid = 1;
         grid_col -= GRID_WIDTH;
       }
+
+      if (grid_col > devs[grid]->track_count) {
+        continue;
+      }
+
       proj.select_grid(grid);
 
       auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
-
-      if (ptrack->is_active()) {
-        if ((ptrack->is<MDTrack>()) &&
-            (md_mem_track = empty_track2->load_from_mem<MDTrack>(grid_col))) {
-          if (memcmp(&md_mem_track->machine, &(((MDTrack *)ptrack)->machine),
-                     sizeof(MDMachine)) != 0) {
-            send_machine[n] = 0;
-          } else {
-            send_machine[n] = 1;
-            DEBUG_PRINTLN("machines match");
-          }
-        } else {
-          if ((ptrack->is<A4Track>()) &&
-              (a4_mem_track = empty_track2->load_from_mem<A4Track>(grid_col))) {
-            if (memcmp(&a4_mem_track->sound, &((A4Track *)ptrack)->sound,
-                       sizeof(A4Sound)) != 0) {
-              send_machine[n] = 0;
-            } else {
-              send_machine[n] = 1;
-            }
-          }
-        }
-        ptrack->store_in_mem(grid_col);
+      if (ptrack == nullptr || !ptrack->is_active() || devs[grid]->track_type != ptrack->active) {
+        continue;
       }
+
+      auto *pmem_track = empty_track2->load_from_mem(devs[grid]->track_type, grid_col);
+      if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
+        // track type matched.
+        auto *psound = ptrack->get_sound_data_ptr();
+        auto *pmem_sound = pmem_track->get_sound_data_ptr();
+        auto szsound = ptrack->get_sound_data_size();
+        auto szmem_sound = pmem_track->get_sound_data_size();
+
+        if (!psound || !pmem_sound || szsound != szmem_sound) {
+          // something's wrong, don't send
+        } else if (memcmp(psound, pmem_sound, szsound) != 0) {
+          send_machine[n] = 0;
+        } else {
+          send_machine[n] = 1;
+        }
+      }
+      ptrack->store_in_mem(grid_col);
     }
   }
 
