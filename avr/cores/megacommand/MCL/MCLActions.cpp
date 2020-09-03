@@ -494,7 +494,7 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
         continue;
       }
 
-      auto *pmem_track = empty_track2->load_from_mem(devs[grid]->track_type, grid_col);
+      auto *pmem_track = empty_track2->load_from_mem(grid_col, devs[grid]->track_type);
       if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
         // track type matched.
         auto *psound = ptrack->get_sound_data_ptr();
