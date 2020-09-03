@@ -204,19 +204,19 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      empty_track.load_from_grid(x, y);
+      auto *ptrack = empty_track.load_from_grid(x, y);
 
       // track now has full data and correct type
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
 
-      int16_t chain_row_offset = empty_track.chain.row - t_row;
+      int16_t chain_row_offset = ptrack->chain.row - t_row;
 
       uint8_t new_chain_row = row + chain_row_offset;
       if (new_chain_row >= GRID_LENGTH) { new_chain_row = y + row; }
       else if (new_chain_row < 0) { new_chain_row = y + row; }
-      empty_track.chain.row = new_chain_row;
-      header.update_model(x + col, empty_track.get_model(), empty_track.get_device_type());
+      ptrack->chain.row = new_chain_row;
+      header.update_model(x + col, ptrack->get_model(), ptrack->get_device_type());
       empty_track.on_copy(s_col, d_col, destination_same);
       empty_track.store_in_grid(x + col, y + row);
     }
