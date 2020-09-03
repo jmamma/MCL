@@ -483,7 +483,7 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
         grid_col -= GRID_WIDTH;
       }
 
-      if (grid_col > devs[grid]->track_count) {
+      if (grid_col >= devs[grid]->track_count) {
         continue;
       }
 
