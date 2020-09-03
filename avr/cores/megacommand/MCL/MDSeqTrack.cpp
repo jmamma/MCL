@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
-void MDSeqTrack::set_length(uint8_t len) {
+    void
+    MDSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {
     // re_sync();
@@ -219,7 +220,6 @@ void MDSeqTrack::recalc_slides() {
       continue;
     }
     auto next_lockstep = locks_slide_next_lock_step[c];
-    auto next_lockidx = locks_slide_next_lock_idx[c];
     if (step == next_lockstep) {
       locks_slide_data[c].init();
       continue;
@@ -234,7 +234,7 @@ void MDSeqTrack::recalc_slides() {
     DEBUG_DUMP(timing[step]);
     DEBUG_DUMP(timing_mid);
     y0 = locks[cur_lockidx];
-    y1 = locks[next_lockidx];
+    y1 = locks_slide_next_lock_val[c];
 
     locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
     locks_slide_data[c].yflip = 255;
@@ -306,17 +306,20 @@ again:
     uint8_t cur_mask = 1;
     auto lcks = get_step_locks(next_step);
     for (uint8_t i = 0; i < NUM_MD_LOCKS; ++i) {
-      auto step_is_lock = lcks & cur_mask;
-      if (step_is_lock) {
-        if (step_is_lock & mask) {
-          mask &= ~cur_mask;
-          locks_slide_next_lock_idx[i] = curidx;
+      if (mask & cur_mask) {
+        if (lcks & cur_mask) {
+          locks_slide_next_lock_val[i] = locks[curidx];
           locks_slide_next_lock_step[i] = next_step;
+          mask &= ~cur_mask;
           // all targets hit?
-          if (!mask)
-            return;
+          ++curidx;
+        } else if (steps[next_step].trig) {
+          locks_slide_next_lock_val[i] = locks_params_orig[i];
+          locks_slide_next_lock_step[i] = next_step;
+          mask &= ~cur_mask;
         }
-        ++curidx;
+        if (!mask)
+          return;
       }
       cur_mask <<= 1;
     }
@@ -538,7 +541,7 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   if (match != 255) {
     auto ret = set_track_locks_i(step, match, value);
     auto set_lock = sw.elapsed();
-    //DIAG_MEASURE(1, set_lock);
+    // DIAG_MEASURE(1, set_lock);
     return ret;
   } else {
     return false;
@@ -756,10 +759,10 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
     if (IS_BIT_SET64_P(ppattern, i)) {
-          steps[i].trig = true;
+      steps[i].trig = true;
     }
     if (IS_BIT_SET64_P(pslide, i)) {
-          steps[i].slide = true;
+      steps[i].slide = true;
     }
   }
 

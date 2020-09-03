@@ -40,7 +40,7 @@ public:
 
   uint8_t locks_params_orig[NUM_MD_LOCKS];
   SlideData locks_slide_data[NUM_MD_LOCKS];
-  uint8_t locks_slide_next_lock_idx[NUM_MD_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_MD_LOCKS];
   uint8_t locks_slide_next_lock_step[NUM_MD_LOCKS];
 
   ALWAYS_INLINE() void reset() {
