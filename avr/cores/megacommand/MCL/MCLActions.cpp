@@ -315,9 +315,9 @@ void MCLActions::send_tracks_to_devices() {
       }
 
       auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
+      ptrack->chain.store_in_mem(i, &(chains[0]));
       if (ptrack->is_active()) {
         DEBUG_DUMP(i);
-        ptrack->chain.store_in_mem(i, &(chains[0]));
         ptrack->load_immediate(grid_col);
         if (Analog4.connected && ptrack->is<A4Track>() &&
             grid_col < NUM_A4_SOUND_TRACKS) {
