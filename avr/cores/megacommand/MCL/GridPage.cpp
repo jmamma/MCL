@@ -676,7 +676,7 @@ void GridPage::apply_slot_changes() {
   oled_display.textbox("COPY ", "SLOT");
   }
 #endif
-    mcl_clipboard.copy(getCol(), getRow(), width, height);
+    mcl_clipboard.copy(getCol(), getRow(), width, height, proj.get_grid());
 
   }
 
@@ -684,7 +684,7 @@ void GridPage::apply_slot_changes() {
 #ifdef OLED_DISPLAY
     oled_display.textbox("PASTE", "");
 #endif
-    mcl_clipboard.paste(getCol(), getRow());
+    mcl_clipboard.paste(getCol(), getRow(), proj.get_grid());
   } else {
     GridRowHeader header;
 #ifdef OLED_DISPLAY

@@ -163,8 +163,9 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   return true;
 }
 
-bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
+bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h, uint8_t grid) {
   DEBUG_PRINT_FN();
+  uint8_t old_grid = proj.get_grid();
   t_col = col;
   t_row = row;
   t_w = w;
@@ -179,21 +180,24 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h) {
   GridRowHeader header;
 
   for (int y = 0; y < h; y++) {
-    uint8_t grid = 0;
+    proj.select_grid(grid);
     proj.read_grid_row_header(&header, y + row);
     ret = grids[grid].write_row_header(&header, y + row);
     DEBUG_PRINTLN(header.name);
     for (int x = 0; x < w; x++) {
       ret = proj.read_grid(&temp_track, sizeof(temp_track), x + col, y + row);
+      DEBUG_DUMP(temp_track.active);
       if (ret) {
         ret = grids[grid].write(&temp_track, sizeof(temp_track), x, y);
       }
     }
   }
   close();
+  proj.select_grid(old_grid);
 }
-bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
+bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
   DEBUG_PRINT_FN();
+  uint8_t old_grid = proj.get_grid();
   if (!open()) {
     DEBUG_PRINTLN("error could not open clipboard");
     return false;
@@ -210,18 +214,19 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
   GridRowHeader header;
   GridRowHeader header_copy;
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
+    proj.select_grid(grid);
     proj.read_grid_row_header(&header, y + row);
-    uint8_t grid = 0;
     if ((strlen(header.name) == 0) || (!header.active) ||
         (t_w == GRID_WIDTH && col == 0)) {
       grids[grid].read_row_header(&header_copy, y + t_row);
       header.active = true;
-      strcpy(&(header.name[0]), &(header_copy.name[0]));
+      strncpy(&(header.name[0]), &(header_copy.name[0]), sizeof(header.name));
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      auto *ptrack = empty_track.load_from_grid(x, y);
-
+      DeviceTrack *ptrack = empty_track.load_from_grid(x, y);
+      DEBUG_DUMP(empty_track.active);
+      DEBUG_DUMP( ptrack->get_device_type());
       // track now has full data and correct type
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
@@ -243,6 +248,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row) {
     proj.write_grid_row_header(&header, y + row);
   }
   close();
+  proj.select_grid(old_grid);
 }
 
 MCLClipBoard mcl_clipboard;
