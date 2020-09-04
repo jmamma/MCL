@@ -355,7 +355,7 @@ void GridPage::display_grid_info() {
   oled_display.print(dev2);
 
   oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
-  oled_display.print((int)proj.get_grid());
+  oled_display.print((char) ('A' + proj.get_grid()));
   oled_display.print(':');
 
   char val[4];
