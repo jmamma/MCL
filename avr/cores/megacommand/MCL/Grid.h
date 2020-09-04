@@ -27,16 +27,14 @@ public:
   bool new_grid(const char *gridname);
   bool write_header();
 
-  bool open_file(const char *gridname) {
-    return file.open(gridname, O_RDWR);
-  }
+  bool open_file(const char *gridname) { return file.open(gridname, O_RDWR); }
 
   bool close_file() { return file.close(); }
 
   uint8_t get_slot_model(int column, int row, bool load);
 
   uint32_t get_slot_offset(int16_t column, int16_t row) {
-    uint32_t offset = (int32_t)GRID_SLOT_BYTES +
+    uint32_t offset = (int32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
                       (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
                           (int32_t)GRID_SLOT_BYTES;
     return offset;
@@ -44,7 +42,7 @@ public:
 
   uint32_t get_row_header_offset(int16_t row) {
     uint32_t offset =
-        (int32_t)GRID_SLOT_BYTES +
+        (int32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
         (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
     return offset;
   }
@@ -106,7 +104,6 @@ public:
   }
 
   bool sync() { return file.sync(); }
-
 };
 
 #endif /* GRID_H__ */
