@@ -37,9 +37,11 @@ bool Grid::new_file(const char *gridname) {
   DEBUG_PRINTLN("Attempting to create grid file");
   DEBUG_PRINTLN(gridname);
   bool ret;
+  //GRID_WIDTH + 1 (because first slot is header)
+  //GRID_LENGTH + 1 (last row is reserved for tmp space, used by clipboard);
   ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
                                                (uint32_t)GRID_SLOT_BYTES *
-                                                   (uint32_t)GRID_LENGTH *
+                                                   (uint32_t)(GRID_LENGTH + 1) *
                                                    (uint32_t)(GRID_WIDTH + 1));
 
   if (!ret) {
