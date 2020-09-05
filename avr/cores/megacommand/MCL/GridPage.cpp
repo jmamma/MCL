@@ -355,7 +355,7 @@ void GridPage::display_grid_info() {
   oled_display.print(dev2);
 
   oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
-  oled_display.print((int)proj.get_grid());
+  oled_display.print((char) ('A' + proj.get_grid()));
   oled_display.print(':');
 
   char val[4];
@@ -682,7 +682,7 @@ void GridPage::apply_slot_changes() {
   oled_display.textbox("COPY ", "SLOT");
   }
 #endif
-    mcl_clipboard.copy(getCol(), getRow(), width, height);
+    mcl_clipboard.copy(getCol(), getRow(), width, height, proj.get_grid());
 
   }
 
@@ -690,7 +690,7 @@ void GridPage::apply_slot_changes() {
 #ifdef OLED_DISPLAY
     oled_display.textbox("PASTE", "");
 #endif
-    mcl_clipboard.paste(getCol(), getRow());
+    mcl_clipboard.paste(getCol(), getRow(), proj.get_grid());
   } else {
     GridRowHeader header;
 #ifdef OLED_DISPLAY

@@ -50,6 +50,8 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"},
   // 47: SEQ EDIT
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
+  // 51: GRID
+  {0, "A"}, {1, "B"},
 };
 
 void new_proj_handler() {

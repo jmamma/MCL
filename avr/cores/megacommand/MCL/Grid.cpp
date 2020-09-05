@@ -30,17 +30,18 @@ bool Grid::write_header() {
   return true;
 }
 
-
 bool Grid::new_file(const char *gridname) {
   file.close();
 
   DEBUG_PRINTLN("Attempting to create grid file");
   DEBUG_PRINTLN(gridname);
   bool ret;
-  ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES +
-                                               (uint32_t)GRID_SLOT_BYTES *
-                                                   (uint32_t)GRID_LENGTH *
-                                                   (uint32_t)(GRID_WIDTH + 1));
+  // GRID_WIDTH + 1 (because first slot is header)
+  // GRID_LENGTH + 2 (first row reserved for header information
+  //                 (last row is reserved for tmp space, used by clipboard);
+  ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES *
+                                            (uint32_t)(GRID_LENGTH + 2) *
+                                            (uint32_t)(GRID_WIDTH + 1));
 
   if (!ret) {
     file.close();
@@ -58,7 +59,7 @@ bool Grid::new_file(const char *gridname) {
     return false;
   }
 
-
+  return true;
 }
 
 bool Grid::new_grid(const char *gridname) {
@@ -67,7 +68,9 @@ bool Grid::new_grid(const char *gridname) {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN("Creating new grid");
-  if (!new_file(gridname)) { return false; }
+  if (!new_file(gridname)) {
+    return false;
+  }
 
   DEBUG_PRINTLN("Initializing grid.. please wait");
 #ifdef OLED_DISPLAY
@@ -78,7 +81,7 @@ bool Grid::new_grid(const char *gridname) {
   for (int32_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-      mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
+    mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
 #endif
     if (i % 2 == 0) {
       if (ledstatus == 0) {
@@ -125,15 +128,14 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   if (s_col > 15 && d_col < 16) {
     return false;
   }
- // setup a buffer frame for the tracks.
- //
+  // setup a buffer frame for the tracks.
+  //
   EmptyTrack empty_track;
   // TODO grid id?
   auto *track = empty_track.load_from_grid(s_col, s_row);
   // at this point, the vtable of ptrack should be repaired
   track->on_copy(s_col, d_col, destination_same);
   track->store_in_grid(d_col, d_row);
-
 }
 
 uint8_t Grid::get_slot_model(int column, int row, bool load) {
@@ -174,8 +176,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   // DEBUG_PRINTLN("Writing");
   // DEBUG_DUMP(sizeof(temptrack.active));
 
-  ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track),
-                          &file);
+  ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track), &file);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;
@@ -191,5 +192,3 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   }
   return write_row_header(&row_header, row);
 }
-
-
