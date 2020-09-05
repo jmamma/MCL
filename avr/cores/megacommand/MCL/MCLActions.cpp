@@ -162,7 +162,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_
 
       // Sound tracks
       // If devs[grid_num] is a NullMidiDevice, track type will be 255
-      if (grid_num == 0 || track_num < NUM_EXT_TRACKS) {
+      if (track_num < devs[grid_num]->track_count) {
         track_type = devs[grid_num]->track_type;
         online = (elektron_devs[grid_num] != nullptr);
         DEBUG_DUMP(track_type);
@@ -171,7 +171,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_
         if (!save_grid_tracks[grid_num]) {
           continue;
         }
-      } else if (track_num == MDFX_TRACK_NUM && MD.connected) {
+      } else if (grid_num == 1 && track_num == MDFX_TRACK_NUM && MD.connected) {
         track_type = MDFX_TRACK_TYPE;
         online = true;
       }
@@ -285,11 +285,13 @@ void MCLActions::prepare_next_chain(int row, uint8_t *track_select_array) {
     auto device_track = empty_track.load_from_grid(track_num, row);
     if (device_track == nullptr ||
         device_track->active != devs[grid_num]->track_type) {
+      empty_track.clear();
+      device_track = empty_track.init_track_type(devs[grid_num]->track_type);
       send_machine[n] = 1;
     } else {
-      device_track->store_in_mem(track_num);
       send_machine[n] = 0;
     }
+    device_track->store_in_mem(track_num);
   }
 
   uint16_t next_step;
@@ -365,9 +367,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
     //  continue;
     //}
 
-
     grid_page.active_slots[i] = grid_page.getRow();
-
 
     if (first_note == 255) {
       first_note = i;
@@ -377,7 +377,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
     if (!ptrack) { continue; } // read failure
 
     ptrack->chain.store_in_mem(i, &(chains[0]));
-    if (ptrack->is_active()) {
+    if (ptrack->active != devs[grid]->track_type) {
+      // empty, or incompatible
+    } else {
       DEBUG_DUMP(i);
       ptrack->load_immediate(grid_col);
       if (grid_col < devs[grid]->track_count) {

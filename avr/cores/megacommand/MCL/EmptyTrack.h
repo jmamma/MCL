@@ -22,6 +22,10 @@ public:
   virtual void* get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 
+  /// Erase the track object, including data and the type information
+  /// Need to use init_track_type to repair the type info.
+  void clear();
+
   /*
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);

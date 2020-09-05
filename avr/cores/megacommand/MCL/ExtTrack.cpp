@@ -15,14 +15,10 @@ bool ExtTrack::load_seq_data(uint8_t tracknumber) {
   if (chain.speed == 0) {
     chain.speed = SEQ_SPEED_2X;
   }
-  if (active == EMPTY_TRACK_TYPE) {
-    mcl_seq.ext_tracks[tracknumber].clear_track();
-  } else {
-    mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
-    memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
-    mcl_seq.ext_tracks[tracknumber].speed = chain.speed;
-    mcl_seq.ext_tracks[tracknumber].length = chain.length;
-}
+  mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
+  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
+  mcl_seq.ext_tracks[tracknumber].speed = chain.speed;
+  mcl_seq.ext_tracks[tracknumber].length = chain.length;
 #endif
   return true;
 }
