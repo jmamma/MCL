@@ -144,7 +144,7 @@ void RoutePage::update_globals() {
       ;
     USE_LOCK();
     SET_LOCK();
-    MD.global.toSysex(encoder2);
+    MD.global.toSysex(&encoder2);
     CLEAR_LOCK();
     hasChanged = false;
   }
@@ -218,7 +218,7 @@ void RoutePage::display() {
 bool RoutePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
 #ifndef OLED_DISPLAY

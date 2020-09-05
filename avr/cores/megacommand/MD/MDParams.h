@@ -24,6 +24,7 @@
 #define MD_CURRENT_SONG_REQUEST 0x08
 #define MD_CURRENT_SEQUENCER_MODE 0x10
 #define MD_CURRENT_LOCK_MODE 0x20
+#define MD_CURRENT_TRACK_REQUEST 0x022
 
 #define MD_GLOBAL_MESSAGE_ID 0x50
 #define MD_GLOBAL_REQUEST_ID 0x51
@@ -880,14 +881,8 @@ PGM_P model_param_name(uint8_t model, uint8_t param);
 extern const char *MDLFONames[8];
 extern const md_machine_name_t machine_names[135] PROGMEM;
 
-typedef struct md_machine_name_s_short {
-  char name1[3];
-  char name2[3];
-  uint8_t id;
-} md_machine_name_t_short;
-
-extern md_machine_name_t_short const machine_names_short[135] PROGMEM;
-PGM_P getMachineNameShort(uint8_t machine, uint8_t type);
+extern short_machine_name_t const md_machine_names_short[135] PROGMEM;
+PGM_P getMDMachineNameShort(uint8_t machine, uint8_t type);
 extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
 
 /* @} @} */

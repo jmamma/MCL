@@ -4,6 +4,7 @@
 
 #include "A4.h"
 #include "MD.h"
+#include "MNM.h"
 
 #ifdef MEGACOMMAND
 #include "MidiSDS.h"
@@ -72,6 +73,7 @@
 #include "MDFXTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
+#include "MNMTrack.h"
 
 #include "MCLActions.h"
 #include "MCLSeq.h"

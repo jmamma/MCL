@@ -580,7 +580,7 @@ void RAMPage::display() {
   oled_display.setFont();
   oled_display.setCursor(0, 24);
 
-  char *source;
+  const char *source;
 
   switch (encoders[0]->cur) {
   case SOURCE_MAIN:
@@ -782,7 +782,7 @@ void RAMPage::remove_callbacks() {
 bool RAMPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }

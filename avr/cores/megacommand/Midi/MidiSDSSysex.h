@@ -18,7 +18,6 @@ class MidiSDSSysexListenerClass : public MidiSysexListenerClass {
 
 public:
   bool isSDSMessage;
-  uint8_t msgType;
   uint8_t packetNumber;
   uint8_t sds_slot;
   char sds_name[4];

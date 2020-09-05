@@ -4,6 +4,30 @@
 #define MD_KIT_LENGTH 0x4D0
 #define A4_SOUND_LENGTH 0x19F
 
+// No STL, no closure, no std::function, cannot make this generic...
+//void __attribute__ ((noinline)) FOREACH_GRID_TRACK(void(*fn)(uint8_t, uint8_t, uint8_t, MidiDevice*, ElektronDevice*)) {
+  //uint8_t grid;
+  //uint8_t track_idx;
+  //MidiDevice *devs[2] = {
+      //midi_active_peering.get_device(UART1_PORT),
+      //midi_active_peering.get_device(UART2_PORT),
+  //};
+  //ElektronDevice *elektron_devs[2] = {
+      //devs[0]->asElektronDevice(),
+      //devs[1]->asElektronDevice(),
+  //};
+  //for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+    //if (i < GRID_WIDTH) {
+      //grid = 0;
+      //track_idx = i;
+    //} else {
+      //grid = 1;
+      //track_idx = i - GRID_WIDTH;
+    //}
+    //fn(i, grid, track_idx, devs[grid], elektron_devs[grid]);
+  //}
+//}
+
 void MCLActions::setup() {
   DEBUG_PRINTLN("mcl actions setup");
   mcl_actions_callbacks.setup_callbacks();
@@ -20,22 +44,19 @@ void MCLActions::kit_reload(uint8_t pattern) {
   DEBUG_PRINT_FN();
   if (mcl_actions.do_kit_reload != 255) {
     if (mcl_actions.writepattern == pattern) {
-      MD.loadKit(mcl_actions.do_kit_reload);
+      auto dev1 =
+          midi_active_peering.get_device(UART1_PORT)->asElektronDevice();
+      auto dev2 =
+          midi_active_peering.get_device(UART2_PORT)->asElektronDevice();
+      if (dev1 != nullptr) {
+        dev1->loadKit(mcl_actions.do_kit_reload);
+      }
+      if (dev2 != nullptr) {
+        dev2->loadKit(mcl_actions.do_kit_reload);
+      }
     }
     mcl_actions.do_kit_reload = 255;
   }
-}
-
-MCLActions mcl_actions;
-
-void MCLActions::md_setsysex_recpos(uint8_t rec_type, uint8_t position) {
-  DEBUG_PRINT_FN();
-
-  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position,
-                    (uint8_t)1 & 0x7f};
-  MD.sendSysex(data, countof(data));
-
-  //  MD.sendRequest(0x6b,00000011);
 }
 
 void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
@@ -49,42 +70,61 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
   uint8_t old_grid = proj.get_grid();
 
-  bool save_md_tracks = false;
-  bool save_grid2_tracks = false;
+  bool save_grid_tracks[2] = {false, false};
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+  ElektronDevice *elektron_devs[2] = {
+      devs[0]->asElektronDevice(),
+      devs[1]->asElektronDevice(),
+  };
+
   uint8_t i = 0;
 
-  for (i = 0; i < NUM_MD_TRACKS; i++) {
+  for (i = 0; i < NUM_SLOTS; i++) {
     if (note_interface.notes[i] == 3) {
-      save_md_tracks = true;
+      uint8_t grid_num = (i < GRID_WIDTH) ? 0 : 1;
+      save_grid_tracks[grid_num] = true;
     }
   }
-#ifdef EXT_TRACKS
-  for (i = GRID_WIDTH; i < NUM_SLOTS; i++) {
-    if (note_interface.notes[i] == 3) {
-      save_grid2_tracks = true;
-    }
-  }
+#ifndef EXT_TRACKS
+  save_grid_tracks[1] = false;
 #endif
 
   if (MidiClock.state == 2) {
     merge = 0;
   }
-  if (save_md_tracks) {
-    if (merge > 0) {
-      DEBUG_PRINTLN("fetching pattern");
-      if (!MD.getBlockingPattern(readpattern)) {
-        DEBUG_PRINTLN("could not receive pattern");
-        return;
-      }
-    }
 
-    if (!MD.getBlockingKit(0x7F)) {
-      DEBUG_PRINTLN("could not receive kit");
-      return;
-    }
-    if (MidiClock.state == 2) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].update_kit_params();
+  for (i = 0; i < NUM_GRIDS; ++i) {
+    if (save_grid_tracks[i] && elektron_devs[i] != nullptr) {
+      if (merge > 0) {
+        DEBUG_PRINTLN("fetching pattern");
+        if (elektron_devs[i]->getBlockingPattern(readpattern)) {
+          DEBUG_PRINTLN("could not receive pattern");
+          save_grid_tracks[i] = false;
+          continue;
+        }
+      }
+
+      if (elektron_devs[i]->canReadWorkspaceKit() ) {
+        if (!elektron_devs[i]->getBlockingKit(0x7F)) {
+          DEBUG_PRINTLN("could not receive kit");
+          save_grid_tracks[i] = false;
+          continue;
+        }
+      } else {
+        auto kit = elektron_devs[i]->getCurrentKit();
+        elektron_devs[i]->saveCurrentKit(kit);
+        if (!elektron_devs[i]->getBlockingKit(kit)) {
+          DEBUG_PRINTLN("could not receive kit");
+          save_grid_tracks[i] = false;
+          continue;
+        }
+      }
+
+      if (MidiClock.state == 2) {
+        elektron_devs[i]->updateKitParams();
       }
     }
   }
@@ -109,39 +149,33 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
       if (first_note == 255) {
         first_note = i;
       }
-      track_type = 255;
-      online = false;
 
-      // GRID 0
       if (i < GRID_WIDTH) {
         grid_num = 0;
-        // MD TRACKS
-        track_type = MD_TRACK_TYPE;
         track_num = i;
-        if (MD.connected) {
-          online = true;
-        }
-      }
-      // GRID 1
-      else {
+      } else {
         grid_num = 1;
         track_num = i - GRID_WIDTH;
-        // EXT | A4 TRACKS
-        if (track_num < NUM_EXT_TRACKS) {
-          track_type = EXT_TRACK_TYPE;
-          if (Analog4.connected) {
-            online = true;
-            track_type = A4_TRACK_TYPE;
-          }
-        }
-        // FX TRACKS
-        if (track_num == MDFX_TRACK_NUM) {
-          if (MD.connected) {
-            track_type = MDFX_TRACK_TYPE;
-            online = true;
-          }
-        }
       }
+
+      track_type = 255;
+
+      // Sound tracks
+      // If devs[grid_num] is a NullMidiDevice, track type will be 255
+      if (grid_num == 0 || track_num < NUM_EXT_TRACKS) {
+        track_type = devs[grid_num]->track_type;
+        online = (elektron_devs[grid_num] != nullptr);
+        DEBUG_DUMP(track_type);
+        // If save_grid_tracks[grid_num] turns false, it means getBlockingKit
+        // has failed, so we just skip this device.
+        if (!save_grid_tracks[grid_num]) {
+          continue;
+        }
+      } else if (track_num == MDFX_TRACK_NUM && MD.connected) {
+        track_type = MDFX_TRACK_TYPE;
+        online = true;
+      }
+
       if (track_type != 255) {
         proj.select_grid(grid_num);
 
@@ -181,14 +215,30 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
 
 void MCLActions::write_tracks(int column, int row) {
   DEBUG_PRINT_FN();
+  ElektronDevice *elektron_devs[2] = {
+      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+  };
   if ((mcl_cfg.chain_mode > 0) && (MidiClock.state == 2)) {
-    if (MD.currentKit != MD.kit.origPosition) {
-      MD.getBlockingKit(0x7F);
+    for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
+      if (elektron_devs[i] != nullptr &&
+          elektron_devs[i]->canReadWorkspaceKit()) {
+        auto kit = elektron_devs[i]->getKit();
+        if (kit != nullptr &&
+            elektron_devs[i]->currentKit != kit->getPosition()) {
+          elektron_devs[i]->getBlockingKit(0x7F);
+        }
+      }
     }
     prepare_next_chain(row);
     return;
   }
-  MD.getBlockingKit(0x7F);
+  for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
+    if (elektron_devs[i] != nullptr &&
+        elektron_devs[i]->canReadWorkspaceKit()) {
+      elektron_devs[i]->getBlockingKit(0x7F);
+    }
+  }
 
   send_tracks_to_devices();
 }
@@ -198,6 +248,11 @@ void MCLActions::prepare_next_chain(int row) {
   EmptyTrack empty_track;
   uint8_t q;
   uint8_t old_grid = proj.get_grid();
+
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
 
   //  if (MidiClock.state != 2) {
   //  q = 0;
@@ -211,38 +266,32 @@ void MCLActions::prepare_next_chain(int row) {
     q = 4;
   }
   //  }
-  uint8_t slots_cached[NUM_SLOTS] = {0};
 
-  proj.select_grid(0);
+  for (uint8_t n = 0; n < NUM_TRACKS; ++n) {
+    uint8_t grid_num = (n < GRID_WIDTH) ? 0 : 1;
+    uint8_t track_num = (n < GRID_WIDTH) ? n : (n - GRID_WIDTH);
+    proj.select_grid(grid_num);
 
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-
-    if (note_interface.notes[n] > 0) {
-      auto md_track = empty_track.load_from_grid<MDTrack>(n, row);
-      if (md_track) {
-        md_track->store_in_mem(n);
-        slots_cached[n] = 1;
-        send_machine[n] = 0;
-      } else {
-        send_machine[n] = 1;
-      }
+    if (note_interface.notes[n] == 0 ||
+        track_num >= devs[grid_num]->track_count) {
+      continue;
     }
-  }
-#ifdef EXT_TRACKS
-  proj.select_grid(1);
-  for (uint8_t n = NUM_MD_TRACKS; n < NUM_TRACKS; n++) {
-    if (note_interface.notes[n] > 0) {
-      auto a4_track =
-          empty_track.load_from_grid<A4Track>(n - NUM_MD_TRACKS, row);
-      if (a4_track) {
-        a4_track->store_in_mem(n - NUM_MD_TRACKS);
-        send_machine[n] = 0;
-      } else {
-        send_machine[n] = 1;
-      }
+#ifndef EXT_TRACKS
+    if (n >= GRID_WIDTH) {
+      break;
     }
-  }
 #endif
+
+    auto device_track = empty_track.load_from_grid(track_num, row);
+    if (device_track == nullptr ||
+        device_track->active != devs[grid_num]->track_type) {
+      send_machine[n] = 1;
+    } else {
+      device_track->store_in_mem(track_num);
+      send_machine[n] = 0;
+    }
+  }
+
   uint16_t next_step;
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
@@ -279,14 +328,15 @@ void MCLActions::send_tracks_to_devices() {
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
 
-#ifdef EXT_TRACKS
-  // Used as a way of flaggin which A4 tracks are to be sent
-  uint8_t a4_send[NUM_A4_SOUND_TRACKS] = {0};
-#endif
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
 
   uint8_t first_note = 255;
 
-  uint8_t mute_states[16];
+  uint8_t mute_states[NUM_TRACKS];
+  uint8_t send_masks[NUM_TRACKS] = {0};
 
   uint8_t old_grid = proj.get_grid();
 
@@ -294,35 +344,44 @@ void MCLActions::send_tracks_to_devices() {
 
     uint8_t grid_col = i;
     uint8_t grid = 0;
-    // GRID 0
-    if (i < NUM_MD_TRACKS) {
-      grid = 0;
-      mute_states[i] = mcl_seq.md_tracks[i].mute_state;
-      mcl_seq.md_tracks[i].mute_state = SEQ_MUTE_ON;
-    }
     // GRID 1
+    if (i < GRID_WIDTH) {
+      grid = 0;
+    }
+    // GRID 2
     else {
       grid = 1;
-      grid_col -= NUM_MD_TRACKS;
+      grid_col -= GRID_WIDTH;
     }
+
+    if (grid_col < devs[grid]->track_count) {
+      SeqTrack *seq_track = mcl_seq.seq_tracks[i];
+      mute_states[i] = seq_track->mute_state;
+      seq_track->mute_state = SEQ_MUTE_ON;
+    }
+
     proj.select_grid(grid);
-    if (note_interface.notes[i] > 1) {
+    if (note_interface.notes[i] <= 1) {
+      continue;
+    }
 
-      grid_page.active_slots[i] = grid_page.getRow();
 
-      if (first_note == 255) {
-        first_note = i;
-      }
+    grid_page.active_slots[i] = grid_page.getRow();
 
-      auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
-      ptrack->chain.store_in_mem(i, &(chains[0]));
-      if (ptrack->is_active()) {
-        DEBUG_DUMP(i);
-        ptrack->load_immediate(grid_col);
-        if (Analog4.connected && ptrack->is<A4Track>() &&
-            grid_col < NUM_A4_SOUND_TRACKS) {
-          a4_send[grid_col] = 1;
-        }
+
+    if (first_note == 255) {
+      first_note = i;
+    }
+
+    auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
+    if (!ptrack) { continue; } // read failure
+
+    ptrack->chain.store_in_mem(i, &(chains[0]));
+    if (ptrack->is_active()) {
+      DEBUG_DUMP(i);
+      ptrack->load_immediate(grid_col);
+      if (grid_col < devs[grid]->track_count) {
+        send_masks[i] = 1;
       }
     }
   }
@@ -336,43 +395,48 @@ void MCLActions::send_tracks_to_devices() {
     }
   }
 
-  MD.kit.origPosition = 0x7F;
-
-  /*Send the encoded kit to the MD via sysex*/
+  /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = slowclock;
-
-  // md_setsysex_recpos(4, MD.kit.origPosition);
-  MD.kit.toSysex();
-
-  //  mcl_seq.disable();
-  // md_set_kit(&MD.kit);
-
-  // Send Analog4
-#ifdef EXT_TRACKS
-  if (Analog4.connected) {
-    for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
-      if (a4_send[i] == 1) {
-        auto a4_track = empty_track.load_from_mem<A4Track>(i);
-        if (a4_track) {
-          a4_track->sound.soundpool = true;
-          a4_track->sound.toSysex();
-        }
-      }
+  uint16_t latency_ms = 0;
+  for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
+#ifndef EXT_TRACKS
+    if (i > 0) {
+      break;
+    }
+#endif
+    auto elektron_dev = devs[i]->asElektronDevice();
+    if (elektron_dev != nullptr) {
+      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH, &empty_track);
     }
   }
-#endif
-  uint16_t md_latency_ms =
-      10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
-  md_latency_ms += 10;
-  DEBUG_PRINTLN("latency");
-  DEBUG_PRINTLN(md_latency_ms);
 
-  while (clock_diff(myclock, slowclock) < md_latency_ms) {
+  // switch back to old grid before driving the GUI loop
+  proj.select_grid(old_grid);
+  // note, do not re-enter grid_task -- stackoverflow
+  GUI.removeTask(&grid_task);
+  while (clock_diff(myclock, slowclock) < latency_ms) {
     GUI.loop();
-  };
+  }
+  GUI.addTask(&grid_task);
 
-  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-    mcl_seq.md_tracks[i].mute_state = mute_states[i];
+  for (uint8_t i=0; i < NUM_SLOTS; ++i) {
+
+    uint8_t grid_col = i;
+    uint8_t grid = 0;
+    // GRID 1
+    if (i < GRID_WIDTH) {
+      grid = 0;
+    }
+    // GRID 2
+    else {
+      grid = 1;
+      grid_col -= GRID_WIDTH;
+    }
+
+    if (grid_col < devs[grid]->track_count) {
+      SeqTrack *seq_track = mcl_seq.seq_tracks[i];
+      seq_track->mute_state = mute_states[i];
+    }
   }
 
   /*All the tracks have been sent so clear the write queue*/
@@ -386,7 +450,9 @@ void MCLActions::send_tracks_to_devices() {
 
   cache_next_tracks(note_interface.notes, &empty_track, &empty_track2);
 
+
   // in_sysex = 0;
+  
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       transition_level[n] = 0;
@@ -398,8 +464,7 @@ void MCLActions::send_tracks_to_devices() {
   }
   calc_next_transition();
   calc_latency(&empty_track);
-
-  proj.select_grid(old_grid);
+  
 }
 
 void MCLActions::cache_next_tracks(uint8_t *track_select_array,
@@ -407,8 +472,10 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
                                    EmptyTrack *empty_track2, bool gui_update) {
   DEBUG_PRINT_FN();
 
-  MDTrack *md_mem_track;
-  A4Track *a4_mem_track;
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
 
   uint8_t old_grid = proj.get_grid();
 
@@ -425,42 +492,44 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
       }
       uint8_t grid_col = n;
       uint8_t grid = 0;
-      // GRID 0
-      if (n < NUM_MD_TRACKS) {
+      // GRID 1
+      if (n < GRID_WIDTH) {
         grid = 0;
       }
-      // GRID 1
+      // GRID 2
       else {
         grid = 1;
-        grid_col -= NUM_MD_TRACKS;
+        grid_col -= GRID_WIDTH;
       }
+
+      if (grid_col >= devs[grid]->track_count) {
+        continue;
+      }
+
       proj.select_grid(grid);
 
       auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
-
-      if (ptrack->is_active()) {
-        if ((ptrack->is<MDTrack>()) &&
-            (md_mem_track = empty_track2->load_from_mem<MDTrack>(grid_col))) {
-          if (memcmp(&md_mem_track->machine, &(((MDTrack *)ptrack)->machine),
-                     sizeof(MDMachine)) != 0) {
-            send_machine[n] = 0;
-          } else {
-            send_machine[n] = 1;
-            DEBUG_PRINTLN("machines match");
-          }
-        } else {
-          if ((ptrack->is<A4Track>()) &&
-              (a4_mem_track = empty_track2->load_from_mem<A4Track>(grid_col))) {
-            if (memcmp(&a4_mem_track->sound, &((A4Track *)ptrack)->sound,
-                       sizeof(A4Sound)) != 0) {
-              send_machine[n] = 0;
-            } else {
-              send_machine[n] = 1;
-            }
-          }
-        }
-        ptrack->store_in_mem(grid_col);
+      if (ptrack == nullptr || !ptrack->is_active() || devs[grid]->track_type != ptrack->active) {
+        continue;
       }
+
+      auto *pmem_track = empty_track2->load_from_mem(grid_col, devs[grid]->track_type);
+      if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
+        // track type matched.
+        auto *psound = ptrack->get_sound_data_ptr();
+        auto *pmem_sound = pmem_track->get_sound_data_ptr();
+        auto szsound = ptrack->get_sound_data_size();
+        auto szmem_sound = pmem_track->get_sound_data_size();
+
+        if (!psound || !pmem_sound || szsound != szmem_sound) {
+          // something's wrong, don't send
+        } else if (memcmp(psound, pmem_sound, szsound) != 0) {
+          send_machine[n] = 0;
+        } else {
+          send_machine[n] = 1;
+        }
+      }
+      ptrack->store_in_mem(grid_col);
     }
   }
 
@@ -564,7 +633,10 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
 #ifdef EXT_TRACKS
       else {
         if (next_transitions[n] == next_transition) {
-          a4_latency += A4_SOUND_LENGTH;
+          auto a4_track = empty_track->load_from_mem<A4Track>(n - GRID_WIDTH);
+          if (a4_track) {
+            a4_latency += A4_SOUND_LENGTH;
+          }
         }
       }
 #endif
@@ -646,7 +718,7 @@ int MCLActions::calc_md_set_machine_latency(uint8_t track, MDMachine *machine,
 void MCLActions::md_set_kit(MDKit *kit_) {
   MDTrack temp_track;
 
-  MD.setKitName((kit_->name));
+  MD.setKitName(kit_->name);
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     temp_track.get_machine_from_kit(n);
     md_set_machine(n, &(temp_track.machine), NULL, true);
@@ -732,3 +804,5 @@ void MCLActions::md_set_machine(uint8_t track, MDMachine *machine, MDKit *kit_,
     }
   }
 }
+
+MCLActions mcl_actions;

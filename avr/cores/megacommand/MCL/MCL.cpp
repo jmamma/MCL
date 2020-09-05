@@ -54,6 +54,7 @@ void MCL::setup() {
   md_track_select.setup(&Midi);
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
+  MNMSysexListener.setup(&Midi2);
 #endif
 
 #ifdef MEGACOMMAND

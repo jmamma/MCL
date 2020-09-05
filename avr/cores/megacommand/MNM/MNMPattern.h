@@ -119,7 +119,7 @@ public:
   bool fromSysex(MidiClass *midi);
 
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+	uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 	
 	bool isTrackEmpty(uint8_t track);
 	bool isMidiTrackEmpty(uint8_t track);

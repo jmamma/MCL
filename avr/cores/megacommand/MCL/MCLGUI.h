@@ -15,7 +15,7 @@ public:
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
-  void draw_textbox(char *text, char *text2);
+  void draw_textbox(const char *text, const char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
@@ -40,6 +40,8 @@ public:
                      bool deferred_display = false,
                      uint8_t x_pos = s_progress_x,
                      uint8_t y_pos = s_progress_y);
+
+  void delay_progress(uint16_t clock_);
 
   void draw_microtiming(uint8_t resolution, uint8_t timing);
   void clear_leftpane();
@@ -243,5 +245,7 @@ extern const unsigned char icon_sound[];
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px
 extern const unsigned char icon_a4[];
+// 'mnm_rev', 34x24px
+extern const unsigned char icon_mnm[];
 
 #endif /* MCLGUI_H__ */

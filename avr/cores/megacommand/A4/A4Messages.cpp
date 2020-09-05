@@ -1,10 +1,4 @@
-
-#include "A4Messages.h"
-#include "A4Params.h"
-#include "Elektron.h"
-#include "helpers.h"
-
-#include "A4.h"
+#include "MCL_impl.h"
 
 bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
   if (len != 0xC4 - 6) {
@@ -19,13 +13,13 @@ bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   //	origPosition = data[3];
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 4, len - 4));
+  ElektronSysexDecoder decoder(data + 4);
 
   return true;
 }
 
 uint16_t A4Global::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   return toSysex(encoder);
   if (len < 0xC5)
     return 0;
@@ -71,34 +65,34 @@ void A4Sound::convert(A4Sound_270* old) {
   // skip the partial header 
   payload += 6;
   // getting data from old payload.
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(payload, 392));
-  fromSysex_impl(decoder);
+  ElektronSysexDecoder decoder(payload);
+  fromSysex_impl(&decoder);
 }
 
 // caller guarantees: 1. in checksum; 2. not in 7bit enc.
 // when this routine exits, condition 1) and 2) hold.
-bool A4Sound::fromSysex_impl(ElektronSysexDecoder &decoder) {
-  decoder.start7Bit();
-  decoder.skip(1); // skip sound header 0x05
-  decoder.get(tags);
-  decoder.get(name);
-  decoder.get(sound);
-  decoder.skip(sizeof(a4sound_footer));
-  decoder.stop7Bit();
+bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
+  decoder->start7Bit();
+  decoder->skip(1); // skip sound header 0x05
+  decoder->get(tags);
+  decoder->get(name);
+  decoder->get(sound);
+  decoder->skip(sizeof(a4sound_footer));
+  decoder->stop7Bit();
 }
 
 // caller guarantees: 1. in checksum; 2. not in 7bit enc.
 // when this routine exits, condition 1) and 2) hold.
-void A4Sound::toSysex_impl(ElektronDataToSysexEncoder &encoder)
+void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
 {
-  encoder.pack(a4sound_header);
-  encoder.start7Bit();
-  encoder.pack8(0x05);
-  encoder.pack(tags);
-  encoder.pack(name);
-  encoder.pack(sound);
-  encoder.pack(a4sound_footer);
-  encoder.stop7Bit();
+  encoder->pack(a4sound_header);
+  encoder->start7Bit();
+  encoder->pack8(0x05);
+  encoder->pack(tags);
+  encoder->pack(name);
+  encoder->pack(sound);
+  encoder->pack(a4sound_footer);
+  encoder->stop7Bit();
 }
 
 ///  !Note, sysex frame wrappers are not included in [data..data+len)
@@ -106,30 +100,21 @@ void A4Sound::toSysex_impl(ElektronDataToSysexEncoder &encoder)
 ///  !Note, checksum starts at 0x09 without origPosition.
 bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
   if (len != a4sound_sysex_len) {
-    GUI.setLine(GUI.LINE1);
-    GUI.flash_strings_fill("WRONG LEN", "");
-    GUI.setLine(GUI.LINE2);
-
-    GUI.put_value16(0, len);
-    //  GUI.put_value16(8, 384 - 10 - 2 -2 -1);
-
+    mcl_gui.draw_textbox("WRONG LEN", "");
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksumAnalog(
     data + a4sound_checksum_startidx,
     len - a4sound_checksum_startidx)) {
-    GUI.flash_strings_fill("WRONG CKSUM", "");
+    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
     return false;
   }
 
   origPosition = data[a4sound_origpos_idx];
-  ElektronSysexDecoder decoder(
-    DATA_ENCODER_INIT(
-      data + a4sound_encoding_startidx,
-      len - a4sound_encoding_startidx - 4));
+  ElektronSysexDecoder decoder(data + a4sound_encoding_startidx);
 
-  return fromSysex_impl(decoder);
+  return fromSysex_impl(&decoder);
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
@@ -139,79 +124,68 @@ bool A4Sound::fromSysex(MidiClass *midi) {
   uint16_t len = reclen - a4sound_checksum_startidx;
   uint16_t offset = a4sound_checksum_startidx;
   if (reclen != a4sound_sysex_len) {
-    GUI.setLine(GUI.LINE1);
-    GUI.flash_strings_fill("WRONG LEN", "");
-    GUI.setLine(GUI.LINE2);
-
-    GUI.put_value16(0, len);
-    //  GUI.put_value16(8, 384 - 10 - 2 -2 -1);
-
+    mcl_gui.draw_textbox("WRONG LEN", "");
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len)) {
-    GUI.flash_strings_fill("WRONG CKSUM", "");
+    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
     return false;
   }
 
   origPosition = midi->midiSysex.getByte(a4sound_origpos_idx);
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset, len - 4));
+  ElektronSysexDecoder decoder(midi, offset);
 
-  return fromSysex_impl(decoder);
+  return fromSysex_impl(&decoder);
 }
 
 uint16_t A4Sound::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart2);
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
 
 uint16_t A4Sound::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   if (len < 0xC5) // what is 0xC5?
     return 0;
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
 
-uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder &encoder) {
-  encoder.stop7Bit();
-  encoder.begin();
+uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
+  encoder->stop7Bit();
+  encoder->begin();
   if (!soundpool) {
-    encoder.pack(a4soundx_prologue);
+    encoder->pack(a4soundx_prologue);
   } else {
-    encoder.pack(a4sound_prologue);
+    encoder->pack(a4sound_prologue);
   }
-  encoder.pack8(origPosition);
-  encoder.startChecksum();
+  encoder->pack8(origPosition);
+  encoder->startChecksum();
   toSysex_impl(encoder);
-  uint16_t enclen = encoder.finish();
-  encoder.finishChecksum();
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
   return enclen + 5;
 }
 
 bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
   if (len != (2679 - 10 - 0)) {
-    GUI.setLine(GUI.LINE1);
-    GUI.flash_strings_fill("WRONG LEN", "");
-    GUI.setLine(GUI.LINE2);
-
-    GUI.put_value16(0, len);
-    //  GUI.put_value16(8, 384 - 10 - 2 -2 -1);
+    mcl_gui.draw_textbox("WRONG LEN", "");
 
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksumAnalog(data + 1, len - 1)) {
-    GUI.flash_strings_fill("WRONG CKSUM", "");
+    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
     return false;
   }
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data, len - 4));
+  ElektronSysexDecoder decoder(data);
   decoder.stop7Bit();
   decoder.get8(&origPosition);
   //    decoder.skip(2);
   decoder.get((uint8_t *)&payload_start, sizeof(payload_start));
 
   for (uint8_t i = 0; i < 4; i++) {
-    sounds[i].fromSysex_impl(decoder);
+    sounds[i].fromSysex_impl(&decoder);
     sounds[i].origPosition = i;
   }
   decoder.get((uint8_t *)&payload_end, sizeof(payload_end));
@@ -221,35 +195,36 @@ bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
 
 uint16_t A4Kit::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart2);
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
+
 uint16_t A4Kit::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   if (len < 0xC5)
     return 0;
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
 
-uint16_t A4Kit::toSysex(ElektronDataToSysexEncoder &encoder) {
-  encoder.stop7Bit();
-  encoder.begin();
-  encoder.pack(a4_sysex_hdr, sizeof(a4_sysex_hdr));
+uint16_t A4Kit::toSysex(ElektronDataToSysexEncoder *encoder) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(a4_sysex_hdr, sizeof(a4_sysex_hdr));
   if (workSpace) {
-    encoder.pack8(A4_KITX_MESSAGE_ID);
+    encoder->pack8(A4_KITX_MESSAGE_ID);
   } else {
-    encoder.pack8(A4_KIT_MESSAGE_ID);
+    encoder->pack8(A4_KIT_MESSAGE_ID);
   }
-  encoder.pack(a4_sysex_proto_version, sizeof(a4_sysex_proto_version));
-  encoder.pack8(origPosition);
+  encoder->pack(a4_sysex_proto_version, sizeof(a4_sysex_proto_version));
+  encoder->pack8(origPosition);
 
-  encoder.startChecksum();
-  encoder.pack(payload_start, sizeof(payload_start)); // unknow
+  encoder->startChecksum();
+  encoder->pack(payload_start, sizeof(payload_start)); // unknow
   for (uint8_t i = 0; i < 4; i++) {
     sounds[i].toSysex_impl(encoder);
   }
-  encoder.pack(payload_end, sizeof(payload_end));
-  uint16_t enclen = encoder.finish();
-  encoder.finishChecksum();
+  encoder->pack(payload_end, sizeof(payload_end));
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
 
   return enclen + 5;
 }

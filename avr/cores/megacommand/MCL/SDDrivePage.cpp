@@ -93,7 +93,7 @@ void SDDrivePage::save_snapshot() {
       error_is_md = true;
       goto save_error;
     }
-    if (!mcl_sd.write_data(&MD.global, sizeof(MD.global), &file)) {
+    if (!mcl_sd.write_data_v<MDGlobal>(&MD.global, &file)) {
       error_is_md = false;
       goto save_error;
     }
@@ -108,7 +108,7 @@ void SDDrivePage::save_snapshot() {
       error_is_md = true;
       goto save_error;
     }
-    if (!mcl_sd.write_data(&MD.pattern, sizeof(MD.pattern), &file)) {
+    if (!mcl_sd.write_data_v<MDPattern>(&MD.pattern, &file)) {
       error_is_md = false;
       goto save_error;
     }
@@ -122,7 +122,7 @@ void SDDrivePage::save_snapshot() {
       error_is_md = true;
       goto save_error;
     }
-    if (!mcl_sd.write_data(&MD.kit, sizeof(MD.kit), &file)) {
+    if (!mcl_sd.write_data_v<MDKit>(&MD.kit, &file)) {
       error_is_md = false;
       goto save_error;
     }
@@ -189,14 +189,14 @@ void SDDrivePage::load_snapshot() {
   for (int i = 0; i < 8; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading global", i, 8);
-    if (!mcl_sd.read_data(&MD.global, sizeof(MD.global), &file)) {
+    if (!mcl_sd.read_data_v<MDGlobal>(&MD.global, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(2, i);
+    MD.setSysexRecPos(2, i);
     {
       ElektronDataToSysexEncoder encoder(&MidiUart);
       delay(20);
-      MD.global.toSysex(encoder);
+      MD.global.toSysex(&encoder);
       #ifndef OLED_DISPLAY
       delay(20);
       #endif
@@ -207,10 +207,10 @@ void SDDrivePage::load_snapshot() {
   for (int i = 0; i < 128; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading pattern", i, 128);
-    if (!mcl_sd.read_data(&MD.pattern, sizeof(MD.pattern), &file)) {
+    if (!mcl_sd.read_data_v<MDPattern>(&MD.pattern, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(8, i);
+    MD.setSysexRecPos(8, i);
     delay(20);
     MD.pattern.toSysex();
       #ifndef OLED_DISPLAY
@@ -222,10 +222,10 @@ void SDDrivePage::load_snapshot() {
   for (int i = 0; i < 64; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading kit", i, 64);
-    if (!mcl_sd.read_data(&MD.kit, sizeof(MD.kit), &file)) {
+    if (!mcl_sd.read_data_v<MDKit>(&MD.kit, &file)) {
       goto load_error;
     }
-    mcl_actions.md_setsysex_recpos(4, i);
+    MD.setSysexRecPos(4, i);
     delay(20);
     MD.kit.toSysex();
       #ifndef OLED_DISPLAY

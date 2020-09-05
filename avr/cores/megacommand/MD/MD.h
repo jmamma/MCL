@@ -7,89 +7,9 @@
 
 #include "Elektron.h"
 
-/**
- * \addtogroup MD Elektron MachineDrum
- *
- * @{
- *
- * \defgroup md_md Elektron Machinedrum Class
- * \defgroup md_callbacks Elektron MachineDrum Callbacks
- *
- **/
-
-/**
- * \addtogroup md_callbacks
- *
- * @{
- * MD Callback class, inherit from this class if you want to use callbacks on MD
- *events.
- **/
-
-class MDCallback {
-  public:
-  uint8_t type;
-  uint8_t value;
-  bool received;
-
-  MDCallback(uint8_t _type = 0) {
-    type = _type;
-    init();
-  }
-
-  void init() {
-    received = false;
-    value = 255;
-  }
-  void onStatusResponseCallback(uint8_t _type, uint8_t param) {
-
-    // GUI.printf_fill("eHHHH C%h N%h ",value, param);
-    if (type == _type) {
-      value = param;
-      received = true;
-    }
-  }
-
-  virtual void onSysexReceived() { received = true; }
-
-};
-
-/**
- * Standard method prototype for argument-less MD callbacks.
- **/
-typedef void (MDCallback::*md_callback_ptr_t)();
-/**
- * Standard method prototype for MD status callbacks, called with the
- * status type and the status parameter. This is used to get the
- * current kit, current pattern, current global, etc...
- **/
-typedef void (MDCallback::*md_status_callback_ptr_t)(uint8_t type,
-                                                     uint8_t param);
-
-/**
- * Helper class storing the status and type of a Machinedrum
- * request. This is used to have a blocking call waiting for an answer
- * from the MachineDrum.
- **/
-class MDBlockCurrentStatusCallback : public MDCallback {
-
-public:
-  MDBlockCurrentStatusCallback(uint8_t _type = 0) : MDCallback(_type) {
-  }
-
-  /* @} */
-};
-
-/* @} */
-
 #include "MDMessages.h"
 #include "MDParams.h"
 #include "MDSysex.h"
-
-/**
- * \addtogroup md_md
- *
- * @{
- */
 
 /** Standard elektron sysex header for communicating with the machinedrum. **/
 extern uint8_t machinedrum_sysex_hdr[5];
@@ -97,11 +17,6 @@ extern uint8_t machinedrum_sysex_hdr[5];
 /** This structure stores the tuning information of a melodic machine on the
  * machinedrum. **/
 typedef struct tuning_s {
-  /**
-   * \addtogroup md_md
-   *
-   * @{
-   **/
 
   /** Model of the melodic machine. **/
   uint8_t model;
@@ -130,12 +45,6 @@ public:
   void onNoteOnCallback_Midi(uint8_t *msg);
 };
 
-enum TrigLEDMode {
-  TRIGLED_OVERLAY = 0,
-  TRIGLED_STEPEDIT = 1,
-  TRIGLED_EXCLUSIVE = 2
-};
-
 /**
  * This is the main class used to communicate with a Machinedrum
  * connected to the Minicommand.
@@ -150,33 +59,14 @@ enum TrigLEDMode {
  * It also incorporates the mechanics to produce notes on the
  * MachineDrum by doing lookups of pitch information.
  **/
-class MDClass {
-  /**
-   * \addtogroup md_md
-   *
-   * @{
-   */
+class MDClass: public ElektronDevice {
 
 public:
   MDClass();
-  uint64_t fw_caps;
-  bool connected = false;
-  MidiClass *midi = &Midi;
   MDMidiEvents midi_events;
-  /** Stores the current global of the MD, usually set by the MDTask. **/
-  int currentGlobal;
-  /** Stores the current kit of the MD, usually set by the MDTask. **/
-  int currentKit;
-  int currentTrack;
-  /** Stores the current pattern of the MD, usually set by the MDTask. **/
-  int currentPattern;
-  /** Set to true if the kit was loaded (usually set by MDTask). **/
-  bool loadedKit;
   /** Stores the kit settings of the machinedrum (usually set by MDTask). **/
   MDKit kit;
   MDPattern pattern;
-  /** Set to true if the global was loaded (usually set by MDTask). **/
-  bool loadedGlobal;
 
   uint16_t mute_mask;
   //uint32_t swing_last;
@@ -188,6 +78,18 @@ public:
    * the channel settings and the trigger settings of the MachineDrum.
    **/
   MDGlobal global;
+
+  virtual bool probe();
+  // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
+  virtual bool canReadWorkspaceKit() { return true; }
+  virtual ElektronSysexObject* getKit() { return &kit; }
+  virtual ElektronSysexObject* getPattern() { return &pattern; }
+  virtual ElektronSysexObject* getGlobal() { return &global; }
+  virtual ElektronSysexListenerClass* getSysexListener() { return &MDSysexListener; }
+
+  virtual void updateKitParams();
+  virtual uint16_t sendKitParams(uint8_t* mask, void*);
+  virtual PGM_P getMachineName(uint8_t machine);
 
   /**
    * When given the channel and the cc of an incoming CC messages,
@@ -223,8 +125,6 @@ public:
   void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
 
   void setSampleName(uint8_t slot, char *name);
-  /** Send the given sysex buffer to the MachineDrum. **/
-  void sendSysex(uint8_t *bytes, uint8_t cnt);
 
   /** Set the value of the FX parameter to the given value.
    * Type should be one of:
@@ -243,24 +143,6 @@ public:
   void setEQParam(uint8_t param, uint8_t value);
   /** Set the value of a COMPRESSOR FX parameter. **/
   void setCompressorParam(uint8_t param, uint8_t value);
-
-  /**
-   * Send a sysex request to the MachineDrum. All the request calls
-   * are wrapped in appropriate methods like requestKit,
-   * requestPattern, etc...
-   **/
-  void sendRequest(uint8_t *data, uint8_t len);
-  void sendRequest(uint8_t type, uint8_t param);
-
-  bool get_fw_caps();
-
-  void activate_trig_interface();
-  void deactivate_trig_interface();
-
-  void activate_track_select();
-  void deactivate_track_select();
-
-  void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH
@@ -351,7 +233,6 @@ public:
 
   void setMachine(uint8_t track, MDMachine *machine);
 
-  void setKitName(char *name);
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
@@ -382,10 +263,6 @@ public:
    * Send a sysex message to route the track (0 to 15) to the given output.
    **/
   void setTrackRouting(uint8_t track, uint8_t output);
-  /**
-   * Set the machinedrum tempo.
-   **/
-  void setTempo(uint16_t tempo);
 
   /**
    * Set the trigger group of srcTrack to trigger trigTrack.
@@ -397,24 +274,9 @@ public:
   void setMuteGroup(uint8_t srcTrack, uint8_t muteTrack);
 
   /**
-   * Send a sysex message to set the type id to the given value. This
-   * is used by more specific methods and there should be no need to
-   * use this method directly.
-   **/
-  void setStatus(uint8_t id, uint8_t value);
-  /**
    * Send a sysex message to load the given global.
    **/
   void setGlobal(uint8_t id);
-  void loadGlobal(uint8_t id);
-  /**
-   * Send a sysex message to load the given kit.
-   **/
-  void loadKit(uint8_t kit);
-  /**
-   * Send a sysex message to load the given pattern.
-   **/
-  void loadPattern(uint8_t pattern);
   /**
    * Send a sysex message to load the given song.
    **/
@@ -428,46 +290,10 @@ public:
    * Send a sysex message to load the given global.
    **/
   void setLockMode(uint8_t mode);
-
-  /**
-   * Save the current kit at the given position.
-   **/
-  void saveCurrentKit(uint8_t pos);
-
-  /**
-   * Return a pointer to a program-space string representing the name of the
-   *given machine.
-   **/
-  PGM_P getMachineName(uint8_t machine);
   /**
    * Copy the name of the given pattern into the string str.
    **/
   void getPatternName(uint8_t pattern, char str[5]);
-
-  /**
-   * Request a kit from the machinedrum, which will answer by sending a long
-   *sysex message. Register a callback with the MDSysexListener to act on that
-   *message.
-   **/
-  void requestKit(uint8_t kit);
-  /**
-   * Request a pattern from the machinedrum, which will answer by sending a long
-   *sysex message. Register a callback with the MDSysexListener to act on that
-   *message.
-   **/
-  void requestPattern(uint8_t pattern);
-  /**
-   * Request a song from the machinedrum, which will answer by sending a long
-   *sysex message. Register a callback with the MDSysexListener to act on that
-   *message.
-   **/
-  void requestSong(uint8_t song);
-  /**
-   * Request a global from the machinedrum, which will answer by sending a long
-   *sysex message. Register a callback with the MDSysexListener to act on that
-   *message.
-   **/
-  void requestGlobal(uint8_t global);
 
   /**
    * Check channel settings to see if MD can receive and send CC for params.
@@ -482,56 +308,6 @@ public:
    *settings (not working at the moment).
    **/
   bool checkClockSettings();
-
-  /* requests */
-  /**
-   * Wait for a blocking answer to a status request. Timeout is in clock ticks.
-   **/
-  uint8_t waitBlocking(uint16_t timeout = 1000);
-
-  bool waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout = 3000);
-  /**
-   * Get the status answer from the machinedrum, blocking until either
-   * a message is received or the timeout has run out.
-   *
-   * This method normally doesn't have to be used, because the
-   * standard requests (get kit, get pattern, etc...) are covered by
-   * their own methods.
-   **/
-  uint8_t getBlockingStatus(uint8_t type, uint16_t timeout = 3000);
-  /**
-   * Get the given kit of the machinedrum, blocking for an answer.
-   * The sysex message will be stored in the Sysex receive buffer.
-   **/
-  bool getBlockingKit(uint8_t kit, uint16_t timeout = 3000);
-  /**
-   * Get the given pattern of the machinedrum, blocking for an answer.
-   * The sysex message will be stored in the Sysex receive buffer.
-   **/
-  bool getBlockingPattern(uint8_t pattern, uint16_t timeout = 3000);
-  /**
-   * Get the given song of the machinedrum, blocking for an answer.
-   * The sysex message will be stored in the Sysex receive buffer.
-   **/
-  bool getBlockingSong(uint8_t song, uint16_t timeout = 3000);
-  /**
-   * Get the given global of the machinedrum, blocking for an answer.
-   * The sysex message will be stored in the Sysex receive buffer.
-   **/
-  bool getBlockingGlobal(uint8_t global, uint16_t timeout = 3000);
-  /**
-   * Get the current kit of the machinedrum, blocking for an answer.
-   **/
-  uint8_t getCurrentKit(uint16_t timeout = 3000);
-  /**
-   * Get the current pattern of the machinedrum, blocking for an answer.
-   **/
-  uint8_t getCurrentPattern(uint16_t timeout = 3000);
-
-  /* @} */
-  uint8_t getCurrentTrack(uint16_t timeout = 3000);
-
-  uint8_t getCurrentGlobal(uint16_t timeout = 3000);
 
   void get_mute_state();
 
@@ -598,6 +374,8 @@ public:
   void rec_sample(uint8_t pos = 255);
   void send_sample(uint8_t pos = 255);
   void preview_sample(uint8_t pos);
+
+  void setSysexRecPos(uint8_t rec_type, uint8_t position);
 };
 
 /**
@@ -605,6 +383,7 @@ public:
  * minicommand is connected.
  **/
 extern MDClass MD;
+extern const ElektronSysexProtocol md_protocol;
 
 /* @} */
 

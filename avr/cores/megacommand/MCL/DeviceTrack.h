@@ -15,6 +15,7 @@ class ExtTrack;
 class A4Track;
 class MDTrack;
 class MDFXTrack;
+class MNMTrack;
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
   void _dynamik_kast_impl(DeviceTrack *p, klass **pp) {                        \
@@ -38,17 +39,20 @@ private:
   }
   __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255,
                       EMPTY_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE,
+  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE,
                       EXT_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE, MD_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDFXTrack, MDFX_TRACK_TYPE, MDFX_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MNMTrack, MNM_TRACK_TYPE, MNM_TRACK_TYPE)
 
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
   virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0, bool online = false) = 0;
   virtual uint16_t get_track_size() = 0;
+  virtual void* get_sound_data_ptr() = 0;
+  virtual size_t get_sound_data_size() = 0;
   DeviceTrack *init_track_type(uint8_t track_type);
   template <class T> DeviceTrack *init_track_type() {
     T *p;
@@ -67,6 +71,17 @@ public:
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T *as() { return _dynamik_kast<T>(this); }
   ///  downloads from BANK1 to the runtime object
+  DeviceTrack* load_from_mem(uint8_t col, uint8_t track_type) {
+    DEBUG_PRINT_FN();
+    DeviceTrack *that = init_track_type(track_type);
+    if (!that->GridTrack::load_from_mem(col)) {
+      return nullptr;
+    }
+    if (that->active != track_type) {
+      return nullptr;
+    }
+    return that;
+  }
   template <class T> T *load_from_mem(uint8_t col) {
     DEBUG_PRINT_FN();
     DeviceTrack *that = init_track_type<T>();

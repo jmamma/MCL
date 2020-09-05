@@ -12,10 +12,8 @@ void SoundBrowserPage::init() {
 
   DEBUG_PRINT_FN();
   trig_interface.off();
-  char *snd = ".snd";
-  strcpy(match, snd);
-  char *files = "Sounds";
-  strcpy(title, files);
+  strcpy(match, ".snd");
+  strcpy(title, "Sounds");
 
   show_dirs = true;
   show_save = true;
@@ -33,7 +31,7 @@ void SoundBrowserPage::save_sound() {
 
   grid_page.prepare();
   PGM_P tmp;
-  tmp = getMachineNameShort(MD.kit.models[MD.currentTrack], 2);
+  tmp = getMDMachineNameShort(MD.kit.models[MD.currentTrack], 2);
   memcpy(sound_name, MD.kit.name, 4);
   m_strncpy_p(&sound_name[5], tmp, 3);
 

@@ -11,6 +11,7 @@
 #define EXT_TRACK_TYPE 6
 
 #define MDFX_TRACK_TYPE 7
+#define MNM_TRACK_TYPE 8
 
 #define EMPTY_TRACK_TYPE 0
 

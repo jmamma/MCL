@@ -1,7 +1,8 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef ELEKTRON_PATTERN_H__
-#define ELEKTRON_PATTERN_H__
+#pragma once
+
+#include "Elektron.h"
 
 /**
  * \addtogroup Elektron
@@ -20,7 +21,7 @@
  * for both monomachine and machinedrum and allows to write patches
  * working on either kind of pattern.
  **/
-class ElektronPattern {
+class ElektronPattern: public ElektronSysexObject {
 public:
 	uint8_t maxParams;
 	uint8_t maxTracks;
@@ -108,10 +109,6 @@ public:
 	int8_t getNextEmptyLock();
 	/** Reorganize the locks and remove empty locked parameters. **/
 	void cleanupLocks();
-
-	/** Fill the pattern from sysex (machine specific). **/
-	virtual bool fromSysex(uint8_t *sysex, uint16_t len) { return false; }
 	
 };
 
-#endif /* ELEKTRON_PATTERN_H__ */

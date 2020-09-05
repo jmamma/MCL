@@ -91,7 +91,9 @@ public:
   /* @} */
 };
 
-class a4time_t {
+class
+__attribute__((packed))
+a4time_t {
   uint8_t data;
 public:
   a4time_t() {};
@@ -99,7 +101,9 @@ public:
   float decode() { return .0f; }
 };
 
-class a4notelen_t {
+class
+__attribute__((packed))
+a4notelen_t {
   uint8_t data;
 public:
   a4notelen_t() {};
@@ -110,7 +114,9 @@ public:
 /**
  * Two-byte unsigned floating numbers
  **/
-class a4ufloat_t {
+class 
+__attribute__((packed))
+a4ufloat_t {
   uint8_t data[2];
 public:
   a4ufloat_t() {};
@@ -121,7 +127,9 @@ public:
 /**
  * Two-byte signed floating numbers
  **/
-class a4sfloat_t {
+class 
+__attribute__((packed))
+a4sfloat_t {
   uint8_t data[2];
 public:
   a4sfloat_t() {};
@@ -129,8 +137,9 @@ public:
   float decode() { return .0f; }
 };
 
+struct 
 __attribute__((packed))
-struct a4flt_t{
+a4flt_t{
   a4ufloat_t freq;
   uint8_t    res;
   uint8_t    res_pad;
@@ -143,8 +152,9 @@ struct a4flt_t{
 };
 
 // XXX to be studied further
+struct 
 __attribute__((packed))
-struct a4mod_t {
+a4mod_t {
   uint8_t dest1[2];
   int8_t  depth1[2];
   uint8_t dest2[2];
@@ -157,8 +167,9 @@ struct a4mod_t {
   int8_t  depth5[2];
 };
 
+struct 
 __attribute__((packed))
-struct a4sound_t {
+a4sound_t {
   // 0x2b
   int8_t      osc1_tuning;
   int8_t      osc1_fine;
@@ -375,8 +386,9 @@ public:
   uint8_t payload[415 - 10 - 2 - 4 - 1];
 };
 
+class 
 __attribute__((packed))
-class A4Sound {
+A4Sound {
   /**
    * \addtogroup md_sysex_kit
    * @{
@@ -401,17 +413,17 @@ public:
 
   void convert(A4Sound_270* old);
 
-  bool fromSysex_impl(ElektronSysexDecoder &decoder);
+  bool fromSysex_impl(ElektronSysexDecoder *decoder);
   /** Convert the sound object into a sysex buffer to be sent to the
    * AnalogFour. **/
-  void toSysex_impl(ElektronDataToSysexEncoder &encoder);
+  void toSysex_impl(ElektronDataToSysexEncoder *encoder);
   bool fromSysex(MidiClass *midi);
   bool fromSysex(uint8_t *data, uint16_t len);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
   uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   uint16_t toSysex();
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
 };
 
 /**
@@ -425,7 +437,7 @@ public:
 
 // 2679 - 10 /*header/  - 4 /len check/ - 1 /F7 = 2664
 // 398 * 4
-class A4Kit {
+class A4Kit : public ElektronSysexObject {
   /**
    * \addtogroup md_sysex_kit
    * @{
@@ -440,16 +452,14 @@ public:
   // Unknown data strucutre, probably includes CV and FX settings.
   uint8_t payload_end[1034]; // 2664-398*4-38
 
-  /** Read in a kit message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  /** Convert a kit object to a sysex buffer ready to be sent to the A4. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   /**
    * Convert the global object and encode it into a sysex encoder,
    * for example to send directly to the UAR.
    **/
-  uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   /**
    * Swap two machines.

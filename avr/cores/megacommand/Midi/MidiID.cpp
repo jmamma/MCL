@@ -16,32 +16,37 @@ void MidiID::send_id_request(uint8_t id, uint8_t port) {
   }
   uart->sendRaw(data, sizeof(data));
 }
-void MidiID::init() { set_id(DEVICE_NULL); }
+
+void MidiID::init() { 
+  set_id(DEVICE_NULL); 
+  set_name("");
+}
 
 bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   DEBUG_PRINT_FN();
 
   if (port == UART1_PORT) {
-  MidiSysex.addSysexListener(&MidiIDSysexListener);
+    MidiSysex.addSysexListener(&MidiIDSysexListener);
   }
   else {
-  MidiSysex2.addSysexListener(&MidiIDSysexListener);
+    MidiSysex2.addSysexListener(&MidiIDSysexListener);
   }
-  
+
   send_id_request(id, port);
   uint8_t ret = waitForId(timeout);
-   if (port == UART1_PORT) {
-  MidiSysex.removeSysexListener(&MidiIDSysexListener);
+  if (port == UART1_PORT) {
+    MidiSysex.removeSysexListener(&MidiIDSysexListener);
   }
   else {
-  MidiSysex2.removeSysexListener(&MidiIDSysexListener);
+    MidiSysex2.removeSysexListener(&MidiIDSysexListener);
   }
- 
+
   if (id == ret) {
     return true;
   }
   return false;
 }
+
 uint8_t MidiID::waitForId(uint16_t timeout) {
   MidiIDSysexListener.msgType = 255;
   MidiIDSysexListener.isIDMessage = false;
@@ -60,17 +65,11 @@ uint8_t MidiID::waitForId(uint16_t timeout) {
 void MidiID::set_id(uint8_t id) { family_code[0] = id; }
 uint8_t MidiID::get_id() { return family_code[0]; }
 
+void MidiID::set_name(const char* str) {
+  strncpy(name, str, 16);
+  name[sizeof(name)-1] = '\0';
+}
 char *MidiID::get_name(char *str) {
-  switch (family_code[0]) {
-  case DEVICE_MD:
-    m_strncpy(str, "MD", 3);
-    break;
-  case DEVICE_A4:
-    m_strncpy(str, "A4", 3);
-    break;
-  case DEVICE_MIDI:
-    m_strncpy(str, "MIDI DEVICE", 16);
-    break;
-  }
+  strcpy(str, name);
   return str;
 }

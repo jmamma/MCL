@@ -2,8 +2,11 @@
 //#include "MCLSd.h"
 
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
-  Analog4.getBlockingSoundX(tracknumber);
-  sound.fromSysex(Analog4.midi);
+  auto ret = Analog4.getBlockingSoundX(tracknumber);
+  if (ret) {
+    sound.fromSysex(Analog4.midi);
+  }
+  return ret;
 }
 
 bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
@@ -21,11 +24,6 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   // [>analog 4 tracks<]
 #ifdef EXT_TRACKS
   if (online) {
-    if (Analog4.connected) {
-      if (tracknumber != 255) {
-        get_track_from_sysex(tracknumber);
-      }
-    }
     memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
 
     chain.length = mcl_seq.ext_tracks[tracknumber].length;
@@ -56,3 +54,7 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
 //__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
 //__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;
+
+//__SIZE_PROBE<sizeof(MNMClass)> sz_mnm_class;
+//__SIZE_PROBE<sizeof(MDClass)> sz_md_class;
+//__SIZE_PROBE<sizeof(A4Class)> sz_a4_class;

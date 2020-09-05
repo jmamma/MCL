@@ -7,25 +7,33 @@
 #include "MNMMessages.h"
 #include "MNMPattern.h"
 #include "MNMParams.h"
+#include "MNMSysex.h"
 
-class MNMClass {
+class MNMClass: public ElektronDevice {
  public:
   MNMClass();
-  MidiClass *midi = &Midi;
-  uint8_t currentTrack;
-  
-  int currentGlobal;
-  bool loadedGlobal;
+  MidiUartClass2* midiuart;
   MNMGlobal global;
   
-  int currentKit;
-  bool loadedKit;
   MNMKit kit;
+  //MNMPattern pattern;
 
-  int currentPattern;
+  virtual bool probe();
 
-  void sendSysex(uint8_t *bytes, uint8_t cnt);
-  
+  virtual ElektronSysexObject* getKit() { return &kit; }
+  virtual ElektronSysexObject* getPattern() { return nullptr; }
+  virtual ElektronSysexObject* getGlobal() { return &global; }
+  virtual ElektronSysexListenerClass* getSysexListener() { return &MNMSysexListener; }
+
+  virtual void updateKitParams();
+  virtual uint16_t sendKitParams(uint8_t* mask, void*);
+  virtual PGM_P getMachineName(uint8_t machine);
+
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) { 
+    // TODO MNM does not get the pattern but reports success.
+    return true; 
+  }
+
   void sendMultiTrigNoteOn(uint8_t note, uint8_t velocity);
   void sendMultiTrigNoteOff(uint8_t note);
   void sendMultiMapNoteOn(uint8_t note, uint8_t velocity);
@@ -88,11 +96,6 @@ class MNMClass {
   
   bool parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *param);
 
-  void setStatus(uint8_t id, uint8_t value);
-
-  void loadGlobal(uint8_t id);
-  void loadKit(uint8_t id);
-  void loadPattern(uint8_t id);
   void loadSong(uint8_t id);
 
   void setSequencerMode(bool songMode);
@@ -100,15 +103,6 @@ class MNMClass {
   void setSequencerModeMode(bool midiMode);
   void setAudioTrack(uint8_t track);
   void setMidiTrack(uint8_t track);
-
-  void setCurrentKitName(char *name);
-  void saveCurrentKit(uint8_t id);
-
-  void sendRequest(uint8_t type, uint8_t param);
-  void requestKit(uint8_t kit);
-  void requestPattern(uint8_t pattern);
-  void requestSong(uint8_t song);
-  void requestGlobal(uint8_t global);
 
   void assignMachine(uint8_t model, bool initAll = false, bool initSynth = false) {
     assignMachine(currentTrack, model, initAll, initSynth);
@@ -143,7 +137,6 @@ class MNMClass {
     setAutoMute(false);
   }
   
-  PGM_P getMachineName(uint8_t machine);
   PGM_P getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 
@@ -161,13 +154,10 @@ class MNMClass {
     }
   }
   void revertToTrack(uint8_t track, bool reloadKit = false);
-
-  uint8_t getBlockingStatus(uint8_t type, uint16_t timeout = 1000);
-  uint8_t getCurrentTrack(uint16_t timeout = 1000);
-  uint8_t getCurrentKit(uint16_t timeout = 1000);
 };
 
 extern MNMClass MNM;
+extern const ElektronSysexProtocol mnm_protocol;
 
 #include "MNMSysex.h"
 

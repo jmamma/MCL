@@ -15,8 +15,8 @@ void SeqStepPage::config() {
     seq_param4.max = 1;
   }
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -45,7 +45,7 @@ void SeqStepPage::init() {
   DEBUG_PRINTLN("init seqstep");
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
-  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT)->id;
 
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
@@ -72,8 +72,8 @@ void SeqStepPage::display() {
   GUI.setLine(GUI.LINE1);
   GUI.put_string_at(0, "                ");
   GUI.put_value_at1(15, page_select + 1);
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   char c[3] = "--";
   uint8_t cond = seq_param1.getValue();
@@ -250,7 +250,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t trackid = event->source - 128;
     uint8_t step = trackid + (page_select * 16);

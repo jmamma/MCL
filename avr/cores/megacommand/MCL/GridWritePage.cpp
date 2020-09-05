@@ -139,10 +139,12 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
         oled_display.textbox("CHAIN SLOTS", "");
         oled_display.display();
 #endif
+        /// !Note, note_off_event has reentry issues, so we have to first set the page
+        /// to avoid driving this code path again.
+        GUI.setPage(&grid_page);
         trig_interface.off();
         mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
       }
-      GUI.setPage(&grid_page);
       curpage = 0;
     }
 
@@ -169,8 +171,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     }
 #endif
     mcl_actions.write_original = 1;
-    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
     GUI.setPage(&grid_page);
+    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
     curpage = 0;
     return true;
   }

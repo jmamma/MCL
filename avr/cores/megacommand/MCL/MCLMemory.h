@@ -20,19 +20,21 @@ constexpr size_t NUM_MD_TRACKS = 16;
 #ifdef EXT_TRACKS
 constexpr size_t NUM_A4_TRACKS = 6;
 constexpr size_t NUM_A4_SOUND_TRACKS = 4;
+constexpr size_t NUM_MNM_TRACKS = 6;
+constexpr size_t NUM_EXT_TRACKS = 6;
 #else
 #pragma message("EXT TRACKS DISABLED")
 constexpr size_t NUM_A4_TRACKS = 0;
 constexpr size_t NUM_A4_SOUND_TRACKS = 0;
+constexpr size_t NUM_MNM_TRACKS = 0;
+constexpr size_t NUM_EXT_TRACKS = 0;
 #endif
 
 constexpr size_t NUM_FX_TRACKS = 1;
 constexpr size_t MDFX_TRACK_NUM = 15; //position of MDFX track in grid
 
-constexpr size_t NUM_EXT_TRACKS = NUM_A4_TRACKS;
-
 constexpr size_t NUM_LFO_TRACKS = 2;
-constexpr size_t NUM_TRACKS = (NUM_MD_TRACKS + NUM_A4_TRACKS);
+constexpr size_t NUM_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 constexpr size_t NUM_FILE_ENTRIES = 256;
 
 // as of commit 9dbaa09a6ff92d21b6b3e40d56264013b1e31b5b

@@ -4,8 +4,8 @@ void SeqRlckPage::setup() { SeqPage::setup(); }
 
 void SeqRlckPage::config() {
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -64,8 +64,8 @@ void SeqRlckPage::display() {
 
   GUI.put_string_at(0, "RLCK");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
   if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);

@@ -42,15 +42,14 @@ public:
   bool throttle;
   uint8_t throttle_mod12;
 
-  ElektronDataToSysexEncoder(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
-                                               uint16_t _sysexLen = 0)) {
-    init(DATA_ENCODER_INIT(_sysex, _sysexLen));
+  ElektronDataToSysexEncoder(uint8_t *_sysex = nullptr) {
+    init(_sysex);
     throttle = false;
     throttle_mod12 = 255;
   }
 
   ElektronDataToSysexEncoder(MidiUartParent *_uart) {
-    init(DATA_ENCODER_INIT(NULL, 0), _uart);
+    init(0, _uart);
     throttle = false;
     throttle_mod12 = 255;
   }
@@ -80,10 +79,9 @@ public:
   /** Finish the current conversion and flush remaining data. **/
   virtual uint16_t finish();
 
-  virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex = NULL,
-                                      uint16_t _sysexLen = 0),
-                    MidiUartParent *_uart = NULL);
+  virtual void init(uint8_t *_sysex = nullptr, MidiUartParent *_uart = nullptr);
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
+
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
 };
 
@@ -106,16 +104,16 @@ protected:
 
 public:
   ElektronSysexToDataEncoder(uint8_t *_sysex = NULL, uint16_t _sysexLen = 0) {
-    init(DATA_ENCODER_INIT(_sysex, _sysexLen));
+    init(_sysex);
   }
 
-  ElektronSysexToDataEncoder(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen = 0) {
-    init(DATA_ENCODER_INIT(_midi, _offset, _sysexLen));
+  ElektronSysexToDataEncoder(MidiClass *_midi, uint16_t _offset) {
+    init(_midi, _offset);
   }
 
 
-  virtual void init(DATA_ENCODER_INIT(uint8_t *_sysex, uint16_t _sysexLen));
-  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _sysexLen));
+  virtual void init(uint8_t *_sysex);
+  virtual void init(MidiClass *_midi, uint16_t _offset);
 
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
   DATA_ENCODER_RETURN_TYPE unpack8Bit();
@@ -138,14 +136,12 @@ class ElektronSysexDecoder : public DataDecoder {
   bool in7Bit;
 
 public:
-  ElektronSysexDecoder(DATA_ENCODER_INIT(uint8_t *_data = NULL,
-                        uint16_t _maxLen = 0)) {
-    init(DATA_ENCODER_INIT(_data, _maxLen));
+  ElektronSysexDecoder(uint8_t *_data = nullptr) {
+    init(_data);
   }
 
-  ElektronSysexDecoder(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset = NULL,
-                                         uint16_t _maxLen = 0)) {
-    init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+  ElektronSysexDecoder(MidiClass *_midi, uint16_t _offset) {
+    init(_midi, _offset);
   }
 
   /** Start the decoding of 7-bit data. **/
@@ -157,8 +153,8 @@ public:
   /** Stop the decoding of 7-bit data. **/
   void stop7Bit() { in7Bit = false; }
 
-  virtual void init(DATA_ENCODER_INIT(MidiClass *_midi, uint16_t _offset, uint16_t _maxLen));
-  virtual void init(DATA_ENCODER_INIT(uint8_t *_data, uint16_t _maxLen));
+  virtual void init(MidiClass *_midi, uint16_t _offset);
+  virtual void init(uint8_t *_data);
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 };
 

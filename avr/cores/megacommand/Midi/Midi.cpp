@@ -19,14 +19,10 @@ const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {MIDI_TUNE_REQUEST, midi_wait_status},
                                    {0, midi_ignore_message}};
 
-MidiClass::MidiClass(MidiUartParent *_uart, uint8_t *_sysexBuf,
-                     uint16_t _sysexBufLen, volatile uint8_t *ptr)
-    : midiSysex(_sysexBuf, _sysexBufLen, ptr) {
-  sysexBuf = _sysexBuf;
-  sysexBufLen = _sysexBufLen;
+MidiClass::MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr)
+    : midiSysex(_uart, _sysexBufLen, ptr) {
   midiActive = true;
   uart = _uart;
-  midiSysex.uart = _uart;
   receiveChannel = 0xFF;
   init();
 }

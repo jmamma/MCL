@@ -72,7 +72,7 @@ void MidiSDSClass::cancel() {
   state = SDS_READY;
 }
 
-bool MidiSDSClass::sendWav(char *filename, uint16_t sample_number,
+bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
                            uint32_t loop_end, bool handshake) {
   if (state != SDS_READY) {

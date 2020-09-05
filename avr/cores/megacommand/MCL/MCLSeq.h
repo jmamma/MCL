@@ -35,20 +35,20 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
-  uint8_t num_md_tracks = NUM_MD_TRACKS;
+  static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
-  uint8_t num_ext_tracks = NUM_EXT_TRACKS;
+  static constexpr uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 
 #ifdef LFO_TRACKS
   LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
-  uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
+  static constexpr uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
 
-  SeqTrack *seq_tracks[NUM_MD_TRACKS + NUM_EXT_TRACKS];
+  SeqTrack *seq_tracks[NUM_TRACKS];
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -58,6 +58,9 @@ public:
   void disable();
 
   void add_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
+    if (type != MD_TRACK_TYPE) {
+      track_number += NUM_MD_TRACKS;
+    }
     seq_tracks[track_number] = tp;
     seq_tracks[track_number]->active = type;
   }

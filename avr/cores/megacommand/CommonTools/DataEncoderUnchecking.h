@@ -22,10 +22,10 @@
 #define DATA_ENCODER_FALSE() return
 
 //Required for Macro argument overloading
-#define GET_MACRO(_1,_2,_3,NAME,...) NAME
-#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
-#define DATA_ENCODER_INIT2(data, length) data
-#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
+//#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+//#define DATA_ENCODER_INIT(...) GET_MACRO(__VA_ARGS__, DATA_ENCODER_INIT3, DATA_ENCODER_INIT2)(__VA_ARGS__)
+//#define DATA_ENCODER_INIT2(data, length) data
+//#define DATA_ENCODER_INIT3(midi, offset, length) midi, offset
 
 #define DATA_ENCODER_UNCHECKING 1
 
@@ -87,8 +87,8 @@ public:
 		return ptr - data;
 	}
 		
-  virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb) {
-  }
+  // An actual encoder implement this to provide encoding capabilities.
+  virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb) = 0;
 
 	DATA_ENCODER_RETURN_TYPE fill8(uint8_t inb, uint16_t cnt) {
 		for (uint16_t i = 0; i < cnt; i++) {
@@ -167,28 +167,31 @@ class DataDecoder {
 	 * @{
 	 **/
 public:
-    uint8_t *data;
-    uint8_t *ptr;
+  uint8_t *data;
+  uint8_t *ptr;
 
-    uint16_t n;
-    uint16_t offset;
+  uint16_t n;
+  uint16_t offset;
 
-    MidiClass *midi;
+  MidiClass *midi;
 
-    DataDecoder() {
-	}
+  DataDecoder() {
+  }
 
-	virtual void init(uint8_t *_data) {
-        data = _data;
-        ptr = data;
-    }
+  virtual void init(uint8_t *_data) {
+    data = _data;
+    ptr = data;
+  }
 
-    virtual void init(MidiClass *_midi, uint16_t _offset) {
-		offset = _offset;
-		n = offset;
-        midi = _midi;
-        data = ptr = NULL;
-	}
+  virtual void init(MidiClass *_midi, uint16_t _offset) {
+    offset = _offset;
+    n = offset;
+    midi = _midi;
+    data = ptr = NULL;
+  }
+
+  // An actual decoder overrides this to provide decoding capabilities.
+	virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c) = 0;
 
 	uint16_t getIdx() {
 		return ptr - data;
@@ -200,9 +203,6 @@ public:
 		*b = c;
 	}
 		
-	virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c) {
-	}
-
 	virtual DATA_ENCODER_RETURN_TYPE skip8() {
 		uint8_t b;
 		get8(&b);
@@ -220,6 +220,7 @@ public:
 		get8(&b2);
 		*c = (((uint16_t)b1) << 8) | b2;
 	}
+
 	DATA_ENCODER_RETURN_TYPE get32(uint32_t *c) {
 		uint16_t b1, b2;
 		get16(&b1);
@@ -232,21 +233,25 @@ public:
 			get32(&c[i]);
 		}
 	}
+
 	DATA_ENCODER_RETURN_TYPE get32(uint64_t *c) {
 		uint32_t c2;
 		get32(&c2);
 		*c = c2;
 	}
+
 	DATA_ENCODER_RETURN_TYPE get32(uint64_t *c, uint16_t cnt) {
 		for (uint16_t i = 0; i < cnt; i++) {
 			get32(&c[i]);
 		}
 	}
+
 	DATA_ENCODER_RETURN_TYPE get32hi(uint64_t *c) {
 		uint32_t c2;
 		get32(&c2);
 		*c |= ((uint64_t)c2) << 32;
 	}
+
 	DATA_ENCODER_RETURN_TYPE get32hi(uint64_t *c, uint16_t cnt) {
 		for (uint16_t i = 0; i < cnt; i++) {
 			get32hi(&c[i]);

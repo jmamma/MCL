@@ -13,7 +13,7 @@ bool Wav::close(bool write) {
   headerRead = false;
   return file.close();
 }
-bool Wav::open(char *file_name, bool overwrite, uint16_t numChannels,
+bool Wav::open(const char *file_name, bool overwrite, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate) {
   DEBUG_PRINT_FN();
   bool ret;

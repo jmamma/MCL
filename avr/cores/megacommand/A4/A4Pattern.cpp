@@ -1,12 +1,4 @@
-
-#include "A4.h"
-#include "A4Pattern.h"
-#include "Elektron.h"
-#include "A4Messages.h"
-#include "helpers.h"
-#include "A4Params.h"
-#include "GUI.h"
-
+#include "MCL_impl.h"
 #ifdef HOST_MIDIDUINO
 #include <stdio.h>
 #endif
@@ -17,7 +9,7 @@ bool A4Pattern::fromSysex(uint8_t *data, uint16_t len) {
 	
 	if ((len != (0xACA - 6)) && (len != (0x1521 - 6)))  {
 #ifndef HOST_MIDIDUINO
-		GUI.flash_string_fill("WRONG LENGTH");
+    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
 #else
 		printf("WRONG LENGTH: %x\n", len);
 #endif

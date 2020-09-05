@@ -5,8 +5,8 @@ void SeqRtrkPage::setup() { SeqPage::setup(); }
 void SeqRtrkPage::config() {
 
   // config info labels
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -54,8 +54,8 @@ void SeqRtrkPage::display() {
 
   GUI.put_string_at(0, "RTRK");
 
-  const char *str1 = getMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
   if (SeqPage::midi_device == DEVICE_MD) {
     GUI.put_p_string_at(9, str1);
     GUI.put_p_string_at(11, str2);
@@ -111,7 +111,7 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t track = event->source - 128;
     midi_device = device;

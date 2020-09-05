@@ -19,6 +19,9 @@ public:
     GridTrack::store_in_grid(column, row);
   }
 
+  virtual void* get_sound_data_ptr() { return nullptr; }
+  virtual size_t get_sound_data_size() { return 0; }
+
   /*
   bool get_track_from_sysex(int tracknumber, uint8_t column);
   void place_track_in_sysex(int tracknumber, uint8_t column);

@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include "MNMDataEncoder.h"
+#include "Elektron.h"
 
 /*
 class MNMMidiMap {
@@ -16,7 +17,7 @@ public:
 };
 */
 
-class MNMGlobal {
+class MNMGlobal : public ElektronSysexObject {
 public:
   uint8_t origPosition;
 
@@ -33,15 +34,15 @@ public:
   bool ctrlIn;
   bool ctrlOut;
 
-  bool transportIn;
-  bool sequencerOut;
-  bool arpOut;
+  uint8_t transportIn;
+  uint8_t sequencerOut;
+  uint8_t arpOut;
 
-  bool transportOut;
+  uint8_t transportOut;
   
-  bool keyboardOut;
-  bool midiClockOut;
-  bool pgmChangeOut;
+  uint8_t keyboardOut;
+  uint8_t midiClockOut;
+  uint8_t pgmChangeOut;
 
   uint8_t note; /* not used */
   uint8_t gate; /* not used */
@@ -64,17 +65,20 @@ public:
 
   uint8_t globalRouting;
 	bool pgmChangeIn;
-	uint8_t unused[5];
+	uint8_t unused[6];
 
   uint32_t baseFreq;
 
   MNMGlobal() {
   }
 
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 class MNMTrackModifier {
@@ -115,10 +119,10 @@ public:
   MNMTrackModifier modifier;
 };
 
-class MNMKit {
+class MNMKit: public ElektronSysexObject {
 public:
   uint8_t origPosition;
-  char name[17];
+  char name[12];
 	uint8_t levels[6];
 	uint8_t parameters[6][72];
 	uint8_t models[6];
@@ -151,10 +155,13 @@ public:
   MNMKit() {
   }
   
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 class MNMRow {
@@ -173,19 +180,22 @@ public:
   uint16_t tempo;
 };
 
-class MNMSong {
+class MNMSong: public ElektronSysexObject {
 public:
-  uint8_t origposition;
+  uint8_t origPosition;
   char name[17];
   MNMRow rows[200];
 
   MNMSong() {
   }
   
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(MNMDataToSysexEncoder &encoder);
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
 

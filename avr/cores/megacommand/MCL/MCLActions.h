@@ -59,8 +59,6 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void md_setsysex_recpos(uint8_t rec_type, uint8_t position);
-
   void store_tracks_in_mem(int column, int row, uint8_t merge);
 
   void write_tracks(int column, int row);

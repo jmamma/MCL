@@ -1,10 +1,4 @@
-#include "MD.h"
-#include "WProgram.h"
-#include "helpers.h"
-
-#include "MidiUartParent.h"
-
-#define SYSEX_RETRIES 1
+#include "MCL_impl.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -87,6 +81,110 @@ void MDMidiEvents::disable_live_kit_update() {
 
 uint8_t machinedrum_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x02, 0x00};
 
+const ElektronSysexProtocol md_protocol = {
+  machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr),
+  MD_KIT_REQUEST_ID, 
+  MD_PATTERN_REQUEST_ID, 
+  MD_SONG_REQUEST_ID, 
+  MD_GLOBAL_REQUEST_ID,
+  MD_STATUS_REQUEST_ID,
+
+  MD_CURRENT_TRACK_REQUEST,
+  MD_CURRENT_KIT_REQUEST,
+  MD_CURRENT_PATTERN_REQUEST,
+  MD_CURRENT_SONG_REQUEST,
+  MD_CURRENT_GLOBAL_SLOT_REQUEST,
+
+  MD_SET_STATUS_ID,
+  MD_SET_TEMPO_ID,
+  MD_SET_CURRENT_KIT_NAME_ID, 16,
+
+  MD_LOAD_GLOBAL_ID,
+  MD_LOAD_PATTERN_ID,
+  MD_LOAD_KIT_ID,
+
+  MD_SAVE_KIT_ID,
+};
+
+MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE, NUM_MD_TRACKS, md_protocol)
+{
+  uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
+                                     50, 52, 53, 55, 57, 59, 60, 62};
+
+  global.baseChannel = 0;
+  for (int i = 0; i < 16; i++) {
+    global.drumMapping[i] = standardDrumMapping[i];
+  }
+}
+
+bool MDClass::probe() {
+  DEBUG_PRINT_FN();
+
+  bool ts = md_track_select.state;
+  bool ti = trig_interface.state;
+
+  if (ts) {
+    md_track_select.off();
+  }
+  if (ti) {
+    trig_interface.off();
+  }
+
+  // Hack to prevent unnecessary delay on MC boot
+  connected = false;
+
+  if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
+    mcl_gui.delay_progress(4600);
+  }
+
+  // Begin main probe sequence
+  if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
+    DEBUG_PRINTLN("Midi ID: success");
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
+    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
+    // calculated before proceeding.
+
+    mcl_gui.delay_progress(400);
+    md_exploit.send_globals();
+    getCurrentTrack(CALLBACK_TIMEOUT);
+    for (uint8_t x = 0; x < 2; x++) {
+      for (uint8_t y = 0; y < 16; y++) {
+        mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+        setStatus(0x22, y);
+      }
+    }
+    setStatus(0x22, currentTrack);
+    connected = true;
+    setGlobal(7);
+    global.baseChannel = 9;
+    if (!get_fw_caps()) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      oled_display.display();
+#else
+      gfx.display_text("UPGRADE", "MACHINEDRUM");
+#endif
+      while (1)
+        ;
+    }
+    getBlockingKit(0xF7);
+  }
+
+  if (connected == false) {
+    DEBUG_PRINTLN("delay");
+    mcl_gui.delay_progress(250);
+  }
+
+  if (ts) {
+    md_track_select.on();
+  }
+  if (ti) {
+    trig_interface.on();
+  }
+
+  return connected;
+}
+
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
   uint8_t i;
   if (MD.loadedGlobal) {
@@ -98,20 +196,6 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
   } else {
     return 128;
   }
-}
-
-MDClass::MDClass() {
-  uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
-                                     50, 52, 53, 55, 57, 59, 60, 62};
-
-  currentGlobal = -1;
-  currentKit = -1;
-  currentPattern = -1;
-  global.baseChannel = 0;
-  for (int i = 0; i < 16; i++) {
-    global.drumMapping[i] = standardDrumMapping[i];
-  }
-  loadedKit = loadedGlobal = false;
 }
 
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
@@ -140,79 +224,6 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
   } else {
     *track = 255;
   }
-}
-
-void MDClass::sendRequest(uint8_t *data, uint8_t len) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  MidiUart.sendRaw(data, len);
-  MidiUart.m_putc(0xF7);
-  CLEAR_LOCK();
-}
-
-void MDClass::sendRequest(uint8_t type, uint8_t param) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  MidiUart.m_putc(type);
-  MidiUart.m_putc(param);
-  MidiUart.m_putc(0xF7);
-  CLEAR_LOCK();
-}
-
-bool MDClass::get_fw_caps() {
-  uint8_t cb_type = 255;
-
-  uint8_t data[2] = {0x70, 0x30};
-  sendRequest(data, sizeof(data));
-
-  uint8_t msgType = waitBlocking();
-
-  ((uint8_t *)&(fw_caps))[0] = 0;
-  ((uint8_t *)&(fw_caps))[1] = 1;
-
-  if (msgType == 0x72) {
-    if (MDSysexListener.sysex->getByte(1) == 0x30) {
-      ((uint8_t *)&(fw_caps))[0] = MDSysexListener.sysex->getByte(2);
-      ((uint8_t *)&(fw_caps))[1] = MDSysexListener.sysex->getByte(3);
-    }
-  return true;
-  }
-  return false;
-}
-
-void MDClass::activate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x01};
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::deactivate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x00};
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::activate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x01};
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::deactivate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x00};
-  sendRequest(data, sizeof(data));
-}
-
-void MDClass::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
-  uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
-  // trigleds[0..6]
-  data[2] = bitmask & 0x7F;
-  // trigleds[7..13]
-  data[3] = (bitmask >> 7) & 0x7F;
-  // trigleds[14..15]
-  data[4] = (bitmask >> 14) | (mode << 2);
-  sendRequest(data, sizeof(data));
 }
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
@@ -249,18 +260,6 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param,
   MidiUart.sendCC(channel + global.baseChannel, cc, value);
 }
 
-//  0x5E, 0x5D, 0x5F, 0x60
-
-void MDClass::sendSysex(uint8_t *bytes, uint8_t cnt) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  MidiUart.sendRaw(bytes, cnt);
-  MidiUart.m_putc(0xf7);
-  CLEAR_LOCK();
-}
-
 void MDClass::setSampleName(uint8_t slot, char *name) {
   uint8_t data[6];
   data[0] = MD_SAMPLE_NAME_ID;
@@ -269,12 +268,12 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   data[3] = 0x7F & name[1];
   data[4] = 0x7F & name[2];
   data[5] = 0x7F & name[3];
-  sendSysex(data, 6);
+  sendRequest(data, 6);
 }
 
 void MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type) {
   uint8_t data[3] = {type, param, value};
-  MD.sendSysex(data, 3);
+  sendRequest(data, 3);
 }
 
 void MDClass::setEchoParam(uint8_t param, uint8_t value) {
@@ -387,8 +386,8 @@ bool MDClass::isMelodicTrack(uint8_t track) {
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
-  uint8_t data[3] = {0x62, track << 3 | param, value};
-  MD.sendSysex(data, countof(data));
+  uint8_t data[3] = {0x62, (uint8_t)(track << 3 | param), value};
+  sendRequest(data, countof(data));
 }
 
 void MDClass::setLFO(uint8_t track, MDLFO *lfo, bool extra) {
@@ -406,53 +405,27 @@ void MDClass::setLFO(uint8_t track, MDLFO *lfo, bool extra) {
 
 void MDClass::mapMidiNote(uint8_t pitch, uint8_t track) {
   uint8_t data[3] = {0x5a, pitch, track};
-  MD.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MDClass::resetMidiMap() {
   uint8_t data[1] = {0x64};
-  MD.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MDClass::setTrackRouting(uint8_t track, uint8_t output) {
   uint8_t data[3] = {0x5c, track, output};
-  MD.sendSysex(data, countof(data));
-}
-
-void MDClass::setTempo(uint16_t tempo) {
-  uint8_t data[3] = {0x61, tempo >> 7, tempo & 0x7F};
-  MD.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MDClass::setTrigGroup(uint8_t srcTrack, uint8_t trigTrack) {
   uint8_t data[3] = {0x65, srcTrack, trigTrack};
-  MD.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
   uint8_t data[3] = {0x66, srcTrack, muteTrack};
-  MD.sendSysex(data, countof(data));
-}
-
-void MDClass::setKitName(char *name) {
-  USE_LOCK();
-  SET_LOCK();
-  MidiUart.m_putc(0xF0);
-  MidiUart.sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  MidiUart.sendRaw(0x55);
-  uint8_t buf[8];
-  uint8_t send_limit = 8;
-  uint8_t n = 0;
-  for (uint8_t i = 0; i < 16; i++) {
-    MidiUart.sendRaw(name[i] & 0x7F);
-  }
-  MidiUart.m_putc(0xf7);
-  CLEAR_LOCK();
-}
-
-void MDClass::saveCurrentKit(uint8_t pos) {
-  uint8_t data[2] = {0x59, pos & 0x7F};
-  MD.sendSysex(data, countof(data));
+  sendRequest(data, countof(data));
 }
 
 void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
@@ -469,7 +442,7 @@ void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
     data[2] = model;
     data[3] = 0x00;
   }
-  MD.sendSysex(data, send_length);
+  sendRequest(data, send_length);
 }
 
 void MDClass::setMachine(uint8_t track, MDKit *kit) {
@@ -517,22 +490,10 @@ void MDClass::muteTrack(uint8_t track, bool mute) {
   MidiUart.sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
 }
 
-void MDClass::setStatus(uint8_t id, uint8_t value) {
-
-  uint8_t data[] = {0x71, id & 0x7F, value & 0x7F};
-  MD.sendSysex(data, countof(data));
-}
-
 void MDClass::setGlobal(uint8_t id) {
-  uint8_t data[] = {0x56, (uint8_t)id & 0x7F};
-  MD.sendSysex(data, countof(data));
+  uint8_t data[] = {0x56, (uint8_t)(id & 0x7F)};
+  sendRequest(data, countof(data));
 }
-
-void MDClass::loadGlobal(uint8_t id) { setStatus(1, id); }
-
-void MDClass::loadKit(uint8_t kit) { setStatus(2, kit); }
-
-void MDClass::loadPattern(uint8_t pattern) { setStatus(4, pattern); }
 
 void MDClass::loadSong(uint8_t song) { setStatus(8, song); }
 
@@ -550,20 +511,6 @@ void MDClass::getPatternName(uint8_t pattern, char str[5]) {
   str[4] = 0;
 }
 
-void MDClass::requestKit(uint8_t kit) { sendRequest(MD_KIT_REQUEST_ID, kit); }
-
-void MDClass::requestPattern(uint8_t pattern) {
-  sendRequest(MD_PATTERN_REQUEST_ID, pattern);
-}
-
-void MDClass::requestSong(uint8_t song) {
-  sendRequest(MD_SONG_REQUEST_ID, song);
-}
-
-void MDClass::requestGlobal(uint8_t global) {
-  sendRequest(MD_GLOBAL_REQUEST_ID, global);
-}
-
 bool MDClass::checkParamSettings() {
   if (loadedGlobal) {
     return (MD.global.baseChannel <= 12);
@@ -576,159 +523,8 @@ bool MDClass::checkTriggerSettings() { return false; }
 
 bool MDClass::checkClockSettings() { return false; }
 
-uint8_t MDClass::waitBlocking(uint16_t timeout) {
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  // init MDSysexListener Class
-  //
-  MDSysexListener.start();
-  uint8_t msgtype = 255;
-  do {
-    current_clock = read_slowclock();
-
-    // MCl Code, trying to replicate main loop
-
-    //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-    //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    //     MidiClock.updateClockInterval();
-    //   }
-    handleIncomingMidi();
-    //    GUI.display();
-  } while ((clock_diff(start_clock, current_clock) < timeout) &&
-           (MDSysexListener.msgType == 255));
-  return MDSysexListener.msgType;
-}
-
-bool MDClass::waitBlocking(MDBlockCurrentStatusCallback *cb, uint16_t timeout) {
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
-  do {
-    current_clock = read_slowclock();
-
-    // MCl Code, trying to replicate main loop
-
-    //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-    //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-    //     MidiClock.updateClockInterval();
-    //   }
-    handleIncomingMidi();
-    //    GUI.display();
-  } while ((clock_diff(start_clock, current_clock) < timeout) && !cb->received);
-  connected = cb->received;
-  return cb->received;
-}
-
 // Perform checks on current sysex buffer to see if it Sysex.
 //
-
-uint8_t MDClass::getBlockingStatus(uint8_t type, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb(type);
-
-  MDSysexListener.addOnStatusResponseCallback(
-      &cb, (md_status_callback_ptr_t)&MDBlockCurrentStatusCallback::
-               onStatusResponseCallback);
-  MD.sendRequest(MD_STATUS_REQUEST_ID, type);
-
-  bool ret = waitBlocking(&cb, timeout);
-
-  MDSysexListener.removeOnStatusResponseCallback(&cb);
-
-  return cb.value;
-}
-
-bool MDClass::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    MDSysexListener.addOnKitMessageCallback(
-        &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-    MD.requestKit(kit);
-    bool ret = waitBlocking(&cb, timeout);
-    MDSysexListener.removeOnKitMessageCallback(&cb);
-    if (ret) {
-      if (MD.kit.fromSysex(midi)) {
-        return true;
-      }
-    }
-    count--;
-  }
-  return false;
-}
-
-bool MDClass::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    MDSysexListener.addOnPatternMessageCallback(
-        &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-    MD.requestPattern(pattern);
-    bool ret = waitBlocking(&cb, timeout);
-    MDSysexListener.removeOnPatternMessageCallback(&cb);
-    if (ret) {
-      if (MD.pattern.fromSysex(midi)) {
-        return true;
-      }
-    }
-    count--;
-  }
-  return false;
-}
-
-bool MDClass::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  MDBlockCurrentStatusCallback cb;
-  MDSysexListener.addOnGlobalMessageCallback(
-      &cb, (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-  MD.requestGlobal(global);
-  bool ret = waitBlocking(&cb, timeout);
-  MDSysexListener.removeOnGlobalMessageCallback(&cb);
-
-  return ret;
-}
-
-uint8_t MDClass::getCurrentTrack(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(0x22, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MD.currentTrack = value;
-    return value;
-  }
-}
-uint8_t MDClass::getCurrentKit(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(MD_CURRENT_KIT_REQUEST, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MD.currentKit = value;
-    return value;
-  }
-}
-
-uint8_t MDClass::getCurrentPattern(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(MD_CURRENT_PATTERN_REQUEST, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MD.currentPattern = value;
-    return value;
-  }
-}
-
-uint8_t MDClass::getCurrentGlobal(uint16_t timeout) {
-  uint8_t value = getBlockingStatus(MD_CURRENT_GLOBAL_SLOT_REQUEST, timeout);
-  if (value == 255) {
-    return 255;
-  } else {
-    MD.currentGlobal = value;
-    return value;
-  }
-}
 
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   USE_LOCK();
@@ -1035,6 +831,33 @@ void MDClass::send_sample(uint8_t pos) {
     tap_down_arrow(pos - 1);
     press_yes_button();
   }
+}
+
+void MDClass::setSysexRecPos(uint8_t rec_type, uint8_t position) {
+  DEBUG_PRINT_FN();
+
+  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position, (uint8_t)1 & 0x7f};
+  sendRequest(data, countof(data));
+}
+
+void MDClass::updateKitParams() {
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_kit_params();
+  }
+}
+
+uint16_t MDClass::sendKitParams(uint8_t *masks, void* scratchpad) {
+  /// Ignores masks and scratchpad, and send the whole kit.
+  MD.kit.origPosition = 0x7F;
+  // md_setsysex_recpos(4, MD.kit.origPosition);
+  MD.kit.toSysex();
+  //  mcl_seq.disable();
+  // md_set_kit(&MD.kit);
+  uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
+  md_latency_ms += 10;
+  DEBUG_DUMP(md_latency_ms);
+
+  return md_latency_ms;
 }
 
 MDClass MD;

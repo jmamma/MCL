@@ -1,8 +1,6 @@
-#ifndef MNM_PARAMS_H__
-#define MNM_PARAMS_H__
+#pragma once
 
-class MNMCallback {
-};
+#include "Elektron.h"
 
 extern uint8_t monomachine_sysex_hdr[5];
 
@@ -351,4 +349,5 @@ extern uint8_t monomachine_sysex_hdr[5];
 #define MNM_MODEL_LFO3_INTL 0x36
 #define MNM_MODEL_LFO3_DPTH 0x37
 
-#endif /* MNM_PARAMS_H__ */
+extern short_machine_name_t const mnm_machine_names_short[] PROGMEM;
+extern PGM_P getMNMMachineNameShort(uint8_t machine, uint8_t type);

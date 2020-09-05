@@ -169,41 +169,41 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  if (midi_active_peering.get_device(UART1_PORT) == note_interface.uart1_device) {
+  if (midi_active_peering.get_device(UART1_PORT)->id == note_interface.uart1_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.get_device(UART1_PORT));
+      msg[1], midi_active_peering.get_device(UART1_PORT)->id);
   note_interface.note_on_event(note_num, UART1_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT)->id != note_interface.uart2_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.get_device(UART2_PORT));
+      msg[1], midi_active_peering.get_device(UART2_PORT)->id);
   DEBUG_PRINTLN(note_num);
   note_interface.note_on_event(note_num, UART2_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   // MD input is handled by the NoteInterface object
-  if (midi_active_peering.get_device(UART1_PORT) == note_interface.uart1_device) {
+  if (midi_active_peering.get_device(UART1_PORT)->id == note_interface.uart1_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.get_device(UART1_PORT));
+      msg[1], midi_active_peering.get_device(UART1_PORT)->id);
   note_interface.note_off_event(note_num, UART1_PORT);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART2_PORT) != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT)->id != note_interface.uart2_device) {
     return;
   }
 
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], midi_active_peering.get_device(UART2_PORT));
+      msg[1], midi_active_peering.get_device(UART2_PORT)->id);
   DEBUG_PRINTLN("note to track");
   DEBUG_PRINTLN(note_num);
   note_interface.note_off_event(note_num, UART2_PORT);

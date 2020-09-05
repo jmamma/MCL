@@ -83,7 +83,6 @@ public:
   void place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels = true);
   void load_seq_data(uint8_t tracknumber);
   void get_machine_from_kit(uint8_t tracknumber);
-  bool get_track_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
   void place_track_in_sysex(uint8_t tracknumber);
 
@@ -120,6 +119,9 @@ public:
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
   virtual uint8_t get_model() { return machine.model; }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
+
+  virtual void* get_sound_data_ptr() { return &machine; }
+  virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
 };
 
 #endif /* MDTRACK_H__ */
