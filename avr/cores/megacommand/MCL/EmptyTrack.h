@@ -22,8 +22,7 @@ public:
   virtual void* get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 
-  /// Erase the track object, including data and the type information
-  /// Need to use init_track_type to repair the type info.
+  /// Erase the track data, without erasing the chain data.
   void clear();
 
   /*
