@@ -134,7 +134,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
   }
 
   origPosition = midi->midiSysex.getByte(a4sound_origpos_idx);
-  ElektronSysexDecoder decoder(midi, offset);
+  ElektronSysexDecoder decoder(midi, a4sound_encoding_startidx);
 
   return fromSysex_impl(&decoder);
 }
