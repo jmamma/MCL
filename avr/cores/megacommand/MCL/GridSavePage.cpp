@@ -72,7 +72,8 @@ void GridSavePage::display() {
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
 
-  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16, mute_mask, slide_mask);
+  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
+                     mute_mask, slide_mask);
 
   const char *modestr = "SEQ";
   if (MidiClock.state != 2) {
@@ -159,16 +160,25 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         oled_display.display();
 #endif
 
-        trig_interface.off();
-
         uint8_t save_mode = encoders[0]->cur;
         if (MidiClock.state == 2) {
           encoders[0]->cur = SAVE_SEQ;
           encoders[0]->old = SAVE_SEQ;
           save_mode = SAVE_SEQ;
         }
+        uint8_t offset = proj.get_grid() * 16;
+
+        uint8_t track_select_array[NUM_SLOTS] = {0};
+
+        for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+          if (note_interface.notes[n] == 3) {
+            track_select_array[n + offset] = 1;
+          }
+        }
+
+        trig_interface.off();
         mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
-                                        save_mode);
+                                        track_select_array, save_mode);
       }
       GUI.setPage(&grid_page);
 
@@ -185,13 +195,13 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     oled_display.textbox("SAVE PAT: ", modestr);
     oled_display.display();
 #endif
-    trig_interface.off();
     DEBUG_PRINTLN("notes");
     DEBUG_DUMP(note_interface.notes_all_off());
 
-    for (int i = 0; i < NI_MAX_NOTES; i++) {
+    uint8_t track_select_array[NUM_SLOTS] = {0};
 
-      note_interface.notes[i] = 3;
+    for (int i = 0; i < GRID_WIDTH; i++) {
+      track_select_array[i] = 1;
     }
 
     uint8_t save_mode = encoders[0]->cur;
@@ -203,7 +213,8 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
                                     grid_page.encoders[1]->getValue(),
-                                    save_mode);
+                                    track_select_array, save_mode);
+    trig_interface.off();
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;

@@ -59,7 +59,7 @@ void MCLActions::kit_reload(uint8_t pattern) {
   }
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
+void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_array, uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -83,7 +83,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   uint8_t i = 0;
 
   for (i = 0; i < NUM_SLOTS; i++) {
-    if (note_interface.notes[i] == 3) {
+    if (track_select_array[i] > 0) {
       uint8_t grid_num = (i < GRID_WIDTH) ? 0 : 1;
       save_grid_tracks[grid_num] = true;
     }
@@ -145,7 +145,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   bool online;
 
   for (i = 0; i < NI_MAX_NOTES; i++) {
-    if (note_interface.notes[i] == 3) {
+    if (track_select_array[i] > 0) {
       if (first_note == 255) {
         first_note = i;
       }
@@ -213,7 +213,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t merge) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::write_tracks(int column, int row) {
+void MCLActions::write_tracks(int column, int row, uint8_t *track_select_array) {
   DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
@@ -230,7 +230,7 @@ void MCLActions::write_tracks(int column, int row) {
         }
       }
     }
-    prepare_next_chain(row);
+    prepare_next_chain(row, track_select_array);
     return;
   }
   for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
@@ -240,10 +240,10 @@ void MCLActions::write_tracks(int column, int row) {
     }
   }
 
-  send_tracks_to_devices();
+  send_tracks_to_devices(track_select_array);
 }
 
-void MCLActions::prepare_next_chain(int row) {
+void MCLActions::prepare_next_chain(int row, uint8_t *track_select_array) {
   DEBUG_PRINT_FN();
   EmptyTrack empty_track;
   uint8_t q;
@@ -272,7 +272,7 @@ void MCLActions::prepare_next_chain(int row) {
     uint8_t track_num = (n < GRID_WIDTH) ? n : (n - GRID_WIDTH);
     proj.select_grid(grid_num);
 
-    if (note_interface.notes[n] == 0 ||
+    if (track_select_array[n] == 0 ||
         track_num >= devs[grid_num]->track_count) {
       continue;
     }
@@ -307,7 +307,7 @@ void MCLActions::prepare_next_chain(int row) {
   DEBUG_PRINTLN(next_step);
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
-    if (note_interface.notes[n] > 0) {
+    if (track_select_array[n] > 0) {
       // transition_level[n] = gridio_param3.getValue();
       transition_level[n] = 0;
       next_transitions[n] = next_step;
@@ -324,7 +324,7 @@ void MCLActions::prepare_next_chain(int row) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::send_tracks_to_devices() {
+void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -363,9 +363,9 @@ void MCLActions::send_tracks_to_devices() {
     }
 
     proj.select_grid(grid);
-    if (note_interface.notes[i] <= 1) {
-      continue;
-    }
+    //if (track_select_array[i] <= 1) {
+    //  continue;
+    //}
 
     grid_page.active_slots[i] = grid_page.getRow();
 
@@ -450,13 +450,13 @@ void MCLActions::send_tracks_to_devices() {
 
   // Cache
 
-  cache_next_tracks(note_interface.notes, &empty_track, &empty_track2);
+  cache_next_tracks(track_select_array, &empty_track, &empty_track2);
 
 
   // in_sysex = 0;
-  
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((note_interface.notes[n] > 0) && (grid_page.active_slots[n] >= 0)) {
+    if ((track_select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
                             (mcl_seq.seq_tracks[n]->step_count *
@@ -466,7 +466,7 @@ void MCLActions::send_tracks_to_devices() {
   }
   calc_next_transition();
   calc_latency(&empty_track);
-  
+
 }
 
 void MCLActions::cache_next_tracks(uint8_t *track_select_array,

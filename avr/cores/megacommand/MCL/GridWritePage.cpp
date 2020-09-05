@@ -141,9 +141,17 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 #endif
         /// !Note, note_off_event has reentry issues, so we have to first set the page
         /// to avoid driving this code path again.
+
+        uint8_t offset = proj.get_grid() * 16;
+
+        uint8_t track_select_array[NUM_SLOTS] = { 0 };
+
+        for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+           if (note_interface.notes[n] == 3) { track_select_array[n + offset] = 1; }
+        }
         GUI.setPage(&grid_page);
         trig_interface.off();
-        mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
+        mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(), track_select_array);
       }
       curpage = 0;
     }
@@ -155,9 +163,12 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     //  write the whole row
 
     trig_interface.off();
-    for (int i = 0; i < NI_MAX_NOTES; i++) {
+    uint8_t offset = proj.get_grid() * 16;
 
-      note_interface.notes[i] = 3;
+    uint8_t track_select_array[NUM_SLOTS] = { 0 };
+
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+        track_select_array[n] = 1;
     }
     //   write_tracks_to_md(-1);
 #ifdef OLED_DISPLAY
@@ -172,7 +183,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 #endif
     mcl_actions.write_original = 1;
     GUI.setPage(&grid_page);
-    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue());
+    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(), track_select_array);
     curpage = 0;
     return true;
   }
