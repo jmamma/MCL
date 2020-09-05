@@ -78,22 +78,18 @@ void MDTrack::init() {
 }
 
 void MDTrack::load_seq_data(uint8_t tracknumber) {
-  if (active == EMPTY_TRACK_TYPE) {
-    mcl_seq.md_tracks[tracknumber].clear_track();
-  } else {
-    memcpy(mcl_seq.md_tracks[tracknumber].data(), seq_data.data(),
-           sizeof(seq_data));
-    mcl_seq.md_tracks[tracknumber].speed = chain.speed;
-    mcl_seq.md_tracks[tracknumber].length = chain.length;
-    if (mcl_seq.md_tracks[tracknumber].speed < SEQ_SPEED_1X) {
-      mcl_seq.md_tracks[tracknumber].speed = SEQ_SPEED_1X;
-      mcl_seq.md_tracks[tracknumber].clear_slide_data();
-    }
-    mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
-    mcl_seq.md_tracks[tracknumber].set_length(
-        mcl_seq.md_tracks[tracknumber].length);
-    mcl_seq.md_tracks[tracknumber].update_params();
+  memcpy(mcl_seq.md_tracks[tracknumber].data(), seq_data.data(),
+         sizeof(seq_data));
+  mcl_seq.md_tracks[tracknumber].speed = chain.speed;
+  mcl_seq.md_tracks[tracknumber].length = chain.length;
+  if (mcl_seq.md_tracks[tracknumber].speed < SEQ_SPEED_1X) {
+    mcl_seq.md_tracks[tracknumber].speed = SEQ_SPEED_1X;
+    mcl_seq.md_tracks[tracknumber].clear_slide_data();
   }
+  mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
+  mcl_seq.md_tracks[tracknumber].set_length(
+      mcl_seq.md_tracks[tracknumber].length);
+  mcl_seq.md_tracks[tracknumber].update_params();
 }
 
 void MDTrack::place_track_in_sysex(uint8_t tracknumber) {
