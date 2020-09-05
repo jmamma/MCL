@@ -4,8 +4,6 @@
 #include "WProgram.h"
 #include "helpers.h"
 
-MNMSysexListenerClass MNMSysexListener;
-
 void MNMSysexListenerClass::start() {
   msgType = 255;
   isMNMMessage = false;

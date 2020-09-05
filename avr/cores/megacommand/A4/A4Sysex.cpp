@@ -5,8 +5,6 @@
 #include "A4Sysex.h"
 #include "helpers.h"
 
-A4SysexListenerClass A4SysexListener;
-
 void A4SysexListenerClass::start() {
 
   msgType = 255;

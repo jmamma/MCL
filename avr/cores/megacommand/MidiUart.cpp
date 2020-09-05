@@ -11,14 +11,6 @@
 #include <midi-common.h>
 
 #include <MidiClock.h>
-MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,
-                       UART1_RX_BUFFER_LEN,
-                       (volatile uint8_t *)BANK1_UART1_TX_BUFFER_START,
-                       UART1_TX_BUFFER_LEN);
-MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,
-                         UART2_RX_BUFFER_LEN,
-                         (volatile uint8_t *)BANK1_UART2_TX_BUFFER_START,
-                         UART2_TX_BUFFER_LEN);
 
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>

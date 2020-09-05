@@ -3,8 +3,6 @@
 #include "MidiIDSysex.h"
 #include "helpers.h"
 
-MidiIDSysexListenerClass MidiIDSysexListener;
-
 void MidiIDSysexListenerClass::start() {
 
   msgType = 255;

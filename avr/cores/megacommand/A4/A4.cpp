@@ -184,4 +184,3 @@ void A4Class::muteTrack(uint8_t track, bool mute) {
 void A4Class::setLevel(uint8_t track, uint8_t value) {
   MidiUart2.sendCC(track, 95, value);
 }
-A4Class Analog4;

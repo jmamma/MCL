@@ -26,6 +26,20 @@ public:
   MidiDevice* get_device(uint8_t port);
 };
 
+class GenericMidiDevice : public MidiDevice {
+public:
+  GenericMidiDevice();
+  virtual bool probe() { return true; }
+};
+
+class NullMidiDevice : public MidiDevice {
+public:
+  NullMidiDevice();
+  virtual bool probe() { return false; }
+};
+
+extern GenericMidiDevice generic_midi_device;
+extern NullMidiDevice null_midi_device;
 extern MidiActivePeering midi_active_peering;
 
 #endif /* MIDIACTIVEPEERING_H__ */

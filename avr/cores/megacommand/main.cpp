@@ -266,9 +266,6 @@ ISR(TIMER3_COMPA_vect) {
 #endif
 }
 
-MidiClass Midi(&MidiUart, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
-MidiClass Midi2(&MidiUart2, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
-
 bool enable_clock_callbacks = true;
 
 void handleIncomingMidi() {

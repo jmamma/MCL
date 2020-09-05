@@ -273,4 +273,3 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks, void* scratchpad) {
   return mnm_latency_ms;
 }
 
-MNMClass MNM;

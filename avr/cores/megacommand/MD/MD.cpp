@@ -860,4 +860,3 @@ uint16_t MDClass::sendKitParams(uint8_t *masks, void* scratchpad) {
   return md_latency_ms;
 }
 
-MDClass MD;

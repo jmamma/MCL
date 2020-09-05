@@ -6,4 +6,5 @@ obj
 .ccls-cache
 sketch/*.elf
 sketch/*.hex
+sketch/build
 .vim

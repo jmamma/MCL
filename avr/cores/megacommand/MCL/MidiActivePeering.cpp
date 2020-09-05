@@ -33,21 +33,6 @@ static void prepare_display() {
 #endif
 }
 
-class GenericMidiDevice : public MidiDevice {
-public:
-  GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE, NUM_EXT_TRACKS) {}
-  virtual bool probe() { return true; }
-};
-
-class NullMidiDevice : public MidiDevice {
-public:
-  NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255, 0) {}
-  virtual bool probe() { return false; }
-};
-
-static GenericMidiDevice generic_midi_device;
-static NullMidiDevice null_midi_device;
-
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
 
@@ -144,6 +129,9 @@ MidiDevice* MidiActivePeering::get_device(uint8_t port) {
   }
 }
 
+GenericMidiDevice::GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE, NUM_EXT_TRACKS) {}
+NullMidiDevice::NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255, 0) {}
+
 void MidiActivePeering::run() {
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers), &connected_midi_devices[0]);
 #ifdef EXT_TRACKS
@@ -151,4 +139,3 @@ void MidiActivePeering::run() {
 #endif
 }
 
-MidiActivePeering midi_active_peering;

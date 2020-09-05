@@ -5,8 +5,6 @@
 #include "MDSysex.h"
 #include "helpers.h"
 
-MDSysexListenerClass MDSysexListener;
-
 void MDSysexListenerClass::start() {
   msgType = 255;
   isMDMessage = false;
