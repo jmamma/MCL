@@ -362,11 +362,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
       seq_track->mute_state = SEQ_MUTE_ON;
     }
 
-    proj.select_grid(grid);
-    //if (track_select_array[i] <= 1) {
-    //  continue;
-    //}
+    if (track_select_array[i] == 0) {
+      continue;
+    }
 
+    proj.select_grid(grid);
     grid_page.active_slots[i] = grid_page.getRow();
 
     if (first_note == 255) {
