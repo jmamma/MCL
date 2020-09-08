@@ -34,11 +34,21 @@ MNMClass::MNMClass()
 bool MNMClass::probe() {
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
-    // wait 400 ms, shoul be enought time to allow midiclock tempo to be
+    // wait 400 ms, should be enought time to allow midiclock tempo to be
     // calculated before proceeding.
     mcl_gui.delay_progress(400);
 
-    // TODO MNM Global: fromSysex works, but toSysex doesn't
+    if (!get_fw_caps()) {
+#ifdef OLED_DISPLAY
+      oled_display.textbox("UPGRADE ", "MONOMACHINE");
+      oled_display.display();
+#else
+      gfx.display_text("UPGRADE", "MONOMACHINE");
+#endif
+      while (1)
+        ;
+    }
+
     if (!MNM.getBlockingGlobal(7)) {
       return false;
     }
@@ -60,6 +70,16 @@ bool MNMClass::probe() {
 
     MNMDataToSysexEncoder encoder(midi->uart);
     global.toSysex(&encoder);
+
+    auto currentAudioMidiMode = getBlockingStatus(0x21);
+    setStatus(0x21, 1);
+    for (uint8_t x = 0; x < 3; x++) {
+      for (uint8_t y = 0; y < 6; y++) {
+        mcl_gui.delay_progress(10);
+        setStatus(0x22, y);
+      }
+    }
+    setStatus(0x21, currentAudioMidiMode);
 
     loadGlobal(7);
 

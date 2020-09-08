@@ -117,7 +117,7 @@ uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {
   connected = cb.waitBlocking(timeout);
   listener->removeOnStatusResponseCallback(&cb);
 
-  return cb.value;
+  return connected ? cb.value : 255;
 }
 
 bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
