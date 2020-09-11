@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-void ExtTrack::chain_load(uint8_t tracknumber) {
+void ExtTrack::transition_load(uint8_t tracknumber) {
   uint8_t n = tracknumber;
 
   mcl_seq.ext_tracks[n].buffer_notesoff();

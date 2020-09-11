@@ -14,7 +14,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-void MDTrack::chain_load(uint8_t tracknumber) {
+void MDTrack::transition_load(uint8_t tracknumber) {
   uint8_t n = tracknumber;
   if (mcl_actions.send_machine[n]) {
     bool send_level = false;

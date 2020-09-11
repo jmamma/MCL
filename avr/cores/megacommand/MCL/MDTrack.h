@@ -80,7 +80,7 @@ public:
 
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
-  void chain_load(uint8_t tracknumber);
+  void transition_load(uint8_t tracknumber);
 
   void load_seq_data(uint8_t tracknumber);
   void get_machine_from_kit(uint8_t tracknumber);
