@@ -65,11 +65,13 @@ public:
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
   virtual void load_immediate(uint8_t track_number) {}
+  virtual void chain_load(uint8_t tracknumber) {}
+
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
   virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
-  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { } 
+  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return DEVICE_NULL; }
 

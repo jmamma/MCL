@@ -21,6 +21,7 @@ public:
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
+  void chain_load(uint8_t tracknumber);
   bool load_seq_data(uint8_t tracknumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,

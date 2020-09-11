@@ -1,5 +1,16 @@
 #include "MCL_impl.h"
 
+void ExtTrack::chain_load(uint8_t tracknumber) {
+  uint8_t n = tracknumber;
+
+  mcl_seq.ext_tracks[n].buffer_notesoff();
+  mcl_seq.ext_tracks[n].start_step = mcl_actions.next_transition;
+  mcl_seq.ext_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
+  mcl_seq.ext_tracks[n].mute_until_start = true;
+
+  load_seq_data(n);
+}
+
 void ExtTrack::load_immediate(uint8_t tracknumber) {
   store_in_mem(tracknumber);
   load_seq_data(tracknumber);
@@ -24,7 +35,7 @@ bool ExtTrack::load_seq_data(uint8_t tracknumber) {
 }
 
 bool ExtTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
-                                   bool online) {
+                             bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/

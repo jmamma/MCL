@@ -1,5 +1,36 @@
 #include "MCL_impl.h"
 
+void MDTrack::chain_load(uint8_t tracknumber) {
+  uint8_t n = tracknumber;
+  if (mcl_actions.send_machine[n]) {
+    bool send_level = false;
+    DEBUG_DUMP(n);
+    switch (mcl_actions.transition_level[n]) {
+    case 1:
+      send_level = true;
+      machine.level = 0;
+      break;
+    case TRANSITION_UNMUTE:
+      DEBUG_PRINTLN("unmuting");
+      MD.muteTrack(n, false);
+      break;
+    case TRANSITION_MUTE:
+      DEBUG_PRINTLN("muting");
+      MD.muteTrack(n, true);
+      break;
+    default:
+      break;
+    }
+    bool send = true;
+    MD.sendMachine(n, &(machine), send_level, send);
+  }
+  mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
+  mcl_seq.md_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
+  mcl_seq.md_tracks[n].mute_until_start = true;
+
+  load_seq_data(n);
+}
+
 void MDTrack::load_immediate(uint8_t tracknumber) {
   MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(tracknumber);

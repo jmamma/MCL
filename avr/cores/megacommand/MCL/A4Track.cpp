@@ -1,6 +1,16 @@
 #include "MCL_impl.h"
 //#include "MCLSd.h"
 
+void A4Track::chain_load(uint8_t tracknumber) {
+  uint8_t n = tracknumber;
+  if ((mcl_actions.a4_latency > 0) && (mcl_actions.send_machine[n] == 0)) {
+    DEBUG_PRINTLN("here");
+    DEBUG_PRINTLN("send a4 sound");
+    sound.toSysex();
+  }
+  ExtTrack::chain_load(n);
+}
+
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
   auto ret = Analog4.getBlockingSoundX(tracknumber);
   if (ret) {
@@ -10,8 +20,7 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
 }
 
 bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
-                                  bool online) {
-
+                            bool online) {
 
   active = A4_TRACK_TYPE;
 
@@ -37,8 +46,8 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   return true;
 }
 
-// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes
-// Do compile with avr-gcc and observe the error messages
+// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit
+// x86 sizes Do compile with avr-gcc and observe the error messages
 
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
@@ -46,7 +55,8 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
 
 //__SIZE_PROBE<sizeof(A4Track)> sza4;
 //__SIZE_PROBE<sizeof(MDTrack)> szmd;
-//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmd_2;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)>
+//szmd_2;
 //__SIZE_PROBE<sizeof(EmptyTrack)> szempty;
 //__SIZE_PROBE<FX_TRACK_LEN> szfx;
 //__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;

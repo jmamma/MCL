@@ -20,6 +20,7 @@ public:
     active = A4_TRACK_TYPE;
     static_assert(sizeof(A4Track) <= GRID2_TRACK_LEN);
   }
+  void chain_load(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
   bool convert(A4Track_270 *old) {

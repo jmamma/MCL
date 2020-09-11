@@ -24,8 +24,6 @@ void GridTask::run() {
 
   int slots_changed[NUM_SLOTS];
 
-  uint8_t slots_loaded[NUM_MD_TRACKS] = {0};
-
   bool send_ext_slots = false;
   bool send_md_slots = false;
 
@@ -116,36 +114,23 @@ void GridTask::run() {
           GUI.loop();
         }
       }
-      // in_sysex2 = 1;
     }
+
     for (uint8_t n = NUM_MD_TRACKS; n < NUM_SLOTS; n++) {
       if (slots_changed[n] >= 0) {
         auto ext_track = empty_track.load_from_mem<ExtTrack>(n - NUM_MD_TRACKS);
         DEBUG_DUMP(mcl_actions.a4_latency);
 
-        if (ext_track->is<A4Track>()) {
-          if ((mcl_actions.a4_latency > 0) &&
-              (mcl_actions.send_machine[n] == 0)) {
-            DEBUG_PRINTLN("here");
-            DEBUG_PRINTLN("send a4 sound");
-            ext_track->as<A4Track>()->sound.toSysex();
-          }
-        }
-
-        grid_page.active_slots[n] = slots_changed[n];
         if (ext_track->active != EMPTY_TRACK_TYPE) {
-          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].buffer_notesoff();
+          ext_track->chain_load(n - NUM_MD_TRACKS);
 
-          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step =
-              mcl_actions.next_transition;
-          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].start_step_offset =
-              mcl_actions.transition_offsets[n];
-          mcl_seq.ext_tracks[n - NUM_MD_TRACKS].mute_until_start = true;
-          ext_track->load_seq_data(n - NUM_MD_TRACKS);
         } else {
+
           DEBUG_PRINTLN("clearing ext track");
           mcl_seq.ext_tracks[n - NUM_MD_TRACKS].clear_track();
         }
+
+        grid_page.active_slots[n] = slots_changed[n];
       }
     }
   }
@@ -173,44 +158,8 @@ void GridTask::run() {
       if (slots_changed[n] >= 0) {
         auto md_track = empty_track.load_from_mem<MDTrack>(n);
         if (md_track) {
-          if (mcl_actions.send_machine[n] == 0) {
-            if (slots_loaded[n] == 0) {
-              bool send_level = false;
-              switch (mcl_actions.transition_level[n]) {
-              case 1:
-                send_level = true;
-                md_track->machine.level = 0;
-                break;
-              case TRANSITION_UNMUTE:
-                DEBUG_PRINTLN("unmuting");
-                DEBUG_DUMP(n);
-                MD.muteTrack(n, false);
-                break;
-              case TRANSITION_MUTE:
-                DEBUG_PRINTLN("muting");
-                DEBUG_DUMP(n);
-                MD.muteTrack(n, true);
-                break;
-              default:
-                DEBUG_PRINTLN("default");
-                break;
-              }
-              MD.sendMachine(n, &(md_track->machine),
-                                         send_level, true);
-              slots_loaded[n] = 1;
-            }
-          }
-
-          mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
-          mcl_seq.md_tracks[n].start_step_offset =
-              mcl_actions.transition_offsets[n];
-          mcl_seq.md_tracks[n].mute_until_start = true;
-
-          md_track->load_seq_data(n);
-        }
-
-        else {
-          //&& (mcl_cfg.chain_mode != 2)) {
+          md_track->chain_load(n);
+        } else {
           DEBUG_PRINTLN("clearing track");
           DEBUG_DUMP(n);
           bool clear_locks = true;
