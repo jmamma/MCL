@@ -98,13 +98,14 @@ void GridTask::run() {
           random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
     }
   }
-  if (send_device[1]) {
+  uint8_t grid = 1;
+  if (send_device[grid]) {
 
     uint32_t go_step = mcl_actions.next_transition * 12 -
-                       mcl_actions.md_div192th_latency -
-                       mcl_actions.a4_div192th_latency;
+                       mcl_actions.dev_latency[grid].div192th_latency -
+                       mcl_actions.dev_latency[grid].div192th_latency;
     uint32_t diff;
-    if (mcl_actions.a4_latency > 0) {
+    if (mcl_actions.dev_latency[grid].latency > 0) {
       while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                   go_step)) != 0) &&
              (MidiClock.div192th_counter < go_step) && (MidiClock.state == 2)) {
@@ -134,10 +135,10 @@ void GridTask::run() {
       }
     }
   }
-
-  if (send_device[0]) {
+  grid = 0;
+  if (send_device[grid]) {
     uint32_t go_step =
-        mcl_actions.next_transition * 12 - mcl_actions.md_div192th_latency;
+        mcl_actions.next_transition * 12 - mcl_actions.dev_latency[grid].div192th_latency;
     uint32_t diff;
     while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                 go_step)) != 0) &&
@@ -171,12 +172,8 @@ void GridTask::run() {
       }
     }
   }
-  uint8_t count = 0;
-  uint8_t slots_cached[NUM_SLOTS] = {0};
 
   EmptyTrack empty_track2;
-
-  uint8_t old_grid = proj.get_grid();
 
   if (mcl_cfg.chain_mode != 2) {
 

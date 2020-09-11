@@ -1,9 +1,16 @@
 #include "MCL_impl.h"
 //#include "MCLSd.h"
 
+#define A4_SOUND_LENGTH 0x19F
+
+uint16_t A4Track::calc_latency(uint8_t tracknumber) {
+  uint16_t a4_latency = A4_SOUND_LENGTH;
+  return a4_latency;
+}
+
 void A4Track::chain_load(uint8_t tracknumber) {
   uint8_t n = tracknumber;
-  if ((mcl_actions.a4_latency > 0) && (mcl_actions.send_machine[n] == 0)) {
+  if ((mcl_actions.send_machine[n] == 0)) {
     DEBUG_PRINTLN("here");
     DEBUG_PRINTLN("send a4 sound");
     sound.toSysex();

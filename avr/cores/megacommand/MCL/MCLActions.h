@@ -13,13 +13,22 @@
 #define TRANSITION_MUTE 2
 #define TRANSITION_UNMUTE 3
 
+class DeviceLatency {
+public:
+  uint16_t latency;
+  uint8_t div32th_latency;
+  uint8_t div192th_latency;
+};
+
 class ChainModeData {
 public:
+  DeviceLatency dev_latency[NUM_GRIDS];
+
   GridChain chains[NUM_SLOTS];
 
   uint16_t md_latency;
 
-  uint16_t next_transition = (uint16_t) -1;
+  uint16_t next_transition = (uint16_t)-1;
 
   uint16_t nearest_bar;
   uint8_t nearest_beat;
@@ -28,15 +37,6 @@ public:
   uint8_t transition_offsets[NUM_SLOTS];
   uint8_t send_machine[NUM_SLOTS];
   uint8_t transition_level[NUM_SLOTS];
-
-  uint8_t md_div32th_latency;
-
-  uint8_t md_div192th_latency;
-#ifdef EXT_TRACKS
-  uint16_t a4_latency;
-  uint8_t a4_div32th_latency;
-  uint8_t a4_div192th_latency;
-#endif
 };
 
 class MCLActions : public ChainModeData {
@@ -59,21 +59,21 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void store_tracks_in_mem(int column, int row, uint8_t *track_select_array,  uint8_t merge);
+  void store_tracks_in_mem(int column, int row, uint8_t *track_select_array,
+                           uint8_t merge);
 
   void write_tracks(int column, int row, uint8_t *track_select_array);
   void send_tracks_to_devices(uint8_t *track_select_array);
   void prepare_next_chain(int row, uint8_t *track_select_array);
 
-  void cache_next_tracks(uint8_t *track_select_array, EmptyTrack *empty_track, EmptyTrack *empty_track2, bool update_gui = false);
+  void cache_next_tracks(uint8_t *track_select_array, EmptyTrack *empty_track,
+                         EmptyTrack *empty_track2, bool update_gui = false);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
   void calc_latency(DeviceTrack *empty_track);
-
 };
 
 extern MCLActionsCallbacks mcl_actions_callbacks;
 extern MCLActionsMidiEvents mcl_actions_midievents;
 
 extern MCLActions mcl_actions;
-

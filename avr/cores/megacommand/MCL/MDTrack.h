@@ -3,10 +3,10 @@
 #define MDTRACK_H__
 
 #include "DeviceTrack.h"
+#include "DiagnosticPage.h"
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
-#include "DiagnosticPage.h"
 
 #define LOCK_AMOUNT 256
 
@@ -79,7 +79,7 @@ public:
   void init();
 
   void clear_track();
-
+  uint16_t calc_latency(uint8_t tracknumber);
   void chain_load(uint8_t tracknumber);
 
   void load_seq_data(uint8_t tracknumber);
@@ -88,7 +88,7 @@ public:
   void place_track_in_sysex(uint8_t tracknumber);
 
   bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
-                           bool online = false);
+                     bool online = false);
   void load_immediate(uint8_t tracknumber);
 
   // scale machine track vol by percentage
@@ -121,7 +121,7 @@ public:
   virtual uint8_t get_model() { return machine.model; }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
 
-  virtual void* get_sound_data_ptr() { return &machine; }
+  virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
 };
 

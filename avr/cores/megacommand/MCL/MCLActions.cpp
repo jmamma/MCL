@@ -2,30 +2,28 @@
 #include "MCL_impl.h"
 
 #define MD_KIT_LENGTH 0x4D0
-#define A4_SOUND_LENGTH 0x19F
 
 // No STL, no closure, no std::function, cannot make this generic...
-//void __attribute__ ((noinline)) FOREACH_GRID_TRACK(void(*fn)(uint8_t, uint8_t, uint8_t, MidiDevice*, ElektronDevice*)) {
-  //uint8_t grid;
-  //uint8_t track_idx;
-  //MidiDevice *devs[2] = {
-      //midi_active_peering.get_device(UART1_PORT),
-      //midi_active_peering.get_device(UART2_PORT),
-  //};
-  //ElektronDevice *elektron_devs[2] = {
-      //devs[0]->asElektronDevice(),
-      //devs[1]->asElektronDevice(),
-  //};
-  //for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-    //if (i < GRID_WIDTH) {
-      //grid = 0;
-      //track_idx = i;
-    //} else {
-      //grid = 1;
-      //track_idx = i - GRID_WIDTH;
-    //}
-    //fn(i, grid, track_idx, devs[grid], elektron_devs[grid]);
-  //}
+// void __attribute__ ((noinline)) FOREACH_GRID_TRACK(void(*fn)(uint8_t,
+// uint8_t, uint8_t, MidiDevice*, ElektronDevice*)) { uint8_t grid; uint8_t
+// track_idx; MidiDevice *devs[2] = {
+// midi_active_peering.get_device(UART1_PORT),
+// midi_active_peering.get_device(UART2_PORT),
+//};
+// ElektronDevice *elektron_devs[2] = {
+// devs[0]->asElektronDevice(),
+// devs[1]->asElektronDevice(),
+//};
+// for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+// if (i < GRID_WIDTH) {
+// grid = 0;
+// track_idx = i;
+//} else {
+// grid = 1;
+// track_idx = i - GRID_WIDTH;
+//}
+// fn(i, grid, track_idx, devs[grid], elektron_devs[grid]);
+//}
 //}
 
 void MCLActions::setup() {
@@ -59,7 +57,9 @@ void MCLActions::kit_reload(uint8_t pattern) {
   }
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_array, uint8_t merge) {
+void MCLActions::store_tracks_in_mem(int column, int row,
+                                     uint8_t *track_select_array,
+                                     uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -107,7 +107,7 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_
         }
       }
 
-      if (elektron_devs[i]->canReadWorkspaceKit() ) {
+      if (elektron_devs[i]->canReadWorkspaceKit()) {
         if (!elektron_devs[i]->getBlockingKit(0x7F)) {
           DEBUG_PRINTLN("could not receive kit");
           save_grid_tracks[i] = false;
@@ -213,7 +213,8 @@ void MCLActions::store_tracks_in_mem(int column, int row, uint8_t *track_select_
   proj.select_grid(old_grid);
 }
 
-void MCLActions::write_tracks(int column, int row, uint8_t *track_select_array) {
+void MCLActions::write_tracks(int column, int row,
+                              uint8_t *track_select_array) {
   DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
@@ -374,7 +375,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
     }
 
     auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
-    if (!ptrack) { continue; } // read failure
+    if (!ptrack) {
+      continue;
+    } // read failure
 
     ptrack->chain.store_in_mem(i, &(chains[0]));
     if (ptrack->active != devs[grid]->track_type) {
@@ -408,7 +411,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
 #endif
     auto elektron_dev = devs[i]->asElektronDevice();
     if (elektron_dev != nullptr) {
-      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH, &empty_track);
+      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH,
+                                                &empty_track);
     }
   }
 
@@ -421,7 +425,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
   }
   GUI.addTask(&grid_task);
 
-  for (uint8_t i=0; i < NUM_SLOTS; ++i) {
+  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
 
     uint8_t grid_col = i;
     uint8_t grid = 0;
@@ -452,7 +456,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
 
   cache_next_tracks(track_select_array, &empty_track, &empty_track2);
 
-
   // in_sysex = 0;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -466,7 +469,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
   }
   calc_next_transition();
   calc_latency(&empty_track);
-
 }
 
 void MCLActions::cache_next_tracks(uint8_t *track_select_array,
@@ -511,11 +513,13 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
       proj.select_grid(grid);
 
       auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
-      if (ptrack == nullptr || !ptrack->is_active() || devs[grid]->track_type != ptrack->active) {
+      if (ptrack == nullptr || !ptrack->is_active() ||
+          devs[grid]->track_type != ptrack->active) {
         continue;
       }
 
-      auto *pmem_track = empty_track2->load_from_mem(grid_col, devs[grid]->track_type);
+      auto *pmem_track =
+          empty_track2->load_from_mem(grid_col, devs[grid]->track_type);
       if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
         // track type matched.
         auto *psound = ptrack->get_sound_data_ptr();
@@ -612,56 +616,61 @@ void MCLActions::calc_next_transition() {
 }
 
 void MCLActions::calc_latency(DeviceTrack *empty_track) {
-  md_latency = 0;
-#ifdef EXT_TRACKS
-  a4_latency = 0;
-#endif
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+
+  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
+    dev_latency[a].latency = 0;
+  }
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((grid_page.active_slots[n] >= 0) && (send_machine[n] == 0)) {
-      if (n < NUM_MD_TRACKS) {
-        if (next_transitions[n] == next_transition) {
-          auto md_track = empty_track->load_from_mem<MDTrack>(n);
-          if (md_track) {
-            bool send_machine, send_level = false;
-            md_latency += MD.sendMachine(n, &(md_track->machine), send_level, send_machine);
-          }
-          if (transition_level[n] == TRANSITION_MUTE ||
-              transition_level[n] == TRANSITION_UNMUTE) {
-            md_latency += 3;
-          }
-        }
+    if ((grid_page.active_slots[n] < 0) && (send_machine[n] != 0))
+      continue;
+    if (next_transitions[n] == next_transition) {
+      uint8_t grid_col = n;
+      uint8_t grid = 0;
+      // GRID 1
+      if (n < GRID_WIDTH) {
+        grid = 0;
       }
-#ifdef EXT_TRACKS
+      // GRID 2
       else {
-        if (next_transitions[n] == next_transition) {
-          auto a4_track = empty_track->load_from_mem<A4Track>(n - GRID_WIDTH);
-          if (a4_track) {
-            a4_latency += A4_SOUND_LENGTH;
-          }
-        }
+        grid = 1;
+        grid_col -= GRID_WIDTH;
       }
-#endif
+
+      if (grid_col >= devs[grid]->track_count) {
+        continue;
+      }
+
+      auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
+      if (ptrack == nullptr || !ptrack->is_active() ||
+          devs[grid]->track_type != ptrack->active) {
+        continue;
+      }
+
+      dev_latency[grid].latency = ptrack->calc_latency(n);
     }
   }
-  grid_task.active = true;
+
   float tempo = MidiClock.get_tempo();
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
   float div32th_per_second = tempo * 0.133333333333f;
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
-  float bytes_per_second_uart1 = MidiUart.speed / 10.0f;
-  float md_latency_in_seconds = mcl_actions.md_latency / bytes_per_second_uart1;
-  md_div32th_latency = round(div32th_per_second * md_latency_in_seconds) + 1;
-  md_div192th_latency = round(div192th_per_second * md_latency_in_seconds) + 3;
+  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
+    dev_latency[a].latency = 0;
 
-#ifdef EXT_TRACKS
-  float bytes_per_second_uart2 = MidiUart2.speed / 10.0f;
-  float a4_latency_in_seconds = mcl_actions.a4_latency / bytes_per_second_uart2;
-  a4_div32th_latency = round(div32th_per_second * a4_latency_in_seconds) + 1;
-  a4_div192th_latency = round(div192th_per_second * a4_latency_in_seconds) + 3;
-#endif
+    float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
+    float latency_in_seconds = dev_latency[a].latency / bytes_per_second_uart1;
+    dev_latency[a].div32th_latency =
+        round(div32th_per_second * latency_in_seconds) + 1;
+    dev_latency[a].div192th_latency =
+        round(div192th_per_second * latency_in_seconds) + 3;
+  }
 }
 
 MCLActions mcl_actions;

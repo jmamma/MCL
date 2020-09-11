@@ -53,6 +53,9 @@ public:
   virtual uint16_t get_track_size() = 0;
   virtual void* get_sound_data_ptr() = 0;
   virtual size_t get_sound_data_size() = 0;
+
+  virtual uint16_t calc_latency(uint8_t tracknumber) { return 0; }
+
   DeviceTrack *init_track_type(uint8_t track_type);
   template <class T> DeviceTrack *init_track_type() {
     T *p;

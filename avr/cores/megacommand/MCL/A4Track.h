@@ -20,6 +20,7 @@ public:
     active = A4_TRACK_TYPE;
     static_assert(sizeof(A4Track) <= GRID2_TRACK_LEN);
   }
+  uint16_t calc_latency(uint8_t tracknumber);
   void chain_load(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
