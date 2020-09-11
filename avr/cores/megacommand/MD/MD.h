@@ -234,6 +234,19 @@ public:
   void setMachine(uint8_t track, MDMachine *machine);
 
   /**
+   * Load machine, but only send parameters that differ from MD.kit, returns total bytes sent
+   * if send == false, then only return the byte count, don't send.
+   * if send == true, send parameters to MD, insert machine in kit.
+   **/
+  uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level, bool send);
+
+  /**
+   * Inserts a machine in to the MDKit object
+   **/
+
+  void insertMachineInKit(uint8_t track, MDMachine *machine,
+                                bool set_level = true);
+  /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
    **/

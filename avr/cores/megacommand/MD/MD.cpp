@@ -82,32 +82,35 @@ void MDMidiEvents::disable_live_kit_update() {
 uint8_t machinedrum_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x02, 0x00};
 
 const ElektronSysexProtocol md_protocol = {
-  machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr),
-  MD_KIT_REQUEST_ID, 
-  MD_PATTERN_REQUEST_ID, 
-  MD_SONG_REQUEST_ID, 
-  MD_GLOBAL_REQUEST_ID,
-  MD_STATUS_REQUEST_ID,
+    machinedrum_sysex_hdr,
+    sizeof(machinedrum_sysex_hdr),
+    MD_KIT_REQUEST_ID,
+    MD_PATTERN_REQUEST_ID,
+    MD_SONG_REQUEST_ID,
+    MD_GLOBAL_REQUEST_ID,
+    MD_STATUS_REQUEST_ID,
 
-  MD_CURRENT_TRACK_REQUEST,
-  MD_CURRENT_KIT_REQUEST,
-  MD_CURRENT_PATTERN_REQUEST,
-  MD_CURRENT_SONG_REQUEST,
-  MD_CURRENT_GLOBAL_SLOT_REQUEST,
+    MD_CURRENT_TRACK_REQUEST,
+    MD_CURRENT_KIT_REQUEST,
+    MD_CURRENT_PATTERN_REQUEST,
+    MD_CURRENT_SONG_REQUEST,
+    MD_CURRENT_GLOBAL_SLOT_REQUEST,
 
-  MD_SET_STATUS_ID,
-  MD_SET_TEMPO_ID,
-  MD_SET_CURRENT_KIT_NAME_ID, 16,
+    MD_SET_STATUS_ID,
+    MD_SET_TEMPO_ID,
+    MD_SET_CURRENT_KIT_NAME_ID,
+    16,
 
-  MD_LOAD_GLOBAL_ID,
-  MD_LOAD_PATTERN_ID,
-  MD_LOAD_KIT_ID,
+    MD_LOAD_GLOBAL_ID,
+    MD_LOAD_PATTERN_ID,
+    MD_LOAD_KIT_ID,
 
-  MD_SAVE_KIT_ID,
+    MD_SAVE_KIT_ID,
 };
 
-MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE, NUM_MD_TRACKS, md_protocol)
-{
+MDClass::MDClass()
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE,
+                     NUM_MD_TRACKS, md_protocol) {
   uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
                                      50, 52, 53, 55, 57, 59, 60, 62};
 
@@ -468,7 +471,6 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
     setTrigGroup(track, machine->trigGroup);
   }
   if (machine->muteGroup == 255) {
-
     setMuteGroup(track, 127);
   } else {
     setMuteGroup(track, machine->muteGroup);
@@ -478,6 +480,134 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
     setTrackParam(track, i, machine->params[i]);
   }
   //  MidiUart.useRunningStatus = false;
+}
+
+void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
+                                bool set_level) {
+  MDKit *kit_ = &kit;
+
+  memcpy(kit_->params[track], &(machine->params), 24);
+  if (set_level) {
+    kit_->levels[track] = machine->level;
+  }
+  kit_->models[track] = machine->model;
+
+  if (machine->lfo.destinationTrack == track) {
+
+    machine->lfo.destinationTrack = track;
+  }
+  // sanity check.
+  if (machine->lfo.destinationTrack > 15) {
+    DEBUG_PRINTLN("warning: lfo dest was out of bounds");
+    machine->lfo.destinationTrack = track;
+  }
+  memcpy(&(kit_->lfos[track]), &machine->lfo, sizeof(machine->lfo));
+
+  if ((machine->trigGroup < 16) && (machine->trigGroup != track)) {
+    kit_->trigGroups[track] = machine->trigGroup;
+  } else {
+    kit_->trigGroups[track] = 255;
+  }
+
+  if ((machine->muteGroup < 16) && (machine->muteGroup != track)) {
+    kit_->muteGroups[track] = machine->muteGroup;
+  } else {
+    kit_->muteGroups[track] = 255;
+  }
+}
+
+uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
+                            bool send) {
+  uint16_t bytes = 0;
+
+  MDKit *kit_ = &kit;
+
+  if (kit_->models[track] != machine->model) {
+    if (send)
+      MD.assignMachine(track, machine->model, 0);
+    bytes += 5 + 7;
+  }
+
+  MDLFO *lfo = &(machine->lfo);
+  if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
+    if (send)
+      MD.setLFOParam(track, 0, lfo->destinationTrack);
+    bytes += 3 + 7;
+  }
+
+  if ((kit_->lfos[track].destinationParam != lfo->destinationParam)) {
+    if (send)
+      MD.setLFOParam(track, 1, lfo->destinationParam);
+    bytes += 3 + 7;
+  }
+
+  if ((kit_->lfos[track].shape1 != lfo->shape1)) {
+    if (send)
+      MD.setLFOParam(track, 2, lfo->shape1);
+    bytes += 3 + 7;
+  }
+
+  if ((kit_->lfos[track].shape2 != lfo->shape2)) {
+    if (send)
+      MD.setLFOParam(track, 3, lfo->shape2);
+    bytes += 3 + 7;
+  }
+
+  if ((kit_->lfos[track].type != lfo->type)) {
+    if (send)
+      MD.setLFOParam(track, 4, lfo->type);
+    bytes += 3 + 7;
+  }
+
+  if ((kit_->trigGroups[track] != machine->trigGroup)) {
+    if ((machine->trigGroup > 15) || (kit_->trigGroups[track] == track)) {
+      if (send)
+        MD.setTrigGroup(track, 127);
+      bytes += 3 + 7;
+    } else {
+      if (send)
+        MD.setTrigGroup(track, machine->trigGroup);
+      bytes += 3 + 7;
+    }
+  }
+  if ((kit_->muteGroups[track] != machine->muteGroup)) {
+    if ((machine->muteGroup > 15) || (kit_->muteGroups[track] == track)) {
+      if (send)
+        MD.setMuteGroup(track, 127);
+      bytes += 3 + 7;
+    } else {
+      if (send)
+        MD.setMuteGroup(track, machine->muteGroup);
+      bytes += 3 + 7;
+    }
+  }
+
+  if ((send_level) && (kit_->levels[track] != machine->level)) {
+    if (send)
+      MD.setTrackParam(track, 33, machine->level);
+    bytes += 3;
+  }
+  //  MidiUart.useRunningStatus = true;
+  //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;
+
+  //  mcl_seq.md_tracks[track].send_params = true;
+  for (uint8_t i = 0; i < 24; i++) {
+
+    if (((kit_->params[track][i] != machine->params[i])) ||
+        ((i < 8) && (kit_->models[track] != machine->model))) {
+      //   (mcl_seq.md_tracks[track].is_param(i)))) {
+      // mcl_seq.md_tracks[track].params[i] = machine->params[i];
+      if (machine->params[i] != 255) {
+        if (send)
+          MD.setTrackParam(track, i, machine->params[i]);
+        bytes += 3;
+      }
+    }
+  }
+  if (send)
+    insertMachineInKit(track, machine, send_level);
+
+  return bytes;
 }
 
 void MDClass::muteTrack(uint8_t track, bool mute) {
@@ -836,7 +966,8 @@ void MDClass::send_sample(uint8_t pos) {
 void MDClass::setSysexRecPos(uint8_t rec_type, uint8_t position) {
   DEBUG_PRINT_FN();
 
-  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position, (uint8_t)1 & 0x7f};
+  uint8_t data[] = {0x6b, (uint8_t)(rec_type & 0x7F), position,
+                    (uint8_t)1 & 0x7f};
   sendRequest(data, countof(data));
 }
 
@@ -846,17 +977,17 @@ void MDClass::updateKitParams() {
   }
 }
 
-uint16_t MDClass::sendKitParams(uint8_t *masks, void* scratchpad) {
+uint16_t MDClass::sendKitParams(uint8_t *masks, void *scratchpad) {
   /// Ignores masks and scratchpad, and send the whole kit.
   MD.kit.origPosition = 0x7F;
   // md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
   //  mcl_seq.disable();
   // md_set_kit(&MD.kit);
-  uint16_t md_latency_ms = 10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
+  uint16_t md_latency_ms =
+      10000.0 * ((float)sizeof(MDKit) / (float)MidiUart.speed);
   md_latency_ms += 10;
   DEBUG_DUMP(md_latency_ms);
 
   return md_latency_ms;
 }
-

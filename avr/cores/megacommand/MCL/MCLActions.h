@@ -69,11 +69,6 @@ public:
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
   void calc_latency(DeviceTrack *empty_track);
-  int calc_md_set_machine_latency(uint8_t track, MDMachine *model,
-                                  MDKit *kit_ = NULL, bool send_level = false);
-  void md_set_kit(MDKit *kit_);
-  void md_set_fxs(MDKit *kit_);
-  void md_set_machine(uint8_t track, MDMachine *model, MDKit *kit_ = NULL, bool send_level = false);
 
 };
 

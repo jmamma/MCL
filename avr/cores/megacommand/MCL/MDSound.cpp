@@ -68,29 +68,29 @@ bool MDSound::load_sound(uint8_t track) {
   DEBUG_PRINT_FN();
 
   DEBUG_PRINTLN(machine1.model);
-
+  #ifdef DEBUG_MODE
   PGM_P tmp;
   char str[3] = "  ";
   tmp = getMDMachineNameShort(machine1.model, 2);
   m_strncpy_p(str, tmp, 3);
   DEBUG_PRINTLN(str);
+  #endif
 
   if ((machine_count > 1) && (track != 15)) {
+    #ifdef DEBUG_MODE
     DEBUG_PRINTLN("loading second machine");
     tmp = getMDMachineNameShort(machine2.model, 2);
-     m_strncpy_p(str, tmp, 3);
+    m_strncpy_p(str, tmp, 3);
     DEBUG_PRINTLN(str);
-
+    #endif
     if (machine2.lfo.destinationTrack < 16) {
       machine2.lfo.destinationTrack += track;
     }
     machine1.trigGroup = track + 1;
     machine2.trigGroup = track;
 
-    mcl_actions.md_set_machine(track + 1, &machine2, &MD.kit, true);
-    MD.kit.models[track + 1] = machine2.model;
-    memcpy(&(MD.kit.params[track + 1]), &machine2.params, 24);
-    memcpy(&(MD.kit.lfos[track + 1]), &machine2.lfo, sizeof(MDLFO));
+    bool send_level, send = true;
+    MD.sendMachine(track + 1, &machine2, send_level, send);
 
   } else {
     machine1.trigGroup = track;
@@ -100,20 +100,15 @@ bool MDSound::load_sound(uint8_t track) {
     machine1.lfo.destinationTrack += track;
   }
 
-
-  mcl_actions.md_set_machine(track, &machine1, &MD.kit ,true);
-
   if (machine_count == 1) {
-  MD.kit.trigGroups[track] = track;
+  machine1.trigGroup = track;
   }
   else {
-  MD.kit.trigGroups[track] = track + 1;
+  machine1.trigGroup = track + 1;
   }
 
-  MD.kit.models[track] = machine1.model;
-  memcpy(&(MD.kit.params[track]), &machine1.params, 24);
-  memcpy(&(MD.kit.lfos[track]), &machine1.lfo, sizeof(MDLFO));
-
+  bool send_level, send = true;
+  MD.sendMachine(track, &machine1, send_level, send);
 
 }
 

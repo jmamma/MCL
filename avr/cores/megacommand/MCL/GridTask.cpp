@@ -175,10 +175,10 @@ void GridTask::run() {
         if (md_track) {
           if (mcl_actions.send_machine[n] == 0) {
             if (slots_loaded[n] == 0) {
-              bool set_level = false;
+              bool send_level = false;
               switch (mcl_actions.transition_level[n]) {
               case 1:
-                set_level = true;
+                send_level = true;
                 md_track->machine.level = 0;
                 break;
               case TRANSITION_UNMUTE:
@@ -195,9 +195,8 @@ void GridTask::run() {
                 DEBUG_PRINTLN("default");
                 break;
               }
-              mcl_actions.md_set_machine(n, &(md_track->machine), &(MD.kit),
-                                         set_level);
-              md_track->place_track_in_kit(n, &(MD.kit), set_level);
+              MD.sendMachine(n, &(md_track->machine),
+                                         send_level, true);
               slots_loaded[n] = 1;
             }
           }

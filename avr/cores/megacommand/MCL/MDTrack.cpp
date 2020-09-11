@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 void MDTrack::load_immediate(uint8_t tracknumber) {
-  place_track_in_kit(tracknumber, &(MD.kit));
+  MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(tracknumber);
   store_in_mem(tracknumber);
 }
@@ -30,48 +30,6 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
 
-void MDTrack::place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels) {
-
-  memcpy(kit->params[tracknumber], &(machine.params), 24);
-  if (levels) {
-    kit->levels[tracknumber] = machine.level;
-  }
-  kit->models[tracknumber] = machine.model;
-
-  if (machine.lfo.destinationTrack == tracknumber) {
-
-    machine.lfo.destinationTrack = tracknumber;
-  }
-  // sanity check.
-  if (machine.lfo.destinationTrack > 15) {
-    DEBUG_PRINTLN("warning: lfo dest was out of bounds");
-    machine.lfo.destinationTrack = tracknumber;
-  }
-  memcpy(&(kit->lfos[tracknumber]), &machine.lfo, sizeof(machine.lfo));
-  /*
-  DEBUG_PRINTLN("LFO");
-  DEBUG_DUMP(kit->lfos[tracknumber].destinationTrack);
-  DEBUG_DUMP(kit->lfos[tracknumber].destinationParam);
-  DEBUG_DUMP(kit->lfos[tracknumber].shape1);
-  DEBUG_DUMP(kit->lfos[tracknumber].shape2);
-  DEBUG_DUMP(kit->lfos[tracknumber].type);
-  DEBUG_DUMP(kit->lfos[tracknumber].speed);
-  DEBUG_DUMP(kit->lfos[tracknumber].depth);
-  DEBUG_DUMP(kit->lfos[tracknumber].mix);
-  */
-  if ((machine.trigGroup < 16) && (machine.trigGroup != tracknumber)) {
-    kit->trigGroups[tracknumber] = machine.trigGroup;
-  } else {
-    kit->trigGroups[tracknumber] = 255;
-  }
-
-  if ((machine.muteGroup < 16) && (machine.muteGroup != tracknumber)) {
-    kit->muteGroups[tracknumber] = machine.muteGroup;
-  } else {
-    kit->muteGroups[tracknumber] = 255;
-  }
-}
-
 void MDTrack::init() {
   machine.init();
   seq_data.init();
@@ -93,7 +51,7 @@ void MDTrack::load_seq_data(uint8_t tracknumber) {
 }
 
 void MDTrack::place_track_in_sysex(uint8_t tracknumber) {
-  place_track_in_kit(tracknumber, &(MD.kit));
+  MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(tracknumber);
 }
 

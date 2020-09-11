@@ -80,7 +80,6 @@ public:
 
   void clear_track();
 
-  void place_track_in_kit(uint8_t tracknumber, MDKit *kit, bool levels = true);
   void load_seq_data(uint8_t tracknumber);
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
