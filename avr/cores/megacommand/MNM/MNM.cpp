@@ -261,6 +261,33 @@ void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll, bool in
   sendRequest(data, countof(data));
 }
 
+void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine, bool set_level) {
+  MNMKit *kit_ = &kit;
+
+  memcpy(kit_->parameters[track], machine->params, 72);
+  if (set_level) {
+    kit_->levels[track] = machine->level;
+  }
+  kit_->models[track] = machine->model;
+
+  memcpy(kit_->destPages + track, machine->modifier.destPage,  6*2);
+  memcpy(kit_->destParams + track, machine->modifier.destParam, 6*2);
+  memcpy(kit_->destRanges + track, machine->modifier.range, 6*2);
+
+  kit_->hpKeyTrack = machine->modifier.HPKeyTrack;
+  kit_->lpKeyTrack = machine->modifier.LPKeyTrack;
+  kit_->mirrorLR = machine->modifier.mirrorLR;
+  kit_->mirrorUD = machine->modifier.mirrorUD;
+
+  kit_->trigLegatoAmp = machine->trig.legatoAmp;
+  kit_->trigLegatoFilter = machine->trig.legatoFilter;
+  kit_->trigLegatoLFO = machine->trig.legatoLFO;
+  kit_->trigPortamento = machine->trig.portamento;
+  kit_->trigTracks[track] = machine->trig.track;
+
+  kit_->types[track] = machine->type;
+}
+
 void MNMClass::setMachine(uint8_t track, uint8_t idx) {
   assignMachine(track, kit.models[idx]);
   for (int i = 0; i < 56; i++) {
@@ -278,12 +305,12 @@ void MNMClass::updateKitParams() {
 uint16_t MNMClass::sendKitParams(uint8_t *masks, void* scratchpad) {
   DEBUG_PRINT_FN();
   /// Ignores masks and scratchpad, and send the whole kit.
-  auto kit = getCurrentKit();
-  MNM.kit.origPosition = kit;
-  // md_setsysex_recpos(4, MNM.kit.origPosition);
+  auto kit_pos = getCurrentKit();
+  kit.origPosition = kit_pos;
+  // md_setsysex_recpos(4, kit_->origPosition);
   MNMDataToSysexEncoder encoder(&MidiUart2);
-  MNM.kit.toSysex(&encoder);
-  MNM.loadKit(kit);
+  kit.toSysex(&encoder);
+  MNM.loadKit(kit_pos);
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
   uint16_t mnm_latency_ms = 10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);

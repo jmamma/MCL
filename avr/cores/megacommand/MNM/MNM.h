@@ -108,6 +108,9 @@ class MNMClass: public ElektronDevice {
     assignMachine(currentTrack, model, initAll, initSynth);
   }
   void assignMachine(uint8_t track, uint8_t model, bool initAll = false, bool initSynth = false);
+
+  void insertMachineInKit(uint8_t track, MNMMachine *machine, bool set_level = true);
+
   void setMachine(uint8_t idx) {
     setMachine(currentTrack, idx);
   }

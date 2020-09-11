@@ -14,7 +14,6 @@ public:
   }
 
   virtual void load_immediate(uint8_t tracknumber);
-  void place_track_in_kit(uint8_t tracknumber, MNMKit *kit, bool levels = true);
   void get_machine_from_kit(uint8_t tracknumber);
   virtual bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
   virtual uint16_t get_track_size() { return sizeof(MNMTrack); }
