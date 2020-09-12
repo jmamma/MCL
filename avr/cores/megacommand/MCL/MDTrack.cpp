@@ -14,8 +14,8 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-void MDTrack::transition_load(uint8_t tracknumber) {
-  uint8_t n = tracknumber;
+void MDTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+  uint8_t n = slotnumber;
   if (mcl_actions.send_machine[n]) {
     bool send_level = false;
     DEBUG_DUMP(n);
@@ -26,28 +26,26 @@ void MDTrack::transition_load(uint8_t tracknumber) {
       break;
     case TRANSITION_UNMUTE:
       DEBUG_PRINTLN("unmuting");
-      MD.muteTrack(n, false);
+      MD.muteTrack(tracknumber, false);
       break;
     case TRANSITION_MUTE:
       DEBUG_PRINTLN("muting");
-      MD.muteTrack(n, true);
+      MD.muteTrack(tracknumber, true);
       break;
     default:
       break;
     }
     bool send = true;
-    MD.sendMachine(n, &(machine), send_level, send);
+    MD.sendMachine(tracknumber, &(machine), send_level, send);
   }
-  mcl_seq.md_tracks[n].start_step = mcl_actions.next_transition;
-  mcl_seq.md_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
-  mcl_seq.md_tracks[n].mute_until_start = true;
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
 
-  load_seq_data(n);
+  load_seq_data(seq_track);
 }
 
-void MDTrack::load_immediate(uint8_t tracknumber) {
+void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   MD.insertMachineInKit(tracknumber, &(machine));
-  load_seq_data(tracknumber);
+  load_seq_data(seq_track);
   store_in_mem(tracknumber);
 }
 
@@ -80,24 +78,21 @@ void MDTrack::init() {
   seq_data.init();
 }
 
-void MDTrack::load_seq_data(uint8_t tracknumber) {
-  memcpy(mcl_seq.md_tracks[tracknumber].data(), seq_data.data(),
-         sizeof(seq_data));
-  mcl_seq.md_tracks[tracknumber].speed = chain.speed;
-  mcl_seq.md_tracks[tracknumber].length = chain.length;
-  if (mcl_seq.md_tracks[tracknumber].speed < SEQ_SPEED_1X) {
-    mcl_seq.md_tracks[tracknumber].speed = SEQ_SPEED_1X;
-    mcl_seq.md_tracks[tracknumber].clear_slide_data();
-  }
-  mcl_seq.md_tracks[tracknumber].oneshot_mask = 0;
-  mcl_seq.md_tracks[tracknumber].set_length(
-      mcl_seq.md_tracks[tracknumber].length);
-  mcl_seq.md_tracks[tracknumber].update_params();
-}
+void MDTrack::load_seq_data(SeqTrack *seq_track) {
+  MDSeqTrack *md_seq_track = (MDSeqTrack*) seq_track;
 
-void MDTrack::place_track_in_sysex(uint8_t tracknumber) {
-  MD.insertMachineInKit(tracknumber, &(machine));
-  load_seq_data(tracknumber);
+  memcpy(md_seq_track->data(), seq_data.data(),
+         sizeof(seq_data));
+  md_seq_track->speed = chain.speed;
+  md_seq_track->length = chain.length;
+  if (md_seq_track->speed < SEQ_SPEED_1X) {
+    md_seq_track->speed = SEQ_SPEED_1X;
+    md_seq_track->clear_slide_data();
+  }
+  md_seq_track->oneshot_mask = 0;
+  md_seq_track->set_length(
+      md_seq_track->length);
+  md_seq_track->update_params();
 }
 
 void MDTrack::scale_seq_vol(float scale) {

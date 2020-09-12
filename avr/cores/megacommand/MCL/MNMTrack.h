@@ -13,7 +13,7 @@ public:
     static_assert(sizeof(MNMTrack) <= GRID2_TRACK_LEN);
   }
 
-  virtual void load_immediate(uint8_t tracknumber);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   virtual bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
   virtual uint16_t get_track_size() { return sizeof(MNMTrack); }

@@ -1,9 +1,9 @@
 #include "MCL_impl.h"
 
-void MNMTrack::load_immediate(uint8_t tracknumber) {
+void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINT_FN();
   MNM.insertMachineInKit(tracknumber, &(machine));
-  load_seq_data(tracknumber);
+  load_seq_data(seq_track);
   store_in_mem(tracknumber);
 }
 

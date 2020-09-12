@@ -1,19 +1,15 @@
 #include "MCL_impl.h"
 
-void ExtTrack::transition_load(uint8_t tracknumber) {
-  uint8_t n = tracknumber;
-
-  mcl_seq.ext_tracks[n].buffer_notesoff();
-  mcl_seq.ext_tracks[n].start_step = mcl_actions.next_transition;
-  mcl_seq.ext_tracks[n].start_step_offset = mcl_actions.transition_offsets[n];
-  mcl_seq.ext_tracks[n].mute_until_start = true;
-
-  load_seq_data(n);
+void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+  ext_track->buffer_notesoff();
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
+  load_seq_data(seq_track);
 }
 
-void ExtTrack::load_immediate(uint8_t tracknumber) {
+void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   store_in_mem(tracknumber);
-  load_seq_data(tracknumber);
+  load_seq_data(seq_track);
 }
 
 bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
@@ -21,15 +17,16 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   return true;
 }
 
-bool ExtTrack::load_seq_data(uint8_t tracknumber) {
+bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #ifdef EXT_TRACKS
   if (chain.speed == 0) {
     chain.speed = SEQ_SPEED_2X;
   }
-  mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
-  memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
-  mcl_seq.ext_tracks[tracknumber].speed = chain.speed;
-  mcl_seq.ext_tracks[tracknumber].length = chain.length;
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+  ext_track->buffer_notesoff();
+  memcpy(ext_track, &seq_data, sizeof(seq_data));
+  ext_track->speed = chain.speed;
+  ext_track->length = chain.length;
 #endif
   return true;
 }

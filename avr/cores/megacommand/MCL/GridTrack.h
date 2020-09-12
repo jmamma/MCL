@@ -64,8 +64,9 @@ public:
   }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
-  virtual void load_immediate(uint8_t track_number) {}
-  virtual void transition_load(uint8_t tracknumber) {}
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
+  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+
   virtual void transition_clear(uint8_t tracknumber, SeqTrack* seq_track) {}
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }

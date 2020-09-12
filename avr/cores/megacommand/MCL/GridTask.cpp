@@ -132,7 +132,7 @@ void GridTask::run() {
       auto *pmem_track = empty_track.load_from_mem(track_idx, track_type);
 
       if (pmem_track->is_active()) {
-        pmem_track->transition_load(track_idx);
+        pmem_track->transition_load(track_idx, seq_track, n);
 
       } else {
         pmem_track->transition_clear(track_idx, seq_track);

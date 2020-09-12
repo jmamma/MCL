@@ -21,17 +21,17 @@ public:
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
-  void transition_load(uint8_t tracknumber);
+  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
   void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     ext_seq_track->clear_track();
   }
 
-  bool load_seq_data(uint8_t tracknumber);
+  bool load_seq_data(SeqTrack *seq_track);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
                            bool online = false);
-  virtual void load_immediate(uint8_t tracknumber);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   bool virtual convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;

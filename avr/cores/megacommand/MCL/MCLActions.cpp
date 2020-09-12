@@ -396,7 +396,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
       // empty, or incompatible
     } else {
       DEBUG_DUMP(i);
-      ptrack->load_immediate(track_idx);
+      ptrack->load_immediate(track_idx, seq_track);
       if (track_type != 255) {
         send_masks[i] = 1;
       }

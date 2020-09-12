@@ -21,7 +21,7 @@ public:
     static_assert(sizeof(A4Track) <= GRID2_TRACK_LEN);
   }
   uint16_t calc_latency(uint8_t tracknumber);
-  void transition_load(uint8_t tracknumber);
+  void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge, bool online = false);
   bool convert(A4Track_270 *old) {

@@ -80,7 +80,7 @@ public:
 
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
-  void transition_load(uint8_t tracknumber);
+  void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
   void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
     MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
     bool clear_locks = true;
@@ -88,14 +88,13 @@ public:
     md_seq_track->clear_track(clear_locks, reset_params);
   }
 
-  void load_seq_data(uint8_t tracknumber);
+  void load_seq_data(SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
-  void place_track_in_sysex(uint8_t tracknumber);
 
   bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
                      bool online = false);
-  void load_immediate(uint8_t tracknumber);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   // scale machine track vol by percentage
   void scale_vol(float scale);
