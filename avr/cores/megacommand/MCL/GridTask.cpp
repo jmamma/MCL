@@ -51,7 +51,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
-  uint8_t grid_id, track_idx, track_type, dev_idx;
+  uint8_t grid_idx, track_idx, track_type, dev_idx;
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
@@ -70,7 +70,7 @@ void GridTask::run() {
         (mcl_cfg.chain_mode == 2)) {
 
 
-      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
+      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
 
       auto *pmem_track =
           empty_track.load_from_mem(track_idx, track_type);
@@ -101,7 +101,7 @@ void GridTask::run() {
   for (uint8_t c = 2 - 1; c >= 0; c--) {
     wait = true;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
+    SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
 
     if ((track_idx == 255) || (dev_idx != c))
         continue;
