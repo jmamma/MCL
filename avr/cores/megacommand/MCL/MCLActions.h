@@ -57,12 +57,9 @@ public:
   void setup();
 
   uint8_t get_grid_id(uint8_t slot_number);
-  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id);
+  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id, uint8_t *dev_idx);
 
-  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id, uint8_t *track_idx, uint8_t *track_type);
-  SeqTrack *get_seq_track(uint8_t slot_number);
-  uint8_t get_dev_track_type(uint8_t slot_number);
-  uint8_t get_dev_track_id(uint8_t slot_number);
+  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id, uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx);
 
   void send_globals();
   void switch_global(uint8_t global_page);

@@ -62,7 +62,7 @@ uint8_t MCLActions::get_grid_id(uint8_t slot_number) {
 }
 
 GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
-                                                uint8_t *id) {
+                                                uint8_t *track_idx, uint8_t *dev_idx) {
   uint8_t grid_id = get_grid_id(slot_number);
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
@@ -73,52 +73,27 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
     auto *p = &(devs[n]->grid_devices[grid_id]);
     for (uint8_t i = 0; i < p->get_num_tracks(); i++) {
       if (slot_number == p->tracks[i].get_slot_number()) {
-        *id = i;
+        *track_idx = i;
+        *dev_idx = n;
         return &(p->tracks[i]);
       }
     }
   }
-  *id = 255;
+  *track_idx = 255;
+  *dev_idx = 255;
   return nullptr;
 }
 
 SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id,
-                            uint8_t *track_idx, uint8_t *track_type) {
-  uint8_t id;
-  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+                            uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx) {
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, track_idx, dev_idx);
   *grid_id = get_grid_id(slot_number);
   if (p) {
-    *track_idx = id;
     *track_type = p->track_type;
     return p->seq_track;
   }
-  *track_idx = 255;
   *track_type = 255;
   return nullptr;
-}
-
-SeqTrack *MCLActions::get_seq_track(uint8_t slot_number) {
-  uint8_t id;
-  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
-  if (p) {
-    return p->seq_track;
-  }
-  return nullptr;
-}
-
-uint8_t MCLActions::get_dev_track_type(uint8_t slot_number) {
-  uint8_t id;
-  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
-  if (p) {
-    return p->track_type;
-  }
-  return 255;
-}
-
-uint8_t MCLActions::get_dev_track_id(uint8_t slot_number) {
-  uint8_t id;
-  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
-  return id;
 }
 
 void MCLActions::store_tracks_in_mem(int column, int row,
@@ -146,7 +121,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
   uint8_t i = 0;
 
-  uint8_t grid_id, track_idx, track_type;
+  uint8_t grid_id, track_idx, track_type, dev_idx;
 
   for (i = 0; i < NUM_SLOTS; i++) {
     if (track_select_array[i] > 0) {
@@ -215,9 +190,9 @@ void MCLActions::store_tracks_in_mem(int column, int row,
       }
 
       SeqTrack *seq_track =
-          get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
+          get_dev_slot_info(i, &grid_id, &track_idx, &track_type, &dev_idx);
 
-      online = (elektron_devs[grid_id] != nullptr);
+      online = (elektron_devs[dev_idx] != nullptr);
       DEBUG_DUMP(track_type);
       // If save_grid_tracks[grid_id] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
@@ -315,11 +290,11 @@ void MCLActions::prepare_next_chain(int row, uint8_t *track_select_array) {
   if (q < 4) {
     q = 4;
   }
-  uint8_t grid_id, track_idx, track_type;
+  uint8_t grid_id, track_idx, track_type, dev_idx;
 
   for (uint8_t n = 0; n < NUM_TRACKS; ++n) {
 
-    SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+    SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
     proj.select_grid(grid_id);
 
     if (track_select_array[n] == 0 ||
@@ -387,11 +362,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
 
   uint8_t old_grid = proj.get_grid();
 
-  uint8_t grid_id, track_idx, track_type;
+  uint8_t grid_id, track_idx, track_type, dev_idx;
 
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
-    SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
+    SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type, &dev_idx);
 
     if (seq_track) {
       mute_states[i] = seq_track->mute_state;
@@ -463,7 +438,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
   GUI.addTask(&grid_task);
 
   for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-      SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
+      SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type, &dev_idx);
 
       if (seq_track) {
       seq_track->mute_state = mute_states[i];
@@ -508,7 +483,7 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
 
   uint8_t old_grid = proj.get_grid();
 
-    uint8_t grid_id, track_idx, track_type;
+    uint8_t grid_id, track_idx, track_type, dev_idx;
 
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -523,7 +498,7 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
         }
       }
 
-      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
 
       if (track_idx == 255) {
         continue;
@@ -643,7 +618,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   for (uint8_t a = 0; a < NUM_GRIDS; a++) {
     dev_latency[a].latency = 0;
   }
-  uint8_t grid_id, track_idx, track_type;
+  uint8_t grid_id, track_idx, track_type, dev_idx;
 
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -651,7 +626,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       continue;
     if (next_transitions[n] == next_transition) {
 
-      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
 
       if (track_idx == 255) {
         continue;

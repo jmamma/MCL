@@ -51,6 +51,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
+  uint8_t grid_id, track_idx, track_type, dev_idx;
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
@@ -68,25 +69,16 @@ void GridTask::run() {
     if ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
         (mcl_cfg.chain_mode == 2)) {
 
-      uint8_t grid_col = n;
-      uint8_t grid = 0;
-      // GRID 1
-      if (n < GRID_WIDTH) {
-        grid = 0;
-      }
-      // GRID 2
-      else {
-        grid = 1;
-        grid_col -= GRID_WIDTH;
-      }
+
+      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
 
       auto *pmem_track =
-          empty_track.load_from_mem(grid_col, devs[grid]->track_type);
+          empty_track.load_from_mem(track_idx, track_type);
       if (pmem_track != nullptr) {
         slots_changed[n] = mcl_actions.chains[n].row;
         memcpy(&mcl_actions.chains[n], &pmem_track->chain, sizeof(GridChain));
         if (pmem_track->active) {
-          send_device[grid] = true;
+          send_device[dev_idx] = true;
         }
       }
     }
@@ -106,38 +98,21 @@ void GridTask::run() {
   }
 
   bool wait;
-  uint8_t grid = 255;
+  for (uint8_t c = 2 - 1; c >= 0; c--) {
+    wait = true;
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    SeqTrack *seq_track = mcl_actions.get_dev_slot_info(n, &grid_id, &track_idx, &track_type, &dev_idx);
 
-  for (int8_t n = NUM_SLOTS - 1; n >= 0; n--) {
-
-    uint8_t grid_col = n;
-    // GRID 1
-    if (n < GRID_WIDTH) {
-      if (grid != 0) {
-        wait = true;
-      }
-      grid = 0;
-    }
-    // GRID 2
-    else {
-      if (grid != 1) {
-        wait = true;
-      }
-      grid = 1;
-      grid_col -= GRID_WIDTH;
-    }
-
-    if (grid_col >= devs[grid]->track_count)
+    if ((track_idx == 255) || (dev_idx != c))
         continue;
 
-    grid_col = devs[grid]->track_count - grid_col - 1;
     // Wait on first track of each device;
-    if (wait && send_device[grid] &&
-        mcl_actions.dev_latency[grid].latency > 0) {
+    if (wait && send_device[c] &&
+        mcl_actions.dev_latency[c].latency > 0) {
 
       uint32_t go_step =
           mcl_actions.next_transition * 12 - div192th_total_latency;
-      div192th_total_latency -= mcl_actions.dev_latency[grid].latency;
+      div192th_total_latency -= mcl_actions.dev_latency[dev_idx].latency;
       uint32_t diff;
 
       while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
@@ -150,15 +125,15 @@ void GridTask::run() {
         }
       }
     }
-
+    wait = false;
     if (slots_changed[n] < 0)
       continue;
 
     auto *pmem_track =
-        empty_track.load_from_mem(grid_col, devs[grid]->track_type);
+        empty_track.load_from_mem(track_idx, track_type);
 
     if (pmem_track->is_active()) {
-      pmem_track->transition_load(grid_col);
+      pmem_track->transition_load(track_idx);
 
     } else {
       //** TODO
@@ -174,7 +149,7 @@ void GridTask::run() {
 
     grid_page.active_slots[n] = slots_changed[n];
   }
-
+  }
   if (mcl_cfg.chain_mode != 2) {
 
     uint8_t track_select_array[NUM_SLOTS] = {0};

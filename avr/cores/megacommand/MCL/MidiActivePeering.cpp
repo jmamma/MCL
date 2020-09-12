@@ -129,8 +129,8 @@ MidiDevice* MidiActivePeering::get_device(uint8_t port) {
   }
 }
 
-GenericMidiDevice::GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false, EXT_TRACK_TYPE, NUM_EXT_TRACKS) {}
-NullMidiDevice::NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false, 255, 0) {}
+GenericMidiDevice::GenericMidiDevice() : MidiDevice(&Midi2, "MIDI Device", DEVICE_MIDI, nullptr, false) {}
+NullMidiDevice::NullMidiDevice() : MidiDevice(nullptr, "NULL Device", DEVICE_NULL, nullptr, false) {}
 
 void MidiActivePeering::run() {
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers), &connected_midi_devices[0]);
