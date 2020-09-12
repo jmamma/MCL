@@ -121,14 +121,14 @@ MDClass::MDClass()
 }
 
 void MDClass::init_grid_devices() {
-  uint8_t grid_id = 0;
+  uint8_t grid_idx = 0;
 
-  auto *devp = &grid_devices[grid_id];
+  auto *devp = &grid_devices[grid_idx];
 
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
     devp->add_track(i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
   }
-  devp = &grid_devices[grid_id];
+  devp = &grid_devices[grid_idx];
   devp->add_track(15, nullptr, MDFX_TRACK_TYPE);
 }
 

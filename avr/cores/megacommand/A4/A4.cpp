@@ -33,9 +33,9 @@ A4Class::A4Class(): ElektronDevice(
     }
 
 void A4Class::init_grid_devices() {
-  uint8_t grid_id = 0;
+  uint8_t grid_idx = 1;
 
-  auto *devp = &grid_devices[grid_id];
+  auto *devp = &grid_devices[grid_idx];
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     devp->add_track(i,  &(mcl_seq.ext_tracks[i]), A4_TRACK_TYPE);
