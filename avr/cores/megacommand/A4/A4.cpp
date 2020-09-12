@@ -29,7 +29,22 @@ const ElektronSysexProtocol a4_protocol = {
 
 A4Class::A4Class(): ElektronDevice(
     &Midi2, "A4", DEVICE_A4, icon_a4, A4_TRACK_TYPE, NUM_A4_SOUND_TRACKS,
-    a4_protocol){}
+    a4_protocol){
+    init_grid_devices();
+    }
+
+void A4Class::init_grid_devices() {
+  uint8_t dev_id = 0;
+
+  auto *devp = &grid_devices[dev_id];
+
+  devp->grid_id = 1;
+
+  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+    devp->add_track(i,  &(mcl_seq.ext_tracks[i]));
+  }
+
+}
 
 uint16_t A4Class::sendKitParams(uint8_t* masks, void* scratchpad) {
   auto empty_track = (EmptyTrack*)scratchpad;

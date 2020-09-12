@@ -4,10 +4,10 @@
 #define ELEKTRON_H__
 
 #include "WProgram.h"
-
 #include <inttypes.h>
 #include "MidiID.h"
 #include "MidiSysex.h"
+#include "MCLMemory.h"
 
 /** Store the name of a monomachine machine. **/
 typedef struct mnm_machine_name_s {
@@ -132,9 +132,36 @@ typedef void (SysexCallback::*sysex_status_callback_ptr_t)(uint8_t type,
 
 /// forward declaration
 class ElektronDevice;
-
+class SeqTrack;
 /// Base class for MIDI-compatible devices
 /// Defines basic device description data and driver interfaces.
+
+class GridDeviceTrack {
+public:
+  uint8_t slot_number;
+  SeqTrack *seq_track;
+  uint8_t get_slot_number() { return slot_number; }
+  SeqTrack *get_seq_track() { return seq_track; }
+};
+
+class GridDevice {
+public:
+  uint8_t num_tracks;
+  uint8_t grid_id;
+  uint8_t get_track_count() { return num_tracks; }
+
+  GridDeviceTrack tracks[NUM_GRIDS];
+
+  GridDevice() { init(); }
+
+  void init() { num_tracks = 0; }
+  void add_track(uint8_t slot_number, SeqTrack *seq_track) {
+    tracks[num_tracks].slot_number = slot_number;
+    tracks[num_tracks].seq_track = seq_track;
+    num_tracks++;
+  }
+};
+
 class MidiDevice {
 public:
   bool connected;
@@ -146,6 +173,8 @@ public:
   const bool isElektronDevice;
   const uint8_t track_type; // Track type identifier
   const uint8_t track_count; // Specifies the maximum number of tracks that can be hosted
+
+  GridDevice grid_devices[NUM_GRIDS];
 
   MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice, const uint8_t _track_type, const uint8_t _track_count)
     : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice), track_type(_track_type), track_count(_track_count)
@@ -159,6 +188,8 @@ public:
     if (!isElektronDevice) return nullptr;
     return (ElektronDevice*) this;
   }
+
+  virtual void init_grid_devices() {};
 
   virtual void disconnect() { connected = false; }
   virtual bool probe() = 0;

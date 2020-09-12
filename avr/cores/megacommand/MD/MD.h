@@ -80,6 +80,8 @@ public:
   MDGlobal global;
 
   virtual bool probe();
+  virtual void init_grid_devices();
+
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual ElektronSysexObject* getKit() { return &kit; }

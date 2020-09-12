@@ -1,39 +1,56 @@
 #include "MCL_impl.h"
 
 const ElektronSysexProtocol mnm_protocol = {
-  monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr),
-  MNM_KIT_REQUEST_ID, 
-  MNM_PATTERN_REQUEST_ID, 
-  MNM_SONG_REQUEST_ID, 
-  MNM_GLOBAL_REQUEST_ID,
-  MNM_STATUS_REQUEST_ID,
+    monomachine_sysex_hdr,
+    sizeof(monomachine_sysex_hdr),
+    MNM_KIT_REQUEST_ID,
+    MNM_PATTERN_REQUEST_ID,
+    MNM_SONG_REQUEST_ID,
+    MNM_GLOBAL_REQUEST_ID,
+    MNM_STATUS_REQUEST_ID,
 
-  MNM_CURRENT_AUDIO_TRACK_REQUEST,
-  MNM_CURRENT_KIT_REQUEST,
-  MNM_CURRENT_PATTERN_REQUEST,
-  MNM_CURRENT_SONG_REQUEST,
-  MNM_CURRENT_GLOBAL_SLOT_REQUEST,
+    MNM_CURRENT_AUDIO_TRACK_REQUEST,
+    MNM_CURRENT_KIT_REQUEST,
+    MNM_CURRENT_PATTERN_REQUEST,
+    MNM_CURRENT_SONG_REQUEST,
+    MNM_CURRENT_GLOBAL_SLOT_REQUEST,
 
-  MNM_SET_STATUS_ID,
-  MNM_SET_TEMPO_ID,
-  MNM_SET_CURRENT_KIT_NAME_ID, 11,
+    MNM_SET_STATUS_ID,
+    MNM_SET_TEMPO_ID,
+    MNM_SET_CURRENT_KIT_NAME_ID,
+    11,
 
-  MNM_LOAD_GLOBAL_ID,
-  MNM_LOAD_PATTERN_ID,
-  MNM_LOAD_KIT_ID,
+    MNM_LOAD_GLOBAL_ID,
+    MNM_LOAD_PATTERN_ID,
+    MNM_LOAD_KIT_ID,
 
-  MNM_SAVE_KIT_ID,
+    MNM_SAVE_KIT_ID,
 };
 
 MNMClass::MNMClass()
-  :ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, MNM_TRACK_TYPE, NUM_MNM_TRACKS, mnm_protocol) {
+    : ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, MNM_TRACK_TYPE,
+                     NUM_MNM_TRACKS, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
+  init_grid_devices();
+}
+
+void MNMClass::init_grid_devices() {
+  uint8_t dev_id = 0;
+
+  auto *devp = &grid_devices[dev_id];
+
+  devp->grid_id = 1;
+
+  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+    devp->add_track(i, &(mcl_seq.ext_tracks[i]));
+  }
 }
 
 bool MNMClass::probe() {
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), UART2_PORT);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo),
+                          UART2_PORT);
     // wait 400 ms, should be enought time to allow midiclock tempo to be
     // calculated before proceeding.
     mcl_gui.delay_progress(400);
@@ -122,9 +139,9 @@ void MNMClass::sendAutoNoteOff(uint8_t note) {
 }
 
 void MNMClass::triggerTrack(uint8_t track, bool amp, bool lfo, bool filter) {
-  midiuart->sendNRPN(global.baseChannel,
-		    (uint16_t)(0x7F << 7),
-		    (uint8_t)((track << 3) | (amp ? 4 : 0) | (lfo ? 2 : 0) | (filter ? 1 : 0)));
+  midiuart->sendNRPN(global.baseChannel, (uint16_t)(0x7F << 7),
+                     (uint8_t)((track << 3) | (amp ? 4 : 0) | (lfo ? 2 : 0) |
+                               (filter ? 1 : 0)));
 }
 
 void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
@@ -179,7 +196,8 @@ void MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value) {
   midiuart->sendCC(global.baseChannel + track, cc, value);
 }
 
-bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *param) {
+bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
+                       uint8_t *param) {
   if ((channel >= global.baseChannel) && (channel < (global.baseChannel + 6))) {
     *track = channel - global.baseChannel;
     if ((cc >= 0x30) && (cc <= 0x3f)) {
@@ -203,9 +221,7 @@ bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *par
   return false;
 }
 
-void MNMClass::loadSong(uint8_t id) {
-  setStatus(8, id);
-}
+void MNMClass::loadSong(uint8_t id) { setStatus(8, id); }
 
 void MNMClass::setSequencerMode(bool songMode) {
   setStatus(0x10, songMode ? 1 : 0);
@@ -219,13 +235,9 @@ void MNMClass::setSequencerModeMode(bool midiMode) {
   setStatus(0x21, midiMode ? 1 : 0);
 }
 
-void MNMClass::setAudioTrack(uint8_t track) {
-  setStatus(0x22, track);
-}
+void MNMClass::setAudioTrack(uint8_t track) { setStatus(0x22, track); }
 
-void MNMClass::setMidiTrack(uint8_t track) {
-  setStatus(0x23, track);
-}
+void MNMClass::setMidiTrack(uint8_t track) { setStatus(0x23, track); }
 
 void MNMClass::revertToCurrentKit(bool reloadKit) {
   if (!reloadKit) {
@@ -240,7 +252,6 @@ void MNMClass::revertToCurrentKit(bool reloadKit) {
   }
 }
 
-
 void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   if (!reloadKit) {
     if (loadedKit) {
@@ -249,8 +260,9 @@ void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   }
 }
 
-void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll, bool initSynth) {
-  uint8_t data[] = { MNM_LOAD_GLOBAL_ID, track, model, 0x00 };
+void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
+                             bool initSynth) {
+  uint8_t data[] = {MNM_LOAD_GLOBAL_ID, track, model, 0x00};
   if (initAll) {
     data[3] = 0x01;
   } else if (initSynth) {
@@ -261,7 +273,8 @@ void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll, bool in
   sendRequest(data, countof(data));
 }
 
-void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine, bool set_level) {
+void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine,
+                                  bool set_level) {
   MNMKit *kit_ = &kit;
 
   memcpy(kit_->parameters[track], machine->params, 72);
@@ -270,9 +283,9 @@ void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine, bool set_l
   }
   kit_->models[track] = machine->model;
 
-  memcpy(kit_->destPages + track, machine->modifier.destPage,  6*2);
-  memcpy(kit_->destParams + track, machine->modifier.destParam, 6*2);
-  memcpy(kit_->destRanges + track, machine->modifier.range, 6*2);
+  memcpy(kit_->destPages + track, machine->modifier.destPage, 6 * 2);
+  memcpy(kit_->destParams + track, machine->modifier.destParam, 6 * 2);
+  memcpy(kit_->destRanges + track, machine->modifier.range, 6 * 2);
 
   kit_->hpKeyTrack = machine->modifier.HPKeyTrack;
   kit_->lpKeyTrack = machine->modifier.LPKeyTrack;
@@ -298,11 +311,11 @@ void MNMClass::setMachine(uint8_t track, uint8_t idx) {
 
 void MNMClass::updateKitParams() {
   for (uint8_t n = 0; n < NUM_MNM_TRACKS; n++) {
-    //mcl_seq.ext_tracks[n].update_kit_params(); // huh.
+    // mcl_seq.ext_tracks[n].update_kit_params(); // huh.
   }
 }
 
-uint16_t MNMClass::sendKitParams(uint8_t *masks, void* scratchpad) {
+uint16_t MNMClass::sendKitParams(uint8_t *masks, void *scratchpad) {
   DEBUG_PRINT_FN();
   /// Ignores masks and scratchpad, and send the whole kit.
   auto kit_pos = getCurrentKit();
@@ -313,10 +326,10 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks, void* scratchpad) {
   MNM.loadKit(kit_pos);
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
-  uint16_t mnm_latency_ms = 10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
+  uint16_t mnm_latency_ms =
+      10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
   mnm_latency_ms += 10;
   DEBUG_DUMP(mnm_latency_ms);
 
   return mnm_latency_ms;
 }
-

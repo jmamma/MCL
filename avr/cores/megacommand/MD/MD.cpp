@@ -118,6 +118,24 @@ MDClass::MDClass()
   for (int i = 0; i < 16; i++) {
     global.drumMapping[i] = standardDrumMapping[i];
   }
+  init_grid_devices();
+}
+
+void MDClass::init_grid_devices() {
+  uint8_t dev_id = 0;
+  uint8_t grid_id = 0;
+
+  auto *devp = &grid_devices[dev_id];
+
+  devp->grid_id = dev_id;
+
+  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
+    devp->add_track(i, &(mcl_seq.md_tracks[i]));
+  }
+  dev_id = 1;
+  devp = &grid_devices[dev_id];
+  devp->grid_id = dev_id;
+  devp->add_track(15, nullptr);
 }
 
 bool MDClass::probe() {
@@ -483,7 +501,7 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 }
 
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
-                                bool set_level) {
+                                 bool set_level) {
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], &(machine->params), 24);
@@ -517,7 +535,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
 }
 
 uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
-                            bool send) {
+                             bool send) {
   uint16_t bytes = 0;
 
   MDKit *kit_ = &kit;
