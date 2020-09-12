@@ -58,6 +58,8 @@ public:
 
   uint8_t get_grid_id(uint8_t slot_number);
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id);
+
+  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id, uint8_t *track_idx, uint8_t *track_type);
   SeqTrack *get_seq_track(uint8_t slot_number);
   uint8_t get_dev_track_type(uint8_t slot_number);
   uint8_t get_dev_track_id(uint8_t slot_number);

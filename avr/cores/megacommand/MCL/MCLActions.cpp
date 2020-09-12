@@ -82,6 +82,19 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   return nullptr;
 }
 
+SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id,
+                            uint8_t *track_idx, uint8_t *track_type) {
+  uint8_t id;
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+  if (p) {
+    *grid_id = get_grid_id(slot_number);
+    *track_idx = id;
+    *track_type = p->track_type;
+    return p->seq_track;
+  }
+  return nullptr;
+}
+
 SeqTrack *MCLActions::get_seq_track(uint8_t slot_number) {
   uint8_t id;
   GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
@@ -188,10 +201,10 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   }
 
   uint8_t grid_id = 0;
-  uint8_t track_id = 0;
+  uint8_t track_idx = 0;
 
   DEBUG_DUMP(Analog4.connected);
-  uint8_t track_type, track_num;
+  uint8_t track_type;
   bool online;
 
   for (i = 0; i < NI_MAX_NOTES; i++) {
@@ -200,9 +213,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         first_note = i;
       }
 
-      grid_id = get_grid_id(i);
-      track_id = get_dev_track_id(i);
-      track_type = get_dev_track_type(i);
+      SeqTrack *seq_track =
+          get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
 
       online = (elektron_devs[grid_id] != nullptr);
       DEBUG_DUMP(track_type);
@@ -216,8 +228,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         proj.select_grid(grid_id);
 
         // Preserve existing chain settings before save.
-        if (row_headers[grid_id].track_type[track_num] != EMPTY_TRACK_TYPE) {
-          grid_track.load_from_grid(track_num, row);
+        if (row_headers[grid_id].track_type[track_idx] != EMPTY_TRACK_TYPE) {
+          grid_track.load_from_grid(track_idx, row);
           empty_track.chain.loops = grid_track.chain.loops;
           empty_track.chain.row = grid_track.chain.row;
         } else {
@@ -226,10 +238,10 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         }
         DEBUG_DUMP(track_type);
         auto pdevice_track = empty_track.init_track_type(track_type);
-        pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge,
+        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), merge,
                                      online);
-        row_headers[grid_id].update_model(
-            track_num, pdevice_track->get_model(), track_type);
+        row_headers[grid_id].update_model(track_idx, pdevice_track->get_model(),
+                                          track_type);
       }
     }
   }
