@@ -109,8 +109,7 @@ const ElektronSysexProtocol md_protocol = {
 };
 
 MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, MD_TRACK_TYPE,
-                     NUM_MD_TRACKS, md_protocol) {
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, md_protocol) {
   uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
                                      50, 52, 53, 55, 57, 59, 60, 62};
 
@@ -130,12 +129,12 @@ void MDClass::init_grid_devices() {
   devp->grid_id = dev_id;
 
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-    devp->add_track(i, &(mcl_seq.md_tracks[i]));
+    devp->add_track(i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
   }
   dev_id = 1;
   devp = &grid_devices[dev_id];
   devp->grid_id = dev_id;
-  devp->add_track(15, nullptr);
+  devp->add_track(15, nullptr, MDFX_TRACK_TYPE);
 }
 
 bool MDClass::probe() {

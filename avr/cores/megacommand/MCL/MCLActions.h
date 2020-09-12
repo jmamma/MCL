@@ -55,6 +55,13 @@ public:
   MCLActions() {}
 
   void setup();
+
+  uint8_t get_grid_id(uint8_t slot_number);
+  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id);
+  SeqTrack *get_seq_track(uint8_t slot_number);
+  uint8_t get_dev_track_type(uint8_t slot_number);
+  uint8_t get_dev_track_id(uint8_t slot_number);
+
   void send_globals();
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);

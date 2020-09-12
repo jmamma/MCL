@@ -139,6 +139,7 @@ class SeqTrack;
 class GridDeviceTrack {
 public:
   uint8_t slot_number;
+  uint8_t track_type;
   SeqTrack *seq_track;
   uint8_t get_slot_number() { return slot_number; }
   SeqTrack *get_seq_track() { return seq_track; }
@@ -148,16 +149,17 @@ class GridDevice {
 public:
   uint8_t num_tracks;
   uint8_t grid_id;
-  uint8_t get_track_count() { return num_tracks; }
+  uint8_t get_num_tracks() { return num_tracks; }
 
   GridDeviceTrack tracks[NUM_GRIDS];
 
   GridDevice() { init(); }
 
   void init() { num_tracks = 0; }
-  void add_track(uint8_t slot_number, SeqTrack *seq_track) {
+  void add_track(uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type) {
     tracks[num_tracks].slot_number = slot_number;
     tracks[num_tracks].seq_track = seq_track;
+    tracks[num_tracks].track_type = track_type;
     num_tracks++;
   }
 };
@@ -171,13 +173,11 @@ public:
   const uint8_t id; // Device identifier
   const uint8_t* const icon;
   const bool isElektronDevice;
-  const uint8_t track_type; // Track type identifier
-  const uint8_t track_count; // Specifies the maximum number of tracks that can be hosted
 
   GridDevice grid_devices[NUM_GRIDS];
 
-  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice, const uint8_t _track_type, const uint8_t _track_count)
-    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice), track_type(_track_type), track_count(_track_count)
+  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice)
+    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice)
   {
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
@@ -347,9 +347,9 @@ public:
   bool loadedGlobal;
 
   ElektronDevice(
-      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const uint8_t _track_type, const uint8_t _track_count,
+      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon,
       const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, _icon, true, _track_type, _track_count), sysex_protocol(protocol) {
+    : MidiDevice(_midi, _name, _id, _icon, true), sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;

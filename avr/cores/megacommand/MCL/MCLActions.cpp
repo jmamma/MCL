@@ -57,6 +57,55 @@ void MCLActions::kit_reload(uint8_t pattern) {
   }
 }
 
+uint8_t MCLActions::get_grid_id(uint8_t slot_number) {
+  return slot_number / GRID_WIDTH;
+}
+
+GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
+                                                uint8_t *id) {
+  uint8_t grid_id = get_grid_id(slot_number);
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+
+  for (uint8_t n = 0; n < 2; n++) {
+    auto *p = &(devs[n]->grid_devices[grid_id]);
+    for (uint8_t i = 0; i < p->get_num_tracks(); i++) {
+      if (slot_number == p->tracks[i].get_slot_number()) {
+        *id = i;
+        return &(p->tracks[i]);
+      }
+    }
+  }
+  *id = 255;
+  return nullptr;
+}
+
+SeqTrack *MCLActions::get_seq_track(uint8_t slot_number) {
+  uint8_t id;
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+  if (p) {
+    return p->seq_track;
+  }
+  return nullptr;
+}
+
+uint8_t MCLActions::get_dev_track_type(uint8_t slot_number) {
+  uint8_t id;
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+  if (p) {
+    return p->track_type;
+  }
+  return 255;
+}
+
+uint8_t MCLActions::get_dev_track_id(uint8_t slot_number) {
+  uint8_t id;
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+  return id;
+}
+
 void MCLActions::store_tracks_in_mem(int column, int row,
                                      uint8_t *track_select_array,
                                      uint8_t merge) {
@@ -138,7 +187,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
 
-  uint8_t grid_num = 0;
+  uint8_t grid_id = 0;
+  uint8_t track_id = 0;
 
   DEBUG_DUMP(Analog4.connected);
   uint8_t track_type, track_num;
@@ -150,37 +200,23 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         first_note = i;
       }
 
-      if (i < GRID_WIDTH) {
-        grid_num = 0;
-        track_num = i;
-      } else {
-        grid_num = 1;
-        track_num = i - GRID_WIDTH;
-      }
+      grid_id = get_grid_id(i);
+      track_id = get_dev_track_id(i);
+      track_type = get_dev_track_type(i);
 
-      track_type = 255;
-
-      // Sound tracks
-      // If devs[grid_num] is a NullMidiDevice, track type will be 255
-      if (track_num < devs[grid_num]->track_count) {
-        track_type = devs[grid_num]->track_type;
-        online = (elektron_devs[grid_num] != nullptr);
-        DEBUG_DUMP(track_type);
-        // If save_grid_tracks[grid_num] turns false, it means getBlockingKit
-        // has failed, so we just skip this device.
-        if (!save_grid_tracks[grid_num]) {
-          continue;
-        }
-      } else if (grid_num == 1 && track_num == MDFX_TRACK_NUM && MD.connected) {
-        track_type = MDFX_TRACK_TYPE;
-        online = true;
+      online = (elektron_devs[grid_id] != nullptr);
+      DEBUG_DUMP(track_type);
+      // If save_grid_tracks[grid_num] turns false, it means getBlockingKit
+      // has failed, so we just skip this device.
+      if (!save_grid_tracks[grid_id]) {
+        continue;
       }
 
       if (track_type != 255) {
-        proj.select_grid(grid_num);
+        proj.select_grid(grid_id);
 
         // Preserve existing chain settings before save.
-        if (row_headers[grid_num].track_type[track_num] != EMPTY_TRACK_TYPE) {
+        if (row_headers[grid_id].track_type[track_num] != EMPTY_TRACK_TYPE) {
           grid_track.load_from_grid(track_num, row);
           empty_track.chain.loops = grid_track.chain.loops;
           empty_track.chain.row = grid_track.chain.row;
@@ -192,7 +228,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         auto pdevice_track = empty_track.init_track_type(track_type);
         pdevice_track->store_in_grid(track_num, grid_page.getRow(), merge,
                                      online);
-        row_headers[grid_num].update_model(
+        row_headers[grid_id].update_model(
             track_num, pdevice_track->get_model(), track_type);
       }
     }

@@ -28,8 +28,7 @@ const ElektronSysexProtocol mnm_protocol = {
 };
 
 MNMClass::MNMClass()
-    : ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, MNM_TRACK_TYPE,
-                     NUM_MNM_TRACKS, mnm_protocol) {
+    : ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
   init_grid_devices();
@@ -43,7 +42,7 @@ void MNMClass::init_grid_devices() {
   devp->grid_id = 1;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    devp->add_track(i, &(mcl_seq.ext_tracks[i]));
+    devp->add_track(i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
   }
 }
 
