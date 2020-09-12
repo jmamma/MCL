@@ -81,6 +81,12 @@ public:
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_load(uint8_t tracknumber);
+  void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
+    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+    bool clear_locks = true;
+    bool reset_params = false;
+    md_seq_track->clear_track(clear_locks, reset_params);
+  }
 
   void load_seq_data(uint8_t tracknumber);
   void get_machine_from_kit(uint8_t tracknumber);

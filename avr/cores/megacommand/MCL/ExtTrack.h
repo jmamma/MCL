@@ -22,6 +22,11 @@ public:
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
   void transition_load(uint8_t tracknumber);
+  void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
+    ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
+    ext_seq_track->clear_track();
+  }
+
   bool load_seq_data(uint8_t tracknumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
