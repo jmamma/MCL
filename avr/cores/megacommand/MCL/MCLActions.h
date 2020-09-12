@@ -22,7 +22,7 @@ public:
 
 class ChainModeData {
 public:
-  DeviceLatency dev_latency[NUM_GRIDS];
+  DeviceLatency dev_latency[2];
 
   GridChain chains[NUM_SLOTS];
 

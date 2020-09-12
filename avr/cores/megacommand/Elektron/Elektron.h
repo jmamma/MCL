@@ -148,10 +148,9 @@ public:
 class GridDevice {
 public:
   uint8_t num_tracks;
-  uint8_t grid_id;
   uint8_t get_num_tracks() { return num_tracks; }
 
-  GridDeviceTrack tracks[NUM_GRIDS];
+  GridDeviceTrack tracks[NUM_SLOTS];
 
   GridDevice() { init(); }
 

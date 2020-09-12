@@ -68,7 +68,7 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
-
+  //Find first device that is hosting this slot_number.
   for (uint8_t n = 0; n < 2; n++) {
     auto *p = &(devs[n]->grid_devices[grid_idx]);
     for (uint8_t i = 0; i < p->get_num_tracks(); i++) {
@@ -298,7 +298,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *track_select_array) {
     proj.select_grid(grid_idx);
 
     if (track_select_array[n] == 0 ||
-        track_type != 255) {
+        track_type == 255) {
       continue;
     }
 
@@ -622,7 +622,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
 
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((grid_page.active_slots[n] < 0) && (send_machine[n] != 0))
+    if ((grid_page.active_slots[n] < 0) || (send_machine[n] != 0))
       continue;
     if (next_transitions[n] == next_transition) {
 
@@ -648,7 +648,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
-  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
+  for (uint8_t a = 0; a < 2; a++) {
     dev_latency[a].latency = 0;
 
     float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;

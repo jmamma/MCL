@@ -35,11 +35,9 @@ MNMClass::MNMClass()
 }
 
 void MNMClass::init_grid_devices() {
-  uint8_t dev_id = 0;
+  uint8_t grid_id = 1;
 
-  auto *devp = &grid_devices[dev_id];
-
-  devp->grid_id = 1;
+  auto *devp = &grid_devices[grid_id];
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     devp->add_track(i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
