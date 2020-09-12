@@ -86,12 +86,14 @@ SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_id,
                             uint8_t *track_idx, uint8_t *track_type) {
   uint8_t id;
   GridDeviceTrack *p = get_grid_dev_track(slot_number, &id);
+  *grid_id = get_grid_id(slot_number);
   if (p) {
-    *grid_id = get_grid_id(slot_number);
     *track_idx = id;
     *track_type = p->track_type;
     return p->seq_track;
   }
+  *track_idx = 255;
+  *track_type = 255;
   return nullptr;
 }
 
@@ -144,10 +146,12 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
   uint8_t i = 0;
 
+  uint8_t grid_id, track_idx, track_type;
+
   for (i = 0; i < NUM_SLOTS; i++) {
     if (track_select_array[i] > 0) {
-      uint8_t grid_num = (i < GRID_WIDTH) ? 0 : 1;
-      save_grid_tracks[grid_num] = true;
+      uint8_t grid_id = get_grid_id(i);
+      save_grid_tracks[grid_id] = true;
     }
   }
 #ifndef EXT_TRACKS
@@ -200,11 +204,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
 
-  uint8_t grid_id = 0;
-  uint8_t track_idx = 0;
 
   DEBUG_DUMP(Analog4.connected);
-  uint8_t track_type;
   bool online;
 
   for (i = 0; i < NI_MAX_NOTES; i++) {
@@ -218,7 +219,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
       online = (elektron_devs[grid_id] != nullptr);
       DEBUG_DUMP(track_type);
-      // If save_grid_tracks[grid_num] turns false, it means getBlockingKit
+      // If save_grid_tracks[grid_id] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
       if (!save_grid_tracks[grid_id]) {
         continue;
@@ -314,33 +315,28 @@ void MCLActions::prepare_next_chain(int row, uint8_t *track_select_array) {
   if (q < 4) {
     q = 4;
   }
-  //  }
+  uint8_t grid_id, track_idx, track_type;
 
   for (uint8_t n = 0; n < NUM_TRACKS; ++n) {
-    uint8_t grid_num = (n < GRID_WIDTH) ? 0 : 1;
-    uint8_t track_num = (n < GRID_WIDTH) ? n : (n - GRID_WIDTH);
-    proj.select_grid(grid_num);
+
+    SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+    proj.select_grid(grid_id);
 
     if (track_select_array[n] == 0 ||
-        track_num >= devs[grid_num]->track_count) {
+        track_type != 255) {
       continue;
     }
-#ifndef EXT_TRACKS
-    if (n >= GRID_WIDTH) {
-      break;
-    }
-#endif
 
-    auto device_track = empty_track.load_from_grid(track_num, row);
+    auto device_track = empty_track.load_from_grid(track_idx, row);
     if (device_track == nullptr ||
-        device_track->active != devs[grid_num]->track_type) {
+        device_track->active != track_type) {
       empty_track.clear();
-      device_track = empty_track.init_track_type(devs[grid_num]->track_type);
+      device_track = empty_track.init_track_type(track_type);
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
     }
-    device_track->store_in_mem(track_num);
+    device_track->store_in_mem(track_idx);
   }
 
   uint16_t next_step;
@@ -391,22 +387,13 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
 
   uint8_t old_grid = proj.get_grid();
 
+  uint8_t grid_id, track_idx, track_type;
+
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
-    uint8_t grid_col = i;
-    uint8_t grid = 0;
-    // GRID 1
-    if (i < GRID_WIDTH) {
-      grid = 0;
-    }
-    // GRID 2
-    else {
-      grid = 1;
-      grid_col -= GRID_WIDTH;
-    }
+    SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
 
-    if (grid_col < devs[grid]->track_count) {
-      SeqTrack *seq_track = mcl_seq.seq_tracks[i];
+    if (seq_track) {
       mute_states[i] = seq_track->mute_state;
       seq_track->mute_state = SEQ_MUTE_ON;
     }
@@ -415,25 +402,27 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
       continue;
     }
 
-    proj.select_grid(grid);
+    proj.select_grid(grid_id);
+
     grid_page.active_slots[i] = grid_page.getRow();
 
     if (first_note == 255) {
       first_note = i;
     }
 
-    auto *ptrack = empty_track.load_from_grid(grid_col, grid_page.getRow());
+    auto *ptrack = empty_track.load_from_grid(track_idx, grid_page.getRow());
+
     if (!ptrack) {
       continue;
     } // read failure
 
     ptrack->chain.store_in_mem(i, &(chains[0]));
-    if (ptrack->active != devs[grid]->track_type) {
+    if (ptrack->active != track_type) {
       // empty, or incompatible
     } else {
       DEBUG_DUMP(i);
-      ptrack->load_immediate(grid_col);
-      if (grid_col < devs[grid]->track_count) {
+      ptrack->load_immediate(track_idx);
+      if (track_type != 255) {
         send_masks[i] = 1;
       }
     }
@@ -474,23 +463,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *track_select_array) {
   GUI.addTask(&grid_task);
 
   for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+      SeqTrack *seq_track = get_dev_slot_info(i, &grid_id, &track_idx, &track_type);
 
-    uint8_t grid_col = i;
-    uint8_t grid = 0;
-    // GRID 1
-    if (i < GRID_WIDTH) {
-      grid = 0;
-    }
-    // GRID 2
-    else {
-      grid = 1;
-      grid_col -= GRID_WIDTH;
-    }
-
-    if (grid_col < devs[grid]->track_count) {
-      SeqTrack *seq_track = mcl_seq.seq_tracks[i];
+      if (seq_track) {
       seq_track->mute_state = mute_states[i];
-    }
+      }
   }
 
   /*All the tracks have been sent so clear the write queue*/
@@ -531,6 +508,9 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
 
   uint8_t old_grid = proj.get_grid();
 
+    uint8_t grid_id, track_idx, track_type;
+
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (track_select_array[n] > 0) {
 
@@ -542,32 +522,23 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
           }
         }
       }
-      uint8_t grid_col = n;
-      uint8_t grid = 0;
-      // GRID 1
-      if (n < GRID_WIDTH) {
-        grid = 0;
-      }
-      // GRID 2
-      else {
-        grid = 1;
-        grid_col -= GRID_WIDTH;
-      }
 
-      if (grid_col >= devs[grid]->track_count) {
+      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+
+      if (track_idx == 255) {
         continue;
       }
 
-      proj.select_grid(grid);
+      proj.select_grid(grid_id);
 
-      auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
+      auto *ptrack = empty_track->load_from_grid(track_idx, chains[n].row);
       if (ptrack == nullptr || !ptrack->is_active() ||
-          devs[grid]->track_type != ptrack->active) {
+          track_type != ptrack->active) {
         continue;
       }
 
       auto *pmem_track =
-          empty_track2->load_from_mem(grid_col, devs[grid]->track_type);
+          empty_track2->load_from_mem(track_idx, track_type);
       if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
         // track type matched.
         auto *psound = ptrack->get_sound_data_ptr();
@@ -583,7 +554,7 @@ void MCLActions::cache_next_tracks(uint8_t *track_select_array,
           send_machine[n] = 1;
         }
       }
-      ptrack->store_in_mem(grid_col);
+      ptrack->store_in_mem(track_idx);
     }
   }
 
@@ -672,34 +643,27 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   for (uint8_t a = 0; a < NUM_GRIDS; a++) {
     dev_latency[a].latency = 0;
   }
+  uint8_t grid_id, track_idx, track_type;
+
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] < 0) && (send_machine[n] != 0))
       continue;
     if (next_transitions[n] == next_transition) {
-      uint8_t grid_col = n;
-      uint8_t grid = 0;
-      // GRID 1
-      if (n < GRID_WIDTH) {
-        grid = 0;
-      }
-      // GRID 2
-      else {
-        grid = 1;
-        grid_col -= GRID_WIDTH;
-      }
 
-      if (grid_col >= devs[grid]->track_count) {
+      SeqTrack *seq_track = get_dev_slot_info(n, &grid_id, &track_idx, &track_type);
+
+      if (track_idx == 255) {
         continue;
       }
 
-      auto *ptrack = empty_track->load_from_grid(grid_col, chains[n].row);
+      auto *ptrack = empty_track->load_from_mem(track_idx, track_type);
       if (ptrack == nullptr || !ptrack->is_active() ||
-          devs[grid]->track_type != ptrack->active) {
+          track_type != ptrack->active) {
         continue;
       }
 
-      dev_latency[grid].latency = ptrack->calc_latency(n);
+      dev_latency[grid_id].latency = ptrack->calc_latency(n);
     }
   }
 
