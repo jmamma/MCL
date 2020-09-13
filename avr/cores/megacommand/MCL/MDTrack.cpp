@@ -152,6 +152,8 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
         md_seq_track.init();
         chain.length = MD.pattern.patternLength;
         chain.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+        md_seq_track.length = chain.length;
+        md_seq_track.speed = chain.speed;
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
