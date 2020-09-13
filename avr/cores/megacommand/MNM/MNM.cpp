@@ -37,11 +37,10 @@ MNMClass::MNMClass()
 void MNMClass::init_grid_devices() {
   uint8_t grid_idx = 1;
 
-  auto *devp = &grid_devices[grid_idx];
-
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    devp->add_track(i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
+    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
   }
+
 }
 
 bool MNMClass::probe() {

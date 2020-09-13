@@ -183,6 +183,10 @@ public:
     connected = false;
   }
 
+  void add_track_to_grid(uint8_t grid_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type) {
+    auto *devp = &grid_devices[grid_idx];
+    devp->add_track(slot_number + grid_idx * GRID_WIDTH, seq_track, track_type);
+  }
   ElektronDevice* asElektronDevice() {
     if (!isElektronDevice) return nullptr;
     return (ElektronDevice*) this;
