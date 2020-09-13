@@ -141,7 +141,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     if (save_grid_tracks[i] && elektron_devs[i] != nullptr) {
       if (merge > 0) {
         DEBUG_PRINTLN("fetching pattern");
-        if (elektron_devs[i]->getBlockingPattern(readpattern)) {
+        if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
           DEBUG_PRINTLN("could not receive pattern");
           save_grid_tracks[i] = false;
           continue;
