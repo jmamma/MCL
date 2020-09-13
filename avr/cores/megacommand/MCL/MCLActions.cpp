@@ -71,7 +71,7 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   //Find first device that is hosting this slot_number.
   for (uint8_t n = 0; n < 2; n++) {
     auto *p = &(devs[n]->grid_devices[grid_idx]);
-    for (uint8_t i = 0; i < p->get_num_tracks(); i++) {
+    for (uint8_t i = 0; i < GRID_WIDTH; i++) {
       if (slot_number == p->tracks[i].get_slot_number()) {
         *track_idx = i;
         *dev_idx = n;
