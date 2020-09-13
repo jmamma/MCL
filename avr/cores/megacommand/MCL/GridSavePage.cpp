@@ -200,7 +200,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     uint8_t track_select_array[NUM_SLOTS] = {0};
 
-    for (int i = 0; i < GRID_WIDTH; i++) {
+    for (int i = 0; i < NUM_SLOTS; i++) {
       track_select_array[i] = 1;
     }
 
