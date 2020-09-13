@@ -1,6 +1,8 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
+#define NUM_DEVS 2
+
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 

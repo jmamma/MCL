@@ -97,7 +97,7 @@ void GridTask::run() {
   }
 
   bool wait;
-  for (uint8_t c = 2 - 1; c >= 0; c--) {
+  for (int8_t c = 2 - 1; c >= 0; c--) {
     wait = true;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
