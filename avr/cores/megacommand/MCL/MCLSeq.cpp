@@ -175,7 +175,7 @@ void MCLSeq::seq() {
   seq_ptc_page.on_192_callback();
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-    aux_tracks[i].seq();
+  //  aux_tracks[i].seq();
   }
 
 #ifdef LFO_TRACKS
