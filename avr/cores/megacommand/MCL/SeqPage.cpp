@@ -292,7 +292,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       GUI.pushPage(&step_menu_page);
     } else {
       if (opt_midi_device_capture == DEVICE_MD) {
-        DEBUG_PRINTLN("okay using MD for length update");
+        DEBUG_PRINTLN(F("okay using MD for length update"));
         opt_trackid = last_md_track + 1;
 
         opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
@@ -673,7 +673,7 @@ void pattern_len_handler(EncoderParent *enc) {
     return;
   }
   if (SeqPage::midi_device == DEVICE_MD) {
-    DEBUG_PRINTLN("under 16");
+    DEBUG_PRINTLN(F("under 16"));
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       char str[4];
       itoa(enc_->cur, str, 10);
@@ -718,7 +718,7 @@ void opt_trackid_handler() {
 void opt_speed_handler() {
 
   if (opt_midi_device_capture == DEVICE_MD) {
-    DEBUG_PRINTLN("okay using MD for length update");
+    DEBUG_PRINTLN(F("okay using MD for length update"));
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         mcl_seq.md_tracks[n].set_speed(opt_speed);

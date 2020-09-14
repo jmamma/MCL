@@ -77,7 +77,7 @@ void MCLGfx::draw_evil() {
 
 void MCLGfx::splashscreen() {
 #ifdef OLED_DISPLAY
-  DEBUG_PRINTLN("OLED enabled");
+  DEBUG_PRINTLN(F("OLED enabled"));
   oled_display.setTextSize(2);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);
@@ -118,7 +118,7 @@ void MCLGfx::splashscreen() {
 
 #else
 
-  DEBUG_PRINTLN("HD44780 enabled");
+  DEBUG_PRINTLN(F("HD44780 enabled"));
   char str1[17] = "MEGACOMMAND LIVE";
   char str2[17] = VERSION_STR;
   str1[16] = '\0';

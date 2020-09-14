@@ -152,7 +152,7 @@ bool MDClass::probe() {
 
   // Begin main probe sequence
   if (MidiUart.device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
-    DEBUG_PRINTLN("Midi ID: success");
+    DEBUG_PRINTLN(F("Midi ID: success"));
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
     // wait 300 ms, shoul be enought time to allow midiclock tempo to be
     // calculated before proceeding.
@@ -184,7 +184,7 @@ bool MDClass::probe() {
   }
 
   if (connected == false) {
-    DEBUG_PRINTLN("delay");
+    DEBUG_PRINTLN(F("delay"));
     mcl_gui.delay_progress(250);
   }
 
@@ -508,7 +508,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   }
   // sanity check.
   if (machine->lfo.destinationTrack > 15) {
-    DEBUG_PRINTLN("warning: lfo dest was out of bounds");
+    DEBUG_PRINTLN(F("warning: lfo dest was out of bounds"));
     machine->lfo.destinationTrack = track;
   }
   memcpy(&(kit_->lfos[track]), &machine->lfo, sizeof(machine->lfo));

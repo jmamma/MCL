@@ -128,10 +128,10 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
   DEBUG_DUMP(event->source);
   if (note_interface.is_event(event)) {
-    DEBUG_PRINTLN("note event");
+    DEBUG_PRINTLN(F("note event"));
     trig_interface.send_md_leds();
     if (note_interface.notes_all_off()) {
-      DEBUG_PRINTLN("notes all off");
+      DEBUG_PRINTLN(F("notes all off"));
       if (BUTTON_DOWN(Buttons.BUTTON2)) {
         return true;
       } else {

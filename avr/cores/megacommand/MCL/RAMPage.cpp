@@ -161,7 +161,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   mcl_actions.transition_level[track] = TRANSITION_UNMUTE;
 
   mcl_actions.calc_next_transition();
-  DEBUG_PRINTLN("my next step");
+  DEBUG_PRINTLN(F("my next step"));
   DEBUG_PRINTLN(next_step);
   DEBUG_PRINTLN(mcl_actions.next_transition);
   EmptyTrack empty_track;

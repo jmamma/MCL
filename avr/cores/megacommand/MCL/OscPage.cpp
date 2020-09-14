@@ -22,7 +22,7 @@ float OscPage::get_freq() {
   return fout;
 }
 void OscPage::init() {
-  DEBUG_PRINTLN("seq extstep init");
+  DEBUG_PRINTLN(F("seq extstep init"));
   wd.last_page = this;
   create_chars_mixer();
   // md_exploit.on();

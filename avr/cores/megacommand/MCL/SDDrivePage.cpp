@@ -77,10 +77,10 @@ void SDDrivePage::save_snapshot() {
   gfx.display_text("Please Wait", "Saving Snap");
   #endif
 
-  DEBUG_PRINTLN("creating new snapshot:");
+  DEBUG_PRINTLN(F("creating new snapshot:"));
   DEBUG_PRINTLN(temp_entry);
   if (!file.open(temp_entry, O_WRITE | O_CREAT)) {
-    DEBUG_PRINTLN("error openning");
+    DEBUG_PRINTLN(F("error openning"));
     error_is_md = false;
     goto save_error;
   }
@@ -168,10 +168,10 @@ void SDDrivePage::load_snapshot() {
   char temp_entry[16];
   file.getName(temp_entry, 16);
   file.close();
-  DEBUG_PRINTLN("loading snapshot");
+  DEBUG_PRINTLN(F("loading snapshot"));
   DEBUG_PRINTLN(temp_entry);
   if (!file.open(temp_entry, O_READ)) {
-    DEBUG_PRINTLN("error openning");
+    DEBUG_PRINTLN(F("error openning"));
     gfx.alert("Error", "Cannot open file for read");
     return;
   }

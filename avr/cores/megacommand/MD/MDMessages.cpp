@@ -270,7 +270,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
-    DEBUG_PRINTLN("kit wrong length");
+    DEBUG_PRINTLN(F("kit wrong length"));
     DEBUG_DUMP(len);
     return false;
   }
@@ -324,7 +324,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
-  DEBUG_PRINTLN("md kit okay");
+  DEBUG_PRINTLN(F("md kit okay"));
   return true;
 }
 
@@ -345,7 +345,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->throttle = true;
     //float swing = (float) MD->swing_last / 16385->0;
     //encoder->throttle_mod12 = floor((swing) * 12);
-    //DEBUG_PRINTLN("swing");
+    //DEBUG_PRINTLN(F("swing"));
     //DEBUG_DUMP(encoder->throttle_mod12);
   }
   encoder->stop7Bit();

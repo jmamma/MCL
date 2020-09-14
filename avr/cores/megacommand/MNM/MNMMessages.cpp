@@ -172,7 +172,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   }
   decoder.get8(&splitKey);
   decoder.get8(&splitRange);
-  DEBUG_PRINTLN("mnm kit okay");
+  DEBUG_PRINTLN(F("mnm kit okay"));
   return true;
 }
 

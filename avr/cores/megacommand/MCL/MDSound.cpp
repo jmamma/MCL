@@ -78,7 +78,7 @@ bool MDSound::load_sound(uint8_t track) {
 
   if ((machine_count > 1) && (track != 15)) {
     #ifdef DEBUG_MODE
-    DEBUG_PRINTLN("loading second machine");
+    DEBUG_PRINTLN(F("loading second machine"));
     tmp = getMDMachineNameShort(machine2.model, 2);
     m_strncpy_p(str, tmp, 3);
     DEBUG_PRINTLN(str);
@@ -121,13 +121,13 @@ bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
 
   ret = file.seekSet(position);
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;
   }
   if (!file.isOpen()) {
-    DEBUG_PRINTLN("file not open");
+    DEBUG_PRINTLN(F("file not open"));
     return false;
   }
   ret = mcl_sd.read_data(data, size, &file);
@@ -144,7 +144,7 @@ bool MDSound::write_data(void *data, uint32_t size, uint32_t position) {
   ret = file.seekSet(position);
 
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;

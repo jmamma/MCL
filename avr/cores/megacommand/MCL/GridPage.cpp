@@ -138,7 +138,7 @@ void GridPage::loop() {
       mcl_cfg.row = encoders[1]->cur;
 
       mcl_cfg.tempo = MidiClock.get_tempo();
-      DEBUG_PRINTLN("write cfg");
+      DEBUG_PRINTLN(F("write cfg"));
       mcl_cfg.write_cfg();
       grid_lastclock = slowclock;
       write_cfg = false;
@@ -771,7 +771,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_DUMP(getCol());
     DEBUG_DUMP(getRow());
     slot.load_from_grid(getCol(), getRow());
-    DEBUG_PRINTLN("what's in the slot");
+    DEBUG_PRINTLN(F("what's in the slot"));
     DEBUG_DUMP(slot.chain.loops);
     DEBUG_DUMP(slot.chain.row);
     encoders[0] = &grid_slot_param1;

@@ -195,7 +195,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     oled_display.textbox("SAVE PAT: ", modestr);
     oled_display.display();
 #endif
-    DEBUG_PRINTLN("notes");
+    DEBUG_PRINTLN(F("notes"));
     DEBUG_DUMP(note_interface.notes_all_off());
 
     uint8_t track_select_array[NUM_SLOTS] = {0};

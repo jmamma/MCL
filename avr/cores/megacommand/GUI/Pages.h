@@ -271,12 +271,12 @@ public:
   /** Clear the active page stack, and push page as the currentPage(). **/
   void setPage(LightPage *page) {
     if (currentPage() != NULL) {
-      DEBUG_PRINTLN("calling cleanup");
+      DEBUG_PRINTLN(F("calling cleanup"));
       currentPage()->cleanup();
     }
 
     else {
-      DEBUG_PRINTLN("Current Page is NULL");
+      DEBUG_PRINTLN(F("Current Page is NULL"));
     }
 
     pageStack.reset();

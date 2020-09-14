@@ -41,7 +41,7 @@ void GridTask::run() {
   if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                  (uint32_t)mcl_actions.next_transition * 2)) {
 
-    DEBUG_PRINTLN("Preparing for next transition:");
+    DEBUG_PRINTLN(F("Preparing for next transition:"));
     DEBUG_DUMP(MidiClock.div16th_counter);
     DEBUG_DUMP(mcl_actions.next_transition);
     // Transition window
@@ -97,7 +97,7 @@ void GridTask::run() {
   for (uint8_t a = 0; a < NUM_GRIDS; a++) {
     div192th_total_latency = mcl_actions.dev_latency[a].div192th_latency;
   }
-  DEBUG_PRINTLN("sending tracks");
+  DEBUG_PRINTLN(F("sending tracks"));
   bool wait;
   for (int8_t c = 2 - 1; c >= 0; c--) {
     wait = true;

@@ -429,7 +429,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
 
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
-        DEBUG_PRINTLN("Trying to clear");
+        DEBUG_PRINTLN(F("Trying to clear"));
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }

@@ -55,7 +55,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
 
   ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), column, row);
   if (!ret) {
-    DEBUG_PRINTLN("Write failed");
+    DEBUG_PRINTLN(F("Write failed"));
     return false;
   }
 

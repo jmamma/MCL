@@ -22,11 +22,11 @@ void Page::update() {}
 
 void PageContainer::pushPage(LightPage* page) {
   if (currentPage() == page) {
-    DEBUG_PRINTLN("can't push twice");
+    DEBUG_PRINTLN(F("can't push twice"));
     // can't push the same page twice in a row
     return;
   }
-  DEBUG_PRINTLN("Pushing page");
+  DEBUG_PRINTLN(F("Pushing page"));
   page->parent = this;
   if (!page->isSetup) {
     page->setup();

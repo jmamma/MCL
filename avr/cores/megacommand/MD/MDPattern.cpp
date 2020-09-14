@@ -155,7 +155,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     printf("WRONG LENGTH: %x\n", len);
 #endif
 
-    DEBUG_PRINTLN("WRONG LENGTH");
+    DEBUG_PRINTLN(F("WRONG LENGTH"));
     DEBUG_DUMP(len);
     return false;
   }
@@ -164,7 +164,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 
-    DEBUG_PRINTLN("bad checksum");
+    DEBUG_PRINTLN(F("bad checksum"));
     return false;
   }
 
@@ -265,7 +265,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   isExtraPattern = patternLength > 32;
 
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
-    DEBUG_PRINTLN("using throttle");
+    DEBUG_PRINTLN(F("using throttle"));
     encoder->throttle = true;
     //float swing = (float) MD.swing_last / 16385.0;
     //encoder.throttle_mod12 = round(swing * 12);

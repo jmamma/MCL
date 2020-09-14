@@ -226,7 +226,7 @@ public:
 
     static bool inCallback = false;
     if (inCallback) {
-      DEBUG_PRINTLN("clock collision");
+      DEBUG_PRINTLN(F("clock collision"));
       return;
     } else {
       inCallback = true;
@@ -411,7 +411,7 @@ public:
     onMidiStartImmediateCallbacks.call(div96th_counter);
     state = STARTING;
 
-    DEBUG_PRINTLN("START");
+    DEBUG_PRINTLN(F("START"));
   }
 
   ALWAYS_INLINE() void handleImmediateMidiStop() {

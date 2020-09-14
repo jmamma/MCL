@@ -6,7 +6,7 @@ bool Grid::write_header() {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Writing grid header");
+  DEBUG_PRINTLN(F("Writing grid header"));
 
   version = GRID_VERSION;
   hash = 0;
@@ -15,7 +15,7 @@ bool Grid::write_header() {
 
   if (!ret) {
 
-    DEBUG_PRINTLN("Seek failed");
+    DEBUG_PRINTLN(F("Seek failed"));
 
     return false;
   }
@@ -23,17 +23,17 @@ bool Grid::write_header() {
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(GridHeader), &file);
 
   if (!ret) {
-    DEBUG_PRINTLN("Write header failed");
+    DEBUG_PRINTLN(F("Write header failed"));
     return false;
   }
-  DEBUG_PRINTLN("Write header success");
+  DEBUG_PRINTLN(F("Write header success"));
   return true;
 }
 
 bool Grid::new_file(const char *gridname) {
   file.close();
 
-  DEBUG_PRINTLN("Attempting to create grid file");
+  DEBUG_PRINTLN(F("Attempting to create grid file"));
   DEBUG_PRINTLN(gridname);
   bool ret;
   // GRID_WIDTH + 1 (because first slot is header)
@@ -45,17 +45,17 @@ bool Grid::new_file(const char *gridname) {
 
   if (!ret) {
     file.close();
-    DEBUG_PRINTLN("Could not extend file");
+    DEBUG_PRINTLN(F("Could not extend file"));
     return false;
   }
-  DEBUG_PRINTLN("extension succeeded, trying to close");
+  DEBUG_PRINTLN(F("extension succeeded, trying to close"));
   file.close();
 
   ret = file.open(gridname, O_RDWR);
 
   if (!ret) {
     file.close();
-    DEBUG_PRINTLN("Could not open file");
+    DEBUG_PRINTLN(F("Could not open file"));
     return false;
   }
 
@@ -67,12 +67,12 @@ bool Grid::new_grid(const char *gridname) {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Creating new grid");
+  DEBUG_PRINTLN(F("Creating new grid"));
   if (!new_file(gridname)) {
     return false;
   }
 
-  DEBUG_PRINTLN("Initializing grid.. please wait");
+  DEBUG_PRINTLN(F("Initializing grid.. please wait"));
 #ifdef OLED_DISPLAY
   oled_display.drawRect(15, 23, 98, 6, WHITE);
 #endif
@@ -95,7 +95,7 @@ bool Grid::new_grid(const char *gridname) {
 
     ret = clear_row(i);
     if (!ret) {
-      DEBUG_PRINTLN("coud not clear row");
+      DEBUG_PRINTLN(F("coud not clear row"));
       return false;
     }
   }
@@ -103,7 +103,7 @@ bool Grid::new_grid(const char *gridname) {
   ret = file.seekSet(0);
 
   if (!ret) {
-    DEBUG_PRINTLN("Could not seek");
+    DEBUG_PRINTLN(F("Could not seek"));
     return false;
   }
 
@@ -119,9 +119,9 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
                      bool destination_same) {
   DEBUG_PRINT_FN();
   DEBUG_PRINT(s_col);
-  DEBUG_PRINT(" ");
+  DEBUG_PRINT(F(" "));
   DEBUG_PRINT(d_col);
-  DEBUG_PRINTLN(" ");
+  DEBUG_PRINTLN(F(" "));
   if (s_col < 16 && d_col > 15) {
     return false;
   }
@@ -168,7 +168,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   if (!ret) {
     DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Clear grid failed: ");
+    DEBUG_PRINTLN(F("Clear grid failed: "));
     DEBUG_DUMP(row);
     DEBUG_DUMP(column);
     return false;
@@ -178,7 +178,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
 
   ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track), &file);
   if (!ret) {
-    DEBUG_PRINTLN("Write failed");
+    DEBUG_PRINTLN(F("Write failed"));
     return false;
   }
   return true;

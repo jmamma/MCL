@@ -19,7 +19,7 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::onMidiStopCallback() {
- DEBUG_PRINTLN("initialising nearest steps");
+ DEBUG_PRINTLN(F("initialising nearest steps"));
 //   memset(&mcl_actions.next_transitions[0], 0, 20);
 /*
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {

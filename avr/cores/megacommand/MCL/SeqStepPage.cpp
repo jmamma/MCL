@@ -42,7 +42,7 @@ void SeqStepPage::config_encoders() {
 
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("init seqstep");
+  DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT)->id;
@@ -328,7 +328,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.midi_events.enable_live_kit_update();
       }
       if (active_track.get_step(step, mask_type)) {
-        DEBUG_PRINTLN("clear step");
+        DEBUG_PRINTLN(F("clear step"));
 
         if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
           active_track.set_step(step, mask_type, false);

@@ -52,7 +52,7 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
      return;
   }
 
-  DEBUG_PRINTLN("note off");
+  DEBUG_PRINTLN(F("note off"));
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = EVENT_BUTTON_RELEASED;
@@ -204,7 +204,7 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.get_device(UART2_PORT)->id);
-  DEBUG_PRINTLN("note to track");
+  DEBUG_PRINTLN(F("note to track"));
   DEBUG_PRINTLN(note_num);
   note_interface.note_off_event(note_num, UART2_PORT);
 }

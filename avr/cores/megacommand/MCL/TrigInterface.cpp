@@ -25,7 +25,7 @@ bool TrigInterface::on() {
 
   sysex->addSysexListener(this);
   state = true;
-  DEBUG_PRINTLN("activating trig interface");
+  DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();
   note_interface.notecount = 0;
   note_interface.init_notes();
@@ -42,7 +42,7 @@ bool TrigInterface::off() {
   }
   sysex->removeSysexListener(this);
   note_interface.note_proceed = false;
-  DEBUG_PRINTLN("deactiviating trig interface");
+  DEBUG_PRINTLN(F("deactiviating trig interface"));
   state = false;
   MD.deactivate_trig_interface();
   return true;
@@ -63,7 +63,7 @@ void TrigInterface::end_immediate() {
   note_interface.note_off_event(trig - 0x40, UART1_PORT);
   }
   else {
-  DEBUG_PRINTLN("trig on");
+  DEBUG_PRINTLN(F("trig on"));
   DEBUG_PRINTLN(trig);
   note_interface.note_on_event(trig, UART1_PORT);
   }

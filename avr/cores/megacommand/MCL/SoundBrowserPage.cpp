@@ -39,7 +39,7 @@ void SoundBrowserPage::save_sound() {
     char temp_entry[16];
     strcpy(temp_entry, sound_name);
     strcat(temp_entry, ".snd");
-    DEBUG_PRINTLN("creating new sound:");
+    DEBUG_PRINTLN(F("creating new sound:"));
     DEBUG_PRINTLN(temp_entry);
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
     sound.fetch_sound(MD.currentTrack);
@@ -58,10 +58,10 @@ void SoundBrowserPage::load_sound() {
     MDSound sound;
     file.getName(temp_entry, 16);
     file.close();
-    DEBUG_PRINTLN("loading sound");
+    DEBUG_PRINTLN(F("loading sound"));
     DEBUG_PRINTLN(temp_entry);
     if (!sound.file.open(temp_entry, O_READ)) {
-      DEBUG_PRINTLN("error openning");
+      DEBUG_PRINTLN(F("error openning"));
       gfx.alert("Error", "Opening");
       return;
     }

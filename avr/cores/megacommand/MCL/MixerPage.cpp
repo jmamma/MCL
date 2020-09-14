@@ -459,7 +459,7 @@ void MixerMidiEvents::remove_callbacks() {
     return;
   }
 
-  DEBUG_PRINTLN("remove calblacks");
+  DEBUG_PRINTLN(F("remove calblacks"));
   Midi.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(

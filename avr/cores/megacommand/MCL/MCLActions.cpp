@@ -27,7 +27,7 @@
 //}
 
 void MCLActions::setup() {
-  DEBUG_PRINTLN("mcl actions setup");
+  DEBUG_PRINTLN(F("mcl actions setup"));
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
@@ -142,9 +142,9 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   for (i = 0; i < NUM_GRIDS; ++i) {
     if (save_grid_tracks[i] && elektron_devs[i] != nullptr) {
       if (merge > 0) {
-        DEBUG_PRINTLN("fetching pattern");
+        DEBUG_PRINTLN(F("fetching pattern"));
         if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
-          DEBUG_PRINTLN("could not receive pattern");
+          DEBUG_PRINTLN(F("could not receive pattern"));
           save_grid_tracks[i] = false;
           continue;
         }
@@ -152,7 +152,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
       if (elektron_devs[i]->canReadWorkspaceKit()) {
         if (!elektron_devs[i]->getBlockingKit(0x7F)) {
-          DEBUG_PRINTLN("could not receive kit");
+          DEBUG_PRINTLN(F("could not receive kit"));
           save_grid_tracks[i] = false;
           continue;
         }
@@ -160,7 +160,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         auto kit = elektron_devs[i]->getCurrentKit();
         elektron_devs[i]->saveCurrentKit(kit);
         if (!elektron_devs[i]->getBlockingKit(kit)) {
-          DEBUG_PRINTLN("could not receive kit");
+          DEBUG_PRINTLN(F("could not receive kit"));
           save_grid_tracks[i] = false;
           continue;
         }
@@ -319,12 +319,12 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   } else {
     next_step = MidiClock.div16th_counter + 1;
   }
-  DEBUG_PRINTLN("q");
+  DEBUG_PRINTLN(F("q"));
   DEBUG_PRINTLN(q);
-  DEBUG_PRINTLN("write step");
+  DEBUG_PRINTLN(F("write step"));
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   DEBUG_PRINTLN(next_step);
-  DEBUG_PRINTLN("setting transition");
+  DEBUG_PRINTLN(F("setting transition"));
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] > 0) {
@@ -411,7 +411,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   }
 
   if (write_original == 1) {
-    DEBUG_PRINTLN("write original");
+    DEBUG_PRINTLN(F("write original"));
     //     MD.kit.origPosition = md_track->origPosition;
     for (uint8_t c = 0; c < 17; c++) {
       MD.kit.name[c] =
@@ -607,7 +607,7 @@ void MCLActions::calc_next_transition() {
           DEBUG_PRINTLN(grid_page.active_slots[n]);
           DEBUG_PRINTLN(chains[n].row);
           DEBUG_PRINTLN(next_transitions[n]);
-          DEBUG_PRINTLN(" ");
+          DEBUG_PRINTLN(F(" "));
           next_transition = next_transitions[n];
         }
       }
@@ -617,9 +617,9 @@ void MCLActions::calc_next_transition() {
   nearest_beat = next_transition % 4 + 1;
   // next_transition = next_transition % 16;
 
-  DEBUG_PRINTLN("current_step");
+  DEBUG_PRINTLN(F("current_step"));
   DEBUG_PRINTLN(MidiClock.div16th_counter);
-  DEBUG_PRINTLN("nearest step");
+  DEBUG_PRINTLN(F("nearest step"));
   DEBUG_PRINTLN(next_transition);
 }
 

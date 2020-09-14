@@ -82,7 +82,7 @@ bool Project::load_project(const char *projectname) {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Loading project");
+  DEBUG_PRINTLN(F("Loading project"));
   DEBUG_PRINTLN(projectname);
   file.close();
 
@@ -98,13 +98,13 @@ bool Project::load_project(const char *projectname) {
   ret = file.open(projectname, O_RDWR);
   if (!ret) {
 
-    DEBUG_PRINTLN("Could not open project file");
+    DEBUG_PRINTLN(F("Could not open project file"));
     return false;
   }
   ret = check_project_version();
 
   if (!ret) {
-    DEBUG_PRINTLN("Project version incompatible");
+    DEBUG_PRINTLN(F("Project version incompatible"));
     file.close();
     return false;
   }
@@ -115,10 +115,10 @@ bool Project::load_project(const char *projectname) {
     name[l] = '.';
     name[l + 1] = i + '0';
     name[l + 2] = '\0';
-    DEBUG_PRINTLN("opening grid");
+    DEBUG_PRINTLN(F("opening grid"));
     DEBUG_PRINTLN(name);
     if (!grids[i].open_file(name)) {
-      DEBUG_PRINTLN("could not open grid");
+      DEBUG_PRINTLN(F("could not open grid"));
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
@@ -129,7 +129,7 @@ bool Project::load_project(const char *projectname) {
   ret = mcl_cfg.write_cfg();
 
   if (!ret) {
-    DEBUG_PRINTLN("could not write cfg");
+    DEBUG_PRINTLN(F("could not write cfg"));
     return false;
   }
   return true;
@@ -139,18 +139,18 @@ bool Project::check_project_version() {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Check project version");
+  DEBUG_PRINTLN(F("Check project version"));
 
   ret = file.seekSet(0);
 
   if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
+    DEBUG_PRINTLN(F("Seek failed"));
     return false;
   }
   ret = mcl_sd.read_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
-    DEBUG_PRINTLN("Could not read project header");
+    DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
   if (version >= PROJ_VERSION) {
@@ -166,7 +166,7 @@ bool Project::write_header() {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Writing project header");
+  DEBUG_PRINTLN(F("Writing project header"));
 
   version = PROJ_VERSION;
   //  Config mcl_cfg.
@@ -177,7 +177,7 @@ bool Project::write_header() {
 
   if (!ret) {
 
-    DEBUG_PRINTLN("Seek failed");
+    DEBUG_PRINTLN(F("Seek failed"));
 
     return false;
   }
@@ -185,10 +185,10 @@ bool Project::write_header() {
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(ProjectHeader), &file);
 
   if (!ret) {
-    DEBUG_PRINTLN("Write header failed");
+    DEBUG_PRINTLN(F("Write header failed"));
     return false;
   }
-  DEBUG_PRINTLN("Write header success");
+  DEBUG_PRINTLN(F("Write header success"));
   return true;
 }
 
@@ -197,20 +197,20 @@ bool Project::new_project(const char *projectname) {
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Creating new project");
+  DEBUG_PRINTLN(F("Creating new project"));
 
   file.close();
 
-  DEBUG_PRINTLN("Attempting to extend project file");
+  DEBUG_PRINTLN(F("Attempting to extend project file"));
 
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
 
   if (!ret) {
     file.close();
-    DEBUG_PRINTLN("Could not extend file");
+    DEBUG_PRINTLN(F("Could not extend file"));
     return false;
   }
-  DEBUG_PRINTLN("extension succeeded, trying to close");
+  DEBUG_PRINTLN(F("extension succeeded, trying to close"));
   file.close();
 
   ret = file.open(projectname, O_RDWR);
@@ -218,7 +218,7 @@ bool Project::new_project(const char *projectname) {
   if (!ret) {
     file.close();
 
-    DEBUG_PRINTLN("Could not open file");
+    DEBUG_PRINTLN(F("Could not open file"));
     return false;
   }
 
@@ -226,7 +226,7 @@ bool Project::new_project(const char *projectname) {
   ret = file.seekSet(0);
 
   if (!ret) {
-    DEBUG_PRINTLN("Could not seek");
+    DEBUG_PRINTLN(F("Could not seek"));
     return false;
   }
 
@@ -240,7 +240,7 @@ bool Project::new_project(const char *projectname) {
   mcl_cfg.number_projects++;
   mcl_cfg.write_cfg();
 
-  DEBUG_PRINTLN("project created");
+  DEBUG_PRINTLN(F("project created"));
   // if (!ret) {
   // return false;
   // }

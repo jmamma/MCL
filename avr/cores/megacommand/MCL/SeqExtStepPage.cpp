@@ -59,7 +59,7 @@ void SeqExtStepPage::config_encoders() {
 
 void SeqExtStepPage::init() {
   page_count = 8;
-  DEBUG_PRINTLN("seq extstep init");
+  DEBUG_PRINTLN(F("seq extstep init"));
   curpage = SEQ_EXTSTEP_PAGE;
   trig_interface.on();
   note_interface.state = true;
@@ -511,7 +511,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (device == DEVICE_MD) {
 
         if ((track + (page_select * 16)) >= active_track.length) {
-          DEBUG_PRINTLN("setting to 0");
+          DEBUG_PRINTLN(F("setting to 0"));
           DEBUG_PRINTLN(last_ext_track);
           DEBUG_PRINTLN(page_select);
           note_interface.notes[track] = 0;
@@ -585,7 +585,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // selected For selected steps record notes.
 #ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  DEBUG_PRINT("note on midi2 ext, ");
+  DEBUG_PRINT(F("note on midi2 ext, "));
   DEBUG_DUMP(channel);
 
   if (channel < mcl_seq.num_ext_tracks) {

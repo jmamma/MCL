@@ -34,19 +34,19 @@ bool MCLSysConfig::write_cfg() {
   int b;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Writing cfg");
+  DEBUG_PRINTLN(F("Writing cfg"));
   cfgfile.close();
   ret = cfgfile.open("/config.mcls", O_RDWR);
   if (!ret) {
-    DEBUG_PRINTLN("Open cfg file failed");
+    DEBUG_PRINTLN(F("Open cfg file failed"));
     return false;
   }
 
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(MCLSysConfigData), &cfgfile);
   if (!ret) {
-    DEBUG_PRINTLN("Write cfg failed");
+    DEBUG_PRINTLN(F("Write cfg failed"));
   }
-  DEBUG_PRINTLN("Write cfg okay");
+  DEBUG_PRINTLN(F("Write cfg okay"));
   cfgfile.close();
   cfg_save_lastclock = slowclock;
   return true;
@@ -57,15 +57,15 @@ bool MCLSysConfig::cfg_init() {
   int b;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Initialising cfgfile");
+  DEBUG_PRINTLN(F("Initialising cfgfile"));
 
-  // DEBUG_PRINTLN("conf ext");
+  // DEBUG_PRINTLN(F("conf ext"));
   cfgfile.remove();
   ret = cfgfile.createContiguous("/config.mcls", (uint32_t)GRID_SLOT_BYTES);
   if (ret) {
-    DEBUG_PRINTLN("Created new cfgfile");
+    DEBUG_PRINTLN(F("Created new cfgfile"));
   } else {
-    DEBUG_PRINTLN("Failed to create new cfgfile");
+    DEBUG_PRINTLN(F("Failed to create new cfgfile"));
     return false;
   }
 

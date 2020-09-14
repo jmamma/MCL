@@ -25,11 +25,11 @@ void MDTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t 
       machine.level = 0;
       break;
     case TRANSITION_UNMUTE:
-      DEBUG_PRINTLN("unmuting");
+      DEBUG_PRINTLN(F("unmuting"));
       MD.muteTrack(tracknumber, false);
       break;
     case TRANSITION_MUTE:
-      DEBUG_PRINTLN("muting");
+      DEBUG_PRINTLN(F("muting"));
       MD.muteTrack(tracknumber, true);
       break;
     default:
@@ -143,7 +143,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
     chain.speed = seq_track->speed;
 
     if (merge > 0) {
-      DEBUG_PRINTLN("auto merge");
+      DEBUG_PRINTLN(F("auto merge"));
       MDSeqTrack temp_seq_track;
       if (merge == SAVE_MERGE) {
         // Load up internal sequencer data
@@ -156,7 +156,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
         chain.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
         temp_seq_track.length = chain.length;
         temp_seq_track.speed = chain.speed;
-        DEBUG_PRINTLN("SAVE_MD");
+        DEBUG_PRINTLN(F("SAVE_MD"));
       }
       // merge md pattern data with seq_data
       temp_seq_track.merge_from_md(column, &(MD.pattern));
@@ -179,15 +179,15 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   ret = proj.write_grid((uint8_t *)(this), len, column, row);
 
   if (!ret) {
-    DEBUG_PRINTLN("write failed");
+    DEBUG_PRINTLN(F("write failed"));
     return false;
   }
   DEBUG_DUMP(chain.length);
-  DEBUG_PRINTLN("Track stored in grid");
+  DEBUG_PRINTLN(F("Track stored in grid"));
   DEBUG_PRINT(column);
-  DEBUG_PRINT(" ");
+  DEBUG_PRINT(F(" "));
   DEBUG_PRINT(row);
-  DEBUG_PRINT("model");
+  DEBUG_PRINT(F("model"));
   return true;
 }
 

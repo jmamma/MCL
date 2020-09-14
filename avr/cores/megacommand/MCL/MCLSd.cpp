@@ -7,7 +7,7 @@ SdFat SD;
 bool MCLSd::sd_init() {
   bool ret = false;
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Initializing SD Card");
+  DEBUG_PRINTLN(F("Initializing SD Card"));
   // File file("/test.mcl",O_WRITE);
   /*Configuration file used to store settings when Minicommand is turned off*/
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
@@ -18,12 +18,12 @@ bool MCLSd::sd_init() {
   }
   if (ret == false) {
     sd_state = false;
-    DEBUG_PRINTLN("SD Init fail");
+    DEBUG_PRINTLN(F("SD Init fail"));
     return false;
   }
   sd_state = true;
 
-  DEBUG_PRINTLN("SD Init okay");
+  DEBUG_PRINTLN(F("SD Init okay"));
   return true;
 }
 bool MCLSd::load_init() {
@@ -41,16 +41,16 @@ bool MCLSd::load_init() {
   if (sd_state) {
 
     if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
-      DEBUG_PRINTLN("Config file open: success");
+      DEBUG_PRINTLN(F("Config file open: success"));
 
       if (read_data((uint8_t *)&mcl_cfg, sizeof(MCLSysConfigData),
                     &mcl_cfg.cfgfile)) {
-        DEBUG_PRINTLN("Config file read: success");
+        DEBUG_PRINTLN(F("Config file read: success"));
 
         if (mcl_cfg.version != CONFIG_VERSION) {
-          DEBUG_PRINTLN("Incompatible config version");
+          DEBUG_PRINTLN(F("Incompatible config version"));
           if (!mcl_cfg.cfg_init()) {
-            DEBUG_PRINTLN("Could not init cfg");
+            DEBUG_PRINTLN(F("Could not init cfg"));
             return false;
           }
 #ifdef OLED_DISPLAY
@@ -63,14 +63,14 @@ bool MCLSd::load_init() {
         }
 
         else if (mcl_cfg.number_projects > 0) {
-          DEBUG_PRINTLN("Project count greater than 0, try to load existing");
+          DEBUG_PRINTLN(F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
-            DEBUG_PRINTLN("error loading project");
+            DEBUG_PRINTLN(F("error loading project"));
             proj.new_project();
             return true;
 
           } else {
-            DEBUG_PRINTLN("Project loaded successfully, load grid");
+            DEBUG_PRINTLN(F("Project loaded successfully, load grid"));
             return true;
           }
           return true;
@@ -79,7 +79,7 @@ bool MCLSd::load_init() {
           return true;
         }
       } else {
-        DEBUG_PRINTLN("Could not read cfg file.");
+        DEBUG_PRINTLN(F("Could not read cfg file."));
 
         if (!mcl_cfg.cfg_init()) {
           return false;
@@ -88,7 +88,7 @@ bool MCLSd::load_init() {
         return true;
       }
     } else {
-      DEBUG_PRINTLN("Could not open cfg file. Let's try to create it");
+      DEBUG_PRINTLN(F("Could not open cfg file. Let's try to create it"));
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
@@ -122,7 +122,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
       /*reset position*/
       ret = filep->seekSet(pos);
       if (!ret) {
-        DEBUG_PRINTLN("Could not seek, failing");
+        DEBUG_PRINTLN(F("Could not seek, failing"));
         return false;
       }
     } else {
@@ -135,7 +135,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
   } else {
 
     DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Total write failures");
+    DEBUG_PRINTLN(F("Total write failures"));
     DEBUG_PRINTLN(write_fail);
     DEBUG_PRINTLN(b);
     DEBUG_PRINTLN(len);
@@ -164,7 +164,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
       /*reset position*/
       ret = filep->seekSet(pos);
       if (!ret) {
-        DEBUG_PRINTLN("Could not seek, failing");
+        DEBUG_PRINTLN(F("Could not seek, failing"));
         return false;
       }
       pass = false;
@@ -177,7 +177,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
     return true;
   } else {
     DEBUG_PRINT_FN();
-    DEBUG_PRINTLN("Total read failures");
+    DEBUG_PRINTLN(F("Total read failures"));
     DEBUG_PRINTLN(read_fail);
 
     return false;

@@ -11,8 +11,8 @@ uint16_t A4Track::calc_latency(uint8_t tracknumber) {
 void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   if ((mcl_actions.send_machine[slotnumber] == 0)) {
-    DEBUG_PRINTLN("here");
-    DEBUG_PRINTLN("send a4 sound");
+    DEBUG_PRINTLN(F("here"));
+    DEBUG_PRINTLN(F("send a4 sound"));
     sound.toSysex();
   }
   ExtTrack::transition_load(tracknumber, seq_track, slotnumber);
@@ -34,7 +34,7 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   bool ret;
   int b = 0;
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("storing a4 track");
+  DEBUG_PRINTLN(F("storing a4 track"));
   uint32_t len;
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;

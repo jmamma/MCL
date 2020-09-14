@@ -24,11 +24,20 @@
 #ifdef DEBUGMODE
 
 #define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
+
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
-#define DEBUG_DUMP(x)  ({Serial.print(#x); Serial.print(" = "); Serial.println(x);})
+#define DEBUG_DUMP(x)  { \
+  Serial.print(F(#x)); \
+  Serial.print(F(" = ")); \
+  Serial.println(x); \
+}
 // __PRETTY_FUNCTION__ is a gcc extension
-#define DEBUG_PRINT_FN(x) ({DEBUG_PRINT("func_call: "); DEBUG_PRINTLN(__PRETTY_FUNCTION__);})
+#define DEBUG_PRINT_FN(x) { \
+  DEBUG_PRINT(F("func_call: ")); \
+  Serial.println(__PRETTY_FUNCTION__); \
+}
+//#define DEBUG_PRINT_FN(x)
 
 #else
 #define DEBUG_INIT()

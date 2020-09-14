@@ -25,7 +25,7 @@ bool MCLClipBoard::open() {
     grid_filename[l] = '.';
     grid_filename[l + 1] = i + '0';
     grid_filename[l + 2] = '\0';
-    DEBUG_PRINTLN("Creating clipboard");
+    DEBUG_PRINTLN(F("Creating clipboard"));
     if (!SD.exists(grid_filename)) {
       if (!grids[i].new_grid(grid_filename)) {
         gfx.alert("ERROR", "SD ERROR");
@@ -33,7 +33,7 @@ bool MCLClipBoard::open() {
       }
     } else {
       if (!grids[i].open_file(grid_filename)) {
-        DEBUG_PRINTLN("Could not open clipboard");
+        DEBUG_PRINTLN(F("Could not open clipboard"));
         return false;
       }
     }
@@ -75,7 +75,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   uint8_t grid = 0;
 
   if (!open()) {
-    DEBUG_PRINTLN("error could not open clipboard");
+    DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
 
@@ -92,7 +92,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   }
   close();
   if (!ret) {
-    DEBUG_PRINTLN("failed write");
+    DEBUG_PRINTLN(F("failed write"));
   }
   return ret;
 }
@@ -122,7 +122,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   MDTrack *md_track = (MDTrack *)(&temp_track);
   uint8_t grid = 0;
   if (!open()) {
-    DEBUG_PRINTLN("error could not open clipboard");
+    DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
   if (source_track < NUM_MD_TRACKS) {
@@ -132,12 +132,12 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
                     GRID_LENGTH);
   }
   if (!ret) {
-    DEBUG_PRINTLN("failed read");
+    DEBUG_PRINTLN(F("failed read"));
     close();
     return false;
   }
   if (source_track < NUM_MD_TRACKS) {
-    DEBUG_PRINTLN("loading seq track");
+    DEBUG_PRINTLN(F("loading seq track"));
     memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
            sizeof(md_track->seq_data));
     if (md_track->machine.trigGroup == source_track) {
@@ -149,7 +149,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     if (md_track->machine.lfo.destinationTrack == source_track) {
       md_track->machine.lfo.destinationTrack = track;
     }
-    DEBUG_PRINTLN("sending seq track");
+    DEBUG_PRINTLN(F("sending seq track"));
     bool send_machine, send_level = true;
     MD.sendMachine(track, &(md_track->machine), send_level, send_machine);
   }
@@ -171,7 +171,7 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h, uint
   t_w = w;
   t_h = h;
   if (!open()) {
-    DEBUG_PRINTLN("error could not open clipboard");
+    DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
   EmptyTrack temp_track;
@@ -199,7 +199,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
   DEBUG_PRINT_FN();
   uint8_t old_grid = proj.get_grid();
   if (!open()) {
-    DEBUG_PRINTLN("error could not open clipboard");
+    DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
 

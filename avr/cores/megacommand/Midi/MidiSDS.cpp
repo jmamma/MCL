@@ -67,7 +67,7 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
   return MidiSDSSysexListener.msgType;
 }
 void MidiSDSClass::cancel() {
-  DEBUG_PRINTLN("cancelling transmission");
+  DEBUG_PRINTLN(F("cancelling transmission"));
   wav_file.close();
   state = SDS_READY;
 }
@@ -76,11 +76,11 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number,
                            uint8_t loop_type, uint32_t loop_start,
                            uint32_t loop_end, bool handshake) {
   if (state != SDS_READY) {
-          DEBUG_PRINTLN("sds not in ready state");
+          DEBUG_PRINTLN(F("sds not in ready state"));
   return false;
   }
   if (!wav_file.open(filename, false)) {
-    DEBUG_PRINTLN("Could not open WAV");
+    DEBUG_PRINTLN(F("Could not open WAV"));
     return false;
   }
   packetNumber = 0;
@@ -94,7 +94,7 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number,
   loopStart = loop_start;
   loopEnd = loop_end;
   packetNumber = 0;
-  DEBUG_PRINTLN("sending dump");
+  DEBUG_PRINTLN(F("sending dump"));
   DEBUG_PRINTLN(sampleLength);
   sendDumpHeader();
   uint8_t rep = 0;
@@ -134,12 +134,12 @@ bool MidiSDSClass::sendSamples() {
 
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
-    // DEBUG_PRINTLN("NUM OF SAMPLES");
+    // DEBUG_PRINTLN(F("NUM OF SAMPLES"));
     // DEBUG_PRINTLN(num_of_samples);
     ret = wav_file.read_samples(&samples, num_of_samples, samplesSoFar, 0);
  //   DEBUG_PRINTLN(samplesSoFar);
     if (!ret) {
-      DEBUG_PRINTLN("could not read");
+      DEBUG_PRINTLN(F("could not read"));
       return ret;
     }
     byte_count = 0;
@@ -175,7 +175,7 @@ bool MidiSDSClass::sendSamples() {
       uint8_t bits7;
       uint8_t shift;
       for (shift = 0; shift < midiBytes_per_word; shift++) {
-        //    DEBUG_PRINTLN("shift");
+        //    DEBUG_PRINTLN(F("shift"));
         //   DEBUG_PRINTLN(shift + n);
         bits7 = encode_val >> (sampleFormat - (7 * (shift + 1)));
         data[n + shift] = (uint8_t)0x7F & bits7;
@@ -205,7 +205,7 @@ bool MidiSDSClass::sendSamples() {
           // Timeout in reply, switch to no-handshake proto
         }
         if (msgType == MIDI_SDS_WAIT) {
-          DEBUG_PRINTLN("told to wait");
+          DEBUG_PRINTLN(F("told to wait"));
           msgType = waitForMsg();
           if (msgType != MIDI_SDS_ACK) {
             cancel();
@@ -274,7 +274,7 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
     MidiUart.m_putc(buf[i]);
     checksum ^= buf[i];
     if (buf[i] > 0x7F) {
-      DEBUG_PRINTLN("crap");
+      DEBUG_PRINTLN(F("crap"));
     }
   }
   for (int i = len; i < 120; i++)

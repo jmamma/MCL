@@ -48,7 +48,7 @@ bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   ret = proj.write_grid((uint8_t *)(this), len, column, row);
 
   if (!ret) {
-    DEBUG_PRINTLN("write failed");
+    DEBUG_PRINTLN(F("write failed"));
     return false;
   }
   return true;

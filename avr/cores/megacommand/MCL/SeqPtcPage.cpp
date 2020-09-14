@@ -90,7 +90,7 @@ void SeqPtcPage::init() {
   ptc_param_len.handler = ptc_pattern_len_handler;
   recording = false;
   note_mask = 0;
-  DEBUG_PRINTLN("control mode:");
+  DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   trig_interface.on();
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
@@ -515,7 +515,7 @@ void SeqPtcPage::render_arp() {
   }
 
   // Collect notes, sort in ascending order
-  DEBUG_PRINTLN("collecting notes");
+  DEBUG_PRINTLN(F("collecting notes"));
   for (uint8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
     note = arp_get_next_note_up(sort_up[i - 1]);
     if (note != 255) {
@@ -524,7 +524,7 @@ void SeqPtcPage::render_arp() {
       DEBUG_PRINTLN(i);
     }
   }
-  DEBUG_PRINTLN("finish");
+  DEBUG_PRINTLN(F("finish"));
   DEBUG_PRINTLN(num_of_notes);
   if (num_of_notes == 0) {
     return;
@@ -808,7 +808,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     uint8_t note = event->source - 128;
     uint8_t pitch = calc_scale_note(note);
-    DEBUG_PRINTLN("yep");
+    DEBUG_PRINTLN(F("yep"));
     // note interface presses are treated as musical notes here
     if (mask == EVENT_BUTTON_PRESSED) {
 
@@ -934,7 +934,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  DEBUG_PRINT("note on midi2: ");
+  DEBUG_PRINT(F("note on midi2: "));
   DEBUG_DUMP(channel);
 
   // matches control channel, or MIDI2 is OMNI?
@@ -986,7 +986,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   seq_ptc_page.config_encoders();
 
   DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
-  DEBUG_PRINTLN("Sending note");
+  DEBUG_PRINTLN(F("Sending note"));
   DEBUG_DUMP(pitch);
   pitch += ptc_param_oct.cur * 12 + 12;
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
@@ -1007,7 +1007,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     return;
   }
 
-  DEBUG_PRINTLN("note off midi2");
+  DEBUG_PRINTLN(F("note off midi2"));
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
@@ -1123,7 +1123,7 @@ void SeqPtcMidiEvents::remove_callbacks() {
     return;
   }
 
-  DEBUG_PRINTLN("remove calblacks");
+  DEBUG_PRINTLN(F("remove calblacks"));
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(

@@ -13,7 +13,7 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   if (!proj.read_grid(this, sizeof(GridTrack), column, row)) {
-    DEBUG_PRINTLN("read failed");
+    DEBUG_PRINTLN(F("read failed"));
     return false;
   }
 
@@ -35,7 +35,7 @@ bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   DEBUG_PRINT_FN();
 
   if (!proj.write_grid(this, sizeof(GridTrack), column, row)) {
-    DEBUG_PRINTLN("write failed");
+    DEBUG_PRINTLN(F("write failed"));
     return false;
   }
 

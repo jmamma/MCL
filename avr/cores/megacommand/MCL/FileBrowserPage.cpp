@@ -79,7 +79,7 @@ void FileBrowserPage::init() {
       }
     }
     if (is_match_file) {
-      DEBUG_PRINTLN("file matched");
+      DEBUG_PRINTLN(F("file matched"));
       if (add_entry(temp_entry)) {
         if (strcmp(temp_entry, mcl_cfg.project) == 0) {
           DEBUG_DUMP(temp_entry);
@@ -100,7 +100,7 @@ void FileBrowserPage::init() {
   } else {
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
-  DEBUG_PRINTLN("finished list files");
+  DEBUG_PRINTLN(F("finished list files"));
 }
 
 void FileBrowserPage::display() {
