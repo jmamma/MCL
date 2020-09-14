@@ -26,7 +26,7 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
   return ret;
 }
 
-bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                             bool online) {
 
   active = A4_TRACK_TYPE;
@@ -37,16 +37,18 @@ bool A4Track::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   DEBUG_PRINTLN("storing a4 track");
   uint32_t len;
 
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+
   // [>analog 4 tracks<]
 #ifdef EXT_TRACKS
   if (online) {
-    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
-
-    chain.length = mcl_seq.ext_tracks[tracknumber].length;
-    chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
+    //get_track_from_sysex(tracknumber);
+    chain.length = seq_track->length;
+    chain.speed = seq_track->speed;
+    memcpy(&seq_data, seq_track, sizeof(seq_data));
   }
 #endif
-  ret = proj.write_grid((uint8_t *)this, sizeof(A4Track), tracknumber, row);
+  ret = proj.write_grid((uint8_t *)this, sizeof(A4Track), column, row);
   if (!ret) {
     return false;
   }

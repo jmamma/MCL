@@ -29,7 +29,7 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 }
 
 // merge and online are ignored here.
-bool GridTrack::store_in_grid(uint8_t column, uint16_t row, uint8_t merge,
+bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                               bool online) {
 
   DEBUG_PRINT_FN();

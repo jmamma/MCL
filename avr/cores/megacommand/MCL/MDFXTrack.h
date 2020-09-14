@@ -21,8 +21,8 @@ public:
   void place_fx_in_kit();
   void get_fx_from_kit();
 
-  bool store_in_grid(uint8_t tracknumber, uint16_t row,
-                                uint8_t merge, bool online);
+  bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
+                                uint8_t merge = 0, bool online = false);
 
   void load_immediate(uint8_t tracknumber);
 

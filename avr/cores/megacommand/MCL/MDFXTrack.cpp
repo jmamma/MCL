@@ -30,7 +30,7 @@ void MDFXTrack::get_fx_from_kit() {
   enable_dynamics = true;
 }
 
-bool MDFXTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                               bool online) {
   active = MDFX_TRACK_TYPE;
   bool ret;
@@ -38,14 +38,14 @@ bool MDFXTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   DEBUG_PRINT_FN();
   uint32_t len;
 
-  if (tracknumber != 255 && online == true) {
+  if (column != 255 && online == true) {
     get_fx_from_kit();
   }
 
   len = sizeof(MDFXTrack);
   DEBUG_PRINTLN(len);
 
-  ret = proj.write_grid((uint8_t *)(this), len, tracknumber, row);
+  ret = proj.write_grid((uint8_t *)(this), len, column, row);
 
   if (!ret) {
     DEBUG_PRINTLN("write failed");

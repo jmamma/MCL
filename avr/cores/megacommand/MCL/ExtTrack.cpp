@@ -31,7 +31,7 @@ bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
   return true;
 }
 
-bool ExtTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                              bool online) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
@@ -42,16 +42,18 @@ bool ExtTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   DEBUG_PRINT_FN();
   uint32_t len;
 
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+
 #ifdef EXT_TRACKS
   if (online) {
-    get_track_from_sysex(tracknumber);
-    chain.length = mcl_seq.ext_tracks[tracknumber].length;
-    chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
-    memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
+    get_track_from_sysex(column);
+    chain.length = seq_track->length;
+    chain.speed = seq_track->speed;
+    memcpy(&seq_data, seq_track, sizeof(seq_data));
   }
 #endif
 
-  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), tracknumber, row);
+  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), column, row);
   if (!ret) {
     DEBUG_PRINTLN("Write failed");
     return false;

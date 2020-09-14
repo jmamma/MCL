@@ -215,7 +215,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         }
         DEBUG_DUMP(track_type);
         auto pdevice_track = empty_track.init_track_type(track_type);
-        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), merge,
+        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track, merge,
                                      online);
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), track_type);

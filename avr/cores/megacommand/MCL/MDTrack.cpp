@@ -125,7 +125,7 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                             bool online) {
   active = MD_TRACK_TYPE;
 
@@ -134,35 +134,37 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   DEBUG_PRINT_FN();
   uint32_t len;
 
-  if (tracknumber != 255 && online == true) {
-    get_machine_from_kit(tracknumber);
+  MDSeqTrack *md_seq_track = (MDSeqTrack*) seq_track;
 
-    chain.length = mcl_seq.md_tracks[tracknumber].length;
-    chain.speed = mcl_seq.md_tracks[tracknumber].speed;
+  if (column != 255 && online == true) {
+    get_machine_from_kit(column);
+
+    chain.length = seq_track->length;
+    chain.speed = seq_track->speed;
 
     if (merge > 0) {
       DEBUG_PRINTLN("auto merge");
-      MDSeqTrack md_seq_track;
+      MDSeqTrack temp_seq_track;
       if (merge == SAVE_MERGE) {
         // Load up internal sequencer data
-        memcpy(md_seq_track.data(), mcl_seq.md_tracks[tracknumber].data(),
+        memcpy(temp_seq_track.data(), md_seq_track->data(),
                sizeof(MDSeqTrackData));
       }
       if (merge == SAVE_MD) {
-        md_seq_track.init();
+        temp_seq_track.init();
         chain.length = MD.pattern.patternLength;
         chain.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-        md_seq_track.length = chain.length;
-        md_seq_track.speed = chain.speed;
+        temp_seq_track.length = chain.length;
+        temp_seq_track.speed = chain.speed;
         DEBUG_PRINTLN("SAVE_MD");
       }
       // merge md pattern data with seq_data
-      md_seq_track.merge_from_md(tracknumber, &(MD.pattern));
+      temp_seq_track.merge_from_md(column, &(MD.pattern));
       // copy merged data in to this track object's seq data for writing to SD
-      memcpy(this->seq_data.data(), md_seq_track.data(),
+      memcpy(this->seq_data.data(), temp_seq_track.data(),
              sizeof(MDSeqTrackData));
     } else {
-      memcpy(this->seq_data.data(), mcl_seq.md_tracks[tracknumber].data(),
+      memcpy(this->seq_data.data(), md_seq_track->data(),
              sizeof(MDSeqTrackData));
     }
     // Normalise track levels
@@ -174,7 +176,7 @@ bool MDTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
   len = sizeof(MDTrack);
   DEBUG_PRINTLN(len);
 
-  ret = proj.write_grid((uint8_t *)(this), len, tracknumber, row);
+  ret = proj.write_grid((uint8_t *)(this), len, column, row);
 
   if (!ret) {
     DEBUG_PRINTLN("write failed");

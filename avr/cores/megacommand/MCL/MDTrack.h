@@ -92,7 +92,7 @@ public:
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
 
-  bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0,
+  bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 

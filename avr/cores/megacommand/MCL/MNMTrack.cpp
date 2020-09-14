@@ -32,25 +32,26 @@ void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.type = MNM.kit.types[tracknumber];
 }
 
-bool MNMTrack::store_in_grid(uint8_t tracknumber, uint16_t row, uint8_t merge,
+bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                                   bool online) {
 
   DEBUG_PRINT_FN();
   active = MNM_TRACK_TYPE;
-
+  uint8_t tracknumber = column;
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   if (tracknumber != 255 && online == true) {
     get_machine_from_kit(tracknumber);
 
-    chain.length = mcl_seq.ext_tracks[tracknumber].length;
-    chain.speed = mcl_seq.ext_tracks[tracknumber].speed;
+    chain.length = seq_track->length;
+    chain.speed = seq_track->speed;
 
     if (merge > 0) {
       // TODO decode MNM track data from a pattern...
     } else {
-      memcpy(&seq_data, &mcl_seq.ext_tracks[tracknumber], sizeof(seq_data));
+      memcpy(&seq_data, seq_track, sizeof(seq_data));
     }
   }
   // Write data to sd
-  return proj.write_grid((uint8_t *)(this), sizeof(MNMTrack), tracknumber, row);
+  return proj.write_grid((uint8_t *)(this), sizeof(MNMTrack), column, row);
 }
 

@@ -38,7 +38,7 @@ public:
   // load header without data from grid
   bool load_from_grid(uint8_t column, uint16_t row);
   // save header without data to grid
-  virtual bool store_in_grid(uint8_t column, uint16_t row, uint8_t merge = 0, bool online = false);
+  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
