@@ -4,6 +4,7 @@
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
+  if (seq_track == nullptr) { return; }
   seq_track->start_step = mcl_actions.next_transition;
   seq_track->start_step_offset = mcl_actions.transition_offsets[n];
   seq_track->mute_until_start = true;
