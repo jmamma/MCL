@@ -114,6 +114,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset();
   }
+
+  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+    aux_tracks[i].reset();
+  }
+
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].sample_hold = 0;
@@ -168,6 +173,11 @@ void MCLSeq::seq() {
   }
   //Arp
   seq_ptc_page.on_192_callback();
+
+  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+    aux_tracks[i].seq();
+  }
+
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq();
