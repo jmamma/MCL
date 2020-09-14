@@ -184,7 +184,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   }
   DEBUG_DUMP(chain.length);
   DEBUG_PRINTLN("Track stored in grid");
-  DEBUG_PRINT(tracknumber);
+  DEBUG_PRINT(column);
   DEBUG_PRINT(" ");
   DEBUG_PRINT(row);
   DEBUG_PRINT("model");
