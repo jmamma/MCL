@@ -468,10 +468,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
-      transition_level[n] = 0;
+    SeqTrack *seq_track =
+        get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+            transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
-                            (mcl_seq.seq_tracks[n]->step_count *
-                             mcl_seq.seq_tracks[n]->get_speed_multiplier());
+                            (seq_track->step_count *
+                             seq_track->get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -553,12 +555,17 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
     return;
   }
 
+  uint8_t grid_idx, track_idx, track_type, dev_idx;
+
+  SeqTrack *seq_track =
+          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+
   uint16_t next_transitions_old = next_transitions[n];
   float len;
 
   float l = chains[n].length;
   len = (float)chains[n].loops * l *
-        (float)mcl_seq.seq_tracks[n]->get_speed_multiplier();
+        (float)seq_track->get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;

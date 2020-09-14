@@ -22,6 +22,7 @@ constexpr size_t NUM_A4_TRACKS = 6;
 constexpr size_t NUM_A4_SOUND_TRACKS = 4;
 constexpr size_t NUM_MNM_TRACKS = 6;
 constexpr size_t NUM_EXT_TRACKS = 6;
+constexpr size_t NUM_AUX_TRACKS = 4;
 #else
 #pragma message("EXT TRACKS DISABLED")
 constexpr size_t NUM_A4_TRACKS = 0;

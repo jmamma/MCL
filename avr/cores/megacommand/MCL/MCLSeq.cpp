@@ -19,7 +19,6 @@ void MCLSeq::setup() {
               //(uint8_t) (((float) n / (float)48) * (float)96);
       }    } */
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    add_track(i, MD_TRACK_TYPE,&md_tracks[i]);
 
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
@@ -39,12 +38,17 @@ void MCLSeq::setup() {
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    add_track(i, EXT_TRACK_TYPE,&ext_tracks[i]);
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
     ext_tracks[i].speed = SEQ_SPEED_2X;
   }
 #endif
+  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+    aux_tracks[i].channel = i;
+    aux_tracks[i].length = 16;
+    aux_tracks[i].speed = SEQ_SPEED_2X;
+  }
+#
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
 

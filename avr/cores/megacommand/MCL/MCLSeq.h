@@ -48,7 +48,7 @@ public:
   static constexpr uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
 
-  SeqTrack *seq_tracks[NUM_TRACKS];
+  SeqTrack aux_tracks[NUM_AUX_TRACKS];
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -56,14 +56,6 @@ public:
   void setup();
   void enable();
   void disable();
-
-  void add_track(uint8_t track_number, uint8_t type, SeqTrack *tp) {
-    if (type != MD_TRACK_TYPE) {
-      track_number += NUM_MD_TRACKS;
-    }
-    seq_tracks[track_number] = tp;
-    seq_tracks[track_number]->active = type;
-  }
 
   void update_kit_params();
   void update_params();
