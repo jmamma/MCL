@@ -349,7 +349,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   uint8_t select_array[NUM_SLOTS];
   //Take a copy, because we call GUI.loop later.
-  memcpy(&select_array,&slot_select_array,NUM_SLOTS);
+  memcpy(&select_array, slot_select_array, NUM_SLOTS);
 
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
