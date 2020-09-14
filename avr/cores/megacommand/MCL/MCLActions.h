@@ -65,14 +65,14 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void store_tracks_in_mem(int column, int row, uint8_t *track_select_array,
+  void store_tracks_in_mem(int column, int row, uint8_t *slot_select_array,
                            uint8_t merge);
 
-  void write_tracks(int column, int row, uint8_t *track_select_array);
-  void send_tracks_to_devices(uint8_t *track_select_array);
-  void prepare_next_chain(int row, uint8_t *track_select_array);
+  void write_tracks(int column, int row, uint8_t *slot_select_array);
+  void send_tracks_to_devices(uint8_t *slot_select_array);
+  void prepare_next_chain(int row, uint8_t *slot_select_array);
 
-  void cache_next_tracks(uint8_t *track_select_array, EmptyTrack *empty_track,
+  void cache_next_tracks(uint8_t *slot_select_array, EmptyTrack *empty_track,
                          EmptyTrack *empty_track2, bool update_gui = false);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
