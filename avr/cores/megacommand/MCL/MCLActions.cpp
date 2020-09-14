@@ -292,18 +292,16 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   }
   uint8_t grid_idx, track_idx, track_type, dev_idx;
 
-  for (uint8_t n = 0; n < NUM_TRACKS; ++n) {
+  for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
 
     SeqTrack *seq_track =
         get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
     proj.select_grid(grid_idx);
-
     if ((slot_select_array[n] == 0) || (track_type == 255)) {
       // Ignore slots that are not device supported.
       slot_select_array[n] = 0;
       continue;
     }
-
     auto device_track = empty_track.load_from_grid(track_idx, row);
     if (device_track == nullptr || device_track->active != track_type) {
       empty_track.clear();
@@ -326,6 +324,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   DEBUG_PRINTLN("write step");
   DEBUG_PRINTLN(MidiClock.div16th_counter);
   DEBUG_PRINTLN(next_step);
+  DEBUG_PRINTLN("setting transition");
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] > 0) {
@@ -348,6 +347,10 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   DEBUG_PRINT_FN();
 
+  uint8_t select_array[NUM_SLOTS];
+  //Take a copy, because we call GUI.loop later.
+  memcpy(&select_array,&slot_select_array,NUM_SLOTS);
+
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
 
@@ -358,8 +361,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   uint8_t first_note = 255;
 
-  uint8_t mute_states[NUM_TRACKS];
-  uint8_t send_masks[NUM_TRACKS] = {0};
+  uint8_t mute_states[NUM_SLOTS];
+  uint8_t send_masks[NUM_SLOTS] = {0};
 
   uint8_t old_grid = proj.get_grid();
 
@@ -375,9 +378,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
       seq_track->mute_state = SEQ_MUTE_ON;
     }
 
-    if ((slot_select_array[i] == 0) || (track_type == 255)) {
+    if ((select_array[i] == 0) || (track_type == 255)) {
       // Ignore slots that are not device supported.
-      slot_select_array[i] = 0;
+      select_array[i] = 0;
       continue;
     }
 
@@ -459,12 +462,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   // Cache
 
-  cache_next_tracks(slot_select_array, &empty_track, &empty_track2);
+  cache_next_tracks(select_array, &empty_track, &empty_track2);
 
   // in_sysex = 0;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((slot_select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
+    if ((select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
       transition_level[n] = 0;
       next_transitions[n] = MidiClock.div16th_counter -
                             (mcl_seq.seq_tracks[n]->step_count *
