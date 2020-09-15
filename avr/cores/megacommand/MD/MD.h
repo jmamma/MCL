@@ -136,15 +136,15 @@ public:
    * - MD_SET_EQ_PARAM_ID
    * - MD_SET_DYNAMIX_PARAM_ID
    **/
-  void sendFXParam(uint8_t param, uint8_t value, uint8_t type);
+  uint8_t sendFXParam(uint8_t param, uint8_t value, uint8_t type, bool send = true);
   /** Set the value of an ECHO FX parameter. **/
-  void setEchoParam(uint8_t param, uint8_t value);
+  uint8_t setEchoParam(uint8_t param, uint8_t value,bool send = true);
   /** Set the value of a REVERB FX parameter. **/
-  void setReverbParam(uint8_t param, uint8_t value);
+  uint8_t setReverbParam(uint8_t param, uint8_t value, bool send = true);
   /** Set the value of an EQ FX parameter. **/
-  void setEQParam(uint8_t param, uint8_t value);
+  uint8_t setEQParam(uint8_t param, uint8_t value, bool send = true);
   /** Set the value of a COMPRESSOR FX parameter. **/
-  void setCompressorParam(uint8_t param, uint8_t value);
+  uint8_t setCompressorParam(uint8_t param, uint8_t value, bool send = true);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH

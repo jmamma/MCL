@@ -405,8 +405,8 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
-  virtual void sendRequest(uint8_t *data, uint8_t len);
-  virtual void sendRequest(uint8_t type, uint8_t param);
+  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true);
+  virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/

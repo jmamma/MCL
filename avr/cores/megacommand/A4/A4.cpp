@@ -58,7 +58,8 @@ uint16_t A4Class::sendKitParams(uint8_t* masks, void* scratchpad) {
   return 0;
 }
 
-void A4Class::sendRequest(uint8_t type, uint8_t param) {
+uint16_t A4Class::sendRequest(uint8_t type, uint8_t param, bool send) {
+  if (send) {
   USE_LOCK();
   SET_LOCK();
   MidiUart2.m_putc(0xF0);
@@ -69,6 +70,8 @@ void A4Class::sendRequest(uint8_t type, uint8_t param) {
   MidiUart2.sendRaw(a4_sysex_ftr, sizeof(a4_sysex_ftr));
   MidiUart2.m_putc(0xF7);
   CLEAR_LOCK();
+  }
+  return sizeof(a4_sysex_hdr) + sizeof(a4_sysex_proto_version) + sizeof(a4_sysex_ftr) + 4;
 }
 
 bool A4Class::probe() {

@@ -2,7 +2,8 @@
 
 #define SYSEX_RETRIES 1
 
-void ElektronDevice::sendRequest(uint8_t *data, uint8_t len) {
+uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
+  if (send) {
   USE_LOCK();
   SET_LOCK();
   uart->m_putc(0xF0);
@@ -10,11 +11,13 @@ void ElektronDevice::sendRequest(uint8_t *data, uint8_t len) {
   uart->sendRaw(data, len);
   uart->m_putc(0xF7);
   CLEAR_LOCK();
+  }
+  return len + sysex_protocol.header_size + 2;
 }
 
-void ElektronDevice::sendRequest(uint8_t type, uint8_t param) {
+uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   uint8_t data[] = {type, param};
-  sendRequest(data, 2);
+  return sendRequest(data, 2, send);
 }
 
 bool ElektronDevice::get_fw_caps() {

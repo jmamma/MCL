@@ -20,6 +20,9 @@ public:
 
   void place_fx_in_kit();
   void get_fx_from_kit();
+  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t send_fx(bool send = true);
+  void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
 
   bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
                                 uint8_t merge = 0, bool online = false);

@@ -34,14 +34,14 @@ class A4Class : public ElektronDevice {
 
 public:
   A4Class();
-  
+
   virtual bool probe();
   virtual void init_grid_devices();
 
   virtual uint16_t sendKitParams(uint8_t* masks, void* scratchpad);
 
   // Overriden for A4 proto version and footer injection
-  virtual void sendRequest(uint8_t, uint8_t);
+  virtual uint16_t sendRequest(uint8_t, uint8_t, bool send = true);
 
   virtual ElektronSysexListenerClass* getSysexListener() { return &A4SysexListener; }
   // TODO A4 kit not placed in class

@@ -1,21 +1,40 @@
 #include "MCL_impl.h"
 
-void MDFXTrack::load_immediate(uint8_t tracknumber) {
-  place_fx_in_kit();
+void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                                uint8_t slotnumber) {
+  send_fx();
 }
+
+uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {
+  bool send = false;
+  return send_fx(send);
+}
+
+uint16_t MDFXTrack::send_fx(bool send) {
+  uint16_t bytes = 0;
+  for (uint8_t a = 0; a < sizeof(reverb); a++) {
+    if (enable_reverb) { bytes += MD.setEchoParam(a, reverb[a], send); }
+    if (enable_delay) { bytes += MD.setReverbParam(a, reverb[a], send); }
+    if (enable_eq) { bytes += MD.setEQParam(a, reverb[a], send); }
+    if (enable_dynamics) { bytes += MD.setCompressorParam(a, reverb[a], send); }
+  }
+  return bytes;
+}
+
+void MDFXTrack::load_immediate(uint8_t tracknumber) { place_fx_in_kit(); }
 
 void MDFXTrack::place_fx_in_kit() {
   if (enable_reverb) {
-  memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));
+    memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));
   }
   if (enable_delay) {
-  memcpy(&MD.kit.delay, &delay, sizeof(delay));
+    memcpy(&MD.kit.delay, &delay, sizeof(delay));
   }
   if (enable_eq) {
-  memcpy(&MD.kit.eq, &eq, sizeof(eq));
+    memcpy(&MD.kit.eq, &eq, sizeof(eq));
   }
   if (enable_dynamics) {
-  memcpy(&MD.kit.dynamics, &dynamics, sizeof(dynamics));
+    memcpy(&MD.kit.dynamics, &dynamics, sizeof(dynamics));
   }
 }
 
@@ -30,8 +49,8 @@ void MDFXTrack::get_fx_from_kit() {
   enable_dynamics = true;
 }
 
-bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
-                              bool online) {
+bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+                              uint8_t merge, bool online) {
   active = MDFX_TRACK_TYPE;
   bool ret;
   int b = 0;

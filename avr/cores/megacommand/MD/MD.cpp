@@ -284,25 +284,25 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   sendRequest(data, 6);
 }
 
-void MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type) {
+uint8_t MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type, bool send) {
   uint8_t data[3] = {type, param, value};
-  sendRequest(data, 3);
+  return sendRequest(data, 3, send);
 }
 
-void MDClass::setEchoParam(uint8_t param, uint8_t value) {
-  sendFXParam(param, value, MD_SET_RHYTHM_ECHO_PARAM_ID);
+uint8_t MDClass::setEchoParam(uint8_t param, uint8_t value, bool send) {
+  return sendFXParam(param, value, MD_SET_RHYTHM_ECHO_PARAM_ID, send);
 }
 
-void MDClass::setReverbParam(uint8_t param, uint8_t value) {
-  sendFXParam(param, value, MD_SET_GATE_BOX_PARAM_ID);
+uint8_t MDClass::setReverbParam(uint8_t param, uint8_t value,bool send) {
+  return sendFXParam(param, value, MD_SET_GATE_BOX_PARAM_ID, send);
 }
 
-void MDClass::setEQParam(uint8_t param, uint8_t value) {
-  sendFXParam(param, value, MD_SET_EQ_PARAM_ID);
+uint8_t MDClass::setEQParam(uint8_t param, uint8_t value, bool send) {
+  return sendFXParam(param, value, MD_SET_EQ_PARAM_ID, send);
 }
 
-void MDClass::setCompressorParam(uint8_t param, uint8_t value) {
-  sendFXParam(param, value, MD_SET_DYNAMIX_PARAM_ID);
+uint8_t MDClass::setCompressorParam(uint8_t param, uint8_t value, bool send) {
+  return sendFXParam(param, value, MD_SET_DYNAMIX_PARAM_ID, send);
 }
 
 /*** tunings ***/
