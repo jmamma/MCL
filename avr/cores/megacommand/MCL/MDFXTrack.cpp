@@ -21,9 +21,10 @@ uint16_t MDFXTrack::send_fx(bool send) {
   return bytes;
 }
 
-void MDFXTrack::load_immediate(uint8_t tracknumber) { place_fx_in_kit(); }
+void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) { place_fx_in_kit(); }
 
 void MDFXTrack::place_fx_in_kit() {
+  DEBUG_PRINTLN("place");
   if (enable_reverb) {
     memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));
   }

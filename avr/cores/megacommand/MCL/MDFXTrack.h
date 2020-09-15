@@ -27,7 +27,7 @@ public:
   bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
                                 uint8_t merge = 0, bool online = false);
 
-  void load_immediate(uint8_t tracknumber);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
   virtual uint32_t get_region() { return BANK1_FX_TRACKS_START; }
