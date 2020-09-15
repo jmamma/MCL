@@ -13,10 +13,10 @@ uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {
 uint16_t MDFXTrack::send_fx(bool send) {
   uint16_t bytes = 0;
   for (uint8_t a = 0; a < sizeof(reverb); a++) {
-    if (enable_reverb) { bytes += MD.setEchoParam(a, reverb[a], send); }
-    if (enable_delay) { bytes += MD.setReverbParam(a, reverb[a], send); }
-    if (enable_eq) { bytes += MD.setEQParam(a, reverb[a], send); }
-    if (enable_dynamics) { bytes += MD.setCompressorParam(a, reverb[a], send); }
+    if (enable_reverb) { bytes += MD.setReverbParam(a, reverb[a], send); }
+    if (enable_delay) { bytes += MD.setEchoParam(a, delay[a], send); }
+    if (enable_eq) { bytes += MD.setEQParam(a, eq[a], send); }
+    if (enable_dynamics) { bytes += MD.setCompressorParam(a, dynamics[a], send); }
   }
   return bytes;
 }
