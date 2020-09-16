@@ -68,7 +68,8 @@ public:
     auto *p = load_from_grid(col, row);
     if (!p)
       return nullptr;
-    return _dynamik_kast<T>(p);
+    auto ptrack = p->init_track_type(p->active);
+    return _dynamik_kast<T>(ptrack);
   }
 
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
@@ -83,8 +84,10 @@ public:
     if (that->active != track_type) {
       return nullptr;
     }
-    return that;
+    auto ptrack = that->init_track_type(that->active);
+    return ptrack;
   }
+
   template <class T> T *load_from_mem(uint8_t col) {
     DEBUG_PRINT_FN();
     DeviceTrack *that = init_track_type<T>();
@@ -96,7 +99,8 @@ public:
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
-    return _dynamik_kast<T>(that);
+    auto ptrack = that->init_track_type(that->active);
+    return _dynamik_kast<T>(ptrack);
   }
 };
 
