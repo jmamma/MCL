@@ -127,9 +127,10 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
   for (i = 0; i < NUM_SLOTS; i++) {
     if (slot_select_array[i] > 0) {
-      SeqTrack *seq_track = get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
+      SeqTrack *seq_track =
+          get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
       if (track_type != 255) {
-      save_dev_tracks[dev_idx] = true;
+        save_dev_tracks[dev_idx] = true;
       }
     }
   }
@@ -171,7 +172,6 @@ void MCLActions::store_tracks_in_mem(int column, int row,
     }
   }
 
-
   GridRowHeader row_headers[NUM_GRIDS];
   GridTrack grid_track;
 
@@ -210,8 +210,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         }
         DEBUG_DUMP(track_type);
         auto pdevice_track = empty_track.init_track_type(track_type);
-        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track, merge,
-                                     online);
+        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track,
+                                     merge, online);
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), track_type);
       }
@@ -343,7 +343,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   DEBUG_PRINT_FN();
 
   uint8_t select_array[NUM_SLOTS];
-  //Take a copy, because we call GUI.loop later.
+  // Take a copy, because we call GUI.loop later.
   memcpy(&select_array, slot_select_array, NUM_SLOTS);
 
   EmptyTrack empty_track;
@@ -458,12 +458,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
-    SeqTrack *seq_track =
-        get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
-            transition_level[n] = 0;
-      next_transitions[n] = MidiClock.div16th_counter -
-                            (seq_track->step_count *
-                             seq_track->get_speed_multiplier());
+      SeqTrack *seq_track =
+          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+      transition_level[n] = 0;
+      next_transitions[n] =
+          MidiClock.div16th_counter -
+          (seq_track->step_count * seq_track->get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -507,25 +507,28 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       proj.select_grid(grid_idx);
 
       auto *ptrack = empty_track->load_from_grid(track_idx, chains[n].row);
-      if (ptrack == nullptr || !ptrack->is_active() ||
-          track_type != ptrack->active) {
-        continue;
-      }
 
-      auto *pmem_track = empty_track2->load_from_mem(track_idx, track_type);
-      if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
-        // track type matched.
-        auto *psound = ptrack->get_sound_data_ptr();
-        auto *pmem_sound = pmem_track->get_sound_data_ptr();
-        auto szsound = ptrack->get_sound_data_size();
-        auto szmem_sound = pmem_track->get_sound_data_size();
+      if (ptrack == nullptr || ptrack->active != track_type) {
+        // EMPTY_TRACK_TYPE
+        empty_track->clear();
+        empty_track->init_track_type(track_type);
+        send_machine[n] = 1;
+      } else {
+        auto *pmem_track = empty_track2->load_from_mem(track_idx, track_type);
+        if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
+          // track type matched.
+          auto *psound = ptrack->get_sound_data_ptr();
+          auto *pmem_sound = pmem_track->get_sound_data_ptr();
+          auto szsound = ptrack->get_sound_data_size();
+          auto szmem_sound = pmem_track->get_sound_data_size();
 
-        if (!psound || !pmem_sound || szsound != szmem_sound) {
-          // something's wrong, don't send
-        } else if (memcmp(psound, pmem_sound, szsound) != 0) {
-          send_machine[n] = 0;
-        } else {
-          send_machine[n] = 1;
+          if (!psound || !pmem_sound || szsound != szmem_sound) {
+            // something's wrong, don't send
+          } else if (memcmp(psound, pmem_sound, szsound) != 0) {
+            send_machine[n] = 0;
+          } else {
+            send_machine[n] = 1;
+          }
         }
       }
       ptrack->store_in_mem(track_idx);
@@ -548,14 +551,13 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   uint8_t grid_idx, track_idx, track_type, dev_idx;
 
   SeqTrack *seq_track =
-          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+      get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
 
   uint16_t next_transitions_old = next_transitions[n];
   float len;
 
   float l = chains[n].length;
-  len = (float)chains[n].loops * l *
-        (float)seq_track->get_speed_multiplier();
+  len = (float)chains[n].loops * l * (float)seq_track->get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;
