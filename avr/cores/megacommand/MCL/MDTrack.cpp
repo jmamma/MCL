@@ -16,7 +16,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   uint8_t n = slotnumber;
-  if (mcl_actions.send_machine[n]) {
+  if (mcl_actions.send_machine[n] == 0) {
     bool send_level = false;
     DEBUG_DUMP(n);
     switch (mcl_actions.transition_level[n]) {
