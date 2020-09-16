@@ -388,10 +388,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
     } // read failure
 
     ptrack->chain.store_in_mem(i, &(chains[0]));
+
     if (ptrack->active != track_type) {
-      // empty, or incompatible
+      ptrack->init_track_type(track_type);
+      ptrack->transition_clear(track_idx, seq_track);
     } else {
-      DEBUG_DUMP(i);
       ptrack->load_immediate(track_idx, seq_track);
       if (track_type != 255) {
         send_masks[i] = 1;
