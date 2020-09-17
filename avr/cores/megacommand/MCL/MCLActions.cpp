@@ -209,7 +209,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           empty_track.chain.loops = 0;
         }
         DEBUG_DUMP(track_type);
-        auto pdevice_track = empty_track.init_track_type(track_type);
+        auto pdevice_track = ((DeviceTrack *)&empty_track)->init_track_type(track_type);
         pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track,
                                      merge, online);
         row_headers[grid_idx].update_model(
@@ -300,7 +300,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     auto device_track = empty_track.load_from_grid(track_idx, row);
     if (device_track == nullptr || device_track->active != track_type) {
       empty_track.clear();
-      device_track = empty_track.init_track_type(track_type);
+      device_track = device_track->init_track_type(track_type);
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
