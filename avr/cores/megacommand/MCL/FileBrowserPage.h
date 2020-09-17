@@ -37,6 +37,7 @@ public:
 
   // configuration, should be set before calling base init()
   bool show_dirs = false;
+  bool select_dirs = false;
   bool show_save = true;
   bool show_parent = true;
   bool show_new_folder = true;
@@ -72,8 +73,6 @@ public:
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
-
-private:
 
   void _handle_filemenu();
   void _calcindices(int &);

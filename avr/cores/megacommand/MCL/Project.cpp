@@ -19,8 +19,16 @@ again:
 
   if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
 
-    // Create project directory
+    // Create parent project directory
     chdir_projects();
+
+    // Create project directory
+    SD.mkdir(newprj, true);
+
+    if (!SD.chdir(newprj)) {
+    gfx.alert("ERROR", "DIR");
+    goto again;
+    }
 
     char proj_filename[sizeof(newprj) + 5] = {'\0'};
     strcat(proj_filename, newprj);
@@ -54,7 +62,7 @@ again:
     //
     bool ret = proj.new_project(proj_filename);
     if (ret) {
-      if (proj.load_project(proj_filename)) {
+      if (proj.load_project(newprj)) {
         grid_page.reload_slot_models = false;
         DEBUG_PRINTLN("project loaded, setting page to grid");
         GUI.setPage(&grid_page);
@@ -86,16 +94,29 @@ bool Project::load_project(const char *projectname) {
   DEBUG_PRINTLN(projectname);
   file.close();
 
-  char name[PRJ_NAME_LEN + 2];
-  uint8_t l = strlen(projectname) - 4;
-  strncpy(name, projectname, l);
+  uint8_t l = strlen(projectname);
 
-  const char *c_project_root = PRJ_DIR;
+  char proj_filename[l + 5] = {'\0'};
+  strcat(proj_filename, projectname);
+  strcat(proj_filename, ".mcl");
+
+  char grid_name[l + 2] = {'\0'};
+  strcat(grid_name, projectname);
+
+  //Open project parent
   chdir_projects();
-  //Open project directory.
-  SD.chdir(name);
 
-  ret = file.open(projectname, O_RDWR);
+  //Open project directory.
+  SD.chdir(projectname);
+
+  if (!SD.exists(proj_filename)) {
+    DEBUG_DUMP(proj_filename);
+    DEBUG_PRINTLN(F("does not exist"));
+    return false;
+
+  }
+
+  ret = file.open(proj_filename, O_RDWR);
   if (!ret) {
 
     DEBUG_PRINTLN(F("Could not open project file"));
@@ -112,12 +133,12 @@ bool Project::load_project(const char *projectname) {
  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grids[i].close_file();
 
-    name[l] = '.';
-    name[l + 1] = i + '0';
-    name[l + 2] = '\0';
+    grid_name[l] = '.';
+    grid_name[l + 1] = i + '0';
+    grid_name[l + 2] = '\0';
     DEBUG_PRINTLN(F("opening grid"));
-    DEBUG_PRINTLN(name);
-    if (!grids[i].open_file(name)) {
+    DEBUG_PRINTLN(grid_name);
+    if (!grids[i].open_file(grid_name)) {
       DEBUG_PRINTLN(F("could not open grid"));
       gfx.alert("ERROR", "OPEN GRID");
       return false;

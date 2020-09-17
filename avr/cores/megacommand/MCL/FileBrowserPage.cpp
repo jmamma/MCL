@@ -422,9 +422,11 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     file.open(temp_entry, O_READ);
 
     // chdir to child
-    if (file.isDirectory()) {
-      _cd(temp_entry);
-      return false;
+    if (!select_dirs) {
+      if (file.isDirectory()) {
+        _cd(temp_entry);
+        return false;
+      }
     }
 
     // select an entry
