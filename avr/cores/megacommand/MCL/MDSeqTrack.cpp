@@ -24,24 +24,23 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void MDSeqTrack::re_sync() {
-  uint16_t q = length;
-  start_step = (MidiClock.div16th_counter / q) * q + q;
-  start_step_offset = 0;
+  uint32_t q = length * 12;
+  start_step = (MidiClock.div192th_counter / q) * q + q;
   mute_until_start = true;
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
-  if (mute_until_start) {
 
-    if ((clock_diff(MidiClock.div16th_counter, start_step) == 0)) {
-      if (start_step_offset > 0) {
-        start_step_offset--;
-      } else {
+  if (mute_until_start) {
+#ifdef DEFER_SEQ
+    if ((clock_diff(MidiClock.div192th_counter + 1, start_step) == 0)) {
+#else
+    if ((clock_diff(MidiClock.div192th_counter, start_step) == 0)) {
+#endif
         reset();
-      }
     }
-  }
+ }
 
   uint8_t timing_mid = get_timing_mid_inline();
 

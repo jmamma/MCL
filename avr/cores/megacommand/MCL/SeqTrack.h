@@ -54,7 +54,6 @@ public:
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   uint32_t start_step;
-  uint8_t start_step_offset;
 
   ALWAYS_INLINE() void reset() {
     step_count = 0;

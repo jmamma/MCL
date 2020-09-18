@@ -25,22 +25,24 @@ void ExtSeqTrack::set_length(uint8_t len) {
 }
 
 void ExtSeqTrack::re_sync() {
-  uint16_t q = length;
+  uint32_t q = length * 12;
   start_step = (MidiClock.div16th_counter / q) * q + q;
-  start_step_offset = 0;
   mute_until_start = true;
 }
 
 void ExtSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
-  if (mute_until_start) {
 
-    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      if (MidiClock.mod12_counter == start_step_offset) {
+  if (mute_until_start) {
+#ifdef DEFER_SEQ
+    if ((clock_diff(MidiClock.div192th_counter + 1, start_step) == 0)) {
+#else
+    if ((clock_diff(MidiClock.div192th_counter, start_step) == 0)) {
+#endif
         reset();
-      }
     }
   }
+
   uint8_t timing_mid = get_timing_mid_inline();
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
@@ -63,7 +65,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
         } else if (notes[c][current_step] > 0) {
-          noteon_conditional(notes_conditional[c][current_step],
+          noteon_conditional(0,
                              abs(notes[c][current_step]) - 1);
         }
       }
