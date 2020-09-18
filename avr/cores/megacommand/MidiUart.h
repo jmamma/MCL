@@ -137,6 +137,7 @@ public:
 #ifdef DEFER_SEQ
 extern MidiUartClass seq_tx1;
 extern MidiUartClass seq_tx2;
+
 #endif
 
 extern MidiUartClass MidiUart;
@@ -169,9 +170,17 @@ public:
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  #ifdef DEFER_SEQ
+  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
+  #endif
   #endif
 };
 
 extern MidiUartClass2 MidiUart2;
+
+#ifdef DEFER_SEQ
+extern MidiUartClass2 seq_tx3;
+extern MidiUartClass2 seq_tx4;
+#endif
 
 #endif /* MIDI_UART_H__ */

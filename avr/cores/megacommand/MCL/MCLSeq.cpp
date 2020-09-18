@@ -173,24 +173,34 @@ void MCLSeq::seq() {
 
   Stopwatch sw;
   MidiUartParent *uart;
-// Flush side channel (isr best effort flush);
-// Render sequencer data to adjacent buffer.
+  MidiUartParent *uart2;
+
+  // Flush side channel (isr best effort flush);
+  // Render sequencer data to adjacent buffer.
+
 #ifdef DEFER_SEQ
-  SET_BIT(PORTB, PB5);
   if (uart_sidechannel) {
     uart = &seq_tx2;
+    uart2 = &seq_tx4;
     seq_tx2.txRb.init();
+    seq_tx4.txRb.init();
     MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
+    MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
   } else {
     uart = &seq_tx1;
+    uart2 = &seq_tx3;
     seq_tx1.txRb.init();
+    seq_tx3.txRb.init();
     MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
+    MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
   }
   UART_SET_ISR_TX_BIT();
+  UART2_SET_ISR_TX_BIT();
   // Flip uart / side_channel buffer for next run
   uart_sidechannel = !uart_sidechannel;
 #else
   uart = &MidiUart;
+  uart = &MidiUart2;
 #endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -211,7 +221,7 @@ void MCLSeq::seq() {
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].seq(uart);
+    ext_tracks[i].seq(uart2);
   }
 #endif
 

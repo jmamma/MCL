@@ -408,13 +408,28 @@ ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
-  if (!MidiUart2.txRb.isEmpty_isr()) {
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    UART2_WRITE_CHAR(MidiUart2.txRb.get_h_isr());
+  #ifdef DEFER_SEQ
+  if ((MidiUart2.txRb_sidechannel != nullptr) && (MidiUart2.uart_block == 0)) {
+
+    if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+      UART2_WRITE_CHAR(MidiUart2.txRb_sidechannel->get_h_isr());
+    }
+    if (MidiUart2.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart2.txRb_sidechannel = nullptr;
+    }
+  } else {
+  #endif
+    if (!MidiUart2.txRb.isEmpty_isr()) {
+      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+      UART2_WRITE_CHAR(MidiUart2.txRb.get_h_isr());
+    }
+    if (MidiUart2.txRb.isEmpty_isr()) {
+      UART2_CLEAR_ISR_TX_BIT();
+    }
+  #ifdef DEFER_SEQ
   }
-  if (MidiUart2.txRb.isEmpty_isr()) {
-    UART2_CLEAR_ISR_TX_BIT();
-  }
+  #endif
 }
 #endif
 #endif
