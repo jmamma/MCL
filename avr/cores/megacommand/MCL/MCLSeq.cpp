@@ -165,10 +165,6 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 }
 
-#ifdef MEGACOMMAND
-#pragma GCC push_options
-#pragma GCC optimize("unroll-loops")
-#endif
 void MCLSeq::seq() {
 
   Stopwatch sw;
@@ -233,9 +229,6 @@ void MCLSeq::seq() {
   // DIAG_MEASURE(0, seq_time);
 }
 
-#ifdef MEGACOMMAND
-#pragma GCC pop_options
-#endif
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
