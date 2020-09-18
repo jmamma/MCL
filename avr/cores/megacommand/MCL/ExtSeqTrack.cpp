@@ -31,7 +31,8 @@ void ExtSeqTrack::re_sync() {
   mute_until_start = true;
 }
 
-void ExtSeqTrack::seq() {
+void ExtSeqTrack::seq(MidiUartParent *uart_) {
+  uart = uart_;
   if (mute_until_start) {
 
     if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {

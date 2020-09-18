@@ -1,10 +1,8 @@
 #include "DiagnosticPage.h"
 #include "MCL_impl.h"
 
-#define DEFER
-
 void MCLSeq::setup() {
-  uart = &MidiUart;
+  // uart = &MidiUart;
 
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
 
@@ -51,7 +49,6 @@ void MCLSeq::setup() {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_2X;
   }
-#
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
 
@@ -128,6 +125,10 @@ void MCLSeq::onMidiStartImmediateCallback() {
     lfo_tracks[i].step_count = 0;
   }
 #endif
+#ifdef DEFER_SEQ
+  uart_sidechannel = !uart_sidechannel;
+  seq();
+#endif
 }
 
 void MCLSeq::onMidiStartCallback() {
@@ -170,23 +171,29 @@ void MCLSeq::onMidiStopCallback() {
 void MCLSeq::seq() {
 
   Stopwatch sw;
-  // Flush side channel (isr best effort flush);
-  // Render sequencer data to adjacent buffer.
-  #ifdef defer
+  MidiUartParent *uart;
+// Flush side channel (isr best effort flush);
+// Render sequencer data to adjacent buffer.
+#ifdef DEFER_SEQ
+  SET_BIT(PORTB, PB5);
   if (uart_sidechannel) {
     uart = &seq_tx2;
+    seq_tx2.txRb.init();
     MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
   } else {
     uart = &seq_tx1;
+    seq_tx1.txRb.init();
     MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
   }
   UART_SET_ISR_TX_BIT();
-  //Flip uart / side_channel buffer for next run
+  // Flip uart / side_channel buffer for next run
   uart_sidechannel = !uart_sidechannel;
-  #endif
+#else
+  uart = &MidiUart;
+#endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq();
+    md_tracks[i].seq(uart);
   }
   // Arp
   seq_ptc_page.on_192_callback();
@@ -203,7 +210,7 @@ void MCLSeq::seq() {
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].seq();
+    ext_tracks[i].seq(uart);
   }
 #endif
 
@@ -214,6 +221,7 @@ void MCLSeq::seq() {
   auto seq_time = sw.elapsed();
   // DIAG_MEASURE(0, seq_time);
 }
+
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
 #endif

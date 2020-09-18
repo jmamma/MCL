@@ -13,6 +13,7 @@
 #include <MidiClock.h>
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
+extern uint16_t clock_measure = 0;
 
 MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
                              volatile uint8_t *tx_buf, uint16_t tx_buf_size)
@@ -21,8 +22,10 @@ MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
   rxRb.len = rx_buf_size;
   txRb.ptr = tx_buf;
   txRb.len = tx_buf_size;
+#ifdef DEFER_SEQ
   // ignore side channel;
   txRb_sidechannel = nullptr;
+#endif
   initSerial();
 }
 
@@ -374,8 +377,9 @@ ISR(USART1_UDRE_vect) {
 ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
-
+  #ifdef DEFER_SEQ
   if ((MidiUart.txRb_sidechannel != nullptr) && (MidiUart.uart_block == 0)) {
+
     if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
       MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
       UART_WRITE_CHAR(MidiUart.txRb_sidechannel->get_h_isr());
@@ -384,6 +388,7 @@ ISR(USART0_UDRE_vect) {
       MidiUart.txRb_sidechannel = nullptr;
     }
   } else {
+  #endif
     if (!MidiUart.txRb.isEmpty_isr()) {
       MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
       UART_WRITE_CHAR(MidiUart.txRb.get_h_isr());
@@ -391,7 +396,9 @@ ISR(USART0_UDRE_vect) {
     if (MidiUart.txRb.isEmpty_isr()) {
       UART_CLEAR_ISR_TX_BIT();
     }
+  #ifdef DEFER_SEQ
   }
+  #endif
 }
 
 #ifdef MEGACOMMAND

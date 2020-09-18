@@ -4,6 +4,7 @@
 
 // -- Midi UART devices
 
+#ifdef DEFER_SEQ
 MidiUartClass seq_tx1((volatile uint8_t *)nullptr,
                        (size_t) 0,
                        (volatile uint8_t *)BANK1_UARTSEQ_TX1_BUFFER_START,
@@ -12,7 +13,7 @@ MidiUartClass seq_tx2((volatile uint8_t *)nullptr,
                        (size_t) 0,
                        (volatile uint8_t *)BANK1_UARTSEQ_TX2_BUFFER_START,
                        TX_SEQBUF_SIZE);
-
+#endif
 
 MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,
                        UART1_RX_BUFFER_LEN,

@@ -97,6 +97,8 @@ class MidiUartClass;
 #else
 #define TX_BUF_TYPE uint8_t
 #endif
+
+extern uint16_t clock_measure;
 void isr_usart1(uint8_t caller);
 void isr_usart2(uint8_t caller);
 void isr_midi();
@@ -127,11 +129,15 @@ public:
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  #ifdef DEFER_SEQ
   volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
+  #endif
 };
 
+#ifdef DEFER_SEQ
 extern MidiUartClass seq_tx1;
 extern MidiUartClass seq_tx2;
+#endif
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;

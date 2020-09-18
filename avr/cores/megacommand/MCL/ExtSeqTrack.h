@@ -92,7 +92,7 @@ public:
     oneshot_mask[1] = 0;
   }
 
-  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
   ALWAYS_INLINE()
   void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   ALWAYS_INLINE() void note_on(uint8_t note);
