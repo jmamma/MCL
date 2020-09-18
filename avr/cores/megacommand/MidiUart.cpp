@@ -375,7 +375,7 @@ ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
 
-  if (MidiUart.txRb_sidechannel != nullptr) {
+  if ((MidiUart.txRb_sidechannel != nullptr) && (MidiUart.uart_block == 0)) {
     if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
       MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
       UART_WRITE_CHAR(MidiUart.txRb_sidechannel->get_h_isr());
