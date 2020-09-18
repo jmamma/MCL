@@ -35,6 +35,10 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
+  bool uart_sidechannel;
+
+  MidiUartClass *uart;
+
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
 

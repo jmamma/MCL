@@ -1,7 +1,6 @@
 #include "MCL_impl.h"
 
-    void
-    MDSeqTrack::set_length(uint8_t len) {
+void MDSeqTrack::set_length(uint8_t len) {
   length = len;
   if (step_count >= length) {
     // re_sync();
@@ -184,7 +183,7 @@ void MDSeqTrack::send_slides() {
         }
       }
 
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val, uart);
     }
   }
 }
@@ -419,7 +418,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
     }
     idx += lock_bit;
     if (send) {
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param, uart);
     }
   }
 }
@@ -432,7 +431,7 @@ void MDSeqTrack::send_trig_inline() {
     mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
         MD.kit.levels[MD.kit.trigGroups[track_number]];
   }
-  MD.triggerTrack(track_number, 127);
+  MD.triggerTrack(track_number, 127, uart);
 }
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {

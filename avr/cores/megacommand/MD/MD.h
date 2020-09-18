@@ -115,7 +115,7 @@ public:
    *
    * track goes from 0 to 15, velocity from 0 to 127.
    **/
-  void triggerTrack(uint8_t track, uint8_t velocity);
+  void triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_ = nullptr);
   /**
    * Set the parameter param (0 to 23, or 32 for mute, and 33 for
    * LEVEL) of the given track (from 0 to 15) to value.
@@ -123,8 +123,8 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value);
-  void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
+  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr);
+  void setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr);
 
   void setSampleName(uint8_t slot, char *name);
 

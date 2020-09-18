@@ -127,7 +127,11 @@ public:
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
 };
+
+extern MidiUartClass seq_tx1;
+extern MidiUartClass seq_tx2;
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;

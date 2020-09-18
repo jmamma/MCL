@@ -1,7 +1,10 @@
-#include "MCL_impl.h"
 #include "DiagnosticPage.h"
+#include "MCL_impl.h"
+
+#define DEFER
 
 void MCLSeq::setup() {
+  uart = &MidiUart;
 
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
 
@@ -149,7 +152,7 @@ void MCLSeq::onMidiStopCallback() {
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < 4; c++) {
-    md_tracks[i].locks_slide_data[c].init();
+      md_tracks[i].locks_slide_data[c].init();
     }
   }
   seq_ptc_page.onMidiStopCallback();
@@ -167,15 +170,29 @@ void MCLSeq::onMidiStopCallback() {
 void MCLSeq::seq() {
 
   Stopwatch sw;
+  // Flush side channel (isr best effort flush);
+  // Render sequencer data to adjacent buffer.
+  #ifdef defer
+  if (uart_sidechannel) {
+    uart = &seq_tx2;
+    MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
+  } else {
+    uart = &seq_tx1;
+    MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
+  }
+  UART_SET_ISR_TX_BIT();
+  //Flip uart / side_channel buffer for next run
+  uart_sidechannel = !uart_sidechannel;
+  #endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
-  //Arp
+  // Arp
   seq_ptc_page.on_192_callback();
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-  //  aux_tracks[i].seq();
+    //  aux_tracks[i].seq();
   }
 
 #ifdef LFO_TRACKS
@@ -195,7 +212,7 @@ void MCLSeq::seq() {
   }
 
   auto seq_time = sw.elapsed();
-  //DIAG_MEASURE(0, seq_time);
+  // DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
@@ -205,7 +222,9 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  if (!update_params) { return; }
+  if (!update_params) {
+    return;
+  }
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -217,7 +236,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     mcl_seq.md_tracks[track].update_param(track_param, value);
 #ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param, value);
+      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1,
+                                                           track_param, value);
     }
 #endif
   }

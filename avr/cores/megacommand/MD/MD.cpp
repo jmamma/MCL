@@ -239,20 +239,23 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
   }
 }
 
-void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
+void MDClass::triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart->sendNoteOn(global.baseChannel, global.drumMapping[track],
+    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track],
                         velocity);
   }
 }
 
-void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value) {
-  setTrackParam_inline(track, param, value);
+void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_) {
+  setTrackParam_inline(track, param, value, uart_);
 }
 
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param,
-                                   uint8_t value) {
+                                   uint8_t value, MidiUartParent *uart_) {
 
+  if (uart_ == nullptr) { uart_ = uart; }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
@@ -270,7 +273,7 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param,
   } else {
     return;
   }
-  uart->sendCC(channel + global.baseChannel, cc, value);
+  uart_->sendCC(channel + global.baseChannel, cc, value);
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
