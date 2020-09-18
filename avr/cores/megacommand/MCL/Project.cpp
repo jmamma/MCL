@@ -118,7 +118,7 @@ bool Project::load_project(const char *projectname) {
 
   ret = file.open(proj_filename, O_RDWR);
   if (!ret) {
-
+    file.close();
     DEBUG_PRINTLN(F("Could not open project file"));
     return false;
   }
