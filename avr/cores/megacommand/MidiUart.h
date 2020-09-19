@@ -111,12 +111,6 @@ public:
                 volatile uint8_t *tx_buf, uint16_t tx_buf_size);
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
     txRb.put_h(c);
     UART_SET_ISR_TX_BIT();
   }
@@ -127,6 +121,7 @@ public:
 
   void set_speed(uint32_t speed, uint8_t port);
 
+  int8_t in_message;
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
   #ifdef DEFER_SEQ
@@ -155,17 +150,11 @@ public:
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
   #ifdef UART2_TX
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
     txRb.put_h(c);
     UART2_SET_ISR_TX_BIT();
   #endif
   }
-
+  int8_t in_message;
   ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX

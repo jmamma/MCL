@@ -39,13 +39,12 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 #else
     if ((clock_diff(MidiClock.div192th_counter, start_step) == 0)) {
 #endif
-        reset();
+      reset();
     }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
-  if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
-      (mute_state == SEQ_MUTE_OFF)) {
+  if ((mute_until_start == false) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == length) {
@@ -65,8 +64,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
         if (notes[c][current_step] < 0) {
           note_off(abs(notes[c][current_step]) - 1);
         } else if (notes[c][current_step] > 0) {
-          noteon_conditional(0,
-                             abs(notes[c][current_step]) - 1);
+          noteon_conditional(0, abs(notes[c][current_step]) - 1);
         }
       }
     }
@@ -236,7 +234,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint8_t step = step_count;
 
   for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    //if current step already has this note, then we'll use the next step over
+    // if current step already has this note, then we'll use the next step over
     if (abs(notes[c][step]) == note_num + 1) {
       match = c;
 
@@ -262,7 +260,6 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   }
   notes_conditional[match][step] = condition;
   notes_timing[match][step_count] = utiming;
-
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
@@ -298,8 +295,8 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
 void ExtSeqTrack::clear_ext_conditional() {
   for (uint8_t x = 0; x < NUM_EXT_STEPS; x++) {
     for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
-       notes_conditional[c][x] = 0;
-       notes_timing[c][x] = 0;
+      notes_conditional[c][x] = 0;
+      notes_timing[c][x] = 0;
     }
   }
 }
@@ -362,6 +359,5 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
         SET_BIT128(temp_data.locks_masks[a], new_pos);
       }
     }
-
   }
 }

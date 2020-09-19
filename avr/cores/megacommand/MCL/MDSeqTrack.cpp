@@ -44,7 +44,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
 
   uint8_t timing_mid = get_timing_mid_inline();
 
-  if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
+  if ((mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;

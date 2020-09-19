@@ -176,7 +176,14 @@ void MCLSeq::seq() {
 
   // Flush side channel (isr best effort flush);
   // Render sequencer data to adjacent buffer.
-
+//  PORTB |= _BV(PB5); 
+/*
+  if ((MidiUart.txRb_sidechannel != nullptr)) {
+  setLed2();
+  }
+*/
+  UART_CLEAR_ISR_TX_BIT();
+  UART2_CLEAR_ISR_TX_BIT();
 #ifdef DEFER_SEQ
   if (uart_sidechannel) {
     uart = &seq_tx2;
@@ -193,6 +200,7 @@ void MCLSeq::seq() {
     MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
     MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
   }
+  //clearLed2();
   UART_SET_ISR_TX_BIT();
   UART2_SET_ISR_TX_BIT();
   // Flip uart / side_channel buffer for next run

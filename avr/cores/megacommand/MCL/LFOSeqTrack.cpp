@@ -82,7 +82,7 @@ void LFOSeqTrack::seq() {
       IS_BIT_SET64(pattern_mask, step_count)) {
     sample_count = 0;
   }
-  if (enable && (MidiUart.uart_block == 0)) {
+  if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       uint8_t wav_value = get_wav_value(sample_count, i);
       if (last_wav_value[i] != wav_value) {
