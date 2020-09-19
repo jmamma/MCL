@@ -125,12 +125,15 @@ void MCLSeq::onMidiStartImmediateCallback() {
     lfo_tracks[i].step_count = 0;
   }
 #endif
-#ifdef DEFER_SEQ
-  uart_sidechannel = !uart_sidechannel;
+
   sei();
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
+
+#ifdef DEFER_SEQ
+
+  uart_sidechannel = !uart_sidechannel;
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
@@ -196,7 +199,7 @@ void MCLSeq::seq() {
   uart_sidechannel = !uart_sidechannel;
 #else
   uart = &MidiUart;
-  uart = &MidiUart2;
+  uart2 = &MidiUart2;
 #endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
