@@ -184,10 +184,7 @@ void encoder_fx_handle(Encoder *enc) {
       mdEnc->setValue(68);
     }
   }
-  USE_LOCK();
-  SET_LOCK();
   MD.sendFXParam(mdEnc->fxparam, mdEnc->getValue(), mdEnc->effect);
-  CLEAR_LOCK();
 }
 
 uint8_t GridPage::getRow() { return param2.cur; }

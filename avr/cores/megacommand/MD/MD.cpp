@@ -670,15 +670,12 @@ bool MDClass::checkClockSettings() { return false; }
 //
 
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
-  USE_LOCK();
-  SET_LOCK();
   uart->m_putc(0xF0);
   uart->sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   uart->m_putc(MD_GUI_CMD);
   uart->m_putc(command);
   uart->m_putc(value);
   uart->m_putc(0xF7);
-  CLEAR_LOCK();
 }
 
 void MDClass::toggle_kit_menu() {
