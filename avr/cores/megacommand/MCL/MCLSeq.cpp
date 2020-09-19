@@ -143,8 +143,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
 #endif
 }
 
-void MCLSeq::onMidiStartCallback() {
-}
+void MCLSeq::onMidiStartCallback() {}
 
 void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS
@@ -176,31 +175,37 @@ void MCLSeq::seq() {
 
   // Flush side channel (isr best effort flush);
   // Render sequencer data to adjacent buffer.
-//  PORTB |= _BV(PB5); 
-/*
-  if ((MidiUart.txRb_sidechannel != nullptr)) {
-  setLed2();
-  }
-*/
+
   UART_CLEAR_ISR_TX_BIT();
   UART2_CLEAR_ISR_TX_BIT();
 #ifdef DEFER_SEQ
   if (uart_sidechannel) {
     uart = &seq_tx2;
     uart2 = &seq_tx4;
-    seq_tx2.txRb.init();
-    seq_tx4.txRb.init();
+    // If the side channel ring buffer is not empty, it means it did not finish
+    // transmiting before next Seq() call. We will drain the old
+    // buffer in to the new to retain the MIDI data.
+    while (!seq_tx2.txRb.isEmpty_isr()) {
+      seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
+    }
+    while (!seq_tx4.txRb.isEmpty_isr()) {
+      seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
+    }
     MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
     MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
   } else {
     uart = &seq_tx1;
     uart2 = &seq_tx3;
-    seq_tx1.txRb.init();
-    seq_tx3.txRb.init();
+    while (!seq_tx1.txRb.isEmpty_isr()) {
+      seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
+    }
+    while (!seq_tx3.txRb.isEmpty_isr()) {
+      seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
+    }
     MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
     MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
   }
-  //clearLed2();
+  // clearLed2();
   UART_SET_ISR_TX_BIT();
   UART2_SET_ISR_TX_BIT();
   // Flip uart / side_channel buffer for next run
