@@ -496,6 +496,12 @@ MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
     txRb.len = tx_buf_size;
   }
 #endif
+
+#ifdef DEFER_SEQ
+  // ignore side channel;
+  txRb_sidechannel = nullptr;
+#endif
+
   initSerial();
 }
 
