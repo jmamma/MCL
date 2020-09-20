@@ -226,13 +226,16 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
     }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
-      DeviceTrack *ptrack = empty_track.load_from_grid(x + t_col, y + t_row);
       // track now has full data and correct type
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;
 
       uint8_t slot_n = grid * GRID_WIDTH + d_col;
 
+      grids[grid].read(&empty_track, sizeof(EmptyTrack), s_col, y + t_row);
+
+      DeviceTrack *ptrack = ((DeviceTrack*) &empty_track)->init_track_type(empty_track.active);
+      DEBUG_DUMP(ptrack->active);
       SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
           slot_n, &grid_idx, &track_idx, &track_type, &dev_idx);
 
@@ -251,8 +254,8 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
       ptrack->chain.row = new_chain_row;
       header.update_model(d_col, ptrack->get_model(),
                           ptrack->get_device_type());
-      empty_track.on_copy(s_col, d_col, destination_same);
-      empty_track.store_in_grid(d_col, y + row);
+      ptrack->on_copy(s_col, d_col, destination_same);
+      ptrack->store_in_grid(d_col, y + row);
     }
     proj.write_grid_row_header(&header, y + row);
   }
