@@ -132,15 +132,14 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   md_track.machine.muteGroup = 127;
   md_track.chain.length = (uint8_t)steps;
   md_track.chain.speed = SEQ_SPEED_1X;
-  md_track.chain.loops = 0;
-  md_track.chain.row = mcl_actions.chains[track].row;
+  md_track.chain.init(mcl_actions.chains[track].row);
 
   md_track.store_in_mem(track);
 
   grid_page.active_slots[track] = 0x7FFF;
   mcl_actions.chains[track].row = SLOT_RAM_RECORD;
   mcl_actions.chains[track].loops = 1;
-
+  
   uint8_t m = mcl_seq.md_tracks[track].length;
 
   //  uint16_t next_step =
@@ -355,11 +354,8 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   }
   md_track.machine.muteGroup = 127;
 
-  md_track.chain.length = (uint8_t)steps;
-  md_track.chain.speed = SEQ_SPEED_1X;
   uint8_t magic = encoders[1]->cur;
-  md_track.chain.loops = 0;
-  md_track.chain.row = mcl_actions.chains[track].row;
+  md_track.chain.init(mcl_actions.chains[track].row, md_track.chain.loops, md_track.chain.length, md_track.chain.speed);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
 

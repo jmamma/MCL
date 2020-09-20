@@ -31,11 +31,11 @@ public:
   void store_in_mem(uint8_t tracknumber, GridChain *chain_array) {
      memcpy(&chain_array[tracknumber], this, sizeof(GridChain));
   }
-  void init(uint8_t row) {
-  row = row;
-  loops = 0;
-  length = 16;
-  speed = SEQ_SPEED_1X;
+  void init(uint8_t row_, uint8_t loops_ = 0, uint8_t length_ = 16, uint8_t speed_ = SEQ_SPEED_1X) {
+  row = row_;
+  loops = loops_;
+  length = length_;
+  speed = speed_;
   }
 };
 
