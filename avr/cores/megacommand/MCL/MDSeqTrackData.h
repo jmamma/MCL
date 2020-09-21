@@ -89,8 +89,8 @@ public:
 
   void init() { memset(this, 0, sizeof(MDSeqTrackData)); }
   bool convert(MDSeqTrackData_270 *old) {
-    /*ordering of these statements is important to ensure memory
-     * is copied before being overwritten*/
+    // TODO
+    return false;
   }
 };
 

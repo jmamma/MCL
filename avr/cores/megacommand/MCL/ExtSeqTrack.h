@@ -7,10 +7,12 @@
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+#include "CommonTools/NibbleArray.h"
+#include "MCL.h"
 
 #define NUM_EXT_STEPS 128
-#define NUM_EXT_NOTES 4
-#define NUM_EXT_LOCKS 4
+#define NUM_EXT_EVENTS 512
+#define NUM_EXT_LOCKS 8
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -30,8 +32,6 @@
 #define NUM_EXT_LOCKS_270 4
 #define NUM_EXT_STEPS_270 128
 
-#define EXTSEQTRACKDATA_VERSION 30
-
 class ExtSeqTrackData_270 {
 public:
   uint8_t length; // Resolution = 2 / ExtPatternResolution
@@ -47,54 +47,57 @@ public:
   uint8_t timing[NUM_EXT_STEPS_270];
 };
 
+/// 24-bit ext track event descriptor
+struct ext_event_t {
+  /// true for lock, false for Midi note
+  bool is_lock : 1;
+  /// effective when is_lock is true
+  uint8_t lock_idx : 3;
+  uint8_t cond_id : 4;
+  /// for Midi note: note on/off
+  /// for plock: lock engage/disengage
+  bool event_on : 1;
+  /// for Midi note: pitch value
+  /// for plock & lock engage: lock value
+  /// for plock & lock disengage: ignored
+  uint8_t event_value : 7;
+  /// micro timing value
+  uint8_t micro_timing;
+};
+
 class ExtSeqTrackData {
 public:
-  uint8_t version;
-  // 7-bit midi note + 1-bit on/off
-  int8_t notes[NUM_EXT_NOTES]
-              [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
-
-  // range max [0..191]
-  uint8_t notes_timing[NUM_EXT_NOTES][NUM_EXT_STEPS];
-  // 15 conditional types, 1 bit p-lock affecting
-  uint8_t notes_conditional[NUM_EXT_NOTES][NUM_EXT_STEPS];
-
+  NibbleArray<128> timing_buckets;
+  ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_EXT_LOCKS];
-  uint64_t locks_masks[NUM_EXT_LOCKS][2]; // 128bit
-
-  // 8-bit lock values
-  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
+  uint16_t event_count;
 
   bool convert(ExtSeqTrackData_270 *old) {
-    /*ordering of these statements is important to ensure memory
-     * is copied before being overwritten*/
-    version = EXTSEQTRACKDATA_VERSION;
-    memcpy(&notes, old->notes, NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
-    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-      memcpy(&notes_timing[a][0], old->timing, NUM_EXT_STEPS_270);
-      memcpy(&notes_conditional[a][0], old->conditional, NUM_EXT_STEPS_270);
-    }
-    memset(&locks_params, 0, NUM_EXT_LOCKS);
-    memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
-    return true;
+    // TODO
+    return false;
+  }
+
+  void reset() {
+    event_count = 0;
+    timing_buckets.clear();
   }
 };
+
 class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 
 public:
-  uint64_t note_buffer[2] = {
-      0}; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
+    ExtSeqTrackData::reset();
   }
 
   ALWAYS_INLINE() void seq();
-  ALWAYS_INLINE()
-  void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   ALWAYS_INLINE() void note_on(uint8_t note);
   ALWAYS_INLINE() void note_off(uint8_t note);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
@@ -109,6 +112,19 @@ public:
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();
+  void handle_event(uint16_t index);
+  void remove_event(uint16_t index);
+  uint16_t add_event(uint8_t step);
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx);
+
+  void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
+    ev_idx = 0;
+    ev_end = timing_buckets.get(step_count);
+    for (uint8_t i = 0; i < step_count; ++i) {
+      ev_idx += timing_buckets.get(i);
+    }
+    ev_end += ev_idx;
+  }
 
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
@@ -160,9 +176,6 @@ public:
     }
     *buf = 0;
   }
-#define DIR_LEFT 0
-#define DIR_RIGHT 1
-#define DIR_REVERSE 2
 
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }

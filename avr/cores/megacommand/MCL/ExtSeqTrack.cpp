@@ -3,10 +3,8 @@
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint8_t i = 0; i < NUM_EXT_STEPS; i++) {
-    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-      notes_timing[a][i] = round(mult * (float)notes_timing[a][i]);
-    }
+  for (uint16_t i = 0; i < NUM_EXT_EVENTS; i++) {
+    events[i].micro_timing = round(mult * (float)events[i].micro_timing);
   }
   speed = _speed;
   uint8_t timing_mid = get_timing_mid();
@@ -31,6 +29,63 @@ void ExtSeqTrack::re_sync() {
   mute_until_start = true;
 }
 
+void ExtSeqTrack::remove_event(uint16_t index) {
+  uint16_t ev_idx = 0;
+  uint8_t step;
+  uint8_t bucket = 0;
+  for(step = 0; step < length && ev_idx <= index; ++step) {
+    bucket = timing_buckets.get(step);
+    ev_idx += bucket;
+  }
+  // step is at least 1, move back to get current step
+  --step;
+ timing_buckets.set(step, bucket - 1);
+ memmove(events+index, events+index+1, sizeof(ext_event_t) * (NUM_EXT_EVENTS - index - 1));
+ --event_count;
+}
+
+uint16_t ExtSeqTrack::add_event(uint8_t step) {
+  uint8_t u = timing_buckets.get(step); 
+  if (15 == u || event_count >= NUM_EXT_EVENTS) {
+    // bucket full or track full
+    return 0xFFFF;
+  }
+  ++event_count;
+  timing_buckets.set(step, u+1);
+  uint16_t idx, end;
+  locate(step, idx, end);
+  memmove(events + end + 1, events + end, sizeof(ext_event_t) * (NUM_EXT_EVENTS - end - 1));
+}
+
+uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num, uint16_t &idx) {
+  uint16_t end;
+  locate(step, idx, end);
+  for(uint16_t i = idx; i != end; ++i) {
+    if (events[i].is_lock || events[i].event_value != note_num) { continue; }
+    return i;
+  }
+  return 0xFFFF;
+}
+
+void ExtSeqTrack::handle_event(uint16_t index) {
+  auto &ev = events[index];
+  if (ev.is_lock) {
+    // plock
+    if (ev.event_on) {
+      // lock engage
+    } else {
+      // lock disengage
+    }
+  } else {
+    // midi note
+    if (ev.event_on) {
+      noteon_conditional(ev.cond_id, ev.event_value);
+    } else {
+      note_off(ev.event_value);
+    }
+  }
+}
+
 void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
@@ -44,27 +99,37 @@ void ExtSeqTrack::seq() {
   if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
       (mute_state == SEQ_MUTE_OFF)) {
 
+    // the range we're interested in:
+    // [current timing bucket, micro >= timing_mid ... next timing bucket, micro < timing_mid]
+
+    uint16_t ev_idx, ev_end;
+
+    // Locate CURRENT
+    locate(step_count, ev_idx, ev_end);
+
+    // Go over CURRENT
+    for(; ev_idx != ev_end; ++ev_idx) {
+      auto u = events[ev_idx].micro_timing;
+      if (u >= timing_mid && u - timing_mid == mod12_counter) {
+        handle_event(ev_idx);
+      }
+    }
+
+    // Locate NEXT
     uint8_t next_step = 0;
     if (step_count == length) {
       next_step = 0;
+      ev_idx = 0;
     } else {
       next_step = step_count + 1;
     }
+    ev_end = ev_idx + timing_buckets.get(next_step);
 
-    for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
-      uint8_t current_step;
-      if (((notes_timing[c][step_count] >= timing_mid) &&
-           ((notes_timing[c][current_step = step_count] - timing_mid) ==
-            mod12_counter)) ||
-          ((notes_timing[c][next_step] < timing_mid) &&
-           ((notes_timing[c][current_step = next_step]) == mod12_counter))) {
-
-        if (notes[c][current_step] < 0) {
-          note_off(abs(notes[c][current_step]) - 1);
-        } else if (notes[c][current_step] > 0) {
-          noteon_conditional(notes_conditional[c][current_step],
-                             abs(notes[c][current_step]) - 1);
-        }
+    // Go over NEXT
+    for(; ev_idx != ev_end; ++ev_idx) {
+      auto u = events[ev_idx].micro_timing;
+      if (u < timing_mid && u == mod12_counter) {
+        handle_event(ev_idx);
       }
     }
   }
@@ -75,6 +140,7 @@ void ExtSeqTrack::seq() {
     step_count_inc();
   }
 }
+
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
   DEBUG_PRINTLN(F("note on"));
@@ -131,7 +197,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
     }
     break;
   case 8:
-    if ((iterations_8 == 8)) {
+    if (iterations_8 == 8) {
       note_on(note);
     }
   case 5:
@@ -179,87 +245,84 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
 
 void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
                                      uint8_t velocity) {
-  uint8_t match = 255;
   // Look for matching note already on this step
   // If it's a note off, then disable the note
   // If it's a note on, set the note note-off.
-  for (uint8_t c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (notes[c][step] == -(1 * (note_num + 1))) {
-      notes[c][step] = 0;
+  uint16_t ev_idx;
+  uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
+  if (note_idx != 0xFFFF) {
+    if (events[note_idx].event_on) {
+      events[note_idx].event_on = false;
+    } else {
+      remove_event(note_idx);
       buffer_notesoff();
-      match = c;
-    }
-    if (notes[c][step] == (1 * (note_num + 1))) {
-      notes[c][step] = (-1 * (note_num + 1));
-      match = c;
-    }
-  }
-  // No matches are found, we count number of on and off to determine next
-  // note type.
-  for (uint8_t c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (notes[c][step] == 0) {
-      match = c;
-      int8_t ons_and_offs = 0;
-      // Check to see if we have same number of note offs as note ons.
-      // If there are more note ons for given note, the next note entered
-      // should be a note off.
-      for (uint8_t a = 0; a < length; a++) {
-        for (uint8_t b = 0; b < NUM_EXT_NOTES; b++) {
-          if (notes[b][a] == -(1 * (note_num + 1))) {
-            ons_and_offs -= 1;
+      for(uint16_t j = ev_idx - 1; j != 0xFFFF; --j) {
+        if (!events[j].is_lock && events[j].event_value == note_num) {
+          if (events[j].event_on) {
+            // found a complete note spanning j..i
+            remove_event(j);
+          } else {
+            // ... two consequtive note on events?
           }
-          if (notes[b][a] == (1 * (note_num + 1))) {
-            ons_and_offs += 1;
-          }
+          break;
         }
       }
-      if (ons_and_offs <= 0) {
-        notes[c][step] = (note_num + 1);
-      } else {
-        notes[c][step] = -1 * (note_num + 1);
-      }
+    }
+    return;
+  }
+
+  // No matches are found, we count number of on and off to determine next
+  // note type.
+  int8_t ons_and_offs = 0;
+  for (uint16_t i = 0; i < ev_idx; ++ i) {
+    if (events[i].is_lock || events[i].event_value != note_num) { continue; } 
+    if (events[i].event_on) {
+      ons_and_offs++;
+    } else {
+      ons_and_offs--;
     }
   }
+  ev_idx = add_event(step);
+  if (ev_idx == 0xFFFF) {
+    return;
+  }
+  events[ev_idx].is_lock = false;
+  events[ev_idx].cond_id = 0;
+  events[ev_idx].event_value = note_num;
+  events[ev_idx].event_on = (ons_and_offs <= 0);
 }
+
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
   uint8_t timing_mid = get_timing_mid() - 1;
   uint8_t utiming = (mod12_counter + timing_mid);
 
   uint8_t condition = 0;
-  uint8_t match = 255;
-  uint8_t c = 0;
 
   uint8_t step = step_count;
-
-  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    //if current step already has this note, then we'll use the next step over
-    if (abs(notes[c][step]) == note_num + 1) {
-      match = c;
-
-      if (notes[c][step] > 0) {
-        step = step + 1;
-        if (step > length) {
-          step = 0;
-        }
-        utiming = (timing_mid - mod12_counter);
-        // timing = 0;
+  uint16_t ev_idx;
+  uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
+  if (note_idx != 0xFFFF) {
+    if (events[note_idx].event_on) {
+      // if current step already has this note, then we'll use the next step over
+      step = step + 1;
+      if (step > length) {
+        step = 0;
       }
-    }
-  }
-  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (notes[c][step_count] == 0) {
-      match = c;
+      utiming = (timing_mid - mod12_counter);
+    } else {
+      // note off event already on this step
+      return;
     }
   }
 
-  if (match != 255) {
-    notes[match][step] = -1 * (note_num + 1);
-    // SET_BIT64(ExtLockMasks[track], step_count);
-  }
-  notes_conditional[match][step] = condition;
-  notes_timing[match][step_count] = utiming;
-
+  uint16_t match = add_event(step);
+  if (match == 0xFFFF) return;
+  events[match].cond_id = condition;
+  events[match].event_on = false;
+  events[match].event_value = note_num;
+  events[match].is_lock = false;
+  events[match].micro_timing = utiming;
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
@@ -267,45 +330,38 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t utiming = (mod12_counter + get_timing_mid() - 1);
   uint8_t condition = 0;
 
-  uint8_t match = 255;
-  uint8_t c = 0;
-  // Let's try and find an existing param
+  // Let's try and find an existing note
+  uint16_t ev_idx;
+  uint16_t note_idx = find_midi_note(step_count, note_num, ev_idx);
 
-  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (notes[c][step_count] == note_num + 1) {
-      match = c;
-    }
+  if (note_idx != 0xFFFF && !events[note_idx].event_on) {
+    note_idx = 0xFFFF;
   }
-  for (c = 0; c < NUM_EXT_NOTES && match == 255; c++) {
-    if (notes[c][step_count] == 0) {
-      match = c;
-    }
-  }
-  if (match != 255) {
-    // We dont want to record steps if note off mask is set
-    //  if (notes[match][step_count] < 0) { return; }
-    notes[match][step_count] = note_num + 1;
-    // SET_BIT64(ExtLockMasks[track], step_count);
 
-    notes_conditional[match][step_count] = condition;
-    notes_timing[match][step_count] = utiming;
+  if (note_idx == 0xFFFF) {
+    note_idx = add_event(step_count);
+  } 
+
+  if (note_idx != 0xFFFF) {
+    events[note_idx].is_lock = false;
+    events[note_idx].event_on = true;
+    events[note_idx].event_value = note_num;
+    events[note_idx].cond_id = condition;
+    events[note_idx].micro_timing = utiming;
   }
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
-  for (uint8_t x = 0; x < NUM_EXT_STEPS; x++) {
-    for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
-       notes_conditional[c][x] = 0;
-       notes_timing[c][x] = 0;
-    }
+  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+    events[x].cond_id = 0;
+    events[x].micro_timing = 0; // XXX zero or mid?
   }
 }
+
 void ExtSeqTrack::clear_ext_notes() {
-  for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
-    for (uint8_t x = 0; x < NUM_EXT_STEPS; x++) {
-      notes[c][x] = 0;
-    }
-    // ExtPatternNotesParams[i][c] = 0;
+  event_count = 0;
+  for (uint8_t c = 0; c < NUM_EXT_STEPS; c++) {
+    timing_buckets.set(c, 0);
   }
 }
 
@@ -317,48 +373,45 @@ void ExtSeqTrack::clear_track() {
 
 void ExtSeqTrack::modify_track(uint8_t dir) {
 
-  int8_t new_pos = 0;
+  uint8_t n_cur;
+  ext_event_t ev_cur[16];
 
-  ExtSeqTrackData temp_data;
-
-  memcpy(&temp_data, this, sizeof(ExtSeqTrackData));
-
-  for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-    locks_masks[a][0] = 0;
-    locks_masks[a][1] = 0;
-  }
-  oneshot_mask[0] = 0;
-  oneshot_mask[1] = 0;
-
-  for (uint8_t n = 0; n < length; n++) {
-    switch (dir) {
+  switch(dir) {
     case DIR_LEFT:
-      if (n == 0) {
-        new_pos = length - 1;
-      } else {
-        new_pos = n - 1;
-      }
+      n_cur = timing_buckets.get(0);
+      memcpy(ev_cur, events + n_cur, sizeof(ext_event_t) * n_cur);
+      memmove(events, events + n_cur, sizeof(ext_event_t) * (event_count - n_cur));
+      memcpy(events + event_count - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
+      timing_buckets.shift_left(length);
       break;
     case DIR_RIGHT:
-      if (n == length - 1) {
-        new_pos = 0;
-      } else {
-        new_pos = n + 1;
-      }
+      n_cur = timing_buckets.get(length-1);
+      memcpy(ev_cur, events + event_count - n_cur, sizeof(ext_event_t) * n_cur);
+      memmove(events + n_cur, events, sizeof(ext_event_t) * (event_count - n_cur));
+      memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
+      timing_buckets.shift_right(length);
       break;
     case DIR_REVERSE:
-      new_pos = length - n - 1;
-      break;
-    }
+      uint16_t end = event_count / 2;
+      for(uint16_t i = 0; i < end; ++i) {
+        auto tmp = events[i];
+        auto j = event_count - 1 - i;
+        events[i] = events[j];
+        events[j] = tmp;
 
-    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-      notes[a][new_pos] = temp_data.notes[a][n];
-      notes_timing[a][new_pos] = temp_data.notes_timing[a][n];
-      notes_conditional[a][new_pos] = temp_data.notes_conditional[a][n];
-      if (IS_BIT_SET128(temp_data.locks_masks[a], n)) {
-        SET_BIT128(temp_data.locks_masks[a], new_pos);
+        // need to flip note on/off
+        if (!events[i].is_lock) {
+          events[i].event_on = !events[i].event_on;
+        }
+
+        if (!events[j].is_lock) {
+          events[j].event_on = !events[j].event_on;
+        }
       }
-    }
-
+      timing_buckets.reverse(length);
+      break;
   }
+
+  oneshot_mask[0] = 0;
+  oneshot_mask[1] = 0;
 }
