@@ -33,35 +33,41 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   uint16_t ev_idx = 0;
   uint8_t step;
   uint8_t bucket = 0;
-  for(step = 0; step < length && ev_idx <= index; ++step) {
+  for (step = 0; step < length && ev_idx <= index; ++step) {
     bucket = timing_buckets.get(step);
     ev_idx += bucket;
   }
   // step is at least 1, move back to get current step
   --step;
- timing_buckets.set(step, bucket - 1);
- memmove(events+index, events+index+1, sizeof(ext_event_t) * (NUM_EXT_EVENTS - index - 1));
- --event_count;
+  timing_buckets.set(step, bucket - 1);
+  memmove(events + index, events + index + 1,
+          sizeof(ext_event_t) * (NUM_EXT_EVENTS - index - 1));
+  --event_count;
 }
 
 uint16_t ExtSeqTrack::add_event(uint8_t step) {
-  uint8_t u = timing_buckets.get(step); 
+  uint8_t u = timing_buckets.get(step);
   if (15 == u || event_count >= NUM_EXT_EVENTS) {
     // bucket full or track full
     return 0xFFFF;
   }
   ++event_count;
-  timing_buckets.set(step, u+1);
+  timing_buckets.set(step, u + 1);
   uint16_t idx, end;
   locate(step, idx, end);
-  memmove(events + end + 1, events + end, sizeof(ext_event_t) * (NUM_EXT_EVENTS - end - 1));
+  memmove(events + end + 1, events + end,
+          sizeof(ext_event_t) * (NUM_EXT_EVENTS - end - 1));
+  return idx;
 }
 
-uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num, uint16_t &idx) {
+uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
+                                     uint16_t &idx) {
   uint16_t end;
   locate(step, idx, end);
-  for(uint16_t i = idx; i != end; ++i) {
-    if (events[i].is_lock || events[i].event_value != note_num) { continue; }
+  for (uint16_t i = idx; i != end; ++i) {
+    if (events[i].is_lock || events[i].event_value != note_num) {
+      continue;
+    }
     return i;
   }
   return 0xFFFF;
@@ -100,7 +106,8 @@ void ExtSeqTrack::seq() {
       (mute_state == SEQ_MUTE_OFF)) {
 
     // the range we're interested in:
-    // [current timing bucket, micro >= timing_mid ... next timing bucket, micro < timing_mid]
+    // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
+    // < timing_mid]
 
     uint16_t ev_idx, ev_end;
 
@@ -108,7 +115,7 @@ void ExtSeqTrack::seq() {
     locate(step_count, ev_idx, ev_end);
 
     // Go over CURRENT
-    for(; ev_idx != ev_end; ++ev_idx) {
+    for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u >= timing_mid && u - timing_mid == mod12_counter) {
         handle_event(ev_idx);
@@ -126,7 +133,7 @@ void ExtSeqTrack::seq() {
     ev_end = ev_idx + timing_buckets.get(next_step);
 
     // Go over NEXT
-    for(; ev_idx != ev_end; ++ev_idx) {
+    for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
         handle_event(ev_idx);
@@ -256,7 +263,7 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
     } else {
       remove_event(note_idx);
       buffer_notesoff();
-      for(uint16_t j = ev_idx - 1; j != 0xFFFF; --j) {
+      for (uint16_t j = ev_idx - 1; j != 0xFFFF; --j) {
         if (!events[j].is_lock && events[j].event_value == note_num) {
           if (events[j].event_on) {
             // found a complete note spanning j..i
@@ -274,8 +281,10 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
   // No matches are found, we count number of on and off to determine next
   // note type.
   int8_t ons_and_offs = 0;
-  for (uint16_t i = 0; i < ev_idx; ++ i) {
-    if (events[i].is_lock || events[i].event_value != note_num) { continue; } 
+  for (uint16_t i = 0; i < ev_idx; ++i) {
+    if (events[i].is_lock || events[i].event_value != note_num) {
+      continue;
+    }
     if (events[i].event_on) {
       ons_and_offs++;
     } else {
@@ -304,7 +313,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
   if (note_idx != 0xFFFF) {
     if (events[note_idx].event_on) {
-      // if current step already has this note, then we'll use the next step over
+      // if current step already has this note, then we'll use the next step
+      // over
       step = step + 1;
       if (step > length) {
         step = 0;
@@ -317,7 +327,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   }
 
   uint16_t match = add_event(step);
-  if (match == 0xFFFF) return;
+  if (match == 0xFFFF)
+    return;
   events[match].cond_id = condition;
   events[match].event_on = false;
   events[match].event_value = note_num;
@@ -340,8 +351,7 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
 
   if (note_idx == 0xFFFF) {
     note_idx = add_event(step_count);
-  } 
-
+  }
   if (note_idx != 0xFFFF) {
     events[note_idx].is_lock = false;
     events[note_idx].event_on = true;
@@ -376,40 +386,42 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t n_cur;
   ext_event_t ev_cur[16];
 
-  switch(dir) {
-    case DIR_LEFT:
-      n_cur = timing_buckets.get(0);
-      memcpy(ev_cur, events + n_cur, sizeof(ext_event_t) * n_cur);
-      memmove(events, events + n_cur, sizeof(ext_event_t) * (event_count - n_cur));
-      memcpy(events + event_count - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
-      timing_buckets.shift_left(length);
-      break;
-    case DIR_RIGHT:
-      n_cur = timing_buckets.get(length-1);
-      memcpy(ev_cur, events + event_count - n_cur, sizeof(ext_event_t) * n_cur);
-      memmove(events + n_cur, events, sizeof(ext_event_t) * (event_count - n_cur));
-      memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
-      timing_buckets.shift_right(length);
-      break;
-    case DIR_REVERSE:
-      uint16_t end = event_count / 2;
-      for(uint16_t i = 0; i < end; ++i) {
-        auto tmp = events[i];
-        auto j = event_count - 1 - i;
-        events[i] = events[j];
-        events[j] = tmp;
+  switch (dir) {
+  case DIR_LEFT:
+    n_cur = timing_buckets.get(0);
+    memcpy(ev_cur, events + n_cur, sizeof(ext_event_t) * n_cur);
+    memmove(events, events + n_cur,
+            sizeof(ext_event_t) * (event_count - n_cur));
+    memcpy(events + event_count - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
+    timing_buckets.shift_left(length);
+    break;
+  case DIR_RIGHT:
+    n_cur = timing_buckets.get(length - 1);
+    memcpy(ev_cur, events + event_count - n_cur, sizeof(ext_event_t) * n_cur);
+    memmove(events + n_cur, events,
+            sizeof(ext_event_t) * (event_count - n_cur));
+    memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
+    timing_buckets.shift_right(length);
+    break;
+  case DIR_REVERSE:
+    uint16_t end = event_count / 2;
+    for (uint16_t i = 0; i < end; ++i) {
+      auto tmp = events[i];
+      auto j = event_count - 1 - i;
+      events[i] = events[j];
+      events[j] = tmp;
 
-        // need to flip note on/off
-        if (!events[i].is_lock) {
-          events[i].event_on = !events[i].event_on;
-        }
-
-        if (!events[j].is_lock) {
-          events[j].event_on = !events[j].event_on;
-        }
+      // need to flip note on/off
+      if (!events[i].is_lock) {
+        events[i].event_on = !events[i].event_on;
       }
-      timing_buckets.reverse(length);
-      break;
+
+      if (!events[j].is_lock) {
+        events[j].event_on = !events[j].event_on;
+      }
+    }
+    timing_buckets.reverse(length);
+    break;
   }
 
   oneshot_mask[0] = 0;
