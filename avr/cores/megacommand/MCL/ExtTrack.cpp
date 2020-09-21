@@ -24,7 +24,7 @@ bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
   }
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   ext_track->buffer_notesoff();
-  memcpy(ext_track, &seq_data, sizeof(seq_data));
+  memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
   ext_track->speed = chain.speed;
   ext_track->length = chain.length;
 #endif
@@ -49,7 +49,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     get_track_from_sysex(column);
     chain.length = seq_track->length;
     chain.speed = seq_track->speed;
-    memcpy(&seq_data, seq_track, sizeof(seq_data));
+    memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
 

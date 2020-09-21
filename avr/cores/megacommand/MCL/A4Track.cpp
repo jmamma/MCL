@@ -45,7 +45,7 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
     //get_track_from_sysex(tracknumber);
     chain.length = seq_track->length;
     chain.speed = seq_track->speed;
-    memcpy(&seq_data, seq_track, sizeof(seq_data));
+    memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
   ret = proj.write_grid((uint8_t *)this, sizeof(A4Track), column, row);

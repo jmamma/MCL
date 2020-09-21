@@ -65,6 +65,7 @@ public:
   // 8-bit lock values
   uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
 
+  void* data() const { return (void*) &version; }
   bool convert(ExtSeqTrackData_270 *old) {
     /*ordering of these statements is important to ensure memory
      * is copied before being overwritten*/
