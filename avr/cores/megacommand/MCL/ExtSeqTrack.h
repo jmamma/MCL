@@ -72,7 +72,7 @@ public:
   uint8_t locks_params[NUM_EXT_LOCKS];
   uint16_t event_count;
 
-  void* data() const { return (void*) &version; }
+  void* data() const { return (void*) &timing_buckets; }
   bool convert(ExtSeqTrackData_270 *old) {
     // TODO
     return false;
