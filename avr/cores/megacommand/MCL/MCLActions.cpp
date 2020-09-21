@@ -205,8 +205,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           empty_track.chain.loops = grid_track.chain.loops;
           empty_track.chain.row = grid_track.chain.row;
         } else {
-          empty_track.chain.row = row;
-          empty_track.chain.loops = 0;
+          empty_track.chain.init(row);
         }
         DEBUG_DUMP(track_type);
         auto pdevice_track = ((DeviceTrack *)&empty_track)->init_track_type(track_type);
