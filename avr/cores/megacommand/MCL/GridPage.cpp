@@ -450,6 +450,10 @@ void GridPage::display_grid() {
         str[0] = 'F';
         str[1] = 'X';
         break;
+      case MDROUTE_TRACK_TYPE:
+        str[0] = 'R';
+        str[1] = 'T';
+        break;
       case MNM_TRACK_TYPE:
         tmp = getMNMMachineNameShort(model, 2);
         if (tmp) { m_strncpy_p(str, tmp, 3); }

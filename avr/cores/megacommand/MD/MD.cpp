@@ -127,7 +127,8 @@ void MDClass::init_grid_devices() {
   add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
   }
   grid_idx = 1;
-  add_track_to_grid(grid_idx, 15, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 1]), MDFX_TRACK_TYPE);
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 1]), MDFX_TRACK_TYPE);
+  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 2]), MDROUTE_TRACK_TYPE);
 }
 
 bool MDClass::probe() {
@@ -426,9 +427,9 @@ void MDClass::resetMidiMap() {
   sendRequest(data, countof(data));
 }
 
-void MDClass::setTrackRouting(uint8_t track, uint8_t output) {
+uint8_t MDClass::setTrackRouting(uint8_t track, uint8_t output, bool send) {
   uint8_t data[3] = {0x5c, track, output};
-  sendRequest(data, countof(data));
+  return sendRequest(data, countof(data), send);
 }
 
 void MDClass::setTrigGroup(uint8_t srcTrack, uint8_t trigTrack) {
