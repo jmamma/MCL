@@ -15,6 +15,8 @@ class ExtTrack;
 class A4Track;
 class MDTrack;
 class MDFXTrack;
+class MDRouteTrack;
+class MDTempoTrack;
 class MNMTrack;
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
@@ -44,6 +46,8 @@ private:
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE, MD_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDFXTrack, MDFX_TRACK_TYPE, MDFX_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MDRouteTrack, MDROUTE_TRACK_TYPE, MDROUTE_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MDTempoTrack, MDTEMPO_TRACK_TYPE, MDTEMPO_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MNMTrack, MNM_TRACK_TYPE, MNM_TRACK_TYPE)
 
 public:

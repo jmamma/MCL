@@ -490,7 +490,7 @@ public:
   /**
    * Set the tempo.
    **/
-  virtual void setTempo(float tempo);
+  virtual uint8_t setTempo(float tempo, bool send = true);
   /**
    * Send a sysex message to load the given global.
    **/

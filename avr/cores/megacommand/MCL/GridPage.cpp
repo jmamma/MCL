@@ -24,10 +24,9 @@ void GridPage::setup() {
   if (mcl_cfg.row < MAX_VISIBLE_ROWS) { cur_row = mcl_cfg.row; }
   else { cur_row = MAX_VISIBLE_ROWS - 1; }
   */
-  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    active_slots[n] = -1;
-  }
+  memset(active_slots, -1, NUM_SLOTS);
 }
+
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
   oled_display.setFont();
@@ -112,15 +111,6 @@ void GridPage::loop() {
     load_slot_models();
     reload_slot_models = true;
   }
-  /*
-    if (_DOWN(Buttons.BUTTON3) && (encoders[2]->hasChanged())) {
-      toggle_fx1();
-    }
-
-    if (_DOWN(Buttons.BUTTON3) && (encoders[3]->hasChanged())) {
-      toggle_fx2();
-    }
-    */
 
   if (slowclock < grid_lastclock) {
     grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
@@ -174,19 +164,6 @@ void GridPage::displayScroll(uint8_t i) {
   }
 }
 
-void encoder_fx_handle(Encoder *enc) {
-  GridEncoder *mdEnc = (GridEncoder *)enc;
-
-  /*Scale delay feedback for safe ranges*/
-
-  if (mdEnc->fxparam == MD_ECHO_FB) {
-    if (mdEnc->getValue() > 68) {
-      mdEnc->setValue(68);
-    }
-  }
-  MD.sendFXParam(mdEnc->fxparam, mdEnc->getValue(), mdEnc->effect);
-}
-
 uint8_t GridPage::getRow() { return param2.cur; }
 
 uint8_t GridPage::getCol() { return param1.cur; }
@@ -226,42 +203,6 @@ void GridPage::tick_frames() {
     // frames_fps = ((frames + frames_fps)/ 2);
     frames = 0;
     frames_startclock = slowclock;
-  }
-}
-
-void GridPage::toggle_fx1() {
-  dispeffect = 1;
-  GridEncoder *enc = (GridEncoder *)encoders[2];
-  if (enc->effect == MD_FX_REV) {
-    fx_dc = enc->getValue();
-    enc->setValue(fx_tm);
-
-    enc->effect = MD_FX_ECHO;
-    enc->fxparam = MD_ECHO_TIME;
-  } else {
-    fx_tm = enc->getValue();
-    enc->setValue(fx_dc);
-    enc->effect = MD_FX_REV;
-    enc->fxparam = MD_REV_DEC;
-  }
-}
-
-void GridPage::toggle_fx2() {
-  dispeffect = 1;
-
-  GridEncoder *enc = (GridEncoder *)encoders[3];
-  if (enc->effect == MD_FX_REV) {
-    fx_lv = enc->getValue();
-    enc->setValue(fx_fb);
-    enc->effect = MD_FX_ECHO;
-    enc->fxparam = MD_ECHO_FB;
-  }
-
-  else {
-    fx_fb = enc->getValue();
-    enc->setValue(fx_lv);
-    enc->effect = MD_FX_REV;
-    enc->fxparam = MD_REV_LEV;
   }
 }
 
@@ -446,6 +387,14 @@ void GridPage::display_grid() {
       case MDFX_TRACK_TYPE:
         str[0] = 'F';
         str[1] = 'X';
+        break;
+      case MDROUTE_TRACK_TYPE:
+        str[0] = 'R';
+        str[1] = 'T';
+        break;
+      case MDTEMPO_TRACK_TYPE:
+        str[0] = 'T';
+        str[1] = 'P';
         break;
       case MNM_TRACK_TYPE:
         tmp = getMNMMachineNameShort(model, 2);
@@ -777,7 +726,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[2]->cur = 1;
     encoders[3]->cur = 1;
     slot_apply = 0;
-    merge_md = 0;
     return true;
   }
 
