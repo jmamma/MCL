@@ -277,7 +277,7 @@ public:
   /**
    * Send a sysex message to route the track (0 to 15) to the given output.
    **/
-  void setTrackRouting(uint8_t track, uint8_t output);
+  uint8_t setTrackRouting(uint8_t track, uint8_t output, bool send = true);
 
   /**
    * Set the trigger group of srcTrack to trigger trigTrack.

@@ -3,7 +3,22 @@
 #pragma once
 
 #include "DeviceTrack.h"
-#include "MDFXData.h"
+
+class MDFXData {
+public:
+  bool enable_reverb;
+  bool enable_delay;
+  bool enable_eq;
+  bool enable_dynamics;
+  /** The settings of the reverb effect. f**/
+  uint8_t reverb[8];
+  /** The settings of the delay effect. **/
+  uint8_t delay[8];
+  /** The settings of the EQ effect. **/
+  uint8_t eq[8];
+  /** The settings of the compressor effect. **/
+  uint8_t dynamics[8];
+};
 
 class MDFXTrack : public DeviceTrack, public MDFXData {
 public:
@@ -30,7 +45,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
-  virtual uint32_t get_region() { return BANK1_FX_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }

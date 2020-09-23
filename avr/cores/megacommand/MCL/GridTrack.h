@@ -6,12 +6,15 @@
 #define MD_TRACK_TYPE_270 1
 #define EXT_TRACK_TYPE_270 3
 
-#define MD_TRACK_TYPE 4
 #define A4_TRACK_TYPE 5
 #define EXT_TRACK_TYPE 6
 
-#define MDFX_TRACK_TYPE 7
 #define MNM_TRACK_TYPE 8
+
+#define MD_TRACK_TYPE 4
+#define MDFX_TRACK_TYPE 7
+#define MDROUTE_TRACK_TYPE 9
+#define MDTEMPO_TRACK_TYPE 10
 
 #define EMPTY_TRACK_TYPE 0
 
