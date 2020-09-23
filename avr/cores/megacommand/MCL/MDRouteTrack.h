@@ -28,7 +28,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
-  virtual uint32_t get_region() { return BANK1_FX_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
 
   virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }

@@ -129,6 +129,7 @@ void MDClass::init_grid_devices() {
   grid_idx = 1;
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 1]), MDFX_TRACK_TYPE);
   add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 2]), MDROUTE_TRACK_TYPE);
+  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[NUM_AUX_TRACKS - 3]), MDTEMPO_TRACK_TYPE);
 }
 
 bool MDClass::probe() {

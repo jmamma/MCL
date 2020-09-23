@@ -32,8 +32,9 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 #endif
 
 constexpr size_t NUM_FX_TRACKS = 2;
-constexpr size_t MDFX_TRACK_NUM = 15; //position of MDFX track in grid
-constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDFX track in grid
+constexpr size_t MDFX_TRACK_NUM = 13; //position of MDFX track in grid
+constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
+constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
 constexpr size_t NUM_LFO_TRACKS = 2;
 constexpr size_t NUM_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
@@ -65,10 +66,10 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN;
 // 16x MD tracks
 // GRID1 tracks start at 0x9330
 constexpr size_t BANK1_MD_TRACKS_START = BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN;
-constexpr size_t BANK1_FX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
+constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
 // 6x A4 tracks
 // GRID2 tracks start at //TODO
-constexpr size_t BANK1_A4_TRACKS_START = BANK1_FX_TRACKS_START + FX_TRACK_LEN * NUM_FX_TRACKS;
+constexpr size_t BANK1_A4_TRACKS_START = BANK1_AUX_TRACKS_START + FX_TRACK_LEN * NUM_FX_TRACKS;
  
 // 256x file entries (16 bytes each)
 // Start at //TODO

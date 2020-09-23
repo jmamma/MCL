@@ -72,6 +72,8 @@
 #include "MDTrack.h"
 #include "MDFXTrack.h"
 #include "MDRouteTrack.h"
+#include "MDTempoTrack.h"
+
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
 #include "MNMTrack.h"
