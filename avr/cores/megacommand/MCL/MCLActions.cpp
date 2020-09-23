@@ -176,6 +176,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   GridTrack grid_track;
 
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+    proj.select_grid(n);
     proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
 
