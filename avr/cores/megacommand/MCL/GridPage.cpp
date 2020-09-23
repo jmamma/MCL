@@ -24,10 +24,9 @@ void GridPage::setup() {
   if (mcl_cfg.row < MAX_VISIBLE_ROWS) { cur_row = mcl_cfg.row; }
   else { cur_row = MAX_VISIBLE_ROWS - 1; }
   */
-  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-    active_slots[n] = -1;
-  }
+  memset(active_slots, -1, NUM_SLOTS);
 }
+
 void GridPage::cleanup() {
 #ifdef OLED_DISPLAY
   oled_display.setFont();
