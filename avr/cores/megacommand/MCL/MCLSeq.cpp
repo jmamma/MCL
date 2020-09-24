@@ -105,6 +105,7 @@ void MCLSeq::update_params() {
 void MCLSeq::onMidiContinueCallback() { update_params(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
+  realtime = true;
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
@@ -133,13 +134,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
 
 #ifdef DEFER_SEQ
 
-  uart_sidechannel = !uart_sidechannel;
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
 #endif
-  seq();
 #endif
 }
 
@@ -172,49 +171,59 @@ void MCLSeq::seq() {
   Stopwatch sw;
   MidiUartParent *uart;
   MidiUartParent *uart2;
+  bool engage_sidechannel = true;
 
-  // Flush side channel (isr best effort flush);
-  // Render sequencer data to adjacent buffer.
+  //If realtime, we render the first tick in realtime, subsequent ticks are
+  //defered rendered.
 
-  UART_CLEAR_ISR_TX_BIT();
-  UART2_CLEAR_ISR_TX_BIT();
+  if (!realtime) {
+again:
+    UART_CLEAR_ISR_TX_BIT();
+    UART2_CLEAR_ISR_TX_BIT();
 #ifdef DEFER_SEQ
-  if (uart_sidechannel) {
-    uart = &seq_tx2;
-    uart2 = &seq_tx4;
-    // If the side channel ring buffer is not empty, it means it did not finish
-    // transmiting before next Seq() call. We will drain the old
-    // buffer in to the new to retain the MIDI data.
-    while (!seq_tx2.txRb.isEmpty_isr()) {
-      seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
+    if (uart_sidechannel) {
+      uart = &seq_tx2;
+      uart2 = &seq_tx4;
+      // If the side channel ring buffer is not empty, it means it did not
+      // finish transmiting before next Seq() call. We will drain the old buffer
+      // in to the new to retain the MIDI data.
+      if (engage_sidechannel) {
+        while (!seq_tx2.txRb.isEmpty_isr()) {
+          seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
+        }
+        while (!seq_tx4.txRb.isEmpty_isr()) {
+          seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
+        }
+        MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
+        MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
+      }
+    } else {
+      uart = &seq_tx1;
+      uart2 = &seq_tx3;
+      if (engage_sidechannel) {
+        while (!seq_tx1.txRb.isEmpty_isr()) {
+          seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
+        }
+        while (!seq_tx3.txRb.isEmpty_isr()) {
+          seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
+        }
+        MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
+        MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
+      }
     }
-    while (!seq_tx4.txRb.isEmpty_isr()) {
-      seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
-    }
-    MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
-    MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
-  } else {
-    uart = &seq_tx1;
-    uart2 = &seq_tx3;
-    while (!seq_tx1.txRb.isEmpty_isr()) {
-      seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
-    }
-    while (!seq_tx3.txRb.isEmpty_isr()) {
-      seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
-    }
-    MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
-    MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
-  }
-  // clearLed2();
-  UART_SET_ISR_TX_BIT();
-  UART2_SET_ISR_TX_BIT();
-  // Flip uart / side_channel buffer for next run
-  uart_sidechannel = !uart_sidechannel;
+    // clearLed2();
+    UART_SET_ISR_TX_BIT();
+    UART2_SET_ISR_TX_BIT();
+    // Flip uart / side_channel buffer for next run
+    uart_sidechannel = !uart_sidechannel;
 #else
-  uart = &MidiUart;
-  uart2 = &MidiUart2;
+    uart = &MidiUart;
+    uart2 = &MidiUart2;
 #endif
-
+  } else {
+    uart = &MidiUart;
+    uart2 = &MidiUart2;
+  }
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
   }
@@ -241,6 +250,11 @@ void MCLSeq::seq() {
     md_tracks[i].recalc_slides();
   }
 
+  if (realtime) {
+    realtime = false;
+    engage_sidechannel = false;
+    goto again;
+  }
   auto seq_time = sw.elapsed();
   // DIAG_MEASURE(0, seq_time);
 }
