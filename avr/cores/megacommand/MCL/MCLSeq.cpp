@@ -197,6 +197,11 @@ again:
         MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
       }
+      else {
+      //Purge stale buffers (from MIDI CONTINUE).
+      seq_tx2.txRb.init();
+      seq_tx4.txRb.init();
+      }
     } else {
       uart = &seq_tx1;
       uart2 = &seq_tx3;
@@ -209,6 +214,10 @@ again:
         }
         MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
+      }
+      else {
+      seq_tx1.txRb.init();
+      seq_tx3.txRb.init();
       }
     }
     // clearLed2();
