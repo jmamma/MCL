@@ -87,11 +87,14 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
 
 SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx,
                                         uint8_t *track_idx, uint8_t *track_type,
-                                        uint8_t *dev_idx) {
+                                        uint8_t *dev_idx, bool *is_aux) {
   GridDeviceTrack *p = get_grid_dev_track(slot_number, track_idx, dev_idx);
   *grid_idx = get_grid_idx(slot_number);
   if (p) {
     *track_type = p->track_type;
+    if (is_aux != nullptr) {
+    *is_aux = p->is_aux;
+    }
     return p->seq_track;
   }
   *track_type = 255;

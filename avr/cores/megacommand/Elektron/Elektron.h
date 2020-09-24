@@ -140,6 +140,7 @@ class GridDeviceTrack {
 public:
   uint8_t slot_number;
   uint8_t track_type;
+  bool is_aux;
   SeqTrack *seq_track;
   uint8_t get_slot_number() { return slot_number; }
   SeqTrack *get_seq_track() { return seq_track; }
@@ -155,10 +156,11 @@ public:
   GridDevice() { init(); }
 
   void init() { num_tracks = 0; }
-  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type) {
+  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, bool is_aux = false) {
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
+    tracks[track_idx].is_aux = is_aux;
     num_tracks++;
   }
 };
@@ -183,9 +185,9 @@ public:
     connected = false;
   }
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type) {
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, bool is_aux = false) {
     auto *devp = &grid_devices[grid_idx];
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type);
+    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, is_aux);
   }
   ElektronDevice* asElektronDevice() {
     if (!isElektronDevice) return nullptr;
