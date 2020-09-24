@@ -83,11 +83,15 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[track].data(),
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track);
+    md_track->chain.length = mcl_seq.md_tracks[track].length;
+    md_track->chain.speed = mcl_seq.md_tracks[track].speed;
     ret = grids[grid].write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
   }
   else {
     memcpy(&temp_track, &mcl_seq.ext_tracks[track - NUM_MD_TRACKS],
            sizeof(ExtSeqTrackData));
+    temp_track.chain.length = mcl_seq.ext_tracks[track - NUM_MD_TRACKS].length;
+    temp_track.chain.speed = mcl_seq.ext_tracks[track -  NUM_MD_TRACKS].speed;
     ret = grids[grid].write(&temp_track, sizeof(ExtSeqTrack), track, GRID_LENGTH);
   }
   close();
@@ -140,6 +144,10 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN(F("loading seq track"));
     memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
            sizeof(md_track->seq_data));
+
+    mcl_seq.md_tracks[track].length = md_track->chain.length;
+    mcl_seq.md_tracks[track].speed = md_track->chain.speed;
+
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
     }
@@ -157,6 +165,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   else if (track >= NUM_MD_TRACKS) {
     memcpy(&mcl_seq.ext_tracks[track - NUM_MD_TRACKS], &(temp_track),
            sizeof(ExtSeqTrackData));
+    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].length = temp_track.chain.length;
+    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].speed = temp_track.chain.speed;
   }
 #endif
   close();
