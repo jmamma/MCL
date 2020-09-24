@@ -1,5 +1,8 @@
 #include "MCL_impl.h"
 
+uint8_t GridIOPage::track_type_select = 0xFF;
+bool GridIOPage::show_track_type_select = false;
+
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
