@@ -420,7 +420,6 @@ ISR(USART0_UDRE_vect) {
     }
     if (MidiUart.txRb.isEmpty_isr()) {
       UART_CLEAR_ISR_TX_BIT();
-      MidiUart.in_message = 0;
     }
 #ifdef DEFER_SEQ
   }
