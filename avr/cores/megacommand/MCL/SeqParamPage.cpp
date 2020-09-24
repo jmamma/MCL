@@ -35,7 +35,7 @@ void SeqParamPage::init() {
   seq_lock1.max = 127;
   seq_param3.max = 24;
   seq_lock2.max = 127;
-
+  seq_param3.min = 0;
   seq_param3.handler = NULL;
 
   seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];

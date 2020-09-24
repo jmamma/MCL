@@ -52,6 +52,7 @@ void SeqStepPage::init() {
   seq_param2.old = 12;
   seq_param1.cur = 0;
   seq_param3.max = 64;
+  seq_param3.min = 1;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
