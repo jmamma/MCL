@@ -41,7 +41,7 @@ void GridWritePage::display() {
   oled_display.setFont(&TomThumb);
 
   if (show_track_type_select) {
-    mcl_gui.draw_track_type_select(42, MCLGUI::s_menu_y + 16,
+    mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
                                    track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
@@ -97,9 +97,10 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN(F("note event"));
     uint8_t track = event->source - 128;
     if (show_track_type_select) {
-      if ((event->mask == EVENT_BUTTON_PRESSED) && (track < 3)) {
-        TOGGLE_BIT(track_type_select, track);
+      if ((event->mask == EVENT_BUTTON_PRESSED) && (track < 4)) {
+        TOGGLE_BIT16(track_type_select, track);
       }
+     MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
     } else {
       trig_interface.send_md_leds();
       if (note_interface.notes_all_off()) {
@@ -134,6 +135,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
   mcl_gui.draw_popup("GROUP CHAIN", true, 28);
   show_track_type_select = true;
+   MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
@@ -152,13 +154,11 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
           mcl_actions.get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx, &is_aux);
           if (track_type == 255)
               continue;
-          DEBUG_DUMP(n);
-          DEBUG_DUMP(dev_idx);
-          if (!is_aux && IS_BIT_SET(track_type_select, dev_idx)) {
+          if (!is_aux && IS_BIT_SET16(track_type_select, dev_idx)) {
           track_select_array[n] = 1;
           }
           //AUX tracks
-          if (is_aux && IS_BIT_SET(track_type_select, 2)) {
+          if (is_aux && IS_BIT_SET16(track_type_select, dev_idx + 1)) {
           track_select_array[n] = 1;
           }
     }

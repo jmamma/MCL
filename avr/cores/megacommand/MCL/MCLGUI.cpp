@@ -628,11 +628,18 @@ void MCLGUI::draw_track_type_select(uint8_t x, uint8_t y,
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
-  for (uint8_t i = 0; i < 3; i++) {
-    if (i > 1) {
-      strcpy(dev, "AUX");
-    } else if (devs[i] != nullptr) {
-      strncpy(dev, devs[i]->name,2);
+  for (uint8_t i = 0; i < 4; i++) {
+
+    uint8_t devidx = 0;
+    bool aux = false;
+    if (i > 1) { devidx = 1; }
+    if (i & 1) { aux = true; }
+
+    if (aux) {
+    strcpy(dev, "FX");
+    }
+    else {
+    strncpy(dev, devs[devidx]->name,2);
     }
     oled_display.setCursor(x, y);
     oled_display.print(dev);
