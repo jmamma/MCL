@@ -41,6 +41,7 @@ void SeqExtStepPage::config_encoders() {
   seq_param3.cur = 64;
   seq_param3.old = 64;
   seq_param3.max = 128;
+  seq_param3.min = 1;
 
   fov_offset = 0;
   cur_x = 0;

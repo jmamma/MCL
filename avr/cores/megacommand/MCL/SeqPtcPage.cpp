@@ -50,6 +50,7 @@ void SeqPtcPage::cleanup() {
   //  midi_events.remove_callbacks();
 }
 void SeqPtcPage::config_encoders() {
+  ptc_param_len.min = 1;
   if (midi_device == DEVICE_MD) {
     ptc_param_len.max = 64;
     ptc_param_len.cur = mcl_seq.md_tracks[last_md_track].length;
