@@ -20,7 +20,6 @@ class GridWritePage : public GridIOPage {
  void display();
  void setup();
  void init();
- void cleanup();
 };
 
 #endif /* GRIDWRITEPAGE_H__ */

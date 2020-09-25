@@ -24,8 +24,6 @@ void GridSavePage::loop() {
   }
 }
 
-void GridSavePage::cleanup() {}
-
 #ifndef OLED_DISPLAY
 void GridSavePage::display() {
   GUI.setLine(GUI.LINE1);

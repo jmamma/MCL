@@ -3,6 +3,10 @@
 uint16_t GridIOPage::track_type_select = 0xF;
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type_select = false;
+uint8_t GridIOPage::old_grid = 0;
+
+void GridIOPage::cleanup() { proj.select_grid(old_grid); }
+
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||

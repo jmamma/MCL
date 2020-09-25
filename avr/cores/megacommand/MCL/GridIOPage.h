@@ -9,6 +9,7 @@ class GridIOPage : public LightPage {
  public:
  static uint16_t track_type_select;
  static uint32_t track_select;
+ static uint8_t old_grid;
 
  static bool show_track_type_select;
 

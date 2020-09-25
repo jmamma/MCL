@@ -16,7 +16,6 @@ public:
   void display();
   void setup();
   void init();
-  void cleanup();
 };
 
 #endif /* GRIDSAVEPAGE_H__ */

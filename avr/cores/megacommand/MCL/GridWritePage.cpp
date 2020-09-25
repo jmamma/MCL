@@ -25,6 +25,7 @@ void GridWritePage::setup() {
 }
 
 void GridWritePage::init() {
+  old_grid = proj.get_grid();
   show_track_type_select = false;
   track_select = 0;
   draw_popup();
@@ -37,7 +38,7 @@ void GridWritePage::draw_popup() {
 #endif
 }
 
-void GridWritePage::cleanup() {}
+void GridWritePage::cleanup() { proj.select_grid(old_grid); }
 
 void GridWritePage::display() {
 
@@ -102,6 +103,12 @@ void GridWritePage::send_chain() {
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
+  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    if (note_interface.notes[n] > 0) {
+      SET_BIT32(track_select, n + proj.get_grid() * 16);
+    }
+  }
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (IS_BIT_SET32(track_select, n)) {
       track_select_array[n] = 1;
@@ -133,16 +140,16 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       }
     } else {
       if (!show_track_type_select) {
-      trig_interface.send_md_leds();
-      if (note_interface.notes_all_off()) {
-        DEBUG_PRINTLN(F("notes all off"));
-        if (BUTTON_DOWN(Buttons.BUTTON2)) {
-          return true;
-        } else {
-          send_chain();
+        trig_interface.send_md_leds();
+        if (note_interface.notes_all_off()) {
+          DEBUG_PRINTLN(F("notes all off"));
+          if (BUTTON_DOWN(Buttons.BUTTON2)) {
+            return true;
+          } else {
+            send_chain();
+          }
+          curpage = 0;
         }
-        curpage = 0;
-      }
       }
     }
     return true;
@@ -153,12 +160,14 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
       if (note_interface.notes[n] > 0) {
-       TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
-       if (note_interface.notes[n] == 1) { note_interface.ignoreNextEvent(n); }
-       note_interface.notes[n] = 0;
-    }
+        TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
+        if (note_interface.notes[n] == 1) {
+          note_interface.ignoreNextEvent(n);
+        }
+        note_interface.notes[n] = 0;
+      }
     }
     proj.toggle_grid();
     draw_popup();
@@ -166,8 +175,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
 
-//    if (!note_interface.notes_all_off()) { return true; }
- //   send_chain();
+    //    if (!note_interface.notes_all_off()) { return true; }
+    //   send_chain();
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
