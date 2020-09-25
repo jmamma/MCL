@@ -27,7 +27,7 @@ void GridWritePage::setup() {
 void GridWritePage::draw_popup() {
   char *str = "GROUP CHAIN";
 
-  if (!track_type_select) {
+  if (!show_track_type_select) {
     strcpy(str, "CHAIN TO  ");
     str[8] = 'A' + proj.get_grid();
   }
