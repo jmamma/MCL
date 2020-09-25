@@ -150,20 +150,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     show_track_type_select = true;
     MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      if (note_interface.notes[n] > 0) {
-        TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
-        if (note_interface.notes[n] == 1) {
-          note_interface.ignoreNextEvent(n);
-        }
-        note_interface.notes[n] = 0;
-      }
-    }
-    proj.toggle_grid();
-    draw_popup();
-    trig_interface.send_md_leds();
-  }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
 
     //    if (!note_interface.notes_all_off()) { return true; }
