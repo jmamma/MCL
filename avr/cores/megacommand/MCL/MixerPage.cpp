@@ -341,7 +341,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       return false;
     }
 
-    trig_interface.send_md_leds();
+    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
 #ifdef OLED_DISPLAY
       if (note_interface.notes[track] > 0) {
