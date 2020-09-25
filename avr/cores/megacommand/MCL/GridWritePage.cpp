@@ -16,24 +16,27 @@ void GridWritePage::setup() {
   ((MCLEncoder *)encoders[2])->max = 1;
 
   // MD.requestKit(MD.currentKit);
+  note_interface.init_notes();
   trig_interface.on();
+
   note_interface.state = true;
   // GUI.display();
   curpage = W_PAGE;
 }
 
-void GridWritePage::init() {
-  show_track_type_select = false;
-#ifdef OLED_DISPLAY
-  mcl_gui.draw_popup("CHAIN FROM GRID", true, 28);
-#endif
-}
+void GridWritePage::draw_popup() {
+  char *str = "GROUP CHAIN";
 
-void GridWritePage::cleanup() {}
+  if (!track_type_select) {
+    strcpy(str, "CHAIN TO  ");
+    str[8] = 'A' + proj.get_grid();
+  }
+  mcl_gui.draw_popup(str, true, 28);
+}
 
 void GridWritePage::display() {
 
-  mcl_gui.clear_popup(28);
+  draw_popup();
 
   const uint64_t mute_mask = 0, slide_mask = 0;
 
@@ -41,7 +44,7 @@ void GridWritePage::display() {
   oled_display.setFont(&TomThumb);
 
   if (show_track_type_select) {
-    mcl_gui.draw_track_type_select(42, MCLGUI::s_menu_y + 16,
+    mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
                                    track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
@@ -82,9 +85,32 @@ void GridWritePage::display() {
     oled_display.setCursor(74, MCLGUI::s_menu_y + 19);
     oled_display.print("SEQ");
   }
-
   oled_display.display();
   oled_display.setFont(oldfont);
+}
+void GridWritePage::chain() {
+  oled_display.textbox("CHAIN SLOTS", "");
+  oled_display.display();
+  /// !Note, note_off_event has reentry issues, so we have to first set
+  /// the page to avoid driving this code path again.
+
+  uint8_t track_select_array[NUM_SLOTS] = {0};
+
+  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    if (note_interface.notes[n] > 0) {
+      SET_BIT32(track_select, n + proj.get_grid() * 16);
+    }
+  }
+
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (IS_BIT_SET32(track_select, n)) {
+      track_select_array[n] = 1;
+    }
+  }
+  GUI.setPage(&grid_page);
+  trig_interface.off();
+  mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(),
+                           track_select_array);
 }
 
 bool GridWritePage::handleEvent(gui_event_t *event) {
@@ -96,46 +122,53 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     DEBUG_PRINTLN(F("note event"));
     uint8_t track = event->source - 128;
-    if (show_track_type_select) {
-      if ((event->mask == EVENT_BUTTON_PRESSED) && (track < 3)) {
-        TOGGLE_BIT(track_type_select, track);
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (show_track_type_select) {
+        if (track < 4) {
+          TOGGLE_BIT16(track_type_select, track);
+          MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
+        }
+      } else {
+        trig_interface.send_md_leds();
       }
     } else {
-      trig_interface.send_md_leds();
-      if (note_interface.notes_all_off()) {
-        DEBUG_PRINTLN(F("notes all off"));
-        if (BUTTON_DOWN(Buttons.BUTTON2)) {
-          return true;
-        } else {
-          oled_display.textbox("CHAIN SLOTS", "");
-          oled_display.display();
-          /// !Note, note_off_event has reentry issues, so we have to first set
-          /// the page to avoid driving this code path again.
-
-          uint8_t offset = proj.get_grid() * 16;
-
-          uint8_t track_select_array[NUM_SLOTS] = {0};
-
-          for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-            if (note_interface.notes[n] == 3) {
-              track_select_array[n + offset] = 1;
-            }
+      if (!show_track_type_select) {
+        trig_interface.send_md_leds();
+        if (note_interface.notes_all_off()) {
+          DEBUG_PRINTLN(F("notes all off"));
+          if (BUTTON_DOWN(Buttons.BUTTON2)) {
+            return true;
+          } else {
+            chain();
           }
-          GUI.setPage(&grid_page);
-          trig_interface.off();
-          mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(),
-                                   track_select_array);
         }
-        curpage = 0;
       }
     }
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  mcl_gui.draw_popup("GROUP CHAIN", true, 28);
-  show_track_type_select = true;
+    show_track_type_select = true;
+    MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
   }
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+      if (note_interface.notes[n] > 0) {
+        TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
+        if (note_interface.notes[n] == 1) {
+          note_interface.ignoreNextEvent(n);
+        }
+        note_interface.notes[n] = 0;
+      }
+    }
+    proj.toggle_grid();
+    draw_popup();
+    trig_interface.send_md_leds();
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
 
+    //    if (!note_interface.notes_all_off()) { return true; }
+    //   chain();
+  }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
 
@@ -144,24 +177,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
     uint8_t track_select_array[NUM_SLOTS] = {0};
 
-    uint8_t grid_idx, track_idx, track_type, dev_idx;
-    bool is_aux;
-
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      SeqTrack *seq_track =
-          mcl_actions.get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx, &is_aux);
-          if (track_type == 255)
-              continue;
-          DEBUG_DUMP(n);
-          DEBUG_DUMP(dev_idx);
-          if (!is_aux && IS_BIT_SET(track_type_select, dev_idx)) {
-          track_select_array[n] = 1;
-          }
-          //AUX tracks
-          if (is_aux && IS_BIT_SET(track_type_select, 2)) {
-          track_select_array[n] = 1;
-          }
-    }
+    track_select_array_from_type_select(track_select_array);
     //   write_tracks_to_md(-1);
 #ifdef OLED_DISPLAY
     if (MidiClock.state != 2) {

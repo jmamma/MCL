@@ -8,12 +8,17 @@ void GridSavePage::setup() {
   note_interface.state = true;
   curpage = S_PAGE;
   grid_page.reload_slot_models = false;
+  draw_popup();
 }
 
-void GridSavePage::init() {
-#ifdef OLED_DISPLAY
-  mcl_gui.draw_popup("SAVE TO GRID", true, 28);
-#endif
+void GridSavePage::draw_popup() {
+  char *str = "GROUP SAVE";
+
+  if (!show_track_type_select) {
+    strcpy(str, "SAVE TO  ");
+    str[8] = 'A' + proj.get_grid();
+  }
+  mcl_gui.draw_popup(str, true, 28);
 }
 
 void GridSavePage::loop() {
@@ -23,97 +28,44 @@ void GridSavePage::loop() {
     encoders[0]->cur = encoders[0]->old;
   }
 }
-
-void GridSavePage::cleanup() {}
-
-#ifndef OLED_DISPLAY
-void GridSavePage::display() {
-  GUI.setLine(GUI.LINE1);
-  char strn[17] = "----------------";
-
-  for (int i = 0; i < 16; i++) {
-
-    if (note_interface.notes[i] != 0) {
-
-      strn[i] = (char)219;
-    }
-  }
-
-  GUI.put_string_at(0, strn);
-
-  GUI.setLine(GUI.LINE2);
-  GUI.put_string_at_fill(0, "S");
-
-  const char *save_mode = "SEQ";
-  if (MidiClock.state == 2) {
-    save_mode = "---";
-  } else {
-    if (encoders[0]->cur == SAVE_MD) {
-      save_mode = "MD";
-    }
-    if (encoders[0]->cur == SAVE_MERGE) {
-      save_mode = "MERGE";
-    }
-  }
-
-  GUI.put_string_at(3, save_mode);
-
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 *
-       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-  GUI.put_value_at2(14, step_count);
-}
-#else
 void GridSavePage::display() {
 
-  mcl_gui.clear_popup(28);
+  draw_popup();
+
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
 
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
-
-  mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
-                     mute_mask, slide_mask);
-
-  const char *modestr = "SEQ";
-  if (MidiClock.state != 2) {
-    if (encoders[0]->cur == SAVE_MD) {
-      modestr = "MD";
-    }
-    if (encoders[0]->cur == SAVE_MERGE) {
-      modestr = "MERGE";
-    }
-  }
-  mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4, "MODE",
-                            modestr);
-
-  char step[4] = {'\0'};
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 *
-       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-  itoa(step_count, step, 10);
-
-  // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
-  // MCLGUI::s_menu_y + 4, "STEP", step);
-
-  oled_display.setFont(&TomThumb);
-  // draw data flow in the center
-  constexpr uint8_t data_x = 56;
-  if (MidiClock.state != 2 && encoders[0]->cur == SAVE_MERGE) {
-    oled_display.setCursor(data_x + 2, MCLGUI::s_menu_y + 12);
-    oled_display.print("MD");
-    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
-    oled_display.print("SEQ");
-
-    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
-    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2, WHITE);
-    oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
-    mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
+  if (show_track_type_select) {
+    mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
+                                   track_type_select);
   } else {
-    if (encoders[0]->cur == SAVE_SEQ || MidiClock.state == 2) {
-      oled_display.setCursor(data_x, MCLGUI::s_menu_y + 12);
-      oled_display.print("SND");
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
+                       mute_mask, slide_mask);
+
+    char modestr[7];
+    get_modestr(modestr);
+
+    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
+                              "MODE", modestr);
+
+    char step[4] = {'\0'};
+    uint8_t step_count =
+        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+        (64 *
+         ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+    itoa(step_count, step, 10);
+
+    // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
+    // MCLGUI::s_menu_y + 4, "STEP", step);
+
+    oled_display.setFont(&TomThumb);
+    // draw data flow in the center
+    constexpr uint8_t data_x = 56;
+    if (MidiClock.state != 2 && encoders[0]->cur == SAVE_MERGE) {
+      oled_display.setCursor(data_x + 2, MCLGUI::s_menu_y + 12);
+      oled_display.print("MD");
       oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
       oled_display.print("SEQ");
 
@@ -122,88 +74,116 @@ void GridSavePage::display() {
       oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
       mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
     } else {
-      oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
-      oled_display.print(modestr);
-      mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
+      if (encoders[0]->cur == SAVE_SEQ || MidiClock.state == 2) {
+        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 12);
+        oled_display.print("SND");
+        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
+        oled_display.print("SEQ");
+
+        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
+        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2,
+                                   WHITE);
+        oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
+        mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
+      } else {
+        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
+        oled_display.print(modestr);
+        mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
+      }
+    }
+
+    oled_display.setCursor(data_x + 24, MCLGUI::s_menu_y + 15);
+    oled_display.print("GRID");
+  }
+  oled_display.display();
+  oled_display.setFont(oldfont);
+}
+
+void GridSavePage::save() {
+  char modestr[7];
+  get_modestr(modestr);
+  oled_display.textbox("SAVE SLOTS: ", modestr);
+  oled_display.display();
+
+  uint8_t save_mode = encoders[0]->cur;
+  if (MidiClock.state == 2) {
+    encoders[0]->cur = SAVE_SEQ;
+    encoders[0]->old = SAVE_SEQ;
+    save_mode = SAVE_SEQ;
+  }
+
+  uint8_t track_select_array[NUM_SLOTS] = {0};
+
+  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    if (note_interface.notes[n] > 0) {
+      SET_BIT32(track_select, n + proj.get_grid() * 16);
     }
   }
 
-  oled_display.setCursor(data_x + 24, MCLGUI::s_menu_y + 15);
-  oled_display.print("GRID");
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (IS_BIT_SET32(track_select, n)) {
+      track_select_array[n] = 1;
+    }
+  }
 
-  oled_display.display();
+  GUI.setPage(&grid_page);
+  trig_interface.off();
+  mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
+                                  track_select_array, save_mode);
 }
-#endif
 
-bool GridSavePage::handleEvent(gui_event_t *event) {
-  const char *modestr = "SEQ";
+void GridSavePage::get_modestr(char *modestr) {
+
+  strcpy(modestr, "SEQ");
   if (MidiClock.state != 2) {
     if (encoders[0]->cur == SAVE_MD) {
-      modestr = "MD";
+      strcpy(modestr, "MD");
     }
     if (encoders[0]->cur == SAVE_MERGE) {
-      modestr = "MERGE";
+      strcpy(modestr, "MERGE");
     }
   }
+}
 
-  if (note_interface.is_event(event)) {
-    trig_interface.send_md_leds();
-    if (note_interface.notes_all_off()) {
-      if (BUTTON_DOWN(Buttons.BUTTON2)) {
-        return true;
-      } else {
-
-        uint16_t last_clock = slowclock;
-
-#ifdef OLED_DISPLAY
-        oled_display.textbox("SAVE SLOTS: ", modestr);
-        oled_display.display();
-#endif
-
-        uint8_t save_mode = encoders[0]->cur;
-        if (MidiClock.state == 2) {
-          encoders[0]->cur = SAVE_SEQ;
-          encoders[0]->old = SAVE_SEQ;
-          save_mode = SAVE_SEQ;
-        }
-        uint8_t offset = proj.get_grid() * 16;
-
-        uint8_t track_select_array[NUM_SLOTS] = {0};
-
-        for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-          if (note_interface.notes[n] == 3) {
-            track_select_array[n + offset] = 1;
-          }
-        }
-
-        trig_interface.off();
-        mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
-                                        track_select_array, save_mode);
-      }
-      GUI.setPage(&grid_page);
-
-      curpage = 0;
-    }
-    return true;
-  }
+bool GridSavePage::handleEvent(gui_event_t *event) {
   if (GridIOPage::handleEvent(event)) {
     return true;
   }
 
+  if (note_interface.is_event(event)) {
+    trig_interface.send_md_leds();
+    uint8_t track = event->source - 128;
+    if (note_interface.notes_all_off()) {
+      if (show_track_type_select) {
+        if (track < 4) {
+          TOGGLE_BIT16(track_type_select, track);
+          MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
+        }
+      } else {
+        save();
+      }
+    }
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    show_track_type_select = true;
+    MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
+  }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-#ifdef OLED_DISPLAY
-    oled_display.textbox("SAVE PAT: ", modestr);
-    oled_display.display();
-#endif
-    DEBUG_PRINTLN(F("notes"));
-    DEBUG_DUMP(note_interface.notes_all_off());
+    trig_interface.off();
+    uint8_t offset = proj.get_grid() * 16;
 
     uint8_t track_select_array[NUM_SLOTS] = {0};
 
-    for (int i = 0; i < NUM_SLOTS; i++) {
-      track_select_array[i] = 1;
-    }
+    track_select_array_from_type_select(track_select_array);
 
+#ifdef OLED_DISPLAY
+    char modestr[7];
+    get_modestr(modestr);
+    oled_display.textbox("SAVE PAT: ", modestr);
+    oled_display.display();
+#endif
     uint8_t save_mode = encoders[0]->cur;
     if (MidiClock.state == 2) {
       encoders[0]->cur = SAVE_SEQ;
@@ -214,7 +194,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
                                     grid_page.encoders[1]->getValue(),
                                     track_select_array, save_mode);
-    trig_interface.off();
     GUI.setPage(&grid_page);
     curpage = 0;
     return true;

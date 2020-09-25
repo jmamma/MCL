@@ -36,6 +36,8 @@ public:
   bool write_header();
 
   void select_grid(uint8_t i) { grid_select = i; }
+  void toggle_grid() { grid_select = !grid_select; }
+
   uint8_t get_grid() { return grid_select; }
   // Write data to a specific grid
   bool write_grid(void *data, size_t len, uint8_t col, uint16_t row,
