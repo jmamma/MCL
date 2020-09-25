@@ -29,7 +29,7 @@ void GridWritePage::draw_popup() {
 
   if (!show_track_type_select) {
     strcpy(str, "CHAIN TO  ");
-    str[8] = 'A' + proj.get_grid();
+    str[9] = 'A' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
 }
