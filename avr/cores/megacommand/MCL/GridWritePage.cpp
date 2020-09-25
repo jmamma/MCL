@@ -25,11 +25,11 @@ void GridWritePage::setup() {
 }
 
 void GridWritePage::draw_popup() {
-  char *str = "GROUP CHAIN";
+  char *str = "GROUP CHAIN  ";
 
   if (!show_track_type_select) {
-    strcpy(str, "CHAIN TO  ");
-    str[9] = 'A' + proj.get_grid();
+    strcpy(str, "CHAIN FROM  ");
+    str[11] = 'A' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
 }
