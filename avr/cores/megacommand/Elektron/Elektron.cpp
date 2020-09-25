@@ -74,7 +74,7 @@ void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
   // trigleds[14..15]
   data[4] = (bitmask >> 14) | (mode << 2);
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
