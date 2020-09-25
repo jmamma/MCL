@@ -4,10 +4,7 @@
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
-  for (uint8_t i = 0; i < NI_MAX_NOTES; i++) {
-    notes[i] = 0;
-    // notes_off[i] = 0;
-  }
+  memset(notes, 0, NI_MAX_NOTES);
 }
 
 bool NoteInterface::is_event(gui_event_t *event) {

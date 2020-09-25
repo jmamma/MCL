@@ -14,7 +14,9 @@ class GridWritePage : public GridIOPage {
  GridWritePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {
 
  }
+ void send_chain();
  bool handleEvent(gui_event_t *event);
+ void draw_popup();
  void display();
  void setup();
  void init();

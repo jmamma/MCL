@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 uint16_t GridIOPage::track_type_select = 0xF;
+uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type_select = false;
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
