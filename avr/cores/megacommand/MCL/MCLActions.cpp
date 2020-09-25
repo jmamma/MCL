@@ -645,7 +645,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
           track_type != ptrack->active) {
         continue;
       }
-      dev_latency[dev_idx].latency += ptrack->calc_latency(n);
+      dev_latency[dev_idx].latency += ptrack->calc_latency(track_idx);
     }
   }
 
