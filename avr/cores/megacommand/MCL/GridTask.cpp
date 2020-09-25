@@ -94,12 +94,12 @@ void GridTask::run() {
   }
 
   uint32_t div192th_total_latency = 0;
-  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
-    div192th_total_latency = mcl_actions.dev_latency[a].div192th_latency;
+  for (uint8_t a = 0; a < NUM_DEVS; a++) {
+    div192th_total_latency += mcl_actions.dev_latency[a].div192th_latency;
   }
   DEBUG_PRINTLN(F("sending tracks"));
   bool wait;
-  for (int8_t c = 2 - 1; c >= 0; c--) {
+  for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
     wait = true;
 
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
