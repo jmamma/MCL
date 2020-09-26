@@ -33,11 +33,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
   if (mute_until_start) {
-#ifdef DEFER_SEQ
-    if ((clock_diff(MidiClock.div192th_counter + 1, start_step) == 0)) {
-#else
-    if ((clock_diff(MidiClock.div192th_counter, start_step) == 0)) {
-#endif
+    if ((MidiClock.clock_diff_div192(MidiClock.div192th_counter, start_step) == 0)) {
         reset();
     }
  }

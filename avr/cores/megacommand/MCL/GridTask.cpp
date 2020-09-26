@@ -112,7 +112,7 @@ void GridTask::run() {
       if (wait && send_device[c] && mcl_actions.dev_latency[c].latency > 0) {
 
         uint32_t go_step =
-            mcl_actions.next_transition * 12 - div192th_total_latency;
+            mcl_actions.next_transition * 12 - div192th_total_latency - 1;
         div192th_total_latency -= mcl_actions.dev_latency[dev_idx].latency;
         uint32_t diff;
 
