@@ -502,7 +502,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
   MDKit *kit_ = &kit;
 
-  memcpy(kit_->params[track], &(machine->params), 24);
+  memcpy(kit_->params[track], machine->params, 24);
   if (set_level) {
     kit_->levels[track] = machine->level;
   }
@@ -609,7 +609,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].send_params = true;
   for (uint8_t i = 0; i < 24; i++) {
 
-    if (((kit_->params[track][i] != machine->params[i])) ||
+   if (((kit_->params[track][i] != machine->params[i])) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
       //   (mcl_seq.md_tracks[track].is_param(i)))) {
       // mcl_seq.md_tracks[track].params[i] = machine->params[i];
