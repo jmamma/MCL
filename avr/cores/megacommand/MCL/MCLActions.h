@@ -23,6 +23,8 @@ public:
 class ChainModeData {
 public:
   DeviceLatency dev_latency[2];
+  uint8_t div32th_total_latency;
+  uint8_t div192th_total_latency;
 
   GridChain chains[NUM_SLOTS];
 
@@ -37,6 +39,7 @@ public:
   uint8_t transition_offsets[NUM_SLOTS];
   uint8_t send_machine[NUM_SLOTS];
   uint8_t transition_level[NUM_SLOTS];
+
 };
 
 class MCLActions : public ChainModeData {
