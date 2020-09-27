@@ -126,7 +126,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       if (show_track_type_select) {
         if (track < 4) {
           TOGGLE_BIT16(track_type_select, track);
-          MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
+          MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
         trig_interface.send_md_leds();
@@ -148,7 +148,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     show_track_type_select = true;
-    MD.set_trigleds(track_type_select, TRIGLED_OVERLAY);
+    MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {

@@ -12,44 +12,11 @@ void RoutePage::set_level(int curtrack, int value) {
   // in_sysex = 0;
 }
 
-#ifndef OLED_DISPLAY
-void RoutePage::draw_routes(uint8_t line_number) {
-  if (line_number == 0) {
-    GUI.setLine(GUI.LINE1);
-  } else {
-    GUI.setLine(GUI.LINE2);
-  }
-  /*Initialise the string with blank steps*/
-  char str[17] = "----------------";
-
-  /*Display 16 track routes on screen,
-   For 16 tracks check to see if there is a route*/
-  for (int i = 0; i < 16; i++) {
-
-    if (mcl_cfg.routing[i] != 6) {
-      str[i] = (char)'A' + mcl_cfg.routing[i];
-    }
-    if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
-      /*If the bit is set, there is a route at this position. We'd like to
-       * display it as [] on screen*/
-      /*Char 219 on the minicommand LCD is a []*/
-
-#ifdef OLED_DISPLAY
-      str[i] = (char)2;
-#else
-      str[i] = (char)219;
-#endif
-    }
-  }
-
-  /*Display the routes*/
-  GUI.put_string_at(0, str);
-}
-#else
 void RoutePage::draw_routes() {
   const uint64_t slide_mask = 0, mute_mask = 0;
 
-  mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, 0, 0, -1, 16, mute_mask, slide_mask);
+  mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, 0, 0, -1, 16, mute_mask,
+                     slide_mask);
 
   char cur;
 
@@ -80,7 +47,6 @@ void RoutePage::draw_routes() {
 
   oled_display.setTextColor(WHITE);
 }
-#endif
 
 void RoutePage::toggle_route(int i, uint8_t routing) {
   if (mcl_cfg.routing[i] != 6) {
@@ -150,33 +116,6 @@ void RoutePage::update_globals() {
   }
 }
 
-#ifndef OLED_DISPLAY
-void RoutePage::display() {
-  GUI.clearLines();
-  GUI.setLine(GUI.LINE2);
-  uint8_t x;
-
-  // GUI.put_string_at(12,"Route");
-  GUI.put_string_at(0, "ROUTE");
-
-  GUI.put_string_at(9, "Q:");
-  if (encoders[1]->getValue() == 0) {
-    GUI.put_string_at(11, "--");
-  } else {
-    x = 1 << encoders[1]->getValue();
-    GUI.put_value_at2(11, x);
-  }
-  char str_tmp[2] = "0";
-  str_tmp[0] = encoders[0]->cur + 'A';
-  GUI.put_string_at(7, str_tmp);
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 *
-       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-  GUI.put_value_at2(14, step_count);
-  draw_routes(0);
-}
-#else
 void RoutePage::display() {
   uint8_t x;
 
@@ -213,7 +152,6 @@ void RoutePage::display() {
   oled_display.display();
   oled_display.setFont(oldfont);
 }
-#endif
 
 bool RoutePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
@@ -221,9 +159,8 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
-#ifndef OLED_DISPLAY
-    draw_routes(0);
-#endif
+    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+
     /*    if (event->mask == EVENT_BUTTON_PRESSED) {
 
       if ((encoders[2]->getValue() == 0)) {
@@ -242,27 +179,27 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  //if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    //update_globals();
-    //md_exploit.off();
-    //md_exploit.on();
-    //GUI.setPage(&mixer_page);
-    //return true;
+  // if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  // update_globals();
+  // md_exploit.off();
+  // md_exploit.on();
+  // GUI.setPage(&mixer_page);
+  // return true;
   //}
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
     return true;
   }
-/*
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    update_globals();
-    GUI.setPage(&grid_page);
+  /*
+    if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+        EVENT_PRESSED(event, Buttons.ENCODER2) ||
+        EVENT_PRESSED(event, Buttons.ENCODER3) ||
+        EVENT_PRESSED(event, Buttons.ENCODER1)) {
+      update_globals();
+      GUI.setPage(&grid_page);
 
-    return true;
-  }
-*/
+      return true;
+    }
+  */
   return false;
 }
