@@ -7,16 +7,13 @@ void GridWritePage::setup() {
   encoders[1]->cur =
       MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
 
-  patternswitch = 1;
   ((MCLEncoder *)encoders[3])->max = 6;
-  if (mode == WRITE_PAGE) {
-    encoders[3]->cur = 4;
-    mode = CHAIN_PAGE;
-  }
+  encoders[3]->cur = 4;
   ((MCLEncoder *)encoders[2])->max = 1;
 
   // MD.requestKit(MD.currentKit);
   note_interface.init_notes();
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
 
   note_interface.state = true;
@@ -120,7 +117,6 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
   DEBUG_DUMP(event->source);
   if (note_interface.is_event(event)) {
-    DEBUG_PRINTLN(F("note event"));
     uint8_t track = event->source - 128;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type_select) {
@@ -129,11 +125,11 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
           MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
-        trig_interface.send_md_leds();
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
       if (!show_track_type_select) {
-        trig_interface.send_md_leds();
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
         if (note_interface.notes_all_off()) {
           DEBUG_PRINTLN(F("notes all off"));
           if (BUTTON_DOWN(Buttons.BUTTON2)) {
