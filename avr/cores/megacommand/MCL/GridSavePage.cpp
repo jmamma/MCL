@@ -4,9 +4,9 @@
 void GridSavePage::setup() {
   MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   note_interface.state = true;
-  curpage = S_PAGE;
   grid_page.reload_slot_models = false;
   draw_popup();
 }
@@ -151,18 +151,29 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   }
 
   if (note_interface.is_event(event)) {
-    trig_interface.send_md_leds();
     uint8_t track = event->source - 128;
-    if (note_interface.notes_all_off()) {
+    if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type_select) {
         if (track < 4) {
           TOGGLE_BIT16(track_type_select, track);
           MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
-        save();
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+      }
+    } else {
+      if (!show_track_type_select) {
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        if (note_interface.notes_all_off()) {
+          if (BUTTON_DOWN(Buttons.BUTTON2)) {
+            return true;
+          } else {
+            save();
+          }
+        }
       }
     }
+
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
