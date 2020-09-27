@@ -132,13 +132,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
     md_tracks[i].update_params();
   }
 
-#ifdef DEFER_SEQ
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
   }
-#endif
 #endif
 }
 
@@ -180,7 +178,6 @@ void MCLSeq::seq() {
 again:
     UART_CLEAR_ISR_TX_BIT();
     UART2_CLEAR_ISR_TX_BIT();
-#ifdef DEFER_SEQ
     if (uart_sidechannel) {
       uart = &seq_tx2;
       uart2 = &seq_tx4;
@@ -225,10 +222,6 @@ again:
     UART2_SET_ISR_TX_BIT();
     // Flip uart / side_channel buffer for next run
     uart_sidechannel = !uart_sidechannel;
-#else
-    uart = &MidiUart;
-    uart2 = &MidiUart2;
-#endif
   } else {
     uart = &MidiUart;
     uart2 = &MidiUart2;

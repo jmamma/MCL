@@ -35,9 +35,7 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
-  #ifdef DEFER_SEQ
   bool uart_sidechannel;
-  #endif
   bool realtime;
 
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;

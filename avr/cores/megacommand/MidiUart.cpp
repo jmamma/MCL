@@ -22,10 +22,8 @@ MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
   rxRb.len = rx_buf_size;
   txRb.ptr = tx_buf;
   txRb.len = tx_buf_size;
-#ifdef DEFER_SEQ
   // ignore side channel;
   txRb_sidechannel = nullptr;
-#endif
   initSerial();
 }
 
@@ -377,7 +375,6 @@ ISR(USART1_UDRE_vect) {
 ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
-#ifdef DEFER_SEQ
   if ((MidiUart.txRb_sidechannel != nullptr) && (MidiUart.in_message == 0)) {
 
     if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
@@ -390,7 +387,6 @@ ISR(USART0_UDRE_vect) {
       MidiUart.txRb_sidechannel = nullptr;
     }
   } else {
-#endif
     if (!MidiUart.txRb.isEmpty_isr()) {
       MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
       uint8_t c = MidiUart.txRb.get_h_isr();
@@ -421,9 +417,7 @@ ISR(USART0_UDRE_vect) {
     if (MidiUart.txRb.isEmpty_isr()) {
       UART_CLEAR_ISR_TX_BIT();
     }
-#ifdef DEFER_SEQ
   }
-#endif
 }
 
 #ifdef MEGACOMMAND
@@ -433,7 +427,6 @@ ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
-#ifdef DEFER_SEQ
   if ((MidiUart2.txRb_sidechannel != nullptr) && (MidiUart2.in_message == 0)) {
 
     if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
@@ -444,7 +437,6 @@ ISR(USART1_UDRE_vect) {
       MidiUart2.txRb_sidechannel = nullptr;
     }
   } else {
-#endif
     if (!MidiUart2.txRb.isEmpty_isr()) {
       MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
       uint8_t c = MidiUart2.txRb.get_h_isr();
@@ -475,9 +467,7 @@ ISR(USART1_UDRE_vect) {
     if (MidiUart2.txRb.isEmpty_isr()) {
       UART2_CLEAR_ISR_TX_BIT();
     }
-#ifdef DEFER_SEQ
   }
-#endif
 }
 #endif
 #endif
@@ -496,10 +486,8 @@ MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
   }
 #endif
 
-#ifdef DEFER_SEQ
   // ignore side channel;
   txRb_sidechannel = nullptr;
-#endif
 
   initSerial();
 }

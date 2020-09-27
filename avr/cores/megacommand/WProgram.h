@@ -8,9 +8,6 @@
 #define MIDIDUINO 1
 #define SYSEX_BUF_SIZE 6000
 
-//Defered sequencer rendering
-#define DEFER_SEQ
-
 #include "wiring_private.h"
 
 //#define DEBUGMODE
