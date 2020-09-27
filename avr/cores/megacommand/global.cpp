@@ -20,6 +20,16 @@ MidiUartClass2 seq_tx4((volatile uint8_t *)nullptr,
                        (size_t) 0,
                        (volatile uint8_t *)BANK1_UARTSEQ_TX4_BUFFER_START,
                        TX_SEQBUF_SIZE);
+
+MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,
+                       UART1_RX_BUFFER_LEN,
+                       (volatile uint8_t *)BANK1_UART1_TX_BUFFER_START,
+                       UART1_TX_BUFFER_LEN);
+MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,
+                         UART2_RX_BUFFER_LEN,
+                         (volatile uint8_t *)BANK1_UART2_TX_BUFFER_START,
+                         UART2_TX_BUFFER_LEN);
+
 // -- Midi class objects
 MidiClass Midi(&MidiUart, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
 MidiClass Midi2(&MidiUart2, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
