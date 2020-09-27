@@ -313,8 +313,10 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   uint16_t next_step;
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
+
+  if (next_step < MidiClock.div16th_counter + 2) { next_step += q; }
   } else {
-    next_step = MidiClock.div16th_counter + 1;
+    next_step = MidiClock.div16th_counter + 2;
   }
   DEBUG_PRINTLN(F("q"));
   DEBUG_PRINTLN(q);
