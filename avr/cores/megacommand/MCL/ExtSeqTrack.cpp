@@ -25,22 +25,22 @@ void ExtSeqTrack::set_length(uint8_t len) {
 }
 
 void ExtSeqTrack::re_sync() {
-  uint32_t q = length * 12;
-  start_step = (MidiClock.div16th_counter / q) * q + q;
-  mute_until_start = true;
+//  uint32_t q = length * 12;
+//  start_step = (MidiClock.div16th_counter / q) * q + q;
 }
 
 void ExtSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
-  if (mute_until_start) {
-    if ((MidiClock.clock_diff_div192(MidiClock.div192th_counter, start_step) == 0)) {
+  if (count_down) {
+    count_down--;
+    if (count_down == 0) {
       reset();
     }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
-  if ((mute_until_start == false) && (mute_state == SEQ_MUTE_OFF)) {
+  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == length) {

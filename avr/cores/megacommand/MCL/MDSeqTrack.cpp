@@ -24,24 +24,23 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void MDSeqTrack::re_sync() {
-  uint32_t q = length * 12;
-  start_step = (MidiClock.div192th_counter / q) * q + q;
-  mute_until_start = true;
+//  uint32_t q = length * 12;
+//  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
-  if (mute_until_start) {
-    if ((MidiClock.clock_diff_div192(MidiClock.div192th_counter, start_step) == 0)) {
-        reset();
+  if (count_down) {
+    count_down--;
+    if (count_down == 0) {
+      reset();
     }
- }
+  }
 
   uint8_t timing_mid = get_timing_mid_inline();
 
-  if ((mute_until_start == false) &&
-      (mute_state == SEQ_MUTE_OFF)) {
+  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
@@ -179,7 +178,8 @@ void MDSeqTrack::send_slides() {
         }
       }
 
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val, uart);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val,
+                              uart);
     }
   }
 }
@@ -414,7 +414,8 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
     }
     idx += lock_bit;
     if (send) {
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param, uart);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param,
+                              uart);
     }
   }
 }
@@ -752,7 +753,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
     pslide = (uint8_t *)&pattern->slidePatterns[track_number];
   }
 
-   // 32770.0 is scalar to get MD swing amount in to readible percentage
+  // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
   float swing = (float)pattern->swingAmount / 16385.0;

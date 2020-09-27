@@ -47,13 +47,12 @@ public:
   uint8_t channel;
   MidiUartParent *uart = &MidiUart;
 
-  bool mute_until_start = false;
 
   uint8_t locks_slides_recalc = 255;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
 
-  uint32_t start_step;
+  uint8_t count_down;
 
   ALWAYS_INLINE() void reset() {
     step_count = 0;
@@ -62,7 +61,7 @@ public:
     iterations_7 = 1;
     iterations_8 = 1;
     mod12_counter = 0;
-    mute_until_start = false;
+    count_down = 0;
   }
 
   ALWAYS_INLINE() void seq();
