@@ -314,7 +314,9 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
 
-  if (next_step < MidiClock.div16th_counter + 2) { next_step += q; }
+    if (next_step < MidiClock.div16th_counter + 2) {
+      next_step += q;
+    }
   } else {
     next_step = MidiClock.div16th_counter + 2;
   }
@@ -629,6 +631,8 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
     dev_latency[a].div32th_latency = 0;
     dev_latency[a].div192th_latency = 0;
   }
+  bool send_dev[NUM_DEVS] = {0};
+
   uint8_t grid_idx, track_idx, track_type, dev_idx;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -647,7 +651,8 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
           track_type != ptrack->active) {
         continue;
       }
-      dev_latency[dev_idx].latency += ptrack->calc_latency(track_idx);
+      send_dev[dev_idx] = true;
+      dev_latency[dev_idx].latency += ptrack->calc_latency(n);
     }
   }
 
@@ -657,17 +662,23 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
+  div32th_total_latency = 0;
+  div192th_total_latency = 0;
+
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
-    if (dev_latency[a].latency > 0) {
-    float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
+    if (send_dev[a]) {
+      float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
       float latency_in_seconds =
           dev_latency[a].latency / bytes_per_second_uart1;
       dev_latency[a].div32th_latency =
           round(div32th_per_second * latency_in_seconds) + 1;
       dev_latency[a].div192th_latency =
           round(div192th_per_second * latency_in_seconds) + 3;
+      div32th_total_latency += dev_latency[a].div32th_latency;
+      div192th_total_latency += dev_latency[a].div192th_latency;
+     DEBUG_DUMP(dev_latency[a].div32th_latency);
+     DEBUG_DUMP(dev_latency[a].div192th_latency);
     }
-    DEBUG_DUMP(dev_latency[a].latency);
   }
 }
 
