@@ -12,7 +12,8 @@ void GridSavePage::setup() {
 }
 
 void GridSavePage::draw_popup() {
-  char *str = "GROUP SAVE";
+  char str[16];
+  strcpy(str,"GROUP SAVE");
 
   if (!show_track_type) {
     strcpy(str, "SAVE TO  ");
