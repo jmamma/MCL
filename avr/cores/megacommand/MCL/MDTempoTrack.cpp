@@ -1,8 +1,12 @@
 #include "MCL_impl.h"
 
+void MDTempoTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+
+    send_tempo();
+}
+
 void MDTempoTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                uint8_t slotnumber) {
-  send_tempo();
+                                   uint8_t slotnumber) {
 }
 
 uint16_t MDTempoTrack::calc_latency(uint8_t tracknumber) {
@@ -18,12 +22,11 @@ void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   send_tempo();
 }
 
-void MDTempoTrack::get_tempo() {
-  tempo = MidiClock.get_tempo();
-}
+void MDTempoTrack::get_tempo() { tempo = MidiClock.get_tempo(); }
 
-bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
-                              uint8_t merge, bool online) {
+bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
+                                 SeqTrack *seq_track, uint8_t merge,
+                                 bool online) {
   active = MDTEMPO_TRACK_TYPE;
   bool ret;
   int b = 0;
