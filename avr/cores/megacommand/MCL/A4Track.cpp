@@ -8,13 +8,14 @@ uint16_t A4Track::calc_latency(uint8_t tracknumber) {
   return a4_latency;
 }
 
-void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
-  uint8_t n = slotnumber;
-  if ((mcl_actions.send_machine[slotnumber] == 0)) {
+void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     DEBUG_PRINTLN(F("here"));
     DEBUG_PRINTLN(F("send a4 sound"));
     sound.toSysex();
-  }
+}
+
+void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+  uint8_t n = slotnumber;
   ExtTrack::transition_load(tracknumber, seq_track, slotnumber);
 }
 

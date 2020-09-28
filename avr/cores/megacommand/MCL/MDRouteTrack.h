@@ -18,6 +18,7 @@ public:
   void get_routes();
   uint16_t calc_latency(uint8_t tracknumber);
   uint16_t send_routes(bool send = true);
+  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
 
