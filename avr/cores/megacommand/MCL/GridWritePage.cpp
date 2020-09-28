@@ -22,7 +22,8 @@ void GridWritePage::setup() {
 }
 
 void GridWritePage::draw_popup() {
-  char *str = "GROUP CHAIN  ";
+  char str[16];
+  strcpy(str,"GROUP CHAIN");
 
   if (!show_track_type) {
     strcpy(str, "CHAIN FROM  ");
