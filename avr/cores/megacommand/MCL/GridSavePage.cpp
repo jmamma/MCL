@@ -14,7 +14,7 @@ void GridSavePage::setup() {
 void GridSavePage::draw_popup() {
   char *str = "GROUP SAVE";
 
-  if (!show_track_type_select) {
+  if (!show_track_type) {
     strcpy(str, "SAVE TO  ");
     str[8] = 'A' + proj.get_grid();
   }
@@ -37,9 +37,9 @@ void GridSavePage::display() {
 
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
-  if (show_track_type_select) {
+  if (show_track_type) {
     mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
-                                   track_type_select);
+                                   mcl_cfg.track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
                        mute_mask, slide_mask);
@@ -153,16 +153,16 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (show_track_type_select) {
+      if (show_track_type) {
         if (track < 4) {
-          TOGGLE_BIT16(track_type_select, track);
-          MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
+          TOGGLE_BIT16(mcl_cfg.track_type_select, track);
+          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
-      if (!show_track_type_select) {
+      if (!show_track_type) {
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
         if (note_interface.notes_all_off()) {
           if (BUTTON_DOWN(Buttons.BUTTON2)) {
@@ -177,8 +177,8 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_track_type_select = true;
-    MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
+    show_track_type = true;
+    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {

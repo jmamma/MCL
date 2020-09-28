@@ -24,7 +24,7 @@ void GridWritePage::setup() {
 void GridWritePage::draw_popup() {
   char *str = "GROUP CHAIN  ";
 
-  if (!show_track_type_select) {
+  if (!show_track_type) {
     strcpy(str, "CHAIN FROM  ");
     str[11] = 'A' + proj.get_grid();
   }
@@ -40,9 +40,9 @@ void GridWritePage::display() {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
-  if (show_track_type_select) {
+  if (show_track_type) {
     mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
-                                   track_type_select);
+                                   mcl_cfg.track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
                        mute_mask, slide_mask);
@@ -119,16 +119,16 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (show_track_type_select) {
+      if (show_track_type) {
         if (track < 4) {
-          TOGGLE_BIT16(track_type_select, track);
-          MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
+          TOGGLE_BIT16(mcl_cfg.track_type_select, track);
+          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
-      if (!show_track_type_select) {
+      if (!show_track_type) {
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
         if (note_interface.notes_all_off()) {
           DEBUG_PRINTLN(F("notes all off"));
@@ -143,8 +143,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_track_type_select = true;
-    MD.set_trigleds(track_type_select, TRIGLED_EXCLUSIVE);
+    show_track_type = true;
+    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {

@@ -1,15 +1,14 @@
 #include "MCL_impl.h"
 
-uint16_t GridIOPage::track_type_select = 0xF;
 uint32_t GridIOPage::track_select = 0;
-bool GridIOPage::show_track_type_select = false;
+bool GridIOPage::show_track_type = false;
 uint8_t GridIOPage::old_grid = 0;
 
 void GridIOPage::cleanup() { proj.select_grid(old_grid); }
 
 void GridIOPage::init() {
   old_grid = proj.get_grid();
-  show_track_type_select = false;
+  show_track_type = false;
   track_select = 0;
 }
 
@@ -22,11 +21,11 @@ void GridIOPage::track_select_array_from_type_select(uint8_t *track_select_array
         n, &grid_idx, &track_idx, &track_type, &dev_idx, &is_aux);
     if (track_type == 255)
       continue;
-    if (!is_aux && IS_BIT_SET16(track_type_select, dev_idx)) {
+    if (!is_aux && IS_BIT_SET16(mcl_cfg.track_type_select, dev_idx)) {
       track_select_array[n] = 1;
     }
     // AUX tracks
-    if (is_aux && IS_BIT_SET16(track_type_select, dev_idx + 1)) {
+    if (is_aux && IS_BIT_SET16(mcl_cfg.track_type_select, dev_idx + 1)) {
       track_select_array[n] = 1;
     }
   }
