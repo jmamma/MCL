@@ -93,27 +93,29 @@ void GridTask::run() {
     }
   }
 
-  uint32_t div192th_total_latency = 0;
-  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
-    div192th_total_latency = mcl_actions.dev_latency[a].div192th_latency;
-  }
   DEBUG_PRINTLN(F("sending tracks"));
   bool wait;
-  for (int8_t c = 2 - 1; c >= 0; c--) {
+  for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
     wait = true;
 
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (slots_changed[n] < 0)
+        continue;
+
       SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
           n, &grid_idx, &track_idx, &track_type, &dev_idx);
       if ((track_idx == 255) || (dev_idx != c))
         continue;
 
       // Wait on first track of each device;
-      if (wait && send_device[c] && mcl_actions.dev_latency[c].latency > 0) {
+      if (wait && send_device[c]) {
 
-        uint32_t go_step =
-            mcl_actions.next_transition * 12 - div192th_total_latency;
-        div192th_total_latency -= mcl_actions.dev_latency[dev_idx].latency;
+        uint32_t go_step = mcl_actions.next_transition * 12 -
+                           mcl_actions.div192th_total_latency;
+
+        mcl_actions.div192th_total_latency -=
+            mcl_actions.dev_latency[dev_idx].latency;
+
         uint32_t diff;
 
         while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
@@ -129,12 +131,12 @@ void GridTask::run() {
       }
       wait = false;
 
-      if (slots_changed[n] < 0)
-        continue;
-
       auto *pmem_track = empty_track.load_from_mem(track_idx, track_type);
 
       if (pmem_track->is_active()) {
+        if (mcl_actions.send_machine[n] == 0) {
+        pmem_track->transition_send(track_idx, n);
+        }
         pmem_track->transition_load(track_idx, seq_track, n);
 
       } else {

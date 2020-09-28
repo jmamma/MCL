@@ -87,11 +87,14 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
 
 SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx,
                                         uint8_t *track_idx, uint8_t *track_type,
-                                        uint8_t *dev_idx) {
+                                        uint8_t *dev_idx, bool *is_aux) {
   GridDeviceTrack *p = get_grid_dev_track(slot_number, track_idx, dev_idx);
   *grid_idx = get_grid_idx(slot_number);
   if (p) {
     *track_type = p->track_type;
+    if (is_aux != nullptr) {
+      *is_aux = p->is_aux;
+    }
     return p->seq_track;
   }
   *track_type = 255;
@@ -190,7 +193,6 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
 
       online = (elektron_devs[dev_idx] != nullptr);
-      DEBUG_DUMP(track_type);
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
       if (!save_dev_tracks[dev_idx]) {
@@ -208,8 +210,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         } else {
           empty_track.chain.init(row);
         }
-        DEBUG_DUMP(track_type);
-        auto pdevice_track = ((DeviceTrack *)&empty_track)->init_track_type(track_type);
+        auto pdevice_track =
+            ((DeviceTrack *)&empty_track)->init_track_type(track_type);
         pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track,
                                      merge, online);
         row_headers[grid_idx].update_model(
@@ -311,9 +313,15 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   uint16_t next_step;
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
+
+//    if (next_step < MidiClock.div16th_counter + 2) {
+//      next_step += q;
+//    }
   } else {
-    next_step = MidiClock.div16th_counter + 1;
+    next_step = MidiClock.div16th_counter + 2;
   }
+  bool recalc_latency = true;
+again:
   DEBUG_PRINTLN(F("q"));
   DEBUG_PRINTLN(q);
   DEBUG_PRINTLN(F("write step"));
@@ -334,8 +342,14 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     }
   }
   calc_next_transition();
-  calc_latency(&empty_track);
-
+  if (recalc_latency) {
+    calc_latency(&empty_track);
+  }
+  if (next_step - (div32th_total_latency / 2) < MidiClock.div16th_counter) {
+    next_step += q;
+    recalc_latency = false;
+    goto again;
+  }
   proj.select_grid(old_grid);
 }
 
@@ -344,7 +358,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   uint8_t select_array[NUM_SLOTS];
   // Take a copy, because we call GUI.loop later.
-  memcpy(&select_array, slot_select_array, NUM_SLOTS);
+  memcpy(select_array, slot_select_array, NUM_SLOTS);
 
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
@@ -370,7 +384,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
       mute_states[i] = seq_track->mute_state;
       seq_track->mute_state = SEQ_MUTE_ON;
     }
-
     if ((select_array[i] == 0) || (track_type == 255)) {
       // Ignore slots that are not device supported.
       select_array[i] = 0;
@@ -621,9 +634,13 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  for (uint8_t a = 0; a < NUM_GRIDS; a++) {
+  for (uint8_t a = 0; a < NUM_DEVS; a++) {
     dev_latency[a].latency = 0;
+    dev_latency[a].div32th_latency = 0;
+    dev_latency[a].div192th_latency = 0;
   }
+  bool send_dev[NUM_DEVS] = {0};
+
   uint8_t grid_idx, track_idx, track_type, dev_idx;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -633,7 +650,6 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
 
       SeqTrack *seq_track =
           get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
-
       if (track_idx == 255) {
         continue;
       }
@@ -643,8 +659,8 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
           track_type != ptrack->active) {
         continue;
       }
-
-      dev_latency[grid_idx].latency = ptrack->calc_latency(n);
+      send_dev[dev_idx] = true;
+      dev_latency[dev_idx].latency += ptrack->calc_latency(n);
     }
   }
 
@@ -654,15 +670,23 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
-  for (uint8_t a = 0; a < 2; a++) {
-    dev_latency[a].latency = 0;
+  div32th_total_latency = 0;
+  div192th_total_latency = 0;
 
-    float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-    float latency_in_seconds = dev_latency[a].latency / bytes_per_second_uart1;
-    dev_latency[a].div32th_latency =
-        round(div32th_per_second * latency_in_seconds) + 1;
-    dev_latency[a].div192th_latency =
-        round(div192th_per_second * latency_in_seconds) + 3;
+  for (uint8_t a = 0; a < NUM_DEVS; a++) {
+    if (send_dev[a]) {
+      float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
+      float latency_in_seconds =
+          dev_latency[a].latency / bytes_per_second_uart1;
+      dev_latency[a].div32th_latency =
+          round(div32th_per_second * latency_in_seconds) + 1;
+      dev_latency[a].div192th_latency =
+          round(div192th_per_second * latency_in_seconds) + 3;
+      div32th_total_latency += dev_latency[a].div32th_latency;
+      div192th_total_latency += dev_latency[a].div192th_latency;
+      DEBUG_DUMP(dev_latency[a].div32th_latency);
+      DEBUG_DUMP(dev_latency[a].div192th_latency);
+    }
   }
 }
 

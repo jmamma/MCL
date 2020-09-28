@@ -23,6 +23,8 @@ public:
 class ChainModeData {
 public:
   DeviceLatency dev_latency[2];
+  uint8_t div192th_total_latency;
+  uint8_t div32th_total_latency;
 
   GridChain chains[NUM_SLOTS];
 
@@ -59,7 +61,7 @@ public:
   uint8_t get_grid_idx(uint8_t slot_number);
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id, uint8_t *dev_idx);
 
-  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx, uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx);
+  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx, uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx, bool *is_aux = nullptr);
 
   void send_globals();
   void switch_global(uint8_t global_page);

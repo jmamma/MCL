@@ -757,16 +757,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
     pslide = (uint8_t *)&pattern->slidePatterns[track_number];
   }
 
-  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-    if (IS_BIT_SET64_P(ppattern, i)) {
-      steps[i].trig = true;
-    }
-    if (IS_BIT_SET64_P(pslide, i)) {
-      steps[i].slide = true;
-    }
-  }
-
-  // 32770.0 is scalar to get MD swing amount in to readible percentage
+   // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
   float swing = (float)pattern->swingAmount / 16385.0;
@@ -780,12 +771,16 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   }
 
   for (uint8_t a = 0; a < length; a++) {
+    if (IS_BIT_SET64_P(pslide, a)) {
+      steps[a].slide = true;
+    }
     if (IS_BIT_SET64_P(ppattern, a)) {
+      steps[a].trig = true;
       steps[a].cond_id = 0;
       steps[a].cond_plock = false;
       timing[a] = timing_mid;
       if (IS_BIT_SET64_P(pswingpattern, a)) {
-        timing[a] = round(swing * timing_mid) + timing_mid;
+        timing[a] += round(swing * timing_mid);
       }
     }
   }

@@ -10,15 +10,14 @@
 
 class GridWritePage : public GridIOPage {
  public:
- uint8_t mode = WRITE_PAGE;
  GridWritePage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {
 
  }
+ void chain();
  bool handleEvent(gui_event_t *event);
+ void draw_popup();
  void display();
  void setup();
- void init();
- void cleanup();
 };
 
 #endif /* GRIDWRITEPAGE_H__ */
