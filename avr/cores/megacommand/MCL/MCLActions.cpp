@@ -314,12 +314,14 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   if (q > 0) {
     next_step = (MidiClock.div16th_counter / q) * q + q;
 
-    if (next_step < MidiClock.div16th_counter + 2) {
-      next_step += q;
-    }
+//    if (next_step < MidiClock.div16th_counter + 2) {
+//      next_step += q;
+//    }
   } else {
     next_step = MidiClock.div16th_counter + 2;
   }
+  bool recalc_latency = true;
+again:
   DEBUG_PRINTLN(F("q"));
   DEBUG_PRINTLN(q);
   DEBUG_PRINTLN(F("write step"));
@@ -340,8 +342,14 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     }
   }
   calc_next_transition();
-  calc_latency(&empty_track);
-
+  if (recalc_latency) {
+    calc_latency(&empty_track);
+  }
+  if (next_step - (div32th_total_latency / 2) < MidiClock.div16th_counter) {
+    next_step += q;
+    recalc_latency = false;
+    goto again;
+  }
   proj.select_grid(old_grid);
 }
 
@@ -676,8 +684,8 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
           round(div192th_per_second * latency_in_seconds) + 3;
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
-     DEBUG_DUMP(dev_latency[a].div32th_latency);
-     DEBUG_DUMP(dev_latency[a].div192th_latency);
+      DEBUG_DUMP(dev_latency[a].div32th_latency);
+      DEBUG_DUMP(dev_latency[a].div192th_latency);
     }
   }
 }
