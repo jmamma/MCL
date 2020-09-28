@@ -5,8 +5,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   uint16_t md_latency = 0;
   bool send_machine, send_level = false;
 
-  md_latency +=
-      MD.sendMachine(n, &(machine), send_level, send_machine);
+  md_latency += MD.sendMachine(n, &(machine), send_level, send_machine);
   if (mcl_actions.transition_level[n] == TRANSITION_MUTE ||
       mcl_actions.transition_level[n] == TRANSITION_UNMUTE) {
     md_latency += 3;
@@ -14,32 +13,33 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-void MDTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   uint8_t n = slotnumber;
-  if (mcl_actions.send_machine[n] == 0) {
-    bool send_level = false;
-    DEBUG_DUMP(n);
-    switch (mcl_actions.transition_level[n]) {
-    case 1:
-      send_level = true;
-      machine.level = 0;
-      break;
-    case TRANSITION_UNMUTE:
-      DEBUG_PRINTLN(F("unmuting"));
-      MD.muteTrack(tracknumber, false);
-      break;
-    case TRANSITION_MUTE:
-      DEBUG_PRINTLN(F("muting"));
-      MD.muteTrack(tracknumber, true);
-      break;
-    default:
-      break;
-    }
+  bool send_level = false;
+  DEBUG_DUMP(n);
+  switch (mcl_actions.transition_level[n]) {
+  case 1:
+    send_level = true;
+    machine.level = 0;
+    break;
+  case TRANSITION_UNMUTE:
+    DEBUG_PRINTLN(F("unmuting"));
+    MD.muteTrack(tracknumber, false);
+    break;
+  case TRANSITION_MUTE:
+    DEBUG_PRINTLN(F("muting"));
+    MD.muteTrack(tracknumber, true);
+    break;
+  default:
+    break;
     bool send = true;
     MD.sendMachine(tracknumber, &(machine), send_level, send);
   }
-  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
+}
 
+void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                              uint8_t slotnumber) {
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_seq_data(seq_track);
 }
 
@@ -79,10 +79,9 @@ void MDTrack::init() {
 }
 
 void MDTrack::load_seq_data(SeqTrack *seq_track) {
-  MDSeqTrack *md_seq_track = (MDSeqTrack*) seq_track;
+  MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
 
-  memcpy(md_seq_track->data(), seq_data.data(),
-         sizeof(seq_data));
+  memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
   md_seq_track->speed = chain.speed;
   md_seq_track->length = chain.length;
   if (md_seq_track->speed < SEQ_SPEED_1X) {
@@ -90,8 +89,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
     md_seq_track->clear_slide_data();
   }
   md_seq_track->oneshot_mask = 0;
-  md_seq_track->set_length(
-      md_seq_track->length);
+  md_seq_track->set_length(md_seq_track->length);
   md_seq_track->update_params();
 }
 
@@ -125,8 +123,8 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
-                            bool online) {
+bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+                            uint8_t merge, bool online) {
   active = MD_TRACK_TYPE;
 
   bool ret;
@@ -134,7 +132,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   DEBUG_PRINT_FN();
   uint32_t len;
 
-  MDSeqTrack *md_seq_track = (MDSeqTrack*) seq_track;
+  MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
 
   if (column != 255 && online == true) {
     get_machine_from_kit(column);
