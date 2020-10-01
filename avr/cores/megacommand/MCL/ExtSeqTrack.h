@@ -78,7 +78,7 @@ public:
     return false;
   }
 
-  void reset() {
+  void clear() {
     event_count = 0;
     timing_buckets.clear();
   }
@@ -94,7 +94,6 @@ public:
     SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
-    ExtSeqTrackData::reset();
   }
 
   ALWAYS_INLINE() void seq();
