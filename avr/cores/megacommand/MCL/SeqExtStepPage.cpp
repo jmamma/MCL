@@ -115,7 +115,6 @@ void SeqExtStepPage::draw_pianoroll() {
   }
   uint8_t fov_zoom = seq_param4.cur;
 
-  DEBUG_DUMP(fov_zoom);
   fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
 
   fov_pixels_per_tick = (float)fov_w / (float)fov_length;
@@ -124,9 +123,6 @@ void SeqExtStepPage::draw_pianoroll() {
   //    fov_pixels_per_tick = 1;
   //   fov_length = fov_w;
   // }
-  DEBUG_DUMP(fov_zoom);
-  DEBUG_DUMP(fov_length);
-  DEBUG_DUMP(fov_pixels_per_tick);
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
@@ -188,10 +184,11 @@ void SeqExtStepPage::draw_pianoroll() {
       // Check if note is note_on (positive) and is visible within fov vertical
       // range.
       if (note_val > 0) {
+
         uint16_t ev_idx_j;
         uint8_t j = find_note_off(note_val, i);
         uint16_t note_idx = active_track.find_midi_note(j, note_val, ev_idx_j);
-        auto &ev_j = active_track.events[ev_idx_j];
+        auto &ev_j = active_track.events[note_idx];
 
         uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
         uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
@@ -570,7 +567,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           // active_track.timing[(track + (page_select * 16))] = 0;
           // active_track.conditional[(track + (page_select * 16))] = 0;
         }
-          
+
         else {
           // active_track.timing[(track + (page_select * 16))] = utiming; //
           // upper active_track.conditional[(track + (page_select * 16))] =

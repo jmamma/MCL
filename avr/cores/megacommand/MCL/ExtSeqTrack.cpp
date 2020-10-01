@@ -52,11 +52,13 @@ uint16_t ExtSeqTrack::add_event(uint8_t step) {
     return 0xFFFF;
   }
   ++event_count;
-  timing_buckets.set(step, u + 1);
   uint16_t idx, end;
   locate(step, idx, end);
   memmove(events + end + 1, events + end,
           sizeof(ext_event_t) * (NUM_EXT_EVENTS - end - 1));
+
+  timing_buckets.set(step, u + 1);
+
   return idx;
 }
 

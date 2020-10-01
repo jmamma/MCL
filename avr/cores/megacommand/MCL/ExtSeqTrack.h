@@ -120,11 +120,13 @@ public:
 
   void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
     ev_idx = 0;
-    ev_end = timing_buckets.get(step_count);
-    for (uint8_t i = 0; i < step_count; ++i) {
+    ev_end = timing_buckets.get(step);
+    for (uint8_t i = 0; i < step; ++i) {
       ev_idx += timing_buckets.get(i);
     }
+
     ev_end += ev_idx;
+
   }
 
   void buffer_notesoff() {
