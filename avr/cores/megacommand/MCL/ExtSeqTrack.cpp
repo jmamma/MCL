@@ -59,7 +59,7 @@ uint16_t ExtSeqTrack::add_event(uint8_t step) {
 
   timing_buckets.set(step, u + 1);
 
-  return idx;
+  return end;
 }
 
 uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
