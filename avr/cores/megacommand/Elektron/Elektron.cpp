@@ -34,12 +34,11 @@ bool ElektronDevice::get_fw_caps() {
   auto listener = getSysexListener();
 
   if (msgType == 0x72) {
-    // XXX wrong reply. fix the firmware!
     if (listener->sysex->getByte(begin) == 0x30) {
       ((uint8_t *)&(fw_caps))[0] = listener->sysex->getByte(begin+1);
       ((uint8_t *)&(fw_caps))[1] = listener->sysex->getByte(begin+2);
     }
-  return true;
+    return true;
   }
   return false;
 }
