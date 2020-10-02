@@ -2,7 +2,7 @@
 
 #include "MCL_impl.h"
 
-#define FILENAME_CLIPBOARD "cbd.tmp"
+#define FILENAME_CLIPBOARD "clipb.tmp"
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
@@ -27,7 +27,7 @@ bool MCLClipBoard::open() {
     grid_filename[l + 2] = '\0';
     DEBUG_PRINTLN(F("Creating clipboard"));
     if (!SD.exists(grid_filename)) {
-      if (!grids[i].new_grid(grid_filename)) {
+      if (!grids[i].new_file(grid_filename)) {
         gfx.alert("ERROR", "SD ERROR");
         return false;
       }
@@ -35,6 +35,9 @@ bool MCLClipBoard::open() {
       if (!grids[i].open_file(grid_filename)) {
         DEBUG_PRINTLN(F("Could not open clipboard"));
         return false;
+      }
+      else {
+        DEBUG_PRINTLN(F("Opened Clipboard"));
       }
     }
   }
