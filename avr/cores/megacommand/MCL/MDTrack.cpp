@@ -3,7 +3,7 @@
 uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   uint8_t n = tracknumber;
   uint16_t md_latency = 0;
-  bool send_machine, send_level = false;
+  bool send_machine = false, send_level = false;
 
   md_latency += MD.sendMachine(n, &(machine), send_level, send_machine);
   if (mcl_actions.transition_level[n] == TRANSITION_MUTE ||
