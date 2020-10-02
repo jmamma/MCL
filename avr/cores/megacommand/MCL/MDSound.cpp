@@ -39,11 +39,10 @@ bool MDSound::fetch_sound(uint8_t track) {
   // If track uses trigGroup, assume sound is made up of two models.
 
   if ((trigGroup < 16) && (trigGroup != track)) {
-  machine2.model = MD.kit.models[trigGroup];
-  machine2.level = MD.kit.levels[trigGroup];
-  memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
-  memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
-
+    machine2.model = MD.kit.models[trigGroup];
+    machine2.level = MD.kit.levels[trigGroup];
+    memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
+    memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
 
     if (machine2.lfo.destinationTrack == trigGroup) {
       machine2.lfo.destinationTrack = 1;
@@ -51,45 +50,43 @@ bool MDSound::fetch_sound(uint8_t track) {
 
     else if (machine2.lfo.destinationTrack == track) {
       machine2.lfo.destinationTrack = 0;
-    }
-    else {
-     machine2.lfo.destinationTrack = 255;
-     machine2.lfo.depth = machine2.params[MODEL_LFOD] = 0;
+    } else {
+      machine2.lfo.destinationTrack = 255;
+      machine2.lfo.depth = machine2.params[MODEL_LFOD] = 0;
     }
 
     machine_count++;
     machine2.track = 1;
     machine2.normalize_level();
   }
-
 }
 
 bool MDSound::load_sound(uint8_t track) {
   DEBUG_PRINT_FN();
 
   DEBUG_PRINTLN(machine1.model);
-  #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
   PGM_P tmp;
   char str[3] = "  ";
   tmp = getMDMachineNameShort(machine1.model, 2);
   m_strncpy_p(str, tmp, 3);
   DEBUG_PRINTLN(str);
-  #endif
+#endif
 
+  bool send_level = true, send = true;
   if ((machine_count > 1) && (track != 15)) {
-    #ifdef DEBUG_MODE
+#ifdef DEBUG_MODE
     DEBUG_PRINTLN(F("loading second machine"));
     tmp = getMDMachineNameShort(machine2.model, 2);
     m_strncpy_p(str, tmp, 3);
     DEBUG_PRINTLN(str);
-    #endif
+#endif
     if (machine2.lfo.destinationTrack < 16) {
       machine2.lfo.destinationTrack += track;
     }
     machine1.trigGroup = track + 1;
     machine2.trigGroup = track;
 
-    bool send_level, send = true;
     MD.sendMachine(track + 1, &machine2, send_level, send);
 
   } else {
@@ -101,15 +98,12 @@ bool MDSound::load_sound(uint8_t track) {
   }
 
   if (machine_count == 1) {
-  machine1.trigGroup = track;
-  }
-  else {
-  machine1.trigGroup = track + 1;
+    machine1.trigGroup = track;
+  } else {
+    machine1.trigGroup = track + 1;
   }
 
-  bool send_level, send = true;
   MD.sendMachine(track, &machine1, send_level, send);
-
 }
 
 bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
