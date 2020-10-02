@@ -190,12 +190,11 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     track_select_array_from_type_select(track_select_array);
 
-#ifdef OLED_DISPLAY
     char modestr[7];
     get_modestr(modestr);
-    oled_display.textbox("SAVE PAT: ", modestr);
+    oled_display.textbox("SAVE GROUPS: ", modestr);
     oled_display.display();
-#endif
+
     uint8_t save_mode = encoders[0]->cur;
     if (MidiClock.state == 2) {
       encoders[0]->cur = SAVE_SEQ;

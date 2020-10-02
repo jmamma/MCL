@@ -23,7 +23,7 @@ void GridWritePage::setup() {
 
 void GridWritePage::draw_popup() {
   char str[16];
-  strcpy(str,"GROUP CHAIN");
+  strcpy(str, "GROUP CHAIN");
 
   if (!show_track_type) {
     strcpy(str, "CHAIN FROM  ");
@@ -163,15 +163,8 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
     track_select_array_from_type_select(track_select_array);
     //   write_tracks_to_md(-1);
-#ifdef OLED_DISPLAY
-    if (MidiClock.state != 2) {
-      oled_display.textbox("CHAIN GROUPS", "");
-      oled_display.display();
-    } else {
-      oled_display.textbox("CHAIN PAT", "");
-      oled_display.display();
-    }
-#endif
+    oled_display.textbox("CHAIN GROUPS", "");
+    oled_display.display();
     mcl_actions.write_original = 1;
     GUI.setPage(&grid_page);
     mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(),

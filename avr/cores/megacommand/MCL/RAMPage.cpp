@@ -130,16 +130,14 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   }
 
   md_track.machine.muteGroup = 127;
-  md_track.chain.length = (uint8_t)steps;
-  md_track.chain.speed = SEQ_SPEED_1X;
-  md_track.chain.init(mcl_actions.chains[track].row);
+  md_track.chain.init(mcl_actions.chains[track].row, 0, steps, SEQ_SPEED_1X);
 
   md_track.store_in_mem(track);
 
   grid_page.active_slots[track] = 0x7FFF;
   mcl_actions.chains[track].row = SLOT_RAM_RECORD;
   mcl_actions.chains[track].loops = 1;
-  
+
   uint8_t m = mcl_seq.md_tracks[track].length;
 
   //  uint16_t next_step =
@@ -205,7 +203,6 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   trk.locks_params[0] = ROM_STRT + 1;
   trk.locks_params[1] = ROM_END + 1;
   uint8_t mode = encoders[1]->cur;
-
   for (uint8_t s = 0; s < slices; s++) {
     uint8_t n = s * step_inc;
 
@@ -306,7 +303,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   memset(&(md_track.seq_data), 0, sizeof(MDSeqTrackData));
   memset(&(md_track.machine.params), 255, 24);
 
-  uint16_t steps = encoders[3]->cur * 4;
+  uint8_t steps = encoders[3]->cur * 4;
 
   RAMPage::rec_states[page_id] = STATE_QUEUE;
   if (mcl_cfg.ram_page_mode == LINK) {
@@ -355,7 +352,8 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.muteGroup = 127;
 
   uint8_t magic = encoders[1]->cur;
-  md_track.chain.init(mcl_actions.chains[track].row, md_track.chain.loops, md_track.chain.length, md_track.chain.speed);
+
+  md_track.chain.init(mcl_actions.chains[track].row, 0, steps, SEQ_SPEED_1X);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
 
