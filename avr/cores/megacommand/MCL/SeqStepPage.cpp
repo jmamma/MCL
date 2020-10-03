@@ -45,7 +45,7 @@ void SeqStepPage::init() {
   DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
-  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT)->id;
+  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;

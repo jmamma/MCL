@@ -54,7 +54,7 @@ void SeqExtStepPage::config_encoders() {
   seq_param4.cur = 16;
   seq_param4.min = 4;
   config();
-  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT)->id;
+  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 #endif
 }
 
