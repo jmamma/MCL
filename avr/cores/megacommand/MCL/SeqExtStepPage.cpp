@@ -126,21 +126,7 @@ void SeqExtStepPage::draw_pianoroll() {
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
-  // Draw vertical keyboard
-
-  const uint16_t chromatic = 0b0000010101001010;
-  for (uint8_t k = 0; k < fov_notes; k++) {
-    uint8_t scale_pos =
-        (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
-    if (!IS_BIT_SET16(chromatic, scale_pos)) {
-      oled_display.fillRect(draw_x - keyboard_w,
-                            draw_y + k * (fov_h / fov_notes), keyboard_w,
-                            (fov_h / fov_notes), WHITE);
-    }
-  }
-  //  oled_display.drawLine(draw_x-1 , 0, draw_x-1 , fov_h, WHITE);
-
-  // Draw sequencer position..
+    // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
 
     uint8_t cur_tick_fov_x =
@@ -156,7 +142,7 @@ void SeqExtStepPage::draw_pianoroll() {
         min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
   }
 
-  for (int i = 0; i < active_track.length; i++) {
+  for (int i = 1; i < active_track.length; i++) {
     // Draw grid.
     uint16_t grid_tick_x = i * timing_mid;
     if (is_within_fov(grid_tick_x)) {
@@ -490,6 +476,29 @@ void SeqExtStepPage::display() {
   */
 
   SeqPage::display();
+// Draw vertical keyboard
+  oled_display.fillRect(draw_x - keyboard_w - 1, 0, keyboard_w + 1, fov_h, BLACK);
+
+  const uint16_t chromatic = 0b0000010101001010;
+  for (uint8_t k = 0; k < fov_notes; k++) {
+    uint8_t scale_pos =
+        (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
+    if (!IS_BIT_SET16(chromatic, scale_pos)) {
+      oled_display.fillRect(draw_x - keyboard_w,
+                            draw_y + k * (fov_h / fov_notes) + 1, keyboard_w + 1,
+                            (fov_h / fov_notes) - 1, WHITE);
+    }
+    else {
+//    oled_display.fillRect(draw_x - keyboard_w,
+//                            draw_y + k * (fov_h / fov_notes) + 1, keyboard_w + 1,
+//                            (fov_h / fov_notes) - 1, BLACK);
+    oled_display.fillRect(draw_x,
+                            draw_y + k * (fov_h / fov_notes), 1,
+                            (fov_h / fov_notes) + 1, WHITE);
+    }
+  }
+   // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
+
 
   oled_display.display();
 #endif

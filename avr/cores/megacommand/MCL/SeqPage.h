@@ -98,7 +98,7 @@ public:
   virtual void init();
   virtual void cleanup();
 
-  static constexpr uint8_t pidx_x0 = 1;
+  static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
