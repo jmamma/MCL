@@ -42,6 +42,8 @@ public:
 
   int16_t roll_length;
 
+  bool proj_dir;
+
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
@@ -52,6 +54,8 @@ public:
   void draw_pianoroll();
   void draw_viewport_minimap();
   uint8_t find_note_off(int8_t note_val, uint8_t step);
+
+  void add_note();
 
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }

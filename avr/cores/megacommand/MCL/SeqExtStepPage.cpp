@@ -45,8 +45,8 @@ void SeqExtStepPage::config_encoders() {
 
   fov_offset = 0;
   cur_x = 0;
-  cur_y = 64;
   fov_y = 64;
+  cur_y = fov_y + 1;
   cur_w = timing_mid;
 
   seq_param2.max = 127;
@@ -226,13 +226,15 @@ void SeqExtStepPage::draw_pianoroll() {
 
           // Draw vertical projection
           uint8_t proj_y = 255;
-          if ((note_val >= fov_y + fov_notes) &&
-              (cur_y == fov_y + fov_notes - 1)) {
+          if ((note_val >= fov_y + fov_notes) && (proj_dir)) {
+          //&&     (cur_y == fov_y + fov_notes - 1)) {
             proj_y = 0;
           }
-          if ((note_val < fov_y) && (cur_y == fov_y)) {
+          if ((note_val < fov_y) && (!proj_dir)) {
+          // && (cur_y == fov_y)) {
             proj_y = draw_y + fov_h + 1;
           }
+
           if (proj_y != 255) {
             if (note_end < note_start) {
               // Wrap around note
@@ -282,7 +284,7 @@ void SeqExtStepPage::draw_pianoroll() {
   }
   // Draw interactive cursor
   DEBUG_DUMP(cur_w);
-  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y + 1) * (fov_h / fov_notes));
+  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
   uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
   if (fov_cur_x < 0) {
@@ -326,7 +328,7 @@ void SeqExtStepPage::display() { SeqPage::display(); }
 void SeqExtStepPage::loop() {
   SeqPage::loop();
   if (seq_param1.hasChanged()) {
-    // Vertical translation
+    // Horizontal translation
     int16_t diff = seq_param1.cur - seq_param1.old;
 
     DEBUG_DUMP(diff);
@@ -364,34 +366,36 @@ void SeqExtStepPage::loop() {
   }
 
   if (seq_param2.hasChanged()) {
-    // Horizontal translation
+    // Vertical translation
     int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
 
     DEBUG_DUMP(diff);
     if (diff < 0) {
-      if (cur_y <= fov_y) {
+      proj_dir = false;
+      if (cur_y <= fov_y + 1) {
         fov_y += diff;
-        if (fov_y < 0) {
-          fov_y = 0;
+        if (fov_y < 1) {
+          fov_y = 1;
         }
-        cur_y = fov_y;
+        cur_y = fov_y + 1;
       } else {
         cur_y += diff;
-        if (cur_y < fov_y) {
-          cur_y = fov_y;
+        if (cur_y < fov_y + 1) {
+          cur_y = fov_y + 1;
         }
       }
     } else {
-      if (cur_y >= fov_y + fov_notes - 1) {
+      proj_dir = true;
+      if (cur_y >= fov_y + fov_notes) {
         fov_y += diff;
         if (fov_y + fov_notes > 127) {
           fov_y = 127 - fov_notes;
         }
-        cur_y = fov_y + fov_notes - 1;
+        cur_y = fov_y + fov_notes;
       } else {
         cur_y += diff;
-        if (cur_y > fov_y + fov_notes - 1) {
-          cur_y = fov_y + fov_notes - 1;
+        if (cur_y >= fov_y + fov_notes) {
+          cur_y = fov_y + fov_notes;
         }
       }
     }
@@ -487,17 +491,29 @@ void SeqExtStepPage::display() {
 
   SeqPage::display();
 
-  if (mcl_gui.show_encoder_value(&seq_param2) &&
-      (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-      (!show_step_menu)) {
-    mcl_gui.draw_microtiming(mcl_seq.ext_tracks[last_ext_track].speed,
-                             seq_param2.cur);
-  }
-
   oled_display.display();
 #endif
 }
 #endif
+
+void SeqExtStepPage::add_note() {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
+
+  uint8_t start_step = (cur_x / timing_mid);
+  uint8_t start_utiming = timing_mid + cur_x - (start_step * timing_mid);
+
+  uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+
+  if (end_step >= active_track.length) {
+  end_step = active_track.length - 1;
+  end_utiming = timing_mid * 2 - 1;
+  }
+
+  active_track.set_ext_track_step(start_step, start_utiming, cur_y, true);
+  active_track.set_ext_track_step(end_step, end_utiming, cur_y, false);
+}
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
@@ -517,13 +533,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN(track);
       if (device == DEVICE_MD) {
 
-        if ((track + (page_select * 16)) >= active_track.length) {
-          DEBUG_PRINTLN(F("setting to 0"));
-          DEBUG_PRINTLN(last_ext_track);
-          DEBUG_PRINTLN(page_select);
-          note_interface.notes[track] = 0;
-          return true;
-        }
+        cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
+
+        //        seq_param2.cur = (fov_w / 16) * track;
 
         //   int8_t utiming =
         //     active_track.timing[(track + (page_select * 16))]; // upper
@@ -543,14 +555,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     if (mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_MD) {
-
-        uint8_t utiming = (seq_param2.cur + 0);
-        bool cond_plock; // TODO not used
-        uint8_t condition =
-            translate_to_step_conditional(seq_param1.cur, &cond_plock);
-        if ((track + (page_select * 16)) >= active_track.length) {
-          return true;
-        }
 
         //  timing = 3;
         // condition = 3;
@@ -581,7 +585,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    GUI.setPage(&seq_step_page);
+    add_note();
     return true;
   }
 
@@ -606,13 +610,14 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (MidiClock.state != 2) {
       mcl_seq.ext_tracks[channel].note_on(msg[1]);
     }
-
-    for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.notes[i] == 1) {
-        mcl_seq.ext_tracks[channel].set_ext_track_step(
-            seq_extstep_page.page_select * 16 + i, msg[1], msg[2]);
-      }
-    }
+    /*
+        for (uint8_t i = 0; i < 16; i++) {
+          if (note_interface.notes[i] == 1) {
+            mcl_seq.ext_tracks[channel].set_ext_track_step(
+                seq_extstep_page.page_select * 16 + i, msg[1], msg[2]);
+          }
+        }
+    */
   }
 #endif
 }

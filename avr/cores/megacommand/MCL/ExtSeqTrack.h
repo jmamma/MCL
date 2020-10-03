@@ -105,7 +105,8 @@ public:
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 
-  void set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  void set_ext_track_step(uint8_t step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on);
 
   void clear_ext_conditional();
   void clear_ext_notes();
@@ -115,6 +116,9 @@ public:
   void handle_event(uint16_t index);
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step);
+
+
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx, bool event_on);
   uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx);
 
   void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {

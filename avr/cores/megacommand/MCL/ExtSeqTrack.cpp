@@ -63,6 +63,20 @@ uint16_t ExtSeqTrack::add_event(uint8_t step) {
 }
 
 uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
+                                     uint16_t &idx, bool event_on) {
+  uint16_t end;
+  locate(step, idx, end);
+  for (uint16_t i = idx; i != end; ++i) {
+    if (events[i].is_lock || events[i].event_value != note_num ||
+        events[i].event_on != event_on) {
+      continue;
+    }
+    return i;
+  }
+  return 0xFFFF;
+}
+
+uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
                                      uint16_t &idx) {
   uint16_t end;
   locate(step, idx, end);
@@ -252,55 +266,29 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   }
 }
 
-void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t note_num,
-                                     uint8_t velocity) {
+void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on) {
   // Look for matching note already on this step
   // If it's a note off, then disable the note
   // If it's a note on, set the note note-off.
   uint16_t ev_idx;
-  uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
-  if (note_idx != 0xFFFF) {
-    if (events[note_idx].event_on) {
-      events[note_idx].event_on = false;
-    } else {
-      remove_event(note_idx);
-      buffer_notesoff();
-      for (uint16_t j = ev_idx - 1; j != 0xFFFF; --j) {
-        if (!events[j].is_lock && events[j].event_value == note_num) {
-          if (events[j].event_on) {
-            // found a complete note spanning j..i
-            remove_event(j);
-          } else {
-            // ... two consequtive note on events?
-          }
-          break;
-        }
-      }
-    }
-    return;
+  uint16_t note_idx =
+      find_midi_note(step, note_num, ev_idx, event_on);
+
+  if (note_idx == 0xFFFF) {
+    ev_idx = add_event(step);
+  } else {
+    ev_idx = note_idx;
   }
 
-  // No matches are found, we count number of on and off to determine next
-  // note type.
-  int8_t ons_and_offs = 0;
-  for (uint16_t i = 0; i < ev_idx; ++i) {
-    if (events[i].is_lock || events[i].event_value != note_num) {
-      continue;
-    }
-    if (events[i].event_on) {
-      ons_and_offs++;
-    } else {
-      ons_and_offs--;
-    }
-  }
-  ev_idx = add_event(step);
   if (ev_idx == 0xFFFF) {
     return;
   }
   events[ev_idx].is_lock = false;
   events[ev_idx].cond_id = 0;
   events[ev_idx].event_value = note_num;
-  events[ev_idx].event_on = (ons_and_offs <= 0);
+  events[ev_idx].event_on = event_on;
+  events[ev_idx].micro_timing = utiming;
 }
 
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
