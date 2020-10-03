@@ -42,7 +42,7 @@ public:
 
   int16_t roll_length;
 
-  bool proj_dir;
+  bool scroll_dir;
 
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

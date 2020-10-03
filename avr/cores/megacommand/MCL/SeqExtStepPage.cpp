@@ -226,11 +226,11 @@ void SeqExtStepPage::draw_pianoroll() {
 
           // Draw vertical projection
           uint8_t proj_y = 255;
-          if ((note_val >= fov_y + fov_notes) && (proj_dir)) {
+          if ((note_val >= fov_y + fov_notes) && (scroll_dir)) {
           //&&     (cur_y == fov_y + fov_notes - 1)) {
             proj_y = 0;
           }
-          if ((note_val < fov_y) && (!proj_dir)) {
+          if ((note_val < fov_y) && (!scroll_dir)) {
           // && (cur_y == fov_y)) {
             proj_y = draw_y + fov_h + 1;
           }
@@ -371,7 +371,7 @@ void SeqExtStepPage::loop() {
 
     DEBUG_DUMP(diff);
     if (diff < 0) {
-      proj_dir = false;
+      scroll_dir = false;
       if (cur_y <= fov_y + 1) {
         fov_y += diff;
         if (fov_y < 1) {
@@ -385,7 +385,7 @@ void SeqExtStepPage::loop() {
         }
       }
     } else {
-      proj_dir = true;
+      scroll_dir = true;
       if (cur_y >= fov_y + fov_notes) {
         fov_y += diff;
         if (fov_y + fov_notes > 127) {
