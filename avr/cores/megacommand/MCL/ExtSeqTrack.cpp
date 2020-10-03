@@ -33,6 +33,10 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   uint16_t ev_idx = 0;
   uint8_t step;
   uint8_t bucket = 0;
+  if (event_count == 0) {
+    // bucket empty
+    return;
+  }
   for (step = 0; step < length && ev_idx <= index; ++step) {
     bucket = timing_buckets.get(step);
     ev_idx += bucket;

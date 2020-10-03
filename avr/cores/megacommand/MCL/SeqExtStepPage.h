@@ -31,7 +31,7 @@ public:
 
   static constexpr uint8_t draw_y = 2;
   static constexpr uint8_t draw_x = 128 - fov_w;
-  static constexpr uint8_t keyboard_w = 2;
+  static constexpr uint8_t keyboard_w = 4;
 
   float fov_pixels_per_tick;
 
@@ -55,6 +55,7 @@ public:
   void draw_viewport_minimap();
   uint8_t find_note_off(int8_t note_val, uint8_t step);
 
+  void del_note();
   void add_note();
 
   bool is_within_fov(uint16_t x) {
