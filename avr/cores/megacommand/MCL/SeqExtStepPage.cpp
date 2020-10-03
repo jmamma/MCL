@@ -533,7 +533,7 @@ void SeqExtStepPage::del_note() {
         uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
         uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
-        if ((note_start <= cur_x + cur_w) && (note_end >= cur_x)) {
+        if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
           DEBUG_DUMP("deleteing");
           active_track.remove_event(note_idx_off);
           active_track.remove_event(note_idx_on);
