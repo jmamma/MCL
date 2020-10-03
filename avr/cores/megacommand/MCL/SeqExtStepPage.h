@@ -29,6 +29,8 @@ public:
   int16_t fov_offset = 0;
   uint16_t fov_length;
 
+  uint8_t x_notes_down = 0;
+
   static constexpr uint8_t draw_y = 2;
   static constexpr uint8_t draw_x = 128 - fov_w;
   static constexpr uint8_t keyboard_w = 3;

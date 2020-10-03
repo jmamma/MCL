@@ -25,6 +25,7 @@ void SeqExtStepPage::config() {
 
   // use continuous page index display
   display_page_index = false;
+  x_notes_down = 0;
 }
 
 void SeqExtStepPage::config_encoders() {
@@ -575,7 +576,6 @@ void SeqExtStepPage::add_note() {
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
 #ifdef EXT_TRACKS
-  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -590,52 +590,24 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN(track);
       if (device == DEVICE_MD) {
 
-        cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
-
-        //        seq_param2.cur = (fov_w / 16) * track;
-
-        //   int8_t utiming =
-        //     active_track.timing[(track + (page_select * 16))]; // upper
-        // uint8_t condition =
-        //   active_track.conditional[(track + (page_select * 16))]; // lower
-        // seq_param1.cur = translate_to_knob_conditional(condition);
-        // Micro
-        /*
-        if (utiming == 0) {
-          utiming = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-        }
-
-        seq_param2.cur = utiming;
-        */
-        note_interface.last_note = track;
-      }
-    }
-    if (mask == EVENT_BUTTON_RELEASED) {
-      if (device == DEVICE_MD) {
-
-        //  timing = 3;
-        // condition = 3;
-        /*
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME)
-        { for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) { if
-        (active_track.notes[c][track + page_select * 16] > 0) {
-              MidiUart2.sendNoteOff(
-                  last_ext_track,
-                  abs(active_track.notes[c][track + page_select * 16]) - 1,
-        0);
-            }
-            active_track.notes[c][track + page_select * 16] = 0;
+        ++x_notes_down;
+        if (x_notes_down == 1) {
+          cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
+          note_interface.last_note = track;
+        } else {
+          cur_w = fov_offset + (float)(fov_length / 16) * (float)track - cur_x;
+          if (cur_w < 0) {
+            cur_x += cur_w;
+            cur_w = -cur_w;
+          } else if (cur_w < cur_w_min) {
+            cur_w = cur_w_min;
           }
-          // active_track.timing[(track + (page_select * 16))] = 0;
-          // active_track.conditional[(track + (page_select * 16))] = 0;
         }
+      }
+    } else if (mask == EVENT_BUTTON_RELEASED) {
+      if (device == DEVICE_MD) {
+        --x_notes_down;
 
-        else {
-          // active_track.timing[(track + (page_select * 16))] = utiming; //
-          // upper active_track.conditional[(track + (page_select * 16))] =
-          // condition; // upper
-        }
-        */
       }
       return true;
     }
