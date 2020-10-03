@@ -666,8 +666,27 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_DUMP(channel);
 
   if (channel < mcl_seq.num_ext_tracks) {
+
+    auto fov_offset = seq_extstep_page.fov_offset;
+    auto cur_x = seq_extstep_page.cur_x;
+    auto fov_y = seq_extstep_page.fov_y;
+    auto cur_y = msg[1];
+    auto cur_w = seq_extstep_page.cur_w;
+
+    if (fov_y >= cur_y && cur_y != 0) {
+      fov_y = cur_y - 1;
+    } else if (fov_y + SeqExtStepPage::fov_notes <= cur_y) {
+      fov_y = cur_y - SeqExtStepPage::fov_notes;
+    }
+
     last_ext_track = channel;
     seq_extstep_page.config_encoders();
+
+    seq_extstep_page.fov_offset = fov_offset;
+    seq_extstep_page.cur_x = cur_x;
+    seq_extstep_page.fov_y = fov_y;
+    seq_extstep_page.cur_y = cur_y;
+    seq_extstep_page.cur_w = cur_w;
 
     if (MidiClock.state != 2) {
       mcl_seq.ext_tracks[channel].note_on(msg[1]);
