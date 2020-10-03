@@ -38,9 +38,11 @@ void MCLSeq::setup() {
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].uart = &MidiUart2;
     ext_tracks[i].channel = i;
     ext_tracks[i].set_length(16);
     ext_tracks[i].speed = SEQ_SPEED_2X;
+    ext_tracks[i].clear();
   }
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
