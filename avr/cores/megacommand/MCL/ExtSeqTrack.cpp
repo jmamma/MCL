@@ -33,7 +33,7 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   uint16_t ev_idx = 0;
   uint8_t step;
   uint8_t bucket = 0;
-  if (event_count == 0) {
+  if (index >= event_count) {
     // bucket empty
     return;
   }
