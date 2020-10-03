@@ -503,6 +503,7 @@ void SeqExtStepPage::display() {
 #endif
 
 void SeqExtStepPage::del_note() {
+  DEBUG_PRINTLN("del note");
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
@@ -522,8 +523,6 @@ void SeqExtStepPage::del_note() {
       uint16_t ev_idx_j;
       uint16_t note_idx_off;
       uint8_t j = find_note_off(cur_y, i);
-      DEBUG_DUMP(i);
-      DEBUG_DUMP(j);
       bool event_on = false;
       note_idx_off =
           active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
@@ -534,8 +533,9 @@ void SeqExtStepPage::del_note() {
         uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
         if ((note_start <= cur_x + cur_w) && (note_end >= cur_x)) {
-          active_track.remove_event(note_idx_on);
+          DEBUG_DUMP("deleteing");
           active_track.remove_event(note_idx_off);
+          active_track.remove_event(note_idx_on);
         }
       }
     }
@@ -557,6 +557,8 @@ void SeqExtStepPage::add_note() {
     end_utiming = timing_mid * 2 - 1;
   }
 
+  del_note();
+
   bool event_on = false;
   uint16_t ev_idx;
   uint16_t note_idx =
@@ -566,7 +568,6 @@ void SeqExtStepPage::add_note() {
     //
     return;
   }
-  del_note();
   active_track.set_ext_track_step(start_step, start_utiming, cur_y, true);
   active_track.set_ext_track_step(end_step, end_utiming, cur_y, false);
 }
