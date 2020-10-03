@@ -523,10 +523,12 @@ void SeqExtStepPage::del_note() {
       active_track.remove_event(note_idx);
     }
   }*/
-  uint16_t note_idx = active_track.find_midi_note(start_step, cur_y, ev_idx);
+  bool event_on = true;
+  uint16_t note_idx = active_track.find_midi_note(start_step, cur_y, ev_idx, event_on);
   if (note_idx != 0xFFFF) {
     active_track.remove_event(note_idx);
-    note_idx = active_track.find_midi_note(j, cur_y, ev_idx);
+    event_on = false;
+    note_idx = active_track.find_midi_note(j, cur_y, ev_idx, event_on);
     active_track.remove_event(note_idx);
   }
 }
@@ -544,6 +546,15 @@ void SeqExtStepPage::add_note() {
   if (end_step >= active_track.length) {
     end_step = active_track.length - 1;
     end_utiming = timing_mid * 2 - 1;
+  }
+
+  bool event_on = false;
+  uint16_t ev_idx;
+  uint16_t note_idx = active_track.find_midi_note(end_step, cur_y, ev_idx, event_on);
+  if (note_idx != 0xFFFF) {
+  //Note off already on end step, abort
+  //
+  return;
   }
 
   active_track.set_ext_track_step(start_step, start_utiming, cur_y, true);
