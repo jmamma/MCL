@@ -126,7 +126,7 @@ void SeqExtStepPage::draw_pianoroll() {
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
-    // Draw sequencer position..
+  // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
 
     uint8_t cur_tick_fov_x =
@@ -142,7 +142,7 @@ void SeqExtStepPage::draw_pianoroll() {
         min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
   }
 
-  for (int i = 1; i < active_track.length; i++) {
+  for (int i = 0; i < active_track.length; i++) {
     // Draw grid.
     uint16_t grid_tick_x = i * timing_mid;
     if (is_within_fov(grid_tick_x)) {
@@ -268,7 +268,6 @@ void SeqExtStepPage::draw_pianoroll() {
     }
   }
   // Draw interactive cursor
-  DEBUG_DUMP(cur_w);
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
   uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
@@ -475,8 +474,9 @@ void SeqExtStepPage::display() {
   */
 
   SeqPage::display();
-// Draw vertical keyboard
-  oled_display.fillRect(draw_x - keyboard_w - 1, 0, keyboard_w + 1, fov_h, BLACK);
+  // Draw vertical keyboard
+  oled_display.fillRect(draw_x - keyboard_w - 1, 0, keyboard_w + 1, fov_h,
+                        BLACK);
 
   const uint16_t chromatic = 0b0000010101001010;
   for (uint8_t k = 0; k < fov_notes; k++) {
@@ -484,20 +484,18 @@ void SeqExtStepPage::display() {
         (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
     if (!IS_BIT_SET16(chromatic, scale_pos)) {
       oled_display.fillRect(draw_x - keyboard_w,
-                            draw_y + k * (fov_h / fov_notes) + 1, keyboard_w + 1,
-                            (fov_h / fov_notes) - 1, WHITE);
-    }
-    else {
-//    oled_display.fillRect(draw_x - keyboard_w,
-//                            draw_y + k * (fov_h / fov_notes) + 1, keyboard_w + 1,
-//                            (fov_h / fov_notes) - 1, BLACK);
-    oled_display.fillRect(draw_x,
-                            draw_y + k * (fov_h / fov_notes), 1,
+                            draw_y + k * (fov_h / fov_notes) + 1,
+                            keyboard_w + 1, (fov_h / fov_notes) - 1, WHITE);
+    } else {
+      //    oled_display.fillRect(draw_x - keyboard_w,
+      //                            draw_y + k * (fov_h / fov_notes) + 1,
+      //                            keyboard_w + 1, (fov_h / fov_notes) - 1,
+      //                            BLACK);
+      oled_display.fillRect(draw_x, draw_y + k * (fov_h / fov_notes), 1,
                             (fov_h / fov_notes) + 1, WHITE);
     }
   }
-   // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
-
+  // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
 
   oled_display.display();
 #endif
@@ -509,27 +507,38 @@ void SeqExtStepPage::del_note() {
   uint8_t timing_mid = active_track.get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
 
-  uint8_t end_step = ((cur_x + cur_w) / timing_mid);
-  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+  //uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  //uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
 
-  uint16_t ev_idx;
-  uint8_t j = find_note_off(cur_y, start_step);
+  for (int i = 0; i < active_track.length; i++) {
 
-  /*
-  if (j <= end_step) {
-    uint16_t note_idx = active_track.find_midi_note(j, cur_y, ev_idx);
-    auto &ev_j = active_track.events[note_idx];
-    if (ev_j.micro_timing <= end_utiming) {
-      active_track.remove_event(note_idx);
+    bool event_on = true;
+    uint16_t ev_idx, ev_end;
+
+    uint16_t note_idx_on =
+        active_track.find_midi_note(i, cur_y, ev_idx, event_on);
+
+    if (note_idx_on != 0xFFFF) {
+      uint16_t ev_idx_j;
+      uint16_t note_idx_off;
+      uint8_t j = find_note_off(cur_y, i);
+      DEBUG_DUMP(i);
+      DEBUG_DUMP(j);
+      bool event_on = false;
+      note_idx_off =
+          active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
+      if (note_idx_off != 0xFFFF) {
+        auto &ev = active_track.events[ev_idx];
+        auto &ev_j = active_track.events[ev_idx_j];
+        uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
+        uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
+
+        if ((note_start <= cur_x + cur_w) && (note_end >= cur_x)) {
+          active_track.remove_event(note_idx_on);
+          active_track.remove_event(note_idx_off);
+        }
+      }
     }
-  }*/
-  bool event_on = true;
-  uint16_t note_idx = active_track.find_midi_note(start_step, cur_y, ev_idx, event_on);
-  if (note_idx != 0xFFFF) {
-    active_track.remove_event(note_idx);
-    event_on = false;
-    note_idx = active_track.find_midi_note(j, cur_y, ev_idx, event_on);
-    active_track.remove_event(note_idx);
   }
 }
 
@@ -550,13 +559,14 @@ void SeqExtStepPage::add_note() {
 
   bool event_on = false;
   uint16_t ev_idx;
-  uint16_t note_idx = active_track.find_midi_note(end_step, cur_y, ev_idx, event_on);
+  uint16_t note_idx =
+      active_track.find_midi_note(end_step, cur_y, ev_idx, event_on);
   if (note_idx != 0xFFFF) {
-  //Note off already on end step, abort
-  //
-  return;
+    // Note off already on end step, abort
+    //
+    return;
   }
-
+  del_note();
   active_track.set_ext_track_step(start_step, start_utiming, cur_y, true);
   active_track.set_ext_track_step(end_step, end_utiming, cur_y, false);
 }
@@ -605,12 +615,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         //  timing = 3;
         // condition = 3;
         /*
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
-          for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) {
-            if (active_track.notes[c][track + page_select * 16] > 0) {
+        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME)
+        { for (uint8_t c = 0; c < NUM_EXT_NOTES; c++) { if
+        (active_track.notes[c][track + page_select * 16] > 0) {
               MidiUart2.sendNoteOff(
                   last_ext_track,
-                  abs(active_track.notes[c][track + page_select * 16]) - 1, 0);
+                  abs(active_track.notes[c][track + page_select * 16]) - 1,
+        0);
             }
             active_track.notes[c][track + page_select * 16] = 0;
           }
