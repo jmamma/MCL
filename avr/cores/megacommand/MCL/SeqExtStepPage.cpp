@@ -537,6 +537,7 @@ void SeqExtStepPage::del_note() {
           DEBUG_DUMP("deleteing");
           active_track.remove_event(note_idx_off);
           active_track.remove_event(note_idx_on);
+          active_track.note_off(cur_y);
         }
       }
     }
