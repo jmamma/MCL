@@ -37,15 +37,14 @@ void ExtSeqTrack::remove_event(uint16_t index) {
     // bucket empty
     return;
   }
-  for (step = 0; step < length && ev_idx <= index; ++step) {
+  for (step = 0; step < length && ev_idx <= index && ++step; ) {
     bucket = timing_buckets.get(step);
     ev_idx += bucket;
   }
-  // step is at least 1, move back to get current step
-  --step;
   timing_buckets.set(step, bucket - 1);
+  // move [index+1...event_count-1] to [index...event_count-2]
   memmove(events + index, events + index + 1,
-          sizeof(ext_event_t) * (NUM_EXT_EVENTS - index - 1));
+          sizeof(ext_event_t) * (event_count - index - 1));
   --event_count;
 }
 
@@ -55,13 +54,15 @@ uint16_t ExtSeqTrack::add_event(uint8_t step) {
     // bucket full or track full
     return 0xFFFF;
   }
-  ++event_count;
   uint16_t idx, end;
   locate(step, idx, end);
-  memmove(events + end + 1, events + end,
-          sizeof(ext_event_t) * (NUM_EXT_EVENTS - end - 1));
 
   timing_buckets.set(step, u + 1);
+  // move [end...event_count-1] to [end+1...event_count]
+  memmove(events + end + 1, events + end,
+          sizeof(ext_event_t) * (event_count - end));
+  ++event_count;
+
 
   return end;
 }
