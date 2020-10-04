@@ -37,10 +37,11 @@ void ExtSeqTrack::remove_event(uint16_t index) {
     // bucket empty
     return;
   }
-  for (step = 0; step < length && ev_idx <= index && ++step; ) {
+  for (step = 0; step < length && ev_idx <= index; ++step) {
     bucket = timing_buckets.get(step);
     ev_idx += bucket;
   }
+  --step;
   timing_buckets.set(step, bucket - 1);
   // move [index+1...event_count-1] to [index...event_count-2]
   memmove(events + index, events + index + 1,
