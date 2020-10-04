@@ -528,13 +528,13 @@ bool SeqExtStepPage::del_note() {
       note_idx_off =
           active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
       if (note_idx_off != 0xFFFF) {
-        auto &ev = active_track.events[ev_idx];
-        auto &ev_j = active_track.events[ev_idx_j];
+        auto &ev = active_track.events[note_idx_on];
+        auto &ev_j = active_track.events[note_idx_off];
         uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
         uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
         if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
-          DEBUG_DUMP("deleteing");
+          DEBUG_DUMP("deleting");
           active_track.remove_event(note_idx_off);
           active_track.remove_event(note_idx_on);
           active_track.note_off(cur_y);
