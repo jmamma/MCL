@@ -57,7 +57,7 @@ public:
   void draw_viewport_minimap();
   uint8_t find_note_off(int8_t note_val, uint8_t step);
 
-  void del_note();
+  bool del_note();
   void add_note();
 
   bool is_within_fov(uint16_t x) {

@@ -503,7 +503,7 @@ void SeqExtStepPage::display() {
 }
 #endif
 
-void SeqExtStepPage::del_note() {
+bool SeqExtStepPage::del_note() {
   DEBUG_PRINTLN("del note");
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
@@ -538,10 +538,12 @@ void SeqExtStepPage::del_note() {
           active_track.remove_event(note_idx_off);
           active_track.remove_event(note_idx_on);
           active_track.note_off(cur_y);
+          return true;
         }
       }
     }
   }
+  return false;
 }
 
 void SeqExtStepPage::add_note() {
@@ -558,8 +560,6 @@ void SeqExtStepPage::add_note() {
     end_step = active_track.length - 1;
     end_utiming = timing_mid * 2 - 1;
   }
-
-  del_note();
 
   bool event_on = false;
   uint16_t ev_idx;
@@ -615,12 +615,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    add_note();
+  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    if (!del_note()) { add_note(); }
     return true;
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    del_note();
+
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     return true;
   }
 
