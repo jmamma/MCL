@@ -556,6 +556,8 @@ void SeqExtStepPage::add_note() {
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
 
+  if (end_step == start_step) { end_step = end_step + 1; end_utiming -= timing_mid; }
+
   if (end_step >= active_track.length) {
     end_step = active_track.length - 1;
     end_utiming = timing_mid * 2 - 1;
