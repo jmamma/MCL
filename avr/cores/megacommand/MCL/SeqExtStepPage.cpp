@@ -493,7 +493,7 @@ void SeqExtStepPage::display() {
       //                            keyboard_w + 1, (fov_h / fov_notes) - 1,
       //                            BLACK);
       oled_display.fillRect(draw_x, draw_y + k * (fov_h / fov_notes), 1,
-                            (fov_h / fov_notes) + 0, WHITE);
+                            (fov_h / fov_notes) + 1, WHITE);
     }
   }
   // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
