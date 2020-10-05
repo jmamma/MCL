@@ -77,28 +77,31 @@ void SeqExtStepPage::cleanup() {
 
 #define MAX_FOV_W 96
 
-uint8_t SeqExtStepPage::find_note_off(int8_t note_val, uint8_t step) {
+uint8_t SeqExtStepPage::search_note_off(int8_t note_val, uint8_t step, uint16_t& ev_idx, uint16_t ev_end) {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-  uint8_t match = 255;
   // Scan for matching note off;
-  uint16_t idx, note_idx;
-  for (uint8_t j = step + 1; j < active_track.length && match == 255; j++) {
-    note_idx = active_track.find_midi_note(j, note_val, idx, false);
-    if (note_idx != 0xFFFF) {
-      match = j;
+  uint8_t j = step;
+  ++ev_idx;
+
+  do {
+    for (; ev_idx != ev_end; ++ev_idx) {
+      auto &ev = active_track.events[ev_idx];
+      if (ev.is_lock || ev.event_value != note_val || ev.event_on) {
+        continue;
+      }
+      return j;
     }
-  }
-  // Wrap around
-  for (uint8_t j = 0; j < step && match == 255; j++) {
-    note_idx = active_track.find_midi_note(j, note_val, idx, false);
-    if (note_idx != 0xFFFF) {
-      match = j;
-    }
-  }
-  if (match == 255) {
-    return step;
-  }
-  return match;
+    ++j;
+    if (j >= active_track.length) {
+      // wrap around
+      j = 0;
+      ev_end = 0;
+    } 
+    ev_idx = ev_end;
+    ev_end += active_track.timing_buckets.get(j);
+  } while (j != step);
+
+  return step;
 }
 
 void SeqExtStepPage::draw_pianoroll() {
@@ -147,7 +150,10 @@ void SeqExtStepPage::draw_pianoroll() {
         min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
   }
 
+  uint16_t ev_idx=0, ev_end=0;
   for (int i = 0; i < active_track.length; i++) {
+    // Update bucket index range
+    ev_end += active_track.timing_buckets.get(i);
     // Draw grid
     if (fov_zoom < 32) {
       uint16_t grid_tick_x = i * timing_mid;
@@ -165,26 +171,18 @@ void SeqExtStepPage::draw_pianoroll() {
       }
     }
 
-    uint16_t ev_idx, ev_end;
-    active_track.locate(i, ev_idx, ev_end);
-
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
-      int note_val = 0;
-      if (ev.event_on) {
-        note_val = ev.event_value;
-      }
-      // Check if note is note_on (positive) and is visible within fov vertical
+      int note_val = ev.event_value;
+      // Check if note is note_on and is visible within fov vertical
       // range.
-      if (note_val < 0)
+      if (ev.is_lock || !ev.event_on) {
         continue;
+      }
 
-      uint16_t ev_idx_j;
-      uint8_t j = find_note_off(note_val, i);
-      bool event_on = false;
-      uint16_t note_idx =
-          active_track.find_midi_note(j, note_val, ev_idx_j, event_on);
-      auto &ev_j = active_track.events[note_idx];
+      uint16_t note_off_idx = ev_idx;
+      uint8_t j = search_note_off(note_val, i, note_off_idx, ev_end);
+      auto &ev_j = active_track.events[note_off_idx];
 
       uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
       uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
@@ -514,16 +512,13 @@ bool SeqExtStepPage::del_note() {
   uint16_t note_start, note_end;
   for (int i = 0; i < active_track.length; i++) {
 
-    bool event_on = true;
-
-    note_idx_on = active_track.find_midi_note(i, cur_y, ev_idx, event_on);
+    note_idx_on = active_track.find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
+    ev_end = ev_idx + active_track.timing_buckets.get(i);
 
     if (note_idx_on != 0xFFFF) {
       note_on_found = true;
-      uint16_t ev_idx_j;
-      uint8_t j = find_note_off(cur_y, i);
-      bool event_on = false;
-      note_idx_off = active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
+      note_idx_off = note_idx_on;
+      uint8_t j = search_note_off(cur_y, i, note_idx_off, ev_end);
       DEBUG_DUMP(i);
       DEBUG_DUMP(j);
       if (note_idx_off != 0xFFFF) {
@@ -540,8 +535,7 @@ bool SeqExtStepPage::del_note() {
         DEBUG_DUMP(cur_x);
         if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
           active_track.remove_event(note_idx_off);
-          event_on = true;
-          note_idx_on = active_track.find_midi_note(i, cur_y, ev_idx, event_on);
+          note_idx_on = active_track.find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
           active_track.remove_event(note_idx_on);
           active_track.note_off(cur_y);
           return true;
@@ -550,8 +544,7 @@ bool SeqExtStepPage::del_note() {
     } else if (note_on_found) {
       continue;
     }
-    event_on = false;
-    note_idx_off = active_track.find_midi_note(i, cur_y, ev_idx, event_on);
+    note_idx_off = active_track.find_midi_note(i, cur_y, ev_idx, /*event_on*/ false);
 
     if (note_idx_off != 0xFFFF) {
       // Remove wrap around notes
@@ -595,10 +588,9 @@ void SeqExtStepPage::add_note() {
     end_utiming = timing_mid * 2 - 1;
   }
 
-  bool event_on = false;
   uint16_t ev_idx;
   uint16_t note_idx =
-      active_track.find_midi_note(end_step, cur_y, ev_idx, event_on);
+      active_track.find_midi_note(end_step, cur_y, ev_idx, /*event_on*/ false);
   if (note_idx != 0xFFFF) {
     DEBUG_DUMP("abort");
     // Note off already on end step, abort

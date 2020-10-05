@@ -76,10 +76,10 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
 }
 
 uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
-                                     uint16_t &idx, bool event_on) {
+                                     uint16_t &start_idx, bool event_on) {
   uint16_t end;
-  locate(step, idx, end);
-  for (uint16_t i = idx; i != end; ++i) {
+  locate(step, start_idx, end);
+  for (uint16_t i = start_idx; i != end; ++i) {
     if (events[i].is_lock || events[i].event_value != note_num ||
         events[i].event_on != event_on) {
       continue;
@@ -90,10 +90,10 @@ uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
 }
 
 uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
-                                     uint16_t &idx) {
+                                     uint16_t &start_idx) {
   uint16_t end;
-  locate(step, idx, end);
-  for (uint16_t i = idx; i != end; ++i) {
+  locate(step, start_idx, end);
+  for (uint16_t i = start_idx; i != end; ++i) {
     if (events[i].is_lock || events[i].event_value != note_num) {
       continue;
     }

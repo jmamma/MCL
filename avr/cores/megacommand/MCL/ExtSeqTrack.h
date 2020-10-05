@@ -131,8 +131,10 @@ public:
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
 
-  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx, bool event_on);
-  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx);
+  // find midi note within the given step.
+  // returns: note index & step start index.
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx, bool event_on);
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx);
 
   void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
     ev_idx = 0;
