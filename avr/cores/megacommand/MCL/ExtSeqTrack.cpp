@@ -60,30 +60,15 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   locate(step, idx, end);
 
   //Insertion sort
-
-  if (e->is_lock) {
-  //Insert in slot 0
-  } else {
-    if (!e->event_on) {
-      //If note off, insert in first position after locks
-      for (; idx != end; idx++) {
-        if (!events[idx].is_lock && !events[idx].event_on) {
-          break;
-        }
-      }
-    }
-    else {
-    //If note on, insert at end
-    idx = end;
-    }
+  while(idx < end && events[idx].micro_timing < e->micro_timing) {
+    ++idx;
   }
 
   timing_buckets.set(step, u + 1);
-  // move [end...event_count-1] to [end+1...event_count]
+  // move [idx...event_count-1] to [idx+1...event_count]
   memmove(events + idx + 1, events + idx,
           sizeof(ext_event_t) * (event_count - idx));
-
-  memcpy(events + idx, e, sizeof(ext_event_t));
+  events[idx] = *e;
 
   ++event_count;
 
