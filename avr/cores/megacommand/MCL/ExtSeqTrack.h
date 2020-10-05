@@ -115,7 +115,7 @@ public:
   void re_sync();
   void handle_event(uint16_t index);
   void remove_event(uint16_t index);
-  uint16_t add_event(uint8_t step);
+  uint16_t add_event(uint8_t step, ext_event_t *e);
 
 
   uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& ev_idx, bool event_on);
