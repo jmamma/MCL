@@ -589,7 +589,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t track = event->source - 128;
 
     if (device == DEVICE_A4) {
-      track -= 16;
+      return true;
     }
 
     if (mask == EVENT_BUTTON_PRESSED) {

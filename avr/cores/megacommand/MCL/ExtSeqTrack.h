@@ -63,6 +63,19 @@ struct ext_event_t {
   uint8_t event_value : 7;
   /// micro timing value
   uint8_t micro_timing;
+
+  bool operator < (const ext_event_t& that) {
+    // order by micro_timing
+    if (this->micro_timing != that.micro_timing) {
+      return this->micro_timing < that.micro_timing;
+    }
+    // off < on
+    if (this->event_on != that.event_on) {
+      return that.event_on;
+    }
+
+    return false;
+  }
 };
 
 class ExtSeqTrackData {

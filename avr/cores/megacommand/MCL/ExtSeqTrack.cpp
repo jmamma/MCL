@@ -60,7 +60,7 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   locate(step, idx, end);
 
   //Insertion sort
-  while(idx < end && events[idx].micro_timing < e->micro_timing) {
+  while(idx < end && events[idx] < *e) {
     ++idx;
   }
 
