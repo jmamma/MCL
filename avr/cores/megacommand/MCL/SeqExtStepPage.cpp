@@ -83,15 +83,15 @@ uint8_t SeqExtStepPage::find_note_off(int8_t note_val, uint8_t step) {
   // Scan for matching note off;
   uint16_t idx, note_idx;
   for (uint8_t j = step + 1; j < active_track.length && match == 255; j++) {
-    note_idx = active_track.find_midi_note(j, note_val, idx);
-    if ((note_idx != 0xFFFF) && (!active_track.events[note_idx].event_on)) {
+    note_idx = active_track.find_midi_note(j, note_val, idx, false);
+    if (note_idx != 0xFFFF) {
       match = j;
     }
   }
   // Wrap around
   for (uint8_t j = 0; j < step && match == 255; j++) {
-    note_idx = active_track.find_midi_note(j, note_val, idx);
-    if ((note_idx != 0xFFFF) && (!active_track.events[note_idx].event_on)) {
+    note_idx = active_track.find_midi_note(j, note_val, idx, false);
+    if (note_idx != 0xFFFF) {
       match = j;
     }
   }
@@ -175,7 +175,8 @@ void SeqExtStepPage::draw_pianoroll() {
         uint16_t ev_idx_j;
         uint8_t j = find_note_off(note_val, i);
         bool event_on = false;
-        uint16_t note_idx = active_track.find_midi_note(j, note_val, ev_idx_j, event_on);
+        uint16_t note_idx =
+            active_track.find_midi_note(j, note_val, ev_idx_j, event_on);
         auto &ev_j = active_track.events[note_idx];
 
         uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
@@ -317,7 +318,6 @@ void SeqExtStepPage::loop() {
     // Horizontal translation
     int16_t diff = seq_param1.cur - seq_param1.old;
 
-    DEBUG_DUMP(diff);
     if (diff < 0) {
       if (cur_x <= fov_offset) {
         fov_offset += diff;
@@ -355,7 +355,6 @@ void SeqExtStepPage::loop() {
     // Vertical translation
     int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
 
-    DEBUG_DUMP(diff);
     if (diff < 0) {
       scroll_dir = false;
       if (cur_y <= fov_y + 1) {
@@ -510,8 +509,9 @@ bool SeqExtStepPage::del_note() {
   uint8_t timing_mid = active_track.get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
 
-  //uint8_t end_step = ((cur_x + cur_w) / timing_mid);
-  //uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+  // uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  // uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step *
+  // timing_mid);
 
   for (int i = 0; i < active_track.length; i++) {
 
@@ -526,8 +526,7 @@ bool SeqExtStepPage::del_note() {
       uint16_t note_idx_off;
       uint8_t j = find_note_off(cur_y, i);
       bool event_on = false;
-      note_idx_off =
-          active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
+      note_idx_off = active_track.find_midi_note(j, cur_y, ev_idx_j, event_on);
       if (note_idx_off != 0xFFFF) {
         auto &ev = active_track.events[note_idx_on];
         auto &ev_j = active_track.events[note_idx_off];
@@ -535,7 +534,6 @@ bool SeqExtStepPage::del_note() {
         uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
         if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
-          DEBUG_DUMP("deleting");
           active_track.remove_event(note_idx_off);
           active_track.remove_event(note_idx_on);
           active_track.note_off(cur_y);
@@ -557,7 +555,10 @@ void SeqExtStepPage::add_note() {
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
 
-  if (end_step == start_step) { end_step = end_step + 1; end_utiming -= timing_mid; }
+  if (end_step == start_step) {
+    end_step = end_step + 1;
+    end_utiming -= timing_mid;
+  }
 
   if (end_step >= active_track.length) {
     end_step = active_track.length - 1;
@@ -569,6 +570,7 @@ void SeqExtStepPage::add_note() {
   uint16_t note_idx =
       active_track.find_midi_note(end_step, cur_y, ev_idx, event_on);
   if (note_idx != 0xFFFF) {
+    DEBUG_DUMP("abort");
     // Note off already on end step, abort
     //
     return;
@@ -611,7 +613,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     } else if (mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_MD) {
         --x_notes_down;
-
       }
       return true;
     }
@@ -619,7 +620,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    if (!del_note()) { add_note(); }
+    if (!del_note()) {
+      add_note();
+    }
     return true;
   }
 
