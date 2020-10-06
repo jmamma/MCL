@@ -130,11 +130,18 @@ public:
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
+  bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
+  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y);
 
   // find midi note within the given step.
   // returns: note index & step start index.
   uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx, bool event_on);
   uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx);
+
+  // search forward, then wrap around
+  // caller pass in note_idx of the note on event, and end index for current bucket.
+  // returns: step index & note index
+  uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx, uint16_t ev_end);
 
   void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
     ev_idx = 0;

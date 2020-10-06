@@ -102,6 +102,140 @@ uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
   return 0xFFFF;
 }
 
+uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
+                                        uint16_t &ev_idx, uint16_t ev_end) {
+  // Scan for matching note off;
+  uint8_t j = step;
+  ++ev_idx;
+
+  do {
+    for (; ev_idx != ev_end; ++ev_idx) {
+      auto &ev = events[ev_idx];
+      if (ev.is_lock || ev.event_value != note_val || ev.event_on) {
+        continue;
+      }
+      return j;
+    }
+    ++j;
+    if (j >= length) {
+      // wrap around
+      j = 0;
+      ev_end = 0;
+    }
+    ev_idx = ev_end;
+    ev_end += timing_buckets.get(j);
+  } while (j != step);
+
+  return step;
+}
+
+
+void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
+  uint8_t timing_mid = get_timing_mid();
+
+  uint8_t start_step = (cur_x / timing_mid);
+  uint8_t start_utiming = timing_mid + cur_x - (start_step * timing_mid);
+
+  uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+
+  if (end_step == start_step) {
+    end_step = end_step + 1;
+    end_utiming -= timing_mid;
+  }
+
+  if (end_step >= length) {
+    end_step = length - 1;
+    end_utiming = timing_mid * 2 - 1;
+  }
+
+  uint16_t ev_idx;
+  uint16_t note_idx =
+      find_midi_note(end_step, cur_y, ev_idx, /*event_on*/ false);
+  if (note_idx != 0xFFFF) {
+    DEBUG_DUMP("abort");
+    // Note off already on end step, abort
+    //
+    return;
+  }
+  set_ext_track_step(start_step, start_utiming, cur_y, true);
+  set_ext_track_step(end_step, end_utiming, cur_y, false);
+}
+
+
+bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
+  DEBUG_PRINTLN("del note");
+  uint8_t timing_mid = get_timing_mid();
+  uint8_t start_step = (cur_x / timing_mid);
+
+  // uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  // uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step *
+  // timing_mid);
+
+  uint16_t note_idx_off, note_idx_on;
+  bool note_on_found = false;
+  uint16_t ev_idx, ev_end;
+  uint16_t note_start, note_end;
+  for (int i = 0; i < length; i++) {
+
+    note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
+    ev_end = ev_idx + timing_buckets.get(i);
+
+    if (note_idx_on != 0xFFFF) {
+      note_on_found = true;
+      note_idx_off = note_idx_on;
+      uint8_t j = search_note_off(cur_y, i, note_idx_off, ev_end);
+      DEBUG_DUMP(i);
+      DEBUG_DUMP(j);
+      if (note_idx_off != 0xFFFF) {
+        auto &ev = events[note_idx_on];
+        auto &ev_j = events[note_idx_off];
+        note_start = i * timing_mid + ev.micro_timing - timing_mid;
+        note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
+        DEBUG_DUMP(note_start);
+        DEBUG_DUMP(note_end);
+        if (note_end < note_start) {
+          note_end += length * timing_mid;
+        }
+        DEBUG_DUMP(note_end);
+        DEBUG_DUMP(cur_x);
+        if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
+          remove_event(note_idx_off);
+          note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
+          remove_event(note_idx_on);
+          note_off(cur_y);
+          return true;
+        }
+      }
+    } else if (note_on_found) {
+      continue;
+    }
+    note_idx_off = find_midi_note(i, cur_y, ev_idx, /*event_on*/ false);
+
+    if (note_idx_off != 0xFFFF) {
+      // Remove wrap around notes
+      auto &ev = events[note_idx_off];
+      uint16_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
+      if (note_end > cur_x) {
+        remove_event(note_idx_off);
+        for (uint8_t j = length - 1; j > i; j--) {
+          note_idx_on = find_midi_note(j, cur_y, ev_idx, true);
+          if (note_idx_on != 0xFFFF) {
+            remove_event(note_idx_on);
+            break;
+          }
+        }
+        note_off(cur_y);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
+
 void ExtSeqTrack::handle_event(uint16_t index) {
   auto &ev = events[index];
   if (ev.is_lock) {
@@ -306,13 +440,16 @@ void ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t utiming,
 
 void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
-  uint8_t timing_mid = get_timing_mid() - 1;
-  uint8_t utiming = (mod12_counter + timing_mid);
+  uint8_t timing_mid = get_timing_mid();
+  uint8_t utiming = (mod12_counter + timing_mid - 1);
 
   uint8_t condition = 0;
 
   uint8_t step = step_count;
   uint16_t ev_idx;
+
+  //del_note(step * timing_mid + utiming - timing_mid, timing_mid);
+
   uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
   if (note_idx != 0xFFFF) {
     if (events[note_idx].event_on) {
@@ -340,15 +477,19 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
 
   add_event(step, &e);
-  
+
   return;
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
 
+  uint8_t timing_mid = get_timing_mid();
+
   uint8_t utiming = (mod12_counter + get_timing_mid() - 1);
   uint8_t condition = 0;
 
+
+  //del_note(step_count * timing_mid + utiming - timing_mid, timing_mid);
   // Let's try and find an existing note
   uint16_t ev_idx;
   uint16_t note_idx = find_midi_note(step_count, note_num, ev_idx);
@@ -356,6 +497,7 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   if (note_idx != 0xFFFF && !events[note_idx].event_on) {
     note_idx = 0xFFFF;
   }
+
 
 
   ext_event_t e;

@@ -55,13 +55,6 @@ public:
   void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
   void draw_pianoroll();
   void draw_viewport_minimap();
-  // search forward, then wrap around
-  // caller pass in note_idx of the note on event, and end index for current bucket.
-  // returns: step index & note index
-  uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx, uint16_t ev_end);
-
-  bool del_note();
-  void add_note();
 
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }
