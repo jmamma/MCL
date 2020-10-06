@@ -114,8 +114,8 @@ void SeqExtStepPage::draw_pianoroll() {
 
   // FOV offsets
 
-  if (seq_param4.cur > 64) {
-    seq_param4.cur = 64;
+  if (seq_param4.cur > 32) {
+    seq_param4.cur = 32;
   }
   if (seq_param4.cur > active_track.length) {
     seq_param4.cur = active_track.length;
@@ -151,11 +151,11 @@ void SeqExtStepPage::draw_pianoroll() {
   }
 
   uint16_t ev_idx=0, ev_end=0;
+  uint8_t h = fov_h / fov_notes;
   for (int i = 0; i < active_track.length; i++) {
     // Update bucket index range
     ev_end += active_track.timing_buckets.get(i);
     // Draw grid
-    if (fov_zoom < 32) {
       uint16_t grid_tick_x = i * timing_mid;
       if (is_within_fov(grid_tick_x)) {
         uint8_t grid_fov_x =
@@ -165,11 +165,17 @@ void SeqExtStepPage::draw_pianoroll() {
           // draw crisscross
           // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel( grid_fov_x,
           // (k * (fov_h / fov_notes)), WHITE); }
-          oled_display.drawPixel(grid_fov_x, draw_y + (k * (fov_h / fov_notes)),
+          oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)),
                                  WHITE);
+
+          if (i % 16 == 0) {
+          oled_display.drawPixel(grid_fov_x, draw_y + (k * h) + (h / 2),
+                                 WHITE);
+
+          }
+
         }
       }
-    }
 
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
