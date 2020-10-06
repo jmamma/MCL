@@ -66,7 +66,6 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   while (idx < end && events[idx] < *e) {
     ++idx;
   }
-
   timing_buckets.set(step, u + 1);
   // move [idx...event_count-1] to [idx+1...event_count]
   memmove(events + idx + 1, events + idx,
@@ -74,7 +73,6 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   events[idx] = *e;
 
   ++event_count;
-
   return idx;
 }
 
@@ -153,12 +151,15 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
       slot = n;
     }
     else if (notes_on[n].value == value) {
-      match = value;
+      match = n;
       break;
     }
   }
   if (match != 255) {
    slot = match;
+  }
+  else {
+   notes_on_count++;
   }
 
   if (slot != 255) {
@@ -168,7 +169,6 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
     DEBUG_DUMP(value);
     notes_on[slot].value = value;
     notes_on[slot].x = x;
-    notes_on_count++;
   }
 
   return;
