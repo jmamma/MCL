@@ -78,6 +78,12 @@ struct ext_event_t {
   }
 };
 
+class NoteVector {
+public:
+  uint16_t x;
+  uint8_t value;
+};
+
 class ExtSeqTrackData {
 public:
   NibbleArray<128> timing_buckets;
@@ -103,6 +109,9 @@ public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
+  static NoteVector notes_on[16];
+  static uint8_t notes_on_count;
+
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask[0] = 0;
@@ -120,7 +129,6 @@ public:
 
   void set_ext_track_step(uint8_t step, uint8_t utiming,
                                      uint8_t note_num, uint8_t event_on);
-
   void clear_ext_conditional();
   void clear_ext_notes();
   void clear_track();
@@ -129,6 +137,10 @@ public:
   void handle_event(uint16_t index);
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step, ext_event_t *e);
+
+  void init_notes_on();
+  void add_notes_on(uint16_t x, uint8_t value);
+  uint8_t find_notes_on(uint8_t value);
 
   bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
   void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y);

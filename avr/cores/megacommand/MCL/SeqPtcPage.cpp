@@ -848,6 +848,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     seq_ptc_page.queue_redraw();
     recording = !recording;
+    mcl_seq.ext_tracks[last_ext_track].init_notes_on();
+
 #ifdef OLED_DISPLAY
     if (recording) {
       oled_display.textbox("RECORDING", "");
