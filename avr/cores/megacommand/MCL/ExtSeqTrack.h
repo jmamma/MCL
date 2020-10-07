@@ -7,10 +7,13 @@
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+#include "CommonTools/NibbleArray.h"
+#include "MCL.h"
 
 #define NUM_EXT_STEPS 128
-#define NUM_EXT_NOTES 4
-#define NUM_EXT_LOCKS 4
+#define NUM_EXT_EVENTS 512
+#define NUM_EXT_LOCKS 8
+#define NUM_NOTES_ON 16 //number of notes that can be recorded simultaneously.
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -30,8 +33,6 @@
 #define NUM_EXT_LOCKS_270 4
 #define NUM_EXT_STEPS_270 128
 
-#define EXTSEQTRACKDATA_VERSION 30
-
 class ExtSeqTrackData_270 {
 public:
   uint8_t length; // Resolution = 2 / ExtPatternResolution
@@ -47,45 +48,70 @@ public:
   uint8_t timing[NUM_EXT_STEPS_270];
 };
 
-class ExtSeqTrackData {
-public:
-  uint8_t version;
-  // 7-bit midi note + 1-bit on/off
-  int8_t notes[NUM_EXT_NOTES]
-              [NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
+/// 24-bit ext track event descriptor
+struct ext_event_t {
+  /// true for lock, false for Midi note
+  bool is_lock : 1;
+  /// effective when is_lock is true
+  uint8_t lock_idx : 3;
+  uint8_t cond_id : 4;
+  /// for Midi note: note on/off
+  /// for plock: lock engage/disengage
+  bool event_on : 1;
+  /// for Midi note: pitch value
+  /// for plock & lock engage: lock value
+  /// for plock & lock disengage: ignored
+  uint8_t event_value : 7;
+  /// micro timing value
+  uint8_t micro_timing;
 
-  // range max [0..191]
-  uint8_t notes_timing[NUM_EXT_NOTES][NUM_EXT_STEPS];
-  // 15 conditional types, 1 bit p-lock affecting
-  uint8_t notes_conditional[NUM_EXT_NOTES][NUM_EXT_STEPS];
-
-  uint8_t locks_params[NUM_EXT_LOCKS];
-  uint64_t locks_masks[NUM_EXT_LOCKS][2]; // 128bit
-
-  // 8-bit lock values
-  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
-
-  void* data() const { return (void*) &version; }
-  bool convert(ExtSeqTrackData_270 *old) {
-    /*ordering of these statements is important to ensure memory
-     * is copied before being overwritten*/
-    version = EXTSEQTRACKDATA_VERSION;
-    memcpy(&notes, old->notes, NUM_EXT_NOTES_270 * NUM_EXT_STEPS_270);
-    for (uint8_t a = 0; a < NUM_EXT_NOTES; a++) {
-      memcpy(&notes_timing[a][0], old->timing, NUM_EXT_STEPS_270);
-      memcpy(&notes_conditional[a][0], old->conditional, NUM_EXT_STEPS_270);
+  bool operator < (const ext_event_t& that) {
+    // order by micro_timing
+    if (this->micro_timing != that.micro_timing) {
+      return this->micro_timing < that.micro_timing;
     }
-    memset(&locks_params, 0, NUM_EXT_LOCKS);
-    memset(&locks_masks, 0, NUM_EXT_LOCKS * 2);
-    return true;
+    // off < on
+    if (this->event_on != that.event_on) {
+      return that.event_on;
+    }
+
+    return false;
   }
 };
+
+class NoteVector {
+public:
+  uint16_t x;
+  uint8_t value;
+};
+
+class ExtSeqTrackData {
+public:
+  NibbleArray<128> timing_buckets;
+  ext_event_t events[NUM_EXT_EVENTS];
+  uint8_t locks_params[NUM_EXT_LOCKS];
+  uint16_t event_count;
+
+  void* data() const { return (void*) &timing_buckets; }
+  bool convert(ExtSeqTrackData_270 *old) {
+    // TODO
+    return false;
+  }
+
+  void clear() {
+    event_count = 0;
+    timing_buckets.clear();
+  }
+};
+
 class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 
 public:
-  uint64_t note_buffer[2] = {
-      0}; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
+
+  NoteVector notes_on[NUM_NOTES_ON];
+  uint8_t notes_on_count;
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
@@ -103,17 +129,49 @@ public:
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 
-  void set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-
+  bool set_ext_track_step(uint8_t &step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on);
   void clear_ext_conditional();
   void clear_ext_notes();
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();
+  void handle_event(uint16_t index);
+  void remove_event(uint16_t index);
+  uint16_t add_event(uint8_t step, ext_event_t *e);
+
+  void init_notes_on();
+  void add_notes_on(uint16_t x, uint8_t value);
+  uint8_t find_notes_on(uint8_t value);
+
+  bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
+  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y);
+
+  // find midi note within the given step.
+  // returns: note index & step start index.
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx, bool event_on);
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx);
+
+  // search forward, then wrap around
+  // caller pass in note_idx of the note on event, and end index for current bucket.
+  // returns: step index & note index
+  uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx, uint16_t ev_end);
+
+  void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
+    ev_idx = 0;
+    ev_end = timing_buckets.get(step);
+    for (uint8_t i = 0; i < step; ++i) {
+      ev_idx += timing_buckets.get(i);
+    }
+
+    ev_end += ev_idx;
+
+  }
 
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
+    init_notes_on();
   }
 
   void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
@@ -161,9 +219,6 @@ public:
     }
     *buf = 0;
   }
-#define DIR_LEFT 0
-#define DIR_RIGHT 1
-#define DIR_REVERSE 2
 
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }

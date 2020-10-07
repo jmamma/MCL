@@ -42,8 +42,7 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 
   // [>analog 4 tracks<]
 #ifdef EXT_TRACKS
-  if (online) {
-    //get_track_from_sysex(tracknumber);
+  if (online && get_track_from_sysex(seq_track->channel)) {
     chain.length = seq_track->length;
     chain.speed = seq_track->speed;
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));

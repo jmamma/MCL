@@ -414,14 +414,13 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port)->id;
+    auto device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
     uint8_t page_select = 0;
     uint8_t step = track + (page_select * 16);
-    uint8_t midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device == DEVICE_A4) {
+      if (device == &Analog4) {
         // GUI.setPage(&seq_extstep_page)
         return true;
       }

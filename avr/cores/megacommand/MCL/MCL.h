@@ -42,6 +42,11 @@
 
 #define MD_KITBUF_POS 63
 
+// Sequencer editing constants
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+#define DIR_REVERSE 2
+
 // Memory layout for SRAM bank 1
 
 extern int8_t curpage;

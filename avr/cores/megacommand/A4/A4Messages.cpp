@@ -79,6 +79,10 @@ bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
   decoder->get(sound);
   decoder->skip(sizeof(a4sound_footer));
   decoder->stop7Bit();
+
+  DEBUG_PRINTLN("A4Sound fromSysex_impl");
+  DEBUG_DUMP(name);
+  DEBUG_DUMP(origPosition);
 }
 
 // caller guarantees: 1. in checksum; 2. not in 7bit enc.
@@ -122,7 +126,6 @@ bool A4Sound::fromSysex(MidiClass *midi) {
 
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;
-  uint16_t offset = a4sound_checksum_startidx;
   if (reclen != a4sound_sysex_len) {
     mcl_gui.draw_textbox("WRONG LEN", "");
     return false;
@@ -155,9 +158,9 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->stop7Bit();
   encoder->begin();
   if (!soundpool) {
-    encoder->pack(a4soundx_prologue);
-  } else {
     encoder->pack(a4sound_prologue);
+  } else {
+    encoder->pack(a4soundx_prologue);
   }
   encoder->pack8(origPosition);
   encoder->startChecksum();

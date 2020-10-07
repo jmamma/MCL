@@ -45,14 +45,16 @@ extern void opt_mask_handler();
 extern void seq_menu_handler();
 extern void step_menu_handler();
 
+class MidiDevice;
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
   static uint8_t page_select;
   static uint8_t page_count;
-  static uint8_t midi_device;
   static uint8_t step_select;
   static uint8_t mask_type;
+  static MidiDevice* midi_device;
 
   static bool show_seq_menu;
   static bool show_step_menu;
@@ -84,7 +86,7 @@ public:
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
-  void select_track(uint8_t device, uint8_t track);
+  void select_track(MidiDevice* device, uint8_t track);
 
   uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);
   uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
@@ -98,7 +100,7 @@ public:
   virtual void init();
   virtual void cleanup();
 
-  static constexpr uint8_t pidx_x0 = 1;
+  static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;

@@ -100,10 +100,6 @@ public:
   void set_length(uint8_t len);
   void re_sync();
 
-  #define DIR_LEFT 0
-  #define DIR_RIGHT 1
-  #define DIR_REVERSE 2
-
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }
   void reverse() { modify_track(DIR_REVERSE); }

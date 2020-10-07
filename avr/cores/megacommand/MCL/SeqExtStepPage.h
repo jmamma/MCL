@@ -29,9 +29,11 @@ public:
   int16_t fov_offset = 0;
   uint16_t fov_length;
 
+  uint8_t x_notes_down = 0;
+
   static constexpr uint8_t draw_y = 2;
   static constexpr uint8_t draw_x = 128 - fov_w;
-  static constexpr uint8_t keyboard_w = 2;
+  static constexpr uint8_t keyboard_w = 3;
 
   float fov_pixels_per_tick;
 
@@ -42,6 +44,8 @@ public:
 
   int16_t roll_length;
 
+  bool scroll_dir;
+
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
@@ -51,7 +55,6 @@ public:
   void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
   void draw_pianoroll();
   void draw_viewport_minimap();
-  uint8_t find_note_off(int8_t note_val, uint8_t step);
 
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }

@@ -34,7 +34,7 @@ void SeqRtrkPage::init() {
   seq_param3.max = 64;
   seq_param4.max = 11;
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
-  midi_device = DEVICE_MD;
+  midi_device = &MD;
   curpage = SEQ_RTRK_PAGE;
   recording = true;
   config();
@@ -111,13 +111,13 @@ bool SeqRtrkPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port)->id;
+    auto device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
     midi_device = device;
     if (BUTTON_DOWN(Buttons.BUTTON2) || BUTTON_DOWN(Buttons.BUTTON3)) { return true; }
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device != DEVICE_MD) { return true; }
+      if (device != &MD) { return true; }
       last_md_track = track;
 
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;

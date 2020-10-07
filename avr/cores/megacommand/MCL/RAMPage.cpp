@@ -213,28 +213,28 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
       trk.set_track_locks_i(n, 0, ln_trk.get_track_lock(n, 0));
       trk.set_track_locks_i(n, 1, ln_trk.get_track_lock(n, 1));
     } else if (RAMPage::slice_modes[page_id] == 0) {
-      trk.set_track_locks_i(n, 0, sample_inc * s + 1);
-      auto val = (sample_inc) * (s + 1) + 1;
-      if (val > 128)
-        val = 128;
+      trk.set_track_locks_i(n, 0, sample_inc * s + 0);
+      auto val = (sample_inc) * (s + 1) + 0;
+      if (val > 127)
+        val = 127;
       trk.set_track_locks_i(n, 1, val);
     } else {
       switch (mode) {
       default: {
         // Reverse
-        trk.set_track_locks_i(n, 1, sample_inc * s + 1);
-        auto val = (sample_inc) * (s + 1) + 1;
-        if (val > 128) {
-          val = 128;
+        trk.set_track_locks_i(n, 1, sample_inc * s + 0);
+        auto val = (sample_inc) * (s + 1) + 0;
+        if (val > 127) {
+          val = 127;
         }
         trk.set_track_locks_i(n, 0, val);
         break;
       }
       case 5: {
-        trk.set_track_locks_i(n, 0, sample_inc * (slices - s) + 1);
-        auto val = (sample_inc) * (slices - s + 1) + 1;
-        if (val > 128) {
-          val = 128;
+        trk.set_track_locks_i(n, 0, sample_inc * (slices - s) + 0);
+        auto val = (sample_inc) * (slices - s + 1) + 0;
+        if (val > 127) {
+          val = 127;
         }
         trk.set_track_locks_i(n, 1, val);
 
@@ -243,10 +243,10 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
       case 6: {
         uint8_t t;
         t = random(0, slices);
-        trk.set_track_locks_i(n, 0, sample_inc * (t) + 1);
-        auto val = (sample_inc) * (t + 1) + 1;
-        if (val > 128) {
-          val = 128;
+        trk.set_track_locks_i(n, 0, sample_inc * (t) + 0);
+        auto val = (sample_inc) * (t + 1) + 0;
+        if (val > 127) {
+          val = 127;
         }
         trk.set_track_locks_i(n, 1, val);
 
@@ -275,17 +275,17 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           }
         }
         if (s % m == 0) {
-          trk.set_track_locks_i(n, 1, sample_inc * s + 1);
-          auto val = (sample_inc) * (s + 1) + 1;
-          if (val > 128) {
-            val = 128;
+          trk.set_track_locks_i(n, 1, sample_inc * s + 0);
+          auto val = (sample_inc) * (s + 1) + 0;
+          if (val > 127) {
+            val = 127;
           }
           trk.set_track_locks_i(n, 0, val);
         } else {
-          trk.set_track_locks_i(n, 0, sample_inc * s + 1);
-          auto val = (sample_inc) * (s + 1) + 1;
-          if (val > 128) {
-            val = 128;
+          trk.set_track_locks_i(n, 0, sample_inc * s + 0);
+          auto val = (sample_inc) * (s + 1) + 0;
+          if (val > 127) {
+            val = 127;
           }
           trk.set_track_locks_i(n, 1, val);
         }
