@@ -127,7 +127,7 @@ public:
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
 
-  void set_ext_track_step(uint8_t step, uint8_t utiming,
+  bool set_ext_track_step(uint8_t step, uint8_t utiming,
                                      uint8_t note_num, uint8_t event_on);
   void clear_ext_conditional();
   void clear_ext_notes();
