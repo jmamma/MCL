@@ -169,6 +169,7 @@ public:
   void buffer_notesoff() {
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
+    init_notes_on();
   }
 
   void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
