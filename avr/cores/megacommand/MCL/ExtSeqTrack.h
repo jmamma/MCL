@@ -13,6 +13,7 @@
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_EVENTS 512
 #define NUM_EXT_LOCKS 8
+#define NUM_NOTES_ON 16 //number of notes that can be recorded simultaneously.
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -109,7 +110,7 @@ public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  static NoteVector notes_on[16];
+  static NoteVector notes_on[NUM_NOTES_ON];
   static uint8_t notes_on_count;
 
   ALWAYS_INLINE() void reset() {

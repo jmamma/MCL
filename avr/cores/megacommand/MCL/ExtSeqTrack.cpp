@@ -129,13 +129,13 @@ uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
 
 void ExtSeqTrack::init_notes_on() {
   notes_on_count = 0;
-  for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     notes_on[n].value = 255;
   }
 }
 
 void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
-  if (notes_on_count >= 16) {
+  if (notes_on_count >= NUM_NOTES_ON) {
     return;
   }
 
@@ -143,7 +143,7 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
   uint8_t match = 255;
   DEBUG_DUMP("adding notes on");
   DEBUG_DUMP(value);
-  for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (notes_on[n].value == 255 && slot == 255) {
       slot = n;
     } else if (notes_on[n].value == value) {
@@ -170,7 +170,7 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
 }
 
 uint8_t ExtSeqTrack::find_notes_on(uint8_t value) {
-  for (uint8_t n = 0; n < 16; n++) {
+  for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (notes_on[n].value == value) {
       return n;
     }
