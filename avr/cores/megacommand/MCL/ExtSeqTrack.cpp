@@ -149,17 +149,15 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
   for (uint8_t n = 0; n < 16; n++) {
     if (notes_on[n].value == 255 && slot == 255) {
       slot = n;
-    }
-    else if (notes_on[n].value == value) {
+    } else if (notes_on[n].value == value) {
       match = n;
       break;
     }
   }
   if (match != 255) {
-   slot = match;
-  }
-  else {
-   notes_on_count++;
+    slot = match;
+  } else {
+    notes_on_count++;
   }
 
   if (slot != 255) {
@@ -210,9 +208,18 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     //
     return;
   }
-  if (set_ext_track_step(start_step, start_utiming, cur_y, true)) {
+  set_ext_track_step(start_step, start_utiming, cur_y, true);
   set_ext_track_step(end_step, end_utiming, cur_y, false);
+  /*
+  if (set_ext_track_step(start_step, start_utiming, cur_y, true)) {
+    if (!set_ext_track_step(end_step, end_utiming, cur_y, false)) {
+      uint16_t note_idx = find_midi_note(start_step, cur_y, ev_idx, true);
+      if (note_idx != 0xFFFF) {
+        remove_event(note_idx);
+      }
+    }
   }
+  */
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
@@ -228,6 +235,8 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   bool note_on_found = false;
   uint16_t ev_idx, ev_end;
   uint16_t note_start, note_end;
+  bool ret = false;
+  again:
   for (int i = 0; i < length; i++) {
 
     note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
@@ -256,7 +265,8 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
           note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
           remove_event(note_idx_on);
           note_off(cur_y);
-          return true;
+          ret = true;
+          goto again;
         }
       }
     } else if (note_on_found) {
@@ -281,12 +291,13 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
           }
         }
         note_off(cur_y);
-        return true;
+        ret = true;
+        goto again;
       }
     }
   }
 
-  return false;
+  return ret;
 }
 
 void ExtSeqTrack::handle_event(uint16_t index) {
@@ -474,7 +485,9 @@ bool ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t utiming,
   uint16_t ev_idx;
   uint16_t note_idx = find_midi_note(step, note_num, ev_idx, event_on);
 
-  if (note_idx != 0xFFFF) { return false; }
+  if (note_idx != 0xFFFF) {
+    return false;
+  }
   ext_event_t e;
 
   e.is_lock = false;
@@ -512,7 +525,9 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint16_t start_x = notes_on[n].x;
   uint16_t end_x = step * timing_mid + utiming - timing_mid;
 
-  if (end_x < start_x) { end_x += length * timing_mid; }
+  if (end_x < start_x) {
+    end_x += length * timing_mid;
+  }
 
   uint16_t w = end_x - start_x;
   DEBUG_DUMP("Del then add");
@@ -564,34 +579,34 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t utiming = (mod12_counter + get_timing_mid());
   uint8_t condition = 0;
 
-  //del_note(step_count * timing_mid + utiming - timing_mid, 0, note_num);
+  // del_note(step_count * timing_mid + utiming - timing_mid, 0, note_num);
   // Let's try and find an existing note
 
   add_notes_on(step_count * timing_mid + utiming - timing_mid, note_num);
 
   return;
- /*
-  uint16_t ev_idx;
-  uint16_t note_idx = find_midi_note(step_count, note_num, ev_idx);
+  /*
+   uint16_t ev_idx;
+   uint16_t note_idx = find_midi_note(step_count, note_num, ev_idx);
 
-  if (note_idx != 0xFFFF && !events[note_idx].event_on) {
-    note_idx = 0xFFFF;
-  }
+   if (note_idx != 0xFFFF && !events[note_idx].event_on) {
+     note_idx = 0xFFFF;
+   }
 
-  ext_event_t e;
+   ext_event_t e;
 
-  e.is_lock = false;
-  e.cond_id = 0;
-  e.event_value = note_num;
-  e.event_on = true;
-  e.micro_timing = utiming;
+   e.is_lock = false;
+   e.cond_id = 0;
+   e.event_value = note_num;
+   e.event_on = true;
+   e.micro_timing = utiming;
 
-  if (note_idx == 0xFFFF) {
-    add_event(step_count, &e);
-  } else {
-    memcpy(events + note_idx, &e, sizeof(ext_event_t));
-  }
- */
+   if (note_idx == 0xFFFF) {
+     add_event(step_count, &e);
+   } else {
+     memcpy(events + note_idx, &e, sizeof(ext_event_t));
+   }
+  */
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
