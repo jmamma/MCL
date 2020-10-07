@@ -1,8 +1,5 @@
 #include "MCL_impl.h"
 
-NoteVector ExtSeqTrack::notes_on[16];
-uint8_t ExtSeqTrack::notes_on_count = 0;
-
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
@@ -208,8 +205,10 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     //
     return;
   }
+
   set_ext_track_step(start_step, start_utiming, cur_y, true);
   set_ext_track_step(end_step, end_utiming, cur_y, false);
+
   /*
   if (set_ext_track_step(start_step, start_utiming, cur_y, true)) {
     if (!set_ext_track_step(end_step, end_utiming, cur_y, false)) {
@@ -236,7 +235,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   uint16_t ev_idx, ev_end;
   uint16_t note_start, note_end;
   bool ret = false;
-  again:
+again:
   for (int i = 0; i < length; i++) {
 
     note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
@@ -477,7 +476,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   }
 }
 
-bool ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t utiming,
+bool ExtSeqTrack::set_ext_track_step(uint8_t &step, uint8_t utiming,
                                      uint8_t note_num, uint8_t event_on) {
   // Look for matching note already on this step
   // If it's a note off, then disable the note
@@ -486,7 +485,18 @@ bool ExtSeqTrack::set_ext_track_step(uint8_t step, uint8_t utiming,
   uint16_t note_idx = find_midi_note(step, note_num, ev_idx, event_on);
 
   if (note_idx != 0xFFFF) {
-    return false;
+    // if current step already has this note, then we'll use the next step
+    // over
+    step = step + 1;
+    if (step > length) {
+      step = 0;
+    }
+    uint8_t timing_mid = get_timing_mid();
+    utiming = (timing_mid - mod12_counter);
+    note_idx = find_midi_note(step, note_num, ev_idx, event_on);
+    if (note_idx != 0xFFFF) {
+      return false;
+    }
   }
   ext_event_t e;
 
@@ -541,35 +551,6 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   notes_on_count--;
 
   return;
-  /*
-  uint16_t note_idx = find_midi_note(step, note_num, ev_idx);
-  if (note_idx != 0xFFFF) {
-    if (events[note_idx].event_on) {
-      // if current step already has this note, then we'll use the next step
-      // over
-      step = step + 1;
-      if (step > length) {
-        step = 0;
-      }
-      utiming = (timing_mid - mod12_counter);
-    } else {
-      // note off event already on this step
-      return;
-    }
-  }
-
-  ext_event_t e;
-
-  e.is_lock = false;
-  e.cond_id = condition;
-  e.event_value = note_num;
-  e.event_on = false;
-  e.micro_timing = utiming;
-
-  add_event(step, &e);
-
-  return;
-  */
 }
 
 void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
@@ -585,28 +566,6 @@ void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
   add_notes_on(step_count * timing_mid + utiming - timing_mid, note_num);
 
   return;
-  /*
-   uint16_t ev_idx;
-   uint16_t note_idx = find_midi_note(step_count, note_num, ev_idx);
-
-   if (note_idx != 0xFFFF && !events[note_idx].event_on) {
-     note_idx = 0xFFFF;
-   }
-
-   ext_event_t e;
-
-   e.is_lock = false;
-   e.cond_id = 0;
-   e.event_value = note_num;
-   e.event_on = true;
-   e.micro_timing = utiming;
-
-   if (note_idx == 0xFFFF) {
-     add_event(step_count, &e);
-   } else {
-     memcpy(events + note_idx, &e, sizeof(ext_event_t));
-   }
-  */
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
