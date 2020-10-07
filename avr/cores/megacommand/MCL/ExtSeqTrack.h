@@ -110,8 +110,8 @@ public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  static NoteVector notes_on[NUM_NOTES_ON];
-  static uint8_t notes_on_count;
+  NoteVector notes_on[NUM_NOTES_ON];
+  uint8_t notes_on_count;
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
