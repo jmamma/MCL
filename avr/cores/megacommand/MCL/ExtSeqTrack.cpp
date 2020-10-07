@@ -141,8 +141,10 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
 
   uint8_t slot = 255;
   uint8_t match = 255;
+  /*
   DEBUG_DUMP("adding notes on");
   DEBUG_DUMP(value);
+  */
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (notes_on[n].value == 255 && slot == 255) {
       slot = n;
@@ -158,10 +160,12 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
   }
 
   if (slot != 255) {
+    /*
     DEBUG_DUMP("adding notes on");
     DEBUG_DUMP(slot);
     DEBUG_DUMP(x);
     DEBUG_DUMP(value);
+    */
     notes_on[slot].value = value;
     notes_on[slot].x = x;
   }
@@ -222,7 +226,6 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
-  DEBUG_PRINTLN("del note");
   uint8_t timing_mid = get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
 
@@ -245,20 +248,14 @@ again:
       note_on_found = true;
       note_idx_off = note_idx_on;
       uint8_t j = search_note_off(cur_y, i, note_idx_off, ev_end);
-      DEBUG_DUMP(i);
-      DEBUG_DUMP(j);
       if (note_idx_off != 0xFFFF) {
         auto &ev = events[note_idx_on];
         auto &ev_j = events[note_idx_off];
         note_start = i * timing_mid + ev.micro_timing - timing_mid;
         note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
-        DEBUG_DUMP(note_start);
-        DEBUG_DUMP(note_end);
         if (note_end < note_start) {
           note_end += length * timing_mid;
         }
-        DEBUG_DUMP(note_end);
-        DEBUG_DUMP(cur_x);
         if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
           remove_event(note_idx_off);
           note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
@@ -275,12 +272,9 @@ again:
 
     if (note_idx_off != 0xFFFF) {
       // Remove wrap around notes
-      DEBUG_DUMP("remove wrap");
       auto &ev = events[note_idx_off];
       uint16_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
       if (note_end > cur_x) {
-        DEBUG_DUMP(i);
-        DEBUG_DUMP(length - 1);
         remove_event(note_idx_off);
         for (uint8_t j = length - 1; j > i; j--) {
           note_idx_on = find_midi_note(j, cur_y, ev_idx, true);
@@ -527,8 +521,6 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   // del_note(step * timing_mid + utiming - timing_mid, 0, note_num);
 
   uint8_t n = find_notes_on(note_num);
-  DEBUG_DUMP("finding");
-  DEBUG_DUMP(n);
   if (n == 255)
     return;
 
@@ -540,9 +532,6 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   }
 
   uint16_t w = end_x - start_x;
-  DEBUG_DUMP("Del then add");
-  DEBUG_DUMP(start_x);
-  DEBUG_DUMP(step_count);
 
   del_note(start_x, w, note_num);
   add_note(start_x, w, note_num);
