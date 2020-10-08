@@ -157,7 +157,7 @@ void SeqExtStepPage::draw_pianoroll() {
 
       uint16_t note_off_idx = ev_idx;
       uint8_t j = active_track.search_note_off(note_val, i, note_off_idx, ev_end);
-      if (note_off_idx == 0xFFFF) { continue; }
+      if (note_off_idx == 0xFFFF) { note_off_idx = ev_idx; }
       auto &ev_j = active_track.events[note_off_idx];
 
       uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
