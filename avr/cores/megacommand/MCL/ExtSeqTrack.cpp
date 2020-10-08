@@ -124,6 +124,7 @@ uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
     ev_end += timing_buckets.get(j);
   } while (j != step);
 
+  ev_idx = 0xFFFF;
   return step;
 }
 
@@ -183,6 +184,10 @@ uint8_t ExtSeqTrack::find_notes_on(uint8_t value) {
 }
 
 void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
+    DEBUG_DUMP("Add_note");
+  DEBUG_DUMP(cur_x);
+  DEBUG_DUMP(cur_w);
+
   uint8_t timing_mid = get_timing_mid();
 
   uint8_t start_step = (cur_x / timing_mid);
@@ -193,6 +198,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 
   if (end_step == start_step) {
     end_step = end_step + 1;
+//    end_utiming = 2 * timing_mid - end_utiming;
     end_utiming -= timing_mid;
   }
 
@@ -200,8 +206,19 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     end_step = end_step - length;
   }
 
+  DEBUG_DUMP(start_step);
+  DEBUG_DUMP(end_step);
+
   uint16_t ev_idx;
   uint16_t note_idx =
+      find_midi_note(start_step, cur_y, ev_idx, /*event_on*/ true);
+  if (note_idx != 0xFFFF) {
+  DEBUG_DUMP("abort note on");
+  return;
+  }
+
+  ev_idx = 0;
+  note_idx =
       find_midi_note(end_step, cur_y, ev_idx, /*event_on*/ false);
   if (note_idx != 0xFFFF) {
     DEBUG_DUMP("abort");
@@ -209,6 +226,10 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     //
     return;
   }
+
+  DEBUG_DUMP("Adding note");
+  DEBUG_DUMP(start_step);
+  DEBUG_DUMP(end_step);
 
   set_ext_track_step(start_step, start_utiming, cur_y, true);
   set_ext_track_step(end_step, end_utiming, cur_y, false);
@@ -226,6 +247,9 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
+  DEBUG_DUMP("del_note");
+  DEBUG_DUMP(cur_x);
+  DEBUG_DUMP(cur_w);
   uint8_t timing_mid = get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
 
@@ -238,9 +262,10 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   uint16_t ev_idx, ev_end;
   uint16_t note_start, note_end;
   bool ret = false;
-again:
+
   for (int i = 0; i < length; i++) {
 
+    again:
     note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
     ev_end = ev_idx + timing_buckets.get(i);
 
@@ -257,6 +282,9 @@ again:
           note_end += length * timing_mid;
         }
         if ((note_start <= cur_x + cur_w) && (note_end > cur_x)) {
+          DEBUG_DUMP("del note");
+          DEBUG_DUMP(i);
+          DEBUG_DUMP(j);
           remove_event(note_idx_off);
           note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
           remove_event(note_idx_on);
@@ -265,20 +293,25 @@ again:
           goto again;
         }
       }
-    } else if (note_on_found) {
+    }
+    if (note_on_found) {
       continue;
     }
     note_idx_off = find_midi_note(i, cur_y, ev_idx, /*event_on*/ false);
 
     if (note_idx_off != 0xFFFF) {
+      DEBUG_DUMP("Wrap");
       // Remove wrap around notes
       auto &ev = events[note_idx_off];
       uint16_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
       if (note_end > cur_x) {
+        DEBUG_DUMP("deleting wrap");
+        DEBUG_DUMP(i);
         remove_event(note_idx_off);
         for (uint8_t j = length - 1; j > i; j--) {
           note_idx_on = find_midi_note(j, cur_y, ev_idx, true);
           if (note_idx_on != 0xFFFF) {
+            DEBUG_DUMP(j);
             remove_event(note_idx_on);
             break;
           }
@@ -370,8 +403,6 @@ void ExtSeqTrack::seq() {
 
 void ExtSeqTrack::note_on(uint8_t note) {
   uart->sendNoteOn(channel, note, 100);
-  DEBUG_PRINTLN(F("note on"));
-  DEBUG_DUMP(note);
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
     SET_BIT64(note_buffer[1], note - 64);
@@ -528,7 +559,8 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
   uint16_t end_x = step * timing_mid + utiming - timing_mid;
 
   if (end_x < start_x) {
-    end_x += length * timing_mid;
+    del_note(0, end_x, note_num);
+    end_x += length * mod12_counter;
   }
 
   uint16_t w = end_x - start_x;
