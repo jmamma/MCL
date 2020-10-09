@@ -501,8 +501,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
+    trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+
     if (mask == EVENT_BUTTON_PRESSED) {
-      if (device == DEVICE_MD) {
         ++x_notes_down;
         if (x_notes_down == 1) {
           cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
@@ -516,14 +517,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             cur_w = cur_w_min;
           }
         }
-      }
     } else if (mask == EVENT_BUTTON_RELEASED) {
-      if (device == DEVICE_MD) {
         --x_notes_down;
         if (x_notes_down == 0) {
           enter_notes();
         }
-      }
       return true;
     }
     return true;

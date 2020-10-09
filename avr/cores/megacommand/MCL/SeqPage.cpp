@@ -722,6 +722,7 @@ void opt_length_handler() {
   mcl_seq.md_tracks[last_md_track].set_length(opt_length);
   }
   else {
+  mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   mcl_seq.ext_tracks[last_ext_track].set_length(opt_length);
   }
 }
@@ -731,6 +732,7 @@ void opt_channel_handler() {
   mcl_seq.md_tracks[last_md_track].channel = opt_channel - 1;
   }
   else {
+  mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
   mcl_seq.ext_tracks[last_ext_track].channel = opt_channel - 1;
   }
 }

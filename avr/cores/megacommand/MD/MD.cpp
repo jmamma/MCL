@@ -191,6 +191,7 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(250);
   }
 
+  MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
   if (ts) {
     md_track_select.on();
   }
