@@ -1,6 +1,8 @@
 #include "MCL_impl.h"
 
-void SeqExtStepPage::setup() { SeqPage::setup(); }
+void SeqExtStepPage::setup() {
+  SeqPage::setup();
+}
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
 //  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
@@ -25,7 +27,6 @@ void SeqExtStepPage::config() {
 
   // use continuous page index display
   display_page_index = false;
-  x_notes_down = 0;
 }
 
 void SeqExtStepPage::config_encoders() {
@@ -65,6 +66,7 @@ void SeqExtStepPage::init() {
   curpage = SEQ_EXTSTEP_PAGE;
   trig_interface.on();
   note_interface.state = true;
+  x_notes_down = 0;
   config_encoders();
   midi_events.setup_callbacks();
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
@@ -156,8 +158,11 @@ void SeqExtStepPage::draw_pianoroll() {
       }
 
       uint16_t note_off_idx = ev_idx;
-      uint8_t j = active_track.search_note_off(note_val, i, note_off_idx, ev_end);
-      if (note_off_idx == 0xFFFF) { note_off_idx = ev_idx; }
+      uint8_t j =
+          active_track.search_note_off(note_val, i, note_off_idx, ev_end);
+      if (note_off_idx == 0xFFFF) {
+        note_off_idx = ev_idx;
+      }
       auto &ev_j = active_track.events[note_off_idx];
 
       uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
@@ -472,6 +477,17 @@ void SeqExtStepPage::display() {
 }
 #endif
 
+void SeqExtStepPage::enter_notes() {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
+    if (active_track.notes_on[n].value == 255)
+      continue;
+    if (!active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value)) {
+      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value);
+    }
+  }
+}
+
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
 #ifdef EXT_TRACKS
@@ -486,9 +502,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
 
     if (mask == EVENT_BUTTON_PRESSED) {
-      DEBUG_PRINTLN(track);
       if (device == DEVICE_MD) {
-
         ++x_notes_down;
         if (x_notes_down == 1) {
           cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
@@ -506,6 +520,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     } else if (mask == EVENT_BUTTON_RELEASED) {
       if (device == DEVICE_MD) {
         --x_notes_down;
+        if (x_notes_down == 0) {
+          enter_notes();
+        }
       }
       return true;
     }
@@ -514,8 +531,14 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-    if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-      active_track.add_note(cur_x, cur_w, cur_y);
+
+    if (active_track.notes_on_count > 1) {
+      enter_notes();
+    } else {
+
+      if (!active_track.del_note(cur_x, cur_w, cur_y)) {
+        active_track.add_note(cur_x, cur_w, cur_y);
+      }
     }
     return true;
   }
@@ -561,6 +584,10 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_extstep_page.cur_y = cur_y;
     seq_extstep_page.cur_w = cur_w;
 
+    mcl_seq.ext_tracks[channel].record_ext_track_noteon(msg[1], msg[2]);
+    if (seq_extstep_page.x_notes_down > 0) {
+      seq_extstep_page.enter_notes();
+    }
     if (MidiClock.state != 2) {
       mcl_seq.ext_tracks[channel].note_on(msg[1]);
     }
@@ -579,6 +606,8 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  mcl_seq.ext_tracks[channel].remove_notes_on(msg[1]);
+
   if (channel < mcl_seq.num_ext_tracks && MidiClock.state != 2) {
     mcl_seq.ext_tracks[channel].note_off(msg[1]);
   }

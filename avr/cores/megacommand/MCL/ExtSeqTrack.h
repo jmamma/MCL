@@ -142,6 +142,7 @@ public:
   void init_notes_on();
   void add_notes_on(uint16_t x, uint8_t value);
   uint8_t find_notes_on(uint8_t value);
+  void remove_notes_on(uint8_t value);
 
   bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
   void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y);
@@ -168,9 +169,9 @@ public:
   }
 
   void buffer_notesoff() {
+    init_notes_on();
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
-    init_notes_on();
   }
 
   void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
