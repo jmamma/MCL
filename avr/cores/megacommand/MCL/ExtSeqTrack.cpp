@@ -16,7 +16,7 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
 
 void ExtSeqTrack::set_length(uint8_t len) {
   length = len;
-  if (step_count >= length) {
+  while (step_count >= length) {
     step_count = length % step_count;
   }
   DEBUG_DUMP(step_count);

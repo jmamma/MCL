@@ -1,9 +1,8 @@
 #include "MCL_impl.h"
 
-    void
-    MDSeqTrack::set_length(uint8_t len) {
+void MDSeqTrack::set_length(uint8_t len) {
   length = len;
-  if (step_count >= length) {
+  while (step_count >= length) {
     // re_sync();
     step_count = (step_count % length);
   }
@@ -704,6 +703,7 @@ void MDSeqTrack::clear_conditional() {
 void MDSeqTrack::clear_locks(bool reset_params) {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
+  DEBUG_DUMP("Clear these locks");
   uint8_t locks_params_buf[NUM_MD_LOCKS];
   for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     locks_params_buf[c] = locks_params[c];
@@ -724,6 +724,7 @@ void MDSeqTrack::clear_locks(bool reset_params) {
 void MDSeqTrack::clear_track(bool locks, bool reset_params) {
   clear_conditional();
   if (locks) {
+    DEBUG_DUMP("clear locks");
     clear_locks(reset_params);
   }
   memset(steps, 0, sizeof(steps));
@@ -757,7 +758,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
     pslide = (uint8_t *)&pattern->slidePatterns[track_number];
   }
 
-   // 32770.0 is scalar to get MD swing amount in to readible percentage
+  // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
   float swing = (float)pattern->swingAmount / 16385.0;
