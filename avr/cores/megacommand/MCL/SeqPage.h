@@ -25,6 +25,8 @@ extern uint8_t opt_clear;
 extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
+extern uint8_t opt_length;
+extern uint8_t opt_channel;
 
 extern uint16_t trigled_mask;
 
@@ -41,6 +43,8 @@ extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
 extern void opt_clear_step_locks_handler();
 extern void opt_mask_handler();
+extern void opt_length_handler();
+extern void opt_channel_handler();
 
 extern void seq_menu_handler();
 extern void step_menu_handler();

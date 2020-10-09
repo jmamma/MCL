@@ -22,6 +22,8 @@ uint8_t opt_clear = 0;
 uint8_t opt_shift = 0;
 uint8_t opt_reverse = 0;
 uint8_t opt_clear_step = 0;
+uint8_t opt_length = 0;
+uint8_t opt_channel = 0;
 
 uint16_t trigled_mask = 0;
 
@@ -55,6 +57,8 @@ void SeqPage::init() {
   oled_display.clearDisplay();
 #endif
   toggle_device = true;
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
@@ -229,10 +233,14 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (opt_midi_device_capture == &MD) {
         opt_trackid = last_md_track + 1;
         opt_speed = mcl_seq.md_tracks[last_md_track].speed;
+        opt_length = mcl_seq.md_tracks[last_md_track].length;
+        opt_channel = mcl_seq.md_tracks[last_md_track].channel + 1;
       } else {
 #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
+        opt_length = mcl_seq.ext_tracks[last_ext_track].length;
+        opt_channel = mcl_seq.ext_tracks[last_ext_track].channel + 1;
 #endif
       }
 
@@ -707,6 +715,24 @@ void pattern_len_handler(EncoderParent *enc) {
     }
   }
 #endif
+}
+
+void opt_length_handler() {
+  if (opt_midi_device_capture == &MD) {
+  mcl_seq.md_tracks[last_md_track].set_length(opt_length);
+  }
+  else {
+  mcl_seq.ext_tracks[last_ext_track].set_length(opt_length);
+  }
+}
+
+void opt_channel_handler() {
+  if (opt_midi_device_capture == &MD) {
+  mcl_seq.md_tracks[last_md_track].channel = opt_channel - 1;
+  }
+  else {
+  mcl_seq.ext_tracks[last_ext_track].channel = opt_channel - 1;
+  }
 }
 
 void opt_mask_handler() { seq_step_page.config_mask_info(); }

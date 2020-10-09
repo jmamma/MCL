@@ -60,7 +60,7 @@ public:
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }
     return false;
   }
-
+  void enter_notes();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void loop();

@@ -1,8 +1,6 @@
 #include "MCL_impl.h"
 
-void SeqExtStepPage::setup() {
-  SeqPage::setup();
-}
+void SeqExtStepPage::setup() { SeqPage::setup(); }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
 //  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
@@ -70,6 +68,8 @@ void SeqExtStepPage::init() {
   config_encoders();
   midi_events.setup_callbacks();
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
 }
 
 void SeqExtStepPage::cleanup() {
