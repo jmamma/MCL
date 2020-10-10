@@ -15,8 +15,6 @@ MCLEncoder ptc_param_scale(0, 23, ENCODER_RES_SEQ);
 
 SeqParamPage seq_param_page[NUM_PARAM_PAGES];
 SeqStepPage seq_step_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
-SeqRtrkPage seq_rtrk_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
-SeqRlckPage seq_rlck_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
 
 #ifdef EXT_TRACKS
 uint8_t last_ext_track;

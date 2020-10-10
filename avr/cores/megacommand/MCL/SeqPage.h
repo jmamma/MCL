@@ -6,11 +6,12 @@
 #include "GUI.h"
 #include "midi-common.h"
 
-class SeqPageMidiEvents : public MidiCallback {
+class SeqPageMidiEvents : public MidiCallback, ClockCallback {
 public:
   void setup_callbacks();
   void remove_callbacks();
   virtual void onControlChangeCallback_Midi(uint8_t *msg);
+  void onMidiStartCallback();
 };
 
 
@@ -64,7 +65,11 @@ public:
   static bool show_step_menu;
   static bool toggle_device;
 
-  bool recording = false;
+  static uint8_t last_midi_state;
+  static uint16_t deferred_timer;
+  const uint8_t render_defer_time = 50;
+
+  static bool recording;
   bool display_page_index = true;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };
@@ -96,6 +101,8 @@ public:
   uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
 
   uint64_t *get_mask();
+
+  void queue_redraw() { deferred_timer = slowclock; }
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

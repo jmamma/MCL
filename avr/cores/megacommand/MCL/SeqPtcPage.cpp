@@ -43,7 +43,6 @@ void SeqPtcPage::setup() {
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
   // trig_interface.off();
-  recording = false;
   if (MidiClock.state != 2) {
     MD.setTrackParam(focus_track, 0, MD.kit.params[focus_track][0]);
   }
@@ -89,7 +88,6 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
   ptc_param_len.handler = ptc_pattern_len_handler;
-  recording = false;
   note_mask = 0;
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
@@ -197,23 +195,6 @@ void SeqPtcPage::loop() {
     render_arp();
   }
 #endif
-
-  if (ptc_param_oct.hasChanged() || ptc_param_finetune.hasChanged() ||
-      ptc_param_len.hasChanged() || ptc_param_scale.hasChanged()) {
-    queue_redraw();
-  }
-
-  if (last_midi_state != MidiClock.state) {
-    last_midi_state = MidiClock.state;
-    redisplay = true;
-  }
-
-  if (deferred_timer != 0 &&
-      clock_diff(deferred_timer, slowclock) > render_defer_time) {
-    deferred_timer = 0;
-    redisplay = true;
-  }
-
   SeqPage::loop();
 }
 
@@ -448,8 +429,6 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
 }
-
-void SeqPtcPage::queue_redraw() { deferred_timer = slowclock; }
 
 void SeqPtcPage::setup_arp() {
   if (arp_enabled) {
@@ -844,15 +823,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       GUI.pushPage(&poly_page);
       return true;
     }
-    seq_ptc_page.queue_redraw();
-    recording = !recording;
+    queue_redraw();
     mcl_seq.ext_tracks[last_ext_track].init_notes_on();
 
-#ifdef OLED_DISPLAY
+    recording = !recording;
     if (recording) {
       oled_display.textbox("RECORDING", "");
     }
-#endif
     return true;
   }
   /*
