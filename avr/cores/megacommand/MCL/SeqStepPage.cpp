@@ -254,22 +254,24 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           translate_to_knob_conditional(active_track.steps[step].cond_id,
                                         active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
-      uint8_t note_num = 255;
-
-      tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
-      if (tuning) {
-        for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
-          uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
-          if (ccStored >= pitch) {
-            note_num = i;
+      if (pitch != active_track.locks_params_orig[0]) {
+        uint8_t note_num = 255;
+        tuning_t const *tuning =
+            MD.getModelTuning(MD.kit.models[last_md_track]);
+        if (tuning) {
+          for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
+            uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
+            if (ccStored >= pitch) {
+              note_num = i;
+            }
           }
+          if (note_num == 255) {
+            seq_param4.cur = 0;
+          } else {
+            seq_param4.cur = note_num;
+          }
+          seq_param4.old = seq_param4.cur;
         }
-        if (note_num == 255) {
-          seq_param4.cur = 0;
-        } else {
-          seq_param4.cur = note_num;
-        }
-        seq_param4.old = seq_param4.cur;
       }
       // Micro
       //      if (note_interface.notes_count_on() <= 1) {
@@ -338,9 +340,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       oled_display.textbox("CLEAR ", "LOCK");
       active_track.clear_param_locks(last_param_id);
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
-      oled_display.textbox("CLEAR ", "LOCKS");
-       for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-        if (active_track.locks_params[c] > 0) {
+        oled_display.textbox("CLEAR ", "LOCKS");
+        for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+          if (active_track.locks_params[c] > 0) {
             active_track.clear_param_locks(active_track.locks_params[c] - 1);
           }
         }
