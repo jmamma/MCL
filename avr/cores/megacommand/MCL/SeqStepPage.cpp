@@ -337,13 +337,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case REC_EVENT_CC:
       oled_display.textbox("CLEAR ", "LOCK");
       active_track.clear_param_locks(last_param_id);
-      for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      oled_display.textbox("CLEAR ", "LOCKS");
+       for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
         if (active_track.locks_params[c] > 0) {
-          if (BUTTON_DOWN(Buttons.BUTTON3)) {
-            oled_display.textbox("CLEAR ", "LOCKS");
             active_track.clear_param_locks(active_track.locks_params[c] - 1);
           }
-          last_param_id = active_track.locks_params[c] - 1;
         }
       }
       break;
