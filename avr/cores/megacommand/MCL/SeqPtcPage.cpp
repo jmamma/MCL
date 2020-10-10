@@ -430,13 +430,11 @@ void SeqPtcPage::trig_md(uint8_t note_num) {
 }
 
 void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
-  note_num = ptc_param_oct.cur * 12 + note_num;
   CLEAR_BIT64(note_mask, note_num);
   render_arp();
 }
 
 void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
-  note_num = (ptc_param_oct.cur * 12 + note_num);
   uint8_t next_track = get_next_voice(note_num);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
@@ -958,6 +956,8 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
 
+  pitch += ptc_param_oct.cur * 12;
+
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     if (GUI.currentPage() == &seq_ptc_page) {
@@ -992,7 +992,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
   DEBUG_PRINTLN(F("Sending note"));
   DEBUG_DUMP(pitch);
-  pitch += ptc_param_oct.cur * 12;
   MidiUart2.sendNoteOn(channel, pitch, msg[2]);
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
@@ -1025,6 +1024,8 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t pitch = seq_ptc_page.calc_scale_note(note + oct * 12);
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
+  pitch += ptc_param_oct.cur * 12;
+
   if (arp_und.cur != ARP_LATCH) {
     CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   }
@@ -1044,7 +1045,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   }
   last_ext_track = channel;
   seq_ptc_page.config_encoders();
-  pitch += ptc_param_oct.cur * 12;
   MidiUart2.sendNoteOff(channel, pitch, msg[2]);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
