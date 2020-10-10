@@ -516,9 +516,10 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   auto idx = get_lockidx(step, lock_idx);
   if (idx < NUM_MD_LOCK_SLOTS && steps[step].locks_enabled) {
     return locks[idx];
-  } else {
-    return locks_params_orig[lock_idx];
   }
+  /*else {
+    return locks_params_orig[lock_idx];
+  }*/
   return 255;
 }
 
