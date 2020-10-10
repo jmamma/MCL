@@ -6,7 +6,7 @@
 #include "GUI.h"
 #include "midi-common.h"
 
-class SeqPageMidiEvents : public MidiCallback, ClockCallback {
+class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   void setup_callbacks();
   void remove_callbacks();

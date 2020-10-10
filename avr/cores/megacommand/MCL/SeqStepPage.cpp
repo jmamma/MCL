@@ -2,6 +2,8 @@
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
+#define REC_EVENT_TRIG 0
+#define REC_EVENT_CC 1
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
@@ -59,6 +61,7 @@ void SeqStepPage::init() {
   trig_interface.on();
   config();
   note_interface.state = true;
+  last_rec_event = 255;
 }
 
 void SeqStepPage::cleanup() {
@@ -70,8 +73,10 @@ void SeqStepPage::cleanup() {
 }
 
 void SeqStepPage::display() {
-  if (recording && MidiClock.state == 2 && !redisplay) {
-    return;
+  if (recording && MidiClock.state == 2) {
+    if (!redisplay) {
+      return;
+    }
   }
 
   oled_display.clearDisplay();
@@ -184,6 +189,15 @@ void SeqStepPage::loop() {
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
+  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
+      SeqPage::handleEvent(event)) {
+    if (show_seq_menu) {
+      redisplay = true;
+      return true;
+    }
+    return true;
+  }
+
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
   if (note_interface.is_event(event)) {
@@ -199,12 +213,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        last_md_track = track;
 
         config_encoders();
         MD.triggerTrack(track, 127);
+        last_rec_event = REC_EVENT_TRIG;
+        // Don't allow display_refresh if last_md_track != MD.currentTrack
+        MD.currentTrack = track;
+        last_md_track = MD.currentTrack;
+
         if (MidiClock.state == 2)
-          mcl_seq.md_tracks[last_md_track].record_track(127);
+          mcl_seq.md_tracks[track].record_track(127);
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
         return true;
       }
@@ -303,28 +321,41 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   } // end TI events
 
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    //    if (note_interface.notes_all_off() || (note_interface.notes_count() ==
-    //    0)) {
-    //      GUI.setPage(&grid_page);
-    //    }
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    switch (last_rec_event) {
+    case REC_EVENT_TRIG:
+      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+        oled_display.textbox("CLEAR ", "TRACKS");
+        for (uint8_t n = 0; n < 16; ++n) {
+          mcl_seq.md_tracks[n].clear_track();
+        }
+      } else {
+        oled_display.textbox("CLEAR ", "TRACK");
+        active_track.clear_track();
+      }
+      break;
+    case REC_EVENT_CC:
+      oled_display.textbox("CLEAR ", "LOCK");
+      active_track.clear_param_locks(last_param_id);
+      for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+        if (active_track.locks_params[c] > 0) {
+          if (BUTTON_DOWN(Buttons.BUTTON3)) {
+            oled_display.textbox("CLEAR ", "LOCKS");
+            active_track.clear_param_locks(active_track.locks_params[c] - 1);
+          }
+          last_param_id = active_track.locks_params[c] - 1;
+        }
+      }
+      break;
+    }
+    queue_redraw();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
+    oled_display.textbox("REC", "");
     queue_redraw();
-    if (recording) {
-      oled_display.textbox("REC", "");
-    }
-    return true;
-  }
-
-  if (SeqPage::handleEvent(event)) {
-    if (show_seq_menu) {
-      redisplay = true;
-      return true;
-    }
     return true;
   }
 
@@ -360,14 +391,16 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param > 23) {
     return;
   }
-
   if (SeqPage::recording) {
     // Record CC
+    seq_step_page.last_rec_event = REC_EVENT_CC;
     if (MidiClock.state != 2) {
       return;
     }
 
+    seq_step_page.last_param_id = track_param;
     last_md_track = track;
+    last_md_track = MD.currentTrack;
     // ignore level
     if (track_param > 31) {
       return;
