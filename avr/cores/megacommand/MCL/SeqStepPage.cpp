@@ -319,35 +319,36 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   } // end TI events
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    switch (last_rec_event) {
-    case REC_EVENT_TRIG:
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        oled_display.textbox("CLEAR ", "TRACKS");
-        for (uint8_t n = 0; n < 16; ++n) {
-          mcl_seq.md_tracks[n].clear_track();
+  if (recording) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+      switch (last_rec_event) {
+      case REC_EVENT_TRIG:
+        if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          oled_display.textbox("CLEAR ", "TRACKS");
+          for (uint8_t n = 0; n < 16; ++n) {
+            mcl_seq.md_tracks[n].clear_track();
+          }
+        } else {
+          oled_display.textbox("CLEAR ", "TRACK");
+          active_track.clear_track();
         }
-      } else {
-        oled_display.textbox("CLEAR ", "TRACK");
-        active_track.clear_track();
-      }
-      break;
-    case REC_EVENT_CC:
-      oled_display.textbox("CLEAR ", "LOCK");
-      active_track.clear_param_locks(last_param_id);
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        oled_display.textbox("CLEAR ", "LOCKS");
-        for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-          if (active_track.locks_params[c] > 0) {
-            active_track.clear_param_locks(active_track.locks_params[c] - 1);
+        break;
+      case REC_EVENT_CC:
+        oled_display.textbox("CLEAR ", "LOCK");
+        active_track.clear_param_locks(last_param_id);
+        if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          oled_display.textbox("CLEAR ", "LOCKS");
+          for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+            if (active_track.locks_params[c] > 0) {
+              active_track.clear_param_locks(active_track.locks_params[c] - 1);
+            }
           }
         }
+        break;
       }
-      break;
+      queue_redraw();
+      return true;
     }
-    queue_redraw();
-    return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
