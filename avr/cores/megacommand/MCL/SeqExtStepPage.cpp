@@ -61,7 +61,7 @@ void SeqExtStepPage::config_encoders() {
 void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
-  curpage = SEQ_EXTSTEP_PAGE;
+  SeqPage::init();
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
@@ -387,6 +387,11 @@ void SeqExtStepPage::loop() {
 }
 
 void SeqExtStepPage::display() {
+  if (recording && MidiClock.state == 2) {
+    if (!redisplay) {
+      return;
+    }
+  }
 
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
@@ -491,6 +496,7 @@ void SeqExtStepPage::enter_notes() {
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
 #ifdef EXT_TRACKS
+
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -527,21 +533,45 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+    if (!recording) {
+      if (active_track.notes_on_count > 1) {
+        enter_notes();
+      } else {
 
-    if (active_track.notes_on_count > 1) {
-      enter_notes();
-    } else {
-
-      if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-        active_track.add_note(cur_x, cur_w, cur_y);
+        if (!active_track.del_note(cur_x, cur_w, cur_y)) {
+          active_track.add_note(cur_x, cur_w, cur_y);
+        }
       }
+      return true;
     }
+  } else {
+    switch (last_rec_event) {
+    case REC_EVENT_TRIG:
+      if (BUTTON_DOWN(Buttons.BUTTON3)) {
+        oled_display.textbox("CLEAR ", "TRACKS");
+        for (uint8_t n = 0; n < NUM_EXT_TRACKS; ++n) {
+          mcl_seq.ext_tracks[n].clear_track();
+        }
+      } else {
+        oled_display.textbox("CLEAR ", "TRACK");
+        active_track.clear_track();
+      }
+      break;
+    case REC_EVENT_CC:
+      // TODO
+      // oled_display.textbox("CLEAR ", "LOCK");
+      break;
+    }
+    queue_redraw();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    recording = !recording;
+    oled_display.textbox("REC", "");
+    queue_redraw();
     return true;
   }
 
@@ -587,17 +617,10 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (seq_extstep_page.x_notes_down > 0) {
       seq_extstep_page.enter_notes();
     }
-    if (MidiClock.state != 2) {
+    if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
+      seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
       mcl_seq.ext_tracks[channel].note_on(cur_y);
     }
-    /*
-        for (uint8_t i = 0; i < 16; i++) {
-          if (note_interface.notes[i] == 1) {
-            mcl_seq.ext_tracks[channel].set_ext_track_step(
-                seq_extstep_page.page_select * 16 + i, msg[1], msg[2]);
-          }
-        }
-    */
   }
 #endif
 }
@@ -610,9 +633,14 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   if (channel < mcl_seq.num_ext_tracks) {
 
-    mcl_seq.ext_tracks[channel].remove_notes_on(pitch);
     if (MidiClock.state != 2) {
       mcl_seq.ext_tracks[channel].note_off(pitch);
+    }
+    if ((seq_extstep_page.recording) && (MidiClock.state == 2)) {
+      mcl_seq.ext_tracks[channel].note_off(pitch);
+      mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
+    } else {
+      mcl_seq.ext_tracks[channel].remove_notes_on(pitch);
     }
   }
 #endif

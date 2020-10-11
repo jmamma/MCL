@@ -4,7 +4,8 @@ uint8_t SeqPage::page_select = 0;
 
 MidiDevice *SeqPage::midi_device = &MD;
 
-
+uint8_t SeqPage::last_param_id = 0;
+uint8_t SeqPage::last_rec_event = 0;
 
 uint8_t SeqPage::page_count = 4;
 
@@ -75,6 +76,7 @@ void SeqPage::init() {
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   }
+  last_rec_event = 255;
 }
 
 void SeqPage::cleanup() {

@@ -2,8 +2,6 @@
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
-#define REC_EVENT_TRIG 0
-#define REC_EVENT_CC 1
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
@@ -61,7 +59,6 @@ void SeqStepPage::init() {
   trig_interface.on();
   config();
   note_interface.state = true;
-  last_rec_event = 255;
 }
 
 void SeqStepPage::cleanup() {

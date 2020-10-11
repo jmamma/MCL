@@ -6,6 +6,9 @@
 #include "GUI.h"
 #include "midi-common.h"
 
+#define REC_EVENT_TRIG 0
+#define REC_EVENT_CC 1
+
 class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   void setup_callbacks();
@@ -67,6 +70,9 @@ public:
 
   static uint8_t last_midi_state;
   static uint16_t deferred_timer;
+  static uint8_t last_param_id;
+  static uint8_t last_rec_event;
+
   const uint8_t render_defer_time = 50;
 
   static bool recording;
