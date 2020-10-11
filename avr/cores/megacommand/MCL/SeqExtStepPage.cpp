@@ -545,27 +545,27 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
       }
       return true;
-    }
-  } else {
-    switch (last_rec_event) {
-    case REC_EVENT_TRIG:
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        oled_display.textbox("CLEAR ", "TRACKS");
-        for (uint8_t n = 0; n < NUM_EXT_TRACKS; ++n) {
-          mcl_seq.ext_tracks[n].clear_track();
+    } else {
+      switch (last_rec_event) {
+      case REC_EVENT_TRIG:
+        if (BUTTON_DOWN(Buttons.BUTTON3)) {
+          oled_display.textbox("CLEAR ", "TRACKS");
+          for (uint8_t n = 0; n < NUM_EXT_TRACKS; ++n) {
+            mcl_seq.ext_tracks[n].clear_track();
+          }
+        } else {
+          oled_display.textbox("CLEAR ", "TRACK");
+          active_track.clear_track();
         }
-      } else {
-        oled_display.textbox("CLEAR ", "TRACK");
-        active_track.clear_track();
+        break;
+      case REC_EVENT_CC:
+        // TODO
+        // oled_display.textbox("CLEAR ", "LOCK");
+        break;
       }
-      break;
-    case REC_EVENT_CC:
-      // TODO
-      // oled_display.textbox("CLEAR ", "LOCK");
-      break;
+      queue_redraw();
+      return true;
     }
-    queue_redraw();
-    return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
