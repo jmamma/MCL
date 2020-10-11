@@ -28,10 +28,9 @@
 #define SEQ_MENU_PASTE 7
 #define SEQ_MENU_SPEED 8
 #define SEQ_MENU_LENGTH 9
-#define SEQ_MENU_SPEED 10
-#define SEQ_MENU_CHANNEL 11
-#define SEQ_MENU_SHIFT 12
-#define SEQ_MENU_REVERSE 13
+#define SEQ_MENU_CHANNEL 10
+#define SEQ_MENU_SHIFT 11
+#define SEQ_MENU_REVERSE 12
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
