@@ -504,24 +504,24 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
     if (mask == EVENT_BUTTON_PRESSED) {
-        ++x_notes_down;
-        if (x_notes_down == 1) {
-          cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
-          note_interface.last_note = track;
-        } else {
-          cur_w = fov_offset + (float)(fov_length / 16) * (float)track - cur_x;
-          if (cur_w < 0) {
-            cur_x += cur_w;
-            cur_w = -cur_w;
-          } else if (cur_w < cur_w_min) {
-            cur_w = cur_w_min;
-          }
+      ++x_notes_down;
+      if (x_notes_down == 1) {
+        cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
+        note_interface.last_note = track;
+      } else {
+        cur_w = fov_offset + (float)(fov_length / 16) * (float)track - cur_x;
+        if (cur_w < 0) {
+          cur_x += cur_w;
+          cur_w = -cur_w;
+        } else if (cur_w < cur_w_min) {
+          cur_w = cur_w_min;
         }
+      }
     } else if (mask == EVENT_BUTTON_RELEASED) {
-        --x_notes_down;
-        if (x_notes_down == 0) {
-          enter_notes();
-        }
+      --x_notes_down;
+      if (x_notes_down == 0) {
+        enter_notes();
+      }
       return true;
     }
     return true;
@@ -556,6 +556,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // selected For selected steps record notes.
 #ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t note_num = msg[1];
   DEBUG_PRINT(F("note on midi2 ext, "));
   DEBUG_DUMP(channel);
 
@@ -564,7 +565,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     auto fov_offset = seq_extstep_page.fov_offset;
     auto cur_x = seq_extstep_page.cur_x;
     auto fov_y = seq_extstep_page.fov_y;
-    auto cur_y = msg[1];
+    auto cur_y = seq_ptc_page.seq_ext_pitch(note_num);
     auto cur_w = seq_extstep_page.cur_w;
 
     if (fov_y >= cur_y && cur_y != 0) {
@@ -582,12 +583,12 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_extstep_page.cur_y = cur_y;
     seq_extstep_page.cur_w = cur_w;
 
-    mcl_seq.ext_tracks[channel].record_ext_track_noteon(msg[1], msg[2]);
+    mcl_seq.ext_tracks[channel].record_ext_track_noteon(cur_y, msg[2]);
     if (seq_extstep_page.x_notes_down > 0) {
       seq_extstep_page.enter_notes();
     }
     if (MidiClock.state != 2) {
-      mcl_seq.ext_tracks[channel].note_on(msg[1]);
+      mcl_seq.ext_tracks[channel].note_on(cur_y);
     }
     /*
         for (uint8_t i = 0; i < 16; i++) {
@@ -604,10 +605,15 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  mcl_seq.ext_tracks[channel].remove_notes_on(msg[1]);
+  uint8_t note_num = msg[1];
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
 
-  if (channel < mcl_seq.num_ext_tracks && MidiClock.state != 2) {
-    mcl_seq.ext_tracks[channel].note_off(msg[1]);
+  if (channel < mcl_seq.num_ext_tracks) {
+
+    mcl_seq.ext_tracks[channel].remove_notes_on(pitch);
+    if (MidiClock.state != 2) {
+      mcl_seq.ext_tracks[channel].note_off(pitch);
+    }
   }
 #endif
 }
