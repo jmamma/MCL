@@ -877,27 +877,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
-  uint8_t note_orig = note_num;
-  uint8_t pitch;
-
-  uint8_t root_note = (note_num / 12) * 12;
-  uint8_t pos = note_num - root_note;
-  uint8_t oct = note_num / 12;
-  // if (pos >= scales[seq_param5.cur]->size) {
-  oct += pos / scales[ptc_param_scale.cur]->size;
-  pos = pos - scales[ptc_param_scale.cur]->size *
-                  (pos / scales[ptc_param_scale.cur]->size);
-  // }
-
-  //  if (seq_param5.getValue() > 0) {
-  pitch = ptc_param_oct.cur * 12 + scales[ptc_param_scale.cur]->pitches[pos] +
-          oct * 12;
-  //   }
-
-  return pitch;
-}
-
 #define NOTE_C2 48
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -921,14 +900,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   // pitch - MIDI_NOTE_C4
   //
-  uint8_t note = note_num - (note_num / 12) * 12;
-  uint8_t oct = 0;
-  if (note_num >= NOTE_C2) {
-    oct = (note_num / 12) - (NOTE_C2 / 12);
-  } else {
+    uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  if (pitch == 255)
     return;
-  }
-  uint8_t pitch = seq_ptc_page.calc_scale_note(note + oct * 12);
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
@@ -977,6 +951,17 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 #endif
 }
 
+uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
+  uint8_t note = note_num - (note_num / 12) * 12;
+  uint8_t oct = 0;
+  if (note_num >= NOTE_C2) {
+    oct = (note_num / 12) - (NOTE_C2 / 12);
+  } else {
+    return 255;
+  }
+  return calc_scale_note(note + oct * 12);
+}
+
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if ((GUI.currentPage() == &seq_step_page) ||
 #ifdef EXT_TRACKS
@@ -991,14 +976,9 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
-  uint8_t note = note_num - (note_num / 12) * 12;
-  uint8_t oct = 0;
-  if (note_num >= NOTE_C2) {
-    oct = (note_num / 12) - (NOTE_C2 / 12);
-  } else {
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  if (pitch == 255)
     return;
-  }
-  uint8_t pitch = seq_ptc_page.calc_scale_note(note + oct * 12);
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
   pitch += ptc_param_oct.cur * 12;
