@@ -494,7 +494,14 @@ void SeqExtStepPage::enter_notes() {
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
-
+  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
+      SeqPage::handleEvent(event)) {
+    if (show_seq_menu) {
+      redisplay = true;
+      return true;
+    }
+    return true;
+  }
 #ifdef EXT_TRACKS
 
   if (note_interface.is_event(event)) {
@@ -576,8 +583,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
 #endif
-
-  return SeqPage::handleEvent(event);
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
