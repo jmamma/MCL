@@ -113,6 +113,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track) {
     last_ext_track = min(track, 3); // XXX
   }
 #endif
+  DEBUG_DUMP("wtf");
   GUI.currentPage()->redisplay = true;
   GUI.currentPage()->config();
 }
@@ -1110,16 +1111,19 @@ void SeqPage::loop() {
   if (deferred_timer != 0 &&
       clock_diff(deferred_timer, slowclock) > render_defer_time) {
     deferred_timer = 0;
+    DEBUG_DUMP("redisplay");
     redisplay = true;
   }
 
  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
       encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
+    DEBUG_DUMP("queue redraw");
     queue_redraw();
   }
 
   if (last_midi_state != MidiClock.state) {
     last_midi_state = MidiClock.state;
+    DEBUG_DUMP("hii")
     redisplay = true;
   }
 
