@@ -161,10 +161,6 @@ void ExtSeqTrack::add_notes_on(uint16_t x, uint8_t value) {
       return;
     notes_on_count++;
   }
-  DEBUG_DUMP("adding notes_on");
-  DEBUG_DUMP(slot);
-  DEBUG_DUMP(x);
-  DEBUG_DUMP(value);
   notes_on[slot].value = value;
   notes_on[slot].x = x;
 
@@ -512,7 +508,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num, uint8_t velocity) {
 
   if (end_x < start_x) {
     del_note(0, end_x, note_num);
-    end_x += length * mod12_counter;
+    end_x += length * timing_mid;
   }
 
   uint16_t w = end_x - start_x;
