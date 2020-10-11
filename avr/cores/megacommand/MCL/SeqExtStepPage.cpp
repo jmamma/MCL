@@ -494,14 +494,6 @@ void SeqExtStepPage::enter_notes() {
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
-  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
-      SeqPage::handleEvent(event)) {
-    if (show_seq_menu) {
-      redisplay = true;
-      return true;
-    }
-    return true;
-  }
 #ifdef EXT_TRACKS
 
   if (note_interface.is_event(event)) {
@@ -579,6 +571,15 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     recording = !recording;
     oled_display.textbox("REC", "");
     queue_redraw();
+    return true;
+  }
+
+  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
+      SeqPage::handleEvent(event)) {
+    if (show_seq_menu) {
+      redisplay = true;
+      return true;
+    }
     return true;
   }
 
