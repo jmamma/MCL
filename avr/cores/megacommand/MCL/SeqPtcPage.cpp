@@ -959,7 +959,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   } else {
     return 255;
   }
-  return calc_scale_note(note + (oct + 1) * 12);
+  return calc_scale_note(note + oct * 12) + 12;
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
