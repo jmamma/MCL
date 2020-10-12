@@ -62,18 +62,21 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(a4sound_t)> sza4t;
 
+//__SIZE_PROBE<sizeof(MNMClass)> sz_mnm_class;
+//__SIZE_PROBE<sizeof(MDClass)> sz_md_class;
+//__SIZE_PROBE<sizeof(A4Class)> sz_a4_class;
+
+//__SIZE_PROBE<sizeof(DeviceTrack)> szdevicetrk;
 //__SIZE_PROBE<sizeof(A4Track)> sza4;
-//__SIZE_PROBE<sizeof(MDTrack)> szmd;
-//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)>
-//szmd_2;
 //__SIZE_PROBE<sizeof(EmptyTrack)> szempty;
+//__SIZE_PROBE<sizeof(ExtTrack)> szext;
+//__SIZE_PROBE<sizeof(MDTrack)> szmd;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmd_2;
 //__SIZE_PROBE<FX_TRACK_LEN> szfx;
 //__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;
 
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
+//__SIZE_PROBE<BANK1_AUX_TRACKS_START> addr_aux;
 //__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
+//__SIZE_PROBE<BANK1_FILE_ENTRIES_START> addr_file_start;
 //__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;
-
-//__SIZE_PROBE<sizeof(MNMClass)> sz_mnm_class;
-//__SIZE_PROBE<sizeof(MDClass)> sz_md_class;
-//__SIZE_PROBE<sizeof(A4Class)> sz_a4_class;
