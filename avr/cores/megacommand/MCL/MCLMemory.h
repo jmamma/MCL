@@ -40,7 +40,7 @@ constexpr size_t NUM_LFO_TRACKS = 2;
 constexpr size_t NUM_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 constexpr size_t NUM_FILE_ENTRIES = 256;
 
-// as of commit after 2e9a5cc08cd4401fc84cb1c977c3c92a11466196
+// as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
 // MDTrack 534
 // A4Track 1957
