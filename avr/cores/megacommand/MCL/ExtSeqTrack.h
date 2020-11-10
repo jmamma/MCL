@@ -83,6 +83,7 @@ class NoteVector {
 public:
   uint16_t x;
   uint8_t value;
+  uint8_t velocity;
 };
 
 class ExtSeqTrackData {
@@ -91,7 +92,6 @@ public:
   ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_EXT_LOCKS];
   uint16_t event_count;
-
   void* data() const { return (void*) &timing_buckets; }
   bool convert(ExtSeqTrackData_270 *old) {
     // TODO
@@ -109,7 +109,12 @@ class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
-
+  /*
+  uint8_t locks_params_orig[NUM_MD_LOCKS];
+  SlideData locks_slide_data[NUM_MD_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_MD_LOCKS];
+  uint8_t locks_slide_next_lock_step[NUM_MD_LOCKS];
+  */
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
 
@@ -125,8 +130,15 @@ public:
   ALWAYS_INLINE() void note_off(uint8_t note);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
 
+  uint8_t find_lock_idx(uint8_t param_id);
+
+  bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
+                                 uint8_t value);
+
+  bool set_ext_track_velocity(uint8_t &step, uint8_t utiming, uint8_t velocity);
+
   void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
-  void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
+  void record_ext_track_noteoff(uint8_t note_num);
 
   bool set_ext_track_step(uint8_t &step, uint8_t utiming,
                                      uint8_t note_num, uint8_t event_on);
@@ -140,7 +152,7 @@ public:
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
   void init_notes_on();
-  void add_notes_on(uint16_t x, uint8_t value);
+  void add_notes_on(uint16_t x, uint8_t value, uint8_t velocity);
   uint8_t find_notes_on(uint8_t value);
   void remove_notes_on(uint8_t value);
 
