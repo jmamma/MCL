@@ -945,7 +945,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_DUMP(pitch);
   mcl_seq.ext_tracks[channel].note_on(pitch, msg[2]);
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[channel].record_ext_track_noteon(pitch, msg[2]);
+    mcl_seq.ext_tracks[channel].record_track_noteon(pitch, msg[2]);
   }
   seq_ptc_page.queue_redraw();
 #endif
@@ -1004,7 +1004,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   seq_ptc_page.config_encoders();
   mcl_seq.ext_tracks[channel].note_off(pitch);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
+    mcl_seq.ext_tracks[channel].record_track_noteoff(pitch);
   }
   seq_ptc_page.queue_redraw();
 #endif

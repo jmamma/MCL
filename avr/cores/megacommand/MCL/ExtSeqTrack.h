@@ -92,6 +92,8 @@ public:
   ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_EXT_LOCKS];
   uint16_t event_count;
+  uint8_t velocities[128];
+  uint8_t locks_params_orig[NUM_EXT_LOCKS];
   void* data() const { return (void*) &timing_buckets; }
   bool convert(ExtSeqTrackData_270 *old) {
     // TODO
@@ -110,10 +112,9 @@ public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
   /*
-  uint8_t locks_params_orig[NUM_MD_LOCKS];
-  SlideData locks_slide_data[NUM_MD_LOCKS];
-  uint8_t locks_slide_next_lock_val[NUM_MD_LOCKS];
-  uint8_t locks_slide_next_lock_step[NUM_MD_LOCKS];
+  SlideData locks_slide_data[NUM_EXT_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_EXT_LOCKS];
+  uint8_t locks_slide_next_lock_step[NUM_EXT_LOCKS];
   */
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
@@ -127,27 +128,25 @@ public:
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100);
-  ALWAYS_INLINE() void note_off(uint8_t note);
-  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
+  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
 
   uint8_t find_lock_idx(uint8_t param_id);
 
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
                                  uint8_t value);
 
-  bool set_ext_track_velocity(uint8_t &step, uint8_t utiming, uint8_t velocity);
+  void record_track_noteon(uint8_t note_num, uint8_t velocity);
+  void record_track_noteoff(uint8_t note_num);
 
-  void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
-  void record_ext_track_noteoff(uint8_t note_num);
-
-  bool set_ext_track_step(uint8_t &step, uint8_t utiming,
-                                     uint8_t note_num, uint8_t event_on);
+  bool set_track_step(uint8_t &step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on, uint8_t velocity);
   void clear_ext_conditional();
   void clear_ext_notes();
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();
-  void handle_event(uint16_t index);
+  void handle_event(uint16_t index, uint8_t step);
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
@@ -157,7 +156,7 @@ public:
   void remove_notes_on(uint8_t value);
 
   bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
-  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y);
+  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity);
 
   // find midi note within the given step.
   // returns: note index & step start index.

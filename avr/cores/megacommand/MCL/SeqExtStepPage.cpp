@@ -488,7 +488,7 @@ void SeqExtStepPage::enter_notes() {
     if (active_track.notes_on[n].value == 255)
       continue;
     if (!active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value)) {
-      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value);
+      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value, velocity);
     }
   }
 }
@@ -540,7 +540,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       } else {
 
         if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-          active_track.add_note(cur_x, cur_w, cur_y);
+          active_track.add_note(cur_x, cur_w, cur_y, velocity);
         }
       }
       return true;
@@ -619,7 +619,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_extstep_page.cur_y = cur_y;
     seq_extstep_page.cur_w = cur_w;
 
-    mcl_seq.ext_tracks[channel].record_ext_track_noteon(cur_y, msg[2]);
+    mcl_seq.ext_tracks[channel].record_track_noteon(cur_y, msg[2]);
     if (seq_extstep_page.x_notes_down > 0) {
       seq_extstep_page.enter_notes();
     }
@@ -644,7 +644,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     }
     if ((seq_extstep_page.recording) && (MidiClock.state == 2)) {
       mcl_seq.ext_tracks[channel].note_off(pitch);
-      mcl_seq.ext_tracks[channel].record_ext_track_noteoff(pitch, msg[2]);
+      mcl_seq.ext_tracks[channel].record_track_noteoff(pitch);
     } else {
       mcl_seq.ext_tracks[channel].remove_notes_on(pitch);
     }

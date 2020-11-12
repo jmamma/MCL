@@ -223,9 +223,8 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_
     return;
   }
 
-  set_ext_track_velocity(start_step, start_utiming, cur_y, velocity);
-  set_ext_track_step(start_step, start_utiming, cur_y, true);
-  set_ext_track_step(end_step, end_utiming, cur_y, false);
+  set_track_step(start_step, start_utiming, cur_y, true, velocity);
+  set_track_step(end_step, end_utiming, cur_y, false, 255);
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
@@ -302,7 +301,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   return ret;
 }
 
-void ExtSeqTrack::handle_event(uint16_t index) {
+void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
     // plock
@@ -314,9 +313,9 @@ void ExtSeqTrack::handle_event(uint16_t index) {
   } else {
     // midi note
     if (ev.event_on) {
-      noteon_conditional(ev.cond_id, ev.event_value);
+      noteon_conditional(ev.cond_id, ev.event_value, velocities[step]);
     } else {
-      note_off(ev.event_value);
+      note_off(ev.event_value, 0);
     }
   }
 }
@@ -347,7 +346,7 @@ void ExtSeqTrack::seq() {
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u >= timing_mid && u - timing_mid == mod12_counter) {
-        handle_event(ev_idx);
+        handle_event(ev_idx, step_count);
       }
     }
 
@@ -365,7 +364,7 @@ void ExtSeqTrack::seq() {
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
-        handle_event(ev_idx);
+        handle_event(ev_idx, next_step);
       }
     }
   }
@@ -387,8 +386,8 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity) {
   }
 }
 
-void ExtSeqTrack::note_off(uint8_t note) {
-  uart->sendNoteOff(channel, note, 0);
+void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity) {
+  uart->sendNoteOff(channel, note, velocity);
 
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
@@ -398,7 +397,7 @@ void ExtSeqTrack::note_off(uint8_t note) {
   }
 }
 
-void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
+void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity) {
   if (condition > 64) {
     condition -= 64;
   }
@@ -407,78 +406,78 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note) {
   case 0:
   case 1:
     if (!IS_BIT_SET128(oneshot_mask, step_count)) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 3:
     if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 6:
     if (iterations_6 == 6) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 4:
     if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 8:
     if (iterations_8 == 8) {
-      note_on(note);
+      note_on(note, velocity);
     }
   case 5:
     if (iterations_5 == 5) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 7:
     if (iterations_7 == 7) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 9:
     if (get_random_byte() <= 13) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 10:
     if (get_random_byte() <= 32) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 11:
     if (get_random_byte() <= 64) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 12:
     if (get_random_byte() <= 96) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 13:
     if (get_random_byte() <= 115) {
-      note_on(note);
+      note_on(note, velocity);
     }
     break;
   case 14:
     if (!IS_BIT_SET128(oneshot_mask, step_count)) {
       SET_BIT128(oneshot_mask, step_count);
-      note_on(note);
+      note_on(note, velocity);
     }
   }
 }
 
 
-uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) const {
+uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
     param_id += 1;
     if (!param_id)
       return 255;
@@ -510,25 +509,20 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_p
 
   e.is_lock = true;
   e.cond_id = 0;
-  e.lock_idx = c;
+  e.lock_idx = match;
   e.event_value = value;
   e.event_on = true;
   e.micro_timing = utiming;
 
-  add_event(step, &e);
-
-    return ret;
-  } else {
-    return false;
+  if (add_event(step, &e) == 0xFFFF) { return false; }
+  return true;
   }
+  return false;
 }
 
-bool ExtSeqTrack::set_ext_track_velocity(uint8_t &step, uint8_t utiming, uint8_t velocity) {
-   set_track_locks(step, utiming, PARAM_VEL, velocity);
-}
 
-bool ExtSeqTrack::set_ext_track_step(uint8_t &step, uint8_t utiming,
-                                     uint8_t note_num, uint8_t event_on) {
+bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on, uint8_t velocity) {
   ext_event_t e;
 
   e.is_lock = false;
@@ -537,11 +531,12 @@ bool ExtSeqTrack::set_ext_track_step(uint8_t &step, uint8_t utiming,
   e.event_on = event_on;
   e.micro_timing = utiming;
 
-  add_event(step, &e);
+  if (add_event(step, &e) == 0xFFFF) { return false; }
+  if (velocity < 0x80) { velocities[step] = velocity; }
   return true;
 }
 
-void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num) {
+void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   uint8_t timing_mid = get_timing_mid();
   uint8_t utiming = (mod12_counter + timing_mid);
@@ -574,7 +569,7 @@ void ExtSeqTrack::record_ext_track_noteoff(uint8_t note_num) {
   return;
 }
 
-void ExtSeqTrack::record_ext_track_noteon(uint8_t note_num, uint8_t velocity) {
+void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 
   uint8_t timing_mid = get_timing_mid();
 
