@@ -22,15 +22,16 @@
 #define SEQ_MENU_TRACK 1
 #define SEQ_MENU_ARP 2
 #define SEQ_MENU_TRANSPOSE 3
-#define SEQ_MENU_COPY 4
-#define SEQ_MENU_CLEAR_TRACK 5
-#define SEQ_MENU_CLEAR_LOCKS 6
-#define SEQ_MENU_PASTE 7
-#define SEQ_MENU_SPEED 8
-#define SEQ_MENU_LENGTH 9
-#define SEQ_MENU_CHANNEL 10
-#define SEQ_MENU_SHIFT 11
-#define SEQ_MENU_REVERSE 12
+#define SEQ_MENU_VEL 4
+#define SEQ_MENU_COPY 5
+#define SEQ_MENU_CLEAR_TRACK 6
+#define SEQ_MENU_CLEAR_LOCKS 7
+#define SEQ_MENU_PASTE 8
+#define SEQ_MENU_SPEED 9
+#define SEQ_MENU_LENGTH 10
+#define SEQ_MENU_CHANNEL 11
+#define SEQ_MENU_SHIFT 12
+#define SEQ_MENU_REVERSE 13
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
@@ -66,7 +67,7 @@ extern ArpPage arp_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<13> seq_menu_page;
+extern MenuPage<14> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
 extern MCLEncoder step_menu_entry_encoder;

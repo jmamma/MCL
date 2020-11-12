@@ -70,6 +70,7 @@ void SeqExtStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
 }
 
 void SeqExtStepPage::cleanup() {

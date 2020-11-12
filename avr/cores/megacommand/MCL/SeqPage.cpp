@@ -10,6 +10,7 @@ uint8_t SeqPage::last_rec_event = 0;
 uint8_t SeqPage::page_count = 4;
 
 uint8_t SeqPage::mask_type = MASK_PATTERN;
+uint8_t SeqPage::velocity = 100;
 
 bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
@@ -71,6 +72,8 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
+
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {

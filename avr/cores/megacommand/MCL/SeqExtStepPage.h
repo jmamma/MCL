@@ -46,8 +46,6 @@ public:
 
   bool scroll_dir;
 
-  uint8_t velocity = 100;
-
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
