@@ -73,6 +73,19 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   return idx;
 }
 
+uint16_t ExtSeqTrack::find_lock(uint8_t step, uint8_t lock_idx,
+                                uint16_t &start_idx) {
+  uint16_t end;
+  locate(step, start_idx, end);
+  for (uint16_t i = start_idx; i != end; ++i) {
+    if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
+      continue;
+    }
+    return i;
+  }
+  return 0xFFFF;
+}
+
 uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
                                      uint16_t &start_idx, bool event_on) {
   uint16_t end;
@@ -187,7 +200,8 @@ void ExtSeqTrack::remove_notes_on(uint8_t value) {
   notes_on_count--;
 }
 
-void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity) {
+void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
+                           uint8_t velocity) {
 
   uint8_t timing_mid = get_timing_mid();
 
@@ -397,7 +411,8 @@ void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity) {
   }
 }
 
-void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity) {
+void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
+                                     uint8_t velocity) {
   if (condition > 64) {
     condition -= 64;
   }
@@ -476,22 +491,21 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note, uint8_t ve
   }
 }
 
-
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
-    param_id += 1;
-    if (!param_id)
-      return 255;
-    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-      if (locks_params[c] == param_id) {
-        return c;
-      }
-    }
+  param_id += 1;
+  if (!param_id)
     return 255;
+  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+    if (locks_params[c] == param_id) {
+      return c;
+    }
+  }
+  return 255;
 }
 #define PARAM_VEL 128
 
-bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
-                                 uint8_t value) {
+bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
+                                  uint8_t track_param, uint8_t value) {
 
   // Let's try and find an existing param
   uint8_t match = find_lock_idx(track_param);
@@ -499,30 +513,46 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_p
   for (uint8_t c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
-     // locks_params_orig[c] = MD.kit.params[track_number][track_param];
+      // locks_params_orig[c] = MD.kit.params[track_number][track_param];
       match = c;
     }
   }
 
+  ext_event_t *e;
+
   if (match != 255) {
-   ext_event_t e;
 
-  e.is_lock = true;
-  e.cond_id = 0;
-  e.lock_idx = match;
-  e.event_value = value;
-  e.event_on = true;
-  e.micro_timing = utiming;
+    uint16_t ev_idx;
+    uint16_t lock_idx = find_lock(step, track_param, ev_idx);
 
-  if (add_event(step, &e) == 0xFFFF) { return false; }
-  return true;
+    if (lock_idx != 0xFFFF) {
+      e = &events[ev_idx];
+    } else {
+      ext_event_t new_event;
+      e = &new_event;
+    }
+
+    e->is_lock = true;
+    e->cond_id = 0;
+    e->lock_idx = match;
+    e->event_value = value;
+    e->event_on = true;
+    e->micro_timing = utiming;
+
+    if (lock_idx == 0xFFFF) {
+      if (add_event(step, e) == 0xFFFF) {
+        return false;
+      }
+    }
+
+    return true;
   }
   return false;
 }
 
-
 bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
-                                     uint8_t note_num, uint8_t event_on, uint8_t velocity) {
+                                 uint8_t note_num, uint8_t event_on,
+                                 uint8_t velocity) {
   ext_event_t e;
 
   e.is_lock = false;
@@ -531,8 +561,12 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
   e.event_on = event_on;
   e.micro_timing = utiming;
 
-  if (add_event(step, &e) == 0xFFFF) { return false; }
-  if (velocity < 0x80) { velocities[step] = velocity; }
+  if (add_event(step, &e) == 0xFFFF) {
+    return false;
+  }
+  if (velocity < 0x80) {
+    velocities[step] = velocity;
+  }
   return true;
 }
 
@@ -576,7 +610,8 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t utiming = (mod12_counter + get_timing_mid());
   uint8_t condition = 0;
 
-  add_notes_on(step_count * timing_mid + utiming - timing_mid, note_num, velocity);
+  add_notes_on(step_count * timing_mid + utiming - timing_mid, note_num,
+               velocity);
 
   return;
 }

@@ -132,6 +132,8 @@ public:
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
 
   uint8_t find_lock_idx(uint8_t param_id);
+  uint16_t find_lock(uint8_t step, uint8_t lock_idx,
+                                     uint16_t &start_idx);
 
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
                                  uint8_t value);
