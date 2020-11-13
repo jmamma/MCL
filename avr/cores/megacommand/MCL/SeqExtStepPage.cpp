@@ -489,7 +489,8 @@ void SeqExtStepPage::enter_notes() {
     if (active_track.notes_on[n].value == 255)
       continue;
     if (!active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value)) {
-      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value, velocity);
+      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
+                            velocity);
     }
   }
 }
@@ -587,6 +588,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 #endif
 }
 
+void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  if (SeqPage::recording) {
+    if (channel < NUM_EXT_TRACKS) {
+      mcl_seq.ext_tracks[channel].record_track_locks(param, value);
+      mcl_seq.ext_tracks[channel].update_param(param, value);
+    }
+  }
+}
+
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // Step edit for ExtSeq
   // For each incoming note, check to see if note interface has any steps
@@ -627,7 +640,9 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
       seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
       uint8_t vel = SeqPage::velocity;
-      if (seq_extstep_page.recording) { vel = msg[2]; }
+      if (seq_extstep_page.recording) {
+        vel = msg[2];
+      }
       mcl_seq.ext_tracks[channel].note_on(cur_y, vel);
     }
   }
@@ -664,7 +679,9 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   Midi2.addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
-
+  Midi2.addOnControlChangeCallback(this,
+                                   (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+                                       onControlChangeCallback_Midi2);
   state = true;
 }
 
@@ -678,5 +695,8 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   Midi2.removeOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
+  Midi2.removeOnControlChangeCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+                onControlChangeCallback_Midi2);
   state = false;
 }

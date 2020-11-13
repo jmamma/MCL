@@ -131,6 +131,8 @@ public:
   ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
 
+  void update_param(uint8_t param_id, uint8_t value);
+
   uint8_t find_lock_idx(uint8_t param_id);
   uint16_t find_lock(uint8_t step, uint8_t lock_idx,
                                      uint16_t &start_idx);
@@ -138,6 +140,7 @@ public:
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
                                  uint8_t value);
 
+  void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_track_noteoff(uint8_t note_num);
 
@@ -148,6 +151,7 @@ public:
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();
+  void reset_params();
   void handle_event(uint16_t index, uint8_t step);
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step, ext_event_t *e);

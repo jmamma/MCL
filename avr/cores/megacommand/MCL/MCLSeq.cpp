@@ -145,6 +145,7 @@ void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].buffer_notesoff();
+    ext_tracks[i].reset_params();
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -234,6 +235,9 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   if (channel < mcl_seq.num_ext_tracks) {
     if (param == 0x5E) {
       mcl_seq.ext_tracks[channel].mute_state = value;
+    }
+    else {
+    mcl_seq.ext_tracks[channel].update_param(param, value);
     }
   }
 #endif

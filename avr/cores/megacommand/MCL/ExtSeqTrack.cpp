@@ -315,11 +315,20 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   return ret;
 }
 
+void ExtSeqTrack::reset_params() {
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    if (locks_params[c] > 0) {
+      uart->sendCC(channel, locks_params[c] - 1, locks_params_orig[c]);
+    }
+  }
+}
+
 void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
     // plock
     if (ev.event_on) {
+      uart->sendCC(channel, locks_params[ev.lock_idx] - 1, ev.event_value);
       // lock engage
     } else {
       // lock disengage
@@ -491,10 +500,21 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   }
 }
 
+void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
+  param_id += 1;
+
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    if (locks_params[c] > 0) {
+      if (locks_params[c] == param_id) {
+        locks_params_orig[c] = value;
+        return;
+      }
+    }
+  }
+}
+
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   param_id += 1;
-  if (!param_id)
-    return 255;
   for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     if (locks_params[c] == param_id) {
       return c;
@@ -503,6 +523,15 @@ uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   return 255;
 }
 #define PARAM_VEL 128
+
+void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
+  uint8_t utiming = (mod12_counter + get_timing_mid());
+  if (step_count >= length) {
+    return;
+  }
+
+  set_track_locks(step_count, utiming, track_param, value);
+}
 
 bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
                                   uint8_t track_param, uint8_t value) {
@@ -531,6 +560,8 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
       ext_event_t new_event;
       e = &new_event;
     }
+    DEBUG_DUMP("adding lock");
+    DEBUG_DUMP(match);
 
     e->is_lock = true;
     e->cond_id = 0;
@@ -542,6 +573,9 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     if (lock_idx == 0xFFFF) {
       if (add_event(step, e) == 0xFFFF) {
         return false;
+      }
+      else {
+      DEBUG_DUMP("added lock");
       }
     }
 
