@@ -15,24 +15,6 @@
 
 class MDTrack;
 
-class SlideData {
-public:
-  int16_t err;
-  int8_t inc;
-  int16_t dx;
-  int16_t dy;
-  int16_t x0;
-  int8_t y0;
-  int8_t y1;
-  bool steep;
-  int16_t x1;
-  uint8_t yflip;
-  ALWAYS_INLINE() void init() {
-    dy = 0;
-    dx = 0;
-  }
-};
-
 class MDSeqTrack : public MDSeqTrackData, public SeqTrack {
 
 public:

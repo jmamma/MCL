@@ -111,11 +111,12 @@ class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
-  /*
+
   SlideData locks_slide_data[NUM_EXT_LOCKS];
   uint8_t locks_slide_next_lock_val[NUM_EXT_LOCKS];
   uint8_t locks_slide_next_lock_step[NUM_EXT_LOCKS];
-  */
+  uint8_t locks_slide_next_lock_utiming[NUM_EXT_LOCKS];
+
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
 
@@ -130,6 +131,7 @@ public:
   ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
+  ALWAYS_INLINE() void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
 
   void update_param(uint8_t param_id, uint8_t value);
 
@@ -139,6 +141,8 @@ public:
 
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
                                  uint8_t value);
+  void send_slides();
+  void recalc_slides();
 
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_noteon(uint8_t note_num, uint8_t velocity);

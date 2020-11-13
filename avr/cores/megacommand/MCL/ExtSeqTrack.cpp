@@ -73,6 +73,210 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   return idx;
 }
 
+#define _swap_int16_t(a, b)                                                    \
+  {                                                                            \
+    int16_t t = a;                                                             \
+    a = b;                                                                     \
+    b = t;                                                                     \
+  }
+#define _swap_int8_t(a, b)                                                     \
+  {                                                                            \
+    int8_t t = a;                                                              \
+    a = b;                                                                     \
+    b = t;                                                                     \
+  }
+
+void ExtSeqTrack::send_slides() {
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
+
+      uint8_t val;
+      val = locks_slide_data[c].y0;
+      if (locks_slide_data[c].steep) {
+        if (locks_slide_data[c].err > 0) {
+          locks_slide_data[c].y0 += locks_slide_data[c].inc;
+          locks_slide_data[c].err -= locks_slide_data[c].dx;
+        }
+        locks_slide_data[c].err += locks_slide_data[c].dy;
+        locks_slide_data[c].x0++;
+        if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
+          locks_slide_data[c].init();
+          break;
+        }
+      } else {
+        uint16_t x0_old = locks_slide_data[c].x0;
+        while (locks_slide_data[c].x0 == x0_old) {
+          if (locks_slide_data[c].err > 0) {
+            locks_slide_data[c].x0 += locks_slide_data[c].inc;
+            locks_slide_data[c].err -= locks_slide_data[c].dy;
+          }
+          locks_slide_data[c].err += locks_slide_data[c].dx;
+          locks_slide_data[c].y0++;
+          if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
+            locks_slide_data[c].init();
+            break;
+          }
+        }
+        if (locks_slide_data[c].yflip != 255) {
+          val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
+        }
+      }
+      uart->sendCC(channel, locks_params[c] - 1, 0x7F & val);
+    }
+  }
+}
+
+void ExtSeqTrack::recalc_slides() {
+  if (locks_slides_recalc == 255) {
+    return;
+  }
+  DEBUG_PRINT_FN();
+  int16_t x0, x1;
+  int8_t y0, y1;
+  uint8_t step = locks_slides_recalc;
+  uint8_t timing_mid = get_timing_mid_inline();
+
+  uint8_t find_array[8] = {0};
+
+  uint16_t curidx, ev_end;
+  locate(step, curidx, ev_end);
+
+  for (uint8_t n = 0; n < timing_buckets.get(step); n++) {
+    auto &e = events[curidx + n];
+    if (e.is_lock) {
+      find_array[n] = 1;
+    }
+  }
+
+  find_next_locks(curidx, step, find_array);
+
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    if (!locks_params[c]) {
+      continue;
+    }
+    ext_event_t *e;
+    for (uint8_t n = 0; n < timing_buckets.get(step); n++) {
+      e = &events[curidx + n];
+      if (e->is_lock && e->lock_idx == c) {
+        break;
+      }
+      else { e = nullptr; }
+    }
+
+    if (e == nullptr) continue;
+
+    auto next_lockstep = locks_slide_next_lock_step[c];
+
+    if (step == next_lockstep) {
+      locks_slide_data[c].init();
+      continue;
+    }
+    x0 = step * timing_mid + e->micro_timing - timing_mid + 1;
+    if (next_lockstep < step) {
+      x1 = (length + next_lockstep) * timing_mid + locks_slide_next_lock_utiming[c] -
+           timing_mid - 1;
+    } else {
+      x1 = next_lockstep * timing_mid + locks_slide_next_lock_utiming[c] - timing_mid - 1;
+    }
+    y0 = e->event_value;
+    y1 = locks_slide_next_lock_val[c];
+
+    locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
+    locks_slide_data[c].yflip = 255;
+    if (locks_slide_data[c].steep) {
+      /* Disable as this use case will not exist.
+      if (x0 > x1) {
+            _swap_int16_t(x0, x1);
+           _swap_int16_t(y0, y1);
+      }
+      */
+    } else {
+      if (y0 > y1) {
+        _swap_int8_t(y0, y1);
+        _swap_int16_t(x0, x1);
+        locks_slide_data[c].yflip = y0;
+      }
+    }
+    locks_slide_data[c].dx = x1 - x0;
+    locks_slide_data[c].dy = y1 - y0;
+    locks_slide_data[c].inc = 1;
+
+    if (locks_slide_data[c].steep) {
+      if (locks_slide_data[c].dy < 0) {
+        locks_slide_data[c].inc = -1;
+        locks_slide_data[c].dy *= -1;
+      }
+      locks_slide_data[c].dy *= 2;
+      locks_slide_data[c].err = locks_slide_data[c].dy - locks_slide_data[c].dx;
+      locks_slide_data[c].dx *= 2;
+    } else {
+      if (locks_slide_data[c].dx < 0) {
+        locks_slide_data[c].inc = -1;
+        locks_slide_data[c].dx *= -1;
+      }
+
+      locks_slide_data[c].dx *= 2;
+      locks_slide_data[c].err = locks_slide_data[c].dx - locks_slide_data[c].dy;
+      locks_slide_data[c].dy *= 2;
+    }
+    locks_slide_data[c].y0 = y0;
+    locks_slide_data[c].x0 = x0;
+    locks_slide_data[c].x1 = x1;
+    locks_slide_data[c].y1 = y1;
+    DEBUG_DUMP(step);
+    DEBUG_DUMP(locks_slide_data[c].x0);
+    DEBUG_DUMP(locks_slide_data[c].y0);
+    DEBUG_DUMP(x1);
+    DEBUG_DUMP(y1);
+    DEBUG_DUMP(locks_slide_data[c].dx);
+    DEBUG_DUMP(locks_slide_data[c].dy);
+    DEBUG_DUMP(locks_slide_data[c].steep);
+    DEBUG_DUMP(locks_slide_data[c].inc);
+    DEBUG_DUMP(locks_slide_data[c].yflip);
+  }
+
+  locks_slides_recalc = 255;
+}
+
+void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
+                                  uint8_t *find_array) {
+  DEBUG_PRINT_FN();
+  DEBUG_DUMP(step);
+  // caller ensures step < length
+  uint8_t next_step = step + 1;
+  curidx += timing_buckets.get(step);
+
+  uint8_t max_len = length;
+
+
+again:
+  for (; next_step < max_len; next_step++) {
+    for (; curidx < timing_buckets.get(next_step); curidx++) {
+      auto &e = events[curidx];
+      if (!e.is_lock)
+        continue;
+      uint8_t i = e.lock_idx;
+      if (find_array[i] == 1) {
+        locks_slide_next_lock_val[i] = e.event_value;
+        locks_slide_next_lock_step[i] = next_step;
+        locks_slide_next_lock_utiming[i] = e.micro_timing;
+     /* } else if (e.trig) {
+        locks_slide_next_lock_val[i] = locks_params_orig[i];
+        locks_slide_next_lock_step[i] = next_step;
+        locks_slide_next_lock_utiming[i] = e.micro_timing;
+      } */
+    }
+    }
+  }
+
+  if (next_step >= length) {
+    next_step = 0;
+    curidx = 0;
+    max_len = step;
+    goto again;
+  }
+}
+
 uint16_t ExtSeqTrack::find_lock(uint8_t step, uint8_t lock_idx,
                                 uint16_t &start_idx) {
   uint16_t end;
@@ -329,6 +533,7 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     // plock
     if (ev.event_on) {
       uart->sendCC(channel, locks_params[ev.lock_idx] - 1, ev.event_value);
+      locks_slides_recalc = step;
       // lock engage
     } else {
       // lock disengage
@@ -364,6 +569,7 @@ void ExtSeqTrack::seq() {
 
     // Locate CURRENT
     locate(step_count, ev_idx, ev_end);
+    send_slides();
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
@@ -515,7 +721,7 @@ void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
 
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   param_id += 1;
-  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
     if (locks_params[c] == param_id) {
       return c;
     }
@@ -539,7 +745,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
   // Let's try and find an existing param
   uint8_t match = find_lock_idx(track_param);
 
-  for (uint8_t c = 0; c < NUM_MD_LOCKS && match == 255; c++) {
+  for (uint8_t c = 0; c < NUM_EXT_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
       // locks_params_orig[c] = MD.kit.params[track_number][track_param];
@@ -573,9 +779,8 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     if (lock_idx == 0xFFFF) {
       if (add_event(step, e) == 0xFFFF) {
         return false;
-      }
-      else {
-      DEBUG_DUMP("added lock");
+      } else {
+        DEBUG_DUMP("added lock");
       }
     }
 
