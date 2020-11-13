@@ -9,7 +9,9 @@ uint8_t SeqPage::last_rec_event = 0;
 
 uint8_t SeqPage::page_count = 4;
 
+uint8_t SeqPage::pianoroll_mode = 0;
 uint8_t SeqPage::mask_type = MASK_PATTERN;
+uint8_t SeqPage::param_select = 0;
 uint8_t SeqPage::velocity = 100;
 
 bool SeqPage::show_seq_menu = false;
@@ -34,7 +36,7 @@ uint16_t trigled_mask = 0;
 bool SeqPage::recording = false;
 
 uint16_t SeqPage::deferred_timer = 0;
-uint8_t  SeqPage::last_midi_state = 0;
+uint8_t SeqPage::last_midi_state = 0;
 
 static MidiDevice *opt_midi_device_capture = &MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -73,7 +75,8 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
-
+  seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {
@@ -1120,7 +1123,7 @@ void SeqPage::loop() {
     redisplay = true;
   }
 
- if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
+  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
       encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
     DEBUG_DUMP("queue redraw");
     queue_redraw();
@@ -1273,13 +1276,13 @@ void SeqPage::draw_knob(uint8_t i, Encoder *enc, const char *title) {
 }
 
 void SeqPageMidiEvents::onMidiStartCallback() {
- if (SeqPage::recording) {
- oled_display.textbox("REC", "");
- }
+  if (SeqPage::recording) {
+    oled_display.textbox("REC", "");
+  }
 }
 
 void SeqPageMidiEvents::setup_callbacks() {
-   MidiClock.addOnMidiStartCallback(
+  MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&SeqPageMidiEvents::onMidiStartCallback);
   //   Midi.addOnControlChangeCallback(
   //      this,
@@ -1287,7 +1290,7 @@ void SeqPageMidiEvents::setup_callbacks() {
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
-          MidiClock.addOnMidiStartCallback(
+  MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&SeqPageMidiEvents::onMidiStartCallback);
   //  Midi.removeOnControlChangeCallback(
   //      this,

@@ -57,6 +57,8 @@ public:
   void draw_pianoroll();
   void draw_viewport_minimap();
 
+  void draw_lockeditor();
+
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }
     return false;

@@ -177,7 +177,8 @@ public:
   // caller pass in note_idx of the note on event, and end index for current bucket.
   // returns: step index & note index
   uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx, uint16_t ev_end);
-
+  uint8_t search_lock_idx(uint8_t lock_idx, uint8_t step,
+                                     uint16_t &ev_idx, uint16_t ev_end);
   void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
     ev_idx = 0;
     ev_end = timing_buckets.get(step);

@@ -317,6 +317,35 @@ uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
   return 0xFFFF;
 }
 
+uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
+                                     uint16_t &ev_idx, uint16_t ev_end) {
+  // Scan for matching note off;
+  uint8_t j = step;
+  ++ev_idx;
+
+  do {
+    for (; ev_idx != ev_end; ++ev_idx) {
+      auto &ev = events[ev_idx];
+      if (!ev.is_lock || ev.lock_idx != lock_idx) {
+        continue;
+      }
+      return j;
+    }
+    ++j;
+    if (j >= length) {
+      // wrap around
+      j = 0;
+      ev_end = 0;
+    }
+    ev_idx = ev_end;
+    ev_end += timing_buckets.get(j);
+  } while (j != step);
+
+  ev_idx = 0xFFFF;
+  return step;
+}
+
+
 uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
                                      uint16_t &ev_idx, uint16_t ev_end) {
   // Scan for matching note off;
