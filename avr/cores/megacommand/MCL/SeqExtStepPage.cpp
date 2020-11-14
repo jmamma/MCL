@@ -128,7 +128,7 @@ void SeqExtStepPage::draw_lockeditor() {
     if (j > i) {
       i = j;
       ev_end = ev_j_end;
-      //active_track.locate(i, ev_idx, ev_end);
+      // active_track.locate(i, ev_idx, ev_end);
     } else {
       ev_end += active_track.timing_buckets.get(i);
     }
@@ -177,7 +177,8 @@ void SeqExtStepPage::draw_lockeditor() {
         DEBUG_DUMP(lock_fov_start_y);
         DEBUG_DUMP(lock_fov_end_y);
         if (lock_end < lock_start) {
-          float gradient = float (lock_fov_end_y - lock_fov_start_y) / (float) (lock_fov_end - lock_fov_start);
+          float gradient = float(lock_fov_end_y - lock_fov_start_y) /
+                           (float)(lock_fov_end - lock_fov_start);
           // Wrap around note
           /*
                     if (lock_start < fov_offset + fov_length) {
@@ -196,12 +197,15 @@ void SeqExtStepPage::draw_lockeditor() {
           // Standard note.
           oled_display.drawLine(lock_fov_start + draw_x, lock_fov_start_y,
                                 draw_x + lock_fov_end, lock_fov_end_y, WHITE);
+          oled_display.drawLine(lock_fov_start + draw_x, lock_fov_start_y + 1,
+                                draw_x + lock_fov_end, lock_fov_end_y + 1,
+                                WHITE);
         }
       }
     }
-      if (j < i) {
-        break;
-      }
+    if (j < i) {
+      break;
+    }
   }
   // Draw interactive cursor
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
@@ -430,7 +434,7 @@ void SeqExtStepPage::loop() {
 
     uint8_t w = cur_w;
     if (pianoroll_mode == 1) {
-    w = 3;
+      w = 3;
     }
     if (diff < 0) {
       if (cur_x <= fov_offset) {
@@ -685,22 +689,23 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (!recording) {
       if (pianoroll_mode == 1) {
-     uint8_t timing_mid = active_track.get_timing_mid();
+        uint8_t timing_mid = active_track.get_timing_mid();
 
-       uint8_t step = (cur_x / timing_mid);
-       uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
+        uint8_t step = (cur_x / timing_mid);
+        uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
 
-      active_track.set_track_locks(step, utiming, param_select, lock_cur_y);
-      }
-      else {
-      if (active_track.notes_on_count > 1) {
-        enter_notes();
+        active_track.set_track_locks(
+            step, utiming, active_track.locks_params[param_select] - 1,
+            lock_cur_y);
       } else {
+        if (active_track.notes_on_count > 1) {
+          enter_notes();
+        } else {
 
-        if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-          active_track.add_note(cur_x, cur_w, cur_y, velocity);
+          if (!active_track.del_note(cur_x, cur_w, cur_y)) {
+            active_track.add_note(cur_x, cur_w, cur_y, velocity);
+          }
         }
-      }
       }
       return true;
     } else {
@@ -752,7 +757,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
   DEBUG_DUMP("blah");
   if (SeqPage::recording) {
-          DEBUG_DUMP("Record... cc");
+    DEBUG_DUMP("Record... cc");
     if (channel < NUM_EXT_TRACKS) {
       mcl_seq.ext_tracks[channel].record_track_locks(param, value);
       mcl_seq.ext_tracks[channel].update_param(param, value);
