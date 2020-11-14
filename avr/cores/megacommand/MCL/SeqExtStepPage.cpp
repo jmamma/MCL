@@ -62,6 +62,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
   SeqPage::init();
+  param_select = 0;
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
@@ -70,9 +71,7 @@ void SeqExtStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
 }
 
 void SeqExtStepPage::cleanup() {
@@ -121,8 +120,10 @@ void SeqExtStepPage::draw_lockeditor() {
         min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
   }
 
+  uint8_t h = fov_h / fov_notes;
   uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
   uint8_t j = 0;
+
   for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
     if (j > i) {
@@ -132,15 +133,33 @@ void SeqExtStepPage::draw_lockeditor() {
     } else {
       ev_end += active_track.timing_buckets.get(i);
     }
+    uint16_t grid_tick_x = i * timing_mid;
+    if (is_within_fov(grid_tick_x)) {
+      uint8_t grid_fov_x =
+          draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
+
+      for (uint8_t k = 0; k < fov_notes; k += 1) {
+        // draw crisscross
+        // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel(
+        // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
+        oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)), WHITE);
+
+        if (i % 16 == 0) {
+          oled_display.drawPixel(grid_fov_x, draw_y + (k * h) + (h / 2), WHITE);
+        }
+      }
+    }
+
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
       int lock_val = ev.event_value;
-      if (!ev.is_lock || (ev.lock_idx != param_select)) {
+      if (!ev.is_lock || (ev.lock_idx != pianoroll_mode - 1)) {
         continue;
       }
       uint16_t next_lock_ev = ev_idx;
       ev_j_end = ev_end;
-      j = active_track.search_lock_idx(param_select, i, next_lock_ev, ev_j_end);
+      j = active_track.search_lock_idx(pianoroll_mode - 1, i, next_lock_ev,
+                                       ev_j_end);
       if (next_lock_ev == 0xFFFF) {
         next_lock_ev = ev_idx;
       }
@@ -172,10 +191,6 @@ void SeqExtStepPage::draw_lockeditor() {
         uint8_t lock_fov_end_y =
             fov_h - (((float)ev_j.event_value / 128.0) * (float)fov_h);
 
-        DEBUG_DUMP(lock_fov_start);
-        DEBUG_DUMP(lock_fov_end);
-        DEBUG_DUMP(lock_fov_start_y);
-        DEBUG_DUMP(lock_fov_end_y);
         if (lock_end < lock_start) {
           float gradient = float(lock_fov_end_y - lock_fov_start_y) /
                            (float)(lock_fov_end - lock_fov_start);
@@ -427,13 +442,21 @@ void SeqExtStepPage::display() { SeqPage::display(); }
 #else
 
 void SeqExtStepPage::loop() {
+  if (pianoroll_mode == 0) {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
+  } else {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
+  }
   SeqPage::loop();
+
   if (seq_param1.hasChanged()) {
     // Horizontal translation
     int16_t diff = seq_param1.cur - seq_param1.old;
 
     uint8_t w = cur_w;
-    if (pianoroll_mode == 1) {
+    if (pianoroll_mode >= 1) {
       w = 3;
     }
     if (diff < 0) {
@@ -472,7 +495,7 @@ void SeqExtStepPage::loop() {
   if (seq_param2.hasChanged()) {
     // Vertical translation
     int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
-    if (pianoroll_mode == 1) {
+    if (pianoroll_mode >= 1) {
       lock_cur_y = limit_value(lock_cur_y, diff, 0, 127);
     }
 
@@ -687,24 +710,24 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    if (pianoroll_mode >= 1) {
+      uint8_t timing_mid = active_track.get_timing_mid();
+
+      uint8_t step = (cur_x / timing_mid);
+      uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
+
+      active_track.set_track_locks(
+          step, utiming, active_track.locks_params[pianoroll_mode - 1] - 1,
+          lock_cur_y);
+      return true;
+    }
     if (!recording) {
-      if (pianoroll_mode == 1) {
-        uint8_t timing_mid = active_track.get_timing_mid();
-
-        uint8_t step = (cur_x / timing_mid);
-        uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
-
-        active_track.set_track_locks(
-            step, utiming, active_track.locks_params[param_select] - 1,
-            lock_cur_y);
+      if (active_track.notes_on_count > 1) {
+        enter_notes();
       } else {
-        if (active_track.notes_on_count > 1) {
-          enter_notes();
-        } else {
 
-          if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-            active_track.add_note(cur_x, cur_w, cur_y, velocity);
-          }
+        if (!active_track.del_note(cur_x, cur_w, cur_y)) {
+          active_track.add_note(cur_x, cur_w, cur_y, velocity);
         }
       }
       return true;
@@ -731,6 +754,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
   }
 
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    if (pianoroll_mode >= 1) { active_track.locks_params[SeqPage::pianoroll_mode - 1] = SeqPage::param_select + 1; }
+  }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
     oled_display.textbox("REC", "");
@@ -738,12 +765,15 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if ((!recording || MidiClock.state != 2 ||
-       EVENT_PRESSED(event, Buttons.BUTTON2)) &&
-      SeqPage::handleEvent(event)) {
-    if (show_seq_menu) {
-      redisplay = true;
-      return true;
+  if (!recording || MidiClock.state != 2 ||
+      EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    param_select = active_track.locks_params[pianoroll_mode - 1] - 1;
+
+    if (SeqPage::handleEvent(event)) {
+      if (show_seq_menu) {
+        redisplay = true;
+        return true;
+      }
     }
     return true;
   }

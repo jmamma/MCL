@@ -787,10 +787,10 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
   if (match != 255) {
 
     uint16_t ev_idx;
-    uint16_t lock_idx = find_lock(step, track_param, ev_idx);
+    uint16_t lock_ev_idx = find_lock(step, match, ev_idx);
 
-    if (lock_idx != 0xFFFF) {
-      e = &events[ev_idx];
+    if (lock_ev_idx != 0xFFFF) {
+      e = &events[lock_ev_idx];
     } else {
       ext_event_t new_event;
       e = &new_event;
@@ -805,7 +805,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     e->event_on = true;
     e->micro_timing = utiming;
 
-    if (lock_idx == 0xFFFF) {
+    if (lock_ev_idx == 0xFFFF) {
       if (add_event(step, e) == 0xFFFF) {
         return false;
       } else {

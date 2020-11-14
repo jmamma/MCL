@@ -53,8 +53,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   // 51: GRID
   {0, "A"}, {1, "B"},
   // 53: PIANO ROLL
-  {0,"NOTE"}, {1,"LOCKS"},
-  // 51: GRID
+  {0,"NOTE"},
 };
 
 void new_proj_handler() {
