@@ -122,10 +122,16 @@ void SeqExtStepPage::draw_lockeditor() {
   }
 
   uint16_t ev_idx = 0, ev_end = 0;
-
-  for (int i = 0; i < active_track.length; i++) {
+  uint8_t j = 0;
+  for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
+    if (j > i) {
+        i = j;
+        active_track.locate(i, ev_idx, ev_end);
+    }
+    else {
     ev_end += active_track.timing_buckets.get(i);
+    }
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
       int lock_val = ev.event_value;
@@ -133,7 +139,7 @@ void SeqExtStepPage::draw_lockeditor() {
         continue;
       }
       uint16_t next_lock_ev = ev_idx;
-      uint8_t j =
+      j =
           active_track.search_lock_idx(param_select, i, next_lock_ev, ev_end);
       if (next_lock_ev == 0xFFFF) {
         next_lock_ev = ev_idx;
@@ -191,10 +197,7 @@ void SeqExtStepPage::draw_lockeditor() {
                                 draw_x + lock_fov_end, lock_fov_end_y, WHITE);
         }
       }
-//      if (j > i) {
-//        i = j;
-//        ev_idx = active_track.timing_buckets.get(i);
-//      }
+      if (j < i) { break; }
     }
   }
 }
@@ -699,7 +702,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
+  if ((!recording || MidiClock.state != 2 || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
       SeqPage::handleEvent(event)) {
     if (show_seq_menu) {
       redisplay = true;
