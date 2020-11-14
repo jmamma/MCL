@@ -318,7 +318,7 @@ uint16_t ExtSeqTrack::find_midi_note(uint8_t step, uint8_t note_num,
 }
 
 uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
-                                     uint16_t &ev_idx, uint16_t ev_end) {
+                                     uint16_t &ev_idx, uint16_t &ev_end) {
   // Scan for matching note off;
   uint8_t j = step;
   ++ev_idx;

@@ -121,13 +121,14 @@ void SeqExtStepPage::draw_lockeditor() {
         min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
   }
 
-  uint16_t ev_idx = 0, ev_end = 0;
+  uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
   uint8_t j = 0;
   for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
     if (j > i) {
       i = j;
-      active_track.locate(i, ev_idx, ev_end);
+      ev_end = ev_j_end;
+      //active_track.locate(i, ev_idx, ev_end);
     } else {
       ev_end += active_track.timing_buckets.get(i);
     }
@@ -138,7 +139,8 @@ void SeqExtStepPage::draw_lockeditor() {
         continue;
       }
       uint16_t next_lock_ev = ev_idx;
-      j = active_track.search_lock_idx(param_select, i, next_lock_ev, ev_end);
+      ev_j_end = ev_end;
+      j = active_track.search_lock_idx(param_select, i, next_lock_ev, ev_j_end);
       if (next_lock_ev == 0xFFFF) {
         next_lock_ev = ev_idx;
       }
@@ -175,6 +177,7 @@ void SeqExtStepPage::draw_lockeditor() {
         DEBUG_DUMP(lock_fov_start_y);
         DEBUG_DUMP(lock_fov_end_y);
         if (lock_end < lock_start) {
+          float gradient = float (lock_fov_end_y - lock_fov_start_y) / (float) (lock_fov_end - lock_fov_start);
           // Wrap around note
           /*
                     if (lock_start < fov_offset + fov_length) {
@@ -195,10 +198,10 @@ void SeqExtStepPage::draw_lockeditor() {
                                 draw_x + lock_fov_end, lock_fov_end_y, WHITE);
         }
       }
+    }
       if (j < i) {
         break;
       }
-    }
   }
   // Draw interactive cursor
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
