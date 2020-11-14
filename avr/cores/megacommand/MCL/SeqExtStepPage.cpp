@@ -684,6 +684,15 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (!recording) {
+      if (pianoroll_mode == 1) {
+     uint8_t timing_mid = active_track.get_timing_mid();
+
+       uint8_t step = (cur_x / timing_mid);
+       uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
+
+      active_track.set_track_locks(step, utiming, param_select, lock_cur_y);
+      }
+      else {
       if (active_track.notes_on_count > 1) {
         enter_notes();
       } else {
@@ -691,6 +700,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (!active_track.del_note(cur_x, cur_w, cur_y)) {
           active_track.add_note(cur_x, cur_w, cur_y, velocity);
         }
+      }
       }
       return true;
     } else {
