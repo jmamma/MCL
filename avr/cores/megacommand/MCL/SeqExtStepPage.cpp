@@ -762,30 +762,30 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             param_select + 1;
       }
     }
-    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-      recording = !recording;
-      oled_display.textbox("REC", "");
-      queue_redraw();
-      return true;
-    }
+  }
+  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    recording = !recording;
+    oled_display.textbox("REC", "");
+    queue_redraw();
+    return true;
+  }
 
-    if (!recording || MidiClock.state != 2 ||
-        EVENT_PRESSED(event, Buttons.BUTTON2)) {
-      if (pianoroll_mode >= 1) {
-        if (active_track.locks_params[pianoroll_mode - 1] == 0) {
-          param_select = 128;
-        } else {
-          param_select = active_track.locks_params[pianoroll_mode - 1] - 1;
-        }
+  if (!recording || MidiClock.state != 2 ||
+      EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    if (pianoroll_mode >= 1) {
+      if (active_track.locks_params[pianoroll_mode - 1] == 0) {
+        param_select = 128;
+      } else {
+        param_select = active_track.locks_params[pianoroll_mode - 1] - 1;
       }
-      if (SeqPage::handleEvent(event)) {
-        if (show_seq_menu) {
-          redisplay = true;
-          return true;
-        }
-      }
-      return true;
     }
+    if (SeqPage::handleEvent(event)) {
+      if (show_seq_menu) {
+        redisplay = true;
+        return true;
+      }
+    }
+    return true;
   }
 }
 
