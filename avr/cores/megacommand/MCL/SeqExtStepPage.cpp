@@ -62,7 +62,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
   SeqPage::init();
-  param_select = 0;
+  param_select = 128;
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
@@ -670,7 +670,6 @@ void SeqExtStepPage::enter_notes() {
 }
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
-#ifdef EXT_TRACKS
 
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -755,30 +754,39 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    if (pianoroll_mode >= 1) { active_track.locks_params[SeqPage::pianoroll_mode - 1] = SeqPage::param_select + 1; }
-  }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    recording = !recording;
-    oled_display.textbox("REC", "");
-    queue_redraw();
-    return true;
-  }
-
-  if (!recording || MidiClock.state != 2 ||
-      EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    param_select = active_track.locks_params[pianoroll_mode - 1] - 1;
-
-    if (SeqPage::handleEvent(event)) {
-      if (show_seq_menu) {
-        redisplay = true;
-        return true;
+    if (pianoroll_mode >= 1) {
+      if (param_select == 128) {
+        active_track.locks_params[SeqPage::pianoroll_mode - 1] = 0;
+      } else {
+        active_track.locks_params[SeqPage::pianoroll_mode - 1] =
+            param_select + 1;
       }
     }
-    return true;
-  }
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      recording = !recording;
+      oled_display.textbox("REC", "");
+      queue_redraw();
+      return true;
+    }
 
-#endif
+    if (!recording || MidiClock.state != 2 ||
+        EVENT_PRESSED(event, Buttons.BUTTON2)) {
+      if (pianoroll_mode >= 1) {
+        if (active_track.locks_params[pianoroll_mode - 1] == 0) {
+          param_select = 128;
+        } else {
+          param_select = active_track.locks_params[pianoroll_mode - 1] - 1;
+        }
+      }
+      if (SeqPage::handleEvent(event)) {
+        if (show_seq_menu) {
+          redisplay = true;
+          return true;
+        }
+      }
+      return true;
+    }
+  }
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
