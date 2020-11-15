@@ -136,7 +136,7 @@ void ExtSeqTrack::recalc_slides() {
   uint8_t step = locks_slides_recalc;
   uint8_t timing_mid = get_timing_mid_inline();
 
-  uint8_t find_array[8] = {0};
+  uint8_t find_array[NUM_EXT_LOCKS] = {0};
 
   uint16_t curidx, ev_end;
   locate(step, curidx, ev_end);
@@ -144,7 +144,7 @@ void ExtSeqTrack::recalc_slides() {
   for (uint8_t n = 0; n < timing_buckets.get(step); n++) {
     auto &e = events[curidx + n];
     if (e.is_lock) {
-      find_array[n] = 1;
+      find_array[e.lock_idx] = 1;
     }
   }
 

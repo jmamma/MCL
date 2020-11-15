@@ -146,13 +146,18 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].buffer_notesoff();
     ext_tracks[i].reset_params();
+    ext_tracks[i].locks_slides_recalc = 255;
+    for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    ext_tracks[i].locks_slide_data[c].init();
+    }
+
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
     md_tracks[i].locks_slide_data[c].init();
     }
   }
@@ -197,6 +202,11 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].recalc_slides();
   }
+
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].recalc_slides();
+  }
+
 
   auto seq_time = sw.elapsed();
   //DIAG_MEASURE(0, seq_time);
