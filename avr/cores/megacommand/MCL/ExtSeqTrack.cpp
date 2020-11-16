@@ -179,7 +179,7 @@ again:
   for (; next_step < max_len; next_step++) {
     for (; curidx < timing_buckets.get(next_step); curidx++) {
       auto &e = events[curidx];
-      if (!e.is_lock || e.event_on)
+      if (!e.is_lock)
         continue;
       uint8_t i = e.lock_idx;
       if (find_array[i] == 1) {
