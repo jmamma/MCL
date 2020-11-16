@@ -671,7 +671,7 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 }
 
 bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
-                                    uint8_t value) {
+                                    uint8_t value, uint8_t range) {
   uint8_t lock_idx = find_lock_idx(track_param);
   uint16_t start_idx, end;
   locate(step, start_idx, end);
@@ -681,7 +681,7 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
     if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
       continue;
     }
-    if (events[i].event_value == value || value == 255) {
+    if (value == 255 || (events[i].event_value <= value + range && events[i].event_value >= limit_value(value, -1 * range, 0, 127))) {
       remove_event(i);
       ret = true;
       if (value != 255) { break; }

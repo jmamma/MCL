@@ -55,7 +55,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   // 53: PIANO ROLL
   {0,"NOTE"},
   // 54: OFF
-  {128, "OFF"},
+  {128, "OFF"}, {129, "LEARN"},
 };
 
 void new_proj_handler() {

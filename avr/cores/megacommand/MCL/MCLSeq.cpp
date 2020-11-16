@@ -1,5 +1,5 @@
-#include "MCL_impl.h"
 #include "DiagnosticPage.h"
+#include "MCL_impl.h"
 
 void MCLSeq::setup() {
 
@@ -148,9 +148,8 @@ void MCLSeq::onMidiStopCallback() {
     ext_tracks[i].reset_params();
     ext_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    ext_tracks[i].locks_slide_data[c].init();
+      ext_tracks[i].locks_slide_data[c].init();
     }
-
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -158,7 +157,7 @@ void MCLSeq::onMidiStopCallback() {
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    md_tracks[i].locks_slide_data[c].init();
+      md_tracks[i].locks_slide_data[c].init();
     }
   }
   seq_ptc_page.onMidiStopCallback();
@@ -180,11 +179,11 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
-  //Arp
+  // Arp
   seq_ptc_page.on_192_callback();
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-  //  aux_tracks[i].seq();
+    //  aux_tracks[i].seq();
   }
 
 #ifdef LFO_TRACKS
@@ -207,9 +206,8 @@ void MCLSeq::seq() {
     ext_tracks[i].recalc_slides();
   }
 
-
   auto seq_time = sw.elapsed();
-  //DIAG_MEASURE(0, seq_time);
+  // DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND
 #pragma GCC pop_options
@@ -219,7 +217,9 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  if (!update_params) { return; }
+  if (!update_params) {
+    return;
+  }
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -231,7 +231,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     mcl_seq.md_tracks[track].update_param(track_param, value);
 #ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param, value);
+      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1,
+                                                           track_param, value);
     }
 #endif
   }
@@ -242,12 +243,13 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t param = msg[1];
   uint8_t value = msg[2];
 #ifdef EXT_TRACKS
-  if (channel < mcl_seq.num_ext_tracks) {
-    if (param == 0x5E) {
-      mcl_seq.ext_tracks[channel].mute_state = value;
-    }
-    else {
-    mcl_seq.ext_tracks[channel].update_param(param, value);
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (mcl_seq.ext_tracks[n].channel == channel) {
+      if (param == 0x5E) {
+        mcl_seq.ext_tracks[n].mute_state = value;
+      } else {
+        mcl_seq.ext_tracks[n].update_param(param, value);
+      }
     }
   }
 #endif
