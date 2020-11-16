@@ -684,6 +684,7 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
     if (events[i].event_value == value || value == 255) {
       remove_event(i);
       ret = true;
+      if (value != 255) { break; }
     }
   }
   return ret;
