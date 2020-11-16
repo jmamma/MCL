@@ -70,6 +70,13 @@ struct ext_event_t {
     if (this->micro_timing != that.micro_timing) {
       return this->micro_timing < that.micro_timing;
     }
+    /*
+    // order by lock
+
+    if (this->is_lock != that.is_lock) {
+      return this.is_lock;
+    }
+    */
     // off < on
     if (this->event_on != that.event_on) {
       return that.event_on;
@@ -128,7 +135,9 @@ public:
   ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
-  ALWAYS_INLINE() void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
+  void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
+  uint8_t find_next_lock(uint8_t step, uint8_t lock_idx, uint16_t &curidx, uint16_t &end);
+
   void update_param(uint8_t param_id, uint8_t value);
 
   uint8_t find_lock_idx(uint8_t param_id);
