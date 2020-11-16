@@ -338,7 +338,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         active_track.clear_param_locks(last_param_id);
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
           oled_display.textbox("CLEAR ", "LOCKS");
-          for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+          for (uint8_t c = 0; c < NUM_LOCKS; c++) {
             if (active_track.locks_params[c] > 0) {
               active_track.clear_param_locks(active_track.locks_params[c] - 1);
             }

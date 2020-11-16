@@ -10,8 +10,12 @@ uint8_t SeqPage::last_rec_event = 0;
 uint8_t SeqPage::page_count = 4;
 
 uint8_t SeqPage::pianoroll_mode = 0;
+
 uint8_t SeqPage::mask_type = MASK_PATTERN;
 uint8_t SeqPage::param_select = 0;
+
+uint8_t SeqPage::last_pianoroll_mode = 0;
+
 uint8_t SeqPage::velocity = 100;
 
 bool SeqPage::show_seq_menu = false;

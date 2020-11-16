@@ -12,7 +12,6 @@
 
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_EVENTS 512
-#define NUM_EXT_LOCKS 8
 #define NUM_NOTES_ON 16 //number of notes that can be recorded simultaneously.
 
 #define SEQ_NOTEBUF_SIZE 8
@@ -30,7 +29,7 @@
 #define EXT_SPEED_270_1_4X 6
 #define EXT_SPEED_270_1_8X 7
 #define NUM_EXT_NOTES_270 4
-#define NUM_EXT_LOCKS_270 4
+#define NUM_LOCKS_270 4
 #define NUM_EXT_STEPS_270 128
 
 class ExtSeqTrackData_270 {
@@ -40,9 +39,10 @@ public:
   uint8_t reserved[NUM_EXT_NOTES_270];
   int8_t notes[NUM_EXT_NOTES_270]
               [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
-  uint8_t locks[NUM_EXT_LOCKS_270][NUM_EXT_STEPS_270];
-  uint8_t locks_params[NUM_EXT_LOCKS_270];
-  uint64_t lock_masks[NUM_EXT_LOCKS_270];
+  uint8_t locks[NUM_LOCKS_270][NUM_EXT_STEPS_270];
+  uint8_t locks_params[NUM_LOCKS_270];
+
+  uint64_t lock_masks[NUM_LOCKS_270];
 
   uint8_t conditional[NUM_EXT_STEPS_270];
   uint8_t timing[NUM_EXT_STEPS_270];
@@ -90,10 +90,10 @@ class ExtSeqTrackData {
 public:
   NibbleArray<128> timing_buckets;
   ext_event_t events[NUM_EXT_EVENTS];
-  uint8_t locks_params[NUM_EXT_LOCKS];
+  uint8_t locks_params[NUM_LOCKS];
   uint16_t event_count;
   uint8_t velocities[128];
-  uint8_t locks_params_orig[NUM_EXT_LOCKS];
+  uint8_t locks_params_orig[NUM_LOCKS];
   void* data() const { return (void*) &timing_buckets; }
   bool convert(ExtSeqTrackData_270 *old) {
     // TODO
@@ -112,13 +112,10 @@ public:
   uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  SlideData locks_slide_data[NUM_EXT_LOCKS];
-  uint8_t locks_slide_next_lock_val[NUM_EXT_LOCKS];
-  uint8_t locks_slide_next_lock_step[NUM_EXT_LOCKS];
-  uint8_t locks_slide_next_lock_utiming[NUM_EXT_LOCKS];
-
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
+
+  uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
@@ -132,16 +129,14 @@ public:
   ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
   ALWAYS_INLINE() void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
-
   void update_param(uint8_t param_id, uint8_t value);
 
   uint8_t find_lock_idx(uint8_t param_id);
   uint16_t find_lock(uint8_t step, uint8_t lock_idx,
                                      uint16_t &start_idx);
-
+  uint8_t count_lock_event(uint8_t step, uint8_t lock_idx);
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
                                  uint8_t value);
-  void send_slides();
   void recalc_slides();
 
   void record_track_locks(uint8_t track_param, uint8_t value);
@@ -152,6 +147,10 @@ public:
                                      uint8_t note_num, uint8_t event_on, uint8_t velocity);
   void clear_ext_conditional();
   void clear_ext_notes();
+
+  //clear_track_locks: if value != 255, delete specific lock event of value.
+  //otherwise delete all locks matching track_param of any value
+  bool clear_track_locks(uint8_t step, uint8_t track_param, uint8_t value = 255);
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();

@@ -30,7 +30,7 @@ const menu_t<16> seq_menu_layout PROGMEM = {
     "SEQ",
     {
         {"EDIT:", 0,4, 4, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, 47},
-        {"EDIT:", 0, 1 + NUM_EXT_LOCKS, 1, (uint8_t *)&SeqPage::pianoroll_mode, (Page *) NULL, NULL, 53},
+        {"EDIT:", 0, 1 + NUM_LOCKS, 1, (uint8_t *)&SeqPage::pianoroll_mode, (Page *) NULL, NULL, 53},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, 0},
         {"PARAM CC:", 0, 129, 1, (uint8_t *)&SeqPage::param_select, (Page *)NULL, NULL, 54},
         {"ARPEGGIATOR", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, 0},

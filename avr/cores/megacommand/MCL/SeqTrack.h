@@ -6,6 +6,9 @@
 #include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
+#include "MCLMemory.h"
+
+#define EMPTY_TRACK_TYPE 0
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -22,6 +25,8 @@
 #define MASK_LOCK 1
 #define MASK_SLIDE 2
 #define MASK_MUTE 3
+
+#define NUM_LOCKS 8
 
 class SeqTrack_270 {};
 
@@ -72,6 +77,12 @@ public:
 
   uint32_t start_step;
   uint8_t start_step_offset;
+
+  SlideData locks_slide_data[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_step[NUM_LOCKS];
+
+  SeqTrack() { active = EMPTY_TRACK_TYPE; }
 
   ALWAYS_INLINE() void reset() {
     step_count = 0;
@@ -200,6 +211,8 @@ public:
     }
     return multi;
   }
+  void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
+  void send_slides(volatile uint8_t *locks_params);
 };
 
 #endif /* SEQTRACK_H__ */

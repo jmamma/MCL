@@ -73,59 +73,6 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   return idx;
 }
 
-#define _swap_int16_t(a, b)                                                    \
-  {                                                                            \
-    int16_t t = a;                                                             \
-    a = b;                                                                     \
-    b = t;                                                                     \
-  }
-#define _swap_int8_t(a, b)                                                     \
-  {                                                                            \
-    int8_t t = a;                                                              \
-    a = b;                                                                     \
-    b = t;                                                                     \
-  }
-
-void ExtSeqTrack::send_slides() {
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
-    if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
-
-      uint8_t val;
-      val = locks_slide_data[c].y0;
-      if (locks_slide_data[c].steep) {
-        if (locks_slide_data[c].err > 0) {
-          locks_slide_data[c].y0 += locks_slide_data[c].inc;
-          locks_slide_data[c].err -= locks_slide_data[c].dx;
-        }
-        locks_slide_data[c].err += locks_slide_data[c].dy;
-        locks_slide_data[c].x0++;
-        if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
-          locks_slide_data[c].init();
-          break;
-        }
-      } else {
-        uint16_t x0_old = locks_slide_data[c].x0;
-        while (locks_slide_data[c].x0 == x0_old) {
-          if (locks_slide_data[c].err > 0) {
-            locks_slide_data[c].x0 += locks_slide_data[c].inc;
-            locks_slide_data[c].err -= locks_slide_data[c].dy;
-          }
-          locks_slide_data[c].err += locks_slide_data[c].dx;
-          locks_slide_data[c].y0++;
-          if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
-            locks_slide_data[c].init();
-            break;
-          }
-        }
-        if (locks_slide_data[c].yflip != 255) {
-          val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
-        }
-      }
-      uart->sendCC(channel, locks_params[c] - 1, 0x7F & val);
-    }
-  }
-}
-
 void ExtSeqTrack::recalc_slides() {
   if (locks_slides_recalc == 255) {
     return;
@@ -136,12 +83,16 @@ void ExtSeqTrack::recalc_slides() {
   uint8_t step = locks_slides_recalc;
   uint8_t timing_mid = get_timing_mid_inline();
 
-  uint8_t find_array[NUM_EXT_LOCKS] = {0};
+  uint8_t find_array[NUM_LOCKS] = {0};
 
   uint16_t curidx, ev_end;
   locate(step, curidx, ev_end);
 
-  for (uint8_t n = 0; n < timing_buckets.get(step); n++) {
+  // Because, we support two lock values of same lock_idx per step.
+  // Slide -> from last lock event on start step to first lock event on
+  // destination step
+
+  for (int8_t n = timing_buckets.get(step) - 1; n > 0; n--) {
     auto &e = events[curidx + n];
     if (e.is_lock) {
       find_array[e.lock_idx] = 1;
@@ -150,7 +101,7 @@ void ExtSeqTrack::recalc_slides() {
 
   find_next_locks(curidx, step, find_array);
 
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (!locks_params[c]) {
       continue;
     }
@@ -159,11 +110,13 @@ void ExtSeqTrack::recalc_slides() {
       e = &events[curidx + n];
       if (e->is_lock && e->lock_idx == c) {
         break;
+      } else {
+        e = nullptr;
       }
-      else { e = nullptr; }
     }
 
-    if (e == nullptr) continue;
+    if (e == nullptr)
+      continue;
 
     auto next_lockstep = locks_slide_next_lock_step[c];
 
@@ -173,67 +126,17 @@ void ExtSeqTrack::recalc_slides() {
     }
     x0 = step * timing_mid + e->micro_timing - timing_mid + 1;
     if (next_lockstep < step) {
-      x1 = (length + next_lockstep) * timing_mid + locks_slide_next_lock_utiming[c] -
-           timing_mid - 1;
+      x1 = (length + next_lockstep) * timing_mid +
+           locks_slide_next_lock_utiming[c] - timing_mid - 1;
     } else {
-      x1 = next_lockstep * timing_mid + locks_slide_next_lock_utiming[c] - timing_mid - 1;
+      x1 = next_lockstep * timing_mid + locks_slide_next_lock_utiming[c] -
+           timing_mid - 1;
     }
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
 
-    locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
-    locks_slide_data[c].yflip = 255;
-    if (locks_slide_data[c].steep) {
-      /* Disable as this use case will not exist.
-      if (x0 > x1) {
-            _swap_int16_t(x0, x1);
-           _swap_int16_t(y0, y1);
-      }
-      */
-    } else {
-      if (y0 > y1) {
-        _swap_int8_t(y0, y1);
-        _swap_int16_t(x0, x1);
-        locks_slide_data[c].yflip = y0;
-      }
-    }
-    locks_slide_data[c].dx = x1 - x0;
-    locks_slide_data[c].dy = y1 - y0;
-    locks_slide_data[c].inc = 1;
-
-    if (locks_slide_data[c].steep) {
-      if (locks_slide_data[c].dy < 0) {
-        locks_slide_data[c].inc = -1;
-        locks_slide_data[c].dy *= -1;
-      }
-      locks_slide_data[c].dy *= 2;
-      locks_slide_data[c].err = locks_slide_data[c].dy - locks_slide_data[c].dx;
-      locks_slide_data[c].dx *= 2;
-    } else {
-      if (locks_slide_data[c].dx < 0) {
-        locks_slide_data[c].inc = -1;
-        locks_slide_data[c].dx *= -1;
-      }
-
-      locks_slide_data[c].dx *= 2;
-      locks_slide_data[c].err = locks_slide_data[c].dx - locks_slide_data[c].dy;
-      locks_slide_data[c].dy *= 2;
-    }
-    locks_slide_data[c].y0 = y0;
-    locks_slide_data[c].x0 = x0;
-    locks_slide_data[c].x1 = x1;
-    locks_slide_data[c].y1 = y1;
-    DEBUG_DUMP(step);
-    DEBUG_DUMP(locks_slide_data[c].x0);
-    DEBUG_DUMP(locks_slide_data[c].y0);
-    DEBUG_DUMP(x1);
-    DEBUG_DUMP(y1);
-    DEBUG_DUMP(locks_slide_data[c].dx);
-    DEBUG_DUMP(locks_slide_data[c].dy);
-    DEBUG_DUMP(locks_slide_data[c].steep);
-    DEBUG_DUMP(locks_slide_data[c].inc);
-    DEBUG_DUMP(locks_slide_data[c].yflip);
-  }
+    prepare_slide(c, x0, x1, y0, y1);
+     }
 
   locks_slides_recalc = 255;
 }
@@ -248,7 +151,6 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
 
   uint8_t max_len = length;
 
-
 again:
   for (; next_step < max_len; next_step++) {
     for (; curidx < timing_buckets.get(next_step); curidx++) {
@@ -260,12 +162,12 @@ again:
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
         locks_slide_next_lock_utiming[i] = e.micro_timing;
-     /* } else if (e.trig) {
-        locks_slide_next_lock_val[i] = locks_params_orig[i];
-        locks_slide_next_lock_step[i] = next_step;
-        locks_slide_next_lock_utiming[i] = e.micro_timing;
-      } */
-    }
+        /* } else if (e.trig) {
+           locks_slide_next_lock_val[i] = locks_params_orig[i];
+           locks_slide_next_lock_step[i] = next_step;
+           locks_slide_next_lock_utiming[i] = e.micro_timing;
+         } */
+      }
     }
   }
 
@@ -344,7 +246,6 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
   ev_idx = 0xFFFF;
   return step;
 }
-
 
 uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
                                      uint16_t &ev_idx, uint16_t ev_end) {
@@ -549,7 +450,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 }
 
 void ExtSeqTrack::reset_params() {
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
       uart->sendCC(channel, locks_params[c] - 1, locks_params_orig[c]);
     }
@@ -598,7 +499,7 @@ void ExtSeqTrack::seq() {
 
     // Locate CURRENT
     locate(step_count, ev_idx, ev_end);
-    send_slides();
+    send_slides(locks_params);
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
@@ -738,7 +639,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
 void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   param_id += 1;
 
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
       if (locks_params[c] == param_id) {
         locks_params_orig[c] = value;
@@ -750,7 +651,7 @@ void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
 
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   param_id += 1;
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] == param_id) {
       return c;
     }
@@ -764,8 +665,41 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
   if (step_count >= length) {
     return;
   }
-
+  // clear all locks on step
+  clear_track_locks(step_count, track_param, 255);
   set_track_locks(step_count, utiming, track_param, value);
+}
+
+bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
+                                    uint8_t value) {
+  uint8_t lock_idx = find_lock_idx(track_param);
+  uint16_t start_idx, end;
+  locate(step, start_idx, end);
+  bool ret = false;
+
+  for (uint16_t i = start_idx; i != end; ++i) {
+    if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
+      continue;
+    }
+    if (events[i].event_value == value || value == 255) {
+      remove_event(i);
+      ret = true;
+    }
+  }
+  return ret;
+}
+
+uint8_t ExtSeqTrack::count_lock_event(uint8_t step, uint8_t lock_idx) {
+  uint16_t start_idx, end;
+  locate(step, start_idx, end);
+  uint8_t count = 0;
+  for (uint16_t i = start_idx; i != end; ++i) {
+    if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
+      continue;
+    }
+    count++;
+  }
+  return count;
 }
 
 bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
@@ -774,7 +708,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
   // Let's try and find an existing param
   uint8_t match = find_lock_idx(track_param);
 
-  for (uint8_t c = 0; c < NUM_EXT_LOCKS && match == 255; c++) {
+  for (uint8_t c = 0; c < NUM_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
       // locks_params_orig[c] = MD.kit.params[track_number][track_param];
@@ -787,14 +721,20 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
   if (match != 255) {
 
     uint16_t ev_idx;
-    uint16_t lock_ev_idx = find_lock(step, match, ev_idx);
+    //  uint16_t lock_ev_idx = find_lock(step, match, ev_idx);
 
-    if (lock_ev_idx != 0xFFFF) {
-      e = &events[lock_ev_idx];
-    } else {
-      ext_event_t new_event;
-      e = &new_event;
+    // if (lock_ev_idx != 0xFFFF) {
+    //   e = &events[lock_ev_idx];
+    // } else {
+
+    // Only allow maximum 2 lock events of same idx per step
+    uint8_t count = count_lock_event(step, match);
+    if (count >= 2) {
+      return false;
     }
+
+    ext_event_t new_event;
+    e = &new_event;
     DEBUG_DUMP("adding lock");
     DEBUG_DUMP(match);
 
@@ -805,12 +745,8 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     e->event_on = true;
     e->micro_timing = utiming;
 
-    if (lock_ev_idx == 0xFFFF) {
-      if (add_event(step, e) == 0xFFFF) {
-        return false;
-      } else {
-        DEBUG_DUMP("added lock");
-      }
+    if (add_event(step, e) == 0xFFFF) {
+      return false;
     }
 
     return true;

@@ -59,7 +59,7 @@ public:
   void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
   void draw_pianoroll();
   void draw_viewport_minimap();
-
+  void draw_seq_pos();
   void draw_lockeditor();
 
   bool is_within_fov(uint16_t x) {

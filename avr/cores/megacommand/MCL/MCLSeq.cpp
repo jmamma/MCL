@@ -147,7 +147,7 @@ void MCLSeq::onMidiStopCallback() {
     ext_tracks[i].buffer_notesoff();
     ext_tracks[i].reset_params();
     ext_tracks[i].locks_slides_recalc = 255;
-    for (uint8_t c = 0; c < NUM_EXT_LOCKS; c++) {
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     ext_tracks[i].locks_slide_data[c].init();
     }
 
@@ -157,7 +157,7 @@ void MCLSeq::onMidiStopCallback() {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
-    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     md_tracks[i].locks_slide_data[c].init();
     }
   }

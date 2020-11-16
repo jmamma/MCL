@@ -63,6 +63,7 @@ public:
   static uint8_t step_select;
   static uint8_t mask_type;
   static uint8_t param_select;
+  static uint8_t last_pianoroll_mode;
   static uint8_t pianoroll_mode;
   static uint8_t velocity;
   static MidiDevice* midi_device;
