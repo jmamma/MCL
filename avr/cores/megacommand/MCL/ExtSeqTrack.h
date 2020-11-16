@@ -145,7 +145,7 @@ public:
                                      uint16_t &start_idx);
   uint8_t count_lock_event(uint8_t step, uint8_t lock_idx);
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
-                                 uint8_t value);
+                                 uint8_t value, uint8_t lock_idx = 255);
   void recalc_slides();
 
   void record_track_locks(uint8_t track_param, uint8_t value);
