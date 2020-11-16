@@ -94,33 +94,11 @@ void SeqExtStepPage::draw_seq_pos() {
   }
 }
 
-void SeqExtStepPage::draw_lockeditor() {
+void SeqExtStepPage::draw_grid() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-  uint8_t timing_mid = active_track.get_timing_mid();
-
-  // Absolute piano roll dimensions
-  uint16_t pattern_end_x = active_track.length * timing_mid;
-  uint8_t pattern_end_fov_x = fov_w;
-
-  if (is_within_fov(pattern_end_x)) {
-    pattern_end_fov_x =
-        min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
-  }
-
   uint8_t h = fov_h / fov_notes;
-  uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
-  uint8_t j = 0;
-
   for (uint8_t i = 0; i < active_track.length; i++) {
-    // Update bucket index range
-    if (j > i) {
-      i = j;
-      ev_end = ev_j_end;
-      // active_track.locate(i, ev_idx, ev_end);
-    } else {
-      ev_end += active_track.timing_buckets.get(i);
-    }
-    uint16_t grid_tick_x = i * timing_mid;
+    uint16_t grid_tick_x = i * active_track.get_timing_mid();
     if (is_within_fov(grid_tick_x)) {
       uint8_t grid_fov_x =
           draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
@@ -136,7 +114,34 @@ void SeqExtStepPage::draw_lockeditor() {
         }
       }
     }
+  }
+}
 
+void SeqExtStepPage::draw_lockeditor() {
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t timing_mid = active_track.get_timing_mid();
+
+  // Absolute piano roll dimensions
+  uint16_t pattern_end_x = active_track.length * timing_mid;
+  uint8_t pattern_end_fov_x = fov_w;
+
+  if (is_within_fov(pattern_end_x)) {
+    pattern_end_fov_x =
+        min(fov_w, fov_pixels_per_tick * (pattern_end_x - fov_offset));
+  }
+
+  uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
+  uint8_t j = 0;
+
+  for (uint8_t i = 0; i < active_track.length; i++) {
+    // Update bucket index range
+    if (j > i) {
+      i = j;
+      ev_end = ev_j_end;
+      // active_track.locate(i, ev_idx, ev_end);
+    } else {
+      ev_end += active_track.timing_buckets.get(i);
+    }
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
       int lock_val = ev.event_value;
@@ -240,23 +245,6 @@ void SeqExtStepPage::draw_pianoroll() {
   for (int i = 0; i < active_track.length; i++) {
     // Update bucket index range
     ev_end += active_track.timing_buckets.get(i);
-    // Draw grid
-    uint16_t grid_tick_x = i * timing_mid;
-    if (is_within_fov(grid_tick_x)) {
-      uint8_t grid_fov_x =
-          draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
-
-      for (uint8_t k = 0; k < fov_notes; k += 1) {
-        // draw crisscross
-        // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel(
-        // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
-        oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)), WHITE);
-
-        if (i % 16 == 0) {
-          oled_display.drawPixel(grid_fov_x, draw_y + (k * h) + (h / 2), WHITE);
-        }
-      }
-    }
 
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
@@ -406,34 +394,35 @@ void SeqExtStepPage::loop() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
   }
-  auto active_track = mcl_seq.ext_tracks[last_ext_track];
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
   SeqPage::loop();
 
   // If pianoroll_edit mode changed.
-  if (last_pianoroll_mode != pianoroll_mode) {
+  if (show_seq_menu) {
+    if (last_pianoroll_mode != pianoroll_mode) {
 
-    if (pianoroll_mode > 0) {
-      if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
-          0) {
-        param_select = 128;
+      if (pianoroll_mode > 0) {
+        if (mcl_seq.ext_tracks[last_ext_track]
+                .locks_params[pianoroll_mode - 1] == 0) {
+          param_select = 128;
+        } else {
+          param_select = mcl_seq.ext_tracks[last_ext_track]
+                             .locks_params[pianoroll_mode - 1] -
+                         1;
+        }
+      }
+      last_pianoroll_mode = pianoroll_mode;
+    }
+    if ((pianoroll_mode > 0)) {
+      if (param_select == 128) {
+        mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] = 0;
       } else {
-        param_select = mcl_seq.ext_tracks[last_ext_track]
-                           .locks_params[pianoroll_mode - 1] -
-                       1;
+        mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
+            param_select + 1;
       }
     }
-    last_pianoroll_mode = pianoroll_mode;
   }
-  if (pianoroll_mode > 0) {
-    if (param_select == 128) {
-      mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] = 0;
-    } else {
-      mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
-          param_select + 1;
-    }
-  }
-
   if (seq_param1.hasChanged()) {
     // Horizontal translation
     int16_t diff = seq_param1.cur - seq_param1.old;
@@ -572,7 +561,9 @@ void SeqExtStepPage::display() {
 
   fov_pixels_per_tick = (float)fov_w / (float)fov_length;
 
+  draw_grid();
   draw_seq_pos();
+
   if (pianoroll_mode == 0) {
     MusicalNotes number_to_note;
     uint8_t oct = cur_y / 12;
@@ -737,6 +728,16 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (!recording || MidiClock.state != 2 ||
       EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    if (pianoroll_mode > 0) {
+      if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
+          0) {
+        param_select = 128;
+      } else {
+        param_select = mcl_seq.ext_tracks[last_ext_track]
+                           .locks_params[pianoroll_mode - 1] -
+                       1;
+      }
+    }
     if (SeqPage::handleEvent(event)) {
       if (show_seq_menu) {
         redisplay = true;
