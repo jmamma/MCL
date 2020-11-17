@@ -56,6 +56,7 @@ public:
       : SeqPage(e1, e2, e3, e4) {}
   void config_encoders();
 
+  void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color = WHITE);
   void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
   void draw_pianoroll();
   void draw_lockeditor();
@@ -66,6 +67,12 @@ public:
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }
     return false;
+  }
+  bool is_within_fov(uint16_t start_x, uint8_t end_x) {
+      if (is_within_fov(start_x) || is_within_fov(end_x) ||
+          ((start_x < fov_offset) && (end_x >= fov_offset + fov_length)) ||
+          (start_x < fov_offset && end_x < fov_offset && end_x < start_x)) { return true; }
+      return false;
   }
   void enter_notes();
   virtual bool handleEvent(gui_event_t *event);

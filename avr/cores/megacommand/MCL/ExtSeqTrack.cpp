@@ -743,7 +743,7 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
     if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
       continue;
     }
-    if (value == 255 || (events[i].event_value <= value + range &&
+    if (value == 255 || (events[i].event_value == value) || (events[i].event_value <= value + range &&
                          events[i].event_value >=
                              limit_value(value, -1 * (int)range, 0, 127))) {
       remove_event(i);
