@@ -693,7 +693,6 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
   // clear all locks on step
   clear_track_locks(step_count, track_param, 255);
   set_track_locks(step_count, utiming, track_param, value);
-
   uint8_t lock_idx = find_lock_idx(track_param);
   uint16_t start_idx, end;
   uint8_t j = find_next_lock(step_count, lock_idx, start_idx, end);
@@ -775,7 +774,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
 
   if (lock_idx == 255) {
     // Let's try and find an existing param
-    uint8_t lock_idx = find_lock_idx(track_param);
+    lock_idx = find_lock_idx(track_param);
 
     for (uint8_t c = 0; c < NUM_LOCKS && lock_idx == 255; c++) {
       if (locks_params[c] == 0) {
