@@ -160,7 +160,9 @@ public:
 
   //clear_track_locks: if value != 255, delete specific lock event of value.
   //otherwise delete all locks matching track_param of any value
-  bool clear_track_locks(uint8_t step, uint8_t track_param, uint8_t value = 255, uint8_t range = 0);
+  bool del_track_locks(int16_t cur_x, uint8_t lock_idx,
+                                 uint8_t value);
+  bool clear_track_locks(uint8_t step, uint8_t track_param, uint8_t value = 255);
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();

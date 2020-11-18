@@ -714,8 +714,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       uint8_t lock_idx = pianoroll_mode - 1;
 
       bool clear = false;
-      clear |= active_track.clear_track_locks(
-          step, active_track.locks_params[lock_idx] - 1, lock_cur_y, 3);
+      clear = active_track.del_track_locks(
+          cur_x, lock_idx, lock_cur_y);
       if (!clear) {
         active_track.set_track_locks(step, utiming,
                                      active_track.locks_params[lock_idx] - 1,

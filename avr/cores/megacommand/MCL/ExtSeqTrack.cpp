@@ -184,7 +184,7 @@ again:
         continue;
 
       uint8_t i = e.lock_idx;
-      //if (!e.event_on) { find_array[i] = 0; }
+      // if (!e.event_on) { find_array[i] = 0; }
       if (find_array[i] == 1) {
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
@@ -258,7 +258,7 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
       if (!ev.is_lock || ev.lock_idx != lock_idx) {
         continue;
       }
-     // if (!ev.event_on) { goto end; }
+      // if (!ev.event_on) { goto end; }
       return j;
     }
     ++j;
@@ -270,7 +270,7 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
     ev_idx = ev_end;
     ev_end += timing_buckets.get(j);
   } while (j != step);
-  end:
+end:
   ev_idx = 0xFFFF;
   return step;
 }
@@ -696,8 +696,41 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
   set_track_locks(step_count, utiming, track_param, value, false);
 }
 
+bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
+                                 uint8_t value) {
+  uint8_t timing_mid = get_timing_mid();
+  uint8_t start_step = (cur_x / timing_mid);
+
+  if (start_step != 0) { --start_step; }
+  uint16_t start_idx = 0;
+  uint16_t end = 0;
+  locate(start_step, start_idx, end);
+  end = start_idx;
+  bool ret = false;
+
+  uint8_t r = 2;
+
+  for (uint8_t n = start_step; n < min(length,start_step + 3); n++) {
+    end += timing_buckets.get(n);
+    for (; start_idx < end; start_idx++) {
+      DEBUG_DUMP(start_idx);
+      uint8_t i = start_idx;
+      if (!events[i].is_lock || events[i].lock_idx != lock_idx ||
+          (events[i].event_value > value + r ||
+           events[i].event_value < min(0, value - r)))
+        continue;
+      int16_t event_x = n * timing_mid + events[i].micro_timing - timing_mid;
+      if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
+        remove_event(i);
+        ret = true;
+      }
+    }
+  }
+  return ret;
+}
+
 bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
-                                    uint8_t value, uint8_t range) {
+                                    uint8_t value) {
   uint8_t lock_idx = find_lock_idx(track_param);
   uint16_t start_idx, end;
   locate(step, start_idx, end);
@@ -707,13 +740,10 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
     if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
       continue;
     }
-    if (value == 255 || (events[i].event_value == value) ||
-        (events[i].event_value <= value + range &&
-         events[i].event_value >=
-             limit_value(value, -1 * (int)range, 0, 127))) {
+    if (value == 255 || (events[i].event_value == value)) {
       remove_event(i);
       ret = true;
-      if (value != 255 && range == 0) {
+      if (value != 255) {
         break;
       }
     }
