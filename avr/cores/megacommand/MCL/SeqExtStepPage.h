@@ -68,7 +68,7 @@ public:
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) { return true; }
     return false;
   }
-  bool is_within_fov(uint16_t start_x, uint8_t end_x) {
+  bool is_within_fov(uint16_t start_x, uint16_t end_x) {
       if (is_within_fov(start_x) || is_within_fov(end_x) ||
           ((start_x < fov_offset) && (end_x >= fov_offset + fov_length)) ||
           (start_x < fov_offset && end_x < fov_offset && end_x < start_x)) { return true; }

@@ -185,8 +185,11 @@ void SeqExtStepPage::draw_lockeditor() {
         if (end_x < start_x) {
           end_x_tmp += roll_length;
         }
-        float gradient =
+        float gradient;
+        if (start_x == end_x) { gradient = 0; }
+        else { gradient =
             (float)(end_y - start_y) / (float)(end_x_tmp - start_x_tmp);
+        }
         // y = mx + y2 - mx2 = m( x - x1) + y1
 
         if (start_x < fov_offset) {
