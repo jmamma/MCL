@@ -56,7 +56,7 @@ struct ext_event_t {
   uint8_t lock_idx : 3;
   uint8_t cond_id : 4;
   /// for Midi note: note on/off
-  /// for plock: lock engage/disengage
+  /// for plock: lock slide engage/disengage
   bool event_on : 1;
   /// for Midi note: pitch value
   /// for plock & lock engage: lock value
@@ -144,8 +144,9 @@ public:
   uint16_t find_lock(uint8_t step, uint8_t lock_idx,
                                      uint16_t &start_idx);
   uint8_t count_lock_event(uint8_t step, uint8_t lock_idx);
+
   bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
-                                 uint8_t value, uint8_t lock_idx = 255);
+                                 uint8_t value, bool slide = true, uint8_t lock_idx = 255);
   void recalc_slides();
 
   void record_track_locks(uint8_t track_param, uint8_t value);

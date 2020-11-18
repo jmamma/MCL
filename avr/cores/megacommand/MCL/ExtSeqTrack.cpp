@@ -94,7 +94,7 @@ void ExtSeqTrack::recalc_slides() {
 
   for (int8_t n = timing_buckets.get(step) - 1; n > 0; n--) {
     auto &e = events[curidx + n];
-    if (e.is_lock) {
+    if (e.is_lock && e.event_on) {
       find_array[e.lock_idx] = 1;
     }
   }
@@ -151,7 +151,7 @@ again:
   for (; next_step < max_len; next_step++) {
     for (; curidx < timing_buckets.get(next_step); curidx++) {
       auto &e = events[curidx];
-      if (!e.is_lock)
+      if (!e.is_lock || !e.event_on)
         continue;
       return next_step;
     }
@@ -486,12 +486,10 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
     // plock
+    uart->sendCC(channel, locks_params[ev.lock_idx] - 1, ev.event_value);
+    // event_on == lock slide
     if (ev.event_on) {
-      uart->sendCC(channel, locks_params[ev.lock_idx] - 1, ev.event_value);
       locks_slides_recalc = step;
-      // lock engage
-    } else {
-      // lock disengage
     }
   } else {
     // midi note
@@ -692,43 +690,7 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
   }
   // clear all locks on step
   clear_track_locks(step_count, track_param, 255);
-  set_track_locks(step_count, utiming, track_param, value);
-  uint8_t lock_idx = find_lock_idx(track_param);
-  uint16_t start_idx, end;
-  uint8_t j = find_next_lock(step_count, lock_idx, start_idx, end);
-
-  if (j != step_count) {
-    uint8_t count = 0;
-    ext_event_t *ev_1 = nullptr;
-    ext_event_t *ev_2 = nullptr;
-
-    for (uint16_t i = start_idx; i != end; ++i) {
-      if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
-        continue;
-      }
-      if (ev_1 == nullptr) {
-        ev_1 = &events[i];
-      } else if (ev_2 == nullptr) {
-        ev_2 = &events[i];
-      }
-      count++;
-    }
-
-    if (count == 0) {
-      set_track_locks(j, 0, track_param, value);
-    }
-    if (count >= 2) {
-      // Replace first event
-      ev_1->event_value = value;
-    }
-    if (count == 1) {
-      // Shift first event
-      if (ev_1->event_value != value) {
-        set_track_locks(j, ev_1->micro_timing, track_param, ev_1->event_value);
-        ev_1->event_value = value;
-      }
-    }
-  }
+  set_track_locks(step_count, utiming, track_param, value, false);
 }
 
 bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
@@ -742,12 +704,13 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
     if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
       continue;
     }
-    if (value == 255 || (events[i].event_value == value) || (events[i].event_value <= value + range &&
-                         events[i].event_value >=
-                             limit_value(value, -1 * (int)range, 0, 127))) {
+    if (value == 255 || (events[i].event_value == value) ||
+        (events[i].event_value <= value + range &&
+         events[i].event_value >=
+             limit_value(value, -1 * (int)range, 0, 127))) {
       remove_event(i);
       ret = true;
-      if (value != 255) {
+      if (value != 255 && range == 0) {
         break;
       }
     }
@@ -770,7 +733,7 @@ uint8_t ExtSeqTrack::count_lock_event(uint8_t step, uint8_t lock_idx) {
 
 bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
                                   uint8_t track_param, uint8_t value,
-                                  uint8_t lock_idx) {
+                                  bool event_on, uint8_t lock_idx) {
 
   if (lock_idx == 255) {
     // Let's try and find an existing param
@@ -810,7 +773,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     e->cond_id = 0;
     e->lock_idx = lock_idx;
     e->event_value = value;
-    e->event_on = true;
+    e->event_on = event_on;
     e->micro_timing = utiming;
 
     if (add_event(step, e) == 0xFFFF) {
