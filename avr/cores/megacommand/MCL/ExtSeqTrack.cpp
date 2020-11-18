@@ -173,12 +173,16 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
 
   uint8_t count = 0;
   for (uint8_t n = 0; n < NUM_LOCKS; n++) {
-  if (find_array[n] == 1) { count++; }
+    if (find_array[n] == 1) {
+      count++;
+    }
   }
-  if (count == 0) { return; }
+  if (count == 0) {
+    return;
+  }
   // caller ensures step < length
   uint8_t next_step;
-  if (step == length - 1) {
+  if (step >= length - 1) {
     next_step = 0;
     curidx = 0;
   } else {
@@ -193,7 +197,9 @@ again:
   for (; next_step < max_len; next_step++) {
     end += timing_buckets.get(next_step);
     for (; curidx < end; curidx++) {
-      if (count == 0) { return; }
+      if (count == 0) {
+        return;
+      }
       auto &e = events[curidx];
       if (!e.is_lock)
         continue;
@@ -220,9 +226,10 @@ again:
     }
   }
 
-  if (next_step >= length) {
+  if (next_step == length) {
     next_step = 0;
     curidx = 0;
+    end = 0;
     max_len = step;
     goto again;
   }
@@ -708,7 +715,8 @@ uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
 }
 #define PARAM_VEL 128
 
-void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value, bool slide) {
+void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
+                                     bool slide) {
   uint8_t utiming = (mod12_counter + get_timing_mid());
   if (step_count >= length) {
     return;

@@ -269,10 +269,10 @@ void SeqExtStepPage::draw_lockeditor() {
   uint8_t fov_cur_w = (float)(cur_w)*fov_pixels_per_tick;
   uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0 * (float)fov_h);
 
-  oled_display.drawPixel(draw_x + fov_cur_x - 1, draw_y + fov_cur_y, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1, WHITE);
+  oled_display.drawPixel(draw_x + fov_cur_x - 1, draw_y + fov_cur_y - 2, WHITE);
+  oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y - 2, WHITE);
+  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1 - 2, WHITE);
+  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2, WHITE);
 }
 
 void SeqExtStepPage::draw_pianoroll() {
