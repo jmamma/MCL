@@ -26,13 +26,14 @@ SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &pt
 
 ArpPage arp_page(&arp_und, &arp_mode, &arp_speed, &arp_oct);
 
-const menu_t<16> seq_menu_layout PROGMEM = {
+const menu_t<17> seq_menu_layout PROGMEM = {
     "SEQ",
     {
         {"EDIT:", 0,4, 4, (uint8_t *)&SeqPage::mask_type, (Page *) NULL, opt_mask_handler, 47},
         {"EDIT:", 0, 1 + NUM_LOCKS, 1, (uint8_t *)&SeqPage::pianoroll_mode, (Page *) NULL, NULL, 53},
         {"TRACK SEL:", 1, 17, 0, (uint8_t *)&opt_trackid, (Page *)NULL, opt_trackid_handler, 0},
         {"CC:", 0, 130, 2, (uint8_t *)&SeqPage::param_select, (Page *)NULL, NULL, 54},
+        {"SLIDE:", 0, 2, 2, (uint8_t *)&SeqPage::slide, (Page *)NULL, NULL, 24},
         {"ARPEGGIATOR", 0, 0, 0, (uint8_t *)NULL, (Page *) &arp_page, NULL, 0},
         {"TRANSPOSE:", 0, 12, 0, (uint8_t *)&seq_ptc_page.key, (Page *) NULL, NULL, 0},
         {"VEL:", 0, 128, 0, (uint8_t *)&SeqPage::velocity, (Page *)NULL, NULL, 0},
@@ -51,7 +52,7 @@ const menu_t<16> seq_menu_layout PROGMEM = {
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<16> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<17> seq_menu_page(&seq_menu_layout, &seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 const menu_t<4> step_menu_layout PROGMEM = {
     "STP",

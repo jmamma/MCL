@@ -36,6 +36,8 @@ public:
   static constexpr uint8_t draw_x = 128 - fov_w;
   static constexpr uint8_t keyboard_w = 3;
 
+  static constexpr uint8_t zoom_max = 32;
+
   float fov_pixels_per_tick;
 
   int16_t cur_x;

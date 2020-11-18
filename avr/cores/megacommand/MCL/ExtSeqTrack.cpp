@@ -708,14 +708,14 @@ uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
 }
 #define PARAM_VEL 128
 
-void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
+void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value, bool slide) {
   uint8_t utiming = (mod12_counter + get_timing_mid());
   if (step_count >= length) {
     return;
   }
   // clear all locks on step
   clear_track_locks(step_count, track_param, 255);
-  set_track_locks(step_count, utiming, track_param, value, false);
+  set_track_locks(step_count, utiming, track_param, value, slide);
 }
 
 bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,

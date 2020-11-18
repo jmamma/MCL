@@ -149,7 +149,7 @@ public:
                                  uint8_t value, bool slide = true, uint8_t lock_idx = 255);
   void recalc_slides();
 
-  void record_track_locks(uint8_t track_param, uint8_t value);
+  void record_track_locks(uint8_t track_param, uint8_t value, bool slide = false);
   void record_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_track_noteoff(uint8_t note_num);
 

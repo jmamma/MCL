@@ -66,6 +66,8 @@ public:
   static uint8_t last_pianoroll_mode;
   static uint8_t pianoroll_mode;
   static uint8_t velocity;
+  static uint8_t slide;
+
   static MidiDevice* midi_device;
 
   static bool show_seq_menu;
