@@ -91,34 +91,27 @@ void ExtSeqTrack::recalc_slides() {
   // Because, we support two lock values of same lock_idx per step.
   // Slide -> from last lock event on start step to first lock event on
   // destination step
-
-  for (int8_t n = timing_buckets.get(step) - 1; n > 0; n--) {
+  DEBUG_DUMP(timing_buckets.get(step));
+  for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     auto &e = events[curidx + n];
+    DEBUG_DUMP(curidx + n);
     if (e.is_lock && e.event_on) {
       find_array[e.lock_idx] = 1;
+      DEBUG_DUMP(e.lock_idx);
+      DEBUG_DUMP(find_array[e.lock_idx]);
     }
   }
 
   find_next_locks(curidx, step, find_array);
 
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (!locks_params[c]) {
-      continue;
-    }
-    ext_event_t *e;
-    for (uint8_t n = 0; n < timing_buckets.get(step); n++) {
-      e = &events[curidx + n];
-      if (e->is_lock && e->lock_idx == c) {
-        break;
-      } else {
-        e = nullptr;
-      }
-    }
-
-    if (e == nullptr)
+  ext_event_t *e;
+  for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
+    e = &events[curidx + n];
+    uint8_t c = e->lock_idx;
+    if (!e->is_lock || !e->event_on || !locks_params[c])
       continue;
 
-    auto next_lockstep = locks_slide_next_lock_step[c];
+    uint8_t next_lockstep = locks_slide_next_lock_step[c];
 
     if (step == next_lockstep) {
       locks_slide_data[c].init();
@@ -135,6 +128,12 @@ void ExtSeqTrack::recalc_slides() {
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
 
+    DEBUG_DUMP("prepare slide");
+    DEBUG_DUMP(c);
+    DEBUG_DUMP(x0);
+    DEBUG_DUMP(x1);
+    DEBUG_DUMP(y0);
+    DEBUG_DUMP(y1);
     prepare_slide(c, x0, x1, y0, y1);
   }
 
@@ -146,10 +145,11 @@ uint8_t ExtSeqTrack::find_next_lock(uint8_t step, uint8_t lock_idx,
   uint8_t next_step = step + 1;
   locate(next_step, curidx, end);
   uint8_t max_len = length;
-
+  curidx = end;
 again:
   for (; next_step < max_len; next_step++) {
-    for (; curidx < timing_buckets.get(next_step); curidx++) {
+    end += timing_buckets.get(next_step);
+    for (; curidx < end; curidx++) {
       auto &e = events[curidx];
       if (!e.is_lock || !e.event_on)
         continue;
@@ -170,25 +170,47 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
                                   uint8_t *find_array) {
   DEBUG_PRINT_FN();
   DEBUG_DUMP(step);
-  // caller ensures step < length
-  uint8_t next_step = step + 1;
-  curidx += timing_buckets.get(step);
 
+  uint8_t count = 0;
+  for (uint8_t n = 0; n < NUM_LOCKS; n++) {
+  if (find_array[n] == 1) { count++; }
+  }
+  if (count == 0) { return; }
+  // caller ensures step < length
+  uint8_t next_step;
+  if (step == length - 1) {
+    next_step = 0;
+    curidx = 0;
+  } else {
+    curidx += timing_buckets.get(step);
+    next_step = step + 1;
+  }
+
+  uint16_t end = curidx;
   uint8_t max_len = length;
 
 again:
   for (; next_step < max_len; next_step++) {
-    for (; curidx < timing_buckets.get(next_step); curidx++) {
+    end += timing_buckets.get(next_step);
+    for (; curidx < end; curidx++) {
+      if (count == 0) { return; }
       auto &e = events[curidx];
       if (!e.is_lock)
         continue;
 
       uint8_t i = e.lock_idx;
+      DEBUG_DUMP(e.lock_idx);
       // if (!e.event_on) { find_array[i] = 0; }
       if (find_array[i] == 1) {
+        DEBUG_DUMP("found lock");
+        DEBUG_DUMP(i);
+        DEBUG_DUMP(next_step);
+        DEBUG_DUMP(e.event_value);
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
         locks_slide_next_lock_utiming[i] = e.micro_timing;
+        find_array[i] = 0;
+        count--;
         /* } else if (e.trig) {
            locks_slide_next_lock_val[i] = locks_params_orig[i];
            locks_slide_next_lock_step[i] = next_step;
@@ -697,11 +719,13 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 }
 
 bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
-                                 uint8_t value) {
+                                  uint8_t value) {
   uint8_t timing_mid = get_timing_mid();
   uint8_t start_step = (cur_x / timing_mid);
 
-  if (start_step != 0) { --start_step; }
+  if (start_step != 0) {
+    --start_step;
+  }
   uint16_t start_idx = 0;
   uint16_t end = 0;
   locate(start_step, start_idx, end);
@@ -710,7 +734,7 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
 
   uint8_t r = 2;
 
-  for (uint8_t n = start_step; n < min(length,start_step + 3); n++) {
+  for (uint8_t n = start_step; n < min(length, start_step + 3); n++) {
     end += timing_buckets.get(n);
     for (; start_idx < end; start_idx++) {
       DEBUG_DUMP(start_idx);
