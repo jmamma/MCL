@@ -182,7 +182,9 @@ again:
       auto &e = events[curidx];
       if (!e.is_lock)
         continue;
+
       uint8_t i = e.lock_idx;
+      //if (!e.event_on) { find_array[i] = 0; }
       if (find_array[i] == 1) {
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
@@ -256,6 +258,7 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
       if (!ev.is_lock || ev.lock_idx != lock_idx) {
         continue;
       }
+     // if (!ev.event_on) { goto end; }
       return j;
     }
     ++j;
@@ -267,7 +270,7 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
     ev_idx = ev_end;
     ev_end += timing_buckets.get(j);
   } while (j != step);
-
+  end:
   ev_idx = 0xFFFF;
   return step;
 }
