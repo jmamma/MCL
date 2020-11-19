@@ -127,13 +127,14 @@ void ExtSeqTrack::recalc_slides() {
     }
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
-
+   /*
     DEBUG_DUMP("prepare slide");
     DEBUG_DUMP(c);
     DEBUG_DUMP(x0);
     DEBUG_DUMP(x1);
     DEBUG_DUMP(y0);
     DEBUG_DUMP(y1);
+    */
     prepare_slide(c, x0, x1, y0, y1);
   }
 
@@ -208,10 +209,12 @@ again:
       DEBUG_DUMP(e.lock_idx);
       // if (!e.event_on) { find_array[i] = 0; }
       if (find_array[i] == 1) {
+              /*
         DEBUG_DUMP("found lock");
         DEBUG_DUMP(i);
         DEBUG_DUMP(next_step);
         DEBUG_DUMP(e.event_value);
+        */
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
         locks_slide_next_lock_utiming[i] = e.micro_timing;
@@ -759,6 +762,12 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
     }
   }
   return ret;
+}
+
+void ExtSeqTrack::clear_track_locks(uint8_t track_param) {
+  for (uint8_t n = 0; n < length; n++) {
+  clear_track_locks(n, track_param, 255);
+  }
 }
 
 bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,

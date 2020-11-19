@@ -837,6 +837,7 @@ void opt_clear_track_handler() {
 }
 
 void opt_clear_locks_handler() {
+
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
@@ -853,6 +854,20 @@ void opt_clear_locks_handler() {
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
+    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+    if (opt_clear == 2) {
+      oled_display.textbox("CLEAR ", "LOCKS");
+      for (uint8_t n = 0; n < NUM_LOCKS; n++) {
+        active_track.clear_track_locks(active_track.locks_params[n] - 1);
+      }
+    }
+    if (opt_clear == 1) {
+      oled_display.textbox("CLEAR ", "LOCK");
+      if (SeqPage::pianoroll_mode > 0) {
+        active_track.clear_track_locks(
+            active_track.locks_params[SeqPage::pianoroll_mode - 1] - 1);
+      }
+    }
     // TODO ext locks
   }
   opt_clear = 0;

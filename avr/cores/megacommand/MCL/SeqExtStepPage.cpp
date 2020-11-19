@@ -437,9 +437,14 @@ void SeqExtStepPage::loop() {
   if (pianoroll_mode == 0) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
+
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
   }
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
