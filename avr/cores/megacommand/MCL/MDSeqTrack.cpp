@@ -200,13 +200,13 @@ again:
     uint8_t cur_mask = 1;
     auto lcks = get_step_locks(next_step);
     for (uint8_t i = 0; i < NUM_LOCKS; ++i) {
+
       if (mask & cur_mask) {
         if (lcks & cur_mask) {
           locks_slide_next_lock_val[i] = locks[curidx];
           locks_slide_next_lock_step[i] = next_step;
           mask &= ~cur_mask;
           // all targets hit?
-          ++curidx;
         } else if (steps[next_step].trig) {
           locks_slide_next_lock_val[i] = locks_params_orig[i];
           locks_slide_next_lock_step[i] = next_step;
@@ -214,6 +214,9 @@ again:
         }
         if (!mask)
           return;
+      }
+      if (lcks & cur_mask) {
+      curidx++;
       }
       cur_mask <<= 1;
     }
@@ -264,7 +267,7 @@ bool MDSeqTrack::get_step(uint8_t step, uint8_t mask_type) const {
   case MASK_PATTERN:
     return steps[step].trig;
   case MASK_LOCK:
-    return (steps[step].locks && steps[step].locks_enabled);
+    return steps[step].locks_enabled;
   case MASK_MUTE:
     return IS_BIT_SET64(oneshot_mask, step);
   case MASK_SLIDE:
