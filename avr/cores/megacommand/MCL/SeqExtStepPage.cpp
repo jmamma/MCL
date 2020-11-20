@@ -868,14 +868,14 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       if (seq_extstep_page.x_notes_down > 0) {
         seq_extstep_page.enter_notes();
       }
-      if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
+      //if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
         seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
         uint8_t vel = SeqPage::velocity;
         if (seq_extstep_page.recording) {
           vel = msg[2];
         }
         mcl_seq.ext_tracks[n].note_on(cur_y, vel);
-      }
+      //}
     }
   }
 #endif
