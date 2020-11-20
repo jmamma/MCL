@@ -258,7 +258,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = last_md_track + 1;
         opt_speed = mcl_seq.md_tracks[last_md_track].speed;
         opt_length = mcl_seq.md_tracks[last_md_track].length;
-        opt_channel = mcl_seq.md_tracks[last_md_track].channel + 1;
       } else {
 #ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
@@ -755,7 +754,6 @@ void opt_length_handler() {
 
 void opt_channel_handler() {
   if (opt_midi_device_capture == &MD) {
-    mcl_seq.md_tracks[last_md_track].channel = opt_channel - 1;
   } else {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     mcl_seq.ext_tracks[last_ext_track].channel = opt_channel - 1;

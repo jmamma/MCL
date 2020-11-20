@@ -101,6 +101,8 @@ public:
   uint16_t event_count;
   uint8_t velocities[128];
   uint8_t locks_params_orig[NUM_LOCKS];
+  uint8_t channel;
+  void set_channel(uint8_t channel_) { channel = channel_; }
   void* data() const { return (void*) &timing_buckets; }
   bool convert(ExtSeqTrackData_270 *old) {
     // TODO

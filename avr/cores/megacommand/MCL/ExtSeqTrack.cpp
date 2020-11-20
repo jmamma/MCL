@@ -557,7 +557,7 @@ void ExtSeqTrack::seq() {
 
     // Locate CURRENT
     locate(step_count, ev_idx, ev_end);
-    send_slides(locks_params);
+    send_slides(locks_params, channel);
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {

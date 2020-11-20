@@ -66,7 +66,6 @@ public:
   uint8_t iterations_8;
 
   uint8_t port = UART1_PORT;
-  uint8_t channel;
   MidiUartParent *uart = &MidiUart;
 
   bool mute_until_start = false;
@@ -212,7 +211,7 @@ public:
     return multi;
   }
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
-  void send_slides(volatile uint8_t *locks_params);
+  void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 };
 
 #endif /* SEQTRACK_H__ */

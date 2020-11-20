@@ -51,7 +51,7 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 // So we manually allocate the following BANK1 memory regions, with a little bit of headroom:
 
 constexpr size_t GRID1_TRACK_LEN = 534;
-constexpr size_t GRID2_TRACK_LEN = 2093;
+constexpr size_t GRID2_TRACK_LEN = 2094;
 constexpr size_t FX_TRACK_LEN = 43;
 constexpr size_t DEVICE_TRACK_LEN = 7;
 
