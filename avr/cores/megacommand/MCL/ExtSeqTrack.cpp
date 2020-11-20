@@ -127,14 +127,14 @@ void ExtSeqTrack::recalc_slides() {
     }
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
-   /*
-    DEBUG_DUMP("prepare slide");
-    DEBUG_DUMP(c);
-    DEBUG_DUMP(x0);
-    DEBUG_DUMP(x1);
-    DEBUG_DUMP(y0);
-    DEBUG_DUMP(y1);
-    */
+    /*
+     DEBUG_DUMP("prepare slide");
+     DEBUG_DUMP(c);
+     DEBUG_DUMP(x0);
+     DEBUG_DUMP(x1);
+     DEBUG_DUMP(y0);
+     DEBUG_DUMP(y1);
+     */
     prepare_slide(c, x0, x1, y0, y1);
   }
 
@@ -204,12 +204,12 @@ again:
       DEBUG_DUMP(e.lock_idx);
       // if (!e.event_on) { find_array[i] = 0; }
       if (find_array[i] == 1) {
-              /*
-        DEBUG_DUMP("found lock");
-        DEBUG_DUMP(i);
-        DEBUG_DUMP(next_step);
-        DEBUG_DUMP(e.event_value);
-        */
+        /*
+  DEBUG_DUMP("found lock");
+  DEBUG_DUMP(i);
+  DEBUG_DUMP(next_step);
+  DEBUG_DUMP(e.event_value);
+  */
         locks_slide_next_lock_val[i] = e.event_value;
         locks_slide_next_lock_step[i] = next_step;
         locks_slide_next_lock_utiming[i] = e.micro_timing;
@@ -394,13 +394,13 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
 
   uint8_t timing_mid = get_timing_mid();
 
-  uint8_t start_step = (cur_x / timing_mid);
-  uint8_t start_utiming = timing_mid + cur_x - (start_step * timing_mid);
+  uint8_t step = (cur_x / timing_mid);
+  uint8_t start_utiming = timing_mid + cur_x - (step * timing_mid);
 
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
 
-  if (end_step == start_step) {
+  if (end_step == step) {
     DEBUG_DUMP("ALERT start == end");
     end_step = end_step + 1;
     //    end_utiming = 2 * timing_mid - end_utiming;
@@ -412,8 +412,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   }
 
   uint16_t ev_idx;
-  uint16_t note_idx =
-      find_midi_note(start_step, cur_y, ev_idx, /*event_on*/ true);
+  uint16_t note_idx = find_midi_note(step, cur_y, ev_idx, /*event_on*/ true);
   if (note_idx != 0xFFFF) {
     DEBUG_DUMP("abort note on");
     return;
@@ -426,7 +425,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
     return;
   }
 
-  set_track_step(start_step, start_utiming, cur_y, true, velocity);
+  set_track_step(step, start_utiming, cur_y, true, velocity);
   set_track_step(end_step, end_utiming, cur_y, false, 255);
 }
 
@@ -435,7 +434,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   DEBUG_DUMP(cur_x);
   DEBUG_DUMP(cur_w);
   uint8_t timing_mid = get_timing_mid();
-  uint8_t start_step = (cur_x / timing_mid);
+  uint8_t step = (cur_x / timing_mid);
 
   // uint8_t end_step = ((cur_x + cur_w) / timing_mid);
   // uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step *
@@ -534,8 +533,10 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
 void ExtSeqTrack::seq() {
   if (mute_until_start) {
 
-    if (clock_diff(MidiClock.div16th_counter, start_step) == 0) {
-      if (MidiClock.mod12_counter == start_step_offset) {
+    if ((clock_diff(MidiClock.div16th_counter, start_step) == 0)) {
+      if (start_step_offset > 0) {
+        start_step_offset--;
+      } else {
         reset();
       }
     }
@@ -727,20 +728,20 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
 bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
                                   uint8_t value) {
   uint8_t timing_mid = get_timing_mid();
-  uint8_t start_step = (cur_x / timing_mid);
+  uint8_t step = (cur_x / timing_mid);
 
-  if (start_step != 0) {
-    --start_step;
+  if (step != 0) {
+    --step;
   }
   uint16_t start_idx = 0;
   uint16_t end = 0;
-  locate(start_step, start_idx, end);
+  locate(step, start_idx, end);
   end = start_idx;
   bool ret = false;
 
   uint8_t r = 2;
 
-  for (uint8_t n = start_step; n < min(length, start_step + 3); n++) {
+  for (uint8_t n = step; n < min(length, step + 3); n++) {
     end += timing_buckets.get(n);
     for (; start_idx < end; start_idx++) {
       DEBUG_DUMP(start_idx);
@@ -761,7 +762,7 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
 
 void ExtSeqTrack::clear_track_locks(uint8_t track_param) {
   for (uint8_t n = 0; n < length; n++) {
-  clear_track_locks(n, track_param, 255);
+    clear_track_locks(n, track_param, 255);
   }
 }
 
