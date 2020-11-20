@@ -182,14 +182,9 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
     return;
   }
   // caller ensures step < length
-  uint8_t next_step;
-  if (step >= length - 1) {
-    next_step = 0;
-    curidx = 0;
-  } else {
-    curidx += timing_buckets.get(step);
-    next_step = step + 1;
-  }
+
+  curidx += timing_buckets.get(step);
+  uint8_t next_step = step + 1;
 
   uint16_t end = curidx;
   uint8_t max_len = length;
@@ -833,10 +828,11 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     // } else {
 
     // Only allow maximum 2 lock events of same idx per step
+    /*
     uint8_t count = count_lock_event(step, lock_idx);
     if (count >= 2) {
       return false;
-    }
+    }*/
 
     ext_event_t new_event;
     e = &new_event;
