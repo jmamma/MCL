@@ -828,6 +828,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         mcl_seq.ext_tracks[n].update_param(param, value);
       }
     }
+  return;
   }
 }
 
@@ -854,15 +855,16 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       } else if (fov_y + SeqExtStepPage::fov_notes <= cur_y) {
         fov_y = cur_y - SeqExtStepPage::fov_notes;
       }
-
-      last_ext_track = n;
-      seq_extstep_page.config_encoders();
-
       seq_extstep_page.fov_offset = fov_offset;
       seq_extstep_page.cur_x = cur_x;
       seq_extstep_page.fov_y = fov_y;
       seq_extstep_page.cur_y = cur_y;
       seq_extstep_page.cur_w = cur_w;
+
+      if (last_ext_track != n) {
+      last_ext_track = n;
+      return;
+      }
 
       mcl_seq.ext_tracks[n].record_track_noteon(cur_y, msg[2]);
       if (seq_extstep_page.x_notes_down > 0) {
@@ -876,6 +878,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
         }
         mcl_seq.ext_tracks[n].note_on(cur_y, vel);
       //}
+      return;
     }
   }
 #endif
@@ -899,6 +902,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       } else {
         mcl_seq.ext_tracks[n].remove_notes_on(pitch);
       }
+     return;
     }
   }
 #endif
