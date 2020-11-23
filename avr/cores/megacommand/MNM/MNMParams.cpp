@@ -1,7 +1,7 @@
 #include "WProgram.h"
 #include "helpers.h"
-#include "MNMParams.hh"
-#include "Elektron.hh"
+#include "MNMParams.h"
+#include "Elektron.h"
 #include "MNM.h"
 
 uint8_t monomachine_sysex_hdr[5] = {
@@ -41,6 +41,35 @@ const mnm_machine_name_t mnm_machine_names[] PROGMEM = {
   { "FX-RINGMOD", 17 }
 };
 
+const short_machine_name_t mnm_machine_names_short[] PROGMEM = {
+  { "GN","--", 0},
+  { "GN", "SN", 1},
+  { "GN", "NS", 2},
+
+  { "SW", "SW", 4 },
+  { "SW", "PU", 5 },
+  { "SW", "EN", 14 },
+
+  { "SI", "65", 3 },
+  
+  { "DP", "WA", 6 },
+  { "DP", "BB", 7 },
+  { "DP", "DD", 32 },
+  { "DP", "DE", 33 },
+  
+  { "FM", "ST", 8 },
+  { "FM", "PA", 9 },
+  { "FM", "DY", 10 },
+  
+  { "VO", "VO", 11 },
+  
+  { "FX", "TH", 12 },
+  { "FX", "RV", 13 },
+  { "FX", "CR", 15 },
+  { "FX", "DM", 16 },
+  { "FX", "RM", 17 }
+};
+
 PGM_P MNMClass::getMachineName(uint8_t machine) {
   for (uint8_t i = 0; i < countof(mnm_machine_names); i++) {
     if (pgm_read_byte(&mnm_machine_names[i].id) == machine) {
@@ -49,6 +78,18 @@ PGM_P MNMClass::getMachineName(uint8_t machine) {
   }
   return NULL;
 }
+
+PGM_P getMNMMachineNameShort(uint8_t machine, uint8_t type) {
+
+  if (machine == 0) {
+    if (type == 1) {
+      return mnm_machine_names_short[0].name2;
+    }
+  }
+
+  return getMachineNameShort(machine, type, mnm_machine_names_short, countof(mnm_machine_names_short));
+}
+
 
 const model_param_name_t mnm_gnd_sin_model_names[] PROGMEM = { {"TUN", 7},
 							 {"", 127} };
@@ -278,7 +319,7 @@ model_to_param_names_t mnm_model_param_names[] = {
   { MNM_FX_RINGMOD_MODEL, mnm_fx_ringmod_model_names }
 };
 
-static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
+static PGM_P get_param_name(const model_param_name_t *names, uint8_t param) {
   uint8_t i = 0;
   uint8_t id;
   if (names == NULL)
@@ -293,7 +334,7 @@ static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
   return NULL;
 }
 
-static model_param_name_t *get_model_param_names(uint8_t model) {
+static const model_param_name_t *get_model_param_names(uint8_t model) {
   for (uint16_t i = 0; i < countof(mnm_model_param_names); i++) {
     if (model == mnm_model_param_names[i].model) {
       return mnm_model_param_names[i].names;

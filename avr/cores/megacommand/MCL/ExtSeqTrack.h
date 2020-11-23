@@ -3,14 +3,16 @@
 #ifndef EXTSEQTRACK_H__
 #define EXTSEQTRACK_H__
 
-#include "MidiUartParent.hh"
+#include "MidiUartParent.h"
 //#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+#include "CommonTools/NibbleArray.h"
+#include "MCL.h"
 
 #define NUM_EXT_STEPS 128
-#define NUM_EXT_NOTES 4
-#define NUM_EXT_LOCKS 4
+#define NUM_EXT_EVENTS 512
+#define NUM_NOTES_ON 16 //number of notes that can be recorded simultaneously.
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -19,140 +21,191 @@
 #define UART2_PORT 2
 
 // EXT Track speed
-#define EXT_SPEED_1X 2
-#define EXT_SPEED_2X 1
-#define EXT_SPEED_3_4X 3
-#define EXT_SPEED_3_2X 4
-#define EXT_SPEED_1_2X 5
-#define EXT_SPEED_1_4X 6
-#define EXT_SPEED_1_8X 7
+#define EXT_SPEED_270_1X 2
+#define EXT_SPEED_270_2X 1
+#define EXT_SPEED_270_3_4X 3
+#define EXT_SPEED_270_3_2X 4
+#define EXT_SPEED_270_1_2X 5
+#define EXT_SPEED_270_1_4X 6
+#define EXT_SPEED_270_1_8X 7
+#define NUM_EXT_NOTES_270 4
+#define NUM_LOCKS_270 4
+#define NUM_EXT_STEPS_270 128
 
-const uint8_t ext_speeds[7] PROGMEM = {
-    EXT_SPEED_1X,   EXT_SPEED_2X,   EXT_SPEED_3_4X, EXT_SPEED_3_2X,
-    EXT_SPEED_1_2X, EXT_SPEED_1_4X, EXT_SPEED_1_8X};
+class ExtSeqTrackData_270 {
+public:
+  uint8_t length; // Resolution = 2 / ExtPatternResolution
+  uint8_t speed;
+  uint8_t reserved[NUM_EXT_NOTES_270];
+  int8_t notes[NUM_EXT_NOTES_270]
+              [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
+  uint8_t locks[NUM_LOCKS_270][NUM_EXT_STEPS_270];
+  uint8_t locks_params[NUM_LOCKS_270];
+
+  uint64_t lock_masks[NUM_LOCKS_270];
+
+  uint8_t conditional[NUM_EXT_STEPS_270];
+  uint8_t timing[NUM_EXT_STEPS_270];
+};
+
+/// 24-bit ext track event descriptor
+struct ext_event_t {
+  /// true for lock, false for Midi note
+  bool is_lock : 1;
+  /// effective when is_lock is true
+  uint8_t lock_idx : 3;
+  uint8_t cond_id : 4;
+  /// for Midi note: note on/off
+  /// for plock: lock slide engage/disengage
+  bool event_on : 1;
+  /// for Midi note: pitch value
+  /// for plock & lock engage: lock value
+  /// for plock & lock disengage: ignored
+  uint8_t event_value : 7;
+  /// micro timing value
+  uint8_t micro_timing;
+
+  bool operator < (const ext_event_t& that) {
+    // order by micro_timing
+    if (this->micro_timing != that.micro_timing) {
+      return this->micro_timing < that.micro_timing;
+    }
+    /*
+    // order by lock
+
+    if (this->is_lock != that.is_lock) {
+      return this.is_lock;
+    }
+    */
+    // off < on
+    if (this->event_on != that.event_on) {
+      return that.event_on;
+    }
+
+    return false;
+  }
+};
+
+class NoteVector {
+public:
+  uint16_t x;
+  uint8_t value;
+  uint8_t velocity;
+};
 
 class ExtSeqTrackData {
 public:
-  uint8_t length;
-  uint8_t speed; // Resolution = 2 / ExtPatternResolution
-  uint8_t reserved[NUM_EXT_NOTES];
-  int8_t notes[NUM_EXT_NOTES][NUM_EXT_STEPS]; // 128 steps, up to 4 notes per step
-  uint8_t locks[NUM_EXT_LOCKS][NUM_EXT_STEPS];
-  uint8_t locks_params[NUM_EXT_LOCKS];
-  uint64_t lock_masks[NUM_EXT_LOCKS];
+  NibbleArray<128> timing_buckets;
+  ext_event_t events[NUM_EXT_EVENTS];
+  uint8_t locks_params[NUM_LOCKS];
+  uint16_t event_count;
+  uint8_t velocities[128];
+  uint8_t locks_params_orig[NUM_LOCKS];
+  uint8_t channel;
+  void set_channel(uint8_t channel_) { channel = channel_; }
+  void* data() const { return (void*) &timing_buckets; }
+  bool convert(ExtSeqTrackData_270 *old) {
+    // TODO
+    return false;
+  }
 
-  uint8_t conditional[NUM_EXT_STEPS];
-  uint8_t timing[NUM_EXT_STEPS];
+  void clear() {
+    event_count = 0;
+    timing_buckets.clear();
+  }
 };
-class ExtSeqTrack : public ExtSeqTrackData {
+
+class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
 
 public:
-  uint8_t channel;
-  uint8_t port = UART2_PORT;
-  MidiUartParent *uart = &MidiUart2;
-
-  uint8_t mute_state = SEQ_MUTE_OFF;
-
-  uint64_t note_buffer[2] = {
-      0}; // 2 x 64 bit masks to store state of 128 notes.
+  uint64_t note_buffer[2] = {0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
 
-  uint8_t step_count;
-  uint8_t mod12_counter;
-  uint32_t start_step;
-  uint8_t start_step_offset;
-  bool mute_until_start = false;
+  NoteVector notes_on[NUM_NOTES_ON];
+  uint8_t notes_on_count;
 
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
+  uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
   ALWAYS_INLINE() void reset() {
-    step_count = 0;
+    SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
-    mute_until_start = false;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
   }
-  ALWAYS_INLINE() void step_count_inc() {
-    if (step_count == length - 1) {
-      step_count = 0;
 
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
-    } else {
-      step_count++;
-    }
-  }
   ALWAYS_INLINE() void seq();
-  ALWAYS_INLINE()
-  void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  ALWAYS_INLINE() void note_on(uint8_t note);
-  ALWAYS_INLINE() void note_off(uint8_t note);
-  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note);
+  ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100);
+  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note, uint8_t velocity = 100);
+  void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
+  uint8_t find_next_lock(uint8_t step, uint8_t lock_idx, uint16_t &curidx, uint16_t &end);
 
-  void record_ext_track_noteon(uint8_t note_num, uint8_t velocity);
-  void record_ext_track_noteoff(uint8_t note_num, uint8_t velocity);
+  void update_param(uint8_t param_id, uint8_t value);
 
-  void set_ext_track_step(uint8_t step, uint8_t note_num, uint8_t velocity);
+  uint8_t find_lock_idx(uint8_t param_id);
+  uint16_t find_lock(uint8_t step, uint8_t lock_idx,
+                                     uint16_t &start_idx);
+  uint8_t count_lock_event(uint8_t step, uint8_t lock_idx);
 
+  bool set_track_locks(uint8_t step, uint8_t utiming, uint8_t track_param,
+                                 uint8_t value, bool slide = true, uint8_t lock_idx = 255);
+  void recalc_slides();
+
+  void record_track_locks(uint8_t track_param, uint8_t value, bool slide = false);
+  void record_track_noteon(uint8_t note_num, uint8_t velocity);
+  void record_track_noteoff(uint8_t note_num);
+
+  bool set_track_step(uint8_t &step, uint8_t utiming,
+                                     uint8_t note_num, uint8_t event_on, uint8_t velocity);
   void clear_ext_conditional();
   void clear_ext_notes();
+
+  //clear_track_locks: if value != 255, delete specific lock event of value.
+  //otherwise delete all locks matching track_param of any value
+  bool del_track_locks(int16_t cur_x, uint8_t lock_idx,
+                                 uint8_t value);
+  void clear_track_locks(uint8_t track_param);
+  bool clear_track_locks(uint8_t step, uint8_t track_param, uint8_t value = 255);
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();
+  void reset_params();
+  void handle_event(uint16_t index, uint8_t step);
+  void remove_event(uint16_t index);
+  uint16_t add_event(uint8_t step, ext_event_t *e);
 
-  uint8_t get_timing_mid() { return get_timing_mid_inline(); }
+  void init_notes_on();
+  void add_notes_on(uint16_t x, uint8_t value, uint8_t velocity);
+  uint8_t find_notes_on(uint8_t value);
+  void remove_notes_on(uint8_t value);
 
-  ALWAYS_INLINE() uint8_t get_timing_mid_inline() {
-    uint8_t timing_mid;
-    switch (speed) {
-    default:
-    case EXT_SPEED_1X:
-      timing_mid = 12;
-      break;
-    case EXT_SPEED_2X:
-      timing_mid = 6;
-      break;
-    case EXT_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
-      break;
-    case EXT_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
-      break;
-    case EXT_SPEED_1_2X:
-      timing_mid = 24;
-      break;
-    case EXT_SPEED_1_4X:
-      timing_mid = 48;
-      break;
-    case EXT_SPEED_1_8X:
-      timing_mid = 96;
-      break;
+  bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
+  void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity);
+
+  // find midi note within the given step.
+  // returns: note index & step start index.
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx, bool event_on);
+  uint16_t find_midi_note(uint8_t step, uint8_t note_num, uint16_t& start_idx);
+
+  // search forward, then wrap around
+  // caller pass in note_idx of the note on event, and end index for current bucket.
+  // returns: step index & note index
+  uint8_t search_note_off(int8_t note_val, uint8_t step, uint16_t &note_idx, uint16_t ev_end);
+  uint8_t search_lock_idx(uint8_t lock_idx, uint8_t step,
+                                     uint16_t &ev_idx, uint16_t &ev_end);
+  void locate(uint8_t step, uint16_t& ev_idx, uint16_t& ev_end) {
+    ev_idx = 0;
+    ev_end = timing_buckets.get(step);
+    for (uint8_t i = 0; i < step; ++i) {
+      ev_idx += timing_buckets.get(i);
     }
-    return timing_mid;
+
+    ev_end += ev_idx;
+
   }
+
   void buffer_notesoff() {
+    init_notes_on();
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
   }
@@ -202,9 +255,6 @@ public:
     }
     *buf = 0;
   }
-#define DIR_LEFT 0
-#define DIR_RIGHT 1
-#define DIR_REVERSE 2
 
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }
@@ -213,8 +263,6 @@ public:
   void modify_track(uint8_t dir);
 
   void set_speed(uint8_t _speed);
-  float get_speed_multiplier();
-  float get_speed_multiplier(uint8_t speed);
 };
 
 #endif /* EXTSEQTRACK_H__ */

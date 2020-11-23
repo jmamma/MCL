@@ -111,8 +111,7 @@ extern const uint32_t _bvmasks32[];
 #define IS_BIT_SET128(target, bit)           IS_BIT_SET_RADDR(target, bit)
 #define IS_BIT_CLEAR128(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
 
-
-
+uint8_t popcount(const uint8_t bits);
 
 /** @} */
 
@@ -275,8 +274,7 @@ extern volatile uint16_t clock_minutes;
 #ifdef __cplusplus
 }
 
-#include "BitArray.hh"
-#include "Task.hh"
+#include "Task.h"
 #endif
 
 #endif /* HELPERS_H__ */

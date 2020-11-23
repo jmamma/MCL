@@ -19,6 +19,8 @@ class SeqStepPage : public SeqPage {
 
 public:
   bool show_pitch = false;
+  uint8_t last_param_id;
+  uint8_t last_rec_event;
   SeqStepMidiEvents midi_events;
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)

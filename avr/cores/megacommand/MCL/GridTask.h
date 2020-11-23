@@ -2,13 +2,11 @@
 #define GRID_TASK_H__
 
 #include "MCL.h"
-#include "Task.hh"
-#include "EmptyTrack.h"
+#include "Task.h"
 
 class GridTask : public Task {
 
 public:
-  bool active = false;
 
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 

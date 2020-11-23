@@ -50,9 +50,9 @@ extern MCLEncoder grid_slot_param2;
 
 extern MenuPage<
     #ifndef OLED_DISPLAY
-    8
+    9
     #else
-    7
+    8
     #endif
 >
 grid_slot_page;

@@ -1,6 +1,4 @@
-#include "FileBrowserPage.h"
-#include "MCL.h"
-#include "MCLMenus.h"
+#include "MCL_impl.h"
 
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
@@ -13,13 +11,17 @@ void FileBrowserPage::setup() {
   DEBUG_PRINT_FN();
 }
 
-void FileBrowserPage::add_entry(const char *entry) {
+bool FileBrowserPage::add_entry(const char *entry) {
+  if (numEntries >= NUM_FILE_ENTRIES) {
+    return false;
+  }
   char buf[16];
   m_strncpy(buf, entry, sizeof(buf));
   buf[15] = '\0';
   volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
   memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
+  return true;
 }
 
 void FileBrowserPage::init() {
@@ -38,7 +40,6 @@ void FileBrowserPage::init() {
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
   filemenu_active = false;
 
-  int index = 0;
   //  reset directory pointer
   SD.vwd()->rewind();
   numEntries = 0;
@@ -78,17 +79,17 @@ void FileBrowserPage::init() {
       }
     }
     if (is_match_file) {
-      DEBUG_PRINTLN("file matched");
-      add_entry(temp_entry);
-      if (strcmp(temp_entry, mcl_cfg.project) == 0) {
-        DEBUG_DUMP(temp_entry);
-        DEBUG_DUMP(mcl_cfg.project);
+      DEBUG_PRINTLN(F("file matched"));
+      if (add_entry(temp_entry)) {
+        if (strcmp(temp_entry, mcl_cfg.project) == 0) {
+          DEBUG_DUMP(temp_entry);
+          DEBUG_DUMP(mcl_cfg.project);
 
-        cur_file = numEntries - 1;
-        encoders[1]->cur = numEntries - 1;
+          cur_file = numEntries - 1;
+          encoders[1]->cur = numEntries - 1;
+        }
       }
     }
-    index++;
     file.close();
     DEBUG_DUMP(numEntries);
   }
@@ -96,9 +97,10 @@ void FileBrowserPage::init() {
   if (numEntries <= 0) {
     numEntries = 0;
     ((MCLEncoder *)encoders[1])->max = 0;
+  } else {
+    ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
-  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
-  DEBUG_PRINTLN("finished list files");
+  DEBUG_PRINTLN(F("finished list files"));
 }
 
 void FileBrowserPage::display() {
@@ -420,9 +422,11 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     file.open(temp_entry, O_READ);
 
     // chdir to child
-    if (file.isDirectory()) {
-      _cd(temp_entry);
-      return false;
+    if (!select_dirs) {
+      if (file.isDirectory()) {
+        _cd(temp_entry);
+        return false;
+      }
     }
 
     // select an entry

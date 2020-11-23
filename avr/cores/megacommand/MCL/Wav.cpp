@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "Wav.h"
+#include "MCL_impl.h"
 
 bool Wav::close(bool write) {
   DEBUG_PRINT_FN();
@@ -7,14 +6,14 @@ bool Wav::close(bool write) {
   if (write) {
     ret = write_header();
     if (!ret) {
-      DEBUG_PRINTLN("could not write header");
+      DEBUG_PRINTLN(F("could not write header"));
       return false;
     }
   }
   headerRead = false;
   return file.close();
 }
-bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
+bool Wav::open(const char *file_name, bool overwrite, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate) {
   DEBUG_PRINT_FN();
   bool ret;
@@ -22,7 +21,7 @@ bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
   DEBUG_PRINTLN(filename);
 
   if (file.isOpen()) {
-    DEBUG_PRINTLN("file already open");
+    DEBUG_PRINTLN(F("file already open"));
     file.close();
   }
 //  bool create_new = !file.exists(filename);
@@ -37,23 +36,23 @@ bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
   create_new = true;
   }
   if (!ret) {
-    DEBUG_PRINTLN("could not open wave file");
+    DEBUG_PRINTLN(F("could not open wave file"));
   }
   if ((overwrite) || create_new) {
-    DEBUG_PRINTLN("truncating");
+    DEBUG_PRINTLN(F("truncating"));
     ret = file.truncate(0);
     if (!ret) {
-      DEBUG_PRINTLN("truncate failed");
+      DEBUG_PRINTLN(F("truncate failed"));
     }
 
     header.init_header(numChannels, sampleRate, bitRate);
     ret = write_header();
     headerRead = true;
     if (!ret) {
-      DEBUG_PRINTLN("Write wave header failed");
+      DEBUG_PRINTLN(F("Write wave header failed"));
       return false;
     }
-    DEBUG_PRINTLN("offset");
+    DEBUG_PRINTLN(F("offset"));
     DEBUG_PRINTLN(WAV_DATA_OFFSET);
     DEBUG_PRINTLN(file.fileSize());
     data_offset = WAV_DATA_OFFSET;
@@ -61,7 +60,7 @@ bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
 
     ret = read_header();
     if (!ret) {
-      DEBUG_PRINTLN("Could not read header");
+      DEBUG_PRINTLN(F("Could not read header"));
       return false;
     }
     headerRead = true;
@@ -71,7 +70,7 @@ bool Wav::open(char *file_name, bool overwrite = false, uint16_t numChannels,
 
 bool Wav::rename(char *new_name) {
   if (!file.rename(&file, new_name)) {
-    DEBUG_PRINTLN("rename failed");
+    DEBUG_PRINTLN(F("rename failed"));
   }
   m_strncpy(&filename, new_name, 16);
 }
@@ -121,7 +120,7 @@ bool Wav::read_header() {
 
   memcpy(&header, &header_buf, sizeof(header));
   if ((header.bitRate > 28) || (header.bitRate < 8)) {
-    DEBUG_PRINTLN("header bitRate is not valid:");
+    DEBUG_PRINTLN(F("header bitRate is not valid:"));
     DEBUG_PRINTLN(header.bitRate);
     return false;
   }
@@ -137,7 +136,7 @@ bool Wav::write_data(void *data, uint32_t size, uint32_t position) {
   ret = file.seekSet(position);
 
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;
@@ -156,13 +155,13 @@ bool Wav::read_data(void *data, uint32_t size, uint32_t position) {
 
   ret = file.seekSet(position);
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;
   }
   if (!file.isOpen()) {
-    DEBUG_PRINTLN("file not open");
+    DEBUG_PRINTLN(F("file not open"));
     return false;
   }
   ret = mcl_sd.read_data(data, size, &file);
@@ -185,7 +184,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   bool ret = write_data(data, size, position + data_offset);
 
   if (!ret) {
-    DEBUG_PRINTLN("write failed");
+    DEBUG_PRINTLN(F("write failed"));
     return false;
   }
   uint32_t new_subchunk2Size = (position + size) * header.numChannels;
@@ -203,7 +202,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
     ret = write_header();
   }
   if (!ret) {
-    DEBUG_PRINTLN("write header failed");
+    DEBUG_PRINTLN(F("write header failed"));
     return false;
   }
   return ret;
@@ -224,7 +223,7 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_offset,
   //  DEBUG_PRINTLN(header.subchunk2Size);
   // If requested read size extends past channel size, then truncate read
   if (position + size > header.subchunk2Size / header.numChannels) {
-    DEBUG_PRINTLN("read size is greater than file size, adjusting");
+    DEBUG_PRINTLN(F("read size is greater than file size, adjusting"));
     size = (header.subchunk2Size / header.numChannels) - position;
   }
   //  DEBUG_PRINTLN(file.fileSize());
@@ -236,7 +235,7 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_offset,
   return ret;
 }
 
-int16_t Wav::find_peak(uint8_t channel = 0) {
+int16_t Wav::find_peak(uint8_t channel) {
   DEBUG_PRINT_FN();
   int16_t peak_value = 0;
   int16_t current_sample = 0;
@@ -256,7 +255,7 @@ int16_t Wav::find_peak(uint8_t channel = 0) {
   uint32_t sample_max = (pow(2, header.bitRate) / 2);
   bool write_header = false;
 
-  DEBUG_PRINTLN("read_size");
+  DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
   DEBUG_PRINTLN(bytes_per_word);
@@ -269,7 +268,7 @@ int16_t Wav::find_peak(uint8_t channel = 0) {
     // Read read_size samples.
 
     if (!read_samples(buffer, read_size, n, channel)) {
-      DEBUG_PRINTLN("could not read");
+      DEBUG_PRINTLN(F("could not read"));
       return false;
     }
     // Itterate through samples in buffer
@@ -279,12 +278,12 @@ int16_t Wav::find_peak(uint8_t channel = 0) {
       if (peak_value < abs(current_sample)) { peak_value = current_sample; }
     }
   }
-  DEBUG_PRINTLN("peak found");
+  DEBUG_PRINTLN(F("peak found"));
   DEBUG_PRINTLN(peak_value);
   return peak_value;
 }
 
-bool Wav::apply_gain(float gain, uint8_t channel = 0) {
+bool Wav::apply_gain(float gain, uint8_t channel) {
   DEBUG_PRINT_FN();
 
   uint8_t bytes_per_word = header.bitRate / 8;
@@ -301,7 +300,7 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
   uint32_t sample_val = 0;
   uint32_t sample_max = (pow(2, header.bitRate) / 2);
   bool write_header = false;
-  DEBUG_PRINTLN("read_size");
+  DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
   DEBUG_PRINTLN(num_of_samples);
   DEBUG_PRINTLN(bytes_per_word);
@@ -315,7 +314,7 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
     // Read read_size samples.
 
     if (!read_samples(buffer, read_size, n, channel)) {
-      DEBUG_PRINTLN("could not read");
+      DEBUG_PRINTLN(F("could not read"));
       return false;
     }
     // Itterate through samples in buffer
@@ -385,7 +384,7 @@ bool Wav::apply_gain(float gain, uint8_t channel = 0) {
     }
     // Write back the adjusted samples
     if (!write_samples(buffer, read_size, n, channel, write_header)) {
-      DEBUG_PRINTLN("could not write");
+      DEBUG_PRINTLN(F("could not write"));
       return false;
     }
     // loop

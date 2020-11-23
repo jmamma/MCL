@@ -1,9 +1,4 @@
-#include "MCL.h"
-#include "WavDesigner.h"
-#include "DSP.h"
-#include "Osc.h"
-#include "Wav.h"
-#include "MidiSDS.hh"
+#include "MCL_impl.h"
 
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();
@@ -23,7 +18,7 @@ bool WavDesigner::render() {
     }
   }
   // Determine sample lenght for 1 cycle.
-  DEBUG_PRINTLN("fund: ");
+  DEBUG_PRINTLN(F("fund: "));
   DEBUG_PRINTLN(fund_freq);
 
   // Recalculate sample rate using base frequency, for sample alignment.
@@ -48,7 +43,7 @@ bool WavDesigner::render() {
   }
   n_cycle += 2;
   //  n_cycle = 8096;
-  DEBUG_PRINTLN("samples");
+  DEBUG_PRINTLN(F("samples"));
   DEBUG_PRINTLN(n_cycle);
   // 512B worth of buffer
   uint16_t buffer[256];
@@ -131,7 +126,7 @@ bool WavDesigner::render() {
     if (sample < -1 * MAX_HEADROOM) {
       sample = -1 * MAX_HEADROOM;
     }
-    // DEBUG_PRINTLN(" ");
+    // DEBUG_PRINTLN(F(" "));
    
     // Need to correctly convert from float to int
     int16_t out_sample;
@@ -149,7 +144,7 @@ bool WavDesigner::render() {
 
     if ((abs(out_sample) > largest_sample_so_far)) {
       largest_sample_so_far = abs(out_sample);
-      DEBUG_PRINTLN("large sample found");
+      DEBUG_PRINTLN(F("large sample found"));
       DEBUG_PRINTLN(largest_sample_so_far);
     }
 
@@ -171,7 +166,7 @@ bool WavDesigner::render() {
     // If buffer overflow approaching write to flash.
 
     if ((samples_so_far > 255) || (n == n_cycle - 1)) {
-      DEBUG_PRINTLN("let's write");
+      DEBUG_PRINTLN(F("let's write"));
       DEBUG_PRINTLN(samples_so_far);
       if (!wav_file.write_samples(buffer, samples_so_far, pos, 0,
                                   write_header)) {
@@ -185,20 +180,20 @@ bool WavDesigner::render() {
   // Normalise wav
 
   float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
-  DEBUG_PRINTLN("gain:");
+  DEBUG_PRINTLN(F("gain:"));
   DEBUG_PRINTLN(largest_sample_so_far);
   DEBUG_PRINTLN(normalize_gain);
   wav_file.file.sync();
   wav_file.apply_gain(normalize_gain);
   write_header = true;
   if (!wav_file.close(write_header)) {
-    DEBUG_PRINTLN("could not close");
+    DEBUG_PRINTLN(F("could not close"));
   }
-  DEBUG_PRINTLN("wave stats:");
+  DEBUG_PRINTLN(F("wave stats:"));
   DEBUG_PRINTLN(n_cycle);
   DEBUG_PRINTLN(pos);
   DEBUG_PRINTLN(wav_file.header.subchunk2Size);
-  DEBUG_PRINTLN("zero crossings");
+  DEBUG_PRINTLN(F("zero crossings"));
   DEBUG_PRINTLN(first_zero_crossing);
   DEBUG_PRINTLN(last_zero_crossing);
   DEBUG_PRINTLN(n_cycle - 3);

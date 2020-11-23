@@ -2,7 +2,9 @@
 bin
 obj
 .ionide
+.vs
 .ccls-cache
 sketch/*.elf
 sketch/*.hex
+sketch/build
 .vim

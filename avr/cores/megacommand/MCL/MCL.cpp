@@ -1,11 +1,16 @@
-#include "MCL.h"
+#include "MCL_impl.h"
 
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
 
 void MCL::setup() {
-  DEBUG_PRINTLN("Welcome to MegaCommand Live");
+  DEBUG_PRINTLN(F("Welcome to MegaCommand Live"));
   DEBUG_PRINTLN(VERSION);
+
+  DEBUG_DUMP(sizeof(MDTrack));
+  DEBUG_DUMP(sizeof(A4Track));
+  DEBUG_DUMP(sizeof(ExtTrack));
+  DEBUG_DUMP(sizeof(EmptyTrack));
 
   bool ret = false;
   delay(100);
@@ -32,7 +37,7 @@ void MCL::setup() {
   text_input_page.no_escape = false;
   if (ret) { GUI.setPage(&grid_page); }
 
-  DEBUG_PRINTLN("tempo:");
+  DEBUG_PRINTLN(F("tempo:"));
   DEBUG_PRINTLN(mcl_cfg.tempo);
   MidiClock.setTempo(mcl_cfg.tempo);
 
@@ -49,6 +54,7 @@ void MCL::setup() {
   md_track_select.setup(&Midi);
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
+  MNMSysexListener.setup(&Midi2);
 #endif
 
 #ifdef MEGACOMMAND
@@ -74,7 +80,7 @@ void MCL::setup() {
     GUI.use_screen_saver = false;
   }
 
-  DEBUG_PRINTLN("Track sizes:");
+  DEBUG_PRINTLN(F("Track sizes:"));
 #ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));
 #endif

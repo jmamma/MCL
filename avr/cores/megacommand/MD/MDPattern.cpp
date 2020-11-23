@@ -1,10 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
-#include "Elektron.hh"
+#include "Elektron.h"
 #include "GUI.h"
 #include "MD.h"
-#include "MDMessages.hh"
-#include "MDParams.hh"
-#include "MDPattern.hh"
+#include "MDMessages.h"
+#include "MDParams.h"
+#include "MDPattern.h"
 #include "helpers.h"
 
 #ifdef HOST_MIDIDUINO
@@ -35,44 +35,10 @@ void MDPattern::clearPattern() {
   //	doubleTempo = 0;
 
   patternLength = 16;
-  swingAmount = 50 << 14;
+  swingAmount = 50ULL << 14;
   //	origPosition = 0;
   //	kit = 0;
   //	scale = 0;
-}
-
-bool MDPatternShort::fromSysex(uint8_t *data, uint16_t len) {
-  if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
-    return false;
-  }
-
-  if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    return false;
-  }
-
-  origPosition = data[3];
-
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 0xA - 6, 74));
-  decoder.skip(16 * 4);
-
-  decoder.start7Bit();
-  decoder.skip(16 * 4);
-
-  decoder.start7Bit();
-  decoder.skip(16 * 4);
-  /*
-   accentPattern = decoder.gget32();
-   slidePattern  = decoder.gget32();
-   swingPattern  = decoder.gget32();
-   swingAmount   = decoder.gget32();
-   */
-  decoder.stop7Bit();
-
-  decoder.skip8();
-  decoder.get8(&patternLength);
-  decoder.skip(2);
-  decoder.get8(&kit);
-  return true;
 }
 
 void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
@@ -102,7 +68,7 @@ bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
   }
 
   origPosition = data[3];
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(data + 0xA - 6, 74));
+  ElektronSysexDecoder decoder(data + 0xA - 6);
   decoder.get32(trigPatterns, 16);
 
   decoder.start7Bit();
@@ -189,7 +155,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     printf("WRONG LENGTH: %x\n", len);
 #endif
 
-    DEBUG_PRINTLN("WRONG LENGTH");
+    DEBUG_PRINTLN(F("WRONG LENGTH"));
     DEBUG_DUMP(len);
     return false;
   }
@@ -198,12 +164,12 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 
-    DEBUG_PRINTLN("bad checksum");
+    DEBUG_PRINTLN(F("bad checksum"));
     return false;
   }
 
   origPosition = midi->midiSysex.getByte(3);
-  ElektronSysexDecoder decoder(DATA_ENCODER_INIT(midi, offset + 0xA - 6, 74));
+  ElektronSysexDecoder decoder(midi, offset + 0xA - 6);
   decoder.get32(trigPatterns, 16);
 
   decoder.start7Bit();
@@ -279,27 +245,28 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
 uint16_t MDPattern::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart);
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
 
+
 uint16_t MDPattern::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(DATA_ENCODER_INIT(data, len));
+  ElektronDataToSysexEncoder encoder(data);
   isExtraPattern = patternLength > 32;
   uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 
   if (len < (sysexLength + 5))
     return 0;
 
-  return toSysex(encoder);
+  return toSysex(&encoder);
 }
 
-uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
+uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   DEBUG_PRINT_FN();
   isExtraPattern = patternLength > 32;
 
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
-    DEBUG_PRINTLN("using throttle");
-    encoder.throttle = true;
+    DEBUG_PRINTLN(F("using throttle"));
+    encoder->throttle = true;
     //float swing = (float) MD.swing_last / 16385.0;
     //encoder.throttle_mod12 = round(swing * 12);
   }
@@ -331,92 +298,92 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder &encoder) {
    */
   uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 
-  encoder.stop7Bit();
-  encoder.begin();
-  encoder.pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  encoder.pack8(MD_PATTERN_MESSAGE_ID);
-  encoder.pack8(0x03); // version
-  encoder.pack8(0x01);
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
+  encoder->pack8(MD_PATTERN_MESSAGE_ID);
+  encoder->pack8(0x03); // version
+  encoder->pack8(0x01);
 
-  encoder.startChecksum();
-  encoder.pack8(origPosition);
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
 
-  encoder.start7Bit();
-  encoder.pack32(trigPatterns, 16);
-  encoder.reset();
-  encoder.pack32(lockPatterns, 16);
-  encoder.reset();
+  encoder->start7Bit();
+  encoder->pack32(trigPatterns, 16);
+  encoder->reset();
+  encoder->pack32(lockPatterns, 16);
+  encoder->reset();
 
-  encoder.pack32(accentPattern);
+  encoder->pack32(accentPattern);
 
-  encoder.pack32(slidePattern);
-  encoder.pack32(swingPattern);
-  encoder.pack32(swingAmount);
+  encoder->pack32(slidePattern);
+  encoder->pack32(swingPattern);
+  encoder->pack32(swingAmount);
 
-  encoder.stop7Bit();
+  encoder->stop7Bit();
 
-  encoder.pack8(accentAmount);
+  encoder->pack8(accentAmount);
 
-  encoder.pack8(patternLength);
-  encoder.pack8(doubleTempo);
-  encoder.pack8(scale);
-  encoder.pack8(kit);
-  encoder.pack8(numLockedRows);
+  encoder->pack8(patternLength);
+  encoder->pack8(doubleTempo);
+  encoder->pack8(scale);
+  encoder->pack8(kit);
+  encoder->pack8(numLockedRows);
 
-  encoder.start7Bit();
+  encoder->start7Bit();
 
   uint8_t lockIdx = 0;
   for (uint8_t track = 0; track < 16; track++) {
     for (uint8_t param = 0; param < 24; param++) {
       int8_t lock = paramLocks[track][param];
       if ((lock != -1) && (lockIdx < 64)) {
-        encoder.pack(locks[lock], 32);
+        encoder->pack(locks[lock], 32);
         lockIdx++;
       }
     }
   }
-  encoder.fill8(0xFF, 32 * (64 - lockIdx));
-  encoder.reset(); // reset 7 bit
+  encoder->fill8(0xFF, 32 * (64 - lockIdx));
+  encoder->reset(); // reset 7 bit
 
-  encoder.pack32(accentEditAll);
+  encoder->pack32(accentEditAll);
 
-  encoder.pack32(slideEditAll);
-  encoder.pack32(swingEditAll);
+  encoder->pack32(slideEditAll);
+  encoder->pack32(swingEditAll);
 
-  encoder.pack32(accentPatterns, 16);
-  encoder.pack32(slidePatterns, 16);
-  encoder.pack32(swingPatterns, 16);
+  encoder->pack32(accentPatterns, 16);
+  encoder->pack32(slidePatterns, 16);
+  encoder->pack32(swingPatterns, 16);
 
-  encoder.finish();
+  encoder->finish();
 
   if (isExtraPattern) {
-    encoder.start7Bit();
-    encoder.pack32hi(trigPatterns, 16);
-    encoder.pack32hi(accentPattern);
+    encoder->start7Bit();
+    encoder->pack32hi(trigPatterns, 16);
+    encoder->pack32hi(accentPattern);
 
-    encoder.pack32hi(slidePattern);
-    encoder.pack32hi(swingPattern);
+    encoder->pack32hi(slidePattern);
+    encoder->pack32hi(swingPattern);
 
     lockIdx = 0;
     for (uint8_t track = 0; track < 16; track++) {
       for (uint8_t param = 0; param < 24; param++) {
         int8_t lock = paramLocks[track][param];
         if ((lock != -1) && (lockIdx < 64)) {
-          encoder.pack(locks[lock] + 32, 32);
+          encoder->pack(locks[lock] + 32, 32);
           lockIdx++;
         }
       }
     }
-    encoder.fill8(0xFF, 32 * (64 - lockIdx));
-    encoder.pack32hi(accentPatterns, 16);
+    encoder->fill8(0xFF, 32 * (64 - lockIdx));
+    encoder->pack32hi(accentPatterns, 16);
 
-    encoder.pack32hi(slidePatterns, 16);
-    encoder.pack32hi(swingPatterns, 16);
+    encoder->pack32hi(slidePatterns, 16);
+    encoder->pack32hi(swingPatterns, 16);
 
-    encoder.finish();
+    encoder->finish();
   }
 
-  encoder.finishChecksum();
+  encoder->finishChecksum();
 
   return sysexLength + 5;
 }

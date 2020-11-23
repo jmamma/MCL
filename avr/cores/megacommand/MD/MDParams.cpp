@@ -31,7 +31,7 @@ const char *MDLFONames[8] = {
 
 #ifndef DISABLE_MACHINE_NAMES 
 
-md_machine_name_t_short const machine_names_short[135] PROGMEM = {
+short_machine_name_t const md_machine_names_short[135] PROGMEM = {
   { "GN","--", 0},
   { "GN", "SN", 1},
   { "GN", "NS", 2},
@@ -309,24 +309,15 @@ const md_machine_name_t machine_names[135] PROGMEM = {
 
 #endif
 
-PGM_P getMachineNameShort(uint8_t machine, uint8_t type) {
+PGM_P getMDMachineNameShort(uint8_t machine, uint8_t type) {
 
-  if (machine == NULL) {
+  if (machine == 0) {
     if (type == 1) {
-      return machine_names_short[0].name2;
+      return md_machine_names_short[0].name2;
     }
   }
-  for (uint8_t i = 0; i < countof(machine_names_short); i++) {
-    if (pgm_read_byte(&machine_names_short[i].id) == machine) {
-      if (type == 1) {
-        return machine_names_short[i].name1;
-      }
-      else {
-        return machine_names_short[i].name2;
-      }
 
-    }
-  }
+  return getMachineNameShort(machine, type, md_machine_names_short, countof(md_machine_names_short));
 }
 
 PGM_P MDClass::getMachineName(uint8_t machine) {
@@ -933,7 +924,7 @@ model_to_param_names_t model_param_names[] = {
   { RAM_R4_MODEL,  ram_r_model_names }
 };
 
-static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
+static PGM_P get_param_name(const model_param_name_t *names, uint8_t param) {
   uint8_t i = 0;
   uint8_t id;
   if (names == NULL)
@@ -948,7 +939,7 @@ static PGM_P get_param_name(model_param_name_t *names, uint8_t param) {
   return NULL;
 }
 
-static model_param_name_t *get_model_param_names(uint8_t model) {
+static const model_param_name_t *get_model_param_names(uint8_t model) {
   for (uint16_t i = 0; i < countof(model_param_names); i++) {
     if (model == model_param_names[i].model) {
       return model_param_names[i].names;

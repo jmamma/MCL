@@ -1,4 +1,4 @@
-#include "MCL.h"
+#include "MCL_impl.h"
 
 bool MDSound::write_sound() {
   DEBUG_PRINT_FN();
@@ -39,11 +39,10 @@ bool MDSound::fetch_sound(uint8_t track) {
   // If track uses trigGroup, assume sound is made up of two models.
 
   if ((trigGroup < 16) && (trigGroup != track)) {
-  machine2.model = MD.kit.models[trigGroup];
-  machine2.level = MD.kit.levels[trigGroup];
-  memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
-  memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
-
+    machine2.model = MD.kit.models[trigGroup];
+    machine2.level = MD.kit.levels[trigGroup];
+    memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
+    memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));
 
     if (machine2.lfo.destinationTrack == trigGroup) {
       machine2.lfo.destinationTrack = 1;
@@ -51,46 +50,44 @@ bool MDSound::fetch_sound(uint8_t track) {
 
     else if (machine2.lfo.destinationTrack == track) {
       machine2.lfo.destinationTrack = 0;
-    }
-    else {
-     machine2.lfo.destinationTrack = 255;
-     machine2.lfo.depth = machine2.params[MODEL_LFOD] = 0;
+    } else {
+      machine2.lfo.destinationTrack = 255;
+      machine2.lfo.depth = machine2.params[MODEL_LFOD] = 0;
     }
 
     machine_count++;
     machine2.track = 1;
     machine2.normalize_level();
   }
-
 }
 
 bool MDSound::load_sound(uint8_t track) {
   DEBUG_PRINT_FN();
 
   DEBUG_PRINTLN(machine1.model);
-
+#ifdef DEBUG_MODE
   PGM_P tmp;
   char str[3] = "  ";
-  tmp = getMachineNameShort(machine1.model, 2);
+  tmp = getMDMachineNameShort(machine1.model, 2);
   m_strncpy_p(str, tmp, 3);
   DEBUG_PRINTLN(str);
+#endif
 
+  bool send_level = true, send = true;
   if ((machine_count > 1) && (track != 15)) {
-    DEBUG_PRINTLN("loading second machine");
-    tmp = getMachineNameShort(machine2.model, 2);
-     m_strncpy_p(str, tmp, 3);
+#ifdef DEBUG_MODE
+    DEBUG_PRINTLN(F("loading second machine"));
+    tmp = getMDMachineNameShort(machine2.model, 2);
+    m_strncpy_p(str, tmp, 3);
     DEBUG_PRINTLN(str);
-
+#endif
     if (machine2.lfo.destinationTrack < 16) {
       machine2.lfo.destinationTrack += track;
     }
     machine1.trigGroup = track + 1;
     machine2.trigGroup = track;
 
-    mcl_actions.md_set_machine(track + 1, &machine2, &MD.kit, true);
-    MD.kit.models[track + 1] = machine2.model;
-    memcpy(&(MD.kit.params[track + 1]), &machine2.params, 24);
-    memcpy(&(MD.kit.lfos[track + 1]), &machine2.lfo, sizeof(MDLFO));
+    MD.sendMachine(track + 1, &machine2, send_level, send);
 
   } else {
     machine1.trigGroup = track;
@@ -100,21 +97,13 @@ bool MDSound::load_sound(uint8_t track) {
     machine1.lfo.destinationTrack += track;
   }
 
-
-  mcl_actions.md_set_machine(track, &machine1, &MD.kit ,true);
-
   if (machine_count == 1) {
-  MD.kit.trigGroups[track] = track;
+    machine1.trigGroup = track;
+  } else {
+    machine1.trigGroup = track + 1;
   }
-  else {
-  MD.kit.trigGroups[track] = track + 1;
-  }
 
-  MD.kit.models[track] = machine1.model;
-  memcpy(&(MD.kit.params[track]), &machine1.params, 24);
-  memcpy(&(MD.kit.lfos[track]), &machine1.lfo, sizeof(MDLFO));
-
-
+  MD.sendMachine(track, &machine1, send_level, send);
 }
 
 bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
@@ -126,13 +115,13 @@ bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
 
   ret = file.seekSet(position);
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;
   }
   if (!file.isOpen()) {
-    DEBUG_PRINTLN("file not open");
+    DEBUG_PRINTLN(F("file not open"));
     return false;
   }
   ret = mcl_sd.read_data(data, size, &file);
@@ -149,7 +138,7 @@ bool MDSound::write_data(void *data, uint32_t size, uint32_t position) {
   ret = file.seekSet(position);
 
   if (!ret) {
-    DEBUG_PRINTLN("could not seek");
+    DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
     DEBUG_PRINTLN(file.fileSize());
     return false;

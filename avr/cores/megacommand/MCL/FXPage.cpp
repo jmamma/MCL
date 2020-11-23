@@ -1,7 +1,4 @@
-#include "FXPage.h"
-#include "MCL.h"
-#include "RAMPage.h"
-#include "MCLGUI.h"
+#include "MCL_impl.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1
@@ -204,7 +201,7 @@ void FXPage::remove_callbacks() {
 bool FXPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }

@@ -1,7 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL.h"
-#include "MCLActions.h"
-#include "MCLActionsEvents.h"
+#include "MCL_impl.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
@@ -21,10 +19,10 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::onMidiStopCallback() {
- DEBUG_PRINTLN("initialising nearest steps");
+ DEBUG_PRINTLN(F("initialising nearest steps"));
 //   memset(&mcl_actions.next_transitions[0], 0, 20);
 /*
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
   mcl_actions.next_transitions[n] = 0;
   if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
   }
@@ -36,7 +34,7 @@ void MCLActionsCallbacks::onMidiStopCallback() {
 void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
-  for (uint8_t n = 0; n < 20; n++) {
+  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
     if (grid_page.active_slots[n] >= 0) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;

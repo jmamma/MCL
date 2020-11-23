@@ -1,20 +1,17 @@
-#include "TrigInterface.h"
-#include "MD.h"
-#include "NoteInterface.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void TrigInterface::start() {
 
 }
 
-void TrigInterface::send_md_leds() {
+void TrigInterface::send_md_leds(TrigLEDMode mode) {
     uint16_t led_mask = 0;
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.notes[i] == 1) {
         SET_BIT16(led_mask, i);
       }
     }
-    MD.set_trigleds(led_mask, TRIGLED_OVERLAY);
+    MD.set_trigleds(led_mask, mode);
 }
 
 bool TrigInterface::on() {
@@ -28,7 +25,7 @@ bool TrigInterface::on() {
 
   sysex->addSysexListener(this);
   state = true;
-  DEBUG_PRINTLN("activating trig interface");
+  DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();
   note_interface.notecount = 0;
   note_interface.init_notes();
@@ -45,7 +42,7 @@ bool TrigInterface::off() {
   }
   sysex->removeSysexListener(this);
   note_interface.note_proceed = false;
-  DEBUG_PRINTLN("deactiviating trig interface");
+  DEBUG_PRINTLN(F("deactiviating trig interface"));
   state = false;
   MD.deactivate_trig_interface();
   return true;
@@ -57,8 +54,8 @@ void TrigInterface::end_immediate() {
   if (!state) {
     return;
   }
- if (sysex->getByte(0) != ids[0]) { return false; }
- if (sysex->getByte(1) != ids[1]) { return false; }
+ if (sysex->getByte(0) != ids[0]) { return; }
+ if (sysex->getByte(1) != ids[1]) { return; }
 
  uint8_t trig = sysex->getByte(2);
 
@@ -66,7 +63,7 @@ void TrigInterface::end_immediate() {
   note_interface.note_off_event(trig - 0x40, UART1_PORT);
   }
   else {
-  DEBUG_PRINTLN("trig on");
+  DEBUG_PRINTLN(F("trig on"));
   DEBUG_PRINTLN(trig);
   note_interface.note_on_event(trig, UART1_PORT);
   }

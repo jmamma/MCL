@@ -2,8 +2,8 @@
 
 #include "MCLSd.h"
 #include "math.h"
-#include "MidiSDSMessages.hh"
-#include "MidiSDSSysex.hh"
+#include "MidiSDSMessages.h"
+#include "MidiSDSSysex.h"
 #include "helpers.h"
 MidiSDSSysexListenerClass MidiSDSSysexListener;
 
@@ -32,7 +32,7 @@ void MidiSDSSysexListenerClass::end() {
 
     case MIDI_SDS_DATAPACKET:
     if (midi_sds.state != SDS_REC) {
-      DEBUG_PRINTLN("not in sds rec mode");
+      DEBUG_PRINTLN(F("not in sds rec mode"));
       midi_sds.sendCancelMessage();
       midi_sds.cancel();
       return;
@@ -52,7 +52,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
     sds_name[2] = sysex->getByte(9);
     sds_name[3] = sysex->getByte(10);
     sds_name_rec = true;
-    DEBUG_PRINTLN("sample name received");
+    DEBUG_PRINTLN(F("sample name received"));
 
     return;
   }
@@ -70,7 +70,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
   case MIDI_SDS_DUMPHEADER:
 
     if (midi_sds.state != SDS_READY) {
-      DEBUG_PRINTLN("header received, not in ready");
+      DEBUG_PRINTLN(F("header received, not in ready"));
       return;
     }
     midi_sds.state = SDS_REC;
@@ -138,7 +138,7 @@ void MidiSDSSysexListenerClass::dump_header() {
   DEBUG_PRINTLN(midi_sds.sampleLength);
   uint32_t sampleRate = 1000000000 / midi_sds.samplePeriod + 1;
 
-  DEBUG_PRINTLN("MidiSDS DumpHeader Received");
+  DEBUG_PRINTLN(F("MidiSDS DumpHeader Received"));
   DEBUG_PRINTLN(midi_sds.sampleNumber);
   DEBUG_PRINTLN(midi_sds.sampleFormat);
   DEBUG_PRINTLN(midi_sds.samplePeriod);
@@ -182,15 +182,15 @@ void MidiSDSSysexListenerClass::data_packet() {
   uint8_t checksum = 0;
   uint8_t packetNumber = sysex->getByte(3);
   if (packetNumber != midi_sds.packetNumber) {
-    DEBUG_PRINTLN("Packet received out of order");
+    DEBUG_PRINTLN(F("Packet received out of order"));
     midi_sds.sendNakMessage();
     return;
   }
-  for (uint16_t b = 0; b < sysex->len - 1; b++) {
+  for (uint16_t b = 0; b < sysex->recordLen - 1; b++) {
     checksum ^= sysex->getByte(b);
   }
-  if ((sysex->len == 125) &&
-      (sysex->getByte(sysex->len - 1) == checksum)) {
+  if ((sysex->recordLen == 125) &&
+      (sysex->getByte(sysex->recordLen - 1) == checksum)) {
     // 120 byte data stream divided in to m words.
     // 7bits per data midi data byte.
     // For an 8bit sample (smallest bit rate), 2 midi data bytes are required.
@@ -198,7 +198,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     // packet.
     // temp_file.open("temp_file.sds", FILE_WRITE | O_APPEND);
     //    if (temp_file.write(&MidiSysex, MidiSysex.len) != MidiSysex.len) {
-    //    DEBUG_PRINTLN("could not write");
+    //    DEBUG_PRINTLN(F("could not write"));
     //}
     // temp_file.close();
     // midi_sds.sendAckMessage();
@@ -223,7 +223,7 @@ void MidiSDSSysexListenerClass::data_packet() {
       signed_val = 0;
       // Decode 7 bit midiBytes in to value
       uint8_t shift;
-      //  DEBUG_PRINTLN("MIDI_BIN");
+      //  DEBUG_PRINTLN(F("MIDI_BIN"));
       for (shift = 0; shift < midi_sds.midiBytes_per_word; shift++) {
 
         decode_val = decode_val << 7;
@@ -262,13 +262,13 @@ void MidiSDSSysexListenerClass::data_packet() {
       if (midi_sds.use_hand_shake) { midi_sds.sendAckMessage(); }
       midi_sds.incPacketNumber();
     } else {
-      DEBUG_PRINTLN("error writing sds to SDCard");
+      DEBUG_PRINTLN(F("error writing sds to SDCard"));
       midi_sds.sendCancelMessage();
       midi_sds.state = SDS_READY;
     }
     // DEBUG_PRINT(" ");
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
-      DEBUG_PRINTLN("Sample receive finished");
+      DEBUG_PRINTLN(F("Sample receive finished"));
       DEBUG_PRINTLN(midi_sds.wav_file.header.subchunk2Size);
       bool write_header = true;
       midi_sds.wav_file.close(write_header);
@@ -279,11 +279,11 @@ void MidiSDSSysexListenerClass::data_packet() {
     }
 
   } else {
-    DEBUG_PRINTLN("sds packet checksum error");
+    DEBUG_PRINTLN(F("sds packet checksum error"));
     DEBUG_PRINTLN(midi_sds.packetNumber);
-    DEBUG_PRINTLN(sysex->len);
-    DEBUG_PRINTLN(sysex->getByte(sysex->len - 1));
-    DEBUG_PRINT(" ");
+    DEBUG_PRINTLN(sysex->recordLen);
+    DEBUG_PRINTLN(sysex->getByte(sysex->recordLen - 1));
+    DEBUG_PRINT(F(" "));
     DEBUG_PRINT(checksum);
     midi_sds.sendNakMessage();
   }

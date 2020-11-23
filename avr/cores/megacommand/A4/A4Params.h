@@ -1,0 +1,122 @@
+
+#ifndef A4_PARAMS_H__
+#define A4_PARAMS_H__
+
+#define A4_KIT_MESSAGE_ID                    0x52
+#define A4_KIT_REQUEST_ID                    0x62
+
+#define A4_KITX_MESSAGE_ID                   0x58
+#define A4_KITX_REQUEST_ID                   0x68
+
+#define A4_SOUND_MESSAGE_ID                  0x53
+#define A4_SOUND_REQUEST_ID                  0x63
+
+#define A4_SOUNDX_MESSAGE_ID                 0x59
+#define A4_SOUNDX_REQUEST_ID                 0x69
+
+#define A4_PATTERN_MESSAGE_ID                0x54
+#define A4_PATTERN_REQUEST_ID                0x64
+
+#define A4_PATTERNX_MESSAGE_ID               0x5A
+#define A4_PATTERNX_REQUEST_ID               0x6A
+
+#define A4_SONG_MESSAGE_ID                   0x55
+#define A4_SONG_REQUEST_ID                   0x65
+
+#define A4_SONGX_MESSAGE_ID                  0x5B
+#define A4_SONGX_REQUEST_ID                  0x6B
+
+#define A4_SETTINGS_MESSAGE_ID               0x56
+#define A4_SETTINGS_REQUEST_ID               0x66
+
+#define A4_SETTINGSX_MESSAGE_ID              0x5C
+#define A4_SETTINGSX_REQUEST_ID              0x6C
+
+#define A4_GLOBAL_MESSAGE_ID                 0x57
+#define A4_GLOBAL_REQUEST_ID                 0x67
+
+#define A4_GLOBALX_MESSAGE_ID                0x5D
+#define A4_GLOBALX_REQUEST_ID                0x6D
+
+#define A4_ANALOG_CALIBRATION_REQUEST_ID     0x7C
+
+#define A4_PRESS_STOP_KEY_REQUEST_ID         0xF8
+// BPM does not display LOCK
+#define A4_PRESS_STOP_KEY_REQUEST_ID2        0xFC
+
+// nothing, but freeze for a while (BPM displays LOCK)
+#define A4_UNKNOWN_0_REQUEST_ID              0xFA
+// nothing, but freeze for a while (BPM displays LOCK)
+#define A4_UNKNOWN_1_REQUEST_ID              0xFB
+
+/* 
+0xFD | 0xFD param1
+
+Sample Response:
+f0 00 20 3c 06 00 11 38  40 7e 7f 7d 00 00 00 1c | 00 40 62 7f 78 00 00 0e  00 00 40 76 7f 78 00 07
+00 00 00 00 6a 7f 7d 02  00 00 00 00 40 7e 00 01 | 00 00 00 00 00 40 62 00  00 00 00 00 00 00 40 40
+7e 00 00 00 00 00 00 20  00 7a 00 00 00 00 00 10 | 00 28 62 00 03 00 00 0a  00 00 00 7a 00 7f 00 05
+00 00 00 00 7e 00 7f 02  00 00 00 00 00 36 00 03 | 00 00 00 00 00 7e 02 21  7c 43 00 00 00 00 02 50
+3e 7c 5b 00 00 00 00 28  00 7e 00 5b 00 00 00 34 | 00 7e 56 7c 7f 00 00 18  00 00 02 7e 7c 66 00 0c
+00 00 00 6a 02 00 00 06  00 00 00 00 02 6e 00 43 | 5f 00 00 00 00 7e 12 21  00 5f 00 00 00 00 02 50
+7e 00 5b 00 00 00 00 68  3a 3a 00 7b 00 00 00 30 | 00 02 02 00 73 00 00 18  00 00 7e 3a 00 00 00 0d
+00 00 00 36 7e 00 00 06  00 00 00 00 02 7a 00 03 | 00 00 00 00 00 3e 02 21  00 10 00 00 00 00 7e 50
+7a 00 78 00 00 00 00 28  00 7e 00 00 00 00 00 30 | 00 02 7e 00 00 00 00 18  00 00 7e 7e 00 00 00 04
+00 00 00 00 7e 00 00 02  00 00 00 00 00 36 01 41 | 7d 00 00 00 00 00 02 00  75 05 00 00 00 00 00 40
+3e 55 75 00 00 00 00 20  00 7e 5d 05 00 00 00 14 | 00 00 7e 01 7d 00 00 08  00 00 00 7e 29 45 00 04
+00 00 00 00 7e 01 55 02  00 00 00 00 00 7e 55 01 | 15 00 00 00 00 00 7e 20  55 7c 00 00 00 00 00 40
+7e 7d 04 00 00 00 00 20  00 7e 01 74 00 00 00 10 | 00 00 7e 29 24 00 00 0a  00 00 00 7e 01 7c 00 04
+00 00 00 00 7e 49 6c 02  00 00 00 00 00 7e 7d 01 | 04 00 00 00 00 00 7e 00  41 7c 00 00 00 00 00 50
+7e 01 7c 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 08  00 00 00 1f 00 01 00 04
+00 00 00 3f 08 0e 1f 00  00 00 00 00 20 1f 31 40 | 01 00 00 00 00 10 00 20  20 00 00 00 00 00 08 00
+1f 43 5f 00 00 00 00 00  04 05 4b 50 00 00 00 00 | 00 02 1f 43 5f 00 00 02  00 00 01 00 20 00 00 05
+00 00 00 00 1f 31 1f 02  00 00 00 00 3f 10 0e 00 | 01 00 00 00 00 20 0f 00  00 1e 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 1f 17 00 1f 00  00 00 00 00 11 15 0e 00 | 05 00 00 00 00 1f 1d 20  31 05 00 00 00 00 00 10
+00 20 00 00 00 00 00 00  1f 1f 43 51 00 00 00 00 | 00 05 10 4b 5f 00 00 00  00 00 05 1f 43 51 00 01
+00 00 00 00 00 20 00 00  00 00 00 00 1f 1f 31 40 | 1f 00 00 00 00 05 15 00  0e 01 00 00 00 00 05 00
+0a 00 1e 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 01 | 1f 00 00 00 00 04 00 00  0e 11 00 00 00 00 00 50
+1f 31 0e 00 00 00 00 28  04 05 20 00 00 00 00 10 | 00 00 07 43 5f 00 00 08  00 00 04 00 4b 55 00 04
+00 00 00 3f 1f 43 55 00  00 00 00 00 24 08 20 40 | 00 00 00 00 00 20 1f 20  31 01 00 00 00 00 24 00
+00 0e 1f 00 00 00 00 00  00 00 00 01 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 17 00  00 01 00 00 00 00 0e 00
+15 0e 1f 00 00 00 00 28  31 1d 31 01 00 00 00 14 | 00 26 00 20 00 00 00 00  00 00 43 5f 4c 5f 00 00
+00 00 00 43 45 4a 45 00  00 00 00 00 40 47 45 01 | 5b 00 00 00 00 20 00 20  22 00 00 00 00 00 31 50
+1f 31 1f 00 00 00 00 00  0e 11 0e 04 00 00 00 04 | 00 00 0e 00 5b 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+1f 00 1f 00 00 00 00 00  0e 05 00 10 00 00 00 10 | 00 31 07 55 50 00 00 08  00 00 2c 00 00 00 00 01
+00 00 00 58 5f 7f 1f 00  00 00 00 00 5a 48 7f 40 | 15 00 00 00 00 40 5f 20  7f 15 00 00 00 00 20 40
+00 00 00 00 00 00 00 20  31 1f 55 5f 00 00 00 00 | 00 0e 02 00 10 00 00 00  00 00 00 1f 00 0f 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00  00 00 f7 
+*/
+#define A4_UNKNOWN_2_REQUEST_ID              0xFD
+
+/*
+COMMAND 0x60 param
+
+Generates an endless stream of dumps (what is it?)
+*/
+#define A4_UNKNOWN_3_REQUEST_ID              0x60
+
+/*
+E0 00 = pitch down octaves
+E0 01 01 = then, pitch up 2semitones?
+
+E1 = track2
+E2 = track3
+E3 01 = track4 down 2 semitones
+...
+E8 same
+*/
+#define A4_UNKNOWN_4_REQUEST_ID              0xE0
+#define A4_UNKNOWN_5_REQUEST_ID              0xE8
+#define A4_UNKNOWN_6_REQUEST_ID              0xE1
+
+// seems to be unmute, 1 param
+#define A4_UNKNOWN_7_REQUEST_ID              0x80 // ~0x84?
+// seems to be mute, 1 param
+#define A4_UNKNOWN_8_REQUEST_ID              0x90 // ~0x94?
+
+#endif /* A4_PARAMS_H__ */

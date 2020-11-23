@@ -4,6 +4,7 @@
 #define WAV_H__
 
 #include "MCL.h"
+#include "MCLSd.h"
 #define WAV_DATA_OFFSET 44
 
 class WavHeader {
@@ -60,7 +61,7 @@ public:
   File file;
   Wav() {
   }
-  bool open(char *file_name, bool overwrite = false, uint16_t numChannels = 1,
+  bool open(const char *file_name, bool overwrite = false, uint16_t numChannels = 1,
             uint32_t sampleRate = 44100, uint8_t bitRate = 16);
   bool close(bool write = false);
   bool write_header();

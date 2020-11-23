@@ -13,13 +13,12 @@
  * Elektron data encoders and decoders
  **/
 
-#include "Elektron.hh"
-#include "ElektronDataEncoder.hh"
+#include "Elektron.h"
+#include "ElektronDataEncoder.h"
 
-void ElektronDataToSysexEncoder::init(DATA_ENCODER_INIT(uint8_t *_sysex,
-                                                        uint16_t _sysexLen),
+void ElektronDataToSysexEncoder::init(uint8_t *_sysex,
                                       MidiUartParent *_uart) {
-  DataEncoder::init(DATA_ENCODER_INIT(_sysex, _sysexLen));
+  DataEncoder::init(_sysex);
   uart = _uart;
   if (uart != NULL) {
     data = ptr = buf;
@@ -170,17 +169,14 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::pack8(uint8_t inb) {
   DATA_ENCODER_TRUE();
 }
 
-void ElektronSysexToDataEncoder::init(DATA_ENCODER_INIT(uint8_t *_data,
-                                                        uint16_t _maxLen)) {
-  DataEncoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+void ElektronSysexToDataEncoder::init(uint8_t *_data) {
+  DataEncoder::init(_data);
   cnt7 = 0;
   cnt = 0;
   retLen = 0;
 }
-void ElektronSysexToDataEncoder::init(DATA_ENCODER_INIT(MidiClass *_midi,
-                                                        uint16_t _offset,
-                                                        uint16_t _maxLen)) {
-  DataEncoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+void ElektronSysexToDataEncoder::init(MidiClass *_midi, uint16_t _offset) {
+  DataEncoder::init(_midi, _offset);
   cnt7 = 0;
   cnt = 0;
   retLen = 0;
@@ -226,16 +222,13 @@ uint16_t ElektronSysexToDataEncoder::finish() {
 #endif
 }
 
-void ElektronSysexDecoder::init(DATA_ENCODER_INIT(uint8_t *_data,
-                                                  uint16_t _maxLen)) {
-  DataDecoder::init(DATA_ENCODER_INIT(_data, _maxLen));
+void ElektronSysexDecoder::init(uint8_t *_data) {
+  DataDecoder::init(_data);
   start7Bit();
 }
 
-void ElektronSysexDecoder::init(DATA_ENCODER_INIT(MidiClass *_midi,
-                                                  uint16_t _offset,
-                                                  uint16_t _maxLen)) {
-  DataDecoder::init(DATA_ENCODER_INIT(_midi, _offset, _maxLen));
+void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
+  DataDecoder::init(_midi, _offset);
   start7Bit();
 }
 
@@ -259,7 +252,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
     cnt7++;
   } else {
     if (data) {
-      c = *(ptr++);
+      *c = *(ptr++);
     } else {
       *c = midi->midiSysex.getByte(n++);
     }

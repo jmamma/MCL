@@ -1,5 +1,4 @@
-#include "MenuPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void MenuPageBase::init() {
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
@@ -189,7 +188,7 @@ void MenuPageBase::display() {
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  Page *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  LightPage *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
   if (page_callback != NULL) {
     DEBUG_PRINTLN("setting page");
     DEBUG_PRINTLN((uint16_t)page_callback);
@@ -197,7 +196,7 @@ bool MenuPageBase::enter() {
     return false;
   }
   if (row_func != NULL) {
-    DEBUG_PRINTLN("calling callback func");
+    DEBUG_PRINTLN(F("calling callback func"));
     (*row_func)();
   }
 }

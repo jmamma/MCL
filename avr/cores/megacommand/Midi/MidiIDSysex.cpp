@@ -1,9 +1,7 @@
 #include "WProgram.h"
 
-#include "MidiIDSysex.hh"
+#include "MidiIDSysex.h"
 #include "helpers.h"
-
-MidiIDSysexListenerClass MidiIDSysexListener;
 
 void MidiIDSysexListenerClass::start() {
 
@@ -32,7 +30,7 @@ void MidiIDSysexListenerClass::end_immediate() {
   if ((sysex->getByte(i++) == 0x06) &&
       (sysex->getByte(i++) == 0x02)) {
 
-    DEBUG_PRINTLN("MidiID message detected");
+    DEBUG_PRINTLN(F("MidiID message detected"));
     dev->manufacturer_id[0] = sysex->getByte(i++);
     if (dev->manufacturer_id[0] == 0) {
       dev->manufacturer_id[1] = sysex->getByte(i++);
@@ -50,7 +48,7 @@ void MidiIDSysexListenerClass::end_immediate() {
 
     msgType = sysex->getByte(2);
     isIDMessage = true;
-    DEBUG_PRINTLN("fam code");
+    DEBUG_PRINTLN(F("fam code"));
     DEBUG_DUMP(dev->family_code[0]);
    return;
   }

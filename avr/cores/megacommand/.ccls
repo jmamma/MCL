@@ -50,4 +50,4 @@ clang++
 #  Compiler options
 -Wall
 -Wextra
-%c %cpp -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics
+%c %cpp -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics

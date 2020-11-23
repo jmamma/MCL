@@ -1,5 +1,4 @@
-#include "ArpPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
@@ -151,7 +150,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }

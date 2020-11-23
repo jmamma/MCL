@@ -4,7 +4,7 @@
 #define MCLACTIONSEVENTS_H__
 
 #include "MidiClock.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 
 class MCLActionsMidiEvents : public MidiCallback {
 public:

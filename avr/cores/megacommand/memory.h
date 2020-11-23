@@ -1,6 +1,8 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
+#define NUM_DEVS 2
+
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 
@@ -20,7 +22,7 @@
 #define SYSEX1_DATA_LEN 0x1830UL //6KB
 
 #define BANK1_SYSEX2_DATA_START (BANK1_SYSEX1_DATA_START + SYSEX1_DATA_LEN)
-#define SYSEX2_DATA_LEN 0x4000UL //16KB
+#define SYSEX2_DATA_LEN 0x1830UL //6KB
 
 /* definition to expand macro then apply to pragma message */
 #define VALUE_TO_STRING(x) #x
@@ -75,7 +77,7 @@ FORCED_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
 
 FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint32_t len) {
   select_bank(1);
-  memcpy(dst, src, len);
+  memcpy((void*)dst, (void*)src, len);
 }
 
 FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {

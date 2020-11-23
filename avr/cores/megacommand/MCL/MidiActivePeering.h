@@ -3,8 +3,9 @@
 #ifndef MIDIACTIVEPEERING_H__
 #define MIDIACTIVEPEERING_H__
 
-#include "MidiID.hh"
-#include "Task.hh"
+#include "MidiID.h"
+#include "Elektron.h"
+#include "Task.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2
@@ -17,14 +18,28 @@ public:
 
   virtual void run();
   virtual void destroy() {};
-  void prepare_display();
-  void delay_progress(uint16_t clock_);
 
-  void md_setup();
-  void a4_setup();
-  uint8_t get_device(uint8_t port);
+  /**
+   * Gets the device connected to the port.
+   * Always return a non-null pointer (could be a NullMidiDevice*).
+   **/
+  MidiDevice* get_device(uint8_t port);
 };
 
+class GenericMidiDevice : public MidiDevice {
+public:
+  GenericMidiDevice();
+  virtual bool probe() { return true; }
+};
+
+class NullMidiDevice : public MidiDevice {
+public:
+  NullMidiDevice();
+  virtual bool probe() { return false; }
+};
+
+extern GenericMidiDevice generic_midi_device;
+extern NullMidiDevice null_midi_device;
 extern MidiActivePeering midi_active_peering;
 
 #endif /* MIDIACTIVEPEERING_H__ */

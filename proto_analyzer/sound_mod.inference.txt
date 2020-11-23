@@ -1,0 +1,16 @@
+Basic format from patch 103 shows:
+
+DepthMSB: sign
+[1B Depth] | [1B DepthPad]  | [1B Unknown] | [1B Destination]
+
+0x121 - 0x134 Vol
+
+0x139 - VolBipolar
+
+0x13b - 0x14d PB
+
+0x151 - 0x164 MW
+
+0x168 - 0x17b BR
+
+0x17f - 0x191 AT

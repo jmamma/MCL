@@ -1,6 +1,8 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
+#include "Sketch.h"
+#include "Pages.h"
 
 #define SCREEN_SAVER_TIME 5
 
@@ -32,17 +34,17 @@ void GuiClass::setSketch(Sketch *_sketch) {
     currentPage()->redisplayPage();
 }
 
-void GuiClass::setPage(PageParent *page) {
+void GuiClass::setPage(LightPage *page) {
   if (sketch != NULL)
     sketch->setPage(page);
 }
 
-void GuiClass::pushPage(PageParent *page) {
+void GuiClass::pushPage(LightPage *page) {
   if (sketch != NULL)
     sketch->pushPage(page);
 }
 
-void GuiClass::popPage(PageParent *page) {
+void GuiClass::popPage(LightPage *page) {
   if (sketch != NULL)
     sketch->popPage(page);
 }
@@ -52,7 +54,7 @@ void GuiClass::popPage() {
     sketch->popPage();
 }
 
-PageParent *GuiClass::currentPage() {
+LightPage *GuiClass::currentPage() {
   if (sketch != NULL)
     return sketch->currentPage();
   else
@@ -74,7 +76,9 @@ void GuiClass::loop() {
   if (!EventRB.isEmpty()) {
     clock_minutes = 0;
     minuteclock = 0;
-    screen_saver = false;
+#ifdef OLED_DISPLAY
+    oled_display.screen_saver = false;
+#endif
   }
 
   while (!EventRB.isEmpty()) {
@@ -115,16 +119,12 @@ void GuiClass::loop() {
 #ifndef HOST_MIDIDUINO
   ::loop();
 #endif
-  if ((use_screen_saver) && (!screen_saver) && (clock_minutes >= SCREEN_SAVER_TIME)) {
-    screen_saver = true;
+  if (use_screen_saver && clock_minutes >= SCREEN_SAVER_TIME) {
 #ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-    oled_display.display();
+    oled_display.screen_saver = true;
 #endif
   }
-  if (screen_saver == false) {
-    display();
-  }
+  display();
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {

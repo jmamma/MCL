@@ -1,222 +1,287 @@
-/* Copyright (c) 2009 - http://ruinwesen.com/ */
+#include "Elektron.h"
 
-/**
- * \addtogroup Elektron
- *
- * @{
- *
- * \addtogroup elektron_helpers Elektron Helpers
- *
- * @{
- *
- * \file
- * Elektron helper routines and data structures
- **/
+#define SYSEX_RETRIES 1
 
-#include "Elektron.hh"
+uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
+  if (send) {
+  USE_LOCK();
+  SET_LOCK();
+  uart->m_putc(0xF0);
+  uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
+  uart->sendRaw(data, len);
+  uart->m_putc(0xF7);
+  CLEAR_LOCK();
+  }
+  return len + sysex_protocol.header_size + 2;
+}
 
-uint16_t ElektronHelper::ElektronDataToSysex(uint8_t *data, uint8_t *sysex, uint16_t len) {
-  uint16_t retlen = 0;
-  uint16_t cnt;
-  uint16_t cnt7 = 0;
+uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
+  uint8_t data[] = {type, param};
+  return sendRequest(data, 2, send);
+}
 
-  sysex[0] = 0;
-  for (cnt = 0; cnt < len; cnt++) {
-    uint8_t c = data[cnt] & 0x7F;
-    uint8_t msb = data[cnt] >> 7;
-    sysex[0] |= msb << (6 - cnt7);
-    sysex[1 + cnt7] = c;
+bool ElektronDevice::get_fw_caps() {
 
-    if (cnt7++ == 6) {
-      sysex += 8;
-      retlen += 8;
-      sysex[0] = 0;
-      cnt7 = 0;
+  uint8_t data[2] = {0x70, 0x30};
+  sendRequest(data, sizeof(data));
+
+  uint8_t msgType = waitBlocking();
+
+  ((uint8_t *)&(fw_caps))[0] = 0;
+  ((uint8_t *)&(fw_caps))[1] = 1;
+
+  auto begin = sysex_protocol.header_size + 1;
+  auto listener = getSysexListener();
+
+  if (msgType == 0x72) {
+    if (listener->sysex->getByte(begin) == 0x30) {
+      ((uint8_t *)&(fw_caps))[0] = listener->sysex->getByte(begin+1);
+      ((uint8_t *)&(fw_caps))[1] = listener->sysex->getByte(begin+2);
+    }
+    return true;
+  }
+  return false;
+}
+
+void ElektronDevice::activate_trig_interface() {
+  uint8_t data[3] = {0x70, 0x31, 0x01};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::deactivate_trig_interface() {
+  uint8_t data[3] = {0x70, 0x31, 0x00};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::activate_track_select() {
+  uint8_t data[3] = {0x70, 0x32, 0x01};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::deactivate_track_select() {
+  uint8_t data[3] = {0x70, 0x32, 0x00};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
+  uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
+  // trigleds[0..6]
+  data[2] = bitmask & 0x7F;
+  // trigleds[7..13]
+  data[3] = (bitmask >> 7) & 0x7F;
+  // trigleds[14..15]
+  data[4] = (bitmask >> 14) | (mode << 2);
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
+  uint16_t start_clock = read_slowclock();
+  uint16_t current_clock = start_clock;
+  auto listener = getSysexListener();
+  listener->start();
+  do {
+    current_clock = read_slowclock();
+    handleIncomingMidi();
+  } while ((clock_diff(start_clock, current_clock) < timeout) &&
+           (listener->msgType == 255));
+  return listener->msgType;
+}
+
+void ElektronDevice::requestKit(uint8_t kit) { 
+  sendRequest(sysex_protocol.kitrequest_id, kit); 
+}
+
+void ElektronDevice::requestPattern(uint8_t pattern) {
+  sendRequest(sysex_protocol.patternrequest_id, pattern);
+}
+
+void ElektronDevice::requestSong(uint8_t song) {
+  sendRequest(sysex_protocol.songrequest_id, song);
+}
+
+void ElektronDevice::requestGlobal(uint8_t global) {
+  sendRequest(sysex_protocol.globalrequest_id, global);
+}
+
+
+uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {
+  SysexCallback cb(type);
+
+  auto listener = getSysexListener();
+
+  listener->addOnStatusResponseCallback(&cb, (sysex_status_callback_ptr_t)&SysexCallback::onStatusResponse);
+  sendRequest(sysex_protocol.statusrequest_id, type);
+  connected = cb.waitBlocking(timeout);
+  listener->removeOnStatusResponseCallback(&cb);
+
+  return connected ? cb.value : 255;
+}
+
+bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
+  SysexCallback cb;
+  uint8_t count = SYSEX_RETRIES;
+  auto listener = getSysexListener();
+  while ((MidiClock.state == 2) &&
+         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+    ;
+  while (count) {
+    listener->addOnKitMessageCallback(
+        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+    requestKit(kit);
+    connected = cb.waitBlocking(timeout);
+    listener->removeOnKitMessageCallback(&cb);
+    if (connected) {
+      auto kit = getKit();
+      if (kit != nullptr && kit->fromSysex(midi)) {
+        return true;
+      }
+    }
+    count--;
+  }
+  return false;
+}
+
+bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
+  SysexCallback cb;
+  uint8_t count = SYSEX_RETRIES;
+  auto listener = getSysexListener();
+  while ((MidiClock.state == 2) &&
+         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+    ;
+  while (count) {
+    listener->addOnPatternMessageCallback(
+        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+    requestPattern(pattern);
+    connected = cb.waitBlocking(timeout);
+    listener->removeOnPatternMessageCallback(&cb);
+    if (connected) {
+      auto pattern = getPattern();
+      if (pattern != nullptr && pattern->fromSysex(midi)) {
+        return true;
+      }
+    }
+    count--;
+  }
+  return false;
+}
+
+bool ElektronDevice::getBlockingGlobal(uint8_t global, uint16_t timeout) {
+  SysexCallback cb;
+  auto listener = getSysexListener();
+  listener->addOnGlobalMessageCallback(
+      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+  requestGlobal(global);
+  connected = cb.waitBlocking(timeout);
+  listener->removeOnGlobalMessageCallback(&cb);
+  if (connected) {
+    auto global = getGlobal();
+    if (global != nullptr && global->fromSysex(midi)) {
+      return true;
     }
   }
-  return retlen + cnt7 + (cnt7 != 0 ? 1 : 0);
+
+  return connected;
 }
 
-uint16_t ElektronHelper::ElektronSysexToData(uint8_t *sysex, uint8_t *data, uint16_t len) {
-  uint16_t cnt;
-  uint16_t cnt2 = 0;
-  uint16_t bits = 0;
-  for (cnt = 0; cnt < len; cnt++) {
-    if ((cnt % 8) == 0) {
-      bits = sysex[cnt];
-    } else {
-      bits <<= 1;
-      data[cnt2++] = sysex[cnt] | (bits & 0x80);
+uint8_t ElektronDevice::getCurrentTrack(uint16_t timeout) {
+  uint8_t value = getBlockingStatus(sysex_protocol.track_index_request_id, timeout);
+  if (value == 255) {
+    return 255;
+  } else {
+    currentTrack = value;
+    return value;
+  }
+}
+uint8_t ElektronDevice::getCurrentKit(uint16_t timeout) {
+  uint8_t value = getBlockingStatus(sysex_protocol.kit_index_request_id, timeout);
+  if (value == 255) {
+    return 255;
+  } else {
+    currentKit = value;
+    return value;
+  }
+}
+
+uint8_t ElektronDevice::getCurrentPattern(uint16_t timeout) {
+  uint8_t value = getBlockingStatus(sysex_protocol.pattern_index_request_id, timeout);
+  if (value == 255) {
+    return 255;
+  } else {
+    currentPattern = value;
+    return value;
+  }
+}
+
+uint8_t ElektronDevice::getCurrentGlobal(uint16_t timeout) {
+  uint8_t value = getBlockingStatus(sysex_protocol.global_index_request_id, timeout);
+  if (value == 255) {
+    return 255;
+  } else {
+    currentGlobal = value;
+    return value;
+  }
+}
+
+void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
+  uint8_t data[] = { sysex_protocol.status_set_id , (uint8_t)(id & 0x7F), (uint8_t)(value & 0x7F) };
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::setKitName(const char *name) {
+  USE_LOCK();
+  SET_LOCK();
+  uart->m_putc(0xF0);
+  uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
+  uart->sendRaw(sysex_protocol.kitname_set_id);
+  for (uint8_t i = 0; i < sysex_protocol.kitname_length; i++) {
+    uart->sendRaw(name[i] & 0x7F);
+  }
+  uart->m_putc(0xf7);
+  CLEAR_LOCK();
+}
+
+uint8_t ElektronDevice::setTempo(float tempo, bool send) {
+  uint16_t qtempo = tempo * 24;
+  uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7), (uint8_t)(qtempo & 0x7F)};
+  return sendRequest(data, countof(data), send);
+}
+
+void ElektronDevice::loadGlobal(uint8_t id) { 
+  uint8_t data[] = {sysex_protocol.load_global_id, (uint8_t)(id & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::loadKit(uint8_t kit) {
+  uint8_t data[] = {sysex_protocol.load_kit_id, (uint8_t)(kit & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::loadPattern(uint8_t pattern) {
+  uint8_t data[] = {sysex_protocol.load_pattern_id, (uint8_t)(pattern & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+void ElektronDevice::saveCurrentKit(uint8_t pos) {
+  uint8_t data[2] = {sysex_protocol.save_kit_id, (uint8_t)(pos & 0x7F)};
+  sendRequest(data, countof(data));
+}
+
+PGM_P getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t length) {
+  for (uint8_t i = 0; i < length; i++) {
+    if (pgm_read_byte(&table[i].id) == machine) {
+      if (type == 1) {
+        return table[i].name1;
+      }
+      else {
+        return table[i].name2;
+      }
+
     }
   }
-  return cnt2;
 }
-
-uint16_t ElektronHelper::MNMDataToSysex(uint8_t *data, uint8_t *sysex,
-					uint16_t len, uint16_t sysexLen) {
-  MNMDataToSysexEncoder encoder(DATA_ENCODER_INIT(sysex, sysexLen));
-	encoder.pack(data, len);
-  return encoder.finish();
-}
-
-uint16_t ElektronHelper::MNMSysexToData(uint8_t *sysex, uint8_t *data,
-					uint16_t len, uint16_t maxLen) {
-  MNMSysexToDataEncoder encoder(DATA_ENCODER_INIT(data, maxLen));
-	encoder.pack(sysex, len);
-  return encoder.finish();
-}
-
-uint16_t ElektronHelper::to16Bit7(uint8_t b1, uint8_t b2) {
-  return (b1 << 7) | b2; 
-}
-
-uint16_t ElektronHelper::to16Bit(uint8_t b1, uint8_t b2) {
-  return (b1 << 8) | b2; 
-}
-
-uint16_t ElektronHelper::to16Bit(uint8_t *b) {
-  return (b[0] << 8) | b[1]; 
-}
-
-
-uint32_t ElektronHelper::to32Bit(uint8_t *b) {
-  return ((uint32_t)b[0] << 24) | ((uint32_t)b[1] << 16) | ((uint32_t)b[2] << 8) | (uint32_t)b[3];
-}
-
-void ElektronHelper::from16Bit(uint16_t num, uint8_t *b) {
-  b[0] = (num >> 8) & 0xFF;
-  b[1] = num & 0xFF;
-}
-
-void ElektronHelper::from32Bit(uint32_t num, uint8_t *b) {
-  b[0] = (num >> 24) & 0xFF;
-  b[1] = (num >> 16) & 0xFF;
-  b[2] = (num >> 8) & 0xFF;
-  b[3] = (num >> 0) & 0xFF;
-}
-
-uint64_t ElektronHelper::to64Bit(uint8_t *b) {
-  uint64_t ret = 0;
-  ret |= ((uint64_t)(b[0]) << 56);
-  ret |= ((uint64_t)(b[1]) << 48);
-  ret |= ((uint64_t)(b[2]) << 40);
-  ret |= ((uint64_t)(b[3]) << 32);
-  ret |= ((uint64_t)(b[4]) << 24);
-  ret |= ((uint64_t)(b[5]) << 16);
-  ret |= ((uint64_t)(b[6]) << 8);
-  ret |= ((uint64_t)(b[7]) << 0);
-  return ret;
-}
-
-void ElektronHelper::from64Bit(uint64_t num, uint8_t *b) {
-  b[0] = (num >> 56) & 0xFF;
-  b[1] = (num >> 48) & 0xFF;
-  b[2] = (num >> 40) & 0xFF;
-  b[3] = (num >> 32) & 0xFF;
-  b[4] = (num >> 24) & 0xFF;
-  b[5] = (num >> 16) & 0xFF;
-  b[6] = (num >> 8) & 0xFF;
-  b[7] = (num >> 0) & 0xFF;
-}
-/* check sysex */
-
-bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
-  uint16_t cksum = 0;
-  for (int i = 0; i < len - 4; i++) {
-  cksum += data[i];
-  }
-  cksum &= 0x3FFF;
-  uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
-
-  if (cksum != realcksum) {
-#ifdef HOST_MIDIDUINO
-		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
-#endif
-    // wrong checksum
-    return false;
-  }
-	return true;
-
-}
-
-bool ElektronHelper::checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset, uint16_t len) {
-  uint16_t cksum = 0;
-  for (int i = 0; i < len - 4; i++) {
-    cksum += midi->midiSysex.getByte(i + offset);
-  }
-  cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex.getByte(offset + len - 4), midi->midiSysex.getByte(offset + len - 3));
-  if (cksum != realcksum) {
-#ifdef HOST_MIDIDUINO
-		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
-#endif
-    // wrong checksum
-    return false;
-  }
-	return true;
-}
-
-void ElektronHelper::calculateSysexChecksumAnalog(uint8_t *data, uint16_t len) {
-	data[0] = 0xF0;
-  uint16_t checksum = 0;
-  for (int i = 9; i < len; i++)
-    checksum += data[i];
-  data[len] = (uint8_t)((checksum >> 7) & 0x7F);
-  data[len + 1] = (uint8_t)(checksum & 0x7F);
-  uint16_t length = len + 5 - 7 - 3;
-  data[len + 2] = (uint8_t)((length >> 7) &0x7F);
-  data[len + 3 ] = (uint8_t)(length & 0x7F);
-  data[len + 4] = 0xF7;
-}
-
-
-/* check sysex */
-bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
-  uint16_t cksum = 0;
-  for (int i = 9 - 6; i < len - 4; i++) {
-    cksum += data[i];
-  }
-  cksum &= 0x3FFF;
-  uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
-  if (cksum != realcksum) {
-#ifdef HOST_MIDIDUINO
-		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
-#endif
-    // wrong checksum
-    return false;
-  }
-	return true;
-}
-
-bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16_t len) {
-  uint16_t cksum = 0;
-  for (int i = 9 - 6; i < len - 4; i++) {
-    cksum += midi->midiSysex.getByte(i + offset);
-  }
-  cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex.getByte(offset + len - 4), midi->midiSysex.getByte(offset + len - 3));
-  if (cksum != realcksum) {
-#ifdef HOST_MIDIDUINO
-		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
-#endif
-    // wrong checksum
-    return false;
-  }
-	return true;
-}
-
-void ElektronHelper::calculateSysexChecksum(uint8_t *data, uint16_t len) {
-	data[0] = 0xF0;
-  uint16_t checksum = 0;
-  for (int i = 9; i < len; i++)
-    checksum += data[i];
-  data[len] = (uint8_t)((checksum >> 7) & 0x7F);
-  data[len + 1] = (uint8_t)(checksum & 0x7F);
-  uint16_t length = len + 5 - 7 - 3;
-  data[len + 2] = (uint8_t)((length >> 7) &0x7F);
-  data[len + 3 ] = (uint8_t)(length & 0x7F);
-  data[len + 4] = 0xF7;
-}
-
-/* Encoders */
 

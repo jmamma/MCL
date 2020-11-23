@@ -4,10 +4,10 @@
 #ifndef MIDICLOCK_H__
 #define MIDICLOCK_H__
 
-#include "Callback.hh"
-#include "Vector.hh"
+#include "Callback.h"
+#include "Vector.h"
 #include "WProgram.h"
-#include "midi-common.hh"
+#include "midi-common.h"
 #include <inttypes.h>
 
 /**
@@ -226,7 +226,7 @@ public:
 
     static bool inCallback = false;
     if (inCallback) {
-      DEBUG_PRINTLN("clock collision");
+      DEBUG_PRINTLN(F("clock collision"));
       return;
     } else {
       inCallback = true;
@@ -399,7 +399,7 @@ public:
   bool clock_less_than(uint32_t a, uint32_t b);
   uint32_t clock_diff_div192(uint32_t old_clock, uint32_t new_clock);
 
-  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiStart() {
+  ALWAYS_INLINE() void handleImmediateMidiStart() {
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_START);
     }
@@ -411,10 +411,10 @@ public:
     onMidiStartImmediateCallbacks.call(div96th_counter);
     state = STARTING;
 
-    DEBUG_PRINTLN("START");
+    DEBUG_PRINTLN(F("START"));
   }
 
-  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiStop() {
+  ALWAYS_INLINE() void handleImmediateMidiStop() {
     state = PAUSED;
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_STOP);
@@ -426,7 +426,7 @@ public:
     //  init();
   }
 
-  ALWAYS_INLINE() void MidiClockClass::handleImmediateMidiContinue() {
+  ALWAYS_INLINE() void handleImmediateMidiContinue() {
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_CONTINUE);
     }

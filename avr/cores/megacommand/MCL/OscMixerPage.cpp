@@ -1,9 +1,4 @@
-#include "DSP.h"
-#include "MCL.h"
-#include "Osc.h"
-#include "OscMixerPage.h"
-#include "OscPage.h"
-#include "WavDesigner.h"
+#include "MCL_impl.h"
 
 void OscMixerPage::setup() {}
 

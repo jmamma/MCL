@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 #include "helpers.h"
-#include "LCDParent.hh"
+#include "LCDParent.h"
 
 class LCDClass : public LCDParentClass {
  public:

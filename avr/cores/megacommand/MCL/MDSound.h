@@ -1,6 +1,5 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-#ifndef MDSOUND_H__
-#define MDSOUND_H__
+#pragma once
 
 #define KICK 1
 #define SNARE 2
@@ -38,4 +37,3 @@ public:
 
 };
 
-#endif /* MDSOUND_H__ */

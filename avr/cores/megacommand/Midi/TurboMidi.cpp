@@ -1,8 +1,8 @@
 #include "WProgram.h"
 
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "TurboMidi.hh"
+#include "MidiSysex.h"
+#include "TurboMidi.h"
 
 #ifndef HOST_MIDIDUINO
 
@@ -11,7 +11,7 @@ static uint8_t turbomidi_sysex_header[] = {
 };
 
 void TurboMidiSysexListenerClass::handleByte(uint8_t byte) {
-	if (sysex->len == 3) {
+	if (sysex->recordLen == 3) {
 		if (byte == 0x00) {
 			isGenericMessage = true;
 		} else {
