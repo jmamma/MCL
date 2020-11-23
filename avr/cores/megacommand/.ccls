@@ -1,4 +1,4 @@
-g++
+clang++
 %c -std=gnu11
 %cpp -std=c++14
 #  Treats all headers as c++ headers
