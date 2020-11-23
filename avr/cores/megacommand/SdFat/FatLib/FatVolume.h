@@ -331,7 +331,7 @@ class FatVolume : public  FatPartition {
   }
 #endif  // ENABLE_ARDUINO_STRING
 
- private:
+// private:
   FatFile* vwd() {return &m_vwd;}
   friend FatFile;
   FatFile m_vwd;
