@@ -812,7 +812,6 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-  DEBUG_DUMP("blah");
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
       if (SeqPage::pianoroll_mode > 0) {
@@ -829,8 +828,8 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
         mcl_seq.ext_tracks[n].update_param(param, value);
       }
-    }
     return;
+   }
   }
 }
 
@@ -895,7 +894,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
 
-      //if (MidiClock.state != 2) {
+      // if (MidiClock.state != 2) {
       mcl_seq.ext_tracks[n].note_off(pitch);
       // }
       if ((seq_extstep_page.recording) && (MidiClock.state == 2)) {
