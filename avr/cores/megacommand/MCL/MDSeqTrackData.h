@@ -5,20 +5,19 @@
 
 #include "CommonTools/helpers.h"
 
-#define NUM_MD_LOCKS_270 4
+#define NUM_LOCKS_270 4
 #define NUM_MD_STEPS_270 64
 
 #define NUM_MD_LOCK_SLOTS 256
 #define NUM_MD_STEPS 64
-#define NUM_MD_LOCKS 8
 
 class MDSeqTrackData_270 {
 public:
   uint8_t length;
   uint8_t speed;
   uint32_t slide_mask32; // to be increased to 64bits
-  uint8_t locks[NUM_MD_LOCKS_270][NUM_MD_STEPS_270];
-  uint8_t locks_params[NUM_MD_LOCKS_270];
+  uint8_t locks[NUM_LOCKS_270][NUM_MD_STEPS_270];
+  uint8_t locks_params[NUM_LOCKS_270];
   uint64_t pattern_mask;
   uint64_t lock_mask;
   uint8_t conditional[NUM_MD_STEPS_270];
@@ -40,7 +39,7 @@ public:
 class MDSeqStep {
 public:
   bool active;
-  uint8_t locks[NUM_MD_LOCKS];
+  uint8_t locks[NUM_LOCKS];
   uint8_t timing;
   MDSeqStepDescriptor data;
 };
@@ -48,7 +47,7 @@ public:
 class MDSeqTrackData {
 public:
   uint8_t locks[NUM_MD_LOCK_SLOTS];
-  uint8_t locks_params[NUM_MD_LOCKS];
+  uint8_t locks_params[NUM_LOCKS];
   uint8_t timing[NUM_MD_STEPS];
   MDSeqStepDescriptor steps[NUM_MD_STEPS];
 
@@ -60,7 +59,7 @@ public:
     param_id += 1;
     if (!param_id)
       return 255;
-    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       if (locks_params[c] == param_id) {
         return c;
       }

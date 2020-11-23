@@ -216,7 +216,7 @@ extern const unsigned char wheel_side [];
 // 'chroma', 24x25px 
 extern const unsigned char icon_chroma[];
 // 'rec', 24x15px
-extern const unsigned char icon_rec[];
+//extern const unsigned char icon_rec[];
 // 'grid', 24x15px
 extern const unsigned char icon_grid[];
 // 'lfo', 24x24px
@@ -238,9 +238,11 @@ extern const unsigned char icon_ram1[];
 // 'ram2', 24x25px
 extern const unsigned char icon_ram2[];
 // 'rythmecho', 24x25px
-extern const unsigned char icon_rhytmecho [];
+extern const unsigned char icon_rhytmecho[];
 // 'route', 24x16px
-extern const unsigned char icon_route [];
+extern const unsigned char icon_route[];
+// 'pianoroll', 24x25px
+extern const unsigned char icon_pianoroll[];
 // 'sound', 24x19px
 extern const unsigned char icon_sound[];
 // 'md_rev', 34x24px

@@ -97,7 +97,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
 void MDTrack::scale_seq_vol(float scale) {
   for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
     auto idx = seq_data.get_lockidx(n);
-    for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       if (seq_data.steps[n].is_lock(c)) {
         if ((seq_data.locks_params[c] == MODEL_LFOD + 1) ||
             (seq_data.locks_params[c] == MODEL_VOL + 1)) {

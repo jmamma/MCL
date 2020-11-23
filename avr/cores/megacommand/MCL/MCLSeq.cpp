@@ -40,14 +40,14 @@ void MCLSeq::setup() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].uart = &MidiUart2;
-    ext_tracks[i].channel = i;
+    ext_tracks[i].set_channel(i);
     ext_tracks[i].set_length(16);
     ext_tracks[i].speed = SEQ_SPEED_2X;
     ext_tracks[i].clear();
+    ext_tracks[i].init_notes_on();
   }
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-    aux_tracks[i].channel = i;
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_2X;
   }
@@ -148,13 +148,18 @@ void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].buffer_notesoff();
+    ext_tracks[i].reset_params();
+    ext_tracks[i].locks_slides_recalc = 255;
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+      ext_tracks[i].locks_slide_data[c].init();
+    }
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
-    for (uint8_t c = 0; c < 4; c++) {
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       md_tracks[i].locks_slide_data[c].init();
     }
   }
@@ -254,11 +259,17 @@ again:
     md_tracks[i].recalc_slides();
   }
 
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].recalc_slides();
+  }
+
+
   if (realtime) {
     realtime = false;
     engage_sidechannel = false;
     goto again;
   }
+
   auto seq_time = sw.elapsed();
   // DIAG_MEASURE(0, seq_time);
 }
@@ -294,9 +305,13 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t param = msg[1];
   uint8_t value = msg[2];
 #ifdef EXT_TRACKS
-  if (channel < mcl_seq.num_ext_tracks) {
-    if (param == 0x5E) {
-      mcl_seq.ext_tracks[channel].mute_state = value;
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (mcl_seq.ext_tracks[n].channel == channel) {
+      if (param == 0x5E) {
+        mcl_seq.ext_tracks[n].mute_state = value;
+      } else {
+        mcl_seq.ext_tracks[n].update_param(param, value);
+      }
     }
   }
 #endif

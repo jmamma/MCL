@@ -35,8 +35,6 @@
 #define SEQ_PTC_PAGE 16
 #define SEQ_EUC_PAGE 20
 #define SEQ_EUCPTC_PAGE 21
-#define SEQ_RLCK_PAGE 13
-#define SEQ_RTRK_PAGE 11
 #define SEQ_RPTC_PAGE 14
 #define LOAD_PROJECT_PAGE 8
 

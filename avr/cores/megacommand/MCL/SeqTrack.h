@@ -6,6 +6,9 @@
 #include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
+#include "MCLMemory.h"
+
+#define EMPTY_TRACK_TYPE 0
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -23,10 +26,29 @@
 #define MASK_SLIDE 2
 #define MASK_MUTE 3
 
+#define NUM_LOCKS 8
+
 class SeqTrack_270 {};
 
-// ephemeral data.
+class SlideData {
+public:
+  int16_t err;
+  int8_t inc;
+  int16_t dx;
+  int16_t dy;
+  int16_t x0;
+  int8_t y0;
+  int8_t y1;
+  bool steep;
+  int16_t x1;
+  uint8_t yflip;
+  ALWAYS_INLINE() void init() {
+    dy = 0;
+    dx = 0;
+  }
+};
 
+// ephemeral data
 class SeqTrack {
 
 public:
@@ -44,7 +66,6 @@ public:
   uint8_t iterations_8;
 
   uint8_t port = UART1_PORT;
-  uint8_t channel;
   MidiUartParent *uart = &MidiUart;
 
 
@@ -53,6 +74,12 @@ public:
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   uint8_t count_down;
+
+  SlideData locks_slide_data[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_step[NUM_LOCKS];
+
+  SeqTrack() { active = EMPTY_TRACK_TYPE; }
 
   ALWAYS_INLINE() void reset() {
     step_count = 0;
@@ -181,6 +208,8 @@ public:
     }
     return multi;
   }
+  void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
+  void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 };
 
 #endif /* SEQTRACK_H__ */

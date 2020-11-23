@@ -6,11 +6,15 @@
 #include "GUI.h"
 #include "midi-common.h"
 
-class SeqPageMidiEvents : public MidiCallback {
+#define REC_EVENT_TRIG 0
+#define REC_EVENT_CC 1
+
+class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   void setup_callbacks();
   void remove_callbacks();
   virtual void onControlChangeCallback_Midi(uint8_t *msg);
+  void onMidiStartCallback();
 };
 
 
@@ -25,6 +29,8 @@ extern uint8_t opt_clear;
 extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
+extern uint8_t opt_length;
+extern uint8_t opt_channel;
 
 extern uint16_t trigled_mask;
 
@@ -41,6 +47,8 @@ extern void opt_copy_step_handler();
 extern void opt_mute_step_handler();
 extern void opt_clear_step_locks_handler();
 extern void opt_mask_handler();
+extern void opt_length_handler();
+extern void opt_channel_handler();
 
 extern void seq_menu_handler();
 extern void step_menu_handler();
@@ -54,13 +62,26 @@ public:
   static uint8_t page_count;
   static uint8_t step_select;
   static uint8_t mask_type;
+  static uint8_t param_select;
+  static uint8_t last_pianoroll_mode;
+  static uint8_t pianoroll_mode;
+  static uint8_t velocity;
+  static uint8_t slide;
+
   static MidiDevice* midi_device;
 
   static bool show_seq_menu;
   static bool show_step_menu;
   static bool toggle_device;
 
-  bool recording = false;
+  static uint8_t last_midi_state;
+  static uint16_t deferred_timer;
+  static uint8_t last_param_id;
+  static uint8_t last_rec_event;
+
+  const uint8_t render_defer_time = 50;
+
+  static bool recording;
   bool display_page_index = true;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };
@@ -92,6 +113,8 @@ public:
   uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
 
   uint64_t *get_mask();
+
+  void queue_redraw() { deferred_timer = slowclock; }
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

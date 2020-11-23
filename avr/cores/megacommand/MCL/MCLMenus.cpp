@@ -34,7 +34,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {1, "AUT"},{2,"MAN"},{3,"RND"},
   // 22: SYSTEM DISPLAY
   {0, "INT"}, {1, "INT+EXT"},
-  // 24: SYSTEM SCREENSAVER
+  // 24: MULTI
   {0, "OFF"}, {1, "ON"},
   // 26: SEQ COPY/CLEAR TRK/PASTE/REVERSE
   {0, "--",}, {1, "TRK"}, {2, "ALL"},
@@ -52,6 +52,10 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
   // 51: GRID
   {0, "A"}, {1, "B"},
+  // 53: PIANO ROLL
+  {0,"NOTE"},
+  // 54: OFF
+  {128, "OFF"}, {129, "LEARN"},
 };
 
 void new_proj_handler() {

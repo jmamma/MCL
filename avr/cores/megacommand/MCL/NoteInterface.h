@@ -30,7 +30,7 @@ public:
   uint8_t notecount = 0;
   uint8_t last_note;
   uint64_t ignore_next_mask;
-  uint16_t note_hold = 0;
+  uint16_t note_hold[NUM_DEVS];
   bool note_proceed = false;
   bool state = true;
   void init_notes();
