@@ -895,9 +895,9 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
 
-      if (MidiClock.state != 2) {
-        mcl_seq.ext_tracks[n].note_off(pitch);
-      }
+      //if (MidiClock.state != 2) {
+      mcl_seq.ext_tracks[n].note_off(pitch);
+      // }
       if ((seq_extstep_page.recording) && (MidiClock.state == 2)) {
         mcl_seq.ext_tracks[n].note_off(pitch);
         mcl_seq.ext_tracks[n].record_track_noteoff(pitch);
