@@ -1,4 +1,4 @@
-clang++
+g++
 %c -std=gnu11
 %cpp -std=c++14
 #  Treats all headers as c++ headers
@@ -37,6 +37,7 @@ clang++
 -I../../variants/mega
 #  Additionally include the AVR environment
 -IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
+-I/usr/avr/include
 #
 #  CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x82200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 #  Define the flags: -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
