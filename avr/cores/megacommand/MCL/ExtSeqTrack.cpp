@@ -882,11 +882,6 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint8_t step = step_count;
   uint16_t ev_idx;
 
-<<<<<<< HEAD
- // del_note(step * timing_mid + utiming - timing_mid, 0, note_num);
-
-=======
->>>>>>> dev
   uint8_t n = find_notes_on(note_num);
   if (n == 255)
     return;

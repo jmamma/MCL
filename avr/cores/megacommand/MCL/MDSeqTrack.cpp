@@ -129,60 +129,6 @@ void MDSeqTrack::reset_params() {
     }
   }
 }
-#define _swap_int16_t(a, b)                                                    \
-  {                                                                            \
-    int16_t t = a;                                                             \
-    a = b;                                                                     \
-    b = t;                                                                     \
-  }
-#define _swap_int8_t(a, b)                                                     \
-  {                                                                            \
-    int8_t t = a;                                                              \
-    a = b;                                                                     \
-    b = t;                                                                     \
-  }
-
-void MDSeqTrack::send_slides() {
-  for (uint8_t c = 0; c < NUM_MD_LOCKS; c++) {
-    if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
-
-      uint8_t val;
-      val = locks_slide_data[c].y0;
-      if (locks_slide_data[c].steep) {
-        if (locks_slide_data[c].err > 0) {
-          locks_slide_data[c].y0 += locks_slide_data[c].inc;
-          locks_slide_data[c].err -= locks_slide_data[c].dx;
-        }
-        locks_slide_data[c].err += locks_slide_data[c].dy;
-        locks_slide_data[c].x0++;
-        if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
-          locks_slide_data[c].init();
-          break;
-        }
-      } else {
-        uint16_t x0_old = locks_slide_data[c].x0;
-        while (locks_slide_data[c].x0 == x0_old) {
-          if (locks_slide_data[c].err > 0) {
-            locks_slide_data[c].x0 += locks_slide_data[c].inc;
-            locks_slide_data[c].err -= locks_slide_data[c].dy;
-          }
-          locks_slide_data[c].err += locks_slide_data[c].dx;
-          locks_slide_data[c].y0++;
-          if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
-            locks_slide_data[c].init();
-            break;
-          }
-        }
-        if (locks_slide_data[c].yflip != 255) {
-          val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
-        }
-      }
-
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val,
-                              uart);
-    }
-  }
-}
 
 void MDSeqTrack::recalc_slides() {
   if (locks_slides_recalc == 255) {
