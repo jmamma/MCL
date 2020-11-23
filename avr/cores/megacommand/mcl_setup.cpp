@@ -1,4 +1,4 @@
-#ifdef MCL
+#ifdef MCL_NOSKETCH
 
 #include "MCL.h"
 

@@ -54,6 +54,9 @@ $(info    OBJS is $(OBJS))
 CFLAGS += $(INCS)
 CXXFLAGS += $(INCS)
 
+CFLAGS += -DMCL_NOSKETCH
+CXXFLAGS += -DMCL_NOSKETCH
+
 all: main.hex
 
 main.cxx: $(INOFILES) $(wildcard ${CORE_DIR}/*.cpp)

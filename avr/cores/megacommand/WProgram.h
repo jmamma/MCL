@@ -33,11 +33,11 @@
   Serial.println(x); \
 }
 // __PRETTY_FUNCTION__ is a gcc extension
-#define DEBUG_PRINT_FN(x) { \
-  DEBUG_PRINT(F("func_call: ")); \
-  Serial.println(__PRETTY_FUNCTION__); \
-}
-//#define DEBUG_PRINT_FN(x)
+// #define DEBUG_PRINT_FN(x) { \
+//   DEBUG_PRINT(F("func_call: ")); \
+//   Serial.println(__PRETTY_FUNCTION__); \
+// }
+#define DEBUG_PRINT_FN(x)
 
 #else
 #define DEBUG_INIT()
