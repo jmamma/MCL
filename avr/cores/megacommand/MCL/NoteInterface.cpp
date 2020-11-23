@@ -5,6 +5,7 @@ void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
   memset(notes, 0, NI_MAX_NOTES);
+  memset(note_hold, 0, NUM_DEVS);
 }
 
 bool NoteInterface::is_event(gui_event_t *event) {
@@ -26,7 +27,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     notes[note_num] = 1;
   }
   if (note_num < GRID_WIDTH) {
-    note_hold = slowclock;
+    note_hold[port] = slowclock;
   }
   if (IS_BIT_SET64(ignore_next_mask, note_num)) {
      CLEAR_BIT64(ignore_next_mask, note_num);
@@ -222,7 +223,6 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
   Midi2.addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
-
   state = true;
 }
 

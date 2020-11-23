@@ -1,6 +1,10 @@
 #include "MCL_impl.h"
 
 void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+  DEBUG_DUMP("transition_load_ext");
+  DEBUG_DUMP((uint16_t) seq_track);
+  DEBUG_DUMP(slotnumber);
+  DEBUG_DUMP(tracknumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   ext_track->buffer_notesoff();
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);

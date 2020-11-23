@@ -306,7 +306,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN(F("clear step"));
 
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
           active_track.set_step(step, mask_type, false);
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;

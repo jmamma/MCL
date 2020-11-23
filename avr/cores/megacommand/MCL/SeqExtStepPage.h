@@ -44,6 +44,8 @@ public:
   int16_t cur_y;
   int16_t cur_w;
 
+  int16_t last_cur_x;
+
   int8_t lock_cur_y = 64;
 
   static constexpr int16_t cur_w_min = 2;

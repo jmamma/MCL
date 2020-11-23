@@ -230,7 +230,7 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       }
 
       if (active_track.steps[step].locks_enabled) {
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
           active_track.disable_step_locks(step);
         }
       }

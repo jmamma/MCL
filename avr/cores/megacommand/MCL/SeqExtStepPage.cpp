@@ -65,6 +65,7 @@ void SeqExtStepPage::init() {
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
+  last_cur_x = -1;
   config_encoders();
   midi_events.setup_callbacks();
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
@@ -110,13 +111,13 @@ void SeqExtStepPage::draw_grid() {
         // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
         bool draw = false;
         if ((pianoroll_mode > 0 && k == 3) || i % 16 == 0) {
-        draw = true;
+          draw = true;
         }
         if (pianoroll_mode == 0) {
-        draw = true;
+          draw = true;
         }
         if (draw) {
-        oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)), WHITE);
+          oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)), WHITE);
         }
         if (i % 16 == 0) {
           oled_display.drawPixel(grid_fov_x, draw_y + (k * h) + (h / 2), WHITE);
@@ -682,13 +683,15 @@ void SeqExtStepPage::enter_notes() {
 
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
+  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;
     uint8_t track = event->source - 128;
 
-    if (device == DEVICE_A4) {
+    if (device != DEVICE_MD) {
       return true;
     }
 
@@ -718,7 +721,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (pianoroll_mode >= 1) {
       uint8_t timing_mid = active_track.get_timing_mid();
@@ -828,7 +830,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         mcl_seq.ext_tracks[n].update_param(param, value);
       }
     }
-  return;
+    return;
   }
 }
 
@@ -862,21 +864,21 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       seq_extstep_page.cur_w = cur_w;
 
       if (last_ext_track != n) {
-      last_ext_track = n;
-      return;
+        last_ext_track = n;
+        return;
       }
 
       mcl_seq.ext_tracks[n].record_track_noteon(cur_y, msg[2]);
       if (seq_extstep_page.x_notes_down > 0) {
         seq_extstep_page.enter_notes();
       }
-      //if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
-        seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
-        uint8_t vel = SeqPage::velocity;
-        if (seq_extstep_page.recording) {
-          vel = msg[2];
-        }
-        mcl_seq.ext_tracks[n].note_on(cur_y, vel);
+      // if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
+      seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
+      uint8_t vel = SeqPage::velocity;
+      if (seq_extstep_page.recording) {
+        vel = msg[2];
+      }
+      mcl_seq.ext_tracks[n].note_on(cur_y, vel);
       //}
       return;
     }
@@ -902,7 +904,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       } else {
         mcl_seq.ext_tracks[n].remove_notes_on(pitch);
       }
-     return;
+      return;
     }
   }
 #endif
