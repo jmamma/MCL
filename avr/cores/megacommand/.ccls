@@ -51,4 +51,5 @@ clang++
 #  Compiler options
 -Wall
 -Wextra
+-DMCL_NOSKETCH
 %c %cpp -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics
