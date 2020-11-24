@@ -30,3 +30,14 @@ FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto -fno-split-wide-types
    text    data     bss     dec     hex filename
  218016    6026   42415  266457   410d9 main.elf
  ```
+
+# avr-gcc 7.3 (Arduino)
+```
+FEATURE_FLAGS = -fshort-enums -fpack-struct -funsigned-char -funsigned-bitfields -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects
+   text    data     bss     dec     hex filename
+ 217670    6018   42409  266097   40f71 main.elf
+
+FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto -fno-split-wide-types
+   text    data     bss     dec     hex filename
+ 218312    6030   42415  266757   41205 main.elf
+```
