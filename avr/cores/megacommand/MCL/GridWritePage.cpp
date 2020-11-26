@@ -23,10 +23,10 @@ void GridWritePage::setup() {
 
 void GridWritePage::draw_popup() {
   char str[16];
-  strcpy(str, "GROUP CHAIN");
+  strcpy(str, "GROUP LOAD");
 
   if (!show_track_type) {
-    strcpy(str, "CHAIN FROM  ");
+    strcpy(str, "LOAD FROM  ");
     str[11] = 'A' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
@@ -87,7 +87,7 @@ void GridWritePage::display() {
   oled_display.setFont(oldfont);
 }
 void GridWritePage::chain() {
-  oled_display.textbox("CHAIN SLOTS", "");
+  oled_display.textbox("LOAD SLOTS", "");
   oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
   /// the page to avoid driving this code path again.
@@ -163,7 +163,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
 
     track_select_array_from_type_select(track_select_array);
     //   write_tracks_to_md(-1);
-    oled_display.textbox("CHAIN GROUPS", "");
+    oled_display.textbox("LOAD GROUPS", "");
     oled_display.display();
     mcl_actions.write_original = 1;
     GUI.setPage(&grid_page);
