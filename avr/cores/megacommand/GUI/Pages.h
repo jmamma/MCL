@@ -72,7 +72,6 @@ public:
   bool redisplay;
   /** Set to true when the setup() function has been called. **/
   bool isSetup;
-  bool isCleanedUp;
 
   bool classic_display = true;
 
@@ -199,42 +198,12 @@ public:
   PageContainer *parent;
   bool redisplay;
 
-  /** The long name of a page (max 16 characters), used for example in
-   * ScrollSwitchPage. **/
-  char name[17];
-  /** The short name of a page (3 characters), used for example in SwitchPage.
-   * **/
-  char shortName[4];
-  /**
-   * Create a page with the given long name and short name. setup()
-   * needs to be called for dynamic initialization steps.
-   **/
   Page(const char *_name = NULL, const char *_shortName = NULL) : PageParent() {
     parent = NULL;
     redisplay = false;
     isSetup = false;
-
-    setName(_name);
-    setShortName(_shortName);
   }
 
-  /** Set the long name (max 16 chars) of the page. **/
-  void setName(const char *_name = NULL) {
-    if (_name != NULL) {
-      m_strncpy(name, _name, 17);
-    } else {
-      name[0] = '\0';
-    }
-  }
-
-  /** Set the short name (max 3 chars) of the page. **/
-  void setShortName(const char *_shortName = NULL) {
-    if (_shortName != NULL) {
-      m_strncpy(shortName, _shortName, 4);
-    } else {
-      shortName[0] = '\0';
-    }
-  }
   void update();
 };
 
@@ -290,7 +259,6 @@ public:
    * then the show() method of the page.
    **/
   void pushPage(LightPage *page);
-
 
   /** This will pop the page if it is the topmost page of the stack. **/
   void popPage(LightPage *page) {
