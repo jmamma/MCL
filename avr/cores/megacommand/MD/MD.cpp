@@ -117,7 +117,6 @@ MDClass::MDClass()
   for (int i = 0; i < 16; i++) {
     global.drumMapping[i] = standardDrumMapping[i];
   }
-  init_grid_devices();
 }
 
 void MDClass::init_grid_devices() {
@@ -199,6 +198,7 @@ bool MDClass::probe() {
     trig_interface.on();
   }
 
+  init_grid_devices();
   return connected;
 }
 

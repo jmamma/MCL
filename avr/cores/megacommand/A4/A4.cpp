@@ -29,7 +29,6 @@ const ElektronSysexProtocol a4_protocol = {
 
 A4Class::A4Class(): ElektronDevice(
     &Midi2, "A4", DEVICE_A4, icon_a4, a4_protocol){
-    init_grid_devices();
     }
 
 void A4Class::init_grid_devices() {
@@ -81,6 +80,7 @@ bool A4Class::probe() {
   if (getBlockingSettings(0)) {
     connected = true;
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
+    init_grid_devices();
   }
   return connected;
 }
