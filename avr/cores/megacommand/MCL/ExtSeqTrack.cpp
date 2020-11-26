@@ -390,7 +390,7 @@ void ExtSeqTrack::remove_notes_on(uint8_t value) {
 }
 
 void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
-                           uint8_t velocity) {
+                           uint8_t velocity, uint8_t cond) {
 
   uint8_t timing_mid = get_timing_mid();
 
@@ -425,8 +425,8 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
     return;
   }
 
-  set_track_step(step, start_utiming, cur_y, true, velocity);
-  set_track_step(end_step, end_utiming, cur_y, false, 255);
+  set_track_step(step, start_utiming, cur_y, true, velocity, cond);
+  set_track_step(end_step, end_utiming, cur_y, false, 255, 0);
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
@@ -858,11 +858,11 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
 
 bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
                                  uint8_t note_num, uint8_t event_on,
-                                 uint8_t velocity) {
+                                 uint8_t velocity, uint8_t cond) {
   ext_event_t e;
 
   e.is_lock = false;
-  e.cond_id = 0;
+  e.cond_id = cond;
   e.event_value = note_num;
   e.event_on = event_on;
   e.micro_timing = utiming;

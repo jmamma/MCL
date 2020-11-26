@@ -17,6 +17,7 @@ uint8_t SeqPage::param_select = 0;
 uint8_t SeqPage::last_pianoroll_mode = 0;
 
 uint8_t SeqPage::velocity = 100;
+uint8_t SeqPage::cond = 0;
 uint8_t SeqPage::slide = true;
 
 bool SeqPage::show_seq_menu = false;
@@ -80,6 +81,7 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);

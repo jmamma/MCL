@@ -437,12 +437,14 @@ void SeqExtStepPage::loop() {
 
   if (pianoroll_mode == 0) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
 
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
@@ -676,7 +678,7 @@ void SeqExtStepPage::enter_notes() {
       continue;
     if (!active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value)) {
       active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
-                            velocity);
+                            velocity, cond);
     }
   }
 }
@@ -752,7 +754,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       } else {
 
         if (!active_track.del_note(cur_x, cur_w, cur_y)) {
-          active_track.add_note(cur_x, cur_w, cur_y, velocity);
+          active_track.add_note(cur_x, cur_w, cur_y, velocity, cond);
         }
       }
       return true;
