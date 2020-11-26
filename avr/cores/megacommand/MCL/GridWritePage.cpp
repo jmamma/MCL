@@ -27,7 +27,7 @@ void GridWritePage::draw_popup() {
 
   if (!show_track_type) {
     strcpy(str, "LOAD FROM  ");
-    str[11] = 'A' + proj.get_grid();
+    str[10] = 'A' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
 }
