@@ -21,11 +21,13 @@ uint16_t MDRouteTrack::send_routes(bool send) {
 
 void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   memcpy(mcl_cfg.routing, routing, sizeof(routing));
+  mcl_cfg.poly_mask = poly_mask;
   send_routes();
 }
 
 void MDRouteTrack::get_routes() {
   memcpy(routing, mcl_cfg.routing, sizeof(routing));
+  poly_mask = mcl_cfg.poly_mask;
 }
 
 bool MDRouteTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,

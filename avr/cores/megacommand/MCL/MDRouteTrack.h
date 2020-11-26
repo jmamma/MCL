@@ -7,6 +7,7 @@
 class RouteData {
 public:
   uint8_t routing[16];
+  uint16_t poly_mask;
 };
 
 class MDRouteTrack : public DeviceTrack, public RouteData {
