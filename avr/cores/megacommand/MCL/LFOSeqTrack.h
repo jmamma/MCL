@@ -49,8 +49,7 @@ public:
   uint8_t mode;
   uint8_t offset_behaviour;
   uint64_t pattern_mask;
-
-  bool enable = false;
+  bool enable;
   uint8_t length = 16;
 };
 
@@ -71,6 +70,7 @@ public:
   void check_and_update_params_offset(uint8_t dest, uint8_t param,
                                       uint8_t value);
   void init() {
+    enable = false;
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       last_wav_value[a] = 255;
       params[a].dest = 255;
