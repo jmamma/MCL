@@ -159,7 +159,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           save_dev_tracks[i] = false;
           continue;
         }
-      } else {
+      } else if (elektron_devs[i]->canReadKit()) {
         auto kit = elektron_devs[i]->getCurrentKit();
         elektron_devs[i]->saveCurrentKit(kit);
         if (!elektron_devs[i]->getBlockingKit(kit)) {

@@ -376,6 +376,12 @@ public:
     return false;
   }
 
+  virtual bool canReadKit() {
+    // TODO fw cap for live kit access
+    //return fw_caps & FW_CAP
+    return false;
+  }
+
   virtual ElektronSysexObject* getKit() = 0;
   virtual ElektronSysexObject* getPattern() = 0;
   virtual ElektronSysexObject* getGlobal() = 0;

@@ -84,6 +84,7 @@ bool A4Class::probe() {
   mcl_gui.delay_progress(300);
   if (getBlockingSettings(0)) {
     connected = true;
+    DEBUG_DUMP(connected);
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   }
   return connected;
