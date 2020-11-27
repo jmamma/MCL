@@ -378,11 +378,11 @@ void GridPage::display_grid() {
         break;
       case A4_TRACK_TYPE:
         str[0] = 'A';
-        str[1] = (x + getCol() - cur_col) + '0';
+        str[1] = (x + getCol() - cur_col) + '1';
         break;
       case EXT_TRACK_TYPE:
         str[0] = 'M';
-        str[1] = (x + getCol() - cur_col) + '0';
+        str[1] = (x + getCol() - cur_col) + '1';
         break;
       case MDFX_TRACK_TYPE:
         str[0] = 'F';
