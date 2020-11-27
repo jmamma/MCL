@@ -17,6 +17,7 @@ class MDTrack;
 class MDFXTrack;
 class MDRouteTrack;
 class MDTempoTrack;
+class MDLFOTrack;
 class MNMTrack;
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
@@ -49,6 +50,7 @@ private:
   __IMPL_DYNAMIK_KAST(MDRouteTrack, MDROUTE_TRACK_TYPE, MDROUTE_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDTempoTrack, MDTEMPO_TRACK_TYPE, MDTEMPO_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MNMTrack, MNM_TRACK_TYPE, MNM_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MDLFOTrack, MDLFO_TRACK_TYPE, MDLFO_TRACK_TYPE)
 
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);

@@ -6,6 +6,7 @@ void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 
 void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
+    place_fx_in_kit();
 }
 
 uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {

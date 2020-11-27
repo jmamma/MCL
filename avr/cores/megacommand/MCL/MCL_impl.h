@@ -70,6 +70,7 @@
 
 #include "LFO.h"
 #include "MDTrack.h"
+#include "MDLFOTrack.h"
 #include "MDFXTrack.h"
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
