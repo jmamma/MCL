@@ -140,11 +140,15 @@ class GridDeviceTrack {
 public:
   uint8_t slot_number;
   uint8_t track_type;
-  bool is_aux;
+  uint8_t group_type;
   SeqTrack *seq_track;
   uint8_t get_slot_number() { return slot_number; }
   SeqTrack *get_seq_track() { return seq_track; }
 };
+
+#define GROUP_DEV 0
+#define GROUP_AUX 1
+#define GROUP_TEMPO 2
 
 class GridDevice {
 public:
@@ -157,11 +161,11 @@ public:
 
   void init() { num_tracks = 0; }
 
-  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, bool is_aux = false) {
+  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
-    tracks[track_idx].is_aux = is_aux;
+    tracks[track_idx].group_type = group_type;
     num_tracks++;
   }
 };

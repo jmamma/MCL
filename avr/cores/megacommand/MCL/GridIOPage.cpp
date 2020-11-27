@@ -15,21 +15,26 @@ void GridIOPage::init() {
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
   uint8_t grid_idx, track_idx, track_type, dev_idx;
-  bool is_aux;
+  uint8_t group_type;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
-        n, &grid_idx, &track_idx, &track_type, &dev_idx, &is_aux);
+        n, &grid_idx, &track_idx, &track_type, &dev_idx, &group_type);
     if (track_type == 255)
       continue;
 
-    if (!is_aux &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, (dev_idx * NUM_DEVS))) {
+    if ((group_type == GROUP_DEV) &&
+        IS_BIT_SET16(mcl_cfg.track_type_select, dev_idx)) {
       track_select_array[n] = 1;
     }
     // AUX tracks
-    if (is_aux &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, (dev_idx * NUM_DEVS) + 1)) {
+    if ((group_type == GROUP_AUX) &&
+        IS_BIT_SET16(mcl_cfg.track_type_select, 2)) {
+      track_select_array[n] = 1;
+    }
+
+    if ((group_type == GROUP_TEMPO) &&
+        IS_BIT_SET16(mcl_cfg.track_type_select, 3)) {
       track_select_array[n] = 1;
     }
   }
