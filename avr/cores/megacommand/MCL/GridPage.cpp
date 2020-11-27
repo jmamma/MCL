@@ -445,6 +445,8 @@ void GridPage::display_grid() {
   if ((getCol() - cur_col + col_shift) % 4 == 0) {
     mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
+  oled_display.setTextColor(WHITE, BLACK);
+
 #endif
 }
 void GridPage::display_slot_menu() {
