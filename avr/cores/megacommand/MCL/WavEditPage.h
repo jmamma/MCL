@@ -6,6 +6,8 @@
 #include "GUI.h"
 #include "Wav.h"
 
+#define WAV_SECONDS 1.0 // maximmum sample length to display on screen 
+
 #define WAV_DRAW_STEREO 2
 #define WAV_DRAW_LEFT 0
 #define WAV_DRAW_RIGHT 1

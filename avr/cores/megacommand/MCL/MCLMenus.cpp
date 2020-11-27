@@ -58,6 +58,8 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {128, "OFF"}, {129, "LEARN"},
   // 56: PROB
   {1, "L1"}, {2, "L2"}, {3, "L3"}, {4, "L4"}, {5, "L5"}, {6, "L6"}, {7, "L7"}, {8, "L8"}, {9, "P1"}, {10, "P2"}, {11, "P5"}, {12, "P7"}, {13, "P9"},
+  // 69: WAV EDIT
+  {0, "LEFT"}, {1, "RIGHT"}, {2, "STEREO"},
 };
 
 void new_proj_handler() {
