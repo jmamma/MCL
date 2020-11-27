@@ -194,9 +194,9 @@ public:
     memset(grid_devices,0, sizeof(GridDevice) * NUM_GRIDS);
   }
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, bool is_aux = false) {
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
     auto *devp = &grid_devices[grid_idx];
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, is_aux);
+    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type);
   }
 
   ElektronDevice* asElektronDevice() {
