@@ -35,7 +35,7 @@ void A4Class::init_grid_devices() {
   uint8_t grid_idx = 1;
 
 
-  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+  for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
     add_track_to_grid(grid_idx, i,  &(mcl_seq.ext_tracks[i]), A4_TRACK_TYPE);
   }
 
@@ -80,7 +80,6 @@ bool A4Class::probe() {
   if (getBlockingSettings(0)) {
     connected = true;
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
-    init_grid_devices();
   }
   return connected;
 }

@@ -93,7 +93,6 @@ bool MNMClass::probe() {
     setStatus(0x21, currentAudioMidiMode);
 
     loadGlobal(7);
-    init_grid_devices();
     return MNM.connected;
   }
 

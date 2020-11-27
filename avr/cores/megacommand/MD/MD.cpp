@@ -198,7 +198,6 @@ bool MDClass::probe() {
     trig_interface.on();
   }
 
-  init_grid_devices();
   return connected;
 }
 
