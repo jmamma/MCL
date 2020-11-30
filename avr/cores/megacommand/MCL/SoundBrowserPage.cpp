@@ -58,7 +58,8 @@ void SoundBrowserPage::save_sound() {
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[FILE_ENTRY_SIZE];
-    sprintf(temp_entry, "%s.snd", sound_name);
+    strcpy(temp_entry, sound_name);
+    strcat(temp_entry, ".snd");
     sound.file.open(temp_entry, O_RDWR | O_CREAT);
     sound.fetch_sound(MD.currentTrack);
     sound.write_sound();

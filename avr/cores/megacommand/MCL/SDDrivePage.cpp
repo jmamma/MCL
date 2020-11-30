@@ -85,8 +85,9 @@ void SDDrivePage::save_snapshot() {
   // File exists?
   if (file.open(temp_entry, O_READ)) {
     file.close();
-    char msg[24] = {'\0'};
-    sprintf(msg, "Overwrite %s?", entry_name);
+    char msg[24] = "Overwrite ";
+    strcat(msg, entry_name);
+    strcat(msg, "?");
     if (!mcl_gui.wait_for_confirm("File exists", msg)) {
       return;
     }
@@ -337,8 +338,8 @@ void SDDrivePage::send_sample_pack(int start_slot) {
     }
     temp_entry[len] = 0;
 #ifdef OLED_DISPLAY
-    char line2[16];
-    sprintf(line2, "Sending #%d..", slot);
+    char line2[16] = "Sending #";
+    itoa(slot, line2 + 9, 10);
     mcl_gui.draw_infobox("Loading samples", line2);
     oled_display.display();
 #endif

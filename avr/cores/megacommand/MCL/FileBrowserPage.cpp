@@ -376,7 +376,9 @@ void FileBrowserPage::_handle_filemenu() {
     create_folder();
     break;
   case FM_DELETE: // delete
-    sprintf(buf2, "Delete %s?", buf1);
+    strcpy(buf2, "Delete ");
+    strcat(buf2, buf1);
+    strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
@@ -399,7 +401,9 @@ void FileBrowserPage::_handle_filemenu() {
     }
     break;
   case FM_OVERWRITE: // overwrite
-    sprintf(buf2, "Overwrite %s?", buf1);
+    strcpy(buf2, "Overwrite ");
+    strcat(buf2, buf1);
+    strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       // the derived class may expect the file to be open
       // when on_select is called.
@@ -547,10 +551,16 @@ void FileBrowserPage::end_immediate() {
     }
     bool slot_occupied = s_tmpbuf[4];
     s_tmpbuf[4] = 0;
-    if (slot_occupied) {
-      sprintf(temp_entry, "%02d - %s", i, s_tmpbuf);
+    strcpy(temp_entry, "00 - ");
+    if (i < 10) {
+      itoa(i, temp_entry+1, 10);
     } else {
-      sprintf(temp_entry, "%02d - [EMPTY]", i);
+      itoa(i, temp_entry, 10);
+    }
+    if (slot_occupied) {
+      strcat(temp_entry, s_tmpbuf);
+    } else {
+      strcat(temp_entry, "[EMPTY]");
     }
     add_entry(temp_entry);
   }
