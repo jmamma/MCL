@@ -28,7 +28,7 @@ void LoadProjectPage::on_select(const char *entry) {
   char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcat(proj_filename, entry);
 
-  again:
+again:
   if (proj.load_project(proj_filename)) {
     GUI.setPage(&grid_page);
   } else {
@@ -36,5 +36,23 @@ void LoadProjectPage::on_select(const char *entry) {
     strcpy(proj_filename, mcl_cfg.project);
     goto again;
   }
+}
 
+void LoadProjectPage::on_delete(const char *entry) {
+  file.open(entry, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+  char temp_entry[16];
+  if (dir) {
+    if (SD.chdir(entry)) {
+      // SD.vwd()->rmRfStar(); //extra 276 bytes
+      while (file.openNext(SD.vwd(), O_READ)) {
+        file.getName(temp_entry, 16);
+        file.close();
+        SD.remove(temp_entry);
+      }
+      _cd_up();
+      SD.rmdir(entry);
+    }
+  }
 }
