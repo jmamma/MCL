@@ -175,7 +175,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
     }
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy_P(myName, modelname, 4);
     }
   }
 #ifdef OLED_DISPLAY

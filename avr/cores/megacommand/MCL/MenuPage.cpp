@@ -71,7 +71,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   char str[17];
   PGM_P pgp = get_menu()->get_item_name(item_n);
   if (pgp != NULL) {
-    m_strncpy_p(str, pgp, 16);
+    strncpy_P(str, pgp, 16);
     oled_display.print(str);
   }
   uint8_t number_of_items = get_menu()->get_number_of_items();
@@ -89,7 +89,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
     if (pgp == NULL) {
       oled_display.println(*pdest);
     } else {
-      m_strncpy_p(str, pgp, 11);
+      strncpy_P(str, pgp, 11);
       oled_display.println(str);
     }
   }
@@ -132,7 +132,7 @@ void MenuPageBase::display() {
   PGM_P pgp;
   pgp = get_menu()->get_name();
 
-  m_strncpy_p(str, pgp, 16);
+  strncpy_P(str, pgp, 16);
 
   uint8_t number_of_items = get_menu()->get_number_of_items();
 #ifdef OLED_DISPLAY
@@ -156,12 +156,12 @@ void MenuPageBase::display() {
   GUI.put_string_at(0, "[");
   GUI.put_string_at(1, str);
 
-  GUI.put_string_at(m_strlen(str), "]");
+  GUI.put_string_at(strlen(str), "]");
   pgp = get_menu()->get_item_name(cur_row);
 
   GUI.setLine(GUI.LINE2);
   if (pgp != NULL) {
-    m_strncpy_p(str, pgp, 16);
+    strncpy_P(str, pgp, 16);
     GUI.put_string_at_fill(0, str);
   }
 
@@ -177,7 +177,7 @@ void MenuPageBase::display() {
     if (pgp == NULL) {
       GUI.put_value_at(10, *(get_menu()->get_dest_variable(cur_row)));
     } else {
-      m_strncpy_p(str, pgp, 11);
+      strncpy_P(str, pgp, 11);
       GUI.put_string_at(10, str);
     }
   }

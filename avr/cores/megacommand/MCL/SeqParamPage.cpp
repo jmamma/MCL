@@ -8,12 +8,9 @@ void SeqParamPage::config() {
 
   constexpr uint8_t len1 = sizeof(info1);
 
-  char buf[len1] = {'\0'};
-  m_strncpy_p(buf, str1, len1);
-  strncpy(info1, buf, len1);
+  strncpy_P(info1, str1, len1);
   strncat(info1, ">", len1);
-  m_strncpy_p(buf, str2, len1);
-  strncat(info1, buf, len1);
+  strncat_P(info1, str2, len1);
 
   strcpy(info2, "PARAM-");
   info2[6] = 'A' + page_id;
@@ -80,7 +77,7 @@ void SeqParamPage::display() {
     modelname = model_param_name(MD.kit.models[last_md_track],
                                  seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy_P(myName, modelname, 4);
     }
     GUI.put_string_at(0, myName);
   }
@@ -96,7 +93,7 @@ void SeqParamPage::display() {
     modelname = model_param_name(MD.kit.models[last_md_track],
                                  seq_param3.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName2, modelname, 4);
+      strncpy_P(myName2, modelname, 4);
     }
     GUI.put_string_at(7, myName2);
   }
@@ -130,7 +127,7 @@ void SeqParamPage::display() {
     modelname = model_param_name(MD.kit.models[last_md_track],
                                  seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy_P(myName, modelname, 4);
     }
   }
 
@@ -139,7 +136,7 @@ void SeqParamPage::display() {
     modelname = model_param_name(MD.kit.models[last_md_track],
                                  seq_param3.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName2, modelname, 4);
+      strncpy_P(myName2, modelname, 4);
     }
   }
 

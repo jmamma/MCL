@@ -53,7 +53,7 @@ public:
 	/** Copy the element pointed to by c into the ring buffer. **/
   void putp(C *c) {
     start = (start + 1) % N;
-    m_memcpy((void *)&buf[start], c, sizeof(C));
+    memcpy((void *)&buf[start], c, sizeof(C));
     count = MIN(N, count+1);
   }
 
@@ -78,7 +78,7 @@ public:
 	/** Get a copy of the element at index i into c. **/
   bool getCopy(uint8_t i, C *c) {
     if (count > i) {
-      m_memcpy(c, (void *)&buf[(start + N - i) % N], sizeof(C));
+      memcpy(c, (void *)&buf[(start + N - i) % N], sizeof(C));
       return true;
     } else {
       return false;

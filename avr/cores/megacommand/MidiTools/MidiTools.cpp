@@ -34,7 +34,7 @@ const char *noteNames[] = {
 void getNotePitch(uint8_t pitch, char *name) {
   int8_t octave = pitch / 12 - 1;
   uint8_t note = pitch % 12;
-  m_strncpy(name, noteNames[note], 2);
+  strncpy(name, noteNames[note], 2);
   if (octave < 0) {
     name[2] = '-';
     name[3] = '0' - octave;

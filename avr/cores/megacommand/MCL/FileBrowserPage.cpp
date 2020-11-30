@@ -25,7 +25,7 @@ bool FileBrowserPage::add_entry(const char *entry) {
     return false;
   }
   char buf[FILE_ENTRY_SIZE];
-  m_strncpy(buf, entry, sizeof(buf));
+  strncpy(buf, entry, sizeof(buf));
   buf[FILE_ENTRY_SIZE - 1] = '\0';
   volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
   memcpy_bank1(ptr, buf, sizeof(buf));

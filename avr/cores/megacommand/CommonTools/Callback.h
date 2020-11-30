@@ -71,7 +71,7 @@ public:
     for (uint8_t i = 0; i < size; i++) {
       if (callbacks[i].obj == obj &&
 					callbacks[i].ptr == ptr) {
-				m_memcpy(callbacks + i, callbacks + i + 1, sizeof(callbacks[0]) * (size - i - 1));
+				memcpy(callbacks + i, callbacks + i + 1, sizeof(callbacks[0]) * (size - i - 1));
 				size--;
 				break;
       }
@@ -86,7 +86,7 @@ public:
   again:
     for (uint8_t i = 0; i < size; i++) {
       if (callbacks[i].obj == obj) {
-				m_memcpy(callbacks + i, callbacks + i + 1, sizeof(callbacks[0]) * (size - i - 1));
+				memcpy(callbacks + i, callbacks + i + 1, sizeof(callbacks[0]) * (size - i - 1));
 				size--;
 				goto again;
       }

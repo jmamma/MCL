@@ -19,7 +19,7 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(filename);
   uint8_t file_mode = write ? (O_WRITE | O_CREAT) : (O_READ);
-  m_strncpy(filename, file_name, 16);
+  strncpy(filename, file_name, 16);
   headerRead = false;
 
   if (file.isOpen()) {
@@ -70,7 +70,7 @@ bool Wav::rename(char *new_name) {
   if (!file.rename(&file, new_name)) {
     DEBUG_PRINTLN(F("rename failed"));
   }
-  m_strncpy(&filename, new_name, 16);
+  strncpy(filename, new_name, 16);
 }
 
 /// write layout:

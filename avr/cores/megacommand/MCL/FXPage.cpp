@@ -116,7 +116,7 @@ void FXPage::display() {
     uint8_t fx_type = params[n].type;
     GUI.setLine(GUI.LINE1);
     param_name = fx_param_name(fx_type, fx_param);
-    m_strncpy_p(str, param_name, 4);
+    strncpy_P(str, param_name, 4);
 
     GUI.put_string_at(i * 4, str);
 
@@ -144,7 +144,7 @@ void FXPage::display() {
     uint8_t fx_param = params[n].param;
     uint8_t fx_type = params[n].type;
     param_name = fx_param_name(fx_type, fx_param);
-    m_strncpy_p(str, param_name, 4);
+    strncpy_P(str, param_name, 4);
 
     mcl_gui.draw_knob(i, encoders[i], str);
   //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);

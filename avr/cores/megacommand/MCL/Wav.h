@@ -63,13 +63,13 @@ struct fmtchunk_t : public chunk_t {
     activate<fmtchunk_t>(0);
   }
 
-  static constexpr char *id = "fmt ";
+  static constexpr const char *id = "fmt ";
 };
 
 struct datachunk_t : public chunk_t {
   uint8_t data[0];
 
-  static constexpr char *id = "data";
+  static constexpr const char *id = "data";
 
   void init() { activate<datachunk_t>(0); }
 };
@@ -144,7 +144,7 @@ struct smplchunk_t : public chunk_t {
     DEBUG_DUMP(SDS_loop_end);
   }
 
-  static constexpr char *id = "smpl";
+  static constexpr const char *id = "smpl";
 };
 
 // ref: http://soundfile.sapp.org/doc/WaveFormat/

@@ -84,7 +84,7 @@ void ArpPage::display() {
     break;
   }
   GUI.put_string_at(0, str);
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  strncpy_P(str, arp_names[encoders[1]->cur], 4);
   GUI.put_string_at(4,str);
   GUI.put_value_at2(8, encoders[2]->cur);
   GUI.put_value_at2(12, encoders[3]->cur);
@@ -121,7 +121,7 @@ void ArpPage::display() {
   }
   mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
 
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 

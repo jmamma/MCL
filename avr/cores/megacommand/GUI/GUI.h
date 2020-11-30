@@ -323,21 +323,6 @@ public:
    * increments) and fill up with whitespace. **/
   void put_p_string_at_fill(uint8_t idx, PGM_P str);
 
-  /** Print the format string using the vsnprintf function. **/
-  void printf(const char *fmt, ...);
-  /** Print the format string using the vsnprintf function and fill up with
-   * whitespace. **/
-  void printf_fill(const char *fmt, ...);
-  /** Print the format string at the given idx (in 1 character increments) using
-   * the vsnprintf function. **/
-  void printf_at(uint8_t idx, const char *fmt, ...);
-  /**
-   * Print the format string at the given idx (in 1 character
-   * increments) using the vsnprintf function and fill up with
-   * whitespace.
-   **/
-  void printf_at_fill(uint8_t idx, const char *fmt, ...);
-
   /** Set the flash duration of the currently active flash line. **/
   void flash(uint16_t duration = DEFAULT_FLASH_DURATION);
   /** Flash the value in base 10 at the given idx (in 4 character increments)
@@ -411,23 +396,6 @@ public:
    * duration. **/
   void flash_p_strings_fill(PGM_P str1, PGM_P str2,
                             uint16_t duration = DEFAULT_FLASH_DURATION);
-
-  /** Flash the given format string using the vsnprintf function. **/
-  void flash_printf(const char *fmt, ...);
-  /** Flash the given format string using the vsnprintf function and fill with
-   * whitespace. **/
-  void flash_printf_fill(const char *fmt, ...);
-  /**
-   * Flash the given format string at the given idx (in 1-character
-   * increments) using the vsnprintf function and fill with
-   * whitespace.
-   **/
-  void flash_printf_at(uint8_t idx, const char *fmt, ...);
-  /**
-   * Flash the given format string using the vsnprintf function and
-   * fill with whitespace.
-   **/
-  void flash_printf_at_fill(uint8_t idx, const char *fmt, ...);
 
   /** Switch the line to be displayed, using either GUI.LINE1 or GUI.LINE2. **/
   void setLine(const uint8_t line) { curLine = line; }

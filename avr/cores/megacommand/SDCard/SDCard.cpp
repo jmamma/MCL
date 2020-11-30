@@ -145,13 +145,13 @@ bool SDCardEntry::setPath(const char *path) {
   if (pos != NULL) {
     uint8_t len = MIN(sizeof(dir), (uint16_t)(pos - path));
     if (len == 0) {
-      m_strncpy(dir, "/", sizeof(dir));
+      strncpy(dir, "/", sizeof(dir));
     } else {
-      m_strncpy(dir, path, len);
+      strncpy(dir, path, len);
     }
-    m_strncpy(name, pos + 1, sizeof(name));
+    strncpy(name, pos + 1, sizeof(name));
   } else {
-    m_strncpy(dir, path, sizeof(dir));
+    strncpy(dir, path, sizeof(dir));
   }
 
   return exists;
@@ -202,10 +202,10 @@ int SDCardEntry::listDirectory(SDCardEntry entries[], int maxCount) {
 }
 
 void SDCardEntry::setFromParentEntry(SDCardEntry *parent) {
-  m_strncpy(dir, parent->dir, sizeof(dir));
-  m_strnappend(dir, parent->dir_entry.long_name, sizeof(dir));
+  strncpy(dir, parent->dir, sizeof(dir));
+  strncat(dir, parent->dir_entry.long_name, sizeof(dir));
   
-  m_strncpy(name, dir_entry.long_name, sizeof(name));
+  strncpy(name, dir_entry.long_name, sizeof(name));
   exists = true;
 }
 
@@ -221,7 +221,7 @@ bool SDCardEntry::createSubDirectory(const char *path, struct fat_dir_entry_stru
   while (1) {
     const char *pos = strchr(path, '/');
     if (pos == NULL) {
-      m_strncpy(subDir, path, sizeof(subDir) - 1);
+      strncpy(subDir, path, sizeof(subDir) - 1);
     } else {
       int len = pos - path;
       memcpy(subDir, path, len);

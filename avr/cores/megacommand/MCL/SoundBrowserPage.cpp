@@ -54,7 +54,7 @@ void SoundBrowserPage::save_sound() {
   PGM_P tmp;
   tmp = getMDMachineNameShort(MD.kit.models[MD.currentTrack], 2);
   memcpy(sound_name, MD.kit.name, 4);
-  m_strncpy_p(&sound_name[5], tmp, 3);
+  strncpy_P(&sound_name[5], tmp, 3);
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[FILE_ENTRY_SIZE];

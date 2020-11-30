@@ -315,7 +315,7 @@ void GridPage::display_grid_info() {
   oled_display.setTextColor(BLACK, WHITE);
   if (row_headers[cur_row].active) {
     char rowname[10];
-    m_strncpy(rowname, row_headers[cur_row].name, 9);
+    strncpy(rowname, row_headers[cur_row].name, 9);
     rowname[9] = '\0';
 
     oled_display.print(rowname);
@@ -374,7 +374,7 @@ void GridPage::display_grid() {
       switch (track_type) {
       case MD_TRACK_TYPE:
         tmp = getMDMachineNameShort(model, 2);
-        if (tmp) { m_strncpy_p(str, tmp, 3); }
+        if (tmp) { strncpy_P(str, tmp, 3); }
         break;
       case A4_TRACK_TYPE:
         str[0] = 'A';
@@ -402,7 +402,7 @@ void GridPage::display_grid() {
         break;
       case MNM_TRACK_TYPE:
         tmp = getMNMMachineNameShort(model, 2);
-        if (tmp) { m_strncpy_p(str, tmp, 3); }
+        if (tmp) { strncpy_P(str, tmp, 3); }
         break;
       }
       //  Highlight the current cursor position + slot menu apply range
@@ -500,9 +500,9 @@ void GridPage::display() {
 
       if (track_type == MD_TRACK_TYPE) {
         tmp = getMDMachineNameShort(model, 1);
-        m_strncpy_p(str, tmp, 3);
+        strncpy_P(str, tmp, 3);
         tmp = getMDMachineNameShort(model, 2);
-        m_strncpy_p(str2, tmp, 3);
+        strncpy_P(str2, tmp, 3);
       }
       if (track_type == A4_TRACK_TYPE) {
         str[0] = 'A';

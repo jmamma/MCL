@@ -73,7 +73,7 @@ bool MCLSysConfig::cfg_init() {
 
   version = CONFIG_VERSION;
   number_projects = 0;
-  m_strncpy(project, my_string, 16);
+  strncpy(project, my_string, 16);
   clock_send = 0;
   clock_rec = 0;
   uart1_turbo = 3;

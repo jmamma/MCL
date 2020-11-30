@@ -20,12 +20,9 @@ void SeqStepPage::config() {
 
   constexpr uint8_t len1 = sizeof(info1);
 
-  char buf[len1] = {'\0'};
-  m_strncpy_p(buf, str1, len1);
-  strncpy(info1, buf, len1);
+  strncpy_P(info1, str1, len1);
   strncat(info1, ">", len1);
-  m_strncpy_p(buf, str2, len1);
-  strncat(info1, buf, len1);
+  strncat_P(info1, str2, len1);
 
   config_mask_info();
   config_encoders();
@@ -446,7 +443,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     PGM_P modelname = NULL;
     modelname = model_param_name(MD.kit.models[last_md_track], track_param);
     if (modelname != NULL) {
-      m_strncpy_p(str, modelname, 3);
+      strncpy_P(str, modelname, 3);
       if (strlen(str) == 2) {
         str[2] = ' ';
         str[3] = '\0';

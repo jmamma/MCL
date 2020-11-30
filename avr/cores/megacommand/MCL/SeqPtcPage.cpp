@@ -120,9 +120,9 @@ void SeqPtcPage::config() {
     str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
     str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
 
-    m_strncpy_p(str_first, str1, len1);
+    strncpy_P(str_first, str1, len1);
 
-    m_strncpy_p(str_second, str2, len1);
+    strncpy_P(str_second, str2, len1);
   }
 #ifdef EXT_TRACKS
   else {
@@ -313,7 +313,7 @@ void SeqPtcPage::display() {
 #endif
 
   // draw SCALE
-  m_strncpy_p(buf1, scale_names[ptc_param_scale.getValue()], 4);
+  strncpy_P(buf1, scale_names[ptc_param_scale.getValue()], 4);
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard

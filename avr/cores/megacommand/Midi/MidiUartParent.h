@@ -329,17 +329,8 @@ public:
   ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
-  void sendString(const char *data) { sendString(data, m_strlen(data)); }
+  void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
-
-  void printfString(const char *fmt, ...) {
-    va_list lp;
-    va_start(lp, fmt);
-    char buf[128];
-    uint16_t len = m_vsnprintf(buf, sizeof(buf), fmt, lp);
-    va_end(lp);
-    sendString(buf, len);
-  }
 
 #ifdef HOST_MIDIDUINO
   virtual ~MidiUartParent() {}
