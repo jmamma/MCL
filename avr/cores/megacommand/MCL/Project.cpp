@@ -17,7 +17,7 @@ bool Project::new_project(char *newprj) {
     return false;
   }
 
-  char proj_filename[strlen(newprj) + 5] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN] = {'\0'};
   strcat(proj_filename, newprj);
   strcat(proj_filename, ".mcl");
 
@@ -31,7 +31,7 @@ bool Project::new_project(char *newprj) {
 
   // Initialise Grid Files.
   //
-  char grid_filename[strlen(newprj) + 2] = { '\0'};
+  char grid_filename[PRJ_NAME_LEN] = {'\0'};
   strcat(grid_filename, newprj);
   uint8_t l = strlen(grid_filename);
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
@@ -47,6 +47,7 @@ bool Project::new_project(char *newprj) {
   }
   // Initialiase Project Master File.
   //
+  DEBUG_DUMP(proj_filename);
   return proj.new_project_master_file(proj_filename);
 }
 
@@ -89,15 +90,41 @@ void Project::chdir_projects() {
   SD.chdir(c_project_root);
 }
 
+#define OLD_PROJ_VERSION 2025
+
 bool Project::convert_project(const char *projectname) {
   // TODO
+
+  Project src_proj;
   char filename[PRJ_NAME_LEN + sizeof(".mcl")];
   strcpy(filename, projectname);
-  filename[strlen(projectname) - 4] = '\0'; //truncate filename
+  filename[strlen(projectname) - 4] = '\0'; // truncate filename
 
   DEBUG_DUMP(filename);
-  if (!new_project(filename)) { return false; }
 
+  bool ret;
+  ret = src_proj.file.open(projectname, O_RDWR);
+  if (!ret) {
+    DEBUG_PRINTLN("can't open");
+    goto error;
+  }
+  ret = src_proj.check_project_version(OLD_PROJ_VERSION);
+  DEBUG_DUMP(src_proj.version);
+  if (!ret) {
+    DEBUG_PRINTLN("Bad verision");
+    goto error;
+  }
+
+  if (!new_project(filename)) {
+    goto error;
+  }
+
+  // Old projects located in root dir
+ return true;
+error:
+  src_proj.file.close();
+  DEBUG_PRINTLN("error");
+  return false;
 }
 
 bool Project::load_project(const char *projectname) {
@@ -170,7 +197,7 @@ bool Project::load_project(const char *projectname) {
   return true;
 }
 
-bool Project::check_project_version() {
+bool Project::check_project_version(uint16_t version_current) {
   bool ret;
 
   DEBUG_PRINT_FN();
@@ -188,7 +215,7 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  if (version >= PROJ_VERSION) {
+  if (version >= version_current) {
     project_loaded = true;
     return true;
   } else {
@@ -227,17 +254,17 @@ bool Project::write_header() {
   return true;
 }
 
-bool Project::new_project_master_file(const char *projectname) {
+bool Project::new_project_master_file(char *projectname) {
 
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN(F("Creating new project"));
+  DEBUG_PRINTLN(F("Creating new project master file"));
 
   file.close();
 
   DEBUG_PRINTLN(F("Attempting to extend project file"));
-
+  DEBUG_DUMP(projectname);
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
 
   if (!ret) {

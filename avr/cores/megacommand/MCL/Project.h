@@ -33,8 +33,8 @@ public:
   bool new_project_prompt();
   bool load_project(const char *projectname);
   bool convert_project(const char *projectname);
-  bool check_project_version();
-  bool new_project_master_file(const char *projectname);
+  bool check_project_version(uint16_t version_current = PROJ_VERSION);
+  bool new_project_master_file(char *projectname);
   bool write_header();
 
   void select_grid(uint8_t i) { grid_select = i; }
