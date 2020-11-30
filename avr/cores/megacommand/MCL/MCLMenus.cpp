@@ -64,10 +64,11 @@ void new_proj_handler() {
   proj.new_project();
 }
 
-const menu_t<8> system_menu_layout PROGMEM = {
+const menu_t<9> system_menu_layout PROGMEM = {
     "GLOBAL",
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, NULL, 0},
+        {"CONV PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) &convert_proj_page, NULL, 0},
         {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &new_proj_handler, 0},
         {"MIDI",0, 0, 0, (uint8_t *) NULL, (Page*) &midi_config_page, NULL, 0},
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, NULL, 0},
@@ -154,7 +155,7 @@ const menu_t<5> file_menu_layout PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
-MenuPage<8> system_page(&system_menu_layout, &options_param1, &options_param2);
+MenuPage<9> system_page(&system_menu_layout, &options_param1, &options_param2);
 MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);

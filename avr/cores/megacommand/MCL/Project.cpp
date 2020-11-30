@@ -85,6 +85,12 @@ void Project::chdir_projects() {
   SD.chdir(c_project_root);
 }
 
+
+
+bool Project::convert_project(const char *projectname) {
+//TODO
+}
+
 bool Project::load_project(const char *projectname) {
 
   bool ret;

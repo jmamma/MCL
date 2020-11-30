@@ -31,6 +31,7 @@ public:
   void setup();
   bool new_project();
   bool load_project(const char *projectname);
+  bool convert_project(const char *projectname);
   bool check_project_version();
   bool new_project(const char *projectname);
   bool write_header();
