@@ -29,11 +29,12 @@ public:
   void chdir_projects();
   bool project_loaded = false;
   void setup();
-  bool new_project();
+  bool new_project(char *newprj);
+  bool new_project_prompt();
   bool load_project(const char *projectname);
   bool convert_project(const char *projectname);
   bool check_project_version();
-  bool new_project(const char *projectname);
+  bool new_project_master_file(const char *projectname);
   bool write_header();
 
   void select_grid(uint8_t i) { grid_select = i; }

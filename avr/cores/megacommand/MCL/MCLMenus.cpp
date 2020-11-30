@@ -61,7 +61,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
 };
 
 void new_proj_handler() {
-  proj.new_project();
+  proj.new_project_prompt();
 }
 
 const menu_t<9> system_menu_layout PROGMEM = {
