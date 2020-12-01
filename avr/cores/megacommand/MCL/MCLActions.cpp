@@ -303,6 +303,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     if (device_track == nullptr || device_track->active != track_type) {
       empty_track.clear();
       device_track = device_track->init_track_type(track_type);
+      device_track->active = EMPTY_TRACK_TYPE;
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
@@ -525,6 +526,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         // EMPTY_TRACK_TYPE
         empty_track->clear();
         empty_track->init_track_type(track_type);
+        empty_track->active = EMPTY_TRACK_TYPE;
         send_machine[n] = 1;
       } else {
         auto *pmem_track = empty_track2->load_from_mem(track_idx, track_type);
