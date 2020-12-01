@@ -119,6 +119,9 @@ bool Project::convert_project(const char *projectname) {
     goto error;
   }
 
+  if (!load_project(filename)) {
+    goto error;
+  }
   Grid_270 src_grid;
   KitExtra kit_extra;
 
@@ -131,6 +134,7 @@ bool Project::convert_project(const char *projectname) {
     // this, but ignore unique type for simplicity)
     mcl_sd.read_data(&row_header_src, sizeof(GridRowHeader), &src_proj.file);
 
+    DEBUG_DUMP(row_header_src.active);
     if (!row_header_src.active)
       continue;
 
