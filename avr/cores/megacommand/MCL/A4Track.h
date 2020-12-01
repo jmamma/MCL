@@ -24,16 +24,24 @@ public:
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
   bool get_track_from_sysex(uint8_t tracknumber);
-  bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
-                     uint8_t merge = 0, bool online = false);
+  bool store_in_grid(uint8_t column, uint16_t row,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     bool online = false);
   bool convert(A4Track_270 *old) {
     if (active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
-      //These were swapped on the EXT Tracks originally.
-      if (chain.speed == 1) { chain.speed = 2; }
-      else if ( chain.speed == 2) { chain.speed = 1; }
+      // These were swapped on the EXT Tracks originally.
+      if (chain.speed == 1) {
+        chain.speed = 2;
+      } else if (chain.speed == 2) {
+        chain.speed = 1;
+      }
       chain.length = old->seq_data.length;
-      if (chain.length == 0) { chain.length = 16; }
+      if (chain.length == 0) {
+        chain.length = 16;
+      }
+      chain.row = old->chain.row;
+      chain.loops = old->chain.loops;
       sound.convert(&old->sound);
       seq_data.convert(&old->seq_data);
       active = A4_TRACK_TYPE;

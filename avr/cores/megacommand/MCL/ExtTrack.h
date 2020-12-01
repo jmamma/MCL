@@ -41,7 +41,8 @@ public:
 
       chain.length = old->seq_data.length;
       if (chain.length == 0) { chain.length = 16; }
-
+      chain.row = old->chain.row;
+      chain.loops = old->chain.loops;
       seq_data.convert(&(old->seq_data));
       active = EXT_TRACK_TYPE;
       return true;

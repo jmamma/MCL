@@ -115,10 +115,12 @@ public:
         chain.speed = old->seq_data.speed - 64;
       }
       chain.length = old->seq_data.length;
+
+      chain.row = old->chain.row;
+      chain.loops = old->chain.loops;
       if (chain.length == 0) { chain.length = 16; }
 
       seq_data.convert(&(old->seq_data));
-
       active = MD_TRACK_TYPE;
       return true;
     }
