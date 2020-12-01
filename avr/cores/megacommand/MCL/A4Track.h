@@ -28,7 +28,7 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
   bool convert(A4Track_270 *old) {
-    if (active == A4_TRACK_TYPE_270) {
+    if (old->active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
       // These were swapped on the EXT Tracks originally.
       if (chain.speed == 1) {

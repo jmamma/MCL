@@ -33,7 +33,7 @@ public:
                      uint8_t merge = 0, bool online = false);
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   bool virtual convert(ExtTrack_270 *old) {
-    if (active == EXT_TRACK_TYPE_270) {
+    if (old->active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
       //These were swapped on the EXT Tracks originally.
       if (chain.speed == 1) { chain.speed = 2; }

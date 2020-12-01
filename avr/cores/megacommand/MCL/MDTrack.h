@@ -107,7 +107,7 @@ public:
   void normalize();
 
   bool convert(MDTrack_270 *old) {
-    if (active == MD_TRACK_TYPE_270) {
+   if (old->active == MD_TRACK_TYPE_270) {
       memcpy(&machine, &old->machine, sizeof(MDMachine));
       if (old->seq_data.speed < 64) {
         chain.speed = SEQ_SPEED_1X;
