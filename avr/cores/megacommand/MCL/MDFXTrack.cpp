@@ -6,7 +6,6 @@ void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 
 void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
-    place_fx_in_kit();
 }
 
 uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {
@@ -30,6 +29,7 @@ uint16_t MDFXTrack::send_fx(bool send) {
       bytes += MD.setCompressorParam(a, dynamics[a], send);
     }
   }
+  place_fx_in_kit();
   return bytes;
 }
 
