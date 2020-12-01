@@ -29,7 +29,11 @@ public:
   bool convert(A4Track_270 *old) {
     if (active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
+      //These were swapped on the EXT Tracks originally.
+      if (chain.speed == 1) { chain.speed = 2; }
+      else if ( chain.speed == 2) { chain.speed = 1; }
       chain.length = old->seq_data.length;
+      if (chain.length == 0) { chain.length = 16; }
       sound.convert(&old->sound);
       seq_data.convert(&old->seq_data);
       active = A4_TRACK_TYPE;
