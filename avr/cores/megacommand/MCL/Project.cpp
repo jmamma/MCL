@@ -169,10 +169,10 @@ bool Project::convert_project(const char *projectname) {
         A4Track a4_track;
         a4_track.convert(&a4_track_src);
 
-        a4_track.store_in_grid(x, y);
+        a4_track.store_in_grid(x - NUM_MD_TRACKS, y);
         if (a4_track_src.active == A4_TRACK_TYPE ||
             a4_track_src.active == EXT_TRACK_TYPE) {
-          row_headers[grid].update_model(x, a4_track_src.active,
+          row_headers[grid].update_model(x - NUM_MD_TRACKS, a4_track_src.active,
                                          a4_track_src.active);
         }
       }
