@@ -86,9 +86,9 @@ public:
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
-   /* if (that->active != track_type) {
+    if (that->active != track_type) {
       return nullptr;
-    }*/
+    }
     auto ptrack = that->init_track_type(that->active);
     return ptrack;
   }
@@ -100,9 +100,9 @@ public:
     diag_page.println("this", (uint16_t)this);
     diag_page.println("region", (uint16_t)that->get_region());
     */
-   /* if (!that->GridTrack::load_from_mem(col)) {
+    if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
-    }*/
+    }
     auto ptrack = that->init_track_type(that->active);
     return _dynamik_kast<T>(ptrack);
   }
