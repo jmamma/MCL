@@ -123,6 +123,7 @@ bool Project::convert_project(const char *projectname) {
   KitExtra kit_extra;
 
   for (uint8_t y = 0; y < GRID_LENGTH_270; y++) {
+    mcl_gui.draw_progress("CONVERTING", y, GRID_LENGTH_270);
     src_proj.file.seekSet(src_grid.get_row_header_offset(y));
 
     GridRowHeader row_header_src;
