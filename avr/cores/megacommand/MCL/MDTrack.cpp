@@ -84,10 +84,6 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
   md_seq_track->speed = chain.speed;
   md_seq_track->length = chain.length;
-  if (md_seq_track->speed < SEQ_SPEED_1X) {
-    md_seq_track->speed = SEQ_SPEED_1X;
-    md_seq_track->clear_slide_data();
-  }
   md_seq_track->oneshot_mask = 0;
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->update_params();
@@ -136,7 +132,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   if (column != 255 && online == true) {
     get_machine_from_kit(column);
-
+    DEBUG_DUMP("online");
     chain.length = seq_track->length;
     chain.speed = seq_track->speed;
 
