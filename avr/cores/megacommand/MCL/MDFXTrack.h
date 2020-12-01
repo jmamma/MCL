@@ -35,6 +35,8 @@ public:
 
   void place_fx_in_kit();
   void get_fx_from_kit();
+  void get_fx_from_kit_extra(KitExtra *kit_extra);
+
   uint16_t calc_latency(uint8_t tracknumber);
   uint16_t send_fx(bool send = true);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);

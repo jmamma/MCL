@@ -120,6 +120,7 @@ bool Project::convert_project(const char *projectname) {
   }
 
   Grid_270 src_grid;
+  KitExtra kit_extra;
 
   for (uint8_t y = 0; y < GRID_LENGTH_270; y++) {
     src_proj.file.seekSet(src_grid.get_row_header_offset(y));
@@ -139,6 +140,7 @@ bool Project::convert_project(const char *projectname) {
       memcpy(&row_headers[a].name, &row_header_src.name, 17);
       row_headers[a].active = row_header_src.active;
     }
+    uint8_t first_track = 255;
 
     for (uint8_t x = 0; x < GRID_WIDTH_270; x++) {
 
@@ -156,6 +158,16 @@ bool Project::convert_project(const char *projectname) {
 
         md_track.store_in_grid(x, y);
         if (md_track_src.active == MD_TRACK_TYPE) {
+          if (first_track == 255) {
+            // Extract MDFX from first active MD_TRACK slot in row
+            first_track = x;
+            MDFXTrack md_fx_track;
+            md_fx_track.get_fx_from_kit_extra(&md_track_src.kitextra);
+            select_grid(1);
+            md_fx_track.store_in_grid(MDFX_TRACK_NUM, y);
+            row_headers[1].update_model(MDFX_TRACK_NUM, MDFX_TRACK_TYPE,
+                                        MDFX_TRACK_TYPE);
+          }
           row_headers[grid].update_model(x, md_track_src.machine.model,
                                          md_track_src.active);
         }
