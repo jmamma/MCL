@@ -186,14 +186,16 @@ bool Project::convert_project(const char *projectname) {
         if (a4_track_src.active == EXT_TRACK_TYPE_270) {
           ExtTrack ext_track;
           ext_track.convert((ExtTrack_270 *)&a4_track_src);
+          ext_track.seq_data.channel = x - NUM_MD_TRACKS;
           ext_track.store_in_grid(x - NUM_MD_TRACKS, y);
-          row_headers[grid].update_model(x, EXT_TRACK_TYPE, EXT_TRACK_TYPE);
+          row_headers[grid].update_model(x - NUM_MD_TRACKS, EXT_TRACK_TYPE, EXT_TRACK_TYPE);
         }
         if (a4_track_src.active == A4_TRACK_TYPE_270) {
           A4Track a4_track;
           a4_track.convert(&a4_track_src);
+          a4_track.seq_data.channel = x - NUM_MD_TRACKS;
           a4_track.store_in_grid(x - NUM_MD_TRACKS, y);
-          row_headers[grid].update_model(x, A4_TRACK_TYPE, A4_TRACK_TYPE);
+          row_headers[grid].update_model(x - NUM_MD_TRACKS, A4_TRACK_TYPE, A4_TRACK_TYPE);
         }
       }
     }
