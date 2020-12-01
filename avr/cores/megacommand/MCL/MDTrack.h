@@ -108,13 +108,17 @@ public:
 
   bool convert(MDTrack_270 *old) {
     if (active == MD_TRACK_TYPE_270) {
+      memcpy(&machine, &old->machine, sizeof(MDMachine));
       if (old->seq_data.speed < 64) {
         chain.speed = SEQ_SPEED_1X;
       } else {
         chain.speed = old->seq_data.speed - 64;
       }
+      chain.length = old->seq_data.length;
+      if (chain.length == 0) { chain.length = 16; }
 
       seq_data.convert(&(old->seq_data));
+
       active = MD_TRACK_TYPE;
       return true;
     }
