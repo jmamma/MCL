@@ -119,8 +119,74 @@ bool Project::convert_project(const char *projectname) {
     goto error;
   }
 
+  Grid_270 src_grid;
+
+  for (uint8_t y = 0; y < GRID_LENGTH_270; y++) {
+    src_proj.file.seekSet(src_grid.get_row_header_offset(y));
+
+    GridRowHeader row_header_src;
+    // Extract active and name from row header. (data strcuture differs after
+    // this, but ignore unique type for simplicity)
+    mcl_sd.read_data(&row_header_src, sizeof(GridRowHeader), &src_proj.file);
+
+    if (!row_header_src.active)
+      continue;
+
+    GridRowHeader row_headers[NUM_DEVS];
+
+    for (uint8_t a = 0; a < NUM_DEVS; a++) {
+      row_headers[a].init();
+      memcpy(&row_headers[a].name, &row_header_src.name, 17);
+      row_headers[a].active = row_header_src.active;
+    }
+
+    for (uint8_t x = 0; x < GRID_WIDTH_270; x++) {
+
+      src_proj.file.seekSet(src_grid.get_slot_offset(x, y));
+      uint8_t grid = 0;
+      if (x < NUM_MD_TRACKS) {
+
+        select_grid(grid);
+
+        MDTrack_270 md_track_src;
+        mcl_sd.read_data(&md_track_src, sizeof(MDTrack_270), &src_proj.file);
+
+        MDTrack md_track;
+        md_track.convert(&md_track_src);
+
+        md_track.store_in_grid(x, y);
+        if (md_track_src.active == MD_TRACK_TYPE) {
+          row_headers[grid].update_model(x, md_track_src.machine.model,
+                                         md_track_src.active);
+        }
+      } else {
+        grid = 1;
+        select_grid(grid);
+
+        A4Track_270 a4_track_src;
+        mcl_sd.read_data(&a4_track_src, sizeof(A4Track_270), &src_proj.file);
+
+        A4Track a4_track;
+        a4_track.convert(&a4_track_src);
+
+        a4_track.store_in_grid(x, y);
+        if (a4_track_src.active == A4_TRACK_TYPE ||
+            a4_track_src.active == EXT_TRACK_TYPE) {
+          row_headers[grid].update_model(x, a4_track_src.active,
+                                         a4_track_src.active);
+        }
+      }
+    }
+    for (uint8_t a = 0; a < NUM_DEVS; a++) {
+      proj.write_grid_row_header(&row_headers[a], y, a);
+      proj.sync_grid(a);
+    }
+  }
+  select_grid(0);
+  src_proj.file.close();
   // Old projects located in root dir
- return true;
+  return true;
+
 error:
   src_proj.file.close();
   DEBUG_PRINTLN("error");

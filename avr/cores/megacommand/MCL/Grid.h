@@ -10,6 +10,17 @@
 
 #define GRID_VERSION 3000
 
+
+#define GRID_LENGTH_270 128
+#define GRID_WIDTH_270 20
+#define GRID_SLOT_BYTES_270 4096
+
+class Grid_270 {
+  public:
+  int32_t get_slot_offset(int16_t column, int16_t row);
+  int32_t get_row_header_offset(int16_t row);
+};
+
 class GridHeader {
 public:
   uint32_t version;
