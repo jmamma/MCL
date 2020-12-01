@@ -119,15 +119,16 @@ public:
       }
       steps[n].cond_id = cond;
       for (uint8_t c = 0; c < NUM_LOCKS_270; c++) {
-      steps[n].locks |= (1 << c);
-      locks[lock_slot] = old->locks[c][n];
-      lock_slot++;
+        if (lock_slot < NUM_MD_LOCK_SLOTS) {
+          steps[n].locks |= (1 << c);
+          locks[lock_slot++] = old->locks[c][n];
+        }
       }
       if (IS_BIT_SET64(old->lock_mask, n)) {
         steps[n].locks_enabled = true;
       }
     }
-    return false;
+    return true;
   }
 };
 

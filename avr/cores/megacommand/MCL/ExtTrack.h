@@ -35,10 +35,19 @@ public:
   bool virtual convert(ExtTrack_270 *old) {
     if (active == EXT_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
+      //These were swapped on the EXT Tracks originally.
+      if (chain.speed == 1) { chain.speed = 2; }
+      else if ( chain.speed == 2) { chain.speed = 1; }
+
       chain.length = old->seq_data.length;
+      if (chain.length == 0) { chain.length = 16; }
+
       seq_data.convert(&(old->seq_data));
       active = EXT_TRACK_TYPE;
+      return true;
     }
+
+
     return false;
   }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
