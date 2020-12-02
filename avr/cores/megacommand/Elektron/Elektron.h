@@ -155,7 +155,7 @@ public:
   uint8_t num_tracks;
   uint8_t get_num_tracks() { return num_tracks; }
 
-  GridDeviceTrack tracks[NUM_SLOTS];
+  GridDeviceTrack tracks[GRID_WIDTH];
 
   GridDevice() { init(); }
 
