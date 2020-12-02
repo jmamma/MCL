@@ -205,8 +205,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         // Preserve existing chain settings before save.
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
           grid_track.load_from_grid(track_idx, row);
-          empty_track.chain.loops = grid_track.chain.loops;
-          empty_track.chain.row = grid_track.chain.row;
+          memcpy(&empty_track.chain, &grid_track.chain,sizeof(GridChain));
         } else {
           empty_track.chain.init(row);
         }
