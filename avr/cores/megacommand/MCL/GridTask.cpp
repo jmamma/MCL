@@ -133,14 +133,11 @@ void GridTask::run() {
 
       auto *pmem_track = empty_track.load_from_mem(track_idx, track_type);
 
-      if (pmem_track->is_active()) {
+      if (pmem_track != nullptr) {
         if (mcl_actions.send_machine[n] == 0) {
         pmem_track->transition_send(track_idx, n);
         }
         pmem_track->transition_load(track_idx, seq_track, n);
-
-      } else {
-        pmem_track->transition_clear(track_idx, seq_track);
       }
 
       grid_page.active_slots[n] = slots_changed[n];
