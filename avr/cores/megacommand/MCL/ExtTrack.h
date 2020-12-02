@@ -29,25 +29,33 @@ public:
 
   bool load_seq_data(SeqTrack *seq_track);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
-  bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
-                     uint8_t merge = 0, bool online = false);
+  bool store_in_grid(uint8_t column, uint16_t row,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     bool online = false);
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+
   bool virtual convert(ExtTrack_270 *old) {
     if (old->active == EXT_TRACK_TYPE_270) {
-      chain.speed = old->seq_data.speed;
-      //These were swapped on the EXT Tracks originally.
-      if (chain.speed == 1) { chain.speed = 2; }
-      else if ( chain.speed == 2) { chain.speed = 1; }
-
+      if (old->seq_data.speed == 0) {
+        chain.speed = SEQ_SPEED_2X;
+      } else {
+        chain.speed = old->seq_data.speed - 1;
+        if (chain.speed == 0) {
+          chain.speed = SEQ_SPEED_2X;
+        } else if (chain.speed == 1) {
+          chain.speed = SEQ_SPEED_1X;
+        }
+      }
       chain.length = old->seq_data.length;
-      if (chain.length == 0) { chain.length = 16; }
+      if (chain.length == 0) {
+        chain.length = 16;
+      }
       chain.row = old->chain.row;
       chain.loops = old->chain.loops;
       seq_data.convert(&(old->seq_data));
       active = EXT_TRACK_TYPE;
       return true;
     }
-
 
     return false;
   }

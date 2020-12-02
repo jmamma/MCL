@@ -123,6 +123,7 @@ public:
         e.event_value = abs(old->notes[a][n]) - 1;
         e.event_on = note_on;
         e.micro_timing = old->timing[n];
+        velocities[n] = 100;
         if (event_count < NUM_EXT_EVENTS) {
           uint8_t bucket = timing_buckets.get(n);
           if (bucket < 16) {
