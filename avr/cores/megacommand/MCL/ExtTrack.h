@@ -35,6 +35,12 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   bool virtual convert(ExtTrack_270 *old) {
+    chain.row = old->chain.row;
+    chain.loops = old->chain.loops;
+    if (chain.row >= GRID_LENGTH) {
+      chain.row = GRID_LENGTH - 1;
+    }
+
     if (old->active == EXT_TRACK_TYPE_270) {
       if (old->seq_data.speed == 0) {
         chain.speed = SEQ_SPEED_2X;
@@ -50,15 +56,15 @@ public:
       if (chain.length == 0) {
         chain.length = 16;
       }
-      chain.row = old->chain.row;
-      if (chain.row >= GRID_LENGTH) { chain.row = GRID_LENGTH - 1; }
-      chain.loops = old->chain.loops;
-      seq_data.convert(&(old->seq_data));
-      active = EXT_TRACK_TYPE;
-      return true;
+       seq_data.convert(&(old->seq_data));
+       active = EXT_TRACK_TYPE;
     }
-
-    return false;
+    else {
+      chain.speed = SEQ_SPEED_1X;
+      chain.length = 16;
+      active = EMPTY_TRACK_TYPE;
+    }
+    return true;
   }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return sizeof(ExtTrack); }

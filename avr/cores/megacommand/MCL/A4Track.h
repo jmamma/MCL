@@ -28,6 +28,12 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
   bool convert(A4Track_270 *old) {
+    chain.row = old->chain.row;
+    chain.loops = old->chain.loops;
+    if (chain.row >= GRID_LENGTH) {
+      chain.row = GRID_LENGTH - 1;
+    }
+
     if (old->active == A4_TRACK_TYPE_270) {
       chain.speed = old->seq_data.speed;
       if (old->seq_data.speed == 0) {
@@ -46,15 +52,16 @@ public:
         chain.length = 16;
       }
 
-      chain.row = old->chain.row;
-      if (chain.row >= GRID_LENGTH) { chain.row = GRID_LENGTH - 1; }
-      chain.loops = old->chain.loops;
       sound.convert(&old->sound);
       seq_data.convert(&old->seq_data);
       active = A4_TRACK_TYPE;
-      return true;
+    } else {
+      chain.speed = SEQ_SPEED_1X;
+      chain.length = 16;
+      active = EMPTY_TRACK_TYPE;
     }
-    return false;
+
+    return true;
   }
   virtual uint16_t get_track_size() { return sizeof(A4Track); }
   virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO

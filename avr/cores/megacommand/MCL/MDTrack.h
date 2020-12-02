@@ -81,7 +81,8 @@ public:
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                       uint8_t slotnumber);
   void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
     MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
     bool clear_locks = true;
@@ -93,7 +94,8 @@ public:
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
 
-  bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+  bool store_in_grid(uint8_t column, uint16_t row,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
@@ -107,7 +109,12 @@ public:
   void normalize();
 
   bool convert(MDTrack_270 *old) {
-   if (old->active == MD_TRACK_TYPE_270) {
+    chain.row = old->chain.row;
+    chain.loops = old->chain.loops;
+    if (chain.row >= GRID_LENGTH) {
+      chain.row = GRID_LENGTH - 1;
+    }
+    if (old->active == MD_TRACK_TYPE_270) {
       memcpy(&machine, &old->machine, sizeof(MDMachine));
       if (old->seq_data.speed < 64) {
         chain.speed = SEQ_SPEED_1X;
@@ -116,17 +123,13 @@ public:
       }
       chain.length = old->seq_data.length;
 
-      chain.row = old->chain.row;
-      chain.loops = old->chain.loops;
-      if (chain.row >= GRID_LENGTH) { chain.row = GRID_LENGTH - 1; }
-
-      if (chain.length == 0) { chain.length = 16; }
-
       seq_data.convert(&(old->seq_data));
       active = MD_TRACK_TYPE;
-      return true;
+    } else {
+      chain.speed = SEQ_SPEED_1X;
+      chain.length = 16;
     }
-    return false;
+    return true;
   }
 
   virtual uint16_t get_track_size() { return sizeof(MDTrack); }
