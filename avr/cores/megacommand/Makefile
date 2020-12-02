@@ -34,12 +34,18 @@ F_CPU = 16000000L
 
 INOFILES=$(wildcard *.pde)
 
-OPTIM=-Os
+OPTIM_FLAGS   = -Os
+WARN_FLAGS    = -Wall -Wextra
+COMPILE_FLAGS = -c $(OPTIM_FLAGS) $(WARN_FLAGS) -MMD
+FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver
+LINK_FLAGS    = -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
+ARCH_FLAGS    = -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 
-CFLAGS = -c -g -Os -Wextra -std=gnu11 -ffunction-sections -fdata-sections -MMD -flto -fno-fat-lto-objects -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+CFLAGS        = -std=gnu11   $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
+CXXFLAGS      = -std=gnu++11 $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
+CXXFLAGS     += -fno-exceptions -fno-threadsafe-statics -fno-rtti
 
-CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
-CLDFLAGS = -Wall -Wextra -Os -flto -fuse-linker-plugin -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax -mmcu=atmega2560
+LDFLAGS = $(OPTIM_FLAGS) $(WARN_FLAGS) -flto -fuse-linker-plugin -mrelax $(LINK_FLAGS) $(ARCH_FLAGS)
 
 DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD MNM
 
@@ -59,17 +65,11 @@ CXXFLAGS += -DMCL_NOSKETCH
 
 all: main.hex
 
-main.cxx: $(INOFILES) $(wildcard ${CORE_DIR}/*.cpp)
-	echo ${INOFILES} $(wildcard ${CORE_DIR}/*.cpp)
-
 main.elf: core.a
-	$(CC) $(CLDFLAGS) -o $@ $^ -lm
+	$(CC) $(LDFLAGS) -o $@ $^
 
 %.o: %.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
-
-mcl.o: mcl.pde
-	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 core.a: $(OBJS) Makefile
 	echo $(AR) rcs $@ $^
@@ -105,7 +105,8 @@ core.a: $(OBJS) Makefile
 	$(OBJCOPY) -j .text -j .data -O srec $< $@
 
 %.hex: %.elf
-	$(OBJCOPY) -j .text -j .data -O ihex $< $@
+	$(OBJCOPY) -j .text -j .data -O ihex $< $@; \
+	$(AVRSIZE) $<
 
 %.ee_srec: %.elf
 	$(OBJCOPY) -j .eeprom --change-section-lma .eeprom=0 -O srec $< $@
@@ -115,7 +116,12 @@ libclean:
 	rm -rf $(OBJS)
 
 clean:
-	rm -rf *.os *.o *.elf *.elfs *.lst main.cxx
+	find . -iname '*.d' -exec rm {} \; ; \
+	find . -iname '*.o' -exec rm {} \; ; \
+	find . -iname '*.os' -exec rm {} \; ; \
+	find . -iname '*.elf' -exec rm {} \; ; \
+	find . -iname '*.lst' -exec rm {} \; ;
+
 
 upload: main.hex
 	echo "DEVICE is $(AVR_DEVICE)"; \

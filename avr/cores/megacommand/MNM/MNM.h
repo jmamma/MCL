@@ -32,6 +32,12 @@ public:
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
   virtual PGM_P getMachineName(uint8_t machine);
 
+  virtual bool canReadKit() {
+    // TODO fw cap for live kit access
+    //return fw_caps & FW_CAP
+    return true;
+  }
+
   virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
     // TODO MNM does not get the pattern but reports success.
     return true;

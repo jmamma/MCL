@@ -5,84 +5,214 @@
 
 void Project::setup() {}
 
-bool Project::new_project() {
+bool Project::new_project(char *newprj) {
+  // Create parent project directory
+  chdir_projects();
+
+  // Create project directory
+  SD.mkdir(newprj, true);
+
+  if (!SD.chdir(newprj)) {
+    gfx.alert("ERROR", "DIR");
+    return false;
+  }
+
+  char proj_filename[PRJ_NAME_LEN] = {'\0'};
+  strcat(proj_filename, newprj);
+  strcat(proj_filename, ".mcl");
+
+  gfx.alert("PLEASE WAIT", "CREATING PROJECT");
+
+  DEBUG_PRINTLN(proj_filename);
+  if (SD.exists(proj_filename)) {
+    gfx.alert("ERROR", "PROJECT EXISTS");
+    return false;
+  }
+
+  // Initialise Grid Files.
+  //
+  char grid_filename[PRJ_NAME_LEN] = {'\0'};
+  strcat(grid_filename, newprj);
+  uint8_t l = strlen(grid_filename);
+  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+    grid_filename[l] = '.';
+    grid_filename[l + 1] = i + '0';
+    grid_filename[l + 2] = '\0';
+    if (!SD.exists(grid_filename)) {
+      if (!grids[i].new_grid(grid_filename)) {
+        gfx.alert("ERROR", "SD ERROR");
+        return false;
+      }
+    }
+  }
+  // Initialiase Project Master File.
+  //
+  DEBUG_DUMP(proj_filename);
+  return proj.new_project_master_file(proj_filename);
+}
+
+bool Project::new_project_prompt() {
   char newprj[PRJ_NAME_LEN];
 
-  char my_string[sizeof(newprj)] = "project___";
+  char my_string[PRJ_NAME_LEN] = "project___";
 
   my_string[7] = (mcl_cfg.number_projects % 1000) / 100 + '0';
   my_string[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
   my_string[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
 
-  strncpy(newprj, my_string, sizeof(newprj));
+  strncpy(newprj, my_string, PRJ_NAME_LEN);
 again:
 
-  if (mcl_gui.wait_for_input(newprj, "New Project:", sizeof(newprj))) {
-
-    // Create parent project directory
-    chdir_projects();
-
-    // Create project directory
-    SD.mkdir(newprj, true);
-
-    if (!SD.chdir(newprj)) {
-    gfx.alert("ERROR", "DIR");
-    goto again;
-    }
-
-    char proj_filename[sizeof(newprj) + 5] = {'\0'};
-    strcat(proj_filename, newprj);
-    strcat(proj_filename, ".mcl");
-
-    gfx.alert("PLEASE WAIT", "CREATING PROJECT");
-
-    DEBUG_PRINTLN(proj_filename);
-    if (SD.exists(proj_filename)) {
-      gfx.alert("ERROR", "PROJECT EXISTS");
+  if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
+    if (!new_project(newprj)) {
       goto again;
     }
-
-    // Initialise Grid Files.
-    //
-    char grid_filename[sizeof(newprj) + 2];
-    strncpy(grid_filename, newprj, sizeof(newprj));
-    uint8_t l = strlen(grid_filename);
-    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      grid_filename[l] = '.';
-      grid_filename[l + 1] = i + '0';
-      grid_filename[l + 2] = '\0';
-      if (!SD.exists(grid_filename)) {
-        if (!grids[i].new_grid(grid_filename)) {
-          gfx.alert("ERROR", "SD ERROR");
-          goto again;
-        }
-      }
+    if (proj.load_project(newprj)) {
+      grid_page.reload_slot_models = false;
+      DEBUG_PRINTLN("project loaded, setting page to grid");
+      GUI.setPage(&grid_page);
+      return true;
+    } else {
+      gfx.alert("ERROR", "SD ERROR");
+      goto again;
     }
-    // Initialiase Project File.
-    //
-    bool ret = proj.new_project(proj_filename);
-    if (ret) {
-      if (proj.load_project(newprj)) {
-        grid_page.reload_slot_models = false;
-        DEBUG_PRINTLN("project loaded, setting page to grid");
-        GUI.setPage(&grid_page);
-        return true;
-      } else {
-        gfx.alert("ERROR", "SD ERROR");
-        goto again;
-      }
-      return false;
-    }
-  } else if (proj.project_loaded) {
+  }
+  if (proj.project_loaded) {
     GUI.setPage(&grid_page);
     return true;
   }
+  return false;
 }
 
 void Project::chdir_projects() {
   const char *c_project_root = PRJ_DIR;
   SD.mkdir(c_project_root, true);
   SD.chdir(c_project_root);
+}
+
+#define OLD_PROJ_VERSION 2025
+
+bool Project::convert_project(const char *projectname) {
+  // TODO
+
+  Project src_proj;
+  char filename[PRJ_NAME_LEN + sizeof(".mcl")];
+  strcpy(filename, projectname);
+  filename[strlen(projectname) - 4] = '\0'; // truncate filename
+
+  DEBUG_DUMP(filename);
+
+  bool ret;
+  ret = src_proj.file.open(projectname, O_RDWR);
+  if (!ret) {
+    DEBUG_PRINTLN("can't open");
+    goto error;
+  }
+  ret = src_proj.check_project_version(OLD_PROJ_VERSION);
+  DEBUG_DUMP(src_proj.version);
+  if (!ret) {
+    DEBUG_PRINTLN("Bad verision");
+    goto error;
+  }
+
+  if (!new_project(filename)) {
+    goto error;
+  }
+
+  if (!load_project(filename)) {
+    goto error;
+  }
+  Grid_270 src_grid;
+  KitExtra kit_extra;
+
+  for (uint8_t y = 0; y < GRID_LENGTH_270; y++) {
+    mcl_gui.draw_progress("CONVERTING", y, GRID_LENGTH_270);
+    src_proj.file.seekSet(src_grid.get_row_header_offset(y));
+
+    GridRowHeader row_header_src;
+    // Extract active and name from row header. (data strcuture differs after
+    // this, but ignore unique type for simplicity)
+    mcl_sd.read_data(&row_header_src, sizeof(GridRowHeader), &src_proj.file);
+
+    DEBUG_DUMP(row_header_src.active);
+    if (!row_header_src.active)
+      continue;
+
+    GridRowHeader row_headers[NUM_DEVS];
+
+    for (uint8_t a = 0; a < NUM_DEVS; a++) {
+      row_headers[a].init();
+      memcpy(&row_headers[a].name, &row_header_src.name, 17);
+      row_headers[a].active = row_header_src.active;
+    }
+    uint8_t first_track = 255;
+
+    for (uint8_t x = 0; x < GRID_WIDTH_270; x++) {
+
+      src_proj.file.seekSet(src_grid.get_slot_offset(x, y));
+      uint8_t grid = 0;
+      if (x < NUM_MD_TRACKS) {
+
+        select_grid(grid);
+
+        MDTrack_270 md_track_src;
+        mcl_sd.read_data(&md_track_src, sizeof(MDTrack_270), &src_proj.file);
+
+        MDTrack md_track;
+        md_track.convert(&md_track_src);
+
+        md_track.store_in_grid(x, y);
+        if (md_track_src.active == MD_TRACK_TYPE_270) {
+          if (first_track == 255) {
+            // Extract MDFX from first active MD_TRACK slot in row
+            first_track = x;
+            MDFXTrack md_fx_track;
+            md_fx_track.get_fx_from_kit_extra(&md_track_src.kitextra);
+            select_grid(1);
+            md_fx_track.store_in_grid(MDFX_TRACK_NUM, y);
+            row_headers[1].update_model(MDFX_TRACK_NUM, MDFX_TRACK_TYPE,
+                                        MDFX_TRACK_TYPE);
+          }
+          row_headers[grid].update_model(x, md_track_src.machine.model,
+                                         md_track.active);
+        }
+      } else {
+        grid = 1;
+        select_grid(grid);
+
+        A4Track_270 a4_track_src;
+        mcl_sd.read_data(&a4_track_src, sizeof(A4Track_270), &src_proj.file);
+
+        if (a4_track_src.active == EXT_TRACK_TYPE_270) {
+          ExtTrack ext_track;
+          ext_track.convert((ExtTrack_270 *)&a4_track_src);
+          ext_track.seq_data.channel = x - NUM_MD_TRACKS;
+          ext_track.store_in_grid(x - NUM_MD_TRACKS, y);
+          row_headers[grid].update_model(x - NUM_MD_TRACKS, EXT_TRACK_TYPE, EXT_TRACK_TYPE);
+        }
+        if (a4_track_src.active == A4_TRACK_TYPE_270) {
+          A4Track a4_track;
+          a4_track.convert(&a4_track_src);
+          a4_track.seq_data.channel = x - NUM_MD_TRACKS;
+          a4_track.store_in_grid(x - NUM_MD_TRACKS, y);
+          row_headers[grid].update_model(x - NUM_MD_TRACKS, A4_TRACK_TYPE, A4_TRACK_TYPE);
+        }
+      }
+    }
+    for (uint8_t a = 0; a < NUM_DEVS; a++) {
+      proj.write_grid_row_header(&row_headers[a], y, a);
+      proj.sync_grid(a);
+    }
+  }
+  select_grid(0);
+  src_proj.file.close();
+  // Old projects located in root dir
+  return true;
+
+error:
+  src_proj.file.close();
+  DEBUG_PRINTLN("error");
+  return false;
 }
 
 bool Project::load_project(const char *projectname) {
@@ -103,17 +233,16 @@ bool Project::load_project(const char *projectname) {
   char grid_name[l + 2] = {'\0'};
   strcat(grid_name, projectname);
 
-  //Open project parent
+  // Open project parent
   chdir_projects();
 
-  //Open project directory.
+  // Open project directory.
   SD.chdir(projectname);
 
   if (!SD.exists(proj_filename)) {
     DEBUG_DUMP(proj_filename);
     DEBUG_PRINTLN(F("does not exist"));
     return false;
-
   }
 
   ret = file.open(proj_filename, O_RDWR);
@@ -130,7 +259,7 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
 
- for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grids[i].close_file();
 
     grid_name[l] = '.';
@@ -143,7 +272,7 @@ bool Project::load_project(const char *projectname) {
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
- }
+  }
 
   strncpy(mcl_cfg.project, projectname, 16);
 
@@ -156,7 +285,7 @@ bool Project::load_project(const char *projectname) {
   return true;
 }
 
-bool Project::check_project_version() {
+bool Project::check_project_version(uint16_t version_current) {
   bool ret;
 
   DEBUG_PRINT_FN();
@@ -174,7 +303,7 @@ bool Project::check_project_version() {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  if (version >= PROJ_VERSION) {
+  if (version >= version_current) {
     project_loaded = true;
     return true;
   } else {
@@ -213,17 +342,17 @@ bool Project::write_header() {
   return true;
 }
 
-bool Project::new_project(const char *projectname) {
+bool Project::new_project_master_file(char *projectname) {
 
   bool ret;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN(F("Creating new project"));
+  DEBUG_PRINTLN(F("Creating new project master file"));
 
   file.close();
 
   DEBUG_PRINTLN(F("Attempting to extend project file"));
-
+  DEBUG_DUMP(projectname);
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
 
   if (!ret) {

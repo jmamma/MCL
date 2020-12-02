@@ -29,15 +29,19 @@ const ElektronSysexProtocol a4_protocol = {
 
 A4Class::A4Class(): ElektronDevice(
     &Midi2, "A4", DEVICE_A4, icon_a4, a4_protocol){
-    init_grid_devices();
     }
 
 void A4Class::init_grid_devices() {
   uint8_t grid_idx = 1;
 
-
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    add_track_to_grid(grid_idx, i,  &(mcl_seq.ext_tracks[i]), A4_TRACK_TYPE);
+    uint8_t track_type= EXT_TRACK_TYPE;
+
+    if (i < NUM_A4_SOUND_TRACKS) {
+       track_type = A4_TRACK_TYPE;
+    }
+
+    add_track_to_grid(grid_idx, i,  &(mcl_seq.ext_tracks[i]), track_type);
   }
 
 }
@@ -80,6 +84,7 @@ bool A4Class::probe() {
   mcl_gui.delay_progress(300);
   if (getBlockingSettings(0)) {
     connected = true;
+    DEBUG_DUMP(connected);
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   }
   return connected;

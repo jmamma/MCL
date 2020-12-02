@@ -23,9 +23,6 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
 
 bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #ifdef EXT_TRACKS
-  if (chain.speed == 0) {
-    chain.speed = SEQ_SPEED_2X;
-  }
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   ext_track->buffer_notesoff();
   memcpy(ext_track->data(), &seq_data, sizeof(seq_data));

@@ -20,7 +20,9 @@ void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t 
 }
 
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
+  DEBUG_DUMP("get blocking");
   auto ret = Analog4.getBlockingSoundX(tracknumber);
+  DEBUG_DUMP("finished");
   if (ret) {
     sound.fromSysex(Analog4.midi);
   }

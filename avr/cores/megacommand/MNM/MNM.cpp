@@ -31,7 +31,6 @@ MNMClass::MNMClass()
     : ElektronDevice(&Midi2, "MM", DEVICE_MNM, icon_mnm, mnm_protocol) {
   global.baseChannel = 0;
   midiuart = &MidiUart2;
-  init_grid_devices();
 }
 
 void MNMClass::init_grid_devices() {
@@ -94,7 +93,6 @@ bool MNMClass::probe() {
     setStatus(0x21, currentAudioMidiMode);
 
     loadGlobal(7);
-
     return MNM.connected;
   }
 

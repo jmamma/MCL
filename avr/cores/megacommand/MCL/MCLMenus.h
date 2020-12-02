@@ -27,10 +27,10 @@ extern MCLEncoder config_param7;
 
 extern void new_proj_handler();
 
-extern MenuPage<8> system_page;
+extern MenuPage<9> system_page;
 extern MenuPage<5> midi_config_page;
 extern MenuPage<4> md_config_page;
-extern MenuPage<2> mcl_config_page;
+extern MenuPage<1> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
 extern MenuPage<1> ram_config_page;

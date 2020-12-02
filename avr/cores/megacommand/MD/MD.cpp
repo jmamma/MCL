@@ -117,7 +117,6 @@ MDClass::MDClass()
   for (int i = 0; i < 16; i++) {
     global.drumMapping[i] = standardDrumMapping[i];
   }
-  init_grid_devices();
 }
 
 void MDClass::init_grid_devices() {
@@ -127,10 +126,10 @@ void MDClass::init_grid_devices() {
   add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
   }
   grid_idx = 1;
-  bool is_aux = true;
-  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]), MDFX_TRACK_TYPE, is_aux);
-  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]), MDROUTE_TRACK_TYPE, is_aux);
-  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[2]), MDTEMPO_TRACK_TYPE, is_aux);
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]), MDFX_TRACK_TYPE, GROUP_AUX);
+  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]), MDROUTE_TRACK_TYPE, GROUP_AUX);
+  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM,  &(mcl_seq.aux_tracks[2]), MDLFO_TRACK_TYPE, GROUP_AUX);
+  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[3]), MDTEMPO_TRACK_TYPE, GROUP_TEMPO);
 }
 
 bool MDClass::probe() {

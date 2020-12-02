@@ -87,13 +87,13 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
 
 SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx,
                                         uint8_t *track_idx, uint8_t *track_type,
-                                        uint8_t *dev_idx, bool *is_aux) {
+                                        uint8_t *dev_idx, uint8_t *group_type) {
   GridDeviceTrack *p = get_grid_dev_track(slot_number, track_idx, dev_idx);
   *grid_idx = get_grid_idx(slot_number);
   if (p) {
     *track_type = p->track_type;
-    if (is_aux != nullptr) {
-      *is_aux = p->is_aux;
+    if (group_type != nullptr) {
+      *group_type = p->group_type;
     }
     return p->seq_track;
   }
@@ -159,7 +159,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
           save_dev_tracks[i] = false;
           continue;
         }
-      } else {
+      } else if (elektron_devs[i]->canReadKit()) {
         auto kit = elektron_devs[i]->getCurrentKit();
         elektron_devs[i]->saveCurrentKit(kit);
         if (!elektron_devs[i]->getBlockingKit(kit)) {
@@ -205,8 +205,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
         // Preserve existing chain settings before save.
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
           grid_track.load_from_grid(track_idx, row);
-          empty_track.chain.loops = grid_track.chain.loops;
-          empty_track.chain.row = grid_track.chain.row;
+          memcpy(&empty_track.chain, &grid_track.chain,sizeof(GridChain));
         } else {
           empty_track.chain.init(row);
         }
@@ -394,6 +393,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
     grid_page.active_slots[i] = grid_page.getRow();
 
+    DEBUG_DUMP("here");
+    DEBUG_DUMP(grid_page.getRow());
+
     auto *ptrack = empty_track.load_from_grid(track_idx, grid_page.getRow());
 
     if (!ptrack) {
@@ -518,6 +520,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
 
       proj.select_grid(grid_idx);
+
+      if (chains[n].row >= GRID_LENGTH) continue;
 
       auto *ptrack = empty_track->load_from_grid(track_idx, chains[n].row);
 

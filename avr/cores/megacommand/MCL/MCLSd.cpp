@@ -57,7 +57,7 @@ bool MCLSd::load_init() {
           gfx.draw_evil();
           oled_display.clearDisplay();
 #endif
-          proj.new_project();
+          proj.new_project_prompt();
           return true;
 
         }
@@ -66,7 +66,7 @@ bool MCLSd::load_init() {
           DEBUG_PRINTLN(F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
-            proj.new_project();
+            proj.new_project_prompt();
             return true;
 
           } else {
@@ -75,7 +75,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          proj.new_project();
+          proj.new_project_prompt();
           return true;
         }
       } else {
@@ -84,7 +84,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        proj.new_project();
+        proj.new_project_prompt();
         return true;
       }
     } else {
@@ -95,7 +95,7 @@ bool MCLSd::load_init() {
 #ifdef OLED_DISPLAY
       oled_display.clearDisplay();
 #endif
-      proj.new_project();
+      proj.new_project_prompt();
       return true;
     }
     return true;

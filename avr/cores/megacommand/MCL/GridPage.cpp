@@ -378,11 +378,11 @@ void GridPage::display_grid() {
         break;
       case A4_TRACK_TYPE:
         str[0] = 'A';
-        str[1] = (x + getCol() - cur_col) + '0';
+        str[1] = (x + getCol() - cur_col) + '1';
         break;
       case EXT_TRACK_TYPE:
         str[0] = 'M';
-        str[1] = (x + getCol() - cur_col) + '0';
+        str[1] = (x + getCol() - cur_col) + '1';
         break;
       case MDFX_TRACK_TYPE:
         str[0] = 'F';
@@ -395,6 +395,10 @@ void GridPage::display_grid() {
       case MDTEMPO_TRACK_TYPE:
         str[0] = 'T';
         str[1] = 'P';
+        break;
+      case MDLFO_TRACK_TYPE:
+        str[0] = 'L';
+        str[1] = 'F';
         break;
       case MNM_TRACK_TYPE:
         tmp = getMNMMachineNameShort(model, 2);
@@ -441,6 +445,8 @@ void GridPage::display_grid() {
   if ((getCol() - cur_col + col_shift) % 4 == 0) {
     mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
+  oled_display.setTextColor(WHITE, BLACK);
+
 #endif
 }
 void GridPage::display_slot_menu() {

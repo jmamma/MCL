@@ -32,7 +32,8 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 #endif
 
 constexpr size_t NUM_FX_TRACKS = 2;
-constexpr size_t MDFX_TRACK_NUM = 13; //position of MDFX track in grid
+constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
+constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 

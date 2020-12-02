@@ -29,6 +29,7 @@ uint16_t MDFXTrack::send_fx(bool send) {
       bytes += MD.setCompressorParam(a, dynamics[a], send);
     }
   }
+  place_fx_in_kit();
   return bytes;
 }
 
@@ -50,6 +51,17 @@ void MDFXTrack::place_fx_in_kit() {
   if (enable_dynamics) {
     memcpy(&MD.kit.dynamics, &dynamics, sizeof(dynamics));
   }
+}
+
+void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
+  memcpy(&reverb, &kit_extra->reverb, sizeof(reverb));
+  memcpy(&delay, &kit_extra->delay, sizeof(delay));
+  memcpy(&eq, &kit_extra->eq, sizeof(eq));
+  memcpy(&dynamics, &kit_extra->dynamics, sizeof(dynamics));
+  enable_reverb = true;
+  enable_delay = true;
+  enable_eq = true;
+  enable_dynamics = true;
 }
 
 void MDFXTrack::get_fx_from_kit() {

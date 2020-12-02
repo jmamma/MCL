@@ -35,6 +35,9 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   case MDROUTE_TRACK_TYPE:
     ::new(this) MDRouteTrack;
     break;
+  case MDLFO_TRACK_TYPE:
+    ::new(this) MDLFOTrack;
+    break;
   case MNM_TRACK_TYPE:
     ::new(this) MNMTrack;
     break;

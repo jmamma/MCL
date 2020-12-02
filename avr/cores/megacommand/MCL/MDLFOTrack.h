@@ -3,22 +3,17 @@
 #pragma once
 
 #include "DeviceTrack.h"
+#include "LFOSeqTrack.h"
 
-class RouteData {
+class MDLFOTrack : public DeviceTrack {
 public:
-  uint8_t routing[16];
-  uint16_t poly_mask;
-};
+  LFOSeqTrackData lfo_data;
+  MDLFOTrack() { active = MDLFO_TRACK_TYPE; }
 
-class MDRouteTrack : public DeviceTrack, public RouteData {
-public:
-  MDRouteTrack() { active = MDROUTE_TRACK_TYPE; }
+  void init() {}
 
-  void init() { memset(routing, 6, sizeof(routing)); }
-
-  void get_routes();
+  void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber);
-  uint16_t send_routes(bool send = true);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
@@ -29,11 +24,11 @@ public:
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
-  virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
+  virtual uint16_t get_track_size() { return sizeof(MDLFOTrack); }
   virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
 
-  virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }
+  virtual uint8_t get_model() { return MDLFO_TRACK_TYPE; }
+  virtual uint8_t get_device_type() { return MDLFO_TRACK_TYPE; }
 
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }

@@ -56,16 +56,19 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {0,"NOTE"},
   // 54: OFF
   {128, "OFF"}, {129, "LEARN"},
+  // 56: PROB
+  {1, "L1"}, {2, "L2"}, {3, "L3"}, {4, "L4"}, {5, "L5"}, {6, "L6"}, {7, "L7"}, {8, "L8"}, {9, "P1"}, {10, "P2"}, {11, "P5"}, {12, "P7"}, {13, "P9"},
 };
 
 void new_proj_handler() {
-  proj.new_project();
+  proj.new_project_prompt();
 }
 
-const menu_t<8> system_menu_layout PROGMEM = {
+const menu_t<9> system_menu_layout PROGMEM = {
     "GLOBAL",
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, NULL, 0},
+        {"CONV PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) &convert_proj_page, NULL, 0},
         {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &new_proj_handler, 0},
         {"MIDI",0, 0, 0, (uint8_t *) NULL, (Page*) &midi_config_page, NULL, 0},
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, NULL, 0},
@@ -130,11 +133,10 @@ const menu_t<3> chain_menu_layout PROGMEM = {
 };
 
 
-const menu_t<2> mclconfig_menu_layout PROGMEM = {
+const menu_t<1> mclconfig_menu_layout PROGMEM = {
     "SYSTEM",
     {
         {"DISPLAY:", 0, 2, 2, (uint8_t *) &mcl_cfg.display_mirror, (Page*) NULL, NULL, 22},
-        {"SCREENSAVER:", 0, 2, 2, (uint8_t *) &mcl_cfg.screen_saver, (Page*) NULL, NULL, 24},
         //{"DIAGNOSTIC:", 0, 0, 0, (uint8_t *) NULL, (Page*) &diag_page, NULL, {}},
     },
     (&mclsys_apply_config),
@@ -153,12 +155,12 @@ const menu_t<5> file_menu_layout PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
-MenuPage<8> system_page(&system_menu_layout, &options_param1, &options_param2);
+MenuPage<9> system_page(&system_menu_layout, &options_param1, &options_param2);
 MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
-MenuPage<2> mcl_config_page(&mclconfig_menu_layout, &config_param1,
+MenuPage<1> mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
 MenuPage<1> ram_config_page(&rampage1_menu_layout, &config_param1,
                          &config_param7);

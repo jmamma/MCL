@@ -1,5 +1,12 @@
 #include "MCL_impl.h"
 
+void GenericMidiDevice::init_grid_devices() {
+  uint8_t grid_idx = 1;
+  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), EXT_TRACK_TYPE);
+  }
+}
+
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartParent *_getMidiUart(uint8_t port) {
   if (port == UART1_PORT)
@@ -36,23 +43,19 @@ static void prepare_display() {
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
 
-static MidiDevice* port1_drivers[] = {
-  &MD
+static MidiDevice *port1_drivers[] = {&MD};
+
+static MidiDevice *port2_drivers[] = {
+    &MNM,
+    &Analog4,
+    &generic_midi_device,
 };
 
-static MidiDevice* port2_drivers[] = {
-  &MNM,
-  &Analog4,
-  &generic_midi_device,
-};
+static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
+                                                &null_midi_device};
 
-static MidiDevice* connected_midi_devices[2] = {
-  &null_midi_device,
-  &null_midi_device
-};
-
-static void probePort(uint8_t port, MidiDevice* drivers[],
-                      size_t nr_drivers, MidiDevice** active_device) {
+static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
+                      MidiDevice **active_device) {
   auto *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -62,7 +65,8 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
       pmidi->speed > 31250) {
     MidiUart.set_speed((uint32_t)31250, port);
     for (size_t i = 0; i < nr_drivers; ++i) {
-      if (drivers[i]->connected) drivers[i]->disconnect();
+      if (drivers[i]->connected)
+        drivers[i]->disconnect();
     }
 #ifndef OLED_DISPLAY
     char str[16];
@@ -95,7 +99,8 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
       LCD.puts(GUI.lines[1].data);
 #endif
 
-      for (int probe_retry = 0; probe_retry < 3 && !probe_success; ++probe_retry) {
+      for (int probe_retry = 0; probe_retry < 3 && !probe_success;
+           ++probe_retry) {
         probe_success = drivers[i]->probe();
       } // for retries
 
@@ -108,6 +113,7 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
+        drivers[i]->init_grid_devices();
         *active_device = drivers[i];
 #ifndef OLED_DISPLAY
         GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
@@ -119,7 +125,7 @@ static void probePort(uint8_t port, MidiDevice* drivers[],
   }
 }
 
-MidiDevice* MidiActivePeering::get_device(uint8_t port) {
+MidiDevice *MidiActivePeering::get_device(uint8_t port) {
   if (port == 1) {
     return connected_midi_devices[0];
   } else if (port == 2) {
@@ -129,13 +135,16 @@ MidiDevice* MidiActivePeering::get_device(uint8_t port) {
   }
 }
 
-GenericMidiDevice::GenericMidiDevice() : MidiDevice(&Midi2, "MI", DEVICE_MIDI, nullptr, false) {}
-NullMidiDevice::NullMidiDevice() : MidiDevice(nullptr, "  ", DEVICE_NULL, nullptr, false) {}
+GenericMidiDevice::GenericMidiDevice()
+    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, nullptr, false) {}
+NullMidiDevice::NullMidiDevice()
+    : MidiDevice(nullptr, "  ", DEVICE_NULL, nullptr, false) {}
 
 void MidiActivePeering::run() {
-  probePort(UART1_PORT, port1_drivers, countof(port1_drivers), &connected_midi_devices[0]);
+  probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
+            &connected_midi_devices[0]);
 #ifdef EXT_TRACKS
-  probePort(UART2_PORT, port2_drivers, countof(port2_drivers), &connected_midi_devices[1]);
+  probePort(UART2_PORT, port2_drivers, countof(port2_drivers),
+            &connected_midi_devices[1]);
 #endif
 }
-

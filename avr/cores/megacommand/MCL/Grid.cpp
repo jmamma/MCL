@@ -191,3 +191,19 @@ __attribute__((noinline)) bool Grid::clear_row(int16_t row) {
   }
   return write_row_header(&row_header, row);
 }
+
+int32_t Grid_270::get_slot_offset(int16_t column, int16_t row) {
+  int32_t offset = (int32_t)GRID_SLOT_BYTES_270 +
+                   (int32_t)((column + 1) + (row * (GRID_WIDTH_270 + 1))) *
+                       (int32_t)GRID_SLOT_BYTES_270;
+  return offset;
+}
+
+int32_t Grid_270::get_row_header_offset(int16_t row) {
+  int32_t offset =
+      (int32_t)GRID_SLOT_BYTES_270 +
+      (int32_t)(0 + (row * (GRID_WIDTH_270 + 1))) * (int32_t)GRID_SLOT_BYTES_270;
+  return offset;
+}
+
+

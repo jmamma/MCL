@@ -84,6 +84,8 @@ public:
 
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
+  virtual bool canReadKit() { return true; }
+
   virtual ElektronSysexObject* getKit() { return &kit; }
   virtual ElektronSysexObject* getPattern() { return &pattern; }
   virtual ElektronSysexObject* getGlobal() { return &global; }
