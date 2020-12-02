@@ -118,6 +118,8 @@ public:
 
       chain.row = old->chain.row;
       chain.loops = old->chain.loops;
+      if (chain.row >= GRID_LENGTH) { chain.row = GRID_LENGTH - 1; }
+
       if (chain.length == 0) { chain.length = 16; }
 
       seq_data.convert(&(old->seq_data));

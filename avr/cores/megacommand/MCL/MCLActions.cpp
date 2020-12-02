@@ -393,6 +393,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
     grid_page.active_slots[i] = grid_page.getRow();
 
+    DEBUG_DUMP("here");
+    DEBUG_DUMP(grid_page.getRow());
+
     auto *ptrack = empty_track.load_from_grid(track_idx, grid_page.getRow());
 
     if (!ptrack) {
@@ -517,6 +520,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
 
       proj.select_grid(grid_idx);
+
+      if (chains[n].row >= GRID_LENGTH) continue;
 
       auto *ptrack = empty_track->load_from_grid(track_idx, chains[n].row);
 

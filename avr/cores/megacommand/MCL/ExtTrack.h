@@ -51,6 +51,7 @@ public:
         chain.length = 16;
       }
       chain.row = old->chain.row;
+      if (chain.row >= GRID_LENGTH) { chain.row = GRID_LENGTH - 1; }
       chain.loops = old->chain.loops;
       seq_data.convert(&(old->seq_data));
       active = EXT_TRACK_TYPE;
