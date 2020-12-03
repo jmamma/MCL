@@ -136,10 +136,8 @@ bool Project::convert_project(const char *projectname) {
     mcl_gui.draw_progress("CONVERTING", y, GRID_LENGTH_270);
     src_proj.file.seekSet(src_grid.get_row_header_offset(y));
 
-    GridRowHeader row_header_src;
-    // Extract active and name from row header. (data strcuture differs after
-    // this, but ignore unique type for simplicity)
-    mcl_sd.read_data(&row_header_src, sizeof(GridRowHeader), &src_proj.file);
+    GridRowHeader_270 row_header_src;
+    mcl_sd.read_data(&row_header_src, sizeof(GridRowHeader_270), &src_proj.file);
 
     DEBUG_DUMP(row_header_src.active);
     if (!row_header_src.active)
@@ -165,6 +163,11 @@ bool Project::convert_project(const char *projectname) {
         MDTrack_270 md_track_src;
         mcl_sd.read_data(&md_track_src, sizeof(MDTrack_270), &src_proj.file);
 
+        //Fix bug whereby unpopulated slots still were not initialiased on delete/copy/paste
+        if (row_header_src.track_type[x] == EMPTY_TRACK_TYPE || row_header_src.track_type[x] == 255) {
+        md_track_src.active = EMPTY_TRACK_TYPE;
+        }
+
         MDTrack md_track;
         md_track.convert(&md_track_src);
 
@@ -189,6 +192,10 @@ bool Project::convert_project(const char *projectname) {
 
         A4Track_270 a4_track_src;
         mcl_sd.read_data(&a4_track_src, sizeof(A4Track_270), &src_proj.file);
+        //Fix bug whereby unpopulated slots still were not initialiased on delete/copy/paste
+        if (row_header_src.track_type[x] == EMPTY_TRACK_TYPE || row_header_src.track_type[x] == 255) {
+        a4_track_src.active = EMPTY_TRACK_TYPE;
+        }
 
         if (a4_track_src.active == EXT_TRACK_TYPE_270) {
           ExtTrack ext_track;

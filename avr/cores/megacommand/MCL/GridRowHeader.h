@@ -5,6 +5,14 @@
 
 #include "MCLMemory.h"
 
+class GridRowHeader_270 {
+ public:
+  bool active;
+  char name[17];
+  uint8_t track_type[22];
+  uint8_t model[22];
+};
+
 class GridRowHeader {
  public:
   bool active;
