@@ -44,8 +44,8 @@ void LoadProjectPage::on_delete(const char *entry) {
   file.close();
   char temp_entry[16];
   if (strcmp(mcl_cfg.project, entry) == 0) {
-  gfx.alert("ERROR", "CURRENT PROJECT");
-  return;
+    gfx.alert("ERROR", "CURRENT PROJECT");
+    return;
   }
   if (dir) {
     if (SD.chdir(entry)) {
