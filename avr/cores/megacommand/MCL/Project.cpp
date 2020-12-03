@@ -5,8 +5,9 @@
 
 void Project::setup() {}
 
-bool Project::new_project(char *newprj) {
+bool Project::new_project(const char *newprj) {
   // Create parent project directory
+  //
   chdir_projects();
 
   // Create project directory
@@ -17,8 +18,9 @@ bool Project::new_project(char *newprj) {
     return false;
   }
 
-  char proj_filename[PRJ_NAME_LEN] = {'\0'};
-  strcat(proj_filename, newprj);
+
+  char proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  strcpy(proj_filename, newprj);
   strcat(proj_filename, ".mcl");
 
   gfx.alert("PLEASE WAIT", "CREATING PROJECT");
@@ -31,9 +33,12 @@ bool Project::new_project(char *newprj) {
 
   // Initialise Grid Files.
   //
-  char grid_filename[PRJ_NAME_LEN] = {'\0'};
-  strcat(grid_filename, newprj);
+
+  char grid_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  strcpy(grid_filename, newprj);
   uint8_t l = strlen(grid_filename);
+
+
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grid_filename[l] = '.';
     grid_filename[l + 1] = i + '0';
@@ -47,8 +52,8 @@ bool Project::new_project(char *newprj) {
   }
   // Initialiase Project Master File.
   //
-  DEBUG_DUMP(proj_filename);
-  return proj.new_project_master_file(proj_filename);
+  bool ret = proj.new_project_master_file(proj_filename);
+  return ret;
 }
 
 bool Project::new_project_prompt() {
@@ -62,8 +67,8 @@ bool Project::new_project_prompt() {
 
   strncpy(newprj, my_string, PRJ_NAME_LEN);
 again:
-
   if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
+
     if (!new_project(newprj)) {
       goto again;
     }
@@ -96,7 +101,7 @@ bool Project::convert_project(const char *projectname) {
   // TODO
 
   Project src_proj;
-  char filename[PRJ_NAME_LEN + sizeof(".mcl")];
+  char filename[PRJ_NAME_LEN + 4];
   strcpy(filename, projectname);
   filename[strlen(projectname) - 4] = '\0'; // truncate filename
 
@@ -116,10 +121,12 @@ bool Project::convert_project(const char *projectname) {
   }
 
   if (!new_project(filename)) {
+    DEBUG_PRINTLN("new proj failed");
     goto error;
   }
 
   if (!load_project(filename)) {
+    DEBUG_PRINTLN("load failed");
     goto error;
   }
   Grid_270 src_grid;
@@ -211,6 +218,7 @@ bool Project::convert_project(const char *projectname) {
 
 error:
   src_proj.file.close();
+  load_project(mcl_cfg.project);
   DEBUG_PRINTLN("error");
   return false;
 }
@@ -225,13 +233,13 @@ bool Project::load_project(const char *projectname) {
   file.close();
 
   uint8_t l = strlen(projectname);
-
-  char proj_filename[l + 5] = {'\0'};
-  strcat(proj_filename, projectname);
+  DEBUG_PRINTLN(l);
+  char proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  strcpy(proj_filename, projectname);
   strcat(proj_filename, ".mcl");
 
-  char grid_name[l + 2] = {'\0'};
-  strcat(grid_name, projectname);
+  char grid_name[PRJ_NAME_LEN + 4] = {'\0'};
+  strcpy(grid_name, projectname);
 
   // Open project parent
   chdir_projects();
@@ -342,7 +350,7 @@ bool Project::write_header() {
   return true;
 }
 
-bool Project::new_project_master_file(char *projectname) {
+bool Project::new_project_master_file(const char *projectname) {
 
   bool ret;
 
@@ -352,9 +360,8 @@ bool Project::new_project_master_file(char *projectname) {
   file.close();
 
   DEBUG_PRINTLN(F("Attempting to extend project file"));
-  DEBUG_DUMP(projectname);
+  DEBUG_PRINTLN(projectname);
   ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
-
   if (!ret) {
     file.close();
     DEBUG_PRINTLN(F("Could not extend file"));
@@ -390,6 +397,7 @@ bool Project::new_project_master_file(char *projectname) {
   mcl_cfg.number_projects++;
   mcl_cfg.write_cfg();
 
+  DEBUG_PRINTLN(projectname);
   DEBUG_PRINTLN(F("project created"));
   // if (!ret) {
   // return false;
