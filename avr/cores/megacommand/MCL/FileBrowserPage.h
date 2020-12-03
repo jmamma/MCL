@@ -95,12 +95,14 @@ public:
   virtual void end();
   virtual void end_immediate();
 
+protected:
+  void _cd_up();
+  void _cd(const char *);
+
 private:
 
   void _handle_filemenu();
   void _calcindices(int &);
-  void _cd_up();
-  void _cd(const char *);
 
   void query_sample_slots();
   void query_filesystem();
