@@ -26,7 +26,7 @@ void LoadProjectPage::on_select(const char *entry) {
   file.close();
 
   char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
-  strcat(proj_filename, entry);
+  strcpy(proj_filename, entry);
 
 again:
   if (proj.load_project(proj_filename)) {
@@ -43,6 +43,10 @@ void LoadProjectPage::on_delete(const char *entry) {
   bool dir = file.isDirectory();
   file.close();
   char temp_entry[16];
+  if (strcmp(mcl_cfg.project, entry) == 0) {
+  gfx.alert("ERROR", "CURRENT PROJECT");
+  return;
+  }
   if (dir) {
     if (SD.chdir(entry)) {
       // SD.vwd()->rmRfStar(); //extra 276 bytes
