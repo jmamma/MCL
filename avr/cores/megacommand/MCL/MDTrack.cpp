@@ -82,8 +82,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
 
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
-  md_seq_track->speed = chain.speed;
-  md_seq_track->length = chain.length;
+  load_chain_data(seq_track);
   md_seq_track->oneshot_mask = 0;
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->update_params();

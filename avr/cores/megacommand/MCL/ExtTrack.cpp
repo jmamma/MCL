@@ -26,8 +26,7 @@ bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   ext_track->buffer_notesoff();
   memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
-  ext_track->speed = chain.speed;
-  ext_track->length = chain.length;
+  load_chain_data(seq_track);
 #endif
   return true;
 }

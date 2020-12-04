@@ -30,6 +30,7 @@ uint16_t MDFXTrack::send_fx(bool send) {
 }
 
 void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_chain_data(seq_track);
   place_fx_in_kit();
 }
 
