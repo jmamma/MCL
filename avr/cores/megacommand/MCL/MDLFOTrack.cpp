@@ -2,9 +2,6 @@
 void MDLFOTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   load_immediate(tracknumber, nullptr);
 }
-void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                 uint8_t slotnumber) {}
-
 uint16_t MDLFOTrack::calc_latency(uint8_t tracknumber) { return 0; }
 
 void MDLFOTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {

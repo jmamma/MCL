@@ -2,10 +2,6 @@
 void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   load_immediate(tracknumber, nullptr);
 }
-void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                uint8_t slotnumber) {
-}
-
 uint16_t MDRouteTrack::calc_latency(uint8_t tracknumber) {
   bool send = false;
   return send_routes(send);
