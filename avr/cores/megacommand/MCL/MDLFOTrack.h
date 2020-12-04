@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "DeviceTrack.h"
+#include "AUXTrack.h"
 #include "LFOSeqTrack.h"
 
-class MDLFOTrack : public DeviceTrack {
+class MDLFOTrack : public AUXTrack {
 public:
   LFOSeqTrackData lfo_data;
   MDLFOTrack() { active = MDLFO_TRACK_TYPE; }
@@ -15,9 +15,6 @@ public:
   void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber);
-
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);

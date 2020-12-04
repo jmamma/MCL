@@ -5,10 +5,6 @@ void MDTempoTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     send_tempo();
 }
 
-void MDTempoTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                   uint8_t slotnumber) {
-}
-
 uint16_t MDTempoTrack::calc_latency(uint8_t tracknumber) {
   bool send = false;
   return send_tempo(send);
