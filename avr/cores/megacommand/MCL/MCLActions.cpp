@@ -648,7 +648,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   uint8_t grid_idx, track_idx, track_type, dev_idx;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((grid_page.active_slots[n] < 0) || (send_machine[n] != 0))
+    if ((grid_page.active_slots[n] < 0))
       continue;
     if (next_transitions[n] == next_transition) {
 
@@ -657,14 +657,15 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       if (track_idx == 255) {
         continue;
       }
-
+      if (send_machine[n] == 0) {
       auto *ptrack = empty_track->load_from_mem(track_idx, track_type);
       if (ptrack == nullptr || !ptrack->is_active() ||
           track_type != ptrack->active) {
         continue;
       }
-      send_dev[dev_idx] = true;
       dev_latency[dev_idx].latency += ptrack->calc_latency(n);
+      }
+      send_dev[dev_idx] = true;
     }
   }
 
