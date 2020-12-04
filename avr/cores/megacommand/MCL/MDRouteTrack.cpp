@@ -16,6 +16,7 @@ uint16_t MDRouteTrack::send_routes(bool send) {
 }
 
 void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_chain_data(seq_track);
   memcpy(mcl_cfg.routing, routing, sizeof(routing));
   mcl_cfg.poly_mask = poly_mask;
   send_routes();

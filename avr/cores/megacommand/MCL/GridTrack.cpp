@@ -1,6 +1,11 @@
 #include "MCL_impl.h"
 #include "new.h"
 
+void GridTrack::load_chain_data(SeqTrack *seq_track) {
+  seq_track->speed = chain.speed;
+  seq_track->length = chain.length;
+}
+
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
