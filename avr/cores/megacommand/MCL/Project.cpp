@@ -170,7 +170,6 @@ bool Project::convert_project(const char *projectname) {
 
         MDTrack md_track;
         md_track.convert(&md_track_src);
-        md_track.chain.init(y);
         md_track.store_in_grid(x, y);
         if (md_track_src.active == MD_TRACK_TYPE_270) {
           if (first_track == 255) {
