@@ -29,7 +29,7 @@ uint16_t MDFXTrack::send_fx(bool send) {
       bytes += MD.setCompressorParam(a, dynamics[a], send);
     }
   }
-  place_fx_in_kit();
+  if (send) { place_fx_in_kit(); }
   return bytes;
 }
 

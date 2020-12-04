@@ -138,9 +138,9 @@ void GridTask::run() {
         pmem_track->transition_send(track_idx, n);
         }
         pmem_track->transition_load(track_idx, seq_track, n);
+        grid_page.active_slots[n] = slots_changed[n];
       }
 
-      grid_page.active_slots[n] = slots_changed[n];
     }
   }
   if (mcl_cfg.chain_mode != 2) {

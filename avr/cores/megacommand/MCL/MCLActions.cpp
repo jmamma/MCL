@@ -507,6 +507,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         handleIncomingMidi();
         if (n % 8 == 0) {
           if (GUI.currentPage() != &grid_write_page) {
+            proj.select_grid(old_grid);
             GUI.loop();
           }
         }
@@ -546,6 +547,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
           } else {
             send_machine[n] = 1;
           }
+          DEBUG_DUMP(send_machine[n]);
         }
       }
       ptrack->store_in_mem(track_idx);
