@@ -76,11 +76,11 @@ constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LE
 // GRID2 tracks start at 0x8D16
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_AUX_TRACKS_START + FX_TRACK_LEN * NUM_FX_TRACKS;
  
-// 256x file entries (16 bytes each)
-// Start at 0xBAF4
+// 256x file entries (24 bytes each)
+// Start at 0xBE2A
 constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_TRACKS);
 constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + FILE_ENTRY_SIZE * NUM_FILE_ENTRIES);
 
-// At 0xCAF4
+// At 0xD62A
 
 #endif /* MCLMEMORY_H__ */
