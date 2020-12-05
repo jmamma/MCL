@@ -4,13 +4,10 @@
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
   if (send) {
-  USE_LOCK();
-  SET_LOCK();
   uart->m_putc(0xF0);
   uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
   uart->sendRaw(data, len);
   uart->m_putc(0xF7);
-  CLEAR_LOCK();
   }
   return len + sysex_protocol.header_size + 2;
 }
@@ -233,8 +230,6 @@ void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
 }
 
 void ElektronDevice::setKitName(const char *name) {
-  USE_LOCK();
-  SET_LOCK();
   uart->m_putc(0xF0);
   uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
   uart->sendRaw(sysex_protocol.kitname_set_id);
@@ -242,7 +237,6 @@ void ElektronDevice::setKitName(const char *name) {
     uart->sendRaw(name[i] & 0x7F);
   }
   uart->m_putc(0xf7);
-  CLEAR_LOCK();
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
