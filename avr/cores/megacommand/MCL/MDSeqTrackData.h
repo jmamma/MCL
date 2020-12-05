@@ -120,8 +120,10 @@ public:
       steps[n].cond_id = cond;
       for (uint8_t c = 0; c < NUM_LOCKS_270; c++) {
         if (lock_slot < NUM_MD_LOCK_SLOTS) {
-          steps[n].locks |= (1 << c);
-          locks[lock_slot++] = old->locks[c][n] - 1;
+          if (old->locks[c][n] != 0) {
+            steps[n].locks |= (1 << c);
+            locks[lock_slot++] = old->locks[c][n] - 1;
+          }
         }
       }
       if (IS_BIT_SET64(old->lock_mask, n)) {
