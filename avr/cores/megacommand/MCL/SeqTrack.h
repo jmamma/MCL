@@ -79,6 +79,8 @@ public:
   uint8_t locks_slide_next_lock_val[NUM_LOCKS];
   uint8_t locks_slide_next_lock_step[NUM_LOCKS];
 
+  uint16_t cur_event_idx;
+
   SeqTrack() { active = EMPTY_TRACK_TYPE; }
 
   ALWAYS_INLINE() void reset() {
@@ -89,12 +91,14 @@ public:
     iterations_8 = 1;
     mod12_counter = 0;
     count_down = 0;
+    cur_event_idx = 0;
   }
 
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
       step_count = 0;
+      cur_event_idx = 0;
 
       iterations_5++;
       iterations_6++;
