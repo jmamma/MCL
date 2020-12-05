@@ -95,13 +95,13 @@ public:
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     sendCommandByte(cmdByte);
-    m_putc(byte1);
+    m_putc(byte1 & 0x7F);
   }
 
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
     sendCommandByte(cmdByte);
-    m_putc(byte1);
-    m_putc(byte2);
+    m_putc(byte1 & 0x7F);
+    m_putc(byte2 & 0x7F);
   }
 
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
@@ -293,27 +293,27 @@ public:
   }
 
   void sendNRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
-    sendCC(channel, 99, (parameter >> 7) & 0x7F);
-    sendCC(channel, 98, (parameter & 0x7F));
+    sendCC(channel, 99, (parameter >> 7));
+    sendCC(channel, 98, (parameter));
     sendCC(channel, 6, value);
   }
   void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
-    sendCC(channel, 99, (parameter >> 7) & 0x7F);
-    sendCC(channel, 98, (parameter & 0x7F));
-    sendCC(channel, 6, (value >> 7) & 0x7F);
-    sendCC(channel, 38, (value & 0x7F));
+    sendCC(channel, 99, (parameter >> 7));
+    sendCC(channel, 98, (parameter));
+    sendCC(channel, 6, (value >> 7));
+    sendCC(channel, 38, (value));
   }
 
   void sendRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
-    sendCC(channel, 101, (parameter >> 7) & 0x7F);
-    sendCC(channel, 100, (parameter & 0x7F));
+    sendCC(channel, 101, (parameter >> 7));
+    sendCC(channel, 100, (parameter));
     sendCC(channel, 6, value);
   }
   void sendRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
-    sendCC(channel, 101, (parameter >> 7) & 0x7F);
-    sendCC(channel, 100, (parameter & 0x7F));
-    sendCC(channel, 6, (value >> 7) & 0x7F);
-    sendCC(channel, 38, (value & 0x7F));
+    sendCC(channel, 101, (parameter >> 7));
+    sendCC(channel, 100, (parameter));
+    sendCC(channel, 6, (value >> 7));
+    sendCC(channel, 38, (value));
   }
 
   virtual void sendSysex(const uint8_t *data, uint8_t cnt) {
