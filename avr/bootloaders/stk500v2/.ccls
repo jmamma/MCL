@@ -1,0 +1,16 @@
+%c -std=gnu99
+-I./
+#  VARIENTS_DIR
+-I../../variants/mega
+#  Additionally include the AVR environment
+-IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
+-I/usr/avr/include
+#  Flags extracted from Makefile
+-funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fno-jump-tables
+-Wall -Wstrict-prototypes
+-DBOOTLOADER_ADDRESS=3E000
+-D_MEGA_BOARD_
+-DMCU=atmega2560
+-DF_CPU=16000000
+-D__AVR_ARCH__=__AVR_ATmega2560__
+-D__AVR_ATmega2560__
