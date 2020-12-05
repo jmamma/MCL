@@ -68,14 +68,12 @@ public:
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
 
-  bool mute_until_start = false;
 
   uint8_t locks_slides_recalc = 255;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
 
-  uint32_t start_step;
-  uint8_t start_step_offset;
+  uint8_t count_down;
 
   SlideData locks_slide_data[NUM_LOCKS];
   uint8_t locks_slide_next_lock_val[NUM_LOCKS];
@@ -90,7 +88,7 @@ public:
     iterations_7 = 1;
     iterations_8 = 1;
     mod12_counter = 0;
-    mute_until_start = false;
+    count_down = 0;
   }
 
   ALWAYS_INLINE() void seq();

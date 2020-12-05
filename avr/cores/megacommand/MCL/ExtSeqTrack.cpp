@@ -23,10 +23,8 @@ void ExtSeqTrack::set_length(uint8_t len) {
 }
 
 void ExtSeqTrack::re_sync() {
-  uint16_t q = length;
-  start_step = (MidiClock.div16th_counter / q) * q + q;
-  start_step_offset = 0;
-  mute_until_start = true;
+//  uint32_t q = length * 12;
+//  start_step = (MidiClock.div16th_counter / q) * q + q;
 }
 
 void ExtSeqTrack::remove_event(uint16_t index) {
@@ -531,19 +529,16 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
 }
 
 void ExtSeqTrack::seq() {
-  if (mute_until_start) {
 
-    if ((clock_diff(MidiClock.div16th_counter, start_step) == 0)) {
-      if (start_step_offset > 0) {
-        start_step_offset--;
-      } else {
-        reset();
-      }
-    }
+  if (count_down) {
+    count_down--;
+    if (count_down == 0) {
+      reset();
+   }
   }
+
   uint8_t timing_mid = get_timing_mid_inline();
-  if ((MidiUart2.uart_block == 0) && (mute_until_start == false) &&
-      (mute_state == SEQ_MUTE_OFF)) {
+  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
@@ -573,7 +568,7 @@ void ExtSeqTrack::seq() {
     }
     ev_end = ev_idx + timing_buckets.get(next_step);
 
-    // Go over NEXT
+   // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
@@ -897,7 +892,6 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
     del_note(0, end_x, note_num);
     end_x += length * timing_mid;
   }
-
   uint16_t w = end_x - start_x;
 
   del_note(start_x, w, note_num);
@@ -923,7 +917,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
-  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+ for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
     events[x].micro_timing = 0; // XXX zero or mid?
   }
