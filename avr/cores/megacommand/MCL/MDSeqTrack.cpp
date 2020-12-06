@@ -73,6 +73,7 @@ void MDSeqTrack::seq() {
 
     if (mod12_counter == timing_mid) {
       mod12_counter = 0;
+      cur_event_idx += popcount(steps[step_count].locks);
       step_count_inc();
     }
   }
@@ -293,6 +294,7 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
 }
 
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
+  uint16_t lock_idx = cur_event_idx;
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
@@ -300,14 +302,14 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
     uint8_t send_param;
     if (locks_params[c]) {
       if (lock_present) {
-        send_param = locks[cur_event_idx];
+        send_param = locks[lock_idx];
         send = true;
       } else if (trig) {
         send_param = locks_params_orig[c];
         send = true;
       }
     }
-    cur_event_idx += lock_bit;
+    lock_idx += lock_bit;
     if (send) {
       MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
     }
