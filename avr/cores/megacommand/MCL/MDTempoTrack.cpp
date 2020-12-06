@@ -1,7 +1,6 @@
 #include "MCL_impl.h"
 
 void MDTempoTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-
     send_tempo();
 }
 
