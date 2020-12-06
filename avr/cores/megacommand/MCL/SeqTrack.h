@@ -68,8 +68,8 @@ public:
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
 
-
   uint8_t locks_slides_recalc = 255;
+  uint16_t locks_slides_idx = 0;
 
   uint8_t mute_state = SEQ_MUTE_OFF;
 

@@ -62,6 +62,7 @@ void MDSeqTrack::seq() {
         send_parameter_locks(current_step, step.trig);
         if (step.slide) {
           locks_slides_recalc = current_step;
+          locks_slides_idx = cur_event_idx;
         }
         if (send_trig && step.trig) {
           send_trig_inline();
@@ -149,7 +150,7 @@ void MDSeqTrack::recalc_slides() {
     cur_mask <<= 1;
   }
 
-  auto lockidx = cur_event_idx;
+  auto lockidx = locks_slides_idx;
   find_next_locks(lockidx, step, find_mask);
 
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
