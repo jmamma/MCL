@@ -984,6 +984,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;
+    uint8_t timing_mid_2x = get_timing_mid() * 2;
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
       auto j = ev_end - 1 - i;
@@ -991,20 +992,24 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       events[j] = tmp;
 
       // need to flip note on/off
-      if (!events[i].is_lock) {
-        events[i].event_on = !events[i].event_on;
-      }
+      if (!events[i].is_lock) { events[i].event_on = !events[i].event_on; }
+      if (!events[j].is_lock) { events[j].event_on = !events[j].event_on; }
 
-      if (!events[j].is_lock) {
-        events[j].event_on = !events[j].event_on;
-      }
+      // reverse microtiming
+      events[i].micro_timing = timing_mid_2x - events[i].micro_timing;
+      events[j].micro_timing = timing_mid_2x - events[j].micro_timing;
     }
-    for (uint8_t n = 0; n < length; n++) {
+
+    // reverse velocities
+    uint8_t len_2 = length / 2;
+    for (uint8_t n = 0; n < len_2; n++) {
       uint8_t vel_tmp = velocities[n];
       uint8_t z = length - 1 - n;
       velocities[n] = velocities[z];
       velocities[z] = vel_tmp;
     }
+
+    // reverse timing buckets
     timing_buckets.reverse(length);
     break;
   }
