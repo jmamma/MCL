@@ -23,8 +23,8 @@ void ExtSeqTrack::set_length(uint8_t len) {
 }
 
 void ExtSeqTrack::re_sync() {
-//  uint32_t q = length * 12;
-//  start_step = (MidiClock.div16th_counter / q) * q + q;
+  //  uint32_t q = length * 12;
+  //  start_step = (MidiClock.div16th_counter / q) * q + q;
 }
 
 void ExtSeqTrack::remove_event(uint16_t index) {
@@ -44,6 +44,9 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   // move [index+1...event_count-1] to [index...event_count-2]
   memmove(events + index, events + index + 1,
           sizeof(ext_event_t) * (event_count - index - 1));
+  if (step < step_count) {
+    cur_event_idx--;
+  }
   --event_count;
 }
 
@@ -66,7 +69,9 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   memmove(events + idx + 1, events + idx,
           sizeof(ext_event_t) * (event_count - idx));
   events[idx] = *e;
-
+  if (step < step_count) {
+    cur_event_idx++;
+  }
   ++event_count;
   return idx;
 }
@@ -84,19 +89,16 @@ void ExtSeqTrack::recalc_slides() {
   uint8_t find_array[NUM_LOCKS] = {0};
 
   uint16_t curidx, ev_end;
-  locate(step, curidx, ev_end);
+
+  curidx = locks_slides_idx;
 
   // Because, we support two lock values of same lock_idx per step.
   // Slide -> from last lock event on start step to first lock event on
   // destination step
-  DEBUG_DUMP(timing_buckets.get(step));
   for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     auto &e = events[curidx + n];
-    DEBUG_DUMP(curidx + n);
     if (e.is_lock && e.event_on) {
       find_array[e.lock_idx] = 1;
-      DEBUG_DUMP(e.lock_idx);
-      DEBUG_DUMP(find_array[e.lock_idx]);
     }
   }
 
@@ -145,6 +147,7 @@ uint8_t ExtSeqTrack::find_next_lock(uint8_t step, uint8_t lock_idx,
   locate(next_step, curidx, end);
   uint8_t max_len = length;
   curidx = end;
+
 again:
   for (; next_step < max_len; next_step++) {
     end += timing_buckets.get(next_step);
@@ -539,16 +542,17 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
+  uint16_t ev_idx, ev_end;
+
   if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
     // < timing_mid]
 
-    uint16_t ev_idx, ev_end;
+    ev_idx = cur_event_idx;
+    ev_end = cur_event_idx + timing_buckets.get(step_count);
 
-    // Locate CURRENT
-    locate(step_count, ev_idx, ev_end);
     send_slides(locks_params, channel);
 
     // Go over CURRENT
@@ -579,7 +583,10 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   }
   mod12_counter++;
 
+  locks_slides_idx = cur_event_idx;
+
   if (mod12_counter == timing_mid) {
+    cur_event_idx += timing_buckets.get(step_count);
     mod12_counter = 0;
     step_count_inc();
   }
@@ -979,6 +986,9 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     timing_buckets.reverse(length);
     break;
   }
+
+  uint16_t ev_end;
+  locate(step_count, cur_event_idx, ev_end);
 
   oneshot_mask[0] = 0;
   oneshot_mask[1] = 0;

@@ -4,10 +4,10 @@
 #define MIDIUARTPARENT_H__
 
 #include "Callback.h"
+#include "Core.h"
+#include "MidiID.h"
 #include "Vector.h"
 #include <midi-common.h>
-#include "MidiID.h"
-#include "Core.h"
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
@@ -92,20 +92,21 @@ public:
 
   virtual uint8_t getc() { return 0; }
 
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) {
+    sendCommandByte(cmdByte);
+  }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     sendCommandByte(cmdByte);
     m_putc(byte1 & 0x7F);
   }
-
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+  ALWAYS_INLINE()
+  virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
     sendCommandByte(cmdByte);
     m_putc(byte1 & 0x7F);
     m_putc(byte2 & 0x7F);
   }
-
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
-   #ifdef MIDI_RUNNING_STATUS
+#ifdef MIDI_RUNNING_STATUS
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
         MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
       if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
@@ -123,9 +124,9 @@ public:
         m_putc(byte);
       }
     }
-   #else
+#else
     m_putc(byte);
-   #endif
+#endif
   }
 
   CallbackVector1<MidiCallback, 8, uint8_t *> noteOnCallbacks;
@@ -226,70 +227,72 @@ public:
     sendRPN(currentChannel, parameter, value);
   }
 
-  ALWAYS_INLINE() void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
-    #ifdef MIDI_VALIDATE
+  ALWAYS_INLINE()
+  void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
     uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_ON | channel), note, velocity};
-    //noteOnCallbacks.call(msg);
+    // noteOnCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  ALWAYS_INLINE() void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
-    #ifdef MIDI_VALIDATE
+  ALWAYS_INLINE()
+  void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
     uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_OFF | channel), note, velocity};
-    //noteOffCallbacks.call(msg);
+    // noteOffCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
-    #ifdef MIDI_VALIDATE
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
     uint8_t msg[3] = {(uint8_t)(MIDI_CONTROL_CHANGE | channel), cc, value};
-    //ccCallbacks.call(msg);
+    // ccCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   ALWAYS_INLINE() void sendProgramChange(uint8_t channel, uint8_t program) {
-    #ifdef MIDI_VALIDATE
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
     sendMessage((uint8_t)(MIDI_PROGRAM_CHANGE | channel), program);
   }
 
   void sendPolyKeyPressure(uint8_t channel, uint8_t note, uint8_t pressure) {
-    #ifdef MIDI_VALIDATE
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
     sendMessage((uint8_t)(MIDI_AFTER_TOUCH | channel), note, pressure);
   }
 
   void sendChannelPressure(uint8_t channel, uint8_t pressure) {
-    #ifdef MIDI_VALIDATE
+#ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
       return;
-    #endif
+#endif
 
-   sendMessage((uint8_t)(MIDI_CHANNEL_PRESSURE | channel), pressure);
+    sendMessage((uint8_t)(MIDI_CHANNEL_PRESSURE | channel), pressure);
   }
 
   void sendPitchBend(uint8_t channel, int16_t pitchbend) {
     pitchbend += 8192;
-    sendMessage((uint8_t)(MIDI_PITCH_WHEEL | channel), pitchbend & 0x7F,
-                (pitchbend >> 7) & 0x7F);
+    sendMessage((uint8_t)(MIDI_PITCH_WHEEL | channel), pitchbend,
+                (pitchbend >> 7));
   }
 
   void sendNRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
@@ -321,7 +324,9 @@ public:
     puts(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) { puts(msg, cnt); }
+  ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) {
+    puts(msg, cnt);
+  }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }

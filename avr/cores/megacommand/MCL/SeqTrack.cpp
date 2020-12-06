@@ -109,10 +109,10 @@ void SeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
       }
       switch (active) {
       case MD_TRACK_TYPE:
-        MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val);
+        MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
         break;
       default:
-        uart->sendCC(channel, locks_params[c] - 1, 0x7F & val);
+        uart->sendCC(channel, locks_params[c] - 1, val);
         break;
       }
     }
