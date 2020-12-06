@@ -427,7 +427,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   }
 
   set_track_step(step, start_utiming, cur_y, true, velocity, cond);
-  set_track_step(end_step, end_utiming, cur_y, false, 255, 0);
+  set_track_step(end_step, end_utiming, cur_y, false, velocity, 0);
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
@@ -872,7 +872,7 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
   if (add_event(step, &e) == 0xFFFF) {
     return false;
   }
-  if (velocity < 0x80) {
+  if (event_on || velocities[step] == 0) {
     velocities[step] = velocity;
   }
   return true;
@@ -950,6 +950,8 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t vel_tmp;
 
   mute_state = SEQ_MUTE_ON;
+  buffer_notesoff();
+
   uint8_t timing_mid = get_timing_mid();
 
   uint16_t ev_idx, ev_end;
@@ -983,7 +985,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;
-    uint8_t timing_mid_2x = get_timing_mid() * 2;
+    uint8_t timing_mid = get_timing_mid();
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
       auto j = ev_end - i - 1;
@@ -1007,7 +1009,6 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       velocities[n] = velocities[z];
       velocities[z] = vel_tmp;
     }
-
     // reverse timing buckets
     timing_buckets.reverse(length);
     break;
