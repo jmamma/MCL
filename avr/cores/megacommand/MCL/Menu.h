@@ -34,7 +34,7 @@ class MenuBase {
 public:
   uint8_t entry_mask[4];
 
-  MenuBase() { entry_mask[0] = entry_mask[1] = 0xFF; }
+  MenuBase() { memset(entry_mask, 0xFF, sizeof(entry_mask)); }
 
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);
