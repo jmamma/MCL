@@ -711,7 +711,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     step_buf = steps[0];
     timing_buf = timing[0];
     memmove(steps, steps + 1, ncopy);
-    memmove(timing, timing + 1, sizeof(timing) - 1);
+    memmove(timing, timing + 1, length - 1);
     steps[length - 1] = step_buf;
     timing[length - 1] = timing_buf;
     break;
@@ -727,7 +727,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     step_buf = steps[length - 1];
     timing_buf = timing[length - 1];
     memmove(steps + 1, steps, ncopy);
-    memmove(timing + 1, timing, sizeof(timing) - 1);
+    memmove(timing + 1, timing, length - 1);
     steps[0] = step_buf;
     timing[0] = timing_buf;
     break;

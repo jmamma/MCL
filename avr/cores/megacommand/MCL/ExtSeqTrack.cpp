@@ -948,7 +948,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
   uint8_t n_cur;
   ext_event_t ev_cur[16];
-
+  uint8_t vel_tmp;
   switch (dir) {
   case DIR_LEFT:
     n_cur = timing_buckets.get(0);
@@ -956,6 +956,11 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     memmove(events, events + n_cur,
             sizeof(ext_event_t) * (event_count - n_cur));
     memcpy(events + event_count - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
+
+    vel_tmp = velocities[0];
+    memmove(velocities, velocities + 1, length - 1);
+    velocities[length - 1] = vel_tmp;
+
     timing_buckets.shift_left(length);
     break;
   case DIR_RIGHT:
@@ -964,6 +969,10 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     memmove(events + n_cur, events,
             sizeof(ext_event_t) * (event_count - n_cur));
     memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
+    vel_tmp = velocities[length - 1];
+    memmove(velocities + 1, velocities, length - 1);
+    velocities[0] = vel_tmp;
+
     timing_buckets.shift_right(length);
     break;
   case DIR_REVERSE:
@@ -971,8 +980,11 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
       auto j = event_count - 1 - i;
+      uint8_t vel_tmp = velocities[i];
       events[i] = events[j];
+      velocities[i] = velocities[j];
       events[j] = tmp;
+      velocities[j] = vel_tmp;
 
       // need to flip note on/off
       if (!events[i].is_lock) {
