@@ -960,8 +960,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     n_cur = timing_buckets.get(0);
     memcpy(ev_cur, events, sizeof(ext_event_t) * n_cur);
 
-    memmove(events, events + n_cur,
-            sizeof(ext_event_t) * (ev_end - n_cur));
+    memmove(events, events + n_cur, sizeof(ext_event_t) * (ev_end - n_cur));
 
     memcpy(events + ev_end - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
 
@@ -974,8 +973,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   case DIR_RIGHT:
     n_cur = timing_buckets.get(length - 1);
     memcpy(ev_cur, events + ev_end - n_cur, sizeof(ext_event_t) * n_cur);
-    memmove(events + n_cur, events,
-            sizeof(ext_event_t) * (ev_end - n_cur));
+    memmove(events + n_cur, events, sizeof(ext_event_t) * (ev_end - n_cur));
     memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
     vel_tmp = velocities[length - 1];
     memmove(velocities + 1, velocities, length - 1);
@@ -985,6 +983,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;
+    uint8_t timing_mid_2x = get_timing_mid() * 2;
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
       auto j = ev_end - i - 1;
@@ -995,10 +994,10 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       if (!events[i].is_lock) {
         events[i].event_on = !events[i].event_on;
       }
-
       if (!events[j].is_lock) {
         events[j].event_on = !events[j].event_on;
       }
+
       events[i].micro_timing = timing_mid * 2 - events[i].micro_timing;
       events[j].micro_timing = timing_mid * 2 - events[j].micro_timing;
     }
@@ -1008,6 +1007,8 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       velocities[n] = velocities[z];
       velocities[z] = vel_tmp;
     }
+
+    // reverse timing buckets
     timing_buckets.reverse(length);
     break;
   }
