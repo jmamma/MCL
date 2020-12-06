@@ -23,8 +23,8 @@ void ExtSeqTrack::set_length(uint8_t len) {
 }
 
 void ExtSeqTrack::re_sync() {
-//  uint32_t q = length * 12;
-//  start_step = (MidiClock.div16th_counter / q) * q + q;
+  //  uint32_t q = length * 12;
+  //  start_step = (MidiClock.div16th_counter / q) * q + q;
 }
 
 void ExtSeqTrack::remove_event(uint16_t index) {
@@ -44,7 +44,9 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   // move [index+1...event_count-1] to [index...event_count-2]
   memmove(events + index, events + index + 1,
           sizeof(ext_event_t) * (event_count - index - 1));
-  if (index < cur_event_idx) { cur_event_idx--; }
+  if (step < step_count) {
+    cur_event_idx--;
+  }
   --event_count;
 }
 
@@ -67,7 +69,9 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   memmove(events + idx + 1, events + idx,
           sizeof(ext_event_t) * (event_count - idx));
   events[idx] = *e;
-  if (idx < cur_event_idx) { cur_event_idx++; }
+  if (step < step_count) {
+    cur_event_idx++;
+  }
   ++event_count;
   return idx;
 }
@@ -533,7 +537,7 @@ void ExtSeqTrack::seq() {
     count_down--;
     if (count_down == 0) {
       reset();
-   }
+    }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
@@ -544,7 +548,6 @@ void ExtSeqTrack::seq() {
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
     // < timing_mid]
-
 
     ev_idx = cur_event_idx;
     ev_end = cur_event_idx + timing_buckets.get(step_count);
@@ -569,7 +572,7 @@ void ExtSeqTrack::seq() {
     }
     ev_end = ev_idx + timing_buckets.get(next_step);
 
-   // Go over NEXT
+    // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
@@ -582,7 +585,7 @@ void ExtSeqTrack::seq() {
   locks_slides_idx = cur_event_idx;
 
   if (mod12_counter == timing_mid) {
-    cur_event_idx = ev_end;
+    cur_event_idx += timing_buckets.get(step_count);
     mod12_counter = 0;
     step_count_inc();
   }
@@ -921,7 +924,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
- for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
     events[x].micro_timing = 0; // XXX zero or mid?
   }

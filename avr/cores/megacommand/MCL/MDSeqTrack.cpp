@@ -455,6 +455,7 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
 
     memmove(locks + lock_slot + 1, locks + lock_slot,
             NUM_MD_LOCK_SLOTS - lock_slot - 1);
+    if (step < step_count) { cur_event_idx++; }
     steps[step].locks |= (1 << lockidx);
   }
   locks[lock_slot] = value;
