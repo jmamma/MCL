@@ -95,11 +95,11 @@ public:
 
 class ExtSeqTrackData {
 public:
-  NibbleArray<128> timing_buckets;
+  NibbleArray<NUM_EXT_STEPS> timing_buckets;
   ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_LOCKS];
   uint16_t event_count;
-  uint8_t velocities[128];
+  uint8_t velocities[NUM_EXT_STEPS];
   uint8_t locks_params_orig[NUM_LOCKS];
   uint8_t channel;
   void set_channel(uint8_t channel_) { channel = channel_; }
