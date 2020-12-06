@@ -950,6 +950,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t vel_tmp;
 
   mute_state = SEQ_MUTE_ON;
+  uint8_t timing_mid = get_timing_mid();
 
   uint16_t ev_idx, ev_end;
   locate(length, ev_idx, ev_end);
@@ -986,7 +987,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     uint16_t end = ev_end / 2;
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
-      auto j = ev_end - 1 - i;
+      auto j = ev_end - i - 1;
       events[i] = events[j];
       events[j] = tmp;
 
@@ -998,8 +999,10 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       if (!events[j].is_lock) {
         events[j].event_on = !events[j].event_on;
       }
+      events[i].micro_timing = timing_mid * 2 - events[i].micro_timing;
+      events[j].micro_timing = timing_mid * 2 - events[j].micro_timing;
     }
-    for (uint8_t n = 0; n < length; n++) {
+    for (uint8_t n = 0; n < length / 2; n++) {
       uint8_t vel_tmp = velocities[n];
       uint8_t z = length - 1 - n;
       velocities[n] = velocities[z];
