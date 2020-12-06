@@ -25,6 +25,7 @@ public:
                      bool online = false);
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void send_data();
 
   virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
   virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
@@ -33,5 +34,5 @@ public:
   virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }
 
   virtual void *get_sound_data_ptr() { return &routing; }
-  virtual size_t get_sound_data_size() { return 16; }
+  virtual size_t get_sound_data_size() { return sizeof(routing); }
 };
