@@ -632,6 +632,7 @@ void MDSeqTrack::clear_locks(bool reset_params) {
       }
     }
   }
+  cur_event_idx = 0;
 }
 
 void MDSeqTrack::clear_track(bool locks, bool reset_params) {
