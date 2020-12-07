@@ -610,7 +610,7 @@ void RAMPage::display() {
   char val[4];
 
   itoa(encoders[1]->cur, val, 10);
-  mcl_gui.draw_knob(1, "MOD", val);
+  mcl_gui.draw_knob(1, "DICE", val);
 
   itoa(1 << encoders[2]->cur, val, 10);
   mcl_gui.draw_knob(2, "SLI", val);
@@ -799,6 +799,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    oled_display.textbox("DICE", "");
     RAMPage::slice_modes[page_id] = 1;
     if (mcl_cfg.ram_page_mode == MONO) {
       slice(14 + page_id, 255);
@@ -810,6 +811,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     RAMPage::slice_modes[page_id] = 0;
+    oled_display.textbox("SLICE", "");
     if (mcl_cfg.ram_page_mode == MONO) {
       if (!slice(14 + page_id, 255)) {
         setup_ram_play_mono(14 + page_id);
