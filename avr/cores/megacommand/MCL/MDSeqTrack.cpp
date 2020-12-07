@@ -64,7 +64,7 @@ void MDSeqTrack::seq() {
       auto &step = steps[current_step];
       bool send_trig = trig_conditional(step.cond_id);
       if (send_trig || !step.cond_plock) {
-        send_parameter_locks(lock_idx, current_step, step.trig);
+        send_parameter_locks_inline(current_step, step.trig, lock_idx);
         if (step.slide) {
           locks_slides_recalc = current_step;
           locks_slides_idx = lock_idx;
@@ -299,7 +299,15 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
   }
 }
 
-void MDSeqTrack::send_parameter_locks(uint16_t lock_idx, uint8_t step, bool trig) {
+void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx) {
+  uint16_t idx, end;
+  if (lock_idx == 0xFFFF) { idx = get_lockidx(step); }
+  else { idx = lock_idx; }
+  send_parameter_locks_inline(step, trig, idx);
+}
+
+
+void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx) {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
@@ -307,6 +315,9 @@ void MDSeqTrack::send_parameter_locks(uint16_t lock_idx, uint8_t step, bool trig
     uint8_t send_param;
     if (locks_params[c]) {
       if (lock_present) {
+        DEBUG_DUMP("lock present");
+        DEBUG_DUMP(lock_idx);
+        DEBUG_DUMP(locks[lock_idx]);
         send_param = locks[lock_idx];
         send = true;
       } else if (trig) {

@@ -40,7 +40,8 @@ public:
   void send_trig();
   ALWAYS_INLINE() void send_trig_inline();
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
-  ALWAYS_INLINE() void send_parameter_locks(uint16_t lock_idx, uint8_t step, bool trig);
+  void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
+  ALWAYS_INLINE() void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
 
   ALWAYS_INLINE() void recalc_slides();
   ALWAYS_INLINE()
