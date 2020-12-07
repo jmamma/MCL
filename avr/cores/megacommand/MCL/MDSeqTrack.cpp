@@ -473,7 +473,7 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
     if (step < step_count) { cur_event_idx++; }
     steps[step].locks |= (1 << lockidx);
   }
-  locks[lock_slot] = value;
+  locks[lock_slot] = min(127,value);
   steps[step].locks_enabled = true;
   return true;
 }
