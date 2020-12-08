@@ -41,6 +41,16 @@ public:
   uint8_t transition_level[NUM_SLOTS];
 };
 
+class DeviceSlotInfo {
+public:
+  uint8_t grid_idx;
+  uint8_t track_idx;
+  uint8_t track_type;
+  uint8_t dev_idx;
+  uint8_t group_type;
+  SeqTrack* seq_track;
+};
+
 class MCLActions : public ChainModeData {
 public:
   uint8_t do_kit_reload;
@@ -61,7 +71,7 @@ public:
   uint8_t get_grid_idx(uint8_t slot_number);
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id, uint8_t *dev_idx);
 
-  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx, uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx, uint8_t *group_type = nullptr);
+  bool get_dev_slot_info(uint8_t slot_number, DeviceSlotInfo* pinfo);
 
   void send_globals();
   void switch_global(uint8_t global_page);

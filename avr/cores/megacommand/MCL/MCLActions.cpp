@@ -85,20 +85,18 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   return nullptr;
 }
 
-SeqTrack *MCLActions::get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx,
-                                        uint8_t *track_idx, uint8_t *track_type,
-                                        uint8_t *dev_idx, uint8_t *group_type) {
-  GridDeviceTrack *p = get_grid_dev_track(slot_number, track_idx, dev_idx);
-  *grid_idx = get_grid_idx(slot_number);
+bool MCLActions::get_dev_slot_info(uint8_t slot_number, DeviceSlotInfo* pinfo) {
+  GridDeviceTrack *p = get_grid_dev_track(slot_number, &pinfo->track_idx, &pinfo->dev_idx);
+  pinfo->grid_idx = get_grid_idx(slot_number);
   if (p) {
-    *track_type = p->track_type;
-    if (group_type != nullptr) {
-      *group_type = p->group_type;
-    }
-    return p->seq_track;
+    pinfo->track_type = p->track_type;
+    pinfo->group_type = p->group_type;
+    pinfo->seq_track = p->seq_track;
+    return true;
   }
-  *track_type = 255;
-  return nullptr;
+  pinfo->track_type = 255;
+  pinfo->seq_track = nullptr;
+  return false;
 }
 
 void MCLActions::store_tracks_in_mem(int column, int row,
@@ -125,16 +123,11 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   };
 
   uint8_t i = 0;
-
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  DeviceSlotInfo dev_info;
 
   for (i = 0; i < NUM_SLOTS; i++) {
-    if (slot_select_array[i] > 0) {
-      SeqTrack *seq_track =
-          get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
-      if (track_type != 255) {
-        save_dev_tracks[dev_idx] = true;
-      }
+    if (slot_select_array[i] > 0 && get_dev_slot_info(i, &dev_info)) {
+      save_dev_tracks[dev_info.dev_idx] = true;
     }
   }
 
@@ -189,32 +182,30 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   for (i = 0; i < NUM_SLOTS; i++) {
     if (slot_select_array[i] > 0) {
 
-      SeqTrack *seq_track =
-          get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
-
-      online = (elektron_devs[dev_idx] != nullptr);
+      bool dev_slot_ok = get_dev_slot_info(i, &dev_info);
+      online = (elektron_devs[dev_info.dev_idx] != nullptr);
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
-      if (!save_dev_tracks[dev_idx]) {
+      if (!save_dev_tracks[dev_info.dev_idx]) {
         continue;
       }
 
-      if (track_type != 255) {
-        proj.select_grid(grid_idx);
+      if (dev_slot_ok) {
+        proj.select_grid(dev_info.grid_idx);
 
         // Preserve existing chain settings before save.
-        if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-          grid_track.load_from_grid(track_idx, row);
+        if (row_headers[dev_info.grid_idx].track_type[dev_info.track_idx] != EMPTY_TRACK_TYPE) {
+          grid_track.load_from_grid(dev_info.track_idx, row);
           memcpy(&empty_track.chain, &grid_track.chain,sizeof(GridChain));
         } else {
           empty_track.chain.init(row);
         }
         auto pdevice_track =
-            ((DeviceTrack *)&empty_track)->init_track_type(track_type);
-        pdevice_track->store_in_grid(track_idx, grid_page.getRow(), seq_track,
+            ((DeviceTrack *)&empty_track)->init_track_type(dev_info.track_type);
+        pdevice_track->store_in_grid(dev_info.track_idx, grid_page.getRow(), dev_info.seq_track,
                                      merge, online);
-        row_headers[grid_idx].update_model(
-            track_idx, pdevice_track->get_model(), track_type);
+        row_headers[dev_info.grid_idx].update_model(
+            dev_info.track_idx, pdevice_track->get_model(), dev_info.track_type);
       }
     }
   }
@@ -286,27 +277,26 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
   if (q < 4) {
     q = 4;
   }
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  DeviceSlotInfo dev_info;
 
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
 
-    SeqTrack *seq_track =
-        get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
-    proj.select_grid(grid_idx);
-    if ((slot_select_array[n] == 0) || (track_type == 255)) {
+    if ((slot_select_array[n] == 0) || !get_dev_slot_info(n, &dev_info)) {
       // Ignore slots that are not device supported.
       slot_select_array[n] = 0;
       continue;
     }
-    auto device_track = empty_track.load_from_grid(track_idx, row);
-    if (device_track == nullptr || device_track->active != track_type) {
+
+    proj.select_grid(dev_info.grid_idx);
+    auto device_track = empty_track.load_from_grid(dev_info.track_idx, row);
+    if (device_track == nullptr || device_track->active != dev_info.track_type) {
       empty_track.clear();
-      device_track = device_track->init_track_type(track_type);
+      device_track = device_track->init_track_type(dev_info.track_type);
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
     }
-    device_track->store_in_mem(track_idx);
+    device_track->store_in_mem(dev_info.track_idx);
   }
 
   uint16_t next_step;
@@ -372,31 +362,25 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   uint8_t old_grid = proj.get_grid();
 
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  DeviceSlotInfo dev_info;
 
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
-    SeqTrack *seq_track =
-        get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
-
-    if (seq_track) {
-      mute_states[i] = seq_track->mute_state;
-      seq_track->mute_state = SEQ_MUTE_ON;
-    }
-    if ((select_array[i] == 0) || (track_type == 255)) {
+    if (!select_array[i] || !get_dev_slot_info(i, &dev_info)) {
       // Ignore slots that are not device supported.
-      select_array[i] = 0;
       continue;
     }
 
-    proj.select_grid(grid_idx);
+    mute_states[i] = dev_info.seq_track->mute_state;
+    dev_info.seq_track->mute_state = SEQ_MUTE_ON;
 
+    proj.select_grid(dev_info.grid_idx);
     grid_page.active_slots[i] = grid_page.getRow();
 
     DEBUG_DUMP("here");
     DEBUG_DUMP(grid_page.getRow());
 
-    auto *ptrack = empty_track.load_from_grid(track_idx, grid_page.getRow());
+    auto *ptrack = empty_track.load_from_grid(dev_info.track_idx, grid_page.getRow());
 
     if (!ptrack) {
       continue;
@@ -404,12 +388,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
     ptrack->chain.store_in_mem(i, &(chains[0]));
 
-    if (ptrack->active != track_type) {
-      ptrack->init_track_type(track_type);
-      ptrack->transition_clear(track_idx, seq_track);
+    if (ptrack->active != dev_info.track_type) {
+      ptrack->init_track_type(dev_info.track_type);
+      ptrack->transition_clear(dev_info.track_idx, dev_info.seq_track);
     } else {
-      ptrack->load_immediate(track_idx, seq_track);
-      if (track_type != 255) {
+      ptrack->load_immediate(dev_info.track_idx, dev_info.seq_track);
+      if (dev_info.track_type != 255) {
         send_masks[i] = 1;
       }
     }
@@ -450,11 +434,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   GUI.addTask(&grid_task);
 
   for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-    SeqTrack *seq_track =
-        get_dev_slot_info(i, &grid_idx, &track_idx, &track_type, &dev_idx);
-
-    if (seq_track) {
-      seq_track->mute_state = mute_states[i];
+    if (get_dev_slot_info(i, &dev_info)) {
+      dev_info.seq_track->mute_state = mute_states[i];
     }
   }
 
@@ -472,13 +453,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   // in_sysex = 0;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
-      SeqTrack *seq_track =
-          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+    if (select_array[n] && grid_page.active_slots[n] >= 0 && get_dev_slot_info(n, &dev_info)) {
       transition_level[n] = 0;
       next_transitions[n] =
           MidiClock.div16th_counter -
-          (seq_track->step_count * seq_track->get_speed_multiplier());
+          (dev_info.seq_track->step_count * dev_info.seq_track->get_speed_multiplier());
       calc_next_slot_transition(n);
     }
   }
@@ -497,8 +476,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   };
 
   uint8_t old_grid = proj.get_grid();
-
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  DeviceSlotInfo dev_info;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (slot_select_array[n] > 0) {
@@ -513,26 +491,23 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         }
       }
 
-      SeqTrack *seq_track =
-          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
-
-      if (track_idx == 255) {
+      if (!get_dev_slot_info(n, &dev_info)) {
         continue;
       }
 
-      proj.select_grid(grid_idx);
+      proj.select_grid(dev_info.grid_idx);
 
       if (chains[n].row >= GRID_LENGTH) continue;
 
-      auto *ptrack = empty_track->load_from_grid(track_idx, chains[n].row);
+      auto *ptrack = empty_track->load_from_grid(dev_info.track_idx, chains[n].row);
 
-      if (ptrack == nullptr || ptrack->active != track_type) {
+      if (ptrack == nullptr || ptrack->active != dev_info.track_type) {
         // EMPTY_TRACK_TYPE
         empty_track->clear();
-        empty_track->init_track_type(track_type);
+        empty_track->init_track_type(dev_info.track_type);
         send_machine[n] = 1;
       } else {
-        auto *pmem_track = empty_track2->load_from_mem(track_idx, track_type);
+        auto *pmem_track = empty_track2->load_from_mem(dev_info.track_idx, dev_info.track_type);
         if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
           // track type matched.
           auto *psound = ptrack->get_sound_data_ptr();
@@ -550,7 +525,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
           DEBUG_DUMP(send_machine[n]);
         }
       }
-      ptrack->store_in_mem(track_idx);
+      ptrack->store_in_mem(dev_info.track_idx);
     }
   }
 
@@ -567,16 +542,16 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
     return;
   }
 
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
-
-  SeqTrack *seq_track =
-      get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
+  DeviceSlotInfo dev_info;
+  if (!get_dev_slot_info(n, &dev_info)) {
+    return;
+  }
 
   uint16_t next_transitions_old = next_transitions[n];
   float len;
 
   float l = chains[n].length;
-  len = (float)chains[n].loops * l * (float)seq_track->get_speed_multiplier();
+  len = (float)chains[n].loops * l * (float)dev_info.seq_track->get_speed_multiplier();
   while (len < 4) {
     if (len < 1) {
       len = 4;
@@ -647,27 +622,25 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
   }
   bool send_dev[NUM_DEVS] = {0};
 
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  DeviceSlotInfo dev_info;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] < 0))
       continue;
     if (next_transitions[n] == next_transition) {
 
-      SeqTrack *seq_track =
-          get_dev_slot_info(n, &grid_idx, &track_idx, &track_type, &dev_idx);
-      if (track_idx == 255) {
+      if (!get_dev_slot_info(n, &dev_info)) {
         continue;
       }
       if (send_machine[n] == 0) {
-      auto *ptrack = empty_track->load_from_mem(track_idx, track_type);
-      if (ptrack == nullptr || !ptrack->is_active() ||
-          track_type != ptrack->active) {
-        continue;
+        auto *ptrack = empty_track->load_from_mem(dev_info.track_idx, dev_info.track_type);
+        if (ptrack == nullptr || !ptrack->is_active() ||
+            dev_info.track_type != ptrack->active) {
+          continue;
+        }
+      dev_latency[dev_info.dev_idx].latency += ptrack->calc_latency(n);
       }
-      dev_latency[dev_idx].latency += ptrack->calc_latency(n);
-      }
-      send_dev[dev_idx] = true;
+      send_dev[dev_info.dev_idx] = true;
     }
   }
 
