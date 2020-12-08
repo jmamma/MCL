@@ -24,6 +24,7 @@ class MDFXTrack : public AUXTrack, public MDFXData {
 public:
   MDFXTrack() {
     active = MDFX_TRACK_TYPE;
+    static_assert(sizeof(MDFXTrack) <= AUX_TRACK_LEN);
   }
 
   void init() {

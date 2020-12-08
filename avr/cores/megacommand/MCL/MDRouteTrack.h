@@ -12,7 +12,10 @@ public:
 
 class MDRouteTrack : public AUXTrack, public RouteData {
 public:
-  MDRouteTrack() { active = MDROUTE_TRACK_TYPE; }
+  MDRouteTrack() { 
+    active = MDROUTE_TRACK_TYPE; 
+    static_assert(sizeof(MDRouteTrack) <= AUX_TRACK_LEN);
+  }
 
   void init() { memset(routing, 6, sizeof(routing)); }
 

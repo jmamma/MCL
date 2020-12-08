@@ -57,8 +57,8 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   return true;
 }
 
-// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit
-// x86 sizes Do compile with avr-gcc and observe the error messages
+// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
+// Do compile with avr-gcc and observe the error messages
 
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
@@ -74,7 +74,7 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 //__SIZE_PROBE<sizeof(ExtTrack)> szext;
 //__SIZE_PROBE<sizeof(MDTrack)> szmd;
 //__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmd_2;
-//__SIZE_PROBE<FX_TRACK_LEN> szfx;
+//__SIZE_PROBE<AUX_TRACK_LEN> szfx;
 //__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;
 
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;

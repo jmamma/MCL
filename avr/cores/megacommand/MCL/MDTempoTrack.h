@@ -11,7 +11,10 @@ public:
 
 class MDTempoTrack : public AUXTrack, public TempoData {
 public:
-  MDTempoTrack() { active = MDTEMPO_TRACK_TYPE; }
+  MDTempoTrack() { 
+    active = MDTEMPO_TRACK_TYPE; 
+    static_assert(sizeof(MDTempoTrack) <= AUX_TRACK_LEN);
+  }
 
   void init() { }
 

@@ -8,7 +8,10 @@
 class MDLFOTrack : public AUXTrack {
 public:
   LFOSeqTrackData lfo_data;
-  MDLFOTrack() { active = MDLFO_TRACK_TYPE; }
+  MDLFOTrack() { 
+    active = MDLFO_TRACK_TYPE; 
+    static_assert(sizeof(MDLFOTrack) <= AUX_TRACK_LEN);
+  }
 
   void init() {}
 
