@@ -277,7 +277,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     uint8_t grid_idx = get_grid_idx(n);
     proj.select_grid(grid_idx);
 
-    if ((slot_select_array[n] == 0) || (gdt != nullptr)) {
+    if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
       // Ignore slots that are not device supported.
       slot_select_array[n] = 0;
       continue;
