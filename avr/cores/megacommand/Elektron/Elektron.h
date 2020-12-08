@@ -166,10 +166,10 @@ public:
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
-    if (mem_slot == 255) {
+    if (mem_slot_idx == 255) {
     tracks[track_idx].mem_slot_idx = track_idx;
     }
-    tracks[track_idx].mem_slot = mem_slot;
+    tracks[track_idx].mem_slot_idx = mem_slot_idx;
     tracks[track_idx].group_type = group_type;
     num_tracks++;
   }
@@ -199,9 +199,9 @@ public:
     memset(grid_devices,0, sizeof(GridDevice) * NUM_GRIDS);
   }
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
     auto *devp = &grid_devices[grid_idx];
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type);
+    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type, mem_slot_idx);
   }
 
   ElektronDevice* asElektronDevice() {
