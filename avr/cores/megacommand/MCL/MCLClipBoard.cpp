@@ -227,7 +227,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
   GridRowHeader header;
   GridRowHeader header_copy;
 
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  uint8_t track_idx, dev_idx;
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
     proj.select_grid(grid);
     proj.read_grid_row_header(&header, y + row);
@@ -249,10 +249,10 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
 
       DeviceTrack *ptrack = ((DeviceTrack*) &empty_track)->init_track_type(empty_track.active);
       DEBUG_DUMP(ptrack->active);
-      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
-          slot_n, &grid_idx, &track_idx, &track_type, &dev_idx);
 
-      if (track_type != ptrack->active)
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
+
+      if (gdt != nullptr && gdt->track_type != ptrack->active)
         //Don't allow paste in to unsupported slots
         continue;
 
