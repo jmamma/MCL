@@ -141,6 +141,7 @@ public:
   uint8_t slot_number;
   uint8_t track_type;
   uint8_t group_type;
+  uint8_t mem_slot_idx;
   SeqTrack *seq_track;
   uint8_t get_slot_number() { return slot_number; }
   SeqTrack *get_seq_track() { return seq_track; }
@@ -161,10 +162,14 @@ public:
 
   void init() { num_tracks = 0; }
 
-  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
+  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
+    if (mem_slot == 255) {
+    tracks[track_idx].mem_slot_idx = track_idx;
+    }
+    tracks[track_idx].mem_slot = mem_slot;
     tracks[track_idx].group_type = group_type;
     num_tracks++;
   }
