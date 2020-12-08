@@ -2,7 +2,7 @@
 
 #include "LFO.h"
 #include "math.h"
-#define DIV_1_127 (1.00 / MAX)
+#define DIV_1_127 (1.00 / 127.0)
 // Exponential Rise Formua:
 // y = M * (1-e^(-x/a));
 // M = Maximum
@@ -24,8 +24,6 @@
 // For M = 127. a = 26
 //
 //
-
-#define MAX 127
 
 uint8_t ExpLFO::get_sample(uint8_t sample_number) {
   uint8_t y = (uint8_t)((float)amplitude *

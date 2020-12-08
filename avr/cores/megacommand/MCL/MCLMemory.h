@@ -43,10 +43,12 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
-// MDTrack 534
-// A4Track 1965
+// GridTrack 7
 // DeviceTrack 7
-// EmptyTrack 1957
+// MDTrack 534
+// ExtTrack 1754
+// A4Track 2094
+// EmptyTrack 2094
 //
 // MDLFOTrack 226
 // MDRouteTrack 25
@@ -59,7 +61,7 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 constexpr size_t DEVICE_TRACK_LEN = 7;
 constexpr size_t GRID1_TRACK_LEN = 534;
 constexpr size_t GRID2_TRACK_LEN = 2094;
-constexpr size_t AUX_TRACK_LEN = 43;
+constexpr size_t AUX_TRACK_LEN = 226;
 
 //Use these to produce compiler errors that probes the sizes!
 template<uint32_t X> struct __SIZE_PROBE;
