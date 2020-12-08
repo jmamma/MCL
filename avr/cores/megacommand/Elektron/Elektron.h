@@ -166,10 +166,10 @@ public:
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
+    tracks[track_idx].mem_slot_idx = mem_slot_idx;
     if (mem_slot_idx == 255) {
     tracks[track_idx].mem_slot_idx = track_idx;
     }
-    tracks[track_idx].mem_slot_idx = mem_slot_idx;
     tracks[track_idx].group_type = group_type;
     num_tracks++;
   }
