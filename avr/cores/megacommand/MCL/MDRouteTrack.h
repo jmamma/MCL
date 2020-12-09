@@ -12,7 +12,10 @@ public:
 
 class MDRouteTrack : public AUXTrack, public RouteData {
 public:
-  MDRouteTrack() { active = MDROUTE_TRACK_TYPE; }
+  MDRouteTrack() {
+    active = MDROUTE_TRACK_TYPE;
+    static_assert(sizeof(MDRouteTrack) <= MDROUTE_TRACK_LEN);
+  }
 
   void init() { memset(routing, 6, sizeof(routing)); }
 
@@ -28,7 +31,7 @@ public:
   void send_data();
 
   virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
-  virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_MDROUTE_TRACK_START; }
 
   virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }

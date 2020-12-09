@@ -52,7 +52,7 @@ void GridTask::run() {
 
   GUI.removeTask(&grid_task);
 
-  uint8_t grid_idx, track_idx, track_type, dev_idx;
+  uint8_t track_idx, dev_idx;
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
@@ -70,10 +70,11 @@ void GridTask::run() {
     if ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
         (mcl_cfg.chain_mode == 2)) {
 
-      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
-          n, &grid_idx, &track_idx, &track_type, &dev_idx);
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
 
-      auto *pmem_track = empty_track.load_from_mem(track_idx, track_type);
+      if (gdt == nullptr) { continue; }
+
+      auto *pmem_track = empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
       if (pmem_track != nullptr) {
         slots_changed[n] = mcl_actions.chains[n].row;
         track_select_array[n] = 1;
@@ -102,9 +103,8 @@ void GridTask::run() {
       if (slots_changed[n] < 0)
         continue;
 
-      SeqTrack *seq_track = mcl_actions.get_dev_slot_info(
-          n, &grid_idx, &track_idx, &track_type, &dev_idx);
-      if ((track_idx == 255) || (dev_idx != c))
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+      if ((gdt == nullptr) || (dev_idx != c))
         continue;
 
       // Wait on first track of each device;
@@ -131,13 +131,14 @@ void GridTask::run() {
       }
       wait = false;
 
-      auto *pmem_track = empty_track.load_from_mem(track_idx, track_type);
-
+      auto *pmem_track = empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+      DEBUG_PRINTLN("gridtask");
+      DEBUG_DUMP(pmem_track->active);
       if (pmem_track != nullptr) {
         if (mcl_actions.send_machine[n] == 0) {
         pmem_track->transition_send(track_idx, n);
         }
-        pmem_track->transition_load(track_idx, seq_track, n);
+        pmem_track->transition_load(track_idx, gdt->seq_track, n);
         grid_page.active_slots[n] = slots_changed[n];
       }
 

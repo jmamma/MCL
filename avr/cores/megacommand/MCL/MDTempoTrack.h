@@ -11,9 +11,12 @@ public:
 
 class MDTempoTrack : public AUXTrack, public TempoData {
 public:
-  MDTempoTrack() { active = MDTEMPO_TRACK_TYPE; }
+  MDTempoTrack() {
+    active = MDTEMPO_TRACK_TYPE;
+    static_assert(sizeof(MDTempoTrack) <= MDTEMPO_TRACK_LEN);
+  }
 
-  void init() { }
+  void init() {}
 
   void get_tempo();
   uint16_t calc_latency(uint8_t tracknumber);
@@ -26,7 +29,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDTempoTrack); }
-  virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_MDTEMPO_TRACK_START; }
 
   virtual uint8_t get_model() { return MDTEMPO_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDTEMPO_TRACK_TYPE; }

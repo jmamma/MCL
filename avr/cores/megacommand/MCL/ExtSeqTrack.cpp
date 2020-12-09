@@ -427,7 +427,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   }
 
   set_track_step(step, start_utiming, cur_y, true, velocity, cond);
-  set_track_step(end_step, end_utiming, cur_y, false, 255, 0);
+  set_track_step(end_step, end_utiming, cur_y, false, velocity, 0);
 }
 
 bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
@@ -873,7 +873,7 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
   if (add_event(step, &e) == 0xFFFF) {
     return false;
   }
-  if (velocity < 0x80) {
+  if (event_on || velocities[step] == 0) {
     velocities[step] = velocity;
   }
   return true;
@@ -945,17 +945,26 @@ void ExtSeqTrack::clear_track() {
 }
 
 void ExtSeqTrack::modify_track(uint8_t dir) {
-
+  uint8_t old_mute_state = mute_state;
   uint8_t n_cur;
   ext_event_t ev_cur[16];
   uint8_t vel_tmp;
+  mute_state = SEQ_MUTE_ON;
+  buffer_notesoff();
+
+  uint8_t timing_mid = get_timing_mid();
+
+  uint16_t ev_idx, ev_end;
+  locate(length, ev_idx, ev_end);
+
   switch (dir) {
   case DIR_LEFT:
     n_cur = timing_buckets.get(0);
-    memcpy(ev_cur, events + n_cur, sizeof(ext_event_t) * n_cur);
-    memmove(events, events + n_cur,
-            sizeof(ext_event_t) * (event_count - n_cur));
-    memcpy(events + event_count - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
+    memcpy(ev_cur, events, sizeof(ext_event_t) * n_cur);
+
+    memmove(events, events + n_cur, sizeof(ext_event_t) * (ev_end - n_cur));
+
+    memcpy(events + ev_end - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
 
     vel_tmp = velocities[0];
     memmove(velocities, velocities + 1, length - 1);
@@ -965,9 +974,8 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     break;
   case DIR_RIGHT:
     n_cur = timing_buckets.get(length - 1);
-    memcpy(ev_cur, events + event_count - n_cur, sizeof(ext_event_t) * n_cur);
-    memmove(events + n_cur, events,
-            sizeof(ext_event_t) * (event_count - n_cur));
+    memcpy(ev_cur, events + ev_end - n_cur, sizeof(ext_event_t) * n_cur);
+    memmove(events + n_cur, events, sizeof(ext_event_t) * (ev_end - n_cur));
     memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
     vel_tmp = velocities[length - 1];
     memmove(velocities + 1, velocities, length - 1);
@@ -976,32 +984,39 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     timing_buckets.shift_right(length);
     break;
   case DIR_REVERSE:
-    uint16_t end = event_count / 2;
+    uint16_t end = ev_end / 2;
+    uint8_t timing_mid = get_timing_mid();
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
-      auto j = event_count - 1 - i;
-      uint8_t vel_tmp = velocities[i];
+      auto j = ev_end - i - 1;
       events[i] = events[j];
-      velocities[i] = velocities[j];
       events[j] = tmp;
-      velocities[j] = vel_tmp;
 
       // need to flip note on/off
       if (!events[i].is_lock) {
         events[i].event_on = !events[i].event_on;
       }
-
       if (!events[j].is_lock) {
         events[j].event_on = !events[j].event_on;
       }
+
+      events[i].micro_timing = timing_mid * 2 - events[i].micro_timing;
+      events[j].micro_timing = timing_mid * 2 - events[j].micro_timing;
     }
+    for (uint8_t n = 0; n < length / 2; n++) {
+      uint8_t vel_tmp = velocities[n];
+      uint8_t z = length - 1 - n;
+      velocities[n] = velocities[z];
+      velocities[z] = vel_tmp;
+    }
+    // reverse timing buckets
     timing_buckets.reverse(length);
     break;
   }
 
-  uint16_t ev_end;
   locate(step_count, cur_event_idx, ev_end);
 
   oneshot_mask[0] = 0;
   oneshot_mask[1] = 0;
+  mute_state = old_mute_state;
 }

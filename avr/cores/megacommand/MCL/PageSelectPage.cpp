@@ -31,8 +31,8 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"LFO", &lfo_page, 3, 0, 24, 24, (uint8_t *)icon_lfo},
 
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, (uint8_t *)icon_step},
-    {"PIANO ROLL", &seq_extstep_page, 5, 1, 24, 25, (uint8_t *)icon_pianoroll},
-    {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
+    {"PIANO ROLL", &seq_extstep_page, 6, 1, 24, 25, (uint8_t *)icon_pianoroll},
+    {"LOCKS", &seq_param_page[0], 5, 1, 24, 19, (uint8_t *)icon_para},
     {"CHROMATIC", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
 #ifdef SOUND_PAGE
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, (uint8_t *)icon_sound},
