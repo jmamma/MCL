@@ -511,7 +511,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         empty_track->init_track_type(gdt->track_type);
         send_machine[n] = 1;
       } else {
-        auto *pmem_track = empty_track2->load_from_mem(track_idx, gdt->track_type);
+        auto *pmem_track = empty_track2->load_from_mem(gdt->mem_slot_idx, gdt->track_type);
         if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
           // track type matched.
           auto *psound = ptrack->get_sound_data_ptr();
