@@ -24,7 +24,7 @@ class MDFXTrack : public AUXTrack, public MDFXData {
 public:
   MDFXTrack() {
     active = MDFX_TRACK_TYPE;
-    static_assert(sizeof(MDFXTrack) <= AUX_TRACK_LEN);
+    static_assert(sizeof(MDFXTrack) <= MDFX_TRACK_LEN);
   }
 
   void init() {
@@ -48,7 +48,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
-  virtual uint32_t get_region() { return BANK1_AUX_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_MDFX_TRACK_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }

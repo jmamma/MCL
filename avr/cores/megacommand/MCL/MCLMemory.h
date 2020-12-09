@@ -61,7 +61,12 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 constexpr size_t DEVICE_TRACK_LEN = 7;
 constexpr size_t GRID1_TRACK_LEN = 534;
 constexpr size_t GRID2_TRACK_LEN = 2094;
-constexpr size_t AUX_TRACK_LEN = 226;
+
+constexpr size_t MDLFO_TRACK_LEN = 226;
+constexpr size_t MDROUTE_TRACK_LEN = 25;
+constexpr size_t MDFX_TRACK_LEN = 43;
+constexpr size_t MDTEMPO_TRACK_LEN = 11;
+
 
 //Use these to produce compiler errors that probes the sizes!
 template<uint32_t X> struct __SIZE_PROBE;
@@ -80,6 +85,12 @@ constexpr size_t BANK1_MD_TRACKS_START = BANK1_SYSEX2_DATA_START + SYSEX2_DATA_L
 constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
 // 6x A4 tracks
 // GRID2 tracks start at 0x8D16
+
+constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_AUX_TRACKS_START;
+constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
+constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
+constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
+
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_AUX_TRACKS_START + AUX_TRACK_LEN * NUM_AUX_TRACKS;
 
 // 256x file entries (16 bytes each)
