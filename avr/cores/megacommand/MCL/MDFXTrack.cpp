@@ -11,20 +11,22 @@ uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {
 
 uint16_t MDFXTrack::send_fx(bool send) {
   uint16_t bytes = 0;
-  for (uint8_t a = 0; a < sizeof(reverb); a++) {
+
+  bytes += MD.sendFXParamsBulk(reverb, send);
+  /*
     if (enable_reverb) {
-      bytes += MD.setReverbParam(a, reverb[a], send);
+      bytes += MD.setReverbParams(reverb, send);
     }
     if (enable_delay) {
-      bytes += MD.setEchoParam(a, delay[a], send);
+      bytes += MD.setEchoParams(delay, send);
     }
     if (enable_eq) {
-      bytes += MD.setEQParam(a, eq[a], send);
+      bytes += MD.setEQParams(eq, send);
     }
     if (enable_dynamics) {
-      bytes += MD.setCompressorParam(a, dynamics[a], send);
+      bytes += MD.setCompressorParams(dynamics, send);
     }
-  }
+  */
   if (send) { place_fx_in_kit(); }
   return bytes;
 }

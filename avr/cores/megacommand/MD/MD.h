@@ -59,7 +59,7 @@ public:
  * It also incorporates the mechanics to produce notes on the
  * MachineDrum by doing lookups of pitch information.
  **/
-class MDClass: public ElektronDevice {
+class MDClass : public ElektronDevice {
 
 public:
   MDClass();
@@ -69,7 +69,7 @@ public:
   MDPattern pattern;
 
   uint16_t mute_mask;
-  //uint32_t swing_last;
+  // uint32_t swing_last;
 
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).
@@ -86,13 +86,15 @@ public:
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }
 
-  virtual ElektronSysexObject* getKit() { return &kit; }
-  virtual ElektronSysexObject* getPattern() { return &pattern; }
-  virtual ElektronSysexObject* getGlobal() { return &global; }
-  virtual ElektronSysexListenerClass* getSysexListener() { return &MDSysexListener; }
+  virtual ElektronSysexObject *getKit() { return &kit; }
+  virtual ElektronSysexObject *getPattern() { return &pattern; }
+  virtual ElektronSysexObject *getGlobal() { return &global; }
+  virtual ElektronSysexListenerClass *getSysexListener() {
+    return &MDSysexListener;
+  }
 
   virtual void updateKitParams();
-  virtual uint16_t sendKitParams(uint8_t* mask, void*);
+  virtual uint16_t sendKitParams(uint8_t *mask, void *);
   virtual PGM_P getMachineName(uint8_t machine);
 
   /**
@@ -125,7 +127,8 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value);
+  ALWAYS_INLINE()
+  void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value);
   void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
 
   void setSampleName(uint8_t slot, char *name);
@@ -138,9 +141,20 @@ public:
    * - MD_SET_EQ_PARAM_ID
    * - MD_SET_DYNAMIX_PARAM_ID
    **/
-  uint8_t sendFXParam(uint8_t param, uint8_t value, uint8_t type, bool send = true);
+
+  // Send multiple values simultaneously (single sysex message);
+  uint8_t sendFXParamsBulk(uint8_t *values, bool send = true);
+  uint8_t sendFXParams(uint8_t *values, uint8_t type, bool send = true);
+
+  uint8_t setEchoParams(uint8_t *values, bool send = true);
+  uint8_t setReverbParams(uint8_t *values, bool send = true);
+  uint8_t setEQParams(uint8_t *values, bool send = true);
+  uint8_t setCompressorParams(uint8_t *values, bool send = true);
+
+  uint8_t sendFXParam(uint8_t param, uint8_t value, uint8_t type,
+                      bool send = true);
   /** Set the value of an ECHO FX parameter. **/
-  uint8_t setEchoParam(uint8_t param, uint8_t value,bool send = true);
+  uint8_t setEchoParam(uint8_t param, uint8_t value, bool send = true);
   /** Set the value of a REVERB FX parameter. **/
   uint8_t setReverbParam(uint8_t param, uint8_t value, bool send = true);
   /** Set the value of an EQ FX parameter. **/
@@ -238,18 +252,19 @@ public:
   void setMachine(uint8_t track, MDMachine *machine);
 
   /**
-   * Load machine, but only send parameters that differ from MD.kit, returns total bytes sent
-   * if send == false, then only return the byte count, don't send.
-   * if send == true, send parameters to MD, insert machine in kit.
+   * Load machine, but only send parameters that differ from MD.kit, returns
+   *total bytes sent if send == false, then only return the byte count, don't
+   *send. if send == true, send parameters to MD, insert machine in kit.
    **/
-  uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level, bool send);
+  uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level,
+                      bool send);
 
   /**
    * Inserts a machine in to the MDKit object
    **/
 
   void insertMachineInKit(uint8_t track, MDMachine *machine,
-                                bool set_level = true);
+                          bool set_level = true);
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
@@ -279,6 +294,7 @@ public:
   /**
    * Send a sysex message to route the track (0 to 15) to the given output.
    **/
+  uint8_t setTrackRoutings(uint8_t *values, bool send = true);
   uint8_t setTrackRouting(uint8_t track, uint8_t output, bool send = true);
 
   /**
