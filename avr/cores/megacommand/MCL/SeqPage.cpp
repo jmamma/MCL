@@ -121,15 +121,19 @@ void SeqPage::config_mask_info() {
 
 void SeqPage::select_track(MidiDevice *device, uint8_t track) {
   if (device == &MD) {
-
+    DEBUG_PRINTLN("setting md track");
     last_md_track = track;
+    if (mcl_cfg.track_select) {
+    MD.currentTrack = track;
+    MD.setStatus(0x22, track);
+    }
   }
 #ifdef EXT_TRACKS
   else {
-    last_ext_track = min(track, 3); // XXX
+    DEBUG_PRINTLN("setting ext track");
+    last_ext_track = min(track, NUM_EXT_TRACKS - 1); 
   }
 #endif
-  DEBUG_DUMP("wtf");
   GUI.currentPage()->redisplay = true;
   GUI.currentPage()->config();
 }
@@ -1157,13 +1161,13 @@ void SeqPage::loop() {
   }
 
   if (last_md_track != MD.currentTrack) {
-    select_track(midi_device, MD.currentTrack);
+    select_track(&MD, MD.currentTrack);
   }
   if (show_seq_menu) {
     seq_menu_page.loop();
     if (opt_midi_device_capture != &MD && opt_trackid > 4) {
       // lock trackid to [1..4]
-      opt_trackid = min(opt_trackid, 4);
+      opt_trackid = min(opt_trackid, NUM_EXT_TRACKS - 1);
       seq_menu_value_encoder.cur = opt_trackid;
     }
     return;
