@@ -93,6 +93,7 @@ void SeqPtcPage::init() {
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   trig_interface.on();
+  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
     trig_interface.on();
     note_interface.state = true;
@@ -323,8 +324,11 @@ void SeqPtcPage::display() {
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
   oled_display.setFont(&TomThumb);
-  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    oled_display.setCursor(107, 32);
+  oled_display.setCursor(107, 32);
+  if (arp_enabled) {
+    oled_display.print("ARP");
+  }
+  else if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
     oled_display.print("POLY");
   }
   SeqPage::display();
@@ -796,7 +800,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
       SET_BIT64(note_mask, pitch);
       render_arp();
-      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       if (midi_device != &MD) {
         midi_device = device;
         config();
@@ -813,10 +816,10 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       if (arp_und.cur != ARP_LATCH) {
         CLEAR_BIT64(note_mask, pitch);
         render_arp();
-        trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       }
     }
 
+    trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
     // deferred trigger redraw to update TI keyboard feedback.
     queue_redraw();
 

@@ -96,6 +96,12 @@ void PolyPage::display() {
 #ifdef OLED_DISPLAY
   LCD.goLine(1);
   LCD.puts(GUI.lines[1].data);
+
+  if (mcl_cfg.poly_mask != trigled_mask) {
+    trigled_mask = mcl_cfg.poly_mask;
+    MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_STEPEDIT);
+  }
+
   oled_display.display();
 #endif
 }
