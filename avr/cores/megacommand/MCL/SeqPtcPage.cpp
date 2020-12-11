@@ -100,7 +100,9 @@ void SeqPtcPage::init() {
     trig_interface.off();
   }
   curpage = SEQ_PTC_PAGE;
-  if (focus_track == 255) { focus_track = last_md_track; }
+  if (focus_track == 255) {
+    focus_track = last_md_track;
+  }
   config();
   re_init = false;
 }
@@ -731,9 +733,9 @@ void SeqPtcPage::on_192_callback() {
     timing_mid = 8;
   }
   if (arp_mod12_counter == 0) {
-      if (arp_count % (1 << arp_speed.cur) == 0) {
+    if (arp_count % (1 << arp_speed.cur) == 0) {
       trig = true;
-      }
+    }
 
     if ((arp_len > 0) && (trig)) {
       trig_md(arp_notes[arp_idx]);
@@ -743,14 +745,15 @@ void SeqPtcPage::on_192_callback() {
       }
     }
 
-   arp_count++;
+    arp_count++;
     if (arp_count > 15) {
       arp_count = 0;
     }
   }
-    arp_mod12_counter++;
-    if (arp_mod12_counter == timing_mid) { arp_mod12_counter = 0; }
-
+  arp_mod12_counter++;
+  if (arp_mod12_counter == timing_mid) {
+    arp_mod12_counter = 0;
+  }
 }
 
 void SeqPtcPage::recalc_notemask() {
@@ -793,6 +796,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
       SET_BIT64(note_mask, pitch);
       render_arp();
+      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       if (midi_device != &MD) {
         midi_device = device;
         config();
@@ -809,6 +813,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       if (arp_und.cur != ARP_LATCH) {
         CLEAR_BIT64(note_mask, pitch);
         render_arp();
+        trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       }
     }
 
@@ -848,7 +853,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (midi_device == &MD) {
 
-      if ((poly_max > 1) && (is_poly))  {
+      if ((poly_max > 1) && (is_poly)) {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CLEAR ", "POLY TRACKS");
 #endif
@@ -901,7 +906,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   // pitch - MIDI_NOTE_C4
   //
-    uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   if (pitch == 255)
     return;
 
@@ -913,7 +918,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     if (GUI.currentPage() == &seq_ptc_page) {
-    seq_ptc_page.focus_track = last_md_track;
+      seq_ptc_page.focus_track = last_md_track;
     }
     if (!seq_ptc_page.arp_enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
