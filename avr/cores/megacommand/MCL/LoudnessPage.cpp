@@ -28,25 +28,24 @@ void LoudnessPage::scale_vol(float inc) {
 
   grid_page.prepare();
 
-  uint8_t seq_mute_states[NUM_MD_TRACKS];
-  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
-    seq_mute_states[a] = mcl_seq.md_tracks[a].mute_state;
-  }
+  //uint8_t seq_mute_states[NUM_MD_TRACKS];
+
   for (uint8_t n = 0; n < 16; n++) {
+
+    //seq_mute_states[n] = mcl_seq.md_tracks[n].mute_state;
+    //mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
     md_track->get_machine_from_kit(n);
-    memcpy(&(md_track->seq_data), &mcl_seq.md_tracks[n],
-           sizeof(md_track->seq_data));
+    memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[n].data(),
+           sizeof(MDSeqTrackData));
     md_track->scale_vol(inc);
-    memcpy(&mcl_seq.md_tracks[n], &(md_track->seq_data),
-           sizeof(md_track->seq_data));
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
-    bool send_machine, send_level = true;
+    memcpy(mcl_seq.md_tracks[n].data(), md_track->seq_data.data(),
+           sizeof(MDSeqTrackData));
+    bool send_machine = true;
+    bool send_level = true;
     MD.sendMachine(n, &(md_track->machine), send_level, send_machine);
+    //mcl_seq.md_tracks[n].mute_state = seq_mute_states[n];
   }
 
-  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
-    mcl_seq.md_tracks[a].mute_state = seq_mute_states[a];
-  }
 }
 
 void LoudnessPage::display() {
