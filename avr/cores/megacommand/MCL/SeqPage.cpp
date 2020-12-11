@@ -131,7 +131,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track) {
 #ifdef EXT_TRACKS
   else {
     DEBUG_PRINTLN("setting ext track");
-    last_ext_track = min(track, NUM_EXT_TRACKS - 1); 
+    last_ext_track = min(track, NUM_EXT_TRACKS - 1);
   }
 #endif
   GUI.currentPage()->redisplay = true;
@@ -1167,7 +1167,7 @@ void SeqPage::loop() {
     seq_menu_page.loop();
     if (opt_midi_device_capture != &MD && opt_trackid > 4) {
       // lock trackid to [1..4]
-      opt_trackid = min(opt_trackid, NUM_EXT_TRACKS - 1);
+      opt_trackid = min(opt_trackid, NUM_EXT_TRACKS);
       seq_menu_value_encoder.cur = opt_trackid;
     }
     return;
