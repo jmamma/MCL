@@ -42,7 +42,7 @@ void LoudnessPage::scale_vol(float inc) {
            sizeof(MDSeqTrackData));
     bool send_machine = true;
     bool send_level = true;
-    MD.sendMachine(n, &(md_track->machine), send_level, send_machine);
+    MD.setMachineBulk(n, &(md_track->machine), send_level, send_machine);
     //mcl_seq.md_tracks[n].mute_state = seq_mute_states[n];
   }
 

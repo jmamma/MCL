@@ -5,7 +5,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   uint16_t md_latency = 0;
   bool send_machine = false, send_level = false;
 
-  md_latency += MD.sendMachine(n, &(machine), send_level, send_machine);
+  md_latency += MD.setMachineBulk(n, &(machine), send_level, send_machine);
   if (mcl_actions.transition_level[n] == TRANSITION_MUTE ||
       mcl_actions.transition_level[n] == TRANSITION_UNMUTE) {
     md_latency += 3;
@@ -34,7 +34,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     break;
   }
   bool send = true;
-  MD.sendMachine(tracknumber, &(machine), send_level, send);
+  MD.setMachineBulk(tracknumber, &(machine), send_level, send);
 }
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,

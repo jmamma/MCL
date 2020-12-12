@@ -87,7 +87,7 @@ bool MDSound::load_sound(uint8_t track) {
     machine1.trigGroup = track + 1;
     machine2.trigGroup = track;
 
-    MD.sendMachine(track + 1, &machine2, send_level, send);
+    MD.setMachineBulk(track + 1, &machine2, send_level, send);
 
   } else {
     machine1.trigGroup = track;
@@ -103,7 +103,7 @@ bool MDSound::load_sound(uint8_t track) {
     machine1.trigGroup = track + 1;
   }
 
-  MD.sendMachine(track, &machine1, send_level, send);
+  MD.setMachineBulk(track, &machine1, send_level, send);
 }
 
 bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {

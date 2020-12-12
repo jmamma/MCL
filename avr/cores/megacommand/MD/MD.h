@@ -247,6 +247,8 @@ public:
    * out of the machine structure.
    **/
 
+  uint8_t setMachineBulk(uint8_t track, MDMachine *machine, uint8_t level = 255, bool send = true);
+
   void setMachine(uint8_t track, MDKit *kit);
 
   void setMachine(uint8_t track, MDMachine *machine);

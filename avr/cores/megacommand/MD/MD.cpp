@@ -509,6 +509,31 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
   // uart->useRunningStatus = false;
 }
 
+
+uint8_t MDClass::setMachineBulk(uint8_t track, MDMachine *machine, uint8_t level, bool send) {
+ uint8_t data[40] = {0x70, 0x5b};
+ uint8_t i = 2;
+ data[i++] = track;
+  if (machine->model >= 128) {
+    data[i++] = (machine->model - 128);
+    data[i++] = 0x01;
+  } else {
+    data[i++] = machine->model;
+    data[i++] = 0x00;
+  }
+ memcpy(&data[i], machine->params, 24);
+ i += 24;
+ memcpy(&data[i], &machine->lfo, 5);
+ i += 5;
+ if (machine->trigGroup == 255) { machine->trigGroup = 127; }
+ if (machine->muteGroup == 255) { machine->muteGroup = 127; }
+ data[i++] = machine->trigGroup;
+ data[i++] = machine->muteGroup;
+
+ if (level != 255) {  data[i++] = level; }
+ return sendRequest(data, i, send);
+}
+
 void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   // 138 bytes approx
   assignMachine(track, machine->model);
