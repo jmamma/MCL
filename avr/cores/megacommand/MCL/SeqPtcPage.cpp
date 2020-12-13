@@ -1062,7 +1062,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
           if (track_param < 24) {
             MD.setTrackParam(n, track_param, value);
+            if (GUI.currentPage() != &mixer_page) {
             oled_display.textbox("POLY-", "LINK");
+            }
             seq_ptc_page.redisplay = true;
           }
         }
