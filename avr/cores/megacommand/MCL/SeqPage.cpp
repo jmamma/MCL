@@ -85,6 +85,8 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
+
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {
