@@ -1165,7 +1165,7 @@ void SeqPage::loop() {
   }
   if (show_seq_menu) {
     seq_menu_page.loop();
-    if (opt_midi_device_capture != &MD && opt_trackid > 4) {
+    if (opt_midi_device_capture != &MD && opt_trackid > NUM_EXT_TRACKS) {
       // lock trackid to [1..4]
       opt_trackid = min(opt_trackid, NUM_EXT_TRACKS);
       seq_menu_value_encoder.cur = opt_trackid;
