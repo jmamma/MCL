@@ -839,7 +839,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     recording = !recording;
     if (recording) {
-      oled_display.textbox("RECORDING", "");
+      oled_display.textbox("REC", "");
     }
     return true;
   }
