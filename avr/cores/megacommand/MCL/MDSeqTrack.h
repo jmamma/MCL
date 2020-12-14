@@ -15,13 +15,13 @@
 
 class MDTrack;
 
-class MDSeqTrack : public MDSeqTrackData, public SeqTrack {
+class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
 
 public:
   uint64_t oneshot_mask;
   uint8_t locks_params_orig[NUM_LOCKS];
 
-  MDSeqTrack() : SeqTrack() { active = MD_TRACK_TYPE; }
+  MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask = 0;

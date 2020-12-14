@@ -68,16 +68,9 @@ public:
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
 
-  uint8_t locks_slides_recalc = 255;
-  uint16_t locks_slides_idx = 0;
-
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   uint8_t count_down;
-
-  SlideData locks_slide_data[NUM_LOCKS];
-  uint8_t locks_slide_next_lock_val[NUM_LOCKS];
-  uint8_t locks_slide_next_lock_step[NUM_LOCKS];
 
   uint16_t cur_event_idx;
 
@@ -91,7 +84,6 @@ public:
     iterations_8 = 1;
     mod12_counter = 0;
     count_down = 0;
-    cur_event_idx = 0;
   }
 
   ALWAYS_INLINE() void seq();
@@ -212,6 +204,16 @@ public:
     }
     return multi;
   }
+};
+
+class SeqSlideTrack : public SeqTrack {
+  public:
+  SlideData locks_slide_data[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_val[NUM_LOCKS];
+  uint8_t locks_slide_next_lock_step[NUM_LOCKS];
+  uint8_t locks_slides_recalc = 255;
+  uint16_t locks_slides_idx = 0;
+
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
   void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 };
