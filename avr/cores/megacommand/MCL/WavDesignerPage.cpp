@@ -10,7 +10,7 @@ MCLEncoder *WavDesignerPage::opt_param2_capture;
 
 void wav_menu_handler() {
   if (WavDesignerPage::opt_mode == WavDesignerPage::last_mode) {
-    if (WavDesignerPage::opt_mode == 0) {
+    if (WavDesignerPage::opt_mode < 3) {
       wd.pages[WavDesignerPage::opt_mode].osc_waveform =
           WavDesignerPage::opt_shape;
     }
