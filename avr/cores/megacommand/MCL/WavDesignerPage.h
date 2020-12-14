@@ -11,7 +11,7 @@ extern MCLEncoder wav_menu_entry_encoder;
 extern MenuPage<3> wav_menu_page;
 
 class WavDesignerPage : public LightPage {
-  public:
+public:
   uint8_t id;
   static uint8_t opt_mode;
   static uint8_t opt_shape;
@@ -22,13 +22,14 @@ class WavDesignerPage : public LightPage {
   static MCLEncoder *opt_param1_capture;
   static MCLEncoder *opt_param2_capture;
   WavDesignerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-            Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {
-      }
+                  Encoder *e4 = NULL)
+      : LightPage(e1, e2, e3, e4) {}
 
   virtual void init() {
-  wav_menu_page.menu.enable_entry(2, false);
-  show_menu = false;
+    if (WavDesignerPage::opt_mode < 3) {
+      wav_menu_page.menu.enable_entry(2, false);
+    }
+    show_menu = false;
   }
   virtual void loop();
   virtual void display();
