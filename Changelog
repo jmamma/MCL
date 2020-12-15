@@ -1,3 +1,172 @@
+MCL 3.00 20/12/2020
+
+  Projects:
+    Historically, projects have been stored in the root directory of the SD Card i.e
+    "/my_project.mcl"
+
+    In 3.0 new and converted projects are now stored in the /Projects/ directory.
+
+    Each project has its own folder, inside the project folder there are 3 files.
+
+        \Projects\new_project_000\
+	       |- new_project_000.mcl <- Project master file
+           |- new_project_000.0   <- Grid A data
+           |- new_project_000.1   <- Grid B data
+
+  Project Conversion:
+
+    Version 2.X projects can be converted to the 3.0 format using the "CONVERT PROJECT"
+    menu option in Global Settings. Project conversion is non-destructive, your original 2.X
+    files will remain in the root directory of the SD Card.
+
+    When initiated, project conversion will create a new project directory, create the necessary
+    project files and then migrate the 2.X data across.
+
+  Grid A + B:
+
+    There are now 2 grids per project. Grid A and Grid B.
+    Grid A is used to store 16 MD tracks.
+    Grid B is used to store 6 External MIDI tracks + 4 AUX tracks.
+
+    From the Grid Page, the chain menu [ shift 2 ] can be used to toggle between Grids A and B.
+
+  New AUX (Auxillary) Track Types:
+
+    LFOTrack    (LF): Store and recall LFO page data.
+    RouteTrack  (RT): Store and recall MD Routing and Poly settings
+	MDFXTrack   (FX): Store and recall MDFX (Delay, Reverb, EQ, Dynamics)
+    TempoTrack  (TP): Store and recall Tempo
+
+    AUX Tracks are positioned on Grid B and occupy slots 12 to 15.
+	AUX Tracks can be chained like regular tracks, meaning you can automate
+	loading of LFOs, TrackRouting, MDFX and tempo.
+
+ MIDI Devices + Grid:
+
+    MCL Firmware has been rewritten to dynamically support various MIDI  devices.
+
+	When connected, each device is allocated to specific slots on Grid A or B.
+
+	For example. The MD (Machinedrum) device has slots 0 to 15 reserved on
+	Grid A. Slot 14 on Grid B is allocated to the MD FX.
+
+	The Analog 4 or MNM will reserve slots  0 to 6 on Grid B.
+
+	Similarly, a generic MIDI device will use slots 0 to 6 on Grid B.
+
+  ClipBoard:
+
+    Copy and paste of Grid Slots will adhere to the slot allocation rules
+	described in the previous section.
+
+  Save Page + Load Page (Formerly Write Page):
+
+    By popular request, the Write page has been renamed to Load.
+
+	The [ Shift 1 ] button can be used to toggle between Grids A + B, slots
+	from both grids can be selected before releasing to Save/Write.
+
+	The [ Shift 2 ] button now opens a Group Select menu, allowing you to
+	load or save all tracks corresponding to an attached MIDI device.
+    Or Load/Save the AU (Auxillary tracks).
+
+
+  MD Sequencer:
+
+    The MD sequencer has been rewritten. Each track supports 8 parameter locks,
+	with a maximum of 256 locks per track, shared across each of the 8
+	parameters.
+
+	Slide mask is now functional across the full 64 steps of the sequencer.
+
+  Ext MIDI Sequencer:
+
+    The EXT Midi Sequencer has been rewritten.
+
+    There are 6 x EXT Midi Sequencer Tracks. These are stored in Grid B, slots 0 to 5.
+
+	Each EXT Midi track can be used to sequencer an attached MIDI device on port 2.
+	This could be an Analog 4, Elektron Monomachine or a generic MIDI device
+	such as a synth module.
+
+	16 events per step:
+	  - Each event could be an automation parameter or note_on/note_off
+	  message.
+	  - Microtiming per event
+	  - Condition per event
+	  - Velocity per step
+
+    8 Midi Control Channel Automation Parameters with slide.
+
+  PianoRoll + Automation Editor:
+
+    To accompany the new EXT Midi Sequencer tracks we have created a PianoRoll
+    editor used to edit the sequence for Ext Midi Tracks 1 to 6.
+
+    The editor featuers an interactive cursor, controllable using [ Encoder 1 ]
+    and [ Encoder 2 ].
+
+    [ Encoder 3 ] adjust note width.
+    [ Encoder 4 ] inc/dec zoom.
+
+    Notes can be added by pressing [ Write. ]
+    Notes can be deleted by positioning the cursor on top the note and pressing
+    [ write ]
+
+    Holding [ shift 2 ] opens the PianoRoll menu. From here you can adjust the
+    MIDI Channel, note velocity, note probability, track length, speed etc.
+
+    The pianoroll editor allows for automation editing.
+
+    From the Shift Menu, you select to Edit Automation Parameters 1 to 8.
+    The CC option allows a specific Midi Control Channel number to be select,
+    alternatively you can select LEARN, to Automatically learn the next received
+    CC.
+
+    Automation automatically slides between values. Slide can be toggled on or
+    off per event.
+
+  Record Page: (Deprecated)
+
+    The record page has been removed.
+
+	Track recording can now be engaged from the StepEdit page or the PianoRoll
+	editor by pressing [ Save ].
+
+	Both automation (parameter locks) and note data can be recorded
+	simultaneously in this mode.
+
+  WavDesigner GUI:
+
+    WavDesigner button assignemnt has changed.
+
+    Shift 2 now opens a menu for selecting Oscillators 1 to 3, or the
+	Oscillator Mixer sub page.
+
+    WaveForm is selectable from the shift-menu.
+
+	The rendered waveform can be transferred to a MD sample slot using the
+	shift menu's "TRANSFER" option accessible from the Oscillator Mixer
+	sub page.
+
+    [ Save ] can be used to toggle between oscilaltor pitch / frequency
+    [ Shift 1 ] convieniently opens the MD's sample slot menu.
+
+  MD TrigInterface:
+
+    The integration with the MD trigger interface has been improved. When
+	editing a sequence on the MC the MD's LEDs will reflect the pattern on the MC.
+
+	Similarly when using the Trig Interface to select tracks, the LEDs will
+	illuminate appropriately.
+
+	The trig interface will now automatically exit recording/mute menus when activated.
+
+  Other:
+    Numerous bug fixes, refactors and optimisations have been performed during this
+	release. If you encounter bugs, please try and reliably replicate the problem
+	and open a new "issue" on github.
+
 MCL 2.70 21/06/2020
 
 Changes:
