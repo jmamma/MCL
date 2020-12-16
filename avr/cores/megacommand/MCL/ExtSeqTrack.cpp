@@ -708,7 +708,7 @@ void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   param_id += 1;
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] == param_id) {
+    if (locks_params[c] - 1 == param_id) {
       return c;
     }
   }
@@ -762,15 +762,19 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
   return ret;
 }
 
-void ExtSeqTrack::clear_track_locks(uint8_t track_param) {
+void ExtSeqTrack::clear_track_locks(uint8_t idx) {
   for (uint8_t n = 0; n < length; n++) {
-    clear_track_locks(n, track_param, 255);
+    clear_track_locks_idx(n, idx, 255);
   }
 }
 
 bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
                                     uint8_t value) {
   uint8_t lock_idx = find_lock_idx(track_param);
+  return clear_track_locks_idx(step, lock_idx, value);
+}
+
+bool ExtSeqTrack::clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value) {
   uint16_t start_idx, end;
   locate(step, start_idx, end);
   bool ret = false;
