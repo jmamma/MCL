@@ -138,19 +138,20 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     if (merge > 0) {
       DEBUG_PRINTLN(F("auto merge"));
       MDSeqTrack temp_seq_track;
+      temp_seq_track.init();
       if (merge == SAVE_MERGE) {
         // Load up internal sequencer data
         memcpy(temp_seq_track.data(), md_seq_track->data(),
                sizeof(MDSeqTrackData));
       }
       if (merge == SAVE_MD) {
-        temp_seq_track.init();
         chain.length = MD.pattern.patternLength;
         chain.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-        temp_seq_track.length = chain.length;
-        temp_seq_track.speed = chain.speed;
         DEBUG_PRINTLN(F("SAVE_MD"));
       }
+      temp_seq_track.length = chain.length;
+      temp_seq_track.speed = chain.speed;
+
       // merge md pattern data with seq_data
       temp_seq_track.merge_from_md(column, &(MD.pattern));
       // copy merged data in to this track object's seq data for writing to SD
