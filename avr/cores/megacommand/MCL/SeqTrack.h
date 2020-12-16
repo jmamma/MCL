@@ -78,6 +78,7 @@ public:
 
   ALWAYS_INLINE() void reset() {
     step_count = 0;
+    cur_event_idx = 0;
     iterations_5 = 1;
     iterations_6 = 1;
     iterations_7 = 1;
