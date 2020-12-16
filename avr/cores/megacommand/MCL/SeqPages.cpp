@@ -41,7 +41,7 @@ const menu_t<19> seq_menu_layout PROGMEM = {
         {"SPEED:", 0, 7, 7, (uint8_t *)&opt_speed, (Page *)NULL, opt_speed_handler, 40},
         {"LENGTH:", 1, 128, 0, (uint8_t *)&opt_length, (Page *)NULL, opt_length_handler, 0},
         {"CHANNEL:", 1, 17, 0, (uint8_t *)&opt_channel, (Page *)NULL, opt_channel_handler, 0},
-        {"COPY:", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, 26},
+        {"COPY:  ", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, 26},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, 26},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_locks_handler, 29},
         {"PASTE:", 0, 3, 3, (uint8_t *)&opt_paste, (Page *)NULL, opt_paste_track_handler, 26},

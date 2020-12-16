@@ -61,7 +61,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   // 69: WAV
   {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
   // 75: OSC
-  {0, "OSC-1"}, {1, "OSC-2"}, {2, "OSC-3"}, {3, "MIXER"},
+  {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
 };
 
 void new_proj_handler() {
