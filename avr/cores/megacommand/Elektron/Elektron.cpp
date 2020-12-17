@@ -27,8 +27,7 @@ bool ElektronDevice::get_fw_caps() {
 
   uint8_t msgType = waitBlocking();
 
-  ((uint8_t *)&(fw_caps))[0] = 0;
-  ((uint8_t *)&(fw_caps))[1] = 1;
+  fw_caps = 0;
 
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();

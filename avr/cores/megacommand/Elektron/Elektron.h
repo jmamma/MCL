@@ -346,6 +346,8 @@ public:
 #define FW_CAP_MUTE_STATE     FW_CAP(2)
 #define FW_CAP_SAMPLE         FW_CAP(3)
 #define FW_CAP_TRIG_LEDS      FW_CAP(4)
+#define FW_CAP_KIT_WORKSPACE  FW_CAP(5)
+#define FW_CAP_MASTER_FX      FW_CAP(6)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
