@@ -1,12 +1,15 @@
 MCL 3.00 20/12/2020
 
   Projects:
+    Version 3.0 features a new project format. Projects created in earlier
+	versions of MCL must be converted to the new format.
+
     Historically, projects have been stored in the root directory of the SD Card i.e
     "/my_project.mcl"
 
     In 3.0 new and converted projects are now stored in the /Projects/ directory.
 
-    Each project has its own folder, inside the project folder there are 3 files.
+    Each project has its own folder, inside the project folder there are 3 files:
 
         \Projects\new_project_000\
 	       |- new_project_000.mcl <- Project master file
@@ -19,8 +22,11 @@ MCL 3.00 20/12/2020
     menu option in Global Settings. Project conversion is non-destructive, your original 2.X
     files will remain in the root directory of the SD Card.
 
-    When initiated, project conversion will create a new project directory, create the necessary
-    project files and then migrate the 2.X data across.
+    When initiated, project conversion will create a new project directory
+	under \Projects\, create the necessary project files and then migrate the 2.X data across.
+
+    Projects created in version 3.0 are not compatible with earlier version of
+	MCL.
 
   Grid A + B:
 
@@ -28,7 +34,8 @@ MCL 3.00 20/12/2020
     Grid A is used to store 16 MD tracks.
     Grid B is used to store 6 External MIDI tracks + 4 AUX tracks.
 
-    From the Grid Page, the chain menu [ shift 2 ] can be used to toggle between Grids A and B.
+    From the Grid Page, use the chain menu (accessible by holding [ shift 2 ])
+	to toggle between Grids A and B.
 
   New AUX (Auxillary) Track Types:
 
@@ -38,12 +45,12 @@ MCL 3.00 20/12/2020
     TempoTrack  (TP): Store and recall Tempo
 
     AUX Tracks are positioned on Grid B and occupy slots 12 to 15.
-	AUX Tracks can be chained like regular tracks, meaning you can automate
+	AUX Tracks can be chained like regular tracks, so that you can automate
 	loading of LFOs, TrackRouting, MDFX and tempo.
 
  MIDI Devices + Grid:
 
-    MCL Firmware has been rewritten to dynamically support various MIDI  devices.
+    MCL Firmware has been rewritten to dynamically support various MIDI devices.
 
 	When connected, each device is allocated to specific slots on Grid A or B.
 
@@ -63,21 +70,23 @@ MCL 3.00 20/12/2020
 
     By popular request, the Write page has been renamed to Load.
 
-	The [ Shift 1 ] button can be used to toggle between Grids A + B, slots
-	from both grids can be selected before releasing to Save/Write.
+	Saving and Loading actions apply to the current Grid.
 
-	The [ Shift 2 ] button now opens a Group Select menu, allowing you to
-	load or save all tracks corresponding to an attached MIDI device.
-    Or Load/Save the AU (Auxillary tracks).
+	When in the Save or Load Page, the [ Shift 1 ] button can be used to
+	toggle between Grid A or Grid B.
 
+	Slots from both grids can be selected before releasing all MD trigs to Save/Write.
+
+	When in the Save or Load Page the [ Shift 2 ] button now opens a Group Select menu, allowing you to
+	load or save all tracks corresponding to a group.
+    There are four groups, MD, Midi Device2, FX (MDFX + LFOTrack + RouteTrack), TP (Tempo)
 
   MD Sequencer:
 
-    The MD sequencer has been rewritten. Each track supports 8 parameter locks,
-	with a maximum of 256 locks per track, shared across each of the 8
-	parameters.
+    The MD sequencer has been rewritten. Each track supports 8 parameter lock destinations.
+	There are a maximum of 256 locks per track, shared between each of the 8 parameters.
 
-	Slide mask is now functional across the full 64 steps of the sequencer.
+	Slide editing is now functional across the full 64 steps of the sequencer.
 
   Ext MIDI Sequencer:
 
@@ -89,14 +98,17 @@ MCL 3.00 20/12/2020
 	This could be an Analog 4, Elektron Monomachine or a generic MIDI device
 	such as a synth module.
 
-	16 events per step:
+    Features of the new EXT Midi Sequencer:
+	  - 6 x Tracks
+	  - 128 steps per Track
+	  - 16 events per step
 	  - Each event could be an automation parameter or note_on/note_off
 	  message.
 	  - Microtiming per event
-	  - Condition per event
+	  - Conditional trig per event
 	  - Velocity per step
-
-    8 Midi Control Channel Automation Parameters with slide.
+      - Each track includes 8 MIDI Control Channel automation parameters with
+	  optional slide (linear interpolation).
 
   PianoRoll + Automation Editor:
 
@@ -107,24 +119,23 @@ MCL 3.00 20/12/2020
     and [ Encoder 2 ].
 
     [ Encoder 3 ] adjust note width.
-    [ Encoder 4 ] inc/dec zoom.
+    [ Encoder 4 ] increase/decrease zoom.
 
-    Notes can be added by pressing [ Write. ]
-    Notes can be deleted by positioning the cursor on top the note and pressing
-    [ write ]
+    Notes can be added by pressing [ Write ]
+    Notes can be deleted by positioning the cursor over the note(s) and pressing
+    [ Write ]
 
     Holding [ shift 2 ] opens the PianoRoll menu. From here you can adjust the
     MIDI Channel, note velocity, note probability, track length, speed etc.
 
     The pianoroll editor allows for automation editing.
 
-    From the Shift Menu, you select to Edit Automation Parameters 1 to 8.
-    The CC option allows a specific Midi Control Channel number to be select,
-    alternatively you can select LEARN, to Automatically learn the next received
-    CC.
+    From the Shift Menu, you can select to Edit Automation Parameters 1 to 8.
 
-    Automation automatically slides between values. Slide can be toggled on or
-    off per event.
+    The CC option allows a specific MIDI Control Channel number to be chosen
+	per parameter,
+    Alternatively you can select LEARN, to Automatically learn the next received
+    CC.
 
   Record Page: (Deprecated)
 
@@ -141,9 +152,9 @@ MCL 3.00 20/12/2020
     WavDesigner button assignemnt has changed.
 
     Shift 2 now opens a menu for selecting Oscillators 1 to 3, or the
-	Oscillator Mixer sub page.
+	Oscillator Mixer sub pages.
 
-    WaveForm is selectable from the shift-menu.
+    The oscillator's WaveForm is selectable from the shift-menu.
 
 	The rendered waveform can be transferred to a MD sample slot using the
 	shift menu's "TRANSFER" option accessible from the Oscillator Mixer
@@ -165,7 +176,7 @@ MCL 3.00 20/12/2020
   Other:
     Numerous bug fixes, refactors and optimisations have been performed during this
 	release. If you encounter bugs, please try and reliably replicate the problem
-	and open a new "issue" on github.
+	and submit a new "issue" on github.
 
 MCL 2.70 21/06/2020
 
