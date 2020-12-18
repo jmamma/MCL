@@ -173,6 +173,13 @@ MCL 3.00 20/12/2020
 
     The trig interface will now automatically exit recording/mute menus when activated.
 
+  Misc:
+
+   MixerPage - [ Shift 2 ]: Undo functionality deprecated.
+
+   Machinedrum - [ Function ] + [ Extended ] will now restore kit parameters
+   to the state of the last chain/load from MCL.
+
   Other:
     Numerous bug fixes, refactors and optimisations have been performed during this
     release. If you encounter bugs, please try and reliably replicate the problem
