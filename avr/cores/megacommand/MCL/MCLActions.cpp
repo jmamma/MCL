@@ -292,9 +292,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
-      if (dev_sync_slot[dev_idx] == 255) {
-        dev_sync_slot[dev_idx] = n;
-      }
+      dev_sync_slot[dev_idx] = n;
     }
     device_track->store_in_mem(gdt->mem_slot_idx);
   }
