@@ -177,7 +177,8 @@ bool MDClass::probe() {
     setGlobal(7);
     global.baseChannel = 9;
 
-    if (!get_fw_caps() || !(fw_caps & ((uint64_t) FW_CAP_MASTER_FX | (uint64_t) FW_CAP_TRIG_LEDS))) {
+    if (!get_fw_caps() || !(fw_caps & ((uint64_t)FW_CAP_MASTER_FX |
+                                       (uint64_t)FW_CAP_TRIG_LEDS))) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
@@ -187,7 +188,7 @@ bool MDClass::probe() {
       while (1)
         ;
     }
-    getBlockingKit(0xF7);
+    getBlockingKit(0x7F);
   }
 
   if (connected == false) {
@@ -196,11 +197,15 @@ bool MDClass::probe() {
   }
 
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+
   if (ts) {
     md_track_select.on();
   }
   if (ti) {
     trig_interface.on();
+  } else {
+
+    deactivate_trig_interface();
   }
 
   return connected;
