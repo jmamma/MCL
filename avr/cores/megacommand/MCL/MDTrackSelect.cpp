@@ -19,15 +19,15 @@ bool MDTrackSelect::on() {
 }
 
 bool MDTrackSelect::off() {
+  sysex->removeSysexListener(this);
+  state = false;
   if (!state) {
     return false;
-  }
+   }
   if (!MD.connected) {
     return false;
   }
   MD.deactivate_track_select();
-  sysex->removeSysexListener(this);
-  state = false;
   return true;
 }
 
