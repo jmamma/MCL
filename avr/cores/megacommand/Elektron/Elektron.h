@@ -348,6 +348,7 @@ public:
 #define FW_CAP_TRIG_LEDS      FW_CAP(4)
 #define FW_CAP_KIT_WORKSPACE  FW_CAP(5)
 #define FW_CAP_MASTER_FX      FW_CAP(6)
+#define FW_CAP_UNDOKIT_SYNC   FW_CAP(7)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -425,6 +426,7 @@ public:
   void deactivate_track_select();
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
 
+  void undokit_sync();
   /**
    * Send a sysex request to the device. All the request calls
    * are wrapped in appropriate methods like requestKit,

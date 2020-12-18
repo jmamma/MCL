@@ -177,8 +177,9 @@ bool MDClass::probe() {
     setGlobal(7);
     global.baseChannel = 9;
 
-    if (!get_fw_caps() || !(fw_caps & ((uint64_t)FW_CAP_MASTER_FX |
-                                       (uint64_t)FW_CAP_TRIG_LEDS))) {
+    if (!get_fw_caps() ||
+        !(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
+          (uint64_t)FW_CAP_UNDOKIT_SYNC))) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
