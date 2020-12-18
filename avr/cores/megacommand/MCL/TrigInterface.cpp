@@ -40,10 +40,10 @@ bool TrigInterface::off() {
   if (!state) {
     return false;
   }
+  state = false;
   if (!MD.connected) {
     return false;
   }
-  state = false;
   MD.deactivate_trig_interface();
   return true;
 }
