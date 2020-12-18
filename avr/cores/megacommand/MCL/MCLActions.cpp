@@ -630,6 +630,9 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
     dev_latency[a].latency = 0;
     dev_latency[a].div32th_latency = 0;
     dev_latency[a].div192th_latency = 0;
+    if (dev_sync_slot[a] != 255) {
+    dev_latency[a].latency += 2 + 7;
+    }
   }
   bool send_dev[NUM_DEVS] = {0};
 
