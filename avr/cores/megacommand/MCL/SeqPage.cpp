@@ -649,7 +649,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 // from knob value to step value
 uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
                                                /*OUT*/ bool *plock) {
-  if (condition >= NUM_TRIG_CONDITIONS) {
+  if (condition > NUM_TRIG_CONDITIONS) {
     condition = condition - NUM_TRIG_CONDITIONS;
     *plock = true;
   } else {

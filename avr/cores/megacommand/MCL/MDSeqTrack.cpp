@@ -58,7 +58,7 @@ void MDSeqTrack::seq() {
 
       uint16_t lock_idx = cur_event_idx;
       if (current_step == next_step) {
-      lock_idx += popcount(steps[step_count].locks);
+        lock_idx += popcount(steps[step_count].locks);
       }
 
       auto &step = steps[current_step];
@@ -299,15 +299,19 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
   }
 }
 
-void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx) {
+void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
+                                      uint16_t lock_idx) {
   uint16_t idx, end;
-  if (lock_idx == 0xFFFF) { idx = get_lockidx(step); }
-  else { idx = lock_idx; }
+  if (lock_idx == 0xFFFF) {
+    idx = get_lockidx(step);
+  } else {
+    idx = lock_idx;
+  }
   send_parameter_locks_inline(step, trig, idx);
 }
 
-
-void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx) {
+void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
+                                             uint16_t lock_idx) {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
@@ -345,12 +349,13 @@ void MDSeqTrack::send_trig_inline() {
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {
   bool send_trig = false;
+  if (IS_BIT_SET64(oneshot_mask, step_count)) {
+    return false;
+  }
   switch (condition) {
   case 0:
   case 1:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
-      send_trig = true;
-    }
+    send_trig = true;
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
@@ -470,10 +475,12 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
 
     memmove(locks + lock_slot + 1, locks + lock_slot,
             NUM_MD_LOCK_SLOTS - lock_slot - 1);
-    if (step < step_count) { cur_event_idx++; }
+    if (step < step_count) {
+      cur_event_idx++;
+    }
     steps[step].locks |= (1 << lockidx);
   }
-  locks[lock_slot] = min(127,value);
+  locks[lock_slot] = min(127, value);
   steps[step].locks_enabled = true;
   return true;
 }

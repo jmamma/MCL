@@ -614,6 +614,7 @@ void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity) {
 
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
                                      uint8_t velocity) {
+  if (IS_BIT_SET128(oneshot_mask, step_count)) { return; }
   if (condition > 64) {
     condition -= 64;
   }
@@ -621,9 +622,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   switch (condition) {
   case 0:
   case 1:
-    if (!IS_BIT_SET128(oneshot_mask, step_count)) {
       note_on(note, velocity);
-    }
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
