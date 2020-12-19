@@ -33,10 +33,12 @@ void SDDrivePage::display() {
   }
 }
 
+#define SNP_NAME_LEN 14
+
 void SDDrivePage::save_snapshot() {
   DEBUG_PRINT_FN();
 
-  char entry_name[] = "        ";
+  char entry_name[SNP_NAME_LEN] = "new_snapshot";
   bool error_is_md = false;
 
   if (!MD.connected) {
