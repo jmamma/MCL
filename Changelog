@@ -81,8 +81,11 @@ MCL 3.00 20/12/2020
 
 	When in the Save or Load Page, holding the [ Shift 2 ] button now opens a Group Select menu,
 	allowing you to load or save all tracks corresponding to a group.
+
     There are four groups, MD, Midi Device2, FX (MDFX + LFOTrack + RouteTrack), TP (Tempo)
     The groups can be enabled/disabled using the MD's trigger interface.
+
+    Releasing [ Shift 2] will save/load tracks corresponding to the active groups.
 
   MD Sequencer:
 
