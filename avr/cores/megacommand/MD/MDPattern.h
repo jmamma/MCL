@@ -29,9 +29,6 @@ class MDPattern : public ElektronPattern {
 public:
   uint8_t origPosition;
 
-  uint8_t getPosition() { return origPosition; }
-  void setPosition(uint8_t _pos) { origPosition = _pos; }
-
   /* SUPER IMPORTANT DO NOT CHANGE THE ORDER OF DECLARATION OF THESE VARIABLES
    */
 
@@ -64,12 +61,6 @@ public:
   uint8_t kit;
   uint8_t numLockedRows; // unused
 
-  uint8_t getKit() { return kit; }
-  void setKit(uint8_t _kit) { kit = _kit; }
-
-  uint8_t getLength() { return patternLength; }
-  void setLength(uint8_t _len) { patternLength = _len; }
-
   uint32_t accentEditAll;
   uint32_t slideEditAll;
   uint32_t swingEditAll;
@@ -79,49 +70,57 @@ public:
 
   uint8_t numRows;
   int8_t paramLocks[16][24];
-  int8_t getLockIdx(uint8_t track, uint8_t param) {
-    return paramLocks[track][param];
-  }
-  void setLockIdx(uint8_t track, uint8_t param, int8_t value) {
-    paramLocks[track][param] = value;
-  }
 
   bool isExtraPattern;
 
-  MDPattern() : ElektronPattern() {
+  /** ElektronPattern implementation */
+
+  virtual uint8_t getPosition() { return origPosition; }
+  virtual void    setPosition(uint8_t _pos) { origPosition = _pos; }
+
+  virtual uint8_t getLength() { return patternLength; }
+  virtual void    setLength(uint8_t _len) { patternLength = _len; }
+
+  virtual uint8_t getKit() { return kit; }
+  virtual void    setKit(uint8_t _kit) { kit = _kit; }
+
+  virtual bool    isTrackEmpty(uint8_t track);
+  virtual bool    isTrigSet(uint8_t track, uint8_t trig) { return IS_BIT_SET64(trigPatterns[track], trig); }
+
+  virtual void clearPattern();
+  virtual void clearTrack(uint8_t track);
+
+  virtual void setTrig(uint8_t track, uint8_t trig) { SET_BIT64(trigPatterns[track], trig); }
+  virtual void setNote(uint8_t track, uint8_t step, uint8_t pitch);
+  virtual void clearTrig(uint8_t track, uint8_t trig);
+
+  virtual int8_t getLockIdx(uint8_t track, uint8_t param) { return paramLocks[track][param]; }
+  virtual void   setLockIdx(uint8_t track, uint8_t param, int8_t value) { paramLocks[track][param] = value; }
+
+  virtual void recalculateLockPatterns();
+
+  /** ElektronSysexObject implementation */
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+
+  MDPattern(bool _init = true) : ElektronPattern(_init) {
     maxSteps = 64;
     maxParams = 24;
     maxTracks = 16;
     maxLocks = 64;
 
     isExtraPattern = false;
-    init();
   }
 
   /* XXX TODO extra pattern 64 */
 
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
-  virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   uint16_t toSysex();
 
-  bool isTrackEmpty(uint8_t track);
 
   void clear_step_locks(uint8_t track, uint8_t step);
-  void clearPattern();
-  void clearTrack(uint8_t track);
 
-  void clearTrig(uint8_t track, uint8_t trig);
-  inline void setTrig(uint8_t track, uint8_t trig) {
-    SET_BIT64(trigPatterns[track], trig);
-  }
-  inline bool isTrigSet(uint8_t track, uint8_t trig) {
-    return IS_BIT_SET64(trigPatterns[track], trig);
-  }
-  void setNote(uint8_t track, uint8_t step, uint8_t pitch);
-
-  virtual void recalculateLockPatterns();
 
   /**
    * Swap two tracks of the patterns by copying hits, param locks and

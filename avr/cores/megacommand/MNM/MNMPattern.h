@@ -15,9 +15,6 @@ class MNMPattern : public ElektronPattern {
 public:
   uint8_t origPosition;
 
-	uint8_t getPosition() { return origPosition; }
-	void    setPosition(uint8_t _pos) { origPosition = _pos; }
-
 	/* SUPER IMPORTANT DO NOT CHANGE THE ORDER OF DECLARATION OF THESE VARIABLES */
 
   uint64_t ampTrigs[6];
@@ -82,12 +79,6 @@ public:
   uint8_t midiArpLength[6];
   uint8_t midiArpPattern[6][16];
 
-	uint8_t getKit() { return kit; }
-	void    setKit(uint8_t _kit) { kit = _kit; }
-	
-	uint8_t getLength() { return patternLength; }
-	void    setLength(uint8_t _len) { patternLength = _len; }
-
 	uint8_t unused[4];
 
   uint16_t midiNotesUsed;
@@ -98,62 +89,70 @@ public:
   uint8_t locksUsed;
   uint8_t numRows;
   int8_t paramLocks[6][64];
-	int8_t getLockIdx(uint8_t track, uint8_t param) {
-		return paramLocks[track][param];
-	}
-	void   setLockIdx(uint8_t track, uint8_t param, int8_t value) {
-		paramLocks[track][param] = value;
-	}
-  
+
   mnm_note_t midiNotes[400];
   mnm_note_t chordNotes[192];
 
-  MNMPattern() : ElektronPattern() {
+  /** ElektronPattern implementation */
+
+	virtual uint8_t getPosition() { return origPosition; }
+	virtual void    setPosition(uint8_t _pos) { origPosition = _pos; }
+
+	virtual uint8_t getLength() { return patternLength; }
+	virtual void    setLength(uint8_t _len) { patternLength = _len; }
+
+	virtual uint8_t getKit() { return kit; }
+	virtual void    setKit(uint8_t _kit) { kit = _kit; }
+	
+	virtual bool   isTrackEmpty(uint8_t track);
+  // TODO virtual bool isLockEmpty(uint8_t track, uint8_t param);
+	virtual bool   isTrigSet(uint8_t track, uint8_t trig) { return isAmpTrigSet(track, trig); }
+
+  virtual void   clearPattern();
+  virtual void   clearTrack(uint8_t track);
+
+	virtual void   setTrig(uint8_t track, uint8_t trig) { setTrig(track, trig, true, true, true, true); }
+  virtual void   setNote(uint8_t track, uint8_t step, uint8_t note);
+	virtual void   clearTrig(uint8_t track, uint8_t trig) { clearTrig(track, trig, true, true, true, true); }
+	
+	virtual int8_t getLockIdx(uint8_t track, uint8_t param) { return paramLocks[track][param]; }
+	virtual void   setLockIdx(uint8_t track, uint8_t param, int8_t value) { paramLocks[track][param] = value; }
+  virtual void   recalculateLockPatterns();
+
+  /** ElektronSysexObject implementation */
+  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
+  virtual bool fromSysex(MidiClass *midi);
+
+  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
+	virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
+  
+  MNMPattern(bool _init = true) : ElektronPattern(_init) {
 		maxSteps = 64;
 		maxParams = 64;
 		maxTracks = 6;
 		maxLocks = 62;
-		init();
   }
-  bool fromSysex(uint8_t *sysex, uint16_t len);
-  bool fromSysex(MidiClass *midi);
 
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-	uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
-	
-	bool isTrackEmpty(uint8_t track);
 	bool isMidiTrackEmpty(uint8_t track);
 	
-  void clearPattern();
-  void clearTrack(uint8_t track);
 	void clearMidiTrack(uint8_t track);
 
   void clearTrig(uint8_t track, uint8_t trig,
 								 bool ampTrig, bool filterTrig = false, bool lfoTrig = false,
 								 bool triglessTrig = false, bool chordTrig = false);
-	void clearTrig(uint8_t track, uint8_t trig) {
-		clearTrig(track, trig, true, true, true, true);
-	}
+
   void setTrig(uint8_t track, uint8_t trig,
 							 bool ampTrig, bool filterTrig = false, bool lfoTrig = false,
 							 bool triglessTrig = false, bool chordTrig = false);
-	
-	void setTrig(uint8_t track, uint8_t trig) {
-		setTrig(track, trig, true, true, true, true);
-	}
 
   bool isTrigSet(uint8_t track, uint8_t trig,
 	       bool ampTrig, bool filterTrig = false, bool lfoTrig = false,
 	       bool triglessTrig = false, bool chordTrig = false);
 
-	bool isTrigSet(uint8_t track, uint8_t trig) {
-		return isAmpTrigSet(track, trig);
-	}
-
-	
   void clearAllTrig(uint8_t track, uint8_t trig) {
     clearTrig(track, trig, true, true, true, true, true);
   }
+
   void setAllTrig(uint8_t track, uint8_t trig) {
     setTrig(track, trig, true, true, true, true);
   }
@@ -192,9 +191,7 @@ public:
   }
 
   int8_t getNextEmptyLock();
-  void recalculateLockPatterns();
 
-  void setNote(uint8_t track, uint8_t step, uint8_t note);
   void setChordNote(uint8_t track, uint8_t step, uint8_t note);
   void clearChordNote(uint8_t track, uint8_t step, uint8_t note);
 
