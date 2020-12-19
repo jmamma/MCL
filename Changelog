@@ -41,9 +41,9 @@ MCL 3.00 20/12/2020
 
   New AUX (Auxiliary) Track Types:
 
+    MDFXTrack   (FX): Store and recall MDFX (MachinDrum MasterFX: Delay, Reverb, EQ, Dynamics)
     LFOTrack    (LF): Store and recall LFO page data.
     RouteTrack  (RT): Store and recall MD Track Routing and Chromatic Mode's Poly settings.
-    MDFXTrack   (FX): Store and recall MDFX (MachinDrum MasterFX: Delay, Reverb, EQ, Dynamics)
     TempoTrack  (TP): Store and recall Tempo.
 
     AUX Tracks are positioned on Grid B and occupy slots 12 to 15.
