@@ -84,9 +84,6 @@ public:
   uint8_t programChange;
   uint8_t trigMode;
 
-  MDGlobal() {
-  }
-
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
   virtual bool fromSysex(uint8_t *sysex, uint16_t len);

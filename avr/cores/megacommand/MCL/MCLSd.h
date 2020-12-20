@@ -21,7 +21,7 @@ class MCLSd {
   /// read data from SD card and repair vtable
   template <class T> bool read_data_v(T *data, FatFile *filep) {
     auto ret = read_data(data, sizeof(T), filep);
-    ::new(data)T();
+    ::new(data)T;
     return ret;
   }
   /// Specialization for ElektronPattern...
