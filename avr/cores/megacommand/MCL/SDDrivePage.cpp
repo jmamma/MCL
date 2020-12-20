@@ -209,7 +209,7 @@ void SDDrivePage::load_snapshot() {
   for (int i = 0; i < 128; ++i) {
     progress_i = i;
     mcl_gui.draw_progress("Loading pattern", i, 128);
-    if (!mcl_sd.read_data_v<MDPattern>(&MD.pattern, &file)) {
+    if (!mcl_sd.read_data_v_noinit<MDPattern>(&MD.pattern, &file)) {
       goto load_error;
     }
     MD.setSysexRecPos(8, i);

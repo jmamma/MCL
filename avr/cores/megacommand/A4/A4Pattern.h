@@ -33,13 +33,11 @@ public:
 
     uint8_t data[8];
 
-	A4Pattern() : ElektronPattern() {
+	A4Pattern(bool _init = true) : ElektronPattern(_init) {
 		maxSteps = 64;
 		maxParams = 24;
 		maxTracks = 16;
 		maxLocks = 64;
-		
-		init();
 	}
 	
 	/* XXX TODO extra pattern 64 */

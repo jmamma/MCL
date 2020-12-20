@@ -84,8 +84,7 @@ public:
   uint8_t programChange;
   uint8_t trigMode;
 
-  MDGlobal() {
-  }
+  MDGlobal() : ElektronSysexObject() {};
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
@@ -198,6 +197,7 @@ class MDKit: public ElektronSysexObject {
    **/
 
 public:
+
   uint8_t origPosition;
   char name[17];
 
@@ -223,6 +223,8 @@ public:
   uint8_t trigGroups[16];
   /** The mute group selected for each track (255: OFF). **/
   uint8_t muteGroups[16];
+
+  MDKit(): ElektronSysexObject() {}
 
   virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
