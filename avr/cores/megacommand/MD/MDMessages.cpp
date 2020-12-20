@@ -60,7 +60,11 @@ bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
 
   decoder.get8(&baseChannel);
   decoder.get8(&unused);
-  decoder.get16(&tempo);
+  uint8_t tempo_lower;
+  uint8_t tempo_upper;
+  decoder.get8(&tempo_upper);
+  decoder.get8(&tempo_lower);
+  tempo = (tempo_upper << 7 ) | tempo_lower;
   decoder.getb(&extendedMode);
 
   uint8_t byte = 0;
@@ -108,7 +112,11 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 
   decoder.get8(&baseChannel);
   decoder.get8(&unused);
-  decoder.get16(&tempo);
+  uint8_t tempo_lower;
+  uint8_t tempo_upper;
+  decoder.get8(&tempo_upper);
+  decoder.get8(&tempo_lower);
+  tempo = (tempo_upper << 7 ) | tempo_lower;
   decoder.getb(&extendedMode);
 
   uint8_t byte = 0;
@@ -470,7 +478,7 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
     decoder.start7Bit();
     decoder.get((uint8_t *)&rows[i], 4);
     decoder.get16(&rows[i].mutes);
-    decoder.get16(&rows[i].tempo);
+    decoder.get16(&rows[i].tempo); // different from MDGlobal tempo, this is 7bit encoded
     decoder.get(&rows[i].startPosition, 2);
     decoder.stop7Bit();
   }
