@@ -61,6 +61,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   if (!pmidi || !pmidi_class)
     return;
   uint8_t id = pmidi->device.get_id();
+  oled_display.setTextColor(WHITE, BLACK);
   if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
       pmidi->speed > 31250) {
     MidiUart.set_speed((uint32_t)31250, port);
