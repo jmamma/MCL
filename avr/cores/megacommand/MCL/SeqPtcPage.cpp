@@ -933,7 +933,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_ptc_page.queue_redraw();
     return;
   }
-
+  if (channel >= mcl_seq.num_ext_tracks) {
+    return;
+  }
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
   auto active_device = midi_active_peering.get_device(UART2_PORT);
@@ -944,9 +946,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     seq_ptc_page.config();
   } else {
     SeqPage::midi_device = active_device;
-  }
-  if (channel >= mcl_seq.num_ext_tracks) {
-    return;
   }
   last_ext_track = channel;
   seq_ptc_page.config_encoders();
