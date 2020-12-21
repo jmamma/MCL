@@ -175,7 +175,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
       GridDeviceTrack *gdt = get_grid_dev_track(i, &track_idx, &dev_idx);
       uint8_t grid_idx = get_grid_idx(i);
-      online = (elektron_devs[dev_idx] != nullptr);
+
+      online = (devs[dev_idx] != nullptr);
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
 
