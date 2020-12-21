@@ -150,7 +150,9 @@ void GridTask::run() {
           if (mcl_actions.dev_sync_slot[dev_idx] == n) {
             DEBUG_PRINTLN("undo kit sync");
             DEBUG_PRINTLN(n);
+            if (elektron_devs[dev_idx]) {
             elektron_devs[dev_idx]->undokit_sync();
+            }
             mcl_actions.dev_sync_slot[dev_idx] = -1;
           }
         }
