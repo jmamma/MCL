@@ -939,26 +939,35 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
   auto active_device = midi_active_peering.get_device(UART2_PORT);
-  if (SeqPage::midi_device != active_device || (last_ext_track != channel)) {
+  if (SeqPage::midi_device != active_device || (mcl_seq.ext_tracks[last_ext_track].channel != channel)) {
 
     SeqPage::midi_device = active_device;
-    last_ext_track = channel;
+    seq_ptc_page.set_last_ext_track(channel);
     seq_ptc_page.config();
   } else {
     SeqPage::midi_device = active_device;
   }
-  last_ext_track = channel;
+  seq_ptc_page.set_last_ext_track(channel);
   seq_ptc_page.config_encoders();
 
-  DEBUG_PRINTLN(mcl_seq.ext_tracks[channel].length);
+  DEBUG_PRINTLN(mcl_seq.ext_tracks[last_ext_track].length);
   DEBUG_PRINTLN(F("Sending note"));
   DEBUG_DUMP(pitch);
-  mcl_seq.ext_tracks[channel].note_on(pitch, msg[2]);
+  mcl_seq.ext_tracks[last_ext_track].note_on(pitch, msg[2]);
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[channel].record_track_noteon(pitch, msg[2]);
+    mcl_seq.ext_tracks[last_ext_track].record_track_noteon(pitch, msg[2]);
   }
   seq_ptc_page.queue_redraw();
 #endif
+}
+
+void SeqPtcPage::set_last_ext_track(uint8_t channel) {
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (mcl_seq.ext_tracks[n].channel == channel) {
+     last_ext_track = n;
+     break;
+    }
+  }
 }
 
 uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
@@ -1010,11 +1019,11 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
   }
-  last_ext_track = channel;
+  seq_ptc_page.set_last_ext_track(channel);
   seq_ptc_page.config_encoders();
-  mcl_seq.ext_tracks[channel].note_off(pitch);
+  mcl_seq.ext_tracks[last_ext_track].note_off(pitch);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[channel].record_track_noteoff(pitch);
+    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(pitch);
   }
   seq_ptc_page.queue_redraw();
 #endif
