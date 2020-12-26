@@ -1,3 +1,14 @@
+MCL 3.00x 26/12/2020
+
+Hotfixes A -> D
+
+- MCL would freeze if Ext MIDI channel was greater than 6
+- Ext MIDI tracks would not save correctly for generic devices.
+- Ext MIDI tracks would cause MCL to crash on chain.
+- Project Rename was broken in 3.0
+- Polypage incorrect LED mode.
+- Illuminate LED2 when REC mode is activated.
+
 MCL 3.00 20/12/2020
 
   MCL 3.00 requires that your Machinedrum is upgraded to firmware version X.03
