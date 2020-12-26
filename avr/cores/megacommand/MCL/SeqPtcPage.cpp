@@ -839,7 +839,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     recording = !recording;
     if (recording) {
+      setLed2();
       oled_display.textbox("REC", "");
+    }
+    else {
+    clearLed2();
     }
     return true;
   }

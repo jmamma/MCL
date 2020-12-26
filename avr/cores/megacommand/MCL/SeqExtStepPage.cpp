@@ -214,11 +214,14 @@ void SeqExtStepPage::draw_lockeditor() {
         if (end_x >= fov_offset + fov_length) {
           end_fov_x = fov_w;
           if (start_x > end_x) {
-               end_y_tmp = ((float)(fov_offset + fov_length + roll_length - start_x)) * gradient + start_y;
-          }
-          else {
-          end_y_tmp =
-              ((float)(fov_offset + fov_length - start_x)) * gradient + start_y;
+            end_y_tmp =
+                ((float)(fov_offset + fov_length + roll_length - start_x)) *
+                    gradient +
+                start_y;
+          } else {
+            end_y_tmp =
+                ((float)(fov_offset + fov_length - start_x)) * gradient +
+                start_y;
           }
         } else {
           end_fov_x = (float)(end_x - fov_offset) * fov_pixels_per_tick;
@@ -248,10 +251,11 @@ void SeqExtStepPage::draw_lockeditor() {
             }
 
             if (end_x > fov_offset) {
-            
-            uint8_t  end_y_tmp =
-                    ((float)(roll_length - start_x + fov_offset)) * gradient + start_y;
-            uint8_t tmp_end_fov_y =
+
+              uint8_t end_y_tmp =
+                  ((float)(roll_length - start_x + fov_offset)) * gradient +
+                  start_y;
+              uint8_t tmp_end_fov_y =
                   fov_h - (((float)end_y_tmp / 128.0) * (float)fov_h);
 
               draw_thick_line(draw_x, tmp_end_fov_y, end_fov_x + draw_x,
@@ -683,9 +687,9 @@ void SeqExtStepPage::enter_notes() {
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (active_track.notes_on[n].value == 255)
       continue;
-      active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value);
-      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
-                            velocity, cond);
+    active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value);
+    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
+                          velocity, cond);
   }
 }
 
@@ -711,16 +715,16 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
         note_interface.last_note = track;
       } else {
-        cur_w = fov_offset + (float)(fov_length / 16) * (float)track - cur_x - 1;
+        cur_w =
+            fov_offset + (float)(fov_length / 16) * (float)track - cur_x - 1;
         if (cur_w < 0) {
           cur_x += cur_w;
           cur_w = -cur_w;
         }
       }
       cur_x = max(0, cur_x);
-      cur_w = max(cur_w_min,cur_w);
+      cur_w = max(cur_w_min, cur_w);
     } else if (mask == EVENT_BUTTON_RELEASED) {
-
 
       --x_notes_down;
       if (x_notes_down == 0) {
@@ -791,7 +795,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
-    oled_display.textbox("REC", "");
+    if (recording) {
+      oled_display.textbox("REC", "");
+      setLed2();
+    } else {
+      clearLed2();
+    }
     queue_redraw();
     return true;
   }

@@ -102,6 +102,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   recording = false;
+  clearLed2();
 }
 
 void SeqPage::config_mask_info() {
