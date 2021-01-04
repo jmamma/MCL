@@ -50,9 +50,11 @@ void SeqPtcPage::cleanup() {
 }
 void SeqPtcPage::config_encoders() {
   ptc_param_len.min = 1;
+  bool show_chan = true;
   if (midi_device == &MD) {
     ptc_param_len.max = 64;
     ptc_param_len.cur = mcl_seq.md_tracks[last_md_track].length;
+    show_chan = false;
   }
 #ifdef EXT_TRACKS
   else {
@@ -60,6 +62,7 @@ void SeqPtcPage::config_encoders() {
     ptc_param_len.cur = mcl_seq.ext_tracks[last_ext_track].length;
   }
 #endif
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, show_chan);
 }
 
 uint8_t SeqPtcPage::calc_poly_count() {
