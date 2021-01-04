@@ -414,7 +414,6 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
           IS_BIT_SET64(active_track.lock_mask, i + offset)) {
         str[i] = (char)219;
       }
-
       if (note_interface.notes[i] == 1) {
         /*Char 219 on the minicommand LCD is a []*/
         str[i] = (char)255;
@@ -614,26 +613,28 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint64_t mask, lock_mask, oneshot_mask = 0, slide_mask = 0;
     active_track.get_mask(&mask, MASK_PATTERN);
-    uint16_t led_mask = 0;
+    uint64_t led_mask = 0;
 
     switch (mask_type) {
     case MASK_PATTERN:
-      led_mask = mask >> offset;
+      led_mask = mask;
       break;
     case MASK_LOCK:
       active_track.get_mask(&lock_mask, MASK_LOCK);
-      led_mask = lock_mask >> offset;
+      led_mask = lock_mask;
       break;
     case MASK_MUTE:
       oneshot_mask = active_track.oneshot_mask;
-      led_mask = oneshot_mask >> offset;
+      led_mask = oneshot_mask;
       break;
     case MASK_SLIDE:
       active_track.get_mask(&slide_mask, MASK_SLIDE);
-      led_mask = slide_mask >> offset;
+      led_mask = slide_mask;
       break;
     }
-
+    led_mask <<= (64 - active_track.length);
+    led_mask >>= (64 - active_track.length);
+    led_mask = led_mask >> offset;
     draw_mask(offset, mask, active_track.step_count, active_track.length,
               oneshot_mask, slide_mask, show_current_step);
 
