@@ -5,25 +5,25 @@ MCL 3.01 02/01/2020
 
   MIDI Active Peering:
 
-	Added a new option for configuring the MIDI port 2 device.
+    Added a new option for configuring the MIDI port 2 device.
 
-	Global Settings -> MIDI -> DEVICE 2
+    Global Settings -> MIDI -> DEVICE 2
 
-	Set to either (General MIDI or Elektron)
+    Set to either (General MIDI or Elektron)
 
-    This option sets the type of MIDI driver for port 2. Elektron devices have
-	more advanced features such as retaining kit/sound data when
-	saving/loading slots, where as general MIDI will only save/load MIDI sequencer data.
+    This option sets the default MIDI driver for port 2. Supported Elektron devices have
+    more advanced features such as retaining kit/sound data when saving/loading slots, 
+    where as general MIDI will only save/load MIDI sequencer data.
 
     If you are intending to pair your Megacommand with an Elektron device
-	(MNM, A4) set this to Elektron.
+    (MNM, A4) set this to Elektron.
 
-	For all other devices, set this to General MIDI (new default setting).
+    For all other devices, set this to General MIDI (new default setting).
 
   PianoRoll:
 
-	Added Program Change as a destination CC.
-	(Slides are disabled for Program Change).
+    Added MIDI Program Change as a CC destination.
+    (Slides are disabled for Program Change).
 
 MCL 3.00x 26/12/2020
 
