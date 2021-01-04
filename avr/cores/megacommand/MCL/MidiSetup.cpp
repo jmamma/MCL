@@ -25,10 +25,19 @@ void MidiSetup::cfg_ports() {
 
   } else {
     MidiClock.transmit_uart1 = true;
-    //MidiClock.transmit_uart2 = false;
+    // MidiClock.transmit_uart2 = false;
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
 
+  auto *pmidi = &MidiUart2;
+  pmidi->device.init();
+  if (mcl_cfg.uart2_device == 0) {
+    pmidi->device.set_id(generic_midi_device.id);
+    pmidi->device.set_name(generic_midi_device.name);
+    generic_midi_device.init_grid_devices();
+  } else {
+    generic_midi_device.disconnect();
+  }
 
   if (MD.connected) {
     md_exploit.send_globals();
@@ -46,5 +55,4 @@ void MidiSetup::cfg_ports() {
   }
 
   MidiClock.start();
-
 }

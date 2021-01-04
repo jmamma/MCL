@@ -62,6 +62,8 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
   // 75: OSC
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
+  // 79: MIDI_DEVICE
+  {0, "GENER"}, {1, "ELEKT"},
 };
 
 void new_proj_handler() {
@@ -100,17 +102,18 @@ const menu_t<1> rampage1_menu_layout PROGMEM = {
      NULL,
 };
 
-const menu_t<5> midiconfig_menu_layout PROGMEM = {
+const menu_t<6> midiconfig_menu_layout PROGMEM = {
     "MIDI",
     {
         {"TURBO 1:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart1_turbo, (Page*) NULL, NULL, 2},
         {"TURBO 2:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart2_turbo, (Page*) NULL, NULL, 2},
+        {"DEVICE 2:", 0, 2, 2, (uint8_t *) &mcl_cfg.uart2_device, (Page*) NULL, NULL, 79},
 
         {"CLK REC:", 0, 2, 2, (uint8_t *) &mcl_cfg.clock_rec, (Page*) NULL, NULL, 6},
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},
 
         {"MIDI FWD:", 0, 3, 3, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, NULL, 10},
-   },
+    },
 
     (&mclsys_apply_config),
 };
@@ -160,7 +163,7 @@ const menu_t<5> file_menu_layout PROGMEM = {
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
 MenuPage<9> system_page(&system_menu_layout, &options_param1, &options_param2);
-MenuPage<5> midi_config_page(&midiconfig_menu_layout, &config_param1,
+MenuPage<6> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
