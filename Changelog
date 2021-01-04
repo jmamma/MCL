@@ -1,3 +1,30 @@
+MCL 3.01 02/01/2020
+
+  MCL 3.01 will prompt you to create a new project on startup, this is a
+  formality as the system config has been updated.
+
+  MIDI Active Peering:
+
+	Added a new option for configuring the MIDI port 2 device.
+
+	Global Settings -> MIDI -> DEVICE 2
+
+	Set to either (General MIDI or Elektron)
+
+    This option sets the type of MIDI driver for port 2. Elektron devices have
+	more advanced features such as retaining kit/sound data when
+	saving/loading slots, where as general MIDI will only save/load MIDI sequencer data.
+
+    If you are intending to pair your Megacommand with an Elektron device
+	(MNM, A4) set this to Elektron.
+
+	For all other devices, set this to General MIDI (new default setting).
+
+  PianoRoll:
+
+	Added Program Change as a destination CC.
+	(Slides are disabled for Program Change).
+
 MCL 3.00x 26/12/2020
 
 Hotfixes A -> D
