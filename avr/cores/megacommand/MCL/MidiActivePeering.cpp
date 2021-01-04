@@ -54,6 +54,37 @@ static MidiDevice *port2_drivers[] = {
 static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
                                                 &null_midi_device};
 
+void MidiActivePeering::disconnect(uint8_t port) {
+  MidiDevice **drivers;
+  uint8_t nr_drivers = 1;
+  if (port == UART1_PORT) {
+    drivers = port1_drivers;
+  } else {
+    drivers = port2_drivers;
+    nr_drivers = 3;
+  }
+  for (size_t i = 0; i < nr_drivers; ++i) {
+    if (drivers[i]->connected)
+      drivers[i]->disconnect();
+  }
+}
+
+void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
+  MidiDevice **connected_dev;
+
+  connected_dev = &connected_midi_devices[port - 1];
+
+  midi_active_peering.disconnect(port);
+
+  auto *pmidi = _getMidiUart(port);
+  pmidi->device.init();
+  pmidi->device.set_name(driver->name);
+  pmidi->device.set_id(driver->id);
+  driver->init_grid_devices();
+
+  *connected_dev = driver;
+}
+
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
                       MidiDevice **active_device) {
   auto *pmidi = _getMidiUart(port);

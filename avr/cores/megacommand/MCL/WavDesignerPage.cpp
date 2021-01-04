@@ -32,8 +32,8 @@ void wav_render() { wd.prompt_send(); }
 const menu_t<3> wav_menu_layout PROGMEM = {
     "",
     {
-        {"EDIT:", 0, 4, 4, (uint8_t *)&WavDesignerPage::opt_mode, (Page *)NULL, NULL, 75},
-        {"WAV:", 0, 6, 6, (uint8_t *)&WavDesignerPage::opt_shape, (Page *)NULL, NULL, 69},
+        {"EDIT:", 0, 4, 4, (uint8_t *)&WavDesignerPage::opt_mode, (Page *)NULL, NULL, 76},
+        {"WAV:", 0, 6, 6, (uint8_t *)&WavDesignerPage::opt_shape, (Page *)NULL, NULL, 70},
         {"TRANSFER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, wav_render, 0},
     },
     wav_menu_handler,

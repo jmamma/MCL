@@ -29,16 +29,12 @@ void MidiSetup::cfg_ports() {
     MidiClock.mode = MidiClock.EXTERNAL_UART2;
   }
 
-  auto *pmidi = &MidiUart2;
-  pmidi->device.init();
   if (mcl_cfg.uart2_device == 0) {
-    pmidi->device.set_id(generic_midi_device.id);
-    pmidi->device.set_name(generic_midi_device.name);
-    generic_midi_device.init_grid_devices();
-  } else {
-    generic_midi_device.disconnect();
+  midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
   }
-
+  else {
+  midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
+  }
   if (MD.connected) {
     md_exploit.send_globals();
 

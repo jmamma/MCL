@@ -132,11 +132,7 @@ void SeqPtcPage::config() {
   }
 #ifdef EXT_TRACKS
   else {
-    if (Analog4.connected) {
-      strcpy(str_first, "A4");
-    } else {
-      strcpy(str_first, "MI");
-    }
+    strcpy(str_first, midi_active_peering.get_device(UART2_PORT)->name);
     str_second[0] = 'T';
     str_second[1] = last_ext_track + '1';
   }
