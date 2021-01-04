@@ -55,14 +55,14 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   // 53: PIANO ROLL
   {0,"NOTE"},
   // 54: OFF
-  {128, "OFF"}, {129, "LEARN"},
-  // 56: PROB
+  {128, "PRG"}, {129, "OFF"}, {130, "LEARN"},
+  // 57: PROB
   {1, "L1"}, {2, "L2"}, {3, "L3"}, {4, "L4"}, {5, "L5"}, {6, "L6"}, {7, "L7"}, {8, "L8"}, {9, "P1"}, {10, "P2"}, {11, "P5"}, {12, "P7"}, {13, "P9"},
-  // 69: WAV
+  // 70: WAV
   {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
-  // 75: OSC
+  // 76: OSC
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
-  // 79: MIDI_DEVICE
+  // 80: MIDI_DEVICE
   {0, "GENER"}, {1, "ELEKT"},
 };
 
@@ -107,7 +107,7 @@ const menu_t<6> midiconfig_menu_layout PROGMEM = {
     {
         {"TURBO 1:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart1_turbo, (Page*) NULL, NULL, 2},
         {"TURBO 2:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart2_turbo, (Page*) NULL, NULL, 2},
-        {"DEVICE 2:", 0, 2, 2, (uint8_t *) &mcl_cfg.uart2_device, (Page*) NULL, NULL, 79},
+        {"DEVICE 2:", 0, 2, 2, (uint8_t *) &mcl_cfg.uart2_device, (Page*) NULL, NULL, 80},
 
         {"CLK REC:", 0, 2, 2, (uint8_t *) &mcl_cfg.clock_rec, (Page*) NULL, NULL, 6},
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},

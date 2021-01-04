@@ -108,7 +108,7 @@ void ExtSeqTrack::recalc_slides() {
   for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     e = &events[curidx + n];
     uint8_t c = e->lock_idx;
-    if (!e->is_lock || !e->event_on || !locks_params[c])
+    if (!e->is_lock || !e->event_on || !locks_params[c] || locks_params[c] - 1 > 127)
       continue;
 
     uint8_t next_lockstep = locks_slide_next_lock_step[c];
@@ -507,7 +507,10 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 void ExtSeqTrack::reset_params() {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
-      uart->sendCC(channel, locks_params[c] - 1, locks_params_orig[c]);
+      uint8_t param = locks_params[c] - 1;
+      if (param < 128) {
+        uart->sendCC(channel, param, locks_params_orig[c]);
+      }
     }
   }
 }
@@ -516,10 +519,15 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
     // plock
-    uart->sendCC(channel, locks_params[ev.lock_idx] - 1, ev.event_value);
-    // event_on == lock slide
-    if (ev.event_on) {
-      locks_slides_recalc = step;
+    uint8_t param = locks_params[ev.lock_idx] - 1;
+    if (param == 128) {
+      uart->sendProgramChange(channel, ev.event_value);
+    } else {
+      uart->sendCC(channel, param, ev.event_value);
+      // event_on == lock slide
+      if (ev.event_on) {
+        locks_slides_recalc = step;
+      }
     }
   } else {
     // midi note
@@ -614,7 +622,9 @@ void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity) {
 
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
                                      uint8_t velocity) {
-  if (IS_BIT_SET128(oneshot_mask, step_count)) { return; }
+  if (IS_BIT_SET128(oneshot_mask, step_count)) {
+    return;
+  }
   if (condition > 64) {
     condition -= 64;
   }
@@ -622,7 +632,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   switch (condition) {
   case 0:
   case 1:
-      note_on(note, velocity);
+    note_on(note, velocity);
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
@@ -773,7 +783,8 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
   return clear_track_locks_idx(step, lock_idx, value);
 }
 
-bool ExtSeqTrack::clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value) {
+bool ExtSeqTrack::clear_track_locks_idx(uint8_t step, uint8_t lock_idx,
+                                        uint8_t value) {
   uint16_t start_idx, end;
   locate(step, start_idx, end);
   bool ret = false;
@@ -839,6 +850,11 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     if (count >= 2) {
       return false;
     }*/
+
+    // Don't allow slides for non CC paramaters
+    if (track_param > 127) {
+      event_on = false;
+    }
 
     ext_event_t new_event;
     e = &new_event;
