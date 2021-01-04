@@ -11,7 +11,7 @@ MCL 3.01 02/01/2020
 
     Set to either (General MIDI or Elektron)
 
-    This option sets the type of MIDI driver for port 2. Supported Elektron devices have
+    This option sets the default MIDI driver for port 2. Supported Elektron devices have
     more advanced features such as retaining kit/sound data when saving/loading slots, 
     where as general MIDI will only save/load MIDI sequencer data.
 
