@@ -18,7 +18,7 @@ public:
   ExtSeqTrackData seq_data;
   ExtTrack() {
     active = EXT_TRACK_TYPE;
-    static_assert(sizeof(ExtTrack) <= EXT_TRACK_LEN);
+    static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
   virtual void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                uint8_t slotnumber);
@@ -68,7 +68,7 @@ public:
   }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return sizeof(ExtTrack); }
-  virtual uint32_t get_region() { return BANK1_EXT_TRACKS_START; }
+  virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
 
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
