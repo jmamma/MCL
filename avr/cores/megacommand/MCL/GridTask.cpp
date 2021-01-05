@@ -145,6 +145,7 @@ void GridTask::run() {
       DEBUG_PRINTLN("gridtask");
       DEBUG_DUMP(pmem_track->active);
       if (pmem_track != nullptr) {
+        pmem_track->transition_load(track_idx, gdt->seq_track, n);
         if (mcl_actions.send_machine[n] == 0) {
           pmem_track->transition_send(track_idx, n);
           if (mcl_actions.dev_sync_slot[dev_idx] == n) {
@@ -156,7 +157,6 @@ void GridTask::run() {
             mcl_actions.dev_sync_slot[dev_idx] = -1;
           }
         }
-        pmem_track->transition_load(track_idx, gdt->seq_track, n);
         grid_page.active_slots[n] = slots_changed[n];
       }
     }
