@@ -29,6 +29,11 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
   return ret;
 }
 
+void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  store_in_mem(tracknumber);
+  load_seq_data(seq_track);
+}
+
 bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                             bool online) {
 
