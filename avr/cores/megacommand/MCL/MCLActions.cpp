@@ -627,17 +627,22 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       midi_active_peering.get_device(UART2_PORT),
   };
 
+  //float load_latency[NUM_DEVS];
+
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     dev_latency[a].latency = 0;
     dev_latency[a].div32th_latency = 0;
     dev_latency[a].div192th_latency = 0;
+
     if (dev_sync_slot[a] != 255) {
     dev_latency[a].latency += 2 + 7;
     }
+    //load_latency[a] = 0;
   }
   bool send_dev[NUM_DEVS] = {0};
 
   uint8_t track_idx, dev_idx;
+
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] < 0))
@@ -648,12 +653,15 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
         continue;
       }
       if (send_machine[n] == 0) {
+      //  uint16_t old_clock = clock;
         auto *ptrack =
             empty_track->load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+      //  uint16_t diff = clock_diff(old_clock, clock);
         if (ptrack == nullptr || !ptrack->is_active() ||
             gdt->track_type != ptrack->active) {
           continue;
         }
+        //load_latency[dev_idx] += diff;
         dev_latency[dev_idx].latency += ptrack->calc_latency(n);
       }
       send_dev[dev_idx] = true;
@@ -673,7 +681,8 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
       float latency_in_seconds =
-          dev_latency[a].latency / bytes_per_second_uart1;
+           dev_latency[a].latency / bytes_per_second_uart1;
+      //latency_in_seconds += load_latency[a] * 0.0002;
       dev_latency[a].div32th_latency =
           round(div32th_per_second * latency_in_seconds) + 1;
       dev_latency[a].div192th_latency =
