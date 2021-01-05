@@ -11,6 +11,8 @@ uint16_t A4Track::calc_latency(uint8_t tracknumber) {
 void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     DEBUG_PRINTLN(F("here"));
     DEBUG_PRINTLN(F("send a4 sound"));
+    sound.origPosition = tracknumber;
+    sound.soundpool = true;
     sound.toSysex();
 }
 
