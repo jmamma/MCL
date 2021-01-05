@@ -37,11 +37,13 @@ void A4Class::init_grid_devices() {
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     uint8_t track_type= EXT_TRACK_TYPE;
 
+    uint8_t track_idx = i - NUM_EXT_TRACKS;
     if (i < NUM_A4_SOUND_TRACKS) {
        track_type = A4_TRACK_TYPE;
+       track_idx = i;
     }
 
-    add_track_to_grid(grid_idx, i,  &(mcl_seq.ext_tracks[i]), track_type);
+    add_track_to_grid(grid_idx, track_idx,  &(mcl_seq.ext_tracks[i]), track_type);
   }
 
 }
@@ -50,6 +52,8 @@ uint16_t A4Class::sendKitParams(uint8_t* masks, void* scratchpad) {
   auto empty_track = (EmptyTrack*)scratchpad;
   for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
     if (masks[i] == 1) {
+     DEBUG_PRINTLN("sending_kit_params");
+     DEBUG_PRINTLN(i);
       auto a4_track = empty_track->load_from_mem<A4Track>(i);
       if (a4_track) {
         a4_track->sound.soundpool = true;

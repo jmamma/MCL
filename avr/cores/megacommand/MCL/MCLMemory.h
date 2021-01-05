@@ -61,6 +61,7 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 constexpr size_t DEVICE_TRACK_LEN = 7;
 constexpr size_t GRID1_TRACK_LEN = 534;
 constexpr size_t GRID2_TRACK_LEN = 2094;
+constexpr size_t EXT_TRACK_LEN = 1754;
 
 constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
@@ -93,10 +94,10 @@ constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK
 
 // 6x A4 tracks
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
-
+constexpr size_t BANK1_EXT_TRACKS_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_SOUND_TRACKS);
 // 256x file entries (16 bytes each)
 // Start at 0xBAF4
-constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_TRACKS);
+constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_EXT_TRACKS_START + EXT_TRACK_LEN * NUM_EXT_TRACKS);
 constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES);
 
 // At 0xCAF4
