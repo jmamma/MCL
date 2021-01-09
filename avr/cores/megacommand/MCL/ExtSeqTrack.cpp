@@ -717,7 +717,7 @@ void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
 uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
   param_id += 1;
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] - 1 == param_id) {
+    if (locks_params[c] == param_id) {
       return c;
     }
   }
