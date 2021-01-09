@@ -110,8 +110,8 @@ void MCLGfx::splashscreen() {
   delay(750);
 
   for (uint8_t a = 0; a < 32; a++) {
-    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 30, a, BLACK);
-    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 30, 32 - a,
+    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 31, a, BLACK);
+    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 31, 32 - a,
                           BLACK);
     oled_display.display();
   }

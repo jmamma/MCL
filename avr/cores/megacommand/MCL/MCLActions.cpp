@@ -290,6 +290,7 @@ void MCLActions::prepare_next_chain(int row, uint8_t *slot_select_array) {
     if (device_track == nullptr || device_track->active != gdt->track_type) {
       empty_track.clear();
       device_track = device_track->init_track_type(gdt->track_type);
+      device_track->init(track_idx, gdt->seq_track);
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;

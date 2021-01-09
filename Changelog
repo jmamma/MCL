@@ -1,3 +1,11 @@
+MCL 3.01a 09/01/2020
+
+Hotfixes:
+
+- PianoRoll automation record was broken.
+- PianoRoll length parameter was limited to 127, should have been 128 steps.
+- When loading Ext MIDI tracks, preserve MIDI channel setting.
+
 MCL 3.01 02/01/2020
 
   MCL 3.01 will prompt you to create a new project on startup, this is a
