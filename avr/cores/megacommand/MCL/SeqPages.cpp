@@ -39,7 +39,7 @@ const menu_t<19> seq_menu_layout PROGMEM = {
         {"VEL:", 0, 128, 0, (uint8_t *)&SeqPage::velocity, (Page *)NULL, NULL, 0},
         {"COND:", 1, NUM_TRIG_CONDITIONS, NUM_TRIG_CONDITIONS, (uint8_t *)&SeqPage::cond, (Page *)NULL, NULL, 57},
         {"SPEED:", 0, 7, 7, (uint8_t *)&opt_speed, (Page *)NULL, opt_speed_handler, 40},
-        {"LENGTH:", 1, 128, 0, (uint8_t *)&opt_length, (Page *)NULL, opt_length_handler, 0},
+        {"LENGTH:", 1, 129, 0, (uint8_t *)&opt_length, (Page *)NULL, opt_length_handler, 0},
         {"CHANNEL:", 1, 17, 0, (uint8_t *)&opt_channel, (Page *)NULL, opt_channel_handler, 0},
         {"COPY:  ", 0, 3, 3, (uint8_t *)&opt_copy, (Page *)NULL, opt_copy_track_handler, 26},
         {"CLEAR:", 0, 3, 3, (uint8_t *)&opt_clear, (Page *)NULL, opt_clear_track_handler, 26},
