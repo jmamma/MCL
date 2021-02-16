@@ -1,8 +1,20 @@
 #include "MegaComFileServer.h"
 
+#define FILEOP_BEGIN() \
+  if (fileop_active) { \
+    reply_error("device is busy", ""); \
+    return -1; \
+  } \
+  fileop_active = true; \
+
+#define FILEOP_END() \
+  fileop_active = false; \
+  
+
 MCFileServer::MCFileServer(): MegaComServer(false) {
   file.close();
   SD.chdir(true);
+  fileop_active = false;
 }
 
 uint16_t MCFileServer::readstr(char* pstr) {
@@ -11,6 +23,10 @@ uint16_t MCFileServer::readstr(char* pstr) {
     auto data = msg_getch();
     *pstr++ = data;
     if (data == 0) break;
+    ++len;
+  }
+  if (pstr[-1] != 0) {
+    pstr[0] = 0; 
     ++len;
   }
   return len;
@@ -24,6 +40,12 @@ int MCFileServer::dispatch() {
       return ls();
     case FC_GET:
       return get();
+    case FC_PUT_BEGIN:
+      return put_begin();
+    case FC_PUT_DATA:
+      return put_data();
+    case FC_PUT_END:
+      return put_end();
     default:
       return -1;
   }
@@ -41,8 +63,8 @@ int MCFileServer::resume(int state) {
 }
 
 int MCFileServer::cwd() {
-  char path[128];
-  uint16_t len = readstr(path);
+  char path[256];
+  readstr(path);
   if (!SD.chdir(path, true)){
     reply_error("cwd failed. path = ", path);
   } else {
@@ -57,7 +79,7 @@ void MCFileServer::reply_ok() {
   megacom_task.tx_end(msg.channel);
 }
 
-void MCFileServer::reply_error(char* errmsg, char* more) {
+void MCFileServer::reply_error(const char* errmsg, const char* more) {
   int len1 = strlen(errmsg);
   int len2 = 0;
   if(more != nullptr) len2 = strlen(more);
@@ -69,7 +91,9 @@ void MCFileServer::reply_error(char* errmsg, char* more) {
 }
 
 int MCFileServer::ls() {
+
   if (state == 0) {
+    FILEOP_BEGIN();
     SD.vwd()->rewind();
   }
   char path[128];
@@ -92,6 +116,7 @@ int MCFileServer::ls() {
 
     return 1;
   } else {
+    FILEOP_END();
     reply_ok();
     return -1;
   }
@@ -102,6 +127,8 @@ static uint32_t _fsize;
 int MCFileServer::get() {
   char buf[513];
   if (state == 0) {
+    FILEOP_BEGIN();
+
     file.close();
     readstr(buf);
     file.open(buf, O_READ);
@@ -134,9 +161,69 @@ rollback:
     return 1;
   } else {
     file.close();
+    FILEOP_END();
     reply_ok();
     return -1;
   }
+}
+
+int MCFileServer::put_begin() {
+  char path[256];
+
+  FILEOP_BEGIN();
+  file.close();
+  readstr(path);
+  if (!file.open(path, O_WRITE | O_CREAT)) {
+    FILEOP_END();
+    reply_error("put_begin: cannot open file", "");
+    return -1;
+  }
+  reply_ok();
+  return -1;
+}
+
+int MCFileServer::put_data() {
+  char buf[513];
+  uint16_t len = msg.len;
+
+  if (!fileop_active) {
+    reply_error("invalid request", "");
+    return -1;
+  }
+
+  if (len > sizeof(buf)) {
+    reply_error("put_data size too big","");
+    file.close();
+    FILEOP_END();
+    return -1;
+  }
+
+  for(uint16_t i = 0; i < len; ++i) {
+    buf[i] = msg_getch();
+  }
+
+  if (len == file.write(buf, len)) {
+    reply_ok();
+  } else {
+    file.close();
+    FILEOP_END();
+    reply_error("file write error", "");
+  }
+
+  return -1;
+}
+
+int MCFileServer::put_end() {
+  if (!fileop_active) {
+    reply_error("invalid request", "");
+    return -1;
+  }
+
+  file.close();
+  FILEOP_END();
+
+  reply_ok();
+  return -1;
 }
 
 MCFileServer megacom_fileserver;

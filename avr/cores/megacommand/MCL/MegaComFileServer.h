@@ -7,7 +7,9 @@ enum filecommand_t {
   FC_CWD,
   FC_LS,
   FC_GET,
-  FC_PUT,
+  FC_PUT_BEGIN,
+  FC_PUT_DATA,
+  FC_PUT_END,
   FC_DELETE,
   FC_RENAME,
 
@@ -21,13 +23,17 @@ private:
   File file;
   filecommand_t cmd;
   int state;
+  bool fileop_active;
 public:
   MCFileServer();
   int cwd();
   int ls();
   int get();
+  int put_begin();
+  int put_data();
+  int put_end();
   void reply_ok();
-  void reply_error(char*, char*);
+  void reply_error(const char*, const char*);
   int dispatch();
   uint16_t readstr(char*);
   virtual int run();

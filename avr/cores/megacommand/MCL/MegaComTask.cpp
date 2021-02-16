@@ -374,7 +374,7 @@ void MegaComTask::tx_dword(uint8_t channel, uint32_t data) {
   channels[channel].tx_data(data & 0xFF);
 }
 
-void MegaComTask::tx_vec(uint8_t channel, char *vec, int len) {
+void MegaComTask::tx_vec(uint8_t channel, const char *vec, int len) {
   if (len) {
     channels[channel].tx_data(vec[0]);
   }
@@ -408,7 +408,7 @@ void MegaComTask::tx_end_isr(uint8_t channel) {
   channels[channel].tx_end_isr();
 }
 
-void MegaComTask::debug(char *pmsg) {
+void MegaComTask::debug(const char *pmsg) {
   USE_LOCK();
   SET_LOCK();
 
