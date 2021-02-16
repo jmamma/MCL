@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2030
+#define CONFIG_VERSION 2033
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -43,6 +43,8 @@ public:
   // bit0 = USB  -> PORT
   // bit1 = PORT -> USB
   uint8_t extmidi;
+  uint16_t track_type_select;
+  uint8_t uart2_device;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

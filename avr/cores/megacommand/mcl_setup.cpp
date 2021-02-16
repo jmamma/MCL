@@ -1,4 +1,4 @@
-//#ifdef MCL
+#ifdef MCL_NOSKETCH
 
 #include "MCL.h"
 
@@ -11,4 +11,4 @@ void loop() {
   // put your main code here, to run repeatedly:
 }
 
-//#endif
+#endif

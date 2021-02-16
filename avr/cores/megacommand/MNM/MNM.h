@@ -3,31 +3,46 @@
 
 #include <inttypes.h>
 
+#include "MNMMessages.h"
+#include "MNMParams.h"
+#include "MNMPattern.h"
+#include "MNMSysex.h"
 #include "WProgram.h"
-#include "MNMMessages.hh"
-#include "MNMPattern.hh"
-#include "MNMParams.hh"
 
-#include "MNMEncoders.h"
-
-class MNMClass {
- public:
+class MNMClass : public ElektronDevice {
+public:
   MNMClass();
-  MidiClass *midi = &Midi;
-  uint8_t currentTrack;
-  
-  int currentGlobal;
-  bool loadedGlobal;
+  MidiUartClass2 *midiuart;
   MNMGlobal global;
-  
-  int currentKit;
-  bool loadedKit;
+
   MNMKit kit;
+  // MNMPattern pattern;
 
-  int currentPattern;
+  virtual bool probe();
+  virtual void init_grid_devices();
 
-  void sendSysex(uint8_t *bytes, uint8_t cnt);
-  
+  virtual ElektronSysexObject *getKit() { return &kit; }
+  virtual ElektronSysexObject *getPattern() { return nullptr; }
+  virtual ElektronSysexObject *getGlobal() { return &global; }
+  virtual ElektronSysexListenerClass *getSysexListener() {
+    return &MNMSysexListener;
+  }
+
+  virtual void updateKitParams();
+  virtual uint16_t sendKitParams(uint8_t *mask, void *);
+  virtual PGM_P getMachineName(uint8_t machine);
+
+  virtual bool canReadKit() {
+    // TODO fw cap for live kit access
+    //return fw_caps & FW_CAP
+    return true;
+  }
+
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
+    // TODO MNM does not get the pattern but reports success.
+    return true;
+  }
+
   void sendMultiTrigNoteOn(uint8_t note, uint8_t velocity);
   void sendMultiTrigNoteOff(uint8_t note);
   void sendMultiMapNoteOn(uint8_t note, uint8_t velocity);
@@ -38,9 +53,7 @@ class MNMClass {
     sendNoteOn(currentTrack, note, velocity);
   }
   void sendNoteOn(uint8_t track, uint8_t note, uint8_t velocity);
-  void sendNoteOff(uint8_t note) {
-    sendNoteOff(currentTrack, note);
-  }
+  void sendNoteOff(uint8_t note) { sendNoteOff(currentTrack, note); }
   void sendNoteOff(uint8_t track, uint8_t note);
 
   void setParam(uint8_t param, uint8_t value) {
@@ -55,46 +68,32 @@ class MNMClass {
     setMidiParam(currentTrack, param, value);
   }
   void setMidiParam(uint8_t track, uint8_t param, uint8_t value);
-  void setTrackPitch(uint8_t pitch) {
-    setTrackPitch(currentTrack, pitch);
-  }
+  void setTrackPitch(uint8_t pitch) { setTrackPitch(currentTrack, pitch); }
   void setTrackPitch(uint8_t track, uint8_t pitch);
 
-  void setTrackLevel(uint8_t level) {
-    setTrackLevel(currentTrack, level);
-  }
+  void setTrackLevel(uint8_t level) { setTrackLevel(currentTrack, level); }
   void setTrackLevel(uint8_t track, uint8_t level);
 
   void triggerTrack(bool amp = false, bool lfo = false, bool filter = false) {
     triggerTrack(currentTrack, amp, lfo, filter);
   }
-  void triggerTrackAmp() {
-    triggerTrackAmp(currentTrack);
-  }
+  void triggerTrackAmp() { triggerTrackAmp(currentTrack); }
   void triggerTrackAmp(uint8_t track) {
     triggerTrack(track, true, false, false);
   }
-  void triggerTrackLFO() {
-    triggerTrackLFO(currentTrack);
-  }
+  void triggerTrackLFO() { triggerTrackLFO(currentTrack); }
   void triggerTrackLFO(uint8_t track) {
     triggerTrack(track, false, true, false);
   }
-  void triggerTrackFilter() {
-    triggerTrackFilter(currentTrack);
-  }
+  void triggerTrackFilter() { triggerTrackFilter(currentTrack); }
   void triggerTrackFilter(uint8_t track) {
     triggerTrack(track, false, false, true);
   }
-  void triggerTrack(uint8_t track, bool amp = false, bool lfo = false, bool filter = false);
-  
+  void triggerTrack(uint8_t track, bool amp = false, bool lfo = false,
+                    bool filter = false);
+
   bool parseCC(uint8_t channel, uint8_t cc, uint8_t *track, uint8_t *param);
 
-  void setStatus(uint8_t id, uint8_t value);
-
-  void loadGlobal(uint8_t id);
-  void loadKit(uint8_t id);
-  void loadPattern(uint8_t id);
   void loadSong(uint8_t id);
 
   void setSequencerMode(bool songMode);
@@ -103,49 +102,29 @@ class MNMClass {
   void setAudioTrack(uint8_t track);
   void setMidiTrack(uint8_t track);
 
-  void setCurrentKitName(char *name);
-  void saveCurrentKit(uint8_t id);
-
-  void sendRequest(uint8_t type, uint8_t param);
-  void requestKit(uint8_t kit);
-  void requestPattern(uint8_t pattern);
-  void requestSong(uint8_t song);
-  void requestGlobal(uint8_t global);
-
-  void assignMachine(uint8_t model, bool initAll = false, bool initSynth = false) {
+  void assignMachine(uint8_t model, bool initAll = false,
+                     bool initSynth = false) {
     assignMachine(currentTrack, model, initAll, initSynth);
   }
-  void assignMachine(uint8_t track, uint8_t model, bool initAll = false, bool initSynth = false);
-  void setMachine(uint8_t idx) {
-    setMachine(currentTrack, idx);
-  }
+  void assignMachine(uint8_t track, uint8_t model, bool initAll = false,
+                     bool initSynth = false);
+
+  void insertMachineInKit(uint8_t track, MNMMachine *machine,
+                          bool set_level = true);
+
+  void setMachine(uint8_t idx) { setMachine(currentTrack, idx); }
   void setMachine(uint8_t track, uint8_t idx);
 
-  void setMute(bool mute) {
-    setMute(currentTrack, mute);
-  }
+  void setMute(bool mute) { setMute(currentTrack, mute); }
   void setMute(uint8_t track, bool mute);
-  void muteTrack() {
-    muteTrack(currentTrack);
-  }
-  void muteTrack(uint8_t track) {
-    setMute(track, true);
-  }
-  void unmuteTrack() {
-    unmuteTrack(currentTrack);
-  }
-  void unmuteTrack(uint8_t track) {
-    setMute(track, false);
-  }
+  void muteTrack() { muteTrack(currentTrack); }
+  void muteTrack(uint8_t track) { setMute(track, true); }
+  void unmuteTrack() { unmuteTrack(currentTrack); }
+  void unmuteTrack(uint8_t track) { setMute(track, false); }
   void setAutoMute(bool mute);
-  void muteAutoTrack() {
-    setAutoMute(true);
-  }
-  void unmuteAutoTrack() {
-    setAutoMute(false);
-  }
-  
-  PGM_P getMachineName(uint8_t machine);
+  void muteAutoTrack() { setAutoMute(true); }
+  void unmuteAutoTrack() { setAutoMute(false); }
+
   PGM_P getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 
@@ -153,26 +132,21 @@ class MNMClass {
   void revertToCurrentTrack(bool reloadTrack = true) {
     if (!reloadTrack) {
       if (currentTrack != 255) {
-	revertToTrack(currentTrack, false);
+        revertToTrack(currentTrack, false);
       }
     } else {
       uint8_t track = getCurrentTrack(500);
       if (track != 255) {
-	revertToTrack(track, false);
+        revertToTrack(track, false);
       }
     }
   }
   void revertToTrack(uint8_t track, bool reloadKit = false);
-
-  uint8_t getBlockingStatus(uint8_t type, uint16_t timeout = 1000);
-  uint8_t getCurrentTrack(uint16_t timeout = 1000);
-  uint8_t getCurrentKit(uint16_t timeout = 1000);
 };
 
 extern MNMClass MNM;
+extern const ElektronSysexProtocol mnm_protocol;
 
-#include "MNMSysex.hh"
-
-#include "MNMTask.hh"
+#include "MNMSysex.h"
 
 #endif /* MNM_H__ */

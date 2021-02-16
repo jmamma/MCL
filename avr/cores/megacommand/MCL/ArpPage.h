@@ -3,7 +3,7 @@
 #ifndef ARPPAGE_H__
 #define ARPPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "GUI.h"
 #include "MCLEncoder.h"
 

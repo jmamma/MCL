@@ -3,7 +3,7 @@
 #ifndef MIXERPAGE_H__
 #define MIXERPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "GUI.h"
 
 
@@ -19,25 +19,24 @@ public:
   void onControlChangeCallback_Midi(uint8_t *msg);
 };
 
-void encoder_level_handle(Encoder *enc);
-void encoder_filtf_handle(Encoder *enc);
-void encoder_filtw_handle(Encoder *enc);
-void encoder_filtq_handle(Encoder *enc);
-void encoder_lastparam_handle(Encoder *enc);
+void encoder_level_handle(EncoderParent *enc);
+void encoder_filtf_handle(EncoderParent *enc);
+void encoder_filtw_handle(EncoderParent *enc);
+void encoder_filtq_handle(EncoderParent *enc);
+void encoder_lastparam_handle(EncoderParent *enc);
 
 class MixerPage : public LightPage {
 public:
   MixerMidiEvents midi_events;
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
-  uint8_t params[16][24];
   char info_line2[9];
   uint8_t display_mode;
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
       }
-  void adjust_param(Encoder *enc, uint8_t param);
+  void adjust_param(EncoderParent *enc, uint8_t param);
 
   void draw_levels();
   void set_level(int curtrack, int value);

@@ -32,9 +32,9 @@ template <uint8_t N> struct menu_t {
 
 class MenuBase {
 public:
-  uint8_t entry_mask[2];
+  uint8_t entry_mask[4];
 
-  MenuBase() { entry_mask[0] = entry_mask[1] = 0xFF; }
+  MenuBase() { memset(entry_mask, 0xFF, sizeof(entry_mask)); }
 
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);
@@ -44,7 +44,7 @@ public:
   uint8_t get_option_range(uint8_t item_n);
   uint8_t get_number_of_options(uint8_t item_n);
   uint8_t get_options_offset(uint8_t item_n);
-  Page *get_page_callback(uint8_t item_n);
+  LightPage *get_page_callback(uint8_t item_n);
   uint8_t get_number_of_items();
   const menu_item_t *get_item(uint8_t item_n);
   PGM_P get_item_name(uint8_t item_n);
@@ -71,7 +71,7 @@ public:
   }
   virtual PGM_P get_name() { return layout->name; }
   virtual FP get_exit_function() {
-    return pgm_read_word(&(layout->exit_function));
+    return (FP)pgm_read_word(&(layout->exit_function));
   }
   virtual const menu_item_t *get_entry_address(uint8_t i) { return layout->items + i; }
   virtual uint8_t get_entry_count() { return N; };

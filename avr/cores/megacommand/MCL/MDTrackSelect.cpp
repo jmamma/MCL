@@ -1,6 +1,4 @@
-#include "MDTrackSelect.h"
-#include "MD.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 void MDTrackSelect::start() {
 
@@ -21,15 +19,15 @@ bool MDTrackSelect::on() {
 }
 
 bool MDTrackSelect::off() {
+  sysex->removeSysexListener(this);
   if (!state) {
     return false;
-  }
+   }
+  state = false;
   if (!MD.connected) {
     return false;
   }
   MD.deactivate_track_select();
-  sysex->removeSysexListener(this);
-  state = false;
   return true;
 }
 
@@ -41,8 +39,8 @@ void MDTrackSelect::end_immediate() {
     return;
   }
 
- if (sysex->getByte(0) != ids[0]) { return false; }
- if (sysex->getByte(1) != ids[1]) { return false; }
+ if (sysex->getByte(0) != ids[0]) { return; }
+ if (sysex->getByte(1) != ids[1]) { return; }
 
  MD.currentTrack = sysex->getByte(2);
  return;

@@ -1,86 +1,96 @@
-#include "A4Track.h"
-#include "MCL.h"
-#include "MCLSeq.h"
+#include "MCL_impl.h"
 //#include "MCLSd.h"
 
-void A4Track::load_seq_data(int tracknumber) {
-#ifdef EXT_TRACKS
-  if (seq_data.speed == 0) { seq_data.speed = EXT_SPEED_2X; }
-  if (active == EMPTY_TRACK_TYPE) {
-    mcl_seq.ext_tracks[tracknumber].clear_track();
-  } else {
-    mcl_seq.ext_tracks[tracknumber].buffer_notesoff();
-    memcpy(&mcl_seq.ext_tracks[tracknumber], &seq_data, sizeof(seq_data));
-  }
-#endif
+#define A4_SOUND_LENGTH 0x19F
+
+uint16_t A4Track::calc_latency(uint8_t tracknumber) {
+  uint16_t a4_latency = A4_SOUND_LENGTH;
+  return a4_latency;
 }
 
-bool A4Track::get_track_from_sysex(int tracknumber, uint8_t column) {
-
-  active = A4_TRACK_TYPE;
+void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+    DEBUG_PRINTLN(F("here"));
+    DEBUG_PRINTLN(F("send a4 sound"));
+    sound.origPosition = tracknumber;
+    sound.soundpool = true;
+    sound.toSysex();
 }
 
-bool A4Track::load_track_from_grid(int32_t column, int32_t row, int m) {
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  int32_t offset = grid.get_slot_offset(column, row);
-  int32_t len;
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
-  if (m > 0) {
-    ret = mcl_sd.read_data((uint8_t *)(this), m, &proj.file);
-  } else {
-    ret = mcl_sd.read_data((uint8_t *)(this), A4_TRACK_LEN, &proj.file);
-  }
-  if (!ret) {
-    DEBUG_PRINTLN("Write failed");
-    return false;
-  }
-  if (active == EMPTY_TRACK_TYPE) {
-  seq_data.length = 16;
-  }
-
-  return true;
+void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+  uint8_t n = slotnumber;
+  ExtTrack::transition_load(tracknumber, seq_track, slotnumber);
 }
-bool A4Track::store_track_in_grid(int32_t column, int32_t row, int track,
-                                  bool online) {
-  /*Assign a track to Grid i*/
-  /*Extraact track data from received pattern and kit and store in track
-   * object*/
+
+bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
+  DEBUG_DUMP("get blocking");
+  auto ret = Analog4.getBlockingSoundX(tracknumber);
+  DEBUG_DUMP("finished");
+  if (ret) {
+    sound.fromSysex(Analog4.midi);
+  }
+  return ret;
+}
+
+void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  store_in_mem(tracknumber);
+  load_seq_data(seq_track);
+}
+
+bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+                            bool online) {
+
   active = A4_TRACK_TYPE;
 
   bool ret;
   int b = 0;
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("storing a4 track");
-  int32_t len;
-  int32_t offset = grid.get_slot_offset(column, row);
-  ret = proj.file.seekSet(offset);
-  if (!ret) {
-    DEBUG_PRINTLN("Seek failed");
-    return false;
-  }
+  DEBUG_PRINTLN(F("storing a4 track"));
+  uint32_t len;
 
-  /*analog 4 tracks*/
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+
+  // [>analog 4 tracks<]
 #ifdef EXT_TRACKS
-  if (online) {
-    if (Analog4.connected) {
-      if (track != 255) {
-        get_track_from_sysex(track - 16, column - 16);
-      }
-    }
-    memcpy(&seq_data, &mcl_seq.ext_tracks[track - 16], sizeof(seq_data));
+  if (online && get_track_from_sysex(column)) {
+    chain.length = seq_track->length;
+    chain.speed = seq_track->speed;
+    memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
-  ret = mcl_sd.write_data((uint8_t *)this, A4_TRACK_LEN, &proj.file);
+  ret = proj.write_grid((uint8_t *)this, sizeof(A4Track), column, row);
   if (!ret) {
     return false;
   }
-  grid_page.row_headers[grid_page.cur_row].update_model(column, column,
-                                                        A4_TRACK_TYPE);
   return true;
 }
+
+// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
+// Do compile with avr-gcc and observe the error messages
+
+//__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
+//__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
+//__SIZE_PROBE<sizeof(a4sound_t)> sza4t;
+
+//__SIZE_PROBE<sizeof(MNMClass)> sz_mnm_class;
+//__SIZE_PROBE<sizeof(MDClass)> sz_md_class;
+//__SIZE_PROBE<sizeof(A4Class)> sz_a4_class;
+
+//__SIZE_PROBE<sizeof(GridTrack)> szgridtrack;
+//__SIZE_PROBE<sizeof(DeviceTrack)> szdevicetrk;
+//__SIZE_PROBE<sizeof(A4Track)> sza4trk;
+//__SIZE_PROBE<sizeof(EmptyTrack)> szemptytrk;
+//__SIZE_PROBE<sizeof(ExtTrack)> szexttrk;
+//__SIZE_PROBE<sizeof(MDTrack)> szmdtrk;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmdtrk_summed;
+//__SIZE_PROBE<sizeof(MDLFOTrack)> szmdlfotrk;
+//__SIZE_PROBE<sizeof(MDRouteTrack)> szmdroutetrk;
+//__SIZE_PROBE<sizeof(MDFXTrack)> szmdfxtrk;
+//__SIZE_PROBE<sizeof(MDTempoTrack)> szmdtempotrk;
+//__SIZE_PROBE<AUX_TRACK_LEN> szfx;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;
+
+//__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
+//__SIZE_PROBE<BANK1_AUX_TRACKS_START> addr_aux;
+//__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
+//__SIZE_PROBE<BANK1_FILE_ENTRIES_START> addr_file_start;
+//__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;

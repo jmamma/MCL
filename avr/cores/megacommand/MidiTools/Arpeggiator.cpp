@@ -2,7 +2,7 @@
 
 #include "WProgram.h"
 #include "helpers.h"
-#include "Arpeggiator.hh"
+#include "Arpeggiator.h"
 
 /**
  * \addtogroup Midi
@@ -140,21 +140,21 @@ void ArpeggiatorClass::calculateArp() {
   switch (arpStyle) {
   case ARP_STYLE_UP:
     bubbleSortUp();
-    m_memcpy(arpNotes, orderedNotes, numNotes);
-    m_memcpy(arpVelocities, orderedVelocities, numNotes);
+    memcpy(arpNotes, orderedNotes, numNotes);
+    memcpy(arpVelocities, orderedVelocities, numNotes);
     arpLen = numNotes;
     break;
     
   case ARP_STYLE_DOWN:
     bubbleSortDown();
-    m_memcpy(arpNotes, orderedNotes, numNotes);
-    m_memcpy(arpVelocities, orderedVelocities, numNotes);
+    memcpy(arpNotes, orderedNotes, numNotes);
+    memcpy(arpVelocities, orderedVelocities, numNotes);
     arpLen = numNotes;
     break;
     
   case ARP_STYLE_ORDER: {
-    m_memcpy(arpNotes, orderedNotes, numNotes);
-    m_memcpy(arpVelocities, orderedVelocities, numNotes);
+    memcpy(arpNotes, orderedNotes, numNotes);
+    memcpy(arpVelocities, orderedVelocities, numNotes);
     arpLen = numNotes;
   }
     break;
@@ -162,8 +162,8 @@ void ArpeggiatorClass::calculateArp() {
   case ARP_STYLE_UPDOWN:
     if (numNotes > 1) {
       bubbleSortUp();
-      m_memcpy(arpNotes, orderedNotes, numNotes);
-      m_memcpy(arpVelocities, orderedVelocities, numNotes);
+      memcpy(arpNotes, orderedNotes, numNotes);
+      memcpy(arpVelocities, orderedVelocities, numNotes);
       for (int i = 0; i < numNotes - 2; i++) {
 				arpNotes[numNotes + i] = orderedNotes[numNotes - 2 - i];
 				arpVelocities[numNotes + i] = arpVelocities[numNotes - 2 - i];
@@ -179,8 +179,8 @@ void ArpeggiatorClass::calculateArp() {
   case ARP_STYLE_DOWNUP:
     if (numNotes > 1) {
       bubbleSortDown();
-      m_memcpy(arpNotes, orderedNotes, numNotes);
-      m_memcpy(arpVelocities, orderedVelocities, numNotes);
+      memcpy(arpNotes, orderedNotes, numNotes);
+      memcpy(arpVelocities, orderedVelocities, numNotes);
       for (int i = 0; i < numNotes - 2; i++) {
 				arpNotes[numNotes + i] = orderedNotes[numNotes - 2 - i];
 				arpVelocities[numNotes + i] = arpVelocities[numNotes - 2 - i];
@@ -196,8 +196,8 @@ void ArpeggiatorClass::calculateArp() {
   case ARP_STYLE_UP_AND_DOWN:
     if (numNotes > 1) {
       bubbleSortUp();
-      m_memcpy(arpNotes, orderedNotes, numNotes);
-      m_memcpy(arpVelocities, orderedVelocities, numNotes);
+      memcpy(arpNotes, orderedNotes, numNotes);
+      memcpy(arpVelocities, orderedVelocities, numNotes);
       for (int i = 0; i < numNotes; i++) {
 				arpNotes[numNotes + i] = orderedNotes[numNotes - 1 - i];
 				arpVelocities[numNotes + i] = arpVelocities[numNotes - 1 - i];
@@ -213,8 +213,8 @@ void ArpeggiatorClass::calculateArp() {
   case ARP_STYLE_DOWN_AND_UP:
     if (numNotes > 1) {
       bubbleSortDown();
-      m_memcpy(arpNotes, orderedNotes, numNotes);
-      m_memcpy(arpVelocities, orderedVelocities, numNotes);
+      memcpy(arpNotes, orderedNotes, numNotes);
+      memcpy(arpVelocities, orderedVelocities, numNotes);
       for (int i = 0; i < numNotes; i++) {
 				arpNotes[numNotes + i] = orderedNotes[numNotes - 1 - i];
 				arpVelocities[numNotes + i] = arpVelocities[numNotes - 1 - i];
@@ -380,8 +380,8 @@ void ArpeggiatorClass::calculateArp() {
     break;
    
   case ARP_STYLE_RANDOM_ONCE:
-    m_memcpy(arpNotes, orderedNotes, numNotes);
-    m_memcpy(arpVelocities, orderedVelocities, numNotes);
+    memcpy(arpNotes, orderedNotes, numNotes);
+    memcpy(arpVelocities, orderedVelocities, numNotes);
     for (int i = 0; i < numNotes; i++) {
       uint8_t rand = random() % numNotes;
       uint8_t tmp;

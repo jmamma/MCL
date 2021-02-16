@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MixerPage.h"
+#include "MCL_impl.h"
 
 #define FADER_LEN 16
 #define FADE_RATE 16
@@ -76,7 +75,6 @@ void MixerPage::init() {
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
-  memcpy(&params, MD.kit.params, sizeof(params));
 
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -150,7 +148,7 @@ void MixerPage::draw_levels() {
   }
 }
 
-void encoder_level_handle(Encoder *enc) {
+void encoder_level_handle(EncoderParent *enc) {
 
   bool redraw_frame = (mixer_page.display_mode != MODEL_LEVEL);
 
@@ -192,23 +190,23 @@ void encoder_level_handle(Encoder *enc) {
   enc->old = 64;
 }
 
-void encoder_filtf_handle(Encoder *enc) {
+void encoder_filtf_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTF);
 }
 
-void encoder_filtw_handle(Encoder *enc) {
+void encoder_filtw_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTW);
 }
 
-void encoder_filtq_handle(Encoder *enc) {
+void encoder_filtq_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTQ);
 }
 
-void encoder_lastparam_handle(Encoder *enc) {
+void encoder_lastparam_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
 }
 
-void MixerPage::adjust_param(Encoder *enc, uint8_t param) {
+void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
   set_display_mode(param);
 
@@ -346,13 +344,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t track = event->source - 128;
 
     if (track > 16) {
       return false;
     }
+
+    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
 #ifdef OLED_DISPLAY
       if (note_interface.notes[track] > 0) {
@@ -363,7 +364,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
 
 #endif
-
       return true;
     }
 
@@ -409,23 +409,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.notes[i] == 1) {
-        for (uint8_t c = 0; c < 24; c++) {
-          if (MD.kit.params[i][c] != params[i][c]) {
-            USE_LOCK();
-            SET_LOCK();
-            MD.setTrackParam(i, c, params[i][c]);
-            MD.kit.params[i][c] = params[i][c];
-            CLEAR_LOCK();
-          }
-        }
-      }
-    }
-    return true;
-  }
-
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -460,7 +443,7 @@ void MixerMidiEvents::remove_callbacks() {
     return;
   }
 
-  DEBUG_PRINTLN("remove calblacks");
+  DEBUG_PRINTLN(F("remove calblacks"));
   Midi.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(

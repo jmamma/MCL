@@ -3,7 +3,7 @@
 class MidiUartClass;
 
 #include <inttypes.h>
-#include <MidiUartParent.hh>
+#include <MidiUartParent.h>
 #include "RingBuffer.h"
 #include <avr/io.h>
 //#define TXEN 3
@@ -108,8 +108,8 @@ class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
 
 public:
-  MidiUartClass(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
-                volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
+  MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
+                volatile uint8_t *tx_buf, uint16_t tx_buf_size);
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
     if (c == 0xF0) {
@@ -140,8 +140,8 @@ class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
 
 public:
-  MidiUartClass2(volatile uint8_t *rx_buf = NULL, uint16_t rx_buf_size = 0,
-                 volatile uint8_t *tx_buf = NULL, uint16_t tx_buf_size = 0);
+  MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
+                 volatile uint8_t *tx_buf, uint16_t tx_buf_size);
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 

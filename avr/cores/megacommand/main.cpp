@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <WProgram.h>
 #include <wiring_private.h>
-//#include <Events.hh>
+//#include <Events.h>
 extern "C" {
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
@@ -265,15 +265,6 @@ ISR(TIMER3_COMPA_vect) {
   gui_poll();
 #endif
 }
-/*
-uint8_t sysexBuf[5500];
-MidiClass Midi(&MidiUart, sysexBuf, sizeof(sysexBuf));
-uint8_t sysexBuf2[2800];
-MidiClass Midi2(&MidiUart2, sysexBuf2, sizeof(sysexBuf2));
-*/
-
-MidiClass Midi(&MidiUart, NULL, SYSEX1_DATA_LEN, BANK1_SYSEX1_DATA_START);
-MidiClass Midi2(&MidiUart2, NULL, SYSEX2_DATA_LEN, BANK1_SYSEX2_DATA_START);
 
 bool enable_clock_callbacks = true;
 
@@ -309,8 +300,8 @@ void __mainInnerLoop(bool callLoop) {
   }
 }
 
-void setupEventHandlers();
-void setupMidiCallbacks();
+//void setupEventHandlers();
+//void setupMidiCallbacks();
 // void setupClockCallbacks();
 int main(void) {
   delay(100);
@@ -325,8 +316,8 @@ int main(void) {
   oldsr = sr;
 
   OUTPUTDDR |= _BV(OUTPUTPIN);
-  setupEventHandlers();
-  setupMidiCallbacks();
+  // setupEventHandlers();
+  // setupMidiCallbacks();
   //	setupClockCallbacks();
   sei();
 

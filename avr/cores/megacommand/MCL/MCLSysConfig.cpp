@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLSysConfig.h"
+#include "MCL_impl.h"
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
@@ -32,19 +31,19 @@ bool MCLSysConfig::write_cfg() {
   int b;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Writing cfg");
+  DEBUG_PRINTLN(F("Writing cfg"));
   cfgfile.close();
   ret = cfgfile.open("/config.mcls", O_RDWR);
   if (!ret) {
-    DEBUG_PRINTLN("Open cfg file failed");
+    DEBUG_PRINTLN(F("Open cfg file failed"));
     return false;
   }
 
   ret = mcl_sd.write_data((uint8_t *)this, sizeof(MCLSysConfigData), &cfgfile);
   if (!ret) {
-    DEBUG_PRINTLN("Write cfg failed");
+    DEBUG_PRINTLN(F("Write cfg failed"));
   }
-  DEBUG_PRINTLN("Write cfg okay");
+  DEBUG_PRINTLN(F("Write cfg okay"));
   cfgfile.close();
   cfg_save_lastclock = slowclock;
   return true;
@@ -55,15 +54,15 @@ bool MCLSysConfig::cfg_init() {
   int b;
 
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("Initialising cfgfile");
+  DEBUG_PRINTLN(F("Initialising cfgfile"));
 
-  // DEBUG_PRINTLN("conf ext");
+  // DEBUG_PRINTLN(F("conf ext"));
   cfgfile.remove();
   ret = cfgfile.createContiguous("/config.mcls", (uint32_t)GRID_SLOT_BYTES);
   if (ret) {
-    DEBUG_PRINTLN("Created new cfgfile");
+    DEBUG_PRINTLN(F("Created new cfgfile"));
   } else {
-    DEBUG_PRINTLN("Failed to create new cfgfile");
+    DEBUG_PRINTLN(F("Failed to create new cfgfile"));
     return false;
   }
 
@@ -71,7 +70,7 @@ bool MCLSysConfig::cfg_init() {
 
   version = CONFIG_VERSION;
   number_projects = 0;
-  m_strncpy(project, my_string, 16);
+  strncpy(project, my_string, 16);
   clock_send = 0;
   clock_rec = 0;
   uart1_turbo = 3;
@@ -96,6 +95,8 @@ bool MCLSysConfig::cfg_init() {
   ram_page_mode = 0;
   track_select = 1;
   extmidi = 0;
+  track_type_select = 0xF;
+  uart2_device = 0;
   cfgfile.close();
 
   ret = write_cfg();

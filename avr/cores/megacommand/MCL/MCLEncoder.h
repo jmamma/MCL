@@ -3,7 +3,7 @@
 #ifndef MCLENCODER_H__
 #define MCLENCODER_H__
 
-#include "Encoders.hh"
+#include "Encoders.h"
 
 class MCLEncoder : public Encoder {
     /**

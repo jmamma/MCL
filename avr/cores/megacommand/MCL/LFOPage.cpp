@@ -1,9 +1,4 @@
-#include "LFO.h"
-#include "LFOPage.h"
-#include "MCL.h"
-#include "MCLGUI.h"
-#include "MCLSeq.h"
-#include "MD.h"
+#include "MCL_impl.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -180,7 +175,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
     }
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy_P(myName, modelname, 4);
     }
   }
 #ifdef OLED_DISPLAY
@@ -355,29 +350,37 @@ void LFOPage::display() {
     info2 = "LFO>MOD";
   }
 
+  const uint64_t slide_mask = 0;
+  const uint64_t mute_mask = 0;
+
   switch (lfo_track->mode) {
-  case LFO_MODE_FREE:
-    info1 = "FREE";
-    break;
-  case LFO_MODE_TRIG:
-    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
-    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
-                      lfo_track->length, true);
+    case LFO_MODE_TRIG:
     info1 = "TRIG";
     break;
-  case LFO_MODE_ONE:
-    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
-    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
-                      lfo_track->length, true);
+    case LFO_MODE_ONE:
     info1 = "ONE";
     break;
+    info1 = "FREE";
+    break;
   }
+
+  if (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE) {
+    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
+              lfo_track->length, mute_mask, slide_mask, true);
+    if ((uint16_t)lfo_track->pattern_mask != trigled_mask) {
+      trigled_mask = (uint16_t)lfo_track->pattern_mask;
+      MD.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);
+    }
+  }
+
   mcl_gui.draw_panel_labels(info1, info2);
 
   oled_display.display();
   oled_display.setFont(oldfont);
 #endif
 }
+
 void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -416,14 +419,13 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    auto device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
     uint8_t page_select = 0;
     uint8_t step = track + (page_select * 16);
-    uint8_t midi_device = device;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device == DEVICE_A4) {
+      if (device == &Analog4) {
         // GUI.setPage(&seq_extstep_page)
         return true;
       }
@@ -431,8 +433,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
 
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
-        DEBUG_PRINTLN("Trying to clear");
-        if (clock_diff(note_interface.note_hold, slowclock) < TRIG_HOLD_TIME) {
+        DEBUG_PRINTLN(F("Trying to clear"));
+        if (clock_diff(note_interface.note_hold[port], slowclock) <
+            TRIG_HOLD_TIME) {
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }
       }

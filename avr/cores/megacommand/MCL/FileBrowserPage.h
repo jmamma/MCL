@@ -9,6 +9,7 @@
 #include "SeqPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
+#include "MidiSysex.h"
 
 #define MAX_ENTRIES 1024
 
@@ -21,8 +22,9 @@
 #define MENU_WIDTH 78
 
 #define MAX_FB_ITEMS 4
+#define MAX_FT_SELECT 3
 
-class FileBrowserPage : public LightPage {
+class FileBrowserPage : public LightPage, public MidiSysexListenerClass {
 public:
   File file;
   //  char file_entries[NUM_FILE_ENTRIES][16];
@@ -37,11 +39,19 @@ public:
 
   // configuration, should be set before calling base init()
   bool show_dirs = false;
+  bool select_dirs = false;
   bool show_save = true;
   bool show_parent = true;
   bool show_new_folder = true;
   bool show_filemenu = true;
   bool show_overwrite = false;
+  bool show_samplemgr = false;
+  bool show_filetypes = false;
+  bool show_edit_wav = false;
+  uint8_t filetype_idx = 0;
+  uint8_t filetype_max = 0;
+  const char* filetypes[MAX_FT_SELECT];
+  const char* filetype_names[MAX_FT_SELECT];
 
   bool filemenu_active = false;
 
@@ -52,15 +62,22 @@ public:
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4) {
+      : LightPage(e1, e2, e3, e4), MidiSysexListenerClass() {
           param1 = e1;
           param2 = e2;
+          ids[0] = 0;
+          ids[1] = 0x20;
+          ids[2] = 0x3c;
       }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  void add_entry(const char *entry);
+
+  bool add_entry(const char *entry);
+  void get_entry(uint16_t n, const char *entry);
+
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();
+
   virtual void loop();
   virtual void setup();
   virtual void init();
@@ -73,12 +90,22 @@ public:
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
 
+  // MidiSysexListenerClass
+  virtual void start();
+  virtual void end();
+  virtual void end_immediate();
+
+protected:
+  void _cd_up();
+  void _cd(const char *);
+
 private:
 
   void _handle_filemenu();
   void _calcindices(int &);
-  void _cd_up();
-  void _cd(const char *);
+
+  void query_sample_slots();
+  void query_filesystem();
 };
 
 #endif /* FILEBROWSERPAGE_H__ */

@@ -7,20 +7,11 @@
 #include <util/delay.h>
 
 #include <MidiUart.h>
-#include <MidiUartParent.hh>
-#include <midi-common.hh>
+#include <MidiUartParent.h>
+#include <midi-common.h>
 
 #include <MidiClock.h>
 #include "MegaComMidiServer.h"
-
-MidiUartClass MidiUart((volatile uint8_t *)BANK1_UART1_RX_BUFFER_START,
-                       UART1_RX_BUFFER_LEN,
-                       (volatile uint8_t *)BANK1_UART1_TX_BUFFER_START,
-                       UART1_TX_BUFFER_LEN);
-MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,
-                         UART2_RX_BUFFER_LEN,
-                         (volatile uint8_t *)BANK1_UART2_TX_BUFFER_START,
-                         UART2_TX_BUFFER_LEN);
 
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
@@ -28,14 +19,10 @@ MidiUartClass2 MidiUart2((volatile uint8_t *)BANK1_UART2_RX_BUFFER_START,
 MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
                              volatile uint8_t *tx_buf, uint16_t tx_buf_size)
     : MidiUartParent() {
-  if (rx_buf) {
-    rxRb.ptr = rx_buf;
-    rxRb.len = rx_buf_size;
-  }
-  if (tx_buf) {
-    txRb.ptr = tx_buf;
-    txRb.len = tx_buf_size;
-  }
+  rxRb.ptr = rx_buf;
+  rxRb.len = rx_buf_size;
+  txRb.ptr = tx_buf;
+  txRb.len = tx_buf_size;
   initSerial();
 }
 
@@ -59,8 +46,14 @@ void MidiUartClass::initSerial() {
 void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
 #ifdef TX_IRQ
   // empty TX buffer before switching speed
-  while (!txRb.isEmpty())
-    ;
+  if (port == 1) {
+    while (!txRb.isEmpty())
+      ;
+  }
+  if (port == 2) {
+    while (!MidiUart2.txRb.isEmpty())
+      ;
+  }
 #endif
 
   uart_set_speed(speed, port);

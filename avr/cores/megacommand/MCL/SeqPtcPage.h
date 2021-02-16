@@ -12,7 +12,7 @@
 
 extern scale_t *scales[24];
 
-void ptc_pattern_len_handler(Encoder *enc);
+void ptc_pattern_len_handler(EncoderParent *enc);
 
 class SeqPtcMidiEvents : public MidiCallback {
 public:
@@ -59,11 +59,8 @@ public:
   uint8_t key = 0;
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
-  uint8_t last_midi_state = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
   uint64_t note_mask = 0;
-  uint16_t deferred_timer = 0;
-  const uint8_t render_defer_time = 50;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -75,13 +72,13 @@ public:
   uint8_t get_next_voice(uint8_t pitch);
   uint8_t calc_scale_note(uint8_t note_num);
 
+  void set_last_ext_track(uint8_t channel);
   void trig_md(uint8_t note_num);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
   void config_encoders();
   void init_poly();
-  void queue_redraw();
 
   bool arp_enabled = false;
   uint8_t arp_notes[ARP_MAX_NOTES];

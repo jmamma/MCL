@@ -228,7 +228,7 @@ void MegaComTask::init() {
   SET_LOCK();
 
   rx_msgs.len = NUM_COMMSG_SLOTS;
-  rx_msgs.ptr = COMMSG_SLOTS_START;
+  rx_msgs.ptr = (volatile commsg_t*)COMMSG_SLOTS_START;
 
   for (int i = 0; i < COMCHANNEL_MAX; ++i) {
     channels[i].init(

@@ -34,7 +34,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {1, "AUT"},{2,"MAN"},{3,"RND"},
   // 22: SYSTEM DISPLAY
   {0, "INT"}, {1, "INT+EXT"},
-  // 24: SYSTEM SCREENSAVER
+  // 24: MULTI
   {0, "OFF"}, {1, "ON"},
   // 26: SEQ COPY/CLEAR TRK/PASTE/REVERSE
   {0, "--",}, {1, "TRK"}, {2, "ALL"},
@@ -50,18 +50,35 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"},
   // 47: SEQ EDIT
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
-  // 51: EXT MIDI
+  // 51: GRID
+  {0, "A"}, {1, "B"},
+  // 53: PIANO ROLL
+  {0,"NOTE"},
+  // 54: OFF
+  {128, "PRG"}, {129, "OFF"}, {130, "LEARN"},
+  // 57: PROB
+  {1, "L1"}, {2, "L2"}, {3, "L3"}, {4, "L4"}, {5, "L5"}, {6, "L6"}, {7, "L7"}, {8, "L8"}, {9, "P1"}, {10, "P2"}, {11, "P5"}, {12, "P7"}, {13, "P9"},
+  // 70: WAV
+  {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
+  // 76: OSC
+  {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
+  // 80: MIDI_DEVICE
+  {0, "GENER"}, {1, "ELEKT"},
+  // 82: WAV EDIT
+  {0, "LEFT"}, {1, "RIGHT"}, {2, "STEREO"},
+  // 85: EXT MIDI
   {0, "OFF"}, {1, "IN"}, {2, "OUT"}, {3, "IN+OUT"},
 };
 
 void new_proj_handler() {
-  proj.new_project();
+  proj.new_project_prompt();
 }
 
-const menu_t<8> system_menu_layout PROGMEM = {
+const menu_t<9> system_menu_layout PROGMEM = {
     "GLOBAL",
     {
         {"LOAD PROJECT" ,0, 0, 0, (uint8_t *) NULL, (Page*) &load_proj_page, NULL, 0},
+        {"CONV PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) &convert_proj_page, NULL, 0},
         {"NEW PROJECT",0, 0, 0, (uint8_t *) NULL, (Page*) NULL, &new_proj_handler, 0},
         {"MIDI",0, 0, 0, (uint8_t *) NULL, (Page*) &midi_config_page, NULL, 0},
         {"MACHINEDRUM", 0, 0, 0, (uint8_t *) NULL, (Page*) &md_config_page, NULL, 0},
@@ -89,18 +106,19 @@ const menu_t<1> rampage1_menu_layout PROGMEM = {
      NULL,
 };
 
-const menu_t<6> midiconfig_menu_layout PROGMEM = {
+const menu_t<7> midiconfig_menu_layout PROGMEM = {
     "MIDI",
     {
         {"TURBO 1:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart1_turbo, (Page*) NULL, NULL, 2},
         {"TURBO 2:", 0, 4, 4, (uint8_t *) &mcl_cfg.uart2_turbo, (Page*) NULL, NULL, 2},
+        {"DEVICE 2:", 0, 2, 2, (uint8_t *) &mcl_cfg.uart2_device, (Page*) NULL, NULL, 80},
 
         {"CLK REC:", 0, 2, 2, (uint8_t *) &mcl_cfg.clock_rec, (Page*) NULL, NULL, 6},
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},
 
         {"MIDI FWD:", 0, 3, 3, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, NULL, 10},
         {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 51},
-   },
+    },
 
     (&mclsys_apply_config),
 };
@@ -127,19 +145,19 @@ const menu_t<3> chain_menu_layout PROGMEM = {
 };
 
 
-const menu_t<2> mclconfig_menu_layout PROGMEM = {
+const menu_t<1> mclconfig_menu_layout PROGMEM = {
     "SYSTEM",
     {
         {"DISPLAY:", 0, 2, 2, (uint8_t *) &mcl_cfg.display_mirror, (Page*) NULL, NULL, 22},
-        {"SCREENSAVER:", 0, 2, 2, (uint8_t *) &mcl_cfg.screen_saver, (Page*) NULL, NULL, 24},
         //{"DIAGNOSTIC:", 0, 0, 0, (uint8_t *) NULL, (Page*) &diag_page, NULL, {}},
     },
     (&mclsys_apply_config),
 };
 
-const menu_t<5> file_menu_layout PROGMEM = {
+const menu_t<6> file_menu_layout PROGMEM = {
     "FILE",
     {
+        {"EDIT WAV", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"NEW DIR.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
@@ -150,12 +168,12 @@ const menu_t<5> file_menu_layout PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_param6);
-MenuPage<8> system_page(&system_menu_layout, &options_param1, &options_param2);
-MenuPage<6> midi_config_page(&midiconfig_menu_layout, &config_param1,
+MenuPage<9> system_page(&system_menu_layout, &options_param1, &options_param2);
+MenuPage<7> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
 MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
-MenuPage<2> mcl_config_page(&mclconfig_menu_layout, &config_param1,
+MenuPage<1> mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
 MenuPage<1> ram_config_page(&rampage1_menu_layout, &config_param1,
                          &config_param7);
@@ -166,6 +184,6 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
-MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<5> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
+MCLEncoder file_menu_encoder(0, 5, ENCODER_RES_PAT);
+MenuPage<6> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
 

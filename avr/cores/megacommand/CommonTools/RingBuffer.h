@@ -281,10 +281,10 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
 
 template <class C, int N, class T>
 bool CRingBuffer<C, N, T>::getp(C *dst) volatile {
-  if (isEmpty())
-    return false;
   USE_LOCK();
   SET_LOCK();
+  if (isEmpty())
+    return false;
   if (ptr == NULL) {
     memcpy(dst, (void *)&buf[rd], sizeof(C));
   } else {

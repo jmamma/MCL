@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "QuestionDialogPage.h"
+#include "MCL_impl.h"
 
 void QuestionDialogPage::init(const char* title_, const char* text_) {
 #ifdef OLED_DISPLAY

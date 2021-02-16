@@ -1,5 +1,4 @@
-#include "ArpPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
@@ -85,7 +84,7 @@ void ArpPage::display() {
     break;
   }
   GUI.put_string_at(0, str);
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  strncpy_P(str, arp_names[encoders[1]->cur], 4);
   GUI.put_string_at(4,str);
   GUI.put_value_at2(8, encoders[2]->cur);
   GUI.put_value_at2(12, encoders[3]->cur);
@@ -122,7 +121,7 @@ void ArpPage::display() {
   }
   mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
 
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
@@ -151,7 +150,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
 
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }

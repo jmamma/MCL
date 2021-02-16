@@ -1,4 +1,4 @@
-#include "FS_FileSystem.hh"
+#include "FS_FileSystem.h"
 #include "GUI.h"
 #include "LCD.h"
 //  FS_FileSystem::FS_FileSystem() {
@@ -96,7 +96,7 @@
      for (int i = 0; i < FS_MAX_ENTRIES; i++) {
        if ((count < n) && (count < header.number_of_entries)) {
        read_entry(i,&temp);
-       m_strncpy(buf[count * FS_FILE_NAME_LENGTH],temp.path,FS_FILE_NAME_LENGTH); 
+       strncpy(buf[count * FS_FILE_NAME_LENGTH],temp.path,FS_FILE_NAME_LENGTH); 
        if (temp.active != FS_ENTRY_DISABLED) {
          count++;
        }
@@ -216,7 +216,7 @@
     if (best_match > -1) {
       //We found an existing entry we can use
       read_entry(i,&temp);
-      m_strncpy(&temp.path,path,FS_FILE_NAME_LENGTH);
+      strncpy(temp.path,path,FS_FILE_NAME_LENGTH);
       temp.path[FS_FILE_NAME_LENGTH - 1] = '\n';
       temp.size = size;
       temp.active = FS_ENTRY_ACTIVE;
@@ -248,7 +248,7 @@
 
         if (temp.offset + size < sdcard_info.capacity) {
 
-         m_strncpy(&temp.path,path,FS_FILE_NAME_LENGTH);
+         strncpy(temp.path,path,FS_FILE_NAME_LENGTH);
          temp.path[FS_FILE_NAME_LENGTH - 1] = '\n';
          
          //Write the entry to file table then read it in to entry object

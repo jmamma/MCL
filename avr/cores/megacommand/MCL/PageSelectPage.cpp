@@ -1,6 +1,5 @@
-#include "MCL.h"
-#include "PageSelectPage.h"
 #include <avr/pgmspace.h>
+#include "MCL_impl.h"
 
 struct PageCategory {
   char Name[8];
@@ -32,8 +31,8 @@ const PageSelectEntry Entries[] PROGMEM = {
     {"LFO", &lfo_page, 3, 0, 24, 24, (uint8_t *)icon_lfo},
 
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, (uint8_t *)icon_step},
-    {"RECORD", &seq_rtrk_page, 5, 1, 24, 15, (uint8_t *)icon_rec},
-    {"LOCKS", &seq_param_page[0], 6, 1, 24, 19, (uint8_t *)icon_para},
+    {"PIANO ROLL", &seq_extstep_page, 6, 1, 24, 25, (uint8_t *)icon_pianoroll},
+    {"LOCKS", &seq_param_page[0], 5, 1, 24, 19, (uint8_t *)icon_para},
     {"CHROMATIC", &seq_ptc_page, 7, 1, 24, 25, (uint8_t *)icon_chroma},
 #ifdef SOUND_PAGE
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, (uint8_t *)icon_sound},
@@ -66,9 +65,9 @@ static uint8_t get_pageidx(uint8_t page_number) {
 static LightPage *get_page(uint8_t pageidx, char *str) {
   if (pageidx < n_entry) {
     if (str) {
-      m_strncpy_p(str, (PGM_P) & (Entries[pageidx].Name), 16);
+      strncpy_P(str, (PGM_P) & (Entries[pageidx].Name), 16);
     }
-    return pgm_read_word(&Entries[pageidx].Page);
+    return (LightPage*)pgm_read_word(&Entries[pageidx].Page);
   } else {
     if (str) {
       strncpy(str, "----", 5);
@@ -80,7 +79,7 @@ static LightPage *get_page(uint8_t pageidx, char *str) {
 static void get_page_icon(uint8_t pageidx, const uint8_t *&icon, uint8_t &w,
                           uint8_t &h) {
   if (pageidx < n_entry) {
-    icon = pgm_read_word(&Entries[pageidx].IconData);
+    icon = (const uint8_t*)pgm_read_word(&Entries[pageidx].IconData);
     w = pgm_read_byte(&Entries[pageidx].IconWidth);
     h = pgm_read_byte(&Entries[pageidx].IconHeight);
   } else {
@@ -91,7 +90,7 @@ static void get_page_icon(uint8_t pageidx, const uint8_t *&icon, uint8_t &w,
 
 static void get_category_name_by_idx(uint8_t catidx, char *str) {
   if (str) {
-    m_strncpy_p(str, (PGM_P) & (Categories[catidx].Name), 16);
+    strncpy_P(str, (PGM_P) & (Categories[catidx].Name), 16);
   }
 }
 
@@ -349,7 +348,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port);
+    uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t track = event->source - 128;
     // note interface presses select corresponding page

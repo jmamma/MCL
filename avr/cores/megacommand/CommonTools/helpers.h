@@ -111,8 +111,7 @@ extern const uint32_t _bvmasks32[];
 #define IS_BIT_SET128(target, bit)           IS_BIT_SET_RADDR(target, bit)
 #define IS_BIT_CLEAR128(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
 
-
-
+uint8_t popcount(const uint8_t bits);
 
 /** @} */
 
@@ -220,22 +219,8 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
  * @{
  **/
 	
-uint16_t m_snprintf(char *dst, uint16_t len, const char *fmt, ...);
-uint16_t m_vsnprintf(char *dst, uint16_t len, const char *fmt, va_list lp);
-	
-void m_memcpy(void *dst, const void *src, uint16_t cnt);
-void m_memset(void *dst, uint16_t cnt, uint8_t elt);
-void m_strncpy(void *dst, const char *src, uint16_t cnt);
 void m_strncpy_fill(void *dst, const char *src, uint16_t cnt);
-void m_memcpy_p(void *dst, PGM_P src, uint16_t cnt);
-void m_strncpy_p(void *dst, PGM_P src, uint16_t cnt);
 void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt);
-void m_memclr(void *dst, uint16_t cnt);
-void m_str16cpy_fill(void *dst, const char *src);
-void m_str16cpy_p_fill(void *dst, PGM_P src);
-void m_str16cpy_p(void *dst, PGM_P src);
-void m_strnappend(void *dst, const char *src, int len);
-uint16_t m_strlen(const char *str);
 void m_toupper(char* str);
 void m_trim_space(char* str);
 
@@ -277,8 +262,7 @@ extern void uart_set_speed(uint32_t speed, uint8_t port);
 #ifdef __cplusplus
 }
 
-#include "BitArray.hh"
-#include "Task.hh"
+#include "Task.h"
 #endif
 
 #endif /* HELPERS_H__ */

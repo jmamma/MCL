@@ -1,19 +1,17 @@
-#include "AuxPages.h"
-#include "MCL.h"
-#include "MCLSeq.h"
+#include "MCL_impl.h"
 
-extern MCLEncoder mixer_param1(0, 127);
-extern MCLEncoder mixer_param2(0, 127);
-extern MCLEncoder mixer_param3(0, 127);
-extern MCLEncoder mixer_param4(0, 127);
+MCLEncoder mixer_param1(0, 127);
+MCLEncoder mixer_param2(0, 127);
+MCLEncoder mixer_param3(0, 127);
+MCLEncoder mixer_param4(0, 127);
 
-extern MCLEncoder route_param1(2, 5);
-extern MCLEncoder route_param2(0, 6);
+MCLEncoder route_param1(2, 5);
+MCLEncoder route_param2(0, 6);
 
-extern MCLEncoder fx_param1(0, 127);
-extern MCLEncoder fx_param2(0, 127);
-extern MCLEncoder fx_param3(0, 127);
-extern MCLEncoder fx_param4(0, 127);
+MCLEncoder fx_param1(0, 127);
+MCLEncoder fx_param2(0, 127);
+MCLEncoder fx_param3(0, 127);
+MCLEncoder fx_param4(0, 127);
 
 MixerPage mixer_page(&mixer_param1, &mixer_param2, &mixer_param3,
                      &mixer_param4);

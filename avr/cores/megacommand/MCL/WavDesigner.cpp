@@ -1,17 +1,36 @@
-#include "MCL.h"
-#include "WavDesigner.h"
-#include "DSP.h"
-#include "Osc.h"
-#include "Wav.h"
-#include "MidiSDS.hh"
+#include "MCL_impl.h"
+
+void WavDesigner::prompt_send() {
+    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+
+#ifdef OLED_DISPLAY
+      oled_display.clearDisplay();
+#endif
+      GUI.setLine(GUI.LINE1);
+      GUI.put_string_at(0, "Render..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+      oled_display.clearDisplay();
+#endif
+      wd.render();
+      GUI.put_string_at(0, "Sending..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+#endif
+     wd.send();
+   }
+}
 
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();
   float sample_rate = 44100;
   Wav wav_file;
 
-  bool overwrite = true;
-  if (!wav_file.open("render.wav", overwrite, 1, sample_rate, 16)) {
+  if (!wav_file.open("render.wav", true, 1, sample_rate, 16, true)) {
     return false;
   }
   // Work out lowest base frequency.
@@ -23,7 +42,7 @@ bool WavDesigner::render() {
     }
   }
   // Determine sample lenght for 1 cycle.
-  DEBUG_PRINTLN("fund: ");
+  DEBUG_PRINTLN(F("fund: "));
   DEBUG_PRINTLN(fund_freq);
 
   // Recalculate sample rate using base frequency, for sample alignment.
@@ -48,7 +67,7 @@ bool WavDesigner::render() {
   }
   n_cycle += 2;
   //  n_cycle = 8096;
-  DEBUG_PRINTLN("samples");
+  DEBUG_PRINTLN(F("samples"));
   DEBUG_PRINTLN(n_cycle);
   // 512B worth of buffer
   uint16_t buffer[256];
@@ -97,7 +116,7 @@ bool WavDesigner::render() {
         // DEBUG_PRINTLN(osc_sample);
         break;
       case 2:
-       tri_osc.width = pages[i].get_width();
+        tri_osc.width = pages[i].get_width();
         osc_sample +=
             tri_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
         break;
@@ -131,8 +150,7 @@ bool WavDesigner::render() {
     if (sample < -1 * MAX_HEADROOM) {
       sample = -1 * MAX_HEADROOM;
     }
-    // DEBUG_PRINTLN(" ");
-   
+    // DEBUG_PRINTLN(F(" "));
     // Need to correctly convert from float to int
     int16_t out_sample;
     if (sample > 0) {
@@ -140,7 +158,7 @@ bool WavDesigner::render() {
     } else {
       out_sample = (int16_t)(sample - 0.5);
     }
-    DEBUG_PRINTLN(out_sample); 
+    DEBUG_PRINTLN(out_sample);
     buffer[samples_so_far] = out_sample;
 
     samples_so_far++;
@@ -149,7 +167,7 @@ bool WavDesigner::render() {
 
     if ((abs(out_sample) > largest_sample_so_far)) {
       largest_sample_so_far = abs(out_sample);
-      DEBUG_PRINTLN("large sample found");
+      DEBUG_PRINTLN(F("large sample found"));
       DEBUG_PRINTLN(largest_sample_so_far);
     }
 
@@ -171,7 +189,7 @@ bool WavDesigner::render() {
     // If buffer overflow approaching write to flash.
 
     if ((samples_so_far > 255) || (n == n_cycle - 1)) {
-      DEBUG_PRINTLN("let's write");
+      DEBUG_PRINTLN(F("let's write"));
       DEBUG_PRINTLN(samples_so_far);
       if (!wav_file.write_samples(buffer, samples_so_far, pos, 0,
                                   write_header)) {
@@ -182,23 +200,12 @@ bool WavDesigner::render() {
       samples_so_far = 0;
     }
   }
-  // Normalise wav
 
-  float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
-  DEBUG_PRINTLN("gain:");
-  DEBUG_PRINTLN(largest_sample_so_far);
-  DEBUG_PRINTLN(normalize_gain);
-  wav_file.file.sync();
-  wav_file.apply_gain(normalize_gain);
-  write_header = true;
-  if (!wav_file.close(write_header)) {
-    DEBUG_PRINTLN("could not close");
-  }
-  DEBUG_PRINTLN("wave stats:");
+  DEBUG_PRINTLN(F("wave stats:"));
   DEBUG_PRINTLN(n_cycle);
   DEBUG_PRINTLN(pos);
-  DEBUG_PRINTLN(wav_file.header.subchunk2Size);
-  DEBUG_PRINTLN("zero crossings");
+  DEBUG_PRINTLN(wav_file.header.data.chunk_size);
+  DEBUG_PRINTLN(F("zero crossings"));
   DEBUG_PRINTLN(first_zero_crossing);
   DEBUG_PRINTLN(last_zero_crossing);
   DEBUG_PRINTLN(n_cycle - 3);
@@ -206,11 +213,25 @@ bool WavDesigner::render() {
   DEBUG_PRINTLN(n_cycle);
   loop_start = first_zero_crossing;
   loop_end = last_zero_crossing;
+
   // first_zero_crossing = 0;
+  // Normalise wav
+
+  float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
+  DEBUG_PRINTLN("gain:");
+  DEBUG_PRINTLN(largest_sample_so_far);
+  DEBUG_PRINTLN(normalize_gain);
+  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start, loop_end);
+  wav_file.file.sync();
+  wav_file.apply_gain(normalize_gain);
+  write_header = true;
+  if (!wav_file.close(write_header)) {
+    DEBUG_PRINTLN(F("could not close"));
+  }
 }
+
 bool WavDesigner::send() {
-    return midi_sds.sendWav("render.wav", mixer.enc4.cur, SDS_LOOP_FORWARD, loop_start,
-                          loop_end, true);
+  return midi_sds.sendWav("render.wav", mixer.enc4.cur, false);
 }
 
 WavDesigner wd;

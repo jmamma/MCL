@@ -5,17 +5,17 @@
 
 #include <stdlib.h>
 
-#include "Task.hh"
-#include "Vector.hh"
+#include "Task.h"
+#include "Vector.h"
 #include "WProgram.h"
 
 #if defined(MIDIDUINO_USE_GUI) || defined(HOST_MIDIDUINO)
 
 #define MIDIDUINO_GUI_ACTIVE 1
 
-#include "Encoders.hh"
-#include "Events.hh"
-#include "Pages.hh"
+#include "Encoders.h"
+#include "Events.h"
+#include "Pages.h"
 
 /**
  * \addtogroup GUI
@@ -59,7 +59,6 @@ typedef struct line_s {
 /* @} */
 
 class Page;
-class PageParent;
 class Sketch;
 
 /** The default sketch that is always available. **/
@@ -104,7 +103,6 @@ public:
    */
   bool display_mirror = false;
   bool use_screen_saver = false;
-  bool screen_saver = false;
   /** A vector storing the registered event handlers (max 4). **/
   Vector<event_handler_t, 4> eventHandlers;
   /** A vector storing the registered tasks (max 8). **/
@@ -135,7 +133,7 @@ public:
    **/
   void setSketch(Sketch *_sketch);
   /** Returns a pointer to the current sketches currentPage(). **/
-  PageParent *currentPage();
+  LightPage *currentPage();
 
   /**
    * Set the current page of the active sketch (all the page stack will be
@@ -143,13 +141,13 @@ public:
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void setPage(PageParent *page);
+  void setPage(LightPage *page);
   /**
    * Push a new page on top of the currently active one.
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void pushPage(PageParent *page);
+  void pushPage(LightPage *page);
   /**
    * Pop the top page.
    *
@@ -161,7 +159,7 @@ public:
    *
    * Refer to the documentation of the Sketch class for more details.
    **/
-  void popPage(PageParent *page);
+  void popPage(LightPage *page);
 
   /**
    * Add a new event handler to the event handler vector (max 4). The
@@ -325,21 +323,6 @@ public:
    * increments) and fill up with whitespace. **/
   void put_p_string_at_fill(uint8_t idx, PGM_P str);
 
-  /** Print the format string using the vsnprintf function. **/
-  void printf(const char *fmt, ...);
-  /** Print the format string using the vsnprintf function and fill up with
-   * whitespace. **/
-  void printf_fill(const char *fmt, ...);
-  /** Print the format string at the given idx (in 1 character increments) using
-   * the vsnprintf function. **/
-  void printf_at(uint8_t idx, const char *fmt, ...);
-  /**
-   * Print the format string at the given idx (in 1 character
-   * increments) using the vsnprintf function and fill up with
-   * whitespace.
-   **/
-  void printf_at_fill(uint8_t idx, const char *fmt, ...);
-
   /** Set the flash duration of the currently active flash line. **/
   void flash(uint16_t duration = DEFAULT_FLASH_DURATION);
   /** Flash the value in base 10 at the given idx (in 4 character increments)
@@ -414,23 +397,6 @@ public:
   void flash_p_strings_fill(PGM_P str1, PGM_P str2,
                             uint16_t duration = DEFAULT_FLASH_DURATION);
 
-  /** Flash the given format string using the vsnprintf function. **/
-  void flash_printf(const char *fmt, ...);
-  /** Flash the given format string using the vsnprintf function and fill with
-   * whitespace. **/
-  void flash_printf_fill(const char *fmt, ...);
-  /**
-   * Flash the given format string at the given idx (in 1-character
-   * increments) using the vsnprintf function and fill with
-   * whitespace.
-   **/
-  void flash_printf_at(uint8_t idx, const char *fmt, ...);
-  /**
-   * Flash the given format string using the vsnprintf function and
-   * fill with whitespace.
-   **/
-  void flash_printf_at_fill(uint8_t idx, const char *fmt, ...);
-
   /** Switch the line to be displayed, using either GUI.LINE1 or GUI.LINE2. **/
   void setLine(const uint8_t line) { curLine = line; }
   /** Clear both lines **/
@@ -461,9 +427,9 @@ extern GuiClass GUI;
 
 char hex2c(uint8_t hex);
 
-#include "Encoders.hh"
-#include "Pages.hh"
-#include "Sketch.hh"
+#include "Encoders.h"
+#include "Pages.h"
+#include "Sketch.h"
 
 #endif
 

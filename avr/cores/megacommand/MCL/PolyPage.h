@@ -3,7 +3,7 @@
 #ifndef POLYPAGE_H__
 #define POLYPAGE_H__
 
-//#include "Pages.hh"
+//#include "Pages.h"
 #include "GUI.h"
 
 class PolyPage : public LightPage {

@@ -1,9 +1,7 @@
 #include "WProgram.h"
 
-#include "MidiIDSysex.hh"
+#include "MidiIDSysex.h"
 #include "helpers.h"
-
-MidiIDSysexListenerClass MidiIDSysexListener;
 
 void MidiIDSysexListenerClass::start() {
 
@@ -18,21 +16,18 @@ void MidiIDSysexListenerClass::handleByte(uint8_t byte) {}
 #define MD_ID_NAME 0x73
 
 void MidiIDSysexListenerClass::end() {
-  DEBUG_PRINT_FN(); 
 }
 
 void MidiIDSysexListenerClass::end_immediate() {
   // MidiUartParent *uart = sysex->uart;
-  DEBUG_PRINT_FN();
   MidiID *dev = &(sysex->uart->device);
   uint16_t p = (uint16_t) dev;
-  DEBUG_DUMP(p);
 
   uint8_t i = 2;
   if ((sysex->getByte(i++) == 0x06) &&
       (sysex->getByte(i++) == 0x02)) {
 
-    DEBUG_PRINTLN("MidiID message detected");
+    DEBUG_PRINTLN(F("MidiID message detected"));
     dev->manufacturer_id[0] = sysex->getByte(i++);
     if (dev->manufacturer_id[0] == 0) {
       dev->manufacturer_id[1] = sysex->getByte(i++);
@@ -50,7 +45,7 @@ void MidiIDSysexListenerClass::end_immediate() {
 
     msgType = sysex->getByte(2);
     isIDMessage = true;
-    DEBUG_PRINTLN("fam code");
+    DEBUG_PRINTLN(F("fam code"));
     DEBUG_DUMP(dev->family_code[0]);
    return;
   }

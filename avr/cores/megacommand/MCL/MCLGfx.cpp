@@ -1,5 +1,4 @@
-#include "MCL.h"
-#include "MCLGfx.h"
+#include "MCL_impl.h"
 
 void MCLGfx::init_oled() {
 #ifdef OLED_DISPLAY
@@ -78,7 +77,7 @@ void MCLGfx::draw_evil() {
 
 void MCLGfx::splashscreen() {
 #ifdef OLED_DISPLAY
-  DEBUG_PRINTLN("OLED enabled");
+  DEBUG_PRINTLN(F("OLED enabled"));
   oled_display.setTextSize(2);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);
@@ -111,15 +110,15 @@ void MCLGfx::splashscreen() {
   delay(750);
 
   for (uint8_t a = 0; a < 32; a++) {
-    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 30, a, BLACK);
-    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 30, 32 - a,
+    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 31, a, BLACK);
+    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 31, 32 - a,
                           BLACK);
     oled_display.display();
   }
 
 #else
 
-  DEBUG_PRINTLN("HD44780 enabled");
+  DEBUG_PRINTLN(F("HD44780 enabled"));
   char str1[17] = "MEGACOMMAND LIVE";
   char str2[17] = VERSION_STR;
   str1[16] = '\0';

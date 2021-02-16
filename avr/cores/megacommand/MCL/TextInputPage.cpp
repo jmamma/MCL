@@ -1,5 +1,4 @@
-#include "TextInputPage.h"
-#include "MCL.h"
+#include "MCL_impl.h"
 
 constexpr auto sz_allowedchar = 71;
 
@@ -41,7 +40,7 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   title = title_;
   length = len;
   max_length = len;
-  m_strncpy(text, text_, len);
+  strncpy(text, text_, len);
   cursor_position = 0;
   config_normal();
 }
@@ -284,7 +283,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {
       cpy_len -= 1;
     }
-    m_strncpy(textp, text, cpy_len);
+    strncpy(textp, text, cpy_len);
     textp[cpy_len] = '\0';
     GUI.ignoreNextEvent(event->source);
     GUI.popPage();

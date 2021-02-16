@@ -1,8 +1,8 @@
 #include "WProgram.h"
 
 #include "Midi.h"
-#include "MidiSysex.hh"
-#include "TurboMidi.hh"
+#include "MidiSysex.h"
+#include "TurboMidi.h"
 
 #ifndef HOST_MIDIDUINO
 
@@ -11,7 +11,7 @@ static uint8_t turbomidi_sysex_header[] = {
 };
 
 void TurboMidiSysexListenerClass::handleByte(uint8_t byte) {
-	if (sysex->len == 3) {
+	if (sysex->recordLen == 3) {
 		if (byte == 0x00) {
 			isGenericMessage = true;
 		} else {
@@ -96,14 +96,23 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 
 	uint8_t speed1;
 	uint8_t speed2;
+
+  char nbuf[8];
+  char msgbuf[16];
 	
 	sendSpeedRequest();
 	bool ret = blockForState(tm_master_req_answer_recvd);
 	GUI.setLine(GUI.LINE2);
 	if (ret) {
-		GUI.flash_printf("s %X c %X", slaveSpeeds, certifiedSlaveSpeeds);
+    strcpy(msgbuf, "s ");
+    itoa(slaveSpeeds, nbuf, 16);
+    strcat(msgbuf, nbuf);
+    strcat(msgbuf, " c ");
+    itoa(certifiedSlaveSpeeds, nbuf, 16);
+    strcat(msgbuf, nbuf);
+		GUI.flash_string(msgbuf);
 	} else {
-		GUI.flash_printf("REQ TIMEOUT");
+		GUI.flash_string("REQ TIMEOUT");
 		goto fail;
 	}
 
@@ -113,9 +122,15 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 	ret = blockForState(tm_master_speed_ack_recvd);
 	GUI.setLine(GUI.LINE2);
 	if (ret) {
-		GUI.flash_printf("ACK %b %b", speed1, speed2);
+    strcpy(msgbuf, "ACK ");
+    itoa(speed1, nbuf, 16);
+    strcat(msgbuf, nbuf);
+    strcat(msgbuf, " ");
+    itoa(speed2, nbuf, 16);
+    strcat(msgbuf, nbuf);
+		GUI.flash_string(msgbuf);
 	} else {
-		GUI.flash_printf("ACK TIMEOUT");
+		GUI.flash_string("ACK TIMEOUT");
 		goto fail;
 	}
 
@@ -123,9 +138,9 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 	ret = blockForState(tm_master_test_1_recvd);
 	GUI.setLine(GUI.LINE2);
 	if (ret) {
-		GUI.flash_printf("TEST1 ACK");
+		GUI.flash_string("TEST1 ACK");
 	} else {
-		GUI.flash_printf("TEST1 TIMEOUT");
+		GUI.flash_string("TEST1 TIMEOUT");
 		goto fail;
 	}
 
@@ -133,9 +148,9 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 	ret = blockForState(tm_master_test_2_recvd);
 	GUI.setLine(GUI.LINE2);
 	if (ret) {
-		GUI.flash_printf("TEST2 ACK");
+		GUI.flash_string("TEST2 ACK");
 	} else {
-		GUI.flash_printf("TEST2 TIMEOUT");
+		GUI.flash_string("TEST2 TIMEOUT");
 		goto fail;
 	}
 

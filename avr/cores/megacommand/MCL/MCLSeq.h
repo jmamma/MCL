@@ -1,15 +1,10 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 
-#ifndef MCLSEQUENCER_H__
-#define MCLSEQUENCER_H__
+#pragma once
 
-#include "ExtSeqTrack.h"
 #include "LFOSeqTrack.h"
-#include "MCLMemory.h"
 #include "MDSeqTrack.h"
-#include "SeqPages.h"
-#include "midi-common.hh"
-
+#include "ExtSeqTrack.h"
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -40,18 +35,20 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
-  uint8_t num_md_tracks = NUM_MD_TRACKS;
+  static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
-  uint8_t num_ext_tracks = NUM_EXT_TRACKS;
+  static constexpr uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 
 #ifdef LFO_TRACKS
   LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
-  uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
+  static constexpr uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
+
+  SeqTrack aux_tracks[NUM_AUX_TRACKS];
 
   MCLSeqMidiEvents midi_events;
   bool state = false;
@@ -71,4 +68,3 @@ public:
 
 extern MCLSeq mcl_seq;
 
-#endif /* MCLSEQUENCER_H__ */

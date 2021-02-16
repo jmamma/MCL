@@ -8,74 +8,111 @@
 #define LFO_TRACKS
 #endif
 
-#define NUM_MD_TRACKS    16UL
+constexpr size_t NUM_GRIDS = 2;
+constexpr size_t GRID_WIDTH = 16;
+constexpr size_t GRID_LENGTH = 128;
+constexpr size_t GRID_SLOT_BYTES = 4096;
+
+constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
+
+constexpr size_t NUM_MD_TRACKS = 16;
 
 #ifdef EXT_TRACKS
-#define NUM_A4_TRACKS    4UL
+constexpr size_t NUM_A4_TRACKS = 6;
+constexpr size_t NUM_A4_SOUND_TRACKS = 4;
+constexpr size_t NUM_MNM_TRACKS = 6;
+constexpr size_t NUM_EXT_TRACKS = 6;
 #else
 #pragma message("EXT TRACKS DISABLED")
-#define NUM_A4_TRACKS    0UL
+constexpr size_t NUM_A4_TRACKS = 0;
+constexpr size_t NUM_A4_SOUND_TRACKS = 0;
+constexpr size_t NUM_MNM_TRACKS = 0;
+constexpr size_t NUM_EXT_TRACKS = 0;
 #endif
 
-#define NUM_EXT_TRACKS   NUM_A4_TRACKS
+constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 
-#define NUM_LFO_TRACKS   2UL
-#define NUM_TRACKS (NUM_MD_TRACKS + NUM_A4_TRACKS)
-#define NUM_FILE_ENTRIES 256UL
+constexpr size_t NUM_AUX_TRACKS = 4;
+constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
+constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
+constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
+constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
-#include "MDSeqTrack.h"
-#include "ExtSeqTrack.h"
-#include "MD.h"
 #include "MegaComDef.h"
 
-#define MD_TRACK_LEN (sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine))
-#define A4_TRACK_LEN (sizeof(GridTrack) + sizeof(ExtSeqTrackData) + sizeof(A4Sound))
+constexpr size_t NUM_LFO_TRACKS = 1;
+constexpr size_t NUM_FILE_ENTRIES = 256;
+constexpr size_t FILE_ENTRY_SIZE = 16;
+
+// as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
+// the track sizes are:
+// GridTrack 7
+// DeviceTrack 7
+// MDTrack 534
+// ExtTrack 1754
+// A4Track 2094
+// EmptyTrack 2094
+//
+// MDLFOTrack 226
+// MDRouteTrack 25
+// MDFXTrack 43
+// MDTempoTrack 11
+
+
+// So we manually allocate the following BANK1 memory regions, with a little bit of headroom:
+
+constexpr size_t DEVICE_TRACK_LEN = 7;
+constexpr size_t GRID1_TRACK_LEN = 534;
+constexpr size_t GRID2_TRACK_LEN = 2094;
+
+constexpr size_t MDLFO_TRACK_LEN = 226;
+constexpr size_t MDROUTE_TRACK_LEN = 25;
+constexpr size_t MDFX_TRACK_LEN = 43;
+constexpr size_t MDTEMPO_TRACK_LEN = 11;
+
 
 //Use these to produce compiler errors that probes the sizes!
-//template<int X> struct __WOW;
-//__WOW<sizeof(MDTrackLight)> szmd;
-//__WOW<sizeof(A4Track)> sza4;
-#pragma message("MD_TRACK_LEN = 501")
-#pragma message("A4_TRACK_LEN = 1742")
+template<uint32_t X> struct __SIZE_PROBE;
 
-
-//#define MD_TRACK_LEN (sizeof(MDTrackLight))
-//#define A4_TRACK_LEN (sizeof(A4Track))
 
 #ifdef EXT_TRACKS
-#define EMPTY_TRACK_LEN A4_TRACK_LEN
+constexpr size_t EMPTY_TRACK_LEN = GRID2_TRACK_LEN - DEVICE_TRACK_LEN;
 #else
-#pragma message("EMPTY_TRACK_LEN == MD_TRACK_LEN")
-#define EMPTY_TRACK_LEN MD_TRACK_LEN
+constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 #endif
 
 // 16x MD tracks
-#define BANK1_MD_TRACKS_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
+// GRID1 tracks start at 0x6B60
+constexpr size_t BANK1_MD_TRACKS_START = BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN;
+// AUX tracks start at 0x8CC0
+constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
+// GRID2 tracks start at 0x8D16
 
-// 4x A4 tracks
-#define BANK1_A4_TRACKS_START (BANK1_MD_TRACKS_START + MD_TRACK_LEN * NUM_MD_TRACKS)
-// 1024x FILE entries
-#define BANK1_FILE_ENTRIES_START (BANK1_A4_TRACKS_START + A4_TRACK_LEN * NUM_A4_TRACKS)
-#define BANK1_FILE_ENTRIES_END (BANK1_FILE_ENTRIES_START + 16UL * NUM_FILE_ENTRIES)
+// AUX Tracks
+constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_AUX_TRACKS_START;
+constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
+constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
+constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
+
+// 6x A4 tracks
+constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
+
+// 256x file entries (16 bytes each)
+// Start at 0xBAF4
+constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_TRACKS);
+constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + FILE_ENTRY_SIZE * NUM_FILE_ENTRIES);
+
+// At 0xCAF4
 
 // 4x COMSRC rx/tx buffers
-#define NUM_COMCHANNEL_BUFFER 4
-#define COMCHANNEL_BUFFER_START (BANK1_FILE_ENTRIES_END)
-#define COMCHANNEL_BUFFER_END (COMCHANNEL_BUFFER_START + NUM_COMCHANNEL_BUFFER * 2 * COMCHANNEL_BUFSIZE)
+constexpr size_t NUM_COMCHANNEL_BUFFER=4;
+constexpr size_t COMCHANNEL_BUFFER_START=BANK1_FILE_ENTRIES_END;
+constexpr size_t COMCHANNEL_BUFFER_END=COMCHANNEL_BUFFER_START + NUM_COMCHANNEL_BUFFER * 2 * COMCHANNEL_BUFSIZE;
 
 // 16x COMMSG slots
-#define NUM_COMMSG_SLOTS 16
-#define COMMSG_SLOTS_START (COMCHANNEL_BUFFER_END)
-#define COMMSG_SLOTS_END (COMMSG_SLOTS_START + sizeof(commsg_t) * NUM_COMMSG_SLOTS)
+constexpr size_t NUM_COMMSG_SLOTS=16;
+constexpr size_t COMMSG_SLOTS_START=COMCHANNEL_BUFFER_END;
+constexpr size_t COMMSG_SLOTS_END=COMMSG_SLOTS_START + sizeof(commsg_t) * NUM_COMMSG_SLOTS;
 
-//#pragma message (VAR_NAME_VALUE(NUM_MD_TRACKS))
-//#pragma message (VAR_NAME_VALUE(NUM_A4_TRACKS))
-//#pragma message (VAR_NAME_VALUE(NUM_EXT_TRACKS))
-//#pragma message (VAR_NAME_VALUE(NUM_LFO_TRACKS))
-//#pragma message (VAR_NAME_VALUE(NUM_TRACKS))
-//#pragma message (VAR_NAME_VALUE(BANK1_MD_TRACKS_START))
-//#pragma message (VAR_NAME_VALUE(BANK1_A4_TRACKS_START))
-//#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_START))
-//#pragma message (VAR_NAME_VALUE(BANK1_FILE_ENTRIES_END))
 
 #endif /* MCLMEMORY_H__ */

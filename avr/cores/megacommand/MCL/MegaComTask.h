@@ -1,7 +1,7 @@
 #pragma once
 
-#include "MCL.h"
-#include "Task.hh"
+#include "MCL_impl.h"
+#include "Task.h"
 
 #ifdef MEGACOMMAND
 

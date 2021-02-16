@@ -1,7 +1,4 @@
-#include "FXPage.h"
-#include "MCL.h"
-#include "RAMPage.h"
-#include "MCLGUI.h"
+#include "MCL_impl.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1
@@ -119,7 +116,7 @@ void FXPage::display() {
     uint8_t fx_type = params[n].type;
     GUI.setLine(GUI.LINE1);
     param_name = fx_param_name(fx_type, fx_param);
-    m_strncpy_p(str, param_name, 4);
+    strncpy_P(str, param_name, 4);
 
     GUI.put_string_at(i * 4, str);
 
@@ -147,7 +144,7 @@ void FXPage::display() {
     uint8_t fx_param = params[n].param;
     uint8_t fx_type = params[n].type;
     param_name = fx_param_name(fx_type, fx_param);
-    m_strncpy_p(str, param_name, 4);
+    strncpy_P(str, param_name, 4);
 
     mcl_gui.draw_knob(i, encoders[i], str);
   //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
@@ -204,7 +201,7 @@ void FXPage::remove_callbacks() {
 bool FXPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port) != DEVICE_MD) {
+    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }

@@ -5,10 +5,11 @@
 #define NOTEINTERFACE_H__
 
 #include "GUI.h"
+#include "MCLMemory.h"
 
 #define TRIG_HOLD_TIME 450
 
-#define NI_MAX_NOTES 20
+#define NI_MAX_NOTES NUM_SLOTS
 
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:
@@ -24,13 +25,12 @@ public:
 
 class NoteInterface {
 public:
-  uint8_t uart1_device = DEVICE_MD;
   uint8_t uart2_device = DEVICE_A4;
   uint8_t notes[NI_MAX_NOTES];
   uint8_t notecount = 0;
   uint8_t last_note;
   uint64_t ignore_next_mask;
-  uint16_t note_hold = 0;
+  uint16_t note_hold[NUM_DEVS];
   bool note_proceed = false;
   bool state = true;
   void init_notes();

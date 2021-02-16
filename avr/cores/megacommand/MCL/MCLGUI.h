@@ -15,7 +15,7 @@ public:
   // fills dst buffer with input text. ensures that:
   // 1. dst is null-terminated
   // 2. dst has no trailing spaces
-  void draw_textbox(char *text, char *text2);
+  void draw_textbox(const char *text, const char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);
@@ -41,6 +41,8 @@ public:
                      uint8_t x_pos = s_progress_x,
                      uint8_t y_pos = s_progress_y);
 
+  void delay_progress(uint16_t clock_);
+
   void draw_microtiming(uint8_t resolution, uint8_t timing);
   void clear_leftpane();
   void clear_rightpane();
@@ -63,12 +65,12 @@ public:
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t note_mask);
-  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, uint64_t pattern_mask,
-                  uint8_t step_count, uint8_t length, uint64_t mute_mask = 0, uint64_t slide_mask = 0);
-  void draw_ext_track(uint8_t x, uint8_t y, uint8_t offset, uint8_t ext_trackid,
-                      bool show_current_step);
-  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, uint64_t lock_mask,
+  void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &pattern_mask,
+                  uint8_t step_count, uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask);
+  void draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
                  uint8_t step_count, uint8_t length, bool show_current_step);
+
+  void draw_track_type_select(uint8_t x, uint8_t y, uint8_t track_type_select);
 
   void draw_panel_toggle(const char *s1, const char *s2, bool s1_active);
   void draw_panel_labels(const char *info1, const char *info2);
@@ -214,7 +216,7 @@ extern const unsigned char wheel_side [];
 // 'chroma', 24x25px 
 extern const unsigned char icon_chroma[];
 // 'rec', 24x15px
-extern const unsigned char icon_rec[];
+//extern const unsigned char icon_rec[];
 // 'grid', 24x15px
 extern const unsigned char icon_grid[];
 // 'lfo', 24x24px
@@ -236,14 +238,18 @@ extern const unsigned char icon_ram1[];
 // 'ram2', 24x25px
 extern const unsigned char icon_ram2[];
 // 'rythmecho', 24x25px
-extern const unsigned char icon_rhytmecho [];
+extern const unsigned char icon_rhytmecho[];
 // 'route', 24x16px
-extern const unsigned char icon_route [];
+extern const unsigned char icon_route[];
+// 'pianoroll', 24x25px
+extern const unsigned char icon_pianoroll[];
 // 'sound', 24x19px
 extern const unsigned char icon_sound[];
 // 'md_rev', 34x24px
 extern const unsigned char icon_md[];
 // 'a4_rev', 34x24px
 extern const unsigned char icon_a4[];
+// 'mnm_rev', 34x24px
+extern const unsigned char icon_mnm[];
 
 #endif /* MCLGUI_H__ */

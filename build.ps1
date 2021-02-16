@@ -28,9 +28,11 @@ if ($Clean) {
     Remove-Item -ErrorAction SilentlyContinue -Recurse -Force obj
 }
 
-$BIN_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\bin")
-$OBJ_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\obj")
-$SKETCH_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot\sketch")
+$BIN_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot/bin")
+$OBJ_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot/obj")
+$SKETCH_PATH = [System.IO.Path]::GetFullPath("$PSScriptRoot/sketch")
+
+Write-Output $SKETCH_PATH
 
 $buildOutput = & {
   arduino-cli compile `
@@ -84,6 +86,6 @@ if ($ShowStats) {
 
 if ($Upload) {
   Write-Host "==============> Uploading..." -ForegroundColor Yellow
-  arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega .\sketch\ -pCOM4
+  arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega ./sketch/ -pCOM4
   Write-Host "==============> Finished." -ForegroundColor Green
 }

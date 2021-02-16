@@ -5,12 +5,12 @@
 #include <inttypes.h>
 
 extern "C" {
-#include "byteordering.hh"
-#include "partition.hh"
-#include "fat.hh"
-#include "fat_config.hh"
-#include "sd-reader_config.hh"
-#include "sd_raw.hh"
+#include "byteordering.h"
+#include "partition.h"
+#include "fat.h"
+#include "fat_config.h"
+#include "sd-reader_config.h"
+#include "sd_raw.h"
 }
 
 class SDCardEntry;
