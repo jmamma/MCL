@@ -24,28 +24,22 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void MDSeqTrack::re_sync() {
-  uint16_t q = length;
-  start_step = (MidiClock.div16th_counter / q) * q + q;
-  start_step_offset = 0;
-  mute_until_start = true;
+  //  uint32_t q = length * 12;
+  //  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
 void MDSeqTrack::seq() {
-  if (mute_until_start) {
 
-    if ((clock_diff(MidiClock.div16th_counter, start_step) == 0)) {
-      if (start_step_offset > 0) {
-        start_step_offset--;
-      } else {
-        reset();
-      }
+  if (count_down) {
+    count_down--;
+    if (count_down == 0) {
+      reset();
     }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
 
-  if ((MidiUart.uart_block == 0) && (mute_until_start == false) &&
-      (mute_state == SEQ_MUTE_OFF)) {
+  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
@@ -62,12 +56,18 @@ void MDSeqTrack::seq() {
         ((timing[next_step] < timing_mid) &&
          ((timing[current_step = next_step]) == mod12_counter))) {
 
+      uint16_t lock_idx = cur_event_idx;
+      if (current_step == next_step) {
+        lock_idx += popcount(steps[step_count].locks);
+      }
+
       auto &step = steps[current_step];
       bool send_trig = trig_conditional(step.cond_id);
       if (send_trig || !step.cond_plock) {
-        send_parameter_locks(current_step, step.trig);
+        send_parameter_locks_inline(current_step, step.trig, lock_idx);
         if (step.slide) {
           locks_slides_recalc = current_step;
+          locks_slides_idx = lock_idx;
         }
         if (send_trig && step.trig) {
           send_trig_inline();
@@ -79,6 +79,7 @@ void MDSeqTrack::seq() {
 
     if (mod12_counter == timing_mid) {
       mod12_counter = 0;
+      cur_event_idx += popcount(steps[step_count].locks);
       step_count_inc();
     }
   }
@@ -154,7 +155,7 @@ void MDSeqTrack::recalc_slides() {
     cur_mask <<= 1;
   }
 
-  auto lockidx = get_lockidx(step);
+  auto lockidx = locks_slides_idx;
   find_next_locks(lockidx, step, find_mask);
 
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
@@ -216,7 +217,7 @@ again:
           return;
       }
       if (lcks & cur_mask) {
-      curidx++;
+        curidx++;
       }
       cur_mask <<= 1;
     }
@@ -298,8 +299,19 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
   }
 }
 
-void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
-  auto idx = get_lockidx(step);
+void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
+                                      uint16_t lock_idx) {
+  uint16_t idx, end;
+  if (lock_idx == 0xFFFF) {
+    idx = get_lockidx(step);
+  } else {
+    idx = lock_idx;
+  }
+  send_parameter_locks_inline(step, trig, idx);
+}
+
+void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
+                                             uint16_t lock_idx) {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
@@ -307,14 +319,17 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig) {
     uint8_t send_param;
     if (locks_params[c]) {
       if (lock_present) {
-        send_param = locks[idx];
+        DEBUG_DUMP("lock present");
+        DEBUG_DUMP(lock_idx);
+        DEBUG_DUMP(locks[lock_idx]);
+        send_param = locks[lock_idx];
         send = true;
       } else if (trig) {
         send_param = locks_params_orig[c];
         send = true;
       }
     }
-    idx += lock_bit;
+    lock_idx += lock_bit;
     if (send) {
       MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
     }
@@ -334,12 +349,13 @@ void MDSeqTrack::send_trig_inline() {
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {
   bool send_trig = false;
+  if (IS_BIT_SET64(oneshot_mask, step_count)) {
+    return false;
+  }
   switch (condition) {
   case 0:
   case 1:
-    if (!IS_BIT_SET64(oneshot_mask, step_count)) {
-      send_trig = true;
-    }
+    send_trig = true;
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
@@ -414,8 +430,7 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   auto idx = get_lockidx(step, lock_idx);
   if (idx < NUM_MD_LOCK_SLOTS && steps[step].locks_enabled) {
     return locks[idx];
-  }
-  else {
+  } else {
     return locks_params_orig[lock_idx];
   }
   return 255;
@@ -460,9 +475,12 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
 
     memmove(locks + lock_slot + 1, locks + lock_slot,
             NUM_MD_LOCK_SLOTS - lock_slot - 1);
+    if (step < step_count) {
+      cur_event_idx++;
+    }
     steps[step].locks |= (1 << lockidx);
   }
-  locks[lock_slot] = value;
+  locks[lock_slot] = min(127, value);
   steps[step].locks_enabled = true;
   return true;
 }
@@ -573,6 +591,9 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
   uint8_t cnt = popcount(steps[step].locks);
   if (cnt != 0) {
     memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
+    if (step < step_count) {
+      cur_event_idx -= cnt;
+    }
   }
   steps[step].locks = 0;
   steps[step].locks_enabled = false;
@@ -618,6 +639,7 @@ void MDSeqTrack::clear_locks(bool reset_params) {
       }
     }
   }
+  cur_event_idx = 0;
 }
 
 void MDSeqTrack::clear_track(bool locks, bool reset_params) {
@@ -688,6 +710,8 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 
 void MDSeqTrack::modify_track(uint8_t dir) {
 
+  uint8_t old_mute_state = mute_state;
+
   oneshot_mask = 0;
   constexpr size_t ncopy = sizeof(steps) - sizeof(MDSeqStepDescriptor);
   uint8_t lock_buf[NUM_LOCKS];
@@ -695,6 +719,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
   uint8_t timing_buf;
   uint16_t total_nlock = get_lockidx(length);
 
+  mute_state = SEQ_MUTE_ON;
   switch (dir) {
   case DIR_LEFT: {
     // shift locks
@@ -707,6 +732,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     step_buf = steps[0];
     timing_buf = timing[0];
     memmove(steps, steps + 1, ncopy);
+    memmove(timing, timing + 1, length - 1);
     steps[length - 1] = step_buf;
     timing[length - 1] = timing_buf;
     break;
@@ -722,6 +748,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     step_buf = steps[length - 1];
     timing_buf = timing[length - 1];
     memmove(steps + 1, steps, ncopy);
+    memmove(timing + 1, timing, length - 1);
     steps[0] = step_buf;
     timing[0] = timing_buf;
     break;
@@ -752,6 +779,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     break;
   }
   }
+  cur_event_idx = get_lockidx(step_count);
+  mute_state = old_mute_state;
 }
 
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {

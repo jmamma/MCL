@@ -4,6 +4,7 @@
 #define OSCPAGE_H__
 
 #include "GUI.h"
+#include "WavDesignerPage.h"
 
 // Encoder 1: Oscillator Type
 // Encoder 2: Pitch
@@ -14,9 +15,8 @@ void osc_mod_handler(EncoderParent *enc);
 
 
 
-class OscPage : public LightPage {
+class OscPage : public WavDesignerPage {
 public:
-  uint8_t id;
   MCLEncoder enc1;
   MCLEncoder enc2;
   MCLEncoder enc3;

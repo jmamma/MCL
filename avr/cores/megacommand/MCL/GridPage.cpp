@@ -70,7 +70,7 @@ void GridPage::loop() {
     cur_col = new_val;
   }
 
-    if (encoders[1]->hasChanged()) {
+  if (encoders[1]->hasChanged()) {
     diff = encoders[1]->cur - encoders[1]->old;
     new_val = cur_row + diff;
 
@@ -168,9 +168,7 @@ uint8_t GridPage::getRow() { return param2.cur; }
 
 uint8_t GridPage::getCol() { return param1.cur; }
 
-uint8_t GridPage::getWidth() {
-  return GRID_WIDTH;
-}
+uint8_t GridPage::getWidth() { return GRID_WIDTH; }
 
 void GridPage::load_slot_models() {
   DEBUG_PRINT_FN();
@@ -181,7 +179,8 @@ void GridPage::load_slot_models() {
   }
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    proj.read_grid_row_header(&row_headers[n],getRow() - cur_row + n + row_shift);
+    proj.read_grid_row_header(&row_headers[n],
+                              getRow() - cur_row + n + row_shift);
   }
 #else
 
@@ -293,7 +292,7 @@ void GridPage::display_grid_info() {
   oled_display.print(dev2);
 
   oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
-  oled_display.print((char) ('A' + proj.get_grid()));
+  oled_display.print((char)('A' + proj.get_grid()));
   oled_display.print(':');
 
   char val[4];
@@ -358,7 +357,8 @@ void GridPage::display_grid() {
     auto cur_posx = x_offset;
     auto cur_posy = y_offset + y * 8;
     auto w = getWidth();
-    for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < w; x++) {
+    for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < w;
+         x++) {
       oled_display.setCursor(cur_posx, cur_posy);
 
       auto track_idx = x + getCol() - cur_col;
@@ -416,7 +416,8 @@ void GridPage::display_grid() {
       }
 
       uint8_t track_grid_idx = track_idx + GRID_WIDTH * proj.get_grid();
-      if (MidiClock.getBlinkHint(false) && row_idx == active_slots[track_grid_idx]) {
+      if (MidiClock.getBlinkHint(false) &&
+          row_idx == active_slots[track_grid_idx]) {
         // blink, don't print
         blink = true;
       } else {
@@ -429,7 +430,7 @@ void GridPage::display_grid() {
       }
 
       // tomThumb is 4x6
-      if (track_idx % 4 == 3 && w >= 8 ) {
+      if (track_idx % 4 == 3 && w >= 8) {
         if (y == 0) {
           // draw vertical separator
           mcl_gui.draw_vertical_dashline(cur_posx + 9, 3);
@@ -565,16 +566,28 @@ void GridPage::prepare() {
 
 void rename_row() {
   const char *my_title = "Row Name:";
-  if (grid_page.row_headers[grid_page.cur_row].active) {
-    if (mcl_gui.wait_for_input(grid_page.row_headers[grid_page.cur_row].name,
-                             my_title, 8)) {
-      proj.write_grid_row_header(&(grid_page.row_headers[grid_page.cur_row]), grid_page.encoders[1]->cur);
-      proj.sync_grid();
+  uint8_t old_grid = proj.get_grid();
+  GridRowHeader row_headers[NUM_GRIDS];
+
+  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+    proj.select_grid(n);
+    proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
+  }
+
+  if (row_headers[0].active) {
+    if (mcl_gui.wait_for_input(row_headers[0].name, my_title, 8)) {
+      strcpy(row_headers[1].name, row_headers[0].name);
+      for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+        proj.select_grid(n);
+        proj.write_grid_row_header(&(row_headers[n]), grid_page.getRow());
+        proj.sync_grid();
+      }
     }
+  } else {
+    gfx.alert("Error", "Row not active");
   }
-  else {
-  gfx.alert("Error","Row not active");
-  }
+  proj.select_grid(old_grid);
+  grid_page.load_slot_models();
 }
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
@@ -627,12 +640,11 @@ void GridPage::apply_slot_changes() {
 
   if (slot_copy == 1) {
 #ifdef OLED_DISPLAY
-  if (width > 0) {
-  oled_display.textbox("COPY ", "SLOTS");
-  }
-  else {
-  oled_display.textbox("COPY ", "SLOT");
-  }
+    if (width > 0) {
+      oled_display.textbox("COPY ", "SLOTS");
+    } else {
+      oled_display.textbox("COPY ", "SLOT");
+    }
 #endif
     mcl_clipboard.copy(getCol(), getRow(), width, height, proj.get_grid());
 
@@ -647,15 +659,13 @@ void GridPage::apply_slot_changes() {
     GridRowHeader header;
 #ifdef OLED_DISPLAY
     if (slot_clear == 1) {
-    if (width > 0) {
-    oled_display.textbox("CLEAR ", "SLOTS");
-    }
-    else {
-  oled_display.textbox("CLEAR ", "SLOT");
-    }
-    }
-    else if (slot_update == 1) {
-  oled_display.textbox("CHAIN ", "UPDATE");
+      if (width > 0) {
+        oled_display.textbox("CLEAR ", "SLOTS");
+      } else {
+        oled_display.textbox("CLEAR ", "SLOT");
+      }
+    } else if (slot_update == 1) {
+      oled_display.textbox("CHAIN ", "UPDATE");
     }
 #endif
     bool activate_header = false;

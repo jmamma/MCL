@@ -61,7 +61,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
   SeqPage::init();
-  param_select = 128;
+  param_select = 129;
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
@@ -213,9 +213,16 @@ void SeqExtStepPage::draw_lockeditor() {
 
         if (end_x >= fov_offset + fov_length) {
           end_fov_x = fov_w;
-          end_y_tmp =
-              ((float)(fov_offset + fov_length - start_x)) * gradient + start_y;
-
+          if (start_x > end_x) {
+            end_y_tmp =
+                ((float)(fov_offset + fov_length + roll_length - start_x)) *
+                    gradient +
+                start_y;
+          } else {
+            end_y_tmp =
+                ((float)(fov_offset + fov_length - start_x)) * gradient +
+                start_y;
+          }
         } else {
           end_fov_x = (float)(end_x - fov_offset) * fov_pixels_per_tick;
         }
@@ -244,8 +251,10 @@ void SeqExtStepPage::draw_lockeditor() {
             }
 
             if (end_x > fov_offset) {
+
               uint8_t end_y_tmp =
-                  ((float)(roll_length - start_x)) * gradient + start_y;
+                  ((float)(roll_length - start_x + fov_offset)) * gradient +
+                  start_y;
               uint8_t tmp_end_fov_y =
                   fov_h - (((float)end_y_tmp / 128.0) * (float)fov_h);
 
@@ -441,6 +450,7 @@ void SeqExtStepPage::loop() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
 
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
@@ -448,6 +458,7 @@ void SeqExtStepPage::loop() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
   }
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
@@ -460,7 +471,7 @@ void SeqExtStepPage::loop() {
       if (pianoroll_mode > 0) {
         if (mcl_seq.ext_tracks[last_ext_track]
                 .locks_params[pianoroll_mode - 1] == 0) {
-          param_select = 128;
+          param_select = 129;
         } else {
           param_select = mcl_seq.ext_tracks[last_ext_track]
                              .locks_params[pianoroll_mode - 1] -
@@ -470,7 +481,7 @@ void SeqExtStepPage::loop() {
       last_pianoroll_mode = pianoroll_mode;
     }
     if ((pianoroll_mode > 0)) {
-      if (param_select == 128) {
+      if (param_select == 129) {
         mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] = 0;
       } else {
         mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
@@ -676,10 +687,9 @@ void SeqExtStepPage::enter_notes() {
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (active_track.notes_on[n].value == 255)
       continue;
-    if (!active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value)) {
-      active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
-                            velocity, cond);
-    }
+    active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value);
+    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
+                          velocity, cond);
   }
 }
 
@@ -705,15 +715,17 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
         note_interface.last_note = track;
       } else {
-        cur_w = fov_offset + (float)(fov_length / 16) * (float)track - cur_x;
+        cur_w =
+            fov_offset + (float)(fov_length / 16) * (float)track - cur_x - 1;
         if (cur_w < 0) {
           cur_x += cur_w;
           cur_w = -cur_w;
-        } else if (cur_w < cur_w_min) {
-          cur_w = cur_w_min;
         }
       }
+      cur_x = max(0, cur_x);
+      cur_w = max(cur_w_min, cur_w);
     } else if (mask == EVENT_BUTTON_RELEASED) {
+
       --x_notes_down;
       if (x_notes_down == 0) {
         enter_notes();
@@ -749,7 +761,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (!recording) {
-      if (active_track.notes_on_count > 1) {
+      if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
 
@@ -783,7 +795,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
-    oled_display.textbox("REC", "");
+    if (recording) {
+      oled_display.textbox("REC", "");
+      setLed2();
+    } else {
+      clearLed2();
+    }
     queue_redraw();
     return true;
   }
@@ -793,7 +810,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
           0) {
-        param_select = 128;
+        param_select = 129;
       } else {
         param_select = mcl_seq.ext_tracks[last_ext_track]
                            .locks_params[pianoroll_mode - 1] -
@@ -819,7 +836,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       if (SeqPage::pianoroll_mode > 0) {
         if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] -
                 1 ==
-            129) {
+            130) {
           mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
               param + 1;
           SeqPage::param_select = param;
@@ -830,8 +847,8 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
         mcl_seq.ext_tracks[n].update_param(param, value);
       }
-    return;
-   }
+      return;
+    }
   }
 }
 

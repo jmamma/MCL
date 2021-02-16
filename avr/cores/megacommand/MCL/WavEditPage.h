@@ -12,15 +12,15 @@
 #define WAV_DRAW_LEFT 0
 #define WAV_DRAW_RIGHT 1
 
-extern MCLEncoder wav_menu_value_encoder;
-extern MCLEncoder wav_menu_entry_encoder;
-extern MenuPage<1> wav_menu_page;
+extern MCLEncoder wavedit_menu_value_encoder;
+extern MCLEncoder wavedit_menu_entry_encoder;
+extern MenuPage<1> wavedit_menu_page;
 
 class WavEditPage : public LightPage {
 public:
   Wav wav_file;
 
-  bool show_wav_menu;
+  bool show_wavedit_menu;
 
   int32_t selection_start;
   int32_t selection_end;

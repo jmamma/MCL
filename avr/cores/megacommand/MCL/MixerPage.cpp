@@ -75,7 +75,6 @@ void MixerPage::init() {
   bool switch_tracks = false;
   note_interface.state = true;
   midi_events.setup_callbacks();
-  memcpy(&params, MD.kit.params, sizeof(params));
 
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -410,23 +409,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.notes[i] == 1) {
-        for (uint8_t c = 0; c < 24; c++) {
-          if (MD.kit.params[i][c] != params[i][c]) {
-            USE_LOCK();
-            SET_LOCK();
-            MD.setTrackParam(i, c, params[i][c]);
-            MD.kit.params[i][c] = params[i][c];
-            CLEAR_LOCK();
-          }
-        }
-      }
-    }
-    return true;
-  }
-
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||

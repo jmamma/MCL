@@ -27,8 +27,7 @@ bool ElektronDevice::get_fw_caps() {
 
   uint8_t msgType = waitBlocking();
 
-  ((uint8_t *)&(fw_caps))[0] = 0;
-  ((uint8_t *)&(fw_caps))[1] = 1;
+  fw_caps = 0;
 
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
@@ -65,6 +64,11 @@ void ElektronDevice::deactivate_track_select() {
   uint8_t data[3] = {0x70, 0x32, 0x00};
   sendRequest(data, sizeof(data));
   waitBlocking();
+}
+
+void ElektronDevice::undokit_sync() {
+  uint8_t data[2] = {0x70, 0x42};
+  sendRequest(data, sizeof(data));
 }
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {

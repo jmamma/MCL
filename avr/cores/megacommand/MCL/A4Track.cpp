@@ -11,6 +11,8 @@ uint16_t A4Track::calc_latency(uint8_t tracknumber) {
 void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     DEBUG_PRINTLN(F("here"));
     DEBUG_PRINTLN(F("send a4 sound"));
+    sound.origPosition = tracknumber;
+    sound.soundpool = true;
     sound.toSysex();
 }
 
@@ -27,6 +29,11 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
     sound.fromSysex(Analog4.midi);
   }
   return ret;
+}
+
+void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  store_in_mem(tracknumber);
+  load_seq_data(seq_track);
 }
 
 bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
@@ -57,8 +64,8 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   return true;
 }
 
-// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit
-// x86 sizes Do compile with avr-gcc and observe the error messages
+// !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
+// Do compile with avr-gcc and observe the error messages
 
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
@@ -68,13 +75,18 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 //__SIZE_PROBE<sizeof(MDClass)> sz_md_class;
 //__SIZE_PROBE<sizeof(A4Class)> sz_a4_class;
 
+//__SIZE_PROBE<sizeof(GridTrack)> szgridtrack;
 //__SIZE_PROBE<sizeof(DeviceTrack)> szdevicetrk;
-//__SIZE_PROBE<sizeof(A4Track)> sza4;
-//__SIZE_PROBE<sizeof(EmptyTrack)> szempty;
-//__SIZE_PROBE<sizeof(ExtTrack)> szext;
-//__SIZE_PROBE<sizeof(MDTrack)> szmd;
-//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmd_2;
-//__SIZE_PROBE<FX_TRACK_LEN> szfx;
+//__SIZE_PROBE<sizeof(A4Track)> sza4trk;
+//__SIZE_PROBE<sizeof(EmptyTrack)> szemptytrk;
+//__SIZE_PROBE<sizeof(ExtTrack)> szexttrk;
+//__SIZE_PROBE<sizeof(MDTrack)> szmdtrk;
+//__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine)> szmdtrk_summed;
+//__SIZE_PROBE<sizeof(MDLFOTrack)> szmdlfotrk;
+//__SIZE_PROBE<sizeof(MDRouteTrack)> szmdroutetrk;
+//__SIZE_PROBE<sizeof(MDFXTrack)> szmdfxtrk;
+//__SIZE_PROBE<sizeof(MDTempoTrack)> szmdtempotrk;
+//__SIZE_PROBE<AUX_TRACK_LEN> szfx;
 //__SIZE_PROBE<sizeof(GridTrack) + sizeof(MDFXData)> szfx_2;
 
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;

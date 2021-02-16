@@ -1,13 +1,20 @@
 #include "MCL_impl.h"
 #include "new.h"
 
+void GridTrack::load_chain_data(SeqTrack *seq_track) {
+  seq_track->speed = chain.speed;
+  seq_track->length = chain.length;
+}
+
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
   if (seq_track == nullptr) { return; }
-  seq_track->start_step = mcl_actions.next_transition;
-  seq_track->start_step_offset = mcl_actions.transition_offsets[n];
-  seq_track->mute_until_start = true;
+  USE_LOCK();
+  SET_LOCK();
+  seq_track->count_down = MidiClock.clock_diff_div192(MidiClock.div192th_counter, (uint32_t) mcl_actions.next_transition * (uint32_t) 12 + (uint32_t) mcl_actions.transition_offsets[n]);
+  CLEAR_LOCK();
+//  seq_track->mute_until_start = true;
 }
 
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {

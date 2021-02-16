@@ -60,6 +60,8 @@ static constexpr size_t a4sound_checksum_startidx = a4sound_origpos_idx + 1;
 static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + sizeof(a4sound_header);
 
 void A4Sound::convert(A4Sound_270* old) {
+  this->soundpool = old->workSpace;
+  this->origPosition = old->origPosition;
   // legacy payload len = 398
   uint8_t* payload = old->payload;
   // skip the partial header 

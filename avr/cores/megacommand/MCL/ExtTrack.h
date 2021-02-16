@@ -32,6 +32,12 @@ public:
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
+
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+    ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
+    seq_data.channel = ext_seq_track->channel;
+    chain.speed = SEQ_SPEED_2X;
+  }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   bool virtual convert(ExtTrack_270 *old) {
@@ -56,10 +62,9 @@ public:
       if (chain.length == 0) {
         chain.length = 16;
       }
-       seq_data.convert(&(old->seq_data));
-       active = EXT_TRACK_TYPE;
-    }
-    else {
+      seq_data.convert(&(old->seq_data));
+      active = EXT_TRACK_TYPE;
+    } else {
       chain.speed = SEQ_SPEED_1X;
       chain.length = 16;
       active = EMPTY_TRACK_TYPE;
@@ -67,7 +72,7 @@ public:
     return true;
   }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
-  virtual uint16_t get_track_size() { return sizeof(ExtTrack); }
+  virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
   virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
 
   virtual void *get_sound_data_ptr() { return nullptr; }

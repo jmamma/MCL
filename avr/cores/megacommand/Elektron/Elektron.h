@@ -141,6 +141,7 @@ public:
   uint8_t slot_number;
   uint8_t track_type;
   uint8_t group_type;
+  uint8_t mem_slot_idx;
   SeqTrack *seq_track;
   uint8_t get_slot_number() { return slot_number; }
   SeqTrack *get_seq_track() { return seq_track; }
@@ -161,10 +162,14 @@ public:
 
   void init() { num_tracks = 0; }
 
-  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
+  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
     tracks[track_idx].slot_number = slot_number;
     tracks[track_idx].seq_track = seq_track;
     tracks[track_idx].track_type = track_type;
+    tracks[track_idx].mem_slot_idx = mem_slot_idx;
+    if (mem_slot_idx == 255) {
+    tracks[track_idx].mem_slot_idx = track_idx;
+    }
     tracks[track_idx].group_type = group_type;
     num_tracks++;
   }
@@ -194,9 +199,9 @@ public:
     memset(grid_devices,0, sizeof(GridDevice) * NUM_GRIDS);
   }
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV) {
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
     auto *devp = &grid_devices[grid_idx];
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type);
+    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type, mem_slot_idx);
   }
 
   ElektronDevice* asElektronDevice() {
@@ -341,6 +346,9 @@ public:
 #define FW_CAP_MUTE_STATE     FW_CAP(2)
 #define FW_CAP_SAMPLE         FW_CAP(3)
 #define FW_CAP_TRIG_LEDS      FW_CAP(4)
+#define FW_CAP_KIT_WORKSPACE  FW_CAP(5)
+#define FW_CAP_MASTER_FX      FW_CAP(6)
+#define FW_CAP_UNDOKIT_SYNC   FW_CAP(7)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -418,6 +426,7 @@ public:
   void deactivate_track_select();
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
 
+  void undokit_sync();
   /**
    * Send a sysex request to the device. All the request calls
    * are wrapped in appropriate methods like requestKit,

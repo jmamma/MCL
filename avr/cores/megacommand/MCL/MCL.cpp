@@ -12,6 +12,11 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(ExtTrack));
   DEBUG_DUMP(sizeof(EmptyTrack));
 
+  DEBUG_DUMP(sizeof(MDLFOTrack));
+  DEBUG_DUMP(sizeof(MDRouteTrack));
+  DEBUG_DUMP(sizeof(MDFXTrack));
+  DEBUG_DUMP(sizeof(MDTempoTrack));
+
   bool ret = false;
   delay(100);
   ret = mcl_sd.sd_init();

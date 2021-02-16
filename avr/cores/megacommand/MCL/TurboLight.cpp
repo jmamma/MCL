@@ -67,7 +67,12 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
   }
   MidiUart.set_speed(tmSpeeds[speed ], port);
   //delay(50);
+  if (speed <= 1) {
+  MidiUart_->activeSenseEnabled = false;
+  }
+  else {
   MidiUart_->setActiveSenseTimer(150);
+  }
   //  MidiUart_->m_putc_immediate(0xF8);
   //MidiUart_->m_putc_immediate(0xFE);
 

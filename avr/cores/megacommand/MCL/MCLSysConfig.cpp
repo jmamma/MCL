@@ -98,6 +98,7 @@ bool MCLSysConfig::cfg_init() {
   ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0xF;
+  uart2_device = 0;
   cfgfile.close();
 
   ret = write_cfg();

@@ -1,12 +1,7 @@
 #include "MCL_impl.h"
 
 void MDTempoTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-
     send_tempo();
-}
-
-void MDTempoTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                   uint8_t slotnumber) {
 }
 
 uint16_t MDTempoTrack::calc_latency(uint8_t tracknumber) {
@@ -19,6 +14,7 @@ uint16_t MDTempoTrack::send_tempo(bool send) {
 }
 
 void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_chain_data(seq_track);
   send_tempo();
 }
 

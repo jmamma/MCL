@@ -1,19 +1,19 @@
 #include "MCL_impl.h"
 #include "WavEditPage.h"
 
-MCLEncoder wav_menu_value_encoder(0, 16, ENCODER_RES_PAT);
-MCLEncoder wav_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
+MCLEncoder wavedit_menu_value_encoder(0, 16, ENCODER_RES_PAT);
+MCLEncoder wavedit_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 
-const menu_t<1> wav_menu_layout PROGMEM = {
+const menu_t<1> wavedit_menu_layout PROGMEM = {
     "WAV",
     {
-        {"CH:", 0, 3, 3, (uint8_t *)&wav_edit_page.draw_mode, (Page *)NULL, NULL, 69 },
+        {"CH:", 0, 3, 3, (uint8_t *)&wav_edit_page.draw_mode, (Page *)NULL, NULL, 82 },
     },
     NULL,
 };
 
-MenuPage<1> wav_menu_page(&wav_menu_layout, &wav_menu_value_encoder,
-                          &wav_menu_entry_encoder);
+MenuPage<1> wavedit_menu_page(&wavedit_menu_layout, &wavedit_menu_value_encoder,
+                          &wavedit_menu_entry_encoder);
 
 MCLEncoder wav_edit_param1(0, 128, ENCODER_RES_SYS);
 MCLEncoder wav_edit_param2(0, 128, ENCODER_RES_SYS);
@@ -78,20 +78,20 @@ bool WavEditPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    if (!show_wav_menu) {
-      encoders[0] = &wav_menu_value_encoder;
-      encoders[1] = &wav_menu_entry_encoder;
-      show_wav_menu = true;
-      wav_menu_page.init();
+    if (!show_wavedit_menu) {
+      encoders[0] = &wavedit_menu_value_encoder;
+      encoders[1] = &wavedit_menu_entry_encoder;
+      show_wavedit_menu = true;
+      wavedit_menu_page.init();
     }
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    if (show_wav_menu) {
+    if (show_wavedit_menu) {
       encoders[0] = &wav_edit_param1;
       encoders[1] = &wav_edit_param2;
-      show_wav_menu = false;
-      wav_menu_page.enter();
+      show_wavedit_menu = false;
+      wavedit_menu_page.enter();
     }
     return true;
   }
@@ -165,8 +165,8 @@ void WavEditPage::render(uint32_t length, int32_t sample_offset) {
 }
 
 void WavEditPage::loop() {
-  if (show_wav_menu) {
-    wav_menu_page.loop();
+  if (show_wavedit_menu) {
+    wavedit_menu_page.loop();
     return;
   }
   if (wav_edit_param3.hasChanged()) {
@@ -440,8 +440,8 @@ void WavEditPage::display() {
 
 
 
-  if (show_wav_menu) {
-    wav_menu_page.draw_menu(128 - 40, 8, 40);
+  if (show_wavedit_menu) {
+    wavedit_menu_page.draw_menu(128 - 40, 8, 40);
   } else {
 
     oled_display.setCursor(88, 6);

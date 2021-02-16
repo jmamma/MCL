@@ -3,89 +3,49 @@
 void OscMixerPage::setup() {}
 
 void OscMixerPage::init() {
+  WavDesignerPage::init();
   trig_interface.off();
   wd.last_page = this;
   create_chars_mixer();
-#ifdef OLED_DISPLAY
   classic_display = false;
-  oled_display.clearDisplay();
-#endif
 }
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
+  if (WavDesignerPage::handleEvent(event)) {
+  return true;
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.ignoreNextEvent(event->source);
-    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-
-#ifdef OLED_DISPLAY
-      oled_display.clearDisplay();
-#endif
-      GUI.setLine(GUI.LINE1);
-      GUI.put_string_at(0, "Render..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-      oled_display.clearDisplay();
-#endif
-      wd.render();
-      GUI.put_string_at(0, "Sending..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-#endif
-      // if (MD.connected) {
-      //  MD.rec_sample();
-      //}
-      // delay(250);
-      // in_sysex = 1;
-      wd.send();
-      // in_sysex = 0;
-      // delay(100);
-      // MD.press_no_button();
-      // MD.clear_all_windows_quick();
-    }
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    wd.load_next_page(id);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     MD.preview_sample(encoders[3]->cur + 1);
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
-    return true;
-  }
   return false;
 }
 
-void OscMixerPage::loop() {}
+void OscMixerPage::loop() { WavDesignerPage::loop(); }
 void OscMixerPage::display() {
 // oled_display.clearDisplay();
-#ifdef OLED_DISPLAY
+  auto oldfont = oled_display.getFont();
+  if (show_menu) {
+    WavDesignerPage::display();
+  }
+  else {
+  oled_display.setFont();
+  oled_display.setCursor(0, 0);
   oled_display.fillRect(0, 0, 64, 32, BLACK);
-#endif
   GUI.setLine(GUI.LINE1);
 
-  GUI.put_string_at(0, "SLOT:          ");
+  oled_display.print("SLOT: ");
 
-  GUI.put_value_at2(5, enc4.cur);
-#ifdef OLED_DISPLAY
-  LCD.goLine(0);
-  LCD.puts(GUI.lines[0].data);
-#endif
+  oled_display.print(enc4.cur);
   draw_levels();
   scanline_width = 4;
-#ifdef OLED_DISPLAY
   draw_wav();
+  }
   oled_display.display();
-#endif
+  oled_display.setFont(oldfont);
 }
+
 float OscMixerPage::get_max_gain() {
   float max_gain = (float)MAX_HEADROOM / (num_of_channels);
   return max_gain;

@@ -14,7 +14,7 @@
     b = t;                                                                     \
   }
 
-void SeqTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
+void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
   uint8_t c = lock_idx;
   locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
   locks_slide_data[c].yflip = 255;
@@ -72,7 +72,7 @@ void SeqTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0
 */
 }
 
-void SeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
+void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
@@ -109,10 +109,10 @@ void SeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
       }
       switch (active) {
       case MD_TRACK_TYPE:
-        MD.setTrackParam_inline(track_number, locks_params[c] - 1, 0x7F & val);
+        MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
         break;
       default:
-        uart->sendCC(channel, locks_params[c] - 1, 0x7F & val);
+        uart->sendCC(channel, locks_params[c] - 1, val);
         break;
       }
     }

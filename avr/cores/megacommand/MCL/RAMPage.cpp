@@ -203,39 +203,32 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   trk.locks_params[0] = ROM_STRT + 1;
   trk.locks_params[1] = ROM_END + 1;
   uint8_t mode = encoders[1]->cur;
+
   for (uint8_t s = 0; s < slices; s++) {
     uint8_t n = s * step_inc;
 
     if ((linked_track < track) || (linked_track == 255)) {
       trk.steps[n].trig = true;
     }
+    trk.timing[n] = trk.get_timing_mid();
     if (linked_track < track) {
       trk.set_track_locks_i(n, 0, ln_trk.get_track_lock(n, 0));
       trk.set_track_locks_i(n, 1, ln_trk.get_track_lock(n, 1));
     } else if (RAMPage::slice_modes[page_id] == 0) {
       trk.set_track_locks_i(n, 0, sample_inc * s + 0);
-      auto val = (sample_inc) * (s + 1) + 0;
-      if (val > 127)
-        val = 127;
-      trk.set_track_locks_i(n, 1, val);
+      trk.set_track_locks_i(n, 1, (sample_inc) * (s + 1) + 0);
     } else {
       switch (mode) {
       default: {
         // Reverse
         trk.set_track_locks_i(n, 1, sample_inc * s + 0);
-        auto val = (sample_inc) * (s + 1) + 0;
-        if (val > 127) {
-          val = 127;
-        }
+        uint8_t val = (sample_inc) * (s + 1) + 0;
         trk.set_track_locks_i(n, 0, val);
         break;
       }
       case 5: {
         trk.set_track_locks_i(n, 0, sample_inc * (slices - s) + 0);
-        auto val = (sample_inc) * (slices - s + 1) + 0;
-        if (val > 127) {
-          val = 127;
-        }
+        uint8_t val = (sample_inc) * (slices - s + 1) + 0;
         trk.set_track_locks_i(n, 1, val);
 
         break;
@@ -244,10 +237,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
         uint8_t t;
         t = random(0, slices);
         trk.set_track_locks_i(n, 0, sample_inc * (t) + 0);
-        auto val = (sample_inc) * (t + 1) + 0;
-        if (val > 127) {
-          val = 127;
-        }
+        uint8_t val = (sample_inc) * (t + 1) + 0;
         trk.set_track_locks_i(n, 1, val);
 
         break;
@@ -276,17 +266,11 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
         }
         if (s % m == 0) {
           trk.set_track_locks_i(n, 1, sample_inc * s + 0);
-          auto val = (sample_inc) * (s + 1) + 0;
-          if (val > 127) {
-            val = 127;
-          }
+          uint8_t val = (sample_inc) * (s + 1) + 0;
           trk.set_track_locks_i(n, 0, val);
         } else {
           trk.set_track_locks_i(n, 0, sample_inc * s + 0);
-          auto val = (sample_inc) * (s + 1) + 0;
-          if (val > 127) {
-            val = 127;
-          }
+          uint8_t val = (sample_inc) * (s + 1) + 0;
           trk.set_track_locks_i(n, 1, val);
         }
         break;
@@ -626,7 +610,7 @@ void RAMPage::display() {
   char val[4];
 
   itoa(encoders[1]->cur, val, 10);
-  mcl_gui.draw_knob(1, "MOD", val);
+  mcl_gui.draw_knob(1, "DICE", val);
 
   itoa(1 << encoders[2]->cur, val, 10);
   mcl_gui.draw_knob(2, "SLI", val);
@@ -815,6 +799,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    oled_display.textbox("DICE", "");
     RAMPage::slice_modes[page_id] = 1;
     if (mcl_cfg.ram_page_mode == MONO) {
       slice(14 + page_id, 255);
@@ -826,6 +811,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     RAMPage::slice_modes[page_id] = 0;
+    oled_display.textbox("SLICE", "");
     if (mcl_cfg.ram_page_mode == MONO) {
       if (!slice(14 + page_id, 255)) {
         setup_ram_play_mono(14 + page_id);

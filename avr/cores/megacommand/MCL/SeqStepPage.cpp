@@ -350,7 +350,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
+    if (recording) {
     oled_display.textbox("REC", "");
+    setLed2();
+    }
+    else {
+    clearLed2();
+    }
     queue_redraw();
     return true;
   }

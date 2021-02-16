@@ -170,7 +170,6 @@ bool Project::convert_project(const char *projectname) {
 
         MDTrack md_track;
         md_track.convert(&md_track_src);
-
         md_track.store_in_grid(x, y);
         if (md_track_src.active == MD_TRACK_TYPE_270) {
           if (first_track == 255) {
@@ -178,6 +177,7 @@ bool Project::convert_project(const char *projectname) {
             first_track = x;
             MDFXTrack md_fx_track;
             md_fx_track.get_fx_from_kit_extra(&md_track_src.kitextra);
+            md_fx_track.chain.init(y);
             select_grid(1);
             md_fx_track.store_in_grid(MDFX_TRACK_NUM, y);
             row_headers[1].update_model(MDFX_TRACK_NUM, MDFX_TRACK_TYPE,

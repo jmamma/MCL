@@ -72,6 +72,7 @@ public:
   uint8_t get_next_voice(uint8_t pitch);
   uint8_t calc_scale_note(uint8_t note_num);
 
+  void set_last_ext_track(uint8_t channel);
   void trig_md(uint8_t note_num);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);

@@ -46,6 +46,7 @@
 #include "OscPage.h"
 #include "Wav.h"
 #include "WavDesigner.h"
+#include "WavDesignerPage.h"
 #include "DSP.h"
 #endif
 

@@ -1,12 +1,299 @@
+MCL 3.01a 09/01/2020
+
+Hotfixes:
+
+- PianoRoll automation record was broken.
+- PianoRoll length parameter was limited to 127, should have been 128 steps.
+- When loading empty Ext MIDI tracks, preserve MIDI channel setting.
+
+MCL 3.01 02/01/2020
+
+  MCL 3.01 will prompt you to create a new project on startup, this is a
+  formality as the system config file that stores Global Settings will be re-initialised.
+
+  MIDI Active Peering:
+
+    Added a new option for configuring the MIDI port 2 device.
+
+    Global Settings -> MIDI -> DEVICE 2
+
+    Set to either: [ General MIDI (Gener) ] or [ Elektron (Elekt) ]
+
+    This option sets the default MIDI driver for port 2. Supported Elektron devices have
+    more advanced features such as retaining kit/sound data when saving/loading slots,
+    The general MIDI driver will only save/load MIDI sequencer data.
+
+    If you are intending to pair your Megacommand with an Elektron device
+    (MNM, A4) set this to Elektron.
+
+    For all other MIDI devices, set this to General MIDI (new default setting).
+
+  PianoRoll:
+
+    Added MIDI Program Change as a CC destination.
+    (Slides are disabled for Program Change).
+
+  GridPage:
+
+	Rename row now applies to grids A + B simultaneously.
+
+  Fixes:
+
+    - Ext MIDI tracks would not save or load correctly due to lack of
+	connectivity. (See MIDI active peering above to set driver type).
+    - A4 sound data would not load correctly in a variety of circumstances.
+    - Improvement to chain mode transition behaviour.
+
+MCL 3.00x 26/12/2020
+
+Hotfixes A -> D
+
+- MCL would freeze if Ext MIDI channel was greater than 6
+- Ext MIDI tracks would not save correctly for generic devices.
+- Ext MIDI tracks would cause MCL to crash on chain.
+- Project Rename was broken in 3.0
+- Polypage incorrect LED mode.
+- Illuminate LED2 when REC mode is activated.
+
+MCL 3.00 20/12/2020
+
+  MCL 3.00 requires that your Machinedrum is upgraded to firmware version X.03
+
+  Projects:
+
+    Version 3.00 features a new project format. Projects created in earlier
+    versions of MCL must be converted to the new format.
+
+    Historically, projects have been stored in the root directory of the SD Card i.e
+    "/my_project.mcl"
+
+    In 3.0 new and converted projects are now stored in the /Projects/ directory.
+
+    Each project has its own folder, inside the project folder there are 3 files:
+
+      \Projects\new_project_000\
+                                |- new_project_000.mcl   <- Project master file
+                                |- new_project_000.0     <- Grid A data
+                                |- new_project_000.1     <- Grid B data
+
+  Project Conversion:
+
+    Version 2.X projects can be converted to the 3.0 format using the "CONVERT PROJECT"
+    menu option in Global Settings. Project conversion is non-destructive, your original 2.X
+    files will remain in the root directory of the SD Card.
+
+    When initiated, project conversion will create a new project subdirectory
+    under \Projects\, create the necessary project files and then migrate the 2.X data across.
+
+    Projects created in version 3.0 are not compatible with earlier version of MCL.
+
+  Grid A + B:
+
+    There are now 2 grids per project. Grid A and Grid B.
+    Grid A is used to store 16 MD tracks.
+    Grid B is used to store 6 External MIDI tracks + 4 AUX tracks.
+
+    From the Grid Page, use the chain menu (accessible by holding [ shift 2 ])
+    to switch between Grids A and B.
+
+  New AUX (Auxiliary) Track Types:
+
+    MDFXTrack   (FX): Store and recall MDFX (MachinDrum MasterFX: Delay, Reverb, EQ, Dynamics)
+    LFOTrack    (LF): Store and recall LFO page data.
+    RouteTrack  (RT): Store and recall MD Track Routing and Chromatic Mode's Poly settings.
+    TempoTrack  (TP): Store and recall Tempo.
+
+    AUX Tracks are positioned on Grid B and occupy slots 12 to 15.
+    AUX Tracks can be saved/loaded/chained like regular tracks, so that you can automate
+    loading of LFOs, TrackRouting, MDFX and tempo.
+
+ MIDI Devices + Grid:
+
+    MCL Firmware has been rewritten to dynamically support various MIDI devices.
+
+    When connected, each device is allocated to a collection of pre-defined slots
+	on Grid A and/or B.
+
+    For example. The MD (Machinedrum) device has slots 0 to 15 reserved on Grid A.
+	Slot 14 on Grid B is allocated to the MDFX track type.
+
+    The Analog 4 or MNM will reserve slots  0 to 6 on Grid B.
+
+    Similarly, a generic MIDI device will use slots 0 to 6 on Grid B.
+
+  ClipBoard:
+
+    Copy and paste of Grid Slots will adhere to the slot allocation rules described in the
+	previous section.
+
+  Save Page + Load Page (Formerly Write Page):
+
+    By popular request, the Write page has been renamed to Load.
+
+    Saving and Loading actions apply to the current Grid.
+
+    When in the Save or Load Page, the [ Shift 1 ] button can be used to
+    toggle between Grid A or Grid B.
+
+    Slots from both grids can be selected before releasing all MD trigs to Save/Write.
+
+  Group Select:
+
+	When in the Save or Load Page, holding the [ Shift 2 ] button now opens a Group Select menu,
+	allowing you to load or save all tracks corresponding to a group.
+
+    There are four groups:
+
+      1) MIDI Device 1 (MD)
+	  2) MIDI Device 2 (A4/MNM/Generic)
+	  3) FX (MDFX + LFOTrack + RouteTrack)
+	  4) TP (Tempo)
+
+    The groups can be enabled/disabled using the MD's trigger interface.
+
+    Releasing [ Shift 2 ] will save/load tracks corresponding to the active groups.
+
+  MD Sequencer:
+
+    The MD sequencer has been re-designed. Each track supports 8 parameter lock destinations.
+    There are a maximum of 256 locks per track, shared between each of the 8 parameters.
+
+    Slide editing is now functional across the full 64 steps of the sequencer.
+
+  Ext MIDI Sequencer:
+
+    The External (Ext) Midi Sequencer has been re-designed.
+
+    There are 6 x Ext MIDI Sequencer Tracks. These are stored in Grid B, slots 0 to 5.
+
+    Each Ext MIDI track can be used to sequence an attached MIDI device on port 2.
+    This could be an Elektron Analog 4, Elektron Monomachine or a generic MIDI device
+    such as a synth module.
+
+    Features of the new Ext MIDI Sequencer:
+      - 6 x Tracks
+      - 128 steps per track
+	  - 512 events per track.
+      - A maximum of 16 events per step, (i.e 16 note polyphony)
+	  - Each event could be an automation parameter or note_on/note_off message.
+      - Microtiming per event
+      - Conditional trig per event
+      - Velocity per step
+      - Each track includes 8 MIDI Control Channel automation parameters with
+      optional slide (linear interpolation).
+
+  PianoRoll + Automation Editor:
+
+    To accompany the new Ext MIDI Sequencer tracks we have created a PianoRoll
+    editor which can be used to edit the sequences for Ext MIDI Tracks 1 to 6.
+
+    The editor features an interactive cursor, controllable using [ Encoder 1 ]
+    and [ Encoder 2 ].
+
+    [ Encoder 1 ] cursor horizontal position
+	[ Encoder 2 ] cursor vertical position
+    [ Encoder 3 ] cursor width.
+    [ Encoder 4 ] increase/decrease zoom.
+
+    [ Write ] add note
+	[ Write ] delete note ( deletes all notes overlapped by cursor )
+
+    [ Shift 2 ] pianoroll menu.
+
+    - PianoRoll Menu:
+
+      Holding [ Shift 2 ] opens the PianoRoll menu. From here you can change
+	  the current Track and the selected Edit Mode. For each track you can adjust the
+      MIDI Channel, track length and playback speed. Cursor editing options are also included
+	  here including note velocity and note conditional settings.
+
+    - MD Trigger Interface Cursor Control:
+
+	  The cursor can be positioned horizontally by pressing MD trigger buttons.
+	  The cursor can be positioned vertically by playing notes on the attached MIDI device.
+
+	  Note width can also be adjusted by holding one MD Trigger button and then
+	  pressing another.
+
+	  An attached MIDI Keyboard can be used to enter notes into the sequence.
+	  Notes can be added by holding MD trigger buttons in conjunction with
+      pressing notes or chords on an attached MIDI device.
+
+    - Automation Editing:
+
+	  The piano roll editor allows for automation editing.
+
+      From the PianoRoll Menu's "Edit" parameter, you can select to Edit Automation Parameters
+	  1 to 8.
+
+      Slide enables/disable interpolation between automation events.
+
+      The CC option allows a specific MIDI Control Channel number to be chosen
+      per parameter, Alternatively you can select LEARN, to Automatically learn the next
+	  received CC.
+
+  Record Page: (Deprecated)
+
+    The record page has been removed.
+
+    Track recording can now be engaged from the StepEdit page or the PianoRoll editor by
+	pressing [ Save ].
+
+    Both automation (parameter locks) and note data can be recorded simultaneously in this
+	mode.
+
+    Pressing [ Write ] during a recording will clear the sequence for the current track.
+
+  WavDesigner GUI:
+
+    WavDesigner button assignment has changed.
+
+    Shift 2 now opens a menu for selecting Oscillators 1 to 3, or the Oscillator Mixer sub
+	pages.
+
+    The oscillator's WaveForm is selectable from the shift-menu.
+
+    The rendered waveform can be transferred to a MD sample slot using the
+    shift menu's "TRANSFER" option accessible from the Oscillator Mixer
+    sub page.
+
+    [ Save ] can be used to toggle between oscillator pitch / frequency
+    [ Write ] conveniently opens the MD's sample slot menu.
+
+  MD Trigger Interface:
+
+    The integration with the MD trigger interface has been improved. When editing a sequence
+	on the MC the MD's LEDs will illuminate according to the pattern sequence on the MC.
+
+    The MD's cursor (indicating current sequence position) will also be
+	illimunated during playblack. The cursor is synced to the MD's current pattern speed + length.
+
+    When using the Trig Interface to select tracks, the LEDs will illuminate appropriately.
+
+    The trig interface will now automatically exit recording/mute menus when activated.
+
+  Misc:
+
+    MixerPage - [ Shift 2 ]: Undo functionality deprecated.
+
+    Machinedrum - [ Function ] + [ Extended ] will now restore kit parameters
+    to the state of the last chain/load from MCL.
+
+  Other:
+
+    Numerous bug fixes, refactors and optimizations have been performed during this
+    release. If you encounter bugs, please try and reliably replicate the problem
+    and submit a new "issue" on github.
+
 MCL 2.70 21/06/2020
 
 Changes:
   - Sequencer:
     * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
     * Added sequencer support for parameter slides. (Slide data is only retained for first 32 steps)
-    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or Mutes. 
+    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or Mutes.
       The "Edit" parameter controlling the edit mode is accessible from the StepEdit page's Track Menu.
-    * Added ^ trig conditions (L1^, L2^, L3^.. etc). 
+    * Added ^ trig conditions (L1^, L2^, L3^.. etc).
       When chosen the step's parameter locks or slides must also obey the trig condition.
     * Sequencer step glyphs have been improved for each of the edit modes.
     * Added visual feedback when setting parameter slides using MD encoders.
@@ -16,8 +303,8 @@ Changes:
   - Chromatic/Arpeggiator:
 
     * The focused chromatic voice is now selected when notes are played in the chromatic page.
-      This prevents the chromatic voice changing uintentionally when switching tracks on the MD.
-      Similarly when playing from Ext Keyboard, you can only change the focused chromatic voice(s) 
+      This prevents the chromatic voice changing unintentionally when switching tracks on the MD.
+      Similarly when playing from Ext Keyboard, you can only change the focused chromatic voice(s)
       from within the Chromatic Page.
     * Arpeggiator now runs in either standard or triplet time depending on track
       speed.
@@ -44,10 +331,10 @@ Bug Fixes:
     * Improved sequencer editing
 
   - Chain Mode:
-    * In some circumstances chaining an empty track would result in unpredicatable behaviour.
+    * In some circumstances chaining an empty track would result in unpredictable behaviour.
     * Updating chain ROW/LOOP settings could resurrect a previously cleared slot.
     * Oneshot masks are now cleared on chain transition
-    * When chaining slots, only send machine parameters if track's sound is not equal to current track. 
+    * When chaining slots, only send machine parameters if track's sound is not equal to current track.
       (This was previously broken in some scenarios, resulting in no sound transition)
 
   - LFOs:
@@ -56,7 +343,6 @@ Bug Fixes:
   - Chromatic/Arpeggiator:
 
     * When connecting device to MIDI port 2, active "Peering" notification would appear frozen on chromatic page.
-
 
 MCL 2.62 08/05/2020
 

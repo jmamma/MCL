@@ -22,7 +22,8 @@ public:
 
 class ChainModeData {
 public:
-  DeviceLatency dev_latency[2];
+  DeviceLatency dev_latency[NUM_DEVS];
+
   uint8_t div192th_total_latency;
   uint8_t div32th_total_latency;
 
@@ -39,6 +40,8 @@ public:
   uint8_t transition_offsets[NUM_SLOTS];
   uint8_t send_machine[NUM_SLOTS];
   uint8_t transition_level[NUM_SLOTS];
+
+  uint8_t dev_sync_slot[NUM_DEVS];
 };
 
 class MCLActions : public ChainModeData {
@@ -60,8 +63,6 @@ public:
 
   uint8_t get_grid_idx(uint8_t slot_number);
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id, uint8_t *dev_idx);
-
-  SeqTrack *get_dev_slot_info(uint8_t slot_number, uint8_t *grid_idx, uint8_t *track_idx, uint8_t *track_type, uint8_t *dev_idx, uint8_t *group_type = nullptr);
 
   void send_globals();
   void switch_global(uint8_t global_page);

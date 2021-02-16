@@ -29,13 +29,15 @@ const char *MDLFONames[8] = {
  * Names for the different machine models of the machinedrum.
  **/
 
-#ifndef DISABLE_MACHINE_NAMES 
+#ifndef DISABLE_MACHINE_NAMES
 
-short_machine_name_t const md_machine_names_short[135] PROGMEM = {
+short_machine_name_t const md_machine_names_short[137] PROGMEM = {
   { "GN","--", 0},
   { "GN", "SN", 1},
   { "GN", "NS", 2},
   { "GN", "IM", 3},
+  { "GN", "SW", 4},
+  { "GN", "PU", 5},
   { "TR", "BD", 16},
   { "TR", "SD", 17},
   { "TR", "XT", 18},
@@ -169,11 +171,13 @@ short_machine_name_t const md_machine_names_short[135] PROGMEM = {
   { "RO", "48", 191}
 };
 
-const md_machine_name_t machine_names[135] PROGMEM = {
+const md_machine_name_t machine_names[137] PROGMEM = {
   { "GND---", 0},
   { "GND-SN", 1},
   { "GND-NS", 2},
   { "GND-IM", 3},
+  { "GND-SW", 4},
+  { "GND-PU", 5},
   { "TRX-BD", 16},
   { "TRX-SD", 17},
   { "TRX-XT", 18},
@@ -329,15 +333,24 @@ PGM_P MDClass::getMachineName(uint8_t machine) {
   return NULL;
 }
 
-const model_param_name_t gnd_sn_model_names[] PROGMEM = { { "PTC", 0},
+const model_param_name_t gnd_sn_model_names[] PROGMEM = { { "PT1", 0},
 						    { "DEC", 1},
 						    { "RMP", 2},
-						    { "RDC", 3}, {"", 127} };
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"PT4",6}, {"UNI",7}, {"", 127} };
+
 const model_param_name_t gnd_ns_model_names[] PROGMEM = { { "DEC", 0}, {"", 127} };
 const model_param_name_t gnd_im_model_names[] PROGMEM = { { "UP", 0},
 						    { "UVL", 1},
 						    { "DWN", 2},
 						    { "DVL", 3}, {"", 127} };
+const model_param_name_t gnd_sw_model_names[] PROGMEM = { { "PT1", 0},
+						    { "DEC", 1},
+						    { "RMP", 2},
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"SKE",6}, {"UNI",7}, {"", 127} };
+const model_param_name_t gnd_pu_model_names[] PROGMEM = { { "PT1", 0},
+						    { "DEC", 1},
+						    { "RMP", 2},
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"WID",6}, {"UNI",7}, {"", 127} };
 
 const model_param_name_t trx_bd_model_names[] PROGMEM = { { "PTC", 0},
 						    { "DEC", 1},
@@ -848,7 +861,9 @@ model_to_param_names_t model_param_names[] = {
   { GND_SN_MODEL, gnd_sn_model_names },
   { GND_NS_MODEL, gnd_ns_model_names },
   { GND_IM_MODEL, gnd_im_model_names },
-  
+  { GND_SW_MODEL, gnd_sw_model_names },
+  { GND_PU_MODEL, gnd_pu_model_names },
+
   { TRX_BD_MODEL, trx_bd_model_names },
   { TRX_B2_MODEL, trx_b2_model_names },
   { TRX_SD_MODEL, trx_sd_model_names },
@@ -1119,6 +1134,8 @@ static const tuning_t tunings[] = {
   { TRX_XT_MODEL, MIDI_NOTE_B3, sizeof(trx_xt_tuning), 6, trx_xt_tuning },
   { TRX_BD_MODEL, MIDI_NOTE_B1, sizeof(trx_bd_tuning), 7, trx_bd_tuning },
   { GND_SN_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
+  { GND_SW_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
+  { GND_PU_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
   { TRX_B2_MODEL, MIDI_NOTE_A1, sizeof(trx_b2_tuning), 8, trx_b2_tuning },
   { TRX_RS_MODEL, MIDI_NOTE_F4, sizeof(trx_rs_tuning), 13, trx_rs_tuning },
   { TRX_S2_MODEL, MIDI_NOTE_F2, sizeof(trx_s2_tuning), 0, trx_s2_tuning },

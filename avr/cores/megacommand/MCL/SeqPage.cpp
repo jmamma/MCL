@@ -85,6 +85,8 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
+
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {
@@ -100,6 +102,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   recording = false;
+  clearLed2();
 }
 
 void SeqPage::config_mask_info() {
@@ -121,15 +124,19 @@ void SeqPage::config_mask_info() {
 
 void SeqPage::select_track(MidiDevice *device, uint8_t track) {
   if (device == &MD) {
-
+    DEBUG_PRINTLN("setting md track");
     last_md_track = track;
+    if (mcl_cfg.track_select) {
+    MD.currentTrack = track;
+    MD.setStatus(0x22, track);
+    }
   }
 #ifdef EXT_TRACKS
   else {
-    last_ext_track = min(track, 3); // XXX
+    DEBUG_PRINTLN("setting ext track");
+    last_ext_track = min(track, NUM_EXT_TRACKS - 1);
   }
 #endif
-  DEBUG_DUMP("wtf");
   GUI.currentPage()->redisplay = true;
   GUI.currentPage()->config();
 }
@@ -407,7 +414,6 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
           IS_BIT_SET64(active_track.lock_mask, i + offset)) {
         str[i] = (char)219;
       }
-
       if (note_interface.notes[i] == 1) {
         /*Char 219 on the minicommand LCD is a []*/
         str[i] = (char)255;
@@ -607,26 +613,28 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint64_t mask, lock_mask, oneshot_mask = 0, slide_mask = 0;
     active_track.get_mask(&mask, MASK_PATTERN);
-    uint16_t led_mask = 0;
+    uint64_t led_mask = 0;
 
     switch (mask_type) {
     case MASK_PATTERN:
-      led_mask = mask >> offset;
+      led_mask = mask;
       break;
     case MASK_LOCK:
       active_track.get_mask(&lock_mask, MASK_LOCK);
-      led_mask = lock_mask >> offset;
+      led_mask = lock_mask;
       break;
     case MASK_MUTE:
       oneshot_mask = active_track.oneshot_mask;
-      led_mask = oneshot_mask >> offset;
+      led_mask = oneshot_mask;
       break;
     case MASK_SLIDE:
       active_track.get_mask(&slide_mask, MASK_SLIDE);
-      led_mask = slide_mask >> offset;
+      led_mask = slide_mask;
       break;
     }
-
+    led_mask <<= (64 - active_track.length);
+    led_mask >>= (64 - active_track.length);
+    led_mask = led_mask >> offset;
     draw_mask(offset, mask, active_track.step_count, active_track.length,
               oneshot_mask, slide_mask, show_current_step);
 
@@ -643,7 +651,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 // from knob value to step value
 uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
                                                /*OUT*/ bool *plock) {
-  if (condition >= NUM_TRIG_CONDITIONS) {
+  if (condition > NUM_TRIG_CONDITIONS) {
     condition = condition - NUM_TRIG_CONDITIONS;
     *plock = true;
   } else {
@@ -858,14 +866,13 @@ void opt_clear_locks_handler() {
     if (opt_clear == 2) {
       oled_display.textbox("CLEAR ", "LOCKS");
       for (uint8_t n = 0; n < NUM_LOCKS; n++) {
-        active_track.clear_track_locks(active_track.locks_params[n] - 1);
+        active_track.clear_track_locks(n);
       }
     }
     if (opt_clear == 1) {
       oled_display.textbox("CLEAR ", "LOCK");
       if (SeqPage::pianoroll_mode > 0) {
-        active_track.clear_track_locks(
-            active_track.locks_params[SeqPage::pianoroll_mode - 1] - 1);
+        active_track.clear_track_locks(SeqPage::pianoroll_mode - 1);
       }
     }
     // TODO ext locks
@@ -1157,13 +1164,13 @@ void SeqPage::loop() {
   }
 
   if (last_md_track != MD.currentTrack) {
-    select_track(midi_device, MD.currentTrack);
+    select_track(&MD, MD.currentTrack);
   }
   if (show_seq_menu) {
     seq_menu_page.loop();
-    if (opt_midi_device_capture != &MD && opt_trackid > 4) {
+    if (opt_midi_device_capture != &MD && opt_trackid > NUM_EXT_TRACKS) {
       // lock trackid to [1..4]
-      opt_trackid = min(opt_trackid, 4);
+      opt_trackid = min(opt_trackid, NUM_EXT_TRACKS);
       seq_menu_value_encoder.cur = opt_trackid;
     }
     return;

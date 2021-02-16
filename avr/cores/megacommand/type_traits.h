@@ -15,4 +15,20 @@ template<typename _Tp>
     enum { __value = 1 };
   };
 
+// adapted from cppreference.com
+
+template<bool B, class T = void>
+  struct enable_if {};
+ 
+template<class T>
+  struct enable_if<true, T> { typedef T type; };
+
+struct true_type 
+  {
+    enum { __value = 1 };
+  };
+struct false_type 
+  {
+    enum { __value = 0 };
+  };
 

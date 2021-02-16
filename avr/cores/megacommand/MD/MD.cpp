@@ -123,13 +123,17 @@ void MDClass::init_grid_devices() {
   uint8_t grid_idx = 0;
 
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-  add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
+    add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
   }
   grid_idx = 1;
-  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]), MDFX_TRACK_TYPE, GROUP_AUX);
-  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]), MDROUTE_TRACK_TYPE, GROUP_AUX);
-  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM,  &(mcl_seq.aux_tracks[2]), MDLFO_TRACK_TYPE, GROUP_AUX);
-  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[3]), MDTEMPO_TRACK_TYPE, GROUP_TEMPO);
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]),
+                    MDFX_TRACK_TYPE, GROUP_AUX, 0);
+  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]),
+                    MDROUTE_TRACK_TYPE, GROUP_AUX, 0);
+  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &(mcl_seq.aux_tracks[2]),
+                    MDLFO_TRACK_TYPE, GROUP_AUX, 0);
+  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[3]),
+                    MDTEMPO_TRACK_TYPE, GROUP_TEMPO, 0);
 }
 
 bool MDClass::probe() {
@@ -172,7 +176,15 @@ bool MDClass::probe() {
     connected = true;
     setGlobal(7);
     global.baseChannel = 9;
-    if (!get_fw_caps()) {
+
+    uint8_t count = 3;
+
+    while (!get_fw_caps() && count) {
+      mcl_gui.delay_progress(50);
+      count--;
+    }
+    if (!(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
+                     (uint64_t)FW_CAP_UNDOKIT_SYNC))) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
@@ -182,7 +194,7 @@ bool MDClass::probe() {
       while (1)
         ;
     }
-    getBlockingKit(0xF7);
+    getBlockingKit(0x7F);
   }
 
   if (connected == false) {
@@ -191,11 +203,15 @@ bool MDClass::probe() {
   }
 
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+
   if (ts) {
     md_track_select.on();
   }
   if (ti) {
     trig_interface.on();
+  } else {
+
+    deactivate_trig_interface();
   }
 
   return connected;
@@ -244,8 +260,7 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart->sendNoteOn(global.baseChannel, global.drumMapping[track],
-                        velocity);
+    uart->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
   }
 }
 
@@ -287,7 +302,33 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   sendRequest(data, 6);
 }
 
-uint8_t MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type, bool send) {
+uint8_t MDClass::sendFXParamsBulk(uint8_t *values, bool send) {
+  uint8_t data[2 + 8 * 4] = {0x70, 0x61};
+  memcpy(&data[2], values, 8 * 4);
+  return sendRequest(data, sizeof(data), send);
+}
+
+uint8_t MDClass::sendFXParams(uint8_t *values, uint8_t type, bool send) {
+  uint8_t data[2 + 8] = {0x70, type};
+  memcpy(&data[2], values, 8);
+  return sendRequest(data, sizeof(data), send);
+}
+
+uint8_t MDClass::setEchoParams(uint8_t *values, bool send) {
+  return sendFXParams(values, MD_SET_RHYTHM_ECHO_PARAM_ID, send);
+}
+uint8_t MDClass::setReverbParams(uint8_t *values, bool send) {
+  return sendFXParams(values, MD_SET_GATE_BOX_PARAM_ID, send);
+}
+uint8_t MDClass::setEQParams(uint8_t *values, bool send) {
+  return sendFXParams(values, MD_SET_EQ_PARAM_ID, send);
+}
+uint8_t MDClass::setCompressorParams(uint8_t *values, bool send) {
+  return sendFXParams(values, MD_SET_DYNAMIX_PARAM_ID, send);
+}
+
+uint8_t MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type,
+                             bool send) {
   uint8_t data[3] = {type, param, value};
   return sendRequest(data, 3, send);
 }
@@ -296,7 +337,7 @@ uint8_t MDClass::setEchoParam(uint8_t param, uint8_t value, bool send) {
   return sendFXParam(param, value, MD_SET_RHYTHM_ECHO_PARAM_ID, send);
 }
 
-uint8_t MDClass::setReverbParam(uint8_t param, uint8_t value,bool send) {
+uint8_t MDClass::setReverbParam(uint8_t param, uint8_t value, bool send) {
   return sendFXParam(param, value, MD_SET_GATE_BOX_PARAM_ID, send);
 }
 
@@ -427,6 +468,12 @@ void MDClass::mapMidiNote(uint8_t pitch, uint8_t track) {
 void MDClass::resetMidiMap() {
   uint8_t data[1] = {0x64};
   sendRequest(data, countof(data));
+}
+
+uint8_t MDClass::setTrackRoutings(uint8_t *values, bool send) {
+  uint8_t data[2 + 16] = {0x70, 0x5c};
+  memcpy(&data[2], values, 16);
+  return sendRequest(data, sizeof(data), send);
 }
 
 uint8_t MDClass::setTrackRouting(uint8_t track, uint8_t output, bool send) {
@@ -606,7 +653,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].send_params = true;
   for (uint8_t i = 0; i < 24; i++) {
 
-   if (((kit_->params[track][i] != machine->params[i])) ||
+    if (((kit_->params[track][i] != machine->params[i])) ||
         ((i < 8) && (kit_->models[track] != machine->model))) {
       //   (mcl_seq.md_tracks[track].is_param(i)))) {
       // mcl_seq.md_tracks[track].params[i] = machine->params[i];
