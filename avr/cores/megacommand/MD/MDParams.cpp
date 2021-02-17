@@ -1075,6 +1075,13 @@ static const uint8_t rom_tuning[] PROGMEM = {
   109, (112), 114, 116, 119, 121, 123, 125, 
 };
 
+static const uint8_t gnd_x_tri_tuning[] PROGMEM = {
+  0, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 43, 46, 49, 52, 55, 58, 61,
+  64, 67, 70, 73, 76, 79, 82, 85, 88, 91, 94, 97, 100, 103, 106, 109, 112, 115, 118,
+  121, 124, 127,
+};
+
+
 static const uint8_t gnd_sn_tuning[] PROGMEM = {
   0, 2, 3, 4, 6, 7, 8, 10, 11, 12, 14, 15, 16, 18, 19, 20,
   22, 23, 24, 26, 27, 28, 30, 31, 32, 34, 35, 36, 38, 39, 40, 42, 43, 44, 46, 47, 48,
@@ -1134,7 +1141,7 @@ static const tuning_t tunings[] = {
   { TRX_XT_MODEL, MIDI_NOTE_B3, sizeof(trx_xt_tuning), 6, trx_xt_tuning },
   { TRX_BD_MODEL, MIDI_NOTE_B1, sizeof(trx_bd_tuning), 7, trx_bd_tuning },
   { GND_SN_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
-  { GND_SW_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
+  { GND_SW_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_x_tri_tuning },
   { GND_PU_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
   { TRX_B2_MODEL, MIDI_NOTE_A1, sizeof(trx_b2_tuning), 8, trx_b2_tuning },
   { TRX_RS_MODEL, MIDI_NOTE_F4, sizeof(trx_rs_tuning), 13, trx_rs_tuning },
