@@ -45,7 +45,7 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534
+// MDTrack 536
 // ExtTrack 1754
 // A4Track 2094
 // EmptyTrack 2094
@@ -59,7 +59,7 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 // So we manually allocate the following BANK1 memory regions, with a little bit of headroom:
 
 constexpr size_t DEVICE_TRACK_LEN = 7;
-constexpr size_t GRID1_TRACK_LEN = 534;
+constexpr size_t GRID1_TRACK_LEN = 536;
 constexpr size_t GRID2_TRACK_LEN = 2094;
 
 constexpr size_t MDLFO_TRACK_LEN = 226;

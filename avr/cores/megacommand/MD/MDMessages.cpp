@@ -226,6 +226,7 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
     return false;
   }
 
+  uint8_t version = data[1];
   origPosition = data[3];
 
   ElektronSysexDecoder decoder(data + 4);
@@ -270,6 +271,9 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
+  if (version >= 5) {
+    decoder.get(tuning, 2);
+  }
 
   return true;
 }
@@ -288,8 +292,8 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
+  uint8_t version = midi->midiSysex.getByte(1 + offset);
   origPosition = midi->midiSysex.getByte(3 + offset);
-
   ElektronSysexDecoder decoder(midi, offset + 4);
   GUI.setLine(GUI.LINE2);
   decoder.stop7Bit();
@@ -332,6 +336,10 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
+  if (version >= 5) {
+    decoder.get(tuning, 2);
+  }
+
   DEBUG_PRINTLN(F("md kit okay"));
   return true;
 }
@@ -360,7 +368,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_KIT_MESSAGE_ID);
-  encoder->pack8(0x04); // version
+  encoder->pack8(0x05); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
@@ -392,7 +400,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   encoder->pack(trigGroups, 16);
   encoder->pack(muteGroups, 16);
-
+  encoder->pack(tuning, 2);
   uint16_t enclen = encoder->finish();
   encoder->finishChecksum();
 

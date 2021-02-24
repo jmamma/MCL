@@ -166,6 +166,7 @@ public:
   MDLFO lfo;
   uint8_t trigGroup;
   uint8_t muteGroup;
+  uint8_t tuning;
 
   void scale_vol(float scale);
   float normalize_level();
@@ -182,6 +183,7 @@ public:
   trigGroup = 127;
   muteGroup = 127;
   lfo.init(track);
+  tuning = 0;
   }
   /* @} */
 };
@@ -223,6 +225,9 @@ public:
   uint8_t trigGroups[16];
   /** The mute group selected for each track (255: OFF). **/
   uint8_t muteGroups[16];
+
+  /** 16bit tuning mask **/
+  uint8_t tuning[2];
 
   MDKit(): ElektronSysexObject() {}
 
