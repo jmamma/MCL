@@ -214,7 +214,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
 }
 
 bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != (0x4d1 - 7)) {
+  if (len != (0x4d4 - 7)) {
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
     GUI.flash_put_value16(0, len);
@@ -281,7 +281,7 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
 bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
-  if (len != (0x4d1 - 7)) {
+  if (len != (0x4d4 - 7)) {
     DEBUG_PRINTLN(F("kit wrong length"));
     DEBUG_DUMP(len);
     return false;
