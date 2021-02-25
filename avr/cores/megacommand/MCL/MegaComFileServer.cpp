@@ -46,6 +46,8 @@ int MCFileServer::dispatch() {
       return put_data();
     case FC_PUT_END:
       return put_end();
+    case FC_RENAME:
+      return rename();
     default:
       return -1;
   }
@@ -70,6 +72,29 @@ int MCFileServer::cwd() {
   } else {
     reply_ok();
   }
+  return -1;
+}
+
+int MCFileServer::rename() {
+  char name1[128];
+  char name2[128];
+  int len1 = readstr(name1);
+  int len2 = readstr(name2);
+
+  if (len1 <= 0 || len2 <= 0) {
+    reply_error("invalid file names.", "");
+    return -1;
+  }
+
+  FILEOP_BEGIN();
+  file.close();
+  if (SD.rename(name1, name2)) {
+    reply_ok();
+  } else {
+    reply_error("rename failed", "");
+  }
+  FILEOP_END();
+
   return -1;
 }
 
