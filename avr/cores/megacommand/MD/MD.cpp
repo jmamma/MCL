@@ -554,8 +554,9 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, bool send)
     data[i] = 0x00;
   }
  if (machine->get_tonal()) {
- data[i++] += 2;
+ data[i] += 2;
  }
+ i++;
  return sendRequest(data, i, send);
 }
 
