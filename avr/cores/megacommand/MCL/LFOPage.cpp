@@ -170,7 +170,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
   PGM_P modelname = NULL;
   if (dest != 0) {
     if (dest < 17) {
-      modelname = model_param_name(MD.kit.models[dest - 1], param);
+      modelname = model_param_name(MD.kit.get_model(dest - 1), param);
     } else {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
     }

@@ -6,7 +6,7 @@
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   seq_param4.cur = 0;
   seq_param4.old = 0;
   if (tuning) {
@@ -15,8 +15,8 @@ void SeqStepPage::config() {
     seq_param4.max = 1;
   }
   // config info labels
-  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -89,7 +89,7 @@ void SeqStepPage::display() {
   itoa(seq_param3.getValue(), K, 10);
   draw_knob(2, "LEN", K);
 
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   if (show_pitch) {
     if (tuning != NULL) {
       strcpy(K, "--");
@@ -140,7 +140,7 @@ void SeqStepPage::loop() {
 
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
-    tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+    tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
 
     MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
@@ -254,7 +254,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (pitch != active_track.locks_params_orig[0]) {
         uint8_t note_num = 255;
         tuning_t const *tuning =
-            MD.getModelTuning(MD.kit.models[last_md_track]);
+            MD.getKitModelTuning(last_md_track);
         if (tuning) {
           for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
             uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
@@ -371,7 +371,7 @@ void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[last_md_track]);
+  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   uint8_t note_num = msg[1] - tuning->base;
   if (note_num < tuning->len) {
     uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
@@ -450,7 +450,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     char str[5] = "--  ";
     char str2[4] = "-- ";
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track], track_param);
+    modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {
       m_strncpy_p(str, modelname, 3);
       if (strlen(str) == 2) {

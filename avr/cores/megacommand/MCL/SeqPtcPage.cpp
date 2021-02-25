@@ -126,8 +126,8 @@ void SeqPtcPage::config() {
   if (midi_device == &MD) {
     const char *str1;
     const char *str2;
-    str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
-    str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
+    str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
+    str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
     m_strncpy_p(str_first, str1, len1);
 
@@ -217,8 +217,8 @@ void SeqPtcPage::display() {
     dev_num = last_ext_track + 16;
   }
 #endif
-  const char *str1 = getMDMachineNameShort(MD.kit.models[dev_num], 1);
-  const char *str2 = getMDMachineNameShort(MD.kit.models[dev_num], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.get_model(dev_num), 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.get_model(dev_num), 2);
   GUI.setLine(GUI.LINE1);
 
   if (recording) {
@@ -384,7 +384,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
 }
 
 uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
-  tuning_t const *tuning = MD.getModelTuning(MD.kit.models[track]);
+  tuning_t const *tuning = MD.getKitModelTuning(track);
 
   uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
   note_num = note_num - note_offset;

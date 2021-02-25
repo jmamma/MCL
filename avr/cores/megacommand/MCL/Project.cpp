@@ -183,7 +183,7 @@ bool Project::convert_project(const char *projectname) {
             row_headers[1].update_model(MDFX_TRACK_NUM, MDFX_TRACK_TYPE,
                                         MDFX_TRACK_TYPE);
           }
-          row_headers[grid].update_model(x, md_track_src.machine.model,
+          row_headers[grid].update_model(x, md_track_src.machine.get_model(),
                                          md_track.active);
         }
       } else {

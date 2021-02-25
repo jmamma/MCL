@@ -909,6 +909,24 @@ extern short_machine_name_t const md_machine_names_short[137] PROGMEM;
 PGM_P getMDMachineNameShort(uint8_t machine, uint8_t type);
 extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
 
+/** This structure stores the tuning information of a melodic machine on the
+ * machinedrum. **/
+typedef struct tuning_s {
+
+  /** Model of the melodic machine. **/
+  uint8_t model;
+  /** Base pitch of the melodic machine. **/
+  uint8_t base;
+  /** Length of the tuning array storing the pitch values for each pitch. **/
+  uint8_t len;
+  uint8_t offset;
+  /** Pointer to an array for pitch values for individual midi notes. **/
+  const uint8_t *tuning;
+
+  /* @} */
+} tuning_t;
+
+
 /* @} @} */
 
 #endif /* MD_PARAMS_H__ */

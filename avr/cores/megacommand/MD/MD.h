@@ -14,23 +14,6 @@
 /** Standard elektron sysex header for communicating with the machinedrum. **/
 extern uint8_t machinedrum_sysex_hdr[5];
 
-/** This structure stores the tuning information of a melodic machine on the
- * machinedrum. **/
-typedef struct tuning_s {
-
-  /** Model of the melodic machine. **/
-  uint8_t model;
-  /** Base pitch of the melodic machine. **/
-  uint8_t base;
-  /** Length of the tuning array storing the pitch values for each pitch. **/
-  uint8_t len;
-  uint8_t offset;
-  /** Pointer to an array for pitch values for individual midi notes. **/
-  const uint8_t *tuning;
-
-  /* @} */
-} tuning_t;
-
 class MDMidiEvents : public MidiCallback {
 public:
   bool kitupdate_state;
@@ -216,7 +199,11 @@ public:
   /**
    * Get the tuning information of the given model.
    **/
-  const tuning_t *getModelTuning(uint8_t model);
+  const tuning_t *getModelTuning(uint8_t model, uint8_t tonal = 0);
+
+  const tuning_t *getKitModelTuning(uint8_t track) {
+    return getModelTuning(kit.get_model(track),kit.get_tonal(track));
+  }
   /**
    * Lookup the given pitch in the global track trigger settings, and returns
    *the track mapped to the give note. Returns 128 if no track could be found.
@@ -241,7 +228,7 @@ public:
    * Send a sysex machine to change the model of the machine on the given track.
    **/
   void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255);
-
+  uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, bool send = true);
   /**
    * Load the given machine (including parameters) on the given track
    * out of the machine structure.
@@ -257,7 +244,7 @@ public:
    *send. if send == true, send parameters to MD, insert machine in kit.
    **/
   uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level,
-                      bool send);
+                      bool send = true);
 
   /**
    * Inserts a machine in to the MDKit object

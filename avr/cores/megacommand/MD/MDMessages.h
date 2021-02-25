@@ -183,12 +183,12 @@ public:
   muteGroup = 127;
   lfo.init(track);
   }
-  uint8_t get_model() {
-    return 0x20000 ^ model;
-  }
-  bool get_tonal() {
-    if (model >= 0x20000) { return true; }
-    return false;
+
+  uint8_t get_model();
+  bool get_tonal();
+
+  uint32_t get_model_raw() {
+    return model;
   }
   /* @} */
 };
@@ -250,14 +250,9 @@ public:
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
 
-  uint8_t get_model(uint8_t track) {
-    return 0x20000 ^ models[track];
-  }
+  uint8_t get_model(uint8_t track);
+  bool get_tonal(uint8_t track);
 
-  bool get_tonal(uint8_t track) {
-    if (models[track] >= 0x20000) { return true; }
-    return false;
-  }
   /* @} */
 };
 

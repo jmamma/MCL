@@ -352,7 +352,7 @@ uint8_t MDClass::setCompressorParam(uint8_t param, uint8_t value, bool send) {
 /*** tunings ***/
 
 uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
-  tuning_t const *tuning = getModelTuning(kit.get_model(track),kit.get_tuning(track));
+  tuning_t const *tuning = getKitModelTuning(track);
 
   if (tuning == NULL)
     return 128;
@@ -382,7 +382,7 @@ uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
 }
 
 uint8_t MDClass::trackGetPitch(uint8_t track, uint8_t pitch) {
-  tuning_t const *tuning = getModelTuning(kit.get_model(track),kit.get_tuning(track));
+  tuning_t const *tuning = getKitModelTuning(track);
 
   if (tuning == NULL)
     return 128;
@@ -439,7 +439,7 @@ void MDClass::sliceTrack16(uint8_t track, uint8_t from, uint8_t to) {
 }
 
 bool MDClass::isMelodicTrack(uint8_t track) {
-  return (getModelTuning(kit.get_model(track) != NULL);
+  return (getModelTuning(kit.get_model(track)) != NULL);
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
@@ -491,7 +491,7 @@ void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
   sendRequest(data, countof(data));
 }
 
-void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t tonal, uint8_t init) {
+void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
   uint8_t send_length = 5;
   if (init == 255) {
     send_length = 4;
@@ -505,13 +505,12 @@ void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t tonal, uint8_t
     data[2] = model;
     data[3] = 0x00;
   }
-  if (tonal) { data[3] += 2; }
   sendRequest(data, send_length);
 }
 
 void MDClass::setMachine(uint8_t track, MDKit *kit) {
   // 138 bytes approx
-  assignMachine(track, kit->get_model(track), kit->get_tuning(track));
+  assignMachine(track, kit->get_model(track), kit->get_tonal(track));
   setLFO(track, &(kit->lfos[track]), false);
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
@@ -543,6 +542,23 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   //  uart->useRunningStatus = false;
 }
 
+uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, bool send) {
+ uint8_t data[40] = {0x70, 0x5b};
+ uint8_t i = 2;
+ data[i++] = track;
+  if (machine->get_model() >= 128) {
+    data[i++] = (machine->get_model() - 128);
+    data[i] = 0x01;
+  } else {
+    data[i++] = machine->get_model();
+    data[i] = 0x00;
+  }
+ if (machine->get_tonal()) {
+ data[i++] += 2;
+ }
+ return sendRequest(data, i, send);
+}
+
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
   MDKit *kit_ = &kit;
@@ -551,7 +567,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   if (set_level) {
     kit_->levels[track] = machine->level;
   }
-  kit_->models[track] = machine->model;
+  kit_->models[track] = machine->get_model_raw();
 
   if (machine->lfo.destinationTrack == track) {
 
@@ -583,10 +599,10 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   MDKit *kit_ = &kit;
 
-  if (kit_->models[track] != machine->model) {
+  if (kit_->get_model(track) != machine->get_model()) {
     if (send)
-      MD.assignMachine(track, machine->model, 0);
-    bytes += 5 + 7;
+      MD.assignMachineBulk(track, machine);
+    bytes +=  MD.assignMachineBulk(track, machine, false);
   }
 
   MDLFO *lfo = &(machine->lfo);
@@ -654,10 +670,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].send_params = true;
   for (uint8_t i = 0; i < 24; i++) {
 
-    if (((kit_->params[track][i] != machine->params[i])) ||
-        ((i < 8) && (kit_->models[track] != machine->model))) {
-      //   (mcl_seq.md_tracks[track].is_param(i)))) {
-      // mcl_seq.md_tracks[track].params[i] = machine->params[i];
+    if (kit_->params[track][i] != machine->params[i]) {
       if (machine->params[i] != 255) {
         if (send)
           MD.setTrackParam(track, i, machine->params[i]);

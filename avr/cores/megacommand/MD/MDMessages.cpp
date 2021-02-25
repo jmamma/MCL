@@ -64,7 +64,7 @@ bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
   uint8_t tempo_upper;
   decoder.get8(&tempo_upper);
   decoder.get8(&tempo_lower);
-  tempo = (tempo_upper << 7 ) | tempo_lower;
+  tempo = (tempo_upper << 7) | tempo_lower;
   decoder.getb(&extendedMode);
 
   uint8_t byte = 0;
@@ -116,7 +116,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   uint8_t tempo_upper;
   decoder.get8(&tempo_upper);
   decoder.get8(&tempo_lower);
-  tempo = (tempo_upper << 7 ) | tempo_lower;
+  tempo = (tempo_upper << 7) | tempo_lower;
   decoder.getb(&extendedMode);
 
   uint8_t byte = 0;
@@ -213,8 +213,25 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   return enclen + 5;
 }
 
+uint8_t MDMachine::get_model() { return 0x20000 ^ model; }
+bool MDMachine::get_tonal() {
+  if (model >= 0x20000) {
+    return true;
+  }
+  return false;
+}
+
+
+uint8_t MDKit::get_model(uint8_t track) { return 0x20000 ^ models[track]; }
+bool MDKit::get_tonal(uint8_t track) {
+  if (models[track] >= 0x20000) {
+    return true;
+  }
+  return false;
+}
+
 bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != (0x4d4 - 7)) {
+  if (len != (0x4d1 - 7)) {
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
     GUI.flash_put_value16(0, len);
@@ -269,7 +286,7 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
 bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.recordLen - 5;
   uint16_t offset = 5;
-  if (len != (0x4d4 - 7)) {
+  if (len != (0x4d1 - 7)) {
     DEBUG_PRINTLN(F("kit wrong length"));
     DEBUG_DUMP(len);
     return false;
@@ -335,10 +352,10 @@ uint16_t MDKit::toSysex(uint8_t *data, uint16_t len) {
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
     encoder->throttle = true;
-    //float swing = (float) MD->swing_last / 16385->0;
-    //encoder->throttle_mod12 = floor((swing) * 12);
-    //DEBUG_PRINTLN(F("swing"));
-    //DEBUG_DUMP(encoder->throttle_mod12);
+    // float swing = (float) MD->swing_last / 16385->0;
+    // encoder->throttle_mod12 = floor((swing) * 12);
+    // DEBUG_PRINTLN(F("swing"));
+    // DEBUG_DUMP(encoder->throttle_mod12);
   }
   encoder->stop7Bit();
   encoder->begin();
@@ -376,7 +393,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   encoder->pack(trigGroups, 16);
   encoder->pack(muteGroups, 16);
-  //encoder->pack(tuning, 2);
+  // encoder->pack(tuning, 2);
   uint16_t enclen = encoder->finish();
   encoder->finishChecksum();
 
@@ -462,7 +479,8 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
     decoder.start7Bit();
     decoder.get((uint8_t *)&rows[i], 4);
     decoder.get16(&rows[i].mutes);
-    decoder.get16(&rows[i].tempo); // different from MDGlobal tempo, this is 7bit encoded
+    decoder.get16(
+        &rows[i].tempo); // different from MDGlobal tempo, this is 7bit encoded
     decoder.get(&rows[i].startPosition, 2);
     decoder.stop7Bit();
   }

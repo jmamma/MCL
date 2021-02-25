@@ -3,8 +3,8 @@
 void SeqParamPage::setup() { SeqPage::setup(); }
 void SeqParamPage::config() {
   // config info labels
-  const char *str1 = getMDMachineNameShort(MD.kit.models[last_md_track], 1);
-  const char *str2 = getMDMachineNameShort(MD.kit.models[last_md_track], 2);
+  const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
+  const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
   constexpr uint8_t len1 = sizeof(info1);
 
@@ -77,7 +77,7 @@ void SeqParamPage::display() {
     GUI.put_string_at(0, "--");
   } else {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.get_model(last_md_track),
                                  seq_param1.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
@@ -93,7 +93,7 @@ void SeqParamPage::display() {
     GUI.put_string_at(7, "--");
   } else {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.get_model(last_md_track),
                                  seq_param3.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
@@ -127,7 +127,7 @@ void SeqParamPage::display() {
 
   if (seq_param1.getValue() != 0) {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.get_model(last_md_track),
                                  seq_param1.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName, modelname, 4);
@@ -136,7 +136,7 @@ void SeqParamPage::display() {
 
   if (seq_param3.getValue() != 0) {
     PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.models[last_md_track],
+    modelname = model_param_name(MD.kit.get_model(last_md_track),
                                  seq_param3.getValue() - 1);
     if (modelname != NULL) {
       m_strncpy_p(myName2, modelname, 4);
