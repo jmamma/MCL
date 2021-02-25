@@ -439,7 +439,7 @@ void MDClass::sliceTrack16(uint8_t track, uint8_t from, uint8_t to) {
 }
 
 bool MDClass::isMelodicTrack(uint8_t track) {
-  return (getModelTuning(kit.get_model(track)) != NULL);
+  return (getKitModelTuning(track) != NULL);
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
@@ -599,7 +599,8 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   MDKit *kit_ = &kit;
 
-  if (kit_->get_model(track) != machine->get_model()) {
+  //Compare raw model data type. if tonal state changed we should still resend
+  if (kit_->models[track] != machine->model) {
     if (send)
       MD.assignMachineBulk(track, machine);
     bytes +=  MD.assignMachineBulk(track, machine, false);
