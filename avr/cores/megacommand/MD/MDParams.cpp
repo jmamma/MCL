@@ -1128,7 +1128,7 @@ static const uint8_t tonal_tuning[] PROGMEM = {
 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126
 };
 
-static const tuning_t e12_tuning_t = { E12_SD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning };
+static const tuning_t rom_tonal_tuning_t = { ROM_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning };
 
 
 static const tuning_t tunings_tonal[] = {
@@ -1181,12 +1181,18 @@ tuning_t const *track_tunings[16];
 
 const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;
+
   if ((model >= 128) && (model <= 191)) {
-    return &rom_tuning_t;
+    if (tonal) {
+      return &rom_tonal_tuning_t;
+    }
+    else {
+      return &rom_tuning_t;
+    }
   }
 
   if ((model >= E12_SD_MODEL) && (model <= E12_BC_MODEL) && (tonal)) {
-    return &e12_tuning_t;
+    return &rom_tonal_tuning_t;
   }
 
 
