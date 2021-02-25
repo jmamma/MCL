@@ -1179,16 +1179,21 @@ static const tuning_t tunings[] = {
 
 tuning_t const *track_tunings[16];
 
-const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, uint8_t tonal) {
+const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;
-  if (((model >= 128) && (model <= 191))) {
+  if ((model >= 128) && (model <= 191)) {
     return &rom_tuning_t;
   }
+
+  if ((model >= E12_SD_MODEL) && (model <= E12_BC_MODEL) && (tonal)) {
+    return &e12_tuning_t;
+  }
+
 
   const tuning_t *t = tunings;
   uint8_t len = countof(tunings);
 
-  if (tonal > 0) {
+  if (tonal) {
     t = tunings_tonal;
     len = countof(tunings_tonal);
   }

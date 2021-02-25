@@ -199,7 +199,7 @@ public:
   /**
    * Get the tuning information of the given model.
    **/
-  const tuning_t *getModelTuning(uint8_t model, uint8_t tonal = 0);
+  const tuning_t *getModelTuning(uint8_t model, bool tonal = false);
 
   const tuning_t *getKitModelTuning(uint8_t track) {
     return getModelTuning(kit.get_model(track),kit.get_tonal(track));
