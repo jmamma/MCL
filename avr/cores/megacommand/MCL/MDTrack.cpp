@@ -55,7 +55,7 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
 
   machine.track = tracknumber;
   machine.level = MD.kit.levels[tracknumber];
-  machine.model = MD.kit.get_model(tracknumber);
+  machine.model = MD.kit.models[tracknumber]; //get_raw_model including tonal bit
 
   /*Check to see if LFO is modulating host track*/
   /*IF it is then we need to make sure that the LFO destination is updated to
