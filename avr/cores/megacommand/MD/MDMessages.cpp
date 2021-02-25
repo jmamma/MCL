@@ -242,24 +242,11 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   decoder.get32(models, 16);
   decoder.stop7Bit(); // reset 7 bit
   decoder.start7Bit();
-  // uint8_t lfo_out;
 
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)&lfos[i], 5);
     decoder.get((uint8_t *)&lfo_statestore, 31);
-
-    //	decoder.get((uint8_t *)&lfos[i], 5);
-    //   for (int j = 0; j < 31; j++) {
-    //      decoder.get((uint8_t *)&lfo_out,1);
-    //                      LCD.goLine(0);
-    //    LCD.putnumber(j);
-    //                    LCD.goLine(1);
-    //  LCD.putnumber((int)lfo_out);
-    // delay(400);
-
-    //        }
   }
-  //  GUI.flash_put_value(0, lfo_out);
 
   decoder.stop7Bit();
 
@@ -271,10 +258,11 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
+  /*
   if (version >= 5) {
     decoder.get(tuning, 2);
   }
-
+  */
   return true;
 }
 
@@ -307,24 +295,11 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.get32(models, 16);
   decoder.stop7Bit(); // reset 7 bit
   decoder.start7Bit();
-  // uint8_t lfo_out;
 
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)&lfos[i], 5);
     decoder.get((uint8_t *)&lfo_statestore, 31);
-
-    //	decoder.get((uint8_t *)&lfos[i], 5);
-    //   for (int j = 0; j < 31; j++) {
-    //      decoder.get((uint8_t *)&lfo_out,1);
-    //                      LCD.goLine(0);
-    //    LCD.putnumber(j);
-    //                    LCD.goLine(1);
-    //  LCD.putnumber((int)lfo_out);
-    // delay(400);
-
-    //        }
   }
-  //  GUI.flash_put_value(0, lfo_out);
 
   decoder.stop7Bit();
 
@@ -336,10 +311,11 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
+  /*
   if (version >= 5) {
     decoder.get(tuning, 2);
   }
-
+  */
   DEBUG_PRINTLN(F("md kit okay"));
   return true;
 }
@@ -400,7 +376,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   encoder->pack(trigGroups, 16);
   encoder->pack(muteGroups, 16);
-  encoder->pack(tuning, 2);
+  //encoder->pack(tuning, 2);
   uint16_t enclen = encoder->finish();
   encoder->finishChecksum();
 

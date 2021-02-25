@@ -166,7 +166,6 @@ public:
   MDLFO lfo;
   uint8_t trigGroup;
   uint8_t muteGroup;
-  uint8_t tuning;
 
   void scale_vol(float scale);
   float normalize_level();
@@ -183,7 +182,13 @@ public:
   trigGroup = 127;
   muteGroup = 127;
   lfo.init(track);
-  tuning = 0;
+  }
+  uint8_t get_model() {
+    return 0x20000 ^ model;
+  }
+  bool get_tonal() {
+    if (model >= 0x20000) { return true; }
+    return false;
   }
   /* @} */
 };
@@ -226,9 +231,6 @@ public:
   /** The mute group selected for each track (255: OFF). **/
   uint8_t muteGroups[16];
 
-  /** 16bit tuning mask **/
-  uint8_t tuning[2];
-
   MDKit(): ElektronSysexObject() {}
 
   virtual bool fromSysex(uint8_t *sysex, uint16_t len);
@@ -247,6 +249,15 @@ public:
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
+
+  uint8_t get_model(uint8_t track) {
+    return 0x20000 ^ models[track];
+  }
+
+  bool get_tonal(uint8_t track) {
+    if (models[track] >= 0x20000) { return true; }
+    return false;
+  }
   /* @} */
 };
 

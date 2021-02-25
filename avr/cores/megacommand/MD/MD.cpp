@@ -352,7 +352,7 @@ uint8_t MDClass::setCompressorParam(uint8_t param, uint8_t value, bool send) {
 /*** tunings ***/
 
 uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
-  tuning_t const *tuning = getModelTuning(kit.models[track]);
+  tuning_t const *tuning = getModelTuning(kit.get_model(track),kit.get_tuning(track));
 
   if (tuning == NULL)
     return 128;
@@ -382,7 +382,7 @@ uint8_t MDClass::trackGetCCPitch(uint8_t track, uint8_t cc, int8_t *offset) {
 }
 
 uint8_t MDClass::trackGetPitch(uint8_t track, uint8_t pitch) {
-  tuning_t const *tuning = getModelTuning(kit.models[track]);
+  tuning_t const *tuning = getModelTuning(kit.get_model(track),kit.get_tuning(track));
 
   if (tuning == NULL)
     return 128;
@@ -439,7 +439,7 @@ void MDClass::sliceTrack16(uint8_t track, uint8_t from, uint8_t to) {
 }
 
 bool MDClass::isMelodicTrack(uint8_t track) {
-  return (getModelTuning(kit.models[track]) != NULL);
+  return (getModelTuning(kit.get_model(track) != NULL);
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
@@ -491,7 +491,7 @@ void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
   sendRequest(data, countof(data));
 }
 
-void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
+void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t tonal, uint8_t init) {
   uint8_t send_length = 5;
   if (init == 255) {
     send_length = 4;
@@ -505,12 +505,13 @@ void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
     data[2] = model;
     data[3] = 0x00;
   }
+  if (tonal) { data[3] += 2; }
   sendRequest(data, send_length);
 }
 
 void MDClass::setMachine(uint8_t track, MDKit *kit) {
   // 138 bytes approx
-  assignMachine(track, kit->models[track]);
+  assignMachine(track, kit->get_model(track), kit->get_tuning(track));
   setLFO(track, &(kit->lfos[track]), false);
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
@@ -523,7 +524,7 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
 
 void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   // 138 bytes approx
-  assignMachine(track, machine->model);
+  assignMachine(track, machine->get_model(), machine->get_tonal());
   setLFO(track, &(machine->lfo), false);
   if (machine->trigGroup == 255) {
     setTrigGroup(track, 127);
