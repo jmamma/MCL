@@ -117,7 +117,7 @@ const menu_t<7> midiconfig_menu_layout PROGMEM = {
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},
 
         {"MIDI FWD:", 0, 3, 3, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, NULL, 10},
-        {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 51},
+        {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 85},
     },
 
     (&mclsys_apply_config),
