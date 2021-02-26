@@ -560,15 +560,8 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i] += 2;
   }
   i++;
-  /*
    memcpy(data + i,machine->params,24);
    i += 24;
-
-  for (uint8_t a = 0; a < 24; a++) {
-
-          Serial.println(machine->params[a]);
-          Serial.println(machine->params[a], HEX);
-  }
 
    memcpy(data + i,&machine->lfo, 5);
    i += 5;
@@ -576,9 +569,9 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
    if (machine->muteGroup == 255) { machine->muteGroup = 127; }
    data[i++] = machine->trigGroup;
    data[i++] = machine->muteGroup;
-   if (level != 255) {  data[i++] = level; }
-   if (send) { insertMachineInKit(track, machine, send_level); }
-   */
+   bool set_level = false;
+   if (level != 255) {  data[i++] = level; set_level = true; }
+   if (send) { insertMachineInKit(track, machine, set_level); }
   return sendRequest(data, i, send);
 }
 
@@ -623,21 +616,23 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   MDKit *kit_ = &kit;
 
   // Compare raw model data type. if tonal state changed we should still resend
-  if (kit_->models[track] != machine->model) {
-//    uint8_t level = 255;
-//    if ((send_level) && (kit_->levels[track] != machine->level)) {
- //     level = kit_->levels[track];
- //   }
+//  if (kit_->models[track] != machine->model) {
+    uint8_t level = 255;
+    if ((send_level) && (kit_->levels[track] != machine->level)) {
+      level = kit_->levels[track];
+    }
     if (send) {
       DEBUG_PRINTLN("sendMachine");
-      MD.assignMachine(track, machine->get_model(), 0);
+     // MD.assignMachine(track, machine->get_model(), 0);
 
-     // MD.assignMachineBulk(track, machine, level);
+      
+      MD.assignMachineBulk(track, machine, level);
     }
 
-    bytes += 5 + 7;
-    //bytes += MD.assignMachineBulk(track, machine, level, false);
-  }
+    //bytes += 5 + 7;
+    bytes += MD.assignMachineBulk(track, machine, level, false);
+ // }
+ /*  
   MDLFO *lfo = &(machine->lfo);
   if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
     if (send)
@@ -703,8 +698,10 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].send_params = true;
 
   for (uint8_t i = 0; i < 24; i++) {
-
-    if (kit_->params[track][i] != machine->params[i]) {
+ 
+    if (((kit_->params[track][i] != machine->params[i])) ||
+       ((i < 8) && (kit_->models[track] != machine->model))) {
+    //if (kit_->params[track][i] != machine->params[i]) {
       if (machine->params[i] != 255) {
         if (send)
           MD.setTrackParam(track, i, machine->params[i]);
@@ -712,6 +709,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
       }
     }
   }
+*/
   if (send)
     insertMachineInKit(track, machine, send_level);
 
