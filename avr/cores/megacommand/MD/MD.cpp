@@ -557,6 +557,8 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, bool send)
  data[i] += 2;
  }
  i++;
+ memcpy(data + i,machine->params,24);
+ i += 24;
  return sendRequest(data, i, send);
 }
 
@@ -670,6 +672,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;
 
   //  mcl_seq.md_tracks[track].send_params = true;
+  /*
   for (uint8_t i = 0; i < 24; i++) {
 
     if (kit_->params[track][i] != machine->params[i]) {
@@ -680,6 +683,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
       }
     }
   }
+  */
   if (send)
     insertMachineInKit(track, machine, send_level);
 
