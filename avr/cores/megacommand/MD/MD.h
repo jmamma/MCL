@@ -228,7 +228,7 @@ public:
    * Send a sysex machine to change the model of the machine on the given track.
    **/
   void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255);
-  uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, bool send = true);
+  uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t send_level, bool send = true);
   /**
    * Load the given machine (including parameters) on the given track
    * out of the machine structure.

@@ -542,7 +542,7 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   //  uart->useRunningStatus = false;
 }
 
-uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, bool send) {
+uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t level, bool send) {
  uint8_t data[40] = {0x70, 0x5b};
  uint8_t i = 2;
  data[i++] = track;
@@ -557,9 +557,21 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine, bool send)
  data[i] += 2;
  }
  i++;
- memcpy(data + i,machine->params,24);
+  memcpy(data + i,machine->params,24);
  i += 24;
+ 
+ memcpy(data + i,&machine->lfo, 5);
+ i += 5;
+ if (machine->trigGroup == 255) { machine->trigGroup = 127; }
+ if (machine->muteGroup == 255) { machine->muteGroup = 127; }
+ data[i++] = machine->trigGroup;
+ data[i++] = machine->muteGroup;
+ bool send_level = true;
+ if (level != 255) {  data[i++] = level; send_level = false; }
+ if (send) { insertMachineInKit(track, machine, send_level); }
+ 
  return sendRequest(data, i, send);
+
 }
 
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
@@ -604,11 +616,15 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   //Compare raw model data type. if tonal state changed we should still resend
   if (kit_->models[track] != machine->model) {
+    uint8_t level = 255;
+    if ((send_level) && (kit_->levels[track] != machine->level)) {
+    level = kit_->levels[track];
+    }
     if (send)
-      MD.assignMachineBulk(track, machine);
-    bytes +=  MD.assignMachineBulk(track, machine, false);
+      MD.assignMachineBulk(track, machine, level);
+    bytes +=  MD.assignMachineBulk(track, machine, level, false);
   }
-
+ /* 
   MDLFO *lfo = &(machine->lfo);
   if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
     if (send)
@@ -672,7 +688,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;
 
   //  mcl_seq.md_tracks[track].send_params = true;
-  /*
+
   for (uint8_t i = 0; i < 24; i++) {
 
     if (kit_->params[track][i] != machine->params[i]) {
@@ -683,7 +699,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
       }
     }
   }
-  */
+*/
   if (send)
     insertMachineInKit(track, machine, send_level);
 
