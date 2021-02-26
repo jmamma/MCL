@@ -624,15 +624,19 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   // Compare raw model data type. if tonal state changed we should still resend
   if (kit_->models[track] != machine->model) {
-    uint8_t level = 255;
-    if ((send_level) && (kit_->levels[track] != machine->level)) {
-      level = kit_->levels[track];
-    }
+//    uint8_t level = 255;
+//    if ((send_level) && (kit_->levels[track] != machine->level)) {
+ //     level = kit_->levels[track];
+ //   }
     if (send) {
       DEBUG_PRINTLN("sendMachine");
-      MD.assignMachineBulk(track, machine, level);
+      MD.assignMachine(track, machine->get_model(), 0);
+
+     // MD.assignMachineBulk(track, machine, level);
     }
-    bytes += MD.assignMachineBulk(track, machine, level, false);
+
+    bytes += 5 + 7;
+    //bytes += MD.assignMachineBulk(track, machine, level, false);
   }
   MDLFO *lfo = &(machine->lfo);
   if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
