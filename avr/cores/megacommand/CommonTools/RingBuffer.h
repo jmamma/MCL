@@ -52,6 +52,8 @@ public:
   ALWAYS_INLINE() bool put_h(C c) volatile;
   /** put_h but when running from within isr that is already blocking**/
   ALWAYS_INLINE() bool put_h_isr(C c) volatile;
+  /** put_h in isr, copy n elements from src buffer to ring buffer **/
+  ALWAYS_INLINE() bool put_h_isr(C *src, T n) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
   ALWAYS_INLINE() bool putp(C *c) volatile;
   /** Drop _at most_ the next n element in the ring buffer. **/
@@ -106,6 +108,33 @@ CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
   #ifdef CHECKING
   overflow = other.overflow;
   #endif
+}
+
+template <class C, int N, class T>
+bool CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  T s = n;
+
+  if (wr + n >= len) {
+    s = len - 1 - wr;
+  }
+  memcpy_bank1(ptr + wr, src, s);
+  wr += s;
+  n -= s;
+  if (n) {
+    memcpy_bank1(ptr, src, n);
+    wr = n;
+  }
+  if (wr == len) {
+    wr = 0;
+  }
+  return true;
 }
 
 template <class C, int N, class T>

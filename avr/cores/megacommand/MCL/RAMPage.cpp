@@ -166,7 +166,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 }
 
 void RAMPage::reverse(uint8_t track) {
-  uint8_t model = (MD.kit.models[track]);
+  uint8_t model = (MD.kit.get_model(track));
 
   if (model != RAM_P1_MODEL && model != RAM_P2_MODEL && model != RAM_P3_MODEL &&
       model != RAM_P4_MODEL) {
@@ -183,7 +183,7 @@ void RAMPage::reverse(uint8_t track) {
 }
 
 bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
-  uint8_t model = (MD.kit.models[track]);
+  uint8_t model = (MD.kit.get_model(track));
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return false;

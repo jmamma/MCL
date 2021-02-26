@@ -183,6 +183,13 @@ public:
   muteGroup = 127;
   lfo.init(track);
   }
+
+  uint8_t get_model();
+  bool get_tonal();
+
+  uint32_t get_model_raw() {
+    return model;
+  }
   /* @} */
 };
 
@@ -242,6 +249,10 @@ public:
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
+
+  uint8_t get_model(uint8_t track);
+  bool get_tonal(uint8_t track);
+
   /* @} */
 };
 

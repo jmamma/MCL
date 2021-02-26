@@ -3,14 +3,22 @@
 #define SYSEX_RETRIES 1
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
+  uint8_t buf[256];
+
   if (send) {
-  USE_LOCK();
-  SET_LOCK();
-  uart->m_putc(0xF0);
-  uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
-  uart->sendRaw(data, len);
-  uart->m_putc(0xF7);
-  CLEAR_LOCK();
+    uint8_t i = 0;
+    buf[i++] = 0xF0;
+    for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
+      buf[i++] = sysex_protocol.header[n];
+    }
+    for (uint8_t n = 0; n < len; n++) {
+      buf[i++] = data[n];
+    }
+    buf[i++] = 0xF7;
+    USE_LOCK();
+    SET_LOCK();
+    uart->m_putc(buf, i);
+    CLEAR_LOCK();
   }
   return len + sysex_protocol.header_size + 2;
 }

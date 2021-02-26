@@ -1121,6 +1121,36 @@ static const uint8_t e12_lt_tuning[] PROGMEM = {
 
 static const tuning_t rom_tuning_t = { ROM_MODEL,    45, 
 				       sizeof(rom_tuning), 4,   rom_tuning };
+
+static const uint8_t tonal_tuning[] PROGMEM = {
+0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46,
+48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
+94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126
+};
+
+static const tuning_t rom_tonal_tuning_t = { ROM_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning };
+
+
+static const tuning_t tunings_tonal[] = {
+  { EFM_BD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_SD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_XT_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CP_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_RS_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CB_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_HH_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CY_MODEL, MIDI_NOTE_CS3, sizeof(tonal_tuning), 0, tonal_tuning },
+
+  { TRX_BD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_SD_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_XT_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_RS_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_XC_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_B2_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_S2_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+
+};
+
 static const tuning_t tunings[] = {
   { EFM_RS_MODEL, MIDI_NOTE_B4, sizeof(efm_rs_tuning), 4, efm_rs_tuning },
   { EFM_HH_MODEL, MIDI_NOTE_B4, sizeof(efm_hh_tuning), 8, efm_hh_tuning },
@@ -1149,14 +1179,34 @@ static const tuning_t tunings[] = {
 
 tuning_t const *track_tunings[16];
 
-const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model) {
+const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;
-  if (((model >= 128) && (model <= 191))) {
-    return &rom_tuning_t;
+
+  if ((model >= 128) && (model <= 191)) {
+    if (tonal) {
+      return &rom_tonal_tuning_t;
+    }
+    else {
+      return &rom_tuning_t;
+    }
   }
-  for (i = 0; i < countof(tunings); i++) {
-    if (model == tunings[i].model) {
-      return tunings + i;
+
+  if ((model >= E12_SD_MODEL) && (model <= E12_BC_MODEL) && (tonal)) {
+    return &rom_tonal_tuning_t;
+  }
+
+
+  const tuning_t *t = tunings;
+  uint8_t len = countof(tunings);
+
+  if (tonal) {
+    t = tunings_tonal;
+    len = countof(tunings_tonal);
+  }
+
+  for (i = 0; i < len; i++) {
+    if (model == t[i].model) {
+      return t + i;
     }
   }
 

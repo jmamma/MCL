@@ -52,7 +52,7 @@ void SoundBrowserPage::save_sound() {
 
   grid_page.prepare();
   PGM_P tmp;
-  tmp = getMDMachineNameShort(MD.kit.models[MD.currentTrack], 2);
+  tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
   memcpy(sound_name, MD.kit.name, 4);
   strncpy_P(&sound_name[5], tmp, 3);
 
