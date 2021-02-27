@@ -6,6 +6,9 @@
 #include "helpers.h"
 
 #include "MD.h"
+
+#define MDX_KIT_VERSION 64
+
 uint8_t lfo_statestore[31];
 
 void MDMachine::scale_vol(float scale) {
@@ -150,7 +153,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_GLOBAL_MESSAGE_ID);
-  encoder->pack8(0x05); // version
+  encoder->pack8(MDX_KIT_VERSION); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
@@ -361,7 +364,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_KIT_MESSAGE_ID);
-  encoder->pack8(0x05); // version
+  encoder->pack8(MDX_KIT_VERSION); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
