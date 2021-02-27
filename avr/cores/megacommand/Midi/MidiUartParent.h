@@ -34,7 +34,6 @@ public:
   uint8_t running_status;
   uint8_t currentChannel;
   uint8_t uart_port;
-  uint8_t uart_block;
   uint32_t speed;
 
   bool useRunningStatus;

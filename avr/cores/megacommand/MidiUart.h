@@ -114,12 +114,6 @@ public:
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
     txRb.put_h(c);
     UART_SET_ISR_TX_BIT();
   }
@@ -154,12 +148,6 @@ public:
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
   #ifdef UART2_TX
-    if (c == 0xF0) {
-      uart_block = 1;
-    }
-    if (c == 0xF7) {
-      uart_block = 0;
-    }
     txRb.put_h(c);
     UART2_SET_ISR_TX_BIT();
   #endif
