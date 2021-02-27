@@ -216,7 +216,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   return enclen + 5;
 }
 
-uint8_t MDMachine::get_model() { return model &= ~(1 << 17); }
+uint8_t MDMachine::get_model() { return model; }
 bool MDMachine::get_tonal() {
   if (model >= 0x20000) {
     return true;
@@ -225,7 +225,7 @@ bool MDMachine::get_tonal() {
 }
 
 
-uint8_t MDKit::get_model(uint8_t track) { return models[track] &= ~(1 << 17); }
+uint8_t MDKit::get_model(uint8_t track) { return models[track]; }
 bool MDKit::get_tonal(uint8_t track) {
   if (models[track] >= 0x20000) {
     return true;
