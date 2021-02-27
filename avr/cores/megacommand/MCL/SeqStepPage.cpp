@@ -203,10 +203,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     MidiDevice *device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    uint8_t step = track + (page_select * 16);
     if (device != &MD) {
       return true;
     }
+
+    uint8_t step = track + (page_select * 16);
 
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -253,8 +254,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = condition;
       if (pitch != active_track.locks_params_orig[0]) {
         uint8_t note_num = 255;
-        tuning_t const *tuning =
-            MD.getKitModelTuning(last_md_track);
+        tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
         if (tuning) {
           for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
             uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
@@ -306,7 +306,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN(F("clear step"));
 
-        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) <
+            TRIG_HOLD_TIME) {
           active_track.set_step(step, mask_type, false);
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;
@@ -319,6 +320,21 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   } // end TI events
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    switch (key) {
+    case 0x27:
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (!note_interface.notes_count_on())
+          return true;
+        MD.triggerTrack(last_md_track, 127);
+      }
+      break;
+    }
+    return true;
+  }
+
   if (recording) {
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
       switch (last_rec_event) {
@@ -354,11 +370,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
     if (recording) {
-    oled_display.textbox("REC", "");
-    setLed2();
-    }
-    else {
-    clearLed2();
+      oled_display.textbox("REC", "");
+      setLed2();
+    } else {
+      clearLed2();
     }
     queue_redraw();
     return true;
