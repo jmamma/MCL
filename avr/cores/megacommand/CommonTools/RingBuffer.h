@@ -113,7 +113,7 @@ bool CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   wr += s;
   n -= s;
   if (n) {
-    memcpy_bank1(ptr, src, n);
+    memcpy_bank1(ptr, src + s, n);
     wr = n;
   }
   if (wr == len) {
@@ -161,7 +161,7 @@ bool CRingBuffer<C, N, T>::put_h(C *src, T n) volatile {
   wr += s;
   n -= s;
   if (n) {
-    memcpy_bank1(ptr, src, n);
+    memcpy_bank1(ptr, src + s, n);
     wr = n;
   }
   if (wr == len) {
