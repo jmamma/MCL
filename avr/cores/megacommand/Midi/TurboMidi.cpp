@@ -152,7 +152,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 }
 
 static void sendTurbomidiHeader(uint8_t cmd) {
-	MidiUart.puts(turbomidi_sysex_header, sizeof(turbomidi_sysex_header));
+	MidiUart.m_putc(turbomidi_sysex_header, sizeof(turbomidi_sysex_header));
 	MidiUart.m_putc(cmd);
 }
 

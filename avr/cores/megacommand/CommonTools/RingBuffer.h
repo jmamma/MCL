@@ -49,6 +49,8 @@ public:
   ALWAYS_INLINE() bool put(C c) volatile;
   /** A slightly more efficient version of put, if ptr == NULL */
   ALWAYS_INLINE() bool put_h(C c) volatile;
+  /** put_h, copy n elements from src buffer to ring buffer **/
+  ALWAYS_INLINE() bool put_h(C *src, T n) volatile;
   /** put_h but when running from within isr that is already blocking**/
   ALWAYS_INLINE() bool put_h_isr(C c) volatile;
   /** put_h in isr, copy n elements from src buffer to ring buffer **/
@@ -136,6 +138,36 @@ bool CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
   if (wr == len) {
     wr = 0;
   }
+  return true;
+}
+
+template <class C, int N, class T>
+bool CRingBuffer<C, N, T>::put_h(C *src, T n) volatile {
+  USE_LOCK();
+  SET_LOCK();
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  T s = n;
+
+  if (wr + n >= len) {
+    s = len - 1 - wr;
+  }
+  memcpy_bank1(ptr + wr, src, s);
+  wr += s;
+  n -= s;
+  if (n) {
+    memcpy_bank1(ptr, src, n);
+    wr = n;
+  }
+  if (wr == len) {
+    wr = 0;
+  }
+  CLEAR_LOCK();
   return true;
 }
 
