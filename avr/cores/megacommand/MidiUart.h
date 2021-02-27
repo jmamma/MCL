@@ -143,7 +143,7 @@ public:
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     txRb.put_h(src,size);
-    UART_SET_ISR_TX_BIT();
+    UART2_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
