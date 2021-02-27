@@ -76,18 +76,15 @@ public:
       }
     }
   }
-
   virtual void initSerial() { running_status = 0; }
 
   virtual uint8_t m_getc() {}
-  virtual void m_putc(uint8_t *src, uint16_t size) {}
-  virtual void m_putc(const uint8_t *src, uint16_t size) { m_putc(src, size); }
+  virtual void m_putc(uint8_t *src, uint16_t size) { DEBUG_PRINTLN("here"); }
   virtual void m_putc(uint8_t c) {}
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual bool avail() { return false; }
 
   virtual uint8_t getc() { return 0; }
-
 
   #ifdef MIDI_RUNNING_STATUS
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
@@ -335,7 +332,7 @@ public:
     m_putc(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
+  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }
