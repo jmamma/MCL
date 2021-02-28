@@ -57,16 +57,29 @@ void TrigInterface::end_immediate() {
  if (sysex->getByte(0) != ids[0]) { return; }
  if (sysex->getByte(1) != ids[1]) { return; }
 
- uint8_t trig = sysex->getByte(2);
+  uint8_t key = sysex->getByte(2);
+  bool key_down = false;
 
-  if (trig >= 0x40) {
-  note_interface.note_off_event(trig - 0x40, UART1_PORT);
+  if (key >= 0x40) {
+    key_down = true;
+    key -= 0x40;
   }
-  else {
-  DEBUG_PRINTLN(F("trig on"));
-  DEBUG_PRINTLN(trig);
-  note_interface.note_on_event(trig, UART1_PORT);
+  if (key < 16) {
+    if (key_down) {
+      note_interface.note_off_event(key, UART1_PORT);
+    }
+    else {
+      note_interface.note_on_event(key, UART1_PORT);
+    }
+   return;
   }
+
+  gui_event_t event;
+  event.source = key + 64; //EVENT_CMD
+  event.mask = key_down ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
+  event.port = UART1_PORT;
+  EventRB.putp(&event);
+
   return;
 }
 

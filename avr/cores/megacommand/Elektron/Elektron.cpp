@@ -15,10 +15,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
       buf[i++] = data[n];
     }
     buf[i++] = 0xF7;
-    USE_LOCK();
-    SET_LOCK();
     uart->m_putc(buf, i);
-    CLEAR_LOCK();
   }
   return len + sysex_protocol.header_size + 2;
 }

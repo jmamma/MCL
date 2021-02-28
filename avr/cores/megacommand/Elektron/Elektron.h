@@ -297,7 +297,7 @@ enum TrigLEDMode {
 /// sysex constants for constructing data frames
 class ElektronSysexProtocol {
 public:
-  const uint8_t* const header;
+  uint8_t* const header;
   const size_t header_size;
 
   const uint8_t kitrequest_id;

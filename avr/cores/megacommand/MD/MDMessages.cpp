@@ -6,6 +6,9 @@
 #include "helpers.h"
 
 #include "MD.h"
+
+#define MDX_KIT_VERSION 64
+
 uint8_t lfo_statestore[31];
 
 void MDMachine::scale_vol(float scale) {
@@ -148,7 +151,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_GLOBAL_MESSAGE_ID);
-  encoder->pack8(0x05); // version
+  encoder->pack8(MDX_KIT_VERSION); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
@@ -211,7 +214,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   return enclen + 5;
 }
 
-uint8_t MDMachine::get_model() { return model &= ~(1 << 17); }
+uint8_t MDMachine::get_model() { return model; }
 bool MDMachine::get_tonal() {
   if (model >= 0x20000) {
     return true;
@@ -220,7 +223,7 @@ bool MDMachine::get_tonal() {
 }
 
 
-uint8_t MDKit::get_model(uint8_t track) { return models[track] &= ~(1 << 17); }
+uint8_t MDKit::get_model(uint8_t track) { return models[track]; }
 bool MDKit::get_tonal(uint8_t track) {
   if (models[track] >= 0x20000) {
     return true;
@@ -359,7 +362,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_KIT_MESSAGE_ID);
-  encoder->pack8(0x05); // version
+  encoder->pack8(MDX_KIT_VERSION); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
