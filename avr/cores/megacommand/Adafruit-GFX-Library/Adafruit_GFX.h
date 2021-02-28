@@ -61,6 +61,8 @@ class Adafruit_GFX : public Print {
       int16_t x2, int16_t y2, uint16_t color),
     fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
       int16_t x2, int16_t y2, uint16_t color),
+    // MCL-specific 3px triangle fill
+    fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color),
     drawRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h,
       int16_t radius, uint16_t color),
     fillRoundRect(int16_t x0, int16_t y0, int16_t w, int16_t h,

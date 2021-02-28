@@ -270,8 +270,7 @@ void GridPage::display_grid_info() {
   if (MidiClock.state == 2) {
 
     oled_display.drawLine(tri_x, tri_y, tri_x, tri_y + 4, WHITE);
-    oled_display.fillTriangle(tri_x + 1, tri_y, tri_x + 3, tri_y + 2, tri_x + 1,
-                              tri_y + 4, WHITE);
+    oled_display.fillTriangle_3px(tri_x + 1, tri_y, WHITE);
   }
   if (MidiClock.state == 0) {
     oled_display.fillRect(tri_x - 1, tri_y, 2, 5, WHITE);
