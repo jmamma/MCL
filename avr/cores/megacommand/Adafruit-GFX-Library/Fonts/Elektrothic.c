@@ -1,6 +1,6 @@
 #include "Elektrothic.h"
 #include <avr/pgmspace.h>
-#include "gfxfont.h"
+#include "../gfxfont.h"
 
 const uint8_t ElektrothicBitmaps[] PROGMEM = {
     0xFF, 0xF3, 0xC0, 0xDE, 0xF7, 0xB0, 0x34, 0x59, 0xFB, 0xF2, 0x8F, 0xFF,
