@@ -739,9 +739,7 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
   } else if (playing) {
     oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4,
                           WHITE);
-    oled_display.fillTriangle(pane_tri_x + 1, pane_tri_y, pane_tri_x + 3,
-                              pane_tri_y + 2, pane_tri_x + 1, pane_tri_y + 4,
-                              WHITE);
+    oled_display.fillTriangle_3px(pane_tri_x + 1, pane_tri_y, WHITE);
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
   }
