@@ -342,7 +342,7 @@ public:
     va_list lp;
     va_start(lp, fmt);
     char buf[128];
-    uint16_t len = m_vsnprintf(buf, sizeof(buf), fmt, lp);
+    uint16_t len = vsnprintf(buf, sizeof(buf), fmt, lp);
     va_end(lp);
     sendString(buf, len);
   }

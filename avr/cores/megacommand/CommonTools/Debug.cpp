@@ -2,6 +2,7 @@
 #include "Debug.h"
 #include <string.h>
 #include <stdio.h>
+#include <avr/pgmspace.h>
 
 #ifdef MEGACOMMAND
 
@@ -11,6 +12,10 @@ namespace __debug_impl {
 
 void format_impl() {
   // template recursion termination
+}
+
+void format(const __FlashStringHelper*& pmsg) {
+  strcat_P(_debug_strbuf, (const char*)pmsg);
 }
 
 void format(const char* pmsg) {

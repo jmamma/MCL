@@ -1159,7 +1159,7 @@ void SeqPage::loop() {
 
   if (last_midi_state != MidiClock.state) {
     last_midi_state = MidiClock.state;
-    DEBUG_DUMP("hii")
+    DEBUG_DUMP("hii");
     redisplay = true;
   }
 

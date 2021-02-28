@@ -6,6 +6,7 @@ extern char _debug_strbuf[];
 
 namespace __debug_impl
 {
+  void format(const __FlashStringHelper*& pmsg);
   void format(const char* pmsg);
   void format(const int8_t &val);
   void format(const uint8_t &val);
