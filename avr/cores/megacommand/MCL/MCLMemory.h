@@ -1,7 +1,6 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef MCLMEMORY_H__
-#define MCLMEMORY_H__
+#pragma once
 
 #ifdef MEGACOMMAND
 #define EXT_TRACKS
@@ -115,4 +114,3 @@ constexpr size_t COMMSG_SLOTS_START=COMCHANNEL_BUFFER_END;
 constexpr size_t COMMSG_SLOTS_END=COMMSG_SLOTS_START + sizeof(commsg_t) * NUM_COMMSG_SLOTS;
 
 
-#endif /* MCLMEMORY_H__ */
