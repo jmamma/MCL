@@ -1,7 +1,6 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef MCLMEMORY_H__
-#define MCLMEMORY_H__
+#pragma once
 
 #ifdef MEGACOMMAND
 #define EXT_TRACKS
@@ -100,5 +99,3 @@ constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK
 constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES);
 
 // At 0xCAF4
-
-#endif /* MCLMEMORY_H__ */
