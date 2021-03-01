@@ -6,31 +6,73 @@ extern char _debug_strbuf[];
 
 namespace __debug_impl
 {
-  void format(const __FlashStringHelper*& pmsg);
-  void format(const char* pmsg);
-  void format(const int8_t &val);
-  void format(const uint8_t &val);
-  void format(const int16_t &val);
-  void format(const uint16_t &val);
-  void format(const int32_t &val);
-  void format(const uint32_t &val);
-  void format(const float &val);
+  inline void format_impl() {
+    // template recursion termination
+  }
 
-  void format_impl();
+  inline void format(const __FlashStringHelper*& pmsg) {
+    strcat_P(_debug_strbuf, (const char*)pmsg);
+  }
+
+  inline void format(const char* pmsg) {
+    strcat(_debug_strbuf, pmsg);
+  }
+
+  inline void format(const int8_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%d", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const uint8_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%u", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const int16_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%d", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const uint16_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%u", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const int32_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%ld", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const uint32_t &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%lu", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  inline void format(const float &val) {
+    char buf[16];
+    snprintf(buf, sizeof(buf)-1, "%f", val);
+    strcat(_debug_strbuf, buf);
+  }
+
+  void send_debug_msg_impl();
 
   template<typename T1, typename ...Args>
-    void format_impl(T1 arg1, Args... args) {
+    inline void format_impl(T1 arg1, Args... args) {
       // assume bank0
       // assume correct _debug_strbuf and append content to it
       format(arg1);
       format_impl(args...);
   }
-
-  void send_debug_msg_impl();
 }
 
 template<typename T1, typename ...Args>
-void debug_msg(T1 arg1, Args... args) {
+inline void debug_msg(T1 arg1, Args... args) {
 
   USE_LOCK();
   SET_LOCK();
