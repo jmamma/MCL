@@ -88,7 +88,6 @@ void GridPage::loop() {
     reload_slot_models = true;
     grid_lastclock = slowclock;
 
-    volatile uint8_t *ptr;
     write_cfg = true;
   }
   encoders[2]->cur = 1;

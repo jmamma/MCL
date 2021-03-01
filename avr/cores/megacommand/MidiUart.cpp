@@ -15,8 +15,8 @@
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
 
-MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                             volatile uint8_t *tx_buf, uint16_t tx_buf_size)
+MidiUartClass::MidiUartClass(uint8_t *rx_buf, uint16_t rx_buf_size,
+                             uint8_t *tx_buf, uint16_t tx_buf_size)
     : MidiUartParent() {
   rxRb.ptr = rx_buf;
   rxRb.len = rx_buf_size;
@@ -401,8 +401,8 @@ ISR(USART1_UDRE_vect) {
 #endif
 #endif
 
-MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                               volatile uint8_t *tx_buf, uint16_t tx_buf_size)
+MidiUartClass2::MidiUartClass2(uint8_t *rx_buf, uint16_t rx_buf_size,
+                               uint8_t *tx_buf, uint16_t tx_buf_size)
     : MidiUartParent() {
   if (rx_buf) {
     rxRb.ptr = rx_buf;

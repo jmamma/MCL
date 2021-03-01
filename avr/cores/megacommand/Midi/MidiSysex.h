@@ -67,7 +67,7 @@ protected:
   bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
-  volatile uint8_t *sysex_highmem_buf;
+  uint8_t *sysex_highmem_buf;
   uint16_t sysex_bufsize;
 
 public:
@@ -77,7 +77,7 @@ public:
   MidiUartParent *uart;
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartParent *_uart, uint16_t size, volatile uint8_t *ptr) {
+  MidiSysexClass(MidiUartParent *_uart, uint16_t size, uint8_t *ptr) {
     uart = _uart;
     sysex_highmem_buf = ptr;
     sysex_bufsize = size;

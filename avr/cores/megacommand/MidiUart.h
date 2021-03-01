@@ -105,8 +105,8 @@ class MidiUartClass : public MidiUartParent {
   virtual void initSerial();
 
 public:
-  MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                volatile uint8_t *tx_buf, uint16_t tx_buf_size);
+  MidiUartClass(uint8_t *rx_buf, uint16_t rx_buf_size,
+                uint8_t *tx_buf, uint16_t tx_buf_size);
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     txRb.put(src,size);
@@ -124,8 +124,8 @@ public:
 
   void set_speed(uint32_t speed, uint8_t port);
 
-  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  RingBuffer<0, RX_BUF_TYPE> rxRb;
+  RingBuffer<0, TX_BUF_TYPE> txRb;
 };
 
 extern MidiUartClass MidiUart;
@@ -136,8 +136,8 @@ class MidiUartClass2 : public MidiUartParent {
   virtual void initSerial();
 
 public:
-  MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                 volatile uint8_t *tx_buf, uint16_t tx_buf_size);
+  MidiUartClass2(uint8_t *rx_buf, uint16_t rx_buf_size,
+                 uint8_t *tx_buf, uint16_t tx_buf_size);
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
@@ -154,9 +154,9 @@ public:
   }
 
   ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
-  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
+  RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX
-  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  RingBuffer<0, TX_BUF_TYPE> txRb;
   #endif
 };
 

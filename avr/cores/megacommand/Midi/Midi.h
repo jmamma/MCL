@@ -80,7 +80,7 @@ public:
   MidiSysexClass midiSysex;
   uint8_t receiveChannel;
 
-  MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
+  MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, uint8_t *ptr);
 
   void init();
   void handleByte(uint8_t c);

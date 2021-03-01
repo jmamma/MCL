@@ -37,40 +37,43 @@ template <class C, int N, class T = uint8_t> class CRingBuffer {
    **/
 
 public:
+  // NOTE keep read/write head as volatile to prevent
+  // the compiler from re-ordering the access around
+  // SET_LOCK() and CLEAR_LOCK()
   volatile T rd, wr;
-  volatile C buf[N];
-  volatile T len = N;
-  volatile C *ptr = NULL;
+  T len = N;
+  C *ptr = NULL;
+  C buf[N];
   #ifdef CHECKING
   volatile uint8_t overflow;
   #endif
-  CRingBuffer(volatile uint8_t *ptr = NULL);
+  CRingBuffer(uint8_t *ptr = NULL);
   /** Add a new element c to the ring buffer. **/
-  ALWAYS_INLINE() void put(C c) volatile;
+  ALWAYS_INLINE() void put(C c);
   /** copy n elements from src buffer to ring buffer **/
-  ALWAYS_INLINE() void put(C *src, T n) volatile;
+  ALWAYS_INLINE() void put(C *src, T n);
   /** put_h but when running from within isr that is already blocking**/
-  ALWAYS_INLINE() void put_h_isr(C c) volatile;
+  ALWAYS_INLINE() void put_h_isr(C c);
   /** put_h in isr, copy n elements from src buffer to ring buffer **/
-  ALWAYS_INLINE() void put_h_isr(C *src, T n) volatile;
+  ALWAYS_INLINE() void put_h_isr(C *src, T n);
   /** Copy a new element pointed to by c to the ring buffer. **/
-  ALWAYS_INLINE() void putp(C *c) volatile;
+  ALWAYS_INLINE() void putp(C *c);
   /** Return the next element in the ring buffer. **/
-  ALWAYS_INLINE() C get() volatile;
+  ALWAYS_INLINE() C get();
   /** get_h but when running from within isr that is already blocking**/
-  ALWAYS_INLINE() C get_h_isr() volatile;
+  ALWAYS_INLINE() C get_h_isr();
   /** Copy the next element into dst. **/
-  ALWAYS_INLINE() void getp(C *dst) volatile;
+  ALWAYS_INLINE() void getp(C *dst);
   /** Get the next element without removing it from the ring buffer. **/
-  ALWAYS_INLINE() C peek() volatile;
+  ALWAYS_INLINE() C peek();
   /** Returns true if the ring buffer is empty. **/
-  ALWAYS_INLINE() bool isEmpty() volatile;
+  ALWAYS_INLINE() bool isEmpty();
   /** Returns true if the ring buffer is empty. Use in isr**/
-  ALWAYS_INLINE() bool isEmpty_isr() volatile;
+  ALWAYS_INLINE() bool isEmpty_isr();
   /** Returns true if the ring buffer is full. **/
-  ALWAYS_INLINE() bool isFull() volatile;
+  ALWAYS_INLINE() bool isFull();
   /** Returns the number of elements in the ring buffer. **/
-  T size() volatile;
+  T size();
 
   /* @} */
 };
@@ -82,8 +85,8 @@ public:
 };
 
 template <class C, int N, class T>
-CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
-  ptr = reinterpret_cast<volatile C *>(_ptr);
+CRingBuffer<C, N, T>::CRingBuffer(uint8_t *_ptr) {
+  ptr = (C*)_ptr;
   rd = 0;
   wr = 0;
   #ifdef CHECKING
@@ -92,7 +95,7 @@ CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
+void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) {
   #ifdef CHECKING
   if (isFull()) {
     overflow++;
@@ -105,100 +108,64 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   if (wr + n > len) {
     s = len -  wr;
   }
-  memcpy_bank1(ptr + wr, src, s * sizeof(C));
-  wr += s;
-  n -= s;
-  if (n) {
-    memcpy_bank1(ptr, src + s, n * sizeof(C));
-    wr = n;
-  }
-  if (wr == len) {
-    wr = 0;
-  }
-}
-
-
-
-template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
-  #ifdef CHECKING
-  if (isFull()) {
-    overflow++;
-    return false;
-  }
-  #endif
-
-  put_bank1(ptr + wr, c);
-  wr++;
-  if (wr == len) {
-    wr = 0;
-  }
-}
-
-template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put(C *src, T n) volatile {
-  USE_LOCK();
-  SET_LOCK();
-  #ifdef CHECKING
-  if (isFull()) {
-    overflow++;
-    return false;
-  }
-  #endif
-
-  T s = n;
-
-  if (wr + n > len) {
-    s = len - wr;
-  }
-
-  if constexpr (N != 0) {
-    memcpy(buf + wr, src, s * sizeof(C));
-  } else {
+  if constexpr (N == 0) {
     memcpy_bank1(ptr + wr, src, s * sizeof(C));
+  } else {
+    memcpy(buf + wr, src, s * sizeof(C));
   }
-
   wr += s;
   n -= s;
   if (n) {
-    if constexpr (N != 0) {
-      memcpy(buf, src + s, n * sizeof(C));
-    } else {
+    if constexpr (N == 0) {
       memcpy_bank1(ptr, src + s, n * sizeof(C));
+    } else {
+      memcpy(buf, src + s, n * sizeof(C));
     }
-
     wr = n;
   }
   if (wr == len) {
     wr = 0;
   }
-  CLEAR_LOCK();
 }
 
-
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put(C c) volatile {
-  USE_LOCK();
-  SET_LOCK();
+void CRingBuffer<C, N, T>::put_h_isr(C c) {
   #ifdef CHECKING
   if (isFull()) {
     overflow++;
     return false;
   }
   #endif
-  if constexpr (N != 0) {
-    buf[wr] = c;
-  } else {
+
+  if constexpr (N == 0) {
     put_bank1(ptr + wr, c);
+  } else {
+    buf[wr] = c;
   }
   wr++;
   if (wr == len) {
     wr = 0;
   }
+}
+
+template <class C, int N, class T>
+void CRingBuffer<C, N, T>::put(C *src, T n) {
+  USE_LOCK();
+  SET_LOCK();
+  put_h_isr(src, n);
   CLEAR_LOCK();
 }
 
-template <class C, int N, class T> T CRingBuffer<C, N, T>::size() volatile {
+
+template <class C, int N, class T>
+void CRingBuffer<C, N, T>::put(C c) {
+  USE_LOCK();
+  SET_LOCK();
+  put_h_isr(c);
+  CLEAR_LOCK();
+}
+
+template <class C, int N, class T> T CRingBuffer<C, N, T>::size() {
   if (wr >= rd) {
     return wr - rd;
   } else {
@@ -207,32 +174,22 @@ template <class C, int N, class T> T CRingBuffer<C, N, T>::size() volatile {
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::putp(C *c) volatile {
+void CRingBuffer<C, N, T>::putp(C *c) {
   USE_LOCK();
   SET_LOCK();
-  #ifdef CHECKING
-  if (isFull()) {
-    overflow++;
-    return false;
-  }
-  #endif
-  if constexpr (N != 0) {
-    memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
-  } else {
-    memcpy_bank1((void *)&(ptr)[wr], (void *)c, sizeof(*c));
-  }
-  wr++;
-  if (wr == len) {
-    wr = 0;
-  }
+  put_h_isr(c, 1);
   CLEAR_LOCK();
 }
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
-  if (isEmpty_isr())
-    return 0;
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() {
   C ret;
-  ret = get_bank1(ptr + rd);
+  if (isEmpty_isr())
+    return ret;
+  if constexpr (N == 0) {
+    ret = get_bank1(ptr + rd);
+  } else {
+    ret = buf[rd];
+  }
   rd++;
   if (rd == len) {
     rd = 0;
@@ -241,44 +198,24 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile 
 }
 
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get() {
   USE_LOCK();
   SET_LOCK();
-  if (isEmpty_isr())
-    return 0;
-  C ret;
-  if constexpr (N != 0) {
-    ret = buf[rd];
-  } else {
-    ret = get_bank1(ptr + rd);
-  }
-  rd++;
-  if (rd == len) {
-    rd = 0;
-  }
+  C ret = get_h_isr();
   CLEAR_LOCK();
   return ret;
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::getp(C *dst) volatile {
+void CRingBuffer<C, N, T>::getp(C *dst) {
   USE_LOCK();
   SET_LOCK();
-  if (isEmpty())
-    return;
-  if constexpr(N!=0) {
-    memcpy(dst, (void *)&buf[rd], sizeof(C));
-  } else {
-    memcpy_bank1(dst, (void *)&ptr[rd], sizeof(C));
-  }
-  rd++;
-  if (rd == len) {
-    rd = 0;
-  }
+  C v = get_h_isr();
   CLEAR_LOCK();
+  *dst = v;
 }
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() volatile {
+template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() {
   if (isEmpty())
     return (C)0;
   else
@@ -286,7 +223,7 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() volatile {
 }
 
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isEmpty() volatile {
+bool CRingBuffer<C, N, T>::isEmpty() {
   USE_LOCK();
   SET_LOCK();
   bool ret = (rd == wr);
@@ -294,15 +231,14 @@ bool CRingBuffer<C, N, T>::isEmpty() volatile {
   return ret;
 }
 
-
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isEmpty_isr() volatile {
+bool CRingBuffer<C, N, T>::isEmpty_isr() {
   bool ret = (rd == wr);
   return ret;
 }
 
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isFull() volatile {
+bool CRingBuffer<C, N, T>::isFull() {
   USE_LOCK();
   SET_LOCK();
   T a = wr + 1;
