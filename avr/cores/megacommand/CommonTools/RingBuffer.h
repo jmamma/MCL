@@ -37,43 +37,40 @@ template <class C, int N, class T = uint8_t> class CRingBuffer {
    **/
 
 public:
-  // NOTE keep read/write head as volatile to prevent
-  // the compiler from re-ordering the access around
-  // SET_LOCK() and CLEAR_LOCK()
   volatile T rd, wr;
-  T len = N;
-  C *ptr = NULL;
-  C buf[N];
+  volatile C buf[N];
+  volatile T len = N;
+  volatile C *ptr = NULL;
   #ifdef CHECKING
   volatile uint8_t overflow;
   #endif
-  CRingBuffer(uint8_t *ptr = NULL);
+  CRingBuffer(volatile uint8_t *ptr = NULL);
   /** Add a new element c to the ring buffer. **/
-  ALWAYS_INLINE() void put(C c);
+  ALWAYS_INLINE() void put(C c) volatile;
   /** copy n elements from src buffer to ring buffer **/
-  ALWAYS_INLINE() void put(C *src, T n);
+  ALWAYS_INLINE() void put(C *src, T n) volatile;
   /** put_h but when running from within isr that is already blocking**/
-  ALWAYS_INLINE() void put_h_isr(C c);
+  ALWAYS_INLINE() void put_h_isr(C c) volatile;
   /** put_h in isr, copy n elements from src buffer to ring buffer **/
-  ALWAYS_INLINE() void put_h_isr(C *src, T n);
+  ALWAYS_INLINE() void put_h_isr(C *src, T n) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
-  ALWAYS_INLINE() void putp(C *c);
+  ALWAYS_INLINE() void putp(C *c) volatile;
   /** Return the next element in the ring buffer. **/
-  ALWAYS_INLINE() C get();
+  ALWAYS_INLINE() C get() volatile;
   /** get_h but when running from within isr that is already blocking**/
-  ALWAYS_INLINE() C get_h_isr();
+  ALWAYS_INLINE() C get_h_isr() volatile;
   /** Copy the next element into dst. **/
-  ALWAYS_INLINE() void getp(C *dst);
+  ALWAYS_INLINE() void getp(C *dst) volatile;
   /** Get the next element without removing it from the ring buffer. **/
-  ALWAYS_INLINE() C peek();
+  ALWAYS_INLINE() C peek() volatile;
   /** Returns true if the ring buffer is empty. **/
-  ALWAYS_INLINE() bool isEmpty();
+  ALWAYS_INLINE() bool isEmpty() volatile;
   /** Returns true if the ring buffer is empty. Use in isr**/
-  ALWAYS_INLINE() bool isEmpty_isr();
+  ALWAYS_INLINE() bool isEmpty_isr() volatile;
   /** Returns true if the ring buffer is full. **/
-  ALWAYS_INLINE() bool isFull();
+  ALWAYS_INLINE() bool isFull() volatile;
   /** Returns the number of elements in the ring buffer. **/
-  T size();
+  T size() volatile;
 
   /* @} */
 };
@@ -85,8 +82,8 @@ public:
 };
 
 template <class C, int N, class T>
-CRingBuffer<C, N, T>::CRingBuffer(uint8_t *_ptr) {
-  ptr = (C*)_ptr;
+CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
+  ptr = reinterpret_cast<volatile C *>(_ptr);
   rd = 0;
   wr = 0;
   #ifdef CHECKING
@@ -95,7 +92,7 @@ CRingBuffer<C, N, T>::CRingBuffer(uint8_t *_ptr) {
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) {
+void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   #ifdef CHECKING
   if (isFull()) {
     overflow++;
@@ -108,19 +105,11 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) {
   if (wr + n > len) {
     s = len -  wr;
   }
-  if constexpr (N == 0) {
-    memcpy_bank1(ptr + wr, src, s * sizeof(C));
-  } else {
-    memcpy(buf + wr, src, s * sizeof(C));
-  }
+  memcpy_bank1(ptr + wr, src, s * sizeof(C));
   wr += s;
   n -= s;
   if (n) {
-    if constexpr (N == 0) {
-      memcpy_bank1(ptr, src + s, n * sizeof(C));
-    } else {
-      memcpy(buf, src + s, n * sizeof(C));
-    }
+    memcpy_bank1(ptr, src + s, n * sizeof(C));
     wr = n;
   }
   if (wr == len) {
@@ -128,8 +117,10 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) {
   }
 }
 
+
+
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put_h_isr(C c) {
+void CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
   #ifdef CHECKING
   if (isFull()) {
     overflow++;
@@ -137,11 +128,7 @@ void CRingBuffer<C, N, T>::put_h_isr(C c) {
   }
   #endif
 
-  if constexpr (N == 0) {
-    put_bank1(ptr + wr, c);
-  } else {
-    buf[wr] = c;
-  }
+  put_bank1(ptr + wr, c);
   wr++;
   if (wr == len) {
     wr = 0;
@@ -149,23 +136,69 @@ void CRingBuffer<C, N, T>::put_h_isr(C c) {
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put(C *src, T n) {
+void CRingBuffer<C, N, T>::put(C *src, T n) volatile {
   USE_LOCK();
   SET_LOCK();
-  put_h_isr(src, n);
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  T s = n;
+
+  if (wr + n > len) {
+    s = len - wr;
+  }
+
+  if constexpr (N != 0) {
+    memcpy(buf + wr, src, s * sizeof(C));
+  } else {
+    memcpy_bank1(ptr + wr, src, s * sizeof(C));
+  }
+
+  wr += s;
+  n -= s;
+  if (n) {
+    if constexpr (N != 0) {
+      memcpy(buf, src + s, n * sizeof(C));
+    } else {
+      memcpy_bank1(ptr, src + s, n * sizeof(C));
+    }
+
+    wr = n;
+  }
+  if (wr == len) {
+    wr = 0;
+  }
   CLEAR_LOCK();
 }
 
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::put(C c) {
+void CRingBuffer<C, N, T>::put(C c) volatile {
   USE_LOCK();
   SET_LOCK();
-  put_h_isr(c);
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+  if constexpr (N != 0) {
+    buf[wr] = c;
+  } else {
+    put_bank1(ptr + wr, c);
+  }
+  wr++;
+  if (wr == len) {
+    wr = 0;
+  }
   CLEAR_LOCK();
 }
 
-template <class C, int N, class T> T CRingBuffer<C, N, T>::size() {
+template <class C, int N, class T> T CRingBuffer<C, N, T>::size() volatile {
   if (wr >= rd) {
     return wr - rd;
   } else {
@@ -174,22 +207,32 @@ template <class C, int N, class T> T CRingBuffer<C, N, T>::size() {
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::putp(C *c) {
+void CRingBuffer<C, N, T>::putp(C *c) volatile {
   USE_LOCK();
   SET_LOCK();
-  put_h_isr(c, 1);
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+  if constexpr (N != 0) {
+    memcpy((void *)&buf[wr], (void *)c, sizeof(*c));
+  } else {
+    memcpy_bank1((void *)&(ptr)[wr], (void *)c, sizeof(*c));
+  }
+  wr++;
+  if (wr == len) {
+    wr = 0;
+  }
   CLEAR_LOCK();
 }
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() {
-  C ret;
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
   if (isEmpty_isr())
-    return ret;
-  if constexpr (N == 0) {
-    ret = get_bank1(ptr + rd);
-  } else {
-    ret = buf[rd];
-  }
+    return 0;
+  C ret;
+  ret = get_bank1(ptr + rd);
   rd++;
   if (rd == len) {
     rd = 0;
@@ -198,24 +241,44 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() {
 }
 
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get() {
+template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
   USE_LOCK();
   SET_LOCK();
-  C ret = get_h_isr();
+  if (isEmpty_isr())
+    return 0;
+  C ret;
+  if constexpr (N != 0) {
+    ret = buf[rd];
+  } else {
+    ret = get_bank1(ptr + rd);
+  }
+  rd++;
+  if (rd == len) {
+    rd = 0;
+  }
   CLEAR_LOCK();
   return ret;
 }
 
 template <class C, int N, class T>
-void CRingBuffer<C, N, T>::getp(C *dst) {
+void CRingBuffer<C, N, T>::getp(C *dst) volatile {
   USE_LOCK();
   SET_LOCK();
-  C v = get_h_isr();
+  if (isEmpty())
+    return;
+  if constexpr(N!=0) {
+    memcpy(dst, (void *)&buf[rd], sizeof(C));
+  } else {
+    memcpy_bank1(dst, (void *)&ptr[rd], sizeof(C));
+  }
+  rd++;
+  if (rd == len) {
+    rd = 0;
+  }
   CLEAR_LOCK();
-  *dst = v;
 }
 
-template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() {
+template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() volatile {
   if (isEmpty())
     return (C)0;
   else
@@ -223,7 +286,7 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::peek() {
 }
 
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isEmpty() {
+bool CRingBuffer<C, N, T>::isEmpty() volatile {
   USE_LOCK();
   SET_LOCK();
   bool ret = (rd == wr);
@@ -231,14 +294,15 @@ bool CRingBuffer<C, N, T>::isEmpty() {
   return ret;
 }
 
+
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isEmpty_isr() {
+bool CRingBuffer<C, N, T>::isEmpty_isr() volatile {
   bool ret = (rd == wr);
   return ret;
 }
 
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::isFull() {
+bool CRingBuffer<C, N, T>::isFull() volatile {
   USE_LOCK();
   SET_LOCK();
   T a = wr + 1;

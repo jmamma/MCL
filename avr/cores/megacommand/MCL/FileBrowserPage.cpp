@@ -18,7 +18,7 @@ bool FileBrowserPage::add_entry(const char *entry) {
   char buf[16];
   m_strncpy(buf, entry, sizeof(buf));
   buf[15] = '\0';
-  uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
+  volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
   memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
   return true;
@@ -144,7 +144,8 @@ void FileBrowserPage::display() {
     }
     char temp_entry[16];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + entry_num * 16;
+    volatile uint8_t *ptr =
+        (uint8_t *)BANK1_FILE_ENTRIES_START + entry_num * 16;
     memcpy_bank1(temp_entry, ptr, 16);
     oled_display.println(temp_entry);
   }
@@ -165,7 +166,7 @@ void FileBrowserPage::display() {
   char temp_entry[17];
   uint16_t entry_num = encoders[1]->cur;
   uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
-  uint8_t *ptr = pos;
+  volatile uint8_t *ptr = pos;
   memcpy_bank1(temp_entry, ptr, 16);
   temp_entry[16] = '\0';
   GUI.put_string_at(1, temp_entry);
@@ -284,7 +285,8 @@ void FileBrowserPage::_cd(const char *child) {
 
 void FileBrowserPage::_handle_filemenu() {
   char buf1[16];
-  uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
   memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
 
   char *suffix_pos = strchr(buf1, '.');
@@ -406,7 +408,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     char temp_entry[16];
-    uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
+    volatile uint8_t *ptr =
+        (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
     memcpy_bank1(temp_entry, ptr, 16);
 
     // chdir to parent

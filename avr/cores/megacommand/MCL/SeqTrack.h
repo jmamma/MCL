@@ -216,7 +216,7 @@ class SeqSlideTrack : public SeqTrack {
   uint16_t locks_slides_idx = 0;
 
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
-  void send_slides(uint8_t *locks_params, uint8_t channel = 0);
+  void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 };
 
 #endif /* SEQTRACK_H__ */

@@ -4,7 +4,7 @@
 
 #define MAX_BUTTONS 8
 
-CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
+volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
 volatile uint8_t event_ignore_next_mask;
 
 void pollEventGUI() {

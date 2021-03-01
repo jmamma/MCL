@@ -72,7 +72,7 @@ void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8
 */
 }
 
-void SeqSlideTrack::send_slides(uint8_t *locks_params, uint8_t channel) {
+void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
