@@ -105,12 +105,12 @@ public:
  #else
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { m_putc(cmdByte); }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
-    uint8_t data[2] = { cmdByte, byte1 & 0x7F };
+    uint8_t data[2] = { cmdByte, (uint8_t)(byte1 & 0x7F) };
     m_putc(data,2);
   }
 
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
-    uint8_t data[3] = { cmdByte, byte1 & 0x7F, byte2 & 0x7F };
+    uint8_t data[3] = { cmdByte, (uint8_t)(byte1 & 0x7F), (uint8_t)(byte2 & 0x7F) };
     m_putc(data,3);
   }
   #endif
