@@ -40,6 +40,14 @@ typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
   uint8_t port;
+
+  gui_event_s& operator = (volatile gui_event_s& other) {
+    mask = other.mask;
+    source = other.source;
+    port = other.port;
+    return *this;
+  }
+
 } gui_event_t;
 
 /**
