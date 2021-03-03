@@ -128,6 +128,7 @@ public:
     } else {
       chain.speed = SEQ_SPEED_1X;
       chain.length = 16;
+      active = EMPTY_TRACK_TYPE;
     }
     return true;
   }

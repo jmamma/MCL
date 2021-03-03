@@ -151,7 +151,6 @@ bool Project::convert_project(const char *projectname) {
       row_headers[a].active = row_header_src.active;
     }
     uint8_t first_track = 255;
-
     for (uint8_t x = 0; x < GRID_WIDTH_270; x++) {
 
       src_proj.file.seekSet(src_grid.get_slot_offset(x, y));
@@ -170,7 +169,14 @@ bool Project::convert_project(const char *projectname) {
 
         MDTrack md_track;
         md_track.convert(&md_track_src);
-        md_track.store_in_grid(x, y);
+
+        if (md_track.active == MD_TRACK_TYPE) {
+          md_track.store_in_grid(x, y);
+        }
+        else {
+          ((GridTrack)md_track).store_in_grid(x, y);
+        }
+
         if (md_track_src.active == MD_TRACK_TYPE_270) {
           if (first_track == 255) {
             // Extract MDFX from first active MD_TRACK slot in row
