@@ -184,7 +184,7 @@ bool MDClass::probe() {
       count--;
     }
     if (!(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
-                     (uint64_t)FW_CAP_UNDOKIT_SYNC))) {
+                     (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL))) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
