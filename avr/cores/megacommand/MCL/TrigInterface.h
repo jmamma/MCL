@@ -17,6 +17,7 @@ class TrigInterface : public MidiSysexListenerClass {
 
 public:
   bool state = false;
+  uint64_t cmd_key_state;
 
   TrigInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;

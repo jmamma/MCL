@@ -127,8 +127,8 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track) {
     DEBUG_PRINTLN("setting md track");
     last_md_track = track;
     if (mcl_cfg.track_select) {
-    MD.currentTrack = track;
-    MD.setStatus(0x22, track);
+      MD.currentTrack = track;
+      MD.setStatus(0x22, track);
     }
   }
 #ifdef EXT_TRACKS
@@ -218,14 +218,32 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     return false;
   } // end TI events
 
-  // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    page_select += 1;
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
 
-    if (page_select >= page_count) {
-      page_select = 0;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_SCALE:
+        goto scale_press;
+      case MDX_KEY_LEFT:
+        mcl_seq.md_tracks[last_md_track].rotate_left();
+        break;
+      case MDX_KEY_RIGHT:
+        mcl_seq.md_tracks[last_md_track].rotate_right();
+        break;
+      }
     }
     return true;
+  }
+
+  // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
+  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    scale_press:
+      page_select += 1;
+      if (page_select >= page_count) {
+        page_select = 0;
+      }
+      return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {

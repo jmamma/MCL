@@ -323,14 +323,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    switch (key) {
-    case MDX_KEY_YES:
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
         if (!note_interface.notes_count_on())
           return true;
         MD.triggerTrack(last_md_track, 127);
+        break;
       }
-      break;
     }
     return true;
   }
