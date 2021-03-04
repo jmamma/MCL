@@ -242,16 +242,24 @@ void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
 }
 
 void ElektronDevice::setKitName(const char *name) {
-  USE_LOCK();
-  SET_LOCK();
-  uart->m_putc(0xF0);
-  uart->sendRaw(sysex_protocol.header, sysex_protocol.header_size);
-  uart->sendRaw(sysex_protocol.kitname_set_id);
-  for (uint8_t i = 0; i < sysex_protocol.kitname_length; i++) {
-    uart->sendRaw(name[i] & 0x7F);
+  uint8_t buf[64];
+  uint8_t i = 0;
+
+  buf[i++] = 0xF0;
+
+  for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
+    buf[i++] = sysex_protocol.header[n];
   }
-  uart->m_putc(0xf7);
-  CLEAR_LOCK();
+
+  buf[i++] = sysex_protocol.kitname_set_id;
+
+  for (uint8_t n = 0; n < sysex_protocol.kitname_length; n++) {
+    buf[i++] = name[i] & 0x7F;;
+  }
+
+  buf[i++] = 0xF7;
+
+  uart->m_putc(buf,i);
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
