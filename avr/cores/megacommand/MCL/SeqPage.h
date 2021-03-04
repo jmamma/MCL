@@ -80,7 +80,7 @@ public:
   static uint8_t last_param_id;
   static uint8_t last_rec_event;
 
-  const uint8_t render_defer_time = 50;
+  const uint8_t render_defer_time = 90;
 
   static bool recording;
   bool display_page_index = true;
