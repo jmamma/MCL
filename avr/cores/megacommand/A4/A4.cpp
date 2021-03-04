@@ -91,11 +91,6 @@ uint16_t A4Class::sendRequest(uint8_t type, uint8_t param, bool send) {
       buf[i++] = a4_sysex_ftr[n];
     }
     buf[i++] = 0xF7;
-    for (uint8_t n = 0; n < len; n++) {
-    Serial.print(buf[n], HEX);
-    Serial.print(" ");
-    }
-    Serial.println();
     MidiUart2.m_putc(buf, i);
   }
   return len;
