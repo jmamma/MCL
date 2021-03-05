@@ -1,3 +1,7 @@
+MCL 3.10a 06/03/202
+
+  Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
+
 MCL 3.10 05/03/2020
 
   MCL 3.10 requires that your Machinedrum is upgraded to firmware version X.04
