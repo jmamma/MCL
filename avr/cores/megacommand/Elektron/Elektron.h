@@ -338,17 +338,19 @@ public:
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };
 
-/// !Note, should be synced with fw.c
-#define FW_CAP(x) (1 << x)
+#define FW_CAP_LOW(x) (1 << x)
+#define FW_CAP_HIGH(x) (FW_CAP_LOW(x + 8))
 
-//#define FW_CAP_DEBUG          FW_CAP(0)
-#define FW_CAP_TRIG_INTERFACE FW_CAP(1)
-#define FW_CAP_MUTE_STATE     FW_CAP(2)
-#define FW_CAP_SAMPLE         FW_CAP(3)
-#define FW_CAP_TRIG_LEDS      FW_CAP(4)
-#define FW_CAP_KIT_WORKSPACE  FW_CAP(5)
-#define FW_CAP_MASTER_FX      FW_CAP(6)
-#define FW_CAP_UNDOKIT_SYNC   FW_CAP(7)
+ //#define FW_CAP_DEBUG        FW_CAP_LOW(0)
+#define FW_CAP_TRIG_INTERFACE FW_CAP_LOW(1)
+#define FW_CAP_MUTE_STATE     FW_CAP_LOW(2)
+#define FW_CAP_SAMPLE         FW_CAP_LOW(3)
+#define FW_CAP_TRIG_LEDS      FW_CAP_LOW(4)
+#define FW_CAP_KIT_WORKSPACE  FW_CAP_LOW(5)
+#define FW_CAP_MASTER_FX      FW_CAP_LOW(6)
+
+#define FW_CAP_UNDOKIT_SYNC   FW_CAP_HIGH(0)
+#define FW_CAP_TONAL          FW_CAP_HIGH(1)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {

@@ -184,7 +184,7 @@ bool MDClass::probe() {
       count--;
     }
     if (!(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
-                     (uint64_t)FW_CAP_UNDOKIT_SYNC))) {
+                     (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL))) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
@@ -763,15 +763,21 @@ bool MDClass::checkClockSettings() { return false; }
 //
 
 void MDClass::send_gui_command(uint8_t command, uint8_t value) {
-  USE_LOCK();
-  SET_LOCK();
-  uart->m_putc(0xF0);
-  uart->sendRaw(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  uart->m_putc(MD_GUI_CMD);
-  uart->m_putc(command);
-  uart->m_putc(value);
-  uart->m_putc(0xF7);
-  CLEAR_LOCK();
+  uint8_t buf[64];
+  uint8_t i = 0;
+
+  buf[i++] = 0xF0;
+
+  for (uint8_t n = 0; n < sizeof(machinedrum_sysex_hdr); n++) {
+    buf[i++] = machinedrum_sysex_hdr[i];
+  }
+
+  buf[i++] = MD_GUI_CMD;
+  buf[i++] = command;
+  buf[i++] = value;
+  buf[i++] = 0xF7;
+
+  uart->m_putc(buf,i);
 }
 
 void MDClass::toggle_kit_menu() {

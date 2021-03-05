@@ -22,7 +22,7 @@ bool TrigInterface::on() {
   if (!MD.connected) {
     return false;
   }
-
+  cmd_key_state = 0;
   sysex->addSysexListener(this);
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
@@ -73,7 +73,12 @@ void TrigInterface::end_immediate() {
     }
    return;
   }
-
+  if (key_down) {
+    CLEAR_BIT64(cmd_key_state, key);
+  }
+  else {
+    SET_BIT64(cmd_key_state, key);
+  }
   gui_event_t event;
   event.source = key + 64; //EVENT_CMD
   event.mask = key_down ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;

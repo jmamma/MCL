@@ -902,10 +902,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (GUI.currentPage() == &grid_write_page)) {
     return;
   }
-
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  DEBUG_PRINT(F("note on midi2: "));
+  DEBUG_PRINTLN("note on");
   DEBUG_DUMP(channel);
 
   // matches control channel, or MIDI2 is OMNI?
@@ -981,7 +980,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   } else {
     return 255;
   }
-  return calc_scale_note(note + oct * 12) + 12;
+  return calc_scale_note(note + oct * 12);
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
@@ -993,7 +992,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       (GUI.currentPage() == &grid_write_page)) {
     return;
   }
-
   DEBUG_PRINTLN(F("note off midi2"));
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -1064,6 +1062,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
+  uint8_t display_polylink = 0;
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
 
@@ -1075,16 +1074,19 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
           if (track_param < 24) {
             MD.setTrackParam(n, track_param, value);
-            if (GUI.currentPage() != &mixer_page) {
-            oled_display.textbox("POLY-", "LINK");
-            }
-            seq_ptc_page.redisplay = true;
-          }
+            display_polylink = 1;
+         }
         }
         // in_sysex = 0;
       }
     }
   }
+
+  if (display_polylink && GUI.currentPage() != &mixer_page) {
+    oled_display.textbox("POLY-", "LINK");
+    seq_ptc_page.queue_redraw();
+  }
+
 }
 
 void SeqPtcMidiEvents::setup_callbacks() {

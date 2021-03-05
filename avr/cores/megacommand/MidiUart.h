@@ -112,12 +112,12 @@ public:
                 volatile uint8_t *tx_buf, uint16_t tx_buf_size);
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put_h(src,size);
+    txRb.put(src,size);
     UART_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    txRb.put_h(c);
+    txRb.put(c);
     UART_SET_ISR_TX_BIT();
   }
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
@@ -145,13 +145,13 @@ public:
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put_h(src,size);
+    txRb.put(src,size);
     UART2_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
   #ifdef UART2_TX
-    txRb.put_h(c);
+    txRb.put(c);
     UART2_SET_ISR_TX_BIT();
   #endif
   }

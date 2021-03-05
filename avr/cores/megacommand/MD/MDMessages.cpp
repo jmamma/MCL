@@ -151,7 +151,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
   encoder->pack8(MD_GLOBAL_MESSAGE_ID);
-  encoder->pack8(MDX_KIT_VERSION); // version
+  encoder->pack8(0x05); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
