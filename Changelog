@@ -11,6 +11,7 @@ MCL 3.10 05/03/2020
   - If the machine's tuning setting is TONAL then the new quater tone, equal temperament
   tuning table will be used.
   - If the machine's tuning setting is DEFAULT the legacy microtonal tuning table is used.
+  - Increased display refresh latency in favour of much lower MIDI note latency.
 
   Piano Roll:
   - Fixed external MIDI key note mapping offset.
