@@ -99,7 +99,6 @@ CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
 }
 
 template <class C, int N, class T>
-<<<<<<< HEAD
 CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
   ptr = other.ptr;
   rd = other.rd;
@@ -110,10 +109,7 @@ CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
 }
 
 template <class C, int N, class T>
-bool CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
-=======
 void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
->>>>>>> dev
   #ifdef CHECKING
   if (isFull()) {
     overflow++;
@@ -199,19 +195,6 @@ void CRingBuffer<C, N, T>::putp(C *c) volatile {
   CLEAR_LOCK();
 }
 
-<<<<<<< HEAD
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h() volatile {
-  USE_LOCK();
-  SET_LOCK();
-  C ret;
-  if (isEmpty_isr()) {
-    return ret;
-  }
-  ret = get_bank1(ptr + rd);
-  rd++;
-  if (rd == len) {
-    rd = 0;
-=======
 template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
   C ret;
   if (isEmpty_isr())
@@ -221,19 +204,8 @@ template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile 
     ret = get_bank1(ptr + rd);
   } else {
     ret = buf[rd];
->>>>>>> dev
   }
 
-<<<<<<< HEAD
-
-template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
-  C ret;
-  if (isEmpty_isr()) {
-    return ret;
-  }
-  ret = get_bank1(ptr + rd);
-=======
->>>>>>> dev
   rd++;
   if (rd == len) {
     rd = 0;
@@ -272,23 +244,7 @@ template <class C, int N, class T> void CRingBuffer<C, N, T>::undo(T n) volatile
 template <class C, int N, class T> C CRingBuffer<C, N, T>::get() volatile {
   USE_LOCK();
   SET_LOCK();
-<<<<<<< HEAD
-  C ret;
-  if (isEmpty_isr()) {
-    return ret;
-  }
-  if (ptr == NULL) {
-    ret = buf[rd];
-  } else {
-    ret = get_bank1(ptr + rd);
-  }
-  rd++;
-  if (rd == len) {
-    rd = 0;
-  }
-=======
   C ret = get_h_isr();
->>>>>>> dev
   CLEAR_LOCK();
   return ret;
 }

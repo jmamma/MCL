@@ -294,7 +294,7 @@ void MegaComTask::run() {
       update_server_state(suspended_server, state);
     } else if (rx_msgs.size()) {
       // handle rx messages here
-      auto cur_msg = rx_msgs.get_h();
+      auto cur_msg = rx_msgs.get();
       auto pserver = servers[cur_msg.type];
       pserver->msg = cur_msg;
       int state = pserver->run();
@@ -422,7 +422,7 @@ void MegaComTask::debug(const char *pmsg) {
 
 uint8_t MegaComServer::msg_getch() {
   --msg.len;
-  return msg.pbuf->get_h();
+  return msg.pbuf->get();
 }
 
 uint16_t MegaComServer::pending() { return msg.len; }
