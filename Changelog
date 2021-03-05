@@ -1,6 +1,7 @@
-MCL 3.10a 06/03/202
+MCL 3.10b 06/03/2020
 
-  Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
+  - Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
+  - Fix trig preview.
 
 MCL 3.10 05/03/2020
 

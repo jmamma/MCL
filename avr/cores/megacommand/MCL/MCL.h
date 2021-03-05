@@ -20,7 +20,7 @@
 #endif
 
 #define VERSION 3010
-#define VERSION_STR "3.10"
+#define VERSION_STR "3.10b"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
