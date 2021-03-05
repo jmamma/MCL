@@ -1,3 +1,43 @@
+MCL 3.10 05/03/2020
+
+  MCL 3.10 requires that your Machinedrum is upgraded to firmware version X.04
+
+ Machinedrum:
+  - Added support for the new MD machines: GND-SNPRO, GND-PUL, GND-SW
+
+ Chromatic:
+  - Added support for MD tonal tuning. For compatible machines, the tuning setting
+  is automatically saved with the slot's sound data.
+  - If the machine's tuning setting is TONAL then the new quater tone, equal temperament
+  tuning table will be used.
+  - If the machine's tuning setting is DEFAULT the legacy microtonal tuning table is used.
+
+  Piano Roll:
+  - Fixed external MIDI key note mapping offset.
+  - FYI: Chromatic settings [ scale ] + [ octave ] are applied to incoming MIDI notes from port 2.
+
+  Sequencer Step Edit:
+  - Added Trig Preview: hold trigger button and press enter on the MD.
+  - Rotate sequencer by holding Function and pressing Left or Right on the MD.
+  - Toggle between sequencer pages by pressing SCALE on the MD
+
+  Chain Mode:
+  - Fixed transition timing issues which could result in tracks going out of
+  sync when chaining slots.
+  - Fixed sending a garbled Kit Name when chaining an empty row.
+
+  MIDI:
+  - Optimized lower level MIDI code and reduced payload sizes for faster data
+  transfer: means tighter chain transitions.
+  - MIDI clock synchronisation now correctly handles phase resets from non MD devices.
+
+  Project Conversion:
+  - Fixed a bug when converting projects from 2.X -> 3.0 that would cause
+  ghost tracks to appear in the new project. If you noticed that project
+  conversion was not satisfactory, then it is advised that you re-convert the
+  old 2.X project using firmware 3.10
+
+
 MCL 3.01a 09/01/2020
 
 Hotfixes:
