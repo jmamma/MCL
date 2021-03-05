@@ -81,6 +81,7 @@ public:
   bool transmit_uart2;
   bool isInit;
 
+  bool reset_clock = false;
   //    volatile uint16_t mcl_clock;
   //   volatile uint16_t mcl_countbool
   volatile enum {
@@ -348,6 +349,11 @@ public:
    */
   ALWAYS_INLINE() void incrementCounters() {
     mod8_free_counter++;
+    if (reset_clock) {
+      mod8_free_counter = 0;
+      last_clock8 = clock;
+      reset_clock = false;
+    }
     if (mod8_free_counter == 8) {
       diff_clock8 = midi_clock_diff(last_clock8, clock);
       last_clock8 = clock;

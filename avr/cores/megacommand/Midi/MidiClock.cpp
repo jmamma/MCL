@@ -32,6 +32,7 @@ void MidiClockClass::init() {
   clock_last_time = clock;
   mod12_counter = 0;
   mod6_counter = inmod6_counter = 0;
+  reset_clock = true;
   bar_counter = 1;
   beat_counter = 1;
   step_counter = 1;
