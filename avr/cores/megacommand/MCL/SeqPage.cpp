@@ -227,13 +227,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         goto scale_press;
       case MDX_KEY_LEFT:
         mcl_seq.md_tracks[last_md_track].rotate_left();
-        break;
+        return true;
       case MDX_KEY_RIGHT:
         mcl_seq.md_tracks[last_md_track].rotate_right();
-        break;
+        return true;
       }
     }
-    return true;
   }
 
   // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
