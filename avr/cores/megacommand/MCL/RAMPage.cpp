@@ -708,6 +708,8 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   }
   MD.parseCC(channel, param, &track, &track_param);
 
+  if (track_param == 32) { return; } //ignore mute
+
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return;
   }

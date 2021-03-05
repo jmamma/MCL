@@ -463,7 +463,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-
+  if (track_param == 32) { return; } //don't process mute
   for (int i = 0; i < 16; i++) {
     if ((note_interface.notes[i] == 1) && (i != track)) {
       USE_LOCK();

@@ -1086,7 +1086,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t display_polylink = 0;
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
-
+  if (track_param == 32) { return; } //don't process mute
   if ((seq_ptc_page.poly_max > 1)) {
     if (IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
 

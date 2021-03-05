@@ -224,9 +224,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
+    if (track_param > 23) { return; } //ignore level/mute
+
     mcl_seq.md_tracks[track].update_param(track_param, value);
 #ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
