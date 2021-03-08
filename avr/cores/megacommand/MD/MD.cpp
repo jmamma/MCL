@@ -769,7 +769,7 @@ void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   buf[i++] = 0xF0;
 
   for (uint8_t n = 0; n < sizeof(machinedrum_sysex_hdr); n++) {
-    buf[i++] = machinedrum_sysex_hdr[i];
+    buf[i++] = machinedrum_sysex_hdr[n];
   }
 
   buf[i++] = MD_GUI_CMD;
