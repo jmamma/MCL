@@ -1,3 +1,9 @@
+MCL 3.10c 08/03/2020
+  - Tonal tuning tables for EFM and TRX machines were disabled. fixed.
+  - Fix display glitch on WavDesigner page.
+  - WavDesigner OscMixer page's sample preview shortcut [ Write ] was broken.
+  - Limit detune range on Chromatic Page to within 0 and 127.
+
 MCL 3.10b 06/03/2020
 
   - Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
