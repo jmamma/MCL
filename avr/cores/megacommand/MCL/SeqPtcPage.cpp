@@ -397,9 +397,9 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
     return 255;
   }
 
-  uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]) +
-                          ptc_param_finetune.getValue() - 32;
-  return machine_pitch;
+  uint8_t machine_pitch = max((int8_t) 0, (int8_t) pgm_read_byte(&tuning->tuning[note_num]) +
+                          (int8_t)ptc_param_finetune.getValue() - 32);
+  return min(machine_pitch,127);
 }
 
 void SeqPtcPage::trig_md(uint8_t note_num) {
