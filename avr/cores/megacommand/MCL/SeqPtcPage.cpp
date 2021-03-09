@@ -910,7 +910,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num, MidiDevice* device) {
 
 
 uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device) {
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num, device) + ptc_param_oct.cur * 12;
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num, device);
   if (pitch == 255) { return 255; }
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
@@ -920,8 +920,8 @@ uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device) 
   else {
     CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   }
+  pitch += ptc_param_oct.cur * 12;
   return pitch;
-
 }
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {

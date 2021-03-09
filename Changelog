@@ -1,4 +1,12 @@
+MCL 3.10d 09/03/2021
+
+  - RAM Page record/playback was broken, fixed.
+  - Fixed RAM record/play synchronization bug introduced in 3.00
+  - Added some precautions to sysex data and kit model transmission.
+  - Fixed arpeggiator regression when using external MIDI keyboard.
+
 MCL 3.10c 08/03/2021
+
   - Tonal tuning tables for EFM and TRX machines were disabled. fixed.
   - Fix display glitch on WavDesigner page.
   - WavDesigner OscMixer page's sample preview shortcut [ Write ] was broken.
