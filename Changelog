@@ -1,15 +1,15 @@
-MCL 3.10c 08/03/2020
+MCL 3.10c 08/03/2021
   - Tonal tuning tables for EFM and TRX machines were disabled. fixed.
   - Fix display glitch on WavDesigner page.
   - WavDesigner OscMixer page's sample preview shortcut [ Write ] was broken.
   - Limit detune range on Chromatic Page to within 0 and 127.
 
-MCL 3.10b 06/03/2020
+MCL 3.10b 06/03/2021
 
   - Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
   - Fix trig preview.
 
-MCL 3.10 05/03/2020
+MCL 3.10 05/03/2021
 
   MCL 3.10 requires that your Machinedrum is upgraded to firmware version X.04
 
@@ -50,7 +50,7 @@ MCL 3.10 05/03/2020
   old 2.X project using firmware 3.10
 
 
-MCL 3.01a 09/01/2020
+MCL 3.01a 09/01/2021
 
 Hotfixes:
 
@@ -58,7 +58,7 @@ Hotfixes:
 - PianoRoll length parameter was limited to 127, should have been 128 steps.
 - When loading empty Ext MIDI tracks, preserve MIDI channel setting.
 
-MCL 3.01 02/01/2020
+MCL 3.01 02/01/2021
 
   MCL 3.01 will prompt you to create a new project on startup, this is a
   formality as the system config file that stores Global Settings will be re-initialised.
