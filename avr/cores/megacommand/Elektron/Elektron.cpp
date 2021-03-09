@@ -12,7 +12,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
       buf[i++] = sysex_protocol.header[n];
     }
     for (uint8_t n = 0; n < len; n++) {
-      buf[i++] = data[n];
+      buf[i++] = data[n] & 0x7F;
     }
     buf[i++] = 0xF7;
     uart->m_putc(buf, i);

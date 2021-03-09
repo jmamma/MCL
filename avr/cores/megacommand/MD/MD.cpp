@@ -560,19 +560,19 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i] += 2;
   }
   i++;
-   memcpy(data + i,machine->params,24);
-   i += 24;
+  memcpy(data + i,machine->params,24);
+  i += 24;
 
-   memcpy(data + i,&machine->lfo, 5);
-   i += 5;
-   if (machine->trigGroup == 255) { machine->trigGroup = 127; }
-   if (machine->muteGroup == 255) { machine->muteGroup = 127; }
-   data[i++] = machine->trigGroup;
-   data[i++] = machine->muteGroup;
-   bool set_level = false;
-   if (level != 255) {  data[i++] = level; set_level = true; }
-   if (send) { insertMachineInKit(track, machine, set_level); }
-   return sendRequest(data, i, send);
+  memcpy(data + i,&machine->lfo, 5);
+  i += 5;
+  if (machine->trigGroup > 15) { machine->trigGroup = 127; }
+  if (machine->muteGroup > 15) { machine->muteGroup = 127; }
+  data[i++] = machine->trigGroup;
+  data[i++] = machine->muteGroup;
+  bool set_level = false;
+  if (level != 255) {  data[i++] = level; set_level = true; }
+  if (send) { insertMachineInKit(track, machine, set_level); }
+  return sendRequest(data, i, send);
 }
 
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
