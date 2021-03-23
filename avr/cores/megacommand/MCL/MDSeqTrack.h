@@ -69,6 +69,7 @@ public:
   // access the step lock bitmap, masked by locks_enable bit.
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
+  void clear_step_lock(uint8_t step, uint8_t param_id);
   void clear_locks(bool reset_params = true);
   void clear_track(bool locks = true, bool reset_params = true);
   void clear_param_locks(uint8_t param_id);

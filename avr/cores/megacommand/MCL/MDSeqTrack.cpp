@@ -559,6 +559,27 @@ void MDSeqTrack::clear_slide_data() {
   }
 }
 
+void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
+  uint8_t match = find_param(param_id);
+
+  if (match == 255)
+    return;
+
+  uint8_t idx = get_lockidx(step);
+
+  uint8_t offset = 0;
+  for (uint8_t n = 0; n <= match; n++) {
+    if (IS_BIT_SET(steps[step].locks,n)) {
+    offset++;
+    }
+  }
+
+  memmove(locks + idx + offset, locks + idx + offset + 1, NUM_MD_LOCK_SLOTS - idx - 1);
+  if (step < step_count) {
+    cur_event_idx -= 1;
+  }
+}
+
 void MDSeqTrack::clear_param_locks(uint8_t param_id) {
   uint8_t match = find_param(param_id);
   if (match == 255)
@@ -572,9 +593,9 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
 
   // pass1, mark
   for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
-    uint8_t locks = steps[x].locks;
-    uint8_t nlocks = popcount(locks);
-    if (locks & mask) {
+    uint8_t _locks = steps[x].locks;
+    uint8_t nlocks = popcount(_locks);
+    if (_locks & mask) {
       remove[x] = true;
       steps[x].locks &= nmask;
     } else {

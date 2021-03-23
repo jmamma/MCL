@@ -337,16 +337,36 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
-        uint8_t step = 255;
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          if (note_interface.notes[n] == 1) { step = n; break; }
-        }
+        uint8_t step = note_interface.get_first_md_note();
         if (step == 255) { return true; }
         active_track.send_parameter_locks(step, true);
+        if (MidiClock.state != 2) {
         reset_on_release = true;
+        }
         MD.triggerTrack(last_md_track, 127);
         break;
+      case 0x10:
+      case 0x11:
+      case 0x12:
+      case 0x13:
+      case 0x14:
+      case 0x15:
+      case 0x16:
+      case 0x17:
+        if (event->mask == EVENT_BUTTON_PRESSED) {
+          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+              if (note_interface.notes[n] == 1) {
+              active_track.clear_step_lock(n, MD.currentSynthPage + key - 0x10);
+              }
+          }
+         uint8_t params[8];
+         memset(params,255,8);
+         active_track.get_step_page_locks(step, MD.currentSynthPage, params);
+         MD.activate_encoder_interface(params);
+        }
+        break;
       }
+
     }
     return true;
   }
