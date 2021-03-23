@@ -182,6 +182,15 @@ void SeqStepPage::loop() {
     seq_param2.old = seq_param2.cur;
     seq_param4.old = seq_param4.cur;
   }
+  if (note_interface.notes_all_off_md()) {
+        mcl_gui.init_encoders_used_clock();
+        //active_track.reset_params();
+        MD.deactivate_encoder_interface();
+        mcl_seq.midi_events.update_params = true;
+        MD.midi_events.enable_live_kit_update();
+        note_interface.init_notes();
+  }
+
 }
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
@@ -234,9 +243,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       mcl_seq.midi_events.update_params = false;
       MD.midi_events.disable_live_kit_update();
 
-      if (MidiClock.state != 2) {
-        active_track.send_parameter_locks(step, true);
-      }
+        //active_track.send_parameter_locks(step, true);
+        uint8_t params[8];
+        memset(params,255,8);
+        active_track.get_step_page_locks(step, MD.currentSynthPage, params);
+        MD.activate_encoder_interface(params);
+
       show_pitch = true;
 
       if (step >= active_track.length) {
@@ -297,13 +309,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      if (note_interface.notes_all_off_md()) {
-        mcl_gui.init_encoders_used_clock();
-        active_track.reset_params();
-        mcl_seq.midi_events.update_params = true;
-        MD.midi_events.enable_live_kit_update();
-      }
-      if (active_track.get_step(step, mask_type)) {
+     if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN(F("clear step"));
 
         if (clock_diff(note_interface.note_hold[port], slowclock) <

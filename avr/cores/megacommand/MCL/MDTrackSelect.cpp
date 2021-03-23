@@ -43,6 +43,7 @@ void MDTrackSelect::end_immediate() {
  if (sysex->getByte(1) != ids[1]) { return; }
 
  MD.currentTrack = sysex->getByte(2);
+ MD.currentSynthPage = sysex->getByte(3);
  return;
 }
 

@@ -363,7 +363,10 @@ public:
   int currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
   int currentKit;
+
   int currentTrack;
+  int currentSynthPage;
+
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
   int currentPattern;
   /** Set to true if the kit was loaded (usually set by MDTask). **/
@@ -420,6 +423,9 @@ public:
   virtual PGM_P getMachineName(uint8_t machine) { return nullptr; }
 
   bool get_fw_caps();
+
+  void activate_encoder_interface(uint8_t *params);
+  void deactivate_encoder_interface();
 
   void activate_trig_interface();
   void deactivate_trig_interface();

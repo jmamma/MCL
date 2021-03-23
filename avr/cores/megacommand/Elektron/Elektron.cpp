@@ -47,6 +47,33 @@ bool ElektronDevice::get_fw_caps() {
   return false;
 }
 
+void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+  uint8_t data[3 + 2 + 8] = {0x70, 0x36, 0x01};
+  uint8_t mask_1 = 0;
+  uint8_t mask_2 = 0;
+  for (uint8_t n = 0; n < 8; n++) {
+     if (params[n] != 255) {
+       data[3 + 2 + n] = params[n];
+       if (n < 7) {
+         mask_1 |= (1 << n);
+       }
+       else {
+         mask_2 = 1;
+       }
+     }
+  }
+  data[3] = mask_1;
+  data[4] = mask_2;
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::deactivate_encoder_interface() {
+  uint8_t data[3] = {0x70, 0x36, 0x00};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));
