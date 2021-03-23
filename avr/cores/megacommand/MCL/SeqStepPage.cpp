@@ -59,6 +59,7 @@ void SeqStepPage::init() {
   trig_interface.on();
   config();
   note_interface.state = true;
+  reset_on_release = false;
 }
 
 void SeqStepPage::cleanup() {
@@ -138,11 +139,12 @@ void SeqStepPage::loop() {
   if (recording)
     return;
 
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
 
-    MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
     for (uint8_t n = 0; n < 16; n++) {
 
@@ -187,8 +189,11 @@ void SeqStepPage::loop() {
         //active_track.reset_params();
         MD.deactivate_encoder_interface();
         mcl_seq.midi_events.update_params = true;
-        MD.midi_events.enable_live_kit_update();
         note_interface.init_notes();
+        if (reset_on_release) {
+        active_track.reset_params();
+        reset_on_release = false;
+        }
   }
 
 }
@@ -241,7 +246,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
-      MD.midi_events.disable_live_kit_update();
 
         //active_track.send_parameter_locks(step, true);
         uint8_t params[8];
@@ -333,8 +337,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
-        if (!note_interface.notes_count_on())
-          return true;
+        uint8_t step = 255;
+        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          if (note_interface.notes[n] == 1) { step = n; break; }
+        }
+        if (step == 255) { return true; }
+        active_track.send_parameter_locks(step, true);
+        reset_on_release = true;
         MD.triggerTrack(last_md_track, 127);
         break;
       }
