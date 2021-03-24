@@ -145,7 +145,6 @@ void SeqStepPage::loop() {
       seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
 
-
     for (uint8_t n = 0; n < 16; n++) {
 
       if (note_interface.notes[n] == 1) {
@@ -185,17 +184,16 @@ void SeqStepPage::loop() {
     seq_param4.old = seq_param4.cur;
   }
   if (note_interface.notes_all_off_md()) {
-        mcl_gui.init_encoders_used_clock();
-        //active_track.reset_params();
-        MD.deactivate_encoder_interface();
-        mcl_seq.midi_events.update_params = true;
-        note_interface.init_notes();
-        if (reset_on_release) {
-        active_track.reset_params();
-        reset_on_release = false;
-        }
+    mcl_gui.init_encoders_used_clock();
+    // active_track.reset_params();
+    MD.deactivate_encoder_interface();
+    mcl_seq.midi_events.update_params = true;
+    note_interface.init_notes();
+    if (reset_on_release) {
+      active_track.reset_params();
+      reset_on_release = false;
+    }
   }
-
 }
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
@@ -247,11 +245,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
 
-        //active_track.send_parameter_locks(step, true);
-        uint8_t params[8];
-        memset(params,255,8);
-        active_track.get_step_page_locks(step, MD.currentSynthPage, params);
-        MD.activate_encoder_interface(params);
+      // active_track.send_parameter_locks(step, true);
+      uint8_t params[24];
+      memset(params, 255, 24);
+      active_track.get_step_locks(step, params);
+      MD.activate_encoder_interface(params);
 
       show_pitch = true;
 
@@ -313,7 +311,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-     if (active_track.get_step(step, mask_type)) {
+      if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN(F("clear step"));
 
         if (clock_diff(note_interface.note_hold[port], slowclock) <
@@ -334,17 +332,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
 
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+      uint8_t step = note_interface.get_first_md_note();
       switch (key) {
-      case MDX_KEY_YES:
-        uint8_t step = note_interface.get_first_md_note();
-        if (step == 255) { return true; }
-        active_track.send_parameter_locks(step, true);
-        if (MidiClock.state != 2) {
-        reset_on_release = true;
-        }
-        MD.triggerTrack(last_md_track, 127);
-        break;
       case 0x10:
       case 0x11:
       case 0x12:
@@ -353,21 +342,34 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       case 0x15:
       case 0x16:
       case 0x17:
-        if (event->mask == EVENT_BUTTON_PRESSED) {
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-              if (note_interface.notes[n] == 1) {
-              active_track.clear_step_lock(n, MD.currentSynthPage + key - 0x10);
-              }
+        if (event->mask == EVENT_BUTTON_RELEASED) {
+        if (step == 255) { return true; }
+        DEBUG_PRINTLN("here");
+        DEBUG_PRINTLN(key);
+        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          if (note_interface.notes[n] == 1) {
+            active_track.clear_step_lock(n, MD.currentSynthPage + key - 0x10);
           }
-         uint8_t params[8];
-         memset(params,255,8);
-         active_track.get_step_page_locks(step, MD.currentSynthPage, params);
-         MD.activate_encoder_interface(params);
+        }
+        uint8_t params[24];
+        memset(params, 255, 24);
+        active_track.get_step_locks(step, params);
+        MD.activate_encoder_interface(params);
+        }
+        break;
+      case MDX_KEY_YES:
+        if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (step == 255) {
+          return true;
+        }
+        active_track.send_parameter_locks(step, true);
+        if (MidiClock.state != 2) {
+          reset_on_release = true;
+        }
+        MD.triggerTrack(last_md_track, 127);
         }
         break;
       }
-
-    }
     return true;
   }
 
@@ -476,6 +478,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       step = i + (SeqPage::page_select * 16);
       if (active_track.set_track_locks(step, track_param, value)) {
         store_lock = 0;
+        trig_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 + 16);
       } else {
         store_lock = 1;
       }

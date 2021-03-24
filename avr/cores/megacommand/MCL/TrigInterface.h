@@ -18,6 +18,7 @@ class TrigInterface : public MidiSysexListenerClass {
 public:
   bool state = false;
   uint64_t cmd_key_state;
+  uint64_t ignore_next_mask;
 
   TrigInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;
@@ -26,7 +27,9 @@ public:
   void setup(MidiClass *_midi) {
     sysex = &(_midi->midiSysex);
   }
-
+  void ignoreNextEvent(uint8_t i) {
+    SET_BIT64(ignore_next_mask, i);
+  }
   bool on();
   bool off();
 

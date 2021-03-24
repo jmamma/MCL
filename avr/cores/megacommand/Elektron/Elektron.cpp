@@ -48,22 +48,20 @@ bool ElektronDevice::get_fw_caps() {
 }
 
 void ElektronDevice::activate_encoder_interface(uint8_t *params) {
-  uint8_t data[3 + 2 + 8] = {0x70, 0x36, 0x01};
-  uint8_t mask_1 = 0;
-  uint8_t mask_2 = 0;
-  for (uint8_t n = 0; n < 8; n++) {
-     if (params[n] != 255) {
-       data[3 + 2 + n] = params[n];
-       if (n < 7) {
-         mask_1 |= (1 << n);
-       }
-       else {
-         mask_2 = 1;
-       }
+  uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
+
+  uint8_t mod7 = 0;
+  uint8_t cnt = 0;
+
+  for (uint8_t n = 0; n < 24; n++) {
+    if (params[n] != 255) {
+       data[3 + cnt] |= (1 << mod7);
+       data[3 + 4 + n] = params[n];
+
      }
+     mod7++;
+     if (mod7 == 7) { mod7 = 0; cnt++; }
   }
-  data[3] = mask_1;
-  data[4] = mask_2;
   sendRequest(data, sizeof(data));
   waitBlocking();
 }
@@ -77,13 +75,13 @@ void ElektronDevice::deactivate_encoder_interface() {
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::deactivate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x00};
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::activate_track_select() {

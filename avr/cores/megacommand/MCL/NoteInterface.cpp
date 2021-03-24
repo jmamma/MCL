@@ -95,8 +95,6 @@ bool NoteInterface::notes_all_off_md() {
       b++;
     }
   }
-  DEBUG_PRINTLN(a);
-  DEBUG_PRINTLN(b);
   if ((a == 0) && (b > 0)) {
     all_notes_off = true;
   }
@@ -115,8 +113,6 @@ bool NoteInterface::notes_all_off() {
       b++;
     }
   }
-  DEBUG_PRINTLN(a);
-  DEBUG_PRINTLN(b);
   if ((a == 0) && (b > 0)) {
     all_notes_off = true;
   }

@@ -64,6 +64,12 @@ void TrigInterface::end_immediate() {
     key_down = true;
     key -= 0x40;
   }
+
+  if (IS_BIT_SET64(ignore_next_mask, key)) {
+    CLEAR_BIT64(ignore_next_mask, key);
+    return;
+  }
+
   if (key < 16) {
     if (key_down) {
       note_interface.note_off_event(key, UART1_PORT);

@@ -333,23 +333,15 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
   }
 }
 
-void MDSeqTrack::get_step_page_locks(uint8_t step, uint8_t synth_page, uint8_t *params) {
+void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params) {
   uint16_t lock_idx = get_lockidx(step);
-  DEBUG_PRINTLN(synth_page);
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
-    bool send = false;
-    uint8_t send_param;
-    uint8_t base_param = synth_page * 8;
+    bool lock_bit = steps[step].is_lock_bit(c);
     if (locks_params[c]) {
       uint8_t param = locks_params[c] - 1;
-      if ((param >= base_param) && (param < base_param + 8)) {
-        if (lock_present) {
-          DEBUG_PRINTLN("seting param");
-          DEBUG_PRINTLN(param - base_param);
-          params[param - base_param] = locks[lock_idx];
-        }
+      if (lock_present) {
+        params[param] = locks[lock_idx];
       }
     }
     lock_idx += lock_bit;
@@ -565,19 +557,34 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
   if (match == 255)
     return;
 
+  uint8_t mask = (1 << match);
   uint8_t idx = get_lockidx(step);
 
   uint8_t offset = 0;
-  for (uint8_t n = 0; n <= match; n++) {
-    if (IS_BIT_SET(steps[step].locks,n)) {
-    offset++;
-    }
+  uint8_t locks_ = steps[step].locks;
+  for (uint8_t n = 0; n < match; n++) {
+    offset += locks_ & 1;
+    locks_ = locks_ >> 1;
   }
 
   memmove(locks + idx + offset, locks + idx + offset + 1, NUM_MD_LOCK_SLOTS - idx - 1);
+  steps[step].locks &= ~(mask);
+
+  if (steps[step].locks == 0) {
+    steps[step].locks_enabled = false;
+  }
   if (step < step_count) {
     cur_event_idx -= 1;
   }
+
+  for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+    if (steps[n].locks & mask) {
+      return;
+    }
+  }
+
+  //If no more locks on any step, unset the param
+  locks_params[match] = 0;
 }
 
 void MDSeqTrack::clear_param_locks(uint8_t param_id) {
