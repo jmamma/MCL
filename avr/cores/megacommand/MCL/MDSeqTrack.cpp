@@ -438,6 +438,14 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
   return send_trig;
 }
 
+uint8_t MDSeqTrack::get_track_lock_implicit(uint8_t step, uint8_t param) {
+  uint8_t lock_idx = find_param(param);
+  if (lock_idx < NUM_LOCKS) {
+  return get_track_lock(step, lock_idx);
+  }
+  return 255;
+}
+
 uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   auto idx = get_lockidx(step, lock_idx);
   if (idx < NUM_MD_LOCK_SLOTS && steps[step].locks_enabled) {

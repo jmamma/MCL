@@ -265,7 +265,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.max =
           mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
       int8_t utiming = active_track.timing[step];
-      uint8_t pitch = active_track.get_track_lock(step, 0);
+      uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
       // Cond
       uint8_t condition =
           translate_to_knob_conditional(active_track.steps[step].cond_id,
@@ -337,7 +337,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
 
-    uint8_t step = note_interface.get_first_md_note();
+    uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
     switch (key) {
     case 0x10:
     case 0x11:
@@ -352,20 +352,24 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
       if (event->mask == EVENT_BUTTON_RELEASED) {
-       DEBUG_PRINTLN("here");
-        DEBUG_PRINTLN(key);
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.notes[n] == 1) {
-            active_track.clear_step_lock(n, param);
+            uint8_t s = n + (page_select * 16);
+            active_track.clear_step_lock(s, param);
           }
         }
       }
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        if (active_track.get_track_lock(step, param) == 255) { return true; }
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+       int8_t lock_idx = active_track.find_param(param);
+
+       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.notes[n] == 1) {
-            active_track.set_track_locks(n, param, MD.kit.params[last_md_track][param]);
-            trig_interface.ignoreNextEvent(key);
+            uint8_t s = n + (page_select * 16);
+            if (lock_idx == -1 || !active_track.steps[s].is_lock(lock_idx)) {
+              DEBUG_PRINTLN("setting lock");
+              active_track.set_track_locks(s, param, MD.kit.params[last_md_track][param]);
+              trig_interface.ignoreNextEvent(key);
+            }
           }
         }
       }
