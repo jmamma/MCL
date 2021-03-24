@@ -559,15 +559,14 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
 
   uint8_t mask = (1 << match);
   uint8_t idx = get_lockidx(step);
-
-  uint8_t offset = 0;
   uint8_t locks_ = steps[step].locks;
-  for (uint8_t n = 0; n < match; n++) {
-    offset += locks_ & 1;
-    locks_ = locks_ >> 1;
-  }
 
-  memmove(locks + idx + offset, locks + idx + offset + 1, NUM_MD_LOCK_SLOTS - idx - 1);
+  if (!(steps[step].locks & mask)) { return; }
+
+  uint8_t offset = popcount(locks_ & (mask - 1));
+
+  memmove(locks + idx + offset, locks + idx + offset + 1, NUM_MD_LOCK_SLOTS - idx - offset - 1);
+
   steps[step].locks &= ~(mask);
 
   if (steps[step].locks == 0) {

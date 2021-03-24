@@ -35,6 +35,7 @@ public:
   virtual void config_encoders();
   virtual void loop();
   virtual void cleanup();
+  void send_locks(uint8_t step);
 };
 
 #endif /* SEQSTEPPAGE_H__ */

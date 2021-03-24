@@ -196,6 +196,14 @@ void SeqStepPage::loop() {
   }
 }
 
+void SeqStepPage::send_locks(uint8_t step) {
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+  uint8_t params[24];
+  memset(params, 255, 24);
+  active_track.get_step_locks(step, params);
+  MD.activate_encoder_interface(params);
+}
+
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
@@ -246,11 +254,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       mcl_seq.midi_events.update_params = false;
 
       // active_track.send_parameter_locks(step, true);
-      uint8_t params[24];
-      memset(params, 255, 24);
-      active_track.get_step_locks(step, params);
-      MD.activate_encoder_interface(params);
-
+      MD.activate_encoder_interface(step);
+      send_locks(step);
       show_pitch = true;
 
       if (step >= active_track.length) {
@@ -332,33 +337,42 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
 
-      uint8_t step = note_interface.get_first_md_note();
-      switch (key) {
-      case 0x10:
-      case 0x11:
-      case 0x12:
-      case 0x13:
-      case 0x14:
-      case 0x15:
-      case 0x16:
-      case 0x17:
-        if (event->mask == EVENT_BUTTON_RELEASED) {
-        if (step == 255) { return true; }
-        DEBUG_PRINTLN("here");
+    uint8_t step = note_interface.get_first_md_note();
+    switch (key) {
+    case 0x10:
+    case 0x11:
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17:
+       if (step == 255) {
+          return true;
+        }
+      uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+       DEBUG_PRINTLN("here");
         DEBUG_PRINTLN(key);
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.notes[n] == 1) {
-            active_track.clear_step_lock(n, MD.currentSynthPage + key - 0x10);
+            active_track.clear_step_lock(n, param);
           }
         }
-        uint8_t params[24];
-        memset(params, 255, 24);
-        active_track.get_step_locks(step, params);
-        MD.activate_encoder_interface(params);
+      }
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (active_track.get_track_lock(step, param) == 255) { return true; }
+        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          if (note_interface.notes[n] == 1) {
+            active_track.set_track_locks(n, param, MD.kit.params[param]);
+            trig_interface.ignoreNextEvent(key);
+          }
         }
-        break;
-      case MDX_KEY_YES:
-        if (event->mask == EVENT_BUTTON_PRESSED) {
+      }
+      send_locks(step);
+      break;
+    case MDX_KEY_YES:
+      if (event->mask == EVENT_BUTTON_PRESSED) {
         if (step == 255) {
           return true;
         }
@@ -367,9 +381,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           reset_on_release = true;
         }
         MD.triggerTrack(last_md_track, 127);
-        }
-        break;
       }
+      break;
+    }
     return true;
   }
 
@@ -478,7 +492,8 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       step = i + (SeqPage::page_select * 16);
       if (active_track.set_track_locks(step, track_param, value)) {
         store_lock = 0;
-        trig_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 + 16);
+        trig_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 +
+                                       16);
       } else {
         store_lock = 1;
       }
@@ -520,6 +535,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (store_lock == 1) {
 #ifdef OLED_DISPLAY
     oled_display.textbox("LOCK PARAMS ", "FULL");
+    //seq_step_page.send_locks(step);
 #endif
   }
 }
