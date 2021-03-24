@@ -346,7 +346,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case 0x14:
     case 0x15:
     case 0x16:
-    case 0x17:
+    case 0x17: {
        if (step == 255) {
           return true;
         }
@@ -371,6 +371,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       send_locks(step);
       break;
+    }
     case MDX_KEY_YES:
       if (event->mask == EVENT_BUTTON_PRESSED) {
         if (step == 255) {
