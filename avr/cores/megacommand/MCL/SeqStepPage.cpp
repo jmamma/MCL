@@ -364,7 +364,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (active_track.get_track_lock(step, param) == 255) { return true; }
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.notes[n] == 1) {
-            active_track.set_track_locks(n, param, MD.kit.params[param]);
+            active_track.set_track_locks(n, param, MD.kit.params[last_md_track][param]);
             trig_interface.ignoreNextEvent(key);
           }
         }
