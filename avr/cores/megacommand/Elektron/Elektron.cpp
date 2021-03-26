@@ -72,6 +72,30 @@ void ElektronDevice::deactivate_encoder_interface() {
   waitBlocking();
 }
 
+void ElektronDevice::activate_enhanced_gui() {
+  uint8_t data[3] = {0x70, 0x37, 0x01};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::deactivate_enhanced_gui() {
+  uint8_t data[3] = {0x70, 0x37, 0x00};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::set_seq_page(uint8_t page) {
+  uint8_t data[3] = {0x70, 0x38, page };
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::set_rec_mode(uint8_t mode) {
+  uint8_t data[3] = {0x70, 0x3A, mode};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));

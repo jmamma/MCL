@@ -145,8 +145,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);
-    uint8_t track = event->source - 128;
 
+    uint8_t track = event->source - 128;
     // =================== seq menu mode TI events ================
 
     if (show_seq_menu) {
@@ -241,6 +241,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       page_select += 1;
       if (page_select >= page_count) {
         page_select = 0;
+      }
+      ElektronDevice *elektron_dev = midi_device->asElektronDevice();
+      if (elektron_dev != nullptr) {
+        elektron_dev->set_seq_page(page_select);
       }
       return true;
   }

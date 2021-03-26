@@ -14,6 +14,14 @@ void TrigInterface::send_md_leds(TrigLEDMode mode) {
     MD.set_trigleds(led_mask, mode);
 }
 
+void TrigInterface::enable_listener() {
+  sysex->addSysexListener(this);
+}
+
+void TrigInterface::disable_listener() {
+  sysex->removeSysexListener(this);
+}
+
 bool TrigInterface::on() {
 
   if (state) {
@@ -23,7 +31,6 @@ bool TrigInterface::on() {
     return false;
   }
   cmd_key_state = 0;
-  sysex->addSysexListener(this);
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();
@@ -34,7 +41,6 @@ bool TrigInterface::on() {
 }
 
 bool TrigInterface::off() {
-  sysex->removeSysexListener(this);
   note_interface.note_proceed = false;
   DEBUG_PRINTLN(F("deactiviating trig interface"));
   if (!state) {
@@ -51,13 +57,14 @@ bool TrigInterface::off() {
 void TrigInterface::end() { }
 
 void TrigInterface::end_immediate() {
-  if (!state) {
-    return;
-  }
+  //if (!state) {
+  //  return;
+  //}
  if (sysex->getByte(0) != ids[0]) { return; }
  if (sysex->getByte(1) != ids[1]) { return; }
 
   uint8_t key = sysex->getByte(2);
+
   bool key_down = false;
 
   if (key >= 0x40) {

@@ -55,7 +55,10 @@ void MCL::setup() {
   mcl_seq.setup();
 
   MDSysexListener.setup(&Midi);
+
   trig_interface.setup(&Midi);
+  trig_interface.enable_listener();
+
   md_track_select.setup(&Midi);
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
@@ -69,6 +72,8 @@ void MCL::setup() {
   midi_setup.cfg_ports();
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
+
+  GUI.addEventHandler((event_handler_t) &mcl_handleEvent);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
@@ -93,4 +98,36 @@ void MCL::setup() {
   DEBUG_PRINTLN(sizeof(MDSeqTrackData));
   DEBUG_PRINTLN(sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine));
 }
+
+bool mcl_handleEvent(gui_event_t *event) {
+
+  DEBUG_PRINTLN("RECEV EVENT");
+  DEBUG_PRINTLN(event->source);
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    DEBUG_PRINTLN(key);
+    DEBUG_PRINTLN(MDX_KEY_REC);
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+        case MDX_KEY_REC:
+          setLed2();
+          if (GUI.currentPage() != &seq_step_page) {
+             GUI.setPage(&seq_step_page);
+          }
+          else {
+             GUI.setPage(&grid_page);
+             MD.set_rec_mode(0);
+          }
+          return true;
+        }
+    }
+     if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_REC:
+          return true;
+        }
+    }
+  }
+}
+
 MCL mcl;

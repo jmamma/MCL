@@ -202,6 +202,8 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(250);
   }
 
+  activate_enhanced_gui();
+
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
   if (ts) {

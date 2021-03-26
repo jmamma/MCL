@@ -57,6 +57,7 @@ void SeqStepPage::init() {
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
+  MD.set_rec_mode(1);
   config();
   note_interface.state = true;
   reset_on_release = false;

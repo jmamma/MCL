@@ -4,14 +4,19 @@
 #include "NoteInterface.h"
 #include "WProgram.h"
 
-#define MDX_KEY_FUNC 0x24 + 1
-#define MDX_KEY_LEFT 0x25 + 1
-#define MDX_KEY_RIGHT 0x26 + 1
-#define MDX_KEY_YES 0x27 + 1
-#define MDX_KEY_NO 0x28 + 1
-#define MDX_KEY_SCALE 0x29 + 1
-#define MDX_KEY_UP 0x2F + 1
-#define MDX_KEY_DOWN 0x30 + 1
+#define MDX_KEY_TRIG1 0x00
+#define MDX_KEY_ENCBUTTON1 0x10
+#define MDX_KEY_BANKA 0x1A
+#define MDX_KEY_BANKGROUP 0x1E
+#define MDX_KEY_REC 0x20
+#define MDX_KEY_FUNC 0x25
+#define MDX_KEY_LEFT 0x26
+#define MDX_KEY_RIGHT 0x27
+#define MDX_KEY_YES 0x28
+#define MDX_KEY_NO 0x29
+#define MDX_KEY_SCALE 0x2A
+#define MDX_KEY_UP 0x30
+#define MDX_KEY_DOWN 0x31
 
 class TrigInterface : public MidiSysexListenerClass {
 
@@ -32,6 +37,9 @@ public:
   }
   bool on();
   bool off();
+
+  void enable_listener();
+  void disable_listener();
 
   virtual void start();
   virtual void end();
