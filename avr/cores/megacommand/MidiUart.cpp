@@ -168,7 +168,7 @@ ISR(USART0_RX_vect) {
 
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
 
-    if (Midi.ext_out) { megacom_midiserver.send(0, c); }
+    if (Midi.ext_out) { megacom_midiserver.send_isr(0, c); }
 
     MidiUart.recvActiveSenseTimer = 0;
     if (MidiClock.mode == MidiClock.EXTERNAL_UART1) {
@@ -210,7 +210,7 @@ ISR(USART0_RX_vect) {
           Midi.midiSysex.abort();
 
           MidiUart.rxRb.put_h_isr(c);
-          if (Midi.ext_out) { megacom_midiserver.send(0, c); }
+          if (Midi.ext_out) { megacom_midiserver.send_isr(0, c); }
 
         } else {
           // handle sysex end here
@@ -233,12 +233,12 @@ ISR(USART0_RX_vect) {
         // Midi_->last_status = Midi_->running_status = 0;
       } else {
         MidiUart.rxRb.put_h_isr(c);
-        if (Midi.ext_out) { megacom_midiserver.send(0, c); }
+        if (Midi.ext_out) { megacom_midiserver.send_isr(0, c); }
       }
     } break;
     default:
       MidiUart.rxRb.put_h_isr(c);
-      if (Midi.ext_out) { megacom_midiserver.send(0, c); }
+      if (Midi.ext_out) { megacom_midiserver.send_isr(0, c); }
 
       break;
     }
@@ -265,7 +265,7 @@ ISR(USART1_RX_vect) {
 
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
 
-    if (Midi2.ext_out) { megacom_midiserver.send(1, c); }
+    if (Midi2.ext_out) { megacom_midiserver.send_isr(1, c); }
 
     MidiUart2.recvActiveSenseTimer = 0;
     if (((MidiClock.mode == MidiClock.EXTERNAL_UART2))) {
@@ -307,7 +307,7 @@ ISR(USART1_RX_vect) {
           Midi2.midiSysex.abort();
 
           MidiUart2.rxRb.put_h_isr(c);
-          if (Midi2.ext_out) { megacom_midiserver.send(1, c); }
+          if (Midi2.ext_out) { megacom_midiserver.send_isr(1, c); }
 
         } else {
           // handle sysex end here
@@ -333,12 +333,12 @@ ISR(USART1_RX_vect) {
         // Midi_->last_status = Midi_->running_status = 0;
       } else {
         MidiUart2.rxRb.put_h_isr(c);
-        if (Midi2.ext_out) { megacom_midiserver.send(1, c); }
+        if (Midi2.ext_out) { megacom_midiserver.send_isr(1, c); }
       }
     } break;
     default:
       MidiUart2.rxRb.put_h_isr(c);
-      if (Midi2.ext_out) { megacom_midiserver.send(1, c); }
+      if (Midi2.ext_out) { megacom_midiserver.send_isr(1, c); }
 
       break;
     }

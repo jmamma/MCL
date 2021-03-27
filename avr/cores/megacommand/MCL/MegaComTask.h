@@ -21,14 +21,16 @@ public:
 // A coroutine that listens to MegaCom frames and dispatches the received frames to the handlers
 // The desiderata is to make it non-blocking, and interleaved with other tasks, at the cost of
 // having throttled bandwidth and lower priority.
-// There are two types of messages. REALTIME and ASYNC.
+// There are three types of messages. SYNC(BULK), ASYNC(BULK) and REALTIME.
 // ASYNC RX: Upon frame receive, put it into the message queue, send back ACK, and process it by the task
 // ASYNC TX: Initiated in non-ISR context, queued into send buffer.
-// REALTIME RX: Upon frame receive, handled in the ISR directly, then send back ACK.
-// REALTIME TX: Initiated in ISR context.
+// SYNC RX: Upon frame receive, handled in the ISR directly, do not send back ACK.
+// SYNC TX: Initiated in ISR context.
+// REALTIME: SYNC, special state machine for short messages
 // Several implications:
-//   - It means REALTIME messages are full-duplex but ASYNC messages are half-duplex (ping-pong).
-//   - REALTIME servers are STATELESS
+//   - It means SYNC messages are full-duplex but ASYNC messages are half-duplex (ping-pong).
+//   - SYNC servers are STATELESS
+//   - REALTIME message type & data length limited to 0x0-0xF
 class MegaComTask: public Task {
 private:
   CRingBuffer<commsg_t, 0, uint8_t> rx_msgs;
@@ -55,6 +57,7 @@ public:
   void tx_end(uint8_t channel);
   comstatus_t tx_checkstatus(uint8_t channel, uint8_t type);
   void tx_end_isr(uint8_t channel);
+  bool tx_realtime_isr(uint8_t channel, uint8_t type, const char* vec, uint8_t len);
 
   void debug(const char* pmsg);
 

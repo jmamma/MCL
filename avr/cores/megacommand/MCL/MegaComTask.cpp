@@ -10,7 +10,7 @@
 ISR(USART0_RX_vect) {
   select_bank(0);
   if (UART_USB_CHECK_OVERRUN()) {
-    setLed2();
+    // setLed2();
   }
   uint8_t data = UART_USB_READ_CHAR();
   megacom_task.rx_isr(COMCHANNEL_UART_USB, data);
@@ -58,43 +58,46 @@ bool comchannel_t::tx_isempty_isr() { return tx_buf.isEmpty_isr(); }
 void comchannel_t::rx_isr(uint8_t data) {
   switch (rx_state) {
   case COMSTATE_SYNC:
-    if (data == COMSYNC_TOKEN) {
-      rx_state = COMSTATE_TYPE;
+    if (data == COMSYNC_BULK) {
+      rx_state = COMSTATE_BULKTYPE;
       rx_chksum = 0;
+    } else if ((data & 0xF0) == COMSYNC_RT) {
+      rx_state = COMSTATE_RTHEAD;
+      rx_type = data & 0x0F;
+      rx_chksum = rx_type;
     }
     break;
-  case COMSTATE_TYPE:
+  case COMSTATE_BULKTYPE:
     rx_type = data;
-    rx_state = COMSTATE_LEN1;
+    rx_state = COMSTATE_BULKLEN1;
     rx_chksum += data;
     break;
-  case COMSTATE_LEN1:
+  case COMSTATE_BULKLEN1:
     rx_len = data;
-    rx_state = COMSTATE_LEN2;
+    rx_state = COMSTATE_BULKLEN2;
     rx_chksum += data;
     break;
-  case COMSTATE_LEN2:
+  case COMSTATE_BULKLEN2:
     rx_len = (rx_len << 8) + data;
     rx_pending = rx_len;
     if (!rx_len || rx_type >= COMSERVER_UNSUPPORTED) {
-      rx_state = COMSTATE_CHECKSUM;
+      rx_state = COMSTATE_BULKCHECKSUM;
     } else if (rx_len >= COMCHANNEL_BUFSIZE) {
       rx_state = COMSTATE_SYNC;
     } else {
-      rx_state = COMSTATE_DATA;
+      rx_state = COMSTATE_BULKDATA;
     }
     rx_chksum += data;
     break;
-  case COMSTATE_DATA:
+  case COMSTATE_BULKDATA:
     rx_chksum += data;
     // TODO check for overflow?
     rx_buf.put_h_isr(data);
     if (--rx_pending == 0) {
-      rx_state = COMSTATE_CHECKSUM;
+      rx_state = COMSTATE_BULKCHECKSUM;
     }
     break;
-  case COMSTATE_CHECKSUM:
-
+  case COMSTATE_BULKCHECKSUM:
     rx_state = COMSTATE_SYNC;
     // for these data types, do not send back REQUEST_RESEND, just update tx
     // status.
@@ -120,11 +123,8 @@ void comchannel_t::rx_isr(uint8_t data) {
         tx_begin(true, COMSERVER_UNSUPPORTED, rx_type);
         tx_end_isr();
       } else if (status == CS_REALTIME_MESSAGE) {
-        // undo the buffer
+        // undo the buffer, no ack
         rx_buf.undo(rx_len);
-        // ack it
-        tx_begin(true, COMSERVER_ACK, rx_type);
-        tx_end_isr();
       } else {
         goto request_resend;
         // request a resend, buy us some time to process the messages...
@@ -136,6 +136,26 @@ void comchannel_t::rx_isr(uint8_t data) {
       tx_begin(true, COMSERVER_REQUEST_RESEND, rx_type);
       tx_end_isr();
     }
+    break;
+  case COMSTATE_RTHEAD:
+    rx_len = data & 0x0F;
+    rx_pending = rx_len;
+    rx_chksum += rx_len;
+    rx_chksum += (data & 0xF0) >> 4;
+    rx_state = COMSTATE_RTDATA;
+    break;
+  case COMSTATE_RTDATA:
+    rx_buf.put_h_isr(data);
+    rx_chksum += (data & 0x0F);
+    rx_chksum += (data & 0xF0) >> 4;
+    if (--rx_pending != 0) {
+      break;
+    }
+    rx_state = COMSTATE_SYNC;
+    if ((rx_chksum & 0x0F) == 0) {
+      megacom_task.recv_msg_isr(id, rx_type, &rx_buf, rx_len);
+    }
+    rx_buf.undo(rx_len);
     break;
   }
 }
@@ -182,7 +202,7 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
   tx_chksum = 0;
 
   // SYNC
-  tx_buf.put_h_isr(COMSYNC_TOKEN);
+  tx_buf.put_h_isr(COMSYNC_BULK);
   // TYPE
   tx_chksum += type;
   tx_buf.put_h_isr(type);
@@ -201,6 +221,7 @@ bool comchannel_t::tx_begin(bool isr, uint8_t type, uint16_t len) {
     tx_status[type] = CS_TX_ACTIVE;
     tx_timestamp[type] = read_slowclock();
   }
+  return true;
 }
 
 void comchannel_t::tx_data(uint8_t data) {
@@ -215,6 +236,32 @@ void comchannel_t::tx_end() {
 
   // release IRQ lock
   SREG = tx_irqlock;
+}
+
+bool comchannel_t::tx_realtime_isr(uint8_t type, const char* vec, uint8_t len) {
+  if (len >= 0x10 || tx_buf.len - tx_buf.size() < len || type >= 0x10) {
+    return false;
+  }
+
+  // compute complementary 4-bit chksum
+  tx_chksum = type + len;
+  for(int i = 0; i < len; ++i) {
+    char data = vec[i];
+    tx_chksum += data & 0x0F;
+    tx_chksum += (data & 0xF0) >> 4;
+  }
+  tx_chksum = (0x0F - (tx_chksum & 0x0F)) << 4;
+
+  // SYNC
+  tx_buf.put_h_isr(COMSYNC_RT | type);
+  // HEAD
+  tx_buf.put_h_isr(tx_chksum | len);
+  // DATA
+  for (int i = 0; i < len; ++i) {
+    tx_buf.put_h_isr(vec[i]);
+  }
+  tx_available_callback();
+  return true;
 }
 
 // tx_end_isr doesn't check for ACK
@@ -356,6 +403,10 @@ bool MegaComTask::tx_begin(uint8_t channel, uint8_t type, uint16_t len) {
 
 bool MegaComTask::tx_begin_isr(uint8_t channel, uint8_t type, uint16_t len) {
   return channels[channel].tx_begin(true, type, len);
+}
+
+bool MegaComTask::tx_realtime_isr(uint8_t channel, uint8_t type, const char* vec, uint8_t len) {
+  return channels[channel].tx_realtime_isr(type, vec, len);
 }
 
 void MegaComTask::tx_data(uint8_t channel, uint8_t data) {

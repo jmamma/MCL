@@ -3,7 +3,6 @@
 
 // IN ISR
 int MCMidiServer::run(){
-  clearLed2();
   uint8_t port = msg_getch();
   MidiUartParent* device;
   if (port == 0) {
@@ -24,6 +23,7 @@ int MCMidiServer::run(){
 void MCMidiServer::send_isr(uint8_t port, uint8_t data) {
   // TODO hard coded
   if (!megacom_task.tx_begin_isr(COMCHANNEL_UART_USB, COMSERVER_EXTMIDI, 2)) {
+    setLed2();
     return;
   }
   megacom_task.tx_data(COMCHANNEL_UART_USB, port);

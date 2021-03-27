@@ -6,14 +6,21 @@ typedef RingBuffer<0, uint16_t> combuf_t;
 
 #define COMCHANNEL_BUFSIZE 768
 
-#define COMSYNC_TOKEN 0x5a
+#define COMSYNC_BULK 0x5a
+#define COMSYNC_RT   0xa0
 
-#define COMSTATE_SYNC     0
-#define COMSTATE_TYPE     1
-#define COMSTATE_LEN1     2
-#define COMSTATE_LEN2     3
-#define COMSTATE_DATA     4
-#define COMSTATE_CHECKSUM 5
+enum comstate_t {
+  COMSTATE_SYNC          = 0,
+
+  COMSTATE_BULKTYPE      = 1,
+  COMSTATE_BULKLEN1      = 2,
+  COMSTATE_BULKLEN2      = 3,
+  COMSTATE_BULKDATA      = 4,
+  COMSTATE_BULKCHECKSUM  = 5,
+
+  COMSTATE_RTHEAD        = 6,
+  COMSTATE_RTDATA        = 7,
+};
 
 enum comchannel_id_t {
   COMCHANNEL_UART_USB,
@@ -73,6 +80,7 @@ public:
   void tx_end();
   void tx_end_isr();
   void tx_set_data_available_callback(void(*cb)());
+  bool tx_realtime_isr(uint8_t type, const char* vec, uint8_t len);
 };
 
 class commsg_t {
