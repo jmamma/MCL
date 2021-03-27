@@ -96,6 +96,15 @@ void ElektronDevice::set_rec_mode(uint8_t mode) {
   //waitBlocking();
 }
 
+void ElektronDevice::popup_text(char *str) {
+  uint8_t data[66] = {0x70, 0x3B };
+  uint8_t len = strlen(str);
+  strcpy(data + 2, str);
+  sendRequest(data, 2 + len);
+  //waitBlocking();
+}
+
+
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));

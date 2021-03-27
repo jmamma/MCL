@@ -427,13 +427,13 @@ public:
   void activate_encoder_interface(uint8_t *params);
   void deactivate_encoder_interface();
 
+  void activate_enhanced_gui();
+  void deactivate_enhanced_gui();
 
-  void ElektronDevice::activate_enhanced_gui();
-  void ElektronDevice::deactivate_enhanced_gui();
+  void set_seq_page(uint8_t page);
 
-  void ElektronDevice::set_seq_page(uint8_t page);
-
-  void ElektronDevice::set_rec_mode(uint8_t mode);
+  void set_rec_mode(uint8_t mode);
+  void popup_text(char *str);
 
   void activate_trig_interface();
   void deactivate_trig_interface();

@@ -58,6 +58,7 @@ void SeqStepPage::init() {
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
+  MD.set_seq_page(page_select);
   config();
   note_interface.state = true;
   reset_on_release = false;

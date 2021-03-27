@@ -8,6 +8,7 @@
 #define MDX_KEY_ENCBUTTON1 0x10
 #define MDX_KEY_BANKA 0x1A
 #define MDX_KEY_BANKGROUP 0x1E
+#define MDX_KEY_SONG 0x1F
 #define MDX_KEY_REC 0x20
 #define MDX_KEY_FUNC 0x25
 #define MDX_KEY_LEFT 0x26
@@ -17,6 +18,9 @@
 #define MDX_KEY_SCALE 0x2A
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
+#define MDX_KEY_COPY 0x34
+#define MDX_KEY_CLEAR 0x35
+#define MDX_KEY_PASTE 0x36
 
 class TrigInterface : public MidiSysexListenerClass {
 

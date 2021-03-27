@@ -206,6 +206,7 @@ bool MDClass::probe() {
 
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
+  MD.popup_text("ENHANCED");
   if (ts) {
     md_track_select.on();
   }
