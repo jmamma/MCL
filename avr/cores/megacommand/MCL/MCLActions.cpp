@@ -404,9 +404,14 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   if (write_original == 1) {
     DEBUG_PRINTLN(F("write original"));
     //     MD.kit.origPosition = md_track->origPosition;
-    for (uint8_t c = 0; c < 17; c++) {
+    if (grid_page.row_headers[grid_page.cur_row].active) {
+      for (uint8_t c = 0; c < 17; c++) {
       MD.kit.name[c] =
           toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
+      }
+    }
+    else {
+      strcpy(MD.kit.name,"NEW_KIT");
     }
   }
 

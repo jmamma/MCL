@@ -867,7 +867,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       auto fov_offset = seq_extstep_page.fov_offset;
       auto cur_x = seq_extstep_page.cur_x;
       auto fov_y = seq_extstep_page.fov_y;
-      auto cur_y = seq_ptc_page.seq_ext_pitch(note_num);
+      auto cur_y = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
       auto cur_w = seq_extstep_page.cur_w;
 
       if (fov_y >= cur_y && cur_y != 0) {
@@ -908,7 +908,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
 
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {

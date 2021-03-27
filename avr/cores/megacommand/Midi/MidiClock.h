@@ -81,6 +81,7 @@ public:
   bool transmit_uart2;
   bool isInit;
 
+  bool reset_clock_phase = false;
   //    volatile uint16_t mcl_clock;
   //   volatile uint16_t mcl_countbool
   volatile enum {
@@ -348,6 +349,11 @@ public:
    */
   ALWAYS_INLINE() void incrementCounters() {
     mod8_free_counter++;
+    if (reset_clock_phase) {
+      mod8_free_counter = 0;
+      last_clock8 = clock;
+      reset_clock_phase = false;
+    }
     if (mod8_free_counter == 8) {
       diff_clock8 = midi_clock_diff(last_clock8, clock);
       last_clock8 = clock;
@@ -400,6 +406,8 @@ public:
   uint32_t clock_diff_div192(uint32_t old_clock, uint32_t new_clock);
 
   ALWAYS_INLINE() void handleImmediateMidiStart() {
+    reset_clock_phase = true;
+
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_START);
     }
@@ -427,6 +435,7 @@ public:
   }
 
   ALWAYS_INLINE() void handleImmediateMidiContinue() {
+    reset_clock_phase = true;
     if (transmit_uart1) {
       MidiUart.sendRaw(MIDI_CONTINUE);
     }
