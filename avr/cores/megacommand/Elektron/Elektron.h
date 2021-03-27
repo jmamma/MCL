@@ -433,6 +433,8 @@ public:
   void set_seq_page(uint8_t page);
 
   void set_rec_mode(uint8_t mode);
+
+  void popup_text(uint8_t action_string);
   void popup_text(char *str);
 
   void activate_trig_interface();

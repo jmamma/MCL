@@ -945,6 +945,7 @@ void opt_copy_track_handler() {
 #ifdef OLED_DISPLAY
       oled_display.textbox("COPY TRACK", "");
 #endif
+      MD.popup_text(4);
       mcl_clipboard.copy_track = last_md_track;
       mcl_clipboard.copy_sequencer_track(last_md_track);
     }

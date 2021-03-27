@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "midi-common.h"
+#include "Elektron.h"
 
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
@@ -32,6 +33,7 @@ extern uint8_t opt_clear_step;
 extern uint8_t opt_length;
 extern uint8_t opt_channel;
 
+extern MidiDevice *opt_midi_device_capture;
 extern uint16_t trigled_mask;
 
 extern void opt_trackid_handler();

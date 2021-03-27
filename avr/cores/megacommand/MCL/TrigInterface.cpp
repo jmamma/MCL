@@ -64,11 +64,10 @@ void TrigInterface::end_immediate() {
  if (sysex->getByte(1) != ids[1]) { return; }
 
   uint8_t key = sysex->getByte(2);
-
-  bool key_down = false;
+  bool key_release = false;
 
   if (key >= 0x40) {
-    key_down = true;
+    key_release = true;
     key -= 0x40;
   }
 
@@ -78,7 +77,7 @@ void TrigInterface::end_immediate() {
   }
 
   if (key < 16) {
-    if (key_down) {
+    if (key_release) {
       note_interface.note_off_event(key, UART1_PORT);
     }
     else {
@@ -86,7 +85,7 @@ void TrigInterface::end_immediate() {
     }
    return;
   }
-  if (key_down) {
+  if (key_release) {
     CLEAR_BIT64(cmd_key_state, key);
   }
   else {
@@ -94,7 +93,7 @@ void TrigInterface::end_immediate() {
   }
   gui_event_t event;
   event.source = key + 64; //EVENT_CMD
-  event.mask = key_down ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
+  event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;
   EventRB.putp(&event);
 

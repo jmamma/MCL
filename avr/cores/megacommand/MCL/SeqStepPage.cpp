@@ -338,9 +338,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-
+    opt_midi_device_capture = midi_device;
     uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
     switch (key) {
+    // ENCODER BUTTONS
     case 0x10:
     case 0x11:
     case 0x12:
@@ -349,9 +350,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case 0x15:
     case 0x16:
     case 0x17: {
-       if (step == 255) {
-          return true;
-        }
+      if (step == 255) {
+        return true;
+      }
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
@@ -362,14 +363,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
       }
       if (event->mask == EVENT_BUTTON_PRESSED) {
-       int8_t lock_idx = active_track.find_param(param);
+        int8_t lock_idx = active_track.find_param(param);
 
-       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.notes[n] == 1) {
             uint8_t s = n + (page_select * 16);
             if (lock_idx == -1 || !active_track.steps[s].is_lock(lock_idx)) {
               DEBUG_PRINTLN("setting lock");
-              active_track.set_track_locks(s, param, MD.kit.params[last_md_track][param]);
+              active_track.set_track_locks(s, param,
+                                           MD.kit.params[last_md_track][param]);
               trig_interface.ignoreNextEvent(key);
             }
           }
@@ -378,7 +380,20 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       send_locks(step);
       break;
     }
-    case MDX_KEY_YES:
+    case MDX_KEY_COPY: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        // Note copy
+        if (step < 16) {
+          return true;
+        } else {
+          // Track copy
+          opt_copy = 1;
+          opt_copy_track_handler();
+        }
+      }
+      break;
+    }
+    case MDX_KEY_YES: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         if (step == 255) {
           return true;
@@ -390,6 +405,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.triggerTrack(last_md_track, 127);
       }
       break;
+    }
     }
     return true;
   }
@@ -542,7 +558,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (store_lock == 1) {
 #ifdef OLED_DISPLAY
     oled_display.textbox("LOCK PARAMS ", "FULL");
-    //seq_step_page.send_locks(step);
+    // seq_step_page.send_locks(step);
 #endif
   }
 }
