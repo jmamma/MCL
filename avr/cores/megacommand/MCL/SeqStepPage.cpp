@@ -70,6 +70,7 @@ void SeqStepPage::cleanup() {
   if (MidiClock.state != 2) {
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
+  MD.set_rec_mode(0);
 }
 
 void SeqStepPage::display() {
@@ -136,6 +137,9 @@ void SeqStepPage::display() {
 }
 
 void SeqStepPage::loop() {
+  if (MD.global.extendedMode != 2) {
+    GUI.setPage(&grid_page);
+  }
   SeqPage::loop();
 
   if (recording)
@@ -393,6 +397,32 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       break;
     }
+    case MDX_KEY_PASTE: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        // Note copy
+        if (step < 16) {
+          return true;
+        } else {
+          // Track copy
+          opt_paste = 1;
+          opt_paste_track_handler();
+        }
+      }
+      break;
+    }
+    case MDX_KEY_CLEAR: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        // Note copy
+        if (step < 16) {
+          return true;
+        } else {
+          // Track copy
+          opt_clear = 1;
+          opt_clear_track_handler();
+        }
+      }
+      break;
+    }
     case MDX_KEY_YES: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         if (step == 255) {
@@ -444,6 +474,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
+    MD.set_rec_mode(2);
     if (recording) {
       oled_display.textbox("REC", "");
       setLed2();
@@ -455,6 +486,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   }
 
   return false;
+}
+
+void SeqStepMidiEvents::onMidiStartCallback() {
+  //Handle record down + play
+//  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+//    seq_step_page.recording = true;
+//    MD.set_rec_mode(2);
+//  }
 }
 
 void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -573,7 +613,8 @@ void SeqStepMidiEvents::setup_callbacks() {
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
-
+  //MidiClock.addOnMidiStartCallback(
+  //    this, (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = true;
 }
 
@@ -587,5 +628,7 @@ void SeqStepMidiEvents::remove_callbacks() {
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
+  //MidiClock.removeOnMidiStartCallback(
+  //    this, (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = false;
 }

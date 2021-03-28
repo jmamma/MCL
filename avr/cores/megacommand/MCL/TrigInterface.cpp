@@ -15,6 +15,7 @@ void TrigInterface::send_md_leds(TrigLEDMode mode) {
 }
 
 void TrigInterface::enable_listener() {
+  cmd_key_state = 0;
   sysex->addSysexListener(this);
 }
 
@@ -30,7 +31,6 @@ bool TrigInterface::on() {
   if (!MD.connected) {
     return false;
   }
-  cmd_key_state = 0;
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();

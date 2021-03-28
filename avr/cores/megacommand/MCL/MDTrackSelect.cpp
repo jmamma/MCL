@@ -11,7 +11,7 @@ bool MDTrackSelect::on() {
   if (!MD.connected) {
     return false;
   }
-  MD.activate_track_select();
+//  MD.activate_track_select();
   sysex->addSysexListener(this);
 
   state = true;
@@ -27,7 +27,7 @@ bool MDTrackSelect::off() {
   if (!MD.connected) {
     return false;
   }
-  MD.deactivate_track_select();
+//  MD.deactivate_track_select();
   return true;
 }
 
@@ -44,6 +44,9 @@ void MDTrackSelect::end_immediate() {
 
  MD.currentTrack = sysex->getByte(2);
  MD.currentSynthPage = sysex->getByte(3);
+ MD.global.extendedMode = sysex->getByte(4);
+ DEBUG_PRINTLN("extended");
+ DEBUG_PRINTLN( MD.global.extendedMode);
  return;
 }
 

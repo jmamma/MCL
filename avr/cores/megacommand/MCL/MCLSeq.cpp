@@ -104,7 +104,18 @@ void MCLSeq::update_params() {
 #endif
 }
 
-void MCLSeq::onMidiContinueCallback() { update_params(); }
+void seq_rec_play() {
+  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+    if (GUI.currentPage() != &seq_step_page) {
+      GUI.setPage(&seq_step_page);
+    }
+    seq_step_page.recording = true;
+    MD.set_rec_mode(2);
+  }
+}
+
+void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
@@ -138,6 +149,7 @@ void MCLSeq::onMidiStartCallback() {
     lfo_tracks[i].update_params_offset();
   }
 #endif
+  seq_rec_play();
 }
 
 void MCLSeq::onMidiStopCallback() {

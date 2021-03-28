@@ -841,7 +841,7 @@ void opt_clear_track_handler() {
 #ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR TRACK", "");
 #endif
-
+      MD.popup_text(5);
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
   }
@@ -988,6 +988,7 @@ void opt_paste_track_handler() {
 #endif
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_md_track);
+      MD.popup_text(6);
     }
 #ifdef EXT_TRACKS
     else {

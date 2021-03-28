@@ -142,9 +142,7 @@ bool MDClass::probe() {
   bool ts = md_track_select.state;
   bool ti = trig_interface.state;
 
-  if (ts) {
-    md_track_select.off();
-  }
+  md_track_select.off();
   if (ti) {
     trig_interface.off();
   }
@@ -203,13 +201,12 @@ bool MDClass::probe() {
   }
 
   activate_enhanced_gui();
+  MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
 
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
   MD.popup_text("ENHANCED");
-  if (ts) {
-    md_track_select.on();
-  }
+  md_track_select.on();
   if (ti) {
     trig_interface.on();
   } else {
