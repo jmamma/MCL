@@ -10,6 +10,7 @@
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
 #define PAGE_UNDO 64
+#define NOTE_UNDO 65
 
 class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:

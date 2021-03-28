@@ -66,9 +66,6 @@ void SeqPage::setup() { create_chars_seq(); }
 
 void SeqPage::init() {
   recording = false;
-  if (mcl_cfg.track_select == 1) {
-    md_track_select.on();
-  }
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
@@ -89,18 +86,17 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
 
+  /*
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   }
+  */
   last_rec_event = 255;
 }
 
 void SeqPage::cleanup() {
-  if (mcl_cfg.track_select == 1) {
-    md_track_select.off();
-  }
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   recording = false;

@@ -121,7 +121,6 @@ const menu_t<6> midiconfig_menu_layout PROGMEM = {
 const menu_t<4> mdconfig_menu_layout PROGMEM = {
     "MD",
     {
-        {"TRACK SELECT:",0, 2, 2, (uint8_t *) &mcl_cfg.track_select, (Page*) NULL, NULL, 13},
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, NULL, 15},
         {"CTRL CHAN:",0, 18, 2, (uint8_t *) &mcl_cfg.uart2_ctrl_mode, (Page*) NULL, NULL, 17},
         {"POLY CONFIG", 0, 0, 0, (uint8_t *) NULL, (Page*) &poly_page, NULL, 0},
