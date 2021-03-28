@@ -68,7 +68,7 @@ bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
   decoder.get8(&tempo_upper);
   decoder.get8(&tempo_lower);
   tempo = (tempo_upper << 7) | tempo_lower;
-  decoder.getb(&extendedMode);
+  decoder.get8(&extendedMode);
 
   uint8_t byte = 0;
   decoder.get8(&byte);
@@ -120,7 +120,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   decoder.get8(&tempo_upper);
   decoder.get8(&tempo_lower);
   tempo = (tempo_upper << 7) | tempo_lower;
-  decoder.getb(&extendedMode);
+  decoder.get8(&extendedMode);
 
   uint8_t byte = 0;
   decoder.get8(&byte);

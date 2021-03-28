@@ -1,17 +1,15 @@
 #include "MCL_impl.h"
 
-void TrigInterface::start() {
-
-}
+void TrigInterface::start() {}
 
 void TrigInterface::send_md_leds(TrigLEDMode mode) {
-    uint16_t led_mask = 0;
-    for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.notes[i] == 1) {
-        SET_BIT16(led_mask, i);
-      }
+  uint16_t led_mask = 0;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (note_interface.notes[i] == 1) {
+      SET_BIT16(led_mask, i);
     }
-    MD.set_trigleds(led_mask, mode);
+  }
+  MD.set_trigleds(led_mask, mode);
 }
 
 void TrigInterface::enable_listener() {
@@ -19,9 +17,7 @@ void TrigInterface::enable_listener() {
   sysex->addSysexListener(this);
 }
 
-void TrigInterface::disable_listener() {
-  sysex->removeSysexListener(this);
-}
+void TrigInterface::disable_listener() { sysex->removeSysexListener(this); }
 
 bool TrigInterface::on() {
 
@@ -54,14 +50,18 @@ bool TrigInterface::off() {
   return true;
 }
 
-void TrigInterface::end() { }
+void TrigInterface::end() {}
 
 void TrigInterface::end_immediate() {
-  //if (!state) {
+  // if (!state) {
   //  return;
   //}
- if (sysex->getByte(0) != ids[0]) { return; }
- if (sysex->getByte(1) != ids[1]) { return; }
+  if (sysex->getByte(0) != ids[0]) {
+    return;
+  }
+  if (sysex->getByte(1) != ids[1]) {
+    return;
+  }
 
   uint8_t key = sysex->getByte(2);
   bool key_release = false;
@@ -69,6 +69,11 @@ void TrigInterface::end_immediate() {
   if (key >= 0x40) {
     key_release = true;
     key -= 0x40;
+  }
+  if (key_release) {
+    CLEAR_BIT64(cmd_key_state, key);
+  } else {
+    SET_BIT64(cmd_key_state, key);
   }
 
   if (IS_BIT_SET64(ignore_next_mask, key)) {
@@ -79,20 +84,13 @@ void TrigInterface::end_immediate() {
   if (key < 16) {
     if (key_release) {
       note_interface.note_off_event(key, UART1_PORT);
-    }
-    else {
+    } else {
       note_interface.note_on_event(key, UART1_PORT);
     }
-   return;
-  }
-  if (key_release) {
-    CLEAR_BIT64(cmd_key_state, key);
-  }
-  else {
-    SET_BIT64(cmd_key_state, key);
+    return;
   }
   gui_event_t event;
-  event.source = key + 64; //EVENT_CMD
+  event.source = key + 64; // EVENT_CMD
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;
   EventRB.putp(&event);

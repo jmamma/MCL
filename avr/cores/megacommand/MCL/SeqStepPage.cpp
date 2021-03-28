@@ -344,6 +344,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     opt_midi_device_capture = midi_device;
     uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
+    if (note_interface.get_first_md_note() == 255) {
+      step = 255;
+    }
     switch (key) {
     // ENCODER BUTTONS
     case 0x10:
@@ -387,8 +390,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case MDX_KEY_COPY: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note copy
-        if (step < 16) {
-          return true;
+        if (step != 255) {
+          opt_copy_step_handler();
+        } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          opt_copy_page_handler();
+          trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_copy = 1;
@@ -400,8 +406,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case MDX_KEY_PASTE: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note copy
-        if (step < 16) {
-          return true;
+        if (step != 255) {
+          opt_paste_step_handler();
+        } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          opt_paste_page_handler();
+          trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_paste = 1;
@@ -413,8 +422,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     case MDX_KEY_CLEAR: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note copy
-        if (step < 16) {
-          return true;
+        if (step != 255) {
+          opt_clear_step = 1;
+          opt_clear_step_locks_handler();
+        } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          opt_clear_page_handler();
+          trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_clear = 1;
@@ -489,12 +502,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqStepMidiEvents::onMidiStartCallback() {
-  //Handle record down + play
-//  if (trig_interface.is_key_down(MDX_KEY_REC)) {
-    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
-//    seq_step_page.recording = true;
-//    MD.set_rec_mode(2);
-//  }
+  // Handle record down + play
+  //  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+  // trig_interface.ignoreNextEvent(MDX_KEY_REC);
+  //    seq_step_page.recording = true;
+  //    MD.set_rec_mode(2);
+  //  }
 }
 
 void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -613,8 +626,9 @@ void SeqStepMidiEvents::setup_callbacks() {
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
-  //MidiClock.addOnMidiStartCallback(
-  //    this, (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
+  // MidiClock.addOnMidiStartCallback(
+  //    this,
+  //    (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = true;
 }
 
@@ -628,7 +642,8 @@ void SeqStepMidiEvents::remove_callbacks() {
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
-  //MidiClock.removeOnMidiStartCallback(
-  //    this, (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
+  // MidiClock.removeOnMidiStartCallback(
+  //    this,
+  //    (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = false;
 }

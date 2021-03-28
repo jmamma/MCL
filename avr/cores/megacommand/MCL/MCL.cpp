@@ -111,8 +111,7 @@ bool mcl_handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN(MDX_KEY_REC);
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_REC:
-        setLed2();
+      case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page) {
           GUI.setPage(&seq_step_page);
         } else {
@@ -125,6 +124,27 @@ bool mcl_handleEvent(gui_event_t *event) {
           }
         }
         return true;
+      }
+      case MDX_KEY_COPY: {
+        if (GUI.currentPage() == &seq_step_page)
+          break;
+        opt_copy = 2;
+        opt_copy_track_handler();
+        break;
+      }
+      case MDX_KEY_PASTE: {
+        if (GUI.currentPage() == &seq_step_page)
+          break;
+        opt_paste = 2;
+        opt_paste_track_handler();
+        break;
+      }
+      case MDX_KEY_CLEAR: {
+        if (GUI.currentPage() == &seq_step_page)
+          break;
+        opt_clear = 2;
+        opt_clear_track_handler();
+      }
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {

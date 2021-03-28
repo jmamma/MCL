@@ -9,6 +9,7 @@
 
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
+#define PAGE_UNDO 64
 
 class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
@@ -32,6 +33,8 @@ extern uint8_t opt_reverse;
 extern uint8_t opt_clear_step;
 extern uint8_t opt_length;
 extern uint8_t opt_channel;
+extern uint8_t opt_undo;
+extern uint8_t opt_undo_track;
 
 extern MidiDevice *opt_midi_device_capture;
 extern uint16_t trigled_mask;
@@ -41,6 +44,7 @@ extern void opt_speed_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler();
+extern void opt_copy_track_handler(uint8_t op = 255);
 extern void opt_paste_track_handler();
 extern void opt_shift_track_handler();
 extern void opt_reverse_track_handler();
@@ -51,6 +55,11 @@ extern void opt_clear_step_locks_handler();
 extern void opt_mask_handler();
 extern void opt_length_handler();
 extern void opt_channel_handler();
+extern void opt_clear_page_handler();
+extern void opt_copy_page_handler(uint8_t op);
+extern void opt_copy_page_handler();
+extern void opt_paste_page_handler();
+extern void opt_clear_step_handler();
 
 extern void seq_menu_handler();
 extern void step_menu_handler();

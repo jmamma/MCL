@@ -858,6 +858,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
 }
 
 void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
+  clear_step_locks(n);
   timing[n] = step->timing;
 
   for (uint8_t a = 0; a < NUM_LOCKS; a++) {
