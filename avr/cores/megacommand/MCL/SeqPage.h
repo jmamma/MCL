@@ -45,7 +45,7 @@ extern void opt_speed_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler();
-extern void opt_copy_track_handler(uint8_t op = 255);
+extern void opt_copy_track_handler(uint8_t op);
 extern void opt_paste_track_handler();
 extern void opt_shift_track_handler();
 extern void opt_reverse_track_handler();
@@ -107,7 +107,7 @@ public:
   }
   void config_as_trackedit();
   void config_as_lockedit();
-  void config_mask_info();
+  void config_mask_info(bool silent = true);
   void create_chars_seq();
   void draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask, const uint8_t step_count, const uint8_t length, const bool show_current_step = true);
   void draw_lock_mask(const uint8_t offset, const bool show_current_step = true);

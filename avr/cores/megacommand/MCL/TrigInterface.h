@@ -7,6 +7,9 @@
 #define MDX_KEY_TRIG1 0x00
 #define MDX_KEY_ENCBUTTON1 0x10
 #define MDX_KEY_BANKA 0x1A
+#define MDX_KEY_BANKB 0x1B
+#define MDX_KEY_BANKC 0x1C
+#define MDX_KEY_BANKD 0x1D
 #define MDX_KEY_BANKGROUP 0x1E
 #define MDX_KEY_SONG 0x1F
 #define MDX_KEY_REC 0x20

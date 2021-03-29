@@ -105,7 +105,7 @@ void ElektronDevice::popup_text(char *str) {
   uint8_t data[66] = {0x70, 0x3B };
   uint8_t len = strlen(str);
   strcpy(data + 2, str);
-  sendRequest(data, 2 + len);
+  sendRequest(data, 2 + len + 1);
   //waitBlocking();
 }
 

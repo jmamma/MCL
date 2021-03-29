@@ -103,7 +103,7 @@ void SeqPage::cleanup() {
   clearLed2();
 }
 
-void SeqPage::config_mask_info() {
+void SeqPage::config_mask_info(bool silent) {
   switch (mask_type) {
   case MASK_PATTERN:
     strcpy(info2, "TRIG");
@@ -117,6 +117,11 @@ void SeqPage::config_mask_info() {
   case MASK_MUTE:
     strcpy(info2, "MUTE");
     break;
+  }
+  if (!silent) {
+    char str[16] = "EDIT ";
+    strcat(str,info2);
+    MD.popup_text(str);
   }
 }
 
@@ -795,7 +800,7 @@ void opt_channel_handler() {
   }
 }
 
-void opt_mask_handler() { seq_step_page.config_mask_info(); }
+void opt_mask_handler() { seq_step_page.config_mask_info(false); }
 
 void opt_trackid_handler() {
   opt_seqpage_capture->select_track(opt_midi_device_capture, opt_trackid - 1);

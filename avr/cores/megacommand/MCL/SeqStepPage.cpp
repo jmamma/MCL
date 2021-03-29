@@ -449,6 +449,46 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       break;
     }
+    case MDX_KEY_BANKB: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (mask_type == MASK_LOCK) {
+            mask_type = MASK_PATTERN;
+          } else {
+            mask_type = MASK_LOCK;
+          }
+          config_mask_info(false);
+        }
+      }
+      break;
+    }
+    case MDX_KEY_BANKC: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (mask_type == MASK_MUTE) {
+            mask_type = MASK_PATTERN;
+          } else {
+            mask_type = MASK_MUTE;
+          }
+          config_mask_info(false);
+        }
+      }
+      break;
+    }
+
+    case MDX_KEY_BANKD: {
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (mask_type == MASK_SLIDE) {
+            mask_type = MASK_PATTERN;
+          } else {
+            mask_type = MASK_SLIDE;
+          }
+          config_mask_info(false);
+        }
+      }
+      break;
+    }
     }
     return true;
   }
