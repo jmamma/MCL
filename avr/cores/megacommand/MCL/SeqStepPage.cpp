@@ -324,7 +324,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //      }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
-      if (md_micro) { MD.draw_close_microtiming(); md_micro = false; }
+      if (md_micro) {
+        MD.draw_close_microtiming();
+        md_micro = false;
+      }
       if (last_md_track < 15) {
         show_pitch = false;
       }
@@ -500,35 +503,42 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       break;
     }
     case MDX_KEY_UP: {
-      if (step == 255) {
-        return;
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (step == 255) {
+          return;
+        }
+        seq_param1.cur += 1;
+        return true;
       }
-      seq_param1.cur += 1;
-      return true;
     }
     case MDX_KEY_DOWN: {
-      if (step == 255) {
-        return;
-      }
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (step == 255) {
+          return;
+        }
         seq_param1.cur -= 1;
 
-      return;
+        return;
+      }
     }
     case MDX_KEY_LEFT: {
-      if (step == 255) {
-        return;
-      }
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (step == 255) {
+          return;
+        }
 
         seq_param2.cur -= 1;
-      return true;
+        return true;
+      }
     }
     case MDX_KEY_RIGHT: {
-      if (step == 255) {
-        return;
-      }
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+        if (step == 255) {
+          return;
+        }
         seq_param2.cur += 1;
-
-      return;
+      }
+      return true;
     }
       return true;
     }
