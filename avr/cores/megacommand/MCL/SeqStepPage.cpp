@@ -166,6 +166,11 @@ void SeqStepPage::loop() {
           active_track.steps[step].cond_plock = cond_plock;
           active_track.timing[step] = utiming;
 
+          if (seq_param2.hasChanged()) {
+            md_micro = true;
+            MD.draw_microtiming(active_track.speed, utiming);
+          }
+
           switch (mask_type) {
           case MASK_LOCK:
             active_track.enable_step_locks(step);
@@ -315,6 +320,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       //      }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
+      if (md_micro) { MD.draw_close_microtiming(); md_micro = false; }
       if (last_md_track < 15) {
         show_pitch = false;
       }
@@ -489,8 +495,24 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       break;
     }
+    case MDX_KEY_LEFT: {
+      if (step == 255) {
+        return;
+      }
+
+        seq_param2.cur -= 1;
+      return true;
     }
-    return true;
+    case MDX_KEY_RIGHT: {
+      if (step == 255) {
+        return;
+      }
+        seq_param2.cur += 1;
+
+      return;
+    }
+      return true;
+    }
   }
 
   if (recording) {

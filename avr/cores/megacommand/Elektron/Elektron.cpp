@@ -101,6 +101,18 @@ void ElektronDevice::popup_text(uint8_t action_string) {
   //waitBlocking();
 }
 
+void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
+  uint8_t data[5] = {0x70, 0x3C, 0x20, speed, timing};
+  sendRequest(data, 5);
+  //waitBlocking();
+}
+void ElektronDevice::draw_close_microtiming() {
+  uint8_t data[3] = {0x70, 0x3C, 0x21};
+  sendRequest(data, 3);
+  //waitBlocking();
+}
+
+
 void ElektronDevice::popup_text(char *str) {
   uint8_t data[66] = {0x70, 0x3B };
   uint8_t len = strlen(str);

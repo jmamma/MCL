@@ -436,6 +436,8 @@ public:
 
   void popup_text(uint8_t action_string);
   void popup_text(char *str);
+  void draw_close_microtiming();
+  void draw_microtiming(uint8_t speed, uint8_t timing);
 
   void activate_trig_interface();
   void deactivate_trig_interface();

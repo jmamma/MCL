@@ -80,6 +80,7 @@ public:
   static uint8_t velocity;
   static uint8_t cond;
   static uint8_t slide;
+  static uint8_t md_micro;
 
   static MidiDevice* midi_device;
 

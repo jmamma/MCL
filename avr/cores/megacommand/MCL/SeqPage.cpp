@@ -19,6 +19,7 @@ uint8_t SeqPage::last_pianoroll_mode = 0;
 uint8_t SeqPage::velocity = 100;
 uint8_t SeqPage::cond = 0;
 uint8_t SeqPage::slide = true;
+uint8_t SeqPage::md_micro = false;
 
 bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
@@ -224,13 +225,18 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-
+    uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
+    if (note_interface.get_first_md_note() == 255) {
+      step = 255;
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_LEFT:
+        if (step != 255) { return; }
         mcl_seq.md_tracks[last_md_track].rotate_left();
         return true;
       case MDX_KEY_RIGHT:
+        if (step != 255) { return; }
         mcl_seq.md_tracks[last_md_track].rotate_right();
         return true;
       }
