@@ -232,13 +232,20 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_LEFT:
-        if (step != 255) { return; }
+        if (step != 255) { return false; }
         mcl_seq.md_tracks[last_md_track].rotate_left();
         return true;
       case MDX_KEY_RIGHT:
-        if (step != 255) { return; }
+        if (step != 255) { return false; }
         mcl_seq.md_tracks[last_md_track].rotate_right();
         return true;
+      case MDX_KEY_UP:
+        if (step != 255) { return false; }
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          mcl_seq.md_tracks[last_md_track].reverse();
+        return true;
+        }
+        return false;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
@@ -705,30 +712,35 @@ uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
   return condition;
 }
 
+
 void SeqPage::draw_knob_conditional(uint8_t cond) {
   char K[4];
+  conditional_str(K, cond);
+  draw_knob(0, "COND", K);
+}
+
+void SeqPage::conditional_str(char *str, uint8_t cond) {
   if (cond == 0) {
-    strcpy(K, "L1");
+    strcpy(str, "L1");
   } else {
     if (cond > NUM_TRIG_CONDITIONS) {
       cond = cond - NUM_TRIG_CONDITIONS;
     }
 
     if (cond <= 8) {
-      strcpy(K, "L  ");
-      K[1] = cond + '0';
+      strcpy(str, "L  ");
+      str[1] = cond + '0';
     } else if (cond <= 13) {
-      strcpy(K, "P  ");
+      strcpy(str, "P  ");
       uint8_t prob[5] = {1, 2, 5, 7, 9};
-      K[1] = prob[cond - 9] + '0';
+      str[1] = prob[cond - 9] + '0';
     } else if (cond == 14) {
-      strcpy(K, "1S ");
+      strcpy(str, "1S ");
     }
     if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
-      K[2] = '^';
+      str[2] = '^';
     }
   }
-  draw_knob(0, "COND", K);
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {

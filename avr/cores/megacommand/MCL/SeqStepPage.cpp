@@ -170,7 +170,11 @@ void SeqStepPage::loop() {
             md_micro = true;
             MD.draw_microtiming(active_track.speed, utiming);
           }
-
+          if (seq_param1.hasChanged()) {
+            char str[4];
+            conditional_str(str, seq_param1.getValue());
+            MD.popup_text(str);
+          }
           switch (mask_type) {
           case MASK_LOCK:
             active_track.enable_step_locks(step);
@@ -494,6 +498,21 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
       }
       break;
+    }
+    case MDX_KEY_UP: {
+      if (step == 255) {
+        return;
+      }
+      seq_param1.cur += 1;
+      return true;
+    }
+    case MDX_KEY_DOWN: {
+      if (step == 255) {
+        return;
+      }
+        seq_param1.cur -= 1;
+
+      return;
     }
     case MDX_KEY_LEFT: {
       if (step == 255) {

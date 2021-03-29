@@ -117,6 +117,7 @@ public:
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
+  void conditional_str(char *str, uint8_t cond);
   void draw_knob_conditional(uint8_t cond);
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
