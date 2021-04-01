@@ -424,6 +424,8 @@ public:
 
   bool get_fw_caps();
 
+  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count);
+
   void activate_encoder_interface(uint8_t *params);
   void deactivate_encoder_interface();
 

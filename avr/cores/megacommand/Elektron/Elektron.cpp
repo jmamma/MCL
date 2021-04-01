@@ -66,6 +66,11 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   waitBlocking();
 }
 
+void ElektronDevice::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count) {
+  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count };
+  sendRequest(data, sizeof(data));
+}
+
 void ElektronDevice::deactivate_encoder_interface() {
   uint8_t data[3] = {0x70, 0x36, 0x00};
   sendRequest(data, sizeof(data));
