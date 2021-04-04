@@ -42,9 +42,26 @@ void MDTrackSelect::end_immediate() {
  if (sysex->getByte(0) != ids[0]) { return; }
  if (sysex->getByte(1) != ids[1]) { return; }
 
- MD.currentTrack = sysex->getByte(2);
  MD.currentSynthPage = sysex->getByte(3);
  MD.global.extendedMode = sysex->getByte(4);
+ if (sysex->recordLen == 7) {
+   if (GUI.currentPage() == &seq_step_page) {
+     MD.currentTrack = sysex->getByte(2);
+     mcl_seq.md_tracks[MD.currentTrack].set_length(sysex->getByte(5));
+     mcl_seq.md_tracks[MD.currentTrack].speed = sysex->getByte(6);
+     seq_step_page.config_encoders();
+     setLed2();
+   }
+   else if (GUI.currentPage() == &grid_page)  {
+     for (uint8_t n = 0; n < 16; n++) {
+       mcl_seq.md_tracks[n].set_length(sysex->getByte(5));
+       mcl_seq.md_tracks[n].set_speed(sysex->getByte(6));
+     }
+   }
+ }
+ else {
+   MD.currentTrack = sysex->getByte(2);
+ }
  DEBUG_PRINTLN("extended");
  DEBUG_PRINTLN( MD.global.extendedMode);
  return;

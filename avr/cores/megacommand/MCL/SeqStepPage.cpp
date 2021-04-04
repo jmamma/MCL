@@ -578,11 +578,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;
-    MD.set_rec_mode(2);
+
     if (recording) {
+      MD.set_rec_mode(2);
       oled_display.textbox("REC", "");
       setLed2();
     } else {
+      MD.set_rec_mode(1);
       clearLed2();
     }
     queue_redraw();
