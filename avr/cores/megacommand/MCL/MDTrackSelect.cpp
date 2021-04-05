@@ -31,19 +31,13 @@ bool MDTrackSelect::off() {
   return true;
 }
 
-void MDTrackSelect::end() { }
-
-
-void MDTrackSelect::end_immediate() {
+void MDTrackSelect::end() {
   if (!state) {
     return;
   }
-
  if (sysex->getByte(0) != ids[0]) { return; }
  if (sysex->getByte(1) != ids[1]) { return; }
 
- MD.currentSynthPage = sysex->getByte(3);
- MD.global.extendedMode = sysex->getByte(4);
  if (sysex->recordLen == 7) {
    if (GUI.currentPage() == &seq_step_page) {
      if (seq_step_page.recording) { goto update_pattern; }
@@ -61,11 +55,20 @@ void MDTrackSelect::end_immediate() {
      }
    }
  }
- else {
-   MD.currentTrack = sysex->getByte(2);
- }
- DEBUG_PRINTLN("extended");
- DEBUG_PRINTLN( MD.global.extendedMode);
+
+}
+
+
+void MDTrackSelect::end_immediate() {
+  if (!state) {
+    return;
+  }
+ if (sysex->getByte(0) != ids[0]) { return; }
+ if (sysex->getByte(1) != ids[1]) { return; }
+
+ if (sysex->recordLen != 7) { MD.currentTrack = sysex->getByte(2); }
+ MD.currentSynthPage = sysex->getByte(3);
+ MD.global.extendedMode = sysex->getByte(4);
  return;
 }
 
