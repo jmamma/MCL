@@ -60,6 +60,9 @@ void SeqStepPage::init() {
   MD.set_rec_mode(1);
   MD.set_seq_page(page_select);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
+  auto &active_track = mcl_seq.md_tracks[last_md_track];
+  MD.sync_seqtrack(active_track.length, active_track.speed,
+                     active_track.step_count);
   config();
   note_interface.state = true;
   reset_on_release = false;

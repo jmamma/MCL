@@ -241,6 +241,11 @@ void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
         set_bit = true;
       }
       break;
+    case MASK_LOCKS_ON_STEP:
+      if (steps[i].locks) {
+        set_bit = true;
+      }
+      break;
     case MASK_LOCK:
       if (steps[i].locks_enabled) {
         set_bit = true;

@@ -39,6 +39,7 @@ extern uint8_t opt_undo_track;
 
 extern MidiDevice *opt_midi_device_capture;
 extern uint16_t trigled_mask;
+extern uint16_t locks_on_step_mask;
 
 extern void opt_trackid_handler();
 extern void opt_speed_handler();

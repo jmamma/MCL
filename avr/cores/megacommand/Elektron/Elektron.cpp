@@ -156,14 +156,14 @@ void ElektronDevice::undokit_sync() {
   sendRequest(data, sizeof(data));
 }
 
-void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
+void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode, uint8_t blink) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
   // trigleds[0..6]
   data[2] = bitmask & 0x7F;
   // trigleds[7..13]
   data[3] = (bitmask >> 7) & 0x7F;
   // trigleds[14..15]
-  data[4] = (bitmask >> 14) | (mode << 2);
+  data[4] = (bitmask >> 14) | (mode << 2) | (blink << 4);
   sendRequest(data, sizeof(data));
   //waitBlocking();
 }
