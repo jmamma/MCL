@@ -41,7 +41,7 @@ extern MCLEncoder input_encoder2;
 extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
-extern MenuPage<6> file_menu_page;
+extern MenuPage<5> file_menu_page;
 
 
 #endif /* MCLMENUS_H__ */

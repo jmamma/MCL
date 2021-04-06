@@ -64,9 +64,7 @@ const menu_option_t MENU_OPTIONS[] PROGMEM = {
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
   // 80: MIDI_DEVICE
   {0, "GENER"}, {1, "ELEKT"},
-  // 82: WAV EDIT
-  {0, "LEFT"}, {1, "RIGHT"}, {2, "STEREO"},
-  // 85: EXT MIDI
+  // 82: EXT MIDI
   {0, "OFF"}, {1, "IN"}, {2, "OUT"}, {3, "IN+OUT"},
 };
 
@@ -117,7 +115,7 @@ const menu_t<7> midiconfig_menu_layout PROGMEM = {
         {"CLK SEND:", 0,  2, 2, (uint8_t *) &mcl_cfg.clock_send, (Page*) NULL, NULL, 8},
 
         {"MIDI FWD:", 0, 3, 3, (uint8_t *) &mcl_cfg.midi_forward, (Page*) NULL, NULL, 10},
-        {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 85},
+        {"EXT MIDI:", 0, 4, 4, (uint8_t *) &mcl_cfg.extmidi, (Page*) NULL, NULL, 82},
     },
 
     (&mclsys_apply_config),
@@ -153,10 +151,9 @@ const menu_t<1> mclconfig_menu_layout PROGMEM = {
     (&mclsys_apply_config),
 };
 
-const menu_t<6> file_menu_layout PROGMEM = {
+const menu_t<5> file_menu_layout PROGMEM = {
     "FILE",
     {
-        {"EDIT WAV", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"NEW DIR.", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"DELETE", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
         {"RENAME", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, NULL, 0},
@@ -184,5 +181,5 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
 MCLEncoder file_menu_encoder(0, 5, ENCODER_RES_PAT);
-MenuPage<6> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
+MenuPage<5> file_menu_page(&file_menu_layout, &config_param1, &file_menu_encoder);
 

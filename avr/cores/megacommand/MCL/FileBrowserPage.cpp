@@ -59,12 +59,11 @@ void FileBrowserPage::query_sample_slots() {
 
   sysex->removeSysexListener(this);
 }
-#define FM_EDIT_WAV 0
-#define FM_NEW_FOLDER 1
-#define FM_DELETE 2
-#define FM_RENAME 3
-#define FM_OVERWRITE 4
-#define FM_CANCEL 5
+#define FM_NEW_FOLDER 0
+#define FM_DELETE 1
+#define FM_RENAME 2
+#define FM_OVERWRITE 3
+#define FM_CANCEL 4
 
 void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {
@@ -84,7 +83,6 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
   file_menu_page.menu.enable_entry(FM_OVERWRITE, show_overwrite);
   file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
-  file_menu_page.menu.enable_entry(FM_EDIT_WAV, show_edit_wav);
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
@@ -368,10 +366,6 @@ void FileBrowserPage::_handle_filemenu() {
   uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
-  case FM_EDIT_WAV: // edit wav
-    wav_edit_page.open(buf1);
-    GUI.pushPage(&wav_edit_page);
-    break;
   case FM_NEW_FOLDER: // new folder
     create_folder();
     break;

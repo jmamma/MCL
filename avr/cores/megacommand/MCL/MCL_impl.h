@@ -56,7 +56,6 @@
 #include "SeqPages.h"
 #include "AuxPages.h"
 #include "GridPages.h"
-#include "WavEditPage.h"
 
 #include "GridEncoder.h"
 #include "MCLEncoder.h"
