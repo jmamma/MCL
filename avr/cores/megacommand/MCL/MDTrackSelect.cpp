@@ -45,7 +45,6 @@ void MDTrackSelect::end() {
      mcl_seq.md_tracks[MD.currentTrack].set_length(sysex->getByte(5));
      mcl_seq.md_tracks[MD.currentTrack].speed = sysex->getByte(6);
      seq_step_page.config_encoders();
-     setLed2();
    }
    else if (GUI.currentPage() == &grid_page)  {
      update_pattern:

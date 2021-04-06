@@ -887,10 +887,10 @@ void opt_clear_track_handler() {
   }
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
+      MD.popup_text(2);
 #ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR MD ", "TRACKS");
 #endif
-      MD.popup_text(2);
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }

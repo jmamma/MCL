@@ -59,6 +59,7 @@ void SeqStepPage::init() {
   trig_interface.on();
   MD.set_rec_mode(1);
   MD.set_seq_page(page_select);
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
   config();
   note_interface.state = true;
   reset_on_release = false;
@@ -268,14 +269,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
 
+      if (step >= active_track.length) {
+        return true;
+      }
+
       // active_track.send_parameter_locks(step, true);
       MD.activate_encoder_interface(step);
       send_locks(step);
       show_pitch = true;
-
-      if (step >= active_track.length) {
-        return true;
-      }
 
       seq_param2.max =
           mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
@@ -659,28 +660,30 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   for (int i = 0; i < 16; i++) {
     if ((note_interface.notes[i] == 1)) {
       step = i + (SeqPage::page_select * 16);
-      if (active_track.set_track_locks(step, track_param, value)) {
-        store_lock = 0;
-        trig_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 +
-                                       16);
-      } else {
-        store_lock = 1;
-      }
+      if (step < active_track.length) {
+        if (active_track.set_track_locks(step, track_param, value)) {
+          store_lock = 0;
+          trig_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 +
+                                         16);
+        } else {
+          store_lock = 1;
+        }
 
-      active_track.enable_step_locks(step);
-      if (seq_step_page.mask_type == MASK_PATTERN) {
-        uint8_t utiming = (seq_param2.cur + 0);
-        bool cond_plock;
-        uint8_t condition = seq_step_page.translate_to_step_conditional(
-            seq_param1.cur, &cond_plock);
+        active_track.enable_step_locks(step);
+        if (seq_step_page.mask_type == MASK_PATTERN) {
+          uint8_t utiming = (seq_param2.cur + 0);
+          bool cond_plock;
+          uint8_t condition = seq_step_page.translate_to_step_conditional(
+              seq_param1.cur, &cond_plock);
 
-        active_track.steps[step].trig = true;
-        active_track.steps[step].cond_id = condition;
-        active_track.steps[step].cond_plock = cond_plock;
-        active_track.timing[step] = utiming;
+          active_track.steps[step].trig = true;
+          active_track.steps[step].cond_id = condition;
+          active_track.steps[step].cond_plock = cond_plock;
+          active_track.timing[step] = utiming;
 
-      } else {
-        // SET_BIT64_P(mask, step);
+        } else {
+          // SET_BIT64_P(mask, step);
+        }
       }
     }
   }
