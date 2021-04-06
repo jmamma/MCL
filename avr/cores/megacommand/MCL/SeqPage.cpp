@@ -706,7 +706,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     if (led_mask != trigled_mask) {
       trigled_mask = led_mask;
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
-      if (MASK_MUTE) {
+      if (mask_type == MASK_MUTE) {
       MD.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
