@@ -63,7 +63,7 @@ public:
   uint8_t unused;
 
   uint16_t tempo;
-  bool extendedMode;
+  uint8_t extendedMode;
   bool clockIn;
   bool clockOut;
   bool transportIn;
@@ -188,7 +188,7 @@ public:
   bool get_tonal();
 
   uint32_t get_model_raw() {
-    return model;
+    return model & 0x200FF; //2^17 + 255
   }
   /* @} */
 };

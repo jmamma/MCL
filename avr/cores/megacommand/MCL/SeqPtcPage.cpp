@@ -397,9 +397,9 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
     return 255;
   }
 
-  uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]) +
-                          ptc_param_finetune.getValue() - 32;
-  return machine_pitch;
+  uint8_t machine_pitch = max((int8_t) 0, (int8_t) pgm_read_byte(&tuning->tuning[note_num]) +
+                          (int8_t)ptc_param_finetune.getValue() - 32);
+  return min(machine_pitch,127);
 }
 
 void SeqPtcPage::trig_md(uint8_t note_num) {
@@ -838,11 +838,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     recording = !recording;
     if (recording) {
+      MD.set_rec_mode(2);
       setLed2();
       oled_display.textbox("REC", "");
     }
     else {
-    clearLed2();
+      MD.set_rec_mode(1);
+      clearLed2();
     }
     return true;
   }
@@ -910,7 +912,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num, MidiDevice* device) {
 
 
 uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device) {
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num, device) + ptc_param_oct.cur * 12;
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num, device);
   if (pitch == 255) { return 255; }
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
@@ -920,8 +922,8 @@ uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device) 
   else {
     CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
   }
+  pitch += ptc_param_oct.cur * 12;
   return pitch;
-
 }
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -1086,7 +1088,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t display_polylink = 0;
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
-
+  if (track_param == 32) { return; } //don't process mute
   if ((seq_ptc_page.poly_max > 1)) {
     if (IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
 

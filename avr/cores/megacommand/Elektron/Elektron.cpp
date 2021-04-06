@@ -12,7 +12,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
       buf[i++] = sysex_protocol.header[n];
     }
     for (uint8_t n = 0; n < len; n++) {
-      buf[i++] = data[n];
+      buf[i++] = data[n] & 0x7F;
     }
     buf[i++] = 0xF7;
     uart->m_putc(buf, i);
@@ -47,16 +47,96 @@ bool ElektronDevice::get_fw_caps() {
   return false;
 }
 
+void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+  uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
+
+  uint8_t mod7 = 0;
+  uint8_t cnt = 0;
+
+  for (uint8_t n = 0; n < 24; n++) {
+    if (params[n] != 255) {
+       data[3 + cnt] |= (1 << mod7);
+       data[3 + 4 + n] = params[n];
+
+     }
+     mod7++;
+     if (mod7 == 7) { mod7 = 0; cnt++; }
+  }
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count) {
+  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count };
+  sendRequest(data, sizeof(data));
+}
+
+void ElektronDevice::deactivate_encoder_interface() {
+  uint8_t data[3] = {0x70, 0x36, 0x00};
+  sendRequest(data, sizeof(data));
+  waitBlocking();
+}
+
+void ElektronDevice::activate_enhanced_gui() {
+  uint8_t data[3] = {0x70, 0x37, 0x01};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::deactivate_enhanced_gui() {
+  uint8_t data[3] = {0x70, 0x37, 0x00};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::set_seq_page(uint8_t page) {
+  uint8_t data[3] = {0x70, 0x38, page };
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+
+void ElektronDevice::set_rec_mode(uint8_t mode) {
+  uint8_t data[3] = {0x70, 0x3A, mode};
+  sendRequest(data, sizeof(data));
+  //waitBlocking();
+}
+void ElektronDevice::popup_text(uint8_t action_string) {
+  uint8_t data[3] = {0x70, 0x3B, action_string};
+  sendRequest(data, 3);
+  //waitBlocking();
+}
+
+void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
+  uint8_t data[5] = {0x70, 0x3C, 0x20, speed, timing};
+  sendRequest(data, 5);
+  //waitBlocking();
+}
+void ElektronDevice::draw_close_microtiming() {
+  uint8_t data[3] = {0x70, 0x3C, 0x21};
+  sendRequest(data, 3);
+  //waitBlocking();
+}
+
+
+void ElektronDevice::popup_text(char *str) {
+  uint8_t data[66] = {0x70, 0x3B };
+  uint8_t len = strlen(str);
+  strcpy(data + 2, str);
+  sendRequest(data, 2 + len + 1);
+  //waitBlocking();
+}
+
+
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::deactivate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x00};
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::activate_track_select() {
@@ -76,14 +156,14 @@ void ElektronDevice::undokit_sync() {
   sendRequest(data, sizeof(data));
 }
 
-void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode) {
+void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode, uint8_t blink) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};
   // trigleds[0..6]
   data[2] = bitmask & 0x7F;
   // trigleds[7..13]
   data[3] = (bitmask >> 7) & 0x7F;
   // trigleds[14..15]
-  data[4] = (bitmask >> 14) | (mode << 2);
+  data[4] = (bitmask >> 14) | (mode << 2) | (blink << 4);
   sendRequest(data, sizeof(data));
   //waitBlocking();
 }

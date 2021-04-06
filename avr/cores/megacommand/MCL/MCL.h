@@ -20,7 +20,7 @@
 #endif
 
 #define VERSION 3010
-#define VERSION_STR "3.10"
+#define VERSION_STR "3.10d"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -57,3 +57,4 @@ public:
 
 extern MCL mcl;
 
+bool mcl_handleEvent(gui_event_t *event);

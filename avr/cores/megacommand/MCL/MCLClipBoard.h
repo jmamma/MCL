@@ -19,7 +19,7 @@ public:
 
   Grid grids[NUM_GRIDS];
 
-  MDSeqStep step;
+  MDSeqStep steps[16];
 
   bool init();
   bool open();

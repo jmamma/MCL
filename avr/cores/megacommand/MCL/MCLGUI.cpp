@@ -483,9 +483,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   }
 
   uint8_t x = x_pos;
-  char K[4];
-  strcpy(K, "--");
-  K[3] = '\0';
+  char K[4] = "--";
 
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {

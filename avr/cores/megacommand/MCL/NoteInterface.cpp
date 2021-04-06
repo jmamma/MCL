@@ -20,7 +20,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     DEBUG_PRINTLN("note interface disabled");
     return;
   }
- if (note_num > NI_MAX_NOTES) {
+  if (note_num > NI_MAX_NOTES) {
     return;
   }
   if (notes[note_num] != 1) {
@@ -30,8 +30,8 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
     note_hold[port] = slowclock;
   }
   if (IS_BIT_SET64(ignore_next_mask, note_num)) {
-     CLEAR_BIT64(ignore_next_mask, note_num);
-     return;
+    CLEAR_BIT64(ignore_next_mask, note_num);
+    return;
   }
   gui_event_t event;
   event.source = note_num + 128;
@@ -43,11 +43,11 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
- DEBUG_PRINTLN(note_num);
+  DEBUG_PRINTLN(note_num);
   notes[note_num] = 3;
   if (IS_BIT_SET64(ignore_next_mask, note_num)) {
-     CLEAR_BIT64(ignore_next_mask, note_num);
-     return;
+    CLEAR_BIT64(ignore_next_mask, note_num);
+    return;
   }
 
   DEBUG_PRINTLN(F("note off"));
@@ -72,6 +72,17 @@ uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
   return 255;
 }
 
+uint8_t NoteInterface::get_first_md_note() {
+  uint8_t note = 255;
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    if (notes[n] == 1) {
+      note = n;
+      break;
+    }
+  }
+  return note;
+}
+
 bool NoteInterface::notes_all_off_md() {
   bool all_notes_off = false;
   uint8_t a = 0;
@@ -84,15 +95,11 @@ bool NoteInterface::notes_all_off_md() {
       b++;
     }
   }
-  DEBUG_PRINTLN(a);
-  DEBUG_PRINTLN(b);
   if ((a == 0) && (b > 0)) {
     all_notes_off = true;
   }
   return all_notes_off;
 }
-
-
 
 bool NoteInterface::notes_all_off() {
   bool all_notes_off = false;
@@ -106,8 +113,6 @@ bool NoteInterface::notes_all_off() {
       b++;
     }
   }
-  DEBUG_PRINTLN(a);
-  DEBUG_PRINTLN(b);
   if ((a == 0) && (b > 0)) {
     all_notes_off = true;
   }
@@ -121,7 +126,7 @@ uint8_t NoteInterface::notes_count_on() {
       a++;
     }
   }
- return a;
+  return a;
 }
 
 uint8_t NoteInterface::notes_count_off() {
@@ -176,7 +181,8 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART2_PORT)->id != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT)->id !=
+      note_interface.uart2_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
@@ -196,7 +202,8 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
-  if (midi_active_peering.get_device(UART2_PORT)->id != note_interface.uart2_device) {
+  if (midi_active_peering.get_device(UART2_PORT)->id !=
+      note_interface.uart2_device) {
     return;
   }
 

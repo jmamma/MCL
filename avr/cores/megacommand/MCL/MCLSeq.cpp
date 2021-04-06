@@ -104,7 +104,19 @@ void MCLSeq::update_params() {
 #endif
 }
 
-void MCLSeq::onMidiContinueCallback() { update_params(); }
+void seq_rec_play() {
+  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+    if (GUI.currentPage() != &seq_step_page && GUI.currentPage() != &seq_param_page && GUI.currentPage() != &seq_ptc_page) {
+      GUI.setPage(&seq_step_page);
+    }
+    seq_step_page.recording = true;
+    setLed2();
+    MD.set_rec_mode(2);
+  }
+}
+
+void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
@@ -138,6 +150,7 @@ void MCLSeq::onMidiStartCallback() {
     lfo_tracks[i].update_params_offset();
   }
 #endif
+  seq_rec_play();
 }
 
 void MCLSeq::onMidiStopCallback() {
@@ -224,9 +237,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
+    if (track_param > 23) { return; } //ignore level/mute
+
     mcl_seq.md_tracks[track].update_param(track_param, value);
 #ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {

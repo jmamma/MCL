@@ -142,9 +142,7 @@ bool MDClass::probe() {
   bool ts = md_track_select.state;
   bool ti = trig_interface.state;
 
-  if (ts) {
-    md_track_select.off();
-  }
+  md_track_select.off();
   if (ti) {
     trig_interface.off();
   }
@@ -202,11 +200,13 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(250);
   }
 
+  activate_enhanced_gui();
+  MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
+
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
-  if (ts) {
-    md_track_select.on();
-  }
+  MD.popup_text("ENHANCED");
+  md_track_select.on();
   if (ti) {
     trig_interface.on();
   } else {
@@ -560,18 +560,18 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i] += 2;
   }
   i++;
-   memcpy(data + i,machine->params,24);
-   i += 24;
+  memcpy(data + i,machine->params,24);
+  i += 24;
 
-   memcpy(data + i,&machine->lfo, 5);
-   i += 5;
-   if (machine->trigGroup == 255) { machine->trigGroup = 127; }
-   if (machine->muteGroup == 255) { machine->muteGroup = 127; }
-   data[i++] = machine->trigGroup;
-   data[i++] = machine->muteGroup;
-   bool set_level = false;
-   if (level != 255) {  data[i++] = level; set_level = true; }
-   if (send) { insertMachineInKit(track, machine, set_level); }
+  memcpy(data + i,&machine->lfo, 5);
+  i += 5;
+  if (machine->trigGroup > 15) { machine->trigGroup = 127; }
+  if (machine->muteGroup > 15) { machine->muteGroup = 127; }
+  data[i++] = machine->trigGroup;
+  data[i++] = machine->muteGroup;
+  bool set_level = false;
+  if (level != 255) {  data[i++] = level; set_level = true; }
+  if (send) { insertMachineInKit(track, machine, set_level); }
   return sendRequest(data, i, send);
 }
 
@@ -615,103 +615,12 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   MDKit *kit_ = &kit;
 
-  // Compare raw model data type. if tonal state changed we should still resend
-//  if (kit_->models[track] != machine->model) {
-    uint8_t level = 255;
-    if ((send_level) && (kit_->levels[track] != machine->level)) {
-      level = kit_->levels[track];
-    }
-    if (send) {
-      DEBUG_PRINTLN("sendMachine");
-     // MD.assignMachine(track, machine->get_model(), 0);
-
-      
-      MD.assignMachineBulk(track, machine, level);
-    }
-
-    //bytes += 5 + 7;
-    bytes += MD.assignMachineBulk(track, machine, level, false);
- // }
- /*  
-  MDLFO *lfo = &(machine->lfo);
-  if ((kit_->lfos[track].destinationTrack != lfo->destinationTrack)) {
-    if (send)
-      MD.setLFOParam(track, 0, lfo->destinationTrack);
-    bytes += 3 + 7;
-  }
-
-  if ((kit_->lfos[track].destinationParam != lfo->destinationParam)) {
-    if (send)
-      MD.setLFOParam(track, 1, lfo->destinationParam);
-    bytes += 3 + 7;
-  }
-
-  if ((kit_->lfos[track].shape1 != lfo->shape1)) {
-    if (send)
-      MD.setLFOParam(track, 2, lfo->shape1);
-    bytes += 3 + 7;
-  }
-
-  if ((kit_->lfos[track].shape2 != lfo->shape2)) {
-    if (send)
-      MD.setLFOParam(track, 3, lfo->shape2);
-    bytes += 3 + 7;
-  }
-
-  if ((kit_->lfos[track].type != lfo->type)) {
-    if (send)
-      MD.setLFOParam(track, 4, lfo->type);
-    bytes += 3 + 7;
-  }
-
-  if ((kit_->trigGroups[track] != machine->trigGroup)) {
-    if ((machine->trigGroup > 15) || (kit_->trigGroups[track] == track)) {
-      if (send)
-        MD.setTrigGroup(track, 127);
-      bytes += 3 + 7;
-    } else {
-      if (send)
-        MD.setTrigGroup(track, machine->trigGroup);
-      bytes += 3 + 7;
-    }
-  }
-  if ((kit_->muteGroups[track] != machine->muteGroup)) {
-    if ((machine->muteGroup > 15) || (kit_->muteGroups[track] == track)) {
-      if (send)
-        MD.setMuteGroup(track, 127);
-      bytes += 3 + 7;
-    } else {
-      if (send)
-        MD.setMuteGroup(track, machine->muteGroup);
-      bytes += 3 + 7;
-    }
-  }
-
+  uint8_t level = 255;
   if ((send_level) && (kit_->levels[track] != machine->level)) {
-    if (send)
-      MD.setTrackParam(track, 33, machine->level);
-    bytes += 3;
+    level = kit_->levels[track];
   }
-  //  uart->useRunningStatus = true;
-  //  mcl_seq.md_tracks[track].trigGroup = machine->trigGroup;
 
-  //  mcl_seq.md_tracks[track].send_params = true;
-
-  for (uint8_t i = 0; i < 24; i++) {
- 
-    if (((kit_->params[track][i] != machine->params[i])) ||
-       ((i < 8) && (kit_->models[track] != machine->model))) {
-    //if (kit_->params[track][i] != machine->params[i]) {
-      if (machine->params[i] != 255) {
-        if (send)
-          MD.setTrackParam(track, i, machine->params[i]);
-        bytes += 3;
-      }
-    }
-  }
-*/
-  if (send)
-    insertMachineInKit(track, machine, send_level);
+  MD.assignMachineBulk(track, machine, level, send);
 
   return bytes;
 }
@@ -769,7 +678,7 @@ void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   buf[i++] = 0xF0;
 
   for (uint8_t n = 0; n < sizeof(machinedrum_sysex_hdr); n++) {
-    buf[i++] = machinedrum_sysex_hdr[i];
+    buf[i++] = machinedrum_sysex_hdr[n];
   }
 
   buf[i++] = MD_GUI_CMD;
