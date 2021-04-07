@@ -81,7 +81,7 @@ public:
   void reset_params();
   void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
-  void set_length(uint8_t len);
+  void set_length(uint8_t len, bool expand = false);
   void re_sync();
 
   void rotate_left() { modify_track(DIR_LEFT); }

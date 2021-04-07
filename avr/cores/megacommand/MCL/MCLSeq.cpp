@@ -113,6 +113,7 @@ void seq_rec_play() {
     seq_step_page.recording = true;
     setLed2();
     MD.set_rec_mode(2);
+    seq_step_page.reset_undo();
   }
 }
 

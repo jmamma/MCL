@@ -39,17 +39,19 @@ void MDTrackSelect::end() {
  if (sysex->getByte(1) != ids[1]) { return; }
 
  if (sysex->recordLen == 7) {
-   if (GUI.currentPage() == &seq_step_page) {
+  bool expand = true;
+  seq_step_page.reset_undo();
+  if (GUI.currentPage() == &seq_step_page) {
      if (seq_step_page.recording) { goto update_pattern; }
      MD.currentTrack = sysex->getByte(2);
-     mcl_seq.md_tracks[MD.currentTrack].set_length(sysex->getByte(5));
+     mcl_seq.md_tracks[MD.currentTrack].set_length(sysex->getByte(5), expand);
      mcl_seq.md_tracks[MD.currentTrack].set_speed(sysex->getByte(6));
      seq_step_page.config_encoders();
    }
    else if (GUI.currentPage() == &grid_page)  {
      update_pattern:
      for (uint8_t n = 0; n < 16; n++) {
-       mcl_seq.md_tracks[n].set_length(sysex->getByte(5));
+       mcl_seq.md_tracks[n].set_length(sysex->getByte(5), expand);
        mcl_seq.md_tracks[n].set_speed(sysex->getByte(6));
      }
    }

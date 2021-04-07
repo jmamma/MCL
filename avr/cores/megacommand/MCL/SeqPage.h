@@ -107,6 +107,10 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
+  void reset_undo() {
+    opt_undo_track = 0;
+    opt_undo = 0;
+  }
   void config_as_trackedit();
   void config_as_lockedit();
   void config_mask_info(bool silent = true);

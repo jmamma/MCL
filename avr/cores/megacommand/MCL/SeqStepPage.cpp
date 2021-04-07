@@ -418,7 +418,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
-          opt_copy = 1;
+          opt_copy = recording ? 2 : 1;
           opt_copy_track_handler();
         }
       }
@@ -426,15 +426,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     case MDX_KEY_PASTE: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        // Note copy
+        // Note paste
         if (step != 255) {
           opt_paste_step_handler();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
-          // Track copy
-          opt_paste = 1;
+          // Track paste
+          opt_paste = recording ? 2 : 1;
           opt_paste_track_handler();
         }
       }
@@ -442,7 +442,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     case MDX_KEY_CLEAR: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        // Note copy
+        // Note clear
         if (step != 255) {
           opt_clear_step = 1;
           opt_clear_step_locks_handler();
@@ -450,8 +450,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
-          // Track copy
-          opt_clear = 1;
+          // Track clear
+          opt_clear = recording ? 2 : 1;
           opt_clear_track_handler();
         }
       }
