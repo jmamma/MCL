@@ -1187,7 +1187,7 @@ void opt_clear_step_handler() {
   MD.popup_text(14);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
-  mcl_seq.md_tracks[last_md_track].copy_step(
+  mcl_seq.md_tracks[last_md_track].paste_step(
       SeqPage::step_select + SeqPage::page_select * 16, &empty_step);
 }
 

@@ -252,6 +252,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     uint8_t step = track + (page_select * 16);
 
+    step_select = track;
+
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
 
