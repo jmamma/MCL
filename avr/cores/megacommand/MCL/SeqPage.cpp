@@ -889,24 +889,28 @@ void opt_speed_handler() {
 }
 
 void opt_clear_track_handler() {
+  uint8_t copy = false;
   if (opt_undo != 255) {
     if (opt_undo != opt_clear) {
       opt_undo = 255;
-      goto CLEAR;
+      goto COPY;
     }
     opt_paste = opt_clear;
     opt_paste_track_handler();
     return;
   } else {
-  CLEAR:
-    opt_copy_track_handler(opt_clear);
+  COPY:
+    copy = true;
   }
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
+
       MD.popup_text(2);
 #ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR MD ", "TRACKS");
 #endif
+
+      if (copy) { opt_copy_track_handler(opt_clear); }
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
@@ -915,6 +919,7 @@ void opt_clear_track_handler() {
       oled_display.textbox("CLEAR TRACK", "");
 #endif
       MD.popup_text(5);
+      if (copy) { opt_copy_track_handler(opt_clear); }
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
   }
