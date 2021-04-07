@@ -43,7 +43,7 @@ void MDTrackSelect::end() {
      if (seq_step_page.recording) { goto update_pattern; }
      MD.currentTrack = sysex->getByte(2);
      mcl_seq.md_tracks[MD.currentTrack].set_length(sysex->getByte(5));
-     mcl_seq.md_tracks[MD.currentTrack].speed = sysex->getByte(6);
+     mcl_seq.md_tracks[MD.currentTrack].set_speed(sysex->getByte(6));
      seq_step_page.config_encoders();
    }
    else if (GUI.currentPage() == &grid_page)  {

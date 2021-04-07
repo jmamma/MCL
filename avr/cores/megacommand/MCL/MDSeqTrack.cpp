@@ -4,7 +4,7 @@ void MDSeqTrack::set_length(uint8_t len) {
   length = len;
   while (step_count >= length && length > 0) {
     // re_sync();
-    step_count = (step_count % length);
+    step_count = (step_count - length);
   }
 }
 
