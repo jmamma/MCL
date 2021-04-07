@@ -153,6 +153,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page && seq_step_page.recording == 0) {
+           page_select_page.md_prepare();
            GUI.setPage(&grid_page);
         }
         return true;
