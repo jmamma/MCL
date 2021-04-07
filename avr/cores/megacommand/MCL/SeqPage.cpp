@@ -744,7 +744,7 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
   draw_knob(0, "COND", K);
 }
 
-void SeqPage::conditional_str(char *str, uint8_t cond) {
+void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
   if (cond == 0) {
     strcpy(str, "L1");
   } else {
@@ -762,8 +762,10 @@ void SeqPage::conditional_str(char *str, uint8_t cond) {
     } else if (cond == 14) {
       strcpy(str, "1S ");
     }
+    str[3] = '\0';
     if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
       str[2] = '^';
+      if (is_md) { str[2] = '+'; }
     }
   }
 }

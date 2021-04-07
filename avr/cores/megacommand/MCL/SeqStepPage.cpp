@@ -70,6 +70,7 @@ void SeqStepPage::init() {
   config();
   note_interface.state = true;
   reset_on_release = false;
+  update_params_queue = false;
 }
 
 void SeqStepPage::cleanup() {
@@ -180,8 +181,10 @@ void SeqStepPage::loop() {
           }
           if (seq_param1.hasChanged()) {
             char str[4];
-            conditional_str(str, seq_param1.getValue());
-            MD.popup_text(str);
+            if (seq_param1.getValue() > 0) {
+              conditional_str(str, seq_param1.getValue(), true);
+              MD.popup_text(str);
+            }
           }
           switch (mask_type) {
           case MASK_LOCK:
@@ -206,11 +209,20 @@ void SeqStepPage::loop() {
     seq_param2.old = seq_param2.cur;
     seq_param4.old = seq_param4.cur;
   }
+
+  if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
+    mcl_seq.midi_events.update_params = true;
+    update_params_queue = false;
+  }
+
   if (note_interface.notes_all_off_md()) {
     mcl_gui.init_encoders_used_clock();
     // active_track.reset_params();
     MD.deactivate_encoder_interface();
-    mcl_seq.midi_events.update_params = true;
+
+    update_params_queue = true;
+    update_params_clock = slowclock;
+
     note_interface.init_notes();
     if (reset_on_release) {
       active_track.reset_params();
@@ -264,8 +276,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.currentTrack = track;
         last_md_track = MD.currentTrack;
 
-        if (MidiClock.state == 2)
+        if (MidiClock.state == 2) {
           mcl_seq.md_tracks[track].record_track(127);
+        }
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
         return true;
       }
