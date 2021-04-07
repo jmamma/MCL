@@ -129,6 +129,7 @@ public:
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(MidiDevice* device, uint8_t track);
 
+  void bootstrap_record();
   uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);
   uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
 

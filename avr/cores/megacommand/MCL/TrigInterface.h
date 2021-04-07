@@ -24,6 +24,7 @@
 #define MDX_KEY_COPY 0x34
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
+#define MDX_KEY_REALTIME 0x37
 
 class TrigInterface : public MidiSysexListenerClass {
 
