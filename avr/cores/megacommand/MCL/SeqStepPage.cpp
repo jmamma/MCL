@@ -67,6 +67,7 @@ void SeqStepPage::init() {
   config();
   note_interface.state = true;
   reset_on_release = false;
+  update_params_queue = false;
 }
 
 void SeqStepPage::cleanup() {
@@ -177,8 +178,10 @@ void SeqStepPage::loop() {
           }
           if (seq_param1.hasChanged()) {
             char str[4];
-            conditional_str(str, seq_param1.getValue());
-            MD.popup_text(str);
+            if (seq_param1.getValue() > 0) {
+              conditional_str(str, seq_param1.getValue(), true);
+              MD.popup_text(str);
+            }
           }
           switch (mask_type) {
           case MASK_LOCK:
@@ -189,7 +192,7 @@ void SeqStepPage::loop() {
             break;
           }
 
-          if ((seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
+          if (seq_param4.hasChanged() && (seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
               (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
@@ -203,11 +206,20 @@ void SeqStepPage::loop() {
     seq_param2.old = seq_param2.cur;
     seq_param4.old = seq_param4.cur;
   }
+
+  if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
+    mcl_seq.midi_events.update_params = true;
+    update_params_queue = false;
+  }
+
   if (note_interface.notes_all_off_md()) {
     mcl_gui.init_encoders_used_clock();
     // active_track.reset_params();
     MD.deactivate_encoder_interface();
-    mcl_seq.midi_events.update_params = true;
+
+    update_params_queue = true;
+    update_params_clock = slowclock;
+
     note_interface.init_notes();
     if (reset_on_release) {
       active_track.reset_params();
@@ -249,6 +261,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     uint8_t step = track + (page_select * 16);
 
+    step_select = track;
+
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
 
@@ -259,8 +273,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.currentTrack = track;
         last_md_track = MD.currentTrack;
 
-        if (MidiClock.state == 2)
+        if (MidiClock.state == 2) {
           mcl_seq.md_tracks[track].record_track(127);
+        }
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
         return true;
       }
@@ -415,7 +430,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
-          opt_copy = 1;
+          opt_copy = recording ? 2 : 1;
           opt_copy_track_handler();
         }
       }
@@ -423,15 +438,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     case MDX_KEY_PASTE: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        // Note copy
+        // Note paste
         if (step != 255) {
           opt_paste_step_handler();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
-          // Track copy
-          opt_paste = 1;
+          // Track paste
+          opt_paste = recording ? 2 : 1;
           opt_paste_track_handler();
         }
       }
@@ -439,7 +454,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     case MDX_KEY_CLEAR: {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        // Note copy
+        // Note clear
         if (step != 255) {
           opt_clear_step = 1;
           opt_clear_step_locks_handler();
@@ -447,8 +462,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
-          // Track copy
-          opt_clear = 1;
+          // Track clear
+          opt_clear = recording ? 2 : 1;
           opt_clear_track_handler();
         }
       }

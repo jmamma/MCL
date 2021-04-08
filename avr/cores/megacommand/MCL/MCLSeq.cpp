@@ -107,12 +107,8 @@ void MCLSeq::update_params() {
 void seq_rec_play() {
   if (trig_interface.is_key_down(MDX_KEY_REC)) {
     //trig_interface.ignoreNextEvent(MDX_KEY_REC);
-    if (GUI.currentPage() != &seq_step_page && GUI.currentPage() != &seq_param_page && GUI.currentPage() != &seq_ptc_page) {
-      GUI.setPage(&seq_step_page);
-    }
-    seq_step_page.recording = true;
-    setLed2();
-    MD.set_rec_mode(2);
+    seq_step_page.bootstrap_record(); 
+    seq_step_page.reset_undo();
   }
 }
 

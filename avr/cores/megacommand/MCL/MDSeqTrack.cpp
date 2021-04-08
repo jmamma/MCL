@@ -1,10 +1,29 @@
 #include "MCL_impl.h"
 
-void MDSeqTrack::set_length(uint8_t len) {
+void MDSeqTrack::set_length(uint8_t len, bool expand) {
+  uint8_t old_length = length;
   length = len;
   while (step_count >= length && length > 0) {
     // re_sync();
-    step_count = (step_count % length);
+    step_count = (step_count - length);
+  }
+  if (expand && old_length <= 16 && length > 16) {
+    for (uint8_t n = 16; n < length; n++) {
+      if ((*(int *)&(steps[n])) != 0) {
+        expand = false;
+        break;
+      }
+    }
+    if (expand) {
+      MDSeqStep empty_step;
+      memset(&empty_step, 0, sizeof(empty_step));
+      for (uint8_t y = 1; y < 4; y++) {
+        for (uint8_t n = 0; n < 16; n++) {
+          copy_step(n, &empty_step);
+          paste_step(n + y * 16, &empty_step);
+        }
+      }
+    }
   }
 }
 
@@ -446,7 +465,7 @@ bool MDSeqTrack::trig_conditional(uint8_t condition) {
 uint8_t MDSeqTrack::get_track_lock_implicit(uint8_t step, uint8_t param) {
   uint8_t lock_idx = find_param(param);
   if (lock_idx < NUM_LOCKS) {
-  return get_track_lock(step, lock_idx);
+    return get_track_lock(step, lock_idx);
   }
   return 255;
 }
@@ -574,11 +593,14 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
   uint8_t idx = get_lockidx(step);
   uint8_t locks_ = steps[step].locks;
 
-  if (!(steps[step].locks & mask)) { return; }
+  if (!(steps[step].locks & mask)) {
+    return;
+  }
 
   uint8_t offset = popcount(locks_ & (mask - 1));
 
-  memmove(locks + idx + offset, locks + idx + offset + 1, NUM_MD_LOCK_SLOTS - idx - offset - 1);
+  memmove(locks + idx + offset, locks + idx + offset + 1,
+          NUM_MD_LOCK_SLOTS - idx - offset - 1);
 
   steps[step].locks &= ~(mask);
 
@@ -595,7 +617,7 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
     }
   }
 
-  //If no more locks on any step, unset the param
+  // If no more locks on any step, unset the param
   locks_params[match] = 0;
 }
 

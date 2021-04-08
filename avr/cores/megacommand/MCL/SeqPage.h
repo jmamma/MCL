@@ -107,6 +107,10 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
+  void reset_undo() {
+    opt_undo_track = 0;
+    opt_undo = 0;
+  }
   void config_as_trackedit();
   void config_as_lockedit();
   void config_mask_info(bool silent = true);
@@ -118,13 +122,14 @@ public:
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char* title, const char* text);
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
-  void conditional_str(char *str, uint8_t cond);
+  void conditional_str(char *str, uint8_t cond, bool is_md = false);
   void draw_knob_conditional(uint8_t cond);
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(MidiDevice* device, uint8_t track);
 
+  void bootstrap_record();
   uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);
   uint8_t translate_to_knob_conditional(uint8_t condition, /*IN*/ bool plock);
 

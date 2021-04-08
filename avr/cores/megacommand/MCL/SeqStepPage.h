@@ -21,6 +21,8 @@ class SeqStepPage : public SeqPage {
 public:
   bool show_pitch = false;
   bool reset_on_release = false;
+  bool update_params_queue;
+  uint16_t update_params_clock;
   uint8_t last_param_id;
   uint8_t last_rec_event;
   SeqStepMidiEvents midi_events;

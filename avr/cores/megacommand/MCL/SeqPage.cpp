@@ -105,6 +105,18 @@ void SeqPage::cleanup() {
   clearLed2();
 }
 
+void SeqPage::bootstrap_record() {
+  if (GUI.currentPage() != &seq_step_page &&
+      GUI.currentPage() != &seq_param_page &&
+      GUI.currentPage() != &seq_ptc_page) {
+    GUI.setPage(&seq_step_page);
+  }
+  seq_step_page.recording = true;
+  setLed2();
+  MD.set_rec_mode(2);
+  oled_display.textbox("REC", "");
+}
+
 void SeqPage::config_mask_info(bool silent) {
   switch (mask_type) {
   case MASK_PATTERN:
@@ -692,7 +704,6 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     draw_mask(offset, mask, active_track.step_count, active_track.length,
               oneshot_mask, slide_mask, show_current_step);
 
-
     if (recording)
       return;
     mask <<= (64 - active_track.length);
@@ -707,7 +718,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       trigled_mask = led_mask;
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
       if (mask_type == MASK_MUTE) {
-      MD.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
+        MD.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
     if (locks_on_step_mask_ != locks_on_step_mask) {
@@ -744,7 +755,7 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
   draw_knob(0, "COND", K);
 }
 
-void SeqPage::conditional_str(char *str, uint8_t cond) {
+void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
   if (cond == 0) {
     strcpy(str, "L1");
   } else {
@@ -762,8 +773,12 @@ void SeqPage::conditional_str(char *str, uint8_t cond) {
     } else if (cond == 14) {
       strcpy(str, "1S ");
     }
+    str[3] = '\0';
     if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
       str[2] = '^';
+      if (is_md) {
+        str[2] = '+';
+      }
     }
   }
 }
@@ -889,24 +904,30 @@ void opt_speed_handler() {
 }
 
 void opt_clear_track_handler() {
+  uint8_t copy = false;
   if (opt_undo != 255) {
     if (opt_undo != opt_clear) {
       opt_undo = 255;
-      goto CLEAR;
+      goto COPY;
     }
     opt_paste = opt_clear;
     opt_paste_track_handler();
     return;
   } else {
-  CLEAR:
-    opt_copy_track_handler(opt_clear);
+  COPY:
+    copy = true;
   }
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
+
       MD.popup_text(2);
 #ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR MD ", "TRACKS");
 #endif
+
+      if (copy) {
+        opt_copy_track_handler(opt_clear);
+      }
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
       }
@@ -915,6 +936,9 @@ void opt_clear_track_handler() {
       oled_display.textbox("CLEAR TRACK", "");
 #endif
       MD.popup_text(5);
+      if (copy) {
+        opt_copy_track_handler(opt_clear);
+      }
       mcl_seq.md_tracks[last_md_track].clear_track();
     }
   }
@@ -1182,7 +1206,7 @@ void opt_clear_step_handler() {
   MD.popup_text(14);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
-  mcl_seq.md_tracks[last_md_track].copy_step(
+  mcl_seq.md_tracks[last_md_track].paste_step(
       SeqPage::step_select + SeqPage::page_select * 16, &empty_step);
 }
 
