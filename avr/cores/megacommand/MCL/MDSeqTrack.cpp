@@ -380,7 +380,8 @@ void MDSeqTrack::send_trig_inline() {
     mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
         MD.kit.levels[MD.kit.trigGroups[track_number]];
   }
-  MD.triggerTrack(track_number, 127);
+  SET_BIT16(mcl_seq.md_trig_mask,track_number);
+  //MD.triggerTrack(track_number, 127);
 }
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {

@@ -182,11 +182,13 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
-  Stopwatch sw;
+//  Stopwatch sw;
 
+  md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
+  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask); }
   // Arp
   seq_ptc_page.on_192_callback();
 
@@ -214,7 +216,7 @@ void MCLSeq::seq() {
     ext_tracks[i].recalc_slides();
   }
 
-  auto seq_time = sw.elapsed();
+  //auto seq_time = sw.elapsed();
   // DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND

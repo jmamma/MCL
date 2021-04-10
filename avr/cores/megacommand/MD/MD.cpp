@@ -258,6 +258,22 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
   }
 }
 
+void MDClass::parallelTrig(uint16_t mask) {
+  uint8_t a;
+  uint8_t b;
+  uint8_t c;
+
+  a = mask & 0x7F;
+  mask = mask >> 7;
+  c = mask >> 7 & 0xF7;
+  b = mask & 0x7F;
+
+  uart->sendNoteOn(global.baseChannel + 1, a, b);
+  if (c > 0) {
+  uart->sendNoteOn(global.baseChannel + 2, c, 0);
+  }
+}
+
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity) {
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
     uart->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
