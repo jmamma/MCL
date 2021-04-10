@@ -1,0 +1,9 @@
+.vs
+**/*.lib
+**/*.exe
+uzlib/Debug
+uzlib/Release
+**/*.obj
+*.pdb
+compress/Debug
+compress/Release

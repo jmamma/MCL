@@ -1,4 +1,3 @@
-#include "Elektrothic.h"
 #include <avr/pgmspace.h>
 #include "../gfxfont.h"
 
