@@ -121,7 +121,7 @@ const menu_t<7> midiconfig_menu_layout PROGMEM = {
     (&mclsys_apply_config),
 };
 
-const menu_t<4> mdconfig_menu_layout PROGMEM = {
+const menu_t<3> mdconfig_menu_layout PROGMEM = {
     "MD",
     {
         {"NORMALIZE:",0, 2, 2, (uint8_t *) &mcl_cfg.auto_normalize, (Page*) NULL, NULL, 15},
@@ -167,7 +167,7 @@ MenuPage<1> aux_config_page(&auxconfig_menu_layout, &config_param1, &config_para
 MenuPage<9> system_page(&system_menu_layout, &options_param1, &options_param2);
 MenuPage<7> midi_config_page(&midiconfig_menu_layout, &config_param1,
                           &config_param3);
-MenuPage<4> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
+MenuPage<3> md_config_page(&mdconfig_menu_layout, &config_param1, &config_param4);
 MenuPage<3> chain_config_page(&chain_menu_layout, &config_param1, &config_param6);
 MenuPage<1> mcl_config_page(&mclconfig_menu_layout, &config_param1,
                          &config_param5);
