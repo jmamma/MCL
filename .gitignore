@@ -6,6 +6,8 @@ obj
 .ccls-cache
 sketch/*.elf
 sketch/*.hex
+sketch/sym*
+sketch/sym*
 sketch/build
 .vim
 avr/cores/megacommand/**/*.o
