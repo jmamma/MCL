@@ -10,7 +10,9 @@ function parse-symbol($line) {
   $seg = $line.Substring(17,5).Trim()
   try {
     $size = [int64]("0x"+$line.Substring(23,8).Trim())
-    $name = $line.Substring(31).Replace(".hidden ", "").Trim()
+    $name = $line.Substring(31)
+    $hidden =  $name -match ".hidden"
+    $name = $name.Replace(".hidden ", "").Trim()
     if ($Size -eq "00000000") {
       return
     }
@@ -20,6 +22,7 @@ function parse-symbol($line) {
       Segment = $seg
       Size = $size
       Name = $name
+      Hidden = $hidden
     }
   } catch {}
 }
