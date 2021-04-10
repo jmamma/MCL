@@ -39,10 +39,15 @@ $data = $symbols | Where-Object -Property Segment -eq ".data" | Sort-Object -Des
 $lines | Out-File "sym_objdump.txt"
 $header | Out-File "sym_header.txt"
 echo "There are $($text.Count) .text objects"
-$text | Out-GridView 
 echo "There are $($bss.Count) .bss objects"
-$bss | Out-GridView 
 echo "There are $($data.Count) .data objects"
-$data | Out-GridView
+
+$comp_target = $text | Where-Object -Property Flags -Match "O"
+$comp_total_size = 0
+foreach ($obj in $comp_target) {
+  $comp_total_size += $obj.Size
+}
+
+echo "Total compressable object size: $comp_total_size"
 
 Set-Location ..
