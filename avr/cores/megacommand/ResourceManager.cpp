@@ -5,7 +5,6 @@ const resource_t __RESOURCES[] PROGMEM = {
 };
 
 ResourceManager::ResourceManager() {
-  uzlib_init();
   // m_seqId = 0;
   // for(int i = 0; i < RM_POOLSIZE; ++i) {
   // m_slotId[i] = 0xFF;
@@ -37,16 +36,7 @@ ResourceManager::ResourceManager() {
 
 void *ResourceManager::GetResourceImpl(int RES_ID) {
   resource_t resource;
-  uzlib_uncomp d;
   memcpy_P(&resource, __RESOURCES + RES_ID, sizeof(resource_t));
-  uzlib_uncompress_init(&d, nullptr, 0);
-  d.source = resource.block;
-  d.source_limit = resource.block + RM_BUFSIZE; // TODO should be block length
-  d.source_read_cb = nullptr;
-  d.dest = m_buffer;
-  d.dest_start = m_buffer;
-  d.dest_limit = m_buffer + resource.len;
-  uzlib_uncompress(&d);
   return m_buffer;
 }
 

@@ -27,7 +27,6 @@ function compile($f) {
     -I../avr/cores/megacommand/GUI `
     -I../avr/cores/megacommand/MD `
     -I../avr/cores/megacommand/MNM `
-    -I../avr/cores/megacommand/uzlib `
     -DF_CPU=16000000L `
     -DARDUINO=10803 `
     -DARDUINO_AVR_MEGA2560 `
@@ -38,6 +37,10 @@ function compile($f) {
     -Os $f -c -o "$n.o"
   avr-objcopy -O binary -j .data "$n.o" "$n.hex"
   ../uzlib-host/Release/compress.exe "$n.hex" "$n.z"
+  #F:\git\vcpkg\installed\x64-windows\tools\brotli\brotli.exe "$n.hex" -o "$n.br"
+  ../compress/bin/Release/netcoreapp3.1/compress.exe "$n.hex" "$n.ez"
+  rm -ErrorAction Ignore patterns.txt
+  rm "$n.o"
 }
 
 Get-ChildItem *.cpp | ForEach-Object { compile $_ }
