@@ -247,7 +247,6 @@ again:
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
   }
-  MD.parallelTrig(uart);
 
   if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
   // Arp
