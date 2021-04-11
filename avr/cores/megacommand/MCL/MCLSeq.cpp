@@ -249,7 +249,7 @@ again:
   }
   MD.parallelTrig(uart);
 
-  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask); }
+  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
   // Arp
   seq_ptc_page.on_192_callback();
 
