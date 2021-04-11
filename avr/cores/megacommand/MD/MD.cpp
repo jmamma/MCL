@@ -277,9 +277,9 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   c = mask >> 7 & 0xF7;
   b = mask & 0x7F;
 
-  uart->sendNoteOn(global.baseChannel + 1, a, b);
+    uart_->sendNoteOn(global.baseChannel + 1, a, b);
   if (c > 0) {
-  uart->sendNoteOn(global.baseChannel + 2, c, 0);
+    uart_->sendNoteOn(global.baseChannel + 2, c, 0);
   }
 }
 
