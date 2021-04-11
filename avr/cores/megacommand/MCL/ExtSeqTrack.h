@@ -127,19 +127,17 @@ public:
         if (event_count < NUM_EXT_EVENTS) {
           uint8_t bucket = timing_buckets.get(n);
           if (bucket < 16) {
-          timing_buckets.set(n, bucket + 1);
-          events[event_count++] = e;
+            timing_buckets.set(n, bucket + 1);
+            events[event_count++] = e;
           }
         }
       }
     }
     return true;
   }
-
-
 };
 
-class ExtSeqTrack : public ExtSeqTrackData, public SeqTrack {
+class ExtSeqTrack : public ExtSeqTrackData, public SeqSlideTrack {
 
 public:
   uint64_t note_buffer[2] = {
@@ -151,7 +149,9 @@ public:
 
   uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
- ALWAYS_INLINE() void reset() {
+  ExtSeqTrack() : SeqSlideTrack() { active = EXT_TRACK_TYPE; }
+
+  ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask[0] = 0;
     oneshot_mask[1] = 0;
@@ -192,9 +192,10 @@ public:
   // clear_track_locks: if value != 255, delete specific lock event of value.
   // otherwise delete all locks matching track_param of any value
   bool del_track_locks(int16_t cur_x, uint8_t lock_idx, uint8_t value);
-  void clear_track_locks(uint8_t track_param);
+  void clear_track_locks(uint8_t idx);
   bool clear_track_locks(uint8_t step, uint8_t track_param,
                          uint8_t value = 255);
+  bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
   void clear_track();
   void set_length(uint8_t len);
   void re_sync();

@@ -11,6 +11,8 @@ uint16_t A4Track::calc_latency(uint8_t tracknumber) {
 void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     DEBUG_PRINTLN(F("here"));
     DEBUG_PRINTLN(F("send a4 sound"));
+    sound.origPosition = tracknumber;
+    sound.soundpool = true;
     sound.toSysex();
 }
 
@@ -27,6 +29,11 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
     sound.fromSysex(Analog4.midi);
   }
   return ret;
+}
+
+void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  store_in_mem(tracknumber);
+  load_seq_data(seq_track);
 }
 
 bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,

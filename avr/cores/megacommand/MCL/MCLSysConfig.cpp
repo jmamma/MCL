@@ -22,11 +22,6 @@ void mclsys_apply_config() {
   } else {
     GUI.use_screen_saver = false;
   }
-  if (MD.connected) {
-    if (mcl_cfg.track_select != 1) {
-      md_track_select.off();
-    }
-  }
 }
 
 bool MCLSysConfig::write_cfg() {
@@ -98,6 +93,7 @@ bool MCLSysConfig::cfg_init() {
   ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0xF;
+  uart2_device = 0;
   cfgfile.close();
 
   ret = write_cfg();

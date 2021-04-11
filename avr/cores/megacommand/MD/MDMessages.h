@@ -63,7 +63,7 @@ public:
   uint8_t unused;
 
   uint16_t tempo;
-  bool extendedMode;
+  uint8_t extendedMode;
   bool clockIn;
   bool clockOut;
   bool transportIn;
@@ -84,8 +84,7 @@ public:
   uint8_t programChange;
   uint8_t trigMode;
 
-  MDGlobal() {
-  }
+  MDGlobal() : ElektronSysexObject() {};
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
@@ -184,6 +183,13 @@ public:
   muteGroup = 127;
   lfo.init(track);
   }
+
+  uint8_t get_model();
+  bool get_tonal();
+
+  uint32_t get_model_raw() {
+    return model & 0x200FF; //2^17 + 255
+  }
   /* @} */
 };
 
@@ -198,6 +204,7 @@ class MDKit: public ElektronSysexObject {
    **/
 
 public:
+
   uint8_t origPosition;
   char name[17];
 
@@ -224,6 +231,8 @@ public:
   /** The mute group selected for each track (255: OFF). **/
   uint8_t muteGroups[16];
 
+  MDKit(): ElektronSysexObject() {}
+
   virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
@@ -240,6 +249,10 @@ public:
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
+
+  uint8_t get_model(uint8_t track);
+  bool get_tonal(uint8_t track);
+
   /* @} */
 };
 

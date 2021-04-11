@@ -2,6 +2,7 @@
 
 void QuestionDialogPage::init(const char* title_, const char* text_) {
 #ifdef OLED_DISPLAY
+  classic_display = false;
   mcl_gui.draw_infobox(title_, text_, -1);
   oled_display.drawFastHLine(MCLGUI::dlg_info_x1 + 1, MCLGUI::dlg_info_y2, MCLGUI::dlg_info_w - 2, BLACK);
 

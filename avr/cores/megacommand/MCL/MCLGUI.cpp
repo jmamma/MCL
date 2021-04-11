@@ -483,9 +483,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   }
 
   uint8_t x = x_pos;
-  char K[4];
-  strcpy(K, "--");
-  K[3] = '\0';
+  char K[4] = "--";
 
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {
@@ -739,9 +737,7 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
   } else if (playing) {
     oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4,
                           WHITE);
-    oled_display.fillTriangle(pane_tri_x + 1, pane_tri_y, pane_tri_x + 3,
-                              pane_tri_y + 2, pane_tri_x + 1, pane_tri_y + 4,
-                              WHITE);
+    oled_display.fillTriangle_3px(pane_tri_x + 1, pane_tri_y, WHITE);
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);
   }

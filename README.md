@@ -83,3 +83,8 @@ void setup() {
 }
 ```
 3) Compile sketch and upload to your MegaCommand
+
+### Pre-compile binaries.
+
+The latest release binaries can always be found here https://github.com/jmamma/MIDICtrl20_MegaCommand/releases/
+

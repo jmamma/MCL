@@ -26,18 +26,7 @@ public:
     mixer.enc4.cur = 0;
     last_page = &(pages[0]);
   }
-  void load_next_page(uint8_t id) {
-   if (id < NUM_OSC - 1) {
-   GUI.setPage(&pages[id + 1]);
-   }
-   else if (id == MIXER_ID) {
-   GUI.setPage(&pages[0]);
-   }
-   else {
-   GUI.setPage(&mixer);
-   }
-
-  }
+  void prompt_send();
   bool render();
   bool send();
 };

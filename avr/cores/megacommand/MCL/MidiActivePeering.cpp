@@ -54,6 +54,40 @@ static MidiDevice *port2_drivers[] = {
 static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
                                                 &null_midi_device};
 
+void MidiActivePeering::disconnect(uint8_t port) {
+  MidiDevice **drivers;
+  uint8_t nr_drivers = 1;
+  if (port == UART1_PORT) {
+    drivers = port1_drivers;
+  } else {
+    drivers = port2_drivers;
+    nr_drivers = 3;
+  }
+  for (size_t i = 0; i < nr_drivers; ++i) {
+    if (drivers[i]->connected) {
+      if (midi_active_peering.get_device(port)->asElektronDevice()) {
+        turbo_light.set_speed(0, port);
+      }
+      drivers[i]->disconnect();
+    }
+  }
+}
+
+void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
+  MidiDevice **connected_dev;
+
+  connected_dev = &connected_midi_devices[port - 1];
+
+  midi_active_peering.disconnect(port);
+  auto *pmidi = _getMidiUart(port);
+  pmidi->device.init();
+  pmidi->device.set_name(driver->name);
+  pmidi->device.set_id(driver->id);
+  driver->init_grid_devices();
+
+  *connected_dev = driver;
+}
+
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
                       MidiDevice **active_device) {
   auto *pmidi = _getMidiUart(port);
@@ -61,6 +95,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   if (!pmidi || !pmidi_class)
     return;
   uint8_t id = pmidi->device.get_id();
+  oled_display.setTextColor(WHITE, BLACK);
   if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
       pmidi->speed > 31250) {
     MidiUart.set_speed((uint32_t)31250, port);

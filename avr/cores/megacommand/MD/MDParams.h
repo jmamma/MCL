@@ -75,6 +75,8 @@
 #define GND_SN_MODEL 1
 #define GND_NS_MODEL 2
 #define GND_IM_MODEL 3
+#define GND_SW_MODEL 4
+#define GND_PU_MODEL 5
 
 #define TRX_BD_MODEL 16
 #define TRX_SD_MODEL 17
@@ -264,6 +266,28 @@
 #define GND_SN_DEC 1
 #define GND_SN_RAMP 2
 #define GND_SN_RDEC 3
+#define GND_SN_PTCH2 4
+#define GND_SN_PTCH3 5
+#define GND_SN_PTCH4 6
+#define GND_SN_UNI 7
+
+#define GND_SW_PTCH 0
+#define GND_SW_DEC 1
+#define GND_SW_RAMP 2
+#define GND_SW_RDEC 3
+#define GND_SW_PTCH2 4
+#define GND_SW_PTCH3 5
+#define GND_SW_SKEW 6
+#define GND_SW_UNI 7
+
+#define GND_PU_PTCH 0
+#define GND_PU_DEC 1
+#define GND_PU_RAMP 2
+#define GND_PU_RDEC 3
+#define GND_PU_PTCH2 4
+#define GND_PU_PTCH3 5
+#define GND_PU_WIDTH 6
+#define GND_PU_UNI 7
 
 #define GND_NS_DEC 0
 
@@ -879,11 +903,29 @@
 PGM_P model_param_name(uint8_t model, uint8_t param);
 
 extern const char *MDLFONames[8];
-extern const md_machine_name_t machine_names[135] PROGMEM;
+extern const md_machine_name_t machine_names[137] PROGMEM;
 
-extern short_machine_name_t const md_machine_names_short[135] PROGMEM;
+extern short_machine_name_t const md_machine_names_short[137] PROGMEM;
 PGM_P getMDMachineNameShort(uint8_t machine, uint8_t type);
 extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
+
+/** This structure stores the tuning information of a melodic machine on the
+ * machinedrum. **/
+typedef struct tuning_s {
+
+  /** Model of the melodic machine. **/
+  uint8_t model;
+  /** Base pitch of the melodic machine. **/
+  uint8_t base;
+  /** Length of the tuning array storing the pitch values for each pitch. **/
+  uint8_t len;
+  uint8_t offset;
+  /** Pointer to an array for pitch values for individual midi notes. **/
+  const uint8_t *tuning;
+
+  /* @} */
+} tuning_t;
+
 
 /* @} @} */
 

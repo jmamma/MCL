@@ -32,12 +32,14 @@ public:
 	int8_t lockTracks[64];
 	int8_t lockParams[64];
 
-	ElektronPattern() {
+	ElektronPattern(bool _init) {
 		maxParams = 0;
 		maxTracks = 0;
 		maxSteps = 0;
 		maxLocks = 0;
-		clearPattern();
+    if (_init) {
+      init();
+    }
 	}
 
 	/** Clear the pattern. */

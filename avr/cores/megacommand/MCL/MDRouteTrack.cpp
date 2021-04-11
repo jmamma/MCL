@@ -10,9 +10,7 @@ uint16_t MDRouteTrack::calc_latency(uint8_t tracknumber) {
 
 uint16_t MDRouteTrack::send_routes(bool send) {
   uint16_t bytes = 0;
-  for (uint8_t a = 0; a < NUM_MD_TRACKS; a++) {
-    bytes += MD.setTrackRouting(a, routing[a], send);
-  }
+  bytes += MD.setTrackRoutings(routing, send);
   return bytes;
 }
 

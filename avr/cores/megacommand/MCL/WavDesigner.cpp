@@ -1,5 +1,30 @@
 #include "MCL_impl.h"
 
+void WavDesigner::prompt_send() {
+    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+
+#ifdef OLED_DISPLAY
+      oled_display.clearDisplay();
+#endif
+      GUI.setLine(GUI.LINE1);
+      GUI.put_string_at(0, "Render..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+      oled_display.clearDisplay();
+#endif
+      wd.render();
+      GUI.put_string_at(0, "Sending..");
+      LCD.goLine(0);
+      LCD.puts(GUI.lines[0].data);
+#ifdef OLED_DISPLAY
+      oled_display.display();
+#endif
+     wd.send();
+   }
+}
+
 bool WavDesigner::render() {
   DEBUG_PRINT_FN();
   float sample_rate = 44100;

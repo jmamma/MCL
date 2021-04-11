@@ -55,14 +55,15 @@ public:
   uint8_t timing[NUM_MD_STEPS];
   MDSeqStepDescriptor steps[NUM_MD_STEPS];
 
-  // get the pointer to the data chunk.
-  // useful to skip the vtable
   // !! Note lockidx is lock index, not param id
   bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity);
   // !! Note track_param is param_id, not lock index
   bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
   // !! Note lockidx is lock index, not param_id
   uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
+
+  // get the pointer to the data chunk.
+  // useful to skip the vtable
 
   void *data() const { return (void *)&locks; }
 

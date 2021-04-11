@@ -76,25 +76,18 @@ public:
       }
     }
   }
-
   virtual void initSerial() { running_status = 0; }
 
-  ALWAYS_INLINE() virtual void puts(const uint8_t *data, uint16_t cnt) {
-    while (cnt--) {
-      m_putc(*data);
-      ++data;
-    }
-  }
   virtual uint8_t m_getc() {}
+  virtual void m_putc(uint8_t *src, uint16_t size) { DEBUG_PRINTLN("here"); }
   virtual void m_putc(uint8_t c) {}
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual bool avail() { return false; }
 
   virtual uint8_t getc() { return 0; }
 
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) {
-    sendCommandByte(cmdByte);
-  }
+ #ifdef MIDI_RUNNING_STATUS
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     sendCommandByte(cmdByte);
     m_putc(byte1 & 0x7F);
@@ -105,6 +98,19 @@ public:
     m_putc(byte1 & 0x7F);
     m_putc(byte2 & 0x7F);
   }
+ #else
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { m_putc(cmdByte); }
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+    uint8_t data[2] = { cmdByte, (uint8_t)(byte1 & 0x7F) };
+    m_putc(data,2);
+  }
+
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+    uint8_t data[3] = { cmdByte, (uint8_t)(byte1 & 0x7F), (uint8_t)(byte2 & 0x7F) };
+    m_putc(data,3);
+  }
+  #endif
+
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
 #ifdef MIDI_RUNNING_STATUS
     if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
@@ -319,20 +325,18 @@ public:
     sendCC(channel, 38, (value));
   }
 
-  virtual void sendSysex(const uint8_t *data, uint8_t cnt) {
+  virtual void sendSysex(uint8_t *data, uint8_t cnt) {
     sendCommandByte(0xF0);
-    puts(data, cnt);
+    m_putc(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(const uint8_t *msg, uint16_t cnt) {
-    puts(msg, cnt);
-  }
+  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
 
-  void printfString(const char *fmt, ...) {
+  void printfString(char *fmt, ...) {
     va_list lp;
     va_start(lp, fmt);
     char buf[128];

@@ -170,7 +170,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
   PGM_P modelname = NULL;
   if (dest != 0) {
     if (dest < 17) {
-      modelname = model_param_name(MD.kit.models[dest - 1], param);
+      modelname = model_param_name(MD.kit.get_model(dest - 1), param);
     } else {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
     }
@@ -354,28 +354,33 @@ void LFOPage::display() {
   const uint64_t mute_mask = 0;
 
   switch (lfo_track->mode) {
-  case LFO_MODE_FREE:
-    info1 = "FREE";
-    break;
-  case LFO_MODE_TRIG:
-    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
-    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
-                      lfo_track->length, mute_mask, slide_mask, true);
+    case LFO_MODE_TRIG:
     info1 = "TRIG";
     break;
-  case LFO_MODE_ONE:
-    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
-    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
-                      lfo_track->length, mute_mask, slide_mask, true);
+    case LFO_MODE_ONE:
     info1 = "ONE";
     break;
+    info1 = "FREE";
+    break;
   }
+
+  if (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE) {
+    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
+              lfo_track->length, mute_mask, slide_mask, true);
+    if ((uint16_t)lfo_track->pattern_mask != trigled_mask) {
+      trigled_mask = (uint16_t)lfo_track->pattern_mask;
+      MD.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);
+    }
+  }
+
   mcl_gui.draw_panel_labels(info1, info2);
 
   oled_display.display();
   oled_display.setFont(oldfont);
 #endif
 }
+
 void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -429,7 +434,8 @@ bool LFOPage::handleEvent(gui_event_t *event) {
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
         DEBUG_PRINTLN(F("Trying to clear"));
-        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) <
+            TRIG_HOLD_TIME) {
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }
       }

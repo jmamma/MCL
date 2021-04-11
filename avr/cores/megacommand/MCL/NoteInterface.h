@@ -45,6 +45,7 @@ public:
   uint8_t notes_count_off();
   uint8_t notes_count();
   uint8_t notes_count_on();
+  uint8_t get_first_md_note();
   void ignoreNextEvent(uint8_t i) {
   SET_BIT64(ignore_next_mask, i);
   }

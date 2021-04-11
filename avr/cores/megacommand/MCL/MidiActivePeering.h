@@ -17,7 +17,8 @@ public:
   }
 
   virtual void setup(uint16_t _interval = 0) { interval = _interval; }
-
+  virtual void disconnect(uint8_t port);
+  virtual void force_connect(uint8_t port, MidiDevice *driver);
   virtual void run();
   virtual void destroy(){};
 

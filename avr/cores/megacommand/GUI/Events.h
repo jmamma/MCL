@@ -29,6 +29,8 @@
 /** Tests if button was released in the event structure. **/
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
 
+#define EVENT_CMD(event) ((event->source >= 64) && (event->source < 128))
+
 /**
  * Stores a GUI event. The mask stores what event happened (button
  * released or pressed at the moment), and the source indicates which
@@ -38,6 +40,14 @@ typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
   uint8_t port;
+
+  gui_event_s& operator = (volatile gui_event_s& other) {
+    mask = other.mask;
+    source = other.source;
+    port = other.port;
+    return *this;
+  }
+
 } gui_event_t;
 
 /**

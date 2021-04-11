@@ -128,6 +128,7 @@ public:
     } else {
       chain.speed = SEQ_SPEED_1X;
       chain.length = 16;
+      active = EMPTY_TRACK_TYPE;
     }
     return true;
   }
@@ -135,7 +136,7 @@ public:
   virtual uint16_t get_track_size() { return sizeof(MDTrack); }
   virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
-  virtual uint8_t get_model() { return machine.model; }
+  virtual uint8_t get_model() { return machine.get_model(); }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
 
   virtual void *get_sound_data_ptr() { return &machine; }

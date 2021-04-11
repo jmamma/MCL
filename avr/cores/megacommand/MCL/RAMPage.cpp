@@ -68,9 +68,13 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
                             uint8_t source, uint8_t len, uint8_t rate,
                             uint8_t pan, uint8_t linked_track) {
   MDTrack md_track;
+  MDSeqTrack md_seq_track;
+  bool clear_locks = true;
+  bool send_params = false;
 
-  memset(&(md_track.seq_data), 0, sizeof(MDSeqTrackData));
-  memset(&(md_track.machine.params), 255, 24);
+  md_seq_track.clear_track(clear_locks, send_params);
+
+  md_track.machine.init();
 
   uint16_t steps = encoders[3]->cur * 4;
   RAMPage::rec_states[page_id] = STATE_QUEUE;
@@ -115,19 +119,21 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   md_track.machine.params[MODEL_LFOM] = 0;
   md_track.machine.lfo.destinationTrack = track;
 
+  uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.steps[0].trig = true;
+    md_seq_track.set_track_step(0,timing_mid,0);
     // md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_track.seq_data.steps[0].trig = true;
+    md_seq_track.set_track_step(0,timing_mid,0);
     // oneshot
     // md_track.seq_data.conditional[0] = 14;
   } else {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.steps[0].trig = false;
   }
+
+  memcpy(&(md_track.seq_data), &md_seq_track, sizeof(MDSeqTrackData));
 
   md_track.machine.muteGroup = 127;
   md_track.chain.init(mcl_actions.chains[track].row, 0, steps, SEQ_SPEED_1X);
@@ -155,6 +161,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   // mcl_actions.calc_next_slot_transition(track);
   mcl_actions.send_machine[track] = 0;
   mcl_actions.next_transitions[track] = next_step;
+  mcl_actions.transition_offsets[track] = 0;
   mcl_actions.transition_level[track] = TRANSITION_UNMUTE;
 
   mcl_actions.calc_next_transition();
@@ -166,7 +173,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 }
 
 void RAMPage::reverse(uint8_t track) {
-  uint8_t model = (MD.kit.models[track]);
+  uint8_t model = (MD.kit.get_model(track));
 
   if (model != RAM_P1_MODEL && model != RAM_P2_MODEL && model != RAM_P3_MODEL &&
       model != RAM_P4_MODEL) {
@@ -183,7 +190,7 @@ void RAMPage::reverse(uint8_t track) {
 }
 
 bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
-  uint8_t model = (MD.kit.models[track]);
+  uint8_t model = (MD.kit.get_model(track));
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return false;
@@ -283,9 +290,16 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
 void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
                              uint8_t linked_track) {
   MDTrack md_track;
+  MDSeqTrack md_seq_track;
 
-  memset(&(md_track.seq_data), 0, sizeof(MDSeqTrackData));
-  memset(&(md_track.machine.params), 255, 24);
+  bool clear_locks = true;
+  bool send_params = false;
+
+  md_seq_track.clear_track(clear_locks, send_params);
+
+  mcl_seq.md_tracks[track].clear_track(clear_locks, send_params); //make sure current track does not retrigger
+
+  md_track.machine.init();
 
   uint8_t steps = encoders[3]->cur * 4;
 
@@ -296,7 +310,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
-  /*
+  
   md_track.machine.params[ROM_PTCH] = 64;
   md_track.machine.params[ROM_DEC] = 64;
   md_track.machine.params[ROM_HOLD] = 127;
@@ -305,7 +319,6 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.params[ROM_END] = 127;
   md_track.machine.params[ROM_RTRG] = 0;
   md_track.machine.params[ROM_RTIM] = 127;
-  */
   md_track.machine.params[MODEL_AMD] = 0;
   md_track.machine.params[MODEL_AMF] = 0;
   md_track.machine.params[MODEL_EQF] = 64;
@@ -323,16 +336,19 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.params[MODEL_LFOM] = 0;
 
+  uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.steps[0].trig = true;
+    md_seq_track.set_track_step(0,timing_mid,0);
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_track.seq_data.steps[0].trig = true;
+    md_seq_track.set_track_step(0,timing_mid,0);
   } else {
     md_track.machine.trigGroup = 255;
-    md_track.seq_data.steps[0].trig = false;
   }
+
+  memcpy(&(md_track.seq_data), &md_seq_track, sizeof(MDSeqTrackData));
+
   md_track.machine.muteGroup = 127;
 
   uint8_t magic = encoders[1]->cur;
@@ -351,10 +367,11 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   // uint16_t next_step =   MidiClock.div16th_counter + (m -
   // mcl_seq.md_tracks[track].step_count);
-  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
+  uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + 2 * steps;
   grid_page.active_slots[track] = 0x7FFF;
   mcl_actions.transition_level[track] = TRANSITION_NORMAL;
   mcl_actions.next_transitions[track] = next_step;
+  mcl_actions.transition_offsets[track] = 0;
   transition_step = next_step;
   record_len = (uint8_t)steps;
   mcl_actions.calc_next_transition();
@@ -439,8 +456,7 @@ void RAMPage::loop() {
       // record_len)) {
     }
   } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
-
-             (MidiClock.div16th_counter >= transition_step + record_len)) {
+             (MidiClock.div16th_counter >= transition_step)) {
     if (mcl_cfg.ram_page_mode == LINK) {
       RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_PLAY;
     } else {
@@ -707,6 +723,8 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
   MD.parseCC(channel, param, &track, &track_param);
+
+  if (track_param == 32) { return; } //ignore mute
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return;

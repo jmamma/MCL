@@ -29,13 +29,15 @@ const char *MDLFONames[8] = {
  * Names for the different machine models of the machinedrum.
  **/
 
-#ifndef DISABLE_MACHINE_NAMES 
+#ifndef DISABLE_MACHINE_NAMES
 
-short_machine_name_t const md_machine_names_short[135] PROGMEM = {
+short_machine_name_t const md_machine_names_short[137] PROGMEM = {
   { "GN","--", 0},
   { "GN", "SN", 1},
   { "GN", "NS", 2},
   { "GN", "IM", 3},
+  { "GN", "SW", 4},
+  { "GN", "PU", 5},
   { "TR", "BD", 16},
   { "TR", "SD", 17},
   { "TR", "XT", 18},
@@ -169,11 +171,13 @@ short_machine_name_t const md_machine_names_short[135] PROGMEM = {
   { "RO", "48", 191}
 };
 
-const md_machine_name_t machine_names[135] PROGMEM = {
+const md_machine_name_t machine_names[137] PROGMEM = {
   { "GND---", 0},
   { "GND-SN", 1},
   { "GND-NS", 2},
   { "GND-IM", 3},
+  { "GND-SW", 4},
+  { "GND-PU", 5},
   { "TRX-BD", 16},
   { "TRX-SD", 17},
   { "TRX-XT", 18},
@@ -329,15 +333,24 @@ PGM_P MDClass::getMachineName(uint8_t machine) {
   return NULL;
 }
 
-const model_param_name_t gnd_sn_model_names[] PROGMEM = { { "PTC", 0},
+const model_param_name_t gnd_sn_model_names[] PROGMEM = { { "PT1", 0},
 						    { "DEC", 1},
 						    { "RMP", 2},
-						    { "RDC", 3}, {"", 127} };
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"PT4",6}, {"UNI",7}, {"", 127} };
+
 const model_param_name_t gnd_ns_model_names[] PROGMEM = { { "DEC", 0}, {"", 127} };
 const model_param_name_t gnd_im_model_names[] PROGMEM = { { "UP", 0},
 						    { "UVL", 1},
 						    { "DWN", 2},
 						    { "DVL", 3}, {"", 127} };
+const model_param_name_t gnd_sw_model_names[] PROGMEM = { { "PT1", 0},
+						    { "DEC", 1},
+						    { "RMP", 2},
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"SKE",6}, {"UNI",7}, {"", 127} };
+const model_param_name_t gnd_pu_model_names[] PROGMEM = { { "PT1", 0},
+						    { "DEC", 1},
+						    { "RMP", 2},
+						    { "RDC", 3}, {"PT2",4}, {"PT3",5}, {"WID",6}, {"UNI",7}, {"", 127} };
 
 const model_param_name_t trx_bd_model_names[] PROGMEM = { { "PTC", 0},
 						    { "DEC", 1},
@@ -848,7 +861,9 @@ model_to_param_names_t model_param_names[] = {
   { GND_SN_MODEL, gnd_sn_model_names },
   { GND_NS_MODEL, gnd_ns_model_names },
   { GND_IM_MODEL, gnd_im_model_names },
-  
+  { GND_SW_MODEL, gnd_sw_model_names },
+  { GND_PU_MODEL, gnd_pu_model_names },
+
   { TRX_BD_MODEL, trx_bd_model_names },
   { TRX_B2_MODEL, trx_b2_model_names },
   { TRX_SD_MODEL, trx_sd_model_names },
@@ -1106,6 +1121,41 @@ static const uint8_t e12_lt_tuning[] PROGMEM = {
 
 static const tuning_t rom_tuning_t = { ROM_MODEL,    45, 
 				       sizeof(rom_tuning), 4,   rom_tuning };
+
+static const uint8_t tonal_tuning[] PROGMEM = {
+0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46,
+48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92,
+94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126
+};
+
+static const tuning_t rom_tonal_tuning_t = { ROM_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning };
+
+
+static const tuning_t tunings_tonal[] = {
+
+  { EFM_BD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_SD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_XT_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CP_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_RS_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CB_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_HH_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { EFM_CY_MODEL, MIDI_NOTE_CS3, sizeof(tonal_tuning), 0, tonal_tuning },
+
+  { TRX_BD_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_SD_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_XT_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_RS_MODEL, MIDI_NOTE_CS2, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_XC_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_B2_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 0, tonal_tuning },
+  { TRX_S2_MODEL, MIDI_NOTE_CS1, sizeof(tonal_tuning), 0, tonal_tuning },
+
+  { GND_SN_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
+  { GND_SW_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
+  { GND_PU_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
+
+};
+
 static const tuning_t tunings[] = {
   { EFM_RS_MODEL, MIDI_NOTE_B4, sizeof(efm_rs_tuning), 4, efm_rs_tuning },
   { EFM_HH_MODEL, MIDI_NOTE_B4, sizeof(efm_hh_tuning), 8, efm_hh_tuning },
@@ -1119,6 +1169,8 @@ static const tuning_t tunings[] = {
   { TRX_XT_MODEL, MIDI_NOTE_B3, sizeof(trx_xt_tuning), 6, trx_xt_tuning },
   { TRX_BD_MODEL, MIDI_NOTE_B1, sizeof(trx_bd_tuning), 7, trx_bd_tuning },
   { GND_SN_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
+  { GND_SW_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
+  { GND_PU_MODEL, MIDI_NOTE_F2, sizeof(gnd_sn_tuning), 3, gnd_sn_tuning },
   { TRX_B2_MODEL, MIDI_NOTE_A1, sizeof(trx_b2_tuning), 8, trx_b2_tuning },
   { TRX_RS_MODEL, MIDI_NOTE_F4, sizeof(trx_rs_tuning), 13, trx_rs_tuning },
   { TRX_S2_MODEL, MIDI_NOTE_F2, sizeof(trx_s2_tuning), 0, trx_s2_tuning },
@@ -1132,14 +1184,34 @@ static const tuning_t tunings[] = {
 
 tuning_t const *track_tunings[16];
 
-const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model) {
+const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;
-  if (((model >= 128) && (model <= 191))) {
-    return &rom_tuning_t;
+
+  if ((model >= 128) && (model <= 191)) {
+    //if (tonal) {
+    //  return &rom_tonal_tuning_t;
+   // }
+   // else {
+      return &rom_tuning_t;
+   // }
   }
-  for (i = 0; i < countof(tunings); i++) {
-    if (model == tunings[i].model) {
-      return tunings + i;
+
+  //if ((model >= E12_SD_MODEL) && (model <= E12_BC_MODEL) && (tonal)) {
+  //  return &rom_tonal_tuning_t;
+  //}
+
+
+  const tuning_t *t = tunings;
+  uint8_t len = countof(tunings);
+
+  if (tonal) {
+    t = tunings_tonal;
+    len = countof(tunings_tonal);
+  }
+
+  for (i = 0; i < len; i++) {
+    if (model == t[i].model) {
+      return t + i;
     }
   }
 

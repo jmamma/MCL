@@ -467,6 +467,13 @@ void Adafruit_GFX::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
   endWrite();
 }
 
+// MCL-specific 3px triangle fill
+void Adafruit_GFX::fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color) {
+  drawFastVLine(x0, y0, 5, color);
+  drawFastVLine(x0+1, y0+1, 3, color);
+  drawPixel(x0+2,y0+2, color);
+}
+
 // BITMAP / XBITMAP / GRAYSCALE / RGB BITMAP FUNCTIONS ---------------------
 
 // Draw a PROGMEM-resident 1-bit image at the specified (x,y) position,

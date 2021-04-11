@@ -4,11 +4,11 @@
 #define OSCMIXERPAGE_H__
 
 #include "GUI.h"
+#include "WavDesignerPage.h"
 
-class OscMixerPage : public LightPage {
+class OscMixerPage : public WavDesignerPage {
 public:
   // Static variables shared amongst derived objects
-  uint8_t id;
   float num_of_channels = 3;
   uint8_t sample_number;
   uint8_t scanline_width;

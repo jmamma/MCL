@@ -104,7 +104,15 @@ void MCLSeq::update_params() {
 #endif
 }
 
-void MCLSeq::onMidiContinueCallback() { update_params(); }
+void seq_rec_play() {
+  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+    seq_step_page.bootstrap_record(); 
+    seq_step_page.reset_undo();
+  }
+}
+
+void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
@@ -140,6 +148,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
     lfo_tracks[i].update_params_offset();
   }
 #endif
+  seq_rec_play();
 }
 
 void MCLSeq::onMidiStartCallback() {}
@@ -173,7 +182,6 @@ void MCLSeq::onMidiStopCallback() {
 
 void MCLSeq::seq() {
 
-  Stopwatch sw;
   MidiUartParent *uart;
   MidiUartParent *uart2;
   bool engage_sidechannel = true;
@@ -233,9 +241,15 @@ again:
     uart = &MidiUart;
     uart2 = &MidiUart2;
   }
+//  Stopwatch sw;
+
+  md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
   }
+  MD.parallelTrig(uart);
+
+  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask); }
   // Arp
   seq_ptc_page.on_192_callback();
 
@@ -270,8 +284,6 @@ again:
     goto again;
   }
 
-  auto seq_time = sw.elapsed();
-  // DIAG_MEASURE(0, seq_time);
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
@@ -287,9 +299,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
+    if (track_param > 23) { return; } //ignore level/mute
+
     mcl_seq.md_tracks[track].update_param(track_param, value);
 #ifdef LFO_TRACKS
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {

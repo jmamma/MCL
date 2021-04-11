@@ -297,7 +297,7 @@ enum TrigLEDMode {
 /// sysex constants for constructing data frames
 class ElektronSysexProtocol {
 public:
-  const uint8_t* const header;
+  uint8_t* const header;
   const size_t header_size;
 
   const uint8_t kitrequest_id;
@@ -338,14 +338,19 @@ public:
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };
 
-/// !Note, should be synced with fw.c
-#define FW_CAP(x) (1 << x)
+#define FW_CAP_LOW(x) (1 << x)
+#define FW_CAP_HIGH(x) (FW_CAP_LOW(x + 8))
 
-//#define FW_CAP_DEBUG          FW_CAP(0)
-#define FW_CAP_TRIG_INTERFACE FW_CAP(1)
-#define FW_CAP_MUTE_STATE     FW_CAP(2)
-#define FW_CAP_SAMPLE         FW_CAP(3)
-#define FW_CAP_TRIG_LEDS      FW_CAP(4)
+ //#define FW_CAP_DEBUG        FW_CAP_LOW(0)
+#define FW_CAP_TRIG_INTERFACE FW_CAP_LOW(1)
+#define FW_CAP_MUTE_STATE     FW_CAP_LOW(2)
+#define FW_CAP_SAMPLE         FW_CAP_LOW(3)
+#define FW_CAP_TRIG_LEDS      FW_CAP_LOW(4)
+#define FW_CAP_KIT_WORKSPACE  FW_CAP_LOW(5)
+#define FW_CAP_MASTER_FX      FW_CAP_LOW(6)
+
+#define FW_CAP_UNDOKIT_SYNC   FW_CAP_HIGH(0)
+#define FW_CAP_TONAL          FW_CAP_HIGH(1)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -358,7 +363,10 @@ public:
   int currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
   int currentKit;
+
   int currentTrack;
+  int currentSynthPage;
+
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
   int currentPattern;
   /** Set to true if the kit was loaded (usually set by MDTask). **/
@@ -416,13 +424,31 @@ public:
 
   bool get_fw_caps();
 
+  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count);
+
+  void activate_encoder_interface(uint8_t *params);
+  void deactivate_encoder_interface();
+
+  void activate_enhanced_gui();
+  void deactivate_enhanced_gui();
+
+  void set_seq_page(uint8_t page);
+
+  void set_rec_mode(uint8_t mode);
+
+  void popup_text(uint8_t action_string);
+  void popup_text(char *str);
+  void draw_close_microtiming();
+  void draw_microtiming(uint8_t speed, uint8_t timing);
+
   void activate_trig_interface();
   void deactivate_trig_interface();
 
   void activate_track_select();
   void deactivate_track_select();
-  void set_trigleds(uint16_t bitmask, TrigLEDMode mode);
+  void set_trigleds(uint16_t bitmask, TrigLEDMode mode, uint8_t blink = 0);
 
+  void undokit_sync();
   /**
    * Send a sysex request to the device. All the request calls
    * are wrapped in appropriate methods like requestKit,
