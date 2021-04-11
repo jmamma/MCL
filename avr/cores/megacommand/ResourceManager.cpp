@@ -1,3 +1,4 @@
+#include "MCL_impl.h"
 #include "ResourceManager.h"
 #include <avr/pgmspace.h>
 
@@ -34,10 +35,9 @@ ResourceManager::ResourceManager() {
   //return pid;
 //}
 
-void *ResourceManager::GetResourceImpl(int RES_ID) {
-  resource_t resource;
-  memcpy_P(&resource, __RESOURCES + RES_ID, sizeof(resource_t));
-  return m_buffer;
-}
+//void ResourceManager::GetResourceImpl(int RES_ID, byte* buf) {
+  //resource_t resource;
+  //memcpy_P(&resource, __RESOURCES + RES_ID, sizeof(resource_t));
+//}
 
 ResourceManager R;

@@ -1,3 +1,5 @@
 #pragma once
 
-size_t unpack(void* src, void* dest);
+#include "MCL.h"
+
+size_t unpack(uint8_t* src, uint8_t* dest);

@@ -43,4 +43,28 @@ function compile($f) {
   rm "$n.o"
 }
 
-Get-ChildItem *.cpp | ForEach-Object { compile $_ }
+function gen($f) {
+  Write-Host "Generating $f"
+  $n = [System.IO.Path]::GetFileNameWithoutExtension($f)
+  $path = [System.IO.Path]::GetDirectoryName($f)
+  $cpp = "#include `"R.h`""
+  $cpp += "`nconst unsigned char __R_$n[] PROGMEM = {";
+  $data = [System.IO.File]::ReadAllBytes("$path\$n.ez")
+  foreach($b in $data) {
+    $cpp += "`n  $b,"
+  }
+  $cpp += "`n};"
+  $cpp | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R_$n.cpp"
+}
+
+$h = "#pragma once"
+$h += "`n#include <avr/pgmspace.h>"
+
+Get-ChildItem *.cpp | ForEach-Object {
+  compile $_ 
+  gen $_
+  $n = [System.IO.Path]::GetFileNameWithoutExtension($_)
+  $h += "`nextern const unsigned char __R_$n[] PROGMEM;"
+}
+
+$h | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R.h"

@@ -161,6 +161,13 @@ Global variables use 51610 bytes (90%) of dynamic memory, leaving 5221 bytes for
 PROGMEM +2464
 RAM +4296 (4096 buffer)
 
+== With unpack ==
+Sketch uses 228944 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 47314 bytes (83%) of dynamic memory, leaving 9517 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM +382
+RAM +0 (hey)
+
 == Compression run result ==
  ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
  └─╜ ╰▷ .\gen-resource.ps1
