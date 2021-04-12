@@ -20,6 +20,7 @@ public:
 
   virtual bool probe();
   virtual void init_grid_devices();
+  virtual uint8_t* icon();
 
   virtual ElektronSysexObject *getKit() { return &kit; }
   virtual ElektronSysexObject *getPattern() { return nullptr; }

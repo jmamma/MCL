@@ -85,12 +85,6 @@ struct __T_icons_device {
 extern const unsigned char __R_icons_knob[] PROGMEM;
 struct __T_icons_knob {
   union {
-    unsigned char icon_chroma[0];
-    char zz__icon_chroma[75];
-  };
-  static constexpr size_t countof_icon_chroma = 75 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_chroma = 75;
-  union {
     unsigned char wheel_side[0];
     char zz__wheel_side[57];
   };
@@ -154,6 +148,12 @@ struct __T_icons_knob {
 
 extern const unsigned char __R_icons_page[] PROGMEM;
 struct __T_icons_page {
+  union {
+    unsigned char icon_chroma[0];
+    char zz__icon_chroma[75];
+  };
+  static constexpr size_t countof_icon_chroma = 75 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_chroma = 75;
   union {
     unsigned char icon_pianoroll[0];
     char zz__icon_pianoroll[75];

@@ -14,6 +14,8 @@ private:
 public:
 	ResourceManager();
 	void Clear();
+	void Save(uint8_t* buf, size_t* sz);
+	void Restore(uint8_t* buf, size_t sz);
 
 #include "resources/ResMan.h"
 };

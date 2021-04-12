@@ -14,4 +14,14 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 	return pos;
 }
 
+void ResourceManager::Save(uint8_t *buf, size_t *sz) {
+	memcpy(buf, m_buffer, m_bufsize);
+	*sz = m_bufsize;
+}
+
+void ResourceManager::Restore(uint8_t *buf, size_t sz) {
+	memcpy(m_buffer, buf, sz);
+	m_bufsize = sz;
+}
+
 ResourceManager R;

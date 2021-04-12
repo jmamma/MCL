@@ -182,13 +182,12 @@ public:
   MidiUartParent* uart;
   const char* const name;
   const uint8_t id; // Device identifier
-  const uint8_t* const icon;
   const bool isElektronDevice;
 
   GridDevice grid_devices[NUM_GRIDS];
 
-  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon, const bool _isElektronDevice)
-    : name(_name), id(_id), icon(_icon), isElektronDevice(_isElektronDevice)
+  MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
+    : name(_name), id(_id), isElektronDevice(_isElektronDevice)
   {
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
@@ -213,6 +212,8 @@ public:
 
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
+  // 34x42 bitmap icon of the device
+  virtual uint8_t *icon() { return nullptr; }
 };
 
 /// Base class for Elektron sysex listeners
@@ -375,9 +376,9 @@ public:
   bool loadedGlobal;
 
   ElektronDevice(
-      MidiClass* _midi, const char* _name, const uint8_t _id, const uint8_t* _icon,
+      MidiClass* _midi, const char* _name, const uint8_t _id,
       const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, _icon, true), sysex_protocol(protocol) {
+    : MidiDevice(_midi, _name, _id, true), sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;
