@@ -30,7 +30,7 @@ public:
 
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
-  virtual PGM_P getMachineName(uint8_t machine);
+  virtual const char* getMachineName(uint8_t machine);
 
   virtual bool canReadKit() {
     // TODO fw cap for live kit access

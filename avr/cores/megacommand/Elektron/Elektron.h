@@ -417,7 +417,7 @@ public:
    * Return a pointer to a program-space string representing the name of the
    *given machine.
    **/
-  virtual PGM_P getMachineName(uint8_t machine) { return nullptr; }
+  virtual const char* getMachineName(uint8_t machine) { return nullptr; }
 
   bool get_fw_caps();
 

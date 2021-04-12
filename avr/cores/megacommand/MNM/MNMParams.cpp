@@ -13,35 +13,7 @@ uint8_t monomachine_sysex_hdr[5] = {
   0x00 /* base channel padding */
 };
 
-const mnm_machine_name_t mnm_machine_names[] PROGMEM = {
-  { "GND-GND", 0 },
-  { "GND-SIN", 1 },
-  { "GND-NOIS", 2 },
-
-  { "SWAVE-SAW", 4 },
-  { "SWAVE-PULS", 5 },
-  { "SWAVE-ENS", 14 },
-
-  { "SID-6581", 3 },
-  
-  { "DPRO-WAVE", 6 },
-  { "DPRO-BBOX", 7 },
-  { "DPRO-DDRW", 32 },
-  { "DPRO-DENS", 33 },
-  
-  { "FM+-STAT", 8 },
-  { "FM+-PAR", 9 },
-  { "FM+-DYN", 10 },
-  
-  { "VO-VO-6", 11 },
-  
-  { "FX-THRU", 12 },
-  { "FX-REVERB", 13 },
-  { "FX-CHORUS", 15 },
-  { "FX-DYNAMIX", 16 },
-  { "FX-RINGMOD", 17 }
-};
-
+/// Caller is responsible to make sure machine_names_short is loaded in RM
 const char* getMNMMachineNameShort(uint8_t machine, uint8_t type) {
   if (machine == 0) {
     if (type == 1) {
@@ -54,10 +26,11 @@ const char* getMNMMachineNameShort(uint8_t machine, uint8_t type) {
       R.machine_names_short->countof_mnm_machine_names_short);
 }
 
-PGM_P MNMClass::getMachineName(uint8_t machine) {
-  for (uint8_t i = 0; i < countof(mnm_machine_names); i++) {
-    if (pgm_read_byte(&mnm_machine_names[i].id) == machine) {
-      return mnm_machine_names[i].name;
+/// Caller is responsible to make sure machine_names_long is loaded in RM
+const char* MNMClass::getMachineName(uint8_t machine) {
+  for (uint8_t i = 0; i < R.machine_names_long->countof_mnm_machine_names; i++) {
+    if (R.machine_names_long->mnm_machine_names[i].id == machine) {
+      return R.machine_names_long->mnm_machine_names[i].name;
     }
   }
   return NULL;

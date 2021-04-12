@@ -78,7 +78,7 @@ public:
 
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
-  virtual PGM_P getMachineName(uint8_t machine);
+  virtual const char* getMachineName(uint8_t machine);
 
   /**
    * When given the channel and the cc of an incoming CC messages,
