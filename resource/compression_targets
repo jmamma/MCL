@@ -168,6 +168,12 @@ Low memory available, stability problems may occur.
 PROGMEM +382
 RAM +0 (hey)
 
+== Compress icons_boot, machine_names_short ==
+Sketch uses 228454 bytes (89%) of program storage space. Maximum is 253952 bytes.
+Global variables use 51438 bytes (90%) of dynamic memory, leaving 5393 bytes for local variables . Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -108
+
 == Compression run result ==
  ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
  └─╜ ╰▷ .\gen-resource.ps1

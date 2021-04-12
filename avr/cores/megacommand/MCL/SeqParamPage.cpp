@@ -6,14 +6,13 @@ void SeqParamPage::config() {
   const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
   const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
-  constexpr uint8_t len1 = sizeof(info1);
-
-  char buf[len1] = {'\0'};
-  m_strncpy_p(buf, str1, len1);
-  strncpy(info1, buf, len1);
-  strncat(info1, ">", len1);
-  m_strncpy_p(buf, str2, len1);
-  strncat(info1, buf, len1);
+  // 0-1
+  copyMachineNameShort(str1, info1);
+  info1[2] = '>';
+  // 3-4
+  copyMachineNameShort(str2, info1 + 3);
+  // 5
+  info1[5] = 0;
 
   strcpy(info2, "PARAM-");
   info2[6] = 'A' + page_id;

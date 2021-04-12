@@ -123,7 +123,6 @@ function gen_h($f) {
     }
   }
 
-  $id = 0
   $Script:h += "`nstruct __T_$n {"
   foreach($sym in $syms) {
     $name = $sym.Name
@@ -134,9 +133,11 @@ function gen_h($f) {
     $size = $sym.Size
     $Script:h += "`n  union {"
     $Script:h += "`n    $type $name[0];"
-    $Script:h += "`n    char zz__$id[$size];"
+    $Script:h += "`n    char zz__$name[$size];"
     $Script:h += "`n  };"
-    $id += 1
+
+    $Script:h += "`n  static constexpr size_t countof_$name = $size / sizeof($type);"
+    $Script:h += "`n  static constexpr size_t sizeofof_$name = $size;"
   }
 
 

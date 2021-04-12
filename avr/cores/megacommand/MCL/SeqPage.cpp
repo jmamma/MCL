@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -93,6 +94,9 @@ void SeqPage::init() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   }
   last_rec_event = 255;
+
+  R.Clear();
+  R.use_machine_names_short();
 }
 
 void SeqPage::cleanup() {

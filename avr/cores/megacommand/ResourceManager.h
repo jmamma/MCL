@@ -9,7 +9,7 @@ class ResourceManager {
 private:
 	uint8_t m_buffer[RM_BUFSIZE];
 	uint16_t m_bufsize = 0;
-	byte* __use_resource(void* pgm);
+	byte* __use_resource(const void* pgm);
 
 public:
 	ResourceManager();

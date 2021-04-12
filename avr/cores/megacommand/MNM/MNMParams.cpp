@@ -3,6 +3,7 @@
 #include "MNMParams.h"
 #include "Elektron.h"
 #include "MNM.h"
+#include "ResourceManager.h"
 
 uint8_t monomachine_sysex_hdr[5] = {
   0x00,
@@ -41,34 +42,17 @@ const mnm_machine_name_t mnm_machine_names[] PROGMEM = {
   { "FX-RINGMOD", 17 }
 };
 
-const short_machine_name_t mnm_machine_names_short[] PROGMEM = {
-  { "GN","--", 0},
-  { "GN", "SN", 1},
-  { "GN", "NS", 2},
-
-  { "SW", "SW", 4 },
-  { "SW", "PU", 5 },
-  { "SW", "EN", 14 },
-
-  { "SI", "65", 3 },
-  
-  { "DP", "WA", 6 },
-  { "DP", "BB", 7 },
-  { "DP", "DD", 32 },
-  { "DP", "DE", 33 },
-  
-  { "FM", "ST", 8 },
-  { "FM", "PA", 9 },
-  { "FM", "DY", 10 },
-  
-  { "VO", "VO", 11 },
-  
-  { "FX", "TH", 12 },
-  { "FX", "RV", 13 },
-  { "FX", "CR", 15 },
-  { "FX", "DM", 16 },
-  { "FX", "RM", 17 }
-};
+const char* getMNMMachineNameShort(uint8_t machine, uint8_t type) {
+  if (machine == 0) {
+    if (type == 1) {
+      return R.machine_names_short->mnm_machine_names_short[0].name2;
+    }
+  }
+  return getMachineNameShort(
+      machine, type, 
+      R.machine_names_short->mnm_machine_names_short, 
+      R.machine_names_short->countof_mnm_machine_names_short);
+}
 
 PGM_P MNMClass::getMachineName(uint8_t machine) {
   for (uint8_t i = 0; i < countof(mnm_machine_names); i++) {
@@ -78,18 +62,6 @@ PGM_P MNMClass::getMachineName(uint8_t machine) {
   }
   return NULL;
 }
-
-PGM_P getMNMMachineNameShort(uint8_t machine, uint8_t type) {
-
-  if (machine == 0) {
-    if (type == 1) {
-      return mnm_machine_names_short[0].name2;
-    }
-  }
-
-  return getMachineNameShort(machine, type, mnm_machine_names_short, countof(mnm_machine_names_short));
-}
-
 
 const model_param_name_t mnm_gnd_sin_model_names[] PROGMEM = { {"TUN", 7},
 							 {"", 127} };

@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 /*
    Function for initialising the SD Card
 */
@@ -32,7 +33,7 @@ bool MCLSd::load_init() {
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
 #ifdef OLED_DISPLAY
-    gfx.draw_evil();
+    gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     oled_display.clearDisplay();
     GUI.ignoreNextEvent(Buttons.BUTTON3);
 #endif
@@ -54,7 +55,7 @@ bool MCLSd::load_init() {
             return false;
           }
 #ifdef OLED_DISPLAY
-          gfx.draw_evil();
+          gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
 #endif
           proj.new_project_prompt();
