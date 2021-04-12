@@ -1,17 +1,5 @@
 #include "MCL.h"
 #include "MCL_impl.h"
-#include "Pages.h"
-
-struct PageSelectEntry {
-  char Name[16];
-  void *Page;
-  uint8_t PageNumber; // same as trig id
-  uint8_t CategoryId;
-  uint8_t IconWidth;
-  uint8_t IconHeight;
-  uint8_t *IconData;
-};
-
 
 PageSelectEntry Entries[] = {
     {"GRID", &grid_page, 0, 0, 24, 15, (uint8_t *)icon_grid},

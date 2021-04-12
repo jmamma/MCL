@@ -1,11 +1,6 @@
 #pragma once
 #include "unpack.h"
-
-struct resource_t {
-	int len;
-	uint8_t* block;
-	int offset;
-};
+#include "resources/R.h"
 
 #define RM_POOLSIZE 32
 #define RM_BUFSIZE 4096
@@ -13,9 +8,14 @@ struct resource_t {
 class ResourceManager {
 private:
 	uint8_t m_buffer[RM_BUFSIZE];
+	uint16_t m_bufsize = 0;
+	byte* __use_resource(void* pgm);
 
 public:
 	ResourceManager();
+	void Clear();
+
+#include "resources/ResMan.h"
 };
 
 extern ResourceManager R;

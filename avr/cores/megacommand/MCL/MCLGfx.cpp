@@ -75,14 +75,14 @@ void MCLGfx::draw_evil() {
 #endif
 }
 
-void MCLGfx::splashscreen() {
+void MCLGfx::splashscreen(unsigned char* bitmap) {
 #ifdef OLED_DISPLAY
   DEBUG_PRINTLN(F("OLED enabled"));
   oled_display.setTextSize(2);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);
 
-  oled_display.drawBitmap(35, 8, mcl_logo_bitmap, BITMAP_MCL_LOGO_W,
+  oled_display.drawBitmap(35, 8, bitmap, BITMAP_MCL_LOGO_W,
                           BITMAP_MCL_LOGO_H, WHITE);
   /* oled_display.println("MEGA");
    oled_display.setCursor(22, 15);

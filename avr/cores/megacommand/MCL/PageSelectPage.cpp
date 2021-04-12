@@ -1,22 +1,6 @@
 #include <avr/pgmspace.h>
 #include "MCL_impl.h"
 
-struct PageCategory {
-  char Name[8];
-  uint8_t PageCount;
-  uint8_t FirstPage;
-};
-
-struct PageSelectEntry {
-  char Name[16];
-  LightPage *Page;
-  uint8_t PageNumber; // same as trig id
-  uint8_t CategoryId;
-  uint8_t IconWidth;
-  uint8_t IconHeight;
-  uint8_t *IconData;
-};
-
 const PageCategory Categories[] PROGMEM = {
     {"MAIN", 4, 0},
     {"SEQ", 4, 4},

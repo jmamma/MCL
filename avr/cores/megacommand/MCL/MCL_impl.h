@@ -82,5 +82,3 @@
 
 #include "MCLActions.h"
 #include "MCLSeq.h"
-
-#include "ResourceManager.h"

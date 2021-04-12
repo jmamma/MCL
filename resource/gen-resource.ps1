@@ -1,4 +1,5 @@
 $env:PATH += ";C:\Users\Yatao\AppData\Local\Arduino15\packages\arduino\tools\avr-gcc\7.3.0-atmel3.6.1-arduino7\bin"
+
 function compile($f) {
   Write-Host "Compiling $f"
   $n = [System.IO.Path]::GetFileNameWithoutExtension($f)
@@ -39,11 +40,10 @@ function compile($f) {
   ../uzlib-host/Release/compress.exe "$n.hex" "$n.z"
   #F:\git\vcpkg\installed\x64-windows\tools\brotli\brotli.exe "$n.hex" -o "$n.br"
   ../compress/bin/Release/netcoreapp3.1/compress.exe "$n.hex" "$n.ez"
-  rm -ErrorAction Ignore patterns.txt
-  rm "$n.o"
+  Remove-Item -ErrorAction Ignore patterns.txt
 }
 
-function gen($f) {
+function gen_cpp($f) {
   Write-Host "Generating $f"
   $n = [System.IO.Path]::GetFileNameWithoutExtension($f)
   $path = [System.IO.Path]::GetDirectoryName($f)
@@ -57,14 +57,99 @@ function gen($f) {
   $cpp | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R_$n.cpp"
 }
 
-$h = "#pragma once"
-$h += "`n#include <avr/pgmspace.h>"
+function parse_symbol($line) {
+  $segs = -split $line
+  if ($segs.Length -lt 2) {
+    return
+  }
+  $loc = $line.Substring(0, 8)
+  $flags = $line.Substring(9, 7).Trim()
+  $seg = $line.Substring(17,5).Trim()
+  try {
+    $size = [int64]("0x"+$line.Substring(23,8).Trim())
+    $name = $line.Substring(31)
+    $hidden =  $name -match ".hidden"
+    $name = $name.Replace(".hidden ", "").Trim()
+    if ($Size -eq "00000000") {
+      return
+    }
+    return [PSCustomObject]@{
+      Location = $loc
+      Flags = $flags
+      Segment = $seg
+      Size = $size
+      Name = $name
+      Hidden = $hidden
+    }
+  } catch {}
+}
+
+
+$Script:h = "#pragma once"
+$Script:h += "`n#include <avr/pgmspace.h>"
+$Script:h += "`n#include `"MCL.h`""
+$Script:h += "`n#include `"MCL_impl.h`""
+$Script:resman = ""
+
+function gen_h($f) {
+  $n = [System.IO.Path]::GetFileNameWithoutExtension($f)
+  $Script:h += "`nextern const unsigned char __R_$n[] PROGMEM;"
+
+  $path = [System.IO.Path]::GetDirectoryName($f)
+  $skip = $true
+  $syms = @()
+  $typs = @{}
+  foreach($line in $(avr-objdump -x "$path\$n.o")) {
+    if ($line -eq "SYMBOL TABLE:") {
+      $skip = $false
+    } elseif (-not $skip) {
+      $sym = parse_symbol($line)
+      if ($sym.Segment -eq ".data" -and $sym.Name -ne ".data") {
+        $syms += $sym
+      }
+    }
+  }
+  foreach($line in $(Get-Content $f)) {
+    if ($line -match ".*=.*") {
+      [System.Text.RegularExpressions.Match]$m = [regex]::Match($line, "([^=\[\]]*)(?:\[.*\])\s* = ")
+      $split = -split $m.Groups[1].Value
+      $len = $split.Length
+      $type = $split[0..($len-2)] -join " "
+      $name = $split[$len-1]
+      if ($name -eq "") {
+        continue
+      }
+      $typs[$name]=$type
+    }
+  }
+
+  $id = 0
+  $Script:h += "`nstruct __T_$n {"
+  foreach($sym in $syms) {
+    $name = $sym.Name
+    $type = $typs[$name]
+    if ($type -eq "") {
+      continue
+    }
+    $size = $sym.Size
+    $Script:h += "`n  union {"
+    $Script:h += "`n    $type $name[0];"
+    $Script:h += "`n    char zz__$id[$size];"
+    $Script:h += "`n  };"
+    $id += 1
+  }
+
+
+  $Script:h += "`n};`n"
+  $Script:resman += "  `n__T_$n *$n;"
+  $Script:resman += "  `nvoid use_$n() { $n = (__T_$n*) __use_resource(__R_$n); }"
+}
 
 Get-ChildItem *.cpp | ForEach-Object {
   compile $_ 
-  gen $_
-  $n = [System.IO.Path]::GetFileNameWithoutExtension($_)
-  $h += "`nextern const unsigned char __R_$n[] PROGMEM;"
+  gen_cpp $_
+  gen_h $_
 }
 
-$h | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R.h"
+$Script:h | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R.h"
+$Script:resman | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/ResMan.h"
