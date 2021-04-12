@@ -104,7 +104,15 @@ void MCLSeq::update_params() {
 #endif
 }
 
-void MCLSeq::onMidiContinueCallback() { update_params(); }
+void seq_rec_play() {
+  if (trig_interface.is_key_down(MDX_KEY_REC)) {
+    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+    seq_step_page.bootstrap_record(); 
+    seq_step_page.reset_undo();
+  }
+}
+
+void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
 #ifdef EXT_TRACKS
@@ -138,6 +146,7 @@ void MCLSeq::onMidiStartCallback() {
     lfo_tracks[i].update_params_offset();
   }
 #endif
+  seq_rec_play();
 }
 
 void MCLSeq::onMidiStopCallback() {
@@ -173,11 +182,13 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 void MCLSeq::seq() {
 
-  Stopwatch sw;
+//  Stopwatch sw;
 
+  md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq();
   }
+  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask); }
   // Arp
   seq_ptc_page.on_192_callback();
 
@@ -205,7 +216,7 @@ void MCLSeq::seq() {
     ext_tracks[i].recalc_slides();
   }
 
-  auto seq_time = sw.elapsed();
+  //auto seq_time = sw.elapsed();
   // DIAG_MEASURE(0, seq_time);
 }
 #ifdef MEGACOMMAND

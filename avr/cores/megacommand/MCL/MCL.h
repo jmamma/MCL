@@ -57,3 +57,4 @@ public:
 
 extern MCL mcl;
 
+bool mcl_handleEvent(gui_event_t *event);

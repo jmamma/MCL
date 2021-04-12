@@ -63,7 +63,7 @@ public:
   uint8_t unused;
 
   uint16_t tempo;
-  bool extendedMode;
+  uint8_t extendedMode;
   bool clockIn;
   bool clockOut;
   bool transportIn;

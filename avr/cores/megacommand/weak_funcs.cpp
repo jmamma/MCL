@@ -82,7 +82,7 @@ public:
 DefaultCallbacks defaultCallbacks;
 
 void __attribute__((weak)) setupEventHandlers() {
-	GUI.addEventHandler(&handleEvent);
+//	GUI.addEventHandler(&handleEvent);
 }
 
 void __attribute__((weak)) setupMidiCallbacks() {

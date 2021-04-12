@@ -28,9 +28,6 @@
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)
 #define DEBUG_DUMP(x)  { \
-  Serial.print(F(#x)); \
-  Serial.print(F(" = ")); \
-  Serial.println(x); \
 }
 // __PRETTY_FUNCTION__ is a gcc extension
 // #define DEBUG_PRINT_FN(x) { \

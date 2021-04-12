@@ -142,9 +142,7 @@ bool MDClass::probe() {
   bool ts = md_track_select.state;
   bool ti = trig_interface.state;
 
-  if (ts) {
-    md_track_select.off();
-  }
+  md_track_select.off();
   if (ti) {
     trig_interface.off();
   }
@@ -202,11 +200,13 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(250);
   }
 
+  activate_enhanced_gui();
+  MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
+
   MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
-  if (ts) {
-    md_track_select.on();
-  }
+  MD.popup_text("ENHANCED");
+  md_track_select.on();
   if (ti) {
     trig_interface.on();
   } else {
@@ -255,6 +255,22 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
     }
   } else {
     *track = 255;
+  }
+}
+
+void MDClass::parallelTrig(uint16_t mask) {
+  uint8_t a;
+  uint8_t b;
+  uint8_t c;
+
+  a = mask & 0x7F;
+  mask = mask >> 7;
+  c = mask >> 7 & 0xF7;
+  b = mask & 0x7F;
+
+  uart->sendNoteOn(global.baseChannel + 1, a, b);
+  if (c > 0) {
+  uart->sendNoteOn(global.baseChannel + 2, c, 0);
   }
 }
 

@@ -22,11 +22,6 @@ void mclsys_apply_config() {
   } else {
     GUI.use_screen_saver = false;
   }
-  if (MD.connected) {
-    if (mcl_cfg.track_select != 1) {
-      md_track_select.off();
-    }
-  }
 }
 
 bool MCLSysConfig::write_cfg() {

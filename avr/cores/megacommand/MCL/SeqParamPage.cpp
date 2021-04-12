@@ -206,6 +206,8 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint8_t step = track + (page_select * 16);
 
+    step_select = track;
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
       seq_param1.cur = mcl_seq.md_tracks[last_md_track].locks_params[p1];
       seq_param3.cur = mcl_seq.md_tracks[last_md_track].locks_params[p2];

@@ -42,6 +42,7 @@ public:
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
   ALWAYS_INLINE() void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
+  void get_step_locks(uint8_t step, uint8_t *params);
 
   ALWAYS_INLINE() void recalc_slides();
   ALWAYS_INLINE()
@@ -54,7 +55,9 @@ public:
   // !! Note track_param is param_id, not lock index
   bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
   // !! Note lockidx is lock index, not param_id
+
   uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
+  uint8_t get_track_lock_implicit(uint8_t step, uint8_t param);
 
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
@@ -67,6 +70,7 @@ public:
   // access the step lock bitmap, masked by locks_enable bit.
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
+  void clear_step_lock(uint8_t step, uint8_t param_id);
   void clear_locks(bool reset_params = true);
   void clear_track(bool locks = true, bool reset_params = true);
   void clear_param_locks(uint8_t param_id);
@@ -77,7 +81,7 @@ public:
   void reset_params();
   void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
-  void set_length(uint8_t len);
+  void set_length(uint8_t len, bool expand = false);
   void re_sync();
 
   void rotate_left() { modify_track(DIR_LEFT); }
