@@ -14,6 +14,9 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 	return pos;
 }
 
+// XXX 4KB buf on stack is too heavy
+// consider writing to SD card
+// SWAP partition!!
 void ResourceManager::Save(uint8_t *buf, size_t *sz) {
 	memcpy(buf, m_buffer, m_bufsize);
 	*sz = m_bufsize;

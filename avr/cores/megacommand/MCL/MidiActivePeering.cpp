@@ -42,7 +42,6 @@ static void prepare_display(uint8_t* buf) {
   oled_display.println("Peering...");
 #endif
   if (!resource_loaded) {
-    R.Save(buf, &resource_size);
     R.Clear();
     R.use_icons_device();
     resource_loaded = true;
@@ -194,7 +193,9 @@ void MidiActivePeering::run() {
   probePort(UART2_PORT, port2_drivers, countof(port2_drivers),
             &connected_midi_devices[1], resource_buf);
   if (resource_loaded) {
-    R.Restore(resource_buf, resource_size);
+    // XXX doesn't work yet
+    //R.Restore(resource_buf, resource_size);
+    GUI.currentPage()->init();
     resource_loaded = false;
   }
 #endif

@@ -213,11 +213,4 @@ extern const unsigned char wheel_angle [];
 // 'wheel3', 19x19px
 extern const unsigned char wheel_side [];
 
-// 'md_rev', 34x24px
-extern const unsigned char icon_md[];
-// 'a4_rev', 34x24px
-extern const unsigned char icon_a4[];
-// 'mnm_rev', 34x24px
-extern const unsigned char icon_mnm[];
-
 #endif /* MCLGUI_H__ */
