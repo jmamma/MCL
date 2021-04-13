@@ -10,7 +10,7 @@
 000023e9	l     O	.text	593	ElektrothicBitmaps	
 000009fa	l     O	.text	477	MENU_OPTIONS	
 000016a4	g     O	.text	418	TomThumbBitmaps	
-000007b7	l     O	.text	360	Entries	 -- TOO MANY REFERENCES
+000007b7	l     O	.text	360	Entries
 00001d12	l     O	.text	278	seq_menu_layout	 -- TOO MANY REFERENCES
 00003fb1	l     O	.text	240	mnm_machine_names	
 00001a6e	l     O	.text	206	slot_menu_layout	 -- TOO MANY REFERENCES
@@ -190,20 +190,23 @@ PROGMEM -108
 
 == enhanced_gui branch ==
 Sketch uses 233782 bytes (92%) of program storage space. Maximum is 253952 bytes.
-Global variables use 47610 bytes (83%) of dynamic memory, leaving 9221 bytes for local variable
-s. Maximum is 56831 bytes.
+Global variables use 47610 bytes (83%) of dynamic memory, leaving 9221 bytes for local variable s. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
 
 == merged with enhanced_gui and applying compression ==
 Sketch uses 231450 bytes (91%) of program storage space. Maximum is 253952 bytes.
-Global variables use 52651 bytes (92%) of dynamic memory, leaving 4180 bytes for local variable
-s. Maximum is 56831 bytes.
+Global variables use 52651 bytes (92%) of dynamic memory, leaving 4180 bytes for local variable s. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
 PROGMEM -2332
 
 == disable diag page logger ==
 Sketch uses 231226 bytes (91%) of program storage space. Maximum is 253952 bytes.
-Global variables use 51919 bytes (91%) of dynamic memory, leaving 4912 bytes for local variable
-s. Maximum is 56831 bytes.
+Global variables use 51919 bytes (91%) of dynamic memory, leaving 4912 bytes for local variable s. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
 PROGMEM -2556
+
+== compress menu items ==
+Sketch uses 230854 bytes (90%) of program storage space. Maximum is 253952 byte s.
+Global variables use 52919 bytes (93%) of dynamic memory, leaving 3912 bytes fo r local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -2928

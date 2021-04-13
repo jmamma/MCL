@@ -1,7 +1,7 @@
 #include "MCLMenus.h"
 #include "Project.h"
 
-menu_option_t _MENU_OPTIONS[] = {
+menu_option_t MENU_OPTIONS[] = {
   // 0: RAM PAGE LINK
   {0, "MONO"}, {1, "STEREO"},
   // 2: MIDI TURBO 1/2

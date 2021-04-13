@@ -21,8 +21,6 @@ struct menu_item_t {
   uint8_t options_begin;
 };
 
-extern const menu_option_t MENU_OPTIONS[];
-
 template <uint8_t N> struct menu_t {
   char name[10];
   menu_item_t items[N];
@@ -49,7 +47,7 @@ public:
   const menu_item_t *get_item(uint8_t item_n);
   PGM_P get_item_name(uint8_t item_n);
   uint8_t get_item_index(uint8_t item_n);
-  PGM_P get_option_name(uint8_t item_n, uint8_t option_n);
+  const char* get_option_name(uint8_t item_n, uint8_t option_n);
   FP get_row_function(uint8_t item_n);
 
   virtual PGM_P get_name() = 0;

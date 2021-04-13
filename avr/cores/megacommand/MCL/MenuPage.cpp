@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void MenuPageBase::init() {
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
@@ -16,6 +17,9 @@ void MenuPageBase::init() {
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
+  
+  R.Clear();
+  R.use_menu_options();
 }
 
 void MenuPageBase::setup() {
@@ -89,7 +93,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
     if (pgp == NULL) {
       oled_display.println(*pdest);
     } else {
-      m_strncpy_p(str, pgp, 11);
+      strncpy(str, pgp, 11);
       oled_display.println(str);
     }
   }
@@ -177,7 +181,7 @@ void MenuPageBase::display() {
     if (pgp == NULL) {
       GUI.put_value_at(10, *(get_menu()->get_dest_variable(cur_row)));
     } else {
-      m_strncpy_p(str, pgp, 11);
+      strncpy(str, pgp, 11);
       GUI.put_string_at(10, str);
     }
   }

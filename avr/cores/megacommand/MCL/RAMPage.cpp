@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 #define STATE_NOSTATE 0
 #define STATE_QUEUE 1

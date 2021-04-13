@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void MenuBase::enable_entry(uint8_t entry_index, bool en) {
   auto midx = entry_index / 8;
@@ -87,14 +88,14 @@ uint8_t MenuBase::get_options_offset(uint8_t item_n) {
   return pgm_read_byte(&(item->options_begin));
 }
 
-PGM_P MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
+// caller ensures menu_options is loaded in ResMan
+const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
   auto *item = get_item(item_n);
-  const menu_option_t *option;
   uint8_t num_of_options = get_number_of_options(item_n);
   uint8_t options_offset = get_options_offset(item_n);
   for (uint8_t a = 0; a < num_of_options; a++) {
-    option = MENU_OPTIONS+a+options_offset;
-    if (pgm_read_byte(&(option->pos)) == option_n) {
+    const menu_option_t *option = R.menu_options->MENU_OPTIONS + a + options_offset;
+    if (option->pos == option_n) {
       return option->name;
     }
   }

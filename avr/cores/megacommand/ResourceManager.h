@@ -2,7 +2,7 @@
 #include "unpack.h"
 #include "resources/R.h"
 
-#define RM_BUFSIZE 5000
+#define RM_BUFSIZE 6000
 
 class ResourceManager {
 private:

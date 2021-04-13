@@ -372,6 +372,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       row_func();
       show_seq_menu = false;
       show_step_menu = false;
+      init();
       return true;
     }
     if (show_seq_menu) {
@@ -384,6 +385,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     show_seq_menu = false;
     show_step_menu = false;
     mcl_gui.init_encoders_used_clock();
+    init();
     return true;
   }
 #else

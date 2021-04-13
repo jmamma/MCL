@@ -29,7 +29,7 @@ extern void new_proj_handler();
 
 extern MenuPage<9> system_page;
 extern MenuPage<6> midi_config_page;
-extern MenuPage<4> md_config_page;
+extern MenuPage<3> md_config_page;
 extern MenuPage<1> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
