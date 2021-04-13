@@ -19,6 +19,8 @@ __T_machine_names_short *machine_names_short;
 void use_machine_names_short() { machine_names_short = (__T_machine_names_short*) __use_resource(__R_machine_names_short); }  
 __T_machine_param_names *machine_param_names;  
 void use_machine_param_names() { machine_param_names = (__T_machine_param_names*) __use_resource(__R_machine_param_names); }  
+__T_menu_layouts *menu_layouts;  
+void use_menu_layouts() { menu_layouts = (__T_menu_layouts*) __use_resource(__R_menu_layouts); }  
 __T_menu_options *menu_options;  
 void use_menu_options() { menu_options = (__T_menu_options*) __use_resource(__R_menu_options); }  
 __T_page_entries *page_entries;  

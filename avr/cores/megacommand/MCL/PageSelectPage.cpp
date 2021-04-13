@@ -79,55 +79,7 @@ void PageSelectPage::init() {
   R.Clear();
   R.use_icons_page();
   R.use_page_entries();
-  // calibrate references
-  R.page_entries->Entries[0].Page = &grid_page;
-  R.page_entries->Entries[0].IconData = R.icons_page->icon_grid;
-  R.page_entries->Entries[1].Page = &mixer_page;
-  R.page_entries->Entries[1].IconData = R.icons_page->icon_mixer;
-  R.page_entries->Entries[2].Page = &route_page;
-  R.page_entries->Entries[2].IconData = R.icons_page->icon_route;
-  R.page_entries->Entries[3].Page = &lfo_page;
-  R.page_entries->Entries[3].IconData = R.icons_page->icon_lfo;
-
-  R.page_entries->Entries[4].Page = &seq_step_page;
-  R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
-  R.page_entries->Entries[5].Page = &seq_extstep_page;
-  R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].Page = &seq_param_page[0];
-  R.page_entries->Entries[6].IconData = R.icons_page->icon_para;
-  R.page_entries->Entries[7].Page = &seq_ptc_page;
-  R.page_entries->Entries[7].IconData = R.icons_page->icon_chroma;
-
-  uint8_t idx = 8;
-#ifdef SOUND_PAGE
-  R.page_entries->Entries[idx].Page = &sound_browser;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_sound;
-  ++idx;
-#endif
-#ifdef WAV_DESIGNER
-  R.page_entries->Entries[idx].Page = &wd.pages[0];
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
-  ++idx;
-#endif
-#ifdef LOUDNESS_PAGE
-  R.page_entries->Entries[idx].Page = &loudness_page;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_loudness;
-  ++idx;
-#endif
-
-  R.page_entries->Entries[idx].Page = &fx_page_a;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_rhytmecho;
-  ++idx;
-  R.page_entries->Entries[idx].Page = &fx_page_b;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
-  ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_a;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram1;
-  ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_b;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
-  // calibration complete
-
+  R.restore_page_entry_deps();
 
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();

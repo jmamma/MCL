@@ -18,9 +18,9 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
   return bit_is_set(entry_mask[midx], bit);
 }
 
-FP MenuBase::get_row_function(uint8_t item_n) {
+menu_function_t MenuBase::get_row_function(uint8_t item_n) {
   const menu_item_t *item = get_item(item_n);
-  return (FP)pgm_read_word(&(item->row_function));
+  return (menu_function_t)pgm_read_word(menu_target_functions + item->row_function_id);
 }
 
 uint8_t MenuBase::get_number_of_items() {
@@ -53,44 +53,43 @@ uint8_t MenuBase::get_item_index(uint8_t item_n)
   return pentry - get_entry_address(0);
 }
 
-PGM_P MenuBase::get_item_name(uint8_t item_n) {
+const char* MenuBase::get_item_name(uint8_t item_n) {
   auto *item = get_item(item_n);
   return item->name;
 }
 
 LightPage *MenuBase::get_page_callback(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return (LightPage*)pgm_read_word(&(item->page_callback));
+  return (LightPage*)pgm_read_word(menu_target_pages + item->page_callback_id);
 }
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return (uint8_t*)pgm_read_word(&(item->destination_var));
+  return (uint8_t*)pgm_read_word(menu_target_param + item->destination_var_id);
 }
 
 uint8_t MenuBase::get_option_range(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_byte(&(item->range));
+  return item->range;
 }
 
 uint8_t MenuBase::get_option_min(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_byte(&(item->min));
+  return item->min;
 }
 
 uint8_t MenuBase::get_number_of_options(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_byte(&(item->number_of_options));
+  return item->number_of_options;
 }
 
 uint8_t MenuBase::get_options_offset(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return pgm_read_byte(&(item->options_begin));
+  return item->options_begin;
 }
 
 // caller ensures menu_options is loaded in ResMan
 const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
-  auto *item = get_item(item_n);
   uint8_t num_of_options = get_number_of_options(item_n);
   uint8_t options_offset = get_options_offset(item_n);
   for (uint8_t a = 0; a < num_of_options; a++) {
@@ -99,5 +98,5 @@ const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
       return option->name;
     }
   }
-  return NULL;
+  return nullptr;
 }

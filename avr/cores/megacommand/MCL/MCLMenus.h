@@ -43,5 +43,26 @@ extern TextInputPage text_input_page;
 extern MCLEncoder file_menu_encoder;
 extern MenuPage<5> file_menu_page;
 
+extern MCLEncoder seq_menu_value_encoder;
+extern MCLEncoder seq_menu_entry_encoder;
+extern MenuPage<19> seq_menu_page;
 
+extern MCLEncoder step_menu_value_encoder;
+extern MCLEncoder step_menu_entry_encoder;
+extern MenuPage<4> step_menu_page;
+
+extern MCLEncoder grid_slot_param1;
+extern MCLEncoder grid_slot_param2;
+
+constexpr size_t grid_slot_page_N =
+    #ifndef OLED_DISPLAY
+    9;
+    #else
+    8;
+    #endif
+extern MenuPage<grid_slot_page_N> grid_slot_page;
+
+extern MCLEncoder wav_menu_value_encoder;
+extern MCLEncoder wav_menu_entry_encoder;
+extern MenuPage<3> wav_menu_page;
 #endif /* MCLMENUS_H__ */

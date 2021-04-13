@@ -11,23 +11,23 @@
 000009fa	l     O	.text	477	MENU_OPTIONS	
 000016a4	g     O	.text	418	TomThumbBitmaps	
 000007b7	l     O	.text	360	Entries
-00001d12	l     O	.text	278	seq_menu_layout	 -- TOO MANY REFERENCES
+00001d12	l     O	.text	278	seq_menu_layout
 00003fb1	l     O	.text	240	mnm_machine_names	
-00001a6e	l     O	.text	206	slot_menu_layout	 -- TOO MANY REFERENCES
-0000205c	l     O	.text	206	system_menu_layout	 -- TOO MANY REFERENCES
+00001a6e	l     O	.text	206	slot_menu_layou
+0000205c	l     O	.text	206	system_menu_layout
 000019a7	l     O	.text	192	evilknievel_bitmap	
 0000263a	l     O	.text	152	mcl_logo_bitmap	
 00002c67	l     O	.text	140	mnm_machine_names_short	
-00001e28	l     O	.text	134	file_menu_layout	 -- TOO MANY REFERENCES
-00001fd6	l     O	.text	134	midiconfig_menu_layout	 -- TOO MANY REFERENCES
+00001e28	l     O	.text	134	file_menu_layout
+00001fd6	l     O	.text	134	midiconfig_menu_layout
 00002d93	l     O	.text	125	ctr_8p_model_names	
 00003eb7	l     O	.text	125	generic_param_names	
 00003f34	l     O	.text	125	mid_model_names	
 00001b3c	l     O	.text	120	icon_a4	
 00001bb4	l     O	.text	120	icon_mnm	
 00001c2c	l     O	.text	120	icon_md	
-00001ca4	l     O	.text	110	step_menu_layout	 -- TOO MANY REFERENCES
-00001f68	l     O	.text	110	mdconfig_menu_layout	 -- TOO MANY REFERENCES
+00001ca4	l     O	.text	110	step_menu_layout
+00001f68	l     O	.text	110	mdconfig_menu_layout
 00000bd7	l     O	.text	96	scale_names	
 0000124c	l     O	.text	96	gnd_sn_tuning	
 00001f12	l     O	.text	86	chain_menu_layout	
@@ -43,7 +43,7 @@
 00001961	g     O	.text	70	digital_pin_to_bit_mask_PGM	
 000026d2	l     O	.text	70	digital_pin_to_timer_PGM	
 0000137b	l     O	.text	66	efm_cp_tuning	
-00001ed4	l     O	.text	62	mclconfig_menu_layout	 -- TOO MANY REFERENCES
+00001ed4	l     O	.text	62	mclconfig_menu_layout
 0000057c	l     O	.text	57	icon_wavd	
 000005b5	l     O	.text	57	icon_sound	
 00000639	l     O	.text	57	icon_para	
@@ -210,3 +210,15 @@ Sketch uses 230854 bytes (90%) of program storage space. Maximum is 253952 byte 
 Global variables use 52919 bytes (93%) of dynamic memory, leaving 3912 bytes fo r local variables. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
 PROGMEM -2928
+
+== compress menu layouts ==
+Sketch uses 229964 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52876 bytes (93%) of dynamic memory, leaving 3955 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -3818
+
+== remove diag_page entirely ==
+Sketch uses 229392 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52814 bytes (92%) of dynamic memory, leaving 4017 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -4390

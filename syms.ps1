@@ -28,7 +28,7 @@ function parse-symbol($line) {
 }
 
 Set-Location sketch
-$lines = $(avr-objdump -x sketch.MIDICtrl20_MegaCommand.avr.mega.elf)
+$lines = $(avr-objdump -x build/MIDICtrl20_MegaCommand.avr.mega\sketch.ino.elf)
 $header = $lines | Select-Object -First 37
 $symbols = $lines | Select-Object -Skip 38 | %{ parse-symbol($_) }
 

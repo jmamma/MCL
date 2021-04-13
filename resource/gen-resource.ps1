@@ -109,11 +109,12 @@ function gen_h($f) {
   }
   foreach($line in $(Get-Content $f)) {
     if ($line -match ".*=.*") {
-      [System.Text.RegularExpressions.Match]$m = [regex]::Match($line, "([^=\[\]]*)(?:\[.*\])\s* = ")
+      [System.Text.RegularExpressions.Match]$m = [regex]::Match($line, "([^=\[\]]*)(?:\[.*\])?\s* = ")
       $split = -split $m.Groups[1].Value
       $len = $split.Length
       $type = $split[0..($len-2)] -join " "
       $name = $split[$len-1]
+      echo "name = $name, type = $type"
       if ($name -eq "") {
         continue
       }

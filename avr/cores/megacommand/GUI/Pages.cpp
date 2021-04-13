@@ -36,8 +36,10 @@ void PageContainer::pushPage(LightPage* page) {
   page->redisplayPage();
   page->show();
   pageStack.push(page);
+#ifdef ENABLE_DIAG_LOGGING
   // deactivate diagnostic page on pushPage
   diag_page.deactivate();
+#endif
 }
 
 void PageParent::redisplayPage() {

@@ -25,12 +25,14 @@
 
 #endif
 
+#ifdef ENABLE_DIAG_LOGGING
 class DiagnosticPage : public LightPage, MidiCallback {
 private:
   uint16_t last_clock;
   bool active;
   uint8_t mode;
 
+#ifdef ENABLE_DIAG_LOGGING
   unsigned long perf_counters[DIAGNOSTIC_NUM_COUNTER];
   char perf_name[DIAGNOSTIC_NUM_COUNTER][9];
   char log_buf[DIAGNOSTIC_NUM_LOG][17];
@@ -38,9 +40,6 @@ private:
   uint8_t log_head;
   uint8_t log_disp_frame;
   uint8_t log_disp_head;
-
-  void draw_perfcounter();
-  void draw_log();
 
   void advance_log_head() {
     ++log_head;
@@ -50,6 +49,9 @@ private:
       log_head = 0;
     }
   }
+#endif
+  void draw_perfcounter();
+  void draw_log();
 
 public:
   DiagnosticPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
@@ -94,5 +96,6 @@ public:
 };
 
 extern DiagnosticPage diag_page;
+#endif
 
 #endif /* DIAGNOSTICPAGE_H__ */

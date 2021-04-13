@@ -15,6 +15,8 @@ public:
 	void Clear();
 	void Save(uint8_t* buf, size_t* sz);
 	void Restore(uint8_t* buf, size_t sz);
+	void restore_menu_layout_deps();
+	void restore_page_entry_deps();
 
 #include "resources/ResMan.h"
 };
