@@ -37,8 +37,6 @@ function compile($f) {
     -std=gnu++1z `
     -Os $f -c -o "$n.o"
   avr-objcopy -O binary -j .data "$n.o" "$n.hex"
-  ../uzlib-host/Release/compress.exe "$n.hex" "$n.z"
-  #F:\git\vcpkg\installed\x64-windows\tools\brotli\brotli.exe "$n.hex" -o "$n.br"
   ../compress/bin/Release/netcoreapp3.1/compress.exe "$n.hex" "$n.ez"
   Remove-Item -ErrorAction Ignore patterns.txt
 }
