@@ -7,12 +7,23 @@
 #include "MCLEncoder.h"
 #include "CommonTools/Stopwatch.h"
 
+#ifdef ENABLE_DIAG_LOGGING
+
 #define DIAGNOSTIC_NUM_COUNTER 4
 #define DIAGNOSTIC_NUM_LOG 40
-
 #define DIAG_MEASURE(i, x) diag_page.set_perfcounter(i, #x, x)
 #define DIAG_PRINTLN(x) diag_page.println(x)
 #define DIAG_DUMP(x) diag_page.println(#x, x)
+
+#else
+
+#define DIAGNOSTIC_NUM_COUNTER 0
+#define DIAGNOSTIC_NUM_LOG 0
+#define DIAG_MEASURE(i, x)
+#define DIAG_PRINTLN(x)
+#define DIAG_DUMP(x)
+
+#endif
 
 class DiagnosticPage : public LightPage, MidiCallback {
 private:

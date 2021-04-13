@@ -50,4 +50,6 @@ foreach ($obj in $comp_target) {
 
 echo "Total compressable object size: $comp_total_size"
 
+$data | Out-GridView
+$bss | Out-GridView
 Set-Location ..

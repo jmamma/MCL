@@ -151,6 +151,20 @@
 00003eaf	l     O	.text	4	model_param_namehhE3__c_0	
 00003eb3	l     O	.text	4	model_param_namehhE3__c	
 
+== Initial compression run result ==
+ ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
+ └─╜ ╰▷ .\gen-resource.ps1
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\fonts.cpp
+compressed 3621 to 2871 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\icons.cpp
+compressed 1986 to 1385 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\machine_names.cpp
+compressed 5345 to 2947 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\menu_options.cpp
+compressed 738 to 399 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\tuning.cpp
+compressed 810 to 700 raw bytes
+
 == Initial comp branch size ==
 Sketch uses 228562 bytes (90%) of program storage space. Maximum is 253952 bytes.
 Global variables use 47314 bytes (83%) of dynamic memory, leaving 9517 bytes for local variables. Maximum is 56831 bytes.
@@ -175,23 +189,21 @@ Low memory available, stability problems may occur.
 PROGMEM -108
 
 == enhanced_gui branch ==
+Sketch uses 233782 bytes (92%) of program storage space. Maximum is 253952 bytes.
+Global variables use 47610 bytes (83%) of dynamic memory, leaving 9221 bytes for local variable
+s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
 
 == merged with enhanced_gui and applying compression ==
 Sketch uses 231450 bytes (91%) of program storage space. Maximum is 253952 bytes.
 Global variables use 52651 bytes (92%) of dynamic memory, leaving 4180 bytes for local variable
 s. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
+PROGMEM -2332
 
-== Compression run result ==
- ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
- └─╜ ╰▷ .\gen-resource.ps1
-Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\fonts.cpp
-compressed 3621 to 2871 raw bytes
-Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\icons.cpp
-compressed 1986 to 1385 raw bytes
-Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\machine_names.cpp
-compressed 5345 to 2947 raw bytes
-Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\menu_options.cpp
-compressed 738 to 399 raw bytes
-Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\tuning.cpp
-compressed 810 to 700 raw bytes
+== disable diag page logger ==
+Sketch uses 231226 bytes (91%) of program storage space. Maximum is 253952 bytes.
+Global variables use 51919 bytes (91%) of dynamic memory, leaving 4912 bytes for local variable
+s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -2556
