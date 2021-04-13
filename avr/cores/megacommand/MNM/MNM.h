@@ -126,7 +126,7 @@ public:
   void muteAutoTrack() { setAutoMute(true); }
   void unmuteAutoTrack() { setAutoMute(false); }
 
-  PGM_P getModelParamName(uint8_t model, uint8_t param);
+  const char* getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 
   void revertToCurrentKit(bool reloadKit = true);

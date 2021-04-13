@@ -30,7 +30,7 @@ typedef struct model_param_name_s {
 /** Data structure holding the parameter names for a machine model. **/
 typedef struct model_to_param_names_s {
   uint8_t model;
-  const model_param_name_t *names;
+  uint16_t offset; // offset of the first param in the lookup table
 } model_to_param_names_t;
 
 typedef struct short_machine_name_s {

@@ -75,11 +75,10 @@ void SeqParamPage::display() {
   if (seq_param1.getValue() == 0) {
     GUI.put_string_at(0, "--");
   } else {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param1.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy(myName, modelname, 4);
     }
     GUI.put_string_at(0, myName);
   }
@@ -91,11 +90,10 @@ void SeqParamPage::display() {
   if (seq_param3.getValue() == 0) {
     GUI.put_string_at(7, "--");
   } else {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param3.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName2, modelname, 4);
+      strncpy(myName2, modelname, 4);
     }
     GUI.put_string_at(7, myName2);
   }
@@ -125,20 +123,18 @@ void SeqParamPage::display() {
   char myName2[4] = "-- ";
 
   if (seq_param1.getValue() != 0) {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param1.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy(myName, modelname, 4);
     }
   }
 
   if (seq_param3.getValue() != 0) {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param3.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param3.getValue() - 1);
     if (modelname != NULL) {
-      m_strncpy_p(myName2, modelname, 4);
+      strncpy(myName2, modelname, 4);
     }
   }
 
@@ -231,7 +227,8 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       }
 
       if (active_track.steps[step].locks_enabled) {
-        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) <
+            TRIG_HOLD_TIME) {
           active_track.disable_step_locks(step);
         }
       }

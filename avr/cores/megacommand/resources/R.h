@@ -10,6 +10,7 @@ struct __T_font_default {
   };
   static constexpr size_t countof_font = 1280 / sizeof(unsigned char);
   static constexpr size_t sizeofof_font = 1280;
+  static constexpr size_t __total_size = 1280;
 };
 
 extern const unsigned char __R_font_elektrothic[] PROGMEM;
@@ -26,6 +27,7 @@ struct __T_font_elektrothic {
   };
   static constexpr size_t countof_ElektrothicBitmaps = 593 / sizeof(unsigned char);
   static constexpr size_t sizeofof_ElektrothicBitmaps = 593;
+  static constexpr size_t __total_size = 1258;
 };
 
 extern const unsigned char __R_font_tomthumb[] PROGMEM;
@@ -42,6 +44,7 @@ struct __T_font_tomthumb {
   };
   static constexpr size_t countof_TomThumbBitmaps = 418 / sizeof(unsigned char);
   static constexpr size_t sizeofof_TomThumbBitmaps = 418;
+  static constexpr size_t __total_size = 1083;
 };
 
 extern const unsigned char __R_icons_boot[] PROGMEM;
@@ -58,6 +61,7 @@ struct __T_icons_boot {
   };
   static constexpr size_t countof_mcl_logo_bitmap = 152 / sizeof(unsigned char);
   static constexpr size_t sizeofof_mcl_logo_bitmap = 152;
+  static constexpr size_t __total_size = 344;
 };
 
 extern const unsigned char __R_icons_device[] PROGMEM;
@@ -80,6 +84,7 @@ struct __T_icons_device {
   };
   static constexpr size_t countof_icon_md = 120 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_md = 120;
+  static constexpr size_t __total_size = 360;
 };
 
 extern const unsigned char __R_icons_knob[] PROGMEM;
@@ -144,6 +149,7 @@ struct __T_icons_knob {
   };
   static constexpr size_t countof_encoder_small_0 = 22 / sizeof(unsigned char);
   static constexpr size_t sizeofof_encoder_small_0 = 22;
+  static constexpr size_t __total_size = 325;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;
@@ -238,6 +244,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
+  static constexpr size_t __total_size = 957;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
@@ -254,6 +261,7 @@ struct __T_machine_names_long {
   };
   static constexpr size_t countof_machine_names = 1096 / sizeof(md_machine_name_t);
   static constexpr size_t sizeofof_machine_names = 1096;
+  static constexpr size_t __total_size = 1336;
 };
 
 extern const unsigned char __R_machine_names_short[] PROGMEM;
@@ -270,400 +278,24 @@ struct __T_machine_names_short {
   };
   static constexpr size_t countof_md_machine_names_short = 959 / sizeof(short_machine_name_t);
   static constexpr size_t sizeofof_md_machine_names_short = 959;
+  static constexpr size_t __total_size = 1099;
 };
 
 extern const unsigned char __R_machine_param_names[] PROGMEM;
 struct __T_machine_param_names {
   union {
-    model_param_name_t generic_param_names[0];
-    char zz__generic_param_names[125];
+    model_param_name_t mnm_model_param_names[0];
+    char zz__mnm_model_param_names[955];
   };
-  static constexpr size_t countof_generic_param_names = 125 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_generic_param_names = 125;
+  static constexpr size_t countof_mnm_model_param_names = 955 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_mnm_model_param_names = 955;
   union {
-    model_param_name_t ram_r_model_names[0];
-    char zz__ram_r_model_names[45];
+    model_param_name_t md_model_param_names[0];
+    char zz__md_model_param_names[2910];
   };
-  static constexpr size_t countof_ram_r_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ram_r_model_names = 45;
-  union {
-    model_param_name_t rom_model_names[0];
-    char zz__rom_model_names[45];
-  };
-  static constexpr size_t countof_rom_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_rom_model_names = 45;
-  union {
-    model_param_name_t ctr_dx_model_names[0];
-    char zz__ctr_dx_model_names[40];
-  };
-  static constexpr size_t countof_ctr_dx_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_dx_model_names = 40;
-  union {
-    model_param_name_t ctr_eq_model_names[0];
-    char zz__ctr_eq_model_names[40];
-  };
-  static constexpr size_t countof_ctr_eq_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_eq_model_names = 40;
-  union {
-    model_param_name_t ctr_gb_model_names[0];
-    char zz__ctr_gb_model_names[40];
-  };
-  static constexpr size_t countof_ctr_gb_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_gb_model_names = 40;
-  union {
-    model_param_name_t ctr_re_model_names[0];
-    char zz__ctr_re_model_names[40];
-  };
-  static constexpr size_t countof_ctr_re_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_re_model_names = 40;
-  union {
-    model_param_name_t ctr_8p_model_names[0];
-    char zz__ctr_8p_model_names[125];
-  };
-  static constexpr size_t countof_ctr_8p_model_names = 125 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_8p_model_names = 125;
-  union {
-    model_param_name_t ctr_al_model_names[0];
-    char zz__ctr_al_model_names[45];
-  };
-  static constexpr size_t countof_ctr_al_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_ctr_al_model_names = 45;
-  union {
-    model_param_name_t mid_model_names[0];
-    char zz__mid_model_names[125];
-  };
-  static constexpr size_t countof_mid_model_names = 125 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_mid_model_names = 125;
-  union {
-    model_param_name_t inp_ea_model_names[0];
-    char zz__inp_ea_model_names[45];
-  };
-  static constexpr size_t countof_inp_ea_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_inp_ea_model_names = 45;
-  union {
-    model_param_name_t inp_fa_model_names[0];
-    char zz__inp_fa_model_names[45];
-  };
-  static constexpr size_t countof_inp_fa_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_inp_fa_model_names = 45;
-  union {
-    model_param_name_t inp_ga_model_names[0];
-    char zz__inp_ga_model_names[30];
-  };
-  static constexpr size_t countof_inp_ga_model_names = 30 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_inp_ga_model_names = 30;
-  union {
-    model_param_name_t p_i_hh_model_names[0];
-    char zz__p_i_hh_model_names[45];
-  };
-  static constexpr size_t countof_p_i_hh_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_hh_model_names = 45;
-  union {
-    model_param_name_t p_i_cc_model_names[0];
-    char zz__p_i_cc_model_names[45];
-  };
-  static constexpr size_t countof_p_i_cc_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_cc_model_names = 45;
-  union {
-    model_param_name_t p_i_rc_model_names[0];
-    char zz__p_i_rc_model_names[45];
-  };
-  static constexpr size_t countof_p_i_rc_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_rc_model_names = 45;
-  union {
-    model_param_name_t p_i_rs_model_names[0];
-    char zz__p_i_rs_model_names[35];
-  };
-  static constexpr size_t countof_p_i_rs_model_names = 35 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_rs_model_names = 35;
-  union {
-    model_param_name_t p_i_ma_model_names[0];
-    char zz__p_i_ma_model_names[30];
-  };
-  static constexpr size_t countof_p_i_ma_model_names = 30 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_ma_model_names = 30;
-  union {
-    model_param_name_t p_i_ml_model_names[0];
-    char zz__p_i_ml_model_names[25];
-  };
-  static constexpr size_t countof_p_i_ml_model_names = 25 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_ml_model_names = 25;
-  union {
-    model_param_name_t p_i_mt_model_names[0];
-    char zz__p_i_mt_model_names[45];
-  };
-  static constexpr size_t countof_p_i_mt_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_mt_model_names = 45;
-  union {
-    model_param_name_t p_i_sd_model_names[0];
-    char zz__p_i_sd_model_names[40];
-  };
-  static constexpr size_t countof_p_i_sd_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_sd_model_names = 40;
-  union {
-    model_param_name_t p_i_bd_model_names[0];
-    char zz__p_i_bd_model_names[35];
-  };
-  static constexpr size_t countof_p_i_bd_model_names = 35 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_p_i_bd_model_names = 35;
-  union {
-    model_param_name_t e12_bc_model_names[0];
-    char zz__e12_bc_model_names[45];
-  };
-  static constexpr size_t countof_e12_bc_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_bc_model_names = 45;
-  union {
-    model_param_name_t e12_sh_model_names[0];
-    char zz__e12_sh_model_names[45];
-  };
-  static constexpr size_t countof_e12_sh_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_sh_model_names = 45;
-  union {
-    model_param_name_t e12_tr_model_names[0];
-    char zz__e12_tr_model_names[45];
-  };
-  static constexpr size_t countof_e12_tr_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_tr_model_names = 45;
-  union {
-    model_param_name_t e12_ta_model_names[0];
-    char zz__e12_ta_model_names[45];
-  };
-  static constexpr size_t countof_e12_ta_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_ta_model_names = 45;
-  union {
-    model_param_name_t e12_br_model_names[0];
-    char zz__e12_br_model_names[45];
-  };
-  static constexpr size_t countof_e12_br_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_br_model_names = 45;
-  union {
-    model_param_name_t e12_cc_model_names[0];
-    char zz__e12_cc_model_names[45];
-  };
-  static constexpr size_t countof_e12_cc_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_cc_model_names = 45;
-  union {
-    model_param_name_t e12_rc_model_names[0];
-    char zz__e12_rc_model_names[45];
-  };
-  static constexpr size_t countof_e12_rc_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_rc_model_names = 45;
-  union {
-    model_param_name_t e12_oh_model_names[0];
-    char zz__e12_oh_model_names[45];
-  };
-  static constexpr size_t countof_e12_oh_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_oh_model_names = 45;
-  union {
-    model_param_name_t e12_ch_model_names[0];
-    char zz__e12_ch_model_names[45];
-  };
-  static constexpr size_t countof_e12_ch_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_ch_model_names = 45;
-  union {
-    model_param_name_t e12_cb_model_names[0];
-    char zz__e12_cb_model_names[45];
-  };
-  static constexpr size_t countof_e12_cb_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_cb_model_names = 45;
-  union {
-    model_param_name_t e12_rs_model_names[0];
-    char zz__e12_rs_model_names[45];
-  };
-  static constexpr size_t countof_e12_rs_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_rs_model_names = 45;
-  union {
-    model_param_name_t e12_cp_model_names[0];
-    char zz__e12_cp_model_names[45];
-  };
-  static constexpr size_t countof_e12_cp_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_cp_model_names = 45;
-  union {
-    model_param_name_t e12_lt_model_names[0];
-    char zz__e12_lt_model_names[45];
-  };
-  static constexpr size_t countof_e12_lt_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_lt_model_names = 45;
-  union {
-    model_param_name_t e12_ht_model_names[0];
-    char zz__e12_ht_model_names[45];
-  };
-  static constexpr size_t countof_e12_ht_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_ht_model_names = 45;
-  union {
-    model_param_name_t e12_sd_model_names[0];
-    char zz__e12_sd_model_names[45];
-  };
-  static constexpr size_t countof_e12_sd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_sd_model_names = 45;
-  union {
-    model_param_name_t e12_bd_model_names[0];
-    char zz__e12_bd_model_names[45];
-  };
-  static constexpr size_t countof_e12_bd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_e12_bd_model_names = 45;
-  union {
-    model_param_name_t efm_cy_model_names[0];
-    char zz__efm_cy_model_names[40];
-  };
-  static constexpr size_t countof_efm_cy_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_cy_model_names = 40;
-  union {
-    model_param_name_t efm_hh_model_names[0];
-    char zz__efm_hh_model_names[45];
-  };
-  static constexpr size_t countof_efm_hh_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_hh_model_names = 45;
-  union {
-    model_param_name_t efm_cb_model_names[0];
-    char zz__efm_cb_model_names[40];
-  };
-  static constexpr size_t countof_efm_cb_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_cb_model_names = 40;
-  union {
-    model_param_name_t efm_rs_model_names[0];
-    char zz__efm_rs_model_names[45];
-  };
-  static constexpr size_t countof_efm_rs_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_rs_model_names = 45;
-  union {
-    model_param_name_t efm_cp_model_names[0];
-    char zz__efm_cp_model_names[45];
-  };
-  static constexpr size_t countof_efm_cp_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_cp_model_names = 45;
-  union {
-    model_param_name_t efm_xt_model_names[0];
-    char zz__efm_xt_model_names[45];
-  };
-  static constexpr size_t countof_efm_xt_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_xt_model_names = 45;
-  union {
-    model_param_name_t efm_sd_model_names[0];
-    char zz__efm_sd_model_names[45];
-  };
-  static constexpr size_t countof_efm_sd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_sd_model_names = 45;
-  union {
-    model_param_name_t efm_bd_model_names[0];
-    char zz__efm_bd_model_names[45];
-  };
-  static constexpr size_t countof_efm_bd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_efm_bd_model_names = 45;
-  union {
-    model_param_name_t trx_xc_model_names[0];
-    char zz__trx_xc_model_names[40];
-  };
-  static constexpr size_t countof_trx_xc_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_xc_model_names = 40;
-  union {
-    model_param_name_t trx_cl_model_names[0];
-    char zz__trx_cl_model_names[35];
-  };
-  static constexpr size_t countof_trx_cl_model_names = 35 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_cl_model_names = 35;
-  union {
-    model_param_name_t trx_ma_model_names[0];
-    char zz__trx_ma_model_names[45];
-  };
-  static constexpr size_t countof_trx_ma_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_ma_model_names = 45;
-  union {
-    model_param_name_t trx_cy_model_names[0];
-    char zz__trx_cy_model_names[35];
-  };
-  static constexpr size_t countof_trx_cy_model_names = 35 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_cy_model_names = 35;
-  union {
-    model_param_name_t trx_oh_model_names[0];
-    char zz__trx_oh_model_names[30];
-  };
-  static constexpr size_t countof_trx_oh_model_names = 30 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_oh_model_names = 30;
-  union {
-    model_param_name_t trx_ch_model_names[0];
-    char zz__trx_ch_model_names[30];
-  };
-  static constexpr size_t countof_trx_ch_model_names = 30 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_ch_model_names = 30;
-  union {
-    model_param_name_t trx_cb_model_names[0];
-    char zz__trx_cb_model_names[35];
-  };
-  static constexpr size_t countof_trx_cb_model_names = 35 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_cb_model_names = 35;
-  union {
-    model_param_name_t trx_rs_model_names[0];
-    char zz__trx_rs_model_names[20];
-  };
-  static constexpr size_t countof_trx_rs_model_names = 20 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_rs_model_names = 20;
-  union {
-    model_param_name_t trx_cp_model_names[0];
-    char zz__trx_cp_model_names[45];
-  };
-  static constexpr size_t countof_trx_cp_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_cp_model_names = 45;
-  union {
-    model_param_name_t trx_xt_model_names[0];
-    char zz__trx_xt_model_names[40];
-  };
-  static constexpr size_t countof_trx_xt_model_names = 40 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_xt_model_names = 40;
-  union {
-    model_param_name_t trx_sd_model_names[0];
-    char zz__trx_sd_model_names[45];
-  };
-  static constexpr size_t countof_trx_sd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_sd_model_names = 45;
-  union {
-    model_param_name_t trx_s2_model_names[0];
-    char zz__trx_s2_model_names[45];
-  };
-  static constexpr size_t countof_trx_s2_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_s2_model_names = 45;
-  union {
-    model_param_name_t trx_b2_model_names[0];
-    char zz__trx_b2_model_names[45];
-  };
-  static constexpr size_t countof_trx_b2_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_b2_model_names = 45;
-  union {
-    model_param_name_t trx_bd_model_names[0];
-    char zz__trx_bd_model_names[45];
-  };
-  static constexpr size_t countof_trx_bd_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_trx_bd_model_names = 45;
-  union {
-    model_param_name_t gnd_pu_model_names[0];
-    char zz__gnd_pu_model_names[45];
-  };
-  static constexpr size_t countof_gnd_pu_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_gnd_pu_model_names = 45;
-  union {
-    model_param_name_t gnd_sw_model_names[0];
-    char zz__gnd_sw_model_names[45];
-  };
-  static constexpr size_t countof_gnd_sw_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_gnd_sw_model_names = 45;
-  union {
-    model_param_name_t gnd_im_model_names[0];
-    char zz__gnd_im_model_names[25];
-  };
-  static constexpr size_t countof_gnd_im_model_names = 25 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_gnd_im_model_names = 25;
-  union {
-    model_param_name_t gnd_ns_model_names[0];
-    char zz__gnd_ns_model_names[10];
-  };
-  static constexpr size_t countof_gnd_ns_model_names = 10 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_gnd_ns_model_names = 10;
-  union {
-    model_param_name_t gnd_sn_model_names[0];
-    char zz__gnd_sn_model_names[45];
-  };
-  static constexpr size_t countof_gnd_sn_model_names = 45 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_gnd_sn_model_names = 45;
+  static constexpr size_t countof_md_model_param_names = 2910 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_md_model_param_names = 2910;
+  static constexpr size_t __total_size = 3865;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
@@ -674,6 +306,7 @@ struct __T_menu_options {
   };
   static constexpr size_t countof__MENU_OPTIONS = 738 / sizeof(menu_option_t);
   static constexpr size_t sizeofof__MENU_OPTIONS = 738;
+  static constexpr size_t __total_size = 738;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;
@@ -684,6 +317,7 @@ struct __T_page_entries {
   };
   static constexpr size_t countof_Entries = 360 / sizeof(PageSelectEntry);
   static constexpr size_t sizeofof_Entries = 360;
+  static constexpr size_t __total_size = 360;
 };
 
 extern const unsigned char __R_tuning[] PROGMEM;
@@ -820,5 +454,6 @@ struct __T_tuning {
   };
   static constexpr size_t countof_efm_rs_tuning = 48 / sizeof(unsigned char);
   static constexpr size_t sizeofof_efm_rs_tuning = 48;
+  static constexpr size_t __total_size = 810;
 };
 

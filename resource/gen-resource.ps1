@@ -122,6 +122,7 @@ function gen_h($f) {
   }
 
   $Script:h += "`nstruct __T_$n {"
+  $total_sz = 0
   foreach($sym in $syms) {
     $name = $sym.Name
     $type = $typs[$name]
@@ -136,18 +137,26 @@ function gen_h($f) {
 
     $Script:h += "`n  static constexpr size_t countof_$name = $size / sizeof($type);"
     $Script:h += "`n  static constexpr size_t sizeofof_$name = $size;"
+    $total_sz += $size
   }
 
+  $Script:h += "`n  static constexpr size_t __total_size = $total_sz;"
 
   $Script:h += "`n};`n"
   $Script:resman += "  `n__T_$n *$n;"
   $Script:resman += "  `nvoid use_$n() { $n = (__T_$n*) __use_resource(__R_$n); }"
 }
 
+function clean($f) {
+  $n = [System.IO.Path]::GetFileNameWithoutExtension($f)
+  rm "$n.o", "$n.hex", "$n.ez"
+}
+
 Get-ChildItem *.cpp | ForEach-Object {
   compile $_ 
   gen_cpp $_
   gen_h $_
+  clean $_
 }
 
 $Script:h | Out-File -Encoding utf8 -FilePath "../avr/cores/megacommand/resources/R.h"

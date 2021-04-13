@@ -100,6 +100,7 @@ void SeqPage::init() {
 
   R.Clear();
   R.use_machine_names_short();
+  R.use_machine_param_names();
 }
 
 void SeqPage::cleanup() {

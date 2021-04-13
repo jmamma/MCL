@@ -174,6 +174,14 @@ Global variables use 51438 bytes (90%) of dynamic memory, leaving 5393 bytes for
 Low memory available, stability problems may occur.
 PROGMEM -108
 
+== enhanced_gui branch ==
+
+== merged with enhanced_gui and applying compression ==
+Sketch uses 231450 bytes (91%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52651 bytes (92%) of dynamic memory, leaving 4180 bytes for local variable
+s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+
 == Compression run result ==
  ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
  └─╜ ╰▷ .\gen-resource.ps1

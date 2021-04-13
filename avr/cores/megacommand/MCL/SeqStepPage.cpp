@@ -711,10 +711,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (store_lock == 0) {
     char str[5] = "--  ";
     char str2[4] = "-- ";
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
+    const char* modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {
-      m_strncpy_p(str, modelname, 3);
+      strncpy(str, modelname, 3);
       if (strlen(str) == 2) {
         str[2] = ' ';
         str[3] = '\0';
