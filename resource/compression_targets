@@ -222,3 +222,10 @@ Sketch uses 229392 bytes (90%) of program storage space. Maximum is 253952 bytes
 Global variables use 52814 bytes (92%) of dynamic memory, leaving 4017 bytes for local variables. Maximum is 56831 bytes.
 Low memory available, stability problems may occur.
 PROGMEM -4390
+
+
+== trim Elektrothic to digits only ==
+Sketch uses 228260 bytes (89%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52814 bytes (92%) of dynamic memory, leaving 4017 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -5522
