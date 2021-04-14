@@ -18,9 +18,13 @@ void MenuPageBase::init() {
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
   
+  DEBUG_PRINTLN("MenuPageBase::init");
   R.Clear();
+  R.use_machine_names_short(); // for grid page
   R.use_menu_options();
   R.use_menu_layouts();
+  DEBUG_PRINT("R.Size() = ");
+  DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
 }
 

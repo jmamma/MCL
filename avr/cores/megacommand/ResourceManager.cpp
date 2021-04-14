@@ -79,6 +79,10 @@ void ResourceManager::restore_page_entry_deps() {
 
 }
 
+size_t ResourceManager::Size() {
+  return m_bufsize;
+}
+
 void ResourceManager::restore_menu_layout_deps() {
 	aux_config_page.set_layout(R.menu_layouts->auxconfig_menu_layout);
 	system_page.set_layout(R.menu_layouts->system_menu_layout);

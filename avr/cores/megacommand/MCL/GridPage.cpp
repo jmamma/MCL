@@ -10,8 +10,12 @@ void GridPage::init() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
+  DEBUG_PRINTLN("GridPage::init()");
   R.Clear();
   R.use_machine_names_short();
+
+  DEBUG_PRINT("R.Size() = ");
+  DEBUG_PRINTLN(R.Size());
 }
 
 void GridPage::setup() {
@@ -732,7 +736,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
 
-    show_slot_menu = true;
     DEBUG_DUMP(getCol());
     DEBUG_DUMP(getRow());
     slot.load_from_grid(getCol(), getRow());
@@ -741,15 +744,17 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_DUMP(slot.chain.row);
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
-    grid_slot_page.init();
     encoders[2]->cur = 1;
     encoders[3]->cur = 1;
     slot_apply = 0;
+    show_slot_menu = true;
+    grid_slot_page.init();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     apply_slot_changes();
+    init();
     return true;
   }
 #else
