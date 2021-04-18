@@ -379,11 +379,10 @@ ISR(USART0_UDRE_vect) {
 
     if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
       MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-      UART_WRITE_CHAR(MidiUart.txRb_sidechannel->get_h_isr());
-      //PORTB |= (1 << PB5);
+      uint8_t c = MidiUart.txRb_sidechannel->get_h_isr();
+      UART_WRITE_CHAR(c);
     }
     if (MidiUart.txRb_sidechannel->isEmpty_isr()) {
-      //PORTB &= ~(1 << PB5);
       MidiUart.txRb_sidechannel = nullptr;
     }
   } else {
@@ -394,7 +393,7 @@ ISR(USART0_UDRE_vect) {
       if ((MidiUart.in_message > 0) && (c < 128)) {
         MidiUart.in_message--;
       }
-      switch (c) {
+      switch (c & 0xF0) {
       case MIDI_CHANNEL_PRESSURE:
       case MIDI_PROGRAM_CHANGE:
         MidiUart.in_message = 1;
@@ -414,7 +413,7 @@ ISR(USART0_UDRE_vect) {
         break;
       }
     }
-    if (MidiUart.txRb.isEmpty_isr()) {
+    if (MidiUart.txRb.isEmpty_isr() && (MidiUart.txRb_sidechannel != nullptr)) {
       UART_CLEAR_ISR_TX_BIT();
     }
   }
@@ -431,7 +430,8 @@ ISR(USART1_UDRE_vect) {
 
     if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
       MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-      UART2_WRITE_CHAR(MidiUart2.txRb_sidechannel->get_h_isr());
+      uint8_t c = MidiUart2.txRb_sidechannel->get_h_isr();
+      UART2_WRITE_CHAR(c);
     }
     if (MidiUart2.txRb_sidechannel->isEmpty_isr()) {
       MidiUart2.txRb_sidechannel = nullptr;
@@ -444,7 +444,7 @@ ISR(USART1_UDRE_vect) {
       if ((MidiUart2.in_message > 0) && (c < 128)) {
         MidiUart2.in_message--;
       }
-      switch (c) {
+      switch (c & 0xF0) {
       case MIDI_CHANNEL_PRESSURE:
       case MIDI_PROGRAM_CHANGE:
         MidiUart2.in_message = 1;
@@ -464,7 +464,7 @@ ISR(USART1_UDRE_vect) {
         break;
       }
     }
-    if (MidiUart2.txRb.isEmpty_isr()) {
+    if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel != nullptr)) {
       UART2_CLEAR_ISR_TX_BIT();
     }
   }
