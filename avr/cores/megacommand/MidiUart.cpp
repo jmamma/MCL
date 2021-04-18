@@ -393,29 +393,37 @@ ISR(USART0_UDRE_vect) {
       if ((MidiUart.in_message > 0) && (c < 128)) {
         MidiUart.in_message--;
       }
-      switch (c & 0xF0) {
-      case MIDI_CHANNEL_PRESSURE:
-      case MIDI_PROGRAM_CHANGE:
-        MidiUart.in_message = 1;
-        break;
-      case MIDI_NOTE_OFF:
-      case MIDI_NOTE_ON:
-      case MIDI_AFTER_TOUCH:
-      case MIDI_CONTROL_CHANGE:
-      case MIDI_PITCH_WHEEL:
-        MidiUart.in_message = 2;
-        break;
-      case MIDI_SYSEX_START:
-        MidiUart.in_message = -1;
-        break;
-      case MIDI_SYSEX_END:
-        MidiUart.in_message = 0;
-        break;
+      if (c & 0xF0 == MIDI_NOTE_ON) {
+        setLed2();
+      }
+      if (c < 0xF0) {
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+          MidiUart.in_message = 1;
+          break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+          MidiUart.in_message = 2;
+          break;
+        }
+      } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+          MidiUart.in_message = -1;
+          break;
+        case MIDI_SYSEX_END:
+          MidiUart.in_message = 0;
+          break;
+        }
       }
     }
-    if (MidiUart.txRb.isEmpty_isr() && (MidiUart.txRb_sidechannel != nullptr)) {
-      UART_CLEAR_ISR_TX_BIT();
-    }
+  }
+  if (MidiUart.txRb.isEmpty_isr() && (MidiUart.txRb_sidechannel == nullptr)) {
+    UART_CLEAR_ISR_TX_BIT();
   }
 }
 
@@ -444,29 +452,34 @@ ISR(USART1_UDRE_vect) {
       if ((MidiUart2.in_message > 0) && (c < 128)) {
         MidiUart2.in_message--;
       }
-      switch (c & 0xF0) {
-      case MIDI_CHANNEL_PRESSURE:
-      case MIDI_PROGRAM_CHANGE:
-        MidiUart2.in_message = 1;
-        break;
-      case MIDI_NOTE_OFF:
-      case MIDI_NOTE_ON:
-      case MIDI_AFTER_TOUCH:
-      case MIDI_CONTROL_CHANGE:
-      case MIDI_PITCH_WHEEL:
-        MidiUart2.in_message = 2;
-        break;
-      case MIDI_SYSEX_START:
-        MidiUart2.in_message = -1;
-        break;
-      case MIDI_SYSEX_END:
-        MidiUart2.in_message = 0;
-        break;
+      if (c < 0xF0) {
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+          MidiUart2.in_message = 1;
+          break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+          MidiUart2.in_message = 2;
+          break;
+        }
+      } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+          MidiUart2.in_message = -1;
+          break;
+        case MIDI_SYSEX_END:
+          MidiUart2.in_message = 0;
+          break;
+        }
       }
     }
-    if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel != nullptr)) {
-      UART2_CLEAR_ISR_TX_BIT();
-    }
+  }
+  if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel == nullptr)) {
+    UART2_CLEAR_ISR_TX_BIT();
   }
 }
 #endif
