@@ -207,12 +207,8 @@ bool MDClass::probe() {
 
   MD.popup_text("ENHANCED");
   md_track_select.on();
-  if (ti) {
-    trig_interface.on();
-  } else {
 
-    deactivate_trig_interface();
-  }
+  GUI.currentPage()->init();
 
   return connected;
 }
