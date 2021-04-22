@@ -35,7 +35,10 @@ const Page* const menu_target_pages[] PROGMEM = {
     // 9 - ram_config_page
     (Page*) &ram_config_page,
 
+    // 10
     (Page*) &poly_page,
+    // 11
+    (Page*) &arp_page,
 };
 
 const uint8_t* const menu_target_param[] PROGMEM = {
