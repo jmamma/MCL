@@ -1,6 +1,6 @@
 #!/bin/bash
 AVR_DIR=$(cd "../../../../tools/avr"; pwd)
-DEV=/dev/$(ls /dev | grep usb | head -n 1)
+DEV=/dev/$(ls /dev | grep usb | grep cu | tail -n 1)
 make -j8
 if [ $? -eq 0 ]; then
   echo RAM USAGE: $(${AVR_DIR}/bin/avr-size main.elf | grep main | awk '{ print $2 + $3}')

@@ -2,6 +2,14 @@
 #include "ResourceManager.h"
 
 void MenuPageBase::init() {
+  DEBUG_PRINTLN("MenuPageBase::init");
+  R.Clear();
+  R.use_machine_names_short(); // for grid page
+  R.use_menu_options();
+  R.use_menu_layouts();
+  DEBUG_PRINT("R.Size() = ");
+  DEBUG_PRINTLN(R.Size());
+  R.restore_menu_layout_deps();
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
@@ -17,16 +25,8 @@ void MenuPageBase::init() {
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
-  
-  DEBUG_PRINTLN("MenuPageBase::init");
-  R.Clear();
-  R.use_machine_names_short(); // for grid page
-  R.use_menu_options();
-  R.use_menu_layouts();
-  DEBUG_PRINT("R.Size() = ");
-  DEBUG_PRINTLN(R.Size());
-  R.restore_menu_layout_deps();
 }
+
 
 void MenuPageBase::setup() {
 #ifdef OLED_DISPLAY
