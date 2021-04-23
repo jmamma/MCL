@@ -47,6 +47,7 @@ bool SeqPage::recording = false;
 
 uint16_t SeqPage::deferred_timer = 0;
 uint8_t SeqPage::last_midi_state = 0;
+uint8_t SeqPage::last_step = 255;
 
 static MidiDevice *opt_midi_device_capture = &MD;
 static SeqPage *opt_seqpage_capture = nullptr;

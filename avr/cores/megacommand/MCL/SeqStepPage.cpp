@@ -465,8 +465,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note clear
         if (step != 255) {
+          if (last_step != step) { reset_undo(); }
           opt_clear_step = 1;
           opt_clear_step_locks_handler();
+          last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
