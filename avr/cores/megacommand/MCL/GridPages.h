@@ -42,18 +42,6 @@ extern MCLEncoder gridio_param4;
 extern GridSavePage grid_save_page;
 extern GridWritePage grid_write_page;
 
-
 extern GridTrack slot;
 
-extern MCLEncoder grid_slot_param1;
-extern MCLEncoder grid_slot_param2;
-
-extern MenuPage<
-    #ifndef OLED_DISPLAY
-    9
-    #else
-    8
-    #endif
->
-grid_slot_page;
 #endif /* GRIDPAGES_H__ */

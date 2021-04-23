@@ -66,10 +66,9 @@ bool MDSound::load_sound(uint8_t track) {
 
   DEBUG_PRINTLN(machine1.model);
 #ifdef DEBUG_MODE
-  PGM_P tmp;
   char str[3] = "  ";
-  tmp = getMDMachineNameShort(machine1.model, 2);
-  m_strncpy_p(str, tmp, 3);
+  const char* tmp = getMDMachineNameShort(machine1.model, 2);
+  copyMachineNameShort(tmp, str);
   DEBUG_PRINTLN(str);
 #endif
 
@@ -78,7 +77,7 @@ bool MDSound::load_sound(uint8_t track) {
 #ifdef DEBUG_MODE
     DEBUG_PRINTLN(F("loading second machine"));
     tmp = getMDMachineNameShort(machine2.model, 2);
-    m_strncpy_p(str, tmp, 3);
+    copyMachineNameShort(tmp, str);
     DEBUG_PRINTLN(str);
 #endif
     if (machine2.lfo.destinationTrack < 16) {

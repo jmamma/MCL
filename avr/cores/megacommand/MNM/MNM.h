@@ -20,6 +20,7 @@ public:
 
   virtual bool probe();
   virtual void init_grid_devices();
+  virtual uint8_t* icon();
 
   virtual ElektronSysexObject *getKit() { return &kit; }
   virtual ElektronSysexObject *getPattern() { return nullptr; }
@@ -30,7 +31,7 @@ public:
 
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
-  virtual PGM_P getMachineName(uint8_t machine);
+  virtual const char* getMachineName(uint8_t machine);
 
   virtual bool canReadKit() {
     // TODO fw cap for live kit access
@@ -125,7 +126,7 @@ public:
   void muteAutoTrack() { setAutoMute(true); }
   void unmuteAutoTrack() { setAutoMute(false); }
 
-  PGM_P getModelParamName(uint8_t model, uint8_t param);
+  const char* getModelParamName(uint8_t model, uint8_t param);
   void getPatternName(uint8_t pattern, char str[5]);
 
   void revertToCurrentKit(bool reloadKit = true);

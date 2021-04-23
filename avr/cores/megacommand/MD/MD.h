@@ -64,6 +64,7 @@ public:
 
   virtual bool probe();
   virtual void init_grid_devices();
+  virtual uint8_t* icon();
 
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
@@ -78,7 +79,7 @@ public:
 
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
-  virtual PGM_P getMachineName(uint8_t machine);
+  virtual const char* getMachineName(uint8_t machine);
 
   /**
    * When given the channel and the cc of an incoming CC messages,

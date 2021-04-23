@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void GenericMidiDevice::init_grid_devices() {
   uint8_t grid_idx = 1;
@@ -31,13 +32,20 @@ static MidiClass *_getMidiClass(uint8_t port) {
     return nullptr;
 }
 
-static void prepare_display() {
+static bool resource_loaded = false;
+static size_t resource_size = 0;
+static void prepare_display(uint8_t* buf) {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
   oled_display.println("Peering...");
 #endif
+  if (!resource_loaded) {
+    R.Clear();
+    R.use_icons_device();
+    resource_loaded = true;
+  }
 }
 
 // the general probe accept whatever devices.
@@ -89,7 +97,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
 }
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
-                      MidiDevice **active_device) {
+                      MidiDevice **active_device, uint8_t* resource_buf) {
   auto *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -119,9 +127,10 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       MidiUart.set_speed((uint32_t)31250, port);
 #ifdef OLED_DISPLAY
       auto oldfont = oled_display.getFont();
-      prepare_display();
-      if (drivers[i]->icon) {
-        oled_display.drawBitmap(14, 8, drivers[i]->icon, 34, 42, WHITE);
+      prepare_display(resource_buf);
+      uint8_t* icon = drivers[i]->icon();
+      if (icon) {
+        oled_display.drawBitmap(14, 8, icon, 34, 42, WHITE);
       }
       oled_display.display();
 #else
@@ -171,15 +180,23 @@ MidiDevice *MidiActivePeering::get_device(uint8_t port) {
 }
 
 GenericMidiDevice::GenericMidiDevice()
-    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, nullptr, false) {}
+    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {}
 NullMidiDevice::NullMidiDevice()
-    : MidiDevice(nullptr, "  ", DEVICE_NULL, nullptr, false) {}
+    : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
 void MidiActivePeering::run() {
+  byte resource_buf[RM_BUFSIZE];
+  resource_loaded = false;
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
-            &connected_midi_devices[0]);
+            &connected_midi_devices[0], resource_buf);
 #ifdef EXT_TRACKS
   probePort(UART2_PORT, port2_drivers, countof(port2_drivers),
-            &connected_midi_devices[1]);
+            &connected_midi_devices[1], resource_buf);
+  if (resource_loaded) {
+    // XXX doesn't work yet
+    //R.Restore(resource_buf, resource_size);
+    GUI.currentPage()->init();
+    resource_loaded = false;
+  }
 #endif
 }

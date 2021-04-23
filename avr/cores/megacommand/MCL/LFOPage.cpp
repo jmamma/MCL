@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -30,7 +31,11 @@ void LFOPage::init() {
   if (lfo_track->mode != LFO_MODE_FREE) {
     trig_interface.on();
   }
+  // LFOPage not using base SeqPage init?
+  R.Clear();
+  R.use_machine_param_names();
 }
+
 void LFOPage::cleanup() {
   trig_interface.off();
 #ifdef OLED_DISPLAY
@@ -167,7 +172,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
 
   char myName[4] = "-- ";
 
-  PGM_P modelname = NULL;
+  const char* modelname = NULL;
   if (dest != 0) {
     if (dest < 17) {
       modelname = model_param_name(MD.kit.get_model(dest - 1), param);
@@ -175,7 +180,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
     }
     if (modelname != NULL) {
-      m_strncpy_p(myName, modelname, 4);
+      strncpy(myName, modelname, 4);
     }
   }
 #ifdef OLED_DISPLAY

@@ -1,6 +1,15 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void MenuPageBase::init() {
+  DEBUG_PRINTLN("MenuPageBase::init");
+  R.Clear();
+  R.use_machine_names_short(); // for grid page
+  R.use_menu_options();
+  R.use_menu_layouts();
+  DEBUG_PRINT("R.Size() = ");
+  DEBUG_PRINTLN(R.Size());
+  R.restore_menu_layout_deps();
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
@@ -17,6 +26,7 @@ void MenuPageBase::init() {
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
 }
+
 
 void MenuPageBase::setup() {
 #ifdef OLED_DISPLAY
@@ -68,11 +78,9 @@ void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
 
 void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 #ifdef OLED_DISPLAY
-  char str[17];
-  PGM_P pgp = get_menu()->get_item_name(item_n);
-  if (pgp != NULL) {
-    m_strncpy_p(str, pgp, 16);
-    oled_display.print(str);
+  const char* name = get_menu()->get_item_name(item_n);
+  if (name != nullptr) {
+    oled_display.print(name);
   }
   uint8_t number_of_items = get_menu()->get_number_of_items();
 
@@ -85,12 +93,11 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 
     oled_display.print(" ");
     uint8_t *pdest = get_menu()->get_dest_variable(item_n);
-    pgp = get_menu()->get_option_name(item_n, *pdest);
-    if (pgp == NULL) {
+    const char* option_name = get_menu()->get_option_name(item_n, *pdest);
+    if (option_name == NULL) {
       oled_display.println(*pdest);
     } else {
-      m_strncpy_p(str, pgp, 11);
-      oled_display.println(str);
+      oled_display.println(option_name);
     }
   }
 #endif
@@ -128,12 +135,6 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
 
 void MenuPageBase::display() {
 
-  char str[17];
-  PGM_P pgp;
-  pgp = get_menu()->get_name();
-
-  m_strncpy_p(str, pgp, 16);
-
   uint8_t number_of_items = get_menu()->get_number_of_items();
 #ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
@@ -141,7 +142,7 @@ void MenuPageBase::display() {
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
-  oled_display.println(str);
+  oled_display.println(get_menu()->get_name());
   mcl_gui.draw_vertical_dashline(x_offset - 6);
 
   draw_menu(x_offset, 8);
@@ -157,12 +158,11 @@ void MenuPageBase::display() {
   GUI.put_string_at(1, str);
 
   GUI.put_string_at(m_strlen(str), "]");
-  pgp = get_menu()->get_item_name(cur_row);
+  const char* item_name = get_menu()->get_item_name(cur_row);
 
   GUI.setLine(GUI.LINE2);
-  if (pgp != NULL) {
-    m_strncpy_p(str, pgp, 16);
-    GUI.put_string_at_fill(0, str);
+  if (item_name != NULL) {
+    GUI.put_string_at_fill(0, item_name);
   }
 
   if (cur_row > number_of_items - 1) {
@@ -172,13 +172,12 @@ void MenuPageBase::display() {
   uint8_t number_of_options = get_menu()->get_number_of_options(cur_row);
   if (get_menu()->get_option_range(cur_row) > 0) {
 
-    pgp = get_menu()->get_option_name(
+    const char* opt_name = get_menu()->get_option_name(
         cur_row, *(get_menu()->get_dest_variable(cur_row)));
     if (pgp == NULL) {
       GUI.put_value_at(10, *(get_menu()->get_dest_variable(cur_row)));
     } else {
-      m_strncpy_p(str, pgp, 11);
-      GUI.put_string_at(10, str);
+      GUI.put_string_at(10, opt_name);
     }
   }
 

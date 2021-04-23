@@ -558,9 +558,11 @@ void Adafruit_SSD1305::display(void) {
     }
   }
 
+#ifdef ENABLE_DIAG_LOGGING
   if (diag_page.is_active()) {
     diag_page.draw();
   }
+#endif
 
   if(screen_saver) {
     clearDisplay();
