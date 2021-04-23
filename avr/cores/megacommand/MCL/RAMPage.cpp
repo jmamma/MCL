@@ -15,6 +15,7 @@
 
 uint8_t RAMPage::rec_states[NUM_RAM_PAGES];
 uint8_t RAMPage::slice_modes[NUM_RAM_PAGES];
+bool RAMPage::cc_link_enable;
 
 void RAMPage::setup() {
   DEBUG_PRINT_FN();
@@ -719,9 +720,10 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   // to all polyphonic tracks
   uint8_t param_true = 0;
 
-  if (mcl_cfg.ram_page_mode == MONO) {
+  if ((mcl_cfg.ram_page_mode == MONO) || (!cc_link_enable)) {
     return;
   }
+
   MD.parseCC(channel, param, &track, &track_param);
 
   if (track_param == 32) { return; } //ignore mute
@@ -760,7 +762,7 @@ void RAMPage::setup_callbacks() {
   }
   Midi.addOnControlChangeCallback(
       this, (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
-
+  cc_link_enable = true;
   midi_state = true;
 }
 

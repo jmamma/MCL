@@ -24,6 +24,7 @@ public:
 
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
+  static bool cc_link_enable;
 
   static uint8_t rec_states[NUM_RAM_PAGES];
   static uint8_t slice_modes[NUM_RAM_PAGES];

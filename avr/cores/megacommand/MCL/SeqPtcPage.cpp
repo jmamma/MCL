@@ -1086,6 +1086,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
   uint8_t display_polylink = 0;
+
+  if (!seq_ptc_page.cc_link_enable) { return; }
+
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
   if (track_param == 32) { return; } //don't process mute
@@ -1126,7 +1129,7 @@ void SeqPtcMidiEvents::setup_callbacks() {
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
-
+  seq_ptc_page.cc_link_enable = true;
   state = true;
 }
 
