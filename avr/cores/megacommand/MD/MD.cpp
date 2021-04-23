@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -109,7 +110,7 @@ const ElektronSysexProtocol md_protocol = {
 };
 
 MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, icon_md, md_protocol) {
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {
   uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
                                      50, 52, 53, 55, 57, 59, 60, 62};
 
@@ -215,6 +216,11 @@ bool MDClass::probe() {
   }
 
   return connected;
+}
+
+// Caller is responsible to make sure icons_device is loaded in RM
+uint8_t* MDClass::icon() {
+  return R.icons_device->icon_md;
 }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {

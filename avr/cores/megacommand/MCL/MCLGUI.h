@@ -213,43 +213,4 @@ extern const unsigned char wheel_angle [];
 // 'wheel3', 19x19px
 extern const unsigned char wheel_side [];
 
-// 'chroma', 24x25px 
-extern const unsigned char icon_chroma[];
-// 'rec', 24x15px
-//extern const unsigned char icon_rec[];
-// 'grid', 24x15px
-extern const unsigned char icon_grid[];
-// 'lfo', 24x24px
-extern const unsigned char icon_lfo[];
-// 'loudness', 24x16px
-extern const unsigned char icon_loudness[];
-// 'wavd', 24x19px
-extern const unsigned char icon_wavd[];
-// 'mixer', 24x16px
-extern const unsigned char icon_mixer[];
-// 'para', 24x19px
-extern const unsigned char icon_para[];
-// 'step', 24x25px
-extern const unsigned char icon_step[];
-// 'gatebox', 24x25px
-extern const unsigned char icon_gatebox[];
-// 'ram1', 24x25px
-extern const unsigned char icon_ram1[];
-// 'ram2', 24x25px
-extern const unsigned char icon_ram2[];
-// 'rythmecho', 24x25px
-extern const unsigned char icon_rhytmecho[];
-// 'route', 24x16px
-extern const unsigned char icon_route[];
-// 'pianoroll', 24x25px
-extern const unsigned char icon_pianoroll[];
-// 'sound', 24x19px
-extern const unsigned char icon_sound[];
-// 'md_rev', 34x24px
-extern const unsigned char icon_md[];
-// 'a4_rev', 34x24px
-extern const unsigned char icon_a4[];
-// 'mnm_rev', 34x24px
-extern const unsigned char icon_mnm[];
-
 #endif /* MCLGUI_H__ */

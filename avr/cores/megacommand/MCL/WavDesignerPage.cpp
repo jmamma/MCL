@@ -29,21 +29,6 @@ void wav_menu_handler() {
 
 void wav_render() { wd.prompt_send(); }
 
-const menu_t<3> wav_menu_layout PROGMEM = {
-    "",
-    {
-        {"EDIT:", 0, 4, 4, (uint8_t *)&WavDesignerPage::opt_mode, (Page *)NULL, NULL, 76},
-        {"WAV:", 0, 6, 6, (uint8_t *)&WavDesignerPage::opt_shape, (Page *)NULL, NULL, 70},
-        {"TRANSFER", 0, 0, 0, (uint8_t *)NULL, (Page *)NULL, wav_render, 0},
-    },
-    wav_menu_handler,
-};
-
-MCLEncoder wav_menu_value_encoder(0, 16, ENCODER_RES_PAT);
-MCLEncoder wav_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<3> wav_menu_page(&wav_menu_layout, &wav_menu_value_encoder,
-                          &wav_menu_entry_encoder);
-
 void WavDesignerPage::display() {
   if (show_menu) {
     constexpr uint8_t width = 52;

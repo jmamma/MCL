@@ -71,14 +71,6 @@ extern MCLEncoder ptc_param_scale;
 extern SeqPtcPage seq_ptc_page;
 extern ArpPage arp_page;
 
-extern MCLEncoder seq_menu_value_encoder;
-extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<19> seq_menu_page;
-
-extern MCLEncoder step_menu_value_encoder;
-extern MCLEncoder step_menu_entry_encoder;
-extern MenuPage<4> step_menu_page;
-
 extern void mcl_save_sound();
 extern void mcl_load_sound();
 

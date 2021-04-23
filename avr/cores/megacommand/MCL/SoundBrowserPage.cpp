@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 const char* c_sound_root = "/Sounds/MD";
 
@@ -21,6 +22,9 @@ void SoundBrowserPage::init() {
   show_new_folder = true;
   show_overwrite = true;
   FileBrowserPage::init();
+
+  R.Clear();
+  R.use_machine_names_short();
 }
 
 void SoundBrowserPage::save_sound() {

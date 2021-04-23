@@ -49,14 +49,17 @@ template <int N> class MenuPage : public MenuPageBase {
 public:
   Menu<N> menu;
 
-  MenuPage(const menu_t<N> *layout, Encoder *e1 = NULL, Encoder *e2 = NULL,
+  MenuPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
            Encoder *e3 = NULL, Encoder *e4 = NULL)
       : MenuPageBase(e1, e2, e3, e4) {
-    menu.set_layout(layout);
   }
 
 protected:
   virtual MenuBase* get_menu() { return &menu; }
+public:
+  void set_layout(menu_t<N>* layout) {
+    menu.set_layout(layout);
+  }
 };
 
 #endif /* MENUPAGE_H__ */

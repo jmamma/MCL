@@ -900,14 +900,12 @@
 
 #define MD_GUI_TRACK_1 0x40
 
-PGM_P model_param_name(uint8_t model, uint8_t param);
+extern const char* model_param_name(uint8_t model, uint8_t param);
 
 extern const char *MDLFONames[8];
-extern const md_machine_name_t machine_names[137] PROGMEM;
 
-extern short_machine_name_t const md_machine_names_short[137] PROGMEM;
-PGM_P getMDMachineNameShort(uint8_t machine, uint8_t type);
-extern PGM_P fx_param_name(uint8_t fx_type, uint8_t param);
+extern const char* getMDMachineNameShort(uint8_t machine, uint8_t type);
+extern const char* fx_param_name(uint8_t fx_type, uint8_t param);
 
 /** This structure stores the tuning information of a melodic machine on the
  * machinedrum. **/

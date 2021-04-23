@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
@@ -35,7 +36,9 @@ void MCL::setup() {
     return;
   }
 
-  gfx.splashscreen();
+  R.Clear();
+  R.use_icons_boot();
+  gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
   // if (!ret) { }
   text_input_page.no_escape = true;
   ret = mcl_sd.load_init();

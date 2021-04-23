@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void GridPage::init() {
   show_slot_menu = false;
@@ -9,6 +10,12 @@ void GridPage::init() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
+  DEBUG_PRINTLN("GridPage::init()");
+  R.Clear();
+  R.use_machine_names_short();
+
+  DEBUG_PRINT("R.Size() = ");
+  DEBUG_PRINTLN(R.Size());
 }
 
 void GridPage::setup() {
@@ -368,15 +375,15 @@ void GridPage::display_grid() {
       bool blink = false;
       auto active_cue_color = WHITE;
 
-      strcpy(str, "--");
+      str[0] = str[1] = '-';
+      str[2] = 0;
       //  Set cell label
       switch (track_type) {
-      case MD_TRACK_TYPE:
-        tmp = getMDMachineNameShort(model, 2);
-        if (tmp) {
-          m_strncpy_p(str, tmp, 3);
-        }
+      case MD_TRACK_TYPE: {
+        auto tmp = getMDMachineNameShort(model, 2);
+        copyMachineNameShort(tmp, str);
         break;
+        }
       case A4_TRACK_TYPE:
         str[0] = 'A';
         str[1] = (x + getCol() - cur_col) + '1';
@@ -404,7 +411,7 @@ void GridPage::display_grid() {
       case MNM_TRACK_TYPE:
         tmp = getMNMMachineNameShort(model, 2);
         if (tmp) {
-          m_strncpy_p(str, tmp, 3);
+          copyMachineNameShort(tmp, str);
         }
         break;
       }
@@ -488,7 +495,6 @@ void GridPage::display() {
   // Rendering code for HD44780 below
   char str[3] = "  ";
   char str2[3] = "  ";
-  PGM_P tmp;
   uint8_t y = 0;
   for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
     uint8_t track_type = row_headers[y].track_type[x + encoders[0]->cur];
@@ -497,16 +503,14 @@ void GridPage::display() {
         ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
 
     } else {
-      str[0] = '-';
-      str[1] = '-';
-      str2[0] = '-';
-      str2[1] = '-';
+      str[0] = str[1] = str2[0] = str2[1] = '-';
 
       if (track_type == MD_TRACK_TYPE) {
+        const char* tmp;
         tmp = getMDMachineNameShort(model, 1);
-        m_strncpy_p(str, tmp, 3);
+        copyMachineNameShort(tmp, str);
         tmp = getMDMachineNameShort(model, 2);
-        m_strncpy_p(str2, tmp, 3);
+        copyMachineNameShort(tmp, str2);
       }
       if (track_type == A4_TRACK_TYPE) {
         str[0] = 'A';
@@ -732,7 +736,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
 
-    show_slot_menu = true;
     DEBUG_DUMP(getCol());
     DEBUG_DUMP(getRow());
     slot.load_from_grid(getCol(), getRow());
@@ -741,15 +744,17 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_DUMP(slot.chain.row);
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
-    grid_slot_page.init();
     encoders[2]->cur = 1;
     encoders[3]->cur = 1;
     slot_apply = 0;
+    show_slot_menu = true;
+    grid_slot_page.init();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     apply_slot_changes();
+    init();
     return true;
   }
 #else

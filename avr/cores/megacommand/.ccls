@@ -31,6 +31,7 @@ clang++
 -IGUI
 -IMD
 -IMNM
+-Iuzlib
 #  CORE_DIR
 -I./
 #  VARIENTS_DIR

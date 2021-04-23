@@ -124,14 +124,11 @@ void SeqPtcPage::config() {
   char str_first[3] = "--";
   char str_second[3] = "--";
   if (midi_device == &MD) {
-    const char *str1;
-    const char *str2;
-    str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
-    str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
-
-    m_strncpy_p(str_first, str1, len1);
-
-    m_strncpy_p(str_second, str2, len1);
+    const char *str;
+    str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
+    copyMachineNameShort(str, str_first);
+    str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
+    copyMachineNameShort(str, str_second);
   }
 #ifdef EXT_TRACKS
   else {

@@ -6,8 +6,8 @@
 
 class MCLGfx {
   public:
-  void draw_evil();
-  void splashscreen();
+  void draw_evil(unsigned char* bitmap);
+  void splashscreen(unsigned char* bitmap);
   void init_oled();
   void display_text(const char *str1, const char *str2);
   void alert(const char *str1, const char *str2);
