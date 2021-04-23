@@ -290,6 +290,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
+      update_params_queue = false;
 
       if (step >= active_track.length) {
         return true;
