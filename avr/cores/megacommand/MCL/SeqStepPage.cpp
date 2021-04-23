@@ -212,6 +212,7 @@ void SeqStepPage::loop() {
 
   if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
     mcl_seq.midi_events.update_params = true;
+    MD.midi_events.enable_live_kit_update();
     update_params_queue = false;
   }
 
@@ -291,6 +292,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
       update_params_queue = false;
+      MD.midi_events.disable_live_kit_update();
 
       if (step >= active_track.length) {
         return true;
