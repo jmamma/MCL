@@ -131,7 +131,7 @@ public:
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
-  void select_track(MidiDevice* device, uint8_t track);
+  void select_track(MidiDevice* device, uint8_t track, bool send = true);
 
   void bootstrap_record();
   uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);

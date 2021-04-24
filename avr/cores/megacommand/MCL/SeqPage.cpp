@@ -156,7 +156,7 @@ void SeqPage::config_mask_info(bool silent) {
   }
 }
 
-void SeqPage::select_track(MidiDevice *device, uint8_t track) {
+void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   if (device == &MD) {
     DEBUG_PRINTLN("setting md track");
     opt_undo = 255;
@@ -164,7 +164,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
-    if (mcl_cfg.track_select) {
+    if (mcl_cfg.track_select && send) {
       MD.currentTrack = track;
       MD.setStatus(0x22, track);
     }
@@ -1411,7 +1411,7 @@ void SeqPage::loop() {
   }
 
   if (last_md_track != MD.currentTrack) {
-    select_track(&MD, MD.currentTrack);
+    select_track(&MD, MD.currentTrack, false);
   }
   if (show_seq_menu) {
     seq_menu_page.loop();
