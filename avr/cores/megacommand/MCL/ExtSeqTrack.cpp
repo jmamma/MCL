@@ -539,13 +539,14 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   }
 }
 
-void ExtSeqTrack::seq() {
+void ExtSeqTrack::seq(MidiUartParent *uart_) {
+  uart = uart_;
 
   if (count_down) {
     count_down--;
     if (count_down == 0) {
       reset();
-    }
+   }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
@@ -580,7 +581,7 @@ void ExtSeqTrack::seq() {
     }
     ev_end = ev_idx + timing_buckets.get(next_step);
 
-    // Go over NEXT
+   // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
@@ -943,7 +944,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
-  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+ for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
     events[x].micro_timing = 0; // XXX zero or mid?
   }
@@ -967,7 +968,6 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t n_cur;
   ext_event_t ev_cur[16];
   uint8_t vel_tmp;
-
   mute_state = SEQ_MUTE_ON;
   buffer_notesoff();
 

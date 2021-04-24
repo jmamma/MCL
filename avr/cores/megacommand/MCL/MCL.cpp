@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 int8_t curpage;
 uint8_t patternswitch = PATTERN_UDEF;
@@ -42,7 +43,9 @@ void MCL::setup() {
     return;
   }
 
-  gfx.splashscreen();
+  R.Clear();
+  R.use_icons_boot();
+  gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
   // if (!ret) { }
   text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
@@ -116,6 +119,11 @@ bool mcl_handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN(key);
     DEBUG_PRINTLN(MDX_KEY_REC);
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
+          key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
+        reset_undo();
+      }
+
       switch (key) {
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
@@ -155,6 +163,9 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_CLEAR: {
         if (GUI.currentPage() == &seq_step_page)
+          break;
+        if ((note_interface.notes_count_on() > 0) ||
+            (trig_interface.is_key_down(MDX_KEY_SCALE)))
           break;
         opt_clear = 2;
         opt_clear_track_handler();

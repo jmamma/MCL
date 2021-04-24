@@ -15,6 +15,7 @@
 
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
+extern uint16_t clock_measure = 0;
 
 MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
                              volatile uint8_t *tx_buf, uint16_t tx_buf_size)
@@ -23,6 +24,8 @@ MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
   rxRb.len = rx_buf_size;
   txRb.ptr = tx_buf;
   txRb.len = tx_buf_size;
+  // ignore side channel;
+  txRb_sidechannel = nullptr;
   initSerial();
 }
 
@@ -31,16 +34,16 @@ void MidiUartClass::initSerial() {
   set_speed(31250, 1);
   set_speed(31250, 2);
 
-  #ifdef MEGACOMMAND
+#ifdef MEGACOMMAND
   UCSR1C = (3 << UCSZ00);
 
   /** enable receive, transmit and receive and transmit interrupts. **/
   UCSR1B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-  #else
-  UCSR0C = (3<<UCSZ00);
+#else
+  UCSR0C = (3 << UCSZ00);
 
   UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-  #endif
+#endif
 }
 
 void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
@@ -66,7 +69,6 @@ void MidiUartClass::set_speed(uint32_t speed, uint8_t port) {
   }
 }
 
-
 void MidiUartClass2::m_putc_immediate(uint8_t c) {
 
 #ifdef UART2_TX
@@ -75,26 +77,7 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
     SET_LOCK();
     // block interrupts
     while (!UART2_CHECK_EMPTY_BUFFER()) {
-    #ifdef MEGACOMMAND
-    if (TIMER1_CHECK_INT()) {
-        TCNT1 = 0;
-        clock++;
-        TIMER1_CLEAR_INT()
-      }
-      if (TIMER3_CHECK_INT()) {
-        TCNT2 = 0;
-        slowclock++;
-        TIMER3_CLEAR_INT()
-      }
-    #endif
-    }
-
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    UART2_WRITE_CHAR(c);
-    CLEAR_LOCK();
-  } else {
-    while (!UART2_CHECK_EMPTY_BUFFER()) {
-    #ifdef MEGACOMMAND
+#ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -105,7 +88,26 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
-    #endif
+#endif
+    }
+
+    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+    UART2_WRITE_CHAR(c);
+    CLEAR_LOCK();
+  } else {
+    while (!UART2_CHECK_EMPTY_BUFFER()) {
+#ifdef MEGACOMMAND
+      if (TIMER1_CHECK_INT()) {
+        TCNT1 = 0;
+        clock++;
+        TIMER1_CLEAR_INT()
+      }
+      if (TIMER3_CHECK_INT()) {
+        TCNT2 = 0;
+        slowclock++;
+        TIMER3_CLEAR_INT()
+      }
+#endif
     }
 
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -121,7 +123,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
     SET_LOCK();
     // block interrupts
     while (!UART_CHECK_EMPTY_BUFFER()) {
-    #ifdef MEGACOMMAND
+#ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -132,7 +134,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
-    #endif
+#endif
     }
 
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
@@ -140,7 +142,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
     CLEAR_LOCK();
   } else {
     while (!UART_CHECK_EMPTY_BUFFER()) {
-    #ifdef MEGACOMMAND
+#ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -151,7 +153,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
-    #endif
+#endif
     }
 
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
@@ -363,12 +365,55 @@ ISR(USART1_UDRE_vect) {
 ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
-  if (!MidiUart.txRb.isEmpty_isr()) {
-    MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    UART_WRITE_CHAR(MidiUart.txRb.get_h_isr());
+  if ((MidiUart.txRb_sidechannel != nullptr) && (MidiUart.in_message == 0)) {
+
+    if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
+      uint8_t c = MidiUart.txRb_sidechannel->get_h_isr();
+      UART_WRITE_CHAR(c);
+    }
+    if (MidiUart.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart.txRb_sidechannel = nullptr;
+    }
+  } else {
+    if (!MidiUart.txRb.isEmpty_isr()) {
+      MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
+      uint8_t c = MidiUart.txRb.get_h_isr();
+      UART_WRITE_CHAR(c);
+      if ((MidiUart.in_message > 0) && (c < 128)) {
+        MidiUart.in_message--;
+      }
+      if (c & 0xF0 == MIDI_NOTE_ON) {
+        setLed2();
+      }
+      if (c < 0xF0) {
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+          MidiUart.in_message = 1;
+          break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+          MidiUart.in_message = 2;
+          break;
+        }
+      } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+          MidiUart.in_message = -1;
+          break;
+        case MIDI_SYSEX_END:
+          MidiUart.in_message = 0;
+          break;
+        }
+      }
+    }
   }
-  if (MidiUart.txRb.isEmpty_isr()) {
-          UART_CLEAR_ISR_TX_BIT();
+  if (MidiUart.txRb.isEmpty_isr() && (MidiUart.txRb_sidechannel == nullptr)) {
+    UART_CLEAR_ISR_TX_BIT();
   }
 }
 
@@ -379,11 +424,51 @@ ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
-  if (!MidiUart2.txRb.isEmpty_isr()) {
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    UART2_WRITE_CHAR(MidiUart2.txRb.get_h_isr());
+  if ((MidiUart2.txRb_sidechannel != nullptr) && (MidiUart2.in_message == 0)) {
+
+    if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+      uint8_t c = MidiUart2.txRb_sidechannel->get_h_isr();
+      UART2_WRITE_CHAR(c);
+    }
+    if (MidiUart2.txRb_sidechannel->isEmpty_isr()) {
+      MidiUart2.txRb_sidechannel = nullptr;
+    }
+  } else {
+    if (!MidiUart2.txRb.isEmpty_isr()) {
+      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+      uint8_t c = MidiUart2.txRb.get_h_isr();
+      UART2_WRITE_CHAR(c);
+      if ((MidiUart2.in_message > 0) && (c < 128)) {
+        MidiUart2.in_message--;
+      }
+      if (c < 0xF0) {
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+          MidiUart2.in_message = 1;
+          break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+          MidiUart2.in_message = 2;
+          break;
+        }
+      } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+          MidiUart2.in_message = -1;
+          break;
+        case MIDI_SYSEX_END:
+          MidiUart2.in_message = 0;
+          break;
+        }
+      }
+    }
   }
-  if (MidiUart2.txRb.isEmpty_isr()) {
+  if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel == nullptr)) {
     UART2_CLEAR_ISR_TX_BIT();
   }
 }
@@ -397,12 +482,16 @@ MidiUartClass2::MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
     rxRb.ptr = rx_buf;
     rxRb.len = rx_buf_size;
   }
-  #ifdef UART2_TX
+#ifdef UART2_TX
   if (tx_buf) {
     txRb.ptr = tx_buf;
     txRb.len = tx_buf_size;
   }
-  #endif
+#endif
+
+  // ignore side channel;
+  txRb_sidechannel = nullptr;
+
   initSerial();
 }
 

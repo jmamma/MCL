@@ -64,6 +64,7 @@ public:
 
   virtual bool probe();
   virtual void init_grid_devices();
+  virtual uint8_t* icon();
 
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
@@ -78,7 +79,7 @@ public:
 
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
-  virtual PGM_P getMachineName(uint8_t machine);
+  virtual const char* getMachineName(uint8_t machine);
 
   /**
    * When given the channel and the cc of an incoming CC messages,
@@ -102,7 +103,7 @@ public:
    *
    * track goes from 0 to 15, velocity from 0 to 127.
    **/
-  void triggerTrack(uint8_t track, uint8_t velocity);
+  void triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_ = nullptr);
   /**
    * Set the parameter param (0 to 23, or 32 for mute, and 33 for
    * LEVEL) of the given track (from 0 to 15) to value.
@@ -110,9 +111,8 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE()
-  void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value);
-  void setTrackParam(uint8_t track, uint8_t param, uint8_t value);
+  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr);
+  void setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr);
 
   void setSampleName(uint8_t slot, char *name);
 
@@ -180,7 +180,7 @@ public:
    * the global variable.
    **/
   void sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity);
-
+  void parallelTrig(uint16_t mask, MidiUartParent *uart_ = nullptr);
   /**
    * Slice the track (assuming it's a ROM or RAM-P machine) on the
    * given 32th, assuming that the loaded sample is 2 bars long.

@@ -6,9 +6,7 @@
 #include "MCL.h"
 
 extern void wavdesign_menu_handler();
-extern MCLEncoder wavdesign_menu_value_encoder;
-extern MCLEncoder wavdesign_menu_entry_encoder;
-extern MenuPage<3> wavdesign_menu_page;
+extern void wav_render();
 
 class WavDesignerPage : public LightPage {
 public:

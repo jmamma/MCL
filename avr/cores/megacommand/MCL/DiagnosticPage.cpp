@@ -1,6 +1,8 @@
 #include "MCL_impl.h"
 
-#ifdef OLED_DISPLAY
+#if defined(ENABLE_DIAG_LOGGING)
+
+#if defined(OLED_DISPLAY) 
 
 void _draw_frame(uint8_t w) {
   oled_display.fillRect(60, 0, w + 2, 32, BLACK);
@@ -107,3 +109,4 @@ bool DiagnosticPage::handleEvent(gui_event_t *event) {
 }
 
 DiagnosticPage diag_page;
+#endif

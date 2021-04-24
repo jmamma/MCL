@@ -61,6 +61,7 @@ public:
   uint8_t poly_max = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
   uint64_t note_mask = 0;
+  bool cc_link_enable;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

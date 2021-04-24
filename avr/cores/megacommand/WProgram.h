@@ -7,7 +7,6 @@
 
 #define MIDIDUINO 1
 #define SYSEX_BUF_SIZE 6000
-//#define SYSEX_BUF_SIZE 128
 
 #include "wiring_private.h"
 

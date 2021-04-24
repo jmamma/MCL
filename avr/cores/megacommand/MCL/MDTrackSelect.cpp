@@ -40,7 +40,7 @@ void MDTrackSelect::end() {
 
  if (sysex->recordLen == 7) {
   bool expand = true;
-  seq_step_page.reset_undo();
+  reset_undo();
   if (GUI.currentPage() == &seq_step_page) {
      if (seq_step_page.recording) { goto update_pattern; }
      MD.currentTrack = sysex->getByte(2);

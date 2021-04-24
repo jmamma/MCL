@@ -2,6 +2,7 @@
 #include "MCL_impl.h"
 
 void MCLSeq::setup() {
+  // uart = &MidiUart;
 
   for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
 
@@ -50,7 +51,6 @@ void MCLSeq::setup() {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_2X;
   }
-#
   //   MidiClock.addOnClockCallback(this,
   //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
 
@@ -107,14 +107,15 @@ void MCLSeq::update_params() {
 void seq_rec_play() {
   if (trig_interface.is_key_down(MDX_KEY_REC)) {
     //trig_interface.ignoreNextEvent(MDX_KEY_REC);
-    seq_step_page.bootstrap_record(); 
-    seq_step_page.reset_undo();
+    seq_step_page.bootstrap_record();
+    reset_undo();
   }
 }
 
 void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
 
 void MCLSeq::onMidiStartImmediateCallback() {
+  realtime = true;
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
@@ -135,12 +136,13 @@ void MCLSeq::onMidiStartImmediateCallback() {
     lfo_tracks[i].step_count = 0;
   }
 #endif
-}
 
-void MCLSeq::onMidiStartCallback() {
+  sei();
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
+
+
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
@@ -148,6 +150,8 @@ void MCLSeq::onMidiStartCallback() {
 #endif
   seq_rec_play();
 }
+
+void MCLSeq::onMidiStartCallback() {}
 
 void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS
@@ -176,17 +180,75 @@ void MCLSeq::onMidiStopCallback() {
 #endif
 }
 
-#ifdef MEGACOMMAND
-#pragma GCC push_options
-#pragma GCC optimize("unroll-loops")
-#endif
 void MCLSeq::seq() {
 
-  Stopwatch sw;
+  MidiUartParent *uart;
+  MidiUartParent *uart2;
+  bool engage_sidechannel = true;
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq();
+  //If realtime, we render the first tick in realtime, subsequent ticks are
+  //defered rendered.
+
+  if (!realtime) {
+again:
+    UART_CLEAR_ISR_TX_BIT();
+    UART2_CLEAR_ISR_TX_BIT();
+    if (uart_sidechannel) {
+      uart = &seq_tx2;
+      uart2 = &seq_tx4;
+      // If the side channel ring buffer is not empty, it means it did not
+      // finish transmiting before next Seq() call. We will drain the old buffer
+      // in to the new to retain the MIDI data.
+      if (engage_sidechannel) {
+        while (!seq_tx2.txRb.isEmpty_isr()) {
+          seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
+        }
+        while (!seq_tx4.txRb.isEmpty_isr()) {
+          seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
+        }
+        MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
+        MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
+      }
+      else {
+      //Purge stale buffers (from MIDI CONTINUE).
+      seq_tx2.txRb.init();
+      seq_tx4.txRb.init();
+      }
+    } else {
+      uart = &seq_tx1;
+      uart2 = &seq_tx3;
+      if (engage_sidechannel) {
+        while (!seq_tx1.txRb.isEmpty_isr()) {
+          seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
+        }
+        while (!seq_tx3.txRb.isEmpty_isr()) {
+          seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
+        }
+        MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
+        MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
+      }
+      else {
+      seq_tx1.txRb.init();
+      seq_tx3.txRb.init();
+      }
+    }
+    // clearLed2();
+    UART_SET_ISR_TX_BIT();
+    UART2_SET_ISR_TX_BIT();
+    // Flip uart / side_channel buffer for next run
+    uart_sidechannel = !uart_sidechannel;
+  } else {
+    uart = &MidiUart;
+    uart2 = &MidiUart2;
   }
+//  Stopwatch sw;
+
+  md_trig_mask = 0;
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].seq(uart);
+  }
+
+  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
   // Arp
   seq_ptc_page.on_192_callback();
 
@@ -202,7 +264,7 @@ void MCLSeq::seq() {
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].seq();
+    ext_tracks[i].seq(uart2);
   }
 #endif
 
@@ -214,12 +276,15 @@ void MCLSeq::seq() {
     ext_tracks[i].recalc_slides();
   }
 
-  auto seq_time = sw.elapsed();
-  // DIAG_MEASURE(0, seq_time);
+
+  if (realtime) {
+    realtime = false;
+    engage_sidechannel = false;
+    goto again;
+  }
+
 }
-#ifdef MEGACOMMAND
-#pragma GCC pop_options
-#endif
+
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}

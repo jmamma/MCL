@@ -86,6 +86,6 @@ if ($ShowStats) {
 
 if ($Upload) {
   Write-Host "==============> Uploading..." -ForegroundColor Yellow
-  arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega ./sketch/ -pCOM4
+  arduino-cli upload -b MIDICtrl20_MegaCommand:avr:mega -pCOM4 -i bin/sketch.ino.hex
   Write-Host "==============> Finished." -ForegroundColor Green
 }

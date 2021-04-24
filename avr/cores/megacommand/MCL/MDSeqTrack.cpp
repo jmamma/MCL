@@ -43,11 +43,12 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void MDSeqTrack::re_sync() {
-  //  uint32_t q = length * 12;
-  //  count_down = (MidiClock.div192th_counter / q) * q + q;
+//  uint32_t q = length * 12;
+//  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
-void MDSeqTrack::seq() {
+void MDSeqTrack::seq(MidiUartParent *uart_) {
+  uart = uart_;
 
   if (count_down) {
     count_down--;
@@ -352,7 +353,8 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     }
     lock_idx += lock_bit;
     if (send) {
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param);
+      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param,
+                              uart);
     }
   }
 }
@@ -380,7 +382,8 @@ void MDSeqTrack::send_trig_inline() {
     mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
         MD.kit.levels[MD.kit.trigGroups[track_number]];
   }
-  MD.triggerTrack(track_number, 127);
+//  MD.triggerTrack(track_number, 127, uart);
+  SET_BIT16(mcl_seq.md_trig_mask,track_number);
 }
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {

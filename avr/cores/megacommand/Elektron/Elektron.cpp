@@ -6,7 +6,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
   uint8_t buf[256];
 
   if (send) {
-    uint8_t i = 0;
+   uint8_t i = 0;
     buf[i++] = 0xF0;
     for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
       buf[i++] = sysex_protocol.header[n];
@@ -368,9 +368,9 @@ void ElektronDevice::saveCurrentKit(uint8_t pos) {
   sendRequest(data, countof(data));
 }
 
-PGM_P getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t length) {
+const char* getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t length) {
   for (uint8_t i = 0; i < length; i++) {
-    if (pgm_read_byte(&table[i].id) == machine) {
+    if (table[i].id == machine) {
       if (type == 1) {
         return table[i].name1;
       }

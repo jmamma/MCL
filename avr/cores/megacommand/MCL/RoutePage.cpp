@@ -1,9 +1,12 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void RoutePage::setup() {}
 void RoutePage::init() {
   hasChanged = false;
   note_interface.state = true;
+  R.Clear();
+  R.use_icons_page();
 }
 void RoutePage::cleanup() { note_interface.state = false; }
 void RoutePage::set_level(int curtrack, int value) {
@@ -108,10 +111,7 @@ void RoutePage::update_globals() {
     while ((MidiClock.state == 2) &&
            ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
       ;
-    USE_LOCK();
-    SET_LOCK();
     MD.global.toSysex(&encoder2);
-    CLEAR_LOCK();
     hasChanged = false;
   }
 }
@@ -121,7 +121,7 @@ void RoutePage::display() {
 
   auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
-  oled_display.drawBitmap(0, 0, icon_route, 24, 16, WHITE);
+  oled_display.drawBitmap(0, 0, R.icons_page->icon_route, 24, 16, WHITE);
 
   mcl_gui.draw_knob_frame();
 

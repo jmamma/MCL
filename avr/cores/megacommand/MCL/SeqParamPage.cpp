@@ -6,11 +6,13 @@ void SeqParamPage::config() {
   const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
   const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
-  constexpr uint8_t len1 = sizeof(info1);
-
-  strncpy_P(info1, str1, len1);
-  strncat(info1, ">", len1);
-  strncat_P(info1, str2, len1);
+  // 0-1
+  copyMachineNameShort(str1, info1);
+  info1[2] = '>';
+  // 3-4
+  copyMachineNameShort(str2, info1 + 3);
+  // 5
+  info1[5] = 0;
 
   strcpy(info2, "PARAM-");
   info2[6] = 'A' + page_id;
@@ -73,11 +75,10 @@ void SeqParamPage::display() {
   if (seq_param1.getValue() == 0) {
     GUI.put_string_at(0, "--");
   } else {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param1.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      strncpy_P(myName, modelname, 4);
+      strncpy(myName, modelname, 4);
     }
     GUI.put_string_at(0, myName);
   }
@@ -89,11 +90,10 @@ void SeqParamPage::display() {
   if (seq_param3.getValue() == 0) {
     GUI.put_string_at(7, "--");
   } else {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param3.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      strncpy_P(myName2, modelname, 4);
+      strncpy(myName2, modelname, 4);
     }
     GUI.put_string_at(7, myName2);
   }
@@ -123,20 +123,18 @@ void SeqParamPage::display() {
   char myName2[4] = "-- ";
 
   if (seq_param1.getValue() != 0) {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param1.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param1.getValue() - 1);
     if (modelname != NULL) {
-      strncpy_P(myName, modelname, 4);
+      strncpy(myName, modelname, 4);
     }
   }
 
   if (seq_param3.getValue() != 0) {
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track),
-                                 seq_param3.getValue() - 1);
+    const char *modelname = model_param_name(MD.kit.get_model(last_md_track),
+                                             seq_param3.getValue() - 1);
     if (modelname != NULL) {
-      strncpy_P(myName2, modelname, 4);
+      strncpy(myName2, modelname, 4);
     }
   }
 
@@ -229,7 +227,8 @@ bool SeqParamPage::handleEvent(gui_event_t *event) {
       }
 
       if (active_track.steps[step].locks_enabled) {
-        if (clock_diff(note_interface.note_hold[port], slowclock) < TRIG_HOLD_TIME) {
+        if (clock_diff(note_interface.note_hold[port], slowclock) <
+            TRIG_HOLD_TIME) {
           active_track.disable_step_locks(step);
         }
       }

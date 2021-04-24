@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -47,6 +48,7 @@ bool SeqPage::recording = false;
 
 uint16_t SeqPage::deferred_timer = 0;
 uint8_t SeqPage::last_midi_state = 0;
+uint8_t SeqPage::last_step = 255;
 
 static MidiDevice *opt_midi_device_capture = &MD;
 static SeqPage *opt_seqpage_capture = nullptr;
@@ -65,6 +67,17 @@ void SeqPage::create_chars_seq() {
 }
 
 void SeqPage::setup() { create_chars_seq(); }
+
+void SeqPage::check_and_set_page_select() {
+    if (page_select >= page_count ||
+        page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
+      page_select = 0;
+    }
+    ElektronDevice *elektron_dev = midi_device->asElektronDevice();
+    if (elektron_dev != nullptr) {
+      elektron_dev->set_seq_page(page_select);
+    }
+}
 
 void SeqPage::init() {
   recording = false;
@@ -96,6 +109,10 @@ void SeqPage::init() {
   }
   */
   last_rec_event = 255;
+
+  R.Clear();
+  R.use_machine_names_short();
+  R.use_machine_param_names();
 }
 
 void SeqPage::cleanup() {
@@ -282,14 +299,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
   scale_press:
     page_select += 1;
-    if (page_select >= page_count ||
-        page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
-      page_select = 0;
-    }
-    ElektronDevice *elektron_dev = midi_device->asElektronDevice();
-    if (elektron_dev != nullptr) {
-      elektron_dev->set_seq_page(page_select);
-    }
+    check_and_set_page_select();
     return true;
   }
 
@@ -367,6 +377,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       row_func();
       show_seq_menu = false;
       show_step_menu = false;
+      init();
       return true;
     }
     if (show_seq_menu) {
@@ -379,6 +390,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     show_seq_menu = false;
     show_step_menu = false;
     mcl_gui.init_encoders_used_clock();
+    init();
     return true;
   }
 #else

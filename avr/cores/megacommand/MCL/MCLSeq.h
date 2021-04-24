@@ -35,6 +35,9 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
+  bool uart_sidechannel;
+  bool realtime;
+
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
 
@@ -49,6 +52,8 @@ public:
 #endif
 
   SeqTrack aux_tracks[NUM_AUX_TRACKS];
+
+  uint16_t md_trig_mask = 0;
 
   MCLSeqMidiEvents midi_events;
   bool state = false;

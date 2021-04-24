@@ -124,14 +124,11 @@ void SeqPtcPage::config() {
   char str_first[3] = "--";
   char str_second[3] = "--";
   if (midi_device == &MD) {
-    const char *str1;
-    const char *str2;
-    str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
-    str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
-
-    strncpy_P(str_first, str1, len1);
-
-    strncpy_P(str_second, str2, len1);
+    const char *str;
+    str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
+    copyMachineNameShort(str, str_first);
+    str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
+    copyMachineNameShort(str, str_second);
   }
 #ifdef EXT_TRACKS
   else {
@@ -1086,6 +1083,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
   uint8_t display_polylink = 0;
+
+  if (!seq_ptc_page.cc_link_enable) { return; }
+
   MD.parseCC(channel, param, &track, &track_param);
   uint8_t start_track;
   if (track_param == 32) { return; } //don't process mute
@@ -1126,7 +1126,7 @@ void SeqPtcMidiEvents::setup_callbacks() {
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
-
+  seq_ptc_page.cc_link_enable = true;
   state = true;
 }
 

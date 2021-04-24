@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
@@ -37,7 +38,7 @@ const ElektronSysexProtocol a4_protocol = {
 };
 
 A4Class::A4Class()
-    : ElektronDevice(&Midi2, "A4", DEVICE_A4, icon_a4, a4_protocol) {}
+    : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {}
 
 void A4Class::init_grid_devices() {
   uint8_t grid_idx = 1;
@@ -107,6 +108,12 @@ bool A4Class::probe() {
   }
   return connected;
 }
+
+// Caller is responsible to make sure icons_device is loaded in RM
+uint8_t* A4Class::icon() {
+  return R.icons_device->icon_a4;
+}
+
 
 void A4Class::requestKitX(uint8_t kit) { sendRequest(A4_KITX_REQUEST_ID, kit); }
 

@@ -1,0 +1,231 @@
+== All PROGMEM "Object" symbols, sorted by size ==
+
+00002718	l     O	.text	1280	font	
+00003a1d	l     O	.text	1080	machine_names	
+0000366c	l     O	.text	945	md_machine_names_short	
+00000c37	l     O	.text	665	ElektrothicGlyphs	
+0000140b	g     O	.text	665	TomThumbGlyphs	
+00002150	l     O	.text	665	ElektrothicGlyphs	
+00000ed0	l     O	.text	593	ElektrothicBitmaps	
+000023e9	l     O	.text	593	ElektrothicBitmaps	
+000009fa	l     O	.text	477	MENU_OPTIONS	
+000016a4	g     O	.text	418	TomThumbBitmaps	
+000007b7	l     O	.text	360	Entries
+00001d12	l     O	.text	278	seq_menu_layout
+00003fb1	l     O	.text	240	mnm_machine_names	
+00001a6e	l     O	.text	206	slot_menu_layou
+0000205c	l     O	.text	206	system_menu_layout
+000019a7	l     O	.text	192	evilknievel_bitmap	
+0000263a	l     O	.text	152	mcl_logo_bitmap	
+00002c67	l     O	.text	140	mnm_machine_names_short	
+00001e28	l     O	.text	134	file_menu_layout
+00001fd6	l     O	.text	134	midiconfig_menu_layout
+00002d93	l     O	.text	125	ctr_8p_model_names	
+00003eb7	l     O	.text	125	generic_param_names	
+00003f34	l     O	.text	125	mid_model_names	
+00001b3c	l     O	.text	120	icon_a4	
+00001bb4	l     O	.text	120	icon_mnm	
+00001c2c	l     O	.text	120	icon_md	
+00001ca4	l     O	.text	110	step_menu_layout
+00001f68	l     O	.text	110	mdconfig_menu_layout
+00000bd7	l     O	.text	96	scale_names	
+0000124c	l     O	.text	96	gnd_sn_tuning	
+00001f12	l     O	.text	86	chain_menu_layout	
+00000420	l     O	.text	75	icon_ram2	
+0000046b	l     O	.text	75	icon_ram1	
+000004b6	g     O	.text	75	icon_gatebox	
+00000501	g     O	.text	75	icon_rhytmecho	
+000005ee	l     O	.text	75	icon_chroma	
+0000069f	l     O	.text	75	icon_step	
+000006ea	l     O	.text	72	icon_lfo	
+00002c18	l     O	.text	72	arp_names	
+0000191b	g     O	.text	70	digital_pin_to_port_PGM	
+00001961	g     O	.text	70	digital_pin_to_bit_mask_PGM	
+000026d2	l     O	.text	70	digital_pin_to_timer_PGM	
+0000137b	l     O	.text	66	efm_cp_tuning	
+00001ed4	l     O	.text	62	mclconfig_menu_layout
+0000057c	l     O	.text	57	icon_wavd	
+000005b5	l     O	.text	57	icon_sound	
+00000639	l     O	.text	57	icon_para	
+0000091f	l     O	.text	57	wheel_side	
+00000958	l     O	.text	57	wheel_angle	
+00000991	l     O	.text	57	wheel_top	
+0000054c	l     O	.text	48	icon_loudness	
+00000732	l     O	.text	48	icon_mixer	
+000009ca	l     O	.text	48	icon_route	
+00001149	l     O	.text	48	e12_cb_tuning	
+00001179	l     O	.text	48	e12_bc_tuning	
+000011c7	l     O	.text	48	rom_tuning	
+00001315	l     O	.text	48	efm_bd_tuning	
+000013db	l     O	.text	48	efm_rs_tuning	
+00000672	l     O	.text	45	icon_rec	
+00000762	l     O	.text	45	icon_grid	
+00002e10	l     O	.text	45	ctr_al_model_names	
+00002e3d	l     O	.text	45	inp_ea_model_names	
+00002e6a	l     O	.text	45	inp_fa_model_names	
+00002eb5	l     O	.text	45	p_i_hh_model_names	
+00002ee2	l     O	.text	45	p_i_cc_model_names	
+00002f0f	l     O	.text	45	p_i_rc_model_names	
+00002f96	l     O	.text	45	p_i_mt_model_names	
+0000300e	l     O	.text	45	e12_bc_model_names	
+0000303b	l     O	.text	45	e12_sh_model_names	
+00003068	l     O	.text	45	e12_tr_model_names	
+00003095	l     O	.text	45	e12_ta_model_names	
+000030c2	l     O	.text	45	e12_br_model_names	
+000030ef	l     O	.text	45	e12_cc_model_names	
+0000311c	l     O	.text	45	e12_rc_model_names	
+00003149	l     O	.text	45	e12_oh_model_names	
+00003176	l     O	.text	45	e12_ch_model_names	
+000031a3	l     O	.text	45	e12_cb_model_names	
+000031d0	l     O	.text	45	e12_rs_model_names	
+000031fd	l     O	.text	45	e12_cp_model_names	
+0000322a	l     O	.text	45	e12_lt_model_names	
+00003257	l     O	.text	45	e12_ht_model_names	
+00003284	l     O	.text	45	e12_sd_model_names	
+000032b1	l     O	.text	45	e12_bd_model_names	
+00003306	l     O	.text	45	efm_hh_model_names	
+0000335b	l     O	.text	45	efm_rs_model_names	
+00003388	l     O	.text	45	efm_cp_model_names	
+000033b5	l     O	.text	45	efm_xt_model_names	
+000033e2	l     O	.text	45	efm_sd_model_names	
+0000340f	l     O	.text	45	efm_bd_model_names	
+0000343c	l     O	.text	45	trx_s2_model_names	
+000034b4	l     O	.text	45	trx_ma_model_names	
+00003554	l     O	.text	45	trx_cp_model_names	
+000035a9	l     O	.text	45	trx_sd_model_names	
+000035d6	l     O	.text	45	trx_b2_model_names	
+00003603	l     O	.text	45	trx_bd_model_names	
+00003e55	l     O	.text	45	ram_r_model_names	
+00003e82	l     O	.text	45	rom_model_names	
+0000078f	l     O	.text	40	Categories	
+00001121	l     O	.text	40	e12_lt_tuning	
+00002cf3	l     O	.text	40	ctr_dx_model_names	
+00002d1b	l     O	.text	40	ctr_eq_model_names	
+00002d43	l     O	.text	40	ctr_gb_model_names	
+00002d6b	l     O	.text	40	ctr_re_model_names	
+00002fc3	l     O	.text	40	p_i_sd_model_names	
+000032de	l     O	.text	40	efm_cy_model_names	
+00003333	l     O	.text	40	efm_cb_model_names	
+00003469	l     O	.text	40	trx_xc_model_names	
+00003581	l     O	.text	40	trx_xt_model_names	
+00001eae	l     O	.text	38	rampage1_menu_layout	
+0000212a	l     O	.text	38	auxconfig_menu_layout	
+00002f3c	l     O	.text	35	p_i_rs_model_names	
+00002feb	l     O	.text	35	p_i_bd_model_names	
+00003491	l     O	.text	35	trx_cl_model_names	
+000034e1	l     O	.text	35	trx_cy_model_names	
+000011a9	l     O	.text	30	efm_cy_tuning	
+000011f7	l     O	.text	30	efm_cb_tuning	
+0000135d	l     O	.text	30	efm_sd_tuning	
+000013bd	l     O	.text	30	efm_hh_tuning	
+00002e97	l     O	.text	30	inp_ga_model_names	
+00002f5f	l     O	.text	30	p_i_ma_model_names	
+00003504	l     O	.text	30	trx_oh_model_names	
+00003522	l     O	.text	30	trx_ch_model_names	
+000018e7	g     O	.text	26	port_to_output_PGM	
+00001901	g     O	.text	26	port_to_mode_PGM	
+00002f7d	l     O	.text	25	p_i_ml_model_names	
+00003630	l     O	.text	25	gnd_im_model_names	
+00003653	l     O	.text	25	gnd_sn_model_names	
+00001234	l     O	.text	24	trx_b2_tuning	
+000012ac	l     O	.text	24	trx_bd_tuning	
+000012c4	l     O	.text	24	trx_xt_tuning	
+000012dc	l     O	.text	24	trx_xc_tuning	
+00001345	l     O	.text	24	efm_xt_tuning	
+00001846	l     O	.text	22	encoder_small_6	
+0000185c	l     O	.text	22	encoder_small_5	
+00001872	l     O	.text	22	encoder_small_4	
+00001888	l     O	.text	22	encoder_small_3	
+0000189e	l     O	.text	22	encoder_small_2	
+000018b4	l     O	.text	22	encoder_small_1	
+000018ca	l     O	.text	22	encoder_small_0	
+00001300	l     O	.text	21	trx_cl_tuning	
+00003540	l     O	.text	20	trx_rs_model_names	
+00001215	l     O	.text	19	trx_s2_tuning	
+00001228	l     O	.text	12	trx_rs_tuning	
+000012f4	l     O	.text	12	trx_sd_tuning	
+00003649	l     O	.text	10	gnd_ns_model_names	
+000018e0	l     O	.text	7	Elektrothic	
+00001a67	g     O	.text	7	TomThumb	
+00002c60	l     O	.text	7	Elektrothic	
+00003eaf	l     O	.text	4	model_param_namehhE3__c_0	
+00003eb3	l     O	.text	4	model_param_namehhE3__c	
+
+== Initial compression run result ==
+ ┌─┐ C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource                                                                                                                                                                                                  comp ◇◇ ┆ Yatao
+ └─╜ ╰▷ .\gen-resource.ps1
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\fonts.cpp
+compressed 3621 to 2871 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\icons.cpp
+compressed 1986 to 1385 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\machine_names.cpp
+compressed 5345 to 2947 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\menu_options.cpp
+compressed 738 to 399 raw bytes
+Compiling C:\Users\Yatao\Documents\Arduino\hardware\MIDICtrl20_MegaCommand\resource\tuning.cpp
+compressed 810 to 700 raw bytes
+
+== Initial comp branch size ==
+Sketch uses 228562 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 47314 bytes (83%) of dynamic memory, leaving 9517 bytes for local variables. Maximum is 56831 bytes.
+
+== With uzlib ==
+Sketch uses 231026 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 51610 bytes (90%) of dynamic memory, leaving 5221 bytes for local variables. Maximum is 56831 bytes.
+PROGMEM +2464
+RAM +4296 (4096 buffer)
+
+== With unpack ==
+Sketch uses 228944 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 47314 bytes (83%) of dynamic memory, leaving 9517 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM +382
+RAM +0 (hey)
+
+== Compress icons_boot, machine_names_short ==
+Sketch uses 228454 bytes (89%) of program storage space. Maximum is 253952 bytes.
+Global variables use 51438 bytes (90%) of dynamic memory, leaving 5393 bytes for local variables . Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -108
+
+== enhanced_gui branch ==
+Sketch uses 233782 bytes (92%) of program storage space. Maximum is 253952 bytes.
+Global variables use 47610 bytes (83%) of dynamic memory, leaving 9221 bytes for local variable s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+
+== merged with enhanced_gui and applying compression ==
+Sketch uses 231450 bytes (91%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52651 bytes (92%) of dynamic memory, leaving 4180 bytes for local variable s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -2332
+
+== disable diag page logger ==
+Sketch uses 231226 bytes (91%) of program storage space. Maximum is 253952 bytes.
+Global variables use 51919 bytes (91%) of dynamic memory, leaving 4912 bytes for local variable s. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -2556
+
+== compress menu items ==
+Sketch uses 230854 bytes (90%) of program storage space. Maximum is 253952 byte s.
+Global variables use 52919 bytes (93%) of dynamic memory, leaving 3912 bytes fo r local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -2928
+
+== compress menu layouts ==
+Sketch uses 229964 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52876 bytes (93%) of dynamic memory, leaving 3955 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -3818
+
+== remove diag_page entirely ==
+Sketch uses 229392 bytes (90%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52814 bytes (92%) of dynamic memory, leaving 4017 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -4390
+
+
+== trim Elektrothic to digits only ==
+Sketch uses 228260 bytes (89%) of program storage space. Maximum is 253952 bytes.
+Global variables use 52814 bytes (92%) of dynamic memory, leaving 4017 bytes for local variables. Maximum is 56831 bytes.
+Low memory available, stability problems may occur.
+PROGMEM -5522

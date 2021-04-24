@@ -104,10 +104,7 @@ void MixerPage::cleanup() {
 void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 1;
   MD.kit.levels[curtrack] = value;
-  USE_LOCK();
-  SET_LOCK();
   MD.setTrackParam(curtrack, 33, value);
-  CLEAR_LOCK();
   // in_sysex = 0;
 }
 
@@ -223,24 +220,15 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
         newval = 127;
       }
       for (uint8_t value = MD.kit.params[i][param]; value < newval; value++) {
-        USE_LOCK();
-        SET_LOCK();
         MD.setTrackParam(i, param, value);
         MD.kit.params[i][param] = value;
-        CLEAR_LOCK();
       }
       for (uint8_t value = MD.kit.params[i][param]; value > newval; value--) {
-        USE_LOCK();
-        SET_LOCK();
         MD.setTrackParam(i, param, value);
         MD.kit.params[i][param] = value;
-        CLEAR_LOCK();
       }
-      USE_LOCK();
-      SET_LOCK();
       MD.setTrackParam(i, param, newval);
       MD.kit.params[i][param] = newval;
-      CLEAR_LOCK();
 
 #ifdef OLED_DISPLAY
       uint8_t scaled_level = (newval / 127.0f) * FADER_LEN;
@@ -409,6 +397,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
+  /*
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    for (uint8_t i = 0; i < 16; i++) {
+      if (note_interface.notes[i] == 1) {
+        for (uint8_t c = 0; c < 24; c++) {
+          if (MD.kit.params[i][c] != params[i][c]) {
+            MD.setTrackParam(i, c, params[i][c]);
+            MD.kit.params[i][c] = params[i][c];
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  */
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -466,15 +470,12 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == 32) { return; } //don't process mute
   for (int i = 0; i < 16; i++) {
     if ((note_interface.notes[i] == 1) && (i != track)) {
-      USE_LOCK();
-      SET_LOCK();
       MD.setTrackParam(i, track_param, value);
       if (track_param < 24) {
         MD.kit.params[i][track_param] = value;
       } else {
         MD.kit.levels[i] = value;
       }
-      CLEAR_LOCK();
     }
     if (track_param == 33) {
       uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;

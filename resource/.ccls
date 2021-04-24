@@ -1,0 +1,56 @@
+clang++
+%c -std=gnu11
+%cpp -std=c++14
+#  Treats all headers as c++ headers
+%h %hpp -x c++-header
+#  Include dirs in Makefile:
+#  DIRS = Sequencer SDCard Elektron A4 Wire Wire/utility Midi MidiTools Adafruit-GFX-Library Adafruit-GFX-Library/Fonts SdFat SdFat/SdCard SdFat/FatLib SdFat/SpiDriver SdFat/SpiDriver/boards MCL SPI Adafruit_SSD1305_Library CommonTools GUI MD MNM
+#  LDIRS = $(foreach dir,$(DIRS),$(CORE_DIR)/$(dir)) ${CORE_DIR} ${VARIENTS_DIR}
+#  INCS = $(foreach dir,$(LDIRS),-I$(dir))
+#
+#  DIRS
+-I../avr/cores/megacommand/Sequencer
+-I../avr/cores/megacommand/SDCard
+-I../avr/cores/megacommand/Elektron
+-I../avr/cores/megacommand/A4
+-I../avr/cores/megacommand/Wire
+-I../avr/cores/megacommand/Wire/utility
+-I../avr/cores/megacommand/Midi
+-I../avr/cores/megacommand/MidiTools
+-I../avr/cores/megacommand/Adafruit-GFX-Library
+-I../avr/cores/megacommand/Adafruit-GFX-Library/Fonts
+-I../avr/cores/megacommand/SdFat
+-I../avr/cores/megacommand/SdFat/SdCard
+-I../avr/cores/megacommand/SdFat/FatLib
+-I../avr/cores/megacommand/SdFat/SpiDriver
+-I../avr/cores/megacommand/SdFat/SpiDriver/boards
+-I../avr/cores/megacommand/MCL
+-I../avr/cores/megacommand/SPI
+-I../avr/cores/megacommand/Adafruit_SSD1305_Library
+-I../avr/cores/megacommand/CommonTools
+-I../avr/cores/megacommand/GUI
+-I../avr/cores/megacommand/MD
+-I../avr/cores/megacommand/MNM
+-I../avr/cores/megacommand/uzlib
+#  CORE_DIR
+-I../avr/cores
+#  VARIENTS_DIR
+-I../avr/variants/mega
+#  Additionally include the AVR environment
+-IC:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include
+-I/usr/avr/include
+#
+#  CXXFLAGS = -c -g -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x82200,--defsym=__heap_end=0x80ffff -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+#  Define the flags: -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
+-DF_CPU=16000000L
+-DARDUINO=10803
+-DARDUINO_AVR_MEGA2560
+-DARDUINO_ARCH_AVR
+#  Additional define flags
+-D__AVR_ATmega2560__
+-DAVR
+#  Compiler options
+-Wall
+-Wextra
+-DMCL_NOSKETCH
+%c %cpp -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics

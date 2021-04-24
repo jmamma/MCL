@@ -68,6 +68,11 @@ extern void step_menu_handler();
 
 class MidiDevice;
 
+extern inline void reset_undo() {
+  opt_undo = 255;
+  opt_undo_track = 255;
+}
+
 class SeqPage : public LightPage {
 public:
   // Static variables shared amongst derived objects
@@ -93,6 +98,7 @@ public:
   static uint16_t deferred_timer;
   static uint8_t last_param_id;
   static uint8_t last_rec_event;
+  static uint8_t last_step;
 
   const uint8_t render_defer_time = 110;
 
@@ -107,10 +113,8 @@ public:
           Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
   }
-  void reset_undo() {
-    opt_undo_track = 0;
-    opt_undo = 0;
-  }
+
+  void check_and_set_page_select();
   void config_as_trackedit();
   void config_as_lockedit();
   void config_mask_info(bool silent = true);

@@ -18,11 +18,13 @@ void SeqStepPage::config() {
   const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
   const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
 
-  constexpr uint8_t len1 = sizeof(info1);
-
-  strncpy_P(info1, str1, len1);
-  strncat(info1, ">", len1);
-  strncat_P(info1, str2, len1);
+  // 0-1
+  copyMachineNameShort(str1, info1);
+  info1[2] = '>';
+  // 3-4
+  copyMachineNameShort(str2, info1 + 3);
+  // 5
+  info1[5] = 0;
 
   config_mask_info();
   config_encoders();
@@ -55,12 +57,12 @@ void SeqStepPage::init() {
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
-  MD.set_seq_page(page_select);
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
+  check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
-
   trigled_mask = 0;
   locks_on_step_mask = 0;
 
@@ -209,6 +211,9 @@ void SeqStepPage::loop() {
 
   if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
     mcl_seq.midi_events.update_params = true;
+    MD.midi_events.enable_live_kit_update();
+    seq_ptc_page.cc_link_enable = true;
+    RAMPage::cc_link_enable = true;
     update_params_queue = false;
   }
 
@@ -287,7 +292,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
-
+      update_params_queue = false;
+      MD.midi_events.disable_live_kit_update();
+      seq_ptc_page.cc_link_enable = false;
+      RAMPage::cc_link_enable = false;
       if (step >= active_track.length) {
         return true;
       }
@@ -456,8 +464,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note clear
         if (step != 255) {
+          if (last_step != step) { reset_undo(); }
           opt_clear_step = 1;
           opt_clear_step_locks_handler();
+          last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
@@ -709,10 +719,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (store_lock == 0) {
     char str[5] = "--  ";
     char str2[4] = "-- ";
-    PGM_P modelname = NULL;
-    modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
+    const char* modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {
-      strncpy_P(str, modelname, 3);
+      strncpy(str, modelname, 3);
       if (strlen(str) == 2) {
         str[2] = ' ';
         str[3] = '\0';
