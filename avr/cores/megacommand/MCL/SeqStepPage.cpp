@@ -57,12 +57,12 @@ void SeqStepPage::init() {
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
-  MD.set_seq_page(page_select);
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
+  check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
-
   trigled_mask = 0;
   locks_on_step_mask = 0;
 

@@ -68,6 +68,17 @@ void SeqPage::create_chars_seq() {
 
 void SeqPage::setup() { create_chars_seq(); }
 
+void SeqPage::check_and_set_page_select() {
+    if (page_select >= page_count ||
+        page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
+      page_select = 0;
+    }
+    ElektronDevice *elektron_dev = midi_device->asElektronDevice();
+    if (elektron_dev != nullptr) {
+      elektron_dev->set_seq_page(page_select);
+    }
+}
+
 void SeqPage::init() {
   recording = false;
   page_count = 4;
@@ -288,14 +299,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
   scale_press:
     page_select += 1;
-    if (page_select >= page_count ||
-        page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
-      page_select = 0;
-    }
-    ElektronDevice *elektron_dev = midi_device->asElektronDevice();
-    if (elektron_dev != nullptr) {
-      elektron_dev->set_seq_page(page_select);
-    }
+    check_and_set_page_select();
     return true;
   }
 
