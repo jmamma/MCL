@@ -437,8 +437,8 @@ public:
 
   void set_rec_mode(uint8_t mode);
 
-  void popup_text(uint8_t action_string);
-  void popup_text(char *str);
+  void popup_text(uint8_t action_string, uint8_t persistent = 0);
+  void popup_text(char *str, uint8_t persistent = 0);
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
 

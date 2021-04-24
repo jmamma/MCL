@@ -152,7 +152,8 @@ void SeqPage::config_mask_info(bool silent) {
   if (!silent) {
     char str[16] = "EDIT ";
     strcat(str, info2);
-    MD.popup_text(str);
+    uint8_t persistent = (mask_type == MASK_PATTERN) ? 2 : 1;
+    MD.popup_text(str, persistent);
   }
 }
 

@@ -100,11 +100,20 @@ void ElektronDevice::set_rec_mode(uint8_t mode) {
   sendRequest(data, sizeof(data));
   //waitBlocking();
 }
-void ElektronDevice::popup_text(uint8_t action_string) {
-  uint8_t data[3] = {0x70, 0x3B, action_string};
-  sendRequest(data, 3);
+void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
+  uint8_t data[4] = {0x70, 0x3B, persistent, action_string};
+  sendRequest(data, 4);
   //waitBlocking();
 }
+
+void ElektronDevice::popup_text(char *str, uint8_t persistent) {
+  uint8_t data[67] = {0x70, 0x3B, persistent };
+  uint8_t len = strlen(str);
+  strcpy(data + 3, str);
+  sendRequest(data, 3 + len + 1);
+  //waitBlocking();
+}
+
 
 void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
   uint8_t data[5] = {0x70, 0x3C, 0x20, speed, timing};
@@ -114,15 +123,6 @@ void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
 void ElektronDevice::draw_close_microtiming() {
   uint8_t data[3] = {0x70, 0x3C, 0x21};
   sendRequest(data, 3);
-  //waitBlocking();
-}
-
-
-void ElektronDevice::popup_text(char *str) {
-  uint8_t data[66] = {0x70, 0x3B };
-  uint8_t len = strlen(str);
-  strcpy(data + 2, str);
-  sendRequest(data, 2 + len + 1);
   //waitBlocking();
 }
 
