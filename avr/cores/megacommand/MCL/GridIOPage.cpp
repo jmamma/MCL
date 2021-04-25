@@ -4,7 +4,7 @@ uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
 uint8_t GridIOPage::old_grid = 0;
 
-void GridIOPage::cleanup() { proj.select_grid(old_grid); }
+void GridIOPage::cleanup() { trig_interface.send_md_leds(); proj.select_grid(old_grid); }
 
 void GridIOPage::init() {
   old_grid = proj.get_grid();
