@@ -26,7 +26,7 @@ void SeqStepPage::config() {
   // 5
   info1[5] = 0;
 
-  config_mask_info();
+  config_mask_info((mask_type == MASK_PATTERN)); //false = transmit popup text for trig mode if required.
   config_encoders();
   // config menu
   config_as_trackedit();
@@ -79,6 +79,7 @@ void SeqStepPage::cleanup() {
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
   MD.set_rec_mode(0);
+  MD.popup_text(127, 2); //clear persistent trig mode popup
 }
 
 void SeqStepPage::display() {
