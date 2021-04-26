@@ -334,7 +334,7 @@ again:
   if (recalc_latency) {
     calc_latency(&empty_track);
   }
-  if (next_step - (div32th_total_latency / 2) < MidiClock.div16th_counter) {
+  if (next_step - (div192th_total_latency / 6) < MidiClock.div16th_counter) {
     next_step += q;
     recalc_latency = false;
     goto again;
