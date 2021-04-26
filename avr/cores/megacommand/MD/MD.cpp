@@ -150,14 +150,28 @@ bool MDClass::probe() {
 
   // Hack to prevent unnecessary delay on MC boot
   connected = false;
-
+  delay(100);
   if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
     mcl_gui.delay_progress(4600);
   }
 
   // Begin main probe sequence
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
-    DEBUG_PRINTLN(F("Midi ID: success"));
+    delay(100);
+    uint8_t count = 3;
+
+    uint64_t fw_caps_mask = ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS | (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL);
+
+    while ((!get_fw_caps() || !(fw_caps & fw_caps_mask)) && count) {
+      mcl_gui.delay_progress(250);
+      count--;
+    }
+
+    if (!(fw_caps & fw_caps_mask)) {
+       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+       goto abort;
+    }
+
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
     // wait 300 ms, shoul be enought time to allow midiclock tempo to be
     // calculated before proceeding.
@@ -175,41 +189,23 @@ bool MDClass::probe() {
     connected = true;
     setGlobal(7);
     global.baseChannel = 9;
-
-    uint8_t count = 3;
-
-    while (!get_fw_caps() && count) {
-      mcl_gui.delay_progress(50);
-      count--;
-    }
-    if (!(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
-                     (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL))) {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-      oled_display.display();
-#else
-      gfx.display_text("UPGRADE", "MACHINEDRUM");
-#endif
-      while (1)
-        ;
-    }
     getBlockingKit(0x7F);
   }
+  if (connected) {
+    activate_enhanced_gui();
+    MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
 
-  if (connected == false) {
+    MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+
+    MD.popup_text("ENHANCED");
+    md_track_select.on();
+  }
+
+  else {
+    abort:
     DEBUG_PRINTLN(F("delay"));
     mcl_gui.delay_progress(250);
   }
-
-  activate_enhanced_gui();
-  MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
-
-  MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-
-  MD.popup_text("ENHANCED");
-  md_track_select.on();
-
-  GUI.currentPage()->init();
 
   return connected;
 }

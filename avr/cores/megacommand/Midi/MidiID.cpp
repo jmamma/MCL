@@ -17,8 +17,8 @@ void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uart->sendRaw(data, sizeof(data));
 }
 
-void MidiID::init() { 
-  set_id(DEVICE_NULL); 
+void MidiID::init() {
+  set_id(DEVICE_NULL);
   set_name("");
 }
 
@@ -32,8 +32,7 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
     MidiSysex2.addSysexListener(&MidiIDSysexListener);
   }
 
-  send_id_request(id, port);
-  uint8_t ret = waitForId(timeout);
+  uint8_t ret = waitForId(id, port, timeout);
   if (port == UART1_PORT) {
     MidiSysex.removeSysexListener(&MidiIDSysexListener);
   }
@@ -47,12 +46,13 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   return false;
 }
 
-uint8_t MidiID::waitForId(uint16_t timeout) {
+uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
   MidiIDSysexListener.msgType = 255;
   MidiIDSysexListener.isIDMessage = false;
 
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
+  send_id_request(id, port);
   do {
     current_clock = read_slowclock();
     handleIncomingMidi();
