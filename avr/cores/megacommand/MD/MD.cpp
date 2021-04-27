@@ -635,7 +635,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   uint8_t level = 255;
   if ((send_level) && (kit_->levels[track] != machine->level)) {
-    level = kit_->levels[track];
+    level = machine->level;
   }
 
   MD.assignMachineBulk(track, machine, level, send);
