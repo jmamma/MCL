@@ -27,13 +27,19 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
   }
 }
 
-void MDSeqTrack::set_speed(uint8_t _speed) {
-  uint8_t old_speed = speed;
-  float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-    timing[i] = round(mult * (float)timing[i]);
+void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
+                           bool timing_adjust) {
+  if (old_speed == 255) {
+    old_speed = speed;
   }
-  speed = _speed;
+  if (timing_adjust) {
+    float mult =
+        get_speed_multiplier(new_speed) / get_speed_multiplier(old_speed);
+    for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+      timing[i] = round(mult * (float)timing[i]);
+    }
+  }
+  speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
     mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
@@ -43,8 +49,8 @@ void MDSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void MDSeqTrack::re_sync() {
-//  uint32_t q = length * 12;
-//  count_down = (MidiClock.div192th_counter / q) * q + q;
+  //  uint32_t q = length * 12;
+  //  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {
@@ -94,14 +100,13 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
         }
       }
     }
+  }
+  mod12_counter++;
 
-    mod12_counter++;
-
-    if (mod12_counter == timing_mid) {
-      mod12_counter = 0;
-      cur_event_idx += popcount(steps[step_count].locks);
-      step_count_inc();
-    }
+  if (mod12_counter == timing_mid) {
+    mod12_counter = 0;
+    cur_event_idx += popcount(steps[step_count].locks);
+    step_count_inc();
   }
 }
 
@@ -382,8 +387,8 @@ void MDSeqTrack::send_trig_inline() {
     mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
         MD.kit.levels[MD.kit.trigGroups[track_number]];
   }
-//  MD.triggerTrack(track_number, 127, uart);
-  SET_BIT16(mcl_seq.md_trig_mask,track_number);
+  //  MD.triggerTrack(track_number, 127, uart);
+  SET_BIT16(mcl_seq.md_trig_mask, track_number);
 }
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {

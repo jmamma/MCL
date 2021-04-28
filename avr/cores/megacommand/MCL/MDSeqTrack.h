@@ -90,7 +90,7 @@ public:
 
   void modify_track(uint8_t dir);
 
-  void set_speed(uint8_t _speed);
+  void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
