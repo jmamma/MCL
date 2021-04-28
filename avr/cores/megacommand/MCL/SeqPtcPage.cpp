@@ -92,7 +92,7 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
-
+  cc_link_enable = true;
   ptc_param_len.handler = ptc_pattern_len_handler;
   note_mask = 0;
   DEBUG_PRINTLN(F("control mode:"));
@@ -1126,7 +1126,6 @@ void SeqPtcMidiEvents::setup_callbacks() {
   Midi2.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
-  seq_ptc_page.cc_link_enable = true;
   state = true;
 }
 

@@ -31,6 +31,7 @@ void RAMPage::init() {
   oled_display.setFont();
 #endif
   trig_interface.off();
+  cc_link_enable = true;
   if (mcl_cfg.ram_page_mode == MONO) {
     ((MCLEncoder *)encoders[0])->max = 2;
   } else {
@@ -763,7 +764,6 @@ void RAMPage::setup_callbacks() {
   }
   Midi.addOnControlChangeCallback(
       this, (midi_callback_ptr_t)&RAMPage::onControlChangeCallback_Midi);
-  cc_link_enable = true;
   midi_state = true;
 }
 
