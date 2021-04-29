@@ -163,7 +163,7 @@ bool MDClass::probe() {
 
     if (!(fw_caps & fw_caps_mask)) {
        oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-       goto abort;
+       while (1) {};
     }
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
@@ -192,7 +192,6 @@ bool MDClass::probe() {
 
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
 
-    MD.popup_text("ENHANCED");
     md_track_select.on();
   }
 
