@@ -106,6 +106,13 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   oled_display.setTextColor(WHITE, BLACK);
   if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
       pmidi->speed > 31250) {
+
+
+    if ((port == UART1_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART1) || (port == UART2_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
+      //Disable MidiClock/Transport on disconnected port.
+      MidiClock.mode = 255;
+      MidiClock.init();
+    }
     MidiUart.set_speed((uint32_t)31250, port);
     DEBUG_PRINTLN("disconnecting");
     for (size_t i = 0; i < nr_drivers; ++i) {
@@ -121,8 +128,6 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     for (size_t i = 0; i < nr_drivers; ++i) {
 
       MidiIDSysexListener.setup(pmidi_class);
-
-      MidiUart.set_speed((uint32_t)31250, port);
 
       auto oldfont = oled_display.getFont();
       prepare_display(resource_buf);
@@ -146,6 +151,13 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         pmidi->device.set_name(drivers[i]->name);
         drivers[i]->init_grid_devices();
         *active_device = drivers[i];
+        //Re-enable MidiClock/Transport recv
+        if (UART1_PORT && mcl_cfg.clock_rec == 0) {
+           MidiClock.mode = MidiClock.EXTERNAL_MIDI;
+        }
+        if (UART2_PORT && mcl_cfg.clock_rec == 1) {
+          MidiClock.mode = MidiClock.EXTERNAL_UART2;
+        }
         break;
       }
     } // for drivers

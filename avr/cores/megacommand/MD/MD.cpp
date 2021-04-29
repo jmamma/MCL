@@ -148,16 +148,10 @@ bool MDClass::probe() {
     trig_interface.off();
   }
 
-  // Hack to prevent unnecessary delay on MC boot
   connected = false;
-  delay(100);
-  if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
-    mcl_gui.delay_progress(4600);
-  }
 
   // Begin main probe sequence
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
-    delay(100);
     uint8_t count = 3;
 
     uint64_t fw_caps_mask = ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS | (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL);
@@ -173,10 +167,11 @@ bool MDClass::probe() {
     }
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
-    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
-    // calculated before proceeding.
-
-    mcl_gui.delay_progress(400);
+    mcl_gui.delay_progress(100);
+    if (mcl_cfg.clock_rec == 0) {
+       MidiClock.mode = MidiClock.EXTERNAL_MIDI;
+    }
+    mcl_gui.delay_progress(300);
     md_exploit.send_globals();
     getCurrentTrack(CALLBACK_TIMEOUT);
     for (uint8_t x = 0; x < 2; x++) {
@@ -204,7 +199,7 @@ bool MDClass::probe() {
   else {
     abort:
     DEBUG_PRINTLN(F("delay"));
-    mcl_gui.delay_progress(250);
+    mcl_gui.delay_progress(4600);
   }
 
   return connected;
