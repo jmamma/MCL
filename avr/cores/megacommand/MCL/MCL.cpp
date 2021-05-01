@@ -144,6 +144,11 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_COPY: {
         if (GUI.currentPage() == &seq_step_page)
           break;
+        if (GUI.currentPage() != &seq_ptc_page &&
+            GUI.currentPage() != &seq_param_page && trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          //Ignore scale + copy if page != seq_step_page
+          break;
+        }
         opt_copy = 2;
         opt_copy_track_handler();
         break;
@@ -151,6 +156,11 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_PASTE: {
         if (GUI.currentPage() == &seq_step_page)
           break;
+        if (GUI.currentPage() != &seq_ptc_page &&
+            GUI.currentPage() != &seq_param_page && trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          //Ignore scale + copy if page != seq_step_page
+          break;
+        }
         opt_paste = 2;
         opt_paste_track_handler();
         break;
