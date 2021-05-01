@@ -99,6 +99,7 @@ public:
   static uint8_t last_param_id;
   static uint8_t last_rec_event;
   static uint8_t last_step;
+  static uint16_t last_md_model;
 
   const uint8_t render_defer_time = 110;
 

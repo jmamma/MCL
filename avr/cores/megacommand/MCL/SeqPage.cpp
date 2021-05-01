@@ -28,6 +28,8 @@ bool SeqPage::toggle_device = true;
 
 uint8_t SeqPage::step_select = 255;
 
+uint16_t SeqPage::last_md_model = 255;
+
 uint8_t opt_speed = 1;
 uint8_t opt_trackid = 1;
 uint8_t opt_copy = 0;
@@ -109,6 +111,7 @@ void SeqPage::init() {
   }
   */
   last_rec_event = 255;
+  last_md_model = MD.kit.models[MD.currentTrack];
 
   R.Clear();
   R.use_machine_names_short();
@@ -1411,7 +1414,8 @@ void SeqPage::loop() {
     redisplay = true;
   }
 
-  if (last_md_track != MD.currentTrack) {
+  if (last_md_track != MD.currentTrack || last_md_model != MD.kit.models[MD.currentTrack]) {
+    last_md_model = MD.kit.models[MD.currentTrack];
     select_track(&MD, MD.currentTrack, false);
   }
   if (show_seq_menu) {
