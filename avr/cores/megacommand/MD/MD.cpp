@@ -163,7 +163,8 @@ bool MDClass::probe() {
 
     if (!(fw_caps & fw_caps_mask)) {
        oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-       while (1) {};
+       return false;
+       //while (1) {};
     }
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
