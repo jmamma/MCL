@@ -54,6 +54,7 @@ public:
 
   void setup_ram_play_mono(uint8_t track);
   void setup_ram_play_stereo(uint8_t track);
+  void prepare_chain(uint8_t track, uint8_t steps, uint8_t row);
 
   void reverse(uint8_t track);
   bool slice(uint8_t track, uint8_t linked_track);
