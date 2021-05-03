@@ -1,6 +1,6 @@
 #include "MCLMenus.h"
-#include "Project.h"
 #include "MCL_impl.h"
+#include "Project.h"
 #include "ResourceManager.h"
 
 MCLEncoder options_param1(0, 11, ENCODER_RES_SYS);
@@ -15,92 +15,65 @@ MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
 
-void new_proj_handler() {
-  proj.new_project_prompt();
-}
+void new_proj_handler() { proj.new_project_prompt(); }
 
-const Page* const menu_target_pages[] PROGMEM = {
+const Page *const menu_target_pages[] PROGMEM = {
     nullptr,
 
     // 1 - load_proj_page
-    (Page*) &load_proj_page,
-    (Page*) &convert_proj_page,
-    (Page*) &midi_config_page,
-    (Page*) &md_config_page,
-    (Page*) &chain_config_page,
-    (Page*) &aux_config_page,
-    (Page*) &sddrive_page,
-    (Page*) &mcl_config_page,
+    (Page *)&load_proj_page,
+    (Page *)&convert_proj_page,
+    (Page *)&midi_config_page,
+    (Page *)&md_config_page,
+    (Page *)&chain_config_page,
+    (Page *)&aux_config_page,
+    (Page *)&sddrive_page,
+    (Page *)&mcl_config_page,
 
     // 9 - ram_config_page
-    (Page*) &ram_config_page,
+    (Page *)&ram_config_page,
 
     // 10
-    (Page*) &poly_page,
+    (Page *)&poly_page,
     // 11
-    (Page*) &arp_page,
+    (Page *)&arp_page,
 };
 
-const uint8_t* const menu_target_param[] PROGMEM = {
+const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 
     // 1
     &mcl_cfg.ram_page_mode,
 
     // 2
-    &mcl_cfg.uart1_turbo,
-    &mcl_cfg.uart2_turbo,
-    &mcl_cfg.uart2_device,                   
-    &mcl_cfg.clock_rec,
-    &mcl_cfg.clock_send, 
-    &mcl_cfg.midi_forward,
+    &mcl_cfg.uart1_turbo, &mcl_cfg.uart2_turbo, &mcl_cfg.uart2_device,
+    &mcl_cfg.clock_rec, &mcl_cfg.clock_send, &mcl_cfg.midi_forward,
 
     // 8
-    &mcl_cfg.auto_normalize,
-    &mcl_cfg.uart2_ctrl_mode,
+    &mcl_cfg.auto_normalize, &mcl_cfg.uart2_ctrl_mode,
 
     // 10
-    &mcl_cfg.chain_mode,    
-    &mcl_cfg.chain_rand_min,
-    &mcl_cfg.chain_rand_max,
+    &mcl_cfg.chain_mode, &mcl_cfg.chain_rand_min, &mcl_cfg.chain_rand_max,
 
     // 13
     &mcl_cfg.display_mirror,
 
     // 14
-    &opt_trackid,             
-    &SeqPage::mask_type,      
-    &SeqPage::pianoroll_mode, 
-    &SeqPage::param_select,   
-    &SeqPage::slide,          
-    &seq_ptc_page.key,        
-    &SeqPage::velocity,       
-    &SeqPage::cond,
-    &opt_speed,
-    &opt_length,  
-    &opt_channel, 
-    &opt_copy,    
-    &opt_clear,   
-    &opt_paste,   
-    &opt_shift,   
-    &opt_reverse, 
+    &opt_trackid, &SeqPage::mask_type, &SeqPage::pianoroll_mode,
+    &SeqPage::param_select, &SeqPage::slide, &seq_ptc_page.key,
+    &SeqPage::velocity, &SeqPage::cond, &opt_speed, &opt_length, &opt_channel,
+    &opt_copy, &opt_clear, &opt_paste, &opt_shift, &opt_reverse,
 
     // 30
     &opt_clear_step,
 
     // 31
-    &grid_page.grid_select_apply,
-    &mcl_cfg.chain_mode,         
-    &slot.chain.loops,           
-    &slot.chain.row,             
-    &grid_page.slot_apply,       
-    &grid_page.slot_clear,       
-    &grid_page.slot_copy,        
-    &grid_page.slot_paste,       
+    &grid_page.grid_select_apply, &mcl_cfg.chain_mode, &slot.chain.loops,
+    &slot.chain.row, &grid_page.slot_apply, &grid_page.slot_clear,
+    &grid_page.slot_copy, &grid_page.slot_paste,
 
     // 39
-    &WavDesignerPage::opt_mode,
-    &WavDesignerPage::opt_shape,
+    &WavDesignerPage::opt_mode, &WavDesignerPage::opt_shape,
 
     // 41 - end
 };
@@ -140,6 +113,8 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     wav_render,
     // 23
     wav_menu_handler,
+    // 24
+    mclsys_apply_config_midi,
 };
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
@@ -173,4 +148,3 @@ MenuPage<grid_slot_page_N> grid_slot_page(&grid_slot_param1, &grid_slot_param2);
 MCLEncoder wav_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wav_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
 MenuPage<3> wav_menu_page(&wav_menu_value_encoder, &wav_menu_entry_encoder);
-

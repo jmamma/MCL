@@ -57,7 +57,7 @@ menu_t<6> midiconfig_menu_layout = {
 
         {"MIDI FWD:", 0, 3, 3, 7, 0, 0, 10},
     },
-    1, 0
+    24, 0
 };
 
 menu_t<3> mdconfig_menu_layout = {

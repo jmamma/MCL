@@ -626,7 +626,7 @@ const unsigned char __R_menu_layouts[] PROGMEM = {
   7,
   183,
   93,
-  1,
+  24,
   235,
   77,
   77,

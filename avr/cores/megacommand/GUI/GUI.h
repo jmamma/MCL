@@ -102,7 +102,7 @@ public:
    * @{
    */
   bool display_mirror = false;
-  bool use_screen_saver = false;
+  bool use_screen_saver = true;
   /** A vector storing the registered event handlers (max 4). **/
   Vector<event_handler_t, 4> eventHandlers;
   /** A vector storing the registered tasks (max 8). **/

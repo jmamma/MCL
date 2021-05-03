@@ -3,7 +3,6 @@
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
   mcl_cfg.write_cfg();
-  midi_setup.cfg_ports();
 #ifndef DEBUGMODE
 #ifdef MEGACOMMAND
   if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
@@ -17,12 +16,13 @@ void mclsys_apply_config() {
   }
 #endif
 #endif
-  if (mcl_cfg.screen_saver == 1) {
-    GUI.use_screen_saver = true;
-  } else {
-    GUI.use_screen_saver = false;
-  }
 }
+
+void mclsys_apply_config_midi() {
+  mclsys_apply_config();
+  midi_setup.cfg_ports();
+}
+
 
 bool MCLSysConfig::write_cfg() {
   bool ret;
