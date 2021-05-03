@@ -30,7 +30,7 @@ menu_t<1> auxconfig_menu_layout = {
     "AUX PAGES",
     {
         //           m  r  n  d  p  f  o
-        {"RAM Page" ,0, 0, 0, 0, 0, 0, 0},
+        {"RAM Page" ,0, 0, 0, 0, 9, 0, 0},
     },
     0, 0,
 };

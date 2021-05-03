@@ -1,4 +1,4 @@
-﻿#include "R.h"
+#include "R.h"
 const unsigned char __R_font_default[] PROGMEM = {
   230,
   0,

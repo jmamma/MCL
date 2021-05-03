@@ -1,4 +1,4 @@
-﻿#include "R.h"
+#include "R.h"
 const unsigned char __R_menu_options[] PROGMEM = {
   252,
   0,
