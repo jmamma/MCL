@@ -482,33 +482,20 @@ void SeqPtcPage::render_arp() {
   }
   arp_len = 0;
 
-  uint8_t num_of_notes;
+  uint8_t num_of_notes = 0;
   uint8_t note = 0;
   uint8_t b = 0;
 
   uint8_t sort_up[NOTE_RANGE];
   uint8_t sort_down[NOTE_RANGE];
 
-  note = arp_get_next_note_up(-1);
-  if (note != 255) {
-    num_of_notes++;
-    sort_up[0] = note;
-  } else {
-    return;
-  }
-
   // Collect notes, sort in ascending order
-  DEBUG_PRINTLN(F("collecting notes"));
-  for (uint8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
-    note = arp_get_next_note_up(sort_up[i - 1]);
-    if (note != 255) {
-      num_of_notes++;
-      sort_up[i] = note;
-      DEBUG_PRINTLN(i);
-    }
+  for (int8_t i = 0; i < NOTE_RANGE && note != 255; i++) {
+    note = arp_get_next_note_up(i - 1);
+    if (note == 255) { break; }
+    num_of_notes++;
+    sort_up[i] = note;
   }
-  DEBUG_PRINTLN(F("finish"));
-  DEBUG_PRINTLN(num_of_notes);
   if (num_of_notes == 0) {
     return;
   }
