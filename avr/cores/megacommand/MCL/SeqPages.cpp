@@ -22,6 +22,8 @@ SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
                                 &seq_param4);
 #endif
 
+uint8_t last_md_track;
+
 SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_finetune, &ptc_param_len, &ptc_param_scale);
 
 ArpPage arp_page(&arp_und, &arp_mode, &arp_speed, &arp_oct);

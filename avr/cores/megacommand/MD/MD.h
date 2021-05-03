@@ -63,6 +63,7 @@ public:
   MDGlobal global;
 
   virtual bool probe();
+  virtual void setup();
   virtual void init_grid_devices();
   virtual uint8_t* icon();
 
@@ -77,6 +78,12 @@ public:
     return &MDSysexListener;
   }
 
+  //Global config
+  void setBaseChannel(uint8_t channel);
+  void setLocalOn(bool localOn);
+  void setProgramChange(uint8_t val);
+  void setExternalSync();
+  //---
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask, void *);
   virtual const char* getMachineName(uint8_t machine);

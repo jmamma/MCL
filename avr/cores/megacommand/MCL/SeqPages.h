@@ -56,6 +56,8 @@ extern MCLEncoder seq_lock2;
 extern uint8_t last_ext_track;
 #endif
 
+extern uint8_t last_md_track;
+
 extern SeqParamPage seq_param_page[NUM_PARAM_PAGES];
 extern SeqStepPage seq_step_page;
 

@@ -29,37 +29,7 @@ void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   }
 }
 
-void MDClass::get_mute_state() {
-  /*  Midi.addOnNoteOnCallback(MDMidiEvents,
-   (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi); for (uint8_t n =
-   0; n < 16; n++) { MD.assignMachine(n, MID_16_MODEL, 0);
-    midi_events.mute_mask_track = n;
 
-    if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, 127); }
-    uint16_t start_clock = read_slowclock();
-    uint16_t current_clock = start_clock;
-    do {
-      current_clock = read_slowclock();
-
-      handleIncomingMidi();
-    } while ((clock_diff(start_clock, current_clock) < timeout) &&
-   !cb->received);
-
-    if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, Kit.trigGroups[n]); }
-    assignMachine(n, kit->models[n]);
-    setLFO(track, &(kit->lfos[track]), false);
-    setTrigGroup(track, kit->trigGroups[track]);
-    for (uint8_t i = 0; i < 8; i++) {
-      setTrackParam(track, i, kit->params[track][i]);
-    }
-
-
-   }
-   Midi.removeOnNoteOnCallback(
-        &MDMidiEvents,
-   (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi);
-  */
-}
 
 void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
@@ -120,6 +90,65 @@ MDClass::MDClass()
   }
 }
 
+void MDClass::setup() {
+  MD.resetMidiMap();
+  MD.setTrackRoutings(mcl_cfg.routing);
+
+  if (mcl_cfg.clock_rec == 0) {
+    MD.global.clockIn = false;
+    MD.global.clockOut = true;
+  } else {
+    MD.global.clockIn = true;
+    MD.global.clockOut = false;
+  }
+  MD.global.transportIn = true;
+  // some bug
+  MD.global.transportOut = true;
+
+  if (MD.global.baseChannel == 0) { setBaseChannel(9); }
+
+  MD.setExternalSync();
+  MD.setProgramChange(2);
+  MD.setLocalOn(true);
+}
+
+void MDClass::setBaseChannel(uint8_t channel) {
+  uint8_t data[3] = {0x70, 0x4A, channel };
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setLocalOn(bool localOn) {
+  uint8_t data[3] = {0x70, 0x4B, localOn };
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setProgramChange(uint8_t val) {
+  uint8_t data[3] = {0x70, 0x4C, val };
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setExternalSync() {
+  uint8_t byte = 0;
+  //  clockIn = false;
+  //  transportIn = true;
+  //  clockOut = true;
+  //  transportOut = true;
+  if (global.clockIn)
+    //        byte = byte + 1;
+    SET_BIT(byte, 0);
+  if (!global.transportIn)
+    //       byte = byte + 8;
+    SET_BIT(byte, 4);
+  if (global.clockOut)
+    //      byte = byte + 16;
+    SET_BIT(byte, 5);
+  if (global.transportOut)
+    //        byte = byte + 32;
+    SET_BIT(byte, 6);
+  uint8_t data[3] = {0x70, 0x4D, byte };
+  sendRequest(data, sizeof(data));
+}
+
 void MDClass::init_grid_devices() {
   uint8_t grid_idx = 0;
 
@@ -173,8 +202,9 @@ bool MDClass::probe() {
        MidiClock.mode = MidiClock.EXTERNAL_MIDI;
     }
     mcl_gui.delay_progress(300);
-    md_exploit.send_globals();
     getCurrentTrack(CALLBACK_TIMEOUT);
+    getBlockingKit(0x7F);
+    setup();
     for (uint8_t x = 0; x < 2; x++) {
       for (uint8_t y = 0; y < 16; y++) {
         mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
@@ -183,16 +213,10 @@ bool MDClass::probe() {
     }
     setStatus(0x22, currentTrack);
     connected = true;
-    setGlobal(7);
-    global.baseChannel = 9;
-    getBlockingKit(0x7F);
   }
   if (connected) {
     activate_enhanced_gui();
-    MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
-
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-
     md_track_select.on();
   }
 

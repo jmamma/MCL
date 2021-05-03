@@ -104,18 +104,6 @@ void RoutePage::toggle_routes_batch(bool solo) {
   }
 }
 
-void RoutePage::update_globals() {
-  if (hasChanged) {
-    ElektronDataToSysexEncoder encoder2(&MidiUart);
-    md_exploit.setup_global(1);
-    while ((MidiClock.state == 2) &&
-           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-      ;
-    MD.global.toSysex(&encoder2);
-    hasChanged = false;
-  }
-}
-
 void RoutePage::display() {
   uint8_t x;
 

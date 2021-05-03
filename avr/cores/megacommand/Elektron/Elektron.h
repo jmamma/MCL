@@ -210,6 +210,8 @@ public:
 
   virtual void init_grid_devices() {};
 
+  virtual void setup() { };
+
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
   // 34x42 bitmap icon of the device
