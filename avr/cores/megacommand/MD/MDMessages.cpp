@@ -299,7 +299,6 @@ bool MDKit::fromSysex(MidiClass *midi) {
     GUI.flash_strings_fill("WRONG CKSUM", "");
     return false;
   }
-  MD.global.baseChannel = midi->midiSysex.getByte(offset - 1); //MIDI base channel is padded in sysex header
 
   uint8_t version = midi->midiSysex.getByte(1 + offset);
   origPosition = midi->midiSysex.getByte(3 + offset);

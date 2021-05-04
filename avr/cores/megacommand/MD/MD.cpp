@@ -91,25 +91,24 @@ MDClass::MDClass()
 }
 
 void MDClass::setup() {
-  MD.resetMidiMap();
-  MD.setTrackRoutings(mcl_cfg.routing);
+  resetMidiMap();
+  setTrackRoutings(mcl_cfg.routing);
 
   if (mcl_cfg.clock_rec == 0) {
-    MD.global.clockIn = false;
-    MD.global.clockOut = true;
+    global.clockIn = false;
+    global.clockOut = true;
   } else {
-    MD.global.clockIn = true;
-    MD.global.clockOut = false;
+    global.clockIn = true;
+    global.clockOut = false;
   }
-  MD.global.transportIn = true;
-  // some bug
-  MD.global.transportOut = true;
+  global.transportIn = true;
+  global.transportOut = true;
 
-  if (MD.global.baseChannel == 0) { setBaseChannel(9); }
+  if (global.baseChannel == 0) { setBaseChannel(9); }
 
-  MD.setExternalSync();
-  MD.setProgramChange(2);
-  MD.setLocalOn(true);
+  setExternalSync();
+  setProgramChange(2);
+  setLocalOn(true);
 }
 
 void MDClass::setBaseChannel(uint8_t channel) {
@@ -128,24 +127,27 @@ void MDClass::setProgramChange(uint8_t val) {
 }
 
 void MDClass::setExternalSync() {
-  uint8_t byte = 0;
+  uint8_t b = 0;
   //  clockIn = false;
   //  transportIn = true;
   //  clockOut = true;
   //  transportOut = true;
-  if (global.clockIn)
-    //        byte = byte + 1;
-    SET_BIT(byte, 0);
-  if (!global.transportIn)
-    //       byte = byte + 8;
-    SET_BIT(byte, 4);
-  if (global.clockOut)
-    //      byte = byte + 16;
-    SET_BIT(byte, 5);
-  if (global.transportOut)
-    //        byte = byte + 32;
-    SET_BIT(byte, 6);
-  uint8_t data[3] = {0x70, 0x4D, byte };
+
+  b = global.clockIn;
+
+  if (!global.transportIn) {
+    b |= 1 << 4;
+  }
+
+  if (global.clockOut) {
+    b |= 1 << 5;
+  }
+
+  if (global.transportOut) {
+    b |= 1 << 6;
+  }
+
+  uint8_t data[3] = {0x70, 0x4D, b };
   sendRequest(data, sizeof(data));
 }
 
