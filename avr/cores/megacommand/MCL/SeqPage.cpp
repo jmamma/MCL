@@ -247,7 +247,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[2]->cur = step;
       note_interface.ignoreNextEvent(track);
       if (event->mask == EVENT_BUTTON_RELEASED) {
-        note_interface.notes[track] = 0;
+        note_interface.clear_note(track);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
@@ -319,7 +319,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         (GUI.currentPage() != &seq_ptc_page)) {
       uint8_t note = 255;
       for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
-        if (note_interface.notes[n] == 1) {
+        if (note_interface.is_note_on(n)) {
           note = n;
         }
       }
@@ -404,7 +404,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         (GUI.currentPage() != &seq_ptc_page)) {
       uint8_t note = 255;
       for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
-        if (note_interface.notes[n] == 1) {
+        if (note_interface.is_note_on(n)) {
           note = n;
         }
       }
@@ -496,7 +496,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
           IS_BIT_SET64(active_track.lock_mask, i + offset)) {
         str[i] = (char)219;
       }
-      if (note_interface.notes[i] == 1) {
+      if (note_interface.is_note_on(i)) {
         /*Char 219 on the minicommand LCD is a []*/
         str[i] = (char)255;
       }
@@ -546,7 +546,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
         } else if ((show_current_step) && (step_count == i + offset) &&
                    (MidiClock.state == 2)) {
           mystr[i] = ' ';
-        } else if (note_interface.notes[i] == 1) {
+        } else if (note_interface.is_note_on(i)) {
           /*Char 219 on the minicommand LCD is a []*/
 #ifdef OLED_DISPLAY
           mystr[i] = (char)3;
@@ -648,7 +648,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       }
       if ((i >= offset) && (i < offset + 16)) {
 
-        if (note_interface.notes[i - offset] == 1) {
+        if (note_interface.is_note_on(i - offset)) {
 #ifdef OLED_DISPLAY
           mystr[i - offset] = (char)3;
 #else
@@ -1248,7 +1248,7 @@ void opt_paste_step_handler() {
 
 void opt_mute_step_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (note_interface.notes[n] == 1) {
+    if (note_interface.is_note_on(n)) {
       TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask,
                    n + SeqPage::page_select * 16);
     }
@@ -1263,7 +1263,7 @@ void opt_clear_step_locks_handler() {
     MD.popup_text(14);
   }
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    if (note_interface.notes[n] == 1) {
+    if (note_interface.is_note_on(n)) {
 
       if (opt_midi_device_capture == &MD) {
         mcl_seq.md_tracks[last_md_track].clear_step_locks(

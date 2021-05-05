@@ -748,7 +748,7 @@ void SeqPtcPage::on_192_callback() {
 void SeqPtcPage::recalc_notemask() {
   note_mask = 0;
   for (uint8_t i = 0; i < 24; i++) {
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       uint8_t pitch = calc_scale_note(i);
       SET_BIT64(note_mask, pitch);
     }

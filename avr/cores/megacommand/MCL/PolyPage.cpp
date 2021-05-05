@@ -35,7 +35,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
   for (int i = 0; i < 16; i++) {
 
 #ifdef OLED_DISPLAY
-    if (note_interface.notes[i] > 0) {
+    if (note_interface.is_note(i)) {
 
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
@@ -61,7 +61,7 @@ void PolyPage::draw_mask(uint8_t line_number) {
 
       str[i] = (char)'-';
     }
-    if (note_interface.notes[i] > 0) {
+    if (note_interface.is_note(i)) {
 
       str[i] = (char)255;
     }
@@ -123,7 +123,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
       toggle_mask(track);
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      note_interface.notes[track] = 0;
+      note_interface.clear_note(track);
     }
     //  }
     return true;

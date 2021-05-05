@@ -158,7 +158,7 @@ void SeqParamPage::loop() {
       seq_param3.hasChanged() || seq_lock2.hasChanged()) {
     for (uint8_t n = 0; n < 16; n++) {
 
-      if (note_interface.notes[n] == 1) {
+      if (note_interface.is_note_on(n)) {
         uint8_t step = n + (page_select * 16);
         auto &active_track = mcl_seq.md_tracks[last_md_track];
         int8_t utiming = active_track.timing[step]; // upper

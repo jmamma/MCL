@@ -26,10 +26,12 @@ public:
 class NoteInterface {
 public:
   uint8_t uart2_device = DEVICE_A4;
-  uint8_t notes[NI_MAX_NOTES];
-  uint8_t notecount = 0;
+
+  uint32_t notes_on;
+  uint32_t notes_off;
+  uint32_t notes_ignore;
+  
   uint8_t last_note;
-  uint64_t ignore_next_mask;
   uint16_t note_hold[NUM_DEVS];
   bool note_proceed = false;
   bool state = true;
@@ -37,6 +39,8 @@ public:
   void setup();
   void draw_notes(uint8_t line_number);
   uint8_t note_to_track_map(uint8_t note, uint8_t device);
+
+  void add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t port);
   void note_on_event(uint8_t note_num, uint8_t port);
   void note_off_event(uint8_t note_num, uint8_t port);
   bool is_event(gui_event_t *event);
@@ -46,8 +50,14 @@ public:
   uint8_t notes_count();
   uint8_t notes_count_on();
   uint8_t get_first_md_note();
+
+  bool is_note(uint8_t note_num);
+  bool is_note_on(uint8_t note_num);
+  bool is_note_off(uint8_t note_num);
+  void clear_note(uint8_t note_num);
+
   void ignoreNextEvent(uint8_t i) {
-  SET_BIT64(ignore_next_mask, i);
+    SET_BIT32(notes_ignore, i);
   }
   NoteInterfaceMidiEvents ni_midi_events;
 };

@@ -34,7 +34,7 @@ void RoutePage::draw_routes() {
       auto x = MCLGUI::seq_x0 + i * (MCLGUI::seq_w + 1);
       oled_display.setCursor(x + 1, MCLGUI::trig_y + 5);
 
-      if (note_interface.notes[i] > 0 && note_interface.notes[i] != 3) {
+      if (note_interface.is_note_on(i)) {
         oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
                               WHITE);
         oled_display.setTextColor(BLACK);
@@ -72,23 +72,15 @@ void RoutePage::toggle_routes_batch(bool solo) {
       GUI.display();
     }
   }
-  /*
-  for (i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 3) {
-      MD.muteTrack(i, true);
-    }
-  }
-*/
-  // send the track to master before unmuting
 
   for (i = 0; i < 16; i++) {
     if (!solo) {
-      if ((note_interface.notes[i] == 3)) {
+      if (note_interface.is_note_off(i)) {
         toggle_route(i, encoders[0]->cur);
       }
     } else {
       uint8_t routing_last = mcl_cfg.routing[i];
-      if (note_interface.notes[i] == 3) {
+      if (note_interface.is_note_off(i)) {
         mcl_cfg.routing[i] = 6;
       } else {
         if (mcl_cfg.routing[i] == 6) {
@@ -98,9 +90,7 @@ void RoutePage::toggle_routes_batch(bool solo) {
       if (mcl_cfg.routing[i] != routing_last) {
         MD.setTrackRouting(i, mcl_cfg.routing[i]);
       }
-    } ///
-    //  note_interface.notes[i] = 0;
-    // trackinfo_page.display();
+    }
   }
 }
 

@@ -29,7 +29,7 @@ void MixerPage::set_display_mode(uint8_t param) {
 static void oled_draw_routing() {
   for (int i = 0; i < 16; ++i) {
     // draw routing
-    if (note_interface.notes[i] > 0) {
+    if (note_interface.is_note(i)) {
 
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
@@ -123,11 +123,7 @@ void MixerPage::draw_levels() {
     } else {
       fader_level = MD.kit.params[i][display_mode];
     }
-    //  if (note_interface.notes[i] == 1) {
-    //   scaled_level = (int)(disp_levels[i] / 127.0f) * 7;
-    //   } else {
     scaled_level = (int)(((float)fader_level / (float)127) * 7);
-    //    }
     if (scaled_level == 7) {
       str[i] = (char)(255);
     } else if (scaled_level > 0) {
@@ -155,7 +151,7 @@ void encoder_level_handle(EncoderParent *enc) {
   int track_newval;
 
   for (int i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       track_newval = MD.kit.levels[i] + dir;
       if (track_newval < 0) {
         track_newval = 0;
@@ -173,7 +169,7 @@ void encoder_level_handle(EncoderParent *enc) {
       mixer_page.set_level(i, track_newval);
     }
 
-    if (note_interface.notes[i] == 1 || redraw_frame) {
+    if (note_interface.is_note_on(i) || redraw_frame) {
 #ifdef OLED_DISPLAY
       uint8_t scaled_level = (MD.kit.levels[i] / 127.0f) * FADER_LEN;
 
@@ -211,7 +207,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   int newval;
 
   for (int i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       newval = MD.kit.params[i][param] + dir;
       if (newval < 0) {
         newval = 0;
@@ -261,7 +257,7 @@ void MixerPage::display() {
 
       str[i] = (char)'-';
     }
-    if (note_interface.notes[i] > 0) {
+    if (note_interface.is_note(i)) {
 
       str[i] = (char)255;
     }
@@ -291,7 +287,7 @@ void MixerPage::display() {
 
     if (display_mode == MODEL_LEVEL) {
 
-      if (note_interface.notes[i] == 1) {
+      if (note_interface.is_note_on(i)) {
         oled_display.fillRect(fader_x, 13 + (FADER_LEN - fader_level), 6,
                               fader_level, WHITE);
       } else {
@@ -344,7 +340,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
 #ifdef OLED_DISPLAY
-      if (note_interface.notes[track] > 0) {
+      if (note_interface.is_note(track)) {
         oled_display.fillRect(0 + track * 8, 2, 6, 6, WHITE);
         if (note_interface.notes_count_on() == 1) {
           MD.setStatus(0x22, track);
@@ -400,7 +396,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   /*
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.notes[i] == 1) {
+      if (note_interface.is_note_on(i)) {
         for (uint8_t c = 0; c < 24; c++) {
           if (MD.kit.params[i][c] != params[i][c]) {
             MD.setTrackParam(i, c, params[i][c]);
@@ -469,7 +465,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   MD.parseCC(channel, param, &track, &track_param);
   if (track_param == 32) { return; } //don't process mute
   for (int i = 0; i < 16; i++) {
-    if ((note_interface.notes[i] == 1) && (i != track)) {
+    if ((note_interface.is_note_on(i)) && (i != track)) {
       MD.setTrackParam(i, track_param, value);
       if (track_param < 24) {
         MD.kit.params[i][track_param] = value;

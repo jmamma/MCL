@@ -162,7 +162,7 @@ void SeqStepPage::loop() {
 
     for (uint8_t n = 0; n < 16; n++) {
 
-      if (note_interface.notes[n] == 1) {
+      if (note_interface.is_note_on(n)) {
         uint8_t step = n + (page_select * 16);
         if (step < active_track.length) {
 
@@ -405,7 +405,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          if (note_interface.notes[n] == 1) {
+          if (note_interface.is_note_on(n)) {
             uint8_t s = n + (page_select * 16);
             active_track.clear_step_lock(s, param);
           }
@@ -415,7 +415,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         int8_t lock_idx = active_track.find_param(param);
 
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          if (note_interface.notes[n] == 1) {
+          if (note_interface.is_note_on(n)) {
             uint8_t s = n + (page_select * 16);
             if (lock_idx == -1 || !active_track.steps[s].is_lock(lock_idx)) {
               DEBUG_PRINTLN("setting lock");
@@ -688,7 +688,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   uint8_t store_lock = 255;
   for (int i = 0; i < 16; i++) {
-    if ((note_interface.notes[i] == 1)) {
+    if ((note_interface.is_note_on(i))) {
       step = i + (SeqPage::page_select * 16);
       if (step < active_track.length) {
         if (active_track.set_track_locks(step, track_param, value)) {

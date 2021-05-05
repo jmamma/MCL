@@ -590,7 +590,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     uint8_t idx = i + offset;
     bool in_range = idx < length;
 
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       // TI feedback
       oled_display.fillRect(x + 1, y + 1, seq_w - 2, trig_h - 2, WHITE);
       // oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
@@ -670,7 +670,6 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
         show_current_step && step_count == idx && MidiClock.state == 2;
     bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
 
-    //    if (note_interface.notes[i] == 1) {
     // TI feedback
     //     oled_display.drawRect(x, y, seq_w, led_h, WHITE);
     if (!in_range) {

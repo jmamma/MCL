@@ -116,7 +116,7 @@ void GridSavePage::save() {
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    if (note_interface.notes[n] > 0) {
+    if (note_interface.is_note(n)) {
       SET_BIT32(track_select, n + proj.get_grid() * 16);
     }
   }
