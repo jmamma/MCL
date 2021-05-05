@@ -67,7 +67,7 @@ class SeqTrackBase {
   uint8_t step_count;
   uint8_t mod12_counter;
 
-  SeqTrack() { active = EMPTY_TRACK_TYPE; }
+  SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
 
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
@@ -78,61 +78,9 @@ class SeqTrackBase {
     }
   }
 
-  ALWAYS_INLINE reset() {
+  ALWAYS_INLINE() void reset() {
     mod12_counter = 0;
     step_count = 0;
-  }
-};
-
-class SeqTrack : public SeqTrackBase {
-
-public:
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
-
-  uint8_t count_down;
-
-  uint16_t cur_event_idx;
-
-  ALWAYS_INLINE() void reset() {
-    count_down = 0;
-    cur_event_idx = 0;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
-    SeqTrackBase::reset();
- }
-
-  ALWAYS_INLINE() void seq();
-  ALWAYS_INLINE() void step_count_inc() {
-    if (step_count == length - 1) {
-      step_count = 0;
-      cur_event_idx = 0;
-
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
-    } else {
-      step_count++;
-    }
   }
 
   uint8_t get_timing_mid(uint8_t speed_) {
@@ -225,6 +173,60 @@ public:
     }
     return multi;
   }
+
+};
+
+class SeqTrack : public SeqTrackBase {
+
+public:
+  // Conditional counters
+  uint8_t iterations_5;
+  uint8_t iterations_6;
+  uint8_t iterations_7;
+  uint8_t iterations_8;
+
+  uint8_t count_down;
+
+  uint16_t cur_event_idx;
+
+  ALWAYS_INLINE() void reset() {
+    count_down = 0;
+    cur_event_idx = 0;
+    iterations_5 = 1;
+    iterations_6 = 1;
+    iterations_7 = 1;
+    iterations_8 = 1;
+    SeqTrackBase::reset();
+ }
+
+  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+      cur_event_idx = 0;
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) {
+        iterations_5 = 1;
+      }
+      if (iterations_6 > 6) {
+        iterations_6 = 1;
+      }
+      if (iterations_7 > 7) {
+        iterations_7 = 1;
+      }
+      if (iterations_8 > 8) {
+        iterations_8 = 1;
+      }
+    } else {
+      step_count++;
+    }
+  }
+
 };
 
 class SeqSlideTrack : public SeqTrack {

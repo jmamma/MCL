@@ -5,6 +5,7 @@
 #include "LFOSeqTrack.h"
 #include "MDSeqTrack.h"
 #include "ExtSeqTrack.h"
+#include "ArpSeqTrack.h"
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0

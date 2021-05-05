@@ -3,6 +3,14 @@
 //length will determine retrig speed.
 //arp position (arp_idx) is independent of length
 
+void ArpSeqTrack::set_speed(uint8_t speed_) {
+  speed = speed_;
+  uint8_t timing_mid = get_timing_mid();
+  if (mod12_counter > timing_mid) {
+    mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+  }
+}
+
 void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
   uint8_t timing_mid = get_timing_mid_inline();
@@ -10,11 +18,11 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == 0) {
     if ((arp_len > 0)) {
       switch (active) {
-        case ARP_MD_TRACK_TYPE:
+        case MD_ARP_TRACK_TYPE:
           seq_ptc_page.trig_md(arp_notes[arp_idx],uart);
           break;
-        case ARP_EXT_TRACK_TYPE:
-          seq_ptc_page.trig_ext(arp_notes[arp_idx],uart);
+        case EXT_ARP_TRACK_TYPE:
+          mcl_seq.ext_tracks[last_ext_track].note_on(arp_notes[arp_idx], 127);
           break;
       }
       arp_idx++;
@@ -28,26 +36,6 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
     step_count_inc();
   }
 
-}
-
-void SeqPtcPage::setup_arp() {
-  if (arp_enabled) {
-    return;
-  }
-  speed = SEQ_SPEED_2X;
-
-  arp_enabled = true;
-  arp_len = 0; 
-  arp_idx = 0; 
-  arp_count = 0; 
-  render_arp();
-}
-
-void SeqPtcPage::remove_arp() {
-  if (!arp_enabled) {
-    return;
-  }
-  arp_enabled = false;
 }
 
 #define NOTE_RANGE 24
@@ -68,7 +56,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     return;
   }
   note_mask = note_mask_;
-  oct = oct_
+  oct = oct_;
   mode = mode_;
 
   arp_len = 0;
@@ -97,7 +85,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   }
   note = 255;
 
-  switch (arp_mode) {
+  switch (mode) {
   case ARP_RND:
     for (uint8_t i = 0; i < num_of_notes; i++) {
       note = sort_up[random(0, num_of_notes)];

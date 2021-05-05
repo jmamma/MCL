@@ -262,7 +262,12 @@ void SeqPtcPage::display() {
 
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(107, 32);
-  if (arp_enabled) {
+  
+  ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
+  if (midi_device == &MD) {
+    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+  }
+  if (arp_track->arp_enabled) {
     oled_display.print("ARP");
   }
   else if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
@@ -422,7 +427,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
       midi_device = &MD;
 
-      if ((!arp_enabled) || (MidiClock.state != 2)) {
+      ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+      if ((!arp_track->arp_enabled) || (MidiClock.state != 2)) {
         trig_md(pitch);
       }
     } else if (mask == EVENT_BUTTON_RELEASED) {
@@ -570,7 +576,10 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (GUI.currentPage() == &seq_ptc_page) {
       seq_ptc_page.focus_track = last_md_track;
     }
-    if (!seq_ptc_page.arp_enabled) {
+
+    ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+
+    if (!arp_track->arp_enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
     seq_ptc_page.render_arp();

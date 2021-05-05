@@ -120,10 +120,12 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].reset();
+    ext_arp_tracks[i].reset();
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset();
+    md_arp_tracks[i].reset();
   }
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
@@ -172,7 +174,6 @@ void MCLSeq::onMidiStopCallback() {
       md_tracks[i].locks_slide_data[c].init();
     }
   }
-  seq_ptc_page.onMidiStopCallback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
@@ -251,7 +252,6 @@ again:
 
   if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
   // Arp
-  seq_ptc_page.on_192_callback();
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     //  aux_tracks[i].seq();

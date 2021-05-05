@@ -5,6 +5,7 @@
 #include "MidiUartParent.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
+#include "GridTrack.h"
 
 class ArpSeqData {
   public:
@@ -17,10 +18,10 @@ class ArpSeqData {
   uint8_t mode;
   uint8_t oct;
   uint32_t note_mask; //input notes
-}
+};
 
 //Ephemeral
-class ArpSeqTrack : public SeqTrackBase  {
+class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
 
 public:
   ArpSeqTrack() : SeqTrackBase() { 
@@ -45,21 +46,25 @@ public:
   void set_length(uint8_t len);
   void re_sync();
   void set_speed(uint8_t _speed);
-  void render();
+
+
+  uint8_t get_next_note_up(int8_t cur);
+  void render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_);
+
 };
 
 class MDArpSeqTrack : public ArpSeqTrack {
   public:
     MDArpSeqTrack() : ArpSeqTrack() {
       ArpSeqTrack::init();
-      active = ARP_MD_TRACK_TYPE;
+      active = MD_ARP_TRACK_TYPE;
     }
-}
+};
 
 class ExtArpSeqTrack : public ArpSeqTrack {
   public:
     ExtArpSeqTrack() : ArpSeqTrack() {
       ArpSeqTrack::init();
-      active = ARP_EXT_TRACK_TYPE;
+      active = EXT_ARP_TRACK_TYPE;
     }
-}
+};

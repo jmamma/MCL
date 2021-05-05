@@ -31,18 +31,18 @@ void ArpPage::loop() {
   
   ArpSeqTrack *arp_track;
   
-  ArpSeqTrack *arp_track = mcl_seq.ext_arp_tracks[last_ext_track];
+  arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (seq_ptc_page.midi_device == &MD) {
-    ArpSeqTrack = mcl_seq.md_arp_tracks[last_md_track];
+    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
 
   if (encoders[0]->hasChanged()) {
     switch (encoders[0]->cur) {
     case ARP_ON: 
-      arp_track.enable = 1;
+      arp_track->arp_enabled = 1;
       break;
     case ARP_OFF:
-      arp_track.enable = 0;
+      arp_track->arp_enabled = 0;
       break;
     }
     if (encoders[0]->old > 1) {
@@ -55,8 +55,8 @@ void ArpPage::loop() {
     seq_ptc_page.render_arp();
   }
 
-  if (encoders[2]->hasChanged) {
-    arp_track.set_speed(arp_speed.cur);
+  if (encoders[2]->hasChanged()) {
+    arp_track->set_speed(1 << arp_speed.cur);
   }
 }
 
