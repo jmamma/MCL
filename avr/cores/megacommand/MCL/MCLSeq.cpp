@@ -25,6 +25,7 @@ void MCLSeq::setup() {
     md_tracks[i].set_length(16);
     md_tracks[i].speed = SEQ_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
+    md_arp_tracks[i].track_number = i;
   }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -45,6 +46,7 @@ void MCLSeq::setup() {
     ext_tracks[i].speed = SEQ_SPEED_2X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
+    ext_arp_tracks[i].track_number = i;
   }
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {

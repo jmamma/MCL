@@ -104,25 +104,18 @@ uint8_t NoteInterface::get_first_md_note() {
 }
 
 bool NoteInterface::notes_all_off_md() {
-  uint8_t a = popcount16(notes_on);
-  uint8_t b = popcount16(notes_off);
   
-  bool all_notes_off = false;
-  
-  if ((a == 0) && (b > 0)) {
-    all_notes_off = true;
+  if (((uint16_t) notes_on == 0) && ((uint16_t)notes_off > 0)) {
+    return true;
   }
-  return all_notes_off;
+  return false;
 }
 
 bool NoteInterface::notes_all_off() {
-  bool all_notes_off = false;
-  uint8_t a = popcount32((uint16_t) notes_on);
-  uint8_t b = popcount32((uint16_t) notes_off);
-   if ((a == 0) && (b > 0)) {
-    all_notes_off = true;
+  if ((notes_on == 0) && (notes_off > 0)) {
+    return true;
   }
-  return all_notes_off;
+  return false;
 }
 
 uint8_t NoteInterface::notes_count_on() {

@@ -16,7 +16,10 @@ void ArpPage::init() {
   oled_display.setFont();
   seq_ptc_page.redisplay = true;
   seq_ptc_page.display();
+  track_update();
+}
 
+void ArpPage::track_update() {
   arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (seq_ptc_page.midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
@@ -34,6 +37,7 @@ void ArpPage::init() {
   arp_und.cur = arp_track->enabled;
   arp_und.old = arp_und.cur;
 
+
 }
 
 void ArpPage::cleanup() {
@@ -44,7 +48,6 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
-  
 
   if (encoders[0]->hasChanged()) {
     switch (encoders[0]->cur) {
@@ -66,7 +69,7 @@ void ArpPage::loop() {
   }
 
   if (encoders[2]->hasChanged()) {
-    arp_track->set_speed(1 << arp_speed.cur);
+    arp_track->set_length(1 << arp_speed.cur);
   }
 }
 

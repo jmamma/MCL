@@ -23,7 +23,7 @@ public:
       }
   
   bool handleEvent(gui_event_t *event);
-
+  void track_update();
   void loop();
   void display();
   void setup();

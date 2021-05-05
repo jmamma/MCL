@@ -298,11 +298,11 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num) {
   return scales[ptc_param_scale.cur]->pitches[note_num] + oct * 12 + key;
 }
 
-uint8_t SeqPtcPage::get_next_voice(uint8_t pitch) {
+uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
   uint8_t voice = 255;
   uint8_t count = 0;
-  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, focus_track))) {
-    return focus_track;
+  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, track_number))) {
+    return track_number;
   }
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
@@ -354,9 +354,11 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
   return min(machine_pitch,127);
 }
 
-void SeqPtcPage::trig_md(uint8_t note_num, MidiUartParent *uart_) {
+void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, MidiUartParent *uart_) {
+  if (track_number == 255) { track_number = focus_track; }
+
   note_num = ptc_param_oct.cur * 12 + note_num;
-  uint8_t next_track = get_next_voice(note_num);
+  uint8_t next_track = get_next_voice(note_num, track_number);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
     return;
@@ -376,7 +378,7 @@ void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
 }
 
 void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
-  uint8_t next_track = get_next_voice(note_num);
+  uint8_t next_track = get_next_voice(note_num, focus_track);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
     return;
@@ -437,6 +439,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         focus_track = last_md_track;
         config_encoders();
       }
+      arp_page.track_update();
       midi_device = &MD;
 
       ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
@@ -594,6 +597,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (!arp_track->enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
+    arp_page.track_update();
     seq_ptc_page.render_arp();
     seq_ptc_page.queue_redraw();
     return;
@@ -620,10 +624,18 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_PRINTLN(mcl_seq.ext_tracks[last_ext_track].length);
   DEBUG_PRINTLN(F("Sending note"));
   DEBUG_DUMP(pitch);
-  mcl_seq.ext_tracks[last_ext_track].note_on(pitch, msg[2]);
-  if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[last_ext_track].record_track_noteon(pitch, msg[2]);
+  
+  ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
+
+  if (!arp_track->enabled) {
+    mcl_seq.ext_tracks[last_ext_track].note_on(pitch, msg[2]);
+    if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+      mcl_seq.ext_tracks[last_ext_track].record_track_noteon(pitch, msg[2]);
+    }
   }
+  arp_page.track_update();
+  seq_ptc_page.render_arp();
+  
   seq_ptc_page.queue_redraw();
 #endif
 }

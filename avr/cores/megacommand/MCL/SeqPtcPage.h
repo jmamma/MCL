@@ -47,11 +47,11 @@ public:
   uint8_t seq_ext_pitch(uint8_t note_num, MidiDevice* device = &generic_midi_device);
   uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device = &generic_midi_device);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num);
-  uint8_t get_next_voice(uint8_t pitch);
+  uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
   uint8_t calc_scale_note(uint8_t note_num);
 
   void set_last_ext_track(uint8_t channel);
-  void trig_md(uint8_t note_num, MidiUartParent *uart = nullptr);
+  void trig_md(uint8_t note_num, uint8_t track_number = 255, MidiUartParent *uart = nullptr);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 

@@ -68,10 +68,9 @@ public:
 
   ALWAYS_INLINE() void seq(MidiUartParent *uart_);
   void clear_track();
-  void set_length(uint8_t len);
   void re_sync();
-  void set_speed(uint8_t _speed);
-
+  void set_speed(uint8_t speed_);
+  void set_length(uint8_t length_);
 
   uint8_t get_next_note_up(int8_t cur);
   void render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_);
