@@ -112,6 +112,8 @@ extern const uint32_t _bvmasks32[];
 #define IS_BIT_CLEAR128(target, bit)         IS_BIT_CLEAR_RADDR(target, bit)
 
 uint8_t popcount(const uint8_t bits);
+uint8_t popcount16(const uint16_t bits);
+uint8_t popcount32(const uint32_t bits);
 
 /** @} */
 
