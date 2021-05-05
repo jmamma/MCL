@@ -50,43 +50,62 @@ public:
 };
 
 // ephemeral data
-class SeqTrack {
 
-public:
+
+class SeqTrackBase {
+  public:
   uint8_t active;
+
+  uint8_t port = UART1_PORT;
+  MidiUartParent *uart = &MidiUart;
+  uint8_t mute_state = SEQ_MUTE_OFF;
+
   uint8_t length;
   uint8_t speed;
   uint8_t track_number;
+
   uint8_t step_count;
   uint8_t mod12_counter;
 
+  SeqTrack() { active = EMPTY_TRACK_TYPE; }
+
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+
+   } else {
+      step_count++;
+    }
+  }
+
+  ALWAYS_INLINE reset() {
+    mod12_counter = 0;
+    step_count = 0;
+  }
+};
+
+class SeqTrack : public SeqTrackBase {
+
+public:
   // Conditional counters
   uint8_t iterations_5;
   uint8_t iterations_6;
   uint8_t iterations_7;
   uint8_t iterations_8;
 
-  uint8_t port = UART1_PORT;
-  MidiUartParent *uart = &MidiUart;
-
-  uint8_t mute_state = SEQ_MUTE_OFF;
-
   uint8_t count_down;
 
   uint16_t cur_event_idx;
 
-  SeqTrack() { active = EMPTY_TRACK_TYPE; }
-
   ALWAYS_INLINE() void reset() {
-    step_count = 0;
+    count_down = 0;
     cur_event_idx = 0;
     iterations_5 = 1;
     iterations_6 = 1;
     iterations_7 = 1;
     iterations_8 = 1;
-    mod12_counter = 0;
-    count_down = 0;
-  }
+    SeqTrackBase::reset();
+ }
 
   ALWAYS_INLINE() void seq();
   ALWAYS_INLINE() void step_count_inc() {

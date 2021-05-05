@@ -200,84 +200,23 @@ void SeqPtcPage::loop() {
   SeqPage::loop();
 }
 
-#ifndef OLED_DISPLAY
-void SeqPtcPage::display() {
-  uint8_t dev_num;
-  if (!redisplay) {
-    return true;
+void SeqPtcPage::render_arp() {
+  if (midi_device == &MD) {
+    mcl_seq.md_arp_tracks[last_md_track].render(arp_mode.cur,arp_oct.cur, note_mask);
   }
-  if (midi_device == DEVICE_MD) {
-    dev_num = last_md_track;
-  }
-#ifdef EXT_TRACKS
   else {
-    dev_num = last_ext_track + 16;
+    mcl_seq.ext_arp_tracks[last_ext_track].render(arp_mode.cur, arp_oct.cur, note_mask);
   }
-#endif
-  const char *str1 = getMDMachineNameShort(MD.kit.get_model(dev_num), 1);
-  const char *str2 = getMDMachineNameShort(MD.kit.get_model(dev_num), 2);
-  GUI.setLine(GUI.LINE1);
-
-  if (recording) {
-    GUI.put_string_at(0, "RPTC");
-  } else {
-    GUI.put_string_at(0, "PTC");
-  }
-  if (midi_device == DEVICE_MD) {
-    GUI.put_value_at(5, ptc_param_len.getValue());
-    GUI.put_p_string_at(9, str1);
-    GUI.put_p_string_at(11, str2);
-  }
-#ifdef EXT_TRACKS
-  else {
-    GUI.put_value_at(5, (ptc_param_len.getValue()));
-    if (Analog4.connected) {
-      GUI.put_string_at(9, "A4T");
-    } else {
-      GUI.put_string_at(9, "MID");
-    }
-    GUI.put_value_at1(12, last_ext_track + 1);
-  }
-#endif
-
-  GUI.setLine(GUI.LINE2);
-  GUI.put_string_at(0, "OC:");
-  GUI.put_value_at2(3, ptc_param_oct.getValue());
-
-  if (ptc_param_finetune.getValue() < 32) {
-    GUI.put_string_at(6, "F:-");
-    GUI.put_value_at2(9, 32 - ptc_param_finetune.getValue());
-
-  } else if (ptc_param_finetune.getValue() > 32) {
-    GUI.put_string_at(6, "F:+");
-    GUI.put_value_at2(9, ptc_param_finetune.getValue() - 32);
-
-  } else {
-    GUI.put_string_at(6, "F: 0");
-  }
-
-  GUI.put_string_at(12, "S:");
-
-  GUI.put_value_at2(14, ptc_param_scale.getValue());
-  SeqPage::display();
 }
-#else
+
 void SeqPtcPage::display() {
-  uint8_t dev_num;
   if (!redisplay) {
     return;
   }
 
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
-  if (midi_device == &MD) {
-    dev_num = last_md_track;
-  }
-#ifdef EXT_TRACKS
-  else {
-    dev_num = last_ext_track + 16;
-  }
-#endif
+ 
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   draw_knob_frame();
   char buf1[4];
@@ -333,7 +272,6 @@ void SeqPtcPage::display() {
   oled_display.display();
   oled_display.setFont(oldfont);
 }
-#endif
 
 uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num) {
   uint8_t size = scales[ptc_param_scale.cur]->size;
@@ -399,15 +337,15 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
   return min(machine_pitch,127);
 }
 
-void SeqPtcPage::trig_md(uint8_t note_num) {
+void SeqPtcPage::trig_md(uint8_t note_num, MidiUartParent *uart_) {
   note_num = ptc_param_oct.cur * 12 + note_num;
   uint8_t next_track = get_next_voice(note_num);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
     return;
   }
-  MD.setTrackParam(next_track, 0, machine_pitch);
-  MD.triggerTrack(next_track, 127);
+  MD.setTrackParam(next_track, 0, machine_pitch, uart_);
+  MD.triggerTrack(next_track, 127, uart_);
   if ((recording) && (MidiClock.state == 2)) {
 
     mcl_seq.md_tracks[next_track].record_track(127);
@@ -432,316 +370,6 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   if ((recording) && (MidiClock.state == 2)) {
     mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
-  }
-}
-
-void SeqPtcPage::setup_arp() {
-  if (arp_enabled) {
-    return;
-  }
-  arp_enabled = true;
-  arp_len = 0;
-  arp_idx = 0;
-  arp_count = 0;
-  render_arp();
-  /*MidiClock.addOn192Callback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
-  MidiClock.addOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);*/
-}
-
-void SeqPtcPage::remove_arp() {
-  if (!arp_enabled) {
-    return;
-  }
-  arp_enabled = false;
-  /*
-  MidiClock.removeOn192Callback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::on_192_callback);
-  MidiClock.removeOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&SeqPtcPage::onMidiStopCallback);*/
-}
-
-uint8_t SeqPtcPage::arp_get_next_note_down(uint8_t cur) {}
-#define NOTE_RANGE 24
-
-uint8_t SeqPtcPage::arp_get_next_note_up(int8_t cur) {
-
-  for (int8_t i = cur + 1; i < NOTE_RANGE; i++) {
-    if (IS_BIT_SET32(note_mask, i)) {
-      return i;
-    }
-  }
-  return 255;
-}
-
-void SeqPtcPage::render_arp() {
-  DEBUG_PRINT_FN();
-  if (!arp_enabled) {
-    return;
-  }
-  arp_len = 0;
-
-  uint8_t num_of_notes = 0;
-  uint8_t note = 0;
-  uint8_t b = 0;
-
-  uint8_t sort_up[NOTE_RANGE];
-  uint8_t sort_down[NOTE_RANGE];
-
-  // Collect notes, sort in ascending order
-  for (int8_t i = 0; i < NOTE_RANGE && note != 255; i++) {
-    note = arp_get_next_note_up(i - 1);
-    if (note == 255) { break; }
-    num_of_notes++;
-    sort_up[i] = note;
-  }
-  if (num_of_notes == 0) {
-    return;
-  }
-  // Sort notes in descending order
-
-  for (uint8_t i = 0; i < num_of_notes; i++) {
-    sort_down[num_of_notes - i - 1] = sort_up[i];
-  }
-  note = 255;
-
-  switch (arp_mode.cur) {
-  case ARP_RND:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[random(0, num_of_notes)];
-      arp_notes[arp_len++] = note + 12 * random(0, arp_oct.cur);
-    }
-    break;
-
-  case ARP_UP2:
-  case ARP_UPP:
-  case ARP_UP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_DOWN2:
-  case ARP_DOWNP:
-  case ARP_DOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    break;
-
-  case ARP_UPDOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
-      note = sort_down[i];
-      arp_notes[arp_len] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_DOWNUP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
-      note = sort_up[i];
-      arp_notes[arp_len] = note;
-      arp_len++;
-    }
-
-    break;
-  case ARP_UPNDOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[arp_len] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_DOWNNUP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      arp_notes[arp_len] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_CONV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_DIV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_up[b];
-        b++;
-      } else {
-        note = sort_down[b];
-      }
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_CONVDIV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    b = 0;
-    for (uint8_t i = 1; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      arp_notes[i] = note;
-      arp_len++;
-    }
-    break;
-  case ARP_PINKUP:
-    if (num_of_notes == 1) {
-      note = sort_up[0];
-      arp_notes[arp_len++] = note;
-    }
-    for (uint8_t i = 0; i < num_of_notes - 1; i++) {
-      note = sort_up[i];
-      arp_notes[arp_len++] = note;
-      note = sort_down[0];
-      arp_notes[arp_len++] = note;
-    }
-
-    break;
-
-  case ARP_PINKDOWN:
-    for (uint8_t i = 1; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[arp_len++] = note;
-      note = sort_down[0];
-      arp_notes[arp_len++] = note;
-    }
-    break;
-
-  case ARP_THUMBUP:
-    if (num_of_notes == 1) {
-      note = sort_down[0];
-      arp_notes[arp_len++] = note;
-    }
-    for (uint8_t i = 0; i < num_of_notes - 1; i++) {
-      note = sort_up[i];
-      arp_notes[arp_len++] = note;
-      note = sort_down[0];
-      arp_notes[arp_len++] = note;
-    }
-
-    break;
-
-  case ARP_THUMBDOWN:
-    for (uint8_t i = 1; i < num_of_notes; i++) {
-      note = sort_down[i];
-      arp_notes[arp_len++] = note;
-      note = sort_down[0];
-      arp_notes[arp_len++] = note;
-    }
-    break;
-  }
-
-  // Generate subsequent octave itterations
-  for (uint8_t n = 0; n < arp_oct.cur; n++) {
-    for (uint8_t i = 0; i < num_of_notes && arp_len < ARP_MAX_NOTES; i++) {
-      switch (arp_mode.cur) {
-      case ARP_UP2:
-      case ARP_DOWN2:
-        arp_notes[arp_len] = arp_notes[i];
-        if (!(i & 1)) {
-          arp_notes[arp_len] += (n + 1) * 12;
-        }
-        break;
-      case ARP_UPP:
-      case ARP_DOWNP:
-        arp_notes[arp_len] = arp_notes[i];
-        if (i == num_of_notes - 1) {
-          arp_notes[arp_len] += (n + 1) * 12;
-        }
-        break;
-      default:
-        arp_notes[arp_len] = arp_notes[i] + (n + 1) * 12;
-        break;
-      }
-      arp_len++;
-    }
-  }
-
-  if (arp_idx >= arp_len) {
-    arp_idx = arp_len - 1;
-  }
-}
-
-void SeqPtcPage::onMidiStopCallback() {
-  arp_mod12_counter = 0;
-  arp_count = 0;
-}
-
-void SeqPtcPage::on_192_callback() {
-
-  uint8_t timing_mid = 6;
-  bool trig = false;
-
-  if ((mcl_seq.md_tracks[focus_track].speed == SEQ_SPEED_3_4X) ||
-      (mcl_seq.md_tracks[focus_track].speed == SEQ_SPEED_3_2X)) {
-    timing_mid = 8;
-  }
-  if (arp_mod12_counter == 0) {
-    if (arp_count % (1 << arp_speed.cur) == 0) {
-      trig = true;
-    }
-
-    if ((arp_len > 0) && (trig)) {
-      trig_md(arp_notes[arp_idx]);
-      arp_idx++;
-      if (arp_idx == arp_len) {
-        arp_idx = 0;
-      }
-    }
-
-    arp_count++;
-    if (arp_count > 15) {
-      arp_count = 0;
-    }
-  }
-  arp_mod12_counter++;
-  if (arp_mod12_counter == timing_mid) {
-    arp_mod12_counter = 0;
   }
 }
 

@@ -75,33 +75,16 @@ public:
   uint8_t calc_scale_note(uint8_t note_num);
 
   void set_last_ext_track(uint8_t channel);
-  void trig_md(uint8_t note_num);
+  void trig_md(uint8_t note_num, MidiUartParent *uart = nullptr);
   void trig_md_fromext(uint8_t note_num);
   void clear_trig_fromext(uint8_t note_num);
 
   void config_encoders();
   void init_poly();
 
-  bool arp_enabled = false;
-  uint8_t arp_notes[ARP_MAX_NOTES];
-  uint8_t arp_len;
-
-  uint8_t arp_idx;
-  uint8_t arp_base;
-  uint8_t arp_dir;
-  uint8_t arp_count;
-  uint8_t arp_mod12_counter;
-
-  void setup_arp();
-  void remove_arp();
   void render_arp();
 
   void recalc_notemask();
-
-  uint8_t arp_get_next_note_up(int8_t);
-  uint8_t arp_get_next_note_down(uint8_t);
-  ALWAYS_INLINE() void on_192_callback();
-  ALWAYS_INLINE() void onMidiStopCallback();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

@@ -28,13 +28,21 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
+  
+  ArpSeqTrack *arp_track;
+  
+  ArpSeqTrack *arp_track = mcl_seq.ext_arp_tracks[last_ext_track];
+  if (seq_ptc_page.midi_device == &MD) {
+    ArpSeqTrack = mcl_seq.md_arp_tracks[last_md_track];
+  }
+
   if (encoders[0]->hasChanged()) {
     switch (encoders[0]->cur) {
-    case ARP_ON:
-      seq_ptc_page.setup_arp();
+    case ARP_ON: 
+      arp_track.enable = 1;
       break;
     case ARP_OFF:
-      seq_ptc_page.remove_arp();
+      arp_track.enable = 0;
       break;
     }
     if (encoders[0]->old > 1) {
@@ -47,6 +55,9 @@ void ArpPage::loop() {
     seq_ptc_page.render_arp();
   }
 
+  if (encoders[2]->hasChanged) {
+    arp_track.set_speed(arp_speed.cur);
+  }
 }
 
 typedef char arp_name_t[4];

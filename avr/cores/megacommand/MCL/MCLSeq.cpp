@@ -246,6 +246,7 @@ again:
   md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
+    md_arp_tracks[i].seq(uart);
   }
 
   if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
@@ -265,6 +266,7 @@ again:
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
+    ext_arp_tracks[i].seq(uart2);
   }
 #endif
 
