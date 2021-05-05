@@ -540,6 +540,7 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
 }
 
 void ExtSeqTrack::seq(MidiUartParent *uart_) {
+  MidiUartParent *uart_old = uart;
   uart = uart_;
 
   if (count_down) {
@@ -598,10 +599,12 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     mod12_counter = 0;
     step_count_inc();
   }
+  uart = uart_old;
 }
 
-void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity) {
-  uart->sendNoteOn(channel, note, velocity);
+void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
+  if (uart_ != nullptr) { uart_ = uart; }
+  uart_->sendNoteOn(channel, note, velocity);
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
     SET_BIT64(note_buffer[1], note - 64);
@@ -610,8 +613,9 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity) {
   }
 }
 
-void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity) {
-  uart->sendNoteOff(channel, note, velocity);
+void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
+  if (uart_ != nullptr) { uart_ = uart; }
+  uart_->sendNoteOff(channel, note, velocity);
 
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {

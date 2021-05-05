@@ -76,7 +76,9 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
   return offset;
 }
 
-void LFOSeqTrack::seq() {
+void LFOSeqTrack::seq(MidiUartParent *uart_) {
+  MidiUartParent *uart_old = uart;
+  uart = uart_;
 
   if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&
       IS_BIT_SET64(pattern_mask, step_count)) {
@@ -91,12 +93,12 @@ void LFOSeqTrack::seq() {
           // MD CC LFO
           if (params[i].dest <= NUM_MD_TRACKS) {
             MD.setTrackParam_inline(params[i].dest - 1, params[i].param,
-                                    wav_value);
+                                    wav_value, uart);
           }
           // MD FX LFO
           else {
             MD.sendFXParam(params[i].param, wav_value,
-                           MD_FX_ECHO + params[i].dest - NUM_MD_TRACKS - 1);
+                           MD_FX_ECHO + params[i].dest - NUM_MD_TRACKS - 1, uart);
           }
           last_wav_value[i] = wav_value;
         }
@@ -129,6 +131,7 @@ void LFOSeqTrack::seq() {
       step_count++;
     }
   }
+  uart = uart_old;
 }
 
 void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,

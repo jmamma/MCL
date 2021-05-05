@@ -259,7 +259,7 @@ again:
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].seq();
+    lfo_tracks[i].seq(uart);
   }
 #endif
 

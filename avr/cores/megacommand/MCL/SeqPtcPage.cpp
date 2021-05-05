@@ -202,10 +202,22 @@ void SeqPtcPage::loop() {
 
 void SeqPtcPage::render_arp() {
   if (midi_device == &MD) {
+    if (mcl_seq.md_tracks[last_md_track].speed == SEQ_SPEED_3_4X || mcl_seq.md_tracks[last_md_track].speed == SEQ_SPEED_3_2X) { 
+       mcl_seq.md_arp_tracks[last_md_track].speed = SEQ_SPEED_3_2X;
+    }
+    else {
+       mcl_seq.md_arp_tracks[last_md_track].speed = SEQ_SPEED_2X;
+    }
     mcl_seq.md_arp_tracks[last_md_track].render(arp_mode.cur,arp_oct.cur, note_mask);
   }
   else {
-    mcl_seq.ext_arp_tracks[last_ext_track].render(arp_mode.cur, arp_oct.cur, note_mask);
+     if (mcl_seq.md_tracks[last_ext_track].speed == SEQ_SPEED_3_4X || mcl_seq.ext_tracks[last_ext_track].speed == SEQ_SPEED_3_2X) {
+       mcl_seq.md_tracks[last_ext_track].speed = SEQ_SPEED_3_2X;
+     }
+     else {
+       mcl_seq.ext_arp_tracks[last_ext_track].speed = SEQ_SPEED_2X;
+     } 
+     mcl_seq.ext_arp_tracks[last_ext_track].render(arp_mode.cur, arp_oct.cur, note_mask);
   }
 }
 

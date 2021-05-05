@@ -54,6 +54,7 @@ void MDSeqTrack::re_sync() {
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {
+  MidiUartParent *uart_old = uart;
   uart = uart_;
 
   if (count_down) {
@@ -108,6 +109,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     cur_event_idx += popcount(steps[step_count].locks);
     step_count_inc();
   }
+  uart = uart_old;
 }
 
 bool MDSeqTrack::is_param(uint8_t param_id) {

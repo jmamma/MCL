@@ -12,6 +12,7 @@ void ArpSeqTrack::set_speed(uint8_t speed_) {
 }
 
 void ArpSeqTrack::seq(MidiUartParent *uart_) {
+  MidiUartParent *uart_old = uart;
   uart = uart_;
   uint8_t timing_mid = get_timing_mid_inline();
   
@@ -36,7 +37,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == timing_mid) {
     mod12_counter = 0;
   }
-
+  uart = uart_old;
 }
 
 #define NOTE_RANGE 24
