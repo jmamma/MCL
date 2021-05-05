@@ -6,6 +6,7 @@
 //#include "Pages.h"
 #include "GUI.h"
 #include "MCLEncoder.h"
+#include "ArpSeqTrack.h"
 
 extern MCLEncoder arp_speed;
 extern MCLEncoder arp_oct;
@@ -14,12 +15,13 @@ extern MCLEncoder arp_und;
 
 class ArpPage : public LightPage {
 public:
+  ArpSeqTrack *arp_track;
 
   ArpPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
       }
-
+  
   bool handleEvent(gui_event_t *event);
 
   void loop();

@@ -34,12 +34,12 @@
 
 class ArpSeqData {
   public:
-  bool arp_enabled;
-  uint8_t arp_notes[ARP_MAX_NOTES]; //output notes
+  uint8_t notes[ARP_MAX_NOTES]; //output notes
   
-  uint8_t arp_len;
-  uint8_t arp_idx;
+  uint8_t len;
+  uint8_t idx;
 
+  uint8_t enabled;
   uint8_t mode;
   uint8_t oct;
   uint32_t note_mask; //input notes
@@ -56,9 +56,9 @@ public:
   void init() {
     speed = SEQ_SPEED_2X;
     length = 16;
-    arp_enabled = false; 
-    arp_len = 0;  
-    arp_idx = 0;  
+    enabled = false; 
+    len = 0;  
+    idx = 0;  
     note_mask = 0;
   }
 

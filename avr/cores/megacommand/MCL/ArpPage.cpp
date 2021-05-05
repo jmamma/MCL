@@ -12,12 +12,28 @@ void ArpPage::setup() {
 void ArpPage::init() {
 
   DEBUG_PRINT_FN();
-#ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.setFont();
   seq_ptc_page.redisplay = true;
   seq_ptc_page.display();
-#endif
+
+  arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
+  if (seq_ptc_page.midi_device == &MD) {
+    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+  }
+
+  arp_speed.cur = arp_track->speed;
+  arp_speed.old = arp_speed.cur;
+
+  arp_oct.cur = arp_track->oct;
+  arp_oct.old = arp_oct.cur;
+
+  arp_mode.cur = arp_track->mode;
+  arp_mode.old = arp_mode.cur;
+
+  arp_und.cur = arp_track->enabled;
+  arp_und.old = arp_und.cur;
+
 }
 
 void ArpPage::cleanup() {
@@ -29,20 +45,14 @@ void ArpPage::cleanup() {
 
 void ArpPage::loop() {
   
-  ArpSeqTrack *arp_track;
-  
-  arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
-  if (seq_ptc_page.midi_device == &MD) {
-    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
-  }
 
   if (encoders[0]->hasChanged()) {
     switch (encoders[0]->cur) {
     case ARP_ON: 
-      arp_track->arp_enabled = 1;
+      arp_track->enabled = 1;
       break;
     case ARP_OFF:
-      arp_track->arp_enabled = 0;
+      arp_track->enabled = 0;
       break;
     }
     if (encoders[0]->old > 1) {

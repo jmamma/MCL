@@ -279,7 +279,7 @@ void SeqPtcPage::display() {
   if (midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
-  if (arp_track->arp_enabled) {
+  if (arp_track->enabled) {
     oled_display.print("ARP");
   }
   else if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
@@ -440,7 +440,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       midi_device = &MD;
 
       ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
-      if ((!arp_track->arp_enabled) || (MidiClock.state != 2)) {
+      if ((!arp_track->enabled) || (MidiClock.state != 2)) {
         trig_md(pitch);
       }
     } else if (mask == EVENT_BUTTON_RELEASED) {
@@ -591,7 +591,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
-    if (!arp_track->arp_enabled) {
+    if (!arp_track->enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
     seq_ptc_page.render_arp();
