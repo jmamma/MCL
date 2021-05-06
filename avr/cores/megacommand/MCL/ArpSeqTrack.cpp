@@ -108,129 +108,72 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   }
   note = 255;
 
+  
+  for (uint8_t i = 0; i < num_of_notes; i++) {
+    switch (mode) {
+    case ARP_RND:
+      note = sort_up[random(0, num_of_notes)] + 12 * random(0,oct);
+      break;
+    case ARP_UP2:
+    case ARP_UPP:
+    case ARP_UP:
+    case ARP_UPDOWN:
+    case ARP_UPNDOWN:
+      note = sort_up[i];
+      break;
+    case ARP_DOWN2:
+    case ARP_DOWNP:
+    case ARP_DOWN:
+    case ARP_DOWNUP:
+    case ARP_DOWNNUP:
+      note = sort_down[i];
+      break;
+    case ARP_CONV:
+    case ARP_CONVDIV:
+      if (i & 1) {
+        note = sort_down[b];
+        b++;
+      } else {
+        note = sort_up[b];
+      }
+      break;
+    case ARP_DIV:
+      if (i & 1) {
+        note = sort_up[b];
+        b++;
+      } else {
+        note = sort_down[b];
+      }
+      break;
+    }
+    notes[i] = note;
+    len++;
+  }
+
+  for (uint8_t i = 1; i < num_of_notes - 1; i++) {
+    switch (mode) {
+      case ARP_UPDOWN:
+      case ARP_UPNDOWN:
+        note = sort_down[i];
+        break;
+      case ARP_DOWNUP:
+      case ARP_DOWNNUP:
+        note = sort_up[i];
+        break;
+      case ARP_CONVDIV:
+        if (i & 1) {
+          note = sort_up[b];
+          b++;
+        } else {
+          note = sort_down[b];
+        }
+        break;
+    }
+    notes[len] = note;
+    len++; 
+  }
+
   switch (mode) {
-  case ARP_RND:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[random(0, num_of_notes)];
-      notes[len++] = note + 12 * random(0, oct);
-    }
-    break;
-
-  case ARP_UP2:
-  case ARP_UPP:
-  case ARP_UP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      notes[i] = note;
-      len++;
-    }
-    break;
-  case ARP_DOWN2:
-  case ARP_DOWNP:
-  case ARP_DOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      notes[i] = note;
-      len++;
-    }
-    break;
-
-  case ARP_UPDOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      notes[i] = note;
-      len++;
-    }
-    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
-      note = sort_down[i];
-      notes[len] = note;
-      len++;
-    }
-    break;
-  case ARP_DOWNUP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      notes[i] = note;
-      len++;
-    }
-    for (uint8_t i = 1; i < num_of_notes - 1; i++) {
-      note = sort_up[i];
-      notes[len] = note;
-      len++;
-    }
-
-    break;
-  case ARP_UPNDOWN:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      notes[i] = note;
-      len++;
-    }
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      notes[len] = note;
-      len++;
-    }
-    break;
-  case ARP_DOWNNUP:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_down[i];
-      notes[i] = note;
-      len++;
-    }
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      note = sort_up[i];
-      notes[len] = note;
-      len++;
-    }
-    break;
-  case ARP_CONV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      notes[i] = note;
-      len++;
-    }
-    break;
-  case ARP_DIV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_up[b];
-        b++;
-      } else {
-        note = sort_down[b];
-      }
-      notes[i] = note;
-      len++;
-    }
-    break;
-  case ARP_CONVDIV:
-    for (uint8_t i = 0; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      notes[i] = note;
-      len++;
-    }
-    b = 0;
-    for (uint8_t i = 1; i < num_of_notes; i++) {
-      if (i & 1) {
-        note = sort_down[b];
-        b++;
-      } else {
-        note = sort_up[b];
-      }
-      notes[i] = note;
-      len++;
-    }
-    break;
   case ARP_PINKUP:
     if (num_of_notes == 1) {
       note = sort_up[0];
