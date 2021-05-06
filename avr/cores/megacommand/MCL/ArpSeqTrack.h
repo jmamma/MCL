@@ -49,6 +49,7 @@ class ArpSeqData {
 class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
 
 public:
+  uint8_t last_note_on;
   ArpSeqTrack() : SeqTrackBase() { 
     active = ARP_TRACK_TYPE;
     init();
@@ -60,6 +61,7 @@ public:
     len = 0;  
     idx = 0;  
     note_mask = 0;
+    last_note_on = 255;
   }
 
   ALWAYS_INLINE() void reset() {

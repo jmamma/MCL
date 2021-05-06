@@ -44,7 +44,7 @@ void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
   // trig_interface.off();
   if (MidiClock.state != 2) {
-    MD.setTrackParam(focus_track, 0, MD.kit.params[focus_track][0]);
+    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
   }
   //  midi_events.remove_callbacks();
 }
@@ -355,7 +355,7 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num) {
 }
 
 void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, MidiUartParent *uart_) {
-  if (track_number == 255) { track_number = focus_track; }
+  if (track_number == 255) { track_number = last_md_track; }
 
   note_num = ptc_param_oct.cur * 12 + note_num;
   uint8_t next_track = get_next_voice(note_num, track_number);
@@ -378,17 +378,31 @@ void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
 }
 
 void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
-  uint8_t next_track = get_next_voice(note_num, focus_track);
+  uint8_t next_track = get_next_voice(note_num, last_md_track);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
     return;
   }
-  render_arp();
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
   if ((recording) && (MidiClock.state == 2)) {
     mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
+  }
+}
+
+void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number, MidiUartParent *uart_) {
+    if (track_number == 255) { track_number = last_ext_track; }
+    mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
+    if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+      mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
+    } 
+}
+void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number, MidiUartParent *uart_) {
+  if (track_number == 255) { track_number = last_ext_track; }
+  mcl_seq.ext_tracks[last_ext_track].note_off(pitch, uart_);
+  if (seq_ptc_page.recording && (MidiClock.state == 2)) {
+    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(pitch, velocity, uart_);
   }
 }
 
@@ -594,12 +608,15 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
+    seq_ptc_page.render_arp();
+    arp_page.track_update();
+    seq_ptc_page.queue_redraw();
+ 
     if (!arp_track->enabled) {
       seq_ptc_page.trig_md_fromext(pitch);
+      
     }
-    arp_page.track_update();
-    seq_ptc_page.render_arp();
-    seq_ptc_page.queue_redraw();
+    
     return;
   }
   if (channel >= mcl_seq.num_ext_tracks) {
@@ -626,18 +643,15 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_DUMP(pitch);
   
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
-
-  if (!arp_track->enabled) {
-    mcl_seq.ext_tracks[last_ext_track].note_on(pitch, msg[2]);
-    if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
-      mcl_seq.ext_tracks[last_ext_track].record_track_noteon(pitch, msg[2]);
-    }
-  }
-  arp_page.track_update();
   seq_ptc_page.render_arp();
-  
+  arp_page.track_update();
   seq_ptc_page.queue_redraw();
+ 
+  if (!arp_track->enabled) {
+     note_on_ext(pitch, msg[2]);
+  }
 #endif
+  return;
 }
 
 void SeqPtcPage::set_last_ext_track(uint8_t channel) {
@@ -690,11 +704,15 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   }
   seq_ptc_page.set_last_ext_track(channel);
   seq_ptc_page.config_encoders();
-  mcl_seq.ext_tracks[last_ext_track].note_off(pitch);
-  if (seq_ptc_page.recording && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(pitch);
-  }
+
+  seq_ptc_page.render_arp();
+  arp_page.track_update();
   seq_ptc_page.queue_redraw();
+
+  if (!arp_track->enabled) {
+     note_off_ext(pitch, msg[2]);
+  }
+
 #endif
 }
 

@@ -51,8 +51,12 @@ public:
   uint8_t calc_scale_note(uint8_t note_num);
 
   void set_last_ext_track(uint8_t channel);
-  void trig_md(uint8_t note_num, uint8_t track_number = 255, MidiUartParent *uart = nullptr);
+  void trig_md(uint8_t note_num, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
   void trig_md_fromext(uint8_t note_num);
+
+  void note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
+  void note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
+  
   void clear_trig_fromext(uint8_t note_num);
 
   void config_encoders();

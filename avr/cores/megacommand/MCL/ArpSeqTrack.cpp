@@ -23,28 +23,38 @@ void ArpSeqTrack::set_length(uint8_t length_) {
 void ArpSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
+
   uint8_t timing_mid = get_timing_mid_inline();
   
-  if (mod12_counter == 0 && step_count == 0 && enabled) {
-    if ((len > 0)) {
-      switch (active) {
-        case MD_ARP_TRACK_TYPE:
-          seq_ptc_page.trig_md(notes[idx], track_number, uart);
-          break;
-        case EXT_ARP_TRACK_TYPE:
-          mcl_seq.ext_tracks[track_number].note_on(notes[idx], 127, uart);
-          break;
-      }
-      idx++;
-      if (idx == len) {
-        idx = 0;
+  if (mod12_counter == 0 && enabled) { 
+    if (step_count) {
+      if ((len > 0)) {
+        switch (active) {
+          case MD_ARP_TRACK_TYPE:
+            seq_ptc_page.trig_md(notes[idx], track_number, uart);
+            break;
+          case EXT_ARP_TRACK_TYPE:
+            seq_ptc_page.note_on(notes[idx], 127, track_number, uart);
+            last_note_on = notes[idx];
+            break;
+        }
+        idx++;
+        if (idx == len) {
+          idx = 0;
+        }   
       }   
-    }   
+    }
+    if (active == EXT_ARP_TRACK_TYPE && step_count == length / 2) {
+      if (last_note_on != 255) { 
+        seq_ptc_page.note_off(last_note_on, 0, uart);
+        last_note_on = 255;
+        break;
+      }    
+    }
   }
 
   mod12_counter++;
-  if (mod12_counter == timing_mid) {
-  
+  if (mod12_counter == timing_mid) { 
     step_count_inc();
     mod12_counter = 0;
   }
