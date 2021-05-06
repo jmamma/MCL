@@ -105,7 +105,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   }
   note = 255;
 
-  
+  bool ignore = false; 
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
@@ -142,11 +142,16 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
         note = sort_down[b];
       }
       break;
+    default:
+      ignore = true;
     }
-    notes[i] = note;
-    len++;
+    if (!ignore) {
+      notes[i] = note;
+      len++;
+    }
   }
 
+  ignore = false;
   for (uint8_t i = 1; i < num_of_notes - 1; i++) {
     switch (mode) {
       case ARP_UPDOWN:
@@ -165,9 +170,14 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
           note = sort_down[b];
         }
         break;
+      default:
+        ignore = true;
+        break;
     }
-    notes[len] = note;
-    len++; 
+    if (!ignore) {
+      notes[len] = note;
+      len++; 
+    }
   }
 
   switch (mode) {
