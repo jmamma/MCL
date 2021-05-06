@@ -400,9 +400,9 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_n
 }
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number, MidiUartParent *uart_) {
   if (track_number == 255) { track_number = last_ext_track; }
-  mcl_seq.ext_tracks[last_ext_track].note_off(pitch, uart_);
+  mcl_seq.ext_tracks[last_ext_track].note_off(note_num, uart_);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(pitch, velocity, uart_);
+    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(note_num);
   }
 }
 
@@ -648,7 +648,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   seq_ptc_page.queue_redraw();
  
   if (!arp_track->enabled) {
-     note_on_ext(pitch, msg[2]);
+     seq_ptc_page.note_on_ext(pitch, msg[2]);
   }
 #endif
   return;
@@ -709,8 +709,9 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   arp_page.track_update();
   seq_ptc_page.queue_redraw();
 
+  ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   if (!arp_track->enabled) {
-     note_off_ext(pitch, msg[2]);
+     seq_ptc_page.note_off_ext(pitch, msg[2]);
   }
 
 #endif

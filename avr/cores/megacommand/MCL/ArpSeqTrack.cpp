@@ -34,7 +34,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
             seq_ptc_page.trig_md(notes[idx], track_number, uart);
             break;
           case EXT_ARP_TRACK_TYPE:
-            seq_ptc_page.note_on(notes[idx], 127, track_number, uart);
+            seq_ptc_page.note_on_ext(notes[idx], 127, track_number, uart);
             last_note_on = notes[idx];
             break;
         }
@@ -46,9 +46,8 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
     }
     if (active == EXT_ARP_TRACK_TYPE && step_count == length / 2) {
       if (last_note_on != 255) { 
-        seq_ptc_page.note_off(last_note_on, 0, uart);
+        seq_ptc_page.note_off_ext(last_note_on, 0, uart);
         last_note_on = 255;
-        break;
       }    
     }
   }
