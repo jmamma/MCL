@@ -28,7 +28,7 @@ bool SeqPage::toggle_device = true;
 
 uint8_t SeqPage::step_select = 255;
 
-uint16_t SeqPage::last_md_model = 255;
+uint32_t SeqPage::last_md_model = 255;
 
 uint8_t opt_speed = 1;
 uint8_t opt_trackid = 1;
