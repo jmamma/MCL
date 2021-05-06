@@ -27,7 +27,8 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uint8_t timing_mid = get_timing_mid_inline();
   
   if (mod12_counter == 0 && enabled) { 
-    if (step_count == 0) {
+   DEBUG_PRINTLN(step_count); 
+   if (step_count == 0) {
       if (len > 0) {
         switch (active) {
           case MD_ARP_TRACK_TYPE:
@@ -89,8 +90,14 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   uint8_t sort_down[NOTE_RANGE];
 
   // Collect notes, sort in ascending order
+  note = get_next_note_up(-1);
+  if (note != 255) {
+    num_of_notes++;
+    sort_up[0] = note;
+  }
+
   for (int8_t i = 0; i < NOTE_RANGE && note != 255; i++) {
-    note = get_next_note_up(i - 1);
+    note = get_next_note_up(sort_up[i - 1]);
     if (note == 255) { break; }
     num_of_notes++;
     sort_up[i] = note;
@@ -105,7 +112,6 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   }
   note = 255;
 
-  bool ignore = false; 
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
@@ -143,15 +149,12 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
       }
       break;
     default:
-      ignore = true;
+      goto next;
     }
-    if (!ignore) {
-      notes[i] = note;
-      len++;
-    }
+    notes[i] = note;
+    len++;
   }
-
-  ignore = false;
+  next:
   for (uint8_t i = 1; i < num_of_notes - 1; i++) {
     switch (mode) {
       case ARP_UPDOWN:
@@ -171,15 +174,12 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
         }
         break;
       default:
-        ignore = true;
-        break;
+        goto next2;
     }
-    if (!ignore) {
-      notes[len] = note;
-      len++; 
-    }
+    notes[len] = note;
+    len++;
   }
-
+  next2:
   switch (mode) {
   case ARP_PINKUP:
     if (num_of_notes == 1) {
