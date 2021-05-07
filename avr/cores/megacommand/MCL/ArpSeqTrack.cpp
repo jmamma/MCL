@@ -96,7 +96,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     sort_up[0] = note;
   }
 
-  for (int8_t i = 0; i < NOTE_RANGE && note != 255; i++) {
+  for (int8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
     note = get_next_note_up(sort_up[i - 1]);
     if (note == 255) { break; }
     num_of_notes++;
