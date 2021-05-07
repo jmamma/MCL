@@ -50,17 +50,10 @@ void ArpPage::cleanup() {
 void ArpPage::loop() {
 
   if (encoders[0]->hasChanged()) {
-    switch (encoders[0]->cur) {
-    case ARP_ON: 
-      arp_track->enabled = 1;
-      break;
-    case ARP_OFF:
-      arp_track->enabled = 0;
-      break;
-    }
+    arp_track->enabled = encoders[0]->cur;
     if (encoders[0]->old > 1) {
-    seq_ptc_page.note_mask = 0;
-    seq_ptc_page.render_arp();
+      seq_ptc_page.note_mask = 0;
+      seq_ptc_page.render_arp();
     }
   }
   if (encoders[1]->hasChanged() ||
