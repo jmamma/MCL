@@ -1394,6 +1394,15 @@ void SeqPage::config_as_lockedit() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
 }
 
+bool SeqPage::md_track_change_check() {
+  if (last_md_track != MD.currentTrack || last_md_model != MD.kit.models[MD.currentTrack]) {
+    last_md_model = MD.kit.models[MD.currentTrack];
+    select_track(&MD, MD.currentTrack, false);
+    return true;
+  }
+  return false;
+}
+
 void SeqPage::loop() {
   if (deferred_timer != 0 &&
       clock_diff(deferred_timer, slowclock) > render_defer_time) {
@@ -1414,10 +1423,8 @@ void SeqPage::loop() {
     redisplay = true;
   }
 
-  if (last_md_track != MD.currentTrack || last_md_model != MD.kit.models[MD.currentTrack]) {
-    last_md_model = MD.kit.models[MD.currentTrack];
-    select_track(&MD, MD.currentTrack, false);
-  }
+  md_track_change_check();
+
   if (show_seq_menu) {
     seq_menu_page.loop();
     if (opt_midi_device_capture != &MD && opt_trackid > NUM_EXT_TRACKS) {

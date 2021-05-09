@@ -2,11 +2,10 @@
 
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
-MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
+MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_und(0, 2, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {
-  arp_speed.cur = 1;
 }
 
 void ArpPage::init() {
@@ -25,8 +24,8 @@ void ArpPage::track_update() {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
 
-  arp_speed.cur = arp_track->speed;
-  arp_speed.old = arp_speed.cur;
+  arp_rate.cur = arp_track->rate;
+  arp_rate.old = arp_rate.cur;
 
   arp_oct.cur = arp_track->oct;
   arp_oct.old = arp_oct.cur;
@@ -48,8 +47,12 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
+ if (seq_ptc_page.md_track_change_check()) {
+   track_update();
+   return;
+ }
 
-  if (encoders[0]->hasChanged()) {
+ if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
     if (encoders[0]->old > 1) {
       seq_ptc_page.note_mask = 0;
@@ -62,8 +65,9 @@ void ArpPage::loop() {
   }
 
   if (encoders[2]->hasChanged()) {
-    arp_track->set_length(1 << arp_speed.cur);
+    arp_track->set_length(1 << arp_rate.cur);
   }
+  
 }
 
 typedef char arp_name_t[4];
@@ -120,7 +124,15 @@ void ArpPage::display() {
   oled_display.setCursor(42, 10);
 
   oled_display.setTextColor(WHITE);
-  oled_display.print("ARPEGGIATOR");
+  oled_display.print("ARPEGGIATOR: T");
+
+  if (seq_ptc_page.midi_device == &MD) {
+    oled_display.print(last_md_track + 1);
+  }
+  else {
+    oled_display.print(last_ext_track + 1);
+  }
+
   char str[5];
   uint8_t y = 12;
   uint8_t x = 16;
@@ -143,7 +155,7 @@ void ArpPage::display() {
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
   itoa(encoders[2]->cur, str, 10);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "SPD", str);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str);
 
   itoa(encoders[3]->cur, str, 10);
   mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "OCT", str);
@@ -162,9 +174,9 @@ bool ArpPage::handleEvent(gui_event_t *event) {
     GUI.popPage();
     return true;
   }
-
-  seq_ptc_page.handleEvent(event);
-
+  if (arp_track->enabled) {
+    seq_ptc_page.handleEvent(event);
+  }
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {

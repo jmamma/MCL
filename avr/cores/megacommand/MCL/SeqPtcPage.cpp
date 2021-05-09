@@ -453,8 +453,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         focus_track = last_md_track;
         config_encoders();
       }
-      arp_page.track_update();
       midi_device = &MD;
+      arp_page.track_update();
 
       ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
       if ((!arp_track->enabled) || (MidiClock.state != 2)) {
