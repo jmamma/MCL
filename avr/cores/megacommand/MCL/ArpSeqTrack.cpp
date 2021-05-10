@@ -154,13 +154,12 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     len++;
   }
   next:
-  for (uint8_t i = 1; i < num_of_notes - 1; i++) {
-    switch (mode) {
-      case ARP_UPDOWN:
+
+  for (uint8_t i = 0; i < num_of_notes; i++) {
+     switch (mode) {
       case ARP_UPNDOWN:
         note = sort_down[i];
         break;
-      case ARP_DOWNUP:
       case ARP_DOWNNUP:
         note = sort_up[i];
         break;
@@ -171,6 +170,21 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
         } else {
           note = sort_down[b];
         }
+        break;
+      default:
+        goto next1;
+    }
+    notes[len] = note;
+    len++;
+  }
+  next1:
+  for (uint8_t i = 1; i < num_of_notes - 1; i++) {
+    switch (mode) {
+      case ARP_UPDOWN:
+        note = sort_down[i];
+        break;
+      case ARP_DOWNUP:
+        note = sort_up[i];
         break;
       default:
         goto next2;
@@ -198,7 +212,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
       notes[len++] = note;
-      note = sort_down[0];
+      note = sort_up[0];
       notes[len++] = note;
     }
     break;
@@ -228,8 +242,9 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   }
 
   // Generate subsequent octave itterations
+  uint8_t old_len = len;
   for (uint8_t n = 0; n < oct; n++) {
-    for (uint8_t i = 0; i < num_of_notes && len < ARP_MAX_NOTES; i++) {
+    for (uint8_t i = 0; i < old_len && len < ARP_MAX_NOTES; i++) {
       switch (mode) {
       case ARP_UP2:
       case ARP_DOWN2:

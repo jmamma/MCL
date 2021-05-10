@@ -61,11 +61,14 @@ void ArpPage::loop() {
   }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
+    arp_track->oct = arp_oct.cur;
+    arp_track->mode = arp_mode.cur;
     seq_ptc_page.render_arp();
   }
 
   if (encoders[2]->hasChanged()) {
     arp_track->set_length(1 << arp_rate.cur);
+    arp_track->rate = arp_rate.cur;
   }
   
 }
