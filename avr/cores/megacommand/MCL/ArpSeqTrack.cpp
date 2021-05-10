@@ -31,7 +31,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
       if (len > 0) {
         switch (active) {
           case MD_ARP_TRACK_TYPE:
-            seq_ptc_page.trig_md(notes[idx], track_number, uart);
+            seq_ptc_page.trig_md(notes[idx], track_number, fine_tune, uart);
             break;
           case EXT_ARP_TRACK_TYPE:
             seq_ptc_page.note_on_ext(notes[idx], 127, track_number, uart);
@@ -70,13 +70,14 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
   return 255; 
 }
 
-void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
+void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t note_mask_) {
  DEBUG_PRINT_FN();
   if (!enabled) {
     return;
   }
+  fine_tune = fine_tune_;
   note_mask = note_mask_;
-  oct = oct_;
+  range = range_;
   mode = mode_;
 
   len = 0;
@@ -99,7 +100,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     note = get_next_note_up(sort_up[i - 1]);
     if (note == 255) { break; }
     num_of_notes++;
-    sort_up[i] = note;
+    sort_up[i] = note + oct_ * 12;
   }
   if (num_of_notes == 0) {
     return;
@@ -114,7 +115,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
-      note = sort_up[random(0, num_of_notes)] + 12 * random(0,oct);
+      note = sort_up[random(0, num_of_notes)] + 12 * random(0,range);
       break;
     case ARP_UP2:
     case ARP_UPP:
@@ -241,9 +242,9 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_) {
     break;
   }
 
-  // Generate subsequent octave itterations
+  // Generate subsequent octave ranges.
   uint8_t old_len = len;
-  for (uint8_t n = 0; n < oct; n++) {
+  for (uint8_t n = 0; n < range; n++) {
     for (uint8_t i = 0; i < old_len && len < ARP_MAX_NOTES; i++) {
       switch (mode) {
       case ARP_UP2:

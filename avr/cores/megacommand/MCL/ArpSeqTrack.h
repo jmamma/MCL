@@ -41,9 +41,11 @@ class ArpSeqData {
 
   uint8_t enabled;
   uint8_t mode;
+  uint8_t range;
   uint8_t oct;
   uint8_t rate;
-  uint32_t note_mask; //input notes
+  uint8_t fine_tune;
+  uint64_t note_mask; //input notes
 };
 
 //Ephemeral
@@ -64,6 +66,9 @@ public:
     idx = 0;  
     note_mask = 0;
     last_note_on = 255;
+ 
+    oct = 1;
+    fine_tune = 0;
   }
 
   ALWAYS_INLINE() void reset() {
@@ -77,7 +82,7 @@ public:
   void set_length(uint8_t length_);
 
   uint8_t get_next_note_up(int8_t cur);
-  void render(uint8_t mode_, uint8_t oct_, uint32_t note_mask_);
+  void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t note_mask_);
 
 };
 

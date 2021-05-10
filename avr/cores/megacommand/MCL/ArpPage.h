@@ -9,7 +9,7 @@
 #include "ArpSeqTrack.h"
 
 extern MCLEncoder arp_rate;
-extern MCLEncoder arp_oct;
+extern MCLEncoder arp_range;
 extern MCLEncoder arp_mode;
 extern MCLEncoder arp_enabled;
 

@@ -66,7 +66,7 @@ extern SeqExtStepPage seq_extstep_page;
 #endif
 
 extern MCLEncoder ptc_param_oct;
-extern MCLEncoder ptc_param_finetune;
+extern MCLEncoder ptc_param_fine_tune;
 extern MCLEncoder ptc_param_len;
 extern MCLEncoder ptc_param_scale;
 

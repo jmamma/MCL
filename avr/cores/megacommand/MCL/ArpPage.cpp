@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_range(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
@@ -27,8 +27,8 @@ void ArpPage::track_update() {
   arp_rate.cur = arp_track->rate;
   arp_rate.old = arp_rate.cur;
 
-  arp_oct.cur = arp_track->oct;
-  arp_oct.old = arp_oct.cur;
+  arp_range.cur = arp_track->oct;
+  arp_range.old = arp_range.cur;
 
   arp_mode.cur = arp_track->mode;
   arp_mode.old = arp_mode.cur;
@@ -61,7 +61,7 @@ void ArpPage::loop() {
   }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
-    arp_track->oct = arp_oct.cur;
+    arp_track->oct = arp_range.cur;
     arp_track->mode = arp_mode.cur;
     seq_ptc_page.render_arp();
   }
@@ -80,40 +80,6 @@ const arp_name_t arp_names[] PROGMEM = {
     "PU", "PD", "TU", "TD", "UPP", "DP", "U2",  "D2",  "RND",
 };
 
-#ifndef OLED_DISPLAY
-void ArpPage::display() {
-  uint8_t dev_num;
-  if (!redisplay) {
-    return true;
-  }
- GUI.setLine(GUI.LINE1);
-
-  GUI.put_string_at(0, "ARP");
-  GUI.put_string_at(4, "MOD");
-  GUI.put_string_at(8, "SPD");
-  GUI.put_string_at(12,"OCT");
-
-  GUI.setLine(GUI.LINE2);
-  char str[5];
-
-  switch (encoders[0]->cur) {
-  case ARP_ON:
-    strcpy(str, "ON");
-    break;
-  case ARP_OFF:
-    strcpy(str, "--");
-    break;
-  case ARP_LATCH:
-    strcpy(str, "LAT");
-    break;
-  }
-  GUI.put_string_at(0, str);
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
-  GUI.put_string_at(4,str);
-  GUI.put_value_at2(8, encoders[2]->cur);
-  GUI.put_value_at2(12, encoders[3]->cur);
-}
-#else 
 void ArpPage::display() {
 
   if (!classic_display) {
@@ -161,13 +127,12 @@ void ArpPage::display() {
   mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str);
 
   itoa(encoders[3]->cur, str, 10);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "OCT", str);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str);
 
   oled_display.display();
   oled_display.setFont(oldfont);
 }
 
-#endif
 bool ArpPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON3) ||
