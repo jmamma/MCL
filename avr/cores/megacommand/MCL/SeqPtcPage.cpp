@@ -269,21 +269,22 @@ void SeqPtcPage::display() {
   // draw TI keyboard
 
   oled_display.setFont(&TomThumb);
-  oled_display.setCursor(107, 32);
+  oled_display.setCursor(105, 32);
   
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
+  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
+    oled_display.print("PLY");
+  }
+  
   uint64_t mask = note_mask;
   if (arp_track->enabled) {
     oled_display.print("ARP");
     mask = arp_track->note_mask;
   }
-  else if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    oled_display.print("POLY");
-  }
-
+ 
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
   SeqPage::display();
   oled_display.display();
@@ -403,7 +404,7 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_n
 }
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number, MidiUartParent *uart_) {
   if (track_number == 255) { track_number = last_ext_track; }
-  mcl_seq.ext_tracks[last_ext_track].note_off(note_num, uart_);
+  mcl_seq.ext_tracks[last_ext_track].note_off(note_num, velocity, uart_);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(note_num);
   }
@@ -611,8 +612,8 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
-    seq_ptc_page.render_arp();
     arp_page.track_update();
+    seq_ptc_page.render_arp();
     seq_ptc_page.queue_redraw();
  
     if (!arp_track->enabled) {
@@ -645,8 +646,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   DEBUG_DUMP(pitch);
   
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
-  seq_ptc_page.render_arp();
+  
   arp_page.track_update();
+  seq_ptc_page.render_arp();
   seq_ptc_page.queue_redraw();
  
   if (!arp_track->enabled) {

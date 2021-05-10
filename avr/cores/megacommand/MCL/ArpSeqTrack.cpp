@@ -58,12 +58,12 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_old;
 }
 
-#define NOTE_RANGE 24
+#define NOTE_RANGE 64
 
 uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 
   for (int8_t i = cur + 1; i < NOTE_RANGE; i++) {
-    if (IS_BIT_SET32(note_mask, i)) {
+    if (IS_BIT_SET64(note_mask, i)) {
       return i;
     }    
   }
@@ -93,14 +93,16 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   note = get_next_note_up(-1);
   if (note != 255) {
     num_of_notes++;
-    sort_up[0] = note;
+    sort_up[0] = min(127, note + oct_ * 12);
   }
 
+  DEBUG_PRINTLN("render");
   for (int8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
     note = get_next_note_up(sort_up[i - 1]);
     if (note == 255) { break; }
     num_of_notes++;
-    sort_up[i] = note + oct_ * 12;
+    sort_up[i] = min(127, note + oct_ * 12);
+    DEBUG_PRINTLN(note + oct_ * 12);
   }
   if (num_of_notes == 0) {
     return;
