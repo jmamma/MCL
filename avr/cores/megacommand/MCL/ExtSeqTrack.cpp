@@ -603,7 +603,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 }
 
 void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ != nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) { uart_ = uart; }
   uart_->sendNoteOn(channel, note, velocity);
   // Greater than 64
   if (IS_BIT_SET(note, 6)) {
@@ -614,7 +614,7 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartParent *uart_)
 }
 
 void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ != nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) { uart_ = uart; }
   uart_->sendNoteOff(channel, note, velocity);
 
   // Greater than 64
