@@ -11,17 +11,11 @@
 extern MCLEncoder arp_rate;
 extern MCLEncoder arp_oct;
 extern MCLEncoder arp_mode;
-extern MCLEncoder arp_enabled;
-
-extern MCLEncoder arp_trig;
-extern MCLEncoder arp_repeat;
-extern MCLEncoder arp_gate;
-extern MCLEncoder arp_steps;
+extern MCLEncoder arp_und;
 
 class ArpPage : public LightPage {
 public:
   ArpSeqTrack *arp_track;
-  bool sub_page;
 
   ArpPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
@@ -30,9 +24,6 @@ public:
   
   bool handleEvent(gui_event_t *event);
   void track_update();
-
-  void config_encoders();
-
   void loop();
   void display();
   void setup();

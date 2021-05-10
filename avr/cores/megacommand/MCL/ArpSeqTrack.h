@@ -43,13 +43,7 @@ class ArpSeqData {
   uint8_t mode;
   uint8_t oct;
   uint8_t rate;
-
-  uint8_t trig;
-  uint8_t repeat;
-  uint8_t gate;
-  uint8_t steps;
-  
-  uint64_t note_mask; //input notes
+  uint32_t note_mask; //input notes
 };
 
 //Ephemeral
@@ -57,7 +51,6 @@ class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
 
 public:
   uint8_t last_note_on;
-  uint8_t repeat_counter;
   ArpSeqTrack() : SeqTrackBase() { 
     active = ARP_TRACK_TYPE;
     init();
@@ -67,17 +60,10 @@ public:
     rate = 1;
     length = 1 << rate; //Arp rate is function of length
     enabled = false; 
-    trig = 0;
-    repeat = 1;
-    gate = length / 2;
-    steps = 127;
-
     len = 0;  
     idx = 0;  
     note_mask = 0;
     last_note_on = 255;
-
-    repeat_counter = 0;
   }
 
   ALWAYS_INLINE() void reset() {

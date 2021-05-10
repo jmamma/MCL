@@ -38,19 +38,13 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
             last_note_on = notes[idx];
             break;
         }
-
-        repeat_counter++;
-        if (repeat_counter == repeat) {
-          idx++;
-          repeat_counter = 0;
-        }
+        idx++;
         if (idx == len) {
           idx = 0;
         }   
       }   
     }
-   
-    if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == gate) {
+    if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
         seq_ptc_page.note_off_ext(last_note_on, 0, uart);
         last_note_on = 255;
     }
