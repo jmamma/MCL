@@ -89,12 +89,16 @@ void MDTrackSelect::end_immediate() {
   if (sysex->getByte(1) != ids[1]) {
     return;
   }
+  
   uint8_t b = sysex->getByte(2);
+  MD.global.extendedMode = b >> 4;
+  MD.global.baseChannel = b & 0xF;
+
+  b = sysex->getByte(3);
   if (sysex->recordLen != 8) {
     MD.currentTrack = b & 0xF;
   }
   MD.currentSynthPage = b >> 4;
-  MD.global.extendedMode = sysex->getByte(3);
   b = sysex->getByte(4);
   MD.kit.models[MD.currentTrack] = sysex->getByte(5);
   if (b & 1) { MD.kit.models[MD.currentTrack] += 128; }
