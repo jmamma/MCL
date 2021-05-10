@@ -49,7 +49,7 @@ void MDTrackSelect::end() {
       if (seq_step_page.recording) {
         goto update_pattern;
       }
-      uint8_t b = sysex->getByte(2);
+      uint8_t b = sysex->getByte(3);
       MD.currentTrack = b & 0xF;
       mcl_seq.md_tracks[MD.currentTrack].set_length(length, expand);
       mcl_seq.md_tracks[MD.currentTrack].set_speed(new_speed);
