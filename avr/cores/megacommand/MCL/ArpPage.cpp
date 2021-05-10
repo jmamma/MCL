@@ -3,7 +3,7 @@
 MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 2, ENCODER_RES_SEQ);
+MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {
 }
@@ -33,8 +33,8 @@ void ArpPage::track_update() {
   arp_mode.cur = arp_track->mode;
   arp_mode.old = arp_mode.cur;
 
-  arp_und.cur = arp_track->enabled;
-  arp_und.old = arp_und.cur;
+  arp_enabled.cur = arp_track->enabled;
+  arp_enabled.old = arp_enabled.cur;
 
 
 }
