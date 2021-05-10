@@ -270,7 +270,6 @@ void SeqPtcPage::display() {
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard
-  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
 
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(107, 32);
@@ -279,12 +278,16 @@ void SeqPtcPage::display() {
   if (midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
+  uint64_t mask = note_mask;
   if (arp_track->enabled) {
     oled_display.print("ARP");
+    mask = arp_track->note_mask;
   }
   else if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
     oled_display.print("POLY");
   }
+
+  mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
   SeqPage::display();
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -461,7 +464,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         trig_md(pitch);
       }
     } else if (mask == EVENT_BUTTON_RELEASED) {
-      if (arp_und.cur != ARP_LATCH) {
+      if (arp_enabled.cur != ARP_LATCH) {
         CLEAR_BIT64(note_mask, pitch);
         render_arp();
       }
@@ -681,7 +684,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
 
-    if (arp_und.cur != ARP_LATCH) {
+    if (arp_enabled.cur != ARP_LATCH) {
       pitch = process_ext_pitch(note_num, note_on, SeqPage::midi_device);
       if (pitch == 255) return;
       seq_ptc_page.render_arp();
