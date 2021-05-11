@@ -50,7 +50,7 @@ menu_t<6> midiconfig_menu_layout = {
         //            m  r  n  d  p  f  o
         {"TURBO 1:",  0, 4, 4, 2, 0, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, 0, 0, 2},
-        {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 80},
+        {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 81},
 
         {"CLK REC:",  0, 2, 2, 5, 0, 0, 6},
         {"CLK SEND:", 0, 2, 2, 6, 0, 0, 8},
@@ -118,7 +118,7 @@ menu_t<19> seq_menu_layout = {
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  11, 0,  0},
         {"TRANSPOSE:",  0, 12,                  0,                   19, 0,  0,  0},
         {"VEL:",        0, 128,                 0,                   20, 0,  0,  0},
-        {"COND:",       1, NUM_TRIG_CONDITIONS, NUM_TRIG_CONDITIONS, 21, 0,  0,  57},
+        {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, 0,  0,  57},
         {"SPEED:",      0, 7,                   7,                   22, 0,  5,  40},
         {"LENGTH:",     1, 129,                 0,                   23, 0,  6,  0},
         {"CHANNEL:",    1, 17,                  0,                   24, 0,  7,  0},
@@ -168,8 +168,8 @@ menu_t<3> wav_menu_layout = {
     "",
     {
         //           m  r  n  d   p  f   o
-        {"EDIT:",    0, 4, 4, 39, 0, 0,  76},
-        {"WAV:",     0, 6, 6, 40, 0, 0,  70},
+        {"EDIT:",    0, 4, 4, 39, 0, 0,  77},
+        {"WAV:",     0, 6, 6, 40, 0, 0,  71},
         {"TRANSFER", 0, 0, 0, 0,  0, 22, 0},
     },
     23, 0
