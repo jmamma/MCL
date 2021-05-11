@@ -106,12 +106,8 @@ void MCL::setup() {
 
 bool mcl_handleEvent(gui_event_t *event) {
 
-  DEBUG_PRINTLN("RECEV EVENT");
-  DEBUG_PRINTLN(event->source);
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    DEBUG_PRINTLN(key);
-    DEBUG_PRINTLN(MDX_KEY_REC);
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
           key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {

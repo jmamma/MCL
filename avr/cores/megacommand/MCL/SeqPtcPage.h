@@ -31,7 +31,6 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
-  uint8_t focus_track = 255;
   uint8_t key = 0;
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
@@ -48,7 +47,7 @@ public:
   uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device = &generic_midi_device);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num, uint8_t fine_tune = 255);
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
-  uint8_t calc_scale_note(uint8_t note_num);
+  uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
 
   void set_last_ext_track(uint8_t channel);
   void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);

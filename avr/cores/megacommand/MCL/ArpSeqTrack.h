@@ -66,7 +66,7 @@ public:
     idx = 0;  
     memset(note_mask,0,2);
     last_note_on = 255;
- 
+    range = 0;
     oct = 1;
     fine_tune = 0;
   }

@@ -113,7 +113,7 @@ void SeqPtcPage::init() {
 
 void SeqPtcPage::config() {
   config_encoders();
-
+  recalc_notemask();
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
   char buf[len1] = {'\0'};
@@ -290,12 +290,25 @@ void SeqPtcPage::display() {
   oled_display.setFont(oldfont);
 }
 
-uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num) {
+uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
   uint8_t size = scales[ptc_param_scale.cur]->size;
-  uint8_t oct = note_num / size;
-  note_num = note_num - oct * size;
+  uint8_t oct;
 
-  return scales[ptc_param_scale.cur]->pitches[note_num] + oct * 12 + key;
+  uint8_t d = size;
+  if (padded) {
+    d = 12;
+  }
+  oct = note_num / d;
+  note_num = note_num - oct * d;
+
+  uint8_t pos = note_num;
+
+  if (padded) {
+  pos = min(note_num, size);
+  if (pos == size) { pos = 0; oct++; }
+  }
+
+  return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + key;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
@@ -411,7 +424,7 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_
 
 void SeqPtcPage::recalc_notemask() {
   memset(note_mask,0,sizeof(note_mask));
-  for (uint8_t i = 0; i < 24; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       uint8_t pitch = calc_scale_note(i);
       SET_BIT128_P(note_mask, pitch);
@@ -547,7 +560,9 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num, MidiDevice* device) {
 
   uint8_t oct = 0;
   uint8_t note = note_num;
+  bool padded = true;
   if (device == &MD) {
+    padded = false;
     note = note_num - (note_num / 12) * 12;
     if (note_num >= NOTE_C2) {
       oct = (note_num / 12) - (NOTE_C2 / 12);
@@ -555,7 +570,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num, MidiDevice* device) {
     return 255;
     }
   }
-  return calc_scale_note(note + oct * 12);
+ return calc_scale_note(note + oct * 12, padded);
 }
 
 
