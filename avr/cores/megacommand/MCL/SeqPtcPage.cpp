@@ -107,9 +107,6 @@ void SeqPtcPage::init() {
     trig_interface.off();
   }
   curpage = SEQ_PTC_PAGE;
-  if (focus_track == 255) {
-    focus_track = last_md_track;
-  }
   config();
   re_init = false;
 }
@@ -451,21 +448,19 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_PRESSED) {
 
       SET_BIT128_P(note_mask, pitch);
-      render_arp();
       if (midi_device != &MD) {
-        midi_device = device;
+        midi_device = &MD;
         config();
       } else {
-        focus_track = last_md_track;
         config_encoders();
       }
-      midi_device = &MD;
+ 
       arp_page.track_update();
-
       ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
       if ((!arp_track->enabled) || (MidiClock.state != 2)) {
         trig_md(pitch + ptc_param_oct.cur * 12);
-      }
+      } 
+      render_arp();
     } else if (mask == EVENT_BUTTON_RELEASED) {
       if (arp_enabled.cur != ARP_LATCH) {
         CLEAR_BIT128_P(note_mask, pitch);
@@ -607,10 +602,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
     pitch = process_ext_pitch(note_num, note_on, SeqPage::midi_device);
     if (pitch == 255) return;
-
-    if (GUI.currentPage() == &seq_ptc_page) {
-      seq_ptc_page.focus_track = last_md_track;
-    }
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
