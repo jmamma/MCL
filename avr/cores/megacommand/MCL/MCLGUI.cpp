@@ -528,7 +528,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
 
 void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                            uint8_t note_height, uint8_t num_of_notes,
-                           uint64_t note_mask) {
+                           uint64_t *note_mask) {
 #ifdef OLED_DISPLAY
   const uint16_t chromatic = 0b0000010101001010;
   const uint8_t half = note_height / 2;
@@ -542,9 +542,21 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
   // draw first '|'
   oled_display.drawFastVLine(x, y, note_height, WHITE);
 
+  uint8_t first_note = 0;
+  for (uint8_t n = 0; n < 128; n++) {
+    if (IS_BIT_SET128_P(note_mask, n)) {
+      first_note = n;
+      break;
+    }
+  }
+
+  uint8_t offset = (first_note / 24) * 24;
+
+  offset = min(127 - num_of_notes, offset);
+
   for (uint8_t n = 0; n < num_of_notes; n++) {
 
-    bool pressed = IS_BIT_SET64(note_mask, n);
+    bool pressed = IS_BIT_SET128_P(note_mask, n + offset);
     bool black = IS_BIT_SET16(chromatic, note_type);
 
     if (black) {

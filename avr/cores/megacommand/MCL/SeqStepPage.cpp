@@ -122,9 +122,9 @@ void SeqStepPage::display() {
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu) && (tuning != NULL)) {
-    uint64_t note_mask = 0;
+    uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur + tuning->base;
-    SET_BIT64(note_mask, note - 24 * (note / 24));
+    SET_BIT64(note_mask, note);
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
     SeqPage::display();
   }

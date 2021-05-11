@@ -153,8 +153,7 @@ public:
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
-    oneshot_mask[0] = 0;
-    oneshot_mask[1] = 0;
+    memset(oneshot_mask,0,sizeof(oneshot_mask));
   }
 
   ALWAYS_INLINE() void seq(MidiUartParent *uart_);

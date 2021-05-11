@@ -45,7 +45,7 @@ class ArpSeqData {
   uint8_t oct;
   uint8_t rate;
   uint8_t fine_tune;
-  uint64_t note_mask; //input notes
+  uint64_t note_mask[2]; //input notes
 };
 
 //Ephemeral
@@ -64,7 +64,7 @@ public:
     enabled = false; 
     len = 0;  
     idx = 0;  
-    note_mask = 0;
+    memset(note_mask,0,2);
     last_note_on = 255;
  
     oct = 1;

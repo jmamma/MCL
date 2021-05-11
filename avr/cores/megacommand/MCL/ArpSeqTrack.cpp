@@ -58,14 +58,14 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_old;
 }
 
-#define NOTE_RANGE 64
+#define NOTE_RANGE 128
 
 uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 
-  for (int8_t i = cur + 1; i < NOTE_RANGE; i++) {
-    if (IS_BIT_SET64(note_mask, i)) {
+  for (int8_t i = cur + 1; i < 128; i++) {
+    if (IS_BIT_SET128_P(note_mask, i)) {
       return i;
-    }    
+    }
   }
   return 255; 
 }
@@ -76,7 +76,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     return;
   }
   fine_tune = fine_tune_;
-  note_mask = *note_mask_;
+  memcpy(note_mask,note_mask_,sizeof(note_mask));
   range = range_;
   mode = mode_;
 
@@ -86,8 +86,8 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   uint8_t note = 0;
   uint8_t b = 0;
 
-  uint8_t sort_up[NOTE_RANGE];
-  uint8_t sort_down[NOTE_RANGE];
+  uint8_t sort_up[ARP_MAX_NOTES];
+  uint8_t sort_down[ARP_MAX_NOTES];
 
   // Collect notes, sort in ascending order
   note = get_next_note_up(-1); 
@@ -97,7 +97,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     sort_up[0] = min(127, note + oct_ * 12);
   }
 
-  for (int8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
+  for (int8_t i = 1; i < ARP_MAX_NOTES && note != 255; i++) {
     note = get_next_note_up(last_note);
     if (note == 255) { break; }
     last_note = note;

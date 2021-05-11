@@ -64,7 +64,7 @@ public:
                           bool show_value);
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
-                     uint64_t note_mask);
+                     uint64_t *note_mask);
   void draw_trigs(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &pattern_mask,
                   uint8_t step_count, uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask);
   void draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
