@@ -70,13 +70,13 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
   return 255; 
 }
 
-void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t note_mask_) {
+void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
  DEBUG_PRINT_FN();
   if (!enabled) {
     return;
   }
   fine_tune = fine_tune_;
-  note_mask = note_mask_;
+  note_mask = *note_mask_;
   range = range_;
   mode = mode_;
 
@@ -90,19 +90,19 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   uint8_t sort_down[NOTE_RANGE];
 
   // Collect notes, sort in ascending order
-  note = get_next_note_up(-1);
+  note = get_next_note_up(-1); 
+  uint8_t last_note = note;
   if (note != 255) {
     num_of_notes++;
     sort_up[0] = min(127, note + oct_ * 12);
   }
 
-  DEBUG_PRINTLN("render");
   for (int8_t i = 1; i < NOTE_RANGE && note != 255; i++) {
-    note = get_next_note_up(sort_up[i - 1]);
+    note = get_next_note_up(last_note);
     if (note == 255) { break; }
+    last_note = note;
     num_of_notes++;
     sort_up[i] = min(127, note + oct_ * 12);
-    DEBUG_PRINTLN(note + oct_ * 12);
   }
   if (num_of_notes == 0) {
     return;

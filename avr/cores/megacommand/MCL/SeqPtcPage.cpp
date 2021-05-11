@@ -195,7 +195,9 @@ void SeqPtcPage::loop() {
     if (midi_device != &MD) {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     }
-    recalc_notemask();
+    else {
+      recalc_notemask();
+    }
     render_arp();
   }
 #endif
@@ -215,7 +217,7 @@ void SeqPtcPage::render_arp() {
   else {
     arp_track->speed = SEQ_SPEED_2X;
   }
-  arp_track->render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur, arp_range.cur, note_mask);
+  arp_track->render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur, arp_range.cur, &note_mask);
 }
 
 void SeqPtcPage::display() {
@@ -567,11 +569,15 @@ uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device) 
   if (pitch == 255) { return 255; }
 
   uint8_t scaled_pitch = pitch - (pitch / 24) * 24;
-  if (note_type) {
-    SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
-  }
-  else {
-    CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+  if (scaled_pitch < 64) {
+    if (note_type) {
+      SET_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+    }
+    else {
+      if (arp_enabled.cur != ARP_LATCH) { 
+        CLEAR_BIT64(seq_ptc_page.note_mask, scaled_pitch);
+      }   
+    }
   }
   pitch += ptc_param_oct.cur * 12;
   return pitch;

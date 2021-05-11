@@ -82,7 +82,7 @@ public:
   void set_length(uint8_t length_);
 
   uint8_t get_next_note_up(int8_t cur);
-  void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t note_mask_);
+  void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_);
 
 };
 
