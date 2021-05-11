@@ -25,7 +25,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
   uint8_t timing_mid = get_timing_mid_inline();
-
+  
   if (mod12_counter == 0 && enabled) { 
    if (step_count == 0) {
       if (len > 0) {
@@ -88,7 +88,6 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
 
   uint8_t sort_up[ARP_MAX_NOTES];
   uint8_t sort_down[ARP_MAX_NOTES];
-  uint8_t notes_tmp[ARP_MAX_NOTES] = {};
 
   // Collect notes, sort in ascending order
   note = get_next_note_up(-1); 
@@ -154,7 +153,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     default:
       goto next;
     }
-    notes_tmp[i] = note;
+    notes[i] = note;
     len++;
   }
   next:
@@ -178,7 +177,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       default:
         goto next1;
     }
-    notes_tmp[len] = note;
+    notes[len] = note;
     len++;
   }
   next1:
@@ -193,7 +192,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       default:
         goto next2;
     }
-    notes_tmp[len] = note;
+    notes[len] = note;
     len++;
   }
   next2:
@@ -201,13 +200,13 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_PINKUP:
     if (num_of_notes == 1) {
       note = sort_up[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
       note = sort_up[i];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
       note = sort_down[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
 
     break;
@@ -215,22 +214,22 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_PINKDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
       note = sort_up[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
     break;
 
   case ARP_THUMBUP:
     if (num_of_notes == 1) {
       note = sort_down[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
       note = sort_up[i];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
       note = sort_down[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
 
     break;
@@ -238,9 +237,9 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_THUMBDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
       note = sort_down[0];
-      notes_tmp[len++] = note;
+      notes[len++] = note;
     }
     break;
   }
@@ -252,30 +251,26 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       switch (mode) {
       case ARP_UP2:
       case ARP_DOWN2:
-        notes_tmp[len] = notes_tmp[i];
+        notes[len] = notes[i];
         if (!(i & 1)) {
-          notes_tmp[len] += (n + 1) * 12;
+          notes[len] += (n + 1) * 12;
         }
         break;
       case ARP_UPP:
       case ARP_DOWNP:
-        notes_tmp[len] = notes_tmp[i];
+        notes[len] = notes[i];
         if (i == num_of_notes - 1) {
-          notes_tmp[len] += (n + 1) * 12;
+          notes[len] += (n + 1) * 12;
         }
         break;
       default:
-        notes_tmp[len] = notes_tmp[i] + (n + 1) * 12;
+        notes[len] = notes[i] + (n + 1) * 12;
         break;
       }
       len++;
     }
   }
 
-  if (active == EXT_ARP_TRACK_TYPE) {
-    mcl_seq.ext_tracks[track_number].buffer_notesoff();
-  }
-  memcpy(notes, notes_tmp, sizeof(notes));
   if (idx >= len) {
     idx = len - 1;
   }
