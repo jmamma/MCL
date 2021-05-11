@@ -304,8 +304,14 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
   uint8_t pos = note_num;
 
   if (padded) {
-  pos = min(note_num, size);
-  if (pos == size) { pos = 0; oct++; }
+  //pos = note_num - (note_num / (size + 1)) * (size + 1);
+  //pos = min(note_num, size);
+  const uint16_t chromatic = 0b0000010101001010;
+  if (IS_BIT_SET16(chromatic, note_num)) {
+  note_num--;
+  }
+  pos = round((float) (size - 1) * (float) note_num / 12.0);
+  //if (pos == size) { pos = 0; oct++; }
   }
 
   return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + key;
@@ -703,7 +709,11 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       pitch = process_ext_pitch(note_num, note_on, SeqPage::midi_device);
       if (pitch == 255) return;
     }
-    seq_ptc_page.clear_trig_fromext(pitch);
+
+    ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+    if (!arp_track->enabled) {
+      seq_ptc_page.clear_trig_fromext(pitch);
+    }
     seq_ptc_page.queue_redraw();
     return;
   }
@@ -721,7 +731,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   arp_page.track_update();
   seq_ptc_page.queue_redraw();
 
-  ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+  ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (!arp_track->enabled) {
      seq_ptc_page.note_off_ext(pitch, msg[2]);
   }
