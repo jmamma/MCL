@@ -27,10 +27,12 @@ void LFOPage::init() {
   oled_display.setFont();
 #endif
   update_encoders();
-
+  MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
+                     lfo_track->step_count);
   if (lfo_track->mode != LFO_MODE_FREE) {
     trig_interface.on();
   }
+
   // LFOPage not using base SeqPage init?
   R.Clear();
   R.use_machine_param_names();
