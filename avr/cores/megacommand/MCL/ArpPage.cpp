@@ -23,7 +23,6 @@ void ArpPage::track_update() {
   if (seq_ptc_page.midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
-
   arp_rate.cur = arp_track->rate;
   arp_rate.old = arp_rate.cur;
 
@@ -35,7 +34,6 @@ void ArpPage::track_update() {
 
   arp_enabled.cur = arp_track->enabled;
   arp_enabled.old = arp_enabled.cur;
-
 
 }
 
@@ -54,7 +52,7 @@ void ArpPage::loop() {
 
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    if (encoders[0]->old > 1) {
+    if (encoders[0]->old == 0) {
       memset(seq_ptc_page.note_mask,0,sizeof(seq_ptc_page.note_mask));
       seq_ptc_page.render_arp();
     }
@@ -145,11 +143,10 @@ bool ArpPage::handleEvent(gui_event_t *event) {
   if (arp_track->enabled) {
     seq_ptc_page.handleEvent(event);
   }
-  if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
+  else if (note_interface.is_event(event) && midi_active_peering.get_device(event->port) == &MD) {
+      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       return true;
-    }
+
   }
   return false;
 }
