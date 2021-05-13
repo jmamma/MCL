@@ -582,7 +582,7 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 }
 
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
-                                   uint8_t level, bool send) {
+                                   uint8_t level, uint8_t mode, bool send) {
 
   DEBUG_PRINTLN("assign machine");
   uint8_t data[43] = {0x70, 0x5b};
@@ -599,8 +599,13 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i] += 2;
   }
   i++;
+
+  if (mode == 0) { goto end; }
+
   memcpy(data + i,machine->params,24);
   i += 24;
+
+  if (mode == 1) { goto end; }
 
   memcpy(data + i,&machine->lfo, 5);
   i += 5;
@@ -611,6 +616,8 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   bool set_level = false;
   if (level != 255) {  data[i++] = level; set_level = true; }
   if (send) { insertMachineInKit(track, machine, set_level); }
+
+  end:
   return sendRequest(data, i, send);
 }
 

@@ -45,7 +45,11 @@ void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
   // trig_interface.off();
   if (MidiClock.state != 2) {
+    MDTrack md_track;
+    md_track.machine.model = MD.kit.models[last_md_track];
+    MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
     MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+    //MD.assignMachineBulk(last_md_track, &md_track.machine, 255, true, true);
   }
   //  midi_events.remove_callbacks();
 }

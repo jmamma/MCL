@@ -154,13 +154,16 @@ void MDSeqTrack::update_params() {
 }
 
 void MDSeqTrack::reset_params() {
+  MDTrack md_track;
+
+  md_track.get_machine_from_kit(track_number);
+
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
-      MD.setTrackParam(track_number, locks_params[c] - 1, locks_params_orig[c]);
-      //    MD.setTrackParam(track_number, locks_params[c] - 1,
-      //                   MD.kit.params[track_number][locks_params[c] - 1]);
+      md_track.machine.params[locks_params[c] - 1] = locks_params_orig[c];
     }
   }
+  MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
 }
 
 void MDSeqTrack::recalc_slides() {
