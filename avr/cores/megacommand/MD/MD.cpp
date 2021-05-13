@@ -666,7 +666,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
     level = machine->level;
   }
 
-  MD.assignMachineBulk(track, machine, level, send);
+  MD.assignMachineBulk(track, machine, level, 255, send);
 
   return bytes;
 }
