@@ -124,6 +124,7 @@ bool mcl_handleEvent(gui_event_t *event) {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
             MD.set_rec_mode(1);
+            clearLed2();
           } else {
             if (GUI.currentPage() == &seq_step_page) {
               MD.set_rec_mode(0);
@@ -172,24 +173,18 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       }
     }
+/*
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_REC: {
-        if (GUI.currentPage() != &seq_step_page &&
-            seq_step_page.recording == 0) {
-          page_select_page.md_prepare();
-          GUI.setPage(&grid_page);
-        }
         return true;
       }
       case MDX_KEY_REALTIME: {
-        seq_step_page.recording = 0;
-        MD.set_rec_mode(1);
-        clearLed2();
         return true;
       }
       }
     }
+*/
   }
 }
 

@@ -207,6 +207,7 @@ bool MDClass::probe() {
     getCurrentTrack(CALLBACK_TIMEOUT);
     getBlockingKit(0x7F);
     setup();
+
     for (uint8_t x = 0; x < 2; x++) {
       for (uint8_t y = 0; y < 16; y++) {
         mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
@@ -214,12 +215,14 @@ bool MDClass::probe() {
       }
     }
     setStatus(0x22, currentTrack);
+
     connected = true;
   }
-  if (connected) {
+  if (connected) { 
     activate_enhanced_gui();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-    md_track_select.on();
+    md_track_select.on(); 
+    MD.global.extendedMode = 2;
   }
 
   else {
