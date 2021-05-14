@@ -154,7 +154,13 @@ void SeqStepPage::loop() {
   if (recording)
     return;
 
+
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+
+  if (MDSeqTrack::sync_cursor) {
+     MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
+     MDSeqTrack::sync_cursor = 0;
+  }
 
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {

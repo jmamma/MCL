@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+bool MDSeqTrack::sync_cursor = 0;
+
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
   length = len;
@@ -61,6 +63,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == 0) {
       reset();
+      if (last_md_track == track_number) { sync_cursor = true; }
     }
   }
 

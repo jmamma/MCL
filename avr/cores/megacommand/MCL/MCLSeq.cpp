@@ -253,6 +253,7 @@ again:
   }
 
   if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
+  
   // Arp
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {

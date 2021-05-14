@@ -21,6 +21,8 @@ public:
   uint64_t oneshot_mask;
   uint8_t locks_params_orig[NUM_LOCKS];
 
+  static bool sync_cursor;
+
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
