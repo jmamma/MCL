@@ -33,6 +33,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   default:
     break;
   }
+
   bool send = true;
   MD.sendMachine(tracknumber, &(machine), send_level, send);
 }

@@ -5,6 +5,7 @@
 #include "LFOSeqTrack.h"
 #include "MDSeqTrack.h"
 #include "ExtSeqTrack.h"
+#include "ArpSeqTrack.h"
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -35,11 +36,17 @@ public:
 
 class MCLSeq : public ClockCallback {
 public:
+  bool uart_sidechannel;
+  bool realtime;
+
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
+  MDArpSeqTrack md_arp_tracks[NUM_MD_TRACKS];
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
+  ExtArpSeqTrack ext_arp_tracks[NUM_EXT_TRACKS];
+
   static constexpr uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 

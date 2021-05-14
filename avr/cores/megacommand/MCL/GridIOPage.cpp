@@ -4,7 +4,7 @@ uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
 uint8_t GridIOPage::old_grid = 0;
 
-void GridIOPage::cleanup() { proj.select_grid(old_grid); }
+void GridIOPage::cleanup() { trig_interface.send_md_leds(); proj.select_grid(old_grid); }
 
 void GridIOPage::init() {
   old_grid = proj.get_grid();
@@ -42,12 +42,12 @@ void GridIOPage::track_select_array_from_type_select(
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      if (note_interface.notes[n] > 0) {
+      if (note_interface.is_note(n)) {
         TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
-        if (note_interface.notes[n] == 1) {
+        if (note_interface.is_note_on(n)) {
           note_interface.ignoreNextEvent(n);
         }
-        note_interface.notes[n] = 0;
+        note_interface.clear_note(n);
       }
     }
     proj.toggle_grid();

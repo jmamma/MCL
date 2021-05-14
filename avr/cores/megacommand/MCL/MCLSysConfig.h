@@ -10,6 +10,7 @@
 #define MIDI_LOCAL_MODE 0
 
 extern void mclsys_apply_config();
+extern void mclsys_apply_config_midi();
 
 class MCLSysConfigData {
 public:

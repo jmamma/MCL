@@ -55,6 +55,14 @@ const uint8_t _popcount_lut[] = {
 
 uint8_t popcount(const uint8_t bits) { return _popcount_lut[bits]; }
 
+uint8_t popcount16(const uint16_t bits) {
+    return  _popcount_lut[((uint8_t*)&(bits))[0]] + _popcount_lut[((uint8_t*)&(bits))[1]];
+}
+
+uint8_t popcount32(const uint32_t bits) {
+    return  _popcount_lut[((uint8_t*)&(bits))[0]] + _popcount_lut[((uint8_t*)&(bits))[1]] + _popcount_lut[((uint8_t*)&(bits))[2]] + _popcount_lut[((uint8_t*)&(bits))[3]];
+}
+
 /** Return the length of a string. **/
 uint16_t m_strlen(const char *src) {
   uint16_t result = 0;

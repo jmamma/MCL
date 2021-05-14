@@ -17,6 +17,10 @@
 #define MDTEMPO_TRACK_TYPE 10
 #define MDLFO_TRACK_TYPE 11
 
+#define ARP_TRACK_TYPE 12
+#define MD_ARP_TRACK_TYPE 13
+#define EXT_ARP_TRACK_TYPE 14
+
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridChain.h"

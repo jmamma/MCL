@@ -28,6 +28,5 @@ class RoutePage : public LightPage {
 #else
  void draw_routes();
 #endif
- void update_globals();
 };
 #endif /* ROUTEPAGE_H__ */

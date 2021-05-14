@@ -65,7 +65,6 @@
 #include "GridTask.h"
 
 #include "MCLClipBoard.h"
-#include "MDExploit.h"
 #include "MDSound.h"
 #include "MDTrackSelect.h"
 
@@ -76,6 +75,7 @@
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
 
+#include "ArpSeqTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
 #include "MNMTrack.h"

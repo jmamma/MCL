@@ -334,7 +334,7 @@ again:
   if (recalc_latency) {
     calc_latency(&empty_track);
   }
-  if (next_step - (div32th_total_latency / 2) < MidiClock.div16th_counter) {
+  if (next_step - (div192th_total_latency / 6) < MidiClock.div16th_counter) {
     next_step += q;
     recalc_latency = false;
     goto again;
@@ -691,7 +691,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
       dev_latency[a].div32th_latency =
           round(div32th_per_second * latency_in_seconds) + 1;
       dev_latency[a].div192th_latency =
-          round(div192th_per_second * latency_in_seconds) + 6;
+          round(div192th_per_second * latency_in_seconds) + 7;
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;

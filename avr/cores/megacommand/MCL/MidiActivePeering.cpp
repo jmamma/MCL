@@ -106,16 +106,20 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   oled_display.setTextColor(WHITE, BLACK);
   if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
       pmidi->speed > 31250) {
+
+
+    if ((port == UART1_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART1) || (port == UART2_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
+      //Disable MidiClock/Transport on disconnected port.
+      MidiClock.mode = 255;
+      MidiClock.init();
+    }
     MidiUart.set_speed((uint32_t)31250, port);
+    DEBUG_PRINTLN("disconnecting");
     for (size_t i = 0; i < nr_drivers; ++i) {
       if (drivers[i]->connected)
         drivers[i]->disconnect();
     }
-#ifndef OLED_DISPLAY
-    char str[16];
-    GUI.flash_strings_fill(pmidi->device.get_name(str), "DISCONNECTED");
-#endif
-    // reset MidiID to none
+   // reset MidiID to none
     pmidi->device.init();
     // reset connected device to /dev/null
     *active_device = &null_midi_device;
@@ -124,44 +128,36 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     for (size_t i = 0; i < nr_drivers; ++i) {
 
       MidiIDSysexListener.setup(pmidi_class);
-      MidiUart.set_speed((uint32_t)31250, port);
-#ifdef OLED_DISPLAY
+
       auto oldfont = oled_display.getFont();
       prepare_display(resource_buf);
       uint8_t* icon = drivers[i]->icon();
       if (icon) {
         oled_display.drawBitmap(14, 8, icon, 34, 42, WHITE);
       }
-      oled_display.display();
-#else
-      GUI.clearLines();
-      GUI.setLine(GUI.LINE1);
-      GUI.put_string_at_fill(0, "Peering...");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-      LCD.goLine(1);
-      LCD.puts(GUI.lines[1].data);
-#endif
-
+      mcl_gui.delay_progress(0);
       for (int probe_retry = 0; probe_retry < 3 && !probe_success;
            ++probe_retry) {
+        DEBUG_PRINTLN("probing...");
         probe_success = drivers[i]->probe();
       } // for retries
 
       MidiIDSysexListener.cleanup();
       GUI.currentPage()->redisplay = true;
-#ifdef OLED_DISPLAY
       oled_display.setFont(oldfont);
-#endif
 
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
         drivers[i]->init_grid_devices();
         *active_device = drivers[i];
-#ifndef OLED_DISPLAY
-        GUI.flash_strings_fill(drivers[i].name, "CONNECTED");
-#endif
+        //Re-enable MidiClock/Transport recv
+        if (UART1_PORT && mcl_cfg.clock_rec == 0) {
+           MidiClock.mode = MidiClock.EXTERNAL_MIDI;
+        }
+        if (UART2_PORT && mcl_cfg.clock_rec == 1) {
+          MidiClock.mode = MidiClock.EXTERNAL_UART2;
+        }
         break;
       }
     } // for drivers

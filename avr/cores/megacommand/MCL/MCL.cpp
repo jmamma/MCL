@@ -106,23 +106,26 @@ void MCL::setup() {
 
 bool mcl_handleEvent(gui_event_t *event) {
 
-  DEBUG_PRINTLN("RECEV EVENT");
-  DEBUG_PRINTLN(event->source);
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    DEBUG_PRINTLN(key);
-    DEBUG_PRINTLN(MDX_KEY_REC);
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
+          key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
+        reset_undo();
+      }
+
       switch (key) {
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
-            GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_param_page) {
+            GUI.currentPage() != &seq_ptc_page) {
           GUI.setPage(&seq_step_page);
+          page_select_page.md_prepare();
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
-            MD.set_rec_mode(1);
+            MD.set_rec_mode(GUI.currentPage() == &seq_step_page);
+            GUI.currentPage()->redisplay = true;
+            clearLed2();
           } else {
             if (GUI.currentPage() == &seq_step_page) {
               MD.set_rec_mode(0);
@@ -134,11 +137,17 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         seq_step_page.bootstrap_record();
+        GUI.currentPage()->redisplay = true;
         return true;
       }
       case MDX_KEY_COPY: {
         if (GUI.currentPage() == &seq_step_page)
           break;
+        if (GUI.currentPage() != &seq_ptc_page &&
+            trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          //Ignore scale + copy if page != seq_step_page
+          break;
+        }
         opt_copy = 2;
         opt_copy_track_handler();
         break;
@@ -146,6 +155,11 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_PASTE: {
         if (GUI.currentPage() == &seq_step_page)
           break;
+        if (GUI.currentPage() != &seq_ptc_page &&
+            trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          //Ignore scale + copy if page != seq_step_page
+          break;
+        }
         opt_paste = 2;
         opt_paste_track_handler();
         break;
@@ -153,29 +167,26 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_CLEAR: {
         if (GUI.currentPage() == &seq_step_page)
           break;
+        if ((note_interface.notes_count_on() > 0) ||
+            (trig_interface.is_key_down(MDX_KEY_SCALE)))
+          break;
         opt_clear = 2;
         opt_clear_track_handler();
       }
       }
     }
+/*
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_REC: {
-        if (GUI.currentPage() != &seq_step_page &&
-            seq_step_page.recording == 0) {
-          page_select_page.md_prepare();
-          GUI.setPage(&grid_page);
-        }
         return true;
       }
       case MDX_KEY_REALTIME: {
-        seq_step_page.recording = 0;
-        MD.set_rec_mode(1);
-        clearLed2();
         return true;
       }
       }
     }
+*/
   }
 }
 

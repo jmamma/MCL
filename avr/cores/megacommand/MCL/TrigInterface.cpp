@@ -5,7 +5,7 @@ void TrigInterface::start() {}
 void TrigInterface::send_md_leds(TrigLEDMode mode) {
   uint16_t led_mask = 0;
   for (uint8_t i = 0; i < 16; i++) {
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       SET_BIT16(led_mask, i);
     }
   }
@@ -30,7 +30,6 @@ bool TrigInterface::on() {
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();
-  note_interface.notecount = 0;
   note_interface.init_notes();
   note_interface.note_proceed = true;
   return true;

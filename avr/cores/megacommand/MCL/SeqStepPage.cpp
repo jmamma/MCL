@@ -26,7 +26,7 @@ void SeqStepPage::config() {
   // 5
   info1[5] = 0;
 
-  config_mask_info();
+  config_mask_info((mask_type == MASK_PATTERN)); //false = transmit popup text for trig mode if required.
   config_encoders();
   // config menu
   config_as_trackedit();
@@ -57,12 +57,12 @@ void SeqStepPage::init() {
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
-  MD.set_seq_page(page_select);
+  trig_interface.send_md_leds(TRIGLED_STEPEDIT);
+  check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
-
   trigled_mask = 0;
   locks_on_step_mask = 0;
 
@@ -75,10 +75,9 @@ void SeqStepPage::init() {
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
   SeqPage::cleanup();
-  if (MidiClock.state != 2) {
-    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
-  }
+  params_reset();
   MD.set_rec_mode(0);
+  MD.popup_text(127, 2); //clear persistent trig mode popup
 }
 
 void SeqStepPage::display() {
@@ -109,10 +108,10 @@ void SeqStepPage::display() {
         uint8_t base = tuning->base;
         uint8_t notenum = seq_param4.cur + base;
         MusicalNotes number_to_note;
-        uint8_t oct = notenum / 12 - 1;
+        int8_t oct = notenum / 12 - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         strcpy(K, number_to_note.notes_upper[note]);
-        K[2] = oct + '0';
+        itoa(oct,K + 2,10);
         K[3] = 0;
       }
       draw_knob(3, "PTC", K);
@@ -121,9 +120,9 @@ void SeqStepPage::display() {
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu) && (tuning != NULL)) {
-    uint64_t note_mask = 0;
+    uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur + tuning->base;
-    SET_BIT64(note_mask, note - 24 * (note / 24));
+    SET_BIT64(note_mask, note);
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
     SeqPage::display();
   }
@@ -153,7 +152,13 @@ void SeqStepPage::loop() {
   if (recording)
     return;
 
+
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+
+  if (MDSeqTrack::sync_cursor) {
+     MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
+     MDSeqTrack::sync_cursor = 0;
+  }
 
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
@@ -161,7 +166,7 @@ void SeqStepPage::loop() {
 
     for (uint8_t n = 0; n < 16; n++) {
 
-      if (note_interface.notes[n] == 1) {
+      if (note_interface.is_note_on(n)) {
         uint8_t step = n + (page_select * 16);
         if (step < active_track.length) {
 
@@ -211,6 +216,9 @@ void SeqStepPage::loop() {
 
   if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
     mcl_seq.midi_events.update_params = true;
+    MD.midi_events.enable_live_kit_update();
+    seq_ptc_page.cc_link_enable = true;
+    RAMPage::cc_link_enable = true;
     update_params_queue = false;
   }
 
@@ -271,9 +279,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         config_encoders();
         MD.triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
-        // Don't allow display_refresh if last_md_track != MD.currentTrack
-        MD.currentTrack = track;
-        last_md_track = MD.currentTrack;
+        last_step = track; 
 
         if (MidiClock.state == 2) {
           mcl_seq.md_tracks[track].record_track(127);
@@ -289,7 +295,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       mcl_seq.midi_events.update_params = false;
-
+      update_params_queue = false;
+      MD.midi_events.disable_live_kit_update();
+      seq_ptc_page.cc_link_enable = false;
+      RAMPage::cc_link_enable = false;
       if (step >= active_track.length) {
         return true;
       }
@@ -308,7 +317,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           translate_to_knob_conditional(active_track.steps[step].cond_id,
                                         active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
-      if (pitch != active_track.locks_params_orig[0]) {
+      //if (pitch != active_track.locks_params_orig[0]) {
         uint8_t note_num = 255;
         tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
         if (tuning) {
@@ -325,7 +334,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           seq_param4.old = seq_param4.cur;
         }
-      }
+      //}
       // Micro
       //      if (note_interface.notes_count_on() <= 1) {
       if (utiming == 0) {
@@ -398,7 +407,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          if (note_interface.notes[n] == 1) {
+          if (note_interface.is_note_on(n)) {
             uint8_t s = n + (page_select * 16);
             active_track.clear_step_lock(s, param);
           }
@@ -408,7 +417,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         int8_t lock_idx = active_track.find_param(param);
 
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-          if (note_interface.notes[n] == 1) {
+          if (note_interface.is_note_on(n)) {
             uint8_t s = n + (page_select * 16);
             if (lock_idx == -1 || !active_track.steps[s].is_lock(lock_idx)) {
               DEBUG_PRINTLN("setting lock");
@@ -426,7 +435,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note copy
         if (step != 255) {
-          opt_copy_step_handler();
+          opt_copy_step_handler(255);
+          note_interface.ignoreNextEvent(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_copy_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
@@ -443,6 +453,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         // Note paste
         if (step != 255) {
           opt_paste_step_handler();
+          note_interface.ignoreNextEvent(step);
+          send_locks(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
@@ -458,8 +470,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         // Note clear
         if (step != 255) {
+          if (last_step != step) { reset_undo(); }
           opt_clear_step = 1;
-          opt_clear_step_locks_handler();
+          opt_clear_step_handler();
+          note_interface.ignoreNextEvent(step);
+          last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
@@ -477,9 +492,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         active_track.send_parameter_locks(step, true);
-        if (MidiClock.state != 2) {
-          reset_on_release = true;
-        }
+        reset_on_release = true;
         MD.triggerTrack(last_md_track, 127);
       }
       break;
@@ -577,7 +590,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
         } else {
           oled_display.textbox("CLEAR ", "TRACK");
-          active_track.clear_track();
+          mcl_seq.md_tracks[last_step].clear_track();
         }
         break;
       case REC_EVENT_CC:
@@ -654,6 +667,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param > 23) {
     return;
   }
+
   if (SeqPage::recording) {
     // Record CC
     seq_step_page.last_rec_event = REC_EVENT_CC;
@@ -662,8 +676,6 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
 
     seq_step_page.last_param_id = track_param;
-    last_md_track = track;
-    last_md_track = MD.currentTrack;
     // ignore level
     if (track_param > 31) {
       return;
@@ -679,7 +691,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   uint8_t store_lock = 255;
   for (int i = 0; i < 16; i++) {
-    if ((note_interface.notes[i] == 1)) {
+    if ((note_interface.is_note_on(i))) {
       step = i + (SeqPage::page_select * 16);
       if (step < active_track.length) {
         if (active_track.set_track_locks(step, track_param, value)) {

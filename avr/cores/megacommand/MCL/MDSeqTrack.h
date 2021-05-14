@@ -21,6 +21,8 @@ public:
   uint64_t oneshot_mask;
   uint8_t locks_params_orig[NUM_LOCKS];
 
+  static bool sync_cursor;
+
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
@@ -32,7 +34,7 @@ public:
   bool get_step(uint8_t step, uint8_t mask_type) const;
   void set_step(uint8_t step, uint8_t mask_type, bool val);
 
-  void seq();
+  void seq(MidiUartParent *uart_);
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
@@ -71,8 +73,8 @@ public:
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
   void clear_step_lock(uint8_t step, uint8_t param_id);
-  void clear_locks(bool reset_params = true);
-  void clear_track(bool locks = true, bool reset_params = true);
+  void clear_locks(bool reset_params_ = true);
+  void clear_track(bool locks = true, bool reset_params_ = true);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
   void update_kit_params();
@@ -90,7 +92,7 @@ public:
 
   void modify_track(uint8_t dir);
 
-  void set_speed(uint8_t _speed);
+  void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);

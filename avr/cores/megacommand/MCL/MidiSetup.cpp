@@ -2,18 +2,18 @@
 
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();
-  MidiClock.stop();
 
-  if (mcl_cfg.midi_forward == 1) {
+  if (mcl_cfg.midi_forward == 1 || mcl_cfg.midi_forward == 3) {
     Midi.forward = true;
   } else {
     Midi.forward = false;
   }
-  if (mcl_cfg.midi_forward == 2) {
+  if (mcl_cfg.midi_forward == 2 || mcl_cfg.midi_forward == 3) {
     Midi2.forward = true;
   } else {
     Midi2.forward = false;
   }
+
   if (mcl_cfg.clock_send == 1) {
     MidiClock.transmit_uart2 = true;
   } else {
@@ -33,23 +33,17 @@ void MidiSetup::cfg_ports() {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
-  if (MD.connected) {
-    md_exploit.send_globals();
-
-    delay(100);
-
-    md_exploit.switch_global(7);
-  }
 
   if (elektron_devs[0]) {
+    elektron_devs[0]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
   }
   if (mcl_cfg.uart2_device == 0) {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
   } else if (elektron_devs[1]) {
+    elektron_devs[1]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
   }
-  MidiClock.start();
 }

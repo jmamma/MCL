@@ -45,6 +45,8 @@ public:
   volatile uint8_t overflow;
   #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
+  /** Reset the buffer **/
+  ALWAYS_INLINE() void init() volatile;
   /** Add a new element c to the ring buffer. **/
   ALWAYS_INLINE() void put(C c) volatile;
   /** copy n elements from src buffer to ring buffer **/
@@ -84,11 +86,19 @@ public:
 template <class C, int N, class T>
 CRingBuffer<C, N, T>::CRingBuffer(volatile uint8_t *_ptr) {
   ptr = reinterpret_cast<volatile C *>(_ptr);
+  init();
+}
+
+template <class C, int N, class T>
+void CRingBuffer<C, N, T>::init() volatile {
+  USE_LOCK();
+  SET_LOCK();
   rd = 0;
   wr = 0;
   #ifdef CHECKING
   overflow = 0;
   #endif
+  CLEAR_LOCK();
 }
 
 template <class C, int N, class T>

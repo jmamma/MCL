@@ -36,6 +36,7 @@ void MidiClockClass::init() {
   beat_counter = 1;
   step_counter = 1;
   isInit = false;
+  clearLed();
 }
 
 uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock,

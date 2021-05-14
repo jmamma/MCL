@@ -97,6 +97,8 @@ class MidiUartClass;
 #else
 #define TX_BUF_TYPE uint8_t
 #endif
+
+extern uint16_t clock_measure;
 void isr_usart1(uint8_t caller);
 void isr_usart2(uint8_t caller);
 void isr_midi();
@@ -124,9 +126,14 @@ public:
 
   void set_speed(uint32_t speed, uint8_t port);
 
+  int8_t in_message;
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
 };
+
+extern MidiUartClass seq_tx1;
+extern MidiUartClass seq_tx2;
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;
@@ -152,14 +159,18 @@ public:
     UART2_SET_ISR_TX_BIT();
   #endif
   }
-
+  int8_t in_message;
   ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   #ifdef UART2_TX
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
   #endif
 };
 
 extern MidiUartClass2 MidiUart2;
+
+extern MidiUartClass2 seq_tx3;
+extern MidiUartClass2 seq_tx4;
 
 #endif /* MIDI_UART_H__ */

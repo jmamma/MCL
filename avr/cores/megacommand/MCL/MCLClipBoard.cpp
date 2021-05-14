@@ -152,8 +152,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
            sizeof(md_track->seq_data));
 
-    mcl_seq.md_tracks[track].length = md_track->chain.length;
-    mcl_seq.md_tracks[track].speed = md_track->chain.speed;
+    mcl_seq.md_tracks[track].set_length(md_track->chain.length);
+    mcl_seq.md_tracks[track].set_speed(md_track->chain.speed);
 
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
@@ -165,7 +165,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
       md_track->machine.lfo.destinationTrack = track;
     }
     DEBUG_PRINTLN(F("sending seq track"));
-    bool send_machine = true, send_level = true;
+    bool send_machine = true;
+    bool send_level = true;
     MD.sendMachine(track, &(md_track->machine), send_level, send_machine);
   }
   else {

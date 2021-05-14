@@ -341,8 +341,6 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
-      MD.getCurrentTrack(CALLBACK_TIMEOUT);
-      last_md_track = MD.currentTrack;
       GUI.setPage(p);
     }
     return true;

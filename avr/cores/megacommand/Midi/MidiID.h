@@ -21,7 +21,7 @@ public:
   void init();
   void send_id_request(uint8_t id, uint8_t port);
   bool getBlockingId(uint8_t id, uint8_t port, uint16_t timeout);
-  uint8_t waitForId(uint16_t timeout);
+  uint8_t waitForId(uint8_t id, uint8_t port, uint16_t timeout);
   uint8_t get_id();
   void set_id(uint8_t id);
   char *get_name(char *str);
