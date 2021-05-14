@@ -57,18 +57,7 @@ static SeqPage *opt_seqpage_capture = nullptr;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
-void SeqPage::create_chars_seq() {
-  uint8_t temp_charmap1[8] = {0, 15, 16, 16, 16, 15, 0};
-  uint8_t temp_charmap2[8] = {0, 31, 0, 0, 0, 31, 0};
-  uint8_t temp_charmap3[8] = {0, 30, 1, 1, 1, 30, 0};
-  uint8_t temp_charmap4[8] = {0, 27, 4, 4, 4, 27, 0};
-  LCD.createChar(6, temp_charmap1);
-  LCD.createChar(3, temp_charmap2);
-  LCD.createChar(4, temp_charmap3);
-  LCD.createChar(5, temp_charmap4);
-}
-
-void SeqPage::setup() { create_chars_seq(); }
+void SeqPage::setup() { }
 
 void SeqPage::check_and_set_page_select() {
     if (page_select >= page_count ||
