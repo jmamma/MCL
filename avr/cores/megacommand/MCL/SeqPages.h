@@ -47,7 +47,6 @@ extern MCLEncoder seq_param4;
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
 
-#include "SeqParamPage.h"
 #include "SeqPtcPage.h"
 #include "SeqStepPage.h"
 
@@ -58,7 +57,6 @@ extern uint8_t last_ext_track;
 
 extern uint8_t last_md_track;
 
-extern SeqParamPage seq_param_page[NUM_PARAM_PAGES];
 extern SeqStepPage seq_step_page;
 
 #ifdef EXT_TRACKS

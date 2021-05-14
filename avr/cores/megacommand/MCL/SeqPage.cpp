@@ -123,7 +123,6 @@ void SeqPage::params_reset() {
 
 void SeqPage::bootstrap_record() {
   if (GUI.currentPage() != &seq_step_page &&
-      GUI.currentPage() != &seq_param_page &&
       GUI.currentPage() != &seq_ptc_page) {
     GUI.setPage(&seq_step_page);
   }
@@ -447,7 +446,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       }
       if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
 
-        GUI.setPage(&seq_param_page[0]);
         return false;
       }
       if (EVENT_PRESSED(event, Buttons.ENCODER4)) {

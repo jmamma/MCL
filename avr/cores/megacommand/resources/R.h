@@ -215,12 +215,6 @@ struct __T_icons_page {
   static constexpr size_t countof_icon_step = 75 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_step = 75;
   union {
-    unsigned char icon_para[0];
-    char zz__icon_para[57];
-  };
-  static constexpr size_t countof_icon_para = 57 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_para = 57;
-  union {
     unsigned char icon_wavd[0];
     char zz__icon_wavd[57];
   };
@@ -244,7 +238,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
-  static constexpr size_t __total_size = 957;
+  static constexpr size_t __total_size = 900;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
@@ -390,11 +384,11 @@ extern const unsigned char __R_page_entries[] PROGMEM;
 struct __T_page_entries {
   union {
     PageSelectEntry Entries[0];
-    char zz__Entries[360];
+    char zz__Entries[336];
   };
-  static constexpr size_t countof_Entries = 360 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 360;
-  static constexpr size_t __total_size = 360;
+  static constexpr size_t countof_Entries = 336 / sizeof(PageSelectEntry);
+  static constexpr size_t sizeofof_Entries = 336;
+  static constexpr size_t __total_size = 336;
 };
 
 extern const unsigned char __R_tuning[] PROGMEM;

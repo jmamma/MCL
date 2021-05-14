@@ -117,8 +117,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
-            GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_param_page) {
+            GUI.currentPage() != &seq_ptc_page) {
           GUI.setPage(&seq_step_page);
           page_select_page.md_prepare();
         } else {
@@ -145,7 +144,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() == &seq_step_page)
           break;
         if (GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_param_page && trig_interface.is_key_down(MDX_KEY_SCALE)) {
+            trig_interface.is_key_down(MDX_KEY_SCALE)) {
           //Ignore scale + copy if page != seq_step_page
           break;
         }
@@ -157,7 +156,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() == &seq_step_page)
           break;
         if (GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_param_page && trig_interface.is_key_down(MDX_KEY_SCALE)) {
+            trig_interface.is_key_down(MDX_KEY_SCALE)) {
           //Ignore scale + copy if page != seq_step_page
           break;
         }
