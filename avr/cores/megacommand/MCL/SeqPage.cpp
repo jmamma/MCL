@@ -1259,7 +1259,7 @@ void opt_copy_step_handler(uint8_t op) {
 void opt_paste_step_handler() {
   if (opt_undo == STEP_UNDO) {
     opt_undo = 255;
-    char str[] = "UNDO CLEAR STEP";
+    char str[] = "UNDO STEP";
     oled_display.textbox(str, "");
     MD.popup_text(str);
   } else {
