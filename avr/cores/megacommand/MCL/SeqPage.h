@@ -64,6 +64,7 @@ extern void opt_clear_step_handler();
 extern void seq_menu_handler();
 extern void step_menu_handler();
 
+
 class MidiDevice;
 
 extern inline void reset_undo() {

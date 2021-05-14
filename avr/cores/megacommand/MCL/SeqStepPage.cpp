@@ -57,7 +57,7 @@ void SeqStepPage::init() {
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
-  trig_interface.send_md_leds(TRIGLED_OVERLAY);
+  trig_interface.send_md_leds(TRIGLED_STEPEDIT);
   check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
@@ -279,9 +279,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         config_encoders();
         MD.triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
-        // Don't allow display_refresh if last_md_track != MD.currentTrack
-        MD.currentTrack = track;
-        last_md_track = MD.currentTrack;
+        last_step = track; 
 
         if (MidiClock.state == 2) {
           mcl_seq.md_tracks[track].record_track(127);
@@ -592,7 +590,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
         } else {
           oled_display.textbox("CLEAR ", "TRACK");
-          active_track.clear_track();
+          mcl_seq.md_tracks[last_step].clear_track();
         }
         break;
       case REC_EVENT_CC:

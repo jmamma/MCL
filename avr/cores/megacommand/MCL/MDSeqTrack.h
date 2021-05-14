@@ -73,8 +73,8 @@ public:
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
   void clear_step_lock(uint8_t step, uint8_t param_id);
-  void clear_locks(bool reset_params = true);
-  void clear_track(bool locks = true, bool reset_params = true);
+  void clear_locks(bool reset_params_ = true);
+  void clear_track(bool locks = true, bool reset_params_ = true);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
   void update_kit_params();

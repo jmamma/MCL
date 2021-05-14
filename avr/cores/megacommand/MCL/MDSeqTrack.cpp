@@ -718,7 +718,7 @@ void MDSeqTrack::clear_conditional() {
   oneshot_mask = 0;
 }
 
-void MDSeqTrack::clear_locks(bool reset_params) {
+void MDSeqTrack::clear_locks(bool reset_params_) {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
@@ -729,22 +729,17 @@ void MDSeqTrack::clear_locks(bool reset_params) {
   }
 
   memset(locks, 0, sizeof(locks));
-  if (reset_params) {
-    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-      if (locks_params_buf[c] > 0) {
-        MD.setTrackParam(track_number, locks_params_buf[c] - 1,
-                         locks_params_orig[c]);
-      }
-    }
+  if (reset_params_) {
+  reset_params();
   }
   cur_event_idx = 0;
 }
 
-void MDSeqTrack::clear_track(bool locks, bool reset_params) {
+void MDSeqTrack::clear_track(bool locks, bool reset_params_) {
   clear_conditional();
   if (locks) {
     DEBUG_DUMP("clear locks");
-    clear_locks(reset_params);
+    clear_locks(reset_params_);
   }
   memset(steps, 0, sizeof(steps));
 }

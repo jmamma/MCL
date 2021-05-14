@@ -127,6 +127,7 @@ void SeqPage::bootstrap_record() {
       GUI.currentPage() != &seq_ptc_page) {
     GUI.setPage(&seq_step_page);
   }
+  trig_interface.send_md_leds(TRIGLED_OVERLAY);
   seq_step_page.recording = true;
   setLed2();
   MD.set_rec_mode(2);
