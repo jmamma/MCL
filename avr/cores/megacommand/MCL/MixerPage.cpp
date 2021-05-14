@@ -67,6 +67,7 @@ void MixerPage::setup() {
 }
 
 void MixerPage::init() {
+  memcpy(params, MD.kit.params, sizeof(params));
   level_pressmode = 0;
   for (uint8_t i = 0; i < 4; i++) {
     encoders[i]->cur = 64;
@@ -393,7 +394,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&page_select_page);
     return true;
   }
-  /*
+  
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.is_note_on(i)) {
@@ -408,7 +409,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  */
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
