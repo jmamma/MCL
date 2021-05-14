@@ -450,6 +450,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         // Note paste
         if (step != 255) {
           opt_paste_step_handler();
+          send_locks(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
@@ -486,9 +487,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         active_track.send_parameter_locks(step, true);
-        if (MidiClock.state != 2) {
-          reset_on_release = true;
-        }
+        reset_on_release = true;
         MD.triggerTrack(last_md_track, 127);
       }
       break;
