@@ -125,6 +125,13 @@ void SeqPage::cleanup() {
   clearLed2();
 }
 
+void SeqPage::params_reset() {
+  MDTrack md_track;
+  md_track.machine.model = MD.kit.models[last_md_track];
+  MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
+  MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+}
+
 void SeqPage::bootstrap_record() {
   if (GUI.currentPage() != &seq_step_page &&
       GUI.currentPage() != &seq_param_page &&

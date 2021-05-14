@@ -43,11 +43,7 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
-
-  MDTrack md_track;
-  md_track.machine.model = MD.kit.models[last_md_track];
-  MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
-  MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+  params_reset();
 }
 void SeqPtcPage::config_encoders() {
   ptc_param_len.min = 1;
