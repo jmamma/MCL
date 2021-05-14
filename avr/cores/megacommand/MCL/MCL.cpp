@@ -120,6 +120,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             GUI.currentPage() != &seq_ptc_page &&
             GUI.currentPage() != &seq_param_page) {
           GUI.setPage(&seq_step_page);
+          page_select_page.md_prepare();
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
