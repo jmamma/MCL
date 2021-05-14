@@ -33,15 +33,14 @@ void MidiSetup::cfg_ports() {
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
 
-  elektron_devs[0]->setup();
-  elektron_devs[1]->setup();
-
   if (elektron_devs[0]) {
+    elektron_devs[0]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
   }
   if (mcl_cfg.uart2_device == 0) {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
   } else if (elektron_devs[1]) {
+    elektron_devs[1]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
