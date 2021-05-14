@@ -1175,8 +1175,6 @@ void opt_clear_page_handler() {
   }
 }
 
-void opt_copy_page_handler() { opt_copy_page_handler(255); }
-
 void opt_copy_page_handler(uint8_t op) {
   bool silent = false;
   opt_undo = 255;
@@ -1221,31 +1219,57 @@ void opt_paste_page_handler() {
 }
 
 void opt_clear_step_handler() {
-#ifdef OLED_DISPLAY
-  oled_display.textbox("CLEAR STEP", "");
-#endif
-  MD.popup_text(14);
+  if (opt_undo != 255) {
+    if (opt_undo != STEP_UNDO) {
+      opt_undo = 255;
+      goto CLEAR;
+    }
+    opt_paste_step_handler();
+    return;
+  } else {
+  CLEAR:
+    opt_copy_step_handler(STEP_UNDO);
+  }
+  char str[] = "CLEAR STEP";
+  oled_display.textbox(str, "");
+  MD.popup_text(str);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
   mcl_seq.md_tracks[last_md_track].paste_step(
       SeqPage::step_select + SeqPage::page_select * 16, &empty_step);
 }
 
-void opt_copy_step_handler() {
-#ifdef OLED_DISPLAY
-  oled_display.textbox("COPY STEP", "");
-#endif
-  MD.popup_text(13);
+void opt_copy_step_handler(uint8_t op) {
+  bool silent = false;
+  opt_undo = 255;
+  if (op != 255) {
+    opt_undo = op;
+    silent = true;
+  }
+  if (!silent) {
+    char str[] = "COPY STEP";
+    oled_display.textbox(str, "");
+    MD.popup_text(str);
+  }
   mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select +
                                                  SeqPage::page_select * 16,
                                              &mcl_clipboard.steps[0]);
 }
 
 void opt_paste_step_handler() {
+  if (opt_undo == STEP_UNDO) {
+    opt_undo = 255;
+    char str[] = "UNDO CLEAR STEP";
+    oled_display.textbox(str, "");
+    MD.popup_text(str);
+  } else {
+
+  char str2[] = "PASTE STEP";
 #ifdef OLED_DISPLAY
-  oled_display.textbox("PASTE STEP", "");
+  oled_display.textbox(str2, "");
 #endif
-  MD.popup_text(15);
+  MD.popup_text(str2);
+  }
   mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select +
                                                   SeqPage::page_select * 16,
                                               &mcl_clipboard.steps[0]);
