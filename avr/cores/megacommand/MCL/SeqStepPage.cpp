@@ -667,6 +667,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param > 23) {
     return;
   }
+
   if (SeqPage::recording) {
     // Record CC
     seq_step_page.last_rec_event = REC_EVENT_CC;
@@ -675,8 +676,6 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
 
     seq_step_page.last_param_id = track_param;
-    last_md_track = track;
-    last_md_track = MD.currentTrack;
     // ignore level
     if (track_param > 31) {
       return;
