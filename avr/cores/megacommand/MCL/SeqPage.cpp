@@ -940,12 +940,17 @@ void opt_clear_track_handler() {
 #ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR MD ", "TRACKS");
 #endif
-
+      uint8_t old_mutes[16];
+      for (uint8_t n = 0; n < 16; n++) {
+        old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
+        mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+      }
       if (copy) {
         opt_copy_track_handler(opt_clear);
       }
       for (uint8_t n = 0; n < 16; ++n) {
         mcl_seq.md_tracks[n].clear_track();
+        mcl_seq.md_tracks[n].mute_state = old_mutes[n];
       }
     } else if (opt_clear == 1) {
 #ifdef OLED_DISPLAY
