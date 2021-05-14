@@ -110,10 +110,10 @@ void SeqStepPage::display() {
         uint8_t base = tuning->base;
         uint8_t notenum = seq_param4.cur + base;
         MusicalNotes number_to_note;
-        uint8_t oct = notenum / 12 - 1;
+        int8_t oct = notenum / 12 - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         strcpy(K, number_to_note.notes_upper[note]);
-        K[2] = oct + '0';
+        itoa(oct,K + 2,10);
         K[3] = 0;
       }
       draw_knob(3, "PTC", K);
@@ -315,7 +315,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           translate_to_knob_conditional(active_track.steps[step].cond_id,
                                         active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
-      if (pitch != active_track.locks_params_orig[0]) {
+      //if (pitch != active_track.locks_params_orig[0]) {
         uint8_t note_num = 255;
         tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
         if (tuning) {
@@ -332,7 +332,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           seq_param4.old = seq_param4.cur;
         }
-      }
+      //}
       // Micro
       //      if (note_interface.notes_count_on() <= 1) {
       if (utiming == 0) {
