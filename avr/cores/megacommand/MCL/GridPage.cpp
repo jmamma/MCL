@@ -715,22 +715,24 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  // TRACK READ PAGE
+  
+  if (!show_slot_menu) {
+    // TRACK READ PAGE
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      grid_save_page.isSetup = false;
+      GUI.setPage(&grid_save_page);
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    grid_save_page.isSetup = false;
-    GUI.setPage(&grid_save_page);
+      return true;
+    }
 
-    return true;
-  }
+    // TRACK WRITE PAGE
 
-  // TRACK WRITE PAGE
+    if  (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+      grid_write_page.isSetup = false;
+      GUI.setPage(&grid_write_page);
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    grid_write_page.isSetup = false;
-    GUI.setPage(&grid_write_page);
-
-    return true;
+      return true;
+    }
   }
 
 #ifdef OLED_DISPLAY
