@@ -20,6 +20,9 @@ void TrigInterface::enable_listener() {
 void TrigInterface::disable_listener() { sysex->removeSysexListener(this); }
 
 bool TrigInterface::on() {
+  note_interface.init_notes();
+  cmd_key_state = 0;
+  note_interface.note_proceed = true;
 
   if (state) {
     return false;
@@ -30,8 +33,6 @@ bool TrigInterface::on() {
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
   MD.activate_trig_interface();
-  note_interface.init_notes();
-  note_interface.note_proceed = true;
   return true;
 }
 
