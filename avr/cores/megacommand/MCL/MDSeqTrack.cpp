@@ -372,11 +372,11 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
   }
 }
 
-void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params) {
+void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_enabled) {
   uint16_t lock_idx = get_lockidx(step);
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    bool lock_present = steps[step].is_lock(c);
     bool lock_bit = steps[step].is_lock_bit(c);
+    bool lock_present = lock_bit & (steps[step].locks_enabled || ignore_locks_enabled);
     if (locks_params[c]) {
       uint8_t param = locks_params[c] - 1;
       if (lock_present) {

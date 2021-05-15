@@ -44,7 +44,7 @@ public:
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
   ALWAYS_INLINE() void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
-  void get_step_locks(uint8_t step, uint8_t *params);
+  void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
 
   ALWAYS_INLINE() void recalc_slides();
   ALWAYS_INLINE()

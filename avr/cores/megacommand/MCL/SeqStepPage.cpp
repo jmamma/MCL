@@ -242,7 +242,8 @@ void SeqStepPage::send_locks(uint8_t step) {
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
   uint8_t params[24];
   memset(params, 255, 24);
-  active_track.get_step_locks(step, params);
+  bool ignore_locks_disabled = true;
+  active_track.get_step_locks(step, params, ignore_locks_disabled);
   MD.activate_encoder_interface(params);
 }
 
