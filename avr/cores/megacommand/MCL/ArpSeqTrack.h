@@ -35,7 +35,6 @@
 class ArpSeqData {
   public:
   uint8_t notes[ARP_MAX_NOTES]; //output notes
-  
   uint8_t len;
   uint8_t idx;
 
@@ -53,22 +52,27 @@ class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
 
 public:
   uint8_t last_note_on;
-  ArpSeqTrack() : SeqTrackBase() { 
+  ArpSeqTrack() : SeqTrackBase() {
     active = ARP_TRACK_TYPE;
     init();
-  } 
+  }
+
+  void clear_notes() {
+    len = 0;
+    idx = 0;
+    memset(note_mask,0,2);
+    last_note_on = 255;
+  }
+
   void init() {
     speed = SEQ_SPEED_2X;
     rate = 1;
     length = 1 << rate; //Arp rate is function of length
-    enabled = false; 
-    len = 0;  
-    idx = 0;  
-    memset(note_mask,0,2);
-    last_note_on = 255;
+    enabled = false;
     range = 0;
     oct = 1;
     fine_tune = 0;
+    clear_notes();
   }
 
   ALWAYS_INLINE() void reset() {

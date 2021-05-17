@@ -16,12 +16,14 @@ extern MCLEncoder arp_enabled;
 class ArpPage : public LightPage {
 public:
   ArpSeqTrack *arp_track;
+  ArpSeqTrack *last_arp_track;
 
   ArpPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-      }
-  
+  last_arp_track = nullptr;
+  }
+
   bool handleEvent(gui_event_t *event);
   void track_update();
   void loop();
