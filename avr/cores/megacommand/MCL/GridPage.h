@@ -19,12 +19,15 @@ class GridPage : public LightPage {
 public:
   GridRowHeader row_headers[MAX_VISIBLE_ROWS];
 
+  float frames_fps;
   uint8_t cursor_x = 0;
   uint8_t cursoy_y = 0;
   uint8_t col = 0;
   uint8_t row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
+  uint16_t frames = 0;
+  uint16_t frames_startclock = 0;
   uint16_t grid_lastclock = 0;
   uint8_t display_name = 0;
 
@@ -39,6 +42,9 @@ public:
 
   uint8_t slot_copy;
   uint8_t slot_paste;
+
+  uint32_t slot_buffer_mask;
+  uint8_t slot_buffer_row;
 
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
