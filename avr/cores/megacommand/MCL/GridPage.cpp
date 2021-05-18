@@ -200,16 +200,13 @@ void GridPage::display_counters() {
   uint8_t y_offset = 8;
   uint8_t x_offset = 20;
 
-  char val[4];
-  // val[0] = (MidiClock.bar_counter / 100) + '0';
-  val[0] = (MidiClock.bar_counter % 100) / 10 + '0';
-  val[1] = (MidiClock.bar_counter % 10) + '0';
+  char val[3];
   val[2] = '\0';
+
+  GUI.put_value_at2(0, MidiClock.bar_counter, val);
+
   if (val[0] == '0') {
     val[0] = (char)0x60;
-    //  if (val[1] == '0') {
-    //    val[1] = (char)0x60;
-    // }
   }
 
   oled_display.setFont(&TomThumb);
@@ -222,9 +219,7 @@ void GridPage::display_counters() {
   if ((mcl_cfg.chain_mode > 0) &&
       (mcl_actions.next_transition != (uint16_t)-1) &&
       (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
-    // val[0] = (mcl_actions.nearest_bar / 100) + '0';
-    val[0] = (mcl_actions.nearest_bar % 100) / 10 + '0';
-    val[1] = (mcl_actions.nearest_bar % 10) + '0';
+    GUI.put_value_at2(0, mcl_actions.nearest_bar, val);
 
     if (val[0] == '0') {
       val[0] = (char)0x60;
@@ -285,14 +280,11 @@ void GridPage::display_grid_info() {
   oled_display.print(':');
 
   char val[4];
-  val[0] = (encoders[0]->cur % 100) / 10 + '0';
-  val[1] = (encoders[0]->cur % 10) + '0';
+  GUI.put_value_at2(0, encoders[0]->cur, val);
   val[2] = '\0';
   oled_display.print(val);
   oled_display.print(" ");
-  val[0] = encoders[1]->cur / 100 + '0';
-  val[1] = (encoders[1]->cur % 100) / 10 + '0';
-  val[2] = (encoders[1]->cur % 10) + '0';
+  GUI.put_value_at(0, encoders[1]->cur, val);
   val[3] = '\0';
   oled_display.print(val);
 
