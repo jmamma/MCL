@@ -60,7 +60,7 @@ public:
    * This is used by most methods of the MDClass because they look up
    * the channel settings and the trigger settings of the MachineDrum.
    **/
-  MDGlobal global;
+  MDGlobalLight global;
 
   virtual bool probe();
   virtual void setup();
@@ -73,7 +73,7 @@ public:
 
   virtual ElektronSysexObject *getKit() { return &kit; }
   virtual ElektronSysexObject *getPattern() { return &pattern; }
-  virtual ElektronSysexObject *getGlobal() { return &global; }
+  virtual ElektronSysexObject *getGlobal() { return nullptr; }
   virtual ElektronSysexListenerClass *getSysexListener() {
     return &MDSysexListener;
   }

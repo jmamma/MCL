@@ -7,7 +7,6 @@
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 #include "PolyPage.h"
-#include "SDDrivePage.h"
 #include "GridPages.h"
 #include "TextInputPage.h"
 #include "SeqPages.h"
@@ -27,7 +26,7 @@ extern MCLEncoder config_param7;
 
 extern void new_proj_handler();
 
-extern MenuPage<9> system_page;
+extern MenuPage<8> system_page;
 extern MenuPage<6> midi_config_page;
 extern MenuPage<3> md_config_page;
 extern MenuPage<1> mcl_config_page;

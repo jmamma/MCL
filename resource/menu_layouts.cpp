@@ -9,7 +9,7 @@
   ExitFunc
   ExitPage
  ***/
-menu_t<9> system_menu_layout = {
+menu_t<8> system_menu_layout = {
     "GLOBAL",
     {
         //               m  r  n  d  p  f  o
@@ -20,7 +20,6 @@ menu_t<9> system_menu_layout = {
         {"MACHINEDRUM",  0, 0, 0, 0, 4, 0, 0},
         {"CHAIN MODE",   0, 0, 0, 0, 5, 0, 0},
         {"AUX PAGES",    0, 0, 0, 0, 6, 0, 0},
-        {"SD DRIVE",     0, 0, 0, 0, 7, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, 8, 0, 0},
     },
     0, 0

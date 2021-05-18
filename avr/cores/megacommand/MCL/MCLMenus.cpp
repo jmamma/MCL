@@ -27,7 +27,6 @@ const Page *const menu_target_pages[] PROGMEM = {
     (Page *)&md_config_page,
     (Page *)&chain_config_page,
     (Page *)&aux_config_page,
-    (Page *)&sddrive_page,
     (Page *)&mcl_config_page,
 
     // 9 - ram_config_page
@@ -118,7 +117,7 @@ const menu_function_t menu_target_functions[] PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
-MenuPage<9> system_page(&options_param1, &options_param2);
+MenuPage<8> system_page(&options_param1, &options_param2);
 MenuPage<6> midi_config_page(&config_param1, &config_param3);
 MenuPage<3> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);

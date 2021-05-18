@@ -81,13 +81,7 @@ const ElektronSysexProtocol md_protocol = {
 
 MDClass::MDClass()
     : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {
-  uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
-                                     50, 52, 53, 55, 57, 59, 60, 62};
 
-  global.baseChannel = 0;
-  for (int i = 0; i < 16; i++) {
-    global.drumMapping[i] = standardDrumMapping[i];
-  }
 }
 
 void MDClass::setup() {
@@ -178,7 +172,7 @@ bool MDClass::probe() {
   if (ti) {
     trig_interface.off();
   }
-
+  DEBUG_PRINTLN("md probe");
   connected = false;
 
   // Begin main probe sequence
