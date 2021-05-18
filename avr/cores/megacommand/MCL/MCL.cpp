@@ -119,7 +119,6 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() != &seq_step_page &&
             GUI.currentPage() != &seq_ptc_page) {
           GUI.setPage(&seq_step_page);
-          trig_interface.ignoreNextEvent(MDX_KEY_REC);
           page_select_page.md_prepare();
         } else {
           if (seq_step_page.recording) {
@@ -127,7 +126,11 @@ bool mcl_handleEvent(gui_event_t *event) {
             MD.set_rec_mode(GUI.currentPage() == &seq_step_page);
             GUI.currentPage()->redisplay = true;
             clearLed2();
-            trig_interface.ignoreNextEvent(MDX_KEY_REC);
+          } else {
+            if (GUI.currentPage() == &seq_step_page) {
+              MD.set_rec_mode(0);
+              GUI.setPage(&grid_page);
+            }
           }
         }
         return true;
@@ -176,23 +179,18 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_REC: {
-       // if (!SeqPage::recording && GUI.currentPage() == &seq_ptc_page) {
-        if (!SeqPage::recording) {
-          if (GUI.currentPage() != &seq_step_page) {
+        if (!SeqPage::recording && GUI.currentPage() == &seq_ptc_page) {
+        if (GUI.currentPage() != &seq_step_page) {
             GUI.setPage(&seq_step_page);
             page_select_page.md_prepare();
-          } 
-          else  {      
-            MD.set_rec_mode(0);
-            GUI.setPage(&grid_page);
-          }
+          }   
+          return true;
         }
-        return true;
       }
       case MDX_KEY_REALTIME: {
         return true;
       }
-     }
+      }
     }
 
   }
