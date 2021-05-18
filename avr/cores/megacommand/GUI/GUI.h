@@ -259,31 +259,42 @@ public:
    */
 
   void put_value_at1(uint8_t idx, uint8_t value);
+  void put_value_at1(uint8_t idx, uint8_t value, char *data);
+  
   void put_value_at2(uint8_t idx, uint8_t value);
+  void put_value_at2(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 4 character increments).
    * **/
   void put_value(uint8_t idx, uint8_t value);
+  void put_value(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 4 character increments).
    * **/
   void put_value(uint8_t idx, int value);
+  void put_value(uint8_t idx, int value, char *data);
   /** Display the value in base 16 at the given idx (in 4 character increments).
    * **/
   void put_value16(uint8_t idx, uint16_t value);
+  void put_value16(uint8_t idx, uint16_t value, char *data);
   /** Display the value in base 16 at the given idx (in 4 character increments).
    * **/
   void put_valuex(uint8_t idx, uint8_t value);
+  void put_valuex(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 1 character increments).
    * **/
   void put_value_at(uint8_t idx, uint8_t value);
+  void put_value_at(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 1 character increments).
    * **/
   void put_value_at(uint8_t idx, int value);
+  void put_value_at(uint8_t idx, int value, char *data);
   /** Display the value in base 16 at the given idx (in 1 character increments).
    * **/
   void put_value16_at(uint8_t idx, uint16_t value);
+  void put_value16_at(uint8_t idx, uint16_t value,  char *data);
   /** Display the value in base 16 at the given idx (in 1 character increments).
    * **/
   void put_valuex_at(uint8_t idx, uint8_t value);
+  void put_valuex_at(uint8_t idx, uint8_t value, char *data);
 
   /** Display the string at the given idx (in 4 character increments). **/
   void put_string(uint8_t idx, const char *str);
