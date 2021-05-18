@@ -22,7 +22,7 @@ compiler.path={runtime.tools.avr-gcc.path}/bin/
 compiler.c.cmd=avr-gcc
 
 compiler.c.flags=-std=gnu11 -c -Os {compiler.warning_flags} -MMD -ffunction-sections -fdata-sections -flto=jobserver -lm -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
-compiler.c.elf.flags={compiler.warning_flags} -Os -flto -fuse-linker-plugin -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax -mrelax
+compiler.c.elf.flags={compiler.warning_flags} -Os -flto -fuse-linker-plugin -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 compiler.c.elf.cmd=avr-gcc
 compiler.S.flags=-c -g -x assembler-with-cpp -flto
 compiler.cpp.cmd=avr-g++
