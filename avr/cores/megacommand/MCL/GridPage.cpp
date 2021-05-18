@@ -21,7 +21,6 @@ void GridPage::init() {
 void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
   LCD.createChar(1, charmap);
-  frames_startclock = slowclock;
   encoders[0]->cur = encoders[0]->old = mcl_cfg.col;
   encoders[1]->cur = encoders[1]->old = mcl_cfg.row;
   cur_col = mcl_cfg.cur_col;
@@ -195,42 +194,20 @@ void GridPage::load_slot_models() {
 
 #endif
 }
-void GridPage::tick_frames() {
-  uint16_t current_clock = slowclock;
-
-  frames += 1;
-  if (clock_diff(frames_startclock, current_clock) >= 400) {
-    frames_startclock = slowclock;
-    frames = 0;
-  }
-  if (clock_diff(frames_startclock, current_clock) >= 250) {
-    frames_fps = frames;
-    // DEBUG_DUMP((float)frames * (float)4);
-    // frames_fps = ((frames + frames_fps)/ 2);
-    frames = 0;
-    frames_startclock = slowclock;
-  }
-}
 
 void GridPage::display_counters() {
 #ifdef OLED_DISPLAY
   uint8_t y_offset = 8;
   uint8_t x_offset = 20;
 
-  char val[4];
-  // val[0] = (MidiClock.bar_counter / 100) + '0';
-  val[0] = (MidiClock.bar_counter % 100) / 10 + '0';
-  val[1] = (MidiClock.bar_counter % 10) + '0';
-  val[2] = '\0';
-  if (val[0] == '0') {
-    val[0] = (char)0x60;
-    //  if (val[1] == '0') {
-    //    val[1] = (char)0x60;
-    // }
+  char val[4] = "0";
+  uint8_t offset = 0;
+  if (MidiClock.bar_counter < 100) {
+    offset = MidiClock.bar_counter < 10 ? 3 : 0;
+    itoa(MidiClock.bar_counter,val,10);
   }
-
   oled_display.setFont(&TomThumb);
-  oled_display.setCursor(24, y_offset);
+  oled_display.setCursor(24 + offset, y_offset);
   oled_display.print(val);
 
   oled_display.print(":");
@@ -239,18 +216,13 @@ void GridPage::display_counters() {
   if ((mcl_cfg.chain_mode > 0) &&
       (mcl_actions.next_transition != (uint16_t)-1) &&
       (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
-    // val[0] = (mcl_actions.nearest_bar / 100) + '0';
-    val[0] = (mcl_actions.nearest_bar % 100) / 10 + '0';
-    val[1] = (mcl_actions.nearest_bar % 10) + '0';
-
-    if (val[0] == '0') {
-      val[0] = (char)0x60;
-      if (val[1] == '0') {
-        val[1] = (char)0x60;
-      }
+    char val2[4] = "0";
+    if (mcl_actions.nearest_bar < 100) {
+      offset = mcl_actions.nearest_bar < 10 ? 3 : 0;
+      itoa(mcl_actions.nearest_bar,val2,10);
     }
-    oled_display.setCursor(24, y_offset + 8);
-    oled_display.print(val);
+    oled_display.setCursor(24 + offset, y_offset + 8);
+    oled_display.print(val2);
     oled_display.print(":");
     oled_display.print(mcl_actions.nearest_beat);
   }
@@ -302,9 +274,7 @@ void GridPage::display_grid_info() {
   oled_display.print(':');
 
   char val[4];
-  val[0] = (encoders[0]->cur % 100) / 10 + '0';
-  val[1] = (encoders[0]->cur % 10) + '0';
-  val[2] = '\0';
+  itoa(encoders[0]->cur,val, 10);
   oled_display.print(val);
   oled_display.print(" ");
   val[0] = encoders[1]->cur / 100 + '0';
@@ -486,7 +456,6 @@ void GridPage::display_oled() {
 
 void GridPage::display() {
 
-  tick_frames();
 #ifdef OLED_DISPLAY
   display_oled();
   return;
