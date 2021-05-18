@@ -21,7 +21,6 @@ void GridPage::init() {
 void GridPage::setup() {
   uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
   LCD.createChar(1, charmap);
-  frames_startclock = slowclock;
   encoders[0]->cur = encoders[0]->old = mcl_cfg.col;
   encoders[1]->cur = encoders[1]->old = mcl_cfg.row;
   cur_col = mcl_cfg.cur_col;
@@ -194,22 +193,6 @@ void GridPage::load_slot_models() {
   proj.read_grid_row_header(&row_headers[0], getRow());
 
 #endif
-}
-void GridPage::tick_frames() {
-  uint16_t current_clock = slowclock;
-
-  frames += 1;
-  if (clock_diff(frames_startclock, current_clock) >= 400) {
-    frames_startclock = slowclock;
-    frames = 0;
-  }
-  if (clock_diff(frames_startclock, current_clock) >= 250) {
-    frames_fps = frames;
-    // DEBUG_DUMP((float)frames * (float)4);
-    // frames_fps = ((frames + frames_fps)/ 2);
-    frames = 0;
-    frames_startclock = slowclock;
-  }
 }
 
 void GridPage::display_counters() {
@@ -486,7 +469,6 @@ void GridPage::display_oled() {
 
 void GridPage::display() {
 
-  tick_frames();
 #ifdef OLED_DISPLAY
   display_oled();
   return;
