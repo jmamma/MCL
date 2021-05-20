@@ -27,14 +27,16 @@ const Page *const menu_target_pages[] PROGMEM = {
     (Page *)&md_config_page,
     (Page *)&chain_config_page,
     (Page *)&aux_config_page,
+
+    // 7
     (Page *)&mcl_config_page,
 
-    // 9 - ram_config_page
+    // 8 - ram_config_page
     (Page *)&ram_config_page,
 
-    // 10
+    // 9
     (Page *)&poly_page,
-    // 11
+    // 10
     (Page *)&arp_page,
 };
 

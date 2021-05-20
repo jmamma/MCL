@@ -20,7 +20,7 @@ menu_t<8> system_menu_layout = {
         {"MACHINEDRUM",  0, 0, 0, 0, 4, 0, 0},
         {"CHAIN MODE",   0, 0, 0, 0, 5, 0, 0},
         {"AUX PAGES",    0, 0, 0, 0, 6, 0, 0},
-        {"SYSTEM",       0, 0, 0, 0, 8, 0, 0},
+        {"SYSTEM",       0, 0, 0, 0, 7, 0, 0},
     },
     0, 0
 };
@@ -29,7 +29,7 @@ menu_t<1> auxconfig_menu_layout = {
     "AUX PAGES",
     {
         //           m  r  n  d  p  f  o
-        {"RAM Page" ,0, 0, 0, 0, 9, 0, 0},
+        {"RAM Page" ,0, 0, 0, 0, 8, 0, 0},
     },
     0, 0,
 };
@@ -114,7 +114,7 @@ menu_t<19> seq_menu_layout = {
         {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, 0,  0,  54},
         {"CC:",         0, 131,                 3,                   17, 0,  0,  55},
         {"SLIDE:",      0, 2,                   2,                   18, 0,  0,  25},
-        {"ARPEGGIATOR", 0, 0,                   0,                   0,  11, 0,  0},
+        {"ARPEGGIATOR", 0, 0,                   0,                   0,  10, 0,  0},
         {"TRANSPOSE:",  0, 12,                  0,                   19, 0,  0,  0},
         {"VEL:",        0, 128,                 0,                   20, 0,  0,  0},
         {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, 0,  0,  58},
@@ -127,7 +127,7 @@ menu_t<19> seq_menu_layout = {
         {"PASTE:",      0, 3,                   3,                   27, 0,  11, 27},
         {"SHIFT:",      0, 5,                   5,                   28, 0,  12, 35},
         {"REVERSE:",    0, 3,                   3,                   29, 0,  13, 27},
-        {"POLYPHONY",   0, 0,                   0,                   0,  10,  0,  0},
+        {"POLYPHONY",   0, 0,                   0,                   0,  9,  0,  0},
     },
     14, 0
 };
