@@ -38,10 +38,11 @@ void ArpPage::track_update() {
   arp_enabled.old = arp_enabled.cur;
 
   if (last_arp_track && arp_track != last_arp_track) {
-    if (last_arp_track->enabled == 1) {
+    if (last_arp_track->enabled < 2) {
       last_arp_track->clear_notes();
+
     }
-    if (seq_ptc_page.note_mask) { seq_ptc_page.render_arp(); }
+    seq_ptc_page.render_arp();
   }
 
   last_arp_track = arp_track;
@@ -62,17 +63,13 @@ void ArpPage::loop() {
 
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    if (encoders[0]->old != 1) {
-      seq_ptc_page.recalc_notemask();
-      seq_ptc_page.render_arp();
-    }
-    seq_ptc_page.render_arp();
+    seq_ptc_page.render_arp(encoders[0]->old != 1);
  }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
     arp_track->oct = arp_range.cur;
     arp_track->mode = arp_mode.cur;
-    seq_ptc_page.render_arp();
+    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH);
   }
 
   if (encoders[2]->hasChanged()) {
@@ -151,13 +148,14 @@ bool ArpPage::handleEvent(gui_event_t *event) {
     GUI.popPage();
     return true;
   }
-  if (arp_track->enabled) {
+  if (note_interface.is_event(event)) {
     seq_ptc_page.handleEvent(event);
+    return true;
   }
-  else if (note_interface.is_event(event) && midi_active_peering.get_device(event->port) == &MD) {
+/*  if (note_interface.is_event(event) && midi_active_peering.get_device(event->port) == &MD) {
       trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
       return true;
 
-  }
+  } */
   return false;
 }

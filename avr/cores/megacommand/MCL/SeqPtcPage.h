@@ -46,8 +46,8 @@ public:
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   uint8_t calc_poly_count();
-  uint8_t seq_ext_pitch(uint8_t note_num, MidiDevice* device = &generic_midi_device);
-  uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device = &generic_midi_device);
+  uint8_t seq_ext_pitch(uint8_t note_num);
+  uint8_t process_ext_pitch(uint8_t note_num, bool note_type);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num, uint8_t fine_tune = 255);
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
@@ -64,7 +64,7 @@ public:
   void config_encoders();
   void init_poly();
 
-  void render_arp();
+  void render_arp(bool recalc_notemask_ = true);
 
   void recalc_notemask();
 
