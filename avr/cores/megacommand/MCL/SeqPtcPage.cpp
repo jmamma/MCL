@@ -40,6 +40,7 @@ void SeqPtcPage::setup() {
   midi_events.setup_callbacks();
   ptc_param_oct.cur = 1;
   ptc_param_fine_tune.cur = 32;
+  memset(dev_note_masks, 0, sizeof(dev_note_masks));
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -188,9 +189,8 @@ void SeqPtcPage::loop() {
       ptc_param_fine_tune.hasChanged()) {
     if (midi_device != &MD) {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-    } else {
-      recalc_notemask();
     }
+    recalc_notemask();
     render_arp();
   }
 #endif
@@ -312,7 +312,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
     }
   }
 
-  return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + key;
+  return min(127, scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + key);
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
@@ -398,7 +398,7 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number,
 }
 
 void SeqPtcPage::clear_trig_fromext(uint8_t note_num) {
-  CLEAR_BIT128_P(note_mask, note_num);
+  CLEAR_BIT128_P(dev_note_masks[1], note_num);
   render_arp();
 }
 
@@ -439,8 +439,10 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
 
 void SeqPtcPage::recalc_notemask() {
   memset(note_mask, 0, sizeof(note_mask));
-  for (uint8_t i = 0; i < 16; i++) {
-    if (note_interface.is_note_on(i)) {
+  uint8_t dev = (midi_device == &MD) ? 0 : 1;
+  
+  for (uint8_t i = 0; i < 128; i++) {
+    if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
       uint8_t pitch = calc_scale_note(i);
       SET_BIT128_P(note_mask, pitch);
     }
@@ -470,18 +472,21 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
 
     uint8_t note = event->source - 128;
+
     uint8_t pitch = calc_scale_note(note);
     DEBUG_PRINTLN(F("yep"));
     // note interface presses are treated as musical notes here
     if (mask == EVENT_BUTTON_PRESSED) {
 
-      SET_BIT128_P(note_mask, pitch);
       if (midi_device != &MD) {
         midi_device = &MD;
         config();
       } else {
         config_encoders();
       }
+
+      SET_BIT128_P(dev_note_masks[0], note);
+      SET_BIT128_P(note_mask, pitch);
 
       arp_page.track_update();
       ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
@@ -491,6 +496,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       render_arp();
     } else if (mask == EVENT_BUTTON_RELEASED) {
       if (arp_enabled.cur != ARP_LATCH) {
+        CLEAR_BIT128_P(dev_note_masks[0], note);
         CLEAR_BIT128_P(note_mask, pitch);
         render_arp();
       }
@@ -595,8 +601,10 @@ uint8_t process_ext_pitch(uint8_t note_num, bool note_type,
   }
 
   if (note_type) {
+    SET_BIT128_P(seq_ptc_page.dev_note_masks[1], note_num);
     SET_BIT128_P(seq_ptc_page.note_mask, pitch);
   } else if (arp_enabled.cur != ARP_LATCH) {
+    CLEAR_BIT128_P(seq_ptc_page.dev_note_masks[1], note_num);
     CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
   }
 

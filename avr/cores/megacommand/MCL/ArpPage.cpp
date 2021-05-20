@@ -63,7 +63,8 @@ void ArpPage::loop() {
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
     if (encoders[0]->old != 1) {
-      memset(seq_ptc_page.note_mask,0,sizeof(seq_ptc_page.note_mask));
+      seq_ptc_page.recalc_notemask();
+      seq_ptc_page.render_arp();
     }
     seq_ptc_page.render_arp();
  }

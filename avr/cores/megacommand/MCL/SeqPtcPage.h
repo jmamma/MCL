@@ -35,7 +35,10 @@ public:
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
+
+  uint64_t dev_note_masks[NUM_DEVS][2];
   uint64_t note_mask[2];
+
   bool cc_link_enable;
 
   SeqPtcMidiEvents midi_events;
