@@ -25,8 +25,8 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
   uint8_t timing_mid = get_timing_mid_inline();
-  
-  if (mod12_counter == 0 && enabled) { 
+
+  if (mod12_counter == 0 && enabled) {
    if (step_count == 0) {
       if (len > 0) {
         switch (active) {
@@ -42,16 +42,16 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
         if (idx == len) {
           idx = 0;
         }
-      }   
+      }
     }
   }
   mod12_counter++;
-  if (mod12_counter == timing_mid) { 
+  if (mod12_counter == timing_mid) {
     step_count_inc();
     if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
         seq_ptc_page.note_off_ext(last_note_on, 0, uart);
         last_note_on = 255;
-    } 
+    }
     mod12_counter = 0;
   }
   uart = uart_old;
@@ -66,7 +66,7 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
       return i;
     }
   }
-  return 255; 
+  return 255;
 }
 
 void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
@@ -75,7 +75,9 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     return;
   }
   fine_tune = fine_tune_;
-  memcpy(note_mask,note_mask_,sizeof(note_mask));
+
+  memcpy(note_mask, note_mask_, sizeof(note_mask));
+
   range = range_;
   mode = mode_;
 
@@ -89,7 +91,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   uint8_t sort_down[ARP_MAX_NOTES];
 
   // Collect notes, sort in ascending order
-  note = get_next_note_up(-1); 
+  note = get_next_note_up(-1);
   uint8_t last_note = note;
   if (note != 255) {
     num_of_notes++;

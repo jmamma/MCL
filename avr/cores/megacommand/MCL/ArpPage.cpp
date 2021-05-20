@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-MCLEncoder arp_range(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
@@ -19,10 +19,12 @@ void ArpPage::init() {
 }
 
 void ArpPage::track_update() {
+
   arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (seq_ptc_page.midi_device == &MD) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
+
   arp_rate.cur = arp_track->rate;
   arp_rate.old = arp_rate.cur;
 
@@ -35,6 +37,14 @@ void ArpPage::track_update() {
   arp_enabled.cur = arp_track->enabled;
   arp_enabled.old = arp_enabled.cur;
 
+  if (last_arp_track && arp_track != last_arp_track) {
+    if (last_arp_track->enabled == 1) {
+      last_arp_track->clear_notes();
+    }
+    if (seq_ptc_page.note_mask) { seq_ptc_page.render_arp(); }
+  }
+
+  last_arp_track = arp_track;
 }
 
 void ArpPage::cleanup() {
@@ -52,11 +62,11 @@ void ArpPage::loop() {
 
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    if (encoders[0]->old == 0) {
+    if (encoders[0]->old != 1) {
       memset(seq_ptc_page.note_mask,0,sizeof(seq_ptc_page.note_mask));
-      seq_ptc_page.render_arp();
     }
-  }
+    seq_ptc_page.render_arp();
+ }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
     arp_track->oct = arp_range.cur;
@@ -68,7 +78,7 @@ void ArpPage::loop() {
     arp_track->set_length(1 << arp_rate.cur);
     arp_track->rate = arp_rate.cur;
   }
-  
+
 }
 
 typedef char arp_name_t[4];
