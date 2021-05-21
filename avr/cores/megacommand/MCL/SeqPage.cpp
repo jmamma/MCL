@@ -115,10 +115,12 @@ void SeqPage::cleanup() {
 }
 
 void SeqPage::params_reset() {
-  MDTrack md_track;
-  md_track.machine.model = MD.kit.models[last_md_track];
-  MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
-  MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+  if (MidiClock.state != 2) {
+    MDTrack md_track;
+    md_track.machine.model = MD.kit.models[last_md_track];
+    MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
+    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+  }
 }
 
 void SeqPage::bootstrap_record() {

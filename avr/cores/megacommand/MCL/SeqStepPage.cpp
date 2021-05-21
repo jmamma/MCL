@@ -70,6 +70,7 @@ void SeqStepPage::init() {
   note_interface.state = true;
   reset_on_release = false;
   update_params_queue = false;
+  display();
 }
 
 void SeqStepPage::cleanup() {
