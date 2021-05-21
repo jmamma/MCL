@@ -65,7 +65,7 @@ menu_t<3> mdconfig_menu_layout = {
         //              m  r   n  d  p  f  o
         {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
         {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
-        {"POLY CONFIG", 0, 0,  0, 0, 0, 0, 0},
+        {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
     },
     1, 0
 };
