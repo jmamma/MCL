@@ -393,9 +393,6 @@ ISR(USART0_UDRE_vect) {
       if ((MidiUart.in_message > 0) && (c < 128)) {
         MidiUart.in_message--;
       }
-      if (c & 0xF0 == MIDI_NOTE_ON) {
-        setLed2();
-      }
       if (c < 0xF0) {
         switch (c & 0xF0) {
         case MIDI_CHANNEL_PRESSURE:
