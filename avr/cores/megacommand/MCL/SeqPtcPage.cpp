@@ -184,15 +184,17 @@ void SeqPtcPage::loop() {
   if (re_init) {
     init();
   }
-#ifdef EXT_TRACKS
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged() ||
       ptc_param_fine_tune.hasChanged()) {
     if (midi_device != &MD) {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     }
     render_arp();
+    queue_redraw();
   }
-#endif
+  if (md_track_change_check()) {
+    arp_page.track_update();
+  }
   SeqPage::loop();
 }
 
@@ -468,6 +470,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
 
     uint8_t note = event->source - 128;
+    if (mask == EVENT_BUTTON_PRESSED) {
+      SET_BIT128_P(dev_note_masks[0], note);
+    }
+    else {
+      CLEAR_BIT128_P(dev_note_masks[0], note);
+    }
 
     uint8_t pitch = calc_scale_note(note);
     if (pitch > 127) return false;
@@ -482,7 +490,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         config_encoders();
       }
 
-      SET_BIT128_P(dev_note_masks[0], note);
       SET_BIT128_P(note_mask, pitch);
 
       arp_page.track_update();
@@ -492,7 +499,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
       render_arp(false);
     } else if (mask == EVENT_BUTTON_RELEASED) {
-      CLEAR_BIT128_P(dev_note_masks[0], note);
       if (arp_enabled.cur != ARP_LATCH) {
         CLEAR_BIT128_P(note_mask, pitch);
         render_arp(false);
@@ -574,27 +580,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 #define NOTE_C2 48
 
 uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
-  uint8_t oct = 0;
-  uint8_t note = note_num;
-  bool padded = true;
-  if (midi_device == &MD) {
-    padded = false;
-    note = note_num - (note_num / 12) * 12;
-    if (note_num >= NOTE_C2) {
-      oct = (note_num / 12) - (NOTE_C2 / 12);
-    } else {
-      return 255;
-    }
-  }
-  uint8_t pitch = calc_scale_note(note + oct * 12, padded);
+  uint8_t pitch = calc_scale_note(note_num, true);
   return (pitch < 128) ? pitch : 255;
 }
 
 uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
-  if (pitch == 255) {
-    return 255;
-  }
   uint8_t dev = (midi_device == &MD) ? 0 : 1; 
 
   DEBUG_PRINTLN("process ext pitch");
@@ -603,10 +594,12 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   DEBUG_PRINTLN(pitch);
   if (note_type) {
     SET_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
-    SET_BIT128_P(seq_ptc_page.note_mask, pitch);
+    if (pitch != 255) {
+      SET_BIT128_P(seq_ptc_page.note_mask, pitch);
+    }
   } else {       
     CLEAR_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
-    if (arp_enabled.cur != ARP_LATCH) {
+    if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
     CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
     }
   }
@@ -614,6 +607,7 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   pitch += ptc_param_oct.cur * 12;
   return pitch;
 }
+
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if ((GUI.currentPage() == &seq_step_page) ||
@@ -641,16 +635,22 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
 
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    
+    if (note_num < NOTE_C2) {
+      return;
+    }
+    uint8_t note = note_num - (note_num / 12) * 12;
+    note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
+
     pitch = seq_ptc_page.process_ext_pitch(note_num, note_on);
+    arp_page.track_update();
+    seq_ptc_page.render_arp(false);
+    seq_ptc_page.queue_redraw();
+
     if (pitch == 255)
       return;
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
-
-    arp_page.track_update();
-    if (arp_track->enabled) { seq_ptc_page.render_arp(false); }
-
-    seq_ptc_page.queue_redraw();
 
     if (!arp_track->enabled) {
       seq_ptc_page.trig_md_fromext(pitch + ptc_param_oct.cur * 12);
@@ -720,15 +720,16 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    if (note_num < NOTE_C2) {
+      return;
+    }
+    uint8_t note = note_num - (note_num / 12) * 12;
+    note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
 
-    bool arp_latch = (arp_enabled.cur == ARP_LATCH);
-    pitch = seq_ptc_page.process_ext_pitch(note_num, arp_latch);
-    if (pitch == 255)
-        return;
-    if (arp_enabled.cur)
-        seq_ptc_page.render_arp(false);
-    
+    pitch = seq_ptc_page.process_ext_pitch(note_num, false);
+    seq_ptc_page.render_arp(false);
     seq_ptc_page.queue_redraw();
+    
     return;
   }
 

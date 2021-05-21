@@ -70,18 +70,17 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 }
 
 void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
- DEBUG_PRINT_FN();
+  DEBUG_PRINT_FN();
+
+  memcpy(note_mask, note_mask_, sizeof(note_mask));
+  fine_tune = fine_tune_;
+  range = range_;
+  mode = mode_;
+  len = 0;
+
   if (!enabled) {
     return;
   }
-  fine_tune = fine_tune_;
-
-  memcpy(note_mask, note_mask_, sizeof(note_mask));
-
-  range = range_;
-  mode = mode_;
-
-  len = 0;
 
   uint8_t num_of_notes = 0;
   uint8_t note = 0;

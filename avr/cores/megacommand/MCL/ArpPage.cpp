@@ -38,13 +38,13 @@ void ArpPage::track_update() {
   arp_enabled.old = arp_enabled.cur;
 
   if (last_arp_track && arp_track != last_arp_track) {
-    if (last_arp_track->enabled < 2) {
+    if (last_arp_track->enabled != ARP_LATCH) {
       last_arp_track->clear_notes();
-
     }
+  }
+  if (arp_track->enabled != ARP_LATCH) {
     seq_ptc_page.render_arp();
   }
-
   last_arp_track = arp_track;
 }
 
