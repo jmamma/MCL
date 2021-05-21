@@ -41,6 +41,7 @@ void SeqPtcPage::setup() {
   ptc_param_oct.cur = 1;
   ptc_param_fine_tune.cur = 32;
   memset(dev_note_masks, 0, sizeof(dev_note_masks));
+  memset(note_mask, 0, sizeof(note_mask));
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -92,7 +93,6 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
   cc_link_enable = true;
   ptc_param_len.handler = ptc_pattern_len_handler;
-  memset(note_mask, 0, sizeof(note_mask));
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
   trig_interface.on();
@@ -110,7 +110,6 @@ void SeqPtcPage::init() {
 
 void SeqPtcPage::config() {
   config_encoders();
-  recalc_notemask();
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
   char buf[len1] = {'\0'};
@@ -189,7 +188,7 @@ void SeqPtcPage::loop() {
     if (midi_device != &MD) {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     }
-    render_arp();
+    render_arp(ptc_param_scale.hasChanged());
     queue_redraw();
   }
   if (md_track_change_check()) {
@@ -653,7 +652,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
     if (!arp_track->enabled) {
-      seq_ptc_page.trig_md_fromext(pitch + ptc_param_oct.cur * 12);
+      seq_ptc_page.trig_md_fromext(pitch);
     }
 
     return;

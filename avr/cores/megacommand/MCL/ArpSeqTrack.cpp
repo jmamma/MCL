@@ -31,10 +31,10 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
       if (len > 0) {
         switch (active) {
           case MD_ARP_TRACK_TYPE:
-            seq_ptc_page.trig_md(notes[idx], track_number, fine_tune, uart);
+            seq_ptc_page.trig_md(notes[idx] + oct * 12, track_number, fine_tune, uart);
             break;
           case EXT_ARP_TRACK_TYPE:
-            seq_ptc_page.note_on_ext(notes[idx], 127, track_number, uart);
+            seq_ptc_page.note_on_ext(notes[idx] + oct * 12, 127, track_number, uart);
             last_note_on = notes[idx];
             break;
         }
@@ -72,16 +72,18 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
   DEBUG_PRINT_FN();
 
-  memcpy(note_mask, note_mask_, sizeof(note_mask));
   fine_tune = fine_tune_;
   range = range_;
   mode = mode_;
   len = 0;
+  oct = oct_;
 
   if (!enabled) {
     return;
   }
 
+  memcpy(note_mask, note_mask_, sizeof(note_mask));
+  
   uint8_t num_of_notes = 0;
   uint8_t note = 0;
   uint8_t b = 0;
@@ -94,7 +96,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   uint8_t last_note = note;
   if (note != 255) {
     num_of_notes++;
-    sort_up[0] = min(127, note + oct_ * 12);
+    sort_up[0] = min(127, note);
   }
 
   for (int8_t i = 1; i < ARP_MAX_NOTES && note != 255; i++) {
@@ -102,7 +104,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     if (note == 255) { break; }
     last_note = note;
     num_of_notes++;
-    sort_up[i] = min(127, note + oct_ * 12);
+    sort_up[i] = min(127, note);
   }
   if (num_of_notes == 0) {
     return;
