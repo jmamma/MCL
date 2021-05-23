@@ -215,6 +215,7 @@ bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
   SysexCallback cb;
   uint8_t count = SYSEX_RETRIES;
   auto listener = getSysexListener();
+  bool ret;
   while ((MidiClock.state == 2) &&
          ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
     ;
@@ -222,9 +223,9 @@ bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
     listener->addOnKitMessageCallback(
         &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
     requestKit(kit);
-    connected = cb.waitBlocking(timeout);
+    ret = cb.waitBlocking(timeout);
     listener->removeOnKitMessageCallback(&cb);
-    if (connected) {
+    if (ret) {
       auto kit = getKit();
       if (kit != nullptr && kit->fromSysex(midi)) {
         return true;
@@ -239,6 +240,7 @@ bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
   SysexCallback cb;
   uint8_t count = SYSEX_RETRIES;
   auto listener = getSysexListener();
+  bool ret;
   while ((MidiClock.state == 2) &&
          ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
     ;
@@ -246,9 +248,9 @@ bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
     listener->addOnPatternMessageCallback(
         &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
     requestPattern(pattern);
-    connected = cb.waitBlocking(timeout);
+    ret = cb.waitBlocking(timeout);
     listener->removeOnPatternMessageCallback(&cb);
-    if (connected) {
+    if (ret) {
       auto pattern = getPattern();
       if (pattern != nullptr && pattern->fromSysex(midi)) {
         return true;
