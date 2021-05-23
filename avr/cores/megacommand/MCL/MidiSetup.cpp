@@ -35,8 +35,8 @@ void MidiSetup::cfg_ports() {
   };
 
   if (elektron_devs[0]) {
-    elektron_devs[0]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
+    elektron_devs[0]->setup();
   }
   if (mcl_cfg.uart2_device == 0) {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);

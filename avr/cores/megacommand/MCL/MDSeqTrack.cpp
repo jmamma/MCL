@@ -88,7 +88,8 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
 
       uint16_t lock_idx = cur_event_idx;
       if (current_step == next_step) {
-        lock_idx += popcount(steps[step_count].locks);
+        if (current_step == 0) { lock_idx = 0; }
+        else { lock_idx += popcount(steps[step_count].locks); }
       }
 
       auto &step = steps[current_step];
