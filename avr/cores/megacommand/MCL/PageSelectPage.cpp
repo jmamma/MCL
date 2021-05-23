@@ -332,12 +332,22 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64; 
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_SONG: {
+          goto release;
+        }   
+      }
+    }
+  }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+    release:
     LightPage *p;
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
-      trig_interface.off();
       //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
@@ -347,7 +357,6 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    trig_interface.off();
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
     return true;

@@ -115,6 +115,10 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
 
       switch (key) {
+      case MDX_KEY_SONG: {
+        GUI.setPage(&page_select_page);
+        return true;
+      }
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
             GUI.currentPage() != &seq_ptc_page) {

@@ -36,6 +36,7 @@ void MidiSetup::cfg_ports() {
 
   if (elektron_devs[0]) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
+    delay(100);
     elektron_devs[0]->setup();
   }
   if (mcl_cfg.uart2_device == 0) {
