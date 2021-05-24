@@ -52,7 +52,6 @@ void MCL::setup() {
   MidiClock.setTempo(mcl_cfg.tempo);
 
   note_interface.setup();
-  // md_exploit.setup();
 
   MD.midi_events.enable_live_kit_update();
 
@@ -75,6 +74,7 @@ void MCL::setup() {
 #endif
 
   midi_setup.cfg_ports();
+  
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 

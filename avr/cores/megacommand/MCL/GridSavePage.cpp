@@ -2,12 +2,13 @@
 #define S_PAGE 3
 
 void GridSavePage::setup() {
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   note_interface.state = true;
   grid_page.reload_slot_models = false;
+  MD.popup_text("SAVE SLOTS", true);
+  if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
   draw_popup();
 }
 
@@ -146,6 +147,12 @@ void GridSavePage::get_modestr(char *modestr) {
   }
 }
 
+void GridSavePage::group_select() {
+    show_track_type = true;
+    MD.popup_text("SAVE GROUPS", true);
+    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+}
+
 bool GridSavePage::handleEvent(gui_event_t *event) {
   if (GridIOPage::handleEvent(event)) {
     return true;
@@ -177,12 +184,26 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_track_type = true;
-    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+        case MDX_KEY_FUNC:
+          group_select();
+          return true;
+        }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_FUNC:
+          goto save_groups;
+        }
+      }
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    save_groups:
     trig_interface.off();
     uint8_t offset = proj.get_grid() * 16;
 

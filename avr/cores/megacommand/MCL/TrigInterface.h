@@ -25,7 +25,7 @@
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
 #define MDX_KEY_REALTIME 0x37
-#define MDX_KEY_FUNCYES 0x3B
+#define MDX_KEY_FUNCYES 0x3A
 
 class TrigInterface : public MidiSysexListenerClass {
 

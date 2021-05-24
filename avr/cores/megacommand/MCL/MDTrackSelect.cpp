@@ -98,7 +98,9 @@ void MDTrackSelect::end_immediate() {
   if (sysex->recordLen != 8) {
     MD.currentTrack = b & 0xF;
   }
-  MD.currentSynthPage = b >> 4;
+  MD.currentSynthPage = (b >> 4) & 3;
+  proj.select_grid((b & 64) > 0);
+  grid_page.reload_slot_models = false;
   b = sysex->getByte(4);
   MD.kit.models[MD.currentTrack] = sysex->getByte(5);
   if (b & 1) { MD.kit.models[MD.currentTrack] += 128; }

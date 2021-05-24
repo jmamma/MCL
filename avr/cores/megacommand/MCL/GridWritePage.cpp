@@ -1,12 +1,8 @@
 #include "MCL_impl.h"
 
 void GridWritePage::setup() {
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
-  MD.getCurrentPattern(CALLBACK_TIMEOUT);
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  encoders[1]->cur =
-      MD.currentPattern - 16 * ((int)MD.currentPattern / (int)16);
-
+  
   ((MCLEncoder *)encoders[3])->max = 6;
   encoders[3]->cur = 4;
   ((MCLEncoder *)encoders[2])->max = 1;
@@ -15,10 +11,11 @@ void GridWritePage::setup() {
   note_interface.init_notes();
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
-
+  MD.popup_text("LOAD SLOTS", true);
   note_interface.state = true;
   // GUI.display();
   curpage = W_PAGE;
+  if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
 }
 
 void GridWritePage::draw_popup() {
@@ -111,6 +108,12 @@ void GridWritePage::chain() {
                            track_select_array);
 }
 
+void GridWritePage::group_select() {
+    show_track_type = true;
+    MD.popup_text("LOAD GROUPS", true);
+    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+}
+
 bool GridWritePage::handleEvent(gui_event_t *event) {
   // Call parent GUI handler first.
   if (GridIOPage::handleEvent(event)) {
@@ -143,19 +146,28 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_track_type = true;
-    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64; 
+   
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+        case MDX_KEY_FUNC:
+        group_select();
+        }   
+    }   
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_UP:
+          goto load_groups;
+        }   
+      }
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
 
-    //    if (!note_interface.notes_all_off()) { return true; }
-    //   chain();
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+ if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
-
+    load_groups:
     trig_interface.off();
     uint8_t offset = proj.get_grid() * 16;
 

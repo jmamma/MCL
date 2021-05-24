@@ -14,6 +14,7 @@ class GridWritePage : public GridIOPage {
 
  }
  void chain();
+ void group_select();
  bool handleEvent(gui_event_t *event);
  void draw_popup();
  void display();

@@ -264,7 +264,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (note_interface.get_first_md_note() == 255) {
       step = 255;
     }
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+    if (event->mask == EVENT_BUTTON_PRESSED && trig_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT:
         if (step != 255) {
@@ -282,11 +282,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         if (step != 255) {
           return false;
         }
-        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
-          mcl_seq.md_tracks[last_md_track].reverse();
-          return true;
-        }
-        return false;
+        mcl_seq.md_tracks[last_md_track].reverse();
+        return true;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {

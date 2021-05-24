@@ -14,6 +14,7 @@ public:
   void get_modestr(char *modestr);
   void save();
   bool handleEvent(gui_event_t *event);
+  void group_select();
   void loop();
   void display();
   void setup();

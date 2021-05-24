@@ -689,19 +689,48 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64; 
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+        case MDX_KEY_UP: {
+          param2.cur -= 1;
+          return true;
+        }
+        case MDX_KEY_DOWN: {
+          param2.cur += 1;
+          return true;
+        }
+        case MDX_KEY_LEFT: {
+          param1.cur = max(0,param1.cur - 1);
+          return true;
+        }
+        case MDX_KEY_RIGHT: {
+          param1.cur += 1;
+          return true;
+        }
+        case MDX_KEY_YES: {
+            if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+              goto load;
+            }
+            goto save;
+        }
+      }
+    }
+  }   
+   
   if (!show_slot_menu) {
-    // TRACK READ PAGE
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      save:
       grid_save_page.isSetup = false;
       GUI.setPage(&grid_save_page);
 
       return true;
     }
 
-    // TRACK WRITE PAGE
-
     if  (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+      load:
       grid_write_page.isSetup = false;
       GUI.setPage(&grid_write_page);
 
