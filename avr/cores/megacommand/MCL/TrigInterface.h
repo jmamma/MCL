@@ -27,6 +27,29 @@
 #define MDX_KEY_REALTIME 0x37
 #define MDX_KEY_FUNCYES 0x3A
 
+#include "Task.h"
+
+#define KEY_REPEAT_INTERVAL 80
+
+class TrigInterfaceTask : public Task {
+
+public:
+
+  TrigInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
+  }
+
+  void setup() {
+    interval = KEY_REPEAT_INTERVAL; 
+    starting = false;
+    lastExecution = slowclock;
+  } 
+
+  virtual void run();
+
+};
+
+extern TrigInterfaceTask trig_interface_task;
+
 class TrigInterface : public MidiSysexListenerClass {
 
 public:

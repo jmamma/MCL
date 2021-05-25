@@ -115,6 +115,15 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
 
       switch (key) {
+      case MDX_KEY_UP:
+      case MDX_KEY_DOWN:
+      case MDX_KEY_LEFT:
+      case MDX_KEY_RIGHT: {
+        trig_interface_task.setup();
+        GUI.addTask(&trig_interface_task);
+        //return false to allow other gui handler to pick up.
+        return false;
+      }
       case MDX_KEY_SONG: {
         GUI.setPage(&page_select_page);
         return true;
