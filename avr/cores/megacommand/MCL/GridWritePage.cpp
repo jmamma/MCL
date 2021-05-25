@@ -152,20 +152,19 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
    
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-        case MDX_KEY_FUNC:
+        case MDX_KEY_UP:
         group_select();
-        }   
-    }   
+        }
+    }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
         case MDX_KEY_UP:
           goto load_groups;
         }   
       }
-  }
+    }
 
-
- if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
     load_groups:
     trig_interface.off();

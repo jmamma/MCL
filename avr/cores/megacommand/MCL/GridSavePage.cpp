@@ -187,22 +187,23 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-        case MDX_KEY_FUNC:
+        case MDX_KEY_UP:
           group_select();
-          return true;
         }
     }
+
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_FUNC:
+        case MDX_KEY_UP:
           goto save_groups;
         }
       }
-  }
+    }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     save_groups:
     trig_interface.off();
     uint8_t offset = proj.get_grid() * 16;
