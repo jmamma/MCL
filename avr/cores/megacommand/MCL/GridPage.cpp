@@ -693,24 +693,28 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64; 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      switch (key) {
+        uint8_t inc = 1;
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) { inc = 4; }
+        switch (key) {
         case MDX_KEY_UP: {
-          param2.cur -= 1;
+          param2.cur -= inc;
           return true;
         }
         case MDX_KEY_DOWN: {
-          param2.cur += 1;
+          param2.cur += inc;
           return true;
         }
         case MDX_KEY_LEFT: {
-          param1.cur = max(0,param1.cur - 1);
+          param1.cur = max(0,param1.cur - inc);
           return true;
         }
         case MDX_KEY_RIGHT: {
-          param1.cur += 1;
+          param1.cur += inc;
           return true;
         }
+        case MDX_KEY_FUNCYES:
         case MDX_KEY_YES: {
+            trig_interface.ignoreNextEvent(MDX_KEY_YES);
             if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
               goto load;
             }

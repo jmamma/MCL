@@ -190,14 +190,14 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-        case MDX_KEY_UP:
+        case MDX_KEY_YES:
           group_select();
         }
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_UP:
+        case MDX_KEY_YES:
           goto save_groups;
         }
       }
