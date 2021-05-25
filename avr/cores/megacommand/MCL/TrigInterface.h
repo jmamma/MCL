@@ -29,6 +29,7 @@
 
 #include "Task.h"
 
+/*
 #define KEY_REPEAT_INTERVAL 80
 
 class TrigInterfaceTask : public Task {
@@ -41,7 +42,8 @@ public:
   void setup() {
     interval = KEY_REPEAT_INTERVAL; 
     starting = false;
-    lastExecution = slowclock;
+    uint16_t clock = read_slowclock();
+    lastExecution = clock;
   } 
 
   virtual void run();
@@ -49,6 +51,7 @@ public:
 };
 
 extern TrigInterfaceTask trig_interface_task;
+*/
 
 class TrigInterface : public MidiSysexListenerClass {
 

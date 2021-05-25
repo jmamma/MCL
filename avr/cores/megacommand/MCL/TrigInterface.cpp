@@ -1,5 +1,6 @@
 #include "MCL_impl.h"
 
+/*
 TrigInterfaceTask trig_interface_task;
 
 void TrigInterfaceTask::run() {
@@ -30,6 +31,7 @@ void TrigInterfaceTask::run() {
   EventRB.putp(&event);
  
 }
+*/
 
 void TrigInterface::start() {}
 
