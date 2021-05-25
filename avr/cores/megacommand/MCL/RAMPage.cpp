@@ -62,7 +62,7 @@ void RAMPage::setup_sequencer(uint8_t track) {
   CLEAR_LOCK();
 }
 
-void RAMPage::prepare_chain(uint8_t track, uint8_t steps, uint8_t row) {
+void RAMPage::prepare_chain(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition) {
 
   mcl_actions.chains[track].row = row;
   mcl_actions.chains[track].loops = 1;
@@ -70,7 +70,7 @@ void RAMPage::prepare_chain(uint8_t track, uint8_t steps, uint8_t row) {
   mcl_actions.send_machine[track] = 0;
   uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
   grid_page.active_slots[track] = 0x7FFF;
-  mcl_actions.transition_level[track] = TRANSITION_NORMAL;
+  mcl_actions.transition_level[track] = transition;
   mcl_actions.next_transitions[track] = next_step;
   mcl_actions.transition_offsets[track] = 0;
   transition_step = next_step;
@@ -159,7 +159,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   md_track.store_in_mem(track);
 
-  prepare_chain(track, steps, SLOT_RAM_RECORD);
+  prepare_chain(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
 
 }
 
