@@ -13,7 +13,7 @@
 #include <MidiClock.h>
 // extern MidiClockClass MidiClock;
 #include <avr/io.h>
-extern uint16_t clock_measure = 0;
+uint16_t clock_measure = 0;
 
 MidiUartClass::MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
                              volatile uint8_t *tx_buf, uint16_t tx_buf_size)
@@ -220,7 +220,8 @@ ISR(USART0_RX_vect) {
       MidiUart.recvActiveSenseTimer = 0;
     }
     if (Midi.forward) {
-      MidiUart2.m_putc(c);
+      if (MidiClock.state != 2) { UART2_SET_ISR_TX_BIT(); }
+      MidiUart2.txRb.put_h_isr(c);
     }
     switch (Midi.live_state) {
     case midi_wait_sysex: {
@@ -311,7 +312,8 @@ ISR(USART1_RX_vect) {
       MidiUart2.recvActiveSenseTimer = 0;
     }
     if (Midi2.forward) {
-      MidiUart.m_putc(c);
+      if (MidiClock.state != 2) { UART_SET_ISR_TX_BIT(); }
+      MidiUart.txRb.put_h_isr(c);
     }
     switch (Midi2.live_state) {
     case midi_wait_sysex: {

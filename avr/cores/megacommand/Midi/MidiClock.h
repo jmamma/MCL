@@ -220,21 +220,22 @@ public:
   }
 
   ALWAYS_INLINE() void init();
+
+  volatile bool inCallback = false;
+
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
       return;
 
-    static bool inCallback = false;
     if (inCallback) {
       DEBUG_PRINTLN(F("clock collision"));
       return;
-    } else {
-      inCallback = true;
     }
 
-#ifndef HOST_MIDIDUINO
+    inCallback = true;
+
+    uint8_t _irqlock_tmp = SREG;
     sei();
-#endif
 
     on192Callbacks.call(div192th_counter);
 
@@ -251,6 +252,7 @@ public:
     }
 
     inCallback = false;
+    SREG = _irqlock_tmp;
   }
 
   ALWAYS_INLINE() void handleImmediateClock() {
