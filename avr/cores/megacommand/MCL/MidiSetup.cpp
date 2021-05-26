@@ -3,15 +3,14 @@
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();
 
+  Midi.uart_forward = nullptr;
+  Midi2.uart_forward = nullptr;
+
   if (mcl_cfg.midi_forward == 1 || mcl_cfg.midi_forward == 3) {
-    Midi.forward = true;
-  } else {
-    Midi.forward = false;
+    Midi.uart_forward = &MidiUart2;
   }
   if (mcl_cfg.midi_forward == 2 || mcl_cfg.midi_forward == 3) {
-    Midi2.forward = true;
-  } else {
-    Midi2.forward = false;
+    Midi2.uart_forward = &MidiUart;
   }
 
   if (mcl_cfg.clock_send == 1) {

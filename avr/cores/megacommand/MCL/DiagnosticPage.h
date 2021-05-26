@@ -2,7 +2,7 @@
 
 #ifndef DIAGNOSTICPAGE_H__
 #define DIAGNOSTICPAGE_H__
-
+#define ENABLE_DIAG_LOGGING
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "CommonTools/Stopwatch.h"

@@ -186,9 +186,11 @@ again:
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
         while (!seq_tx2.txRb.isEmpty_isr()) {
+          setLed2();
           seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
         }
         while (!seq_tx4.txRb.isEmpty_isr()) {
+          setLed2();
           seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
         }
         MidiUart.txRb_sidechannel = &(seq_tx1.txRb);

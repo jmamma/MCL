@@ -270,10 +270,10 @@ bool enable_clock_callbacks = true;
 
 void handleIncomingMidi() {
   if (Midi.midiSysex.callSysexCallBacks) {
-    Midi.midiSysex.end();
+    Midi.sysexEnd();
   }
   if (Midi2.midiSysex.callSysexCallBacks) {
-    Midi2.midiSysex.end();
+    Midi2.sysexEnd();
   }
 
   while (MidiUart.avail()) {

@@ -67,11 +67,11 @@ protected:
   bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
-  volatile uint8_t *sysex_highmem_buf;
-  uint16_t sysex_bufsize;
 
 public:
 
+  volatile uint8_t *sysex_highmem_buf;
+  uint16_t sysex_bufsize;
   bool callSysexCallBacks;
   uint16_t recordLen;
   MidiUartParent *uart;
@@ -202,6 +202,7 @@ public:
   // Handled by main loop
   void end() {
     callSysexCallBacks = false;
+  
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i])) {
         listeners[i]->end();

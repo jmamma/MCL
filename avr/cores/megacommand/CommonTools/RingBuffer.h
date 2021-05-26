@@ -55,6 +55,8 @@ public:
   ALWAYS_INLINE() void put_h_isr(C c) volatile;
   /** put_h in isr, copy n elements from src buffer to ring buffer **/
   ALWAYS_INLINE() void put_h_isr(C *src, T n) volatile;
+  /** get_h in isr, copy n elements from src buffer to ring buffer **/
+  ALWAYS_INLINE() void get_h_isr(C *dst, T n) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
   ALWAYS_INLINE() void putp(C *c) volatile;
   /** Return the next element in the ring buffer. **/
@@ -100,6 +102,41 @@ void CRingBuffer<C, N, T>::init() volatile {
   #endif
   CLEAR_LOCK();
 }
+
+template <class C, int N, class T>
+void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
+  #ifdef CHECKING
+  if (isFull()) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  T s = n;
+
+  if (rd + n > len) {
+    s = len -  rd;
+  }
+  if constexpr (N == 0) {
+    memcpy_bank1(dst, ptr + rd, s * sizeof(C));
+  } else {
+    memcpy(dst, buf + rd, s * sizeof(C));
+  }
+  rd += s;
+  n -= s;
+  if (n) {
+    if constexpr (N == 0) {
+      memcpy_bank1(dst + s, ptr, n * sizeof(C));
+    } else {
+      memcpy(dst + s, buf, n * sizeof(C));
+    }
+    wr = n;
+  }
+  if (wr == len) {
+    wr = 0;
+  }
+}
+
 
 template <class C, int N, class T>
 void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
