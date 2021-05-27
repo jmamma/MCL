@@ -182,6 +182,7 @@ bool MDClass::probe() {
     uint64_t fw_caps_mask = ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS | (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL);
 
     while ((!get_fw_caps() || !(fw_caps & fw_caps_mask)) && count) {
+      DEBUG_PRINTLN("bad caps");
       mcl_gui.delay_progress(250);
       count--;
     }

@@ -43,6 +43,7 @@ public:
   volatile C *ptr = NULL;
   #ifdef CHECKING
   volatile uint8_t overflow;
+  bool check = true;
   #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
   /** Reset the buffer **/
@@ -106,7 +107,7 @@ void CRingBuffer<C, N, T>::init() volatile {
 template <class C, int N, class T>
 void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
   #ifdef CHECKING
-  if (isFull()) {
+  if (isFull() && check) {
     overflow++;
     return false;
   }
@@ -130,10 +131,10 @@ void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
     } else {
       memcpy(dst + s, buf, n * sizeof(C));
     }
-    wr = n;
+    rd = n;
   }
-  if (wr == len) {
-    wr = 0;
+  if (rd == len) {
+    rd = 0;
   }
 }
 
@@ -141,7 +142,7 @@ void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
 template <class C, int N, class T>
 void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   #ifdef CHECKING
-  if (isFull()) {
+  if (isFull() && check) {
     overflow++;
     return false;
   }
@@ -177,7 +178,7 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
 template <class C, int N, class T>
 void CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
   #ifdef CHECKING
-  if (isFull()) {
+  if (isFull() && check) {
     overflow++;
     return false;
   }
@@ -215,7 +216,7 @@ template <class C, int N, class T> T CRingBuffer<C, N, T>::size() volatile {
   if (wr >= rd) {
     return wr - rd;
   } else {
-    return 256 << (sizeof(T) - 1) - rd + wr;
+    return len - rd + wr;
   }
 }
 

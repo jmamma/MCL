@@ -5,7 +5,7 @@
 
 bool MNMGlobal::fromSysex(MidiClass *midi) {
   uint16_t offset = 5;
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
 
   //DEBUG_PRINT_FN();
 
@@ -14,7 +14,7 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   }
 
   //DEBUG_PRINT_FN();
-  //for(int i=0;i<midi->midiSysex.recordLen; ++i) {
+  //for(int i=0;i<midi->midiSysex.get_recordLen(); ++i) {
     //DEBUG_PRINTLN(midi->midiSysex.getByte(i));
   //}
 
@@ -127,7 +127,7 @@ uint16_t MNMGlobal::toSysex(uint8_t *sysex, uint16_t len) {
 bool MNMKit::fromSysex(MidiClass *midi) {
   DEBUG_PRINT_FN();
   uint16_t offset = 5;
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 #ifdef MIDIDUINO
@@ -298,7 +298,7 @@ bool MNMSong::fromSysex(uint8_t *data, uint16_t len) {
 
 bool MNMSong::fromSysex(MidiClass *midi) {
   uint16_t offset = 0;
-  uint16_t len = midi->midiSysex.recordLen;
+  uint16_t len = midi->midiSysex.get_recordLen();
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
     return false;

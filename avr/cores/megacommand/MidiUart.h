@@ -133,12 +133,12 @@ public:
                 volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartClassCommon(rx_buf, rx_buf_size, tx_buf, tx_buf_size) {}
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put(src,size);
+    txRb.put_h_isr(src,size);
     UART_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    txRb.put(c);
+    txRb.put_h_isr(c);
     UART_SET_ISR_TX_BIT();
   }
 
@@ -148,17 +148,17 @@ public:
 class MidiUartClass2 : public MidiUartClassCommon {
 
 public:
-  
+
   MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
                 volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartClassCommon(rx_buf, rx_buf_size, tx_buf, tx_buf_size) {}
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put(src,size);
+    txRb.put_h_isr(src,size);
     UART2_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    txRb.put(c);
+    txRb.put_h_isr(c);
     UART2_SET_ISR_TX_BIT();
   }
 

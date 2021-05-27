@@ -64,17 +64,15 @@ void MCL::setup() {
   trig_interface.enable_listener();
 
   md_track_select.setup(&Midi);
+
 #ifdef EXT_TRACKS
   A4SysexListener.setup(&Midi2);
   MNMSysexListener.setup(&Midi2);
 #endif
 
-#ifdef MEGACOMMAND
   MidiSDSSysexListener.setup(&Midi);
-#endif
-
   midi_setup.cfg_ports();
-  
+
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 

@@ -40,7 +40,7 @@ void MDTrackSelect::end() {
     return;
   }
 
-  if (sysex->recordLen == 8) {
+  if (sysex->get_recordLen() == 8) {
     bool expand = true;
     reset_undo();
     uint8_t length = sysex->getByte(6);
@@ -89,13 +89,13 @@ void MDTrackSelect::end_immediate() {
   if (sysex->getByte(1) != ids[1]) {
     return;
   }
-  
+
   uint8_t b = sysex->getByte(2);
   MD.global.extendedMode = b >> 4;
   MD.global.baseChannel = b & 0xF;
 
   b = sysex->getByte(3);
-  if (sysex->recordLen != 8) {
+  if (sysex->get_recordLen() != 8) {
     MD.currentTrack = b & 0xF;
   }
   MD.currentSynthPage = (b >> 4) & 3;

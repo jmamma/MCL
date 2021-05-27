@@ -58,7 +58,6 @@ public:
 
   bool isGenericMessage;
 
-  virtual void handleByte(uint8_t byte);
   virtual void start() { isGenericMessage = false; }
   virtual void end_immediate();
 

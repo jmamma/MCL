@@ -13,7 +13,7 @@ void A4SysexListenerClass::start() {
 
 void A4SysexListenerClass::handleByte(uint8_t byte) {
 
-  if (isA4Message && MidiSysex2.recordLen == sizeof(a4_sysex_hdr)) {
+  if (isA4Message && MidiSysex2.get_recordLen() == sizeof(a4_sysex_hdr)) {
     msgType = byte;
     switch (byte) {
     case A4_GLOBAL_MESSAGE_ID:

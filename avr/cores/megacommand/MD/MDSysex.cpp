@@ -15,6 +15,8 @@ void MDSysexListenerClass::handleByte(uint8_t byte) { }
 void MDSysexListenerClass::end_immediate() { }
 
 void MDSysexListenerClass::end() {
+  DEBUG_PRINTLN("sysex end");
+DEBUG_PRINTLN(sysex->getByte(3));
   if (sysex->getByte(3) == 0x02) {
     isMDMessage = true;
   } else {
@@ -22,6 +24,8 @@ void MDSysexListenerClass::end() {
     return;
   }
   msgType = sysex->getByte(sizeof(machinedrum_sysex_hdr));
+  DEBUG_PRINTLN("msgType");
+  DEBUG_PRINTLN(msgType);
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
     onStatusResponseCallbacks.call(sysex->getByte(6), sysex->getByte(7));

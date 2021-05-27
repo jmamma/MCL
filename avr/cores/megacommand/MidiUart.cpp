@@ -240,16 +240,12 @@ ISR(USART0_RX_vect) {
 
     if (MIDI_IS_STATUS_BYTE(c)) {
       if (c != MIDI_SYSEX_END) {
-        Midi.live_state = midi_wait_status;
         Midi.midiSysex.abort();
-
         MidiUart.rxRb.put_h_isr(c);
-
       } else {
-        Midi.midiSysex.callSysexCallBacks = true;
-        Midi.live_state = midi_wait_status;
         Midi.midiSysex.end_immediate();
       }
+      Midi.live_state = midi_wait_status;
     } else {
       // record
       Midi.midiSysex.handleByte(c);
@@ -316,16 +312,12 @@ ISR(USART1_RX_vect) {
 
     if (MIDI_IS_STATUS_BYTE(c)) {
       if (c != MIDI_SYSEX_END) {
-        Midi2.live_state = midi_wait_status;
         Midi2.midiSysex.abort();
-
         MidiUart2.rxRb.put_h_isr(c);
-
       } else {
-        Midi2.midiSysex.callSysexCallBacks = true;
-        Midi2.live_state = midi_wait_status;
         Midi2.midiSysex.end_immediate();
       }
+      Midi2.live_state = midi_wait_status;
     } else {
       // record
       Midi2.midiSysex.handleByte(c);

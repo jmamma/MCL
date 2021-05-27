@@ -82,7 +82,7 @@ public:
   MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
 
   void init();
-  void sysexEnd();
+  void sysexEnd(uint8_t msg_rd);
   void handleByte(uint8_t c);
 
 #ifdef HOST_MIDIDUINO

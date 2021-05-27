@@ -269,11 +269,15 @@ ISR(TIMER3_COMPA_vect) {
 bool enable_clock_callbacks = true;
 
 void handleIncomingMidi() {
-  if (Midi.midiSysex.callSysexCallBacks) {
-    Midi.sysexEnd();
+
+  while (Midi.midiSysex.avail()) {
+    Midi.sysexEnd(Midi.midiSysex.msg_rd);
+    Midi.midiSysex.get_next_msg();
   }
-  if (Midi2.midiSysex.callSysexCallBacks) {
-    Midi2.sysexEnd();
+
+  while (Midi2.midiSysex.avail()) {
+    Midi2.sysexEnd(Midi2.midiSysex.msg_rd);
+    Midi2.midiSysex.get_next_msg();
   }
 
   while (MidiUart.avail()) {

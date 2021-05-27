@@ -90,7 +90,7 @@ bool MDGlobal::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len != 0xC4 - 6) {
@@ -238,6 +238,7 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
     GUI.flash_strings_fill("WRONG LEN", "");
     GUI.setLine(GUI.LINE2);
     GUI.flash_put_value16(0, len);
+    DEBUG_PRINTLN("Wrong length");
     return false;
   }
 
@@ -287,7 +288,7 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 bool MDKit::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
     DEBUG_PRINTLN(F("kit wrong length"));
@@ -492,7 +493,7 @@ bool MDSong::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 bool MDSong::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len < 0x1a - 7)

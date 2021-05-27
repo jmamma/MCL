@@ -19,7 +19,8 @@ const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {MIDI_TUNE_REQUEST, midi_wait_status},
                                    {0, midi_ignore_message}};
 
-MidiClass::MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr)
+MidiClass::MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen,
+                     volatile uint8_t *ptr)
     : midiSysex(_uart, _sysexBufLen, ptr) {
   midiActive = true;
   uart = _uart;
@@ -33,17 +34,37 @@ void MidiClass::init() {
   in_state = midi_wait_status;
   live_state = midi_wait_status;
 }
-#define ENABLE_DIAG_LOGGING
-#include "DiagnosticPage.h"
-void MidiClass::sysexEnd() {
 
-  if (uart_forward && (midiSysex.recordLen + 2) < (uart_forward->txRb.len - uart_forward->txRb.size())) {
-      uart_forward->m_putc(0xF0);
-      uart_forward->m_putc(midiSysex.sysex_highmem_buf,midiSysex.recordLen);
-      uart_forward->m_putc(0xF7);
+void MidiClass::sysexEnd(uint8_t msg_rd) {
+  midiSysex.rd_cur = msg_rd;
+  uint16_t len = midiSysex.get_recordLen();
+  DEBUG_PRINTLN("processing");
+  DEBUG_PRINTLN(msg_rd);
+  DEBUG_PRINTLN(len);
+  DEBUG_PRINTLN(uart_forward->txRb.len - uart_forward->txRb.size());
+  if (len == 0 || midiSysex.get_ptr() == nullptr) { DEBUG_PRINTLN("returning"); return; }
+
+  if (uart_forward && ((len + 2) < (uart_forward->txRb.len -
+                                           uart_forward->txRb.size()))) {
+    const uint16_t size = 2048;
+    uint8_t buf[size];
+    uint16_t n = 0;
+    midiSysex.Rb.rd = (uint16_t) midiSysex.get_ptr() - (uint16_t) midiSysex.Rb.ptr;
+    uart_forward->m_putc(0xF0);
+    while (len) {
+      if (len > size) {
+        n = size;
+        len -= n;
+      } else {
+        n = len;
+        len = 0;
+      }
+      midiSysex.Rb.get_h_isr(buf, n); //we don't worry about the Rb.rd increase, as it wont be used anywhere else
+      uart_forward->m_putc(buf, n);
+    }
+    uart_forward->m_putc(0xF7);
   }
   midiSysex.end();
-
 }
 
 void MidiClass::handleByte(uint8_t byte) {
@@ -160,10 +181,12 @@ again:
       callback =
           0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
-    
+
     uint8_t buf[3];
-    memcpy(buf,msg,3);
-    if (uart_forward) { uart_forward->m_putc(buf, in_msg_len); }
+    memcpy(buf, msg, 3);
+    if (uart_forward) {
+      uart_forward->m_putc(buf, in_msg_len);
+    }
 
 #ifdef HOST_MIDIDUINO
     messageCallback.call(msg, in_msg_len);

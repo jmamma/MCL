@@ -202,6 +202,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexToDataEncoder::unpack8Bit() {
     if (data) {
       *(ptr++) = tmpData[i];
     } else {
+      DEBUG_PRINTLN("ElektronSysexToDataEncoder");
       midi->midiSysex.putByte(n++, tmpData[i]);
     }
     retLen++;
