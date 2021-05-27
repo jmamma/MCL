@@ -15,8 +15,10 @@
 #include <avr/io.h>
 uint16_t clock_measure = 0;
 
-MidiUartClassCommon::MidiUartClassCommon(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                             volatile uint8_t *tx_buf, uint16_t tx_buf_size)
+MidiUartClassCommon::MidiUartClassCommon(volatile uint8_t *rx_buf,
+                                         uint16_t rx_buf_size,
+                                         volatile uint8_t *tx_buf,
+                                         uint16_t tx_buf_size)
     : MidiUartParent() {
   rxRb.ptr = rx_buf;
   rxRb.len = rx_buf_size;
@@ -27,8 +29,7 @@ MidiUartClassCommon::MidiUartClassCommon(volatile uint8_t *rx_buf, uint16_t rx_b
   initSerial();
 }
 
-
-void MidiUartClass::initSerial() {
+void MidiUartClassCommon::initSerial() {
   running_status = 0;
   set_speed(31250, 1);
 
@@ -42,10 +43,6 @@ void MidiUartClass::initSerial() {
 
   UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 #endif
-}
-
-void MidiUartClass2::initSerial() {
-  running_status = 0;
   set_speed(31250, 2);
 #ifdef MEGACOMMAND
   UCSR2C = (3 << UCSZ00);
@@ -232,59 +229,47 @@ ISR(USART0_RX_vect) {
         MidiUart.rxRb.put_h_isr(c);
       }
     }
-  } else {
+    return;
+  }
+
+  if (MIDI_IS_STATUS_BYTE(c)) {
+    MidiUart.recvActiveSenseTimer = 0;
+  }
+  switch (Midi.live_state) {
+  case midi_wait_sysex: {
 
     if (MIDI_IS_STATUS_BYTE(c)) {
-      MidiUart.recvActiveSenseTimer = 0;
-    }
-    switch (Midi.live_state) {
-    case midi_wait_sysex: {
+      if (c != MIDI_SYSEX_END) {
+        Midi.live_state = midi_wait_status;
+        Midi.midiSysex.abort();
 
-      if (MIDI_IS_STATUS_BYTE(c)) {
-        if (c != MIDI_SYSEX_END) {
-          Midi.live_state = midi_wait_status;
-          Midi.midiSysex.abort();
-
-          MidiUart.rxRb.put_h_isr(c);
-
-        } else {
-          // handle sysex end here
-          //     GUI.flash_string("OKAY");
-          Midi.midiSysex.callSysexCallBacks = true;
-          Midi.live_state = midi_wait_status;
-          Midi.midiSysex.end_immediate();
-        }
-      } else {
-        // record
-        Midi.midiSysex.handleByte(c);
-      }
-      break;
-    }
-
-    case midi_wait_status: {
-      if (c == MIDI_SYSEX_START) {
-        Midi.live_state = midi_wait_sysex;
-        Midi.midiSysex.reset();
-        // Midi_->last_status = Midi_->running_status = 0;
-      } else {
         MidiUart.rxRb.put_h_isr(c);
-      }
-    } break;
-    default:
-      MidiUart.rxRb.put_h_isr(c);
 
-      break;
+      } else {
+        Midi.midiSysex.callSysexCallBacks = true;
+        Midi.live_state = midi_wait_status;
+        Midi.midiSysex.end_immediate();
+      }
+    } else {
+      // record
+      Midi.midiSysex.handleByte(c);
     }
+    break;
   }
-  /*
-    if (UART_CHECK_EMPTY_BUFFER() && !MidiUart.txRb.isEmpty()) {
-      MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-      UART_WRITE_CHAR(MidiUart.txRb.get());
+
+  case midi_wait_status: {
+    if (c == MIDI_SYSEX_START) {
+      Midi.live_state = midi_wait_sysex;
+      Midi.midiSysex.reset();
+    } else {
+      MidiUart.rxRb.put_h_isr(c);
     }
-    if (UART2_CHECK_EMPTY_BUFFER() && !MidiUart2.txRb.isEmpty()) {
-     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-      UART2_WRITE_CHAR(MidiUart2.txRb.get());
-    } */
+  } break;
+  default: {
+    MidiUart.rxRb.put_h_isr(c);
+    break;
+  }
+  }
 }
 
 #ifdef MEGACOMMAND
@@ -320,80 +305,47 @@ ISR(USART1_RX_vect) {
         MidiUart2.rxRb.put_h_isr(c);
       }
     }
-  return;
+    return;
   }
 
+  if (MIDI_IS_STATUS_BYTE(c)) {
+    MidiUart2.recvActiveSenseTimer = 0;
+  }
+  switch (Midi2.live_state) {
+  case midi_wait_sysex: {
+
     if (MIDI_IS_STATUS_BYTE(c)) {
-      MidiUart2.recvActiveSenseTimer = 0;
-    }
-    switch (Midi2.live_state) {
-    case midi_wait_sysex: {
-
-      if (MIDI_IS_STATUS_BYTE(c)) {
-        if (c != MIDI_SYSEX_END) {
-          Midi2.live_state = midi_wait_status;
-          Midi2.midiSysex.abort();
-
-          MidiUart2.rxRb.put_h_isr(c);
-
-        } else {
-          Midi2.midiSysex.callSysexCallBacks = true;
-          Midi2.live_state = midi_wait_status;
-          if (Midi2.uart_forward && (Midi2.midiSysex.recordLen + 2) < (Midi2.uart_forward->txRb.len - Midi2.uart_forward->txRb.size())) {
-              Midi2.uart_forward->m_putc(0xF0);
-              Midi2.uart_forward->m_putc(Midi2.midiSysex.sysex_highmem_buf,Midi2.midiSysex.recordLen);
-              Midi2.uart_forward->m_putc(0xF7);
-          }
-
-          Midi2.midiSysex.end_immediate();
-        }
-      } else {
-        // record
-        Midi2.midiSysex.handleByte(c);
-      }
-      break;
-    }
-    case midi_wait_status: {
-      if (c == MIDI_SYSEX_START) {
-        Midi2.live_state = midi_wait_sysex;
-        Midi2.midiSysex.reset();
-        // Midi_->last_status = Midi_->running_status = 0;
-      } else {
-        goto handle_midi_byte;
-      }
-    } break;
-    default: {
-       handle_midi_byte:
-       switch (c & 0xF0) {
-        case MIDI_CHANNEL_PRESSURE:
-        case MIDI_PROGRAM_CHANGE:
-          MidiUart.in_message_rx = 1;
-          MidiUart.msg_pos = 0;
-          break;
-        case MIDI_NOTE_OFF:
-        case MIDI_NOTE_ON:
-        case MIDI_AFTER_TOUCH:
-        case MIDI_CONTROL_CHANGE:
-        case MIDI_PITCH_WHEEL:
-          MidiUart.in_message_rx = 2;
-          MidiUart.msg_pos = 0;
-          break;
-        default:
-          MidiUart.in_message_rx = 0;
-          return;
-        }
-        
-       if (MidiUart.in_message_rx > 0) {
-         MidiUart.msg[MidiUart.msg_pos++] = c;
-         if (c < 128)
-          MidiUart.in_message_rx--;
-         if (!MidiUart.in_message_rx && Midi.uart_forward) { uint8_t buf[3]; memcpy(buf,MidiUart.msg,3); Midi.uart_forward->m_putc(buf, MidiUart.msg_pos); }
-        }
+      if (c != MIDI_SYSEX_END) {
+        Midi2.live_state = midi_wait_status;
+        Midi2.midiSysex.abort();
 
         MidiUart2.rxRb.put_h_isr(c);
-      break;
-     }
+
+      } else {
+        Midi2.midiSysex.callSysexCallBacks = true;
+        Midi2.live_state = midi_wait_status;
+        Midi2.midiSysex.end_immediate();
+      }
+    } else {
+      // record
+      Midi2.midiSysex.handleByte(c);
     }
+    break;
+  }
+  case midi_wait_status: {
+    if (c == MIDI_SYSEX_START) {
+      Midi2.live_state = midi_wait_sysex;
+      Midi2.midiSysex.reset();
+    } else {
+      MidiUart2.rxRb.put_h_isr(c);
+    }
+    break;
+  }
+  default: {
+    MidiUart2.rxRb.put_h_isr(c);
+    break;
+  }
+  }
 }
 
 #ifdef TX_IRQ
@@ -460,7 +412,8 @@ ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
-  if ((MidiUart2.txRb_sidechannel != nullptr) && (MidiUart2.in_message_tx == 0)) {
+  if ((MidiUart2.txRb_sidechannel != nullptr) &&
+      (MidiUart2.in_message_tx == 0)) {
 
     if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
       MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
@@ -510,5 +463,3 @@ ISR(USART1_UDRE_vect) {
 }
 #endif
 #endif
-
-

@@ -37,14 +37,13 @@ void MidiClass::init() {
 #include "DiagnosticPage.h"
 void MidiClass::sysexEnd() {
 
-/*  uint16_t a = midiSysex.recordLen;
-  DIAG_DUMP(a);
   if (uart_forward && (midiSysex.recordLen + 2) < (uart_forward->txRb.len - uart_forward->txRb.size())) {
       uart_forward->m_putc(0xF0);
       uart_forward->m_putc(midiSysex.sysex_highmem_buf,midiSysex.recordLen);
       uart_forward->m_putc(0xF7);
-  }*/
+  }
   midiSysex.end();
+
 }
 
 void MidiClass::handleByte(uint8_t byte) {
@@ -161,11 +160,11 @@ again:
       callback =
           0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
-    /*
+    
     uint8_t buf[3];
     memcpy(buf,msg,3);
     if (uart_forward) { uart_forward->m_putc(buf, in_msg_len); }
-    */
+
 #ifdef HOST_MIDIDUINO
     messageCallback.call(msg, in_msg_len);
 #endif
