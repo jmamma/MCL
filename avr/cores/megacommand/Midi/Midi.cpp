@@ -62,7 +62,7 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
       midiSysex.Rb.get_h_isr(buf, n); //we don't worry about the Rb.rd increase, as it wont be used anywhere else
       uart_forward->txRb.put_h_isr(buf, n);
     }
-    uart_forward->txRb.put_h_isr(0xF7);
+    uart_forward->m_putc(0xF7);
   }
   midiSysex.end();
 }

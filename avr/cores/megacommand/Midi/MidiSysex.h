@@ -41,7 +41,8 @@ public:
     msgType = 255;
     msg_rd = 255;
   };
-
+  /* Point MidiSysexClass to the last sysex message matching this listener's message ids */
+  void readSysexStart() { sysex->rd_cur = msg_rd; }
   virtual void start() {}
   virtual void end() {}
   virtual void end_immediate() {}
@@ -56,6 +57,7 @@ public:
 #define NUM_SYSEX_SLAVES 4
 
 #define NUM_SYSEX_MSGS 24
+
 
 class MidiSysexLedger {
 public:
