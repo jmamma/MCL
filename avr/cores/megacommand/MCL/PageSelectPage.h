@@ -4,9 +4,6 @@
 #define PageSelectPAGE_H__
 
 #include "GUI.h"
-#include "MD.h"
-
-#define USE_BLOCKINGKIT
 
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;
@@ -29,9 +26,6 @@ struct PageSelectEntry {
 
 class PageSelectPage : public LightPage {
 public:
-  #ifndef USE_BLOCKINGKIT
-  MDCallback kit_cb;
-  #endif
   bool loop_init = false;
   uint8_t page_select;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

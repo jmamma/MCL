@@ -105,42 +105,15 @@ void PageSelectPage::init() {
 }
 
 void PageSelectPage::md_prepare() {
-#ifndef USE_BLOCKINGKIT
-  kit_cb.init();
-
-  MDSysexListener.addOnKitMessageCallback(
-      &kit_cb,
-      (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-#endif
   if (MD.connected) {
-#ifdef USE_BLOCKINGKIT
-    MD.getBlockingKit(0x7F, CALLBACK_TIMEOUT);
-    if (MidiClock.state == 2) {
+    if (MD.getBlockingKit(0x7F, CALLBACK_TIMEOUT) && MidiClock.state == 2) {
       // Restore kit param values that are being modulaated by locks
       mcl_seq.update_kit_params();
     }
-#else
-    MD.requestKit(0x7F);
-    delay(20);
-#endif
   }
 }
 
 void PageSelectPage::cleanup() {
-#ifndef USE_BLOCKINGKIT
-  uint16_t myclock = slowclock;
-  if (!loop_init) {
-    while (!kit_cb.received && (clock_diff(myclock, slowclock) < 400))
-      ;
-    if (kit_cb.received) {
-      MD.kit.fromSysex(MD.midi);
-      if (MidiClock.state == 2) {
-        mcl_seq.update_kit_params();
-      }
-    }
-  }
-  MDSysexListener.removeOnKitMessageCallback(&kit_cb);
-#endif
   note_interface.init_notes();
   MD.set_trigleds(0, TRIGLED_OVERLAY);
 }
