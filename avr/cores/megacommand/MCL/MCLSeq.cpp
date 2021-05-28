@@ -185,6 +185,7 @@ again:
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
+/*
         while (!seq_tx2.txRb.isEmpty_isr()) {
           setLed2();
           seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
@@ -193,6 +194,7 @@ again:
           setLed2();
           seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
         }
+*/
         MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
       }
@@ -205,12 +207,14 @@ again:
       uart = &seq_tx1;
       uart2 = &seq_tx3;
       if (engage_sidechannel) {
+/*
         while (!seq_tx1.txRb.isEmpty_isr()) {
           seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
         }
         while (!seq_tx3.txRb.isEmpty_isr()) {
           seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
         }
+*/
         MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
       }

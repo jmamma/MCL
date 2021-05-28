@@ -42,7 +42,7 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
   DEBUG_PRINTLN(msg_rd);
   DEBUG_PRINTLN(len);
   DEBUG_PRINTLN(uart_forward->txRb.len - uart_forward->txRb.size());
-  if (len == 0 || midiSysex.get_ptr() == nullptr) { DEBUG_PRINTLN("returning"); return; }
+  //if (len == 0 || midiSysex.get_ptr() == nullptr) { DEBUG_PRINTLN("returning"); return; }
 
   if (uart_forward && ((len + 2) < (uart_forward->txRb.len -
                                            uart_forward->txRb.size()))) {
@@ -50,7 +50,7 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
     uint8_t buf[size];
     uint16_t n = 0;
     midiSysex.Rb.rd = (uint16_t) midiSysex.get_ptr() - (uint16_t) midiSysex.Rb.ptr;
-    uart_forward->m_putc(0xF0);
+    uart_forward->txRb.put_h_isr(0xF0);
     while (len) {
       if (len > size) {
         n = size;
@@ -60,9 +60,9 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
         len = 0;
       }
       midiSysex.Rb.get_h_isr(buf, n); //we don't worry about the Rb.rd increase, as it wont be used anywhere else
-      uart_forward->m_putc(buf, n);
+      uart_forward->txRb.put_h_isr(buf, n);
     }
-    uart_forward->m_putc(0xF7);
+    uart_forward->txRb.put_h_isr(0xF7);
   }
   midiSysex.end();
 }

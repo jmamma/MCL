@@ -115,23 +115,8 @@ public:
   ALWAYS_INLINE() volatile uint8_t *get_ptr() { return ledger[rd_cur].ptr; }
 
   bool avail() {
-      again:
-      if ((msg_wr == msg_rd) || ledger[msg_rd].state != SYSEX_STATE_FIN || ledger[msg_rd].recordLen == 0) { return false; }
-/*
-      uint16_t ledger_start = (uint16_t) ledger[msg_rd].ptr - (uint16_t) Rb.ptr;
-      uint16_t ledger_end = ledger_start + ledger[msg_rd].recordLen - 1;
-      if (ledger_end > Rb.len) { ledger_end -= Rb.len; }
-
-      if (Rb.wr >= ledger_start && Rb.wr <= ledger_end) {
-        //Current ledge datar is invalid, as bytes have been overwritten.
-        memset(&ledger[msg_rd],0,sizeof(MidiSysexLedger));
-        get_next_msg();
-        goto again;
-      }
-*/
-      return true;
+      return ((msg_wr != msg_rd) && ledger[msg_rd].state == SYSEX_STATE_FIN && ledger[msg_rd].recordLen != 0);
   }
-
 
   bool is_full() {
     uint8_t msg_next = msg_wr + 1;
