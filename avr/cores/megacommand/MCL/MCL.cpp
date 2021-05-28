@@ -141,7 +141,6 @@ bool mcl_handleEvent(gui_event_t *event) {
             clearLed2();
           } else {
             if (GUI.currentPage() == &seq_step_page) {
-              MD.set_rec_mode(0);
               GUI.setPage(&grid_page);
             }
           }
