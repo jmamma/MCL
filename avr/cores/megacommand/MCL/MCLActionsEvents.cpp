@@ -10,7 +10,7 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
 
   mcl_actions.start_clock96th = MidiClock.div96th_counter;
   if (MidiClock.state != 2) {
-    MD.getBlockingKit(0xF7);
+    MD.getBlockingKit(0x7F);
   }
 }
 
