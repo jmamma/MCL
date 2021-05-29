@@ -88,30 +88,46 @@ public:
 
   virtual uint8_t getc() { return 0; }
 
- #ifdef MIDI_RUNNING_STATUS
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
+#ifdef MIDI_RUNNING_STATUS
+  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) {
+    sendCommandByte(cmdByte);
+  }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1 & 0x7F);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
   ALWAYS_INLINE()
   virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
     sendCommandByte(cmdByte);
     m_putc(byte1 & 0x7F);
     m_putc(byte2 & 0x7F);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
- #else
+#else
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { m_putc(cmdByte); }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
-    uint8_t data[2] = { cmdByte, (uint8_t)(byte1 & 0x7F) };
-    m_putc(data,2);
+    uint8_t data[2] = {cmdByte, (uint8_t)(byte1 & 0x7F)};
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
+    m_putc(data, 2);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
 
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
-    uint8_t data[3] = { cmdByte, (uint8_t)(byte1 & 0x7F), (uint8_t)(byte2 & 0x7F) };
-    m_putc(data,3);
+  ALWAYS_INLINE()
+  virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
+    uint8_t data[3] = {cmdByte, (uint8_t)(byte1 & 0x7F),
+                       (uint8_t)(byte2 & 0x7F)};
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
+    m_putc(data, 3);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
-  #endif
+#endif
 
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
 #ifdef MIDI_RUNNING_STATUS
@@ -304,35 +320,53 @@ public:
   }
 
   void sendNRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
     sendCC(channel, 99, (parameter >> 7));
     sendCC(channel, 98, (parameter));
     sendCC(channel, 6, value);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
   void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
     sendCC(channel, 99, (parameter >> 7));
     sendCC(channel, 98, (parameter));
     sendCC(channel, 6, (value >> 7));
     sendCC(channel, 38, (value));
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
 
   void sendRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
     sendCC(channel, 101, (parameter >> 7));
     sendCC(channel, 100, (parameter));
     sendCC(channel, 6, value);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
   void sendRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
     sendCC(channel, 101, (parameter >> 7));
     sendCC(channel, 100, (parameter));
     sendCC(channel, 6, (value >> 7));
     sendCC(channel, 38, (value));
+     MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
   }
 
   virtual void sendSysex(uint8_t *data, uint8_t cnt) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
     sendCommandByte(0xF0);
     m_putc(data, cnt);
     sendCommandByte(0xF7);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
+
   }
-  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
+  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) {
+    uint8_t _handle_midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    MidiUartParent::handle_midi_lock = 1;
+    m_putc(msg, cnt);
+    MidiUartParent::handle_midi_lock = _handle_midi_lock_tmp;
+  }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, m_strlen(data)); }

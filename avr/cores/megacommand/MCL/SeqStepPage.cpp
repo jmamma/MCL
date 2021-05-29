@@ -57,7 +57,6 @@ void SeqStepPage::init() {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
-  MidiUartParent::handle_midi_lock = 0;
 
   trigled_mask = 0;
   locks_on_step_mask = 0;
@@ -130,12 +129,10 @@ void SeqStepPage::display() {
   }
 
   else {
-    MidiUartParent::handle_midi_lock = 1;
 
     draw_lock_mask((page_select * 16), DEVICE_MD);
     draw_mask((page_select * 16), DEVICE_MD);
 
-    MidiUartParent::handle_midi_lock = 0;
 
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
@@ -163,7 +160,6 @@ void SeqStepPage::loop() {
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
-  MidiUartParent::handle_midi_lock = 1;
 
   if (MDSeqTrack::sync_cursor) {
      MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);

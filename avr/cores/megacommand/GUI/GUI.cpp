@@ -72,7 +72,6 @@ void GuiClass::redisplay() {
 void loop();
 
 void GuiClass::loop() {
-  MidiUartParent::handle_midi_lock = 1;
   if (!EventRB.isEmpty()) {
     clock_minutes = 0;
     minuteclock = 0;
@@ -104,7 +103,6 @@ void GuiClass::loop() {
     }
   }
 
-  MidiUartParent::handle_midi_lock = 0;
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {
@@ -124,7 +122,6 @@ void GuiClass::loop() {
     oled_display.screen_saver = true;
 #endif
   }
-  MidiUartParent::handle_midi_lock = 0;
 
   display();
 

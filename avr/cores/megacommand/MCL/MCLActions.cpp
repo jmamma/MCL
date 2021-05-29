@@ -494,7 +494,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (slot_select_array[n] > 0) {
 
       if (gui_update) {
-        handleIncomingMidi();
         if (n % 8 == 0) {
           if (GUI.currentPage() != &grid_write_page) {
             proj.select_grid(old_grid);

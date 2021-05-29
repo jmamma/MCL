@@ -26,6 +26,8 @@ void TurboLight::send_header(uint8_t cmd, MidiUartClass *MidiUart_) {
 }
 
 void TurboLight::set_speed(uint8_t speed, uint8_t port) {
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
   MidiUartClass *MidiUart_;
 
   if (port == 1) {
@@ -78,7 +80,7 @@ void TurboLight::set_speed(uint8_t speed, uint8_t port) {
 
   // MidiUart_->sendActiveSenseTimer = 10;
   //   CLEAR_LOCK();
-
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 
