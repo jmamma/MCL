@@ -78,6 +78,7 @@ void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   trig_interface.on();
   md_prepare();
+  MidiUartParent::handle_midi_lock = 0;
   R.Clear();
   R.use_icons_page();
   R.use_page_entries();

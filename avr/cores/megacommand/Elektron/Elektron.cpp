@@ -15,10 +15,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
       buf[i++] = data[n] & 0x7F;
     }
     buf[i++] = 0xF7;
-    uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
-    MidiUartParent::handle_midi_lock = 1;
     uart->m_putc(buf, i);
-    MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   }
   return len + sysex_protocol.header_size + 2;
 }

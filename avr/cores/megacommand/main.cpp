@@ -213,9 +213,7 @@ ISR(TIMER1_COMPA_vect) {
    uint8_t _irqlock_tmp = SREG;
    MidiUartParent::handle_midi_lock = 1;
    sei();
-   setLed2();
    handleIncomingMidi();
-   clearLed2();
    SREG = _irqlock_tmp;
    MidiUartParent::handle_midi_lock = 0;
   }
@@ -281,19 +279,19 @@ bool enable_clock_callbacks = true;
 
 
 void handleIncomingMidi() {
-  if (Midi.midiSysex.avail()) {
+  while (Midi.midiSysex.avail()) {
     Midi.sysexEnd(Midi.midiSysex.msg_rd);
     Midi.midiSysex.get_next_msg();
   }
-  if (Midi2.midiSysex.avail()) {
+  while (Midi2.midiSysex.avail()) {
     Midi2.sysexEnd(Midi2.midiSysex.msg_rd);
     Midi2.midiSysex.get_next_msg();
   }
-  if (MidiUart.avail()) {
+  while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
   // Disable non realtime midi
-  if (MidiUart2.avail()) {
+  while (MidiUart2.avail()) {
     Midi2.handleByte(MidiUart2.m_getc());
   }
 }

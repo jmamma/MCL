@@ -267,9 +267,7 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   data[2] = deviceID;
   data[4] = packetNumber;
   uint8_t checksum = 0;
-  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
-  MidiUartParent::handle_midi_lock = 1;
-  MidiUart.m_putc(data, 5);
+  MidiUart.sendRaw(data, 5);
   for (int i = 1; i < 5; i++)
     checksum ^= data[i];
   for (int i = 0; i < len; i++) {
@@ -283,7 +281,6 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
     MidiUart.m_putc(0x00);
   MidiUart.m_putc(checksum & 0x7F);
   MidiUart.m_putc(0xF7);
-  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   return true;
 }
 MidiSDSClass midi_sds;

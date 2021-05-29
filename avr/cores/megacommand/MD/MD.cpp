@@ -729,7 +729,8 @@ void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   buf[i++] = command;
   buf[i++] = value;
   buf[i++] = 0xF7;
-  uart->sendRaw(buf,i);
+
+  uart->m_putc(buf,i);
 }
 
 void MDClass::toggle_kit_menu() {

@@ -78,7 +78,6 @@ void ElektronDataToSysexEncoder::finishChecksum() {
   pack8(len & 0x7F);
   if (uart != NULL) {
     uart_send(0xF7);
-    MidiUartParent::handle_midi_lock = 0;
   } else {
     *(ptr++) = 0xF7;
   }
@@ -86,7 +85,6 @@ void ElektronDataToSysexEncoder::finishChecksum() {
 
 void ElektronDataToSysexEncoder::begin() {
   if (uart != NULL) {
-    MidiUartParent::handle_midi_lock = 1;
     uart_send(0xF0);
   } else {
     *(ptr++) = 0xF0;
