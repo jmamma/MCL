@@ -217,14 +217,11 @@ public:
       if (recvIds[0] == listener->ids[0] && recvIds[1] == listener->ids[1] &&
           recvIds[2] == listener->ids[2])
         return true;
-      else
-        return false;
     } else {
       if (recvIds[0] == listener->ids[0])
         return true;
-      else
-        return false;
     }
+    return false;
   }
 
   ALWAYS_INLINE() void abort() {
@@ -260,6 +257,8 @@ public:
     uint8_t old_msg = rd_cur;
     rd_cur = msg_wr;
 
+    stopRecord();
+
     recvIds[0] = getByte(0);
 
     sysexLongId = false;
@@ -275,20 +274,17 @@ public:
         listeners[i]->end_immediate();
       }
     }
-    stopRecord();
     rd_cur = old_msg;
   }
 
   ALWAYS_INLINE() void handleByte(uint8_t byte) {
     if (recording) {
-      /*if (ledger[msg_rd].state == SYSEX_STATE_FIN && ledger[msg_rd].ptr ==
-      Rb.ptr + Rb.wr) { setLed2(); abort();
+      //if (ledger[msg_rd].state == SYSEX_STATE_FIN && ledger[msg_rd].ptr == Rb.ptr + Rb.wr) { abort(); return; }
       //memset(&ledger[msg_rd],0,sizeof(MidiSysexLedger));
       //get_next_msg();
-      }*/
       recordByte(byte);
     }
-  }
+   }
 
   /* @} */
 };
