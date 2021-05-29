@@ -47,12 +47,6 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
-  seq_param2.min = 1;
-  seq_param2.old = 12;
-  seq_param1.cur = 0;
-  seq_param3.max = 64;
-  seq_param3.min = 1;
   midi_events.setup_callbacks();
   curpage = SEQ_STEP_PAGE;
   trig_interface.on();
@@ -63,13 +57,20 @@ void SeqStepPage::init() {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
+  MidiUartParent::handle_midi_lock = 0;
+
   trigled_mask = 0;
   locks_on_step_mask = 0;
-
   config();
   note_interface.state = true;
   reset_on_release = false;
   update_params_queue = false;
+  seq_param1.max = NUM_TRIG_CONDITIONS * 2;
+  seq_param2.min = 1;
+  seq_param2.old = 12;
+  seq_param1.cur = 0;
+  seq_param3.max = 64;
+  seq_param3.min = 1;
   display();
 }
 
@@ -129,8 +130,13 @@ void SeqStepPage::display() {
   }
 
   else {
+    MidiUartParent::handle_midi_lock = 1;
+
     draw_lock_mask((page_select * 16), DEVICE_MD);
     draw_mask((page_select * 16), DEVICE_MD);
+
+    MidiUartParent::handle_midi_lock = 0;
+
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
@@ -147,6 +153,7 @@ void SeqStepPage::display() {
 void SeqStepPage::loop() {
   if (MD.global.extendedMode != 2) {
     GUI.setPage(&grid_page);
+    return;
   }
   SeqPage::loop();
 
@@ -156,11 +163,12 @@ void SeqStepPage::loop() {
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
+  MidiUartParent::handle_midi_lock = 1;
+
   if (MDSeqTrack::sync_cursor) {
      MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
      MDSeqTrack::sync_cursor = 0;
   }
-
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
@@ -631,31 +639,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-void SeqStepMidiEvents::onMidiStartCallback() {
-  // Handle record down + play
-  //  if (trig_interface.is_key_down(MDX_KEY_REC)) {
-  // trig_interface.ignoreNextEvent(MDX_KEY_REC);
-  //    seq_step_page.recording = true;
-  //    MD.set_rec_mode(2);
-  //  }
-}
-
-void SeqStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-
-  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
-  uint8_t note_num = msg[1] - tuning->base;
-  if (note_num < tuning->len) {
-    uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
-    if (MidiClock.state != 2) {
-      MD.setTrackParam(last_md_track, 0, machine_pitch);
-      MD.triggerTrack(last_md_track, 127);
-    }
-    seq_param4.cur = note_num;
-  }
-}
-
 void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -754,11 +737,6 @@ void SeqStepMidiEvents::setup_callbacks() {
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
-  Midi2.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
-  // MidiClock.addOnMidiStartCallback(
-  //    this,
-  //    (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = true;
 }
 
@@ -770,10 +748,5 @@ void SeqStepMidiEvents::remove_callbacks() {
   Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
-  Midi2.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqStepMidiEvents::onNoteOnCallback_Midi2);
-  // MidiClock.removeOnMidiStartCallback(
-  //    this,
-  //    (midi_clock_callback_ptr_t)&SeqStepMidiEvents::onMidiStartCallback);
   state = false;
 }

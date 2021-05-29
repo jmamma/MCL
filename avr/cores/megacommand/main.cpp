@@ -27,7 +27,7 @@ extern "C" {
 #ifdef OLED_DISPLAY
 Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
 #endif
-volatile uint8_t MidiUartParent::midi_lock = 0;
+volatile uint8_t MidiUartParent::handle_midi_lock = 0;
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
 // extern volatile uint16_t slowclock = 0;
@@ -209,13 +209,13 @@ ISR(TIMER1_COMPA_vect) {
     }
   }
 
-  if (!MidiUartParent::midi_lock)  {
+  if (!MidiUartParent::handle_midi_lock)  {
    uint8_t _irqlock_tmp = SREG;
-   MidiUartParent::midi_lock = 1;
+   MidiUartParent::handle_midi_lock = 1;
    sei();
    handleIncomingMidi();
    SREG = _irqlock_tmp;
-   MidiUartParent::midi_lock = 0;
+   MidiUartParent::handle_midi_lock = 0;
   }
 }
 

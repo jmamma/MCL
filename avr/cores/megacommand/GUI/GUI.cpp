@@ -72,7 +72,7 @@ void GuiClass::redisplay() {
 void loop();
 
 void GuiClass::loop() {
-  MidiUartParent::midi_lock = 1;
+  MidiUartParent::handle_midi_lock = 1;
   if (!EventRB.isEmpty()) {
     clock_minutes = 0;
     minuteclock = 0;
@@ -104,6 +104,7 @@ void GuiClass::loop() {
     }
   }
 
+  MidiUartParent::handle_midi_lock = 0;
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {
@@ -118,13 +119,15 @@ void GuiClass::loop() {
 #ifndef HOST_MIDIDUINO
   ::loop();
 #endif
-  MidiUartParent::midi_lock = 0;
   if (use_screen_saver && clock_minutes >= SCREEN_SAVER_TIME) {
 #ifdef OLED_DISPLAY
     oled_display.screen_saver = true;
 #endif
   }
+  MidiUartParent::handle_midi_lock = 0;
+
   display();
+
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {

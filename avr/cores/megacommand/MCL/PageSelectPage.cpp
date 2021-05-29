@@ -76,6 +76,9 @@ get_category_name_fail:
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+  trig_interface.on();
+  md_prepare();
+  MidiUartParent::handle_midi_lock = 0;
   R.Clear();
   R.use_icons_page();
   R.use_page_entries();
@@ -99,6 +102,8 @@ void PageSelectPage::init() {
   classic_display = false;
 #endif
   loop_init = true;
+   // md_exploit.on(switch_tracks);
+    note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   display();
@@ -169,7 +174,7 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::loop() {
-  if (loop_init) {
+/*  if (loop_init) {
     bool switch_tracks = false;
     // md_exploit.off(switch_tracks);
     trig_interface.on();
@@ -177,7 +182,7 @@ void PageSelectPage::loop() {
     // md_exploit.on(switch_tracks);
     note_interface.state = true;
     loop_init = false;
-  }
+  } */
 
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur - enc_->old;

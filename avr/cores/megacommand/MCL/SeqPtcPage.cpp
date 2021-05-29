@@ -609,14 +609,14 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
 
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  if ((GUI.currentPage() == &seq_step_page) ||
+/*  if ((GUI.currentPage() == &seq_step_page) ||
 #ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
 #endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
-  }
+  }*/
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN("note on");
@@ -704,14 +704,14 @@ void SeqPtcPage::set_last_ext_track(uint8_t channel) {
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  if ((GUI.currentPage() == &seq_step_page) ||
+/*  if ((GUI.currentPage() == &seq_step_page) ||
 #ifdef EXT_TRACKS
       (GUI.currentPage() == &seq_extstep_page) ||
 #endif
       (GUI.currentPage() == &grid_save_page) ||
       (GUI.currentPage() == &grid_write_page)) {
     return;
-  }
+  }*/
   DEBUG_PRINTLN(F("note off midi2"));
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -725,10 +725,13 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     uint8_t note = note_num - (note_num / 12) * 12;
     note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
 
+    if (GUI.currentPage() == &seq_step_page) {
+    seq_param4.cur = note_num;
+    }
     pitch = seq_ptc_page.process_ext_pitch(note_num, false);
     seq_ptc_page.render_arp(false);
     seq_ptc_page.queue_redraw();
-    
+
     return;
   }
 

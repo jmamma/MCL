@@ -70,6 +70,7 @@ void SeqPage::check_and_set_page_select() {
 }
 
 void SeqPage::init() {
+  MidiUartParent::handle_midi_lock = 0;
   recording = false;
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
@@ -104,6 +105,7 @@ void SeqPage::init() {
   R.Clear();
   R.use_machine_names_short();
   R.use_machine_param_names();
+  MidiUartParent::handle_midi_lock = 1;
 }
 
 void SeqPage::cleanup() {

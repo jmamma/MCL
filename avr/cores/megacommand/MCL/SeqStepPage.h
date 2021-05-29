@@ -8,12 +8,9 @@
 class SeqStepMidiEvents : public MidiCallback, public ClockCallback {
 public:
   bool state;
-  void onNoteOnCallback_Midi2(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void setup_callbacks();
   void remove_callbacks();
-  void onMidiStartCallback();
-
 };
 
 class SeqStepPage : public SeqPage {

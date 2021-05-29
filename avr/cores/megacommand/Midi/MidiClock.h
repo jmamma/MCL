@@ -234,9 +234,9 @@ public:
 
     inCallback = true;
 
-    uint8_t _midi_lock_tmp = MidiUartParent::midi_lock;
+    uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
     uint8_t _irqlock_tmp = SREG;
-    MidiUartParent::midi_lock = 1;
+    MidiUartParent::handle_midi_lock = 1;
 
     sei();
 
@@ -256,7 +256,7 @@ public:
 
     inCallback = false;
     SREG = _irqlock_tmp;
-    MidiUartParent::midi_lock = _midi_lock_tmp;
+    MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   }
 
   ALWAYS_INLINE() void handleImmediateClock() {

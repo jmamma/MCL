@@ -40,6 +40,9 @@ void MDTrackSelect::end() {
     return;
   }
 
+  DEBUG_PRINTLN("track select end");
+  DEBUG_PRINTLN(sysex->get_recordLen());
+  DEBUG_PRINTLN(msg_rd);
   if (sysex->get_recordLen() == 8) {
     bool expand = true;
     reset_undo();
@@ -103,8 +106,12 @@ void MDTrackSelect::end_immediate() {
   grid_page.reload_slot_models = false;
   b = sysex->getByte(4);
   MD.kit.models[MD.currentTrack] = sysex->getByte(5);
-  if (b & 1) { MD.kit.models[MD.currentTrack] += 128; }
-  if (b & 2) { MD.kit.models[MD.currentTrack] += 0x20000; }
+  if (b & 1) {
+    MD.kit.models[MD.currentTrack] += 128;
+  }
+  if (b & 2) {
+    MD.kit.models[MD.currentTrack] += 0x20000;
+  }
   return;
 }
 
