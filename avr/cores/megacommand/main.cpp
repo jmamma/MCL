@@ -27,7 +27,7 @@ extern "C" {
 #ifdef OLED_DISPLAY
 Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
 #endif
-
+volatile uint8_t MidiUartParent::midi_lock = 0;
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
 // extern volatile uint16_t slowclock = 0;
@@ -208,6 +208,15 @@ ISR(TIMER1_COMPA_vect) {
       }
     }
   }
+
+  if (!MidiUartParent::midi_lock)  {
+   uint8_t _irqlock_tmp = SREG;
+   MidiUartParent::midi_lock = 1;
+   sei();
+   handleIncomingMidi();
+   SREG = _irqlock_tmp;
+   MidiUartParent::midi_lock = 0;
+  }
 }
 
 // XXX CMP to have better time
@@ -268,18 +277,16 @@ ISR(TIMER3_COMPA_vect) {
 
 bool enable_clock_callbacks = true;
 
-void handleIncomingMidi() {
 
+void handleIncomingMidi() {
   while (Midi.midiSysex.avail()) {
     Midi.sysexEnd(Midi.midiSysex.msg_rd);
     Midi.midiSysex.get_next_msg();
   }
-
   while (Midi2.midiSysex.avail()) {
     Midi2.sysexEnd(Midi2.midiSysex.msg_rd);
     Midi2.midiSysex.get_next_msg();
   }
-
   while (MidiUart.avail()) {
     Midi.handleByte(MidiUart.m_getc());
   }
@@ -298,7 +305,7 @@ void __mainInnerLoop(bool callLoop) {
   // }
 
   //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
-  handleIncomingMidi();
+  //handleIncomingMidi();
   if (callLoop) {
     GUI.loop();
   }

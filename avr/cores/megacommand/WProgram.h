@@ -82,7 +82,6 @@ extern "C" {
 #include "WMath.h"
 #endif
 
-
 extern uint32_t write_count;
 extern uint32_t write_count_time;
 extern uint16_t minuteclock;

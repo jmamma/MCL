@@ -94,13 +94,10 @@ public:
   static bool toggle_device;
 
   static uint8_t last_midi_state;
-  static uint16_t deferred_timer;
   static uint8_t last_param_id;
   static uint8_t last_rec_event;
   static uint8_t last_step;
   static uint32_t last_md_model;
-
-  const uint8_t render_defer_time = 110;
 
   static bool recording;
   bool display_page_index = true;
@@ -139,7 +136,7 @@ public:
 
   uint64_t *get_mask();
 
-  void queue_redraw() { deferred_timer = slowclock; }
+  void queue_redraw() { redisplay = true; }
   void params_reset();
 
   virtual bool handleEvent(gui_event_t *event);

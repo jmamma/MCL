@@ -48,7 +48,6 @@ uint16_t locks_on_step_mask = 0;
 
 bool SeqPage::recording = false;
 
-uint16_t SeqPage::deferred_timer = 0;
 uint8_t SeqPage::last_midi_state = 0;
 uint8_t SeqPage::last_step = 255;
 
@@ -1428,12 +1427,6 @@ bool SeqPage::md_track_change_check() {
 }
 
 void SeqPage::loop() {
-  if (deferred_timer != 0 &&
-      clock_diff(deferred_timer, slowclock) > render_defer_time) {
-    deferred_timer = 0;
-    DEBUG_DUMP("redisplay");
-    redisplay = true;
-  }
 
   if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
       encoders[2]->hasChanged() || encoders[3]->hasChanged()) {

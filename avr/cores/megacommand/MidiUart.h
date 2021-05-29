@@ -113,12 +113,9 @@ public:
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
-  void set_speed(uint32_t speed, uint8_t port);
-
-  int8_t in_message_rx;
   int8_t in_message_tx;
-  uint8_t msg[3];
-  uint8_t msg_pos;
+
+  void set_speed(uint32_t speed, uint8_t port);
 
   void initSerial();
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
