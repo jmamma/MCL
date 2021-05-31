@@ -72,7 +72,7 @@ void GridTask::run() {
 
     slots_changed[n] = mcl_actions.links[n].row;
     if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-        (mcl_cfg.link_mode == 2)) {
+        (mcl_cfg.link_mode == LINK_MANUAL)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -93,12 +93,14 @@ void GridTask::run() {
       }
     }
     // Override link data if in manual or random mode
-    if (mcl_cfg.link_mode == 2) {
-      mcl_actions.links[n].loops = 0;
-    } else if (mcl_cfg.link_mode == 3) {
-      mcl_actions.links[n].loops = random(1, 8);
-      mcl_actions.links[n].row =
-          random(mcl_cfg.link_rand_min, mcl_cfg.link_rand_max);
+    switch (mcl_cfg.link_mode) {
+       case LINK_CHAIN: {
+         break;
+       }
+       case LINK_MANUAL: {
+         mcl_actions.links[n].loops = 0;
+         break;
+       }
     }
   }
 
@@ -162,7 +164,7 @@ void GridTask::run() {
       }
     }
   }
-  if (mcl_cfg.link_mode != 2) {
+  if (mcl_cfg.link_mode != LINK_MANUAL) {
 
     bool update_gui = true;
     mcl_actions.cache_next_tracks(track_select_array, &empty_track,

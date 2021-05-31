@@ -19,7 +19,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 18: MD CTRL CHAN
   {0, "INT"},{17, "OMNI"},
   // 20: MD CHAIN/Slot CHAIN
-  {1, "AUT"},{2,"MAN"},{3,"RND"},
+  {1, "AUT"},{2,"MAN"},{3,"CHN"},
   // 23: SYSTEM DISPLAY
   {0, "INT"}, {1, "INT+EXT"},
   // 25: MULTI

@@ -331,12 +331,6 @@ struct __T_menu_layouts {
   static constexpr size_t countof_mclconfig_menu_layout = 33 / sizeof(menu_t<1>);
   static constexpr size_t sizeofof_mclconfig_menu_layout = 33;
   union {
-    menu_t<3> chain_menu_layout[0];
-    char zz__chain_menu_layout[75];
-  };
-  static constexpr size_t countof_chain_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_chain_menu_layout = 75;
-  union {
     menu_t<3> mdconfig_menu_layout[0];
     char zz__mdconfig_menu_layout[75];
   };
@@ -361,12 +355,12 @@ struct __T_menu_layouts {
   static constexpr size_t countof_auxconfig_menu_layout = 33 / sizeof(menu_t<1>);
   static constexpr size_t sizeofof_auxconfig_menu_layout = 33;
   union {
-    menu_t<8> system_menu_layout[0];
-    char zz__system_menu_layout[180];
+    menu_t<7> system_menu_layout[0];
+    char zz__system_menu_layout[159];
   };
-  static constexpr size_t countof_system_menu_layout = 180 / sizeof(menu_t<8>);
-  static constexpr size_t sizeofof_system_menu_layout = 180;
-  static constexpr size_t __total_size = 1446;
+  static constexpr size_t countof_system_menu_layout = 159 / sizeof(menu_t<7>);
+  static constexpr size_t sizeofof_system_menu_layout = 159;
+  static constexpr size_t __total_size = 1350;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

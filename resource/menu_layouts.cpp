@@ -9,7 +9,7 @@
   ExitFunc
   ExitPage
  ***/
-menu_t<8> system_menu_layout = {
+menu_t<7> system_menu_layout = {
     "GLOBAL",
     {
         //               m  r  n  d  p  f  o
@@ -18,7 +18,6 @@ menu_t<8> system_menu_layout = {
         {"NEW PROJECT",  0, 0, 0, 0, 0, 2, 0},
         {"MIDI",         0, 0, 0, 0, 3, 0, 0},
         {"MACHINEDRUM",  0, 0, 0, 0, 4, 0, 0},
-        {"CHAIN MODE",   0, 0, 0, 0, 5, 0, 0},
         {"AUX PAGES",    0, 0, 0, 0, 6, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, 7, 0, 0},
     },
@@ -69,18 +68,6 @@ menu_t<3> mdconfig_menu_layout = {
     },
     1, 0
 };
-
-menu_t<3> chain_menu_layout = {
-    "CHAIN",
-    {
-        //            m  r    n  d   p  f  o
-        {"CHAIN:",    1, 4,   3, 10, 0, 0, 20},
-        {"RAND MIN:", 0, 128, 0, 11, 0, 0, 0},
-        {"RAND MAX:", 0, 128, 0, 12, 0, 0, 0},
-    },
-    1, 0
-};
-
 
 menu_t<1> mclconfig_menu_layout = {
     "SYSTEM",

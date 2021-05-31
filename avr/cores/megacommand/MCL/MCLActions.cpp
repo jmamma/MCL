@@ -449,7 +449,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
 
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
-  if ((mcl_cfg.link_mode == 0) || (mcl_cfg.link_mode == 2)) {
+  if ((mcl_cfg.link_mode == 0) || (mcl_cfg.link_mode == LINK_MANUAL)) {
     next_transition = (uint16_t)-1;
     return;
   }
