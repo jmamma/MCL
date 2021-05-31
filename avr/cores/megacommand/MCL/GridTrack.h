@@ -21,6 +21,8 @@
 #define MD_ARP_TRACK_TYPE 13
 #define EXT_ARP_TRACK_TYPE 14
 
+#define GRIDCHAIN_TRACK_TYPE 15
+
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridLink.h"

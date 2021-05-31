@@ -61,6 +61,7 @@
 
 #include "Grid.h"
 #include "GridLink.h"
+#include "GridChain.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
 
@@ -74,6 +75,7 @@
 #include "MDFXTrack.h"
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
+#include "GridChainTrack.h"
 
 #include "ArpSeqTrack.h"
 #include "EmptyTrack.h"

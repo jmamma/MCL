@@ -3,6 +3,7 @@
 #pragma once
 
 #include "MCLActionsEvents.h"
+#include "GridChain.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -43,6 +44,8 @@ public:
   uint8_t transition_level[NUM_SLOTS];
 
   uint8_t dev_sync_slot[NUM_DEVS];
+
+  GridChain chain;
 };
 
 class MCLActions : public LinkModeData {

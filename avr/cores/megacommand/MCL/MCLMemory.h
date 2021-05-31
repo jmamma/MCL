@@ -16,6 +16,8 @@ constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 
 constexpr size_t NUM_MD_TRACKS = 16;
 
+constexpr size_t NUM_LINKS = 16;
+
 #ifdef EXT_TRACKS
 constexpr size_t NUM_A4_TRACKS = 6;
 constexpr size_t NUM_A4_SOUND_TRACKS = 4;
@@ -31,7 +33,9 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 
 constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 
-constexpr size_t NUM_AUX_TRACKS = 4;
+constexpr size_t NUM_AUX_TRACKS = 5;
+
+constexpr size_t GRIDCHAIN_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
 constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
@@ -65,7 +69,7 @@ constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
 constexpr size_t MDFX_TRACK_LEN = 43;
 constexpr size_t MDTEMPO_TRACK_LEN = 11;
-
+constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 
 //Use these to produce compiler errors that probes the sizes!
 template<uint32_t X> struct __SIZE_PROBE;
@@ -85,11 +89,12 @@ constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LE
 // GRID2 tracks start at 0x8D16
 
 // AUX Tracks
-constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_AUX_TRACKS_START;
+
+constexpr size_t BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;
+constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHAIN_TRACK_LEN;
 constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
 constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
 constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
-
 // 6x A4 tracks
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
 
