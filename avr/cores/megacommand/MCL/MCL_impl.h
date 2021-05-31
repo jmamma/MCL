@@ -60,7 +60,7 @@
 #include "MCLEncoder.h"
 
 #include "Grid.h"
-#include "GridChain.h"
+#include "GridLink.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
 

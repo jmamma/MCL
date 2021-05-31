@@ -36,7 +36,7 @@ void GridTask::run() {
   uint8_t div32th_margin = 8;
 
   uint32_t div32th_counter;
-  if ((mcl_cfg.chain_mode == 0) ||
+  if ((mcl_cfg.link_mode == 0) ||
       (mcl_actions.next_transition == (uint16_t)-1)) {
     return;
   }
@@ -60,7 +60,7 @@ void GridTask::run() {
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
-    if ((mcl_actions.chains[n].loops == 0) || (grid_page.active_slots[n] < 0))
+    if ((mcl_actions.links[n].loops == 0) || (grid_page.active_slots[n] < 0))
       continue;
 
     uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
@@ -70,9 +70,9 @@ void GridTask::run() {
     if (MidiClock.clock_less_than(div32th_counter, next_transition))
       continue;
 
-    slots_changed[n] = mcl_actions.chains[n].row;
-    if ((mcl_actions.chains[n].row != grid_page.active_slots[n]) ||
-        (mcl_cfg.chain_mode == 2)) {
+    slots_changed[n] = mcl_actions.links[n].row;
+    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
+        (mcl_cfg.link_mode == 2)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -84,21 +84,21 @@ void GridTask::run() {
       auto *pmem_track =
           empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
       if (pmem_track != nullptr) {
-        slots_changed[n] = mcl_actions.chains[n].row;
+        slots_changed[n] = mcl_actions.links[n].row;
         track_select_array[n] = 1;
-        memcpy(&mcl_actions.chains[n], &pmem_track->chain, sizeof(GridChain));
+        memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
         if (pmem_track->active) {
           send_device[dev_idx] = true;
         }
       }
     }
-    // Override chain data if in manual or random mode
-    if (mcl_cfg.chain_mode == 2) {
-      mcl_actions.chains[n].loops = 0;
-    } else if (mcl_cfg.chain_mode == 3) {
-      mcl_actions.chains[n].loops = random(1, 8);
-      mcl_actions.chains[n].row =
-          random(mcl_cfg.chain_rand_min, mcl_cfg.chain_rand_max);
+    // Override link data if in manual or random mode
+    if (mcl_cfg.link_mode == 2) {
+      mcl_actions.links[n].loops = 0;
+    } else if (mcl_cfg.link_mode == 3) {
+      mcl_actions.links[n].loops = random(1, 8);
+      mcl_actions.links[n].row =
+          random(mcl_cfg.link_rand_min, mcl_cfg.link_rand_max);
     }
   }
 
@@ -162,7 +162,7 @@ void GridTask::run() {
       }
     }
   }
-  if (mcl_cfg.chain_mode != 2) {
+  if (mcl_cfg.link_mode != 2) {
 
     bool update_gui = true;
     mcl_actions.cache_next_tracks(track_select_array, &empty_track,

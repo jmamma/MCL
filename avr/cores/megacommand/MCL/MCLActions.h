@@ -21,14 +21,14 @@ public:
   uint8_t div192th_latency;
 };
 
-class ChainModeData {
+class LinkModeData {
 public:
   DeviceLatency dev_latency[NUM_DEVS];
 
   uint8_t div192th_total_latency;
   uint8_t div32th_total_latency;
 
-  GridChain chains[NUM_SLOTS];
+  GridLink links[NUM_SLOTS];
 
   uint16_t md_latency;
 
@@ -45,7 +45,7 @@ public:
   uint8_t dev_sync_slot[NUM_DEVS];
 };
 
-class MCLActions : public ChainModeData {
+class MCLActions : public LinkModeData {
 public:
   uint8_t do_kit_reload;
   int writepattern;
@@ -74,7 +74,7 @@ public:
 
   void write_tracks(int column, int row, uint8_t *slot_select_array);
   void send_tracks_to_devices(uint8_t *slot_select_array);
-  void prepare_next_chain(int row, uint8_t *slot_select_array);
+  void prepare_next_link(int row, uint8_t *slot_select_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, EmptyTrack *empty_track,
                          EmptyTrack *empty_track2, bool update_gui = false);

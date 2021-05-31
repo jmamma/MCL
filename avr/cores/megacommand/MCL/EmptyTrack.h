@@ -22,7 +22,7 @@ public:
   virtual void* get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 
-  /// Erase the track data, without erasing the chain data.
+  /// Erase the track data, without erasing the link data.
   void clear();
 
   /*

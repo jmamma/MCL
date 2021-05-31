@@ -15,7 +15,7 @@ uint16_t MDRouteTrack::send_routes(bool send) {
 }
 
 void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  load_chain_data(seq_track);
+  load_link_data(seq_track);
   send_data();
 }
 

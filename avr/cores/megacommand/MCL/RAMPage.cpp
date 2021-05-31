@@ -62,10 +62,10 @@ void RAMPage::setup_sequencer(uint8_t track) {
   CLEAR_LOCK();
 }
 
-void RAMPage::prepare_chain(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition) {
+void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition) {
 
-  mcl_actions.chains[track].row = row;
-  mcl_actions.chains[track].loops = 1;
+  mcl_actions.links[track].row = row;
+  mcl_actions.links[track].loops = 1;
 
   mcl_actions.send_machine[track] = 0;
   uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
@@ -153,13 +153,13 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   memcpy(&(md_track.seq_data), &md_seq_track, sizeof(MDSeqTrackData));
 
   md_track.machine.muteGroup = 127;
-  md_track.chain.init(mcl_actions.chains[track].row, 0, steps, SEQ_SPEED_1X);
+  md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
 
   mcl_actions.dev_sync_slot[0] = track;
 
   md_track.store_in_mem(track);
 
-  prepare_chain(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
+  prepare_link(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
 
 }
 
@@ -342,14 +342,14 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   uint8_t magic = encoders[1]->cur;
 
-  md_track.chain.init(mcl_actions.chains[track].row, 0, steps, SEQ_SPEED_1X);
+  md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
 
   mcl_actions.dev_sync_slot[0] = track;
 
   md_track.store_in_mem(track);
-  prepare_chain(track, steps, SLOT_RAM_PLAY);
+  prepare_link(track, steps, SLOT_RAM_PLAY);
 
 }
 

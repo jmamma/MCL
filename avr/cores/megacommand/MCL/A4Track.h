@@ -29,36 +29,36 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
   bool convert(A4Track_270 *old) {
-    chain.row = old->chain.row;
-    chain.loops = old->chain.loops;
-    if (chain.row >= GRID_LENGTH) {
-      chain.row = GRID_LENGTH - 1;
+    link.row = old->link.row;
+    link.loops = old->link.loops;
+    if (link.row >= GRID_LENGTH) {
+      link.row = GRID_LENGTH - 1;
     }
 
     if (old->active == A4_TRACK_TYPE_270) {
-      chain.speed = old->seq_data.speed;
+      link.speed = old->seq_data.speed;
       if (old->seq_data.speed == 0) {
-        chain.speed = SEQ_SPEED_2X;
+        link.speed = SEQ_SPEED_2X;
       } else {
-        chain.speed = old->seq_data.speed - 1;
-        if (chain.speed == 0) {
-          chain.speed = SEQ_SPEED_2X;
-        } else if (chain.speed == 1) {
-          chain.speed = SEQ_SPEED_1X;
+        link.speed = old->seq_data.speed - 1;
+        if (link.speed == 0) {
+          link.speed = SEQ_SPEED_2X;
+        } else if (link.speed == 1) {
+          link.speed = SEQ_SPEED_1X;
         }
       }
 
-      chain.length = old->seq_data.length;
-      if (chain.length == 0) {
-        chain.length = 16;
+      link.length = old->seq_data.length;
+      if (link.length == 0) {
+        link.length = 16;
       }
 
       sound.convert(&old->sound);
       seq_data.convert(&old->seq_data);
       active = A4_TRACK_TYPE;
     } else {
-      chain.speed = SEQ_SPEED_1X;
-      chain.length = 16;
+      link.speed = SEQ_SPEED_1X;
+      link.length = 16;
       active = EMPTY_TRACK_TYPE;
     }
 

@@ -8,8 +8,8 @@
 #include "MCLActions.h"
 
 #define NUM_RAM_PAGES 2
-#define SLOT_RAM_RECORD (1 << (sizeof(GridChain::row) * 8)) - 1 - 1
-#define SLOT_RAM_PLAY (1 << (sizeof(GridChain::row) * 8)) - 1 - 2
+#define SLOT_RAM_RECORD (1 << (sizeof(GridLink::row) * 8)) - 1 - 1
+#define SLOT_RAM_PLAY (1 << (sizeof(GridLink::row) * 8)) - 1 - 2
 
 class RAMPage : public LightPage, MidiCallback {
 public:
@@ -55,7 +55,7 @@ public:
 
   void setup_ram_play_mono(uint8_t track);
   void setup_ram_play_stereo(uint8_t track);
-  void prepare_chain(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition = TRANSITION_NORMAL);
+  void prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition = TRANSITION_NORMAL);
 
   void reverse(uint8_t track);
   bool slice(uint8_t track, uint8_t linked_track);

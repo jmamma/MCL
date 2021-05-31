@@ -24,9 +24,9 @@ void MCLActionsCallbacks::onMidiStopCallback() {
 /*
   for (uint8_t n = 0; n < NUM_TRACKS; n++) {
   mcl_actions.next_transitions[n] = 0;
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
+  if (mcl_cfg.link_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
   }
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_transition(); }
+  if (mcl_cfg.link_mode != 2) { mcl_actions.calc_next_transition(); }
   else { mcl_actions.next_transition = (uint16_t) -1; }
 */
  }
@@ -38,10 +38,10 @@ void MCLActionsCallbacks::onMidiStartCallback() {
     if (grid_page.active_slots[n] >= 0) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
-      if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
+      if (mcl_cfg.link_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
     }
   }
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_transition(); }
+  if (mcl_cfg.link_mode != 2) { mcl_actions.calc_next_transition(); }
   else { mcl_actions.next_transition = (uint16_t) -1; }
 }
 

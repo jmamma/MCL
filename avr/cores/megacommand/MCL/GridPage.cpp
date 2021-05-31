@@ -216,7 +216,7 @@ void GridPage::display_counters() {
   oled_display.print(":");
   oled_display.print(MidiClock.beat_counter);
 
-  if ((mcl_cfg.chain_mode > 0) &&
+  if ((mcl_cfg.link_mode > 0) &&
       (mcl_actions.next_transition != (uint16_t)-1) &&
       (MidiClock.bar_counter <= mcl_actions.nearest_bar)) {
     GUI.put_value_at2(0, mcl_actions.nearest_bar, val);
@@ -612,8 +612,8 @@ void GridPage::apply_slot_changes() {
   uint8_t slot_update = 0;
 
   if (slot_copy + slot_paste + slot_clear == 0) {
-    if ((temp_slot.chain.row != slot.chain.row) ||
-        (temp_slot.chain.loops != slot.chain.loops)) {
+    if ((temp_slot.link.row != slot.link.row) ||
+        (temp_slot.link.loops != slot.link.loops)) {
       slot_update = 1;
     }
     height = 1;
@@ -659,7 +659,7 @@ void GridPage::apply_slot_changes() {
           proj.clear_slot_grid(x + getCol(), y + getRow());
           header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
-          // Save slot chain data
+          // Save slot link data
           activate_header = true;
           slot.active = header.track_type[x + getCol()];
           slot.store_in_grid(x + getCol(), y + getRow());
@@ -749,8 +749,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_DUMP(getRow());
     slot.load_from_grid(getCol(), getRow());
     DEBUG_PRINTLN(F("what's in the slot"));
-    DEBUG_DUMP(slot.chain.loops);
-    DEBUG_DUMP(slot.chain.row);
+    DEBUG_DUMP(slot.link.loops);
+    DEBUG_DUMP(slot.link.row);
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
     encoders[2]->cur = 1;

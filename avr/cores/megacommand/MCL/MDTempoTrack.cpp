@@ -14,7 +14,7 @@ uint16_t MDTempoTrack::send_tempo(bool send) {
 }
 
 void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  load_chain_data(seq_track);
+  load_link_data(seq_track);
   send_tempo();
 }
 
