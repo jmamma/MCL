@@ -156,7 +156,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() == &seq_step_page)
           break;
         if (GUI.currentPage() != &seq_ptc_page &&
-            trig_interface.is_key_down(MDX_KEY_SCALE)) {
+            (trig_interface.is_key_down(MDX_KEY_SCALE) || trig_interface.is_key_down(MDX_KEY_NO))) {
           //Ignore scale + copy if page != seq_step_page
           break;
         }
@@ -168,7 +168,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() == &seq_step_page)
           break;
         if (GUI.currentPage() != &seq_ptc_page &&
-            trig_interface.is_key_down(MDX_KEY_SCALE)) {
+            (trig_interface.is_key_down(MDX_KEY_SCALE) || trig_interface.is_key_down(MDX_KEY_NO))) {
           //Ignore scale + copy if page != seq_step_page
           break;
         }
@@ -180,12 +180,17 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() == &seq_step_page)
           break;
         if ((note_interface.notes_count_on() > 0) ||
-            (trig_interface.is_key_down(MDX_KEY_SCALE)))
+            (trig_interface.is_key_down(MDX_KEY_SCALE) || trig_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
         opt_clear_track_handler();
       }
+      case MDX_KEY_STOP: {
+
+        break;
       }
+      }
+
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {

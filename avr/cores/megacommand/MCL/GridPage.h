@@ -33,11 +33,14 @@ public:
 
   int active_slots[NUM_SLOTS];
   uint8_t grid_select_apply;
-  uint8_t slot_apply;
   uint8_t slot_clear;
 
+  uint8_t slot_apply;
   uint8_t slot_copy;
   uint8_t slot_paste;
+  uint8_t slot_undo;
+  uint8_t slot_undo_x;
+  uint8_t slot_undo_y;
 
   uint16_t grid_lastclock;
 
@@ -60,7 +63,7 @@ public:
   void cleanup();
   void init();
   void prepare();
-  void apply_slot_changes();
+  void apply_slot_changes(bool ignore_undo = false);
   void loop();
 };
 
