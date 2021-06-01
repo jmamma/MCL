@@ -21,6 +21,7 @@
 #define MDX_KEY_SCALE 0x2A
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
+#define MDX_KEY_STOP 0x32
 #define MDX_KEY_COPY 0x34
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
