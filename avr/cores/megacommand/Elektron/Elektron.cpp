@@ -105,6 +105,13 @@ void ElektronDevice::set_rec_mode(uint8_t mode) {
   sendRequest(data, sizeof(data));
   // waitBlocking();
 }
+
+void ElektronDevice::set_key_repeat(uint8_t mode) {
+  uint8_t data[3] = {0x70, 0x4D, mode};
+  sendRequest(data, sizeof(data));
+  // waitBlocking();
+}
+
 void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
   uint8_t data[4] = {0x70, 0x3B, persistent, action_string};
   sendRequest(data, 4);
@@ -158,6 +165,8 @@ void ElektronDevice::undokit_sync() {
   uint8_t data[2] = {0x70, 0x42};
   sendRequest(data, sizeof(data));
 }
+
+
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
                                   uint8_t blink) {

@@ -450,6 +450,7 @@ public:
   void activate_track_select();
   void deactivate_track_select();
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, uint8_t blink = 0);
+  void set_key_repeat(uint8_t mode);
 
   void undokit_sync();
   /**
