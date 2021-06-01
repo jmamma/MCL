@@ -45,7 +45,7 @@ public:
 
   uint8_t dev_sync_slot[NUM_DEVS];
 
-  GridChain chain;
+  GridChain chains[NUM_SLOTS];
 };
 
 class MCLActions : public LinkModeData {
@@ -75,9 +75,10 @@ public:
   void store_tracks_in_mem(int column, int row, uint8_t *slot_select_array,
                            uint8_t merge);
 
-  void write_tracks(int column, int row, uint8_t *slot_select_array);
+  void load_tracks(int column, int row, uint8_t *slot_select_array);
   void send_tracks_to_devices(uint8_t *slot_select_array);
   void prepare_next_link(int row, uint8_t *slot_select_array);
+  void add_slots_to_chain(int row, uint8_t *slot_select_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, EmptyTrack *empty_track,
                          EmptyTrack *empty_track2, bool update_gui = false);

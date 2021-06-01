@@ -6,21 +6,22 @@
 
 class GridChainTrack : public AUXTrack {
 public:
-  GridChain chain;
+  GridChain chains;
+
   GridChainTrack() {
     active = GRIDCHAIN_TRACK_TYPE;
     static_assert(sizeof(GridChainTrack) <= GRIDCHAIN_TRACK_LEN);
   }
 
-  void init() { chain.init(); }
+  void init() {}
 
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-  void get_chain();
-  void place_chain();
+  void get_chains();
+  void place_chains();
 
   virtual uint16_t get_track_size() { return sizeof(GridChainTrack); }
   virtual uint32_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }

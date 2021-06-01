@@ -87,7 +87,7 @@ bool MCLSysConfig::cfg_init() {
   midi_forward = 0;
   auto_save = 1;
   auto_normalize = 1;
-  link_mode = LINK_MANUAL;
+  chain_mode = CHAIN_MANUAL;
   link_rand_min = 0;
   link_rand_max = 1;
   ram_page_mode = 0;

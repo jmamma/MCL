@@ -3,16 +3,16 @@
 
 void GridChainTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
-  get_chain();
+  get_chains();
 }
 
-void GridChainTrack::place_chain() {
-  memcpy(&mcl_actions.chain, &chain, sizeof(GridChain));
+void GridChainTrack::place_chains() {
+  memcpy(&mcl_actions.chains, &chains, sizeof(GridChain));
 }
 
 
-void GridChainTrack::get_chain() {
-  memcpy(&chain, &mcl_actions.chain, sizeof(GridChain));
+void GridChainTrack::get_chains() {
+  memcpy(&chains, &mcl_actions.chains, sizeof(GridChain));
 }
 
 bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
@@ -24,7 +24,7 @@ bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_t
   uint32_t len;
 
   if (column != 255 && online == true) {
-    get_chain();
+    get_chains();
   }
 
   len = sizeof(GridChainTrack);

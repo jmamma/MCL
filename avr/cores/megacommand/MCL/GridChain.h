@@ -1,29 +1,38 @@
 #pragma once
 
-#include <string.h>
 #include "MCLMemory.h"
+#include <string.h>
 
 class GridChain {
-
 public:
-  uint8_t lengths[NUM_SLOTS];
-  uint8_t dst[NUM_SLOTS][NUM_LINKS];
+  GridChain() { init(); };
+  uint8_t pos;
+  uint8_t length;
+  uint8_t rows[NUM_LINKS];
 
-  GridChain() { init(); }
-  //Store link data in link array.
   void init() {
-    memset(lengths, 0, sizeof(lengths));
-    memset(dst, 255, sizeof(dst));
+    pos = 0;
+    length = 0;
+    memset(rows, 255, sizeof(rows));
   }
 
-  bool add_link(uint8_t slot, uint8_t row) {
-     uint8_t len = lengths[slot];
-     if (len == NUM_LINKS) {
-       return false;
-     }
-     dst[slot][len] = row;
-     lengths[slot] += 1;
+  bool add(uint8_t row) {
+    if (length == NUM_LINKS) {
+      length = 0;
+    }
+    rows[length] = row;
+    length++;
+    return true;
   }
 
+  uint8_t get_next() {
+    if (pos == length) {
+      pos = 0;
+    }
+    return rows[pos++];
+  }
+
+  void reset() { pos = 0; }
 };
+
 

@@ -104,7 +104,7 @@ void GridWritePage::link() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(),
+  mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
                            track_select_array);
 }
 
@@ -148,8 +148,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64; 
-   
+    uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
         case MDX_KEY_YES:
@@ -160,7 +159,7 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
       switch (key) {
         case MDX_KEY_YES:
           goto load_groups;
-        }   
+        }
       }
     }
 
@@ -173,12 +172,12 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     uint8_t track_select_array[NUM_SLOTS] = {0};
 
     track_select_array_from_type_select(track_select_array);
-    //   write_tracks_to_md(-1);
+    //   load_tracks_to_md(-1);
     oled_display.textbox("LOAD GROUPS", "");
     oled_display.display();
     mcl_actions.write_original = 1;
     GUI.setPage(&grid_page);
-    mcl_actions.write_tracks(0, grid_page.encoders[1]->getValue(),
+    mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
                              track_select_array);
     curpage = 0;
     return true;

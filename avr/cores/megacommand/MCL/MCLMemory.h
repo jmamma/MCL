@@ -16,7 +16,7 @@ constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 
 constexpr size_t NUM_MD_TRACKS = 16;
 
-constexpr size_t NUM_LINKS = 16;
+constexpr size_t NUM_LINKS = 8;
 
 #ifdef EXT_TRACKS
 constexpr size_t NUM_A4_TRACKS = 6;
