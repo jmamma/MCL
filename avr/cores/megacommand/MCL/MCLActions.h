@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "MCLActionsEvents.h"
 #include "GridChain.h"
+#include "MCLActionsEvents.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -17,7 +17,7 @@
 class DeviceLatency {
 public:
   uint16_t latency;
-//uint16_t load_latency;
+  // uint16_t load_latency;
   uint8_t div32th_latency;
   uint8_t div192th_latency;
 };
@@ -65,8 +65,22 @@ public:
 
   void setup();
 
+  uint8_t get_quant() {
+    uint8_t q;
+    if (gridio_param4.cur == 0) {
+      q = 4;
+    } else {
+      q = 1 << gridio_param4.cur;
+    }
+    if (q < 4) {
+      q = 4;
+    }
+    return q;
+  }
+
   uint8_t get_grid_idx(uint8_t slot_number);
-  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id, uint8_t *dev_idx);
+  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id,
+                                      uint8_t *dev_idx);
 
   void send_globals();
   void switch_global(uint8_t global_page);
@@ -77,7 +91,7 @@ public:
 
   void load_tracks(int column, int row, uint8_t *slot_select_array);
   void send_tracks_to_devices(uint8_t *slot_select_array);
-  void prepare_next_link(int row, uint8_t *slot_select_array);
+  void prepare_next_transition(int row, uint8_t *slot_select_array);
   void add_slots_to_chain(int row, uint8_t *slot_select_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, EmptyTrack *empty_track,

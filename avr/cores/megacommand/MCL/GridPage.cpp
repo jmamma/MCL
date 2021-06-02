@@ -16,23 +16,19 @@ void GridPage::init() {
   R.Clear();
   R.use_machine_names_short();
 
-  DEBUG_PRINT("R.Size() = ");
-  DEBUG_PRINTLN(R.Size());
 }
 
 void GridPage::setup() {
-  uint8_t charmap[8] = {10, 10, 10, 10, 10, 10, 10, 00};
-  LCD.createChar(1, charmap);
   encoders[0]->cur = encoders[0]->old = mcl_cfg.col;
   encoders[1]->cur = encoders[1]->old = mcl_cfg.row;
   cur_col = mcl_cfg.cur_col;
   cur_row = mcl_cfg.cur_row;
+  memset(active_slots, -1, sizeof(active_slots));
   /*
   cur_col = 0;
   if (mcl_cfg.row < MAX_VISIBLE_ROWS) { cur_row = mcl_cfg.row; }
   else { cur_row = MAX_VISIBLE_ROWS - 1; }
   */
-  memset(active_slots, -1, NUM_SLOTS);
 }
 
 void GridPage::cleanup() {
@@ -659,7 +655,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
           header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot link data
-          DEBUG_PRINTLN("updating slot");
           activate_header = true;
           slot.active = header.track_type[x + getCol()];
           slot.store_in_grid(x + getCol(), y + getRow());

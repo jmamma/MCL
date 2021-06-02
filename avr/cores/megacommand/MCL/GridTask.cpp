@@ -96,6 +96,9 @@ void GridTask::run() {
     switch (mcl_cfg.chain_mode) {
        case CHAIN_QUEUE: {
          uint8_t next_row = mcl_actions.chains[n].get_next();
+         DEBUG_PRINTLN("next row");
+         DEBUG_PRINTLN(n);
+         DEBUG_PRINTLN(next_row);
          if (next_row != 255) {
            mcl_actions.links[n].row = next_row;
            mcl_actions.links[n].loops = 1;
