@@ -15,6 +15,11 @@
 #define MAX_VISIBLE_COLS 4
 #endif
 
+#define SLOT_DISABLED 255
+#define SLOT_PENDING 254
+#define SLOT_RAM_RECORD 253
+#define SLOT_RAM_PLAY 252
+
 class GridPage : public LightPage {
 public:
   GridRowHeader row_headers[MAX_VISIBLE_ROWS];
@@ -31,7 +36,8 @@ public:
   bool show_slot_menu = false;
   bool write_cfg = false;
 
-  int active_slots[NUM_SLOTS];
+  uint8_t active_slots[NUM_SLOTS];
+
   uint8_t grid_select_apply;
   uint8_t slot_clear;
 

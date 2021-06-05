@@ -21,7 +21,7 @@ void GridPage::setup() {
   encoders[1]->cur = encoders[1]->old = mcl_cfg.row;
   cur_col = mcl_cfg.cur_col;
   cur_row = mcl_cfg.cur_row;
-  memset(active_slots, -1, sizeof(active_slots));
+  memset(active_slots, SLOT_DISABLED, sizeof(active_slots));
   /*
   cur_col = 0;
   if (mcl_cfg.row < MAX_VISIBLE_ROWS) { cur_row = mcl_cfg.row; }

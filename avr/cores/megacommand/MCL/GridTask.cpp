@@ -60,7 +60,7 @@ void GridTask::run() {
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
-    if ((mcl_actions.links[n].loops == 0) || (grid_page.active_slots[n] < 0))
+    if ((mcl_actions.links[n].loops == 0) || (grid_page.active_slots[n] == SLOT_DISABLED))
       continue;
 
     uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;

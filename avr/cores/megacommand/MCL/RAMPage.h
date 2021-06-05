@@ -8,8 +8,6 @@
 #include "MCLActions.h"
 
 #define NUM_RAM_PAGES 2
-#define SLOT_RAM_RECORD (1 << (sizeof(GridLink::row) * 8)) - 1 - 1
-#define SLOT_RAM_PLAY (1 << (sizeof(GridLink::row) * 8)) - 1 - 2
 
 class RAMPage : public LightPage, MidiCallback {
 public:

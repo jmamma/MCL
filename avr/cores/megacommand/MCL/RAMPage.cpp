@@ -69,7 +69,7 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t tr
 
   mcl_actions.send_machine[track] = 0;
   uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
-  grid_page.active_slots[track] = 0x7FFF;
+  grid_page.active_slots[track] = SLOT_PENDING;
   mcl_actions.transition_level[track] = transition;
   mcl_actions.next_transitions[track] = next_step;
   mcl_actions.transition_offsets[track] = 0;

@@ -36,13 +36,13 @@ class ArpSeqData {
   public:
   uint8_t notes[ARP_MAX_NOTES]; //output notes
   uint8_t len;
-  uint8_t idx;
 
-  uint8_t enabled;
+  uint8_t enabled : 4;
+  uint8_t range : 4;
+  uint8_t oct : 4;
+  uint8_t rate : 4;
   uint8_t mode;
-  uint8_t range;
-  uint8_t oct;
-  uint8_t rate;
+
   uint8_t fine_tune;
   uint64_t note_mask[2]; //input notes
 };
@@ -52,6 +52,8 @@ class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
 
 public:
   uint8_t last_note_on;
+  uint8_t idx;
+
   ArpSeqTrack() : SeqTrackBase() {
     active = ARP_TRACK_TYPE;
     init();

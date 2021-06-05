@@ -317,7 +317,7 @@ again:
       links[n].row = row;
       links[n].loops = 1;
       // if (grid_page.active_slots[n] < 0) {
-      grid_page.active_slots[n] = 0x7FFF;
+      grid_page.active_slots[n] = SLOT_PENDING;
       // }
     }
   }
@@ -487,7 +487,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
   // in_sysex = 0;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((select_array[n] > 0) && (grid_page.active_slots[n] >= 0)) {
+    if ((select_array[n] > 0) && (grid_page.active_slots[n] != SLOT_DISABLED)) {
       GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
       if (gdt != nullptr) {
         transition_level[n] = 0;
@@ -645,7 +645,7 @@ void MCLActions::calc_next_transition() {
   next_transition = (uint16_t)-1;
   DEBUG_PRINT_FN();
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (grid_page.active_slots[n] >= 0) {
+    if (grid_page.active_slots[n] != SLOT_DISABLED) {
       if (((links[n].loops > 0) &&
            (links[n].row != grid_page.active_slots[n])) ||
           links[n].length) {
@@ -687,7 +687,7 @@ void MCLActions::calc_latency(DeviceTrack *empty_track) {
 
   DEBUG_PRINTLN("calc latency");
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((grid_page.active_slots[n] < 0))
+    if ((grid_page.active_slots[n] == SLOT_DISABLED))
       continue;
     if (next_transitions[n] == next_transition) {
       GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);

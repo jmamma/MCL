@@ -22,7 +22,7 @@ void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (grid_page.active_slots[n] >= 0) {
+    if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
       mcl_actions.chains[n].reset();

@@ -8,6 +8,8 @@ public:
   GridChain() { init(); };
   uint8_t pos;
   uint8_t length;
+
+  uint8_t lengths[NUM_LINKS];
   uint8_t rows[NUM_LINKS];
 
   void init() {
