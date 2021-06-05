@@ -105,8 +105,8 @@ public:
   bool use_screen_saver = true;
   /** A vector storing the registered event handlers (max 4). **/
   Vector<event_handler_t, 4> eventHandlers;
-  /** A vector storing the registered tasks (max 8). **/
-  Vector<Task *, 8> tasks;
+  /** A vector storing the registered tasks (max 4). **/
+  Vector<Task *, 4> tasks;
 
 #ifdef GUI_NUM_ENCODERS
   /** The number of encoders present in the GUI (4 on the minicommand). **/
