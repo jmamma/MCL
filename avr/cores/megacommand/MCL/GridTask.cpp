@@ -92,8 +92,8 @@ void GridTask::run() {
       }
     }
     // Override link data if in manual or queue mode
-    if (mcl_actions.slot_chain_mode[n] == CHAIN_QUEUE && mcl_actions.chains[n].length) {
-        uint8_t next_row = mcl_actions.chains[n].get_next();
+    if (mcl_actions.slot_chain_mode[n] == CHAIN_QUEUE && mcl_actions.chains[n].num_of_links) {
+        uint8_t next_row = mcl_actions.chains[n].get();
          if (next_row != 255) {
            mcl_actions.links[n].row = next_row;
            mcl_actions.links[n].loops = 1;
@@ -176,6 +176,9 @@ void GridTask::run() {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       if (track_select_array[n] > 0) {
         mcl_actions.calc_next_slot_transition(n);
+        if (mcl_actions.slot_chain_mode[n] == CHAIN_QUEUE && mcl_actions.chains[n].num_of_links) {
+          mcl_actions.chains[n].inc();
+        }
       }
     }
 

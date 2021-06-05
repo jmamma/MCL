@@ -352,11 +352,13 @@ void MCLActions::add_slots_to_chain(int row, uint8_t *slot_select_array) {
       continue;
     }
     if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
-      chains[n].add(row);
-      if (chains[n].length - 1 == chains[n].pos) {
+      chains[n].add(row, get_quant());
+      if (chains[n].num_of_links - 1 == chains[n].pos) {
+        if ((MidiClock.state != 2 && chains[n].num_of_links > 1)) { goto queue; }
         chains[n].pos++;
       } else {
         DEBUG_PRINTLN("queue slot");
+        queue:
         slot_select_array[n] = 0;
       }
     } else {
@@ -581,9 +583,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   switch (slot_chain_mode[n]) {
   case CHAIN_QUEUE: {
-    if (mcl_actions.chains[n].length) {
+    if (mcl_actions.chains[n].num_of_links) {
       links[n].loops = 1;
-      links[n].length = get_quant();
+      links[n].length = chains[n].get_length();
     }
     break;
   }
