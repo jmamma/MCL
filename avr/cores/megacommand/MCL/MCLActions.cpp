@@ -35,7 +35,6 @@ void MCLActions::setup() {
     transition_offsets[i] = 0;
     send_machine[i] = 0;
     transition_level[i] = 0;
-    slot_chain_mode[i] = CHAIN_MANUAL;
   }
   memset(dev_sync_slot, 255, NUM_DEVS);
 }
@@ -354,17 +353,19 @@ void MCLActions::add_slots_to_chain(int row, uint8_t *slot_select_array) {
     if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
       chains[n].add(row, get_quant());
       if (chains[n].num_of_links - 1 == chains[n].pos) {
-        if ((MidiClock.state != 2 && chains[n].num_of_links > 1)) { goto queue; }
+        if ((MidiClock.state != 2 && chains[n].num_of_links > 1)) {
+          goto queue;
+        }
         chains[n].pos++;
       } else {
         DEBUG_PRINTLN("queue slot");
-        queue:
+      queue:
         slot_select_array[n] = 0;
       }
     } else {
       chains[n].init();
     }
-    slot_chain_mode[n] = mcl_cfg.chain_mode;
+    chains[n].mode = mcl_cfg.chain_mode;
   }
 
   proj.select_grid(old_grid);
@@ -581,9 +582,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   DEBUG_PRINT_FN();
   //  DEBUG_PRINTLN(next_transitions[n]);
 
-  switch (slot_chain_mode[n]) {
+  switch (chains[n].mode) {
   case CHAIN_QUEUE: {
-    if (mcl_actions.chains[n].num_of_links) {
+    if (chains[n].num_of_links) {
       links[n].loops = 1;
       links[n].length = chains[n].get_length();
     }
@@ -591,7 +592,6 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
   }
   case CHAIN_AUTO: {
     if (links[n].loops == 0) {
-
       next_transitions[n] = -1;
       return;
     }

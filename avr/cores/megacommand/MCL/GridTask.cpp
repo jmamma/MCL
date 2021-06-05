@@ -60,7 +60,8 @@ void GridTask::run() {
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
-    if ((mcl_actions.links[n].loops == 0) || (grid_page.active_slots[n] == SLOT_DISABLED))
+    if ((mcl_actions.links[n].loops == 0) ||
+        (grid_page.active_slots[n] == SLOT_DISABLED))
       continue;
 
     uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
@@ -71,7 +72,8 @@ void GridTask::run() {
       continue;
 
     slots_changed[n] = mcl_actions.links[n].row;
-    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) || (mcl_actions.slot_chain_mode[n] == CHAIN_MANUAL)) {
+    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
+        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -92,19 +94,13 @@ void GridTask::run() {
       }
     }
     // Override link data if in manual or queue mode
-    if (mcl_actions.slot_chain_mode[n] == CHAIN_QUEUE && mcl_actions.chains[n].num_of_links) {
-        uint8_t next_row = mcl_actions.chains[n].get();
-         if (next_row != 255) {
-           mcl_actions.links[n].row = next_row;
-           mcl_actions.links[n].loops = 1;
-         }
-         else {
-           mcl_actions.links[n].loops = 0;
-         }
+    uint8_t next_row = mcl_actions.chains[n].get();
+    if (next_row != 255) {
+      mcl_actions.links[n].row = next_row;
+      mcl_actions.links[n].loops = 1;
+    } else {
+      mcl_actions.links[n].loops = 0;
     }
-   // else if (mcl_cfg.chain_mode == CHAIN_MANUAL) {
-   //      mcl_actions.links[n].loops = 0;
-   // }
   }
 
   DEBUG_PRINTLN(F("sending tracks"));
@@ -156,7 +152,7 @@ void GridTask::run() {
             DEBUG_PRINTLN("undo kit sync");
             DEBUG_PRINTLN(n);
             if (elektron_devs[dev_idx]) {
-            elektron_devs[dev_idx]->undokit_sync();
+              elektron_devs[dev_idx]->undokit_sync();
             }
             mcl_actions.dev_sync_slot[dev_idx] = -1;
           }
@@ -166,27 +162,25 @@ void GridTask::run() {
       }
     }
   }
-//  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
+  //  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
 
-    bool update_gui = true;
-    mcl_actions.cache_next_tracks(track_select_array, &empty_track,
-                                  &empty_track2, update_gui);
+  bool update_gui = true;
+  mcl_actions.cache_next_tracks(track_select_array, &empty_track, &empty_track2,
+                                update_gui);
 
-    // Once tracks are cached, we can calculate their next transition
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (track_select_array[n] > 0) {
-        mcl_actions.calc_next_slot_transition(n);
-        if (mcl_actions.slot_chain_mode[n] == CHAIN_QUEUE && mcl_actions.chains[n].num_of_links) {
-          mcl_actions.chains[n].inc();
-        }
-      }
+  // Once tracks are cached, we can calculate their next transition
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (track_select_array[n] > 0) {
+      mcl_actions.calc_next_slot_transition(n);
+      mcl_actions.chains[n].inc();
     }
+  }
 
-    mcl_actions.calc_next_transition();
-    mcl_actions.calc_latency(&empty_track);
-//  } else {
-//    mcl_actions.next_transition = (uint16_t)-1;
-//  }
+  mcl_actions.calc_next_transition();
+  mcl_actions.calc_latency(&empty_track);
+  //  } else {
+  //    mcl_actions.next_transition = (uint16_t)-1;
+  //  }
 
   GUI.addTask(&grid_task);
 }

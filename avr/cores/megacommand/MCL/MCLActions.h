@@ -46,7 +46,6 @@ public:
   uint8_t dev_sync_slot[NUM_DEVS];
 
   GridChain chains[NUM_SLOTS];
-  uint8_t slot_chain_mode[NUM_SLOTS];
 };
 
 class MCLActions : public LinkModeData {

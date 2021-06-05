@@ -4,10 +4,6 @@
 #include "MCL.h"
 #include "Task.h"
 
-#define CHAIN_AUTO 1
-#define CHAIN_MANUAL 2
-#define CHAIN_QUEUE 3
-
 class GridTask : public Task {
 
 public:
