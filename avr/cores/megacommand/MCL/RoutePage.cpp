@@ -152,7 +152,6 @@ bool RoutePage::handleEvent(gui_event_t *event) {
         toggle_routes_batch();
         note_interface.init_notes();
         //  md_exploit.send_globals();
-        curpage = 0;
       }
     }
     return true;

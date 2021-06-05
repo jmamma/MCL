@@ -48,7 +48,6 @@ void SeqStepPage::init() {
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   midi_events.setup_callbacks();
-  curpage = SEQ_STEP_PAGE;
   trig_interface.on();
   MD.set_rec_mode(1);
   trig_interface.send_md_leds(TRIGLED_STEPEDIT);

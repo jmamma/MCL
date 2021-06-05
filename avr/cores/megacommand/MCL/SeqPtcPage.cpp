@@ -103,7 +103,6 @@ void SeqPtcPage::init() {
   } else {
     trig_interface.off();
   }
-  curpage = SEQ_PTC_PAGE;
   config();
   re_init = false;
 }

@@ -14,7 +14,6 @@ void GridWritePage::setup() {
   MD.popup_text("LOAD SLOTS", true);
   note_interface.state = true;
   // GUI.display();
-  curpage = W_PAGE;
   if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
 }
 
@@ -179,7 +178,6 @@ bool GridWritePage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
     mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
                              track_select_array);
-    curpage = 0;
     return true;
   }
 }

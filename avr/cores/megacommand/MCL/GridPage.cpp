@@ -12,10 +12,8 @@ void GridPage::init() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
 #endif
-  DEBUG_PRINTLN("GridPage::init()");
   R.Clear();
   R.use_machine_names_short();
-
 }
 
 void GridPage::setup() {
@@ -99,7 +97,7 @@ void GridPage::loop() {
   ((MCLEncoder *)encoders[2])->max = getWidth() - getCol();
   ((MCLEncoder *)encoders[3])->max = GRID_LENGTH - getRow();
 
- if (!reload_slot_models) {
+  if (!reload_slot_models) {
     load_slot_models();
     reload_slot_models = true;
   }
@@ -567,9 +565,11 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   uint8_t height;
 
   GridTrack temp_slot;
+
   temp_slot.load_from_grid(getCol(), getRow());
 
-  uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() && slot_undo_y == getRow();
+  uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() &&
+                 slot_undo_y == getRow();
 
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
@@ -600,7 +600,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   if (undo == 1) {
     slot_paste = 1;
   }
-
   if (slot_copy == 1 || (slot_clear == 1 && !undo)) {
     if (slot_clear == 0) {
       slot_undo = 0;
@@ -809,8 +808,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    apply_slot_changes();
-    init();
+    if (show_slot_menu) {
+      apply_slot_changes();
+      init();
+    }
     return true;
   }
 #else

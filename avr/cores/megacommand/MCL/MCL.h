@@ -47,9 +47,6 @@
 
 // Memory layout for SRAM bank 1
 
-extern int8_t curpage;
-extern uint8_t patternswitch;
-
 class MCL {
 public:
   void setup();

@@ -11,7 +11,9 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 	byte* pos = m_buffer + m_bufsize;
 	uint16_t sz = unpack((byte*)pgm, pos);
 	m_bufsize += sz;
-	return pos;
+    DEBUG_PRINTLN("resource buf size");
+    DEBUG_PRINTLN(m_bufsize);
+    return pos;
 }
 
 // XXX 4KB buf on stack is too heavy

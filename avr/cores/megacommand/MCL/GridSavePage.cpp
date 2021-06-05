@@ -228,7 +228,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
                                     grid_page.encoders[1]->getValue(),
                                     track_select_array, save_mode);
     GUI.setPage(&grid_page);
-    curpage = 0;
     return true;
   }
 }

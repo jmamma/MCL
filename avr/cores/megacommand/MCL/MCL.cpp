@@ -1,9 +1,6 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
-int8_t curpage;
-uint8_t patternswitch = PATTERN_UDEF;
-
 void MCL::setup() {
   DEBUG_PRINTLN(F("Welcome to MegaCommand Live"));
   DEBUG_PRINTLN(VERSION);

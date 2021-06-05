@@ -54,12 +54,10 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     trig_interface.send_md_leds();
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64; 
+    uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
         case MDX_KEY_NO:
-        case MDX_KEY_BANKC:
-        case MDX_KEY_BANKD:
           goto close;
         }
       }
@@ -68,7 +66,6 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     group_select();
     return true;
   }
- 
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -77,7 +74,6 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
     close:
     GUI.setPage(&grid_page);
-    curpage = 0;
     return true;
   }
   return false;
