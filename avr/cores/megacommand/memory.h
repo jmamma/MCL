@@ -3,6 +3,8 @@
 
 #define NUM_DEVS 2
 
+#define NUM_CLOCK_CALLBACKS 4
+
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 #define TX_SEQBUF_SIZE 0x200UL

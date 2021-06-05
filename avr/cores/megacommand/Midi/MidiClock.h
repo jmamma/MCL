@@ -119,18 +119,17 @@ public:
 
   MidiClockClass();
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStartCallbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartImmediateCallbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStopCallbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiContinueCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStartImmediateCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStopCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiContinueCallbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> on192Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on96Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on32Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on16Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on192Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on96Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on32Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on16Callbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onClockCallbacks;
   void addOnMidiStartImmediateCallback(ClockCallback *obj,
                                        midi_clock_callback_ptr_t func) {
     onMidiStartImmediateCallbacks.add(obj, func);
@@ -207,17 +206,6 @@ public:
     on16Callbacks.remove(obj, func);
   }
   void removeOn16Callback(ClockCallback *obj) { on16Callbacks.remove(obj); }
-
-  void addOnClockCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
-    onClockCallbacks.add(obj, func);
-  }
-  void removeOnClockCallback(ClockCallback *obj,
-                             midi_clock_callback_ptr_t func) {
-    onClockCallbacks.remove(obj, func);
-  }
-  void removeOnClockCallback(ClockCallback *obj) {
-    onClockCallbacks.remove(obj);
-  }
 
   ALWAYS_INLINE() void init();
 
