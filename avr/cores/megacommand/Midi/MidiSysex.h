@@ -234,7 +234,6 @@ public:
 
   // Handled by main loop
   void end() {
-    DEBUG_PRINTLN("sysex end");
     recvIds[0] = getByte(0);
     sysexLongId = false;
     if (recvIds[0] == 0x00) {
@@ -244,7 +243,6 @@ public:
     }
     for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i])) {
-        DEBUG_PRINTLN("calling slave");
         listeners[i]->msg_rd = rd_cur;
         listeners[i]->end();
       }

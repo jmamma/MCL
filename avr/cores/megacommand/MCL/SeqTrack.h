@@ -189,6 +189,10 @@ public:
 
   uint16_t cur_event_idx;
 
+  SeqTrack() {
+  reset();
+  }
+
   ALWAYS_INLINE() void reset() {
     count_down = 0;
     cur_event_idx = 0;

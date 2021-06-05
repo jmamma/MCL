@@ -59,8 +59,6 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   // virtual functions are ready
   uint32_t len = ptrack->get_track_size();
 
-  DEBUG_PRINTLN(len);
-
   if(!proj.read_grid(ptrack, len, column, row)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;

@@ -57,6 +57,7 @@ void GridTask::run() {
   GUI.removeTask(&grid_task);
 
   uint8_t track_idx, dev_idx;
+
   for (int8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
@@ -71,8 +72,7 @@ void GridTask::run() {
       continue;
 
     slots_changed[n] = mcl_actions.links[n].row;
-    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-        (mcl_cfg.chain_mode == CHAIN_MANUAL)) {
+    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) || (mcl_cfg.chain_mode == CHAIN_MANUAL)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -93,12 +93,8 @@ void GridTask::run() {
       }
     }
     // Override link data if in manual or queue mode
-    switch (mcl_cfg.chain_mode) {
-       case CHAIN_QUEUE: {
-         uint8_t next_row = mcl_actions.chains[n].get_next();
-         DEBUG_PRINTLN("next row");
-         DEBUG_PRINTLN(n);
-         DEBUG_PRINTLN(next_row);
+    if (mcl_actions.chains[n].length) {
+        uint8_t next_row = mcl_actions.chains[n].get_next();
          if (next_row != 255) {
            mcl_actions.links[n].row = next_row;
            mcl_actions.links[n].loops = 1;
@@ -106,12 +102,9 @@ void GridTask::run() {
          else {
            mcl_actions.links[n].loops = 0;
          }
-         break;
-       }
-       case CHAIN_MANUAL: {
+    }
+    else if (mcl_cfg.chain_mode == CHAIN_MANUAL) {
          mcl_actions.links[n].loops = 0;
-         break;
-       }
     }
   }
 
@@ -155,7 +148,6 @@ void GridTask::run() {
 
       auto *pmem_track =
           empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
-      DEBUG_PRINTLN("gridtask");
       DEBUG_DUMP(pmem_track->active);
       if (pmem_track != nullptr) {
         gdt->seq_track->count_down = -1;
@@ -175,7 +167,7 @@ void GridTask::run() {
       }
     }
   }
-  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
+//  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
 
     bool update_gui = true;
     mcl_actions.cache_next_tracks(track_select_array, &empty_track,
@@ -190,9 +182,9 @@ void GridTask::run() {
 
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency(&empty_track);
-  } else {
-    mcl_actions.next_transition = (uint16_t)-1;
-  }
+//  } else {
+//    mcl_actions.next_transition = (uint16_t)-1;
+//  }
 
   GUI.addTask(&grid_task);
 }

@@ -26,11 +26,12 @@ void MCLActionsCallbacks::onMidiStartCallback() {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
       mcl_actions.chains[n].reset();
-      if (mcl_cfg.chain_mode != CHAIN_MANUAL) { mcl_actions.calc_next_slot_transition(n); }
+      if (mcl_actions.chains[n].length) { mcl_actions.calc_next_slot_transition(n); }
     }
   }
-  if (mcl_cfg.chain_mode != CHAIN_MANUAL) { mcl_actions.calc_next_transition(); }
-  else { mcl_actions.next_transition = (uint16_t) -1; }
+  mcl_actions.calc_next_transition();
+  //if (mcl_cfg.chain_mode != CHAIN_MANUAL) { mcl_actions.calc_next_transition(); }
+  //else { mcl_actions.next_transition = (uint16_t) -1; }
 }
 
 void MCLActionsMidiEvents::setup_callbacks() {

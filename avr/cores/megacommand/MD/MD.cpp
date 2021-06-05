@@ -582,7 +582,6 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
 
-  DEBUG_PRINTLN("assign machine");
   uint8_t data[43] = {0x70, 0x5b};
   uint8_t i = 2;
   data[i++] = track;

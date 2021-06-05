@@ -18,7 +18,11 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(MDFXTrack));
   DEBUG_DUMP(sizeof(MDTempoTrack));
   DEBUG_DUMP(sizeof(GridChainTrack));
+
+  DEBUG_PRINTLN("bank1 end: ");
+  DEBUG_PRINTLN(BANK1_FILE_ENTRIES_END);
   bool ret = false;
+
   delay(100);
   ret = mcl_sd.sd_init();
 #ifdef OLED_DISPLAY
