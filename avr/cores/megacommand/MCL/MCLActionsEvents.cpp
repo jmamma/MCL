@@ -26,7 +26,7 @@ void MCLActionsCallbacks::onMidiStartCallback() {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
       mcl_actions.chains[n].reset();
-      if (mcl_actions.chains[n].length) { mcl_actions.calc_next_slot_transition(n); }
+      mcl_actions.calc_next_slot_transition(n);
     }
   }
   mcl_actions.calc_next_transition();
