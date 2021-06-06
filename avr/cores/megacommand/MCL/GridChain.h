@@ -50,5 +50,5 @@ public:
 
   uint8_t get_length() { return lengths[pos]; }
 
-  void reset() { pos = 1; }
+  void reset() { pos = num_of_links == 1 ? 0 : 1; }
 };

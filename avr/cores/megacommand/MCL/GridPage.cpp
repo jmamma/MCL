@@ -202,8 +202,7 @@ void GridPage::display_counters() {
 
   if ((mcl_actions.next_transition != (uint16_t)-1) &&
       (MidiClock.bar_counter <= mcl_actions.nearest_bar) &&
-      (mcl_actions.nearest_beat != MidiClock.beat_counter) &&
-      (mcl_actions.nearest_bar != MidiClock.bar_counter)) {
+      (mcl_actions.nearest_beat != MidiClock.beat_counter || mcl_actions.nearest_bar != MidiClock.bar_counter)) {
     GUI.put_value_at2(0, mcl_actions.nearest_bar, val);
 
     if (val[0] == '0') {
@@ -782,8 +781,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     load:
-      grid_write_page.isSetup = false;
-      GUI.setPage(&grid_write_page);
+      grid_load_page.isSetup = false;
+      GUI.setPage(&grid_load_page);
 
       return true;
     }

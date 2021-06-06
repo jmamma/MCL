@@ -57,7 +57,7 @@ void GridTask::run() {
 
   uint8_t track_idx, dev_idx;
 
-  for (int8_t n = 0; n < NUM_SLOTS; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = -1;
 
     if ((mcl_actions.links[n].loops == 0) ||
@@ -72,8 +72,8 @@ void GridTask::run() {
       continue;
 
     slots_changed[n] = mcl_actions.links[n].row;
-    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
+//    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
+//        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -91,12 +91,12 @@ void GridTask::run() {
         if (pmem_track->active) {
           send_device[dev_idx] = true;
         }
-      }
+ //     }
     }
 
-  //  if (mcl_actions.chains[n].mode == CHAIN_MANUAL) {
-  //    mcl_actions.links[n].loops = 0;
-  //  }
+    //  if (mcl_actions.chains[n].mode == CHAIN_MANUAL) {
+    //    mcl_actions.links[n].loops = 0;
+    //  }
   }
 
   DEBUG_PRINTLN(F("sending tracks"));
@@ -129,8 +129,8 @@ void GridTask::run() {
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if (diff > 8) {
-//             handleIncomingMidi();
-//             GUI.loop();
+            handleIncomingMidi();
+            GUI.loop();
           }
         }
       }

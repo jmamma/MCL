@@ -613,7 +613,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (GUI.currentPage() == &seq_extstep_page) ||
 #endif
       (GUI.currentPage() == &grid_save_page) ||
-      (GUI.currentPage() == &grid_write_page)) {
+      (GUI.currentPage() == &grid_load_page)) {
     return;
   }*/
   uint8_t note_num = msg[1];
@@ -708,7 +708,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       (GUI.currentPage() == &seq_extstep_page) ||
 #endif
       (GUI.currentPage() == &grid_save_page) ||
-      (GUI.currentPage() == &grid_write_page)) {
+      (GUI.currentPage() == &grid_load_page)) {
     return;
   }*/
   DEBUG_PRINTLN(F("note off midi2"));

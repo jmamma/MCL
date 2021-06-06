@@ -42,7 +42,7 @@ void NoteInterface::add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t
   if (IS_BIT_SET32(notes_ignore, note_num)) {
     CLEAR_BIT32(notes_ignore, note_num);
     return;
-  } 
+  }
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = event_mask;

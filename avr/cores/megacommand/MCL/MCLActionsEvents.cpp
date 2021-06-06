@@ -46,7 +46,8 @@ void MCLActionsCallbacks::StopHardCallback() {
       elektron_devs[i]->getBlockingKit(0x7F);
     }
   }
-
+  DEBUG_PRINTLN("StopHard");
+  DEBUG_PRINTLN((int)SP);
   mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
 
 }
