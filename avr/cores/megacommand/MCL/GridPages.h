@@ -20,7 +20,7 @@
 
 #include "MCLEncoder.h"
 #include "GridSavePage.h"
-#include "GridWritePage.h"
+#include "GridLoadPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "GridLink.h"
@@ -40,7 +40,7 @@ extern MCLEncoder gridio_param3;
 extern MCLEncoder gridio_param4;
 
 extern GridSavePage grid_save_page;
-extern GridWritePage grid_write_page;
+extern GridLoadPage grid_write_page;
 
 extern GridTrack slot;
 

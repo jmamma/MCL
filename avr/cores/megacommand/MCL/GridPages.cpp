@@ -21,7 +21,7 @@ MCLEncoder gridio_param4(1, 11, ENCODER_RES_PAT);
 
 GridSavePage grid_save_page(&gridio_param1, &gridio_param2, &gridio_param3,
                             &gridio_param4);
-GridWritePage grid_write_page(&gridio_param1, &gridio_param2, &gridio_param3,
+GridLoadPage grid_write_page(&gridio_param1, &gridio_param2, &gridio_param3,
                              &gridio_param4);
 
 GridTrack slot;

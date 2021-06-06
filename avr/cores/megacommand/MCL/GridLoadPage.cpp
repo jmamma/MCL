@@ -1,8 +1,7 @@
 #include "MCL_impl.h"
 
-void GridWritePage::setup() {
+void GridLoadPage::setup() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  
   ((MCLEncoder *)encoders[3])->max = 6;
   encoders[3]->cur = 4;
   ((MCLEncoder *)encoders[2])->max = 1;
@@ -17,7 +16,7 @@ void GridWritePage::setup() {
   if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
 }
 
-void GridWritePage::draw_popup() {
+void GridLoadPage::draw_popup() {
   char str[16];
   strcpy(str, "GROUP LOAD");
 
@@ -28,7 +27,7 @@ void GridWritePage::draw_popup() {
   mcl_gui.draw_popup(str, true, 28);
 }
 
-void GridWritePage::display() {
+void GridLoadPage::display() {
 
   draw_popup();
 
@@ -82,7 +81,7 @@ void GridWritePage::display() {
   oled_display.display();
   oled_display.setFont(oldfont);
 }
-void GridWritePage::link() {
+void GridLoadPage::link() {
   oled_display.textbox("LOAD SLOTS", "");
   oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
@@ -107,13 +106,13 @@ void GridWritePage::link() {
                            track_select_array);
 }
 
-void GridWritePage::group_select() {
+void GridLoadPage::group_select() {
     show_track_type = true;
     MD.popup_text("LOAD GROUPS", true);
     MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
-bool GridWritePage::handleEvent(gui_event_t *event) {
+bool GridLoadPage::handleEvent(gui_event_t *event) {
   // Call parent GUI handler first.
   if (GridIOPage::handleEvent(event)) {
     return true;
