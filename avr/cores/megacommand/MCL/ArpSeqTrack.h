@@ -62,7 +62,7 @@ public:
   void clear_notes() {
     len = 0;
     idx = 0;
-    memset(note_mask,0,2);
+    memset(note_mask,0,sizeof(note_mask));
     last_note_on = 255;
   }
 
