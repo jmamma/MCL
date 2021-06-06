@@ -28,6 +28,7 @@ void MCLActionsCallbacks::StopHardCallback() {
     if ( mcl_actions.chains[n].is_mode_queue()) {
       slot_select_array[n] = 1;
       row_array[n] = mcl_actions.chains[n].rows[0];
+      mcl_actions.chains[n].pos = 0;
       proceed = true;
     }
   }

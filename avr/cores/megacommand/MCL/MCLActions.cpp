@@ -226,7 +226,33 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
 
-  add_slots_to_chain(row, slot_select_array);
+  uint8_t row_array[NUM_SLOTS] = {};
+
+  uint8_t track_idx, dev_idx;
+  for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+
+    GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
+    if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
+      continue;
+    }
+    if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
+      chains[n].add(row, get_quant());
+
+      //A loop is only formed when 2 rows are entred, required for correct link caching
+      if (chains[n].num_of_links == 2 && MidiClock.state != 2) {
+        chains[n].pos = 0;
+        row_array[n] = chains[n].rows[0];
+      }
+      if (chains[n].num_of_links > 2) {
+        slot_select_array[n] = 0;
+      }
+    } else {
+      chains[n].init();
+    }
+    chains[n].mode = mcl_cfg.chain_mode;
+  }
+
+
   if (MidiClock.state == 2) {
     for (uint8_t i = 0; i < NUM_DEVS; ++i) {
       if (elektron_devs[i] != nullptr &&
@@ -241,6 +267,7 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
     prepare_next_transition(row, slot_select_array);
     return;
   }
+
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     if (elektron_devs[i] != nullptr &&
         elektron_devs[i]->canReadWorkspaceKit()) {
@@ -248,7 +275,7 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
     }
   }
 
-  send_tracks_to_devices(slot_select_array);
+  send_tracks_to_devices(slot_select_array, row_array);
 }
 
 void MCLActions::prepare_next_transition(int row, uint8_t *slot_select_array) {
@@ -332,46 +359,8 @@ again:
   proj.select_grid(old_grid);
 }
 
-void MCLActions::add_slots_to_chain(int row, uint8_t *slot_select_array) {
-  DEBUG_PRINT_FN();
-  uint8_t old_grid = proj.get_grid();
-
-  MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
-  };
-
-  uint8_t track_idx, dev_idx;
-  for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
-
-    GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
-    uint8_t grid_idx = get_grid_idx(n);
-    proj.select_grid(grid_idx);
-    if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
-      continue;
-    }
-    if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
-      chains[n].add(row, get_quant());
-      if (chains[n].num_of_links - 1 == chains[n].pos) {
-        if ((MidiClock.state != 2 && chains[n].num_of_links > 1)) {
-          goto queue;
-        }
-        chains[n].pos++;
-      } else {
-        DEBUG_PRINTLN("queue slot");
-      queue:
-        slot_select_array[n] = 0;
-      }
-    } else {
-      chains[n].init();
-    }
-    chains[n].mode = mcl_cfg.chain_mode;
-  }
-
-  proj.select_grid(old_grid);
-}
-
-void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array) {
+void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
+                                        uint8_t *row_array) {
   DEBUG_PRINT_FN();
 
   uint8_t select_array[NUM_SLOTS];
@@ -528,11 +517,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (slot_select_array[n] > 0) {
 
       if (gui_update) {
-        handleIncomingMidi();
+        // handleIncomingMidi();
         if (n % 8 == 0) {
           if (GUI.currentPage() != &grid_write_page) {
             proj.select_grid(old_grid);
-            GUI.loop();
+            //  GUI.loop();
           }
         }
       }
@@ -544,6 +533,14 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
 
       proj.select_grid(grid_idx);
+
+      if (chains[n].is_mode_queue()) {
+        links[n].loops = 1;
+        links[n].length = chains[n].get_length();
+        links[n].speed = SEQ_SPEED_1X;
+        chains[n].inc();
+        links[n].row = chains[n].get_row();
+      }
 
       if (links[n].row >= GRID_LENGTH)
         continue;
@@ -589,10 +586,6 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 
   switch (chains[n].mode) {
   case CHAIN_QUEUE: {
-    if (chains[n].num_of_links) {
-      links[n].loops = 1;
-      links[n].length = chains[n].get_length();
-    }
     break;
   }
   case CHAIN_AUTO: {

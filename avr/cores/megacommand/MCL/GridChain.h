@@ -11,8 +11,8 @@ class GridChain {
 public:
   GridChain() { init(); };
   uint8_t pos;
-  uint8_t num_of_links : 5;
-  uint8_t mode : 3;
+  uint8_t num_of_links;
+  uint8_t mode;
 
   uint8_t lengths[NUM_LINKS];
   uint8_t rows[NUM_LINKS];
@@ -37,7 +37,7 @@ public:
     return true;
   }
 
-  uint8_t get() { return is_mode_queue() ? rows[pos] : 255; }
+  uint8_t get_row() { return rows[pos]; }
 
   void inc() {
     if (!is_mode_queue())
