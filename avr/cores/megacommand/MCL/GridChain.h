@@ -50,5 +50,5 @@ public:
 
   uint8_t get_length() { return lengths[pos]; }
 
-  void reset() { pos = 0; }
+  void reset() { pos = 1; }
 };

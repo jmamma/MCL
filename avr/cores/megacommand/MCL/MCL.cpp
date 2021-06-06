@@ -187,7 +187,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         opt_clear_track_handler();
       }
       case MDX_KEY_STOP: {
-
+        mcl_actions_callbacks.StopHardCallback();
         break;
       }
       }
@@ -201,7 +201,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (GUI.currentPage() != &seq_step_page) {
             GUI.setPage(&seq_step_page);
             page_select_page.md_prepare();
-          }   
+          }
           return true;
         }
       }

@@ -371,7 +371,7 @@ void MCLActions::add_slots_to_chain(int row, uint8_t *slot_select_array) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
+void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array) {
   DEBUG_PRINT_FN();
 
   uint8_t select_array[NUM_SLOTS];
@@ -407,12 +407,17 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array) {
     mute_states[i] = gdt->seq_track->mute_state;
     gdt->seq_track->mute_state = SEQ_MUTE_ON;
 
-    grid_page.active_slots[i] = grid_page.getRow();
+    uint8_t row = grid_page.getRow();
+    if (row_array) {
+      row = row_array[i];
+    }
+
+    grid_page.active_slots[i] = row;
 
     DEBUG_DUMP("here");
-    DEBUG_DUMP(grid_page.getRow());
+    DEBUG_DUMP(row);
 
-    auto *ptrack = empty_track.load_from_grid(track_idx, grid_page.getRow());
+    auto *ptrack = empty_track.load_from_grid(track_idx, row);
 
     if (!ptrack) {
       DEBUG_PRINTLN("bad read");

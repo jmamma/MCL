@@ -18,6 +18,38 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
+void MCLActionsCallbacks::StopHardCallback() {
+
+  uint8_t row_array[NUM_SLOTS];
+  uint8_t slot_select_array[NUM_SLOTS] = {};
+  bool proceed = false;
+
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if ( mcl_actions.chains[n].is_mode_queue()) {
+      slot_select_array[n] = 1;
+      row_array[n] = mcl_actions.chains[n].rows[0];
+      proceed = true;
+    }
+  }
+
+  if (!proceed) { return; }
+
+  ElektronDevice *elektron_devs[2] = {
+      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+  };
+
+  for (uint8_t i = 0; i < NUM_DEVS; ++i) {
+    if (elektron_devs[i] != nullptr &&
+        elektron_devs[i]->canReadWorkspaceKit()) {
+      elektron_devs[i]->getBlockingKit(0x7F);
+    }
+  }
+
+  mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
+
+}
+
 void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;

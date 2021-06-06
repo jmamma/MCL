@@ -90,7 +90,7 @@ public:
                            uint8_t merge);
 
   void load_tracks(int column, int row, uint8_t *slot_select_array);
-  void send_tracks_to_devices(uint8_t *slot_select_array);
+  void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
   void prepare_next_transition(int row, uint8_t *slot_select_array);
   void add_slots_to_chain(int row, uint8_t *slot_select_array);
 

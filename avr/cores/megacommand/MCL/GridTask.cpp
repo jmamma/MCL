@@ -133,9 +133,8 @@ void GridTask::run() {
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if (diff > 8) {
-
-            handleIncomingMidi();
-            GUI.loop();
+             handleIncomingMidi();
+             GUI.loop();
           }
         }
       }
