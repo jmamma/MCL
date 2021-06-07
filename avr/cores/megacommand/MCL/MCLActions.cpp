@@ -509,6 +509,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   uint8_t track_idx, dev_idx;
 
+  memset(dev_sync_slot, 255, NUM_DEVS);
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (slot_select_array[n] > 0) {
 
@@ -566,6 +568,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
             // something's wrong, don't send
           } else if (memcmp(psound, pmem_sound, szsound) != 0) {
             send_machine[n] = 0;
+            dev_sync_slot[dev_idx] = n;
           } else {
             send_machine[n] = 1;
           }
