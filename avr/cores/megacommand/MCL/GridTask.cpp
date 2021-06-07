@@ -71,27 +71,26 @@ void GridTask::run() {
     if (MidiClock.clock_less_than(div32th_counter, next_transition))
       continue;
 
-    slots_changed[n] = mcl_actions.links[n].row;
-//    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-//        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
+    //    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
+    //        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
 
-      GridDeviceTrack *gdt =
-          mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+    GridDeviceTrack *gdt =
+        mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
 
-      if (gdt == nullptr) {
-        continue;
+    if (gdt == nullptr) {
+      continue;
+    }
+
+    auto *pmem_track =
+        empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+    if (pmem_track != nullptr) {
+      slots_changed[n] = mcl_actions.links[n].row;
+      track_select_array[n] = 1;
+      memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
+      if (pmem_track->active) {
+        send_device[dev_idx] = true;
       }
-
-      auto *pmem_track =
-          empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
-      if (pmem_track != nullptr) {
-        slots_changed[n] = mcl_actions.links[n].row;
-        track_select_array[n] = 1;
-        memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
-        if (pmem_track->active) {
-          send_device[dev_idx] = true;
-        }
- //     }
+      //     }
     }
 
     //  if (mcl_actions.chains[n].mode == CHAIN_MANUAL) {
@@ -130,7 +129,9 @@ void GridTask::run() {
                (MidiClock.state == 2)) {
           if (diff > 8) {
             handleIncomingMidi();
-            GUI.loop();
+            if (GUI.currentPage() != &grid_load_page) {
+              GUI.loop();
+            }
           }
         }
       }
@@ -138,23 +139,22 @@ void GridTask::run() {
 
       auto *pmem_track =
           empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
-      DEBUG_DUMP(pmem_track->active);
-      if (pmem_track != nullptr) {
-        gdt->seq_track->count_down = -1;
-        if (mcl_actions.send_machine[n] == 0) {
-          pmem_track->transition_send(track_idx, n);
-          if (mcl_actions.dev_sync_slot[dev_idx] == n) {
-            DEBUG_PRINTLN("undo kit sync");
-            DEBUG_PRINTLN(n);
-            if (elektron_devs[dev_idx]) {
-              elektron_devs[dev_idx]->undokit_sync();
-            }
-            mcl_actions.dev_sync_slot[dev_idx] = -1;
+      if (pmem_track == nullptr)
+        continue;
+
+      gdt->seq_track->count_down = -1;
+      if (mcl_actions.send_machine[n] == 0) {
+        pmem_track->transition_send(track_idx, n);
+        if (mcl_actions.dev_sync_slot[dev_idx] == n) {
+          if (elektron_devs[dev_idx]) {
+            elektron_devs[dev_idx]->undokit_sync();
           }
+          mcl_actions.dev_sync_slot[dev_idx] = -1;
         }
-        pmem_track->transition_load(track_idx, gdt->seq_track, n);
-        grid_page.active_slots[n] = slots_changed[n];
       }
+
+      pmem_track->transition_load(track_idx, gdt->seq_track, n);
+      grid_page.active_slots[n] = slots_changed[n];
     }
   }
   //  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {

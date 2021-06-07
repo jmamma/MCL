@@ -239,11 +239,6 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
     if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
       chains[n].add(row, get_quant());
 
-      //A loop is only formed when 2 rows are entred, required for correct link caching
-      if (chains[n].num_of_links == 2 && MidiClock.state != 2) {
-        chains[n].pos = 0;
-        row_array[n] = chains[n].rows[0];
-      }
       if (chains[n].num_of_links > 2) {
         slot_select_array[n] = 0;
       }
@@ -540,8 +535,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         links[n].length = (float) chains[n].get_length() / (float)gdt->seq_track->get_speed_multiplier();
         chains[n].inc();
         links[n].row = chains[n].get_row();
+        if (links[n].row == 255) { setLed2(); }
         DEBUG_PRINTLN("next row");
         DEBUG_PRINTLN(links[n].row);
+        DEBUG_PRINTLN(chains[n].pos);
+        DEBUG_PRINTLN(chains[n].num_of_links);
       }
 
       if (links[n].row >= GRID_LENGTH)
