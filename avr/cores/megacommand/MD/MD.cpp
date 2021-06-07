@@ -29,8 +29,6 @@ void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   }
 }
 
-
-
 void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
     return;
@@ -79,10 +77,7 @@ const ElektronSysexProtocol md_protocol = {
     MD_SAVE_KIT_ID,
 };
 
-MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {
-
-}
+MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
 
 void MDClass::setup() {
   resetMidiMap();
@@ -98,7 +93,9 @@ void MDClass::setup() {
   global.transportIn = true;
   global.transportOut = true;
 
-  if (global.baseChannel == 0) { setBaseChannel(9); }
+  if (global.baseChannel == 0) {
+    setBaseChannel(9);
+  }
 
   setExternalSync();
   setProgramChange(2);
@@ -106,17 +103,17 @@ void MDClass::setup() {
 }
 
 void MDClass::setBaseChannel(uint8_t channel) {
-  uint8_t data[3] = {0x70, 0x4A, channel };
+  uint8_t data[3] = {0x70, 0x4A, channel};
   sendRequest(data, sizeof(data));
 }
 
 void MDClass::setLocalOn(bool localOn) {
-  uint8_t data[3] = {0x70, 0x4B, localOn };
+  uint8_t data[3] = {0x70, 0x4B, localOn};
   sendRequest(data, sizeof(data));
 }
 
 void MDClass::setProgramChange(uint8_t val) {
-  uint8_t data[3] = {0x70, 0x4C, val };
+  uint8_t data[3] = {0x70, 0x4C, val};
   sendRequest(data, sizeof(data));
 }
 
@@ -141,7 +138,7 @@ void MDClass::setExternalSync() {
     b |= 1 << 6;
   }
 
-  uint8_t data[3] = {0x70, 0x4D, b };
+  uint8_t data[3] = {0x70, 0x4D, b};
   sendRequest(data, sizeof(data));
 }
 
@@ -179,7 +176,9 @@ bool MDClass::probe() {
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
-    uint64_t fw_caps_mask = ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS | (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL);
+    uint64_t fw_caps_mask =
+        ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
+         (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t)FW_CAP_TONAL);
 
     while ((!get_fw_caps() || !(fw_caps & fw_caps_mask)) && count) {
       DEBUG_PRINTLN("bad caps");
@@ -188,15 +187,15 @@ bool MDClass::probe() {
     }
 
     if (!(fw_caps & fw_caps_mask)) {
-       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-       return false;
-       //while (1) {};
+      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      return false;
+      // while (1) {};
     }
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
     mcl_gui.delay_progress(100);
     if (mcl_cfg.clock_rec == 0) {
-       MidiClock.mode = MidiClock.EXTERNAL_MIDI;
+      MidiClock.mode = MidiClock.EXTERNAL_MIDI;
     }
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
@@ -213,15 +212,15 @@ bool MDClass::probe() {
 
     connected = true;
   }
-  if (connected) { 
+  if (connected) {
     activate_enhanced_gui();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-    md_track_select.on(); 
+    md_track_select.on();
     MD.global.extendedMode = 2;
   }
 
   else {
-    abort:
+  abort:
     DEBUG_PRINTLN(F("delay"));
     mcl_gui.delay_progress(4600);
   }
@@ -230,9 +229,7 @@ bool MDClass::probe() {
 }
 
 // Caller is responsible to make sure icons_device is loaded in RM
-uint8_t* MDClass::icon() {
-  return R.icons_device->icon_md;
-}
+uint8_t *MDClass::icon() { return R.icons_device->icon_md; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
   uint8_t i;
@@ -275,16 +272,20 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
   }
 }
 
-void MDClass::triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
+                           MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
 
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track],
-                        velocity);
+    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
   }
 }
 void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t a;
   uint8_t b;
   uint8_t c;
@@ -294,20 +295,23 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   c = mask >> 7 & 0xF7;
   b = mask & 0x7F;
 
-    uart_->sendNoteOn(global.baseChannel + 1, a, b);
+  uart_->sendNoteOn(global.baseChannel + 1, a, b);
   if (c > 0) {
     uart_->sendNoteOn(global.baseChannel + 2, c, 0);
   }
 }
 
-void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_) {
+void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
+                            MidiUartParent *uart_) {
   setTrackParam_inline(track, param, value, uart_);
 }
 
-void MDClass::setTrackParam_inline(uint8_t track, uint8_t param,
-                                   uint8_t value, MidiUartParent *uart_) {
+void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
+                                   MidiUartParent *uart_) {
 
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
@@ -597,24 +601,37 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   }
   i++;
 
-  if (mode == 0) { goto end; }
+  if (mode == 0) {
+    goto end;
+  }
 
-  memcpy(data + i,machine->params,24);
+  memcpy(data + i, machine->params, 24);
   i += 24;
 
-  if (mode == 1) { goto end; }
+  if (mode == 1) {
+    goto end;
+  }
 
-  memcpy(data + i,&machine->lfo, 5);
+  memcpy(data + i, &machine->lfo, 5);
   i += 5;
-  if (machine->trigGroup > 15) { machine->trigGroup = 127; }
-  if (machine->muteGroup > 15) { machine->muteGroup = 127; }
+  if (machine->trigGroup > 15) {
+    machine->trigGroup = 127;
+  }
+  if (machine->muteGroup > 15) {
+    machine->muteGroup = 127;
+  }
   data[i++] = machine->trigGroup;
   data[i++] = machine->muteGroup;
   bool set_level = false;
-  if (level != 255) {  data[i++] = level; set_level = true; }
-  if (send) { insertMachineInKit(track, machine, set_level); }
+  if (level != 255) {
+    data[i++] = level;
+    set_level = true;
+  }
+  if (send) {
+    insertMachineInKit(track, machine, set_level);
+  }
 
-  end:
+end:
   return sendRequest(data, i, send);
 }
 
@@ -729,7 +746,7 @@ void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   buf[i++] = value;
   buf[i++] = 0xF7;
 
-  uart->m_putc(buf,i);
+  uart->m_putc(buf, i);
 }
 
 void MDClass::toggle_kit_menu() {
@@ -1044,14 +1061,8 @@ void MDClass::updateKitParams() {
 uint16_t MDClass::sendKitParams(uint8_t *masks, void *scratchpad) {
   /// Ignores masks and scratchpad, and send the whole kit.
   MD.kit.origPosition = 0x7F;
-  // md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  //  mcl_seq.disable();
-  // md_set_kit(&MD.kit);
-  uint16_t md_latency_ms =
-      10000.0 * ((float)sizeof(MDKit) / (float)uart->speed);
-  md_latency_ms += 10;
-  DEBUG_DUMP(md_latency_ms);
-
-  return md_latency_ms;
+  activate_track_select(); //<-- includes waitBlocking, we need to wait for the
+                           // sysex message to be received before unmuting seq
+  return 0;
 }

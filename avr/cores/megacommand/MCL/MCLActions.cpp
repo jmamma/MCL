@@ -449,11 +449,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   uint16_t myclock = slowclock;
   uint16_t latency_ms = 0;
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
-#ifndef EXT_TRACKS
-    if (i > 0) {
-      break;
-    }
-#endif
     auto elektron_dev = devs[i]->asElektronDevice();
     if (elektron_dev != nullptr) {
       latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH,
