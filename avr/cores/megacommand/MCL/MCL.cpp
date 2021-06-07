@@ -185,6 +185,7 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         opt_clear = 2;
         opt_clear_track_handler();
+        break;
       }
       case MDX_KEY_STOP: {
         mcl_actions_callbacks.StopHardCallback();
