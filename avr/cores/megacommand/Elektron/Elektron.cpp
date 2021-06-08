@@ -67,7 +67,7 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
     }
   }
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::sync_seqtrack(uint8_t length, uint8_t speed,
@@ -79,7 +79,7 @@ void ElektronDevice::sync_seqtrack(uint8_t length, uint8_t speed,
 void ElektronDevice::deactivate_encoder_interface() {
   uint8_t data[3] = {0x70, 0x36, 0x00};
   sendRequest(data, sizeof(data));
-  waitBlocking();
+  //waitBlocking();
 }
 
 void ElektronDevice::activate_enhanced_gui() {

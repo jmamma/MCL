@@ -19,13 +19,14 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::StopHardCallback() {
-
+  DEBUG_PRINTLN("BEGIN stop hard");
   uint8_t row_array[NUM_SLOTS];
   uint8_t slot_select_array[NUM_SLOTS] = {};
   bool proceed = false;
 
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ( mcl_actions.chains[n].is_mode_queue()) {
+    if (mcl_actions.chains[n].is_mode_queue()) {
       slot_select_array[n] = 1;
       row_array[n] = mcl_actions.chains[n].rows[0];
       mcl_actions.chains[n].pos = 0;
@@ -33,13 +34,15 @@ void MCLActionsCallbacks::StopHardCallback() {
     }
   }
 
-  if (!proceed) { return; }
+  if (!proceed) { goto end; }
 
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     if (elektron_devs[i] != nullptr &&
         elektron_devs[i]->canReadWorkspaceKit()) {
@@ -49,10 +52,15 @@ void MCLActionsCallbacks::StopHardCallback() {
   DEBUG_PRINTLN("StopHard");
   DEBUG_PRINTLN((int)SP);
   mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
-
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+end:
+  DEBUG_PRINTLN("END stop hard");
+  return;
 }
 
 void MCLActionsCallbacks::onMidiStartCallback() {
+  DEBUG_PRINTLN("BEGIN on midi start");
+  DEBUG_PRINTLN(SP);
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -64,6 +72,7 @@ void MCLActionsCallbacks::onMidiStartCallback() {
     }
   }
   mcl_actions.calc_next_transition();
+  DEBUG_PRINTLN("END midi start");
 }
 
 void MCLActionsMidiEvents::setup_callbacks() {

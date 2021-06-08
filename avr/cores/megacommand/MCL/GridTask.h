@@ -7,8 +7,10 @@
 class GridTask : public Task {
 
 public:
+  bool stop_hard_callback = true;
 
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
+
 
   void setup(uint16_t interval = 0);
 
@@ -16,6 +18,7 @@ public:
 
   virtual void destroy();
   void init();
+  void transition_handler();
   /* @} */
 };
 

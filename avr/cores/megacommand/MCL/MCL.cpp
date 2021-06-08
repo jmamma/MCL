@@ -188,7 +188,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_STOP: {
-        mcl_actions_callbacks.StopHardCallback();
+        grid_task.stop_hard_callback = true;
         break;
       }
       }

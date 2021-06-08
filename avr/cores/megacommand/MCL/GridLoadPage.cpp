@@ -174,9 +174,9 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     oled_display.textbox("LOAD GROUPS", "");
     oled_display.display();
     mcl_actions.write_original = 1;
-    GUI.setPage(&grid_page);
     mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
                              track_select_array);
+    GUI.setPage(&grid_page);
     return true;
   }
 }

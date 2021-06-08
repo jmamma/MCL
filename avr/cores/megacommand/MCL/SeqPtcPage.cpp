@@ -379,6 +379,8 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
 
 void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number,
                          uint8_t fine_tune, MidiUartParent *uart_) {
+  DEBUG_PRINTLN("md");
+  DEBUG_PRINTLN(SP);
   if (track_number == 255) {
     track_number = last_md_track;
   }

@@ -38,15 +38,18 @@ void MidiClass::init() {
 void MidiClass::sysexEnd(uint8_t msg_rd) {
   midiSysex.rd_cur = msg_rd;
   uint16_t len = midiSysex.get_recordLen();
+  DEBUG_CHECK_STACK();
   DEBUG_PRINTLN("processing");
+  DEBUG_PRINTLN(SP);
   DEBUG_PRINTLN(msg_rd);
-  DEBUG_PRINTLN(len);
+  DEBUG_PRINTLN(midiSysex.msg_wr);
+
   DEBUG_PRINTLN(uart_forward->txRb.len - uart_forward->txRb.size());
   //if (len == 0 || midiSysex.get_ptr() == nullptr) { DEBUG_PRINTLN("returning"); return; }
 
   if (uart_forward && ((len + 2) < (uart_forward->txRb.len -
                                            uart_forward->txRb.size()))) {
-    const uint16_t size = 2048;
+   const uint16_t size = 2048;
     uint8_t buf[size];
     uint16_t n = 0;
     midiSysex.Rb.rd = (uint16_t) midiSysex.get_ptr() - (uint16_t) midiSysex.Rb.ptr;

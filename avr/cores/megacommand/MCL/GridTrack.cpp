@@ -1,5 +1,4 @@
 #include "MCL_impl.h"
-#include "new.h"
 
 void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->speed = link.speed;

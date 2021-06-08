@@ -72,15 +72,12 @@ void GuiClass::redisplay() {
 void loop();
 
 void GuiClass::loop() {
-  MidiUartParent::handle_midi_lock = 1;
-  if (!EventRB.isEmpty()) {
+
+  while (!EventRB.isEmpty()) {
+    MidiUartParent::handle_midi_lock = 1;
     clock_minutes = 0;
     minuteclock = 0;
-#ifdef OLED_DISPLAY
     oled_display.screen_saver = false;
-#endif
-  }
-  while (!EventRB.isEmpty()) {
     gui_event_t event;
     EventRB.getp(&event);
     for (int i = 0; i < eventHandlers.size; i++) {
@@ -98,6 +95,9 @@ void GuiClass::loop() {
         continue;
     }
   }
+
+
+  MidiUartParent::handle_midi_lock = 1;
   for (int i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
       tasks.arr[i]->checkTask();

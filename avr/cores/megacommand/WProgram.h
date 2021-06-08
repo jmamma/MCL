@@ -10,7 +10,7 @@
 
 #include "wiring_private.h"
 
-//#define DEBUGMODE
+#define DEBUGMODE
 
 #ifdef MEGACOMMAND
   #define SD_CS 53 //PB0
@@ -33,6 +33,8 @@
 //   DEBUG_PRINT(F("func_call: ")); \
 //   Serial.println(__PRETTY_FUNCTION__); \
 // }
+//
+#define DEBUG_CHECK_STACK() { if ((int) SP < 512) { setLed2(); setLed(); while (1); } }
 #define DEBUG_PRINT_FN(x)
 
 #else
@@ -41,6 +43,7 @@
 #define DEBUG_PRINTLN(x)
 #define DEBUG_DUMP(x)
 #define DEBUG_PRINT_FN(x)
+#define DEBUG_CHECK_STACK()
 #endif
 
 #ifdef __cplusplus

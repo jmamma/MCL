@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MCL.h"
+#include "new.h"
 
 #include "A4.h"
 #include "MD.h"

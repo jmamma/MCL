@@ -10,7 +10,19 @@ void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //  ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  if (MidiClock.state != 2) {
+
+  if (stop_hard_callback) {
+    mcl_actions_callbacks.StopHardCallback();
+    stop_hard_callback = false;
+    return;
+  }
+
+  GridTask::transition_handler();
+}
+
+void GridTask::transition_handler() {
+
+  if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
     return;
   }
 
@@ -36,9 +48,6 @@ void GridTask::run() {
   uint8_t div32th_margin = 8;
 
   uint32_t div32th_counter;
-  if (mcl_actions.next_transition == (uint16_t)-1) {
-    return;
-  }
 
   // Get within four 16th notes of the next transition.
   if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
@@ -53,6 +62,7 @@ void GridTask::run() {
     return;
   }
 
+  DEBUG_PRINTLN((int)SP);
   GUI.removeTask(&grid_task);
 
   uint8_t track_idx, dev_idx;
@@ -80,7 +90,6 @@ void GridTask::run() {
     if (gdt == nullptr) {
       continue;
     }
-
     auto *pmem_track =
         empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
     if (pmem_track != nullptr) {
@@ -92,7 +101,6 @@ void GridTask::run() {
       }
       //     }
     }
-
     //  if (mcl_actions.chains[n].mode == CHAIN_MANUAL) {
     //    mcl_actions.links[n].loops = 0;
     //  }
@@ -127,16 +135,17 @@ void GridTask::run() {
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
-          if (diff > 8) {
+          if (diff > 10) {
             handleIncomingMidi();
-            if (GUI.currentPage() != &grid_load_page) {
+            if (GUI.currentPage() == &grid_load_page) {
+              GUI.display();
+            } else {
               GUI.loop();
             }
           }
         }
       }
       wait = false;
-
       auto *pmem_track =
           empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
       if (pmem_track == nullptr)
@@ -158,11 +167,11 @@ void GridTask::run() {
     }
   }
   //  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
-
+  DEBUG_PRINTLN("gettin ready to cache");
+  DEBUG_PRINTLN((int)SP);
   bool update_gui = true;
   mcl_actions.cache_next_tracks(track_select_array, &empty_track, &empty_track2,
                                 update_gui);
-
   // Once tracks are cached, we can calculate their next transition
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (track_select_array[n] > 0) {
@@ -172,10 +181,10 @@ void GridTask::run() {
 
   mcl_actions.calc_next_transition();
   mcl_actions.calc_latency(&empty_track);
-  //  } else {
-  //    mcl_actions.next_transition = (uint16_t)-1;
-  //  }
-
+//  } else {
+//    mcl_actions.next_transition = (uint16_t)-1;
+//  }
+end:
   GUI.addTask(&grid_task);
 }
 

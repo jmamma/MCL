@@ -146,6 +146,7 @@ public:
     recording = false;
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     if (is_full()) {
+      DEBUG_PRINTLN("WRITE FULL!!!!");
       return;
     }
     // DEBUG_PRINTLN("record fin");

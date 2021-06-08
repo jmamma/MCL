@@ -55,12 +55,12 @@ void SeqStepPage::init() {
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
-  MidiUartParent::handle_midi_lock = 0;
+                    active_track.step_count);
 
   trigled_mask = 0;
   locks_on_step_mask = 0;
   config();
+
   note_interface.state = true;
   reset_on_release = false;
   update_params_queue = false;
@@ -70,7 +70,6 @@ void SeqStepPage::init() {
   seq_param1.cur = 0;
   seq_param3.max = 64;
   seq_param3.min = 1;
-  display();
 }
 
 void SeqStepPage::cleanup() {
