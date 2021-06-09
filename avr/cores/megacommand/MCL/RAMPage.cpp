@@ -76,8 +76,7 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t tr
   transition_step = next_step;
   record_len = (uint8_t)steps;
   mcl_actions.calc_next_transition();
-  EmptyTrack empty_track;
-  mcl_actions.calc_latency(&empty_track);
+  mcl_actions.calc_latency();
 }
 
 

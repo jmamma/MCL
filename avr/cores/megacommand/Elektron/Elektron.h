@@ -418,7 +418,7 @@ public:
    * Caller provides a scratchpad buffer (for example, EmptyTrack*).
    * Returns the estimated latency for kit sending.
    **/
-  virtual uint16_t sendKitParams(uint8_t* send_mask, void* scratch_buf) { return 0; }
+  virtual uint16_t sendKitParams(uint8_t* send_mask) { return 0; }
   /**
    * Return a pointer to a program-space string representing the name of the
    *given machine.

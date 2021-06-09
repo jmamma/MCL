@@ -93,11 +93,15 @@ public:
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
   void prepare_next_transition(int row, uint8_t *slot_select_array);
 
-  void cache_next_tracks(uint8_t *slot_select_array, EmptyTrack *empty_track,
-                         EmptyTrack *empty_track2, bool gui_update = false);
+  void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n);
   void calc_next_transition();
-  void calc_latency(DeviceTrack *empty_track);
+  void calc_latency();
+
+private:
+  void collect_tracks(int row, uint8_t *slot_select_array);
+  void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
+  void load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
 };
 
 extern MCLActionsCallbacks mcl_actions_callbacks;

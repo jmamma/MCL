@@ -54,11 +54,11 @@ void A4Class::init_grid_devices() {
   }
 }
 
-uint16_t A4Class::sendKitParams(uint8_t *masks, void *scratchpad) {
-  auto empty_track = (EmptyTrack *)scratchpad;
+uint16_t A4Class::sendKitParams(uint8_t *masks) {
+  EmptyTrack empty_track;
   for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
     if (masks[i] == 1) {
-      auto a4_track = empty_track->load_from_mem<A4Track>(i);
+      auto a4_track = empty_track.load_from_mem<A4Track>(i);
       if (a4_track) {
         a4_track->sound.origPosition = i;
         a4_track->sound.soundpool = true;

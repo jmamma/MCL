@@ -39,7 +39,7 @@ public:
   virtual void init_grid_devices();
   virtual uint8_t* icon();
 
-  virtual uint16_t sendKitParams(uint8_t* masks, void* scratchpad);
+  virtual uint16_t sendKitParams(uint8_t* masks);
 
   // Overriden for A4 proto version and footer injection
   virtual uint16_t sendRequest(uint8_t, uint8_t, bool send = true);

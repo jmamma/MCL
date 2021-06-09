@@ -85,7 +85,7 @@ public:
   void setExternalSync();
   //---
   virtual void updateKitParams();
-  virtual uint16_t sendKitParams(uint8_t *mask, void *);
+  virtual uint16_t sendKitParams(uint8_t *mask);
   virtual const char* getMachineName(uint8_t machine);
 
   /**

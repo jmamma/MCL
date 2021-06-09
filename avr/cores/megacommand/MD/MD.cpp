@@ -1058,7 +1058,7 @@ void MDClass::updateKitParams() {
   }
 }
 
-uint16_t MDClass::sendKitParams(uint8_t *masks, void *scratchpad) {
+uint16_t MDClass::sendKitParams(uint8_t *masks) {
   /// Ignores masks and scratchpad, and send the whole kit.
   MD.kit.origPosition = 0x7F;
   MD.kit.toSysex();

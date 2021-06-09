@@ -73,6 +73,8 @@ void loop();
 
 void GuiClass::loop() {
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+
   while (!EventRB.isEmpty()) {
     MidiUartParent::handle_midi_lock = 1;
     clock_minutes = 0;
@@ -134,7 +136,10 @@ void GuiClass::loop() {
       page->finalize();
     }
   }
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+
 }
+
 void GuiClass::display_lcd() {
   PageParent *page = NULL;
   if (sketch != NULL) {
