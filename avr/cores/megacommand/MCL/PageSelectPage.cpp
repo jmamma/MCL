@@ -78,6 +78,7 @@ void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   trig_interface.on();
   md_prepare();
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
   R.Clear();
   R.use_icons_page();
@@ -107,6 +108,7 @@ void PageSelectPage::init() {
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   display();
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void PageSelectPage::md_prepare() {

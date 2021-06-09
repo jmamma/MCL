@@ -56,20 +56,21 @@ static SeqPage *opt_seqpage_capture = nullptr;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
-void SeqPage::setup() { }
+void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
-    if (page_select >= page_count ||
-        page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
-      page_select = 0;
-    }
-    ElektronDevice *elektron_dev = midi_device->asElektronDevice();
-    if (elektron_dev != nullptr) {
-      elektron_dev->set_seq_page(page_select);
-    }
+  if (page_select >= page_count ||
+      page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
+    page_select = 0;
+  }
+  ElektronDevice *elektron_dev = midi_device->asElektronDevice();
+  if (elektron_dev != nullptr) {
+    elektron_dev->set_seq_page(page_select);
+  }
 }
 
 void SeqPage::init() {
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
   recording = false;
   page_count = 4;
@@ -105,7 +106,7 @@ void SeqPage::init() {
   R.Clear();
   R.use_machine_names_short();
   R.use_machine_param_names();
-  MidiUartParent::handle_midi_lock = 1;
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void SeqPage::cleanup() {
@@ -265,7 +266,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (note_interface.get_first_md_note() == 255) {
       step = 255;
     }
-    if (event->mask == EVENT_BUTTON_PRESSED && trig_interface.is_key_down(MDX_KEY_FUNC)) {
+    if (event->mask == EVENT_BUTTON_PRESSED &&
+        trig_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT:
         if (step != 255) {
@@ -1260,11 +1262,11 @@ void opt_paste_step_handler() {
     MD.popup_text(str);
   } else {
 
-  char str2[] = "PASTE STEP";
+    char str2[] = "PASTE STEP";
 #ifdef OLED_DISPLAY
-  oled_display.textbox(str2, "");
+    oled_display.textbox(str2, "");
 #endif
-  MD.popup_text(str2);
+    MD.popup_text(str2);
   }
   mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select +
                                                   SeqPage::page_select * 16,
@@ -1420,7 +1422,8 @@ void SeqPage::config_as_lockedit() {
 }
 
 bool SeqPage::md_track_change_check() {
-  if (last_md_track != MD.currentTrack || last_md_model != MD.kit.models[MD.currentTrack]) {
+  if (last_md_track != MD.currentTrack ||
+      last_md_model != MD.kit.models[MD.currentTrack]) {
     last_md_model = MD.kit.models[MD.currentTrack];
     select_track(&MD, MD.currentTrack, false);
     return true;

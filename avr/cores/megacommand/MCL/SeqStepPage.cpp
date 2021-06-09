@@ -81,11 +81,6 @@ void SeqStepPage::cleanup() {
 }
 
 void SeqStepPage::display() {
-  if (recording && MidiClock.state == 2) {
-    if (!redisplay) {
-      return;
-    }
-  }
 
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
@@ -128,12 +123,13 @@ void SeqStepPage::display() {
   }
 
   else {
+    uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
     MidiUartParent::handle_midi_lock = 1;
 
     draw_lock_mask((page_select * 16), DEVICE_MD);
     draw_mask((page_select * 16), DEVICE_MD);
 
-    MidiUartParent::handle_midi_lock = 0;
+    MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
@@ -161,6 +157,7 @@ void SeqStepPage::loop() {
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
 
   if (MDSeqTrack::sync_cursor) {
@@ -243,6 +240,7 @@ void SeqStepPage::loop() {
       reset_on_release = false;
     }
   }
+   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void SeqStepPage::send_locks(uint8_t step) {
