@@ -50,6 +50,9 @@ public:
 
   uint16_t grid_lastclock;
 
+  uint8_t row_state_scan = 0;
+  uint64_t row_states[2];
+
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
@@ -58,6 +61,8 @@ public:
   uint8_t getWidth();
   uint8_t getCol();
   uint8_t getRow();
+  void update_row_state(uint8_t row, bool state);
+
   void load_slot_models();
   void display_slot_menu();
   void display_counters();
@@ -71,6 +76,7 @@ public:
   void prepare();
   void apply_slot_changes(bool ignore_undo = false);
   void loop();
+
 };
 
 extern void apply_slot_changes_cb();

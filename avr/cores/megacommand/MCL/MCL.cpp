@@ -125,6 +125,17 @@ bool mcl_handleEvent(gui_event_t *event) {
         return false;
       }
 */
+
+      case MDX_KEY_BANKA:
+      case MDX_KEY_BANKB:
+      case MDX_KEY_BANKC:
+      case MDX_KEY_BANKD: {
+        uint8_t bank = key - MDX_KEY_BANKA;
+        trig_interface.on();
+        uint16_t *mask = (uint16_t *) &grid_page.row_states[0];
+        MD.set_trigleds(mask[bank], TRIGLED_OVERLAY);
+        return true;
+      }
       case MDX_KEY_SONG: {
         GUI.setPage(&page_select_page);
         return true;

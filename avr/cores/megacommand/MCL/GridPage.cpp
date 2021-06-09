@@ -126,7 +126,33 @@ void GridPage::loop() {
     }
     // display_name = 0;
   }
+
+  if (row_state_scan) {
+    uint8_t old_grid = proj.get_grid();
+    GridRowHeader header_tmp;
+    row_state_scan--;
+
+    proj.select_grid(0);
+    proj.read_grid_row_header(&header_tmp, row_state_scan);
+    bool state = header_tmp.is_empty();
+
+    proj.select_grid(1);
+    proj.read_grid_row_header(&header_tmp, row_state_scan);
+    state |= header_tmp.is_empty();
+
+    update_row_state(row_state_scan, !state);
+    proj.select_grid(old_grid);
+  }
+
 }
+
+void GridPage::update_row_state(uint8_t row, bool state) {
+  DEBUG_PRINTLN("updating row state");
+  DEBUG_PRINTLN(row);
+  if (state) { SET_BIT128_P(row_states, row); }
+  else { CLEAR_BIT128_P(row_states, row); }
+}
+
 void GridPage::displayScroll(uint8_t i) {
   if (encoders[i] != NULL) {
 
@@ -162,21 +188,17 @@ uint8_t GridPage::getWidth() { return GRID_WIDTH; }
 
 void GridPage::load_slot_models() {
   DEBUG_PRINT_FN();
-#ifdef OLED_DISPLAY
   uint8_t row_shift = 0;
   if ((cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + encoders[3]->cur - MAX_VISIBLE_ROWS;
   }
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    proj.read_grid_row_header(&row_headers[n],
-                              getRow() - cur_row + n + row_shift);
+    uint8_t row = getRow() - cur_row + n + row_shift;
+    proj.read_grid_row_header(&row_headers[n], row);
+    update_row_state(row, row_headers[n].active);
   }
-#else
 
-  proj.read_grid_row_header(&row_headers[0], getRow());
-
-#endif
 }
 
 void GridPage::display_counters() {

@@ -303,6 +303,7 @@ bool Project::load_project(const char *projectname) {
     DEBUG_PRINTLN(F("could not write cfg"));
     return false;
   }
+  grid_page.row_state_scan = GRID_LENGTH;
   return true;
 }
 
