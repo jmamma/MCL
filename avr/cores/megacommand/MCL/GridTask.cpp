@@ -39,8 +39,8 @@ void GridTask::transition_handler() {
   uint32_t div32th_counter;
 
   // Get within four 16th notes of the next transition.
-  if (!MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                 (uint32_t)mcl_actions.next_transition * 2)) {
+  if (MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                 (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
     DEBUG_PRINTLN(F("Preparing for next transition:"));
     DEBUG_DUMP(MidiClock.div16th_counter);
