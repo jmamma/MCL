@@ -26,7 +26,9 @@ void SeqStepPage::config() {
   // 5
   info1[5] = 0;
 
-  config_mask_info((mask_type == MASK_PATTERN)); //false = transmit popup text for trig mode if required.
+  config_mask_info(
+      (mask_type ==
+       MASK_PATTERN)); // false = transmit popup text for trig mode if required.
   config_encoders();
   // config menu
   config_as_trackedit();
@@ -55,7 +57,7 @@ void SeqStepPage::init() {
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   MD.sync_seqtrack(active_track.length, active_track.speed,
-                    active_track.step_count);
+                   active_track.step_count);
 
   trigled_mask = 0;
   locks_on_step_mask = 0;
@@ -63,6 +65,7 @@ void SeqStepPage::init() {
 
   note_interface.state = true;
   reset_on_release = false;
+  ignore_release = 255;
   update_params_queue = false;
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
@@ -77,7 +80,7 @@ void SeqStepPage::cleanup() {
   SeqPage::cleanup();
   params_reset();
   MD.set_rec_mode(0);
-  MD.popup_text(127, 2); //clear persistent trig mode popup
+  MD.popup_text(127, 2); // clear persistent trig mode popup
 }
 
 void SeqStepPage::display() {
@@ -106,7 +109,7 @@ void SeqStepPage::display() {
         int8_t oct = notenum / 12 - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         strcpy(K, number_to_note.notes_upper[note]);
-        itoa(oct,K + 2,10);
+        itoa(oct, K + 2, 10);
         K[3] = 0;
       }
       draw_knob(3, "PTC", K);
@@ -154,15 +157,15 @@ void SeqStepPage::loop() {
   if (recording)
     return;
 
-
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
 
   if (MDSeqTrack::sync_cursor) {
-     MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
-     MDSeqTrack::sync_cursor = 0;
+    MD.sync_seqtrack(active_track.length, active_track.speed,
+                     active_track.step_count);
+    MDSeqTrack::sync_cursor = 0;
   }
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
@@ -185,6 +188,8 @@ void SeqStepPage::loop() {
 
           if (seq_param2.hasChanged()) {
             md_micro = true;
+            DEBUG_PRINTLN("md micro on");
+            setLed2();
             MD.draw_microtiming(active_track.speed, utiming);
           }
           if (seq_param1.hasChanged()) {
@@ -203,8 +208,8 @@ void SeqStepPage::loop() {
             break;
           }
 
-          if (seq_param4.hasChanged() && (seq_param4.cur > 0) && (last_md_track < NUM_MD_TRACKS) &&
-              (tuning != NULL)) {
+          if (seq_param4.hasChanged() && (seq_param4.cur > 0) &&
+              (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
             uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
@@ -218,7 +223,7 @@ void SeqStepPage::loop() {
     seq_param4.old = seq_param4.cur;
   }
 
-  if (update_params_queue && clock_diff(update_params_clock,slowclock) > 400) {
+  if (update_params_queue && clock_diff(update_params_clock, slowclock) > 400) {
     mcl_seq.midi_events.update_params = true;
     MD.midi_events.enable_live_kit_update();
     seq_ptc_page.cc_link_enable = true;
@@ -240,7 +245,7 @@ void SeqStepPage::loop() {
       reset_on_release = false;
     }
   }
-   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void SeqStepPage::send_locks(uint8_t step) {
@@ -285,7 +290,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         config_encoders();
         MD.triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
-        last_step = track; 
+        last_step = track;
 
         if (MidiClock.state == 2) {
           mcl_seq.md_tracks[track].record_track(127);
@@ -309,7 +314,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      // active_track.send_parameter_locks(step, true);
       MD.activate_encoder_interface(step);
       send_locks(step);
       show_pitch = true;
@@ -323,26 +327,23 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           translate_to_knob_conditional(active_track.steps[step].cond_id,
                                         active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
-      //if (pitch != active_track.locks_params_orig[0]) {
-        uint8_t note_num = 255;
-        tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
-        if (tuning) {
-          for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
-            uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
-            if (ccStored >= pitch) {
-              note_num = i;
-            }
+      // if (pitch != active_track.locks_params_orig[0]) {
+      uint8_t note_num = 255;
+      tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
+      if (tuning) {
+        for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
+          uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
+          if (ccStored >= pitch) {
+            note_num = i;
           }
-          if (note_num == 255) {
-            seq_param4.cur = 0;
-          } else {
-            seq_param4.cur = note_num;
-          }
-          seq_param4.old = seq_param4.cur;
         }
-      //}
-      // Micro
-      //      if (note_interface.notes_count_on() <= 1) {
+        if (note_num == 255) {
+          seq_param4.cur = 0;
+        } else {
+          seq_param4.cur = note_num;
+        }
+        seq_param4.old = seq_param4.cur;
+      }
       if (utiming == 0) {
         utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }
@@ -356,14 +357,19 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
         active_track.set_step(step, mask_type, true);
-        note_interface.ignoreNextEvent(track);
+        ignore_release = track;
       }
-      //      }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
       if (md_micro) {
         MD.draw_close_microtiming();
+        clearLed2();
+        DEBUG_PRINTLN("md micro off");
         md_micro = false;
+      }
+      if (ignore_release == track) {
+        ignore_release = 255;
+        return;
       }
       if (last_md_track < 15) {
         show_pitch = false;
@@ -397,6 +403,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (note_interface.get_first_md_note() == 255) {
       step = 255;
     }
+
     switch (key) {
     // ENCODER BUTTONS
     case 0x10:
@@ -437,8 +444,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       send_locks(step);
       break;
     }
-    case MDX_KEY_COPY: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+    }
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_COPY: {
         // Note copy
         if (step != 255) {
           opt_copy_step_handler(255);
@@ -451,11 +461,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_copy = recording ? 2 : 1;
           opt_copy_track_handler();
         }
+        break;
       }
-      break;
-    }
-    case MDX_KEY_PASTE: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_PASTE: {
         // Note paste
         if (step != 255) {
           opt_paste_step_handler();
@@ -469,14 +477,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_paste = recording ? 2 : 1;
           opt_paste_track_handler();
         }
+        break;
       }
-      break;
-    }
-    case MDX_KEY_CLEAR: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_CLEAR: {
         // Note clear
         if (step != 255) {
-          if (last_step != step) { reset_undo(); }
+          if (last_step != step) {
+            reset_undo();
+          }
           opt_clear_step = 1;
           opt_clear_step_handler();
           note_interface.ignoreNextEvent(step);
@@ -489,22 +497,18 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear = recording ? 2 : 1;
           opt_clear_track_handler();
         }
+        break;
       }
-      break;
-    }
-    case MDX_KEY_YES: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_YES: {
         if (step == 255) {
           return true;
         }
         active_track.send_parameter_locks(step, true);
         reset_on_release = true;
         MD.triggerTrack(last_md_track, 127);
+        break;
       }
-      break;
-    }
-    case MDX_KEY_BANKB: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_BANKB: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           if (mask_type == MASK_LOCK) {
             mask_type = MASK_PATTERN;
@@ -513,11 +517,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
+        break;
       }
-      break;
-    }
-    case MDX_KEY_BANKC: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_BANKC: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           if (mask_type == MASK_MUTE) {
             mask_type = MASK_PATTERN;
@@ -526,12 +528,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
+        break;
       }
-      break;
-    }
 
-    case MDX_KEY_BANKD: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_BANKD: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           if (mask_type == MASK_SLIDE) {
             mask_type = MASK_PATTERN;
@@ -540,20 +540,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
+        break;
       }
-      break;
-    }
-    case MDX_KEY_UP: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_UP: {
         if (step == 255) {
           return;
         }
         seq_param1.cur += 1;
         return true;
       }
-    }
-    case MDX_KEY_DOWN: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_DOWN: {
         if (step == 255) {
           return;
         }
@@ -561,59 +557,54 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         return;
       }
-    }
-    case MDX_KEY_LEFT: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_LEFT: {
         if (step == 255) {
           return;
         }
-
         seq_param2.cur -= 1;
         return true;
       }
-    }
-    case MDX_KEY_RIGHT: {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      case MDX_KEY_RIGHT: {
         if (step == 255) {
           return;
         }
         seq_param2.cur += 1;
+        return true;
+      }
       }
       return true;
     }
-      return true;
-    }
-  }
-
-  if (recording) {
-    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-      switch (last_rec_event) {
-      case REC_EVENT_TRIG:
-        if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          oled_display.textbox("CLEAR ", "TRACKS");
-          for (uint8_t n = 0; n < 16; ++n) {
-            mcl_seq.md_tracks[n].clear_track();
+    if (recording) {
+      if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+        switch (last_rec_event) {
+        case REC_EVENT_TRIG:
+          if (BUTTON_DOWN(Buttons.BUTTON3)) {
+            oled_display.textbox("CLEAR ", "TRACKS");
+            for (uint8_t n = 0; n < 16; ++n) {
+              mcl_seq.md_tracks[n].clear_track();
+            }
+          } else {
+            oled_display.textbox("CLEAR ", "TRACK");
+            mcl_seq.md_tracks[last_step].clear_track();
           }
-        } else {
-          oled_display.textbox("CLEAR ", "TRACK");
-          mcl_seq.md_tracks[last_step].clear_track();
-        }
-        break;
-      case REC_EVENT_CC:
-        oled_display.textbox("CLEAR ", "LOCK");
-        active_track.clear_param_locks(last_param_id);
-        if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          oled_display.textbox("CLEAR ", "LOCKS");
-          for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-            if (active_track.locks_params[c] > 0) {
-              active_track.clear_param_locks(active_track.locks_params[c] - 1);
+          break;
+        case REC_EVENT_CC:
+          oled_display.textbox("CLEAR ", "LOCK");
+          active_track.clear_param_locks(last_param_id);
+          if (BUTTON_DOWN(Buttons.BUTTON3)) {
+            oled_display.textbox("CLEAR ", "LOCKS");
+            for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+              if (active_track.locks_params[c] > 0) {
+                active_track.clear_param_locks(active_track.locks_params[c] -
+                                               1);
+              }
             }
           }
+          break;
         }
-        break;
+        queue_redraw();
+        return true;
       }
-      queue_redraw();
-      return true;
     }
   }
 
@@ -704,7 +695,8 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (store_lock == 0) {
     char str[5] = "--  ";
     char str2[4] = "-- ";
-    const char* modelname = model_param_name(MD.kit.get_model(last_md_track), track_param);
+    const char *modelname =
+        model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {
       strncpy(str, modelname, 3);
       if (strlen(str) == 2) {
