@@ -265,17 +265,22 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
     return;
   }
 
+  *param = cc;
+
   if (cc > 71) {
-    *param = cc - 72;
+    *param -= 72 - 16;
     *track += 2;
   }
-  else {
-    *param = cc - 16;
-  }
 
-  if (param > 23) {
+  *param -= 16;
+
+  if (*param > 23) {
     *track += 1;
     *param -= 24;
+  }
+
+  if (*param > 23) {
+    *track = 255;
   }
 
   return;
