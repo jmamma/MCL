@@ -188,8 +188,6 @@ void SeqStepPage::loop() {
 
           if (seq_param2.hasChanged()) {
             md_micro = true;
-            DEBUG_PRINTLN("md micro on");
-            setLed2();
             MD.draw_microtiming(active_track.speed, utiming);
           }
           if (seq_param1.hasChanged()) {
@@ -363,8 +361,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       if (md_micro) {
         MD.draw_close_microtiming();
-        clearLed2();
-        DEBUG_PRINTLN("md micro off");
         md_micro = false;
       }
       if (ignore_release == track) {
@@ -634,7 +630,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
+
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+
   uint8_t step;
   if (track_param > 23) {
     return;
