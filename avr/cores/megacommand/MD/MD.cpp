@@ -246,30 +246,39 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
 
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
                       uint8_t *param) {
-  if ((channel >= global.baseChannel) && (channel < (global.baseChannel + 4))) {
-    channel -= global.baseChannel;
-    *track = channel * 4;
-    if (cc >= 96) {
-      *track += 3;
-      *param = cc - 96;
-    } else if (cc >= 72) {
-      *track += 2;
-      *param = cc - 72;
-    } else if (cc >= 40) {
-      *track += 1;
-      *param = cc - 40;
-    } else if (cc >= 16) {
-      *param = cc - 16;
-    } else if (cc >= 12) {
-      *track += (cc - 12);
+
+  *track = (channel - global.baseChannel) * 4;
+
+  if (cc < 16) {
+    if (cc > 11) {
+      *track += cc - 12;
       *param = 32; // MUTE
-    } else if (cc >= 8) {
+      return;
+    }
+    if (cc > 7) {
       *track += (cc - 8);
       *param = 33; // LEV
+      return;
     }
-  } else {
+    // Ignore General MIDI CC below 8
     *track = 255;
+    return;
   }
+
+  if (cc > 71) {
+    *param = cc - 72;
+    *track += 2;
+  }
+  else {
+    *param = cc - 16;
+  }
+
+  if (param > 23) {
+    *track += 1;
+    *param -= 24;
+  }
+
+  return;
 }
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
@@ -282,6 +291,7 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
     uart_->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
   }
 }
+
 void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
