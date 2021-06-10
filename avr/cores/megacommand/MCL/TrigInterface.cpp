@@ -56,7 +56,6 @@ bool TrigInterface::on() {
   note_interface.init_notes();
   cmd_key_state = 0;
   note_interface.note_proceed = true;
-
   if (state) {
     return false;
   }

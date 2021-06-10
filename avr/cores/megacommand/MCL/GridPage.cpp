@@ -34,6 +34,17 @@ void GridPage::cleanup() {
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
 #endif
+  bank_popup = 0;
+}
+
+void GridPage::close_bank_popup() {
+     MD.draw_close_bank();
+     trig_interface.off();
+     if (last_page != nullptr) {
+        GUI.setPage(last_page);
+      }
+     last_page = nullptr;
+     bank_popup = 0;
 }
 
 void GridPage::loop() {
@@ -127,6 +138,11 @@ void GridPage::loop() {
     // display_name = 0;
   }
 
+  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, slowclock) > 800) {
+    close_bank_popup();
+    return;
+  }
+
   if (row_state_scan) {
     uint8_t old_grid = proj.get_grid();
     GridRowHeader header_tmp;
@@ -143,14 +159,16 @@ void GridPage::loop() {
     update_row_state(row_state_scan, !state);
     proj.select_grid(old_grid);
   }
-
 }
 
 void GridPage::update_row_state(uint8_t row, bool state) {
   DEBUG_PRINTLN("updating row state");
   DEBUG_PRINTLN(row);
-  if (state) { SET_BIT128_P(row_states, row); }
-  else { CLEAR_BIT128_P(row_states, row); }
+  if (state) {
+    SET_BIT128_P(row_states, row);
+  } else {
+    CLEAR_BIT128_P(row_states, row);
+  }
 }
 
 void GridPage::displayScroll(uint8_t i) {
@@ -198,7 +216,6 @@ void GridPage::load_slot_models() {
     proj.read_grid_row_header(&row_headers[n], row);
     update_row_state(row, row_headers[n].active);
   }
-
 }
 
 void GridPage::display_counters() {
@@ -224,7 +241,8 @@ void GridPage::display_counters() {
 
   if ((mcl_actions.next_transition != (uint16_t)-1) &&
       (MidiClock.bar_counter <= mcl_actions.nearest_bar) &&
-      (mcl_actions.nearest_beat != MidiClock.beat_counter || mcl_actions.nearest_bar != MidiClock.bar_counter)) {
+      (mcl_actions.nearest_beat != MidiClock.beat_counter ||
+       mcl_actions.nearest_bar != MidiClock.bar_counter)) {
     GUI.put_value_at2(0, mcl_actions.nearest_bar, val);
 
     if (val[0] == '0') {
@@ -704,7 +722,12 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-
+    if (bank_popup) {
+      uint8_t track = event->source - 128;
+      if (track < 16) {
+      close_bank_popup();
+      }
+    }
     return true;
   }
 
@@ -715,7 +738,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
       }
-      if (show_slot_menu) {
+     if (show_slot_menu) {
         switch (key) {
         case MDX_KEY_COPY: {
           slot_copy = 1;
@@ -781,6 +804,22 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (bank_popup) {
+        switch (key) {
+        case MDX_KEY_BANKA:
+        case MDX_KEY_BANKB:
+        case MDX_KEY_BANKC:
+        case MDX_KEY_BANKD: {
+          uint8_t bank = key - MDX_KEY_BANKA;
+          if (bank_popup == 1) {
+            bank_popup = 2;
+            bank_popup_lastclock = slowclock;
+            MD.draw_bank(bank);
+          }
+          return true;
+        }
+        }
+      }
       switch (key) {
       case MDX_KEY_NO: {
         if (show_slot_menu) {

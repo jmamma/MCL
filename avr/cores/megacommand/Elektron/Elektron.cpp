@@ -126,6 +126,18 @@ void ElektronDevice::popup_text(char *str, uint8_t persistent) {
   // waitBlocking();
 }
 
+void ElektronDevice::draw_bank(uint8_t bank) {
+  uint8_t data[5] = {0x70, 0x3C, 0x22, bank};
+  sendRequest(data, 5);
+  // waitBlocking();
+}
+void ElektronDevice::draw_close_bank() {
+  uint8_t data[3] = {0x70, 0x3C, 0x23};
+  sendRequest(data, 3);
+  // waitBlocking();
+}
+
+
 void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
   uint8_t data[5] = {0x70, 0x3C, 0x20, speed, timing};
   sendRequest(data, 5);

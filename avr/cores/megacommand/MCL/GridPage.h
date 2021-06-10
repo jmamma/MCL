@@ -53,6 +53,11 @@ public:
   uint8_t row_state_scan = 0;
   uint64_t row_states[2];
 
+  LightPage *last_page = nullptr;
+
+  uint8_t bank_popup = 0;
+  uint16_t bank_popup_lastclock;
+
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
@@ -75,6 +80,9 @@ public:
   void init();
   void prepare();
   void apply_slot_changes(bool ignore_undo = false);
+
+  void close_bank_popup();
+
   void loop();
 
 };

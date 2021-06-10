@@ -441,6 +441,10 @@ public:
 
   void popup_text(uint8_t action_string, uint8_t persistent = 0);
   void popup_text(char *str, uint8_t persistent = 0);
+
+  void draw_bank(uint8_t bank);
+  void draw_close_bank();
+
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
 
