@@ -2,20 +2,24 @@
 
 #define SYSEX_RETRIES 1
 
-uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send) {
+uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+
   uint8_t buf[256];
 
   if (send) {
     uint8_t i = 0;
     buf[i++] = 0xF0;
+
     for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
       buf[i++] = sysex_protocol.header[n];
     }
+
     for (uint8_t n = 0; n < len; n++) {
       buf[i++] = data[n] & 0x7F;
     }
     buf[i++] = 0xF7;
-    uart->m_putc(buf, i);
+    uart_->m_putc(buf, i);
   }
   return len + sysex_protocol.header_size + 2;
 }
@@ -68,12 +72,6 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   }
   sendRequest(data, sizeof(data));
   //waitBlocking();
-}
-
-void ElektronDevice::sync_seqtrack(uint8_t length, uint8_t speed,
-                                   uint8_t step_count) {
-  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
-  sendRequest(data, sizeof(data));
 }
 
 void ElektronDevice::deactivate_encoder_interface() {

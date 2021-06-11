@@ -57,8 +57,6 @@ public:
 
   SeqTrack aux_tracks[NUM_AUX_TRACKS];
 
-  uint16_t md_trig_mask = 0;
-
   MCLSeqMidiEvents midi_events;
   bool state = false;
 

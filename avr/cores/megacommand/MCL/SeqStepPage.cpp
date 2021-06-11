@@ -162,11 +162,6 @@ void SeqStepPage::loop() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
 
-  if (MDSeqTrack::sync_cursor) {
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
-    MDSeqTrack::sync_cursor = 0;
-  }
   if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
       seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);

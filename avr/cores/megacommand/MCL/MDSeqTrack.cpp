@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 bool MDSeqTrack::sync_cursor = 0;
+uint16_t MDSeqTrack::md_trig_mask = 0;
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
@@ -398,7 +399,7 @@ void MDSeqTrack::send_trig_inline() {
         MD.kit.levels[MD.kit.trigGroups[track_number]];
   }
   //  MD.triggerTrack(track_number, 127, uart);
-  SET_BIT16(mcl_seq.md_trig_mask, track_number);
+  SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }
 
 bool MDSeqTrack::trig_conditional(uint8_t condition) {

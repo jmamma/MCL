@@ -22,6 +22,7 @@ public:
   uint8_t locks_params_orig[NUM_LOCKS];
 
   static bool sync_cursor;
+  static uint16_t md_trig_mask;
 
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {

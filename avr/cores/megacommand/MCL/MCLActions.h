@@ -34,7 +34,6 @@ public:
   uint16_t md_latency;
 
   uint16_t next_transition = (uint16_t)-1;
-
   uint16_t nearest_bar;
   uint8_t nearest_beat;
 

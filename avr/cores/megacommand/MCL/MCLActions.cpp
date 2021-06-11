@@ -534,7 +534,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
   DEBUG_PRINT_FN();
-  
+
   DEBUG_PRINTLN("cache next");
   DEBUG_PRINTLN((int)SP);
   DEBUG_CHECK_STACK();
@@ -542,19 +542,21 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   uint8_t track_idx, dev_idx;
 
-  memset(dev_sync_slot, 255, NUM_DEVS);
+  memset(dev_sync_slot, 255, sizeof(dev_sync_slot));
 
   const uint8_t count_max = 8;
   uint8_t count = 0;
 
+  const uint8_t div32th_margin = 1;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
       continue;
 
-    if (gui_update) {
-      if (count == 0) {
+
+    if (gui_update && count == 0 && MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                 (uint32_t)mcl_actions.next_transition * 2) > 0) {
 
         proj.select_grid(old_grid);
         handleIncomingMidi();
@@ -564,8 +566,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
           GUI.loop();
         }
         count = count_max;
-      }
     }
+
     count--;
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
     uint8_t grid_idx = get_grid_idx(n);
@@ -624,6 +626,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
     return;
   }
   uint16_t next_transitions_old = next_transitions[n];
+
   float len;
 
   float l = links[n].length;

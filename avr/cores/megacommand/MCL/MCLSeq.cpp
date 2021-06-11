@@ -234,14 +234,19 @@ again:
   }
 //  Stopwatch sw;
 
-  md_trig_mask = 0;
+  MDSeqTrack::md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
     md_arp_tracks[i].seq(uart);
   }
 
-  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
-  
+  if (MDSeqTrack::md_trig_mask > 0) { MD.parallelTrig(MDSeqTrack::md_trig_mask, uart); }
+
+  if (GUI.currentPage() == &seq_step_page && MDSeqTrack::sync_cursor) {
+    auto &active_track = md_tracks[last_md_track];
+    MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart);
+    MDSeqTrack::sync_cursor = 0;
+  }
   // Arp
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {

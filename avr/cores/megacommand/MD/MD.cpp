@@ -297,6 +297,11 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
   }
 }
 
+void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_) {
+  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
+  sendRequest(data, sizeof(data), uart_);
+}
+
 void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
