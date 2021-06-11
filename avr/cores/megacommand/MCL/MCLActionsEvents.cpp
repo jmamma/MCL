@@ -5,6 +5,7 @@ MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
 
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
+/*
   mcl_actions.kit_reload(msg[1]);
   mcl_actions.start_clock32th = MidiClock.div32th_counter;
 
@@ -12,6 +13,7 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
   if (MidiClock.state != 2) {
     MD.getBlockingKit(0x7F);
   }
+*/
 }
 
 void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}

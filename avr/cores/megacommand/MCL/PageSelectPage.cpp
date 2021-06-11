@@ -112,12 +112,10 @@ void PageSelectPage::init() {
 }
 
 void PageSelectPage::md_prepare() {
-  if (MD.connected) {
-    if (MD.getBlockingKit(0x7F, CALLBACK_TIMEOUT) && MidiClock.state == 2) {
-      // Restore kit param values that are being modulaated by locks
-      mcl_seq.update_kit_params();
-    }
-  }
+    kit_cb.init();
+    auto listener = MD.getSysexListener();
+    listener->addOnKitMessageCallback(&kit_cb, (sysex_callback_ptr_t) &MDCallback::onReceived);
+    MD.requestKit(0x7F);
 }
 
 void PageSelectPage::cleanup() {

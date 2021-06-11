@@ -4,6 +4,7 @@
 #define PageSelectPAGE_H__
 
 #include "GUI.h"
+#include "MCLSeq.h"
 
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;
@@ -24,8 +25,25 @@ struct PageSelectEntry {
   uint8_t *IconData;
 };
 
+class MDCallback : public SysexCallback {
+public:
+  bool state = false;
+  void init() { state = true; }
+  void onReceived() {
+    if (MD.kit.fromSysex(MD.midi)) {
+      mcl_seq.update_kit_params();
+    }
+    auto listener = MD.getSysexListener();
+    listener->removeOnKitMessageCallback(this);
+    state = false;
+  }
+};
+
 class PageSelectPage : public LightPage {
 public:
+
+  MDCallback kit_cb;
+
   bool loop_init = false;
   uint8_t page_select;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

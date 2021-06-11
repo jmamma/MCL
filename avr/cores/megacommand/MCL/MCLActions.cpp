@@ -41,6 +41,7 @@ void MCLActions::setup() {
 
 void MCLActions::kit_reload(uint8_t pattern) {
   DEBUG_PRINT_FN();
+/*
   if (mcl_actions.do_kit_reload != 255) {
     if (mcl_actions.writepattern == pattern) {
       auto dev1 =
@@ -56,6 +57,7 @@ void MCLActions::kit_reload(uint8_t pattern) {
     }
     mcl_actions.do_kit_reload = 255;
   }
+*/
 }
 
 uint8_t MCLActions::get_grid_idx(uint8_t slot_number) {
