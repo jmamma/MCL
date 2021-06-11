@@ -249,16 +249,6 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
   }
 
   if (MidiClock.state == 2) {
-    for (uint8_t i = 0; i < NUM_DEVS; ++i) {
-      if (elektron_devs[i] != nullptr &&
-          elektron_devs[i]->canReadWorkspaceKit()) {
-        auto kit = elektron_devs[i]->getKit();
-        if (kit != nullptr &&
-            elektron_devs[i]->currentKit != kit->getPosition()) {
-          elektron_devs[i]->getBlockingKit(0x7F);
-        }
-      }
-    }
     prepare_next_transition(row, slot_select_array);
     return;
   }
