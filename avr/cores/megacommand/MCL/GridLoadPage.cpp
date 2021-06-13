@@ -50,7 +50,7 @@ void GridLoadPage::display() {
         (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
         (64 *
          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-    itoa(step_count, K, 10);
+    mcl_gui.put_value_at(step_count, K);
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
                               "STEP", K);
 
@@ -58,7 +58,7 @@ void GridLoadPage::display() {
     strcpy(K, "---");
     if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
       uint8_t x = 1 << encoders[3]->getValue();
-      itoa(x, K, 10);
+      mcl_gui.put_value_at(x, K);
     }
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
                               MCLGUI::s_menu_y + 4, "QUANT", K);

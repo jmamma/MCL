@@ -95,7 +95,7 @@ void SeqStepPage::display() {
   draw_knob_timing(seq_param2.getValue(), timing_mid);
 
   char K[4];
-  itoa(seq_param3.getValue(), K, 10);
+  mcl_gui.put_value_at(seq_param3.getValue(), K);
   draw_knob(2, "LEN", K);
 
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
@@ -109,7 +109,7 @@ void SeqStepPage::display() {
         int8_t oct = notenum / 12 - 1;
         uint8_t note = notenum - 12 * (notenum / 12);
         strcpy(K, number_to_note.notes_upper[note]);
-        itoa(oct, K + 2, 10);
+        mcl_gui.put_value_at(oct, K + 2);
         K[3] = 0;
       }
       draw_knob(3, "PTC", K);
@@ -697,7 +697,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         str[3] = '\0';
       }
     }
-    itoa(value, str2, 10);
+    mcl_gui.put_value_at(value, str2);
 #ifdef OLED_DISPLAY
     oled_display.textbox(str, str2);
 #endif

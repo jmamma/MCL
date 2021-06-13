@@ -647,8 +647,8 @@ void SeqExtStepPage::display() {
     draw_pianoroll();
   } else {
     strcpy(info2, "LOCK  ");
-    itoa(pianoroll_mode, info2 + 5, 10);
-    itoa(lock_cur_y, info1, 10);
+    mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
+    mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
 

@@ -1,5 +1,22 @@
 #include "MCL_impl.h"
 
+void MCLGUI::put_value_at(uint8_t value, char *str) {
+  if (value < 10) {
+    str[0] = value + '0';
+    str[1] = '\0';
+  } else if (value < 100) {
+    str[0] = (value % 100) / 10 + '0';
+    str[1] = (value % 10) + '0';
+    str[2] = '\0';
+
+  } else if (value < 1000) {
+    str[0] = (value % 1000) / 100 + '0';
+    str[1] = (value % 100) / 10 + '0';
+    str[2] = (value % 10) + '0';
+    str[3] = '\0';
+  }
+}
+
 void MCLGUI::draw_textbox(const char *text, const char *text2) {
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
@@ -487,10 +504,10 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
 
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {
-    itoa(timing_mid - timing, K + 1, 10);
+    put_value_at(timing_mid - timing, K + 1);
   } else {
     K[0] = '+';
-    itoa(timing - timing_mid, K + 1, 10);
+    put_value_at(timing - timing_mid, K + 1);
   }
 
   oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);

@@ -12,9 +12,9 @@ class MCLGUI {
 public:
   uint8_t s_progress_cookie = 0b00110011;
   uint8_t s_progress_count = 0;
-  // fills dst buffer with input text. ensures that:
-  // 1. dst is null-terminated
-  // 2. dst has no trailing spaces
+
+  void put_value_at(uint8_t value, char *str);
+
   void draw_textbox(const char *text, const char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);

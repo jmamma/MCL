@@ -129,10 +129,10 @@ void ArpPage::display() {
 
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
-  itoa(encoders[2]->cur, str, 10);
+  mcl_gui.put_value_at(encoders[2]->cur, str);
   mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str);
 
-  itoa(encoders[3]->cur, str, 10);
+  mcl_gui.put_value_at(encoders[3]->cur, str);
   mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str);
 
   oled_display.display();

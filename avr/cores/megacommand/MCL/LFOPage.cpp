@@ -216,7 +216,7 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
     break;
   default:
     //  K[0] = 'T';
-    itoa(value, K, 10);
+    mcl_gui.put_value_at(value, K);
     break;
   }
 #ifdef OLED_DISPLAY

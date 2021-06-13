@@ -804,10 +804,10 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {
-    itoa(timing_mid - timing, K + 1, 10);
+    mcl_gui.put_value_at(timing_mid - timing, K + 1);
   } else {
     K[0] = '+';
-    itoa(timing - timing_mid, K + 1, 10);
+    mcl_gui.put_value_at(timing - timing_mid, K + 1);
   }
   draw_knob(1, "UTIM", K);
 }
@@ -822,7 +822,7 @@ void pattern_len_handler(EncoderParent *enc) {
     DEBUG_PRINTLN(F("under 16"));
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       char str[4];
-      itoa(enc_->cur, str, 10);
+      mcl_gui.put_value_at(enc_->cur, str);
 #ifdef OLED_DISPLAY
       oled_display.textbox("MD TRACKS LEN: ", str);
 #endif
@@ -842,7 +842,7 @@ void pattern_len_handler(EncoderParent *enc) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
         char str[4];
-        itoa(enc_->cur, str, 10);
+        mcl_gui.put_value_at(enc_->cur, str);
         GUI.ignoreNextEvent(Buttons.BUTTON4);
 #ifdef OLED_DISPLAY
         oled_display.textbox("EXT TRACKS LEN: ", str);

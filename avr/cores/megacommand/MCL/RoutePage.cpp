@@ -112,7 +112,7 @@ void RoutePage::display() {
     strcpy(Q, "--");
   } else {
     x = 1 << encoders[1]->getValue();
-    itoa(x, Q, 10);
+    mcl_gui.put_value_at(x, Q);
   }
   mcl_gui.draw_knob(1, "QUANT", Q);
 
@@ -121,7 +121,7 @@ void RoutePage::display() {
       (64 *
        ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
 
-  itoa(step_count, Q, 10);
+  mcl_gui.put_value_at(step_count, Q);
   strcpy(info_line2, "STEP ");
   strcat(info_line2, Q);
   mcl_gui.draw_panel_labels("ROUTE", info_line2);

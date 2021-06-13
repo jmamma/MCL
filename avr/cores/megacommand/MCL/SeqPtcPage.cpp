@@ -227,16 +227,16 @@ void SeqPtcPage::display() {
   char buf1[4];
 
   // draw OCTAVE
-  itoa(ptc_param_oct.getValue(), buf1, 10);
+  mcl_gui.put_value_at(ptc_param_oct.getValue(), buf1);
   draw_knob(0, "OCT", buf1);
 
   // draw FREQ
   if (ptc_param_fine_tune.getValue() < 32) {
     strcpy(buf1, "-");
-    itoa(32 - ptc_param_fine_tune.getValue(), buf1 + 1, 10);
+    mcl_gui.put_value_at(32 - ptc_param_fine_tune.getValue(), buf1 + 1);
   } else if (ptc_param_fine_tune.getValue() > 32) {
     strcpy(buf1, "+");
-    itoa(ptc_param_fine_tune.getValue() - 32, buf1 + 1, 10);
+    mcl_gui.put_value_at(ptc_param_fine_tune.getValue() - 32, buf1 + 1);
   } else {
     strcpy(buf1, "0");
   }
@@ -244,7 +244,7 @@ void SeqPtcPage::display() {
 
   // draw LEN
   if (midi_device == &MD) {
-    itoa(ptc_param_len.getValue(), buf1, 10);
+    mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
     if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
       draw_knob(2, "PLEN", buf1);
     } else {
@@ -253,7 +253,7 @@ void SeqPtcPage::display() {
   }
 #ifdef EXT_TRACKS
   else {
-    itoa(ptc_param_len.getValue(), buf1, 10);
+    mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
     draw_knob(2, "LEN", buf1);
   }
 #endif

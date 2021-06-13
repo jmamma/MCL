@@ -597,13 +597,13 @@ void RAMPage::display() {
 
   char val[4];
 
-  itoa(encoders[1]->cur, val, 10);
+  mcl_gui.put_value_at(encoders[1]->cur, val);
   mcl_gui.draw_knob(1, "DICE", val);
 
-  itoa(1 << encoders[2]->cur, val, 10);
+  mcl_gui.put_value_at(1 << encoders[2]->cur, val);
   mcl_gui.draw_knob(2, "SLI", val);
 
-  itoa(encoders[3]->cur * 4, val, 10);
+  mcl_gui.put_value_at(encoders[3]->cur * 4, val);
   mcl_gui.draw_knob(3, "LEN", val);
 
   uint8_t w_x = 0, w_y = 2;
