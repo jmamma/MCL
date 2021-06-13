@@ -129,9 +129,12 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
+        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          return false;
+        }
         if (grid_page.last_page == nullptr) {
           grid_page.last_page = GUI.currentPage();
-       }
+        }
         GUI.setPage(&grid_page);
         grid_page.bank_popup = 1;
         trig_interface.on();
