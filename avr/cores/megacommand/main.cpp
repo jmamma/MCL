@@ -202,9 +202,7 @@ ISR(TIMER1_COMPA_vect) {
         MidiClock.increment192Counter();
         MidiClock.div192th_countdown = 0;
         MidiClock.div192th_counter_last = MidiClock.div192th_counter;
-        if ((enable_clock_callbacks)) {
-          MidiClock.callCallbacks();
-        }
+        MidiClock.callCallbacks();
       }
     }
   }

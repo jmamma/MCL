@@ -167,7 +167,6 @@ extern MidiUartClass seq_tx2;
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;
-extern bool enable_clock_callbacks;
 
 extern MidiUartClass2 MidiUart2;
 
