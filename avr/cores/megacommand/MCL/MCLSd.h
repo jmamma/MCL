@@ -7,7 +7,7 @@
 #include "new.h"
 #include "type_traits.h"
 
-#define SD_MAX_RETRIES 5
+#define SD_MAX_RETRIES 20
 
 class MCLSd {
   public:

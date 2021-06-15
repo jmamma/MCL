@@ -191,7 +191,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
         // Preserve existing link settings before save.
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-          grid_track.load_from_grid(track_idx, row);
+          if (!grid_track.load_from_grid(track_idx, row)) continue;
           memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
         } else {
           empty_track.link.init(row);
@@ -283,7 +283,7 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       continue;
     }
     EmptyTrack empty_track;
-    auto device_track = empty_track.load_from_grid(track_idx, row);
+    auto *device_track = empty_track.load_from_grid(track_idx, row);
     if (device_track == nullptr || device_track->active != gdt->track_type) {
       empty_track.clear();
       device_track = device_track->init_track_type(gdt->track_type);
@@ -354,7 +354,7 @@ void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
   EmptyTrack empty_track;
   auto *ptrack = empty_track.load_from_grid(track_idx, row);
 
-  if (!ptrack) {
+  if (ptrack == nullptr) {
     DEBUG_PRINTLN("bad read");
     return;
   } // read failure
