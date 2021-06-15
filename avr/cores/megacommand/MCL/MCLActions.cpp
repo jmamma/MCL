@@ -496,7 +496,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   calc_latency();
 }
 
-void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt) {
+bool MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
 
@@ -507,6 +507,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
     empty_track.clear();
     empty_track.init_track_type(gdt->track_type);
     send_machine[n] = 1;
+    return false;
   } else {
     auto *pmem_track =
         empty_track2.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
@@ -529,6 +530,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
     }
   }
   ptrack->store_in_mem(gdt->mem_slot_idx);
+  return true;
 }
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
@@ -591,7 +593,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (links[n].row >= GRID_LENGTH)
       continue;
 
-    cache_track(n, track_idx, dev_idx,  gdt);
+    if (!cache_track(n, track_idx, dev_idx,  gdt)) {
+      DEBUG_PRINTLN("abort track cache");
+      links[n].loops = 0;
+      slot_select_array[n] = 0;
+    }
   }
 
   proj.select_grid(old_grid);
@@ -674,6 +680,7 @@ void MCLActions::calc_next_transition() {
     }
   }
   nearest_bar = next_transition / 16 + 1;
+  nearest_bar = nearest_bar - (nearest_bar / 100) * 100;
   nearest_beat = next_transition % 4 + 1;
   // next_transition = next_transition % 16;
 
