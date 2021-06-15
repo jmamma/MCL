@@ -496,7 +496,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   calc_latency();
 }
 
-bool MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt) {
+void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
 
@@ -507,7 +507,6 @@ bool MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
     empty_track.clear();
     empty_track.init_track_type(gdt->track_type);
     send_machine[n] = 1;
-    return false;
   } else {
     auto *pmem_track =
         empty_track2.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
@@ -530,7 +529,7 @@ bool MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
     }
   }
   ptrack->store_in_mem(gdt->mem_slot_idx);
-  return true;
+  return;
 }
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
@@ -593,11 +592,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (links[n].row >= GRID_LENGTH)
       continue;
 
-    if (!cache_track(n, track_idx, dev_idx,  gdt)) {
-      DEBUG_PRINTLN("abort track cache");
-      links[n].loops = 0;
-      slot_select_array[n] = 0;
-    }
+    cache_track(n, track_idx, dev_idx,  gdt);
   }
 
   proj.select_grid(old_grid);
