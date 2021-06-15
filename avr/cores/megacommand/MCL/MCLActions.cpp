@@ -501,12 +501,12 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
   EmptyTrack empty_track2;
 
   auto *ptrack = empty_track.load_from_grid(track_idx, links[n].row);
+  send_machine[n] = 1;
 
   if (ptrack == nullptr || ptrack->active != gdt->track_type) {
     // EMPTY_TRACK_TYPE
     empty_track.clear();
     ptrack = empty_track.init_track_type(gdt->track_type);
-    send_machine[n] = 1;
   } else {
     auto *pmem_track =
         empty_track2.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
@@ -522,10 +522,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
       } else if (memcmp(psound, pmem_sound, szsound) != 0) {
         send_machine[n] = 0;
         dev_sync_slot[dev_idx] = n;
-      } else {
-        send_machine[n] = 1;
       }
-      DEBUG_DUMP(send_machine[n]);
     }
   }
   ptrack->store_in_mem(gdt->mem_slot_idx);
