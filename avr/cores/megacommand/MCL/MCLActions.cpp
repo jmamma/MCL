@@ -505,7 +505,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, Grid
   if (ptrack == nullptr || ptrack->active != gdt->track_type) {
     // EMPTY_TRACK_TYPE
     empty_track.clear();
-    empty_track.init_track_type(gdt->track_type);
+    ptrack = empty_track.init_track_type(gdt->track_type);
     send_machine[n] = 1;
   } else {
     auto *pmem_track =
