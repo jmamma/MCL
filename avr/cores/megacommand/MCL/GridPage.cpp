@@ -722,13 +722,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    if (bank_popup) {
-      uint8_t track = event->source - 128;
-      if (track < 16) {
-      close_bank_popup();
-      }
-    }
-    return true;
+    return false;
   }
 
   if (EVENT_CMD(event)) {

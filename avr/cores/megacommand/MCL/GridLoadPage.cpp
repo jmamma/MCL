@@ -112,6 +112,18 @@ void GridLoadPage::group_select() {
     MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
+void GridLoadPage::group_load(uint8_t row) {
+
+    uint8_t track_select_array[NUM_SLOTS] = {0};
+    track_select_array_from_type_select(track_select_array);
+    //   load_tracks_to_md(-1);
+    oled_display.textbox("LOAD GROUPS", "");
+    oled_display.display();
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(0, row,
+                             track_select_array);
+}
+
 bool GridLoadPage::handleEvent(gui_event_t *event) {
   // Call parent GUI handler first.
   if (GridIOPage::handleEvent(event)) {
@@ -165,18 +177,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     //  write the whole row
     load_groups:
     trig_interface.off();
-    uint8_t offset = proj.get_grid() * 16;
 
-    uint8_t track_select_array[NUM_SLOTS] = {0};
+    group_load(grid_page.encoders[1]->getValue());
 
-    track_select_array_from_type_select(track_select_array);
-    //   load_tracks_to_md(-1);
-    oled_display.textbox("LOAD GROUPS", "");
-    oled_display.display();
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
-                             track_select_array);
-    GUI.setPage(&grid_page);
+   GUI.setPage(&grid_page);
     return true;
   }
 }

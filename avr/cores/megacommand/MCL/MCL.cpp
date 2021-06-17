@@ -104,8 +104,41 @@ void MCL::setup() {
 }
 
 bool mcl_handleEvent(gui_event_t *event) {
+  if (note_interface.is_event(event)) {
+    uint8_t mask = event->mask;
+    uint8_t port = event->port;
+    MidiDevice *device = midi_active_peering.get_device(port);
 
-  if (EVENT_CMD(event)) {
+    uint8_t track = event->source - 128;
+    if (device != &MD) {
+      return true;
+    }
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+
+   }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      uint8_t row = MD.currentBank * 64 + grid_page.bank * 16 + track;
+      param2.cur = row;
+
+      uint8_t chain_mode_old = mcl_cfg.chain_mode;
+      if (note_interface.notes_count_off() > 1) {
+        mcl_cfg.chain_mode = CHAIN_QUEUE;
+      }
+      else if (chain_mode_old != CHAIN_AUTO) { mcl_cfg.chain_mode = CHAIN_MANUAL; }
+      if (grid_page.bank_popup > 0 && note_interface.notes_all_off_md()) {
+        for (uint8_t n = 0; n < 16; n++) {
+          if (note_interface.is_note_off(n)) {
+            uint8_t row = MD.currentBank * 64 + grid_page.bank * 16 + n;
+            grid_load_page.group_load(row);
+          }
+        }
+      }
+      mcl_cfg.chain_mode = chain_mode_old;
+    }
+
+  }
+
+  else if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
@@ -138,9 +171,11 @@ bool mcl_handleEvent(gui_event_t *event) {
         GUI.setPage(&grid_page);
         grid_page.bank_popup = 1;
         trig_interface.on();
-        uint8_t bank = key - MDX_KEY_BANKA;
+        grid_page.bank = key - MDX_KEY_BANKA;
         uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-        MD.set_trigleds(mask[bank], TRIGLED_OVERLAY);
+        MD.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVE);
+        uint8_t row = MD.currentBank * 64 + grid_page.bank * 16;
+        param2.cur = row;
         return true;
       }
       case MDX_KEY_SONG: {

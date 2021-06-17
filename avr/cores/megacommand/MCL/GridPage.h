@@ -31,6 +31,7 @@ public:
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t display_name = 0;
+  uint8_t bank = 0;
 
   bool reload_slot_models;
   bool show_slot_menu = false;
