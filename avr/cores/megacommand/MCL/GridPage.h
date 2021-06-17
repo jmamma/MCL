@@ -38,6 +38,7 @@ public:
   bool write_cfg = false;
 
   uint8_t active_slots[NUM_SLOTS];
+  uint8_t last_active_row;
 
   uint8_t grid_select_apply;
   uint8_t slot_clear;
@@ -68,6 +69,8 @@ public:
   uint8_t getCol();
   uint8_t getRow();
   void update_row_state(uint8_t row, bool state);
+  void set_active_row(uint8_t row);
+  void send_active_row();
 
   void load_slot_models();
   void display_slot_menu();
@@ -85,7 +88,7 @@ public:
   void close_bank_popup();
 
   void loop();
-
+  void send_row_led();
 };
 
 extern void apply_slot_changes_cb();

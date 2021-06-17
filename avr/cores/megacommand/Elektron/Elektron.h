@@ -294,7 +294,8 @@ public:
 enum TrigLEDMode {
   TRIGLED_OVERLAY = 0,
   TRIGLED_STEPEDIT = 1,
-  TRIGLED_EXCLUSIVE = 2
+  TRIGLED_EXCLUSIVE = 2,
+  TRIGLED_EXCLUSIVENDYNAMIC = 3
 };
 
 /// sysex constants for constructing data frames

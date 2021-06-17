@@ -37,14 +37,25 @@ void GridPage::cleanup() {
   bank_popup = 0;
 }
 
+void GridPage::set_active_row(uint8_t row) {
+    grid_page.last_active_row = row;
+    if (bank_popup) { send_row_led(); }
+}
+void GridPage::send_row_led() {
+  uint64_t rows[2] = {0};
+  SET_BIT128_P(&rows, grid_page.last_active_row);
+  uint16_t *blink_mask = (uint16_t *)&rows[0];
+
+  MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
+}
 void GridPage::close_bank_popup() {
-     MD.draw_close_bank();
-     trig_interface.off();
-     if (last_page != nullptr) {
-        GUI.setPage(last_page);
-      }
-     last_page = nullptr;
-     bank_popup = 0;
+  MD.draw_close_bank();
+  trig_interface.off();
+  if (last_page != nullptr) {
+    GUI.setPage(last_page);
+  }
+  last_page = nullptr;
+  bank_popup = 0;
 }
 
 void GridPage::loop() {
@@ -732,7 +743,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
       }
-     if (show_slot_menu) {
+      if (show_slot_menu) {
         switch (key) {
         case MDX_KEY_COPY: {
           slot_copy = 1;

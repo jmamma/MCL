@@ -419,6 +419,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     }
 
     grid_page.active_slots[i] = row;
+    grid_page.set_active_row(row);
 
     DEBUG_DUMP("here");
     DEBUG_DUMP(row);
