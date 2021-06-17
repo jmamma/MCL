@@ -102,8 +102,8 @@ void MDTrackSelect::end_immediate() {
     MD.currentTrack = b & 0xF;
   }
   MD.currentSynthPage = (b >> 4) & 3;
-  proj.select_grid((b & 64) > 0);
-  grid_page.reload_slot_models = false;
+  MD.currentBank = (b & 64) > 0;
+
   b = sysex->getByte(4);
   MD.kit.models[MD.currentTrack] = sysex->getByte(5);
   if (b & 1) {

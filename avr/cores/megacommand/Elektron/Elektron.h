@@ -363,15 +363,16 @@ public:
   /// Runtime variables
   uint64_t fw_caps;
   /** Stores the current global of the MD, usually set by the MDTask. **/
-  int currentGlobal;
+  uint8_t currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
-  int currentKit;
+  uint8_t currentKit;
 
-  int currentTrack;
-  int currentSynthPage;
+  uint8_t currentTrack;
+  uint8_t currentSynthPage;
 
+  uint8_t currentBank;
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
-  int currentPattern;
+  uint8_t currentPattern;
   /** Set to true if the kit was loaded (usually set by MDTask). **/
   bool loadedKit;
   /** Set to true if the global was loaded (usually set by MDTask). **/
