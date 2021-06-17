@@ -447,7 +447,7 @@ public:
 
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
-
+  void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
   void activate_trig_interface();
   void deactivate_trig_interface();
 

@@ -548,6 +548,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   const uint8_t div32th_margin = 1;
 
+  int last_row = -1;
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
@@ -589,10 +591,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     if (links[n].row >= GRID_LENGTH)
       continue;
-
+    last_row = links[n].row;
     cache_track(n, track_idx, dev_idx,  gdt);
   }
 
+  if (last_row > -1) { MD.draw_pattern_idx(last_row, grid_page.last_active_row, (mcl_cfg.chain_mode == CHAIN_QUEUE)); grid_page.last_active_row = last_row; }
   proj.select_grid(old_grid);
 }
 

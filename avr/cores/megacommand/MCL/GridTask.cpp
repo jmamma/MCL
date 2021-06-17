@@ -131,7 +131,6 @@ void GridTask::transition_handler() {
       wait = false;
       if (transition_load(n, track_idx, dev_idx, gdt)) {
        grid_page.active_slots[n] = slots_changed[n];
-       last_active_row = slots_changed[n];
       }
     }
   }
@@ -139,7 +138,6 @@ void GridTask::transition_handler() {
   DEBUG_PRINTLN("gettin ready to cache");
   DEBUG_PRINTLN((int)SP);
   bool update_gui = true;
-  if (last_active_row > -1) { grid_page.set_active_row(last_active_row); }
   mcl_actions.cache_next_tracks(track_select_array, update_gui);
   // Once tracks are cached, we can calculate their next transition
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {

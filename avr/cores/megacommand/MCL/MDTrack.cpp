@@ -19,6 +19,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   DEBUG_DUMP(n);
   switch (mcl_actions.transition_level[n]) {
   case 1:
+    DEBUG_PRINTLN("setting transition level to 0");
     send_level = true;
     machine.level = 0;
     break;

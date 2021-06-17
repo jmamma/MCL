@@ -147,6 +147,13 @@ void ElektronDevice::draw_close_microtiming() {
   // waitBlocking();
 }
 
+void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
+  uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
+  sendRequest(data, 6);
+  // waitBlocking();
+}
+
+
 void ElektronDevice::activate_trig_interface() {
   uint8_t data[3] = {0x70, 0x31, 0x01};
   sendRequest(data, sizeof(data));
