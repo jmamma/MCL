@@ -12,7 +12,7 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
       // TODO upgrade right here
       return true;
     } */
-    return nullptr;
+    return this;
     break;
   case EMPTY_TRACK_TYPE:
     ::new(this) EmptyTrack;
@@ -56,6 +56,11 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   // header read successfully. now reconstruct the object.
   auto ptrack = init_track_type(active);
 
+  if (ptrack == nullptr) {
+    DEBUG_PRINTLN("unrecognized track type");
+    return nullptr;
+  }
+
   // virtual functions are ready
   uint32_t len = ptrack->get_track_size();
 
@@ -65,6 +70,10 @@ DeviceTrack* DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   }
 
   auto ptrack2 = ptrack->init_track_type(active);
+  if (ptrack2 == nullptr) {
+    DEBUG_PRINTLN("unrecognized track type 2");
+    return nullptr;
+  }
 
   return ptrack2;
 }
