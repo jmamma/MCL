@@ -185,7 +185,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         grid_page.bank_popup = 1;
         bool clear_states = false;
         trig_interface.on(clear_states);
-        grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 2;
+        grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;
         uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
         MD.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
 
