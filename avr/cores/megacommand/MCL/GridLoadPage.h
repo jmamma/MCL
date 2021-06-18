@@ -19,6 +19,7 @@ class GridLoadPage : public GridIOPage {
  bool handleEvent(gui_event_t *event);
  void draw_popup();
  void display();
+ void init();
  void setup();
 };
 

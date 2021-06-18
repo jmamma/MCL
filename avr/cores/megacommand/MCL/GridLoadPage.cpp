@@ -1,9 +1,8 @@
 #include "MCL_impl.h"
 
-void GridLoadPage::setup() {
+void GridLoadPage::init() {
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   ((MCLEncoder *)encoders[3])->max = 6;
-  encoders[3]->cur = 4;
   ((MCLEncoder *)encoders[2])->max = 1;
 
   // MD.requestKit(MD.currentKit);
@@ -14,6 +13,10 @@ void GridLoadPage::setup() {
   note_interface.state = true;
   // GUI.display();
   if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
+
+}
+void GridLoadPage::setup() {
+  encoders[3]->cur = 4;
 }
 
 void GridLoadPage::draw_popup() {

@@ -843,7 +843,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (!show_slot_menu) {
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     save:
-      grid_save_page.isSetup = false;
       GUI.setPage(&grid_save_page);
 
       return true;
@@ -851,7 +850,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     load:
-      grid_load_page.isSetup = false;
       GUI.setPage(&grid_load_page);
 
       return true;

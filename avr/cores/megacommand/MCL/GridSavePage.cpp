@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 #define S_PAGE 3
 
-void GridSavePage::setup() {
+void GridSavePage::init() {
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
@@ -10,6 +10,9 @@ void GridSavePage::setup() {
   MD.popup_text("SAVE SLOTS", true);
   if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
   draw_popup();
+}
+
+void GridSavePage::setup() {
 }
 
 void GridSavePage::draw_popup() {

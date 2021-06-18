@@ -17,6 +17,7 @@ public:
   void group_select();
   void loop();
   void display();
+  void init();
   void setup();
   void draw_popup();
 };
