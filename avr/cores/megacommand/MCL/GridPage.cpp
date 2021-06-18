@@ -314,7 +314,7 @@ void GridPage::display_grid_info() {
   oled_display.print(dev2);
 
   oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
-  oled_display.print((char)('A' + proj.get_grid()));
+  oled_display.print((char)('X' + proj.get_grid()));
   oled_display.print(':');
 
   char val[4];
@@ -322,8 +322,9 @@ void GridPage::display_grid_info() {
   val[2] = '\0';
   oled_display.print(val);
   oled_display.print(" ");
-  GUI.put_value_at(0, encoders[1]->cur, val);
-  val[3] = '\0';
+  uint8_t bank = encoders[1]->cur / 16;
+  oled_display.print((char)('A' + bank));
+  GUI.put_value_at2(0, encoders[1]->cur - bank * 16 + 1, val);
   oled_display.print(val);
 
   oled_display.setCursor(1, y_offset + 2 * 8);
