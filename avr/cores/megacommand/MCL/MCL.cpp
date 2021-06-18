@@ -127,6 +127,8 @@ bool mcl_handleEvent(gui_event_t *event) {
           mcl_cfg.chain_mode = CHAIN_MANUAL;
         }
 
+        mcl_actions.init_chains();
+
         for (uint8_t n = 0; n < 16; n++) {
           if (note_interface.is_note_off(n)) {
             uint8_t row = grid_page.bank * 16 + n;

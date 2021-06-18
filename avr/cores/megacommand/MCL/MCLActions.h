@@ -81,6 +81,8 @@ public:
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id,
                                       uint8_t *dev_idx);
 
+  void init_chains();
+
   void send_globals();
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);

@@ -39,8 +39,11 @@ void GridPage::cleanup() {
 
 void GridPage::set_active_row(uint8_t row) {
     grid_page.last_active_row = row;
-    if (bank_popup) { send_row_led(); }
+    if (bank_popup) {
+      send_row_led();
+    }
 }
+
 void GridPage::send_row_led() {
   uint64_t rows[2] = {0};
   SET_BIT128_P(&rows, grid_page.last_active_row);

@@ -39,6 +39,12 @@ void MCLActions::setup() {
   memset(dev_sync_slot, 255, NUM_DEVS);
 }
 
+void MCLActions::init_chains() {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    mcl_actions.chains[n].init();
+  }
+}
+
 void MCLActions::kit_reload(uint8_t pattern) {
   DEBUG_PRINT_FN();
   /*
@@ -386,7 +392,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   uint8_t mute_states[NUM_SLOTS];
   uint8_t send_masks[NUM_SLOTS] = {0};
-
+  uint8_t row = 0;
   uint8_t old_grid = proj.get_grid();
 
   uint8_t track_idx, dev_idx;
@@ -414,7 +420,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       continue;
     }
 
-    uint8_t row = grid_page.getRow();
+    row = grid_page.getRow();
     if (row_array) {
       row = row_array[i];
     }
@@ -426,7 +432,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     load_track(track_idx, row, i, gdt, send_masks);
   }
-
+  grid_page.last_active_row = row;
+  // MD.draw_pattern_idx(row, row, 0);
   if (write_original == 1) {
     DEBUG_PRINTLN(F("write original"));
     //     MD.kit.origPosition = md_track->origPosition;
@@ -684,7 +691,11 @@ void MCLActions::calc_next_transition() {
   }
 
   MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
-  grid_page.set_active_row(next_row);
+  // MD.draw_pattern_idx(grid_page.last_active_row, next_row, chain);
+  grid_page.last_active_row = next_row;
+  if (MidiClock.state != 2) {
+    grid_page.set_active_row(next_row);
+  }
 
   nearest_bar = next_transition / 16 + 1;
   nearest_bar = nearest_bar - (nearest_bar / 100) * 100;
