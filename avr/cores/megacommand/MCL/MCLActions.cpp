@@ -94,9 +94,8 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   return nullptr;
 }
 
-void MCLActions::save_tracks(int row,
-                                     uint8_t *slot_select_array,
-                                     uint8_t merge) {
+void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
+                             uint8_t merge) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
@@ -586,9 +585,15 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     proj.select_grid(grid_idx);
 
     if (chains[n].is_mode_queue()) {
-      links[n].loops = 1;
-      links[n].length = (float)chains[n].get_length() /
-                        (float)gdt->seq_track->get_speed_multiplier();
+      if (chains[n].get_length() == QUANT_LEN) {
+        if (links[n].loops == 0) {
+          links[n].loops = 1;
+        }
+      } else if (chains[n].get_length() != QUANT_LEN) {
+          links[n].loops = 1;
+          links[n].length = (float)chains[n].get_length() /
+                            (float)gdt->seq_track->get_speed_multiplier();
+        }
       chains[n].inc();
       links[n].row = chains[n].get_row();
       if (links[n].row == 255) {

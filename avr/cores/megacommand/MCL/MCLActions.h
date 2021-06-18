@@ -47,6 +47,7 @@ public:
   GridChain chains[NUM_SLOTS];
 };
 
+#define QUANT_LEN 255
 class MCLActions : public LinkModeData {
 public:
   uint8_t do_kit_reload;
@@ -66,8 +67,8 @@ public:
 
   uint8_t get_quant() {
     uint8_t q;
-    if (gridio_param4.cur == 0) {
-      q = 4;
+    if (gridio_param4.cur == 1) {
+      q = QUANT_LEN;
     } else {
       q = 1 << gridio_param4.cur;
     }

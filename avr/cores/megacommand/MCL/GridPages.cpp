@@ -10,7 +10,7 @@ MCLEncoder param2(GRID_LENGTH - 1, 0 , ENCODER_RES_GRID);
 #endif
 
 MCLEncoder param3(GRID_WIDTH, 1, ENCODER_RES_GRID);
-MCLEncoder param4(GRID_LENGTH, 1, ENCODER_RES_GRID);
+MCLEncoder param4(6, 1, ENCODER_RES_GRID);
 
 GridPage grid_page(&param1, &param2, &param3, &param4);
 

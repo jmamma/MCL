@@ -58,8 +58,11 @@ void GridLoadPage::display() {
                               "STEP", K);
 
     // draw quantize
-    strcpy(K, "---");
-    if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 0)) {
+    if (encoders[3]->getValue() == 1) {
+      strcpy(K, "--");
+    }
+
+    else if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 1)) {
       uint8_t x = 1 << encoders[3]->getValue();
       mcl_gui.put_value_at(x, K);
     }
