@@ -71,7 +71,7 @@ public:
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
   }
-  bool on();
+  bool on(bool clear_states = true);
   bool off();
 
   void enable_listener();

@@ -49,7 +49,7 @@ void GridPage::send_row_led() {
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
-  MD.draw_close_bank();
+  if (bank_popup == 2) { MD.draw_close_bank(); }
   trig_interface.off();
   if (last_page != nullptr) {
     GUI.setPage(last_page);

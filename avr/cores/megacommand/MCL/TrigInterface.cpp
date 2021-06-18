@@ -52,9 +52,9 @@ void TrigInterface::enable_listener() {
 
 void TrigInterface::disable_listener() { sysex->removeSysexListener(this); }
 
-bool TrigInterface::on() {
+bool TrigInterface::on(bool clear_states) {
   note_interface.init_notes();
-  cmd_key_state = 0;
+  if (clear_states) { cmd_key_state = 0; }
   note_interface.note_proceed = true;
   if (state) {
     return false;

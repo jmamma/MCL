@@ -242,9 +242,11 @@ again:
 
   if (MDSeqTrack::md_trig_mask > 0) { MD.parallelTrig(MDSeqTrack::md_trig_mask, uart); }
 
-  if (GUI.currentPage() == &seq_step_page && MDSeqTrack::sync_cursor) {
+  if (MDSeqTrack::sync_cursor) {
     auto &active_track = md_tracks[last_md_track];
-    MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart);
+    if (GUI.currentPage() == &seq_step_page && IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) { MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart); }
+    //MD.draw_pattern_idx(grid_page.last_active_row, grid_page.last_active_row, 0);
+    grid_page.set_active_row(grid_page.last_active_row); //send led update
     MDSeqTrack::sync_cursor = 0;
   }
   // Arp

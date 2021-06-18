@@ -90,7 +90,7 @@ public:
 
   void load_tracks(int column, int row, uint8_t *slot_select_array);
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
-  void prepare_next_transition(int row, uint8_t *slot_select_array);
+  void manual_transition(int row, uint8_t *slot_select_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n);

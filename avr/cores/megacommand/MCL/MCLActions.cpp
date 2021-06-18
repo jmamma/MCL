@@ -41,23 +41,23 @@ void MCLActions::setup() {
 
 void MCLActions::kit_reload(uint8_t pattern) {
   DEBUG_PRINT_FN();
-/*
-  if (mcl_actions.do_kit_reload != 255) {
-    if (mcl_actions.writepattern == pattern) {
-      auto dev1 =
-          midi_active_peering.get_device(UART1_PORT)->asElektronDevice();
-      auto dev2 =
-          midi_active_peering.get_device(UART2_PORT)->asElektronDevice();
-      if (dev1 != nullptr) {
-        dev1->loadKit(mcl_actions.do_kit_reload);
+  /*
+    if (mcl_actions.do_kit_reload != 255) {
+      if (mcl_actions.writepattern == pattern) {
+        auto dev1 =
+            midi_active_peering.get_device(UART1_PORT)->asElektronDevice();
+        auto dev2 =
+            midi_active_peering.get_device(UART2_PORT)->asElektronDevice();
+        if (dev1 != nullptr) {
+          dev1->loadKit(mcl_actions.do_kit_reload);
+        }
+        if (dev2 != nullptr) {
+          dev2->loadKit(mcl_actions.do_kit_reload);
+        }
       }
-      if (dev2 != nullptr) {
-        dev2->loadKit(mcl_actions.do_kit_reload);
-      }
+      mcl_actions.do_kit_reload = 255;
     }
-    mcl_actions.do_kit_reload = 255;
-  }
-*/
+  */
 }
 
 uint8_t MCLActions::get_grid_idx(uint8_t slot_number) {
@@ -191,7 +191,8 @@ void MCLActions::store_tracks_in_mem(int column, int row,
 
         // Preserve existing link settings before save.
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-          if (!grid_track.load_from_grid(track_idx, row)) continue;
+          if (!grid_track.load_from_grid(track_idx, row))
+            continue;
           memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
         } else {
           empty_track.link.init(row);
@@ -251,7 +252,7 @@ void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
   }
 
   if (MidiClock.state == 2) {
-    prepare_next_transition(row, slot_select_array);
+    manual_transition(row, slot_select_array);
     return;
   }
 
@@ -299,7 +300,7 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::prepare_next_transition(int row, uint8_t *slot_select_array) {
+void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
   DEBUG_PRINT_FN();
   uint8_t q = get_quant();
 
@@ -419,7 +420,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     }
 
     grid_page.active_slots[i] = row;
-    grid_page.set_active_row(row);
 
     DEBUG_DUMP("here");
     DEBUG_DUMP(row);
@@ -497,7 +497,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   calc_latency();
 }
 
-void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt) {
+void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
+                             GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
 
@@ -548,25 +549,24 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   const uint8_t div32th_margin = 1;
 
-  int last_row = -1;
-
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
       continue;
 
+    if (gui_update && count == 0 &&
+        MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                  (uint32_t)mcl_actions.next_transition * 2) >
+            0) {
 
-    if (gui_update && count == 0 && MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                 (uint32_t)mcl_actions.next_transition * 2) > 0) {
-
-        proj.select_grid(old_grid);
-        handleIncomingMidi();
-        if (GUI.currentPage() == &grid_load_page) {
-          GUI.display();
-        } else {
-          GUI.loop();
-        }
-        count = count_max;
+      proj.select_grid(old_grid);
+      handleIncomingMidi();
+      if (GUI.currentPage() == &grid_load_page) {
+        GUI.display();
+      } else {
+        GUI.loop();
+      }
+      count = count_max;
     }
 
     count--;
@@ -591,11 +591,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     if (links[n].row >= GRID_LENGTH)
       continue;
-    last_row = links[n].row;
-    cache_track(n, track_idx, dev_idx,  gdt);
+    cache_track(n, track_idx, dev_idx, gdt);
   }
 
-  if (last_row > -1) { MD.draw_pattern_idx(last_row, grid_page.last_active_row, (mcl_cfg.chain_mode == CHAIN_QUEUE)); grid_page.last_active_row = last_row; }
   proj.select_grid(old_grid);
 }
 
@@ -665,16 +663,29 @@ void MCLActions::calc_next_slot_transition(uint8_t n) {
 void MCLActions::calc_next_transition() {
   next_transition = (uint16_t)-1;
   DEBUG_PRINT_FN();
+  int slot = -1;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       if ((links[n].loops > 0)) {
         // && (links[n].row != grid_page.active_slots[n])) || links[n].length) {
         if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
           next_transition = next_transitions[n];
+          slot = n;
         }
       }
     }
   }
+  uint8_t next_row = grid_page.last_active_row;
+  bool chain = false;
+
+  if (slot > -1) {
+    next_row = links[slot].row;
+    chain = chains[slot].mode;
+  }
+
+  MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
+  grid_page.set_active_row(next_row);
+
   nearest_bar = next_transition / 16 + 1;
   nearest_bar = nearest_bar - (nearest_bar / 100) * 100;
   nearest_beat = next_transition % 4 + 1;
