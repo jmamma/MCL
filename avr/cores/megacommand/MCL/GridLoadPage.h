@@ -13,7 +13,7 @@ class GridLoadPage : public GridIOPage {
  GridLoadPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {
 
  }
- void link();
+ void load();
  void group_select();
  void group_load(uint8_t row);
  bool handleEvent(gui_event_t *event);

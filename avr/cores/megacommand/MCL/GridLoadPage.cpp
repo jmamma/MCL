@@ -84,7 +84,7 @@ void GridLoadPage::display() {
   oled_display.display();
   oled_display.setFont(oldfont);
 }
-void GridLoadPage::link() {
+void GridLoadPage::load() {
   oled_display.textbox("LOAD SLOTS", "");
   oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
@@ -152,7 +152,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
           if (BUTTON_DOWN(Buttons.BUTTON2)) {
             return true;
           } else {
-            link();
+            load();
           }
         }
       }
