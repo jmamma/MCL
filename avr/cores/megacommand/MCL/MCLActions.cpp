@@ -248,7 +248,7 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
     if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
       chains[n].add(row, get_quant());
 
-      if (chains[n].num_of_links > 2) {
+      if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
       }
     } else {

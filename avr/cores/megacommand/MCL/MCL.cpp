@@ -94,6 +94,8 @@ void MCL::setup() {
     GUI.use_screen_saver = false;
   }
 
+  param4.cur = 4;
+
   DEBUG_PRINTLN(F("Track sizes:"));
 #ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));
