@@ -132,7 +132,7 @@ void GridSavePage::save() {
 
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.store_tracks_in_mem(grid_page.encoders[1]->getValue(),
+  mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
                                   track_select_array, save_mode);
 }
 
@@ -226,7 +226,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       save_mode = SAVE_SEQ;
     }
 
-    mcl_actions.store_tracks_in_mem(grid_page.encoders[1]->getValue(),
+    mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
                                     track_select_array, save_mode);
     GUI.setPage(&grid_page);
     return true;

@@ -94,7 +94,7 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   return nullptr;
 }
 
-void MCLActions::store_tracks_in_mem(int row,
+void MCLActions::save_tracks(int row,
                                      uint8_t *slot_select_array,
                                      uint8_t merge) {
   DEBUG_PRINT_FN();

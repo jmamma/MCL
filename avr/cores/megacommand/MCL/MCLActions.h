@@ -87,7 +87,7 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void store_tracks_in_mem(int row, uint8_t *slot_select_array,
+  void save_tracks(int row, uint8_t *slot_select_array,
                            uint8_t merge);
 
   void load_tracks(int row, uint8_t *slot_select_array);
