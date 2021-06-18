@@ -94,7 +94,7 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
   return nullptr;
 }
 
-void MCLActions::store_tracks_in_mem(int column, int row,
+void MCLActions::store_tracks_in_mem(int row,
                                      uint8_t *slot_select_array,
                                      uint8_t merge) {
   DEBUG_PRINT_FN();
@@ -228,7 +228,7 @@ void MCLActions::store_tracks_in_mem(int column, int row,
   proj.select_grid(old_grid);
 }
 
-void MCLActions::load_tracks(int column, int row, uint8_t *slot_select_array) {
+void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
   DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),

@@ -49,6 +49,7 @@ public:
   uint8_t slot_undo;
   uint8_t slot_undo_x;
   uint8_t slot_undo_y;
+  uint8_t slot_load;
 
   uint16_t grid_lastclock;
 

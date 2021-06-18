@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 void GridLoadPage::init() {
+  GridIOPage::init();
   MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
   ((MCLEncoder *)encoders[3])->max = 6;
   ((MCLEncoder *)encoders[2])->max = 1;
@@ -12,9 +13,8 @@ void GridLoadPage::init() {
   MD.popup_text("LOAD SLOTS", true);
   note_interface.state = true;
   // GUI.display();
-  if (trig_interface.is_key_down(MDX_KEY_FUNC)) { group_select(); }
-
 }
+
 void GridLoadPage::setup() {
   encoders[3]->cur = 4;
 }
@@ -105,7 +105,7 @@ void GridLoadPage::link() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.load_tracks(0, grid_page.encoders[1]->getValue(),
+  mcl_actions.load_tracks(grid_page.encoders[1]->getValue(),
                            track_select_array);
 }
 
@@ -123,7 +123,7 @@ void GridLoadPage::group_load(uint8_t row) {
     oled_display.textbox("LOAD GROUPS", "");
     oled_display.display();
     mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(0, row,
+    mcl_actions.load_tracks(row,
                              track_select_array);
 }
 

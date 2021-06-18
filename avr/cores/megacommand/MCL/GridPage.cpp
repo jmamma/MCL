@@ -38,10 +38,10 @@ void GridPage::cleanup() {
 }
 
 void GridPage::set_active_row(uint8_t row) {
-    grid_page.last_active_row = row;
-    if (bank_popup) {
-      send_row_led();
-    }
+  grid_page.last_active_row = row;
+  if (bank_popup) {
+    send_row_led();
+  }
 }
 
 void GridPage::send_row_led() {
@@ -52,7 +52,9 @@ void GridPage::send_row_led() {
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
-  if (bank_popup == 2) { MD.draw_close_bank(); }
+  if (bank_popup == 2) {
+    MD.draw_close_bank();
+  }
   trig_interface.off();
   if (last_page != nullptr) {
     GUI.setPage(last_page);
@@ -644,7 +646,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
   uint8_t slot_update = 0;
 
-  if (slot_copy + slot_paste + slot_clear + undo == 0) {
+  if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
         (temp_slot.link.loops != slot.link.loops)) {
       slot_update = 1;
@@ -685,7 +687,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     mcl_clipboard.paste(getCol(), getRow(), proj.get_grid());
   } else {
     GridRowHeader header;
-#ifdef OLED_DISPLAY
     if (slot_clear == 1) {
     clear:
       slot_undo = 1;
@@ -697,30 +698,55 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     } else if (slot_update == 1) {
       oled_display.textbox("CHAIN ", "UPDATE");
     }
-#endif
+
+    uint8_t chain_mode_old = mcl_cfg.chain_mode;
+    if (slot_load) {
+      if (height > 1) {
+        mcl_cfg.chain_mode = CHAIN_QUEUE;
+      } else if (chain_mode_old != CHAIN_AUTO) {
+        mcl_cfg.chain_mode = CHAIN_MANUAL;
+      }
+      oled_display.textbox("LOAD SLOTS", "");
+    }
     bool activate_header = false;
+
+    uint8_t track_select_array[GRID_LENGTH] = {0};
+
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
+      uint8_t ypos = y + getRow();
       proj.read_grid_row_header(&header, y + getRow());
 
+      memset(track_select_array, 0, sizeof(track_select_array));
+
       for (uint8_t x = 0; x < width && x + getCol() < getWidth(); x++) {
+        uint8_t xpos = x + getCol();
         if (slot_clear == 1) {
           // Delete slot(s)
-          proj.clear_slot_grid(x + getCol(), y + getRow());
-          header.update_model(x + getCol(), 0, EMPTY_TRACK_TYPE);
+          proj.clear_slot_grid(xpos, ypos);
+          header.update_model(xpos, 0, EMPTY_TRACK_TYPE);
         } else if (slot_update == 1) {
           // Save slot link data
           activate_header = true;
-          slot.active = header.track_type[x + getCol()];
-          slot.store_in_grid(x + getCol(), y + getRow());
+          slot.active = header.track_type[xpos];
+          slot.store_in_grid(xpos, ypos);
+        } else if (slot_load == 1) {
+          if (height > 1 && y == 0) {
+            mcl_actions.chains[xpos].init();
+          }
+          track_select_array[xpos] = 1;
         }
       }
+      if (slot_load == 1) {
+        mcl_actions.load_tracks(ypos, track_select_array);
+      }
       // If all slots are deleted then clear the row name
-      if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
+      else if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
         header.active = activate_header;
         strcpy(header.name, "\0");
-        proj.write_grid_row_header(&header, y + getRow());
+        proj.write_grid_row_header(&header, ypos);
       }
     }
+    mcl_cfg.chain_mode = chain_mode_old;
   }
   if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid();
@@ -728,6 +754,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   }
 
   slot_apply = 0;
+  slot_load = 0;
   slot_clear = 0;
   slot_copy = 0;
   slot_paste = 0;
@@ -748,7 +775,13 @@ bool GridPage::handleEvent(gui_event_t *event) {
         inc = 4;
       }
       if (show_slot_menu) {
+
         switch (key) {
+        case MDX_KEY_YES: {
+          slot_load = 1;
+          apply_slot_changes();
+          return true;
+        }
         case MDX_KEY_COPY: {
           slot_copy = 1;
           apply_slot_changes();
