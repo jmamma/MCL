@@ -1,6 +1,6 @@
-#include <avr/pgmspace.h>
 #include "MCL_impl.h"
 #include "ResourceManager.h"
+#include <avr/pgmspace.h>
 
 const PageCategory Categories[] PROGMEM = {
     {"MAIN", 4, 0},
@@ -103,8 +103,8 @@ void PageSelectPage::init() {
   classic_display = false;
 #endif
   loop_init = true;
-   // md_exploit.on(switch_tracks);
-    note_interface.state = true;
+  // md_exploit.on(switch_tracks);
+  note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   display();
@@ -112,10 +112,11 @@ void PageSelectPage::init() {
 }
 
 void PageSelectPage::md_prepare() {
-    kit_cb.init();
-    auto listener = MD.getSysexListener();
-    listener->addOnKitMessageCallback(&kit_cb, (sysex_callback_ptr_t) &MDCallback::onReceived);
-    MD.requestKit(0x7F);
+  kit_cb.init();
+  auto listener = MD.getSysexListener();
+  listener->addOnKitMessageCallback(
+      &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
+  MD.requestKit(0x7F);
 }
 
 void PageSelectPage::cleanup() {
@@ -174,15 +175,15 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::loop() {
-/*  if (loop_init) {
-    bool switch_tracks = false;
-    // md_exploit.off(switch_tracks);
-    trig_interface.on();
-    md_prepare();
-    // md_exploit.on(switch_tracks);
-    note_interface.state = true;
-    loop_init = false;
-  } */
+  /*  if (loop_init) {
+      bool switch_tracks = false;
+      // md_exploit.off(switch_tracks);
+      trig_interface.on();
+      md_prepare();
+      // md_exploit.on(switch_tracks);
+      note_interface.state = true;
+      loop_init = false;
+    } */
 
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur - enc_->old;
@@ -311,17 +312,23 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64; 
+    uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_SONG: {
-          goto release;
-        }   
+      case MDX_KEY_SONG: {
+        goto release;
+      }
+      }
+    } else {
+      switch (key) {
+      case MDX_KEY_NO: {
+        goto load_grid;
+      }
       }
     }
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-    release:
+  release:
     LightPage *p;
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
@@ -335,6 +342,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  load_grid:
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
     return true;
