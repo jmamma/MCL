@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4002
+#define CONFIG_VERSION 4000
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
