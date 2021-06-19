@@ -89,7 +89,7 @@ bool MCLSysConfig::cfg_init() {
   auto_normalize = 1;
   chain_mode = CHAIN_MANUAL;
   chain_queue_length = 1;
-  chain_load_quant = 2;
+  chain_load_quant = 4;
   link_rand_min = 0;
   link_rand_max = 1;
   ram_page_mode = 0;
