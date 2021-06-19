@@ -365,7 +365,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 #endif
 
       if (note_interface.notes_count_on() == 0) {
-      //  encoder_level_handle(mixer_page.encoders[0]);
+        //  encoder_level_handle(mixer_page.encoders[0]);
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           route_page.toggle_routes_batch();
         }
@@ -389,13 +389,25 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   #endif
     }
   */
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_NO: {
+        goto reset_params;
+      }
+      }
+    }
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     trig_interface.on();
     GUI.setPage(&page_select_page);
     return true;
   }
-  
+
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  reset_params:
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.is_note_on(i)) {
         for (uint8_t c = 0; c < 24; c++) {
@@ -463,7 +475,9 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track_param == 32) { return; } //don't process mute
+  if (track_param == 32) {
+    return;
+  } // don't process mute
   for (int i = 0; i < 16; i++) {
     if ((note_interface.is_note_on(i)) && (i != track)) {
       MD.setTrackParam(i, track_param, value);
