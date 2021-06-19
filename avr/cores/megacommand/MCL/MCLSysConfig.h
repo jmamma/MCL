@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 2032
+#define CONFIG_VERSION 4002
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -36,13 +36,18 @@ public:
   uint8_t midi_forward;
   uint8_t auto_save;
   uint8_t chain_mode;
-  uint8_t link_rand_min;
-  uint8_t link_rand_max;
+  uint8_t chain_queue_length;
+  uint8_t chain_load_quant;
+
   uint8_t auto_normalize;
   uint8_t ram_page_mode;
   uint8_t track_select;
   uint16_t track_type_select;
   uint8_t uart2_device;
+
+  //to be deleted
+  uint8_t link_rand_min;
+  uint8_t link_rand_max;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

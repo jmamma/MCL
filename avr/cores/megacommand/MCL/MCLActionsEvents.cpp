@@ -33,6 +33,7 @@ void MCLActionsCallbacks::StopHardCallback() {
       row_array[n] = mcl_actions.chains[n].rows[0];
       mcl_actions.chains[n].pos = 0;
       proceed = true;
+      grid_page.last_active_row = mcl_actions.chains[n].rows[0];
     }
   }
 

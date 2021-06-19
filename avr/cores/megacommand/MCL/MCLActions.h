@@ -48,6 +48,7 @@ public:
 };
 
 #define QUANT_LEN 255
+
 class MCLActions : public LinkModeData {
 public:
   uint8_t do_kit_reload;
@@ -66,14 +67,20 @@ public:
   void setup();
 
   uint8_t get_quant() {
-    uint8_t q;
-    if (gridio_param4.cur == 1) {
-      q = QUANT_LEN;
-    } else {
-      q = 1 << gridio_param4.cur;
-    }
+    uint8_t q = 1 << mcl_cfg.chain_load_quant;
     if (q < 4) {
       q = 4;
+    }
+    return q;
+  }
+
+  //This is the track length quantisatioe
+  uint8_t get_chain_length() {
+    uint8_t q;
+    if (mcl_cfg.chain_queue_length == 1) {
+      q = QUANT_LEN; //use slot settings
+    } else {
+      q = 1 << mcl_cfg.chain_queue_length; //override
     }
     return q;
   }

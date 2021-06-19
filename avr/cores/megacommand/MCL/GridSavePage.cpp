@@ -20,7 +20,7 @@ void GridSavePage::draw_popup() {
 
   if (!show_track_type) {
     strcpy(str, "SAVE TO  ");
-    str[8] = 'A' + proj.get_grid();
+    str[8] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
 }

@@ -3,8 +3,8 @@
 #include "MCLMemory.h"
 #include <string.h>
 
-#define CHAIN_AUTO 1
-#define CHAIN_MANUAL 2
+#define CHAIN_MANUAL 1
+#define CHAIN_AUTO 2
 #define CHAIN_QUEUE 3
 
 class GridChain {

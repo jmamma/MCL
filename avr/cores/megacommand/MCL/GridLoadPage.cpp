@@ -13,11 +13,12 @@ void GridLoadPage::init() {
   MD.popup_text("LOAD SLOTS", true);
   note_interface.state = true;
   // GUI.display();
+  encoders[0]->cur = mcl_cfg.chain_mode;
+  encoders[1]->cur = mcl_cfg.chain_queue_length;
+  encoders[3]->cur = mcl_cfg.chain_load_quant;
 }
 
-void GridLoadPage::setup() {
-  encoders[3]->cur = 4;
-}
+void GridLoadPage::setup() { encoders[3]->cur = 4; }
 
 void GridLoadPage::draw_popup() {
   char str[16];
@@ -25,9 +26,43 @@ void GridLoadPage::draw_popup() {
 
   if (!show_track_type) {
     strcpy(str, "LOAD FROM  ");
-    str[10] = 'A' + proj.get_grid();
+    str[10] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
+}
+
+void GridLoadPage::get_modestr(char *modestr) {
+  if (encoders[0]->hasChanged()) {
+    mcl_cfg.chain_mode = encoders[0]->cur;
+  }
+  if (encoders[1]->hasChanged()) {
+    if (encoders[0]->cur == CHAIN_QUEUE) {
+      mcl_cfg.chain_queue_length = encoders[1]->cur;
+    } else {
+      // Lock encoder
+      encoders[1]->cur = encoders[1]->old;
+    }
+  }
+  if (encoders[3]->hasChanged()) {
+    mcl_cfg.chain_load_quant = encoders[3]->cur;
+  }
+
+  switch (encoders[0]->cur) {
+  case CHAIN_MANUAL: {
+    strcpy(modestr, "MAN");
+    break;
+  }
+
+  case CHAIN_QUEUE: {
+    strcpy(modestr, "QUE");
+    break;
+  }
+
+  case CHAIN_AUTO: {
+    strcpy(modestr, "AUT");
+    break;
+  }
+  }
 }
 
 void GridLoadPage::display() {
@@ -47,30 +82,44 @@ void GridLoadPage::display() {
                        mute_mask, slide_mask);
 
     char K[4] = {'\0'};
+    /*
+     char K[4] = {'\0'};
 
-    // draw step count
-    uint8_t step_count =
-        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-        (64 *
-         ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-    mcl_gui.put_value_at(step_count, K);
+     // draw step count
+     uint8_t step_count =
+         (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+         (64 *
+          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+     mcl_gui.put_value_at(step_count, K);
+     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
+                               "STEP", K);
+ */
+
+    char modestr[7];
+    get_modestr(modestr);
+
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
-                              "STEP", K);
+                              "CHAIN", modestr);
 
+    if (encoders[0]->getValue() == CHAIN_QUEUE) {
+      if (encoders[1]->getValue() == 1) {
+        strcpy(K, "--");
+      } else {
+        uint8_t x = 1 << encoders[1]->getValue();
+        mcl_gui.put_value_at(x, K);
+      }
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 32, MCLGUI::s_menu_y + 4,
+                                "LEN", K);
+    }
     // draw quantize
-    if (encoders[3]->getValue() == 1) {
-      strcpy(K, "--");
-    }
-
-    else if ((encoders[3]->getValue() < 7) && (encoders[3]->getValue() > 1)) {
-      uint8_t x = 1 << encoders[3]->getValue();
-      mcl_gui.put_value_at(x, K);
-    }
+    uint8_t x = 1 << encoders[3]->getValue();
+    mcl_gui.put_value_at(x, K);
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
                               MCLGUI::s_menu_y + 4, "QUANT", K);
 
     oled_display.setFont(&TomThumb);
     // draw data flow in the center
+    /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 12);
     oled_display.print("SND");
     oled_display.setCursor(46, MCLGUI::s_menu_y + 19);
@@ -83,6 +132,7 @@ void GridLoadPage::display() {
     oled_display.print("MD");
     oled_display.setCursor(74, MCLGUI::s_menu_y + 19);
     oled_display.print("SEQ");
+    */
   }
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -109,25 +159,24 @@ void GridLoadPage::load() {
   GUI.setPage(&grid_page);
   trig_interface.off();
   mcl_actions.load_tracks(grid_page.encoders[1]->getValue(),
-                           track_select_array);
+                          track_select_array);
 }
 
 void GridLoadPage::group_select() {
-    show_track_type = true;
-    MD.popup_text("LOAD GROUPS", true);
-    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+  show_track_type = true;
+  MD.popup_text("LOAD GROUPS", true);
+  MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
 void GridLoadPage::group_load(uint8_t row) {
 
-    uint8_t track_select_array[NUM_SLOTS] = {0};
-    track_select_array_from_type_select(track_select_array);
-    //   load_tracks_to_md(-1);
-    oled_display.textbox("LOAD GROUPS", "");
-    oled_display.display();
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(row,
-                             track_select_array);
+  uint8_t track_select_array[NUM_SLOTS] = {0};
+  track_select_array_from_type_select(track_select_array);
+  //   load_tracks_to_md(-1);
+  oled_display.textbox("LOAD GROUPS", "");
+  oled_display.display();
+  mcl_actions.write_original = 1;
+  mcl_actions.load_tracks(row, track_select_array);
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {
@@ -167,26 +216,26 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-        case MDX_KEY_YES:
+      case MDX_KEY_YES:
         group_select();
-        }
+      }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_YES:
-          goto load_groups;
-        }
+      case MDX_KEY_YES:
+        goto load_groups;
       }
     }
+  }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    //  write the whole row
-    load_groups:
+  //  write the whole row
+  load_groups:
     trig_interface.off();
 
     group_load(grid_page.encoders[1]->getValue());
 
-   GUI.setPage(&grid_page);
+    GUI.setPage(&grid_page);
     return true;
   }
 }

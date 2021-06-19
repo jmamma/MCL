@@ -34,7 +34,9 @@ extern MCLEncoder param4;
 
 extern GridPage grid_page;
 
-extern MCLEncoder gridio_param1;
+extern MCLEncoder gridio_save1;
+extern MCLEncoder gridio_load1;
+
 extern MCLEncoder gridio_param2;
 extern MCLEncoder gridio_param3;
 extern MCLEncoder gridio_param4;
