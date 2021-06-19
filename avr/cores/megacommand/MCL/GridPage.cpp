@@ -433,6 +433,7 @@ void GridPage::display_grid() {
       case MDLFO_TRACK_TYPE:
         str[0] = 'L';
         str[1] = 'F';
+        break;
       case GRIDCHAIN_TRACK_TYPE:
         str[0] = 'C';
         str[1] = 'N';
