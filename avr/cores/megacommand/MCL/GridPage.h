@@ -35,6 +35,7 @@ public:
 
   bool reload_slot_models;
   bool show_slot_menu = false;
+  bool slot_menu_hold = false;
   bool write_cfg = false;
 
   uint8_t active_slots[NUM_SLOTS];
@@ -72,7 +73,7 @@ public:
   void update_row_state(uint8_t row, bool state);
   void set_active_row(uint8_t row);
   void send_active_row();
-
+  bool is_slot_queue(uint8_t x, uint8_t y);
   void load_slot_models();
   void display_slot_menu();
   void display_counters();

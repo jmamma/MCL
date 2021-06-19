@@ -136,7 +136,6 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
     {
         //          m  r    n  d   p  f   o
         {"GRID: ",  0, 2,   2, 31, 0, 0,  52},
-        {"CHAIN:",  1, 4,   3, 32, 0, 0,  20},
         {"LOOP: ",  0, 64,  0, 33, 0, 0,  0},
         {"ROW:   ", 0, 128, 0, 34, 0, 0,  0},
    #ifndef OLED_DISPLAY

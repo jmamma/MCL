@@ -192,8 +192,16 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_YES:
+      case MDX_KEY_YES: {
         group_select();
+        return true;
+      }
+      case MDX_KEY_BANKA:
+      case MDX_KEY_BANKB:
+      case MDX_KEY_BANKC: {
+        encoders[0]->cur = key - MDX_KEY_BANKA;
+        return true;
+      }
       }
     }
 

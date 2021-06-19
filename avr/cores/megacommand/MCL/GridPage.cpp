@@ -5,6 +5,7 @@ void GridPage::init() {
   encoders[0] = &param1;
   encoders[1] = &param2;
   show_slot_menu = false;
+  slot_menu_hold = 0;
   reload_slot_models = false;
   trig_interface.off();
   load_slot_models();
@@ -345,6 +346,15 @@ void GridPage::display_grid_info() {
   oled_display.setTextColor(WHITE, BLACK);
 #endif
 }
+bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
+ uint8_t  slot = proj.get_grid() * GRID_WIDTH + x;
+  if (mcl_actions.chains[slot].is_mode_queue() && !show_slot_menu) {
+  for (uint8_t n = 0; n < mcl_actions.chains[slot].num_of_links; n++) {
+     if (mcl_actions.chains[slot].rows[n] == y) { return true; }
+  }
+  }
+  return false;
+}
 
 void GridPage::display_grid() {
 #ifdef OLED_DISPLAY
@@ -435,8 +445,11 @@ void GridPage::display_grid() {
         break;
       }
       //  Highlight the current cursor position + slot menu apply range
-      if (in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
-                  encoders[3]->cur - 1)) {
+      bool a = in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
+                  encoders[3]->cur - 1);
+      bool b = is_slot_queue(track_idx, row_idx);
+
+      if (a ^ b) {
         oled_display.fillRect(cur_posx - 1, cur_posy - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
         active_cue_color = BLACK;
@@ -777,9 +790,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
       if (show_slot_menu) {
 
         switch (key) {
+        case MDX_KEY_NO: {
+          goto slot_menu_off;
+        }
         case MDX_KEY_YES: {
           slot_load = 1;
           apply_slot_changes();
+          if (slot_menu_hold) {
+          goto slot_menu_off;
+          }
           return true;
         }
         case MDX_KEY_COPY: {
@@ -799,18 +818,26 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_UP: {
           param4.cur -= inc;
+          slot_menu_hold = 1;
+          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_DOWN: {
           param4.cur += inc;
+          slot_menu_hold = 1;
+          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_LEFT: {
           param3.cur = max(0, param3.cur - inc);
+          slot_menu_hold = 1;
+          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_RIGHT: {
           param3.cur += inc;
+          slot_menu_hold = 1;
+          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         }
@@ -864,6 +891,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
+        slot_menu_off:
         if (show_slot_menu) {
           apply_slot_changes(true);
           init();

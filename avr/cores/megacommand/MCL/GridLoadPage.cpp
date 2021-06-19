@@ -216,10 +216,19 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_YES:
+      case MDX_KEY_YES: {
         group_select();
+        return true;
+      }
+      case MDX_KEY_BANKA:
+      case MDX_KEY_BANKB:
+      case MDX_KEY_BANKC: {
+        encoders[0]->cur = key - MDX_KEY_BANKA + 1;
+        return true;
+      }
       }
     }
+
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:

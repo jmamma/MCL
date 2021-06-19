@@ -177,6 +177,9 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
+        if (GUI.currentPage() == &grid_load_page || GUI.currentPage() == &grid_save_page) {
+          return false;
+        }
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
         }
