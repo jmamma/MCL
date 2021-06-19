@@ -249,8 +249,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
+        if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
         encoders[0]->cur = key - MDX_KEY_BANKA + 1;
         return true;
+        }
       }
       }
     }
@@ -261,6 +263,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
         goto load_groups;
       }
     }
+    return false;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
