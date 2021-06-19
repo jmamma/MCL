@@ -67,9 +67,11 @@ public:
   void setup();
 
   uint8_t get_quant() {
-    uint8_t q = 1 << mcl_cfg.chain_load_quant;
-    if (q < 4) {
-      q = 4;
+    uint8_t q;
+    if (mcl_cfg.chain_load_quant == 1) {
+      q = QUANT_LEN; //use slot settings
+    } else {
+      q = 1 << mcl_cfg.chain_load_quant; //override
     }
     return q;
   }
@@ -103,7 +105,7 @@ public:
   void manual_transition(int row, uint8_t *slot_select_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
-  void calc_next_slot_transition(uint8_t n);
+  void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false);
   void calc_next_transition();
   void calc_latency();
 

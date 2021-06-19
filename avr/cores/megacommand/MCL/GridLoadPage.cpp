@@ -15,10 +15,10 @@ void GridLoadPage::init() {
   encoders[3]->cur = mcl_cfg.chain_load_quant;
 }
 
-void GridLoadPage::setup() { encoders[3]->cur = 4; }
+void GridLoadPage::setup() {}
 
 void GridLoadPage::get_mode_str(char *str) {
-   switch (encoders[0]->cur) {
+  switch (encoders[0]->cur) {
   case CHAIN_MANUAL: {
     strcpy(str, "MANUAL");
     break;
@@ -34,7 +34,6 @@ void GridLoadPage::get_mode_str(char *str) {
     break;
   }
   }
-
 }
 void GridLoadPage::draw_popup_title() {
   char modestr[16] = "LOAD ";
@@ -126,8 +125,12 @@ void GridLoadPage::display() {
                                 "LEN", K);
     }
     // draw quantize
-    uint8_t x = 1 << encoders[3]->getValue();
-    mcl_gui.put_value_at(x, K);
+    if (encoders[3]->getValue() == 1) {
+      strcpy(K, "--");
+    } else {
+      uint8_t x = 1 << encoders[3]->getValue();
+      mcl_gui.put_value_at(x, K);
+    }
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
                               MCLGUI::s_menu_y + 4, "QUANT", K);
 
