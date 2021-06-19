@@ -71,12 +71,12 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 31
     &grid_page.grid_select_apply, &mcl_cfg.chain_mode, &slot.link.loops,
     &slot.link.row, &grid_page.slot_apply, &grid_page.slot_clear,
-    &grid_page.slot_copy, &grid_page.slot_paste,
+    &grid_page.slot_copy, &grid_page.slot_paste, &slot.link.length,
 
-    // 39
+    // 40
     &WavDesignerPage::opt_mode, &WavDesignerPage::opt_shape,
 
-    // 41 - end
+    // 42 - end
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {

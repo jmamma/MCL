@@ -662,7 +662,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
-        (temp_slot.link.loops != slot.link.loops)) {
+        (temp_slot.link.loops != slot.link.loops) || (temp_slot.link.length != slot.link.length)) {
       slot_update = 1;
       DEBUG_PRINTLN("Slot update");
     }
@@ -932,6 +932,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[2]->cur = 1;
     encoders[3]->cur = 1;
     slot_apply = 0;
+    if (!slot.is_ext_track()) {
+    grid_slot_page.menu.enable_entry(1, true);
+    grid_slot_page.menu.enable_entry(2, false);
+    }
+    else {
+    grid_slot_page.menu.enable_entry(1, false);
+    grid_slot_page.menu.enable_entry(2, true);
+    }
     show_slot_menu = true;
     grid_slot_page.init();
     return true;

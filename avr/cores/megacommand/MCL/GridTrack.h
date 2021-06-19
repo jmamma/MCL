@@ -44,6 +44,7 @@ public:
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
+  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
 
   // load header without data from grid
   bool load_from_grid(uint8_t column, uint16_t row);

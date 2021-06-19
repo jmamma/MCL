@@ -37,7 +37,7 @@ void MCLSeq::setup() {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_2X;
   }
-  
+
   enable();
 
   MidiClock.addOnMidiStopCallback(
