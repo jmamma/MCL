@@ -39,19 +39,21 @@ void MCLActionsCallbacks::StopHardCallback() {
 
   if (!proceed) { goto end; }
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
+ /*
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
 
-  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
-  MidiUartParent::handle_midi_lock = 1;
-  for (uint8_t i = 0; i < NUM_DEVS; ++i) {
+    for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     if (elektron_devs[i] != nullptr &&
         elektron_devs[i]->canReadWorkspaceKit()) {
       elektron_devs[i]->getBlockingKit(0x7F);
     }
   }
+  */
   DEBUG_PRINTLN("StopHard");
   DEBUG_PRINTLN((int)SP);
   mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
