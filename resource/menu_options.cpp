@@ -39,7 +39,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 48: SEQ EDIT
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
   // 52: GRID
-  {0, "A"}, {1, "B"},
+  {0, "X"}, {1, "Y"},
   // 54: PIANO ROLL
   {0,"NOTE"},
   // 55: OFF
