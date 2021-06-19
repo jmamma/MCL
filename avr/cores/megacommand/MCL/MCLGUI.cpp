@@ -17,6 +17,7 @@ void MCLGUI::put_value_at(uint8_t value, char *str) {
   }
 }
 
+
 void MCLGUI::draw_textbox(const char *text, const char *text2) {
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
@@ -151,8 +152,14 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 3, BLACK);
 
   oled_display.setTextColor(BLACK);
-  auto len = strlen(title_buf) * 4;
-  oled_display.setCursor(s_title_x + (s_title_w - len) / 2, s_menu_y + 3);
+
+  auto len = strlen(title_buf);
+  uint8_t whitespace = 0;
+  for (uint8_t n = 0; n < len; n++) {
+    if (title_buf[n] == ' ') { whitespace++; }
+  }
+  len -= whitespace;
+  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 3);
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);

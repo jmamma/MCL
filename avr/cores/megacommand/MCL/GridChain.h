@@ -10,7 +10,8 @@
 class GridChain {
 public:
   GridChain() { init(); };
-  uint8_t pos;
+  uint8_t w;
+  uint8_t r;
   uint8_t num_of_links;
   uint8_t mode;
 
@@ -20,35 +21,40 @@ public:
   bool is_mode_queue() { return (mode == CHAIN_QUEUE && num_of_links); }
 
   void init() {
-    pos = 0;
+    r = 0;
+    w = 0;
     mode = CHAIN_MANUAL;
     num_of_links = 0;
     memset(rows, 255, sizeof(rows));
   }
 
   bool add(uint8_t row, uint8_t length) {
-    if (num_of_links == NUM_LINKS) {
-      num_of_links = 0;
-    }
-    rows[num_of_links] = row;
-    lengths[num_of_links] = length;
+    rows[w] = row;
+    lengths[w] = length;
 
-    num_of_links++;
+    if (num_of_links < NUM_LINKS) {
+      num_of_links++;
+    }
+    w++;
+    if (w == NUM_LINKS) {
+      w = 0;
+    }
     return true;
   }
 
-  uint8_t get_row() { return rows[pos]; }
+  void set_pos(uint8_t pos) { r = pos; }
+  uint8_t get_row() { return rows[r]; }
 
   void inc() {
     if (!is_mode_queue())
       return;
-    pos++;
-    if (pos == num_of_links) {
-      pos = 0;
+    r++;
+    if (r == num_of_links) {
+      r = 0;
     }
   }
 
-  uint8_t get_length() { return lengths[pos]; }
+  uint8_t get_length() { return lengths[r]; }
 
-  void reset() { pos = num_of_links <= 1 ? 0 : 1; }
+  void reset() { r = num_of_links <= 1 ? 0 : 1; }
 };
