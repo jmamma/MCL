@@ -16,6 +16,16 @@ byte* ResourceManager::__use_resource(const void* pgm) {
     return pos;
 }
 
+byte* ResourceManager::Allocate(size_t sz) {
+  byte* pos = m_buffer + m_bufsize;
+  m_bufsize += sz;
+  return pos;
+}
+
+void ResourceManager::Free(size_t sz) {
+  m_bufsize -= sz;
+}
+
 // XXX 4KB buf on stack is too heavy
 // consider writing to SD card
 // SWAP partition!!

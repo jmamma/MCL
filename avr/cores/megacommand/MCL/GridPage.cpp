@@ -942,6 +942,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
     show_slot_menu = true;
     grid_slot_page.init();
+    gen_menu_row_names();
     return true;
   }
 
@@ -1006,4 +1007,25 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   return false;
+}
+
+void gen_menu_row_names() {
+  menu_option_t* p = (menu_option_t*) R.Allocate(sizeof(menu_option_t) * 128);
+  grid_slot_page.menu.set_custom_options(p);
+  uint8_t row_id = 0;
+  for (char bank = 'A'; bank <= 'H'; ++bank) {
+    for (uint8_t i = 1; i <= 16; ++i) {
+      p->pos = row_id++;
+      p->name[0] = bank;
+      if (i < 10) {
+        p->name[1] = '0';
+        p->name[2] = '0' + i;
+      } else {
+        p->name[1] = '1';
+        p->name[2] = '0' + i - 10;
+      }
+      p->name[3] = '\0';
+      ++p;
+    }
+  }
 }

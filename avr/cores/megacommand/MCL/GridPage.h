@@ -95,5 +95,6 @@ public:
 
 extern void apply_slot_changes_cb();
 extern void rename_row();
+extern void gen_menu_row_names();
 
 #endif /* GRIDPAGE_H__ */

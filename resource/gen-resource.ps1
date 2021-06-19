@@ -28,6 +28,7 @@ function compile($f) {
     -I../avr/cores/megacommand/GUI `
     -I../avr/cores/megacommand/MD `
     -I../avr/cores/megacommand/MNM `
+    -fpermissive `
     -DF_CPU=16000000L `
     -DARDUINO=10803 `
     -DARDUINO_AVR_MEGA2560 `
