@@ -7,7 +7,7 @@ void GridLoadPage::init() {
   note_interface.init_notes();
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
-  MD.popup_text("LOAD SLOTS", true);
+  draw_popup_title();
   note_interface.state = true;
   // GUI.display();
   encoders[0]->cur = mcl_cfg.chain_mode;
@@ -16,6 +16,31 @@ void GridLoadPage::init() {
 }
 
 void GridLoadPage::setup() { encoders[3]->cur = 4; }
+
+void GridLoadPage::get_mode_str(char *str) {
+   switch (encoders[0]->cur) {
+  case CHAIN_MANUAL: {
+    strcpy(str, "MANUAL");
+    break;
+  }
+
+  case CHAIN_QUEUE: {
+    strcpy(str, "QUEUE");
+    break;
+  }
+
+  case CHAIN_AUTO: {
+    strcpy(str, "AUTO");
+    break;
+  }
+  }
+
+}
+void GridLoadPage::draw_popup_title() {
+  char modestr[16] = "LOAD ";
+  get_mode_str(modestr + 5);
+  MD.popup_text(modestr, true);
+}
 
 void GridLoadPage::draw_popup() {
   char str[16];
@@ -31,6 +56,7 @@ void GridLoadPage::draw_popup() {
 void GridLoadPage::get_modestr(char *modestr) {
   if (encoders[0]->hasChanged()) {
     mcl_cfg.chain_mode = encoders[0]->cur;
+    draw_popup_title();
   }
   if (encoders[1]->hasChanged()) {
     if (encoders[0]->cur == CHAIN_QUEUE) {
@@ -80,8 +106,8 @@ void GridLoadPage::display() {
 
     char K[4] = {'\0'};
 
- //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
- //                              "STEP", K);
+    //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
+    //                              "STEP", K);
 
     char modestr[7];
     get_modestr(modestr);
@@ -99,22 +125,21 @@ void GridLoadPage::display() {
       mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28, MCLGUI::s_menu_y + 4,
                                 "LEN", K);
     }
-       // draw quantize
+    // draw quantize
     uint8_t x = 1 << encoders[3]->getValue();
     mcl_gui.put_value_at(x, K);
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
                               MCLGUI::s_menu_y + 4, "QUANT", K);
 
     oled_display.setFont(&TomThumb);
-     // draw step count
-     uint8_t step_count =
-         (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-         (64 *
-          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-     oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11, MCLGUI::s_menu_y + 18);
-     oled_display.print(step_count);
-
-
+    // draw step count
+    uint8_t step_count =
+        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
+        (64 *
+         ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+    oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11,
+                           MCLGUI::s_menu_y + 18);
+    oled_display.print(step_count);
 
     // draw data flow in the center
     /*
