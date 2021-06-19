@@ -692,7 +692,7 @@ void MCLActions::calc_next_transition() {
 
   if (slot > -1) {
     next_row = links[slot].row;
-    chain = chains[slot].mode;
+    chain = chains[slot].mode > 1;
   }
 
   MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
