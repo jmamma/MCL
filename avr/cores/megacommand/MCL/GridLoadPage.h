@@ -18,7 +18,9 @@ class GridLoadPage : public GridIOPage {
  void group_select();
  void group_load(uint8_t row);
  bool handleEvent(gui_event_t *event);
+ void get_mode_str(char *str);
  void draw_popup();
+ void draw_popup_title();
  void display();
  void init();
  void setup();
