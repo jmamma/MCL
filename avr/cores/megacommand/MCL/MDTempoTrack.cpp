@@ -31,6 +31,10 @@ bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
 
   if (column != 255 && online == true) {
     get_tempo();
+    if (merge == SAVE_MD) {
+        link.length = MD.pattern.patternLength;
+        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+    }
   }
 
   len = sizeof(MDTempoTrack);
