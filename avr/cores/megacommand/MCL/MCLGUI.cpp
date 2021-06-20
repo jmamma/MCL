@@ -1,5 +1,23 @@
 #include "MCL_impl.h"
 
+void MCLGUI::put_value_at(uint8_t value, char *str) {
+  if (value < 10) {
+    str[0] = value + '0';
+    str[1] = '\0';
+  } else if (value < 100) {
+    str[0] = (value % 100) / 10 + '0';
+    str[1] = (value % 10) + '0';
+    str[2] = '\0';
+
+  } else if (value < 1000) {
+    str[0] = (value % 1000) / 100 + '0';
+    str[1] = (value % 100) / 10 + '0';
+    str[2] = (value % 10) + '0';
+    str[3] = '\0';
+  }
+}
+
+
 void MCLGUI::draw_textbox(const char *text, const char *text2) {
 #ifdef OLED_DISPLAY
   auto oldfont = oled_display.getFont();
@@ -134,8 +152,14 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 3, BLACK);
 
   oled_display.setTextColor(BLACK);
-  auto len = strlen(title_buf) * 4;
-  oled_display.setCursor(s_title_x + (s_title_w - len) / 2, s_menu_y + 3);
+
+  auto len = strlen(title_buf);
+  uint8_t whitespace = 0;
+  for (uint8_t n = 0; n < len; n++) {
+    if (title_buf[n] == ' ') { whitespace++; }
+  }
+  len -= whitespace;
+  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 3);
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
@@ -487,10 +511,10 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
 
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {
-    itoa(timing_mid - timing, K + 1, 10);
+    put_value_at(timing_mid - timing, K + 1);
   } else {
     K[0] = '+';
-    itoa(timing - timing_mid, K + 1, 10);
+    put_value_at(timing - timing_mid, K + 1);
   }
 
   oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);
@@ -528,7 +552,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
 
 void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                            uint8_t note_height, uint8_t num_of_notes,
-                           uint64_t note_mask) {
+                           uint64_t *note_mask) {
 #ifdef OLED_DISPLAY
   const uint16_t chromatic = 0b0000010101001010;
   const uint8_t half = note_height / 2;
@@ -542,9 +566,21 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
   // draw first '|'
   oled_display.drawFastVLine(x, y, note_height, WHITE);
 
+  uint8_t first_note = 0;
+  for (uint8_t n = 0; n < 128; n++) {
+    if (IS_BIT_SET128_P(note_mask, n)) {
+      first_note = n;
+      break;
+    }
+  }
+
+  uint8_t offset = (first_note / 24) * 24;
+
+  offset = min(127 - num_of_notes, offset);
+
   for (uint8_t n = 0; n < num_of_notes; n++) {
 
-    bool pressed = IS_BIT_SET64(note_mask, n);
+    bool pressed = IS_BIT_SET128_P(note_mask, n + offset);
     bool black = IS_BIT_SET16(chromatic, note_type);
 
     if (black) {
@@ -590,7 +626,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     uint8_t idx = i + offset;
     bool in_range = idx < length;
 
-    if (note_interface.notes[i] == 1) {
+    if (note_interface.is_note_on(i)) {
       // TI feedback
       oled_display.fillRect(x + 1, y + 1, seq_w - 2, trig_h - 2, WHITE);
       // oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
@@ -670,7 +706,6 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
         show_current_step && step_count == idx && MidiClock.state == 2;
     bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
 
-    //    if (note_interface.notes[i] == 1) {
     // TI feedback
     //     oled_display.drawRect(x, y, seq_w, led_h, WHITE);
     if (!in_range) {

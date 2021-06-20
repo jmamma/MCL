@@ -17,9 +17,15 @@
 #define MDTEMPO_TRACK_TYPE 10
 #define MDLFO_TRACK_TYPE 11
 
+#define ARP_TRACK_TYPE 12
+#define MD_ARP_TRACK_TYPE 13
+#define EXT_ARP_TRACK_TYPE 14
+
+#define GRIDCHAIN_TRACK_TYPE 15
+
 #define EMPTY_TRACK_TYPE 0
 
-#include "GridChain.h"
+#include "GridLink.h"
 #include "MCLMemory.h"
 #include "SeqTrack.h"
 
@@ -27,17 +33,18 @@ class GridTrack_270 {
 public:
   uint8_t active = EMPTY_TRACK_TYPE;
   char trackName[17];
-  GridChain_270 chain;
+  GridLink_270 link;
 };
 
 class GridTrack {
 public:
   uint8_t active = EMPTY_TRACK_TYPE;
-  GridChain chain;
+  GridLink link;
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
+  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
 
   // load header without data from grid
   bool load_from_grid(uint8_t column, uint16_t row);
@@ -63,12 +70,12 @@ public:
   }
 
   void init() {
-    chain.length = 16;
-    chain.speed = SEQ_SPEED_1X;
+    link.length = 16;
+    link.speed = SEQ_SPEED_1X;
   }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
-  void load_chain_data(SeqTrack *seq_track);
+  void load_link_data(SeqTrack *seq_track);
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}

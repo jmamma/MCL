@@ -32,7 +32,7 @@ uint16_t MDFXTrack::send_fx(bool send) {
 }
 
 void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  load_chain_data(seq_track);
+  load_link_data(seq_track);
   place_fx_in_kit();
 }
 
@@ -84,6 +84,10 @@ bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   if (column != 255 && online == true) {
     get_fx_from_kit();
+    if (merge == SAVE_MD) {
+        link.length = MD.pattern.patternLength;
+        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+    }
   }
 
   len = sizeof(MDFXTrack);

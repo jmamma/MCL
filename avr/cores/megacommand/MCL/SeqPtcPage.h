@@ -27,40 +27,18 @@ public:
   void onControlChangeCallback_Midi2(uint8_t *msg);
 };
 
-#define ARP_UP 0
-#define ARP_DOWN 1
-#define ARP_UPDOWN 2
-#define ARP_DOWNUP 3
-#define ARP_UPNDOWN 4
-#define ARP_DOWNNUP 5
-#define ARP_CONV 6
-#define ARP_DIV 7
-#define ARP_CONVDIV 8
-#define ARP_PINKUP 9
-#define ARP_PINKDOWN 10
-#define ARP_THUMBUP 11
-#define ARP_THUMBDOWN 12
-#define ARP_UPP 13
-#define ARP_DOWNP 14
-#define ARP_UP2 15
-#define ARP_DOWN2 16
-#define ARP_RND 17
-
-#define ARP_ON 1
-#define ARP_LATCH 2
-#define ARP_OFF 0
-
-#define ARP_MAX_NOTES 16 * 3
 class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
-  uint8_t focus_track = 255;
   uint8_t key = 0;
   uint8_t poly_count = 0;
   uint8_t poly_max = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
-  uint64_t note_mask = 0;
+
+  uint64_t dev_note_masks[NUM_DEVS][2];
+  uint64_t note_mask[2];
+
   bool cc_link_enable;
 
   SeqPtcMidiEvents midi_events;
@@ -68,40 +46,27 @@ public:
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   uint8_t calc_poly_count();
-  uint8_t seq_ext_pitch(uint8_t note_num, MidiDevice* device = &generic_midi_device);
-  uint8_t process_ext_pitch(uint8_t note_num, bool note_type, MidiDevice* device = &generic_midi_device);
-  uint8_t get_machine_pitch(uint8_t track, uint8_t note_num);
-  uint8_t get_next_voice(uint8_t pitch);
-  uint8_t calc_scale_note(uint8_t note_num);
+  uint8_t seq_ext_pitch(uint8_t note_num);
+  uint8_t process_ext_pitch(uint8_t note_num, bool note_type);
+  uint8_t get_machine_pitch(uint8_t track, uint8_t note_num, uint8_t fine_tune = 255);
+  uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
+  uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
 
   void set_last_ext_track(uint8_t channel);
-  void trig_md(uint8_t note_num);
+  void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);
   void trig_md_fromext(uint8_t note_num);
+
+  void note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
+  void note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
+  
   void clear_trig_fromext(uint8_t note_num);
 
   void config_encoders();
   void init_poly();
 
-  bool arp_enabled = false;
-  uint8_t arp_notes[ARP_MAX_NOTES];
-  uint8_t arp_len;
-
-  uint8_t arp_idx;
-  uint8_t arp_base;
-  uint8_t arp_dir;
-  uint8_t arp_count;
-  uint8_t arp_mod12_counter;
-
-  void setup_arp();
-  void remove_arp();
-  void render_arp();
+  void render_arp(bool recalc_notemask_ = true);
 
   void recalc_notemask();
-
-  uint8_t arp_get_next_note_up(int8_t);
-  uint8_t arp_get_next_note_down(uint8_t);
-  ALWAYS_INLINE() void on_192_callback();
-  ALWAYS_INLINE() void onMidiStopCallback();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

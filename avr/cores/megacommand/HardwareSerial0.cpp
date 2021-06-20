@@ -33,9 +33,6 @@
 // HardwareSerial instance in as well. Putting each instance in its own
 // file prevents the linker from pulling in any unused instances in the
 // first place.
-
-#if defined(ENABLE_HWSERIAL0)
-
 #if defined(HAVE_HWSERIAL0)
 #ifdef MEGACOMMAND
 #if defined(USART_RX_vect)
@@ -82,4 +79,3 @@ bool Serial0_available() {
   return Serial.available();
 }
 #endif // HAVE_HWSERIAL0
-#endif // ENABLE_HWSERIAL0

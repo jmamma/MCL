@@ -26,7 +26,7 @@ public:
   bool state;
   void onMidiStartCallback();
   void onMidiStopCallback();
-
+  void StopHardCallback();
   void setup_callbacks();
   void remove_callbacks();
 };

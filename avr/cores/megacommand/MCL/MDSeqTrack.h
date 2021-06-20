@@ -21,6 +21,9 @@ public:
   uint64_t oneshot_mask;
   uint8_t locks_params_orig[NUM_LOCKS];
 
+  static uint16_t sync_cursor;
+  static uint16_t md_trig_mask;
+
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
@@ -42,7 +45,7 @@ public:
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
   ALWAYS_INLINE() void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
-  void get_step_locks(uint8_t step, uint8_t *params);
+  void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
 
   ALWAYS_INLINE() void recalc_slides();
   ALWAYS_INLINE()
@@ -71,8 +74,8 @@ public:
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
   void clear_step_lock(uint8_t step, uint8_t param_id);
-  void clear_locks(bool reset_params = true);
-  void clear_track(bool locks = true, bool reset_params = true);
+  void clear_locks(bool reset_params_ = true);
+  void clear_track(bool locks = true, bool reset_params_ = true);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
   void update_kit_params();
@@ -90,7 +93,7 @@ public:
 
   void modify_track(uint8_t dir);
 
-  void set_speed(uint8_t _speed);
+  void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);

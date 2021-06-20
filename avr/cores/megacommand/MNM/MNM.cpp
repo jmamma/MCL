@@ -315,7 +315,7 @@ void MNMClass::updateKitParams() {
   }
 }
 
-uint16_t MNMClass::sendKitParams(uint8_t *masks, void *scratchpad) {
+uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   DEBUG_PRINT_FN();
   /// Ignores masks and scratchpad, and send the whole kit.
   auto kit_pos = getCurrentKit();

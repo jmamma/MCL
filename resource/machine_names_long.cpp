@@ -3,7 +3,7 @@
 md_machine_name_t machine_names[137] = {
     {"GND---", 0},   {"GND-SN", 1},   {"GND-NS", 2},   {"GND-IM", 3},
     {"GND-SW", 4},   {"GND-PU", 5},   {"TRX-BD", 16},  {"TRX-SD", 17},
-    {"TRX-XT", 18},  {"TRX-CP", 19},  {"TRX-RS", 20},  {"TRX-RS", 21},
+    {"TRX-XT", 18},  {"TRX-CP", 19},  {"TRX-RS", 20},  {"TRX-CB", 21},
     {"TRX-CH", 22},  {"TRX-OH", 23},  {"TRX-CY", 24},  {"TRX-MA", 25},
     {"TRX-CL", 26},  {"TRX-XC", 27},  {"TRX-B2", 28},  {"TRX-S2", 29},
     {"EFM-BD", 32},  {"EFM-SD", 33},  {"EFM-XT", 34},  {"EFM-CP", 35},

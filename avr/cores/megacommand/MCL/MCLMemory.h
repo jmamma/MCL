@@ -16,6 +16,8 @@ constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 
 constexpr size_t NUM_MD_TRACKS = 16;
 
+constexpr size_t NUM_LINKS = 8;
+
 #ifdef EXT_TRACKS
 constexpr size_t NUM_A4_TRACKS = 6;
 constexpr size_t NUM_A4_SOUND_TRACKS = 4;
@@ -31,17 +33,16 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 
 constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 
-constexpr size_t NUM_AUX_TRACKS = 4;
+constexpr size_t NUM_AUX_TRACKS = 5;
+
+constexpr size_t GRIDCHAIN_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
 constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
-#include "MegaComDef.h"
-
 constexpr size_t NUM_LFO_TRACKS = 1;
 constexpr size_t NUM_FILE_ENTRIES = 256;
-constexpr size_t FILE_ENTRY_SIZE = 16;
 
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
@@ -68,7 +69,7 @@ constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
 constexpr size_t MDFX_TRACK_LEN = 43;
 constexpr size_t MDTEMPO_TRACK_LEN = 11;
-
+constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 
 //Use these to produce compiler errors that probes the sizes!
 template<uint32_t X> struct __SIZE_PROBE;
@@ -88,29 +89,18 @@ constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LE
 // GRID2 tracks start at 0x8D16
 
 // AUX Tracks
-constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_AUX_TRACKS_START;
+
+constexpr size_t BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;
+constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHAIN_TRACK_LEN;
 constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
 constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
 constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
-
 // 6x A4 tracks
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
 
 // 256x file entries (16 bytes each)
 // Start at 0xBAF4
 constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_TRACKS);
-constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + FILE_ENTRY_SIZE * NUM_FILE_ENTRIES);
+constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES);
 
 // At 0xCAF4
-
-// 4x COMSRC rx/tx buffers
-constexpr size_t NUM_COMCHANNEL_BUFFER=4;
-constexpr size_t COMCHANNEL_BUFFER_START=BANK1_FILE_ENTRIES_END;
-constexpr size_t COMCHANNEL_BUFFER_END=COMCHANNEL_BUFFER_START + NUM_COMCHANNEL_BUFFER * 2 * COMCHANNEL_BUFSIZE;
-
-// 16x COMMSG slots
-constexpr size_t NUM_COMMSG_SLOTS=16;
-constexpr size_t COMMSG_SLOTS_START=COMCHANNEL_BUFFER_END;
-constexpr size_t COMMSG_SLOTS_END=COMMSG_SLOTS_START + sizeof(commsg_t) * NUM_COMMSG_SLOTS;
-
-

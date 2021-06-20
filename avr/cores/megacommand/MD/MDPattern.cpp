@@ -145,7 +145,7 @@ bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
 bool MDPattern::fromSysex(MidiClass *midi) {
 
   init();
-  uint16_t len = midi->midiSysex.recordLen - 5;
+  uint16_t len = midi->midiSysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {

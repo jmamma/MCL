@@ -647,8 +647,8 @@ void SeqExtStepPage::display() {
     draw_pianoroll();
   } else {
     strcpy(info2, "LOCK  ");
-    itoa(pianoroll_mode, info2 + 5, 10);
-    itoa(lock_cur_y, info1, 10);
+    mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
+    mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
 
@@ -864,22 +864,19 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
 
-      auto fov_offset = seq_extstep_page.fov_offset;
-      auto cur_x = seq_extstep_page.cur_x;
       auto fov_y = seq_extstep_page.fov_y;
       auto cur_y = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
-      auto cur_w = seq_extstep_page.cur_w;
+      if (cur_y > 127) { continue; }
 
       if (fov_y >= cur_y && cur_y != 0) {
         fov_y = cur_y - 1;
       } else if (fov_y + SeqExtStepPage::fov_notes <= cur_y) {
         fov_y = cur_y - SeqExtStepPage::fov_notes;
       }
-      seq_extstep_page.fov_offset = fov_offset;
-      seq_extstep_page.cur_x = cur_x;
-      seq_extstep_page.fov_y = fov_y;
-      seq_extstep_page.cur_y = cur_y;
-      seq_extstep_page.cur_w = cur_w;
+      if (MidiClock.state != 2) {
+        seq_extstep_page.fov_y = fov_y;
+        seq_extstep_page.cur_y = cur_y;
+      }
 
       if (last_ext_track != n) {
         last_ext_track = n;

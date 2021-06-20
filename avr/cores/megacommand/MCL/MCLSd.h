@@ -7,7 +7,7 @@
 #include "new.h"
 #include "type_traits.h"
 
-#define SD_MAX_RETRIES 5
+#define SD_MAX_RETRIES 10
 
 class MCLSd {
   public:
@@ -16,6 +16,7 @@ class MCLSd {
   bool sd_state = false;
   bool sd_init();
   bool load_init();
+  bool seek(uint32_t pos, FatFile *filep);
   bool read_data(void *data, size_t len, FatFile *filep);
   bool write_data(void *data, size_t len, FatFile *filep);
   /// read data from SD card and repair vtable

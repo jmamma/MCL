@@ -1,7 +1,6 @@
 #include "GUI.h"
 #include "MidiUart.h"
 #include "WProgram.h"
-#include "MegaComUIServer.h"
 #include "Sketch.h"
 #include "Pages.h"
 
@@ -74,15 +73,13 @@ void loop();
 
 void GuiClass::loop() {
 
-  if (!EventRB.isEmpty()) {
-    clock_minutes = 0;
-    minuteclock = 0;
-#ifdef OLED_DISPLAY
-    oled_display.screen_saver = false;
-#endif
-  }
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
 
   while (!EventRB.isEmpty()) {
+    MidiUartParent::handle_midi_lock = 1;
+    clock_minutes = 0;
+    minuteclock = 0;
+    oled_display.screen_saver = false;
     gui_event_t event;
     EventRB.getp(&event);
     for (int i = 0; i < eventHandlers.size; i++) {
@@ -100,12 +97,16 @@ void GuiClass::loop() {
         continue;
     }
   }
+
+
+  MidiUartParent::handle_midi_lock = 1;
   for (int i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
       tasks.arr[i]->checkTask();
     }
   }
 
+  MidiUartParent::handle_midi_lock = 0;
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {
@@ -125,14 +126,20 @@ void GuiClass::loop() {
     oled_display.screen_saver = true;
 #endif
   }
+  MidiUartParent::handle_midi_lock = 0;
+
   display();
+
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {
       page->finalize();
     }
   }
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+
 }
+
 void GuiClass::display_lcd() {
   PageParent *page = NULL;
   if (sketch != NULL) {
@@ -194,7 +201,37 @@ void GuiClass::display() {
 #ifdef OLED_DISPLAY
 #ifndef DEBUGMODE
   if (display_mirror) {
-    megacom_uiserver.update();
+    // 7bit encode
+    while (!UART_USB_CHECK_EMPTY_BUFFER())
+      ;
+    UART_USB_WRITE_CHAR(0);
+
+    //  Serial.write(0);
+
+    uint8_t buf[8];
+
+    uint16_t n = 0;
+
+    while (n < 512) {
+      buf[0] = 0x80;
+      for (uint8_t c = 0; c < 7; c++) {
+
+        buf[c + 1] = 0x80;
+        if (n + c < 512) {
+          buf[c + 1] |= oled_display.getBuffer(n + c);
+        }
+        uint8_t msb = oled_display.getBuffer(n + c) >> 7;
+        buf[0] |= msb << c;
+      }
+      for (uint8_t c = 0; c < 8; c++) {
+        while (!UART_USB_CHECK_EMPTY_BUFFER())
+          ;
+        UART_USB_WRITE_CHAR(buf[c]);
+      }
+      // Serial.write(buf, 8);
+
+      n = n + 7;
+    }
   }
 #endif
   if (page->classic_display) {
@@ -229,8 +266,10 @@ void GuiClass::put_valuex(uint8_t idx, uint8_t value) {
 }
 
 void GuiClass::put_value_at(uint8_t idx, uint8_t value) {
-  char *data = lines[curLine].data;
+  put_value_at(idx, value, lines[curLine].data);
   lines[curLine].changed = true;
+}
+void GuiClass::put_value_at(uint8_t idx, uint8_t value, char *data) {
   data[idx] = value / 100 + '0';
   data[idx + 1] = (value % 100) / 10 + '0';
   data[idx + 2] = (value % 10) + '0';
@@ -238,21 +277,29 @@ void GuiClass::put_value_at(uint8_t idx, uint8_t value) {
 }
 
 void GuiClass::put_value_at2(uint8_t idx, uint8_t value) {
-  char *data = lines[curLine].data;
+  put_value_at2(idx, value, lines[curLine].data);  
   lines[curLine].changed = true;
+}
+void GuiClass::put_value_at2(uint8_t idx, uint8_t value, char *data) {
   data[idx] = (value % 100) / 10 + '0';
   data[idx + 1] = (value % 10) + '0';
 }
 
 void GuiClass::put_value_at1(uint8_t idx, uint8_t value) {
-  char *data = lines[curLine].data;
-  lines[curLine].changed = true;
+  put_value_at1(idx, value, lines[curLine].data);
+}
+
+void GuiClass::put_value_at1(uint8_t idx, uint8_t value, char *data) {
   data[idx] = (value % 10) + '0';
+  lines[curLine].changed = true;
 }
 
 void GuiClass::put_value_at(uint8_t idx, int value) {
-  char *data = lines[curLine].data;
+  put_value_at(idx, value, lines[curLine].data); 
   lines[curLine].changed = true;
+}
+
+void GuiClass::put_value_at(uint8_t idx, int value, char *data) {
   data[idx] = (value % 1000) / 100 + '0';
   data[idx + 1] = (value % 100) / 10 + '0';
   data[idx + 2] = (value % 10) + '0';
@@ -260,8 +307,11 @@ void GuiClass::put_value_at(uint8_t idx, int value) {
 }
 
 void GuiClass::put_value16_at(uint8_t idx, uint16_t value) {
-  char *data = lines[curLine].data;
-  lines[curLine].changed = true;
+  put_value16_at(idx, value, lines[curLine].data);
+  lines[curLine].changed = true; 
+}
+
+void GuiClass::put_value16_at(uint8_t idx, uint16_t value, char *data) {
   data[idx] = hex2c(value >> 12 & 0xF);
   data[idx + 1] = hex2c(value >> 8 & 0xF);
   data[idx + 2] = hex2c(value >> 4 & 0xF);
@@ -269,7 +319,10 @@ void GuiClass::put_value16_at(uint8_t idx, uint16_t value) {
 }
 
 void GuiClass::put_valuex_at(uint8_t idx, uint8_t value) {
-  char *data = lines[curLine].data;
+  put_valuex_at(idx, value, lines[curLine].data);
+}
+
+void GuiClass::put_valuex_at(uint8_t idx, uint8_t value, char *data) {
   lines[curLine].changed = true;
   data[idx] = hex2c(value >> 4 & 0xF);
   data[idx + 1] = hex2c(value >> 0 & 0xF);
@@ -328,7 +381,7 @@ void GuiClass::put_string_at_fill(uint8_t idx, const char *str) {
 
 void GuiClass::put_p_string_at_fill(uint8_t idx, PGM_P str) {
   char *data = lines[curLine].data;
-  strncpy_P(data + idx, str, sizeof(lines[0].data) - idx);
+  m_strncpy_p_fill(data + idx, str, sizeof(lines[0].data) - idx);
   lines[curLine].changed = true;
 }
 
@@ -339,6 +392,86 @@ void GuiClass::put_p_string_fill(PGM_P str) { put_p_string_at_fill(0, str); }
 void GuiClass::put_string(const char *str) { put_string_at(0, str); }
 
 void GuiClass::put_p_string(PGM_P str) { put_p_string_at(0, str); }
+
+void GuiClass::printf(const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  put_string(buf);
+  va_end(lp);
+}
+
+void GuiClass::printf_fill(const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  put_string_fill(buf);
+  va_end(lp);
+}
+
+void GuiClass::printf_at(uint8_t idx, const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  put_string_at(idx, buf);
+  va_end(lp);
+}
+
+void GuiClass::printf_at_fill(uint8_t idx, const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  put_string_at_fill(idx, buf);
+  va_end(lp);
+}
+
+void GuiClass::flash_printf(const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  flash_string(buf);
+  va_end(lp);
+}
+
+void GuiClass::flash_printf_fill(const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  flash_string_fill(buf);
+  va_end(lp);
+}
+
+void GuiClass::flash_printf_at(uint8_t idx, const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  flash_string_at(idx, buf);
+  va_end(lp);
+}
+
+void GuiClass::flash_printf_at_fill(uint8_t idx, const char *fmt, ...) {
+  va_list lp;
+  va_start(lp, fmt);
+
+  char buf[17];
+  vsnprintf(buf, sizeof(buf), fmt, lp);
+  flash_string_at_fill(idx, buf);
+  va_end(lp);
+}
 
 void GuiClass::clearLines() {
   for (uint8_t a = 0; a < 2; a++) {

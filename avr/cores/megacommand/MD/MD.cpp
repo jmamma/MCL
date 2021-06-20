@@ -29,38 +29,6 @@ void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   }
 }
 
-void MDClass::get_mute_state() {
-  /*  Midi.addOnNoteOnCallback(MDMidiEvents,
-   (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi); for (uint8_t n =
-   0; n < 16; n++) { MD.assignMachine(n, MID_16_MODEL, 0);
-    midi_events.mute_mask_track = n;
-
-    if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, 127); }
-    uint16_t start_clock = read_slowclock();
-    uint16_t current_clock = start_clock;
-    do {
-      current_clock = read_slowclock();
-
-      handleIncomingMidi();
-    } while ((clock_diff(start_clock, current_clock) < timeout) &&
-   !cb->received);
-
-    if (Kit.trigGroups[n] < 16) { MD.setTrigGroup(n, Kit.trigGroups[n]); }
-    assignMachine(n, kit->models[n]);
-    setLFO(track, &(kit->lfos[track]), false);
-    setTrigGroup(track, kit->trigGroups[track]);
-    for (uint8_t i = 0; i < 8; i++) {
-      setTrackParam(track, i, kit->params[track][i]);
-    }
-
-
-   }
-   Midi.removeOnNoteOnCallback(
-        &MDMidiEvents,
-   (midi_callback_ptr_t)&MDMidiEvents::onNoteOnCallback_Midi);
-  */
-}
-
 void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
     return;
@@ -109,15 +77,69 @@ const ElektronSysexProtocol md_protocol = {
     MD_SAVE_KIT_ID,
 };
 
-MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {
-  uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
-                                     50, 52, 53, 55, 57, 59, 60, 62};
+MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
 
-  global.baseChannel = 0;
-  for (int i = 0; i < 16; i++) {
-    global.drumMapping[i] = standardDrumMapping[i];
+void MDClass::setup() {
+  resetMidiMap();
+  setTrackRoutings(mcl_cfg.routing);
+
+  if (mcl_cfg.clock_rec == 0) {
+    global.clockIn = false;
+    global.clockOut = true;
+  } else {
+    global.clockIn = true;
+    global.clockOut = false;
   }
+  global.transportIn = true;
+  global.transportOut = true;
+
+  if (global.baseChannel == 0) {
+    setBaseChannel(9);
+  }
+
+  setExternalSync();
+  setProgramChange(2);
+  setLocalOn(true);
+}
+
+void MDClass::setBaseChannel(uint8_t channel) {
+  uint8_t data[3] = {0x70, 0x4A, channel};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setLocalOn(bool localOn) {
+  uint8_t data[3] = {0x70, 0x4B, localOn};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setProgramChange(uint8_t val) {
+  uint8_t data[3] = {0x70, 0x4C, val};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setExternalSync() {
+  uint8_t b = 0;
+  //  clockIn = false;
+  //  transportIn = true;
+  //  clockOut = true;
+  //  transportOut = true;
+
+  b = global.clockIn;
+
+  if (!global.transportIn) {
+    b |= 1 << 4;
+  }
+
+  if (global.clockOut) {
+    b |= 1 << 5;
+  }
+
+  if (global.transportOut) {
+    b |= 1 << 6;
+  }
+
+  uint8_t data[3] = {0x70, 0x4D, b};
+  sendRequest(data, sizeof(data));
 }
 
 void MDClass::init_grid_devices() {
@@ -147,24 +169,39 @@ bool MDClass::probe() {
   if (ti) {
     trig_interface.off();
   }
-
-  // Hack to prevent unnecessary delay on MC boot
+  DEBUG_PRINTLN("md probe");
   connected = false;
-
-  if ((slowclock > 3000) || (MidiClock.div16th_counter > 4)) {
-    mcl_gui.delay_progress(4600);
-  }
 
   // Begin main probe sequence
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
-    DEBUG_PRINTLN(F("Midi ID: success"));
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
-    // wait 300 ms, shoul be enought time to allow midiclock tempo to be
-    // calculated before proceeding.
+    uint8_t count = 3;
 
-    mcl_gui.delay_progress(400);
-    md_exploit.send_globals();
+    uint64_t fw_caps_mask =
+        ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
+         (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t)FW_CAP_TONAL);
+
+    while ((!get_fw_caps() || !(fw_caps & fw_caps_mask)) && count) {
+      DEBUG_PRINTLN("bad caps");
+      mcl_gui.delay_progress(250);
+      count--;
+    }
+
+    if (!(fw_caps & fw_caps_mask)) {
+      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      return false;
+      // while (1) {};
+    }
+
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
+    mcl_gui.delay_progress(100);
+    if (mcl_cfg.clock_rec == 0) {
+      MidiClock.mode = MidiClock.EXTERNAL_MIDI;
+    }
+    mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
+    getBlockingKit(0x7F);
+    setup();
+
     for (uint8_t x = 0; x < 2; x++) {
       for (uint8_t y = 0; y < 16; y++) {
         mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
@@ -172,52 +209,27 @@ bool MDClass::probe() {
       }
     }
     setStatus(0x22, currentTrack);
+
     connected = true;
-    setGlobal(7);
-    global.baseChannel = 9;
-
-    uint8_t count = 3;
-
-    while (!get_fw_caps() && count) {
-      mcl_gui.delay_progress(50);
-      count--;
-    }
-    if (!(fw_caps & ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
-                     (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t) FW_CAP_TONAL))) {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
-      oled_display.display();
-#else
-      gfx.display_text("UPGRADE", "MACHINEDRUM");
-#endif
-      while (1)
-        ;
-    }
-    getBlockingKit(0x7F);
+  }
+  if (connected) {
+    activate_enhanced_gui();
+    MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+    md_track_select.on();
+    MD.global.extendedMode = 2;
   }
 
-  if (connected == false) {
+  else {
+  abort:
     DEBUG_PRINTLN(F("delay"));
-    mcl_gui.delay_progress(250);
+    mcl_gui.delay_progress(4600);
   }
-
-  activate_enhanced_gui();
-  MD.global.extendedMode = 2; //Enhanced mode activated when enhanced gui enabled
-
-  MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-
-  MD.popup_text("ENHANCED");
-  md_track_select.on();
-
-  GUI.currentPage()->init();
 
   return connected;
 }
 
 // Caller is responsible to make sure icons_device is loaded in RM
-uint8_t* MDClass::icon() {
-  return R.icons_device->icon_md;
-}
+uint8_t *MDClass::icon() { return R.icons_device->icon_md; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
   uint8_t i;
@@ -234,42 +246,66 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
 
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
                       uint8_t *param) {
-  if ((channel >= global.baseChannel) && (channel < (global.baseChannel + 4))) {
-    channel -= global.baseChannel;
-    *track = channel * 4;
-    if (cc >= 96) {
-      *track += 3;
-      *param = cc - 96;
-    } else if (cc >= 72) {
-      *track += 2;
-      *param = cc - 72;
-    } else if (cc >= 40) {
-      *track += 1;
-      *param = cc - 40;
-    } else if (cc >= 16) {
-      *param = cc - 16;
-    } else if (cc >= 12) {
-      *track += (cc - 12);
+
+  *track = (channel - global.baseChannel) * 4;
+
+  if (cc < 16) {
+    if (cc > 11) {
+      *track += cc - 12;
       *param = 32; // MUTE
-    } else if (cc >= 8) {
+      return;
+    }
+    if (cc > 7) {
       *track += (cc - 8);
       *param = 33; // LEV
+      return;
     }
-  } else {
+    // Ignore General MIDI CC below 8
+    *track = 255;
+    return;
+  }
+
+  *param = cc;
+
+  if (cc > 71) {
+    *param -= 72 - 16;
+    *track += 2;
+  }
+
+  *param -= 16;
+
+  if (*param > 23) {
+    *track += 1;
+    *param -= 24;
+  }
+
+  if (*param > 23) {
     *track = 255;
   }
+
+  return;
 }
 
-void MDClass::triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
+                           MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
 
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track],
-                        velocity);
+    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
   }
 }
+
+void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_) {
+  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
+  sendRequest(data, sizeof(data), uart_);
+}
+
 void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t a;
   uint8_t b;
   uint8_t c;
@@ -279,20 +315,23 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   c = mask >> 7 & 0xF7;
   b = mask & 0x7F;
 
-    uart_->sendNoteOn(global.baseChannel + 1, a, b);
+  uart_->sendNoteOn(global.baseChannel + 1, a, b);
   if (c > 0) {
     uart_->sendNoteOn(global.baseChannel + 2, c, 0);
   }
 }
 
-void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_) {
+void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
+                            MidiUartParent *uart_) {
   setTrackParam_inline(track, param, value, uart_);
 }
 
-void MDClass::setTrackParam_inline(uint8_t track, uint8_t param,
-                                   uint8_t value, MidiUartParent *uart_) {
+void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
+                                   MidiUartParent *uart_) {
 
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
@@ -565,9 +604,8 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 }
 
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
-                                   uint8_t level, bool send) {
+                                   uint8_t level, uint8_t mode, bool send) {
 
-  DEBUG_PRINTLN("assign machine");
   uint8_t data[43] = {0x70, 0x5b};
   uint8_t i = 2;
   data[i++] = track;
@@ -582,18 +620,38 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i] += 2;
   }
   i++;
-  memcpy(data + i,machine->params,24);
+
+  if (mode == 0) {
+    goto end;
+  }
+
+  memcpy(data + i, machine->params, 24);
   i += 24;
 
-  memcpy(data + i,&machine->lfo, 5);
+  if (mode == 1) {
+    goto end;
+  }
+
+  memcpy(data + i, &machine->lfo, 5);
   i += 5;
-  if (machine->trigGroup > 15) { machine->trigGroup = 127; }
-  if (machine->muteGroup > 15) { machine->muteGroup = 127; }
+  if (machine->trigGroup > 15) {
+    machine->trigGroup = 127;
+  }
+  if (machine->muteGroup > 15) {
+    machine->muteGroup = 127;
+  }
   data[i++] = machine->trigGroup;
   data[i++] = machine->muteGroup;
   bool set_level = false;
-  if (level != 255) {  data[i++] = level; set_level = true; }
-  if (send) { insertMachineInKit(track, machine, set_level); }
+  if (level != 255) {
+    data[i++] = level;
+    set_level = true;
+  }
+  if (send) {
+    insertMachineInKit(track, machine, set_level);
+  }
+
+end:
   return sendRequest(data, i, send);
 }
 
@@ -639,10 +697,10 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   uint8_t level = 255;
   if ((send_level) && (kit_->levels[track] != machine->level)) {
-    level = kit_->levels[track];
+    level = machine->level;
   }
 
-  MD.assignMachineBulk(track, machine, level, send);
+  MD.assignMachineBulk(track, machine, level, 255, send);
 
   return bytes;
 }
@@ -708,7 +766,7 @@ void MDClass::send_gui_command(uint8_t command, uint8_t value) {
   buf[i++] = value;
   buf[i++] = 0xF7;
 
-  uart->m_putc(buf,i);
+  uart->m_putc(buf, i);
 }
 
 void MDClass::toggle_kit_menu() {
@@ -1019,17 +1077,11 @@ void MDClass::updateKitParams() {
   }
 }
 
-uint16_t MDClass::sendKitParams(uint8_t *masks, void *scratchpad) {
+uint16_t MDClass::sendKitParams(uint8_t *masks) {
   /// Ignores masks and scratchpad, and send the whole kit.
   MD.kit.origPosition = 0x7F;
-  // md_setsysex_recpos(4, MD.kit.origPosition);
   MD.kit.toSysex();
-  //  mcl_seq.disable();
-  // md_set_kit(&MD.kit);
-  uint16_t md_latency_ms =
-      10000.0 * ((float)sizeof(MDKit) / (float)uart->speed);
-  md_latency_ms += 10;
-  DEBUG_DUMP(md_latency_ms);
-
-  return md_latency_ms;
+  activate_track_select(); //<-- includes waitBlocking, we need to wait for the
+                           // sysex message to be received before unmuting seq
+  return 0;
 }

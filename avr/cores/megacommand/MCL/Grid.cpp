@@ -159,7 +159,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   }
 
   temp_track.active = EMPTY_TRACK_TYPE;
-  temp_track.chain.init(row);
+  temp_track.link.init(row);
 
   int32_t offset = get_slot_offset(column, row);
 

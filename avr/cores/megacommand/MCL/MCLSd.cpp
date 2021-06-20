@@ -64,7 +64,8 @@ bool MCLSd::load_init() {
         }
 
         else if (mcl_cfg.number_projects > 0) {
-          DEBUG_PRINTLN(F("Project count greater than 0, try to load existing"));
+          DEBUG_PRINTLN(
+              F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
             proj.new_project_prompt();
@@ -104,6 +105,22 @@ bool MCLSd::load_init() {
   return false;
 }
 
+bool MCLSd::seek(uint32_t pos, FatFile *filep) {
+  bool pass = false;
+  bool ret;
+  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
+    ret = filep->seekSet(pos);
+    if (!ret) {
+      DEBUG_PRINTLN("retry");
+      delay(5);
+      continue;
+    }
+    pass = true;
+    break;
+  }
+  return pass;
+}
+
 bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 
   size_t b;
@@ -111,37 +128,26 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
   bool ret;
   uint32_t pos = filep->curPosition();
 
-  uint8_t n = 0;
-
-  for (n = 0; n < SD_MAX_RETRIES && pass == false; n++) {
-
+  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
+    if (n > 0) {
+      DEBUG_PRINTLN("retry");
+      delay(5);
+    }
+    if (pos != filep->curPosition()) {
+      ret = filep->seekSet(pos);
+      if (!ret)
+        continue;
+    }
     b = filep->write((uint8_t *)data, len);
-
     if (b != len) {
       write_fail++;
-      pass = false;
-      /*reset position*/
-      ret = filep->seekSet(pos);
-      if (!ret) {
-        DEBUG_PRINTLN(F("Could not seek, failing"));
-        return false;
-      }
-    } else {
-      pass = true;
+      continue;
     }
+    pass = true;
+    break;
   }
 
-  if (pass) {
-    return true;
-  } else {
-
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN(F("Total write failures"));
-    DEBUG_PRINTLN(write_fail);
-    DEBUG_PRINTLN(b);
-    DEBUG_PRINTLN(len);
-    return false;
-  }
+  return pass;
 }
 /*
    Function for reading from the project file
@@ -149,40 +155,30 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
 
   size_t b;
-  bool pass = false;
   bool ret;
   uint32_t pos = filep->curPosition();
 
-  uint8_t n = 0;
-
-  for (n = 0; n < SD_MAX_RETRIES && pass == false; n++) {
-
+  bool pass = false;
+  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
+    if (n > 0) {
+      DEBUG_PRINTLN("retry");
+      delay(5);
+    }
+    if (pos != filep->curPosition()) {
+      ret = filep->seekSet(pos);
+      if (!ret)
+        continue;
+    }
     b = filep->read((uint8_t *)data, len);
-
     if (b != len) {
       read_fail++;
-
-      /*reset position*/
-      ret = filep->seekSet(pos);
-      if (!ret) {
-        DEBUG_PRINTLN(F("Could not seek, failing"));
-        return false;
-      }
-      pass = false;
-    } else {
-      pass = true;
+      continue;
     }
+    pass = true;
+    break;
   }
 
-  if (pass) {
-    return true;
-  } else {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN(F("Total read failures"));
-    DEBUG_PRINTLN(read_fail);
-
-    return false;
-  }
+  return pass;
 }
 
 MCLSd mcl_sd;

@@ -55,6 +55,7 @@ public:
 
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
+  MidiUartParent *uart;
   uint8_t track_number;
   uint8_t step_count;
   uint8_t sample_count;
@@ -91,7 +92,7 @@ public:
     }
   }
   void load_wav_table(uint8_t table);
-  ALWAYS_INLINE() void seq();
+  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
 };
 
 #endif /* LFOSEQTRACK_H__ */

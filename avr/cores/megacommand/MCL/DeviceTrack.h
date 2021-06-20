@@ -4,7 +4,6 @@
 
 #include "DiagnosticPage.h"
 #include "GridTrack.h"
-#include "new.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1

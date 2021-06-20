@@ -21,10 +21,38 @@
 #define MDX_KEY_SCALE 0x2A
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
+#define MDX_KEY_STOP 0x32
 #define MDX_KEY_COPY 0x34
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
 #define MDX_KEY_REALTIME 0x37
+#define MDX_KEY_FUNCYES 0x3A
+
+#include "Task.h"
+
+/*
+#define KEY_REPEAT_INTERVAL 80
+
+class TrigInterfaceTask : public Task {
+
+public:
+
+  TrigInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
+  }
+
+  void setup() {
+    interval = KEY_REPEAT_INTERVAL; 
+    starting = false;
+    uint16_t clock = read_slowclock();
+    lastExecution = clock;
+  } 
+
+  virtual void run();
+
+};
+
+extern TrigInterfaceTask trig_interface_task;
+*/
 
 class TrigInterface : public MidiSysexListenerClass {
 
@@ -43,7 +71,7 @@ public:
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
   }
-  bool on();
+  bool on(bool clear_states = true);
   bool off();
 
   void enable_listener();

@@ -183,7 +183,7 @@ bool Project::convert_project(const char *projectname) {
             first_track = x;
             MDFXTrack md_fx_track;
             md_fx_track.get_fx_from_kit_extra(&md_track_src.kitextra);
-            md_fx_track.chain.init(y);
+            md_fx_track.link.init(y);
             select_grid(1);
             md_fx_track.store_in_grid(MDFX_TRACK_NUM, y);
             row_headers[1].update_model(MDFX_TRACK_NUM, MDFX_TRACK_TYPE,
@@ -303,6 +303,7 @@ bool Project::load_project(const char *projectname) {
     DEBUG_PRINTLN(F("could not write cfg"));
     return false;
   }
+  grid_page.row_state_scan = GRID_LENGTH;
   return true;
 }
 

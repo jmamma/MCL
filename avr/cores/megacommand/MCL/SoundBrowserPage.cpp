@@ -1,6 +1,8 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+#define FILE_ENTRY_SIZE 16
+
 const char *c_sound_root = "/Sounds/MD";
 const char *c_snd_suffix = ".snd";
 const char *c_wav_suffix = ".wav";

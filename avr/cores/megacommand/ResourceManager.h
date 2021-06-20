@@ -15,6 +15,10 @@ public:
 	void Clear();
 	void Save(uint8_t* buf, size_t* sz);
 	void Restore(uint8_t* buf, size_t sz);
+	// allocate memory in a stack-like manner
+	byte* Allocate(size_t sz);
+	// free memory in a stack-like manner
+	void Free(size_t sz);
 	void restore_menu_layout_deps();
 	void restore_page_entry_deps();
 	size_t Size();

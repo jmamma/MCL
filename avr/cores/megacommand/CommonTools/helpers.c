@@ -39,7 +39,7 @@ const uint32_t _bvmasks32[] = {
     0x40000000, 0x80000000,
 };
 
-const uint8_t _popcount_lut[] = {
+const uint8_t _popcount_lut[] PROGMEM = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
     2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
     2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
@@ -53,7 +53,15 @@ const uint8_t _popcount_lut[] = {
     4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
 };
 
-uint8_t popcount(const uint8_t bits) { return _popcount_lut[bits]; }
+uint8_t popcount(const uint8_t bits) { return pgm_read_byte_near(&_popcount_lut[bits]); }
+
+uint8_t popcount16(const uint16_t bits) {
+    return popcount(((uint8_t*)&(bits))[0]) + popcount(((uint8_t*)&(bits))[1]);
+}
+
+uint8_t popcount32(const uint32_t bits) {
+    return popcount(((uint8_t*)&(bits))[0]) + popcount(((uint8_t*)&(bits))[1]) + popcount(((uint8_t*)&(bits))[2]) + popcount(((uint8_t*)&(bits))[3]);
+}
 
 static char tohex(uint8_t i) {
   if (i < 10) {

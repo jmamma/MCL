@@ -19,8 +19,8 @@
 #include "Fonts/Elektrothic.h"
 #endif
 
-#define VERSION 3010
-#define VERSION_STR "3.10d"
+#define VERSION 4000
+#define VERSION_STR "4.00"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -46,9 +46,6 @@
 #define DIR_REVERSE 2
 
 // Memory layout for SRAM bank 1
-
-extern int8_t curpage;
-extern uint8_t patternswitch;
 
 class MCL {
 public:

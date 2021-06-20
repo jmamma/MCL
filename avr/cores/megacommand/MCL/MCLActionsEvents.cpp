@@ -5,44 +5,79 @@ MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
 
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
+/*
   mcl_actions.kit_reload(msg[1]);
   mcl_actions.start_clock32th = MidiClock.div32th_counter;
 
   mcl_actions.start_clock96th = MidiClock.div96th_counter;
   if (MidiClock.state != 2) {
-    MD.getBlockingKit(0xF7);
+    MD.getBlockingKit(0x7F);
   }
+*/
 }
 
 void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
-void MCLActionsCallbacks::onMidiStopCallback() {
- DEBUG_PRINTLN(F("initialising nearest steps"));
-//   memset(&mcl_actions.next_transitions[0], 0, 20);
-/*
-  for (uint8_t n = 0; n < NUM_TRACKS; n++) {
-  mcl_actions.next_transitions[n] = 0;
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
+void MCLActionsCallbacks::StopHardCallback() {
+  DEBUG_PRINTLN("BEGIN stop hard");
+  uint8_t row_array[NUM_SLOTS];
+  uint8_t slot_select_array[NUM_SLOTS] = {};
+  bool proceed = false;
+
+
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (mcl_actions.chains[n].is_mode_queue()) {
+      slot_select_array[n] = 1;
+      row_array[n] = mcl_actions.chains[n].rows[0];
+      mcl_actions.chains[n].set_pos(0);
+      proceed = true;
+      grid_page.last_active_row = mcl_actions.chains[n].rows[0];
+    }
   }
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_transition(); }
-  else { mcl_actions.next_transition = (uint16_t) -1; }
-*/
- }
+
+  if (!proceed) { goto end; }
+
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
+ /*
+  ElektronDevice *elektron_devs[2] = {
+      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+  };
+
+    for (uint8_t i = 0; i < NUM_DEVS; ++i) {
+    if (elektron_devs[i] != nullptr &&
+        elektron_devs[i]->canReadWorkspaceKit()) {
+      elektron_devs[i]->getBlockingKit(0x7F);
+    }
+  }
+  */
+  DEBUG_PRINTLN("StopHard");
+  DEBUG_PRINTLN((int)SP);
+  mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+end:
+  DEBUG_PRINTLN("END stop hard");
+  return;
+}
 
 void MCLActionsCallbacks::onMidiStartCallback() {
+  DEBUG_PRINTLN("BEGIN on midi start");
+  DEBUG_PRINTLN(SP);
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (grid_page.active_slots[n] >= 0) {
+    if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
-      if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_slot_transition(n); }
+      mcl_actions.chains[n].reset();
+      mcl_actions.calc_next_slot_transition(n);
     }
   }
-  if (mcl_cfg.chain_mode != 2) { mcl_actions.calc_next_transition(); }
-  else { mcl_actions.next_transition = (uint16_t) -1; }
+  mcl_actions.calc_next_transition();
+  DEBUG_PRINTLN("END midi start");
 }
 
 void MCLActionsMidiEvents::setup_callbacks() {
@@ -89,8 +124,6 @@ void MCLActionsCallbacks::setup_callbacks() {
   }
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-  MidiClock.addOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
 //  MidiClock.addOnMidiContinueCallback(
   //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
@@ -102,8 +135,6 @@ void MCLActionsCallbacks::remove_callbacks() {
   }
   MidiClock.removeOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-  MidiClock.removeOnMidiStopCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStopCallback);
   //  MidiClock.removeOnMidiContinueCallback(
   //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 

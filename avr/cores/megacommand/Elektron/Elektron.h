@@ -210,6 +210,8 @@ public:
 
   virtual void init_grid_devices() {};
 
+  virtual void setup() { };
+
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
   // 34x42 bitmap icon of the device
@@ -292,7 +294,8 @@ public:
 enum TrigLEDMode {
   TRIGLED_OVERLAY = 0,
   TRIGLED_STEPEDIT = 1,
-  TRIGLED_EXCLUSIVE = 2
+  TRIGLED_EXCLUSIVE = 2,
+  TRIGLED_EXCLUSIVENDYNAMIC = 3
 };
 
 /// sysex constants for constructing data frames
@@ -361,15 +364,16 @@ public:
   /// Runtime variables
   uint64_t fw_caps;
   /** Stores the current global of the MD, usually set by the MDTask. **/
-  int currentGlobal;
+  uint8_t currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
-  int currentKit;
+  uint8_t currentKit;
 
-  int currentTrack;
-  int currentSynthPage;
+  uint8_t currentTrack;
+  uint8_t currentSynthPage;
 
+  uint8_t currentBank;
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
-  int currentPattern;
+  uint8_t currentPattern;
   /** Set to true if the kit was loaded (usually set by MDTask). **/
   bool loadedKit;
   /** Set to true if the global was loaded (usually set by MDTask). **/
@@ -416,7 +420,7 @@ public:
    * Caller provides a scratchpad buffer (for example, EmptyTrack*).
    * Returns the estimated latency for kit sending.
    **/
-  virtual uint16_t sendKitParams(uint8_t* send_mask, void* scratch_buf) { return 0; }
+  virtual uint16_t sendKitParams(uint8_t* send_mask) { return 0; }
   /**
    * Return a pointer to a program-space string representing the name of the
    *given machine.
@@ -424,8 +428,6 @@ public:
   virtual const char* getMachineName(uint8_t machine) { return nullptr; }
 
   bool get_fw_caps();
-
-  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count);
 
   void activate_encoder_interface(uint8_t *params);
   void deactivate_encoder_interface();
@@ -437,17 +439,22 @@ public:
 
   void set_rec_mode(uint8_t mode);
 
-  void popup_text(uint8_t action_string);
-  void popup_text(char *str);
+  void popup_text(uint8_t action_string, uint8_t persistent = 0);
+  void popup_text(char *str, uint8_t persistent = 0);
+
+  void draw_bank(uint8_t bank);
+  void draw_close_bank();
+
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
-
+  void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
   void activate_trig_interface();
   void deactivate_trig_interface();
 
   void activate_track_select();
   void deactivate_track_select();
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, uint8_t blink = 0);
+  void set_key_repeat(uint8_t mode);
 
   void undokit_sync();
   /**
@@ -455,7 +462,7 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
-  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true);
+  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartParent *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.

@@ -60,9 +60,10 @@ public:
    * This is used by most methods of the MDClass because they look up
    * the channel settings and the trigger settings of the MachineDrum.
    **/
-  MDGlobal global;
+  MDGlobalLight global;
 
   virtual bool probe();
+  virtual void setup();
   virtual void init_grid_devices();
   virtual uint8_t* icon();
 
@@ -72,13 +73,19 @@ public:
 
   virtual ElektronSysexObject *getKit() { return &kit; }
   virtual ElektronSysexObject *getPattern() { return &pattern; }
-  virtual ElektronSysexObject *getGlobal() { return &global; }
+  virtual ElektronSysexObject *getGlobal() { return nullptr; }
   virtual ElektronSysexListenerClass *getSysexListener() {
     return &MDSysexListener;
   }
 
+  //Global config
+  void setBaseChannel(uint8_t channel);
+  void setLocalOn(bool localOn);
+  void setProgramChange(uint8_t val);
+  void setExternalSync();
+  //---
   virtual void updateKitParams();
-  virtual uint16_t sendKitParams(uint8_t *mask, void *);
+  virtual uint16_t sendKitParams(uint8_t *mask);
   virtual const char* getMachineName(uint8_t machine);
 
   /**
@@ -181,6 +188,7 @@ public:
    **/
   void sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity);
   void parallelTrig(uint16_t mask, MidiUartParent *uart_ = nullptr);
+  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_ = nullptr);
   /**
    * Slice the track (assuming it's a ROM or RAM-P machine) on the
    * given 32th, assuming that the loaded sample is 2 bars long.
@@ -228,7 +236,7 @@ public:
    * Send a sysex machine to change the model of the machine on the given track.
    **/
   void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255);
-  uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t send_level, bool send = true);
+  uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t send_level, uint8_t mode = 255, bool send = true);
   /**
    * Load the given machine (including parameters) on the given track
    * out of the machine structure.

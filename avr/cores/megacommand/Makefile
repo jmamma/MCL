@@ -41,8 +41,8 @@ FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver -fpermissive
 LINK_FLAGS    = -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 ARCH_FLAGS    = -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 
-CFLAGS        = -std=gnu11   $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
-CXXFLAGS      = -std=gnu++11 $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
+CFLAGS        = -std=gnu++1z   $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
+CXXFLAGS      = -std=gnu++1z $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
 CXXFLAGS     += -fno-exceptions -fno-threadsafe-statics -fno-rtti
 
 LDFLAGS = $(OPTIM_FLAGS) $(WARN_FLAGS) -flto -fuse-linker-plugin -mrelax $(LINK_FLAGS) $(ARCH_FLAGS)

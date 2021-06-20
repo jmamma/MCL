@@ -215,12 +215,6 @@ struct __T_icons_page {
   static constexpr size_t countof_icon_step = 75 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_step = 75;
   union {
-    unsigned char icon_para[0];
-    char zz__icon_para[57];
-  };
-  static constexpr size_t countof_icon_para = 57 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_para = 57;
-  union {
     unsigned char icon_wavd[0];
     char zz__icon_wavd[57];
   };
@@ -244,7 +238,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
-  static constexpr size_t __total_size = 957;
+  static constexpr size_t __total_size = 900;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
@@ -308,10 +302,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_wav_menu_layout = 75;
   union {
     menu_t<grid_slot_page_N> slot_menu_layout[0];
-    char zz__slot_menu_layout[180];
+    char zz__slot_menu_layout[201];
   };
-  static constexpr size_t countof_slot_menu_layout = 180 / sizeof(menu_t<grid_slot_page_N>);
-  static constexpr size_t sizeofof_slot_menu_layout = 180;
+  static constexpr size_t countof_slot_menu_layout = 201 / sizeof(menu_t<grid_slot_page_N>);
+  static constexpr size_t sizeofof_slot_menu_layout = 201;
   union {
     menu_t<4> step_menu_layout[0];
     char zz__step_menu_layout[96];
@@ -337,23 +331,17 @@ struct __T_menu_layouts {
   static constexpr size_t countof_mclconfig_menu_layout = 33 / sizeof(menu_t<1>);
   static constexpr size_t sizeofof_mclconfig_menu_layout = 33;
   union {
-    menu_t<3> chain_menu_layout[0];
-    char zz__chain_menu_layout[75];
-  };
-  static constexpr size_t countof_chain_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_chain_menu_layout = 75;
-  union {
     menu_t<3> mdconfig_menu_layout[0];
     char zz__mdconfig_menu_layout[75];
   };
   static constexpr size_t countof_mdconfig_menu_layout = 75 / sizeof(menu_t<3>);
   static constexpr size_t sizeofof_mdconfig_menu_layout = 75;
   union {
-    menu_t<7> midiconfig_menu_layout[0];
-    char zz__midiconfig_menu_layout[159];
+    menu_t<6> midiconfig_menu_layout[0];
+    char zz__midiconfig_menu_layout[138];
   };
-  static constexpr size_t countof_midiconfig_menu_layout = 159 / sizeof(menu_t<7>);
-  static constexpr size_t sizeofof_midiconfig_menu_layout = 159;
+  static constexpr size_t countof_midiconfig_menu_layout = 138 / sizeof(menu_t<6>);
+  static constexpr size_t sizeofof_midiconfig_menu_layout = 138;
   union {
     menu_t<1> rampage1_menu_layout[0];
     char zz__rampage1_menu_layout[33];
@@ -367,34 +355,34 @@ struct __T_menu_layouts {
   static constexpr size_t countof_auxconfig_menu_layout = 33 / sizeof(menu_t<1>);
   static constexpr size_t sizeofof_auxconfig_menu_layout = 33;
   union {
-    menu_t<9> system_menu_layout[0];
-    char zz__system_menu_layout[201];
+    menu_t<7> system_menu_layout[0];
+    char zz__system_menu_layout[159];
   };
-  static constexpr size_t countof_system_menu_layout = 201 / sizeof(menu_t<9>);
-  static constexpr size_t sizeofof_system_menu_layout = 201;
-  static constexpr size_t __total_size = 1488;
+  static constexpr size_t countof_system_menu_layout = 159 / sizeof(menu_t<7>);
+  static constexpr size_t sizeofof_system_menu_layout = 159;
+  static constexpr size_t __total_size = 1371;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[774];
+    char zz__MENU_OPTIONS[792];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 774 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 774;
-  static constexpr size_t __total_size = 774;
+  static constexpr size_t countof_MENU_OPTIONS = 792 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 792;
+  static constexpr size_t __total_size = 792;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;
 struct __T_page_entries {
   union {
     PageSelectEntry Entries[0];
-    char zz__Entries[360];
+    char zz__Entries[336];
   };
-  static constexpr size_t countof_Entries = 360 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 360;
-  static constexpr size_t __total_size = 360;
+  static constexpr size_t countof_Entries = 336 / sizeof(PageSelectEntry);
+  static constexpr size_t sizeofof_Entries = 336;
+  static constexpr size_t __total_size = 336;
 };
 
 extern const unsigned char __R_tuning[] PROGMEM;

@@ -31,6 +31,8 @@ class MidiUartParent {
    **/
 
 public:
+  volatile static uint8_t handle_midi_lock;
+
   uint8_t running_status;
   uint8_t currentChannel;
   uint8_t uart_port;

@@ -92,8 +92,13 @@ uint8_t MenuBase::get_options_offset(uint8_t item_n) {
 const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
   uint8_t num_of_options = get_number_of_options(item_n);
   uint8_t options_offset = get_options_offset(item_n);
+  menu_option_t* base = R.menu_options->MENU_OPTIONS;
+  if (options_offset >= 128) {
+    base = custom_options;
+    options_offset = 0;
+  }
   for (uint8_t a = 0; a < num_of_options; a++) {
-    const menu_option_t *option = R.menu_options->MENU_OPTIONS + a + options_offset;
+    const menu_option_t *option = base + a + options_offset;
     if (option->pos == option_n) {
       return option->name;
     }

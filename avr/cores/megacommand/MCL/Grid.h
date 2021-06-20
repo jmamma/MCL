@@ -10,7 +10,6 @@
 
 #define GRID_VERSION 3000
 
-
 #define GRID_LENGTH_270 128
 #define GRID_WIDTH_270 20
 #define GRID_SLOT_BYTES_270 4096
@@ -59,11 +58,11 @@ public:
   }
 
   bool seek(uint8_t col, uint16_t row) {
-    return file.seekSet(get_slot_offset(col, row));
+    return mcl_sd.seek(get_slot_offset(col, row), &file);
   }
 
   bool seek_row_header(uint16_t row) {
-    return file.seekSet(get_row_header_offset(row));
+    return mcl_sd.seek(get_row_header_offset(row), &file);
   }
 
   bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,

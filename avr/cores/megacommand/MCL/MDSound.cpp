@@ -17,7 +17,7 @@ bool MDSound::read_sound() {
 bool MDSound::fetch_sound(uint8_t track) {
   DEBUG_PRINT_FN();
   machine_count = 0;
-  machine1.model = MD.kit.get_model(track);
+  machine1.model = MD.kit.models[track]; //get raw model including tonal bit
   machine1.level = MD.kit.levels[track];
   memcpy(&machine1.params, &(MD.kit.params[track]), 24);
   memcpy(&machine1.lfo, &(MD.kit.lfos[track]), sizeof(MDLFO));
@@ -39,7 +39,7 @@ bool MDSound::fetch_sound(uint8_t track) {
   // If track uses trigGroup, assume sound is made up of two models.
 
   if ((trigGroup < 16) && (trigGroup != track)) {
-    machine2.model = MD.kit.get_model(trigGroup);
+    machine2.model = MD.kit.models[trigGroup]; //get raw model including tonal bit
     machine2.level = MD.kit.levels[trigGroup];
     memcpy(&machine2.params, &(MD.kit.params[trigGroup]), 24);
     memcpy(&machine2.lfo, &(MD.kit.lfos[trigGroup]), sizeof(MDLFO));

@@ -7,7 +7,6 @@
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 #include "PolyPage.h"
-#include "SDDrivePage.h"
 #include "GridPages.h"
 #include "TextInputPage.h"
 #include "SeqPages.h"
@@ -27,8 +26,8 @@ extern MCLEncoder config_param7;
 
 extern void new_proj_handler();
 
-extern MenuPage<9> system_page;
-extern MenuPage<7> midi_config_page;
+extern MenuPage<7> system_page;
+extern MenuPage<6> midi_config_page;
 extern MenuPage<3> md_config_page;
 extern MenuPage<1> mcl_config_page;
 extern MenuPage<3> chain_config_page;
@@ -54,12 +53,7 @@ extern MenuPage<4> step_menu_page;
 extern MCLEncoder grid_slot_param1;
 extern MCLEncoder grid_slot_param2;
 
-constexpr size_t grid_slot_page_N =
-    #ifndef OLED_DISPLAY
-    9;
-    #else
-    8;
-    #endif
+constexpr size_t grid_slot_page_N = 9;
 extern MenuPage<grid_slot_page_N> grid_slot_page;
 
 extern MCLEncoder wavdesign_menu_value_encoder;

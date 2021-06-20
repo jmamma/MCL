@@ -2,29 +2,14 @@
 #include "MCL_impl.h"
 
 void MCLSeq::setup() {
-  // uart = &MidiUart;
 
-  for (uint8_t i = 0; i < NUM_PARAM_PAGES; i++) {
-
-    seq_param_page[i].setEncoders(&seq_param1, &seq_lock1, &seq_param3,
-                                  &seq_lock2);
-    seq_param_page[i].construct(i * 2, 1 + i * 2);
-    seq_param_page[i].page_id = i;
-  }
-  /*  for (uint8_t i = 0; i < NUM_LFO_PAGES; i++) {
-      seq_lfo_page[i].id = i;
-      seq_lfo_page[i].setEncoders(&seq_param1, &seq_param2, &seq_param3,
-                                    &seq_param4);
-      for (uint8_t n = 0; n < 48; n++) {
-      mcl_seq.lfos[0].samples[n] = n;
-              //(uint8_t) (((float) n / (float)48) * (float)96);
-      }    } */
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
+ for (uint8_t i = 0; i < num_md_tracks; i++) {
 
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
     md_tracks[i].speed = SEQ_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
+    md_arp_tracks[i].track_number = i;
   }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -45,14 +30,13 @@ void MCLSeq::setup() {
     ext_tracks[i].speed = SEQ_SPEED_2X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
+    ext_arp_tracks[i].track_number = i;
   }
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_2X;
   }
-  //   MidiClock.addOnClockCallback(this,
-  //   (midi_clock_callback_ptr_t)&MDSequencer::MDSetup);
 
   enable();
 
@@ -120,10 +104,12 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].reset();
+    ext_arp_tracks[i].reset();
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset();
+    md_arp_tracks[i].reset();
   }
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
@@ -172,7 +158,6 @@ void MCLSeq::onMidiStopCallback() {
       md_tracks[i].locks_slide_data[c].init();
     }
   }
-  seq_ptc_page.onMidiStopCallback();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params_offset();
@@ -200,12 +185,16 @@ again:
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
+/*
         while (!seq_tx2.txRb.isEmpty_isr()) {
+          setLed2();
           seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
         }
         while (!seq_tx4.txRb.isEmpty_isr()) {
+          setLed2();
           seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
         }
+*/
         MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
       }
@@ -218,12 +207,14 @@ again:
       uart = &seq_tx1;
       uart2 = &seq_tx3;
       if (engage_sidechannel) {
+/*
         while (!seq_tx1.txRb.isEmpty_isr()) {
           seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
         }
         while (!seq_tx3.txRb.isEmpty_isr()) {
           seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
         }
+*/
         MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
       }
@@ -243,28 +234,37 @@ again:
   }
 //  Stopwatch sw;
 
-  md_trig_mask = 0;
+  MDSeqTrack::md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
+    md_arp_tracks[i].seq(uart);
   }
 
-  if (md_trig_mask > 0) { MD.parallelTrig(md_trig_mask, uart); }
+  if (MDSeqTrack::md_trig_mask > 0) { MD.parallelTrig(MDSeqTrack::md_trig_mask, uart); }
+
+  if (MDSeqTrack::sync_cursor) {
+    auto &active_track = md_tracks[last_md_track];
+    if (GUI.currentPage() == &seq_step_page && IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) { MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart); }
+    //MD.draw_pattern_idx(grid_page.last_active_row, grid_page.last_active_row, 0);
+    grid_page.set_active_row(grid_page.last_active_row); //send led update
+    MDSeqTrack::sync_cursor = 0;
+  }
   // Arp
-  seq_ptc_page.on_192_callback();
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-    //  aux_tracks[i].seq();
+     aux_tracks[i].seq();
   }
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].seq();
+    lfo_tracks[i].seq(uart);
   }
 #endif
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
+    ext_arp_tracks[i].seq(uart2);
   }
 #endif
 

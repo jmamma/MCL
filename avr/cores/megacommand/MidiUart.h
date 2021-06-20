@@ -80,8 +80,8 @@ class MidiUartClass;
 #define UART_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR0B, UDRIE1)
 #define UART2_CLEAR_ISR_TX_BIT() CLEAR_BIT(UCSR1B, UDRIE1)
 
-#define UART_SET_ISR_TX_BIT() CLEAR_BIT(UCSR0B, UDRIE1)
-#define UART2_SET_ISR_TX_BIT() CLEAR_BIT(UCSR1B, UDRIE1)
+#define UART_SET_ISR_TX_BIT() SET_BIT(UCSR0B, UDRIE1)
+#define UART2_SET_ISR_TX_BIT() SET_BIT(UCSR1B, UDRIE1)
 
 #endif
 
@@ -106,33 +106,63 @@ void isr_usart1(uint8_t caller);
 void isr_usart2(uint8_t caller);
 void isr_midi();
 
-class MidiUartClass : public MidiUartParent {
-  virtual void initSerial();
+
+class MidiUartClassCommon : public MidiUartParent {
+
+public:
+  MidiUartClassCommon(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
+                volatile uint8_t *tx_buf, uint16_t tx_buf_size);
+
+  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
+  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
+
+  int8_t in_message_tx;
+
+  void set_speed(uint32_t speed, uint8_t port);
+
+  void initSerial();
+  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
+  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
+};
+
+class MidiUartClass : public MidiUartClassCommon {
 
 public:
   MidiUartClass(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                volatile uint8_t *tx_buf, uint16_t tx_buf_size);
+                volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartClassCommon(rx_buf, rx_buf_size, tx_buf, tx_buf_size) {}
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put(src,size);
+    txRb.put_h_isr(src,size);
     UART_SET_ISR_TX_BIT();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    txRb.put(c);
+    txRb.put_h_isr(c);
     UART_SET_ISR_TX_BIT();
   }
-  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
-  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
   ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
+};
 
-  void set_speed(uint32_t speed, uint8_t port);
+class MidiUartClass2 : public MidiUartClassCommon {
 
-  int8_t in_message;
-  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
+public:
+
+  MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
+                volatile uint8_t *tx_buf, uint16_t tx_buf_size) : MidiUartClassCommon(rx_buf, rx_buf_size, tx_buf, tx_buf_size) {}
+
+  ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
+    txRb.put_h_isr(src,size);
+    UART2_SET_ISR_TX_BIT();
+  }
+
+  ALWAYS_INLINE() void m_putc(uint8_t c) {
+    txRb.put_h_isr(c);
+    UART2_SET_ISR_TX_BIT();
+  }
+
+  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
 };
 
 extern MidiUartClass seq_tx1;
@@ -140,36 +170,6 @@ extern MidiUartClass seq_tx2;
 
 extern MidiUartClass MidiUart;
 extern uint16_t midiclock_last;
-extern bool enable_clock_callbacks;
-
-class MidiUartClass2 : public MidiUartParent {
-  virtual void initSerial();
-
-public:
-  MidiUartClass2(volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                 volatile uint8_t *tx_buf, uint16_t tx_buf_size);
-  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
-  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
-
-  ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put(src,size);
-    UART2_SET_ISR_TX_BIT();
-  }
-
-  ALWAYS_INLINE() void m_putc(uint8_t c) {
-  #ifdef UART2_TX
-    txRb.put(c);
-    UART2_SET_ISR_TX_BIT();
-  #endif
-  }
-  int8_t in_message;
-  ALWAYS_INLINE() virtual void m_putc_immediate(uint8_t c);
-  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  #ifdef UART2_TX
-  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
-  #endif
-};
 
 extern MidiUartClass2 MidiUart2;
 

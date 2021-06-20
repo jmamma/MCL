@@ -9,7 +9,6 @@ PageSelectEntry Entries[] = {
 
     {"STEP EDIT", &seq_step_page, 4, 1, 24, 25, nullptr},
     {"PIANO ROLL", &seq_extstep_page, 6, 1, 24, 25, nullptr},
-    {"LOCKS", &seq_param_page[0], 5, 1, 24, 19, nullptr},
     {"CHROMATIC", &seq_ptc_page, 7, 1, 24, 25, nullptr},
 #ifdef SOUND_PAGE
     {"SOUND MANAGER", &sound_browser, 8, 2, 24, 19, nullptr},

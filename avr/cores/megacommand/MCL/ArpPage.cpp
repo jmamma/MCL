@@ -1,23 +1,51 @@
 #include "MCL_impl.h"
 
-MCLEncoder arp_oct(0, 3, ENCODER_RES_SEQ);
+MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
-MCLEncoder arp_speed(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_und(0, 2, ENCODER_RES_SEQ);
+MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
+MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {
-  arp_speed.cur = 1;
 }
 
 void ArpPage::init() {
 
   DEBUG_PRINT_FN();
-#ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.setFont();
   seq_ptc_page.redisplay = true;
   seq_ptc_page.display();
-#endif
+  track_update();
+}
+
+void ArpPage::track_update() {
+
+  arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
+  if (seq_ptc_page.midi_device == &MD) {
+    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+  }
+
+  arp_rate.cur = arp_track->rate;
+  arp_rate.old = arp_rate.cur;
+
+  arp_range.cur = arp_track->oct;
+  arp_range.old = arp_range.cur;
+
+  arp_mode.cur = arp_track->mode;
+  arp_mode.old = arp_mode.cur;
+
+  arp_enabled.cur = arp_track->enabled;
+  arp_enabled.old = arp_enabled.cur;
+
+  if (last_arp_track && arp_track != last_arp_track) {
+    if (last_arp_track->enabled != ARP_LATCH) {
+      last_arp_track->clear_notes();
+    }
+  }
+  if (arp_track->enabled != ARP_LATCH) {
+    seq_ptc_page.render_arp();
+  }
+  last_arp_track = arp_track;
 }
 
 void ArpPage::cleanup() {
@@ -28,23 +56,25 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
-  if (encoders[0]->hasChanged()) {
-    switch (encoders[0]->cur) {
-    case ARP_ON:
-      seq_ptc_page.setup_arp();
-      break;
-    case ARP_OFF:
-      seq_ptc_page.remove_arp();
-      break;
-    }
-    if (encoders[0]->old > 1) {
-    seq_ptc_page.note_mask = 0;
-    seq_ptc_page.render_arp();
-    }
-  }
+ if (seq_ptc_page.md_track_change_check()) {
+   track_update();
+   return;
+ }
+
+ if (encoders[0]->hasChanged()) {
+    arp_track->enabled = encoders[0]->cur;
+    seq_ptc_page.render_arp(encoders[0]->old != 1);
+ }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
-    seq_ptc_page.render_arp();
+    arp_track->oct = arp_range.cur;
+    arp_track->mode = arp_mode.cur;
+    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH);
+  }
+
+  if (encoders[2]->hasChanged()) {
+    arp_track->set_length(1 << arp_rate.cur);
+    arp_track->rate = arp_rate.cur;
   }
 
 }
@@ -56,40 +86,6 @@ const arp_name_t arp_names[] PROGMEM = {
     "PU", "PD", "TU", "TD", "UPP", "DP", "U2",  "D2",  "RND",
 };
 
-#ifndef OLED_DISPLAY
-void ArpPage::display() {
-  uint8_t dev_num;
-  if (!redisplay) {
-    return true;
-  }
- GUI.setLine(GUI.LINE1);
-
-  GUI.put_string_at(0, "ARP");
-  GUI.put_string_at(4, "MOD");
-  GUI.put_string_at(8, "SPD");
-  GUI.put_string_at(12,"OCT");
-
-  GUI.setLine(GUI.LINE2);
-  char str[5];
-
-  switch (encoders[0]->cur) {
-  case ARP_ON:
-    strcpy(str, "ON");
-    break;
-  case ARP_OFF:
-    strcpy(str, "--");
-    break;
-  case ARP_LATCH:
-    strcpy(str, "LAT");
-    break;
-  }
-  GUI.put_string_at(0, str);
-  strncpy_P(str, arp_names[encoders[1]->cur], 4);
-  GUI.put_string_at(4,str);
-  GUI.put_value_at2(8, encoders[2]->cur);
-  GUI.put_value_at2(12, encoders[3]->cur);
-}
-#else 
 void ArpPage::display() {
 
   if (!classic_display) {
@@ -103,7 +99,15 @@ void ArpPage::display() {
   oled_display.setCursor(42, 10);
 
   oled_display.setTextColor(WHITE);
-  oled_display.print("ARPEGGIATOR");
+  oled_display.print("ARPEGGIATOR: T");
+
+  if (seq_ptc_page.midi_device == &MD) {
+    oled_display.print(last_md_track + 1);
+  }
+  else {
+    oled_display.print(last_ext_track + 1);
+  }
+
   char str[5];
   uint8_t y = 12;
   uint8_t x = 16;
@@ -125,17 +129,16 @@ void ArpPage::display() {
 
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 
-  itoa(encoders[2]->cur, str, 10);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "SPD", str);
+  mcl_gui.put_value_at(encoders[2]->cur, str);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str);
 
-  itoa(encoders[3]->cur, str, 10);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "OCT", str);
+  mcl_gui.put_value_at(encoders[3]->cur, str);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str);
 
   oled_display.display();
   oled_display.setFont(oldfont);
 }
 
-#endif
 bool ArpPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON3) ||
@@ -145,14 +148,14 @@ bool ArpPage::handleEvent(gui_event_t *event) {
     GUI.popPage();
     return true;
   }
-
-  seq_ptc_page.handleEvent(event);
-
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
-    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
-      return true;
-    }
+    seq_ptc_page.handleEvent(event);
+    return true;
   }
+/*  if (note_interface.is_event(event) && midi_active_peering.get_device(event->port) == &MD) {
+      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+      return true;
+
+  } */
   return false;
 }

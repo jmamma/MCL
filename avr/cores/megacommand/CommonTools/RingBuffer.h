@@ -43,6 +43,7 @@ public:
   volatile C *ptr = NULL;
   #ifdef CHECKING
   volatile uint8_t overflow;
+  bool check = true;
   #endif
   CRingBuffer(volatile uint8_t *ptr = NULL);
   CRingBuffer(const CRingBuffer<C,N,T>& other);
@@ -56,6 +57,8 @@ public:
   ALWAYS_INLINE() void put_h_isr(C c) volatile;
   /** put_h in isr, copy n elements from src buffer to ring buffer **/
   ALWAYS_INLINE() void put_h_isr(C *src, T n) volatile;
+  /** get_h in isr, copy n elements from src buffer to ring buffer **/
+  ALWAYS_INLINE() void get_h_isr(C *dst, T n) volatile;
   /** Copy a new element pointed to by c to the ring buffer. **/
   ALWAYS_INLINE() void putp(C *c) volatile;
   /** Drop _at most_ the next n element in the ring buffer. **/
@@ -119,9 +122,44 @@ CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
 }
 
 template <class C, int N, class T>
+void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
+  #ifdef CHECKING
+  if (isFull() && check) {
+    overflow++;
+    return false;
+  }
+  #endif
+
+  T s = n;
+
+  if (rd + n > len) {
+    s = len -  rd;
+  }
+  if constexpr (N == 0) {
+    memcpy_bank1(dst, ptr + rd, s * sizeof(C));
+  } else {
+    memcpy(dst, buf + rd, s * sizeof(C));
+  }
+  rd += s;
+  n -= s;
+  if (n) {
+    if constexpr (N == 0) {
+      memcpy_bank1(dst + s, ptr, n * sizeof(C));
+    } else {
+      memcpy(dst + s, buf, n * sizeof(C));
+    }
+    rd = n;
+  }
+  if (rd == len) {
+    rd = 0;
+  }
+}
+
+
+template <class C, int N, class T>
 void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   #ifdef CHECKING
-  if (isFull()) {
+  if (isFull() && check) {
     overflow++;
     return false;
   }
@@ -155,7 +193,7 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
 template <class C, int N, class T>
 void CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
   #ifdef CHECKING
-  if (isFull()) {
+  if (isFull() && check) {
     overflow++;
     return false;
   }

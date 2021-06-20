@@ -5,6 +5,7 @@
 #include "LFOSeqTrack.h"
 #include "MDSeqTrack.h"
 #include "ExtSeqTrack.h"
+#include "ArpSeqTrack.h"
 //#include "MDTrack.h"
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -40,9 +41,12 @@ public:
 
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
+  MDArpSeqTrack md_arp_tracks[NUM_MD_TRACKS];
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
+  ExtArpSeqTrack ext_arp_tracks[NUM_EXT_TRACKS];
+
   static constexpr uint8_t num_ext_tracks = NUM_EXT_TRACKS;
 #endif
 
@@ -52,8 +56,6 @@ public:
 #endif
 
   SeqTrack aux_tracks[NUM_AUX_TRACKS];
-
-  uint16_t md_trig_mask = 0;
 
   MCLSeqMidiEvents midi_events;
   bool state = false;

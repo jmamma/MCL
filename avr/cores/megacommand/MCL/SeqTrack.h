@@ -3,10 +3,10 @@
 #ifndef SEQTRACK_H__
 #define SEQTRACK_H__
 
+#include "MCLMemory.h"
 #include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
-#include "MCLMemory.h"
 
 #define EMPTY_TRACK_TYPE 0
 
@@ -50,70 +50,36 @@ public:
 };
 
 // ephemeral data
-class SeqTrack {
 
+class SeqTrackBase {
 public:
   uint8_t active;
-  uint8_t length;
-  uint8_t speed;
-  uint8_t track_number;
-  uint8_t step_count;
-  uint8_t mod12_counter;
-
-  // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
 
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
-
   uint8_t mute_state = SEQ_MUTE_OFF;
 
-  uint8_t count_down;
+  uint8_t length;
+  uint8_t speed;
+  uint8_t track_number;
 
-  uint16_t cur_event_idx;
+  uint8_t step_count;
+  uint8_t mod12_counter;
 
-  SeqTrack() { active = EMPTY_TRACK_TYPE; }
+  SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
 
-  ALWAYS_INLINE() void reset() {
-    step_count = 0;
-    cur_event_idx = 0;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
-    mod12_counter = 0;
-    count_down = 0;
-  }
-
-  ALWAYS_INLINE() void seq();
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
       step_count = 0;
-      cur_event_idx = 0;
 
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
-      }
     } else {
       step_count++;
     }
+  }
+
+  ALWAYS_INLINE() void reset() {
+    mod12_counter = 0;
+    step_count = 0;
   }
 
   uint8_t get_timing_mid(uint8_t speed_) {
@@ -208,15 +174,78 @@ public:
   }
 };
 
+class SeqTrack : public SeqTrackBase {
+
+public:
+  // Conditional counters
+  uint8_t iterations_5;
+  uint8_t iterations_6;
+  uint8_t iterations_7;
+  uint8_t iterations_8;
+
+  uint8_t count_down;
+
+  uint16_t cur_event_idx;
+
+  SeqTrack() { reset(); }
+
+  ALWAYS_INLINE() void reset() {
+    count_down = 0;
+    cur_event_idx = 0;
+    iterations_5 = 1;
+    iterations_6 = 1;
+    iterations_7 = 1;
+    iterations_8 = 1;
+    SeqTrackBase::reset();
+  }
+
+  ALWAYS_INLINE() void seq() {
+    uint8_t timing_mid = get_timing_mid();
+    mod12_counter++;
+    if (mod12_counter == timing_mid) {
+      mod12_counter = 0;
+      step_count_inc();
+    }
+  }
+
+  ALWAYS_INLINE() void step_count_inc() {
+    if (step_count == length - 1) {
+      step_count = 0;
+      cur_event_idx = 0;
+
+      iterations_5++;
+      iterations_6++;
+      iterations_7++;
+      iterations_8++;
+
+      if (iterations_5 > 5) {
+        iterations_5 = 1;
+      }
+      if (iterations_6 > 6) {
+        iterations_6 = 1;
+      }
+      if (iterations_7 > 7) {
+        iterations_7 = 1;
+      }
+      if (iterations_8 > 8) {
+        iterations_8 = 1;
+      }
+    } else {
+      step_count++;
+    }
+  }
+};
+
 class SeqSlideTrack : public SeqTrack {
-  public:
+public:
   SlideData locks_slide_data[NUM_LOCKS];
   uint8_t locks_slide_next_lock_val[NUM_LOCKS];
   uint8_t locks_slide_next_lock_step[NUM_LOCKS];
   uint8_t locks_slides_recalc = 255;
   uint16_t locks_slides_idx = 0;
 
-  void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
+  void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,
+                     int8_t y1);
   void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 };
 

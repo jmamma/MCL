@@ -40,9 +40,16 @@ public:
 	/** Add a new element t to the vector, in the first empty place. **/
   bool add(T t) {
     for (int i = 0; i < N; i++) {
-      if (arr[i] == (T)0 || arr[i] == t) {
-				arr[i] = t;
-				return true;
+      if (arr[i] == t) {
+		 arr[i] = t;
+		 return true;
+      }
+    }
+ 
+    for (int i = 0; i < N; i++) {
+      if (arr[i] == (T)0) {
+		 arr[i] = t;
+		 return true;
       }
     }
     return false;

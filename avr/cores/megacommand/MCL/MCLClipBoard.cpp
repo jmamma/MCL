@@ -87,16 +87,16 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[track].data(),
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track);
-    md_track->chain.length = mcl_seq.md_tracks[track].length;
-    md_track->chain.speed = mcl_seq.md_tracks[track].speed;
+    md_track->link.length = mcl_seq.md_tracks[track].length;
+    md_track->link.speed = mcl_seq.md_tracks[track].speed;
     ret = grids[grid].write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
   }
   else {
     uint8_t n = track - NUM_MD_TRACKS;
     memcpy(ext_track->seq_data.data(), mcl_seq.ext_tracks[n].data(),
            sizeof(ext_track->seq_data));
-    ext_track->chain.length = mcl_seq.ext_tracks[n].length;
-    ext_track->chain.speed = mcl_seq.ext_tracks[n].speed;
+    ext_track->link.length = mcl_seq.ext_tracks[n].length;
+    ext_track->link.speed = mcl_seq.ext_tracks[n].speed;
     ret = grids[grid].write(&temp_track, sizeof(ExtTrack), track, GRID_LENGTH);
   }
   close();
@@ -152,8 +152,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
            sizeof(md_track->seq_data));
 
-    mcl_seq.md_tracks[track].length = md_track->chain.length;
-    mcl_seq.md_tracks[track].speed = md_track->chain.speed;
+    mcl_seq.md_tracks[track].set_length(md_track->link.length);
+    mcl_seq.md_tracks[track].set_speed(md_track->link.speed);
 
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
@@ -165,14 +165,15 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
       md_track->machine.lfo.destinationTrack = track;
     }
     DEBUG_PRINTLN(F("sending seq track"));
-    bool send_machine = true, send_level = true;
+    bool send_machine = true;
+    bool send_level = true;
     MD.sendMachine(track, &(md_track->machine), send_level, send_machine);
   }
   else {
     memcpy(mcl_seq.ext_tracks[track - NUM_MD_TRACKS].data(), ext_track->seq_data.data(),
            sizeof(ext_track->seq_data));
-    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].length = ext_track->chain.length;
-    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].speed = ext_track->chain.speed;
+    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].length = ext_track->link.length;
+    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].speed = ext_track->link.speed;
   }
   close();
   return true;
@@ -258,15 +259,15 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
         //Don't allow paste in to unsupported slots
         continue;
 
-      int16_t chain_row_offset = ptrack->chain.row - t_row;
+      int16_t link_row_offset = ptrack->link.row - t_row;
 
-      uint8_t new_chain_row = row + chain_row_offset;
-      if (new_chain_row >= GRID_LENGTH) {
-        new_chain_row = y + row;
-      } else if (new_chain_row < 0) {
-        new_chain_row = y + row;
+      uint8_t new_link_row = row + link_row_offset;
+      if (new_link_row >= GRID_LENGTH) {
+        new_link_row = y + row;
+      } else if (new_link_row < 0) {
+        new_link_row = y + row;
       }
-      ptrack->chain.row = new_chain_row;
+      ptrack->link.row = new_link_row;
       header.update_model(d_col, ptrack->get_model(),
                           ptrack->get_device_type());
       ptrack->on_copy(s_col, d_col, destination_same);

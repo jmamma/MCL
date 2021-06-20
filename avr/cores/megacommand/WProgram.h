@@ -10,6 +10,42 @@
 
 #include "wiring_private.h"
 
+//#define DEBUGMODE
+
+#ifdef MEGACOMMAND
+  #define SD_CS 53 //PB0
+#else
+  #define SD_CS 9  //PE7
+#endif
+
+#define SERIAL_SPEED 250000
+
+#ifdef DEBUGMODE
+
+#define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
+
+#define DEBUG_PRINT(x)  Serial.print(x)
+#define DEBUG_PRINTLN(x)  Serial.println(x)
+#define DEBUG_DUMP(x)  { \
+}
+// __PRETTY_FUNCTION__ is a gcc extension
+// #define DEBUG_PRINT_FN(x) { \
+//   DEBUG_PRINT(F("func_call: ")); \
+//   Serial.println(__PRETTY_FUNCTION__); \
+// }
+//
+#define DEBUG_CHECK_STACK() { if ((int) SP < 512) { setLed2(); setLed(); while (1); } }
+#define DEBUG_PRINT_FN(x)
+
+#else
+#define DEBUG_INIT()
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTLN(x)
+#define DEBUG_DUMP(x)
+#define DEBUG_PRINT_FN(x)
+#define DEBUG_CHECK_STACK()
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,18 +58,6 @@ extern "C" {
 #endif
 
 #include "CommonTools/helpers.h"
-
-// #define DEBUGMODE
-
-#ifdef MEGACOMMAND
-  #define SD_CS 53 //PB0
-#else
-  #define SD_CS 9  //PE7
-#endif
-
-#define SERIAL_SPEED 1000000
-
-#include "CommonTools/Debug.h"
 
 /* default config flags */
 #define MIDIDUINO_POLL_GUI     1
@@ -60,7 +84,6 @@ extern "C" {
 #include "Midi.h"
 #include "WMath.h"
 #endif
-
 
 extern uint32_t write_count;
 extern uint32_t write_count_time;

@@ -169,7 +169,7 @@ bool MNMPattern::fromSysex(uint8_t *data, uint16_t len) {
 
 bool MNMPattern::fromSysex(MidiClass *midi) {
     uint16_t offset = 0;
-    uint16_t len = midi->midiSysex.recordLen;
+    uint16_t len = midi->midiSysex.get_recordLen();
 
 	if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
     return false;

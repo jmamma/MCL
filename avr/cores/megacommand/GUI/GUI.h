@@ -102,11 +102,11 @@ public:
    * @{
    */
   bool display_mirror = false;
-  bool use_screen_saver = false;
+  bool use_screen_saver = true;
   /** A vector storing the registered event handlers (max 4). **/
   Vector<event_handler_t, 4> eventHandlers;
-  /** A vector storing the registered tasks (max 8). **/
-  Vector<Task *, 8> tasks;
+  /** A vector storing the registered tasks (max 4). **/
+  Vector<Task *, 4> tasks;
 
 #ifdef GUI_NUM_ENCODERS
   /** The number of encoders present in the GUI (4 on the minicommand). **/
@@ -259,31 +259,42 @@ public:
    */
 
   void put_value_at1(uint8_t idx, uint8_t value);
+  void put_value_at1(uint8_t idx, uint8_t value, char *data);
+  
   void put_value_at2(uint8_t idx, uint8_t value);
+  void put_value_at2(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 4 character increments).
    * **/
   void put_value(uint8_t idx, uint8_t value);
+  void put_value(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 4 character increments).
    * **/
   void put_value(uint8_t idx, int value);
+  void put_value(uint8_t idx, int value, char *data);
   /** Display the value in base 16 at the given idx (in 4 character increments).
    * **/
   void put_value16(uint8_t idx, uint16_t value);
+  void put_value16(uint8_t idx, uint16_t value, char *data);
   /** Display the value in base 16 at the given idx (in 4 character increments).
    * **/
   void put_valuex(uint8_t idx, uint8_t value);
+  void put_valuex(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 1 character increments).
    * **/
   void put_value_at(uint8_t idx, uint8_t value);
+  void put_value_at(uint8_t idx, uint8_t value, char *data);
   /** Display the value in base 10 at the given idx (in 1 character increments).
    * **/
   void put_value_at(uint8_t idx, int value);
+  void put_value_at(uint8_t idx, int value, char *data);
   /** Display the value in base 16 at the given idx (in 1 character increments).
    * **/
   void put_value16_at(uint8_t idx, uint16_t value);
+  void put_value16_at(uint8_t idx, uint16_t value,  char *data);
   /** Display the value in base 16 at the given idx (in 1 character increments).
    * **/
   void put_valuex_at(uint8_t idx, uint8_t value);
+  void put_valuex_at(uint8_t idx, uint8_t value, char *data);
 
   /** Display the string at the given idx (in 4 character increments). **/
   void put_string(uint8_t idx, const char *str);
@@ -322,6 +333,21 @@ public:
   /** Display the program-space string at the given idx (in 1 character
    * increments) and fill up with whitespace. **/
   void put_p_string_at_fill(uint8_t idx, PGM_P str);
+
+  /** Print the format string using the vsnprintf function. **/
+  void printf(const char *fmt, ...);
+  /** Print the format string using the vsnprintf function and fill up with
+   * whitespace. **/
+  void printf_fill(const char *fmt, ...);
+  /** Print the format string at the given idx (in 1 character increments) using
+   * the vsnprintf function. **/
+  void printf_at(uint8_t idx, const char *fmt, ...);
+  /**
+   * Print the format string at the given idx (in 1 character
+   * increments) using the vsnprintf function and fill up with
+   * whitespace.
+   **/
+  void printf_at_fill(uint8_t idx, const char *fmt, ...);
 
   /** Set the flash duration of the currently active flash line. **/
   void flash(uint16_t duration = DEFAULT_FLASH_DURATION);
@@ -396,6 +422,23 @@ public:
    * duration. **/
   void flash_p_strings_fill(PGM_P str1, PGM_P str2,
                             uint16_t duration = DEFAULT_FLASH_DURATION);
+
+  /** Flash the given format string using the vsnprintf function. **/
+  void flash_printf(const char *fmt, ...);
+  /** Flash the given format string using the vsnprintf function and fill with
+   * whitespace. **/
+  void flash_printf_fill(const char *fmt, ...);
+  /**
+   * Flash the given format string at the given idx (in 1-character
+   * increments) using the vsnprintf function and fill with
+   * whitespace.
+   **/
+  void flash_printf_at(uint8_t idx, const char *fmt, ...);
+  /**
+   * Flash the given format string using the vsnprintf function and
+   * fill with whitespace.
+   **/
+  void flash_printf_at_fill(uint8_t idx, const char *fmt, ...);
 
   /** Switch the line to be displayed, using either GUI.LINE1 or GUI.LINE2. **/
   void setLine(const uint8_t line) { curLine = line; }

@@ -10,7 +10,7 @@
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
 #define PAGE_UNDO 64
-#define NOTE_UNDO 65
+#define STEP_UNDO 65
 
 class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
@@ -45,26 +45,25 @@ extern void opt_trackid_handler();
 extern void opt_speed_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
-extern void opt_copy_track_handler();
-extern void opt_copy_track_handler(uint8_t op);
+extern void opt_copy_track_handler(uint8_t op = 255);
 extern void opt_paste_track_handler();
 extern void opt_shift_track_handler();
 extern void opt_reverse_track_handler();
 extern void opt_paste_step_handler();
-extern void opt_copy_step_handler();
+extern void opt_copy_step_handler(uint8_t op = 255);
 extern void opt_mute_step_handler();
 extern void opt_clear_step_locks_handler();
 extern void opt_mask_handler();
 extern void opt_length_handler();
 extern void opt_channel_handler();
 extern void opt_clear_page_handler();
-extern void opt_copy_page_handler(uint8_t op);
-extern void opt_copy_page_handler();
+extern void opt_copy_page_handler(uint8_t op = 255);
 extern void opt_paste_page_handler();
 extern void opt_clear_step_handler();
 
 extern void seq_menu_handler();
 extern void step_menu_handler();
+
 
 class MidiDevice;
 
@@ -95,12 +94,10 @@ public:
   static bool toggle_device;
 
   static uint8_t last_midi_state;
-  static uint16_t deferred_timer;
   static uint8_t last_param_id;
   static uint8_t last_rec_event;
   static uint8_t last_step;
-
-  const uint8_t render_defer_time = 110;
+  static uint32_t last_md_model;
 
   static bool recording;
   bool display_page_index = true;
@@ -118,7 +115,6 @@ public:
   void config_as_trackedit();
   void config_as_lockedit();
   void config_mask_info(bool silent = true);
-  void create_chars_seq();
   void draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask, const uint8_t step_count, const uint8_t length, const bool show_current_step = true);
   void draw_lock_mask(const uint8_t offset, const bool show_current_step = true);
   void draw_mask(const uint8_t offset, const uint64_t &pattern_mask, const uint8_t step_count, const uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask, const bool show_current_step = true);
@@ -131,7 +127,8 @@ public:
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
-  void select_track(MidiDevice* device, uint8_t track);
+  void select_track(MidiDevice* device, uint8_t track, bool send = true);
+  bool md_track_change_check();
 
   void bootstrap_record();
   uint8_t translate_to_step_conditional(uint8_t condition, /*OUT*/ bool* plock);
@@ -139,7 +136,8 @@ public:
 
   uint64_t *get_mask();
 
-  void queue_redraw() { deferred_timer = slowclock; }
+  void queue_redraw() { redisplay = true; }
+  void params_reset();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

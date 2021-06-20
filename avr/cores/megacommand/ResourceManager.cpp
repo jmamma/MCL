@@ -11,7 +11,19 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 	byte* pos = m_buffer + m_bufsize;
 	uint16_t sz = unpack((byte*)pgm, pos);
 	m_bufsize += sz;
-	return pos;
+    DEBUG_PRINTLN("resource buf size");
+    DEBUG_PRINTLN(m_bufsize);
+    return pos;
+}
+
+byte* ResourceManager::Allocate(size_t sz) {
+  byte* pos = m_buffer + m_bufsize;
+  m_bufsize += sz;
+  return pos;
+}
+
+void ResourceManager::Free(size_t sz) {
+  m_bufsize -= sz;
 }
 
 // XXX 4KB buf on stack is too heavy
@@ -42,12 +54,10 @@ void ResourceManager::restore_page_entry_deps() {
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
   R.page_entries->Entries[5].Page = &seq_extstep_page;
   R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].Page = &seq_param_page[0];
-  R.page_entries->Entries[6].IconData = R.icons_page->icon_para;
-  R.page_entries->Entries[7].Page = &seq_ptc_page;
-  R.page_entries->Entries[7].IconData = R.icons_page->icon_chroma;
+  R.page_entries->Entries[6].Page = &seq_ptc_page;
+  R.page_entries->Entries[6].IconData = R.icons_page->icon_chroma;
 
-  uint8_t idx = 8;
+  uint8_t idx = 7;
 #ifdef SOUND_PAGE
   R.page_entries->Entries[idx].Page = &sound_browser;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_sound;
@@ -88,7 +98,6 @@ void ResourceManager::restore_menu_layout_deps() {
 	system_page.set_layout(R.menu_layouts->system_menu_layout);
 	midi_config_page.set_layout(R.menu_layouts->midiconfig_menu_layout);
 	md_config_page.set_layout(R.menu_layouts->mdconfig_menu_layout);
-	chain_config_page.set_layout(R.menu_layouts->chain_menu_layout);
 	mcl_config_page.set_layout(R.menu_layouts->mclconfig_menu_layout);
 	ram_config_page.set_layout(R.menu_layouts->rampage1_menu_layout);
 	file_menu_page.set_layout(R.menu_layouts->file_menu_layout);

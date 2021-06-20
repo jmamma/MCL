@@ -153,14 +153,13 @@ public:
 
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
-    oneshot_mask[0] = 0;
-    oneshot_mask[1] = 0;
+    memset(oneshot_mask,0,sizeof(oneshot_mask));
   }
 
   ALWAYS_INLINE() void seq(MidiUartParent *uart_);
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100);
-  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100);
+  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
+  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
   ALWAYS_INLINE()
   void noteon_conditional(uint8_t condition, uint8_t note,
                           uint8_t velocity = 100);

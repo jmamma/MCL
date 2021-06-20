@@ -4,7 +4,11 @@ uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
 uint8_t GridIOPage::old_grid = 0;
 
-void GridIOPage::cleanup() { proj.select_grid(old_grid); }
+void GridIOPage::cleanup() {
+  trig_interface.send_md_leds();
+  MD.popup_text(127, 2);
+  proj.select_grid(old_grid);
+}
 
 void GridIOPage::init() {
   old_grid = proj.get_grid();
@@ -17,7 +21,8 @@ void GridIOPage::track_select_array_from_type_select(
   uint8_t track_idx, dev_idx;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+    GridDeviceTrack *gdt =
+        mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
 
     if (gdt == nullptr)
       continue;
@@ -42,26 +47,43 @@ void GridIOPage::track_select_array_from_type_select(
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      if (note_interface.notes[n] > 0) {
+      if (note_interface.is_note(n)) {
         TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
-        if (note_interface.notes[n] == 1) {
+        if (note_interface.is_note_on(n)) {
           note_interface.ignoreNextEvent(n);
         }
-        note_interface.notes[n] = 0;
+        note_interface.clear_note(n);
       }
     }
     proj.toggle_grid();
     trig_interface.send_md_leds();
   }
-
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_NO: {
+        goto close;
+      }
+      case MDX_KEY_YES: {
+        group_select();
+        return true;
+      }
+     }
+    }
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    group_select();
+    return true;
+  }
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4) ||
       EVENT_RELEASED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
+  close:
     GUI.setPage(&grid_page);
-    curpage = 0;
     return true;
   }
   return false;

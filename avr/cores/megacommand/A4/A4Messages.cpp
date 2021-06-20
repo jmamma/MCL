@@ -124,7 +124,7 @@ bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
-  const auto &reclen = midi->midiSysex.recordLen;
+  const auto &reclen = midi->midiSysex.get_recordLen();
 
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;

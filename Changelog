@@ -1,3 +1,151 @@
+MCL 4.00 20/06/2021
+
+- Enhanced GUI / Machinedrum GUI convergance.
+ Version X.05 of the MD firmware introduces a third editing mode beyond Classic and Extended
+ entitled Enhanced Mode.
+
+ Enhanced mode is activated automatically when the MD is connected to the MegaCommand.
+
+ When in Enhanced mode, both Classic and Extended LEDs will be lit. The three modes can be
+ toggled using the Classic/Extended button.
+
+ Enhanced mode enables the Machinedrum's GUI to be fully integrated in to the MCL workflow
+ All MD sequencer editing commands now apply to the MCL sequencer.
+   This includes:
+      - [ Record ] button to enter/exit step editing.
+	  - [ Function + Record ] to enter realtime record mode (on any page).
+	  - [ Function + Clear/Copy/Paste ] works across pattern/track/page/step.
+	  - [ Step + Left/Right ] Microtiming menu drawn on the MD.
+	  - [ Step + Up/Down ] Conditional trig selection.
+	  - [ Function + Left/Right ] shift track.
+	  - [ Function + Up ] reverse track.
+	  - Step sequencer cursor is now fully synced with the MC.
+	  - Parameter lock editing now works identically to the MD.
+      - Track length and speed settings can be set via the MD's scale menu.
+	    When in step edit mode, this applies to a single track otherwise it
+		will apply to all MD tracks.
+	  - Track sequencer data is automatically copied to new pages when extending a track's
+	    length for the first time.
+
+   MCL commands:
+      - [ Song Button ] opens Page Select page.
+
+      Grid Page:
+	  - [ Up/Down/Left/Right ] navigate the grid by positioning the grid cursor.
+	  - [ Bank Buttons ] navigate the grid (in bank increments).
+	  - Hold [ No ] button opens Slot Menu.
+
+	  Loading/Saving:
+	  - [ Yes ] opens Load Page. Press and hold [ Yes ] again for Group Load menu.
+	  - [ Function + Yes ] opens Save page. Press and hold [ Yes ] again for Group Save menu.
+      - You can now load patterns/rows in the traditional MD way using the [ Bank + Trig buttons ].
+	    -- [ Bank + Trig ] group loads the selected row, from the MCL grid.
+        -- [ Bank + Multiple Trigs ] creates a chain queue consistencing of consecutive group
+		   loads corresponding rows.
+
+	  Slot Menu: Hold [ No ] button to open
+	  - [ Up/Down/Left/Right ] to select multiple slots in the grid.
+	  - [ Clear/Copy/Paste ] to clear/copy/paste selected slot(s)
+	  - [ Yes ] load selected slots. Slots are loaded according to the Chain settings in the LoadPage.
+
+	  Mixer Page:
+	  - [ No + Trig ] revert parameter edits.
+
+- Changes:
+ Grids A/B are now relabelled to X/Y.
+ Grid rows are no longer labelled numerically and instead represented by the corresponding
+
+ Bank + Pattern.
+
+ For example:
+
+    Row 0   = A01
+    Row 1   = A02
+    Row 2   = A03
+    ...
+    Row 15  = A16
+    Row 16  = B01
+    Row 17  = B02
+    ...
+    Row 127 = H16
+
+ Slot Menu:
+
+ Added Len parameter for adjusting a slot's length without loading.
+ Row parameter has been named to Jump. In Chain Auto mode, the Jump parameter corresponds to the
+ destination of next slot transition.
+
+- Chain Mode Enhancements:
+
+ Each column in the grid now has it's own dedicated chain setting. It can be either Manual, Auto or Queue.
+
+ Chain Queue is a new mode that has been added for realtime looping.
+
+ Each column of the Grid can have up to 8 slots queued at any time. Queued slots are played in order
+ and then the sequence is repeated indefinately.
+
+ When Queue mode is selected from the Load page, each loaded slot will be added to the corresonding column's
+ queue.
+
+ A column's queue can be cleared by switching chain mode to either Manual or Auto and then loading a slot in
+ that column.
+
+ As each column has an independent chain setting, it is possible to have some slots chaining automatically
+ (Auto) according to their Loop/Jump setting, other slots can be looping in an improvised queue (Queue),
+ and then the remaining slots could be left static via manual chain (Manual).
+
+- Load Page:
+
+ [ Encoder 1 ] of the load page is used to select the applied Chain Mode when loading.
+ Manual/Auto/Queue are selectable.
+
+ When Queue mode is selected [ Encoder 2 ] becomes accessible and can be used to override the length of
+ queued tracks.
+
+- Sequencer Improvements:
+
+ The sequencer is now pre-rendered: Each frame of the sequencer is generated one clock tick in advance.
+ This means the MIDI payload is sent immediately on each clock pulse eliminating sequencer jitter.
+
+ MD drum sounds are now triggered in parallel using a modification of the MIDI note-on specification.
+ This eliminates phase distortion that could previously be heard on drum sounds playing on the same step.
+
+ Each sequencer track now has it's own dedicated Arpeggiator. Adjustments made to Arpeggiator menu settings
+ will be applied to the current track's Arp.
+ Note: Arpeggiator data is not currently saved with the track data.
+
+- Other Changes:
+
+ Received MIDI data is now processed whenever possible and is no longer
+ subject to program behaviour. This means MIDI receive latency will be the same across all MCL pages
+ and the display refresh no longer needs to be locked during live record. If
+ you are triggering chromatic mode from external MIDI keyboard/sequencer,
+ expect note latency/jitter to be consistent no matter which page/mode you are in.
+
+ MIDI Forwarding has been re-implemented and will no longer result in corrupted message streams.
+
+ SD Card data access has been made robust to tranisent read errors. For best SD Card performance,
+ ensure the card is formated FAT32 via the SD Card Foundations formatting utility.
+
+ MCL no longer requires a dedicted MD global and will only modify settings as
+ needed.
+
+ MCL will automatically detect kit model changes eliminating the need to
+ re-enter pages to refresh the kit state.
+
+ RAM page transitions now occur immediately, instead of delaying an additional
+ cycle.
+
+ When assigning a Machine to the MD, parameters of the current sound will not be altered.
+ This greatly improves the smoothness of slot loading.
+
+Deprecated Features:
+
+- Chain RAND has been deprecated.
+- Parameter Lock page has been deprecated.
+- SD Card drive (MD backup tool) has been deprecated.
+
+
 MCL 3.10d 09/03/2021
 
   - RAM Page record/playback was broken, fixed.

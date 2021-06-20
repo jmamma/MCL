@@ -19,6 +19,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   DEBUG_DUMP(n);
   switch (mcl_actions.transition_level[n]) {
   case 1:
+    DEBUG_PRINTLN("setting transition level to 0");
     send_level = true;
     machine.level = 0;
     break;
@@ -84,7 +85,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
 
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
-  load_chain_data(seq_track);
+  load_link_data(seq_track);
   md_seq_track->oneshot_mask = 0;
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->update_params();
@@ -134,8 +135,8 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   if (column != 255 && online == true) {
     get_machine_from_kit(column);
     DEBUG_DUMP("online");
-    chain.length = seq_track->length;
-    chain.speed = seq_track->speed;
+    link.length = seq_track->length;
+    link.speed = seq_track->speed;
 
     if (merge > 0) {
       DEBUG_PRINTLN(F("auto merge"));
@@ -147,12 +148,12 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
                sizeof(MDSeqTrackData));
       }
       if (merge == SAVE_MD) {
-        chain.length = MD.pattern.patternLength;
-        chain.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+        link.length = MD.pattern.patternLength;
+        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
         DEBUG_PRINTLN(F("SAVE_MD"));
       }
-      temp_seq_track.length = chain.length;
-      temp_seq_track.speed = chain.speed;
+      temp_seq_track.length = link.length;
+      temp_seq_track.speed = link.speed;
 
       // merge md pattern data with seq_data
       temp_seq_track.merge_from_md(column, &(MD.pattern));
@@ -178,7 +179,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }
-  DEBUG_DUMP(chain.length);
+  DEBUG_DUMP(link.length);
   DEBUG_PRINTLN(F("Track stored in grid"));
   DEBUG_PRINT(column);
   DEBUG_PRINT(F(" "));

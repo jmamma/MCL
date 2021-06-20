@@ -28,6 +28,8 @@ void encoder_lastparam_handle(EncoderParent *enc);
 class MixerPage : public LightPage {
 public:
   MixerMidiEvents midi_events;
+  uint8_t params[16][24];
+
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
   char info_line2[9];

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MCL.h"
+#include "new.h"
 
 #include "A4.h"
 #include "MD.h"
@@ -9,7 +10,6 @@
 #ifdef MEGACOMMAND
 #include "MidiSDS.h"
 #include "MidiSDSSysex.h"
-#include "MegaComTask.h"
 #endif
 
 #include "Shared.h"
@@ -61,12 +61,12 @@
 #include "MCLEncoder.h"
 
 #include "Grid.h"
+#include "GridLink.h"
 #include "GridChain.h"
 #include "GridRowHeader.h"
 #include "GridTask.h"
 
 #include "MCLClipBoard.h"
-#include "MDExploit.h"
 #include "MDSound.h"
 #include "MDTrackSelect.h"
 
@@ -76,7 +76,9 @@
 #include "MDFXTrack.h"
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
+#include "GridChainTrack.h"
 
+#include "ArpSeqTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
 #include "MNMTrack.h"

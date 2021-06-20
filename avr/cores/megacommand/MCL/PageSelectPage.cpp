@@ -1,6 +1,6 @@
-#include <avr/pgmspace.h>
 #include "MCL_impl.h"
 #include "ResourceManager.h"
+#include <avr/pgmspace.h>
 
 const PageCategory Categories[] PROGMEM = {
     {"MAIN", 4, 0},
@@ -76,6 +76,10 @@ get_category_name_fail:
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+  trig_interface.on();
+  md_prepare();
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 0;
   R.Clear();
   R.use_icons_page();
   R.use_page_entries();
@@ -99,48 +103,23 @@ void PageSelectPage::init() {
   classic_display = false;
 #endif
   loop_init = true;
+  // md_exploit.on(switch_tracks);
+  note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   display();
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void PageSelectPage::md_prepare() {
-#ifndef USE_BLOCKINGKIT
   kit_cb.init();
-
-  MDSysexListener.addOnKitMessageCallback(
-      &kit_cb,
-      (md_callback_ptr_t)&MDBlockCurrentStatusCallback::onSysexReceived);
-#endif
-  if (MD.connected) {
-#ifdef USE_BLOCKINGKIT
-    MD.getBlockingKit(0x7F, CALLBACK_TIMEOUT);
-    if (MidiClock.state == 2) {
-      // Restore kit param values that are being modulaated by locks
-      mcl_seq.update_kit_params();
-    }
-#else
-    MD.requestKit(0x7F);
-    delay(20);
-#endif
-  }
+  auto listener = MD.getSysexListener();
+  listener->addOnKitMessageCallback(
+      &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
+  MD.requestKit(0x7F);
 }
 
 void PageSelectPage::cleanup() {
-#ifndef USE_BLOCKINGKIT
-  uint16_t myclock = slowclock;
-  if (!loop_init) {
-    while (!kit_cb.received && (clock_diff(myclock, slowclock) < 400))
-      ;
-    if (kit_cb.received) {
-      MD.kit.fromSysex(MD.midi);
-      if (MidiClock.state == 2) {
-        mcl_seq.update_kit_params();
-      }
-    }
-  }
-  MDSysexListener.removeOnKitMessageCallback(&kit_cb);
-#endif
   note_interface.init_notes();
   MD.set_trigleds(0, TRIGLED_OVERLAY);
 }
@@ -196,15 +175,15 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::loop() {
-  if (loop_init) {
-    bool switch_tracks = false;
-    // md_exploit.off(switch_tracks);
-    trig_interface.on();
-    md_prepare();
-    // md_exploit.on(switch_tracks);
-    note_interface.state = true;
-    loop_init = false;
-  }
+  /*  if (loop_init) {
+      bool switch_tracks = false;
+      // md_exploit.off(switch_tracks);
+      trig_interface.on();
+      md_prepare();
+      // md_exploit.on(switch_tracks);
+      note_interface.state = true;
+      loop_init = false;
+    } */
 
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur - enc_->old;
@@ -332,24 +311,38 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
 
     return true;
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+      case MDX_KEY_SONG: {
+        goto release;
+      }
+      }
+    } else {
+      switch (key) {
+      case MDX_KEY_NO: {
+        goto load_grid;
+      }
+      }
+    }
+  }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+  release:
     LightPage *p;
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
-      trig_interface.off();
       //  md_exploit.off();
       GUI.setPage(&grid_page);
     } else {
-      MD.getCurrentTrack(CALLBACK_TIMEOUT);
-      last_md_track = MD.currentTrack;
       GUI.setPage(p);
     }
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    trig_interface.off();
+  load_grid:
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
     return true;

@@ -68,10 +68,7 @@ public:
 
   MidiUartParent *uart;
 
-  bool forward = false;
-
-  bool ext_in = false;
-  bool ext_out = false;
+  MidiUartClassCommon *uart_forward;
   uint8_t callback;
   //  midi_callback_t callbacks[7];
   CallbackVector1<MidiCallback, 8, uint8_t *> midiCallbacks[7];
@@ -86,6 +83,7 @@ public:
   MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
 
   void init();
+  void sysexEnd(uint8_t msg_rd);
   void handleByte(uint8_t c);
 
 #ifdef HOST_MIDIDUINO

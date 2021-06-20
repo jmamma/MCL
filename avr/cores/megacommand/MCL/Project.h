@@ -24,6 +24,7 @@ class Project : public ProjectHeader {
 public:
   File file;
   uint8_t grid_select;
+
   Grid grids[NUM_GRIDS];
 
   void chdir_projects();

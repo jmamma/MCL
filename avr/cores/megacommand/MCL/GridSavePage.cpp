@@ -1,23 +1,26 @@
 #include "MCL_impl.h"
 #define S_PAGE 3
 
-void GridSavePage::setup() {
-  MD.getCurrentTrack(CALLBACK_TIMEOUT);
+void GridSavePage::init() {
+  GridIOPage::init();
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   note_interface.state = true;
   grid_page.reload_slot_models = false;
+  MD.popup_text("SAVE SLOTS", true);
   draw_popup();
 }
 
+void GridSavePage::setup() {}
+
 void GridSavePage::draw_popup() {
   char str[16];
-  strcpy(str,"GROUP SAVE");
+  strcpy(str, "GROUP SAVE");
 
   if (!show_track_type) {
     strcpy(str, "SAVE TO  ");
-    str[8] = 'A' + proj.get_grid();
+    str[8] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true, 28);
 }
@@ -56,7 +59,7 @@ void GridSavePage::display() {
         (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
         (64 *
          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-    itoa(step_count, step, 10);
+    mcl_gui.put_value_at(step_count, step);
 
     // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
     // MCLGUI::s_menu_y + 4, "STEP", step);
@@ -116,7 +119,7 @@ void GridSavePage::save() {
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    if (note_interface.notes[n] > 0) {
+    if (note_interface.is_note(n)) {
       SET_BIT32(track_select, n + proj.get_grid() * 16);
     }
   }
@@ -129,7 +132,7 @@ void GridSavePage::save() {
 
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.store_tracks_in_mem(0, grid_page.encoders[1]->getValue(),
+  mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
                                   track_select_array, save_mode);
 }
 
@@ -144,6 +147,12 @@ void GridSavePage::get_modestr(char *modestr) {
       strcpy(modestr, "MERGE");
     }
   }
+}
+
+void GridSavePage::group_select() {
+  show_track_type = true;
+  MD.popup_text("SAVE GROUPS", true);
+  MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
 bool GridSavePage::handleEvent(gui_event_t *event) {
@@ -177,12 +186,35 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_track_type = true;
-    MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES: {
+        group_select();
+        return true;
+      }
+      case MDX_KEY_BANKA:
+      case MDX_KEY_BANKB:
+      case MDX_KEY_BANKC: {
+        encoders[0]->cur = key - MDX_KEY_BANKA;
+        return true;
+      }
+      }
+    }
+
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+      case MDX_KEY_YES:
+        goto save_groups;
+      }
+    }
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  save_groups:
     trig_interface.off();
     uint8_t offset = proj.get_grid() * 16;
 
@@ -202,11 +234,9 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       save_mode = SAVE_SEQ;
     }
 
-    mcl_actions.store_tracks_in_mem(grid_page.encoders[0]->getValue(),
-                                    grid_page.encoders[1]->getValue(),
+    mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
                                     track_select_array, save_mode);
     GUI.setPage(&grid_page);
-    curpage = 0;
     return true;
   }
 }

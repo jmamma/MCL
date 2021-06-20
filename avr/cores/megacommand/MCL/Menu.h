@@ -34,8 +34,19 @@ class MenuBase {
 private:
 public:
   uint8_t entry_mask[4];
+  menu_option_t* custom_options;
 
-  MenuBase() { memset(entry_mask, 0xFF, sizeof(entry_mask)); }
+  MenuBase() { 
+    memset(entry_mask, 0xFF, sizeof(entry_mask)); 
+    custom_options = nullptr;
+  }
+
+  /// use a custom options name lookup table.
+  /// the table can be dynamically generated, so it is not limited
+  /// to PROGMEM content.
+  void set_custom_options(menu_option_t* p) {
+    custom_options = p;
+  }
 
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);
@@ -61,6 +72,7 @@ protected:
   virtual uint8_t get_entry_count() = 0;
 };
 
+// TODO raise error if N > MAX_MENU_ITEMS
 template <int N> class Menu : public MenuBase {
 
 public:

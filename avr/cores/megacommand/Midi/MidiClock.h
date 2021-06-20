@@ -119,18 +119,17 @@ public:
 
   MidiClockClass();
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStartCallbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStartImmediateCallbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiStopCallbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> onMidiContinueCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStartImmediateCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStopCallbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiContinueCallbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> on192Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on96Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on32Callbacks;
-  CallbackVector1<ClockCallback, 8, uint32_t> on16Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on192Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on96Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on32Callbacks;
+  CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on16Callbacks;
 
-  CallbackVector1<ClockCallback, 8, uint32_t> onClockCallbacks;
   void addOnMidiStartImmediateCallback(ClockCallback *obj,
                                        midi_clock_callback_ptr_t func) {
     onMidiStartImmediateCallbacks.add(obj, func);
@@ -208,33 +207,26 @@ public:
   }
   void removeOn16Callback(ClockCallback *obj) { on16Callbacks.remove(obj); }
 
-  void addOnClockCallback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
-    onClockCallbacks.add(obj, func);
-  }
-  void removeOnClockCallback(ClockCallback *obj,
-                             midi_clock_callback_ptr_t func) {
-    onClockCallbacks.remove(obj, func);
-  }
-  void removeOnClockCallback(ClockCallback *obj) {
-    onClockCallbacks.remove(obj);
-  }
-
   ALWAYS_INLINE() void init();
+
+  volatile bool inCallback = false;
+
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
       return;
 
-    static bool inCallback = false;
     if (inCallback) {
       DEBUG_PRINTLN(F("clock collision"));
       return;
-    } else {
-      inCallback = true;
     }
 
-#ifndef HOST_MIDIDUINO
+    inCallback = true;
+
+    uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+    uint8_t _irqlock_tmp = SREG;
+    MidiUartParent::handle_midi_lock = 1;
+
     sei();
-#endif
 
     on192Callbacks.call(div192th_counter);
 
@@ -251,6 +243,8 @@ public:
     }
 
     inCallback = false;
+    SREG = _irqlock_tmp;
+    MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   }
 
   ALWAYS_INLINE() void handleImmediateClock() {
