@@ -1,4 +1,4 @@
-﻿#include "R.h"
+#include "R.h"
 const unsigned char __R_tuning[] PROGMEM = {
   255,
   0,

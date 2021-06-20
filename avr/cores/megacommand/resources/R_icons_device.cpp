@@ -1,4 +1,4 @@
-﻿#include "R.h"
+#include "R.h"
 const unsigned char __R_icons_device[] PROGMEM = {
   247,
   0,

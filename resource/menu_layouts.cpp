@@ -138,12 +138,12 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         //          m  r    n  d   p  f   o
         {"GRID: ",  0, 2,   2, 31, 0, 0,  52},
         // for non-ext tracks
-        {"LEN: ",   1, 65,  0, 39, 0, 0,  0},
+        {"LEN:   ",   1, 65,  0, 39, 0, 0,  0},
         // for ext tracks
-        {"LEN: ",   1, 129, 0, 39, 0, 0,  0},
+        {"LEN:   ",   1, 129, 0, 39, 0, 0,  0},
         {"LOOP: ",  0, 64,  0, 33, 0, 0,  0},
         // o=128, generate the table on-demand
-        {"JMP:   ", 0, 128, 128, 34, 0, 0, 128},
+        {"JUMP: ", 0, 128, 128, 34, 0, 0, 128},
    #ifndef OLED_DISPLAY
         {"APPLY:",  1, 21,  1, 35, 0, 0,  40},
    #endif
