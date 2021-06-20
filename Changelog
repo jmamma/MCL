@@ -1,4 +1,4 @@
-MCL 4.00 01/07/2021
+MCL 4.00 20/06/2021
 
 - Enhanced GUI / Machinedrum GUI convergance.
  Version X.05 of the MD firmware introduces a third editing mode beyond Classic and Extended
@@ -9,7 +9,7 @@ MCL 4.00 01/07/2021
  When in Enhanced mode, both Classic and Extended LEDs will be lit. The three modes can be
  toggled using the Classic/Extended button.
 
- Enhanced mode enable's the Machinedrum's GUI to be fully integrated in to the MCL workflow
+ Enhanced mode enables the Machinedrum's GUI to be fully integrated in to the MCL workflow
  All MD sequencer editing commands now apply to the MCL sequencer.
    This includes:
       - [ Record ] button to enter/exit step editing.
@@ -22,6 +22,8 @@ MCL 4.00 01/07/2021
 	  - Step sequencer cursor is now fully synced with the MC.
 	  - Parameter lock editing now works identically to the MD.
       - Track length and speed settings can be set via the MD's scale menu.
+	    When in step edit mode, this applies to a single track otherwise it
+		will apply to all MD tracks.
 	  - Track sequencer data is automatically copied to new pages when extending a track's
 	    length for the first time.
 
@@ -29,16 +31,16 @@ MCL 4.00 01/07/2021
       - [ Song Button ] opens Page Select page.
 
       Grid Page:
-	  - [ Up/Down/Left/Right ] navigate the grid.
-	  - [ Bank Buttons ] navigate the grid (in 16 row increments).
+	  - [ Up/Down/Left/Right ] navigate the grid by positioning the grid cursor.
+	  - [ Bank Buttons ] navigate the grid (in bank increments).
 	  - Hold [ No ] button opens Slot Menu.
 
 	  Loading/Saving:
 	  - [ Yes ] opens Load Page. Press and hold [ Yes ] again for Group Load menu.
 	  - [ Function + Yes ] opens Save page. Press and hold [ Yes ] again for Group Save menu.
-      - You can now load patterns/rows in the traditional MD way using the Bank + trig buttons.
+      - You can now load patterns/rows in the traditional MD way using the [ Bank + Trig buttons ].
 	    -- [ Bank + Trig ] group loads the selected row, from the MCL grid.
-        -- [ Bank + Multiple Trigs ] creates a chain queue consistencing of consecutive group 
+        -- [ Bank + Multiple Trigs ] creates a chain queue consistencing of consecutive group
 		   loads corresponding rows.
 
 	  Slot Menu: Hold [ No ] button to open
@@ -49,11 +51,13 @@ MCL 4.00 01/07/2021
 	  Mixer Page:
 	  - [ No + Trig ] revert parameter edits.
 
-- Grids A/B are now relabelled to X/Y.
-- Grid rows are no longer labelled numerically and instead represented by the corresponding
-  Bank + Pattern.
+- Changes:
+ Grids A/B are now relabelled to X/Y.
+ Grid rows are no longer labelled numerically and instead represented by the corresponding
 
-  For example:
+ Bank + Pattern.
+
+ For example:
 
     Row 0   = A01
     Row 1   = A02
@@ -65,10 +69,11 @@ MCL 4.00 01/07/2021
     ...
     Row 127 = H16
 
-- Slot Menu:
-  Added Len parameter for adjusting a slot's length without loading.
-  Row parameter has been named to Jump. In Chain Auto mode, this corresponds to the destination of
-  next slot transition.
+ Slot Menu:
+
+ Added Len parameter for adjusting a slot's length without loading.
+ Row parameter has been named to Jump. In Chain Auto mode, the Jump parameter corresponds to the
+ destination of next slot transition.
 
 - Chain Mode Enhancements:
 
@@ -76,7 +81,7 @@ MCL 4.00 01/07/2021
 
  Chain Queue is a new mode that has been added for realtime looping.
 
- Each column of the Grid can have up to 8 slots queued at any time. Queued  slots are played in order
+ Each column of the Grid can have up to 8 slots queued at any time. Queued slots are played in order
  and then the sequence is repeated indefinately.
 
  When Queue mode is selected from the Load page, each loaded slot will be added to the corresonding column's
@@ -91,15 +96,15 @@ MCL 4.00 01/07/2021
 
 - Load Page:
 
-  [ Encoder 1 ] of the load page is used to select the applied Chain Mode when loading.
-  Manual/Auto/Queue are selectable.
+ [ Encoder 1 ] of the load page is used to select the applied Chain Mode when loading.
+ Manual/Auto/Queue are selectable.
 
-  When Queue mode is selected [ Encoder 2 ] becomes accessible and can be used to override the length of
-  queued tracks.
+ When Queue mode is selected [ Encoder 2 ] becomes accessible and can be used to override the length of
+ queued tracks.
 
 - Sequencer Improvements:
 
- The sequencer is now pre-rendered: Each frame of the sequencer is rendered one clock tick in advance.
+ The sequencer is now pre-rendered: Each frame of the sequencer is generated one clock tick in advance.
  This means the MIDI payload is sent immediately on each clock pulse eliminating sequencer jitter.
 
  MD drum sounds are now triggered in parallel using a modification of the MIDI note-on specification.
@@ -110,15 +115,29 @@ MCL 4.00 01/07/2021
  Note: Arpeggiator data is not currently saved with the track data.
 
 - Other Changes:
- Received MIDI data is now processed whenever possible and is no longer subject to GUI latency.
- This means MIDI receive latency will be the same across all MCL pages and the display refresh no longer needs
- to be locked during live record.
+
+ Received MIDI data is now processed whenever possible and is no longer
+ subject to program behaviour. This means MIDI receive latency will be the same across all MCL pages
+ and the display refresh no longer needs to be locked during live record. If
+ you are triggering chromatic mode from external MIDI keyboard/sequencer,
+ expect note latency/jitter to be consistent no matter which page/mode you are in.
 
  MIDI Forwarding has been re-implemented and will no longer result in corrupted message streams.
 
  SD Card data access has been made robust to tranisent read errors. For best SD Card performance,
  ensure the card is formated FAT32 via the SD Card Foundations formatting utility.
 
+ MCL no longer requires a dedicted MD global and will only modify settings as
+ needed.
+
+ MCL will automatically detect kit model changes eliminating the need to
+ re-enter pages to refresh the kit state.
+
+ RAM page transitions now occur immediately, instead of delaying an additional
+ cycle.
+
+ When assigning a Machine to the MD, parameters of the current sound will not be altered.
+ This greatly improves the smoothness of slot loading.
 
 Deprecated Features:
 
