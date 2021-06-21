@@ -213,7 +213,7 @@ void SeqStepPage::loop() {
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
-            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num);
+            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num, 32);
             active_track.set_track_pitch(step, machine_pitch);
             seq_step_page.encoders_used_clock[3] = slowclock; //indicate that encoder has changed.
           }
@@ -330,26 +330,21 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = condition;
       seq_param1.old = seq_param1.cur;
 
-      uint8_t note_num = 255;
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
+
       if (pitch != 255 && tuning) {
-        for (uint8_t i = 0; i < tuning->len; i++) {
-          uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
-          if (ccStored >= pitch) {
-            note_num = i;
-            break;
-          }
-        }
+        uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
         if (note_num == 255) {
           seq_param4.cur = 0;
         } else {
           //uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
           //note_num = note_num - note_offset;
-          seq_param4.cur = note_num + tuning->base  - ((tuning->base / 12) * 12);
+          seq_param4.cur = note_num;
         }
         seq_param4.old = seq_param4.cur;
       }
+
       if (utiming == 0) {
         utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }

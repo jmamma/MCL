@@ -355,6 +355,22 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
   return voice;
 }
 
+uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t pitch) {
+  uint8_t note_num = 255;
+  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
+  if (pitch != 255 && tuning) {
+    for (uint8_t i = 0; i < tuning->len; i++) {
+      uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
+      if (ccStored >= pitch) {
+        note_num = i;
+        break;
+      }
+    }
+    uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+    return note_num + note_offset;
+  }
+}
+
 uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
                                       uint8_t fine_tune) {
   if (fine_tune == 255) {
@@ -407,6 +423,9 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
   if (machine_pitch == 255) {
     return;
+  }
+  if (GUI.currentPage() == &seq_step_page) {
+    seq_step_page.pitch_param = get_note_from_machine_pitch(machine_pitch);
   }
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
@@ -648,9 +667,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
     if (!arp_track->enabled) {
-      if (GUI.currentPage() == &seq_step_page) {
-        seq_step_page.pitch_param = pitch;
-      }
       seq_ptc_page.trig_md_fromext(pitch);
     }
 
