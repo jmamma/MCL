@@ -217,6 +217,7 @@ bool MDClass::probe() {
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     md_track_select.on();
     MD.global.extendedMode = 2;
+    seq_ptc_page.setup();
   }
 
   else {
@@ -298,6 +299,9 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
 }
 
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
   sendRequest(data, sizeof(data), uart_);
 }
