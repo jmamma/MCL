@@ -3,6 +3,36 @@
 
 static bool s_query_returned = false;
 
+
+File FileBrowserPage::file;
+int FileBrowserPage::numEntries;
+
+char FileBrowserPage::match[5];
+char FileBrowserPage::lwd[128];
+char FileBrowserPage::title[12];
+uint8_t FileBrowserPage::cur_col = 0;
+uint8_t FileBrowserPage::cur_row = 0;
+uint8_t FileBrowserPage::cur_file = 0;
+
+bool FileBrowserPage::show_dirs = false;
+bool FileBrowserPage::select_dirs = false;
+bool FileBrowserPage::show_save = true;
+bool FileBrowserPage::show_parent = true;
+bool FileBrowserPage::show_new_folder = true;
+bool FileBrowserPage::show_filemenu = true;
+bool FileBrowserPage::show_overwrite = false;
+
+bool FileBrowserPage::show_samplemgr = false;
+bool FileBrowserPage::show_filetypes = false;
+uint8_t FileBrowserPage::filetype_idx = 0;
+uint8_t FileBrowserPage::filetype_max = 0;
+const char* FileBrowserPage::filetypes[MAX_FT_SELECT];
+const char* FileBrowserPage::filetype_names[MAX_FT_SELECT];
+
+bool FileBrowserPage::filemenu_active = false;
+
+bool FileBrowserPage::call_handle_filemenu = false;
+
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
   oled_display.clearDisplay();
@@ -148,19 +178,10 @@ void FileBrowserPage::query_filesystem() {
 }
 
 void FileBrowserPage::init() {
-
   filemenu_active = false;
-  if (show_samplemgr) {
-    show_dirs = false;
-    show_save = false;
-    show_filemenu = false;
-    show_new_folder = false;
-    show_overwrite = false;
-    show_filetypes = false;
-    query_sample_slots();
-  } else {
-    query_filesystem();
-  }
+  show_samplemgr = false;
+  show_filetypes = false;
+  query_filesystem();
 }
 
 void FileBrowserPage::display() {

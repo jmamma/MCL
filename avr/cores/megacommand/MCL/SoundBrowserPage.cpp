@@ -14,35 +14,52 @@ const char *c_wav_name = "WAV";
 #define PA_NEW 0
 #define PA_SELECT 1
 
+void SoundBrowserPage::cleanup() {
+  // always call setup() when entering this page.
+  this->isSetup = false;
+}
+
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.chdir(c_sound_root);
   strcpy(lwd, c_sound_root);
-  filetypes[0] = c_snd_suffix;
-  filetypes[1] = c_wav_suffix;
-  filetype_names[0] = c_snd_name;
-  filetype_names[1] = c_wav_name;
-  filetype_max = FT_WAV;
+  show_samplemgr = false;
   FileBrowserPage::setup();
 }
 
 void SoundBrowserPage::init() {
   trig_interface.off();
+  filemenu_active = false;
+
+  filetypes[0] = c_snd_suffix;
+  filetypes[1] = c_wav_suffix;
+  filetype_names[0] = c_snd_name;
+  filetype_names[1] = c_wav_name;
+  filetype_max = FT_WAV;
 
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
+    show_dirs = false;
+    show_save = false;
+    show_filemenu = false;
+    show_new_folder = false;
+    show_overwrite = true;
+    show_filetypes = false;
+    show_parent = false;
+    query_sample_slots();
   } else {
     strcpy(match, ".snd");
     strcpy(title, "Sounds");
     show_dirs = true;
-    // show_save = true;
-    show_save = (filetype_idx == FT_SND);
+    show_save = true;
+    //show_save = (filetype_idx == FT_SND);
     show_filemenu = true;
     show_new_folder = true;
     show_overwrite = true;
     show_filetypes = true;
+    show_parent = true;
+    query_filesystem();
   }
-  FileBrowserPage::init();
 
   R.Clear();
   R.use_machine_names_short();

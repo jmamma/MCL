@@ -26,35 +26,35 @@
 
 class FileBrowserPage : public LightPage, public MidiSysexListenerClass {
 public:
-  File file;
-  //  char file_entries[NUM_FILE_ENTRIES][16];
-  int numEntries;
+  static File file;
+  static int numEntries;
 
-  char match[5];
-  char lwd[128];
-  char title[12];
-  uint8_t cur_col = 0;
-  uint8_t cur_row = 0;
-  uint8_t cur_file = 0;
+  static char match[5];
+  static char lwd[128];
+  static char title[12];
+  static uint8_t cur_col;
+  static uint8_t cur_row;
+  static uint8_t cur_file;
 
   // configuration, should be set before calling base init()
-  bool show_dirs = false;
-  bool select_dirs = false;
-  bool show_save = true;
-  bool show_parent = true;
-  bool show_new_folder = true;
-  bool show_filemenu = true;
-  bool show_overwrite = false;
-  bool show_samplemgr = false;
-  bool show_filetypes = false;
-  uint8_t filetype_idx = 0;
-  uint8_t filetype_max = 0;
-  const char* filetypes[MAX_FT_SELECT];
-  const char* filetype_names[MAX_FT_SELECT];
+  static bool show_dirs;
+  static bool select_dirs;
+  static bool show_save;
+  static bool show_parent;
+  static bool show_new_folder;
+  static bool show_filemenu;
+  static bool show_overwrite;
 
-  bool filemenu_active = false;
+  static bool show_samplemgr;
+  static bool show_filetypes;
+  static uint8_t filetype_idx;
+  static uint8_t filetype_max;
+  static const char* filetypes[MAX_FT_SELECT];
+  static const char* filetype_names[MAX_FT_SELECT];
 
-  bool call_handle_filemenu = false;
+  static bool filemenu_active;
+
+  static bool call_handle_filemenu;
 
   Encoder* param1;
   Encoder* param2;
@@ -98,13 +98,13 @@ protected:
   void _cd_up();
   void _cd(const char *);
 
+  void query_sample_slots();
+  void query_filesystem();
+
 private:
 
   void _handle_filemenu();
   void _calcindices(int &);
-
-  void query_sample_slots();
-  void query_filesystem();
 };
 
 #endif /* FILEBROWSERPAGE_H__ */

@@ -21,6 +21,7 @@ class SoundBrowserPage : public FileBrowserPage {
   void draw_scrollbar(uint8_t x_offset);
   void init();
   void setup();
+  void cleanup();
   void save_sound();
   void load_sound();
   void send_wav(int slot);

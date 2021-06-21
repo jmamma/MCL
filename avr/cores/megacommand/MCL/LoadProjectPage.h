@@ -6,7 +6,6 @@
 #include "FileBrowserPage.h"
 #include "GUI.h"
 
-#define MAX_ENTRIES 1024
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
 #else
