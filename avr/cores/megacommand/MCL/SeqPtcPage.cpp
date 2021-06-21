@@ -358,6 +358,7 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
 uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t pitch) {
   uint8_t note_num = 255;
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
+  pitch -= ptc_param_fine_tune.getValue() - 32;
   if (pitch != 255 && tuning) {
     for (uint8_t i = 0; i < tuning->len; i++) {
       uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
@@ -425,7 +426,8 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
     return;
   }
   if (GUI.currentPage() == &seq_step_page) {
-    seq_step_page.pitch_param = get_note_from_machine_pitch(machine_pitch);
+    seq_step_page.pitch_param = note_num;
+            //get_note_from_machine_pitch(machine_pitch);
   }
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);

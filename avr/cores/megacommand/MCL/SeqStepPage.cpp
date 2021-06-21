@@ -213,7 +213,7 @@ void SeqStepPage::loop() {
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
-            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num, 32);
+            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num);
             active_track.set_track_pitch(step, machine_pitch);
             seq_step_page.encoders_used_clock[3] = slowclock; //indicate that encoder has changed.
           }

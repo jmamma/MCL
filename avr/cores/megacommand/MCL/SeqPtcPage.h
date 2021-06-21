@@ -58,8 +58,10 @@ public:
 
   void note_on_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
   void note_off_ext(uint8_t note_num, uint8_t velocity, uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
-  
+
   void clear_trig_fromext(uint8_t note_num);
+
+  uint8_t get_note_from_machine_pitch(uint8_t pitch);
 
   void config_encoders();
   void init_poly();
