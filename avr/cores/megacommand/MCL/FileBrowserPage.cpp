@@ -1,8 +1,6 @@
 #include "MCL_impl.h"
 #include "memory.h"
 
-#define FILE_ENTRY_SIZE 16
-
 static bool s_query_returned = false;
 
 void FileBrowserPage::setup() {
