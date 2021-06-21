@@ -180,12 +180,13 @@ bool MDClass::probe() {
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL | (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
 
-    while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps)) && count) {
+   while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) && count) {
       DEBUG_PRINTLN("bad caps");
       mcl_gui.delay_progress(250);
       count--;
     }
-    if (((fw_caps & fw_caps_mask) != fw_caps)) {
+
+   if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
       return false;
