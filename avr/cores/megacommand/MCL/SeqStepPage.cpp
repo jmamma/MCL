@@ -7,6 +7,7 @@
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
+  seq_param3.old = seq_param3.cur;
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   seq_param4.cur = 0;
   seq_param4.old = 0;
@@ -38,6 +39,7 @@ void SeqStepPage::config() {
 void SeqStepPage::config_encoders() {
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
+  seq_param3.old = seq_param3.cur;
   seq_param2.cur = timing_mid;
   seq_param2.old = timing_mid;
   seq_param2.max = timing_mid * 2 - 1;
@@ -58,8 +60,7 @@ void SeqStepPage::init() {
   check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
-  MD.sync_seqtrack(active_track.length, active_track.speed,
-                   active_track.step_count);
+  MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
 
   trigled_mask = 0;
   locks_on_step_mask = 0;
