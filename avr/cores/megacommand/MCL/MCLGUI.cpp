@@ -194,16 +194,17 @@ void MCLGUI::delay_progress(uint16_t clock_) {
 }
 
 void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
-                               uint8_t x_pos, uint8_t y_pos) {
+                               uint8_t x_pos, uint8_t y_pos, uint8_t width, uint8_t height, bool border) {
+
 #ifdef OLED_DISPLAY
-  oled_display.fillRect(x_pos + 1, y_pos + 1, s_progress_w - 2,
-                        s_progress_h - 2, BLACK);
+  oled_display.fillRect(x_pos + 1, y_pos + 1, width - 2,
+                        height - 2, BLACK);
 
   float prog = (float)cur / (float)_max;
-  auto progx = (uint8_t)(x_pos + 1 + prog * (s_progress_w - 2));
+  auto progx = (uint8_t)(x_pos + 1 + prog * (width - 2));
   // draw the progress
   oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos - 1,
-                        s_progress_h - 2, WHITE);
+                        height - 2, WHITE);
 
   uint8_t shift = 1;
 
@@ -215,8 +216,8 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
 
   for (uint8_t i = x_pos + 1; i <= progx; i += 1) {
 
-    for (uint8_t n = 0; n < s_progress_h - 2; n++) {
-      uint8_t a = s_progress_h - 2 - n;
+    for (uint8_t n = 0; n < height - 2; n++) {
+      uint8_t a = height - 2 - n;
 
       if (IS_BIT_SET(temp_bitmask, a)) {
         oled_display.drawPixel(i, y_pos + 1 + n, BLACK);
@@ -230,7 +231,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
     s_progress_count = 0;
   }
   s_progress_count++;
-  oled_display.drawRect(x_pos, y_pos, s_progress_w, s_progress_h, WHITE);
+  if (border) oled_display.drawRect(x_pos, y_pos, width, height, WHITE);
 
   if (!deferred_display) {
     oled_display.display();

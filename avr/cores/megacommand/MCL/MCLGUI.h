@@ -34,7 +34,7 @@ public:
   void draw_progress_bar(uint8_t cur, uint8_t _max,
                          bool deferred_display = true,
                          uint8_t x_pos = s_progress_x,
-                         uint8_t y_pos = s_progress_y);
+                         uint8_t y_pos = s_progress_y, uint8_t width = s_progress_w, uint8_t height = s_progress_h, bool border = true);
 
   void draw_progress(const char *msg, uint8_t cur, uint8_t _max,
                      bool deferred_display = false,
