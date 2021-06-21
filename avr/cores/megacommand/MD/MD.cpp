@@ -176,20 +176,19 @@ bool MDClass::probe() {
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
-    uint64_t fw_caps_mask =
-        ((uint64_t)FW_CAP_MASTER_FX | (uint64_t)FW_CAP_TRIG_LEDS |
-         (uint64_t)FW_CAP_UNDOKIT_SYNC | (uint64_t)FW_CAP_TONAL);
+    uint16_t fw_caps_mask =
+        ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
+         (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL | (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
 
-    while ((!get_fw_caps() || !(fw_caps & fw_caps_mask)) && count) {
+    while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps)) && count) {
       DEBUG_PRINTLN("bad caps");
       mcl_gui.delay_progress(250);
       count--;
     }
-
-    if (!(fw_caps & fw_caps_mask)) {
+    if (((fw_caps & fw_caps_mask) != fw_caps)) {
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      oled_display.display();
       return false;
-      // while (1) {};
     }
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
@@ -214,6 +213,7 @@ bool MDClass::probe() {
   }
   if (connected) {
     activate_enhanced_gui();
+    activate_enhanced_midi();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     md_track_select.on();
     MD.global.extendedMode = 2;

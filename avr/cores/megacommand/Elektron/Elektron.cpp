@@ -80,6 +80,17 @@ void ElektronDevice::deactivate_encoder_interface() {
   //waitBlocking();
 }
 
+void ElektronDevice::activate_enhanced_midi() {
+  uint8_t data[3] = {0x70, 0x3E, 0x01};
+  sendRequest(data, sizeof(data));
+  // waitBlocking();
+}
+void ElektronDevice::deactivate_enhanced_midi() {
+  uint8_t data[3] = {0x70, 0x3E, 0x00};
+  sendRequest(data, sizeof(data));
+  // waitBlocking();
+}
+
 void ElektronDevice::activate_enhanced_gui() {
   uint8_t data[3] = {0x70, 0x37, 0x01};
   sendRequest(data, sizeof(data));
