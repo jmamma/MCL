@@ -43,6 +43,9 @@ MCL 4.00 20/06/2021
         -- [ Bank + Multiple Trigs ] creates a chain queue consistencing of consecutive group
 		   loads corresponding rows.
 
+      Load Page:
+	  - [ Bank Buttons ] can be used to select chain mode: Manual, Auto or Queue.
+
 	  Slot Menu: Hold [ No ] button to open
 	  - [ Up/Down/Left/Right ] to select multiple slots in the grid.
 	  - [ Clear/Copy/Paste ] to clear/copy/paste selected slot(s)
