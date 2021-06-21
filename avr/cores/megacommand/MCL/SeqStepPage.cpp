@@ -2,6 +2,7 @@
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
+#define NOTE_C2 48
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
@@ -10,7 +11,7 @@ void SeqStepPage::config() {
   seq_param4.cur = 0;
   seq_param4.old = 0;
   if (tuning) {
-    seq_param4.max = tuning->len - 1;
+    seq_param4.max = tuning->len - 1 + tuning->base;
   } else {
     seq_param4.max = 1;
   }
@@ -46,6 +47,7 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
+  pitch_param = 255;
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
@@ -103,11 +105,14 @@ void SeqStepPage::display() {
     if (tuning != NULL) {
       strcpy(K, "--");
       if (seq_param4.cur != 0) {
-        uint8_t base = tuning->base;
-        uint8_t notenum = seq_param4.cur + base;
+        //uint8_t base = tuning->base;
+        uint8_t note_num = seq_param4.cur;
+               // + base;
         MusicalNotes number_to_note;
-        int8_t oct = notenum / 12 - 1;
-        uint8_t note = notenum - 12 * (notenum / 12);
+
+        uint8_t note = note_num - (note_num / 12) * 12;
+        uint8_t oct = note_num / 12;
+
         strcpy(K, number_to_note.notes_upper[note]);
         mcl_gui.put_value_at(oct, K + 2);
         K[3] = 0;
@@ -119,7 +124,7 @@ void SeqStepPage::display() {
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu) && (tuning != NULL)) {
     uint64_t note_mask[2] = {};
-    uint8_t note = seq_param4.cur + tuning->base;
+    uint8_t note = seq_param4.cur;// + tuning->base;
     SET_BIT64(note_mask, note);
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
     SeqPage::display();
@@ -161,9 +166,12 @@ void SeqStepPage::loop() {
 
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
+  if (pitch_param != 255) {
+  seq_param4.cur = pitch_param;
+  pitch_param = 255;
+  }
 
-  if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
-      seq_param4.hasChanged()) {
+  if (seq_param1.hasChanged() || seq_param2.hasChanged() || seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
 
     for (uint8_t n = 0; n < 16; n++) {
@@ -200,13 +208,13 @@ void SeqStepPage::loop() {
             active_track.steps[step].trig = true;
             break;
           }
-
-          if (seq_param4.hasChanged() && (seq_param4.cur > 0) &&
+          if (seq_param4.hasChanged() != 255 && (seq_param4.cur > 0) &&
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
-            uint8_t machine_pitch = pgm_read_byte(&tuning->tuning[note_num]);
+            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num);
             active_track.set_track_pitch(step, machine_pitch);
+            seq_step_page.encoders_used_clock[3] = slowclock; //indicate that encoder has changed.
           }
         }
       }
@@ -314,26 +322,30 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.max =
           mcl_seq.md_tracks[last_md_track].get_timing_mid() * 2 - 1;
       int8_t utiming = active_track.timing[step];
-      uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
       // Cond
       uint8_t condition =
           translate_to_knob_conditional(active_track.steps[step].cond_id,
                                         active_track.steps[step].cond_plock);
       seq_param1.cur = condition;
-      // if (pitch != active_track.locks_params_orig[0]) {
+      seq_param1.old = seq_param1.cur;
+
       uint8_t note_num = 255;
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
-      if (tuning) {
-        for (uint8_t i = 0; i < tuning->len && note_num == 255; i++) {
+      uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
+      if (pitch != 255 && tuning) {
+        for (uint8_t i = 0; i < tuning->len; i++) {
           uint8_t ccStored = pgm_read_byte(&tuning->tuning[i]);
           if (ccStored >= pitch) {
             note_num = i;
+            break;
           }
         }
         if (note_num == 255) {
           seq_param4.cur = 0;
         } else {
-          seq_param4.cur = note_num;
+          //uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+          //note_num = note_num - note_offset;
+          seq_param4.cur = note_num + tuning->base  - ((tuning->base / 12) * 12);
         }
         seq_param4.old = seq_param4.cur;
       }

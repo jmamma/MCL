@@ -42,6 +42,7 @@ void SeqPtcPage::setup() {
   ptc_param_fine_tune.cur = 32;
   memset(dev_note_masks, 0, sizeof(dev_note_masks));
   memset(note_mask, 0, sizeof(note_mask));
+  isSetup = true;
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
@@ -197,7 +198,9 @@ void SeqPtcPage::loop() {
 }
 
 void SeqPtcPage::render_arp(bool recalc_notemask_) {
-  if (recalc_notemask_) { recalc_notemask(); }
+  if (recalc_notemask_) {
+    recalc_notemask();
+  }
   SeqTrack *seq_track = &mcl_seq.ext_tracks[last_ext_track];
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (midi_device == &MD) {
@@ -437,11 +440,12 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
 void SeqPtcPage::recalc_notemask() {
   memset(note_mask, 0, sizeof(note_mask));
   uint8_t dev = (midi_device == &MD) ? 0 : 1;
-  
+
   for (uint8_t i = 0; i < 128; i++) {
     if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
       uint8_t pitch = calc_scale_note(i);
-      if (pitch > 127) continue;
+      if (pitch > 127)
+        continue;
       SET_BIT128_P(note_mask, pitch);
     }
   }
@@ -472,13 +476,13 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     uint8_t note = event->source - 128;
     if (mask == EVENT_BUTTON_PRESSED) {
       SET_BIT128_P(dev_note_masks[0], note);
-    }
-    else {
+    } else {
       CLEAR_BIT128_P(dev_note_masks[0], note);
     }
 
     uint8_t pitch = calc_scale_note(note);
-    if (pitch > 127) return false;
+    if (pitch > 127)
+      return false;
     DEBUG_PRINTLN(F("yep"));
     // note interface presses are treated as musical notes here
     if (mask == EVENT_BUTTON_PRESSED) {
@@ -586,21 +590,17 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
 
 uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
-  uint8_t dev = (midi_device == &MD) ? 0 : 1; 
+  uint8_t dev = (midi_device == &MD) ? 0 : 1;
 
-  DEBUG_PRINTLN("process ext pitch");
-  DEBUG_PRINTLN(note_type);
-  DEBUG_PRINTLN(note_num);
-  DEBUG_PRINTLN(pitch);
   if (note_type) {
     SET_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
     if (pitch != 255) {
       SET_BIT128_P(seq_ptc_page.note_mask, pitch);
     }
-  } else {       
+  } else {
     CLEAR_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
     if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
-    CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
+      CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
     }
   }
 
@@ -608,16 +608,15 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   return pitch;
 }
 
-
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-/*  if ((GUI.currentPage() == &seq_step_page) ||
-#ifdef EXT_TRACKS
-      (GUI.currentPage() == &seq_extstep_page) ||
-#endif
-      (GUI.currentPage() == &grid_save_page) ||
-      (GUI.currentPage() == &grid_load_page)) {
-    return;
-  }*/
+  /*  if ((GUI.currentPage() == &seq_step_page) ||
+  #ifdef EXT_TRACKS
+        (GUI.currentPage() == &seq_extstep_page) ||
+  #endif
+        (GUI.currentPage() == &grid_save_page) ||
+        (GUI.currentPage() == &grid_load_page)) {
+      return;
+    }*/
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN("note on");
@@ -635,7 +634,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
 
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
-    
+
     if (note_num < NOTE_C2) {
       return;
     }
@@ -643,6 +642,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
 
     pitch = seq_ptc_page.process_ext_pitch(note_num, note_on);
+
     arp_page.track_update();
     seq_ptc_page.render_arp(false);
     seq_ptc_page.queue_redraw();
@@ -653,6 +653,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
     if (!arp_track->enabled) {
+      if (GUI.currentPage() == &seq_step_page) {
+      seq_step_page.pitch_param = pitch;
+      }
       seq_ptc_page.trig_md_fromext(pitch);
     }
 
@@ -705,14 +708,14 @@ void SeqPtcPage::set_last_ext_track(uint8_t channel) {
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-/*  if ((GUI.currentPage() == &seq_step_page) ||
-#ifdef EXT_TRACKS
-      (GUI.currentPage() == &seq_extstep_page) ||
-#endif
-      (GUI.currentPage() == &grid_save_page) ||
-      (GUI.currentPage() == &grid_load_page)) {
-    return;
-  }*/
+  /*  if ((GUI.currentPage() == &seq_step_page) ||
+  #ifdef EXT_TRACKS
+        (GUI.currentPage() == &seq_extstep_page) ||
+  #endif
+        (GUI.currentPage() == &grid_save_page) ||
+        (GUI.currentPage() == &grid_load_page)) {
+      return;
+    }*/
   DEBUG_PRINTLN(F("note off midi2"));
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -726,9 +729,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     uint8_t note = note_num - (note_num / 12) * 12;
     note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
 
-    if (GUI.currentPage() == &seq_step_page) {
-    seq_param4.cur = note_num;
-    }
     pitch = seq_ptc_page.process_ext_pitch(note_num, false);
     seq_ptc_page.render_arp(false);
     seq_ptc_page.queue_redraw();
