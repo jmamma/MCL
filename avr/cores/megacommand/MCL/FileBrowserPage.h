@@ -9,7 +9,6 @@
 #include "SeqPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
-#include "MidiSysex.h"
 
 #define MAX_ENTRIES 1024
 
@@ -24,7 +23,7 @@
 #define MAX_FB_ITEMS 4
 #define MAX_FT_SELECT 3
 
-class FileBrowserPage : public LightPage, public MidiSysexListenerClass {
+class FileBrowserPage : public LightPage {
 public:
   static File file;
   static int numEntries;
@@ -61,12 +60,9 @@ public:
 
   FileBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
-      : LightPage(e1, e2, e3, e4), MidiSysexListenerClass() {
+      : LightPage(e1, e2, e3, e4) {
           param1 = e1;
           param2 = e2;
-          ids[0] = 0;
-          ids[1] = 0x20;
-          ids[2] = 0x3c;
       }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
@@ -89,16 +85,10 @@ public:
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
 
-  // MidiSysexListenerClass
-  virtual void start();
-  virtual void end();
-  virtual void end_immediate();
-
 protected:
   void _cd_up();
   void _cd(const char *);
 
-  void query_sample_slots();
   void query_filesystem();
 
 private:

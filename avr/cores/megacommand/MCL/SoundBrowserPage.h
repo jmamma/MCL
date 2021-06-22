@@ -4,12 +4,16 @@
 #define SOUNDBROWSERPAGE_H__
 
 #include "FileBrowserPage.h"
+#include "MidiSysex.h"
 
-class SoundBrowserPage : public FileBrowserPage {
+class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   public:
 
   SoundBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-                  Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4) {
+                  Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4), MidiSysexListenerClass(){
+    ids[0] = 0;
+    ids[1] = 0x20;
+    ids[2] = 0x3c;
   }
 
   uint8_t pending_action = 0;
@@ -27,6 +31,13 @@ class SoundBrowserPage : public FileBrowserPage {
   void send_wav(int slot);
   void recv_wav(int slot);
 
+  // MidiSysexListenerClass
+  virtual void start();
+  virtual void end();
+  virtual void end_immediate();
+
+protected:
+  void query_sample_slots();
 };
 
 extern SoundBrowserPage sound_browser;

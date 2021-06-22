@@ -8,6 +8,8 @@ const char *c_wav_suffix = ".wav";
 const char *c_snd_name = "SOUND";
 const char *c_wav_name = "WAV";
 
+static bool s_query_returned = false;
+
 #define FT_SND 0
 #define FT_WAV 1
 
@@ -24,12 +26,14 @@ void SoundBrowserPage::setup() {
   SD.chdir(c_sound_root);
   strcpy(lwd, c_sound_root);
   show_samplemgr = false;
+  sysex = &(Midi.midiSysex);
   FileBrowserPage::setup();
 }
 
 void SoundBrowserPage::init() {
   trig_interface.off();
   filemenu_active = false;
+  select_dirs = false;
 
   filetypes[0] = c_snd_suffix;
   filetypes[1] = c_wav_suffix;
@@ -203,6 +207,79 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
 
   return FileBrowserPage::handleEvent(event);
 }
+
+void SoundBrowserPage::query_sample_slots() {
+  encoders[1]->cur = 0;
+  encoders[1]->old = 0;
+  numEntries = 0;
+  cur_file = 255; // XXX why 255?
+  cur_row = 0;
+  uint8_t data[2] = {0x70, 0x34};
+  call_handle_filemenu = false;
+  s_query_returned = false;
+
+  sysex->addSysexListener(this);
+  MD.sendRequest(data, 2);
+  auto time_start = read_slowclock();
+  auto time_now = time_start;
+  do {
+    handleIncomingMidi();
+    time_now = read_slowclock();
+  } while(!s_query_returned && clock_diff(time_start, time_now) < 1000);
+
+  if (!s_query_returned) {
+    add_entry("ERROR");
+  }
+  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
+
+  sysex->removeSysexListener(this);
+}
+
+// MidiSysexListenerClass implementation
+void SoundBrowserPage::start() {}
+
+void SoundBrowserPage::end() {}
+
+void SoundBrowserPage::end_immediate() {
+  if (sysex->getByte(3) != 0x02)
+    return;
+  if (sysex->getByte(4) != 0x00)
+    return;
+  if (sysex->getByte(5) != 0x72)
+    return;
+  if (sysex->getByte(6) != 0x34)
+    return;
+  int nr_samplecount = sysex->getByte(7);
+  if (nr_samplecount > 48)
+    return;
+
+  char s_tmpbuf[5];
+  char temp_entry[FILE_ENTRY_SIZE];
+
+  for (int i = 0, j = 7; i < nr_samplecount; ++i) {
+    for (int k = 0; k < 5; ++k) {
+      s_tmpbuf[k] = sysex->getByte(++j);
+    }
+    bool slot_occupied = s_tmpbuf[4];
+    s_tmpbuf[4] = 0;
+    strcpy(temp_entry, "00 - ");
+    if (i < 10) {
+      itoa(i, temp_entry+1, 10);
+    } else {
+      itoa(i, temp_entry, 10);
+    }
+    if (slot_occupied) {
+      strcat(temp_entry, s_tmpbuf);
+    } else {
+      strcat(temp_entry, "[EMPTY]");
+    }
+    add_entry(temp_entry);
+  }
+
+  s_query_returned = true;
+}
+
+
 
 MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
 MCLEncoder soundbrowser_param2(0, 36, ENCODER_RES_SYS);
