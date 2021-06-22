@@ -28,7 +28,7 @@ void ArpPage::track_update() {
   arp_rate.cur = arp_track->rate;
   arp_rate.old = arp_rate.cur;
 
-  arp_range.cur = arp_track->oct;
+  arp_range.cur = arp_track->range;
   arp_range.old = arp_range.cur;
 
   arp_mode.cur = arp_track->mode;
@@ -67,7 +67,7 @@ void ArpPage::loop() {
  }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
-    arp_track->oct = arp_range.cur;
+    arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
     seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH);
   }
