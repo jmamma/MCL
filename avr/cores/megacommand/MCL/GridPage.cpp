@@ -160,20 +160,25 @@ void GridPage::loop() {
     return;
   }
 
-  if (row_state_scan) {
+  row_state_scan();
+  row_state_scan();
+}
+
+void GridPage::row_state_scan() {
+  if (row_scan) {
     uint8_t old_grid = proj.get_grid();
     GridRowHeader header_tmp;
-    row_state_scan--;
+    row_scan--;
 
     proj.select_grid(0);
-    proj.read_grid_row_header(&header_tmp, row_state_scan);
+    proj.read_grid_row_header(&header_tmp, row_scan);
     bool state = header_tmp.is_empty();
 
     proj.select_grid(1);
-    proj.read_grid_row_header(&header_tmp, row_state_scan);
+    proj.read_grid_row_header(&header_tmp, row_scan);
     state |= header_tmp.is_empty();
 
-    update_row_state(row_state_scan, !state);
+    update_row_state(row_scan, !state);
     proj.select_grid(old_grid);
   }
 }
@@ -512,7 +517,9 @@ void GridPage::display_oled() {
     display_slot_menu();
   }
   display_grid();
-
+  if (row_scan) {
+  mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 7, 7, false);
+  }
   oled_display.display();
 #endif
 }

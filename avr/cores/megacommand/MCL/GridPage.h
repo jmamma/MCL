@@ -54,7 +54,7 @@ public:
 
   uint16_t grid_lastclock;
 
-  uint8_t row_state_scan = 0;
+  uint8_t row_scan = 0;
   uint64_t row_states[2];
 
   LightPage *last_page = nullptr;
@@ -70,6 +70,8 @@ public:
   uint8_t getWidth();
   uint8_t getCol();
   uint8_t getRow();
+
+  void row_state_scan();
   void update_row_state(uint8_t row, bool state);
   void set_active_row(uint8_t row);
   void send_active_row();

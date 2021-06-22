@@ -355,6 +355,8 @@ public:
 
 #define FW_CAP_UNDOKIT_SYNC   FW_CAP_HIGH(0)
 #define FW_CAP_TONAL          FW_CAP_HIGH(1)
+#define FW_CAP_ENHANCED_GUI FW_CAP_HIGH(2)
+#define FW_CAP_ENHANCED_MIDI FW_CAP_HIGH(3)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -362,7 +364,7 @@ public:
   const ElektronSysexProtocol sysex_protocol;
 
   /// Runtime variables
-  uint64_t fw_caps;
+  uint16_t fw_caps;
   /** Stores the current global of the MD, usually set by the MDTask. **/
   uint8_t currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
@@ -434,6 +436,9 @@ public:
 
   void activate_enhanced_gui();
   void deactivate_enhanced_gui();
+
+  void activate_enhanced_midi();
+  void deactivate_enhanced_midi();
 
   void set_seq_page(uint8_t page);
 

@@ -155,7 +155,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
     21, 0,
 };
 
-menu_t<3> wav_menu_layout = {
+menu_t<3> wavdesign_menu_layout = {
     "",
     {
         //           m  r  n  d   p  f   o

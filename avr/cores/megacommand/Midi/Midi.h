@@ -67,7 +67,6 @@ public:
   uint8_t msg[3];
 
   MidiUartParent *uart;
-
   MidiUartClassCommon *uart_forward;
   uint8_t callback;
   //  midi_callback_t callbacks[7];

@@ -112,16 +112,6 @@ void CRingBuffer<C, N, T>::init() volatile {
 }
 
 template <class C, int N, class T>
-CRingBuffer<C, N, T>::CRingBuffer(const CRingBuffer<C, N, T>& other) {
-  ptr = other.ptr;
-  rd = other.rd;
-  wr = other.wr;
-  #ifdef CHECKING
-  overflow = other.overflow;
-  #endif
-}
-
-template <class C, int N, class T>
 void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
   #ifdef CHECKING
   if (isFull() && check) {
