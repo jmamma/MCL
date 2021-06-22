@@ -45,8 +45,8 @@ void FileBrowserPage::setup() {
 }
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
-  uint32_t pos = BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
-  volatile uint8_t *ptr = (uint8_t*)pos;
+  volatile uint8_t *ptr = 
+    (uint8_t*)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
   memcpy_bank1((volatile void*)entry, ptr, FILE_ENTRY_SIZE);
 }
 
@@ -55,7 +55,7 @@ bool FileBrowserPage::add_entry(const char *entry) {
     return false;
   }
   char buf[FILE_ENTRY_SIZE];
-  strncpy(buf, entry, sizeof(buf));
+  strncpy(buf, entry, FILE_ENTRY_SIZE);
   buf[FILE_ENTRY_SIZE - 1] = '\0';
   volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
   memcpy_bank1(ptr, buf, sizeof(buf));
@@ -174,7 +174,6 @@ void FileBrowserPage::query_filesystem() {
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
   DEBUG_PRINTLN(F("finished list files"));
-  ((MCLEncoder *)encoders[1])->max = numEntries - 1;
 }
 
 void FileBrowserPage::init() {
@@ -298,14 +297,9 @@ void FileBrowserPage::loop() {
     cur_row = new_val;
   }
 
-  if (param1->hasChanged()) {
-    if (show_filetypes) {
-      filetype_idx = param1->cur;
-      init();
-    } else {
-      // lock the value -- upper logic may disable it temporarily
-      param1->cur = param1->old;
-    }
+  if (show_filetypes && param1->hasChanged()) {
+    filetype_idx = param1->cur;
+    init();
   }
 }
 
