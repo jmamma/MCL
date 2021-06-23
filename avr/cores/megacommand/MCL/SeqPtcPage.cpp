@@ -65,23 +65,10 @@ void SeqPtcPage::config_encoders() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, show_chan);
 }
 
-uint8_t SeqPtcPage::calc_poly_count() {
-  DEBUG_PRINT_FN();
-  uint8_t count = 0;
-  for (uint8_t x = 0; x < 16; x++) {
-    if (IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      count++;
-    }
-  }
-  DEBUG_PRINTLN(count);
-  return count;
-}
-
 void SeqPtcPage::init_poly() {
-  poly_count = 0;
-  poly_max = calc_poly_count();
   for (uint8_t x = 0; x < 16; x++) {
     poly_notes[x] = -1;
+    poly_order[x] = 0;
   }
 }
 
@@ -152,7 +139,7 @@ void ptc_pattern_len_handler(EncoderParent *enc) {
       }
     } else {
 
-      if ((seq_ptc_page.poly_max > 1) && (is_poly)) {
+      if ((mcl_cfg.poly_mask) && (is_poly)) {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_seq.md_tracks[c].set_length(enc_->cur);
@@ -320,38 +307,52 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
   uint8_t voice = 255;
-  uint8_t count = 0;
-  if (poly_max == 0 || (!IS_BIT_SET16(mcl_cfg.poly_mask, track_number))) {
+
+  // mono
+  if (!mcl_cfg.poly_mask || (!IS_BIT_SET16(mcl_cfg.poly_mask, track_number))) {
     return track_number;
   }
+
   // If track previously played pitch, re-use this track
   for (uint8_t x = 0; x < 16; x++) {
     if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      if (poly_notes[x] == pitch) {
-        return x;
+      if (poly_notes[x] == pitch || poly_notes[x] == -1) {
+        voice = x;
       }
+    }
+  }
 
-      // Search for empty track.
-      if (poly_notes[x] == -1) {
-        voice = x;
-      }
-    }
+  if (voice != 255) {
+    goto end;
   }
-  // Reuse existing track for new pitch
-  for (uint8_t x = 0; x < 16 && voice == 255; x++) {
+  // Reuse oldest note
+  int oldest_val = -1;
+
+  for (uint8_t x = 0; x < 16; x++) {
     if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      if (count == poly_count) {
+      if (poly_order[x] > oldest_val) {
         voice = x;
-      } else {
-        count++;
+        oldest_val = poly_order[x];
       }
     }
   }
-  poly_count++;
-  if ((poly_count >= 15) || (poly_count >= poly_max)) {
-    poly_count = 0;
+
+  // Shift up
+
+end:
+
+  for (uint8_t x = 0; x < 16; x++) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
+      if (poly_order[x] <= poly_order[voice] && x != voice) {
+        poly_order[x]++;
+      }
+    }
   }
+  // set selected voice to be the latest note.
+
+  poly_order[voice] = 0;
   poly_notes[voice] = pitch;
+
   return voice;
 }
 
@@ -427,7 +428,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   }
   if (GUI.currentPage() == &seq_step_page) {
     seq_step_page.pitch_param = note_num;
-            //get_note_from_machine_pitch(machine_pitch);
+    // get_note_from_machine_pitch(machine_pitch);
   }
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
@@ -572,7 +573,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (midi_device == &MD) {
 
-      if ((poly_max > 1) && (is_poly)) {
+      if ((mcl_cfg.poly_mask) && (is_poly)) {
 #ifdef OLED_DISPLAY
         oled_display.textbox("CLEAR ", "POLY TRACKS");
 #endif
@@ -808,19 +809,17 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == 32) {
     return;
   } // don't process mute
-  if ((seq_ptc_page.poly_max > 1)) {
-    if (IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
+  if (mcl_cfg.poly_mask && IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
 
-      for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 0; n < 16; n++) {
 
-        if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
-          if (track_param < 24) {
-            MD.setTrackParam(n, track_param, value);
-            display_polylink = 1;
-          }
+      if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
+        if (track_param < 24) {
+          MD.setTrackParam(n, track_param, value);
+          display_polylink = 1;
         }
-        // in_sysex = 0;
       }
+      // in_sysex = 0;
     }
   }
 
