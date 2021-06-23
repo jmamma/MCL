@@ -142,6 +142,10 @@ MCL 4.00 20/06/2021
  When assigning a Machine to the MD, parameters of the current sound will not be altered.
  This greatly improves the smoothness of slot loading.
 
+ Poly mode voice algorithm improved.
+
+ When using an external MIDI keyboard, scales are now padded across 12 notes for more enjoyable playing.
+
 Deprecated Features:
 
 - Chain RAND has been deprecated.
