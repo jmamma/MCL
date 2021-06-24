@@ -269,6 +269,52 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
   //  DEBUG_PRINTLN(samplesSoFar);
   return true;
 }
+
+bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
+  if (state != SDS_READY) {
+    return false;
+  }
+  // init
+  int i = 0;
+  sendDumpRequest(sample_number);
+
+  if (MIDI_SDS_DUMPHEADER != waitForMsg(2000)) {
+    goto recv_fail;
+  }
+
+  while(true) {
+    uint8_t msg = waitForMsg(2000);
+    if (msg == 255 || msg == MIDI_SDS_CANCEL) goto recv_fail;
+    if (midi_sds.state == SDS_READY) {
+      if (wav_file.file.isOpen()) {
+        goto recv_fail;
+      } else {
+        wav_file.file.open(wav_file.filename);
+        wav_file.rename((char*)filename);
+        wav_file.close(false);
+        return true;
+      }
+    }
+    if (++i < 10) {
+      continue;
+    }
+    i = 0;
+#ifdef OLED_DISPLAY
+    uint32_t progress = midi_sds.samplesSoFar * 80 / midi_sds.sampleLength;
+    mcl_gui.draw_progress("Receiving sample", progress, 80);
+#else
+    gfx.display_text("Receiving sample", "");
+#endif
+  }
+
+recv_fail:
+  if (wav_file.file.isOpen()) {
+    wav_file.file.remove();
+  }
+  state = SDS_READY;
+  return false;
+}
+
 void MidiSDSClass::incPacketNumber() {
   packetNumber++;
 

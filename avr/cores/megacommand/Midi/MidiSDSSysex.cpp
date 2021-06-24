@@ -269,11 +269,11 @@ void MidiSDSSysexListenerClass::data_packet() {
     if (midi_sds.samplesSoFar == midi_sds.sampleLength) {
       DEBUG_PRINTLN(F("Sample receive finished"));
       DEBUG_PRINTLN(midi_sds.wav_file.header.data.chunk_size);
-      bool write_header = true;
-      midi_sds.wav_file.close(write_header);
       if (sds_name_rec) {
+        // must be renamed while open
         midi_sds.wav_file.rename(sds_name);
       }
+      midi_sds.wav_file.close(/*write_header*/ true);
       midi_sds.state = SDS_READY;
     }
 

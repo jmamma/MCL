@@ -17,6 +17,7 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   }
 
   uint8_t pending_action = 0;
+  bool show_ram_slots = false;
 
   virtual void on_new();
   virtual void on_select(const char*);
