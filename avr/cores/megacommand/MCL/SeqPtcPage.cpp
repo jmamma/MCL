@@ -669,7 +669,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[last_md_track];
 
-    if (!arp_track->enabled) {
+    if (!arp_track->enabled || (MidiClock.state != 2)) {
       seq_ptc_page.trig_md_fromext(pitch);
     }
 
@@ -705,7 +705,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   seq_ptc_page.render_arp(false);
   seq_ptc_page.queue_redraw();
 
-  if (!arp_track->enabled) {
+  if (!arp_track->enabled || (MidiClock.state != 2)) {
     seq_ptc_page.note_on_ext(pitch, msg[2]);
   }
 #endif
