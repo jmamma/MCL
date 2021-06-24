@@ -69,8 +69,11 @@ failed:
 bool Wav::rename(char *new_name) {
   if (!file.rename(&file, new_name)) {
     DEBUG_PRINTLN(F("rename failed"));
+    return false;
+  } else {
+    strncpy(filename, new_name, 16);
+    return true;
   }
-  strncpy(filename, new_name, 16);
 }
 
 /// write layout:
