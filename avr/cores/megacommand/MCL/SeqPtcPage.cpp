@@ -80,6 +80,7 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
   cc_link_enable = true;
+  scale_padding = false;
   ptc_param_len.handler = ptc_pattern_len_handler;
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_mode);
@@ -176,7 +177,6 @@ void SeqPtcPage::loop() {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     }
     render_arp(ptc_param_scale.hasChanged());
-    queue_redraw();
   }
   if (md_track_change_check()) {
     arp_page.track_update();
@@ -205,9 +205,6 @@ void SeqPtcPage::render_arp(bool recalc_notemask_) {
 }
 
 void SeqPtcPage::display() {
-  if (!redisplay) {
-    return;
-  }
 
   oled_display.clearDisplay();
   auto *oldfont = oled_display.getFont();
@@ -461,11 +458,12 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
 
 void SeqPtcPage::recalc_notemask() {
   memset(note_mask, 0, sizeof(note_mask));
+
   uint8_t dev = (midi_device == &MD) ? 0 : 1;
 
   for (uint8_t i = 0; i < 128; i++) {
     if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
-      uint8_t pitch = calc_scale_note(i);
+      uint8_t pitch = calc_scale_note(i,scale_padding);
       if (pitch > 127)
         continue;
       SET_BIT128_P(note_mask, pitch);
@@ -476,11 +474,7 @@ void SeqPtcPage::recalc_notemask() {
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (SeqPage::handleEvent(event)) {
-    if (show_seq_menu) {
-      redisplay = true;
-      return true;
-    }
-    queue_redraw();
+    return true;
   }
 
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
@@ -515,6 +509,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       } else {
         config_encoders();
       }
+      scale_padding = false;
 
       SET_BIT128_P(note_mask, pitch);
 
@@ -533,7 +528,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
     // deferred trigger redraw to update TI keyboard feedback.
-    queue_redraw();
 
     return true;
   } // TI events
@@ -544,7 +538,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       GUI.pushPage(&poly_page);
       return true;
     }
-    queue_redraw();
     mcl_seq.ext_tracks[last_ext_track].init_notes_on();
 
     recording = !recording;
@@ -606,7 +599,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 #define NOTE_C2 48
 
 uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
-  uint8_t pitch = calc_scale_note(note_num, true);
+  scale_padding = true;
+  uint8_t pitch = calc_scale_note(note_num, scale_padding);
   return (pitch < 128) ? pitch : 255;
 }
 
@@ -662,7 +656,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     arp_page.track_update();
     seq_ptc_page.render_arp(false);
-    seq_ptc_page.queue_redraw();
 
     if (pitch == 255)
       return;
@@ -703,7 +696,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   arp_page.track_update();
   seq_ptc_page.render_arp(false);
-  seq_ptc_page.queue_redraw();
 
   if (!arp_track->enabled || (MidiClock.state != 2)) {
     seq_ptc_page.note_on_ext(pitch, msg[2]);
@@ -740,7 +732,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
     pitch = seq_ptc_page.process_ext_pitch(note_num, false);
     seq_ptc_page.render_arp(false);
-    seq_ptc_page.queue_redraw();
 
     return;
   }
@@ -756,7 +747,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   seq_ptc_page.render_arp(false);
   arp_page.track_update();
-  seq_ptc_page.queue_redraw();
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (!arp_track->enabled) {
@@ -825,7 +815,6 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   if (display_polylink && GUI.currentPage() != &mixer_page) {
     oled_display.textbox("POLY-", "LINK");
-    seq_ptc_page.queue_redraw();
   }
 }
 

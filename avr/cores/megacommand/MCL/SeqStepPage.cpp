@@ -263,10 +263,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
       SeqPage::handleEvent(event)) {
-    if (show_seq_menu) {
-      redisplay = true;
-      return true;
-    }
     return true;
   }
 
@@ -601,7 +597,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           break;
         }
-        queue_redraw();
         return true;
       }
     }
@@ -618,7 +613,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       MD.set_rec_mode(1);
       clearLed2();
     }
-    queue_redraw();
     return true;
   }
 

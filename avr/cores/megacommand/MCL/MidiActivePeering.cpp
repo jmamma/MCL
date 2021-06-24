@@ -143,7 +143,6 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       } // for retries
 
       MidiIDSysexListener.cleanup();
-      GUI.currentPage()->redisplay = true;
       oled_display.setFont(oldfont);
 
       if (probe_success) {
@@ -161,7 +160,6 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         break;
       }
     } // for drivers
-    GUI.currentPage()->redisplay = true;
   }
 }
 

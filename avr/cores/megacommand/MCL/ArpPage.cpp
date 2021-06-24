@@ -13,7 +13,6 @@ void ArpPage::init() {
   DEBUG_PRINT_FN();
   classic_display = false;
   oled_display.setFont();
-  seq_ptc_page.redisplay = true;
   seq_ptc_page.display();
   track_update();
 }
@@ -43,7 +42,7 @@ void ArpPage::track_update() {
     }
   }
   if (arp_track->enabled != ARP_LATCH) {
-    seq_ptc_page.render_arp();
+  seq_ptc_page.render_arp();
   }
   last_arp_track = arp_track;
 }

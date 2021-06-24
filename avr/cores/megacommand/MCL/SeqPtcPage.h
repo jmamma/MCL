@@ -38,6 +38,7 @@ public:
   uint64_t dev_note_masks[NUM_DEVS][2];
   uint64_t note_mask[2];
 
+  bool scale_padding;
   bool cc_link_enable;
 
   SeqPtcMidiEvents midi_events;
