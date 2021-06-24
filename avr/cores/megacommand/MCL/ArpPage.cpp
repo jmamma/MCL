@@ -55,10 +55,6 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
- if (seq_ptc_page.md_track_change_check()) {
-   track_update();
-   return;
- }
 
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;

@@ -1436,7 +1436,7 @@ void SeqPage::loop() {
     DEBUG_DUMP("hii")
   }
 
-  md_track_change_check();
+//  md_track_change_check();
 
   if (show_seq_menu) {
     seq_menu_page.loop();

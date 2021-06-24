@@ -178,9 +178,6 @@ void SeqPtcPage::loop() {
     }
     render_arp(ptc_param_scale.hasChanged());
   }
-  if (md_track_change_check()) {
-    arp_page.track_update();
-  }
   SeqPage::loop();
 }
 
