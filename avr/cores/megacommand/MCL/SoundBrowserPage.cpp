@@ -232,17 +232,20 @@ void SoundBrowserPage::query_sample_slots() {
 
   if (!s_query_returned) {
     add_entry("ERROR");
+  } else if (numEntries == 0) {
+    add_entry("NON-UW MODEL");
   } else if (show_ram_slots) {
-    // TODO uw?
+    bool mk1 = numEntries < 48;
     char ram[] = "R1";
     add_entry(ram);
     ram[1]++;
     add_entry(ram);
-    // TODO mk1 uw?
-    ram[1]++;
-    add_entry(ram);
-    ram[1]++;
-    add_entry(ram);
+    if (!mk1) {
+      ram[1]++;
+      add_entry(ram);
+      ram[1]++;
+      add_entry(ram);
+    }
   }
   ((MCLEncoder *)encoders[1])->max = numEntries - 1;
 
