@@ -15,4 +15,4 @@ avr/cores/megacommand/**/*.d
 avr/cores/megacommand/**/*.hex
 avr/cores/megacommand/**/*.elf
 avr/cores/megacommand/**/*.a
-
+sym_*.txt

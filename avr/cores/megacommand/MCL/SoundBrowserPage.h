@@ -29,7 +29,7 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   void cleanup();
   void save_sound();
   void load_sound();
-  void send_wav(int slot);
+  void send_sample(int slot, bool is_syx);
   void recv_wav(int slot);
 
   // MidiSysexListenerClass

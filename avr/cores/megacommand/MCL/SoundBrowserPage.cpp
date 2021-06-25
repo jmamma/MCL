@@ -4,14 +4,17 @@
 const char *c_sound_root = "/Sounds/MD";
 const char *c_snd_suffix = ".snd";
 const char *c_wav_suffix = ".wav";
+const char *c_syx_suffix = ".syx";
 
 const char *c_snd_name = "SOUND";
 const char *c_wav_name = "WAV";
+const char *c_syx_name = "SYSEX";
 
 static bool s_query_returned = false;
 
 #define FT_SND 0
 #define FT_WAV 1
+#define FT_SYX 2
 
 #define PA_NEW 0
 #define PA_SELECT 1
@@ -37,9 +40,11 @@ void SoundBrowserPage::init() {
 
   filetypes[0] = c_snd_suffix;
   filetypes[1] = c_wav_suffix;
+  filetypes[2] = c_syx_suffix;
   filetype_names[0] = c_snd_name;
   filetype_names[1] = c_wav_name;
-  filetype_max = FT_WAV;
+  filetype_names[2] = c_syx_name;
+  filetype_max = FT_SYX;
 
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
@@ -55,8 +60,7 @@ void SoundBrowserPage::init() {
     strcpy(match, ".snd");
     strcpy(title, "Sounds");
     show_dirs = true;
-    show_save = true;
-    //show_save = (filetype_idx == FT_SND);
+    show_save = (filetype_idx != FT_SYX);
     show_filemenu = true;
     show_new_folder = true;
     show_overwrite = true;
@@ -118,14 +122,23 @@ void SoundBrowserPage::load_sound() {
   }
 }
 
-// send current selected wav file to slot
-void SoundBrowserPage::send_wav(int slot) {
+// send current selected sample file to slot
+void SoundBrowserPage::send_sample(int slot, bool is_syx) {
+  bool success;
   if (file.isOpen()) {
     char temp_entry[FILE_ENTRY_SIZE];
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
-    midi_sds.sendWav(temp_entry, slot, /* show progress */ true);
-    gfx.alert("Sample sent", temp_entry);
+    if (is_syx) {
+      success = midi_sds.sendSyx(temp_entry, slot);
+    } else {
+      success = midi_sds.sendWav(temp_entry, slot, /* show progress */ true);
+    }
+    if (success) {
+      gfx.alert("Sample sent", temp_entry);
+    } else {
+      gfx.alert("Send failed", temp_entry);
+    }
   }
 }
 
@@ -181,6 +194,7 @@ void SoundBrowserPage::on_select(const char *__) {
       load_sound();
       break;
     case FT_WAV:
+    case FT_SYX:
       pending_action = PA_SELECT;
       show_samplemgr = true;
       show_ram_slots = false;
@@ -190,12 +204,12 @@ void SoundBrowserPage::on_select(const char *__) {
   } else {
     auto slot = encoders[1]->cur;
     switch (pending_action) {
-    case PA_NEW:
-      recv_wav(slot);
-      break;
-    case PA_SELECT:
-      send_wav(slot);
-      break;
+      case PA_NEW:
+        recv_wav(slot);
+        break;
+      case PA_SELECT:
+        send_sample(slot, (filetype_idx == FT_SYX));
+        break;
     }
     show_samplemgr = false;
     init();

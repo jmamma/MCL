@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "MidiSysexFile.h"
 
 void MidiSDSClass::sendGeneralMessage(uint8_t type) {
   uint8_t data[6] = {0xF0, 0x7E, 0x00, 0x00, 0x00, 0xF7};
@@ -41,6 +42,21 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
   MidiUart.sendRaw(data, 7);
 }
 
+uint8_t MidiSDSClass::waitForHandshake() {
+  uint8_t rep;
+wait:
+  rep = waitForMsg();
+  if (rep == MIDI_SDS_ACK) {
+    hand_shake_state = true;
+  } else if (rep == MIDI_SDS_WAIT) {
+    goto wait;
+  } else {
+    // HandShake disabled.
+    hand_shake_state = false;
+  }
+  return rep;
+}
+
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
   MidiSDSSysexListener.msgType = 255;
@@ -56,6 +72,7 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
            (MidiSDSSysexListener.msgType == 255));
   return MidiSDSSysexListener.msgType;
 }
+
 void MidiSDSClass::cancel() {
   DEBUG_PRINTLN(F("cancelling transmission"));
   wav_file.close();
@@ -93,6 +110,95 @@ static void _setName(const char *filename, uint16_t slot) {
   MD.setSampleName(slot, name);
 }
 
+bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
+  MidiSysexFile file;
+  uint8_t buf[256];
+  int szbuf;
+  bool ret = true;
+  uint8_t reply;
+  uint32_t fsize;
+  int show_progress = 0;
+  uint8_t n_retry = 0;
+
+  if (state != SDS_READY || !file.open(filename, O_READ)) {
+    return false;
+  }
+
+  file.seekEnd();
+  fsize = file.position();
+  file.seek(0);
+
+  // 1st packet: sysex request.
+  szbuf = file.readPacket(buf, sizeof(buf));
+  if (szbuf == -1 || buf[1] != 0x7E || buf[3] != 0x01) {
+    ret = false;
+    goto cleanup;
+  }
+  buf[4] = sample_number & 0x7F;
+  buf[5] = (sample_number >> 7) & 0x7F;
+  MidiUart.sendRaw(buf, szbuf);
+  state = SDS_SEND;
+  reply = waitForHandshake();
+  if (reply == MIDI_SDS_CANCEL) {
+    ret = false;
+    goto cleanup;
+  }
+
+  oled_display.clearDisplay();
+
+  while(true) {
+    const uint32_t pos = file.position();
+    DEBUG_PRINT("pos = ");
+    DEBUG_PRINTLN(pos);
+    DEBUG_PRINT("fsize = ");
+    DEBUG_PRINTLN(fsize);
+    if (pos >= fsize) {
+      break;
+    }
+    if (++show_progress > 10) {
+      show_progress = 0;
+      mcl_gui.draw_progress("Sending sample", pos * 80 / fsize ,80);
+    }
+    szbuf = file.readPacket(buf, sizeof(buf));
+    if (szbuf == -1) {
+      ret = false;
+      goto cleanup;
+    }
+    n_retry = 0;
+retry:
+    MidiUart.sendRaw(buf, szbuf);
+    if (!hand_shake_state) {
+      delay(200);
+    } else if (buf[1] == 0x7E && buf[3] == 0x02) {
+      reply = waitForMsg(20);
+      switch (reply) {
+        case 255: // nothing came back
+          hand_shake_state = false;
+          goto retry;
+        case MIDI_SDS_WAIT:
+          reply = waitForMsg();
+          if (reply != MIDI_SDS_ACK) {
+            ret = false;
+            goto cleanup;
+          }
+        case MIDI_SDS_ACK:
+          break;
+        default:
+          if(n_retry++ > 3) {
+            ret = false;
+            goto cleanup;
+          }
+          goto retry;
+      }
+    } // otherwise, don't expect ACK reply (maybe MD-specific name-setting command)
+  }
+  // later packets
+
+cleanup:
+  file.close();
+  state = SDS_READY;
+  return ret;
+}
 
 bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool show_progress) {
   if (state != SDS_READY) {
@@ -125,19 +231,11 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool sh
   uint8_t rep = 0;
 
   midi_sds.state = SDS_SEND;
-wait:
-  rep = waitForMsg();
-  if (rep == MIDI_SDS_ACK) {
-    hand_shake_state = true;
-  } else if (rep == MIDI_SDS_CANCEL) {
+  rep = waitForHandshake();
+  if (rep == MIDI_SDS_CANCEL) {
     cancel();
     wav_file.close();
     return false;
-  } else if (rep == MIDI_SDS_WAIT) {
-    goto wait;
-  } else {
-    // HandShake disabled.
-    hand_shake_state = false;
   }
 
   _setName(filename, sample_number);

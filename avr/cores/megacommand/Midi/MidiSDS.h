@@ -50,6 +50,8 @@ public:
 
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }
   uint8_t waitForMsg(uint16_t timeout = 2000);
+  uint8_t waitForHandshake();
+  bool sendSyx(const char *filename, uint16_t sample_number);
   bool sendWav(const char *filename, uint16_t sample_number, bool show_progress = false);
   bool sendSamples(bool show_progress);
   bool recvWav(const char *filename, uint16_t sample_number /* always show progress */);
