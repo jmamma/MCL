@@ -86,7 +86,6 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   if (track < NUM_MD_TRACKS) {
     memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[track].data(),
            sizeof(md_track->seq_data));
-    md_track->seq_data.count_down = 0;
     md_track->get_machine_from_kit(track);
     md_track->link.length = mcl_seq.md_tracks[track].length;
     md_track->link.speed = mcl_seq.md_tracks[track].speed;
@@ -96,7 +95,6 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     uint8_t n = track - NUM_MD_TRACKS;
     memcpy(ext_track->seq_data.data(), mcl_seq.ext_tracks[n].data(),
            sizeof(ext_track->seq_data));
-    ext_track->seq_data.count_down = 0;
     ext_track->link.length = mcl_seq.ext_tracks[n].length;
     ext_track->link.speed = mcl_seq.ext_tracks[n].speed;
     ret = grids[grid].write(&temp_track, sizeof(ExtTrack), track, GRID_LENGTH);
