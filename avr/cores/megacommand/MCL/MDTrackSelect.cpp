@@ -80,7 +80,7 @@ void MDTrackSelect::end() {
       }
     }
   }
-  bool ret = SeqPage::md_track_change_check();
+  bool ret = seq_step_page.md_track_change_check();
   if (ret) { arp_page.track_update(); }
 }
 
