@@ -74,7 +74,11 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &grid_page.slot_copy, &grid_page.slot_paste, &slot.link.length,
 
     // 40
+#ifdef WAV_DESIGNER
     &WavDesignerPage::opt_mode, &WavDesignerPage::opt_shape,
+#else
+    nullptr, nullptr
+#endif
 
     // 42 - end
 };
@@ -110,10 +114,17 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     rename_row,
     // 21
     apply_slot_changes_cb,
+#ifdef WAV_DESIGNER
     // 22
     wav_render,
     // 23
     wavdesign_menu_handler,
+#else
+    // 22
+    nullptr,
+    // 23
+    nullptr,
+#endif
     // 24
     mclsys_apply_config_midi,
 };

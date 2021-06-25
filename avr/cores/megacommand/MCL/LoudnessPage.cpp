@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef LOUDNESS_PAGE
+
 void LoudnessPage::setup() { DEBUG_PRINT_FN(); }
 
 void LoudnessPage::init() {
@@ -104,3 +106,5 @@ bool LoudnessPage::handleEvent(gui_event_t *event) {
 
 MCLEncoder loudness_param1(1, 255, 2);
 LoudnessPage loudness_page(&loudness_param1);
+
+#endif

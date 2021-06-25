@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef WAV_DESIGNER
+
 void WavDesigner::prompt_send() {
     if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
 
@@ -235,3 +237,5 @@ bool WavDesigner::send() {
 }
 
 WavDesigner wd;
+
+#endif

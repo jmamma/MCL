@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef WAV_DESIGNER
+
 uint8_t WavDesignerPage::opt_mode = 0;
 uint8_t WavDesignerPage::opt_shape = 0;
 bool WavDesignerPage::show_menu = false;
@@ -82,3 +84,5 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
   }
   return false;
 }
+
+#endif
