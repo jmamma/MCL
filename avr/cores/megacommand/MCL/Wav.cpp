@@ -67,7 +67,10 @@ failed:
 }
 
 bool Wav::rename(char *new_name) {
-  if (!file.rename(&file, new_name)) {
+  if (file.isOpen()) {
+    return false;
+  }
+  if (!SD.rename(filename, new_name)) {
     DEBUG_PRINTLN(F("rename failed"));
     return false;
   } else {
