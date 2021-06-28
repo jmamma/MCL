@@ -179,7 +179,6 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_ext_track = min(track, NUM_EXT_TRACKS - 1);
   }
 #endif
-  GUI.currentPage()->redisplay = true;
   GUI.currentPage()->config();
 }
 
@@ -197,7 +196,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_trackid = track + 1;
         note_interface.ignoreNextEvent(track);
         select_track(device, track);
-        redisplay = true;
         seq_menu_page.select_item(0);
       }
 
@@ -1433,19 +1431,12 @@ bool SeqPage::md_track_change_check() {
 
 void SeqPage::loop() {
 
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged() ||
-      encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
-    DEBUG_DUMP("queue redraw");
-    queue_redraw();
-  }
-
   if (last_midi_state != MidiClock.state) {
     last_midi_state = MidiClock.state;
-    DEBUG_DUMP("hii");
-    redisplay = true;
+    DEBUG_DUMP("hii")
   }
 
-  md_track_change_check();
+//  md_track_change_check();
 
   if (show_seq_menu) {
     seq_menu_page.loop();

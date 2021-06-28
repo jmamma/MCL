@@ -13,7 +13,6 @@ void ArpPage::init() {
   DEBUG_PRINT_FN();
   classic_display = false;
   oled_display.setFont();
-  seq_ptc_page.redisplay = true;
   seq_ptc_page.display();
   track_update();
 }
@@ -28,7 +27,7 @@ void ArpPage::track_update() {
   arp_rate.cur = arp_track->rate;
   arp_rate.old = arp_rate.cur;
 
-  arp_range.cur = arp_track->oct;
+  arp_range.cur = arp_track->range;
   arp_range.old = arp_range.cur;
 
   arp_mode.cur = arp_track->mode;
@@ -43,7 +42,7 @@ void ArpPage::track_update() {
     }
   }
   if (arp_track->enabled != ARP_LATCH) {
-    seq_ptc_page.render_arp();
+  seq_ptc_page.render_arp();
   }
   last_arp_track = arp_track;
 }
@@ -56,10 +55,6 @@ void ArpPage::cleanup() {
 }
 
 void ArpPage::loop() {
- if (seq_ptc_page.md_track_change_check()) {
-   track_update();
-   return;
- }
 
  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
@@ -67,7 +62,7 @@ void ArpPage::loop() {
  }
   if (encoders[1]->hasChanged() ||
       encoders[3]->hasChanged()) {
-    arp_track->oct = arp_range.cur;
+    arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
     seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH);
   }

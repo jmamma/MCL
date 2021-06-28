@@ -213,7 +213,6 @@ bool mcl_handleEvent(gui_event_t *event) {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
             MD.set_rec_mode(GUI.currentPage() == &seq_step_page);
-            GUI.currentPage()->redisplay = true;
             clearLed2();
           } else {
             if (GUI.currentPage() == &seq_step_page) {
@@ -225,7 +224,6 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         seq_step_page.bootstrap_record();
-        GUI.currentPage()->redisplay = true;
         return true;
       }
       case MDX_KEY_COPY: {

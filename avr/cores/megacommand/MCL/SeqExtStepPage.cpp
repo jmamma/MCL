@@ -600,12 +600,6 @@ void SeqExtStepPage::loop() {
 }
 
 void SeqExtStepPage::display() {
-  if (recording && MidiClock.state == 2) {
-    if (!redisplay) {
-      return;
-    }
-  }
-
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
 
@@ -788,7 +782,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         // oled_display.textbox("CLEAR ", "LOCK");
         break;
       }
-      queue_redraw();
       return true;
     }
   }
@@ -801,7 +794,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     } else {
       clearLed2();
     }
-    queue_redraw();
     return true;
   }
 
@@ -818,10 +810,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
     if (SeqPage::handleEvent(event)) {
-      if (show_seq_menu) {
-        redisplay = true;
-        return true;
-      }
     }
     return true;
   }

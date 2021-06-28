@@ -136,7 +136,6 @@ public:
 
   uint64_t *get_mask();
 
-  void queue_redraw() { redisplay = true; }
   void params_reset();
 
   virtual bool handleEvent(gui_event_t *event);

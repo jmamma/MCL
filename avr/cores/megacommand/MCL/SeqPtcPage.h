@@ -32,20 +32,19 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 public:
   bool re_init = false;
   uint8_t key = 0;
-  uint8_t poly_count = 0;
-  uint8_t poly_max = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
+  uint8_t poly_order[MAX_POLY_NOTES];
 
   uint64_t dev_note_masks[NUM_DEVS][2];
   uint64_t note_mask[2];
 
+  bool scale_padding;
   bool cc_link_enable;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
-  uint8_t calc_poly_count();
   uint8_t seq_ext_pitch(uint8_t note_num);
   uint8_t process_ext_pitch(uint8_t note_num, bool note_type);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num, uint8_t fine_tune = 255);
