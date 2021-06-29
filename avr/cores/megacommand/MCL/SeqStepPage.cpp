@@ -68,7 +68,7 @@ void SeqStepPage::init() {
 
   note_interface.state = true;
   reset_on_release = false;
-  ignore_release = 255;
+  ignore_release = 0;
   update_params_queue = false;
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
@@ -354,7 +354,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         active_track.timing[step] = utiming;
         CLEAR_BIT64(active_track.oneshot_mask, step);
         active_track.set_step(step, mask_type, true);
-        ignore_release = track;
+        SET_BIT16(ignore_release, track);
+
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
@@ -362,8 +363,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.draw_close_microtiming();
         md_micro = false;
       }
-      if (ignore_release == track) {
-        ignore_release = 255;
+      if (IS_BIT_SET16(ignore_release,track)) {
+        CLEAR_BIT16(ignore_release,track);
         return;
       }
       if (last_md_track < 15) {
