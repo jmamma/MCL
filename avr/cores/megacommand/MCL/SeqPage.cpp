@@ -179,7 +179,9 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_ext_track = min(track, NUM_EXT_TRACKS - 1);
   }
 #endif
-  GUI.currentPage()->config();
+  if (GUI.currentPage()) {
+    GUI.currentPage()->config();
+  }
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
