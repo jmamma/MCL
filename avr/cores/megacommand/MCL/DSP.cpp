@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef WAV_DESIGNER
+
 float DSP::saturate(float sample, float max) {
   float percent_max = 100 - (((float)abs(sample) / (float)max) * 100);
   // y = -ax + n, y = - e^-cx + n
@@ -32,3 +34,5 @@ float DSP::saturate(float sample, float max) {
 }
 
 DSP dsp;
+
+#endif

@@ -1,4 +1,34 @@
 #include "MCL_impl.h"
+#include "memory.h"
+
+File FileBrowserPage::file;
+int FileBrowserPage::numEntries;
+
+char FileBrowserPage::match[5];
+char FileBrowserPage::lwd[128];
+char FileBrowserPage::title[12];
+uint8_t FileBrowserPage::cur_col = 0;
+uint8_t FileBrowserPage::cur_row = 0;
+uint8_t FileBrowserPage::cur_file = 0;
+
+bool FileBrowserPage::show_dirs = false;
+bool FileBrowserPage::select_dirs = false;
+bool FileBrowserPage::show_save = true;
+bool FileBrowserPage::show_parent = true;
+bool FileBrowserPage::show_new_folder = true;
+bool FileBrowserPage::show_filemenu = true;
+bool FileBrowserPage::show_overwrite = false;
+
+bool FileBrowserPage::show_samplemgr = false;
+bool FileBrowserPage::show_filetypes = false;
+uint8_t FileBrowserPage::filetype_idx = 0;
+uint8_t FileBrowserPage::filetype_max = 0;
+const char* FileBrowserPage::filetypes[MAX_FT_SELECT];
+const char* FileBrowserPage::filetype_names[MAX_FT_SELECT];
+
+bool FileBrowserPage::filemenu_active = false;
+
+bool FileBrowserPage::call_handle_filemenu = false;
 
 void FileBrowserPage::setup() {
 #ifdef OLED_DISPLAY
@@ -8,37 +38,53 @@ void FileBrowserPage::setup() {
   // strcpy(match, mcl);
 #endif
   strcpy(title, "Files");
-  DEBUG_PRINT_FN();
+}
+
+void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
+  volatile uint8_t *ptr = 
+    (uint8_t*)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+  memcpy_bank1((volatile void*)entry, ptr, FILE_ENTRY_SIZE);
 }
 
 bool FileBrowserPage::add_entry(const char *entry) {
   if (numEntries >= NUM_FILE_ENTRIES) {
     return false;
   }
-  char buf[16];
-  m_strncpy(buf, entry, sizeof(buf));
-  buf[15] = '\0';
-  volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * 16;
+  char buf[FILE_ENTRY_SIZE];
+  strncpy(buf, entry, FILE_ENTRY_SIZE);
+  buf[FILE_ENTRY_SIZE - 1] = '\0';
+  volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
   memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
   return true;
 }
 
-void FileBrowserPage::init() {
-  DEBUG_PRINT_FN();
+#define FM_NEW_FOLDER 0
+#define FM_DELETE 1
+#define FM_RENAME 2
+#define FM_OVERWRITE 3
+#define FM_CANCEL 4
 
-  char temp_entry[16];
+void FileBrowserPage::query_filesystem() {
+  if (show_filetypes) {
+    if (filetype_idx > filetype_max) filetype_idx = filetype_max;
+    if (filetype_idx < 0) filetype_idx = 0;
+    strcpy(match, filetypes[filetype_idx]);
+    ((MCLEncoder*)param1)->min = 0;
+    ((MCLEncoder*)param1)->max = filetype_max;
+  }
+
+  char temp_entry[FILE_ENTRY_SIZE];
   call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
-  file_menu_page.menu.enable_entry(0, show_new_folder);
-  file_menu_page.menu.enable_entry(1, true); // delete
-  file_menu_page.menu.enable_entry(2, true); // rename
-  file_menu_page.menu.enable_entry(3, show_overwrite);
-  file_menu_page.menu.enable_entry(4, true); // cancel
+  file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
+  file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
+  file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
+  file_menu_page.menu.enable_entry(FM_OVERWRITE, show_overwrite);
+  file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
-  filemenu_active = false;
 
   //  reset directory pointer
   SD.vwd()->rewind();
@@ -48,8 +94,7 @@ void FileBrowserPage::init() {
     add_entry("[ SAVE ]");
   }
 
-  SD.vwd()->getName(temp_entry, 16);
-  DEBUG_DUMP(temp_entry);
+  SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
@@ -60,10 +105,10 @@ void FileBrowserPage::init() {
 
   //  iterate through the files
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
-    for (uint8_t c = 0; c < 16; c++) {
+    for (uint8_t c = 0; c < FILE_ENTRY_SIZE; c++) {
       temp_entry[c] = 0;
     }
-    file.getName(temp_entry, 16);
+    file.getName(temp_entry, FILE_ENTRY_SIZE);
     bool is_match_file = false;
     DEBUG_DUMP(temp_entry);
     if (temp_entry[0] == '.') {
@@ -73,7 +118,6 @@ void FileBrowserPage::init() {
     } else {
       // XXX only 3char suffix
       char *arg1 = &temp_entry[strlen(temp_entry) - 4];
-      DEBUG_DUMP(arg1);
       if (strcmp(arg1, match) == 0) {
         is_match_file = true;
       }
@@ -91,7 +135,6 @@ void FileBrowserPage::init() {
       }
     }
     file.close();
-    DEBUG_DUMP(numEntries);
   }
 
   if (numEntries <= 0) {
@@ -101,6 +144,13 @@ void FileBrowserPage::init() {
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
   }
   DEBUG_PRINTLN(F("finished list files"));
+}
+
+void FileBrowserPage::init() {
+  filemenu_active = false;
+  show_samplemgr = false;
+  show_filetypes = false;
+  query_filesystem();
 }
 
 void FileBrowserPage::display() {
@@ -142,15 +192,22 @@ void FileBrowserPage::display() {
         oled_display.print(">");
       }
     }
-    char temp_entry[16];
+    char temp_entry[FILE_ENTRY_SIZE];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    volatile uint8_t *ptr =
-        (uint8_t *)BANK1_FILE_ENTRIES_START + entry_num * 16;
-    memcpy_bank1(temp_entry, ptr, 16);
+    get_entry(entry_num, temp_entry);
     oled_display.println(temp_entry);
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
     draw_scrollbar(120);
+  }
+
+  if (show_filetypes) {
+    oled_display.setTextColor(WHITE, BLACK);
+    for (int i = 0; i <= filetype_max; ++i) {
+      oled_display.setCursor(2, 18 + i * 6);
+      oled_display.println(filetype_names[i]);
+    }
+    oled_display.fillRect(0, 12 + filetype_idx * 6, 35, 7, INVERT);
   }
 
   oled_display.display();
@@ -163,12 +220,11 @@ void FileBrowserPage::display() {
   } else {
     GUI.put_string_at_fill(0, " ");
   }
-  char temp_entry[17];
+  char temp_entry[FILE_ENTRY_SIZE];
   uint16_t entry_num = encoders[1]->cur;
-  uint32_t pos = BANK1_FILE_ENTRIES_START + entry_num * 16;
-  volatile uint8_t *ptr = pos;
-  memcpy_bank1(temp_entry, ptr, 16);
-  temp_entry[16] = '\0';
+  get_entry(entry_num, tempy_entry);
+  temp_entry[FILE_ENTRY_SIZE - 1] = '\0';
+
   GUI.put_string_at(1, temp_entry);
 
 #endif
@@ -210,6 +266,11 @@ void FileBrowserPage::loop() {
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
   }
+
+  if (show_filetypes && param1->hasChanged()) {
+    filetype_idx = param1->cur;
+    init();
+  }
 }
 
 bool FileBrowserPage::create_folder() {
@@ -226,8 +287,6 @@ void FileBrowserPage::_calcindices(int &saveidx) {
 }
 
 void FileBrowserPage::_cd_up() {
-  DEBUG_PRINT_FN();
-
   file.close();
 
   // don't cd up if we are at the root
@@ -255,8 +314,6 @@ void FileBrowserPage::_cd_up() {
     strcpy(lwd, "/");
   }
 
-  DEBUG_DUMP(lwd);
-
   SD.chdir(lwd);
   init();
 }
@@ -278,16 +335,13 @@ void FileBrowserPage::_cd(const char *child) {
     lwd[--len_lwd] = '\0';
   }
 
-  DEBUG_DUMP(lwd);
-  DEBUG_DUMP(child);
   init();
 }
 
 void FileBrowserPage::_handle_filemenu() {
-  char buf1[16];
-  volatile uint8_t *ptr =
-      (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-  memcpy_bank1(&buf1[0], ptr, sizeof(buf1));
+  char buf1[FILE_ENTRY_SIZE];
+
+  get_entry(encoders[1]->getValue(), buf1);
 
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32] = {'\0'};
@@ -297,18 +351,18 @@ void FileBrowserPage::_handle_filemenu() {
   uint8_t name_length = 8;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
-  case 0: // new folder
+  case FM_NEW_FOLDER: // new folder
     create_folder();
     break;
-  case 1: // delete
-    strcat(buf2, "Delete ");
+  case FM_DELETE: // delete
+    strcpy(buf2, "Delete ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
     break;
-  case 2: // rename
+  case FM_RENAME: // rename
     // trim the suffix is present, add back later
     strcat(buf2, buf1);
     if (suffix_pos != nullptr) {
@@ -325,8 +379,8 @@ void FileBrowserPage::_handle_filemenu() {
       on_rename(buf1, buf2);
     }
     break;
-  case 3: // overwrite
-    strcat(buf2, "Overwrite ");
+  case FM_OVERWRITE: // overwrite
+    strcpy(buf2, "Overwrite ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
@@ -367,29 +421,26 @@ void FileBrowserPage::on_rename(const char *from, const char *to) {
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
-
-  DEBUG_PRINT_FN();
-
   if (note_interface.is_event(event)) {
     return false;
   }
 #ifdef OLED_DISPLAY
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
     file_menu_page.cur_row = 0;
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();
-    return false;
+    return true;
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
     encoders[0] = param1;
     encoders[1] = param2;
 
     _handle_filemenu();
     init();
-    return false;
+    return true;
   }
 #else
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
@@ -407,25 +458,25 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    char temp_entry[16];
+    char temp_entry[FILE_ENTRY_SIZE];
     volatile uint8_t *ptr =
-        (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * 16;
-    memcpy_bank1(temp_entry, ptr, 16);
+        (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * FILE_ENTRY_SIZE;
+    memcpy_bank1(temp_entry, ptr, FILE_ENTRY_SIZE);
 
     // chdir to parent
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
       _cd_up();
-      return false;
+      return true;
     }
 
     DEBUG_DUMP(temp_entry);
-    file.open(temp_entry, O_READ);
-
     // chdir to child
-    if (!select_dirs) {
-      if (file.isDirectory()) {
+    if (!show_samplemgr) {
+      file.open(temp_entry, O_READ);
+      // chdir to child
+      if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
-        return false;
+        return true;
       }
     }
 
@@ -437,9 +488,18 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   // cancel
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    if (show_samplemgr) {
+      // on cancel, break out of sample manager
+      // and intercept cancel event
+      show_samplemgr = false;
+      init();
+      return true;
+    }
+
     on_cancel();
     return true;
   }
 
   return false;
 }
+

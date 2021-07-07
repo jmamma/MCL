@@ -346,30 +346,30 @@ void GuiClass::put_p_string_fill(uint8_t idx, PGM_P str) {
 
 void GuiClass::put_string_at_len(uint8_t idx, const char *str, uint8_t len) {
   char *data = lines[curLine].data;
-  m_strncpy(data + idx, str, len);
+  strncpy(data + idx, str, len);
   lines[curLine].changed = true;
 }
 
 void GuiClass::put_string_at_not(uint8_t idx, const char *str) {
   char *data = lines[curLine].data;
-  m_strncpy(data + idx, str, m_strlen(str) - 1);
+  strncpy(data + idx, str, strlen(str) - 1);
   lines[curLine].changed = true;
 }
 
 void GuiClass::put_string_at(uint8_t idx, const char *str) {
   char *data = lines[curLine].data;
-  m_strncpy(data + idx, str, sizeof(lines[0].data) - idx);
+  strncpy(data + idx, str, sizeof(lines[0].data) - idx);
   lines[curLine].changed = true;
 }
 void GuiClass::put_string_at_noterminator(uint8_t idx, const char *str) {
   char *data = lines[curLine].data;
-  m_strncpy(data + idx, str, sizeof(lines[0].data) - idx - 2);
+  strncpy(data + idx, str, sizeof(lines[0].data) - idx - 2);
   lines[curLine].changed = true;
 }
 
 void GuiClass::put_p_string_at(uint8_t idx, PGM_P str) {
   char *data = lines[curLine].data;
-  m_strncpy_p(data + idx, str, sizeof(lines[0].data) - idx);
+  strncpy_P(data + idx, str, sizeof(lines[0].data) - idx);
   lines[curLine].changed = true;
 }
 
@@ -398,7 +398,7 @@ void GuiClass::printf(const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   put_string(buf);
   va_end(lp);
 }
@@ -408,7 +408,7 @@ void GuiClass::printf_fill(const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   put_string_fill(buf);
   va_end(lp);
 }
@@ -418,7 +418,7 @@ void GuiClass::printf_at(uint8_t idx, const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   put_string_at(idx, buf);
   va_end(lp);
 }
@@ -428,7 +428,7 @@ void GuiClass::printf_at_fill(uint8_t idx, const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   put_string_at_fill(idx, buf);
   va_end(lp);
 }
@@ -438,7 +438,7 @@ void GuiClass::flash_printf(const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   flash_string(buf);
   va_end(lp);
 }
@@ -448,7 +448,7 @@ void GuiClass::flash_printf_fill(const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   flash_string_fill(buf);
   va_end(lp);
 }
@@ -458,7 +458,7 @@ void GuiClass::flash_printf_at(uint8_t idx, const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   flash_string_at(idx, buf);
   va_end(lp);
 }
@@ -468,7 +468,7 @@ void GuiClass::flash_printf_at_fill(uint8_t idx, const char *fmt, ...) {
   va_start(lp, fmt);
 
   char buf[17];
-  m_vsnprintf(buf, sizeof(buf), fmt, lp);
+  vsnprintf(buf, sizeof(buf), fmt, lp);
   flash_string_at_fill(idx, buf);
   va_end(lp);
 }
@@ -549,7 +549,7 @@ void GuiClass::flash_put_valuex_at(uint8_t idx, uint8_t value,
 void GuiClass::flash_string_at(uint8_t idx, const char *str,
                                uint16_t duration) {
   char *data = lines[curLine].flash;
-  m_strncpy(data + idx, str, sizeof(lines[0].flash) - idx);
+  strncpy(data + idx, str, sizeof(lines[0].flash) - idx);
   flash(duration);
 }
 
@@ -562,7 +562,7 @@ void GuiClass::flash_string_at_fill(uint8_t idx, const char *str,
 
 void GuiClass::flash_p_string_at(uint8_t idx, PGM_P str, uint16_t duration) {
   char *data = lines[curLine].flash;
-  m_strncpy_p(data + idx, str, sizeof(lines[0].flash) - idx);
+  strncpy_P(data + idx, str, sizeof(lines[0].flash) - idx);
   flash(duration);
 }
 

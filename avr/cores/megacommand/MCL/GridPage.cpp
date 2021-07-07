@@ -342,7 +342,7 @@ void GridPage::display_grid_info() {
   oled_display.setTextColor(BLACK, WHITE);
   if (row_headers[cur_row].active) {
     char rowname[10];
-    m_strncpy(rowname, row_headers[cur_row].name, 9);
+    strncpy(rowname, row_headers[cur_row].name, 9);
     rowname[9] = '\0';
 
     oled_display.print(rowname);

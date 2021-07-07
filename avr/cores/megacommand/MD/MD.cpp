@@ -283,6 +283,7 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 
   if (*param > 23) {
     *track = 255;
+    return;
   }
 
   return;
@@ -996,7 +997,6 @@ void MDClass::enter_global_edit() {
   if (global == 255) {
     return;
   }
-  DEBUG_DUMP(global);
   clear_all_windows_quick();
   delay(10);
   toggle_global_window();

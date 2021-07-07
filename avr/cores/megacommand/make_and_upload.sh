@@ -11,3 +11,6 @@ if [ $? -eq 0 ]; then
   echo RAM_FREE: $ram_free
   ${AVR_DIR}/bin/avrdude -C${AVR_DIR}/etc/avrdude.conf -v -V -patmega2560 -cwiring -P${DEV} -b115200 -D -Uflash:w:./main.hex
 fi
+
+make -j8
+${AVR_DUDE} -C${AVR_DUDE_CONF} -v -V -patmega2560 -cwiring -P${DEV} -b115200 -D -Uflash:w:./main.hex

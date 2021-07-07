@@ -63,157 +63,11 @@ uint8_t popcount32(const uint32_t bits) {
     return popcount(((uint8_t*)&(bits))[0]) + popcount(((uint8_t*)&(bits))[1]) + popcount(((uint8_t*)&(bits))[2]) + popcount(((uint8_t*)&(bits))[3]);
 }
 
-/** Return the length of a string. **/
-uint16_t m_strlen(const char *src) {
-  uint16_t result = 0;
-  while (src[result++] != '\0')
-    ;
-  return result;
-}
-
-/** Copy cnt bytes from src to dst. **/
-void m_memcpy(void *dst, const void *src, uint16_t cnt) {
-  while (cnt) {
-    *((uint8_t *)dst++) = *((uint8_t *)src++);
-    cnt--;
-  }
-}
-
-/** Copy cnt bytes from the program space src to dst. **/
-void m_memcpy_p(void *dst, PGM_P src, uint16_t cnt) {
-  while (cnt) {
-    *((uint8_t *)dst++) = pgm_read_byte(src);
-    src++;
-    cnt--;
-  }
-}
-
 static char tohex(uint8_t i) {
   if (i < 10) {
     return i + '0';
   } else {
     return i - 10 + 'a';
-  }
-}
-
-/**
- * va_string version of printf.
- *
- * Format arguments are:
- * - %b (byte value)
- * - %B (short value)
- * - %x (hex byte value)
- * - %X (hex short value)
- * - %s (string)
- **/
-uint16_t m_vsnprintf(char *dst, uint16_t len, const char *fmt, va_list lp) {
-
-  char *ptr = dst;
-  char *end = ptr + len - 1;
-  while ((*fmt != 0) && (ptr < end)) {
-    if (*fmt == '%') {
-      fmt++;
-      switch (*fmt) {
-      case '\0':
-        goto end;
-        break;
-
-      case 'b': // byte
-      {
-        uint8_t i = va_arg(lp, int);
-        if ((ptr + 3) < end) {
-          *(ptr++) = i / 100 + '0';
-          *(ptr++) = (i % 100) / 10 + '0';
-          *(ptr++) = (i % 10) + '0';
-        } else {
-          goto end;
-        }
-      } break;
-
-      case 'B': // short
-      {
-        uint16_t i = va_arg(lp, int);
-        if ((ptr + 5) < end) {
-          *(ptr++) = i / 10000 + '0';
-          *(ptr++) = (i % 10000) / 1000 + '0';
-          *(ptr++) = (i % 1000) / 100 + '0';
-          *(ptr++) = (i % 100) / 10 + '0';
-          *(ptr++) = (i % 10) + '0';
-        } else {
-          goto end;
-        }
-      } break;
-
-      case 'x': // hex 8
-      {
-        uint8_t i = va_arg(lp, int);
-        if ((ptr + 2) < end) {
-          *(ptr++) = tohex(i / 16);
-          *(ptr++) = tohex(i % 16);
-        } else {
-          goto end;
-        }
-      } break;
-
-      case 'X': // hex 16
-      {
-        uint16_t i = va_arg(lp, int);
-        if ((ptr + 4) < end) {
-          *(ptr++) = tohex((i >> 12) & 0xF);
-          *(ptr++) = tohex((i >> 8) & 0xF);
-          *(ptr++) = tohex((i >> 4) & 0xF);
-          *(ptr++) = tohex(i & 0xF);
-        } else {
-          goto end;
-        }
-      } break;
-
-      case 's': // string
-      {
-        const char *ptr2 = va_arg(lp, char *);
-        while ((ptr < end) && *ptr2) {
-          *ptr++ = *ptr2++;
-        }
-      } break;
-      }
-    } else {
-      *ptr++ = *fmt;
-    }
-    fmt++;
-  }
-
-  *ptr = '\0';
-  ptr++;
-end:
-  return ptr - dst;
-}
-
-/**
- * embedded printf.
- *
- * Format arguments are:
- * - %b (byte value)
- * - %B (short value)
- * - %x (hex byte value)
- * - %X (hex short value)
- * - %s (string)
- **/
-uint16_t m_snprintf(char *dst, uint16_t len, const char *fmt, ...) {
-  va_list lp;
-  va_start(lp, fmt);
-  uint16_t ret = m_vsnprintf(dst, len, fmt, lp);
-  va_end(lp);
-  return ret;
-}
-
-/** Copy cnt bytes from src to dst. **/
-void m_strncpy(void *dst, const char *src, uint16_t cnt) {
-  while (cnt && *src) {
-    *((uint8_t *)dst++) = *((uint8_t *)src++);
-    cnt--;
-  }
-  if (cnt > 0) {
-    *((uint8_t *)dst++) = 0;
   }
 }
 
@@ -229,21 +83,6 @@ void m_strncpy_fill(void *dst, const char *src, uint16_t cnt) {
   }
   if (cnt > 0)
     *((uint8_t *)dst++) = 0;
-}
-
-/** Copy cnt bytes from program space src to dst. **/
-void m_strncpy_p(void *dst, PGM_P src, uint16_t cnt) {
-  while (cnt) {
-    char byte = pgm_read_byte(src);
-    if (byte == 0)
-      break;
-    *((uint8_t *)dst++) = byte;
-    src++;
-    cnt--;
-  }
-  if (cnt > 0) {
-    *((uint8_t *)dst++) = 0;
-  }
 }
 
 /** Copy cnt bytes from program space src to dst, and fill up with spaces. **/
@@ -264,48 +103,6 @@ void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt) {
     *((uint8_t *)dst++) = 0;
 }
 
-/** Clear cnt bytes of dst and set them to 0. **/
-void m_memclr(void *dst, uint16_t cnt) {
-  while (cnt) {
-    *((uint8_t *)dst++) = 0;
-    cnt--;
-  }
-}
-
-/** Set cnt bytes at dst with the value elt. **/
-void m_memset(void *dst, uint16_t cnt, uint8_t elt) {
-  while (cnt) {
-    *((uint8_t *)dst++) = elt;
-    cnt--;
-  }
-}
-
-/** Copy string (max 16 characters) from src to dst and fill up with whitespace.
- * **/
-void m_str16cpy_fill(void *dst, const char *src) {
-  m_strncpy_fill(dst, src, 16);
-}
-
-/** Copy string (max 16 characters) from program space src to dst and fill up
- * with whitespace. **/
-void m_str16cpy_p_fill(void *dst, PGM_P src) { m_strncpy_p_fill(dst, src, 16); }
-
-/** Copy string (max 16 characters) from program space src to dst. **/
-void m_str16cpy_p(void *dst, PGM_P src) { m_strncpy_p(dst, src, 16); }
-
-/** Append the string at src to the string at dst, not exceeding len characters.
- * **/
-void m_strnappend(void *dst, const char *src, int len) {
-  char *ptr = dst;
-  int i;
-  for (i = 0; i < len; i++) {
-    if (ptr[0] == '\0')
-      break;
-    ptr++;
-  }
-  m_strncpy(ptr, src, len - i);
-}
-
 /** Convert the string to UPPERCASE. **/
 void m_toupper(char *str) {
   char chr;
@@ -319,7 +116,7 @@ void m_toupper(char *str) {
 
 /** Trim ending spaces **/
 void m_trim_space(char *str) {
-  for (int i = m_strlen(str) - 1; i >= 0; --i) {
+  for (int i = strlen(str) - 1; i >= 0; --i) {
     if (str[i] == ' ') {
       str[i] = '\0';
     }
@@ -414,6 +211,44 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) {
 }
 
 /** @} **/
+
+void uart_set_speed(uint32_t speed, uint8_t port) {
+  uint32_t cpu = (F_CPU / 16);
+  cpu /= speed;
+  cpu--;
+
+#ifdef MEGACOMMAND
+  if (port == 0) {
+
+    if(speed >= 250000) {
+      // use u2x mode
+      cpu = (F_CPU / 4 / speed - 1) / 2;
+      UCSR0A = 1 << U2X0;
+    }
+
+    UBRR0H = ((cpu >> 8) & 0xFF);
+    UBRR0L = (cpu & 0xFF);
+  }
+  else if (port == 1) {
+    UBRR1H = ((cpu >> 8) & 0xFF);
+    UBRR1L = (cpu & 0xFF);
+  }
+  else if (port == 2) {
+    UBRR2H = ((cpu >> 8) & 0xFF);
+    UBRR2L = (cpu & 0xFF);
+  }
+#else
+  if (port == 1) {
+    UBRR0H = ((cpu >> 8) & 0xFF);
+    UBRR0L = (cpu & 0xFF);
+  }
+  if (port == 2) {
+    UBRR1H = ((cpu >> 8) & 0xFF);
+    UBRR1L = (cpu & 0xFF);
+  }
+
+#endif
+}
 
 /**
  * \addtogroup helpers_math Math functions

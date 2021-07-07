@@ -27,8 +27,7 @@ function parse-symbol($line) {
   } catch {}
 }
 
-Set-Location sketch
-$lines = $(avr-objdump -x build/MIDICtrl20_MegaCommand.avr.mega\sketch.ino.elf)
+$lines = $(avr-objdump -x bin\sketch.ino.elf)
 $header = $lines | Select-Object -First 37
 $symbols = $lines | Select-Object -Skip 38 | %{ parse-symbol($_) }
 
@@ -52,4 +51,3 @@ echo "Total compressable object size: $comp_total_size"
 
 $data | Out-GridView
 $bss | Out-GridView
-Set-Location ..

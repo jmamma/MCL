@@ -24,10 +24,10 @@ compiler.c.cmd=avr-gcc
 compiler.c.flags=-std=gnu11 -c -Os {compiler.warning_flags} -MMD -ffunction-sections -fdata-sections -flto=jobserver -lm -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 compiler.c.elf.flags={compiler.warning_flags} -Os -flto -fuse-linker-plugin -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 compiler.c.elf.cmd=avr-gcc
-compiler.S.flags=-c -g -x assembler-with-cpp -flto
+compiler.S.flags=-c -x assembler-with-cpp -flto
 compiler.cpp.cmd=avr-g++
 
-compiler.cpp.flags=-std=gnu++1z -c -Os {compiler.warning_flags} -MMD -Wno-attributes -Wno-write-strings -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-rtti -ffunction-sections -fdata-sections -flto=jobserver -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff,--relax -I{build.core.path}/Midi -I{build.core.path}/GUI -I{build.core.path}/CommonTools -I{build.core.path}/Elektron -I{build.core.path}/MD -I{build.core.path}/MidiTools -I{build.core.path}/Sequencer -I{build.core.path}/MNM -I{build.core.path}/PageTools -I{build.core.path}/MDSketches -I{build.core.path}/MDPages -I{build.core.path}/A4 -I{build.core.path}/SPI -I{build.core.path}/Wire -I{build.core.path}/Adafruit-GFX-Library -I{build.core.path}/Adafruit_SSD1305_Library -I{build.core.path}/SdFat -I{build.core.path}/SDCard -I{build.core.path}/MCL
+compiler.cpp.flags=-std=gnu++1z -c -Os {compiler.warning_flags} -MMD -Wno-attributes -Wno-write-strings -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-rtti -ffunction-sections -fdata-sections -flto=jobserver -Wl,--gc-section,--defsym=__stack=0x8021ff,--section-start,.data=0x802100,--defsym=__heap_end=0x80ffff,--relax -I{build.core.path}/Midi -I{build.core.path}/GUI -I{build.core.path}/CommonTools -I{build.core.path}/Elektron -I{build.core.path}/MD -I{build.core.path}/MidiTools -I{build.core.path}/MNM -I{build.core.path}/A4 -I{build.core.path}/SPI -I{build.core.path}/Wire -I{build.core.path}/Adafruit-GFX-Library -I{build.core.path}/Adafruit_SSD1305_Library -I{build.core.path}/SdFat -I{build.core.path}/MCL
 
 compiler.ar.cmd=avr-gcc-ar
 compiler.ar.flags=rcs

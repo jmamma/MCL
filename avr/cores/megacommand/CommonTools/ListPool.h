@@ -105,7 +105,7 @@ public:
   ListElt<C> *alloc(C *c) {
     ListElt<C> *ret = alloc();
     if (ret != NULL) {
-      m_memcpy(&ret->obj, c, sizeof(C));
+      memcpy(&ret->obj, c, sizeof(C));
     }
     return ret;
   }

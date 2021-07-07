@@ -42,7 +42,6 @@ constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
 constexpr size_t NUM_LFO_TRACKS = 1;
-constexpr size_t NUM_FILE_ENTRIES = 256;
 
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
@@ -100,7 +99,9 @@ constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRA
 
 // 256x file entries (16 bytes each)
 // Start at 0xBAF4
+constexpr size_t NUM_FILE_ENTRIES = 256;
+constexpr size_t FILE_ENTRY_SIZE = 16;
 constexpr size_t BANK1_FILE_ENTRIES_START = (BANK1_A4_TRACKS_START + GRID2_TRACK_LEN * NUM_A4_TRACKS);
-constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + 16 * NUM_FILE_ENTRIES);
+constexpr size_t BANK1_FILE_ENTRIES_END = (BANK1_FILE_ENTRIES_START + FILE_ENTRY_SIZE * NUM_FILE_ENTRIES);
 
 // At 0xCAF4

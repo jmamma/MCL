@@ -126,6 +126,8 @@ public:
   void invertDisplay(uint8_t i);
   void setBrightness(uint8_t i);
   uint8_t getBuffer(uint16_t i);
+  // get the pointer to the raw buffer
+  uint8_t* getBuffer();
   bool redisplay = true;
   bool screen_saver = false;
 

@@ -56,7 +56,7 @@ extern MCLEncoder grid_slot_param2;
 constexpr size_t grid_slot_page_N = 9;
 extern MenuPage<grid_slot_page_N> grid_slot_page;
 
-extern MCLEncoder wav_menu_value_encoder;
-extern MCLEncoder wav_menu_entry_encoder;
-extern MenuPage<3> wav_menu_page;
+extern MCLEncoder wavdesign_menu_value_encoder;
+extern MCLEncoder wavdesign_menu_entry_encoder;
+extern MenuPage<3> wavdesign_menu_page;
 #endif /* MCLMENUS_H__ */

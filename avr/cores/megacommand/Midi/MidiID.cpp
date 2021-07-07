@@ -6,7 +6,6 @@
 #define UART2_PORT 2
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
-  DEBUG_PRINT_FN();
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
   MidiUartParent *uart;
   if (port == UART1_PORT) {
@@ -23,7 +22,6 @@ void MidiID::init() {
 }
 
 bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
-  DEBUG_PRINT_FN();
 
   if (port == UART1_PORT) {
     DEBUG_PRINTLN("adding listener port1");

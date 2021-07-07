@@ -120,7 +120,7 @@ void ArpPage::display() {
   }
   mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
 
-  m_strncpy_p(str, arp_names[encoders[1]->cur], 4);
+  strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
   mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
 

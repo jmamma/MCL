@@ -243,7 +243,7 @@ void SeqPtcPage::display() {
 #endif
 
   // draw SCALE
-  m_strncpy_p(buf1, scale_names[ptc_param_scale.getValue()], 4);
+  strncpy_P(buf1, scale_names[ptc_param_scale.getValue()], 4);
   draw_knob(3, "SCA", buf1);
 
   // draw TI keyboard

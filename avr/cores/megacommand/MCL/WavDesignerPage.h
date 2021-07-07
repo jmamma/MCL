@@ -5,7 +5,7 @@
 
 #include "MCL.h"
 
-extern void wav_menu_handler();
+extern void wavdesign_menu_handler();
 extern void wav_render();
 
 class WavDesignerPage : public LightPage {
@@ -25,7 +25,7 @@ public:
 
   virtual void init() {
     if (WavDesignerPage::opt_mode < 3) {
-      wav_menu_page.menu.enable_entry(2, false);
+      wavdesign_menu_page.menu.enable_entry(2, false);
     }
     show_menu = false;
   }

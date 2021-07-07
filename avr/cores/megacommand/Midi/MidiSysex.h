@@ -54,7 +54,7 @@ public:
   /* @} */
 };
 
-#define NUM_SYSEX_SLAVES 4
+#define NUM_SYSEX_SLAVES 5
 
 #define NUM_SYSEX_MSGS 24
 

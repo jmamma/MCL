@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef WAV_DESIGNER
+
 void osc_mod_handler(EncoderParent *enc) {}
 
 uint32_t OscPage::exploit_delay_clock = 0;
@@ -338,3 +340,5 @@ void OscPage::draw_levels() {
 float OscPage::get_phase() { return 0; }
 float OscPage::get_width() { return enc3.cur / 128.00; }
 uint8_t OscPage::get_osc_type() { return osc_waveform; }
+
+#endif

@@ -1,5 +1,7 @@
 #include "MCL_impl.h"
 
+#ifdef WAV_DESIGNER
+
 void OscMixerPage::setup() {}
 
 void OscMixerPage::init() {
@@ -193,3 +195,5 @@ void OscMixerPage::draw_levels() {
   }
   GUI.put_string_at(0, str);
 }
+
+#endif

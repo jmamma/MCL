@@ -19,7 +19,6 @@ void MidiIDSysexListenerClass::end() { DEBUG_PRINT_FN(); }
 
 void MidiIDSysexListenerClass::end_immediate() {
   // MidiUartParent *uart = sysex->uart;
-  DEBUG_PRINT_FN();
   MidiID *dev = &(sysex->uart->device);
   uint16_t p = (uint16_t)dev;
   uint8_t i = 4;

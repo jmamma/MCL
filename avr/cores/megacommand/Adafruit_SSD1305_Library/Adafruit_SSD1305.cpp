@@ -502,6 +502,7 @@ void Adafruit_SSD1305::command(uint8_t c) {
 }
 
 uint8_t Adafruit_SSD1305::getBuffer(uint16_t i) { return buffer[i]; }
+uint8_t* Adafruit_SSD1305::getBuffer() { return buffer; }
 
 void Adafruit_SSD1305::data(uint8_t c) {
   if (cs != -1) {

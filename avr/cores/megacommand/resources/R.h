@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <avr/pgmspace.h>
 #include "MCL.h"
 #include "MCL_impl.h"
@@ -295,11 +295,11 @@ struct __T_machine_param_names {
 extern const unsigned char __R_menu_layouts[] PROGMEM;
 struct __T_menu_layouts {
   union {
-    menu_t<3> wav_menu_layout[0];
-    char zz__wav_menu_layout[75];
+    menu_t<3> wavdesign_menu_layout[0];
+    char zz__wavdesign_menu_layout[75];
   };
-  static constexpr size_t countof_wav_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_wav_menu_layout = 75;
+  static constexpr size_t countof_wavdesign_menu_layout = 75 / sizeof(menu_t<3>);
+  static constexpr size_t sizeofof_wavdesign_menu_layout = 75;
   union {
     menu_t<grid_slot_page_N> slot_menu_layout[0];
     char zz__slot_menu_layout[201];

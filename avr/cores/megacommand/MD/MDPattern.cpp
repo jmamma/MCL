@@ -17,13 +17,13 @@ void MDPattern::clearPattern() {
   numRows = 0;
 
   //	m_memclr(this, sizeof(MDPattern));
-  m_memclr(&trigPatterns, 8 * 16 + 4 * 16 + 4 * 8 + 6);
-  m_memclr(&accentPatterns, 8 * 3 * 16 + 1);
+  memset(&trigPatterns, 0, 8 * 16 + 4 * 16 + 4 * 8 + 6);
+  memset(&accentPatterns, 0, 8 * 3 * 16 + 1);
 
-  m_memset(paramLocks, sizeof(paramLocks), -1);
-  m_memset(lockTracks, sizeof(lockTracks), -1);
-  m_memset(lockParams, sizeof(lockParams), -1);
-  m_memset(locks, sizeof(locks), -1);
+  memset(paramLocks, -1, sizeof(paramLocks));
+  memset(lockTracks, -1, sizeof(lockTracks));
+  memset(lockParams, -1, sizeof(lockParams));
+  memset(locks, -1, sizeof(locks));
 
   //	accentPattern = 0;
   //	slidePattern = 0;

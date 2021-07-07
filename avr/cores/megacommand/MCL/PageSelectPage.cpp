@@ -49,7 +49,7 @@ static void get_page_icon(uint8_t pageidx, uint8_t *&icon, uint8_t &w,
 
 static void get_category_name_by_idx(uint8_t catidx, char *str) {
   if (str) {
-    m_strncpy_p(str, (PGM_P) & (Categories[catidx].Name), 16);
+    strncpy_P(str, (PGM_P) & (Categories[catidx].Name), 16);
   }
 }
 

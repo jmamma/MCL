@@ -85,7 +85,7 @@ bool Stack<T,N>::push(T *t) {
   if (isFull()) {
     start = STACK_INC(start);
   }
-  m_memcpy(&buf[STACK_START()], t, sizeof(T));
+  memcpy(&buf[STACK_START()], t, sizeof(T));
   wr = STACK_INC(wr);
 
   //  SREG = tmp;
@@ -124,7 +124,7 @@ bool Stack<T,N>::peek(T *t) {
     return false;
   }
   if (t != NULL) {
-    m_memcpy(t, &buf[STACK_LAST()], sizeof(T));
+    memcpy(t, &buf[STACK_LAST()], sizeof(T));
   }
 
   //  SREG = tmp;
@@ -138,7 +138,7 @@ template <class T, int N>
     return false;
   }
   if (t != NULL) {
-    m_memcpy(t, &buf[STACK_AT(idx)], sizeof(T));
+    memcpy(t, &buf[STACK_AT(idx)], sizeof(T));
   }
 
   return true;

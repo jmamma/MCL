@@ -335,14 +335,14 @@ public:
   ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
   ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
 
-  void sendString(const char *data) { sendString(data, m_strlen(data)); }
+  void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
 
   void printfString(char *fmt, ...) {
     va_list lp;
     va_start(lp, fmt);
     char buf[128];
-    uint16_t len = m_vsnprintf(buf, sizeof(buf), fmt, lp);
+    uint16_t len = vsnprintf(buf, sizeof(buf), fmt, lp);
     va_end(lp);
     sendString(buf, len);
   }

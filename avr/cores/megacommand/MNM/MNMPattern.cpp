@@ -486,7 +486,7 @@ void MNMPattern::clearTrack(uint8_t track) {
 	triglessTrigs[track] = 0;
 	chordTrigs[track] = 0;
 	slidePatterns[track] = 0;
-	m_memset(noteNBR[track], 64, 255);
+	memset(noteNBR[track], 255, 64);
 	// XXX	swingPatterns[track] = 0;
   clearTrackLocks(track);
 }

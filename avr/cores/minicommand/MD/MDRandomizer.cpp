@@ -121,7 +121,7 @@ bool MDRandomizerClass::undo() {
   }
 
 void MDRandomizerClass::onKitChanged() {
-  m_memcpy(origParams, MD.kit.params[track], sizeof(origParams));
+  memcpy(origParams, MD.kit.params[track], sizeof(origParams));
 }
 
 void MDRandomizerClass::onCCCallback(uint8_t *msg) {
