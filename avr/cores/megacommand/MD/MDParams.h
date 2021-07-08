@@ -78,6 +78,9 @@
 #define GND_SW_MODEL 4
 #define GND_PU_MODEL 5
 
+#define NFX_EV_MODEL 7
+#define NFX_CO_MODEL 8
+
 #define TRX_BD_MODEL 16
 #define TRX_SD_MODEL 17
 #define TRX_XT_MODEL 18
@@ -135,6 +138,8 @@
 #define INP_FB_MODEL 83
 #define INP_EA_MODEL 84
 #define INP_EB_MODEL 85
+#define INP_CA_MODEL 86
+#define INP_CB_MODEL 87
 
 #define MID_MODEL 96
 

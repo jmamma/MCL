@@ -648,7 +648,37 @@ model_param_name_t md_model_param_names[] = {
     {"LFD", 22},
     {"LFM", 23},
     {"", 127},
-    // end
+    // 582 - nfx_ev_model_names
+    {"DEL", 0},
+    {"ATK", 1},
+    {"DEC", 2},
+    {"SUS", 3},
+    {"HLD", 4},
+    {"REL", 5},
+    {"RIN", 6},
+    {"MIX", 7},
+    {"", 127},
+    // 591 - nfx_co_model_names
+    {"ATK", 0},
+    {"REL", 1},
+    {"THR", 2},
+    {"RAT", 3},
+    {"KNE", 4},
+    {"CMX", 5},
+    {"AMX", 6},
+    {"MKU", 7},
+    {"", 127},
+    // 600 - inp_cx_model_names
+    {"ATK", 0},
+    {"REL", 1},
+    {"THR", 2},
+    {"RAT", 3},
+    {"KNE", 4},
+    {"CMX", 5},
+    {"IVL", 6},
+    {"MKU", 7},
+    {"", 127},
+    // 609 - end
 };
 
 model_param_name_t mnm_model_param_names[] = {

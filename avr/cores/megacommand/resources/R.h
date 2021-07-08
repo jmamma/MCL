@@ -251,11 +251,11 @@ struct __T_machine_names_long {
   static constexpr size_t sizeofof_mnm_machine_names = 240;
   union {
     md_machine_name_t machine_names[0];
-    char zz__machine_names[1096];
+    char zz__machine_names[1128];
   };
-  static constexpr size_t countof_machine_names = 1096 / sizeof(md_machine_name_t);
-  static constexpr size_t sizeofof_machine_names = 1096;
-  static constexpr size_t __total_size = 1336;
+  static constexpr size_t countof_machine_names = 1128 / sizeof(md_machine_name_t);
+  static constexpr size_t sizeofof_machine_names = 1128;
+  static constexpr size_t __total_size = 1368;
 };
 
 extern const unsigned char __R_machine_names_short[] PROGMEM;
@@ -268,11 +268,11 @@ struct __T_machine_names_short {
   static constexpr size_t sizeofof_mnm_machine_names_short = 140;
   union {
     short_machine_name_t md_machine_names_short[0];
-    char zz__md_machine_names_short[959];
+    char zz__md_machine_names_short[987];
   };
-  static constexpr size_t countof_md_machine_names_short = 959 / sizeof(short_machine_name_t);
-  static constexpr size_t sizeofof_md_machine_names_short = 959;
-  static constexpr size_t __total_size = 1099;
+  static constexpr size_t countof_md_machine_names_short = 987 / sizeof(short_machine_name_t);
+  static constexpr size_t sizeofof_md_machine_names_short = 987;
+  static constexpr size_t __total_size = 1127;
 };
 
 extern const unsigned char __R_machine_param_names[] PROGMEM;
@@ -285,11 +285,11 @@ struct __T_machine_param_names {
   static constexpr size_t sizeofof_mnm_model_param_names = 955;
   union {
     model_param_name_t md_model_param_names[0];
-    char zz__md_model_param_names[2910];
+    char zz__md_model_param_names[3045];
   };
-  static constexpr size_t countof_md_model_param_names = 2910 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_md_model_param_names = 2910;
-  static constexpr size_t __total_size = 3865;
+  static constexpr size_t countof_md_model_param_names = 3045 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_md_model_param_names = 3045;
+  static constexpr size_t __total_size = 4000;
 };
 
 extern const unsigned char __R_menu_layouts[] PROGMEM;
