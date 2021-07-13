@@ -251,7 +251,6 @@ extern volatile uint16_t slowclock;
 extern volatile uint16_t clock_minutes;
 #endif
 
-extern void uart_set_speed(uint32_t speed, uint8_t port);
 
 /** @} **/
 
