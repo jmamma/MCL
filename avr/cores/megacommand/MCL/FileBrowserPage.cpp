@@ -204,10 +204,10 @@ void FileBrowserPage::display() {
   if (show_filetypes) {
     oled_display.setTextColor(WHITE, BLACK);
     for (int i = 0; i <= filetype_max; ++i) {
-      oled_display.setCursor(2, 18 + i * 6);
+      oled_display.setCursor(2, 17 + i * 7);
       oled_display.println(filetype_names[i]);
     }
-    oled_display.fillRect(0, 12 + filetype_idx * 6, 35, 7, INVERT);
+    oled_display.fillRect(0, 11 + filetype_idx * 7, 35, 7, INVERT);
   }
 
   oled_display.display();
