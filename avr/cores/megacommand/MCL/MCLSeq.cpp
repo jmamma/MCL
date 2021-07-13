@@ -3,7 +3,7 @@
 
 void MCLSeq::setup() {
 
- for (uint8_t i = 0; i < num_md_tracks; i++) {
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
 
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
@@ -90,13 +90,16 @@ void MCLSeq::update_params() {
 
 void seq_rec_play() {
   if (trig_interface.is_key_down(MDX_KEY_REC)) {
-    //trig_interface.ignoreNextEvent(MDX_KEY_REC);
+    // trig_interface.ignoreNextEvent(MDX_KEY_REC);
     seq_step_page.bootstrap_record();
     reset_undo();
   }
 }
 
-void MCLSeq::onMidiContinueCallback() { update_params(); seq_rec_play(); }
+void MCLSeq::onMidiContinueCallback() {
+  update_params();
+  seq_rec_play();
+}
 
 void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
@@ -127,7 +130,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
-
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -171,11 +173,11 @@ void MCLSeq::seq() {
   MidiUartParent *uart2;
   bool engage_sidechannel = true;
 
-  //If realtime, we render the first tick in realtime, subsequent ticks are
-  //defered rendered.
+  // If realtime, we render the first tick in realtime, subsequent ticks are
+  // defered rendered.
 
   if (!realtime) {
-again:
+  again:
     UART_CLEAR_ISR_TX_BIT();
     UART2_CLEAR_ISR_TX_BIT();
     if (uart_sidechannel) {
@@ -185,42 +187,40 @@ again:
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
-/*
-        while (!seq_tx2.txRb.isEmpty_isr()) {
-          setLed2();
-          seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
-        }
-        while (!seq_tx4.txRb.isEmpty_isr()) {
-          setLed2();
-          seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
-        }
-*/
+        /*
+                while (!seq_tx2.txRb.isEmpty_isr()) {
+                  setLed2();
+                  seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
+                }
+                while (!seq_tx4.txRb.isEmpty_isr()) {
+                  setLed2();
+                  seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
+                }
+        */
         MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
-      }
-      else {
-      //Purge stale buffers (from MIDI CONTINUE).
-      seq_tx2.txRb.init();
-      seq_tx4.txRb.init();
+      } else {
+        // Purge stale buffers (from MIDI CONTINUE).
+        seq_tx2.txRb.init();
+        seq_tx4.txRb.init();
       }
     } else {
       uart = &seq_tx1;
       uart2 = &seq_tx3;
       if (engage_sidechannel) {
-/*
-        while (!seq_tx1.txRb.isEmpty_isr()) {
-          seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
-        }
-        while (!seq_tx3.txRb.isEmpty_isr()) {
-          seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
-        }
-*/
+        /*
+                while (!seq_tx1.txRb.isEmpty_isr()) {
+                  seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
+                }
+                while (!seq_tx3.txRb.isEmpty_isr()) {
+                  seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
+                }
+        */
         MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
         MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
-      }
-      else {
-      seq_tx1.txRb.init();
-      seq_tx3.txRb.init();
+      } else {
+        seq_tx1.txRb.init();
+        seq_tx3.txRb.init();
       }
     }
     // clearLed2();
@@ -232,7 +232,7 @@ again:
     uart = &MidiUart;
     uart2 = &MidiUart2;
   }
-//  Stopwatch sw;
+  //  Stopwatch sw;
 
   MDSeqTrack::md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -240,19 +240,26 @@ again:
     md_arp_tracks[i].seq(uart);
   }
 
-  if (MDSeqTrack::md_trig_mask > 0) { MD.parallelTrig(MDSeqTrack::md_trig_mask, uart); }
+  if (MDSeqTrack::md_trig_mask > 0) {
+    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+  }
 
   if (MDSeqTrack::sync_cursor) {
     auto &active_track = md_tracks[last_md_track];
-    if (GUI.currentPage() == &seq_step_page && IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) { MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart); }
-    //MD.draw_pattern_idx(grid_page.last_active_row, grid_page.last_active_row, 0);
-    grid_page.set_active_row(grid_page.last_active_row); //send led update
+    if (GUI.currentPage() == &seq_step_page &&
+        IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
+      MD.sync_seqtrack(active_track.length, active_track.speed,
+                       active_track.length - 1, uart);
+    }
+    // MD.draw_pattern_idx(grid_page.last_active_row, grid_page.last_active_row,
+    // 0);
+    grid_page.set_active_row(grid_page.last_active_row); // send led update
     MDSeqTrack::sync_cursor = 0;
   }
   // Arp
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-     aux_tracks[i].seq();
+    aux_tracks[i].seq();
   }
 
 #ifdef LFO_TRACKS
@@ -276,13 +283,11 @@ again:
     ext_tracks[i].recalc_slides();
   }
 
-
   if (realtime) {
     realtime = false;
     engage_sidechannel = false;
     goto again;
   }
-
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
@@ -290,26 +295,29 @@ void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  if (!update_params) {
-    return;
-  }
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-  if (param >= 16) {
-    MD.parseCC(channel, param, &track, &track_param);
-    if (track_param > 23) { return; } //ignore level/mute
 
-    mcl_seq.md_tracks[track].update_param(track_param, value);
-#ifdef LFO_TRACKS
-    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1,
-                                                           track_param, value);
-    }
-#endif
+  MD.parseCC(channel, param, &track, &track_param);
+  if (track_param == 32) { // Mute
+    mcl_seq.md_tracks[track].mute_state = value > 0;
   }
+  if (track_param > 23) {
+    return;
+  } // ignore level/mute
+  if (!update_params) {
+    return;
+  }
+  mcl_seq.md_tracks[track].update_param(track_param, value);
+#ifdef LFO_TRACKS
+  for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
+    mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param,
+                                                         value);
+  }
+#endif
 }
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -336,7 +344,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
   /*
   Midi.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
-  Midi.addOnNoteOffCallback(
+`  Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   */
   update_params = true;

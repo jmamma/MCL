@@ -29,6 +29,30 @@ uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   return sendRequest(data, 2, send);
 }
 
+bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
+
+  uint8_t data[2] = {0x70, 0x33};
+  sendRequest(data, sizeof(data));
+
+  uint8_t msgType = waitBlocking();
+
+  fw_caps = 0;
+
+  auto begin = sysex_protocol.header_size + 1;
+  auto listener = getSysexListener();
+  listener->sysex->rd_cur = listener->msg_rd;
+  mute_state = 0;
+  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x33) {
+      mute_state = listener->sysex->getByte(begin+1);
+      mute_state |= (listener->sysex->getByte(begin+2) << 7);
+      mute_state |= (listener->sysex->getByte(begin+3) << 14);
+      return true;
+  }
+
+  return false;
+}
+
+
 bool ElektronDevice::get_fw_caps() {
 
   uint8_t data[2] = {0x70, 0x30};
@@ -42,14 +66,12 @@ bool ElektronDevice::get_fw_caps() {
   auto listener = getSysexListener();
   DEBUG_PRINTLN("caps");
   listener->sysex->rd_cur = listener->msg_rd;
-  DEBUG_PRINTLN(listener->sysex->getByte(begin));
   if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x30) {
       ((uint8_t *)&(fw_caps))[0] = listener->sysex->getByte(begin+1);
       ((uint8_t *)&(fw_caps))[1] = listener->sysex->getByte(begin+2);
       return true;
   }
 
-  DEBUG_PRINTLN("returning false");
   return false;
 }
 

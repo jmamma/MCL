@@ -159,6 +159,15 @@ void MDClass::init_grid_devices() {
                     MDTEMPO_TRACK_TYPE, GROUP_TEMPO, 0);
 }
 
+void MDClass::get_mutes() {
+  uint16_t mutes;
+  if (get_mute_state(mutes)) {
+    for (uint8_t n = 0; n < 16; n++) {
+      mcl_seq.md_tracks[n].mute_state = IS_BIT_CLEAR(mutes, n);
+      }
+  }
+}
+
 bool MDClass::probe() {
   DEBUG_PRINT_FN();
 
@@ -178,15 +187,17 @@ bool MDClass::probe() {
 
     uint16_t fw_caps_mask =
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
-         (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL | (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
+         (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
+         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
 
-   while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) && count) {
+    while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
+           count) {
       DEBUG_PRINTLN("bad caps");
       mcl_gui.delay_progress(250);
       count--;
     }
 
-   if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
+    if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
       oled_display.textbox("UPGRADE ", "MACHINEDRUM");
       oled_display.display();
       return false;
@@ -218,6 +229,7 @@ bool MDClass::probe() {
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     md_track_select.on();
     MD.global.extendedMode = 2;
+    get_mutes();
     seq_ptc_page.setup();
   }
 
@@ -300,7 +312,8 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
   }
 }
 
-void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_) {
+void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
+                            MidiUartParent *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }

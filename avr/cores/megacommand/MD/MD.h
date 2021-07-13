@@ -88,6 +88,8 @@ public:
   virtual uint16_t sendKitParams(uint8_t *mask);
   virtual const char* getMachineName(uint8_t machine);
 
+  void get_mutes();
+
   /**
    * When given the channel and the cc of an incoming CC messages,
    * this returns the track and the parameter controller by the
@@ -336,8 +338,6 @@ public:
    *settings (not working at the moment).
    **/
   bool checkClockSettings();
-
-  void get_mute_state();
 
   void send_gui_command(uint8_t command, uint8_t value);
 

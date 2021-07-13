@@ -184,8 +184,8 @@ void GridPage::row_state_scan() {
 }
 
 void GridPage::update_row_state(uint8_t row, bool state) {
-  DEBUG_PRINTLN("updating row state");
-  DEBUG_PRINTLN(row);
+  //DEBUG_PRINTLN("updating row state");
+  //DEBUG_PRINTLN(row);
   if (state) {
     SET_BIT128_P(row_states, row);
   } else {
