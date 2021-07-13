@@ -210,46 +210,6 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock) {
     return new_clock + (65536 - old_clock);
 }
 
-/** @} **/
-
-void uart_set_speed(uint32_t speed, uint8_t port) {
-  uint32_t cpu = (F_CPU / 16);
-  cpu /= speed;
-  cpu--;
-
-#ifdef MEGACOMMAND
-  if (port == 0) {
-
-    if(speed >= 250000) {
-      // use u2x mode
-      cpu = (F_CPU / 4 / speed - 1) / 2;
-      UCSR0A = 1 << U2X0;
-    }
-
-    UBRR0H = ((cpu >> 8) & 0xFF);
-    UBRR0L = (cpu & 0xFF);
-  }
-  else if (port == 1) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
-  }
-  else if (port == 2) {
-    UBRR2H = ((cpu >> 8) & 0xFF);
-    UBRR2L = (cpu & 0xFF);
-  }
-#else
-  if (port == 1) {
-    UBRR0H = ((cpu >> 8) & 0xFF);
-    UBRR0L = (cpu & 0xFF);
-  }
-  if (port == 2) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
-  }
-
-#endif
-}
-
 /**
  * \addtogroup helpers_math Math functions
  *
