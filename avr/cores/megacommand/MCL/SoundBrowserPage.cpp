@@ -58,7 +58,7 @@ void SoundBrowserPage::init() {
     query_sample_slots();
   } else {
     strcpy(match, ".snd");
-    strcpy(title, "Sounds");
+    strcpy(title, "Files");
     show_dirs = true;
     show_save = (filetype_idx != FT_SYX);
     show_filemenu = true;
