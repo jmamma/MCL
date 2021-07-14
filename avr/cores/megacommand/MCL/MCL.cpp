@@ -120,7 +120,7 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0 && note_interface.notes_all_off_md()) {
         uint8_t row = grid_page.bank * 16 + track;
-        param2.cur = row;
+        grid_page.jump_to_row(row);
 
         uint8_t chain_mode_old = mcl_cfg.chain_mode;
         if (note_interface.notes_count_off() > 1) {
@@ -145,7 +145,6 @@ bool mcl_handleEvent(gui_event_t *event) {
         } else {
           note_interface.init_notes();
         }
-
         mcl_cfg.chain_mode = chain_mode_old;
         return true;
       }
@@ -197,7 +196,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         grid_page.send_row_led();
 
         uint8_t row = grid_page.bank * 16;
-        param2.cur = row;
+        grid_page.jump_to_row(row);
         return true;
       }
       case MDX_KEY_SONG: {

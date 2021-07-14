@@ -38,6 +38,14 @@ void GridPage::cleanup() {
   bank_popup = 0;
 }
 
+void GridPage::jump_to_row(uint8_t row) {
+//  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
+//  uint8_t r = row - y;
+  uint8_t y = row;
+  uint8_t r = row - (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
+  param2.cur = y; param2.old = y; cur_row = r; reload_slot_models = false;
+}
+
 void GridPage::set_active_row(uint8_t row) {
   grid_page.last_active_row = row;
   if (bank_popup) {

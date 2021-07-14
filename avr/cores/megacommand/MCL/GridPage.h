@@ -71,6 +71,8 @@ public:
   uint8_t getCol();
   uint8_t getRow();
 
+  void jump_to_row(uint8_t row);
+
   void row_state_scan();
   void update_row_state(uint8_t row, bool state);
   void set_active_row(uint8_t row);
