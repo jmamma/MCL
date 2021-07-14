@@ -7,7 +7,7 @@ void NoteInterface::init_notes() {
    notes_on = 0;
    notes_off = 0;
    //notes_ignore = 0;
-   memset(note_hold, 0, NUM_DEVS);
+   memset(note_hold, 0, sizeof(note_hold));
 }
 
 bool NoteInterface::is_note(uint8_t note_num) {
