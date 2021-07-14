@@ -153,7 +153,6 @@ void MCLSeq::onMidiStopCallback() {
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
