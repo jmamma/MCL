@@ -106,7 +106,7 @@ public:
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false);
-  void calc_next_transition();
+  void calc_next_transition(bool update_active_row = false);
   void calc_latency();
 
 private:

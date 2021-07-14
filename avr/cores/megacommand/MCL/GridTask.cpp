@@ -146,7 +146,8 @@ void GridTask::transition_handler() {
     }
   }
 
-  mcl_actions.calc_next_transition();
+  bool update_active_row = true;
+  mcl_actions.calc_next_transition(update_active_row);
   mcl_actions.calc_latency();
 //  } else {
 //    mcl_actions.next_transition = (uint16_t)-1;

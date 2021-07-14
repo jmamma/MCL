@@ -359,7 +359,7 @@ again:
       }
     }
   }
-  calc_next_transition();
+  calc_next_transition(true);
   if (recalc_latency) {
     calc_latency();
   }
@@ -524,7 +524,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       }
     }
   }
-  calc_next_transition();
+  calc_next_transition(true);
   calc_latency();
 }
 
@@ -700,7 +700,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   }
 }
 
-void MCLActions::calc_next_transition() {
+void MCLActions::calc_next_transition(bool update_active_row) {
   next_transition = (uint16_t)-1;
   DEBUG_PRINT_FN();
   int slot = -1;
@@ -715,19 +715,20 @@ void MCLActions::calc_next_transition() {
       }
     }
   }
-  uint8_t next_row = grid_page.last_active_row;
-  bool chain = false;
+  if (update_active_row) {
+   uint8_t next_row = grid_page.last_active_row;
+   bool chain = false;
 
-  if (slot > -1) {
-    next_row = links[slot].row;
-    chain = chains[slot].mode > 1;
-  }
+   if (slot > -1) {
+     next_row = links[slot].row;
+     chain = chains[slot].mode > 1;
+   }
 
-  MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
-  // MD.draw_pattern_idx(grid_page.last_active_row, next_row, chain);
-  grid_page.last_active_row = next_row;
-  if (MidiClock.state != 2) {
-    grid_page.set_active_row(next_row);
+   MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
+   if (MidiClock.state != 2) {
+      grid_page.set_active_row(grid_page.last_active_row);
+   }
+    grid_page.last_active_row = next_row;
   }
 
   nearest_bar = next_transition / 16 + 1;
