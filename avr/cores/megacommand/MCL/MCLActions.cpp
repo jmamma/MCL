@@ -235,8 +235,9 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
   };
 
   uint8_t row_array[NUM_SLOTS] = {};
-
+  uint8_t cache_track_array[NUM_SLOTS] = {};
   uint8_t track_idx, dev_idx;
+  bool recache = false;
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
     if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
@@ -246,9 +247,12 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
 
     if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
       chains[n].add(row, get_chain_length());
-
       if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
+        if (chains[n].num_of_links == 2) {
+          cache_track_array[n] = 1;
+          recache = true;
+        }
       }
     } else {
       chains[n].init();
@@ -267,8 +271,12 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
       elektron_devs[i]->getBlockingKit(0x7F);
     }
   }
-
-  send_tracks_to_devices(slot_select_array, row_array);
+  if (recache) {
+    bool gui_update = false;
+    cache_next_tracks(cache_track_array, gui_update);
+  } else {
+    send_tracks_to_devices(slot_select_array, row_array);
+  }
 }
 
 void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
@@ -290,7 +298,6 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
     }
     EmptyTrack empty_track;
     auto *device_track = empty_track.load_from_grid(track_idx, row);
-
 
     if (device_track == nullptr || device_track->active != gdt->track_type) {
       empty_track.clear();
@@ -331,8 +338,8 @@ again:
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
           transition_level[n] = 0;
-          next_transitions[n] = div16th_counter -
-                                (gdt->seq_track->step_count *
+          next_transitions[n] =
+              div16th_counter - (gdt->seq_track->step_count *
                                  gdt->seq_track->get_speed_multiplier());
           links[n].speed = gdt->seq_track->speed;
           links[n].length = gdt->seq_track->length;
@@ -716,18 +723,18 @@ void MCLActions::calc_next_transition(bool update_active_row) {
     }
   }
   if (update_active_row) {
-   uint8_t next_row = grid_page.last_active_row;
-   bool chain = false;
+    uint8_t next_row = grid_page.last_active_row;
+    bool chain = false;
 
-   if (slot > -1) {
-     next_row = links[slot].row;
-     chain = chains[slot].mode > 1;
-   }
+    if (slot > -1) {
+      next_row = links[slot].row;
+      chain = chains[slot].mode > 1;
+    }
 
-   MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
-   if (MidiClock.state != 2) {
+    MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
+    if (MidiClock.state != 2) {
       grid_page.set_active_row(grid_page.last_active_row);
-   }
+    }
     grid_page.last_active_row = next_row;
   }
 
