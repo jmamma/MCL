@@ -53,7 +53,7 @@ extern MenuPage<4> step_menu_page;
 extern MCLEncoder grid_slot_param1;
 extern MCLEncoder grid_slot_param2;
 
-constexpr size_t grid_slot_page_N = 9;
+constexpr size_t grid_slot_page_N = 10;
 extern MenuPage<grid_slot_page_N> grid_slot_page;
 
 extern MCLEncoder wavdesign_menu_value_encoder;

@@ -39,11 +39,14 @@ void GridPage::cleanup() {
 }
 
 void GridPage::jump_to_row(uint8_t row) {
-//  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
-//  uint8_t r = row - y;
+  //  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
+  //  uint8_t r = row - y;
   uint8_t y = row;
   uint8_t r = row - (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
-  param2.cur = y; param2.old = y; cur_row = r; reload_slot_models = false;
+  param2.cur = y;
+  param2.old = y;
+  cur_row = r;
+  reload_slot_models = false;
 }
 
 void GridPage::set_active_row(uint8_t row) {
@@ -192,8 +195,8 @@ void GridPage::row_state_scan() {
 }
 
 void GridPage::update_row_state(uint8_t row, bool state) {
-  //DEBUG_PRINTLN("updating row state");
-  //DEBUG_PRINTLN(row);
+  // DEBUG_PRINTLN("updating row state");
+  // DEBUG_PRINTLN(row);
   if (state) {
     SET_BIT128_P(row_states, row);
   } else {
@@ -360,11 +363,13 @@ void GridPage::display_grid_info() {
 #endif
 }
 bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
- uint8_t  slot = proj.get_grid() * GRID_WIDTH + x;
+  uint8_t slot = proj.get_grid() * GRID_WIDTH + x;
   if (mcl_actions.chains[slot].is_mode_queue() && !show_slot_menu) {
-  for (uint8_t n = 0; n < mcl_actions.chains[slot].num_of_links; n++) {
-     if (mcl_actions.chains[slot].rows[n] == y) { return true; }
-  }
+    for (uint8_t n = 0; n < mcl_actions.chains[slot].num_of_links; n++) {
+      if (mcl_actions.chains[slot].rows[n] == y) {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -460,7 +465,7 @@ void GridPage::display_grid() {
       }
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, encoders[2]->cur - 1,
-                  encoders[3]->cur - 1);
+                       encoders[3]->cur - 1);
       bool b = is_slot_queue(track_idx, row_idx);
 
       if (a ^ b) {
@@ -526,7 +531,7 @@ void GridPage::display_oled() {
   }
   display_grid();
   if (row_scan) {
-  mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 9, 7, false);
+    mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 9, 7, false);
   }
   oled_display.display();
 #endif
@@ -677,7 +682,8 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
-        (temp_slot.link.loops != slot.link.loops) || (temp_slot.link.length != slot.link.length)) {
+        (temp_slot.link.loops != slot.link.loops) ||
+        (temp_slot.link.length != slot.link.length)) {
       slot_update = 1;
       DEBUG_PRINTLN("Slot update");
     }
@@ -728,15 +734,13 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
       oled_display.textbox("CHAIN ", "UPDATE");
     }
 
-    uint8_t chain_mode_old = mcl_cfg.chain_mode;
     if (slot_load) {
       if (height > 1) {
         mcl_cfg.chain_mode = CHAIN_QUEUE;
-      } else if (chain_mode_old != CHAIN_AUTO) {
-        mcl_cfg.chain_mode = CHAIN_MANUAL;
       }
-      oled_display.textbox("LOAD SLOTS", "");
+      grid_load_page.display_load();
     }
+
     bool activate_header = false;
 
     uint8_t track_select_array[GRID_LENGTH] = {0};
@@ -759,9 +763,9 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
           slot.active = header.track_type[xpos];
           slot.store_in_grid(xpos, ypos);
         } else if (slot_load == 1) {
-          if (height > 1 && y == 0) {
-            mcl_actions.chains[xpos].init();
-          }
+          // if (height > 1 && y == 0) {
+          //   mcl_actions.chains[xpos].init();
+          // }
           track_select_array[xpos] = 1;
         }
       }
@@ -775,7 +779,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
         proj.write_grid_row_header(&header, ypos);
       }
     }
-    mcl_cfg.chain_mode = chain_mode_old;
   }
   if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid();
@@ -813,7 +816,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_load = 1;
           apply_slot_changes();
           if (slot_menu_hold) {
-          goto slot_menu_off;
+            goto slot_menu_off;
           }
           return true;
         }
@@ -855,6 +858,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_menu_hold = 1;
           trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
+        }
+        case MDX_KEY_BANKA:
+        case MDX_KEY_BANKB:
+        case MDX_KEY_BANKC: {
+          if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+            mcl_cfg.chain_mode = key - MDX_KEY_BANKA + 1;
+            return true;
+          }
         }
         }
       }
@@ -906,7 +917,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-        slot_menu_off:
+      slot_menu_off:
         if (show_slot_menu) {
           apply_slot_changes(true);
           init();
@@ -947,12 +958,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[3]->cur = 1;
     slot_apply = 0;
     if (!slot.is_ext_track()) {
-    grid_slot_page.menu.enable_entry(1, true);
-    grid_slot_page.menu.enable_entry(2, false);
-    }
-    else {
-    grid_slot_page.menu.enable_entry(1, false);
-    grid_slot_page.menu.enable_entry(2, true);
+      grid_slot_page.menu.enable_entry(1, true);
+      grid_slot_page.menu.enable_entry(2, false);
+    } else {
+      grid_slot_page.menu.enable_entry(1, false);
+      grid_slot_page.menu.enable_entry(2, true);
     }
     show_slot_menu = true;
     grid_slot_page.init();
@@ -1024,7 +1034,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 }
 
 void gen_menu_row_names() {
-  menu_option_t* p = (menu_option_t*) R.Allocate(sizeof(menu_option_t) * 128);
+  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
   grid_slot_page.menu.set_custom_options(p);
   uint8_t row_id = 0;
   for (char bank = 'A'; bank <= 'H'; ++bank) {

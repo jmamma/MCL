@@ -52,6 +52,19 @@ void GridLoadPage::draw_popup() {
   mcl_gui.draw_popup(str, true, 28);
 }
 
+void GridLoadPage::display_load() {
+  char *str2 = " SLOTS";
+  char *str1 = "LOAD";
+  if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
+    str1 = "QUEUE";
+  }
+  char str3[16] = "";
+  strcat(str3,str1);
+  strcat(str3,str2);
+  MD.popup_text(str3);
+  oled_display.textbox(str1, str2);
+}
+
 void GridLoadPage::get_modestr(char *modestr) {
   if (encoders[0]->hasChanged()) {
     mcl_cfg.chain_mode = encoders[0]->cur;
@@ -164,7 +177,7 @@ void GridLoadPage::display() {
   oled_display.setFont(oldfont);
 }
 void GridLoadPage::load() {
-  oled_display.textbox("LOAD SLOTS", "");
+  display_load();
   oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
   /// the page to avoid driving this code path again.
