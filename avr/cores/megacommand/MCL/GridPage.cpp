@@ -875,7 +875,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
         param1.cur += inc;
         return true;
       }
-      case MDX_KEY_FUNCYES:
       case MDX_KEY_YES: {
         trig_interface.ignoreNextEvent(MDX_KEY_YES);
         if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
