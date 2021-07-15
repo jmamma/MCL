@@ -68,7 +68,7 @@ const ElektronSysexProtocol md_protocol = {
     MD_SET_STATUS_ID,
     MD_SET_TEMPO_ID,
     MD_SET_CURRENT_KIT_NAME_ID,
-    10,
+    16,
 
     MD_LOAD_GLOBAL_ID,
     MD_LOAD_PATTERN_ID,

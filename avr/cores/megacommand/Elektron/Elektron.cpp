@@ -407,13 +407,8 @@ void ElektronDevice::setKitName(const char *name, MidiUartParent *uart_) {
   data[i++] = sysex_protocol.kitname_set_id;
 
   memcpy(data + i, name, sysex_protocol.kitname_length);
-  //strcpy(data + i, name);
 
-  DEBUG_PRINTLN("kit name");
-  DEBUG_PRINTLN(name);
-
-
-  i += min(strlen(name),sysex_protocol.kitname_length);
+  i += sysex_protocol.kitname_length;
   sendRequest(data, i, true, uart_);
 }
 
