@@ -16,6 +16,22 @@ void GridTask::run() {
     stop_hard_callback = false;
     return;
   }
+  //MD GUI update.
+
+  if (MDSeqTrack::sync_cursor) {
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
+    if (GUI.currentPage() == &seq_step_page &&
+        IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
+      MD.sync_seqtrack(active_track.length, active_track.speed,
+                       active_track.length - 1);
+    }
+    grid_page.set_active_row(grid_page.last_active_row); // send led update
+    if (mcl_actions.send_kit_name) {
+      MD.setKitName(MD.kit.name);
+      mcl_actions.send_kit_name = false;
+    }
+    MDSeqTrack::sync_cursor = 0;
+  }
 
   GridTask::transition_handler();
 }
@@ -38,24 +54,7 @@ void GridTask::transition_handler() {
 
   uint32_t div32th_counter;
 
-  //MD GUI update.
-
-  if (MDSeqTrack::sync_cursor) {
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    if (GUI.currentPage() == &seq_step_page &&
-        IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
-      MD.sync_seqtrack(active_track.length, active_track.speed,
-                       active_track.length - 1);
-    }
-    grid_page.set_active_row(grid_page.last_active_row); // send led update
-    if (mcl_actions.send_kit_name) {
-      MD.setKitName(MD.kit.name);
-      mcl_actions.send_kit_name = false;
-    }
-    MDSeqTrack::sync_cursor = 0;
-  }
-
-  // Get within four 16th notes of the next transition.
+   // Get within four 16th notes of the next transition.
   if (MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                  (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
