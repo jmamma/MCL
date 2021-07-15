@@ -549,7 +549,7 @@ public:
    * use this method directly.
    **/
   virtual void setStatus(uint8_t id, uint8_t value);
-  virtual void setKitName(const char* name);
+  virtual void setKitName(const char* name, MidiUartParent *uart_ = nullptr);
   /**
    * Set the tempo.
    **/

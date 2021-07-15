@@ -366,6 +366,8 @@ again:
       }
     }
   }
+
+
   calc_next_transition(true);
   if (recalc_latency) {
     calc_latency();
@@ -406,6 +408,14 @@ void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     ptrack->load_immediate(track_idx, gdt->seq_track);
     send_masks[pos] = 1;
   }
+}
+
+void MCLActions::update_kit_name(char *str) {
+   if (grid_page.row_headers[grid_page.cur_row].active) {
+      strncpy(MD.kit.name, str, 17);
+    } else {
+      strcpy(MD.kit.name, "NEW_KIT");
+    }
 }
 
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
@@ -468,14 +478,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   if (write_original == 1) {
     DEBUG_PRINTLN(F("write original"));
     //     MD.kit.origPosition = md_track->origPosition;
-    if (grid_page.row_headers[grid_page.cur_row].active) {
-      for (uint8_t c = 0; c < 17; c++) {
-        MD.kit.name[c] =
-            toupper(grid_page.row_headers[grid_page.cur_row].name[c]);
-      }
-    } else {
-      strcpy(MD.kit.name, "NEW_KIT");
-    }
+    update_kit_name(grid_page.row_headers[grid_page.cur_row].name);
+
   }
 
   /*Send the encoded kit to the devices via sysex*/
@@ -587,6 +591,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   const uint8_t div32th_margin = 1;
 
+  uint8_t last_slot = 255;
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
@@ -635,7 +641,14 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     if (links[n].row >= GRID_LENGTH)
       continue;
+    last_slot = n;
     cache_track(n, track_idx, dev_idx, gdt);
+  }
+
+  if (last_slot != 255) {
+    GridRowHeader row_header;
+    proj.read_grid_row_header(&row_header, links[last_slot].row);
+    update_kit_name(row_header.name);
   }
 
   proj.select_grid(old_grid);
@@ -734,6 +747,9 @@ void MCLActions::calc_next_transition(bool update_active_row) {
     MD.draw_pattern_idx(next_row, grid_page.last_active_row, chain);
     if (MidiClock.state != 2) {
       grid_page.set_active_row(grid_page.last_active_row);
+    }
+    else {
+      send_kit_name = true;
     }
     grid_page.last_active_row = next_row;
   }

@@ -232,7 +232,6 @@ void MCLSeq::seq() {
     uart2 = &MidiUart2;
   }
   //  Stopwatch sw;
-
   MDSeqTrack::md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
@@ -243,19 +242,7 @@ void MCLSeq::seq() {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
   }
 
-  if (MDSeqTrack::sync_cursor) {
-    auto &active_track = md_tracks[last_md_track];
-    if (GUI.currentPage() == &seq_step_page &&
-        IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
-      MD.sync_seqtrack(active_track.length, active_track.speed,
-                       active_track.length - 1, uart);
-    }
-    // MD.draw_pattern_idx(grid_page.last_active_row, grid_page.last_active_row,
-    // 0);
-    grid_page.set_active_row(grid_page.last_active_row); // send led update
-    MDSeqTrack::sync_cursor = 0;
-  }
-  // Arp
+ // Arp
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();

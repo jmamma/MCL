@@ -62,6 +62,7 @@ public:
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
 
+  bool send_kit_name = false;
   MCLActions() {}
 
   void setup();
@@ -92,6 +93,7 @@ public:
                                       uint8_t *dev_idx);
 
   void init_chains();
+  void update_kit_name(char *str);
 
   void send_globals();
   void switch_global(uint8_t global_page);

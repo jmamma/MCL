@@ -399,26 +399,23 @@ void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
   sendRequest(data, countof(data));
 }
 
-void ElektronDevice::setKitName(const char *name) {
-  uint8_t buf[64];
+void ElektronDevice::setKitName(const char *name, MidiUartParent *uart_) {
+  uint8_t data[64];
   uint8_t i = 0;
 
-  buf[i++] = 0xF0;
 
-  for (uint8_t n = 0; n < sysex_protocol.header_size; n++) {
-    buf[i++] = sysex_protocol.header[n];
-  }
+  data[i++] = sysex_protocol.kitname_set_id;
 
-  buf[i++] = sysex_protocol.kitname_set_id;
+  memcpy(data + i, name, sysex_protocol.kitname_length);
+  //strcpy(data + i, name);
 
-  for (uint8_t n = 0; n < sysex_protocol.kitname_length; n++) {
-    buf[i++] = name[i] & 0x7F;
-    ;
-  }
+  DEBUG_PRINTLN("kit name");
+  DEBUG_PRINTLN(name);
 
-  buf[i++] = 0xF7;
 
-  uart->m_putc(buf, i);
+  //i += min(strlen(name),sysex_protocol.kitname_length);
+  i += sysex_protocol.kitname_length;
+  sendRequest(data, i, true, uart_);
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
