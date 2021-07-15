@@ -530,9 +530,11 @@ void GridPage::display_oled() {
     display_slot_menu();
   }
   display_grid();
+  /*
   if (row_scan) {
     mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 9, 7, false);
   }
+  */
   oled_display.display();
 #endif
 }
