@@ -115,35 +115,40 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (device != &MD) {
       return true;
     }
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-    }
+
+    uint8_t row = grid_page.bank * 16 + track;
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if (grid_page.bank_popup > 0 && note_interface.notes_all_off_md()) {
-        uint8_t row = grid_page.bank * 16 + track;
-        grid_page.jump_to_row(row);
+    }
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (grid_page.bank_popup > 0) {
 
         uint8_t chain_mode_old = mcl_cfg.chain_mode;
-        if (note_interface.notes_count_off() > 1) {
+        uint8_t note_count = note_interface.notes_count_on();
+        if (note_count > 1) {
           mcl_cfg.chain_mode = CHAIN_QUEUE;
-        } else if (chain_mode_old != CHAIN_AUTO) {
-          mcl_cfg.chain_mode = CHAIN_MANUAL;
-        }
-
-        mcl_actions.init_chains();
-
-        for (uint8_t n = 0; n < 16; n++) {
-          if (note_interface.is_note_off(n)) {
-            uint8_t row = grid_page.bank * 16 + n;
-            grid_load_page.group_load(row);
+        } else {
+          grid_page.jump_to_row(row);
+          if (chain_mode_old != CHAIN_AUTO) {
+            mcl_cfg.chain_mode = CHAIN_MANUAL;
+          }
+          mcl_actions.init_chains();
+      }
+        if (note_count == 2) {
+          for (uint8_t n = 0; n < 16; n++) {
+            if (note_interface.is_note_on(n) && n != track) {
+              uint8_t r = grid_page.bank * 16 + n;
+              grid_load_page.group_load(r);
+            }
           }
         }
+        grid_load_page.group_load(row);
+
         if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
             !trig_interface.is_key_down(MDX_KEY_BANKB) &&
             !trig_interface.is_key_down(MDX_KEY_BANKC) &&
             !trig_interface.is_key_down(MDX_KEY_BANKD)) {
           grid_page.close_bank_popup();
-        } else {
-          note_interface.init_notes();
         }
         mcl_cfg.chain_mode = chain_mode_old;
         return true;
@@ -176,7 +181,9 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (GUI.currentPage() == &grid_load_page || GUI.currentPage() == &grid_save_page || (GUI.currentPage() == &grid_page && grid_page.show_slot_menu)) {
+        if (GUI.currentPage() == &grid_load_page ||
+            GUI.currentPage() == &grid_save_page ||
+            (GUI.currentPage() == &grid_page && grid_page.show_slot_menu)) {
           return false;
         }
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
