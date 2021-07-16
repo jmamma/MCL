@@ -73,6 +73,9 @@ void GridPage::close_bank_popup() {
   }
   last_page = nullptr;
   bank_popup = 0;
+  note_interface.init_notes();
+  //Clear blink leds
+  MD.set_trigleds(0 TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 
 void GridPage::loop() {
