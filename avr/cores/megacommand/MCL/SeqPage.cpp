@@ -669,10 +669,18 @@ void SeqPage::draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask,
                     step_count, length, show_current_step);
 }
 
+
+void SeqPage::shed_mask(uint64_t &mask, uint8_t length, uint8_t offset) {
+  mask <<= (64 - length);
+  mask >>= (64 - length);
+  mask = mask >> offset;
+}
+
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
   uint64_t mask;
   active_track.get_mask(&mask, MASK_LOCKS_ON_STEP);
+  shed_mask(mask, active_track.length, 0);
   draw_lock_mask(offset, mask, active_track.step_count, active_track.length,
                  show_current_step);
 }
@@ -712,21 +720,17 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       led_mask = slide_mask;
       break;
     }
-    led_mask <<= (64 - active_track.length);
-    led_mask >>= (64 - active_track.length);
-    led_mask = led_mask >> offset;
+    shed_mask(led_mask, active_track.length, offset);
     draw_mask(offset, mask, active_track.step_count, active_track.length,
               oneshot_mask, slide_mask, show_current_step);
 
     if (recording)
       return;
-    mask <<= (64 - active_track.length);
-    mask >>= (64 - active_track.length);
 
     uint64_t locks_on_step_mask_ = 0;
+
     active_track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
-    locks_on_step_mask_ <<= (64 - active_track.length);
-    locks_on_step_mask_ >>= (64 - active_track.length);
+    shed_mask(locks_on_step_mask_, active_track.length, offset);
 
     if (led_mask != trigled_mask) {
       trigled_mask = led_mask;

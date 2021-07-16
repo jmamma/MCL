@@ -115,6 +115,7 @@ public:
   void config_as_trackedit();
   void config_as_lockedit();
   void config_mask_info(bool silent = true);
+  void shed_mask(uint64_t &mask, uint8_t length, uint8_t offset);
   void draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask, const uint8_t step_count, const uint8_t length, const bool show_current_step = true);
   void draw_lock_mask(const uint8_t offset, const bool show_current_step = true);
   void draw_mask(const uint8_t offset, const uint64_t &pattern_mask, const uint8_t step_count, const uint8_t length, const uint64_t &mute_mask, const uint64_t &slide_mask, const bool show_current_step = true);
