@@ -235,6 +235,7 @@ void MCLSeq::seq() {
   MDSeqTrack::md_trig_mask = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
+    md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
     md_arp_tracks[i].seq(uart);
   }
 
@@ -257,6 +258,7 @@ void MCLSeq::seq() {
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
+    ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
     ext_arp_tracks[i].seq(uart2);
   }
 #endif

@@ -26,7 +26,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
 
   uint8_t timing_mid = get_timing_mid_inline();
 
-  if (mod12_counter == 0 && enabled) {
+  if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
         switch (active) {
