@@ -77,7 +77,6 @@ get_category_name_fail:
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   trig_interface.on();
-  md_prepare();
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
   R.Clear();
@@ -107,8 +106,19 @@ void PageSelectPage::init() {
   note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
+  draw_popup();
+  md_prepare();
   display();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+}
+
+void PageSelectPage::draw_popup() {
+  char str[16];
+  uint8_t pageidx = get_pageidx(page_select);
+  if (pageidx < 16) {
+    get_page(pageidx, str);
+    MD.popup_text(str, true);
+  }
 }
 
 void PageSelectPage::md_prepare() {
@@ -122,6 +132,7 @@ void PageSelectPage::md_prepare() {
 void PageSelectPage::cleanup() {
   note_interface.init_notes();
   MD.set_trigleds(0, TRIGLED_OVERLAY);
+  MD.popup_text(127, 2);
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
@@ -184,7 +195,7 @@ void PageSelectPage::loop() {
       note_interface.state = true;
       loop_init = false;
     } */
-
+  uint8_t last_page_select = page_select;
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur - enc_->old;
   if ((diff > 0) && (page_select < 16)) {
@@ -208,6 +219,11 @@ void PageSelectPage::loop() {
 
   enc_->cur = 64 + diff;
   enc_->old = 64;
+
+  if (last_page_select != page_select) {
+  draw_popup();
+  last_page_select = page_select;
+  }
 }
 
 void PageSelectPage::display() {
@@ -299,7 +315,10 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       if (device != DEVICE_MD) {
         return false;
       }
-      page_select = track;
+      if (page_select != track) {
+        page_select = track;
+        draw_popup();
+      }
       return true;
     }
     if (mask == EVENT_BUTTON_RELEASED) {

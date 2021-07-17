@@ -227,8 +227,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
             GUI.currentPage() != &seq_ptc_page) {
+          seq_step_page.prepare = true;
           GUI.setPage(&seq_step_page);
-          page_select_page.md_prepare();
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
@@ -296,8 +296,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_REC: {
         if (!SeqPage::recording && GUI.currentPage() == &seq_ptc_page) {
           if (GUI.currentPage() != &seq_step_page) {
+            seq_step_page.prepare = true;
             GUI.setPage(&seq_step_page);
-            page_select_page.md_prepare();
           }
           return true;
         }

@@ -76,6 +76,7 @@ void SeqStepPage::init() {
   seq_param1.cur = 0;
   seq_param3.max = 64;
   seq_param3.min = 1;
+
 }
 
 void SeqStepPage::cleanup() {
@@ -148,6 +149,11 @@ void SeqStepPage::display() {
       mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].speed,
                                seq_param2.cur);
     }
+  }
+
+  if (prepare) {
+    page_select_page.md_prepare();
+    prepare = false;
   }
   oled_display.display();
   oled_display.setFont(oldfont);

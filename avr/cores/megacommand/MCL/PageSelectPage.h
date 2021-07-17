@@ -59,7 +59,7 @@ public:
   virtual void loop();
   virtual void cleanup();
   virtual void md_prepare();
-
+  void draw_popup();
   virtual bool handleEvent(gui_event_t *event);
 
   // get a page in the current category.
