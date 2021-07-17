@@ -484,11 +484,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
 
       char *dst = devs[i]->asElektronDevice()->getKitName();
-      if (dst && row_header.active) {
-        uint8_t len = elektron_dev->sysex_protocol.kitname_length;
-        memcpy(dst, row_header.name,len);
-        dst[len - 1] = '\0';
-      } else {
+      if (dst != nullptr) {
+        if (row_header.active) {
+          uint8_t len = elektron_dev->sysex_protocol.kitname_length;
+          memcpy(dst, row_header.name, len);
+          dst[len - 1] = '\0';
+        }
         strcpy(dst, "NEW_KIT");
       }
     }
@@ -542,9 +543,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   grid_task.chain_behaviour = false;
 
   if (last_slot != 255) {
-      grid_task.last_active_row = grid_task.last_active_row;
-      grid_task.next_active_row = links[last_slot].row;
-      grid_task.chain_behaviour = chains[last_slot].mode > 1;
+    grid_task.last_active_row = grid_task.last_active_row;
+    grid_task.next_active_row = links[last_slot].row;
+    grid_task.chain_behaviour = chains[last_slot].mode > 1;
   }
   grid_task.gui_update();
 
