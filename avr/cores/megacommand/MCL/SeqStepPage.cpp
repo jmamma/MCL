@@ -209,7 +209,7 @@ void SeqStepPage::loop() {
             active_track.steps[step].trig = true;
             break;
           }
-          if (seq_param4.hasChanged() != 255 && (seq_param4.cur > 0) &&
+          if (seq_param4.hasChanged() && (seq_param4.cur > 0) &&
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
