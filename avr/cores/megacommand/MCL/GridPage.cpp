@@ -50,7 +50,7 @@ void GridPage::jump_to_row(uint8_t row) {
 }
 
 void GridPage::set_active_row(uint8_t row) {
-  grid_page.last_active_row = row;
+  grid_task.last_active_row = row;
   if (bank_popup) {
     send_row_led();
   }
@@ -58,9 +58,10 @@ void GridPage::set_active_row(uint8_t row) {
 
 void GridPage::send_row_led() {
   uint64_t rows[2] = {0};
-  SET_BIT128_P(&rows, grid_page.last_active_row);
+  SET_BIT128_P(&rows, grid_task.last_active_row);
   uint16_t *blink_mask = (uint16_t *)&rows[0];
-
+  DEBUG_PRINTLN("Sending row led");
+  DEBUG_PRINTLN(blink_mask[grid_page.bank]);
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
@@ -344,9 +345,9 @@ void GridPage::display_grid_info() {
   val[2] = '\0';
   oled_display.print(val);
   oled_display.print(" ");
-  uint8_t bank = encoders[1]->cur / 16;
-  oled_display.print((char)('A' + bank));
-  GUI.put_value_at2(0, encoders[1]->cur - bank * 16 + 1, val);
+  uint8_t b = encoders[1]->cur / 16;
+  oled_display.print((char)('A' + b));
+  GUI.put_value_at2(0, encoders[1]->cur - b * 16 + 1, val);
   oled_display.print(val);
 
   oled_display.setCursor(1, y_offset + 2 * 8);

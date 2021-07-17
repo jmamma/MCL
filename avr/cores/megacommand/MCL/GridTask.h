@@ -10,6 +10,12 @@ class GridTask : public Task {
 public:
   bool stop_hard_callback = true;
 
+  char kit_names[NUM_DEVS][16];
+
+  uint8_t last_active_row;
+  uint8_t next_active_row;
+  bool chain_behaviour;
+
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 
   void setup(uint16_t interval = 0);
@@ -18,6 +24,7 @@ public:
   virtual void destroy();
 
   void init();
+  void gui_update();
   void transition_handler();
 
   bool link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed, uint8_t *track_select_array, GridDeviceTrack *gdt);

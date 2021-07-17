@@ -39,7 +39,6 @@ public:
   bool write_cfg = false;
 
   uint8_t active_slots[NUM_SLOTS];
-  uint8_t last_active_row;
 
   uint8_t grid_select_apply;
   uint8_t slot_clear;

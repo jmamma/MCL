@@ -118,13 +118,18 @@ bool mcl_handleEvent(gui_event_t *event) {
 
     uint8_t row = grid_page.bank * 16 + track;
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (grid_page.bank_popup > 0) {
+        if (note_interface.notes_all_off()) {
+          note_interface.init_notes();
+        }
+      }
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (grid_page.bank_popup > 0) {
 
         uint8_t chain_mode_old = mcl_cfg.chain_mode;
-        uint8_t note_count = note_interface.notes_count_on();
+        uint8_t note_count = note_interface.notes_count();
         if (note_count > 1) {
           mcl_cfg.chain_mode = CHAIN_QUEUE;
         } else {
@@ -133,12 +138,13 @@ bool mcl_handleEvent(gui_event_t *event) {
             mcl_cfg.chain_mode = CHAIN_MANUAL;
           }
           mcl_actions.init_chains();
-      }
+        }
         if (note_count == 2) {
           for (uint8_t n = 0; n < 16; n++) {
             if (note_interface.is_note_on(n) && n != track) {
               uint8_t r = grid_page.bank * 16 + n;
               grid_load_page.group_load(r);
+              break;
             }
           }
         }

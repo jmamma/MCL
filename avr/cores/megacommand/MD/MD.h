@@ -72,6 +72,7 @@ public:
   virtual bool canReadKit() { return true; }
 
   virtual ElektronSysexObject *getKit() { return &kit; }
+  virtual char *getKitName() { return kit.name; }
   virtual ElektronSysexObject *getPattern() { return &pattern; }
   virtual ElektronSysexObject *getGlobal() { return nullptr; }
   virtual ElektronSysexListenerClass *getSysexListener() {

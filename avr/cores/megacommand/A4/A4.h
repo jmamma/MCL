@@ -47,6 +47,7 @@ public:
   virtual ElektronSysexListenerClass* getSysexListener() { return &A4SysexListener; }
   // TODO A4 kit not placed in class
   virtual ElektronSysexObject* getKit() { return nullptr; }
+  virtual char *getKitName() { return nullptr; }
   // TODO A4 pattern not placed in class
   virtual ElektronSysexObject* getPattern() { return nullptr; }
   // TODO A4 global not placed in class

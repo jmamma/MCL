@@ -62,7 +62,6 @@ public:
   uint32_t start_clock96th = 0;
   uint8_t store_behaviour;
 
-  bool send_kit_name = false;
   MCLActions() {}
 
   void setup();
@@ -93,7 +92,6 @@ public:
                                       uint8_t *dev_idx);
 
   void init_chains();
-  void update_kit_name(char *str);
 
   void send_globals();
   void switch_global(uint8_t global_page);
@@ -108,7 +106,7 @@ public:
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false);
-  void calc_next_transition(bool update_active_row = false);
+  void calc_next_transition();
   void calc_latency();
 
 private:
