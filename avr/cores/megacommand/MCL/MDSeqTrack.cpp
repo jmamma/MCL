@@ -501,7 +501,7 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
 
 bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
                                  uint8_t value) {
-  Stopwatch sw;
+ // Stopwatch sw;
 
   // Let's try and find an existing param
   uint8_t match = find_param(track_param);
@@ -516,7 +516,7 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
 
   if (match != 255) {
     auto ret = set_track_locks_i(step, match, value);
-    auto set_lock = sw.elapsed();
+   // auto set_lock = sw.elapsed();
     // DIAG_MEASURE(1, set_lock);
     return ret;
   } else {
@@ -890,7 +890,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
     if (lcks & mask) {
       step->locks[a] = locks[idx++];
     } else {
-      step->locks[a] = 0;
+      step->locks[a] = 255;
     }
     mask <<= 1;
   }
@@ -903,7 +903,7 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   timing[n] = step->timing;
 
   for (uint8_t a = 0; a < NUM_LOCKS; a++) {
-    if (step->locks[a]) {
+    if (step->locks[a] != 255) {
       set_track_locks(n, locks_params[a] - 1, step->locks[a]);
     }
   }
