@@ -60,6 +60,7 @@ public:
 
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
+  uint16_t bank_popup_loadmask;
 
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
@@ -71,6 +72,7 @@ public:
   uint8_t getRow();
 
   void jump_to_row(uint8_t row);
+  void load_row(uint8_t n, uint8_t row);
 
   void row_state_scan();
   void update_row_state(uint8_t row, bool state);

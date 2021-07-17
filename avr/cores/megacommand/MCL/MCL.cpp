@@ -121,6 +121,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       if (grid_page.bank_popup > 0) {
         if (note_interface.notes_all_off()) {
           note_interface.init_notes();
+          grid_page.bank_popup_loadmask = 0;
         }
       }
     }
@@ -129,26 +130,32 @@ bool mcl_handleEvent(gui_event_t *event) {
       if (grid_page.bank_popup > 0) {
 
         uint8_t chain_mode_old = mcl_cfg.chain_mode;
-        uint8_t note_count = note_interface.notes_count();
-        if (note_count > 1) {
-          mcl_cfg.chain_mode = CHAIN_QUEUE;
-        } else {
+        uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
+
+        if (load_count == 0) {
           grid_page.jump_to_row(row);
           if (chain_mode_old != CHAIN_AUTO) {
             mcl_cfg.chain_mode = CHAIN_MANUAL;
           }
           mcl_actions.init_chains();
         }
-        if (note_count == 2) {
+        if (load_count > 0) {
+          mcl_cfg.chain_mode = CHAIN_QUEUE;
+        }
+
+        if (load_count == 1) {
           for (uint8_t n = 0; n < 16; n++) {
-            if (note_interface.is_note_on(n) && n != track) {
+            if (IS_BIT_SET16(grid_page.bank_popup_loadmask,n)) {
               uint8_t r = grid_page.bank * 16 + n;
-              grid_load_page.group_load(r);
+              CLEAR_BIT16(grid_page.bank_popup_loadmask,n);
+              //Reload as queue.
+              grid_page.load_row(n, r);
               break;
             }
           }
         }
-        grid_load_page.group_load(row);
+
+        grid_page.load_row(track, row);
 
         if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
             !trig_interface.is_key_down(MDX_KEY_BANKB) &&
@@ -200,6 +207,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         GUI.setPage(&grid_page);
         grid_page.bank_popup = 1;
+        grid_page.bank_popup_loadmask = 0;
         bool clear_states = false;
         trig_interface.on(clear_states);
         grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;

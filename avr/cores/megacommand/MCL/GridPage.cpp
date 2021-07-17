@@ -38,6 +38,13 @@ void GridPage::cleanup() {
   bank_popup = 0;
 }
 
+void GridPage::load_row(uint8_t n, uint8_t row) {
+  if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask,n)) {
+    grid_load_page.group_load(row);
+    SET_BIT16(grid_page.bank_popup_loadmask,n);
+  }
+}
+
 void GridPage::jump_to_row(uint8_t row) {
   //  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
   //  uint8_t r = row - y;
