@@ -296,7 +296,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
     }
   }
 
-  return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + key;
+  return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + transpose;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number) {
@@ -458,12 +458,24 @@ void SeqPtcPage::recalc_notemask() {
 
   for (uint8_t i = 0; i < 128; i++) {
     if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
-      uint8_t pitch = calc_scale_note(i,scale_padding);
+      uint8_t pitch = calc_scale_note(i, scale_padding);
       if (pitch > 127)
         continue;
       SET_BIT128_P(note_mask, pitch);
     }
   }
+}
+
+void SeqPtcPage::draw_popup_transpose() {
+  char *str = "KEY:   ";
+  mcl_gui.put_value_at(transpose, str + 5);
+  MD.popup_text(str);
+}
+
+void SeqPtcPage::draw_popup_octave() {
+  char *str = "OCT:   ";
+  mcl_gui.put_value_at(ptc_param_oct.cur, str + 5);
+  MD.popup_text(str);
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
@@ -526,6 +538,44 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     return true;
   } // TI events
+
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+
+    if (event->mask == EVENT_BUTTON_PRESSED &&
+        !trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      switch (key) {
+      case MDX_KEY_LEFT: {
+        if (transpose > 0) {
+          transpose -= 1;
+        }
+        draw_popup_transpose();
+        return true;
+      }
+      case MDX_KEY_RIGHT: {
+        if (transpose < 11) {
+          transpose += 1;
+        }
+        draw_popup_transpose();
+        return true;
+      }
+      case MDX_KEY_UP: {
+        if (ptc_param_oct.cur < 8) {
+          ptc_param_oct.cur += 1;
+        }
+        draw_popup_octave();
+        return true;
+      }
+      case MDX_KEY_DOWN: {
+        if (ptc_param_oct.cur > 0) {
+          ptc_param_oct.cur -= 1;
+        }
+        draw_popup_octave();
+        return true;
+      }
+      }
+    }
+  }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {

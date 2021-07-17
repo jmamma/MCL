@@ -31,7 +31,7 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
   bool re_init = false;
-  uint8_t key = 0;
+  uint8_t transpose = 0;
   int8_t poly_notes[MAX_POLY_NOTES];
   uint8_t poly_order[MAX_POLY_NOTES];
 
@@ -68,6 +68,8 @@ public:
   void render_arp(bool recalc_notemask_ = true);
 
   void recalc_notemask();
+  void draw_popup_octave();
+  void draw_popup_transpose();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
