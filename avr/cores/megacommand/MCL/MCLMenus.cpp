@@ -61,7 +61,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
 
     // 14
     &opt_trackid, &SeqPage::mask_type, &SeqPage::pianoroll_mode,
-    &SeqPage::param_select, &SeqPage::slide, &seq_ptc_page.key,
+    &SeqPage::param_select, &SeqPage::slide, &seq_ptc_page.transpose,
     &SeqPage::velocity, &SeqPage::cond, &opt_speed, &opt_length, &opt_channel,
     &opt_copy, &opt_clear, &opt_paste, &opt_shift, &opt_reverse,
 
