@@ -23,6 +23,7 @@ public:
   virtual uint8_t* icon();
 
   virtual ElektronSysexObject *getKit() { return &kit; }
+  virtual char *getKitName() { return kit.name; }
   virtual ElektronSysexObject *getPattern() { return nullptr; }
   virtual ElektronSysexObject *getGlobal() { return &global; }
   virtual ElektronSysexListenerClass *getSysexListener() {

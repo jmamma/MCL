@@ -9,7 +9,6 @@
 
 #ifdef MEGACOMMAND
   #define WAV_DESIGNER
-  #define LOUDNESS_PAGE
   #define SOUND_PAGE
 #endif
 
