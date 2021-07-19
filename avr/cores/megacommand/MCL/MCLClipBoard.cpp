@@ -153,7 +153,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
            sizeof(md_track->seq_data));
 
     mcl_seq.md_tracks[track].set_length(md_track->link.length);
-    mcl_seq.md_tracks[track].set_speed(md_track->link.speed);
+    mcl_seq.md_tracks[track].set_speed(md_track->link.speed, md_track->link.speed, false);
 
     if (md_track->machine.trigGroup == source_track) {
       md_track->machine.trigGroup = 255;
