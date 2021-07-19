@@ -888,9 +888,9 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   uint8_t mask = 1;
   for (uint8_t a = 0; a < NUM_LOCKS; a++) {
     if (lcks & mask) {
-      step->locks[a] = locks[idx++];
+      step->locks[a] = locks[idx++] + 1;
     } else {
-      step->locks[a] = 255;
+      step->locks[a] = 0;
     }
     mask <<= 1;
   }
@@ -903,8 +903,8 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   timing[n] = step->timing;
 
   for (uint8_t a = 0; a < NUM_LOCKS; a++) {
-    if (step->locks[a] != 255) {
-      set_track_locks(n, locks_params[a] - 1, step->locks[a]);
+    if (step->locks[a] != 0) {
+      set_track_locks(n, locks_params[a] - 1, step->locks[a] - 1);
     }
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
