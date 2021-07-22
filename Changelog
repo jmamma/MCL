@@ -117,6 +117,13 @@ MCL 4.00 20/06/2021
  will be applied to the current track's Arp.
  Note: Arpeggiator data is not currently saved with the track data.
 
+- Sample Uploading/Downloading
+
+ Samples can be transferred between the MDUW and the MC's SD Card via the
+ SoundBrowser Page.
+
+ Both .wav or .syx (SDS) file format's are supported.
+
 - Other Changes:
 
  Received MIDI data is now processed whenever possible and is no longer
