@@ -10,6 +10,8 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
     // re_sync();
     step_count = (step_count - length);
   }
+  cur_event_idx = get_lockidx(step_count);
+
   if (expand && old_length <= 16 && length > 16) {
     for (uint8_t n = 16; n < length; n++) {
       if ((*(int *)&(steps[n])) != 0) {

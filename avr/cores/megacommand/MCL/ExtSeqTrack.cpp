@@ -19,7 +19,9 @@ void ExtSeqTrack::set_length(uint8_t len) {
   while (step_count >= length && length > 0) {
     step_count = length - step_count;
   }
-  DEBUG_DUMP(step_count);
+  uint16_t idx, end;
+  locate(step_count, idx, end);
+  cur_event_id = idx;
 }
 
 void ExtSeqTrack::re_sync() {
