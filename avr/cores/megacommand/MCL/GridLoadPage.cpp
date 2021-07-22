@@ -10,7 +10,7 @@ void GridLoadPage::init() {
   draw_popup_title();
   note_interface.state = true;
   // GUI.display();
-  encoders[0]->cur = mcl_cfg.chain_mode;
+  encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
   encoders[3]->cur = mcl_cfg.chain_load_quant;
 }
@@ -19,17 +19,17 @@ void GridLoadPage::setup() {}
 
 void GridLoadPage::get_mode_str(char *str) {
   switch (encoders[0]->cur) {
-  case CHAIN_MANUAL: {
+  case LOAD_MANUAL: {
     strcpy(str, "MANUAL");
     break;
   }
 
-  case CHAIN_QUEUE: {
+  case LOAD_QUEUE: {
     strcpy(str, "QUEUE");
     break;
   }
 
-  case CHAIN_AUTO: {
+  case LOAD_AUTO: {
     strcpy(str, "AUTO");
     break;
   }
@@ -55,7 +55,7 @@ void GridLoadPage::draw_popup() {
 void GridLoadPage::display_load() {
   char *str2 = " SLOTS";
   char *str1 = "LOAD";
-  if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
+  if (mcl_cfg.load_mode == LOAD_QUEUE) {
     str1 = "QUEUE";
   }
   char str3[16] = "";
@@ -67,11 +67,11 @@ void GridLoadPage::display_load() {
 
 void GridLoadPage::get_modestr(char *modestr) {
   if (encoders[0]->hasChanged()) {
-    mcl_cfg.chain_mode = encoders[0]->cur;
+    mcl_cfg.load_mode = encoders[0]->cur;
     draw_popup_title();
   }
   if (encoders[1]->hasChanged()) {
-    if (encoders[0]->cur == CHAIN_QUEUE) {
+    if (encoders[0]->cur == LOAD_QUEUE) {
       mcl_cfg.chain_queue_length = encoders[1]->cur;
     } else {
       // Lock encoder
@@ -83,17 +83,17 @@ void GridLoadPage::get_modestr(char *modestr) {
   }
 
   switch (encoders[0]->cur) {
-  case CHAIN_MANUAL: {
+  case LOAD_MANUAL: {
     strcpy(modestr, "MAN");
     break;
   }
 
-  case CHAIN_QUEUE: {
+  case LOAD_QUEUE: {
     strcpy(modestr, "QUE");
     break;
   }
 
-  case CHAIN_AUTO: {
+  case LOAD_AUTO: {
     strcpy(modestr, "AUT");
     break;
   }
@@ -125,9 +125,9 @@ void GridLoadPage::display() {
     get_modestr(modestr);
 
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
-                              "CHAIN", modestr);
+                              "MODE", modestr);
 
-    if (encoders[0]->getValue() == CHAIN_QUEUE) {
+    if (encoders[0]->getValue() == LOAD_QUEUE) {
       if (encoders[1]->getValue() == 1) {
         strcpy(K, "--");
       } else {

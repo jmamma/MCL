@@ -744,12 +744,12 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
         oled_display.textbox("CLEAR ", "SLOT");
       }
     } else if (slot_update == 1) {
-      oled_display.textbox("CHAIN ", "UPDATE");
+      oled_display.textbox("SLOT ", "UPDATE");
     }
 
     if (slot_load) {
       if (height > 1) {
-        mcl_cfg.chain_mode = CHAIN_QUEUE;
+        mcl_cfg.load_mode = LOAD_QUEUE;
       }
       grid_load_page.display_load();
     }
@@ -876,7 +876,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_BANKB:
         case MDX_KEY_BANKC: {
           if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
-            mcl_cfg.chain_mode = key - MDX_KEY_BANKA + 1;
+            mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             return true;
           }
         }

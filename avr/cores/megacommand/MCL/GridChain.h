@@ -3,9 +3,9 @@
 #include "MCLMemory.h"
 #include <string.h>
 
-#define CHAIN_MANUAL 1
-#define CHAIN_AUTO 2
-#define CHAIN_QUEUE 3
+#define LOAD_MANUAL 1
+#define LOAD_AUTO 2
+#define LOAD_QUEUE 3
 
 class GridChain {
 public:
@@ -18,12 +18,12 @@ public:
   uint8_t lengths[NUM_LINKS];
   uint8_t rows[NUM_LINKS];
 
-  bool is_mode_queue() { return (mode == CHAIN_QUEUE && num_of_links); }
+  bool is_mode_queue() { return (mode == LOAD_QUEUE && num_of_links); }
 
   void init() {
     r = 0;
     w = 0;
-    mode = CHAIN_MANUAL;
+    mode = LOAD_MANUAL;
     num_of_links = 0;
     memset(rows, 255, sizeof(rows));
   }

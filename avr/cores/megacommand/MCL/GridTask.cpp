@@ -100,7 +100,7 @@ void GridTask::transition_handler() {
       continue;
 
     //    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-    //        (mcl_actions.chains[n].mode == CHAIN_MANUAL)) {
+    //        (mcl_actions.chains[n].mode == LOAD_MANUAL)) {
 
     GridDeviceTrack *gdt =
         mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -113,7 +113,7 @@ void GridTask::transition_handler() {
       send_device[dev_idx] = true;
     }
 
-    //  if (mcl_actions.chains[n].mode == CHAIN_MANUAL) {
+    //  if (mcl_actions.chains[n].mode == LOAD_MANUAL) {
     //    mcl_actions.links[n].loops = 0;
     //  }
   }
@@ -163,7 +163,7 @@ void GridTask::transition_handler() {
       }
     }
   }
-  //  if (mcl_cfg.chain_mode != CHAIN_MANUAL) {
+  //  if (mcl_cfg.load_mode != LOAD_MANUAL) {
   DEBUG_PRINTLN("gettin ready to cache");
   DEBUG_PRINTLN((int)SP);
   bool update_gui = true;

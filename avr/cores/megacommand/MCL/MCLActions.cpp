@@ -245,7 +245,7 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
     }
     row_array[n] = row;
 
-    if (mcl_cfg.chain_mode == CHAIN_QUEUE) {
+    if (mcl_cfg.load_mode == LOAD_QUEUE) {
       chains[n].add(row, get_chain_length());
       if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
@@ -257,7 +257,7 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
     } else {
       chains[n].init();
     }
-    chains[n].mode = mcl_cfg.chain_mode;
+    chains[n].mode = mcl_cfg.load_mode;
   }
 
   if (MidiClock.state == 2) {
@@ -514,7 +514,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
-  // if ((mcl_cfg.chain_mode == 0) || (mcl_cfg.chain_mode == CHAIN_MANUAL)) {
+  // if ((mcl_cfg.load_mode == 0) || (mcl_cfg.load_mode == LOAD_MANUAL)) {
   //   next_transition = (uint16_t)-1;
   //   return;
   // }
@@ -667,17 +667,17 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
 
   if (!ignore_chain_settings) {
     switch (chains[n].mode) {
-    case CHAIN_QUEUE: {
+    case LOAD_QUEUE: {
       break;
     }
-    case CHAIN_AUTO: {
+    case LOAD_AUTO: {
       if (links[n].loops == 0) {
         next_transitions[n] = -1;
         return;
       }
       break;
     }
-    case CHAIN_MANUAL: {
+    case LOAD_MANUAL: {
       next_transitions[n] = -1;
       return;
     }

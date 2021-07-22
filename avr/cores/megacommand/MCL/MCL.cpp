@@ -129,18 +129,18 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (grid_page.bank_popup > 0) {
 
-        uint8_t chain_mode_old = mcl_cfg.chain_mode;
+        uint8_t load_mode_old = mcl_cfg.load_mode;
         uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
 
         if (load_count == 0) {
           grid_page.jump_to_row(row);
-          if (chain_mode_old != CHAIN_AUTO) {
-            mcl_cfg.chain_mode = CHAIN_MANUAL;
+          if (load_mode_old != LOAD_AUTO) {
+            mcl_cfg.load_mode = LOAD_MANUAL;
           }
           mcl_actions.init_chains();
         }
         if (load_count > 0) {
-          mcl_cfg.chain_mode = CHAIN_QUEUE;
+          mcl_cfg.load_mode = LOAD_QUEUE;
         }
 
         if (load_count == 1) {
@@ -163,7 +163,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             !trig_interface.is_key_down(MDX_KEY_BANKD)) {
           grid_page.close_bank_popup();
         }
-        mcl_cfg.chain_mode = chain_mode_old;
+        mcl_cfg.load_mode = load_mode_old;
         return true;
       }
     }

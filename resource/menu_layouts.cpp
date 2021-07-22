@@ -11,7 +11,7 @@
   ExitPage
  ***/
 menu_t<7> system_menu_layout = {
-    "GLOBAL",
+    "CONFIG",
     {
         //               m  r  n  d  p  f  o
         {"LOAD PROJECT", 0, 0, 0, 0, 1, 0, 0},
@@ -137,7 +137,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
     {
         //          m  r    n  d   p  f   o
         {"GRID: ",  0, 2,   2, 31, 0, 0,  52},
-        {"CHAIN:",  1, 4,   3, 32, 0, 0,  20},
+        {"MODE:",   1, 4,   3, 32, 0, 0,  20},
         // for non-ext tracks
         {"LEN:   ",   1, 65,  0, 39, 0, 0,  0},
         // for ext tracks

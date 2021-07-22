@@ -87,7 +87,7 @@ bool MCLSysConfig::cfg_init() {
   midi_forward = 0;
   auto_save = 1;
   auto_normalize = 1;
-  chain_mode = CHAIN_MANUAL;
+  load_mode = LOAD_MANUAL;
   chain_queue_length = 1;
   chain_load_quant = 4;
   link_rand_min = 0;

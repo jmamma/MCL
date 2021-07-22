@@ -35,7 +35,7 @@ public:
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
-  uint8_t chain_mode;
+  uint8_t load_mode;
   uint8_t chain_queue_length;
   uint8_t chain_load_quant;
 

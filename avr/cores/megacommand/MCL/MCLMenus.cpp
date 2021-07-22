@@ -54,7 +54,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.auto_normalize, &mcl_cfg.uart2_ctrl_mode,
 
     // 10
-    &mcl_cfg.chain_mode, &mcl_cfg.link_rand_min, &mcl_cfg.link_rand_max,
+    &mcl_cfg.load_mode, &mcl_cfg.link_rand_min, &mcl_cfg.link_rand_max,
 
     // 13
     &mcl_cfg.display_mirror,
@@ -69,7 +69,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &opt_clear_step,
 
     // 31
-    &grid_page.grid_select_apply, &mcl_cfg.chain_mode, &slot.link.loops,
+    &grid_page.grid_select_apply, &mcl_cfg.load_mode, &slot.link.loops,
     &slot.link.row, &grid_page.slot_apply, &grid_page.slot_clear,
     &grid_page.slot_copy, &grid_page.slot_paste, &slot.link.length,
 

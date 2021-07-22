@@ -1,12 +1,12 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef GRIDLOADPAGE_H__
-#define GRIDLOADPAGE_H__
+#ifndef GRIDCHAINPAGE_H__
+#define GRIDCHAINPAGE_H__
 
 #include "GridIOPage.h"
 
 #define LOAD_PAGE 0
-#define CHAIN_PAGE 1
+#define LOAD_PAGE 1
 
 class GridLoadPage : public GridIOPage {
  public:
@@ -27,4 +27,4 @@ class GridLoadPage : public GridIOPage {
  void setup();
 };
 
-#endif /* GRIDLOADPAGE_H__ */
+#endif /* GRIDCHAINPAGE_H__ */
