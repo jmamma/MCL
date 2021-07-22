@@ -239,7 +239,7 @@ void SeqStepPage::loop() {
     update_params_queue = false;
   }
 
-  if (note_interface.notes_all_off_md()) {
+  if (note_interface.notes_all_off_md() && !grid_page.bank_popup) {
     mcl_gui.init_encoders_used_clock();
     // active_track.reset_params();
     MD.deactivate_encoder_interface();
@@ -274,7 +274,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
-  if (note_interface.is_event(event)) {
+  if (note_interface.is_event(event) && !grid_page.bank_popup) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);

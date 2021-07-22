@@ -44,6 +44,9 @@ void MCL::setup() {
   text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
   text_input_page.no_escape = false;
+
+  GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
+
   if (ret) {
     GUI.setPage(&grid_page);
   }
@@ -77,7 +80,6 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
-  GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
@@ -123,6 +125,7 @@ bool mcl_handleEvent(gui_event_t *event) {
           note_interface.init_notes();
           grid_page.bank_popup_loadmask = 0;
         }
+        return true;
       }
     }
 
