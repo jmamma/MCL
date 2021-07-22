@@ -510,6 +510,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.triggerTrack(last_md_track, 127);
         break;
       }
+       case MDX_KEY_NO: {
+        if (mask_type != MASK_PATTERN) {
+          mask_type = MASK_PATTERN;
+          config_mask_info(false);
+        }
+        break;
+      }
       case MDX_KEY_BANKB: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           if (mask_type == MASK_LOCK) {
