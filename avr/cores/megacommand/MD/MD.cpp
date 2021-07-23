@@ -11,7 +11,6 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
     MD.kit.params[track][track_param] = value;
-
     last_md_param = track_param;
   } else {
     track = param - 8 + (channel - MD.global.baseChannel) * 4;
@@ -166,9 +165,8 @@ void MDClass::get_mutes() {
       mcl_seq.md_tracks[n].mute_state = IS_BIT_SET16(mutes, n);
       DEBUG_PRINTLN(mcl_seq.md_tracks[n].mute_state);
     }
-  }
-  else {
-  DEBUG_PRINTLN("mute state failed");
+  } else {
+    DEBUG_PRINTLN("mute state failed");
   }
 }
 
@@ -341,6 +339,18 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   uart_->sendNoteOn(global.baseChannel + 1, a, b);
   if (c > 0) {
     uart_->sendNoteOn(global.baseChannel + 2, c, 0);
+  }
+}
+
+void MDClass::restore_kit_params() {
+  memcpy(kit.params, kit.params_orig, sizeof(kit.params));
+  updateKitParams();
+}
+
+void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
+  if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
+    MD.kit.params[track][param] = MD.kit.params_orig[track][param];
+    MD.setTrackParam(track, param, MD.kit.params_orig[track][param]);
   }
 }
 
@@ -683,6 +693,8 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, 24);
+  memcpy(kit_->params_orig[track], machine->params, 24);
+
   if (set_level) {
     kit_->levels[track] = machine->level;
   }

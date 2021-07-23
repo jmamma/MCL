@@ -27,6 +27,7 @@
 #define MDX_KEY_PASTE 0x36
 #define MDX_KEY_REALTIME 0x37
 #define MDX_KEY_FUNCYES 0x3A
+#define MDX_KEY_FUNCEXTENDED 0x3B
 
 #include "Task.h"
 

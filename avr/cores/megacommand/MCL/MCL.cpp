@@ -290,6 +290,11 @@ bool mcl_handleEvent(gui_event_t *event) {
         grid_task.stop_hard_callback = true;
         break;
       }
+      case MDX_KEY_FUNCEXTENDED: {
+        MD.restore_kit_params();
+        break;
+      }
+
       }
     }
 

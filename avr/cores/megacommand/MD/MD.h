@@ -114,6 +114,12 @@ public:
    * track goes from 0 to 15, velocity from 0 to 127.
    **/
   void triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_ = nullptr);
+
+  /* Restore modified kit params, with the original values. */
+  void restore_kit_params();
+  /* Restore a single kit param, and transmit the param to the MD */
+  void restore_kit_param(uint8_t track, uint8_t param);
+
   /**
    * Set the parameter param (0 to 23, or 32 for mute, and 33 for
    * LEVEL) of the given track (from 0 to 15) to value.

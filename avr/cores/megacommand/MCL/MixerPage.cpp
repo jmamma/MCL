@@ -67,7 +67,6 @@ void MixerPage::setup() {
 }
 
 void MixerPage::init() {
-  memcpy(params, MD.kit.params, sizeof(params));
   level_pressmode = 0;
   for (uint8_t i = 0; i < 4; i++) {
     encoders[i]->cur = 64;
@@ -411,10 +410,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.is_note_on(i)) {
         for (uint8_t c = 0; c < 24; c++) {
-          if (MD.kit.params[i][c] != params[i][c]) {
-            MD.setTrackParam(i, c, params[i][c]);
-            MD.kit.params[i][c] = params[i][c];
-          }
+           MD.restore_kit_param(i, c);
         }
       }
     }

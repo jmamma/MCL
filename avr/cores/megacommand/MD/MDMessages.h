@@ -239,6 +239,8 @@ public:
 
   /** The parameters for each track. **/
   uint8_t params[16][24];
+  /** Duplicate params not included in the origin MD structure */
+  uint8_t params_orig[16][24];
   /** The levels of each track. **/
   uint8_t levels[16];
   /** The selected drum model for each track. **/
