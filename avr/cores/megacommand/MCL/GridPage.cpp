@@ -54,6 +54,8 @@ void GridPage::jump_to_row(uint8_t row) {
   param2.old = y;
   cur_row = r;
   reload_slot_models = false;
+  grid_lastclock = slowclock;
+  write_cfg = true;
 }
 
 void GridPage::set_active_row(uint8_t row) {
