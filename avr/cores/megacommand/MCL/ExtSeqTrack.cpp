@@ -21,7 +21,7 @@ void ExtSeqTrack::set_length(uint8_t len) {
   }
   uint16_t idx, end;
   locate(step_count, idx, end);
-  cur_event_id = idx;
+  cur_event_idx = idx;
 }
 
 void ExtSeqTrack::re_sync() {
