@@ -172,6 +172,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
+    check_and_set_page_select();
     if (mcl_cfg.track_select && send) {
       MD.currentTrack = track;
       MD.setStatus(0x22, track);
