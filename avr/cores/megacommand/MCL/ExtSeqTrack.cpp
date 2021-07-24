@@ -16,12 +16,18 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
 
 void ExtSeqTrack::set_length(uint8_t len) {
   length = len;
-  while (step_count >= length && length > 0) {
-    step_count = length - step_count;
+
+  uint8_t step = step_count;
+  if (step >= length && length > 0) {
+    step = step % length;
   }
   uint16_t idx, end;
-  locate(step_count, idx, end);
+  locate(step, idx, end);
+  USE_LOCK();
+  SET_LOCK();
+  step_count = step;
   cur_event_idx = idx;
+  CLEAR_LOCK();
 }
 
 void ExtSeqTrack::re_sync() {
