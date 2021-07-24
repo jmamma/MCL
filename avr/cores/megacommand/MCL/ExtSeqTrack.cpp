@@ -15,10 +15,10 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void ExtSeqTrack::set_length(uint8_t len) {
+  if (len == 0) { len = 1; }
   length = len;
-
   uint8_t step = step_count;
-  if (step >= length && length > 0) {
+  if (step >= length) {
     step = step % length;
   }
   uint16_t idx, end;

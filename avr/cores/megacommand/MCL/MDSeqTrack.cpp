@@ -5,12 +5,21 @@ uint16_t MDSeqTrack::md_trig_mask = 0;
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
+  if (len == 0) { len = 1; }
   length = len;
-  while (step_count >= length && length > 0) {
-    // re_sync();
-    step_count = (step_count - length);
+
+  uint8_t step = step_count;
+  if (step >= length) {
+    step = step % length;
   }
-  cur_event_idx = get_lockidx(step_count);
+
+  uint8_t idx = get_lockidx(step);
+
+  USE_LOCK();
+  SET_LOCK();
+  cur_event_idx = idx;
+  step_count = step;
+  CLEAR_LOCK();
 
   if (expand && old_length <= 16 && length > 16) {
     for (uint8_t n = 16; n < length; n++) {
