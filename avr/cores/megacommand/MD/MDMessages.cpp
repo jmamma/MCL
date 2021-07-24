@@ -317,7 +317,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   name[16] = '\0';
 
   decoder.get((uint8_t *)params, 16 * 24);
-  memcpy(params_orig,params, sizeof(params_orig));
+  //memcpy(params_orig,params, sizeof(params_orig));
 
   decoder.get(levels, 16);
 

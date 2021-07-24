@@ -412,6 +412,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         for (uint8_t c = 0; c < 24; c++) {
            MD.restore_kit_param(i, c);
         }
+        mcl_seq.md_tracks[i].update_params();
       }
     }
     return true;

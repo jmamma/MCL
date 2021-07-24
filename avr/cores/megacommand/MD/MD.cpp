@@ -344,7 +344,9 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
 
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
-  updateKitParams();
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].update_params();
+  }
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
