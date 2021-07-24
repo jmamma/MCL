@@ -88,6 +88,8 @@ public:
     bool clear_locks = true;
     bool reset_params = false;
     md_seq_track->clear_track(clear_locks, reset_params);
+    md_seq_track->set_length(16);
+    md_seq_track->set_speed(SEQ_SPEED_1X, 255);
   }
 
   void load_seq_data(SeqTrack *seq_track);

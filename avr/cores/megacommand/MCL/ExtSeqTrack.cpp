@@ -1,10 +1,12 @@
 #include "MCL_impl.h"
 
-void ExtSeqTrack::set_speed(uint8_t _speed) {
+void ExtSeqTrack::set_speed(uint8_t _speed, bool timing_adjust) {
   uint8_t old_speed = speed;
-  float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint16_t i = 0; i < NUM_EXT_EVENTS; i++) {
-    events[i].micro_timing = round(mult * (float)events[i].micro_timing);
+  if (timing_adjust) {
+    float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
+    for (uint16_t i = 0; i < NUM_EXT_EVENTS; i++) {
+      events[i].micro_timing = round(mult * (float)events[i].micro_timing);
+    }
   }
   speed = _speed;
   uint8_t timing_mid = get_timing_mid();
@@ -15,7 +17,9 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void ExtSeqTrack::set_length(uint8_t len) {
-  if (len == 0) { len = 1; }
+  if (len == 0) {
+    len = 1;
+  }
   length = len;
   uint8_t step = step_count;
   if (step >= length) {
@@ -116,7 +120,8 @@ void ExtSeqTrack::recalc_slides() {
   for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     e = &events[curidx + n];
     uint8_t c = e->lock_idx;
-    if (!e->is_lock || !e->event_on || !locks_params[c] || locks_params[c] - 1 > 127)
+    if (!e->is_lock || !e->event_on || !locks_params[c] ||
+        locks_params[c] - 1 > 127)
       continue;
 
     uint8_t next_lockstep = locks_slide_next_lock_step[c];
@@ -555,7 +560,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == 0) {
       reset();
-   }
+    }
   }
 
   uint8_t timing_mid = get_timing_mid_inline();
@@ -590,7 +595,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
     ev_end = ev_idx + timing_buckets.get(next_step);
 
-   // Go over NEXT
+    // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
@@ -610,14 +615,20 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_old;
 }
 
-void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
+                          MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendNoteOn(channel, note, velocity);
   SET_BIT128_P(note_buffer, note);
 }
 
-void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
+                           MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendNoteOff(channel, note, velocity);
   CLEAR_BIT128_P(note_buffer, note);
 }
@@ -945,7 +956,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
- for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
     events[x].micro_timing = 0; // XXX zero or mid?
   }
@@ -1035,7 +1046,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   }
 
   locate(step_count, cur_event_idx, ev_end);
-  memset(oneshot_mask,0,sizeof(oneshot_mask));
-  
+  memset(oneshot_mask, 0, sizeof(oneshot_mask));
+
   mute_state = old_mute_state;
 }

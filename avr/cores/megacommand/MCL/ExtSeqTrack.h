@@ -293,7 +293,7 @@ public:
 
   void modify_track(uint8_t dir);
 
-  void set_speed(uint8_t _speed);
+  void set_speed(uint8_t _speed, bool timing_adjust = true);
 };
 
 #endif /* EXTSEQTRACK_H__ */
