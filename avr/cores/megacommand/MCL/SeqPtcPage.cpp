@@ -480,10 +480,6 @@ void SeqPtcPage::draw_popup_octave() {
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
-
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
 
   if (note_interface.is_event(event)) {
@@ -602,7 +598,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       return true;
     }
   */
-
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (BUTTON_DOWN(Buttons.BUTTON1)) {
       re_init = true;
@@ -635,6 +630,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
 #endif
+    return true;
+  }
+  if (SeqPage::handleEvent(event)) {
     return true;
   }
 

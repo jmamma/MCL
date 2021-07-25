@@ -797,8 +797,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (!recording || MidiClock.state != 2 ||
-      EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     if (pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
           0) {
