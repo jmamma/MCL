@@ -93,8 +93,6 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
 
     send_slides(locks_params);
 
-     DEBUG_CHECK_STACK();
-
     if (((timing[step_count] >= timing_mid) &&
          (timing[current_step = step_count] - timing_mid == mod12_counter)) ||
         ((timing[next_step] < timing_mid) &&
