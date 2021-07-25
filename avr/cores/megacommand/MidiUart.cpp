@@ -406,48 +406,56 @@ ISR(USART1_UDRE_vect) {
   select_bank(0);
   if ((MidiUart2.txRb_sidechannel != nullptr) &&
       (MidiUart2.in_message_tx == 0)) {
-
+    // sidechannel mounted, and no active messages in normal channel
+    // ==> flush the sidechannel now
     if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
       MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
       uint8_t c = MidiUart2.txRb_sidechannel->get_h_isr();
       UART2_WRITE_CHAR(c);
     }
+    // unmount sidechannel if drained
     if (MidiUart2.txRb_sidechannel->isEmpty_isr()) {
       MidiUart2.txRb_sidechannel = nullptr;
     }
-  } else {
-    if (!MidiUart2.txRb.isEmpty_isr()) {
-      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-      uint8_t c = MidiUart2.txRb.get_h_isr();
-      UART2_WRITE_CHAR(c);
-      if ((MidiUart2.in_message_tx > 0) && (c < 128)) {
-        MidiUart2.in_message_tx--;
+  } else if (!MidiUart2.txRb.isEmpty_isr()) {
+    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 2. -and- a normal channel byte is queued
+    // ==> flush the normal channel now
+    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
+    uint8_t c = MidiUart2.txRb.get_h_isr();
+    UART2_WRITE_CHAR(c);
+    if ((MidiUart2.in_message_tx > 0) && (c < 128)) {
+      MidiUart2.in_message_tx--;
+    }
+    if (c < 0xF0) {
+      switch (c & 0xF0) {
+      case MIDI_CHANNEL_PRESSURE:
+      case MIDI_PROGRAM_CHANGE:
+        MidiUart2.in_message_tx = 1;
+        break;
+      case MIDI_NOTE_OFF:
+      case MIDI_NOTE_ON:
+      case MIDI_AFTER_TOUCH:
+      case MIDI_CONTROL_CHANGE:
+      case MIDI_PITCH_WHEEL:
+        MidiUart2.in_message_tx = 2;
+        break;
       }
-      if (c < 0xF0) {
-        switch (c & 0xF0) {
-        case MIDI_CHANNEL_PRESSURE:
-        case MIDI_PROGRAM_CHANGE:
-          MidiUart2.in_message_tx = 1;
-          break;
-        case MIDI_NOTE_OFF:
-        case MIDI_NOTE_ON:
-        case MIDI_AFTER_TOUCH:
-        case MIDI_CONTROL_CHANGE:
-        case MIDI_PITCH_WHEEL:
-          MidiUart2.in_message_tx = 2;
-          break;
-        }
-      } else {
-        switch (c) {
-        case MIDI_SYSEX_START:
-          MidiUart2.in_message_tx = -1;
-          break;
-        case MIDI_SYSEX_END:
-          MidiUart2.in_message_tx = 0;
-          break;
-        }
+    } else {
+      switch (c) {
+      case MIDI_SYSEX_START:
+        MidiUart2.in_message_tx = -1;
+        break;
+      case MIDI_SYSEX_END:
+        MidiUart2.in_message_tx = 0;
+        break;
       }
     }
+  } else {
+    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 2. -and- normal channel is drained
+    // ==> clear active bit and wait for normal channel to be re-supplied
+    UART2_CLEAR_ISR_TX_BIT();
   }
   if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel == nullptr)) {
     UART2_CLEAR_ISR_TX_BIT();
