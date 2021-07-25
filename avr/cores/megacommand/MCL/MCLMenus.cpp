@@ -77,10 +77,11 @@ const uint8_t *const menu_target_param[] PROGMEM = {
 #ifdef WAV_DESIGNER
     &WavDesignerPage::opt_mode, &WavDesignerPage::opt_shape,
 #else
-    nullptr, nullptr
+    nullptr, nullptr,
 #endif
-
-    // 42 - end
+    // 42
+    &mcl_cfg.rec_quant,
+    // 43 - end
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -147,7 +148,7 @@ MenuPage<5> file_menu_page(&config_param1, &file_menu_encoder);
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<19> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<20> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);

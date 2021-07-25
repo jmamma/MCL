@@ -90,12 +90,6 @@ void MCL::setup() {
     GUI.display_mirror = true;
 #endif
   }
-  if (mcl_cfg.screen_saver == 1) {
-    GUI.use_screen_saver = true;
-  } else {
-    GUI.use_screen_saver = false;
-  }
-
   param4.cur = 4;
 
   DEBUG_PRINTLN(F("Track sizes:"));

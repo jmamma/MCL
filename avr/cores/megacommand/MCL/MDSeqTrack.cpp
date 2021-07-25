@@ -567,7 +567,19 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
     return;
   }
 
-  set_track_locks(step_count, track_param, value);
+  uint8_t timing_mid = get_timing_mid();
+  uint8_t mod12 = mod12_counter - 1;
+
+  uint8_t step = step_count;
+
+  if (mcl_cfg.rec_quant) {
+    if (mod12 > timing_mid / 2) {
+       step++;
+       if (step == length) { step = 0; }
+    }
+  }
+  set_track_locks(step, track_param, value);
+
 }
 
 void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
@@ -594,9 +606,7 @@ void MDSeqTrack::record_track(uint8_t velocity) {
 
   uint8_t step = step_count;
 
-  bool quant = false;
-
-  if (quant) {
+  if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
        step++;
        if (step == length) { step = 0; }
@@ -605,6 +615,7 @@ void MDSeqTrack::record_track(uint8_t velocity) {
     utiming = timing_mid;
   }
   set_track_step(step, utiming, velocity);
+
 }
 
 void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,

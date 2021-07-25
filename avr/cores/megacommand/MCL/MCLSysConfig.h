@@ -31,7 +31,7 @@ public:
   uint8_t uart2_ctrl_mode;
   uint32_t mutes;
   uint8_t display_mirror;
-  uint8_t screen_saver;
+  uint8_t rec_quant;
   float tempo;
   uint8_t midi_forward;
   uint8_t auto_save;
