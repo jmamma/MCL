@@ -187,6 +187,8 @@ public:
 
   uint16_t cur_event_idx;
 
+  uint8_t ignore_step;
+
   SeqTrack() { reset(); }
 
   ALWAYS_INLINE() void reset() {
@@ -197,6 +199,7 @@ public:
     iterations_7 = 1;
     iterations_8 = 1;
     SeqTrackBase::reset();
+    ignore_step = 255;
   }
 
   ALWAYS_INLINE() void seq() {

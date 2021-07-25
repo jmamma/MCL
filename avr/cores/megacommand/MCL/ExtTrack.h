@@ -25,8 +25,6 @@ public:
   void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     ext_seq_track->clear_track();
-    ext_seq_track->set_length(16);
-    ext_seq_track->set_speed(SEQ_SPEED_1X, false);
   }
 
   bool load_seq_data(SeqTrack *seq_track);

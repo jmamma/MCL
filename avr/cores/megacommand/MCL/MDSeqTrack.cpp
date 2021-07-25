@@ -81,7 +81,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
 
   uint8_t timing_mid = get_timing_mid_inline();
 
-  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
+  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF) && (ignore_step != step_count)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
@@ -92,6 +92,8 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     uint8_t current_step;
 
     send_slides(locks_params);
+
+     DEBUG_CHECK_STACK();
 
     if (((timing[step_count] >= timing_mid) &&
          (timing[current_step = step_count] - timing_mid == mod12_counter)) ||
@@ -123,8 +125,10 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == timing_mid) {
     mod12_counter = 0;
     cur_event_idx += popcount(steps[step_count].locks);
+    if (ignore_step == step_count) { ignore_step = 255; }
     step_count_inc();
   }
+
   uart = uart_old;
 }
 
@@ -585,8 +589,24 @@ void MDSeqTrack::record_track(uint8_t velocity) {
   if (step_count >= length) {
     return;
   }
-  uint8_t utiming = mod12_counter + get_timing_mid() - 1;
-  set_track_step(step_count, utiming, velocity);
+
+  uint8_t timing_mid = get_timing_mid();
+  uint8_t mod12 = mod12_counter - 1;
+  uint8_t utiming = mod12 + timing_mid;
+
+  uint8_t step = step_count;
+
+  bool quant = false;
+
+  if (quant) {
+    if (mod12 > timing_mid / 2) {
+       step++;
+       if (step == length) { step = 0; }
+       ignore_step = step;
+    }
+    utiming = timing_mid;
+  }
+  set_track_step(step, utiming, velocity);
 }
 
 void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
