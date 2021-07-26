@@ -192,11 +192,12 @@ bool MenuPageBase::enter() {
     DEBUG_PRINTLN("setting page");
     DEBUG_PRINTLN((uint16_t)page_callback);
     GUI.pushPage(page_callback);
-    return false;
+    return true;
   }
   if (row_func != NULL) {
     DEBUG_PRINTLN(F("calling callback func"));
     (*row_func)();
+    return false;
   }
 }
 
