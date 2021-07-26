@@ -292,7 +292,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-
+        reset_undo();
         config_encoders();
         MD.triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
