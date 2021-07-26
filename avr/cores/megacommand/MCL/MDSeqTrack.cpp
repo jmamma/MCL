@@ -71,6 +71,17 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
 
+  uint8_t timing_mid = get_timing_mid_inline();
+
+  mod12_counter++;
+
+  if (mod12_counter == timing_mid) {
+    mod12_counter = 0;
+    cur_event_idx += popcount(steps[step_count].locks);
+    if (ignore_step == step_count) { ignore_step = 255; }
+    step_count_inc();
+  }
+
   if (count_down) {
     count_down--;
     if (count_down == 0) {
@@ -79,7 +90,6 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     }
   }
 
-  uint8_t timing_mid = get_timing_mid_inline();
 
   if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF) && (ignore_step != step_count)) {
 
@@ -118,15 +128,6 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       }
     }
   }
-  mod12_counter++;
-
-  if (mod12_counter == timing_mid) {
-    mod12_counter = 0;
-    cur_event_idx += popcount(steps[step_count].locks);
-    if (ignore_step == step_count) { ignore_step = 255; }
-    step_count_inc();
-  }
-
   uart = uart_old;
 }
 
@@ -561,16 +562,9 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
   return true;
 }
 
-void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
-
-  if (step_count >= length) {
-    return;
-  }
-
+uint8_t MDSeqTrack::get_quantized_step(uint8_t step) {
   uint8_t timing_mid = get_timing_mid();
   uint8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -578,7 +572,17 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
        if (step == length) { step = 0; }
     }
   }
-  set_track_locks(step, track_param, value);
+  return step;
+
+}
+
+void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
+
+  if (step_count >= length) {
+    return;
+  }
+
+  set_track_locks(get_quantized_step(step_count), track_param, value);
 
 }
 
@@ -591,7 +595,7 @@ void MDSeqTrack::record_track_pitch(uint8_t pitch) {
   if (step_count >= length) {
     return;
   }
-  set_track_pitch(step_count, pitch);
+  set_track_pitch(get_quantized_step(step_count), pitch);
 }
 
 void MDSeqTrack::record_track(uint8_t velocity) {

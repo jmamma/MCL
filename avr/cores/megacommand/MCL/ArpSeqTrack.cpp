@@ -26,6 +26,16 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
 
   uint8_t timing_mid = get_timing_mid_inline();
 
+  mod12_counter++;
+  if (mod12_counter == timing_mid) {
+    step_count_inc();
+    if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
+        seq_ptc_page.note_off_ext(last_note_on, 0, uart);
+        last_note_on = 255;
+    }
+    mod12_counter = 0;
+  }
+
   if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
@@ -44,15 +54,6 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
         }
       }
     }
-  }
-  mod12_counter++;
-  if (mod12_counter == timing_mid) {
-    step_count_inc();
-    if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
-        seq_ptc_page.note_off_ext(last_note_on, 0, uart);
-        last_note_on = 255;
-    }
-    mod12_counter = 0;
   }
   uart = uart_old;
 }

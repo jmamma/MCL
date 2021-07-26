@@ -554,6 +554,17 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
 
+  uint8_t timing_mid = get_timing_mid_inline();
+
+  mod12_counter++;
+
+  if (mod12_counter == timing_mid) {
+    cur_event_idx += timing_buckets.get(step_count);
+    mod12_counter = 0;
+    if (ignore_step == step_count) { ignore_step = 255; memset(ignore_notes, 0, sizeof(ignore_notes)); }
+    step_count_inc();
+  }
+
   if (count_down) {
     count_down--;
     if (count_down == 0) {
@@ -561,7 +572,6 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
    }
   }
 
-  uint8_t timing_mid = get_timing_mid_inline();
   uint16_t ev_idx, ev_end;
 
   if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
@@ -601,16 +611,9 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
       }
     }
   }
-  mod12_counter++;
 
   locks_slides_idx = cur_event_idx;
 
-  if (mod12_counter == timing_mid) {
-    cur_event_idx += timing_buckets.get(step_count);
-    mod12_counter = 0;
-    if (ignore_step == step_count) { ignore_step = 255; memset(ignore_notes, 0, sizeof(ignore_notes)); }
-    step_count_inc();
-  }
   uart = uart_old;
 }
 
