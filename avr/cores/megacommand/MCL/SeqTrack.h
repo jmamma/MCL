@@ -78,7 +78,7 @@ public:
   }
 
   ALWAYS_INLINE() void reset() {
-    mod12_counter = 0;
+    mod12_counter = -1;
     step_count = 0;
   }
 

@@ -60,7 +60,8 @@ void SeqStepPage::init() {
   check_and_set_page_select();
 
   auto &active_track = mcl_seq.md_tracks[last_md_track];
-  MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
+  MD.sync_seqtrack(active_track.length, active_track.speed,
+                   active_track.step_count);
 
   trigled_mask = 0;
   locks_on_step_mask = 0;
@@ -76,7 +77,6 @@ void SeqStepPage::init() {
   seq_param1.cur = 0;
   seq_param3.max = 64;
   seq_param3.min = 1;
-
 }
 
 void SeqStepPage::cleanup() {
@@ -107,9 +107,9 @@ void SeqStepPage::display() {
     if (tuning != NULL) {
       strcpy(K, "--");
       if (seq_param4.cur != 0) {
-        //uint8_t base = tuning->base;
+        // uint8_t base = tuning->base;
         uint8_t note_num = seq_param4.cur;
-               // + base;
+        // + base;
         MusicalNotes number_to_note;
 
         uint8_t note = note_num - (note_num / 12) * 12;
@@ -126,7 +126,7 @@ void SeqStepPage::display() {
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
       (!show_step_menu) && (tuning != NULL)) {
     uint64_t note_mask[2] = {};
-    uint8_t note = seq_param4.cur;// + tuning->base;
+    uint8_t note = seq_param4.cur; // + tuning->base;
     SET_BIT64(note_mask, note);
     mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
     SeqPage::display();
@@ -174,11 +174,12 @@ void SeqStepPage::loop() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
   if (pitch_param != 255) {
-  seq_param4.cur = pitch_param;
-  pitch_param = 255;
+    seq_param4.cur = pitch_param;
+    pitch_param = 255;
   }
 
-  if (seq_param1.hasChanged() || seq_param2.hasChanged() || seq_param4.hasChanged()) {
+  if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
+      seq_param4.hasChanged()) {
     tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
 
     for (uint8_t n = 0; n < 16; n++) {
@@ -219,9 +220,11 @@ void SeqStepPage::loop() {
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
-            uint8_t machine_pitch = seq_ptc_page.get_machine_pitch(last_md_track, note_num);
+            uint8_t machine_pitch =
+                seq_ptc_page.get_machine_pitch(last_md_track, note_num);
             active_track.set_track_pitch(step, machine_pitch);
-            seq_step_page.encoders_used_clock[3] = slowclock; //indicate that encoder has changed.
+            seq_step_page.encoders_used_clock[3] =
+                slowclock; // indicate that encoder has changed.
           }
         }
       }
@@ -267,8 +270,7 @@ void SeqStepPage::send_locks(uint8_t step) {
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
-  if ((!recording || EVENT_PRESSED(event, Buttons.BUTTON2)) &&
-      SeqPage::handleEvent(event)) {
+  if (SeqPage::handleEvent(event)) {
     return true;
   }
 
@@ -290,7 +292,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
     if (recording) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
-
+        reset_undo();
         config_encoders();
         MD.triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
@@ -340,8 +342,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (note_num == 255) {
           seq_param4.cur = 0;
         } else {
-          //uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
-          //note_num = note_num - note_offset;
+          // uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+          // note_num = note_num - note_offset;
           seq_param4.cur = note_num;
         }
         seq_param4.old = seq_param4.cur;
@@ -361,7 +363,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         CLEAR_BIT64(active_track.oneshot_mask, step);
         active_track.set_step(step, mask_type, true);
         SET_BIT16(ignore_release, track);
-
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 
@@ -369,8 +370,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.draw_close_microtiming();
         md_micro = false;
       }
-      if (IS_BIT_SET16(ignore_release,track)) {
-        CLEAR_BIT16(ignore_release,track);
+      if (IS_BIT_SET16(ignore_release, track)) {
+        CLEAR_BIT16(ignore_release, track);
         return;
       }
       if (last_md_track < 15) {
@@ -510,7 +511,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         MD.triggerTrack(last_md_track, 127);
         break;
       }
-       case MDX_KEY_NO: {
+      case MDX_KEY_NO: {
         if (mask_type != MASK_PATTERN) {
           mask_type = MASK_PATTERN;
           config_mask_info(false);
@@ -583,38 +584,40 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       return true;
     }
-    if (recording) {
-      if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-        switch (last_rec_event) {
-        case REC_EVENT_TRIG:
-          if (BUTTON_DOWN(Buttons.BUTTON3)) {
-            oled_display.textbox("CLEAR ", "TRACKS");
-            for (uint8_t n = 0; n < 16; ++n) {
-              mcl_seq.md_tracks[n].clear_track();
+  }
+  /*
+      if (recording) {
+        if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+          switch (last_rec_event) {
+          case REC_EVENT_TRIG:
+            if (BUTTON_DOWN(Buttons.BUTTON3)) {
+              oled_display.textbox("CLEAR ", "TRACKS");
+              for (uint8_t n = 0; n < 16; ++n) {
+                mcl_seq.md_tracks[n].clear_track();
+              }
+            } else {
+              oled_display.textbox("CLEAR ", "TRACK");
+              mcl_seq.md_tracks[last_step].clear_track();
             }
-          } else {
-            oled_display.textbox("CLEAR ", "TRACK");
-            mcl_seq.md_tracks[last_step].clear_track();
-          }
-          break;
-        case REC_EVENT_CC:
-          oled_display.textbox("CLEAR ", "LOCK");
-          active_track.clear_param_locks(last_param_id);
-          if (BUTTON_DOWN(Buttons.BUTTON3)) {
-            oled_display.textbox("CLEAR ", "LOCKS");
-            for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-              if (active_track.locks_params[c] > 0) {
-                active_track.clear_param_locks(active_track.locks_params[c] -
-                                               1);
+            break;
+          case REC_EVENT_CC:
+            oled_display.textbox("CLEAR ", "LOCK");
+            active_track.clear_param_locks(last_param_id);
+            if (BUTTON_DOWN(Buttons.BUTTON3)) {
+              oled_display.textbox("CLEAR ", "LOCKS");
+              for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+                if (active_track.locks_params[c] > 0) {
+                  active_track.clear_param_locks(active_track.locks_params[c] -
+                                                 1);
+                }
               }
             }
+            break;
           }
-          break;
+          return true;
         }
-        return true;
       }
-    }
-  }
+    */
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     recording = !recording;

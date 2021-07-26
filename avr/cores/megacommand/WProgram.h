@@ -34,7 +34,7 @@
 //   Serial.println(__PRETTY_FUNCTION__); \
 // }
 //
-#define DEBUG_CHECK_STACK() { if ((int) SP < 0x200 || (int)SP > 0x2200) { oled_display.textbox("SP: ", (uint16_t) SP); oled_display.display(); cli(); setLed2(); setLed(); while (1); } }
+#define DEBUG_CHECK_STACK() { if ((int) SP < 0x200 || (int)SP > 0x2200) { cli(); setLed2(); setLed(); while (1); } }
 #define DEBUG_PRINT_FN(x)
 
 #else

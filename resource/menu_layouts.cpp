@@ -93,7 +93,7 @@ menu_t<5> file_menu_layout = {
     0, 0
 };
 
-menu_t<19> seq_menu_layout = {
+menu_t<20> seq_menu_layout = {
     "SEQ",
     {
         //              m  r                    n                    d   p  f   o
@@ -116,6 +116,7 @@ menu_t<19> seq_menu_layout = {
         {"SHIFT:",      0, 5,                   5,                   28, 0,  12, 35},
         {"REVERSE:",    0, 3,                   3,                   29, 0,  13, 27},
         {"POLYPHONY",   0, 0,                   0,                   0,  9,  0,  0},
+        {"REC QUANT:",  0, 2,                   2,                   42, 0,  0,  25},
     },
     14, 0
 };

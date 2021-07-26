@@ -406,7 +406,7 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number,
   MD.setTrackParam(next_track, 0, machine_pitch, uart_);
   MD.triggerTrack(next_track, 127, uart_);
   if ((recording) && (MidiClock.state == 2)) {
-
+    reset_undo();
     mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
@@ -425,6 +425,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num) {
   MD.setTrackParam(next_track, 0, machine_pitch);
   MD.triggerTrack(next_track, 127);
   if ((recording) && (MidiClock.state == 2)) {
+    reset_undo();
     mcl_seq.md_tracks[next_track].record_track(127);
     mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
   }
@@ -437,6 +438,7 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
   }
   mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
   if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+    reset_undo();
     mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
   }
 }
@@ -447,6 +449,7 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
   }
   mcl_seq.ext_tracks[last_ext_track].note_off(note_num, velocity, uart_);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
+    reset_undo();
     mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(note_num);
   }
 }
@@ -479,10 +482,6 @@ void SeqPtcPage::draw_popup_octave() {
 }
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
-
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
 
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
 
@@ -602,7 +601,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       return true;
     }
   */
-
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (BUTTON_DOWN(Buttons.BUTTON1)) {
       re_init = true;
@@ -635,6 +633,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
 #endif
+    return true;
+  }
+  if (SeqPage::handleEvent(event)) {
     return true;
   }
 

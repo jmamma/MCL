@@ -387,11 +387,13 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       init();
       return true;
     }
-    if (show_seq_menu) {
-      seq_menu_page.enter();
+    if (show_seq_menu && seq_menu_page.enter()) {
+      show_seq_menu = false;
+      return true;
     }
-    if (show_step_menu) {
-      step_menu_page.enter();
+    if (show_step_menu && step_menu_page.enter()) {
+      show_step_menu = false;
+      return true;
     }
 
     show_seq_menu = false;
