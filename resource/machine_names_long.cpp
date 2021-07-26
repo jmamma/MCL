@@ -1,8 +1,8 @@
 #include "Elektron.h"
 
-md_machine_name_t machine_names[141] = {
+md_machine_name_t machine_names[142] = {
     {"GND---", 0},   {"GND-SN", 1},   {"GND-NS", 2},   {"GND-IM", 3},
-    {"GND-SW", 4},   {"GND-PU", 5},   {"NFX-EV", 7},   {"NFX-CO", 8},
+    {"GND-SW", 4},   {"GND-PU", 5},   {"NFX-EV", 7},   {"NFX-CO", 8},  {"NFX-4C", 9},
     {"TRX-BD", 16},  {"TRX-SD", 17},  {"TRX-XT", 18},  {"TRX-CP", 19},
     {"TRX-RS", 20},  {"TRX-CB", 21},  {"TRX-CH", 22},  {"TRX-OH", 23},
     {"TRX-CY", 24},  {"TRX-MA", 25},  {"TRX-CL", 26},  {"TRX-XC", 27},

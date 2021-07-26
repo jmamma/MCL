@@ -80,6 +80,7 @@
 
 #define NFX_EV_MODEL 7
 #define NFX_CO_MODEL 8
+#define NFX_4C_MODEL 9
 
 #define TRX_BD_MODEL 16
 #define TRX_SD_MODEL 17

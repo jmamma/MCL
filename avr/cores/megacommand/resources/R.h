@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <avr/pgmspace.h>
 #include "MCL.h"
 #include "MCL_impl.h"
@@ -251,11 +251,11 @@ struct __T_machine_names_long {
   static constexpr size_t sizeofof_mnm_machine_names = 240;
   union {
     md_machine_name_t machine_names[0];
-    char zz__machine_names[1128];
+    char zz__machine_names[1136];
   };
-  static constexpr size_t countof_machine_names = 1128 / sizeof(md_machine_name_t);
-  static constexpr size_t sizeofof_machine_names = 1128;
-  static constexpr size_t __total_size = 1368;
+  static constexpr size_t countof_machine_names = 1136 / sizeof(md_machine_name_t);
+  static constexpr size_t sizeofof_machine_names = 1136;
+  static constexpr size_t __total_size = 1376;
 };
 
 extern const unsigned char __R_machine_names_short[] PROGMEM;
@@ -268,11 +268,11 @@ struct __T_machine_names_short {
   static constexpr size_t sizeofof_mnm_machine_names_short = 140;
   union {
     short_machine_name_t md_machine_names_short[0];
-    char zz__md_machine_names_short[987];
+    char zz__md_machine_names_short[994];
   };
-  static constexpr size_t countof_md_machine_names_short = 987 / sizeof(short_machine_name_t);
-  static constexpr size_t sizeofof_md_machine_names_short = 987;
-  static constexpr size_t __total_size = 1127;
+  static constexpr size_t countof_md_machine_names_short = 994 / sizeof(short_machine_name_t);
+  static constexpr size_t sizeofof_md_machine_names_short = 994;
+  static constexpr size_t __total_size = 1134;
 };
 
 extern const unsigned char __R_machine_param_names[] PROGMEM;
@@ -285,11 +285,11 @@ struct __T_machine_param_names {
   static constexpr size_t sizeofof_mnm_model_param_names = 955;
   union {
     model_param_name_t md_model_param_names[0];
-    char zz__md_model_param_names[3045];
+    char zz__md_model_param_names[3090];
   };
-  static constexpr size_t countof_md_model_param_names = 3045 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_md_model_param_names = 3045;
-  static constexpr size_t __total_size = 4000;
+  static constexpr size_t countof_md_model_param_names = 3090 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_md_model_param_names = 3090;
+  static constexpr size_t __total_size = 4045;
 };
 
 extern const unsigned char __R_menu_layouts[] PROGMEM;

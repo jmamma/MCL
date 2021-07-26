@@ -1,4 +1,4 @@
-  
+﻿  
 __T_font_default *font_default;  
 void use_font_default() { font_default = (__T_font_default*) __use_resource(__R_font_default); }  
 __T_font_elektrothic *font_elektrothic;  

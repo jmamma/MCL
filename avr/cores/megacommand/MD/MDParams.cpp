@@ -66,6 +66,7 @@ model_to_param_names_t model_param_names[] = {
 
   { NFX_EV_MODEL, 582},
   { NFX_CO_MODEL, 591},
+  { NFX_4C_MODEL, 600},
 
   { TRX_BD_MODEL, 34},
   { TRX_B2_MODEL, 43},
@@ -121,12 +122,12 @@ model_to_param_names_t model_param_names[] = {
   { INP_GA_MODEL, 424},
   { INP_FA_MODEL, 430},
   { INP_EA_MODEL, 439},
-  { INP_CA_MODEL, 600},
+  { INP_CA_MODEL, 609},
 
   { INP_GB_MODEL, 424},
   { INP_FB_MODEL, 430},
   { INP_EB_MODEL, 439},
-  { INP_CB_MODEL, 600},
+  { INP_CB_MODEL, 609},
 
   { MID_MODEL,    448},
 

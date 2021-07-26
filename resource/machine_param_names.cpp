@@ -668,7 +668,17 @@ model_param_name_t md_model_param_names[] = {
     {"AMX", 6},
     {"MKU", 7},
     {"", 127},
-    // 600 - inp_cx_model_names
+    // 600 - nfx_4c_model_names
+    {"T1", 0},
+    {"T2", 1},
+    {"T3", 2},
+    {"T4", 3},
+    {"FF", 4},
+    {"FB", 5},
+    {"DRY", 6},
+    {"MIX", 7},
+    {"", 127},
+    // 609 - inp_cx_model_names
     {"ATK", 0},
     {"REL", 1},
     {"THR", 2},
@@ -678,7 +688,7 @@ model_param_name_t md_model_param_names[] = {
     {"IVL", 6},
     {"MKU", 7},
     {"", 127},
-    // 609 - end
+    // 618 - end
 };
 
 model_param_name_t mnm_model_param_names[] = {
