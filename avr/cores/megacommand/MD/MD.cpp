@@ -226,13 +226,14 @@ bool MDClass::probe() {
     connected = true;
   }
   if (connected) {
+    get_mutes();
     activate_enhanced_gui();
     activate_enhanced_midi();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     md_track_select.on();
     MD.global.extendedMode = 2;
-    get_mutes();
     seq_ptc_page.setup();
+
   }
 
   else {
