@@ -140,8 +140,8 @@ public:
   virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
   virtual void fillScreen(uint16_t color);
 
-private:
   bool textbox_enabled = false;
+private:
   uint16_t textbox_delay;
   uint16_t textbox_clock;
   char textbox_str[16];
