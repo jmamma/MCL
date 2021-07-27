@@ -320,7 +320,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      MD.activate_encoder_interface(step);
       send_locks(step);
       show_pitch = true;
 
