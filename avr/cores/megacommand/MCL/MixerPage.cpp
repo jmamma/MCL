@@ -58,6 +58,7 @@ void MixerPage::init() {
   oled_display.clearDisplay();
   oled_draw_routing();
   set_display_mode(MODEL_LEVEL);
+  first_track = 255;
 }
 
 void MixerPage::cleanup() {
@@ -222,7 +223,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (note_interface.is_note(track)) {
-        if (note_interface.notes_count_on() == 1) {
+        if (first_track == 255) {
+          first_track = track;
           MD.setStatus(0x22, track);
         }
       }
@@ -231,6 +233,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (note_interface.notes_count_on() == 0) {
+        first_track = 255;
         //  encoder_level_handle(mixer_page.encoders[0]);
         if (BUTTON_DOWN(Buttons.BUTTON4)) {
           route_page.toggle_routes_batch();
