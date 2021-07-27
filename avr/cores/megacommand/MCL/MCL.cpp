@@ -80,7 +80,6 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
-
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
 #ifdef OLED_DISPLAY
@@ -102,6 +101,7 @@ void MCL::setup() {
 }
 
 bool mcl_handleEvent(gui_event_t *event) {
+  /*
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -111,63 +111,9 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (device != &MD) {
       return true;
     }
-
-    uint8_t row = grid_page.bank * 16 + track;
-    if (event->mask == EVENT_BUTTON_RELEASED) {
-      if (grid_page.bank_popup > 0) {
-        if (note_interface.notes_all_off()) {
-          note_interface.init_notes();
-          grid_page.bank_popup_loadmask = 0;
-        }
-        return true;
-      }
-    }
-
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (grid_page.bank_popup > 0) {
-
-        uint8_t load_mode_old = mcl_cfg.load_mode;
-        uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
-
-        if (load_count == 0) {
-          grid_page.jump_to_row(row);
-          if (load_mode_old != LOAD_AUTO) {
-            mcl_cfg.load_mode = LOAD_MANUAL;
-          }
-          mcl_actions.init_chains();
-        }
-        if (load_count > 0) {
-          mcl_cfg.load_mode = LOAD_QUEUE;
-        }
-
-        if (load_count == 1) {
-          for (uint8_t n = 0; n < 16; n++) {
-            if (IS_BIT_SET16(grid_page.bank_popup_loadmask,n)) {
-              uint8_t r = grid_page.bank * 16 + n;
-              CLEAR_BIT16(grid_page.bank_popup_loadmask,n);
-              //Reload as queue.
-              grid_page.load_row(n, r);
-              break;
-            }
-          }
-        }
-
-        grid_page.load_row(track, row);
-
-        if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKB) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKC) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKD)) {
-          grid_page.close_bank_popup();
-        }
-        mcl_cfg.load_mode = load_mode_old;
-        return true;
-      }
-    }
-
   }
-
-  else if (EVENT_CMD(event)) {
+  */
+  if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
@@ -288,7 +234,6 @@ bool mcl_handleEvent(gui_event_t *event) {
         MD.restore_kit_params();
         break;
       }
-
       }
     }
 

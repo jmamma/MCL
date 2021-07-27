@@ -39,9 +39,9 @@ void GridPage::cleanup() {
 }
 
 void GridPage::load_row(uint8_t n, uint8_t row) {
-  if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask,n)) {
+  if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask, n)) {
     grid_load_page.group_load(row);
-    SET_BIT16(grid_page.bank_popup_loadmask,n);
+    SET_BIT16(grid_page.bank_popup_loadmask, n);
   }
 }
 
@@ -84,7 +84,7 @@ void GridPage::close_bank_popup() {
   last_page = nullptr;
   bank_popup = 0;
   note_interface.init_notes();
-  //Clear blink leds
+  // Clear blink leds
   MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 
@@ -811,9 +811,68 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    return false;
-  }
+    uint8_t mask = event->mask;
+    uint8_t port = event->port;
+    MidiDevice *device = midi_active_peering.get_device(port);
 
+    uint8_t track = event->source - 128;
+    if (device != &MD) {
+      return true;
+    }
+
+    uint8_t row = grid_page.bank * 16 + track;
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (grid_page.bank_popup > 0) {
+        if (note_interface.notes_all_off()) {
+          note_interface.init_notes();
+          grid_page.bank_popup_loadmask = 0;
+        }
+        return true;
+      }
+    }
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (grid_page.bank_popup > 0) {
+
+        uint8_t load_mode_old = mcl_cfg.load_mode;
+        uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
+
+        if (load_count == 0) {
+          grid_page.jump_to_row(row);
+          if (load_mode_old != LOAD_AUTO) {
+            mcl_cfg.load_mode = LOAD_MANUAL;
+          }
+          mcl_actions.init_chains();
+        }
+        if (load_count > 0) {
+          mcl_cfg.load_mode = LOAD_QUEUE;
+        }
+
+        if (load_count == 1) {
+          for (uint8_t n = 0; n < 16; n++) {
+            if (IS_BIT_SET16(grid_page.bank_popup_loadmask, n)) {
+              uint8_t r = grid_page.bank * 16 + n;
+              CLEAR_BIT16(grid_page.bank_popup_loadmask, n);
+              // Reload as queue.
+              grid_page.load_row(n, r);
+              break;
+            }
+          }
+        }
+
+        grid_page.load_row(track, row);
+
+        if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
+            !trig_interface.is_key_down(MDX_KEY_BANKB) &&
+            !trig_interface.is_key_down(MDX_KEY_BANKC) &&
+            !trig_interface.is_key_down(MDX_KEY_BANKD)) {
+          grid_page.close_bank_popup();
+        }
+        mcl_cfg.load_mode = load_mode_old;
+        return true;
+      }
+    }
+  }
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
