@@ -8,7 +8,7 @@
 class GridTask : public Task {
 
 public:
-  bool stop_hard_callback = true;
+  bool stop_hard_callback = false;
 
   char kit_names[NUM_DEVS][16];
 

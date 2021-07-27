@@ -33,6 +33,7 @@ public:
   int8_t disp_levels[16];
   char info_line2[9];
   uint8_t display_mode;
+  uint8_t first_track;
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
