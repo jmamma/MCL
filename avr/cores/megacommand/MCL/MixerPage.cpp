@@ -1,9 +1,14 @@
 #include "MCL_impl.h"
 
-#define FADER_LEN 16
+#define FADER_LEN 18
 #define FADE_RATE 16
 
-void MixerPage::set_display_mode(uint8_t param) { display_mode = param; }
+void MixerPage::set_display_mode(uint8_t param) {
+  if (display_mode != param) {
+    redraw_mask = -1;
+    display_mode = param;
+  }
+}
 
 #ifdef OLED_DISPLAY
 static void oled_draw_routing() {
@@ -59,6 +64,7 @@ void MixerPage::init() {
   oled_draw_routing();
   set_display_mode(MODEL_LEVEL);
   first_track = 255;
+  redraw_mask = -1;
 }
 
 void MixerPage::cleanup() {
@@ -103,6 +109,7 @@ void encoder_level_handle(EncoderParent *enc) {
       }
       // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
       mixer_page.set_level(i, track_newval);
+      SET_BIT16(mixer_page.redraw_mask, i);
     }
   }
   enc->cur = 64 + dir;
@@ -151,6 +158,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
       }
       MD.setTrackParam(i, param, newval);
       MD.kit.params[i][param] = newval;
+      SET_BIT16(redraw_mask, i);
     }
   }
   enc->cur = 64 + dir;
@@ -164,10 +172,12 @@ void MixerPage::display() {
   uint8_t fader_level;
   uint8_t meter_level;
   uint8_t fader_x = 0;
+  constexpr uint8_t fader_y = 11;
 
   if (oled_display.textbox_enabled) {
-  oled_display.clearDisplay();
-  oled_draw_routing();
+    oled_display.clearDisplay();
+    oled_draw_routing();
+    redraw_mask = -1;
   }
   for (int i = 0; i < 16; i++) {
 
@@ -178,21 +188,28 @@ void MixerPage::display() {
     }
 
     fader_level = ((fader_level * 0.00787) * FADER_LEN) + 0;
-    meter_level = ((disp_levels[i] * 0.00787) * fader_level) + 0;
-    meter_level = min(FADER_LEN, meter_level);
+    meter_level = ((disp_levels[i] * 0.00787) * FADER_LEN) + 0;
+    meter_level = min(fader_level, meter_level);
 
-    oled_display.fillRect(0 + i * 8, 11, 6, FADER_LEN + 1, BLACK);
-
+    if (IS_BIT_SET16(redraw_mask, i)) {
+      oled_display.fillRect(0 + i * 8, fader_y - 1, 6, FADER_LEN + 1, BLACK);
+      oled_display.drawRect(fader_x, fader_y + (FADER_LEN - fader_level), 6,
+                            fader_level + 2, WHITE);
+    }
     if (note_interface.is_note_on(i)) {
-      oled_display.fillRect(fader_x, 13 + (FADER_LEN - fader_level), 6,
+      oled_display.fillRect(fader_x, fader_y + 1 + (FADER_LEN - fader_level), 6,
                             fader_level, WHITE);
     } else {
-      oled_display.fillRect(fader_x + 1, 13 + (FADER_LEN - meter_level), 4,
-                            meter_level, WHITE);
+
+      oled_display.fillRect(fader_x + 1,
+                            fader_y + 1 + (FADER_LEN - fader_level), 4,
+                            FADER_LEN - meter_level - 1, BLACK);
+      oled_display.fillRect(fader_x + 1,
+                            fader_y + 1 + (FADER_LEN - meter_level), 4,
+                            meter_level + 1, WHITE);
     }
-    oled_display.drawRect(fader_x, 12 + (FADER_LEN - fader_level), 6,
-                          fader_level + 1, WHITE);
     fader_x += 8;
+    CLEAR_BIT16(redraw_mask, i);
   }
 
   uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
@@ -203,7 +220,8 @@ void MixerPage::display() {
       disp_levels[n] -= dec;
     }
   }
-  oled_display.display();
+  if (!redraw_mask) { oled_display.display(); }
+  else { redraw_mask = -1; }
   oled_display.setFont(oldfont);
 }
 
@@ -232,6 +250,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
+      SET_BIT16(redraw_mask, track);
       if (note_interface.notes_count_on() == 0) {
         first_track = 255;
         //  encoder_level_handle(mixer_page.encoders[0]);
@@ -343,6 +362,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == 32) {
     return;
   } // don't process mute
+  SET_BIT16(mixer_page.redraw_mask, track);
   for (int i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
       MD.setTrackParam(i, track_param, value);
@@ -352,6 +372,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       if (track_param == 33) {
         MD.kit.levels[i] = value;
       }
+      SET_BIT16(mixer_page.redraw_mask, i);
     }
   }
   mixer_page.set_display_mode(track_param);
