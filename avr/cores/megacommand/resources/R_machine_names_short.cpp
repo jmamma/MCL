@@ -150,7 +150,7 @@ const unsigned char __R_machine_names_short[] PROGMEM = {
   111,
   6,
   109,
-  52,
+  85,
   67,
   111,
   219,

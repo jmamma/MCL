@@ -66,7 +66,7 @@ model_to_param_names_t model_param_names[] = {
 
   { NFX_EV_MODEL, 582},
   { NFX_CO_MODEL, 591},
-  { NFX_4C_MODEL, 600},
+  { NFX_UC_MODEL, 600},
 
   { TRX_BD_MODEL, 34},
   { TRX_B2_MODEL, 43},

@@ -668,11 +668,11 @@ model_param_name_t md_model_param_names[] = {
     {"AMX", 6},
     {"MKU", 7},
     {"", 127},
-    // 600 - nfx_4c_model_names
+    // 600 - nfx_uc_model_names
     {"T1", 0},
     {"T2", 1},
-    {"T3", 2},
-    {"T4", 3},
+    {"TD", 2},
+    {"TI", 3},
     {"FF", 4},
     {"FB", 5},
     {"DRY", 6},

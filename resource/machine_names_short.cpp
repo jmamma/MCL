@@ -2,7 +2,7 @@
 
 short_machine_name_t md_machine_names_short[142] = {
     {"GN", "--", 0},   {"GN", "SN", 1},   {"GN", "NS", 2},   {"GN", "IM", 3},
-    {"GN", "SW", 4},   {"GN", "PU", 5},   {"NF", "EV", 7},   {"NF", "CO", 8},  {"NF", "4C", 9},
+    {"GN", "SW", 4},   {"GN", "PU", 5},   {"NF", "EV", 7},   {"NF", "CO", 8},  {"NF", "UC", 9},
     {"TR", "BD", 16},  {"TR", "SD", 17},  {"TR", "XT", 18},  {"TR", "CP", 19},
     {"TR", "RS", 20},  {"TR", "CB", 21},  {"TR", "CH", 22},  {"TR", "OH", 23},
     {"TR", "CY", 24},  {"TR", "MA", 25},  {"TR", "CL", 26},  {"TR", "XC", 27},
