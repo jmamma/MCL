@@ -54,6 +54,10 @@ MCL 4.00 20/06/2021
 	  Mixer Page:
 	  - [ No + Trig ] revert parameter edits.
 
+      Chromatic Page:
+	  - [ Up/Down ] change octave
+	  - [ Left/Right ] transpose
+
 - Changes:
  Grids A/B are now relabelled to X/Y.
  Grid rows are no longer labelled numerically and instead represented by the corresponding
