@@ -165,6 +165,15 @@ void init(void) {
 
   DDRE |= _BV(PE4) | _BV(PE5);
 
+  //For MC SMD. Level shifter 1 + 2 enable.
+  //PL4 == MEGA2560 level shifter enable
+  //PL3 == Atmega16/34 level shifter enable
+  //Only one should be active at any time.
+
+  DDRL |= _BV(PL4) | _BV(PL3);
+  PORTL |= _BV(PL4);
+  PORTL &= ~_BV(PL3);
+
   timer_init();
   //  m_init();
 }
