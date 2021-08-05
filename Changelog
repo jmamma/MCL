@@ -28,7 +28,7 @@ MCL 4.00 20/06/2021
 	    length for the first time.
 
    MCL commands:
-      - [ Song Button ] opens Page Select page.
+      - [ Global ] opens Page Select page.
 
       Grid Page:
 	  - [ Up/Down/Left/Right ] navigate the grid by positioning the grid cursor.
@@ -40,7 +40,7 @@ MCL 4.00 20/06/2021
 	  - [ Function + Yes ] opens Save page. Press and hold [ Yes ] again for Group Save menu.
       - You can now load patterns/rows in the traditional MD way using the [ Bank + Trig buttons ].
 	    -- [ Bank + Trig ] group loads the selected row, from the MCL grid.
-        -- [ Bank + Multiple Trigs ] creates a chain queue consistencing of consecutive group
+        -- [ Bank + Multiple Trigs ] creates a chain queue consisting of consecutive group
 		   loads corresponding rows.
 
       Load Page:

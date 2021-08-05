@@ -90,8 +90,8 @@ void GridSavePage::display() {
         oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
         mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
       } else {
-        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 15);
-        oled_display.print(modestr);
+        oled_display.setCursor(data_x + 3, MCLGUI::s_menu_y + 15);
+        oled_display.print("MD");
         mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
       }
     }
@@ -138,10 +138,10 @@ void GridSavePage::save() {
 
 void GridSavePage::get_modestr(char *modestr) {
 
-  strcpy(modestr, "SEQ");
+  strcpy(modestr, "SAVE");
   if (MidiClock.state != 2) {
     if (encoders[0]->cur == SAVE_MD) {
-      strcpy(modestr, "MD");
+      strcpy(modestr, "IMPORT");
     }
     if (encoders[0]->cur == SAVE_MERGE) {
       strcpy(modestr, "MERGE");
