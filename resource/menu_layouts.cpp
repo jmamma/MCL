@@ -10,12 +10,12 @@
   ExitFunc
   ExitPage
  ***/
-menu_t<7> system_menu_layout = {
+menu_t<6> system_menu_layout = {
     "CONFIG",
     {
         //               m  r  n  d  p  f  o
         {"LOAD PROJECT", 0, 0, 0, 0, 1, 0, 0},
-        {"CONV PROJECT", 0, 0, 0, 0, 2, 0, 0},
+        //{"CONV PROJECT", 0, 0, 0, 0, 2, 0, 0},
         {"NEW PROJECT",  0, 0, 0, 0, 0, 2, 0},
         {"MIDI",         0, 0, 0, 0, 3, 0, 0},
         {"MACHINEDRUM",  0, 0, 0, 0, 4, 0, 0},

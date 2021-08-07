@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <avr/pgmspace.h>
 #include "MCL.h"
 #include "MCL_impl.h"
@@ -355,12 +355,12 @@ struct __T_menu_layouts {
   static constexpr size_t countof_auxconfig_menu_layout = 33 / sizeof(menu_t<1>);
   static constexpr size_t sizeofof_auxconfig_menu_layout = 33;
   union {
-    menu_t<7> system_menu_layout[0];
-    char zz__system_menu_layout[159];
+    menu_t<6> system_menu_layout[0];
+    char zz__system_menu_layout[138];
   };
-  static constexpr size_t countof_system_menu_layout = 159 / sizeof(menu_t<7>);
-  static constexpr size_t sizeofof_system_menu_layout = 159;
-  static constexpr size_t __total_size = 1413;
+  static constexpr size_t countof_system_menu_layout = 138 / sizeof(menu_t<6>);
+  static constexpr size_t sizeofof_system_menu_layout = 138;
+  static constexpr size_t __total_size = 1392;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

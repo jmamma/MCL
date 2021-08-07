@@ -131,7 +131,7 @@ const menu_function_t menu_target_functions[] PROGMEM = {
 };
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
-MenuPage<7> system_page(&options_param1, &options_param2);
+MenuPage<6> system_page(&options_param1, &options_param2);
 MenuPage<6> midi_config_page(&config_param1, &config_param3);
 MenuPage<3> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);

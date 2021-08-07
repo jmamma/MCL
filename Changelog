@@ -49,7 +49,8 @@ MCL 4.00 20/06/2021
 	  Slot Menu: Hold [ No ] button to open
 	  - [ Up/Down/Left/Right ] to select multiple slots in the grid.
 	  - [ Clear/Copy/Paste ] to clear/copy/paste selected slot(s)
-	  - [ Yes ] load selected slots. Slots are loaded according to the Chain settings in the LoadPage.
+	  - [ Yes ] load selected slots. Slots are loaded according to the load mode setting in the
+	    LoadPage.
 
 	  Mixer Page:
 	  - [ No + Trig ] revert parameter edits.
@@ -59,6 +60,7 @@ MCL 4.00 20/06/2021
 	  - [ Left/Right ] transpose
 
 - Changes:
+ Chain Mode renamed to Load Mode.
  Grids A/B are now relabelled to X/Y.
  Grid rows are no longer labelled numerically and instead represented by the corresponding
 
@@ -79,12 +81,18 @@ MCL 4.00 20/06/2021
  Slot Menu:
 
  Added Len parameter for adjusting a slot's length without loading.
- Row parameter has been named to Jump. In Chain Auto mode, the Jump parameter corresponds to the
+ Row parameter has been named to Jump. In LOad Auto mode, the Jump parameter corresponds to the
  destination of next slot transition.
 
-- Chain Mode Enhancements:
+ Save Page:
+ Save mode names changes:
+   - SEQ renamed SAVE
+   - MD renamed IMPORT
+   - MERGE unchanged.
 
- Each column in the grid now has it's own dedicated chain setting. It can be either Manual, Auto or Queue.
+- Load Mode Enhancements:
+
+ Each column in the grid now has it's own dedicated load setting. It can be either Manual, Auto or Queue.
 
  Chain Queue is a new mode that has been added for realtime looping.
 
@@ -97,7 +105,7 @@ MCL 4.00 20/06/2021
  A column's queue can be cleared by switching chain mode to either Manual or Auto and then loading a slot in
  that column.
 
- As each column has an independent chain setting, it is possible to have some slots chaining automatically
+ As each column has an independent load setting, it is possible to have some slots chaining automatically
  (Auto) according to their Loop/Jump setting, other slots can be looping in an improvised queue (Queue),
  and then the remaining slots could be left static via manual chain (Manual).
 
