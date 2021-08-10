@@ -429,7 +429,7 @@ void SeqExtStepPage::draw_viewport_minimap() {
 
   uint16_t s = fov_offset * (width - 1) / pattern_end;
   uint16_t w = fov_length * (width - 2) / pattern_end;
-  uint16_t p = cur_tick_x * (width - 1) / pattern_end;
+  uint16_t p = min(width,  cur_tick_x * (width - 1) / pattern_end);
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 #endif
@@ -808,10 +808,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
                        1;
       }
     }
-    if (SeqPage::handleEvent(event)) {
-    }
-    return true;
   }
+  if (SeqPage::handleEvent(event)) {
+   return true;
+  }
+
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
