@@ -85,7 +85,7 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
         }
         locks_slide_data[c].err += locks_slide_data[c].dy;
         locks_slide_data[c].x0++;
-        if (locks_slide_data[c].x0 > locks_slide_data[c].x1) {
+        if (locks_slide_data[c].x0 >= locks_slide_data[c].x1) {
           locks_slide_data[c].init();
           break;
         }
@@ -98,7 +98,7 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
           }
           locks_slide_data[c].err += locks_slide_data[c].dx;
           locks_slide_data[c].y0++;
-          if (locks_slide_data[c].y0 > locks_slide_data[c].y1) {
+          if (locks_slide_data[c].y0 >= locks_slide_data[c].y1) {
             locks_slide_data[c].init();
             break;
           }
