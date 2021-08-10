@@ -691,12 +691,17 @@ end:
   return sendRequest(data, i, send);
 }
 
+void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
+  MDKit *kit_ = &kit;
+  memcpy(kit_->params_orig[track], machine->params, 24);
+}
+
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, 24);
-  memcpy(kit_->params_orig[track], machine->params, 24);
+  setOrigParams(track, machine);
 
   if (set_level) {
     kit_->levels[track] = machine->level;

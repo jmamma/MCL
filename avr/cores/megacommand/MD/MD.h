@@ -266,7 +266,7 @@ public:
   /**
    * Inserts a machine in to the MDKit object
    **/
-
+  void setOrigParams(uint8_t track, MDMachine *machine);
   void insertMachineInKit(uint8_t track, MDMachine *machine,
                           bool set_level = true);
   /**

@@ -168,6 +168,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     if (mcl_cfg.auto_normalize == 1) {
       normalize();
     }
+    MD.setOrigParams(column, &machine);
   }
   // Write data to sd
   len = sizeof(MDTrack);
