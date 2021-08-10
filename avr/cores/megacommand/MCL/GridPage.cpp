@@ -674,6 +674,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
   temp_slot.load_from_grid(getCol(), getRow());
 
+  uint8_t load_mode_old = mcl_cfg.load_mode;
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() &&
                  slot_undo_y == getRow();
 
@@ -748,7 +749,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     } else if (slot_update == 1) {
       oled_display.textbox("SLOT ", "UPDATE");
     }
-
     if (slot_load) {
       if (height > 1) {
         mcl_cfg.load_mode = LOAD_QUEUE;
@@ -799,7 +799,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     proj.sync_grid();
     load_slot_models();
   }
-
+  mcl_cfg.load_mode = load_mode_old;
   slot_apply = 0;
   slot_load = 0;
   slot_clear = 0;
