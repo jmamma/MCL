@@ -59,6 +59,7 @@ static MCLEncoder *opt_param2_capture = nullptr;
 void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
+  reset_undo();
   if (page_select >= page_count ||
       page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
     page_select = 0;
