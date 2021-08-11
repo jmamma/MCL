@@ -881,7 +881,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     if (pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
           0) {
@@ -899,6 +899,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
+/*
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -921,6 +922,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       return;
     }
   }
+*/
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -1007,6 +1009,7 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
+/*
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
@@ -1015,6 +1018,7 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   Midi2.addOnControlChangeCallback(this,
                                    (midi_callback_ptr_t)&SeqExtStepMidiEvents::
                                        onControlChangeCallback_Midi2);
+*/
   state = true;
 }
 
@@ -1023,6 +1027,7 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+/*
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(
@@ -1031,5 +1036,6 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   Midi2.removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::
                 onControlChangeCallback_Midi2);
+*/
   state = false;
 }
