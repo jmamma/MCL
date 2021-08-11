@@ -30,7 +30,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == timing_mid) {
     step_count_inc();
     if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
-        seq_ptc_page.note_off_ext(last_note_on, 0, uart);
+        seq_ptc_page.note_off_ext(last_note_on, 0, track_number, uart);
         last_note_on = 255;
     }
     mod12_counter = 0;
@@ -45,7 +45,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
             break;
           case EXT_ARP_TRACK_TYPE:
             seq_ptc_page.note_on_ext(notes[idx] + oct * 12, 127, track_number, uart);
-            last_note_on = notes[idx];
+            last_note_on = notes[idx] + oct * 12;
             break;
         }
         idx++;

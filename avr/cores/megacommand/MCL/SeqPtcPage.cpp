@@ -724,14 +724,13 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if (SeqPage::midi_device != active_device ||
       (last_ext_track != n)) {
     SeqPage::midi_device = active_device;
-    seq_ptc_page.set_last_ext_track(n);
+    last_ext_track = n;
     seq_ptc_page.config();
   } else {
     SeqPage::midi_device = active_device;
   }
 
   pitch = seq_ptc_page.process_ext_pitch(note_num, note_on);
-  seq_ptc_page.set_last_ext_track(channel);
   seq_ptc_page.config_encoders();
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
@@ -746,15 +745,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   }
 #endif
   return;
-}
-
-void SeqPtcPage::set_last_ext_track(uint8_t channel) {
-  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-    if (mcl_seq.ext_tracks[n].channel == channel) {
-      last_ext_track = n;
-      break;
-    }
-  }
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
@@ -787,7 +777,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) { return; }
 
-  seq_ptc_page.set_last_ext_track(n);
+  last_ext_track = n;
   seq_ptc_page.config_encoders();
 
   seq_ptc_page.render_arp(false);
