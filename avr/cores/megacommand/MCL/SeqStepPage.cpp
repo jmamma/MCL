@@ -49,6 +49,8 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
+  opt_midi_device_capture = &MD;
+
   pitch_param = 255;
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
@@ -400,7 +402,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    opt_midi_device_capture = midi_device;
     uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
     if (note_interface.get_first_md_note() == 255) {
       step = 255;

@@ -314,8 +314,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
   }
-
-#ifdef OLED_DISPLAY
   // activate show_seq_menu only if S2 press is not a key combination
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
@@ -341,8 +339,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return true;
     } else if (!show_seq_menu) {
       show_seq_menu = true;
-      // capture current midi_device value
-      opt_midi_device_capture = midi_device;
       // capture current page.
       opt_seqpage_capture = this;
 
@@ -352,12 +348,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_speed = active_track.speed;
         opt_length = active_track.length;
       } else {
-#ifdef EXT_TRACKS
         opt_trackid = last_ext_track + 1;
         opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
         opt_length = mcl_seq.ext_tracks[last_ext_track].length;
         opt_channel = mcl_seq.ext_tracks[last_ext_track].channel + 1;
-#endif
       }
 
       opt_param1_capture = (MCLEncoder *)encoders[0];
@@ -403,68 +397,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     init();
     return true;
   }
-#else
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-    // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if ((note_interface.notes_count_on() != 0) &&
-        (GUI.currentPage() != &seq_ptc_page)) {
-      uint8_t note = 255;
-      for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
-        if (note_interface.is_note_on(n)) {
-          note = n;
-        }
-      }
-      if (note == 255) {
-        return false;
-      }
-      step_select = note;
-      show_step_menu = true;
-      GUI.pushPage(&step_menu_page);
-    } else {
-      if (opt_midi_device_capture == DEVICE_MD) {
-        DEBUG_PRINTLN(F("okay using MD for length update"));
-        opt_trackid = last_md_track + 1;
-
-        opt_speed = get_md_speed(mcl_seq.md_tracks[last_md_track].speed);
-      } else {
-#ifdef EXT_TRACKS
-        opt_trackid = last_ext_track + 1;
-        opt_speed = get_ext_speed(mcl_seq.ext_tracks[last_ext_track].speed);
-#endif
-      }
-      // capture current midi_device value
-      opt_midi_device_capture = midi_device;
-      // capture current page.
-      opt_seqpage_capture = this;
-      GUI.pushPage(&seq_menu_page);
-      show_seq_menu = true;
-      return true;
-    }
-  }
-#endif
-
-  // legacy enc push page switching code
-  /*
-    if (note_interface.notes_all_off() || (note_interface.notes_count() == 0)) {
-      if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-        GUI.setPage(&seq_step_page);
-        return false;
-      }
-      if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-        GUI.setPage(&seq_rtrk_page);
-        return false;
-      }
-      if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-
-        return false;
-      }
-      if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-
-        GUI.setPage(&seq_ptc_page);
-        return false;
-      }
-    }
-  */
 
   return false;
 }
@@ -1514,35 +1446,17 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 #endif
 }
 
-#ifndef OLED_DISPLAY
-void SeqPage::display() {
-  for (uint8_t i = 0; i < 2; i++) {
-    for (int j = 0; j < 16; j++) {
-      if (GUI.lines[i].data[j] == 0) {
-        GUI.lines[i].data[j] = ' ';
-      }
-    }
-    LCD.goLine(i);
-    LCD.puts(GUI.lines[i].data);
-    GUI.lines[i].changed = false;
-  }
-  GUI.setLine(GUI.LINE1);
-}
-#else
-
 //  ref: design/Sequencer.png
 void SeqPage::display() {
 
-  bool is_md = (midi_device == &MD);
+  bool is_md = (opt_midi_device_capture == &MD);
   const char *int_name = midi_active_peering.get_device(UART1_PORT)->name;
   const char *ext_name = midi_active_peering.get_device(UART2_PORT)->name;
 
   uint8_t track_id = last_md_track;
-#ifdef EXT_TRACKS
   if (!is_md) {
     track_id = last_ext_track;
   }
-#endif
   track_id += 1;
 
   //  draw current active track
@@ -1571,12 +1485,8 @@ void SeqPage::display() {
     }
   }
 }
-#endif
 
 void SeqPage::draw_knob_frame() {
-#ifndef OLED_DISPLAY
-  return;
-#endif
   mcl_gui.draw_knob_frame();
   // draw frame
 }

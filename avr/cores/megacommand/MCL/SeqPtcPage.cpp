@@ -168,6 +168,7 @@ void ptc_pattern_len_handler(EncoderParent *enc) {
 }
 
 void SeqPtcPage::loop() {
+  opt_midi_device_capture = midi_device;
   if (re_init) {
     init();
   }
