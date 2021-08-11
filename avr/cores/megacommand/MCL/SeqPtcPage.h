@@ -26,6 +26,7 @@ public:
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
 
+  void onChannelPressureCallback_Midi2(uint8_t *msg);
   void onAfterTouchCallback_Midi2(uint8_t *msg);
   void onPitchWheelCallback_Midi2(uint8_t *msg);
 };
@@ -55,7 +56,6 @@ public:
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
 
-  void set_last_ext_track(uint8_t channel);
   void trig_md(uint8_t note_num, uint8_t track_number = 255,
                uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);
   void trig_md_fromext(uint8_t note_num);

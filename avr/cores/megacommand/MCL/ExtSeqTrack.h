@@ -165,8 +165,8 @@ public:
   void pitch_bend(uint16_t value, MidiUartParent *uart_ = nullptr);
   void after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_ = nullptr);
   void send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_ = nullptr);
-  ALWAYS_INLINE()
-  void noteon_conditional(uint8_t condition, uint8_t note,
+  void channel_pressure(uint8_t pressure, MidiUartParent *uart_ = nullptr);
+  ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note,
                           uint8_t velocity = 100);
   void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);
   uint8_t find_next_lock(uint8_t step, uint8_t lock_idx, uint16_t &curidx,

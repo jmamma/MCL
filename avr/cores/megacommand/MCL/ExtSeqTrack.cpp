@@ -715,6 +715,11 @@ void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartParent *uart_) {
   uart_->sendPitchBend(channel, value);
 }
 
+void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart_->sendChannelPressure(channel, pressure);
+}
+
 void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
   uart_->sendPolyKeyPressure(channel, note, pressure);
