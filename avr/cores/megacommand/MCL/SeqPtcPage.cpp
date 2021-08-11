@@ -719,10 +719,11 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // otherwise, translate the message and send it back to MIDI2.
   auto active_device = midi_active_peering.get_device(UART2_PORT);
   uint8_t n = mcl_seq.find_ext_track(channel);
-  if (n == 255) { return; }
+  if (n == 255) {
+    return;
+  }
 
-  if (SeqPage::midi_device != active_device ||
-      (last_ext_track != n)) {
+  if (SeqPage::midi_device != active_device || (last_ext_track != n)) {
     SeqPage::midi_device = active_device;
     last_ext_track = n;
     seq_ptc_page.config();
@@ -775,7 +776,9 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     return;
   }
   uint8_t n = mcl_seq.find_ext_track(channel);
-  if (n == 255) { return; }
+  if (n == 255) {
+    return;
+  }
 
   last_ext_track = n;
   seq_ptc_page.config_encoders();
@@ -797,6 +800,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
+
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
     // If external keyboard controlling MD param, send parameter updates
@@ -816,12 +820,29 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         MD.setTrackParam(n, param - 16, value);
       }
     }
-  } else {
-    if (channel >= mcl_seq.num_ext_tracks) {
-      return;
-    }
-    mcl_seq.ext_tracks[channel].send_cc(msg[1], msg[2]);
+    return;
   }
+
+  uint8_t n = mcl_seq.find_ext_track(channel);
+  if (n == 255) {
+    return;
+  }
+
+  mcl_seq.ext_tracks[channel].send_cc(msg[1], msg[2]);
+
+  if (GUI.currentPage() == &seq_extstep_page && SeqPage::pianoroll_mode > 0) {
+    if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 ==
+        130) {
+      mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
+          param + 1;
+      SeqPage::param_select = param;
+    }
+  }
+
+  if (SeqPage::recording) {
+    mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
+  }
+  mcl_seq.ext_tracks[n].update_param(param, value);
 }
 
 void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
