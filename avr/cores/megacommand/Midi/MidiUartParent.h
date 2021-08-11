@@ -136,7 +136,7 @@ public:
     m_putc(byte);
 #endif
   }
-
+  /*
   CallbackVector1<MidiCallback, 8, uint8_t *> noteOnCallbacks;
   CallbackVector1<MidiCallback, 8, uint8_t *> noteOffCallbacks;
   CallbackVector1<MidiCallback, 8, uint8_t *> ccCallbacks;
@@ -190,7 +190,7 @@ public:
   void removeOnControlChangeCallback(MidiCallback *obj) {
     ccCallbacks.remove(obj);
   }
-
+  */
   ALWAYS_INLINE() void resetRunningStatus() { running_status = 0; }
 
   ALWAYS_INLINE() void sendNoteOn(uint8_t note, uint8_t velocity) {
@@ -298,7 +298,7 @@ public:
   }
 
   void sendPitchBend(uint8_t channel, int16_t pitchbend) {
-    pitchbend += 8192;
+    //pitchbend += 8192;
     sendMessage((uint8_t)(MIDI_PITCH_WHEEL | channel), pitchbend,
                 (pitchbend >> 7));
   }

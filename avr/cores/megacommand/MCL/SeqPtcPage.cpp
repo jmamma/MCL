@@ -809,26 +809,58 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
-  // If external keyboard controlling MD param, send parameter updates
-  // to all polyphonic tracks
-  if ((param < 16) || (param > 39)) {
-    return;
-  }
-  // If Midi2 forwarding data to port 1 , ignore this to prevent double
-  // messages.
-  //
-  if (mcl_cfg.midi_forward == 2) {
-    return;
-  }
   if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
       (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+    // If external keyboard controlling MD param, send parameter updates
+    // to all polyphonic tracks
+    if ((param < 16) || (param > 39)) {
+      return;
+    }
+    // If Midi2 forwarding data to port 1 , ignore this to prevent double
+    // messages.
+    //
+
+    if (mcl_cfg.midi_forward == 2) {
+      return;
+    }
     for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
       if (IS_BIT_SET16(mcl_cfg.poly_mask, n)) {
         MD.setTrackParam(n, param - 16, value);
       }
     }
+  } else {
+    if (channel >= mcl_seq.num_ext_tracks) {
+      return;
+    }
+    mcl_seq.ext_tracks[channel].send_cc(msg[1], msg[2]);
   }
 }
+
+void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
+  if (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) {
+    return;
+  }
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (channel >= mcl_seq.num_ext_tracks) {
+    return;
+  }
+  int16_t pitch = msg[1] | (msg[2] << 7);
+  mcl_seq.ext_tracks[channel].pitch_bend(pitch);
+}
+
+void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
+  if (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) {
+    return;
+  }
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (channel >= mcl_seq.num_ext_tracks) {
+    return;
+  }
+  mcl_seq.ext_tracks[channel].after_touch(msg[1], msg[2]);
+}
+
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -873,6 +905,11 @@ void SeqPtcMidiEvents::setup_callbacks() {
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
+  Midi2.addOnPitchWheelCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
+  Midi2.addOnAfterTouchCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
+
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
@@ -887,9 +924,14 @@ void SeqPtcMidiEvents::remove_callbacks() {
     return;
   }
 
-  DEBUG_PRINTLN(F("remove calblacks"));
+  DEBUG_PRINTLN(F("remove callbacks"));
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.removeOnPitchWheelCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
+  Midi2.removeOnAfterTouchCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
+
   Midi2.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
   Midi.removeOnControlChangeCallback(

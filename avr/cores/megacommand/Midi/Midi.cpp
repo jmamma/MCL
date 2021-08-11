@@ -97,7 +97,7 @@ again:
       uint8_t tmp_msg[1];
       tmp_msg[0] = uart->uart_port;
 
-      uart->recvActiveSenseCallbacks.call((uint8_t *)&tmp_msg);
+      //uart->recvActiveSenseCallbacks.call((uint8_t *)&tmp_msg);
       uart->recvActiveSenseTimer = 0;
     }
 

@@ -710,6 +710,22 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   }
 }
 
+void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart_->sendPitchBend(channel, value);
+}
+
+void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart_->sendPolyKeyPressure(channel, note, pressure);
+}
+
+void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart_->sendCC(channel, cc, value);
+}
+
+
 void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   param_id += 1;
 
