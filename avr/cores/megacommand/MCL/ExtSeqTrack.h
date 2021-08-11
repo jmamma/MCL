@@ -20,6 +20,11 @@
 
 #define UART2_PORT 2
 
+#define PARAM_PRG 128
+#define PARAM_PB 129
+#define PARAM_OFF 130
+#define PARAM_LEARN 131
+
 // EXT Track speed
 #define EXT_SPEED_270_1X 2
 #define EXT_SPEED_270_2X 1

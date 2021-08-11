@@ -519,6 +519,9 @@ void ExtSeqTrack::reset_params() {
       if (param < 128) {
         uart->sendCC(channel, param, locks_params_orig[c]);
       }
+      if (param == PARAM_PB) {
+        uart->sendPitchBend(channel, 8192);
+      }
     }
   }
 }
@@ -528,9 +531,13 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   if (ev.is_lock) {
     // plock
     uint8_t param = locks_params[ev.lock_idx] - 1;
-    if (param == 128) {
+    if (param == PARAM_PRG) {
       uart->sendProgramChange(channel, ev.event_value);
-    } else {
+    }
+    else if (param == PARAM_PB) {
+      uart->sendPitchBend(channel, ev.event_value << 7);
+    }
+    else {
       uart->sendCC(channel, param, ev.event_value);
       // event_on == lock slide
       if (ev.event_on) {

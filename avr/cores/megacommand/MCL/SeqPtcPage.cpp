@@ -832,14 +832,14 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   if (GUI.currentPage() == &seq_extstep_page && SeqPage::pianoroll_mode > 0) {
     if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 ==
-        130) {
+        PARAM_LEARN) {
       mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
           param + 1;
       SeqPage::param_select = param;
     }
   }
 
-  if (SeqPage::recording) {
+  if (SeqPage::recording && (MidiClock.state == 2)) {
     mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
   }
   mcl_seq.ext_tracks[n].update_param(param, value);
@@ -856,6 +856,7 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
   }
   int16_t pitch = msg[1] | (msg[2] << 7);
   mcl_seq.ext_tracks[channel].pitch_bend(pitch);
+  mcl_seq.ext_tracks[channel].record_track_locks(PARAM_PB, msg[2], SeqPage::slide);
 }
 
 void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {

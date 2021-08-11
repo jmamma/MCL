@@ -65,7 +65,7 @@ void SeqExtStepPage::init() {
   opt_midi_device_capture = midi_device;
 
   SeqPage::init();
-  param_select = 129;
+  param_select = PARAM_OFF;
   trig_interface.on();
   note_interface.state = true;
   x_notes_down = 0;
@@ -578,7 +578,7 @@ void SeqExtStepPage::loop() {
       if (pianoroll_mode > 0) {
         if (mcl_seq.ext_tracks[last_ext_track]
                 .locks_params[pianoroll_mode - 1] == 0) {
-          param_select = 129;
+          param_select = PARAM_OFF;
         } else {
           param_select = mcl_seq.ext_tracks[last_ext_track]
                              .locks_params[pianoroll_mode - 1] -
@@ -588,7 +588,7 @@ void SeqExtStepPage::loop() {
       last_pianoroll_mode = pianoroll_mode;
     }
     if ((pianoroll_mode > 0)) {
-      if (param_select == 129) {
+      if (param_select == PARAM_OFF) {
         mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] = 0;
       } else {
         mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
@@ -885,7 +885,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
           0) {
-        param_select = 129;
+        param_select = PARAM_OFF;
       } else {
         param_select = mcl_seq.ext_tracks[last_ext_track]
                            .locks_params[pianoroll_mode - 1] -
@@ -908,7 +908,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       if (SeqPage::pianoroll_mode > 0) {
         if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] -
                 1 ==
-            130) {
+            PARAM_LEARN) {
           mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
               param + 1;
           SeqPage::param_select = param;
