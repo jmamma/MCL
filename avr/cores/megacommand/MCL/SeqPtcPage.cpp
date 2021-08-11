@@ -672,9 +672,6 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
 }
 
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  if (GUI.currentPage() == &seq_extstep_page) {
-    return;
-  }
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   DEBUG_PRINTLN("note on");
@@ -721,28 +718,28 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
   auto active_device = midi_active_peering.get_device(UART2_PORT);
+  uint8_t n = mcl_seq.find_ext_track(channel);
+  if (n == 255) { return; }
 
   if (SeqPage::midi_device != active_device ||
-      (mcl_seq.ext_tracks[last_ext_track].channel != channel)) {
-
+      (last_ext_track != n)) {
     SeqPage::midi_device = active_device;
-    seq_ptc_page.set_last_ext_track(channel);
+    seq_ptc_page.set_last_ext_track(n);
     seq_ptc_page.config();
   } else {
     SeqPage::midi_device = active_device;
   }
+
   pitch = seq_ptc_page.process_ext_pitch(note_num, note_on);
   seq_ptc_page.set_last_ext_track(channel);
   seq_ptc_page.config_encoders();
-
-  DEBUG_PRINTLN(mcl_seq.ext_tracks[last_ext_track].length);
-  DEBUG_PRINTLN(F("Sending note"));
-  DEBUG_DUMP(pitch);
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
 
   arp_page.track_update();
   seq_ptc_page.render_arp(false);
+
+  seq_extstep_page.set_cur_y(pitch);
 
   if (!arp_track->enabled || (MidiClock.state != 2)) {
     seq_ptc_page.note_on_ext(pitch, msg[2]);
@@ -761,10 +758,8 @@ void SeqPtcPage::set_last_ext_track(uint8_t channel) {
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  if (GUI.currentPage() == &seq_extstep_page) {
-    return;
-  }
   DEBUG_PRINTLN(F("note off midi2"));
+
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t pitch;
@@ -789,7 +784,10 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   if (channel >= mcl_seq.num_ext_tracks) {
     return;
   }
-  seq_ptc_page.set_last_ext_track(channel);
+  uint8_t n = mcl_seq.find_ext_track(channel);
+  if (n == 255) { return; }
+
+  seq_ptc_page.set_last_ext_track(n);
   seq_ptc_page.config_encoders();
 
   seq_ptc_page.render_arp(false);

@@ -481,6 +481,18 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
   }
 }
 
+void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
+      if (fov_y >= cur_y_ && cur_y_ != 0) {
+        fov_y = cur_y_ - 1;
+      } else if (fov_y + fov_notes <= cur_y_) {
+        fov_y = cur_y_ - fov_notes;
+      }
+      if (MidiClock.state != 2) {
+        fov_y = fov_y;
+        cur_y = cur_y_;
+      }
+}
+
 void SeqExtStepPage::pos_cur_y(int16_t diff) {
   if (pianoroll_mode >= 1) {
     lock_cur_y = limit_value(lock_cur_y, diff, 0, 127);
@@ -916,6 +928,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   // For each incoming note, check to see if note interface has any steps
   // selected For selected steps record notes.
 #ifdef EXT_TRACKS
+/*
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
   DEBUG_PRINT(F("note on midi2 ext, "));
@@ -960,11 +973,13 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       return;
     }
   }
+*/
 #endif
 }
 
 void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
+/*
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
@@ -984,6 +999,7 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       return;
     }
   }
+  */
 #endif
 }
 

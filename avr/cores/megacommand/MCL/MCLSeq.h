@@ -64,6 +64,8 @@ public:
   void enable();
   void disable();
 
+  uint8_t find_ext_track(uint8_t channel);
+
   void update_kit_params();
   void update_params();
   void onMidiStartCallback();

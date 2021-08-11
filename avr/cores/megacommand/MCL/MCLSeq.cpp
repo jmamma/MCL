@@ -96,6 +96,15 @@ void seq_rec_play() {
   }
 }
 
+uint8_t MCLSeq::find_ext_track(uint8_t channel) {
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (ext_tracks[n].channel == channel) {
+      return n;
+    }
+  }
+  return 255;
+}
+
 void MCLSeq::onMidiContinueCallback() {
   update_params();
   seq_rec_play();
@@ -243,7 +252,7 @@ void MCLSeq::seq() {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
   }
 
- // Arp
+  // Arp
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();

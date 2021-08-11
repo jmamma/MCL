@@ -68,6 +68,7 @@ public:
   void draw_viewport_minimap();
   void draw_seq_pos();
   void draw_grid();
+  void set_cur_y(uint8_t cur_y_);
   void pos_cur_x(int16_t diff);
   void pos_cur_y(int16_t diff);
   void pos_cur_w(int16_t diff);
