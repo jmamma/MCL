@@ -60,6 +60,10 @@ void SeqExtStepPage::config_encoders() {
 void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
+
+  midi_device = midi_active_peering.get_device(UART2_PORT);
+  opt_midi_device_capture = midi_device;
+
   SeqPage::init();
   param_select = 129;
   trig_interface.on();
@@ -429,7 +433,7 @@ void SeqExtStepPage::draw_viewport_minimap() {
 
   uint16_t s = fov_offset * (width - 1) / pattern_end;
   uint16_t w = fov_length * (width - 2) / pattern_end;
-  uint16_t p = min(width,  cur_tick_x * (width - 1) / pattern_end);
+  uint16_t p = min(width, cur_tick_x * (width - 1) / pattern_end);
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 #endif
@@ -441,6 +445,97 @@ void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
 #ifndef OLED_DISPLAY
 void SeqExtStepPage::display() { SeqPage::display(); }
 #else
+
+void SeqExtStepPage::pos_cur_x(int16_t diff) {
+  uint8_t w = cur_w;
+  if (pianoroll_mode >= 1) {
+    w = 3;
+  }
+  if (diff < 0) {
+    if (cur_x <= fov_offset) {
+      fov_offset += diff;
+      // / fov_pixels_per_tick;
+      if (fov_offset < 0) {
+        fov_offset = 0;
+      }
+      cur_x = fov_offset;
+    } else {
+      cur_x += diff;
+      if (cur_x < fov_offset) {
+        cur_x = fov_offset;
+      }
+    }
+
+  } else {
+    if (cur_x >= fov_offset + fov_length - w) {
+      if (fov_offset + fov_length + diff < roll_length) {
+        fov_offset += diff;
+        cur_x = fov_offset + fov_length - w;
+      }
+    } else {
+      cur_x += diff;
+      if (cur_x > fov_offset + fov_length - w) {
+        cur_x = fov_offset + fov_length - w;
+      }
+    }
+  }
+}
+
+void SeqExtStepPage::pos_cur_y(int16_t diff) {
+  if (pianoroll_mode >= 1) {
+    lock_cur_y = limit_value(lock_cur_y, diff, 0, 127);
+  }
+
+  else {
+    if (diff < 0) {
+      scroll_dir = false;
+      if (cur_y <= fov_y + 1) {
+        fov_y += diff;
+        if (fov_y < 1) {
+          fov_y = 1;
+        }
+        cur_y = fov_y + 1;
+      } else {
+        cur_y += diff;
+        if (cur_y < fov_y + 1) {
+          cur_y = fov_y + 1;
+        }
+      }
+    } else {
+      scroll_dir = true;
+      if (cur_y >= fov_y + fov_notes) {
+        fov_y += diff;
+        if (fov_y + fov_notes > 127) {
+          fov_y = 127 - fov_notes;
+        }
+        cur_y = fov_y + fov_notes;
+      } else {
+        cur_y += diff;
+        if (cur_y >= fov_y + fov_notes) {
+          cur_y = fov_y + fov_notes;
+        }
+      }
+    }
+  }
+}
+
+void SeqExtStepPage::pos_cur_w(int16_t diff) {
+  if (diff < 0) {
+    cur_w += diff;
+    if (cur_w < cur_w_min) {
+      cur_w = cur_w_min;
+    }
+  } else {
+    if (cur_x >= fov_offset + fov_length - cur_w - diff) {
+      if (fov_offset + fov_length + diff < roll_length) {
+        cur_w += diff;
+        fov_offset += diff;
+      }
+    } else {
+      cur_w += diff;
+    }
+  }
+}
 
 void SeqExtStepPage::loop() {
 
@@ -496,39 +591,7 @@ void SeqExtStepPage::loop() {
     if (seq_param4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
       diff *= (timing_mid / 3);
     }
-    uint8_t w = cur_w;
-    if (pianoroll_mode >= 1) {
-      w = 3;
-    }
-    if (diff < 0) {
-      if (cur_x <= fov_offset) {
-        fov_offset += diff;
-        // / fov_pixels_per_tick;
-        if (fov_offset < 0) {
-          fov_offset = 0;
-        }
-        cur_x = fov_offset;
-      } else {
-        cur_x += diff;
-        if (cur_x < fov_offset) {
-          cur_x = fov_offset;
-        }
-      }
-
-    } else {
-      if (cur_x >= fov_offset + fov_length - w) {
-        if (fov_offset + fov_length + diff < roll_length) {
-          fov_offset += diff;
-          cur_x = fov_offset + fov_length - w;
-        }
-      } else {
-        cur_x += diff;
-        if (cur_x > fov_offset + fov_length - w) {
-          cur_x = fov_offset + fov_length - w;
-        }
-      }
-    }
-
+    pos_cur_x(diff);
     seq_param1.cur = 64;
     seq_param1.old = 64;
   }
@@ -536,67 +599,17 @@ void SeqExtStepPage::loop() {
   if (seq_param2.hasChanged()) {
     // Vertical translation
     int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
-    if (pianoroll_mode >= 1) {
-      lock_cur_y = limit_value(lock_cur_y, diff, 0, 127);
-    }
-
-    else {
-      if (diff < 0) {
-        scroll_dir = false;
-        if (cur_y <= fov_y + 1) {
-          fov_y += diff;
-          if (fov_y < 1) {
-            fov_y = 1;
-          }
-          cur_y = fov_y + 1;
-        } else {
-          cur_y += diff;
-          if (cur_y < fov_y + 1) {
-            cur_y = fov_y + 1;
-          }
-        }
-      } else {
-        scroll_dir = true;
-        if (cur_y >= fov_y + fov_notes) {
-          fov_y += diff;
-          if (fov_y + fov_notes > 127) {
-            fov_y = 127 - fov_notes;
-          }
-          cur_y = fov_y + fov_notes;
-        } else {
-          cur_y += diff;
-          if (cur_y >= fov_y + fov_notes) {
-            cur_y = fov_y + fov_notes;
-          }
-        }
-      }
-    }
+    pos_cur_y(diff);
     seq_param2.cur = 64;
     seq_param2.old = 64;
   }
 
   if (seq_param3.hasChanged()) {
-
     int16_t diff = seq_param3.cur - seq_param3.old;
-
-    if (diff < 0) {
-      cur_w += diff;
-      if (cur_w < cur_w_min) {
-        cur_w = cur_w_min;
-      }
-    } else {
-      if (cur_x >= fov_offset + fov_length - cur_w - diff) {
-        if (fov_offset + fov_length + diff < roll_length) {
-          cur_w += diff;
-          fov_offset += diff;
-        }
-      } else {
-        cur_w += diff;
-      }
-    }
-    seq_param3.cur = 64;
-    seq_param3.old = 64;
+    pos_cur_w(diff);
   }
+  seq_param3.cur = 64;
+  seq_param3.old = 64;
 }
 
 void SeqExtStepPage::display() {
@@ -729,6 +742,64 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      int w = cur_w;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        switch (key) {
+        case MDX_KEY_UP: {
+          seq_param4.cur -= 1;
+          return true;
+        }
+        case MDX_KEY_DOWN: {
+          seq_param4.cur += 1;
+          return true;
+        }
+        }
+        w = 1;
+      }
+
+      if (trig_interface.is_key_down(MDX_KEY_NO)) {
+        switch (key) {
+        case MDX_KEY_LEFT: {
+          if (w > 1) { w = w /2; }
+          pos_cur_w(-1 * w);
+          return true;
+        }
+        case MDX_KEY_RIGHT: {
+          pos_cur_w(w);
+          return true;
+        }
+        }
+      } else {
+        switch (key) {
+
+        case MDX_KEY_LEFT: {
+          pos_cur_x(-1 * w);
+          return true;
+        }
+        case MDX_KEY_RIGHT: {
+          pos_cur_x(w);
+          return true;
+        }
+        case MDX_KEY_UP: {
+          pos_cur_y(1);
+          return true;
+        }
+        case MDX_KEY_DOWN: {
+          pos_cur_y(-1);
+          return true;
+        }
+        case MDX_KEY_YES: {
+          goto YES;
+        }
+        }
+      }
+    }
+  }
+
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (pianoroll_mode >= 1) {
       uint8_t timing_mid = active_track.get_timing_mid();
@@ -755,6 +826,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (!recording) {
+    YES:
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
@@ -810,9 +882,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
   }
   if (SeqPage::handleEvent(event)) {
-   return true;
+    return true;
   }
-
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -853,8 +924,11 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
 
       auto fov_y = seq_extstep_page.fov_y;
-      auto cur_y = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
-      if (cur_y > 127) { continue; }
+      auto cur_y =
+          seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
+      if (cur_y > 127) {
+        continue;
+      }
 
       if (fov_y >= cur_y && cur_y != 0) {
         fov_y = cur_y - 1;
