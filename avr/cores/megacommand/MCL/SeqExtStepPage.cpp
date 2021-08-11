@@ -748,6 +748,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       int w = cur_w;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        w = 1;
+      }
+
+      if (trig_interface.is_key_down(MDX_KEY_NO)) {
         switch (key) {
         case MDX_KEY_UP: {
           seq_param4.cur -= 1;
@@ -757,14 +761,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           seq_param4.cur += 1;
           return true;
         }
-        }
-        w = 1;
-      }
-
-      if (trig_interface.is_key_down(MDX_KEY_NO)) {
-        switch (key) {
         case MDX_KEY_LEFT: {
-          if (w > 1) { w = w /2; }
+          if (w > 1) {
+            w = w / 2;
+          }
           pos_cur_w(-1 * w);
           return true;
         }

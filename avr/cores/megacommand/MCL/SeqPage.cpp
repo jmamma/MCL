@@ -127,7 +127,7 @@ void SeqPage::params_reset() {
 }
 
 void SeqPage::bootstrap_record() {
-  if (GUI.currentPage() != &seq_step_page &&
+  if (GUI.currentPage() != &seq_step_page && GUI.currentPage() != &seq_extstep_page &&
       GUI.currentPage() != &seq_ptc_page) {
     GUI.setPage(&seq_step_page);
   }
