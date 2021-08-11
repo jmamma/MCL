@@ -177,6 +177,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             seq_step_page.recording = 0;
             MD.set_rec_mode(GUI.currentPage() == &seq_step_page);
             clearLed2();
+            trig_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
             if (GUI.currentPage() == &seq_step_page) {
               GUI.setPage(&grid_page);
