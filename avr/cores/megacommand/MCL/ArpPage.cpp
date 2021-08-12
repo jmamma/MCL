@@ -15,6 +15,7 @@ void ArpPage::init() {
   oled_display.setFont();
   seq_ptc_page.display();
   track_update();
+  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 }
 
 void ArpPage::track_update() {
