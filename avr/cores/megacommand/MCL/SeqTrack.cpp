@@ -112,6 +112,10 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
         MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
         break;
       default:
+        if (locks_params[c] - 1 == PARAM_PB) {
+          uart->sendPitchBend(channel, val << 7);
+          break;
+        }
         uart->sendCC(channel, locks_params[c] - 1, val);
         break;
       }

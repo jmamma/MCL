@@ -116,7 +116,9 @@ void ExtSeqTrack::recalc_slides() {
   for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     e = &events[curidx + n];
     uint8_t c = e->lock_idx;
-    if (!e->is_lock || !e->event_on || !locks_params[c] || locks_params[c] - 1 > 127)
+    uint8_t param = locks_params[c] - 1;
+    if (!e->is_lock || !e->event_on || !locks_params[c] || param == PARAM_PRG ||
+        param > PARAM_PB)
       continue;
 
     uint8_t next_lockstep = locks_slide_next_lock_step[c];
@@ -533,12 +535,12 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     uint8_t param = locks_params[ev.lock_idx] - 1;
     if (param == PARAM_PRG) {
       uart->sendProgramChange(channel, ev.event_value);
-    }
-    else if (param == PARAM_PB) {
-      uart->sendPitchBend(channel, ev.event_value << 7);
-    }
-    else {
-      uart->sendCC(channel, param, ev.event_value);
+    } else {
+      if (param == PARAM_PB) {
+        uart->sendPitchBend(channel, ev.event_value << 7);
+      } else {
+        uart->sendCC(channel, param, ev.event_value);
+      }
       // event_on == lock slide
       if (ev.event_on) {
         locks_slides_recalc = step;
@@ -546,14 +548,14 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     }
   } else {
     // midi note
-    if (step == ignore_step && IS_BIT_SET128_P(ignore_notes, ev.event_value)) return;
+    if (step == ignore_step && IS_BIT_SET128_P(ignore_notes, ev.event_value))
+      return;
 
     if (ev.event_on) {
       noteon_conditional(ev.cond_id, ev.event_value, velocities[step]);
     } else {
       note_off(ev.event_value, 0);
     }
-
   }
 }
 
@@ -568,7 +570,10 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == timing_mid) {
     cur_event_idx += timing_buckets.get(step_count);
     mod12_counter = 0;
-    if (ignore_step == step_count) { ignore_step = 255; memset(ignore_notes, 0, sizeof(ignore_notes)); }
+    if (ignore_step == step_count) {
+      ignore_step = 255;
+      memset(ignore_notes, 0, sizeof(ignore_notes));
+    }
     step_count_inc();
   }
 
@@ -576,7 +581,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == 0) {
       reset();
-   }
+    }
   }
 
   uint16_t ev_idx, ev_end;
@@ -610,7 +615,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
     ev_end = ev_idx + timing_buckets.get(next_step);
 
-   // Go over NEXT
+    // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       auto u = events[ev_idx].micro_timing;
       if (u < timing_mid && u == mod12_counter) {
@@ -624,14 +629,20 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_old;
 }
 
-void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
+                          MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendNoteOn(channel, note, velocity);
   SET_BIT128_P(note_buffer, note);
 }
 
-void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
+                           MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendNoteOff(channel, note, velocity);
   CLEAR_BIT128_P(note_buffer, note);
 }
@@ -718,25 +729,33 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
 }
 
 void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendPitchBend(channel, value);
 }
 
 void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendChannelPressure(channel, pressure);
 }
 
-void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
+                              MidiUartParent *uart_) {
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendPolyKeyPressure(channel, note, pressure);
 }
 
 void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_) {
-  if (uart_ == nullptr) { uart_ = uart; }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uart_->sendCC(channel, cc, value);
 }
-
 
 void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {
   param_id += 1;
@@ -777,17 +796,17 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
-       step++;
-       if (step == length) { step = 0; }
+      step++;
+      if (step == length) {
+        step = 0;
+      }
     }
     utiming = timing_mid;
   }
 
-
   // clear all locks on step
   clear_track_locks(step, track_param, 255);
   set_track_locks(step, utiming, track_param, value, slide);
-
 }
 
 bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
@@ -906,7 +925,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     }*/
 
     // Don't allow slides for non CC paramaters
-    if (track_param > 127) {
+    if (track_param == PARAM_PRG || track_param > PARAM_PB) {
       event_on = false;
     }
 
@@ -964,8 +983,10 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
-       step++;
-       if (step == length) { step = 0; }
+      step++;
+      if (step == length) {
+        step = 0;
+      }
     }
     utiming = timing_mid;
   }
@@ -999,7 +1020,6 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
 void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 
-
   uint8_t condition = 0;
 
   uint8_t timing_mid = get_timing_mid();
@@ -1011,8 +1031,10 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
-       step++;
-       if (step == length) { step = 0; }
+      step++;
+      if (step == length) {
+        step = 0;
+      }
     }
     utiming = timing_mid;
   }
@@ -1027,7 +1049,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 }
 
 void ExtSeqTrack::clear_ext_conditional() {
- for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
+  for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
     events[x].micro_timing = 0; // XXX zero or mid?
   }
@@ -1117,7 +1139,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   }
 
   locate(step_count, cur_event_idx, ev_end);
-  memset(oneshot_mask,0,sizeof(oneshot_mask));
-  
+  memset(oneshot_mask, 0, sizeof(oneshot_mask));
+
   mute_state = old_mute_state;
 }
