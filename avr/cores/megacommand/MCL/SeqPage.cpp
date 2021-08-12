@@ -173,7 +173,7 @@ void SeqPage::config_mask_info(bool silent) {
 
 void SeqPage::toggle_ext_mask(uint8_t track) {
   if (track > 6) {
-    track -= 7;
+    track -= 8;
     if (track >= mcl_seq.num_ext_tracks) {
       return true;
     }
@@ -187,7 +187,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= mcl_seq.num_ext_tracks) {
       return true;
     }
-    select_track(midi_active_peering.get_device(UART1_PORT), track);
+    select_track(midi_active_peering.get_device(UART2_PORT), track);
   }
 }
 
