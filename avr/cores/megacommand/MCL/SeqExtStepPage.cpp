@@ -74,6 +74,8 @@ void SeqExtStepPage::init() {
   last_cur_x = -1;
   config_encoders();
   midi_events.setup_callbacks();
+
+  //Common menu entries
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
@@ -554,6 +556,7 @@ void SeqExtStepPage::pos_cur_w(int16_t diff) {
 void SeqExtStepPage::loop() {
 
   if (pianoroll_mode == 0) {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
@@ -562,6 +565,7 @@ void SeqExtStepPage::loop() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
 
   } else {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
