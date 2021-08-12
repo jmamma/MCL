@@ -28,39 +28,40 @@ void SeqExtStepPage::config() {
   // use continuous page index display
   display_page_index = false;
 }
-
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
-  if (!encoder_init) {
-    return;
-  }
-  encoder_init = false;
-  uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+
   seq_param1.max = 127;
-  seq_param1.cur = 64;
-  seq_param1.old = 64;
-
-  seq_param2.cur = 64;
-  seq_param2.old = 64;
-
-  seq_param3.handler = NULL;
-  seq_param3.cur = 64;
-  seq_param3.old = 64;
+  seq_param2.max = 127;
   seq_param3.max = 128;
   seq_param3.min = 1;
 
-  fov_offset = 0;
-  cur_x = 0;
-  fov_y = 64;
-  cur_y = fov_y + 1;
-  cur_w = timing_mid;
-
-  seq_param2.max = 127;
-  seq_param4.max = 128;
-  seq_param4.cur = 16;
   seq_param4.min = 4;
+  seq_param4.max = 128;
+  if (encoder_init) {
+    encoder_init = false;
+    uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
+    seq_param1.cur = 64;
+
+    seq_param2.cur = 64;
+
+    seq_param3.handler = NULL;
+    seq_param3.cur = 64;
+    fov_offset = 0;
+    cur_x = 0;
+    fov_y = 64;
+    cur_y = fov_y + 1;
+    cur_w = timing_mid;
+
+    seq_param4.cur = 16;
+  }
+  seq_param1.old = seq_param1.cur;
+  seq_param2.old = seq_param2.cur;
+  seq_param3.old = seq_param3.cur;
+
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+
 #endif
 }
 
@@ -726,6 +727,19 @@ void SeqExtStepPage::enter_notes() {
   }
 }
 
+void SeqExtStepPage::param_select_update() {
+  if (pianoroll_mode > 0) {
+    if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
+        0) {
+      param_select = PARAM_OFF;
+    } else {
+      param_select =
+          mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] -
+          1;
+    }
+  }
+}
+
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
@@ -741,7 +755,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     if (show_seq_menu) {
       if (mask == EVENT_BUTTON_PRESSED) {
-      toggle_ext_mask(track);
+        toggle_ext_mask(track);
+        param_select_update();
       }
       return true;
     }
@@ -905,16 +920,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     ext_mute_mask = 128;
-    if (pianoroll_mode > 0) {
-      if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
-          0) {
-        param_select = PARAM_OFF;
-      } else {
-        param_select = mcl_seq.ext_tracks[last_ext_track]
-                           .locks_params[pianoroll_mode - 1] -
-                       1;
-      }
-    }
+    param_select_update();
   }
   if (SeqPage::handleEvent(event)) {
     return true;

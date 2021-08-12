@@ -120,7 +120,11 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   disable_record();
-  show_seq_menu = false;
+  if (show_seq_menu) {
+    encoders[0] = opt_param1_capture;
+    encoders[1] = opt_param2_capture;
+    show_seq_menu = false;
+  }
 }
 
 void SeqPage::params_reset() {
@@ -188,6 +192,10 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
       return true;
     }
     select_track(midi_active_peering.get_device(UART2_PORT), track);
+    opt_trackid = last_ext_track + 1;
+    opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
+    opt_length = mcl_seq.ext_tracks[last_ext_track].length;
+    opt_channel = mcl_seq.ext_tracks[last_ext_track].channel + 1;
   }
 }
 
@@ -360,11 +368,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if ((note_interface.notes_count_on() != 0) && (!show_step_menu) &&
         (GUI.currentPage() != &seq_ptc_page)) {
       uint8_t note = 255;
-      for (uint8_t n = 0; n < NUM_MD_TRACKS && note == 255; n++) {
-        if (note_interface.is_note_on(n)) {
-          note = n;
-        }
-      }
+      note = note_interface.get_first_md_note();
       if (note == 255) {
         return false;
       }

@@ -92,6 +92,7 @@ public:
     }
     return false;
   }
+  void param_select_update();
   void enter_notes();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
