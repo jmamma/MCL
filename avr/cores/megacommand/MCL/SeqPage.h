@@ -111,6 +111,8 @@ public:
       : LightPage(e1, e2, e3, e4) {
   }
 
+  void disable_record();
+
   void check_and_set_page_select();
   void config_as_trackedit();
   void config_as_lockedit();

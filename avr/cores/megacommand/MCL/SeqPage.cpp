@@ -69,11 +69,15 @@ void SeqPage::check_and_set_page_select() {
     elektron_dev->set_seq_page(page_select);
   }
 }
+void SeqPage::disable_record() {
+  recording = false;
+  clearLed2();
+}
 
 void SeqPage::init() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
-  recording = false;
+  disable_record();
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seqpage_midi_events.setup_callbacks();
@@ -113,8 +117,7 @@ void SeqPage::init() {
 void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
-  recording = false;
-  clearLed2();
+  disable_record();
 }
 
 void SeqPage::params_reset() {

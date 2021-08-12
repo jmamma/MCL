@@ -837,6 +837,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
           param + 1;
       SeqPage::param_select = param;
     }
+    if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 == param) {
+      seq_extstep_page.lock_cur_y = value;
+    }
   }
 
   if (SeqPage::recording && (MidiClock.state == 2)) {

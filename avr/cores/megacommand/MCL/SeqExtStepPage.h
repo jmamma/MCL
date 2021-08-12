@@ -54,6 +54,8 @@ public:
 
   bool scroll_dir;
 
+  bool encoder_init;
+
   SeqExtStepMidiEvents midi_events;
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
