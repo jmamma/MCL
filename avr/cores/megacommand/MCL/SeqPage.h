@@ -100,6 +100,8 @@ public:
   static uint32_t last_md_model;
 
   static bool recording;
+  static uint16_t ext_mute_mask;
+
   bool display_page_index = true;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };
@@ -139,7 +141,11 @@ public:
 
   uint64_t *get_mask();
 
+  void toggle_ext_mask(uint8_t track);
+
   void params_reset();
+
+  void display_ext_mute_mask();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

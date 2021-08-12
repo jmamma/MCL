@@ -26,6 +26,8 @@ bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
 bool SeqPage::toggle_device = true;
 
+uint16_t SeqPage::ext_mute_mask = 0;
+
 uint8_t SeqPage::step_select = 255;
 
 uint32_t SeqPage::last_md_model = 255;
@@ -118,6 +120,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   disable_record();
+  show_seq_menu = false;
 }
 
 void SeqPage::params_reset() {
@@ -130,7 +133,8 @@ void SeqPage::params_reset() {
 }
 
 void SeqPage::bootstrap_record() {
-  if (GUI.currentPage() != &seq_step_page && GUI.currentPage() != &seq_extstep_page &&
+  if (GUI.currentPage() != &seq_step_page &&
+      GUI.currentPage() != &seq_extstep_page &&
       GUI.currentPage() != &seq_ptc_page) {
     GUI.setPage(&seq_step_page);
   }
@@ -160,11 +164,30 @@ void SeqPage::config_mask_info(bool silent) {
     char str[16] = "EDIT ";
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
-     MD.popup_text(-1, 2);
+      MD.popup_text(-1, 2);
+    } else {
+      MD.popup_text(str, 1);
     }
-    else {
-    MD.popup_text(str, 1);
+  }
+}
+
+void SeqPage::toggle_ext_mask(uint8_t track) {
+  if (track > 6) {
+    track -= 7;
+    if (track >= mcl_seq.num_ext_tracks) {
+      return true;
     }
+    if (mcl_seq.ext_tracks[track].mute_state == SEQ_MUTE_ON) {
+      mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_OFF;
+    } else {
+      mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_ON;
+      mcl_seq.ext_tracks[track].buffer_notesoff();
+    }
+  } else {
+    if (track >= mcl_seq.num_ext_tracks) {
+      return true;
+    }
+    select_track(midi_active_peering.get_device(UART1_PORT), track);
   }
 }
 
@@ -190,6 +213,20 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
 #endif
   if (GUI.currentPage()) {
     GUI.currentPage()->config();
+  }
+}
+
+void SeqPage::display_ext_mute_mask() {
+  uint16_t last_mute_mask = ext_mute_mask;
+  ext_mute_mask = 0;
+  for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
+    if (mcl_seq.ext_tracks[n].mute_state == SEQ_MUTE_OFF) {
+      SET_BIT16(ext_mute_mask, 8 + n);
+    }
+  }
+  SET_BIT16(ext_mute_mask, last_ext_track);
+  if (last_mute_mask != ext_mute_mask) {
+    MD.set_trigleds(ext_mute_mask, TRIGLED_EXCLUSIVE);
   }
 }
 
@@ -611,7 +648,6 @@ void SeqPage::draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask,
   mcl_gui.draw_leds(MCLGUI::seq_x0, MCLGUI::led_y, offset, lock_mask,
                     step_count, length, show_current_step);
 }
-
 
 void SeqPage::shed_mask(uint64_t &mask, uint8_t length, uint8_t offset) {
   mask <<= (64 - length);
@@ -1385,7 +1421,7 @@ void SeqPage::loop() {
     DEBUG_DUMP("hii")
   }
 
-//  md_track_change_check();
+  //  md_track_change_check();
 
   if (show_seq_menu) {
     seq_menu_page.loop();

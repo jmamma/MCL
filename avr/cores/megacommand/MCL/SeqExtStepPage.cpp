@@ -1,6 +1,9 @@
 #include "MCL_impl.h"
 
-void SeqExtStepPage::setup() { SeqPage::setup(); encoder_init = true; }
+void SeqExtStepPage::setup() {
+  SeqPage::setup();
+  encoder_init = true;
+}
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
 //  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
@@ -28,7 +31,9 @@ void SeqExtStepPage::config() {
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
-  if (!encoder_init) { return; }
+  if (!encoder_init) {
+    return;
+  }
   encoder_init = false;
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
   seq_param1.max = 127;
@@ -69,13 +74,15 @@ void SeqExtStepPage::init() {
   SeqPage::init();
   param_select = PARAM_OFF;
   trig_interface.on();
+  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+
   note_interface.state = true;
   x_notes_down = 0;
   last_cur_x = -1;
   config_encoders();
   midi_events.setup_callbacks();
 
-  //Common menu entries
+  // Common menu entries
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
@@ -486,15 +493,15 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
 }
 
 void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
-      if (fov_y >= cur_y_ && cur_y_ != 0) {
-        fov_y = cur_y_ - 1;
-      } else if (fov_y + fov_notes <= cur_y_) {
-        fov_y = cur_y_ - fov_notes;
-      }
-      if (MidiClock.state != 2) {
-        fov_y = fov_y;
-        cur_y = cur_y_;
-      }
+  if (fov_y >= cur_y_ && cur_y_ != 0) {
+    fov_y = cur_y_ - 1;
+  } else if (fov_y + fov_notes <= cur_y_) {
+    fov_y = cur_y_ - fov_notes;
+  }
+  if (MidiClock.state != 2) {
+    fov_y = fov_y;
+    cur_y = cur_y_;
+  }
 }
 
 void SeqExtStepPage::pos_cur_y(int16_t diff) {
@@ -579,6 +586,7 @@ void SeqExtStepPage::loop() {
 
   // If pianoroll_edit mode changed.
   if (show_seq_menu) {
+    display_ext_mute_mask();
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (pianoroll_mode > 0) {
@@ -731,6 +739,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (device != DEVICE_MD) {
       return true;
     }
+    if (show_seq_menu) {
+      if (mask == EVENT_BUTTON_PRESSED) {
+      toggle_ext_mask(track);
+      }
+      return true;
+    }
 
     trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
@@ -821,7 +835,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    YES:
+  YES:
     if (pianoroll_mode >= 1) {
       uint8_t timing_mid = active_track.get_timing_mid();
 
@@ -890,6 +904,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    ext_mute_mask = 128;
     if (pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] ==
           0) {
@@ -907,30 +922,30 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
-/*
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-    if (mcl_seq.ext_tracks[n].channel == channel) {
-      if (SeqPage::pianoroll_mode > 0) {
-        if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] -
-                1 ==
-            PARAM_LEARN) {
-          mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
-              param + 1;
-          SeqPage::param_select = param;
+  /*
+    uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+    uint8_t param = msg[1];
+    uint8_t value = msg[2];
+    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+      if (mcl_seq.ext_tracks[n].channel == channel) {
+        if (SeqPage::pianoroll_mode > 0) {
+          if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] -
+                  1 ==
+              PARAM_LEARN) {
+            mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
+                param + 1;
+            SeqPage::param_select = param;
+          }
         }
+        if (SeqPage::recording) {
+          DEBUG_DUMP("Record... cc");
+          mcl_seq.ext_tracks[n].record_track_locks(param, value,
+    SeqPage::slide); mcl_seq.ext_tracks[n].update_param(param, value);
+        }
+        return;
       }
-      if (SeqPage::recording) {
-        DEBUG_DUMP("Record... cc");
-        mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
-        mcl_seq.ext_tracks[n].update_param(param, value);
-      }
-      return;
     }
-  }
-*/
+  */
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -1017,16 +1032,17 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-/*
-  Midi2.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.addOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
-  Midi2.addOnControlChangeCallback(this,
-                                   (midi_callback_ptr_t)&SeqExtStepMidiEvents::
-                                       onControlChangeCallback_Midi2);
-*/
+  /*
+    Midi2.addOnNoteOnCallback(
+        this,
+    (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
+    Midi2.addOnNoteOffCallback(
+        this,
+        (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
+    Midi2.addOnControlChangeCallback(this,
+                                     (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+                                         onControlChangeCallback_Midi2);
+  */
   state = true;
 }
 
@@ -1035,15 +1051,16 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-/*
-  Midi2.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.removeOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
-  Midi2.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::
-                onControlChangeCallback_Midi2);
-*/
+  /*
+    Midi2.removeOnNoteOnCallback(
+        this,
+    (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
+    Midi2.removeOnNoteOffCallback(
+        this,
+        (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
+    Midi2.removeOnControlChangeCallback(
+        this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+                  onControlChangeCallback_Midi2);
+  */
   state = false;
 }

@@ -268,6 +268,9 @@ void SeqPtcPage::display() {
 
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
   SeqPage::display();
+  if (show_seq_menu) {
+    display_ext_mute_mask();
+  }
   oled_display.display();
   oled_display.setFont(oldfont);
 }
@@ -490,13 +493,18 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     auto device = midi_active_peering.get_device(port);
-
+    uint8_t note = event->source - 128;
     // do not route EXT TI events to MD.
     if (device != &MD) {
       return false;
     }
+    if (show_seq_menu) {
+      if (mask == EVENT_BUTTON_PRESSED) {
+      toggle_ext_mask(note);
+      }
+      return true;
+    }
 
-    uint8_t note = event->source - 128;
     if (mask == EVENT_BUTTON_PRESSED) {
       SET_BIT128_P(dev_note_masks[0], note);
     } else {
@@ -635,6 +643,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
 #endif
     return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    ext_mute_mask = 128;
   }
   if (SeqPage::handleEvent(event)) {
     return true;
@@ -839,7 +850,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
           param + 1;
       SeqPage::param_select = param;
     }
-    if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 == param) {
+    if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 ==
+        param) {
       seq_extstep_page.lock_cur_y = value;
     }
   }
@@ -863,7 +875,7 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
   int16_t pitch = msg[1] | (msg[2] << 7);
   mcl_seq.ext_tracks[n].pitch_bend(pitch);
   if (SeqPage::recording && (MidiClock.state == 2)) {
-  mcl_seq.ext_tracks[n].record_track_locks(PARAM_PB, msg[2], SeqPage::slide);
+    mcl_seq.ext_tracks[n].record_track_locks(PARAM_PB, msg[2], SeqPage::slide);
   }
 }
 
@@ -878,7 +890,7 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
   }
   mcl_seq.ext_tracks[n].channel_pressure(msg[1]);
   if (SeqPage::recording && (MidiClock.state == 2)) {
-  mcl_seq.ext_tracks[n].record_track_locks(PARAM_CHP, msg[1], false);
+    mcl_seq.ext_tracks[n].record_track_locks(PARAM_CHP, msg[1], false);
   }
 }
 
@@ -893,7 +905,6 @@ void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
   }
   mcl_seq.ext_tracks[n].after_touch(msg[1], msg[2]);
 }
-
 
 void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -944,7 +955,8 @@ void SeqPtcMidiEvents::setup_callbacks() {
   Midi2.addOnAfterTouchCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
   Midi2.addOnChannelPressureCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
 
   Midi.addOnControlChangeCallback(
       this,
@@ -968,7 +980,8 @@ void SeqPtcMidiEvents::remove_callbacks() {
   Midi2.removeOnAfterTouchCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
   Midi2.removeOnChannelPressureCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
   Midi2.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
   Midi.removeOnControlChangeCallback(
