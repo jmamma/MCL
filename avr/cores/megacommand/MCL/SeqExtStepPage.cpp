@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-void SeqExtStepPage::setup() { SeqPage::setup(); }
+void SeqExtStepPage::setup() { SeqPage::setup(); encoder_init = true; }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
 //  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
@@ -28,6 +28,8 @@ void SeqExtStepPage::config() {
 
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
+  if (!encoder_init) { return; }
+  encoder_init = false;
   uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
   seq_param1.max = 127;
   seq_param1.cur = 64;
@@ -753,6 +755,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
+  bool ignore_clear = false;
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
@@ -805,6 +808,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_YES: {
+          ignore_clear = true;
           goto YES;
         }
         }
@@ -813,6 +817,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    YES:
     if (pianoroll_mode >= 1) {
       uint8_t timing_mid = active_track.get_timing_mid();
 
@@ -838,7 +843,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (!recording) {
-    YES:
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
@@ -848,7 +852,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
       }
       return true;
-    } else {
+    } else if (!ignore_clear) {
       switch (last_rec_event) {
       case REC_EVENT_TRIG:
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
