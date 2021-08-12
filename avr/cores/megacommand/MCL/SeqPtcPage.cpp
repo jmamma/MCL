@@ -828,7 +828,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     return;
   }
 
-  mcl_seq.ext_tracks[channel].send_cc(msg[1], msg[2]);
+  if (mcl_cfg.uart_cc_loopback) {
+    mcl_seq.ext_tracks[channel].send_cc(msg[1], msg[2]);
+  }
 
   if (GUI.currentPage() == &seq_extstep_page && SeqPage::pianoroll_mode > 0) {
     if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 ==

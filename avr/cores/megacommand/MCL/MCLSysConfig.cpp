@@ -90,12 +90,12 @@ bool MCLSysConfig::cfg_init() {
   load_mode = LOAD_MANUAL;
   chain_queue_length = 1;
   chain_load_quant = 4;
-  link_rand_min = 0;
-  link_rand_max = 1;
   ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0b00000101;
   uart2_device = 0;
+  uart_cc_loopback = 0;
+
   cfgfile.close();
 
   ret = write_cfg();

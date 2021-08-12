@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4000
+#define CONFIG_VERSION 4001
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -44,10 +44,11 @@ public:
   uint8_t track_select;
   uint16_t track_type_select;
   uint8_t uart2_device;
+  uint8_t uart_cc_loopback;
 
   //to be deleted
-  uint8_t link_rand_min;
   uint8_t link_rand_max;
+
 };
 
 class MCLSysConfig : public MCLSysConfigData {

@@ -52,5 +52,7 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
   // 84: MIDI_DEVICE
   {0, "GENER"}, {1, "ELEKT"},
+  // 86"
+  {0, "OFF"}, {1, "2->2"},
 };
 

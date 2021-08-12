@@ -54,7 +54,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.auto_normalize, &mcl_cfg.uart2_ctrl_mode,
 
     // 10
-    &mcl_cfg.load_mode, &mcl_cfg.link_rand_min, &mcl_cfg.link_rand_max,
+    &mcl_cfg.load_mode, &mcl_cfg.uart_cc_loopback, &mcl_cfg.link_rand_max,
 
     // 13
     &mcl_cfg.display_mirror,
@@ -132,7 +132,7 @@ const menu_function_t menu_target_functions[] PROGMEM = {
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
 MenuPage<6> system_page(&options_param1, &options_param2);
-MenuPage<6> midi_config_page(&config_param1, &config_param3);
+MenuPage<7> midi_config_page(&config_param1, &config_param3);
 MenuPage<3> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);
 MenuPage<1> mcl_config_page(&config_param1, &config_param5);

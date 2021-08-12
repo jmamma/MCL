@@ -43,7 +43,7 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<6> midiconfig_menu_layout = {
+menu_t<7> midiconfig_menu_layout = {
     "MIDI",
     {
         //            m  r  n  d  p  f  o
@@ -55,6 +55,7 @@ menu_t<6> midiconfig_menu_layout = {
         {"CLK SEND:", 0, 2, 2, 6, 0, 0, 8},
 
         {"MIDI FWD:", 0, 4, 4, 7, 0, 0, 10},
+        {"CC LOOP:", 0, 2, 2, 11, 0, 0, 86},
     },
     24, 0
 };
