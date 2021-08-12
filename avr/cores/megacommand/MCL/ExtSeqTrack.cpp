@@ -118,7 +118,7 @@ void ExtSeqTrack::recalc_slides() {
     uint8_t c = e->lock_idx;
     uint8_t param = locks_params[c] - 1;
     if (!e->is_lock || !e->event_on || !locks_params[c] || param == PARAM_PRG ||
-        param > PARAM_PB)
+        param > PARAM_CHP)
       continue;
 
     uint8_t next_lockstep = locks_slide_next_lock_step[c];
@@ -524,6 +524,9 @@ void ExtSeqTrack::reset_params() {
       if (param == PARAM_PB) {
         uart->sendPitchBend(channel, 8192);
       }
+      if (param == PARAM_CHP) {
+        uart->sendChannelPressure(channel, 0);
+      }
     }
   }
 }
@@ -538,9 +541,14 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     } else {
       if (param == PARAM_PB) {
         uart->sendPitchBend(channel, ev.event_value << 7);
-      } else {
+      }
+      else if (param == PARAM_CHP) {
+        uart->sendChannelPressure(channel, ev.event_value);
+      }
+      else {
         uart->sendCC(channel, param, ev.event_value);
       }
+
       // event_on == lock slide
       if (ev.event_on) {
         locks_slides_recalc = step;
@@ -925,7 +933,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     }*/
 
     // Don't allow slides for non CC paramaters
-    if (track_param == PARAM_PRG || track_param > PARAM_PB) {
+    if (track_param == PARAM_PRG || track_param > PARAM_CHP) {
       event_on = false;
     }
 

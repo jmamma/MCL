@@ -49,7 +49,7 @@ menu_t<6> midiconfig_menu_layout = {
         //            m  r  n  d  p  f  o
         {"TURBO 1:",  0, 4, 4, 2, 0, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, 0, 0, 2},
-        {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 83},
+        {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 84},
 
         {"CLK REC:",  0, 2, 2, 5, 0, 0, 6},
         {"CLK SEND:", 0, 2, 2, 6, 0, 0, 8},
@@ -100,12 +100,12 @@ menu_t<20> seq_menu_layout = {
         {"TRACK SEL:",  1, 17,                  0,                   14, 0,  3,  0},
         {"EDIT:",       0, 4,                   4,                   15, 0,  4,  48},
         {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, 0,  0,  54},
-        {"CC:",         0, 131,                 3,                   17, 0,  0,  55},
+        {"CC:",         0, 133,                 5,                   17, 0,  0,  55},
         {"SLIDE:",      0, 2,                   2,                   18, 0,  0,  25},
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  10, 0,  0},
         {"TRANSPOSE:",  0, 12,                  0,                   19, 0,  0,  0},
         {"VEL:",        0, 128,                 0,                   20, 0,  0,  0},
-        {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, 0,  0,  59},
+        {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, 0,  0,  60},
         {"SPEED:",      0, 7,                   7,                   22, 0,  5,  41},
         {"LENGTH:",     1, 129,                 0,                   23, 0,  6,  0},
         {"CHANNEL:",    1, 17,                  0,                   24, 0,  7,  0},
@@ -161,8 +161,8 @@ menu_t<3> wavdesign_menu_layout = {
     "",
     {
         //           m  r  n  d   p  f   o
-        {"EDIT:",    0, 4, 4, 40, 0, 0,  79},
-        {"WAV:",     0, 6, 6, 41, 0, 0,  73},
+        {"EDIT:",    0, 4, 4, 40, 0, 0,  80},
+        {"WAV:",     0, 6, 6, 41, 0, 0,  74},
         {"TRANSFER", 0, 0, 0, 0,  0, 22, 0},
     },
     23, 0

@@ -107,16 +107,21 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
           val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
         }
       }
+      uint8_t param = locks_params[c] - 1;
       switch (active) {
       case MD_TRACK_TYPE:
-        MD.setTrackParam_inline(track_number, locks_params[c] - 1, val);
+        MD.setTrackParam_inline(track_number, param, val);
         break;
       default:
-        if (locks_params[c] - 1 == PARAM_PB) {
+        if (param == PARAM_PB) {
           uart->sendPitchBend(channel, val << 7);
           break;
         }
-        uart->sendCC(channel, locks_params[c] - 1, val);
+        if (param == PARAM_CHP) {
+          uart->sendChannelPressure(channel, val);
+          break;
+        }
+        uart->sendCC(channel, param, val);
         break;
       }
     }

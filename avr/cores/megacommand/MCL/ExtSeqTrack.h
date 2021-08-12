@@ -22,8 +22,9 @@
 
 #define PARAM_PRG 128
 #define PARAM_PB 129
-#define PARAM_OFF 130
-#define PARAM_LEARN 131
+#define PARAM_CHP 130
+#define PARAM_OFF 131
+#define PARAM_LEARN 132
 
 // EXT Track speed
 #define EXT_SPEED_270_1X 2

@@ -872,6 +872,9 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
     return;
   }
   mcl_seq.ext_tracks[n].channel_pressure(msg[1]);
+  if (SeqPage::recording && (MidiClock.state == 2)) {
+  mcl_seq.ext_tracks[n].record_track_locks(PARAM_CHP, msg[1], false);
+  }
 }
 
 void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
