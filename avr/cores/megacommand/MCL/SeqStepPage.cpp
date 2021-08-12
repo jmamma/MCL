@@ -627,8 +627,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       oled_display.textbox("REC", "");
       setLed2();
     } else {
-      MD.set_rec_mode(1);
-      clearLed2();
+      disable_record();
     }
     return true;
   }

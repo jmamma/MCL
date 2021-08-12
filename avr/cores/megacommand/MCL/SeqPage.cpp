@@ -71,7 +71,9 @@ void SeqPage::check_and_set_page_select() {
     elektron_dev->set_seq_page(page_select);
   }
 }
+
 void SeqPage::disable_record() {
+  MD.set_rec_mode(1);
   recording = false;
   clearLed2();
 }
