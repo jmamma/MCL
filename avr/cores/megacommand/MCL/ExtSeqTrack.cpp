@@ -541,11 +541,9 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     } else {
       if (param == PARAM_PB) {
         uart->sendPitchBend(channel, ev.event_value << 7);
-      }
-      else if (param == PARAM_CHP) {
+      } else if (param == PARAM_CHP) {
         uart->sendChannelPressure(channel, ev.event_value);
-      }
-      else {
+      } else {
         uart->sendCC(channel, param, ev.event_value);
       }
 
@@ -797,10 +795,16 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
 
   uint8_t timing_mid = get_timing_mid();
 
-  uint8_t mod12 = mod12_counter - 1;
-  uint8_t utiming = mod12 + get_timing_mid();
+  int8_t mod12 = mod12_counter - 1;
 
   uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+    mod12 += timing_mid;
+    step = length - 1;
+  }
+
+  uint8_t utiming = mod12 + timing_mid;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -984,10 +988,16 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   uint8_t timing_mid = get_timing_mid();
 
-  uint8_t mod12 = mod12_counter - 1;
-  uint8_t utiming = mod12 + get_timing_mid();
+  int8_t mod12 = mod12_counter - 1;
 
   uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+    mod12 += timing_mid;
+    step = length - 1;
+  }
+
+  uint8_t utiming = mod12 + timing_mid;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -1022,8 +1032,6 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   notes_on[n].value = 255;
   notes_on_count--;
-
-  return;
 }
 
 void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
@@ -1032,10 +1040,16 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
 
   uint8_t timing_mid = get_timing_mid();
 
-  uint8_t mod12 = mod12_counter - 1;
-  uint8_t utiming = mod12 + get_timing_mid();
+  int8_t mod12 = mod12_counter - 1;
 
   uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+    mod12 += timing_mid;
+    step = length - 1;
+  }
+
+  uint8_t utiming = mod12 + timing_mid;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -1050,10 +1064,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
   ignore_step = step;
   SET_BIT128_P(ignore_notes, note_num);
 
-  add_notes_on(step_count * timing_mid + utiming - timing_mid, note_num,
-               velocity);
-
-  return;
+  add_notes_on(step * timing_mid + utiming - timing_mid, note_num, velocity);
 }
 
 void ExtSeqTrack::clear_ext_conditional() {

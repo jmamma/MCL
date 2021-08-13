@@ -562,9 +562,19 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
   return true;
 }
 
-uint8_t MDSeqTrack::get_quantized_step(uint8_t step) {
+uint8_t MDSeqTrack::get_quantized_step() {
   uint8_t timing_mid = get_timing_mid();
-  uint8_t mod12 = mod12_counter - 1;
+
+  int8_t mod12 = mod12_counter - 1;
+
+  uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+     mod12 += timing_mid;
+     step = length - 1;
+  }
+
+  uint8_t utiming = mod12 + timing_mid;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -582,7 +592,7 @@ void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
     return;
   }
 
-  set_track_locks(get_quantized_step(step_count), track_param, value);
+  set_track_locks(get_quantized_step(), track_param, value);
 
 }
 
@@ -595,7 +605,7 @@ void MDSeqTrack::record_track_pitch(uint8_t pitch) {
   if (step_count >= length) {
     return;
   }
-  set_track_pitch(get_quantized_step(step_count), pitch);
+  set_track_pitch(get_quantized_step(), pitch);
 }
 
 void MDSeqTrack::record_track(uint8_t velocity) {
@@ -603,12 +613,18 @@ void MDSeqTrack::record_track(uint8_t velocity) {
   if (step_count >= length) {
     return;
   }
-
   uint8_t timing_mid = get_timing_mid();
-  uint8_t mod12 = mod12_counter - 1;
-  uint8_t utiming = mod12 + timing_mid;
+
+  int8_t mod12 = mod12_counter - 1;
 
   uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+     mod12 += timing_mid;
+     step = length - 1;
+  }
+
+  uint8_t utiming = mod12 + timing_mid;
 
   if (mcl_cfg.rec_quant) {
     if (mod12 > timing_mid / 2) {
@@ -619,7 +635,6 @@ void MDSeqTrack::record_track(uint8_t velocity) {
     utiming = timing_mid;
   }
   set_track_step(step, utiming, velocity);
-
 }
 
 void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
