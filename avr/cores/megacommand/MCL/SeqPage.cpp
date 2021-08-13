@@ -830,6 +830,7 @@ void pattern_len_handler(EncoderParent *enc) {
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       if ((mcl_cfg.poly_mask) && (is_poly)) {
         for (uint8_t c = 0; c < 16; c++) {
@@ -842,10 +843,11 @@ void pattern_len_handler(EncoderParent *enc) {
       }
     }
   } else {
-    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
