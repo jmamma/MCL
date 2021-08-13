@@ -494,13 +494,14 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
 }
 
 void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
+  uint8_t fov_y_ = fov_y;
   if (fov_y >= cur_y_ && cur_y_ != 0) {
-    fov_y = cur_y_ - 1;
+    fov_y_ = cur_y_ - 1;
   } else if (fov_y + fov_notes <= cur_y_) {
-    fov_y = cur_y_ - fov_notes;
+    fov_y_ = cur_y_ - fov_notes;
   }
   if (MidiClock.state != 2) {
-    fov_y = fov_y;
+    fov_y = fov_y_;
     cur_y = cur_y_;
   }
 }
