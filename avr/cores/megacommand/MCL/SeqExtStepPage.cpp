@@ -500,10 +500,10 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
   } else if (fov_y + fov_notes <= cur_y_) {
     fov_y_ = cur_y_ - fov_notes;
   }
-  if (MidiClock.state != 2) {
+//  if (MidiClock.state != 2) {
     fov_y = fov_y_;
     cur_y = cur_y_;
-  }
+//  }
 }
 
 void SeqExtStepPage::pos_cur_y(int16_t diff) {
