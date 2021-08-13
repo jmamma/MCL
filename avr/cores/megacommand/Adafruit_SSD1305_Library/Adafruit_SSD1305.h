@@ -144,8 +144,8 @@ public:
 private:
   uint16_t textbox_delay;
   uint16_t textbox_clock;
-  char textbox_str[16];
-  char textbox_str2[16];
+  char textbox_str[17];
+  char textbox_str2[17];
   uint8_t _i2caddr;
   int8_t sid, sclk, dc, rst, cs;
   void spixfer(uint8_t x);

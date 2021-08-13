@@ -169,7 +169,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
-            GUI.currentPage() != &seq_ptc_page && GUI.currentPage() != &seq_extstep_page) {
+            GUI.currentPage() != &seq_ptc_page &&
+            GUI.currentPage() != &seq_extstep_page) {
           seq_step_page.prepare = true;
           GUI.setPage(&seq_step_page);
         } else {
@@ -200,8 +201,9 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         }
         opt_copy = 2;
-        if (GUI.currentPage() == &seq_ptc_page || GUI.currentPage() == &seq_extstep_page) {
-        opt_copy = SeqPage::recording ? 2 : 1;
+        if (GUI.currentPage() == &seq_ptc_page ||
+            GUI.currentPage() == &seq_extstep_page) {
+          opt_copy = SeqPage::recording ? 2 : 1;
         }
         opt_copy_track_handler();
         break;
@@ -216,8 +218,9 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         }
         opt_paste = 2;
-        if (GUI.currentPage() == &seq_ptc_page || GUI.currentPage() == &seq_extstep_page) {
-        opt_paste = SeqPage::recording ? 2 : 1;
+        if (GUI.currentPage() == &seq_ptc_page ||
+            GUI.currentPage() == &seq_extstep_page) {
+          opt_paste = SeqPage::recording ? 2 : 1;
         }
         opt_paste_track_handler();
         break;
@@ -229,9 +232,15 @@ bool mcl_handleEvent(gui_event_t *event) {
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
              trig_interface.is_key_down(MDX_KEY_NO)))
           break;
-        opt_clear = 2;
-        if (GUI.currentPage() == &seq_ptc_page || GUI.currentPage() == &seq_extstep_page) {
-        opt_clear = SeqPage::recording ? 2 : 1;
+        //  opt_clear = 2;
+        //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
+        if (GUI.currentPage() == &seq_ptc_page ||
+            GUI.currentPage() == &seq_extstep_page) {
+          //  if (SeqPage::midi_device == dev) {
+          opt_clear = 1;
+          //  } else {
+          //    opt_clear = SeqPage::recording ? 2 : 1;
+          //  }
         }
         opt_clear_track_handler();
         break;
@@ -251,7 +260,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       switch (key) {
 
       case MDX_KEY_REC: {
-        if (!SeqPage::recording && (GUI.currentPage() == &seq_ptc_page || GUI.currentPage() == &seq_extstep_page)) {
+        if (!SeqPage::recording && (GUI.currentPage() == &seq_ptc_page ||
+                                    GUI.currentPage() == &seq_extstep_page)) {
           if (GUI.currentPage() != &seq_step_page) {
             seq_step_page.prepare = true;
             GUI.setPage(&seq_step_page);

@@ -889,15 +889,14 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       switch (last_rec_event) {
       case REC_EVENT_TRIG:
         if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          oled_display.textbox("CLEAR ", "TRACKS");
-          for (uint8_t n = 0; n < NUM_EXT_TRACKS; ++n) {
-            mcl_seq.ext_tracks[n].clear_track();
-          }
+          opt_clear = 2;
         } else {
-          oled_display.textbox("CLEAR ", "TRACK");
-          active_track.clear_track();
+          opt_clear = 1;
         }
+        opt_clear = 1;
+        opt_clear_track_handler();
         break;
+
       case REC_EVENT_CC:
         // TODO
         // oled_display.textbox("CLEAR ", "LOCK");
@@ -908,13 +907,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    recording = !recording;
-    if (recording) {
-      oled_display.textbox("REC", "");
-      setLed2();
-    } else {
-      clearLed2();
-    }
+    toggle_record();
     return true;
   }
 

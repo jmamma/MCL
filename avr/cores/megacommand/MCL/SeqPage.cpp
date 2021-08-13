@@ -72,8 +72,24 @@ void SeqPage::check_and_set_page_select() {
   }
 }
 
+void SeqPage::toggle_record() {
+  recording = !recording;
+  if (recording) {
+    enable_record();
+  } else {
+    disable_record();
+  }
+}
+
+void SeqPage::enable_record() {
+  MD.set_rec_mode(2);
+  recording = true;
+  setLed2();
+  oled_display.textbox("REC", "");
+}
+
 void SeqPage::disable_record() {
-  MD.set_rec_mode(1);
+  MD.set_rec_mode((GUI.currentPage() == &seq_step_page));
   recording = false;
   clearLed2();
 }
@@ -145,10 +161,7 @@ void SeqPage::bootstrap_record() {
     GUI.setPage(&seq_step_page);
   }
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
-  seq_step_page.recording = true;
-  setLed2();
-  MD.set_rec_mode(2);
-  oled_display.textbox("REC", "");
+  enable_record();
 }
 
 void SeqPage::config_mask_info(bool silent) {
@@ -193,7 +206,10 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= mcl_seq.num_ext_tracks) {
       return true;
     }
-    select_track(midi_active_peering.get_device(UART2_PORT), track);
+    MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
+    opt_midi_device_capture = dev;
+    midi_device = dev;
+    select_track(dev, track);
     opt_trackid = last_ext_track + 1;
     opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
     opt_length = mcl_seq.ext_tracks[last_ext_track].length;
@@ -807,36 +823,27 @@ void pattern_len_handler(EncoderParent *enc) {
   if (!enc_->hasChanged()) {
     return;
   }
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if (SeqPage::midi_device == &MD) {
-    DEBUG_PRINTLN(F("under 16"));
+
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      char str[4];
-      mcl_gui.put_value_at(enc_->cur, str);
-#ifdef OLED_DISPLAY
-      oled_display.textbox("MD TRACKS LEN: ", str);
-#endif
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
       for (uint8_t c = 0; c < 16; c++) {
         mcl_seq.md_tracks[c].set_length(enc_->cur);
       }
     } else {
-      auto &active_track = mcl_seq.md_tracks[last_md_track];
-      active_track.set_length(enc_->cur);
-      MD.sync_seqtrack(active_track.length, active_track.speed,
-                       active_track.step_count);
+      if ((mcl_cfg.poly_mask) && (is_poly)) {
+        for (uint8_t c = 0; c < 16; c++) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+            mcl_seq.md_tracks[c].set_length(enc_->cur);
+          }
+        }
+      } else {
+        mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
+      }
     }
-  }
-#ifdef EXT_TRACKS
-  else {
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      for (uint8_t c = 0; c < mcl_seq.num_ext_tracks; c++) {
-        char str[4];
-        mcl_gui.put_value_at(enc_->cur, str);
-        GUI.ignoreNextEvent(Buttons.BUTTON4);
-#ifdef OLED_DISPLAY
-        oled_display.textbox("EXT TRACKS LEN: ", str);
-#endif
-        mcl_seq.ext_tracks[c].buffer_notesoff();
+  } else {
+    if (BUTTON_DOWN(Buttons.BUTTON3)) {
+      for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
       }
     } else {
@@ -844,7 +851,6 @@ void pattern_len_handler(EncoderParent *enc) {
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
     }
   }
-#endif
 }
 
 void opt_length_handler() {
@@ -924,9 +930,7 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
 
       MD.popup_text(2);
-#ifdef OLED_DISPLAY
       oled_display.textbox("CLEAR MD ", "TRACKS");
-#endif
       uint8_t old_mutes[16];
       for (uint8_t n = 0; n < 16; n++) {
         old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
@@ -940,33 +944,42 @@ void opt_clear_track_handler() {
         mcl_seq.md_tracks[n].mute_state = old_mutes[n];
       }
     } else if (opt_clear == 1) {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("CLEAR TRACK", "");
-#endif
-      MD.popup_text(5);
+      bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+      char *str = "CLEAR TRACK";
+      if (is_poly) {
+        str = "CLEAR POLY TRACKS";
+      }
+      oled_display.textbox(str, "");
+      MD.popup_text(str);
       if (copy) {
         opt_copy_track_handler(opt_clear);
       }
-      mcl_seq.md_tracks[last_md_track].clear_track();
+      if (is_poly) {
+        for (uint8_t c = 0; c < 16; c++) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+            mcl_seq.md_tracks[c].clear_track();
+          }
+        }
+      } else {
+        mcl_seq.md_tracks[last_md_track].clear_track();
+      }
     }
-  }
-#ifdef EXT_TRACKS
-  else {
+  } else {
+    if (copy) {
+      opt_copy_track_handler(opt_clear);
+    }
+    char *str = "CLEAR EXT TRACK";
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-#ifdef OLED_DISPLAY
-        oled_display.textbox("CLEAR EXT ", "TRACKS");
-#endif
+        str = "CLEAR EXT TRACKS";
         mcl_seq.ext_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("CLEAR EXT ", "TRACK");
-#endif
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
+    oled_display.textbox(str, "");
+    MD.popup_text(str);
   }
-#endif
   opt_clear = 0;
 }
 
@@ -1101,13 +1114,15 @@ void opt_paste_track_handler() {
         MD.popup_text(22);
       }
       mcl_clipboard.paste_sequencer();
-    }
-#ifdef EXT_TRACKS
-    else {
-      oled_display.textbox("PASTE EXT ", "TRACKS");
+    } else {
+      char *str = "UNDO EXT TRACKS";
+      if (!undo) {
+        str = "PASTE EXT TRACKS";
+      }
+      oled_display.textbox(str, "");
+      MD.popup_text(str);
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
-#endif
   }
   if (opt_paste == 1) {
     if (opt_midi_device_capture == &MD) {
@@ -1120,16 +1135,17 @@ void opt_paste_track_handler() {
       }
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_md_track);
-    }
-#ifdef EXT_TRACKS
-    else {
-#ifdef OLED_DISPLAY
-      oled_display.textbox("PASTE EXT ", "TRACK");
-#endif
+    } else {
+      char *str = "UNDO EXT TRACK";
+      if (!undo) {
+        str = "PASTE EXT TRACK";
+      }
+      oled_display.textbox(str, "");
+      MD.popup_text(str);
+
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_ext_track + NUM_MD_TRACKS);
     }
-#endif
   }
   opt_undo = 255;
   opt_paste = 0;

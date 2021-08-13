@@ -102,7 +102,12 @@ void SeqStepPage::display() {
 
   char K[4];
   mcl_gui.put_value_at(seq_param3.getValue(), K);
-  draw_knob(2, "LEN", K);
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
+    draw_knob(2, "PLEN", K);
+  } else {
+    draw_knob(2, "LEN", K);
+  }
 
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   if (show_pitch) {
@@ -620,15 +625,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     */
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    recording = !recording;
-
-    if (recording) {
-      MD.set_rec_mode(2);
-      oled_display.textbox("REC", "");
-      setLed2();
-    } else {
-      disable_record();
-    }
+    toggle_record();
     return true;
   }
 

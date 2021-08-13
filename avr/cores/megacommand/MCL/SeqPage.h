@@ -23,7 +23,6 @@ public:
 
 extern void pattern_len_handler(EncoderParent *enc);
 
-
 extern uint8_t opt_trackid;
 extern uint8_t opt_speed;
 extern uint8_t opt_copy;
@@ -113,7 +112,9 @@ public:
       : LightPage(e1, e2, e3, e4) {
   }
 
+  void toggle_record();
   void disable_record();
+  void enable_record();
 
   void check_and_set_page_select();
   void config_as_trackedit();
