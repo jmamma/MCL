@@ -451,10 +451,10 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
   if (track_number == 255) {
     track_number = last_ext_track;
   }
-  mcl_seq.ext_tracks[last_ext_track].note_off(note_num, velocity, uart_);
+  mcl_seq.ext_tracks[track_number].note_off(note_num, velocity, uart_);
   if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     reset_undo();
-    mcl_seq.ext_tracks[last_ext_track].record_track_noteoff(note_num);
+    mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
   }
 }
 
