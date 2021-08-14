@@ -677,7 +677,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   uint8_t load_mode_old = mcl_cfg.load_mode;
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() &&
                  slot_undo_y == getRow();
-
+  DEBUG_PRINTLN("apply slot");
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
     ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
@@ -781,7 +781,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
           // if (height > 1 && y == 0) {
           //   mcl_actions.chains[xpos].init();
           // }
-          track_select_array[xpos] = 1;
+          track_select_array[xpos + proj.get_grid() * 16] = 1;
         }
       }
       if (slot_load == 1) {
@@ -805,7 +805,6 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   slot_clear = 0;
   slot_copy = 0;
   slot_paste = 0;
-
   slot.load_from_grid(getCol(), getRow());
 }
 
@@ -888,7 +887,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_YES: {
           slot_load = 1;
-          apply_slot_changes();
           if (slot_menu_hold) {
             goto slot_menu_off;
           }
@@ -897,16 +895,19 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_COPY: {
           slot_copy = 1;
           apply_slot_changes();
+          init();
           return true;
         }
         case MDX_KEY_CLEAR: {
           slot_clear = 1;
           apply_slot_changes();
+          init();
           return true;
         }
         case MDX_KEY_PASTE: {
           slot_paste = 1;
           apply_slot_changes();
+          init();
           return true;
         }
         case MDX_KEY_UP: {
