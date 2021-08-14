@@ -44,6 +44,11 @@ extern MCLEncoder seq_param2;
 extern MCLEncoder seq_param3;
 extern MCLEncoder seq_param4;
 
+extern MCLEncoder seq_extparam1;
+extern MCLEncoder seq_extparam2;
+extern MCLEncoder seq_extparam3;
+extern MCLEncoder seq_extparam4;
+
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
 

@@ -6,7 +6,7 @@ void SeqExtStepPage::setup() {
 }
 void SeqExtStepPage::config() {
 #ifdef EXT_TRACKS
-//  seq_param3.cur = mcl_seq.ext_tracks[last_ext_track].length;
+//  seq_extparam3.cur = mcl_seq.ext_tracks[last_ext_track].length;
 #endif
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
@@ -31,33 +31,33 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
 
-  seq_param1.max = 127;
-  seq_param2.max = 127;
-  seq_param3.max = 128;
-  seq_param3.min = 1;
+  seq_extparam1.max = 127;
+  seq_extparam2.max = 127;
+  seq_extparam3.max = 128;
+  seq_extparam3.min = 1;
 
-  seq_param4.min = 4;
-  seq_param4.max = 128;
+  seq_extparam4.min = 4;
+  seq_extparam4.max = 128;
   if (encoder_init) {
     encoder_init = false;
     uint8_t timing_mid = mcl_seq.ext_tracks[last_ext_track].get_timing_mid();
-    seq_param1.cur = 64;
+    seq_extparam1.cur = 64;
 
-    seq_param2.cur = 64;
+    seq_extparam2.cur = 64;
 
-    seq_param3.handler = NULL;
-    seq_param3.cur = 64;
+    seq_extparam3.handler = NULL;
+    seq_extparam3.cur = 64;
     fov_offset = 0;
     cur_x = 0;
     fov_y = 64;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
 
-    seq_param4.cur = 16;
+    seq_extparam4.cur = 16;
   }
-  seq_param1.old = seq_param1.cur;
-  seq_param2.old = seq_param2.cur;
-  seq_param3.old = seq_param3.cur;
+  seq_extparam1.old = seq_extparam1.cur;
+  seq_extparam2.old = seq_extparam2.cur;
+  seq_extparam3.old = seq_extparam3.cur;
 
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
@@ -610,32 +610,32 @@ void SeqExtStepPage::loop() {
       }
     }
   }
-  if (seq_param1.hasChanged()) {
+  if (seq_extparam1.hasChanged()) {
     // Horizontal translation
 
-    int16_t diff = seq_param1.cur - seq_param1.old;
-    if (seq_param4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
+    int16_t diff = seq_extparam1.cur - seq_extparam1.old;
+    if (seq_extparam4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
       diff *= (timing_mid / 3);
     }
     pos_cur_x(diff);
-    seq_param1.cur = 64;
-    seq_param1.old = 64;
+    seq_extparam1.cur = 64;
+    seq_extparam1.old = 64;
   }
 
-  if (seq_param2.hasChanged()) {
+  if (seq_extparam2.hasChanged()) {
     // Vertical translation
-    int16_t diff = seq_param2.old - seq_param2.cur; // reverse dir for sanity.
+    int16_t diff = seq_extparam2.old - seq_extparam2.cur; // reverse dir for sanity.
     pos_cur_y(diff);
-    seq_param2.cur = 64;
-    seq_param2.old = 64;
+    seq_extparam2.cur = 64;
+    seq_extparam2.old = 64;
   }
 
-  if (seq_param3.hasChanged()) {
-    int16_t diff = seq_param3.cur - seq_param3.old;
+  if (seq_extparam3.hasChanged()) {
+    int16_t diff = seq_extparam3.cur - seq_extparam3.old;
     pos_cur_w(diff);
   }
-  seq_param3.cur = 64;
-  seq_param3.old = 64;
+  seq_extparam3.cur = 64;
+  seq_extparam3.old = 64;
 }
 
 void SeqExtStepPage::display() {
@@ -650,14 +650,14 @@ void SeqExtStepPage::display() {
 
   // FOV offsets
 
-  if (seq_param4.cur > zoom_max) {
-    seq_param4.cur = zoom_max;
+  if (seq_extparam4.cur > zoom_max) {
+    seq_extparam4.cur = zoom_max;
   }
-  if (seq_param4.cur > active_track.length) {
-    seq_param4.cur = active_track.length;
+  if (seq_extparam4.cur > active_track.length) {
+    seq_extparam4.cur = active_track.length;
   }
 
-  uint8_t fov_zoom = seq_param4.cur;
+  uint8_t fov_zoom = seq_extparam4.cur;
 
   fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
   if (fov_length + fov_offset > roll_length) {
@@ -800,11 +800,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_NO)) {
         switch (key) {
         case MDX_KEY_UP: {
-          seq_param4.cur -= 1;
+          seq_extparam4.cur -= 1;
           return true;
         }
         case MDX_KEY_DOWN: {
-          seq_param4.cur += 1;
+          seq_extparam4.cur += 1;
           return true;
         }
         case MDX_KEY_LEFT: {

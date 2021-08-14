@@ -5,6 +5,13 @@ MCLEncoder seq_param2(0, 4, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
 MCLEncoder seq_param4(0, 64, ENCODER_RES_SEQ);
 
+MCLEncoder seq_extparam1(0, 128, ENCODER_RES_SEQ);
+MCLEncoder seq_extparam2(0, 128, ENCODER_RES_SEQ);
+MCLEncoder seq_extparam3(0, 128, ENCODER_RES_SEQ);
+MCLEncoder seq_extparam4(0, 128, ENCODER_RES_SEQ);
+
+
+
 MCLEncoder seq_lock1(0, 127, ENCODER_RES_PARAM);
 MCLEncoder seq_lock2(0, 127, ENCODER_RES_PARAM);
 
@@ -15,11 +22,9 @@ MCLEncoder ptc_param_scale(0, 23, ENCODER_RES_SEQ);
 
 SeqStepPage seq_step_page(&seq_param1, &seq_param2, &seq_param3, &seq_param4);
 
-#ifdef EXT_TRACKS
 uint8_t last_ext_track;
-SeqExtStepPage seq_extstep_page(&seq_param1, &seq_param2, &seq_param3,
-                                &seq_param4);
-#endif
+SeqExtStepPage seq_extstep_page(&seq_extparam1, &seq_extparam2, &seq_extparam3,
+                                &seq_extparam4);
 
 uint8_t last_md_track;
 
