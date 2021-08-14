@@ -473,6 +473,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_PASTE: {
         // Note paste
+        reset_undo();
         if (step != 255) {
           opt_paste_step_handler();
           note_interface.ignoreNextEvent(step);

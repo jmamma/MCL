@@ -218,6 +218,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
 }
 
 void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
+  reset_undo();
   if (device == &MD) {
     DEBUG_PRINTLN("setting md track");
     opt_undo = 255;
