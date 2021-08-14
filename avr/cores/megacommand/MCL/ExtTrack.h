@@ -36,7 +36,7 @@ public:
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     seq_data.channel = ext_seq_track->channel;
-    link.speed = SEQ_SPEED_1X;
+    link.speed = SEQ_SPEED_2X;
   }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
