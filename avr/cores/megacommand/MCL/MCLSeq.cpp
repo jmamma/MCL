@@ -27,7 +27,7 @@ void MCLSeq::setup() {
     ext_tracks[i].uart = &MidiUart2;
     ext_tracks[i].set_channel(i);
     ext_tracks[i].set_length(16);
-    ext_tracks[i].speed = SEQ_SPEED_2X;
+    ext_tracks[i].speed = SEQ_SPEED_1X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
     ext_arp_tracks[i].track_number = i;
