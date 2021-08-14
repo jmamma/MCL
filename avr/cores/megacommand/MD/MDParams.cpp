@@ -362,7 +362,7 @@ static const tuning_t tunings_tonal[] = {
   { GND_SN_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
   { GND_SW_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
   { GND_PU_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
-
+  { NFX_UC_MODEL, MIDI_NOTE_CS0, sizeof(tonal_tuning), 3, tonal_tuning },
 };
 
 static const tuning_t tunings[] = {
