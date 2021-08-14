@@ -402,10 +402,10 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
     track_number = last_ext_track;
   }
   mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
-  if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+  //if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
     reset_undo();
     mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
-  }
+  //}
 }
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
                               uint8_t track_number, MidiUartParent *uart_) {
@@ -413,10 +413,10 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
     track_number = last_ext_track;
   }
   mcl_seq.ext_tracks[track_number].note_off(note_num, velocity, uart_);
-  if (seq_ptc_page.recording && (MidiClock.state == 2)) {
+  //if (seq_ptc_page.recording && (MidiClock.state == 2)) {
     reset_undo();
     mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
-  }
+  //}
 }
 
 void SeqPtcPage::recalc_notemask() {

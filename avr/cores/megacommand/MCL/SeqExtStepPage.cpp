@@ -500,10 +500,10 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
   } else if (fov_y + fov_notes <= cur_y_) {
     fov_y_ = cur_y_ - fov_notes;
   }
-//  if (MidiClock.state != 2) {
-    fov_y = fov_y_;
-    cur_y = cur_y_;
-//  }
+  //  if (MidiClock.state != 2) {
+  fov_y = fov_y_;
+  cur_y = cur_y_;
+  //  }
 }
 
 void SeqExtStepPage::pos_cur_y(int16_t diff) {
@@ -547,9 +547,7 @@ void SeqExtStepPage::pos_cur_y(int16_t diff) {
 void SeqExtStepPage::pos_cur_w(int16_t diff) {
   if (diff < 0) {
     cur_w += diff;
-    if (cur_w < cur_w_min) {
-      cur_w = cur_w_min;
-    }
+    cur_w = max(cur_w, cur_w_min);
   } else {
     if (cur_x >= fov_offset + fov_length - cur_w - diff) {
       if (fov_offset + fov_length + diff < roll_length) {
@@ -720,11 +718,10 @@ void SeqExtStepPage::display() {
 void SeqExtStepPage::enter_notes() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
-    if (active_track.notes_on[n].value == 255)
+      if (active_track.notes_on[n].value == 255)
       continue;
     active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value);
-    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
-                          velocity, cond);
+    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value, velocity, cond);
   }
 }
 
@@ -796,7 +793,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       int w = cur_w;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (trig_interface.is_key_down(MDX_KEY_YES)) {
         w = 1;
       }
 
@@ -826,11 +823,21 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
 
         case MDX_KEY_LEFT: {
-          pos_cur_x(-1 * w);
+          if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+            mcl_seq.ext_tracks[last_ext_track].rotate_left();
+          } else {
+            pos_cur_x(-1 * w);
+            if (trig_interface.is_key_down(MDX_KEY_YES)) { trig_interface.ignoreNextEvent(MDX_KEY_YES); }
+          }
           return true;
         }
         case MDX_KEY_RIGHT: {
-          pos_cur_x(w);
+          if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+            mcl_seq.ext_tracks[last_ext_track].rotate_right();
+          } else {
+            pos_cur_x(w);
+            if (trig_interface.is_key_down(MDX_KEY_YES)) { trig_interface.ignoreNextEvent(MDX_KEY_YES); }
+          }
           return true;
         }
         case MDX_KEY_UP: {
@@ -841,11 +848,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           pos_cur_y(-1);
           return true;
         }
-        case MDX_KEY_YES: {
-          ignore_clear = true;
-          goto YES;
+          // case MDX_KEY_YES: {
+          //   ignore_clear = true;
+          //   goto YES;
+          // }
         }
-        }
+      }
+    } else {
+      switch (key) {
+      case MDX_KEY_YES: {
+        ignore_clear = true;
+        goto YES;
+      }
       }
     }
   }
@@ -875,8 +889,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
       DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
       return true;
-    }
-    else {
+    } else {
+            DEBUG_PRINTLN("here");
+            DEBUG_PRINTLN(active_track.notes_on_count);
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {

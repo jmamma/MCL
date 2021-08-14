@@ -1027,8 +1027,10 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   }
   uint16_t w = end_x - start_x;
 
+  if (MidiClock.state == 2 && SeqPage::recording) {
   del_note(start_x, w, note_num);
   add_note(start_x, w, note_num, notes_on[n].velocity);
+  }
 
   notes_on[n].value = 255;
   notes_on_count--;
