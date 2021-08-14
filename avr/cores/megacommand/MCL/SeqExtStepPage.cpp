@@ -876,7 +876,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
       return true;
     }
-    if (!recording) {
+    else {
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
@@ -884,24 +884,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (!active_track.del_note(cur_x, cur_w, cur_y)) {
           active_track.add_note(cur_x, cur_w, cur_y, velocity, cond);
         }
-      }
-      return true;
-    } else if (!ignore_clear) {
-      switch (last_rec_event) {
-      case REC_EVENT_TRIG:
-        if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          opt_clear = 2;
-        } else {
-          opt_clear = 1;
-        }
-        opt_clear = 1;
-        opt_clear_track_handler();
-        break;
-
-      case REC_EVENT_CC:
-        // TODO
-        // oled_display.textbox("CLEAR ", "LOCK");
-        break;
       }
       return true;
     }
