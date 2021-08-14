@@ -218,7 +218,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-
+   DEBUG_PRINTLN("paste here");
   bool destination_same = (col == t_col);
   if (t_w == 1) {
     destination_same = true;
@@ -255,10 +255,11 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
 
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
 
-      if (gdt != nullptr && gdt->track_type != ptrack->active)
-        //Don't allow paste in to unsupported slots
-        continue;
-
+      if (gdt == nullptr || gdt->track_type != ptrack->active) {
+       DEBUG_PRINTLN("track not supported");
+      //Don't allow paste in to unsupported slots
+       continue;
+      }
       int16_t link_row_offset = ptrack->link.row - t_row;
 
       uint8_t new_link_row = row + link_row_offset;
@@ -269,7 +270,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
       }
       ptrack->link.row = new_link_row;
       header.update_model(d_col, ptrack->get_model(),
-                          ptrack->get_device_type());
+                          ptrack->active);
       ptrack->on_copy(s_col, d_col, destination_same);
       ptrack->store_in_grid(d_col, y + row);
     }
