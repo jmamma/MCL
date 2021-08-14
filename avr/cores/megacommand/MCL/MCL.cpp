@@ -222,6 +222,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             GUI.currentPage() == &seq_extstep_page) {
           opt_paste = SeqPage::recording ? 2 : 1;
         }
+        reset_undo();
         opt_paste_track_handler();
         break;
       }
@@ -232,7 +233,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
              trig_interface.is_key_down(MDX_KEY_NO)))
           break;
-        //  opt_clear = 2;
+        opt_clear = 2;
         //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
         if (GUI.currentPage() == &seq_ptc_page ||
             GUI.currentPage() == &seq_extstep_page) {
