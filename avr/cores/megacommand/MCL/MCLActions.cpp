@@ -135,7 +135,6 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
 
   for (i = 0; i < NUM_DEVS; ++i) {
     if (save_dev_tracks[i] && elektron_devs[i] != nullptr) {
-      elektron_devs[dev_idx]->undokit_sync();
       if (merge > 0) {
         DEBUG_PRINTLN(F("fetching pattern"));
         if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
@@ -163,6 +162,9 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
 
       if (MidiClock.state == 2) {
         elektron_devs[i]->updateKitParams();
+      }
+      else {
+        elektron_devs[dev_idx]->undokit_sync();
       }
     }
   }
