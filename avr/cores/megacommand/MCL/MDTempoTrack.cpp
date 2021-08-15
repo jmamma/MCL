@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 void MDTempoTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-    send_tempo();
+  send_tempo();
 }
 
 uint16_t MDTempoTrack::calc_latency(uint8_t tracknumber) {
@@ -18,7 +18,18 @@ void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   send_tempo();
 }
 
-void MDTempoTrack::get_tempo() { tempo = MidiClock.get_tempo(); }
+void MDTempoTrack::get_tempo() {
+  bool tempo_from_clock = true;
+  if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
+    uint16_t tp;
+    if (MD.get_tempo(tp)) {
+      tempo = (float)tp / 24.0;
+      return;
+    }
+  }
+  //Fall back to clock measurement;
+  tempo = MidiClock.get_tempo();
+}
 
 bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
                                  SeqTrack *seq_track, uint8_t merge,
@@ -32,8 +43,8 @@ bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
   if (column != 255 && online == true) {
     get_tempo();
     if (merge == SAVE_MD) {
-        link.length = MD.pattern.patternLength;
-        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+      link.length = MD.pattern.patternLength;
+      link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
     }
   }
 

@@ -29,14 +29,34 @@ uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   return sendRequest(data, 2, send);
 }
 
+bool ElektronDevice::get_tempo(uint16_t &tempo) {
+
+  uint8_t data[2] = {0x70, 0x3F};
+  sendRequest(data, sizeof(data));
+
+  uint8_t msgType = waitBlocking();
+
+  auto begin = sysex_protocol.header_size + 1;
+  auto listener = getSysexListener();
+  listener->sysex->rd_cur = listener->msg_rd;
+
+  tempo = 0;
+  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x3F) {
+      tempo = listener->sysex->getByte(begin+1) << 7;
+      tempo |= (listener->sysex->getByte(begin+2));
+      return true;
+  }
+
+  return false;
+}
+
+
 bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
 
   uint8_t data[2] = {0x70, 0x33};
   sendRequest(data, sizeof(data));
 
   uint8_t msgType = waitBlocking();
-
-  fw_caps = 0;
 
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
