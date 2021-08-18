@@ -402,9 +402,9 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
     track_number = last_ext_track;
   }
   mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
-  //if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
-    reset_undo();
-    mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
+  // if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+  reset_undo();
+  mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
   //}
 }
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
@@ -413,9 +413,9 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
     track_number = last_ext_track;
   }
   mcl_seq.ext_tracks[track_number].note_off(note_num, velocity, uart_);
-  //if (seq_ptc_page.recording && (MidiClock.state == 2)) {
-    reset_undo();
-    mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
+  // if (seq_ptc_page.recording && (MidiClock.state == 2)) {
+  reset_undo();
+  mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
   //}
 }
 
@@ -461,7 +461,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (show_seq_menu) {
       if (mask == EVENT_BUTTON_PRESSED) {
-      toggle_ext_mask(note);
+        toggle_ext_mask(note);
       }
       return true;
     }
@@ -607,6 +607,16 @@ uint8_t SeqPtcPage::process_ext_pitch(uint8_t note_num, bool note_type) {
   return pitch;
 }
 
+bool SeqPtcMidiEvents::is_md_midi(uint8_t channel) {
+  return ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
+          (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) && (GUI.currentPage() != &seq_extstep_page);
+/*
+  return (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) &&
+         (GUI.currentPage() != &seq_extstep_page);
+*/
+}
+
+
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -621,9 +631,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   //
   uint8_t pitch;
   bool note_on = true;
-  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
-      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
-
+  if (is_md_midi(channel)) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
     if (note_num < NOTE_C2) {
@@ -691,8 +699,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t pitch;
 
-  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
-      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+  if (is_md_midi(channel)) {
     if (note_num < NOTE_C2) {
       return;
     }
@@ -737,8 +744,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
 
-  if ((mcl_cfg.uart2_ctrl_mode - 1 == channel) ||
-      (mcl_cfg.uart2_ctrl_mode == MIDI_OMNI_MODE)) {
+  if (is_md_midi(channel)) {
     // If external keyboard controlling MD param, send parameter updates
     // to all polyphonic tracks
     if ((param < 16) || (param > 39)) {
@@ -788,11 +794,11 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
-  if (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (is_md_midi(channel)) {
     return;
   }
 
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;
@@ -805,10 +811,10 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
-  if (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (is_md_midi(channel)) {
     return;
   }
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;
@@ -820,10 +826,10 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
-  if (mcl_cfg.uart2_ctrl_mode != MIDI_LOCAL_MODE) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (is_md_midi(channel)) {
     return;
   }
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;

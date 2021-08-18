@@ -16,6 +16,8 @@ class SeqPtcMidiEvents : public MidiCallback {
 public:
   bool state;
 
+  bool is_md_midi(uint8_t channel);
+
   void setup_callbacks();
   void remove_callbacks();
 
