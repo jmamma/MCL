@@ -1115,9 +1115,23 @@ void MDClass::setSysexRecPos(uint8_t rec_type, uint8_t position) {
 }
 
 void MDClass::updateKitParams() {
+
+  uint16_t old_mutes[16];
+
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
     mcl_seq.md_tracks[n].update_kit_params();
+    //Perform silent reset, to prevent MDkit copying running parameter locks in to undo kit
+    mcl_seq.md_tracks[n].reset_params();
   }
+  setLed2();
+  undokit_sync();
+
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+    mcl_seq.md_tracks[n].mute_state = old_mutes[n];
+  }
+
 }
 
 uint16_t MDClass::sendKitParams(uint8_t *masks) {
