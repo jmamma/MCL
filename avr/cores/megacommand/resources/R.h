@@ -378,11 +378,11 @@ extern const unsigned char __R_page_entries[] PROGMEM;
 struct __T_page_entries {
   union {
     PageSelectEntry Entries[0];
-    char zz__Entries[288];
+    char zz__Entries[312];
   };
-  static constexpr size_t countof_Entries = 288 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 288;
-  static constexpr size_t __total_size = 288;
+  static constexpr size_t countof_Entries = 312 / sizeof(PageSelectEntry);
+  static constexpr size_t sizeofof_Entries = 312;
+  static constexpr size_t __total_size = 312;
 };
 
 extern const unsigned char __R_tuning[] PROGMEM;
