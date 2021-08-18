@@ -1125,7 +1125,6 @@ void MDClass::updateKitParams() {
     //Perform silent reset, to prevent MDkit copying running parameter locks in to undo kit
     mcl_seq.md_tracks[n].reset_params();
   }
-  setLed2();
   undokit_sync();
 
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
