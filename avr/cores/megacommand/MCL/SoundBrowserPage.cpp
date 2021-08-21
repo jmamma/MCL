@@ -262,16 +262,13 @@ void SoundBrowserPage::query_sample_slots() {
     }
   }
   ((MCLEncoder *)encoders[1])->max = numEntries - 1;
-
   sysex->removeSysexListener(this);
 }
 
 // MidiSysexListenerClass implementation
 void SoundBrowserPage::start() {}
 
-void SoundBrowserPage::end() {}
-
-void SoundBrowserPage::end_immediate() {
+void SoundBrowserPage::end() {
   if (sysex->getByte(3) != 0x02)
     return;
   if (sysex->getByte(4) != 0x00)
@@ -295,9 +292,9 @@ void SoundBrowserPage::end_immediate() {
     s_tmpbuf[4] = 0;
     strcpy(temp_entry, "00 - ");
     if (i < 10) {
-      itoa(i, temp_entry+1, 10);
+      mcl_gui.put_value_at(i, temp_entry+1);
     } else {
-      itoa(i, temp_entry, 10);
+      mcl_gui.put_value_at(i, temp_entry);
     }
     if (slot_occupied) {
       strcat(temp_entry, s_tmpbuf);
@@ -308,6 +305,10 @@ void SoundBrowserPage::end_immediate() {
   }
 
   s_query_returned = true;
+
+}
+
+void SoundBrowserPage::end_immediate() {
 }
 
 
