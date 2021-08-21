@@ -1,4 +1,13 @@
-MCL 4.00 20/06/2021
+MCL 4.00 21/08/2021
+
+MCL 4.00 is an significant achieviement. It builds upon the foundations of the 3.XX firmware,
+whilst improving stability, performance and workflow across several key areas.
+The Machinedrum and MCL integration is now closer than ever.
+In short, MCL 4.0 achieves the original vision of the project, a seemless
+enhancement of the Elektron Machinedrum.
+
+It is recommended that you read the updated user documentation in which
+many of the changes listed below, are explained in greater detail.
 
 - Enhanced GUI / Machinedrum GUI convergance.
  Version X.05 of the MD firmware introduces a third editing mode beyond Classic and Extended
@@ -11,53 +20,8 @@ MCL 4.00 20/06/2021
 
  Enhanced mode enables the Machinedrum's GUI to be fully integrated in to the MCL workflow
  All MD sequencer editing commands now apply to the MCL sequencer.
-   This includes:
-      - [ Record ] button to enter/exit step editing.
-	  - [ Function + Record ] to enter realtime record mode (on any page).
-	  - [ Function + Clear/Copy/Paste ] works across pattern/track/page/step.
-	  - [ Step + Left/Right ] Microtiming menu drawn on the MD.
-	  - [ Step + Up/Down ] Conditional trig selection.
-	  - [ Function + Left/Right ] shift track.
-	  - [ Function + Up ] reverse track.
-	  - Step sequencer cursor is now fully synced with the MC.
-	  - Parameter lock editing now works identically to the MD.
-      - Track length and speed settings can be set via the MD's scale menu.
-	    When in step edit mode, this applies to a single track otherwise it
-		will apply to all MD tracks.
-	  - Track sequencer data is automatically copied to new pages when extending a track's
-	    length for the first time.
 
-   MCL commands:
-      - [ Global ] opens Page Select page.
-
-      Grid Page:
-	  - [ Up/Down/Left/Right ] navigate the grid by positioning the grid cursor.
-	  - [ Bank Buttons ] navigate the grid (in bank increments).
-	  - Hold [ No ] button opens Slot Menu.
-
-	  Loading/Saving:
-	  - [ Yes ] opens Load Page. Press and hold [ Yes ] again for Group Load menu.
-	  - [ Function + Yes ] opens Save page. Press and hold [ Yes ] again for Group Save menu.
-      - You can now load patterns/rows in the traditional MD way using the [ Bank + Trig buttons ].
-	    -- [ Bank + Trig ] group loads the selected row, from the MCL grid.
-        -- [ Bank + Multiple Trigs ] creates a chain queue consisting of consecutive group
-		   loads corresponding rows.
-
-      Load Page:
-	  - [ Bank Buttons ] can be used to select chain mode: Manual, Auto or Queue.
-
-	  Slot Menu: Hold [ No ] button to open
-	  - [ Up/Down/Left/Right ] to select multiple slots in the grid.
-	  - [ Clear/Copy/Paste ] to clear/copy/paste selected slot(s)
-	  - [ Yes ] load selected slots. Slots are loaded according to the load mode setting in the
-	    LoadPage.
-
-	  Mixer Page:
-	  - [ No + Trig ] revert parameter edits.
-
-      Chromatic Page:
-	  - [ Up/Down ] change octave
-	  - [ Left/Right ] transpose
+ See the MCL 4.0 user documenation for a summary of commands.
 
 - Changes:
  Chain Mode renamed to Load Mode.
@@ -81,7 +45,7 @@ MCL 4.00 20/06/2021
  Slot Menu:
 
  Added Len parameter for adjusting a slot's length without loading.
- Row parameter has been named to Jump. In LOad Auto mode, the Jump parameter corresponds to the
+ Row parameter has been named to Jump. In Load Auto mode, the Jump parameter corresponds to the
  destination of next slot transition.
 
  Save Page:
@@ -136,15 +100,18 @@ MCL 4.00 20/06/2021
 
  Both .wav or .syx (SDS) file format's are supported.
 
-- Other Changes:
+- Other Changes + Fixes:
 
- Received MIDI data is now processed whenever possible and is no longer
- subject to program behaviour. This means MIDI receive latency will be the same across all MCL pages
- and the display refresh no longer needs to be locked during live record. If
- you are triggering chromatic mode from external MIDI keyboard/sequencer,
- expect note latency/jitter to be consistent no matter which page/mode you are in.
+ Received MIDI messages are now processed immediately.
+ MIDI latency will be the same across all MCL pages and the display refresh no longer needs to be locked during live record.
+ If you are triggering chromatic mode from external MIDI keyboard/sequencer,
+ you can expect note latency/jitter to be consistent no matter which page/mode you are in.
 
  MIDI Forwarding has been re-implemented and will no longer result in corrupted message streams.
+
+ Added "CC LOOP" option for forwarding MIDI CC from Port 2 IN to Port 2 OUT.
+
+ Pitch bend, mod wheel and channel after touch support added for Ext MIDI Tracks. All recordable.
 
  SD Card data access has been made robust to tranisent read errors. For best SD Card performance,
  ensure the card is formated FAT32 via the SD Card Foundations formatting utility.
@@ -158,19 +125,31 @@ MCL 4.00 20/06/2021
  RAM page transitions now occur immediately, instead of delaying an additional
  cycle.
 
+ Paramter locks are not transmitted when a track is muted.
+
+ Paramter locks would not always reach their target, resulting in a loop. Fixed.
+
  When assigning a Machine to the MD, parameters of the current sound will not be altered.
  This greatly improves the smoothness of slot loading.
+
+ Mixer Page's parameterr recall state is synced with the MD's UNDO kit.
+ Individual track parameter recall has been re-enabled. Press [ Trig ] + [ No ]
 
  Poly mode voice algorithm improved.
 
  When using an external MIDI keyboard, scales are now padded across 12 notes for more enjoyable playing.
+
+ Support for NFX machines.
+
+ Numerous bug fixes and stability improvements across all aspects of the
+ firwmare, which will not be documented here.
 
 Deprecated Features:
 
 - Chain RAND has been deprecated.
 - Parameter Lock page has been deprecated.
 - SD Card drive (MD backup tool) has been deprecated.
-
+- Convert Project deprecated. *Project format is the same between 3.X and 4.0
 
 MCL 3.10d 09/03/2021
 
