@@ -76,13 +76,13 @@ void SoundBrowserPage::init() {
 void SoundBrowserPage::save_sound() {
 
   MDSound sound;
-  char sound_name[] = "        ";
+  char sound_name[8] = "        ";
 
   grid_page.prepare();
-  PGM_P tmp;
-  tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
   memcpy(sound_name, MD.kit.name, 4);
-  strncpy_P(&sound_name[5], tmp, 3);
+  const char* tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
+  copyMachineNameShort(tmp, sound_name+4);
+  sound_name[6] = '\0';
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[FILE_ENTRY_SIZE];
@@ -143,8 +143,15 @@ void SoundBrowserPage::send_sample(int slot, bool is_syx) {
 }
 
 void SoundBrowserPage::recv_wav(int slot) {
-  char wav_name[] = "            ";
+  char wav_name[FILE_ENTRY_SIZE] = "";
+  // should be of form "ID - NAME..."
+  //                      ^--~~~~~~~
+  //                         memmove
   get_entry(slot, wav_name);
+  memmove(wav_name+2,wav_name+5,FILE_ENTRY_SIZE - 5);
+  wav_name[FILE_ENTRY_SIZE - 3] = '\0';
+  wav_name[FILE_ENTRY_SIZE - 2] = '\0';
+  wav_name[FILE_ENTRY_SIZE - 1] = '\0';
 
   if (mcl_gui.wait_for_input(wav_name, "Sample Name", sizeof(wav_name) - 1)) {
     char temp_entry[FILE_ENTRY_SIZE];
@@ -291,11 +298,13 @@ void SoundBrowserPage::end() {
     bool slot_occupied = s_tmpbuf[4];
     s_tmpbuf[4] = 0;
     strcpy(temp_entry, "00 - ");
-    if (i < 10) {
-      mcl_gui.put_value_at(i, temp_entry+1);
+    if (i < 9) {
+      mcl_gui.put_value_at(i+1, temp_entry+1);
     } else {
-      mcl_gui.put_value_at(i, temp_entry);
+      mcl_gui.put_value_at(i+1, temp_entry);
     }
+    // put_value_at null-terminates the string. undo that.
+    temp_entry[2] = ' ';
     if (slot_occupied) {
       strcat(temp_entry, s_tmpbuf);
     } else {
