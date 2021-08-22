@@ -1,4 +1,4 @@
-## MIDI-CTRL20
+## MCL
 
 The following repository contains a functional Arduino Mega 2560 core and the MegaCommandLive firmware.
 
