@@ -1,10 +1,10 @@
-## MIDI-CTRL20
+## MCL
 
 The following repository contains a functional Arduino Mega 2560 core and the MegaCommandLive firmware.
 
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
 
-This is a fork of Manuel Odendahl's MIDICtrl Framework:
+Parts of this project are built upon the work of Manuel Odendahl's MIDICtrl Framework:
 https://github.com/wesen/mididuino
 
 The updated repository contains numerous enhancements and fixes.
@@ -13,8 +13,15 @@ The updated repository contains numerous enhancements and fixes.
 - In 2017 the core was modified to work alongside standard Arduino Code and Libraries.
 - In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
 part of the MIDICtrl framework.
+- In 2021 the repository was renamed to MCL, to coincide with the MCL 4.0 release.
+
+### Firmware Download.
+
+See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
 
 ### Installing the MIDICtrl core.
+
+The documentation below is for advanced users who may wish to complile the firmware themselves.
 
 MacOS / Linux: 
 
@@ -40,23 +47,7 @@ https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
 3) Download MIDICtrl20_MegaCommand and extract to the `arduino-1.8.5\hardware\` folder. 
 
 4) If you have an admin-installed Arduino IDE, extract MIDICtrl20_MegaCommand to the arduino user directory `%USERPROFILE%\Documents\Arduino\hardware\` (e.g. `C:\Users\your_name\Documents\Arduino\hardware\`)
-
-
-### Configure the Core
-
-You need to set the correct display type.
-
-As of 2.15 OLED display is enabled by default.
-
-To enable the HD44780 16x2 display edit OLED.h
-```
-${install_dir}/MIDICtrl20_MegaCommand/avr/cores/megacommand/OLED.h
-
-Change
-#define OLED_DISPLAY
-to
-//#define OLED_DISPLAY
-
+5) 
 ```
 
 ### Selecting the Core
@@ -83,8 +74,3 @@ void setup() {
 }
 ```
 3) Compile sketch and upload to your MegaCommand
-
-### Pre-compile binaries.
-
-The latest release binaries can always be found here https://github.com/jmamma/MIDICtrl20_MegaCommand/releases/
-
