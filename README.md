@@ -14,11 +14,13 @@ The updated repository contains numerous enhancements and fixes.
 - In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
 part of the MIDICtrl framework.
 
-## For users: Firmware download.
+### Firmware Download.
 
 See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
 
-### For developers: Installing the MIDICtrl core.
+### Installing the MIDICtrl core.
+
+The documentation below is for advanced users who may wish to complile the firmware themselves.
 
 MacOS / Linux: 
 
