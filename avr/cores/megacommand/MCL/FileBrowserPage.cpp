@@ -380,6 +380,7 @@ void FileBrowserPage::_handle_filemenu() {
     }
     break;
   case FM_OVERWRITE: // overwrite
+    /*
     strcpy(buf2, "Overwrite ");
     strcat(buf2, buf1);
     strcat(buf2, "?");
@@ -388,7 +389,7 @@ void FileBrowserPage::_handle_filemenu() {
       // when on_select is called.
       file.open(buf1, O_READ);
       on_select(buf1);
-    }
+    }*/
     break;
   }
 }

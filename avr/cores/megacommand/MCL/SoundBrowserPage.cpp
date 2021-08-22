@@ -46,13 +46,13 @@ void SoundBrowserPage::init() {
   filetype_names[2] = c_syx_name;
   filetype_max = FT_SYX;
 
+  show_overwrite = false;
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
     show_dirs = false;
     show_save = false;
     show_filemenu = false;
     show_new_folder = false;
-    show_overwrite = true;
     show_filetypes = false;
     show_parent = false;
     query_sample_slots();
@@ -63,7 +63,6 @@ void SoundBrowserPage::init() {
     show_save = (filetype_idx != FT_SYX);
     show_filemenu = true;
     show_new_folder = true;
-    show_overwrite = true;
     show_filetypes = true;
     show_parent = true;
     query_filesystem();
