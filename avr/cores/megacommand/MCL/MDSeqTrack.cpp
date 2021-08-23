@@ -8,6 +8,9 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
   if (len == 0) {
     len = 1;
   }
+  if (len > 64) {
+    len = 16;
+  }
   length = len;
 
   uint8_t step = step_count;
