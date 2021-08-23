@@ -33,7 +33,7 @@ MacOS / Linux:
 2) Get the MIDICtrl library and MegaCommand Core (same repo) and copy it to /Applications/Arduino.app/Contents/Java/hardware/ :
 ```
    cd /Applications/Arduino.app/Contents/Java/hardware/
-   git clone https://github.com/jmamma/MIDICtrl20_MegaCommand
+   git clone https://github.com/jmamma/MCL
 ```
 Windows:
 
@@ -46,7 +46,7 @@ https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
 
 3) Download MIDICtrl20_MegaCommand and extract to the `arduino-1.8.5\hardware\` folder. 
 
-4) If you have an admin-installed Arduino IDE, extract MIDICtrl20_MegaCommand to the arduino user directory `%USERPROFILE%\Documents\Arduino\hardware\` (e.g. `C:\Users\your_name\Documents\Arduino\hardware\`)
+4) If you have an admin-installed Arduino IDE, extract MCL to the arduino user directory `%USERPROFILE%\Documents\Arduino\hardware\` (e.g. `C:\Users\your_name\Documents\Arduino\hardware\`)
 5) 
 ```
 
