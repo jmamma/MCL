@@ -21,7 +21,7 @@ See https://github.com/jmamma/MCL/releases for firmware binaries, user documenta
 
 ### Installing the MIDICtrl core.
 
-The documentation below is for advanced users who may wish to complile the firmware themselves.
+*The documentation below is for advanced users*
 
 MacOS / Linux: 
 
