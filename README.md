@@ -11,15 +11,14 @@ The updated repository contains numerous enhancements and fixes.
 
 - In 2016 the core was adapted to compile with the ArduinoIDE and MegaCommand hardware design.
 - In 2017 the core was modified to work alongside standard Arduino Code and Libraries.
-- In 2018 the MegaCommandLive firmware was refactored in to c++ libraries and is now
-part of the MIDICtrl framework.
+- In 2018 the MegaCommandLive firmware was refactored in to c++ libraries.
 - In 2021 the repository was renamed to MCL, to coincide with the MCL 4.0 release.
 
 ### Firmware Download.
 
 See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
 
-### Installing the MIDICtrl core.
+### Installing the MCL core.
 
 *The documentation below is for advanced users*
 
