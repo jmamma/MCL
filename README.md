@@ -1,6 +1,6 @@
-## MCL
+## MegaCommand Live (MCL)
 
-The following repository contains a functional Arduino Mega 2560 core and the MegaCommandLive firmware.
+The following repository contains a functional Arduino Mega 2560 core and the MegaCommand Live firmware.
 
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
 
