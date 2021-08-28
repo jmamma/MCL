@@ -214,6 +214,7 @@ public:
 
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
+  virtual uint8_t get_mute_cc() { return 255; }
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
 };

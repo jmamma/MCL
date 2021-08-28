@@ -324,8 +324,14 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
-      if (param == 0x5E) {
-        mcl_seq.ext_tracks[n].mute_state = value;
+      if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
+        if (value > 0) {
+          mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_ON;
+          mcl_seq.ext_tracks[n].buffer_notesoff();
+        }
+        else {
+          mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
+        }
       } else {
         mcl_seq.ext_tracks[n].update_param(param, value);
       }

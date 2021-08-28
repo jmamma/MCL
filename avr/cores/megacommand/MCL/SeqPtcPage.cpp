@@ -788,7 +788,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   }
 
   if (SeqPage::recording && (MidiClock.state == 2)) {
-    mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
+    if (param != midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
+      mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
+    }
   }
   mcl_seq.ext_tracks[n].update_param(param, value);
 }

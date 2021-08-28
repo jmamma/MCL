@@ -56,14 +56,14 @@ many of the changes listed below, are explained in greater detail.
 
 - Load Mode Enhancements:
 
- Each column in the grid now has it's own dedicated load setting. It can be either Manual, Auto or Queue.
+ Each column in the grid now has its own dedicated load setting. It can be either Manual, Auto or Queue.
 
  Chain Queue is a new mode that has been added for realtime looping.
 
  Each column of the Grid can have up to 8 slots queued at any time. Queued slots are played in order
- and then the sequence is repeated indefinately.
+ and then the sequence is repeated indefinitely.
 
- When Queue mode is selected from the Load page, each loaded slot will be added to the corresonding column's
+ When Queue mode is selected from the Load page, each loaded slot will be added to the corresponding column's
  queue.
 
  A column's queue can be cleared by switching chain mode to either Manual or Auto and then loading a slot in
@@ -89,7 +89,7 @@ many of the changes listed below, are explained in greater detail.
  MD drum sounds are now triggered in parallel using a modification of the MIDI note-on specification.
  This eliminates phase distortion that could previously be heard on drum sounds playing on the same step.
 
- Each sequencer track now has it's own dedicated Arpeggiator. Adjustments made to Arpeggiator menu settings
+ Each sequencer track now has its own dedicated Arpeggiator. Adjustments made to Arpeggiator menu settings
  will be applied to the current track's Arp.
  Note: Arpeggiator data is not currently saved with the track data.
 
@@ -113,10 +113,10 @@ many of the changes listed below, are explained in greater detail.
 
  Pitch bend, mod wheel and channel after touch support added for Ext MIDI Tracks. All recordable.
 
- SD Card data access has been made robust to tranisent read errors. For best SD Card performance,
- ensure the card is formated FAT32 via the SD Card Foundations formatting utility.
+ SD Card data access has been made robust to transient read errors. For best SD Card performance,
+ ensure the card is formatted FAT32 via the SD Card Foundations formatting utility.
 
- MCL no longer requires a dedicted MD global and will only modify settings as
+ MCL no longer requires a dedicated MD global and will only modify settings as
  needed.
 
  MCL will automatically detect kit model changes eliminating the need to
@@ -125,14 +125,14 @@ many of the changes listed below, are explained in greater detail.
  RAM page transitions now occur immediately, instead of delaying an additional
  cycle.
 
- Paramter locks are not transmitted when a track is muted.
+ Parameter locks are not transmitted when a track is muted.
 
- Paramter locks would not always reach their target, resulting in a loop. Fixed.
+ Parameter locks would not always reach their target, resulting in a loop. Fixed.
 
  When assigning a Machine to the MD, parameters of the current sound will not be altered.
  This greatly improves the smoothness of slot loading.
 
- Mixer Page's parameterr recall state is synced with the MD's UNDO kit.
+ Mixer Page's parameter recall state is synced with the MD's UNDO kit.
  Individual track parameter recall has been re-enabled. Press [ Trig ] + [ No ]
 
  Poly mode voice algorithm improved.
@@ -142,7 +142,7 @@ many of the changes listed below, are explained in greater detail.
  Support for NFX machines.
 
  Numerous bug fixes and stability improvements across all aspects of the
- firwmare, which will not be documented here.
+ firmware, which will not be documented here.
 
 Deprecated Features:
 
