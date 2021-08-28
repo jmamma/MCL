@@ -76,7 +76,7 @@ void SoundBrowserPage::init() {
 void SoundBrowserPage::save_sound() {
 
   MDSound sound;
-  char sound_name[8] = "        ";
+  char sound_name[9] = "        ";
 
   grid_page.prepare();
   memcpy(sound_name, MD.kit.name, 4);
