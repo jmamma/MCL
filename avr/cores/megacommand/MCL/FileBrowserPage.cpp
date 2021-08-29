@@ -59,11 +59,11 @@ bool FileBrowserPage::add_entry(const char *entry) {
   return true;
 }
 
-#define FM_NEW_FOLDER 0
-#define FM_DELETE 1
-#define FM_RENAME 2
-#define FM_OVERWRITE 3
-#define FM_CANCEL 4
+#define FM_CANCEL 0
+#define FM_NEW_FOLDER 1
+#define FM_DELETE 2
+#define FM_RENAME 3
+#define FM_OVERWRITE 4
 
 void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {

@@ -85,11 +85,11 @@ menu_t<5> file_menu_layout = {
     "FILE",
     {
         //            m  r  n  d  p  f  o
+        {"CANCEL",    0, 0, 0, 0, 0, 0, 0},
         {"NEW DIR.",  0, 0, 0, 0, 0, 0, 0},
         {"DELETE",    0, 0, 0, 0, 0, 0, 0},
         {"RENAME",    0, 0, 0, 0, 0, 0, 0},
         {"OVERWRITE", 0, 0, 0, 0, 0, 0, 0},
-        {"CANCEL",    0, 0, 0, 0, 0, 0, 0},
     },
     0, 0
 };
