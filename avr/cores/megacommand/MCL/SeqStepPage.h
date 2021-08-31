@@ -30,6 +30,7 @@ public:
               Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {
       }
+  void disable_md_micro();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void setup();
