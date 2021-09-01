@@ -9,6 +9,7 @@ if [ $? -eq 0 ]; then
   ram_free=$((1024 * 64 - $ram_used - 8 * 1024))
   echo RAM_USED: $ram_used
   echo RAM_FREE: $ram_free
+  #avrdude -c atmelice_isp -p m2560 -D -Uflash:w:./main.hex  -B 1
   ${AVR_DIR}/bin/avrdude -C${AVR_DIR}/etc/avrdude.conf -v -V -patmega2560 -cwiring -P${DEV} -b115200 -D -Uflash:w:./main.hex
 fi
 
