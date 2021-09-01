@@ -1,3 +1,15 @@
+MCL 4.01 01/09/2021
+
+Fixes:
+
+- MCL would crash when Saving sounds from the Sound Manager.
+- Microtiming window could remain stuck on the MD when clearing or copying
+  steps.
+
+It is recommended that you also update your Machinedrum to X.05B. X.05B fixes
+an issue in Enhanced mode whereby GUI keys would become stuck after a period
+of time.
+
 MCL 4.00 21/08/2021
 
 MCL 4.00 is an significant achieviement. It builds upon the foundations of the 3.XX firmware,
