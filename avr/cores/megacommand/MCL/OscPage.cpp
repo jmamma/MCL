@@ -109,8 +109,10 @@ void OscPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
-    trig_interface.on();
-    note_interface.state = true;
+    if (!trig_interface.state) {
+      trig_interface.on();
+      note_interface.state = true;
+    }
   }
 
   else {
