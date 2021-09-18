@@ -744,6 +744,10 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
 
+  if (param < 2 || mcl_cfg.uart_cc_loopback) {
+    MidiUart2.sendCC(channel, param, value);
+  }
+
   if (is_md_midi(channel)) {
     // If external keyboard controlling MD param, send parameter updates
     // to all polyphonic tracks
@@ -768,10 +772,6 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;
-  }
-
-  if (param < 2 || mcl_cfg.uart_cc_loopback) {
-    mcl_seq.ext_tracks[channel].send_cc(param, value);
   }
 
   if (GUI.currentPage() == &seq_extstep_page && SeqPage::pianoroll_mode > 0) {
