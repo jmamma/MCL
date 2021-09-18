@@ -1,3 +1,12 @@
+MCL 4.02 18/09/2021
+
+Fixes:
+
+- Wav designer Trig keys would not respond when editing wavform.
+- Poly-page GUI fixes.
+- Row name loading did not work when sequencer stopped.
+- Fix unstable behaviour when saving under certain circumstances.
+
 MCL 4.01 01/09/2021
 
 Fixes:
