@@ -164,7 +164,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
         elektron_devs[i]->updateKitParams();
       }
       else {
-        elektron_devs[dev_idx]->undokit_sync();
+        elektron_devs[i]->undokit_sync();
       }
     }
   }
@@ -177,16 +177,13 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
     proj.read_grid_row_header(&row_headers[n], grid_page.getRow());
   }
 
-  DEBUG_DUMP(Analog4.connected);
-  bool online;
-
   for (i = 0; i < NUM_SLOTS; i++) {
     if (slot_select_array[i] > 0) {
 
       GridDeviceTrack *gdt = get_grid_dev_track(i, &track_idx, &dev_idx);
       uint8_t grid_idx = get_grid_idx(i);
 
-      online = (devs[dev_idx] != nullptr);
+      bool online = (devs[dev_idx] != nullptr);
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
 
