@@ -476,12 +476,13 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   uint16_t latency_ms = 0;
 
   GridRowHeader row_header;
+
+  proj.select_grid(old_grid);
   proj.read_grid_row_header(&row_header, row);
 
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     auto elektron_dev = devs[i]->asElektronDevice();
     if (elektron_dev != nullptr) {
-      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
 
       char *dst = devs[i]->asElektronDevice()->getKitName();
       if (dst != nullptr) {
@@ -490,12 +491,16 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
           memcpy(dst, row_header.name, len);
           dst[len - 1] = '\0';
         }
-        strcpy(dst, "NEW_KIT");
+        else {
+          strcpy(dst, "NEW KIT");
+        }
+        DEBUG_PRINTLN("SEND NAME");
+        DEBUG_PRINTLN(dst);
       }
+      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
     }
   }
 
-  proj.select_grid(old_grid);
 
   // switch back to old grid before driving the GUI loop
   // note, do not re-enter grid_task -- stackoverflow
