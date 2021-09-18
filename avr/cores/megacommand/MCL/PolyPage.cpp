@@ -129,8 +129,8 @@ bool PolyPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    mcl_cfg.write_cfg();
     GUI.ignoreNextEvent(event->source);
+    mcl_cfg.write_cfg();
     GUI.popPage();
     return true;
   }
