@@ -8,11 +8,10 @@ void PolyPage::init() {
   DEBUG_PRINT_FN();
   trig_interface.on();
   note_interface.init_notes();
-#ifdef OLED_DISPLAY
   classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
-#endif
+  MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
 }
 
 void PolyPage::cleanup() {
