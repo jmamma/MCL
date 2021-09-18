@@ -132,6 +132,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
     GUI.ignoreNextEvent(event->source);
     mcl_cfg.write_cfg();
     GUI.popPage();
+    GUI.currentPage()->init();
     return true;
   }
 
