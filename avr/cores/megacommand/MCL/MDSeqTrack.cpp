@@ -72,9 +72,11 @@ void MDSeqTrack::re_sync() {
   //  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
-void MDSeqTrack::seq(MidiUartParent *uart_) {
+void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   MidiUartParent *uart_old = uart;
+  MidiUartParent *uart2_old = uart2;
   uart = uart_;
+  uart2 = uart2_;
 
   uint8_t timing_mid = get_timing_mid_inline();
 
@@ -127,18 +129,172 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       auto &step = steps[current_step];
       bool send_trig = trig_conditional(step.cond_id);
       if (send_trig || !step.cond_plock) {
-        send_parameter_locks_inline(current_step, step.trig, lock_idx);
-        if (step.slide) {
-          locks_slides_recalc = current_step;
-          locks_slides_idx = lock_idx;
-        }
-        if (send_trig && step.trig) {
-          send_trig_inline();
+        if (MD.kit.models[track_number] & 0xF0 == MID_MODEL) {
+          send_midi(current_step, step.trig, lock_idx);
+        } else {
+          send_parameter_locks_inline(current_step, step.trig, lock_idx);
+          if (step.slide) {
+            locks_slides_recalc = current_step;
+            locks_slides_idx = lock_idx;
+          }
+          if (send_trig && step.trig) {
+            send_trig_inline();
+          }
         }
       }
     }
   }
   uart = uart_old;
+  uart2 = uart2_old;
+}
+
+void MDSeqTrack::buffer_notes_off() {
+  if (MD.kit.models[track_number] & 0xF0 != MID_MODEL) {
+    return;
+  }
+  uint8_t channel = MD.kit.models[track_number] - MID_MODEL;
+  for (uint8_t i = 0; i < 3; i++) {
+    if (midi_notes_buffer[i] != 255) {
+      uart2->sendNoteOff(channel, midi_notes_buffer[i], 0);
+      midi_notes_buffer[i] = 255;
+    }
+  }
+}
+
+void MDSeqTrack::send_midi(uint8_t step, bool trig, uint16_t lock_idx) {
+
+  bool send_notes_off = false;
+  uint8_t notes[3] = {255, 255, 255};
+  uint8_t note_vel = MD.kit.params[track_number][4];
+  uint8_t note_length = MD.kit.params[track_number][3];
+  uint8_t cc_params[6] = {255, 255, 255, 255, 255, 255};
+  uint8_t cc_values[6] = {255, 255, 255, 255, 255, 255};
+
+  uint8_t channel = MD.kit.models[track_number] - MID_MODEL;
+
+  if (midi_note_off_step != 0) {
+    midi_note_off_step--;
+    if (midi_note_off_step == 0) {
+      send_notes_off = true;
+    }
+  }
+
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    bool lock_bit = steps[step].is_lock_bit(c);
+    bool lock_present = steps[step].is_lock(c);
+    bool send = false;
+    uint8_t value;
+    if (locks_params[c]) {
+      if (lock_present) {
+        value = locks[lock_idx];
+        send = true;
+      } else if (trig) {
+        value = locks_params_orig[c];
+        send = true;
+      }
+    }
+    lock_idx += lock_bit;
+    if (!send) {
+      continue;
+    }
+
+    uint8_t param = locks_params[c] - 1;
+    uint8_t n;
+
+    switch (param) {
+    case 0:
+    case 1:
+    case 2: {
+      // Notes
+      if (trig) {
+        notes[param] = value;
+        send_notes_off = true;
+      }
+      break;
+    }
+    case 3: {
+      // Length
+      note_length = value;
+      break;
+    }
+    case 4: {
+      // Vel
+      note_vel = value;
+      break;
+    }
+    case 5: {
+      // PB
+      uart2->sendPitchBend(channel, value);
+      break;
+    }
+    case 6: {
+      // MW
+      uart2->sendCC(channel, 1, value);
+      break;
+    }
+    case 7: {
+      // AT
+      uart2->sendChannelPressure(channel, value);
+      break;
+    }
+    case 8:
+    case 10:
+    case 12:
+    case 14:
+    case 16:
+    case 18: {
+      // CC
+      n = (param - 8) / 2;
+      if (value > 0) {
+        cc_params[n] = value;
+        if (value == 1) {
+          value = 0;
+        }
+        cc_params[n] = value;
+      }
+      break;
+    case 9:
+    case 11:
+    case 13:
+    case 15:
+    case 17:
+    case 19: {
+      // CC
+      n = (param - 9) / 2;
+      cc_values[n] = value;
+      break;
+    }
+    case 20: {
+      // PRG
+      uart2->sendProgramChange(value);
+      break;
+    }
+    case 21:
+    case 22:
+    case 23: {
+      MD.setTrackParam_inline(track_number, param, value, uart);
+    }
+    }
+    }
+  }
+  if (send_notes_off) {
+      clearLed2();
+    buffer_notes_off();
+  }
+  for (uint8_t i = 0; i < 6; i++) {
+    if (cc_params[i] != 255) {
+      uart2->sendCC(channel, cc_params[i], cc_values[i]);
+    }
+  }
+
+  for (uint8_t i = 0; i < 3; i++) {
+    if (notes[i] != 255) {
+      midi_notes_buffer[i] = notes[i];
+      setLed2();
+      uart2->sendNoteOn(channel, notes[i], note_vel);
+      midi_note_off_step = note_length;
+    }
+  }
 }
 
 bool MDSeqTrack::is_param(uint8_t param_id) {

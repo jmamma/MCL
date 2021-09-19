@@ -4,12 +4,12 @@
 void MCLSeq::setup() {
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
     md_tracks[i].speed = SEQ_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
     md_arp_tracks[i].track_number = i;
+    md_tracks[i].uart2 = &MidiUart2;
   }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -162,6 +162,7 @@ void MCLSeq::onMidiStopCallback() {
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].buffer_notes_off();
     md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
@@ -242,10 +243,11 @@ void MCLSeq::seq() {
   }
   //  Stopwatch sw;
   MDSeqTrack::md_trig_mask = 0;
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq(uart);
-    md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-    md_arp_tracks[i].seq(uart);
+      md_tracks[i].seq(uart, uart2);
+      md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
+      md_arp_tracks[i].seq(uart);
   }
 
   if (MDSeqTrack::md_trig_mask > 0) {

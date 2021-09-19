@@ -24,7 +24,11 @@ public:
   static uint16_t sync_cursor;
   static uint16_t md_trig_mask;
 
-  MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
+  uint8_t midi_notes_buffer[3];
+  uint8_t midi_note_off_step;
+  MidiUartParent *uart2 = &MidiUart2;
+
+  MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; memset(midi_notes_buffer, 255, 3); }
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask = 0;
@@ -35,11 +39,14 @@ public:
   bool get_step(uint8_t step, uint8_t mask_type) const;
   void set_step(uint8_t step, uint8_t mask_type, bool val);
 
-  void seq(MidiUartParent *uart_);
+  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  void seq_midi(MidiUartParent *uart_);
+  void send_midi(uint8_t step, bool trig, uint16_t lock_idx);
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
+  void buffer_notes_off();
   void send_trig();
   ALWAYS_INLINE() void send_trig_inline();
   ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
