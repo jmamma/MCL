@@ -112,6 +112,10 @@ void MCLSeq::onMidiContinueCallback() {
 
 void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
+  seq_tx1.txRb.init();
+  seq_tx2.txRb.init();
+  seq_tx3.txRb.init();
+  seq_tx4.txRb.init();
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
@@ -328,8 +332,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         if (value > 0) {
           mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_ON;
           mcl_seq.ext_tracks[n].buffer_notesoff();
-        }
-        else {
+        } else {
           mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
         }
       } else {
