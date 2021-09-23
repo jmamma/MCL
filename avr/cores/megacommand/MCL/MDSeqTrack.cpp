@@ -93,6 +93,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == 0) {
       reset();
+      mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
     }
   }

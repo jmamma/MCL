@@ -593,6 +593,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == 0) {
       reset();
+      mod12_counter = 0;
     }
   }
 
