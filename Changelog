@@ -1,3 +1,9 @@
+MCL 4.03 23/09/2021
+
+Fixes:
+
+- Tracks could drift out of sync when loaded.
+
 MCL 4.02 18/09/2021
 
 Fixes:
