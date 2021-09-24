@@ -11,12 +11,16 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
     if (track > 15) { return; }
+    if (track_param > 23) { return; }
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
   } else {
-    track = param - 8 + (channel - MD.global.baseChannel) * 4;
-    MD.kit.levels[track] = value;
+    if (param > 7 && param < 12) {
+      track = param - 8 + (channel - MD.global.baseChannel) * 4;
+      MD.kit.levels[track] = value;
+    }
   }
+
 }
 
 void MDMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
