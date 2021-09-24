@@ -852,6 +852,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 
   MD.parseCC(channel, param, &track, &track_param);
+  if (track > 15) { return; }
   uint8_t start_track;
   if (track_param == 32) {
     return;

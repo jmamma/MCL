@@ -51,9 +51,6 @@ public:
   MDKit kit;
   MDPattern pattern;
 
-  uint16_t mute_mask;
-  // uint32_t swing_last;
-
   /**
    * Stores the global settings of the machinedrum (usually set by MDTask).
    *

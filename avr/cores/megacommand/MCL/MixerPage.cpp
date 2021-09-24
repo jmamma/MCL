@@ -359,6 +359,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
+  if (track > 15) { return; }
   if (track_param == 32) {
     return;
   } // don't process mute

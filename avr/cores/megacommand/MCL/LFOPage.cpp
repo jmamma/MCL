@@ -399,6 +399,7 @@ void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t param_true = 0;
 
   MD.parseCC(channel, param, &track, &track_param);
+  if (track > 15) { return; }
 }
 
 void LFOPage::setup_callbacks() {

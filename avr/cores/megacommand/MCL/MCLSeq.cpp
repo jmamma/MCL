@@ -303,6 +303,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
+  if (track > 15) { return; }
+
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
   }

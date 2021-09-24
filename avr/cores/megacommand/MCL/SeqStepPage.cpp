@@ -647,6 +647,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
+  if (track > 15) { return; }
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 

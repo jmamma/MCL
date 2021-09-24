@@ -10,6 +10,7 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   if (param >= 16) {
     MD.parseCC(channel, param, &track, &track_param);
+    if (track > 15) { return; }
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
   } else {
@@ -21,11 +22,6 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 void MDMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
 
 void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t note = msg[1];
-  if ((channel == 0x0F) && (note == MIDI_NOTE_C3)) {
-    SET_BIT16(MD.mute_mask, mute_mask_track);
-  }
 }
 
 void MDMidiEvents::enable_live_kit_update() {
