@@ -27,10 +27,11 @@ void MDSysexListenerClass::end() {
   msgType = sysex->getByte(offset++);
 
   uint8_t param, value, fx_type, track;
-
   switch (msgType) {
   case MD_STATUS_RESPONSE_ID:
-    onStatusResponseCallbacks.call(sysex->getByte(offset++), sysex->getByte(offset++));
+    param = sysex->getByte(offset++);
+    value = sysex->getByte(offset++);
+    onStatusResponseCallbacks.call(param, value);
     break;
 
   case MD_GLOBAL_MESSAGE_ID:
