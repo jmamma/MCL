@@ -92,32 +92,10 @@ void MDSysexListenerClass::end() {
     value = sysex->getByte(offset++);
 
     if (track > 15) { return; }
-    switch (param) {
-        case 0:
-          MD.kit.lfos[track].destinationTrack = value;
-          break;
-        case 1:
-          MD.kit.lfos[track].destinationParam = value;
-          break;
-        case 2:
-          MD.kit.lfos[track].shape1 = value;
-          break;
-        case 3:
-          MD.kit.lfos[track].shape2 = value;
-          break;
-        case 4:
-          MD.kit.lfos[track].type = value;
-          break;
-        case 5:
-          MD.kit.lfos[track].speed = value;
-          break;
-        case 6:
-          MD.kit.lfos[track].depth = value;
-          break;
-        case 7:
-          MD.kit.lfos[track].mix = value;
-          break;
-      }
+    if (param > 7) { return; }
+
+    uint8_t *p = &MD.kit.lfos[track].destinationTrack;
+    p[param] = value;
 
     //LFOS, LFOD, LFOM
     if (4 < param && param < 8) {
