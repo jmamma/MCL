@@ -39,7 +39,7 @@ void OscMixerPage::display() {
 
   oled_display.print("SLOT: ");
 
-  oled_display.print(enc4.cur);
+  oled_display.print(encoders[3]->cur);
   draw_levels();
   scanline_width = 4;
   draw_wav();

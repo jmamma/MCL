@@ -114,7 +114,12 @@ bool WavDesigner::render() {
                 sine_gain;
           }
         }
-        osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
+        if (wd.pages[i].largest_sine_peak == 0) {
+          osc_sample = 0;
+        }
+        else {
+          osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
+        }
         // DEBUG_PRINTLN(osc_sample);
         break;
       case 2:

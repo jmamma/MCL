@@ -64,6 +64,7 @@ void OscPage::calc_largest_sine_peak() {
     largest_sine_peak += max_sine_gain * ((float)sine_levels[f] / (float)127);
   }
 }
+
 void OscPage::loop() {
   WavDesignerPage::loop();
   MCLEncoder *enc_ = &enc4;
@@ -127,7 +128,7 @@ void OscPage::display() {
 
   scanline_width = 64;
 
-  uint8_t c = 0;
+  uint8_t c = 1;
   uint8_t i = 0;
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
@@ -228,7 +229,10 @@ void OscPage::draw_wav(uint8_t wav_type) {
                     sine_gain * max_sine_gain;
         }
       }
-      sample = (1.00 / largest_sine_peak) * sample;
+      if (largest_sine_peak == 0) { sample = 0; }
+      else {
+        sample = (1.00 / largest_sine_peak) * sample;
+      }
       break;
     case USR_OSC:
       sample = usr_osc.get_sample((uint32_t)n, 1, 0, usr_values);
