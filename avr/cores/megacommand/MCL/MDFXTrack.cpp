@@ -53,10 +53,7 @@ void MDFXTrack::place_fx_in_kit() {
 }
 
 void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
-  memcpy(&reverb, &kit_extra->reverb, sizeof(reverb));
-  memcpy(&delay, &kit_extra->delay, sizeof(delay));
-  memcpy(&eq, &kit_extra->eq, sizeof(eq));
-  memcpy(&dynamics, &kit_extra->dynamics, sizeof(dynamics));
+  memcpy(&reverb, &kit_extra->reverb, 32);
   enable_reverb = true;
   enable_delay = true;
   enable_eq = true;
@@ -64,10 +61,7 @@ void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
 }
 
 void MDFXTrack::get_fx_from_kit() {
-  memcpy(&reverb, &MD.kit.reverb, sizeof(reverb));
-  memcpy(&delay, &MD.kit.delay, sizeof(delay));
-  memcpy(&eq, &MD.kit.eq, sizeof(eq));
-  memcpy(&dynamics, &MD.kit.dynamics, sizeof(dynamics));
+  memcpy(&reverb, &MD.kit.reverb, 32);
   enable_reverb = true;
   enable_delay = true;
   enable_eq = true;
