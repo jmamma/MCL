@@ -9,7 +9,6 @@ void OscMixerPage::init() {
   trig_interface.off();
   wd.last_page = this;
   create_chars_mixer();
-  classic_display = false;
 }
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
@@ -35,7 +34,6 @@ void OscMixerPage::display() {
   oled_display.setFont();
   oled_display.setCursor(0, 0);
   oled_display.fillRect(0, 0, 64, 32, BLACK);
-  GUI.setLine(GUI.LINE1);
 
   oled_display.print("SLOT: ");
 
@@ -90,9 +88,7 @@ void OscMixerPage::draw_wav() {
     }
   }
   // float buffer[w];
-#ifdef OLED_DISPLAY
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
-#endif
   float largest_sample_so_far;
   for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
     float sample = 0;
@@ -151,13 +147,11 @@ void OscMixerPage::draw_wav() {
     //  largest_sample_so_far = abs(buffer[n]);
     //  }
     uint8_t pixel_y = (uint8_t)(((sample) * (float)(h / 2)) + (h / 2));
-#ifdef OLED_DISPLAY
     oled_display.drawPixel(n + x, pixel_y + y, WHITE);
     // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
     if (n % 2 == 0) {
       oled_display.drawPixel(n + x, (h / 2) + y, WHITE);
     }
-#endif
   }
 
   sample_number += scanline_width;
@@ -172,28 +166,13 @@ void OscMixerPage::draw_wav() {
 }
 
 void OscMixerPage::draw_levels() {
-  GUI.setLine(GUI.LINE2);
   uint8_t scaled_level;
   char str[17] = "                ";
   for (int i = 0; i < 3; i++) {
-#ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);
     oled_display.fillRect(0 + i * 6, 12 + (15 - scaled_level), 4,
                           scaled_level + 1, WHITE);
-#else
-
-    scaled_level = (int)(((float)encoders[i]->cur / (float)127) * 7);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-
-#endif
   }
-  GUI.put_string_at(0, str);
 }
-
 #endif

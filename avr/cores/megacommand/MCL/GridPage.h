@@ -7,13 +7,8 @@
 #include "GridEncoder.h"
 #include "GridRowHeader.h"
 
-#ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8
-#else
-#define MAX_VISIBLE_ROWS 1
-#define MAX_VISIBLE_COLS 4
-#endif
 
 #define SLOT_DISABLED 255
 #define SLOT_PENDING 254

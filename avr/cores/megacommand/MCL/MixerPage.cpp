@@ -10,7 +10,6 @@ void MixerPage::set_display_mode(uint8_t param) {
   }
 }
 
-#ifdef OLED_DISPLAY
 static void oled_draw_routing() {
   for (int i = 0; i < 16; ++i) {
     // draw routing
@@ -34,7 +33,6 @@ static void oled_draw_routing() {
   }
 }
 
-#endif
 
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
@@ -44,10 +42,7 @@ void MixerPage::setup() {
   if (route_page.encoders[0]->cur == 0) {
     route_page.encoders[0]->cur = 2;
   }
-#ifdef OLED_DISPLAY
-  classic_display = false;
   oled_display.clearDisplay();
-#endif
 }
 
 void MixerPage::init() {

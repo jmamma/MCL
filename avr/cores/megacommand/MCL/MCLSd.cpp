@@ -32,11 +32,9 @@ bool MCLSd::load_init() {
   int b;
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
-#ifdef OLED_DISPLAY
     gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     oled_display.clearDisplay();
     GUI.ignoreNextEvent(Buttons.BUTTON3);
-#endif
   }
 
   if (sd_state) {
@@ -54,10 +52,8 @@ bool MCLSd::load_init() {
             DEBUG_PRINTLN(F("Could not init cfg"));
             return false;
           }
-#ifdef OLED_DISPLAY
           gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
-#endif
           proj.new_project_prompt();
           return true;
 
@@ -94,9 +90,7 @@ bool MCLSd::load_init() {
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
-#ifdef OLED_DISPLAY
       oled_display.clearDisplay();
-#endif
       proj.new_project_prompt();
       return true;
     }

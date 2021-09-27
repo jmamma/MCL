@@ -430,7 +430,6 @@ void SeqExtStepPage::draw_pianoroll() {
 }
 
 void SeqExtStepPage::draw_viewport_minimap() {
-#ifdef OLED_DISPLAY
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
   constexpr uint16_t width = pidx_w * 4 + 3;
@@ -448,15 +447,10 @@ void SeqExtStepPage::draw_viewport_minimap() {
   uint16_t p = min(width, cur_tick_x * (width - 1) / pattern_end);
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
-#endif
 }
 
 void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
                                uint16_t note_end) {}
-
-#ifndef OLED_DISPLAY
-void SeqExtStepPage::display() { SeqPage::display(); }
-#else
 
 void SeqExtStepPage::pos_cur_x(int16_t diff) {
   uint8_t w = cur_w;
@@ -713,7 +707,6 @@ void SeqExtStepPage::display() {
   oled_display.display();
 #endif
 }
-#endif
 
 void SeqExtStepPage::enter_notes() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];

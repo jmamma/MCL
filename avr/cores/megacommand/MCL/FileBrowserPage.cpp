@@ -31,12 +31,9 @@ bool FileBrowserPage::filemenu_active = false;
 bool FileBrowserPage::call_handle_filemenu = false;
 
 void FileBrowserPage::setup() {
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-  classic_display = false;
   // char *mcl = ".mcl";
   // strcpy(match, mcl);
-#endif
   strcpy(title, "Files");
 }
 
@@ -154,7 +151,6 @@ void FileBrowserPage::init() {
 }
 
 void FileBrowserPage::display() {
-#ifdef OLED_DISPLAY
   if (filemenu_active) {
     oled_display.fillRect(0, 3, 45, 28, BLACK);
     oled_display.drawRect(1, 4, 43, 26, WHITE);
@@ -211,41 +207,15 @@ void FileBrowserPage::display() {
   }
 
   oled_display.display();
-#else
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, title);
-  GUI.setLine(GUI.LINE2);
-  if (cur_file == encoders[1]->cur) {
-    GUI.put_string_at_fill(0, ">");
-  } else {
-    GUI.put_string_at_fill(0, " ");
-  }
-  char temp_entry[FILE_ENTRY_SIZE];
-  uint16_t entry_num = encoders[1]->cur;
-  get_entry(entry_num, tempy_entry);
-  temp_entry[FILE_ENTRY_SIZE - 1] = '\0';
-
-  GUI.put_string_at(1, temp_entry);
-
-#endif
   return;
 }
 
 void FileBrowserPage::draw_scrollbar(uint8_t x_offset) {
-#ifdef OLED_DISPLAY
   mcl_gui.draw_vertical_scrollbar(x_offset, numEntries, MAX_VISIBLE_ROWS,
                                   encoders[1]->cur - cur_row);
-#endif
 }
 
 void FileBrowserPage::loop() {
-#ifndef OLED_DISPLAY
-  if (call_handle_filemenu) {
-    call_handle_filemenu = false;
-    _handle_filemenu();
-  }
-#endif
-
   if (filemenu_active) {
     file_menu_page.loop();
     return;
@@ -255,14 +225,13 @@ void FileBrowserPage::loop() {
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
-#ifdef OLED_DISPLAY
+
     if (new_val > MAX_VISIBLE_ROWS - 1) {
       new_val = MAX_VISIBLE_ROWS - 1;
     }
     if (new_val < 0) {
       new_val = 0;
     }
-#endif
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
   }
@@ -425,7 +394,6 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return false;
   }
-#ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
@@ -443,12 +411,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     init();
     return true;
   }
-#else
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    call_handle_filemenu = true;
-    GUI.pushPage(&file_menu_page);
-  }
-#endif
+
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
 
     int i_save;

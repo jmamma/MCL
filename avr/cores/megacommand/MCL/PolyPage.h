@@ -17,7 +17,7 @@ public:
 
   bool handleEvent(gui_event_t *event);
   void toggle_mask(uint8_t i);
-  void draw_mask(uint8_t line_number);
+  void draw_mask();
   void display();
   void setup();
   void init();

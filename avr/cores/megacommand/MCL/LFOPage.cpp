@@ -21,11 +21,8 @@ void LFOPage::setup() {
 
 void LFOPage::init() {
   DEBUG_PRINT_FN();
-#ifdef OLED_DISPLAY
-  classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
-#endif
   update_encoders();
   MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
                      lfo_track->step_count);
@@ -40,9 +37,7 @@ void LFOPage::init() {
 
 void LFOPage::cleanup() {
   trig_interface.off();
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
 }
 
 void LFOPage::update_encoders() {
@@ -185,15 +180,7 @@ void LFOPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       strncpy(myName, modelname, 4);
     }
   }
-#ifdef OLED_DISPLAY
   draw_knob(knob, "PAR", myName);
-#else
-  GUI.setLine(GUI.LINE1);
-
-  GUI.put_string_at(knob * 4, myName);
-  ;
-
-#endif
 }
 
 void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
@@ -219,93 +206,11 @@ void LFOPage::draw_dest(uint8_t knob, uint8_t value) {
     mcl_gui.put_value_at(value, K);
     break;
   }
-#ifdef OLED_DISPLAY
   draw_knob(knob, "DEST", K);
-#else
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(knob * 4, K);
-#endif
 }
 
 void LFOPage::display() {
-  if (!classic_display) {
-#ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-#endif
-  }
-#ifndef OLED_DISPLAY
-  GUI.clearLines();
-  GUI.setLine(GUI.LINE1);
-  uint8_t x;
-
-  GUI.put_string_at(0, "LFO");
-  GUI.put_value_at1(4, page_mode ? 1 : 0);
-  GUI.setLine(GUI.LINE2);
-  /*
-    if (mcl_cfg.ram_page_mode == 0) {
-      GUI.put_string_at(0, "MON");
-    } else {
-      GUI.put_string_at(0, "LNK");
-    }
-  */
-  if (page_mode == LFO_DESTINATION) {
-    draw_dest(0, encoders[0]->cur);
-    draw_param(1, encoders[0]->cur, encoders[1]->cur);
-    draw_dest(2, encoders[2]->cur);
-    draw_param(3, encoders[2]->cur, encoders[3]->cur);
-  }
-  if (page_mode == LFO_SETTINGS) {
-    char K[4];
-    switch (lfo_track->wav_type) {
-    case SIN_WAV:
-      strcpy(K, "SIN");
-      break;
-    case TRI_WAV:
-      strcpy(K, "TRI");
-      break;
-    case IRAMP_WAV:
-      strcpy(K, "IR");
-      break;
-    case RAMP_WAV:
-      strcpy(K, "R");
-      break;
-    case EXP_WAV:
-      strcpy(K, "EX");
-      break;
-    case IEXP_WAV:
-      strcpy(K, "IEX");
-      break;
-    }
-    GUI.setLine(GUI.LINE1);
-    GUI.put_string_at(0, K);
-    GUI.put_value_at(4, encoders[1]->cur);
-    GUI.put_value_at(8, encoders[2]->cur);
-    GUI.put_value_at(12, encoders[3]->cur);
-    GUI.setLine(GUI.LINE2);
-    if (lfo_track->enable) {
-      switch (lfo_track->mode) {
-      case LFO_MODE_FREE:
-        GUI.put_string_at(0, "FREE");
-        break;
-      case LFO_MODE_TRIG:
-      case LFO_MODE_ONE:
-        char str[17] = "----------------";
-
-        for (int i = 0; i < 16; i++) {
-          if (IS_BIT_SET64(lfo_track->pattern_mask, i)) {
-
-            str[i] = (char)219;
-          }
-        }
-        GUI.put_string_at(0, str);
-        break;
-      }
-    } else {
-      GUI.put_string_at(0, "LFO: OFF");
-    }
-  }
-#endif
-#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
   auto oldfont = oled_display.getFont();
   uint8_t lfo_track_num = lfo_track->track_number;
   mcl_gui.draw_panel_number(lfo_track_num);
@@ -367,6 +272,7 @@ void LFOPage::display() {
     case LFO_MODE_ONE:
     info1 = "ONE";
     break;
+    default:
     info1 = "FREE";
     break;
   }
@@ -385,7 +291,6 @@ void LFOPage::display() {
 
   oled_display.display();
   oled_display.setFont(oldfont);
-#endif
 }
 
 void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {

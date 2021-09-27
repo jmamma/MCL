@@ -721,15 +721,11 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       }
     }
     mcl_gui.put_value_at(value, str2);
-#ifdef OLED_DISPLAY
     oled_display.textbox(str, str2);
-#endif
   }
   if (store_lock == 1) {
-#ifdef OLED_DISPLAY
     oled_display.textbox("LOCK PARAMS ", "FULL");
     // seq_step_page.send_locks(step);
-#endif
   }
 }
 

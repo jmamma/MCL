@@ -8,16 +8,10 @@
 #include "MCLMenus.h"
 #include "ArpPage.h"
 
-#ifdef OLED_DISPLAY
 #define ENCODER_RES_SEQ 2
 #define ENCODER_RES_PARAM 2
-#else
-#define ENCODER_RES_SEQ 2
-#define ENCODER_RES_PARAM 2
-#endif
 
 #define NUM_PARAM_PAGES 4
-
 
 #define SEQ_MENU_TRACK 0
 #define SEQ_MENU_MASK 1

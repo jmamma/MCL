@@ -3,28 +3,14 @@
 #ifdef WAV_DESIGNER
 
 void WavDesigner::prompt_send() {
-    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-
-#ifdef OLED_DISPLAY
-      oled_display.clearDisplay();
-#endif
-      GUI.setLine(GUI.LINE1);
-      GUI.put_string_at(0, "Render..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-      oled_display.clearDisplay();
-#endif
-      wd.render();
-      GUI.put_string_at(0, "Sending..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-#endif
-     wd.send();
-   }
+  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+    oled_display.textbox("Render", "");
+    oled_display.display();
+    wd.render();
+    oled_display.textbox("Sending..","");
+    oled_display.display();
+    wd.send();
+  }
 }
 
 bool WavDesigner::render() {
@@ -116,8 +102,7 @@ bool WavDesigner::render() {
         }
         if (wd.pages[i].largest_sine_peak == 0) {
           osc_sample = 0;
-        }
-        else {
+        } else {
           osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
         }
         // DEBUG_PRINTLN(osc_sample);
@@ -228,7 +213,8 @@ bool WavDesigner::render() {
   DEBUG_PRINTLN("gain:");
   DEBUG_PRINTLN(largest_sample_so_far);
   DEBUG_PRINTLN(normalize_gain);
-  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start, loop_end);
+  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start,
+                            loop_end);
   wav_file.file.sync();
   wav_file.apply_gain(normalize_gain);
   write_header = true;

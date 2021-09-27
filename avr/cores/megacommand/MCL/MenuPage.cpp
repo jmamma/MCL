@@ -29,9 +29,6 @@ void MenuPageBase::init() {
 
 
 void MenuPageBase::setup() {
-#ifdef OLED_DISPLAY
-  classic_display = false;
-#endif
 }
 
 void MenuPageBase::loop() {
@@ -44,14 +41,12 @@ void MenuPageBase::loop() {
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
-#ifdef OLED_DISPLAY
     if (new_val > visible_rows - 1) {
       new_val = visible_rows - 1;
     }
     if (new_val < 0) {
       new_val = 0;
     }
-#endif
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
     uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
@@ -70,14 +65,11 @@ void MenuPageBase::loop() {
 }
 
 void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
-#ifdef OLED_DISPLAY
   mcl_gui.draw_vertical_scrollbar(x_offset, get_menu()->get_number_of_items(),
                                   visible_rows, encoders[1]->cur - cur_row);
-#endif
 }
 
 void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
-#ifdef OLED_DISPLAY
   const char* name = get_menu()->get_item_name(item_n);
   if (name != nullptr) {
     oled_display.print(name);
@@ -100,12 +92,10 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
       oled_display.println(option_name);
     }
   }
-#endif
 }
 
 void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
                              uint8_t width) {
-#ifdef OLED_DISPLAY
   oled_display.setCursor(x_offset, y_offset);
   uint8_t number_of_items = get_menu()->get_number_of_items();
   uint8_t max_items;
@@ -130,13 +120,11 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
   // draw_item.read(getRow());
 
   oled_display.setTextColor(WHITE, BLACK);
-#endif
 }
 
 void MenuPageBase::display() {
 
   uint8_t number_of_items = get_menu()->get_number_of_items();
-#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
   oled_display.setTextColor(WHITE, BLACK);
@@ -152,36 +140,6 @@ void MenuPageBase::display() {
   }
   oled_display.display();
 
-#else
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, "[");
-  GUI.put_string_at(1, str);
-
-  GUI.put_string_at(m_strlen(str), "]");
-  const char* item_name = get_menu()->get_item_name(cur_row);
-
-  GUI.setLine(GUI.LINE2);
-  if (item_name != NULL) {
-    GUI.put_string_at_fill(0, item_name);
-  }
-
-  if (cur_row > number_of_items - 1) {
-    return true;
-  }
-
-  uint8_t number_of_options = get_menu()->get_number_of_options(cur_row);
-  if (get_menu()->get_option_range(cur_row) > 0) {
-
-    const char* opt_name = get_menu()->get_option_name(
-        cur_row, *(get_menu()->get_dest_variable(cur_row)));
-    if (pgp == NULL) {
-      GUI.put_value_at(10, *(get_menu()->get_dest_variable(cur_row)));
-    } else {
-      GUI.put_string_at(10, opt_name);
-    }
-  }
-
-#endif
 }
 
 bool MenuPageBase::enter() {

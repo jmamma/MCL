@@ -130,26 +130,6 @@ uint8_t NoteInterface::notes_count() {
 }
 
 void NoteInterface::draw_notes(uint8_t line_number) {
-  if (line_number == 0) {
-    GUI.setLine(GUI.LINE1);
-  } else {
-    GUI.setLine(GUI.LINE2);
-  }
-  /*Initialise the string with blank steps*/
-  char str[17] = "----------------";
-
-  for (int i = 0; i < 16; i++) {
-    if (IS_BIT_SET32(notes_on, i)) {
-
-#ifdef OLED_DISPLAY
-      str[i] = (char)2;
-#else
-      str[i] = (char)219;
-#endif
-    }
-  }
-
-  GUI.put_string_at(0, str);
 }
 
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {

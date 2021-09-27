@@ -41,14 +41,13 @@ public:
   void unmute() { mute_state = SEQ_MUTE_OFF; }
 
   void send_trig();
-  ALWAYS_INLINE() void send_trig_inline();
-  ALWAYS_INLINE() bool trig_conditional(uint8_t condition);
+  void send_trig_inline();
+  bool trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
-  ALWAYS_INLINE() void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
+  void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
   void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
 
-  ALWAYS_INLINE() void recalc_slides();
-  ALWAYS_INLINE()
+  void recalc_slides();
   void find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);

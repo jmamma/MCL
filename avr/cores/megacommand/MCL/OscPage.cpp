@@ -7,9 +7,6 @@ void osc_mod_handler(EncoderParent *enc) {}
 uint32_t OscPage::exploit_delay_clock = 0;
 
 void OscPage::setup() {
-#ifdef OLED_DISPLAY
-  classic_display = false;
-#endif
   for (uint8_t i = 0; i < 16; i++) {
     usr_values[i] = random(127);
   }
@@ -30,9 +27,7 @@ void OscPage::init() {
   create_chars_mixer();
   // md_exploit.on();
   note_interface.state = true;
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
 }
 
 void OscPage::cleanup() { DEBUG_PRINT_FN(); }
@@ -198,7 +193,6 @@ void OscPage::display() {
   oled_display.setFont(oldfont);
 }
 void OscPage::draw_wav(uint8_t wav_type) {
-#ifdef OLED_DISPLAY
   uint8_t x = 64;
   uint8_t y = 0;
   uint8_t h = 30;
@@ -229,8 +223,9 @@ void OscPage::draw_wav(uint8_t wav_type) {
                     sine_gain * max_sine_gain;
         }
       }
-      if (largest_sine_peak == 0) { sample = 0; }
-      else {
+      if (largest_sine_peak == 0) {
+        sample = 0;
+      } else {
         sample = (1.00 / largest_sine_peak) * sample;
       }
       break;
@@ -265,7 +260,6 @@ void OscPage::draw_wav(uint8_t wav_type) {
   if (sample_number > 128 - x) {
     sample_number = 0;
   }
-#endif
 }
 
 void OscPage::draw_usr() {
@@ -276,14 +270,8 @@ void OscPage::draw_usr() {
   uint8_t y = 0;
   UsrOsc usr_osc(w);
 
-#ifndef OLED_DISPLAY
-  GUI.setLine(GUI.LINE2);
-  char str[17] = "                ";
-#endif
   for (uint8_t i = 0; i < 16; i++) {
     sample = usr_osc.get_sample((uint32_t)i * 4, 1, 0, usr_values);
-
-#ifdef OLED_DISPLAY
 
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
     if (note_interface.is_note_on(i)) {
@@ -291,24 +279,10 @@ void OscPage::draw_usr() {
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);
       oled_display.drawRect(63 + i * 4, pixel_y - 1, 3, 3, WHITE);
     }
-#else
-    int scaled_level = (int)((float)(sample + 1.0) * .5 * 7.00);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-#endif
   }
-#ifndef OLED_DISPLAY
-  GUI.put_string_at(0, str);
-#endif
 }
 
 void OscPage::draw_levels() {
-#ifndef OLED_DISPLAY
-  GUI.setLine(GUI.LINE2);
-#endif
   uint8_t scaled_level;
   char str[17] = "                ";
   uint8_t x = 64;
@@ -316,7 +290,6 @@ void OscPage::draw_levels() {
   UsrOsc usr_osc(w);
 
   for (int i = 0; i < 16; i++) {
-#ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);
     if (note_interface.is_note_on(i)) {
@@ -326,21 +299,7 @@ void OscPage::draw_levels() {
       oled_display.drawRect(0 + i * 4, 12 + (15 - scaled_level), 3,
                             scaled_level + 1, WHITE);
     }
-
-#else
-
-    scaled_level = (int)(((float)sine_levels[i] / (float)127) * 7);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-
-#endif
   }
-#ifndef OLED_DISPLAY
-  GUI.put_string_at(0, str);
-#endif
 }
 
 float OscPage::get_phase() { return 0; }

@@ -13,10 +13,8 @@
 #endif
 
 //MCL Fonts
-#ifdef OLED_DISPLAY
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
-#endif
 
 #define VERSION 4003
 #define VERSION_STR "4.03"

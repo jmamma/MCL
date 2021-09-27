@@ -53,11 +53,7 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 bool MDPattern::fromSysex(uint8_t *data, uint16_t len) {
   init();
   if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
-#ifndef HOST_MIDIDUINO
-    GUI.flash_string_fill("WRONG LENGTH");
-#else
-    printf("WRONG LENGTH: %x\n", len);
-#endif
+    DEBUG_PRINTLN("wrong length");
     return false;
   }
 
@@ -149,14 +145,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   uint16_t offset = 5;
 
   if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
-#ifndef HOST_MIDIDUINO
-    GUI.flash_string_fill("WRONG LENGTH");
-#else
-    printf("WRONG LENGTH: %x\n", len);
-#endif
-
     DEBUG_PRINTLN(F("WRONG LENGTH"));
-    DEBUG_DUMP(len);
     return false;
   }
 

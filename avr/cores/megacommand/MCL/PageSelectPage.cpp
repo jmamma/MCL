@@ -84,7 +84,6 @@ void PageSelectPage::init() {
   R.use_page_entries();
   R.restore_page_entry_deps();
 
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 128, 7, WHITE);
   oled_display.setFont(&TomThumb);
@@ -99,8 +98,6 @@ void PageSelectPage::init() {
     oled_display.setCursor(label_pos[i], 31);
     oled_display.print(str);
   }
-  classic_display = false;
-#endif
   loop_init = true;
   // md_exploit.on(switch_tracks);
   note_interface.state = true;
@@ -227,7 +224,6 @@ void PageSelectPage::loop() {
 }
 
 void PageSelectPage::display() {
-#ifdef OLED_DISPLAY
   char str[16];
   uint8_t *icon;
   uint8_t iconw, iconh;
@@ -284,18 +280,6 @@ void PageSelectPage::display() {
   }
 
   oled_display.display();
-#else
-  GUI.setLine(GUI.LINE1);
-  char str[16];
-  GUI.put_string_at_fill(0, "Page Select:");
-  get_category_name(page_select, str);
-  GUI.put_string_at(12, str);
-
-  GUI.setLine(GUI.LINE2);
-  get_page(get_pageidx(page_select), str);
-  GUI.put_string_at_fill(0, str);
-#endif
-
   uint16_t led_mask = 1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;

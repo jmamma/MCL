@@ -27,12 +27,7 @@ uint8_t _findchar(char chr) {
 void TextInputPage::setup() {}
 
 void TextInputPage::init() {
-#ifdef OLED_DISPLAY
-  classic_display = false;
-  GUI.lines[0].flashActive = false;
-  GUI.lines[1].flashActive = false;
   oled_display.setTextColor(WHITE, BLACK);
-#endif
 }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
@@ -150,7 +145,6 @@ void TextInputPage::display_normal() {
   }
   auto time = clock_diff(last_clock, slowclock);
 
-#ifdef OLED_DISPLAY
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
   auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
@@ -171,21 +165,6 @@ void TextInputPage::display_normal() {
   }
   oled_display.setFont(oldfont);
   oled_display.display();
-#else
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, title);
-  GUI.setLine(GUI.LINE2);
-  char tmp_str[18];
-  memcpy(tmp_str, &text[0], 18);
-  if (time > FLASH_SPEED) {
-    tmp_str[cursor_position] = (char)255;
-  }
-  if (time > FLASH_SPEED * 2) {
-    last_clock = slowclock;
-  }
-  GUI.clearLine();
-  GUI.put_string_at(0, tmp_str);
-#endif
 }
 
 void TextInputPage::display_charpane() {

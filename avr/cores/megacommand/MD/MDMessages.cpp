@@ -233,19 +233,12 @@ bool MDKit::get_tonal(uint8_t track) {
 
 bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   if (len != (0x4d1 - 7)) {
-    #ifdef DEBUGMODE
-    GUI.flash_strings_fill("WRONG LEN", "");
-    GUI.setLine(GUI.LINE2);
-    GUI.flash_put_value16(0, len);
     DEBUG_PRINTLN("Wrong length");
-    #endif
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    #ifdef DEBUGMODE
-    GUI.flash_strings_fill("WRONG CKSUM", "");
-    #endif
+    DEBUG_PRINTLN("Wrong checksum");
     return false;
   }
 
@@ -253,7 +246,6 @@ bool MDKit::fromSysex(uint8_t *data, uint16_t len) {
   origPosition = data[3];
 
   ElektronSysexDecoder decoder(data + 4);
-  GUI.setLine(GUI.LINE2);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
@@ -300,16 +292,13 @@ bool MDKit::fromSysex(MidiClass *midi) {
   }
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
-    #ifdef DEBUGMODE
-    GUI.flash_strings_fill("WRONG CKSUM", "");
-    #endif
+    DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
   uint8_t version = midi->midiSysex.getByte(1 + offset);
   origPosition = midi->midiSysex.getByte(3 + offset);
   ElektronSysexDecoder decoder(midi, offset + 4);
-  GUI.setLine(GUI.LINE2);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';

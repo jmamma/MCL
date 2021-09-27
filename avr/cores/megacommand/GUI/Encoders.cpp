@@ -50,7 +50,6 @@ void EncoderParent::setValue(int value, bool handle) {
 }
 
 void EncoderParent::displayAt(int i) {
-  GUI.put_value(i, getValue());
   redisplay = false;
 }
 

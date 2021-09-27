@@ -43,14 +43,7 @@ void PageContainer::pushPage(LightPage* page) {
 }
 
 void PageParent::redisplayPage() {
-  if (displaymode == DISPLAY_TEXT_MODE0) {
-    GUI.setLine(GUI.LINE1);
-    GUI.clearLine();
-    GUI.setLine(GUI.LINE2);
-    GUI.clearLine();
-    redisplay = true;
-  } else {
-  }
+  redisplay = true;
 }
 
 uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];

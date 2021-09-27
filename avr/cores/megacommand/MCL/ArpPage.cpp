@@ -11,7 +11,6 @@ void ArpPage::setup() {
 void ArpPage::init() {
 
   DEBUG_PRINT_FN();
-  classic_display = false;
   oled_display.setFont();
   seq_ptc_page.display();
   track_update();
@@ -49,10 +48,7 @@ void ArpPage::track_update() {
 }
 
 void ArpPage::cleanup() {
-  //  md_exploit.off();
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
 }
 
 void ArpPage::loop() {
@@ -84,8 +80,6 @@ const arp_name_t arp_names[] PROGMEM = {
 
 void ArpPage::display() {
 
-  if (!classic_display) {
-  }
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 

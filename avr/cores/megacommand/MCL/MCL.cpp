@@ -22,17 +22,10 @@ void MCL::setup() {
 
   delay(100);
   ret = mcl_sd.sd_init();
-#ifdef OLED_DISPLAY
   gfx.init_oled();
-#endif
   if (!ret) {
-#ifdef OLED_DISPLAY
     oled_display.print("SD CARD ERROR :-(");
     oled_display.display();
-#else
-    GUI.flash_strings_fill("SD CARD ERROR", "");
-#endif
-
     delay(2000);
     return;
   }
@@ -82,9 +75,7 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
-#ifdef OLED_DISPLAY
     oled_display.textbox("DISPLAY ", "MIRROR");
-#endif
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif

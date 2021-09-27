@@ -14,6 +14,7 @@ public:
   uint8_t s_progress_count = 0;
 
   void put_value_at(uint8_t value, char *str);
+  void put_value_at2(uint8_t value, char *str);
 
   void draw_textbox(const char *text, const char *text2);
   bool wait_for_input(char *dst, const char *title, uint8_t len);
