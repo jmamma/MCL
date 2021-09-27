@@ -744,8 +744,13 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
 
-  if (param < 2 || mcl_cfg.uart_cc_loopback) {
+  bool send_uart2 = true;
+
+  //CC_FWD
+  //
+  if (mcl_cfg.uart_cc_loopback) {
     MidiUart2.sendCC(channel, param, value);
+    send_uart2 = false;
   }
 
   if (is_md_midi(channel)) {
@@ -769,9 +774,14 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     return;
   }
 
-  uint8_t n = mcl_seq.find_ext_track(channel);
+   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;
+  }
+
+  //Send mod wheel CC#1 or bank select CC#0
+  if (send_uart2 && param < 2) {
+    mcl_seq.ext_tracks[n].send_cc(param, value);
   }
 
   if (GUI.currentPage() == &seq_extstep_page && SeqPage::pianoroll_mode > 0) {
