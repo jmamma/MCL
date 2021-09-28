@@ -8,8 +8,10 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
 
+  MD.parseCC(channel, param, &track, &track_param);
+  if (track == 255) { return; }
+
   if (param >= 16) {
-    MD.parseCC(channel, param, &track, &track_param);
     if (track > 15) { return; }
     if (track_param > 23) { return; }
     MD.kit.params[track][track_param] = value;
