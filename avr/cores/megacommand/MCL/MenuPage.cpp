@@ -10,6 +10,8 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
+  gen_menu_row_names();
+
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
@@ -27,9 +29,29 @@ void MenuPageBase::init() {
   encoders[1]->old = encoders[1]->cur;
 }
 
-
-void MenuPageBase::setup() {
+void MenuPageBase::gen_menu_row_names() {
+  MenuBase *m = get_menu();
+  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
+  m->set_custom_options(p);
+  uint8_t row_id = 0;
+  for (char bank = 'A'; bank <= 'H'; ++bank) {
+    for (uint8_t i = 1; i <= 16; ++i) {
+      p->pos = row_id++;
+      p->name[0] = bank;
+      if (i < 10) {
+        p->name[1] = '0';
+        p->name[2] = '0' + i;
+      } else {
+        p->name[1] = '1';
+        p->name[2] = '0' + i - 10;
+      }
+      p->name[3] = '\0';
+      ++p;
+    }
+  }
 }
+
+void MenuPageBase::setup() {}
 
 void MenuPageBase::loop() {
 
@@ -70,7 +92,7 @@ void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
 }
 
 void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
-  const char* name = get_menu()->get_item_name(item_n);
+  const char *name = get_menu()->get_item_name(item_n);
   if (name != nullptr) {
     oled_display.print(name);
   }
@@ -85,7 +107,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 
     oled_display.print(" ");
     uint8_t *pdest = get_menu()->get_dest_variable(item_n);
-    const char* option_name = get_menu()->get_option_name(item_n, *pdest);
+    const char *option_name = get_menu()->get_option_name(item_n, *pdest);
     if (option_name == NULL) {
       oled_display.println(*pdest);
     } else {
@@ -139,7 +161,6 @@ void MenuPageBase::display() {
     draw_scrollbar(120);
   }
   oled_display.display();
-
 }
 
 bool MenuPageBase::enter() {

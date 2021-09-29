@@ -14,6 +14,11 @@ MCLEncoder config_param4(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
+MCLEncoder config_param8(0, 17, ENCODER_RES_SYS);
+
+uint8_t opt_import_src;
+uint8_t opt_import_dest;
+uint8_t opt_import_count;
 
 void new_proj_handler() { proj.new_project_prompt(); }
 
@@ -38,6 +43,8 @@ const Page *const menu_target_pages[] PROGMEM = {
     (Page *)&poly_page,
     // 10
     (Page *)&arp_page,
+    // 11
+    (Page *)&md_import_page,
 };
 
 const uint8_t *const menu_target_param[] PROGMEM = {
@@ -81,7 +88,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
 #endif
     // 42
     &mcl_cfg.rec_quant,
-    // 43 - end
+    // 43
+    &opt_import_src, &opt_import_dest, &opt_import_count
+    // 46 - END
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -128,15 +137,18 @@ const menu_function_t menu_target_functions[] PROGMEM = {
 #endif
     // 24
     mclsys_apply_config_midi,
+    // 25
+    md_import,
 };
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
 MenuPage<6> system_page(&options_param1, &options_param2);
 MenuPage<7> midi_config_page(&config_param1, &config_param3);
-MenuPage<3> md_config_page(&config_param1, &config_param4);
+MenuPage<4> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);
 MenuPage<1> mcl_config_page(&config_param1, &config_param5);
 MenuPage<1> ram_config_page(&config_param1, &config_param7);
+MenuPage<4> md_import_page(&config_param1, &config_param8);
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);

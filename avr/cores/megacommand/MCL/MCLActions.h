@@ -115,6 +115,8 @@ private:
   void load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
 };
 
+extern void md_import();
+
 extern MCLActionsCallbacks mcl_actions_callbacks;
 extern MCLActionsMidiEvents mcl_actions_midievents;
 

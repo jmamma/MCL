@@ -105,6 +105,7 @@ void ResourceManager::restore_menu_layout_deps() {
 	step_menu_page.set_layout(R.menu_layouts->step_menu_layout);
 	grid_slot_page.set_layout(R.menu_layouts->slot_menu_layout);
 	wavdesign_menu_page.set_layout(R.menu_layouts->wavdesign_menu_layout);
+    md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);
 }
 
 ResourceManager R;

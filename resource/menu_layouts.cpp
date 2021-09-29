@@ -60,15 +60,28 @@ menu_t<7> midiconfig_menu_layout = {
     24, 0
 };
 
-menu_t<3> mdconfig_menu_layout = {
+menu_t<4> mdconfig_menu_layout = {
     "MD",
     {
         //              m  r   n  d  p  f  o
         {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
         {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
         {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
+        {"IMPORT",      0, 0,  0, 0, 11, 0, 0},
     },
-    1, 0
+    0, 0
+};
+
+menu_t<4> mdimport_menu_layout = {
+    "MD",
+    {
+        //         m  r       n  d  p  f  o
+        {"SRC: ",  0, 128, 128, 43, 0, 0, 128},
+        {"DEST: ", 0, 128, 128, 44, 0, 0, 128},
+        {"COUNT:", 1, 128,  0,  45, 0, 0, 0},
+        {"RUN",    0,   0,  0,   0, 0, 25, 0},
+    },
+    0, 0
 };
 
 menu_t<1> mclconfig_menu_layout = {
