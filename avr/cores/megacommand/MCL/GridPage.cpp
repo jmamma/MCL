@@ -690,6 +690,14 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   slot.load_from_grid(getCol(), getRow());
 }
 
+void slot_menu_hold_() {
+   grid_page.slot_menu_hold = 1;
+   if (trig_interface.is_key_down(MDX_KEY_NO)) { trig_interface.ignoreNextEvent(MDX_KEY_NO); }
+   else {
+     GUI.ignoreNextEvent(Buttons.BUTTON3);
+   }
+}
+
 bool GridPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -762,8 +770,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
         inc = 4;
       }
       if (show_slot_menu) {
-
-        switch (key) {
+       switch (key) {
+        case MDX_KEY_BANKGROUP: {
+          grid_page.grid_select_apply = !grid_page.grid_select_apply;
+          return true;
+        }
         case MDX_KEY_NO: {
           goto slot_menu_off;
         }
@@ -794,26 +805,22 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_UP: {
           param4.cur -= inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
+          slot_menu_hold_();
           return true;
         }
         case MDX_KEY_DOWN: {
           param4.cur += inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
+          slot_menu_hold_();
           return true;
         }
         case MDX_KEY_LEFT: {
           param3.cur = max(0, param3.cur - inc);
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
+          slot_menu_hold_();
           return true;
         }
         case MDX_KEY_RIGHT: {
           param3.cur += inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
+          slot_menu_hold_();
           return true;
         }
         case MDX_KEY_BANKA:
