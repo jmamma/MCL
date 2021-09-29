@@ -631,12 +631,15 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     } else if (slot_update == 1) {
       oled_display.textbox("SLOT ", "UPDATE");
     }
+
     if (slot_load) {
       if (height > 1) {
         mcl_cfg.load_mode = LOAD_QUEUE;
       }
       grid_load_page.display_load();
     }
+
+    oled_display.display();
 
     bool activate_header = false;
 
@@ -691,6 +694,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 }
 
 void slot_menu_hold_() {
+   reset_undo();
    grid_page.slot_menu_hold = 1;
    if (trig_interface.is_key_down(MDX_KEY_NO)) { trig_interface.ignoreNextEvent(MDX_KEY_NO); }
    else {
@@ -789,18 +793,27 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_copy = 1;
           apply_slot_changes();
           init();
+          if (trig_interface.is_key_down(MDX_KEY_NO)) {
+            goto slot_menu_on;
+          }
           return true;
         }
         case MDX_KEY_CLEAR: {
           slot_clear = 1;
           apply_slot_changes();
           init();
+          if (trig_interface.is_key_down(MDX_KEY_NO)) {
+            goto slot_menu_on;
+          }
           return true;
         }
         case MDX_KEY_PASTE: {
           slot_paste = 1;
           apply_slot_changes();
           init();
+          if (trig_interface.is_key_down(MDX_KEY_NO)) {
+            goto slot_menu_on;
+          }
           return true;
         }
         case MDX_KEY_UP: {
