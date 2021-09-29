@@ -98,7 +98,7 @@ public:
   void kit_reload(uint8_t pattern);
 
   void save_tracks(int row, uint8_t *slot_select_array,
-                           uint8_t merge);
+                           uint8_t merge, uint8_t readpattern = 255);
 
   void load_tracks(int row, uint8_t *slot_select_array);
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);

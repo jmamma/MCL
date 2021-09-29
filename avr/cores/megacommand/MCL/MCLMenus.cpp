@@ -16,9 +16,9 @@ MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param8(0, 17, ENCODER_RES_SYS);
 
-uint8_t opt_import_src;
-uint8_t opt_import_dest;
-uint8_t opt_import_count;
+uint8_t opt_import_src = 0;
+uint8_t opt_import_dest = 0;
+uint8_t opt_import_count = 16;
 
 void new_proj_handler() { proj.new_project_prompt(); }
 
