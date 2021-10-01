@@ -650,6 +650,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
       memset(track_select_array, 0, sizeof(track_select_array));
 
+      if (slot_clear && height > 8) { mcl_gui.draw_progress("", y, height); }
       for (uint8_t x = 0; x < width && x + getCol() < getWidth(); x++) {
         uint8_t xpos = x + getCol();
         if (slot_clear == 1) {
@@ -761,7 +762,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
-        inc = 4;
+        inc = 16;
       }
       if (show_slot_menu) {
        switch (key) {
@@ -805,20 +806,16 @@ bool GridPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_UP: {
-          param4.cur -= inc;
-          return true;
+          goto up;
         }
         case MDX_KEY_DOWN: {
-          param4.cur += inc;
-          return true;
+          goto down;
         }
         case MDX_KEY_LEFT: {
-          param3.cur = max(0, param3.cur - inc);
-          return true;
+          goto left;
         }
         case MDX_KEY_RIGHT: {
-          param3.cur += inc;
-          return true;
+          goto right;
         }
         case MDX_KEY_BANKA:
         case MDX_KEY_BANKB:
@@ -832,19 +829,29 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_UP: {
+        up:
         param2.cur -= inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_DOWN: {
+        down:
         param2.cur += inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_LEFT: {
+        left:
+        if (inc > 1) { inc = 4; }
         param1.cur = max(0, param1.cur - inc);
+        reset_undo();
         return true;
       }
       case MDX_KEY_RIGHT: {
+        right:
+        if (inc > 1) { inc = 4; }
         param1.cur += inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_YES: {

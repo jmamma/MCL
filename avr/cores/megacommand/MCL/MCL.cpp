@@ -150,8 +150,8 @@ bool mcl_handleEvent(gui_event_t *event) {
 
         grid_page.send_row_led();
 
-        uint8_t row = grid_page.bank * 16;
-        grid_page.jump_to_row(row);
+        //uint8_t row = grid_page.bank * 16;
+        //grid_page.jump_to_row(row);
         return true;
       }
       case MDX_KEY_SONG: {

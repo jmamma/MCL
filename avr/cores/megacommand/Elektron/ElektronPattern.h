@@ -74,6 +74,8 @@ public:
 	bool isLockPatternEmpty(int8_t idx, uint64_t trigs);
 	/** Returns true if the lock pattern is empty (all values are 255). */
 	bool isLockEmpty(uint8_t idx);
+    /** Returns true if pattern is empty **/
+    virtual bool isEmpty() { return false; }
 
 	/** Clear pattern (machine specific). **/
 	virtual void clearPattern()                         { }

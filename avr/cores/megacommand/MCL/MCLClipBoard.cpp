@@ -200,6 +200,7 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h, uint
     proj.read_grid_row_header(&header, y + row);
     ret = grids[grid].write_row_header(&header, y + row);
     DEBUG_PRINTLN(header.name);
+    if (h > 8) { mcl_gui.draw_progress("", y, h); }
     for (int x = 0; x < w; x++) {
       ret = proj.read_grid(&temp_track, sizeof(temp_track), x + col, y + row);
       DEBUG_DUMP(temp_track.active);
@@ -240,6 +241,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
       header.active = true;
       strncpy(&(header.name[0]), &(header_copy.name[0]), sizeof(header.name));
     }
+    if (t_h > 8) { mcl_gui.draw_progress("", y, t_h); }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
       // track now has full data and correct type

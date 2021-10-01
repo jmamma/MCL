@@ -33,7 +33,6 @@ static void oled_draw_routing() {
   }
 }
 
-
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
   encoders[1]->handler = encoder_filtf_handle;
@@ -215,8 +214,11 @@ void MixerPage::display() {
       disp_levels[n] -= dec;
     }
   }
-  if (!redraw_mask) { oled_display.display(); }
-  else { redraw_mask = -1; }
+  if (!redraw_mask) {
+    oled_display.display();
+  } else {
+    redraw_mask = -1;
+  }
   oled_display.setFont(oldfont);
 }
 
@@ -276,6 +278,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_NO: {
+        if (note_interface.notes_count_on() == 0) {
+          GUI.setPage(&grid_page);
+          return true;
+        }
+
         goto reset_params;
       }
       }
@@ -354,7 +361,9 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
+  if (track > 15) {
+    return;
+  }
   if (track_param == 32) {
     return;
   } // don't process mute

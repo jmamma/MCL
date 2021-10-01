@@ -96,7 +96,7 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
 
 void md_import() {
 
-  if (!mcl_gui.wait_for_confirm("Import:", "Overwrite slots?")) { return; }
+  if (!mcl_gui.wait_for_confirm("Import:", "Overwrite rows?")) { return; }
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
   uint8_t track_idx, dev_idx;
@@ -182,6 +182,10 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
           continue;
         }
         ElektronPattern *p = elektron_devs[i]->getPattern();
+        if (p->isEmpty()) {
+          save_dev_tracks[i] = false;
+          continue;
+        }
         if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
           DEBUG_PRINTLN(F("could not receive kit"));
           continue;
