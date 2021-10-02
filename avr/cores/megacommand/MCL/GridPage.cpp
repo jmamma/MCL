@@ -480,7 +480,6 @@ void GridPage::display_grid() {
     mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
   oled_display.setTextColor(WHITE, BLACK);
-
 }
 void GridPage::display_slot_menu() {
   uint8_t y_offset = 8;
@@ -589,24 +588,29 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   if (undo == 1) {
     slot_paste = 1;
   }
+
   if (slot_copy == 1 || (slot_clear == 1 && !undo)) {
-    if (slot_clear == 0) {
+    if (slot_clear == 1) {
+      slot_undo_x = getCol();
+      slot_undo_y = getRow();
+      if (width > 0) {
+        oled_display.textbox("CLEAR ", "SLOTS");
+      } else {
+        oled_display.textbox("CLEAR ", "SLOT");
+      }
+      slot_undo = 1;
+    } else {
       slot_undo = 0;
       if (width > 0) {
         oled_display.textbox("COPY ", "SLOTS");
       } else {
         oled_display.textbox("COPY ", "SLOT");
       }
-    } else {
-      slot_undo_x = getCol();
-      slot_undo_y = getRow();
     }
-
     mcl_clipboard.copy(getCol(), getRow(), width, height, proj.get_grid());
     if (slot_clear) {
-      goto clear;
+      goto run;
     }
-
   }
 
   else if (slot_paste == 1) {
@@ -618,16 +622,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     slot_undo = 0;
     mcl_clipboard.paste(getCol(), getRow(), proj.get_grid());
   } else {
-    GridRowHeader header;
-    if (slot_clear == 1) {
-    clear:
-      slot_undo = 1;
-      if (width > 0) {
-        oled_display.textbox("CLEAR ", "SLOTS");
-      } else {
-        oled_display.textbox("CLEAR ", "SLOT");
-      }
-    } else if (slot_update == 1) {
+    if (slot_update == 1) {
       oled_display.textbox("SLOT ", "UPDATE");
     }
 
@@ -637,12 +632,14 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
       }
       grid_load_page.display_load();
     }
+  run:
 
     oled_display.display();
 
     bool activate_header = false;
 
     uint8_t track_select_array[GRID_LENGTH] = {0};
+    GridRowHeader header;
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       uint8_t ypos = y + getRow();
@@ -650,7 +647,9 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
       memset(track_select_array, 0, sizeof(track_select_array));
 
-      if (slot_clear && height > 8) { mcl_gui.draw_progress("", y, height); }
+      if (slot_clear && height > 8) {
+        mcl_gui.draw_progress("", y, height);
+      }
       for (uint8_t x = 0; x < width && x + getCol() < getWidth(); x++) {
         uint8_t xpos = x + getCol();
         if (slot_clear == 1) {
@@ -765,7 +764,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         inc = 16;
       }
       if (show_slot_menu) {
-       switch (key) {
+        switch (key) {
         case MDX_KEY_BANKGROUP: {
           grid_page.grid_select_apply = !grid_page.grid_select_apply;
           return true;
@@ -782,7 +781,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_copy = 1;
           apply_slot_changes();
           init();
-          //if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -791,7 +790,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_clear = 1;
           apply_slot_changes();
           init();
-          //if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -800,22 +799,33 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_paste = 1;
           apply_slot_changes();
           init();
-          //if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
         }
         case MDX_KEY_UP: {
-          goto up;
+          param4.cur -= inc;
+          return true;
         }
         case MDX_KEY_DOWN: {
-          goto down;
+          param4.cur += inc;
+          return true;
         }
         case MDX_KEY_LEFT: {
-          goto left;
+          if (inc > 1) {
+            inc = 4;
+          }
+          param3.cur = max(0, param3.cur - inc);
+          return true;
         }
         case MDX_KEY_RIGHT: {
-          goto right;
+          if (inc > 1) {
+            inc = 4;
+          }
+
+          param3.cur += inc;
+          return true;
         }
         case MDX_KEY_BANKA:
         case MDX_KEY_BANKB:
@@ -829,27 +839,31 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_UP: {
-        up:
+      up:
         param2.cur -= inc;
         reset_undo();
         return true;
       }
       case MDX_KEY_DOWN: {
-        down:
+      down:
         param2.cur += inc;
         reset_undo();
         return true;
       }
       case MDX_KEY_LEFT: {
-        left:
-        if (inc > 1) { inc = 4; }
+      left:
+        if (inc > 1) {
+          inc = 4;
+        }
         param1.cur = max(0, param1.cur - inc);
         reset_undo();
         return true;
       }
       case MDX_KEY_RIGHT: {
-        right:
-        if (inc > 1) { inc = 4; }
+      right:
+        if (inc > 1) {
+          inc = 4;
+        }
         param1.cur += inc;
         reset_undo();
         return true;
@@ -957,4 +971,3 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
-
