@@ -7,7 +7,7 @@ Fixes:
 - Parameter changes in the MD's LFO and FX menus are now detected by MCL.
 - Update LFO offsets when restoring kit parameters.
 - Fix WavDesigner crash.
-- Align mod wheel and pitch bend behavioru across MIDI settings.
+- Align mod wheel and pitch bend behaviour across MIDI settings.
 
 MCL 4.02 18/09/2021
 
