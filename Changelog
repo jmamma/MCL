@@ -1,3 +1,14 @@
+MCL 4.03 03/10/2021
+
+Fixes:
+
+- Tracks could drift out of sync when loaded.
+- Fix track model changing on stop.
+- Parameter changes in the MD's LFO and FX menus are now detected by MCL.
+- Update LFO offsets when restoring kit parameters.
+- Fix WavDesigner crash.
+- Align mod wheel and pitch bend behavioru across MIDI settings.
+
 MCL 4.02 18/09/2021
 
 Fixes:
