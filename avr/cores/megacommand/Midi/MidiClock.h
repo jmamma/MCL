@@ -409,8 +409,8 @@ public:
     }
     init();
 
-    onMidiStartImmediateCallbacks.call(div96th_counter);
     state = STARTING;
+    onMidiStartImmediateCallbacks.call(div96th_counter);
 
     DEBUG_PRINTLN(F("START"));
   }

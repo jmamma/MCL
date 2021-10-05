@@ -116,16 +116,16 @@ void MCLSeq::onMidiStartImmediateCallback() {
   seq_tx2.txRb.init();
   seq_tx3.txRb.init();
   seq_tx4.txRb.init();
-#ifdef EXT_TRACKS
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].reset();
+    md_arp_tracks[i].reset();
+  }
+
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
     ext_tracks[i].reset();
     ext_arp_tracks[i].reset();
-  }
-#endif
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].reset();
-    md_arp_tracks[i].reset();
   }
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
@@ -139,7 +139,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
   }
 #endif
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
+
   sei();
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].update_params();
   }
@@ -150,6 +154,8 @@ void MCLSeq::onMidiStartImmediateCallback() {
   }
 #endif
   seq_rec_play();
+
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void MCLSeq::onMidiStartCallback() {}
