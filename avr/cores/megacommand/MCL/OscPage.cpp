@@ -21,7 +21,6 @@ float OscPage::get_freq() {
   return fout;
 }
 void OscPage::init() {
-  DEBUG_PRINTLN(F("seq extstep init"));
   WavDesignerPage::init();
   wd.last_page = this;
   // md_exploit.on();
