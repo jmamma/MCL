@@ -24,7 +24,6 @@ void OscPage::init() {
   DEBUG_PRINTLN(F("seq extstep init"));
   WavDesignerPage::init();
   wd.last_page = this;
-  create_chars_mixer();
   // md_exploit.on();
   note_interface.state = true;
   oled_display.clearDisplay();
