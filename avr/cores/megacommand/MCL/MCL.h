@@ -19,7 +19,7 @@
 #endif
 
 #define VERSION 4004
-#define VERSION_STR "4.04"
+#define VERSION_STR "4.04A"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
