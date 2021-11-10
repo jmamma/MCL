@@ -8,7 +8,6 @@ void OscMixerPage::init() {
   WavDesignerPage::init();
   trig_interface.off();
   wd.last_page = this;
-  create_chars_mixer();
   classic_display = false;
 }
 void OscMixerPage::cleanup() {}

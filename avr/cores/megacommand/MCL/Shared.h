@@ -26,6 +26,4 @@ inline bool range_check(int val, int min, int max) {
 }
 
 
-void create_chars_mixer();
-
 #endif /* SHARED_H__ */
