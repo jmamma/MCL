@@ -373,6 +373,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       MD.setTrackParam(i, track_param, value);
       if (track_param < 24) {
         MD.kit.params[i][track_param] = value;
+        mcl_seq.md_tracks[i].update_param(track_param, value);
       }
       if (track_param == 33) {
         MD.kit.levels[i] = value;
