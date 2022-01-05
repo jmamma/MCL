@@ -656,9 +656,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     return;
   }
-  if (channel >= mcl_seq.num_ext_tracks) {
-    return;
-  }
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
   auto active_device = midi_active_peering.get_device(UART2_PORT);
@@ -715,9 +712,6 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   pitch = seq_ptc_page.process_ext_pitch(note_num, false);
-  if (channel >= mcl_seq.num_ext_tracks) {
-    return;
-  }
   uint8_t n = mcl_seq.find_ext_track(channel);
   if (n == 255) {
     return;
