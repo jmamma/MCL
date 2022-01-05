@@ -247,16 +247,9 @@ public:
   }
 
   void buffer_notesoff() {
-    USE_LOCK();
-    SET_LOCK();
-    if (MidiClock.state == 2) {
-      seq_tx3.txRb.init();
-      seq_tx4.txRb.init();
-    }
     init_notes_on();
     buffer_notesoff64(&(note_buffer[0]), 0);
     buffer_notesoff64(&(note_buffer[1]), 64);
-    CLEAR_LOCK();
   }
 
   void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
