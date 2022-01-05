@@ -83,6 +83,7 @@ void SeqStepPage::init() {
 
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
+  mcl_seq.midi_events.update_params = true;
   SeqPage::cleanup();
   params_reset();
   MD.set_rec_mode(0);
