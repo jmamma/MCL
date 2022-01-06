@@ -260,7 +260,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
 
   // Only copy row name from kit if, the current row is not active.
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    if (!row_headers[n].active && devs[0] == &MD) {
+    if (!row_headers[n].active && devs[0] == &MD && save_dev_tracks[n]) {
       for (uint8_t c = 0; c < 17; c++) {
         row_headers[n].name[c] = MD.kit.name[c];
       }
