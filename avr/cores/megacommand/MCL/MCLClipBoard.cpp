@@ -257,7 +257,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
 
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
 
-      if (gdt == nullptr || gdt->track_type != ptrack->active) {
+      if ((gdt == nullptr || gdt->track_type != ptrack->active) && (ptrack->active != EMPTY_TRACK_TYPE)) {
        DEBUG_PRINTLN("track not supported");
       //Don't allow paste in to unsupported slots
        continue;
