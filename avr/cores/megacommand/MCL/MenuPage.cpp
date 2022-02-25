@@ -197,14 +197,35 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
 
     return true;
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES;
+      case MDX_KEY_NO:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO;
+      case MDX_KEY_UP:
+          encoders[1]->cur -= 1;
+        break;
+      case MDX_KEY_DOWN:
+          encoders[1]->cur += 1;
+        break;
+      }
+    }
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
+  YES:
     enter();
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     GUI.ignoreNextEvent(event->source);
+  NO:
     exit();
     return true;
   }

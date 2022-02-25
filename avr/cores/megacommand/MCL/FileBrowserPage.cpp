@@ -23,8 +23,8 @@ bool FileBrowserPage::show_samplemgr = false;
 bool FileBrowserPage::show_filetypes = false;
 uint8_t FileBrowserPage::filetype_idx = 0;
 uint8_t FileBrowserPage::filetype_max = 0;
-const char* FileBrowserPage::filetypes[MAX_FT_SELECT];
-const char* FileBrowserPage::filetype_names[MAX_FT_SELECT];
+const char *FileBrowserPage::filetypes[MAX_FT_SELECT];
+const char *FileBrowserPage::filetype_names[MAX_FT_SELECT];
 
 bool FileBrowserPage::filemenu_active = false;
 
@@ -38,9 +38,9 @@ void FileBrowserPage::setup() {
 }
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
-  volatile uint8_t *ptr = 
-    (uint8_t*)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
-  memcpy_bank1((volatile void*)entry, ptr, FILE_ENTRY_SIZE);
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+  memcpy_bank1((volatile void *)entry, ptr, FILE_ENTRY_SIZE);
 }
 
 bool FileBrowserPage::add_entry(const char *entry) {
@@ -50,7 +50,8 @@ bool FileBrowserPage::add_entry(const char *entry) {
   char buf[FILE_ENTRY_SIZE];
   strncpy(buf, entry, FILE_ENTRY_SIZE);
   buf[FILE_ENTRY_SIZE - 1] = '\0';
-  volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
   memcpy_bank1(ptr, buf, sizeof(buf));
   numEntries++;
   return true;
@@ -64,11 +65,13 @@ bool FileBrowserPage::add_entry(const char *entry) {
 
 void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {
-    if (filetype_idx > filetype_max) filetype_idx = filetype_max;
-    if (filetype_idx < 0) filetype_idx = 0;
+    if (filetype_idx > filetype_max)
+      filetype_idx = filetype_max;
+    if (filetype_idx < 0)
+      filetype_idx = 0;
     strcpy(match, filetypes[filetype_idx]);
-    ((MCLEncoder*)param1)->min = 0;
-    ((MCLEncoder*)param1)->max = filetype_max;
+    ((MCLEncoder *)param1)->min = 0;
+    ((MCLEncoder *)param1)->max = filetype_max;
   }
 
   char temp_entry[FILE_ENTRY_SIZE];
@@ -394,6 +397,26 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return false;
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES;
+      case MDX_KEY_NO:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO;
+      case MDX_KEY_UP:
+        encoders[1]->cur -= 1;
+        break;
+      case MDX_KEY_DOWN:
+        encoders[1]->cur += 1;
+        break;
+      }
+    }
+  }
+
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
     filemenu_active = true;
     file_menu_encoder.cur = file_menu_encoder.old = 0;
@@ -413,7 +436,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-
+  YES:
     int i_save;
     _calcindices(i_save);
 
@@ -423,8 +446,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     char temp_entry[FILE_ENTRY_SIZE];
-    volatile uint8_t *ptr =
-        (uint8_t *)BANK1_FILE_ENTRIES_START + encoders[1]->getValue() * FILE_ENTRY_SIZE;
+    volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START +
+                            encoders[1]->getValue() * FILE_ENTRY_SIZE;
     memcpy_bank1(temp_entry, ptr, FILE_ENTRY_SIZE);
 
     // chdir to parent
@@ -452,6 +475,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   // cancel
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  NO:
     if (show_samplemgr) {
       // on cancel, break out of sample manager
       // and intercept cancel event
@@ -466,4 +490,3 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
-
