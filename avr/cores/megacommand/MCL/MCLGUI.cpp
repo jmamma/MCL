@@ -253,7 +253,7 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
-  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 16 + line2_offset);
+  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 15 + line2_offset);
   oled_display.println(line2);
 
   oled_display.setFont(oldfont);

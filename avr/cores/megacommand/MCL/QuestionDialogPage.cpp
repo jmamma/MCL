@@ -9,17 +9,14 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
 
-  oled_display.setCursor(MCLGUI::dlg_info_x2 - 86, MCLGUI::dlg_info_y1 + 24);
-  oled_display.print("S NO");
+  oled_display.setCursor(MCLGUI::dlg_info_x2 - 86, MCLGUI::dlg_info_y1 + 23);
+  oled_display.print(" NO");
 
-  oled_display.setCursor(MCLGUI::dlg_info_x2 - 55, MCLGUI::dlg_info_y1 + 24);
-  oled_display.print("W YES");
+  oled_display.setCursor(MCLGUI::dlg_info_x2 - 55, MCLGUI::dlg_info_y1 + 23);
+  oled_display.print(" YES");
 
-  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 21, 9, WHITE);
-  oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 21, 9, WHITE);
-
-  oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17, 5, 7, INVERT);
-  oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17, 5, 7, INVERT);
+  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 16, 9, WHITE);
+  oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
 
   oled_display.setFont(oldfont);
   oled_display.display();
@@ -33,14 +30,29 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
     return false;
   }
 
+    if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES;
+      case MDX_KEY_NO:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO;
+      }
+    }
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    oled_display.fillRect(MCLGUI::dlg_info_x2 - 82, MCLGUI::dlg_info_y1 + 18, 12, 6, INVERT);
+    NO:
+    oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
     oled_display.display();
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    oled_display.fillRect(MCLGUI::dlg_info_x2 - 51, MCLGUI::dlg_info_y1 + 18, 12, 6, INVERT);
+    YES:
+    oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
     oled_display.display();
     return true;
   }
