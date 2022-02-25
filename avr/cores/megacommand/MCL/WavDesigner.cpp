@@ -18,7 +18,7 @@ bool WavDesigner::render() {
   float sample_rate = 44100;
   Wav wav_file;
 
-  if (!wav_file.open("render.wav", true, 1, sample_rate, 16, true)) {
+  if (!wav_file.open("WAVE.wav", true, 1, sample_rate, 16, true)) {
     return false;
   }
   // Work out lowest base frequency.
