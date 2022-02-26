@@ -154,7 +154,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         //grid_page.jump_to_row(row);
         return true;
       }
-      case MDX_KEY_SONG: {
+      case MDX_KEY_PATSONG: {
         GUI.setPage(&page_select_page);
         return true;
       }

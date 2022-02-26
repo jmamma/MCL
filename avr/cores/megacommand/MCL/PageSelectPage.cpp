@@ -318,7 +318,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-      case MDX_KEY_SONG: {
+      case MDX_KEY_PATSONG: {
         goto release;
       }
       }

@@ -878,6 +878,9 @@ bool GridPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_NO: {
         goto slot_menu_on;
       }
+      case MDX_KEY_SONG: {
+        goto system;
+      }
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
@@ -959,7 +962,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
-
+    system:
     system_page.isSetup = false;
     GUI.pushPage(&system_page);
     return true;

@@ -213,6 +213,12 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN:
           encoders[1]->cur += 1;
         break;
+      case MDX_KEY_LEFT:
+        encoders[0]->cur -= 1;
+        break;
+      case MDX_KEY_RIGHT:
+        encoders[0]->cur += 1;
+        break;
       }
     }
   }
