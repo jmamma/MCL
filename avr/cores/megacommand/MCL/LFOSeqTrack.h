@@ -43,14 +43,16 @@ public:
   uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];
   bool wav_table_state[NUM_LFO_PARAMS];
   uint8_t last_wav_value[NUM_LFO_PARAMS];
-  uint8_t sample_hold = 0;
+  uint8_t sample_hold;
 
-  uint8_t speed = 0;
+  uint8_t speed;
   uint8_t mode;
   uint8_t offset_behaviour;
   uint64_t pattern_mask;
   bool enable;
-  uint8_t length = 16;
+  uint8_t length;
+  void *data() const { return (void *)&params; }
+
 };
 
 class LFOSeqTrack : public LFOSeqTrackData {
@@ -72,6 +74,10 @@ public:
                                       uint8_t value);
   void init() {
     enable = false;
+    speed = 0;
+    sample_hold = 0;
+    mode = 0;
+    length = 16;
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       last_wav_value[a] = 255;
       params[a].dest = 255;
