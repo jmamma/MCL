@@ -83,15 +83,6 @@ public:
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
-  void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
-    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-    bool clear_locks = true;
-    bool reset_params = false;
-    md_seq_track->clear_track(clear_locks, reset_params);
-    md_seq_track->set_length(16);
-    md_seq_track->set_speed(SEQ_SPEED_1X, 255);
-  }
-
   void load_seq_data(SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);

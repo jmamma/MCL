@@ -452,8 +452,10 @@ void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
   ptrack->link.store_in_mem(pos, &(links[0]));
 
   if (ptrack->active != gdt->track_type) {
+    empty_track.clear();
     ptrack->init_track_type(gdt->track_type);
-    ptrack->transition_clear(track_idx, gdt->seq_track);
+    ptrack->init(track_idx, gdt->seq_track);
+    ptrack->transition_load(track_idx, gdt->seq_track, pos);
   } else {
     ptrack->load_immediate(track_idx, gdt->seq_track);
     send_masks[pos] = 1;

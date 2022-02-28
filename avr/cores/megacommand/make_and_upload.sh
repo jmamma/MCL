@@ -10,6 +10,6 @@ if [ $? -eq 0 ]; then
   echo RAM_USED: $ram_used
   echo RAM_FREE: $ram_free
   #avrdude -c atmelice_isp -p m2560 -D -Uflash:w:./main.hex  -B 1
-  ${AVR_DIR}/bin/avrdude -C${AVR_DIR}/etc/avrdude.conf -v -patmega2560 -c arduino -P${DEV} -b115200 -D -Uflash:w:./main.hex
+  ${AVR_DIR}/bin/avrdude -C${AVR_DIR}/etc/avrdude.conf -V -patmega2560 -c arduino -P${DEV} -b115200 -D -Uflash:w:./main.hex
 fi
 
