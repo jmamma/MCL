@@ -85,6 +85,7 @@ public:
   void cleanup();
   void init();
   void prepare();
+  void swap_grids();
   void apply_slot_changes(bool ignore_undo = false);
 
   void close_bank_popup();

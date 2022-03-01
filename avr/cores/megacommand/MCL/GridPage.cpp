@@ -546,6 +546,15 @@ void rename_row() {
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
+void GridPage::swap_grids() {
+  if (grid_select_apply != proj.grid_select) {
+    proj.grid_select = grid_select_apply;
+    ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
+    load_slot_models();
+    return;
+  }
+}
+
 void GridPage::apply_slot_changes(bool ignore_undo) {
   uint8_t width;
   uint8_t height;
@@ -558,13 +567,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() &&
                  slot_undo_y == getRow();
   DEBUG_PRINTLN("apply slot");
-  if (grid_select_apply != proj.grid_select) {
-    proj.grid_select = grid_select_apply;
-    ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-    load_slot_models();
-    return;
-  }
-
+  swap_grids();
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
@@ -757,8 +760,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_CMD(event)) {
+
     if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
-      return grid_slot_page.handleEvent(event);
+     if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+         grid_page.grid_select_apply = !grid_page.grid_select_apply;
+         swap_grids();
+         } else {
+        return grid_slot_page.handleEvent(event);
+       }
     }
 
     uint8_t key = event->source - 64;
@@ -769,10 +778,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       if (show_slot_menu) {
         switch (key) {
-        case MDX_KEY_BANKGROUP: {
-          grid_page.grid_select_apply = !grid_page.grid_select_apply;
-          return true;
-        }
         case MDX_KEY_NO: {
           goto slot_menu_off;
         }

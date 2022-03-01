@@ -467,12 +467,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           note_interface.ignoreNextEvent(step);
           disable_md_micro();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
-          opt_copy_page_handler();
+          opt_copy_page_handler_p();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_copy = recording ? 2 : 1;
-          opt_copy_track_handler();
+          opt_copy_track_handler_p();
         }
         break;
       }

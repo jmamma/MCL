@@ -783,7 +783,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-
+    if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
+       return seq_menu_page.handleEvent(event);
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       int w = cur_w;
       if (trig_interface.is_key_down(MDX_KEY_YES)) {

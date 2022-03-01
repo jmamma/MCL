@@ -123,7 +123,7 @@ void TrigInterface::end_immediate() {
   }
   gui_event_t event;
 
-  if (key == MDX_KEY_SCALE && GUI.currentPage() != &seq_step_page) {
+  if (key == MDX_KEY_BANKGROUP && !is_key_down(MDX_KEY_SCALE)) {
     event.source = Buttons.BUTTON3;
   }
   else {

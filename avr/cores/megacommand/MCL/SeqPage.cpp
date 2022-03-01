@@ -134,6 +134,7 @@ void SeqPage::init() {
 void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
+  opt_midi_device_capture = &MD;
   disable_record();
   if (show_seq_menu) {
     encoders[0] = opt_param1_capture;
@@ -836,7 +837,7 @@ void opt_clear_all_locks_handler() {
 #endif
 }
 
-void opt_copy_track_handler() { opt_copy_track_handler(255); }
+void opt_copy_track_handler_p() { opt_copy_track_handler(255); }
 
 void opt_copy_track_handler(uint8_t op) {
   bool silent = false;
@@ -847,6 +848,9 @@ void opt_copy_track_handler(uint8_t op) {
     silent = true;
   }
   DEBUG_PRINTLN("copying");
+  DEBUG_PRINTLN(opt_copy);
+  DEBUG_PRINTLN(op);
+  DEBUG_PRINTLN("/end");
   if (opt_copy == 2) {
 
     if (opt_midi_device_capture == &MD) {
@@ -965,6 +969,10 @@ void opt_clear_page_handler() {
   }
 }
 
+void opt_copy_page_handler_p() {
+  opt_copy_page_handler(255);
+}
+
 void opt_copy_page_handler(uint8_t op) {
   bool silent = false;
   opt_undo = 255;
@@ -1024,6 +1032,10 @@ void opt_clear_step_handler() {
   mcl_seq.md_tracks[last_md_track].paste_step(
       SeqPage::step_select + SeqPage::page_select * 16, &empty_step);
   mcl_seq.md_tracks[last_md_track].clean_params();
+}
+
+void opt_copy_step_handler_p() {
+  opt_copy_step_handler(255);
 }
 
 void opt_copy_step_handler(uint8_t op) {
