@@ -400,6 +400,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      uint8_t inc = 1;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        inc = 8;
+      }
       switch (key) {
       case MDX_KEY_YES:
         //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
@@ -408,16 +412,16 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
         //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-        encoders[1]->cur -= 1;
+        encoders[1]->cur -= inc;
         break;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += 1;
+        encoders[1]->cur += inc;
         break;
       case MDX_KEY_LEFT:
-        encoders[0]->cur -= 1;
+        encoders[0]->cur -= inc;
         break;
       case MDX_KEY_RIGHT:
-        encoders[0]->cur += 1;
+        encoders[0]->cur += inc;
         break;
       }
     }

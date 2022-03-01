@@ -757,6 +757,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_CMD(event)) {
+    if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
+      return grid_slot_page.handleEvent(event);
+    }
+
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
@@ -962,7 +966,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
-    system:
+  system:
     system_page.isSetup = false;
     GUI.pushPage(&system_page);
     return true;
