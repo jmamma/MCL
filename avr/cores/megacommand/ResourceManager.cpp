@@ -4,6 +4,7 @@
 ResourceManager::ResourceManager() { }
 
 void ResourceManager::Clear() {
+    DEBUG_PRINTLN("resource clear");
 	m_bufsize = 0;
 }
 
@@ -19,6 +20,8 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 byte* ResourceManager::Allocate(size_t sz) {
   byte* pos = m_buffer + m_bufsize;
   m_bufsize += sz;
+  DEBUG_PRINTLN("allocate");
+  DEBUG_PRINTLN(m_bufsize);
   return pos;
 }
 
@@ -30,6 +33,7 @@ void ResourceManager::Free(size_t sz) {
 // consider writing to SD card
 // SWAP partition!!
 void ResourceManager::Save(uint8_t *buf, size_t *sz) {
+    DEBUG_PRINTLN("resource SAVE");
 	memcpy(buf, m_buffer, m_bufsize);
 	*sz = m_bufsize;
 }

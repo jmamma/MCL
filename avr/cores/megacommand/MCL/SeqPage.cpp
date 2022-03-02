@@ -837,7 +837,7 @@ void opt_clear_all_locks_handler() {
 #endif
 }
 
-void opt_copy_track_handler_p() { opt_copy_track_handler(255); }
+void opt_copy_track_handler_cb() { opt_copy_track_handler(255); }
 
 void opt_copy_track_handler(uint8_t op) {
   bool silent = false;
@@ -969,7 +969,7 @@ void opt_clear_page_handler() {
   }
 }
 
-void opt_copy_page_handler_p() {
+void opt_copy_page_handler_cb() {
   opt_copy_page_handler(255);
 }
 
@@ -1034,7 +1034,7 @@ void opt_clear_step_handler() {
   mcl_seq.md_tracks[last_md_track].clean_params();
 }
 
-void opt_copy_step_handler_p() {
+void opt_copy_step_handler_cb() {
   opt_copy_step_handler(255);
 }
 

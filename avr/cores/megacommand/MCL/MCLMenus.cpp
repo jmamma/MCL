@@ -105,7 +105,7 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     opt_speed_handler,
     opt_length_handler,
     opt_channel_handler,
-    opt_copy_track_handler_p,
+    opt_copy_track_handler_cb,
     opt_clear_track_handler,
     opt_clear_locks_handler,
     opt_paste_track_handler,
@@ -115,7 +115,7 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     seq_menu_handler,
     // 15
     opt_clear_step_locks_handler,
-    opt_copy_step_handler_p,
+    opt_copy_step_handler_cb,
     opt_paste_step_handler,
     opt_mute_step_handler,
     // 19

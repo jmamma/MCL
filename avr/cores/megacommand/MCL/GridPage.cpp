@@ -2,13 +2,16 @@
 #include "ResourceManager.h"
 
 void GridPage::init() {
+  DEBUG_PRINTLN("Grid page init");
   encoders[0] = &param1;
   encoders[1] = &param2;
+  ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
   show_slot_menu = false;
   reload_slot_models = false;
+  //Edge case, prevent R.Clear being called if we're outside of GridPage
+  if (GUI.currentPage() != &grid_page) { return; }
   trig_interface.off();
   load_slot_models();
-  ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
   oled_display.clearDisplay();
   R.Clear();
   R.use_machine_names_short();
@@ -571,6 +574,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   void (*row_func)() =
       grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
   if (row_func != NULL) {
+    DEBUG_PRINTLN("calling menu func");
     (*row_func)();
     return;
   }
@@ -965,6 +969,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     if (show_slot_menu) {
       apply_slot_changes();
+      DEBUG_PRINTLN("here");
       init();
     }
     return true;

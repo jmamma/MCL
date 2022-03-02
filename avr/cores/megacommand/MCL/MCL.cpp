@@ -196,7 +196,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             GUI.currentPage() == &seq_extstep_page) {
           opt_copy = SeqPage::recording ? 2 : 1;
         }
-        opt_copy_track_handler_p();
+        opt_copy_track_handler_cb();
         break;
       }
       case MDX_KEY_PASTE: {

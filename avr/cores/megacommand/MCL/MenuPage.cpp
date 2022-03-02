@@ -168,7 +168,7 @@ bool MenuPageBase::enter() {
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
   LightPage *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
   if (page_callback != NULL) {
-    DEBUG_PRINTLN("setting page");
+    DEBUG_PRINTLN("pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
     GUI.pushPage(page_callback);
     return true;
@@ -182,6 +182,7 @@ bool MenuPageBase::enter() {
 
 bool MenuPageBase::exit() {
   // Page *exit_page_callback = get_menu()->get_exit_page_callback();
+  DEBUG_PRINTLN("calling exit func");
   void (*exit_func)() = get_menu()->get_exit_function();
   if (exit_func != NULL) {
     (*exit_func)();

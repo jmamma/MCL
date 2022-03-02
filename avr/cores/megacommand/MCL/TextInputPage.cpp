@@ -26,9 +26,7 @@ uint8_t _findchar(char chr) {
 
 void TextInputPage::setup() {}
 
-void TextInputPage::init() {
-  oled_display.setTextColor(WHITE, BLACK);
-}
+void TextInputPage::init() { oled_display.setTextColor(WHITE, BLACK); }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   textp = text_;
@@ -203,7 +201,37 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
-  #ifdef OLED_DISPLAY
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      uint8_t inc = 1;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        inc = 8;
+      }
+      switch (key) {
+      case MDX_KEY_YES:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES;
+      case MDX_KEY_NO:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO;
+      case MDX_KEY_UP:
+        encoders[1]->cur -= inc;
+        break;
+      case MDX_KEY_DOWN:
+        encoders[1]->cur += inc;
+        break;
+      case MDX_KEY_LEFT:
+        encoders[0]->cur -= inc;
+        break;
+      case MDX_KEY_RIGHT:
+        encoders[0]->cur += inc;
+        break;
+      }
+    }
+  }
+
+#ifdef OLED_DISPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
   if (!normal_mode) {
@@ -220,12 +248,14 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-  #endif
+#endif
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+  NO:
     if (!no_escape) {
-    return_state = false;
-    GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
+      DEBUG_PRINTLN("pop a");
+      return_state = false;
+      GUI.ignoreNextEvent(event->source);
+      GUI.popPage();
     }
     return true;
   }
@@ -236,7 +266,6 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-
     if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
       // delete last
       text[cursor_position] = ' ';
@@ -257,6 +286,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    YES:
     return_state = true;
     uint8_t cpy_len = length;
     for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {

@@ -76,6 +76,7 @@ get_category_name_fail:
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+  DEBUG_PRINTLN("page select init");
   trig_interface.on();
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
