@@ -278,6 +278,7 @@ public:
     if (page != NULL) {
       page->redisplayPage();
     }
+    page->init();
   }
 
   /** Returns the topmost page of the stack. **/
