@@ -8,8 +8,10 @@ void GridPage::init() {
   ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
   show_slot_menu = false;
   reload_slot_models = false;
-  //Edge case, prevent R.Clear being called if we're outside of GridPage
-  if (GUI.currentPage() != &grid_page) { return; }
+  // Edge case, prevent R.Clear being called if we're outside of GridPage
+  if (GUI.currentPage() != &grid_page) {
+    return;
+  }
   trig_interface.off();
   load_slot_models();
   oled_display.clearDisplay();
@@ -765,16 +767,26 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_CMD(event)) {
 
+    uint8_t key = event->source - 64;
     if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
-     if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
-         grid_page.grid_select_apply = !grid_page.grid_select_apply;
-         swap_grids();
-         } else {
+      if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+        grid_page.grid_select_apply = !grid_page.grid_select_apply;
+        swap_grids();
+      } else if (show_slot_menu) {
+        if (event->mask == EVENT_BUTTON_PRESSED) {
+          switch (key) {
+          case MDX_KEY_BANKA:
+          case MDX_KEY_BANKB:
+          case MDX_KEY_BANKC: {
+            mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
+            return true;
+          }
+          }
+        }
         return grid_slot_page.handleEvent(event);
-       }
+      }
     }
 
-    uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {

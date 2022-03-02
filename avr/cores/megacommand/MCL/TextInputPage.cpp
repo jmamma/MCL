@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-constexpr auto sz_allowedchar = 71;
+constexpr auto sz_allowedchar = 69;
 
 // idx -> chr
 inline char _getchar(uint8_t i) {
@@ -80,6 +80,15 @@ constexpr auto charpane_pady = 6;
 static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
   x = 2 + (x * 7);
   y = 2 + (y * 7);
+}
+
+
+void TextInputPage::loop() {
+  if (normal_mode == false) {
+    if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
+      ((MCLEncoder *)encoders[0])->max = charpane_w - 4;
+    }
+  }
 }
 
 // charpane:
@@ -205,9 +214,6 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
-        inc = 8;
-      }
       switch (key) {
       case MDX_KEY_YES:
         //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
@@ -227,6 +233,16 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_RIGHT:
         encoders[0]->cur += inc;
         break;
+      case MDX_KEY_FUNC:
+      case MDX_KEY_PATSONG:
+        goto shift;
+      }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+      case MDX_KEY_FUNC:
+      case MDX_KEY_PATSONG:
+        goto shift_release;
       }
     }
   }
@@ -234,8 +250,10 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
 #ifdef OLED_DISPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
-  if (!normal_mode) {
-    if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+
+    if (!normal_mode) {
+    shift_release:
       oled_display.clearDisplay();
       // before exiting charpane, advance current cursor to the next.
       ++cursor_position;
@@ -261,6 +279,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  shift:
     config_charpane();
     return true;
   }
@@ -286,7 +305,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    YES:
+  YES:
     return_state = true;
     uint8_t cpy_len = length;
     for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {
