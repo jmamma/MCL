@@ -155,8 +155,11 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_PATSONG: {
-        GUI.setPage(&page_select_page);
-        return true;
+        if (GUI.currentPage() != &text_input_page) {
+          GUI.setPage(&page_select_page);
+          return true;
+        }
+        return false;
       }
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&

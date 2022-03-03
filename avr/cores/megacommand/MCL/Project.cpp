@@ -3,6 +3,12 @@
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
 
+
+void check_project_loaded() {
+  if (!proj.project_loaded) { GUI.setPage(&start_menu_page); }
+}
+
+
 void Project::setup() {}
 
 bool Project::new_project(const char *newprj) {

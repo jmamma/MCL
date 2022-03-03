@@ -54,7 +54,7 @@ bool MCLSd::load_init() {
           }
           gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
-          proj.new_project_prompt();
+          GUI.setPage(&start_menu_page);
           return true;
 
         }
@@ -64,7 +64,7 @@ bool MCLSd::load_init() {
               F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
-            proj.new_project_prompt();
+            GUI.setPage(&start_menu_page);
             return true;
 
           } else {
@@ -73,7 +73,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          proj.new_project_prompt();
+          GUI.setPage(&start_menu_page);
           return true;
         }
       } else {
@@ -82,7 +82,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        proj.new_project_prompt();
+        GUI.setPage(&start_menu_page);
         return true;
       }
     } else {
@@ -91,7 +91,7 @@ bool MCLSd::load_init() {
         return false;
       }
       oled_display.clearDisplay();
-      proj.new_project_prompt();
+      GUI.setPage(&start_menu_page);
       return true;
     }
     return true;

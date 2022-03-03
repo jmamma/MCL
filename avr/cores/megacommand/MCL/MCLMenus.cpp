@@ -139,9 +139,12 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     mclsys_apply_config_midi,
     // 25
     md_import,
+    // 26
+    check_project_loaded,
 };
 
 MenuPage<1> aux_config_page(&config_param1, &config_param6);
+MenuPage<2> start_menu_page(&options_param1, &options_param2);
 MenuPage<6> system_page(&options_param1, &options_param2);
 MenuPage<7> midi_config_page(&config_param1, &config_param3);
 MenuPage<4> md_config_page(&config_param1, &config_param4);

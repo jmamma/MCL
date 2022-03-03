@@ -366,7 +366,13 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_system_menu_layout = 138 / sizeof(menu_t<6>);
   static constexpr size_t sizeofof_system_menu_layout = 138;
-  static constexpr size_t __total_size = 1530;
+  union {
+    menu_t<2> start_menu_layout[0];
+    char zz__start_menu_layout[54];
+  };
+  static constexpr size_t countof_start_menu_layout = 54 / sizeof(menu_t<2>);
+  static constexpr size_t sizeofof_start_menu_layout = 54;
+  static constexpr size_t __total_size = 1584;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
