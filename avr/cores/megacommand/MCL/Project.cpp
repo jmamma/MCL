@@ -303,6 +303,7 @@ bool Project::load_project(const char *projectname) {
   }
 
   strncpy(mcl_cfg.project, projectname, 16);
+  if (!mcl_cfg.number_projects) { mcl_cfg.number_projects++; }
 
   ret = mcl_cfg.write_cfg();
 
