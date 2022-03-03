@@ -34,12 +34,9 @@ void MCL::setup() {
   R.use_icons_boot();
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
   // if (!ret) { }
-  text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
-  text_input_page.no_escape = false;
 
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
-
   if (ret) {
     GUI.setPage(&grid_page);
   }

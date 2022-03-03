@@ -27,15 +27,19 @@ void LoadProjectPage::on_select(const char *entry) {
 
   char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(proj_filename, entry);
-
-again:
-  if (proj.load_project(proj_filename)) {
-    GUI.setPage(&grid_page);
-  } else {
-    gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
-    strcpy(proj_filename, mcl_cfg.project);
-    goto again;
+  uint8_t count = 2;
+  memcpy(proj_filename, mcl_cfg.project, sizeof(proj_filename));
+  while (count--) {
+    if (proj.load_project(proj_filename)) {
+      DEBUG_PRINTLN("loaded, setting grid");
+      GUI.setPage(&grid_page);
+      return;
+    } else {
+      gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
+      memcpy(proj_filename, mcl_cfg.project, sizeof(proj_filename));
+    }
   }
+
 }
 
 void LoadProjectPage::on_delete(const char *entry) {
@@ -68,19 +72,19 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     DEBUG_PRINTLN("reload current");
     reload_current = true;
   }
-  char grid_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char grid_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(grid_filename, from);
   uint8_t l = strlen(grid_filename);
 
-  char to_grid_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char to_grid_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(to_grid_filename, to);
   uint8_t l2 = strlen(to_grid_filename);
 
-  char proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(proj_filename, from);
   strcat(proj_filename, ".mcl");
 
-  char to_proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char to_proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(to_proj_filename, to);
   strcat(to_proj_filename, ".mcl");
 

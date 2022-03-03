@@ -3,12 +3,6 @@
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
 
-
-void check_project_loaded() {
-  if (!proj.project_loaded) { GUI.setPage(&start_menu_page); }
-}
-
-
 void Project::setup() {}
 
 bool Project::new_project(const char *newprj) {
@@ -25,7 +19,7 @@ bool Project::new_project(const char *newprj) {
   }
 
 
-  char proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
   strcpy(proj_filename, newprj);
   strcat(proj_filename, ".mcl");
 
@@ -40,7 +34,7 @@ bool Project::new_project(const char *newprj) {
   // Initialise Grid Files.
   //
 
-  char grid_filename[PRJ_NAME_LEN + 4] = {'\0'};
+  char grid_filename[PRJ_NAME_LEN  + 5] = {'\0'};
   strcpy(grid_filename, newprj);
   uint8_t l = strlen(grid_filename);
 
@@ -107,7 +101,7 @@ bool Project::convert_project(const char *projectname) {
   // TODO
 
   Project src_proj;
-  char filename[PRJ_NAME_LEN + 4];
+  char filename[PRJ_NAME_LEN  + 5];
   strcpy(filename, projectname);
   filename[strlen(projectname) - 4] = '\0'; // truncate filename
 
@@ -250,20 +244,27 @@ bool Project::load_project(const char *projectname) {
   DEBUG_PRINTLN(F("Loading project"));
   DEBUG_PRINTLN(projectname);
   file.close();
+  project_loaded = false;
 
   uint8_t l = strlen(projectname);
-  DEBUG_PRINTLN(l);
-  char proj_filename[PRJ_NAME_LEN + 4] = {'\0'};
-  strcpy(proj_filename, projectname);
+  if (l > PRJ_NAME_LEN) { DEBUG_PRINTLN("bad len"); return false; }
+
+  char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
+  memcpy(proj_filename, projectname, sizeof(proj_filename));
   strcat(proj_filename, ".mcl");
 
-  char grid_name[PRJ_NAME_LEN + 4] = {'\0'};
+  char grid_name[PRJ_NAME_LEN  + 5] = {'\0'};
   strcpy(grid_name, projectname);
 
   // Open project parent
   chdir_projects();
 
   // Open project directory.
+  if (!SD.exists(projectname)) {
+    DEBUG_PRINTLN("dir does not exist");
+    return false;
+  }
+
   SD.chdir(projectname);
 
   if (!SD.exists(proj_filename)) {

@@ -82,7 +82,6 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
   y = 2 + (y * 7);
 }
 
-
 void TextInputPage::loop() {
   if (normal_mode == false) {
     if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
@@ -269,12 +268,10 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
 #endif
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
   NO:
-    if (!no_escape) {
-      DEBUG_PRINTLN("pop a");
-      return_state = false;
-      GUI.ignoreNextEvent(event->source);
-      GUI.popPage();
-    }
+    DEBUG_PRINTLN("pop a");
+    return_state = false;
+    GUI.ignoreNextEvent(event->source);
+    GUI.popPage();
     return true;
   }
 

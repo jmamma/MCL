@@ -12,8 +12,6 @@
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
 
-void extern check_project_loaded();
-
 class ProjectHeader {
 public:
   uint32_t version;

@@ -19,7 +19,7 @@ menu_t<2> start_menu_layout = {
         {"LOAD PROJECT", 0, 0, 0, 0, 1, 0, 0},
         {"NEW PROJECT",  0, 0, 0, 0, 0, 2, 0},
     },
-    26, 0
+    0, 0
 };
 
 menu_t<6> system_menu_layout = {

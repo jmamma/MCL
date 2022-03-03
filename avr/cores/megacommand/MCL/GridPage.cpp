@@ -495,7 +495,6 @@ void GridPage::display_slot_menu() {
 void GridPage::display() {
 
   oled_display.clearDisplay();
-  oled_display.setTextWrap(false);
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE, BLACK);
   if (!show_slot_menu) {

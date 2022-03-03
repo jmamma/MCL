@@ -61,6 +61,17 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
   return questiondialog_page.return_state;
 }
 
+void MCLGUI::wait_for_project() {
+  again:
+  GUI.setPage(&start_menu_page);
+  while (GUI.currentPage() == &start_menu_page || GUI.currentPage() == &text_input_page || GUI.currentPage() == &load_proj_page) {
+    GUI.loop();
+  }
+  if (!proj.project_loaded) { goto again; }
+  DEBUG_PRINTLN("finished");
+}
+
+
 void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from, uint8_t to) {
   for (uint8_t y = from; y < to; y += 2) {
     oled_display.drawPixel(x, y, WHITE);
