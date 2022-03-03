@@ -28,7 +28,6 @@ void LoadProjectPage::on_select(const char *entry) {
   char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
   strcpy(proj_filename, entry);
   uint8_t count = 2;
-  memcpy(proj_filename, mcl_cfg.project, sizeof(proj_filename));
   while (count--) {
     if (proj.load_project(proj_filename)) {
       DEBUG_PRINTLN("loaded, setting grid");
