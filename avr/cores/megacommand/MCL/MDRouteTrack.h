@@ -17,7 +17,10 @@ public:
     static_assert(sizeof(MDRouteTrack) <= MDROUTE_TRACK_LEN);
   }
 
-  void init() { memset(routing, 6, sizeof(routing)); poly_mask = 0; }
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+    memset(routing, 6, sizeof(routing));
+    poly_mask = 0;
+  }
 
   void get_routes();
   uint16_t calc_latency(uint8_t tracknumber);

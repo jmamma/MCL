@@ -453,6 +453,8 @@ void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   if (ptrack->active != gdt->track_type) {
     empty_track.clear();
+    DEBUG_PRINTLN("Clearing track");
+    DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
     ptrack->transition_load(track_idx, gdt->seq_track, pos);

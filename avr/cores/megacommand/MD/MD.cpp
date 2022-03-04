@@ -577,7 +577,7 @@ void MDClass::resetMidiMap() {
 
 uint8_t MDClass::setTrackRoutings(uint8_t *values, bool send) {
   uint8_t data[2 + 16] = {0x70, 0x5c};
-  memcpy(&data[2], values, 16);
+  memcpy(data + 2, values, 16);
   return sendRequest(data, sizeof(data), send);
 }
 
