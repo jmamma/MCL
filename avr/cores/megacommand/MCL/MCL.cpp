@@ -151,7 +151,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         //grid_page.jump_to_row(row);
         return true;
       }
-      case MDX_KEY_PATSONG: {
+      case MDX_KEY_BANKGROUP: {
         if (GUI.currentPage() != &text_input_page) {
           GUI.setPage(&page_select_page);
           return true;

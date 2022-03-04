@@ -332,7 +332,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   } // end TI events
 
   if (EVENT_CMD(event)) {
-    if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
+    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source - 64;

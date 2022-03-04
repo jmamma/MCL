@@ -123,7 +123,7 @@ void TrigInterface::end_immediate() {
   }
   gui_event_t event;
 
-  if (key == MDX_KEY_BANKGROUP && !is_key_down(MDX_KEY_SCALE)) {
+  if (key == MDX_KEY_PATSONG) {
     event.source = Buttons.BUTTON3;
   }
   else {
