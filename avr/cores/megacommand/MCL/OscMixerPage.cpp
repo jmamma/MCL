@@ -14,10 +14,12 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
   return true;
   }
+  /*
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     MD.preview_sample(encoders[3]->cur + 1);
     return true;
   }
+  */
 
   return false;
 }
@@ -34,9 +36,7 @@ void OscMixerPage::display() {
   oled_display.setCursor(0, 0);
   oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-  oled_display.print("SLOT: ");
-
-  oled_display.print(encoders[3]->cur);
+  oled_display.print("OSC MIXER");
   draw_levels();
   scanline_width = 4;
   draw_wav();

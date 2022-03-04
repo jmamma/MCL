@@ -12,13 +12,6 @@ const char *c_syx_name = "SYSEX";
 
 static bool s_query_returned = false;
 
-#define FT_SND 0
-#define FT_WAV 1
-#define FT_SYX 2
-
-#define PA_NEW 0
-#define PA_SELECT 1
-
 void SoundBrowserPage::cleanup() {
   // always call setup() when entering this page.
   this->isSetup = false;
@@ -217,6 +210,7 @@ void SoundBrowserPage::on_select(const char *__) {
         send_sample(slot, (filetype_idx == FT_SYX));
         break;
     }
+    pending_action = 0;
     show_samplemgr = false;
     init();
   }

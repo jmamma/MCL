@@ -4,14 +4,26 @@
 #define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
-  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+//  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
     oled_display.textbox("Render", "");
     oled_display.display();
     wd.render();
-    oled_display.textbox("Sending..","");
-    oled_display.display();
-    wd.send();
-  }
+    GUI.pushPage(&sound_browser);
+    sound_browser.show_samplemgr = true;
+    sound_browser.pending_action = PA_SELECT;
+    sound_browser.filetype_idx = FT_WAV;
+    sound_browser.init();
+    if (sound_browser.file.open(WAV_NAME,O_READ)) {
+      while (GUI.currentPage() == &sound_browser && sound_browser.pending_action == PA_SELECT) {
+        GUI.loop();
+      }
+    }
+    GUI.popPage();
+    // oled_display.textbox("Sending..","");
+    //
+    // oled_display.display();
+    // wd.send();
+ // }
 }
 
 bool WavDesigner::render() {

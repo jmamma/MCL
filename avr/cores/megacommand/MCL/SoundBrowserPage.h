@@ -6,6 +6,13 @@
 #include "FileBrowserPage.h"
 #include "MidiSysex.h"
 
+#define FT_SND 0
+#define FT_WAV 1
+#define FT_SYX 2
+
+#define PA_NEW 0
+#define PA_SELECT 1
+
 class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   public:
 
