@@ -780,6 +780,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             return true;
           }
+          case MDX_KEY_NO:
+            return true;
           }
         }
         return grid_slot_page.handleEvent(event);
@@ -793,9 +795,9 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       if (show_slot_menu) {
         switch (key) {
-        case MDX_KEY_NO: {
-          goto slot_menu_off;
-        }
+        // case MDX_KEY_NO: {
+        //  goto slot_menu_off;
+        //}
         case MDX_KEY_YES: {
           slot_load = 1;
           goto slot_menu_off;
@@ -926,11 +928,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-      slot_menu_off:
-        if (show_slot_menu) {
-          apply_slot_changes(true);
-          init();
-        }
+        goto slot_menu_off;
       }
       }
     }
@@ -978,7 +976,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    if (show_slot_menu) {
+  slot_menu_off:
+    if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
       apply_slot_changes();
       DEBUG_PRINTLN("here");
       init();
