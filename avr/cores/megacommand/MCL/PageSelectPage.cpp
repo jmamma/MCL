@@ -217,8 +217,8 @@ void PageSelectPage::loop() {
   enc_->old = 64;
 
   if (last_page_select != page_select) {
-  draw_popup();
-  last_page_select = page_select;
+    draw_popup();
+    last_page_select = page_select;
   }
 }
 
@@ -322,10 +322,29 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       }
       }
     } else {
-      switch (key) {
-      case MDX_KEY_NO: {
-        goto load_grid;
+      uint8_t inc = 1;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        inc = 8;
       }
+      switch (key) {
+      case MDX_KEY_YES:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        break;
+      case MDX_KEY_NO:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto load_grid;
+      case MDX_KEY_UP:
+        encoders[1]->cur -= inc;
+        break;
+      case MDX_KEY_DOWN:
+        encoders[1]->cur += inc;
+        break;
+      case MDX_KEY_LEFT:
+        encoders[0]->cur -= inc;
+        break;
+      case MDX_KEY_RIGHT:
+        encoders[0]->cur += inc;
+        break;
       }
     }
   }

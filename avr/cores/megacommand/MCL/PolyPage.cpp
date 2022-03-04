@@ -57,7 +57,7 @@ void PolyPage::display() {
 
   oled_display.setFont();
 
-  oled_display.setCursor(0,15);
+  oled_display.setCursor(0, 15);
   oled_display.println("VOICE SELECT ");
 
   draw_mask();
@@ -72,6 +72,17 @@ void PolyPage::display() {
 }
 
 bool PolyPage::handleEvent(gui_event_t *event) {
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+      case MDX_KEY_NO:
+        goto exit;
+      }
+    }
+  }
+
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
@@ -96,6 +107,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
+  exit:
     mcl_cfg.write_cfg();
     GUI.popPage();
     GUI.currentPage()->init();
