@@ -42,7 +42,18 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
         goto NO;
       }
     }
-  }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+      case MDX_KEY_YES:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES_released;
+      case MDX_KEY_NO:
+      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO_released;
+      }
+    }
+
+    }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     NO:
     oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
@@ -58,12 +69,14 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    YES_released:
     return_state = true;
     GUI.popPage();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    NO_released:
     return_state = false;
     GUI.popPage();
     return true;
