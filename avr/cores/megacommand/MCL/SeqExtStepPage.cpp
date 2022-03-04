@@ -77,7 +77,6 @@ void SeqExtStepPage::init() {
   trig_interface.on();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
-  note_interface.state = true;
   x_notes_down = 0;
   last_cur_x = -1;
   config_encoders();

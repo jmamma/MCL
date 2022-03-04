@@ -88,7 +88,6 @@ void SeqPtcPage::init() {
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
   if (mcl_cfg.uart2_ctrl_mode == MIDI_LOCAL_MODE) {
     trig_interface.on();
-    note_interface.state = true;
   } else {
     trig_interface.off();
   }

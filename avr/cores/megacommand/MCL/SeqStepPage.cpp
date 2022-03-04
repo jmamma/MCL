@@ -69,7 +69,6 @@ void SeqStepPage::init() {
   locks_on_step_mask = 0;
   config();
 
-  note_interface.state = true;
   reset_on_release = false;
   ignore_release = 0;
   update_params_queue = false;

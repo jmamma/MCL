@@ -378,7 +378,6 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     if (lfo_track->mode == LFO_MODE_FREE) {
       trig_interface.off();
     } else {
-      note_interface.state = true;
       trig_interface.on();
     }
   }

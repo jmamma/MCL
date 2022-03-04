@@ -52,7 +52,6 @@ void MixerPage::init() {
   }
   trig_interface.on();
   bool switch_tracks = false;
-  note_interface.state = true;
   midi_events.setup_callbacks();
   oled_display.clearDisplay();
   oled_draw_routing();

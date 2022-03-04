@@ -24,7 +24,6 @@ void OscPage::init() {
   WavDesignerPage::init();
   wd.last_page = this;
   // md_exploit.on();
-  note_interface.state = true;
   oled_display.clearDisplay();
 }
 
@@ -105,7 +104,6 @@ void OscPage::loop() {
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
     if (!trig_interface.state) {
       trig_interface.on();
-      note_interface.state = true;
     }
   }
 

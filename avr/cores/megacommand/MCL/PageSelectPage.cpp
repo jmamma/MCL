@@ -101,7 +101,6 @@ void PageSelectPage::init() {
   }
   loop_init = true;
   // md_exploit.on(switch_tracks);
-  note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   draw_popup();
@@ -190,7 +189,6 @@ void PageSelectPage::loop() {
       trig_interface.on();
       md_prepare();
       // md_exploit.on(switch_tracks);
-      note_interface.state = true;
       loop_init = false;
     } */
   uint8_t last_page_select = page_select;

@@ -6,7 +6,6 @@ void GridSavePage::init() {
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
-  note_interface.state = true;
   grid_page.reload_slot_models = false;
   MD.popup_text("SAVE SLOTS", true);
   draw_popup();

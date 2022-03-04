@@ -8,7 +8,6 @@ void GridLoadPage::init() {
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   draw_popup_title();
-  note_interface.state = true;
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
