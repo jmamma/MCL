@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 #ifdef WAV_DESIGNER
+#define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
   if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
@@ -18,7 +19,7 @@ bool WavDesigner::render() {
   float sample_rate = 44100;
   Wav wav_file;
 
-  if (!wav_file.open("WAVE.wav", true, 1, sample_rate, 16, true)) {
+  if (!wav_file.open(WAV_NAME, true, 1, sample_rate, 16, true)) {
     return false;
   }
   // Work out lowest base frequency.
@@ -224,7 +225,7 @@ bool WavDesigner::render() {
 }
 
 bool WavDesigner::send() {
-  return midi_sds.sendWav("render.wav", mixer.enc4.cur, false);
+  return midi_sds.sendWav(WAV_NAME, mixer.enc4.cur, false);
 }
 
 WavDesigner wd;
