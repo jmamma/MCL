@@ -19,12 +19,8 @@ void wavdesign_menu_handler() {
   }
   WavDesignerPage::last_mode = WavDesignerPage::opt_mode;
   if (WavDesignerPage::opt_mode == 3) {
-    wavdesign_menu_page.menu.enable_entry(1, false);
-    wavdesign_menu_page.menu.enable_entry(2, true);
     GUI.setPage(&wd.mixer);
   } else {
-    wavdesign_menu_page.menu.enable_entry(1, true);
-    wavdesign_menu_page.menu.enable_entry(2, false);
     GUI.setPage(&wd.pages[WavDesignerPage::opt_mode]);
   }
 }

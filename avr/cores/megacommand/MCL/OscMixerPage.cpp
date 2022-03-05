@@ -8,11 +8,13 @@ void OscMixerPage::init() {
   WavDesignerPage::init();
   trig_interface.off();
   wd.last_page = this;
+  wavdesign_menu_page.menu.enable_entry(1, false);
+  wavdesign_menu_page.menu.enable_entry(2, true);
 }
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
-  return true;
+    return true;
   }
   /*
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
@@ -26,20 +28,19 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
 
 void OscMixerPage::loop() { WavDesignerPage::loop(); }
 void OscMixerPage::display() {
-// oled_display.clearDisplay();
+  // oled_display.clearDisplay();
   auto oldfont = oled_display.getFont();
   if (show_menu) {
     WavDesignerPage::display();
-  }
-  else {
-  oled_display.setFont();
-  oled_display.setCursor(0, 0);
-  oled_display.fillRect(0, 0, 64, 32, BLACK);
+  } else {
+    oled_display.setFont();
+    oled_display.setCursor(0, 0);
+    oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-  oled_display.print("OSC MIXER");
-  draw_levels();
-  scanline_width = 4;
-  draw_wav();
+    oled_display.print("OSC MIXER");
+    draw_levels();
+    scanline_width = 4;
+    draw_wav();
   }
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -121,7 +122,7 @@ void OscMixerPage::draw_wav() {
         break;
       case 3:
         pul_osc.width = wd.pages[i].get_width();
-        osc_sample += pul_osc.get_sample(n, freqs[i]); 
+        osc_sample += pul_osc.get_sample(n, freqs[i]);
         break;
       case 4:
         saw_osc.width = wd.pages[i].get_width();

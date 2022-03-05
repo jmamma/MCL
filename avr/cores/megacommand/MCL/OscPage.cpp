@@ -23,7 +23,8 @@ float OscPage::get_freq() {
 void OscPage::init() {
   WavDesignerPage::init();
   wd.last_page = this;
-  // md_exploit.on();
+  wavdesign_menu_page.menu.enable_entry(1, true);
+  wavdesign_menu_page.menu.enable_entry(2, false);
   oled_display.clearDisplay();
 }
 
@@ -215,8 +216,8 @@ void OscPage::draw_wav(uint8_t wav_type) {
       for (uint8_t f = 1; f <= 16; f++) {
         if (sine_levels[f - 1] != 0) {
           float sine_gain = ((float)sine_levels[f - 1] / (float)127);
-          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) *
-                    sine_gain * max_sine_gain;
+          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) * sine_gain *
+                    max_sine_gain;
         }
       }
       if (largest_sine_peak == 0) {
