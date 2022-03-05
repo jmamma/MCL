@@ -618,6 +618,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
     // EMPTY_TRACK_TYPE
     empty_track.clear();
     ptrack = empty_track.init_track_type(gdt->track_type);
+    ptrack->init(track_idx, gdt->seq_track);
   } else {
     auto *pmem_track =
         empty_track2.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
