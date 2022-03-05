@@ -368,6 +368,12 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
     return true;
   }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    //PAT SONG
+    GUI.setPage(&grid_page);
+    GUI.pushPage(&system_page);
+    return true;
+  }
 
   if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
     page_select = get_category_page(0);

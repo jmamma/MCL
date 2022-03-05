@@ -554,7 +554,7 @@ void GridPage::swap_grids() {
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
     ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-    load_slot_models();
+    //load_slot_models();
     return;
   }
 }
@@ -771,6 +771,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
         grid_page.grid_select_apply = !grid_page.grid_select_apply;
         swap_grids();
+        init();
         return true;
       } else if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -904,9 +905,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_NO: {
         goto slot_menu_on;
-      }
-      case MDX_KEY_SONG: {
-        goto system;
       }
       }
     }
