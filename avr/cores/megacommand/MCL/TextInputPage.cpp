@@ -233,14 +233,14 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         encoders[0]->cur += inc;
         break;
       case MDX_KEY_FUNC:
-      case MDX_KEY_PATSONG:
+      case MDX_KEY_BANKGROUP:
         goto shift;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_FUNC:
-      case MDX_KEY_PATSONG:
+      case MDX_KEY_BANKGROUP:
         goto shift_release;
       }
     }

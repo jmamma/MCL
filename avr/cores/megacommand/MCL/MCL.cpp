@@ -152,7 +152,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_BANKGROUP: {
-        if (GUI.currentPage() != &text_input_page) {
+        if (GUI.currentPage() != &text_input_page && !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
           GUI.setPage(&page_select_page);
           return true;
         }

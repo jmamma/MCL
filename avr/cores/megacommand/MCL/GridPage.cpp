@@ -768,9 +768,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     uint8_t key = event->source - 64;
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-      if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+      if (trig_interface.is_key_down(MDX_KEY_BANKGROUP)) {
         grid_page.grid_select_apply = !grid_page.grid_select_apply;
         swap_grids();
+        return true;
       } else if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
