@@ -70,6 +70,7 @@ void SeqPtcPage::init_poly() {
     poly_notes[x] = -1;
     poly_order[x] = 0;
   }
+  cc_link_enable = true;
 }
 
 void SeqPtcPage::init() {
@@ -867,11 +868,11 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     for (uint8_t n = 0; n < 16; n++) {
 
       if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
-        if (track_param < 24) {
-          MD.setTrackParam(n, track_param, value);
-          display_polylink = 1;
+        if ((track_param < 24 && track_param > 7) || (track_param < 8 && MD.kit.models[n] == MD.kit.models[track])) {
+            MD.setTrackParam(n, track_param, value);
+            display_polylink = 1;
+          }
         }
-      }
       // in_sysex = 0;
     }
   }
