@@ -179,6 +179,7 @@ void SoundBrowserPage::on_new() {
 }
 
 void SoundBrowserPage::on_cancel() {
+  pending_action = 0;
   if (show_samplemgr) {
     show_samplemgr = false;
   } else {

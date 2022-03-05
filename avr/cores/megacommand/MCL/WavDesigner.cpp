@@ -4,26 +4,29 @@
 #define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
-//  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-    oled_display.textbox("Render", "");
-    oled_display.display();
-    wd.render();
-    GUI.pushPage(&sound_browser);
-    sound_browser.show_samplemgr = true;
-    sound_browser.pending_action = PA_SELECT;
-    sound_browser.filetype_idx = FT_WAV;
-    sound_browser.init();
-    if (sound_browser.file.open(WAV_NAME,O_READ)) {
-      while (GUI.currentPage() == &sound_browser && sound_browser.pending_action == PA_SELECT) {
-        GUI.loop();
-      }
+  //  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+  oled_display.textbox("Render", "");
+  oled_display.display();
+  wd.render();
+  GUI.pushPage(&sound_browser);
+  sound_browser.show_samplemgr = true;
+  sound_browser.pending_action = PA_SELECT;
+  sound_browser.filetype_idx = FT_WAV;
+  sound_browser.init();
+  if (sound_browser.file.open(WAV_NAME, O_READ)) {
+    while (GUI.currentPage() == &sound_browser &&
+           sound_browser.pending_action == PA_SELECT && sound_browser.show_samplemgr) {
+      GUI.loop();
     }
-    GUI.popPage();
-    // oled_display.textbox("Sending..","");
-    //
-    // oled_display.display();
-    // wd.send();
- // }
+  }
+  DEBUG_PRINTLN("cleaning up");
+  sound_browser.file.close();
+  GUI.setPage(&wd.mixer);
+  // oled_display.textbox("Sending..","");
+  //
+  // oled_display.display();
+  // wd.send();
+  // }
 }
 
 bool WavDesigner::render() {
@@ -122,22 +125,19 @@ bool WavDesigner::render() {
         break;
       case 2:
         tri_osc.width = pages[i].get_width();
-        osc_sample +=
-            tri_osc.get_sample(n, pages[i].get_freq());
+        osc_sample += tri_osc.get_sample(n, pages[i].get_freq());
         break;
       case 3:
         pulse_osc.width = pages[i].get_width();
-        osc_sample +=
-            pulse_osc.get_sample(n, pages[i].get_freq());
+        osc_sample += pulse_osc.get_sample(n, pages[i].get_freq());
         break;
       case 4:
         saw_osc.width = pages[i].get_width();
-        osc_sample +=
-            saw_osc.get_sample(n, pages[i].get_freq());
+        osc_sample += saw_osc.get_sample(n, pages[i].get_freq());
         break;
       case 5:
-        osc_sample += usr_osc.get_sample(
-            n, pages[i].get_freq(), pages[i].usr_values);
+        osc_sample +=
+            usr_osc.get_sample(n, pages[i].get_freq(), pages[i].usr_values);
         break;
       }
       // Sum oscillator samples together
