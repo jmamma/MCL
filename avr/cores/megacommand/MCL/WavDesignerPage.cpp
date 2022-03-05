@@ -47,7 +47,7 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
-      if (show_menu) {
+    //  if (show_menu) {
         switch (key) {
         case MDX_KEY_YES:
           //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
@@ -68,7 +68,7 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
           encoders[0]->cur += inc;
           break;
         }
-      }
+     // }
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
