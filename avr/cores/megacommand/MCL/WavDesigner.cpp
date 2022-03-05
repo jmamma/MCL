@@ -109,7 +109,7 @@ bool WavDesigner::render() {
                 max_sine_gain;
 
             osc_sample +=
-                sine_osc.get_sample(n, pages[i].get_freq() * (float)h, 0) *
+                sine_osc.get_sample(n, pages[i].get_freq() * (float)h) *
                 sine_gain;
           }
         }
@@ -123,21 +123,21 @@ bool WavDesigner::render() {
       case 2:
         tri_osc.width = pages[i].get_width();
         osc_sample +=
-            tri_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+            tri_osc.get_sample(n, pages[i].get_freq());
         break;
       case 3:
         pulse_osc.width = pages[i].get_width();
         osc_sample +=
-            pulse_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+            pulse_osc.get_sample(n, pages[i].get_freq());
         break;
       case 4:
         saw_osc.width = pages[i].get_width();
         osc_sample +=
-            saw_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+            saw_osc.get_sample(n, pages[i].get_freq());
         break;
       case 5:
         osc_sample += usr_osc.get_sample(
-            n, pages[i].get_freq(), pages[i].get_phase(), pages[i].usr_values);
+            n, pages[i].get_freq(), pages[i].usr_values);
         break;
       }
       // Sum oscillator samples together

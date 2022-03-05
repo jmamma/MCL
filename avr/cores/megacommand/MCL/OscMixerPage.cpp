@@ -110,26 +110,25 @@ void OscMixerPage::draw_wav() {
                 max_sine_gain;
 
             osc_sample +=
-                sine_osc.get_sample(n, freqs[i] * (float)f, 0) * sine_gain;
+                sine_osc.get_sample(n, freqs[i] * (float)f) * sine_gain;
           }
         }
         osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
         break;
       case 2:
         tri_osc.width = wd.pages[i].get_width();
-        osc_sample += tri_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += tri_osc.get_sample(n, freqs[i]);
         break;
       case 3:
         pul_osc.width = wd.pages[i].get_width();
-        osc_sample += pul_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += pul_osc.get_sample(n, freqs[i]); 
         break;
       case 4:
         saw_osc.width = wd.pages[i].get_width();
-        osc_sample += saw_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += saw_osc.get_sample(n, freqs[i]);
         break;
       case 5:
-        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].get_phase(),
-                                         wd.pages[i].usr_values);
+        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].usr_values);
         break;
       }
       // Sum oscillator samples together

@@ -215,7 +215,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
       for (uint8_t f = 1; f <= 16; f++) {
         if (sine_levels[f - 1] != 0) {
           float sine_gain = ((float)sine_levels[f - 1] / (float)127);
-          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f, 0) *
+          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) *
                     sine_gain * max_sine_gain;
         }
       }
@@ -226,16 +226,16 @@ void OscPage::draw_wav(uint8_t wav_type) {
       }
       break;
     case USR_OSC:
-      sample = usr_osc.get_sample((uint32_t)n, 1, 0, usr_values);
+      sample = usr_osc.get_sample((uint32_t)n, 1, usr_values);
       break;
     case TRI_OSC:
-      sample = tri_osc.get_sample((uint32_t)n, 1, 0);
+      sample = tri_osc.get_sample((uint32_t)n, 1);
       break;
     case PUL_OSC:
-      sample = pul_osc.get_sample((uint32_t)n, 1, 0);
+      sample = pul_osc.get_sample((uint32_t)n, 1);
       break;
     case SAW_OSC:
-      sample = saw_osc.get_sample((uint32_t)n, 1, 0);
+      sample = saw_osc.get_sample((uint32_t)n, 1);
       break;
     }
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
@@ -267,7 +267,7 @@ void OscPage::draw_usr() {
   UsrOsc usr_osc(w);
 
   for (uint8_t i = 0; i < 16; i++) {
-    sample = usr_osc.get_sample((uint32_t)i * 4, 1, 0, usr_values);
+    sample = usr_osc.get_sample((uint32_t)i * 4, 1, usr_values);
 
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
     if (note_interface.is_note_on(i)) {
