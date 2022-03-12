@@ -5,15 +5,11 @@ MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
 
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
-/*
-  mcl_actions.kit_reload(msg[1]);
-  mcl_actions.start_clock32th = MidiClock.div32th_counter;
 
-  mcl_actions.start_clock96th = MidiClock.div96th_counter;
-  if (MidiClock.state != 2) {
-    MD.getBlockingKit(0x7F);
+  if (mcl_cfg.uart2_prg_in - 1 ==  MIDI_VOICE_CHANNEL(msg[0])) {
+    grid_task.load_row = msg[1];
   }
-*/
+
 }
 
 void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
@@ -84,7 +80,7 @@ void MCLActionsMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  Midi.addOnProgramChangeCallback(
+  Midi2.addOnProgramChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onProgramChangeCallback_Midi);
 
@@ -104,7 +100,7 @@ void MCLActionsMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  Midi.removeOnProgramChangeCallback(
+  Midi2.removeOnProgramChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onProgramChangeCallback_Midi);
 

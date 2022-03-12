@@ -208,11 +208,14 @@ void GridLoadPage::group_select() {
 
 void GridLoadPage::group_load(uint8_t row) {
 
+  if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
+
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
   oled_display.textbox("LOAD GROUPS", "");
   oled_display.display();
+
   mcl_actions.write_original = 1;
   mcl_actions.load_tracks(row, track_select_array);
 }

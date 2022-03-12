@@ -96,7 +96,9 @@ GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number,
 
 void md_import() {
 
-  if (!mcl_gui.wait_for_confirm("Import:", "Overwrite rows?")) { return; }
+  if (!mcl_gui.wait_for_confirm("Import:", "Overwrite rows?")) {
+    return;
+  }
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
   uint8_t track_idx, dev_idx;
@@ -123,10 +125,12 @@ void md_import() {
     }
   }
 
-  for (uint8_t n = opt_import_src; n < opt_import_src + opt_import_count && n < 128; n++) {
+  for (uint8_t n = opt_import_src;
+       n < opt_import_src + opt_import_count && n < 128; n++) {
     uint8_t count = n - opt_import_src;
     mcl_gui.draw_progress("IMPORTING", count, opt_import_count);
-    mcl_actions.save_tracks(opt_import_dest + count, track_select_array, SAVE_MD, n);
+    mcl_actions.save_tracks(opt_import_dest + count, track_select_array,
+                            SAVE_MD, n);
   }
 
   grid_page.row_scan = GRID_LENGTH;
@@ -134,13 +138,15 @@ void md_import() {
   GUI.setPage(&grid_page);
 }
 
-void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
-                             uint8_t merge, uint8_t readpattern) {
+void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
+                             uint8_t readpattern) {
   DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
 
-  if (readpattern == 255) { readpattern = MD.currentPattern; }
+  if (readpattern == 255) {
+    readpattern = MD.currentPattern;
+  }
 
   uint8_t old_grid = proj.get_grid();
 
@@ -172,45 +178,47 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
   }
 
   for (i = 0; i < NUM_DEVS; ++i) {
-    if (save_dev_tracks[i] && elektron_devs[i] != nullptr) {
-      if (merge > 0) {
-        DEBUG_PRINTLN(F("fetching pattern"));
-        DEBUG_PRINTLN(readpattern);
-        if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
-          DEBUG_PRINTLN(F("could not receive pattern"));
-          save_dev_tracks[i] = false;
-          continue;
-        }
-        ElektronPattern *p = elektron_devs[i]->getPattern();
-        if (p->isEmpty()) {
-          save_dev_tracks[i] = false;
-          continue;
-        }
-        if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
-          DEBUG_PRINTLN(F("could not receive kit"));
-          continue;
-        }
-      } else {
-        if (elektron_devs[i]->canReadWorkspaceKit()) {
-          if (!elektron_devs[i]->getBlockingKit(0x7F)) {
-            DEBUG_PRINTLN(F("could not receive kit"));
+    if (elektron_devs[i] != nullptr) {
+      if (save_dev_tracks[i]) {
+        if (merge > 0) {
+          DEBUG_PRINTLN(F("fetching pattern"));
+          DEBUG_PRINTLN(readpattern);
+          if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
+            DEBUG_PRINTLN(F("could not receive pattern"));
             save_dev_tracks[i] = false;
             continue;
           }
-        } else if (elektron_devs[i]->canReadKit()) {
-          auto kit = elektron_devs[i]->getCurrentKit();
-          elektron_devs[i]->saveCurrentKit(kit);
-          if (!elektron_devs[i]->getBlockingKit(kit)) {
-            DEBUG_PRINTLN(F("could not receive kit"));
+          ElektronPattern *p = elektron_devs[i]->getPattern();
+          if (p->isEmpty()) {
             save_dev_tracks[i] = false;
             continue;
           }
+          if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
+            DEBUG_PRINTLN(F("could not receive kit"));
+            continue;
+          }
+        } else {
+          if (elektron_devs[i]->canReadWorkspaceKit()) {
+            if (!elektron_devs[i]->getBlockingKit(0x7F)) {
+              DEBUG_PRINTLN(F("could not receive kit"));
+              save_dev_tracks[i] = false;
+              continue;
+            }
+          } else if (elektron_devs[i]->canReadKit()) {
+            auto kit = elektron_devs[i]->getCurrentKit();
+            elektron_devs[i]->saveCurrentKit(kit);
+            if (!elektron_devs[i]->getBlockingKit(kit)) {
+              DEBUG_PRINTLN(F("could not receive kit"));
+              save_dev_tracks[i] = false;
+              continue;
+            }
+          }
         }
-      }
-      if (MidiClock.state == 2) {
-        elektron_devs[i]->updateKitParams();
-      } else {
-        elektron_devs[i]->undokit_sync();
+        if (MidiClock.state == 2) {
+          elektron_devs[i]->updateKitParams();
+        } else {
+          elektron_devs[i]->undokit_sync();
+        }
       }
     }
   }
@@ -250,8 +258,8 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array,
         }
         auto pdevice_track =
             ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
-        pdevice_track->store_in_grid(track_idx, row,
-                                     gdt->seq_track, merge, online);
+        pdevice_track->store_in_grid(track_idx, row, gdt->seq_track, merge,
+                                     online);
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), gdt->track_type);
       }
@@ -883,9 +891,12 @@ void MCLActions::calc_latency() {
       dev_latency[a].div192th_latency =
           round(div192th_per_second * latency_in_seconds) + 7;
 
-      //Program change minimum delay = 1 x 16th.
+      // Program change minimum delay = 1 x 16th.
       if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
-         if (dev_latency[a].div32th_latency < 2) { dev_latency[a].div32th_latency = 2; dev_latency[a].div192th_latency = 12;  }
+        if (dev_latency[a].div32th_latency < 2) {
+          dev_latency[a].div32th_latency = 2;
+          dev_latency[a].div192th_latency = 12;
+        }
       }
 
       div32th_total_latency += dev_latency[a].div32th_latency;
