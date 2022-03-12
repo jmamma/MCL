@@ -54,5 +54,7 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "GENER"}, {1, "ELEKT"},
   // 86"
   {0, "OFF"}, {1, "2->2"},
+  // 88
+  {0, "--"},{17, "OMNI"},
 };
 

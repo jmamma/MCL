@@ -5,8 +5,7 @@ MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
-void ArpPage::setup() {
-}
+void ArpPage::setup() {}
 
 void ArpPage::init() {
 
@@ -17,11 +16,13 @@ void ArpPage::init() {
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 }
 
-void ArpPage::track_update() {
-
+void ArpPage::track_update(uint8_t n) {
+  if (n == 255) {
+    n = last_md_track;
+  }
   arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (seq_ptc_page.midi_device == &MD) {
-    arp_track = &mcl_seq.md_arp_tracks[last_md_track];
+    arp_track = &mcl_seq.md_arp_tracks[n];
   }
 
   arp_rate.cur = arp_track->rate;
@@ -42,40 +43,36 @@ void ArpPage::track_update() {
     }
   }
   if (arp_track->enabled != ARP_LATCH) {
-  seq_ptc_page.render_arp();
+    seq_ptc_page.render_arp(true, 0);
   }
   last_arp_track = arp_track;
 }
 
-void ArpPage::cleanup() {
-  oled_display.clearDisplay();
-}
+void ArpPage::cleanup() { oled_display.clearDisplay(); }
 
 void ArpPage::loop() {
 
- if (encoders[0]->hasChanged()) {
+  if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    seq_ptc_page.render_arp(encoders[0]->old != 1);
- }
-  if (encoders[1]->hasChanged() ||
-      encoders[3]->hasChanged()) {
+    seq_ptc_page.render_arp(encoders[0]->old != 1, 0);
+  }
+  if (encoders[1]->hasChanged() || encoders[3]->hasChanged()) {
     arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
-    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH);
+    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH, 0);
   }
 
   if (encoders[2]->hasChanged()) {
     arp_track->set_length(1 << arp_rate.cur);
     arp_track->rate = arp_rate.cur;
   }
-
 }
 
 typedef char arp_name_t[4];
 
 const arp_name_t arp_names[] PROGMEM = {
-    "UP", "DWN", "UD",  "DU", "UND", "DNU", "CNV", "DIV", "CND",
-    "PU", "PD", "TU", "TD", "UPP", "DP", "U2",  "D2",  "RND",
+    "UP", "DWN", "UD", "DU", "UND", "DNU", "CNV", "DIV", "CND",
+    "PU", "PD",  "TU", "TD", "UPP", "DP",  "U2",  "D2",  "RND",
 };
 
 void ArpPage::display() {
@@ -93,8 +90,7 @@ void ArpPage::display() {
 
   if (seq_ptc_page.midi_device == &MD) {
     oled_display.print(last_md_track + 1);
-  }
-  else {
+  } else {
     oled_display.print(last_ext_track + 1);
   }
 
@@ -130,11 +126,22 @@ void ArpPage::display() {
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+      case MDX_KEY_NO:
+        goto exit;
+      }
+    }
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON3) ||
       EVENT_PRESSED(event, Buttons.BUTTON2) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
+  exit:
     GUI.popPage();
     return true;
   }
@@ -142,10 +149,11 @@ bool ArpPage::handleEvent(gui_event_t *event) {
     seq_ptc_page.handleEvent(event);
     return true;
   }
-/*  if (note_interface.is_event(event) && midi_active_peering.get_device(event->port) == &MD) {
-      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
-      return true;
+  /*  if (note_interface.is_event(event) &&
+    midi_active_peering.get_device(event->port) == &MD) {
+        trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+        return true;
 
-  } */
+    } */
   return false;
 }

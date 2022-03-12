@@ -28,7 +28,8 @@ public:
   uint8_t cur_row;
   uint8_t cur_col;
   uint16_t poly_mask;
-  uint8_t uart2_ctrl_mode;
+  uint8_t uart2_ctrl_chan;
+  uint8_t uart2_poly_chan;
   uint32_t mutes;
   uint8_t display_mirror;
   uint8_t rec_quant;

@@ -58,7 +58,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.clock_rec, &mcl_cfg.clock_send, &mcl_cfg.midi_forward,
 
     // 8
-    &mcl_cfg.auto_normalize, &mcl_cfg.uart2_ctrl_mode,
+    &mcl_cfg.auto_normalize, &mcl_cfg.uart2_ctrl_chan,
 
     // 10
     &mcl_cfg.load_mode, &mcl_cfg.uart_cc_loopback, &mcl_cfg.link_rand_max,
@@ -89,8 +89,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 42
     &mcl_cfg.rec_quant,
     // 43
-    &opt_import_src, &opt_import_dest, &opt_import_count
-    // 46 - END
+    &opt_import_src, &opt_import_dest, &opt_import_count,
+    // 46
+    &mcl_cfg.uart2_poly_chan
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -145,7 +146,7 @@ MenuPage<1> aux_config_page(&config_param1, &config_param6);
 MenuPage<2> start_menu_page(&options_param1, &options_param2);
 MenuPage<6> system_page(&options_param1, &options_param2);
 MenuPage<7> midi_config_page(&config_param1, &config_param3);
-MenuPage<4> md_config_page(&config_param1, &config_param4);
+MenuPage<5> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);
 MenuPage<1> mcl_config_page(&config_param1, &config_param5);
 MenuPage<1> ram_config_page(&config_param1, &config_param7);

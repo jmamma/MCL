@@ -337,11 +337,11 @@ struct __T_menu_layouts {
   static constexpr size_t countof_mdimport_menu_layout = 96 / sizeof(menu_t<4>);
   static constexpr size_t sizeofof_mdimport_menu_layout = 96;
   union {
-    menu_t<4> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[96];
+    menu_t<5> mdconfig_menu_layout[0];
+    char zz__mdconfig_menu_layout[117];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 96;
+  static constexpr size_t countof_mdconfig_menu_layout = 117 / sizeof(menu_t<5>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 117;
   union {
     menu_t<7> midiconfig_menu_layout[0];
     char zz__midiconfig_menu_layout[159];
@@ -372,18 +372,18 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_start_menu_layout = 54 / sizeof(menu_t<2>);
   static constexpr size_t sizeofof_start_menu_layout = 54;
-  static constexpr size_t __total_size = 1584;
+  static constexpr size_t __total_size = 1605;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[792];
+    char zz__MENU_OPTIONS[810];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 792 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 792;
-  static constexpr size_t __total_size = 792;
+  static constexpr size_t countof_MENU_OPTIONS = 810 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 810;
+  static constexpr size_t __total_size = 810;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;

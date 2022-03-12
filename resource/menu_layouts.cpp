@@ -72,12 +72,13 @@ menu_t<7> midiconfig_menu_layout = {
     24, 0
 };
 
-menu_t<4> mdconfig_menu_layout = {
+menu_t<5> mdconfig_menu_layout = {
     "MD",
     {
         //              m  r   n  d  p  f  o
         {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
         {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
+        {"POLY CHAN:",  0, 18, 2, 46, 0, 0, 88},
         {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
         {"IMPORT",      0, 0,  0, 0, 11, 0, 0},
     },

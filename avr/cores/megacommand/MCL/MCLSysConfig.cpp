@@ -79,7 +79,8 @@ bool MCLSysConfig::cfg_init() {
   cur_col = 0;
   memset(&routing, 6, sizeof(routing));
   poly_mask = 0;
-  uart2_ctrl_mode = MIDI_LOCAL_MODE;
+  uart2_ctrl_chan = MIDI_LOCAL_MODE;
+  uart2_poly_chan = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;
   rec_quant = 0;
