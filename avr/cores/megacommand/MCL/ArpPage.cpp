@@ -16,7 +16,7 @@ void ArpPage::init() {
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 }
 
-void ArpPage::track_update(uint8_t n) {
+void ArpPage::track_update(uint8_t n, bool re_render) {
   if (n == 255) {
     n = last_md_track;
   }
@@ -37,13 +37,15 @@ void ArpPage::track_update(uint8_t n) {
   arp_enabled.cur = arp_track->enabled;
   arp_enabled.old = arp_enabled.cur;
 
+  if (re_render) {
   if (last_arp_track && arp_track != last_arp_track) {
     if (last_arp_track->enabled != ARP_LATCH) {
       last_arp_track->clear_notes();
     }
   }
   if (arp_track->enabled != ARP_LATCH) {
-    seq_ptc_page.render_arp(true, 0);
+    seq_ptc_page.render_arp(true, seq_ptc_page.midi_device, n);
+  }
   }
   last_arp_track = arp_track;
 }
@@ -51,15 +53,19 @@ void ArpPage::track_update(uint8_t n) {
 void ArpPage::cleanup() { oled_display.clearDisplay(); }
 
 void ArpPage::loop() {
+  uint8_t n = last_ext_track;
+  if (seq_ptc_page.midi_device == &MD) {
+    n = last_md_track;
+  }
 
   if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    seq_ptc_page.render_arp(encoders[0]->old != 1, 0);
+    seq_ptc_page.render_arp(encoders[0]->old != 1, seq_ptc_page.midi_device, n);
   }
   if (encoders[1]->hasChanged() || encoders[3]->hasChanged()) {
     arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
-    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH, 0);
+    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH, seq_ptc_page.midi_device, n);
   }
 
   if (encoders[2]->hasChanged()) {

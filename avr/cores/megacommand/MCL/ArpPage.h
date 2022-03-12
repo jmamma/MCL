@@ -25,7 +25,7 @@ public:
   }
 
   bool handleEvent(gui_event_t *event);
-  void track_update(uint8_t n = 255);
+  void track_update(uint8_t n = 255, bool re_render = true);
   void loop();
   void display();
   void setup();

@@ -80,7 +80,7 @@ public:
   void config_encoders();
   void init_poly();
 
-  void render_arp(bool recalc_notemask_ = true, uint8_t channel_event = CTRL_EVENT);
+  void render_arp(bool recalc_notemask_, MidiDevice *midi_dev, uint8_t track);
 
   void recalc_notemask();
   void draw_popup_octave();
