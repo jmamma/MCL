@@ -530,6 +530,10 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   proj.select_grid(old_grid);
   proj.read_grid_row_header(&row_header, row);
 
+  if (mcl_cfg.uart2_prg_out > 0) {
+    MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+  }
+
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     auto elektron_dev = devs[i]->asElektronDevice();
     if (elektron_dev != nullptr) {
@@ -824,6 +828,7 @@ void MCLActions::calc_latency() {
     }
     //  dev_latency[a].load_latency = 0;
   }
+
   bool send_dev[NUM_DEVS] = {0};
 
   uint8_t track_idx, dev_idx;
@@ -863,6 +868,9 @@ void MCLActions::calc_latency() {
   div32th_total_latency = 0;
   div192th_total_latency = 0;
 
+  if (mcl_cfg.uart2_prg_out > 0) {
+    send_dev[1] = true;
+  }
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
@@ -874,6 +882,11 @@ void MCLActions::calc_latency() {
           round(div32th_per_second * latency_in_seconds) + 1;
       dev_latency[a].div192th_latency =
           round(div192th_per_second * latency_in_seconds) + 7;
+
+      //Program change minimum delay = 1 x 16th.
+      if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
+         if (dev_latency[a].div32th_latency < 2) { dev_latency[a].div32th_latency = 2; dev_latency[a].div192th_latency = 12;  }
+      }
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;

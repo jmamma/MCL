@@ -81,6 +81,8 @@ bool MCLSysConfig::cfg_init() {
   poly_mask = 0;
   uart2_ctrl_chan = MIDI_LOCAL_MODE;
   uart2_poly_chan = MIDI_LOCAL_MODE;
+  uart2_prg_in = MIDI_LOCAL_MODE;
+  uart2_prg_out = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;
   rec_quant = 0;

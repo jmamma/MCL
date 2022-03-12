@@ -5,9 +5,6 @@
 
 #include "GridIOPage.h"
 
-#define LOAD_PAGE 0
-#define LOAD_PAGE 1
-
 class GridLoadPage : public GridIOPage {
  public:
  GridLoadPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {

@@ -85,6 +85,8 @@ void GridTask::transition_handler() {
   GUI.removeTask(&grid_task);
   uint8_t track_idx, dev_idx;
 
+  uint8_t row = 255;
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     slots_changed[n] = 255;
 
@@ -114,12 +116,18 @@ void GridTask::transition_handler() {
     }
 
     //  if (mcl_actions.chains[n].mode == LOAD_MANUAL) {
+    if (row == 255) { row = slots_changed[n]; }
     //    mcl_actions.links[n].loops = 0;
     //  }
   }
 
   DEBUG_PRINTLN(F("sending tracks"));
   bool wait;
+
+  if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
+    MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+  }
+
   for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
     wait = true;
 
