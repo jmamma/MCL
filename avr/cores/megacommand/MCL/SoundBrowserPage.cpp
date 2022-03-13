@@ -115,24 +115,28 @@ void SoundBrowserPage::load_sound() {
 }
 
 // send current selected sample file to slot
-void SoundBrowserPage::send_sample(int slot, bool is_syx) {
+void SoundBrowserPage::send_sample(int slot, bool is_syx, char *newname, bool silent) {
   bool success;
   if (file.isOpen()) {
     char temp_entry[FILE_ENTRY_SIZE];
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
+    if (!silent) {
     if (!mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
       return;
+    }
     }
     if (is_syx) {
       success = midi_sds.sendSyx(temp_entry, slot);
     } else {
-      success = midi_sds.sendWav(temp_entry, slot, /* show progress */ true);
+      success = midi_sds.sendWav(temp_entry, newname, slot, /* show progress */ true);
     }
+    if (!silent) {
     if (success) {
       gfx.alert("Sample sent", temp_entry);
     } else {
       gfx.alert("Send failed", temp_entry);
+    }
     }
   }
 }
@@ -308,7 +312,25 @@ bool SoundBrowserPage::_handle_filemenu() {
     init();
     return true;
   case FM_SENDALL:
+    if (!mcl_gui.wait_for_confirm("Send all", "Overwrite?")) {
+      return;
+    }
+    char wav_name[FILE_ENTRY_SIZE] = "";
+    for (uint8_t n = 0; n < numEntries; n++) {
+      get_entry(n, wav_name);
+      DEBUG_PRINTLN(wav_name);
+      if (!isdigit(wav_name[0]) || !isdigit(wav_name[1])) continue;
+      uint8_t slot = (wav_name[0] - '0') * 10 + wav_name[1] - '0' - 1;
+      DEBUG_PRINTLN("slot pos:");
+      DEBUG_PRINTLN(slot);
+      DEBUG_PRINTLN((uint8_t) wav_name[0]);
+      DEBUG_PRINTLN((uint8_t) wav_name[1]);
+      if (slot > 48) { continue; }
 
+      file.open(wav_name);
+      mcl_gui.draw_progress("Send Samples", n, numEntries);
+      send_sample(slot, false, wav_name + 2, true);
+    }
     break;
   }
 }

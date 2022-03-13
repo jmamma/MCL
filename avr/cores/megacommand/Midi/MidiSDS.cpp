@@ -200,7 +200,7 @@ cleanup:
   return ret;
 }
 
-bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool show_progress) {
+bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_t sample_number, bool show_progress) {
   if (state != SDS_READY) {
     return false;
   }
@@ -237,9 +237,14 @@ bool MidiSDSClass::sendWav(const char *filename, uint16_t sample_number, bool sh
     wav_file.close();
     return false;
   }
-
+  if (samplename == nullptr) {
   _setName(filename, sample_number);
-
+  }
+  else {
+  DEBUG_PRINTLN("setting sample name");
+  DEBUG_PRINTLN(samplename);
+  _setName(samplename, sample_number);
+  }
   bool ret = sendSamples(show_progress);
   wav_file.close();
   state = SDS_READY;
