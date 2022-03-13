@@ -6,7 +6,7 @@ MCLActionsMidiEvents mcl_actions_midievents;
 
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
 
-  if (mcl_cfg.uart2_prg_in - 1 ==  MIDI_VOICE_CHANNEL(msg[0])) {
+  if (mcl_cfg.uart2_prg_in - 1 ==  MIDI_VOICE_CHANNEL(msg[0]) || (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
     grid_task.load_row = msg[1];
   }
 
