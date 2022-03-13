@@ -15,7 +15,7 @@ public:
   uint8_t last_active_row;
   uint8_t next_active_row;
   bool chain_behaviour;
-  uint8_t load_row;
+  uint8_t load_row = 255;
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 
   void setup(uint16_t interval = 0);
