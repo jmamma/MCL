@@ -9,13 +9,14 @@
 class MCLActionsMidiEvents : public MidiCallback {
 public:
   bool state;
-
+  uint32_t slot_mask;
+  uint8_t note_to_slot(uint8_t note);
   void setup_callbacks();
   void remove_callbacks();
-  void onProgramChangeCallback_Midi(uint8_t *msg);
-  // Callbacks for intercepting MD triggers as GUI input
-  void onNoteOnCallback_Midi(uint8_t *msg);
-  void onNoteOffCallback_Midi(uint8_t *msg);
+  void onProgramChangeCallback_Midi2(uint8_t *msg);
+  // Callbacks for intercepting MIDI notes for slot loading
+  void onNoteOnCallback_Midi2(uint8_t *msg);
+  void onNoteOffCallback_Midi2(uint8_t *msg);
   // Control change callback required to disable exploit if CC received
   // Any updating of MD display causes exploit to fail.
   void onControlChangeCallback_Midi(uint8_t *msg);

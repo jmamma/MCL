@@ -19,12 +19,33 @@ void GridTask::gui_update() {
 
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
-  //  A4Track *a4_track = (A4Track *)&temp_track;
-  //  ExtTrack *ext_track = (ExtTrack *)&temp_track;
+  //  A4Track *a4_track = (A4Track *)&temp_track; 
+  //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   if (load_row != 255) {
     grid_load_page.group_load(load_row);
     load_row = 255;
+  }
+
+  if ((midi_load) && (clock_diff(midi_event_clock, clock) > 60)) {
+      uint8_t track_select[NUM_SLOTS] = {0};
+      uint8_t r = 255;
+      DEBUG_PRINTLN("process midi load");
+      for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+         if (midi_track_select[n] < 128) {
+           r = midi_track_select[n];
+           memset(track_select, 0, sizeof(track_select));
+           for (uint8_t m = 0; m < NUM_SLOTS; m++) {
+             if (midi_track_select[m] == r) {
+                midi_track_select[m] = 255;
+                track_select[m] = 1;
+             }
+           }
+           mcl_actions.write_original = 1;
+           mcl_actions.load_tracks(r, track_select);
+           }
+      }
+      midi_load = false;
   }
 
   if (stop_hard_callback) {

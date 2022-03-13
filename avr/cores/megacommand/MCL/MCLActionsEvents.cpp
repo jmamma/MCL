@@ -4,16 +4,81 @@
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
 
-void MCLActionsMidiEvents::onProgramChangeCallback_Midi(uint8_t *msg) {
+void MCLActionsMidiEvents::onProgramChangeCallback_Midi2(uint8_t *msg) {
 
-  if (mcl_cfg.uart2_prg_in - 1 ==  MIDI_VOICE_CHANNEL(msg[0]) || (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
-    grid_task.load_row = msg[1];
+  if (mcl_cfg.uart2_prg_in - 1 == MIDI_VOICE_CHANNEL(msg[0]) ||
+      (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
+
+    if (mcl_cfg.uart2_prg_mode == 0) {
+      grid_task.load_row = msg[1];
+    } else {
+      DEBUG_PRINTLN("set row");
+      grid_task.midi_row_select = msg[1];
+    }
   }
-
 }
 
-void MCLActionsMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
-void MCLActionsMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
+uint8_t MCLActionsMidiEvents::note_to_slot(uint8_t note) {
+   /* disable black keys
+  const uint16_t chromatic = 0b0000010101001010;
+  uint8_t o = note / 12;
+  uint8_t p = note - o * 12;
+  uint16_t mask = 0;
+  SET_BIT16(mask, p + 1);
+  mask = mask - 1;
+  return p - popcount16(chromatic & mask) + 7 * o;
+  */
+  return note;
+}
+
+void MCLActionsMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
+  if (mcl_cfg.uart2_prg_in - 1 == MIDI_VOICE_CHANNEL(msg[0]) ||
+      (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
+
+    if (msg[1] < MIDI_NOTE_C4) {
+      return;
+    }
+    uint8_t slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
+    if (slot > NUM_SLOTS - 1) {
+      return;
+    }
+
+    SET_BIT32(slot_mask, slot);
+
+    if (grid_task.midi_row_select == 255) {
+      grid_task.midi_row_select = grid_page.getRow();
+    }
+
+    DEBUG_PRINT("Selecting slot: ");
+    DEBUG_PRINT(slot);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINTLN(grid_task.midi_row_select);
+    grid_task.midi_track_select[slot] = grid_task.midi_row_select;
+  }
+}
+
+void MCLActionsMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+  if (mcl_cfg.uart2_prg_in - 1 == MIDI_VOICE_CHANNEL(msg[0]) ||
+      (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
+
+    if (msg[1] < MIDI_NOTE_C4) {
+      return;
+    }
+    uint8_t slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
+    if (slot > NUM_SLOTS - 1) {
+      return;
+    }
+
+    CLEAR_BIT32(slot_mask, slot);
+
+    if (slot_mask == 0) {
+      grid_task.midi_event_clock = slowclock;
+      DEBUG_PRINTLN("setting slow clock");
+      grid_task.midi_load = true;
+    }
+  }
+}
+
 void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::StopHardCallback() {
@@ -21,7 +86,6 @@ void MCLActionsCallbacks::StopHardCallback() {
   uint8_t row_array[NUM_SLOTS];
   uint8_t slot_select_array[NUM_SLOTS] = {};
   bool proceed = false;
-
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (mcl_actions.chains[n].is_mode_queue()) {
@@ -33,29 +97,33 @@ void MCLActionsCallbacks::StopHardCallback() {
     }
   }
 
-  if (!proceed) { goto end; }
+  if (!proceed) {
+    goto end;
+  }
 
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
- /*
-  ElektronDevice *elektron_devs[2] = {
-      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
-      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
-  };
+  /*
+   ElektronDevice *elektron_devs[2] = {
+       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+   };
 
-    for (uint8_t i = 0; i < NUM_DEVS; ++i) {
-    if (elektron_devs[i] != nullptr &&
-        elektron_devs[i]->canReadWorkspaceKit()) {
-      elektron_devs[i]->getBlockingKit(0x7F);
-    }
-  }
-  */
+     for (uint8_t i = 0; i < NUM_DEVS; ++i) {
+     if (elektron_devs[i] != nullptr &&
+         elektron_devs[i]->canReadWorkspaceKit()) {
+       elektron_devs[i]->getBlockingKit(0x7F);
+     }
+   }
+   */
   DEBUG_PRINTLN("StopHard");
   DEBUG_PRINTLN((int)SP);
   mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 end:
   DEBUG_PRINTLN("END stop hard");
+  grid_task.reset_midi_states();
+  mcl_actions_midievents.slot_mask = 0;
   return;
 }
 
@@ -80,14 +148,16 @@ void MCLActionsMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  Midi2.addOnProgramChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onProgramChangeCallback_Midi);
+  slot_mask = 0;
+  Midi2.addOnProgramChangeCallback(this,
+                                   (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                                       onProgramChangeCallback_Midi2);
 
-  Midi.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi);
-  Midi.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi);
+  Midi2.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.addOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
@@ -101,13 +171,14 @@ void MCLActionsMidiEvents::remove_callbacks() {
     return;
   }
   Midi2.removeOnProgramChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onProgramChangeCallback_Midi);
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                onProgramChangeCallback_Midi2);
 
-  Midi.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi);
-  Midi.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi);
+  Midi2.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  Midi2.removeOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
@@ -119,9 +190,11 @@ void MCLActionsCallbacks::setup_callbacks() {
     return;
   }
   MidiClock.addOnMidiStartCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
-//  MidiClock.addOnMidiContinueCallback(
-  //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+      this,
+      (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+  //  MidiClock.addOnMidiContinueCallback(
+  //    this,
+  //    (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
   state = true;
 };
@@ -130,10 +203,11 @@ void MCLActionsCallbacks::remove_callbacks() {
     return;
   }
   MidiClock.removeOnMidiStartCallback(
-      this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+      this,
+      (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
   //  MidiClock.removeOnMidiContinueCallback(
-  //    this, (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
+  //    this,
+  //    (midi_clock_callback_ptr_t)&MCLActionsCallbacks::onMidiStartCallback);
 
   state = false;
 };
-

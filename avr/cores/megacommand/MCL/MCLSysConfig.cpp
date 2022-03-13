@@ -98,6 +98,7 @@ bool MCLSysConfig::cfg_init() {
   track_type_select = 0b00000101;
   uart2_device = 0;
   uart_cc_loopback = 0;
+  uart2_prg_mode = 0;
 
   cfgfile.close();
 

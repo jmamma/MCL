@@ -55,7 +55,7 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<9> midiconfig_menu_layout = {
+menu_t<10> midiconfig_menu_layout = {
     "MIDI",
     {
         //            m  r  n  d  p  f  o
@@ -68,8 +68,9 @@ menu_t<9> midiconfig_menu_layout = {
 
         {"MIDI FWD:", 0, 4, 4, 7, 0, 0, 10},
         {"CC FWD:", 0, 2, 2, 11, 0, 0, 86},
-        {"PRG CHG IN:", 0, 18, 2, 47, 0, 0, 88},
-        {"PRG CHG OUT:", 0, 17, 2, 48, 0, 0, 88},
+        {"PRG MODE:", 0, 2, 2, 49, 0, 0, 90},
+        {"PRG IN:", 0, 18, 2, 47, 0, 0, 88},
+        {"PRG OUT:", 0, 17, 2, 48, 0, 0, 88},
     },
     24, 0
 };

@@ -196,7 +196,7 @@ void GridLoadPage::load() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.load_tracks(grid_page.encoders[1]->getValue(),
+  mcl_actions.load_tracks(grid_page.getRow(),
                           track_select_array);
 }
 
@@ -286,7 +286,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   load_groups:
     trig_interface.off();
 
-    group_load(grid_page.encoders[1]->getValue());
+    group_load(grid_page.getRow());
 
     GUI.setPage(&grid_page);
     return true;

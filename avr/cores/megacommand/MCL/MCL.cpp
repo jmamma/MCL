@@ -67,6 +67,8 @@ void MCL::setup() {
   MidiSDSSysexListener.setup(&Midi);
   midi_setup.cfg_ports();
 
+  grid_task.init();
+
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
