@@ -281,7 +281,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   proj.select_grid(old_grid);
 }
 
-void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
+void MCLActions::load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array) {
   DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
@@ -297,7 +297,12 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array) {
     if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
       continue;
     }
+    if (_row_array == nullptr) {
     row_array[n] = row;
+    }
+    else {
+    row_array[n] = _row_array[n];
+    }
 
     if (mcl_cfg.load_mode == LOAD_QUEUE) {
       chains[n].add(row, get_chain_length());

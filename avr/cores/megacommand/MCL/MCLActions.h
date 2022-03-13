@@ -100,7 +100,7 @@ public:
   void save_tracks(int row, uint8_t *slot_select_array,
                            uint8_t merge, uint8_t readpattern = 255);
 
-  void load_tracks(int row, uint8_t *slot_select_array);
+  void load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array = nullptr);
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
   void manual_transition(int row, uint8_t *slot_select_array);
 

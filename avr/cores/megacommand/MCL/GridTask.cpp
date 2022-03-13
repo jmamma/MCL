@@ -33,18 +33,11 @@ void GridTask::run() {
       DEBUG_PRINTLN("process midi load");
       for (uint8_t n = 0; n < NUM_SLOTS; n++) {
          if (midi_track_select[n] < 128) {
-           r = midi_track_select[n];
-           memset(track_select, 0, sizeof(track_select));
-           for (uint8_t m = 0; m < NUM_SLOTS; m++) {
-             if (midi_track_select[m] == r) {
-                midi_track_select[m] = 255;
-                track_select[m] = 1;
-             }
-           }
-           mcl_actions.write_original = 1;
-           mcl_actions.load_tracks(r, track_select);
-           }
+            track_select[n] = 1;
+         }
       }
+      mcl_actions.write_original = 1;
+      mcl_actions.load_tracks(r, track_select, midi_track_select);
       midi_load = false;
   }
 
