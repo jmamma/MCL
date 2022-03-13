@@ -43,7 +43,7 @@ extern MCLEncoder input_encoder2;
 extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
-extern MenuPage<5> file_menu_page;
+extern MenuPage<7> file_menu_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;

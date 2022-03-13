@@ -162,7 +162,7 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
 MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<5> file_menu_page(&config_param1, &file_menu_encoder);
+MenuPage<7> file_menu_page(&config_param1, &file_menu_encoder);
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);

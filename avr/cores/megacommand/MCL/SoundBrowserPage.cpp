@@ -72,8 +72,8 @@ void SoundBrowserPage::save_sound() {
 
   grid_page.prepare();
   memcpy(sound_name, MD.kit.name, 4);
-  const char* tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
-  copyMachineNameShort(tmp, sound_name+4);
+  const char *tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
+  copyMachineNameShort(tmp, sound_name + 4);
   sound_name[6] = '\0';
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
@@ -121,6 +121,9 @@ void SoundBrowserPage::send_sample(int slot, bool is_syx) {
     char temp_entry[FILE_ENTRY_SIZE];
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
+    if (!mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
+      return;
+    }
     if (is_syx) {
       success = midi_sds.sendSyx(temp_entry, slot);
     } else {
@@ -134,22 +137,29 @@ void SoundBrowserPage::send_sample(int slot, bool is_syx) {
   }
 }
 
-void SoundBrowserPage::recv_wav(int slot) {
+void SoundBrowserPage::recv_wav(int slot, bool silent) {
   char wav_name[FILE_ENTRY_SIZE] = "";
   // should be of form "ID - NAME..."
   //                      ^--~~~~~~~
   //                         memmove
   get_entry(slot, wav_name);
-  memmove(wav_name+2,wav_name+5,FILE_ENTRY_SIZE - 5);
+  memmove(wav_name + 2, wav_name + 5, FILE_ENTRY_SIZE - 5);
   wav_name[FILE_ENTRY_SIZE - 3] = '\0';
   wav_name[FILE_ENTRY_SIZE - 2] = '\0';
   wav_name[FILE_ENTRY_SIZE - 1] = '\0';
 
-  if (mcl_gui.wait_for_input(wav_name, "Sample Name", sizeof(wav_name) - 1)) {
-    char temp_entry[FILE_ENTRY_SIZE];
-    strncpy(temp_entry, wav_name, sizeof(wav_name) - 1);
-    strcat(temp_entry, ".wav");
-    if (midi_sds.recvWav(temp_entry, slot)) {
+  if (!silent) {
+    if (!mcl_gui.wait_for_input(wav_name, "Sample Name",
+                                sizeof(wav_name) - 1)) {
+      return;
+    }
+  }
+  char temp_entry[FILE_ENTRY_SIZE];
+  strncpy(temp_entry, wav_name, sizeof(wav_name) - 1);
+  strcat(temp_entry, ".wav");
+  bool ret = midi_sds.recvWav(temp_entry, slot);
+  if (!silent) {
+    if (ret) {
       gfx.alert("Sample received", temp_entry);
     } else {
       gfx.alert("Receive failed", temp_entry);
@@ -204,12 +214,12 @@ void SoundBrowserPage::on_select(const char *__) {
   } else {
     auto slot = encoders[1]->cur;
     switch (pending_action) {
-      case PA_NEW:
-        recv_wav(slot);
-        break;
-      case PA_SELECT:
-        send_sample(slot, (filetype_idx == FT_SYX));
-        break;
+    case PA_NEW:
+      recv_wav(slot);
+      break;
+    case PA_SELECT:
+      send_sample(slot, (filetype_idx == FT_SYX));
+      break;
     }
     pending_action = 0;
     show_samplemgr = false;
@@ -243,7 +253,7 @@ void SoundBrowserPage::query_sample_slots() {
   do {
     handleIncomingMidi();
     time_now = read_slowclock();
-  } while(!s_query_returned && clock_diff(time_start, time_now) < 1000);
+  } while (!s_query_returned && clock_diff(time_start, time_now) < 1000);
 
   if (!s_query_returned) {
     add_entry("ERROR");
@@ -267,6 +277,41 @@ void SoundBrowserPage::query_sample_slots() {
 }
 
 // MidiSysexListenerClass implementation
+
+bool SoundBrowserPage::_handle_filemenu() {
+  if (FileBrowserPage::_handle_filemenu()) {
+    return true;
+  }
+  switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
+  case FM_RECVALL:
+    show_samplemgr = true;
+    show_ram_slots = true;
+    init();
+    if (numEntries == 0) {
+      gfx.alert("NON", "UW");
+      goto end;
+    }
+    if (!mcl_gui.wait_for_confirm("Receive all", "Overwrite?")) {
+      goto end;
+    }
+    DEBUG_PRINTLN("Recv samples");
+    DEBUG_PRINTLN(numEntries);
+    for (uint8_t n = 0; n < numEntries; n++) {
+      DEBUG_PRINTLN("Recv wav");
+      char wav_name[FILE_ENTRY_SIZE] = "";
+      get_entry(n, wav_name);
+      if (wav_name[5] != '[') { recv_wav(n, true); }
+    }
+  end:
+    show_samplemgr = false;
+    show_ram_slots = false;
+    init();
+    return true;
+  case FM_SENDALL:
+
+    break;
+  }
+}
 void SoundBrowserPage::start() {}
 
 void SoundBrowserPage::end() {
@@ -293,9 +338,9 @@ void SoundBrowserPage::end() {
     s_tmpbuf[4] = 0;
     strcpy(temp_entry, "00 - ");
     if (i < 9) {
-      mcl_gui.put_value_at(i+1, temp_entry+1);
+      mcl_gui.put_value_at(i + 1, temp_entry + 1);
     } else {
-      mcl_gui.put_value_at(i+1, temp_entry);
+      mcl_gui.put_value_at(i + 1, temp_entry);
     }
     // put_value_at null-terminates the string. undo that.
     temp_entry[2] = ' ';
@@ -308,13 +353,9 @@ void SoundBrowserPage::end() {
   }
 
   s_query_returned = true;
-
 }
 
-void SoundBrowserPage::end_immediate() {
-}
-
-
+void SoundBrowserPage::end_immediate() {}
 
 MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
 MCLEncoder soundbrowser_param2(0, 36, ENCODER_RES_SYS);

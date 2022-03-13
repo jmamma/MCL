@@ -109,7 +109,7 @@ menu_t<1> mclconfig_menu_layout = {
     1, 0
 };
 
-menu_t<5> file_menu_layout = {
+menu_t<7> file_menu_layout = {
     "FILE",
     {
         //            m  r  n  d  p  f  o
@@ -118,6 +118,8 @@ menu_t<5> file_menu_layout = {
         {"DELETE",    0, 0, 0, 0, 0, 0, 0},
         {"RENAME",    0, 0, 0, 0, 0, 0, 0},
         {"OVERWRITE", 0, 0, 0, 0, 0, 0, 0},
+        {"RECV ALL",  0, 0, 0, 0, 0, 0, 0},
+        {"SEND ALL",  0, 0, 0, 0, 0, 0, 0},
     },
     0, 0
 };

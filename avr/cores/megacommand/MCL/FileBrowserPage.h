@@ -23,6 +23,16 @@
 #define MAX_FB_ITEMS 4
 #define MAX_FT_SELECT 3
 
+#define FM_CANCEL 0
+#define FM_NEW_FOLDER 1
+#define FM_DELETE 2
+#define FM_RENAME 3
+#define FM_OVERWRITE 4
+#define FM_RECVALL 5
+#define FM_SENDALL 6
+
+#define FILETYPE_WAV 1
+
 class FileBrowserPage : public LightPage {
 public:
   static File file;
@@ -85,6 +95,7 @@ public:
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
 
+  virtual bool _handle_filemenu();
 protected:
   void _cd_up();
   void _cd(const char *);
@@ -93,7 +104,6 @@ protected:
 
 private:
 
-  void _handle_filemenu();
   void _calcindices(int &);
 };
 

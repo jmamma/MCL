@@ -37,14 +37,14 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   void save_sound();
   void load_sound();
   void send_sample(int slot, bool is_syx);
-  void recv_wav(int slot);
+  void recv_wav(int slot, bool silent = false);
 
   // MidiSysexListenerClass
   virtual void start();
   virtual void end();
   virtual void end_immediate();
-
-protected:
+  virtual bool _handle_filemenu();
+  protected:
   void query_sample_slots();
 };
 

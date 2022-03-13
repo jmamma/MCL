@@ -387,6 +387,9 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
       if (wav_file.file.isOpen()) {
         goto recv_fail;
       } else {
+        if (SD.exists(filename)) {
+          SD.remove(filename);
+        }
         if(!SD.rename(wav_file.filename, filename)) {
           gfx.alert("wav_file rename", "failed :(");
           return false;

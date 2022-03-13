@@ -57,12 +57,6 @@ bool FileBrowserPage::add_entry(const char *entry) {
   return true;
 }
 
-#define FM_CANCEL 0
-#define FM_NEW_FOLDER 1
-#define FM_DELETE 2
-#define FM_RENAME 3
-#define FM_OVERWRITE 4
-
 void FileBrowserPage::query_filesystem() {
   if (show_filetypes) {
     if (filetype_idx > filetype_max)
@@ -83,6 +77,10 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
   file_menu_page.menu.enable_entry(FM_OVERWRITE, show_overwrite);
   file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
+  file_menu_page.menu.enable_entry(FM_RECVALL, false);
+  file_menu_page.menu.enable_entry(FM_SENDALL, false);
+
+
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
@@ -91,9 +89,13 @@ void FileBrowserPage::query_filesystem() {
   numEntries = 0;
   cur_file = 255;
   if (show_save) {
+    if (filetype_idx == FILETYPE_WAV) {
+    add_entry("[ RECV ]");
+    }
+    else {
     add_entry("[ SAVE ]");
+    }
   }
-
   SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
@@ -310,7 +312,7 @@ void FileBrowserPage::_cd(const char *child) {
   init();
 }
 
-void FileBrowserPage::_handle_filemenu() {
+bool FileBrowserPage::_handle_filemenu() {
   char buf1[FILE_ENTRY_SIZE];
 
   get_entry(encoders[1]->getValue(), buf1);
@@ -325,7 +327,7 @@ void FileBrowserPage::_handle_filemenu() {
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_NEW_FOLDER: // new folder
     create_folder();
-    break;
+    return true;
   case FM_DELETE: // delete
     strcpy(buf2, "Delete ");
     strcat(buf2, buf1);
@@ -333,7 +335,7 @@ void FileBrowserPage::_handle_filemenu() {
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }
-    break;
+    return true;
   case FM_RENAME: // rename
     // trim the suffix is present, add back later
     strcat(buf2, buf1);
@@ -350,7 +352,7 @@ void FileBrowserPage::_handle_filemenu() {
       }
       on_rename(buf1, buf2);
     }
-    break;
+    return true;
   case FM_OVERWRITE: // overwrite
     /*
     strcpy(buf2, "Overwrite ");
@@ -364,6 +366,7 @@ void FileBrowserPage::_handle_filemenu() {
     }*/
     break;
   }
+  return false;
 }
 
 void FileBrowserPage::on_delete(const char *entry) {
@@ -406,10 +409,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_YES:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        trig_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;
@@ -434,6 +437,14 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();
+
+    bool state = (param2->cur == 0) && filetype_idx == FILETYPE_WAV;
+    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
+    file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
+    file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
+    file_menu_page.menu.enable_entry(FM_OVERWRITE, !state);
+    file_menu_page.menu.enable_entry(FM_RECVALL, state);
+    file_menu_page.menu.enable_entry(FM_SENDALL, state);
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
