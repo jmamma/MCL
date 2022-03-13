@@ -414,7 +414,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num, uint8_t channel_event) {
   if (machine_pitch == 255) {
     return;
   }
-  if (GUI.currentPage() == &seq_step_page) {
+  if (GUI.currentPage() == &seq_step_page && channel_event == CTRL_EVENT) {
     seq_step_page.pitch_param = note_num;
     // get_note_from_machine_pitch(machine_pitch);
   }
