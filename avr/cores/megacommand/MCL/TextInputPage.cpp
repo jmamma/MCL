@@ -87,6 +87,9 @@ void TextInputPage::loop() {
     if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
       ((MCLEncoder *)encoders[0])->max = charpane_w - 4;
     }
+    else {
+      ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
+    }
   }
 }
 
@@ -179,12 +182,12 @@ void TextInputPage::display_charpane() {
     // clear old highlight
     uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
     calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 7, 7, INVERT);
+    oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // draw new highlight
     sx = encoders[0]->cur;
     sy = encoders[1]->cur;
     calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 7, 7, INVERT);
+    oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // update text. in charpane mode, cursor_position remains constant
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
