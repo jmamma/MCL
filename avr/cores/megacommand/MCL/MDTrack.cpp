@@ -26,10 +26,12 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   case TRANSITION_UNMUTE:
     DEBUG_PRINTLN(F("unmuting"));
     MD.muteTrack(tracknumber, false);
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
     break;
   case TRANSITION_MUTE:
     DEBUG_PRINTLN(F("muting"));
     MD.muteTrack(tracknumber, true);
+    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
     break;
   default:
     break;
