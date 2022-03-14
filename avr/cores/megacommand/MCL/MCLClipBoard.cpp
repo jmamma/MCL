@@ -235,7 +235,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
     proj.select_grid(grid);
     proj.read_grid_row_header(&header, y + row);
-    if ((strlen(header.name) == 0) || (!header.active) ||
+    if ((!header.active) || (strlen(header.name) == 0) ||
         (t_w == GRID_WIDTH && col == 0)) {
       grids[grid].read_row_header(&header_copy, y + t_row);
       header.active = true;

@@ -349,8 +349,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
-
-      if (pitch != 255 && tuning) {
+      if (pitch == 255) {
+        seq_param4.cur = 0; pitch_param = 255;
+      }
+      else if (tuning) {
         uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
         if (note_num == 255) {
           seq_param4.cur = 0;
@@ -359,9 +361,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           // note_num = note_num - note_offset;
           seq_param4.cur = note_num;
         }
-        seq_param4.old = seq_param4.cur;
       }
-
+      seq_param4.old = seq_param4.cur;
       if (utiming == 0) {
         utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }
