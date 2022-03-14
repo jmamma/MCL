@@ -50,8 +50,10 @@ void GridTask::run() {
 
   if (MDSeqTrack::sync_cursor) {
     if (MidiClock.state == 2) {
-      gui_update();
-      MD.setKitName(kit_names[0]);
+      if (last_active_row < GRID_LENGTH) {
+        gui_update();
+        MD.setKitName(kit_names[0]);
+      }
     }
     MDSeqTrack::sync_cursor = 0;
   }
