@@ -673,6 +673,17 @@ void RAMPage::remove_callbacks() {
 }
 
 bool RAMPage::handleEvent(gui_event_t *event) {
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64; 
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+        goto yes;
+      case MDX_KEY_NO:
+        goto no;
+      }
+    }
+  }
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
@@ -689,6 +700,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    yes:
     if (mcl_cfg.ram_page_mode == MONO) {
       uint8_t lev = 64;
       if (encoders[0]->cur == SOURCE_MAIN) {
@@ -725,6 +737,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    no:
     RAMPage::slice_modes[page_id] = 0;
     oled_display.textbox("SLICE", "");
     if (mcl_cfg.ram_page_mode == MONO) {
