@@ -248,6 +248,7 @@ ISR(USART0_RX_vect) {
       Midi.live_state = midi_wait_status;
     } else {
       // record
+      MidiUart.recvActiveSenseTimer = 0;
       Midi.midiSysex.handleByte(c);
     }
     break;
@@ -320,6 +321,7 @@ ISR(USART1_RX_vect) {
       Midi2.live_state = midi_wait_status;
     } else {
       // record
+      MidiUart2.recvActiveSenseTimer = 0;
       Midi2.midiSysex.handleByte(c);
     }
     break;
