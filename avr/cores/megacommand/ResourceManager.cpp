@@ -56,6 +56,7 @@ void ResourceManager::restore_page_entry_deps() {
 
   R.page_entries->Entries[4].Page = &seq_step_page;
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
+
   R.page_entries->Entries[5].Page = &seq_extstep_page;
   R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
   R.page_entries->Entries[6].Page = &seq_ptc_page;
