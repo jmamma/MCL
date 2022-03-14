@@ -977,7 +977,16 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   slot_menu_off:
     if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
+      uint8_t old_undo = slot_undo;
+      bool restore_undo = false;
+      //Prevent undo from occuring when re-entering shift menu. Want to keep undo flag in case user
+      //decides to undo with MD GUI.
+      if (slot_copy + slot_paste + slot_clear + slot_load == 0) { slot_undo = 0; restore_undo = true; }
+
       apply_slot_changes();
+
+      if (restore_undo) { slot_undo = old_undo; }
+
       DEBUG_PRINTLN("here");
       init();
     }
