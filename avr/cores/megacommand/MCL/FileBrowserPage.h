@@ -94,7 +94,7 @@ public:
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
-
+  virtual void chdir_type() {}
   virtual bool _handle_filemenu();
 protected:
   void _cd_up();

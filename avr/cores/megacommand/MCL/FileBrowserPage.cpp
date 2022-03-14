@@ -243,6 +243,7 @@ void FileBrowserPage::loop() {
 
   if (show_filetypes && param1->hasChanged()) {
     filetype_idx = param1->cur;
+    chdir_type();
     init();
   }
 }

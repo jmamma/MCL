@@ -2,6 +2,8 @@
 #include "ResourceManager.h"
 
 const char *c_sound_root = "/Sounds/MD";
+const char *c_wav_root = "/Samples/WAV/";
+const char *c_syx_root = "/Samples/SYX/";
 const char *c_snd_suffix = ".snd";
 const char *c_wav_suffix = ".wav";
 const char *c_syx_suffix = ".syx";
@@ -19,11 +21,27 @@ void SoundBrowserPage::cleanup() {
 
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
+  SD.mkdir(c_wav_root, true);
+  SD.mkdir(c_syx_root, true);
   SD.chdir(c_sound_root);
   strcpy(lwd, c_sound_root);
   show_samplemgr = false;
   sysex = &(Midi.midiSysex);
   FileBrowserPage::setup();
+}
+void SoundBrowserPage::chdir_type() {
+  if (filetype_idx == FT_WAV) {
+   SD.chdir(c_wav_root);
+   strcpy(lwd, c_wav_root);
+  }
+  if (filetype_idx == FT_SND) {
+   SD.chdir(c_sound_root);
+   strcpy(lwd, c_sound_root);
+  }
+  else {
+   SD.chdir(c_syx_root);
+   strcpy(lwd, c_syx_root);
+  }
 }
 
 void SoundBrowserPage::init() {

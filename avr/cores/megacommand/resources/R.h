@@ -379,11 +379,11 @@ extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[846];
+    char zz__MENU_OPTIONS[828];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 846 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 846;
-  static constexpr size_t __total_size = 846;
+  static constexpr size_t countof_MENU_OPTIONS = 828 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 828;
+  static constexpr size_t __total_size = 828;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;

@@ -29,6 +29,7 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   virtual void on_new();
   virtual void on_select(const char*);
   virtual void on_cancel();
+  virtual void chdir_type();
   virtual bool handleEvent(gui_event_t *event);
   void draw_scrollbar(uint8_t x_offset);
   void init();
