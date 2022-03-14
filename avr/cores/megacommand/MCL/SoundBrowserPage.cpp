@@ -2,8 +2,8 @@
 #include "ResourceManager.h"
 
 const char *c_sound_root = "/Sounds/MD";
-const char *c_wav_root = "/Samples/WAV/";
-const char *c_syx_root = "/Samples/SYX/";
+const char *c_wav_root = "/Samples/WAV";
+const char *c_syx_root = "/Samples/SYX";
 const char *c_snd_suffix = ".snd";
 const char *c_wav_suffix = ".wav";
 const char *c_syx_suffix = ".syx";
@@ -23,18 +23,19 @@ void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
-  SD.chdir(c_sound_root);
-  strcpy(lwd, c_sound_root);
+  SD.chdir();
   show_samplemgr = false;
   sysex = &(Midi.midiSysex);
+  chdir_type();
   FileBrowserPage::setup();
 }
+
 void SoundBrowserPage::chdir_type() {
   if (filetype_idx == FT_WAV) {
    SD.chdir(c_wav_root);
    strcpy(lwd, c_wav_root);
   }
-  if (filetype_idx == FT_SND) {
+  else if (filetype_idx == FT_SND) {
    SD.chdir(c_sound_root);
    strcpy(lwd, c_sound_root);
   }
@@ -179,6 +180,8 @@ void SoundBrowserPage::recv_wav(int slot, bool silent) {
   char temp_entry[FILE_ENTRY_SIZE];
   strncpy(temp_entry, wav_name, sizeof(wav_name) - 1);
   strcat(temp_entry, ".wav");
+  DEBUG_PRINTLN("bulk recv");
+  DEBUG_PRINTLN(temp_entry);
   bool ret = midi_sds.recvWav(temp_entry, slot);
   if (!silent) {
     if (ret) {
@@ -322,6 +325,7 @@ bool SoundBrowserPage::_handle_filemenu() {
       DEBUG_PRINTLN("Recv wav");
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
+      DEBUG_PRINTLN(wav_name);
       if (wav_name[5] != '[') { recv_wav(n, true); }
     }
   end:

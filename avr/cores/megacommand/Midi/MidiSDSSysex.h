@@ -39,6 +39,7 @@ public:
   void nak();
   void cancel();
   void setup(MidiClass *_midi);
+  void cleanup(MidiClass *_midi);
   void wait();
   void eof();
   /* @} */

@@ -64,7 +64,6 @@ void MCL::setup() {
   MNMSysexListener.setup(&Midi2);
 #endif
 
-  MidiSDSSysexListener.setup(&Midi);
   midi_setup.cfg_ports();
 
   grid_task.init();

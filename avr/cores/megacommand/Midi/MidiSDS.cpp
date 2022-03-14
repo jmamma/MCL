@@ -67,6 +67,7 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
     current_clock = read_slowclock();
 
     handleIncomingMidi();
+    //midi_active_peering.run();
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
@@ -208,6 +209,8 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
     DEBUG_PRINTLN(F("Could not open WAV"));
     return false;
   }
+  bool ret = false;
+  MidiSDSSysexListener.setup(&Midi);
   packetNumber = 0;
   samplesSoFar = 0;
   sampleNumber = sample_number;
@@ -234,8 +237,7 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
   rep = waitForHandshake();
   if (rep == MIDI_SDS_CANCEL) {
     cancel();
-    wav_file.close();
-    return false;
+    goto fin;
   }
   if (samplename == nullptr) {
   _setName(filename, sample_number);
@@ -245,9 +247,11 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
   DEBUG_PRINTLN(samplename);
   _setName(samplename, sample_number);
   }
-  bool ret = sendSamples(show_progress);
+  ret = sendSamples(show_progress);
+  fin:
   wav_file.close();
   state = SDS_READY;
+  MidiSDSSysexListener.cleanup(&Midi);
   return ret;
 }
 
@@ -374,17 +378,29 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 }
 
 bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
+  bool ret = false;
   if (state != SDS_READY) {
+    DEBUG_PRINTLN("SDS in progress aborting");
     return false;
   }
   // init
+  MidiSDSSysexListener.setup(&Midi);
   int i = 0;
-  sendDumpRequest(sample_number);
+  uint8_t retries = 3;
+  uint8_t m = 255;
+  while (retries--) {
+    sendDumpRequest(sample_number);
 
-  if (MIDI_SDS_DUMPHEADER != waitForMsg(2000)) {
-    goto recv_fail;
+    m = waitForMsg(1000);
+    if (MIDI_SDS_DUMPHEADER == m) {
+      break;
+    }
+    DEBUG_PRINTLN("retry sds");
   }
-
+  if (MIDI_SDS_DUMPHEADER != m) {
+   DEBUG_PRINTLN("request failed");
+  goto recv_fail;
+  }
   while(true) {
     uint8_t msg = waitForMsg(2000);
     if (msg == 255 || msg == MIDI_SDS_CANCEL) goto recv_fail;
@@ -397,9 +413,10 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
         }
         if(!SD.rename(wav_file.filename, filename)) {
           gfx.alert("wav_file rename", "failed :(");
-          return false;
+          goto fin;
         }
-        return true;
+        ret = true;
+        goto fin;
       }
     }
     if (++i < 10) {
@@ -413,13 +430,17 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
     gfx.display_text("Receiving sample", "");
 #endif
   }
-
-recv_fail:
+  recv_fail:
+  DEBUG_PRINTLN("Recv fail");
   if (wav_file.file.isOpen()) {
     wav_file.file.remove();
   }
+  fin:
+  wav_file.close();
   state = SDS_READY;
-  return false;
+  MidiSDSSysexListener.cleanup(&Midi);
+
+  return ret;
 }
 
 void MidiSDSClass::incPacketNumber() {
