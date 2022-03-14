@@ -612,8 +612,6 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-#define NOTE_C2 48
-
 uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
   scale_padding = true;
   uint8_t pitch = calc_scale_note(note_num, scale_padding);
@@ -677,11 +675,11 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   if (channel_event) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
-    if (note_num < NOTE_C2) {
+    if (note_num < MIDI_NOTE_C4) {
       return;
     }
     uint8_t note = note_num - (note_num / 12) * 12;
-    note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
+    note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
 
     pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event);
@@ -743,11 +741,11 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t pitch;
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
   if (channel_event) {
-    if (note_num < NOTE_C2) {
+    if (note_num < MIDI_NOTE_C4) {
       return;
     }
     uint8_t note = note_num - (note_num / 12) * 12;
-    note_num = ((note_num / 12) - (NOTE_C2 / 12)) * 12 + note;
+    note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
 
     pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event);
