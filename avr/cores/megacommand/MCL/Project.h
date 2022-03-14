@@ -81,6 +81,15 @@ public:
     return ret;
   }
 
+  bool clear_row_grid(uint16_t row, uint8_t grid = 255) {
+     if (grid == 255) {
+      grid = grid_select;
+    }
+    bool ret = grids[grid].clear_row(row);
+    return ret;
+  }
+
+
   bool clear_slot_grid(uint8_t col, uint16_t row, uint8_t grid = 255) {
      if (grid == 255) {
       grid = grid_select;

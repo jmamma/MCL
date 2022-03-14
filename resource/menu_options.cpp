@@ -57,6 +57,8 @@ menu_option_t MENU_OPTIONS[] = {
   // 88
   {0, "--"},{17, "OMNI"},
   // 90
-  {0, "BASIC"}, {1, "ADV"}
+  {0, "BASIC"}, {1, "ADV"},
+  // 92
+  {0,"--"}, {1, "ROWS"}
 };
 

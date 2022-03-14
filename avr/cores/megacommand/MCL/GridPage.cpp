@@ -554,12 +554,12 @@ void GridPage::swap_grids() {
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
     ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-    //load_slot_models();
+    // load_slot_models();
     return;
   }
 }
 
-void GridPage::apply_slot_changes(bool ignore_undo) {
+void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   uint8_t width;
   uint8_t height;
 
@@ -572,17 +572,36 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
                  slot_undo_y == getRow();
   DEBUG_PRINTLN("apply slot");
   swap_grids();
-  void (*row_func)() =
-      grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
-  if (row_func != NULL) {
-    DEBUG_PRINTLN("calling menu func");
-    (*row_func)();
-    return;
+  if (!ignore_func) {
+    void (*row_func)() =
+        grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
+    if (row_func != NULL) {
+      DEBUG_PRINTLN("calling menu func");
+      (*row_func)();
+      return;
+    }
   }
   width = encoders[2]->cur;
   height = encoders[3]->cur;
 
   uint8_t slot_update = 0;
+
+  if (insert_rows) {
+    int8_t row_count = GRID_LENGTH - getRow() - height;
+    uint8_t row_dst = getRow() + height;
+    if (row_dst > GRID_LENGTH || row_count < 1) {
+      return;
+    }
+
+    if (mcl_gui.wait_for_confirm("Insert", "Rows?")) {
+      mcl_clipboard.copy(0, getRow(), GRID_WIDTH, row_count, proj.get_grid());
+      mcl_clipboard.paste(0, getRow() + height, proj.get_grid());
+      for (uint8_t n = 0; n < height; n++) {
+        proj.clear_row_grid(getRow() + n);
+      }
+    }
+    goto end;
+  }
 
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
@@ -687,7 +706,9 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
       }
     }
   }
-  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
+end:
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1) ||
+      (insert_rows == 1)) {
     proj.sync_grid();
     load_slot_models();
   }
@@ -697,6 +718,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   slot_clear = 0;
   slot_copy = 0;
   slot_paste = 0;
+  insert_rows = 0;
   slot.load_from_grid(getCol(), getRow());
 }
 
@@ -807,7 +829,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_COPY: {
           slot_copy = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
           // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
@@ -816,7 +838,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_CLEAR: {
           slot_clear = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
           // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
@@ -825,7 +847,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_PASTE: {
           slot_paste = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
           // if (trig_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
@@ -979,13 +1001,18 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
       uint8_t old_undo = slot_undo;
       bool restore_undo = false;
-      //Prevent undo from occuring when re-entering shift menu. Want to keep undo flag in case user
-      //decides to undo with MD GUI.
-      if (slot_copy + slot_paste + slot_clear + slot_load == 0) { slot_undo = 0; restore_undo = true; }
+      // Prevent undo from occuring when re-entering shift menu. Want to keep
+      // undo flag in case user decides to undo with MD GUI.
+      if (slot_copy + slot_paste + slot_clear + slot_load == 0) {
+        slot_undo = 0;
+        restore_undo = true;
+      }
 
       apply_slot_changes();
 
-      if (restore_undo) { slot_undo = old_undo; }
+      if (restore_undo) {
+        slot_undo = old_undo;
+      }
 
       DEBUG_PRINTLN("here");
       init();

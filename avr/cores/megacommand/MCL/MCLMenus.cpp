@@ -97,7 +97,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 48
     &mcl_cfg.uart2_prg_out,
     // 49
-    &mcl_cfg.uart2_prg_mode
+    &mcl_cfg.uart2_prg_mode,
+    // 50
+    &grid_page.insert_rows
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {

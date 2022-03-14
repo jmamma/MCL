@@ -45,6 +45,7 @@ public:
   uint8_t slot_undo_x;
   uint8_t slot_undo_y;
   uint8_t slot_load;
+  uint8_t insert_rows;
 
   uint16_t grid_lastclock;
 
@@ -86,7 +87,7 @@ public:
   void init();
   void prepare();
   void swap_grids();
-  void apply_slot_changes(bool ignore_undo = false);
+  void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void close_bank_popup();
 
