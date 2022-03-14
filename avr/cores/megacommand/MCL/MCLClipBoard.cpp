@@ -239,7 +239,12 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
         (t_w == GRID_WIDTH && col == 0)) {
       grids[grid].read_row_header(&header_copy, y + t_row);
       header.active = true;
+      if (header_copy.active) {
       strncpy(&(header.name[0]), &(header_copy.name[0]), sizeof(header.name));
+      }
+      else {
+      header.name[0] = '\0';
+      }
     }
     if (t_h > 8) { mcl_gui.draw_progress("", y, t_h); }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
