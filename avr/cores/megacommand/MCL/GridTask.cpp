@@ -193,8 +193,8 @@ void GridTask::transition_handler() {
       }
     }
   }
-  //  if (mcl_cfg.load_mode != LOAD_MANUAL) {
-  DEBUG_PRINTLN("gettin ready to cache");
+
+  DEBUG_PRINTLN("SP pre cache");
   DEBUG_PRINTLN((int)SP);
   bool update_gui = true;
   mcl_actions.cache_next_tracks(track_select_array, update_gui);
@@ -207,7 +207,7 @@ void GridTask::transition_handler() {
     }
   }
 
-  if (last_slot != 255) {
+  if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
     // GridDeviceTrack *gdt =
     //    mcl_actions.get_grid_dev_track(last_slot, &track_idx, &dev_idx);
     last_active_row = slots_changed[last_slot];
