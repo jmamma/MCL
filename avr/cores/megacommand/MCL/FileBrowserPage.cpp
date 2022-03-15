@@ -84,6 +84,9 @@ void FileBrowserPage::query_filesystem() {
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
+  DEBUG_PRINTLN("query");
+  DEBUG_PRINTLN(file_menu_encoder.max);
+
   //  reset directory pointer
   SD.vwd()->rewind();
   numEntries = 0;
@@ -438,14 +441,6 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     encoders[0] = &config_param1;
     encoders[1] = &file_menu_encoder;
     file_menu_page.init();
-
-    bool state = (param2->cur == 0) && filetype_idx == FILETYPE_WAV;
-    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
-    file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
-    file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-    file_menu_page.menu.enable_entry(FM_OVERWRITE, !state);
-    file_menu_page.menu.enable_entry(FM_RECVALL, state);
-    file_menu_page.menu.enable_entry(FM_SENDALL, state);
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
