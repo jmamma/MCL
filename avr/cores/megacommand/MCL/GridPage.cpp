@@ -594,10 +594,16 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     }
 
     if (mcl_gui.wait_for_confirm("Insert", "Rows?")) {
-      mcl_clipboard.copy(0, getRow(), GRID_WIDTH, row_count, proj.get_grid());
-      mcl_clipboard.paste(0, getRow() + insert_rows, proj.get_grid());
-      for (uint8_t n = 0; n < insert_rows; n++) {
-        proj.clear_row_grid(getRow() + n);
+      for (uint8_t g = 0; g < 2; g++) {
+        for (uint8_t n = 0; n < row_count; n++) {
+          if (n % 8) mcl_gui.draw_progress("INSERT ROWS", n + g * row_count, row_count * 2);
+          mcl_clipboard.copy(0, getRow() + row_count - n - insert_rows,
+                             GRID_WIDTH, 1, g);
+          mcl_clipboard.paste(0, getRow() + row_count - n, g);
+        }
+        for (uint8_t n = 0; n < insert_rows; n++) {
+          proj.clear_row_grid(getRow() + n, g);
+        }
       }
     }
     goto end;
