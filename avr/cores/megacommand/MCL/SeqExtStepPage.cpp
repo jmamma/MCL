@@ -855,11 +855,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_SCALE: {
+          seq_extparam4.cur = 16;
           fov_offset += fov_w;
           cur_x += fov_w;
           if (fov_offset + fov_length > roll_length) {
+          cur_x = cur_x - fov_offset;
           fov_offset = 0;
-          cur_x = 0;
           }
           return true;
         }
