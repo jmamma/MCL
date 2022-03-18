@@ -128,7 +128,7 @@ void TextInputPage::config_charpane() {
   // initial highlight of selected char
   uint8_t sx = encoders[0]->cur, sy = encoders[1]->cur;
   calc_charpane_coord(sx, sy);
-  oled_display.fillRect(sx, sy, 7, 7, INVERT);
+  oled_display.fillRect(sx, sy, 5, 7, INVERT);
   oled_display.display();
 #endif
 }

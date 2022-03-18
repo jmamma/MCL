@@ -3,11 +3,6 @@
 void LoadProjectPage::init() {
 
   DEBUG_PRINT_FN();
-  strcpy(match, "");
-  strcpy(title, "Project");
-  strcpy(lwd, PRJ_DIR);
-  SD.chdir(PRJ_DIR);
-
   show_dirs = true;
   select_dirs = true;
   show_save = false;
@@ -17,6 +12,11 @@ void LoadProjectPage::init() {
   show_overwrite = false;
 
   FileBrowserPage::init();
+}
+
+void LoadProjectPage::setup() {
+  FileBrowserPage::setup();
+  _cd(PRJ_DIR);
 }
 
 void LoadProjectPage::on_select(const char *entry) {
@@ -45,23 +45,11 @@ void LoadProjectPage::on_delete(const char *entry) {
   file.open(entry, O_READ);
   bool dir = file.isDirectory();
   file.close();
-  char temp_entry[16];
   if (strcmp(mcl_cfg.project, entry) == 0) {
     gfx.alert("ERROR", "CURRENT PROJECT");
     return;
   }
-  if (dir) {
-    if (SD.chdir(entry)) {
-      // SD.vwd()->rmRfStar(); //extra 276 bytes
-      while (file.openNext(SD.vwd(), O_READ)) {
-        file.getName(temp_entry, 16);
-        file.close();
-        SD.remove(temp_entry);
-      }
-      _cd_up();
-      SD.rmdir(entry);
-    }
-  }
+  if (dir) { rm_dir(entry); }
 }
 
 void LoadProjectPage::on_rename(const char *from, const char *to) {

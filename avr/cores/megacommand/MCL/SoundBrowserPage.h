@@ -34,7 +34,6 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   void draw_scrollbar(uint8_t x_offset);
   void init();
   void setup();
-  void cleanup();
   void save_sound();
   void load_sound();
   void send_sample(int slot, bool is_syx, char *newname = nullptr, bool silent = false);

@@ -14,34 +14,26 @@ const char *c_syx_name = "SYSEX";
 
 static bool s_query_returned = false;
 
-void SoundBrowserPage::cleanup() {
-  // always call setup() when entering this page.
-  this->isSetup = false;
-}
-
 void SoundBrowserPage::setup() {
   SD.mkdir(c_sound_root, true);
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
-  SD.chdir();
   show_samplemgr = false;
   sysex = &(Midi.midiSysex);
-  chdir_type();
   FileBrowserPage::setup();
+  chdir_type();
 }
 
 void SoundBrowserPage::chdir_type() {
+  DEBUG_PRINTLN("chdir type");
   if (filetype_idx == FT_WAV) {
-   SD.chdir(c_wav_root);
-   strcpy(lwd, c_wav_root);
+   _cd(c_wav_root);
   }
   else if (filetype_idx == FT_SND) {
-   SD.chdir(c_sound_root);
-   strcpy(lwd, c_sound_root);
+   _cd(c_sound_root);
   }
   else {
-   SD.chdir(c_syx_root);
-   strcpy(lwd, c_syx_root);
+   _cd(c_syx_root);
   }
 }
 
@@ -219,6 +211,7 @@ void SoundBrowserPage::on_cancel() {
     show_samplemgr = false;
   } else {
     // TODO cd .. ?
+   _cd_up();
   }
 }
 

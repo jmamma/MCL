@@ -30,11 +30,18 @@ bool FileBrowserPage::filemenu_active = false;
 
 bool FileBrowserPage::call_handle_filemenu = false;
 
+void FileBrowserPage::cleanup() {
+  // always call setup() when entering this page.
+  this->isSetup = false;
+}
+
 void FileBrowserPage::setup() {
   oled_display.clearDisplay();
   // char *mcl = ".mcl";
   // strcpy(match, mcl);
   strcpy(title, "Files");
+  SD.chdir();
+  strcpy(lwd,"/");
 }
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
@@ -80,7 +87,6 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_RECVALL, false);
   file_menu_page.menu.enable_entry(FM_SENDALL, false);
 
-
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
@@ -93,10 +99,9 @@ void FileBrowserPage::query_filesystem() {
   cur_file = 255;
   if (show_save) {
     if (filetype_idx == FILETYPE_WAV) {
-    add_entry("[ RECV ]");
-    }
-    else {
-    add_entry("[ SAVE ]");
+      add_entry("[ RECV ]");
+    } else {
+      add_entry("[ SAVE ]");
     }
   }
   SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
@@ -104,10 +109,9 @@ void FileBrowserPage::query_filesystem() {
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
   }
+  cur_row = 1;
   encoders[1]->cur = 1;
   encoders[1]->old = 1;
-  cur_row = 1;
-
   //  iterate through the files
   while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
     for (uint8_t c = 0; c < FILE_ENTRY_SIZE; c++) {
@@ -198,8 +202,10 @@ void FileBrowserPage::display() {
     }
     char temp_entry[FILE_ENTRY_SIZE];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    get_entry(entry_num, temp_entry);
-    oled_display.println(temp_entry);
+    if (entry_num < numEntries) {
+      get_entry(entry_num, temp_entry);
+      oled_display.println(temp_entry);
+    }
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
     draw_scrollbar(120);
@@ -266,7 +272,7 @@ void FileBrowserPage::_calcindices(int &saveidx) {
 
 void FileBrowserPage::_cd_up() {
   file.close();
-
+  DEBUG_PRINTLN("cd_up");
   // don't cd up if we are at the root
   auto len_lwd = strlen(lwd);
   if (len_lwd < 2) {
@@ -291,29 +297,50 @@ void FileBrowserPage::_cd_up() {
   if (lwd[0] == '\0') {
     strcpy(lwd, "/");
   }
-
-  SD.chdir(lwd);
+  DEBUG_PRINTLN(lwd);
+  if (!SD.chdir(lwd)) {
+    DEBUG_PRINTLN("bad directory change");
+  }
   init();
 }
 
-void FileBrowserPage::_cd(const char *child) {
+bool FileBrowserPage::_cd(const char *child) {
+  DEBUG_PRINTLN("_cd");
+  DEBUG_PRINTLN(child);
+
+  DEBUG_PRINTLN(lwd);
+
   file.close();
-  if (!SD.chdir(child)) {
-    gfx.alert("ERROR", "Failed to change dir.");
-    init();
-    return;
-  }
-  if (strcmp(lwd, "/") != 0) {
-    strcat(lwd, "/");
-  }
-  strcat(lwd, child);
-  auto len_lwd = strlen(lwd);
-  // trim ending '/'
-  if (lwd[len_lwd - 1] == '/') {
-    lwd[--len_lwd] = '\0';
+  char *ptr = child;
+
+  if (child[0] == '/' && child[1] != '\0') {
+    ptr++;
   }
 
+  if (!SD.chdir(ptr)) {
+    init();
+    return false;
+  }
+
+
+  uint8_t len_lwd = strlen(lwd);
+
+  if (len_lwd == 1) {
+    lwd[0] = '\0';
+  }
+
+  if (child[0] != '/') {
+    DEBUG_PRINTLN(lwd);
+    if (lwd[len_lwd] != '/') {
+      strcat(lwd, "/");
+      len_lwd++;
+    }
+  } else {
+    lwd[0] = '\0';
+  }
+  strcat(lwd, child);
   init();
+  return true;
 }
 
 bool FileBrowserPage::_handle_filemenu() {
@@ -373,12 +400,32 @@ bool FileBrowserPage::_handle_filemenu() {
   return false;
 }
 
+bool FileBrowserPage::rm_dir(const char *dir) {
+  char temp_entry[FILE_ENTRY_SIZE];
+
+  SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  if (_cd(dir)) {
+   // bool ret = SD.vwd()->rmRfStar(); // extra 276 bytes
+    while (file.openNext(SD.vwd(), O_READ)) {
+        if (!file.isDirectory()) {
+        file.getName(temp_entry, FILE_ENTRY_SIZE);
+        DEBUG_PRINT("deleting "); DEBUG_PRINTLN(temp_entry);
+        file.close();
+        SD.remove(temp_entry);
+        }
+    }
+    SD.chdir("/");
+    _cd_up();
+    return SD.rmdir(dir);
+  }
+}
+
 void FileBrowserPage::on_delete(const char *entry) {
   file.open(entry, O_READ);
   bool dir = file.isDirectory();
   file.close();
   if (dir) {
-    if (SD.rmdir(entry)) {
+    if (rm_dir(entry)) {
       gfx.alert("SUCCESS", "Folder removed.");
     } else {
       gfx.alert("ERROR", "Folder not removed.");

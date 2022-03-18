@@ -73,6 +73,7 @@ public:
       : LightPage(e1, e2, e3, e4) {
           param1 = e1;
           param2 = e2;
+          lwd[0] = '\0';
       }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
@@ -83,8 +84,11 @@ public:
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();
 
+  bool rm_dir(const char *dir);
+
   virtual void loop();
   virtual void setup();
+  virtual void cleanup();
   virtual void init();
 
   virtual void on_new() {}
@@ -98,7 +102,7 @@ public:
   virtual bool _handle_filemenu();
 protected:
   void _cd_up();
-  void _cd(const char *);
+  bool _cd(const char *);
 
   void query_filesystem();
 
