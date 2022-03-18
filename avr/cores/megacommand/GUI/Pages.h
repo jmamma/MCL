@@ -266,6 +266,7 @@ public:
    * method of the new topmost page.
    **/
   void popPage() {
+    LightPage *lastpage = currentPage();
     currentPage()->cleanup();
     LightPage *page;
     pageStack.pop(&page);
@@ -277,8 +278,13 @@ public:
     page = currentPage();
     if (page != NULL) {
       page->redisplayPage();
-      page->init();
     }
+    else {
+      if (lastpage == NULL) { return; }
+      pageStack.reset();
+      pushPage(lastpage);
+    }
+    currentPage()->init();
   }
 
   /** Returns the topmost page of the stack. **/
