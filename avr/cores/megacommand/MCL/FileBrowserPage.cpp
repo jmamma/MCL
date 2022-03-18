@@ -314,10 +314,12 @@ bool FileBrowserPage::_cd(const char *child) {
   char *ptr = child;
 
   if (child[0] == '/' && child[1] != '\0') {
+    SD.chdir("/");
     ptr++;
   }
 
   if (!SD.chdir(ptr)) {
+    DEBUG_PRINTLN("cd failed");
     init();
     return false;
   }
@@ -330,7 +332,6 @@ bool FileBrowserPage::_cd(const char *child) {
   }
 
   if (child[0] != '/') {
-    DEBUG_PRINTLN(lwd);
     if (lwd[len_lwd] != '/') {
       strcat(lwd, "/");
       len_lwd++;
@@ -339,6 +340,7 @@ bool FileBrowserPage::_cd(const char *child) {
     lwd[0] = '\0';
   }
   strcat(lwd, child);
+  DEBUG_PRINTLN(lwd);
   init();
   return true;
 }
@@ -404,15 +406,16 @@ bool FileBrowserPage::rm_dir(const char *dir) {
   char temp_entry[FILE_ENTRY_SIZE];
 
   SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  DEBUG_PRINTLN("preparing to delete");
+  DEBUG_PRINTLN(dir);
   if (_cd(dir)) {
+    SD.vwd()->rewind();
    // bool ret = SD.vwd()->rmRfStar(); // extra 276 bytes
     while (file.openNext(SD.vwd(), O_READ)) {
-        if (!file.isDirectory()) {
         file.getName(temp_entry, FILE_ENTRY_SIZE);
         DEBUG_PRINT("deleting "); DEBUG_PRINTLN(temp_entry);
         file.close();
         SD.remove(temp_entry);
-        }
     }
     SD.chdir("/");
     _cd_up();
