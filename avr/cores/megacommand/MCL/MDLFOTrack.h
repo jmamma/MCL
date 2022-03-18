@@ -13,7 +13,11 @@ public:
     static_assert(sizeof(MDLFOTrack) <= MDLFO_TRACK_LEN);
   }
 
-  void init() {}
+  void init() {};
+
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+     lfo_data.init();
+  }
 
   void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber);

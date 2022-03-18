@@ -52,7 +52,17 @@ public:
   bool enable;
   uint8_t length;
   void *data() const { return (void *)&params; }
-
+  void init() {
+    enable = false;
+    speed = 0;
+    sample_hold = 0;
+    mode = 0;
+    length = 16;
+    for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
+      last_wav_value[a] = 255;
+      params[a].dest = 255;
+    }
+  }
 };
 
 class LFOSeqTrack : public LFOSeqTrackData {
@@ -72,17 +82,6 @@ public:
 
   void check_and_update_params_offset(uint8_t dest, uint8_t param,
                                       uint8_t value);
-  void init() {
-    enable = false;
-    speed = 0;
-    sample_hold = 0;
-    mode = 0;
-    length = 16;
-    for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
-      last_wav_value[a] = 255;
-      params[a].dest = 255;
-    }
-  }
   void set_wav_type(uint8_t _wav_type) {
     if (wav_type != _wav_type) {
       wav_type = _wav_type;
