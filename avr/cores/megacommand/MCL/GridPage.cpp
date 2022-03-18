@@ -39,6 +39,7 @@ void GridPage::cleanup() {
 }
 
 void GridPage::load_row(uint8_t n, uint8_t row) {
+  if (row >= GRID_LENGTH) { return; }
   if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask, n)) {
     grid_load_page.group_load(row);
     SET_BIT16(grid_page.bank_popup_loadmask, n);
@@ -67,6 +68,7 @@ void GridPage::set_active_row(uint8_t row) {
 
 void GridPage::send_row_led() {
   uint64_t rows[2] = {0};
+  if (row >= GRID_LENGTH) { return; }
   SET_BIT128_P(&rows, grid_task.last_active_row);
   uint16_t *blink_mask = (uint16_t *)&rows[0];
   DEBUG_PRINTLN("Sending row led");
