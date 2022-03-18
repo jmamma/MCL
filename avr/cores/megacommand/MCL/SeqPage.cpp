@@ -67,6 +67,9 @@ void SeqPage::check_and_set_page_select() {
     page_select = 0;
   }
   ElektronDevice *elektron_dev = midi_device->asElektronDevice();
+  if (elektron_dev != &MD) {
+  DEBUG_PRINTLN("bad device");
+  }
   if (elektron_dev != nullptr) {
     elektron_dev->set_seq_page(page_select);
   }
@@ -220,6 +223,8 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   if (device == &MD) {
     DEBUG_PRINTLN("setting md track");
     opt_undo = 255;
+    DEBUG_PRINTLN(track);
+    if (track >= NUM_MD_TRACKS) { return; }
     last_md_track = track;
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,

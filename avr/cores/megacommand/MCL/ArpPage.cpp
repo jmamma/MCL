@@ -17,12 +17,15 @@ void ArpPage::init() {
 }
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
-  if (n == 255) {
-    n = last_md_track;
-  }
-  arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
+
   if (seq_ptc_page.midi_device == &MD) {
+    if (n > 15) {
+      n = last_md_track;
+    }
     arp_track = &mcl_seq.md_arp_tracks[n];
+  } else {
+    n = last_ext_track;
+    arp_track = &mcl_seq.ext_arp_tracks[n];
   }
 
   arp_rate.cur = arp_track->rate;
@@ -38,14 +41,15 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
   arp_enabled.old = arp_enabled.cur;
 
   if (re_render) {
-  if (last_arp_track && arp_track != last_arp_track) {
-    if (last_arp_track->enabled != ARP_LATCH) {
-      last_arp_track->clear_notes();
+    if (last_arp_track && arp_track != last_arp_track) {
+      if (last_arp_track->enabled != ARP_LATCH) {
+        DEBUG_PRINTLN("clear");
+        last_arp_track->clear_notes();
+      }
     }
-  }
-  if (arp_track->enabled != ARP_LATCH) {
-    seq_ptc_page.render_arp(true, seq_ptc_page.midi_device, n);
-  }
+    if (arp_track->enabled != ARP_LATCH) {
+      seq_ptc_page.render_arp(true, seq_ptc_page.midi_device, n);
+    }
   }
   last_arp_track = arp_track;
 }
@@ -65,7 +69,8 @@ void ArpPage::loop() {
   if (encoders[1]->hasChanged() || encoders[3]->hasChanged()) {
     arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
-    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH, seq_ptc_page.midi_device, n);
+    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH,
+                            seq_ptc_page.midi_device, n);
   }
 
   if (encoders[2]->hasChanged()) {
