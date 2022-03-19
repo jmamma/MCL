@@ -17,7 +17,7 @@
 #include "Fonts/Elektrothic.h"
 
 #define VERSION 4010
-#define VERSION_STR "J4.10"
+#define VERSION_STR "4.10"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

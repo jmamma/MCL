@@ -1,3 +1,93 @@
+MCL 4.10 19/03/2022
+
+- Key Binding Changes:
+
+ When in Enhanced mode, holding the MD's [ Bank Group ] key now opens the MCL Page Select Page.
+ Press [ Function ] + [ Bank Group ] to toggle the active bank group, as before.
+
+ [ Global ] key now behaves like MCL < Shift > button.
+ [ Up/Down/Lift/Right ] [ Yes ] [ No ] can be used to control all MCL menus, including text input and some page functions.
+
+ [ Bank Group ] + [ PatSong ] = MCL Config page.
+ From Grid, [ PatSong ] + [ BankGroup ] = Toggle Grid X/Y
+
+ Toggling between Enhanced + Classic/Extended can now only be performed when the sequencer is stopped
+
+- Save/Import Changes:
+
+ Grid Save modes IMPORT and MERGE are now deprecated and replaced via a "BULK IMPORT" page, located in Config -> Machinedrum -> Import.
+ Multiple patterns can be imported from the MD to the MCL grid in a single operation.
+
+- Program Change IN and OUT:
+
+ Added Config -> Midi -> PRG MODE option, with two Program Change receive Modes, BASIC and ADVANCED
+
+ Basic: Program Change Receive will "Group Load" an entire row according to Load page configuration.
+
+ Advanced: Program change receive will set the row for slots to be loaded from.
+ MIDI notes greater than C3 on port 2 can be used to select slots to be loaded.
+
+ In this way, you can load any slot (or multiple slots) using a combination of Program Change + MIDI note.
+
+ If Program Change is not received before MIDI note on/off, MCL will load from the current selected GUI row.
+
+ Slot loading occurs when all MIDI notes are released. MCL cannot load instanteously, there is a minimum 1 bar delay.
+
+ Config -> Midi -> PRG IN sets the receive channel for Program Change and Note messages.
+ Config -> Midi -> PRG OUT sets the send channel for Program Change messages, which are sent when loading slots or rows.
+
+- Improvements:
+
+ Config -> MD -> POLY CHAN option added. Poly chan can be used to exclusively trigger the designated MD poly voices from a
+ chosen MIDI channel on port2.
+
+ Copy/Paste now shows a progress bar if the operation is expected to take a while.
+
+ Added INSERT row option to the Grid Page's slot menu. Will insert N blank  rows in both Grid X and Y by shifting rows beneath.
+ Note: the Grid length  is never increased and thefore the last N rows at end of the Grid will be deleted.
+
+ MCL will now give users the option of loading an existing project if the boot process can't detect the last open project.
+
+- Sample Management:
+
+ WavDesigner now leverages the SampleBrowser ROM slot selection page.
+ Bulk sample receive and send. Highlight, SoundBrowser -> Wav -> [ RECV ], then press shift2 to access the Send All / Recv All functions.
+
+ When receiving samples, sample are saved to the current directory. Sample names are prefixed with a 2 digit slot number.
+ This 2 digit number is used to preserve sample order when re-uploading. Sample names that do not start with a slot number will
+ be excluded from the bulk upload.
+
+- Bug Fixes:
+
+ Machinedrum no longer changes the internal Kit when toggling between
+ Enhanced/Classic. Toggling between Enhanced + Classic can now only be
+ performed when the sequencer is stopped
+
+ MonoMachine driver was broken, would not load sequencer data from slots.
+
+ External sequencer tracks would not respond above channel 6. Fixed.
+
+ External sequencer tracks would have stuck notes when transitioning to new slots. Fixed
+
+ Empty slots were not copied/pasted correctly.
+
+ Filebrowser actions were not always reliable.
+
+ WavDesigner: Sample transfer and loop points were broken. Fixed
+
+ Fixed glitches in text input pages.
+
+ Auxiliary tracks (Route, LFO) that were empty were not initialised correctly.
+
+ Route page GUI would become unresponsive in certain circumstances.
+
+ RAM Page recording/playback would sometimes not work due to the sequencer track being stealth-muted.
+
+ Numerous GUI fixes.
+
+ Fixed a crash when opening the Bank menu.
+ Fixed a crash when changing MD tracks after being in the PianoRoll.
+
 MCL 4.04 18/10/2021
 
 Fixes:
