@@ -31,6 +31,8 @@ public:
       : SeqPage(e1, e2, e3, e4) {
       }
   void disable_md_micro();
+  void enable_paramupdate_events();
+  void disable_paramupdate_events();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void setup();
