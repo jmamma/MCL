@@ -5,13 +5,13 @@ MCL 4.10 19/03/2022
  When in Enhanced mode, holding the MD's [ Bank Group ] key now opens the MCL Page Select Page.
  Press [ Function ] + [ Bank Group ] to toggle the active bank group, as before.
 
- [ Global ] key now behaves like MCL < Shift > button.
+ [ Global ] key now behaves like MCL's <Shift> button.
  [ Up/Down/Lift/Right ] [ Yes ] [ No ] can be used to control all MCL menus, including text input and some page functions.
 
  [ Bank Group ] + [ PatSong ] = MCL Config page.
  From Grid, [ PatSong ] + [ BankGroup ] = Toggle Grid X/Y
 
- Toggling between Enhanced + Classic/Extended can now only be performed when the sequencer is stopped
+ Toggling between Enhanced + Classic/Extended can now only be performed when the sequencer is stopped.
 
 - Save/Import Changes:
 
@@ -22,10 +22,10 @@ MCL 4.10 19/03/2022
 
  Added Config -> Midi -> PRG MODE option, with two Program Change receive Modes, BASIC and ADVANCED
 
- Basic: Program Change Receive will "Group Load" an entire row according to Load page configuration.
+ Basic: Program Change Receive will "Group Load" an entire row according to Load Page mode and Group Select settings.
 
  Advanced: Program change receive will set the row for slots to be loaded from.
- MIDI notes greater than C3 on port 2 can be used to select slots to be loaded.
+           MIDI notes greater than C3 on port 2 can be used to select slots to be loaded.
 
  In this way, you can load any slot (or multiple slots) using a combination of Program Change + MIDI note.
 
@@ -43,8 +43,8 @@ MCL 4.10 19/03/2022
 
  Copy/Paste now shows a progress bar if the operation is expected to take a while.
 
- Added INSERT row option to the Grid Page's slot menu. Will insert N blank  rows in both Grid X and Y by shifting rows beneath.
- Note: the Grid length  is never increased and thefore the last N rows at end of the Grid will be deleted.
+ Added INSERT row option to the Grid Page's slot menu. Will insert N blank rows in both Grid X and Y by shifting rows beneath.
+ Note: the Grid length is never increased and the last N rows at end of the Grid will be deleted.
 
  MCL will now give users the option of loading an existing project if the boot process can't detect the last open project.
 
@@ -59,17 +59,15 @@ MCL 4.10 19/03/2022
 
 - Bug Fixes:
 
- Machinedrum no longer changes the internal Kit when toggling between
- Enhanced/Classic. Toggling between Enhanced + Classic can now only be
- performed when the sequencer is stopped
+ Machinedrum no longer changes the internal Kit when toggling between Enhanced/Classic.
 
  MonoMachine driver was broken, would not load sequencer data from slots.
 
  External sequencer tracks would not respond above channel 6. Fixed.
 
- External sequencer tracks would have stuck notes when transitioning to new slots. Fixed
+ External sequencer tracks would have stuck notes when transitioning/loading other slots. Fixed
 
- Empty slots were not copied/pasted correctly.
+ Empty slots were not copied/pasted correctly on the Grid.
 
  Filebrowser actions were not always reliable.
 
@@ -86,7 +84,8 @@ MCL 4.10 19/03/2022
  Numerous GUI fixes.
 
  Fixed a crash when opening the Bank menu.
- Fixed a crash when changing MD tracks after being in the PianoRoll.
+
+ Fixed a crash when changing MD tracks after entering the PianoRoll.
 
 MCL 4.04 18/10/2021
 
