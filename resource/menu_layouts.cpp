@@ -10,6 +10,18 @@
   ExitFunc
   ExitPage
  ***/
+
+
+menu_t<2> start_menu_layout = {
+    "PROJECT",
+    {
+        //               m  r  n  d  p  f  o
+        {"LOAD PROJECT", 0, 0, 0, 0, 1, 0, 0},
+        {"NEW PROJECT",  0, 0, 0, 0, 0, 2, 0},
+    },
+    0, 0
+};
+
 menu_t<6> system_menu_layout = {
     "CONFIG",
     {
@@ -43,7 +55,7 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<7> midiconfig_menu_layout = {
+menu_t<10> midiconfig_menu_layout = {
     "MIDI",
     {
         //            m  r  n  d  p  f  o
@@ -56,19 +68,36 @@ menu_t<7> midiconfig_menu_layout = {
 
         {"MIDI FWD:", 0, 4, 4, 7, 0, 0, 10},
         {"CC FWD:", 0, 2, 2, 11, 0, 0, 86},
+        {"PRG MODE:", 0, 2, 2, 49, 0, 0, 90},
+        {"PRG IN:", 0, 18, 2, 47, 0, 0, 88},
+        {"PRG OUT:", 0, 17, 2, 48, 0, 0, 88},
     },
     24, 0
 };
 
-menu_t<3> mdconfig_menu_layout = {
+menu_t<5> mdconfig_menu_layout = {
     "MD",
     {
         //              m  r   n  d  p  f  o
         {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
         {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
+        {"POLY CHAN:",  0, 18, 2, 46, 0, 0, 88},
         {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
+        {"IMPORT",      0, 0,  0, 0, 11, 0, 0},
     },
-    1, 0
+    0, 0
+};
+
+menu_t<4> mdimport_menu_layout = {
+    "MD",
+    {
+        //         m  r       n  d  p  f  o
+        {"SRC: ",  0, 128, 128, 43, 0, 0, 128},
+        {"DEST: ", 0, 128, 128, 44, 0, 0, 128},
+        {"COUNT:", 1, 128,  0,  45, 0, 0, 0},
+        {"RUN",    0,   0,  0,   0, 0, 25, 0},
+    },
+    0, 0
 };
 
 menu_t<1> mclconfig_menu_layout = {
@@ -81,7 +110,7 @@ menu_t<1> mclconfig_menu_layout = {
     1, 0
 };
 
-menu_t<5> file_menu_layout = {
+menu_t<7> file_menu_layout = {
     "FILE",
     {
         //            m  r  n  d  p  f  o
@@ -90,6 +119,8 @@ menu_t<5> file_menu_layout = {
         {"DELETE",    0, 0, 0, 0, 0, 0, 0},
         {"RENAME",    0, 0, 0, 0, 0, 0, 0},
         {"OVERWRITE", 0, 0, 0, 0, 0, 0, 0},
+        {"RECV ALL",  0, 0, 0, 0, 0, 0, 0},
+        {"SEND ALL",  0, 0, 0, 0, 0, 0, 0},
     },
     0, 0
 };
@@ -153,6 +184,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         {"CLEAR:",  0, 2,   2, 36, 0, 0,  33},
         {"COPY:  ", 0, 2,   2, 37, 0, 0,  33},
         {"PASTE:",  0, 2,   2, 38, 0, 0,  33},
+        {"INSROW:", 0, 127, 1, 50, 0, 0,  33},
         {"RENAME",  0, 0,   0, 0,  0, 20, 0},
     },
     21, 0,

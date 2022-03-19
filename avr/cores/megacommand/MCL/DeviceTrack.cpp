@@ -2,18 +2,7 @@
 
 DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   switch (track_type) {
-  case A4_TRACK_TYPE_270:
-  case MD_TRACK_TYPE_270:
-  case EXT_TRACK_TYPE_270:
-/*    if (!data) {
-      // no space for track upgrade
-      return false;
-    } else {
-      // TODO upgrade right here
-      return true;
-    } */
-    return this;
-    break;
+  default:
   case EMPTY_TRACK_TYPE:
     ::new(this) EmptyTrack;
     break;

@@ -1,6 +1,13 @@
 #include "MCL_impl.h"
 void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-  send_data();
+}
+
+void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                              uint8_t slotnumber) {
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
+  load_routes();
+  //Send routes regardless
+  send_routes();
 }
 
 uint16_t MDRouteTrack::calc_latency(uint8_t tracknumber) {
@@ -11,18 +18,20 @@ uint16_t MDRouteTrack::calc_latency(uint8_t tracknumber) {
 uint16_t MDRouteTrack::send_routes(bool send) {
   uint16_t bytes = 0;
   bytes += MD.setTrackRoutings(routing, send);
+
   return bytes;
 }
 
 void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
-  send_data();
+  load_routes();
+  send_routes();
 }
 
-void MDRouteTrack::send_data() {
+
+void MDRouteTrack::load_routes() {
   memcpy(mcl_cfg.routing, routing, sizeof(routing));
   mcl_cfg.poly_mask = poly_mask;
-  send_routes();
 }
 
 void MDRouteTrack::get_routes() {

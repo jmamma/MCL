@@ -4,6 +4,7 @@
 ResourceManager::ResourceManager() { }
 
 void ResourceManager::Clear() {
+    DEBUG_PRINTLN("resource clear");
 	m_bufsize = 0;
 }
 
@@ -19,6 +20,8 @@ byte* ResourceManager::__use_resource(const void* pgm) {
 byte* ResourceManager::Allocate(size_t sz) {
   byte* pos = m_buffer + m_bufsize;
   m_bufsize += sz;
+  DEBUG_PRINTLN("allocate");
+  DEBUG_PRINTLN(m_bufsize);
   return pos;
 }
 
@@ -30,6 +33,7 @@ void ResourceManager::Free(size_t sz) {
 // consider writing to SD card
 // SWAP partition!!
 void ResourceManager::Save(uint8_t *buf, size_t *sz) {
+    DEBUG_PRINTLN("resource SAVE");
 	memcpy(buf, m_buffer, m_bufsize);
 	*sz = m_bufsize;
 }
@@ -52,6 +56,7 @@ void ResourceManager::restore_page_entry_deps() {
 
   R.page_entries->Entries[4].Page = &seq_step_page;
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
+
   R.page_entries->Entries[5].Page = &seq_extstep_page;
   R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
   R.page_entries->Entries[6].Page = &seq_ptc_page;
@@ -105,6 +110,8 @@ void ResourceManager::restore_menu_layout_deps() {
 	step_menu_page.set_layout(R.menu_layouts->step_menu_layout);
 	grid_slot_page.set_layout(R.menu_layouts->slot_menu_layout);
 	wavdesign_menu_page.set_layout(R.menu_layouts->wavdesign_menu_layout);
+    md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);
+    start_menu_page.set_layout(R.menu_layouts->start_menu_layout);
 }
 
 ResourceManager R;

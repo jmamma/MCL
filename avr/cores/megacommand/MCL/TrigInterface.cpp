@@ -122,7 +122,13 @@ void TrigInterface::end_immediate() {
     return;
   }
   gui_event_t event;
-  event.source = key + 64; // EVENT_CMD
+
+  if (key == MDX_KEY_PATSONG && !is_key_down(MDX_KEY_NO)) {
+    event.source = Buttons.BUTTON3;
+  }
+  else {
+    event.source = key + 64; // EVENT_CMD
+  }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;
   EventRB.putp(&event);

@@ -69,7 +69,6 @@ void SeqStepPage::init() {
   locks_on_step_mask = 0;
   config();
 
-  note_interface.state = true;
   reset_on_release = false;
   ignore_release = 0;
   update_params_queue = false;
@@ -83,6 +82,7 @@ void SeqStepPage::init() {
 
 void SeqStepPage::cleanup() {
   midi_events.remove_callbacks();
+  mcl_seq.midi_events.update_params = true;
   SeqPage::cleanup();
   params_reset();
   MD.set_rec_mode(0);
@@ -349,8 +349,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
-
-      if (pitch != 255 && tuning) {
+      if (pitch == 255) {
+        seq_param4.cur = 0; pitch_param = 255;
+      }
+      else if (tuning) {
         uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
         if (note_num == 255) {
           seq_param4.cur = 0;
@@ -359,9 +361,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           // note_num = note_num - note_offset;
           seq_param4.cur = note_num;
         }
-        seq_param4.old = seq_param4.cur;
       }
-
+      seq_param4.old = seq_param4.cur;
       if (utiming == 0) {
         utiming = mcl_seq.md_tracks[last_md_track].get_timing_mid();
       }
@@ -466,12 +467,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           note_interface.ignoreNextEvent(step);
           disable_md_micro();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
-          opt_copy_page_handler();
+          opt_copy_page_handler_cb();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_copy = recording ? 2 : 1;
-          opt_copy_track_handler();
+          opt_copy_track_handler_cb();
         }
         break;
       }
@@ -721,15 +722,11 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       }
     }
     mcl_gui.put_value_at(value, str2);
-#ifdef OLED_DISPLAY
     oled_display.textbox(str, str2);
-#endif
   }
   if (store_lock == 1) {
-#ifdef OLED_DISPLAY
     oled_display.textbox("LOCK PARAMS ", "FULL");
     // seq_step_page.send_locks(step);
-#endif
   }
 }
 

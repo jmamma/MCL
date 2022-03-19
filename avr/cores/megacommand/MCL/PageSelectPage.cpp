@@ -76,6 +76,7 @@ get_category_name_fail:
 
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
+  DEBUG_PRINTLN("page select init");
   trig_interface.on();
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
@@ -84,7 +85,6 @@ void PageSelectPage::init() {
   R.use_page_entries();
   R.restore_page_entry_deps();
 
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 128, 7, WHITE);
   oled_display.setFont(&TomThumb);
@@ -99,11 +99,8 @@ void PageSelectPage::init() {
     oled_display.setCursor(label_pos[i], 31);
     oled_display.print(str);
   }
-  classic_display = false;
-#endif
   loop_init = true;
   // md_exploit.on(switch_tracks);
-  note_interface.state = true;
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   draw_popup();
@@ -192,7 +189,6 @@ void PageSelectPage::loop() {
       trig_interface.on();
       md_prepare();
       // md_exploit.on(switch_tracks);
-      note_interface.state = true;
       loop_init = false;
     } */
   uint8_t last_page_select = page_select;
@@ -221,13 +217,12 @@ void PageSelectPage::loop() {
   enc_->old = 64;
 
   if (last_page_select != page_select) {
-  draw_popup();
-  last_page_select = page_select;
+    draw_popup();
+    last_page_select = page_select;
   }
 }
 
 void PageSelectPage::display() {
-#ifdef OLED_DISPLAY
   char str[16];
   uint8_t *icon;
   uint8_t iconw, iconh;
@@ -284,18 +279,6 @@ void PageSelectPage::display() {
   }
 
   oled_display.display();
-#else
-  GUI.setLine(GUI.LINE1);
-  char str[16];
-  GUI.put_string_at_fill(0, "Page Select:");
-  get_category_name(page_select, str);
-  GUI.put_string_at(12, str);
-
-  GUI.setLine(GUI.LINE2);
-  get_page(get_pageidx(page_select), str);
-  GUI.put_string_at_fill(0, str);
-#endif
-
   uint16_t led_mask = 1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;
@@ -334,15 +317,34 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-      case MDX_KEY_SONG: {
+      case MDX_KEY_BANKGROUP: {
         goto release;
       }
       }
     } else {
-      switch (key) {
-      case MDX_KEY_NO: {
-        goto load_grid;
+      uint8_t inc = 1;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        inc = 8;
       }
+      switch (key) {
+      case MDX_KEY_YES:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        break;
+      case MDX_KEY_NO:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto load_grid;
+      case MDX_KEY_UP:
+        encoders[1]->cur -= inc;
+        break;
+      case MDX_KEY_DOWN:
+        encoders[1]->cur += inc;
+        break;
+      case MDX_KEY_LEFT:
+        encoders[0]->cur -= inc;
+        break;
+      case MDX_KEY_RIGHT:
+        encoders[0]->cur += inc;
+        break;
       }
     }
   }
@@ -364,6 +366,12 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   load_grid:
     GUI.ignoreNextEvent(event->source);
     GUI.setPage(&grid_page);
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    //PAT SONG
+    GUI.setPage(&grid_page);
+    GUI.pushPage(&system_page);
     return true;
   }
 

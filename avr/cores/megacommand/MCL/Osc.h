@@ -15,10 +15,9 @@
 class Osc {
 public:
   float sample_rate;
-  uint8_t phase = 0;
   Osc(float sample_rate_ = 44100) { sample_rate = sample_rate_; }
-  virtual float get_sample(uint32_t sample_number, float freq, float phase);
-
+  virtual float get_sample(uint32_t sample_number, float freq);
+  float poly_blep(float t, float freq);
   void set_sample_rate(float hz);
 };
 
@@ -26,7 +25,7 @@ class SineOsc : public Osc {
 
 public:
   SineOsc(float sample_rate_ = 44100) { set_sample_rate(sample_rate_); }
-  float get_sample(uint32_t sample_number, float freq, float phase);
+  float get_sample(uint32_t sample_number, float freq);
 };
 
 class PulseOsc : public Osc {
@@ -43,7 +42,7 @@ public:
     vmax = 1;
     vmin = -1;
   }
-  float get_sample(uint32_t sample_number, float freq, float phase);
+  float get_sample(uint32_t sample_number, float freq);
   void set_width(float width_);
   void set_skew(float skew_);
 };
@@ -62,7 +61,7 @@ public:
     vmin = -1;
     width = width_;
   }
-  float get_sample(uint32_t sample_number, float freq, float phase);
+  float get_sample(uint32_t sample_number, float freq);
 };
 
 class TriOsc : public Osc {
@@ -77,14 +76,14 @@ public:
     vmin = -1;
     width = width_;
   }
-  float get_sample(uint32_t sample_number, float freq, float phase);
+  float get_sample(uint32_t sample_number, float freq);
 };
 
 class UsrOsc : public Osc {
 
 public:
   UsrOsc(float sample_rate_ = 44100) { set_sample_rate(sample_rate_); }
-  float get_sample(uint32_t sample_number, float freq, float phase,
+  float get_sample(uint32_t sample_number, float freq,
                    uint8_t *usr_values);
 
 };

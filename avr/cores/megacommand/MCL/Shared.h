@@ -25,5 +25,4 @@ inline bool range_check(int val, int min, int max) {
   return true;
 }
 
-
 #endif /* SHARED_H__ */

@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-constexpr auto sz_allowedchar = 71;
+constexpr auto sz_allowedchar = 69;
 
 // idx -> chr
 inline char _getchar(uint8_t i) {
@@ -26,14 +26,7 @@ uint8_t _findchar(char chr) {
 
 void TextInputPage::setup() {}
 
-void TextInputPage::init() {
-#ifdef OLED_DISPLAY
-  classic_display = false;
-  GUI.lines[0].flashActive = false;
-  GUI.lines[1].flashActive = false;
-  oled_display.setTextColor(WHITE, BLACK);
-#endif
-}
+void TextInputPage::init() { oled_display.setTextColor(WHITE, BLACK); }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   textp = text_;
@@ -89,6 +82,17 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
   y = 2 + (y * 7);
 }
 
+void TextInputPage::loop() {
+  if (normal_mode == false) {
+    if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
+      ((MCLEncoder *)encoders[0])->max = charpane_w - 4;
+    }
+    else {
+      ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
+    }
+  }
+}
+
 // charpane:
 // E0 -> x axis [0..17]
 // E1 -> y axis [0..3]
@@ -124,7 +128,7 @@ void TextInputPage::config_charpane() {
   // initial highlight of selected char
   uint8_t sx = encoders[0]->cur, sy = encoders[1]->cur;
   calc_charpane_coord(sx, sy);
-  oled_display.fillRect(sx, sy, 7, 7, INVERT);
+  oled_display.fillRect(sx, sy, 5, 7, INVERT);
   oled_display.display();
 #endif
 }
@@ -150,7 +154,6 @@ void TextInputPage::display_normal() {
   }
   auto time = clock_diff(last_clock, slowclock);
 
-#ifdef OLED_DISPLAY
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
   auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
@@ -171,21 +174,6 @@ void TextInputPage::display_normal() {
   }
   oled_display.setFont(oldfont);
   oled_display.display();
-#else
-  GUI.setLine(GUI.LINE1);
-  GUI.put_string_at(0, title);
-  GUI.setLine(GUI.LINE2);
-  char tmp_str[18];
-  memcpy(tmp_str, &text[0], 18);
-  if (time > FLASH_SPEED) {
-    tmp_str[cursor_position] = (char)255;
-  }
-  if (time > FLASH_SPEED * 2) {
-    last_clock = slowclock;
-  }
-  GUI.clearLine();
-  GUI.put_string_at(0, tmp_str);
-#endif
 }
 
 void TextInputPage::display_charpane() {
@@ -194,12 +182,12 @@ void TextInputPage::display_charpane() {
     // clear old highlight
     uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
     calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 7, 7, INVERT);
+    oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // draw new highlight
     sx = encoders[0]->cur;
     sy = encoders[1]->cur;
     calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 7, 7, INVERT);
+    oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // update text. in charpane mode, cursor_position remains constant
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
@@ -224,11 +212,50 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return true;
   }
-  #ifdef OLED_DISPLAY
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      uint8_t inc = 1;
+      switch (key) {
+      case MDX_KEY_YES:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        goto YES;
+      case MDX_KEY_NO:
+        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        goto NO;
+      case MDX_KEY_UP:
+        encoders[1]->cur -= inc;
+        break;
+      case MDX_KEY_DOWN:
+        encoders[1]->cur += inc;
+        break;
+      case MDX_KEY_LEFT:
+        encoders[0]->cur -= inc;
+        break;
+      case MDX_KEY_RIGHT:
+        encoders[0]->cur += inc;
+        break;
+      case MDX_KEY_FUNC:
+      case MDX_KEY_BANKGROUP:
+        goto shift;
+      }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+      case MDX_KEY_FUNC:
+      case MDX_KEY_BANKGROUP:
+        goto shift_release;
+      }
+    }
+  }
+
+#ifdef OLED_DISPLAY
   // in char-pane mode, do not handle any events
   // except shift-release event.
-  if (!normal_mode) {
-    if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+
+    if (!normal_mode) {
+    shift_release:
       oled_display.clearDisplay();
       // before exiting charpane, advance current cursor to the next.
       ++cursor_position;
@@ -241,23 +268,23 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-  #endif
+#endif
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    if (!no_escape) {
+  NO:
+    DEBUG_PRINTLN("pop a");
     return_state = false;
     GUI.ignoreNextEvent(event->source);
     GUI.popPage();
-    }
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  shift:
     config_charpane();
     return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-
     if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
       // delete last
       text[cursor_position] = ' ';
@@ -278,6 +305,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  YES:
     return_state = true;
     uint8_t cpy_len = length;
     for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {

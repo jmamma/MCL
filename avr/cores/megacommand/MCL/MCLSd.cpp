@@ -32,11 +32,9 @@ bool MCLSd::load_init() {
   int b;
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
-#ifdef OLED_DISPLAY
     gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     oled_display.clearDisplay();
     GUI.ignoreNextEvent(Buttons.BUTTON3);
-#endif
   }
 
   if (sd_state) {
@@ -54,11 +52,9 @@ bool MCLSd::load_init() {
             DEBUG_PRINTLN(F("Could not init cfg"));
             return false;
           }
-#ifdef OLED_DISPLAY
           gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
-#endif
-          proj.new_project_prompt();
+          mcl_gui.wait_for_project();
           return true;
 
         }
@@ -68,7 +64,7 @@ bool MCLSd::load_init() {
               F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
-            proj.new_project_prompt();
+            mcl_gui.wait_for_project();
             return true;
 
           } else {
@@ -77,7 +73,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          proj.new_project_prompt();
+          mcl_gui.wait_for_project();
           return true;
         }
       } else {
@@ -86,7 +82,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        proj.new_project_prompt();
+        mcl_gui.wait_for_project();
         return true;
       }
     } else {
@@ -94,10 +90,8 @@ bool MCLSd::load_init() {
       if (!mcl_cfg.cfg_init()) {
         return false;
       }
-#ifdef OLED_DISPLAY
       oled_display.clearDisplay();
-#endif
-      proj.new_project_prompt();
+      mcl_gui.wait_for_project();
       return true;
     }
     return true;
@@ -111,7 +105,7 @@ bool MCLSd::seek(uint32_t pos, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     ret = filep->seekSet(pos);
     if (!ret) {
-      DEBUG_PRINTLN("retry");
+      DEBUG_PRINTLN("seek retry");
       delay(5);
       continue;
     }
@@ -130,7 +124,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
-      DEBUG_PRINTLN("retry");
+      DEBUG_PRINTLN("write retry");
       delay(5);
     }
     if (pos != filep->curPosition()) {
@@ -161,7 +155,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
   bool pass = false;
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
-      DEBUG_PRINTLN("retry");
+      DEBUG_PRINTLN("read retry");
       delay(5);
     }
     if (pos != filep->curPosition()) {

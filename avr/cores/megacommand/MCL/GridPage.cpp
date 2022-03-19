@@ -2,17 +2,19 @@
 #include "ResourceManager.h"
 
 void GridPage::init() {
+  DEBUG_PRINTLN("Grid page init");
   encoders[0] = &param1;
   encoders[1] = &param2;
+  ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
   show_slot_menu = false;
-  slot_menu_hold = 0;
   reload_slot_models = false;
+  // Edge case, prevent R.Clear being called if we're outside of GridPage
+  if (GUI.currentPage() != &grid_page) {
+    return;
+  }
   trig_interface.off();
   load_slot_models();
-  ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
   R.Clear();
   R.use_machine_names_short();
 }
@@ -31,14 +33,13 @@ void GridPage::setup() {
 }
 
 void GridPage::cleanup() {
-#ifdef OLED_DISPLAY
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
-#endif
   bank_popup = 0;
 }
 
 void GridPage::load_row(uint8_t n, uint8_t row) {
+  if (row >= GRID_LENGTH) { return; }
   if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask, n)) {
     grid_load_page.group_load(row);
     SET_BIT16(grid_page.bank_popup_loadmask, n);
@@ -67,6 +68,7 @@ void GridPage::set_active_row(uint8_t row) {
 
 void GridPage::send_row_led() {
   uint64_t rows[2] = {0};
+  if (row >= GRID_LENGTH) { return; }
   SET_BIT128_P(&rows, grid_task.last_active_row);
   uint16_t *blink_mask = (uint16_t *)&rows[0];
   DEBUG_PRINTLN("Sending row led");
@@ -79,6 +81,7 @@ void GridPage::close_bank_popup() {
   }
   trig_interface.off();
   if (last_page != nullptr) {
+    DEBUG_PRINTLN("setting page");
     GUI.setPage(last_page);
   }
   last_page = nullptr;
@@ -217,33 +220,6 @@ void GridPage::update_row_state(uint8_t row, bool state) {
   }
 }
 
-void GridPage::displayScroll(uint8_t i) {
-  if (encoders[i] != NULL) {
-
-    if (((encoders[0]->getValue() + i + 1) % 4) == 0) {
-      char strn[2] = "I";
-      strn[0] = (char)001;
-      //           strn[0] = (char) 219;
-      GUI.setLine(GUI.LINE1);
-
-      GUI.put_string_at_noterminator((2 + (i * 3)), strn);
-
-      GUI.setLine(GUI.LINE2);
-      GUI.put_string_at_noterminator((2 + (i * 3)), strn);
-    }
-
-    else {
-      char strn_scroll[2] = "|";
-      GUI.setLine(GUI.LINE1);
-
-      GUI.put_string_at_noterminator((2 + (i * 3)), strn_scroll);
-
-      GUI.setLine(GUI.LINE2);
-      GUI.put_string_at_noterminator((2 + (i * 3)), strn_scroll);
-    }
-  }
-}
-
 uint8_t GridPage::getRow() { return param2.cur; }
 
 uint8_t GridPage::getCol() { return param1.cur; }
@@ -259,20 +235,20 @@ void GridPage::load_slot_models() {
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
     uint8_t row = getRow() - cur_row + n + row_shift;
+    if (row >= GRID_LENGTH) { return; }
     proj.read_grid_row_header(&row_headers[n], row);
     update_row_state(row, row_headers[n].active);
   }
 }
 
 void GridPage::display_counters() {
-#ifdef OLED_DISPLAY
   uint8_t y_offset = 8;
   uint8_t x_offset = 20;
 
-  char val[3];
+  char val[3] = "";
   val[2] = '\0';
 
-  GUI.put_value_at2(0, MidiClock.bar_counter, val);
+  mcl_gui.put_value_at2(MidiClock.bar_counter, val);
 
   if (val[0] == '0') {
     val[0] = (char)0x60;
@@ -289,7 +265,7 @@ void GridPage::display_counters() {
       (MidiClock.bar_counter <= mcl_actions.nearest_bar) &&
       (mcl_actions.nearest_beat > MidiClock.beat_counter ||
        mcl_actions.nearest_bar != MidiClock.bar_counter)) {
-    GUI.put_value_at2(0, mcl_actions.nearest_bar, val);
+    mcl_gui.put_value_at2(mcl_actions.nearest_bar, val);
 
     if (val[0] == '0') {
       val[0] = (char)0x60;
@@ -302,11 +278,9 @@ void GridPage::display_counters() {
     oled_display.print(":");
     oled_display.print(mcl_actions.nearest_beat);
   }
-#endif
 }
 
 void GridPage::display_grid_info() {
-#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
@@ -350,13 +324,13 @@ void GridPage::display_grid_info() {
   oled_display.print(':');
 
   char val[4];
-  GUI.put_value_at2(0, encoders[0]->cur, val);
+  mcl_gui.put_value_at2(encoders[0]->cur, val);
   val[2] = '\0';
   oled_display.print(val);
   oled_display.print(" ");
   uint8_t b = encoders[1]->cur / 16;
   oled_display.print((char)('A' + b));
-  GUI.put_value_at2(0, encoders[1]->cur - b * 16 + 1, val);
+  mcl_gui.put_value_at2(encoders[1]->cur - b * 16 + 1, val);
   oled_display.print(val);
 
   oled_display.setCursor(1, y_offset + 2 * 8);
@@ -373,7 +347,6 @@ void GridPage::display_grid_info() {
   }
 
   oled_display.setTextColor(WHITE, BLACK);
-#endif
 }
 bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
   uint8_t slot = proj.get_grid() * GRID_WIDTH + x;
@@ -388,16 +361,11 @@ bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
 }
 
 void GridPage::display_grid() {
-#ifdef OLED_DISPLAY
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
   oled_display.setFont(&TomThumb);
 
-  classic_display = false;
-  //   if (MidiClock.state == 1) {
-  //  oled_display.print('>');
-  //  }
   char str[3];
   PGM_P tmp;
   encoders[1]->handler = NULL;
@@ -521,8 +489,6 @@ void GridPage::display_grid() {
     mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
   oled_display.setTextColor(WHITE, BLACK);
-
-#endif
 }
 void GridPage::display_slot_menu() {
   uint8_t y_offset = 8;
@@ -530,11 +496,9 @@ void GridPage::display_slot_menu() {
   // grid_slot_page.draw_scrollbar(36);
 }
 
-void GridPage::display_oled() {
-#ifdef OLED_DISPLAY
+void GridPage::display() {
 
   oled_display.clearDisplay();
-  oled_display.setTextWrap(false);
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE, BLACK);
   if (!show_slot_menu) {
@@ -549,82 +513,6 @@ void GridPage::display_oled() {
   }
   */
   oled_display.display();
-#endif
-}
-
-void GridPage::display() {
-
-#ifdef OLED_DISPLAY
-  display_oled();
-  return;
-#endif
-
-  // Rendering code for HD44780 below
-  char str[3] = "  ";
-  char str2[3] = "  ";
-  uint8_t y = 0;
-  for (uint8_t x = 0; x < MAX_VISIBLE_COLS; x++) {
-    uint8_t track_type = row_headers[y].track_type[x + encoders[0]->cur];
-    uint8_t model = row_headers[y].model[x + encoders[0]->cur];
-    if (((MidiClock.step_counter == 1) && (MidiClock.state == 2)) &&
-        ((y + getRow() - cur_row) == active_slots[x + getCol() - cur_col])) {
-
-    } else {
-      str[0] = str[1] = str2[0] = str2[1] = '-';
-
-      if (track_type == MD_TRACK_TYPE) {
-        const char *tmp;
-        tmp = getMDMachineNameShort(model, 1);
-        copyMachineNameShort(tmp, str);
-        tmp = getMDMachineNameShort(model, 2);
-        copyMachineNameShort(tmp, str2);
-      }
-      if (track_type == A4_TRACK_TYPE) {
-        str[0] = 'A';
-        str[1] = '4';
-        str2[0] = 'T';
-        str2[1] = model + '0';
-      }
-      if (track_type == EXT_TRACK_TYPE) {
-        str[0] = 'M';
-        str[1] = 'I';
-        str2[0] = 'T';
-        str2[1] = model + '0';
-      }
-    }
-    GUI.setLine(GUI.LINE1);
-    GUI.put_string_at(x * 3, str);
-    GUI.setLine(GUI.LINE2);
-    GUI.put_string_at(x * 3, str2);
-    displayScroll(x);
-  }
-
-  GUI.setLine(GUI.LINE1);
-  /*Displays the kit name of the left most Grid on the first line at position
-   * 12*/
-  if (display_name == 1) {
-    GUI.put_string_at(0, "                ");
-
-    if (row_headers[cur_row].active) {
-      GUI.put_string_at(0, row_headers[0].name);
-    }
-    GUI.setLine(GUI.LINE2);
-
-    GUI.put_string_at(0, "                ");
-    // temptrack.patternOrigPosition;
-    char str[5];
-  }
-  // if (gridio_encoders[1]->getValue() < 8) {
-  // if (temptrack.active != EMPTY_TRACK_TYPE) {
-  //   MD.getPatternName(temptrack.patternOrigPosition , str);
-  // }
-  // }
-  GUI.setLine(GUI.LINE2);
-
-  /*Displays the value of the current Row on the screen.*/
-  GUI.put_value_at2(12, (encoders[0]->getValue()));
-  /*Displays the value of the current Column on the screen.*/
-  GUI.put_value_at2(14, (encoders[1]->getValue()));
 }
 
 void GridPage::prepare() {
@@ -666,7 +554,16 @@ void rename_row() {
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
-void GridPage::apply_slot_changes(bool ignore_undo) {
+void GridPage::swap_grids() {
+  if (grid_select_apply != proj.grid_select) {
+    proj.grid_select = grid_select_apply;
+    ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
+    // load_slot_models();
+    return;
+  }
+}
+
+void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   uint8_t width;
   uint8_t height;
 
@@ -678,23 +575,43 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == getCol() &&
                  slot_undo_y == getRow();
   DEBUG_PRINTLN("apply slot");
-  if (grid_select_apply != proj.grid_select) {
-    proj.grid_select = grid_select_apply;
-    ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-    load_slot_models();
-    return;
-  }
-
-  void (*row_func)() =
-      grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
-  if (row_func != NULL) {
-    (*row_func)();
-    return;
+  swap_grids();
+  if (!ignore_func) {
+    void (*row_func)() =
+        grid_slot_page.menu.get_row_function(grid_slot_page.encoders[1]->cur);
+    if (row_func != NULL) {
+      DEBUG_PRINTLN("calling menu func");
+      (*row_func)();
+      return;
+    }
   }
   width = encoders[2]->cur;
   height = encoders[3]->cur;
 
   uint8_t slot_update = 0;
+
+  if (insert_rows) {
+    int8_t row_count = GRID_LENGTH - getRow() - insert_rows;
+    uint8_t row_dst = getRow() + insert_rows;
+    if (row_dst > GRID_LENGTH || row_count < 1) {
+      return;
+    }
+
+    if (mcl_gui.wait_for_confirm("Insert", "Rows?")) {
+      for (uint8_t g = 0; g < 2; g++) {
+        for (uint8_t n = 0; n < row_count; n++) {
+          if (n % 8) mcl_gui.draw_progress("INSERT ROWS", n + g * row_count, row_count * 2);
+          mcl_clipboard.copy(0, getRow() + row_count - n - insert_rows,
+                             GRID_WIDTH, 1, g);
+          mcl_clipboard.paste(0, getRow() + row_count - n, g);
+        }
+        for (uint8_t n = 0; n < insert_rows; n++) {
+          proj.clear_row_grid(getRow() + n, g);
+        }
+      }
+    }
+    goto end;
+  }
 
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
@@ -708,24 +625,29 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   if (undo == 1) {
     slot_paste = 1;
   }
+
   if (slot_copy == 1 || (slot_clear == 1 && !undo)) {
-    if (slot_clear == 0) {
+    if (slot_clear == 1) {
+      slot_undo_x = getCol();
+      slot_undo_y = getRow();
+      if (width > 0) {
+        oled_display.textbox("CLEAR ", "SLOTS");
+      } else {
+        oled_display.textbox("CLEAR ", "SLOT");
+      }
+      slot_undo = 1;
+    } else {
       slot_undo = 0;
       if (width > 0) {
         oled_display.textbox("COPY ", "SLOTS");
       } else {
         oled_display.textbox("COPY ", "SLOT");
       }
-    } else {
-      slot_undo_x = getCol();
-      slot_undo_y = getRow();
     }
-
     mcl_clipboard.copy(getCol(), getRow(), width, height, proj.get_grid());
     if (slot_clear) {
-      goto clear;
+      goto run;
     }
-
   }
 
   else if (slot_paste == 1) {
@@ -737,28 +659,24 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
     slot_undo = 0;
     mcl_clipboard.paste(getCol(), getRow(), proj.get_grid());
   } else {
-    GridRowHeader header;
-    if (slot_clear == 1) {
-    clear:
-      slot_undo = 1;
-      if (width > 0) {
-        oled_display.textbox("CLEAR ", "SLOTS");
-      } else {
-        oled_display.textbox("CLEAR ", "SLOT");
-      }
-    } else if (slot_update == 1) {
+    if (slot_update == 1) {
       oled_display.textbox("SLOT ", "UPDATE");
     }
+
     if (slot_load) {
       if (height > 1) {
         mcl_cfg.load_mode = LOAD_QUEUE;
       }
       grid_load_page.display_load();
     }
+  run:
+
+    oled_display.display();
 
     bool activate_header = false;
 
     uint8_t track_select_array[GRID_LENGTH] = {0};
+    GridRowHeader header;
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       uint8_t ypos = y + getRow();
@@ -766,6 +684,9 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
 
       memset(track_select_array, 0, sizeof(track_select_array));
 
+      if (slot_clear && height > 8) {
+        mcl_gui.draw_progress("", y, height);
+      }
       for (uint8_t x = 0; x < width && x + getCol() < getWidth(); x++) {
         uint8_t xpos = x + getCol();
         if (slot_clear == 1) {
@@ -795,7 +716,9 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
       }
     }
   }
-  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
+end:
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1) ||
+      (insert_rows == 1)) {
     proj.sync_grid();
     load_slot_models();
   }
@@ -805,6 +728,7 @@ void GridPage::apply_slot_changes(bool ignore_undo) {
   slot_clear = 0;
   slot_copy = 0;
   slot_paste = 0;
+  insert_rows = 0;
   slot.load_from_grid(getCol(), getRow());
 }
 
@@ -873,65 +797,94 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_CMD(event)) {
+
     uint8_t key = event->source - 64;
+    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+      if (trig_interface.is_key_down(MDX_KEY_BANKGROUP) || trig_interface.is_key_down(MDX_KEY_NO)) {
+        grid_page.grid_select_apply = !grid_page.grid_select_apply;
+        swap_grids();
+        init();
+        return true;
+      } else if (show_slot_menu) {
+        if (event->mask == EVENT_BUTTON_PRESSED) {
+          switch (key) {
+          case MDX_KEY_BANKA:
+          case MDX_KEY_BANKB:
+          case MDX_KEY_BANKC: {
+            mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
+            return true;
+          }
+          case MDX_KEY_NO:
+            return true;
+          }
+        }
+        return grid_slot_page.handleEvent(event);
+      }
+    }
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
-        inc = 4;
+        inc = 16;
       }
       if (show_slot_menu) {
-
         switch (key) {
-        case MDX_KEY_NO: {
-          goto slot_menu_off;
-        }
+        // case MDX_KEY_NO: {
+        //  goto slot_menu_off;
+        //}
         case MDX_KEY_YES: {
           slot_load = 1;
-          if (slot_menu_hold) {
-            goto slot_menu_off;
-          }
+          goto slot_menu_off;
           return true;
         }
         case MDX_KEY_COPY: {
           slot_copy = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          //  goto slot_menu_on;
+          //}
           return true;
         }
         case MDX_KEY_CLEAR: {
           slot_clear = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          //  goto slot_menu_on;
+          //}
           return true;
         }
         case MDX_KEY_PASTE: {
           slot_paste = 1;
-          apply_slot_changes();
+          apply_slot_changes(false, true);
           init();
+          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          //  goto slot_menu_on;
+          //}
           return true;
         }
         case MDX_KEY_UP: {
           param4.cur -= inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_DOWN: {
           param4.cur += inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_LEFT: {
+          if (inc > 1) {
+            inc = 4;
+          }
           param3.cur = max(0, param3.cur - inc);
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_RIGHT: {
+          if (inc > 1) {
+            inc = 4;
+          }
+
           param3.cur += inc;
-          slot_menu_hold = 1;
-          trig_interface.ignoreNextEvent(MDX_KEY_NO);
           return true;
         }
         case MDX_KEY_BANKA:
@@ -946,19 +899,33 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_UP: {
+      up:
         param2.cur -= inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_DOWN: {
+      down:
         param2.cur += inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_LEFT: {
+      left:
+        if (inc > 1) {
+          inc = 4;
+        }
         param1.cur = max(0, param1.cur - inc);
+        reset_undo();
         return true;
       }
       case MDX_KEY_RIGHT: {
+      right:
+        if (inc > 1) {
+          inc = 4;
+        }
         param1.cur += inc;
+        reset_undo();
         return true;
       }
       case MDX_KEY_YES: {
@@ -992,11 +959,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-      slot_menu_off:
-        if (show_slot_menu) {
-          apply_slot_changes(true);
-          init();
-        }
+        goto slot_menu_off;
       }
       }
     }
@@ -1018,7 +981,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
   }
 
-#ifdef OLED_DISPLAY
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
   slot_menu_on:
     DEBUG_DUMP(getCol());
@@ -1041,63 +1003,37 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
     show_slot_menu = true;
     grid_slot_page.init();
-    gen_menu_row_names();
     return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    if (show_slot_menu) {
+  slot_menu_off:
+    if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
+      uint8_t old_undo = slot_undo;
+      bool restore_undo = false;
+      // Prevent undo from occuring when re-entering shift menu. Want to keep
+      // undo flag in case user decides to undo with MD GUI.
+      if (slot_copy + slot_paste + slot_clear + slot_load == 0) {
+        slot_undo = 0;
+        restore_undo = true;
+      }
+
       apply_slot_changes();
+
+      if (restore_undo) {
+        slot_undo = old_undo;
+      }
+
+      DEBUG_PRINTLN("here");
       init();
     }
     return true;
   }
-#else
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    display_name = 0;
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    display_name = 1;
-    return;
-  }
-  if (BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-      slot.load_track_from_grid(getCol(), getRow());
-      display_name = 0;
-      slot_apply = 0;
-      GUI.pushPage(&grid_slot_page);
-    }
-    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-      slot.load_track_from_grid(getCol() + 1, getRow());
-      display_name = 0;
-      slot_apply = 0;
-      GUI.pushPage(&grid_slot_page);
-    }
-
-    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-      slot.load_track_from_grid(getCol() + 2, getRow());
-      display_name = 0;
-      slot_apply = 0;
-      GUI.pushPage(&grid_slot_page);
-    }
-
-    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      slot.load_track_from_grid(getCol() + 3, getRow());
-      display_name = 0;
-      slot_apply = 0;
-      GUI.pushPage(&grid_slot_page);
-    }
-    return true;
-  }
-#endif
-
   if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
-
+  system:
     system_page.isSetup = false;
     GUI.pushPage(&system_page);
-
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
@@ -1106,25 +1042,4 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
 
   return false;
-}
-
-void gen_menu_row_names() {
-  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
-  grid_slot_page.menu.set_custom_options(p);
-  uint8_t row_id = 0;
-  for (char bank = 'A'; bank <= 'H'; ++bank) {
-    for (uint8_t i = 1; i <= 16; ++i) {
-      p->pos = row_id++;
-      p->name[0] = bank;
-      if (i < 10) {
-        p->name[1] = '0';
-        p->name[2] = '0' + i;
-      } else {
-        p->name[1] = '1';
-        p->name[2] = '0' + i - 10;
-      }
-      p->name[3] = '\0';
-      ++p;
-    }
-  }
 }

@@ -8,8 +8,10 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track;
   uint8_t track_param;
 
+  MD.parseCC(channel, param, &track, &track_param);
+  if (track == 255) { return; }
+
   if (param >= 16) {
-    MD.parseCC(channel, param, &track, &track_param);
     if (track > 15) { return; }
     if (track_param > 23) { return; }
     MD.kit.params[track][track_param] = value;
@@ -575,7 +577,7 @@ void MDClass::resetMidiMap() {
 
 uint8_t MDClass::setTrackRoutings(uint8_t *values, bool send) {
   uint8_t data[2 + 16] = {0x70, 0x5c};
-  memcpy(&data[2], values, 16);
+  memcpy(data + 2, values, 16);
   return sendRequest(data, sizeof(data), send);
 }
 

@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "SeqPtcPage.h"
 
 void MDTrackSelect::start() {}
 
@@ -81,7 +82,9 @@ void MDTrackSelect::end() {
     }
   }
   bool ret = seq_step_page.md_track_change_check();
-  if (ret) { arp_page.track_update(); }
+  if (ret) {
+     arp_page.track_update(255, seq_ptc_page.is_md_midi(seq_ptc_page.dev_note_channels[0]) != POLY_EVENT);
+  }
 }
 
 void MDTrackSelect::end_immediate() {

@@ -545,12 +545,15 @@ void Adafruit_SSD1305::textbox(const char *text, const char *text2, uint16_t del
   textbox_enabled = true;
 }
 
+bool display_lock = false;
+
 void Adafruit_SSD1305::display(void) {
+  if (display_lock) { return; }
 
   if (screen_saver && screen_saver_active) {
     return;
   }
-
+  display_lock = true;
   if (textbox_enabled) {
     if (clock_diff(textbox_clock, slowclock) < textbox_delay) {
       draw_textbox(textbox_str, textbox_str2);
@@ -633,6 +636,7 @@ void Adafruit_SSD1305::display(void) {
 #endif
     }
   }
+  display_lock = false;
 }
 
 // clear everything

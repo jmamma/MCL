@@ -76,26 +76,44 @@ public:
   /** ElektronPattern implementation */
 
   virtual uint8_t getPosition() { return origPosition; }
-  virtual void    setPosition(uint8_t _pos) { origPosition = _pos; }
+  virtual void setPosition(uint8_t _pos) { origPosition = _pos; }
 
   virtual uint8_t getLength() { return patternLength; }
-  virtual void    setLength(uint8_t _len) { patternLength = _len; }
+  virtual void setLength(uint8_t _len) { patternLength = _len; }
 
   virtual uint8_t getKit() { return kit; }
-  virtual void    setKit(uint8_t _kit) { kit = _kit; }
+  virtual void setKit(uint8_t _kit) { kit = _kit; }
 
-  virtual bool    isTrackEmpty(uint8_t track);
-  virtual bool    isTrigSet(uint8_t track, uint8_t trig) { return IS_BIT_SET64(trigPatterns[track], trig); }
+  virtual bool isEmpty() {
+    uint8_t count = 15;
+    do {
+      if (trigPatterns[count]) {
+        return false;
+      }
+      count--;
+    } while (count);
+    return true;
+  }
+  virtual bool isTrackEmpty(uint8_t track);
+  virtual bool isTrigSet(uint8_t track, uint8_t trig) {
+    return IS_BIT_SET64(trigPatterns[track], trig);
+  }
 
   virtual void clearPattern();
   virtual void clearTrack(uint8_t track);
 
-  virtual void setTrig(uint8_t track, uint8_t trig) { SET_BIT64(trigPatterns[track], trig); }
+  virtual void setTrig(uint8_t track, uint8_t trig) {
+    SET_BIT64(trigPatterns[track], trig);
+  }
   virtual void setNote(uint8_t track, uint8_t step, uint8_t pitch);
   virtual void clearTrig(uint8_t track, uint8_t trig);
 
-  virtual int8_t getLockIdx(uint8_t track, uint8_t param) { return paramLocks[track][param]; }
-  virtual void   setLockIdx(uint8_t track, uint8_t param, int8_t value) { paramLocks[track][param] = value; }
+  virtual int8_t getLockIdx(uint8_t track, uint8_t param) {
+    return paramLocks[track][param];
+  }
+  virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value) {
+    paramLocks[track][param] = value;
+  }
 
   virtual void recalculateLockPatterns();
 
@@ -118,9 +136,7 @@ public:
 
   uint16_t toSysex();
 
-
   void clear_step_locks(uint8_t track, uint8_t step);
-
 
   /**
    * Swap two tracks of the patterns by copying hits, param locks and

@@ -23,6 +23,16 @@
 #define MAX_FB_ITEMS 4
 #define MAX_FT_SELECT 3
 
+#define FM_CANCEL 0
+#define FM_NEW_FOLDER 1
+#define FM_DELETE 2
+#define FM_RENAME 3
+#define FM_OVERWRITE 4
+#define FM_RECVALL 5
+#define FM_SENDALL 6
+
+#define FILETYPE_WAV 1
+
 class FileBrowserPage : public LightPage {
 public:
   static File file;
@@ -63,6 +73,7 @@ public:
       : LightPage(e1, e2, e3, e4) {
           param1 = e1;
           param2 = e2;
+          lwd[0] = '\0';
       }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
@@ -73,8 +84,11 @@ public:
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();
 
+  bool rm_dir(const char *dir);
+
   virtual void loop();
   virtual void setup();
+  virtual void cleanup();
   virtual void init();
 
   virtual void on_new() {}
@@ -84,16 +98,16 @@ public:
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { GUI.popPage(); }
-
+  virtual void chdir_type() {}
+  virtual bool _handle_filemenu();
 protected:
   void _cd_up();
-  void _cd(const char *);
+  bool _cd(const char *);
 
   void query_filesystem();
 
 private:
 
-  void _handle_filemenu();
   void _calcindices(int &);
 };
 

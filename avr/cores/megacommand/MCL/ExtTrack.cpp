@@ -6,7 +6,6 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
   DEBUG_DUMP(slotnumber);
   DEBUG_DUMP(tracknumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-  ext_track->buffer_notesoff();
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_seq_data(seq_track);
 }
@@ -24,9 +23,20 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
 bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #ifdef EXT_TRACKS
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+
+  uint8_t old_mute = seq_track->mute_state;
+
+  seq_track->mute_state = SEQ_MUTE_ON;
+
+  seq_tx3.txRb.init();
+  seq_tx4.txRb.init();
+
   ext_track->buffer_notesoff();
+
   memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
   load_link_data(seq_track);
+
+  seq_track->mute_state = old_mute;
 #endif
   return true;
 }

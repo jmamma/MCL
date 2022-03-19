@@ -8,7 +8,6 @@ void GridLoadPage::init() {
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   draw_popup_title();
-  note_interface.state = true;
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
@@ -197,7 +196,7 @@ void GridLoadPage::load() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.load_tracks(grid_page.encoders[1]->getValue(),
+  mcl_actions.load_tracks(grid_page.getRow(),
                           track_select_array);
 }
 
@@ -209,11 +208,14 @@ void GridLoadPage::group_select() {
 
 void GridLoadPage::group_load(uint8_t row) {
 
+  if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
+
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
   oled_display.textbox("LOAD GROUPS", "");
   oled_display.display();
+
   mcl_actions.write_original = 1;
   mcl_actions.load_tracks(row, track_select_array);
 }
@@ -284,7 +286,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   load_groups:
     trig_interface.off();
 
-    group_load(grid_page.encoders[1]->getValue());
+    group_load(grid_page.getRow());
 
     GUI.setPage(&grid_page);
     return true;

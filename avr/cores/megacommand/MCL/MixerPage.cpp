@@ -10,7 +10,6 @@ void MixerPage::set_display_mode(uint8_t param) {
   }
 }
 
-#ifdef OLED_DISPLAY
 static void oled_draw_routing() {
   for (int i = 0; i < 16; ++i) {
     // draw routing
@@ -34,8 +33,6 @@ static void oled_draw_routing() {
   }
 }
 
-#endif
-
 void MixerPage::setup() {
   encoders[0]->handler = encoder_level_handle;
   encoders[1]->handler = encoder_filtf_handle;
@@ -44,10 +41,7 @@ void MixerPage::setup() {
   if (route_page.encoders[0]->cur == 0) {
     route_page.encoders[0]->cur = 2;
   }
-#ifdef OLED_DISPLAY
-  classic_display = false;
   oled_display.clearDisplay();
-#endif
 }
 
 void MixerPage::init() {
@@ -58,7 +52,6 @@ void MixerPage::init() {
   }
   trig_interface.on();
   bool switch_tracks = false;
-  note_interface.state = true;
   midi_events.setup_callbacks();
   oled_display.clearDisplay();
   oled_draw_routing();
@@ -220,8 +213,11 @@ void MixerPage::display() {
       disp_levels[n] -= dec;
     }
   }
-  if (!redraw_mask) { oled_display.display(); }
-  else { redraw_mask = -1; }
+  if (!redraw_mask) {
+    oled_display.display();
+  } else {
+    redraw_mask = -1;
+  }
   oled_display.setFont(oldfont);
 }
 
@@ -281,6 +277,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_NO: {
+        if (note_interface.notes_count_on() == 0) {
+          GUI.setPage(&grid_page);
+          return true;
+        }
+
         goto reset_params;
       }
       }
@@ -359,7 +360,9 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
+  if (track > 15) {
+    return;
+  }
   if (track_param == 32) {
     return;
   } // don't process mute
@@ -369,6 +372,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       MD.setTrackParam(i, track_param, value);
       if (track_param < 24) {
         MD.kit.params[i][track_param] = value;
+        mcl_seq.md_tracks[i].update_param(track_param, value);
       }
       if (track_param == 33) {
         MD.kit.levels[i] = value;

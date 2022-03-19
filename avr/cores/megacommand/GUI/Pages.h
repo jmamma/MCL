@@ -57,9 +57,6 @@ class PageContainer;
  * configure/store/restore midi clock and midi merge setting.
  **/
 
-#define DISPLAY_PIXEL_MODE 0
-#define DISPLAY_TEXT_MODE0 1
-
 class PageParent {
   /**
    * \addtogroup gui_parent_page
@@ -72,10 +69,6 @@ public:
   bool redisplay;
   /** Set to true when the setup() function has been called. **/
   bool isSetup;
-
-  bool classic_display = true;
-
-  uint8_t displaymode = DISPLAY_TEXT_MODE0;
 
   PageParent() {}
 
@@ -273,6 +266,7 @@ public:
    * method of the new topmost page.
    **/
   void popPage() {
+    LightPage *lastpage = currentPage();
     currentPage()->cleanup();
     LightPage *page;
     pageStack.pop(&page);
@@ -285,6 +279,12 @@ public:
     if (page != NULL) {
       page->redisplayPage();
     }
+    else {
+      if (lastpage == NULL) { return; }
+      pageStack.reset();
+      pushPage(lastpage);
+    }
+    currentPage()->init();
   }
 
   /** Returns the topmost page of the stack. **/

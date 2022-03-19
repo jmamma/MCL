@@ -22,17 +22,10 @@ void MCL::setup() {
 
   delay(100);
   ret = mcl_sd.sd_init();
-#ifdef OLED_DISPLAY
   gfx.init_oled();
-#endif
   if (!ret) {
-#ifdef OLED_DISPLAY
     oled_display.print("SD CARD ERROR :-(");
     oled_display.display();
-#else
-    GUI.flash_strings_fill("SD CARD ERROR", "");
-#endif
-
     delay(2000);
     return;
   }
@@ -41,12 +34,9 @@ void MCL::setup() {
   R.use_icons_boot();
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
   // if (!ret) { }
-  text_input_page.no_escape = true;
   ret = mcl_sd.load_init();
-  text_input_page.no_escape = false;
 
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
-
   if (ret) {
     GUI.setPage(&grid_page);
   }
@@ -74,17 +64,16 @@ void MCL::setup() {
   MNMSysexListener.setup(&Midi2);
 #endif
 
-  MidiSDSSysexListener.setup(&Midi);
   midi_setup.cfg_ports();
+
+  grid_task.init();
 
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
-#ifdef OLED_DISPLAY
     oled_display.textbox("DISPLAY ", "MIRROR");
-#endif
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif
@@ -159,13 +148,16 @@ bool mcl_handleEvent(gui_event_t *event) {
 
         grid_page.send_row_led();
 
-        uint8_t row = grid_page.bank * 16;
-        grid_page.jump_to_row(row);
+        //uint8_t row = grid_page.bank * 16;
+        //grid_page.jump_to_row(row);
         return true;
       }
-      case MDX_KEY_SONG: {
-        GUI.setPage(&page_select_page);
-        return true;
+      case MDX_KEY_BANKGROUP: {
+        if (GUI.currentPage() != &text_input_page && !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+          GUI.setPage(&page_select_page);
+          return true;
+        }
+        return false;
       }
       case MDX_KEY_REC: {
         if (GUI.currentPage() != &seq_step_page &&
@@ -205,7 +197,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             GUI.currentPage() == &seq_extstep_page) {
           opt_copy = SeqPage::recording ? 2 : 1;
         }
-        opt_copy_track_handler();
+        opt_copy_track_handler_cb();
         break;
       }
       case MDX_KEY_PASTE: {

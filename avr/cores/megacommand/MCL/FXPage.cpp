@@ -8,11 +8,8 @@ void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
   DEBUG_PRINT_FN();
-#ifdef OLED_DISPLAY
-  classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
-#endif
   trig_interface.off();
   update_encoders();
 
@@ -23,7 +20,7 @@ void FXPage::init() {
 void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    ((MCLEncoder*)encoders[n])->max = 127;
+    ((MCLEncoder *)encoders[n])->max = 127;
 
     uint8_t a = ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
@@ -51,9 +48,7 @@ void FXPage::update_encoders() {
 
 void FXPage::cleanup() {
   //  md_exploit.off();
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
-#endif
 }
 
 void FXPage::loop() {
@@ -76,22 +71,24 @@ void FXPage::loop() {
       }
 #endif
       MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
-      switch(fx_type) {
+      switch (fx_type) {
       case MD_FX_ECHO:
-      MD.kit.delay[fx_param] = encoders[i]->cur;
-      break;
+        MD.kit.delay[fx_param] = encoders[i]->cur;
+        break;
       case MD_FX_DYN:
-      MD.kit.dynamics[fx_param] = encoders[i]->cur;
-      break;
+        MD.kit.dynamics[fx_param] = encoders[i]->cur;
+        break;
       case MD_FX_REV:
-      MD.kit.reverb[fx_param] = encoders[i]->cur;
-      break;
+        MD.kit.reverb[fx_param] = encoders[i]->cur;
+        break;
       case MD_FX_EQ:
-      MD.kit.eq[fx_param] = encoders[i]->cur;
-      break;
+        MD.kit.eq[fx_param] = encoders[i]->cur;
+        break;
       }
       for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-       mcl_seq.lfo_tracks[n].check_and_update_params_offset(NUM_MD_TRACKS + 1 + fx_type - MD_FX_ECHO, fx_param, encoders[i]->cur);
+        mcl_seq.lfo_tracks[n].check_and_update_params_offset(
+            NUM_MD_TRACKS + 1 + fx_type - MD_FX_ECHO, fx_param,
+            encoders[i]->cur);
       }
     }
   }
@@ -100,46 +97,13 @@ void FXPage::display() {
 
   char str[4];
   PGM_P param_name = NULL;
-  if (!classic_display) {
-#ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-#endif
-  }
-#ifndef OLED_DISPLAY
-  GUI.clearLines();
-  GUI.setLine(GUI.LINE1);
-  uint8_t x;
-
-  GUI.put_string_at(0, "FX");
-  GUI.put_value_at1(4, page_mode ? 1 : 0);
-  GUI.setLine(GUI.LINE2);
-
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
-
-    uint8_t fx_param = params[n].param;
-    uint8_t fx_type = params[n].type;
-    GUI.setLine(GUI.LINE1);
-    param_name = fx_param_name(fx_type, fx_param);
-    strncpy(str, param_name, 4);
-
-    GUI.put_string_at(i * 4, str);
-
-    GUI.setLine(GUI.LINE2);
-    GUI.put_value_at(i * 4, encoders[i]->cur);
-  //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
-  }
-
-
-#endif
-#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
   auto oldfont = oled_display.getFont();
 
   if (page_id == 0) {
-  oled_display.drawBitmap(0, 0, R.icons_page->icon_rhytmecho, 24, 18, WHITE);
-  }
-  else {
-  oled_display.drawBitmap(0, 0, R.icons_page->icon_gatebox, 24, 18, WHITE);
+    oled_display.drawBitmap(0, 0, R.icons_page->icon_rhytmecho, 24, 18, WHITE);
+  } else {
+    oled_display.drawBitmap(0, 0, R.icons_page->icon_gatebox, 24, 18, WHITE);
   }
   mcl_gui.draw_knob_frame();
 
@@ -152,11 +116,11 @@ void FXPage::display() {
     strncpy(str, param_name, 4);
 
     mcl_gui.draw_knob(i, encoders[i], str);
-  //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
+    //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
   }
   oled_display.setFont(&TomThumb);
-  const char* info1;
-  const char* info2;
+  const char *info1;
+  const char *info2;
   if (page_mode) {
     info1 = "FX A";
   } else {
@@ -166,7 +130,6 @@ void FXPage::display() {
   mcl_gui.draw_panel_labels(info1, info2);
   oled_display.display();
   oled_display.setFont(oldfont);
-#endif
 }
 
 void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -180,7 +143,9 @@ void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t param_true = 0;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
+  if (track > 15) {
+    return;
+  }
 }
 
 void FXPage::setup_callbacks() {

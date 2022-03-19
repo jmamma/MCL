@@ -14,8 +14,10 @@ public:
   uint8_t s_progress_count = 0;
 
   void put_value_at(uint8_t value, char *str);
+  void put_value_at2(uint8_t value, char *str);
 
   void draw_textbox(const char *text, const char *text2);
+  void wait_for_project();
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
   void draw_horizontal_dashline(uint8_t y, uint8_t from, uint8_t to);

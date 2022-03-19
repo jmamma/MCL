@@ -32,10 +32,12 @@ void PageContainer::pushPage(LightPage* page) {
     page->setup();
     page->isSetup = true;
   }
+
+  pageStack.push(page);
+
   page->init();
   page->redisplayPage();
   page->show();
-  pageStack.push(page);
 #ifdef ENABLE_DIAG_LOGGING
   // deactivate diagnostic page on pushPage
   diag_page.deactivate();
@@ -43,14 +45,7 @@ void PageContainer::pushPage(LightPage* page) {
 }
 
 void PageParent::redisplayPage() {
-  if (displaymode == DISPLAY_TEXT_MODE0) {
-    GUI.setLine(GUI.LINE1);
-    GUI.clearLine();
-    GUI.setLine(GUI.LINE2);
-    GUI.clearLine();
-    redisplay = true;
-  } else {
-  }
+  redisplay = true;
 }
 
 uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];

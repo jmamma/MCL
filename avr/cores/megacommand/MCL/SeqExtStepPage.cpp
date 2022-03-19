@@ -77,7 +77,6 @@ void SeqExtStepPage::init() {
   trig_interface.on();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
-  note_interface.state = true;
   x_notes_down = 0;
   last_cur_x = -1;
   config_encoders();
@@ -430,7 +429,6 @@ void SeqExtStepPage::draw_pianoroll() {
 }
 
 void SeqExtStepPage::draw_viewport_minimap() {
-#ifdef OLED_DISPLAY
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
   constexpr uint16_t width = pidx_w * 4 + 3;
@@ -448,15 +446,10 @@ void SeqExtStepPage::draw_viewport_minimap() {
   uint16_t p = min(width, cur_tick_x * (width - 1) / pattern_end);
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
-#endif
 }
 
 void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
                                uint16_t note_end) {}
-
-#ifndef OLED_DISPLAY
-void SeqExtStepPage::display() { SeqPage::display(); }
-#else
 
 void SeqExtStepPage::pos_cur_x(int16_t diff) {
   uint8_t w = cur_w;
@@ -624,7 +617,8 @@ void SeqExtStepPage::loop() {
 
   if (seq_extparam2.hasChanged()) {
     // Vertical translation
-    int16_t diff = seq_extparam2.old - seq_extparam2.cur; // reverse dir for sanity.
+    int16_t diff =
+        seq_extparam2.old - seq_extparam2.cur; // reverse dir for sanity.
     pos_cur_y(diff);
     seq_extparam2.cur = 64;
     seq_extparam2.old = 64;
@@ -713,15 +707,15 @@ void SeqExtStepPage::display() {
   oled_display.display();
 #endif
 }
-#endif
 
 void SeqExtStepPage::enter_notes() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
-      if (active_track.notes_on[n].value == 255)
+    if (active_track.notes_on[n].value == 255)
       continue;
     active_track.del_note(cur_x, cur_w, active_track.notes_on[n].value);
-    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value, velocity, cond);
+    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
+                          velocity, cond);
   }
 }
 
@@ -787,9 +781,17 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     return true;
   }
   bool ignore_clear = false;
+  uint8_t timing_mid = active_track.get_timing_mid();
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
+    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+      return seq_menu_page.handleEvent(event);
+    }
+    uint8_t inc = 1;
+    if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      inc = 8;
+    }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       int w = cur_w;
@@ -800,11 +802,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_NO)) {
         switch (key) {
         case MDX_KEY_UP: {
-          seq_extparam4.cur -= 1;
+          seq_extparam4.cur -= inc;
           return true;
         }
         case MDX_KEY_DOWN: {
-          seq_extparam4.cur += 1;
+          seq_extparam4.cur += inc;
           return true;
         }
         case MDX_KEY_LEFT: {
@@ -827,7 +829,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             mcl_seq.ext_tracks[last_ext_track].rotate_left();
           } else {
             pos_cur_x(-1 * w);
-            if (trig_interface.is_key_down(MDX_KEY_YES)) { trig_interface.ignoreNextEvent(MDX_KEY_YES); }
+            if (trig_interface.is_key_down(MDX_KEY_YES)) {
+              trig_interface.ignoreNextEvent(MDX_KEY_YES);
+            }
           }
           return true;
         }
@@ -836,16 +840,28 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             mcl_seq.ext_tracks[last_ext_track].rotate_right();
           } else {
             pos_cur_x(w);
-            if (trig_interface.is_key_down(MDX_KEY_YES)) { trig_interface.ignoreNextEvent(MDX_KEY_YES); }
+            if (trig_interface.is_key_down(MDX_KEY_YES)) {
+              trig_interface.ignoreNextEvent(MDX_KEY_YES);
+            }
           }
           return true;
         }
         case MDX_KEY_UP: {
-          pos_cur_y(1);
+          pos_cur_y(inc);
           return true;
         }
         case MDX_KEY_DOWN: {
-          pos_cur_y(-1);
+          pos_cur_y(-1 * inc);
+          return true;
+        }
+        case MDX_KEY_SCALE: {
+          seq_extparam4.cur = 16;
+          fov_offset += fov_w;
+          cur_x += fov_w;
+          if (fov_offset + fov_length > roll_length) {
+          cur_x = cur_x - fov_offset;
+          fov_offset = 0;
+          }
           return true;
         }
           // case MDX_KEY_YES: {
@@ -867,7 +883,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
   YES:
     if (pianoroll_mode >= 1) {
-      uint8_t timing_mid = active_track.get_timing_mid();
 
       uint8_t step = (cur_x / timing_mid);
       uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
@@ -890,8 +905,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
       return true;
     } else {
-            DEBUG_PRINTLN("here");
-            DEBUG_PRINTLN(active_track.notes_on_count);
+      DEBUG_PRINTLN("here");
+      DEBUG_PRINTLN(active_track.notes_on_count);
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {

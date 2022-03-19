@@ -35,12 +35,10 @@ static MidiClass *_getMidiClass(uint8_t port) {
 static bool resource_loaded = false;
 static size_t resource_size = 0;
 static void prepare_display(uint8_t* buf) {
-#ifdef OLED_DISPLAY
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
   oled_display.println("Peering...");
-#endif
   if (!resource_loaded) {
     R.Clear();
     R.use_icons_device();

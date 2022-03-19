@@ -86,6 +86,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
 
   sendSpeedRequest();
   bool ret = blockForState(tm_master_req_answer_recvd);
+  /*
   GUI.setLine(GUI.LINE2);
   if (ret) {
     GUI.flash_printf("s %X c %X", slaveSpeeds, certifiedSlaveSpeeds);
@@ -93,11 +94,12 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
     GUI.flash_printf("REQ TIMEOUT");
     goto fail;
   }
-
+  */
   speed1 = getHighestBit(speeds & slaveSpeeds) + 1;
   speed2 = getHighestBit(certifiedSpeeds & certifiedSlaveSpeeds) + 1;
   sendSpeedNegotiationRequest(speed1, speed2);
   ret = blockForState(tm_master_speed_ack_recvd);
+  /*
   GUI.setLine(GUI.LINE2);
   if (ret) {
     GUI.flash_printf("ACK %b %b", speed1, speed2);
@@ -105,9 +107,10 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
     GUI.flash_printf("ACK TIMEOUT");
     goto fail;
   }
-
+  */
   sendSpeedTest1(speed1);
   ret = blockForState(tm_master_test_1_recvd);
+  /*
   GUI.setLine(GUI.LINE2);
   if (ret) {
     GUI.flash_printf("TEST1 ACK");
@@ -115,9 +118,10 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
     GUI.flash_printf("TEST1 TIMEOUT");
     goto fail;
   }
-
+  */
   sendSpeedTest2(speed2);
   ret = blockForState(tm_master_test_2_recvd);
+  /*
   GUI.setLine(GUI.LINE2);
   if (ret) {
     GUI.flash_printf("TEST2 ACK");
@@ -125,7 +129,7 @@ bool TurboMidiSysexListenerClass::startTurboMidi() {
     GUI.flash_printf("TEST2 TIMEOUT");
     goto fail;
   }
-
+  */
   //	MidiUart.setActiveSenseTimer(130);
 
   state = tm_master_ok;

@@ -67,6 +67,22 @@ public:
 
   void *data() const { return (void *)&locks; }
 
+  void clean_params() {
+    uint8_t _locks = 0;
+    for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
+      _locks |= steps[x].locks;
+    }
+
+    uint8_t mask = 1;
+
+    for (uint8_t a = 0; a < NUM_LOCKS; a++) {
+      if (!(_locks & mask)) {
+        locks_params[a] = 0;
+      }
+      mask <<= 1;
+    }
+  }
+
   FORCED_INLINE() uint8_t find_param(uint8_t param_id) const {
     param_id += 1;
     if (!param_id)

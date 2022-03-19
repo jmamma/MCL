@@ -6,11 +6,7 @@
 #include "FileBrowserPage.h"
 #include "GUI.h"
 
-#ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
-#else
-#define MAX_VISIBLE_ROWS 1
-#endif
 
 #define MENU_WIDTH 78
 
@@ -22,6 +18,7 @@ public:
   virtual void on_select(const char *entry);
   virtual void on_delete(const char *entry);
   virtual void on_rename(const char *from, const char *to);
+  virtual void setup();
   void init();
 };
 

@@ -22,10 +22,6 @@ public:
   }
   virtual void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                uint8_t slotnumber);
-  void transition_clear(uint8_t tracknumber, SeqTrack *seq_track) {
-    ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
-    ext_seq_track->clear_track();
-  }
 
   bool load_seq_data(SeqTrack *seq_track);
   virtual bool get_track_from_sysex(uint8_t tracknumber);

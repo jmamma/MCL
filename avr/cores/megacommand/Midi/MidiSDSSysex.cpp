@@ -288,3 +288,4 @@ void MidiSDSSysexListenerClass::data_packet() {
 }
 
 void MidiSDSSysexListenerClass::setup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->addSysexListener(this); }
+void MidiSDSSysexListenerClass::cleanup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->removeSysexListener(this); }

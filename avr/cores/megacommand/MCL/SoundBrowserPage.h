@@ -6,6 +6,13 @@
 #include "FileBrowserPage.h"
 #include "MidiSysex.h"
 
+#define FT_SND 0
+#define FT_WAV 1
+#define FT_SYX 2
+
+#define PA_NEW 0
+#define PA_SELECT 1
+
 class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   public:
 
@@ -22,22 +29,22 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   virtual void on_new();
   virtual void on_select(const char*);
   virtual void on_cancel();
+  virtual void chdir_type();
   virtual bool handleEvent(gui_event_t *event);
   void draw_scrollbar(uint8_t x_offset);
   void init();
   void setup();
-  void cleanup();
   void save_sound();
   void load_sound();
-  void send_sample(int slot, bool is_syx);
-  void recv_wav(int slot);
+  void send_sample(int slot, bool is_syx, char *newname = nullptr, bool silent = false);
+  void recv_wav(int slot, bool silent = false);
 
   // MidiSysexListenerClass
   virtual void start();
   virtual void end();
   virtual void end_immediate();
-
-protected:
+  virtual bool _handle_filemenu();
+  protected:
   void query_sample_slots();
 };
 

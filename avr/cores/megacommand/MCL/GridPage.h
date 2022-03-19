@@ -7,13 +7,8 @@
 #include "GridEncoder.h"
 #include "GridRowHeader.h"
 
-#ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8
-#else
-#define MAX_VISIBLE_ROWS 1
-#define MAX_VISIBLE_COLS 4
-#endif
 
 #define SLOT_DISABLED 255
 #define SLOT_PENDING 254
@@ -50,6 +45,7 @@ public:
   uint8_t slot_undo_x;
   uint8_t slot_undo_y;
   uint8_t slot_load;
+  uint8_t insert_rows;
 
   uint16_t grid_lastclock;
 
@@ -90,7 +86,8 @@ public:
   void cleanup();
   void init();
   void prepare();
-  void apply_slot_changes(bool ignore_undo = false);
+  void swap_grids();
+  void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void close_bank_popup();
 

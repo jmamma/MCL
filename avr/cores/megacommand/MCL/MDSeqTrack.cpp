@@ -528,9 +528,8 @@ uint8_t MDSeqTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
   if (idx < NUM_MD_LOCK_SLOTS && steps[step].locks_enabled) {
     return locks[idx];
   } else {
-    return locks_params_orig[lock_idx];
+    return 255;
   }
-  return 255;
 }
 
 bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
@@ -711,14 +710,7 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
     cur_event_idx -= 1;
   }
 
-  for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-    if (steps[n].locks & mask) {
-      return;
-    }
-  }
-
-  // If no more locks on any step, unset the param
-  locks_params[match] = 0;
+  clean_params();
 }
 
 void MDSeqTrack::clear_param_locks(uint8_t param_id) {
@@ -768,6 +760,7 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
   MD.setTrackParam(track_number, param_id, locks_params_orig[match]);
 }
 
+
 void MDSeqTrack::clear_step_locks(uint8_t step) {
   uint8_t idx = get_lockidx(step);
   uint8_t cnt = popcount(steps[step].locks);
@@ -779,6 +772,7 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
   }
   steps[step].locks = 0;
   steps[step].locks_enabled = false;
+
 }
 
 void MDSeqTrack::disable_step_locks(uint8_t step) {

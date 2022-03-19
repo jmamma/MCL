@@ -82,8 +82,6 @@ public:
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
 
-  virtual void transition_clear(uint8_t tracknumber, SeqTrack* seq_track) {}
-
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
   virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }

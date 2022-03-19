@@ -16,6 +16,14 @@ public:
   uint8_t next_active_row;
   bool chain_behaviour;
 
+
+  uint8_t load_row = 255;
+
+  uint8_t midi_track_select[NUM_SLOTS];
+  uint8_t midi_row_select = 255;
+  uint16_t midi_event_clock;
+  bool midi_load;
+
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 
   void setup(uint16_t interval = 0);
@@ -23,7 +31,18 @@ public:
   virtual void run();
   virtual void destroy();
 
-  void init();
+  void init() {
+     reset_midi_states();
+  }
+
+  void reset_midi_states() {
+    load_row = 255;
+    memset(midi_track_select, 255, sizeof(midi_track_select));
+    //midi_row_select = 255;
+    midi_event_clock = -1;
+    midi_load = false;
+  }
+
   void gui_update();
   void transition_handler();
 

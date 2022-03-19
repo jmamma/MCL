@@ -7,9 +7,6 @@ void osc_mod_handler(EncoderParent *enc) {}
 uint32_t OscPage::exploit_delay_clock = 0;
 
 void OscPage::setup() {
-#ifdef OLED_DISPLAY
-  classic_display = false;
-#endif
   for (uint8_t i = 0; i < 16; i++) {
     usr_values[i] = random(127);
   }
@@ -24,14 +21,11 @@ float OscPage::get_freq() {
   return fout;
 }
 void OscPage::init() {
-  DEBUG_PRINTLN(F("seq extstep init"));
   WavDesignerPage::init();
   wd.last_page = this;
-  // md_exploit.on();
-  note_interface.state = true;
-#ifdef OLED_DISPLAY
+  wavdesign_menu_page.menu.enable_entry(1, true);
+  wavdesign_menu_page.menu.enable_entry(2, false);
   oled_display.clearDisplay();
-#endif
 }
 
 void OscPage::cleanup() { DEBUG_PRINT_FN(); }
@@ -111,7 +105,6 @@ void OscPage::loop() {
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
     if (!trig_interface.state) {
       trig_interface.on();
-      note_interface.state = true;
     }
   }
 
@@ -197,7 +190,6 @@ void OscPage::display() {
   oled_display.setFont(oldfont);
 }
 void OscPage::draw_wav(uint8_t wav_type) {
-#ifdef OLED_DISPLAY
   uint8_t x = 64;
   uint8_t y = 0;
   uint8_t h = 30;
@@ -224,26 +216,27 @@ void OscPage::draw_wav(uint8_t wav_type) {
       for (uint8_t f = 1; f <= 16; f++) {
         if (sine_levels[f - 1] != 0) {
           float sine_gain = ((float)sine_levels[f - 1] / (float)127);
-          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f, 0) *
-                    sine_gain * max_sine_gain;
+          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) * sine_gain *
+                    max_sine_gain;
         }
       }
-      if (largest_sine_peak == 0) { sample = 0; }
-      else {
+      if (largest_sine_peak == 0) {
+        sample = 0;
+      } else {
         sample = (1.00 / largest_sine_peak) * sample;
       }
       break;
     case USR_OSC:
-      sample = usr_osc.get_sample((uint32_t)n, 1, 0, usr_values);
+      sample = usr_osc.get_sample((uint32_t)n, 1, usr_values);
       break;
     case TRI_OSC:
-      sample = tri_osc.get_sample((uint32_t)n, 1, 0);
+      sample = tri_osc.get_sample((uint32_t)n, 1);
       break;
     case PUL_OSC:
-      sample = pul_osc.get_sample((uint32_t)n, 1, 0);
+      sample = pul_osc.get_sample((uint32_t)n, 1);
       break;
     case SAW_OSC:
-      sample = saw_osc.get_sample((uint32_t)n, 1, 0);
+      sample = saw_osc.get_sample((uint32_t)n, 1);
       break;
     }
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
@@ -264,7 +257,6 @@ void OscPage::draw_wav(uint8_t wav_type) {
   if (sample_number > 128 - x) {
     sample_number = 0;
   }
-#endif
 }
 
 void OscPage::draw_usr() {
@@ -275,14 +267,8 @@ void OscPage::draw_usr() {
   uint8_t y = 0;
   UsrOsc usr_osc(w);
 
-#ifndef OLED_DISPLAY
-  GUI.setLine(GUI.LINE2);
-  char str[17] = "                ";
-#endif
   for (uint8_t i = 0; i < 16; i++) {
-    sample = usr_osc.get_sample((uint32_t)i * 4, 1, 0, usr_values);
-
-#ifdef OLED_DISPLAY
+    sample = usr_osc.get_sample((uint32_t)i * 4, 1, usr_values);
 
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
     if (note_interface.is_note_on(i)) {
@@ -290,24 +276,10 @@ void OscPage::draw_usr() {
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);
       oled_display.drawRect(63 + i * 4, pixel_y - 1, 3, 3, WHITE);
     }
-#else
-    int scaled_level = (int)((float)(sample + 1.0) * .5 * 7.00);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-#endif
   }
-#ifndef OLED_DISPLAY
-  GUI.put_string_at(0, str);
-#endif
 }
 
 void OscPage::draw_levels() {
-#ifndef OLED_DISPLAY
-  GUI.setLine(GUI.LINE2);
-#endif
   uint8_t scaled_level;
   char str[17] = "                ";
   uint8_t x = 64;
@@ -315,7 +287,6 @@ void OscPage::draw_levels() {
   UsrOsc usr_osc(w);
 
   for (int i = 0; i < 16; i++) {
-#ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);
     if (note_interface.is_note_on(i)) {
@@ -325,21 +296,7 @@ void OscPage::draw_levels() {
       oled_display.drawRect(0 + i * 4, 12 + (15 - scaled_level), 3,
                             scaled_level + 1, WHITE);
     }
-
-#else
-
-    scaled_level = (int)(((float)sine_levels[i] / (float)127) * 7);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-
-#endif
   }
-#ifndef OLED_DISPLAY
-  GUI.put_string_at(0, str);
-#endif
 }
 
 float OscPage::get_phase() { return 0; }

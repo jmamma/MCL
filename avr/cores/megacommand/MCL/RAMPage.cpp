@@ -25,7 +25,6 @@ void RAMPage::setup() {
 
 void RAMPage::init() {
   DEBUG_PRINT_FN();
-  classic_display = false;
   oled_display.clearDisplay();
   oled_display.setFont();
   trig_interface.off();
@@ -439,83 +438,7 @@ void RAMPage::loop() {
 
 void RAMPage::display() {
 
-  if (!classic_display) {
-#ifdef OLED_DISPLAY
-    oled_display.clearDisplay();
-#endif
-  }
-#ifndef OLED_DISPLAY
-  GUI.clearLines();
-  GUI.setLine(GUI.LINE1);
-  uint8_t x;
-
-  GUI.put_string_at(0, "RAM");
-  GUI.put_value_at1(4, page_id + 1);
-  switch (RAMPage::rec_states[page_id]) {
-  case STATE_QUEUE:
-    GUI.put_string_at(6, "[Queue]");
-    break;
-  case STATE_RECORD:
-    GUI.put_string_at(6, "[Record]");
-    break;
-  case STATE_PLAY:
-    GUI.put_string_at(6, "[Play]");
-    break;
-  }
-
-  GUI.setLine(GUI.LINE2);
-  /*
-    if (mcl_cfg.ram_page_mode == 0) {
-      GUI.put_string_at(0, "MON");
-    } else {
-      GUI.put_string_at(0, "LNK");
-    }
-  */
-
-  switch (encoders[0]->cur) {
-  case SOURCE_MAIN:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        GUI.put_string_at(0, "L");
-      }
-      if (page_id == 1) {
-        GUI.put_string_at(0, "R");
-      }
-    } else {
-      GUI.put_string_at(0, "M");
-    }
-    break;
-  case SOURCE_INPA:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        GUI.put_string_at(0, "INA");
-      } else {
-        GUI.put_string_at(0, "INB");
-      }
-    } else {
-      GUI.put_string_at(0, "INA");
-    }
-
-    break;
-  case SOURCE_INPB:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        GUI.put_string_at(0, "INA");
-      } else {
-        GUI.put_string_at(0, "INB");
-      }
-    } else {
-      GUI.put_string_at(0, "INB");
-    }
-    break;
-  }
-  GUI.put_value_at1(4, encoders[1]->cur);
-  GUI.put_string_at(6, "S:");
-  GUI.put_value_at2(8, 1 << encoders[2]->cur);
-  GUI.put_string_at(11, "L:");
-  GUI.put_value_at2(13, (encoders[3]->cur * 4));
-#endif
-#ifdef OLED_DISPLAY
+  oled_display.clearDisplay();
   float remain;
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
@@ -679,8 +602,8 @@ void RAMPage::display() {
   }
   oled_display.display();
   oled_display.setFont(oldfont);
-#endif
 }
+
 void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -750,6 +673,17 @@ void RAMPage::remove_callbacks() {
 }
 
 bool RAMPage::handleEvent(gui_event_t *event) {
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64; 
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+      case MDX_KEY_YES:
+        goto yes;
+      case MDX_KEY_NO:
+        goto no;
+      }
+    }
+  }
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
@@ -766,6 +700,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    yes:
     if (mcl_cfg.ram_page_mode == MONO) {
       uint8_t lev = 64;
       if (encoders[0]->cur == SOURCE_MAIN) {
@@ -802,6 +737,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    no:
     RAMPage::slice_modes[page_id] = 0;
     oled_display.textbox("SLICE", "");
     if (mcl_cfg.ram_page_mode == MONO) {

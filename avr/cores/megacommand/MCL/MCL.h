@@ -13,13 +13,11 @@
 #endif
 
 //MCL Fonts
-#ifdef OLED_DISPLAY
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
-#endif
 
-#define VERSION 4004
-#define VERSION_STR "4.04A"
+#define VERSION 4010
+#define VERSION_STR "J4.10"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

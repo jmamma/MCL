@@ -38,6 +38,10 @@ __attribute__((section(".init3")));
 void my_init_ram(void) {
 // Set PL6 as output
 //
+
+  DDRK = 0xFF;
+  PORTK = 0xFF;
+
 #ifdef MEGACOMMAND
   DDRL |= _BV(PL6);
   PORTL &= ~(_BV(PL6));

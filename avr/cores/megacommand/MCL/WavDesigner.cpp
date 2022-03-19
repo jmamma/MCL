@@ -1,30 +1,35 @@
 #include "MCL_impl.h"
 
 #ifdef WAV_DESIGNER
+#define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
-    if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-
-#ifdef OLED_DISPLAY
-      oled_display.clearDisplay();
-#endif
-      GUI.setLine(GUI.LINE1);
-      GUI.put_string_at(0, "Render..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-      oled_display.clearDisplay();
-#endif
-      wd.render();
-      GUI.put_string_at(0, "Sending..");
-      LCD.goLine(0);
-      LCD.puts(GUI.lines[0].data);
-#ifdef OLED_DISPLAY
-      oled_display.display();
-#endif
-     wd.send();
-   }
+  //  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
+  oled_display.textbox("Render", "");
+  oled_display.display();
+  //Order of statements important for directory switching.
+  GUI.pushPage(&sound_browser);
+  sound_browser.show_samplemgr = true;
+  sound_browser.pending_action = PA_SELECT;
+  sound_browser.filetype_idx = FT_WAV;
+  sound_browser.setup();
+  sound_browser.show_samplemgr = true;
+  wd.render();
+  sound_browser.init();
+  if (sound_browser.file.open(WAV_NAME, O_READ)) {
+    while (GUI.currentPage() == &sound_browser &&
+           sound_browser.pending_action == PA_SELECT && sound_browser.show_samplemgr) {
+      GUI.loop();
+    }
+  }
+  DEBUG_PRINTLN("cleaning up");
+  sound_browser.file.close();
+  GUI.setPage(&wd.mixer);
+  // oled_display.textbox("Sending..","");
+  //
+  // oled_display.display();
+  // wd.send();
+  // }
 }
 
 bool WavDesigner::render() {
@@ -32,7 +37,7 @@ bool WavDesigner::render() {
   float sample_rate = 44100;
   Wav wav_file;
 
-  if (!wav_file.open("render.wav", true, 1, sample_rate, 16, true)) {
+  if (!wav_file.open(WAV_NAME, true, 1, sample_rate, 16, true)) {
     return false;
   }
   // Work out lowest base frequency.
@@ -110,36 +115,32 @@ bool WavDesigner::render() {
                 max_sine_gain;
 
             osc_sample +=
-                sine_osc.get_sample(n, pages[i].get_freq() * (float)h, 0) *
+                sine_osc.get_sample(n, pages[i].get_freq() * (float)h) *
                 sine_gain;
           }
         }
         if (wd.pages[i].largest_sine_peak == 0) {
           osc_sample = 0;
-        }
-        else {
+        } else {
           osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
         }
         // DEBUG_PRINTLN(osc_sample);
         break;
       case 2:
         tri_osc.width = pages[i].get_width();
-        osc_sample +=
-            tri_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+        osc_sample += tri_osc.get_sample(n, pages[i].get_freq());
         break;
       case 3:
         pulse_osc.width = pages[i].get_width();
-        osc_sample +=
-            pulse_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+        osc_sample += pulse_osc.get_sample(n, pages[i].get_freq());
         break;
       case 4:
         saw_osc.width = pages[i].get_width();
-        osc_sample +=
-            saw_osc.get_sample(n, pages[i].get_freq(), pages[i].get_phase());
+        osc_sample += saw_osc.get_sample(n, pages[i].get_freq());
         break;
       case 5:
-        osc_sample += usr_osc.get_sample(
-            n, pages[i].get_freq(), pages[i].get_phase(), pages[i].usr_values);
+        osc_sample +=
+            usr_osc.get_sample(n, pages[i].get_freq(), pages[i].usr_values);
         break;
       }
       // Sum oscillator samples together
@@ -228,7 +229,8 @@ bool WavDesigner::render() {
   DEBUG_PRINTLN("gain:");
   DEBUG_PRINTLN(largest_sample_so_far);
   DEBUG_PRINTLN(normalize_gain);
-  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start, loop_end);
+  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start,
+                            loop_end);
   wav_file.file.sync();
   wav_file.apply_gain(normalize_gain);
   write_header = true;
@@ -238,7 +240,7 @@ bool WavDesigner::render() {
 }
 
 bool WavDesigner::send() {
-  return midi_sds.sendWav("render.wav", mixer.enc4.cur, false);
+  return midi_sds.sendWav(WAV_NAME, mixer.enc4.cur, false);
 }
 
 WavDesigner wd;

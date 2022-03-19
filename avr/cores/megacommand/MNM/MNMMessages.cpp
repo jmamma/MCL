@@ -130,9 +130,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex.get_recordLen() - 5;
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
-#ifdef MIDIDUINO
-    GUI.flash_strings_fill("WRONG CHECK", "");
-#endif
+    DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
@@ -178,9 +176,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
 
 bool MNMKit::fromSysex(uint8_t *data, uint16_t len) {
   if (!ElektronHelper::checkSysexChecksum(data, len)) {
-#ifdef MIDIDUINO
-    GUI.flash_strings_fill("WRONG CHECK", "");
-#endif
+    DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 

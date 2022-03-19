@@ -6,7 +6,6 @@ void GridSavePage::init() {
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
-  note_interface.state = true;
   grid_page.reload_slot_models = false;
   MD.popup_text("SAVE SLOTS", true);
   draw_popup();
@@ -25,13 +24,7 @@ void GridSavePage::draw_popup() {
   mcl_gui.draw_popup(str, true, 28);
 }
 
-void GridSavePage::loop() {
-
-  // prevent encoder 0 from changing when sequencer is running
-  if (encoders[0]->hasChanged() && MidiClock.state == 2) {
-    encoders[0]->cur = encoders[0]->old;
-  }
-}
+void GridSavePage::loop() {}
 void GridSavePage::display() {
 
   draw_popup();
@@ -48,11 +41,8 @@ void GridSavePage::display() {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, 0, 0, 16,
                        mute_mask, slide_mask);
 
-    char modestr[7];
-    get_modestr(modestr);
-
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
-                              "MODE", modestr);
+                              "MODE", "SAVE");
 
     char step[4] = {'\0'};
     uint8_t step_count =
@@ -67,34 +57,16 @@ void GridSavePage::display() {
     oled_display.setFont(&TomThumb);
     // draw data flow in the center
     constexpr uint8_t data_x = 56;
-    if (MidiClock.state != 2 && encoders[0]->cur == SAVE_MERGE) {
-      oled_display.setCursor(data_x + 2, MCLGUI::s_menu_y + 12);
-      oled_display.print("MD");
-      oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
-      oled_display.print("SEQ");
 
-      oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
-      oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2, WHITE);
-      oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
-      mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
-    } else {
-      if (encoders[0]->cur == SAVE_SEQ || MidiClock.state == 2) {
-        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 12);
-        oled_display.print("SND");
-        oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
-        oled_display.print("SEQ");
+    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 12);
+    oled_display.print("SND");
+    oled_display.setCursor(data_x, MCLGUI::s_menu_y + 19);
+    oled_display.print("SEQ");
 
-        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
-        oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2,
-                                   WHITE);
-        oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
-        mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
-      } else {
-        oled_display.setCursor(data_x + 3, MCLGUI::s_menu_y + 15);
-        oled_display.print("MD");
-        mcl_gui.draw_horizontal_arrow(data_x + 13, MCLGUI::s_menu_y + 12, 8);
-      }
-    }
+    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 8, 2, WHITE);
+    oled_display.drawFastHLine(data_x + 13, MCLGUI::s_menu_y + 15, 2, WHITE);
+    oled_display.drawFastVLine(data_x + 15, MCLGUI::s_menu_y + 8, 8, WHITE);
+    mcl_gui.draw_horizontal_arrow(data_x + 16, MCLGUI::s_menu_y + 12, 5);
 
     oled_display.setCursor(data_x + 24, MCLGUI::s_menu_y + 15);
     oled_display.print("GRID");
@@ -104,18 +76,10 @@ void GridSavePage::display() {
 }
 
 void GridSavePage::save() {
-  char modestr[7];
-  get_modestr(modestr);
-  oled_display.textbox("SAVE SLOTS: ", modestr);
+  oled_display.textbox("SAVE SLOTS", "");
   oled_display.display();
 
-  uint8_t save_mode = encoders[0]->cur;
-  if (MidiClock.state == 2) {
-    encoders[0]->cur = SAVE_SEQ;
-    encoders[0]->old = SAVE_SEQ;
-    save_mode = SAVE_SEQ;
-  }
-
+  uint8_t save_mode = SAVE_SEQ;
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
@@ -132,21 +96,8 @@ void GridSavePage::save() {
 
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
-                                  track_select_array, save_mode);
-}
-
-void GridSavePage::get_modestr(char *modestr) {
-
-  strcpy(modestr, "SAVE");
-  if (MidiClock.state != 2) {
-    if (encoders[0]->cur == SAVE_MD) {
-      strcpy(modestr, "IMPORT");
-    }
-    if (encoders[0]->cur == SAVE_MERGE) {
-      strcpy(modestr, "MERGE");
-    }
-  }
+  mcl_actions.save_tracks(grid_page.getRow(), track_select_array,
+                          save_mode);
 }
 
 void GridSavePage::group_select() {
@@ -222,20 +173,13 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     track_select_array_from_type_select(track_select_array);
 
-    char modestr[7];
-    get_modestr(modestr);
-    oled_display.textbox("SAVE GROUPS: ", modestr);
+    oled_display.textbox("SAVE GROUPS", "");
     oled_display.display();
 
-    uint8_t save_mode = encoders[0]->cur;
-    if (MidiClock.state == 2) {
-      encoders[0]->cur = SAVE_SEQ;
-      encoders[0]->old = SAVE_SEQ;
-      save_mode = SAVE_SEQ;
-    }
+    uint8_t save_mode = SAVE_SEQ;
 
-    mcl_actions.save_tracks(grid_page.encoders[1]->getValue(),
-                                    track_select_array, save_mode);
+    mcl_actions.save_tracks(grid_page.getRow(),
+                            track_select_array, save_mode);
     GUI.setPage(&grid_page);
     return true;
   }

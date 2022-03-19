@@ -8,40 +8,39 @@ void OscMixerPage::init() {
   WavDesignerPage::init();
   trig_interface.off();
   wd.last_page = this;
-  classic_display = false;
+  wavdesign_menu_page.menu.enable_entry(1, false);
+  wavdesign_menu_page.menu.enable_entry(2, true);
 }
 void OscMixerPage::cleanup() {}
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
-  return true;
+    return true;
   }
+  /*
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     MD.preview_sample(encoders[3]->cur + 1);
     return true;
   }
+  */
 
   return false;
 }
 
 void OscMixerPage::loop() { WavDesignerPage::loop(); }
 void OscMixerPage::display() {
-// oled_display.clearDisplay();
+  // oled_display.clearDisplay();
   auto oldfont = oled_display.getFont();
   if (show_menu) {
     WavDesignerPage::display();
-  }
-  else {
-  oled_display.setFont();
-  oled_display.setCursor(0, 0);
-  oled_display.fillRect(0, 0, 64, 32, BLACK);
-  GUI.setLine(GUI.LINE1);
+  } else {
+    oled_display.setFont();
+    oled_display.setCursor(0, 0);
+    oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-  oled_display.print("SLOT: ");
-
-  oled_display.print(encoders[3]->cur);
-  draw_levels();
-  scanline_width = 4;
-  draw_wav();
+    oled_display.print("OSC MIXER");
+    draw_levels();
+    scanline_width = 4;
+    draw_wav();
   }
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -89,9 +88,7 @@ void OscMixerPage::draw_wav() {
     }
   }
   // float buffer[w];
-#ifdef OLED_DISPLAY
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
-#endif
   float largest_sample_so_far;
   for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
     float sample = 0;
@@ -114,26 +111,25 @@ void OscMixerPage::draw_wav() {
                 max_sine_gain;
 
             osc_sample +=
-                sine_osc.get_sample(n, freqs[i] * (float)f, 0) * sine_gain;
+                sine_osc.get_sample(n, freqs[i] * (float)f) * sine_gain;
           }
         }
         osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
         break;
       case 2:
         tri_osc.width = wd.pages[i].get_width();
-        osc_sample += tri_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += tri_osc.get_sample(n, freqs[i]);
         break;
       case 3:
         pul_osc.width = wd.pages[i].get_width();
-        osc_sample += pul_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += pul_osc.get_sample(n, freqs[i]);
         break;
       case 4:
         saw_osc.width = wd.pages[i].get_width();
-        osc_sample += saw_osc.get_sample(n, freqs[i], wd.pages[i].get_phase());
+        osc_sample += saw_osc.get_sample(n, freqs[i]);
         break;
       case 5:
-        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].get_phase(),
-                                         wd.pages[i].usr_values);
+        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].usr_values);
         break;
       }
       // Sum oscillator samples together
@@ -150,13 +146,11 @@ void OscMixerPage::draw_wav() {
     //  largest_sample_so_far = abs(buffer[n]);
     //  }
     uint8_t pixel_y = (uint8_t)(((sample) * (float)(h / 2)) + (h / 2));
-#ifdef OLED_DISPLAY
     oled_display.drawPixel(n + x, pixel_y + y, WHITE);
     // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
     if (n % 2 == 0) {
       oled_display.drawPixel(n + x, (h / 2) + y, WHITE);
     }
-#endif
   }
 
   sample_number += scanline_width;
@@ -171,28 +165,13 @@ void OscMixerPage::draw_wav() {
 }
 
 void OscMixerPage::draw_levels() {
-  GUI.setLine(GUI.LINE2);
   uint8_t scaled_level;
   char str[17] = "                ";
   for (int i = 0; i < 3; i++) {
-#ifdef OLED_DISPLAY
 
     scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);
     oled_display.fillRect(0 + i * 6, 12 + (15 - scaled_level), 4,
                           scaled_level + 1, WHITE);
-#else
-
-    scaled_level = (int)(((float)encoders[i]->cur / (float)127) * 7);
-    if (scaled_level == 7) {
-      str[i] = (char)(255);
-
-    } else if (scaled_level > 0) {
-      str[i] = (char)(scaled_level + 2);
-    }
-
-#endif
   }
-  GUI.put_string_at(0, str);
 }
-
 #endif

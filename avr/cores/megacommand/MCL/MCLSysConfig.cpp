@@ -79,7 +79,10 @@ bool MCLSysConfig::cfg_init() {
   cur_col = 0;
   memset(&routing, 6, sizeof(routing));
   poly_mask = 0;
-  uart2_ctrl_mode = MIDI_LOCAL_MODE;
+  uart2_ctrl_chan = MIDI_LOCAL_MODE;
+  uart2_poly_chan = MIDI_LOCAL_MODE;
+  uart2_prg_in = MIDI_LOCAL_MODE;
+  uart2_prg_out = MIDI_LOCAL_MODE;
   mutes = 0;
   display_mirror = 0;
   rec_quant = 0;
@@ -95,6 +98,7 @@ bool MCLSysConfig::cfg_init() {
   track_type_select = 0b00000101;
   uart2_device = 0;
   uart_cc_loopback = 0;
+  uart2_prg_mode = 0;
 
   cfgfile.close();
 

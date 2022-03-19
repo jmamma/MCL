@@ -10,13 +10,16 @@
 
 #define MAX_POLY_NOTES 16
 
+#define POLY_EVENT 0xF0
+#define CTRL_EVENT 0xE0
+#define NO_EVENT 0x00
+
 extern scale_t *scales[24];
 
 class SeqPtcMidiEvents : public MidiCallback {
 public:
   bool state;
 
-  bool is_md_midi(uint8_t channel);
 
   void setup_callbacks();
   void remove_callbacks();
@@ -39,26 +42,29 @@ public:
   int8_t poly_notes[MAX_POLY_NOTES];
   uint8_t poly_order[MAX_POLY_NOTES];
 
+  uint8_t dev_note_channels[NUM_DEVS];
   uint64_t dev_note_masks[NUM_DEVS][2];
   uint64_t note_mask[2];
 
   bool scale_padding;
   bool cc_link_enable;
 
+  uint8_t find_arp_track(uint8_t channel_event);
+
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   uint8_t seq_ext_pitch(uint8_t note_num);
-  uint8_t process_ext_pitch(uint8_t note_num, bool note_type);
+  uint8_t process_ext_event(uint8_t note_num, bool note_type, uint8_t channel);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num,
                             uint8_t fine_tune = 255);
-  uint8_t get_next_voice(uint8_t pitch, uint8_t track_number);
+  uint8_t get_next_voice(uint8_t pitch, uint8_t track_number, uint8_t channel_event);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
 
   void trig_md(uint8_t note_num, uint8_t track_number = 255,
                uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);
-  void trig_md_fromext(uint8_t note_num);
+  void trig_md_fromext(uint8_t note_num, uint8_t channel_event);
 
   void note_on_ext(uint8_t note_num, uint8_t velocity,
                    uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
@@ -70,10 +76,11 @@ public:
 
   uint8_t get_note_from_machine_pitch(uint8_t pitch);
 
+  uint8_t is_md_midi(uint8_t channel);
   void config_encoders();
   void init_poly();
 
-  void render_arp(bool recalc_notemask_ = true);
+  void render_arp(bool recalc_notemask_, MidiDevice *midi_dev, uint8_t track);
 
   void recalc_notemask();
   void draw_popup_octave();

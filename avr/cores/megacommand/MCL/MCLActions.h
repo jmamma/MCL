@@ -98,9 +98,9 @@ public:
   void kit_reload(uint8_t pattern);
 
   void save_tracks(int row, uint8_t *slot_select_array,
-                           uint8_t merge);
+                           uint8_t merge, uint8_t readpattern = 255);
 
-  void load_tracks(int row, uint8_t *slot_select_array);
+  void load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array = nullptr);
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
   void manual_transition(int row, uint8_t *slot_select_array);
 
@@ -114,6 +114,8 @@ private:
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
   void load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
 };
+
+extern void md_import();
 
 extern MCLActionsCallbacks mcl_actions_callbacks;
 extern MCLActionsMidiEvents mcl_actions_midievents;
