@@ -995,11 +995,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
     encoders[3]->cur = 1;
     slot_apply = 0;
     if (!slot.is_ext_track()) {
-      grid_slot_page.menu.enable_entry(1, true);
-      grid_slot_page.menu.enable_entry(2, false);
-    } else {
-      grid_slot_page.menu.enable_entry(1, false);
       grid_slot_page.menu.enable_entry(2, true);
+      grid_slot_page.menu.enable_entry(3, false);
+    } else {
+      grid_slot_page.menu.enable_entry(2, false);
+      grid_slot_page.menu.enable_entry(3, true);
     }
     show_slot_menu = true;
     grid_slot_page.init();

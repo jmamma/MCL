@@ -27,7 +27,7 @@ Please install Machinedrum OS X.06 before using MCL 4.10
  Basic: Program Change Receive will "Group Load" an entire row according to Load Page mode and Group Select settings.
 
  Advanced: Program change receive will set the row for slots to be loaded from.
-           MIDI notes greater than C3 on port 2 can be used to select slots to be loaded.
+           MIDI notes C3 and upwards on port 2 can be used to select slots to be loaded.
 
  In this way, you can load any slot (or multiple slots) using a combination of Program Change + MIDI note.
 
@@ -53,7 +53,7 @@ Please install Machinedrum OS X.06 before using MCL 4.10
 - Sample Management:
 
  WavDesigner now leverages the SampleBrowser ROM slot selection page.
- Bulk sample receive and send. Highlight, SoundBrowser -> Wav -> [ RECV ], then press shift2 to access the Send All / Recv All functions.
+ Bulk sample receive and send. Highlight, SoundBrowser -> Wav -> [ RECV ], then press <Shift> to access the Send All / Recv All functions.
 
  When receiving samples, sample are saved to the current directory. Sample names are prefixed with a 2 digit slot number.
  This 2 digit number is used to preserve sample order when re-uploading. Sample names that do not start with a slot number will
