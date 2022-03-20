@@ -10,8 +10,8 @@ Please install Machinedrum OS X.06 before using MCL 4.10
  [ Global ] key now behaves like MCL's <Shift> button.
  [ Up/Down/Lift/Right ] [ Yes ] [ No ] can be used to control all MCL menus, including text input and some page functions.
 
- [ Bank Group ] + [ PatSong ] = MCL Config page.
- From Grid, [ PatSong ] + [ BankGroup ] = Toggle Grid X/Y
+ [ Bank Group ] + [ Global ] = MCL Config page.
+ From Grid, [ Global ] + [ BankGroup ] = Toggle Grid X/Y
 
  Toggling between Enhanced + Classic/Extended can now only be performed when the sequencer is stopped.
 
@@ -33,7 +33,7 @@ Please install Machinedrum OS X.06 before using MCL 4.10
 
  If Program Change is not received before MIDI note on/off, MCL will load from the current selected GUI row.
 
- Slot loading occurs when all MIDI notes are released. MCL cannot load instanteously, there is a minimum 1 bar delay.
+ Slot loading occurs when all MIDI notes are released. MCL cannot load instantaneously, there is a minimum 1 bar delay.
 
  Config -> Midi -> PRG IN sets the receive channel for Program Change and Note messages.
  Config -> Midi -> PRG OUT sets the send channel for Program Change messages, which are sent when loading slots or rows.
