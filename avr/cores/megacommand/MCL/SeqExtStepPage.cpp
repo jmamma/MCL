@@ -789,12 +789,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t inc = 1;
+    int w = cur_w;
     if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 8;
     }
 
+    if (pianoroll_mode > 0) { w = inc; }
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      int w = cur_w;
       if (trig_interface.is_key_down(MDX_KEY_YES)) {
         w = 1;
       }
@@ -825,7 +826,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
 
         case MDX_KEY_LEFT: {
-          if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (trig_interface.is_key_down(MDX_KEY_FUNC) && (pianoroll_mode == 0)) {
             mcl_seq.ext_tracks[last_ext_track].rotate_left();
           } else {
             pos_cur_x(-1 * w);
@@ -836,7 +837,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_RIGHT: {
-          if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (trig_interface.is_key_down(MDX_KEY_FUNC) && (pianoroll_mode == 0)) {
             mcl_seq.ext_tracks[last_ext_track].rotate_right();
           } else {
             pos_cur_x(w);
