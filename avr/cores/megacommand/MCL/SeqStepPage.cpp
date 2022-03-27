@@ -242,9 +242,12 @@ void SeqStepPage::loop() {
             uint8_t note_num = seq_param4.cur;
             uint8_t machine_pitch =
                 seq_ptc_page.get_machine_pitch(last_md_track, note_num);
-            active_track.set_track_pitch(step, machine_pitch);
-            seq_step_page.encoders_used_clock[3] =
-                slowclock; // indicate that encoder has changed.
+
+            if (machine_pitch != MD.kit.params[last_md_track][0]) {
+              active_track.set_track_pitch(step, machine_pitch);
+              seq_step_page.encoders_used_clock[3] =
+                  slowclock; // indicate that encoder has changed.
+            }
           }
         }
       }
@@ -357,10 +360,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
+      if (pitch > 127) {
+         pitch = MD.kit.params[last_md_track][0];
+      }
+      /*
       if (pitch == 255) {
         seq_param4.cur = 0;
         pitch_param = 255;
       } else if (tuning) {
+      */
+      if (tuning) {
         uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
         if (note_num == 255) {
           seq_param4.cur = 0;
