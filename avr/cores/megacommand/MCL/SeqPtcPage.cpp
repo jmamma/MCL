@@ -808,7 +808,10 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     if (channel_event == POLY_EVENT) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
         if (IS_BIT_SET16(mcl_cfg.poly_mask, n)) {
-          MD.setTrackParam(n, param - 16, value);
+          if (track_param < 24) {
+          mcl_seq.md_tracks[n].update_param(param - 16, value);
+          }
+          MD.setTrackParam(n, param - 16, value, nullptr, true);
         }
       }
     }
@@ -914,7 +917,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
       if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
         if ((track_param < 24 && track_param > 7) || (track_param < 8 && MD.kit.models[n] == MD.kit.models[track])) {
-            MD.setTrackParam(n, track_param, value);
+            mcl_seq.md_tracks[n].update_param(track_param, value);
+            MD.setTrackParam(n, track_param, value, nullptr, true);
             display_polylink = 1;
           }
         }

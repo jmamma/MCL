@@ -357,8 +357,7 @@ void MDClass::restore_kit_params() {
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
   if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
-    MD.kit.params[track][param] = MD.kit.params_orig[track][param];
-    MD.setTrackParam(track, param, MD.kit.params_orig[track][param]);
+    MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr, true);
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
       mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param, MD.kit.params_orig[track][param]);
     }
@@ -366,12 +365,12 @@ void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
 }
 
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
-                            MidiUartParent *uart_) {
-  setTrackParam_inline(track, param, value, uart_);
+                            MidiUartParent *uart_, bool update_kit) {
+  setTrackParam_inline(track, param, value, uart_, update_kit);
 }
 
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
-                                   MidiUartParent *uart_) {
+                                   MidiUartParent *uart_, bool update_kit) {
 
   if (uart_ == nullptr) {
     uart_ = uart;
@@ -386,9 +385,11 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     } else {
       cc += 24 + b * 24;
     }
+    if (update_kit) { kit.params[track][param] = value; }
   } else if (param == 32) { // MUTE
     cc = 12 + b;
   } else if (param == 33) { // LEV
+    if (update_kit) { kit.levels[track] = value; }
     cc = 8 + b;
   } else {
     return;

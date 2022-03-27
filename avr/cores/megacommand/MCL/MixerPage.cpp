@@ -69,8 +69,7 @@ void MixerPage::cleanup() {
 
 void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 1;
-  MD.kit.levels[curtrack] = value;
-  MD.setTrackParam(curtrack, 33, value);
+  MD.setTrackParam(curtrack, 33, value, nullptr, true);
   // in_sysex = 0;
 }
 
@@ -142,15 +141,12 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
         newval = 127;
       }
       for (uint8_t value = MD.kit.params[i][param]; value < newval; value++) {
-        MD.setTrackParam(i, param, value);
-        MD.kit.params[i][param] = value;
+        MD.setTrackParam(i, param, value, nullptr, true);
       }
       for (uint8_t value = MD.kit.params[i][param]; value > newval; value--) {
-        MD.setTrackParam(i, param, value);
-        MD.kit.params[i][param] = value;
+        MD.setTrackParam(i, param, value, nullptr, true);
       }
-      MD.setTrackParam(i, param, newval);
-      MD.kit.params[i][param] = newval;
+      MD.setTrackParam(i, param, newval, nullptr, true);
       SET_BIT16(redraw_mask, i);
     }
   }
@@ -369,13 +365,9 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   SET_BIT16(mixer_page.redraw_mask, track);
   for (int i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
-      MD.setTrackParam(i, track_param, value);
+      MD.setTrackParam(i, track_param, value, nullptr, true);
       if (track_param < 24) {
-        MD.kit.params[i][track_param] = value;
         mcl_seq.md_tracks[i].update_param(track_param, value);
-      }
-      if (track_param == 33) {
-        MD.kit.levels[i] = value;
       }
       SET_BIT16(mixer_page.redraw_mask, i);
     }

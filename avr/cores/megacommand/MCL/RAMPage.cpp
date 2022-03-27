@@ -48,9 +48,7 @@ void RAMPage::init() {
   }
 }
 
-void RAMPage::cleanup() {
-  oled_display.clearDisplay();
-}
+void RAMPage::cleanup() { oled_display.clearDisplay(); }
 void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();
@@ -61,7 +59,8 @@ void RAMPage::setup_sequencer(uint8_t track) {
   CLEAR_LOCK();
 }
 
-void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t transition) {
+void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row,
+                           uint8_t transition) {
 
   mcl_actions.links[track].row = row;
   mcl_actions.links[track].loops = 1;
@@ -77,7 +76,6 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row, uint8_t tr
   mcl_actions.calc_next_transition();
   mcl_actions.calc_latency();
 }
-
 
 void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
                             uint8_t source, uint8_t len, uint8_t rate,
@@ -137,11 +135,11 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0,timing_mid,0);
+    md_seq_track.set_track_step(0, timing_mid, 0);
     // md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0,timing_mid,0);
+    md_seq_track.set_track_step(0, timing_mid, 0);
     // oneshot
     // md_track.seq_data.conditional[0] = 14;
   } else {
@@ -158,7 +156,6 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   md_track.store_in_mem(track);
 
   prepare_link(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
-
 }
 
 void RAMPage::reverse(uint8_t track) {
@@ -284,7 +281,8 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_seq_track.clear_track(clear_locks, send_params);
 
-  mcl_seq.md_tracks[track].clear_track(clear_locks, send_params); //make sure current track does not retrigger
+  mcl_seq.md_tracks[track].clear_track(
+      clear_locks, send_params); // make sure current track does not retrigger
 
   md_track.machine.init();
 
@@ -326,10 +324,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0,timing_mid,0);
+    md_seq_track.set_track_step(0, timing_mid, 0);
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0,timing_mid,0);
+    md_seq_track.set_track_step(0, timing_mid, 0);
   } else {
     md_track.machine.trigGroup = 255;
   }
@@ -348,7 +346,6 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_track.store_in_mem(track);
   prepare_link(track, steps, SLOT_RAM_PLAY);
-
 }
 
 void RAMPage::setup_ram_play_mono(uint8_t track) {
@@ -619,8 +616,12 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
-  if (track_param == 32) { return; } //ignore mute
+  if (track > 15) {
+    return;
+  }
+  if (track_param == 32) {
+    return;
+  } // ignore mute
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return;
@@ -645,7 +646,10 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
         }
         */
       } else {
-        MD.setTrackParam(n, track_param, value);
+        if (track_param < 24) {
+          mcl_seq.md_tracks[n].update_param(track_param, value);
+        }
+        MD.setTrackParam(n, track_param, value, nullptr, true);
       }
     }
     // in_sysex = 0;
@@ -674,7 +678,7 @@ void RAMPage::remove_callbacks() {
 
 bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64; 
+    uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
@@ -700,7 +704,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    yes:
+  yes:
     if (mcl_cfg.ram_page_mode == MONO) {
       uint8_t lev = 64;
       if (encoders[0]->cur == SOURCE_MAIN) {
@@ -737,7 +741,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    no:
+  no:
     RAMPage::slice_modes[page_id] = 0;
     oled_display.textbox("SLICE", "");
     if (mcl_cfg.ram_page_mode == MONO) {
