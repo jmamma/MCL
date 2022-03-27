@@ -83,7 +83,7 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     return;
   }
 
-  if (SD.chdir(from)) {
+  if (_cd(from)) {
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
       grid_filename[l] = '.';
       grid_filename[l + 1] = i + '0';
