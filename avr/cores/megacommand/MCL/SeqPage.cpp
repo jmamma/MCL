@@ -784,8 +784,10 @@ void opt_clear_track_handler() {
     } else if (opt_clear == 1) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
-    oled_display.textbox(str, "");
-    MD.popup_text(str);
+    if (opt_clear) {
+      oled_display.textbox(str, "");
+      MD.popup_text(str);
+    }
   }
   opt_clear = 0;
 }
