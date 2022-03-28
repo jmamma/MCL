@@ -201,6 +201,8 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
       mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_OFF;
     } else {
       mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_ON;
+      uint8_t mod12_counter = MidiClock.mod12_counter;
+      while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {};
       mcl_seq.ext_tracks[track].buffer_notesoff();
     }
   } else {
