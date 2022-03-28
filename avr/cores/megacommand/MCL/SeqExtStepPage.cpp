@@ -794,7 +794,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     int w = timing_mid;
     if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
-      w = w * 4;
+      w = w * 2;
     }
 
     if (pianoroll_mode > 0) {
