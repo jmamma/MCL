@@ -109,13 +109,16 @@ void ExtSeqTrack::recalc_slides() {
   // Because, we support two lock values of same lock_idx per step.
   // Slide -> from last lock event on start step to first lock event on
   // destination step
+  bool find = false;
   for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
     auto &e = events[curidx + n];
     if (e.is_lock && e.event_on) {
       find_array[e.lock_idx] = 1;
+      find = true;
     }
   }
 
+  if (!find) { goto end; }
   find_next_locks(curidx, step, find_array);
 
   ext_event_t *e;
@@ -153,7 +156,7 @@ void ExtSeqTrack::recalc_slides() {
      */
     prepare_slide(c, x0, x1, y0, y1);
   }
-
+  end:
   locks_slides_recalc = 255;
 }
 
@@ -418,9 +421,8 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
 
   if (end_step == step) {
-    DEBUG_DUMP("ALERT start == end");
+    DEBUG_PRINTLN("ALERT start == end");
     end_step = end_step + 1;
-    //    end_utiming = 2 * timing_mid - end_utiming;
     end_utiming -= timing_mid;
   }
 

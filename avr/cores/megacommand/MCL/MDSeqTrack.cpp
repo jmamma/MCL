@@ -223,6 +223,7 @@ void MDSeqTrack::recalc_slides() {
     cur_mask <<= 1;
   }
 
+  if (find_mask == 0) { goto end; }
   auto lockidx = locks_slides_idx;
   find_next_locks(lockidx, step, find_mask);
 
@@ -252,7 +253,7 @@ void MDSeqTrack::recalc_slides() {
     y1 = locks_slide_next_lock_val[c];
     prepare_slide(c, x0, x1, y0, y1);
   }
-
+  end:
   locks_slides_recalc = 255;
 }
 
