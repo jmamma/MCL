@@ -132,9 +132,8 @@ struct smplchunk_t : public chunk_t {
     }
 
     SDS_loop_type = loops[0].dwType;
-    SDS_loop_start =
-        loops[0].dwStart;          // /  fmt.numChannels / (fmt.bitRate / 8);
-    SDS_loop_end = loops[0].dwEnd; // / fmt.numChannels / (fmt.bitRate / 8);
+    SDS_loop_start = loops[0].dwStart / (fmt.numChannels / (fmt.bitRate / 8));
+    SDS_loop_end = loops[0].dwEnd / (fmt.numChannels / (fmt.bitRate / 8));
 
     DEBUG_DUMP(loops[0].dwStart);
     DEBUG_DUMP(loops[0].dwEnd);
