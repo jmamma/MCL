@@ -140,7 +140,11 @@ void SoundBrowserPage::send_sample(int slot, bool is_syx, char *newname, bool si
     if (is_syx) {
       success = midi_sds.sendSyx(temp_entry, slot);
     } else {
-      success = midi_sds.sendWav(temp_entry, newname, slot, /* show progress */ true);
+      char *ptr = newname;
+      if (newname == nullptr) {
+         if (isdigit(temp_entry[0]) && isdigit(temp_entry[1]) && (temp_entry[2] != '.') && (temp_entry[2] != '\0')) { ptr = temp_entry + 2; }
+      }
+      success = midi_sds.sendWav(temp_entry, ptr, slot, /* show progress */ true);
     }
     if (!silent) {
     if (success) {
