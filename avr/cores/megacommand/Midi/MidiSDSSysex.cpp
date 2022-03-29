@@ -1,10 +1,11 @@
 #include "WProgram.h"
 
 #include "MCLSd.h"
-#include "math.h"
 #include "MidiSDSMessages.h"
 #include "MidiSDSSysex.h"
 #include "helpers.h"
+#include "math.h"
+
 MidiSDSSysexListenerClass MidiSDSSysexListener;
 
 void MidiSDSSysexListenerClass::start() {
@@ -29,8 +30,18 @@ void MidiSDSSysexListenerClass::end() {
 
   msgType = sysex->getByte(2);
   switch (msgType) {
+  case MIDI_SDS_DUMPHEADER:
 
-    case MIDI_SDS_DATAPACKET:
+    if (midi_sds.state != SDS_READY) {
+      DEBUG_PRINTLN(F("header received, not in ready"));
+      return;
+    }
+    midi_sds.state = SDS_REC;
+    dump_header();
+
+    break;
+
+  case MIDI_SDS_DATAPACKET:
     if (midi_sds.state != SDS_REC) {
       DEBUG_PRINTLN(F("not in sds rec mode"));
       midi_sds.sendCancelMessage();
@@ -67,18 +78,6 @@ void MidiSDSSysexListenerClass::end_immediate() {
   msgType = sysex->getByte(2);
 
   switch (msgType) {
-  case MIDI_SDS_DUMPHEADER:
-
-    if (midi_sds.state != SDS_READY) {
-      DEBUG_PRINTLN(F("header received, not in ready"));
-      return;
-    }
-    midi_sds.state = SDS_REC;
-
-    dump_header();
-
-    break;
-
 
   case MIDI_SDS_DUMPREQUEST:
     dump_request();
@@ -135,6 +134,16 @@ void MidiSDSSysexListenerClass::dump_header() {
   midi_sds.sampleLength |= ((uint32_t)sysex->getByte(i++) << 7);
   midi_sds.sampleLength |= ((uint32_t)sysex->getByte(i++) << 14);
 
+  midi_sds.loopStart = (uint32_t)(sysex->getByte(i++));
+  midi_sds.loopStart |= ((uint32_t)sysex->getByte(i++) << 7);
+  midi_sds.loopStart |= ((uint32_t)sysex->getByte(i++) << 14);
+
+  midi_sds.loopEnd = (uint32_t)(sysex->getByte(i++));
+  midi_sds.loopEnd |= ((uint32_t)sysex->getByte(i++) << 7);
+  midi_sds.loopEnd |= ((uint32_t)sysex->getByte(i++) << 14);
+
+  midi_sds.loopType = sysex->getByte(i++);
+
   DEBUG_PRINTLN(midi_sds.sampleLength);
   uint32_t sampleRate = 1000000000 / midi_sds.samplePeriod + 1;
 
@@ -143,11 +152,15 @@ void MidiSDSSysexListenerClass::dump_header() {
   DEBUG_PRINTLN(midi_sds.sampleFormat);
   DEBUG_PRINTLN(midi_sds.samplePeriod);
   DEBUG_PRINTLN(sampleRate);
+  DEBUG_PRINTLN("loop");
+  DEBUG_PRINTLN(midi_sds.loopType);
+  DEBUG_PRINTLN(midi_sds.loopStart);
+  DEBUG_PRINTLN(midi_sds.loopEnd);
   char my_string[16] = "___.wav";
-
   my_string[0] = (midi_sds.sampleNumber % 1000) / 100 + '0';
   my_string[1] = (midi_sds.sampleNumber % 100) / 10 + '0';
   my_string[2] = (midi_sds.sampleNumber % 10) + '0';
+
   if ((midi_sds.sampleFormat != 8) && (midi_sds.sampleFormat != 16) &&
       (midi_sds.sampleFormat != 24)) {
     midi_sds.sendNakMessage();
@@ -155,10 +168,17 @@ void MidiSDSSysexListenerClass::dump_header() {
   }
   bool overwrite = true;
   if (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate,
-                              midi_sds.sampleFormat)) {
+                              midi_sds.sampleFormat, midi_sds.loopType != 0x7F)) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
   }
+  if (midi_sds.loopType != 0x7F) {
+    midi_sds.wav_file.header.smpl.init(midi_sds.wav_file.header.fmt,
+                                       midi_sds.loopType, midi_sds.loopStart,
+                                       midi_sds.loopEnd);
+    //midi_sds.wav_file.file.sync();
+  }
+
   midi_sds.samplesSoFar = 0;
   midi_sds.packetNumber = 0;
 
@@ -175,7 +195,9 @@ void MidiSDSSysexListenerClass::dump_header() {
   }
   // temp_file.open("temp_file.sds", FILE_WRITE | O_CREAT);
   ///  temp_file.close();
-  if (midi_sds.use_hand_shake) { midi_sds.sendAckMessage(); }
+  if (midi_sds.use_hand_shake) {
+    midi_sds.sendAckMessage();
+  }
 }
 
 void MidiSDSSysexListenerClass::data_packet() {
@@ -242,10 +264,10 @@ void MidiSDSSysexListenerClass::data_packet() {
         signed_val = decode_val;
       }
       // Shift the value in to b, byte values for wav file.
-      //DEBUG_PRINTLN(" ");
-      //DEBUG_PRINT(decode_val);
-      //DEBUG_PRINT(",");
-      //DEBUG_PRINT(signed_val);
+      // DEBUG_PRINTLN(" ");
+      // DEBUG_PRINT(decode_val);
+      // DEBUG_PRINT(",");
+      // DEBUG_PRINT(signed_val);
       for (uint8_t b = 0; b < midi_sds.bytes_per_word; b++) {
         samples[byte_count + b] = (uint8_t)((signed_val >> (8 * (b))) & 0xFF);
       }
@@ -258,7 +280,9 @@ void MidiSDSSysexListenerClass::data_packet() {
     if (midi_sds.wav_file.write_samples(
             &samples, num_of_samples, midi_sds.samplesSoFar, 0, write_header)) {
       midi_sds.samplesSoFar += num_of_samples;
-      if (midi_sds.use_hand_shake) { midi_sds.sendAckMessage(); }
+      if (midi_sds.use_hand_shake) {
+        midi_sds.sendAckMessage();
+      }
       midi_sds.incPacketNumber();
     } else {
       DEBUG_PRINTLN(F("error writing sds to SDCard"));
@@ -287,5 +311,11 @@ void MidiSDSSysexListenerClass::data_packet() {
   }
 }
 
-void MidiSDSSysexListenerClass::setup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->addSysexListener(this); }
-void MidiSDSSysexListenerClass::cleanup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->removeSysexListener(this); }
+void MidiSDSSysexListenerClass::setup(MidiClass *_midi) {
+  sysex = &(_midi->midiSysex);
+  sysex->addSysexListener(this);
+}
+void MidiSDSSysexListenerClass::cleanup(MidiClass *_midi) {
+  sysex = &(_midi->midiSysex);
+  sysex->removeSysexListener(this);
+}

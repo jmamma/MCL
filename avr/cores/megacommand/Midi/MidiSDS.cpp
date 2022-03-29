@@ -403,18 +403,26 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   }
   while(true) {
     uint8_t msg = waitForMsg(2000);
-    if (msg == 255 || msg == MIDI_SDS_CANCEL) goto recv_fail;
+    if (msg == 255 || msg == MIDI_SDS_CANCEL)  { 
+      DEBUG_PRINTLN("sds recv abort"); 
+      goto recv_fail; 
+    }
     if (midi_sds.state == SDS_READY) {
+      DEBUG_PRINTLN("here");
       if (wav_file.file.isOpen()) {
+        DEBUG_PRINTLN("wav is open");
         goto recv_fail;
       } else {
         if (SD.exists(filename)) {
-          SD.remove(filename);
+          if (!SD.remove(filename)) {
+          DEBUG_PRINTLN("could not remove");
+          }
         }
         if(!SD.rename(wav_file.filename, filename)) {
           gfx.alert("wav_file rename", "failed :(");
           goto fin;
         }
+        DEBUG_PRINTLN("okay");
         ret = true;
         goto fin;
       }
