@@ -115,8 +115,8 @@ struct smplchunk_t : public chunk_t {
 
     loops[0].dwIdentifier = 0;
     loops[0].dwType = SDS_loop_type;
-    loops[0].dwStart = SDS_loop_start;
-    loops[0].dwEnd = SDS_loop_end;
+    loops[0].dwStart = SDS_loop_start * fmt.numChannels * (fmt.bitRate / 8);
+    loops[0].dwEnd = SDS_loop_end * fmt.numChannels * (fmt.bitRate / 8);
     loops[0].dwFraction = 0;
     loops[0].dwPlayCount = 0;
   }
@@ -124,18 +124,24 @@ struct smplchunk_t : public chunk_t {
   void to_sds(const fmtchunk_t &fmt, uint8_t &SDS_loop_type,
               uint32_t &SDS_loop_start, uint32_t &SDS_loop_end) {
     // only activate SDS looping if we're not dealing with chain/slices
-
     if (cSampleLoops != 1) {
       return;
     }
     if (loops[0].dwType > 1) { // neither forward nor fw-bw
       return;
     }
+
     SDS_loop_type = loops[0].dwType;
     SDS_loop_start =
         loops[0].dwStart;          // /  fmt.numChannels / (fmt.bitRate / 8);
     SDS_loop_end = loops[0].dwEnd; // / fmt.numChannels / (fmt.bitRate / 8);
 
+    DEBUG_DUMP(loops[0].dwStart);
+    DEBUG_DUMP(loops[0].dwEnd);
+    DEBUG_DUMP(fmt.numChannels);
+    DEBUG_DUMP(fmt.bitRate);
+    DEBUG_DUMP(SDS_loop_start);
+    DEBUG_DUMP(SDS_loop_end);
   }
 
   static constexpr const char *id = "smpl";
