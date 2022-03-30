@@ -1,3 +1,36 @@
+MCL 4.11 30/03/2022
+
+Please install Machinedrum OS X.06 before using MCL 4.11
+
+- Bug Fixes:
+
+  Project rename was broken in 4.10
+
+  Kit and sequencer params weren't updated during a paramater change on linked/poly tracks.
+  This could cause incorrect value reset on sequencer stop.
+
+  Piano Roll track menu would incorrectly show "clear track message" in certain circumstances.
+
+  When muting ext tracks from the Piano Roll, notes could become stuck.
+
+  Slide calculation would sometimes waste cpu cycles. could result in sequencer slowdown.
+
+- Improvements:
+
+  Better pitch input on step edit page by setting <Encoder 4> to track PTC value.
+
+  Piano Roll GUI: Trig buttons no longer change cursor width and now move in step increments offset by the current page.
+                  Cursor width change via arrow keys is now linear.
+		     	  Func + Left/Right is no longer track shift, and instead is fast travel for cursor.
+
+  Wav Loop Points now correctly adhere to .wav format.
+
+  When receiving samples via MIDI SDS, loop points are now saved within the .wav.
+
+  Sending a single sample starting with 2 digits no longer includes those digits in the sample name.
+
+  MIDI SDS Receive improved.
+
 MCL 4.10 19/03/2022
 
 Please install Machinedrum OS X.06 before using MCL 4.10
