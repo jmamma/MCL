@@ -324,7 +324,7 @@ void GridPage::display_grid_info() {
   oled_display.print(':');
 
   char val[4];
-  mcl_gui.put_value_at2(encoders[0]->cur, val);
+  mcl_gui.put_value_at2(encoders[0]->cur + 1, val);
   val[2] = '\0';
   oled_display.print(val);
   oled_display.print(" ");
