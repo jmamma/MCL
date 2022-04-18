@@ -9,7 +9,6 @@
 #define SYSEX_BUF_SIZE 6000
 
 #include "wiring_private.h"
-
 //#define DEBUGMODE
 
 #ifdef MEGACOMMAND

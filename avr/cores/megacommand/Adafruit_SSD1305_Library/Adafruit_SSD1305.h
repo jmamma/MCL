@@ -117,7 +117,8 @@ public:
   
  Adafruit_SSD1305(int8_t RST) :sid(-1), sclk(-1), dc(-1), rst(RST), cs(-1), Adafruit_GFX(SSD1305_LCDWIDTH, SSD1305_LCDHEIGHT) {}
   
-  
+  uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8];
+
   void begin(uint8_t i2caddr = SSD1305_I2C_ADDRESS);
   void command(uint8_t c);
   void data(uint8_t c);

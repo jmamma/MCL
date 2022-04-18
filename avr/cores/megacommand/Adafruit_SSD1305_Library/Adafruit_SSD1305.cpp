@@ -47,7 +47,7 @@ SPISettings oledspi = SPISettings(16000000, MSBFIRST, SPI_MODE0);
 extern const uint8_t PROGMEM font[];
 
 // the memory buffer for the LCD
-
+/*
 static uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
@@ -138,7 +138,7 @@ static uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8] = {
     0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01
 #endif
 };
-
+*/
 // the most basic function, set a single pixel
 void Adafruit_SSD1305::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x >= width()) || (y >= height()) || (x < 0) || (y < 0))

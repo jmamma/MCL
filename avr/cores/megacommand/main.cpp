@@ -25,8 +25,9 @@ extern "C" {
 #define OLED_RESET 38
 
 #ifdef OLED_DISPLAY
-Adafruit_SSD1305 oled_display(OLED_DC, OLED_RESET, OLED_CS);
+ST7920 oled_display(A4);
 #endif
+
 volatile uint8_t MidiUartParent::handle_midi_lock = 0;
 // extern MidiClockClass MidiClock;
 // extern volatile uint16_t clock = 0;
@@ -177,6 +178,10 @@ void init(void) {
   DDRL |= _BV(PL4) | _BV(PL3);
   PORTL |= _BV(PL4);
   PORTL &= ~_BV(PL3);
+
+
+  DDRF = 0xFF;
+  PORTF = 0xFF;
 
   timer_init();
   //  m_init();

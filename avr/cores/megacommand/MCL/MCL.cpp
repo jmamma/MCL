@@ -21,8 +21,8 @@ void MCL::setup() {
   bool ret = false;
 
   delay(100);
-  ret = mcl_sd.sd_init();
   gfx.init_oled();
+  ret = mcl_sd.sd_init();
   if (!ret) {
     oled_display.print("SD CARD ERROR :-(");
     oled_display.display();

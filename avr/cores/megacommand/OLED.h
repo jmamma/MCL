@@ -3,7 +3,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1305.h>
-
+#include <ST7920_GFX_Library.h>
 #define OLED_DISPLAY
 #define OLED_CLK 52
 #define OLED_MOSI 51
@@ -14,7 +14,7 @@
 #define OLED_RESET 38
 
 #ifdef OLED_DISPLAY
-extern Adafruit_SSD1305 oled_display;
+extern ST7920 oled_display;
 #endif
 
 #endif /* OLED_H__ */
