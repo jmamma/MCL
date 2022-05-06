@@ -678,6 +678,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     uint8_t track_select_array[GRID_LENGTH] = {0};
     GridRowHeader header;
 
+    SeqTrack seq_track;
+    uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
+
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       uint8_t ypos = y + getRow();
       proj.read_grid_row_header(&header, y + getRow());
@@ -696,8 +699,20 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
         } else if (slot_update == 1) {
           // Save slot link data
           activate_header = true;
-          slot.active = header.track_type[xpos];
-          slot.store_in_grid(xpos, ypos);
+          if (x == 0) {
+            //slot.active = header.track_type[xpos];
+            slot.store_in_grid(xpos, ypos);
+          }
+          else {
+            temp_slot.load_from_grid(xpos,ypos);
+            uint8_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
+            //check if length is an even multiple, otherwise skip.
+            if (temp_slot_length && !(target_length % temp_slot_length) && temp_slot_length <= target_length) {
+              temp_slot.link.loops = target_length / temp_slot_length;
+              temp_slot.link.row = slot.link.row;
+              temp_slot.store_in_grid(xpos, ypos);
+            }
+          }
         } else if (slot_load == 1) {
           // if (height > 1 && y == 0) {
           //   mcl_actions.chains[xpos].init();
