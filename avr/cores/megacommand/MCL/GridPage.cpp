@@ -705,7 +705,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
           }
           else {
             temp_slot.load_from_grid(xpos,ypos);
-            uint8_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
+            uint16_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
             //check if length is an even multiple, otherwise skip.
             if (temp_slot_length && !(target_length % temp_slot_length) && temp_slot_length <= target_length) {
               temp_slot.link.loops = target_length / temp_slot_length;
