@@ -26,8 +26,8 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].uart = &MidiUart2;
     ext_tracks[i].set_channel(i);
-    ext_tracks[i].set_length(32);
-    ext_tracks[i].speed = SEQ_SPEED_2X;
+    ext_tracks[i].set_length(16);
+    ext_tracks[i].speed = SEQ_SPEED_1X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
     ext_arp_tracks[i].track_number = i;
@@ -35,7 +35,7 @@ void MCLSeq::setup() {
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].length = 16;
-    aux_tracks[i].speed = SEQ_SPEED_2X;
+    aux_tracks[i].speed = SEQ_SPEED_1X;
   }
 
   enable();
