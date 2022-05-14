@@ -50,6 +50,7 @@ bool MNMClass::probe() {
     // calculated before proceeding.
     mcl_gui.delay_progress(400);
 
+    /*
     if (!get_fw_caps()) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MONOMACHINE");
@@ -60,6 +61,7 @@ bool MNMClass::probe() {
       while (1)
         ;
     }
+    */
 
     if (!MNM.getBlockingGlobal(7)) {
       return false;
