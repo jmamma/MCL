@@ -166,8 +166,11 @@ void MNMClass::setTrackPitch(uint8_t track, uint8_t pitch) {
   midiuart->sendNRPN(global.baseChannel, (112 + track) << 7, pitch);
 }
 
-void MNMClass::setTrackLevel(uint8_t track, uint8_t level) {
-  midiuart->sendCC(global.baseChannel + track, 7, level);
+uint8_t MNMClass::setTrackLevel(uint8_t track, uint8_t level, bool send) {
+  if (send) {
+    midiuart->sendCC(global.baseChannel + track, 7, level);
+  }
+  return 3;
 }
 
 void MNMClass::setAutoParam(uint8_t param, uint8_t value) {
@@ -182,7 +185,7 @@ void MNMClass::setAutoLevel(uint8_t level) {
   midiuart->sendCC(global.autotrackChannel, 7, level);
 }
 
-void MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value) {
+uint8_t MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value, bool send) {
   uint8_t cc = 0;
   if (param == 100) {
     cc = 0x3; // MUT
@@ -195,7 +198,10 @@ void MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value) {
   } else {
     cc = param + 0x40;
   }
+  if (send) {
   midiuart->sendCC(global.baseChannel + track, cc, value);
+  }
+  return 3;
 }
 
 bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
@@ -262,8 +268,8 @@ void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   }
 }
 
-void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
-                             bool initSynth) {
+uint8_t MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
+                             bool initSynth, bool send) {
   uint8_t data[] = {MNM_LOAD_GLOBAL_ID, track, model, 0x00};
   if (initAll) {
     data[3] = 0x01;
@@ -272,7 +278,7 @@ void MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
   } else {
     data[3] = 0x00;
   }
-  sendRequest(data, countof(data));
+  return sendRequest(data, countof(data), send);
 }
 
 void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine,
@@ -303,12 +309,13 @@ void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine,
   kit_->types[track] = machine->type;
 }
 
-void MNMClass::setMachine(uint8_t track, uint8_t idx) {
-  assignMachine(track, kit.models[idx]);
+uint8_t MNMClass::setMachine(uint8_t track, uint8_t idx, bool send) {
+  uint8_t size = assignMachine(track, kit.models[idx], send);
   for (int i = 0; i < 56; i++) {
-    setParam(track, i, kit.parameters[idx][i]);
+    size += setParam(track, i, kit.parameters[idx][i], send);
   }
-  setTrackLevel(track, kit.levels[idx]);
+  size += setTrackLevel(track, kit.levels[idx], send);
+  return size;
 }
 
 void MNMClass::updateKitParams() {

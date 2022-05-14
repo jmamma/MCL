@@ -12,6 +12,10 @@ public:
     active = MNM_TRACK_TYPE;
     static_assert(sizeof(MNMTrack) <= GRID2_TRACK_LEN);
   }
+  void init();
+  uint16_t calc_latency(uint8_t tracknumber);
+
+  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
 
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);

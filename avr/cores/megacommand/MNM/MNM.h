@@ -58,10 +58,10 @@ public:
   void sendNoteOff(uint8_t note) { sendNoteOff(currentTrack, note); }
   void sendNoteOff(uint8_t track, uint8_t note);
 
-  void setParam(uint8_t param, uint8_t value) {
-    setParam(currentTrack, param, value);
+  uint8_t setParam(uint8_t param, uint8_t value) {
+    return setParam(currentTrack, param, value);
   }
-  void setParam(uint8_t track, uint8_t param, uint8_t value);
+  uint8_t setParam(uint8_t track, uint8_t param, uint8_t value, bool send = true);
   void setAutoParam(uint8_t param, uint8_t value);
   void setAutoLevel(uint8_t level);
 
@@ -73,8 +73,8 @@ public:
   void setTrackPitch(uint8_t pitch) { setTrackPitch(currentTrack, pitch); }
   void setTrackPitch(uint8_t track, uint8_t pitch);
 
-  void setTrackLevel(uint8_t level) { setTrackLevel(currentTrack, level); }
-  void setTrackLevel(uint8_t track, uint8_t level);
+  uint8_t setTrackLevel(uint8_t level) { return setTrackLevel(currentTrack, level); }
+  uint8_t setTrackLevel(uint8_t track, uint8_t level, bool send = true);
 
   void triggerTrack(bool amp = false, bool lfo = false, bool filter = false) {
     triggerTrack(currentTrack, amp, lfo, filter);
@@ -104,18 +104,18 @@ public:
   void setAudioTrack(uint8_t track);
   void setMidiTrack(uint8_t track);
 
-  void assignMachine(uint8_t model, bool initAll = false,
+  uint8_t assignMachine(uint8_t model, bool initAll = false,
                      bool initSynth = false) {
-    assignMachine(currentTrack, model, initAll, initSynth);
+    return assignMachine(currentTrack, model, initAll, initSynth);
   }
-  void assignMachine(uint8_t track, uint8_t model, bool initAll = false,
-                     bool initSynth = false);
+  uint8_t assignMachine(uint8_t track, uint8_t model, bool initAll = false,
+                     bool initSynth = false, bool send = true);
 
   void insertMachineInKit(uint8_t track, MNMMachine *machine,
                           bool set_level = true);
 
-  void setMachine(uint8_t idx) { setMachine(currentTrack, idx); }
-  void setMachine(uint8_t track, uint8_t idx);
+  uint8_t setMachine(uint8_t idx) { return setMachine(currentTrack, idx); }
+  uint8_t setMachine(uint8_t track, uint8_t idx, bool send = true);
 
   void setMute(bool mute) { setMute(currentTrack, mute); }
   void setMute(uint8_t track, bool mute);

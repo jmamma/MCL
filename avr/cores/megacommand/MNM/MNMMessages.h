@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include "MNMDataEncoder.h"
 #include "Elektron.h"
-
+#include "MNMParams.h"
 /*
 class MNMMidiMap {
 public:
@@ -97,10 +97,20 @@ public:
   bool mirrorUD;
   bool LPKeyTrack;
   bool HPKeyTrack;
+  void init() {
+    memset(this, 0, sizeof(this));
+  }
 };
 
 class MNMTrig {
 public:
+  void init(uint8_t track_) {
+    portamento = 0;
+    track = track_;
+    legatoAmp = 0;
+    legatoFilter = 0;
+    legatoLFO = 0;
+  }
   bool portamento;
   uint8_t track;
   bool legatoAmp;
@@ -117,6 +127,14 @@ public:
   uint8_t model;
   MNMTrig trig;
   MNMTrackModifier modifier;
+  void init(uint8_t track_) {
+    memset(&params,0, sizeof(params));
+    level = 127;
+    track = track_;
+    model = MNM_GND_GND_MODEL;
+    trig.init(track);
+    modifier.init();
+  }
 };
 
 class MNMKit: public ElektronSysexObject {

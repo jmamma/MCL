@@ -1,5 +1,23 @@
 #include "MCL_impl.h"
 
+void MNMTrack::init() {
+  machine.init(255);
+  //seq_data.init();
+}
+
+uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
+
+  return MNM.setMachine(tracknumber, tracknumber, false);
+}
+
+void MNMTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+    DEBUG_PRINTLN(F("here"));
+    DEBUG_PRINTLN(F("send MNM track"));
+   MNM.insertMachineInKit(tracknumber, &(machine));
+   MNM.setMachine(tracknumber, tracknumber, true);
+}
+
+
 void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINT_FN();
   MNM.insertMachineInKit(tracknumber, &(machine));
@@ -48,7 +66,8 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     if (merge > 0) {
       // TODO decode MNM track data from a pattern...
     } else {
-      memcpy(&seq_data, seq_track, sizeof(seq_data));
+      DEBUG_PRINT("memcpy");
+      memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
     }
   }
   // Write data to sd
