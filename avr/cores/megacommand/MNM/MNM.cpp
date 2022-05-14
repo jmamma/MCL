@@ -43,6 +43,8 @@ void MNMClass::init_grid_devices() {
 }
 
 bool MNMClass::probe() {
+  connected = false;
+  DEBUG_PRINTLN("MNM probe");
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo),
                           UART2_PORT);
@@ -96,6 +98,8 @@ bool MNMClass::probe() {
     setStatus(0x21, currentAudioMidiMode);
 
     loadGlobal(7);
+    connected = true;
+    DEBUG_PRINTLN("MNM CONNECTED");
     return MNM.connected;
   }
 
@@ -270,7 +274,7 @@ void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
 
 uint8_t MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
                              bool initSynth, bool send) {
-  uint8_t data[] = {MNM_LOAD_GLOBAL_ID, track, model, 0x00};
+  uint8_t data[] = {MNM_LOAD_MACHINE_ID, track, model, 0x00};
   if (initAll) {
     data[3] = 0x01;
   } else if (initSynth) {
@@ -310,7 +314,9 @@ void MNMClass::insertMachineInKit(uint8_t track, MNMMachine *machine,
 }
 
 uint8_t MNMClass::setMachine(uint8_t track, uint8_t idx, bool send) {
-  uint8_t size = assignMachine(track, kit.models[idx], send);
+  uint8_t size = assignMachine(track, kit.models[idx], false, false, send);
+  DEBUG_PRINTLN("Setting model");
+  DEBUG_PRINTLN( kit.models[idx]);
   for (int i = 0; i < 56; i++) {
     size += setParam(track, i, kit.parameters[idx][i], send);
   }
@@ -327,11 +333,15 @@ void MNMClass::updateKitParams() {
 uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   DEBUG_PRINT_FN();
   /// Ignores masks and scratchpad, and send the whole kit.
+  /*
   auto kit_pos = getCurrentKit();
+  DEBUG_PRINTLN("pos");
+  DEBUG_PRINTLN(kit_pos);
   kit.origPosition = kit_pos;
   // md_setsysex_recpos(4, kit_->origPosition);
   MNMDataToSysexEncoder encoder(&MidiUart2);
   kit.toSysex(&encoder);
+  DEBUG_PRINTLN("load kit");
   MNM.loadKit(kit_pos);
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
@@ -339,6 +349,10 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks) {
       10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
   mnm_latency_ms += 10;
   DEBUG_DUMP(mnm_latency_ms);
-
-  return mnm_latency_ms;
+  */
+  uint16_t bytes = 0;
+  for (uint8_t n = 0; n < 6; n++) {
+    bytes += setMachine(n,n,true);
+  }
+  return 10 + (10000.0 * ((float)bytes / (float)MidiUart2.speed));
 }
