@@ -14,6 +14,7 @@
 #define MDX_KEY_PATSONG 0x1F
 #define MDX_KEY_REC 0x20
 #define MDX_KEY_GLOBAL 0x21
+#define MDX_KEY_PATSONGKIT 0x22
 #define MDX_KEY_FUNC 0x25
 #define MDX_KEY_LEFT 0x26
 #define MDX_KEY_RIGHT 0x27

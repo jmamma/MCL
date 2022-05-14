@@ -815,12 +815,13 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     uint8_t key = event->source - 64;
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-      if (trig_interface.is_key_down(MDX_KEY_BANKGROUP) || trig_interface.is_key_down(MDX_KEY_NO)) {
-        grid_page.grid_select_apply = !grid_page.grid_select_apply;
-        swap_grids();
-        init();
-        return true;
-      } else if (show_slot_menu) {
+       if (key == MDX_KEY_PATSONGKIT && event->mask == EVENT_BUTTON_PRESSED) {
+          grid_page.grid_select_apply = !grid_page.grid_select_apply;
+          swap_grids();
+          init();
+          return true;
+       }
+       if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
           case MDX_KEY_BANKA:
@@ -829,14 +830,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             return true;
           }
-          case MDX_KEY_NO:
-            return true;
+          case MDX_KEY_NO: {
+            goto next;
+          }
           }
         }
         return grid_slot_page.handleEvent(event);
       }
     }
-
+    next:
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -850,7 +852,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_YES: {
           slot_load = 1;
           goto slot_menu_off;
-          return true;
         }
         case MDX_KEY_COPY: {
           slot_copy = 1;
@@ -951,7 +952,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
         goto save;
       }
       case MDX_KEY_NO: {
-        goto slot_menu_on;
+        if (!show_slot_menu) {
+          goto slot_menu_on;
+        }
+        break;
       }
       }
     }
@@ -974,7 +978,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-        goto slot_menu_off;
+        if (!trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+          goto slot_menu_off;
+        }
+        return true;
       }
       }
     }
