@@ -199,7 +199,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
           }
         } else {
           if (elektron_devs[i]->canReadWorkspaceKit()) {
-            if (!elektron_devs[i]->getBlockingKit(0x7F)) {
+            if (!elektron_devs[i]->getWorkSpaceKit()) {
               DEBUG_PRINTLN(F("could not receive kit"));
               save_dev_tracks[i] = false;
               continue;

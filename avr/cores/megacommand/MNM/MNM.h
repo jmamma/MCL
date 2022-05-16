@@ -22,6 +22,11 @@ public:
   virtual void init_grid_devices();
   virtual uint8_t* icon();
 
+  virtual bool canReadWorkspaceKit() { return true; }
+  virtual bool getWorkSpaceKit() {
+    return getBlockingKit(0x80);
+  }
+  virtual void requestKit(uint8_t kit);
   virtual ElektronSysexObject *getKit() { return &kit; }
   virtual char *getKitName() { return kit.name; }
   virtual ElektronSysexObject *getPattern() { return nullptr; }
@@ -30,6 +35,7 @@ public:
     return &MNMSysexListener;
   }
 
+  virtual uint8_t get_mute_cc() { return 0x03; }
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask);
   virtual const char* getMachineName(uint8_t machine);
@@ -144,6 +150,7 @@ public:
     }
   }
   void revertToTrack(uint8_t track, bool reloadKit = false);
+
 };
 
 extern MNMClass MNM;

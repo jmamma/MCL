@@ -395,6 +395,10 @@ public:
       loadedGlobal = false;
     }
 
+  virtual bool getWorkSpaceKit() {
+    return getBlockingKit(0x7F);
+  }
+
   virtual bool canReadWorkspaceKit() {
     // TODO fw cap for live kit access
     //return fw_caps & FW_CAP
@@ -484,7 +488,7 @@ public:
    *sysex message. Register a callback with the MDSysexListener to act on that
    *message.
    **/
-  void requestKit(uint8_t kit);
+  virtual void requestKit(uint8_t kit);
   /**
    * Request a pattern from the machinedrum, which will answer by sending a long
    *sysex message. Register a callback with the MDSysexListener to act on that

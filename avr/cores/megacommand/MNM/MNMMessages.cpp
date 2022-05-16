@@ -126,16 +126,27 @@ uint16_t MNMGlobal::toSysex(uint8_t *sysex, uint16_t len) {
 
 bool MNMKit::fromSysex(MidiClass *midi) {
   DEBUG_PRINT_FN();
-  uint16_t offset = 5;
+
+
+  uint16_t decode_offset = 0;
+
+  int version = midi->midiSysex.getByte(6);
+  origPosition = midi->midiSysex.getByte(8);
+
+  DEBUG_PRINTLN("MNM kit");
+  if (version == 64) {
+     DEBUG_PRINTLN("VERSION 64");
+     decode_offset++;
+  }
+
   uint16_t len = midi->midiSysex.get_recordLen() - 5;
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(midi, 5, len)) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(3 + offset);
-  MNMSysexDecoder decoder(midi, offset + 4);
+  MNMSysexDecoder decoder(midi, decode_offset + 9);
   decoder.get((uint8_t *)name, 11);
   name[11] = '\0';
 
@@ -175,6 +186,9 @@ bool MNMKit::fromSysex(MidiClass *midi) {
 }
 
 bool MNMKit::fromSysex(uint8_t *data, uint16_t len) {
+  DEBUG_PRINTLN("MNM kit");
+  //Todo, implement version 64.
+
   if (!ElektronHelper::checkSysexChecksum(data, len)) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
@@ -232,11 +246,12 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->begin();
   encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
   encoder->pack8(MNM_KIT_MESSAGE_ID);
-  encoder->pack8(0x02); // version
+  encoder->pack8(64); // version
   encoder->pack8(0x01); // revision
 
   encoder->startChecksum();
   encoder->pack8(origPosition);
+  encoder->pack8(origPosition > 127);
   encoder->start7Bit();
 
   encoder->pack((uint8_t *)name, 11);

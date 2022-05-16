@@ -171,6 +171,10 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
   cksum &= 0x3FFF;
   uint16_t realcksum = ElektronHelper::to16Bit7(data[len - 4], data[len - 3]);
   if (cksum != realcksum) {
+   DEBUG_PRINTLN("chksum bad");
+   DEBUG_PRINTLN(cksum);
+   DEBUG_PRINTLN(realcksum);
+#
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
 #endif
@@ -188,6 +192,9 @@ bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16
   cksum &= 0x3FFF;
 	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex.getByte(offset + len - 4), midi->midiSysex.getByte(offset + len - 3));
   if (cksum != realcksum) {
+   DEBUG_PRINTLN("chksum bad");
+   DEBUG_PRINTLN(cksum);
+   DEBUG_PRINTLN(realcksum);
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
 #endif

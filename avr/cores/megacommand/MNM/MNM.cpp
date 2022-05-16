@@ -52,7 +52,6 @@ bool MNMClass::probe() {
     // calculated before proceeding.
     mcl_gui.delay_progress(400);
 
-    /*
     if (!get_fw_caps()) {
 #ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MONOMACHINE");
@@ -63,22 +62,21 @@ bool MNMClass::probe() {
       while (1)
         ;
     }
-    */
 
     if (!MNM.getBlockingGlobal(7)) {
       return false;
     }
 
-    global.clockIn = true;
+    global.clockIn = false;
     global.clockOut = true;
-    global.ctrlIn = true;
+    global.ctrlIn = false;
     global.ctrlOut = true;
 
     global.arpOut = 2;
     global.autotrackChannel = 9;
     global.baseChannel = 0;
     global.channelSpan = 6;
-    global.keyboardOut = 2;
+    global.keyboardOut = 1;
     global.midiClockOut = 1;
     global.transportIn = true;
     global.transportOut = true;
@@ -109,6 +107,20 @@ bool MNMClass::probe() {
 // Caller is responsible to make sure icons_device is loaded in RM
 uint8_t* MNMClass::icon() {
   return R.icons_device->icon_mnm;
+}
+
+
+void MNMClass::requestKit(uint8_t kit) {
+  uint8_t workspace = 0;
+  if (kit > 0x7F) {
+    kit -= 0x80;
+    workspace = 1;
+    DEBUG_PRINTLN("sending workspace request");
+   }
+
+   uint8_t data[] = {sysex_protocol.kitrequest_id, kit, workspace};
+   sendRequest(data, 3);
+   return;
 }
 
 
@@ -333,26 +345,24 @@ void MNMClass::updateKitParams() {
 uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   DEBUG_PRINT_FN();
   /// Ignores masks and scratchpad, and send the whole kit.
-  /*
-  auto kit_pos = getCurrentKit();
-  DEBUG_PRINTLN("pos");
-  DEBUG_PRINTLN(kit_pos);
-  kit.origPosition = kit_pos;
+  
+  kit.origPosition = 0x80;
   // md_setsysex_recpos(4, kit_->origPosition);
   MNMDataToSysexEncoder encoder(&MidiUart2);
   kit.toSysex(&encoder);
-  DEBUG_PRINTLN("load kit");
-  MNM.loadKit(kit_pos);
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
   uint16_t mnm_latency_ms =
       10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
   mnm_latency_ms += 10;
   DEBUG_DUMP(mnm_latency_ms);
-  */
+  
+  /*
   uint16_t bytes = 0;
   for (uint8_t n = 0; n < 6; n++) {
     bytes += setMachine(n,n,true);
   }
   return 10 + (10000.0 * ((float)bytes / (float)MidiUart2.speed));
+  */
+  return mnm_latency_ms;
 }
