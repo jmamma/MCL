@@ -118,9 +118,7 @@ public:
   virtual void recalculateLockPatterns();
 
   /** ElektronSysexObject implementation */
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   MDPattern(bool _init = true) : ElektronPattern(_init) {

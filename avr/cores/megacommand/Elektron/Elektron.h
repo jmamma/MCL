@@ -334,11 +334,7 @@ public:
   virtual uint8_t getPosition() = 0;
   virtual void setPosition(uint8_t) = 0;
   /** Read in a global message from a sysex buffer. **/
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len) = 0;
-  /** Read in a global message from a sysex buffer. **/
   virtual bool fromSysex(MidiClass *midi) = 0;
-  /** Convert the pattern object into a sysex buffer to be sent to the UART. **/
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len) = 0;
   /** Convert the global object and encode it into a sysex encoder, for example to send directly to the UART.  **/
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };

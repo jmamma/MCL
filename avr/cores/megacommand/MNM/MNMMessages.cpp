@@ -62,11 +62,6 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   return true;
 }
 
-bool MNMGlobal::fromSysex(uint8_t* buf, uint16_t len) {
-  // XXX not implemented
-  return false;
-}
-
 uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
 
   encoder->stop7Bit();
@@ -117,11 +112,6 @@ uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->finishChecksum();
 
   return enclen + 5;
-}
-
-uint16_t MNMGlobal::toSysex(uint8_t *sysex, uint16_t len) {
-  // TODO not implemented
-  return 0;
 }
 
 bool MNMKit::fromSysex(MidiClass *midi) {
@@ -185,59 +175,6 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   return true;
 }
 
-bool MNMKit::fromSysex(uint8_t *data, uint16_t len) {
-  DEBUG_PRINTLN("MNM kit");
-  //Todo, implement version 64.
-
-  if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    DEBUG_PRINTLN("wrong checksum");
-    return false;
-  }
-
-  origPosition = data[3];
-  MNMSysexDecoder decoder(data + 4);
-  decoder.get((uint8_t *)name, 16);
-  name[16] = '\0';
-
-  decoder.get(levels, 6);
-  decoder.get((uint8_t *)parameters, 6 * 72);
-  decoder.get(models, 6);
-  decoder.get(types, 6);
-  decoder.get16(&patchBusIn);
-  decoder.get8(&mirrorLR);
-  decoder.get8(&mirrorUD);
-
-  decoder.get((uint8_t *)destPages, 6 * 6 * 2);
-  decoder.get((uint8_t *)destParams, 6 * 6 * 2);
-  decoder.get((uint8_t *)destRanges, 6 * 6 * 2);
-  decoder.get8(&lpKeyTrack);
-  decoder.get8(&hpKeyTrack);
-
-  decoder.get8(&trigPortamento);
-  decoder.get(trigTracks, 6);
-  decoder.get8(&trigLegatoAmp);
-  decoder.get8(&trigLegatoFilter);
-  decoder.get8(&trigLegatoLFO);
-
-  decoder.get8(&commonMultimode);
-  uint8_t byte;
-  decoder.get8(&byte);
-  if (byte == 0) {
-    commonTiming = 0;
-  } else {
-    commonTiming = 1 << (1 - byte);
-  }
-  decoder.get8(&splitKey);
-  decoder.get8(&splitRange);
-
-  return true;
-}
-
-uint16_t MNMKit::toSysex(uint8_t *data, uint16_t len) {
-  MNMDataToSysexEncoder encoder(data);
-  return toSysex(&encoder);
-}
-
 uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   if ((MidiClock.state == 2) && (MNM.midi->uart->speed > 62500)) {
     encoder->throttle = true;
@@ -296,17 +233,6 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   return enclen + 5;
 }
 
-bool MNMSong::fromSysex(uint8_t *data, uint16_t len) {
-  if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    return false;
-  }
-
-  //	origPosition = data[3];
-  MNMSysexDecoder decoder(data + 4);
-
-  return false;
-}
-
 bool MNMSong::fromSysex(MidiClass *midi) {
   uint16_t offset = 0;
   uint16_t len = midi->midiSysex.get_recordLen();
@@ -319,11 +245,6 @@ bool MNMSong::fromSysex(MidiClass *midi) {
   MNMSysexDecoder decoder(midi, offset + 4);
 
   return false;
-}
-
-uint16_t MNMSong::toSysex(uint8_t *sysex, uint16_t len) {
-  MNMDataToSysexEncoder encoder(sysex);
-  return toSysex(&encoder);
 }
 
 uint16_t MNMSong::toSysex(ElektronDataToSysexEncoder *encoder) {

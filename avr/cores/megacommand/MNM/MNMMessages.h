@@ -72,9 +72,7 @@ public:
   MNMGlobal() {
   }
 
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   virtual uint8_t getPosition() { return origPosition; }
@@ -173,9 +171,7 @@ public:
   MNMKit() {
   }
   
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   virtual uint8_t getPosition() { return origPosition; }
@@ -207,9 +203,7 @@ public:
   MNMSong() {
   }
   
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   virtual uint8_t getPosition() { return origPosition; }

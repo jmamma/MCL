@@ -59,113 +59,6 @@ void MNMPattern::clearPattern() {
   origPosition = 0;
   //  scale = 0;
 }
-bool MNMPattern::fromSysex(uint8_t *data, uint16_t len) {
-	if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    return false;
-  }
-
-  origPosition = data[3];
-	MNMSysexDecoder decoder(data + 4);
-
-	decoder.get64(ampTrigs, 6 * 13);
-	/*
-	decoder.get64(filterTrigs, 6);
-	decoder.get64(lfoTrigs, 6);
-	decoder.get64(offTrigs, 6);
-	decoder.get64(midiNoteOnTrigs, 6);
-	decoder.get64(midiNoteOffTrigs, 6);
-	decoder.get64(triglessTrigs, 6);
-	decoder.get64(chordTrigs, 6);
-	decoder.get64(midiTriglessTrigs, 6);
-	decoder.get64(slidePatterns, 6);
-	decoder.get64(swingPatterns, 6);
-	decoder.get64(midiSlidePatterns, 6);
-	decoder.get64(midiSwingPatterns, 6);
-	*/
-
-	decoder.get32(&swingAmount);
-
-	decoder.get64(lockPatterns, 6);
-	decoder.get((uint8_t *)noteNBR, (6 * 64 + 4) + (6 * 6) + (6 * (6 + 16)) + (6 * (5 + 16)));
-	/*
-	decoder.get8(&patternLength);
-	decoder.get8(&doubleTempo);
-	decoder.get8(&kit);
-	decoder.get8((uint8_t *)&patternTranspose);
-	*/
-
-	//	decoder.get((uint8_t *)transpose, 6 * 6);
-	/*
-		decoder.get(scale, 6);
-		decoder.get(key, 6);
-		decoder.get((uint8_t *)midiTranspose, 6);
-		decoder.get(midiScale, 6);
-		decoder.get(midiKey, 6);
-	*/
-
-	//	decoder.get(arpPlay, 6 * (6 + 16));
-	/*
-	decoder.get(arpMode, 6);
-	decoder.get(arpOctaveRange, 6);
-	decoder.get(arpMultiplier, 6);
-	decoder.get(arpDestination, 6);
-	decoder.get(arpLength, 6);
-	decoder.get((uint8_t *)arpPattern, 6 * 16);
-	*/
-	
-	//	decoder.get(midiArpPlay, 6 * (5 + 16));
-	/*
-	decoder.get(midiArpMode, 6);
-	decoder.get(midiArpOctaveRange, 6);
-	decoder.get(midiArpMultiplier, 6);
-	decoder.get(midiArpLength, 6);
-	decoder.get((uint8_t *)midiArpPattern, 6 * 16);
-	*/
-
-	decoder.get(unused, 4);
-
-	decoder.get16(&midiNotesUsed);
-	decoder.get8(&chordNotesUsed);
-	decoder.get8(&unused2);
-	decoder.get8(&locksUsed);
-	decoder.get((uint8_t *)locks, 62 * 64);
-
-  for (uint16_t i = 0; i < 400; i++) {
-    uint16_t l;
-		decoder.get16(&l);
-    midiNotes[i].note = ((l >> 9) & 0x7f);
-    midiNotes[i].track = (l >> 6) & 0x7;
-    midiNotes[i].position = l & 0x3f;
-  }
-  for (uint8_t i = 0; i < 192; i++) {
-    uint16_t l;
-		decoder.get16(&l);
-    chordNotes[i].note = ((l >> 9) & 0x7f);
-    chordNotes[i].track = (l >> 6) & 0x7;
-    chordNotes[i].position = l & 0x3f;
-  }
-
-	uint8_t foobar;
-	decoder.get8(&foobar);
-
-	numRows = 0;
-  for (uint8_t i = 0; i < 6; i++) {
-    for (uint8_t j = 0; j < 64; j++) {
-      if (IS_BIT_SET64(lockPatterns[i], j)) {
-				//				printf("lock track %d param %d to lock idx %d\n", i, j, numRows);
-				paramLocks[i][j] = numRows;
-				lockTracks[numRows] = i;
-				lockParams[numRows] = j;
-				numRows++;
-      } else {
-				paramLocks[i][j] = -1;
-			}
-    }
-  }
-
-  return true;
-}
-
 
 bool MNMPattern::fromSysex(MidiClass *midi) {
     uint16_t offset = 0;
@@ -283,11 +176,6 @@ bool MNMPattern::fromSysex(MidiClass *midi) {
 #define DEBUG(note, vel) MidiUart.sendNoteOn(note, vel); delay(30);
 #endif
 
-uint16_t MNMPattern::toSysex(uint8_t *data, uint16_t len) {
-	MNMDataToSysexEncoder encoder(data);
-
-	return toSysex(&encoder);
-}
 
 uint16_t MNMPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 	cleanupLocks();

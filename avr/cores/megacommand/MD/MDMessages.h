@@ -117,9 +117,7 @@ public:
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   /* @} */
 };
@@ -264,9 +262,7 @@ public:
 
   MDKit(): ElektronSysexObject() {}
 
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   uint16_t toSysex();
@@ -331,9 +327,7 @@ public:
   MDRow rows[256];
   uint8_t numRows;
 
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
   virtual bool fromSysex(MidiClass *midi);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
 
   virtual uint8_t getPosition() { return origPosition; }
