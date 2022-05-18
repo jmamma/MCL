@@ -27,7 +27,8 @@ const Page *const menu_target_pages[] PROGMEM = {
 
     // 1 - load_proj_page
     (Page *)&load_proj_page,
-    (Page *)&convert_proj_page,
+    (Page *)nullptr,
+    //(Page *)&convert_proj_page,
     (Page *)&midi_config_page,
     (Page *)&md_config_page,
     (Page *)&chain_config_page,
