@@ -113,7 +113,9 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   if (md_track.machine.params[RAM_R_LEN] > 127) {
     md_track.machine.params[RAM_R_LEN] = 127;
   }
+
   md_track.machine.params[RAM_R_RATE] = 127;
+  /*
   md_track.machine.params[MODEL_AMD] = 0;
   md_track.machine.params[MODEL_AMF] = 0;
   md_track.machine.params[MODEL_EQF] = 64;
@@ -130,7 +132,12 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   md_track.machine.params[MODEL_LFOS] = 64;
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.params[MODEL_LFOM] = 0;
+  */
   md_track.machine.lfo.destinationTrack = track;
+
+  uint8_t params[] = { 0, 0, 64, 64, 0, 127, 0, 0, 0, 127, pan, 0, 0, 64, 0, 0};
+
+  memcpy(md_track.machine.params + MODEL_AMD, params, sizeof(params));
 
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
@@ -296,6 +303,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
 
+  /*
   md_track.machine.params[ROM_PTCH] = 64;
   md_track.machine.params[ROM_DEC] = 64;
   md_track.machine.params[ROM_HOLD] = 127;
@@ -320,6 +328,11 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.params[MODEL_LFOS] = 64;
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.params[MODEL_LFOM] = 0;
+  */
+
+  uint8_t params[] = {64, 64, 127, 0, 0, 127, 0, 127, 0, 0, 64, 64, 0, 127, 0, 0, 0, 127, pan, 0, 0, 64, 0, 0};
+
+  memcpy(md_track.machine.params, params, sizeof(params));
 
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
