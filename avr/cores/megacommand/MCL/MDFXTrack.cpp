@@ -38,6 +38,8 @@ void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MDFXTrack::place_fx_in_kit() {
   DEBUG_PRINTLN("place");
+  memcpy(MD.kit.reverb, reverb, sizeof(reverb) * 4);
+  /*
   if (enable_reverb) {
     memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));
   }
@@ -50,22 +52,27 @@ void MDFXTrack::place_fx_in_kit() {
   if (enable_dynamics) {
     memcpy(&MD.kit.dynamics, &dynamics, sizeof(dynamics));
   }
+  */
 }
 
 void MDFXTrack::get_fx_from_kit_extra(KitExtra *kit_extra) {
   memcpy(&reverb, &kit_extra->reverb, 32);
+  /*
   enable_reverb = true;
   enable_delay = true;
   enable_eq = true;
   enable_dynamics = true;
+  */
 }
 
 void MDFXTrack::get_fx_from_kit() {
   memcpy(&reverb, &MD.kit.reverb, 32);
+  /*
   enable_reverb = true;
   enable_delay = true;
   enable_eq = true;
   enable_dynamics = true;
+  */
 }
 
 bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
