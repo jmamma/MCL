@@ -302,6 +302,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  /*
   if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
@@ -312,7 +313,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     //    }
     return true;
   }
-
+  */
   return false;
 }
 
