@@ -150,7 +150,7 @@ bool WavDesigner::render() {
     }
     // Check for overflow outside of int16_t ranges.
     DEBUG_PRINTLN(sample);
-    dsp.saturate(sample, (float)MAX_HEADROOM);
+    //dsp.saturate(sample, (float)MAX_HEADROOM);
 
     if (sample > MAX_HEADROOM) {
       sample = MAX_HEADROOM;

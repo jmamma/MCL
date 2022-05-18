@@ -138,7 +138,7 @@ void OscMixerPage::draw_wav() {
       // DEBUG_PRINTLN(mixer.get_gain(i));
     }
     // Check for overflow outside of int16_t ranges.
-    dsp.saturate(sample, (float)MAX_HEADROOM);
+    //dsp.saturate(sample, (float)MAX_HEADROOM);
     sample = sample / MAX_HEADROOM;
 
     //  buffer[n] = sample;
