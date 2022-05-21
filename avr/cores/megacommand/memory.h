@@ -65,6 +65,18 @@
 
 #ifdef __cplusplus
 
+
+/* MegaCommand hardware has 8KB of stack memory and access to 128KB of external SRAM, split across 4 banks.
+   Because stack memory and external memory share the same address range, we lose direct access to the other banks and have to access
+   them via special modes */
+
+/*
+  BANK 0: 0x2000 -> 0xFFFF accessed natively via .data / global data structures.
+  BANK 1: 0x2000 -> 0xFFFF is accessed by switching RAM bank and syphoning RAM between stack memory.
+  BANK 2: 0x4000 -> 0x6000 is accessed by enabling fringe RAM access, and syphoning RAM between stack memory.
+  BANK 3: 0x4000 -> 0x6000 is accessed by switching RAM bank, enabling fringe RAM access, and syphoning RAM between stack memory.
+*/
+
 class RamBankSelector {
   private:
   uint8_t m_oldbank;
@@ -73,6 +85,24 @@ class RamBankSelector {
   FORCED_INLINE() ~RamBankSelector() { switch_ram_bank(m_oldbank); }
 };
 
+class RamAccessFringe {
+  uint8_t irqlock_tmp;
+  public:
+  FORCED_INLINE() RamAccessFringe() {
+    irqlock_tmp = SREG;
+    cli();
+    DDRC = 0xFF;
+    PORTC = 0x00;
+    XMCRB = (1<<XMM1);
+  }
+  FORCED_INLINE() ~RamAccessFringe() {
+    XMCRB = 0;
+    SREG = irqlock_tmp;
+  }
+};
+
+
+#define ram_access_fringe() RamAccessFringe __ram_access_fringe
 #define select_bank(x) RamBankSelector __bank_selector(x)
 
 template<typename T>
@@ -102,6 +132,32 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   uint8_t c = *dst;
   return c;
 }
+
+
+FORCED_INLINE() extern inline void get_bank2(volatile void *dst, volatile const void *src, uint16_t len) {
+  ram_access_fringe();
+  memcpy((void*)dst, (void*)src + 0x4000, len);
+}
+
+FORCED_INLINE() extern inline void get_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  ram_access_fringe();
+  select_bank(1);
+  memcpy((void*)dst, (void*)src + 0x4000, len);
+}
+
+
+FORCED_INLINE() extern inline void put_bank2(volatile void *dst, volatile const void *src, uint16_t len) {
+  ram_access_fringe();
+  memcpy((void*)dst + 0x4000, (void*)src, len);
+}
+
+FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  ram_access_fringe();
+  select_bank(1);
+  memcpy((void*)dst + 0x4000, (void*)src, len);
+}
+
+
 
 extern volatile uint8_t *rand_ptr;
 

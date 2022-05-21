@@ -47,7 +47,7 @@ void FileBrowserPage::setup() {
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
   volatile uint8_t *ptr =
       (uint8_t *)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
-  memcpy_bank1((volatile void *)entry, ptr, FILE_ENTRY_SIZE);
+  get_bank3((volatile void *)entry, ptr, FILE_ENTRY_SIZE);
 }
 
 bool FileBrowserPage::add_entry(const char *entry) {
@@ -59,7 +59,7 @@ bool FileBrowserPage::add_entry(const char *entry) {
   buf[FILE_ENTRY_SIZE - 1] = '\0';
   volatile uint8_t *ptr =
       (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
-  memcpy_bank1(ptr, buf, sizeof(buf));
+  put_bank3(ptr, buf, sizeof(buf));
   numEntries++;
   return true;
 }
@@ -513,9 +513,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     }
 
     char temp_entry[FILE_ENTRY_SIZE];
-    volatile uint8_t *ptr = (uint8_t *)BANK1_FILE_ENTRIES_START +
-                            encoders[1]->getValue() * FILE_ENTRY_SIZE;
-    memcpy_bank1(temp_entry, ptr, FILE_ENTRY_SIZE);
+    get_entry(encoders[1]->getValue(), temp_entry);
 
     // chdir to parent
     if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
