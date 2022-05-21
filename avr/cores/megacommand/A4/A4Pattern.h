@@ -42,8 +42,6 @@ public:
 	
 	/* XXX TODO extra pattern 64 */
 	
-	/** Read in a pattern message from a sysex buffer. **/
-	bool fromSysex(uint8_t *sysex, uint16_t len);
 	/** Convert the pattern object into a sysex buffer to be sent to the machinedrum. **/
 };
 

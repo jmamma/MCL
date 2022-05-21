@@ -10,7 +10,7 @@ if [ $? -eq 0 ]; then
   echo ROM_SIZE : $size
   echo ROM_LIMIT: $limit
   echo ROM_FREE : $(($limit - $size))
-  ../../../../tools/avr/bin/avr-nm main.elf -Crtd --size-sort | grep -iv ' b ' | head -n 128
+  ../../../../tools/avr/bin/avr-nm main.elf -Crtd --size-sort | grep -iv ' b ' | head -n 256
 
   ram_used=$(${AVR_DIR}/bin/avr-size main.elf | grep main | awk '{ print $2 + $3}')
   ram_free=$((1024 * 64 - $ram_used - 8 * 1024))

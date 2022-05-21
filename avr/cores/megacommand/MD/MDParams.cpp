@@ -391,7 +391,6 @@ static const tuning_t tunings[] = {
   { E12_LT_MODEL, MIDI_NOTE_FS5, sizeof(e12_lt_tuning), 4, e12_lt_tuning },
 };
 
-tuning_t const *track_tunings[16];
 
 const tuning_t PROGMEM *MDClass::getModelTuning(uint8_t model, bool tonal) {
   uint8_t i;

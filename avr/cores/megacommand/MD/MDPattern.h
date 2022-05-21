@@ -6,6 +6,8 @@
 #include "ElektronPattern.h"
 #include <inttypes.h>
 
+//#define MDPATTERN_TOSYSEX_ENABLE
+
 /**
  * \addtogroup MD Elektron MachineDrum
  *

@@ -1,30 +1,5 @@
 #include "MCL_impl.h"
 
-bool A4Global::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != 0xC4 - 6) {
-    //		printf("wrong length\n");
-    // wrong length
-    return false;
-  }
-
-  if (!ElektronHelper::checkSysexChecksum(data, len)) {
-    //		printf("wrong checksum\n");
-    return false;
-  }
-
-  //	origPosition = data[3];
-  ElektronSysexDecoder decoder(data + 4);
-
-  return true;
-}
-
-uint16_t A4Global::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(data);
-  return toSysex(encoder);
-  if (len < 0xC5)
-    return 0;
-}
-
 uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();
   encoder.begin();
@@ -101,28 +76,6 @@ void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
   encoder->stop7Bit();
 }
 
-///  !Note, sysex frame wrappers are not included in [data..data+len)
-///  !Note, first effective payload byte is origPosition @ 0x08.
-///  !Note, checksum starts at 0x09 without origPosition.
-bool A4Sound::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != a4sound_sysex_len) {
-    mcl_gui.draw_textbox("WRONG LEN", "");
-    return false;
-  }
-
-  if (!ElektronHelper::checkSysexChecksumAnalog(
-    data + a4sound_checksum_startidx,
-    len - a4sound_checksum_startidx)) {
-    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
-    return false;
-  }
-
-  origPosition = data[a4sound_origpos_idx];
-  ElektronSysexDecoder decoder(data + a4sound_encoding_startidx);
-
-  return fromSysex_impl(&decoder);
-}
-
 bool A4Sound::fromSysex(MidiClass *midi) {
   const auto &reclen = midi->midiSysex.get_recordLen();
 
@@ -149,13 +102,6 @@ uint16_t A4Sound::toSysex() {
   return toSysex(&encoder);
 }
 
-uint16_t A4Sound::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(data);
-  if (len < 0xC5) // what is 0xC5?
-    return 0;
-  return toSysex(&encoder);
-}
-
 uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->stop7Bit();
   encoder->begin();
@@ -172,41 +118,8 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
   return enclen + 5;
 }
 
-bool A4Kit::fromSysex(uint8_t *data, uint16_t len) {
-  if (len != (2679 - 10 - 0)) {
-    mcl_gui.draw_textbox("WRONG LEN", "");
-
-    return false;
-  }
-
-  if (!ElektronHelper::checkSysexChecksumAnalog(data + 1, len - 1)) {
-    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
-    return false;
-  }
-  ElektronSysexDecoder decoder(data);
-  decoder.stop7Bit();
-  decoder.get8(&origPosition);
-  //    decoder.skip(2);
-  decoder.get((uint8_t *)&payload_start, sizeof(payload_start));
-
-  for (uint8_t i = 0; i < 4; i++) {
-    sounds[i].fromSysex_impl(&decoder);
-    sounds[i].origPosition = i;
-  }
-  decoder.get((uint8_t *)&payload_end, sizeof(payload_end));
-
-  return true;
-}
-
 uint16_t A4Kit::toSysex() {
   ElektronDataToSysexEncoder encoder(&MidiUart2);
-  return toSysex(&encoder);
-}
-
-uint16_t A4Kit::toSysex(uint8_t *data, uint16_t len) {
-  ElektronDataToSysexEncoder encoder(data);
-  if (len < 0xC5)
-    return 0;
   return toSysex(&encoder);
 }
 

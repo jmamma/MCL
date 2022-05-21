@@ -77,15 +77,7 @@ public:
   A4Global() {}
 
   /** Read in a global message from a sysex buffer. **/
-  bool fromSysex(uint8_t *sysex, uint16_t len);
   bool fromSysex(MidiClass *midi);
-  /** Convert the global object into a sysex buffer to be sent to the
-   * machinedrum. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
-  /**
-   * Convert the global object and encode it into a sysex encoder,
-   * for example to send directly to the UAR.
-   **/
   uint16_t toSysex(ElektronDataToSysexEncoder &encoder);
 
   /* @} */
@@ -418,10 +410,8 @@ public:
    * AnalogFour. **/
   void toSysex_impl(ElektronDataToSysexEncoder *encoder);
   bool fromSysex(MidiClass *midi);
-  bool fromSysex(uint8_t *data, uint16_t len);
   /** Convert the global object into a sysex buffer to be sent to the
    * machinedrum. **/
-  uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
   uint16_t toSysex();
 };
@@ -452,8 +442,6 @@ public:
   // Unknown data strucutre, probably includes CV and FX settings.
   uint8_t payload_end[1034]; // 2664-398*4-38
 
-  virtual bool fromSysex(uint8_t *sysex, uint16_t len);
-  virtual uint16_t toSysex(uint8_t *sysex, uint16_t len);
   uint16_t toSysex();
   /**
    * Convert the global object and encode it into a sysex encoder,

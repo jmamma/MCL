@@ -151,6 +151,7 @@ uint16_t MDPattern::toSysex() {
 
 
 uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
+#ifdef MDPATTERN_TOSYSEX_ENABLE
   DEBUG_PRINT_FN();
   isExtraPattern = patternLength > 32;
 
@@ -276,6 +277,9 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->finishChecksum();
 
   return sysexLength + 5;
+#else
+  return 0;
+#endif
 }
 
 void MDPattern::recalculateLockPatterns() {
