@@ -191,7 +191,7 @@ public:
 
 extern MidiClass Midi;
 extern MidiClass Midi2;
-extern MidiClass USBMidi;
+extern MidiClass MidiUSB;
 
 /* @} @} */
 

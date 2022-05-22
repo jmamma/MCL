@@ -93,13 +93,8 @@ again:
       MidiClock.handleMidiStop();
       break;
     }
-    //  }
     if (byte == MIDI_ACTIVE_SENSE) {
-      uint8_t tmp_msg[1];
-      tmp_msg[0] = uart->uart_port;
-
-      //uart->recvActiveSenseCallbacks.call((uint8_t *)&tmp_msg);
-      uart->recvActiveSenseTimer = 0;
+       uart->recvActiveSenseTimer = 0;
     }
 
     return;
@@ -117,30 +112,7 @@ again:
       /* ignore */
     }
     break;
-    /*
-      case midi_wait_sysex:
-
-        if (MIDI_IS_STATUS_BYTE(byte)) {
-          if (byte != MIDI_SYSEX_END) {
-                                    in_state = midi_wait_status;
-                                    midiSysex.abort();
-                                    goto again;
-           } else {
-                  midiSysex.end();
-          }
-        } else {
-          midiSysex.handleByte(byte);
-        }
-        break;
-    */
-  case midi_wait_status: {
-    //   if (byte == MIDI_SYSEX_START) {
-    //			in_state = midi_wait_sysex;
-    //			midiSysex.reset();
-    //			last_status = running_status = 0;
-    //			return;
-    // }
-
+    case midi_wait_status: {
     if (MIDI_IS_STATUS_BYTE(byte)) {
       last_status = byte;
       running_status = 0;
