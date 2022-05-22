@@ -11,15 +11,14 @@
 #include <midi-common.h>
 
 #include <MidiClock.h>
-// extern MidiClockClass MidiClock;
 #include <avr/io.h>
-uint16_t clock_measure = 0;
 
-MidiUartClassCommon::MidiUartClassCommon(volatile uint8_t *rx_buf,
+MidiUartClass::MidiUartClass(uint8_t *udr_, volatile uint8_t *rx_buf,
                                          uint16_t rx_buf_size,
                                          volatile uint8_t *tx_buf,
                                          uint16_t tx_buf_size)
     : MidiUartParent() {
+  udr = udr_;
   rxRb.ptr = rx_buf;
   rxRb.len = rx_buf_size;
   txRb.ptr = tx_buf;
@@ -29,110 +28,49 @@ MidiUartClassCommon::MidiUartClassCommon(volatile uint8_t *rx_buf,
   initSerial();
 }
 
-void MidiUartClassCommon::initSerial() {
+void MidiUartClass::initSerial() {
   running_status = 0;
-  set_speed(31250, 1);
+  set_speed(31250);
 
-#ifdef MEGACOMMAND
-  UCSR1C = (3 << UCSZ00);
+  uint8_t *src = ucsrc();
+  uint8_t *srb = ucsrb();
 
-  /** enable receive, transmit and receive and transmit interrupts. **/
-  UCSR1B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-#else
-  UCSR0C = (3 << UCSZ00);
+  *src = (3 << UCSZ00);
+  *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 
-  UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-#endif
-  set_speed(31250, 2);
-#ifdef MEGACOMMAND
-  UCSR2C = (3 << UCSZ00);
+ // UCSR1C = (3 << UCSZ00);
+ // UCSR1B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 
-  /** enable receive, transmit and receive and transmit interrupts. **/
-  UCSR2B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
-#else
-
-#ifdef UART2_TX
-  USCR1B = _BV(RXEN1) | _BV(TXEN1) | _BV(RXCIE1);
-#else
-  UCSR1B = _BV(RXEN1) | _BV(RXCIE1);
-#endif
-#endif
 }
 
-void MidiUartClassCommon::set_speed(uint32_t speed, uint8_t port) {
-#ifdef TX_IRQ
+void MidiUartClass::set_speed(uint32_t speed_) {
   // empty TX buffer before switching speed
-  if (port == 1) {
     while (!txRb.isEmpty())
       ;
-  }
-  if (port == 2) {
-    while (!MidiUart2.txRb.isEmpty())
-      ;
-  }
-#endif
+
 
   uint32_t cpu = (F_CPU / 16);
   cpu /= speed;
   cpu--;
 
-  // uint32_t cpu = (F_CPU / 16);
-  // cpu /= speed;
-  // cpu--;
-  // UBRR0H = ((cpu >> 8));
-#ifdef MEGACOMMAND
-  if (port == 1) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
-    MidiUart.speed = speed;
-  }
-  if (port == 2) {
-    UBRR2H = ((cpu >> 8) & 0xFF);
-    UBRR2L = (cpu & 0xFF);
-    MidiUart2.speed = speed;
-  }
-#else
-  if (port == 1) {
-    UBRR0H = ((cpu >> 8) & 0xFF);
-    UBRR0L = (cpu & 0xFF);
-    MidiUart.speed = speed;
-  }
-  if (port == 2) {
-    UBRR1H = ((cpu >> 8) & 0xFF);
-    UBRR1L = (cpu & 0xFF);
-    MidiUart2.speed = speed;
-  }
+  uint8_t *ubrrh_ = ubrrh();
+  uint8_t *ubrrl_ = ubrrl();
 
-#endif
-}
+  *ubrrh_ = ((cpu >> 8) & 0xFF);
+  *ubrrl_ = (cpu & 0xFF);
 
-void MidiUartClass2::m_putc_immediate(uint8_t c) {
+ // UBRR1H = ((cpu >> 8) & 0xFF);
+ // UBRR1L = (cpu & 0xFF);
 
-    USE_LOCK();
-    SET_LOCK();
-    while (!UART2_CHECK_EMPTY_BUFFER()) {
-      if (TIMER1_CHECK_INT()) {
-        TCNT1 = 0;
-        clock++;
-        TIMER1_CLEAR_INT()
-      }
-      if (TIMER3_CHECK_INT()) {
-        TCNT2 = 0;
-        slowclock++;
-        TIMER3_CLEAR_INT()
-      }
-    }
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    UART2_WRITE_CHAR(c);
-    CLEAR_LOCK();
+  speed = speed_;
 }
 
 void MidiUartClass::m_putc_immediate(uint8_t c) {
-  //  m_putc(c);
+
     USE_LOCK();
     SET_LOCK();
-    // block interrupts
-    while (!UART_CHECK_EMPTY_BUFFER()) {
+
+    while (!check_empty_tx()) {
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -144,22 +82,15 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         TIMER3_CLEAR_INT()
       }
     }
-
-    MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    UART_WRITE_CHAR(c);
+    sendActiveSenseTimer = sendActiveSenseTimeout;
+    write_char(c);
     CLEAR_LOCK();
 }
 
-#ifdef MEGACOMMAND
-ISR(USART1_RX_vect) {
-#else
-ISR(USART0_RX_vect) {
-#endif
-  select_bank(0);
-  uint8_t c = UART_READ_CHAR();
+void MidiUartClass::rx_isr() {
+  uint8_t c = read_char();
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-
-    MidiUart.recvActiveSenseTimer = 0;
+    recvActiveSenseTimer = 0;
     if (MidiClock.mode == MidiClock.EXTERNAL_UART1) {
 
       if (c == MIDI_CLOCK) {
@@ -179,47 +110,115 @@ ISR(USART0_RX_vect) {
           MidiClock.handleImmediateMidiContinue();
           break;
         }
-        MidiUart.rxRb.put_h_isr(c);
+        rxRb.put_h_isr(c);
       }
     }
     return;
   }
 
   if (MIDI_IS_STATUS_BYTE(c)) {
-    MidiUart.recvActiveSenseTimer = 0;
+    recvActiveSenseTimer = 0;
   }
-  switch (Midi.live_state) {
+  switch (midi->live_state) {
   case midi_wait_sysex: {
 
     if (MIDI_IS_STATUS_BYTE(c)) {
       if (c != MIDI_SYSEX_END) {
-        Midi.midiSysex.abort();
-        MidiUart.rxRb.put_h_isr(c);
+        midi->midiSysex.abort();
+        rxRb.put_h_isr(c);
       } else {
-        Midi.midiSysex.end_immediate();
+        midi->midiSysex.end_immediate();
       }
-      Midi.live_state = midi_wait_status;
+      midi->live_state = midi_wait_status;
     } else {
       // record
-      MidiUart.recvActiveSenseTimer = 0;
-      Midi.midiSysex.handleByte(c);
+      recvActiveSenseTimer = 0;
+      midi->midiSysex.handleByte(c);
     }
     break;
   }
 
   case midi_wait_status: {
     if (c == MIDI_SYSEX_START) {
-      Midi.live_state = midi_wait_sysex;
-      Midi.midiSysex.reset();
+      midi->live_state = midi_wait_sysex;
+      midi->midiSysex.reset();
     } else {
-      MidiUart.rxRb.put_h_isr(c);
+      rxRb.put_h_isr(c);
     }
   } break;
   default: {
-    MidiUart.rxRb.put_h_isr(c);
+    rxRb.put_h_isr(c);
     break;
   }
   }
+}
+
+void MidiUartClass::tx_isr() {
+  if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+    // sidechannel mounted, and no active messages in normal channel
+    // ==> flush the sidechannel now
+    if (txRb_sidechannel->isEmpty_isr()) {
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      uint8_t c = txRb_sidechannel->get_h_isr();
+      write_char(c);
+    }
+    // unmount sidechannel if drained
+    if (txRb_sidechannel->isEmpty_isr()) {
+        txRb_sidechannel = nullptr;
+    }
+  } else if (!txRb.isEmpty_isr()) {
+    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 2. -and- a normal channel byte is queued
+    // ==> flush the normal channel now
+    sendActiveSenseTimer = sendActiveSenseTimeout;
+    uint8_t c = txRb.get_h_isr();
+    write_char(c);
+    if ((in_message_tx > 0) && (c < 128)) {
+      in_message_tx--;
+    }
+    if (c < 0xF0) {
+      switch (c & 0xF0) {
+      case MIDI_CHANNEL_PRESSURE:
+      case MIDI_PROGRAM_CHANGE:
+        in_message_tx = 1;
+        break;
+      case MIDI_NOTE_OFF:
+      case MIDI_NOTE_ON:
+      case MIDI_AFTER_TOUCH:
+      case MIDI_CONTROL_CHANGE:
+      case MIDI_PITCH_WHEEL:
+        in_message_tx = 2;
+        break;
+      }
+    } else {
+      switch (c) {
+      case MIDI_SYSEX_START:
+        in_message_tx = -1;
+        break;
+      case MIDI_SYSEX_END:
+        in_message_tx = 0;
+        break;
+      }
+    }
+  } else {
+    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 2. -and- normal channel is drained
+    // ==> clear active bit and wait for normal channel to be re-supplied
+    clear_tx();
+  }
+  if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
+    clear_tx();
+  }
+}
+
+#ifdef MEGACOMMAND
+ISR(USART1_RX_vect) {
+#else
+ISR(USART0_RX_vect) {
+#endif
+  select_bank(0);
+  setLed();
+  MidiUart.rx_isr();
 }
 
 #ifdef MEGACOMMAND
@@ -228,71 +227,7 @@ ISR(USART2_RX_vect) {
 ISR(USART1_RX_vect) {
 #endif
   select_bank(0);
-
-  uint8_t c = UART2_READ_CHAR();
-  if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-
-    MidiUart2.recvActiveSenseTimer = 0;
-    if (((MidiClock.mode == MidiClock.EXTERNAL_UART2))) {
-
-      if (c == MIDI_CLOCK) {
-        MidiClock.handleClock();
-        MidiClock.callCallbacks(true);
-      } else {
-        switch (c) {
-        case MIDI_START:
-          MidiClock.handleImmediateMidiStart();
-          break;
-
-        case MIDI_STOP:
-          MidiClock.handleImmediateMidiStop();
-          break;
-
-        case MIDI_CONTINUE:
-          MidiClock.handleImmediateMidiContinue();
-          break;
-        }
-        MidiUart2.rxRb.put_h_isr(c);
-      }
-    }
-    return;
-  }
-
-  if (MIDI_IS_STATUS_BYTE(c)) {
-    MidiUart2.recvActiveSenseTimer = 0;
-  }
-  switch (Midi2.live_state) {
-  case midi_wait_sysex: {
-
-    if (MIDI_IS_STATUS_BYTE(c)) {
-      if (c != MIDI_SYSEX_END) {
-        Midi2.midiSysex.abort();
-        MidiUart2.rxRb.put_h_isr(c);
-      } else {
-        Midi2.midiSysex.end_immediate();
-      }
-      Midi2.live_state = midi_wait_status;
-    } else {
-      // record
-      MidiUart2.recvActiveSenseTimer = 0;
-      Midi2.midiSysex.handleByte(c);
-    }
-    break;
-  }
-  case midi_wait_status: {
-    if (c == MIDI_SYSEX_START) {
-      Midi2.live_state = midi_wait_sysex;
-      Midi2.midiSysex.reset();
-    } else {
-      MidiUart2.rxRb.put_h_isr(c);
-    }
-    break;
-  }
-  default: {
-    MidiUart2.rxRb.put_h_isr(c);
-    break;
-  }
-  }
+  MidiUart2.rx_isr();
 }
 
 #ifdef TX_IRQ
@@ -303,61 +238,7 @@ ISR(USART1_UDRE_vect) {
 ISR(USART0_UDRE_vect) {
 #endif
   select_bank(0);
-  if ((MidiUart.txRb_sidechannel != nullptr) && (MidiUart.in_message_tx == 0)) {
-    // sidechannel mounted, and no active messages in normal channel
-    // ==> flush the sidechannel now
-    if (!MidiUart.txRb_sidechannel->isEmpty_isr()) {
-      MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-      uint8_t c = MidiUart.txRb_sidechannel->get_h_isr();
-      UART_WRITE_CHAR(c);
-    }
-    // unmount sidechannel if drained
-    if (MidiUart.txRb_sidechannel->isEmpty_isr()) {
-      MidiUart.txRb_sidechannel = nullptr;
-    }
-  } else if (!MidiUart.txRb.isEmpty_isr()) {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
-    // 2. -and- a normal channel byte is queued
-    // ==> flush the normal channel now
-    MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    uint8_t c = MidiUart.txRb.get_h_isr();
-    UART_WRITE_CHAR(c);
-    if ((MidiUart.in_message_tx > 0) && (c < 128)) {
-      MidiUart.in_message_tx--;
-    }
-    if (c < 0xF0) {
-      switch (c & 0xF0) {
-      case MIDI_CHANNEL_PRESSURE:
-      case MIDI_PROGRAM_CHANGE:
-        MidiUart.in_message_tx = 1;
-        break;
-      case MIDI_NOTE_OFF:
-      case MIDI_NOTE_ON:
-      case MIDI_AFTER_TOUCH:
-      case MIDI_CONTROL_CHANGE:
-      case MIDI_PITCH_WHEEL:
-        MidiUart.in_message_tx = 2;
-        break;
-      }
-    } else {
-      switch (c) {
-      case MIDI_SYSEX_START:
-        MidiUart.in_message_tx = -1;
-        break;
-      case MIDI_SYSEX_END:
-        MidiUart.in_message_tx = 0;
-        break;
-      }
-    }
-  } else {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
-    // 2. -and- normal channel is drained
-    // ==> clear active bit and wait for normal channel to be re-supplied
-    UART_CLEAR_ISR_TX_BIT();
-  }
-  if (MidiUart.txRb.isEmpty_isr() && (MidiUart.txRb_sidechannel == nullptr)) {
-    UART_CLEAR_ISR_TX_BIT();
-  }
+  MidiUart.tx_isr();
 }
 
 #ifdef MEGACOMMAND
@@ -367,62 +248,7 @@ ISR(USART1_UDRE_vect) {
 #endif
 #ifdef UART2_TX
   select_bank(0);
-  if ((MidiUart2.txRb_sidechannel != nullptr) &&
-      (MidiUart2.in_message_tx == 0)) {
-    // sidechannel mounted, and no active messages in normal channel
-    // ==> flush the sidechannel now
-    if (!MidiUart2.txRb_sidechannel->isEmpty_isr()) {
-      MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-      uint8_t c = MidiUart2.txRb_sidechannel->get_h_isr();
-      UART2_WRITE_CHAR(c);
-    }
-    // unmount sidechannel if drained
-    if (MidiUart2.txRb_sidechannel->isEmpty_isr()) {
-      MidiUart2.txRb_sidechannel = nullptr;
-    }
-  } else if (!MidiUart2.txRb.isEmpty_isr()) {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
-    // 2. -and- a normal channel byte is queued
-    // ==> flush the normal channel now
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    uint8_t c = MidiUart2.txRb.get_h_isr();
-    UART2_WRITE_CHAR(c);
-    if ((MidiUart2.in_message_tx > 0) && (c < 128)) {
-      MidiUart2.in_message_tx--;
-    }
-    if (c < 0xF0) {
-      switch (c & 0xF0) {
-      case MIDI_CHANNEL_PRESSURE:
-      case MIDI_PROGRAM_CHANGE:
-        MidiUart2.in_message_tx = 1;
-        break;
-      case MIDI_NOTE_OFF:
-      case MIDI_NOTE_ON:
-      case MIDI_AFTER_TOUCH:
-      case MIDI_CONTROL_CHANGE:
-      case MIDI_PITCH_WHEEL:
-        MidiUart2.in_message_tx = 2;
-        break;
-      }
-    } else {
-      switch (c) {
-      case MIDI_SYSEX_START:
-        MidiUart2.in_message_tx = -1;
-        break;
-      case MIDI_SYSEX_END:
-        MidiUart2.in_message_tx = 0;
-        break;
-      }
-    }
-  } else {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
-    // 2. -and- normal channel is drained
-    // ==> clear active bit and wait for normal channel to be re-supplied
-    UART2_CLEAR_ISR_TX_BIT();
-  }
-  if (MidiUart2.txRb.isEmpty_isr() && (MidiUart2.txRb_sidechannel == nullptr)) {
-    UART2_CLEAR_ISR_TX_BIT();
-  }
+  MidiUart2.tx_isr();
 }
 #endif
 #endif

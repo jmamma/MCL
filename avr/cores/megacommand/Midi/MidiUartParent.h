@@ -23,6 +23,8 @@
  * @{
  **/
 
+class MidiClass;
+
 class MidiUartParent {
   /**
    * \addtogroup midi_uart
@@ -42,6 +44,8 @@ public:
   uint16_t sendActiveSenseTimeout;
   uint16_t recvActiveSenseTimer;
   bool activeSenseEnabled;
+
+  MidiClass *midi;
 
   MidiID device;
 

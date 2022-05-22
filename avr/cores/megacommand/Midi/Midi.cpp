@@ -26,6 +26,7 @@ MidiClass::MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen,
   uart = _uart;
   receiveChannel = 0xFF;
   init();
+  uart->midi = this;
 }
 
 void MidiClass::init() {

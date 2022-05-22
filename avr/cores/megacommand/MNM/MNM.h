@@ -12,7 +12,7 @@
 class MNMClass : public ElektronDevice {
 public:
   MNMClass();
-  MidiUartClass2 *midiuart;
+  MidiUartClass *midiuart;
   MNMGlobal global;
 
   MNMKit kit;

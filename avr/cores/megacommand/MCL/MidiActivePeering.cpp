@@ -96,7 +96,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
                       MidiDevice **active_device, uint8_t* resource_buf) {
-  auto *pmidi = _getMidiUart(port);
+  MidiUartClass *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
     return;
@@ -111,7 +111,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       MidiClock.mode = 255;
       MidiClock.init();
     }
-    MidiUart.set_speed((uint32_t)31250, port);
+    pmidi->set_speed((uint32_t)31250);
     DEBUG_PRINTLN("disconnecting");
     for (size_t i = 0; i < nr_drivers; ++i) {
       if (drivers[i]->connected)
