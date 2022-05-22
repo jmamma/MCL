@@ -108,13 +108,9 @@ void MidiUartClassCommon::set_speed(uint32_t speed, uint8_t port) {
 
 void MidiUartClass2::m_putc_immediate(uint8_t c) {
 
-#ifdef UART2_TX
-  if (!IN_IRQ()) {
     USE_LOCK();
     SET_LOCK();
-    // block interrupts
     while (!UART2_CHECK_EMPTY_BUFFER()) {
-#ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -125,42 +121,18 @@ void MidiUartClass2::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
-#endif
     }
-
     MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
     UART2_WRITE_CHAR(c);
     CLEAR_LOCK();
-  } else {
-    while (!UART2_CHECK_EMPTY_BUFFER()) {
-#ifdef MEGACOMMAND
-      if (TIMER1_CHECK_INT()) {
-        TCNT1 = 0;
-        clock++;
-        TIMER1_CLEAR_INT()
-      }
-      if (TIMER3_CHECK_INT()) {
-        TCNT2 = 0;
-        slowclock++;
-        TIMER3_CLEAR_INT()
-      }
-#endif
-    }
-
-    MidiUart2.sendActiveSenseTimer = MidiUart2.sendActiveSenseTimeout;
-    UART2_WRITE_CHAR(c);
-  }
-#endif
 }
 
 void MidiUartClass::m_putc_immediate(uint8_t c) {
   //  m_putc(c);
-  if (!IN_IRQ()) {
     USE_LOCK();
     SET_LOCK();
     // block interrupts
     while (!UART_CHECK_EMPTY_BUFFER()) {
-#ifdef MEGACOMMAND
       if (TIMER1_CHECK_INT()) {
         TCNT1 = 0;
         clock++;
@@ -171,32 +143,13 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
         slowclock++;
         TIMER3_CLEAR_INT()
       }
-#endif
     }
 
     MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
     UART_WRITE_CHAR(c);
     CLEAR_LOCK();
-  } else {
-    while (!UART_CHECK_EMPTY_BUFFER()) {
-#ifdef MEGACOMMAND
-      if (TIMER1_CHECK_INT()) {
-        TCNT1 = 0;
-        clock++;
-        TIMER1_CLEAR_INT()
-      }
-      if (TIMER3_CHECK_INT()) {
-        TCNT2 = 0;
-        slowclock++;
-        TIMER3_CLEAR_INT()
-      }
-#endif
-    }
-
-    MidiUart.sendActiveSenseTimer = MidiUart.sendActiveSenseTimeout;
-    UART_WRITE_CHAR(c);
-  }
 }
+
 #ifdef MEGACOMMAND
 ISR(USART1_RX_vect) {
 #else
