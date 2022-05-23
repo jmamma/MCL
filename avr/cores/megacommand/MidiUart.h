@@ -134,7 +134,7 @@ public:
 
   void initSerial();
 
-  virtual void m_putc_immediate(uint8_t c);
+  void m_putc_immediate(uint8_t c);
 
   void rx_isr();
   void tx_isr();

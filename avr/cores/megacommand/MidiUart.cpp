@@ -157,7 +157,7 @@ void MidiUartClass::tx_isr() {
   if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
     // sidechannel mounted, and no active messages in normal channel
     // ==> flush the sidechannel now
-    if (txRb_sidechannel->isEmpty_isr()) {
+    if (!txRb_sidechannel->isEmpty_isr()) {
       sendActiveSenseTimer = sendActiveSenseTimeout;
       uint8_t c = txRb_sidechannel->get_h_isr();
       write_char(c);
@@ -217,7 +217,6 @@ ISR(USART1_RX_vect) {
 ISR(USART0_RX_vect) {
 #endif
   select_bank(0);
-  setLed();
   MidiUart.rx_isr();
 }
 

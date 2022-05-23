@@ -38,7 +38,7 @@ MidiUartClass MidiUartUSB(&UDR0, (volatile uint8_t *)BANK1_UART0_RX_BUFFER_START
 // -- Midi class objects
 MidiClass Midi(&MidiUart, SYSEX1_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX1_DATA_START);
 MidiClass Midi2(&MidiUart2, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX2_DATA_START);
-MidiClass MidiUSB(&MidiUartUSB, SYSEX2_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX3_DATA_START);
+MidiClass MidiUSB(&MidiUartUSB, SYSEX3_DATA_LEN, (volatile uint8_t*)BANK1_SYSEX3_DATA_START);
 
 // -- Sysex listeners
 MidiIDSysexListenerClass MidiIDSysexListener;
