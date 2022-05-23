@@ -64,7 +64,6 @@ void MCL::setup() {
   MNMSysexListener.setup(&Midi2);
 #endif
 
-  midi_setup.cfg_ports();
 
   grid_task.init();
 
@@ -80,6 +79,7 @@ void MCL::setup() {
   }
   param4.cur = 4;
 
+  midi_setup.cfg_ports();
   DEBUG_PRINTLN(F("Track sizes:"));
 #ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));

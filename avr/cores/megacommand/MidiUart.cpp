@@ -13,10 +13,9 @@
 #include <MidiClock.h>
 #include <avr/io.h>
 
-MidiUartClass::MidiUartClass(uint8_t *udr_, volatile uint8_t *rx_buf,
-                                         uint16_t rx_buf_size,
-                                         volatile uint8_t *tx_buf,
-                                         uint16_t tx_buf_size)
+MidiUartClass::MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
+                             uint16_t rx_buf_size, volatile uint8_t *tx_buf,
+                             uint16_t tx_buf_size)
     : MidiUartParent() {
   udr = udr_;
   rxRb.ptr = rx_buf;
@@ -31,60 +30,51 @@ MidiUartClass::MidiUartClass(uint8_t *udr_, volatile uint8_t *rx_buf,
 void MidiUartClass::initSerial() {
   running_status = 0;
   set_speed(31250);
-
-  uint8_t *src = ucsrc();
-  uint8_t *srb = ucsrb();
+  volatile uint8_t *src = ucsrc();
+  volatile uint8_t *srb = ucsrb();
 
   *src = (3 << UCSZ00);
   *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-
- // UCSR1C = (3 << UCSZ00);
- // UCSR1B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
-
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {
   // empty TX buffer before switching speed
-    while (!txRb.isEmpty())
-      ;
-
+  // UBRR1H = ((cpu >> 8) & 0xFF);
+  // UBRR1L = (cpu & 0xFF);
+  while (!txRb.isEmpty())
+    ;
 
   uint32_t cpu = (F_CPU / 16);
-  cpu /= speed;
+  cpu /= speed_;
   cpu--;
 
-  uint8_t *ubrrh_ = ubrrh();
-  uint8_t *ubrrl_ = ubrrl();
+  volatile uint8_t *ubrrh_ = ubrrh();
+  volatile uint8_t *ubrrl_ = ubrrl();
 
   *ubrrh_ = ((cpu >> 8) & 0xFF);
   *ubrrl_ = (cpu & 0xFF);
-
- // UBRR1H = ((cpu >> 8) & 0xFF);
- // UBRR1L = (cpu & 0xFF);
 
   speed = speed_;
 }
 
 void MidiUartClass::m_putc_immediate(uint8_t c) {
-
-    USE_LOCK();
-    SET_LOCK();
-
-    while (!check_empty_tx()) {
-      if (TIMER1_CHECK_INT()) {
-        TCNT1 = 0;
-        clock++;
-        TIMER1_CLEAR_INT()
-      }
-      if (TIMER3_CHECK_INT()) {
-        TCNT2 = 0;
-        slowclock++;
-        TIMER3_CLEAR_INT()
-      }
+  USE_LOCK();
+  SET_LOCK();
+  while (!check_empty_tx()) {
+    if (TIMER1_CHECK_INT()) {
+      TCNT1 = 0;
+      clock++;
+      TIMER1_CLEAR_INT()
     }
-    sendActiveSenseTimer = sendActiveSenseTimeout;
-    write_char(c);
-    CLEAR_LOCK();
+    if (TIMER3_CHECK_INT()) {
+      TCNT2 = 0;
+      slowclock++;
+      TIMER3_CLEAR_INT()
+    }
+  }
+  sendActiveSenseTimer = sendActiveSenseTimeout;
+  write_char(c);
+  CLEAR_LOCK();
 }
 
 void MidiUartClass::rx_isr() {
@@ -164,10 +154,11 @@ void MidiUartClass::tx_isr() {
     }
     // unmount sidechannel if drained
     if (txRb_sidechannel->isEmpty_isr()) {
-        txRb_sidechannel = nullptr;
+      txRb_sidechannel = nullptr;
     }
   } else if (!txRb.isEmpty_isr()) {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 1. either sidechannel is unmounted, or an active message is in normal
+    // channel
     // 2. -and- a normal channel byte is queued
     // ==> flush the normal channel now
     sendActiveSenseTimer = sendActiveSenseTimeout;
@@ -201,7 +192,8 @@ void MidiUartClass::tx_isr() {
       }
     }
   } else {
-    // 1. either sidechannel is unmounted, or an active message is in normal channel
+    // 1. either sidechannel is unmounted, or an active message is in normal
+    // channel
     // 2. -and- normal channel is drained
     // ==> clear active bit and wait for normal channel to be re-supplied
     clear_tx();

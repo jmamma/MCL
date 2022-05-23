@@ -34,7 +34,7 @@ void MidiSetup::cfg_ports() {
   };
 
   if (elektron_devs[0]) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), 1);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), Midi.uart);
     delay(100);
     elektron_devs[0]->setup();
   }
@@ -42,7 +42,7 @@ void MidiSetup::cfg_ports() {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
   } else if (elektron_devs[1]) {
     elektron_devs[1]->setup();
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), 2);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), Midi2.uart);
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
   }
