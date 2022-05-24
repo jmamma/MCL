@@ -171,6 +171,8 @@ void MidiUartClass::tx_isr() {
       switch (c & 0xF0) {
       case MIDI_CHANNEL_PRESSURE:
       case MIDI_PROGRAM_CHANGE:
+      case MIDI_MTC_QUARTER_FRAME:
+      case MIDI_SONG_SELECT:
         in_message_tx = 1;
         break;
       case MIDI_NOTE_OFF:
@@ -178,6 +180,7 @@ void MidiUartClass::tx_isr() {
       case MIDI_AFTER_TOUCH:
       case MIDI_CONTROL_CHANGE:
       case MIDI_PITCH_WHEEL:
+      case MIDI_SONG_POSITION_PTR:
         in_message_tx = 2;
         break;
       }
