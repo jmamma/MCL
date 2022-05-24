@@ -290,21 +290,14 @@ bool enable_clock_callbacks = true;
 
 
 void handleIncomingMidi() {
-  while (Midi.midiSysex.avail()) {
-    Midi.sysexEnd(Midi.midiSysex.msg_rd);
-    Midi.midiSysex.get_next_msg();
-  }
-  while (Midi2.midiSysex.avail()) {
-    Midi2.sysexEnd(Midi2.midiSysex.msg_rd);
-    Midi2.midiSysex.get_next_msg();
-  }
-  while (MidiUart.avail()) {
-    Midi.handleByte(MidiUart.m_getc());
-  }
-  // Disable non realtime midi
-  while (MidiUart2.avail()) {
-    Midi2.handleByte(MidiUart2.m_getc());
-  }
+
+  Midi.processSysex();
+  Midi2.processSysex();
+  MidiUSB.processSysex();
+  Midi.processMidi();
+  Midi2.processMidi();
+  MidiUSB.processMidi();
+
 }
 
 void __mainInnerLoop(bool callLoop) {

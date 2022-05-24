@@ -82,6 +82,20 @@ public:
   MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
 
   void init();
+
+  void processSysex() {
+    while (midiSysex.avail()) {
+      sysexEnd(midiSysex.msg_rd);
+      midiSysex.get_next_msg();
+    }
+  }
+
+  void processMidi() {
+    while (uart->avail()) {
+      handleByte(uart->m_getc());
+    }
+  }
+
   void sysexEnd(uint8_t msg_rd);
   void handleByte(uint8_t c);
 
