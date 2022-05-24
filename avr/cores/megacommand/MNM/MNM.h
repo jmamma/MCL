@@ -51,19 +51,6 @@ public:
     return true;
   }
 
-  void sendMultiTrigNoteOn(uint8_t note, uint8_t velocity);
-  void sendMultiTrigNoteOff(uint8_t note);
-  void sendMultiMapNoteOn(uint8_t note, uint8_t velocity);
-  void sendMultiMapNoteOff(uint8_t note);
-  void sendAutoNoteOn(uint8_t note, uint8_t velocity);
-  void sendAutoNoteOff(uint8_t note);
-  void sendNoteOn(uint8_t note, uint8_t velocity) {
-    sendNoteOn(currentTrack, note, velocity);
-  }
-  void sendNoteOn(uint8_t track, uint8_t note, uint8_t velocity);
-  void sendNoteOff(uint8_t note) { sendNoteOff(currentTrack, note); }
-  void sendNoteOff(uint8_t track, uint8_t note);
-
   uint8_t setParam(uint8_t param, uint8_t value) {
     return setParam(currentTrack, param, value);
   }

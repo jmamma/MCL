@@ -100,10 +100,8 @@
 #define TX_BUF_TYPE uint8_t
 #endif
 
-extern uint16_t clock_measure;
-void isr_usart1(uint8_t caller);
-void isr_usart2(uint8_t caller);
-void isr_midi();
+#define UART_MIDI 0
+#define UART_SERIAL 1
 
 class MidiUartClass : public MidiUartParent {
 
@@ -114,6 +112,7 @@ public:
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
+  uint8_t mode;
   int8_t in_message_tx;
 
   volatile uint8_t *udr;

@@ -34,7 +34,9 @@
 // file prevents the linker from pulling in any unused instances in the
 // first place.
 #if defined(HAVE_HWSERIAL0)
-#ifdef MEGACOMMAND
+
+#ifndef MEGACOMMAND //MEGACOMMAND implements uart isr in MidiUart.cpp
+
 #if defined(USART_RX_vect)
   ISR(USART_RX_vect)
 #elif defined(USART0_RX_vect)

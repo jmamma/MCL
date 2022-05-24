@@ -36,7 +36,6 @@ public:
   volatile static uint8_t handle_midi_lock;
 
   uint8_t running_status;
-  uint8_t currentChannel;
   uint32_t speed;
 
   bool useRunningStatus;
@@ -52,7 +51,6 @@ public:
   MidiUartParent() {
     useRunningStatus = false;
     running_status = 0;
-    currentChannel = 0x0;
     activeSenseEnabled = 0;
     recvActiveSenseTimer = 0;
     sendActiveSenseTimer = 0;
@@ -195,48 +193,6 @@ public:
   }
   */
   ALWAYS_INLINE() void resetRunningStatus() { running_status = 0; }
-
-  ALWAYS_INLINE() void sendNoteOn(uint8_t note, uint8_t velocity) {
-    sendNoteOn(currentChannel, note, velocity);
-  }
-  ALWAYS_INLINE() void sendNoteOff(uint8_t note, uint8_t velocity) {
-    sendNoteOff(currentChannel, note, velocity);
-  }
-  ALWAYS_INLINE() void sendNoteOff(uint8_t note) {
-    sendNoteOff(currentChannel, note, 0);
-  }
-  ALWAYS_INLINE() void sendCC(uint8_t cc, uint8_t value) {
-    sendCC(currentChannel, cc, value);
-  }
-  ALWAYS_INLINE() void sendProgramChange(uint8_t program) {
-    sendProgramChange(currentChannel, program);
-  }
-
-  ALWAYS_INLINE() void sendPolyKeyPressure(uint8_t note, uint8_t pressure) {
-    sendPolyKeyPressure(currentChannel, note, pressure);
-  }
-
-  ALWAYS_INLINE() void sendChannelPressure(uint8_t pressure) {
-    sendChannelPressure(currentChannel, pressure);
-  }
-
-  ALWAYS_INLINE() void sendPitchBend(int16_t pitchbend) {
-    sendPitchBend(currentChannel, pitchbend);
-  }
-
-  ALWAYS_INLINE() void sendNRPN(uint16_t parameter, uint8_t value) {
-    sendNRPN(currentChannel, parameter, value);
-  }
-  ALWAYS_INLINE() void sendNRPN(uint16_t parameter, uint16_t value) {
-    sendNRPN(currentChannel, parameter, value);
-  }
-
-  ALWAYS_INLINE() void sendRPN(uint16_t parameter, uint8_t value) {
-    sendRPN(currentChannel, parameter, value);
-  }
-  ALWAYS_INLINE() void sendRPN(uint16_t parameter, uint16_t value) {
-    sendRPN(currentChannel, parameter, value);
-  }
 
   ALWAYS_INLINE()
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {

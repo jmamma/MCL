@@ -7,7 +7,7 @@ void mclsys_apply_config() {
 #ifdef MEGACOMMAND
   if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
     GUI.display_mirror = true;
-
+    MidiUartUSB.mode = UART_SERIAL;
     Serial.begin(SERIAL_SPEED);
   }
   if ((Serial) && (mcl_cfg.display_mirror == 0)) {

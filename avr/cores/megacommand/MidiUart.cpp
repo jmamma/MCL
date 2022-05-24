@@ -18,6 +18,7 @@ MidiUartClass::MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
                              uint16_t tx_buf_size)
     : MidiUartParent() {
   udr = udr_;
+  mode = UART_MIDI;
   rxRb.ptr = rx_buf;
   rxRb.len = rx_buf_size;
   txRb.ptr = tx_buf;
@@ -206,43 +207,42 @@ void MidiUartClass::tx_isr() {
   }
 }
 
-#ifdef MEGACOMMAND
-ISR(USART1_RX_vect) {
-#else
 ISR(USART0_RX_vect) {
-#endif
+  select_bank(0);
+  if (MidiUartUSB.mode == UART_MIDI) {
+    MidiUartUSB.rx_isr();
+  }
+  else {
+    Serial._rx_complete_irq();
+  }
+}
+
+ISR(USART0_TX_vect) {
+  select_bank(0);
+  if (MidiUartUSB.mode == UART_MIDI) {
+    MidiUartUSB.tx_isr();
+  }
+  else {
+   Serial._tx_udr_empty_irq();
+  }
+}
+
+ISR(USART1_RX_vect) {
   select_bank(0);
   MidiUart.rx_isr();
 }
 
-#ifdef MEGACOMMAND
-ISR(USART2_RX_vect) {
-#else
-ISR(USART1_RX_vect) {
-#endif
-  select_bank(0);
-  MidiUart2.rx_isr();
-}
-
-#ifdef TX_IRQ
-
-#ifdef MEGACOMMAND
 ISR(USART1_UDRE_vect) {
-#else
-ISR(USART0_UDRE_vect) {
-#endif
   select_bank(0);
   MidiUart.tx_isr();
 }
 
-#ifdef MEGACOMMAND
+ISR(USART2_RX_vect) {
+  select_bank(0);
+  MidiUart2.rx_isr();
+}
+
 ISR(USART2_UDRE_vect) {
-#elif UART2_TX
-ISR(USART1_UDRE_vect) {
-#endif
-#ifdef UART2_TX
   select_bank(0);
   MidiUart2.tx_isr();
 }
-#endif
-#endif

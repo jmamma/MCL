@@ -23,7 +23,7 @@
 
 #ifdef DEBUGMODE
 
-#define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
+#define DEBUG_INIT() { MidiUartUSB.mode = UART_SERIAL; Serial.begin(SERIAL_SPEED); }
 
 #define DEBUG_PRINT(x)  Serial.print(x)
 #define DEBUG_PRINTLN(x)  Serial.println(x)

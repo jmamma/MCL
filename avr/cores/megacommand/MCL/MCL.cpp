@@ -73,6 +73,7 @@ void MCL::setup() {
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
     oled_display.textbox("DISPLAY ", "MIRROR");
+    MidiUartUSB.mode = UART_SERIAL;
     Serial.begin(250000);
     GUI.display_mirror = true;
 #endif

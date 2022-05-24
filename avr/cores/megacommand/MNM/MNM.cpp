@@ -123,38 +123,6 @@ void MNMClass::requestKit(uint8_t kit) {
 }
 
 
-void MNMClass::sendNoteOn(uint8_t track, uint8_t note, uint8_t velocity) {
-  midiuart->sendNoteOn(track + global.baseChannel, note, velocity);
-}
-
-void MNMClass::sendNoteOff(uint8_t track, uint8_t note) {
-  midiuart->sendNoteOff(track + global.baseChannel, note);
-}
-
-void MNMClass::sendMultiTrigNoteOn(uint8_t note, uint8_t velocity) {
-  midiuart->sendNoteOn(global.multitrigChannel, note, velocity);
-}
-
-void MNMClass::sendMultiTrigNoteOff(uint8_t note) {
-  midiuart->sendNoteOff(global.multitrigChannel, note);
-}
-
-void MNMClass::sendMultiMapNoteOn(uint8_t note, uint8_t velocity) {
-  midiuart->sendNoteOn(global.multimapChannel, note, velocity);
-}
-
-void MNMClass::sendMultiMapNoteOff(uint8_t note) {
-  midiuart->sendNoteOff(global.multimapChannel, note);
-}
-
-void MNMClass::sendAutoNoteOn(uint8_t note, uint8_t velocity) {
-  midiuart->sendNoteOn(global.autotrackChannel, note, velocity);
-}
-
-void MNMClass::sendAutoNoteOff(uint8_t note) {
-  midiuart->sendNoteOff(global.autotrackChannel, note);
-}
-
 void MNMClass::triggerTrack(uint8_t track, bool amp, bool lfo, bool filter) {
   midiuart->sendNRPN(global.baseChannel, (uint16_t)(0x7F << 7),
                      (uint8_t)((track << 3) | (amp ? 4 : 0) | (lfo ? 2 : 0) |
