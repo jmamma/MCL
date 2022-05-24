@@ -44,6 +44,8 @@ public:
   uint16_t recvActiveSenseTimer;
   bool activeSenseEnabled;
 
+  uint8_t mode;
+
   MidiClass *midi;
 
   MidiID device;

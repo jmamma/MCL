@@ -217,7 +217,7 @@ ISR(USART0_RX_vect) {
   }
 }
 
-ISR(USART0_TX_vect) {
+ISR(USART0_UDRE_vect) {
   select_bank(0);
   if (MidiUartUSB.mode == UART_MIDI) {
     MidiUartUSB.tx_isr();

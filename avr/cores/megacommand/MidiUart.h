@@ -112,7 +112,6 @@ public:
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
-  uint8_t mode;
   int8_t in_message_tx;
 
   volatile uint8_t *udr;
