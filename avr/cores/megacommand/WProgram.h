@@ -74,7 +74,7 @@ extern "C" {
 #define USB_STORAGE 2
 #define USB_DFU     0
 
-#define IS_MEGACMD() { PINK & (1 << _BV(PK0)) }
+#define IS_MEGACMD() ~(PINK & (1 << _BV(PK0)))
 #define SET_USB_MODE(x) { PORTK = ((x) << 1); }
 
 #include "mididuino_private.h"
