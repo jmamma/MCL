@@ -70,6 +70,8 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
+  midi_setup.cfg_ports();
+
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
     oled_display.textbox("DISPLAY ", "MIRROR");
@@ -80,7 +82,6 @@ void MCL::setup() {
   }
   param4.cur = 4;
 
-  midi_setup.cfg_ports();
   DEBUG_PRINTLN(F("Track sizes:"));
 #ifdef EXT_TRACKS
   DEBUG_PRINTLN(sizeof(A4Track));

@@ -244,5 +244,6 @@ ISR(USART2_RX_vect) {
 
 ISR(USART2_UDRE_vect) {
   select_bank(0);
+
   MidiUart2.tx_isr();
 }

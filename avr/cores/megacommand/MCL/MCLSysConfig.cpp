@@ -2,27 +2,40 @@
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
-  mcl_cfg.write_cfg();
 #ifndef DEBUGMODE
 #ifdef MEGACOMMAND
-  if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
-    GUI.display_mirror = true;
-    MidiUartUSB.mode = UART_SERIAL;
-    Serial.begin(SERIAL_SPEED);
+  Serial.end();
+  if (mcl_cfg.usb_mode == USB_DFU) {
+    mcl_cfg.usb_mode = USB_SERIAL;
+    if (mcl_gui.wait_for_confirm("USB", "Enter DFU and reboot?")) {
+      SET_USB_MODE(USB_DFU);
+      while (1);
+    }
   }
-  if ((Serial) && (mcl_cfg.display_mirror == 0)) {
-    GUI.display_mirror = false;
-    Serial.end();
+
+  if (mcl_cfg.usb_mode <= USB_SERIAL) {
+    SET_USB_MODE(mcl_cfg.usb_mode);
+  }
+  if (mcl_cfg.usb_mode == USB_SERIAL) {
+    if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
+      GUI.display_mirror = true;
+      MidiUartUSB.mode = UART_SERIAL;
+      Serial.begin(SERIAL_SPEED);
+    }
+    if ((Serial) && (mcl_cfg.display_mirror == 0)) {
+      GUI.display_mirror = false;
+    }
   }
 #endif
 #endif
+
+  mcl_cfg.write_cfg();
 }
 
 void mclsys_apply_config_midi() {
   mclsys_apply_config();
   midi_setup.cfg_ports();
 }
-
 
 bool MCLSysConfig::write_cfg() {
   bool ret;
@@ -99,7 +112,7 @@ bool MCLSysConfig::cfg_init() {
   uart2_device = 0;
   uart_cc_loopback = 0;
   uart2_prg_mode = 0;
-
+  usb_mode = USB_SERIAL;
   cfgfile.close();
 
   ret = write_cfg();

@@ -69,6 +69,14 @@ extern "C" {
 // #define MIDIDUINO_EXTERNAL_RAM 1
 // #define MDIIDUINO_SD_CARD      1
 
+#define USB_SERIAL  3
+#define USB_MIDI    1
+#define USB_STORAGE 2
+#define USB_DFU     0
+
+#define IS_MEGACMD() { PINK & (1 << _BV(PK0)) }
+#define SET_USB_MODE(x) { PORTK = ((x) << 1); }
+
 #include "mididuino_private.h"
 #include "memory.h"
 
@@ -85,6 +93,8 @@ extern "C" {
 #include "Midi.h"
 #include "WMath.h"
 #endif
+
+extern void(* hardwareReset) (void);
 
 extern uint32_t write_count;
 extern uint32_t write_count_time;

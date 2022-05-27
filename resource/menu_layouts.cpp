@@ -100,11 +100,12 @@ menu_t<4> mdimport_menu_layout = {
     0, 0
 };
 
-menu_t<1> mclconfig_menu_layout = {
+menu_t<2> mclconfig_menu_layout = {
     "SYSTEM",
     {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, 0, 0, 23},
+        {"USB MODE:", 0, 4, 4, 12, 0, 0, 92},
         //{"DIAGNOSTIC:", 0, 0, 0, (uint8_t *) NULL, nullptr, NULL, {}},
     },
     1, 0

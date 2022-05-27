@@ -31,7 +31,7 @@ extern MenuPage<2> start_menu_page;
 extern MenuPage<6> system_page;
 extern MenuPage<10> midi_config_page;
 extern MenuPage<5> md_config_page;
-extern MenuPage<1> mcl_config_page;
+extern MenuPage<2> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
 extern MenuPage<1> ram_config_page;

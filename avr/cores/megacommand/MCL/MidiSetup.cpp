@@ -5,7 +5,11 @@ void MidiSetup::cfg_ports() {
 
   Midi.uart_forward = nullptr;
   Midi2.uart_forward = nullptr;
-
+  /*
+  Midi.uart_forward = MidiUSB.uart;
+  MidiUSB.uart_forward = Midi2.uart;
+  MidiUSB.uart->mode = UART_MIDI;
+  */
   if (mcl_cfg.midi_forward == 1 || mcl_cfg.midi_forward == 3) {
     Midi.uart_forward = &MidiUart2;
   }

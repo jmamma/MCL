@@ -49,10 +49,7 @@ public:
   uint16_t track_type_select;
   uint8_t uart2_device;
   uint8_t uart_cc_loopback;
-
-  //to be deleted
-  uint8_t link_rand_max;
-
+  uint8_t usb_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

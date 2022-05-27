@@ -35,12 +35,12 @@ volatile uint8_t MidiUartParent::handle_midi_lock = 0;
 void my_init_ram(void) __attribute__((naked)) __attribute__((used))
 __attribute__((section(".init3")));
 
+void(* hardwareReset) (void) = 0;
+
 void my_init_ram(void) {
 // Set PL6 as output
 //
 
-  DDRK = 0xFF;
-  PORTK = 0xFF;
 
 #ifdef MEGACOMMAND
   DDRL |= _BV(PL6);
@@ -179,6 +179,9 @@ void init(void) {
   PORTL &= ~_BV(PL3);
 
   timer_init();
+
+  MidiUartUSB.set_speed(250000);
+
   //  m_init();
 }
 
@@ -319,6 +322,14 @@ void __mainInnerLoop(bool callLoop) {
 //void setupMidiCallbacks();
 // void setupClockCallbacks();
 int main(void) {
+
+  DDRK = 0x00;
+  DDRK |= _BV(PK1) | _BV(PK2); //set output
+
+  PORTK = 0x00;
+  PORTK |= _BV(PK0) | _BV(PK1) | _BV(PK2); //enable pullup or set high
+
+
   delay(100);
   init();
   // clearLed();

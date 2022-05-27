@@ -15,7 +15,7 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.setCursor(MCLGUI::dlg_info_x2 - 55, MCLGUI::dlg_info_y1 + 23);
   oled_display.print(" YES");
 
-  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 16, 9, WHITE);
+  oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
 
   oled_display.setFont(oldfont);
@@ -61,7 +61,7 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4) && (!BUTTON_DOWN(Buttons.BUTTON1))) {
     YES:
     oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
     oled_display.display();
