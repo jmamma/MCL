@@ -71,7 +71,6 @@ void GuiClass::loop() {
   while (!EventRB.isEmpty()) {
     MidiUartParent::handle_midi_lock = 1;
     clock_minutes = 0;
-    minuteclock = 0;
     oled_display.screen_saver = false;
     gui_event_t event;
     EventRB.getp(&event);
