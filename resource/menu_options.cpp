@@ -59,6 +59,6 @@ menu_option_t MENU_OPTIONS[] = {
   // 90
   {0, "BASIC"}, {1, "ADV"},
   // 92
-  {0, "DFU"}, {1, "MIDI"}, {2, "DISK"}, {3, "SERIAL"},
+  {0, "DFU"}, {3, "SERIAL"}, {2, "MIDI"}, {1, "DISK"},
 };
 

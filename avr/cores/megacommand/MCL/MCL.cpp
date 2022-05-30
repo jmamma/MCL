@@ -30,10 +30,6 @@ void MCL::setup() {
     return;
   }
 
-  if (!IS_MEGACMD()) {
-    mcl_config_page.menu.enable_entry(1, false);
-  }
-
   R.Clear();
   R.use_icons_boot();
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);

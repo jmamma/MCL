@@ -5,15 +5,42 @@ void mclsys_apply_config() {
 #ifndef DEBUGMODE
 #ifdef MEGACOMMAND
   Serial.end();
+
   if (mcl_cfg.usb_mode == USB_DFU) {
+
     mcl_cfg.usb_mode = USB_SERIAL;
-    if (mcl_gui.wait_for_confirm("USB", "Enter DFU and reboot?")) {
-      SET_USB_MODE(USB_DFU);
-      while (1);
+    if (!IS_MEGACMD()) {
+      oled_display.textbox("N/A", "");
+    } else {
+
+      if (mcl_gui.wait_for_confirm("USB", "Enter DFU and reboot?")) {
+        SET_USB_MODE(USB_DFU);
+        while (1)
+          ;
+      }
+    }
+  }
+  else if (mcl_cfg.usb_mode == USB_STORAGE) {
+    mcl_cfg.usb_mode = USB_SERIAL;
+    if (!IS_MEGACMD()) {
+      oled_display.textbox("N/A", "");
+    } else if (mcl_gui.wait_for_confirm("USB", "Enter Disk Mode?")) {
+
+    oled_display.clearDisplay();
+
+    oled_display.textbox("DISK", "MODE");
+    oled_display.display();
+
+    LOCAL_SPI_DISABLE();
+    EXTERNAL_SPI_ENABLE();
+    SET_USB_MODE(USB_STORAGE);
+
+    while (1)
+      ;
     }
   }
 
-  if (mcl_cfg.usb_mode <= USB_SERIAL) {
+  else {
     SET_USB_MODE(mcl_cfg.usb_mode);
   }
   if (mcl_cfg.usb_mode == USB_SERIAL) {
