@@ -49,12 +49,8 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
 #include <inttypes.h>
 #include <avr/interrupt.h>
-#ifdef __cplusplus
-  void __mainInnerLoop(bool callLoop = true);
-
 }
 #endif
 
@@ -76,6 +72,8 @@ extern "C" {
 
 #define IS_MEGACMD() ~(PINK & (1 << _BV(PK0)))
 #define SET_USB_MODE(x) { PORTK = ((x) << 1); }
+#define LOCAL_SPI_ENABLE() { PORTL |= _BV(PL4); PORTL &= ~_BV(PL3); }
+#define LOCAL_SPI_DISABLE() { PORTL |= _BV(PL3); PORTL &= ~_BV(PL4); }
 
 #include "mididuino_private.h"
 #include "memory.h"

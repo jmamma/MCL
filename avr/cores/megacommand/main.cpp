@@ -175,8 +175,8 @@ void init(void) {
   //Only one should be active at any time.
 
   DDRL |= _BV(PL4) | _BV(PL3);
-  PORTL |= _BV(PL4);
-  PORTL &= ~_BV(PL3);
+  
+  LOCAL_SPI_ENABLE();
 
   timer_init();
 
@@ -303,24 +303,6 @@ void handleIncomingMidi() {
 
 }
 
-void __mainInnerLoop(bool callLoop) {
-  //  SET_BIT(OUTPUTPORT, OUTPUTPIN);
-  //  setLed2();
-  //  if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||
-  //       MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
-  //   MidiClock.updateClockInterval();
-  // }
-
-  //  CLEAR_BIT(OUTPUTPORT, OUTPUTPIN);
-  //handleIncomingMidi();
-  if (callLoop) {
-    GUI.loop();
-  }
-}
-
-//void setupEventHandlers();
-//void setupMidiCallbacks();
-// void setupClockCallbacks();
 int main(void) {
 
   DDRK = 0x00;
@@ -332,8 +314,6 @@ int main(void) {
 
   delay(100);
   init();
-  // clearLed();
-  // clearLed2();
 
   uint16_t sr = SR165.read16();
   Buttons.clear();
@@ -342,9 +322,7 @@ int main(void) {
   oldsr = sr;
 
   OUTPUTDDR |= _BV(OUTPUTPIN);
-  // setupEventHandlers();
-  // setupMidiCallbacks();
-  //	setupClockCallbacks();
+
   sei();
 
   DEBUG_INIT();
@@ -358,7 +336,7 @@ int main(void) {
   setup();
   for (;;) {
     loop();
-    __mainInnerLoop();
+    GUI.loop();
   }
   return 0;
 }
