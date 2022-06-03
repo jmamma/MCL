@@ -36,6 +36,7 @@ void MCLGfx::draw_evil(unsigned char* evil) {
 }
 
 void MCLGfx::splashscreen(unsigned char* bitmap) {
+  oled_display.setFont();
   oled_display.setTextSize(2);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(40, 0);

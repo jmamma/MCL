@@ -1,7 +1,12 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+void mcl_setup() {
+  mcl.setup();
+}
+
 void MCL::setup() {
+
   DEBUG_PRINTLN(F("Welcome to MegaCommand Live"));
   DEBUG_PRINTLN(VERSION);
 
@@ -21,8 +26,19 @@ void MCL::setup() {
   bool ret = false;
 
   delay(100);
+
   ret = mcl_sd.sd_init();
   gfx.init_oled();
+  R.Clear();
+  R.use_icons_boot();
+
+  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+    gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
+    GUI.setPage(&boot_menu_page);
+    while (GUI.currentPage() == &boot_menu_page) { GUI.loop(); }
+    return;
+  }
+
   if (!ret) {
     oled_display.print("SD CARD ERROR :-(");
     oled_display.display();
@@ -30,10 +46,8 @@ void MCL::setup() {
     return;
   }
 
-  R.Clear();
-  R.use_icons_boot();
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
-  // if (!ret) { }
+
   ret = mcl_sd.load_init();
 
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
@@ -81,14 +95,6 @@ void MCL::setup() {
 #endif
   }
   param4.cur = 4;
-
-  DEBUG_PRINTLN(F("Track sizes:"));
-#ifdef EXT_TRACKS
-  DEBUG_PRINTLN(sizeof(A4Track));
-#endif
-  DEBUG_PRINTLN(sizeof(MDTrack));
-  DEBUG_PRINTLN(sizeof(MDSeqTrackData));
-  DEBUG_PRINTLN(sizeof(GridTrack) + sizeof(MDSeqTrackData) + sizeof(MDMachine));
 }
 
 bool mcl_handleEvent(gui_event_t *event) {

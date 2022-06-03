@@ -160,8 +160,6 @@ void init(void) {
 
   timer_init();
 
-  MidiUartUSB.set_speed(250000);
-
 }
 
 void setup();

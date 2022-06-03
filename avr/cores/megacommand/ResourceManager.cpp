@@ -112,6 +112,11 @@ void ResourceManager::restore_menu_layout_deps() {
 	wavdesign_menu_page.set_layout(R.menu_layouts->wavdesign_menu_layout);
     md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);
     start_menu_page.set_layout(R.menu_layouts->start_menu_layout);
+    boot_menu_page.set_layout(R.menu_layouts->boot_menu_layout);
+    midiport_menu_page.set_layout(R.menu_layouts->midiport_menu_layout);
+    midiprogram_menu_page.set_layout(R.menu_layouts->midiprogram_menu_layout);
+    midiclock_menu_page.set_layout(R.menu_layouts->midiclock_menu_layout);
+    midiroute_menu_page.set_layout(R.menu_layouts->midiroute_menu_layout);
 }
 
 ResourceManager R;

@@ -50,6 +50,7 @@ typedef void (MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
 
 #include "MidiSysex.h"
 
+#define NUM_FORWARD_PORTS 2
 class MidiClass {
   /**
    * \addtogroup midi_class
@@ -67,7 +68,9 @@ public:
   uint8_t msg[3];
 
   MidiUartParent *uart;
-  MidiUartClass *uart_forward;
+
+  MidiUartClass *uart_forward[NUM_FORWARD_PORTS];
+
   uint8_t callback;
   //  midi_callback_t callbacks[7];
   CallbackVector1<MidiCallback, 8, uint8_t *> midiCallbacks[7];

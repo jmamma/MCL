@@ -4,13 +4,18 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4003
+#define CONFIG_VERSION 4004
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
 
 extern void mclsys_apply_config();
 extern void mclsys_apply_config_midi();
+
+extern void usb_os_update();
+extern void usb_dfu_mode();
+extern void usb_disk_mode();
+extern void mcl_setup();
 
 class MCLSysConfigData {
 public:
@@ -37,7 +42,11 @@ public:
   uint8_t display_mirror;
   uint8_t rec_quant;
   float tempo;
-  uint8_t midi_forward;
+
+  uint8_t midi_forward_1;
+  uint8_t midi_forward_2;
+  uint8_t midi_forward_usb;
+
   uint8_t auto_save;
   uint8_t load_mode;
   uint8_t chain_queue_length;
@@ -50,6 +59,9 @@ public:
   uint8_t uart2_device;
   uint8_t uart_cc_loopback;
   uint8_t usb_mode;
+  uint8_t midi_transport_rec;
+  uint8_t midi_transport_send;
+
 };
 
 class MCLSysConfig : public MCLSysConfigData {

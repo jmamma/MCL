@@ -5,13 +5,11 @@ menu_option_t MENU_OPTIONS[] = {
   // 0: RAM PAGE LINK
   {0, "MONO"}, {1, "STEREO"},
   // 2: MIDI TURBO 1/2
-  {0, "1x"}, {1, "2x"}, {2,"4x"}, {3,"8x"},
-  // 6: MIDI CLK REC
-  {0, "MIDI 1"}, {1, "MIDI 2"},
-  // 8: MIDI CLK SEND
-  {0, "OFF"}, {1, "MIDI 2"},
+  {0, "1x"}, {1, "2x"}, {2,"4x"}, {3,"8x"}, {4,"SHAK"},
+  // 7: MIDI CLK REC
+  {0, "1"}, {1, "2"}, {2,"USB"},
   // 10: MIDI FWD
-  {0, "OFF"}, {1, "1->2"}, {2, "1<-2"}, {3, "1<>2"},
+  {0, "OFF"}, {1, "2"}, {2, "USB"}, {3, "2 + USB"},
   // 14: MD TRACK SELECT
   {0, "MAN"}, {1, "AUTO"},
   // 16: MD NORMALIZE
@@ -58,7 +56,11 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "--"},{17, "OMNI"},
   // 90
   {0, "BASIC"}, {1, "ADV"},
-  // 92
-  {0, "DFU"}, {3, "SERIAL"}, {2, "MIDI"}, {1, "DISK"},
+  // 92: MIDI2 FWD
+  {0, "OFF"}, {1, "1"}, {2, "USB"}, {3, "1 + USB"},
+  // 96: MIDIUSB FWD
+  {0, "OFF"}, {1, "1"}, {2, "2"}, {3, "1 + 2"},
+  // 100: MIDI CLK SEND
+  {0, "OFF"}, {1, "2"}, {2, "USB"}, {3, "2 + USB"},
 };
 

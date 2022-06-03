@@ -13,9 +13,17 @@
 MidiClockClass::MidiClockClass() {
   init();
   mode = OFF;
+  uart_clock_recv = &MidiUart;
+  uart_transport_recv1 = &MidiUart;
+  uart_transport_recv2 = nullptr;
+
+  uart_clock_forward1 = nullptr;
+  uart_clock_forward2 = nullptr;
+
+  uart_transport_forward1 = nullptr;
+  uart_transport_forward2 = nullptr;
+
   setTempo(120);
-  transmit_uart1 = false;
-  transmit_uart2 = false;
   useImmediateClock = true;
 }
 // global uint_32 mcl_16counter;
@@ -89,11 +97,12 @@ void MidiClockClass::start() {
   if (mode == INTERNAL_MIDI) {
     init();
     state = STARTED;
-    if (transmit_uart1) {
-      MidiUart.sendRaw(MIDI_START);
+
+    if (uart_transport_forward1) {
+      uart_transport_forward1->sendRaw(MIDI_START);
     }
-    if (transmit_uart2) {
-      MidiUart2.sendRaw(MIDI_START);
+    if (uart_transport_forward2) {
+      uart_transport_forward2->sendRaw(MIDI_START);
     }
   }
 }
@@ -102,11 +111,11 @@ void MidiClockClass::stop() {
   clearLed();
   if (mode == INTERNAL_MIDI) {
     state = PAUSED;
-    if (transmit_uart1) {
-      MidiUart.sendRaw(MIDI_STOP);
+    if (uart_transport_forward1) {
+      uart_transport_forward1->sendRaw(MIDI_STOP);
     }
-    if (transmit_uart2) {
-      MidiUart2.sendRaw(MIDI_STOP);
+    if (uart_transport_forward2) {
+      uart_transport_forward2->sendRaw(MIDI_STOP);
     }
   }
 }
@@ -114,7 +123,12 @@ void MidiClockClass::stop() {
 void MidiClockClass::pause() {
   if (mode == INTERNAL_MIDI) {
     if (state == PAUSED) {
-      start();
+    if (uart_transport_forward1) {
+      uart_transport_forward1->sendRaw(MIDI_CONTINUE);
+    }
+    if (uart_transport_forward2) {
+      uart_transport_forward2->sendRaw(MIDI_CONTINUE);
+    }
     } else {
       stop();
     }

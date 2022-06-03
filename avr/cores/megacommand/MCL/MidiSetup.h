@@ -6,6 +6,7 @@
 
 class MidiSetup {
   public:
+  void cfg_clock_recv();
   void cfg_ports();
 };
 

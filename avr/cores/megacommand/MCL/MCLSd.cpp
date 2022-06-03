@@ -31,12 +31,6 @@ bool MCLSd::load_init() {
   bool ret = false;
   int b;
 
-  if (BUTTON_DOWN(Buttons.BUTTON2)) {
-    gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
-    oled_display.clearDisplay();
-    GUI.ignoreNextEvent(Buttons.BUTTON3);
-  }
-
   if (sd_state) {
 
     if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {

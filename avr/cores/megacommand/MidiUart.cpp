@@ -82,27 +82,27 @@ void MidiUartClass::rx_isr() {
   uint8_t c = read_char();
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     recvActiveSenseTimer = 0;
-    if (MidiClock.mode == MidiClock.EXTERNAL_UART1) {
-
-      if (c == MIDI_CLOCK) {
+    if (c == MIDI_CLOCK) {
+      if (MidiClock.uart_clock_recv == this) {
         MidiClock.handleClock();
         MidiClock.callCallbacks(true);
-      } else {
-        switch (c) {
-        case MIDI_START:
-          MidiClock.handleImmediateMidiStart();
-          break;
-
-        case MIDI_STOP:
-          MidiClock.handleImmediateMidiStop();
-          break;
-
-        case MIDI_CONTINUE:
-          MidiClock.handleImmediateMidiContinue();
-          break;
-        }
-        rxRb.put_h_isr(c);
       }
+    } else if (MidiClock.uart_transport_recv1 == this ||
+               MidiClock.uart_transport_recv2 == this) {
+      switch (c) {
+      case MIDI_START:
+        MidiClock.handleImmediateMidiStart();
+        break;
+
+      case MIDI_STOP:
+        MidiClock.handleImmediateMidiStop();
+        break;
+
+      case MIDI_CONTINUE:
+        MidiClock.handleImmediateMidiContinue();
+        break;
+      }
+      rxRb.put_h_isr(c);
     }
     return;
   }
@@ -210,9 +210,9 @@ void MidiUartClass::tx_isr() {
 ISR(USART0_RX_vect) {
   select_bank(0);
   if (MidiUartUSB.mode == UART_MIDI) {
+    uint8_t c = MidiUartUSB.read_char();
     MidiUartUSB.rx_isr();
-  }
-  else {
+  } else {
     Serial._rx_complete_irq();
   }
 }
@@ -221,9 +221,8 @@ ISR(USART0_UDRE_vect) {
   select_bank(0);
   if (MidiUartUSB.mode == UART_MIDI) {
     MidiUartUSB.tx_isr();
-  }
-  else {
-   Serial._tx_udr_empty_irq();
+  } else {
+    Serial._tx_udr_empty_irq();
   }
 }
 

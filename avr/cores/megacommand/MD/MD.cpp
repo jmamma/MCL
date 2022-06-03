@@ -209,9 +209,10 @@ bool MDClass::probe() {
 
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), uart);
     mcl_gui.delay_progress(100);
-    if (mcl_cfg.clock_rec == 0) {
-      MidiClock.mode = MidiClock.EXTERNAL_MIDI;
-    }
+
+ //   if (mcl_cfg.clock_rec == 0) {
+ //     MidiClock.uart_clock_recv = uart;
+ //   }
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
     getBlockingKit(0x7F);

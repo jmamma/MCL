@@ -22,6 +22,9 @@
  * @{
  **/
 
+
+#include "MidiUart.h"
+
 class ClockCallback {};
 
 typedef void (ClockCallback::*midi_clock_callback_ptr_t)(uint32_t count);
@@ -75,47 +78,45 @@ public:
 
   volatile bool updateSmaller;
   uint16_t pll_x;
-  // bool transmit;
-  bool transmit_uart1;
-  bool transmit_uart2;
+  // bool transport;
+  bool transport_uart1;
+  bool transport_uart2;
+  bool transport_usb;
+
   bool isInit;
 
   bool reset_clock_phase = false;
   //    volatile uint16_t mcl_clock;
   //   volatile uint16_t mcl_countbool
+
   volatile enum {
     PAUSED = 0,
     STARTING = 1,
     STARTED = 2,
   } state;
 
-#if defined(MIDIDUINO) || defined(HOST_MIDIDUINO)
-
-  typedef enum {
-    OFF = 0,
-    INTERNAL_M,
-    EXTERNAL_UART1,
-    EXTERNAL_UART2
-  } clock_mode_t;
-#define INTERNAL_MIDI INTERNAL_M
-#define EXTERNAL_MIDI EXTERNAL_UART1
-
-#else
   typedef enum {
     OFF = 0,
     INTERNAL_MIDI,
     EXTERNAL_UART1,
-    EXTERNAL_UART2
+    EXTERNAL_UART2,
+    EXTERNAL_USB,
   } clock_mode_t;
   // arduino
 
-#ifndef BOARD_ID
-#define BOARD_ID 0x80
-#endif
-
-#endif
-
   clock_mode_t mode;
+
+  MidiUartClass *uart_clock_recv;
+  MidiUartClass *uart_transport_recv1;
+  MidiUartClass *uart_transport_recv2;
+
+  MidiUartClass *uart_clock_forward1;
+  MidiUartClass *uart_clock_forward2;
+  MidiUartClass *uart_clock_forward3;
+
+  MidiUartClass *uart_transport_forward1;
+  MidiUartClass *uart_transport_forward2;
+  MidiUartClass *uart_transport_forward3;
 
   MidiClockClass();
 
@@ -255,12 +256,11 @@ public:
     // }
     clock_last_time = clock;
     div192th_countdown = 0;
-    if (transmit_uart1) {
-      MidiUart.m_putc_immediate(0xF8);
-    }
-    if (transmit_uart2) {
-      MidiUart2.m_putc_immediate(0xF8);
-    }
+
+    if (uart_clock_forward1) { uart_clock_forward1->sendRaw(0xF8); }
+    if (uart_clock_forward2) { uart_clock_forward2->sendRaw(0xF8); }
+    if (uart_clock_forward3) { uart_clock_forward3->sendRaw(0xF8); }
+
     incrementCounters();
     if ((step_counter == 1) && (state == STARTED)) {
       setLed();
@@ -401,12 +401,10 @@ public:
   ALWAYS_INLINE() void handleImmediateMidiStart() {
     reset_clock_phase = true;
 
-    if (transmit_uart1) {
-      MidiUart.sendRaw(MIDI_START);
-    }
-    if (transmit_uart2) {
-      MidiUart2.sendRaw(MIDI_START);
-    }
+    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_START); }
+    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_START); }
+    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_START); }
+
     init();
 
     state = STARTING;
@@ -417,24 +415,18 @@ public:
 
   ALWAYS_INLINE() void handleImmediateMidiStop() {
     state = PAUSED;
-    if (transmit_uart1) {
-      MidiUart.sendRaw(MIDI_STOP);
-    }
-    if (transmit_uart2) {
-      MidiUart2.sendRaw(MIDI_STOP);
-    }
-
+    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_STOP); }
+    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_STOP); }
+    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_STOP); }
     //  init();
   }
 
   ALWAYS_INLINE() void handleImmediateMidiContinue() {
     reset_clock_phase = true;
-    if (transmit_uart1) {
-      MidiUart.sendRaw(MIDI_CONTINUE);
-    }
-    if (transmit_uart2) {
-      MidiUart2.sendRaw(MIDI_CONTINUE);
-    }
+    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_CONTINUE); }
+    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_CONTINUE); }
+    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_CONTINUE); }
+
     state = STARTED;
 
     isInit = false;

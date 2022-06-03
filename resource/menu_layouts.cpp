@@ -11,6 +11,18 @@
   ExitPage
  ***/
 
+menu_t<4> boot_menu_layout = {
+    "BOOT",
+    {
+        //               m  r  n  d  p  f  o
+        {"OS UPGRADE",  0, 0, 0, 0, 0, 27, 0},
+        {"DFU MODE",  0, 0, 0, 0, 0, 26, 0},
+        {"USB DISK", 0, 0, 0, 0, 0, 28, 0},
+        {"EXIT", 0, 0, 0, 0, 0, 29, 0},
+    },
+    0, 0
+};
+
 
 menu_t<2> start_menu_layout = {
     "PROJECT",
@@ -55,25 +67,66 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<10> midiconfig_menu_layout = {
+menu_t<4> midiconfig_menu_layout = {
     "MIDI",
     {
-        //            m  r  n  d  p  f  o
+        {"PORT CONFIG", 0, 0, 0, 0, 12, 0, 0},
+        {"SYNC",  0, 0, 0, 0, 14, 0, 0},
+        {"ROUTING", 0, 0, 0, 0, 15, 0, 0},
+        {"PROGRAM", 0, 0, 0, 0, 13, 0, 0},
+    },
+    24, 0
+};
+
+menu_t<3> midiport_menu_layout = {
+    "PORTS",
+    {
         {"TURBO 1:",  0, 4, 4, 2, 0, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, 0, 0, 2},
         {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 84},
+    },
+    24, 0
+};
 
-        {"CLK REC:",  0, 2, 2, 5, 0, 0, 6},
-        {"CLK SEND:", 0, 2, 2, 6, 0, 0, 8},
 
-        {"MIDI FWD:", 0, 4, 4, 7, 0, 0, 10},
-        {"CC FWD:", 0, 2, 2, 11, 0, 0, 86},
+
+menu_t<3> midiprogram_menu_layout = {
+    "PROGRAM",
+    {
         {"PRG MODE:", 0, 2, 2, 49, 0, 0, 90},
         {"PRG IN:", 0, 18, 2, 47, 0, 0, 88},
         {"PRG OUT:", 0, 17, 2, 48, 0, 0, 88},
     },
     24, 0
 };
+
+
+menu_t<4> midiclock_menu_layout = {
+    "SYNC",
+    {
+        {"CLOCK RECV:",  0, 3, 3, 5, 0, 0, 7},
+        {"TRANS RECV:",  0, 3, 3, 53, 0, 0, 7},
+        {"CLOCK SEND:", 0, 4, 4, 6, 0, 0, 100},
+        {"TRANS SEND:",  0, 4, 4, 54, 0, 0, 100},
+    },
+    24, 0
+};
+
+
+menu_t<4> midiroute_menu_layout = {
+    "ROUTE",
+    {
+        //            m  r  n  d  p  f  o
+        {"MIDI 1 FWD:", 0, 4, 4, 7, 0, 0, 10},
+        {"MIDI 2 FWD:", 0, 4, 4, 51, 0, 0, 92},
+
+        {"USB FWD:", 0, 4, 4, 52, 0, 0, 96},
+
+        {"CC LOOP:", 0, 2, 2, 11, 0, 0, 86},
+    },
+    24, 0
+};
+
 
 menu_t<5> mdconfig_menu_layout = {
     "MD",
@@ -100,13 +153,11 @@ menu_t<4> mdimport_menu_layout = {
     0, 0
 };
 
-menu_t<2> mclconfig_menu_layout = {
+menu_t<1> mclconfig_menu_layout = {
     "SYSTEM",
     {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, 0, 0, 23},
-        {"USB MODE:", 0, 4, 4, 12, 0, 0, 92},
-        //{"DIAGNOSTIC:", 0, 0, 0, (uint8_t *) NULL, nullptr, NULL, {}},
     },
     1, 0
 };

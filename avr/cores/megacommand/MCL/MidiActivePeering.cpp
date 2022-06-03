@@ -106,9 +106,9 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       pmidi->speed > 31250) {
 
 
-    if ((port == UART1_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART1) || (port == UART2_PORT && MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
+    if ((port == UART1_PORT && MidiClock.uart_clock_recv == pmidi) || (port == UART2_PORT && MidiClock.uart_clock_recv == pmidi)) {
       //Disable MidiClock/Transport on disconnected port.
-      MidiClock.mode = 255;
+      MidiClock.uart_clock_recv = nullptr;
       MidiClock.init();
     }
     pmidi->set_speed((uint32_t)31250);
@@ -149,12 +149,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         drivers[i]->init_grid_devices();
         *active_device = drivers[i];
         //Re-enable MidiClock/Transport recv
-        if (UART1_PORT && mcl_cfg.clock_rec == 0) {
-           MidiClock.mode = MidiClock.EXTERNAL_MIDI;
-        }
-        if (UART2_PORT && mcl_cfg.clock_rec == 1) {
-          MidiClock.mode = MidiClock.EXTERNAL_UART2;
-        }
+        midi_setup.cfg_clock_recv();
         break;
       }
     } // for drivers

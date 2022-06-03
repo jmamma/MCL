@@ -1,48 +1,55 @@
 #include "MCL_impl.h"
 
+bool megacmd_check() {
+  if (!IS_MEGACMD()) {
+    oled_display.textbox("MODE ", "N/A");
+    oled_display.display();
+    return false;
+  }
+  return true;
+}
+
+void usb_os_update() {
+  SET_USB_MODE(USB_SERIAL);
+  oled_display.clearDisplay();
+  oled_display.textbox("OS UPDATE ", "READY");
+  oled_display.display();
+  while (1)
+    ;
+}
+
+void usb_dfu_mode() {
+  if (!megacmd_check()) {
+    return;
+  }
+  SET_USB_MODE(USB_DFU);
+  while (1)
+    ;
+}
+
+void usb_disk_mode() {
+  if (!megacmd_check()) {
+    return;
+  }
+
+  oled_display.clearDisplay();
+
+  oled_display.textbox("USB ", "DISK");
+  oled_display.display();
+
+  LOCAL_SPI_DISABLE();
+  EXTERNAL_SPI_ENABLE();
+  SET_USB_MODE(USB_STORAGE);
+
+  while (1)
+    ;
+}
+
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
 #ifndef DEBUGMODE
 #ifdef MEGACOMMAND
-  Serial.end();
 
-  if (mcl_cfg.usb_mode == USB_DFU) {
-
-    mcl_cfg.usb_mode = USB_SERIAL;
-    if (!IS_MEGACMD()) {
-      oled_display.textbox("N/A", "");
-    } else {
-
-      if (mcl_gui.wait_for_confirm("USB", "Enter DFU and reboot?")) {
-        SET_USB_MODE(USB_DFU);
-        while (1)
-          ;
-      }
-    }
-  }
-  else if (mcl_cfg.usb_mode == USB_STORAGE) {
-    mcl_cfg.usb_mode = USB_SERIAL;
-    if (!IS_MEGACMD()) {
-      oled_display.textbox("N/A", "");
-    } else if (mcl_gui.wait_for_confirm("USB", "Enter Disk Mode?")) {
-
-    oled_display.clearDisplay();
-
-    oled_display.textbox("DISK", "MODE");
-    oled_display.display();
-
-    LOCAL_SPI_DISABLE();
-    EXTERNAL_SPI_ENABLE();
-    SET_USB_MODE(USB_STORAGE);
-
-    while (1)
-      ;
-    }
-  }
-
-  else {
-    SET_USB_MODE(mcl_cfg.usb_mode);
-  }
   if (mcl_cfg.usb_mode == USB_SERIAL) {
     if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
       GUI.display_mirror = true;
@@ -127,7 +134,11 @@ bool MCLSysConfig::cfg_init() {
   display_mirror = 0;
   rec_quant = 0;
   tempo = 125;
-  midi_forward = 0;
+
+  midi_forward_1 = 0;
+  midi_forward_2 = 0;
+  midi_forward_usb = 0;
+
   auto_save = 1;
   auto_normalize = 1;
   load_mode = LOAD_MANUAL;
@@ -140,6 +151,8 @@ bool MCLSysConfig::cfg_init() {
   uart_cc_loopback = 0;
   uart2_prg_mode = 0;
   usb_mode = USB_SERIAL;
+  midi_transport_rec = 0;
+  midi_transport_send = 0;
   cfgfile.close();
 
   ret = write_cfg();

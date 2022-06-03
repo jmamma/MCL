@@ -802,7 +802,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     // messages.
     //
 
-    if (mcl_cfg.midi_forward == 2) {
+    if (mcl_cfg.midi_forward_2 == 1) {
       return;
     }
     if (channel_event == POLY_EVENT) {

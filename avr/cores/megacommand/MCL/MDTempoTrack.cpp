@@ -20,7 +20,7 @@ void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MDTempoTrack::get_tempo() {
   bool tempo_from_clock = true;
-  if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
+  if (MidiClock.uart_clock_recv == &MidiUart) {
     uint16_t tp;
     if (MD.get_tempo(tp)) {
       tempo = (float)tp / 24.0;

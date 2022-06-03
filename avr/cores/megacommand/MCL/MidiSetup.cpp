@@ -1,35 +1,108 @@
 #include "MCL_impl.h"
 
+void MidiSetup::cfg_clock_recv() {
+  MidiClock.mode = MidiClock.EXTERNAL_UART1;
+
+  // Always receive clock on port1, unless source.
+  MidiClock.uart_clock_forward1 = &MidiUart;
+  switch (mcl_cfg.clock_rec) {
+  case 0:
+    MidiClock.uart_clock_recv = &MidiUart;
+    MidiClock.uart_clock_forward1 = nullptr;
+    break;
+  case 1:
+    MidiClock.uart_clock_recv = &MidiUart2;
+    break;
+  case 2:
+    MidiClock.uart_clock_recv = &MidiUartUSB;
+    break;
+  }
+}
+
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();
 
-  Midi.uart_forward = nullptr;
-  Midi2.uart_forward = nullptr;
-  /*
-  Midi.uart_forward = MidiUSB.uart;
-  MidiUSB.uart_forward = Midi2.uart;
-  MidiUSB.uart->mode = UART_MIDI;
-  */
-  if (mcl_cfg.midi_forward == 1 || mcl_cfg.midi_forward == 3) {
-    Midi.uart_forward = &MidiUart2;
-  }
-  if (mcl_cfg.midi_forward == 2 || mcl_cfg.midi_forward == 3) {
-    Midi2.uart_forward = &MidiUart;
+  MidiUartUSB.initSerial();
+  MidiUartUSB.mode = UART_MIDI;
+  MidiUartUSB.set_speed(250000);
+  SET_USB_MODE(USB_MIDI);
+  // Always receive transport on port1 for MD.
+
+  MidiClock.uart_transport_recv1 = &MidiUart;
+  MidiClock.uart_transport_forward1 = &MidiUart;
+  MidiClock.uart_transport_recv2 = nullptr;
+  switch (mcl_cfg.midi_transport_rec) {
+  case 0:
+    MidiClock.uart_transport_forward1 = nullptr;
+  case 1:
+    MidiClock.uart_transport_recv2 = &MidiUart2;
+    break;
+  case 2:
+    MidiClock.uart_transport_recv2 = &MidiUartUSB;
+    break;
   }
 
-  if (mcl_cfg.clock_send == 1) {
-    MidiClock.transmit_uart2 = true;
-  } else {
-    MidiClock.transmit_uart2 = false;
+  MidiClock.uart_transport_forward2 = nullptr;
+  MidiClock.uart_transport_forward3 = nullptr;
+  switch (mcl_cfg.midi_transport_send) {
+    break;
+  case 1:
+    MidiClock.uart_transport_forward2 = &MidiUart2;
+    break;
+  case 2:
+    MidiClock.uart_transport_forward3 = &MidiUartUSB;
+    break;
+  case 3:
+    MidiClock.uart_transport_forward2 = &MidiUart2;
+    MidiClock.uart_transport_forward3 = &MidiUartUSB;
+    break;
   }
-  if (mcl_cfg.clock_rec == 0) {
-    MidiClock.mode = MidiClock.EXTERNAL_MIDI;
-    MidiClock.transmit_uart1 = false;
 
-  } else {
-    MidiClock.transmit_uart1 = true;
-    // MidiClock.transmit_uart2 = false;
-    MidiClock.mode = MidiClock.EXTERNAL_UART2;
+  MidiClock.uart_clock_forward2 = nullptr;
+  MidiClock.uart_clock_forward3 = nullptr;
+  switch (mcl_cfg.clock_send) {
+    break;
+  case 1:
+    MidiClock.uart_clock_forward2 = &MidiUart2;
+    break;
+  case 2:
+    MidiClock.uart_clock_forward3 = &MidiUartUSB;
+    break;
+  case 3:
+    MidiClock.uart_clock_forward2 = &MidiUart2;
+    MidiClock.uart_clock_forward3 = &MidiUartUSB;
+    break;
+  }
+  cfg_clock_recv();
+
+  Midi.uart_forward[0] = nullptr;
+  Midi.uart_forward[1] = nullptr;
+  if (mcl_cfg.midi_forward_1 == 1 || mcl_cfg.midi_forward_1 == 3) {
+    Midi.uart_forward[0] = &MidiUart2;
+  }
+  if (mcl_cfg.midi_forward_1 == 2 || mcl_cfg.midi_forward_1 == 3) {
+    Midi.uart_forward[1] = &MidiUartUSB;
+    ;
+  }
+
+  Midi2.uart_forward[0] = nullptr;
+  Midi2.uart_forward[1] = nullptr;
+  if (mcl_cfg.midi_forward_2 == 1 || mcl_cfg.midi_forward_2 == 3) {
+    Midi2.uart_forward[0] = &MidiUart;
+  }
+  if (mcl_cfg.midi_forward_2 == 2 || mcl_cfg.midi_forward_2 == 3) {
+    Midi2.uart_forward[1] = &MidiUartUSB;
+    ;
+  }
+
+  MidiUSB.uart_forward[0] = nullptr;
+  MidiUSB.uart_forward[1] = nullptr;
+  if (mcl_cfg.midi_forward_usb == 1 || mcl_cfg.midi_forward_usb == 3) {
+    MidiUSB.uart_forward[0] = &MidiUart;
+  }
+  if (mcl_cfg.midi_forward_usb == 2 || mcl_cfg.midi_forward_usb == 3) {
+    MidiUSB.uart_forward[1] = &MidiUart2;
+    ;
   }
 
   ElektronDevice *elektron_devs[2] = {
@@ -38,7 +111,8 @@ void MidiSetup::cfg_ports() {
   };
 
   if (elektron_devs[0]) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), Midi.uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo),
+                          Midi.uart);
     delay(100);
     elektron_devs[0]->setup();
   }
@@ -46,7 +120,8 @@ void MidiSetup::cfg_ports() {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
   } else if (elektron_devs[1]) {
     elektron_devs[1]->setup();
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), Midi2.uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo),
+                          Midi2.uart);
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
   }
