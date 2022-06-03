@@ -22,10 +22,6 @@ void MidiSetup::cfg_clock_recv() {
 void MidiSetup::cfg_ports() {
   DEBUG_PRINT_FN();
 
-  MidiUartUSB.initSerial();
-  MidiUartUSB.mode = UART_MIDI;
-  MidiUartUSB.set_speed(250000);
-  SET_USB_MODE(USB_MIDI);
   // Always receive transport on port1 for MD.
 
   MidiClock.uart_transport_recv1 = &MidiUart;

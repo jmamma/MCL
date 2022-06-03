@@ -256,10 +256,11 @@ int main(void) {
   //Not available on the DIY version.
   PORTK = 0x00;
   PORTK |= _BV(PK0); //enable pullup or set high
-  SET_USB_MODE(USB_SERIAL);
 
   DDRK = 0x00;
+  SET_USB_MODE(USB_MIDI);
   DDRK |= _BV(PK1) | _BV(PK2); //set output
+
 
   //Screen + SD card may need some time to 'charge' before interfacing.
   delay(100);
@@ -273,7 +274,13 @@ int main(void) {
 
   sei();
 
-  DEBUG_INIT();
+  #ifndef DEBUG_MODE
+  MidiUartUSB.mode = UART_MIDI;
+  MidiUartUSB.set_speed(250000);
+  #else
+  MidiUartUSB.mode = UART_SERIAL;
+  Serial.begin(SERIAL_SPEED);
+  #endif
 
 // Set SD card select HIGH before initialising OLED.
 #ifdef MEGACOMMAND

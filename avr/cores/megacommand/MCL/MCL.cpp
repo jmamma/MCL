@@ -32,6 +32,9 @@ void MCL::setup() {
   R.Clear();
   R.use_icons_boot();
 
+  MidiUartUSB.mode = UART_MIDI;
+  MidiUartUSB.set_speed(250000);
+
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
     gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     GUI.setPage(&boot_menu_page);
