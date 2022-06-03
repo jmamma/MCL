@@ -1,5 +1,10 @@
 #include "MCL_impl.h"
 
+void change_usb_mode(uint8_t mode) {
+  uint8_t change_mode_msg[] = {0xF0, 0x7D, 0x4D, 0x43, 0x4C, 0x01, mode, 0xF7};
+  MidiUartUSB.m_putc(change_mode_msg, sizeof(change_mode_msg));
+}
+
 bool megacmd_check() {
   if (!IS_MEGACMD()) {
     oled_display.textbox("MODE ", "N/A");
@@ -10,10 +15,10 @@ bool megacmd_check() {
 }
 
 void usb_os_update() {
-  SET_USB_MODE(USB_SERIAL);
   oled_display.clearDisplay();
   oled_display.textbox("OS UPDATE ", "READY");
   oled_display.display();
+  change_usb_mode(USB_SERIAL);
   while (1)
     ;
 }
@@ -22,6 +27,10 @@ void usb_dfu_mode() {
   if (!megacmd_check()) {
     return;
   }
+  oled_display.clearDisplay();
+  oled_display.textbox("DFU ", "MODE");
+  oled_display.display();
+  //DFU mode is activated via datalines between CPUs
   SET_USB_MODE(USB_DFU);
   while (1)
     ;
@@ -39,8 +48,7 @@ void usb_disk_mode() {
 
   LOCAL_SPI_DISABLE();
   EXTERNAL_SPI_ENABLE();
-  SET_USB_MODE(USB_STORAGE);
-
+  change_usb_mode(USB_STORAGE);
   while (1)
     ;
 }
