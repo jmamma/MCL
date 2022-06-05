@@ -13,10 +13,12 @@ read_buf = []
 read_count = 0
 BLACK = (0,   0,   0)
 WHITE = (255, 255, 255)
- 
+
 BG = WHITE
 FG = BLACK
- 
+
+file_count = 0;
+
 def main():
 
     # Initialize the game engine
@@ -26,11 +28,11 @@ def main():
     pygame.midi.init()
     pygame.display.set_caption("MegaCommand Display")
     # Define the colors we will use in RGB format
-    size = [(128 + 2) * 7, (32 + 2) * 7]
+    w = 7
+    size = [(128 + 2) * w, (32 + 2) * w]
     screen = pygame.display.set_mode(size)
     done = False
-    file_count = 0;
-   
+
     midi_device_in = -1
     midi_device_out = -1
     devices = []
@@ -78,25 +80,28 @@ def main():
               n = 0
             if n == len(header):
               n = 0
-              receive_screen_dump(midi_input, screen)
+              receive_screen_dump(midi_input, screen, w)
 
-def receive_screen_dump(midi_input, screen):
+def receive_screen_dump(midi_input, screen, w):
     # 7bit decode, 0 command bytes, 1 data bytes.
-        global BG, FG
+        global BG, FG, file_count
         draw = True
         n = 0
         c = 255
         m = 0
-        w = 7
  
         buf = [0] * 512
         while n < 512:
             c = read_byte(midi_input)
+            if c == 0xF7:
+              return
             msbs = c
             for a in range(7):
                 if n + a > 511:
                     break
                 c = read_byte(midi_input)
+                if c == 0xF7:
+                  return
                 msb = (msbs & 1) << 7
                 buf[n + a] = c | msb
                 msbs = msbs >> 1
