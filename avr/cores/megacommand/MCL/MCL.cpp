@@ -32,9 +32,6 @@ void MCL::setup() {
   R.Clear();
   R.use_icons_boot();
 
-  MidiUartUSB.mode = UART_MIDI;
-  MidiUartUSB.set_speed(250000);
-
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
     gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     GUI.setPage(&boot_menu_page);
@@ -92,8 +89,6 @@ void MCL::setup() {
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
     oled_display.textbox("DISPLAY ", "MIRROR");
-    MidiUartUSB.mode = UART_SERIAL;
-    Serial.begin(250000);
     GUI.display_mirror = true;
 #endif
   }

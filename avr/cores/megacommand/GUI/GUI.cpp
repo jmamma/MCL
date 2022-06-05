@@ -149,36 +149,30 @@ void GuiClass::display() {
 #ifndef DEBUGMODE
   if (display_mirror) {
     // 7bit encode
-    while (!UART_USB_CHECK_EMPTY_BUFFER())
-      ;
-    UART_USB_WRITE_CHAR(0);
-
-    //  Serial.write(0);
+    MidiUartParent::handle_midi_lock = 1;
+    uint8_t change_mode_msg[] = {0xF0, 0x7D, 0x4D, 0x43, 0x4C, 0x40};
+    MidiUartUSB.m_putc(change_mode_msg, sizeof(change_mode_msg));
 
     uint8_t buf[8];
 
     uint16_t n = 0;
 
     while (n < 512) {
-      buf[0] = 0x80;
+      buf[0] = 0;
       for (uint8_t c = 0; c < 7; c++) {
 
-        buf[c + 1] = 0x80;
+        buf[c + 1] = 0;
         if (n + c < 512) {
-          buf[c + 1] |= oled_display.getBuffer(n + c);
+          buf[c + 1] |= oled_display.getBuffer(n + c) & 0x7F;
         }
         uint8_t msb = oled_display.getBuffer(n + c) >> 7;
         buf[0] |= msb << c;
       }
-      for (uint8_t c = 0; c < 8; c++) {
-        while (!UART_USB_CHECK_EMPTY_BUFFER())
-          ;
-        UART_USB_WRITE_CHAR(buf[c]);
-      }
-      // Serial.write(buf, 8);
-
+      MidiUartUSB.m_putc(buf, sizeof(buf));
       n = n + 7;
     }
+     MidiUartUSB.m_putc(0xF7);
+     MidiUartParent::handle_midi_lock = 0;
   }
 #endif
 #endif
