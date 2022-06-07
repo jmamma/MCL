@@ -156,7 +156,7 @@ bool Wav::read_header() {
       DEBUG_PRINTLN("parse smpl");
       DEBUG_DUMP(smpl_offset);
     } else {
-      break;
+    //break;
     }
     chunk_offset += pchunk->total_len();
   }
