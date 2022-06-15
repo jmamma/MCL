@@ -131,7 +131,7 @@ menu_t<3> midimachinedrum_menu_layout = {
     "MD MIDI",
     {
         //              m  r   n  d  p  f  o
-        {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
+        {"CHRO CHAN:",  0, 18, 2, 9, 0, 0, 18},
         {"POLY CHAN:",  0, 18, 2, 46, 0, 0, 88},
         {"TRIG CHAN:",   0, 18, 2, 57, 0, 0, 18},
     },
