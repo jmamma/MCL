@@ -30,7 +30,7 @@ void MCLGfx::draw_evil(unsigned char* evil) {
   oled_display.drawBitmap(x, 0, evil, 45, 32, BLACK);
   oled_display.display();
 }
-  delay(1800);
+  delay(1000);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(oldfont);
 }
