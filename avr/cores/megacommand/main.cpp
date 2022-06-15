@@ -276,7 +276,6 @@ int main(void) {
 
   #ifndef DEBUG_MODE
   MidiUartUSB.mode = UART_MIDI;
-  MidiUartUSB.set_speed(250000);
   #else
   MidiUartUSB.mode = UART_SERIAL;
   Serial.begin(SERIAL_SPEED);

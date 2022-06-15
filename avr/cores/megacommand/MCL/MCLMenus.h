@@ -43,7 +43,7 @@ extern MenuPage<1> aux_config_page;
 extern MenuPage<1> ram_config_page;
 extern MenuPage<4> md_import_page;
 
-extern MenuPage<3> midiport_menu_page;
+extern MenuPage<5> midiport_menu_page;
 extern MenuPage<3> midiprogram_menu_page;
 extern MenuPage<4> midiclock_menu_page;
 extern MenuPage<4> midiroute_menu_page;

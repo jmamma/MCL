@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4004
+#define CONFIG_VERSION 4006
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -24,6 +24,7 @@ public:
   uint8_t number_projects;
   uint8_t uart1_turbo;
   uint8_t uart2_turbo;
+  uint8_t usb_turbo;
   uint8_t clock_send;
   uint8_t clock_rec;
   uint8_t drumRouting[16];
@@ -61,6 +62,7 @@ public:
   uint8_t usb_mode;
   uint8_t midi_transport_rec;
   uint8_t midi_transport_send;
+  uint8_t midi_ctrl_port;
 
 };
 

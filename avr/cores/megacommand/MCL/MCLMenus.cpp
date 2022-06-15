@@ -122,7 +122,11 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 53
     &mcl_cfg.midi_transport_rec,
     // 54
-    &mcl_cfg.midi_transport_send
+    &mcl_cfg.midi_transport_send,
+    // 55
+    &mcl_cfg.usb_turbo,
+    // 56
+    &mcl_cfg.midi_ctrl_port
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -194,7 +198,7 @@ MenuPage<1> mcl_config_page(&config_param1, &config_param5);
 MenuPage<1> ram_config_page(&config_param1, &config_param7);
 MenuPage<4> md_import_page(&config_param1, &config_param8);
 
-MenuPage<3> midiport_menu_page(&config_param1, &config_param9);
+MenuPage<5> midiport_menu_page(&config_param1, &config_param9);
 MenuPage<3> midiprogram_menu_page(&config_param1, &config_param10);
 MenuPage<4> midiclock_menu_page(&config_param1, &config_param11);
 MenuPage<4> midiroute_menu_page(&config_param1, &config_param12);

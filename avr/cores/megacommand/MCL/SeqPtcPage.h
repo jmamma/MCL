@@ -20,7 +20,8 @@ class SeqPtcMidiEvents : public MidiCallback {
 public:
   bool state;
 
-
+  void setup_midi(MidiClass *midi);
+  void cleanup_midi(MidiClass *midi);
   void setup_callbacks();
   void remove_callbacks();
 

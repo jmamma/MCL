@@ -24,9 +24,6 @@ void usb_os_update() {
 }
 
 void usb_dfu_mode() {
-  if (!megacmd_check()) {
-    return;
-  }
   oled_display.clearDisplay();
   oled_display.textbox("DFU ", "MODE");
   oled_display.display();
@@ -128,6 +125,7 @@ bool MCLSysConfig::cfg_init() {
   clock_rec = 0;
   uart1_turbo = 3;
   uart2_turbo = 3;
+  usb_turbo = 3;
   col = 0;
   row = 0;
   cur_row = 0;
@@ -161,6 +159,7 @@ bool MCLSysConfig::cfg_init() {
   usb_mode = USB_SERIAL;
   midi_transport_rec = 0;
   midi_transport_send = 0;
+  midi_ctrl_port = 1;
   cfgfile.close();
 
   ret = write_cfg();

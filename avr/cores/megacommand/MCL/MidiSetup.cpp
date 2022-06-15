@@ -101,6 +101,9 @@ void MidiSetup::cfg_ports() {
     ;
   }
 
+  turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo),
+                          MidiUSB.uart);
+
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
@@ -120,5 +123,10 @@ void MidiSetup::cfg_ports() {
                           Midi2.uart);
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
+  }
+
+  if (MD.connected) {
+    seq_ptc_page.midi_events.remove_callbacks();
+    seq_ptc_page.midi_events.setup_callbacks();
   }
 }

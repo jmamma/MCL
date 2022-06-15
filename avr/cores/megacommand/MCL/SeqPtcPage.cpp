@@ -931,54 +931,65 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 }
 
+void SeqPtcMidiEvents::setup_midi(MidiClass *midi) {
+  midi->addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
+  midi->addOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
+  midi->addOnPitchWheelCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
+  midi->addOnAfterTouchCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
+  midi->addOnChannelPressureCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
+  midi->addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+  midi->addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
+}
+
+void SeqPtcMidiEvents::cleanup_midi(MidiClass *midi) {
+  midi->removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
+  midi->removeOnPitchWheelCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
+  midi->removeOnAfterTouchCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
+  midi->removeOnChannelPressureCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
+  midi->removeOnNoteOffCallback(
+      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
+  midi->removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
+  midi->removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
+}
+
 void SeqPtcMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  Midi2.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
-  Midi2.addOnPitchWheelCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
-  Midi2.addOnAfterTouchCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
-  Midi2.addOnChannelPressureCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
-
-  Midi.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
-  Midi2.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
+  if (mcl_cfg.midi_ctrl_port == 1 || mcl_cfg.midi_ctrl_port == 3) {
+  setup_midi(&Midi2);
+  }
+  if (mcl_cfg.midi_ctrl_port == 2 || mcl_cfg.midi_ctrl_port == 3) {
+  setup_midi(&MidiUSB);
+  }
   state = true;
 }
+
 
 void SeqPtcMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-
-  DEBUG_PRINTLN(F("remove callbacks"));
-  Midi2.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.removeOnPitchWheelCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onPitchWheelCallback_Midi2);
-  Midi2.removeOnAfterTouchCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onAfterTouchCallback_Midi2);
-  Midi2.removeOnChannelPressureCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
-  Midi2.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOffCallback_Midi2);
-  Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
-  Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
-
+  cleanup_midi(&Midi2);
+  cleanup_midi(&MidiUSB);
   state = false;
 }
