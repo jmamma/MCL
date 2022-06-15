@@ -210,7 +210,6 @@ void MidiUartClass::tx_isr() {
 ISR(USART0_RX_vect) {
   select_bank(0);
   if (MidiUartUSB.mode == UART_MIDI) {
-    uint8_t c = MidiUartUSB.read_char();
     MidiUartUSB.rx_isr();
   } else {
     Serial._rx_complete_irq();
@@ -243,6 +242,5 @@ ISR(USART2_RX_vect) {
 
 ISR(USART2_UDRE_vect) {
   select_bank(0);
-
   MidiUart2.tx_isr();
 }
