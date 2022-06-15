@@ -67,28 +67,29 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<4> midiconfig_menu_layout = {
+menu_t<5> midiconfig_menu_layout = {
     "MIDI",
     {
         {"PORT CONFIG", 0, 0, 0, 0, 12, 0, 0},
         {"SYNC",  0, 0, 0, 0, 14, 0, 0},
         {"ROUTING", 0, 0, 0, 0, 15, 0, 0},
         {"PROGRAM", 0, 0, 0, 0, 13, 0, 0},
+        {"MD MIDI", 0, 0, 0, 0, 16, 0 ,0},
     },
-    24, 0
+    0, 0
 };
 
-menu_t<3> midiport_menu_layout = {
+menu_t<5> midiport_menu_layout = {
     "PORTS",
     {
         {"TURBO 1:",  0, 4, 4, 2, 0, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, 0, 0, 2},
-        {"DEVICE 2:", 0, 2, 2, 4, 0, 0, 84},
+        {"TURBO USB:", 0, 4, 4, 55, 0 , 0, 2},
+        {"DRIVER 2:", 0, 2, 2, 4, 0, 0, 84},
+        {"CTRL PORT:", 1, 4, 4, 56, 0, 0, 100},
     },
     24, 0
 };
-
-
 
 menu_t<3> midiprogram_menu_layout = {
     "PROGRAM",
@@ -112,7 +113,6 @@ menu_t<4> midiclock_menu_layout = {
     24, 0
 };
 
-
 menu_t<4> midiroute_menu_layout = {
     "ROUTE",
     {
@@ -127,16 +127,25 @@ menu_t<4> midiroute_menu_layout = {
     24, 0
 };
 
+menu_t<3> midimachinedrum_menu_layout = {
+    "MD MIDI",
+    {
+        //              m  r   n  d  p  f  o
+        {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
+        {"POLY CHAN:",  0, 18, 2, 46, 0, 0, 88},
+        {"TRIG CHAN:",   0, 18, 2, 57, 0, 0, 18},
+    },
+    24, 0
+};
 
-menu_t<5> mdconfig_menu_layout = {
+
+menu_t<3> mdconfig_menu_layout = {
     "MD",
     {
         //              m  r   n  d  p  f  o
-        {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
-        {"CTRL CHAN:",  0, 18, 2, 9, 0, 0, 18},
-        {"POLY CHAN:",  0, 18, 2, 46, 0, 0, 88},
-        {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
         {"IMPORT",      0, 0,  0, 0, 11, 0, 0},
+        {"NORMALIZE:",  0, 2,  2, 8, 0, 0, 16},
+        {"POLY CONFIG", 0, 0,  0, 0, 9, 0, 0},
     },
     0, 0
 };

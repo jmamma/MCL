@@ -19,7 +19,7 @@ MCLEncoder config_param9(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param10(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param11(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param12(0, 17, ENCODER_RES_SYS);
-
+MCLEncoder config_param13(0, 17, ENCODER_RES_SYS);
 
 
 uint8_t opt_import_src = 0;
@@ -60,6 +60,8 @@ const Page *const menu_target_pages[] PROGMEM = {
     (Page *)&midiclock_menu_page,
     // 15
     (Page *)&midiroute_menu_page,
+    // 16
+    (Page *)&midimachinedrum_menu_page
 };
 
 const uint8_t *const menu_target_param[] PROGMEM = {
@@ -126,7 +128,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 55
     &mcl_cfg.usb_turbo,
     // 56
-    &mcl_cfg.midi_ctrl_port
+    &mcl_cfg.midi_ctrl_port,
+    // 57
+    &mcl_cfg.md_trig_channel
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -190,9 +194,9 @@ MenuPage<1> aux_config_page(&config_param1, &config_param6);
 MenuPage<4> boot_menu_page(&options_param1, &options_param2);
 MenuPage<2> start_menu_page(&options_param1, &options_param2);
 MenuPage<6> system_page(&options_param1, &options_param2);
-MenuPage<4> midi_config_page(&config_param1, &config_param3);
+MenuPage<5> midi_config_page(&config_param1, &config_param3);
 
-MenuPage<5> md_config_page(&config_param1, &config_param4);
+MenuPage<3> md_config_page(&config_param1, &config_param4);
 MenuPage<3> chain_config_page(&config_param1, &config_param6);
 MenuPage<1> mcl_config_page(&config_param1, &config_param5);
 MenuPage<1> ram_config_page(&config_param1, &config_param7);
@@ -202,6 +206,7 @@ MenuPage<5> midiport_menu_page(&config_param1, &config_param9);
 MenuPage<3> midiprogram_menu_page(&config_param1, &config_param10);
 MenuPage<4> midiclock_menu_page(&config_param1, &config_param11);
 MenuPage<4> midiroute_menu_page(&config_param1, &config_param12);
+MenuPage<3> midimachinedrum_menu_page(&config_param1, &config_param13);
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);

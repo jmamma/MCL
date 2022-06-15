@@ -337,11 +337,17 @@ struct __T_menu_layouts {
   static constexpr size_t countof_mdimport_menu_layout = 96 / sizeof(menu_t<4>);
   static constexpr size_t sizeofof_mdimport_menu_layout = 96;
   union {
-    menu_t<5> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[117];
+    menu_t<3> mdconfig_menu_layout[0];
+    char zz__mdconfig_menu_layout[75];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 117 / sizeof(menu_t<5>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 117;
+  static constexpr size_t countof_mdconfig_menu_layout = 75 / sizeof(menu_t<3>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 75;
+  union {
+    menu_t<3> midimachinedrum_menu_layout[0];
+    char zz__midimachinedrum_menu_layout[75];
+  };
+  static constexpr size_t countof_midimachinedrum_menu_layout = 75 / sizeof(menu_t<3>);
+  static constexpr size_t sizeofof_midimachinedrum_menu_layout = 75;
   union {
     menu_t<4> midiroute_menu_layout[0];
     char zz__midiroute_menu_layout[96];
@@ -367,11 +373,11 @@ struct __T_menu_layouts {
   static constexpr size_t countof_midiport_menu_layout = 117 / sizeof(menu_t<5>);
   static constexpr size_t sizeofof_midiport_menu_layout = 117;
   union {
-    menu_t<4> midiconfig_menu_layout[0];
-    char zz__midiconfig_menu_layout[96];
+    menu_t<5> midiconfig_menu_layout[0];
+    char zz__midiconfig_menu_layout[117];
   };
-  static constexpr size_t countof_midiconfig_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_midiconfig_menu_layout = 96;
+  static constexpr size_t countof_midiconfig_menu_layout = 117 / sizeof(menu_t<5>);
+  static constexpr size_t sizeofof_midiconfig_menu_layout = 117;
   union {
     menu_t<1> rampage1_menu_layout[0];
     char zz__rampage1_menu_layout[33];
@@ -402,7 +408,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 96 / sizeof(menu_t<4>);
   static constexpr size_t sizeofof_boot_menu_layout = 96;
-  static constexpr size_t __total_size = 2085;
+  static constexpr size_t __total_size = 2139;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

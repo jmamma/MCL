@@ -12,6 +12,7 @@
 
 #define POLY_EVENT 0xF0
 #define CTRL_EVENT 0xE0
+#define TRIG_EVENT 0xD0
 #define NO_EVENT 0x00
 
 extern scale_t *scales[24];

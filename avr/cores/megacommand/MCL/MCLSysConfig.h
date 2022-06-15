@@ -63,7 +63,7 @@ public:
   uint8_t midi_transport_rec;
   uint8_t midi_transport_send;
   uint8_t midi_ctrl_port;
-
+  uint8_t md_trig_channel;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

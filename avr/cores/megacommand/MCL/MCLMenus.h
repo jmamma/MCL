@@ -29,14 +29,15 @@ extern MCLEncoder config_param9;
 extern MCLEncoder config_param10;
 extern MCLEncoder config_param11;
 extern MCLEncoder config_param12;
+extern MCLEncoder config_param13;
 
 extern void new_proj_handler();
 
 extern MenuPage<4> boot_menu_page;
 extern MenuPage<2> start_menu_page;
 extern MenuPage<6> system_page;
-extern MenuPage<4> midi_config_page;
-extern MenuPage<5> md_config_page;
+extern MenuPage<5> midi_config_page;
+extern MenuPage<3> md_config_page;
 extern MenuPage<1> mcl_config_page;
 extern MenuPage<3> chain_config_page;
 extern MenuPage<1> aux_config_page;
@@ -47,6 +48,7 @@ extern MenuPage<5> midiport_menu_page;
 extern MenuPage<3> midiprogram_menu_page;
 extern MenuPage<4> midiclock_menu_page;
 extern MenuPage<4> midiroute_menu_page;
+extern MenuPage<3> midimachinedrum_menu_page;
 
 extern MCLEncoder input_encoder1;
 extern MCLEncoder input_encoder2;

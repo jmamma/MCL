@@ -117,6 +117,7 @@ void ResourceManager::restore_menu_layout_deps() {
     midiprogram_menu_page.set_layout(R.menu_layouts->midiprogram_menu_layout);
     midiclock_menu_page.set_layout(R.menu_layouts->midiclock_menu_layout);
     midiroute_menu_page.set_layout(R.menu_layouts->midiroute_menu_layout);
+    midimachinedrum_menu_page.set_layout(R.menu_layouts->midimachinedrum_menu_layout);
 }
 
 ResourceManager R;

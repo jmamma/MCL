@@ -675,6 +675,9 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   steps[step].cond_id = 0;
   steps[step].cond_plock = false;
   timing[step] = utiming;
+  if (velocity < 127) {
+    set_track_locks(step, MODEL_VOL, velocity);
+  }
 }
 
 void MDSeqTrack::clear_slide_data() {

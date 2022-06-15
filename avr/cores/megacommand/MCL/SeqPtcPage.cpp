@@ -648,6 +648,9 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
   if (((mcl_cfg.uart2_ctrl_chan - 1 == channel) || (mcl_cfg.uart2_ctrl_chan == MIDI_OMNI_MODE)) && (GUI.currentPage() != &seq_extstep_page)) {
     return CTRL_EVENT;
   }
+  if (mcl_cfg.md_trig_channel - 1 == channel) {
+    return TRIG_EVENT;
+  }
 
   return NO_EVENT;
 /*
@@ -676,7 +679,17 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
     if (note_num < MIDI_NOTE_C4) {
-      return;
+      if (mcl_cfg.md_trig_channel - 1 == channel) {
+            setLed2();
+          uint8_t pos = note_num - MIDI_NOTE_C2;
+          if (pos > 15) { return; }
+          MD.triggerTrack(pos, msg[2]);
+          if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
+            reset_undo();
+            mcl_seq.md_tracks[pos].record_track(msg[2]);
+          }
+          clearLed2();
+      }
     }
     uint8_t note = note_num - (note_num / 12) * 12;
     note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
@@ -945,9 +958,6 @@ void SeqPtcMidiEvents::setup_midi(MidiClass *midi) {
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onChannelPressureCallback_Midi2);
   midi->addOnControlChangeCallback(
       this,
-      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
-  midi->addOnControlChangeCallback(
-      this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
 }
 
@@ -981,6 +991,9 @@ void SeqPtcMidiEvents::setup_callbacks() {
   if (mcl_cfg.midi_ctrl_port == 2 || mcl_cfg.midi_ctrl_port == 3) {
   setup_midi(&MidiUSB);
   }
+  Midi.addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
   state = true;
 }
 
@@ -991,5 +1004,8 @@ void SeqPtcMidiEvents::remove_callbacks() {
   }
   cleanup_midi(&Midi2);
   cleanup_midi(&MidiUSB);
+  Midi.removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
   state = false;
 }
