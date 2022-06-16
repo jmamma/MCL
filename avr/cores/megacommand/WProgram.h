@@ -70,8 +70,8 @@ extern "C" {
 #define USB_STORAGE 1
 #define USB_DFU     0
 
-#define IS_MEGACMD() IS_BIT_CLEAR(PINK,PK0)
-#define SET_USB_MODE(x) { PORTK = ((x) << 1); }
+#define IS_MEGACMD() IS_BIT_CLEAR(PINK,PK2)
+#define SET_USB_MODE(x) { PORTK = ((x)); }
 
 #define LOCAL_SPI_ENABLE() { DDRB = 0xFF; PORTL |= _BV(PL4); }
 #define LOCAL_SPI_DISABLE() { DDRB = 0; PORTB = 0; }

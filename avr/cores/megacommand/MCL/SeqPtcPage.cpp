@@ -680,7 +680,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
     if (note_num < MIDI_NOTE_C4) {
       if (mcl_cfg.md_trig_channel - 1 == channel) {
-            setLed2();
           uint8_t pos = note_num - MIDI_NOTE_C2;
           if (pos > 15) { return; }
           MD.triggerTrack(pos, msg[2]);
@@ -688,7 +687,6 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
             reset_undo();
             mcl_seq.md_tracks[pos].record_track(msg[2]);
           }
-          clearLed2();
       }
     }
     uint8_t note = note_num - (note_num / 12) * 12;

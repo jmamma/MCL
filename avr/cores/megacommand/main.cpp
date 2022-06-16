@@ -255,11 +255,11 @@ int main(void) {
   //PK0 PK1 PK2 are MegaCMD control lines to the Atmega32u2
   //Not available on the DIY version.
   PORTK = 0x00;
-  PORTK |= _BV(PK0); //enable pullup or set high
+  PORTK |= _BV(PK0) | _BV(PK1) | _BV(PK2); //enable pullup or set high
 
   DDRK = 0x00;
-  SET_USB_MODE(USB_MIDI);
-  DDRK |= _BV(PK1) | _BV(PK2); //set output
+  //SET_USB_MODE(USB_MIDI);
+  DDRK |= _BV(PK1) | _BV(PK0); //set output
 
 
   //Screen + SD card may need some time to 'charge' before interfacing.
