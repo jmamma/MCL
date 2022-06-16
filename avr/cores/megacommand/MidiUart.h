@@ -103,7 +103,11 @@
 #define UART_MIDI 0
 #define UART_SERIAL 1
 
+#ifdef DEBUGMODE
 class MidiUartClass : public MidiUartParent, public Stream {
+#else
+class MidiUartClass : public MidiUartParent {
+#endif
 
 public:
   MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf, uint16_t rx_buf_size,
@@ -147,11 +151,13 @@ public:
     set_tx();
   }
 
+  #ifdef DEBUGMODE
   //Stream pure functions
   int available() { return 0; }
   int read() { return 0; }
   int peek() { return 0; }
   void flush() { return; }
+  #endif
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;
