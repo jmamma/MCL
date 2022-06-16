@@ -249,6 +249,11 @@ void handleIncomingMidi() {
 
 }
 
+void change_usb_mode(uint8_t mode) {
+  uint8_t change_mode_msg[] = {0xF0, 0x7D, 0x4D, 0x43, 0x4C, 0x01, mode, 0xF7};
+  MidiUartUSB.m_putc(change_mode_msg, sizeof(change_mode_msg));
+}
+
 int main(void) {
 
 
@@ -258,7 +263,6 @@ int main(void) {
   PORTK |= _BV(PK0) | _BV(PK1) | _BV(PK2); //enable pullup or set high
 
   DDRK = 0x00;
-  //SET_USB_MODE(USB_MIDI);
   DDRK |= _BV(PK1) | _BV(PK0); //set output
 
 
@@ -274,12 +278,7 @@ int main(void) {
 
   sei();
 
-  #ifndef DEBUG_MODE
-  MidiUartUSB.mode = UART_MIDI;
-  #else
-  MidiUartUSB.mode = UART_SERIAL;
-  Serial.begin(SERIAL_SPEED);
-  #endif
+  DEBUG_INIT();
 
 // Set SD card select HIGH before initialising OLED.
 #ifdef MEGACOMMAND

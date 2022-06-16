@@ -11,7 +11,7 @@
 
 #include "wiring_private.h"
 
-//#define DEBUGMODE
+#define DEBUGMODE
 
 #ifdef MEGACOMMAND
   #define SD_CS 53 //PB0
@@ -23,10 +23,10 @@
 
 #ifdef DEBUGMODE
 
-#define DEBUG_INIT() { MidiUartUSB.mode = UART_SERIAL; Serial.begin(SERIAL_SPEED); }
+#define DEBUG_INIT() { change_usb_mode(0x03);  MidiUartUSB.mode = UART_SERIAL; MidiUartUSB.set_speed(SERIAL_SPEED); }
 
-#define DEBUG_PRINT(x)  Serial.print(x)
-#define DEBUG_PRINTLN(x)  Serial.println(x)
+#define DEBUG_PRINT(x)  MidiUartUSB.print(x)
+#define DEBUG_PRINTLN(x)  MidiUartUSB.println(x)
 #define DEBUG_DUMP(x)  { \
 }
 // __PRETTY_FUNCTION__ is a gcc extension
@@ -97,7 +97,7 @@ extern "C" {
 #endif
 
 extern void(* hardwareReset) (void);
-
+extern void change_usb_mode(uint8_t mode);
 extern uint32_t write_count;
 extern uint32_t write_count_time;
 extern uint16_t minuteclock;

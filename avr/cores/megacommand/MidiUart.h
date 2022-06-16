@@ -103,7 +103,7 @@
 #define UART_MIDI 0
 #define UART_SERIAL 1
 
-class MidiUartClass : public MidiUartParent {
+class MidiUartClass : public MidiUartParent, public Stream {
 
 public:
   MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf, uint16_t rx_buf_size,
@@ -133,6 +133,7 @@ public:
   void initSerial();
 
   void m_putc_immediate(uint8_t c);
+  size_t write(uint8_t c) { m_putc(c); return 1; }
 
   void rx_isr();
   void tx_isr();
@@ -145,6 +146,12 @@ public:
     txRb.put_h_isr(c);
     set_tx();
   }
+
+  //Stream pure functions
+  int available() { return 0; }
+  int read() { return 0; }
+  int peek() { return 0; }
+  void flush() { return; }
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;

@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include "Arduino.h"
 
+#include "WProgram.h"
 #include "HardwareSerial.h"
 #include "HardwareSerial_private.h"
 
@@ -212,7 +213,10 @@ void HardwareSerial::flush()
 
 size_t HardwareSerial::write(uint8_t c)
 {
+  
   _written = true;
+   MidiUartUSB.m_putc(c);
+   /*
   // If the buffer and the data register is empty, just write the byte
   // to the data register and be done. This shortcut helps
   // significantly improve the effective datarate at high (>
@@ -243,7 +247,7 @@ size_t HardwareSerial::write(uint8_t c)
   _tx_buffer_head = i;
 	
   sbi(*_ucsrb, UDRIE0);
-  
+  */
   return 1;
 }
 

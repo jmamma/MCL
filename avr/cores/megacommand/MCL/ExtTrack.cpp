@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
-  DEBUG_DUMP("transition_load_ext");
+  DEBUG_DUMP(F("transition_load_ext"));
   DEBUG_DUMP((uint16_t) seq_track);
   DEBUG_DUMP(slotnumber);
   DEBUG_DUMP(tracknumber);

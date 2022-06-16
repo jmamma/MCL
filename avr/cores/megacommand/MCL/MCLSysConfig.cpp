@@ -1,10 +1,5 @@
 #include "MCL_impl.h"
 
-void change_usb_mode(uint8_t mode) {
-  uint8_t change_mode_msg[] = {0xF0, 0x7D, 0x4D, 0x43, 0x4C, 0x01, mode, 0xF7};
-  MidiUartUSB.m_putc(change_mode_msg, sizeof(change_mode_msg));
-}
-
 bool megacmd_check() {
   if (!IS_MEGACMD()) {
     oled_display.textbox("MODE ", "N/A");
@@ -52,22 +47,6 @@ void usb_disk_mode() {
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
-#ifndef DEBUGMODE
-#ifdef MEGACOMMAND
-
-  if (mcl_cfg.usb_mode == USB_SERIAL) {
-    if ((!Serial) && (mcl_cfg.display_mirror == 1)) {
-      GUI.display_mirror = true;
-      MidiUartUSB.mode = UART_SERIAL;
-      Serial.begin(SERIAL_SPEED);
-    }
-    if ((Serial) && (mcl_cfg.display_mirror == 0)) {
-      GUI.display_mirror = false;
-    }
-  }
-#endif
-#endif
-
   mcl_cfg.write_cfg();
 }
 

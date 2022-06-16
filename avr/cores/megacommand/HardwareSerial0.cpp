@@ -68,7 +68,6 @@ ISR(USART_UDRE_vect)
     Serial._tx_udr_empty_irq();
     switch_ram_bank(old_bank);
   }
-#endif
 #if defined(UBRRH) && defined(UBRRL)
   HardwareSerial Serial(&UBRRH, &UBRRL, &UCSRA, &UCSRB, &UCSRC, &UDR);
 #else
@@ -80,4 +79,6 @@ ISR(USART_UDRE_vect)
 bool Serial0_available() {
   return Serial.available();
 }
+
+#endif
 #endif // HAVE_HWSERIAL0

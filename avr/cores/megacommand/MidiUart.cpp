@@ -209,20 +209,20 @@ void MidiUartClass::tx_isr() {
 
 ISR(USART0_RX_vect) {
   select_bank(0);
-  if (MidiUartUSB.mode == UART_MIDI) {
+//  if (MidiUartUSB.mode == UART_MIDI) {
     MidiUartUSB.rx_isr();
-  } else {
-    Serial._rx_complete_irq();
-  }
+//  } else {
+//    Serial._rx_complete_irq();
+//  }
 }
 
 ISR(USART0_UDRE_vect) {
   select_bank(0);
-  if (MidiUartUSB.mode == UART_MIDI) {
+//  if (MidiUartUSB.mode == UART_MIDI) {
     MidiUartUSB.tx_isr();
-  } else {
-    Serial._tx_udr_empty_irq();
-  }
+//  } else {
+ //   Serial._tx_udr_empty_irq();
+//  }
 }
 
 ISR(USART1_RX_vect) {

@@ -194,7 +194,7 @@ void GridTask::transition_handler() {
     }
   }
 
-  DEBUG_PRINTLN("SP pre cache");
+  DEBUG_PRINTLN(F("SP pre cache"));
   DEBUG_PRINTLN((int)SP);
   bool update_gui = true;
   mcl_actions.cache_next_tracks(track_select_array, update_gui);
