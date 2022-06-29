@@ -22,7 +22,9 @@ Please perform the USB DFU firmware procedure to upgrade the USB microcontroller
 
   External MIDI Sequencer Tracks now default to 1x playback speed.
 
-- USB Midi:
+  Loop points are now stored in .wav when receiving looped SDS samples.
+
+- USB MIDI:
 
   Added class compliant USB MIDI. Requires that the USB Microcontroller firmware also be upgraded. ( See DFU firmware upgrade instructions ).
 
