@@ -140,7 +140,70 @@ public:
   size_t write(uint8_t c) { m_putc(c); return 1; }
 
   void rx_isr();
-  void tx_isr();
+  ALWAYS_INLINE() void tx_isr() {
+    if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+    // sidechannel mounted, and no active messages in normal channel
+    // ==> flush the sidechannel now
+    if (!txRb_sidechannel->isEmpty_isr()) {
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      uint8_t c = txRb_sidechannel->get_h_isr();
+      write_char(c);
+    }
+    // unmount sidechannel if drained
+    if (txRb_sidechannel->isEmpty_isr()) {
+      txRb_sidechannel = nullptr;
+    }
+  } else if (!txRb.isEmpty_isr()) {
+    // 1. either sidechannel is unmounted, or an active message is in normal
+    // channel
+    // 2. -and- a normal channel byte is queued
+    // ==> flush the normal channel now
+    sendActiveSenseTimer = sendActiveSenseTimeout;
+    uint8_t c = txRb.get_h_isr();
+    write_char(c);
+    if ((in_message_tx > 0) && (c < 128)) {
+      in_message_tx--;
+    }
+    if (c < 0xF0) {
+      switch (c & 0xF0) {
+      case MIDI_CHANNEL_PRESSURE:
+      case MIDI_PROGRAM_CHANGE:
+      case MIDI_MTC_QUARTER_FRAME:
+      case MIDI_SONG_SELECT:
+        in_message_tx = 1;
+        break;
+      case MIDI_NOTE_OFF:
+      case MIDI_NOTE_ON:
+      case MIDI_AFTER_TOUCH:
+      case MIDI_CONTROL_CHANGE:
+      case MIDI_PITCH_WHEEL:
+      case MIDI_SONG_POSITION_PTR:
+        in_message_tx = 2;
+        break;
+      }
+    } else {
+      switch (c) {
+      case MIDI_SYSEX_START:
+        in_message_tx = -1;
+        break;
+      case MIDI_SYSEX_END:
+        in_message_tx = 0;
+        break;
+      }
+    }
+  } else {
+    // 1. either sidechannel is unmounted, or an active message is in normal
+    // channel
+    // 2. -and- normal channel is drained
+    // ==> clear active bit and wait for normal channel to be re-supplied
+    clear_tx();
+  }
+  if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
+    clear_tx();
+  }
+
+  }
+
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     txRb.put_h_isr(src,size);
     set_tx();
