@@ -11,7 +11,7 @@ bool megacmd_check() {
 
 void usb_os_update() {
   oled_display.clearDisplay();
-  oled_display.textbox("OS UPDATE ", "READY");
+  oled_display.textbox("OS UPDATE", "");
   oled_display.display();
   change_usb_mode(USB_SERIAL);
   while (1)
