@@ -22,7 +22,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
   External MIDI Sequencer Tracks now default to 1x playback speed.
 
-  Loop points are now stored in .wav when receiving looped SDS samples.
+  Loop points are now stored in saved .wav file(s) when receiving looped SDS samples.
   
   MCL Sequencer now supports triggering and recording from an external drump pad, with velocity. See MD MIDI -> TRIG CHAN.
 
