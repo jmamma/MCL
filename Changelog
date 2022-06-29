@@ -1,7 +1,7 @@
 MCL 4.20 29/06/2022
 
 Please install Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
-Please perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Fixes:
   MNM driver was still broken.
