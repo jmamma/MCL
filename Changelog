@@ -30,9 +30,9 @@ Please perform the USB DFU firmware procedure to upgrade the USB microcontroller
 
     Config -> MIDI -> PORT CONFIG
                       SYNC
-       				  ROUTING
+       		      ROUTING
                       PROGRAM
-					  MD MIDI
+		      MD MIDI
 
     PORT CONFIG -> TURBO 1    PORT 1 turbo speed
                    TURBO 2:   PORT 2 turbo speed
