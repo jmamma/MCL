@@ -78,50 +78,41 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   CLEAR_LOCK();
 }
 
-void MidiUartClass::clock_isr(uint8_t c) {
-    recvActiveSenseTimer = 0;
-    if (c == MIDI_CLOCK) {
-      if (MidiClock.uart_clock_recv == this) {
-        MidiClock.handleClock();
-        MidiClock.callCallbacks(true);
-      }
-    } else if (MidiClock.uart_transport_recv1 == this ||
-               MidiClock.uart_transport_recv2 == this) {
-      switch (c) {
-      case MIDI_START:
-        MidiClock.handleImmediateMidiStart();
-        break;
-
-      case MIDI_STOP:
-        MidiClock.handleImmediateMidiStop();
-        break;
-
-      case MIDI_CONTINUE:
-        MidiClock.handleImmediateMidiContinue();
-        break;
-      }
-      rxRb.put_h_isr(c);
+void MidiUartClass::realtime_isr(uint8_t c) {
+  recvActiveSenseTimer = 0;
+  if (c == MIDI_CLOCK) {
+    if (MidiClock.uart_clock_recv == this) {
+      MidiClock.handleClock();
+      MidiClock.callCallbacks(true);
     }
-    return;
+  } else if (MidiClock.uart_transport_recv1 == this ||
+             MidiClock.uart_transport_recv2 == this) {
+    switch (c) {
+    case MIDI_START:
+      MidiClock.handleImmediateMidiStart();
+      break;
 
+    case MIDI_STOP:
+      MidiClock.handleImmediateMidiStop();
+      break;
+
+    case MIDI_CONTINUE:
+      MidiClock.handleImmediateMidiContinue();
+      break;
+    }
+    rxRb.put_h_isr(c);
+  }
+  return;
 }
 
 ISR(USART0_RX_vect) {
   select_bank(0);
-//  if (MidiUartUSB.mode == UART_MIDI) {
-    MidiUartUSB.rx_isr();
-//  } else {
-//    Serial._rx_complete_irq();
-//  }
+  MidiUartUSB.rx_isr();
 }
 
 ISR(USART0_UDRE_vect) {
   select_bank(0);
-//  if (MidiUartUSB.mode == UART_MIDI) {
-    MidiUartUSB.tx_isr();
-//  } else {
- //   Serial._tx_udr_empty_irq();
-//  }
+  MidiUartUSB.tx_isr();
 }
 
 ISR(USART1_RX_vect) {

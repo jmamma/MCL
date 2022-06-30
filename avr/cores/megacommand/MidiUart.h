@@ -154,12 +154,12 @@ public:
     return 1;
   }
 
-  ALWAYS_INLINE() void clock_isr(uint8_t c);
+  ALWAYS_INLINE() void realtime_isr(uint8_t c);
 
-  ALWAYS_INLINE() rx_isr() {
+  ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-      clock_isr(c);
+      realtime_isr(c);
     }
 
     if (MIDI_IS_STATUS_BYTE(c)) {
