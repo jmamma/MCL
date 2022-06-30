@@ -78,9 +78,7 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   CLEAR_LOCK();
 }
 
-void MidiUartClass::rx_isr() {
-  uint8_t c = read_char();
-  if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+void MidiUartClass::clock_isr(uint8_t c) {
     recvActiveSenseTimer = 0;
     if (c == MIDI_CLOCK) {
       if (MidiClock.uart_clock_recv == this) {
@@ -105,43 +103,7 @@ void MidiUartClass::rx_isr() {
       rxRb.put_h_isr(c);
     }
     return;
-  }
 
-  if (MIDI_IS_STATUS_BYTE(c)) {
-    recvActiveSenseTimer = 0;
-  }
-  switch (midi->live_state) {
-  case midi_wait_sysex: {
-
-    if (MIDI_IS_STATUS_BYTE(c)) {
-      if (c != MIDI_SYSEX_END) {
-        midi->midiSysex.abort();
-        rxRb.put_h_isr(c);
-      } else {
-        midi->midiSysex.end_immediate();
-      }
-      midi->live_state = midi_wait_status;
-    } else {
-      // record
-      recvActiveSenseTimer = 0;
-      midi->midiSysex.handleByte(c);
-    }
-    break;
-  }
-
-  case midi_wait_status: {
-    if (c == MIDI_SYSEX_START) {
-      midi->live_state = midi_wait_sysex;
-      midi->midiSysex.reset();
-    } else {
-      rxRb.put_h_isr(c);
-    }
-  } break;
-  default: {
-    rxRb.put_h_isr(c);
-    break;
-  }
-  }
 }
 
 ISR(USART0_RX_vect) {

@@ -1,10 +1,12 @@
 #ifndef MIDI_UART_H__
 #define MIDI_UART_H__
 
-#include <inttypes.h>
-#include <MidiUartParent.h>
 #include "RingBuffer.h"
+#include <MidiUartParent.h>
 #include <avr/io.h>
+#include <inttypes.h>
+#include "Midi.h"
+
 //#define TXEN 3
 //#define RXEN 4
 //#define RXCIE 7
@@ -110,8 +112,9 @@ class MidiUartClass : public MidiUartParent {
 #endif
 
 public:
-  MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf, uint16_t rx_buf_size,
-                volatile uint8_t *tx_buf, uint16_t tx_buf_size);
+  MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
+                uint16_t rx_buf_size, volatile uint8_t *tx_buf,
+                uint16_t tx_buf_size);
 
   ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
@@ -127,85 +130,140 @@ public:
 
   void write_char(uint8_t c) { *udr = c; }
   uint8_t read_char() { return *udr; }
-  bool check_empty_tx() { volatile uint8_t *ptr = ucsra(); return IS_BIT_SET(*ptr, UDRE1); }
+  bool check_empty_tx() {
+    volatile uint8_t *ptr = ucsra();
+    return IS_BIT_SET(*ptr, UDRE1);
+  }
 
-  void set_tx() { volatile uint8_t *ptr = ucsrb(); SET_BIT(*ptr,UDRIE0); }
-  void clear_tx() { volatile uint8_t *ptr = ucsrb(); CLEAR_BIT(*ptr,UDRIE0); }
+  void set_tx() {
+    volatile uint8_t *ptr = ucsrb();
+    SET_BIT(*ptr, UDRIE0);
+  }
+  void clear_tx() {
+    volatile uint8_t *ptr = ucsrb();
+    CLEAR_BIT(*ptr, UDRIE0);
+  }
 
   void set_speed(uint32_t speed);
 
   void initSerial();
 
   void m_putc_immediate(uint8_t c);
-  size_t write(uint8_t c) { m_putc(c); return 1; }
+  size_t write(uint8_t c) {
+    m_putc(c);
+    return 1;
+  }
 
-  void rx_isr();
+  ALWAYS_INLINE() void clock_isr(uint8_t c);
+
+  ALWAYS_INLINE() rx_isr() {
+    uint8_t c = read_char();
+    if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+      clock_isr(c);
+    }
+
+    if (MIDI_IS_STATUS_BYTE(c)) {
+      recvActiveSenseTimer = 0;
+    }
+    switch (midi->live_state) {
+    case midi_wait_sysex: {
+
+      if (MIDI_IS_STATUS_BYTE(c)) {
+        if (c != MIDI_SYSEX_END) {
+          midi->midiSysex.abort();
+          rxRb.put_h_isr(c);
+        } else {
+          midi->midiSysex.end_immediate();
+        }
+        midi->live_state = midi_wait_status;
+      } else {
+        // record
+        recvActiveSenseTimer = 0;
+        midi->midiSysex.handleByte(c);
+      }
+      break;
+    }
+
+    case midi_wait_status: {
+      if (c == MIDI_SYSEX_START) {
+        midi->live_state = midi_wait_sysex;
+        midi->midiSysex.reset();
+      } else {
+        rxRb.put_h_isr(c);
+      }
+    } break;
+    default: {
+      rxRb.put_h_isr(c);
+      break;
+    }
+    }
+  }
+
   ALWAYS_INLINE() void tx_isr() {
     if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
-    // sidechannel mounted, and no active messages in normal channel
-    // ==> flush the sidechannel now
-    if (!txRb_sidechannel->isEmpty_isr()) {
+      // sidechannel mounted, and no active messages in normal channel
+      // ==> flush the sidechannel now
+      if (!txRb_sidechannel->isEmpty_isr()) {
+        sendActiveSenseTimer = sendActiveSenseTimeout;
+        uint8_t c = txRb_sidechannel->get_h_isr();
+        write_char(c);
+      }
+      // unmount sidechannel if drained
+      if (txRb_sidechannel->isEmpty_isr()) {
+        txRb_sidechannel = nullptr;
+      }
+    } else if (!txRb.isEmpty_isr()) {
+      // 1. either sidechannel is unmounted, or an active message is in normal
+      // channel
+      // 2. -and- a normal channel byte is queued
+      // ==> flush the normal channel now
       sendActiveSenseTimer = sendActiveSenseTimeout;
-      uint8_t c = txRb_sidechannel->get_h_isr();
+      uint8_t c = txRb.get_h_isr();
       write_char(c);
-    }
-    // unmount sidechannel if drained
-    if (txRb_sidechannel->isEmpty_isr()) {
-      txRb_sidechannel = nullptr;
-    }
-  } else if (!txRb.isEmpty_isr()) {
-    // 1. either sidechannel is unmounted, or an active message is in normal
-    // channel
-    // 2. -and- a normal channel byte is queued
-    // ==> flush the normal channel now
-    sendActiveSenseTimer = sendActiveSenseTimeout;
-    uint8_t c = txRb.get_h_isr();
-    write_char(c);
-    if ((in_message_tx > 0) && (c < 128)) {
-      in_message_tx--;
-    }
-    if (c < 0xF0) {
-      switch (c & 0xF0) {
-      case MIDI_CHANNEL_PRESSURE:
-      case MIDI_PROGRAM_CHANGE:
-      case MIDI_MTC_QUARTER_FRAME:
-      case MIDI_SONG_SELECT:
-        in_message_tx = 1;
-        break;
-      case MIDI_NOTE_OFF:
-      case MIDI_NOTE_ON:
-      case MIDI_AFTER_TOUCH:
-      case MIDI_CONTROL_CHANGE:
-      case MIDI_PITCH_WHEEL:
-      case MIDI_SONG_POSITION_PTR:
-        in_message_tx = 2;
-        break;
+      if ((in_message_tx > 0) && (c < 128)) {
+        in_message_tx--;
+      }
+      if (c < 0xF0) {
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+        case MIDI_MTC_QUARTER_FRAME:
+        case MIDI_SONG_SELECT:
+          in_message_tx = 1;
+          break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+        case MIDI_SONG_POSITION_PTR:
+          in_message_tx = 2;
+          break;
+        }
+      } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+          in_message_tx = -1;
+          break;
+        case MIDI_SYSEX_END:
+          in_message_tx = 0;
+          break;
+        }
       }
     } else {
-      switch (c) {
-      case MIDI_SYSEX_START:
-        in_message_tx = -1;
-        break;
-      case MIDI_SYSEX_END:
-        in_message_tx = 0;
-        break;
-      }
+      // 1. either sidechannel is unmounted, or an active message is in normal
+      // channel
+      // 2. -and- normal channel is drained
+      // ==> clear active bit and wait for normal channel to be re-supplied
+      clear_tx();
     }
-  } else {
-    // 1. either sidechannel is unmounted, or an active message is in normal
-    // channel
-    // 2. -and- normal channel is drained
-    // ==> clear active bit and wait for normal channel to be re-supplied
-    clear_tx();
-  }
-  if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
-    clear_tx();
-  }
-
+    if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
+      clear_tx();
+    }
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put_h_isr(src,size);
+    txRb.put_h_isr(src, size);
     set_tx();
   }
 
@@ -214,13 +272,13 @@ public:
     set_tx();
   }
 
-  #ifdef DEBUGMODE
-  //Stream pure functions
+#ifdef DEBUGMODE
+  // Stream pure functions
   int available() { return 0; }
   int read() { return 0; }
   int peek() { return 0; }
   void flush() { return; }
-  #endif
+#endif
 
   volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
   volatile RingBuffer<0, TX_BUF_TYPE> txRb;

@@ -13,6 +13,7 @@
 #include "Vector.h"
 
 class MidiUartParent;
+class MidiUartClass;
 
 extern "C" {
 #include "midi-common.h"
