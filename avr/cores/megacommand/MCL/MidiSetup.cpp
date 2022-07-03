@@ -30,6 +30,7 @@ void MidiSetup::cfg_ports() {
   switch (mcl_cfg.midi_transport_rec) {
   case 0:
     MidiClock.uart_transport_forward1 = nullptr;
+    break;
   case 1:
     MidiClock.uart_transport_recv2 = &MidiUart2;
     break;
@@ -41,7 +42,6 @@ void MidiSetup::cfg_ports() {
   MidiClock.uart_transport_forward2 = nullptr;
   MidiClock.uart_transport_forward3 = nullptr;
   switch (mcl_cfg.midi_transport_send) {
-    break;
   case 1:
     MidiClock.uart_transport_forward2 = &MidiUart2;
     break;
@@ -57,7 +57,6 @@ void MidiSetup::cfg_ports() {
   MidiClock.uart_clock_forward2 = nullptr;
   MidiClock.uart_clock_forward3 = nullptr;
   switch (mcl_cfg.clock_send) {
-    break;
   case 1:
     MidiClock.uart_clock_forward2 = &MidiUart2;
     break;
