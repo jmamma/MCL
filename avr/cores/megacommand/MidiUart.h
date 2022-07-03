@@ -158,14 +158,12 @@ public:
 
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
+    recvActiveSenseTimer = 0;
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
       realtime_isr(c);
       return;
     }
 
-    if (MIDI_IS_STATUS_BYTE(c)) {
-      recvActiveSenseTimer = 0;
-    }
     switch (midi->live_state) {
     case midi_wait_sysex: {
 
@@ -179,7 +177,6 @@ public:
         midi->live_state = midi_wait_status;
       } else {
         // record
-        recvActiveSenseTimer = 0;
         midi->midiSysex.handleByte(c);
       }
       break;

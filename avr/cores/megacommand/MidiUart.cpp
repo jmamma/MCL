@@ -79,7 +79,6 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
 }
 
 void MidiUartClass::realtime_isr(uint8_t c) {
-  recvActiveSenseTimer = 0;
   if (c == MIDI_CLOCK) {
     if (MidiClock.uart_clock_recv == this) {
       MidiClock.handleClock();
@@ -87,7 +86,7 @@ void MidiUartClass::realtime_isr(uint8_t c) {
     }
   } else if (MidiClock.uart_transport_recv1 == this ||
              MidiClock.uart_transport_recv2 == this) {
-    switch (c) {
+   switch (c) {
     case MIDI_START:
       MidiClock.handleImmediateMidiStart();
       break;
