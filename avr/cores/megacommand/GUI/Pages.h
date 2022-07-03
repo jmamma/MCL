@@ -97,12 +97,6 @@ public:
    **/
   virtual void display() {}
   /**
-   * This method is called by the GUI main loop on every iteration, at
-   * the end of the main loop.
-   **/
-  virtual void finalize() {}
-
-  /**
    * This should clear specific settings of the page and clear the
    * display if necessary.
    **/
