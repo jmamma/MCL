@@ -160,6 +160,7 @@ public:
     uint8_t c = read_char();
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
       realtime_isr(c);
+      return;
     }
 
     if (MIDI_IS_STATUS_BYTE(c)) {
