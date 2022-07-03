@@ -401,9 +401,9 @@ public:
   ALWAYS_INLINE() void handleImmediateMidiStart() {
     reset_clock_phase = true;
 
-    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_START); }
-    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_START); }
-    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_START); }
+    if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_START); }
+    if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_START); }
+    if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_START); }
 
     init();
 
@@ -415,17 +415,17 @@ public:
 
   ALWAYS_INLINE() void handleImmediateMidiStop() {
     state = PAUSED;
-    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_STOP); }
-    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_STOP); }
-    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_STOP); }
+    if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_STOP); }
+    if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_STOP); }
+    if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_STOP); }
     //  init();
   }
 
   ALWAYS_INLINE() void handleImmediateMidiContinue() {
     reset_clock_phase = true;
-    if (uart_transport_forward1) { uart_clock_forward1->sendRaw(MIDI_CONTINUE); }
-    if (uart_transport_forward2) { uart_clock_forward2->sendRaw(MIDI_CONTINUE); }
-    if (uart_transport_forward3) { uart_clock_forward3->sendRaw(MIDI_CONTINUE); }
+    if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_CONTINUE); }
+    if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_CONTINUE); }
+    if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_CONTINUE); }
 
     state = STARTED;
 
