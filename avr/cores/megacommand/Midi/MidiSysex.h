@@ -146,7 +146,7 @@ public:
     recording = false;
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     if (is_full()) {
-      DEBUG_PRINTLN("WRITE FULL!!!!");
+      //DEBUG_PRINTLN("WRITE FULL!!!!");
     }
     // DEBUG_PRINTLN("record fin");
     // DEBUG_PRINTLN(ledger[msg_wr].recordLen);
@@ -163,7 +163,6 @@ public:
       n = n - Rb.len;
     }
     volatile uint8_t *dst = ledger[rd_cur].ptr + n;
-    DEBUG_PRINTLN("HEREEE");
     put_bank1(dst, c);
   }
   ALWAYS_INLINE() void putByte(uint8_t c) { Rb.put_h_isr(c); }
@@ -225,7 +224,6 @@ public:
   }
 
   ALWAYS_INLINE() void abort() {
-    DEBUG_PRINTLN("aborting");
     recording = false;
     memset(&ledger[msg_wr], 0, sizeof(MidiSysexLedger));
   }
