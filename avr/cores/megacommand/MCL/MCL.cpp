@@ -33,7 +33,7 @@ void MCL::setup() {
   R.use_icons_boot();
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
-    gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
+    //gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     GUI.setPage(&boot_menu_page);
     while (GUI.currentPage() == &boot_menu_page) { GUI.loop(); }
     return;

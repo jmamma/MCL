@@ -1,4 +1,4 @@
-/* Copyright 2018, Justin Mammarella jmamma@gmail.com */
+//* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "MCL_impl.h"
 
 #define MD_KIT_LENGTH 0x4D0
@@ -439,12 +439,17 @@ again:
   DEBUG_PRINTLN("NEXT STEP");
   DEBUG_PRINTLN(next_step);
   DEBUG_PRINTLN(next_transition);
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
 
+  //int32_t pos = next_transition - (div192th_total_latency / 12) - MidiClock.div16th_counter;
+  //next transition should always be at least 2 steps away.
   if (next_transition - (div192th_total_latency / 12) <
-      MidiClock.div16th_counter) {
+    MidiClock.div16th_counter) {
+
     if (q == 255) {
       loops += 1;
     } else {
+      DEBUG_PRINTLN("try again");
       next_step += q;
     }
     recalc_latency = false;
@@ -687,7 +692,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
             0) {
 
       proj.select_grid(old_grid);
-      //handleIncomingMidi();
+      handleIncomingMidi();
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
       } else {
@@ -887,14 +892,13 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-      float latency_in_seconds =
-          (float)dev_latency[a].latency / bytes_per_second_uart1;
+      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1 + 0.250; //250ms minimum.
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
-          round(div32th_per_second * latency_in_seconds) + 1;
+          round(div32th_per_second * latency_in_seconds);
       dev_latency[a].div192th_latency =
-          round(div192th_per_second * latency_in_seconds) + 7;
+          round(div192th_per_second * latency_in_seconds);
 
       // Program change minimum delay = 1 x 16th.
       if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
@@ -906,10 +910,11 @@ void MCLActions::calc_latency() {
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
-      DEBUG_DUMP(dev_latency[a].div32th_latency);
-      DEBUG_DUMP(dev_latency[a].div192th_latency);
-    }
+   }
   }
+    DEBUG_PRINTLN("total latency");
+    DEBUG_PRINTLN(div32th_total_latency);
+    DEBUG_PRINTLN(div192th_total_latency);
 }
 
 MCLActions mcl_actions;

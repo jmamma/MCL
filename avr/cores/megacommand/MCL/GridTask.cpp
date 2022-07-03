@@ -93,8 +93,8 @@ void GridTask::transition_handler() {
       0) {
 
     DEBUG_PRINTLN(F("Preparing for next transition:"));
-    DEBUG_DUMP(MidiClock.div16th_counter);
-    DEBUG_DUMP(mcl_actions.next_transition);
+    DEBUG_PRINTLN(MidiClock.div16th_counter);
+    DEBUG_PRINTLN(mcl_actions.next_transition);
     // Transition window
     div32th_counter = MidiClock.div32th_counter + div32th_margin;
   } else {
@@ -178,7 +178,7 @@ void GridTask::transition_handler() {
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if (diff > 8) {
-           // handleIncomingMidi();
+            handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();
             } else {

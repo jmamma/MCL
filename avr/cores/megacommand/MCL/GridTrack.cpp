@@ -13,7 +13,11 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   SET_LOCK();
   seq_track->count_down = MidiClock.clock_diff_div192(MidiClock.div192th_counter, (uint32_t) mcl_actions.next_transition * (uint32_t) 12 + (uint32_t) mcl_actions.transition_offsets[n] - 1);
   CLEAR_LOCK();
-//  seq_track->mute_until_start = true;
+  DEBUG_PRINTLN(tracknumber);
+  DEBUG_PRINTLN(seq_track->count_down);
+  DEBUG_PRINTLN(MidiClock.div192th_counter);
+  DEBUG_PRINTLN(mcl_actions.next_transition * 12);
+
 }
 
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
