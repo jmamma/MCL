@@ -440,7 +440,7 @@ again:
   DEBUG_PRINTLN(next_step);
   DEBUG_PRINTLN(next_transition);
 
-  if (next_transition - (div192th_total_latency / 6) <
+  if (next_transition - (div192th_total_latency / 12) <
       MidiClock.div16th_counter) {
     if (q == 255) {
       loops += 1;
@@ -687,7 +687,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
             0) {
 
       proj.select_grid(old_grid);
-      handleIncomingMidi();
+      //handleIncomingMidi();
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
       } else {

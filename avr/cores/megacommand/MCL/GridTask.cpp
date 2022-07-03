@@ -178,7 +178,7 @@ void GridTask::transition_handler() {
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if (diff > 8) {
-            handleIncomingMidi();
+           // handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();
             } else {

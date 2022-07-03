@@ -71,7 +71,7 @@ public:
     if (mcl_cfg.chain_load_quant == 1) {
       q = QUANT_LEN; //use slot settings
     } else {
-      q = 1 << mcl_cfg.chain_load_quant; //override
+      q = min(2,1 << mcl_cfg.chain_load_quant); //override
     }
     return q;
   }
