@@ -851,6 +851,8 @@ void MCLActions::calc_latency() {
 
   uint8_t track_idx, dev_idx;
 
+  uint8_t num_devices = 0;
+
   DEBUG_PRINTLN("calc latency");
   DEBUG_CHECK_STACK();
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -873,6 +875,7 @@ void MCLActions::calc_latency() {
         // dev_latency[dev_idx].load_latency += diff;
         dev_latency[dev_idx].latency += ptrack->calc_latency(n);
       }
+      if (send_dev[dev_idx] != true) { num_devices++; }
       send_dev[dev_idx] = true;
     }
   }
@@ -892,7 +895,9 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1 + 0.250; //250ms minimum.
+      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //250ms minimum.
+      if (num_devices == 1) { latency_in_seconds += 0.235; }
+      else if (a == 1) { latency_in_seconds += 0.235; }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
