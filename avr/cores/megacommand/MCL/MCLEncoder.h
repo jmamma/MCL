@@ -60,4 +60,9 @@ class MCLEncoder : public Encoder {
     /* @} */
 };
 
+class MCLExpEncoder : public MCLEncoder {
+  public:
+  MCLExpEncoder(int _max = 127, int _min = 0, int res = 1) : MCLEncoder(_max,_min,res) { }
+  virtual int update(encoder_t *enc);
+};
 #endif /* MCLENCODER_H__ */

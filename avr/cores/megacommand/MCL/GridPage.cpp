@@ -465,7 +465,6 @@ void GridPage::display_grid() {
       } else {
         oled_display.print(str);
       }
-
       if (row_idx == active_slots[track_grid_idx] && !blink) {
         // a gentle visual cue for active slots
         oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
@@ -496,8 +495,20 @@ void GridPage::display_slot_menu() {
   // grid_slot_page.draw_scrollbar(36);
 }
 
+#ifdef FPS
+int frames;
+int frameclock;
+#endif
 void GridPage::display() {
 
+  #ifdef FPS
+  if (clock_diff(frameclock, slowclock) >= 1000) {
+  DEBUG_PRINT("FPS: "); DEBUG_PRINTLN(frames);
+  frames = 0;
+  frameclock = slowclock;
+  }
+  frames++;
+  #endif
   oled_display.clearDisplay();
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE, BLACK);
@@ -550,6 +561,8 @@ void rename_row() {
   }
   proj.select_grid(old_grid);
   grid_page.load_slot_models();
+  grid_slot_param2.cur = 0;
+  grid_slot_page.cur_row = 0;
 }
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }

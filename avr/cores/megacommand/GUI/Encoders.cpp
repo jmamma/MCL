@@ -73,9 +73,8 @@ void Encoder::setName(const char *_name) {
   name[3] = '\0';
 }
 
-int Encoder::update(encoder_t *enc) {
-
-  uint8_t amount = abs(enc->normal);
+int Encoder::update_rotations(encoder_t *enc) {
+   uint8_t amount = abs(enc->normal);
   int inc = 0;
 
   while (amount > 0) {
@@ -98,7 +97,13 @@ int Encoder::update(encoder_t *enc) {
     }
     amount--;
   }
-  inc = inc + (pressmode ? 0 : (fastmode ? 5 * enc->button : enc->button));
+ return inc;
+}
+
+int Encoder::update(encoder_t *enc) {
+  int inc = update_rotations(enc);
+
+  inc = inc + (pressmode ? 0 : (fastmode ? 4 * enc->button : enc->button));
   cur += inc;
 
   return cur;

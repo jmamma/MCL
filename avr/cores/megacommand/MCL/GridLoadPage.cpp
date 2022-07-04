@@ -78,7 +78,7 @@ void GridLoadPage::get_modestr(char *modestr) {
     }
   }
   if (encoders[3]->hasChanged()) {
-    mcl_cfg.chain_load_quant = encoders[3]->cur;
+      mcl_cfg.chain_load_quant = encoders[3]->cur;
   }
 
   switch (encoders[0]->cur) {
@@ -130,18 +130,16 @@ void GridLoadPage::display() {
       if (encoders[1]->getValue() == 1) {
         strcpy(K, "--");
       } else {
-        uint8_t x = 1 << encoders[1]->getValue();
-        mcl_gui.put_value_at(x, K);
+        mcl_gui.put_value_at(encoders[1]->cur, K);
       }
       mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28, MCLGUI::s_menu_y + 4,
                                 "LEN", K);
     }
     // draw quantize
-    if (encoders[3]->getValue() == 0) {
+    if (mcl_cfg.chain_load_quant == 0) {
       strcpy(K, "--");
     } else {
-      uint8_t x = 1 << encoders[3]->getValue();
-      mcl_gui.put_value_at(x, K);
+      mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
     }
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
                               MCLGUI::s_menu_y + 4, "QUANT", K);

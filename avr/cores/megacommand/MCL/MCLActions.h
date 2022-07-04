@@ -71,7 +71,7 @@ public:
     if ((mcl_cfg.chain_load_quant == 0)) {
       q = QUANT_LEN; //use slot settings
     } else {
-      q = 1 << mcl_cfg.chain_load_quant; //override
+      q = mcl_cfg.chain_load_quant; //override
     }
     return q;
   }
@@ -82,7 +82,7 @@ public:
     if (mcl_cfg.chain_queue_length == 1) {
       q = QUANT_LEN; //use slot settings
     } else {
-      q = 1 << mcl_cfg.chain_queue_length; //override
+      q = mcl_cfg.chain_queue_length; //override
     }
     return q;
   }

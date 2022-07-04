@@ -135,6 +135,7 @@ public:
    * handler adds the normal increment, and handles pressing down the
    * encoder according to pressmode and fastmode.
    **/
+  int update_rotations(encoder_t *enc);
   virtual int update(encoder_t *enc);
 };
 /** @} **/
