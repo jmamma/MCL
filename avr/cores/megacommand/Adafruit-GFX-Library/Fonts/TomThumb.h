@@ -45,6 +45,7 @@
 ** Twitter: @skelliam
 ** 
 ** Sept 7, 2018: Glyph changes for MCL (Justin Mammarella)
+** July 4, 2022: Compressed like upstream to reduce space.
 */
 
 #pragma once
