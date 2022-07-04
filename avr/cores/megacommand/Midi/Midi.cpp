@@ -102,10 +102,6 @@ again:
       MidiClock.handleMidiStop();
       break;
     }
-    if (byte == MIDI_ACTIVE_SENSE) {
-      uart->recvActiveSenseTimer = 0;
-    }
-
     return;
   }
 
