@@ -137,7 +137,7 @@ void GridLoadPage::display() {
                                 "LEN", K);
     }
     // draw quantize
-    if (encoders[3]->getValue() == 1) {
+    if (encoders[3]->getValue() == 0) {
       strcpy(K, "--");
     } else {
       uint8_t x = 1 << encoders[3]->getValue();
