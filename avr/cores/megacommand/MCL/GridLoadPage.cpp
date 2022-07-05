@@ -136,7 +136,7 @@ void GridLoadPage::display() {
                                 "LEN", K);
     }
     // draw quantize
-    if (mcl_cfg.chain_load_quant == 0) {
+    if (mcl_cfg.chain_load_quant == 1) {
       strcpy(K, "--");
     } else {
       mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
