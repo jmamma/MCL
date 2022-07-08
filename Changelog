@@ -6,6 +6,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 - Fixes:
   MNM driver was still broken.
   WAV files with unusual data layouts could not be read by the FileBrowser.
+  Manual slot loading could be miss-timed causing tracks to go out of sync.
 
 - Changes:
 
@@ -13,6 +14,9 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
   GridPage: Column indicator now starts at 1 instead of 0.
             MD key combination, [ PatSong ] + [ Kit ] now toggles between Grids X and Y.
+
+  LoadPage: Length and Quantization encoders can be toggled between incremental and exponential modes by holding down the
+            pushbutton during rotation. Minimum transition time during a manual load is 2 steps.
 
 - Improvements:
 
@@ -23,8 +27,8 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
   External MIDI Sequencer Tracks now default to 1x playback speed.
 
   Loop points are now stored in saved .wav file(s) when receiving looped SDS samples.
-  
-  MCL Sequencer now supports triggering and recording from an external drump pad, with velocity. See MD MIDI -> TRIG CHAN.
+
+  MCL Sequencer now supports triggering and recording from a dedicated MIDI channel via an external drump pad. See MD MIDI -> TRIG CHAN.
 
 - USB MIDI:
 
@@ -34,35 +38,37 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
     Config -> MIDI -> PORT CONFIG
                       SYNC
-       		      ROUTING
+       		          ROUTING
                       PROGRAM
-		      MD MIDI
+		              MD MIDI
 
+    --------------------------------------------
+	
     PORT CONFIG -> TURBO 1    PORT 1 turbo speed
                    TURBO 2:   PORT 2 turbo speed
-		   TURBO USB: USB port turbo speed
-		   DRIVER 2:  PORT 2 driver. Elektron or General MIDI.
-		   CTRL PORT: Which MIDI port provides control input (Note + CC) for Sequencer + Chromatic pages.
+		           TURBO USB: USB port turbo speed
+		           DRIVER 2:  PORT 2 driver. Elektron or General MIDI.
+		           CTRL PORT: Which MIDI port provides control input (Note + CC) for Sequencer + Chromatic pages.
 
-    SYNC -> CLOCK RECV: Receive MIDI Clock from port.
-            TRANS RECV: Receive MIDI Transport from port.
-	    CLOCK SEND: Forward MIDI Clock to selected ports
-	    TRANS SEND: Forward MIDI Transport to selected ports.
+    SYNC ->        CLOCK RECV: Receive MIDI Clock from port.
+                   TRANS RECV: Receive MIDI Transport from port.
+	               CLOCK SEND: Forward MIDI Clock to selected ports
+	               TRANS SEND: Forward MIDI Transport to selected ports.
 
-    ROUTING -> MIDI1 FWD: Forward all non-realtime MIDI data from PORT1 to selected ports.
-               MIDI2 FWD: Forward all non-realtime MIDI data from PORT2 to selected ports.
-	       USB FWD: Forward all non-realtime MIDI data from USB-MIDI to selected ports.
-	       CC LOOP: Loopback MIDI CC messages on same port.
+    ROUTING ->     MIDI1 FWD: Forward all non-realtime MIDI data from PORT1 to selected ports.
+                   MIDI2 FWD: Forward all non-realtime MIDI data from PORT2 to selected ports.
+	               USB FWD: Forward all non-realtime MIDI data from USB-MIDI to selected ports.
+	               CC LOOP: Loopback MIDI CC messages on same port.
 
-    PROGRAM -> PROG MODE: Basic or Advanced. (See user manual).
-               PRG IN: Program change receive channel.
-	       PRG OUT: Program change transmit channel.
+    PROGRAM ->     PROG MODE: Basic or Advanced. (See user manual).
+                   PRG IN: Program change receive channel.
+	               PRG OUT: Program change transmit channel.
 
-    MD MIDI -> CTRL CHAN: The CTRL CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode.
-                          For this setting to work correctly, CTRL PORT in PORT CONFIG must also be set to the desired port.
-               POLY CHAN: Dedicated MIDI Channel for playing designated Polyphonic tracks chromatically.
-	       TRIG CHAN: Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drump pad.  
-	                  Track Mapping starts from note C2.
+    MD MIDI ->     CTRL CHAN: The CTRL CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode.
+                              For this setting to work correctly, CTRL PORT in PORT CONFIG must also be set to the desired port.
+                   POLY CHAN: Dedicated MIDI Channel for playing designated Polyphonic tracks chromatically.
+     	           TRIG CHAN: Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drump pad.  
+	                          Track Mapping starts from note C2.
 
 - USB Mass Storage:
 
