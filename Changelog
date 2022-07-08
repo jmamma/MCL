@@ -64,10 +64,10 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
                    PRG IN: Program change receive channel.
 	               PRG OUT: Program change transmit channel.
 
-    MD MIDI ->     CTRL CHAN: The CTRL CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode.
+    MD MIDI ->     CHRO CHAN: The CHRO CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode.
                               For this setting to work correctly, CTRL PORT in PORT CONFIG must also be set to the desired port.
                    POLY CHAN: Dedicated MIDI Channel for playing designated Polyphonic tracks chromatically.
-     	           TRIG CHAN: Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drump pad.  
+     	           TRIG CHAN: Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drum pad.
 	                          Track Mapping starts from note C2.
 
 - USB Mass Storage:
