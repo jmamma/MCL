@@ -47,6 +47,7 @@ void usb_disk_mode() {
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
+  GUI.display_mirror = mcl_cfg.display_mirror;
   mcl_cfg.write_cfg();
 }
 
