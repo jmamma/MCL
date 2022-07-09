@@ -6,7 +6,7 @@ MCLEncoder mixer_param3(0, 127);
 MCLEncoder mixer_param4(0, 127);
 
 MCLEncoder route_param1(2, 5);
-MCLEncoder route_param2(0, 6);
+MCLExpEncoder route_param2(1, 64);
 
 MCLEncoder fx_param1(0, 127);
 MCLEncoder fx_param2(0, 127);

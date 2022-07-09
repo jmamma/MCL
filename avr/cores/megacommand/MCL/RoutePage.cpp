@@ -62,10 +62,10 @@ void RoutePage::toggle_route(int i, uint8_t routing) {
 
 void RoutePage::toggle_routes_batch(bool solo) {
   uint16_t quantize_mute;
-  quantize_mute = 1 << encoders[1]->getValue();
+  quantize_mute = encoders[1]->getValue();
   uint8_t i;
   hasChanged = true;
-  if ((encoders[1]->getValue() < 7) && (encoders[1]->getValue() > 0)) {
+  if ((quantize_mute <= 64) && (quantize_mute > 1)) {
     while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
              (quantize_mute * 2)) != 0) &&
            (MidiClock.state == 2)) {
@@ -108,10 +108,10 @@ void RoutePage::display() {
   mcl_gui.draw_knob(0, "ROUTE", str_tmp);
 
   char Q[4] = {'\0'};
-  if (encoders[1]->getValue() == 0) {
+  if (encoders[1]->getValue() == 1) {
     strcpy(Q, "--");
   } else {
-    x = 1 << encoders[1]->getValue();
+    x = encoders[1]->getValue();
     mcl_gui.put_value_at(x, Q);
   }
   mcl_gui.draw_knob(1, "QUANT", Q);

@@ -16,7 +16,7 @@ extern MCLEncoder mixer_param2;
 extern MCLEncoder mixer_param3;
 extern MCLEncoder mixer_param4;
 extern MCLEncoder route_param1;
-extern MCLEncoder route_param2;
+extern MCLExpEncoder route_param2;
 
 extern MixerPage mixer_page;
 extern RoutePage route_page;
