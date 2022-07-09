@@ -171,9 +171,18 @@ GenericMidiDevice::GenericMidiDevice()
 NullMidiDevice::NullMidiDevice()
     : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
+bool usb_set_speed = true;
+
 void MidiActivePeering::run() {
   byte resource_buf[RM_BUFSIZE];
   resource_loaded = false;
+
+  //Setting USB turbo speed too early can cause OS upload to fail
+  if (turbo_light.lookup_speed(mcl_cfg.usb_turbo) != MidiUartUSB.speed && slowclock > 2000 && usb_set_speed) {
+     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo), MidiUSB.uart);
+     usb_set_speed = false;
+  }
+
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
             &connected_midi_devices[0], resource_buf);
 #ifdef EXT_TRACKS

@@ -84,7 +84,8 @@ void MCL::setup() {
   GUI.addTask(&grid_task);
   GUI.addTask(&midi_active_peering);
 
-  midi_setup.cfg_ports();
+  uint8_t boot = true;
+  midi_setup.cfg_ports(boot);
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE

@@ -19,7 +19,7 @@ void MidiSetup::cfg_clock_recv() {
   }
 }
 
-void MidiSetup::cfg_ports() {
+void MidiSetup::cfg_ports(bool boot) {
   DEBUG_PRINT_FN();
 
   // Always receive transport on port1 for MD.
@@ -100,8 +100,10 @@ void MidiSetup::cfg_ports() {
     ;
   }
 
-  turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo),
-                          MidiUSB.uart);
+  if (!boot) {
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo),
+                            MidiUSB.uart);
+  }
 
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
