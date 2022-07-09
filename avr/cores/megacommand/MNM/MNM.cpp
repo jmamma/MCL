@@ -88,7 +88,7 @@ bool MNMClass::probe() {
     setStatus(0x21, 1);
     for (uint8_t x = 0; x < 3; x++) {
       for (uint8_t y = 0; y < 6; y++) {
-        mcl_gui.delay_progress(10);
+        mcl_gui.delay_progress(25);
         setStatus(0x22, y);
       }
     }
