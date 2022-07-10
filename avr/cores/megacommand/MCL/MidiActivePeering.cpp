@@ -134,7 +134,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         oled_display.drawBitmap(14, 8, icon, 34, 42, WHITE);
       }
       mcl_gui.delay_progress(0);
-      for (int probe_retry = 0; probe_retry < 3 && !probe_success;
+      for (int probe_retry = 0; probe_retry < 6 && !probe_success;
            ++probe_retry) {
         DEBUG_PRINTLN("probing...");
         probe_success = drivers[i]->probe();
