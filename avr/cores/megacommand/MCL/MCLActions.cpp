@@ -443,7 +443,7 @@ again:
 
   //int32_t pos = next_transition - (div192th_total_latency / 12) - MidiClock.div16th_counter;
   //next transition should always be at least 2 steps away.
-  if (next_transition - (div192th_total_latency / 12) <
+  if (next_transition - (div192th_total_latency / 12) - 2 <
     MidiClock.div16th_counter) {
 
     if (q == 255) {
@@ -895,9 +895,9 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //250ms minimum.
-      if (num_devices == 1) { latency_in_seconds += 0.235; }
-      else if (a == 1) { latency_in_seconds += 0.235; }
+      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //150ms minimum.
+      if (num_devices == 1) { latency_in_seconds += 0.160; }
+      else if (a == 1) { latency_in_seconds += 0.160; }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
