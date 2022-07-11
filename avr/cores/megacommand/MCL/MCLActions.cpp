@@ -680,16 +680,23 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   uint8_t count = 0;
 
   const uint8_t div32th_margin = 1;
+  uint32_t diff = 0;
+
+  float tempo = MidiClock.get_tempo();
+  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
+  float div32th_per_second = tempo * 0.133333333333f;
+  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
+  float div192th_per_second = tempo * 0.8f;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
       continue;
 
-    if (gui_update && count == 0 &&
-        MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                  (uint32_t)mcl_actions.next_transition * 2) >
-            0) {
+    if (gui_update && count == 0) {
+      diff = MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                  (uint32_t)mcl_actions.next_transition * 2);
+      if ((float) diff * div32th_per_second < 0.200) {
 
       proj.select_grid(old_grid);
       MidiUartParent::handle_midi_lock = 1;
@@ -701,6 +708,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         GUI.loop();
       }
       count = count_max;
+      }
     }
 
     count--;
@@ -897,9 +905,9 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //150ms minimum.
-      if (num_devices == 1) { latency_in_seconds += 150; }
-      else if (a == 1) { latency_in_seconds += 150; }
+      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //25ms minimum.
+      if (num_devices == 1) { latency_in_seconds += .20; }
+      else if (a == 1) { latency_in_seconds += .20; }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =

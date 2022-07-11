@@ -173,11 +173,14 @@ void GridTask::transition_handler() {
 
         uint32_t diff;
 
+       float tempo = MidiClock.get_tempo();
+       float div192th_per_second = tempo * 0.8f;
+
         while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
-          if (diff > 8) {
+          if ((float)diff * div192th_per_second > 0.100) {
             handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();
