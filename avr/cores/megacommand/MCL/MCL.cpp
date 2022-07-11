@@ -1,9 +1,7 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
-void mcl_setup() {
-  mcl.setup();
-}
+void mcl_setup() { mcl.setup(); }
 
 void MCL::setup() {
 
@@ -33,9 +31,11 @@ void MCL::setup() {
   R.use_icons_boot();
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
-    //gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
+    // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     GUI.setPage(&boot_menu_page);
-    while (GUI.currentPage() == &boot_menu_page) { GUI.loop(); }
+    while (GUI.currentPage() == &boot_menu_page) {
+      GUI.loop();
+    }
     return;
   }
 
@@ -77,7 +77,6 @@ void MCL::setup() {
   A4SysexListener.setup(&Midi2);
   MNMSysexListener.setup(&Midi2);
 #endif
-
 
   grid_task.init();
 
@@ -155,12 +154,15 @@ bool mcl_handleEvent(gui_event_t *event) {
 
         grid_page.send_row_led();
 
-        //uint8_t row = grid_page.bank * 16;
-        //grid_page.jump_to_row(row);
+        // uint8_t row = grid_page.bank * 16;
+        // grid_page.jump_to_row(row);
         return true;
       }
       case MDX_KEY_BANKGROUP: {
-        if (GUI.currentPage() != &text_input_page && !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+        if (GUI.currentPage() != &text_input_page &&
+            GUI.currentPage() != &grid_save_page &&
+            GUI.currentPage() != &grid_load_page &&
+            !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
           GUI.setPage(&page_select_page);
           return true;
         }
