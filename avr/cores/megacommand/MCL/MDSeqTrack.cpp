@@ -804,9 +804,7 @@ void MDSeqTrack::clear_locks(bool reset_params_) {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
-  uint8_t locks_params_buf[NUM_LOCKS];
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    locks_params_buf[c] = locks_params[c];
     locks_params[c] = 0;
   }
 
