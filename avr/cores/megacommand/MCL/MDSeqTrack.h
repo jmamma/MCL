@@ -51,7 +51,7 @@ public:
   void find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
-  void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity);
+  void set_track_step(uint8_t step, uint8_t utiming, uint8_t velocity = 127);
   // !! Note lockidx is lock index, not param id
   bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity);
   // !! Note track_param is param_id, not lock index
