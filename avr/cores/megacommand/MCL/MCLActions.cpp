@@ -692,7 +692,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
             0) {
 
       proj.select_grid(old_grid);
+      MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
+      MidiUartParent::handle_midi_lock = 0;
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
       } else {
@@ -896,8 +898,8 @@ void MCLActions::calc_latency() {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
       float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //150ms minimum.
-      if (num_devices == 1) { latency_in_seconds += 0.160; }
-      else if (a == 1) { latency_in_seconds += 0.160; }
+      if (num_devices == 1) { latency_in_seconds += 150; }
+      else if (a == 1) { latency_in_seconds += 150; }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
