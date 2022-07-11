@@ -906,14 +906,14 @@ void MCLActions::calc_latency() {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
       float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //25ms minimum.
-      if (num_devices == 1) { latency_in_seconds += .20; }
-      else if (a == 1) { latency_in_seconds += .20; }
+      if (num_devices == 1) { latency_in_seconds += .22;}
+      else if (a == 1) { latency_in_seconds += .22; }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
-          round(div32th_per_second * latency_in_seconds);
+          floor(div32th_per_second * latency_in_seconds) + 1;
       dev_latency[a].div192th_latency =
-          round(div192th_per_second * latency_in_seconds);
+          floor(div192th_per_second * latency_in_seconds) + 1;
 
       // Program change minimum delay = 1 x 16th.
       if (mcl_cfg.uart2_prg_out > 0 && a == 1) {

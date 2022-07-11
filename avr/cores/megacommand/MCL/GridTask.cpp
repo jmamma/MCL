@@ -1,3 +1,4 @@
+
 #include "MCL_impl.h"
 
 #define DIV16_MARGIN 8
@@ -180,7 +181,7 @@ void GridTask::transition_handler() {
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
-          if ((float)diff * div192th_per_second > 0.100) {
+          if ((float)diff * div192th_per_second > 0.160) {
             handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();
