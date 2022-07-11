@@ -142,11 +142,11 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0, timing_mid, 0);
+    md_seq_track.set_track_step(0, timing_mid);
     // md_track.seq_data.conditional[0] = 14;
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0, timing_mid, 0);
+    md_seq_track.set_track_step(0, timing_mid);
     // oneshot
     // md_track.seq_data.conditional[0] = 14;
   } else {
@@ -337,10 +337,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   uint8_t timing_mid = md_seq_track.get_timing_mid();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0, timing_mid, 0);
+    md_seq_track.set_track_step(0, timing_mid);
   } else if (track > linked_track) {
     md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0, timing_mid, 0);
+    md_seq_track.set_track_step(0, timing_mid);
   } else {
     md_track.machine.trigGroup = 255;
   }
