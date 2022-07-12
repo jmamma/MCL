@@ -97,9 +97,13 @@ bool MCLSd::seek(uint32_t pos, FatFile *filep) {
   bool pass = false;
   bool ret;
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
+    DEBUG_CHECK_STACK();
+    if (!filep) { DEBUG_PRINTLN(F("huh")); }
     ret = filep->seekSet(pos);
     if (!ret) {
+      SD.begin(SD_CS, SPI_FULL_SPEED);
       DEBUG_PRINTLN("seek retry");
+      DEBUG_PRINTLN(pos);
       delay(5);
       continue;
     }
@@ -150,6 +154,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
       DEBUG_PRINTLN("read retry");
+      SD.begin(SD_CS, SPI_FULL_SPEED);
       delay(5);
     }
     if (pos != filep->curPosition()) {
