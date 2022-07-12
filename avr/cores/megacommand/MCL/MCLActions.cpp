@@ -249,7 +249,9 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
         proj.select_grid(grid_idx);
 
         // Preserve existing link settings before save.
+
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
+          DEBUG_PRINTLN(F("tl"));
           if (!grid_track.load_from_grid(track_idx, row))
             continue;
           memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
@@ -281,7 +283,8 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   proj.select_grid(old_grid);
 }
 
-void MCLActions::load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array) {
+void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
+                             uint8_t *_row_array) {
   DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
@@ -298,10 +301,9 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_
       continue;
     }
     if (_row_array == nullptr) {
-    row_array[n] = row;
-    }
-    else {
-    row_array[n] = _row_array[n];
+      row_array[n] = row;
+    } else {
+      row_array[n] = _row_array[n];
     }
 
     if (mcl_cfg.load_mode == LOAD_QUEUE) {
@@ -356,19 +358,23 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       continue;
     }
     EmptyTrack empty_track;
+    DEBUG_PRINTLN(F("cl"));
     auto *device_track = empty_track.load_from_grid(track_idx, row);
 
     if (device_track == nullptr || device_track->active != gdt->track_type) {
       empty_track.clear();
       device_track = device_track->init_track_type(gdt->track_type);
-      device_track->init(track_idx, gdt->seq_track);
+      if (device_track) {
+        device_track->init(track_idx, gdt->seq_track);
+      }
       send_machine[n] = 1;
     } else {
       send_machine[n] = 0;
       dev_sync_slot[dev_idx] = n;
     }
-
-    device_track->store_in_mem(gdt->mem_slot_idx);
+    if (device_track) {
+      device_track->store_in_mem(gdt->mem_slot_idx);
+    }
   }
 
   proj.select_grid(old_grid);
@@ -441,10 +447,11 @@ again:
   DEBUG_PRINTLN(next_transition);
   DEBUG_PRINTLN(MidiClock.div16th_counter);
 
-  //int32_t pos = next_transition - (div192th_total_latency / 12) - MidiClock.div16th_counter;
-  //next transition should always be at least 2 steps away.
+  // int32_t pos = next_transition - (div192th_total_latency / 12) -
+  // MidiClock.div16th_counter; next transition should always be at least 2 steps
+  // away.
   if (next_transition - (div192th_total_latency / 12) - 2 <
-    MidiClock.div16th_counter) {
+      MidiClock.div16th_counter) {
 
     if (q == 255) {
       loops += 1;
@@ -632,12 +639,13 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
                              GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   EmptyTrack empty_track2;
-
+  DEBUG_CHECK_STACK();
   auto *ptrack = empty_track.load_from_grid(track_idx, links[n].row);
   send_machine[n] = 1;
 
   if (ptrack == nullptr || ptrack->active != gdt->track_type) {
     // EMPTY_TRACK_TYPE
+    DEBUG_PRINTLN(F("clear track"));
     empty_track.clear();
     ptrack = empty_track.init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
@@ -694,20 +702,21 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       continue;
 
     if (gui_update && count == 0) {
-      diff = MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                  (uint32_t)mcl_actions.next_transition * 2);
-      if ((float) diff * div32th_per_second < 0.200) {
+      diff =
+          MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                    (uint32_t)mcl_actions.next_transition * 2);
+      if ((float)diff * div32th_per_second < 0.200) {
 
-      proj.select_grid(old_grid);
-      MidiUartParent::handle_midi_lock = 1;
-      handleIncomingMidi();
-      MidiUartParent::handle_midi_lock = 0;
-      if (GUI.currentPage() == &grid_load_page) {
-        GUI.display();
-      } else {
-        GUI.loop();
-      }
-      count = count_max;
+        proj.select_grid(old_grid);
+        MidiUartParent::handle_midi_lock = 1;
+        handleIncomingMidi();
+        MidiUartParent::handle_midi_lock = 0;
+        if (GUI.currentPage() == &grid_load_page) {
+          GUI.display();
+        } else {
+          GUI.loop();
+        }
+        count = count_max;
       }
     }
 
@@ -741,7 +750,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       continue;
     cache_track(n, track_idx, dev_idx, gdt);
   }
-
+  DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
 }
 
@@ -885,7 +894,9 @@ void MCLActions::calc_latency() {
         // dev_latency[dev_idx].load_latency += diff;
         dev_latency[dev_idx].latency += ptrack->calc_latency(n);
       }
-      if (send_dev[dev_idx] != true) { num_devices++; }
+      if (send_dev[dev_idx] != true) {
+        num_devices++;
+      }
       send_dev[dev_idx] = true;
     }
   }
@@ -905,9 +916,13 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
-      float latency_in_seconds = (float)dev_latency[a].latency / bytes_per_second_uart1; //25ms minimum.
-      if (num_devices == 1) { latency_in_seconds += .22;}
-      else if (a == 1) { latency_in_seconds += .22; }
+      float latency_in_seconds = (float)dev_latency[a].latency /
+                                 bytes_per_second_uart1; // 25ms minimum.
+      if (num_devices == 1) {
+        latency_in_seconds += .23;
+      } else if (a == 1) {
+        latency_in_seconds += .23;
+      }
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
@@ -925,11 +940,11 @@ void MCLActions::calc_latency() {
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
-   }
+    }
   }
-    DEBUG_PRINTLN("total latency");
-    DEBUG_PRINTLN(div32th_total_latency);
-    DEBUG_PRINTLN(div192th_total_latency);
+  DEBUG_PRINTLN("total latency");
+  DEBUG_PRINTLN(div32th_total_latency);
+  DEBUG_PRINTLN(div192th_total_latency);
 }
 
 MCLActions mcl_actions;
