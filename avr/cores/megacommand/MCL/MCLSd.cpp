@@ -101,7 +101,7 @@ bool MCLSd::seek(uint32_t pos, FatFile *filep) {
     if (!filep) { DEBUG_PRINTLN(F("huh")); }
     ret = filep->seekSet(pos);
     if (!ret) {
-      SD.begin(SD_CS, SPI_FULL_SPEED);
+      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       DEBUG_PRINTLN("seek retry");
       DEBUG_PRINTLN(pos);
       delay(5);
@@ -123,6 +123,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
       DEBUG_PRINTLN("write retry");
+      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       delay(5);
     }
     if (pos != filep->curPosition()) {
@@ -154,7 +155,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
       DEBUG_PRINTLN("read retry");
-      SD.begin(SD_CS, SPI_FULL_SPEED);
+      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       delay(5);
     }
     if (pos != filep->curPosition()) {
