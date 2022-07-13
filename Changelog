@@ -7,6 +7,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
   MNM driver was still broken.
   WAV files with unusual data layouts could not be read by the FileBrowser.
   Manual slot loading could be miss-timed causing tracks to go out of sync.
+  MCL would crash if there was a problem reading the SD card during slot loading.
 
 - Changes:
 
@@ -43,7 +44,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 		              MD MIDI
 
     --------------------------------------------
-	
+
     PORT CONFIG -> TURBO 1    PORT 1 turbo speed
                    TURBO 2:   PORT 2 turbo speed
 		           TURBO USB: USB port turbo speed
