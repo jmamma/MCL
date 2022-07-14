@@ -81,6 +81,7 @@ void MCL::setup() {
   grid_task.init();
 
   GUI.addTask(&grid_task);
+  slowclock = 0;
   GUI.addTask(&midi_active_peering);
 
   uint8_t boot = true;
