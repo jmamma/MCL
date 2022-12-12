@@ -190,8 +190,8 @@ void ElektronDevice::draw_close_bank() {
 
 
 void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
-  uint8_t data[5] = {0x70, 0x3C, 0x20, speed, timing};
-  sendRequest(data, 5);
+  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, timing >> 7, timing & 0x7F};
+  sendRequest(data, 6);
   // waitBlocking();
 }
 void ElektronDevice::draw_close_microtiming() {
