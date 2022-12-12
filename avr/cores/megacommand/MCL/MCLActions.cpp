@@ -450,7 +450,7 @@ again:
   // int32_t pos = next_transition - (div192th_total_latency / 12) -
   // MidiClock.div16th_counter; next transition should always be at least 2 steps
   // away.
-  if (next_transition - (div192th_total_latency / 12) - 2 <
+  if (next_transition - (div192th_total_latency / 12) - 1 <
       MidiClock.div16th_counter) {
 
     if (q == 255) {
