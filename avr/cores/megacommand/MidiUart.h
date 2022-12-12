@@ -6,7 +6,6 @@
 #include <avr/io.h>
 #include <inttypes.h>
 #include "Midi.h"
-
 //#define TXEN 3
 //#define RXEN 4
 //#define RXCIE 7
@@ -120,6 +119,7 @@ public:
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
   int8_t in_message_tx;
+  uint8_t running_status;
 
   volatile uint8_t *udr;
   volatile uint8_t *ubrrh() { return udr - 1; }
@@ -128,7 +128,22 @@ public:
   volatile uint8_t *ucsrb() { return udr - 5; }
   volatile uint8_t *ucsra() { return udr - 6; }
 
-  void write_char(uint8_t c) { *udr = c; }
+  ALWAYS_INLINE() bool write_char(uint8_t c) {
+//    *udr = c;
+//    return true;
+    if (MIDI_IS_STATUS_BYTE(c) && MIDI_IS_VOICE_STATUS_BYTE(c)) {
+      if (c != running_status) {
+        running_status = c;
+        *udr = c;
+        return true;
+      }
+      return false;
+    } else {
+      *udr = c;
+      return true;
+    }
+  }
+
   uint8_t read_char() { return *udr; }
   bool check_empty_tx() {
     volatile uint8_t *ptr = ucsra();
@@ -198,13 +213,15 @@ public:
   }
 
   ALWAYS_INLINE() void tx_isr() {
+    bool rs = 1;
+    again:
     if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
       // ==> flush the sidechannel now
       if (!txRb_sidechannel->isEmpty_isr()) {
         sendActiveSenseTimer = sendActiveSenseTimeout;
         uint8_t c = txRb_sidechannel->get_h_isr();
-        write_char(c);
+        rs = write_char(c);
       }
       // unmount sidechannel if drained
       if (txRb_sidechannel->isEmpty_isr()) {
@@ -217,7 +234,8 @@ public:
       // ==> flush the normal channel now
       sendActiveSenseTimer = sendActiveSenseTimeout;
       uint8_t c = txRb.get_h_isr();
-      write_char(c);
+      rs = write_char(c);
+
       if ((in_message_tx > 0) && (c < 128)) {
         in_message_tx--;
       }
@@ -227,6 +245,7 @@ public:
         case MIDI_PROGRAM_CHANGE:
         case MIDI_MTC_QUARTER_FRAME:
         case MIDI_SONG_SELECT:
+          running_status = 0;
           in_message_tx = 1;
           break;
         case MIDI_NOTE_OFF:
@@ -242,9 +261,11 @@ public:
         switch (c) {
         case MIDI_SYSEX_START:
           in_message_tx = -1;
+          running_status = 0;
           break;
         case MIDI_SYSEX_END:
           in_message_tx = 0;
+          running_status = 0;
           break;
         }
       }
@@ -255,6 +276,7 @@ public:
       // ==> clear active bit and wait for normal channel to be re-supplied
       clear_tx();
     }
+    if (!rs) { goto again; }
     if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
     }

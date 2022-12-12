@@ -29,13 +29,14 @@ MidiUartClass::MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
 }
 
 void MidiUartClass::initSerial() {
-  running_status = 0;
   set_speed(31250);
   volatile uint8_t *src = ucsrc();
   volatile uint8_t *srb = ucsrb();
 
+  running_status = 0;
   *src = (3 << UCSZ00);
   *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {
