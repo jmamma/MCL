@@ -120,6 +120,7 @@ public:
 
   int8_t in_message_tx;
   uint8_t running_status;
+  bool running_status_enabled;
 
   volatile uint8_t *udr;
   volatile uint8_t *ubrrh() { return udr - 1; }
@@ -129,8 +130,10 @@ public:
   volatile uint8_t *ucsra() { return udr - 6; }
 
   ALWAYS_INLINE() bool write_char(uint8_t c) {
-//    *udr = c;
-//    return true;
+    if (!running_status_enabled) {
+      *udr = c;
+      return true;
+    }
     if (MIDI_IS_STATUS_BYTE(c) && MIDI_IS_VOICE_STATUS_BYTE(c)) {
       if (c != running_status) {
         running_status = c;

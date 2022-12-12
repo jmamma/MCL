@@ -61,11 +61,15 @@ void MidiSetup::cfg_ports(bool boot) {
     MidiClock.uart_clock_forward2 = &MidiUart2;
     break;
   case 2:
+    #ifndef DEBUGMODE
     MidiClock.uart_clock_forward3 = &MidiUartUSB;
+    #endif
     break;
   case 3:
     MidiClock.uart_clock_forward2 = &MidiUart2;
+    #ifndef DEBUGMODE
     MidiClock.uart_clock_forward3 = &MidiUartUSB;
+    #endif
     break;
   }
   cfg_clock_recv();

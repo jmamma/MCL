@@ -280,6 +280,8 @@ int main(void) {
 
   DEBUG_INIT();
 
+  MidiUartUSB.running_status_enabled = false;
+
 // Set SD card select HIGH before initialising OLED.
 #ifdef MEGACOMMAND
   PORTB |= (1 << PB0);
