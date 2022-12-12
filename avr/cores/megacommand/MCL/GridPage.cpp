@@ -180,6 +180,7 @@ void GridPage::loop() {
       // }
     }
     // display_name = 0;
+    row_state_scan();
   }
 
   if (bank_popup == 2 && clock_diff(bank_popup_lastclock, slowclock) > 800) {
@@ -187,8 +188,6 @@ void GridPage::loop() {
     return;
   }
 
-  row_state_scan();
-  row_state_scan();
 }
 
 void GridPage::row_state_scan() {
@@ -197,15 +196,16 @@ void GridPage::row_state_scan() {
     GridRowHeader header_tmp;
     row_scan--;
 
+    uint8_t row = GRID_LENGTH - row_scan;
     proj.select_grid(0);
-    proj.read_grid_row_header(&header_tmp, row_scan);
+    proj.read_grid_row_header(&header_tmp, row);
     bool state = header_tmp.is_empty();
 
     proj.select_grid(1);
-    proj.read_grid_row_header(&header_tmp, row_scan);
+    proj.read_grid_row_header(&header_tmp, row);
     state |= header_tmp.is_empty();
 
-    update_row_state(row_scan, !state);
+    update_row_state(row, !state);
     proj.select_grid(old_grid);
   }
 }
