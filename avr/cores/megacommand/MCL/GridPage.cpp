@@ -196,7 +196,7 @@ void GridPage::row_state_scan() {
     GridRowHeader header_tmp;
     row_scan--;
 
-    uint8_t row = GRID_LENGTH - row_scan;
+    uint8_t row = GRID_LENGTH - row_scan - 1;
     proj.select_grid(0);
     proj.read_grid_row_header(&header_tmp, row);
     bool state = header_tmp.is_empty();
