@@ -35,10 +35,8 @@ class MidiUartParent {
 public:
   volatile static uint8_t handle_midi_lock;
 
-  uint8_t running_status;
   uint32_t speed;
 
-  bool useRunningStatus;
   uint16_t sendActiveSenseTimer;
   uint16_t sendActiveSenseTimeout;
   uint16_t recvActiveSenseTimer;
@@ -51,8 +49,6 @@ public:
   MidiID device;
 
   MidiUartParent() {
-    useRunningStatus = false;
-    running_status = 0;
     activeSenseEnabled = 0;
     recvActiveSenseTimer = 0;
     sendActiveSenseTimer = 0;
@@ -81,7 +77,7 @@ public:
       }
     }
   }
-  virtual void initSerial() { running_status = 0; }
+  virtual void initSerial() { }
 
   virtual uint8_t m_getc() {}
   virtual void m_putc(uint8_t *src, uint16_t size) { }
@@ -91,19 +87,6 @@ public:
 
   virtual uint8_t getc() { return 0; }
 
- #ifdef MIDI_RUNNING_STATUS
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { sendCommandByte(cmdByte); }
-  ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
-    sendCommandByte(cmdByte);
-    m_putc(byte1 & 0x7F);
-  }
-  ALWAYS_INLINE()
-  virtual void sendMessage(uint8_t cmdByte, uint8_t byte1, uint8_t byte2) {
-    sendCommandByte(cmdByte);
-    m_putc(byte1 & 0x7F);
-    m_putc(byte2 & 0x7F);
-  }
- #else
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte) { m_putc(cmdByte); }
   ALWAYS_INLINE() virtual void sendMessage(uint8_t cmdByte, uint8_t byte1) {
     uint8_t data[2] = { cmdByte, (uint8_t)(byte1 & 0x7F) };
@@ -114,30 +97,9 @@ public:
     uint8_t data[3] = { cmdByte, (uint8_t)(byte1 & 0x7F), (uint8_t)(byte2 & 0x7F) };
     m_putc(data,3);
   }
-  #endif
 
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
-#ifdef MIDI_RUNNING_STATUS
-    if (MIDI_IS_REALTIME_STATUS_BYTE(byte) ||
-        MIDI_IS_SYSCOMMON_STATUS_BYTE(byte)) {
-      if (!MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
-        running_status = 0;
-        m_putc(byte);
-      } else {
-        m_putc_immediate(byte);
-      }
-    } else {
-      if (useRunningStatus) {
-        if (running_status != byte)
-          m_putc(byte);
-        running_status = byte;
-      } else {
-        m_putc(byte);
-      }
-    }
-#else
     m_putc(byte);
-#endif
   }
   /*
   CallbackVector1<MidiCallback, 8, uint8_t *> noteOnCallbacks;
@@ -194,7 +156,6 @@ public:
     ccCallbacks.remove(obj);
   }
   */
-  ALWAYS_INLINE() void resetRunningStatus() { running_status = 0; }
 
   ALWAYS_INLINE()
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
@@ -215,7 +176,10 @@ public:
       return;
 #endif
 
-    uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_OFF | channel), note, velocity};
+    //uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_OFF | channel), note, velocity};
+    //Send Note On VEL = 0, to leverage running status
+    //
+    uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_ON | channel), note, 0};
     // noteOffCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
