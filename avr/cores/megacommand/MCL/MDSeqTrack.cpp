@@ -2,6 +2,7 @@
 
 uint16_t MDSeqTrack::sync_cursor = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
+uint16_t MDSeqTrack::load_machine_cache = 0;
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
@@ -95,6 +96,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       reset();
       mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
+      SET_BIT16(load_machine_cache, track_number);
     }
   }
 

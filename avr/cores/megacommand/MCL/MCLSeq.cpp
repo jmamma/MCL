@@ -261,6 +261,10 @@ void MCLSeq::seq() {
   if (MDSeqTrack::md_trig_mask > 0) {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
   }
+  if (MDSeqTrack::load_machine_cache) {
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache);
+    MDSeqTrack::load_machine_cache = 0;
+  }
 
   // Arp
 

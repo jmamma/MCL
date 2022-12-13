@@ -38,7 +38,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   }
 
   bool send = true;
-  MD.sendMachine(tracknumber, &(machine), send_level, send);
+  MD.sendMachineCache(tracknumber, &(machine), send_level, send);
 }
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,

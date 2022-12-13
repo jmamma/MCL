@@ -48,6 +48,7 @@ public:
 
   bool link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed, uint8_t *track_select_array, GridDeviceTrack *gdt);
   bool transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
+  bool transition_send(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
 
   /* @} */
 };

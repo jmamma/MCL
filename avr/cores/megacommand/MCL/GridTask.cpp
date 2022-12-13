@@ -166,8 +166,8 @@ void GridTask::transition_handler() {
       // Wait on first track of each device;
       if (wait && send_device[c]) {
 
-        uint32_t go_step = mcl_actions.next_transition * 12 -
-                           mcl_actions.div192th_total_latency - 1;
+        uint32_t go_step = mcl_actions.next_transition * 12 - 24;
+//                           mcl_actions.div192th_total_latency - 1;
 
         mcl_actions.div192th_total_latency -=
             mcl_actions.dev_latency[dev_idx].latency;
@@ -249,17 +249,18 @@ end:
 
 bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
-  EmptyTrack empty_track;
-
-  auto *pmem_track =
-      empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
-  if (pmem_track == nullptr) {
+ EmptyTrack empty_track;
+ 
+ auto *pmem_track =
+     empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+ if (pmem_track == nullptr) {
+        
     return false;
   }
   slots_changed[n] = mcl_actions.links[n].row;
   track_select_array[n] = 1;
   memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
-  if (pmem_track->active) {
+  if (empty_track.active) {
     return true;
   }
   return false;
@@ -285,7 +286,7 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
 
   gdt->seq_track->count_down = -1;
   if (mcl_actions.send_machine[n] == 0) {
-    pmem_track->transition_send(track_idx, n);
+    //pmem_track->transition_send(track_idx, n);
     if (mcl_actions.dev_sync_slot[dev_idx] == n) {
       if (elektron_devs[dev_idx]) {
         elektron_devs[dev_idx]->undokit_sync();

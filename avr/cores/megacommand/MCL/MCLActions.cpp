@@ -37,6 +37,7 @@ void MCLActions::setup() {
     transition_level[i] = 0;
   }
   memset(dev_sync_slot, 255, NUM_DEVS);
+  memset(dev_cache_slots, 0, NUM_DEVS);
 }
 
 void MCLActions::init_chains() {
@@ -369,7 +370,9 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       }
       send_machine[n] = 1;
     } else {
+      device_track->transition_send(track_idx,n);
       send_machine[n] = 0;
+      //send_machine[n] = 0;
       dev_sync_slot[dev_idx] = n;
     }
     if (device_track) {
@@ -915,7 +918,7 @@ void MCLActions::calc_latency() {
   }
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
-      float bytes_per_second_uart1 = devs[a]->uart->speed / 10.0f;
+      float bytes_per_second_uart1 = devs[a]->uart->speed * 0.1f;
       float latency_in_seconds = (float)dev_latency[a].latency /
                                  bytes_per_second_uart1; // 25ms minimum.
       if (num_devices == 1) {

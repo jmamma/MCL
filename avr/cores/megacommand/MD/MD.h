@@ -259,6 +259,12 @@ public:
    **/
   uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level,
                       bool send = true);
+  uint8_t sendMachineCache(uint8_t track, MDMachine *machine, bool send_level,
+                      bool send = true) {
+     return sendMachine(track + 16, machine, send_level, send);
+  }
+
+  void loadMachinesCache(uint16_t track_mask);
 
   /**
    * Inserts a machine in to the MDKit object

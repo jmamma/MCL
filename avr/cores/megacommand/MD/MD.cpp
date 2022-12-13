@@ -701,6 +701,14 @@ end:
   return sendRequest(data, i, send);
 }
 
+void MDClass::loadMachinesCache(uint16_t track_mask) {
+  uint8_t a = track_mask & 0x7F;
+  uint8_t b = (track_mask >> 7) & 0x7F;
+  uint8_t c = (track_mask >> 14) & 0x7F;
+  uint8_t data[5] = { 0x70, 0x62, a, b, c };
+  sendRequest(data, countof(data));
+}
+
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
   MDKit *kit_ = &kit;
   memcpy(kit_->params_orig[track], machine->params, 24);
