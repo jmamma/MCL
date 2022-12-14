@@ -78,7 +78,7 @@ public:
 
 class ExtTrackSmall {
 public:
-  uint8_t buf[sizeof(ExtSeqTrackData) / 3];
+  uint8_t buf[sizeof(ExtSeqTrackData) / 4];
   bool load_from_mem_chunk(uint8_t column, uint8_t chunk) {
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + sizeof(ExtTrackSmall) * chunk;
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);

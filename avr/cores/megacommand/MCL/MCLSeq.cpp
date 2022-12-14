@@ -30,6 +30,7 @@ void MCLSeq::setup() {
     ext_tracks[i].speed = SEQ_SPEED_1X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
+    ext_tracks[i].track_number = i;
     ext_arp_tracks[i].track_number = i;
   }
 #endif

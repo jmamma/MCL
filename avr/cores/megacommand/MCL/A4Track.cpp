@@ -18,7 +18,7 @@ void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 
 void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   uint8_t n = slotnumber;
-  ExtTrack::transition_load(tracknumber, seq_track, slotnumber);
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
 }
 
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {

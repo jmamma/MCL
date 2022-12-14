@@ -576,11 +576,18 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
 }
 
 void ExtSeqTrack::load_cache() {
+
   ExtTrackSmall temp_track;
-  for (uint8_t n = 0; n < 3; n++) {
+  //Save on stack space, break ExtTrack in to 4 chunks.
+  for (uint8_t n = 0; n < 4; n++) {
     temp_track.load_from_mem_chunk(track_number, n);
-    temp_track.load_chunk(data(),n);
+    temp_track.load_chunk(this,n);
   }
+  /*
+  ExtTrack temp_track;
+  temp_track.load_from_mem(track_number, EXT_TRACK_TYPE);
+  temp_track.load_seq_data(this);
+  */
 }
 
 void ExtSeqTrack::seq(MidiUartParent *uart_) {
@@ -601,24 +608,26 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     step_count_inc();
   }
 
+  bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
   if (count_down) {
     count_down--;
-    if (count_down == track_number + 1) {
-      //load_cache();
-      goto end;
+    if (is_generic_midi) {
+      if (count_down == track_number + 1) {
+        load_cache();
+        goto end;
+      }
     }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-    } else if (count_down < track_number + 1) {
+    } else if (is_generic_midi && count_down < track_number + 1) {
       goto end;
     }
   }
 
   uint16_t ev_idx, ev_end;
 
-  if ((mute_state == SEQ_MUTE_OFF)) {
-
+  if ((!is_generic_midi && count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
     // < timing_mid]

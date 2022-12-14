@@ -15,6 +15,8 @@ public:
   void init();
   uint16_t calc_latency(uint8_t tracknumber);
 
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                       uint8_t slotnumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
 
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
