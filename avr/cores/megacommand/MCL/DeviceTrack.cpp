@@ -33,6 +33,9 @@ DeviceTrack* DeviceTrack::init_track_type(uint8_t track_type) {
   case GRIDCHAIN_TRACK_TYPE:
     ::new(this) GridChainTrack;
     break;
+  case NULL_TRACK_TYPE:
+    //Dummy init
+    break;
   }
   return this;
 }
