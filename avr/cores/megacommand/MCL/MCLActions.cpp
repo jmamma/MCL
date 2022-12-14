@@ -372,7 +372,6 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
     } else {
       device_track->transition_send(track_idx,n);
       send_machine[n] = 0;
-      //send_machine[n] = 0;
       dev_sync_slot[dev_idx] = n;
     }
     if (device_track) {

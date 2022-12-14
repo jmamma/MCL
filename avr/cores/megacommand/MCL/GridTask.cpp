@@ -166,8 +166,7 @@ void GridTask::transition_handler() {
       // Wait on first track of each device;
       if (wait && send_device[c]) {
 
-        uint32_t go_step = mcl_actions.next_transition * 12 - 24;
-//                           mcl_actions.div192th_total_latency - 1;
+        uint32_t go_step = mcl_actions.next_transition * 12 - mcl_actions.div192th_total_latency - 1;
 
         mcl_actions.div192th_total_latency -=
             mcl_actions.dev_latency[dev_idx].latency;
@@ -201,7 +200,7 @@ void GridTask::transition_handler() {
   DEBUG_PRINTLN(F("SP pre cache"));
   DEBUG_PRINTLN((int)SP);
   bool update_gui = true;
-  mcl_actions.cache_next_tracks(track_select_array, update_gui);
+  //mcl_actions.cache_next_tracks(track_select_array, update_gui);
   // Once tracks are cached, we can calculate their next transition
   uint8_t last_slot = 255;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -250,17 +249,15 @@ end:
 bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
  EmptyTrack empty_track;
- 
  auto *pmem_track =
      empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
  if (pmem_track == nullptr) {
-        
     return false;
   }
   slots_changed[n] = mcl_actions.links[n].row;
   track_select_array[n] = 1;
   memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
-  if (empty_track.active) {
+  if (pmem_track->active) {
     return true;
   }
   return false;

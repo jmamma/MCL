@@ -89,18 +89,25 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     }
     step_count_inc();
   }
-
   if (count_down) {
     count_down--;
     if (count_down == 0) {
+      MDTrack temp_track;
+//      setLed2();
+      temp_track.load_from_mem(track_number,MD_TRACK_TYPE);
+      temp_track.load_seq_data(this);
+//      clearLed2();
       reset();
       mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
       SET_BIT16(load_machine_cache, track_number);
+      goto end;
     }
   }
 
-  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF) &&
+
+
+  if ( (mute_state == SEQ_MUTE_OFF) &&
       (ignore_step != step_count)) {
 
     uint8_t next_step = 0;
@@ -141,6 +148,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       }
     }
   }
+end:
   uart = uart_old;
 }
 

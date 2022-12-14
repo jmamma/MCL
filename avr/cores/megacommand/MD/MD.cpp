@@ -694,6 +694,7 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     set_level = true;
   }
   if (send) {
+    if (track > 15) { track -= 16; }
     insertMachineInKit(track, machine, set_level);
   }
 
