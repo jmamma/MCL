@@ -217,6 +217,7 @@ public:
       return;
 
     if (inCallback) {
+      setLed2();
       DEBUG_PRINTLN(F("clock collision"));
       return;
     }

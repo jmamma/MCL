@@ -370,7 +370,7 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       }
       send_machine[n] = 1;
     } else {
-      device_track->transition_send(track_idx,n);
+      device_track->transition_cache(track_idx,n);
       send_machine[n] = 0;
       dev_sync_slot[dev_idx] = n;
     }
@@ -664,6 +664,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
       if (!psound || !pmem_sound || szsound != szmem_sound) {
         // something's wrong, don't send
       } else if (memcmp(psound, pmem_sound, szsound) != 0) {
+        pmem_track->transition_cache(track_idx,n);
         send_machine[n] = 0;
         dev_sync_slot[dev_idx] = n;
       }
