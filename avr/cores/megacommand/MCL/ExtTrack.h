@@ -76,4 +76,21 @@ public:
   virtual size_t get_sound_data_size() { return 0; }
 };
 
+class ExtTrackSmall {
+public:
+  uint8_t buf[sizeof(ExtSeqTrackData) / 3];
+  bool load_from_mem_chunk(uint8_t column, uint8_t chunk) {
+    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + sizeof(ExtTrackSmall) * chunk;
+    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+    memcpy_bank1(this, ptr, sizeof(ExtTrackSmall));
+    return true;
+  }
+  bool load_chunk(volatile void *ptr, uint8_t chunk) {
+    memcpy(ptr + sizeof(ExtTrackSmall) * chunk, buf, sizeof(ExtTrackSmall));
+    return true;
+  }
+  uint16_t get_track_size() { return GRID2_TRACK_LEN; }
+  uint32_t get_region() { return BANK1_A4_TRACKS_START; }
+
+};
 #endif /* EXTTRACK_H__ */

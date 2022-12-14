@@ -164,10 +164,11 @@ public:
     memset(ignore_notes,0, sizeof(ignore_notes));
   }
 
-  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
+  void seq(MidiUartParent *uart_);
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
   ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
+  void load_cache();
   void pitch_bend(uint16_t value, MidiUartParent *uart_ = nullptr);
   void after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_ = nullptr);
   void send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_ = nullptr);
