@@ -118,7 +118,9 @@ void ExtSeqTrack::recalc_slides() {
     }
   }
 
-  if (!find) { goto end; }
+  if (!find) {
+    goto end;
+  }
   find_next_locks(curidx, step, find_array);
 
   ext_event_t *e;
@@ -156,7 +158,7 @@ void ExtSeqTrack::recalc_slides() {
      */
     prepare_slide(c, x0, x1, y0, y1);
   }
-  end:
+end:
   locks_slides_recalc = 255;
 }
 
@@ -593,15 +595,23 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
   if (count_down) {
     count_down--;
+    if (count_down == track_number / 2 + 1) {
+      ExtTrack temp_track;
+      temp_track.load_from_mem(track_number, EXT_TRACK_TYPE);
+      temp_track.load_seq_data(this);
+      goto end;
+    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
+    } else if (count_down < track_number / 2 + 1) {
+      goto end;
     }
   }
 
   uint16_t ev_idx, ev_end;
 
-  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
+  if ((mute_state == SEQ_MUTE_OFF)) {
 
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
@@ -639,8 +649,8 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
   }
 
+end:
   locks_slides_idx = cur_event_idx;
-
   uart = uart_old;
 }
 
@@ -1037,8 +1047,8 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint16_t w = end_x - start_x;
 
   if (MidiClock.state == 2 && SeqPage::recording) {
-  del_note(start_x, w, note_num);
-  add_note(start_x, w, note_num, notes_on[n].velocity);
+    del_note(start_x, w, note_num);
+    add_note(start_x, w, note_num, notes_on[n].velocity);
   }
 
   notes_on[n].value = 255;
