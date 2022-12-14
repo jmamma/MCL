@@ -79,6 +79,10 @@ public:
 
 class ExtTrackSmall : public DeviceTrack {
 public:
+  ExtTrackSmall() {
+    active = EXT_TRACK_TYPE;
+  }
+ 
   constexpr static uint8_t chunks = 4;
 
   uint8_t seq_data_chunk[(sizeof(ExtSeqTrackData) / chunks) + 1];
@@ -98,14 +102,23 @@ public:
     return true;
   }
 
+  bool load_link_from_mem(uint8_t column) {
+    DEBUG_PRINTLN("lfm");
+    DEBUG_PRINTLN(column);
+
+    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
+    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+    memcpy_bank1(this, ptr, sizeof(GridTrack));
+    return true;
+  }
+
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false) {};
 
   uint8_t get_chunks() { return chunks; }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
-  virtual uint16_t get_track_size() { return sizeof(GridTrack); //hack to leverage load_from_mem 
-  }
+  virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
   virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
 

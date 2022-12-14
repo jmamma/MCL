@@ -63,16 +63,14 @@ public:
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  downloads from BANK1 to the runtime object
-  bool load_from_mem(uint8_t column, uint32_t region = 0) {
-    uint32_t r = region;
-    if (!r) { r = get_region(); }
-    uint32_t pos = r + get_track_size() * (uint32_t)(column);
+  bool load_from_mem(uint8_t column) {
+    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(this, ptr, get_track_size());
     return true;
   }
 
-  void init() {
+ void init() {
     link.length = 16;
     link.speed = SEQ_SPEED_1X;
   }
