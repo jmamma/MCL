@@ -252,6 +252,7 @@ void MCLSeq::seq() {
   }
   //  Stopwatch sw;
   MDSeqTrack::md_trig_mask = 0;
+  MDSeqTrack::load_machine_cache = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
@@ -263,7 +264,6 @@ void MCLSeq::seq() {
   }
   if (MDSeqTrack::load_machine_cache) {
     MD.loadMachinesCache(MDSeqTrack::load_machine_cache);
-    MDSeqTrack::load_machine_cache = 0;
   }
 
   // Arp
