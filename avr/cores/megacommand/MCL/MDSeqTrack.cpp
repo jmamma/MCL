@@ -93,24 +93,20 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     count_down--;
     if (count_down == track_number / 2 + 1) {
       MDTrack temp_track;
-//      setLed2();
       temp_track.load_from_mem(track_number,MD_TRACK_TYPE);
       temp_track.load_seq_data(this);
       SET_BIT16(load_machine_cache, track_number);
       goto end;
     }
     if (count_down == 0) {
-      clearLed2();
       reset();
       mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
     }
-    else if (count_down < track_number / 4) {
+    else if (count_down < track_number / 2 + 1) {
       goto end;
     }
   }
-
-
 
   if ((mute_state == SEQ_MUTE_OFF) &&
       (ignore_step != step_count)) {
