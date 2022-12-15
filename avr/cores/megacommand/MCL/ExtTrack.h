@@ -98,7 +98,7 @@ public:
   bool load_chunk(volatile void *ptr, uint8_t chunk) {
     size_t chunk_size = sizeof(seq_data_chunk);
     if (chunk == chunks - 1) { chunk_size = sizeof(ExtSeqTrackData) - sizeof(seq_data_chunk) * 3; }
-    memcpy(ptr + chunk_size * chunk, seq_data_chunk, chunk_size);
+    memcpy(ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
     return true;
   }
 
