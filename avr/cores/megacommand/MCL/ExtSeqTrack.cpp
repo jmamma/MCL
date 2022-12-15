@@ -624,9 +624,6 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     } else if (is_generic_midi && count_down < track_number + 5) {
       goto end;
     }
-    else if (is_generic_midi) {
-      SeqTrack::in_countdown = 1;
-    }
   }
 
   uint16_t ev_idx, ev_end;

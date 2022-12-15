@@ -39,15 +39,6 @@ void MCLActions::setup() {
   memset(dev_sync_slot, 255, NUM_DEVS);
 }
 
-void MCLActions::gui_loop() {
-  handleIncomingMidi();
-  if (GUI.currentPage() == &grid_load_page) {
-    GUI.display();
-  } else {
-    GUI.loop();
-  }
-}
-
 void MCLActions::init_chains() {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     mcl_actions.chains[n].init();
@@ -689,10 +680,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   DEBUG_PRINTLN("cache next");
   DEBUG_PRINTLN((int)SP);
   DEBUG_CHECK_STACK();
-  while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
-    gui_loop();
-  }
-
+  /*
+    while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
+      gui_loop();
+    }
+  */
   uint8_t old_grid = proj.get_grid();
 
   uint8_t track_idx, dev_idx;
@@ -716,7 +708,14 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (slot_select_array[n] == 0)
       continue;
 
-    if (gui_update && count == 0) {
+    count--;
+    GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
+    uint8_t grid_idx = get_grid_idx(n);
+
+    if (gdt == nullptr)
+      continue;
+
+    if (gui_update && count == 0 || (gdt->seq_track->count_down && (MidiClock.state == 2))) {
       diff =
           MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                     (uint32_t)mcl_actions.next_transition * 2);
@@ -735,14 +734,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
     }
 
-    count--;
-    GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
-    uint8_t grid_idx = get_grid_idx(n);
-
-    if (gdt == nullptr)
-      continue;
-
-    proj.select_grid(grid_idx);
+   proj.select_grid(grid_idx);
 
     if (chains[n].is_mode_queue()) {
       if (chains[n].get_length() == QUANT_LEN) {

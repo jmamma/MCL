@@ -106,9 +106,6 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     else if (count_down < track_number / 4 + 1) {
       goto end;
     }
-    else {
-      SeqTrack::in_countdown = 1;
-    }
   }
 
   if ((mute_state == SEQ_MUTE_OFF) &&

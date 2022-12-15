@@ -20,7 +20,7 @@ void GridTask::gui_update() {
 
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
-  //  A4Track *a4_track = (A4Track *)&temp_track; 
+  //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
 
   if (load_row != 255) {
@@ -29,17 +29,17 @@ void GridTask::run() {
   }
 
   if ((midi_load) && (clock_diff(midi_event_clock, clock) > 60)) {
-      uint8_t track_select[NUM_SLOTS] = {0};
-      uint8_t r = 255;
-      DEBUG_PRINTLN("process midi load");
-      for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-         if (midi_track_select[n] < 128) {
-            track_select[n] = 1;
-         }
+    uint8_t track_select[NUM_SLOTS] = {0};
+    uint8_t r = 255;
+    DEBUG_PRINTLN("process midi load");
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (midi_track_select[n] < 128) {
+        track_select[n] = 1;
       }
-      mcl_actions.write_original = 1;
-      mcl_actions.load_tracks(r, track_select, midi_track_select);
-      midi_load = false;
+    }
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(r, track_select, midi_track_select);
+    midi_load = false;
   }
 
   if (stop_hard_callback) {
@@ -166,23 +166,29 @@ void GridTask::transition_handler() {
       // Wait on first track of each device;
       if (wait && send_device[c]) {
 
-        uint32_t go_step = mcl_actions.next_transition * 12 - mcl_actions.div192th_total_latency - 1;
+        uint32_t go_step = mcl_actions.next_transition * 12 -
+                           mcl_actions.div192th_total_latency - 1;
 
         mcl_actions.div192th_total_latency -=
             mcl_actions.dev_latency[dev_idx].latency;
 
         uint32_t diff;
 
-       float tempo = MidiClock.get_tempo();
-       float div192th_per_second = tempo * 0.8f;
+        float tempo = MidiClock.get_tempo();
+        float div192th_per_second = tempo * 0.8f;
 
         while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if ((float)diff * div192th_per_second > 0.160) {
-            mcl_actions.gui_loop();
-         }
+            handleIncomingMidi();
+            if (GUI.currentPage() == &grid_load_page) {
+              GUI.display();
+            } else {
+              GUI.loop();
+            }
+          }
         }
       }
       wait = false;
@@ -244,10 +250,10 @@ end:
 
 bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
- EmptyTrack empty_track;
- auto *pmem_track =
-     empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
- if (pmem_track == nullptr) {
+  EmptyTrack empty_track;
+  auto *pmem_track =
+      empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+  if (pmem_track == nullptr) {
     return false;
   }
   slots_changed[n] = mcl_actions.links[n].row;
