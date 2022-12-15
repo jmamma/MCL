@@ -703,7 +703,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
-  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+  //Do this in reverse as slot loading in grid task is in reverse
+  uint8_t n = NUM_SLOTS;
+  while (n--) {
 
     if (slot_select_array[n] == 0)
       continue;
