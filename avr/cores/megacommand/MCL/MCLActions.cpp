@@ -37,7 +37,6 @@ void MCLActions::setup() {
     transition_level[i] = 0;
   }
   memset(dev_sync_slot, 255, NUM_DEVS);
-  memset(dev_cache_slots, 0, NUM_DEVS);
 }
 
 void MCLActions::init_chains() {

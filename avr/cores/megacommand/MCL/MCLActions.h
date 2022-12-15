@@ -43,7 +43,6 @@ public:
   uint8_t transition_level[NUM_SLOTS];
 
   uint8_t dev_sync_slot[NUM_DEVS];
-  uint16_t dev_cache_slots[NUM_DEVS];
 
   GridChain chains[NUM_SLOTS];
 };
