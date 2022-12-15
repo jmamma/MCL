@@ -252,6 +252,7 @@ void MCLSeq::seq() {
     uart2 = &MidiUart2;
   }
   //  Stopwatch sw;
+  SeqTrack::in_countdown = 0;
   MDSeqTrack::md_trig_mask = 0;
   MDSeqTrack::load_machine_cache = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {

@@ -66,6 +66,8 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
+  static uint8_t in_countdown;
+
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
 
   ALWAYS_INLINE() void step_count_inc() {

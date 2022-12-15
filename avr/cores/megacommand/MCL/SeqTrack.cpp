@@ -14,6 +14,8 @@
     b = t;                                                                     \
   }
 
+static uint8_t SeqTrack::in_countdown = 0;
+
 void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
   uint8_t c = lock_idx;
   locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);

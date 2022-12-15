@@ -609,13 +609,11 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
     step_count_inc();
   }
-  bool is_generic_midi = true;
-  // bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) ==
-  // &generic_midi_device);
+   bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
   if (count_down) {
     count_down--;
     if (is_generic_midi) {
-      if (count_down == track_number + 1) {
+      if (count_down == (track_number + 5)) {
         load_cache();
         goto end;
       }
@@ -623,8 +621,11 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-    } else if (is_generic_midi && count_down < track_number + 1) {
+    } else if (is_generic_midi && count_down < track_number + 5) {
       goto end;
+    }
+    else if (is_generic_midi) {
+      SeqTrack::in_countdown = 1;
     }
   }
 
