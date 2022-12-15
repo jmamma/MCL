@@ -181,13 +181,8 @@ void GridTask::transition_handler() {
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
           if ((float)diff * div192th_per_second > 0.160) {
-            handleIncomingMidi();
-            if (GUI.currentPage() == &grid_load_page) {
-              GUI.display();
-            } else {
-              GUI.loop();
-            }
-          }
+            mcl_actions.gui_loop();
+         }
         }
       }
       wait = false;
@@ -199,15 +194,8 @@ void GridTask::transition_handler() {
 
   DEBUG_PRINTLN(F("SP pre cache"));
   DEBUG_PRINTLN((int)SP);
+
   bool update_gui = true;
-  while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
-           handleIncomingMidi();
-            if (GUI.currentPage() == &grid_load_page) {
-              GUI.display();
-            } else {
-              GUI.loop();
-            }
-  }
   mcl_actions.cache_next_tracks(track_select_array, update_gui);
   // Once tracks are cached, we can calculate their next transition
   uint8_t last_slot = 255;

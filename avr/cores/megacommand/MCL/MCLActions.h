@@ -108,7 +108,7 @@ public:
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false);
   void calc_next_transition();
   void calc_latency();
-
+  void gui_loop();
 private:
   void collect_tracks(int row, uint8_t *slot_select_array);
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);

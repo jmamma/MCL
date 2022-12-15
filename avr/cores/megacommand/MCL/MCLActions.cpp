@@ -39,6 +39,15 @@ void MCLActions::setup() {
   memset(dev_sync_slot, 255, NUM_DEVS);
 }
 
+void MCLActions::gui_loop() {
+  handleIncomingMidi();
+  if (GUI.currentPage() == &grid_load_page) {
+    GUI.display();
+  } else {
+    GUI.loop();
+  }
+}
+
 void MCLActions::init_chains() {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     mcl_actions.chains[n].init();
@@ -369,7 +378,7 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       }
       send_machine[n] = 1;
     } else {
-      device_track->transition_cache(track_idx,n);
+      device_track->transition_cache(track_idx, n);
       send_machine[n] = 0;
       dev_sync_slot[dev_idx] = n;
     }
@@ -449,8 +458,8 @@ again:
   DEBUG_PRINTLN(MidiClock.div16th_counter);
 
   // int32_t pos = next_transition - (div192th_total_latency / 12) -
-  // MidiClock.div16th_counter; next transition should always be at least 2 steps
-  // away.
+  // MidiClock.div16th_counter; next transition should always be at least 1
+  // steps away.
   if (next_transition - (div192th_total_latency / 12) - 1 <
       MidiClock.div16th_counter) {
 
@@ -663,7 +672,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
       if (!psound || !pmem_sound || szsound != szmem_sound) {
         // something's wrong, don't send
       } else if (memcmp(psound, pmem_sound, szsound) != 0) {
-        pmem_track->transition_cache(track_idx,n);
+        pmem_track->transition_cache(track_idx, n);
         send_machine[n] = 0;
         dev_sync_slot[dev_idx] = n;
       }
@@ -680,6 +689,10 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   DEBUG_PRINTLN("cache next");
   DEBUG_PRINTLN((int)SP);
   DEBUG_CHECK_STACK();
+  while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
+    gui_loop();
+  }
+
   uint8_t old_grid = proj.get_grid();
 
   uint8_t track_idx, dev_idx;
