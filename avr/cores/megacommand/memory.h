@@ -126,6 +126,11 @@ FORCED_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
   *dst = data;
 }
 
+FORCED_INLINE() extern inline int memcmp_bank1(volatile void *dst, volatile const void *src, uint16_t len) {
+  select_bank(1);
+  return memcmp((void*)dst, (void*)src, len);
+}
+
 FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint16_t len) {
   select_bank(1);
   memcpy((void*)dst, (void*)src, len);

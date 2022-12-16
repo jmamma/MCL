@@ -639,7 +639,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
                              GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
-  EmptyTrack empty_track2;
   DEBUG_CHECK_STACK();
   auto *ptrack = empty_track.load_from_grid(track_idx, links[n].row);
   send_machine[n] = 1;
@@ -651,22 +650,10 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
     ptrack = empty_track.init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
   } else {
-    auto *pmem_track =
-        empty_track2.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
-    if (pmem_track != nullptr && pmem_track->active == ptrack->active) {
-      // track type matched.
-      auto *psound = ptrack->get_sound_data_ptr();
-      auto *pmem_sound = pmem_track->get_sound_data_ptr();
-      auto szsound = ptrack->get_sound_data_size();
-      auto szmem_sound = pmem_track->get_sound_data_size();
-
-      if (!psound || !pmem_sound || szsound != szmem_sound) {
-        // something's wrong, don't send
-      } else if (memcmp(psound, pmem_sound, szsound) != 0) {
-        pmem_track->transition_cache(track_idx, n);
-        send_machine[n] = 0;
-        dev_sync_slot[dev_idx] = n;
-      }
+    if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+       ptrack->transition_cache(track_idx, n);
+       send_machine[n] = 0;
+       dev_sync_slot[dev_idx] = n;
     }
   }
   ptrack->store_in_mem(gdt->mem_slot_idx);

@@ -92,6 +92,12 @@ public:
     return ptrack;
   }
 
+  int memcmp_sound(uint8_t column) {
+    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + ((uint32_t) get_sound_data_ptr() - (uint32_t) this);
+    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+    return memcmp_bank1(get_sound_data_ptr(), ptr, get_track_size());
+  }
+
   template <class T> T *load_from_mem(uint8_t col) {
     DeviceTrack *that = init_track_type<T>();
     /*
