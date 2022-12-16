@@ -656,6 +656,7 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
        dev_sync_slot[dev_idx] = n;
     }
   }
+  //if (ptrack == nullptr) { return; }
   ptrack->store_in_mem(gdt->mem_slot_idx);
   return;
 }
@@ -749,8 +750,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
     }
 
-    if (links[n].row >= GRID_LENGTH)
+    if (links[n].row >= GRID_LENGTH || links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
+
     cache_track(n, track_idx, dev_idx, gdt);
   }
   DEBUG_PRINTLN("cache finished");

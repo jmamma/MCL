@@ -74,9 +74,20 @@ void MDSeqTrack::re_sync() {
 }
 
 void MDSeqTrack::load_cache() {
-  MDTrack temp_track;
-  temp_track.load_from_mem(track_number,MD_TRACK_TYPE);
-  temp_track.load_seq_data(this);
+  MDTrackChunk t;
+
+  for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
+    t.load_from_mem_chunk(track_number, n);
+    t.load_chunk(data(), n);
+  }
+
+  t.load_link_from_mem(track_number);
+  t.load_link_data((SeqTrack *)this);
+
+  oneshot_mask = 0;
+//  set_length(length);
+  update_params();
+
   SET_BIT16(load_machine_cache, track_number);
 }
 

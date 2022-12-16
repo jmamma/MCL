@@ -76,36 +76,30 @@ public:
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };
-
-class ExtTrackSmall : public DeviceTrack {
-public:
-  ExtTrackSmall() {
-    active = EXT_TRACK_TYPE;
+/*
+class ExtTrackChunk : public DeviceTrack {
+  public:
+  ExtTrackChunk() {
   }
- 
-  constexpr static uint8_t chunks = 4;
 
-  uint8_t seq_data_chunk[(sizeof(ExtSeqTrackData) / chunks) + 1];
+  uint8_t seq_data_chunk[256];
 
   bool load_from_mem_chunk(uint8_t column, uint8_t chunk) {
     size_t chunk_size = sizeof(seq_data_chunk);
     uint32_t offset = (uint32_t) seq_data_chunk - (uint32_t) this;
-    uint32_t pos = get_region() + GRID2_TRACK_LEN * (uint32_t)(column) + offset + chunk_size * chunk;
+    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + offset + chunk_size * chunk;
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(seq_data_chunk, ptr, chunk_size);
     return true;
   }
   bool load_chunk(volatile void *ptr, uint8_t chunk) {
     size_t chunk_size = sizeof(seq_data_chunk);
-    if (chunk == chunks - 1) { chunk_size = sizeof(ExtSeqTrackData) - sizeof(seq_data_chunk) * 3; }
+    if (chunk == get_chunk_count() - 1) { chunk_size = get_seq_data_size() - sizeof(seq_data_chunk) * chunk; }
     memcpy(ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
     return true;
   }
 
   bool load_link_from_mem(uint8_t column) {
-    DEBUG_PRINTLN("lfm");
-    DEBUG_PRINTLN(column);
-
     uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(this, ptr, sizeof(GridTrack));
@@ -116,7 +110,22 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false) {};
 
-  uint8_t get_chunks() { return chunks; }
+  uint8_t get_chunk_count() { return (get_seq_data_size() / sizeof(seq_data_chunk)) + 1; }
+
+ virtual uint16_t get_seq_data_size() { return sizeof(ExtSeqTrackData); }
+  virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
+  virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
+  virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
+  virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
+
+  virtual void *get_sound_data_ptr() { return nullptr; }
+  virtual size_t get_sound_data_size() { return 0; }
+};
+*/
+
+class ExtTrackChunk : public DeviceTrackChunk {
+public:
+  virtual uint16_t get_seq_data_size() { return sizeof(ExtSeqTrackData); }
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
   virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }

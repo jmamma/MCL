@@ -137,4 +137,17 @@ public:
   virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
 };
 
+class MDTrackChunk : public DeviceTrackChunk {
+public:
+
+  virtual uint16_t get_seq_data_size() { return sizeof(MDSeqTrackData); }
+  virtual uint8_t get_model() { return MD_TRACK_TYPE; }
+  virtual uint16_t get_track_size() { return GRID1_TRACK_LEN; }
+  virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
+  virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
+
+  virtual void *get_sound_data_ptr() { return nullptr; }
+  virtual size_t get_sound_data_size() { return 0; }
+};
+
 #endif /* MDTRACK_H__ */

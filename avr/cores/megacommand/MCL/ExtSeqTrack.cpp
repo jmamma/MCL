@@ -581,15 +581,15 @@ void ExtSeqTrack::load_cache() {
   //  g.load_from_mem(track_number, BANK1_A4_TRACKS_START);
   //  g.load_link_data((SeqTrack *) this);
   buffer_notesoff();
-  ExtTrackSmall t;
+  ExtTrackChunk t;
 
-  t.load_link_from_mem(track_number);
-  t.load_link_data((SeqTrack *)this);
-
-  for (uint8_t n = 0; n < t.get_chunks(); n++) {
+  for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
     t.load_from_mem_chunk(track_number, n);
     t.load_chunk(data(), n);
   }
+  t.load_link_from_mem(track_number);
+  t.load_link_data((SeqTrack *)this);
+
 }
 
 void ExtSeqTrack::seq(MidiUartParent *uart_) {

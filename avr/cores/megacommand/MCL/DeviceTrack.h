@@ -113,4 +113,30 @@ public:
   }
 };
 
+class DeviceTrackChunk : public DeviceTrack {
+  public:
+  DeviceTrackChunk() {
+  }
+
+  uint8_t seq_data_chunk[256];
+
+  bool load_from_mem_chunk(uint8_t column, uint8_t chunk);
+  bool load_chunk(volatile void *ptr, uint8_t chunk);
+  bool load_link_from_mem(uint8_t column);
+  bool store_in_grid(uint8_t column, uint16_t row,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     bool online = false) {};
+
+  uint8_t get_chunk_count() { return (get_seq_data_size() / sizeof(seq_data_chunk)) + 1; }
+
+  virtual uint16_t get_seq_data_size() = 0;
+  virtual uint8_t get_model() = 0;
+  virtual uint16_t get_track_size() = 0;
+  virtual uint32_t get_region() = 0;
+  virtual uint8_t get_device_type() = 0;
+
+  virtual void *get_sound_data_ptr() = 0;
+  virtual size_t get_sound_data_size() = 0;
+};
+
 #endif /* DEVICETRACK_H__ */
