@@ -98,6 +98,7 @@ public:
 
   void copy_step(uint8_t n, MDSeqStep *step);
   void paste_step(uint8_t n, MDSeqStep *step);
+  void load_cache();
 };
 
 #endif /* MDSEQTRACK_H__ */

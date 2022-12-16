@@ -73,6 +73,13 @@ void MDSeqTrack::re_sync() {
   //  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
+void MDSeqTrack::load_cache() {
+  MDTrack temp_track;
+  temp_track.load_from_mem(track_number,MD_TRACK_TYPE);
+  temp_track.load_seq_data(this);
+  SET_BIT16(load_machine_cache, track_number);
+}
+
 void MDSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
@@ -92,10 +99,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   if (count_down) {
     count_down--;
     if (count_down == track_number / 4 + 1) {
-      MDTrack temp_track;
-      temp_track.load_from_mem(track_number,MD_TRACK_TYPE);
-      temp_track.load_seq_data(this);
-      SET_BIT16(load_machine_cache, track_number);
+      load_cache();
       goto end;
     }
     if (count_down == 0) {
