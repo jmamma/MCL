@@ -22,7 +22,6 @@ void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  clearLed2();
   if (load_row != 255) {
     grid_load_page.group_load(load_row);
     load_row = 255;
