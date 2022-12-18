@@ -465,14 +465,14 @@ again:
   }
 }
 
-void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
+bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
                             GridDeviceTrack *gdt, uint8_t *send_masks) {
   EmptyTrack empty_track;
   auto *ptrack = empty_track.load_from_grid(track_idx, row);
 
   if (ptrack == nullptr) {
     DEBUG_PRINTLN("bad read");
-    return;
+    return false;
   } // read failure
 
   ptrack->link.store_in_mem(pos, &(links[0]));
@@ -488,6 +488,7 @@ void MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     ptrack->load_immediate(track_idx, gdt->seq_track);
     send_masks[pos] = 1;
   }
+  return true;
 }
 
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
@@ -545,7 +546,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     DEBUG_DUMP("here");
     DEBUG_DUMP(row);
 
-    load_track(track_idx, row, i, gdt, send_masks);
+    if (!load_track(track_idx, row, i, gdt, send_masks)) {
+      select_array[i] = 0;
+    }
   }
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = slowclock;
@@ -650,13 +653,16 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
     ptrack = empty_track.init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
   } else {
+    if (!ptrack->get_sound_data_ptr() || !ptrack->get_sound_data_size())
+       //something wrong
+       return;
     if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
        ptrack->transition_cache(track_idx, n);
        send_machine[n] = 0;
        dev_sync_slot[dev_idx] = n;
     }
   }
-  //if (ptrack == nullptr) { return; }
+  if (ptrack == nullptr) { return; }
   ptrack->store_in_mem(gdt->mem_slot_idx);
   return;
 }
@@ -749,10 +755,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         setLed2();
       }
     }
-
+    //if (links[n].row >= GRID_LENGTH)
     if (links[n].row >= GRID_LENGTH || links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
-
     cache_track(n, track_idx, dev_idx, gdt);
   }
   DEBUG_PRINTLN("cache finished");

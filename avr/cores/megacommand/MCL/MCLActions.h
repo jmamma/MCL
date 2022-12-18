@@ -111,7 +111,7 @@ public:
 private:
   void collect_tracks(int row, uint8_t *slot_select_array);
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
-  void load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
+  bool load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
 };
 
 extern void md_import();

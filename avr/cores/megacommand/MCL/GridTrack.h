@@ -24,7 +24,6 @@
 #define GRIDCHAIN_TRACK_TYPE 15
 
 #define EMPTY_TRACK_TYPE 0
-#define NULL_TRACK_TYPE 255
 
 #include "GridLink.h"
 #include "MCLMemory.h"
