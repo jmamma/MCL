@@ -33,8 +33,11 @@ void MidiUartClass::initSerial() {
   volatile uint8_t *src = ucsrc();
   volatile uint8_t *srb = ucsrb();
 
+  #ifdef RUNNING_STATUS_OUT
   running_status_enabled = true;
   running_status = 0;
+  #endif
+
   *src = (3 << UCSZ00);
   *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 }
