@@ -59,7 +59,6 @@ public:
   bool isGenericMessage;
 
   virtual void start() { isGenericMessage = false; }
-  virtual void end_immediate();
 
   void setup(MidiClass *midi_) { sysex = &(midi_->midiSysex); sysex->addSysexListener(this); }
 
@@ -78,6 +77,7 @@ public:
   bool startTurboMidi();
   void stopTurboMidi();
 
+  void end();
   static uint32_t tmSpeeds[12];
 
   uint8_t currentSpeed;

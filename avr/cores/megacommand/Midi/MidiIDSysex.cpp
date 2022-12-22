@@ -15,9 +15,7 @@ void MidiIDSysexListenerClass::handleByte(uint8_t byte) {}
 #define MD_ID 0x02
 #define MD_ID_NAME 0x73
 
-void MidiIDSysexListenerClass::end() { DEBUG_PRINT_FN(); }
-
-void MidiIDSysexListenerClass::end_immediate() {
+void MidiIDSysexListenerClass::end() {
   // MidiUartParent *uart = sysex->uart;
   MidiID *dev = &(sysex->uart->device);
   uint16_t p = (uint16_t)dev;

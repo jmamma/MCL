@@ -82,7 +82,6 @@ bool TrigInterface::off() {
   return true;
 }
 
-void TrigInterface::end_immediate() {}
 void TrigInterface::end() {
 
   // if (!state) {

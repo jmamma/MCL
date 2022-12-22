@@ -31,7 +31,6 @@ public:
   virtual void start();
   virtual void handleByte(uint8_t byte);
   virtual void end();
-  virtual void end_immediate();
   inline void data_packet();
   void dump_request();
   void dump_header();

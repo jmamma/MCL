@@ -14,8 +14,6 @@ void MDSysexListenerClass::start() {
 
 void MDSysexListenerClass::handleByte(uint8_t byte) { }
 
-void MDSysexListenerClass::end_immediate() { }
-
 void MDSysexListenerClass::end() {
   if (sysex->getByte(3) == 0x02) {
     isMDMessage = true;

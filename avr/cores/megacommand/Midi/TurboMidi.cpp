@@ -8,7 +8,7 @@
 
 static uint8_t turbomidi_sysex_header[] = {0xF0, 0x00, 0x20, 0x3c, 0x00, 0x00};
 
-void TurboMidiSysexListenerClass::end_immediate() {
+void TurboMidiSysexListenerClass::end() {
   if (sysex->getByte(2) == 0x00) {
     isGenericMessage = true;
   } else {

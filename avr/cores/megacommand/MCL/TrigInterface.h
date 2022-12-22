@@ -84,7 +84,6 @@ public:
 
   virtual void start();
   virtual void end();
-  virtual void end_immediate();
   bool is_key_down(uint8_t key) { return IS_BIT_SET64(cmd_key_state, key); }
   void send_md_leds(TrigLEDMode mode = TRIGLED_EXCLUSIVE);
   void cleanup();
