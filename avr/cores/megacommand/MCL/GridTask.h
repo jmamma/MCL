@@ -30,7 +30,7 @@ public:
 
   virtual void run();
   virtual void destroy();
-
+  void sync_cursor();
   void init() {
      reset_midi_states();
   }

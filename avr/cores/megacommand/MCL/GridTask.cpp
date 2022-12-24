@@ -18,6 +18,19 @@ void GridTask::gui_update() {
   MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
 }
 
+void GridTask::sync_cursor() {
+  if (MDSeqTrack::sync_cursor) {
+    if (MidiClock.state == 2) {
+      if (last_active_row < GRID_LENGTH) {
+        gui_update();
+        MD.setKitName(kit_names[0]);
+      }
+    }
+    MDSeqTrack::sync_cursor = 0;
+  }
+
+}
+
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
@@ -47,17 +60,7 @@ void GridTask::run() {
     return;
   }
   // MD GUI update.
-
-  if (MDSeqTrack::sync_cursor) {
-    if (MidiClock.state == 2) {
-      if (last_active_row < GRID_LENGTH) {
-        gui_update();
-        MD.setKitName(kit_names[0]);
-      }
-    }
-    MDSeqTrack::sync_cursor = 0;
-  }
-
+  sync_cursor();
   GridTask::transition_handler();
 }
 
@@ -223,7 +226,8 @@ void GridTask::transition_handler() {
         mcl_actions.get_grid_dev_track(last_slot, &track_idx, &dev_idx);
 
     GridRowHeader row_header;
-
+    DEBUG_PRINTLN("read row header");
+    DEBUG_PRINTLN(last_active_row);
     proj.read_grid_row_header(&row_header, last_active_row);
     dev_idx = 0;
 
@@ -239,6 +243,7 @@ void GridTask::transition_handler() {
     }
   }
 
+  sync_cursor();
   mcl_actions.calc_next_transition();
   mcl_actions.calc_latency();
 //  } else {
