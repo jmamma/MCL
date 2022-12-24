@@ -51,31 +51,25 @@ extern const uint8_t PROGMEM font[];
 static uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8] = {};
 
 // the most basic function, set a single pixel
-void Adafruit_SSD1305::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if ((x >= width()) || (y >= height()) || (x < 0) || (y < 0))
-    return;
+void Adafruit_SSD1305::drawPixel(uint8_t x, uint8_t y, uint8_t color) {
+  if ((x >= width()) || (y >= height()))
+   return;
 
+  uint16_t index = x + (y / 8) * SSD1305_LCDWIDTH;
   draw_pixel:
   // x is which column
   if (color == WHITE)
-    SET_BIT(buffer[x + (y / 8) * SSD1305_LCDWIDTH],y % 8);
+    SET_BIT(buffer[index],y % 8);
   else if (color == INVERT) {
     color =
-        (IS_BIT_SET(buffer[x + (y / 8) * SSD1305_LCDWIDTH],y % 8)) ? BLACK : WHITE;
+        (IS_BIT_SET(buffer[index],y % 8)) ? BLACK : WHITE;
     goto draw_pixel;
   } else // BLACK
-    CLEAR_BIT(buffer[x + (y / 8) * SSD1305_LCDWIDTH],(y % 8));
+    CLEAR_BIT(buffer[index],(y % 8));
 }
 
-void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
-                                     uint16_t color) {
-  if (x < 0) {
-    x = 0;
-  }
-  if (y < 0) {
-    h += y;
-    y = 0;
-  }
+void Adafruit_SSD1305::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
+                                     uint8_t color) {
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
@@ -131,20 +125,13 @@ void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
   }
 }
 
-void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                                uint16_t color) {
+void Adafruit_SSD1305::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                uint8_t color) {
   // for (int16_t x2 = x + w; x < x2; ++x)
   //{
   // drawFastVLine(x, y, h, color);
   //}
   // return;
-  if (x < 0) {
-    x = 0;
-  }
-  if (y < 0) {
-    h += y;
-    y = 0;
-  }
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
@@ -216,7 +203,7 @@ void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
   }
 }
 
-void Adafruit_SSD1305::fillScreen(uint16_t color) {
+void Adafruit_SSD1305::fillScreen(uint8_t color) {
   if (color == BLACK) {
     clearDisplay();
   } else if (color == WHITE) {
