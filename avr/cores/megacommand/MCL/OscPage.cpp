@@ -114,7 +114,7 @@ void OscPage::loop() {
 }
 void OscPage::display() {
   // oled_display.clearDisplay();
-  oled_display.fillRect(0, 0, 64, 32, BLACK);
+  oled_display.fillRect(0, 0, 64, 31, BLACK);
 
   MusicalNotes number_to_note;
 
@@ -205,7 +205,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
 
-  oled_display.fillRect(n + x, 0, scanline_width, 32, BLACK);
+  oled_display.fillRect(n + x, 0, scanline_width, 31, BLACK);
   for (uint8_t n = sample_number; n < sample_number + scanline_width; n++) {
     //  if ((scanline_width < w) && (wav_type > 0)) {
     //  oled_display.drawLine(n + x, 0, n + x, 32, BLACK);
@@ -240,9 +240,8 @@ void OscPage::draw_wav(uint8_t wav_type) {
       break;
     }
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
-
     if (wav_type != 0) {
-      oled_display.drawPixel(x + n, pixel_y, WHITE);
+       oled_display.drawPixel(x + n, pixel_y, WHITE);
     }
     // }
     // uint8_t i = n;
@@ -254,7 +253,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   }
   sample_number += scanline_width;
 
-  if (sample_number > 128 - x) {
+  if (sample_number > 127 - x) {
     sample_number = 0;
   }
 }
