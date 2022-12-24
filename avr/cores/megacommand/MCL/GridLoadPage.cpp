@@ -106,15 +106,19 @@ void GridLoadPage::display() {
   const uint64_t mute_mask = 0, slide_mask = 0;
 
   auto oldfont = oled_display.getFont();
-  oled_display.setFont(&TomThumb);
 
   if (show_track_type) {
     mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
                                    mcl_cfg.track_type_select);
   } else {
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, 0, note_interface.notes_off, 32, 16,
-                       mute_mask, slide_mask);
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
 
+
+    oled_display.setFont(&Elektrothic);
+    oled_display.setCursor(MCLGUI::s_menu_x + 4, 22);
+    oled_display.print((char) (0x3A +  proj.get_grid()));
+
+    oled_display.setFont(&TomThumb);
     char K[4] = {'\0'};
 
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
@@ -123,8 +127,9 @@ void GridLoadPage::display() {
     char modestr[7];
     get_modestr(modestr);
 
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
+    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 4,
                               "MODE", modestr);
+
 
     if (encoders[0]->getValue() == LOAD_QUEUE) {
       if (encoders[1]->getValue() == 1) {
@@ -132,7 +137,7 @@ void GridLoadPage::display() {
       } else {
         mcl_gui.put_value_at(encoders[1]->cur, K);
       }
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28, MCLGUI::s_menu_y + 4,
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 4,
                                 "LEN", K);
     }
     // draw quantize
