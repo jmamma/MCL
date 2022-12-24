@@ -230,10 +230,10 @@ bool MDClass::probe() {
   }
   if (connected) {
     get_mutes();
+    md_track_select.on();
     activate_enhanced_gui();
     activate_enhanced_midi();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-    md_track_select.on();
     MD.global.extendedMode = 2;
     seq_ptc_page.setup();
 
