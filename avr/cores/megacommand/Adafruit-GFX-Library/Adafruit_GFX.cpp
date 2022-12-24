@@ -802,23 +802,14 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
       uint8_t line = pgm_read_byte(&font[c * 5 + i]);
       for (int8_t j = 0; j < 8; j++, line >>= 1) {
         if (line & 1) {
-          if (size == 1)
             writePixel(x + i, y + j, color);
-          else
-            writeFillRect(x + i * size, y + j * size, size, size, color);
         } else if (bg != color) {
-          if (size == 1)
             writePixel(x + i, y + j, bg);
-          else
-            writeFillRect(x + i * size, y + j * size, size, size, bg);
         }
       }
     }
     if (bg != color) { // If opaque, draw vertical line for last column
-      if (size == 1)
         writeFastVLine(x + 5, y, 8, bg);
-      else
-        writeFillRect(x + 5 * size, y, size, 8 * size, bg);
     }
     endWrite();
 
@@ -869,12 +860,7 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
           bits = pgm_read_byte(&bitmap[bo++]);
         }
         if (bits & 0x80) {
-          if (size == 1) {
             writePixel(x + xo + xx, y + yo + yy, color);
-          } else {
-            writeFillRect(x + (xo16 + xx) * size, y + (yo16 + yy) * size, size,
-                          size, color);
-          }
         }
         bits <<= 1;
       }
