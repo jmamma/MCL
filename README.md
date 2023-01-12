@@ -4,9 +4,11 @@ The following repository contains a functional Arduino Mega 2560 core and the Me
 
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
 
-Parts of this project are built upon the work of Manuel Odendahl's MIDICtrl Framework:
-https://github.com/wesen/mididuino
-
+Parts of this project are built upon the work of:
+   - Manuel Odendahl's MIDICtrl Framework: https://github.com/wesen/mididuino
+   - Bill Greiman's SdFat library: https://github.com/greiman/SdFat
+   - Adafruit's GFX Library: https://github.com/adafruit/Adafruit-GFX-Library
+ 
 The updated repository contains numerous enhancements and fixes.
 
 - In 2016 the core was adapted to compile with the ArduinoIDE and MegaCommand hardware design.
@@ -24,7 +26,7 @@ See https://github.com/jmamma/MCL/releases for firmware binaries, user documenta
 
 MacOS / Linux: 
 
-1) Download the Arduino IDE https://www.arduino.cc/en/Main/Software (1.8.5 tested)
+1) Download the Arduino Legacy IDE [https://www.arduino.cc/en/Main/Software](https://www.arduino.cc/en/software/OldSoftwareReleases) (1.8.5 tested)
 
 2) Copy Arduino.app to your /Applications folder and launch it.
    (Must be opened first before performing step below)
@@ -39,7 +41,7 @@ Windows:
 The Arduino compiler (avr-gcc) does not like spaces within the full path name when compiling the custom core.
 
 1) Download the Windows ZIP file for non-admin install
-https://www.arduino.cc/download_handler.php?f=/arduino-1.8.5-windows.zip
+https://www.arduino.cc/en/software/OldSoftwareReleases
 
 2) Extract zip file to desktop.
 
