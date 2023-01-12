@@ -4,9 +4,11 @@ The following repository contains a functional Arduino Mega 2560 core and the Me
 
 It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
 
-Parts of this project are built upon the work of Manuel Odendahl's MIDICtrl Framework:
-https://github.com/wesen/mididuino
-
+Parts of this project are built upon the work of:
+   - Manuel Odendahl's MIDICtrl Framework: https://github.com/wesen/mididuino
+   - Bill Greiman's SdFat library: https://github.com/greiman/SdFat
+   - Adafruit's GFX Library: https://github.com/adafruit/Adafruit-GFX-Library
+ 
 The updated repository contains numerous enhancements and fixes.
 
 - In 2016 the core was adapted to compile with the ArduinoIDE and MegaCommand hardware design.
