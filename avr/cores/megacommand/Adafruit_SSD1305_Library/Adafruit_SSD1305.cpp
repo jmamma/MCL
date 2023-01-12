@@ -70,6 +70,9 @@ void Adafruit_SSD1305::drawPixel(uint8_t x, uint8_t y, uint8_t color) {
 
 void Adafruit_SSD1305::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
                                      uint8_t color) {
+  if ((x >= width()) || (y >= height()))
+   return;
+
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
@@ -127,7 +130,9 @@ void Adafruit_SSD1305::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
 
 void Adafruit_SSD1305::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
                                 uint8_t color) {
-  // for (int16_t x2 = x + w; x < x2; ++x)
+  if ((x >= width()) || (y >= height()))
+   return;
+        // for (int16_t x2 = x + w; x < x2; ++x)
   //{
   // drawFastVLine(x, y, h, color);
   //}

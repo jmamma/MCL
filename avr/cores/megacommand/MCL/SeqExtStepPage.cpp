@@ -420,11 +420,13 @@ void SeqExtStepPage::draw_pianoroll() {
   if (fov_cur_x < 0) {
     fov_cur_x = 0;
   }
-  if (fov_cur_x + fov_cur_w > fov_w) {
-    fov_cur_w = fov_w - fov_cur_x;
-  }
-  oled_display.fillRect(draw_x + fov_cur_x, draw_y + fov_cur_y, fov_cur_w,
+  if (fov_cur_x < fov_w) {
+    if (fov_cur_x + fov_cur_w > fov_w) {
+      fov_cur_w = fov_w - fov_cur_x;
+    }
+    oled_display.fillRect(draw_x + fov_cur_x, draw_y + fov_cur_y, fov_cur_w,
                         (fov_h / fov_notes), WHITE);
+  }
 }
 
 void SeqExtStepPage::draw_viewport_minimap() {
