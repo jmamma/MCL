@@ -251,7 +251,6 @@ public:
   ALWAYS_INLINE() void end_immediate() {
 
     uint8_t old_msg = rd_cur;
-    rd_cur = msg_wr;
 
     stopRecord();
 
@@ -264,13 +263,6 @@ public:
       recvIds[2] = getByte(2);
     }
 
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
-      if (isListenerActive(listeners[i])) {
-        listeners[i]->msg_rd = rd_cur;
-        listeners[i]->end_immediate();
-      }
-    }
-    rd_cur = old_msg;
   }
 
   ALWAYS_INLINE() void handleByte(uint8_t byte) {

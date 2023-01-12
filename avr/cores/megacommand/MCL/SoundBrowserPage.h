@@ -42,7 +42,6 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   // MidiSysexListenerClass
   virtual void start();
   virtual void end();
-  virtual void end_immediate();
   virtual bool _handle_filemenu();
   protected:
   void query_sample_slots();

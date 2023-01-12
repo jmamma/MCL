@@ -20,7 +20,6 @@ public:
 
   virtual void start();
   virtual void handleByte(uint8_t byte);
-  virtual void end_immediate();
   virtual void end();
 
   void setup(MidiClass *_midi);

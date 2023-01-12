@@ -23,7 +23,6 @@ public:
 
   virtual void start();
   virtual void end();
-  virtual void end_immediate();
   void cleanup();
   /* @} */
 };

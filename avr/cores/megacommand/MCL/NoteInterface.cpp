@@ -39,10 +39,6 @@ bool NoteInterface::is_event(gui_event_t *event) {
 }
 
 void NoteInterface::add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t port) {
-  if (IS_BIT_SET32(notes_ignore, note_num)) {
-    CLEAR_BIT32(notes_ignore, note_num);
-    return;
-  }
   gui_event_t event;
   event.source = note_num + 128;
   event.mask = event_mask;
@@ -57,19 +53,26 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   if (note_num > NI_MAX_NOTES) {
     return;
   }
+  if (IS_BIT_SET32(notes_ignore, note_num)) {
+    CLEAR_BIT32(notes_ignore, note_num);
+    return;
+  }
   SET_BIT32(notes_on, note_num);
   CLEAR_BIT32(notes_off, note_num);
 
   if (note_num < GRID_WIDTH) {
     note_hold[port] = slowclock;
   }
-  
   add_note_event(note_num, EVENT_BUTTON_PRESSED, port);
 }
 void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
-  } 
+  }
+  if (IS_BIT_SET32(notes_ignore, note_num)) {
+    CLEAR_BIT32(notes_ignore, note_num);
+    return;
+  }
   CLEAR_BIT32(notes_on, note_num);
   SET_BIT32(notes_off, note_num);
   add_note_event(note_num, EVENT_BUTTON_RELEASED, port);

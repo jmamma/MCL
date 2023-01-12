@@ -2,6 +2,7 @@
 
 uint16_t MDSeqTrack::sync_cursor = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
+uint16_t MDSeqTrack::load_machine_cache = 0;
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
@@ -72,6 +73,24 @@ void MDSeqTrack::re_sync() {
   //  count_down = (MidiClock.div192th_counter / q) * q + q;
 }
 
+void MDSeqTrack::load_cache() {
+  MDTrackChunk t;
+
+  for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
+    t.load_from_mem_chunk(track_number, n);
+    t.load_chunk(data(), n);
+  }
+
+  t.load_link_from_mem(track_number);
+  t.load_link_data((SeqTrack *)this);
+
+  oneshot_mask = 0;
+//  set_length(length);
+  update_params();
+
+  SET_BIT16(load_machine_cache, track_number);
+}
+
 void MDSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
@@ -88,17 +107,23 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     }
     step_count_inc();
   }
-
   if (count_down) {
     count_down--;
+    if (count_down == track_number / 4 + 1) {
+      load_cache();
+      goto end;
+    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
     }
+    else if (count_down < track_number / 4 + 1) {
+      goto end;
+    }
   }
 
-  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF) &&
+  if ((mute_state == SEQ_MUTE_OFF) &&
       (ignore_step != step_count)) {
 
     uint8_t next_step = 0;
@@ -139,6 +164,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       }
     }
   }
+end:
   uart = uart_old;
 }
 

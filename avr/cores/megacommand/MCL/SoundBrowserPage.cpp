@@ -408,8 +408,6 @@ void SoundBrowserPage::end() {
   s_query_returned = true;
 }
 
-void SoundBrowserPage::end_immediate() {}
-
 MCLEncoder soundbrowser_param1(0, 1, ENCODER_RES_SYS);
 MCLEncoder soundbrowser_param2(0, 36, ENCODER_RES_SYS);
 SoundBrowserPage sound_browser(&soundbrowser_param1, &soundbrowser_param2);

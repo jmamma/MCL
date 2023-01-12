@@ -13,16 +13,25 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   bool send_level = false;
-  DEBUG_DUMP(n);
+  bool send = true;
   switch (mcl_actions.transition_level[n]) {
   case 1:
     DEBUG_PRINTLN("setting transition level to 0");
     send_level = true;
     machine.level = 0;
     break;
+  }
+  MD.sendMachineCache(tracknumber, &(machine), send_level, send);
+}
+
+void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+  uint8_t n = slotnumber;
+  bool send_level = false;
+  DEBUG_DUMP(n);
+  switch (mcl_actions.transition_level[n]) {
   case TRANSITION_UNMUTE:
     DEBUG_PRINTLN(F("unmuting"));
     MD.muteTrack(tracknumber, false);
@@ -37,14 +46,12 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     break;
   }
 
-  bool send = true;
-  MD.sendMachine(tracknumber, &(machine), send_level, send);
 }
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_seq_data(seq_track);
+  //load_seq_data(seq_track);
 }
 
 void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {

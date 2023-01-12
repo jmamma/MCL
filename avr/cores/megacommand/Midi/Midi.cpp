@@ -55,7 +55,7 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
     MidiUartClass *fwd_uart = uart_forward[n];
     if (fwd_uart &&
         ((len + 2) < (fwd_uart->txRb.len - fwd_uart->txRb.size()))) {
-      const uint16_t size = 2048;
+      const uint16_t size = 256;
       uint8_t buf[size];
       uint16_t n = 0;
       midiSysex.Rb.rd =

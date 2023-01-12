@@ -119,7 +119,11 @@ public:
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
 
   int8_t in_message_tx;
+
+  #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
+  bool running_status_enabled;
+  #endif
 
   volatile uint8_t *udr;
   volatile uint8_t *ubrrh() { return udr - 1; }
@@ -128,11 +132,14 @@ public:
   volatile uint8_t *ucsrb() { return udr - 5; }
   volatile uint8_t *ucsra() { return udr - 6; }
 
+  #ifdef RUNNING_STATUS_OUT
   ALWAYS_INLINE() bool write_char(uint8_t c) {
-//    *udr = c;
-//    return true;
+    if (!running_status_enabled) {
+      *udr = c;
+      return true;
+    }
     if (MIDI_IS_STATUS_BYTE(c) && MIDI_IS_VOICE_STATUS_BYTE(c)) {
-      if (c != running_status) {
+    if (c != running_status) {
         running_status = c;
         *udr = c;
         return true;
@@ -143,6 +150,11 @@ public:
       return true;
     }
   }
+  #else
+  ALWAYS_INLINE() void write_char(uint8_t c) {
+     *udr = c;
+  }
+  #endif
 
   uint8_t read_char() { return *udr; }
   bool check_empty_tx() {
@@ -213,7 +225,9 @@ public:
   }
 
   ALWAYS_INLINE() void tx_isr() {
+#ifdef RUNNING_STATUS_OUT
     bool rs = 1;
+#endif
     again:
     if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
@@ -221,7 +235,11 @@ public:
       if (!txRb_sidechannel->isEmpty_isr()) {
         sendActiveSenseTimer = sendActiveSenseTimeout;
         uint8_t c = txRb_sidechannel->get_h_isr();
+#ifdef RUNNING_STATUS_OUT
         rs = write_char(c);
+#else
+        write_char(c);
+#endif
       }
       // unmount sidechannel if drained
       if (txRb_sidechannel->isEmpty_isr()) {
@@ -234,7 +252,11 @@ public:
       // ==> flush the normal channel now
       sendActiveSenseTimer = sendActiveSenseTimeout;
       uint8_t c = txRb.get_h_isr();
+#ifdef RUNNING_STATUS_OUT
       rs = write_char(c);
+#else
+      write_char(c);
+#endif
 
       if ((in_message_tx > 0) && (c < 128)) {
         in_message_tx--;
@@ -245,7 +267,9 @@ public:
         case MIDI_PROGRAM_CHANGE:
         case MIDI_MTC_QUARTER_FRAME:
         case MIDI_SONG_SELECT:
+#ifdef RUNNING_STATUS_OUT
           running_status = 0;
+#endif
           in_message_tx = 1;
           break;
         case MIDI_NOTE_OFF:
@@ -261,11 +285,15 @@ public:
         switch (c) {
         case MIDI_SYSEX_START:
           in_message_tx = -1;
+#ifdef RUNNING_STATUS_OUT
           running_status = 0;
+#endif
           break;
         case MIDI_SYSEX_END:
           in_message_tx = 0;
+#ifdef RUNNING_STATUS_OUT
           running_status = 0;
+#endif
           break;
         }
       }
@@ -276,7 +304,9 @@ public:
       // ==> clear active bit and wait for normal channel to be re-supplied
       clear_tx();
     }
+#ifdef RUNNING_STATUS_OUT
     if (!rs) { goto again; }
+#endif
     if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
     }

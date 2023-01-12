@@ -1,3 +1,21 @@
+MCL 4.30 12/01/2023
+
+Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.20.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+
+- Fixes:
+  The Microtiming Menu would not display correctly on the MD when speed set to 1/8.
+  GUI input from MD's trig keys would sometimes be unreliable.
+
+- Changes:
+  Improved overall framerate and responsiveness of MCL, particulary on the Grid Page.
+
+  Overhauled the method in which MD track's are loaded, such that there are no dropped notes during transitions.
+
+  MCL now responds to Program Change messages incoming via USB MIDI.
+
+  GUI improvements to Save and Load pages.
+
 MCL 4.20 14/07/2022
 
 Please install Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.

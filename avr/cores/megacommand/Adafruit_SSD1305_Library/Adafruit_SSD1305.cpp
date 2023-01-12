@@ -51,55 +51,32 @@ extern const uint8_t PROGMEM font[];
 static uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8] = {};
 
 // the most basic function, set a single pixel
-void Adafruit_SSD1305::drawPixel(int16_t x, int16_t y, uint16_t color) {
-  if ((x >= width()) || (y >= height()) || (x < 0) || (y < 0))
-    return;
+void Adafruit_SSD1305::drawPixel(uint8_t x, uint8_t y, uint8_t color) {
+  if ((x >= width()) || (y >= height()))
+   return;
 
-  // check rotation, move pixel around if necessary*
-  switch (2) {
-  case 1:
-    adagfx_swap(x, y);
-    x = WIDTH - x - 1;
-    break;
-  case 2:
-    //  x = WIDTH - x - 1;
-    y = HEIGHT - y - 1;
-    break;
-  case 3:
-    adagfx_swap(x, y);
-    y = HEIGHT - y - 1;
-    break;
-  }
-
-draw_pixel:
+  uint16_t index = x + (y / 8) * SSD1305_LCDWIDTH;
+  draw_pixel:
   // x is which column
   if (color == WHITE)
-    SET_BIT(buffer[x + (y / 8) * SSD1305_LCDWIDTH],y % 8);
+    SET_BIT(buffer[index],y % 8);
   else if (color == INVERT) {
     color =
-        (IS_BIT_SET(buffer[x + (y / 8) * SSD1305_LCDWIDTH],y % 8)) ? BLACK : WHITE;
+        (IS_BIT_SET(buffer[index],y % 8)) ? BLACK : WHITE;
     goto draw_pixel;
   } else // BLACK
-    CLEAR_BIT(buffer[x + (y / 8) * SSD1305_LCDWIDTH],(y % 8));
+    CLEAR_BIT(buffer[index],(y % 8));
 }
 
-void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
-                                     uint16_t color) {
-  if (x < 0) {
-    x = 0;
-  }
-  if (y < 0) {
-    h += y;
-    y = 0;
-  }
+void Adafruit_SSD1305::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
+                                     uint8_t color) {
+  if ((x >= width()) || (y >= height()))
+   return;
+
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
-  // check rotation, move pixel around if necessary*
-  // MegaCommand rotation
-  y = SSD1305_LCDHEIGHT - y - h;
-
-  // initial pointer position
+ // initial pointer position
   uint8_t *p = buffer + x + (y / 8) * SSD1305_LCDWIDTH;
 
   // 1. upper part
@@ -151,20 +128,15 @@ void Adafruit_SSD1305::drawFastVLine(int16_t x, int16_t y, int16_t h,
   }
 }
 
-void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                                uint16_t color) {
-  // for (int16_t x2 = x + w; x < x2; ++x)
+void Adafruit_SSD1305::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                uint8_t color) {
+  if ((x >= width()) || (y >= height()))
+   return;
+        // for (int16_t x2 = x + w; x < x2; ++x)
   //{
   // drawFastVLine(x, y, h, color);
   //}
   // return;
-  if (x < 0) {
-    x = 0;
-  }
-  if (y < 0) {
-    h += y;
-    y = 0;
-  }
   if (y + h > SSD1305_LCDHEIGHT) {
     h = SSD1305_LCDHEIGHT - y;
   }
@@ -172,11 +144,7 @@ void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
   if (x + w > SSD1305_LCDWIDTH) {
     w = SSD1305_LCDHEIGHT - x;
   }
-  // check rotation, move pixel around if necessary*
-  // MegaCommand rotation
-  y = SSD1305_LCDHEIGHT - y - h;
-
-  // initial pointer position
+   // initial pointer position
   uint8_t *p = buffer + x + (y / 8) * SSD1305_LCDWIDTH;
   const int16_t xend = x + w;
 
@@ -240,7 +208,7 @@ void Adafruit_SSD1305::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
   }
 }
 
-void Adafruit_SSD1305::fillScreen(uint16_t color) {
+void Adafruit_SSD1305::fillScreen(uint8_t color) {
   if (color == BLACK) {
     clearDisplay();
   } else if (color == WHITE) {
@@ -311,7 +279,7 @@ void Adafruit_SSD1305::begin(uint8_t i2caddr) {
   command(0x3F);                  // 1/64
   command(SSD1305_MASTERCONFIG);
   command(0x8e); /* external vcc supply */
-  command(SSD1305_COMSCANDEC);
+  command(SSD1305_COMSCANINC);
   command(SSD1305_SETDISPLAYOFFSET); // 0xD3
   command(0x40);
   command(SSD1305_SETDISPLAYCLOCKDIV); // 0xD5
@@ -486,13 +454,8 @@ void Adafruit_SSD1305::display(void) {
   screen_saver_active = screen_saver;
 
   uint16_t i = 0;
-  uint8_t page;
-  if (SSD1305_LCDHEIGHT == 64)
-    page = 0;
-  if (SSD1305_LCDHEIGHT == 32)
-    page = 4;
 
-  for (; page < 8; page++) {
+  for (uint8_t page = 0; page < 4; page++) {
     command(SSD1305_SETPAGESTART + page);
     command(0x00);
     command(0x10);

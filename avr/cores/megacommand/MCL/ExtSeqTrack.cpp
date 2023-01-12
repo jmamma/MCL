@@ -118,7 +118,9 @@ void ExtSeqTrack::recalc_slides() {
     }
   }
 
-  if (!find) { goto end; }
+  if (!find) {
+    goto end;
+  }
   find_next_locks(curidx, step, find_array);
 
   ext_event_t *e;
@@ -156,7 +158,7 @@ void ExtSeqTrack::recalc_slides() {
      */
     prepare_slide(c, x0, x1, y0, y1);
   }
-  end:
+end:
   locks_slides_recalc = 255;
 }
 
@@ -573,6 +575,23 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   }
 }
 
+void ExtSeqTrack::load_cache() {
+  // Save on stack space, break ExtTrack in to chunks.
+  //  GridTrack g;
+  //  g.load_from_mem(track_number, BANK1_A4_TRACKS_START);
+  //  g.load_link_data((SeqTrack *) this);
+  buffer_notesoff();
+  ExtTrackChunk t;
+
+  for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
+    t.load_from_mem_chunk(track_number, n);
+    t.load_chunk(data(), n);
+  }
+  t.load_link_from_mem(track_number);
+  t.load_link_data((SeqTrack *)this);
+
+}
+
 void ExtSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
@@ -590,19 +609,28 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
     step_count_inc();
   }
-
+   bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
   if (count_down) {
     count_down--;
+    if (is_generic_midi) {
+      if (count_down == (track_number + 5)) {
+        load_cache();
+        goto end;
+      }
+    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
+    } else if (is_generic_midi && count_down < track_number + 5) {
+      goto end;
     }
   }
 
   uint16_t ev_idx, ev_end;
 
-  if ((count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
-
+  if ((mute_state == SEQ_MUTE_OFF)) {
+    // if ((!is_generic_midi && count_down == 0) && (mute_state ==
+    // SEQ_MUTE_OFF)) {
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
     // < timing_mid]
@@ -639,8 +667,8 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
   }
 
+end:
   locks_slides_idx = cur_event_idx;
-
   uart = uart_old;
 }
 
@@ -1037,8 +1065,8 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint16_t w = end_x - start_x;
 
   if (MidiClock.state == 2 && SeqPage::recording) {
-  del_note(start_x, w, note_num);
-  add_note(start_x, w, note_num, notes_on[n].velocity);
+    del_note(start_x, w, note_num);
+    add_note(start_x, w, note_num, notes_on[n].velocity);
   }
 
   notes_on[n].value = 255;

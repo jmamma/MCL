@@ -18,37 +18,7 @@ void GridTask::gui_update() {
   MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
 }
 
-void GridTask::run() {
-  //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
-  //  A4Track *a4_track = (A4Track *)&temp_track; 
-  //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
-
-  if (load_row != 255) {
-    grid_load_page.group_load(load_row);
-    load_row = 255;
-  }
-
-  if ((midi_load) && (clock_diff(midi_event_clock, clock) > 60)) {
-      uint8_t track_select[NUM_SLOTS] = {0};
-      uint8_t r = 255;
-      DEBUG_PRINTLN("process midi load");
-      for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-         if (midi_track_select[n] < 128) {
-            track_select[n] = 1;
-         }
-      }
-      mcl_actions.write_original = 1;
-      mcl_actions.load_tracks(r, track_select, midi_track_select);
-      midi_load = false;
-  }
-
-  if (stop_hard_callback) {
-    mcl_actions_callbacks.StopHardCallback();
-    stop_hard_callback = false;
-    return;
-  }
-  // MD GUI update.
-
+void GridTask::sync_cursor() {
   if (MDSeqTrack::sync_cursor) {
     if (MidiClock.state == 2) {
       if (last_active_row < GRID_LENGTH) {
@@ -59,6 +29,39 @@ void GridTask::run() {
     MDSeqTrack::sync_cursor = 0;
   }
 
+}
+
+void GridTask::run() {
+  //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
+  //  A4Track *a4_track = (A4Track *)&temp_track;
+  //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
+  if (load_row != 255) {
+    bool silent = true;
+    grid_load_page.group_load(load_row, silent);
+    load_row = 255;
+  }
+
+  if ((midi_load) && (clock_diff(midi_event_clock, clock) > 60)) {
+    uint8_t track_select[NUM_SLOTS] = {0};
+    uint8_t r = 255;
+    DEBUG_PRINTLN("process midi load");
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (midi_track_select[n] < 128) {
+        track_select[n] = 1;
+      }
+    }
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(r, track_select, midi_track_select);
+    midi_load = false;
+  }
+
+  if (stop_hard_callback) {
+    mcl_actions_callbacks.StopHardCallback();
+    stop_hard_callback = false;
+    return;
+  }
+  // MD GUI update.
+  sync_cursor();
   GridTask::transition_handler();
 }
 
@@ -164,6 +167,7 @@ void GridTask::transition_handler() {
         continue;
 
       // Wait on first track of each device;
+
       if (wait && send_device[c]) {
 
         uint32_t go_step = mcl_actions.next_transition * 12 -
@@ -174,8 +178,8 @@ void GridTask::transition_handler() {
 
         uint32_t diff;
 
-       float tempo = MidiClock.get_tempo();
-       float div192th_per_second = tempo * 0.8f;
+        float tempo = MidiClock.get_tempo();
+        float div192th_per_second = tempo * 0.8f;
 
         while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                     go_step)) != 0) &&
@@ -197,11 +201,12 @@ void GridTask::transition_handler() {
       }
     }
   }
-
   DEBUG_PRINTLN(F("SP pre cache"));
   DEBUG_PRINTLN((int)SP);
+
   bool update_gui = true;
   mcl_actions.cache_next_tracks(track_select_array, update_gui);
+ 
   // Once tracks are cached, we can calculate their next transition
   uint8_t last_slot = 255;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -222,7 +227,8 @@ void GridTask::transition_handler() {
         mcl_actions.get_grid_dev_track(last_slot, &track_idx, &dev_idx);
 
     GridRowHeader row_header;
-
+    DEBUG_PRINTLN("read row header");
+    DEBUG_PRINTLN(last_active_row);
     proj.read_grid_row_header(&row_header, last_active_row);
     dev_idx = 0;
 
@@ -238,6 +244,7 @@ void GridTask::transition_handler() {
     }
   }
 
+  sync_cursor();
   mcl_actions.calc_next_transition();
   mcl_actions.calc_latency();
 //  } else {
@@ -250,7 +257,6 @@ end:
 bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
-
   auto *pmem_track =
       empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
   if (pmem_track == nullptr) {

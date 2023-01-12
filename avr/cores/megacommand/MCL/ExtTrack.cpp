@@ -7,7 +7,7 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
   DEBUG_DUMP(tracknumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_seq_data(seq_track);
+  //load_seq_data(seq_track);
 }
 
 void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -35,7 +35,7 @@ bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
 
   memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
   load_link_data(seq_track);
-
+  ext_track->set_length(seq_track->length);
   seq_track->mute_state = old_mute;
 #endif
   return true;

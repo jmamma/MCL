@@ -599,6 +599,19 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
     }
   }
 }
+void MCLGUI::draw_trigs(uint8_t x, uint8_t y, const uint16_t &trig_selection) {
+
+  for (int i = 0; i < 16; i++) {
+    if (IS_BIT_SET16(trig_selection,i)) {
+      oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
+    }
+    else{
+      oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
+    }
+    x += seq_w + 1;
+  }
+
+}
 
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         const uint64_t &pattern_mask, uint8_t step_count,

@@ -354,6 +354,7 @@ public:
 #define FW_CAP_TONAL          FW_CAP_HIGH(1)
 #define FW_CAP_ENHANCED_GUI FW_CAP_HIGH(2)
 #define FW_CAP_ENHANCED_MIDI FW_CAP_HIGH(3)
+#define FW_CAP_MACHINE_CACHE FW_CAP_HIGH(4)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {

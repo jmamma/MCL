@@ -69,7 +69,7 @@ public:
     return true;
   }
 
-  void init() {
+ void init() {
     link.length = 16;
     link.speed = SEQ_SPEED_1X;
   }
@@ -79,6 +79,7 @@ public:
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
+  virtual void transition_cache(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
 

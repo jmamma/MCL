@@ -30,6 +30,7 @@ void MCLSeq::setup() {
     ext_tracks[i].speed = SEQ_SPEED_1X;
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
+    ext_tracks[i].track_number = i;
     ext_arp_tracks[i].track_number = i;
   }
 #endif
@@ -252,6 +253,7 @@ void MCLSeq::seq() {
   }
   //  Stopwatch sw;
   MDSeqTrack::md_trig_mask = 0;
+  MDSeqTrack::load_machine_cache = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
@@ -260,6 +262,9 @@ void MCLSeq::seq() {
 
   if (MDSeqTrack::md_trig_mask > 0) {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+  }
+  if (MDSeqTrack::load_machine_cache) {
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache);
   }
 
   // Arp

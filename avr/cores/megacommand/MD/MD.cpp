@@ -192,7 +192,7 @@ bool MDClass::probe() {
     uint16_t fw_caps_mask =
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
-         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
+         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) | (uint16_t)FW_CAP_MACHINE_CACHE;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
@@ -230,10 +230,10 @@ bool MDClass::probe() {
   }
   if (connected) {
     get_mutes();
+    md_track_select.on();
     activate_enhanced_gui();
     activate_enhanced_midi();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-    md_track_select.on();
     MD.global.extendedMode = 2;
     seq_ptc_page.setup();
 
@@ -694,11 +694,20 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     set_level = true;
   }
   if (send) {
+    if (track > 15) { track -= 16; }
     insertMachineInKit(track, machine, set_level);
   }
 
 end:
   return sendRequest(data, i, send);
+}
+
+void MDClass::loadMachinesCache(uint16_t track_mask) {
+  uint8_t a = track_mask & 0x7F;
+  uint8_t b = (track_mask >> 7) & 0x7F;
+  uint8_t c = (track_mask >> 14) & 0x7F;
+  uint8_t data[5] = { 0x70, 0x62, a, b, c };
+  sendRequest(data, countof(data));
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {

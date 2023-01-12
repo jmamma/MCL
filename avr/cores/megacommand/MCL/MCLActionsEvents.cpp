@@ -149,6 +149,10 @@ void MCLActionsMidiEvents::setup_callbacks() {
     return;
   }
   slot_mask = 0;
+  MidiUSB.addOnProgramChangeCallback(this,
+                                   (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                                       onProgramChangeCallback_Midi2);
+
   Midi2.addOnProgramChangeCallback(this,
                                    (midi_callback_ptr_t)&MCLActionsMidiEvents::
                                        onProgramChangeCallback_Midi2);
@@ -170,6 +174,11 @@ void MCLActionsMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+  MidiUSB.removeOnProgramChangeCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                onProgramChangeCallback_Midi2);
+
+
   Midi2.removeOnProgramChangeCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
                 onProgramChangeCallback_Midi2);

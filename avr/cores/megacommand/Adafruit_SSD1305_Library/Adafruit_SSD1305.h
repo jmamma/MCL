@@ -134,11 +134,11 @@ public:
   void textbox(const char *text, const char *text2, uint16_t delay = 800);
   void display();
 
-  void drawPixel(int16_t x, int16_t y, uint16_t color);
+  void drawPixel(uint8_t x, uint8_t y, uint8_t color);
 
-  virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-  virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-  virtual void fillScreen(uint16_t color);
+  virtual void drawFastVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color);
+  virtual void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
+  virtual void fillScreen(uint8_t color);
 
   bool textbox_enabled = false;
 private:

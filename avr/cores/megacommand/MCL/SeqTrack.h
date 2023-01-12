@@ -206,6 +206,7 @@ public:
     uint8_t timing_mid = get_timing_mid();
     mod12_counter++;
     if (mod12_counter == timing_mid) {
+      count_down = 0;
       mod12_counter = 0;
       step_count_inc();
     }

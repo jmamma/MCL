@@ -131,8 +131,8 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
     oled_display.setCursor(x_offset, y_offset + 8 * n);
     if (n == cur_row) {
       oled_display.setTextColor(BLACK, WHITE);
-      oled_display.fillRect(oled_display.getCursorX() - 3,
-                            oled_display.getCursorY() - 6, width, 7, WHITE);
+      oled_display.fillRect(max(0,oled_display.getCursorX() - 3),
+                            max(0,oled_display.getCursorY() - 6), width, 7, WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
     }

@@ -160,8 +160,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   mcl_actions.dev_sync_slot[0] = track;
 
+  md_track.transition_cache(track,track);
   md_track.store_in_mem(track);
-
   prepare_link(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
 }
 
@@ -356,7 +356,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.lfo.destinationTrack = track;
 
   mcl_actions.dev_sync_slot[0] = track;
-
+  md_track.transition_cache(track,track);
   md_track.store_in_mem(track);
   prepare_link(track, steps, SLOT_RAM_PLAY);
 }

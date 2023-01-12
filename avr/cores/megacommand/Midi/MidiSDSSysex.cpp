@@ -28,33 +28,6 @@ void MidiSDSSysexListenerClass::end() {
     return;
   }
 
-  msgType = sysex->getByte(2);
-  switch (msgType) {
-  case MIDI_SDS_DUMPHEADER:
-
-    if (midi_sds.state != SDS_READY) {
-      DEBUG_PRINTLN(F("header received, not in ready"));
-      return;
-    }
-    midi_sds.state = SDS_REC;
-    dump_header();
-
-    break;
-
-  case MIDI_SDS_DATAPACKET:
-    if (midi_sds.state != SDS_REC) {
-      DEBUG_PRINTLN(F("not in sds rec mode"));
-      midi_sds.sendCancelMessage();
-      midi_sds.cancel();
-      return;
-    }
-    data_packet();
-
-    break;
-  }
-}
-void MidiSDSSysexListenerClass::end_immediate() {
-
   if ((sysex->getByte(2) == ELEKTRON_ID) && (sysex->getByte(3) == MD_ID) &&
       (sysex->getByte(5) == MD_SDS_NAME)) {
     sds_slot = sysex->getByte(6);
@@ -68,14 +41,7 @@ void MidiSDSSysexListenerClass::end_immediate() {
     return;
   }
 
-  if (sysex->getByte(0) == 0x7E) {
-    isSDSMessage = true;
-  } else {
-    isSDSMessage = false;
-    return;
-  }
-
-  msgType = sysex->getByte(2);
+   msgType = sysex->getByte(2);
 
   switch (msgType) {
 
@@ -103,8 +69,30 @@ void MidiSDSSysexListenerClass::end_immediate() {
   case MIDI_SDS_EOF:
     eof();
     break;
+  case MIDI_SDS_DUMPHEADER:
+
+    if (midi_sds.state != SDS_READY) {
+      DEBUG_PRINTLN(F("header received, not in ready"));
+      return;
+    }
+    midi_sds.state = SDS_REC;
+    dump_header();
+
+    break;
+
+  case MIDI_SDS_DATAPACKET:
+    if (midi_sds.state != SDS_REC) {
+      DEBUG_PRINTLN(F("not in sds rec mode"));
+      midi_sds.sendCancelMessage();
+      midi_sds.cancel();
+      return;
+    }
+    data_packet();
+
+    break;
   }
 }
+
 void MidiSDSSysexListenerClass::wait() {}
 void MidiSDSSysexListenerClass::eof() {}
 

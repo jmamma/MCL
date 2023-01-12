@@ -80,44 +80,34 @@ void MDTrackSelect::end() {
         mcl_seq.md_tracks[n].mute_state = old_mutes[n];
       }
     }
+  } else {
+
+    uint8_t b = sysex->getByte(2);
+    MD.global.extendedMode = b >> 4;
+    MD.global.baseChannel = b & 0xF;
+
+    b = sysex->getByte(3);
+    if (sysex->get_recordLen() != 8) {
+      MD.currentTrack = b & 0xF;
+    }
+    MD.currentSynthPage = (b >> 4) & 3;
+    MD.currentBank = (b & 64) > 0;
+
+    b = sysex->getByte(4);
+    MD.kit.models[MD.currentTrack] = sysex->getByte(5);
+    if (b & 1) {
+      MD.kit.models[MD.currentTrack] += 128;
+    }
+    if (b & 2) {
+      MD.kit.models[MD.currentTrack] += 0x20000;
+    }
   }
   bool ret = seq_step_page.md_track_change_check();
   if (ret) {
-     arp_page.track_update(255, seq_ptc_page.is_md_midi(seq_ptc_page.dev_note_channels[0]) != POLY_EVENT);
+    arp_page.track_update(
+        255, seq_ptc_page.is_md_midi(seq_ptc_page.dev_note_channels[0]) !=
+                 POLY_EVENT);
   }
-}
-
-void MDTrackSelect::end_immediate() {
-  if (!state) {
-    return;
-  }
-  if (sysex->getByte(0) != ids[0]) {
-    return;
-  }
-  if (sysex->getByte(1) != ids[1]) {
-    return;
-  }
-
-  uint8_t b = sysex->getByte(2);
-  MD.global.extendedMode = b >> 4;
-  MD.global.baseChannel = b & 0xF;
-
-  b = sysex->getByte(3);
-  if (sysex->get_recordLen() != 8) {
-    MD.currentTrack = b & 0xF;
-  }
-  MD.currentSynthPage = (b >> 4) & 3;
-  MD.currentBank = (b & 64) > 0;
-
-  b = sysex->getByte(4);
-  MD.kit.models[MD.currentTrack] = sysex->getByte(5);
-  if (b & 1) {
-    MD.kit.models[MD.currentTrack] += 128;
-  }
-  if (b & 2) {
-    MD.kit.models[MD.currentTrack] += 0x20000;
-  }
-  return;
 }
 
 MDTrackSelect md_track_select;

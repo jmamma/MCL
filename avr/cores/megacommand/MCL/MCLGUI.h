@@ -32,7 +32,8 @@ public:
   void clear_popup(uint8_t h = 0);
   void draw_popup(const char *title, bool deferred_display = false,
                   uint8_t h = 0);
-
+  void draw_trigs(uint8_t x, uint8_t y,
+                        const uint16_t &trig_selection);
   void draw_progress_bar(uint8_t cur, uint8_t _max,
                          bool deferred_display = true,
                          uint8_t x_pos = s_progress_x,
