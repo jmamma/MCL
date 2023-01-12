@@ -10,7 +10,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 - Changes:
   Improved overall framerate and responsiveness of MCL particulary on the Grid Page.
 
-  Overhauled the method in which MD track's are loaded such that there are no dropped notes during transitions.
+  Overhauled the method in which MD tracks are loaded such that there are no dropped notes during transitions.
 
   MCL now responds to Program Change messages incoming via USB MIDI.
 
