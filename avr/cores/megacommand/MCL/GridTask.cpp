@@ -36,7 +36,8 @@ void GridTask::run() {
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   if (load_row != 255) {
-    grid_load_page.group_load(load_row);
+    bool silent = true;
+    grid_load_page.group_load(load_row, silent);
     load_row = 255;
   }
 
