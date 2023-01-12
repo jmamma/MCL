@@ -192,7 +192,7 @@ bool MDClass::probe() {
     uint16_t fw_caps_mask =
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
-         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI);
+         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) | (uint16_t)FW_CAP_MACHINE_CACHE;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
