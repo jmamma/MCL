@@ -142,7 +142,7 @@ void Adafruit_SSD1305::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
   }
 
   if (x + w > SSD1305_LCDWIDTH) {
-    w = SSD1305_LCDHEIGHT - x;
+    w = SSD1305_LCDWIDTH - x;
   }
    // initial pointer position
   uint8_t *p = buffer + x + (y / 8) * SSD1305_LCDWIDTH;

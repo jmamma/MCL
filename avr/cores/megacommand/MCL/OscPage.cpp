@@ -114,7 +114,7 @@ void OscPage::loop() {
 }
 void OscPage::display() {
   // oled_display.clearDisplay();
-  oled_display.fillRect(0, 0, 64, 31, BLACK);
+  oled_display.fillRect(0, 0, 64, 32, BLACK);
 
   MusicalNotes number_to_note;
 
@@ -205,7 +205,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
 
-  oled_display.fillRect(n + x, 0, scanline_width, 31, BLACK);
+  oled_display.fillRect(n + x, 0, scanline_width, 32, BLACK);
   for (uint8_t n = sample_number; n < sample_number + scanline_width; n++) {
     //  if ((scanline_width < w) && (wav_type > 0)) {
     //  oled_display.drawLine(n + x, 0, n + x, 32, BLACK);

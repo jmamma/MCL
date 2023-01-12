@@ -13,7 +13,7 @@ class Adafruit_GFX : public Print {
 
  public:
 
-  Adafruit_GFX(int16_t w, int16_t h); // Constructor
+  Adafruit_GFX(uint8_t w, uint8_t h); // Constructor
 
   // This MUST be defined by the subclass:
   virtual void drawPixel(uint8_t x, uint8_t y, uint8_t color) = 0;

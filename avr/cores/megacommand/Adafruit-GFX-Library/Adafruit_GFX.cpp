@@ -75,7 +75,7 @@ POSSIBILITY OF SUCH DAMAGE.
   }
 #endif
 
-Adafruit_GFX::Adafruit_GFX(int16_t w, int16_t h) : WIDTH(w), HEIGHT(h) {
+Adafruit_GFX::Adafruit_GFX(uint8_t w, uint8_t h) : WIDTH(w), HEIGHT(h) {
   _width = WIDTH;
   _height = HEIGHT;
   rotation = 0;
