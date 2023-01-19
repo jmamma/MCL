@@ -714,25 +714,24 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     bool gui_loop = false;
 
     if (gui_update && count == 0) {
-      diff =
-          MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                    (uint32_t)mcl_actions.next_transition * 2);
-      if ((float)diff * div32th_per_second < 0.200) {
-        gui_loop = true;
-        count = count_max;
-      }
     }
 
-    while ((gdt->seq_track->count_down && (MidiClock.state == 2)) || gui_loop) {
+    while ((gdt->seq_track->count_down && (MidiClock.state == 2)) || count == 0) {
       gui_loop = false;
       proj.select_grid(old_grid);
       MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
       MidiUartParent::handle_midi_lock = 0;
+      diff =
+          MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
+                                    (uint32_t)mcl_actions.next_transition * 2);
+      if ((float)diff * div32th_per_second < 0.200) {
+        count = count_max;
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
       } else {
         GUI.loop();
+      }
       }
       count = count_max;
     }
