@@ -725,6 +725,10 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
               temp_slot.link.row = slot.link.row;
               temp_slot.store_in_grid(xpos, ypos);
             }
+            else if (temp_slot.link.speed == slot.link.speed) {
+              temp_slot.link.length = slot.link.length;
+              temp_slot.store_in_grid(xpos, ypos);
+            }
           }
         } else if (slot_load == 1) {
           // if (height > 1 && y == 0) {
