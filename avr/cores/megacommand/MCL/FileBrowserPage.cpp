@@ -412,10 +412,9 @@ bool FileBrowserPage::rm_dir(const char *dir) {
   //SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
   DEBUG_PRINTLN("preparing to delete");
   DEBUG_PRINTLN(dir);
-  File d;
-  d.open(lwd);
-
   if (_cd(dir)) {
+    File d;
+    d.open(lwd);
     d.rewind();
    // bool ret = SD.vwd()->rmRfStar(); // extra 276 bytes
     while (file.openNext(&d, O_READ)) {
