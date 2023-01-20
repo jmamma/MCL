@@ -76,9 +76,7 @@
  * Set USE_FAT_FILE_FLAG_CONTIGUOUS nonzero to optimize access to
  * contiguous files.  A small amount of flash is flash is used.
  */
-#ifndef USE_FAT_FILE_FLAG_CONTIGUOUS
 #define USE_FAT_FILE_FLAG_CONTIGUOUS 1
-#endif  // USE_FAT_FILE_FLAG_CONTIGUOUS
 //------------------------------------------------------------------------------
 /**
  * Set ENABLE_DEDICATED_SPI non-zero to enable dedicated use of the SPI bus.
@@ -88,15 +86,7 @@
  *
  * Enabling dedicated SPI will cost extra flash and RAM.
  */
-#ifndef ENABLE_DEDICATED_SPI
-#if defined(__AVR__) && FLASHEND < 0X8000
-// 32K AVR boards.
 #define ENABLE_DEDICATED_SPI 1
-#else  // defined(__AVR__) && FLASHEND < 0X8000
-// All other boards.
-#define ENABLE_DEDICATED_SPI 1
-#endif  // defined(__AVR__) && FLASHEND < 0X8000
-#endif  // ENABLE_DEDICATED_SPI
 //------------------------------------------------------------------------------
 // Driver options
 /**
