@@ -12,7 +12,7 @@ bool MCLSd::sd_init() {
   // File file("/test.mcl",O_WRITE);
   /*Configuration file used to store settings when Minicommand is turned off*/
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
-    ret = SD.begin(SD_CS, SPI_FULL_SPEED);
+    ret = SD.begin(SdSpiConfig(SD_CS, SHARED_SPI, SPI_FULL_SPEED));
     if (!ret) {
       delay(50);
     }
