@@ -725,7 +725,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       diff =
           MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                     (uint32_t)mcl_actions.next_transition * 2);
-      if ((float)diff * div32th_per_second < 0.200) {
+      if ((float)diff * div32th_per_second < 0.240) {
         count = count_max;
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
