@@ -123,7 +123,8 @@ void FileBrowserPage::query_filesystem() {
     }
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     bool is_match_file = false;
-    DEBUG_DUMP(temp_entry);
+    DEBUG_PRINTLN(numEntries);
+    DEBUG_PRINTLN(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
@@ -135,7 +136,7 @@ void FileBrowserPage::query_filesystem() {
         is_match_file = true;
       }
     }
-    if (is_match_file) {
+    if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
       if (add_entry(temp_entry)) {
         if (strcmp(temp_entry, mcl_cfg.project) == 0) {
