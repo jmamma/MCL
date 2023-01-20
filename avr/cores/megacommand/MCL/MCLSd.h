@@ -16,24 +16,24 @@ class MCLSd {
   bool sd_state = false;
   bool sd_init();
   bool load_init();
-  bool seek(uint32_t pos, FatFile *filep);
-  bool read_data(void *data, size_t len, FatFile *filep);
-  bool write_data(void *data, size_t len, FatFile *filep);
+  bool seek(uint32_t pos, File *filep);
+  bool read_data(void *data, size_t len, File *filep);
+  bool write_data(void *data, size_t len, File *filep);
   /// read data from SD card and repair vtable
-  template <class T> bool read_data_v(T *data, FatFile *filep) {
+  template <class T> bool read_data_v(T *data, File *filep) {
     auto ret = read_data(data, sizeof(T), filep);
     ::new(data)T;
     return ret;
   }
   /// Specialization for ElektronPattern...
-  template <class T> bool read_data_v_noinit(T *data, FatFile *filep) {
+  template <class T> bool read_data_v_noinit(T *data, File *filep) {
     auto ret = read_data(data, sizeof(T), filep);
     ::new(data)T(false);
     return ret;
   }
 
   /// save data to SD card, including the vtable
-  template <class T> bool write_data_v(T *data, FatFile *filep) {
+  template <class T> bool write_data_v(T *data, File *filep) {
     return write_data(data, sizeof(T), filep);
   }
 

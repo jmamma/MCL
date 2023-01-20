@@ -93,7 +93,7 @@ bool MCLSd::load_init() {
   return false;
 }
 
-bool MCLSd::seek(uint32_t pos, FatFile *filep) {
+bool MCLSd::seek(uint32_t pos, File *filep) {
   bool pass = false;
   bool ret;
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
@@ -101,7 +101,7 @@ bool MCLSd::seek(uint32_t pos, FatFile *filep) {
     if (!filep) { DEBUG_PRINTLN(F("huh")); }
     ret = filep->seekSet(pos);
     if (!ret) {
-      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
+      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       //oled_display.textbox("SEEK RETRY", "");
       //oled_display.display();
       DEBUG_PRINTLN("seek retry");
@@ -115,7 +115,7 @@ bool MCLSd::seek(uint32_t pos, FatFile *filep) {
   return pass;
 }
 
-bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
+bool MCLSd::write_data(void *data, size_t len, File *filep) {
 
   size_t b;
   bool pass = false;
@@ -125,7 +125,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
       DEBUG_PRINTLN("write retry");
-      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
+      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       //oled_display.textbox("WRITE RETRY", "");
       //oled_display.display();
       delay(20);
@@ -149,7 +149,7 @@ bool MCLSd::write_data(void *data, size_t len, FatFile *filep) {
 /*
    Function for reading from the project file
 */
-bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
+bool MCLSd::read_data(void *data, size_t len, File *filep) {
 
   size_t b;
   bool ret;
@@ -159,7 +159,7 @@ bool MCLSd::read_data(void *data, size_t len, FatFile *filep) {
   for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
     if (n > 0) {
       DEBUG_PRINTLN("read retry");
-      SD.cardBegin(SD_CS, SPI_FULL_SPEED);
+      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
       //oled_display.textbox("READ RETRY", "");
       //oled_display.display();
       delay(20);
