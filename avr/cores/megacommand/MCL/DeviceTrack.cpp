@@ -52,11 +52,14 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   }
 
   // virtual functions are ready
-  uint32_t len = ptrack->get_track_size();
 
-  if (!proj.read_grid(ptrack, len, column, row)) {
-    DEBUG_PRINTLN(F("read failed"));
-    return nullptr;
+  if (active != EMPTY_TRACK_TYPE) {
+    uint32_t len = ptrack->get_track_size();
+
+    if (!proj.read_grid(ptrack, len, column, row)) {
+      DEBUG_PRINTLN(F("read failed"));
+      return nullptr;
+    }
   }
 
   auto ptrack2 = ptrack->init_track_type(active);
