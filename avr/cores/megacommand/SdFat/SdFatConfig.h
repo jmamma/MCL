@@ -363,11 +363,7 @@ typedef uint8_t SdCsPin_t;
  *
  * Don't use mult-sector read/write on small AVR boards.
  */
-#if defined(RAMEND) && RAMEND < 3000
-#define USE_MULTI_SECTOR_IO 0
-#else  // RAMEND
 #define USE_MULTI_SECTOR_IO 1
-#endif  // RAMEND
 //------------------------------------------------------------------------------
 /** Enable SDIO driver if available. */
 #if defined(__MK64FX512__) || defined(__MK66FX1M0__)
