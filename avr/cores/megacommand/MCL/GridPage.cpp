@@ -174,8 +174,8 @@ void GridPage::loop() {
 
       mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN(F("write cfg"));
-      mcl_cfg.write_cfg();
-      grid_lastclock = slowclock;
+      if (MidiClock.state != 2) { mcl_cfg.write_cfg(); }
+      grid_lastclock = slowclock;:
       write_cfg = false;
       // }
     }
@@ -191,7 +191,7 @@ void GridPage::loop() {
 }
 
 void GridPage::row_state_scan() {
-  if (row_scan) {
+  if (row_scan && MidiClock.state != 2) {
     uint8_t old_grid = proj.get_grid();
     GridRowHeader header_tmp;
     row_scan--;
