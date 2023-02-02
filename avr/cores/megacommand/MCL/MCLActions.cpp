@@ -398,9 +398,10 @@ void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
   DEBUG_PRINTLN("manual trans");
 again:
   uint16_t div16th_counter = MidiClock.div16th_counter;
-  if (q == 255) {
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+
       if (slot_select_array[n] > 0) {
+        if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
           transition_level[n] = 0;
@@ -415,12 +416,7 @@ again:
           calc_next_slot_transition(n, ignore_chain_settings);
           grid_page.active_slots[n] = SLOT_PENDING;
         }
-      }
-    }
-  } else {
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-
-      if (slot_select_array[n] > 0) {
+        else {
         // transition_level[n] = gridio_param3.getValue();
         transition_level[n] = 0;
         next_transitions[n] = next_step;
@@ -429,6 +425,7 @@ again:
         // if (grid_page.active_slots[n] < 0) {
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
+        }
       }
     }
   }
@@ -926,10 +923,11 @@ void MCLActions::calc_latency() {
       float latency_in_seconds = (float)dev_latency[a].latency /
                                  bytes_per_second_uart1; // 25ms minimum.
       if (num_devices == 1) {
-        latency_in_seconds += .23;
+        latency_in_seconds += .10;
       } else if (a == 1) {
-        latency_in_seconds += .23;
+        latency_in_seconds += .10;
       }
+
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
