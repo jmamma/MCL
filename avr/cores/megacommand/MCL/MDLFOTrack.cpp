@@ -3,6 +3,7 @@ void MDLFOTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
 
 void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   uint8_t slotnumber) {
+  load_link_data(seq_track);
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   memcpy(mcl_seq.lfo_tracks[0].data(), lfo_data.data(),
          sizeof(LFOSeqTrackData));
