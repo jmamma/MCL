@@ -669,10 +669,10 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
-  DEBUG_PRINT_FN();
+// DEBUG_PRINT_FN();
 
-  DEBUG_PRINTLN("cache next");
-  DEBUG_PRINTLN((int)SP);
+//  DEBUG_PRINTLN("cache next");
+//  DEBUG_PRINTLN((int)SP);
   DEBUG_CHECK_STACK();
   /*
     while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
@@ -697,6 +697,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
+  float div192th_time = 1.0 / div192th_per_second;
   //Do this in reverse as slot loading in grid task is in reverse
   uint8_t n = NUM_SLOTS;
   while (n--) {
@@ -722,10 +723,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
       MidiUartParent::handle_midi_lock = 0;
-      diff =
-          MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                    (uint32_t)mcl_actions.next_transition * 2);
-      if ((float)diff * div32th_per_second < 0.240) {
+      if ((float) gdt->seq_track->count_down * div192th_time > (0.80)) {
         count = count_max;
       if (GUI.currentPage() == &grid_load_page) {
         GUI.display();
@@ -759,7 +757,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       continue;
     cache_track(n, track_idx, dev_idx, gdt);
   }
-  DEBUG_PRINTLN("cache finished");
+//  DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
 }
 

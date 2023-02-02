@@ -153,7 +153,10 @@ void GridTask::transition_handler() {
   if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
     MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
   }
-
+  float tempo = MidiClock.get_tempo();
+  float div192th_per_second = tempo * 0.8f;
+  float div192th_time = 1.0 / div192th_per_second;
+ 
   for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
     wait = true;
 
@@ -178,14 +181,11 @@ void GridTask::transition_handler() {
 
         uint32_t diff;
 
-        float tempo = MidiClock.get_tempo();
-        float div192th_per_second = tempo * 0.8f;
-
-        while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
+       while (((diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter,
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
-          if ((float)diff * div192th_per_second > 0.160) {
+          if ((float)diff * div192th_time > 0.80) {
             handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();
@@ -205,7 +205,13 @@ void GridTask::transition_handler() {
   DEBUG_PRINTLN((int)SP);
 
   bool update_gui = true;
-  mcl_actions.cache_next_tracks(track_select_array, update_gui);
+
+  DEBUG_PRINTLN("cache next");
+  volatile uint32_t clk = slowclock;
+ mcl_actions.cache_next_tracks(track_select_array, update_gui);
+
+   uint32_t t = clock_diff(clk,slowclock);
+  DEBUG_PRINTLN(t);
  
   // Once tracks are cached, we can calculate their next transition
   uint8_t last_slot = 255;
@@ -258,7 +264,7 @@ bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   auto *pmem_track =
-      empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+      empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type, sizeof(GridTrack));
   if (pmem_track == nullptr) {
     return false;
   }
