@@ -53,12 +53,13 @@ void GridTask::run() {
     mcl_actions.load_tracks(r, track_select, midi_track_select);
     midi_load = false;
   }
-
   if (stop_hard_callback) {
-    mcl_actions_callbacks.StopHardCallback();
-    stop_hard_callback = false;
-    return;
-  }
+      mcl_actions_callbacks.StopHardCallback();
+      stop_hard_callback = false;
+      return;
+    }
+
+
   // MD GUI update.
   sync_cursor();
   GridTask::transition_handler();
@@ -90,19 +91,21 @@ void GridTask::transition_handler() {
   // Get within 4 16th notes of the next transition.
   GUI.removeTask(&grid_task);
 
-  uint32_t diff =  MidiClock.clock_less_than(MidiClock.div32th_counter, (uint32_t)mcl_actions.next_transition * 2);
+  uint32_t diff = MidiClock.clock_less_than(
+      MidiClock.div32th_counter, (uint32_t)mcl_actions.next_transition * 2);
 
   float tempo = MidiClock.get_tempo();
   float div32th_per_second = tempo * 0.133333333333f;
   float div32th_time = 1.0 / div32th_per_second;
 
-  while (MidiClock.clock_less_than(MidiClock.div32th_counter + 0.240 * (tempo * 0.133333333333f), (uint32_t)mcl_actions.next_transition * 2) <= 0) {
+  while (MidiClock.clock_less_than(
+             MidiClock.div32th_counter + 0.240 * (tempo * 0.133333333333f),
+             (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
-/*  while (MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                (uint32_t)mcl_actions.next_transition * 2) <=
-      0) { */
-          if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
-      return;
+    /*  while (MidiClock.clock_less_than(MidiClock.div32th_counter +
+       div32th_margin, (uint32_t)mcl_actions.next_transition * 2) <= 0) { */
+    if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
+      break;
     }
     DEBUG_PRINTLN(F("Preparing for next transition:"));
     DEBUG_PRINTLN(MidiClock.div16th_counter);
@@ -160,7 +163,7 @@ void GridTask::transition_handler() {
     float tempo = MidiClock.get_tempo();
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;
-      float div192th_time = 1.0 / ( tempo * 0.8f);
+    float div192th_time = 1.0 / (tempo * 0.8f);
     // diff * div19th_time > 0.8ms equivalent to diff > (0.8/1.25) * tempo
     for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
       wait = true;
@@ -219,7 +222,7 @@ void GridTask::transition_handler() {
     uint32_t t = clock_diff(clk, slowclock);
     DEBUG_PRINTLN("time");
     DEBUG_PRINTLN(t);
- 
+
     // Once tracks are cached, we can calculate their next transition
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -258,7 +261,7 @@ void GridTask::transition_handler() {
     sync_cursor();
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();
-   }
+  }
   GUI.addTask(&grid_task);
 }
 

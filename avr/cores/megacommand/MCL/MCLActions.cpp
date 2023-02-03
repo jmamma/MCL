@@ -745,8 +745,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       }
     }
     // if (links[n].row >= GRID_LENGTH)
-    if (links[n].row >= GRID_LENGTH ||
-        links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
+    if (links[n].row >= GRID_LENGTH || links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
     cache_track(n, track_idx, dev_idx, gdt);
   }
@@ -758,7 +757,6 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
                                            bool ignore_chain_settings) {
 
   //DEBUG_PRINT_FN();
-  //  //DEBUG_PRINTLN(next_transitions[n]);
 
   if (!ignore_chain_settings) {
     switch (chains[n].mode) {
@@ -818,6 +816,8 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
          (next_transitions[n] < MidiClock.div16th_counter)) {
     next_transitions[n] += (uint16_t)len;
   }
+
+  DEBUG_PRINT("slot "); DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINTLN(next_transitions[n]);
 }
 
 void MCLActions::calc_next_transition() {
