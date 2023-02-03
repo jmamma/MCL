@@ -91,7 +91,7 @@ void GridTask::transition_handler() {
 
   uint32_t div32th_counter;
 
-  // Get within four 16th notes of the next transition.
+  // Get within 4 16th notes of the next transition.
   if (MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
                                 (uint32_t)mcl_actions.next_transition * 2) <=
       0) {
@@ -154,9 +154,12 @@ void GridTask::transition_handler() {
     MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
   }
   float tempo = MidiClock.get_tempo();
-  float div192th_per_second = tempo * 0.8f;
-  float div192th_time = 1.0 / div192th_per_second;
- 
+  //float div192th_per_second = tempo * 0.8f;
+  //float div192th_time = 1.0 / div192th_per_second;
+  //float div192th_time = 1.25 / tempo;
+  //diff * div19th_time > 0.8ms equivalent to diff > (0.8/1.25) * tempo
+  float ms = (0.8 / 1.25) * tempo;
+
   for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
     wait = true;
 
@@ -185,7 +188,7 @@ void GridTask::transition_handler() {
                                                     go_step)) != 0) &&
                (MidiClock.div192th_counter < go_step) &&
                (MidiClock.state == 2)) {
-          if ((float)diff * div192th_time > 0.80) {
+          if ((float)diff > ms) {
             handleIncomingMidi();
             if (GUI.currentPage() == &grid_load_page) {
               GUI.display();

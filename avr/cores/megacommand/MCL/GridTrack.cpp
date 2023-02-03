@@ -3,9 +3,6 @@
 void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->speed = link.speed;
   seq_track->length = link.length;
-  DEBUG_PRINTLN("link");
-  DEBUG_PRINTLN(link.speed);
-  DEBUG_PRINTLN(link.length);
 }
 
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,

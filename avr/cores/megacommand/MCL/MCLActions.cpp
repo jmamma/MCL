@@ -400,13 +400,13 @@ again:
   uint16_t div16th_counter = MidiClock.div16th_counter;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
-      if (slot_select_array[n] > 0) {
-        if (q == 255) {
+    if (slot_select_array[n] > 0) {
+      if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
           transition_level[n] = 0;
           next_transitions[n] =
-              div16th_counter - (gdt->seq_track->step_count *
+              div16th_counter - ((float)gdt->seq_track->step_count *
                                  gdt->seq_track->get_speed_multiplier());
           links[n].speed = gdt->seq_track->speed;
           links[n].length = gdt->seq_track->length;
@@ -416,7 +416,7 @@ again:
           calc_next_slot_transition(n, ignore_chain_settings);
           grid_page.active_slots[n] = SLOT_PENDING;
         }
-        else {
+      } else {
         // transition_level[n] = gridio_param3.getValue();
         transition_level[n] = 0;
         next_transitions[n] = next_step;
@@ -425,7 +425,6 @@ again:
         // if (grid_page.active_slots[n] < 0) {
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
-        }
       }
     }
   }
@@ -651,25 +650,27 @@ void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
     ptrack->init(track_idx, gdt->seq_track);
   } else {
     if (!ptrack->get_sound_data_ptr() || !ptrack->get_sound_data_size())
-       //something wrong
-       return;
+      // something wrong
+      return;
     if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
-       ptrack->transition_cache(track_idx, n);
-       send_machine[n] = 0;
-       dev_sync_slot[dev_idx] = n;
+      ptrack->transition_cache(track_idx, n);
+      send_machine[n] = 0;
+      dev_sync_slot[dev_idx] = n;
     }
   }
-  if (ptrack == nullptr) { return; }
+  if (ptrack == nullptr) {
+    return;
+  }
   ptrack->store_in_mem(gdt->mem_slot_idx);
   return;
 }
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
-// DEBUG_PRINT_FN();
+  // DEBUG_PRINT_FN();
 
-//  DEBUG_PRINTLN("cache next");
-//  DEBUG_PRINTLN((int)SP);
+  //  DEBUG_PRINTLN("cache next");
+  //  DEBUG_PRINTLN((int)SP);
   DEBUG_CHECK_STACK();
   /*
     while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
@@ -682,9 +683,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   memset(dev_sync_slot, 255, sizeof(dev_sync_slot));
 
-  const uint8_t count_max = 8;
-  uint8_t count = 0;
-
   const uint8_t div32th_margin = 1;
   uint32_t diff = 0;
 
@@ -692,43 +690,41 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
   float div32th_per_second = tempo * 0.133333333333f;
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
-  float div192th_per_second = tempo * 0.8f;
+  //float div192th_per_second = tempo * 0.8f;
+  //float div192th_time = 1.0 / div192th_per_second;
+  float div192th_time = 1.25 / tempo;
 
-  float div192th_time = 1.0 / div192th_per_second;
-  //Do this in reverse as slot loading in grid task is in reverse
+  //float div192th_time = 1.25 / tempo;
+  //diff * div19th_time > 0.8ms equivalent to diff > (0.8/1.25) * tempo
+  float ms = (0.8 / 1.25) * tempo;
+
+  // Do this in reverse as slot loading in grid task is in reverse
+  //
+
   uint8_t n = NUM_SLOTS;
   while (n--) {
 
     if (slot_select_array[n] == 0)
       continue;
 
-    count--;
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
     uint8_t grid_idx = get_grid_idx(n);
 
     if (gdt == nullptr)
       continue;
 
-    bool gui_loop = false;
-
-    if (gui_update && count == 0) {
-    }
-
-    while ((gdt->seq_track->count_down && (MidiClock.state == 2)) || count == 0) {
-      gui_loop = false;
+    while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
       MidiUartParent::handle_midi_lock = 0;
-      if ((float) gdt->seq_track->count_down * div192th_time > (0.80)) {
-        count = count_max;
-      if (GUI.currentPage() == &grid_load_page) {
-        GUI.display();
-      } else {
-        GUI.loop();
+       if (((float) gdt->seq_track->count_down > ms) && gui_update) {
+        if (GUI.currentPage() == &grid_load_page) {
+          GUI.display();
+        } else {
+          GUI.loop();
+        }
       }
-      }
-      count = count_max;
     }
 
     proj.select_grid(grid_idx);
@@ -749,12 +745,13 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         setLed2();
       }
     }
-    //if (links[n].row >= GRID_LENGTH)
-    if (links[n].row >= GRID_LENGTH || links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
+    // if (links[n].row >= GRID_LENGTH)
+    if (links[n].row >= GRID_LENGTH ||
+        links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
     cache_track(n, track_idx, dev_idx, gdt);
   }
-//  DEBUG_PRINTLN("cache finished");
+  //  DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
 }
 
@@ -887,9 +884,9 @@ void MCLActions::calc_latency() {
         continue;
       }
       if (send_machine[n] == 0) {
-        //   uint16_t old_clock = clock;
+        //Optimised, assume we dont need to read the entire object to calculate latency.
         auto *ptrack =
-            empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+            empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type,sizeof(GridTrack));
         //   uint16_t diff = clock_diff(old_clock, clock);
         if (ptrack == nullptr || !ptrack->is_active() ||
             gdt->track_type != ptrack->active) {
