@@ -136,8 +136,11 @@ void GuiClass::display_lcd() {
 
 }
 
+uint8_t fps = 0;
+uint16_t fps_clock = 0;
 void GuiClass::display() {
   PageParent *page = NULL;
+  if (fps == 0 &&  fps_clock == 0) { fps_clock = slowclock; }
   if (sketch != NULL) {
     page = sketch->currentPage();
     if (page != NULL) {
@@ -145,6 +148,8 @@ void GuiClass::display() {
       page->redisplay = false;
     }
   }
+  fps++;
+  if (clock_diff(fps_clock,slowclock) > 1000) { DEBUG_PRINT("FPS: "); DEBUG_PRINTLN(fps); fps = 0; fps_clock = slowclock; }
 #ifdef UART_USB
 #ifndef DEBUGMODE
   if (display_mirror) {
