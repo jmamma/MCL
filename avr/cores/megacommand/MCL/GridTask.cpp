@@ -303,12 +303,6 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
   gdt->seq_track->count_down = -1;
   if (mcl_actions.send_machine[n] == 0) {
     pmem_track->transition_send(track_idx, n);
-    if (mcl_actions.dev_sync_slot[dev_idx] == n) {
-      if (elektron_devs[dev_idx]) {
-        elektron_devs[dev_idx]->undokit_sync();
-      }
-      mcl_actions.dev_sync_slot[dev_idx] = -1;
-    }
   }
 
   pmem_track->transition_load(track_idx, gdt->seq_track, n);

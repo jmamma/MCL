@@ -265,6 +265,7 @@ void MCLSeq::seq() {
   }
   if (MDSeqTrack::load_machine_cache) {
     MD.loadMachinesCache(MDSeqTrack::load_machine_cache);
+    MD.undokit_sync();
   }
 
   // Arp
