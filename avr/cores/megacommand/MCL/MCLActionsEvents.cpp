@@ -10,7 +10,7 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
 
     if (mcl_cfg.uart2_prg_mode == 0) {
-      grid_task.load_row = msg[1];
+      grid_task.midi_row = msg[1];
     } else {
       DEBUG_PRINTLN("set row");
       grid_task.midi_row_select = msg[1];
@@ -53,7 +53,7 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     DEBUG_PRINT(slot);
     DEBUG_PRINT(" ");
     DEBUG_PRINTLN(grid_task.midi_row_select);
-    grid_task.midi_track_select[slot] = grid_task.midi_row_select;
+    grid_task.load_track_select[slot] = grid_task.midi_row_select;
   }
 }
 

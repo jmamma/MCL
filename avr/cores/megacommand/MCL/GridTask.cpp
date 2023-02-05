@@ -30,29 +30,43 @@ void GridTask::sync_cursor() {
   }
 }
 
+void GridTask::load_wait(uint8_t row, uint8_t *track_select_array) {
+  memcpy(load_track_select, track_select_array, sizeof(load_track_select));
+  load_row = row;
+}
+
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  if (load_row != 255) {
+  if (midi_row != 255) {
     bool silent = true;
-    grid_load_page.group_load(load_row, silent);
+    grid_load_page.group_load(midi_row, silent);
+    midi_row = 255;
+  }
+
+  if (load_row != 255) {
+    uint8_t *rows = load_track_select;
+    if (load_row) { rows = nullptr; }
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(load_row, load_track_select, nullptr);
     load_row = 255;
   }
 
-  if ((midi_load) && (clock_diff(midi_event_clock, clock) > 60)) {
+  else if (midi_load && (clock_diff(midi_event_clock, clock) > 60)) {
     uint8_t track_select[NUM_SLOTS] = {0};
     uint8_t r = 255;
     DEBUG_PRINTLN("process midi load");
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (midi_track_select[n] < 128) {
+      if (load_track_select[n] < 128) {
         track_select[n] = 1;
       }
     }
     mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(r, track_select, midi_track_select);
+    mcl_actions.load_tracks(r, track_select, load_track_select);
     midi_load = false;
   }
+
   if (stop_hard_callback) {
       mcl_actions_callbacks.StopHardCallback();
       stop_hard_callback = false;
@@ -195,11 +209,7 @@ void GridTask::transition_handler() {
                  (MidiClock.state == 2)) {
             handleIncomingMidi();
             if ((float)diff > (tempo * 0.8f) * 0.08) {
-              if (GUI.currentPage() == &grid_load_page) {
-                GUI.display();
-              } else {
                 GUI.loop();
-              }
             }
           }
         }

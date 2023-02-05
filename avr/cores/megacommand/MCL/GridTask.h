@@ -17,10 +17,13 @@ public:
   bool chain_behaviour;
 
 
+  uint8_t load_row_midi = 255;
   uint8_t load_row = 255;
+  uint8_t midi_row = 255;
 
-  uint8_t midi_track_select[NUM_SLOTS];
+  uint8_t load_track_select[NUM_SLOTS];
   uint8_t midi_row_select = 255;
+
   uint16_t midi_event_clock;
   bool midi_load;
 
@@ -30,14 +33,16 @@ public:
 
   virtual void run();
   virtual void destroy();
+  void load_wait(uint8_t row, uint8_t *track_select_array);
   void sync_cursor();
   void init() {
      reset_midi_states();
   }
 
   void reset_midi_states() {
+    midi_row = 255;
     load_row = 255;
-    memset(midi_track_select, 255, sizeof(midi_track_select));
+    memset(load_track_select, 255, sizeof(load_track_select));
     //midi_row_select = 255;
     midi_event_clock = -1;
     midi_load = false;

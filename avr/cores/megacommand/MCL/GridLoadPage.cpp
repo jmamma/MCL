@@ -199,8 +199,14 @@ void GridLoadPage::load() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.load_tracks(grid_page.getRow(),
-                          track_select_array);
+
+  if (mcl_cfg.load_mode == LOAD_QUEUE) {
+    mcl_actions.load_tracks(grid_page.getRow(),
+                            track_select_array);
+  }
+  else {
+    grid_task.load_wait(grid_page.getRow(), track_select_array);
+  }
 }
 
 void GridLoadPage::group_select() {
@@ -213,7 +219,6 @@ void GridLoadPage::group_load(uint8_t row, bool silent) {
 
   if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
-
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
   if (!silent) {
@@ -222,7 +227,12 @@ void GridLoadPage::group_load(uint8_t row, bool silent) {
   oled_display.display();
 
   mcl_actions.write_original = 1;
-  mcl_actions.load_tracks(row, track_select_array);
+  if (mcl_cfg.load_mode == LOAD_QUEUE) {
+    mcl_actions.load_tracks(row, track_select_array);
+  }
+  else {
+    grid_task.load_wait(row, track_select_array);
+  }
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {
