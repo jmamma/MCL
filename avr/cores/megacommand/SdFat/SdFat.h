@@ -400,7 +400,7 @@ class SdBase : public Vol {
   }
 #endif  // ENABLE_ARDUINO_SERIAL
   //----------------------------------------------------------------------------
- private:
+ public:
   SdCard* m_card = nullptr;
   SdCardFactory m_cardFactory;
 };

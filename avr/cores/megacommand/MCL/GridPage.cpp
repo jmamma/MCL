@@ -191,7 +191,7 @@ void GridPage::loop() {
 }
 
 void GridPage::row_state_scan() {
-  if (row_scan && MidiClock.state != 2) {
+  if (row_scan) {
     uint8_t old_grid = proj.get_grid();
     GridRowHeader header_tmp;
     row_scan--;

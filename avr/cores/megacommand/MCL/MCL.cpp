@@ -1,6 +1,36 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+void sdcard_bench() {
+
+  EmptyTrack empty_track;
+  DeviceTrack *ptrack;
+  while (1) {
+    uint16_t cl = slowclock;
+    proj.select_grid(0);
+    for (uint8_t n = 0; n < 16; n++) {
+      auto *ptrack = empty_track.load_from_grid(n, 0);
+      ptrack->init_track_type(MD_TRACK_TYPE);
+      USE_LOCK();
+      SET_LOCK();
+      if (ptrack) ptrack->store_in_mem(0);
+      CLEAR_LOCK();
+    }
+    proj.select_grid(1);
+    for (uint8_t n = 0; n < 16; n++) {
+      auto *ptrack = empty_track.load_from_grid(n, 0);
+      ptrack->init_track_type(A4_TRACK_TYPE);
+      USE_LOCK();
+      SET_LOCK();
+      if (ptrack) ptrack->store_in_mem(0);
+      CLEAR_LOCK();
+    }
+    uint16_t diff = clock_diff(cl, slowclock);
+    DEBUG_PRINT("Clock :");
+    DEBUG_PRINTLN(diff);
+  }
+}
+
 void mcl_setup() { mcl.setup(); }
 
 void MCL::setup() {

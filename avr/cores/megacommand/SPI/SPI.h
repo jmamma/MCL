@@ -15,6 +15,8 @@
 #define _SPI_H_INCLUDED
 
 #include <Arduino.h>
+#include "mididuino_private.h"
+#define nop asm volatile ("nop\n\t")
 
 // SPI_HAS_TRANSACTION means SPI has beginTransaction(), endTransaction(),
 // usingInterrupt(), and SPISetting(clock, bitOrder, dataMode)
@@ -56,17 +58,17 @@
 #define SPI_MODE2 0x08
 #define SPI_MODE3 0x0C
 
-#define SPI_MODE_MASK 0x0C  // CPOL = bit 3, CPHA = bit 2 on SPCR
-#define SPI_CLOCK_MASK 0x03  // SPR1 = bit 1, SPR0 = bit 0 on SPCR
-#define SPI_2XCLOCK_MASK 0x01  // SPI2X = bit 0 on SPSR
+#define SPI_MODE_MASK 0x0C    // CPOL = bit 3, CPHA = bit 2 on SPCR
+#define SPI_CLOCK_MASK 0x03   // SPR1 = bit 1, SPR0 = bit 0 on SPCR
+#define SPI_2XCLOCK_MASK 0x01 // SPI2X = bit 0 on SPSR
 
 // define SPI_AVR_EIMSK for AVR boards with external interrupt pins
 #if defined(EIMSK)
-  #define SPI_AVR_EIMSK  EIMSK
+#define SPI_AVR_EIMSK EIMSK
 #elif defined(GICR)
-  #define SPI_AVR_EIMSK  GICR
+#define SPI_AVR_EIMSK GICR
 #elif defined(GIMSK)
-  #define SPI_AVR_EIMSK  GIMSK
+#define SPI_AVR_EIMSK GIMSK
 #endif
 
 class SPISettings {
@@ -78,15 +80,14 @@ public:
       init_MightInline(clock, bitOrder, dataMode);
     }
   }
-  SPISettings() {
-    init_AlwaysInline(4000000, MSBFIRST, SPI_MODE0);
-  }
+  SPISettings() { init_AlwaysInline(4000000, MSBFIRST, SPI_MODE0); }
+
 private:
   void init_MightInline(uint32_t clock, uint8_t bitOrder, uint8_t dataMode) {
     init_AlwaysInline(clock, bitOrder, dataMode);
   }
   void init_AlwaysInline(uint32_t clock, uint8_t bitOrder, uint8_t dataMode)
-    __attribute__((__always_inline__)) {
+      __attribute__((__always_inline__)) {
     // Clock settings are defined as follows. Note that this shows SPI2X
     // inverted, so the bits form increasing numbers. Also note that
     // fosc/64 appears twice
@@ -137,21 +138,20 @@ private:
 
     // Compensate for the duplicate fosc/64
     if (clockDiv == 6)
-    clockDiv = 7;
+      clockDiv = 7;
 
     // Invert the SPI2X bit
     clockDiv ^= 0x1;
 
     // Pack into the SPISettings class
     spcr = _BV(SPE) | _BV(MSTR) | ((bitOrder == LSBFIRST) ? _BV(DORD) : 0) |
-      (dataMode & SPI_MODE_MASK) | ((clockDiv >> 1) & SPI_CLOCK_MASK);
+           (dataMode & SPI_MODE_MASK) | ((clockDiv >> 1) & SPI_CLOCK_MASK);
     spsr = clockDiv & SPI_2XCLOCK_MASK;
   }
   uint8_t spcr;
   uint8_t spsr;
   friend class SPIClass;
 };
-
 
 class SPIClass {
 public:
@@ -180,25 +180,25 @@ public:
       uint8_t sreg = SREG;
       noInterrupts();
 
-      #ifdef SPI_AVR_EIMSK
+#ifdef SPI_AVR_EIMSK
       if (interruptMode == 1) {
         interruptSave = SPI_AVR_EIMSK;
         SPI_AVR_EIMSK &= ~interruptMask;
         SREG = sreg;
       } else
-      #endif
+#endif
       {
         interruptSave = sreg;
       }
     }
 
-    #ifdef SPI_TRANSACTION_MISMATCH_LED
+#ifdef SPI_TRANSACTION_MISMATCH_LED
     if (inTransactionFlag) {
       pinMode(SPI_TRANSACTION_MISMATCH_LED, OUTPUT);
       digitalWrite(SPI_TRANSACTION_MISMATCH_LED, HIGH);
     }
     inTransactionFlag = 1;
-    #endif
+#endif
 
     SPCR = settings.spcr;
     SPSR = settings.spsr;
@@ -214,69 +214,81 @@ public:
      * speeds it is unnoticed.
      */
     asm volatile("nop");
-    while (!(SPSR & _BV(SPIF))) ; // wait
+    while (!(SPSR & _BV(SPIF)))
+      ; // wait
     return SPDR;
   }
   inline static uint16_t transfer16(uint16_t data) {
-    union { uint16_t val; struct { uint8_t lsb; uint8_t msb; }; } in, out;
+    union {
+      uint16_t val;
+      struct {
+        uint8_t lsb;
+        uint8_t msb;
+      };
+    } in, out;
     in.val = data;
     if (!(SPCR & _BV(DORD))) {
       SPDR = in.msb;
       asm volatile("nop"); // See transfer(uint8_t) function
-      while (!(SPSR & _BV(SPIF))) ;
+      while (!(SPSR & _BV(SPIF)))
+        ;
       out.msb = SPDR;
       SPDR = in.lsb;
       asm volatile("nop");
-      while (!(SPSR & _BV(SPIF))) ;
+      while (!(SPSR & _BV(SPIF)))
+        ;
       out.lsb = SPDR;
     } else {
       SPDR = in.lsb;
       asm volatile("nop");
-      while (!(SPSR & _BV(SPIF))) ;
+      while (!(SPSR & _BV(SPIF)))
+        ;
       out.lsb = SPDR;
       SPDR = in.msb;
       asm volatile("nop");
-      while (!(SPSR & _BV(SPIF))) ;
+      while (!(SPSR & _BV(SPIF)))
+        ;
       out.msb = SPDR;
     }
     return out.val;
   }
-  inline static void transfer(void *buf, size_t count) {
+  inline static void transfer(uint8_t *buf, size_t count) {
     if (count == 0) return;
-    uint8_t *p = (uint8_t *)buf;
-    SPDR = *p;
-    while (--count > 0) {
-      uint8_t out = *(p + 1);
-      while (!(SPSR & _BV(SPIF))) ;
-      uint8_t in = SPDR;
-      SPDR = out;
-      *p++ = in;
+    SPDR = *buf++;
+    while (--count) {
+      uint8_t b = *buf++;
+      // nops optimize loop for 16MHz CPU 8 MHz SPI
+      nop;
+      nop;
+      while (!(SPSR & (1 << SPIF))) {
+      }
+      SPDR = b;
     }
-    while (!(SPSR & _BV(SPIF))) ;
-    *p = SPDR;
+    while (!(SPSR & (1 << SPIF))) {
+    }
   }
   // After performing a group of transfers and releasing the chip select
   // signal, this function allows others to access the SPI bus
   inline static void endTransaction(void) {
-    #ifdef SPI_TRANSACTION_MISMATCH_LED
+#ifdef SPI_TRANSACTION_MISMATCH_LED
     if (!inTransactionFlag) {
       pinMode(SPI_TRANSACTION_MISMATCH_LED, OUTPUT);
       digitalWrite(SPI_TRANSACTION_MISMATCH_LED, HIGH);
     }
     inTransactionFlag = 0;
-    #endif
+#endif
 
     if (interruptMode > 0) {
-      #ifdef SPI_AVR_EIMSK
+#ifdef SPI_AVR_EIMSK
       uint8_t sreg = SREG;
-      #endif
+#endif
       noInterrupts();
-      #ifdef SPI_AVR_EIMSK
+#ifdef SPI_AVR_EIMSK
       if (interruptMode == 1) {
         SPI_AVR_EIMSK = interruptSave;
         SREG = sreg;
       } else
-      #endif
+#endif
       {
         SREG = interruptSave;
       }
@@ -289,8 +301,10 @@ public:
   // This function is deprecated.  New applications should use
   // beginTransaction() to configure SPI settings.
   inline static void setBitOrder(uint8_t bitOrder) {
-    if (bitOrder == LSBFIRST) SPCR |= _BV(DORD);
-    else SPCR &= ~(_BV(DORD));
+    if (bitOrder == LSBFIRST)
+      SPCR |= _BV(DORD);
+    else
+      SPCR &= ~(_BV(DORD));
   }
   // This function is deprecated.  New applications should use
   // beginTransaction() to configure SPI settings.
@@ -314,9 +328,9 @@ private:
   static uint8_t interruptMode; // 0=none, 1=mask, 2=global
   static uint8_t interruptMask; // which interrupts to mask
   static uint8_t interruptSave; // temp storage, to restore state
-  #ifdef SPI_TRANSACTION_MISMATCH_LED
+#ifdef SPI_TRANSACTION_MISMATCH_LED
   static uint8_t inTransactionFlag;
-  #endif
+#endif
 };
 
 extern SPIClass SPI;

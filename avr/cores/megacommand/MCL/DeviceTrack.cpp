@@ -38,7 +38,6 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
 }
 
 DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
-  DEBUG_PRINTLN(F("lfg"));
   if (!GridTrack::load_from_grid(column, row)) {
     return nullptr;
   }
