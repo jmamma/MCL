@@ -86,7 +86,7 @@
  *
  * Enabling dedicated SPI will cost extra flash and RAM.
  */
-#define ENABLE_DEDICATED_SPI 0
+#define ENABLE_DEDICATED_SPI 1
 //------------------------------------------------------------------------------
 // Driver options
 /**

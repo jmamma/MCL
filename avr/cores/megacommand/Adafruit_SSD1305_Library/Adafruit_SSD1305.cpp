@@ -224,7 +224,7 @@ void Adafruit_SSD1305::fillScreen(uint8_t color) {
 }
 
 void Adafruit_SSD1305::begin() {
-
+    SD.m_card->setDedicatedSpi(false);
    // set pin directions
    // hardware SPI
     SPI.begin();
@@ -315,6 +315,7 @@ void Adafruit_SSD1305::begin() {
 #endif
 
   command(SSD1305_DISPLAYON); //--turn on oled panel
+   SD.m_card->setDedicatedSpi(true);
 }
 
 void Adafruit_SSD1305::invertDisplay(uint8_t i) {
@@ -396,8 +397,7 @@ void Adafruit_SSD1305::display(void) {
     }
   }
   //For dedicated SPI we do this.
-  //SD.m_card->releaseDedicated();
-   SD.m_card->readStop();
+  SD.m_card->setDedicatedSpi(false);
 #ifdef ENABLE_DIAG_LOGGING
   if (diag_page.is_active()) {
     diag_page.draw();
@@ -437,6 +437,7 @@ void Adafruit_SSD1305::display(void) {
         SPI.endTransaction(); // release the SPI bus
 #endif
   }
+  SD.m_card->setDedicatedSpi(true);
   display_lock = false;
 }
 

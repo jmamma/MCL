@@ -1,8 +1,8 @@
 #include "GUI.h"
 #include "MidiUart.h"
-#include "WProgram.h"
-#include "Sketch.h"
 #include "Pages.h"
+#include "Sketch.h"
+#include "WProgram.h"
 
 #define SCREEN_SAVER_TIME 5
 
@@ -11,9 +11,7 @@
 Sketch _defaultSketch((char *)"DFT");
 
 /************************************************/
-GuiClass::GuiClass() {
-  setSketch(&_defaultSketch);
-}
+GuiClass::GuiClass() { setSketch(&_defaultSketch); }
 
 void GuiClass::setSketch(Sketch *_sketch) {
   if (sketch != NULL) {
@@ -90,7 +88,6 @@ void GuiClass::loop() {
     }
   }
 
-
   MidiUartParent::handle_midi_lock = 1;
   for (int i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
@@ -129,18 +126,17 @@ void GuiClass::loop() {
     }
   }
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
-
 }
 
-void GuiClass::display_lcd() {
+void GuiClass::display_lcd() {}
 
-}
-
+#ifdef DEBUGMODE
 uint8_t fps = 0;
 uint16_t fps_clock = 0;
+#endif
+
 void GuiClass::display() {
   PageParent *page = NULL;
-  if (fps == 0 &&  fps_clock == 0) { fps_clock = slowclock; }
   if (sketch != NULL) {
     page = sketch->currentPage();
     if (page != NULL) {
@@ -148,8 +144,19 @@ void GuiClass::display() {
       page->redisplay = false;
     }
   }
+
+#ifdef DEBUGMODE
+  if (fps == 0 && fps_clock == 0) {
+    fps_clock = slowclock;
+  }
   fps++;
-  if (clock_diff(fps_clock,slowclock) > 1000) { DEBUG_PRINT("FPS: "); DEBUG_PRINTLN(fps); fps = 0; fps_clock = slowclock; }
+  if (clock_diff(fps_clock, slowclock) > 1000) {
+    DEBUG_PRINT("FPS: ");
+    DEBUG_PRINTLN(fps);
+    fps = 0;
+    fps_clock = slowclock;
+  }
+#endif
 #ifdef UART_USB
 #ifndef DEBUGMODE
   if (display_mirror) {
@@ -176,8 +183,8 @@ void GuiClass::display() {
       MidiUartUSB.m_putc(buf, sizeof(buf));
       n = n + 7;
     }
-     MidiUartUSB.m_putc(0xF7);
-     MidiUartParent::handle_midi_lock = 0;
+    MidiUartUSB.m_putc(0xF7);
+    MidiUartParent::handle_midi_lock = 0;
   }
 #endif
 #endif
