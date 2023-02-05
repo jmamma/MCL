@@ -124,7 +124,6 @@ void MCL::setup() {
 #endif
   }
   param4.cur = 4;
-//  sdcard_bench();
 }
 
 bool mcl_handleEvent(gui_event_t *event) {
