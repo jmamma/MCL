@@ -710,20 +710,15 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (gdt == nullptr)
       continue;
 
+    uint32_t diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, (uint32_t) next_transition * 12 + 4 * 12);
     while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
       MidiUartParent::handle_midi_lock = 0;
-      /*
-      if (((float) gdt->seq_track->count_down > 0.08 * 0.8 * tempo) && gui_update) {
-        if (GUI.currentPage() == &grid_load_page) {
-          GUI.display();
-        } else {
+      if (((float) diff > 0.08 * 0.8 * tempo) && gui_update) {
           GUI.loop();
-        }
       }
-      */
     }
 
     proj.select_grid(grid_idx);
