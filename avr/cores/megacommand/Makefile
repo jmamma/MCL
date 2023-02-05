@@ -38,7 +38,7 @@ OPTIM_FLAGS   = -Os
 WARN_FLAGS    = -Wall -Wextra
 COMPILE_FLAGS = -c $(OPTIM_FLAGS) $(WARN_FLAGS) -MMD
 FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver
-LINK_FLAGS    = -lm -Wl,--gc-sections,--defsym=__stack=0x8021ff,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
+LINK_FLAGS    = -lm -Wl,--gc-sections,--defsym=__stack=0x801FA1,--section-start,.sdcard=0x801FA2,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 ARCH_FLAGS    = -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 
 CFLAGS        = -std=gnu11 $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
