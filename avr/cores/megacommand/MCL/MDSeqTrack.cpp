@@ -117,6 +117,9 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       reset();
       mod12_counter = 0;
       SET_BIT16(sync_cursor, track_number);
+      if (mcl_actions.dev_sync_slot[0] == track_number) {
+        MD.undokit_sync();
+      }
     }
     else if (count_down < track_number / 4 + 1) {
       goto end;
