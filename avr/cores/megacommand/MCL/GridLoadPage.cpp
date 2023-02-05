@@ -180,7 +180,7 @@ void GridLoadPage::display() {
 }
 void GridLoadPage::load() {
   display_load();
-  oled_display.display();
+//  oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
   /// the page to avoid driving this code path again.
 
@@ -224,7 +224,7 @@ void GridLoadPage::group_load(uint8_t row, bool silent) {
   if (!silent) {
     oled_display.textbox("LOAD GROUPS", "");
   }
-  oled_display.display();
+  //oled_display.display();
 
   mcl_actions.write_original = 1;
   if (mcl_cfg.load_mode == LOAD_QUEUE) {
