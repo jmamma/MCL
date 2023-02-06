@@ -89,16 +89,13 @@ void GridTask::transition_handler() {
   // Get within 4 16th notes of the next transition.
   GUI.removeTask(&grid_task);
 
-  uint32_t diff = MidiClock.clock_less_than(
-      MidiClock.div32th_counter, (uint32_t)mcl_actions.next_transition * 2);
-
-  float tempo = MidiClock.get_tempo();
-  float div32th_per_second = tempo * 0.133333333333f;
-  float div32th_time = 1.0 / div32th_per_second;
-
   while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + 0.240 * (tempo * 0.133333333333f),
+             MidiClock.div32th_counter + 0.240 * (MidiClock.get_tempo()* 0.133333333333f),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
+
+   float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
+   float div32th_time = 1.0 / div32th_per_second;
+
 
     /*  while (MidiClock.clock_less_than(MidiClock.div32th_counter +
        div32th_margin, (uint32_t)mcl_actions.next_transition * 2) <= 0) { */
@@ -290,8 +287,9 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
   auto *pmem_track =
       empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
 
-  if (pmem_track == nullptr)
+  if (pmem_track == nullptr) {
     return false;
+  }
 
   gdt->seq_track->count_down = -1;
   if (mcl_actions.send_machine[n] == 0) {
