@@ -284,19 +284,22 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
 }
 
 void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
-                             uint8_t *_row_array) {
+                             uint8_t *_row_array, uint8_t load_mode) {
   //DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
-
+  if (load_mode == 255) { load_mode = mcl_cfg.load_mode; }
   uint8_t row_array[NUM_SLOTS] = {};
   uint8_t cache_track_array[NUM_SLOTS] = {};
   uint8_t track_idx, dev_idx;
   bool recache = false;
+  DEBUG_PRINTLN("load tracks");
+  DEBUG_PRINTLN(load_mode);
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
+//    DEBUG_PRINTLN(slot_select_array[n]);
     if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
       continue;
     }
@@ -306,8 +309,10 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
       row_array[n] = _row_array[n];
     }
 
-    if (mcl_cfg.load_mode == LOAD_QUEUE) {
-      chains[n].add(row, get_chain_length());
+
+    if (load_mode == LOAD_QUEUE) {
+      chains[n].add(row_array[n], get_chain_length());
+      DEBUG_PRINTLN("adding link");
       if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
         if (chains[n].num_of_links == 2) {
@@ -318,11 +323,11 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
     } else {
       chains[n].init();
     }
-    chains[n].mode = mcl_cfg.load_mode;
+    chains[n].mode = load_mode;
   }
 
   if (MidiClock.state == 2) {
-    manual_transition(row, slot_select_array);
+    manual_transition(slot_select_array, row_array);
     return;
   }
 
@@ -340,7 +345,7 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
   }
 }
 
-void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
+void MCLActions::collect_tracks(uint8_t *slot_select_array, uint8_t *row_array) {
 
   uint8_t old_grid = proj.get_grid();
   memset(dev_sync_slot, 255, NUM_DEVS);
@@ -357,6 +362,9 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       slot_select_array[n] = 0;
       continue;
     }
+    uint8_t row = row_array[n];
+    DEBUG_PRINTLN("row");
+    DEBUG_PRINTLN(row);
     EmptyTrack empty_track;
     //DEBUG_PRINTLN(F("cl"));
     auto *device_track = empty_track.load_from_grid(track_idx, row);
@@ -381,13 +389,13 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
+void MCLActions::manual_transition(uint8_t *slot_select_array, uint8_t *row_array) {
   //DEBUG_PRINT_FN();
   uint8_t q = get_quant();
 
   //DEBUG_CHECK_STACK();
 
-  collect_tracks(row, slot_select_array);
+  collect_tracks(slot_select_array, row_array);
 
   uint16_t next_step = (MidiClock.div16th_counter / q) * q + q;
   uint8_t loops = 1;
@@ -397,10 +405,14 @@ void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
   bool recalc_latency = true;
   ////DEBUG_PRINTLN("manual trans");
 again:
+  uint8_t row = grid_task.next_active_row;
   uint16_t div16th_counter = MidiClock.div16th_counter;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] > 0) {
+      row = row_array[n];
+      DEBUG_PRINTLN("row");
+      DEBUG_PRINTLN(row);
       if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {

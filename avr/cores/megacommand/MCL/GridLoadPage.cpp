@@ -200,13 +200,7 @@ void GridLoadPage::load() {
   GUI.setPage(&grid_page);
   trig_interface.off();
 
-  if (mcl_cfg.load_mode == LOAD_QUEUE) {
-    mcl_actions.load_tracks(grid_page.getRow(),
-                            track_select_array);
-  }
-  else {
-    grid_task.load_wait(grid_page.getRow(), track_select_array);
-  }
+  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array);
 }
 
 void GridLoadPage::group_select() {
@@ -227,12 +221,7 @@ void GridLoadPage::group_load(uint8_t row, bool silent) {
   //oled_display.display();
 
   mcl_actions.write_original = 1;
-  if (mcl_cfg.load_mode == LOAD_QUEUE) {
-    mcl_actions.load_tracks(row, track_select_array);
-  }
-  else {
-    grid_task.load_wait(row, track_select_array);
-  }
+  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array);
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {

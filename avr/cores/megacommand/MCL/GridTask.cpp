@@ -1,4 +1,3 @@
-
 #include "MCL_impl.h"
 
 #define DIV16_MARGIN 8
@@ -30,53 +29,38 @@ void GridTask::sync_cursor() {
   }
 }
 
-void GridTask::load_wait(uint8_t row, uint8_t *track_select_array) {
-  memcpy(load_track_select, track_select_array, sizeof(load_track_select));
-  load_row = row;
-}
-
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  if (midi_row != 255) {
-    bool silent = true;
-    grid_load_page.group_load(midi_row, silent);
-    midi_row = 255;
-  }
-
-  if (load_row != 255) {
-    uint8_t *rows = load_track_select;
-    if (load_row) { rows = nullptr; }
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(load_row, load_track_select, nullptr);
-    load_row = 255;
-  }
-
-  else if (midi_load && (clock_diff(midi_event_clock, clock) > 60)) {
-    uint8_t track_select[NUM_SLOTS] = {0};
-    uint8_t r = 255;
-    DEBUG_PRINTLN("process midi load");
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (load_track_select[n] < 128) {
-        track_select[n] = 1;
-      }
-    }
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(r, track_select, load_track_select);
-    midi_load = false;
-  }
-
+  // MD GUI update.
   if (stop_hard_callback) {
       mcl_actions_callbacks.StopHardCallback();
       stop_hard_callback = false;
+      load_queue.init();
       return;
     }
 
-
-  // MD GUI update.
   sync_cursor();
   GridTask::transition_handler();
+
+  if (!load_queue.is_empty()) {
+    uint8_t mode;
+    uint8_t row_select_array[NUM_SLOTS];
+    uint8_t track_select[NUM_SLOTS] = {0};
+    load_queue.get(&mode, row_select_array);
+    DEBUG_PRINTLN("load queue get");
+    DEBUG_PRINTLN(mode);
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (row_select_array[n] < 128) {
+        track_select[n] = 1;
+      }
+      DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINT(track_select[n]); DEBUG_PRINT(" "); DEBUG_PRINTLN(row_select_array[n]);
+    }
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(255, track_select, row_select_array, mode);
+  }
+
 }
 
 void GridTask::transition_handler() {

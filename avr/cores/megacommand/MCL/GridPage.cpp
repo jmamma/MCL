@@ -738,7 +738,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
         }
       }
       if (slot_load == 1) {
-        mcl_actions.load_tracks(ypos, track_select_array);
+        grid_task.load_queue.put(mcl_cfg.load_mode,ypos, track_select_array);
       }
       // If all slots are deleted then clear the row name
       else if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
