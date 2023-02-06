@@ -87,14 +87,15 @@ void GuiClass::loop() {
         continue;
     }
   }
-  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
+  MidiUartParent::handle_midi_lock = 1;
   for (int i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
       tasks.arr[i]->checkTask();
     }
   }
 
+  MidiUartParent::handle_midi_lock = 0;
   if (sketch != NULL) {
     PageParent *page = sketch->currentPage();
     if (page != NULL) {

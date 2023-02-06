@@ -725,6 +725,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     uint32_t diff = MidiClock.clock_diff_div192(MidiClock.div192th_counter, (uint32_t) next_transition * 12 + 4 * 12);
     while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
+      handleIncomingMidi();
       if (((float) diff > 0.08 * 0.8 * tempo) && gui_update) {
           GUI.loop();
       }
