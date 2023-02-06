@@ -87,6 +87,7 @@ void GuiClass::loop() {
         continue;
     }
   }
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
   for (int i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
