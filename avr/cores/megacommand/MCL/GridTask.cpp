@@ -191,7 +191,6 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-            handleIncomingMidi();
             if ((float)diff > (tempo * 0.8f) * 0.08) {
                 GUI.loop();
             }
