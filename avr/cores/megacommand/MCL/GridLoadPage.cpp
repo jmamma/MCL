@@ -279,7 +279,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:
+        if (show_track_type) {
         goto load_groups;
+        }
+        return true;
       }
     }
     return false;
