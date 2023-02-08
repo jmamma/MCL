@@ -47,6 +47,7 @@ public:
   bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
 
   // load header without data from grid
+  bool load_from_grid_512(uint8_t column, uint16_t row);
   bool load_from_grid(uint8_t column, uint16_t row);
   // save header without data to grid
   virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false);

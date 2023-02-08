@@ -3,7 +3,7 @@
 /*
    Function for initialising the SD Card
 */
-SdFat SD __attribute__((section(".sdcard")));;
+SdFat SD __attribute__((section(".sdcard")));
 
 bool MCLSd::sd_init() {
   bool ret = false;
