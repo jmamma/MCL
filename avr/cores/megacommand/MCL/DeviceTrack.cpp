@@ -56,7 +56,7 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row) {
     if ( ptrack->get_track_size() < 512) { return ptrack; }
     size_t len = ptrack->get_track_size() - 512;
 
-    if (!proj.read_grid(ptrack + 512, len)) {
+    if (!proj.read_grid((uint8_t*) this + 512, len)) {
       DEBUG_PRINTLN(F("read failed"));
       return nullptr;
     }
