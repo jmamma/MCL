@@ -75,6 +75,7 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
     if (slot_mask == 0) {
       grid_task.load_queue.put(mcl_cfg.load_mode,grid_task.load_track_select);
+      memset(grid_task.load_track_select, 255, sizeof(grid_task.load_track_select));
     }
   }
 }
