@@ -158,6 +158,11 @@ void MCLActionsMidiEvents::setup_callbacks() {
                                    (midi_callback_ptr_t)&MCLActionsMidiEvents::
                                        onProgramChangeCallback_Midi2);
 
+  MidiUSB.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  MidiUSB.addOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
@@ -183,7 +188,11 @@ void MCLActionsMidiEvents::remove_callbacks() {
   Midi2.removeOnProgramChangeCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
                 onProgramChangeCallback_Midi2);
-
+  MidiUSB.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  MidiUSB.removeOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(
