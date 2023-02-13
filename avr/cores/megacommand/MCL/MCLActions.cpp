@@ -379,8 +379,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       }
       send_machine[n] = 1;
     } else {
-      device_track->transition_cache(track_idx, n);
-      send_machine[n] = 0;
+      send_machine[n] = device_track->transition_cache(track_idx, n);
       dev_sync_slot[dev_idx] = n;
     }
     if (device_track) {
@@ -505,6 +504,7 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         uint8_t *row_array) {
   // DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("send tracks to devices");
 
   uint8_t select_array[NUM_SLOTS];
   // Take a copy, because we call GUI.loop later.

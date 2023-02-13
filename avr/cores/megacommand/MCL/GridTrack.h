@@ -81,7 +81,7 @@ public:
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
-  virtual void transition_cache(uint8_t tracknumber, uint8_t slotnumber) {}
+  virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
 

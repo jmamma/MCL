@@ -13,7 +13,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-void MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+bool MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   bool send_level = false;
   bool send = true;
@@ -25,12 +25,13 @@ void MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
     break;
   }
   MD.sendMachineCache(tracknumber, &(machine), send_level, send);
+  return true;
 }
 
 void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   bool send_level = false;
-  DEBUG_DUMP(n);
+  DEBUG_PRINTLN("transition send");
   switch (mcl_actions.transition_level[n]) {
   case TRANSITION_UNMUTE:
     DEBUG_PRINTLN(F("unmuting"));
