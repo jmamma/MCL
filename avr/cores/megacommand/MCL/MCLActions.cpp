@@ -440,6 +440,8 @@ again:
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
       }
+    } else {
+      calc_next_slot_transition(n);
     }
   }
 
@@ -742,13 +744,12 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       ptrack = empty_track.init_track_type(gdt->track_type);
       ptrack->init(track_idx, gdt->seq_track);
     } else {
-      if (!ptrack->get_sound_data_ptr() || !ptrack->get_sound_data_size())
-        // something wrong
-        continue;
-      if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
-        ptrack->transition_cache(track_idx, n);
-        send_machine[n] = 0;
-        dev_sync_slot[dev_idx] = n;
+      if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+        if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+          ptrack->transition_cache(track_idx, n);
+          send_machine[n] = 0;
+          dev_sync_slot[dev_idx] = n;
+        }
       }
     }
     if (ptrack == nullptr) {
@@ -782,6 +783,11 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
       return;
     }
     }
+  }
+
+  // next transition[n] already valid, use this.
+  if (next_transitions[n] != -1 && next_transitions[n] > next_transition) {
+    return;
   }
 
   uint8_t track_idx, dev_idx;

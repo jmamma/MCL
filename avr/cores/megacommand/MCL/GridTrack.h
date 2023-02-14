@@ -55,7 +55,7 @@ public:
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
   bool store_in_mem(uint8_t column) {
-    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
+    uint32_t pos = get_region() + get_region_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(ptr, this, get_track_size());
     return true;
@@ -65,7 +65,7 @@ public:
   ///  downloads from BANK1 to the runtime object
   bool load_from_mem(uint8_t column, size_t size = 0) {
     uint32_t bytes = size ? size : get_track_size();
-    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column);
+    uint32_t pos = get_region() + get_region_size() * (uint32_t)(column);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(this, ptr, bytes);
     return true;
@@ -86,6 +86,7 @@ public:
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
+  virtual uint16_t get_region_size() { return get_track_size(); }
   virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
