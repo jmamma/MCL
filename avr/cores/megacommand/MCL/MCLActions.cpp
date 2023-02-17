@@ -365,8 +365,6 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
     uint8_t row = row_array[n];
-    DEBUG_PRINTLN("row");
-    DEBUG_PRINTLN(row);
     EmptyTrack empty_track;
     // DEBUG_PRINTLN(F("cl"));
     auto *device_track = empty_track.load_from_grid(track_idx, row);
@@ -413,8 +411,6 @@ again:
 
     if (slot_select_array[n] > 0) {
       row = row_array[n];
-      DEBUG_PRINTLN("row");
-      DEBUG_PRINTLN(row);
       if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
@@ -938,7 +934,7 @@ void MCLActions::calc_latency() {
       if (num_devices == 1) {
         latency_in_seconds += .10;
       } else if (a == 1) {
-        latency_in_seconds += .10;
+        latency_in_seconds += .20;
       }
 
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
