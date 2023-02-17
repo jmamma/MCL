@@ -694,11 +694,6 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i++] = level;
     set_level = true;
   }
-  if (send) {
-    if (track > 15) { track -= 16; }
-    DEBUG_PRINT("INSERT MACHINE: "); DEBUG_PRINTLN(track);
-    insertMachineInKit(track, machine, set_level);
-  }
 
 end:
   return sendRequest(data, i, send);
