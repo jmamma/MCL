@@ -84,9 +84,7 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-  uint32_t div32th_counter;
 
-  // Get within 4 16th notes of the next transition.
   GUI.removeTask(&grid_task);
 
   while (MidiClock.clock_less_than(
@@ -97,16 +95,12 @@ void GridTask::transition_handler() {
    float div32th_time = 1.0 / div32th_per_second;
 
 
-    /*  while (MidiClock.clock_less_than(MidiClock.div32th_counter +
-       div32th_margin, (uint32_t)mcl_actions.next_transition * 2) <= 0) { */
     if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
       break;
     }
     DEBUG_PRINTLN(F("Preparing for next transition:"));
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition);
-    // Transition window
-    div32th_counter = MidiClock.div32th_counter + div32th_margin;
 
     DEBUG_PRINTLN((int)SP);
     uint8_t track_idx, dev_idx;
@@ -116,19 +110,12 @@ void GridTask::transition_handler() {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       slots_changed[n] = 255;
 
+      DEBUG_PRINTLN(n);
+      DEBUG_PRINT(mcl_actions.next_transition); DEBUG_PRINT(" "); DEBUG_PRINTLN(mcl_actions.next_transitions[n]);
+
       if ((mcl_actions.links[n].loops == 0) ||
-          (grid_page.active_slots[n] == SLOT_DISABLED))
+          (grid_page.active_slots[n] == SLOT_DISABLED) || (mcl_actions.next_transition != mcl_actions.next_transitions[n]))
         continue;
-
-      uint32_t next_transition = (uint32_t)mcl_actions.next_transitions[n] * 2;
-
-      // If next_transition[n] is less than or equal to transition window, then
-      // flag track for transition.
-      if (MidiClock.clock_less_than(div32th_counter, next_transition))
-        continue;
-
-      //    if ((mcl_actions.links[n].row != grid_page.active_slots[n]) ||
-      //        (mcl_actions.chains[n].mode == LOAD_MANUAL)) {
 
       GridDeviceTrack *gdt =
           mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
@@ -141,12 +128,9 @@ void GridTask::transition_handler() {
         send_device[dev_idx] = true;
       }
 
-      //  if (mcl_actions.chains[n].mode == LOAD_MANUAL) {
       if (row == 255) {
         row = slots_changed[n];
       }
-      //    mcl_actions.links[n].loops = 0;
-      //  }
     }
 
     DEBUG_PRINTLN(F("sending tracks"));
@@ -219,7 +203,7 @@ void GridTask::transition_handler() {
     // Once tracks are cached, we can calculate their next transition
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      mcl_actions.calc_next_slot_transition(n);
+      mcl_actions.calc_next_slot_transition(n, true);
       if (track_select_array[n] > 0) {
         last_slot = n;
       }
