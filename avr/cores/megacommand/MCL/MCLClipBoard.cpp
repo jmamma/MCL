@@ -167,6 +167,7 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN(F("sending seq track"));
     bool send_machine = true;
     bool send_level = true;
+    MD.insertMachineInKit(track, &(md_track->machine));
     MD.sendMachine(track, &(md_track->machine), send_level, send_machine);
   }
   else {
