@@ -433,6 +433,7 @@ again:
         links[n].row = row;
         links[n].loops = 1;
         // if (grid_page.active_slots[n] < 0) {
+        DEBUG_PRINT("slot man trans "); DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINTLN(next_transitions[n]);
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
       }
@@ -487,13 +488,14 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   if (ptrack->active != gdt->track_type) {
     empty_track.clear();
-    // DEBUG_PRINTLN("Clearing track");
-    // DEBUG_PRINTLN(pos);
+     DEBUG_PRINTLN("Clearing track");
+     DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
-    ptrack->transition_load(track_idx, gdt->seq_track, pos);
-  } else {
     ptrack->load_immediate(track_idx, gdt->seq_track);
+  } else {
+   DEBUG_PRINTLN("load immediate track");
+          ptrack->load_immediate(track_idx, gdt->seq_track);
     send_masks[pos] = 1;
   }
   return true;
@@ -853,10 +855,10 @@ void MCLActions::calc_next_transition() {
   nearest_beat = next_transition % 4 + 1;
   // next_transition = next_transition % 16;
 
-  // DEBUG_PRINTLN(F("current_step"));
-  // DEBUG_PRINTLN(MidiClock.div16th_counter);
-  // DEBUG_PRINTLN(F("nearest step"));
-  // DEBUG_PRINTLN(next_transition);
+     DEBUG_PRINTLN(F("current_step"));
+     DEBUG_PRINTLN(MidiClock.div16th_counter);
+   DEBUG_PRINTLN(F("nearest step"));
+    DEBUG_PRINTLN(next_transition);
 }
 
 void MCLActions::calc_latency() {
