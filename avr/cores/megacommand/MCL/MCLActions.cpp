@@ -437,7 +437,7 @@ again:
         // }
       }
     } else {
-      calc_next_slot_transition(n);
+      //calc_next_slot_transition(n);
     }
   }
 
