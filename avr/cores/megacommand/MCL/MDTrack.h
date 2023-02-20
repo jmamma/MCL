@@ -77,7 +77,6 @@ public:
     static_assert(sizeof(MDTrack) <= GRID1_TRACK_LEN);
   }
   void init();
-  void init(uint8_t tracknumber, SeqTrack *seq_track) { init(); get_machine_from_kit(tracknumber); }
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);

@@ -20,7 +20,7 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   return true;
 }
 
-bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
+void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #ifdef EXT_TRACKS
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
 
@@ -38,7 +38,6 @@ bool ExtTrack::load_seq_data(SeqTrack *seq_track) {
   ext_track->set_length(seq_track->length);
   seq_track->mute_state = old_mute;
 #endif
-  return true;
 }
 
 bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,

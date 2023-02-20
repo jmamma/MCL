@@ -492,7 +492,7 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
      DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
-    ptrack->load_immediate(track_idx, gdt->seq_track);
+    ptrack->load_seq_data(gdt->seq_track);
   } else {
    DEBUG_PRINTLN("load immediate track");
           ptrack->load_immediate(track_idx, gdt->seq_track);
