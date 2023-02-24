@@ -29,6 +29,8 @@
 #include "MCLMemory.h"
 #include "SeqTrack.h"
 
+class Grid;
+
 class GridTrack_270 {
 public:
   uint8_t active = EMPTY_TRACK_TYPE;
@@ -47,7 +49,7 @@ public:
   bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
 
   // load header without data from grid
-  bool load_from_grid_512(uint8_t column, uint16_t row);
+  bool load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
   bool load_from_grid(uint8_t column, uint16_t row);
   // save header without data to grid
   virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false);
@@ -85,6 +87,10 @@ public:
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
   virtual void load_seq_data(SeqTrack *seq_track) {}
+
+  virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) {
+    this->load_immediate(dest_track, seq_track);
+  }
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
   virtual uint16_t get_region_size() { return get_track_size(); }

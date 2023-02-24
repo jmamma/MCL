@@ -84,6 +84,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   }
 
   if (track < NUM_MD_TRACKS) {
+    md_track->init_track_type(MD_TRACK_TYPE);
     memcpy(md_track->seq_data.data(), mcl_seq.md_tracks[track].data(),
            sizeof(md_track->seq_data));
     md_track->get_machine_from_kit(track);
@@ -92,7 +93,9 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     ret = grids[grid].write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
   }
   else {
+    grid++;
     uint8_t n = track - NUM_MD_TRACKS;
+    ext_track->init_track_type(EXT_TRACK_TYPE);
     memcpy(ext_track->seq_data.data(), mcl_seq.ext_tracks[n].data(),
            sizeof(ext_track->seq_data));
     ext_track->link.length = mcl_seq.ext_tracks[n].length;
@@ -136,46 +139,24 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-  if (source_track < NUM_MD_TRACKS) {
-    ret = grids[grid].read(&temp_track, sizeof(MDTrack), source_track, GRID_LENGTH);
+   if (source_track < NUM_MD_TRACKS) {
   } else {
-    ret = grids[grid].read(&temp_track, sizeof(ExtTrack), source_track,
-                    GRID_LENGTH);
+    grid++;
   }
-  if (!ret) {
-    DEBUG_PRINTLN(F("failed read"));
-    close();
-    return false;
-  }
-  if (source_track < NUM_MD_TRACKS) {
-    DEBUG_PRINTLN(F("loading seq track"));
-    memcpy(mcl_seq.md_tracks[track].data(), md_track->seq_data.data(),
-           sizeof(md_track->seq_data));
 
-    mcl_seq.md_tracks[track].set_length(md_track->link.length);
-    mcl_seq.md_tracks[track].set_speed(md_track->link.speed, md_track->link.speed, false);
+  auto *device_track = temp_track.load_from_grid_512(source_track, GRID_LENGTH, &grids[grid]);
 
-    if (md_track->machine.trigGroup == source_track) {
-      md_track->machine.trigGroup = 255;
-    }
-    if (md_track->machine.muteGroup == source_track) {
-      md_track->machine.muteGroup = 255;
-    }
-    if (md_track->machine.lfo.destinationTrack == source_track) {
-      md_track->machine.lfo.destinationTrack = track;
-    }
-    DEBUG_PRINTLN(F("sending seq track"));
-    bool send_machine = true;
-    bool send_level = true;
-    MD.insertMachineInKit(track, &(md_track->machine));
-    MD.sendMachine(track, &(md_track->machine), send_level, send_machine);
+  if (device_track == nullptr) { close(); return false; }
+
+  DEBUG_PRINTLN("getting ready to paste");
+
+  if (source_track >= NUM_MD_TRACKS) {
+    track = track - NUM_MD_TRACKS;
+    source_track = source_track - NUM_MD_TRACKS;
   }
-  else {
-    memcpy(mcl_seq.ext_tracks[track - NUM_MD_TRACKS].data(), ext_track->seq_data.data(),
-           sizeof(ext_track->seq_data));
-    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].length = ext_track->link.length;
-    mcl_seq.ext_tracks[track - NUM_MD_TRACKS].speed = ext_track->link.speed;
-  }
+
+  device_track->paste_track(source_track, track, &mcl_seq.md_tracks[track]);
+
   close();
   return true;
 }

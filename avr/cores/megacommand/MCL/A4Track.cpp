@@ -32,7 +32,6 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
 }
 
 void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  store_in_mem(tracknumber);
   load_seq_data(seq_track);
 }
 

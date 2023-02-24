@@ -37,8 +37,8 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   return this;
 }
 
-DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row) {
-  if (!GridTrack::load_from_grid_512(column, row)) {
+DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
+  if (!GridTrack::load_from_grid_512(column, row, grid)) {
     return nullptr;
   }
 
@@ -55,10 +55,17 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row) {
   if (active != EMPTY_TRACK_TYPE) {
     if ( ptrack->get_track_size() < 512) { return ptrack; }
     size_t len = ptrack->get_track_size() - 512;
-
-    if (!proj.read_grid((uint8_t*) this + 512, len)) {
-      DEBUG_PRINTLN(F("read failed"));
-      return nullptr;
+    if (grid) {
+      if (!grid->read((uint8_t*) this + 512, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
+    }
+    else {
+      if (!proj.read_grid((uint8_t*) this + 512, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
     }
   }
   return ptrack;

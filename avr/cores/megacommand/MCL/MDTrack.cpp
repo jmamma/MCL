@@ -1,5 +1,23 @@
 #include "MCL_impl.h"
 
+void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
+                          SeqTrack *seq_track) {
+  DEBUG_PRINTLN(F("paste seq track"));
+  if (machine.trigGroup == src_track) {
+    machine.trigGroup = 255;
+  }
+  if (machine.muteGroup == src_track) {
+    machine.muteGroup = 255;
+  }
+  if (machine.lfo.destinationTrack == src_track) {
+    machine.lfo.destinationTrack = dest_track;
+  }
+  load_immediate(dest_track, seq_track);
+  bool send_machine = true;
+  bool send_level = true;
+  MD.sendMachine(dest_track, &(machine), send_level, send_machine);
+}
+
 uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   uint8_t n = tracknumber;
   uint16_t md_latency = 0;
@@ -46,20 +64,18 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   default:
     break;
   }
-
 }
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  //load_seq_data(seq_track);
+  // load_seq_data(seq_track);
 }
 
 void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
   MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(seq_track);
-  store_in_mem(tracknumber);
 }
 
 void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
@@ -68,7 +84,8 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
 
   machine.track = tracknumber;
   machine.level = MD.kit.levels[tracknumber];
-  machine.model = MD.kit.models[tracknumber]; //get_raw_model including tonal bit
+  machine.model =
+      MD.kit.models[tracknumber]; // get_raw_model including tonal bit
 
   /*Check to see if LFO is modulating host track*/
   /*IF it is then we need to make sure that the LFO destination is updated to
@@ -84,7 +101,6 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
 
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
-
 }
 
 void MDTrack::init() {

@@ -11,7 +11,6 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
 }
 
 void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  store_in_mem(tracknumber);
   load_seq_data(seq_track);
 }
 

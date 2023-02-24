@@ -15,13 +15,20 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   CLEAR_LOCK();
 
 }
-bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row) {
+bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
 
-  if (!proj.read_grid(this, 512, column, row)) {
-    DEBUG_PRINTLN(F("read failed"));
-    return false;
+  if (grid) {
+    if (!grid->read(this, 512, column, row)) {
+      DEBUG_PRINTLN(F("read failed"));
+      return false;
+    }
   }
-
+  else {
+    if (!proj.read_grid(this, 512, column, row)) {
+      DEBUG_PRINTLN(F("read failed"));
+      return false;
+    }
+  }
   auto tmp = this->active;
   ::new (this) GridTrack;
   this->active = tmp;

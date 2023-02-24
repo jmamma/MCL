@@ -495,7 +495,8 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     ptrack->load_seq_data(gdt->seq_track);
   } else {
    DEBUG_PRINTLN("load immediate track");
-          ptrack->load_immediate(track_idx, gdt->seq_track);
+    ptrack->load_immediate(track_idx, gdt->seq_track);
+    ptrack->store_in_mem(track_idx);
     send_masks[pos] = 1;
   }
   return true;
@@ -725,6 +726,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         setLed2();
       }
     }
+
     // if (links[n].row >= GRID_LENGTH)
     if (links[n].row >= GRID_LENGTH ||
         links[n].row == grid_page.active_slots[n] || links[n].loops == 0)

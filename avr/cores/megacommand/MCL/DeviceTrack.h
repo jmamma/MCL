@@ -68,7 +68,7 @@ public:
     return p;
   }
 
-  DeviceTrack *load_from_grid_512(uint8_t column, uint16_t row);
+  DeviceTrack *load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
   DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
   template <class T> T *load_from_grid(uint8_t col, uint16_t row) {
     auto *p = load_from_grid(col, row);
