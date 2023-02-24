@@ -35,8 +35,7 @@ bool MCLClipBoard::open() {
       if (!grids[i].open_file(grid_filename)) {
         DEBUG_PRINTLN(F("Could not open clipboard"));
         return false;
-      }
-      else {
+      } else {
         DEBUG_PRINTLN(F("Opened Clipboard"));
       }
     }
@@ -91,8 +90,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     md_track->link.length = mcl_seq.md_tracks[track].length;
     md_track->link.speed = mcl_seq.md_tracks[track].speed;
     ret = grids[grid].write(&temp_track, sizeof(MDTrack), track, GRID_LENGTH);
-  }
-  else {
+  } else {
     grid++;
     uint8_t n = track - NUM_MD_TRACKS;
     ext_track->init_track_type(EXT_TRACK_TYPE);
@@ -135,33 +133,44 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   ExtTrack *ext_track = (ExtTrack *)(&temp_track);
 
   uint8_t grid = 0;
+  bool is_md_track = source_track < NUM_MD_TRACKS;
   if (!open()) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-   if (source_track < NUM_MD_TRACKS) {
-  } else {
+  if (!is_md_track) {
     grid++;
   }
 
-  auto *device_track = temp_track.load_from_grid_512(source_track, GRID_LENGTH, &grids[grid]);
+  auto *device_track =
+      temp_track.load_from_grid_512(source_track, GRID_LENGTH, &grids[grid]);
 
-  if (device_track == nullptr) { close(); return false; }
+  if (device_track == nullptr) {
+    close();
+    return false;
+  }
 
   DEBUG_PRINTLN("getting ready to paste");
 
-  if (source_track >= NUM_MD_TRACKS) {
+  if (!is_md_track) {
     track = track - NUM_MD_TRACKS;
     source_track = source_track - NUM_MD_TRACKS;
   }
-
   device_track->paste_track(source_track, track, &mcl_seq.md_tracks[track]);
-
+  if (is_md_track && track == last_md_track) {
+    if (GUI.currentPage() == &seq_step_page) {
+      seq_step_page.config();
+    }
+    if (GUI.currentPage() == &seq_ptc_page) {
+      seq_ptc_page.config();
+    }
+  }
   close();
   return true;
 }
 
-bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h, uint8_t grid) {
+bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h,
+                        uint8_t grid) {
   DEBUG_PRINT_FN();
   uint8_t old_grid = proj.get_grid();
   t_col = col;
@@ -182,12 +191,15 @@ bool MCLClipBoard::copy(uint16_t col, uint16_t row, uint16_t w, uint16_t h, uint
     proj.read_grid_row_header(&header, y + row);
     ret = grids[grid].write_row_header(&header, y + row);
     DEBUG_PRINTLN(header.name);
-    if (h > 8) { mcl_gui.draw_progress("", y, h); }
+    if (h > 8) {
+      mcl_gui.draw_progress("", y, h);
+    }
     for (int x = 0; x < w; x++) {
       ret = proj.read_grid(&temp_track, sizeof(temp_track), x + col, y + row);
       DEBUG_DUMP(temp_track.active);
       if (ret) {
-        ret = grids[grid].write(&temp_track, sizeof(temp_track), x + col, y + row);
+        ret = grids[grid].write(&temp_track, sizeof(temp_track), x + col,
+                                y + row);
       }
     }
   }
@@ -201,7 +213,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-   DEBUG_PRINTLN("paste here");
+  DEBUG_PRINTLN("paste here");
   bool destination_same = (col == t_col);
   if (t_w == 1) {
     destination_same = true;
@@ -222,13 +234,14 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
       grids[grid].read_row_header(&header_copy, y + t_row);
       header.active = true;
       if (header_copy.active) {
-      strncpy(&(header.name[0]), &(header_copy.name[0]), sizeof(header.name));
-      }
-      else {
-      header.name[0] = '\0';
+        strncpy(&(header.name[0]), &(header_copy.name[0]), sizeof(header.name));
+      } else {
+        header.name[0] = '\0';
       }
     }
-    if (t_h > 8) { mcl_gui.draw_progress("", y, t_h); }
+    if (t_h > 8) {
+      mcl_gui.draw_progress("", y, t_h);
+    }
     for (int x = 0; x < t_w && x + col < GRID_WIDTH; x++) {
 
       // track now has full data and correct type
@@ -239,15 +252,18 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
 
       grids[grid].read(&empty_track, sizeof(EmptyTrack), s_col, y + t_row);
 
-      DeviceTrack *ptrack = ((DeviceTrack*) &empty_track)->init_track_type(empty_track.active);
+      DeviceTrack *ptrack =
+          ((DeviceTrack *)&empty_track)->init_track_type(empty_track.active);
       DEBUG_DUMP(ptrack->active);
 
-      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
+      GridDeviceTrack *gdt =
+          mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
 
-      if ((gdt == nullptr || gdt->track_type != ptrack->active) && (ptrack->active != EMPTY_TRACK_TYPE)) {
-       DEBUG_PRINTLN("track not supported");
-      //Don't allow paste in to unsupported slots
-       continue;
+      if ((gdt == nullptr || gdt->track_type != ptrack->active) &&
+          (ptrack->active != EMPTY_TRACK_TYPE)) {
+        DEBUG_PRINTLN("track not supported");
+        // Don't allow paste in to unsupported slots
+        continue;
       }
       int16_t link_row_offset = ptrack->link.row - t_row;
 
@@ -258,8 +274,7 @@ bool MCLClipBoard::paste(uint16_t col, uint16_t row, uint8_t grid) {
         new_link_row = y + row;
       }
       ptrack->link.row = new_link_row;
-      header.update_model(d_col, ptrack->get_model(),
-                          ptrack->active);
+      header.update_model(d_col, ptrack->get_model(), ptrack->active);
       ptrack->on_copy(s_col, d_col, destination_same);
       ptrack->store_in_grid(d_col, y + row);
     }
