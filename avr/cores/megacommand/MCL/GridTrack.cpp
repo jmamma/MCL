@@ -1,5 +1,15 @@
 #include "MCL_impl.h"
 
+
+bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr) {
+  if (grid == nullptr) {
+    return proj.write_grid((uint8_t *)(this), len, column, row);
+  }
+  else {
+    return grid->write((uint8_t *)(this), len, column, row);
+  }
+}
+
 void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->speed = link.speed;
   seq_track->length = link.length;
@@ -60,11 +70,11 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
 // merge and online are ignored here.
 bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
-                              bool online) {
+                              bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();
 
-  if (!proj.write_grid(this, sizeof(GridTrack), column, row)) {
+  if (!write_grid(this, sizeof(GridTrack), column, row, grid)) {
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }

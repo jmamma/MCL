@@ -11,6 +11,7 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
 }
 
 void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  DEBUG_PRINTLN("load immediate, ext");
   load_seq_data(seq_track);
 }
 
@@ -40,7 +41,7 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 }
 
 bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
-                             bool online) {
+                             bool online, Grid *grid) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
    * object*/
@@ -60,8 +61,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
-
-  ret = proj.write_grid((uint8_t *)this, sizeof(ExtTrack), column, row);
+  ret = write_grid((uint8_t *)(this), len, column, row, grid);
   if (!ret) {
     DEBUG_PRINTLN(F("Write failed"));
     return false;

@@ -98,7 +98,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
            sizeof(ext_track->seq_data));
     ext_track->link.length = mcl_seq.ext_tracks[n].length;
     ext_track->link.speed = mcl_seq.ext_tracks[n].speed;
-    ret = grids[grid].write(&temp_track, sizeof(ExtTrack), track, GRID_LENGTH);
+    ret = grids[grid].write(&temp_track, sizeof(ExtTrack), n, GRID_LENGTH);
   }
   close();
   if (!ret) {
@@ -132,18 +132,23 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   MDTrack *md_track = (MDTrack *)(&temp_track);
   ExtTrack *ext_track = (ExtTrack *)(&temp_track);
 
-  uint8_t grid = 0;
-  bool is_md_track = source_track < NUM_MD_TRACKS;
+  uint8_t source_track_idx, track_idx, dev_idx;
+
+  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(source_track, &source_track_idx, &dev_idx);
+  if (gdt == nullptr) { return false; }
+
+  gdt = mcl_actions.get_grid_dev_track(track, &track_idx, &dev_idx);
+  if (gdt == nullptr) { return false; }
+
+  uint8_t grid_idx = mcl_actions.get_grid_idx(track);
+
   if (!open()) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-  if (!is_md_track) {
-    grid++;
-  }
 
   auto *device_track =
-      temp_track.load_from_grid_512(source_track, GRID_LENGTH, &grids[grid]);
+      temp_track.load_from_grid_512(source_track_idx, GRID_LENGTH, &grids[grid_idx]);
 
   if (device_track == nullptr) {
     close();
@@ -151,13 +156,13 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   }
 
   DEBUG_PRINTLN("getting ready to paste");
+  device_track->paste_track(source_track_idx, track_idx, gdt->seq_track);
 
-  if (!is_md_track) {
-    track = track - NUM_MD_TRACKS;
-    source_track = source_track - NUM_MD_TRACKS;
-  }
-  device_track->paste_track(source_track, track, &mcl_seq.md_tracks[track]);
-  if (is_md_track && track == last_md_track) {
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+  if (devs[0] == &MD && track_idx == last_md_track) {
     if (GUI.currentPage() == &seq_step_page) {
       seq_step_page.config();
     }

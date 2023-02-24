@@ -29,7 +29,7 @@ void MDLFOTrack::get_lfos() {
 
 bool MDLFOTrack::store_in_grid(uint8_t column, uint16_t row,
                                SeqTrack *seq_track, uint8_t merge,
-                               bool online) {
+                               bool online, Grid *grid) {
   active = MDLFO_TRACK_TYPE;
   bool ret;
   int b = 0;
@@ -43,8 +43,7 @@ bool MDLFOTrack::store_in_grid(uint8_t column, uint16_t row,
 
   len = sizeof(MDLFOTrack);
   DEBUG_PRINTLN(len);
-
-  ret = proj.write_grid((uint8_t *)(this), len, column, row);
+  ret = write_grid((uint8_t *)(this), len, column, row, grid);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));

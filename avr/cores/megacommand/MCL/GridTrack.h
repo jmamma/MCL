@@ -52,7 +52,9 @@ public:
   bool load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
   bool load_from_grid(uint8_t column, uint16_t row);
   // save header without data to grid
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false);
+  bool write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr);
+
+  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
@@ -89,7 +91,7 @@ public:
   virtual void load_seq_data(SeqTrack *seq_track) {}
 
   virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) {
-    this->load_immediate(dest_track, seq_track);
+     load_immediate(dest_track, seq_track);
   }
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }

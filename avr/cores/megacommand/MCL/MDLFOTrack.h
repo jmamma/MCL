@@ -26,7 +26,7 @@ public:
                        uint8_t slotnumber);
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false);
+                     bool online = false, Grid *grid = nullptr);
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
