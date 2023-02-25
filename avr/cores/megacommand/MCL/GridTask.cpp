@@ -203,10 +203,12 @@ void GridTask::transition_handler() {
     // Once tracks are cached, we can calculate their next transition
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      mcl_actions.calc_next_slot_transition(n, true);
+      bool ignore_chain_settings = true;
       if (track_select_array[n] > 0) {
         last_slot = n;
+        ignore_chain_settings = false;
       }
+      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
