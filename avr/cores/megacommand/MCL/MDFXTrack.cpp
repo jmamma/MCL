@@ -1,5 +1,11 @@
 #include "MCL_impl.h"
 
+void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
+                          SeqTrack *seq_track) {
+  load_link_data(seq_track);
+  send_fx(true);
+}
+
 void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     send_fx();
 }

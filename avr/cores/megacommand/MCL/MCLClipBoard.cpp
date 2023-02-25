@@ -58,6 +58,7 @@ bool MCLClipBoard::copy_sequencer(uint8_t offset) {
         return false;
       }
     }
+    copy_sequencer_track(MDFX_TRACK_NUM + NUM_MD_TRACKS);
   } else {
     for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (!copy_sequencer_track(n + NUM_MD_TRACKS)) {
@@ -106,6 +107,7 @@ bool MCLClipBoard::paste_sequencer(uint8_t offset) {
       if (!paste_sequencer_track(n, n)) {
         return false;
       }
+      paste_sequencer_track(MDFX_TRACK_NUM + NUM_MD_TRACKS, MDFX_TRACK_NUM + NUM_MD_TRACKS);
     }
   } else {
     for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
