@@ -1,3 +1,30 @@
+MCL 4.40 25/02/2023
+
+Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+
+- Improvements:
+
+  Increased GUI responsiveness and framerate.
+    Grid page rendering speed increased from 14FPS -> 21FPS
+
+  Increased SDCard read speed:
+	SdCard slot read performance increased by 30%
+
+  Automated Slot Loading, and Queueing has been overhauled for
+  robust, predictable behaviour.
+
+- Fixes
+
+  Grid Page: Allow length adustment across multiple slots when slot speeds are the
+  same.
+
+  Program Change Advanced mode did not work over USB MIDI
+
+  Copy/Paste pattern will now copy/paste MD Master FX.
+
+  Bugs related to parameter locks when pasting MD Tracks.
+
 MCL 4.30 12/01/2023
 
 Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
