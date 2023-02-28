@@ -16,8 +16,8 @@
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
 
-#define VERSION 4030
-#define VERSION_STR "4.30"
+#define VERSION 4040
+#define VERSION_STR "4.40"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

@@ -100,16 +100,16 @@ public:
   void save_tracks(int row, uint8_t *slot_select_array,
                            uint8_t merge, uint8_t readpattern = 255);
 
-  void load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array = nullptr);
+  void load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array = nullptr, uint8_t load_mode = 255);
   void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
-  void manual_transition(int row, uint8_t *slot_select_array);
+  void manual_transition(uint8_t *slot_select_array, uint8_t *row_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false);
   void calc_next_transition();
   void calc_latency();
 private:
-  void collect_tracks(int row, uint8_t *slot_select_array);
+  void collect_tracks(uint8_t *slot_select_array, uint8_t *row_array);
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
   bool load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
 };

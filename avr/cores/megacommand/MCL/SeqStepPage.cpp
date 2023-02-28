@@ -481,7 +481,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         // Note copy
         if (step != 255) {
           opt_copy_step_handler(255);
-          note_interface.ignoreNextEvent(step);
           disable_md_micro();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_copy_page_handler_cb();
@@ -498,7 +497,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         reset_undo();
         if (step != 255) {
           opt_paste_step_handler();
-          note_interface.ignoreNextEvent(step);
           disable_md_micro();
           send_locks(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
@@ -520,7 +518,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear_step = 1;
           opt_clear_step_handler();
           disable_md_micro();
-          note_interface.ignoreNextEvent(step);
           last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_clear_page_handler();

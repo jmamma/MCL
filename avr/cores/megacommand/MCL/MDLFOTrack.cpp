@@ -6,15 +6,16 @@ void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   memcpy(mcl_seq.lfo_tracks[0].data(), lfo_data.data(),
          sizeof(LFOSeqTrackData));
+  load_link_data(seq_track);
 }
 
 uint16_t MDLFOTrack::calc_latency(uint8_t tracknumber) { return 0; }
 
 void MDLFOTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  load_link_data(seq_track);
   memcpy(mcl_seq.lfo_tracks[0].data(), lfo_data.data(),
          sizeof(LFOSeqTrackData));
-
+  DEBUG_PRINTLN("MD LFO LOAD IMMI");
+  load_link_data(seq_track);
   DEBUG_PRINTLN("Load speed");
   DEBUG_PRINTLN(lfo_data.speed);
 }
@@ -28,7 +29,7 @@ void MDLFOTrack::get_lfos() {
 
 bool MDLFOTrack::store_in_grid(uint8_t column, uint16_t row,
                                SeqTrack *seq_track, uint8_t merge,
-                               bool online) {
+                               bool online, Grid *grid) {
   active = MDLFO_TRACK_TYPE;
   bool ret;
   int b = 0;
@@ -42,8 +43,7 @@ bool MDLFOTrack::store_in_grid(uint8_t column, uint16_t row,
 
   len = sizeof(MDLFOTrack);
   DEBUG_PRINTLN(len);
-
-  ret = proj.write_grid((uint8_t *)(this), len, column, row);
+  ret = write_grid((uint8_t *)(this), len, column, row, grid);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));

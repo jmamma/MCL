@@ -48,6 +48,7 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   // UBRR1L = (cpu & 0xFF);
   while (!txRb.isEmpty())
     ;
+  while (!(check_empty_tx()));
 
   uint32_t cpu = (F_CPU / 16);
   cpu /= speed_;

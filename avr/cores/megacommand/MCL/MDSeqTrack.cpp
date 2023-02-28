@@ -74,19 +74,17 @@ void MDSeqTrack::re_sync() {
 }
 
 void MDSeqTrack::load_cache() {
-  MDTrackChunk t;
-
+/*  MDTrackChunk t;
+  DEBUG_PRINTLN("lc");
   for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
     t.load_from_mem_chunk(track_number, n);
     t.load_chunk(data(), n);
-  }
+  }*/
 
-  t.load_link_from_mem(track_number);
-  t.load_link_data((SeqTrack *)this);
-
-  oneshot_mask = 0;
-//  set_length(length);
-  update_params();
+  MDTrack t;
+  t.load_from_mem(track_number, MD_TRACK_TYPE);
+  MD.insertMachineInKit(track_number, &(t.machine),false);
+  t.load_seq_data((SeqTrack *)this);
 
   SET_BIT16(load_machine_cache, track_number);
 }
@@ -226,6 +224,7 @@ void MDSeqTrack::reset_params() {
     }
   }
   if (re_assign) {
+    DEBUG_PRINTLN("re-assign machine");
     MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
   }
 }

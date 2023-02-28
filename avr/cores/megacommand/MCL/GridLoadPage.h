@@ -10,6 +10,8 @@ class GridLoadPage : public GridIOPage {
  GridLoadPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : GridIOPage(e1, e2, e3 ,e4) {
 
  }
+ uint8_t track_select_array[NUM_SLOTS];
+ uint8_t load_row;
  void get_modestr(char *modestr);
  void load();
  void group_select();

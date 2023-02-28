@@ -205,6 +205,13 @@ public:
   ALWAYS_INLINE() void seq() {
     uint8_t timing_mid = get_timing_mid();
     mod12_counter++;
+    if (count_down) {
+      count_down--;
+      if (count_down == 0) {
+        reset();
+        mod12_counter = 0;
+      }
+    }
     if (mod12_counter == timing_mid) {
       count_down = 0;
       mod12_counter = 0;

@@ -159,16 +159,16 @@ public:
   uint8_t read_char() { return *udr; }
   bool check_empty_tx() {
     volatile uint8_t *ptr = ucsra();
-    return IS_BIT_SET(*ptr, UDRE1);
+    return *ptr & (1 << UDRE0);
   }
 
   void set_tx() {
     volatile uint8_t *ptr = ucsrb();
-    SET_BIT(*ptr, UDRIE0);
+    *ptr |= (1 << UDRIE0);
   }
   void clear_tx() {
     volatile uint8_t *ptr = ucsrb();
-    CLEAR_BIT(*ptr, UDRIE0);
+    *ptr &= ~(1 << UDRIE0);
   }
 
   void set_speed(uint32_t speed);

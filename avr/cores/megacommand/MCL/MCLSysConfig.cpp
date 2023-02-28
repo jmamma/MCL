@@ -1,5 +1,12 @@
 #include "MCL_impl.h"
 
+void usb_wait() {
+  oled_display.clearDisplay();
+  oled_display.textbox("PLEASE WAIT", "");
+  oled_display.display();
+  delay(4000);
+}
+
 bool megacmd_check() {
   if (!IS_MEGACMD()) {
     oled_display.textbox("MODE ", "N/A");
@@ -10,15 +17,17 @@ bool megacmd_check() {
 }
 
 void usb_os_update() {
+  usb_wait();
+  change_usb_mode(USB_SERIAL);
   oled_display.clearDisplay();
   oled_display.textbox("OS UPDATE", "");
   oled_display.display();
-  change_usb_mode(USB_SERIAL);
   while (1)
     ;
 }
 
 void usb_dfu_mode() {
+  usb_wait();
   oled_display.clearDisplay();
   oled_display.textbox("DFU ", "MODE");
   oled_display.display();
@@ -32,7 +41,7 @@ void usb_disk_mode() {
   if (!megacmd_check()) {
     return;
   }
-
+  usb_wait();
   oled_display.clearDisplay();
 
   oled_display.textbox("USB ", "DISK");

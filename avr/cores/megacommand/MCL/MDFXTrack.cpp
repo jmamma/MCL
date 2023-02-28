@@ -1,5 +1,11 @@
 #include "MCL_impl.h"
 
+void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
+                          SeqTrack *seq_track) {
+  load_link_data(seq_track);
+  send_fx(true);
+}
+
 void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     send_fx();
 }
@@ -76,7 +82,7 @@ void MDFXTrack::get_fx_from_kit() {
 }
 
 bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
-                              uint8_t merge, bool online) {
+                              uint8_t merge, bool online, Grid *grid) {
   active = MDFX_TRACK_TYPE;
   bool ret;
   int b = 0;
@@ -93,8 +99,7 @@ bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   len = sizeof(MDFXTrack);
   DEBUG_PRINTLN(len);
-
-  ret = proj.write_grid((uint8_t *)(this), len, column, row);
+  ret = write_grid((uint8_t *)(this), len, column, row, grid);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));

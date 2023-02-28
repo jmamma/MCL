@@ -10,7 +10,9 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi2(uint8_t *msg) {
       (mcl_cfg.uart2_prg_in == MIDI_OMNI_MODE)) {
 
     if (mcl_cfg.uart2_prg_mode == 0) {
-      grid_task.load_row = msg[1];
+      uint8_t track_select_array[NUM_SLOTS] = {};
+      grid_load_page.track_select_array_from_type_select(track_select_array);
+      grid_task.load_queue.put(mcl_cfg.load_mode,msg[1],track_select_array);
     } else {
       DEBUG_PRINTLN("set row");
       grid_task.midi_row_select = msg[1];
@@ -53,7 +55,7 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     DEBUG_PRINT(slot);
     DEBUG_PRINT(" ");
     DEBUG_PRINTLN(grid_task.midi_row_select);
-    grid_task.midi_track_select[slot] = grid_task.midi_row_select;
+    grid_task.load_track_select[slot] = grid_task.midi_row_select;
   }
 }
 
@@ -72,9 +74,8 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     CLEAR_BIT32(slot_mask, slot);
 
     if (slot_mask == 0) {
-      grid_task.midi_event_clock = slowclock;
-      DEBUG_PRINTLN("setting slow clock");
-      grid_task.midi_load = true;
+      grid_task.load_queue.put(mcl_cfg.load_mode,grid_task.load_track_select);
+      memset(grid_task.load_track_select, 255, sizeof(grid_task.load_track_select));
     }
   }
 }
@@ -157,6 +158,11 @@ void MCLActionsMidiEvents::setup_callbacks() {
                                    (midi_callback_ptr_t)&MCLActionsMidiEvents::
                                        onProgramChangeCallback_Midi2);
 
+  MidiUSB.addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  MidiUSB.addOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi2.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
   Midi2.addOnNoteOffCallback(
@@ -182,7 +188,11 @@ void MCLActionsMidiEvents::remove_callbacks() {
   Midi2.removeOnProgramChangeCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
                 onProgramChangeCallback_Midi2);
-
+  MidiUSB.removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  MidiUSB.removeOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
   Midi2.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
   Midi2.removeOnNoteOffCallback(

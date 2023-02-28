@@ -180,7 +180,7 @@ void GridLoadPage::display() {
 }
 void GridLoadPage::load() {
   display_load();
-  oled_display.display();
+//  oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
   /// the page to avoid driving this code path again.
 
@@ -199,8 +199,8 @@ void GridLoadPage::load() {
   }
   GUI.setPage(&grid_page);
   trig_interface.off();
-  mcl_actions.load_tracks(grid_page.getRow(),
-                          track_select_array);
+
+  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array);
 }
 
 void GridLoadPage::group_select() {
@@ -213,16 +213,15 @@ void GridLoadPage::group_load(uint8_t row, bool silent) {
 
   if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
-
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
   if (!silent) {
     oled_display.textbox("LOAD GROUPS", "");
   }
-  oled_display.display();
+  //oled_display.display();
 
   mcl_actions.write_original = 1;
-  mcl_actions.load_tracks(row, track_select_array);
+  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array);
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {
@@ -262,6 +261,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      default: {
+        GUI.setPage(&grid_page);
+        return false;
+      }
       case MDX_KEY_YES: {
         group_select();
         return true;
@@ -280,7 +283,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:
+        if (show_track_type) {
         goto load_groups;
+        }
+        return true;
       }
     }
     return false;

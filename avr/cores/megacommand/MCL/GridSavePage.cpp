@@ -146,6 +146,10 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      default: {
+        GUI.setPage(&grid_page);
+        return false;
+      }
       case MDX_KEY_YES: {
         group_select();
         return true;
@@ -162,7 +166,10 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:
-        goto save_groups;
+        if (show_track_type) {
+          goto save_groups;
+        }
+        return true;
       }
     }
   }

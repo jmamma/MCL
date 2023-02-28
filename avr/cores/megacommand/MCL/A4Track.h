@@ -27,7 +27,7 @@ public:
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false);
+                     bool online = false, Grid *grid = nullptr);
   bool convert(A4Track_270 *old) {
     link.row = old->link.row;
     link.loops = old->link.loops;

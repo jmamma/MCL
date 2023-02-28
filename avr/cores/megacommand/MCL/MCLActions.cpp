@@ -27,7 +27,7 @@
 //}
 
 void MCLActions::setup() {
-  DEBUG_PRINTLN(F("mcl actions setup"));
+  // DEBUG_PRINTLN(F("mcl actions setup"));
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
@@ -46,7 +46,7 @@ void MCLActions::init_chains() {
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
-  DEBUG_PRINT_FN();
+  // DEBUG_PRINT_FN();
   /*
     if (mcl_actions.do_kit_reload != 255) {
       if (mcl_actions.writepattern == pattern) {
@@ -140,7 +140,7 @@ void md_import() {
 
 void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
                              uint8_t readpattern) {
-  DEBUG_PRINT_FN();
+  // DEBUG_PRINT_FN();
 
   EmptyTrack empty_track;
 
@@ -181,10 +181,10 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     if (elektron_devs[i] != nullptr) {
       if (save_dev_tracks[i]) {
         if (merge > 0) {
-          DEBUG_PRINTLN(F("fetching pattern"));
-          DEBUG_PRINTLN(readpattern);
+          // DEBUG_PRINTLN(F("fetching pattern"));
+          // DEBUG_PRINTLN(readpattern);
           if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
-            DEBUG_PRINTLN(F("could not receive pattern"));
+            // DEBUG_PRINTLN(F("could not receive pattern"));
             save_dev_tracks[i] = false;
             continue;
           }
@@ -194,13 +194,13 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
             continue;
           }
           if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
-            DEBUG_PRINTLN(F("could not receive kit"));
+            // DEBUG_PRINTLN(F("could not receive kit"));
             continue;
           }
         } else {
           if (elektron_devs[i]->canReadWorkspaceKit()) {
             if (!elektron_devs[i]->getWorkSpaceKit()) {
-              DEBUG_PRINTLN(F("could not receive kit"));
+              // DEBUG_PRINTLN(F("could not receive kit"));
               save_dev_tracks[i] = false;
               continue;
             }
@@ -208,7 +208,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
             auto kit = elektron_devs[i]->getCurrentKit();
             elektron_devs[i]->saveCurrentKit(kit);
             if (!elektron_devs[i]->getBlockingKit(kit)) {
-              DEBUG_PRINTLN(F("could not receive kit"));
+              // DEBUG_PRINTLN(F("could not receive kit"));
               save_dev_tracks[i] = false;
               continue;
             }
@@ -251,7 +251,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
         // Preserve existing link settings before save.
 
         if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-          DEBUG_PRINTLN(F("tl"));
+          // DEBUG_PRINTLN(F("tl"));
           if (!grid_track.load_from_grid(track_idx, row))
             continue;
           memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
@@ -284,19 +284,24 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
 }
 
 void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
-                             uint8_t *_row_array) {
-  DEBUG_PRINT_FN();
+                             uint8_t *_row_array, uint8_t load_mode) {
+  // DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
   };
-
+  if (load_mode == 255) {
+    load_mode = mcl_cfg.load_mode;
+  }
   uint8_t row_array[NUM_SLOTS] = {};
   uint8_t cache_track_array[NUM_SLOTS] = {};
   uint8_t track_idx, dev_idx;
   bool recache = false;
+  DEBUG_PRINTLN("load tracks");
+  DEBUG_PRINTLN(load_mode);
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
+    //    DEBUG_PRINTLN(slot_select_array[n]);
     if ((slot_select_array[n] == 0) || (gdt == nullptr)) {
       continue;
     }
@@ -306,8 +311,9 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
       row_array[n] = _row_array[n];
     }
 
-    if (mcl_cfg.load_mode == LOAD_QUEUE) {
-      chains[n].add(row, get_chain_length());
+    if (load_mode == LOAD_QUEUE) {
+      chains[n].add(row_array[n], get_chain_length());
+      DEBUG_PRINTLN("adding link");
       if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
         if (chains[n].num_of_links == 2) {
@@ -318,11 +324,11 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
     } else {
       chains[n].init();
     }
-    chains[n].mode = mcl_cfg.load_mode;
+    chains[n].mode = load_mode;
   }
 
   if (MidiClock.state == 2) {
-    manual_transition(row, slot_select_array);
+    manual_transition(slot_select_array, row_array);
     return;
   }
 
@@ -340,7 +346,8 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
   }
 }
 
-void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
+void MCLActions::collect_tracks(uint8_t *slot_select_array,
+                                uint8_t *row_array) {
 
   uint8_t old_grid = proj.get_grid();
   memset(dev_sync_slot, 255, NUM_DEVS);
@@ -357,8 +364,9 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       slot_select_array[n] = 0;
       continue;
     }
+    uint8_t row = row_array[n];
     EmptyTrack empty_track;
-    DEBUG_PRINTLN(F("cl"));
+    // DEBUG_PRINTLN(F("cl"));
     auto *device_track = empty_track.load_from_grid(track_idx, row);
 
     if (device_track == nullptr || device_track->active != gdt->track_type) {
@@ -369,8 +377,7 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
       }
       send_machine[n] = 1;
     } else {
-      device_track->transition_cache(track_idx, n);
-      send_machine[n] = 0;
+      send_machine[n] = device_track->transition_cache(track_idx, n);
       dev_sync_slot[dev_idx] = n;
     }
     if (device_track) {
@@ -381,13 +388,14 @@ void MCLActions::collect_tracks(int row, uint8_t *slot_select_array) {
   proj.select_grid(old_grid);
 }
 
-void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
-  DEBUG_PRINT_FN();
+void MCLActions::manual_transition(uint8_t *slot_select_array,
+                                   uint8_t *row_array) {
+  // DEBUG_PRINT_FN();
   uint8_t q = get_quant();
 
-  DEBUG_CHECK_STACK();
+  // DEBUG_CHECK_STACK();
 
-  collect_tracks(row, slot_select_array);
+  collect_tracks(slot_select_array, row_array);
 
   uint16_t next_step = (MidiClock.div16th_counter / q) * q + q;
   uint8_t loops = 1;
@@ -395,17 +403,20 @@ void MCLActions::manual_transition(int row, uint8_t *slot_select_array) {
   uint8_t track_idx, dev_idx;
 
   bool recalc_latency = true;
-  DEBUG_PRINTLN("manual trans");
+  ////DEBUG_PRINTLN("manual trans");
 again:
+  uint8_t row = grid_task.next_active_row;
   uint16_t div16th_counter = MidiClock.div16th_counter;
-  if (q == 255) {
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (slot_select_array[n] > 0) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+
+    if (slot_select_array[n] > 0) {
+      row = row_array[n];
+      if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
           transition_level[n] = 0;
           next_transitions[n] =
-              div16th_counter - (gdt->seq_track->step_count *
+              div16th_counter - ((float)gdt->seq_track->step_count *
                                  gdt->seq_track->get_speed_multiplier());
           links[n].speed = gdt->seq_track->speed;
           links[n].length = gdt->seq_track->length;
@@ -415,21 +426,19 @@ again:
           calc_next_slot_transition(n, ignore_chain_settings);
           grid_page.active_slots[n] = SLOT_PENDING;
         }
-      }
-    }
-  } else {
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-
-      if (slot_select_array[n] > 0) {
+      } else {
         // transition_level[n] = gridio_param3.getValue();
         transition_level[n] = 0;
         next_transitions[n] = next_step;
         links[n].row = row;
         links[n].loops = 1;
         // if (grid_page.active_slots[n] < 0) {
+        DEBUG_PRINT("slot man trans "); DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINTLN(next_transitions[n]);
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
       }
+    } else {
+      //calc_next_slot_transition(n);
     }
   }
 
@@ -443,10 +452,10 @@ again:
     calc_latency();
   }
 
-  DEBUG_PRINTLN("NEXT STEP");
-  DEBUG_PRINTLN(next_step);
-  DEBUG_PRINTLN(next_transition);
-  DEBUG_PRINTLN(MidiClock.div16th_counter);
+  // //DEBUG_PRINTLN("NEXT STEP");
+  // //DEBUG_PRINTLN(next_step);
+  // //DEBUG_PRINTLN(next_transition);
+  // //DEBUG_PRINTLN(MidiClock.div16th_counter);
 
   // int32_t pos = next_transition - (div192th_total_latency / 12) -
   // MidiClock.div16th_counter; next transition should always be at least 2
@@ -457,7 +466,7 @@ again:
     if (q == 255) {
       loops += 1;
     } else {
-      DEBUG_PRINTLN("try again");
+      // DEBUG_PRINTLN("try again");
       next_step += q;
     }
     recalc_latency = false;
@@ -468,10 +477,10 @@ again:
 bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
                             GridDeviceTrack *gdt, uint8_t *send_masks) {
   EmptyTrack empty_track;
-  auto *ptrack = empty_track.load_from_grid(track_idx, row);
+  auto *ptrack = empty_track.load_from_grid_512(track_idx, row);
 
   if (ptrack == nullptr) {
-    DEBUG_PRINTLN("bad read");
+    // DEBUG_PRINTLN("bad read");
     return false;
   } // read failure
 
@@ -479,13 +488,15 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   if (ptrack->active != gdt->track_type) {
     empty_track.clear();
-    DEBUG_PRINTLN("Clearing track");
-    DEBUG_PRINTLN(pos);
+     DEBUG_PRINTLN("Clearing track");
+     DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
-    ptrack->transition_load(track_idx, gdt->seq_track, pos);
+    ptrack->load_seq_data(gdt->seq_track);
   } else {
+   DEBUG_PRINTLN("load immediate track");
     ptrack->load_immediate(track_idx, gdt->seq_track);
+    ptrack->store_in_mem(track_idx);
     send_masks[pos] = 1;
   }
   return true;
@@ -493,7 +504,8 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         uint8_t *row_array) {
-  DEBUG_PRINT_FN();
+  // DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("send tracks to devices");
 
   uint8_t select_array[NUM_SLOTS];
   // Take a copy, because we call GUI.loop later.
@@ -511,9 +523,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   uint8_t track_idx, dev_idx;
 
-  DEBUG_PRINTLN("send tracks 1");
-  DEBUG_PRINTLN((int)SP);
-  DEBUG_CHECK_STACK();
+  // DEBUG_PRINTLN("send tracks 1");
+  // DEBUG_PRINTLN((int)SP);
+  // DEBUG_CHECK_STACK();
 
   uint8_t last_slot = 255;
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
@@ -543,8 +555,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     grid_page.active_slots[i] = row;
 
-    DEBUG_DUMP("here");
-    DEBUG_DUMP(row);
+    // DEBUG_DUMP("here");
+    // DEBUG_DUMP(row);
 
     if (!load_track(track_idx, row, i, gdt, send_masks)) {
       select_array[i] = 0;
@@ -576,8 +588,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
         } else {
           strcpy(dst, "NEW KIT");
         }
-        DEBUG_PRINTLN("SEND NAME");
-        DEBUG_PRINTLN(dst);
+        // DEBUG_PRINTLN("SEND NAME");
+        // DEBUG_PRINTLN(dst);
       }
       latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
     }
@@ -606,7 +618,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // }
 
   // Cache
-  DEBUG_CHECK_STACK();
+  // DEBUG_CHECK_STACK();
   bool gui_update = false;
   cache_next_tracks(select_array, gui_update);
 
@@ -640,40 +652,15 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 }
 
 void MCLActions::cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
-                             GridDeviceTrack *gdt) {
-  EmptyTrack empty_track;
-  DEBUG_CHECK_STACK();
-  auto *ptrack = empty_track.load_from_grid(track_idx, links[n].row);
-  send_machine[n] = 1;
-
-  if (ptrack == nullptr || ptrack->active != gdt->track_type) {
-    // EMPTY_TRACK_TYPE
-    DEBUG_PRINTLN(F("clear track"));
-    empty_track.clear();
-    ptrack = empty_track.init_track_type(gdt->track_type);
-    ptrack->init(track_idx, gdt->seq_track);
-  } else {
-    if (!ptrack->get_sound_data_ptr() || !ptrack->get_sound_data_size())
-       //something wrong
-       return;
-    if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
-       ptrack->transition_cache(track_idx, n);
-       send_machine[n] = 0;
-       dev_sync_slot[dev_idx] = n;
-    }
-  }
-  if (ptrack == nullptr) { return; }
-  ptrack->store_in_mem(gdt->mem_slot_idx);
-  return;
-}
+                             GridDeviceTrack *gdt) {}
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
-  DEBUG_PRINT_FN();
+  // //DEBUG_PRINT_FN();
 
-  DEBUG_PRINTLN("cache next");
-  DEBUG_PRINTLN((int)SP);
-  DEBUG_CHECK_STACK();
+  //  //DEBUG_PRINTLN("cache next");
+  //  //DEBUG_PRINTLN((int)SP);
+  // DEBUG_CHECK_STACK();
   /*
     while (SeqTrack::in_countdown && (MidiClock.state == 2)) {
       gui_loop();
@@ -685,9 +672,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   memset(dev_sync_slot, 255, sizeof(dev_sync_slot));
 
-  const uint8_t count_max = 8;
-  uint8_t count = 0;
-
   const uint8_t div32th_margin = 1;
   uint32_t diff = 0;
 
@@ -695,45 +679,33 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
   float div32th_per_second = tempo * 0.133333333333f;
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
-  float div192th_per_second = tempo * 0.8f;
+  // float div192th_per_second = tempo * 0.8f;
+  // float div192th_time = 1.0 / div192th_per_second;
+  float div192th_time = 1.25 / tempo;
 
-  //Do this in reverse as slot loading in grid task is in reverse
-  uint8_t n = NUM_SLOTS;
-  while (n--) {
+  // float div192th_time = 1.25 / tempo;
+  // diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
+  float ms = (0.80 / 1.25) * tempo;
+
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
     if (slot_select_array[n] == 0)
       continue;
 
-    count--;
     GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
     uint8_t grid_idx = get_grid_idx(n);
 
     if (gdt == nullptr)
       continue;
 
-    bool gui_loop = false;
-
-    if (gui_update && count == 0) {
-    }
-
-    while ((gdt->seq_track->count_down && (MidiClock.state == 2)) || count == 0) {
-      gui_loop = false;
+    uint32_t diff = MidiClock.clock_diff_div192(
+        MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
+    while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
-      MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
-      MidiUartParent::handle_midi_lock = 0;
-      diff =
-          MidiClock.clock_less_than(MidiClock.div32th_counter + div32th_margin,
-                                    (uint32_t)mcl_actions.next_transition * 2);
-      if ((float)diff * div32th_per_second < 0.240) {
-        count = count_max;
-      if (GUI.currentPage() == &grid_load_page) {
-        GUI.display();
-      } else {
+      if (((float)diff > 0.08 * 0.8 * tempo) && gui_update) {
         GUI.loop();
       }
-      }
-      count = count_max;
     }
 
     proj.select_grid(grid_idx);
@@ -754,20 +726,45 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         setLed2();
       }
     }
-    //if (links[n].row >= GRID_LENGTH)
-    if (links[n].row >= GRID_LENGTH || links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
+
+    // if (links[n].row >= GRID_LENGTH)
+    if (links[n].row >= GRID_LENGTH ||
+        links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
-    cache_track(n, track_idx, dev_idx, gdt);
+
+    EmptyTrack empty_track;
+
+    auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
+    send_machine[n] = 1;
+
+    if (ptrack == nullptr || ptrack->active != gdt->track_type) {
+      // EMPTY_TRACK_TYPE
+      ////DEBUG_PRINTLN(F("clear track"));
+      empty_track.clear();
+      ptrack = empty_track.init_track_type(gdt->track_type);
+      ptrack->init(track_idx, gdt->seq_track);
+    } else {
+      if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+        if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+          ptrack->transition_cache(track_idx, n);
+          send_machine[n] = 0;
+          dev_sync_slot[dev_idx] = n;
+        }
+      }
+    }
+    if (ptrack == nullptr) {
+      continue;
+    }
+    ptrack->store_in_mem(gdt->mem_slot_idx);
   }
-  DEBUG_PRINTLN("cache finished");
+  //  //DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
 }
 
 void MCLActions::calc_next_slot_transition(uint8_t n,
                                            bool ignore_chain_settings) {
 
-  DEBUG_PRINT_FN();
-  //  DEBUG_PRINTLN(next_transitions[n]);
+  // DEBUG_PRINT_FN();
 
   if (!ignore_chain_settings) {
     switch (chains[n].mode) {
@@ -786,6 +783,11 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
       return;
     }
     }
+  }
+
+  // next transition[n] already valid, use this.
+  if (next_transitions[n] != -1 && next_transitions[n] > next_transition) {
+    return;
   }
 
   uint8_t track_idx, dev_idx;
@@ -817,8 +819,8 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
     len++;
   }
 
-  DEBUG_DUMP(len - (uint16_t)(len));
-  DEBUG_DUMP(transition_offsets[n]);
+  // DEBUG_DUMP(len - (uint16_t)(len));
+  // DEBUG_DUMP(transition_offsets[n]);
   next_transitions[n] += (uint16_t)len;
 
   // check for overflow and make sure next nearest step is greater than
@@ -827,11 +829,16 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
          (next_transitions[n] < MidiClock.div16th_counter)) {
     next_transitions[n] += (uint16_t)len;
   }
+
+  DEBUG_PRINT("slot ");
+  DEBUG_PRINT(n);
+  DEBUG_PRINT(" ");
+  DEBUG_PRINTLN(next_transitions[n]);
 }
 
 void MCLActions::calc_next_transition() {
   next_transition = (uint16_t)-1;
-  DEBUG_PRINT_FN();
+  // DEBUG_PRINT_FN();
   int8_t slot = -1;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
@@ -850,10 +857,10 @@ void MCLActions::calc_next_transition() {
   nearest_beat = next_transition % 4 + 1;
   // next_transition = next_transition % 16;
 
-  DEBUG_PRINTLN(F("current_step"));
-  DEBUG_PRINTLN(MidiClock.div16th_counter);
-  DEBUG_PRINTLN(F("nearest step"));
-  DEBUG_PRINTLN(next_transition);
+     DEBUG_PRINTLN(F("current_step"));
+     DEBUG_PRINTLN(MidiClock.div16th_counter);
+   DEBUG_PRINTLN(F("nearest step"));
+    DEBUG_PRINTLN(next_transition);
 }
 
 void MCLActions::calc_latency() {
@@ -881,8 +888,8 @@ void MCLActions::calc_latency() {
 
   uint8_t num_devices = 0;
 
-  DEBUG_PRINTLN("calc latency");
-  DEBUG_CHECK_STACK();
+  // DEBUG_PRINTLN("calc latency");
+  // DEBUG_CHECK_STACK();
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] == SLOT_DISABLED))
       continue;
@@ -892,9 +899,10 @@ void MCLActions::calc_latency() {
         continue;
       }
       if (send_machine[n] == 0) {
-        //   uint16_t old_clock = clock;
-        auto *ptrack =
-            empty_track.load_from_mem(gdt->mem_slot_idx, gdt->track_type);
+        // Optimised, assume we dont need to read the entire object to calculate
+        // latency.
+        auto *ptrack = empty_track.load_from_mem(
+            gdt->mem_slot_idx, gdt->track_type, sizeof(GridTrack));
         //   uint16_t diff = clock_diff(old_clock, clock);
         if (ptrack == nullptr || !ptrack->is_active() ||
             gdt->track_type != ptrack->active) {
@@ -928,10 +936,11 @@ void MCLActions::calc_latency() {
       float latency_in_seconds = (float)dev_latency[a].latency /
                                  bytes_per_second_uart1; // 25ms minimum.
       if (num_devices == 1) {
-        latency_in_seconds += .23;
+        latency_in_seconds += .10;
       } else if (a == 1) {
-        latency_in_seconds += .23;
+        latency_in_seconds += .20;
       }
+
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
       dev_latency[a].div32th_latency =
@@ -951,9 +960,9 @@ void MCLActions::calc_latency() {
       div192th_total_latency += dev_latency[a].div192th_latency;
     }
   }
-  DEBUG_PRINTLN("total latency");
-  DEBUG_PRINTLN(div32th_total_latency);
-  DEBUG_PRINTLN(div192th_total_latency);
+  // DEBUG_PRINTLN("total latency");
+  // DEBUG_PRINTLN(div32th_total_latency);
+  // DEBUG_PRINTLN(div192th_total_latency);
 }
 
 MCLActions mcl_actions;

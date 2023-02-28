@@ -54,7 +54,8 @@ private:
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
   //  void place_track_in_sysex(int tracknumber, uint8_t column);
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) = 0;
+
+//  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr) = 0;
   virtual uint16_t get_track_size() = 0;
   virtual void* get_sound_data_ptr() = 0;
   virtual size_t get_sound_data_size() = 0;
@@ -68,6 +69,7 @@ public:
     return p;
   }
 
+  DeviceTrack *load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
   DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
   template <class T> T *load_from_grid(uint8_t col, uint16_t row) {
     auto *p = load_from_grid(col, row);
@@ -80,9 +82,9 @@ public:
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T *as() { return _dynamik_kast<T>(this); }
   ///  downloads from BANK1 to the runtime object
-  DeviceTrack* load_from_mem(uint8_t col, uint8_t track_type) {
+  DeviceTrack* load_from_mem(uint8_t col, uint8_t track_type, size_t size = 0) {
     DeviceTrack *that = init_track_type(track_type);
-    if (!that->GridTrack::load_from_mem(col)) {
+    if (!that->GridTrack::load_from_mem(col, size)) {
       return nullptr;
     }
     if (that->active != track_type) {

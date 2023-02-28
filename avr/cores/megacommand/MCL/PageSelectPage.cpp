@@ -84,21 +84,13 @@ void PageSelectPage::init() {
   R.use_icons_page();
   R.use_page_entries();
   R.restore_page_entry_deps();
-
-  oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 128, 7, WHITE);
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
   oled_display.print("PAGE SELECT");
   oled_display.setTextColor(WHITE);
-  char str[16];
-  uint8_t label_pos[4] = {30, 57, 81, 104};
-  for (uint8_t i = 0; i < 4; ++i) {
-    get_category_name_by_idx(i, str);
-    oled_display.setCursor(label_pos[i], 31);
-    oled_display.print(str);
-  }
+
   loop_init = true;
   // md_exploit.on(switch_tracks);
   // clear trigled so it's always sent on first run
@@ -229,6 +221,18 @@ void PageSelectPage::display() {
   uint8_t pageidx;
   uint8_t catidx;
 
+  oled_display.fillRect(0, 7, 128, 25, BLACK);
+  oled_display.setFont(&TomThumb);
+  oled_display.setTextColor(BLACK);
+  oled_display.setCursor(47, 6);
+  oled_display.print("PAGE SELECT");
+  oled_display.setTextColor(WHITE);
+  uint8_t label_pos[4] = {30, 57, 81, 104};
+  for (uint8_t i = 0; i < 4; ++i) {
+    get_category_name_by_idx(i, str);
+    oled_display.setCursor(label_pos[i], 31);
+    oled_display.print(str);
+  }
   pageidx = get_pageidx(page_select);
   get_page_icon(pageidx, icon, iconw, iconh);
   get_page(pageidx, str);
@@ -239,8 +243,8 @@ void PageSelectPage::display() {
     catidx = 0xFF;
   }
 
-  oled_display.fillRect(28, 7, 100, 16, BLACK);
-  oled_display.fillRect(0, 7, 28, 25, BLACK);
+//  oled_display.fillRect(28, 7, 100, 16, BLACK);
+//  oled_display.fillRect(0, 7, 28, 25, BLACK);
 
   // 4x trig groups
   uint8_t group_x = 28;

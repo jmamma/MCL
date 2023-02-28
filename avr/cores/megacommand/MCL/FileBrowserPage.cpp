@@ -94,7 +94,9 @@ void FileBrowserPage::query_filesystem() {
   DEBUG_PRINTLN(file_menu_encoder.max);
 
   //  reset directory pointer
-  SD.vwd()->rewind();
+  File d;
+  d.open(lwd);
+  d.rewind();
   numEntries = 0;
   cur_file = 255;
   if (show_save) {
@@ -104,7 +106,9 @@ void FileBrowserPage::query_filesystem() {
       add_entry("[ SAVE ]");
     }
   }
-  SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  //SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  //SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  file.getName(temp_entry, FILE_ENTRY_SIZE);
 
   if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
     add_entry("..");
@@ -113,13 +117,14 @@ void FileBrowserPage::query_filesystem() {
   encoders[1]->cur = 1;
   encoders[1]->old = 1;
   //  iterate through the files
-  while (file.openNext(SD.vwd(), O_READ) && (numEntries < MAX_ENTRIES)) {
+  while (file.openNext(&d, O_READ) && (numEntries < MAX_ENTRIES)) {
     for (uint8_t c = 0; c < FILE_ENTRY_SIZE; c++) {
       temp_entry[c] = 0;
     }
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     bool is_match_file = false;
-    DEBUG_DUMP(temp_entry);
+    DEBUG_PRINTLN(numEntries);
+    DEBUG_PRINTLN(temp_entry);
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
@@ -131,7 +136,7 @@ void FileBrowserPage::query_filesystem() {
         is_match_file = true;
       }
     }
-    if (is_match_file) {
+    if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
       if (add_entry(temp_entry)) {
         if (strcmp(temp_entry, mcl_cfg.project) == 0) {
@@ -405,13 +410,15 @@ bool FileBrowserPage::_handle_filemenu() {
 bool FileBrowserPage::rm_dir(const char *dir) {
   char temp_entry[FILE_ENTRY_SIZE];
 
-  SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
+  //SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
   DEBUG_PRINTLN("preparing to delete");
   DEBUG_PRINTLN(dir);
   if (_cd(dir)) {
-    SD.vwd()->rewind();
+    File d;
+    d.open(lwd);
+    d.rewind();
    // bool ret = SD.vwd()->rmRfStar(); // extra 276 bytes
-    while (file.openNext(SD.vwd(), O_READ)) {
+    while (file.openNext(&d, O_READ)) {
         file.getName(temp_entry, FILE_ENTRY_SIZE);
         DEBUG_PRINT("deleting "); DEBUG_PRINTLN(temp_entry);
         file.close();

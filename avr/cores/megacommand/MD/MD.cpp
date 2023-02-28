@@ -652,6 +652,7 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
 
+  DEBUG_PRINT("assign machine bulk: "); DEBUG_PRINTLN(track);
   uint8_t data[43] = {0x70, 0x5b};
   uint8_t i = 2;
   data[i++] = track;
@@ -693,16 +694,13 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
     data[i++] = level;
     set_level = true;
   }
-  if (send) {
-    if (track > 15) { track -= 16; }
-    insertMachineInKit(track, machine, set_level);
-  }
 
 end:
   return sendRequest(data, i, send);
 }
 
 void MDClass::loadMachinesCache(uint16_t track_mask) {
+  DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
@@ -717,6 +715,9 @@ void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
 
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
+
+  DEBUG_PRINT("insert machine in kit "); DEBUG_PRINTLN(track);
+
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, 24);
@@ -758,7 +759,11 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   MDKit *kit_ = &kit;
 
   uint8_t level = 255;
-  if ((send_level) && (kit_->levels[track] != machine->level)) {
+
+  uint8_t track_ = track;
+  if (track_ > 15) { track_ -= 16; }
+
+  if ((send_level) && (kit_->levels[track_] != machine->level)) {
     level = machine->level;
   }
 
