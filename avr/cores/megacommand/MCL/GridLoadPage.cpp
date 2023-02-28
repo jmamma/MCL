@@ -261,6 +261,10 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      default: {
+        GUI.setPage(&grid_page);
+        return false;
+      }
       case MDX_KEY_YES: {
         group_select();
         return true;
