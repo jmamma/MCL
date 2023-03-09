@@ -204,11 +204,13 @@ void GridTask::transition_handler() {
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       bool ignore_chain_settings = true;
+      bool auto_check = true;
       if (track_select_array[n] > 0) {
         last_slot = n;
         ignore_chain_settings = false;
+        auto_check = false;
       }
-      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
+      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings, auto_check);
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {

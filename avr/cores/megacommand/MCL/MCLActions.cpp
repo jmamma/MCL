@@ -762,9 +762,22 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 }
 
 void MCLActions::calc_next_slot_transition(uint8_t n,
-                                           bool ignore_chain_settings) {
+                                           bool ignore_chain_settings, bool auto_check) {
+
 
   // DEBUG_PRINT_FN();
+
+  if (auto_check) {
+   switch (chains[n].mode) {
+    case LOAD_AUTO: {
+      if (links[n].loops == 0) {
+        next_transitions[n] = -1;
+        return;
+      }
+      break;
+    }
+   }
+  }
 
   if (!ignore_chain_settings) {
     switch (chains[n].mode) {
@@ -785,7 +798,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
     }
   }
 
-  // next transition[n] already valid, use this.
+    // next transition[n] already valid, use this.
   if (next_transitions[n] != -1 && next_transitions[n] > next_transition) {
     return;
   }
