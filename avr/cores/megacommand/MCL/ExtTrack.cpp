@@ -48,8 +48,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   bool ret;
 
   int b = 0;
-  DEBUG_PRINT_FN();
-  uint32_t len;
+  if (grid == nullptr) { DEBUG_PRINTLN("grid is nullptr"); }
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
 
@@ -61,7 +60,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
-  ret = write_grid((uint8_t *)(this), len, column, row, grid);
+  ret = write_grid((uint8_t *)(this), sizeof(ExtTrack), column, row, grid);
   if (!ret) {
     DEBUG_PRINTLN(F("Write failed"));
     return false;

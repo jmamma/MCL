@@ -23,7 +23,7 @@ public:
   void get_machine_from_kit(uint8_t tracknumber);
   virtual bool store_in_grid(uint8_t column, uint16_t row,
                              SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                             bool online = false);
+                             bool online = false, Grid *grid = nullptr);
   virtual uint16_t get_track_size() { return sizeof(MNMTrack); }
   virtual uint8_t get_model() { return machine.model; }
   virtual uint8_t get_device_type() { return MNM_TRACK_TYPE; }

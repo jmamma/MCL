@@ -55,7 +55,7 @@ void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
 }
 
 bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
-                                  bool online) {
+                                  bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();
   active = MNM_TRACK_TYPE;
@@ -75,6 +75,8 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     }
   }
   // Write data to sd
-  return proj.write_grid((uint8_t *)(this), sizeof(MNMTrack), column, row);
+  uint32_t len = sizeof(MNMTrack);
+  bool ret = write_grid((uint8_t *)(this), len, column, row, grid);
+  return ret;
 }
 
