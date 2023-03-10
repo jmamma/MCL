@@ -398,7 +398,6 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   collect_tracks(slot_select_array, row_array);
 
   uint16_t next_step = (MidiClock.div16th_counter / q) * q + q;
-  bool overflow = next_step < MidiClock.div16th_counter;
 
   uint8_t loops = 1;
 
@@ -407,6 +406,7 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   bool recalc_latency = true;
   ////DEBUG_PRINTLN("manual trans");
 again:
+  bool overflow = next_step < MidiClock.div16th_counter;
   uint8_t row = grid_task.next_active_row;
   uint16_t div16th_counter = MidiClock.div16th_counter;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
