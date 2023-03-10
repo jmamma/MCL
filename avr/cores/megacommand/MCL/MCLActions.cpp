@@ -398,6 +398,8 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   collect_tracks(slot_select_array, row_array);
 
   uint16_t next_step = (MidiClock.div16th_counter / q) * q + q;
+  bool overflow = next_step < MidiClock.div16th_counter;
+
   uint8_t loops = 1;
 
   uint8_t track_idx, dev_idx;
@@ -433,12 +435,15 @@ again:
         links[n].row = row;
         links[n].loops = 1;
         // if (grid_page.active_slots[n] < 0) {
-        DEBUG_PRINT("slot man trans "); DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINTLN(next_transitions[n]);
+        DEBUG_PRINT("slot man trans ");
+        DEBUG_PRINT(n);
+        DEBUG_PRINT(" ");
+        DEBUG_PRINTLN(next_transitions[n]);
         grid_page.active_slots[n] = SLOT_PENDING;
         // }
       }
     } else {
-      //calc_next_slot_transition(n);
+      // calc_next_slot_transition(n);
     }
   }
 
@@ -460,17 +465,24 @@ again:
   // int32_t pos = next_transition - (div192th_total_latency / 12) -
   // MidiClock.div16th_counter; next transition should always be at least 2
   // steps away.
-  if (next_transition - (div192th_total_latency / 12) - 2 <
-      MidiClock.div16th_counter) {
 
-    if (q == 255) {
-      loops += 1;
-    } else {
-      // DEBUG_PRINTLN("try again");
-      next_step += q;
+  uint32_t next32 = (uint32_t)next_transition;
+  if (next_transition == next_step) {
+    if (overflow) {
+      next32 += (uint16_t)-1;
     }
-    recalc_latency = false;
-    goto again;
+    if (next32 - (div192th_total_latency / 12) - 2 <
+        (uint32_t)MidiClock.div16th_counter) {
+
+      if (q == 255) {
+        loops += 1;
+      } else {
+        // DEBUG_PRINTLN("try again");
+        next_step += q;
+      }
+      recalc_latency = false;
+      goto again;
+    }
   }
 }
 
@@ -488,13 +500,13 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   if (ptrack->active != gdt->track_type) {
     empty_track.clear();
-     DEBUG_PRINTLN("Clearing track");
-     DEBUG_PRINTLN(pos);
+    DEBUG_PRINTLN("Clearing track");
+    DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
     ptrack->load_seq_data(gdt->seq_track);
   } else {
-   DEBUG_PRINTLN("load immediate track");
+    DEBUG_PRINTLN("load immediate track");
     ptrack->load_immediate(track_idx, gdt->seq_track);
     ptrack->store_in_mem(track_idx);
     send_masks[pos] = 1;
@@ -762,13 +774,13 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 }
 
 void MCLActions::calc_next_slot_transition(uint8_t n,
-                                           bool ignore_chain_settings, bool auto_check) {
-
+                                           bool ignore_chain_settings,
+                                           bool auto_check) {
 
   // DEBUG_PRINT_FN();
 
   if (auto_check) {
-   switch (chains[n].mode) {
+    switch (chains[n].mode) {
     case LOAD_AUTO: {
       if (links[n].loops == 0) {
         next_transitions[n] = -1;
@@ -776,7 +788,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
       }
       break;
     }
-   }
+    }
   }
 
   if (!ignore_chain_settings) {
@@ -798,7 +810,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
     }
   }
 
-    // next transition[n] already valid, use this.
+  // next transition[n] already valid, use this.
   if (next_transitions[n] != -1 && next_transitions[n] > next_transition) {
     return;
   }
@@ -870,10 +882,10 @@ void MCLActions::calc_next_transition() {
   nearest_beat = next_transition % 4 + 1;
   // next_transition = next_transition % 16;
 
-     DEBUG_PRINTLN(F("current_step"));
-     DEBUG_PRINTLN(MidiClock.div16th_counter);
-   DEBUG_PRINTLN(F("nearest step"));
-    DEBUG_PRINTLN(next_transition);
+  DEBUG_PRINTLN(F("current_step"));
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
+  DEBUG_PRINTLN(F("nearest step"));
+  DEBUG_PRINTLN(next_transition);
 }
 
 void MCLActions::calc_latency() {
