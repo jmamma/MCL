@@ -1,3 +1,14 @@
+MCL 4.41 10/03/2023
+
+- Fixes
+
+  Regression in 4.40, External Sequencer tracks in Grid Y could not be saved.
+
+  Auto load could cause some tracks to unecessarily reload and play out of sync.
+
+  When outside the Pianoroll, playing MIDI notes on input 2, and holding down MD trig buttons could
+  record notes to the Ext Sequencer tracks.
+
 MCL 4.40 25/02/2023
 
 Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
