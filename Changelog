@@ -6,6 +6,8 @@ MCL 4.41 10/03/2023
 
   Auto load could cause some tracks to unecessarily reload and play out of sync.
 
+  Manual transitions could be missed or cause disruption to queue/auto loading.
+
   When outside the Pianoroll, playing MIDI notes on input 2, and holding down MD trig buttons could
   record notes to the Ext Sequencer tracks.
 
