@@ -203,6 +203,13 @@ void GridTask::transition_handler() {
     // Once tracks are cached, we can calculate their next transition
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      GridDeviceTrack *gdt =
+          mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+
+      if (gdt == nullptr) {
+        continue;
+      }
+
       bool ignore_chain_settings = true;
       bool auto_check = true;
       if (track_select_array[n] > 0) {

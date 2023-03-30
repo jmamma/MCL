@@ -811,7 +811,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   }
 
   // next transition[n] already valid, use this.
-  if (next_transitions[n] != -1 && next_transitions[n] > next_transition) {
+  if (next_transitions[n] == -1 || next_transitions[n] > next_transition) {
     return;
   }
 
