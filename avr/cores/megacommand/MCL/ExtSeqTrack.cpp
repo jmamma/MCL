@@ -630,7 +630,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
   uint16_t ev_idx, ev_end;
 
-  if ((!is_generic_midi && count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
+  if ((is_generic_midi || (!is_generic_midi && count_down == 0)) && (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
