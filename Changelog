@@ -7,6 +7,7 @@ MCL 4.42 01/04/2023
   When loading slots, a second transition could occur unexpectedly causing
   tracks to play out of sync.
 
+  MCL would crash when switching device driver between Elektron and Generic.
 
 MCL 4.41 10/03/2023
 
