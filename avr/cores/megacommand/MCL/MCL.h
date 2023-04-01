@@ -8,7 +8,7 @@
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND
-//  #define WAV_DESIGNER
+  #define WAV_DESIGNER
   #define SOUND_PAGE
 #endif
 
