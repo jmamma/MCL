@@ -609,7 +609,9 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     }
     step_count_inc();
   }
-   bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
+
+  bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
+
   if (count_down) {
     count_down--;
     if (is_generic_midi) {
@@ -628,8 +630,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
   uint16_t ev_idx, ev_end;
 
-  if ((mute_state == SEQ_MUTE_OFF)) {
-    // if ((!is_generic_midi && count_down == 0) && (mute_state ==
+  if ((!is_generic_midi && count_down == 0) && (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
     // the range we're interested in:
     // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
