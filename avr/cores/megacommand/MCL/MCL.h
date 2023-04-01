@@ -8,7 +8,7 @@
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND
-  #define WAV_DESIGNER
+//  #define WAV_DESIGNER
   #define SOUND_PAGE
 #endif
 
@@ -16,8 +16,8 @@
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
 
-#define VERSION 4041
-#define VERSION_STR "4.41"
+#define VERSION 4042
+#define VERSION_STR "4.42"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
