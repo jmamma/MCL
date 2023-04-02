@@ -1,5 +1,9 @@
 MCL 4.42 01/04/2023
 
+- Improvements
+
+  External MIDI tracks can now be universally loaded across different port 2 drivers.
+
 - Fixes
 
   MNM and A4 tracks transitions were broken, as of 4.30
@@ -7,7 +11,8 @@ MCL 4.42 01/04/2023
   When loading slots, a second transition could occur unexpectedly causing
   tracks to play out of sync.
 
-  MCL would crash when switching device driver between Elektron and Generic.
+  MCL would crash when switching port2 device driver between Elektron and Generic.
+
 
 MCL 4.41 10/03/2023
 
