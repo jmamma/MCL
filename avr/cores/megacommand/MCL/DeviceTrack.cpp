@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
+  active = track_type;
   switch (track_type) {
   default:
   case EMPTY_TRACK_TYPE:

@@ -369,7 +369,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
     // DEBUG_PRINTLN(F("cl"));
     auto *device_track = empty_track.load_from_grid(track_idx, row);
 
-    if (device_track == nullptr || device_track->active != gdt->track_type) {
+    if (device_track == nullptr || device_track->active != gdt->track_type && device_track->get_parent_model() != gdt->track_type) {
       empty_track.clear();
       device_track = device_track->init_track_type(gdt->track_type);
       if (device_track) {
@@ -377,6 +377,9 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       }
       send_machine[n] = 1;
     } else {
+      if (device_track->get_parent_model() == gdt->track_type && device_track->allow_cast_to_parent()) {
+        device_track->init_track_type(device_track->get_parent_model());
+      }
       send_machine[n] = device_track->transition_cache(track_idx, n);
       dev_sync_slot[dev_idx] = n;
     }
@@ -498,7 +501,7 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   ptrack->link.store_in_mem(pos, &(links[0]));
 
-  if (ptrack->active != gdt->track_type) {
+  if (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
     empty_track.clear();
     DEBUG_PRINTLN("Clearing track");
     DEBUG_PRINTLN(pos);
@@ -506,6 +509,9 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     ptrack->init(track_idx, gdt->seq_track);
     ptrack->load_seq_data(gdt->seq_track);
   } else {
+    if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
+      ptrack->init_track_type(ptrack->get_parent_model());
+    }
     DEBUG_PRINTLN("load immediate track");
     ptrack->load_immediate(track_idx, gdt->seq_track);
     ptrack->store_in_mem(track_idx);
@@ -749,13 +755,16 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
     send_machine[n] = 1;
 
-    if (ptrack == nullptr || ptrack->active != gdt->track_type) {
+    if (ptrack == nullptr || ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
       // EMPTY_TRACK_TYPE
       ////DEBUG_PRINTLN(F("clear track"));
       empty_track.clear();
       ptrack = empty_track.init_track_type(gdt->track_type);
       ptrack->init(track_idx, gdt->seq_track);
     } else {
+      if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
+        ptrack->init_track_type(ptrack->get_parent_model());
+      }
       if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
         if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
           ptrack->transition_cache(track_idx, n);

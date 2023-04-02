@@ -22,7 +22,7 @@
 #define EXT_ARP_TRACK_TYPE 14
 
 #define GRIDCHAIN_TRACK_TYPE 15
-
+#define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
 
 #include "GridLink.h"
@@ -102,7 +102,8 @@ public:
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return DEVICE_NULL; }
-
+  virtual uint8_t get_parent_model() { return NULL_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() { return false; }
 };
 
 #endif /* GRIDTRACK_H__ */

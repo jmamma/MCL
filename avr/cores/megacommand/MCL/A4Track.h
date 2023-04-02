@@ -67,7 +67,8 @@ public:
   virtual uint16_t get_track_size() { return sizeof(A4Track); }
   virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
   virtual uint8_t get_device_type() { return A4_TRACK_TYPE; }
-
+  virtual uint8_t get_parent_model() { return EXT_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() { return true; }
   virtual void *get_sound_data_ptr() { return &sound; }
   virtual size_t get_sound_data_size() { return sizeof(A4Sound); }
 };

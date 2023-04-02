@@ -73,7 +73,7 @@ public:
   virtual uint32_t get_region() { return BANK1_A4_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
-
+  virtual uint8_t get_parent_model() { return midi_active_peering.get_device(UART2_PORT)->track_type; }
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

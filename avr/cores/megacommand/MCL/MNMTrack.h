@@ -27,7 +27,9 @@ public:
   virtual uint16_t get_track_size() { return sizeof(MNMTrack); }
   virtual uint8_t get_model() { return machine.model; }
   virtual uint8_t get_device_type() { return MNM_TRACK_TYPE; }
-
+  virtual uint8_t get_parent_model() { return EXT_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() { return true; }
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(MNMMachine); }
+
 };

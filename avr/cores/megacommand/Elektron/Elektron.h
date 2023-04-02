@@ -183,7 +183,7 @@ public:
   const char* const name;
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
-
+  uint8_t track_type;
   GridDevice grid_devices[NUM_GRIDS];
 
   MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
@@ -191,6 +191,7 @@ public:
   {
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
+    track_type = 0;
     connected = false;
   }
 
@@ -198,9 +199,10 @@ public:
     memset(grid_devices,0, sizeof(GridDevice) * NUM_GRIDS);
   }
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type_, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
     auto *devp = &grid_devices[grid_idx];
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type, group_type, mem_slot_idx);
+    if (track_type == 0) { track_type = track_type_; }
+    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type_, group_type, mem_slot_idx);
   }
 
   ElektronDevice* asElektronDevice() {
