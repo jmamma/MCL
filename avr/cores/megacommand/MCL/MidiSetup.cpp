@@ -23,6 +23,11 @@ void MidiSetup::cfg_ports(bool boot) {
   DEBUG_PRINT_FN();
 
   // Always receive transport on port1 for MD.
+  ElektronDevice *elektron_devs[2] = {
+      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
+      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+  };
+
 
   MidiClock.uart_transport_recv1 = &MidiUart;
   MidiClock.uart_transport_forward1 = &MidiUart;
@@ -43,13 +48,21 @@ void MidiSetup::cfg_ports(bool boot) {
   MidiClock.uart_transport_forward3 = nullptr;
   switch (mcl_cfg.midi_transport_send) {
   case 1:
-    MidiClock.uart_transport_forward2 = &MidiUart2;
+    if (MidiClock.uart_transport_recv2 == &MidiUart2 && mcl_cfg.uart2_device > 0) {
+    }
+    else {
+      MidiClock.uart_transport_forward2 = &MidiUart2;
+    }
     break;
   case 2:
     MidiClock.uart_transport_forward3 = &MidiUartUSB;
     break;
   case 3:
-    MidiClock.uart_transport_forward2 = &MidiUart2;
+    if (MidiClock.uart_transport_recv2 == &MidiUart2 && mcl_cfg.uart2_device > 0) {
+    }
+    else {
+      MidiClock.uart_transport_forward2 = &MidiUart2;
+    }
     MidiClock.uart_transport_forward3 = &MidiUartUSB;
     break;
   }
@@ -58,7 +71,11 @@ void MidiSetup::cfg_ports(bool boot) {
   MidiClock.uart_clock_forward3 = nullptr;
   switch (mcl_cfg.clock_send) {
   case 1:
-    MidiClock.uart_clock_forward2 = &MidiUart2;
+    if (MidiClock.uart_clock_recv == &MidiUart2 && mcl_cfg.uart2_device > 0) {
+    }
+    else {
+      MidiClock.uart_clock_forward2 = &MidiUart2;
+    }
     break;
   case 2:
     #ifndef DEBUGMODE
@@ -66,8 +83,12 @@ void MidiSetup::cfg_ports(bool boot) {
     #endif
     break;
   case 3:
-    MidiClock.uart_clock_forward2 = &MidiUart2;
-    #ifndef DEBUGMODE
+    if (MidiClock.uart_clock_recv == &MidiUart2 && mcl_cfg.uart2_device > 0) {
+    }
+    else {
+      MidiClock.uart_clock_forward2 = &MidiUart2;
+    }
+#ifndef DEBUGMODE
     MidiClock.uart_clock_forward3 = &MidiUartUSB;
     #endif
     break;
@@ -108,11 +129,6 @@ void MidiSetup::cfg_ports(bool boot) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo),
                             MidiUSB.uart);
   }
-
-  ElektronDevice *elektron_devs[2] = {
-      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
-      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
-  };
 
   if (elektron_devs[0]) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo),
