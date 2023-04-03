@@ -117,6 +117,8 @@ void GridPage::loop() {
         grid_page.grid_select_apply = 1;
         proj.grid_select = 1;
         ((MCLEncoder *)encoders[2])->max = getWidth() - getCol();
+        load_slot_models();
+        reload_slot_models = true;
       }
       else if ((proj.get_grid() == 1) && (encoders[2]->cur == 0) && (old_col != 255)) {
         load_old_col();
@@ -702,6 +704,8 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       }
     }
     mcl_clipboard.copy(_col, getRow(), width, height, proj.get_grid());
+  }
+
     if (slot_clear) {
       goto run;
     }
