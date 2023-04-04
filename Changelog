@@ -13,6 +13,7 @@ MCL 4.42 01/04/2023
 
   MCL would crash when switching port2 device driver between Elektron and Generic.
 
+  Prevent MIDI Clock/Transport loop on port2 when Elektron driver in use.
 
 MCL 4.41 10/03/2023
 
