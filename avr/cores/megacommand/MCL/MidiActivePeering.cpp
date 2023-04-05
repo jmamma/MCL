@@ -184,10 +184,12 @@ void MidiActivePeering::run() {
   resource_loaded = false;
 
   //Setting USB turbo speed too early can cause OS upload to fail
+  #ifndef DEBUGMODE
   if (turbo_light.tmSpeeds[turbo_light.lookup_speed(mcl_cfg.usb_turbo)] != MidiUartUSB.speed && slowclock > 4000 && usb_set_speed) {
      turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo), MidiUSB.uart);
      usb_set_speed = false;
   }
+  #endif
 
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
             &connected_midi_devices[0], resource_buf);
