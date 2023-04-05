@@ -196,7 +196,7 @@ bool MCLClipBoard::copy(uint8_t col, uint16_t row, uint8_t w, uint16_t h) {
     proj.read_grid_row_header(&header, y + row);
     ret = grids[grid].write_row_header(&header, y + row);
     DEBUG_PRINTLN(header.name);
-    if (h > 8) {
+    if (h > 4) {
       mcl_gui.draw_progress("", y, h);
     }
     for (int x = 0; x < w; x++) {
