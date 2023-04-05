@@ -61,6 +61,8 @@ static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
                                                 &null_midi_device};
 
 void MidiActivePeering::disconnect(uint8_t port) {
+        DEBUG_PRINTLN("disconnect");
+        DEBUG_PRINTLN(port);
   MidiUartClass *pmidi = _getMidiUart(port);
   if (!pmidi) { return; }
   MidiDevice **drivers;
@@ -182,7 +184,7 @@ void MidiActivePeering::run() {
   resource_loaded = false;
 
   //Setting USB turbo speed too early can cause OS upload to fail
-  if (turbo_light.lookup_speed(mcl_cfg.usb_turbo) != MidiUartUSB.speed && slowclock > 4000 && usb_set_speed) {
+  if (turbo_light.tmSpeeds[turbo_light.lookup_speed(mcl_cfg.usb_turbo)] != MidiUartUSB.speed && slowclock > 4000 && usb_set_speed) {
      turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo), MidiUSB.uart);
      usb_set_speed = false;
   }
