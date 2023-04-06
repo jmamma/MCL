@@ -6,7 +6,7 @@ MCL 4.42 01/04/2023
 
 - Fixes
 
-  MNM and A4 tracks transitions were broken, as of 4.30
+  MNM and A4 track transitions were broken, as of 4.30.
 
   When loading slots, a second transition could occur unexpectedly causing
   tracks to play out of sync.
