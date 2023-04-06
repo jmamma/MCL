@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Author: Justin Mammarella
-# Date: 30/7/2018
-# Description: Connect to MegaCommand via serial and receive
+# Date: 06/4/2023
+# Description: Connect to MegaCommand via MIDI and receive
 #              dumps of the OLED display bufffer.
 
 import pygame
@@ -114,11 +114,11 @@ def receive_screen_dump(midi_input, screen, w):
                     bit = (buf[x + (int(yd/8) * 128)] >> (yd % 8)) & 0x01
                     if bit > 0:
                         pygame.draw.rect(
-                            screen, FG, [(x + 1) * w, (y + 1) * w, w, w])
+                            screen, FG, [(x + 1) * w, (32 - y) * w, w, w])
         pygame.display.flip()
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
-                done = True  # Flag that we are done so we exit this loop
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_2:
                     BG = BLACK
@@ -129,6 +129,9 @@ def receive_screen_dump(midi_input, screen, w):
                 if event.key == pygame.K_9:
                     pygame.image.save(screen, os.path.expanduser("~/Desktop/") + "mcl_screenshot" + str(file_count) + ".png");
                     file_count += 1
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
         screen.fill(BG)
 
 def read_byte(midi_input):
