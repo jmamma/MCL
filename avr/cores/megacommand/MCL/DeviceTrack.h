@@ -87,10 +87,18 @@ public:
     if (!that->GridTrack::load_from_mem(col, size)) {
       return nullptr;
     }
-    if (that->active != track_type) {
-      return nullptr;
+    auto p = init_track_type(this->active);
+    if (p->active != track_type) {
+      if (p->get_parent_model() == track_type) {
+        if (p->allow_cast_to_parent()) {
+          p->active = p->get_parent_model();
+        }
+      }
+      else {
+        return nullptr;
+      }
     }
-    auto ptrack = that->init_track_type(that->active);
+    auto ptrack = that->init_track_type(p->active);
     return ptrack;
   }
 
