@@ -184,11 +184,9 @@ ISR(TIMER1_COMPA_vect) {
 
   if (!MidiUartParent::handle_midi_lock)  {
    uint8_t _irqlock_tmp = SREG;
-   MidiUartParent::handle_midi_lock = 1;
    sei();
    handleIncomingMidi();
    SREG = _irqlock_tmp;
-   MidiUartParent::handle_midi_lock = 0;
   }
 }
 
@@ -239,6 +237,7 @@ ISR(TIMER3_COMPA_vect) {
 }
 
 void handleIncomingMidi() {
+  MidiUartParent::handle_midi_lock = 1;
 
   Midi.processSysex();
   Midi2.processSysex();
@@ -247,6 +246,7 @@ void handleIncomingMidi() {
   Midi2.processMidi();
   MidiUSB.processMidi();
 
+  MidiUartParent::handle_midi_lock = 0;
 }
 
 void change_usb_mode(uint8_t mode) {

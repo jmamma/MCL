@@ -61,15 +61,12 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
   MidiSDSSysexListener.msgType = 255;
 
-  uint16_t start_clock = read_slowclock();
-  uint16_t current_clock = start_clock;
+  uint16_t start_clock = slowclock;
   do {
-    current_clock = read_slowclock();
-
     handleIncomingMidi();
     //midi_active_peering.run();
     // GUI.display();
-  } while ((clock_diff(start_clock, current_clock) < timeout) &&
+  } while ((clock_diff(start_clock, slowclock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
   return MidiSDSSysexListener.msgType;
 }
@@ -147,6 +144,10 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 
   oled_display.clearDisplay();
 
+  uint16_t latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 5;
+  DEBUG_PRINTLN("latency");
+  DEBUG_PRINTLN(latency_ms);
+
   while(true) {
     const uint32_t pos = file.position();
     DEBUG_PRINT("pos = ");
@@ -167,11 +168,16 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     }
     n_retry = 0;
 retry:
+    if (hand_shake_state) {
+      MidiUartParent::handle_midi_lock = 1;
+    }
     MidiUart.sendRaw(buf, szbuf);
     if (!hand_shake_state) {
-      delay(200);
+      uint16_t myclock = slowclock;
+      while (clock_diff(myclock, slowclock) < latency_ms);
+
     } else if (buf[1] == 0x7E && buf[3] == 0x02) {
-      reply = waitForMsg(20);
+      reply = waitForMsg(100);
       switch (reply) {
         case 255: // nothing came back
           hand_shake_state = false;
@@ -276,6 +282,14 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   uint8_t show_progress_i = 0;
 
+  uint8_t packet = 0;
+
+  uint16_t latency_ms = (float) (1000 * sizeof(data) / ( (float) MidiUart.speed * 0.1f)) + 5;
+  DEBUG_PRINTLN("latency");
+  DEBUG_PRINTLN(latency_ms);
+
+  uint8_t n_retry = 0;
+
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
 
@@ -341,23 +355,37 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
       bits7 = encode_val << (8 - shift);
       data[n + shift - 1] = 0x7F & bits7;
     }
-    if (!hand_shake_state) {
 
-      delay(200);
+    if (!hand_shake_state) {
+      uint16_t myclock = slowclock;
+      while (clock_diff(myclock, slowclock) < latency_ms) {};
       sendData(data, n);
     } else {
       uint8_t count = 0;
       uint8_t msgType = 255;
       while ((msgType != MIDI_SDS_ACK) && count < 3) {
         // No message received, assume handshake disabled
-
+        again:
+        MidiUartParent::handle_midi_lock = 1;
         sendData(data, n);
-        msgType = waitForMsg(20);
+        msgType = waitForMsg(100);
+
         if (msgType == 255) {
           hand_shake_state = false;
-          count = 128;
           DEBUG_PRINTLN("Reply timeout, switch to no-handshake");
+          count = 128;
           // Timeout in reply, switch to no-handshake proto
+        }
+        if (msgType == MIDI_SDS_NAK) {
+          DEBUG_PRINTLN("retry");
+          cancel();
+          return false;
+          //goto again; -> does not work.
+        }
+        if (msgType == MIDI_SDS_CANCEL) {
+          DEBUG_PRINTLN("cancel");
+          cancel();
+          return false;
         }
         if (msgType == MIDI_SDS_WAIT) {
           DEBUG_PRINTLN(F("told to wait"));
@@ -403,9 +431,9 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   }
   while(true) {
     uint8_t msg = waitForMsg(2000);
-    if (msg == 255 || msg == MIDI_SDS_CANCEL)  { 
-      DEBUG_PRINTLN("sds recv abort"); 
-      goto recv_fail; 
+    if (msg == 255 || msg == MIDI_SDS_CANCEL)  {
+      DEBUG_PRINTLN("sds recv abort");
+      goto recv_fail;
     }
     if (midi_sds.state == SDS_READY) {
       DEBUG_PRINTLN("here");
@@ -493,24 +521,21 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   // DEBUG_PRINTLN(len);
   if (len > 120)
     return false;
-  uint8_t data[5] = {0xF0, 0x7E, 0x00, 0x02, 0x00};
-  data[2] = deviceID;
-  data[4] = packetNumber;
+  uint8_t data[127] = {0xF0, 0x7E, deviceID, 0x02, packetNumber};
   uint8_t checksum = 0;
-  MidiUart.sendRaw(data, 5);
+  uint8_t n = 5;
   for (int i = 1; i < 5; i++)
     checksum ^= data[i];
   for (int i = 0; i < len; i++) {
-    MidiUart.m_putc(buf[i]);
+    data[n++] = buf[i];
     checksum ^= buf[i];
-    if (buf[i] > 0x7F) {
-      DEBUG_PRINTLN(F("crap"));
-    }
   }
   for (int i = len; i < 120; i++)
-    MidiUart.m_putc(0x00);
-  MidiUart.m_putc(checksum & 0x7F);
-  MidiUart.m_putc(0xF7);
+    data[n++] = 0x00;
+
+  data[n++] = checksum & 0x7F;
+  data[n] = 0xF7;
+  MidiUart.m_putc(data, 127);
   return true;
 }
 MidiSDSClass midi_sds;
