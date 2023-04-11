@@ -59,16 +59,16 @@ wait:
 
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
-  MidiSDSSysexListener.msgType = 255;
-
   uint16_t start_clock = slowclock;
   do {
-    handleIncomingMidi();
+    //handleIncomingMidi();
     //midi_active_peering.run();
     // GUI.display();
   } while ((clock_diff(start_clock, slowclock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
-  return MidiSDSSysexListener.msgType;
+  uint8_t ret = MidiSDSSysexListener.msgType;
+  MidiSDSSysexListener.msgType = 255;
+  return ret;
 }
 
 void MidiSDSClass::cancel() {

@@ -41,7 +41,6 @@ void MidiSDSSysexListenerClass::end() {
     return;
   }
   msgType = sysex->getByte(2);
-
   //DEBUG_PRINTLN(msgType);
   switch (msgType) {
 
