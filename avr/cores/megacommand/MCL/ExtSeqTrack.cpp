@@ -610,8 +610,6 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     step_count_inc();
   }
 
-  bool is_generic_midi = (midi_active_peering.get_device(UART2_PORT) == &generic_midi_device);
-
   if (count_down) {
     count_down--;
     if (is_generic_midi) {

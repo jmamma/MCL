@@ -146,6 +146,7 @@ public:
 class ExtSeqTrack : public ExtSeqTrackData, public SeqSlideTrack {
 
 public:
+  bool is_generic_midi = true;
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];

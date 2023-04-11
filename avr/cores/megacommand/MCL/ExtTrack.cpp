@@ -6,6 +6,7 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
   DEBUG_DUMP(slotnumber);
   DEBUG_DUMP(tracknumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+  ext_track->is_generic_midi = true;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   //load_seq_data(seq_track);
 }

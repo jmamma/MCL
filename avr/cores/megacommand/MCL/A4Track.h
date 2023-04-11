@@ -23,6 +23,7 @@ public:
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
+  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
