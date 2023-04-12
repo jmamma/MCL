@@ -60,17 +60,12 @@ wait:
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
   uint16_t start_clock = slowclock;
+  MidiSDSSysexListener.msgType = 255;
   do {
-    //handleIncomingMidi();
-    //midi_active_peering.run();
-    // GUI.display();
+     handleIncomingMidi();
   } while ((clock_diff(start_clock, slowclock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
-  uint8_t ret = MidiSDSSysexListener.msgType;
-  DEBUG_PRINT("Ret");
-  DEBUG_PRINTLN(ret);
-  MidiSDSSysexListener.msgType = 255;
-  return ret;
+  return MidiSDSSysexListener.msgType;
 }
 
 void MidiSDSClass::cancel() {
@@ -146,7 +141,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 
   oled_display.clearDisplay();
 
-  uint16_t latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 5;
+  uint16_t latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 
@@ -176,11 +171,11 @@ retry:
       while (clock_diff(myclock, slowclock) < latency_ms);
 
     } else if (buf[1] == 0x7E && buf[3] == 0x02) {
-      reply = waitForMsg(100);
+      reply = waitForMsg(2000);
       switch (reply) {
         case 255: // nothing came back
           hand_shake_state = false;
-          goto retry;
+          break;
         case MIDI_SDS_WAIT:
           reply = waitForMsg();
           if (reply != MIDI_SDS_ACK) {
@@ -261,6 +256,7 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
 }
 
 bool MidiSDSClass::sendSamples(bool show_progress) {
+         //MidiUartParent::handle_midi_lock = 0;
   bool ret = false;
   uint8_t midiBytes_per_word = sampleFormat / 7;
   uint8_t bytes_per_word = sampleFormat / 8;
@@ -283,7 +279,7 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   uint8_t packet = 0;
 
-  uint16_t latency_ms = (float) (1000 * sizeof(data) / ( (float) MidiUart.speed * 0.1f)) + 5;
+  uint16_t latency_ms = (float) (1000 * sizeof(data) / ( (float) MidiUart.speed * 0.1f)) + 20;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 
@@ -364,26 +360,22 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
       uint8_t msgType = 255;
       while ((msgType != MIDI_SDS_ACK) && count < 3) {
         // No message received, assume handshake disabled
-        again:
         sendData(data, n);
-        msgType = waitForMsg(100);
-
+       // msgType = waitForMsg(500);
+        msgType = waitForMsg(2000);
         if (msgType == 255) {
           hand_shake_state = false;
           DEBUG_PRINTLN("Reply timeout, switch to no-handshake");
           count = 128;
           // Timeout in reply, switch to no-handshake proto
         }
-        if (msgType == MIDI_SDS_NAK) {
-          DEBUG_PRINTLN("retry");
-          cancel();
-          return false;
-          //goto again; -> does not work.
-        }
         if (msgType == MIDI_SDS_CANCEL) {
           DEBUG_PRINTLN("cancel");
           cancel();
           return false;
+        }
+        if (msgType == MIDI_SDS_NAK) {
+          DEBUG_PRINTLN("NAK");
         }
         if (msgType == MIDI_SDS_WAIT) {
           DEBUG_PRINTLN(F("told to wait"));
@@ -530,10 +522,10 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   }
   for (int i = len; i < 120; i++)
     data[n++] = 0x00;
-
   data[n++] = checksum & 0x7F;
   data[n] = 0xF7;
   MidiUart.m_putc(data, 127);
+  //DEBUG_PRINT("sending "); DEBUG_PRINT(packetNumber); DEBUG_PRINT(" "); DEBUG_PRINTLN(len);
   return true;
 }
 MidiSDSClass midi_sds;

@@ -49,9 +49,13 @@ void MidiSDSSysexListenerClass::end() {
     break;
 
   case MIDI_SDS_ACK:
+    DEBUG_PRINT("ACK: ");
+    DEBUG_PRINTLN(sysex->getByte(3));
     break;
 
   case MIDI_SDS_NAK:
+    DEBUG_PRINT("NAK: ");
+    DEBUG_PRINTLN(sysex->getByte(3));
     break;
 
   case MIDI_SDS_CANCEL:
