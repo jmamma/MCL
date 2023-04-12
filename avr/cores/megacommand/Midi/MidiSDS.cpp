@@ -67,6 +67,8 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
   } while ((clock_diff(start_clock, slowclock) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
   uint8_t ret = MidiSDSSysexListener.msgType;
+  DEBUG_PRINT("Ret");
+  DEBUG_PRINTLN(ret);
   MidiSDSSysexListener.msgType = 255;
   return ret;
 }
@@ -168,9 +170,6 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     }
     n_retry = 0;
 retry:
-    if (hand_shake_state) {
-      MidiUartParent::handle_midi_lock = 1;
-    }
     MidiUart.sendRaw(buf, szbuf);
     if (!hand_shake_state) {
       uint16_t myclock = slowclock;
@@ -366,7 +365,6 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
       while ((msgType != MIDI_SDS_ACK) && count < 3) {
         // No message received, assume handshake disabled
         again:
-        MidiUartParent::handle_midi_lock = 1;
         sendData(data, n);
         msgType = waitForMsg(100);
 
