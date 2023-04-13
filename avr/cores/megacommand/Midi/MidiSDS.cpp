@@ -59,7 +59,7 @@ wait:
 
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
-  uint16_t start_clock = slowclock;
+  volatile uint16_t start_clock = slowclock;
   MidiSDSSysexListener.msgType = 255;
   do {
      handleIncomingMidi();
