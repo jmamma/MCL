@@ -1,3 +1,9 @@
+MCL 4.43 13/04/2023
+
+- Fixes
+
+  Midi SDS Sample upload was unreliable for large files.
+
 MCL 4.42 01/04/2023
 
 - Improvements
