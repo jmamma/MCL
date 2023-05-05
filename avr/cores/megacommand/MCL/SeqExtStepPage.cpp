@@ -98,8 +98,8 @@ void SeqExtStepPage::cleanup() {
 
 void SeqExtStepPage::draw_seq_pos() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-  uint16_t cur_tick_x = active_track.step_count * active_track.get_timing_mid();
-  +active_track.mod12_counter;
+  uint16_t cur_tick_x = active_track.step_count * active_track.get_timing_mid();// + active_track.mod12_counter;
+
 
   // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
@@ -113,6 +113,35 @@ void SeqExtStepPage::draw_seq_pos() {
 void SeqExtStepPage::draw_grid() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t h = fov_h / fov_notes;
+
+  uint8_t m = 4, n = 16;
+
+  switch (active_track.speed) {
+     default:
+     break;
+     //case SEQ_SPEED_2X:
+     //m = 2; n = 8;
+     //break;
+     case SEQ_SPEED_3_2X:
+     case SEQ_SPEED_3_4X:
+     m = 3; n = 12;
+     break;
+     /*
+     case SEQ_SPEED_3_2X:
+     m = 3; n = 6;
+     break;
+     case SEQ_SPEED_1_2X:
+     m = 8; n = 32;
+     break;
+     case SEQ_SPEED_1_4X:
+     m = 16; n = 64;
+     break;
+     case SEQ_SPEED_1_8X:
+     m = 32; n = 128;
+     break;
+     */
+  }
+
   for (uint8_t i = 0; i < active_track.length; i++) {
     uint16_t grid_tick_x = i * active_track.get_timing_mid();
     if (is_within_fov(grid_tick_x)) {
@@ -124,17 +153,26 @@ void SeqExtStepPage::draw_grid() {
         // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel(
         // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
         bool draw = false;
+        uint8_t v = draw_y + (k * h);
         if ((pianoroll_mode > 0 && k == 3) || i % 16 == 0) {
           draw = true;
         }
         if (pianoroll_mode == 0) {
           draw = true;
         }
-        if (draw) {
-          oled_display.drawPixel(grid_fov_x, draw_y + (k * (h)), WHITE);
+        if (i % n == 0) {
+          //if ((fov_y + k + i) % 2 == 0) {
+          if (k % 2 == 0) {
+            oled_display.drawLine(grid_fov_x, v, grid_fov_x, v + 4, WHITE);
+          }
+          continue;
         }
-        if (i % 16 == 0) {
-          oled_display.drawPixel(grid_fov_x, draw_y + (k * h) + (h / 2), WHITE);
+        if (draw) {
+          oled_display.drawPixel(grid_fov_x, v, WHITE);
+        }
+
+        if (i % m == 0) {
+          oled_display.drawPixel(grid_fov_x, v + (h / 2), WHITE);
         }
       }
     }
@@ -299,6 +337,11 @@ void SeqExtStepPage::draw_lockeditor() {
   oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2, WHITE);
 }
 
+void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w) {
+  oled_display.drawRect(x, y, w, fov_h / fov_notes, WHITE);
+  oled_display.fillRect(x + 1, y + 1, w - 2, fov_h / fov_notes - 2, BLACK);
+}
+
 void SeqExtStepPage::draw_pianoroll() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
@@ -373,7 +416,7 @@ void SeqExtStepPage::draw_pianoroll() {
 
             if (note_start < fov_offset + fov_length) {
               oled_display.drawRect(note_fov_start + draw_x, proj_y,
-                                    pattern_end_fov_x - note_fov_start, 1,
+                                     pattern_end_fov_x - note_fov_start, 1,
                                     WHITE);
             }
 
@@ -383,8 +426,8 @@ void SeqExtStepPage::draw_pianoroll() {
 
           } else {
             // Standard note.
-            oled_display.drawRect(note_fov_start + draw_x, proj_y,
-                                  note_fov_end - note_fov_start, 1, WHITE);
+            draw_note(note_fov_start + draw_x, proj_y,
+                                  note_fov_end - note_fov_start);
           }
         }
         // Draw notes
@@ -392,22 +435,19 @@ void SeqExtStepPage::draw_pianoroll() {
           if (note_end < note_start) {
             // Wrap around note
             if (note_start < fov_offset + fov_length) {
-              oled_display.drawRect(note_fov_start + draw_x,
+              draw_note(note_fov_start + draw_x,
                                     draw_y + note_fov_y,
-                                    pattern_end_fov_x - note_fov_start,
-                                    (fov_h / fov_notes), WHITE);
+                                    pattern_end_fov_x - note_fov_start);
             }
 
             if (note_end > fov_offset) {
-              oled_display.drawRect(draw_x, draw_y + note_fov_y, note_fov_end,
-                                    (fov_h / fov_notes), WHITE);
+              draw_note(draw_x, draw_y + note_fov_y, note_fov_end);
             }
 
           } else {
             // Standard note.
-            oled_display.drawRect(note_fov_start + draw_x, draw_y + note_fov_y,
-                                  note_fov_end - note_fov_start,
-                                  (fov_h / fov_notes), WHITE);
+            draw_note(note_fov_start + draw_x, draw_y + note_fov_y,
+                                  note_fov_end - note_fov_start);
           }
         }
       }
@@ -448,9 +488,6 @@ void SeqExtStepPage::draw_viewport_minimap() {
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 }
-
-void SeqExtStepPage::draw_note(uint8_t note_val, uint16_t note_start,
-                               uint16_t note_end) {}
 
 void SeqExtStepPage::pos_cur_x(int16_t diff) {
   uint8_t w = cur_w;
@@ -675,7 +712,6 @@ void SeqExtStepPage::display() {
 
   draw_viewport_minimap();
   draw_grid();
-  draw_seq_pos();
 
   mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
   if (pianoroll_mode == 0) {
@@ -695,6 +731,7 @@ void SeqExtStepPage::display() {
     mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
+  draw_seq_pos();
 
   SeqPage::display();
   // Draw vertical keyboard
@@ -797,6 +834,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     int w = timing_mid;
     if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
+      if (pianoroll_mode > 0) { inc = 8; }
       w = w * 2;
     }
 
