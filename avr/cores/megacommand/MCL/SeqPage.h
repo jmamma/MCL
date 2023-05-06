@@ -102,6 +102,8 @@ public:
   static uint32_t last_md_model;
 
   static bool recording;
+
+  static uint16_t md_mute_mask;
   static uint16_t ext_mute_mask;
 
   bool display_page_index = true;
@@ -149,6 +151,7 @@ public:
 
   void params_reset();
 
+  bool display_md_mute_mask();
   void display_ext_mute_mask();
 
   virtual bool handleEvent(gui_event_t *event);

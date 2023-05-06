@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 #define FADER_LEN 18
-#define FADE_RATE 16
+#define FADE_RATE 0.0625
 
 void MixerPage::set_display_mode(uint8_t param) {
   if (display_mode != param) {
@@ -10,7 +10,8 @@ void MixerPage::set_display_mode(uint8_t param) {
   }
 }
 
-static void oled_draw_routing() {
+static void oled_draw_mutes() {
+
   for (int i = 0; i < 16; ++i) {
     // draw routing
     if (note_interface.is_note(i)) {
@@ -18,7 +19,7 @@ static void oled_draw_routing() {
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
 
-    else if (mcl_cfg.routing[i] == 6) {
+    else if (mcl_seq.md_tracks[i].mute_state == SEQ_MUTE_OFF) {
 
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
@@ -54,10 +55,12 @@ void MixerPage::init() {
   bool switch_tracks = false;
   midi_events.setup_callbacks();
   oled_display.clearDisplay();
-  oled_draw_routing();
+  MD.set_trigleds(0, TRIGLED_OVERLAY);
+  oled_draw_mutes();
   set_display_mode(MODEL_LEVEL);
   first_track = 255;
   redraw_mask = -1;
+  show_mixer_menu = 0;
 }
 
 void MixerPage::cleanup() {
@@ -73,7 +76,8 @@ void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 0;
 }
 
-void MixerPage::loop() {}
+void MixerPage::loop() {
+}
 
 void MixerPage::draw_levels() {}
 
@@ -165,9 +169,11 @@ void MixerPage::display() {
 
   if (oled_display.textbox_enabled) {
     oled_display.clearDisplay();
-    oled_draw_routing();
+    oled_draw_mutes();
     redraw_mask = -1;
   }
+  if (seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
+
   for (int i = 0; i < 16; i++) {
 
     if (display_mode == MODEL_LEVEL) {
@@ -201,7 +207,7 @@ void MixerPage::display() {
     CLEAR_BIT16(redraw_mask, i);
   }
 
-  uint8_t dec = MidiClock.get_tempo() / FADE_RATE;
+  uint8_t dec = MidiClock.get_tempo() * FADE_RATE;
   for (uint8_t n = 0; n < 16; n++) {
     if (disp_levels[n] < dec) {
       disp_levels[n] = 0;
@@ -229,11 +235,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       return false;
     }
 
-    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+    if (!show_mixer_menu) { trig_interface.send_md_leds(TRIGLED_OVERLAY); }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (note_interface.is_note(track)) {
-        if (first_track == 255) {
+        if (show_mixer_menu) {
+          mcl_seq.md_tracks[track].mute_state = !mcl_seq.md_tracks[track].mute_state;
+          MD.muteTrack(track,  mcl_seq.md_tracks[track].mute_state);
+          oled_draw_mutes();
+        }
+        else if (first_track == 255) {
           first_track = track;
           MD.setStatus(0x22, track);
         }
@@ -253,7 +264,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           route_page.toggle_routes_batch(true);
         }
         note_interface.init_notes();
-        oled_draw_routing();
+        oled_draw_mutes();
       }
       return true;
     }
@@ -277,20 +288,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           GUI.setPage(&grid_page);
           return true;
         }
-
-        goto reset_params;
-      }
-      }
-    }
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    trig_interface.on();
-    GUI.setPage(&page_select_page);
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  reset_params:
     for (uint8_t i = 0; i < 16; i++) {
       if (note_interface.is_note_on(i)) {
         for (uint8_t c = 0; c < 24; c++) {
@@ -299,6 +296,27 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         mcl_seq.md_tracks[i].update_params();
       }
     }
+ 
+      }
+      }
+    }
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
+     seq_step_page.md_mute_mask = 0;
+     show_mixer_menu = true;
+     return true;
+  }
+
+
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+     show_mixer_menu = false;
+     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+     return true;
+  }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    trig_interface.on();
+    GUI.setPage(&page_select_page);
     return true;
   }
 

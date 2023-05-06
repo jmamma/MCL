@@ -31,10 +31,10 @@ public:
 
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
-  char info_line2[9];
   uint8_t display_mode;
   uint8_t first_track;
   uint16_t redraw_mask;
+  bool show_mixer_menu;
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {

@@ -26,6 +26,7 @@ bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
 bool SeqPage::toggle_device = true;
 
+uint16_t SeqPage::md_mute_mask = 0;
 uint16_t SeqPage::ext_mute_mask = 0;
 
 uint8_t SeqPage::step_select = 255;
@@ -247,6 +248,23 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     GUI.currentPage()->config();
   }
 }
+
+bool SeqPage::display_md_mute_mask() {
+  uint16_t last_mute_mask = md_mute_mask;
+  md_mute_mask = 0;
+  for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
+    if (mcl_seq.md_tracks[n].mute_state == SEQ_MUTE_OFF) {
+      SET_BIT16(md_mute_mask, n);
+    }
+  }
+  if (last_mute_mask != md_mute_mask) {
+    MD.set_trigleds(md_mute_mask, TRIGLED_EXCLUSIVE);
+    return true;
+  }
+  return false;
+}
+
+
 
 void SeqPage::display_ext_mute_mask() {
   uint16_t last_mute_mask = ext_mute_mask;
