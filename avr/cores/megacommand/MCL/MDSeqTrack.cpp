@@ -27,23 +27,21 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
   step_count = step;
   CLEAR_LOCK();
 
-  if (expand && old_length <= 16 && length > 16) {
-    for (uint8_t n = 16; n < length; n++) {
+  if (expand && old_length <= 16 && length >= 16) {
+    for (uint8_t n = old_length; n < length; n++) {
       if ((*(int *)&(steps[n])) != 0) {
         expand = false;
-        break;
+        return;
       }
     }
-    if (expand) {
       MDSeqStep empty_step;
       memset(&empty_step, 0, sizeof(empty_step));
-      for (uint8_t y = 1; y < 4; y++) {
-        for (uint8_t n = 0; n < 16; n++) {
-          copy_step(n, &empty_step);
-          paste_step(n + y * 16, &empty_step);
-        }
+      uint8_t a = 0;
+      for (uint8_t n = old_length; n < 64; n++) {
+        copy_step(a++, &empty_step);
+        paste_step(n, &empty_step);
+        if (a == old_length) { a = 0; }
       }
-    }
   }
 }
 
