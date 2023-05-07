@@ -426,8 +426,8 @@ void SeqExtStepPage::draw_pianoroll() {
 
           } else {
             // Standard note.
-            draw_note(note_fov_start + draw_x, proj_y,
-                                  note_fov_end - note_fov_start);
+            oled_display.drawRect(note_fov_start + draw_x, proj_y,
+                                  note_fov_end - note_fov_start, 1, WHITE);
           }
         }
         // Draw notes
