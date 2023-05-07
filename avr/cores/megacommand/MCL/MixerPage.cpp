@@ -169,7 +169,7 @@ void MixerPage::display() {
     oled_draw_mutes();
     redraw_mask = -1;
   }
-  if (show_mixer_menu && seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
+  if (seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
 
   for (int i = 0; i < 16; i++) {
 
