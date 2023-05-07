@@ -44,6 +44,7 @@ public:
   void draw_levels();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
+  void disable_record_mutes();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

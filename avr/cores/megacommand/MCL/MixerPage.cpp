@@ -20,14 +20,11 @@ static void oled_draw_mutes() {
     }
 
     else if (mcl_seq.md_tracks[i].mute_state == SEQ_MUTE_OFF) {
-
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
-
     }
 
     else {
-
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
     }
@@ -77,7 +74,7 @@ void MixerPage::set_level(int curtrack, int value) {
 }
 
 void MixerPage::loop() {
-}
+ }
 
 void MixerPage::draw_levels() {}
 
@@ -172,7 +169,7 @@ void MixerPage::display() {
     oled_draw_mutes();
     redraw_mask = -1;
   }
-  if (seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
+  if (show_mixer_menu && seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
 
   for (int i = 0; i < 16; i++) {
 
@@ -223,6 +220,21 @@ void MixerPage::display() {
   oled_display.setFont(oldfont);
 }
 
+void MixerPage::disable_record_mutes() {
+         for (uint8_t n = 0; n < 16; n++) {
+           if (mcl_seq.md_tracks[n].record_mutes) {
+              mcl_seq.md_tracks[n].record_mutes = false;
+              /*
+              if (mcl_seq.md_tracks[n].mute_state == SEQ_MUTE_ON) {
+                 mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
+                 MD.muteTrack(n,  mcl_seq.md_tracks[n].mute_state);
+              }
+              */
+           }
+         }
+         if (!seq_step_page.recording) { clearLed2(); }
+}
+
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -240,9 +252,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (note_interface.is_note(track)) {
         if (show_mixer_menu) {
-          mcl_seq.md_tracks[track].mute_state = !mcl_seq.md_tracks[track].mute_state;
-          MD.muteTrack(track,  mcl_seq.md_tracks[track].mute_state);
-          oled_draw_mutes();
+
+            mcl_seq.md_tracks[track].mute_state = !mcl_seq.md_tracks[track].mute_state;
+            MD.muteTrack(track,  mcl_seq.md_tracks[track].mute_state);
+
+            if (trig_interface.is_key_down(MDX_KEY_PATSONGKIT)) {
+                mcl_seq.md_tracks[track].record_mutes = true;
+            }
+            oled_draw_mutes();
         }
         else if (first_track == 255) {
           first_track = track;
@@ -283,8 +300,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      case MDX_KEY_PATSONGKIT: {
+        setLed2();
+        break;
+      }
       case MDX_KEY_NO: {
         if (note_interface.notes_count_on() == 0) {
+          disable_record_mutes();
           GUI.setPage(&grid_page);
           return true;
         }
@@ -296,8 +318,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         mcl_seq.md_tracks[i].update_params();
       }
     }
- 
       }
+      }
+    }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+         case MDX_KEY_PATSONGKIT: {
+         disable_record_mutes();
+         MD.set_trigleds(0, TRIGLED_OVERLAY);
+         break;
+         }
       }
     }
   }
@@ -310,12 +340,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
      show_mixer_menu = false;
+     disable_record_mutes();
      MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
      return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     trig_interface.on();
+    disable_record_mutes();
     GUI.setPage(&page_select_page);
     return true;
   }

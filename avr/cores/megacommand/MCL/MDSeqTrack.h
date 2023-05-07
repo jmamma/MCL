@@ -18,8 +18,12 @@ class MDTrack;
 class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
 
 public:
+
   uint64_t oneshot_mask;
+
   uint8_t locks_params_orig[NUM_LOCKS];
+
+  bool record_mutes;
 
   static uint16_t sync_cursor;
   static uint16_t md_trig_mask;
@@ -29,6 +33,7 @@ public:
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask = 0;
+    record_mutes = false;
   }
 
   void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
