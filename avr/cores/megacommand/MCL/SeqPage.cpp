@@ -667,6 +667,9 @@ void pattern_len_handler(EncoderParent *enc) {
         mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
       }
     }
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
+    MD.sync_seqtrack(active_track.length, active_track.speed,
+                     active_track.step_count);
   } else {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
