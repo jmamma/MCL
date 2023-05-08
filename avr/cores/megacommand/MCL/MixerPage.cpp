@@ -273,13 +273,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       SET_BIT16(redraw_mask, track);
       if (note_interface.notes_count_on() == 0) {
         first_track = 255;
-        //  encoder_level_handle(mixer_page.encoders[0]);
-        if (BUTTON_DOWN(Buttons.BUTTON4)) {
-          route_page.toggle_routes_batch();
-        }
-        if (BUTTON_DOWN(Buttons.BUTTON1)) {
-          route_page.toggle_routes_batch(true);
-        }
         note_interface.init_notes();
         oled_draw_mutes();
       }
