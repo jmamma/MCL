@@ -630,7 +630,7 @@ void SeqExtStepPage::loop() {
 
   // If pianoroll_edit mode changed.
   if (show_seq_menu) {
-    display_ext_mute_mask();
+    display_mute_mask(midi_device, 8);
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (pianoroll_mode > 0) {
@@ -984,7 +984,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    ext_mute_mask = 128;
+    mute_mask = 128;
     param_select_update();
   }
   if (SeqPage::handleEvent(event)) {

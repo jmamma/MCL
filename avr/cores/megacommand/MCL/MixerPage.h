@@ -31,6 +31,10 @@ public:
 
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
+  int8_t ext_disp_levels[6];
+
+  MidiDevice* midi_device;
+
   uint8_t display_mode;
   uint8_t first_track;
   uint16_t redraw_mask;
@@ -38,6 +42,7 @@ public:
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
+        midi_device = &MD;
       }
   void adjust_param(EncoderParent *enc, uint8_t param);
 
@@ -45,6 +50,7 @@ public:
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
   void disable_record_mutes();
+  void oled_draw_mutes();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

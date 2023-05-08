@@ -772,14 +772,16 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   return bytes;
 }
 
-void MDClass::muteTrack(uint8_t track, bool mute) {
+void MDClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   if (global.baseChannel == 127)
     return;
-
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart->sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
+  uart_->sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
 }
 
 void MDClass::setGlobal(uint8_t id) {

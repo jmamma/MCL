@@ -253,7 +253,7 @@ void SeqPtcPage::display() {
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
   SeqPage::display();
   if (show_seq_menu) {
-    display_ext_mute_mask();
+    display_mute_mask(midi_active_peering.get_device(UART2_PORT), 8);
   }
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -605,7 +605,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    ext_mute_mask = 128;
+    mute_mask = 128;
   }
   if (SeqPage::handleEvent(event)) {
     return true;

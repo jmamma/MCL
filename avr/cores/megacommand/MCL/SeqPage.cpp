@@ -26,8 +26,7 @@ bool SeqPage::show_seq_menu = false;
 bool SeqPage::show_step_menu = false;
 bool SeqPage::toggle_device = true;
 
-uint16_t SeqPage::md_mute_mask = 0;
-uint16_t SeqPage::ext_mute_mask = 0;
+uint16_t SeqPage::mute_mask = 0;
 
 uint8_t SeqPage::step_select = 255;
 
@@ -249,36 +248,33 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   }
 }
 
-bool SeqPage::display_md_mute_mask() {
-  uint16_t last_mute_mask = md_mute_mask;
-  md_mute_mask = 0;
-  for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
-    if (mcl_seq.md_tracks[n].mute_state == SEQ_MUTE_OFF) {
-      SET_BIT16(md_mute_mask, n);
+bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
+  uint16_t last_mute_mask = mute_mask;
+  mute_mask = 0;
+
+  uint8_t len = mcl_seq.num_md_tracks;
+  SeqTrack *seq_tracks = (SeqTrack*) mcl_seq.md_tracks;
+
+  if (device != &MD) {
+    len = mcl_seq.num_ext_tracks;
+    seq_tracks = (SeqTrack*) mcl_seq.ext_tracks;
+  }
+
+  for (uint8_t n = 0; n < len; n++) {
+    if (seq_tracks[n].mute_state == SEQ_MUTE_OFF) {
+      uint8_t d = offset + n;
+      if (d < 16) {
+        SET_BIT16(mute_mask, d);
+      }
     }
   }
-  if (last_mute_mask != md_mute_mask) {
-    MD.set_trigleds(md_mute_mask, TRIGLED_EXCLUSIVE);
+  if (last_mute_mask != mute_mask) {
+    MD.set_trigleds(mute_mask, TRIGLED_EXCLUSIVE);
     return true;
   }
   return false;
 }
 
-
-
-void SeqPage::display_ext_mute_mask() {
-  uint16_t last_mute_mask = ext_mute_mask;
-  ext_mute_mask = 0;
-  for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-    if (mcl_seq.ext_tracks[n].mute_state == SEQ_MUTE_OFF) {
-      SET_BIT16(ext_mute_mask, 8 + n);
-    }
-  }
-  SET_BIT16(ext_mute_mask, last_ext_track);
-  if (last_mute_mask != ext_mute_mask) {
-    MD.set_trigleds(ext_mute_mask, TRIGLED_EXCLUSIVE);
-  }
-}
 
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {

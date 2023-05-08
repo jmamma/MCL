@@ -10,23 +10,29 @@ void MixerPage::set_display_mode(uint8_t param) {
   }
 }
 
-static void oled_draw_mutes() {
+void MixerPage::oled_draw_mutes() {
 
-  for (int i = 0; i < 16; ++i) {
+  SeqTrack *seq_tracks = (SeqTrack *) mcl_seq.md_tracks;
+  uint8_t len = mcl_seq.num_md_tracks;
+
+  if (midi_device != &MD) {
+    seq_tracks = (SeqTrack *) mcl_seq.ext_tracks;
+    len = mcl_seq.num_ext_tracks;
+  }
+
+  for (uint8_t i = 0; i < len; ++i) {
     // draw routing
     if (note_interface.is_note(i)) {
-
       oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
     }
 
-    else if (mcl_seq.md_tracks[i].mute_state == SEQ_MUTE_OFF) {
+    else if (seq_tracks[i].mute_state == SEQ_MUTE_OFF) {
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
       oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
     }
-
     else {
       oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
-      oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
+      oled_display.drawLine(i * 8, 5, 5 + (i * 8), 5, WHITE);
     }
   }
 }
@@ -36,10 +42,6 @@ void MixerPage::setup() {
   encoders[1]->handler = encoder_filtf_handle;
   encoders[2]->handler = encoder_filtw_handle;
   encoders[3]->handler = encoder_filtq_handle;
-  if (route_page.encoders[0]->cur == 0) {
-    route_page.encoders[0]->cur = 2;
-  }
-  oled_display.clearDisplay();
 }
 
 void MixerPage::init() {
@@ -73,12 +75,15 @@ void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 0;
 }
 
-void MixerPage::loop() {
- }
+void MixerPage::loop() {}
 
 void MixerPage::draw_levels() {}
 
 void encoder_level_handle(EncoderParent *enc) {
+
+  if (mixer_page.midi_device != &MD) {
+    return;
+  }
 
   mixer_page.set_display_mode(MODEL_LEVEL);
 
@@ -127,6 +132,10 @@ void encoder_lastparam_handle(EncoderParent *enc) {
 
 void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
+  if (midi_device != &MD) {
+    return;
+  }
+
   set_display_mode(param);
 
   int dir = enc->getValue() - enc->old;
@@ -169,18 +178,33 @@ void MixerPage::display() {
     oled_draw_mutes();
     redraw_mask = -1;
   }
-  if (seq_step_page.display_md_mute_mask()) { oled_draw_mutes(); }
+  SeqTrack *seq_tracks = (SeqTrack *)&mcl_seq.md_tracks;
+  uint8_t len = mcl_seq.num_md_tracks;
+  uint8_t *levels = disp_levels;
+  if (seq_step_page.display_mute_mask(midi_device)) {
+    oled_draw_mutes();
+  }
+  if (midi_device != &MD) {
+   seq_tracks = (SeqTrack *)&mcl_seq.ext_tracks;
+    len = mcl_seq.num_ext_tracks;
+    levels = ext_disp_levels;
+  }
+  uint8_t dec = MidiClock.get_tempo() * FADE_RATE;
 
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < len; i++) {
 
-    if (display_mode == MODEL_LEVEL) {
-      fader_level = MD.kit.levels[i];
+    if (midi_device == &MD) {
+      if (display_mode == MODEL_LEVEL) {
+        fader_level = MD.kit.levels[i];
+      } else {
+        fader_level = MD.kit.params[i][display_mode];
+      }
     } else {
-      fader_level = MD.kit.params[i][display_mode];
+      fader_level = 127;
     }
 
     fader_level = ((fader_level * 0.00787) * FADER_LEN) + 0;
-    meter_level = ((disp_levels[i] * 0.00787) * FADER_LEN) + 0;
+    meter_level = ((levels[i] * 0.00787) * FADER_LEN) + 0;
     meter_level = min(fader_level, meter_level);
 
     if (IS_BIT_SET16(redraw_mask, i)) {
@@ -201,17 +225,16 @@ void MixerPage::display() {
                             meter_level + 1, WHITE);
     }
     fader_x += 8;
-    CLEAR_BIT16(redraw_mask, i);
-  }
 
-  uint8_t dec = MidiClock.get_tempo() * FADE_RATE;
-  for (uint8_t n = 0; n < 16; n++) {
-    if (disp_levels[n] < dec) {
-      disp_levels[n] = 0;
+    CLEAR_BIT16(redraw_mask, i);
+
+    if (levels[i] < dec) {
+      levels[i] = 0;
     } else {
-      disp_levels[n] -= dec;
+      levels[i] -= dec;
     }
   }
+
   if (!redraw_mask) {
     oled_display.display();
   } else {
@@ -221,18 +244,19 @@ void MixerPage::display() {
 }
 
 void MixerPage::disable_record_mutes() {
-         for (uint8_t n = 0; n < 16; n++) {
-           if (mcl_seq.md_tracks[n].record_mutes) {
-              mcl_seq.md_tracks[n].record_mutes = false;
-              /*
-              if (mcl_seq.md_tracks[n].mute_state == SEQ_MUTE_ON) {
-                 mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
-                 MD.muteTrack(n,  mcl_seq.md_tracks[n].mute_state);
-              }
-              */
-           }
-         }
-         if (!seq_step_page.recording) { clearLed2(); }
+  for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
+    if (n < mcl_seq.num_ext_tracks) {
+      if (mcl_seq.ext_tracks[n].record_mutes) {
+        mcl_seq.ext_tracks[n].record_mutes = false;
+      }
+    }
+    if (mcl_seq.md_tracks[n].record_mutes) {
+      mcl_seq.md_tracks[n].record_mutes = false;
+    }
+  }
+  if (!seq_step_page.recording) {
+    clearLed2();
+  }
 }
 
 bool MixerPage::handleEvent(gui_event_t *event) {
@@ -243,25 +267,34 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source - 128;
 
-    if (track > 16) {
+    SeqTrack *seq_tracks = (SeqTrack*) mcl_seq.md_tracks;
+    uint8_t len = mcl_seq.num_md_tracks;
+    if (midi_device != &MD) {
+      seq_tracks = (SeqTrack*) mcl_seq.ext_tracks;
+      len = mcl_seq.num_ext_tracks;
+    }
+
+    if (track > len) {
       return false;
     }
 
-    if (!show_mixer_menu) { trig_interface.send_md_leds(TRIGLED_OVERLAY); }
+    if (!show_mixer_menu) {
+      trig_interface.send_md_leds(TRIGLED_OVERLAY);
+    }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (note_interface.is_note(track)) {
         if (show_mixer_menu) {
 
-            mcl_seq.md_tracks[track].mute_state = !mcl_seq.md_tracks[track].mute_state;
-            MD.muteTrack(track,  mcl_seq.md_tracks[track].mute_state);
+          seq_tracks[track].mute_state = !seq_tracks[track].mute_state;
 
-            if (trig_interface.is_key_down(MDX_KEY_PATSONGKIT)) {
-                mcl_seq.md_tracks[track].record_mutes = true;
-            }
-            oled_draw_mutes();
-        }
-        else if (first_track == 255) {
+          midi_device->muteTrack(track, seq_tracks[track].mute_state);
+
+          if (trig_interface.is_key_down(MDX_KEY_PATSONGKIT)) {
+            seq_tracks[track].record_mutes = true;
+          }
+          oled_draw_mutes();
+        } else if (first_track == 255) {
           first_track = track;
           MD.setStatus(0x22, track);
         }
@@ -303,39 +336,52 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           GUI.setPage(&grid_page);
           return true;
         }
-    for (uint8_t i = 0; i < 16; i++) {
-      if (note_interface.is_note_on(i)) {
-        for (uint8_t c = 0; c < 24; c++) {
-          MD.restore_kit_param(i, c);
+        if (midi_device == &MD) {
+          for (uint8_t i = 0; i < 16; i++) {
+            if (note_interface.is_note_on(i)) {
+              for (uint8_t c = 0; c < 24; c++) {
+                MD.restore_kit_param(i, c);
+              }
+              mcl_seq.md_tracks[i].update_params();
+            }
+          }
         }
-        mcl_seq.md_tracks[i].update_params();
+        break;
       }
-    }
+      case MDX_KEY_YES: {
+        if (midi_device != &MD) {
+          midi_device = &MD;
+        } else {
+          midi_device = midi_active_peering.get_device(UART2_PORT);
+        }
+        redraw_mask = -1;
+        oled_display.clearDisplay();
+        oled_draw_mutes();
+        break;
       }
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-         case MDX_KEY_PATSONGKIT: {
-         disable_record_mutes();
-         MD.set_trigleds(0, TRIGLED_OVERLAY);
-         break;
-         }
+      case MDX_KEY_PATSONGKIT: {
+        disable_record_mutes();
+        MD.set_trigleds(0, TRIGLED_OVERLAY);
+        break;
+      }
       }
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-     seq_step_page.md_mute_mask = 0;
-     show_mixer_menu = true;
-     return true;
+    seq_step_page.mute_mask = 0;
+    show_mixer_menu = true;
+    return true;
   }
 
-
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-     show_mixer_menu = false;
-     disable_record_mutes();
-     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-     return true;
+    show_mixer_menu = false;
+    disable_record_mutes();
+    MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+    return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {

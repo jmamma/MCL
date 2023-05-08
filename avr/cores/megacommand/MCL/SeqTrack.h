@@ -59,6 +59,8 @@ public:
   MidiUartParent *uart = &MidiUart;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
+  bool record_mutes;
+
   uint8_t length;
   uint8_t speed;
   uint8_t track_number;
@@ -66,7 +68,7 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
-  SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
+  SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {

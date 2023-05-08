@@ -103,8 +103,7 @@ public:
 
   static bool recording;
 
-  static uint16_t md_mute_mask;
-  static uint16_t ext_mute_mask;
+  static uint16_t mute_mask;
 
   bool display_page_index = true;
   char info1[8] = { '\0' };
@@ -151,8 +150,7 @@ public:
 
   void params_reset();
 
-  bool display_md_mute_mask();
-  void display_ext_mute_mask();
+  bool display_mute_mask(MidiDevice *device, uint8_t offset = 0);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();

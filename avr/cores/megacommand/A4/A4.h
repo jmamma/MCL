@@ -89,7 +89,7 @@ public:
   bool getBlockingSoundX(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettingsX(uint8_t global, uint16_t timeout = 3000);
 
-  void muteTrack(uint8_t track, bool mute = true);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
   void setLevel(uint8_t track, uint8_t value);
 

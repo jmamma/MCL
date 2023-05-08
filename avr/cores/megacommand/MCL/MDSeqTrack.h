@@ -23,8 +23,6 @@ public:
 
   uint8_t locks_params_orig[NUM_LOCKS];
 
-  bool record_mutes;
-
   static uint16_t sync_cursor;
   static uint16_t md_trig_mask;
   static uint16_t load_machine_cache;

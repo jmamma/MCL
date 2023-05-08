@@ -217,6 +217,7 @@ public:
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
 };

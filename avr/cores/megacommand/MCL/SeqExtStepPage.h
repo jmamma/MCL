@@ -73,8 +73,6 @@ public:
   void pos_cur_y(int16_t diff);
   void pos_cur_w(int16_t diff);
 
-  void display_mute_mask();
-
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) {
       return true;
