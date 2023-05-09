@@ -120,8 +120,11 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   }
 
   if (record_mutes) {
-    if (mute_state == SEQ_MUTE_ON) { SET_BIT64(oneshot_mask, step_count); }
-    else { CLEAR_BIT64(oneshot_mask, step_count); }
+    uint8_t u = 0;
+    uint8_t q = 0;
+    uint8_t s = get_quantized_step(u, q);
+    if (mute_state == SEQ_MUTE_ON) { SET_BIT64(oneshot_mask, s); }
+    else { CLEAR_BIT64(oneshot_mask, s); }
   }
 
   if ((mute_state == SEQ_MUTE_OFF) &&
@@ -152,14 +155,14 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
       }
 
       auto &step = steps[current_step];
-      bool send_trig = trig_conditional(step.cond_id);
-      if (send_trig || !step.cond_plock) {
+      uint8_t send_trig = trig_conditional(step.cond_id);
+      if (send_trig == TRIG_TRUE || (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
         send_parameter_locks_inline(current_step, step.trig, lock_idx);
         if (step.slide) {
           locks_slides_recalc = current_step;
           locks_slides_idx = lock_idx;
         }
-        if (send_trig && step.trig) {
+        if (send_trig == TRIG_TRUE && step.trig) {
           send_trig_inline();
         }
       }
@@ -465,80 +468,81 @@ void MDSeqTrack::send_trig_inline() {
   SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }
 
-bool MDSeqTrack::trig_conditional(uint8_t condition) {
-  bool send_trig = false;
+uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
+
+  bool send_trig = TRIG_FALSE;
   if (IS_BIT_SET64(oneshot_mask, step_count)) {
-    return false;
+    return TRIG_ONESHOT;
   }
   switch (condition) {
   case 0:
   case 1:
-    send_trig = true;
+    send_trig = TRIG_TRUE;
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 3:
     if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 6:
     if (iterations_6 == 6) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 4:
     if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 8:
     if ((iterations_8 == 8)) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 5:
     if (iterations_5 == 5) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 7:
     if (iterations_7 == 7) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 9:
     if (get_random_byte() <= 13) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 10:
     if (get_random_byte() <= 32) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 11:
     if (get_random_byte() <= 64) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 12:
     if (get_random_byte() <= 96) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 13:
     if (get_random_byte() <= 115) {
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
     break;
   case 14:
     if (!IS_BIT_SET64(oneshot_mask, step_count)) {
       SET_BIT64(oneshot_mask, step_count);
-      send_trig = true;
+      send_trig = TRIG_TRUE;
     }
   }
   return send_trig;
@@ -610,38 +614,13 @@ bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
   return true;
 }
 
-uint8_t MDSeqTrack::get_quantized_step() {
-  uint8_t timing_mid = get_timing_mid();
-
-  int8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
-
-  if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
-    step = length - 1;
-  }
-
-  uint8_t utiming = mod12 + timing_mid;
-
-  if (mcl_cfg.rec_quant) {
-    if (mod12 > timing_mid / 2) {
-      step++;
-      if (step == length) {
-        step = 0;
-      }
-    }
-  }
-  return step;
-}
-
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
 
   if (step_count >= length) {
     return;
   }
-
-  set_track_locks(get_quantized_step(), track_param, value);
+  uint8_t utiming = 0;
+  set_track_locks(get_quantized_step(utiming), track_param, value);
 }
 
 void MDSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
@@ -653,7 +632,8 @@ void MDSeqTrack::record_track_pitch(uint8_t pitch) {
   if (step_count >= length) {
     return;
   }
-  set_track_pitch(get_quantized_step(), pitch);
+  uint8_t utiming = 0;
+  set_track_pitch(get_quantized_step(utiming), pitch);
 }
 
 void MDSeqTrack::record_track(uint8_t velocity) {
@@ -661,29 +641,10 @@ void MDSeqTrack::record_track(uint8_t velocity) {
   if (step_count >= length) {
     return;
   }
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t utiming = 0;
+  uint8_t step = get_quantized_step(utiming);
+  ignore_step = step;
 
-  int8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
-
-  if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
-    step = length - 1;
-  }
-
-  uint8_t utiming = mod12 + timing_mid;
-
-  if (mcl_cfg.rec_quant) {
-    if (mod12 > timing_mid / 2) {
-      step++;
-      if (step == length) {
-        step = 0;
-      }
-      ignore_step = step;
-    }
-    utiming = timing_mid;
-  }
   set_track_step(step, utiming, velocity);
 }
 

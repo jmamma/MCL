@@ -629,8 +629,11 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   uint16_t ev_idx, ev_end;
 
   if (record_mutes) {
-    if (mute_state == SEQ_MUTE_ON) { SET_BIT128_P(oneshot_mask, step_count); }
-    else { CLEAR_BIT128_P(oneshot_mask, step_count); }
+    uint8_t u = 0;
+    uint8_t q = 0;
+    uint8_t s = get_quantized_step(u,q);
+    if (mute_state == SEQ_MUTE_ON) { SET_BIT128_P(oneshot_mask, s); }
+    else { CLEAR_BIT128_P(oneshot_mask, s); }
   }
 
   if ((is_generic_midi || (!is_generic_midi && count_down == 0)) && (mute_state == SEQ_MUTE_OFF)) {
@@ -835,29 +838,8 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
     return;
   }
 
-  uint8_t timing_mid = get_timing_mid();
-
-  int8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
-
-  if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
-    step = length - 1;
-  }
-
-  uint8_t utiming = mod12 + timing_mid;
-
-  if (mcl_cfg.rec_quant) {
-    if (mod12 > timing_mid / 2) {
-      step++;
-      if (step == length) {
-        step = 0;
-      }
-    }
-    utiming = timing_mid;
-  }
-
+  uint8_t utiming = 0;
+  uint8_t step = get_quantized_step(utiming);
   // clear all locks on step
   clear_track_locks(step, track_param, 255);
   set_track_locks(step, utiming, track_param, value, slide);
@@ -1027,29 +1009,9 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
 void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   uint8_t condition = 0;
-
   uint8_t timing_mid = get_timing_mid();
-
-  int8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
-
-  if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
-    step = length - 1;
-  }
-
-  uint8_t utiming = mod12 + timing_mid;
-
-  if (mcl_cfg.rec_quant) {
-    if (mod12 > timing_mid / 2) {
-      step++;
-      if (step == length) {
-        step = 0;
-      }
-    }
-    utiming = timing_mid;
-  }
+  uint8_t utiming = 0;
+  uint8_t step = get_quantized_step(utiming);
 
   uint16_t ev_idx;
 
@@ -1083,27 +1045,8 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t condition = 0;
 
   uint8_t timing_mid = get_timing_mid();
-
-  int8_t mod12 = mod12_counter - 1;
-
-  uint8_t step = step_count;
-
-  if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
-    step = length - 1;
-  }
-
-  uint8_t utiming = mod12 + timing_mid;
-
-  if (mcl_cfg.rec_quant) {
-    if (mod12 > timing_mid / 2) {
-      step++;
-      if (step == length) {
-        step = 0;
-      }
-    }
-    utiming = timing_mid;
-  }
+  uint8_t utiming = 0;
+  uint8_t step = get_quantized_step(utiming);
 
   ignore_step = step;
   SET_BIT128_P(ignore_notes, note_num);

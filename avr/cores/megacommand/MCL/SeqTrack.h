@@ -29,6 +29,10 @@
 
 #define NUM_LOCKS 8
 
+#define TRIG_FALSE 0
+#define TRIG_TRUE 1
+#define TRIG_ONESHOT 3
+
 class SeqTrack_270 {};
 
 class SlideData {
@@ -176,6 +180,12 @@ public:
     }
     return multi;
   }
+
+  uint8_t get_quantized_step() {
+    uint8_t u = 0;
+    get_quantized_step(u);
+  }
+  uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = mcl_cfg.rec_quant);
 };
 
 class SeqTrack : public SeqTrackBase {

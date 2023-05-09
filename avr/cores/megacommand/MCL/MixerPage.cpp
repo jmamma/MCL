@@ -241,14 +241,27 @@ void MixerPage::display() {
 }
 
 void MixerPage::disable_record_mutes() {
+
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
+  };
+
+  ElektronDevice *elektron_devs[2] = {
+      devs[0]->asElektronDevice(),
+      devs[1]->asElektronDevice(),
+  };
+
   for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
     if (n < mcl_seq.num_ext_tracks) {
       if (mcl_seq.ext_tracks[n].record_mutes) {
         mcl_seq.ext_tracks[n].record_mutes = false;
+        if (mcl_seq.ext_tracks[n].mute_state == SEQ_MUTE_ON) { mcl_seq.ext_tracks[n].toggle_mute(); devs[1]->muteTrack(n, SEQ_MUTE_OFF); }
       }
     }
     if (mcl_seq.md_tracks[n].record_mutes) {
       mcl_seq.md_tracks[n].record_mutes = false;
+      if (mcl_seq.md_tracks[n].mute_state == SEQ_MUTE_ON) { mcl_seq.md_tracks[n].toggle_mute(); devs[0]->muteTrack(n, SEQ_MUTE_OFF); }
     }
   }
   if (!seq_step_page.recording) {

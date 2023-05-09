@@ -127,3 +127,30 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
     }
   }
 }
+
+uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
+  uint8_t timing_mid = get_timing_mid();
+
+  int8_t mod12 = mod12_counter - 1;
+
+  uint8_t step = step_count;
+
+  if ((step == 0) && (mod12 < 0)) {
+    mod12 += timing_mid;
+    step = length - 1;
+  }
+
+  utiming = mod12 + timing_mid;
+
+  if (quant) {
+    if (mod12 > timing_mid / 2) {
+      step++;
+      if (step == length) {
+        step = 0;
+      }
+    }
+    utiming = timing_mid;
+  }
+  return step;
+}
+
