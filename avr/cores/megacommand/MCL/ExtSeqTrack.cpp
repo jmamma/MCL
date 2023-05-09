@@ -628,6 +628,11 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
   uint16_t ev_idx, ev_end;
 
+  if (record_mutes) {
+    if (mute_state == SEQ_MUTE_ON) { SET_BIT128_P(oneshot_mask, step_count); }
+    else { CLEAR_BIT128_P(oneshot_mask, step_count); }
+  }
+
   if ((is_generic_midi || (!is_generic_midi && count_down == 0)) && (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
     // the range we're interested in:
@@ -1200,4 +1205,16 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
 
   mute_state = old_mute_state;
+}
+
+void ExtSeqTrack::toggle_mute() {
+  if (mute_state == SEQ_MUTE_ON) {
+    mute_state = SEQ_MUTE_OFF;
+  }
+  else {
+    mute_state = SEQ_MUTE_ON;
+    uint8_t mod12_counter_ = MidiClock.mod12_counter;
+    while (MidiClock.state == 2 && mod12_counter_ == MidiClock.mod12_counter) {};
+    buffer_notesoff();
+  }
 }

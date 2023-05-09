@@ -247,6 +247,7 @@ public:
 
     ev_end += ev_idx;
   }
+  void toggle_mute();
 
   void buffer_notesoff() {
     init_notes_on();

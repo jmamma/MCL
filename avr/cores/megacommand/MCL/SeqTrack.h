@@ -84,6 +84,8 @@ public:
     step_count = 0;
   }
 
+  void toggle_mute() { mute_state = !mute_state; }
+
   uint8_t get_timing_mid(uint8_t speed_) {
     uint8_t timing_mid;
     switch (speed_) {

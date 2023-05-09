@@ -197,14 +197,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= mcl_seq.num_ext_tracks) {
       return true;
     }
-    if (mcl_seq.ext_tracks[track].mute_state == SEQ_MUTE_ON) {
-      mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_OFF;
-    } else {
-      mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_ON;
-      uint8_t mod12_counter = MidiClock.mod12_counter;
-      while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {};
-      mcl_seq.ext_tracks[track].buffer_notesoff();
-    }
+    mcl_seq.ext_tracks[track].toggle_mute();
   } else {
     if (track >= mcl_seq.num_ext_tracks) {
       return true;
@@ -250,18 +243,17 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
 
 bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
   uint16_t last_mute_mask = mute_mask;
+
+  bool is_md_device = (device == &MD);
   mute_mask = 0;
 
-  uint8_t len = mcl_seq.num_md_tracks;
-  SeqTrack *seq_tracks = (SeqTrack*) mcl_seq.md_tracks;
-
-  if (device != &MD) {
-    len = mcl_seq.num_ext_tracks;
-    seq_tracks = (SeqTrack*) mcl_seq.ext_tracks;
-  }
+  uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 
   for (uint8_t n = 0; n < len; n++) {
-    if (seq_tracks[n].mute_state == SEQ_MUTE_OFF) {
+
+   SeqTrack *seq_track = is_md_device ? (SeqTrack*) &mcl_seq.md_tracks[n] : (SeqTrack*) &mcl_seq.ext_tracks[n];
+
+   if (seq_track->mute_state == SEQ_MUTE_OFF) {
       uint8_t d = offset + n;
       if (d < 16) {
         SET_BIT16(mute_mask, d);

@@ -121,7 +121,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
 
   if (record_mutes) {
     if (mute_state == SEQ_MUTE_ON) { SET_BIT64(oneshot_mask, step_count); }
-    if (mute_state == SEQ_MUTE_OFF) { CLEAR_BIT64(oneshot_mask, step_count); }
+    else { CLEAR_BIT64(oneshot_mask, step_count); }
   }
 
   if ((mute_state == SEQ_MUTE_OFF) &&

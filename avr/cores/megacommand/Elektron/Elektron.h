@@ -435,6 +435,8 @@ public:
    **/
   virtual const char* getMachineName(uint8_t machine) { return nullptr; }
 
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
+
   bool get_tempo(uint16_t &tempo);
   bool get_mute_state(uint16_t &mute_state);
   bool get_fw_caps();
