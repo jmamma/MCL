@@ -779,8 +779,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
         if (note_interface.notes_all_off()) {
-          note_interface.init_notes();
+          //note_interface.init_notes();
           grid_page.bank_popup_loadmask = 0;
+          //grid_page.bank_popup = 0;
+          grid_page.close_bank_popup();
         }
         return true;
       }
