@@ -385,9 +385,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             }
             midi_device->muteTrack(track, seq_track->mute_state);
             state = seq_track->mute_state;
-            if (preview_mute_set == current_mute_set) { goto update_mute_set; }
+            if (preview_mute_set == current_mute_set) {
+              goto update_mute_set;
+            }
           } else {
-            update_mute_set:
+          update_mute_set:
             mute_set = preview_mute_set;
             state = IS_BIT_SET16(mute_sets[!is_md_device][mute_set], track);
           }
@@ -482,22 +484,35 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_LEFT: {
+
+        if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(1); }
+        else {
         preview_mute_set = 1;
+        }
         break;
       }
 
       case MDX_KEY_UP: {
-        preview_mute_set = 2;
+        if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(2); }
+        else {
+          preview_mute_set = 2;
+        }
         break;
       }
 
       case MDX_KEY_RIGHT: {
-        preview_mute_set = 3;
+        if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(3); }
+        else {
+          preview_mute_set = 3;
+        }
         break;
       }
 
       case MDX_KEY_DOWN: {
-        preview_mute_set = 0;
+        if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(0); }
+        else {
+          preview_mute_set = 0;
+        }
         break;
       }
       }
@@ -514,8 +529,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
-        preview_mute_set = 255;
+        if (!trig_interface.is_key_down(MDX_KEY_LEFT) &&
+            !trig_interface.is_key_down(MDX_KEY_UP) &&
+            !trig_interface.is_key_down(MDX_KEY_RIGHT) &&
+            !trig_interface.is_key_down(MDX_KEY_DOWN)) {
+          trig_interface.send_md_leds(TRIGLED_OVERLAY);
+          preview_mute_set = 255;
+        }
         break;
       }
       }
@@ -528,23 +548,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    /*
-          if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
-            switch_mute_set(1);
-          }
-
-          else if (trig_interface.is_key_down(MDX_KEY_UP)) {
-            switch_mute_set(2);
-          }
-
-          else if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
-            switch_mute_set(3);
-          }
-
-          else if (trig_interface.is_key_down(MDX_KEY_DOWN)) {
-            switch_mute_set(0);
-          }
-      */
     show_mixer_menu = false;
     disable_record_mutes();
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
