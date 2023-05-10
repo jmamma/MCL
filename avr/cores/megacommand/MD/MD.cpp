@@ -233,6 +233,7 @@ bool MDClass::probe() {
     md_track_select.on();
     activate_enhanced_gui();
     activate_enhanced_midi();
+    MD.set_key_repeat(1);
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     MD.global.extendedMode = 2;
     seq_ptc_page.setup();
