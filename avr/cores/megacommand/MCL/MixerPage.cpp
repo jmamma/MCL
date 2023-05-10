@@ -198,7 +198,7 @@ void MixerPage::display() {
                       TRIGLED_EXCLUSIVE);
       oled_draw_mutes();
     }
-  } else if (seq_step_page.display_mute_mask(midi_device)) {
+  } else if (show_mixer_menu && seq_step_page.display_mute_mask(midi_device)) {
     oled_draw_mutes();
   }
 
@@ -300,9 +300,9 @@ void MixerPage::populate_mute_set() {
       SeqTrack *seq_track = (dev == 0) ? (SeqTrack *)&mcl_seq.md_tracks[n]
                                        : (SeqTrack *)&mcl_seq.ext_tracks[n];
       if (seq_track->mute_state == SEQ_MUTE_ON) {
-        SET_BIT16(mute_sets[dev][current_mute_set], n);
-      } else {
         CLEAR_BIT16(mute_sets[dev][current_mute_set], n);
+      } else {
+        SET_BIT16(mute_sets[dev][current_mute_set], n);
       }
     }
   }
@@ -400,8 +400,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             SET_BIT16(mute_sets[!is_md_device][mute_set], track);
           }
 
-          if (trig_interface.is_key_down(MDX_KEY_PATSONGKIT)) {
-            seq_track->record_mutes = true;
+          if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+             seq_track->record_mutes = true;
           }
           // oled_draw_mutes();
         } else if (first_track == 255) {
@@ -436,10 +436,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_PATSONGKIT: {
-        setLed2();
-        break;
-      }
       case MDX_KEY_NO: {
         if (note_interface.notes_count_on() == 0) {
           disable_record_mutes();
@@ -472,22 +468,19 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           switch_mute_set(0);
           break;
         } else {
-          if (midi_device != &MD) {
-            midi_device = &MD;
-          } else {
-            midi_device = midi_active_peering.get_device(UART2_PORT);
-          }
-          redraw_mask = -1;
-          oled_display.clearDisplay();
-          oled_draw_mutes();
+          seq_step_page.mute_mask = 0;
+          show_mixer_menu = true;
         }
         break;
       }
+
       case MDX_KEY_LEFT: {
 
         if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(1); }
         else {
-        preview_mute_set = 1;
+         preview_mute_set = 1;
+         //force redraw in display()
+         seq_step_page.mute_mask++;
         }
         break;
       }
@@ -495,7 +488,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP: {
         if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(2); }
         else {
-          preview_mute_set = 2;
+         preview_mute_set = 2;
+         //force redraw in display()
+         seq_step_page.mute_mask++;
         }
         break;
       }
@@ -504,6 +499,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(3); }
         else {
           preview_mute_set = 3;
+          //force redraw in display()
+          seq_step_page.mute_mask++;
         }
         break;
       }
@@ -512,19 +509,30 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (trig_interface.is_key_down(MDX_KEY_YES)) { switch_mute_set(0); }
         else {
           preview_mute_set = 0;
+          //force redraw in display()
+          seq_step_page.mute_mask++;
         }
         break;
+      }
+      case MDX_KEY_SCALE: {
+          if (midi_device != &MD) {
+            midi_device = &MD;
+          } else {
+            midi_device = midi_active_peering.get_device(UART2_PORT);
+          }
+          redraw_mask = -1;
+          oled_display.clearDisplay();
+          oled_draw_mutes();
+          break;
       }
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-      case MDX_KEY_PATSONGKIT: {
-        disable_record_mutes();
-        MD.set_trigleds(0, TRIGLED_OVERLAY);
-        break;
+      case MDX_KEY_GLOBAL:
+      case MDX_KEY_YES: {
+      goto global_release;
       }
-
       case MDX_KEY_LEFT:
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:
@@ -532,7 +540,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (!trig_interface.is_key_down(MDX_KEY_LEFT) &&
             !trig_interface.is_key_down(MDX_KEY_UP) &&
             !trig_interface.is_key_down(MDX_KEY_RIGHT) &&
-            !trig_interface.is_key_down(MDX_KEY_DOWN)) {
+            !trig_interface.is_key_down(MDX_KEY_DOWN) &&
+            !trig_interface.is_key_down(MDX_KEY_YES)
+            ) {
           trig_interface.send_md_leds(TRIGLED_OVERLAY);
           preview_mute_set = 255;
         }
@@ -542,16 +552,20 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-    seq_step_page.mute_mask = 0;
-    show_mixer_menu = true;
-    return true;
+        seq_step_page.mute_mask = 0;
+        show_mixer_menu = true;
+        setLed2();
+ 
+   return true;
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    show_mixer_menu = false;
-    disable_record_mutes();
-    MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
-    return true;
+global_release:
+        show_mixer_menu = false;
+        disable_record_mutes();
+        MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+ 
+          return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {

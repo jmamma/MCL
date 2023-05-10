@@ -834,13 +834,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     uint8_t key = event->source - 64;
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-       if (key == MDX_KEY_PATSONGKIT && event->mask == EVENT_BUTTON_PRESSED) {
-          grid_page.grid_select_apply = !grid_page.grid_select_apply;
-          swap_grids();
-          init();
-          return true;
-       }
-       if (show_slot_menu) {
+            if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
           case MDX_KEY_BANKA:
@@ -933,6 +927,12 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
       }
       switch (key) {
+      case MDX_KEY_SCALE: {
+          grid_page.grid_select_apply = !grid_page.grid_select_apply;
+          swap_grids();
+          init();
+          return true;
+       }
       case MDX_KEY_UP: {
       up:
         param2.cur -= inc;
