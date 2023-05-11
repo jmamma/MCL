@@ -200,8 +200,8 @@ void MixerPage::display() {
     }
   } else if (show_mixer_menu && seq_step_page.display_mute_mask(midi_device)) {
     oled_draw_mutes();
-  }
-  else if (mute_sets[!is_md_device][current_mute_set] != seq_step_page.mute_mask) {
+  } else if (mute_sets[!is_md_device][current_mute_set] !=
+             seq_step_page.mute_mask) {
     seq_step_page.mute_mask = mute_sets[!is_md_device][current_mute_set];
     oled_draw_mutes();
   }
@@ -349,7 +349,17 @@ void MixerPage::switch_mute_set(uint8_t state) {
   current_mute_set = state;
   oled_draw_mutes();
 }
-
+uint8_t MixerPage::get_mute_set(uint8_t key) {
+  switch (key) {
+  case MDX_KEY_LEFT:
+    return 1;
+  case MDX_KEY_UP:
+    return 2;
+  case MDX_KEY_RIGHT:
+    return 3;
+  }
+  return 0;
+}
 bool MixerPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
@@ -478,45 +488,15 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
 
-      case MDX_KEY_LEFT: {
-
-        if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(1);
-        } else {
-          preview_mute_set = 1;
-          // force redraw in display()
-          seq_step_page.mute_mask++;
-        }
-        break;
-      }
-
-      case MDX_KEY_UP: {
-        if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(2);
-        } else {
-          preview_mute_set = 2;
-          // force redraw in display()
-          seq_step_page.mute_mask++;
-        }
-        break;
-      }
-
-      case MDX_KEY_RIGHT: {
-        if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(3);
-        } else {
-          preview_mute_set = 3;
-          // force redraw in display()
-          seq_step_page.mute_mask++;
-        }
-        break;
-      }
-
+      case MDX_KEY_LEFT:
+      case MDX_KEY_UP:
+      case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
+        uint8_t set = get_mute_set(key);
         if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(0);
+          switch_mute_set(set);
         } else {
-          preview_mute_set = 0;
+          preview_mute_set = set;
           // force redraw in display()
           seq_step_page.mute_mask++;
         }
@@ -545,12 +525,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
-        if (!trig_interface.is_key_down(MDX_KEY_LEFT) &&
-            !trig_interface.is_key_down(MDX_KEY_UP) &&
-            !trig_interface.is_key_down(MDX_KEY_RIGHT) &&
-            !trig_interface.is_key_down(MDX_KEY_DOWN) &&
-            !trig_interface.is_key_down(MDX_KEY_YES)) {
-          trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        uint64_t mask = _BV(MDX_KEY_LEFT) | _BV(MDX_KEY_UP) |
+               _BV(MDX_KEY_RIGHT) | _BV(MDX_KEY_DOWN) |
+               _BV(MDX_KEY_YES);
+        if ((trig_interface.cmd_key_state & mask) == 0) {
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
           preview_mute_set = 255;
           oled_draw_mutes();
         }

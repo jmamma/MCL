@@ -44,6 +44,8 @@ public:
   uint8_t preview_mute_set = 255;
   uint16_t mute_sets[2][4];
 
+  uint8_t get_mute_set(uint8_t key);
+
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
