@@ -392,11 +392,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           uint8_t state = 0;
 
           if (preview_mute_set == 255 || preview_mute_set == current_mute_set) {
-            if (is_md_device) {
-              seq_track->toggle_mute();
-            } else {
-              mcl_seq.ext_tracks[track].toggle_mute();
-            }
+            seq_track->toggle_mute();
             midi_device->muteTrack(track, seq_track->mute_state);
             state = seq_track->mute_state;
             if (preview_mute_set == current_mute_set) {
