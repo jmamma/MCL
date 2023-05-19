@@ -873,6 +873,11 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
           active_track.clear_track_locks(step, param, 255);
           active_track.set_track_locks(step, timing_mid, param, value,
                                        SeqPage::slide);
+          char str[] = "CC:";
+          char str2[] = "--  ";
+          mcl_gui.put_value_at(value, str2);
+          oled_display.textbox(str, str2);
+
         }
       }
     }
