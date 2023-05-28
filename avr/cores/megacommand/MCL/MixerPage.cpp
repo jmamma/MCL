@@ -26,10 +26,11 @@ void MixerPage::oled_draw_mutes() {
             ? IS_BIT_SET16(mute_sets[!is_md_device][preview_mute_set], i)
             : seq_track->mute_state == SEQ_MUTE_OFF;
 
-    if (note_interface.is_note(i)) {
-      oled_display.fillRect(fader_x, 2, 6, 6, WHITE);
-    } else if (mute_state) {
+ //   if (note_interface.is_note(i)) {
+   //   oled_display.fillRect(fader_x, 2, 6, 6, WHITE);
+   // } else if (mute_state) {
       // No Mute (SEQ_MUTE_OFF)
+    if (mute_state) {
       oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
       oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
     } else {
@@ -478,8 +479,21 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           switch_mute_set(0);
           break;
         } else {
-          seq_step_page.mute_mask = 0;
-          show_mixer_menu = true;
+          if (!note_interface.notes_on) {
+            seq_step_page.mute_mask = 0;
+            show_mixer_menu = true;
+          }
+          else {
+          uint8_t is_md_device = (midi_device == &MD);
+          for (int i = 0; i < 16; i++) {
+            if (note_interface.is_note_on(i)) {
+              SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[i] : (SeqTrack *)&mcl_seq.ext_tracks[i];
+              seq_track->toggle_mute();
+              midi_device->muteTrack(i, seq_track->mute_state);
+            }
+          }
+          }
+
         }
         break;
       }
