@@ -220,7 +220,11 @@ void GridTask::transition_handler() {
         ignore_chain_settings = false;
         auto_check = false;
       }
-      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings, auto_check);
+      else if (mcl_actions.chains[n].mode == LOAD_AUTO && mcl_actions.links[n].loops == 0) {
+        mcl_actions.next_transitions[n] = -1;
+        continue;
+      }
+      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
