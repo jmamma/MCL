@@ -400,15 +400,15 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
 
   collect_tracks(slot_select_array, row_array);
 
-  uint16_t next_step = (MidiClock.div16th_counter / q) * q + q;
+  uint16_t next_step = q == 255 ? (uint16_t) -1 : (MidiClock.div16th_counter / q) * q + q;
 
-  uint8_t loops = 1;
+  bool increase_loops = 0;
 
   uint8_t track_idx, dev_idx;
 
   bool recalc_latency = true;
-  //100ms headroom = 0.100f * (MidiClock.get_tempo()* 0.133333333333f)
-  uint8_t headroom = ceil(MidiClock.get_tempo()* 0.0133333333333f);
+  uint8_t headroom = 4;
+  //uint8_t headroom = ceil(MidiClock.get_tempo()* 0.133333333333f * 0.200f);
   ////DEBUG_PRINTLN("manual trans");
 again:
   bool overflow = next_step < MidiClock.div16th_counter;
@@ -422,15 +422,30 @@ again:
         GridDeviceTrack *gdt = get_grid_dev_track(n, &track_idx, &dev_idx);
         if (gdt != nullptr) {
           transition_level[n] = 0;
-          next_transitions[n] =
-              div16th_counter - ((float)gdt->seq_track->step_count *
-                                 gdt->seq_track->get_speed_multiplier());
+          if (increase_loops) {
+            if (next_transitions[n] == next_transition) {
+              DEBUG_PRINTLN("increasing loops");
+              links[n].loops++;
+            }
+          }
+          else {
+            links[n].loops = 1;
+          }
           links[n].speed = gdt->seq_track->speed;
           links[n].length = gdt->seq_track->length;
           links[n].row = row;
-          links[n].loops = loops;
+
+          next_transitions[n] = MidiClock.div16th_counter - ((float)gdt->seq_track->step_count *
+                                gdt->seq_track->get_speed_multiplier() + (gdt->seq_track->mod12_counter / 12) );
+
+
           bool ignore_chain_settings = true;
-          calc_next_slot_transition(n, ignore_chain_settings);
+          bool ignore_overflow = true;
+          calc_next_slot_transition(n, ignore_chain_settings, ignore_overflow);
+
+          if (MidiClock.clock_less_than(next_transitions[n], next_step)) {
+            next_step = next_transitions[n];
+          }
           grid_page.active_slots[n] = SLOT_PENDING;
         }
       } else {
@@ -472,6 +487,9 @@ again:
   // steps away.
 
   uint32_t next_16th = (uint32_t)next_transition;
+
+  //only recalculate if next_transition is a manual transition.
+
   if (next_transition == next_step) {
     if (overflow) {
       next_16th += (uint16_t)-1;
@@ -482,7 +500,7 @@ again:
         (uint32_t)MidiClock.div16th_counter * 2) {
 
       if (q == 255) {
-        loops += 1;
+        increase_loops = 1;
       } else {
         // DEBUG_PRINTLN("try again");
         next_step += q;
@@ -788,23 +806,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
 void MCLActions::calc_next_slot_transition(uint8_t n,
                                            bool ignore_chain_settings,
-                                           bool auto_check) {
+                                           bool ignore_overflow) {
 
-  // DEBUG_PRINT_FN();
-
-  if (auto_check) {
-    switch (chains[n].mode) {
-    case LOAD_AUTO: {
-      if (links[n].loops == 0) {
-        next_transitions[n] = -1;
-        return;
-      }
-      break;
-    }
-    }
-  }
-
-  if (!ignore_chain_settings) {
+   if (!ignore_chain_settings) {
     switch (chains[n].mode) {
     case LOAD_QUEUE: {
       break;
@@ -824,7 +828,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   }
 
   // next transition[n] already valid, use this.
-  if (next_transitions[n] == -1 || next_transitions[n] > next_transition) {
+  if (next_transitions[n] == -1 || (next_transitions[n] > next_transition && !ignore_overflow)) {
     return;
   }
 
