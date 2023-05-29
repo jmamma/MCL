@@ -662,11 +662,13 @@ void pattern_len_handler(EncoderParent *enc) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
         mcl_seq.ext_tracks[c].set_length(enc_->cur);
+         if (last_ext_track == c) { seq_extparam4.cur = enc_->cur; }
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
       mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
+      seq_extparam4.cur = enc_->cur;
     }
   }
 }
@@ -680,6 +682,7 @@ void opt_length_handler() {
   } else {
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     mcl_seq.ext_tracks[last_ext_track].set_length(opt_length);
+    seq_extparam4.cur = opt_length;
   }
 }
 

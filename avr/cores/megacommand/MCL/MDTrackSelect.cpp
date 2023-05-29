@@ -67,6 +67,7 @@ void MDTrackSelect::end() {
         else{
           mcl_seq.ext_tracks[n].set_length(length, expand);
           mcl_seq.ext_tracks[n].set_speed(new_speed);
+          if (GUI.currentPage() == &seq_extstep_page) { seq_extparam4.cur = length; }
       }
 
       seq_step_page.config_encoders();
@@ -97,6 +98,7 @@ void MDTrackSelect::end() {
         }
         else {
            mcl_seq.ext_tracks[n].set_speed(new_speed);
+           if (last_ext_track == n) { seq_extparam4.cur = length; }
         }
         seq_track->mute_state = SEQ_MUTE_ON;
       }
