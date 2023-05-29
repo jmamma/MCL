@@ -31,12 +31,10 @@ void MixerPage::oled_draw_mutes() {
     //   oled_display.fillRect(fader_x, 2, 6, 6, WHITE);
     // } else if (mute_state) {
     // No Mute (SEQ_MUTE_OFF)
+    oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
     if (mute_state) {
-      oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
       oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
     } else {
-      // Mute (SEQ_MUTE_ON)
-      oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
       oled_display.drawLine(fader_x, 5, 5 + (i * 8), 5, WHITE);
     }
     fader_x += 8;
