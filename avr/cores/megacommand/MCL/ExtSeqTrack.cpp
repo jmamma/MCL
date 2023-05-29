@@ -3,7 +3,7 @@
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
   float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint16_t i = 0; i < NUM_EXT_EVENTS; i++) {
+  for (uint16_t i = 0; i < event_count; i++) {
     events[i].micro_timing = round(mult * (float)events[i].micro_timing);
   }
   speed = _speed;
@@ -27,6 +27,7 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
   if (step >= length && length > 0) {
     step = step % length;
   }
+
   uint16_t idx, end;
   locate(step, idx, end);
   USE_LOCK();
@@ -42,20 +43,21 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
         return;
       }
     }
-      ext_event_t empty_event;
+      ext_event_t empty_events[8];
       uint8_t a = 0;
       for (uint8_t n = old_length; n < 64; n++) {
-      //  memset(&empty_event, 0, sizeof(ext_event_t));
         uint16_t ev_idx, ev_end;
-          locate(a, ev_idx, ev_end);
-          for (; ev_idx != ev_end; ++ev_idx) {
-            memcpy(&empty_event, events + ev_idx, sizeof(ext_event_t));
-            add_event(n, &empty_event);
-          }
+        locate(a, ev_idx, ev_end);
+        memcpy(empty_events, &events[ev_idx], sizeof(empty_events));
+        for (uint8_t m = 0; m < (ev_end - ev_idx); m++) {
+          add_event(n, &empty_events[m]);
+        }
+        velocities[n] = velocities[a];
         a++;
         if (a == old_length) { a = 0; }
       }
   }
+
 }
 
 void ExtSeqTrack::copy_event(uint8_t step, ext_event_t *event) {
