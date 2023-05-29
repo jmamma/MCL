@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 #define FADER_LEN 18
 #define FADE_RATE 0.0625
@@ -68,6 +69,8 @@ void MixerPage::init() {
   redraw_mask = -1;
   show_mixer_menu = 0;
   populate_mute_set();
+//  R.Clear();
+//  R.use_machine_param_names();
 }
 
 void MixerPage::cleanup() {
@@ -121,6 +124,37 @@ void encoder_level_handle(EncoderParent *enc) {
   }
   enc->cur = 64 + dir;
   enc->old = 64;
+}
+
+void send_fx(uint8_t param, EncoderParent *enc, uint8_t type) {
+  //  for (int val = enc->old; val > enc->cur; val--) {
+  MD.sendFXParam(param, enc->cur, type);
+  //  }
+  //  for (int val = enc->old; val > enc->cur; val++) {
+  //  MD.sendFXParam(param, val, type);
+  //  }
+  PGM_P param_name = NULL;
+  switch (type) {
+  case MD_FX_ECHO:
+    MD.kit.delay[param] = enc->cur;
+    break;
+  case MD_FX_DYN:
+    MD.kit.dynamics[param] = enc->cur;
+    break;
+  case MD_FX_REV:
+    MD.kit.reverb[param] = enc->cur;
+    break;
+  case MD_FX_EQ:
+    MD.kit.eq[param] = enc->cur;
+    break;
+  }
+  char str[4];
+  char str2[] = "--  ";
+
+  param_name = fx_param_name(type, param);
+  strncpy(str, param_name, 4);
+  mcl_gui.put_value_at(enc->cur, str2);
+  oled_display.textbox(str, str2);
 }
 
 void encoder_filtf_handle(EncoderParent *enc) {
@@ -450,7 +484,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_NO: {
         if (note_interface.notes_count_on() == 0) {
           disable_record_mutes();
-          GUI.setPage(&grid_page);
+          GUI.setPage(fx_page_a.last_page);
           return true;
         }
         if (midi_device == &MD) {

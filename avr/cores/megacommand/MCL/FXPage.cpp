@@ -4,6 +4,9 @@
 #define FX_TYPE 0
 #define FX_PARAM 1
 #define INTERPOLATE
+
+LightPage *FXPage::last_page = &fx_page_a;
+
 void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
@@ -12,10 +15,11 @@ void FXPage::init() {
   oled_display.setFont();
   trig_interface.off();
   update_encoders();
-
+  MD.set_key_repeat(0);
   R.Clear();
   R.use_icons_page();
   R.use_machine_param_names();
+  last_page = this;
 }
 void FXPage::update_encoders() {
 
@@ -48,6 +52,7 @@ void FXPage::update_encoders() {
 
 void FXPage::cleanup() {
   //  md_exploit.off();
+  MD.set_key_repeat(1);
   oled_display.clearDisplay();
 }
 
@@ -176,6 +181,37 @@ bool FXPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_NO:
+        GUI.setPage(&mixer_page);
+        break;
+      }
+    }
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (key) {
+        case MDX_KEY_SCALE:
+        case MDX_KEY_DOWN:
+        if (GUI.currentPage() == &fx_page_b) {
+          goto toggle_mode;
+        }
+        else {
+          GUI.setPage(&fx_page_b);
+        }
+        break;
+        case MDX_KEY_LEFT:
+        if (GUI.currentPage() == &fx_page_a) {
+          goto toggle_mode;
+        }
+        else {
+          GUI.setPage(&fx_page_a);
+        }
+        break;
+      }
+    }
+  }
   if (event->mask == EVENT_BUTTON_RELEASED) {
     return true;
   }
@@ -186,8 +222,10 @@ bool FXPage::handleEvent(gui_event_t *event) {
     //    GUI.setPage(&grid_page);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    toggle_mode:
     page_mode = !(page_mode);
     update_encoders();
+    return true;
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {

@@ -42,6 +42,7 @@ public:
 
   uint8_t current_mute_set = 0;
   uint8_t preview_mute_set = 255;
+  void send_fx(uint8_t param, Encoder *enc, uint8_t type);
   uint16_t mute_sets[2][4];
 
   uint8_t get_mute_set(uint8_t key);
