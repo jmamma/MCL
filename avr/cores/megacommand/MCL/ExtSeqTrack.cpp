@@ -21,7 +21,7 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
   if (len > 128) {
     len = 16;
   }
-
+  uint8_t old_length = length;
   length = len;
   uint8_t step = step_count;
   if (step >= length && length > 0) {
@@ -34,6 +34,34 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
   step_count = step;
   cur_event_idx = idx;
   CLEAR_LOCK();
+
+  if (expand && old_length <= 16 && length >= 16) {
+    for (uint8_t n = old_length; n < length; n++) {
+      if (timing_buckets.get(n) != 0) {
+        expand = false;
+        return;
+      }
+    }
+      ext_event_t empty_event;
+      uint8_t a = 0;
+      for (uint8_t n = old_length; n < 64; n++) {
+      //  memset(&empty_event, 0, sizeof(ext_event_t));
+        uint16_t ev_idx, ev_end;
+          locate(a, ev_idx, ev_end);
+          for (; ev_idx != ev_end; ++ev_idx) {
+            memcpy(&empty_event, events + ev_idx, sizeof(ext_event_t));
+            add_event(n, &empty_event);
+          }
+        a++;
+        if (a == old_length) { a = 0; }
+      }
+  }
+}
+
+void ExtSeqTrack::copy_event(uint8_t step, ext_event_t *event) {
+  uint16_t ev_idx, ev_end;
+  locate(step, ev_idx, ev_end);
+  memcpy(event, events + ev_idx, sizeof(ext_event_t));
 }
 
 void ExtSeqTrack::re_sync() {
