@@ -45,39 +45,73 @@ void MDTrackSelect::end() {
   DEBUG_PRINTLN(sysex->get_recordLen());
   DEBUG_PRINTLN(msg_rd);
   if (sysex->get_recordLen() == 8) {
+    bool is_md_device = opt_midi_device_capture == &MD && (GUI.currentPage() != &seq_extstep_page);
     bool expand = true;
     reset_undo();
     uint8_t length = sysex->getByte(6);
     uint8_t new_speed = sysex->getByte(7);
-    if (GUI.currentPage() == &seq_step_page) {
+    if (GUI.currentPage() == &seq_step_page || GUI.currentPage() == &seq_extstep_page) {
       if (seq_step_page.recording) {
         goto update_pattern;
       }
       uint8_t b = sysex->getByte(3);
       MD.currentTrack = b & 0xF;
-      mcl_seq.md_tracks[MD.currentTrack].set_length(length, expand);
-      mcl_seq.md_tracks[MD.currentTrack].set_speed(new_speed);
+      uint8_t n = is_md_device ? MD.currentTrack : last_ext_track;
+      SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[n]
+                                       : (SeqTrack *)&mcl_seq.ext_tracks[n];
+
+      if (is_md_device) {
+          mcl_seq.md_tracks[n].set_length(length, expand);
+         mcl_seq.md_tracks[n].set_speed(new_speed);
+      }
+        else{
+          mcl_seq.ext_tracks[n].set_length(length, expand);
+          mcl_seq.ext_tracks[n].set_speed(new_speed);
+      }
+
       seq_step_page.config_encoders();
     } else {
     update_pattern:
       uint8_t old_speeds[16];
       uint8_t old_mutes[16];
-      for (uint8_t n = 0; n < 16; n++) {
-        mcl_seq.md_tracks[n].set_length(length, expand);
-        old_speeds[n] = mcl_seq.md_tracks[n].speed;
+      uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+      for (uint8_t n = 0; n < len; n++) {
+        SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[n]
+                                       : (SeqTrack *)&mcl_seq.ext_tracks[n];
+
+        if (is_md_device) {
+          mcl_seq.md_tracks[n].set_length(length, expand);
+        }
+        else{
+          mcl_seq.ext_tracks[n].set_length(length, expand);
+        }
+        old_speeds[n] = seq_track->speed;
         if (old_speeds[n] == new_speed) {
           old_speeds[n] = 255;
           continue;
         }
-        old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
-        mcl_seq.md_tracks[n].set_speed(new_speed, 255, false);
-        mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+
+        old_mutes[n] = seq_track->mute_state;
+        if (is_md_device) {
+           mcl_seq.md_tracks[n].set_speed(new_speed, 255, false);
+        }
+        else {
+           mcl_seq.ext_tracks[n].set_speed(new_speed);
+        }
+        seq_track->mute_state = SEQ_MUTE_ON;
       }
-      for (uint8_t n = 0; n < 16; n++) {
+      for (uint8_t n = 0; n < len; n++) {
         if (old_speeds[n] == 255)
           continue;
-        mcl_seq.md_tracks[n].set_speed(new_speed, old_speeds[n], true);
-        mcl_seq.md_tracks[n].mute_state = old_mutes[n];
+        SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[n]
+                                       : (SeqTrack *)&mcl_seq.ext_tracks[n];
+        if (is_md_device) {
+           mcl_seq.md_tracks[n].set_speed(new_speed, old_speeds[n], true);
+        }
+        else {
+           mcl_seq.ext_tracks[n].set_speed(new_speed);
+        }
+        seq_track->mute_state = old_mutes[n];
       }
     }
   } else {

@@ -209,7 +209,7 @@ public:
                          uint8_t value = 255);
   bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
   void clear_track();
-  void set_length(uint8_t len);
+  void set_length(uint8_t len, bool expand = false);
   void re_sync();
   void reset_params();
   void handle_event(uint16_t index, uint8_t step);

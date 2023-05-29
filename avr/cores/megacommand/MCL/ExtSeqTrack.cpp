@@ -14,7 +14,7 @@ void ExtSeqTrack::set_speed(uint8_t _speed) {
   }
 }
 
-void ExtSeqTrack::set_length(uint8_t len) {
+void ExtSeqTrack::set_length(uint8_t len, bool expand) {
   if (len == 0) {
     len = 1;
   }
