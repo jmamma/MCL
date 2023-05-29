@@ -859,7 +859,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
           param) {
         seq_extstep_page.lock_cur_y = value;
       }
-    } else {
+    }
+
       auto &active_track = mcl_seq.ext_tracks[n];
       uint8_t timing_mid = active_track.get_timing_mid();
       int a = 16 * timing_mid;
@@ -873,17 +874,18 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
           active_track.clear_track_locks(step, param, 255);
           active_track.set_track_locks(step, timing_mid, param, value,
                                        SeqPage::slide);
-          char str[] = "CC:";
-          char str2[] = "--  ";
-          mcl_gui.put_value_at(value, str2);
-          oled_display.textbox(str, str2);
+          if (SeqPage::pianoroll_mode == 0) {
+            char str[] = "CC:";
+            char str2[] = "--  ";
+            mcl_gui.put_value_at(value, str2);
+            oled_display.textbox(str, str2);
+          }
 
         }
-      }
     }
   }
 
-  if (SeqPage::recording && (MidiClock.state == 2) && note_interface.notes_all_off()) {
+  if (SeqPage::recording && (MidiClock.state == 2) && !note_interface.notes_on) {
     if (param != midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
       mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
     }
