@@ -3,7 +3,6 @@
 
 #define FX_TYPE 0
 #define FX_PARAM 1
-#define INTERPOLATE
 
 LightPage *FXPage::last_page = &fx_page_a;
 
@@ -66,15 +65,6 @@ void FXPage::loop() {
       uint8_t fx_type = params[n].type;
 
       uint8_t val;
-      // Interpolation.
-#ifdef INTERPOLATE
-      for (val = encoders[i]->old; val < encoders[i]->cur; val++) {
-        MD.sendFXParam(fx_param, val, fx_type);
-      }
-      for (val = encoders[i]->old; val > encoders[i]->cur; val--) {
-        MD.sendFXParam(fx_param, val, fx_type);
-      }
-#endif
       MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
       switch (fx_type) {
       case MD_FX_ECHO:

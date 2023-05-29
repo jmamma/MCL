@@ -102,20 +102,7 @@ void encoder_level_handle(EncoderParent *enc) {
 
   for (int i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
-      track_newval = MD.kit.levels[i] + dir;
-      if (track_newval < 0) {
-        track_newval = 0;
-      }
-      if (track_newval > 127) {
-        track_newval = 127;
-      }
-      for (uint8_t level = MD.kit.levels[i]; level < track_newval; level++) {
-        mixer_page.set_level(i, level);
-      }
-      for (uint8_t level = MD.kit.levels[i]; level > track_newval; level--) {
-        mixer_page.set_level(i, level);
-      }
-      // if ((MD.kit.levels[i] < 127) && (MD.kit.levels[i] > 0)) {
+      track_newval = min(max(MD.kit.levels[i] + dir,0),127);
       mixer_page.set_level(i, track_newval);
       SET_BIT16(mixer_page.redraw_mask, i);
     }
@@ -184,19 +171,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
   for (int i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
-      newval = MD.kit.params[i][param] + dir;
-      if (newval < 0) {
-        newval = 0;
-      }
-      if (newval > 127) {
-        newval = 127;
-      }
-      for (uint8_t value = MD.kit.params[i][param]; value < newval; value++) {
-        MD.setTrackParam(i, param, value, nullptr, true);
-      }
-      for (uint8_t value = MD.kit.params[i][param]; value > newval; value--) {
-        MD.setTrackParam(i, param, value, nullptr, true);
-      }
+      newval =min(max(MD.kit.params[i][param] + dir,0),127);
       MD.setTrackParam(i, param, newval, nullptr, true);
       SET_BIT16(redraw_mask, i);
     }
