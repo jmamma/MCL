@@ -407,7 +407,7 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   uint8_t track_idx, dev_idx;
 
   bool recalc_latency = true;
-  uint8_t headroom = 2;
+  uint8_t headroom = 3;
   //uint8_t headroom = ceil(MidiClock.get_tempo()* 0.133333333333f * 0.200f);
   ////DEBUG_PRINTLN("manual trans");
 again:

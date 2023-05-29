@@ -34,6 +34,8 @@ void GridTask::run() {
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
+
+
   if (stop_hard_callback) {
       mcl_actions_callbacks.StopHardCallback();
       stop_hard_callback = false;
@@ -42,7 +44,6 @@ void GridTask::run() {
     }
 
   sync_cursor();
-  GridTask::transition_handler();
 
   if (!load_queue.is_empty()) {
     uint8_t mode;
@@ -60,7 +61,7 @@ void GridTask::run() {
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(255, track_select, row_select_array, mode);
   }
-
+  GridTask::transition_handler();
 }
 
 void GridTask::transition_handler() {
