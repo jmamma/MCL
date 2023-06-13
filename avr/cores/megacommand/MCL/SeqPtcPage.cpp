@@ -314,11 +314,11 @@ poly:
     }
   }
 
+  int oldest_val = -1;
   if (voice != 255) {
     goto end;
   }
   // Reuse oldest note
-  int oldest_val = -1;
 
   for (uint8_t x = 0; x < 16; x++) {
     if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
@@ -860,7 +860,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         seq_extstep_page.lock_cur_y = value;
       }
     }
-
+    if (last_ext_track == n) {
       auto &active_track = mcl_seq.ext_tracks[n];
       uint8_t timing_mid = active_track.get_timing_mid();
       int a = 16 * timing_mid;
@@ -879,13 +879,19 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
             char str2[] = "--  ";
             mcl_gui.put_value_at(value, str2);
             oled_display.textbox(str, str2);
+          } else {
+            uint8_t lock_idx = active_track.find_lock_idx(param);
+            if (lock_idx != 255) {
+              SeqPage::pianoroll_mode = lock_idx + 1;
+            }
           }
-
         }
+      }
     }
   }
 
-  if (SeqPage::recording && (MidiClock.state == 2) && !note_interface.notes_on) {
+  if (SeqPage::recording && (MidiClock.state == 2) &&
+      !note_interface.notes_on) {
     if (param != midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
       mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
     }
