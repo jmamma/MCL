@@ -6,9 +6,9 @@
 #include <avr/io.h>
 #include <inttypes.h>
 #include "Midi.h"
-//#define TXEN 3
-//#define RXEN 4
-//#define RXCIE 7
+// #define TXEN 3
+// #define RXEN 4
+// #define RXCIE 7
 
 #ifdef MEGACOMMAND
 #define TIMER1_CHECK_INT() IS_BIT_SET8(TIFR1, OCF1A)
@@ -87,7 +87,7 @@
 
 #define TX_IRQ 1
 
-//#define RX_BUF_SIZE 2048
+// #define RX_BUF_SIZE 2048
 #if (RX_BUF_SIZE >= 256)
 #define RX_BUF_TYPE uint16_t
 #else
@@ -120,10 +120,10 @@ public:
 
   int8_t in_message_tx;
 
-  #ifdef RUNNING_STATUS_OUT
+#ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
   bool running_status_enabled;
-  #endif
+#endif
 
   volatile uint8_t *udr;
   volatile uint8_t *ubrrh() { return udr - 1; }
@@ -132,14 +132,14 @@ public:
   volatile uint8_t *ucsrb() { return udr - 5; }
   volatile uint8_t *ucsra() { return udr - 6; }
 
-  #ifdef RUNNING_STATUS_OUT
+#ifdef RUNNING_STATUS_OUT
   ALWAYS_INLINE() bool write_char(uint8_t c) {
     if (!running_status_enabled) {
       *udr = c;
       return true;
     }
     if (MIDI_IS_STATUS_BYTE(c) && MIDI_IS_VOICE_STATUS_BYTE(c)) {
-    if (c != running_status) {
+      if (c != running_status) {
         running_status = c;
         *udr = c;
         return true;
@@ -150,11 +150,9 @@ public:
       return true;
     }
   }
-  #else
-  ALWAYS_INLINE() void write_char(uint8_t c) {
-     *udr = c;
-  }
-  #endif
+#else
+  ALWAYS_INLINE() void write_char(uint8_t c) { *udr = c; }
+#endif
 
   uint8_t read_char() { return *udr; }
   bool check_empty_tx() {
@@ -192,7 +190,7 @@ public:
     }
 
     switch (midi->live_state) {
-    case midi_wait_sysex: {
+    case midi_wait_sysex:
 
       if (MIDI_IS_STATUS_BYTE(c)) {
         if (c != MIDI_SYSEX_END) {
@@ -207,28 +205,23 @@ public:
         midi->midiSysex.handleByte(c);
       }
       break;
-    }
 
-    case midi_wait_status: {
+    case midi_wait_status:
       if (c == MIDI_SYSEX_START) {
         midi->live_state = midi_wait_sysex;
         midi->midiSysex.reset();
-      } else {
-        rxRb.put_h_isr(c);
+        break;
       }
-    } break;
-    default: {
+    default:
       rxRb.put_h_isr(c);
       break;
     }
-    }
   }
-
   ALWAYS_INLINE() void tx_isr() {
 #ifdef RUNNING_STATUS_OUT
     bool rs = 1;
 #endif
-    again:
+  again:
     if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
       // ==> flush the sidechannel now
@@ -305,7 +298,9 @@ public:
       clear_tx();
     }
 #ifdef RUNNING_STATUS_OUT
-    if (!rs) { goto again; }
+    if (!rs) {
+      goto again;
+    }
 #endif
     if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
