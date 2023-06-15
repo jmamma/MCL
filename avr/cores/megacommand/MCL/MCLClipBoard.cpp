@@ -86,10 +86,10 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
 
   auto device_track =
             ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
-  if (device_track == nullptr) { goto end; }
-
   bool merge = false;
   bool online = true;
+  if (device_track == nullptr) { goto end; }
+
   ret = device_track->store_in_grid(track_idx, GRID_LENGTH, gdt->seq_track, merge,
                                      online, &grids[grid_idx]);
 

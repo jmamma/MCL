@@ -213,7 +213,6 @@ public:
   void re_sync();
   void reset_params();
   void handle_event(uint16_t index, uint8_t step);
-  void copy_event(uint8_t step, ext_event_t *event);
   void remove_event(uint16_t index);
   uint16_t add_event(uint8_t step, ext_event_t *e);
 

@@ -80,8 +80,8 @@ public:
   virtual void initSerial() { }
 
   virtual uint8_t m_getc() {}
-  virtual void m_putc(uint8_t *src, uint16_t size) { }
-  virtual void m_putc(uint8_t c) {}
+  virtual void m_putc(uint8_t *src, uint16_t size) = 0;
+  virtual void m_putc(uint8_t c) = 0;
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual bool avail() { return false; }
 

@@ -60,12 +60,6 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
 
 }
 
-void ExtSeqTrack::copy_event(uint8_t step, ext_event_t *event) {
-  uint16_t ev_idx, ev_end;
-  locate(step, ev_idx, ev_end);
-  memcpy(event, events + ev_idx, sizeof(ext_event_t));
-}
-
 void ExtSeqTrack::re_sync() {
   //  uint32_t q = length * 12;
   //  start_step = (MidiClock.div16th_counter / q) * q + q;

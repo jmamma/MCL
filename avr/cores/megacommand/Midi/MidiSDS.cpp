@@ -114,7 +114,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
   uint32_t fsize;
   int show_progress = 0;
   uint8_t n_retry = 0;
-
+  uint16_t latency_ms = 0;
   if (state != SDS_READY || !file.open(filename, O_READ)) {
     return false;
   }
@@ -141,7 +141,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 
   oled_display.clearDisplay();
 
-  uint16_t latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
+  latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 

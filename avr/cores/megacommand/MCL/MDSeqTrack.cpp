@@ -254,8 +254,8 @@ void MDSeqTrack::recalc_slides() {
     cur_mask <<= 1;
   }
 
-  if (find_mask == 0) { goto end; }
   auto lockidx = locks_slides_idx;
+  if (find_mask == 0) { goto end; }
   find_next_locks(lockidx, step, find_mask);
 
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {

@@ -172,7 +172,7 @@ void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
 void ElektronDevice::popup_text(char *str, uint8_t persistent) {
   uint8_t data[67] = {0x70, 0x3B, persistent};
   uint8_t len = strlen(str);
-  strcpy(data + 3, str);
+  strcpy((char*) (data + 3), str);
   sendRequest(data, 3 + len + 1);
   // waitBlocking();
 }
@@ -190,7 +190,9 @@ void ElektronDevice::draw_close_bank() {
 
 
 void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
-  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, timing >> 7, timing & 0x7F};
+  uint8_t a = timing >> 7;
+  uint8_t b = timing & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
   sendRequest(data, 6);
   // waitBlocking();
 }
@@ -433,7 +435,7 @@ void ElektronDevice::setKitName(const char *name, MidiUartParent *uart_) {
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
-  uint16_t qtempo = round(tempo * 24.0);
+  uint16_t qtempo = round(tempo * 24.0f);
   uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7),
                      (uint8_t)(qtempo & 0x7F)};
   return sendRequest(data, countof(data), send);
@@ -471,4 +473,5 @@ const char *getMachineNameShort(uint8_t machine, uint8_t type,
       }
     }
   }
+  return nullptr;
 }
