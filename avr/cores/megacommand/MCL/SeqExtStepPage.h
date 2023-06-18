@@ -62,7 +62,7 @@ public:
 
   void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                        uint8_t color = WHITE);
-  void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
+  void draw_note(uint8_t x, uint8_t y, uint8_t w);
   void draw_pianoroll();
   void draw_lockeditor();
   void draw_viewport_minimap();
@@ -72,8 +72,6 @@ public:
   void pos_cur_x(int16_t diff);
   void pos_cur_y(int16_t diff);
   void pos_cur_w(int16_t diff);
-
-  void display_mute_mask();
 
   bool is_within_fov(uint16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) {

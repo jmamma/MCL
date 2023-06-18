@@ -26,6 +26,7 @@ public:
     ids[0] = 0x7E;
     ids[1] = 0x00;
     ids[2] = 0x01;
+    msgType = 255;
   }
 
   virtual void start();

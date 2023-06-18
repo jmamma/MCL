@@ -98,11 +98,11 @@ void MCLActionsCallbacks::StopHardCallback() {
     }
   }
 
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   if (!proceed) {
     goto end;
   }
 
-  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
   /*
    ElektronDevice *elektron_devs[2] = {

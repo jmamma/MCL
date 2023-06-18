@@ -18,7 +18,9 @@ class MDTrack;
 class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
 
 public:
+
   uint64_t oneshot_mask;
+
   uint8_t locks_params_orig[NUM_LOCKS];
 
   static uint16_t sync_cursor;
@@ -29,6 +31,7 @@ public:
   ALWAYS_INLINE() void reset() {
     SeqTrack::reset();
     oneshot_mask = 0;
+    record_mutes = false;
   }
 
   void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
@@ -43,7 +46,7 @@ public:
 
   void send_trig();
   void send_trig_inline();
-  bool trig_conditional(uint8_t condition);
+  uint8_t trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
   void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
   void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
@@ -62,7 +65,6 @@ public:
   uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param);
 
-  uint8_t get_quantized_step();
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);

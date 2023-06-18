@@ -40,9 +40,8 @@ void MidiSDSSysexListenerClass::end() {
 
     return;
   }
-
-   msgType = sysex->getByte(2);
-
+  msgType = sysex->getByte(2);
+  //DEBUG_PRINTLN(msgType);
   switch (msgType) {
 
   case MIDI_SDS_DUMPREQUEST:
@@ -50,24 +49,22 @@ void MidiSDSSysexListenerClass::end() {
     break;
 
   case MIDI_SDS_ACK:
-    ack();
+    DEBUG_PRINT("ACK: ");
+    DEBUG_PRINTLN(sysex->getByte(3));
     break;
 
   case MIDI_SDS_NAK:
-    nak();
+    DEBUG_PRINT("NAK: ");
+    DEBUG_PRINTLN(sysex->getByte(3));
     break;
 
   case MIDI_SDS_CANCEL:
-    cancel();
     break;
 
   case MIDI_SDS_WAIT:
-
-    wait();
     break;
 
   case MIDI_SDS_EOF:
-    eof();
     break;
   case MIDI_SDS_DUMPHEADER:
 

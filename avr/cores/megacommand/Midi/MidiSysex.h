@@ -249,20 +249,7 @@ public:
 
   // Handled by interrupts
   ALWAYS_INLINE() void end_immediate() {
-
-    uint8_t old_msg = rd_cur;
-
     stopRecord();
-
-    recvIds[0] = getByte(0);
-
-    sysexLongId = false;
-    if (recvIds[0] == 0x00) {
-      sysexLongId = true;
-      recvIds[1] = getByte(1);
-      recvIds[2] = getByte(2);
-    }
-
   }
 
   ALWAYS_INLINE() void handleByte(uint8_t byte) {

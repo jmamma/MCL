@@ -34,6 +34,8 @@ void GridTask::run() {
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
+
+
   if (stop_hard_callback) {
       mcl_actions_callbacks.StopHardCallback();
       stop_hard_callback = false;
@@ -42,7 +44,6 @@ void GridTask::run() {
     }
 
   sync_cursor();
-  GridTask::transition_handler();
 
   if (!load_queue.is_empty()) {
     uint8_t mode;
@@ -60,7 +61,7 @@ void GridTask::run() {
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(255, track_select, row_select_array, mode);
   }
-
+  GridTask::transition_handler();
 }
 
 void GridTask::transition_handler() {
@@ -87,8 +88,11 @@ void GridTask::transition_handler() {
 
   GUI.removeTask(&grid_task);
 
+  //240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
+  //               = 0.032 * MidiClock.get_tempo()
+  //
   while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + 0.240 * (MidiClock.get_tempo()* 0.133333333333f),
+             MidiClock.div32th_counter + 0.032 * MidiClock.get_tempo(),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
    float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
@@ -217,7 +221,11 @@ void GridTask::transition_handler() {
         ignore_chain_settings = false;
         auto_check = false;
       }
-      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings, auto_check);
+      else if (mcl_actions.chains[n].mode == LOAD_AUTO && mcl_actions.links[n].loops == 0) {
+        mcl_actions.next_transitions[n] = -1;
+        continue;
+      }
+      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {

@@ -146,6 +146,7 @@ public:
 class ExtSeqTrack : public ExtSeqTrackData, public SeqSlideTrack {
 
 public:
+  bool is_generic_midi = true;
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
@@ -208,7 +209,7 @@ public:
                          uint8_t value = 255);
   bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
   void clear_track();
-  void set_length(uint8_t len);
+  void set_length(uint8_t len, bool expand = false);
   void re_sync();
   void reset_params();
   void handle_event(uint16_t index, uint8_t step);
@@ -246,6 +247,7 @@ public:
 
     ev_end += ev_idx;
   }
+  void toggle_mute();
 
   void buffer_notesoff() {
     init_notes_on();

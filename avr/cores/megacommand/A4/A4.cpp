@@ -220,9 +220,9 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
 
   return connected;
 }
-
-void A4Class::muteTrack(uint8_t track, bool mute) {
-  MidiUart2.sendCC(track, 94, mute ? 1 : 0);
+void A4Class::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart->sendCC(track, 94, mute ? 1 : 0);
 }
 
 void A4Class::setLevel(uint8_t track, uint8_t value) {

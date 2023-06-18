@@ -31,19 +31,37 @@ public:
 
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
-  char info_line2[9];
+  int8_t ext_disp_levels[6];
+
+  MidiDevice* midi_device;
+
   uint8_t display_mode;
   uint8_t first_track;
   uint16_t redraw_mask;
+  bool show_mixer_menu;
+
+  uint8_t current_mute_set = 0;
+  uint8_t preview_mute_set = 255;
+  void send_fx(uint8_t param, Encoder *enc, uint8_t type);
+  uint16_t mute_sets[2][4];
+
+  uint8_t get_mute_set(uint8_t key);
+
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
+        midi_device = &MD;
+        memset(mute_sets,0xFF,sizeof(mute_sets));
       }
   void adjust_param(EncoderParent *enc, uint8_t param);
 
   void draw_levels();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
+  void disable_record_mutes();
+  void oled_draw_mutes();
+  void switch_mute_set(uint8_t state);
+  void populate_mute_set();
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

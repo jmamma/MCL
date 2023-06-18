@@ -56,7 +56,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         group_select();
         return true;
       }
-      case MDX_KEY_BANKGROUP: {
+      case MDX_KEY_SCALE: {
         goto toggle_grid;
       }
      }

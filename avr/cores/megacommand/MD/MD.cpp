@@ -233,6 +233,7 @@ bool MDClass::probe() {
     md_track_select.on();
     activate_enhanced_gui();
     activate_enhanced_midi();
+    MD.set_key_repeat(1);
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     MD.global.extendedMode = 2;
     seq_ptc_page.setup();
@@ -668,6 +669,7 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   }
   i++;
 
+  bool set_level = false;
   if (mode == 0) {
     goto end;
   }
@@ -689,7 +691,6 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   }
   data[i++] = machine->trigGroup;
   data[i++] = machine->muteGroup;
-  bool set_level = false;
   if (level != 255) {
     data[i++] = level;
     set_level = true;
@@ -772,14 +773,16 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   return bytes;
 }
 
-void MDClass::muteTrack(uint8_t track, bool mute) {
+void MDClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   if (global.baseChannel == 127)
     return;
-
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart->sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
+  uart_->sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
 }
 
 void MDClass::setGlobal(uint8_t id) {

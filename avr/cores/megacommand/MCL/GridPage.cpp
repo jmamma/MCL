@@ -852,8 +852,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
         if (note_interface.notes_all_off()) {
-          note_interface.init_notes();
+          //note_interface.init_notes();
           grid_page.bank_popup_loadmask = 0;
+          //grid_page.bank_popup = 0;
+          grid_page.close_bank_popup();
         }
         return true;
       }
@@ -905,13 +907,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     uint8_t key = event->source - 64;
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-       if (key == MDX_KEY_PATSONGKIT && event->mask == EVENT_BUTTON_PRESSED) {
-          grid_page.grid_select_apply = !grid_page.grid_select_apply;
-          swap_grids();
-          init();
-          return true;
-       }
-       if (show_slot_menu) {
+            if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
           case MDX_KEY_BANKA:
@@ -1004,6 +1000,12 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
       }
       switch (key) {
+      case MDX_KEY_SCALE: {
+          grid_page.grid_select_apply = !grid_page.grid_select_apply;
+          swap_grids();
+          init();
+          return true;
+       }
       case MDX_KEY_UP: {
       up:
         param2.cur -= inc;

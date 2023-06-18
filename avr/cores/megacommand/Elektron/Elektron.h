@@ -217,6 +217,7 @@ public:
   virtual void disconnect() { cleanup(); connected = false; }
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
 };
@@ -433,6 +434,8 @@ public:
    *given machine.
    **/
   virtual const char* getMachineName(uint8_t machine) { return nullptr; }
+
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
 
   bool get_tempo(uint16_t &tempo);
   bool get_mute_state(uint16_t &mute_state);

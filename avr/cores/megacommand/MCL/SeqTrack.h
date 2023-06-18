@@ -29,6 +29,10 @@
 
 #define NUM_LOCKS 8
 
+#define TRIG_FALSE 0
+#define TRIG_TRUE 1
+#define TRIG_ONESHOT 3
+
 class SeqTrack_270 {};
 
 class SlideData {
@@ -59,6 +63,8 @@ public:
   MidiUartParent *uart = &MidiUart;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
+  bool record_mutes;
+
   uint8_t length;
   uint8_t speed;
   uint8_t track_number;
@@ -66,7 +72,7 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
-  SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
+  SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
@@ -81,6 +87,8 @@ public:
     mod12_counter = -1;
     step_count = 0;
   }
+
+  void toggle_mute() { mute_state = !mute_state; }
 
   uint8_t get_timing_mid(uint8_t speed_) {
     uint8_t timing_mid;
@@ -172,6 +180,12 @@ public:
     }
     return multi;
   }
+
+  uint8_t get_quantized_step() {
+    uint8_t u = 0;
+    get_quantized_step(u);
+  }
+  uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = mcl_cfg.rec_quant);
 };
 
 class SeqTrack : public SeqTrackBase {

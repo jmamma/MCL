@@ -276,7 +276,7 @@ public:
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
    **/
-  void muteTrack(uint8_t track, bool mute = true);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
   /** Unmute the given track. **/
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
 

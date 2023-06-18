@@ -41,3 +41,7 @@ FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto -fno-split-wide-types
    text    data     bss     dec     hex filename
  218312    6030   42415  266757   41205 main.elf
 ```
+
+avr-gcc 8.5 appears to produce a slightly smaller binary than 7.3. There is also discussion that 8.2+ produces more optimized code for interrupts by
+introducing pseduo-instructions.
+https://sourceware.org/bugzilla/show_bug.cgi?id=21683#c4
