@@ -25,6 +25,7 @@ public:
   uint8_t row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
+  uint8_t old_col = 0;
   uint8_t display_name = 0;
   uint8_t bank = 0;
 
@@ -88,7 +89,7 @@ public:
   void prepare();
   void swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
-
+  void load_old_col();
   void close_bank_popup();
 
   void loop();
