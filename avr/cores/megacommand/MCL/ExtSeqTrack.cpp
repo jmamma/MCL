@@ -45,7 +45,7 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
     }
       ext_event_t empty_events[8];
       uint8_t a = 0;
-      for (uint8_t n = old_length; n < 64; n++) {
+      for (uint8_t n = old_length; n < 128; n++) {
         uint16_t ev_idx, ev_end;
         locate(a, ev_idx, ev_end);
         memcpy(empty_events, &events[ev_idx], sizeof(empty_events));
