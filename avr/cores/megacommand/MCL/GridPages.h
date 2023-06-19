@@ -7,7 +7,6 @@
 #define ENCODER_RES_GRID 1
 #define ENCODER_RES_PAT 2
 
-#include "GridEncoder.h"
 #include "GridPage.h"
 
 #include "MCLEncoder.h"

@@ -62,15 +62,7 @@ void EncoderParent::clear() {
 
 Encoder::Encoder(const char *_name, encoder_handle_t _handler)
     : EncoderParent(_handler) {
-  setName(_name);
   fastmode = true;
-  pressmode = false;
-}
-
-void Encoder::setName(const char *_name) {
-  if (_name != NULL)
-    m_strncpy_fill(name, _name, 4);
-  name[3] = '\0';
 }
 
 int Encoder::update_rotations(encoder_t *enc) {
@@ -103,7 +95,7 @@ int Encoder::update_rotations(encoder_t *enc) {
 int Encoder::update(encoder_t *enc) {
   int inc = update_rotations(enc);
 
-  inc = inc + (pressmode ? 0 : (fastmode ? 4 * enc->button : enc->button));
+  inc = inc + (fastmode ? 4 * enc->button : enc->button);
   cur += inc;
 
   return cur;

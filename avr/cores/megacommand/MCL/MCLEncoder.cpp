@@ -3,7 +3,7 @@
 
 int MCLEncoder::update(encoder_t *enc) {
   int inc = update_rotations(enc);
-  inc = inc + (pressmode ? 0 : (fastmode ? 4 * enc->button : enc->button));
+  inc = inc + fastmode ? 4 * enc->button : enc->button;
   cur = limit_value(cur, inc, min, max);
 
   return cur;
@@ -12,7 +12,7 @@ int MCLEncoder::update(encoder_t *enc) {
 int MCLExpEncoder::update(encoder_t *enc) {
   int inc = update_rotations(enc);
 
-  if (!pressmode && fastmode && inc != 0) {
+  if (fastmode && inc != 0) {
     int8_t r = 0;
     while (cur >>= 1) {
       r++;

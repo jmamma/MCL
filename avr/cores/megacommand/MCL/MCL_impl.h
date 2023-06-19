@@ -57,7 +57,6 @@
 #include "AuxPages.h"
 #include "GridPages.h"
 
-#include "GridEncoder.h"
 #include "MCLEncoder.h"
 
 #include "Grid.h"

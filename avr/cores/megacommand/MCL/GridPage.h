@@ -4,7 +4,6 @@
 #define GRIDPAGE_H__
 
 #include "GUI.h"
-#include "GridEncoder.h"
 #include "GridRowHeader.h"
 
 #define MAX_VISIBLE_ROWS 4
