@@ -834,13 +834,18 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     int w = timing_mid;
     if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
-      if (pianoroll_mode > 0) { inc = 8; }
       w = w * 2;
     }
 
     if (pianoroll_mode > 0) {
-      w = inc;
+      inc = 1;
+      w = seq_extparam4.cur / 2;
+      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+         w *= 2;
+         inc = 8;
+      }
     }
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (trig_interface.is_key_down(MDX_KEY_YES)) {
         w = 1;
