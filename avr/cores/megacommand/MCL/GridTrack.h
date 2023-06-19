@@ -75,10 +75,9 @@ public:
     return true;
   }
 
-  void init() {
+ void init() {
     link.length = 16;
     link.speed = SEQ_SPEED_1X;
-    link.loops = 0;
   }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/

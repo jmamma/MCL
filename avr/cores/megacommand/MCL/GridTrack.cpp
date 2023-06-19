@@ -61,7 +61,7 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
   ::new (this) GridTrack;
   this->active = tmp;
 
-  if ((active == 255)) {
+  if ((active == EMPTY_TRACK_TYPE) || (active == 255)) {
     init();
   }
 
