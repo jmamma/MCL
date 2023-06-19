@@ -883,16 +883,16 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
   end = start_idx;
   bool ret = false;
 
-  uint8_t r = 2;
+  uint8_t r = 4;
 
   for (uint8_t n = step; n < min(length, step + 3); n++) {
     end += timing_buckets.get(n);
     for (; start_idx < end; start_idx++) {
       DEBUG_DUMP(start_idx);
       uint8_t i = start_idx;
-      if (!events[i].is_lock || events[i].lock_idx != lock_idx ||
-          (events[i].event_value > value + r ||
-           events[i].event_value < min(0, value - r)))
+      if (!events[i].is_lock || events[i].lock_idx != lock_idx)
+           //|| (events[i].event_value > value + r ||
+           //events[i].event_value < min(0, value - r)))
         continue;
       int16_t event_x = n * timing_mid + events[i].micro_timing - timing_mid;
       if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
