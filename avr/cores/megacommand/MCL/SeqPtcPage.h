@@ -26,8 +26,12 @@ public:
   void setup_callbacks();
   void remove_callbacks();
 
+  void note_on(uint8_t *msg, uint8_t channel_event);
+  void note_off(uint8_t *msg, uint8_t channel_event);
+
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
+
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
 
