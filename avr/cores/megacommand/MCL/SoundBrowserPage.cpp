@@ -1,157 +1,92 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
-const char *c_sound_root = "/Sounds/MD";
 const char *c_wav_root = "/Samples/WAV";
 const char *c_syx_root = "/Samples/SYX";
-const char *c_snd_suffix = ".snd";
 const char *c_wav_suffix = ".wav";
 const char *c_syx_suffix = ".syx";
 
-const char *c_snd_name = "SOUND";
 const char *c_wav_name = "WAV";
 const char *c_syx_name = "SYSEX";
 
 static bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
-  SD.mkdir(c_sound_root, true);
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
-  show_samplemgr = false;
   sysex = &(Midi.midiSysex);
+  show_samplemgr = false;
   FileBrowserPage::setup();
-  chdir_type();
-}
-
-void SoundBrowserPage::chdir_type() {
-  DEBUG_PRINTLN("chdir type");
-  if (filetype_idx == FT_WAV) {
-   _cd(c_wav_root);
-  }
-  else if (filetype_idx == FT_SND) {
-   _cd(c_sound_root);
-  }
-  else {
-   _cd(c_syx_root);
-  }
+  _cd(c_wav_root);
+  position.reset();
 }
 
 void SoundBrowserPage::init() {
+  file_types.reset();
+  file_types.add(c_wav_suffix);
+  file_types.add(c_syx_suffix);
+
   trig_interface.off();
   filemenu_active = false;
   select_dirs = false;
-
-  filetypes[0] = c_snd_suffix;
-  filetypes[1] = c_wav_suffix;
-  filetypes[2] = c_syx_suffix;
-  filetype_names[0] = c_snd_name;
-  filetype_names[1] = c_wav_name;
-  filetype_names[2] = c_syx_name;
-  filetype_max = FT_SYX;
-
   show_overwrite = false;
+
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
     show_dirs = false;
     show_save = false;
     show_filemenu = false;
     show_new_folder = false;
-    show_filetypes = false;
     show_parent = false;
     query_sample_slots();
   } else {
-    strcpy(match, ".snd");
     strcpy(title, "Select:");
     show_dirs = true;
-    show_save = (filetype_idx != FT_SYX);
+    show_save = true;
     show_filemenu = true;
     show_new_folder = true;
-    show_filetypes = true;
     show_parent = true;
     query_filesystem();
+
   }
 
   R.Clear();
   R.use_machine_names_short();
 }
 
-void SoundBrowserPage::save_sound() {
-
-  MDSound sound;
-  char sound_name[9] = "        ";
-
-  grid_page.prepare();
-  memcpy(sound_name, MD.kit.name, 4);
-  const char *tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
-  copyMachineNameShort(tmp, sound_name + 4);
-  sound_name[6] = '\0';
-
-  if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
-    char temp_entry[FILE_ENTRY_SIZE];
-    strcpy(temp_entry, sound_name);
-    strcat(temp_entry, ".snd");
-    sound.file.open(temp_entry, O_RDWR | O_CREAT);
-    sound.fetch_sound(MD.currentTrack);
-    sound.write_sound();
-    sound.file.close();
-    gfx.alert("File Saved", temp_entry);
-  }
-}
-
-void SoundBrowserPage::load_sound() {
-
-  grid_page.prepare();
-  if (file.isOpen()) {
-    char temp_entry[FILE_ENTRY_SIZE];
-    MDSound sound;
-    file.getName(temp_entry, FILE_ENTRY_SIZE);
-    file.close();
-    DEBUG_PRINTLN(F("loading sound"));
-    DEBUG_PRINTLN(temp_entry);
-    if (!sound.file.open(temp_entry, O_READ)) {
-      gfx.alert("Error", "Opening");
-      return;
-    }
-    sound.read_sound();
-    if (sound.id != SOUND_ID) {
-      sound.file.close();
-      gfx.alert("Error", "Not compatible");
-      return;
-    }
-    sound.load_sound(MD.currentTrack);
-    gfx.alert("Loaded", "Sound");
-    sound.file.close();
-  }
-}
-
 // send current selected sample file to slot
-void SoundBrowserPage::send_sample(int slot, bool is_syx, char *newname, bool silent) {
+void SoundBrowserPage::send_sample(int slot, char *newname, bool silent) {
   bool success;
   if (file.isOpen()) {
     char temp_entry[FILE_ENTRY_SIZE];
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     file.close();
+    bool is_syx =
+        strcmp(c_syx_suffix, &temp_entry[strlen(temp_entry) - 4]) == 0;
     if (!silent) {
-    if (!mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
-      return;
-    }
+      if (!mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
+        return;
+      }
     }
     if (is_syx) {
       success = midi_sds.sendSyx(temp_entry, slot);
     } else {
       char *ptr = newname;
       if (newname == nullptr) {
-         if (isdigit(temp_entry[0]) && isdigit(temp_entry[1]) && (temp_entry[2] != '.') && (temp_entry[2] != '\0')) { ptr = temp_entry + 2; }
+        if (isdigit(temp_entry[0]) && isdigit(temp_entry[1]) &&
+            (temp_entry[2] != '.') && (temp_entry[2] != '\0')) {
+          ptr = temp_entry + 2;
+        }
       }
-      success = midi_sds.sendWav(temp_entry, ptr, slot, /* show progress */ true);
+      success =
+          midi_sds.sendWav(temp_entry, ptr, slot, /* show progress */ true);
     }
     if (!silent) {
-    if (success) {
-      gfx.alert("Sample sent", temp_entry);
-    } else {
-      gfx.alert("Send failed", temp_entry);
-    }
+      if (success) {
+        gfx.alert("Sample sent", temp_entry);
+      } else {
+        gfx.alert("Send failed", temp_entry);
+      }
     }
   }
 }
@@ -190,16 +125,9 @@ void SoundBrowserPage::recv_wav(int slot, bool silent) {
 
 void SoundBrowserPage::on_new() {
   if (!show_samplemgr) {
-    switch (filetype_idx) {
-    case FT_SND:
-      save_sound();
-      break;
-    case FT_WAV:
-      pending_action = PA_NEW;
-      show_samplemgr = true;
-      show_ram_slots = true;
-      break;
-    }
+    pending_action = PA_NEW;
+    show_samplemgr = true;
+    show_ram_slots = true;
     init();
   } else {
     // shouldn't happen.
@@ -215,24 +143,17 @@ void SoundBrowserPage::on_cancel() {
     show_samplemgr = false;
   } else {
     // TODO cd .. ?
-   _cd_up();
+    _cd_up();
   }
 }
 
 void SoundBrowserPage::on_select(const char *__) {
   if (!show_samplemgr) {
-    switch (filetype_idx) {
-    case FT_SND:
-      load_sound();
-      break;
-    case FT_WAV:
-    case FT_SYX:
-      pending_action = PA_SELECT;
-      show_samplemgr = true;
-      show_ram_slots = false;
-      init();
-      break;
-    }
+    pending_action = PA_SELECT;
+    show_samplemgr = true;
+    show_ram_slots = false;
+    DEBUG_PRINTLN("on select");
+    init();
   } else {
     auto slot = encoders[1]->cur;
     switch (pending_action) {
@@ -240,7 +161,7 @@ void SoundBrowserPage::on_select(const char *__) {
       recv_wav(slot);
       break;
     case PA_SELECT:
-      send_sample(slot, (filetype_idx == FT_SYX));
+      send_sample(slot);
       break;
     }
     pending_action = 0;
@@ -252,7 +173,7 @@ void SoundBrowserPage::on_select(const char *__) {
 bool SoundBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
     FileBrowserPage::handleEvent(event);
-    bool state = (param2->cur == 0) && filetype_idx == FILETYPE_WAV;
+    bool state = (param2->cur == 0);
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
     file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
     file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
@@ -335,7 +256,9 @@ bool SoundBrowserPage::_handle_filemenu() {
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
-      if (wav_name[5] != '[') { recv_wav(n, true); }
+      if (wav_name[5] != '[') {
+        recv_wav(n, true);
+      }
     }
   end:
     show_samplemgr = false;
@@ -350,17 +273,20 @@ bool SoundBrowserPage::_handle_filemenu() {
     for (uint8_t n = 0; n < numEntries; n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
-      if (!isdigit(wav_name[0]) || !isdigit(wav_name[1])) continue;
+      if (!isdigit(wav_name[0]) || !isdigit(wav_name[1]))
+        continue;
       uint8_t slot = (wav_name[0] - '0') * 10 + wav_name[1] - '0' - 1;
       DEBUG_PRINTLN("slot pos:");
       DEBUG_PRINTLN(slot);
-      DEBUG_PRINTLN((uint8_t) wav_name[0]);
-      DEBUG_PRINTLN((uint8_t) wav_name[1]);
-      if (slot > 48) { continue; }
+      DEBUG_PRINTLN((uint8_t)wav_name[0]);
+      DEBUG_PRINTLN((uint8_t)wav_name[1]);
+      if (slot > 48) {
+        continue;
+      }
 
       file.open(wav_name);
       mcl_gui.draw_progress("Send Samples", n, numEntries);
-      send_sample(slot, false, wav_name + 2, true);
+      send_sample(slot, wav_name + 2, true);
     }
     break;
   }

@@ -11,7 +11,6 @@ void WavDesigner::prompt_send() {
   GUI.pushPage(&sound_browser);
   sound_browser.show_samplemgr = true;
   sound_browser.pending_action = PA_SELECT;
-  sound_browser.filetype_idx = FT_WAV;
   sound_browser.setup();
   sound_browser.show_samplemgr = true;
   wd.render();
