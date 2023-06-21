@@ -651,29 +651,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t slot_update = 0;
 
-  if (insert_rows) {
-    int8_t row_count = GRID_LENGTH - getRow() - insert_rows;
-    uint8_t row_dst = getRow() + insert_rows;
-    if (row_dst > GRID_LENGTH || row_count < 1) {
-      return;
-    }
-
-    if (mcl_gui.wait_for_confirm("Insert", "Rows?")) {
-      for (uint8_t g = 0; g < 2; g++) {
-        for (uint8_t n = 0; n < row_count; n++) {
-          if (n % 8) mcl_gui.draw_progress("INSERT ROWS", n + g * row_count, row_count * 2);
-          mcl_clipboard.copy(g * GRID_WIDTH, getRow() + row_count - n - insert_rows,
-                             GRID_WIDTH, 1);
-          mcl_clipboard.paste(g * GRID_WIDTH, getRow() + row_count - n);
-        }
-        for (uint8_t n = 0; n < insert_rows; n++) {
-          proj.clear_row_grid(getRow() + n, g);
-        }
-      }
-    }
-    goto end;
-  }
-
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((temp_slot.link.row != slot.link.row) ||
         (temp_slot.link.loops != slot.link.loops) ||
@@ -808,8 +785,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   }
  end:
 
- if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1) ||
-      (insert_rows == 1)) {
+ if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid();
   }
 
@@ -822,8 +798,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     load_old_col();
   }
 
-  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1) ||
-      (insert_rows == 1)) {
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     load_slot_models();
   }
   mcl_cfg.load_mode = load_mode_old;
@@ -832,7 +807,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   slot_clear = 0;
   slot_copy = 0;
   slot_paste = 0;
-  insert_rows = 0;
   slot.load_from_grid(_col, getRow());
   old_col = 255;
 }
