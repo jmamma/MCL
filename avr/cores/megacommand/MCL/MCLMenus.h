@@ -39,8 +39,8 @@ extern MenuPage<boot_menu_page_N> boot_menu_page;
 constexpr size_t start_menu_page_N = 2;
 extern MenuPage<start_menu_page_N> start_menu_page;
 
-constexpr size_t system_page_N = 6;
-extern MenuPage<system_page_N> system_page;
+constexpr size_t system_menu_page_N = 6;
+extern MenuPage<system_menu_page_N> system_page;
 
 constexpr size_t midi_config_page_N = 5;
 extern MenuPage<midi_config_page_N> midi_config_page;
@@ -91,7 +91,7 @@ extern MenuPage<file_menu_page_N> file_menu_page;
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
 
-constexpr size_t seq_menu_page_N = 20;
+constexpr size_t seq_menu_page_N = 21;
 extern MenuPage<seq_menu_page_N> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;

@@ -11,7 +11,7 @@
   ExitPage
  ***/
 
-menu_t<4> boot_menu_layout = {
+menu_t<boot_menu_page_N> boot_menu_layout = {
     "BOOT",
     {
         //               m  r  n  d  p  f  o
@@ -24,7 +24,7 @@ menu_t<4> boot_menu_layout = {
 };
 
 
-menu_t<2> start_menu_layout = {
+menu_t<start_menu_page_N> start_menu_layout = {
     "PROJECT",
     {
         //               m  r  n  d  p  f  o
@@ -34,7 +34,7 @@ menu_t<2> start_menu_layout = {
     0, 0
 };
 
-menu_t<6> system_menu_layout = {
+menu_t<system_menu_page_N> system_menu_layout = {
     "CONFIG",
     {
         //               m  r  n  d  p  f  o
@@ -49,7 +49,7 @@ menu_t<6> system_menu_layout = {
     0, 0
 };
 
-menu_t<1> auxconfig_menu_layout = {
+menu_t<aux_config_page_N> auxconfig_menu_layout = {
     "AUX PAGES",
     {
         //           m  r  n  d  p  f  o
@@ -58,7 +58,7 @@ menu_t<1> auxconfig_menu_layout = {
     0, 0,
 };
 
-menu_t<1> rampage1_menu_layout = {
+menu_t<ram_config_page_N> rampage1_menu_layout = {
     "RAM PAGE",
     {
         //        m  r  n  d  p  f  o
@@ -67,7 +67,7 @@ menu_t<1> rampage1_menu_layout = {
     0, 0
 };
 
-menu_t<5> midiconfig_menu_layout = {
+menu_t<midi_config_page_N> midiconfig_menu_layout = {
     "MIDI",
     {
         {"PORT CONFIG", 0, 0, 0, 0, 12, 0, 0},
@@ -79,7 +79,7 @@ menu_t<5> midiconfig_menu_layout = {
     0, 0
 };
 
-menu_t<5> midiport_menu_layout = {
+menu_t<midiport_menu_page_N> midiport_menu_layout = {
     "PORTS",
     {
         {"TURBO 1:",  0, 4, 4, 2, 0, 0, 2},
@@ -91,7 +91,7 @@ menu_t<5> midiport_menu_layout = {
     24, 0
 };
 
-menu_t<3> midiprogram_menu_layout = {
+menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
     "PROGRAM",
     {
         {"PRG MODE:", 0, 2, 2, 49, 0, 0, 90},
@@ -102,7 +102,7 @@ menu_t<3> midiprogram_menu_layout = {
 };
 
 
-menu_t<4> midiclock_menu_layout = {
+menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
     "SYNC",
     {
         {"CLOCK RECV:",  0, 3, 3, 5, 0, 0, 7},
@@ -113,7 +113,7 @@ menu_t<4> midiclock_menu_layout = {
     24, 0
 };
 
-menu_t<4> midiroute_menu_layout = {
+menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
     "ROUTE",
     {
         //            m  r  n  d  p  f  o
@@ -127,7 +127,7 @@ menu_t<4> midiroute_menu_layout = {
     24, 0
 };
 
-menu_t<3> midimachinedrum_menu_layout = {
+menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     "MD MIDI",
     {
         //              m  r   n  d  p  f  o
@@ -139,7 +139,7 @@ menu_t<3> midimachinedrum_menu_layout = {
 };
 
 
-menu_t<3> mdconfig_menu_layout = {
+menu_t<md_config_page_N> mdconfig_menu_layout = {
     "MD",
     {
         //              m  r   n  d  p  f  o
@@ -150,7 +150,7 @@ menu_t<3> mdconfig_menu_layout = {
     0, 0
 };
 
-menu_t<4> mdimport_menu_layout = {
+menu_t<md_import_page_N> mdimport_menu_layout = {
     "MD",
     {
         //         m  r       n  d  p  f  o
@@ -162,7 +162,7 @@ menu_t<4> mdimport_menu_layout = {
     0, 0
 };
 
-menu_t<1> mclconfig_menu_layout = {
+menu_t<mcl_config_page_N> mclconfig_menu_layout = {
     "SYSTEM",
     {
         //           m  r  n  d   p  f  o
@@ -171,7 +171,7 @@ menu_t<1> mclconfig_menu_layout = {
     1, 0
 };
 
-menu_t<7> file_menu_layout = {
+menu_t<file_menu_page_N> file_menu_layout = {
     "FILE",
     {
         //            m  r  n  d  p  f  o
@@ -186,11 +186,12 @@ menu_t<7> file_menu_layout = {
     0, 0
 };
 
-menu_t<20> seq_menu_layout = {
+menu_t<seq_menu_page_N> seq_menu_layout = {
     "SEQ",
     {
         //              m  r                    n                    d   p  f   o
         {"TRACK SEL:",  1, 17,                  0,                   14, 0,  3,  0},
+        {"DEVICE:",     0, 2,                   2,                   50, 0,  0,  128},
         {"EDIT:",       0, 4,                   4,                   15, 0,  4,  48},
         {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, 0,  0,  54},
         {"CC:",         0, 133,                 5,                   17, 0,  0,  55},
@@ -214,7 +215,7 @@ menu_t<20> seq_menu_layout = {
     14, 0
 };
 
-menu_t<4> step_menu_layout = {
+menu_t<step_menu_page_N> step_menu_layout = {
     "STP",
     {
         //             m  r  n  d   p  f   o

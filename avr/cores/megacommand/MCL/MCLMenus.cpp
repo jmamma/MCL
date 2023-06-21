@@ -192,7 +192,7 @@ MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
 
 MenuPage<boot_menu_page_N> boot_menu_page(&options_param1, &options_param2);
 MenuPage<start_menu_page_N> start_menu_page(&options_param1, &options_param2);
-MenuPage<system_page_N> system_page(&options_param1, &options_param2);
+MenuPage<system_menu_page_N> system_page(&options_param1, &options_param2);
 MenuPage<midi_config_page_N> midi_config_page(&config_param1, &config_param3);
 
 MenuPage<md_config_page_N> md_config_page(&config_param1, &config_param4);
