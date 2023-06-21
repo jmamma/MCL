@@ -3,7 +3,6 @@
 void ConvertProjectPage::init() {
 
   DEBUG_PRINT_FN();
-  strcpy(match, ".mcl");
   strcpy(title, "Project");
   strcpy(lwd, "/");
   SD.chdir("/");
