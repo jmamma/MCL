@@ -13,6 +13,8 @@ void LoadProjectPage::init() {
   show_overwrite = false;
 
   FileBrowserPage::init();
+  strncpy(focus_match,mcl_cfg.project,PRJ_NAME_LEN);
+  query_filesystem();
 }
 
 void LoadProjectPage::setup() {

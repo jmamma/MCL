@@ -4,9 +4,9 @@
 File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
-char FileBrowserPage::match[5];
 char FileBrowserPage::lwd[128];
 char FileBrowserPage::title[12];
+char FileBrowserPage::focus_match[14];
 uint8_t FileBrowserPage::cur_col = 0;
 uint8_t FileBrowserPage::cur_row = 0;
 uint8_t FileBrowserPage::cur_file = 0;
@@ -124,7 +124,7 @@ void FileBrowserPage::query_filesystem() {
     if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
       if (add_entry(temp_entry)) {
-        if (strcmp(temp_entry, mcl_cfg.project) == 0) {
+        if (strlen(focus_match) > 0 && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
           cur_file = numEntries - 1;
@@ -147,6 +147,7 @@ void FileBrowserPage::query_filesystem() {
 void FileBrowserPage::init() {
   filemenu_active = false;
   show_samplemgr = false;
+  strcpy(focus_match,"");
   file_types.reset();
   query_filesystem();
 }

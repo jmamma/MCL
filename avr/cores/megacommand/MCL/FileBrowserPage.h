@@ -91,9 +91,9 @@ public:
   static File file;
   static int numEntries;
 
-  static char match[5];
   static char lwd[128];
   static char title[12];
+
   static uint8_t cur_col;
   static uint8_t cur_row;
   static uint8_t cur_file;
@@ -113,6 +113,7 @@ public:
 
   static bool call_handle_filemenu;
 
+  static char focus_match[PRJ_NAME_LEN];
   static FileBrowserFileTypes file_types;
 
   static FileSystemPosition position;
