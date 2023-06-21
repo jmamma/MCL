@@ -495,18 +495,14 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
       return true;
     }
-
     /*
     if (mask == EVENT_BUTTON_PRESSED) {
       SET_BIT128_P(dev_note_masks[0], note);
     } else {
       CLEAR_BIT128_P(dev_note_masks[0], note);
     }
-
-    uint8_t pitch = calc_scale_note(note);
-    if (pitch > 127)
-      return false;
     */
+
     // note interface presses are treated as musical notes here
     scale_padding = false;
     bool is_md = midi_device == &MD;
@@ -630,7 +626,9 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
       CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
     }
   }
-  if (pitch == 255) { return 255; }
+  if (pitch == 255) {
+    return 255;
+  }
   pitch += ptc_param_oct.cur * 12;
   return pitch;
 }
@@ -656,10 +654,26 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
            (GUI.currentPage() != &seq_extstep_page);
   */
 }
-
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
+
+  if (channel_event) {
+    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+  } else {
+    auto active_device = midi_active_peering.get_device(UART2_PORT);
+    uint8_t n = mcl_seq.find_ext_track(channel);
+    if (n == 255) {
+      return;
+    }
+    if (SeqPage::midi_device != active_device || (last_ext_track != n)) {
+      SeqPage::midi_device = active_device;
+      last_ext_track = min(n, NUM_EXT_TRACKS - 1);
+      seq_ptc_page.config();
+    } else {
+      SeqPage::midi_device = active_device;
+    }
+  }
   uint8_t scale_padding_old = seq_ptc_page.scale_padding;
   seq_ptc_page.scale_padding = true;
   note_on(msg, channel_event);
@@ -669,6 +683,14 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
+  if (channel_event) {
+
+  } else {
+    uint8_t n = mcl_seq.find_ext_track(channel);
+    if (n == 255) {
+      return;
+    }
+  }
   uint8_t scale_padding_old = seq_ptc_page.scale_padding;
   seq_ptc_page.scale_padding = true;
   note_off(msg, channel_event);
@@ -681,17 +703,12 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
   DEBUG_PRINTLN("note on");
   DEBUG_DUMP(channel);
 
-  // matches control channel, or MIDI2 is OMNI?
-  // then route midi message to MD
-  //
-
   // pitch - MIDI_NOTE_C4
   //
   uint8_t pitch;
   bool note_on = true;
-  if (channel_event) {
-    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
+  if (channel_event) {
     if (channel_event == TRIG_EVENT) {
       if (note_num < MIDI_NOTE_C4) {
         uint8_t pos = note_num - MIDI_NOTE_C2;
@@ -729,29 +746,15 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
   }
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
-  auto active_device = midi_active_peering.get_device(UART2_PORT);
-  uint8_t n = mcl_seq.find_ext_track(channel);
-  if (n == 255) {
-    return;
-  }
-
-  if (SeqPage::midi_device != active_device || (last_ext_track != n)) {
-    SeqPage::midi_device = active_device;
-    last_ext_track = min(n, NUM_EXT_TRACKS - 1);
-    seq_ptc_page.config();
-  } else {
-    SeqPage::midi_device = active_device;
-  }
-
   pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel);
   seq_ptc_page.config_encoders();
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
 
   arp_page.track_update();
-  seq_ptc_page.render_arp(false, SeqPage::midi_device, n);
+  seq_ptc_page.render_arp(false, SeqPage::midi_device, last_ext_track);
   if (pitch == 255)
-     return;
+    return;
 
   seq_extstep_page.set_cur_y(pitch);
 
@@ -785,19 +788,13 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
 #ifdef EXT_TRACKS
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
-  uint8_t n = mcl_seq.find_ext_track(channel);
-  if (n == 255) {
-    return;
-  }
 
-  last_ext_track = min(n, NUM_EXT_TRACKS - 1);
-  ;
   seq_ptc_page.config_encoders();
-
-  seq_ptc_page.render_arp(false, SeqPage::midi_device, n);
+  seq_ptc_page.render_arp(false, SeqPage::midi_device, last_ext_track);
   arp_page.track_update();
+
   if (pitch == 255)
-     return;
+    return;
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
   if (!arp_track->enabled) {
