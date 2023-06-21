@@ -659,8 +659,19 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
+  uint8_t scale_padding_old = seq_ptc_page.scale_padding;
   seq_ptc_page.scale_padding = true;
   note_on(msg, channel_event);
+  seq_ptc_page.scale_padding = scale_padding_old;
+}
+
+void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
+  uint8_t scale_padding_old = seq_ptc_page.scale_padding;
+  seq_ptc_page.scale_padding = true;
+  note_off(msg, channel_event);
+  seq_ptc_page.scale_padding = scale_padding_old;
 }
 
 void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
@@ -748,13 +759,6 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
   }
 #endif
   return;
-}
-
-void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
-  seq_ptc_page.scale_padding = true;
-  note_off(msg, channel_event);
 }
 
 void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
