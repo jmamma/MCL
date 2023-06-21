@@ -106,6 +106,7 @@ void SeqPage::init() {
   seqpage_midi_events.setup_callbacks();
   oled_display.clearDisplay();
   toggle_device = true;
+  seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
@@ -436,6 +437,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[0] = &seq_menu_value_encoder;
       encoders[1] = &seq_menu_entry_encoder;
       seq_menu_page.init();
+      step_menu_page.gen_menu_device_names();
+      mcl_cfg.seq_dev = midi_device == &MD ? 0 : 1;
       return true;
     }
   }
@@ -470,6 +473,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     show_seq_menu = false;
     show_step_menu = false;
+    midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
     mcl_gui.init_encoders_used_clock();
     init();
     return true;

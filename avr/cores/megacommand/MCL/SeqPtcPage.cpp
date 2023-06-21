@@ -77,6 +77,7 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   SeqPage::init();
+  seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);

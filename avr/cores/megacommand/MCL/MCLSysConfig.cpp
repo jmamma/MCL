@@ -150,6 +150,7 @@ bool MCLSysConfig::cfg_init() {
   midi_transport_send = 0;
   midi_ctrl_port = 1;
   md_trig_channel = 0;
+  seq_dev = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

@@ -9,7 +9,6 @@
 #include "ProjectPages.h"
 
 #define PROJ_VERSION 3000
-#define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {

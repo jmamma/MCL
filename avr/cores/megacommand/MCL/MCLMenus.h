@@ -33,22 +33,50 @@ extern MCLEncoder config_param13;
 
 extern void new_proj_handler();
 
-extern MenuPage<4> boot_menu_page;
-extern MenuPage<2> start_menu_page;
-extern MenuPage<6> system_page;
-extern MenuPage<5> midi_config_page;
-extern MenuPage<3> md_config_page;
-extern MenuPage<1> mcl_config_page;
-extern MenuPage<3> chain_config_page;
-extern MenuPage<1> aux_config_page;
-extern MenuPage<1> ram_config_page;
-extern MenuPage<4> md_import_page;
+constexpr size_t boot_menu_page_N = 4;
+extern MenuPage<boot_menu_page_N> boot_menu_page;
 
-extern MenuPage<5> midiport_menu_page;
-extern MenuPage<3> midiprogram_menu_page;
-extern MenuPage<4> midiclock_menu_page;
-extern MenuPage<4> midiroute_menu_page;
-extern MenuPage<3> midimachinedrum_menu_page;
+constexpr size_t start_menu_page_N = 2;
+extern MenuPage<start_menu_page_N> start_menu_page;
+
+constexpr size_t system_page_N = 6;
+extern MenuPage<system_page_N> system_page;
+
+constexpr size_t midi_config_page_N = 5;
+extern MenuPage<midi_config_page_N> midi_config_page;
+
+constexpr size_t md_config_page_N = 3;
+extern MenuPage<md_config_page_N> md_config_page;
+
+constexpr size_t mcl_config_page_N = 1;
+extern MenuPage<mcl_config_page_N> mcl_config_page;
+
+constexpr size_t chain_config_page_N = 3;
+extern MenuPage<chain_config_page_N> chain_config_page;
+
+constexpr size_t aux_config_page_N = 1;
+extern MenuPage<aux_config_page_N> aux_config_page;
+
+constexpr size_t ram_config_page_N = 1;
+extern MenuPage<ram_config_page_N> ram_config_page;
+
+constexpr size_t md_import_page_N = 4;
+extern MenuPage<md_import_page_N> md_import_page;
+
+constexpr size_t midiport_menu_page_N = 5;
+extern MenuPage<midiport_menu_page_N> midiport_menu_page;
+
+constexpr size_t midiprogram_menu_page_N = 3;
+extern MenuPage<midiprogram_menu_page_N> midiprogram_menu_page;
+
+constexpr size_t midiclock_menu_page_N = 4;
+extern MenuPage<midiclock_menu_page_N> midiclock_menu_page;
+
+constexpr size_t midiroute_menu_page_N = 4;
+extern MenuPage<midiroute_menu_page_N> midiroute_menu_page;
+
+constexpr size_t midimachinedrum_menu_page_N = 3;
+extern MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page;
 
 extern MCLEncoder input_encoder1;
 extern MCLEncoder input_encoder2;
@@ -56,15 +84,21 @@ extern MCLEncoder input_encoder2;
 extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
-extern MenuPage<7> file_menu_page;
+
+constexpr size_t file_menu_page_N = 7;
+extern MenuPage<file_menu_page_N> file_menu_page;
 
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
-extern MenuPage<20> seq_menu_page;
+
+constexpr size_t seq_menu_page_N = 20;
+extern MenuPage<seq_menu_page_N> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
 extern MCLEncoder step_menu_entry_encoder;
-extern MenuPage<4> step_menu_page;
+
+constexpr size_t step_menu_page_N = 4;
+extern MenuPage<step_menu_page_N> step_menu_page;
 
 extern MCLEncoder grid_slot_param1;
 extern MCLEncoder grid_slot_param2;
@@ -74,7 +108,9 @@ extern MenuPage<grid_slot_page_N> grid_slot_page;
 
 extern MCLEncoder wavdesign_menu_value_encoder;
 extern MCLEncoder wavdesign_menu_entry_encoder;
-extern MenuPage<3> wavdesign_menu_page;
+
+constexpr size_t wavdesign_menu_page_N = 3;
+extern MenuPage<wavdesign_menu_page_N> wavdesign_menu_page;
 
 extern uint8_t opt_import_src;
 extern uint8_t opt_import_dest;

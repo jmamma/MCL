@@ -1092,6 +1092,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
     show_slot_menu = true;
     grid_slot_page.init();
+    grid_slot_page.gen_menu_row_names();
     return true;
   }
 

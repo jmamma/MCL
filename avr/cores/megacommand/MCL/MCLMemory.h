@@ -12,6 +12,8 @@ constexpr size_t GRID_WIDTH = 16;
 constexpr size_t GRID_LENGTH = 128;
 constexpr size_t GRID_SLOT_BYTES = 4096;
 
+constexpr size_t PRJ_NAME_LEN = 14;
+
 constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 
 constexpr size_t NUM_MD_TRACKS = 16;

@@ -10,7 +10,6 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
-  gen_menu_row_names();
 
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
@@ -27,6 +26,20 @@ void MenuPageBase::init() {
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
+}
+
+void MenuPageBase::gen_menu_device_names() {
+  MenuBase *m = get_menu();
+  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
+  m->set_custom_options(p);
+
+  for (uint8_t n = 0; n < NUM_DEVS; n++) {
+    uint8_t row_id = n;
+    p->pos = n;
+    strcpy(p->name,midi_active_peering.get_device(UART1_PORT)->name);
+    p++;
+  }
+
 }
 
 void MenuPageBase::gen_menu_row_names() {
