@@ -391,10 +391,10 @@ struct __T_menu_layouts {
   static constexpr size_t countof_auxconfig_menu_layout = 33 / sizeof(menu_t<aux_config_page_N>);
   static constexpr size_t sizeofof_auxconfig_menu_layout = 33;
   union {
-    menu_t<system_page_N> system_menu_layout[0];
+    menu_t<system_menu_page_N> system_menu_layout[0];
     char zz__system_menu_layout[138];
   };
-  static constexpr size_t countof_system_menu_layout = 138 / sizeof(menu_t<system_page_N>);
+  static constexpr size_t countof_system_menu_layout = 138 / sizeof(menu_t<system_menu_page_N>);
   static constexpr size_t sizeofof_system_menu_layout = 138;
   union {
     menu_t<start_menu_page_N> start_menu_layout[0];

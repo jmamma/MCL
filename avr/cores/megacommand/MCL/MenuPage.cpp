@@ -34,9 +34,8 @@ void MenuPageBase::gen_menu_device_names() {
   m->set_custom_options(p);
 
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
-    uint8_t row_id = n;
-    p->pos = n;
-    strcpy(p->name,midi_active_peering.get_device(UART1_PORT)->name);
+    p->pos = n + 1;
+    strcpy(p->name,midi_active_peering.get_device(n + 1)->name);
     p++;
   }
 

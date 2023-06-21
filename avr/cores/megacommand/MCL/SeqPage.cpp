@@ -437,8 +437,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[0] = &seq_menu_value_encoder;
       encoders[1] = &seq_menu_entry_encoder;
       seq_menu_page.init();
-      step_menu_page.gen_menu_device_names();
-      mcl_cfg.seq_dev = midi_device == &MD ? 0 : 1;
+      seq_menu_page.gen_menu_device_names();
+      mcl_cfg.seq_dev = midi_device == &MD ? UART1_PORT : UART2_PORT;
       return true;
     }
   }
