@@ -45,12 +45,12 @@ void MDTrackSelect::end() {
   DEBUG_PRINTLN(sysex->get_recordLen());
   DEBUG_PRINTLN(msg_rd);
   if (sysex->get_recordLen() == 8) {
-    bool is_md_device = opt_midi_device_capture == &MD && (GUI.currentPage() != &seq_extstep_page);
+    bool is_md_device = SeqPage::midi_device == &MD && (GUI.currentPage() != &seq_extstep_page);
     bool expand = true;
     reset_undo();
     uint8_t length = sysex->getByte(6);
     uint8_t new_speed = sysex->getByte(7);
-    if (GUI.currentPage() == &seq_step_page || GUI.currentPage() == &seq_extstep_page) {
+    if (GUI.currentPage() == &seq_step_page || GUI.currentPage() == &seq_extstep_page || GUI.currentPage() == &seq_ptc_page) {
       if (seq_step_page.recording) {
         goto update_pattern;
       }
@@ -69,8 +69,12 @@ void MDTrackSelect::end() {
           mcl_seq.ext_tracks[n].set_speed(new_speed);
           if (GUI.currentPage() == &seq_extstep_page) { seq_extparam4.cur = length; }
       }
-
-      seq_step_page.config_encoders();
+      if (GUI.currentPage() == &seq_ptc_page) {
+        seq_ptc_page.config_encoders();
+      }
+      if (GUI.currentPage() == &seq_step_page) {
+        seq_step_page.config_encoders();
+      }
     } else {
     update_pattern:
       uint8_t old_speeds[16];
