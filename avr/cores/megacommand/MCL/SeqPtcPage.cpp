@@ -566,6 +566,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         draw_popup_octave();
         return true;
       }
+      case MDX_KEY_SCALE: {
+        midi_device = midi_device == &MD ? midi_active_peering.get_device(UART2_PORT) :  midi_active_peering.get_device(UART1_PORT);
+        config();
+        return true;
+      }
       }
     }
   }
