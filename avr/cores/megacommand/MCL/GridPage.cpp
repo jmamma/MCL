@@ -72,8 +72,6 @@ void GridPage::send_row_led() {
   if (row >= GRID_LENGTH) { return; }
   SET_BIT128_P(&rows, grid_task.last_active_row);
   uint16_t *blink_mask = (uint16_t *)&rows[0];
-  DEBUG_PRINTLN("Sending row led");
-  DEBUG_PRINTLN(blink_mask[grid_page.bank]);
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
@@ -100,7 +98,7 @@ void GridPage::load_old_col() {
   encoders[2]->old = encoders[2]->cur;
   grid_page.grid_select_apply = 0;
   proj.grid_select = 0;
-  ((MCLEncoder *)encoders[2])->max = getWidth() + 1 - getCol();
+  ((MCLEncoder *)encoders[2])->max = getWidth() + 1;
 }
 
 void GridPage::loop() {
@@ -111,12 +109,12 @@ void GridPage::loop() {
         old_col = cur_col;
         cur_col = 0;
         param1.cur = grid_page.cur_col;
-        param2.old = grid_page.cur_col;
+        param1.old = grid_page.cur_col;
         encoders[2]->cur = 1;
         encoders[2]->old = 1;
         grid_page.grid_select_apply = 1;
         proj.grid_select = 1;
-        ((MCLEncoder *)encoders[2])->max = getWidth() - getCol();
+       ((MCLEncoder *)encoders[2])->max = getWidth();
         load_slot_models();
         reload_slot_models = true;
       }
@@ -262,7 +260,7 @@ uint8_t GridPage::getCol() { return param1.cur; }
 uint8_t GridPage::getWidth() { return GRID_WIDTH; }
 
 void GridPage::load_slot_models() {
-  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN("load slot models");
   uint8_t row_shift = 0;
   if ((cur_row + encoders[3]->cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + encoders[3]->cur - MAX_VISIBLE_ROWS;
@@ -602,11 +600,11 @@ void rename_row() {
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
-void GridPage::swap_grids() {
+bool GridPage::swap_grids() {
   if (grid_select_apply != proj.grid_select) {
     proj.grid_select = grid_select_apply;
     ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
-    // load_slot_models();
+    //load_slot_models();
     return;
   }
 }
@@ -614,7 +612,6 @@ void GridPage::swap_grids() {
 void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   uint8_t width;
   uint8_t height;
-
 
   uint8_t _col = getCol();;
 
@@ -628,7 +625,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   temp_slot.load_from_grid(_col, getRow());
 
   if (old_col == 255) {
-    swap_grids();
+    if (swap_grids()) { return; }
   }
 
   uint8_t load_mode_old = mcl_cfg.load_mode;
@@ -796,10 +793,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       goto again;
     }
     load_old_col();
-  }
-
-  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
-    load_slot_models();
   }
   mcl_cfg.load_mode = load_mode_old;
   slot_apply = 0;
