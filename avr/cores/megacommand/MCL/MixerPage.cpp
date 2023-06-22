@@ -574,7 +574,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   global_release:
     show_mixer_menu = false;
     disable_record_mutes();
-    MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
+    MD.set_trigleds(0, TRIGLED_OVERLAY);
     oled_draw_mutes();
     return true;
   }
