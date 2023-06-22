@@ -513,7 +513,9 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
       channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
     }
-
+    else {
+      note += MIDI_NOTE_C1;
+    }
     uint8_t msg[] = {MIDI_NOTE_ON | (is_md ? last_md_track : last_ext_track),
                      note, 127};
 
@@ -635,7 +637,7 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
     return 255;
   }
   pitch += ptc_param_oct.cur * 12;
-  return pitch;
+  return (pitch < 128) ? pitch : 255;
 }
 
 uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
