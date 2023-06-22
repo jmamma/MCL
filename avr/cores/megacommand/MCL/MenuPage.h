@@ -32,6 +32,7 @@ public:
   void select_item(uint8_t item = 0) {
   cur_row = 0;
   encoders[1]->cur = 0;
+  encoders[1]->old = 0;
   }
   void loop();
   void display();

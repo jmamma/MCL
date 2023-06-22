@@ -312,7 +312,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (device != &MD) {
       return true;
     }
-
+    if (show_seq_menu) {
+       opt_trackid = track + 1; 
+       note_interface.ignoreNextEvent(track);
+       select_track(device, track);
+       seq_menu_page.select_item(0);
+       return true;
+    }
     uint8_t step = track + (page_select * 16);
 
     step_select = track;

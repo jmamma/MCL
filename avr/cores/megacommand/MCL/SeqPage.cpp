@@ -275,60 +275,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     MidiDevice *device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    // =================== seq menu mode TI events ================
 
-    if (show_seq_menu) {
-      // TI + SHIFT2 = select track.
-      if (BUTTON_DOWN(Buttons.BUTTON3) && (mcl_cfg.track_select == 0)) {
-        opt_trackid = track + 1;
-        note_interface.ignoreNextEvent(track);
-        select_track(device, track);
-        seq_menu_page.select_item(0);
-      }
-
-      return true;
-    }
-
-    // =================== normal mode TI events ================
-
-    //  TI + WRITE (BUTTON4): adjust track seq length.
-    //  Ignore WRITE release event so it won't trigger
-    //  a page select action.
+    //Removing this block causes progmem to balloon by 1K ??
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       //  calculate the intended seq length.
       uint8_t step = track;
       step += 1 + page_select * 16;
-      //  Further, if SHIFT2 is pressed, set all tracks.
-      /* not required. pattern_len_handler will detect change when
-       * encoder is updated below */
-      /*
-      if (SeqPage::midi_device == DEVICE_MD) {
-        char str[4];
-        itoa(step, str, 10);
-
-        if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          oled_display.textbox("MD TRACKS LEN:", str);
-          GUI.ignoreNextEvent(Buttons.BUTTON3);
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-            mcl_seq.md_tracks[n].length = step;
-          }
-        }
-        else {
-        oled_display.textbox("MD TRACK LEN:", str);
-        mcl_seq.md_tracks[last_md_track].length = step;
-        }
-      }
-#ifdef EXT_TRACKS
-      else {
-        if (BUTTON_DOWN(Buttons.BUTTON3)) {
-          for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-            mcl_seq.ext_tracks[n].length = step;
-          }
-        }
-        mcl_seq.ext_tracks[last_ext_track].length = step;
-      }
-#endif
-*/
       encoders[2]->cur = step;
       note_interface.ignoreNextEvent(track);
       if (event->mask == EVENT_BUTTON_RELEASED) {
@@ -338,9 +290,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (BUTTON_DOWN(Buttons.BUTTON3)) {
         GUI.ignoreNextEvent(Buttons.BUTTON3);
       }
+
       return true;
     }
-
     // notify derived class about unhandled TI event
     return false;
   } // end TI events
@@ -396,8 +348,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     GUI.setPage(&page_select_page);
   }
-  // activate show_seq_menu only if S2 press is not a key combination
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
     if ((note_interface.notes_count_on() != 0) && (!show_step_menu) &&
         (GUI.currentPage() != &seq_ptc_page)) {
