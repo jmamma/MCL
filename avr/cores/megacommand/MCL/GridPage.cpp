@@ -106,10 +106,10 @@ void GridPage::loop() {
   if (show_slot_menu) {
     if (encoders[2]->hasChanged()) {
       if ((proj.get_grid() == 0) && (encoders[2]->cur + cur_col > GRID_WIDTH)) {
-        old_col = cur_col;
+        old_col = getCol();
         cur_col = 0;
-        param1.cur = grid_page.cur_col;
-        param1.old = grid_page.cur_col;
+        param1.cur = 0;
+        param1.old = 0;
         encoders[2]->cur = 1;
         encoders[2]->old = 1;
         grid_page.grid_select_apply = 1;
