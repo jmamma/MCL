@@ -623,6 +623,11 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
 
   dev_note_channels[dev] = channel;
   if (note_type) {
+    if (arp_enabled.cur == ARP_LATCH) {
+      if (seq_ptc_page.dev_note_masks[dev][0] == 0 && seq_ptc_page.dev_note_masks[dev][1] == 0) {
+         memset(seq_ptc_page.note_mask,0,sizeof(seq_ptc_page.note_mask));
+      }
+     }
     SET_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
     if (pitch != 255) {
       SET_BIT128_P(seq_ptc_page.note_mask, pitch);
