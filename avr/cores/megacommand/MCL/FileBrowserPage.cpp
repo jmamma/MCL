@@ -515,13 +515,13 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     // chdir to child
     if (!show_samplemgr) {
 
-      child:
       file.open(temp_entry, O_READ);
       // chdir to child
       if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
         return true;
       }
+      file.close();
     }
 
     if (!dir_only) {
