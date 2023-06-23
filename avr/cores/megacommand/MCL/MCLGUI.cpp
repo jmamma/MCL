@@ -733,7 +733,8 @@ void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
                           pane_label_h, WHITE);
     oled_display.setTextColor(BLACK);
   }
-  if (mcl.currentPage() != SEQ_STEP_PAGE) {
+
+  if (mcl.currentPage() == SEQ_PTC_PAGE) {
     oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
     oled_display.print(s2);
     oled_display.setTextColor(WHITE);

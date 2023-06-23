@@ -1276,8 +1276,12 @@ void SeqPage::display() {
   //  draw current active track
   mcl_gui.draw_panel_number(track_id);
 
-  mcl_gui.draw_panel_toggle(int_name, ext_name, is_md);
-
+  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+    mcl_gui.draw_panel_toggle(ext_name, int_name, true);
+  }
+  else {
+    mcl_gui.draw_panel_toggle(int_name, ext_name, is_md);
+  }
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 
