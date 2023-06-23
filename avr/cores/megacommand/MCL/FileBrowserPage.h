@@ -99,6 +99,8 @@ public:
   static uint8_t cur_file;
 
   // configuration, should be set before calling base init()
+  static bool draw_dirs;
+
   static bool show_dirs;
   static bool select_dirs;
   static bool show_save;
@@ -106,7 +108,6 @@ public:
   static bool show_new_folder;
   static bool show_filemenu;
   static bool show_overwrite;
-
   static bool show_samplemgr;
 
   static bool filemenu_active;

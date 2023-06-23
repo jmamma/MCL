@@ -40,7 +40,7 @@ void SampleBrowserPage::display() {
       bool is_wav = strcmp(c_wav_suffix, (&temp_entry[len - 4])) == 0;
       Wav wav_file;
 
-      if (!is_wav || !wav_file.open(temp_entry, false)) {
+      if (!is_wav || (is_wav && !wav_file.open(temp_entry, false))) {
         FileBrowserPage::selection_change = false;
         goto end;
       }
@@ -94,6 +94,7 @@ void SampleBrowserPage::init() {
 
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
+    draw_dirs = false;
     show_dirs = false;
     show_save = false;
     show_filemenu = false;
@@ -102,6 +103,7 @@ void SampleBrowserPage::init() {
     query_sample_slots();
   } else {
     strcpy(title, "SAMPLE");
+    draw_dirs = true;
     show_dirs = true;
     show_save = true;
     show_filemenu = true;

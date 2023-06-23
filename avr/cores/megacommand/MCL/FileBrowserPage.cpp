@@ -11,6 +11,7 @@ uint8_t FileBrowserPage::cur_col = 0;
 uint8_t FileBrowserPage::cur_row = 0;
 uint8_t FileBrowserPage::cur_file = 0;
 
+bool FileBrowserPage::draw_dirs = false;
 bool FileBrowserPage::show_dirs = false;
 bool FileBrowserPage::select_dirs = false;
 bool FileBrowserPage::show_save = true;
@@ -151,6 +152,7 @@ void FileBrowserPage::query_filesystem() {
 void FileBrowserPage::init() {
   filemenu_active = false;
   show_samplemgr = false;
+  draw_dirs = false;
   strcpy(focus_match, "");
   file_types.reset();
   query_filesystem();
@@ -184,8 +186,8 @@ void FileBrowserPage::draw_filebrowser() {
     max_items = numEntries;
   }
   for (uint8_t n = 0; n < max_items; n++) {
-
-    oled_display.setCursor(x_offset, y_offset + 8 * n);
+    uint8_t y_pos = y_offset + 8 * n;
+    oled_display.setCursor(x_offset, y_pos);
     if (n == cur_row) {
       oled_display.setTextColor(BLACK, WHITE);
       oled_display.fillRect(oled_display.getCursorX() - 3,
@@ -193,7 +195,7 @@ void FileBrowserPage::draw_filebrowser() {
     } else {
       oled_display.setTextColor(WHITE, BLACK);
       if (encoders[1]->cur - cur_row + n == cur_file) {
-        oled_display.setCursor(x_offset - 4, y_offset + n * 8);
+        oled_display.setCursor(x_offset - 4, y_pos);
         oled_display.print(F(">"));
       }
     }
@@ -201,7 +203,15 @@ void FileBrowserPage::draw_filebrowser() {
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
     if (entry_num < numEntries) {
       get_entry(entry_num, temp_entry);
+      File d;
+      d.open(temp_entry, O_READ);
+      if (d.isDirectory() && draw_dirs) {
+        oled_display.drawRect(x_offset, y_pos - 4, 6, 4, WHITE);
+        oled_display.drawFastHLine(x_offset + 1, y_pos - 1 - 4, 3, WHITE);
+        oled_display.setCursor(x_offset + 8, y_pos);
+      }
       oled_display.println(temp_entry);
+      d.close();
     }
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
