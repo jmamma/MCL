@@ -45,7 +45,7 @@ void SampleBrowserPage::display() {
         goto end;
       }
 
-      oled_display.setCursor(0, 16);
+      oled_display.setCursor(0, 23);
 
       float sample_rate_f = (wav_file.header.fmt.sampleRate * 0.001f);
       uint16_t sample_rate = (uint16_t)sample_rate_f;
@@ -55,22 +55,21 @@ void SampleBrowserPage::display() {
       uint8_t decimal =
           ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;
       oled_display.print(decimal);
-      oled_display.print("k ");
+      oled_display.print(F("k "));
 
       oled_display.print(wav_file.header.fmt.bitRate);
-      oled_display.print("/");
+      oled_display.print(F("/"));
       oled_display.print(wav_file.header.fmt.numChannels);
-
       float seconds = wav_file.header.get_length() / (float)wav_file.header.fmt.sampleRate;
       int16_t minutes = seconds * 0.01666666667f;
       int16_t ms = ((float)seconds - int(seconds)) * 1000;
 
-      oled_display.setCursor(0, 23);
+      oled_display.setCursor(0, 30);
 
       oled_display.print(minutes);
-      oled_display.print(":");
+      oled_display.print(F(":"));
       oled_display.print(int(seconds));
-      oled_display.print(":");
+      oled_display.print(F(":"));
       oled_display.print(ms);
 
       wav_file.close();

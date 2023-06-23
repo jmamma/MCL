@@ -518,30 +518,27 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
     char temp_entry[FILE_ENTRY_SIZE];
     get_entry(encoders[1]->getValue(), temp_entry);
-    if (!dir_only) {
 
-      if (encoders[1]->getValue() == i_save) {
-        on_new();
-        return true;
-      }
-
-      // chdir to parent
-      if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
-        _cd_up();
-        return true;
-      }
-    }
-    DEBUG_DUMP(temp_entry);
-    // chdir to child
     if (!show_samplemgr) {
-
       file.open(temp_entry, O_READ);
+      if (!dir_only) {
+
+        if (encoders[1]->getValue() == i_save) {
+          on_new();
+          return true;
+        }
+
+        // chdir to parent
+        if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
+          _cd_up();
+          return true;
+        }
+      }
       // chdir to child
       if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
         return true;
       }
-      file.close();
     }
 
     if (!dir_only) {
