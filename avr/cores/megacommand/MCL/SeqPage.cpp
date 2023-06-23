@@ -403,6 +403,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       row_func =
           seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+      midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
     } else if (show_step_menu) {
       row_func =
           step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
@@ -425,7 +426,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     show_seq_menu = false;
     show_step_menu = false;
-    midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
     mcl_gui.init_encoders_used_clock();
     init();
     return true;
