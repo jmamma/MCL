@@ -7,7 +7,7 @@ void OscMixerPage::setup() {}
 void OscMixerPage::init() {
   WavDesignerPage::init();
   trig_interface.off();
-  wd.last_page = this;
+  wd.last_page = mcl.currentPage();
   wavdesign_menu_page.menu.enable_entry(1, false);
   wavdesign_menu_page.menu.enable_entry(2, true);
 }

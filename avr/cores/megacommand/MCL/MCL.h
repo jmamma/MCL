@@ -98,8 +98,20 @@ public:
       page = 0;
     }
     current_page = page;
-    GUI.setPage(pages_table[page]);
+    GUI.pushPage(pages_table[page]);
   }
+
+  void popPage() {
+    GUI.popPage();
+    for (uint8_t n = 0; n < NUM_PAGES; n++) {
+      if (GUI.currentPage() == pages_table[n]) {
+        current_page = n;
+        return;
+      }
+    }
+    current_page = 255;
+  }
+
 
   PageIndex currentPage() { return current_page; }
 

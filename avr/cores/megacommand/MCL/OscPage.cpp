@@ -21,8 +21,9 @@ float OscPage::get_freq() {
   return fout;
 }
 void OscPage::init() {
+  if (wd.last_page != 255 && wd.last_page != WD_PAGE_0 + id) { mcl.setPage(wd.last_page); wd.last_page = 255; return; }
   WavDesignerPage::init();
-  wd.last_page = this;
+  wd.last_page = mcl.currentPage();
   wavdesign_menu_page.menu.enable_entry(1, true);
   wavdesign_menu_page.menu.enable_entry(2, false);
   oled_display.clearDisplay();
