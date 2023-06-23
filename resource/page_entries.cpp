@@ -10,7 +10,7 @@ PageSelectEntry Entries[] = {
     {"PIANO ROLL", SEQ_EXTSTEP_PAGE, 6, 1, 24, 25, nullptr},
     {"CHROMATIC", SEQ_PTC_PAGE, 7, 1, 24, 25, nullptr},
 #ifdef SOUND_PAGE
-    {"SOUND MANAGER", SOUND_BROWSER, 8, 2, 24, 19, nullptr},
+    {"SAMPLE MANAGER", SAMPLE_BROWSER, 8, 2, 24, 25, nullptr},
 #endif
 #ifdef WAV_DESIGNER
     {"WAV DESIGNER", WD_PAGE_0, 9, 2, 24, 19, nullptr},

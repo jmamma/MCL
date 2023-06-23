@@ -47,7 +47,7 @@ static LightPage *const MCL::pages_table[NUM_PAGES] = {
       &seq_ptc_page,        // Index: 9
       &text_input_page,     // Index: 10
       &poly_page,           // Index: 11
-      &sound_browser,       // Index: 12
+      &sample_browser,       // Index: 12
       &questiondialog_page, // Index: 13
       &start_menu_page,     // Index: 14
       &boot_menu_page,      // Index: 15

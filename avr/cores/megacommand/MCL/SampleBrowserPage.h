@@ -13,10 +13,10 @@
 #define PA_NEW 0
 #define PA_SELECT 1
 
-class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
+class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   public:
 
-  SoundBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
+  SampleBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4), MidiSysexListenerClass(){
     ids[0] = 0;
     ids[1] = 0x20;
@@ -30,6 +30,7 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   virtual void on_select(const char*);
   virtual void on_cancel();
   virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
   void draw_scrollbar(uint8_t x_offset);
   void init();
   void setup();
@@ -43,6 +44,6 @@ class SoundBrowserPage : public FileBrowserPage, public MidiSysexListenerClass {
   void query_sample_slots();
 };
 
-extern SoundBrowserPage sound_browser;
+extern SampleBrowserPage sample_browser;
 
 #endif /* SOUNDBROWSERPAGE_H__ */

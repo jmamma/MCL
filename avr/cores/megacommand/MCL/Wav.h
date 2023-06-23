@@ -158,6 +158,10 @@ struct WavHeader {
   datachunk_t data;
   smplchunk_t smpl;
 
+  uint32_t get_length() {
+     return (data.chunk_size / fmt.numChannels) / (fmt.bitRate / 8);
+  }
+
   uint32_t total_len() const {
     uint32_t sz = 12;
     sz += fmt.total_len();
@@ -222,6 +226,7 @@ public:
   char filename[16];
   File file;
   Wav() {}
+
   bool open(const char *file_name, bool write = false, uint16_t numChannels = 1,
             uint32_t sampleRate = 44100, uint8_t bitRate = 16,
             bool loop = false);

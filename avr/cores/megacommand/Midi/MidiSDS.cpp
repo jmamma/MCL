@@ -215,8 +215,7 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
   samplesSoFar = 0;
   sampleNumber = sample_number;
   setSampleRate(wav_file.header.fmt.sampleRate);
-  sampleLength = (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
-                 (wav_file.header.fmt.bitRate / 8);
+  sampleLength =  wav_file.header.get_length();
   sampleFormat = wav_file.header.fmt.bitRate;
 
   if (wav_file.header.smpl.is_active()) {

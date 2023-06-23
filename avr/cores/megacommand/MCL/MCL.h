@@ -44,7 +44,7 @@ enum PageIndex {
     SEQ_PTC_PAGE,        // Index: 9
     TEXT_INPUT_PAGE,     // Index: 10
     POLY_PAGE,           // Index: 11
-    SOUND_BROWSER,       // Index: 12
+    SAMPLE_BROWSER,       // Index: 12
     QUESTIONDIALOG_PAGE, // Index: 13
     START_MENU_PAGE,     // Index: 14
     BOOT_MENU_PAGE,      // Index: 15

@@ -29,6 +29,10 @@ FileSystemPosition FileBrowserPage::position;
 
 FileBrowserFileTypes FileBrowserPage::file_types;
 
+bool FileBrowserPage::selection_change = false;
+
+uint16_t FileBrowserPage::selection_change_clock = 0;
+
 void FileBrowserPage::cleanup() {
   // always call setup() when entering this page.
   this->isSetup = false;
@@ -90,7 +94,7 @@ void FileBrowserPage::query_filesystem() {
   numEntries = 0;
   cur_file = 255;
 
-//  cur_row = 0;
+  //  cur_row = 0;
   encoders[1]->cur = 1;
   encoders[2]->cur = 1;
 
@@ -101,7 +105,7 @@ void FileBrowserPage::query_filesystem() {
   // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
   file.getName(temp_entry, FILE_ENTRY_SIZE);
 
-  if ((show_parent) && !(strcmp(temp_entry, "/") == 0)) {
+  if ((show_parent) && !(strcmp(lwd, "/") == 0)) {
     add_entry("..");
   }
   //  iterate through the files
@@ -147,28 +151,31 @@ void FileBrowserPage::query_filesystem() {
 void FileBrowserPage::init() {
   filemenu_active = false;
   show_samplemgr = false;
-  strcpy(focus_match,"");
+  strcpy(focus_match, "");
   file_types.reset();
   query_filesystem();
 }
 
-void FileBrowserPage::display() {
-  if (filemenu_active) {
-    oled_display.fillRect(0, 3, 45, 28, BLACK);
-    oled_display.drawRect(1, 4, 43, 26, WHITE);
-    file_menu_page.draw_menu(6, 12, 39);
-    oled_display.display();
-    return;
-  }
+void FileBrowserPage::draw_menu() {
+  oled_display.fillRect(0, 3, 45, 28, BLACK);
+  oled_display.drawRect(1, 4, 43, 26, WHITE);
+  file_menu_page.draw_menu(6, 12, 39);
+  oled_display.display();
+}
 
-  constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
+void FileBrowserPage::draw_sidebar() {
+  constexpr uint8_t x_offset = 43;
   oled_display.clearDisplay();
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.println(title);
   mcl_gui.draw_vertical_dashline(x_offset - 6);
+}
 
+void FileBrowserPage::draw_filebrowser() {
+
+  constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.setCursor(x_offset, 8);
   uint8_t max_items;
   if (numEntries > MAX_VISIBLE_ROWS) {
@@ -200,7 +207,15 @@ void FileBrowserPage::display() {
   if (numEntries > MAX_VISIBLE_ROWS) {
     draw_scrollbar(120);
   }
+}
 
+void FileBrowserPage::display() {
+  if (filemenu_active) {
+    draw_menu();
+    return;
+  }
+  draw_sidebar();
+  draw_filebrowser();
   oled_display.display();
   return;
 }
@@ -217,7 +232,8 @@ void FileBrowserPage::loop() {
   }
 
   if (encoders[1]->hasChanged()) {
-
+    selection_change = true;
+    selection_change_clock = slowclock;
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 
@@ -290,7 +306,6 @@ bool FileBrowserPage::_cd(const char *child) {
   DEBUG_PRINTLN(child);
 
   DEBUG_PRINTLN(lwd);
-
 
   file.close();
   char *ptr = child;
@@ -486,8 +501,13 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     encoders[0] = param1;
     encoders[1] = param2;
 
-    _handle_filemenu();
-    init();
+    if (_handle_filemenu()) {
+      init();
+      return true;
+    }
+    filemenu_active = false;
+    selection_change = true;
+    display();
     return true;
   }
 

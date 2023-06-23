@@ -64,8 +64,8 @@ void ResourceManager::restore_page_entry_deps() {
 
   uint8_t idx = 7;
 #ifdef SOUND_PAGE
-  R.page_entries->Entries[idx].Page = SOUND_BROWSER;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_sound;
+  R.page_entries->Entries[idx].Page = SAMPLE_BROWSER;
+  R.page_entries->Entries[idx].IconData = R.icons_page->icon_sample;
   ++idx;
 #endif
 #ifdef WAV_DESIGNER

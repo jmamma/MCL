@@ -118,6 +118,8 @@ public:
 
   static FileSystemPosition position;
 
+  static bool selection_change;
+  static uint16_t selection_change_clock;
   Encoder *param1;
   Encoder *param2;
 
@@ -129,6 +131,10 @@ public:
     lwd[0] = '\0';
   }
   virtual bool handleEvent(gui_event_t *event);
+  void draw_sidebar();
+  void draw_filebrowser();
+  void draw_menu();
+
   virtual void display();
 
   bool add_entry(const char *entry);
