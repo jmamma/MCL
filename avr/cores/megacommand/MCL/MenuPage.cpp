@@ -201,7 +201,7 @@ bool MenuPageBase::exit() {
     //
   }
   // if (exit_page_callback != NULL) {
-  GUI.popPage();
+  mcl.popPage();
   //}
 }
 

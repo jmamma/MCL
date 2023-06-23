@@ -153,7 +153,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
   exit:
-    GUI.popPage();
+    mcl.popPage();
     return true;
   }
   if (note_interface.is_event(event)) {

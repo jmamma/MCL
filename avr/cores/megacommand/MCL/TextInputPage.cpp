@@ -274,7 +274,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("pop a");
     return_state = false;
     GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
+    mcl.popPage();
     return true;
   }
 
@@ -314,7 +314,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     strncpy(textp, text, cpy_len);
     textp[cpy_len] = '\0';
     GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
+    mcl.popPage();
     return true;
   }
 
