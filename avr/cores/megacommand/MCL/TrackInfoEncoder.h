@@ -2,7 +2,7 @@
 
 #ifndef TRACKINFOENCODER_H__
 #define TRACKINFOENCODER_H__
-#include "MCL.h"
+#include "mcl.h"
 
 class TrackInfoEncoder : public Encoder {
     /**

@@ -34,7 +34,7 @@ void LoadProjectPage::on_select(const char *entry) {
   while (count--) {
     if (proj.load_project(proj_filename)) {
       DEBUG_PRINTLN("loaded, setting grid");
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
       return;
     } else {
       gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");

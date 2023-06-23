@@ -3,7 +3,7 @@
 #ifndef LFOOSC_H__
 #define LFOOSC_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "math.h"
 
 #define EXP_LFO 1

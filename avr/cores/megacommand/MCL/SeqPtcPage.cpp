@@ -413,7 +413,7 @@ void SeqPtcPage::trig_md_fromext(uint8_t note_num, uint8_t channel_event) {
   if (machine_pitch == 255) {
     return;
   }
-  if (GUI.currentPage() == &seq_step_page && channel_event == CTRL_EVENT) {
+  if (mcl.currentPage() == SEQ_STEP_PAGE && channel_event == CTRL_EVENT) {
     seq_step_page.pitch_param = note_num;
     // get_note_from_machine_pitch(machine_pitch);
   }
@@ -580,7 +580,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       re_init = true;
-      GUI.pushPage(&poly_page);
+      mcl.pushPage(POLY_PAGE);
       return true;
     }
     mcl_seq.ext_tracks[last_ext_track].init_notes_on();
@@ -589,14 +589,14 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   }
   /*
     if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
       return true;
     }
   */
   if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     if (BUTTON_DOWN(Buttons.BUTTON1)) {
       re_init = true;
-      GUI.pushPage(&poly_page);
+      mcl.pushPage(POLY_PAGE);
       return true;
     }
   }
@@ -653,7 +653,7 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
 
   if (((mcl_cfg.uart2_ctrl_chan - 1 == channel) ||
        (mcl_cfg.uart2_ctrl_chan == MIDI_OMNI_MODE)) &&
-      (GUI.currentPage() != &seq_extstep_page)) {
+      (mcl.currentPage() != SEQ_EXTSTEP_PAGE)) {
     return CTRL_EVENT;
   }
   if (mcl_cfg.md_trig_channel - 1 == channel) {
@@ -663,7 +663,7 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
   return NO_EVENT;
   /*
     return (mcl_cfg.uart2_ctrl_chan != MIDI_LOCAL_MODE) &&
-           (GUI.currentPage() != &seq_extstep_page);
+           (mcl.currentPage() != SEQ_EXTSTEP_PAGE);
   */
 }
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
@@ -868,7 +868,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     mcl_seq.ext_tracks[n].send_cc(param, value);
   }
 
-  if (GUI.currentPage() == &seq_extstep_page) {
+  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
     if (SeqPage::pianoroll_mode > 0) {
       if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] - 1 ==
           PARAM_LEARN) {
@@ -1000,7 +1000,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
   }
 
-  if (display_polylink && GUI.currentPage() != &mixer_page) {
+  if (display_polylink && mcl.currentPage() != MIXER_PAGE) {
     oled_display.textbox("POLY-", "LINK");
   }
 }

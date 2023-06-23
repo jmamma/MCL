@@ -1,9 +1,11 @@
 #pragma once
 
+#include "mcl.h"
+
 #define MAX_MENU_ITEMS 16
 typedef void (*menu_function_t)();
 
-extern const Page* const menu_target_pages[] PROGMEM;
+extern const PageIndex menu_target_pages[] PROGMEM;
 extern const menu_function_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 
@@ -56,7 +58,7 @@ public:
   uint8_t get_option_range(uint8_t item_n);
   uint8_t get_number_of_options(uint8_t item_n);
   uint8_t get_options_offset(uint8_t item_n);
-  LightPage *get_page_callback(uint8_t item_n);
+  PageIndex get_page_callback(uint8_t item_n);
   uint8_t get_number_of_items();
   const menu_item_t *get_item(uint8_t item_n);
   const char* get_item_name(uint8_t item_n);

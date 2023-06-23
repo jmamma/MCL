@@ -75,7 +75,7 @@ again:
     if (proj.load_project(newprj)) {
       grid_page.reload_slot_models = false;
       DEBUG_PRINTLN("project loaded, setting page to grid");
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
       return true;
     } else {
       gfx.alert("ERROR", "SD ERROR");
@@ -83,7 +83,7 @@ again:
     }
   }
   if (proj.project_loaded) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
   return false;

@@ -93,7 +93,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
   if  (EVENT_RELEASED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
     close:
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
   return false;

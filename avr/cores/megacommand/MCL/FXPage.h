@@ -27,7 +27,7 @@ public:
       }
   }
 
-  static LightPage *last_page;
+  static PageIndex last_page;
 
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;

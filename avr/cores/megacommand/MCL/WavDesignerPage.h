@@ -3,7 +3,7 @@
 #ifndef WAVDESIGNERPAGE_H__
 #define WAVDESIGNERPAGE_H__
 
-#include "MCL.h"
+#include "mcl.h"
 
 extern void wavdesign_menu_handler();
 extern void wav_render();

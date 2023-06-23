@@ -9,7 +9,7 @@ void GridPage::init() {
   show_slot_menu = false;
   reload_slot_models = false;
   // Edge case, prevent R.Clear being called if we're outside of GridPage
-  if (GUI.currentPage() != &grid_page) {
+  if (mcl.currentPage() != GRID_PAGE) {
     return;
   }
   trig_interface.off();
@@ -79,11 +79,11 @@ void GridPage::close_bank_popup() {
     MD.draw_close_bank();
   }
   trig_interface.off();
-  if (last_page != nullptr) {
+  if (last_page != 255) {
     DEBUG_PRINTLN("setting page");
-    GUI.setPage(last_page);
+    mcl.setPage(last_page);
   }
-  last_page = nullptr;
+  last_page = 255;
   bank_popup = 0;
   note_interface.init_notes();
   // Clear blink leds
@@ -1049,14 +1049,14 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (!show_slot_menu) {
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     save:
-      GUI.setPage(&grid_save_page);
+      mcl.setPage(GRID_SAVE_PAGE);
 
       return true;
     }
 
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     load:
-      GUI.setPage(&grid_load_page);
+      mcl.setPage(GRID_LOAD_PAGE);
 
       return true;
     }
@@ -1116,11 +1116,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
       (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
   system:
     system_page.isSetup = false;
-    GUI.pushPage(&system_page);
+    mcl.pushPage(SYSTEM_PAGE);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 

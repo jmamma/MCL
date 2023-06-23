@@ -45,53 +45,52 @@ void ResourceManager::Restore(uint8_t *buf, size_t sz) {
 
 void ResourceManager::restore_page_entry_deps() {
   // calibrate references
-  R.page_entries->Entries[0].Page = &grid_page;
+  R.page_entries->Entries[0].Page = GRID_PAGE;
   R.page_entries->Entries[0].IconData = R.icons_page->icon_grid;
-  R.page_entries->Entries[1].Page = &mixer_page;
+  R.page_entries->Entries[1].Page = MIXER_PAGE;
   R.page_entries->Entries[1].IconData = R.icons_page->icon_mixer;
-  R.page_entries->Entries[2].Page = &route_page;
+  R.page_entries->Entries[2].Page = ROUTE_PAGE;
   R.page_entries->Entries[2].IconData = R.icons_page->icon_route;
-  R.page_entries->Entries[3].Page = &lfo_page;
+  R.page_entries->Entries[3].Page = LFO_PAGE;
   R.page_entries->Entries[3].IconData = R.icons_page->icon_lfo;
 
-  R.page_entries->Entries[4].Page = &seq_step_page;
+  R.page_entries->Entries[4].Page = SEQ_STEP_PAGE;
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
 
-  R.page_entries->Entries[5].Page = &seq_extstep_page;
+  R.page_entries->Entries[5].Page = SEQ_EXTSTEP_PAGE;
   R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].Page = &seq_ptc_page;
+  R.page_entries->Entries[6].Page = SEQ_PTC_PAGE;
   R.page_entries->Entries[6].IconData = R.icons_page->icon_chroma;
 
   uint8_t idx = 7;
 #ifdef SOUND_PAGE
-  R.page_entries->Entries[idx].Page = &sound_browser;
+  R.page_entries->Entries[idx].Page = SOUND_BROWSER;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_sound;
   ++idx;
 #endif
 #ifdef WAV_DESIGNER
-  R.page_entries->Entries[idx].Page = &wd.pages[0];
+  R.page_entries->Entries[idx].Page = WD_PAGE_0;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
   ++idx;
 #endif
 #ifdef LOUDNESS_PAGE
-  R.page_entries->Entries[idx].Page = &loudness_page;
+  R.page_entries->Entries[idx].Page = LOUDNESS_PAGE;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_loudness;
   ++idx;
 #endif
 
-  R.page_entries->Entries[idx].Page = &fx_page_a;
+  R.page_entries->Entries[idx].Page = FX_PAGE_A;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_rhytmecho;
   ++idx;
-  R.page_entries->Entries[idx].Page = &fx_page_b;
+  R.page_entries->Entries[idx].Page = FX_PAGE_B;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
   ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_a;
+  R.page_entries->Entries[idx].Page = RAM_PAGE_A;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram1;
   ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_b;
+  R.page_entries->Entries[idx].Page = RAM_PAGE_B;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
   // calibration complete
-
 }
 
 size_t ResourceManager::Size() {

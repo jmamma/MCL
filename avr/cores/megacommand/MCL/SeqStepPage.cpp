@@ -181,7 +181,7 @@ void SeqStepPage::display() {
 
 void SeqStepPage::loop() {
   if (MD.global.extendedMode != 2) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return;
   }
   SeqPage::loop();

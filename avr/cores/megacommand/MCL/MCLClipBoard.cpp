@@ -158,10 +158,10 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
       midi_active_peering.get_device(UART2_PORT),
   };
   if (devs[0] == &MD && track_idx == last_md_track) {
-    if (GUI.currentPage() == &seq_step_page) {
+    if (mcl.currentPage() == SEQ_STEP_PAGE) {
       seq_step_page.config();
     }
-    if (GUI.currentPage() == &seq_ptc_page) {
+    if (mcl.currentPage() == SEQ_PTC_PAGE) {
       seq_ptc_page.config();
     }
   }

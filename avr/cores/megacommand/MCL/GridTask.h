@@ -1,7 +1,7 @@
 #ifndef GRID_TASK_H__
 #define GRID_TASK_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "Task.h"
 #include "Elektron.h"
 #include "GridChain.h"

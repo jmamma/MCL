@@ -28,42 +28,41 @@ uint8_t opt_import_count = 16;
 
 void new_proj_handler() { proj.new_project_prompt(); }
 
-const Page *const menu_target_pages[] PROGMEM = {
-    nullptr,
+const PageIndex menu_target_pages[] PROGMEM = {
+    255,
 
     // 1 - load_proj_page
-    (Page *)&load_proj_page,
-    (Page *)nullptr,
-    //(Page *)&convert_proj_page,
-    (Page *)&midi_config_page,
-    (Page *)&md_config_page,
-    (Page *)&chain_config_page,
-    (Page *)&aux_config_page,
+    LOAD_PROJ_PAGE,
+    255,
+    // CONVERT_PROJ_PAGE,
+    MIDI_CONFIG_PAGE,
+    MD_CONFIG_PAGE,
+    CHAIN_CONFIG_PAGE,
+    AUX_CONFIG_PAGE,
 
     // 7
-    (Page *)&mcl_config_page,
+    MCL_CONFIG_PAGE,
 
     // 8 - ram_config_page
-    (Page *)&ram_config_page,
+    RAM_CONFIG_PAGE,
 
     // 9
-    (Page *)&poly_page,
+    POLY_PAGE,
     // 10
-    (Page *)&arp_page,
+    ARP_PAGE,
     // 11
-    (Page *)&md_import_page,
+    MD_IMPORT_PAGE,
     // 12
-    (Page *)&midiport_menu_page,
+    MIDIPORT_MENU_PAGE,
     // 13
-    (Page *)&midiprogram_menu_page,
+    MIDIPROGRAM_MENU_PAGE,
     // 14
-    (Page *)&midiclock_menu_page,
+    MIDICLOCK_MENU_PAGE,
     // 15
-    (Page *)&midiroute_menu_page,
+    MIDIROUTE_MENU_PAGE,
     // 16
-    (Page *)&midimachinedrum_menu_page
+    MIDIMACHINEDRUM_MENU_PAGE
 };
-
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 

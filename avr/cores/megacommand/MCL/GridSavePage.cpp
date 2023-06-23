@@ -98,7 +98,7 @@ void GridSavePage::save() {
     }
   }
 
-  GUI.setPage(&grid_page);
+  mcl.setPage(GRID_PAGE);
   trig_interface.off();
   mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
 }
@@ -147,7 +147,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       default: {
-        GUI.setPage(&grid_page);
+        mcl.setPage(GRID_PAGE);
         return false;
       }
       case MDX_KEY_YES: {
@@ -189,7 +189,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     uint8_t save_mode = SAVE_SEQ;
 
     mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
 }

@@ -339,7 +339,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     uint8_t step = track + (page_select * 16);
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (device == &Analog4) {
-        // GUI.setPage(&seq_extstep_page)
+        // mcl.setPage(SEQ_EXTSTEP_PAGE)
         return true;
       }
       if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
@@ -361,7 +361,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
         EVENT_PRESSED(event, Buttons.ENCODER2) ||
         EVENT_PRESSED(event, Buttons.ENCODER3) ||
         EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
     }
   */
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
@@ -389,7 +389,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     lfo_track->enable = !(lfo_track->enable);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 

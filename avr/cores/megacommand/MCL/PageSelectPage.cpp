@@ -21,7 +21,7 @@ static uint8_t get_pageidx(uint8_t page_number) {
   return i;
 }
 
-static LightPage *get_page(uint8_t pageidx, char *str) {
+static PageIndex get_page(uint8_t pageidx, char *str) {
   if (pageidx < R.page_entries->countof_Entries) {
     if (str) {
       strcpy(str, R.page_entries->Entries[pageidx].Name);
@@ -354,14 +354,14 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
   release:
-    LightPage *p;
+    PageIndex p;
     p = get_page(get_pageidx(page_select), nullptr);
     if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
       //  md_exploit.off();
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
     } else {
-      GUI.setPage(p);
+      mcl.setPage(p);
     }
     return true;
   }
@@ -369,13 +369,13 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
   load_grid:
     GUI.ignoreNextEvent(event->source);
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     //PAT SONG
-    GUI.setPage(&grid_page);
-    GUI.pushPage(&system_page);
+    mcl.setPage(GRID_PAGE);
+    mcl.pushPage(SYSTEM_PAGE);
     return true;
   }
 

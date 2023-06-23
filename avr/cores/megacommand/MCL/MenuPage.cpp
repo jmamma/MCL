@@ -178,11 +178,11 @@ void MenuPageBase::display() {
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  LightPage *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
-  if (page_callback != NULL) {
+  PageIndex page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  if (page_callback != 255) {
     DEBUG_PRINTLN("pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
-    GUI.pushPage(page_callback);
+    mcl.pushPage(page_callback);
     return true;
   }
   if (row_func != NULL) {

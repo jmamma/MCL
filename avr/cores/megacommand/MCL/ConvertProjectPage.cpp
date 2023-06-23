@@ -23,7 +23,7 @@ void ConvertProjectPage::on_select(const char *entry) {
   DEBUG_DUMP(entry);
   file.close();
   if (proj.convert_project(entry)) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
   } else {
 //    gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
   }

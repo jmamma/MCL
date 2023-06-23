@@ -160,11 +160,11 @@ bool RoutePage::handleEvent(gui_event_t *event) {
   // update_globals();
   // md_exploit.off();
   // md_exploit.on();
-  // GUI.setPage(&mixer_page);
+  // mcl.setPage(MIXER_PAGE);
   // return true;
   //}
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
   /*
@@ -173,7 +173,7 @@ bool RoutePage::handleEvent(gui_event_t *event) {
         EVENT_PRESSED(event, Buttons.ENCODER3) ||
         EVENT_PRESSED(event, Buttons.ENCODER1)) {
       update_globals();
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
 
       return true;
     }

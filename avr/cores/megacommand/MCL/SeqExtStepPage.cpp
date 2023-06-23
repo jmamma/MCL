@@ -525,7 +525,7 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
 }
 
 void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
-  if (GUI.currentPage() != this || show_seq_menu) { return; }
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE || show_seq_menu) { return; }
   uint8_t fov_y_ = fov_y;
   if (fov_y >= cur_y_ && cur_y_ != 0) {
     fov_y_ = cur_y_ - 1;

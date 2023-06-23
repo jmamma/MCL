@@ -8,7 +8,7 @@ void GridTask::destroy() {}
 
 void GridTask::gui_update() {
   auto &active_track = mcl_seq.md_tracks[last_md_track];
-  if (GUI.currentPage() == &seq_step_page &&
+  if (mcl.currentPage() == SEQ_STEP_PAGE &&
       IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.length - 1);

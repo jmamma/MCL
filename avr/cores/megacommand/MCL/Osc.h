@@ -3,7 +3,7 @@
 #ifndef OSC_H__
 #define OSC_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "math.h"
 
 #define SIN_OSC 1

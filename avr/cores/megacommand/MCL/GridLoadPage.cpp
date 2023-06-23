@@ -197,7 +197,7 @@ void GridLoadPage::load() {
       track_select_array[n] = 1;
     }
   }
-  GUI.setPage(&grid_page);
+  mcl.setPage(GRID_PAGE);
   trig_interface.off();
 
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array);
@@ -262,7 +262,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       default: {
-        GUI.setPage(&grid_page);
+        mcl.setPage(GRID_PAGE);
         return false;
       }
       case MDX_KEY_YES: {
@@ -299,7 +299,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
 
     group_load(grid_page.getRow());
 
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
 }

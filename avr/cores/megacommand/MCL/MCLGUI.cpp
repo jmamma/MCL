@@ -44,8 +44,8 @@ void MCLGUI::draw_textbox(const char *text, const char *text2) {
 bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init();
   text_input_page.init_text(dst, title, len);
-  GUI.pushPage(&text_input_page);
-  while (GUI.currentPage() == &text_input_page) {
+  mcl.pushPage(TEXT_INPUT_PAGE);
+  while (mcl.currentPage() == TEXT_INPUT_PAGE) {
     GUI.loop();
   }
   m_trim_space(dst);
@@ -54,8 +54,8 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
 
 bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
   questiondialog_page.init(title, text);
-  GUI.pushPage(&questiondialog_page);
-  while (GUI.currentPage() == &questiondialog_page) {
+  mcl.pushPage(QUESTIONDIALOG_PAGE);
+  while (mcl.currentPage() == QUESTIONDIALOG_PAGE) {
     GUI.loop();
   }
   return questiondialog_page.return_state;
@@ -63,8 +63,8 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
 
 void MCLGUI::wait_for_project() {
   again:
-  GUI.setPage(&start_menu_page);
-  while (GUI.currentPage() == &start_menu_page || GUI.currentPage() == &text_input_page || GUI.currentPage() == &load_proj_page) {
+  mcl.setPage(START_MENU_PAGE);
+  while (mcl.currentPage() == START_MENU_PAGE || mcl.currentPage() == TEXT_INPUT_PAGE || mcl.currentPage() == LOAD_PROJ_PAGE) {
     GUI.loop();
   }
   if (!proj.project_loaded) { goto again; }

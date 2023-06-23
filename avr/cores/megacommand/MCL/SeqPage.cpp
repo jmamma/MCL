@@ -92,7 +92,7 @@ void SeqPage::enable_record() {
 }
 
 void SeqPage::disable_record() {
-  MD.set_rec_mode((GUI.currentPage() == &seq_step_page));
+  MD.set_rec_mode((mcl.currentPage() == SEQ_STEP_PAGE));
   recording = false;
   clearLed2();
 }
@@ -157,10 +157,10 @@ void SeqPage::params_reset() {
 }
 
 void SeqPage::bootstrap_record() {
-  if (GUI.currentPage() != &seq_step_page &&
-      GUI.currentPage() != &seq_extstep_page &&
-      GUI.currentPage() != &seq_ptc_page) {
-    GUI.setPage(&seq_step_page);
+  if (mcl.currentPage() != SEQ_STEP_PAGE &&
+      mcl.currentPage() != SEQ_EXTSTEP_PAGE &&
+      mcl.currentPage() != SEQ_PTC_PAGE) {
+    mcl.setPage(SEQ_STEP_PAGE);
   }
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   enable_record();
@@ -346,13 +346,13 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
     if ((note_interface.notes_count_on() != 0) && (!show_step_menu) &&
-        (GUI.currentPage() != &seq_ptc_page)) {
+        (mcl.currentPage() != SEQ_PTC_PAGE)) {
       uint8_t note = 255;
       note = note_interface.get_first_md_note();
       if (note == 255) {

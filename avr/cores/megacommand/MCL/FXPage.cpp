@@ -4,7 +4,7 @@
 #define FX_TYPE 0
 #define FX_PARAM 1
 
-LightPage *FXPage::last_page = &fx_page_a;
+PageIndex FXPage::last_page = FX_PAGE_A;
 
 void FXPage::setup() { DEBUG_PRINT_FN(); }
 
@@ -18,7 +18,7 @@ void FXPage::init() {
   R.Clear();
   R.use_icons_page();
   R.use_machine_param_names();
-  last_page = this;
+  last_page = mcl.currentPage();
 }
 void FXPage::update_encoders() {
 
@@ -176,7 +176,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
         case MDX_KEY_NO:
-        GUI.setPage(&mixer_page);
+        mcl.setPage(MIXER_PAGE);
         break;
       }
     }
@@ -184,19 +184,19 @@ bool FXPage::handleEvent(gui_event_t *event) {
       switch (key) {
         case MDX_KEY_SCALE:
         case MDX_KEY_DOWN:
-        if (GUI.currentPage() == &fx_page_b) {
+        if (mcl.currentPage() == FX_PAGE_B) {
           goto toggle_mode;
         }
         else {
-          GUI.setPage(&fx_page_b);
+          mcl.setPage(FX_PAGE_B);
         }
         break;
         case MDX_KEY_LEFT:
-        if (GUI.currentPage() == &fx_page_a) {
+        if (mcl.currentPage() == FX_PAGE_A) {
           goto toggle_mode;
         }
         else {
-          GUI.setPage(&fx_page_a);
+          mcl.setPage(FX_PAGE_A);
         }
         break;
       }
@@ -209,7 +209,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    //    GUI.setPage(&grid_page);
+      //mcl.setPage(GRID_PAGE);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     toggle_mode:
@@ -224,7 +224,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 

@@ -8,32 +8,19 @@
 #include "WProgram.h"
 
 #ifdef MEGACOMMAND
-  #define WAV_DESIGNER
-  #define SOUND_PAGE
+#define WAV_DESIGNER
+#define SOUND_PAGE
 #endif
 
-//MCL Fonts
-#include "Fonts/TomThumb.h"
+// MCL Fonts
 #include "Fonts/Elektrothic.h"
+#include "Fonts/TomThumb.h"
 
 #define VERSION 4043
 #define VERSION_STR "4.43"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
-
-#define CUE_PAGE 5
-#define NEW_PROJECT_PAGE 7
-#define MIXER_PAGE 10
-#define S_PAGE 3
-#define W_PAGE 4
-#define SEQ_STEP_PAGE 1
-#define SEQ_EXTSTEP_PAGE 18
-#define SEQ_PTC_PAGE 16
-#define SEQ_EUC_PAGE 20
-#define SEQ_EUCPTC_PAGE 21
-#define SEQ_RPTC_PAGE 14
-#define LOAD_PROJECT_PAGE 8
 
 #define MD_KITBUF_POS 63
 
@@ -44,8 +31,78 @@
 
 extern void mcl_setup();
 
+enum PageIndex {
+    GRID_PAGE,           // Index: 0
+    PAGE_SELECT_PAGE,    // Index: 1
+    SYSTEM_PAGE,         // Index: 2
+    MIXER_PAGE,          // Index: 3
+    GRID_SAVE_PAGE,      // Index: 4
+    GRID_LOAD_PAGE,      // Index: 5
+    WD_MIXER_PAGE,       // Index: 6
+    SEQ_STEP_PAGE,       // Index: 7
+    SEQ_EXTSTEP_PAGE,    // Index: 8
+    SEQ_PTC_PAGE,        // Index: 9
+    TEXT_INPUT_PAGE,     // Index: 10
+    POLY_PAGE,           // Index: 11
+    SOUND_BROWSER,       // Index: 12
+    QUESTIONDIALOG_PAGE, // Index: 13
+    START_MENU_PAGE,     // Index: 14
+    BOOT_MENU_PAGE,      // Index: 15
+    FX_PAGE_A,           // Index: 16
+    FX_PAGE_B,           // Index: 17
+#ifdef WAV_DESIGNER
+    WD_PAGE_0, // Index: 18
+    WD_PAGE_1, // Index: 19
+    WD_PAGE_2, // Index: 20
+#endif
+    ROUTE_PAGE, // Index: 21
+    LFO_PAGE,   // Index: 22
+    RAM_PAGE_A, // Index: 23
+    RAM_PAGE_B, // Index: 24
+
+    LOAD_PROJ_PAGE,           // Index: 25
+    MIDI_CONFIG_PAGE,         // Index: 26
+    MD_CONFIG_PAGE,           // Index: 27
+    CHAIN_CONFIG_PAGE,        // Index: 28
+    AUX_CONFIG_PAGE,          // Index: 29
+    MCL_CONFIG_PAGE,          // Index: 30
+    RAM_CONFIG_PAGE,          // Index: 31
+    ARP_PAGE,                 // Index: 32
+    MD_IMPORT_PAGE,           // Index: 33
+    MIDIPORT_MENU_PAGE,       // Index: 34
+    MIDIPROGRAM_MENU_PAGE,    // Index: 35
+    MIDICLOCK_MENU_PAGE,      // Index: 36
+    MIDIROUTE_MENU_PAGE,      // Index: 37
+    MIDIMACHINEDRUM_MENU_PAGE // Index: 38
+  };
+
+
 class MCL {
 public:
+  static constexpr uint8_t NUM_PAGES = 39;
+
+  static LightPage *const pages_table[NUM_PAGES];
+
+  PageIndex current_page = 0;
+
+  void setPage(PageIndex page) {
+    if (page >= NUM_PAGES) {
+      page = 0;
+    }
+    current_page = page;
+    GUI.setPage(pages_table[page]);
+  }
+
+  void pushPage(PageIndex page) {
+    if (page >= NUM_PAGES) {
+      page = 0;
+    }
+    current_page = page;
+    GUI.setPage(pages_table[page]);
+  }
+
+  PageIndex currentPage() { return current_page; }
+
   void setup();
 };
 

@@ -135,7 +135,7 @@ void md_import() {
 
   grid_page.row_scan = GRID_LENGTH;
   grid_page.reload_slot_models = false;
-  GUI.setPage(&grid_page);
+  mcl.setPage(GRID_PAGE);
 }
 
 void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,

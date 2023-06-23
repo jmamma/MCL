@@ -457,7 +457,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_NO: {
         if (note_interface.notes_count_on() == 0) {
           disable_record_mutes();
-          GUI.setPage(fx_page_a.last_page);
+          mcl.setPage(fx_page_a.last_page);
           return true;
         }
         if (midi_device == &MD) {
@@ -582,7 +582,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     trig_interface.on();
     disable_record_mutes();
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 
@@ -593,7 +593,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
     //    if (note_interface.notes_count() == 0) {
     //      route_page.update_globals();
-    //      GUI.setPage(&grid_page);
+    //      mcl.setPage(GRID_PAGE);
     //    }
     return true;
   }

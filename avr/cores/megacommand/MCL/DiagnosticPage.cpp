@@ -93,7 +93,7 @@ bool DiagnosticPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
