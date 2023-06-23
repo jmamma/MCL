@@ -25,6 +25,7 @@ public:
   uint16_t update_params_clock;
   uint8_t last_param_id;
   uint8_t last_rec_event;
+  LightPage *last_page = nullptr;
   SeqStepMidiEvents midi_events;
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)

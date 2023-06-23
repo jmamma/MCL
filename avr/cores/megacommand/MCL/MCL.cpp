@@ -200,10 +200,11 @@ bool mcl_handleEvent(gui_event_t *event) {
         return false;
       }
       case MDX_KEY_REC: {
-        if (GUI.currentPage() != &seq_step_page &&
-            GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_extstep_page) {
+       if (GUI.currentPage() != &seq_step_page &&
+          GUI.currentPage() != &seq_ptc_page &&
+          GUI.currentPage() != &seq_extstep_page) {
           seq_step_page.prepare = true;
+          seq_step_page.last_page = GUI.currentPage();
           GUI.setPage(&seq_step_page);
         } else {
           if (seq_step_page.recording) {
@@ -213,7 +214,8 @@ bool mcl_handleEvent(gui_event_t *event) {
             trig_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
             if (GUI.currentPage() == &seq_step_page) {
-              GUI.setPage(&grid_page);
+              trig_interface.ignoreNextEvent(MDX_KEY_REC);
+              GUI.setPage(seq_step_page.last_page);
             }
           }
         }
@@ -297,6 +299,7 @@ bool mcl_handleEvent(gui_event_t *event) {
                                     GUI.currentPage() == &seq_extstep_page)) {
           if (GUI.currentPage() != &seq_step_page) {
             seq_step_page.prepare = true;
+            seq_step_page.last_page = GUI.currentPage();
             GUI.setPage(&seq_step_page);
           }
           return true;
