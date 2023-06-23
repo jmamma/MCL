@@ -97,7 +97,7 @@ void ArpPage::display() {
   oled_display.setCursor(42, 10);
 
   oled_display.setTextColor(WHITE);
-  oled_display.print("ARPEGGIATOR: T");
+  oled_display.print(F("ARPEGGIATOR: T"));
 
   if (seq_ptc_page.midi_device == &MD) {
     oled_display.print(last_md_track + 1);

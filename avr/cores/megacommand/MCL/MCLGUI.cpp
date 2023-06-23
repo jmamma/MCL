@@ -508,7 +508,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.drawRect(8 + 1, 1 + 1, 128 - 16 - 2, 32 - 2 - 2, WHITE);
 
   oled_display.setCursor(x_pos + 34, 10);
-  oled_display.print("uTIMING: ");
+  oled_display.print(F("uTIMING: "));
   oled_display.print(K);
   oled_display.drawLine(x, y_pos + heights[0], x + w, y_pos + heights[0],
                         WHITE);
@@ -718,24 +718,26 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
 
 void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
   oled_display.setFont(&TomThumb);
+
+  oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
   if (s1_active) {
     oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w,
                           pane_label_h, WHITE);
-    oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
     oled_display.setTextColor(BLACK);
     oled_display.print(s1);
     oled_display.setTextColor(WHITE);
   } else {
-    oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
     oled_display.setTextColor(WHITE);
     oled_display.print(s1);
     oled_display.fillRect(pane_label_x, pane_label_ex_y, pane_label_w,
                           pane_label_h, WHITE);
     oled_display.setTextColor(BLACK);
   }
-  oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
-  oled_display.print(s2);
-  oled_display.setTextColor(WHITE);
+  if (mcl.currentPage() != SEQ_STEP_PAGE) {
+    oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
+    oled_display.print(s2);
+    oled_display.setTextColor(WHITE);
+  }
 }
 
 void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {

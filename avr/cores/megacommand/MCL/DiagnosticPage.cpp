@@ -15,7 +15,7 @@ void DiagnosticPage::draw_perfcounter() {
   auto clock = read_slowclock();
 
   oled_display.setCursor(64, 7);
-  oled_display.print("GUI loop");
+  oled_display.print(F("GUI loop"));
   oled_display.setCursor(97, 7);
   oled_display.print(clock_diff(last_clock, clock));
 

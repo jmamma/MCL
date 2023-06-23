@@ -455,26 +455,26 @@ void RAMPage::display() {
   oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
-    oled_display.print(" [Queue]");
+    oled_display.print(F(" [Queue]"));
     break;
   case STATE_RECORD:
-    oled_display.print(" [Record]");
+    oled_display.print(F(" [Record]"));
     break;
   case STATE_PLAY:
-    oled_display.print(" [Play]");
+    oled_display.print(F(" [Play]"));
     break;
   }
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 32);
 
-  oled_display.print("RAM ");
+  oled_display.print(F("RAM "));
   oled_display.print(page_id + 1);
 
   oled_display.setCursor(105, 32);
   if (mcl_cfg.ram_page_mode == 0) {
-    oled_display.print("MONO");
+    oled_display.print(F("MONO"));
   } else {
-    oled_display.print("LINK");
+    oled_display.print(F("LINK"));
   }
   oled_display.setFont();
   oled_display.setCursor(0, 24);
@@ -520,9 +520,9 @@ void RAMPage::display() {
   }
   /*
     oled_display.print(encoders[1]->cur);
-    oled_display.print(" S:");
+    oled_display.print(F(" S:"));
     oled_display.print(1 << encoders[2]->cur);
-    oled_display.print(" L:");
+    oled_display.print(F(" L:"));
     oled_display.print(encoders[3]->cur * 4);
   */
   mcl_gui.draw_knob_frame();

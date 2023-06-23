@@ -238,12 +238,12 @@ void SeqPtcPage::display() {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    oled_display.print("PLY");
+    oled_display.print(F("PLY"));
   }
 
   uint64_t *mask = note_mask;
   if (arp_track->enabled) {
-    oled_display.print("ARP");
+    oled_display.print(F("ARP"));
     mask = arp_track->note_mask;
   }
 

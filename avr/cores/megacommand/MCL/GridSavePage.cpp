@@ -62,9 +62,9 @@ void GridSavePage::display() {
     constexpr uint8_t data_x = 56;
 
     oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 12);
-    oled_display.print("SND");
+    oled_display.print(F("SND"));
     oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 19);
-    oled_display.print("SEQ");
+    oled_display.print(F("SEQ"));
 
     oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 8, 2, WHITE);
     oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 15, 2,
@@ -73,7 +73,7 @@ void GridSavePage::display() {
     mcl_gui.draw_horizontal_arrow(data_x + 16 + 9, MCLGUI::s_menu_y + 12, 5);
 
     oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 15);
-    oled_display.print("GRID");
+    oled_display.print(F("GRID"));
   }
   oled_display.display();
   oled_display.setFont(oldfont);

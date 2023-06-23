@@ -246,7 +246,7 @@ void LFOPage::display() {
 
     x = mcl_gui.knob_x0 + 2;
     oled_display.setCursor(x + 5, 6);
-    oled_display.print("WAV");
+    oled_display.print(F("WAV"));
 
     draw_knob(1, encoders[1], "SPD");
     draw_knob(2, encoders[2], "DEP1");

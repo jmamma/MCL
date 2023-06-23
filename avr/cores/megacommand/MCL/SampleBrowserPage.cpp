@@ -50,7 +50,7 @@ void SampleBrowserPage::display() {
       float sample_rate_f = (wav_file.header.fmt.sampleRate * 0.001f);
       uint16_t sample_rate = (uint16_t)sample_rate_f;
       oled_display.print(sample_rate);
-      oled_display.print(".");
+      oled_display.print(F("."));
 
       uint8_t decimal =
           ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;

@@ -194,7 +194,7 @@ void FileBrowserPage::draw_filebrowser() {
       oled_display.setTextColor(WHITE, BLACK);
       if (encoders[1]->cur - cur_row + n == cur_file) {
         oled_display.setCursor(x_offset - 4, y_offset + n * 8);
-        oled_display.print(">");
+        oled_display.print(F(">"));
       }
     }
     char temp_entry[FILE_ENTRY_SIZE];

@@ -10,10 +10,10 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.setTextColor(WHITE);
 
   oled_display.setCursor(MCLGUI::dlg_info_x2 - 86, MCLGUI::dlg_info_y1 + 23);
-  oled_display.print(" NO");
+  oled_display.print(F(" NO"));
 
   oled_display.setCursor(MCLGUI::dlg_info_x2 - 55, MCLGUI::dlg_info_y1 + 23);
-  oled_display.print(" YES");
+  oled_display.print(F(" YES"));
 
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);

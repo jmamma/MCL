@@ -291,7 +291,7 @@ void GridPage::display_counters() {
   oled_display.setCursor(24, y_offset);
   oled_display.print(val);
 
-  oled_display.print(":");
+  oled_display.print(F(":"));
   oled_display.print(MidiClock.beat_counter);
 
   if ((mcl_actions.next_transition != (uint16_t)-1) &&
@@ -308,7 +308,7 @@ void GridPage::display_counters() {
     }
     oled_display.setCursor(24, y_offset + 8);
     oled_display.print(val);
-    oled_display.print(":");
+    oled_display.print(F(":"));
     oled_display.print(mcl_actions.nearest_beat);
   }
 }
@@ -323,7 +323,7 @@ void GridPage::display_grid_info() {
 
   display_counters();
   oled_display.setFont(&TomThumb);
-  //  oled_display.print(":");
+  //  oled_display.print(F(":"));
   // oled_display.print(MidiClock.step_counter);
 
   oled_display.setCursor(22, y_offset + 1 * 8);
@@ -360,7 +360,7 @@ void GridPage::display_grid_info() {
   mcl_gui.put_value_at2(encoders[0]->cur + 1, val);
   val[2] = '\0';
   oled_display.print(val);
-  oled_display.print(" ");
+  oled_display.print(F(" "));
   uint8_t b = encoders[1]->cur / 16;
   oled_display.print((char)('A' + b));
   mcl_gui.put_value_at2(encoders[1]->cur - b * 16 + 1, val);

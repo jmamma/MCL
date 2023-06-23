@@ -130,10 +130,10 @@ void OscPage::display() {
   switch (osc_waveform) {
   case 0:
     draw_wav(0);
-    oled_display.print("--");
+    oled_display.print(F("--"));
     break;
   case SIN_OSC:
-    oled_display.print("SIN");
+    oled_display.print(F("SIN"));
     draw_levels();
     for (i = 0; i < 16; i++) {
       if (sine_levels[i] > 0) {
@@ -144,34 +144,34 @@ void OscPage::display() {
     draw_wav(SIN_OSC);
     break;
   case TRI_OSC:
-    oled_display.print("TRI");
+    oled_display.print(F("TRI"));
     sample_number = 0;
     draw_wav(TRI_OSC);
     break;
   case PUL_OSC:
-    oled_display.print("PUL");
+    oled_display.print(F("PUL"));
     sample_number = 0;
     draw_wav(PUL_OSC);
     break;
   case SAW_OSC:
-    oled_display.print("SAW");
+    oled_display.print(F("SAW"));
     sample_number = 0;
     draw_wav(SAW_OSC);
     break;
   case USR_OSC:
-    oled_display.print("USR");
+    oled_display.print(F("USR"));
     draw_wav(USR_OSC);
     sample_number = 0;
     draw_usr();
     break;
   }
-  oled_display.print(" ");
+  oled_display.print(F(" "));
 
   char *str = "    ";
   if (show_freq) {
     float freq = get_freq();
     oled_display.print((int)freq);
-    oled_display.print("Hz");
+    oled_display.print(F("Hz"));
     // GUI.printf_at(6, "%f", freq);
   } else {
     uint8_t s = enc1.cur - 8;
@@ -179,9 +179,9 @@ void OscPage::display() {
     oled_display.print(number_to_note.notes_upper[note]);
     oled_display.print((uint8_t)floor(s / 12));
     if (enc3.cur < 0) {
-      oled_display.print("-");
+      oled_display.print(F("-"));
     } else {
-      oled_display.print("+");
+      oled_display.print(F("+"));
     }
     oled_display.print(enc2.cur);
   }

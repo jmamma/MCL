@@ -49,7 +49,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
    */
   oled_display.setCursor(90, 8);
   oled_display.setTextSize(1);
-  oled_display.print("V");
+  oled_display.print(F("V"));
   oled_display.print(VERSION_STR);
   /*  for (float length = 0; length < 32; length += 0.7) {
 

@@ -162,17 +162,17 @@ void GridLoadPage::display() {
     // draw data flow in the center
     /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 12);
-    oled_display.print("SND");
+    oled_display.print(F("SND"));
     oled_display.setCursor(46, MCLGUI::s_menu_y + 19);
-    oled_display.print("GRID");
+    oled_display.print(F("GRID"));
 
     mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 8, 5);
     mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 15, 5);
 
     oled_display.setCursor(74, MCLGUI::s_menu_y + 12);
-    oled_display.print("MD");
+    oled_display.print(F("MD"));
     oled_display.setCursor(74, MCLGUI::s_menu_y + 19);
-    oled_display.print("SEQ");
+    oled_display.print(F("SEQ"));
     */
   }
   oled_display.display();

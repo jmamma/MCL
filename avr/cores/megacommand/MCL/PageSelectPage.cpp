@@ -88,7 +88,7 @@ void PageSelectPage::init() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print("PAGE SELECT");
+  oled_display.print(F("PAGE SELECT"));
   oled_display.setTextColor(WHITE);
 
   loop_init = true;
@@ -225,7 +225,7 @@ void PageSelectPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print("PAGE SELECT");
+  oled_display.print(F("PAGE SELECT"));
   oled_display.setTextColor(WHITE);
   uint8_t label_pos[4] = {30, 57, 81, 104};
   for (uint8_t i = 0; i < 4; ++i) {
