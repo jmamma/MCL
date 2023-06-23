@@ -188,16 +188,17 @@ void FileBrowserPage::draw_filebrowser() {
   for (uint8_t n = 0; n < max_items; n++) {
     uint8_t y_pos = y_offset + 8 * n;
     oled_display.setCursor(x_offset, y_pos);
-    if (n == cur_row) {
+    bool color = n == cur_row;
+    if (color) {
       oled_display.setTextColor(BLACK, WHITE);
       oled_display.fillRect(oled_display.getCursorX() - 3,
                             oled_display.getCursorY() - 6, width, 7, WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
-      if (encoders[1]->cur - cur_row + n == cur_file) {
-        oled_display.setCursor(x_offset - 4, y_pos);
-        oled_display.print(F(">"));
-      }
+    }
+    if (encoders[1]->cur - cur_row + n == cur_file) {
+      oled_display.setCursor(x_offset - 4, y_pos);
+      oled_display.print(F(">"));
     }
     char temp_entry[FILE_ENTRY_SIZE];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
@@ -206,8 +207,8 @@ void FileBrowserPage::draw_filebrowser() {
       File d;
       d.open(temp_entry, O_READ);
       if (d.isDirectory() && draw_dirs) {
-        oled_display.drawRect(x_offset, y_pos - 4, 6, 4, WHITE);
-        oled_display.drawFastHLine(x_offset + 1, y_pos - 1 - 4, 3, WHITE);
+        oled_display.drawRect(x_offset, y_pos - 4, 6, 4, !color);
+        oled_display.drawFastHLine(x_offset + 1, y_pos - 1 - 4, 3, !color);
         oled_display.setCursor(x_offset + 8, y_pos);
       }
       oled_display.println(temp_entry);
