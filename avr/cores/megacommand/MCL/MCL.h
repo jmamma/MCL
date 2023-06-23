@@ -16,8 +16,8 @@
 #include "Fonts/Elektrothic.h"
 #include "Fonts/TomThumb.h"
 
-#define VERSION 4043
-#define VERSION_STR "4.43"
+#define VERSION 4050
+#define VERSION_STR "R4.50"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -81,16 +81,19 @@ class MCL {
 public:
   static constexpr uint8_t NUM_PAGES = 39;
 
-  static LightPage *const pages_table[NUM_PAGES];
+  static LightPage *const pages_table[NUM_PAGES] PROGMEM;
 
   PageIndex current_page = 0;
 
+  LightPage *getPage(PageIndex page) {
+    return (LightPage*) pgm_read_word(pages_table + page);
+  }
   void setPage(PageIndex page) {
     if (page >= NUM_PAGES) {
       page = 0;
     }
     current_page = page;
-    GUI.setPage(pages_table[page]);
+    GUI.setPage(getPage(page));
   }
 
   void pushPage(PageIndex page) {
@@ -98,13 +101,13 @@ public:
       page = 0;
     }
     current_page = page;
-    GUI.pushPage(pages_table[page]);
+    GUI.pushPage(getPage(page));
   }
 
   void popPage() {
     GUI.popPage();
     for (uint8_t n = 0; n < NUM_PAGES; n++) {
-      if (GUI.currentPage() == pages_table[n]) {
+      if (GUI.currentPage() == getPage(n)) {
         current_page = n;
         return;
       }
