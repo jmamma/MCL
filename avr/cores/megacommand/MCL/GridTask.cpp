@@ -107,7 +107,6 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN(mcl_actions.next_transition);
 
     DEBUG_PRINTLN((int)SP);
-    uint8_t track_idx, dev_idx;
 
     uint8_t row = 255;
 
@@ -121,15 +120,16 @@ void GridTask::transition_handler() {
           (grid_page.active_slots[n] == SLOT_DISABLED) || (mcl_actions.next_transition != mcl_actions.next_transitions[n]))
         continue;
 
-      GridDeviceTrack *gdt =
-          mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
+      uint8_t track_idx = mcl_actions.get_track_idx(n);
+      uint8_t device_idx = gdt->device_idx;
 
-      if (gdt == nullptr) {
+      if (!gdt->isActive()) {
         continue;
       }
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
-        send_device[dev_idx] = true;
+        send_device[device_idx] = true;
       }
 
       if (row == 255) {
@@ -154,10 +154,11 @@ void GridTask::transition_handler() {
       for (uint8_t n = 0; n < NUM_SLOTS; n++) {
         if (slots_changed[n] == 255)
           continue;
+        GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
+        uint8_t track_idx = mcl_actions.get_track_idx(n);
+        uint8_t device_idx = gdt->device_idx;
 
-        GridDeviceTrack *gdt =
-            mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
-        if ((gdt == nullptr) || (dev_idx != c))
+        if (!gdt->isActive() || (device_idx != c))
           continue;
 
         // Wait on first track of each device;
@@ -168,7 +169,7 @@ void GridTask::transition_handler() {
                              mcl_actions.div192th_total_latency - 1;
 
           mcl_actions.div192th_total_latency -=
-              mcl_actions.dev_latency[dev_idx].latency;
+              mcl_actions.dev_latency[device_idx].latency;
 
           uint32_t diff;
 
@@ -185,7 +186,7 @@ void GridTask::transition_handler() {
           }
         }
         wait = false;
-        if (transition_load(n, track_idx, dev_idx, gdt)) {
+        if (transition_load(n, track_idx, gdt)) {
           grid_page.active_slots[n] = slots_changed[n];
         }
       }
@@ -207,10 +208,9 @@ void GridTask::transition_handler() {
     // Once tracks are cached, we can calculate their next transition
     uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      GridDeviceTrack *gdt =
-          mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
 
-      if (gdt == nullptr) {
+      if (!gdt->isActive()) {
         continue;
       }
 
@@ -229,18 +229,13 @@ void GridTask::transition_handler() {
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
-      // GridDeviceTrack *gdt =
-      //    mcl_actions.get_grid_dev_track(last_slot, &track_idx, &dev_idx);
       last_active_row = slots_changed[last_slot];
       next_active_row = mcl_actions.links[last_slot].row;
       chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
 
-      GridDeviceTrack *gdt =
-          mcl_actions.get_grid_dev_track(last_slot, &track_idx, &dev_idx);
-
       GridRowHeader row_header;
       proj.read_grid_row_header(&row_header, last_active_row);
-      dev_idx = 0;
+      uint8_t dev_idx = 0;
 
       if (elektron_devs[dev_idx]) {
         uint8_t len = elektron_devs[dev_idx]->sysex_protocol.kitname_length;
@@ -277,8 +272,8 @@ bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
   }
   return false;
 }
-bool GridTask::transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
-                               GridDeviceTrack *gdt) {
+
+bool GridTask::transition_load(uint8_t n, uint8_t track_idx, GridDeviceTrack *gdt) {
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),

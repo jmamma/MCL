@@ -78,11 +78,12 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
     DEBUG_PRINTLN(F("error could not open clipboard"));
     return false;
   }
-  uint8_t track_idx, dev_idx;
-  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(track, &track_idx, &dev_idx);
-  if (gdt == nullptr) { return false; }
+
+  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(track);
+  if (!gdt->isActive()) { return false; }
 
   uint8_t grid_idx = mcl_actions.get_grid_idx(track);
+  uint8_t track_idx = mcl_actions.get_track_idx(track);
 
   auto device_track =
             ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
@@ -127,13 +128,16 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   MDTrack *md_track = (MDTrack *)(&temp_track);
   ExtTrack *ext_track = (ExtTrack *)(&temp_track);
 
-  uint8_t source_track_idx, track_idx, dev_idx;
 
-  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(source_track, &source_track_idx, &dev_idx);
-  if (gdt == nullptr) { return false; }
+  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(source_track);
+  uint8_t source_track_idx = mcl_actions.get_track_idx(source_track);
 
-  gdt = mcl_actions.get_grid_dev_track(track, &track_idx, &dev_idx);
-  if (gdt == nullptr) { return false; }
+  if (!gdt->isActive()) { return false; }
+
+  gdt = mcl_actions.get_grid_dev_track(track);
+  uint8_t track_idx = mcl_actions.get_track_idx(track);
+
+  if (!gdt->isActive()) { return false; }
 
   uint8_t grid_idx = mcl_actions.get_grid_idx(track);
 
@@ -234,7 +238,6 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
 
   GridRowHeader header_copy;
 
-  uint8_t track_idx, dev_idx;
   uint8_t grid = col / 16;
 
   for (int y = 0; y < t_h && y + row < GRID_LENGTH; y++) {
@@ -274,10 +277,11 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
 
 
       DEBUG_PRINTLN(slot_n);
-      GridDeviceTrack *gdt =
-          mcl_actions.get_grid_dev_track(slot_n, &track_idx, &dev_idx);
 
-      if ((gdt == nullptr || (gdt->track_type != ptrack->active && ptrack->get_parent_model() != gdt->track_type)) &&
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n);
+      uint8_t track_idx = mcl_actions.get_track_idx(slot_n);
+
+      if ((!gdt->isActive() || (gdt->track_type != ptrack->active && ptrack->get_parent_model() != gdt->track_type)) &&
           (ptrack->active != EMPTY_TRACK_TYPE)) {
         DEBUG_PRINTLN("track not supported");
         // Don't allow paste in to unsupported slots

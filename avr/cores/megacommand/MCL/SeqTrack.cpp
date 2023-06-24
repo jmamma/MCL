@@ -129,6 +129,8 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
 }
 
 uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
+  if (quant == 255) { quant = mcl_cfg.rec_quant; }
+
   uint8_t timing_mid = get_timing_mid();
 
   int8_t mod12 = mod12_counter - 1;

@@ -34,10 +34,13 @@ MNMClass::MNMClass()
   uart = &MidiUart2;
 }
 
-void MNMClass::init_grid_devices() {
+void MNMClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
+  GridDeviceTrack gdt;
+
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
+    gdt.init(MNM_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
 
 }

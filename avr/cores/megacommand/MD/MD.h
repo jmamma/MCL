@@ -61,7 +61,7 @@ public:
 
   virtual bool probe();
   virtual void setup();
-  virtual void init_grid_devices();
+  virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
 
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT

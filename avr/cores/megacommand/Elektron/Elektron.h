@@ -136,44 +136,35 @@ class SeqTrack;
 /// Base class for MIDI-compatible devices
 /// Defines basic device description data and driver interfaces.
 
+#define GROUP_DEV 0
+#define GROUP_AUX 1
+#define GROUP_TEMPO 2
+#define EMPTY_TRACK_TYPE 0
+
 class GridDeviceTrack {
 public:
-  uint8_t slot_number;
+  uint8_t device_idx;
   uint8_t track_type;
   uint8_t group_type;
   uint8_t mem_slot_idx;
   SeqTrack *seq_track;
-  uint8_t get_slot_number() { return slot_number; }
-  SeqTrack *get_seq_track() { return seq_track; }
-};
 
-#define GROUP_DEV 0
-#define GROUP_AUX 1
-#define GROUP_TEMPO 2
-
-class GridDevice {
-public:
-  uint8_t num_tracks;
-  uint8_t get_num_tracks() { return num_tracks; }
-
-  GridDeviceTrack tracks[GRID_WIDTH];
-
-  GridDevice() { init(); }
-
-  void init() { num_tracks = 0; }
-
-  void add_track(uint8_t track_idx, uint8_t slot_number, SeqTrack *seq_track, uint8_t track_type, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
-    tracks[track_idx].slot_number = slot_number;
-    tracks[track_idx].seq_track = seq_track;
-    tracks[track_idx].track_type = track_type;
-    tracks[track_idx].mem_slot_idx = mem_slot_idx;
-    if (mem_slot_idx == 255) {
-    tracks[track_idx].mem_slot_idx = track_idx;
-    }
-    tracks[track_idx].group_type = group_type;
-    num_tracks++;
+  GridDeviceTrack() {
+    init();
   }
+
+  void init(uint8_t _track_type = EMPTY_TRACK_TYPE, uint8_t _group_type = GROUP_DEV, uint8_t _device_idx = 255, SeqTrack *_seq_track = nullptr, uint8_t _mem_slot_idx = 255) {
+    track_type = _track_type;
+    group_type = _group_type;
+    mem_slot_idx = _mem_slot_idx;
+    seq_track = _seq_track;
+    device_idx = _device_idx;
+  }
+
+  SeqTrack *get_seq_track() { return seq_track; }
+  bool isActive() { return track_type != EMPTY_TRACK_TYPE; }
 };
+
 
 class MidiDevice {
 public:
@@ -184,7 +175,6 @@ public:
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
   uint8_t track_type;
-  GridDevice grid_devices[NUM_GRIDS];
 
   MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice)
@@ -195,26 +185,19 @@ public:
     connected = false;
   }
 
-  void cleanup() {
-    memset(grid_devices,0, sizeof(GridDevice) * NUM_GRIDS);
-  }
-
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, SeqTrack *seq_track, uint8_t track_type_, uint8_t group_type = GROUP_DEV, uint8_t mem_slot_idx = 255) {
-    auto *devp = &grid_devices[grid_idx];
-    if (track_type == 0) { track_type = track_type_; }
-    devp->add_track(track_idx, track_idx + grid_idx * GRID_WIDTH, seq_track, track_type_, group_type, mem_slot_idx);
-  }
+  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt);
+  void cleanup(uint8_t device_idx);
 
   ElektronDevice* asElektronDevice() {
     if (!isElektronDevice) return nullptr;
     return (ElektronDevice*) this;
   }
 
-  virtual void init_grid_devices() {};
+  virtual void init_grid_devices(uint8_t device_idx) {};
 
   virtual void setup() { };
 
-  virtual void disconnect() { cleanup(); connected = false; }
+  virtual void disconnect(uint8_t device_idx) { cleanup(device_idx); connected = false; }
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
   virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};

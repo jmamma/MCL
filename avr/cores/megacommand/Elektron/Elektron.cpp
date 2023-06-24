@@ -1,6 +1,18 @@
 #include "Elektron.h"
+#include "Project.h"
 
 #define SYSEX_RETRIES 1
+
+void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt) {
+  proj.grids[grid_idx].add_track(track_idx, gdt);
+}
+
+void MidiDevice::cleanup(uint8_t device_idx) {
+  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+    proj.grids[n].cleanup(device_idx);
+  }
+}
+
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }

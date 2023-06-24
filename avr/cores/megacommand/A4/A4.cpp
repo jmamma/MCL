@@ -40,17 +40,18 @@ const ElektronSysexProtocol a4_protocol = {
 A4Class::A4Class()
     : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {}
 
-void A4Class::init_grid_devices() {
+void A4Class::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
 
+  GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     uint8_t track_type = EXT_TRACK_TYPE;
 
     if (i < NUM_A4_SOUND_TRACKS) {
       track_type = A4_TRACK_TYPE;
     }
-
-    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), track_type);
+    gdt.init(track_type, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
 }
 

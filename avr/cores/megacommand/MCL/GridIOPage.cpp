@@ -18,17 +18,16 @@ void GridIOPage::init() {
 
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
-  uint8_t track_idx, dev_idx;
-
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     GridDeviceTrack *gdt =
-        mcl_actions.get_grid_dev_track(n, &track_idx, &dev_idx);
+        mcl_actions.get_grid_dev_track(n);
 
-    if (gdt == nullptr)
+    uint8_t device_idx = gdt->device_idx;
+    if (!gdt->isActive())
       continue;
 
     if ((gdt->group_type == GROUP_DEV) &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, dev_idx)) {
+        IS_BIT_SET16(mcl_cfg.track_type_select, device_idx)) {
       track_select_array[n] = 1;
     }
     // AUX tracks

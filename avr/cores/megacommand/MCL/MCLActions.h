@@ -69,27 +69,33 @@ public:
   uint8_t get_quant() {
     uint8_t q;
     if ((mcl_cfg.chain_load_quant == 1)) {
-      q = QUANT_LEN; //use slot settings
+      q = QUANT_LEN; // use slot settings
     } else {
-      q = mcl_cfg.chain_load_quant; //override
+      q = mcl_cfg.chain_load_quant; // override
     }
     return q;
   }
 
-  //This is the track length quantisatioe
+  // This is the track length quantisatioe
   uint8_t get_chain_length() {
     uint8_t q;
     if (mcl_cfg.chain_queue_length == 1) {
-      q = QUANT_LEN; //use slot settings
+      q = QUANT_LEN; // use slot settings
     } else {
-      q = mcl_cfg.chain_queue_length; //override
+      q = mcl_cfg.chain_queue_length; // override
     }
     return q;
   }
 
-  uint8_t get_grid_idx(uint8_t slot_number);
-  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number, uint8_t *id,
-                                      uint8_t *dev_idx);
+  uint8_t get_grid_idx(uint8_t slot_number) {
+    return slot_number < GRID_WIDTH ? 0 : 1;
+  }
+
+  uint8_t get_track_idx(uint8_t slot_number) {
+    return slot_number < GRID_WIDTH ? slot_number : slot_number - GRID_WIDTH;
+  }
+
+  GridDeviceTrack *get_grid_dev_track(uint8_t slot_number);
 
   void init_chains();
 
@@ -97,21 +103,27 @@ public:
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
 
-  void save_tracks(int row, uint8_t *slot_select_array,
-                           uint8_t merge, uint8_t readpattern = 255);
+  void save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
+                   uint8_t readpattern = 255);
 
-  void load_tracks(int row, uint8_t *slot_select_array, uint8_t *_row_array = nullptr, uint8_t load_mode = 255);
-  void send_tracks_to_devices(uint8_t *slot_select_array, uint8_t *row_array = nullptr);
+  void load_tracks(int row, uint8_t *slot_select_array,
+                   uint8_t *_row_array = nullptr, uint8_t load_mode = 255);
+  void send_tracks_to_devices(uint8_t *slot_select_array,
+                              uint8_t *row_array = nullptr);
   void manual_transition(uint8_t *slot_select_array, uint8_t *row_array);
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
-  void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false, bool ignore_overflow = false);
+  void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false,
+                                 bool ignore_overflow = false);
   void calc_next_transition();
   void calc_latency();
+
 private:
   void collect_tracks(uint8_t *slot_select_array, uint8_t *row_array);
-  void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
-  bool load_track(uint8_t track_idx, uint8_t row, uint8_t pos, GridDeviceTrack *gdt, uint8_t *send_masks);
+  void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
+                   GridDeviceTrack *gdt);
+  bool load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
+                  GridDeviceTrack *gdt, uint8_t *send_masks);
 };
 
 extern void md_import();

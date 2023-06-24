@@ -143,21 +143,28 @@ void MDClass::setExternalSync() {
   sendRequest(data, sizeof(data));
 }
 
-void MDClass::init_grid_devices() {
+void MDClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 0;
 
+  GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-    add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
+    gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
   grid_idx = 1;
-  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]),
-                    MDFX_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]),
-                    MDROUTE_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &(mcl_seq.aux_tracks[2]),
-                    MDLFO_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[3]),
-                    MDTEMPO_TRACK_TYPE, GROUP_TEMPO, 0);
+
+  gdt.init(MDFX_TRACK_TYPE, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[0]));
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
+
+  gdt.init(MDROUTE_TRACK_NUM, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[1]));
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 1, &gdt);
+
+  gdt.init(MDLFO_TRACK_NUM, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[2]));
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 2, &gdt);
+
+  gdt.init(MDTEMPO_TRACK_NUM, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[3]));
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 3, &gdt);
+
 }
 
 void MDClass::get_mutes() {

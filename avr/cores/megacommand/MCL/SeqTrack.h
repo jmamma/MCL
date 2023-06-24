@@ -4,7 +4,7 @@
 #define SEQTRACK_H__
 
 #include "MCLMemory.h"
-#include "MidiActivePeering.h"
+//#include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
 
@@ -32,6 +32,8 @@
 #define TRIG_FALSE 0
 #define TRIG_TRUE 1
 #define TRIG_ONESHOT 3
+
+#define UART1_PORT 1
 
 class SeqTrack_270 {};
 
@@ -185,7 +187,7 @@ public:
     uint8_t u = 0;
     get_quantized_step(u);
   }
-  uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = mcl_cfg.rec_quant);
+  uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = 255);
 };
 
 class SeqTrack : public SeqTrackBase {
