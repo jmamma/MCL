@@ -486,12 +486,14 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;
         break;
+      /*
       case MDX_KEY_DOWN:
         encoders[1]->cur += inc;
         break;
       case MDX_KEY_LEFT:
         _cd_up();
         break;
+      */
       case MDX_KEY_RIGHT:
         dir_only = true;
         goto YES;
@@ -562,14 +564,6 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   // cancel
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
   NO:
-    if (show_samplemgr) {
-      // on cancel, break out of sample manager
-      // and intercept cancel event
-      show_samplemgr = false;
-      init();
-      return true;
-    }
-
     on_cancel();
     return true;
   }

@@ -204,6 +204,7 @@ void SampleBrowserPage::on_cancel() {
   pending_action = 0;
   if (show_samplemgr) {
     show_samplemgr = false;
+//    init();
   } else {
     // TODO cd .. ?
     _cd_up();
