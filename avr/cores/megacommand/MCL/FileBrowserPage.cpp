@@ -49,17 +49,26 @@ void FileBrowserPage::setup() {
 }
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
-  volatile uint8_t *ptr =
-      (uint8_t *)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
-  get_bank3((volatile void *)entry, ptr, FILE_ENTRY_SIZE);
+  uint8_t discard_type;
+  get_entry(n, entry, discard_type);
 }
 
-bool FileBrowserPage::add_entry(const char *entry) {
+void FileBrowserPage::get_entry(uint16_t n, const char *entry, uint8_t &type) {
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+  char buf[FILE_ENTRY_SIZE];
+  get_bank3(buf, ptr, FILE_ENTRY_SIZE);
+  type = buf[0];
+  strcpy(entry, buf + 1);
+}
+
+bool FileBrowserPage::add_entry(const char *entry, uint8_t type) {
   if (numEntries >= NUM_FILE_ENTRIES) {
     return false;
   }
   char buf[FILE_ENTRY_SIZE];
-  strncpy(buf, entry, FILE_ENTRY_SIZE);
+  buf[0] = type;
+  strncpy(buf + 1, entry, FILE_ENTRY_SIZE - 1);
   buf[FILE_ENTRY_SIZE - 1] = '\0';
   volatile uint8_t *ptr =
       (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
@@ -118,9 +127,11 @@ void FileBrowserPage::query_filesystem() {
     bool is_match_file = false;
     DEBUG_PRINTLN(numEntries);
     DEBUG_PRINTLN(temp_entry);
+    bool is_dir = false;
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
+      is_dir = true;
       is_match_file = true;
     } else {
       // XXX only 3char suffix
@@ -128,7 +139,7 @@ void FileBrowserPage::query_filesystem() {
     }
     if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
-      if (add_entry(temp_entry)) {
+      if (add_entry(temp_entry,is_dir)) {
         if (strlen(focus_match) > 0 && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
@@ -179,12 +190,10 @@ void FileBrowserPage::draw_filebrowser() {
 
   constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.setCursor(x_offset, 8);
-  uint8_t max_items;
-  if (numEntries > MAX_VISIBLE_ROWS) {
-    max_items = MAX_VISIBLE_ROWS;
-  } else {
-    max_items = numEntries;
-  }
+  uint8_t max_items = min(MAX_VISIBLE_ROWS,numEntries);
+
+  char temp_entry[FILE_ENTRY_SIZE];
+
   for (uint8_t n = 0; n < max_items; n++) {
     uint8_t y_pos = y_offset + 8 * n;
     oled_display.setCursor(x_offset, y_pos);
@@ -200,19 +209,16 @@ void FileBrowserPage::draw_filebrowser() {
       oled_display.setCursor(x_offset - 4, y_pos);
       oled_display.print(F(">"));
     }
-    char temp_entry[FILE_ENTRY_SIZE];
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
     if (entry_num < numEntries) {
-      get_entry(entry_num, temp_entry);
-      File d;
-      d.open(temp_entry, O_READ);
-      if (d.isDirectory() && draw_dirs) {
+      uint8_t type;
+      get_entry(entry_num, temp_entry, type);
+      if (type == DIR_TYPE && draw_dirs) {
         oled_display.drawRect(x_offset, y_pos - 4, 6, 4, !color);
         oled_display.drawFastHLine(x_offset + 1, y_pos - 1 - 4, 3, !color);
         oled_display.setCursor(x_offset + 8, y_pos);
       }
       oled_display.println(temp_entry);
-      d.close();
     }
   }
   if (numEntries > MAX_VISIBLE_ROWS) {
@@ -467,7 +473,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     return false;
   }
-  bool dir_only = false;
+  //bool dir_only = false;
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
@@ -486,17 +492,17 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;
         break;
-      /*
       case MDX_KEY_DOWN:
         encoders[1]->cur += inc;
         break;
+      /*
       case MDX_KEY_LEFT:
         _cd_up();
         break;
-      */
       case MDX_KEY_RIGHT:
         dir_only = true;
         goto YES;
+      */
       }
     }
   }
@@ -534,7 +540,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
     if (!show_samplemgr) {
       file.open(temp_entry, O_READ);
-      if (!dir_only) {
+  //    if (!dir_only) {
 
         if (encoders[1]->getValue() == i_save) {
           on_new();
@@ -546,7 +552,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
           _cd_up();
           return true;
         }
-      }
+    //  }
       // chdir to child
       if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
@@ -554,10 +560,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       }
     }
 
-    if (!dir_only) {
+  //  if (!dir_only) {
       GUI.ignoreNextEvent(event->source);
       on_select(temp_entry);
-    }
+  //  }
     return true;
   }
 
