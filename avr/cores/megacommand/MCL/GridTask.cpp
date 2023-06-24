@@ -124,7 +124,7 @@ void GridTask::transition_handler() {
       uint8_t track_idx = mcl_actions.get_track_idx(n);
       uint8_t device_idx = gdt->device_idx;
 
-      if (!gdt->isActive()) {
+      if (gdt == nullptr) {
         continue;
       }
 
@@ -158,7 +158,7 @@ void GridTask::transition_handler() {
         uint8_t track_idx = mcl_actions.get_track_idx(n);
         uint8_t device_idx = gdt->device_idx;
 
-        if (!gdt->isActive() || (device_idx != c))
+        if (gdt == nullptr || (device_idx != c))
           continue;
 
         // Wait on first track of each device;
@@ -210,7 +210,7 @@ void GridTask::transition_handler() {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
 
-      if (!gdt->isActive()) {
+      if (gdt == nullptr) {
         continue;
       }
 

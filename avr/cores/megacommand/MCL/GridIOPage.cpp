@@ -23,7 +23,7 @@ void GridIOPage::track_select_array_from_type_select(
         mcl_actions.get_grid_dev_track(n);
 
     uint8_t device_idx = gdt->device_idx;
-    if (!gdt->isActive())
+    if (gdt == nullptr)
       continue;
 
     if ((gdt->group_type == GROUP_DEV) &&

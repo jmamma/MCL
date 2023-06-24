@@ -80,7 +80,7 @@ bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   }
 
   GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(track);
-  if (!gdt->isActive()) { return false; }
+  if (gdt == nullptr) { return false; }
 
   uint8_t grid_idx = mcl_actions.get_grid_idx(track);
   uint8_t track_idx = mcl_actions.get_track_idx(track);
@@ -132,12 +132,12 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(source_track);
   uint8_t source_track_idx = mcl_actions.get_track_idx(source_track);
 
-  if (!gdt->isActive()) { return false; }
+  if (gdt == nullptr) { return false; }
 
   gdt = mcl_actions.get_grid_dev_track(track);
   uint8_t track_idx = mcl_actions.get_track_idx(track);
 
-  if (!gdt->isActive()) { return false; }
+  if (gdt == nullptr) { return false; }
 
   uint8_t grid_idx = mcl_actions.get_grid_idx(track);
 
@@ -281,7 +281,7 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n);
       uint8_t track_idx = mcl_actions.get_track_idx(slot_n);
 
-      if ((!gdt->isActive() || (gdt->track_type != ptrack->active && ptrack->get_parent_model() != gdt->track_type)) &&
+      if ((gdt == nullptr || (gdt->track_type != ptrack->active && ptrack->get_parent_model() != gdt->track_type)) &&
           (ptrack->active != EMPTY_TRACK_TYPE)) {
         DEBUG_PRINTLN("track not supported");
         // Don't allow paste in to unsupported slots
