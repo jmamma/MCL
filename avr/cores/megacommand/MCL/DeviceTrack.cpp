@@ -89,7 +89,7 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   // virtual functions are ready
 
   if (active != EMPTY_TRACK_TYPE) {
-    uint32_t len = ptrack->get_track_size();
+    uint16_t len = ptrack->get_track_size();
 
     if (!proj.read_grid(ptrack, len, column, row)) {
       DEBUG_PRINTLN(F("read failed"));
@@ -108,8 +108,8 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
 
 bool DeviceTrackChunk::load_from_mem_chunk(uint8_t column, uint8_t chunk) {
   size_t chunk_size = sizeof(seq_data_chunk);
-  uint32_t offset = (uint32_t)seq_data_chunk - (uint32_t)this;
-  uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + offset +
+  uint16_t offset = (uint16_t)seq_data_chunk - (uint16_t)this;
+  uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + offset +
                  chunk_size * chunk;
   volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
   memcpy_bank1(seq_data_chunk, ptr, chunk_size);
@@ -125,7 +125,7 @@ bool DeviceTrackChunk::load_chunk(volatile void *ptr, uint8_t chunk) {
 }
 
 bool DeviceTrackChunk::load_link_from_mem(uint8_t column) {
-  uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + (uint32_t) &this->link - (uint32_t) this;
+  uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + (uint16_t) &this->link - (uint16_t) this;
   volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
   memcpy_bank1(&this->link, ptr, sizeof(GridTrack));
   return true;

@@ -103,7 +103,7 @@ public:
   }
 
   int memcmp_sound(uint8_t column) {
-    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + ((uint32_t) get_sound_data_ptr() - (uint32_t) this);
+    uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + ((uint16_t) get_sound_data_ptr() - (uint16_t) this);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_track_size());
   }
@@ -142,7 +142,7 @@ class DeviceTrackChunk : public DeviceTrack {
   virtual uint16_t get_seq_data_size() = 0;
   virtual uint8_t get_model() = 0;
   virtual uint16_t get_track_size() = 0;
-  virtual uint32_t get_region() = 0;
+  virtual uint16_t get_region() = 0;
   virtual uint8_t get_device_type() = 0;
 
   virtual void *get_sound_data_ptr() = 0;
