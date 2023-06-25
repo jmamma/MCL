@@ -115,6 +115,9 @@ public:
     current_page = 255;
   }
 
+  bool isSeqPage() {
+     return current_page == SEQ_STEP_PAGE || current_page == SEQ_PTC_PAGE || current_page == SEQ_EXTSTEP_PAGE;
+  }
 
   PageIndex currentPage() { return current_page; }
 

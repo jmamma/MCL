@@ -83,7 +83,7 @@ public:
   uint8_t get_note_from_machine_pitch(uint8_t pitch);
 
   uint8_t is_md_midi(uint8_t channel);
-  void config_encoders();
+  virtual void config_encoders();
   void init_poly();
 
   void render_arp(bool recalc_notemask_, MidiDevice *midi_dev, uint8_t track);

@@ -36,7 +36,6 @@ extern uint8_t opt_channel;
 extern uint8_t opt_undo;
 extern uint8_t opt_undo_track;
 
-extern MidiDevice *opt_midi_device_capture;
 extern uint16_t trigled_mask;
 extern uint16_t locks_on_step_mask;
 
@@ -158,7 +157,7 @@ public:
   virtual void setup();
   virtual void init();
   virtual void cleanup();
-
+  virtual void config_encoders() = 0;
   static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;

@@ -47,11 +47,12 @@ void MDTrackSelect::end() {
   if (sysex->get_recordLen() == 8) {
     bool is_md_device = SeqPage::midi_device == &MD && (mcl.currentPage() != SEQ_EXTSTEP_PAGE);
     bool expand = true;
+    bool is_seq_page = mcl.isSeqPage();
     reset_undo();
     uint8_t length = sysex->getByte(6);
     uint8_t new_speed = sysex->getByte(7);
-    if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == SEQ_EXTSTEP_PAGE || mcl.currentPage() == SEQ_PTC_PAGE) {
-      if (seq_step_page.recording) {
+    if (is_seq_page) {
+      if (SeqPage::recording) {
         goto update_pattern;
       }
       uint8_t b = sysex->getByte(3);
@@ -69,12 +70,8 @@ void MDTrackSelect::end() {
           mcl_seq.ext_tracks[n].set_speed(new_speed);
           if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) { seq_extparam4.cur = length; }
       }
-      if (mcl.currentPage() == SEQ_PTC_PAGE) {
-        seq_ptc_page.config_encoders();
-      }
-      if (mcl.currentPage() == SEQ_STEP_PAGE) {
-        seq_step_page.config_encoders();
-      }
+      SeqPage *seq_page = (SeqPage*) GUI.currentPage();
+      seq_page->config_encoders();
     } else {
     update_pattern:
       uint8_t old_speeds[16];
@@ -118,6 +115,10 @@ void MDTrackSelect::end() {
            mcl_seq.ext_tracks[n].set_speed(new_speed);
         }
         seq_track->mute_state = old_mutes[n];
+      }
+      if (is_seq_page) {
+        SeqPage *seq_page = (SeqPage*) GUI.currentPage();
+        seq_page->config_encoders();
       }
     }
   } else {

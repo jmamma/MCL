@@ -49,7 +49,6 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
-  opt_midi_device_capture = &MD;
 
   pitch_param = 255;
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);

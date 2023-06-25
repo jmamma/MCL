@@ -44,7 +44,7 @@ public:
   void init();
   void loop();
   void cleanup();
-  void update_encoders();
+  virtual void config_encoders();
 
   void setup_callbacks();
   void remove_callbacks();

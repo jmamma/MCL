@@ -23,7 +23,7 @@ void LFOPage::init() {
   DEBUG_PRINT_FN();
   oled_display.clearDisplay();
   oled_display.setFont();
-  update_encoders();
+  config_encoders();
   MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
                      lfo_track->step_count);
   if (lfo_track->mode != LFO_MODE_FREE) {
@@ -40,7 +40,7 @@ void LFOPage::cleanup() {
   oled_display.clearDisplay();
 }
 
-void LFOPage::update_encoders() {
+void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max = NUM_MD_TRACKS + 4;
@@ -366,7 +366,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   */
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     page_mode = !(page_mode);
-    update_encoders();
+    config_encoders();
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {

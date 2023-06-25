@@ -127,7 +127,6 @@ void SeqPtcPage::config() {
   config_as_trackedit();
 }
 void SeqPtcPage::loop() {
-  opt_midi_device_capture = midi_device;
   if (re_init) {
     init();
   }

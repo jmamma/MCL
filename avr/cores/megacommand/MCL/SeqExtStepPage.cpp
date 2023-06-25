@@ -70,7 +70,6 @@ void SeqExtStepPage::init() {
   DEBUG_PRINTLN(F("seq extstep init"));
 
   midi_device = midi_active_peering.get_device(UART2_PORT);
-  opt_midi_device_capture = midi_device;
 
   SeqPage::init();
   param_select = PARAM_OFF;

@@ -58,7 +58,7 @@ public:
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
-  void config_encoders();
+  virtual void config_encoders();
 
   void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                        uint8_t color = WHITE);
