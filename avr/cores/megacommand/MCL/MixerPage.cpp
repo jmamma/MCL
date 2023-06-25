@@ -491,7 +491,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             show_mixer_menu = true;
           } else {
             uint8_t is_md_device = (midi_device == &MD);
-            for (int i = 0; i < 16; i++) {
+            uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+            for (int i = 0; i < len; i++) {
               if (note_interface.is_note_on(i)) {
                 SeqTrack *seq_track = is_md_device
                                           ? (SeqTrack *)&mcl_seq.md_tracks[i]
