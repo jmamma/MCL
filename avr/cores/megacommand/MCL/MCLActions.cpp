@@ -70,7 +70,7 @@ void MCLActions::kit_reload(uint8_t pattern) {
 GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number) {
 
   uint8_t grid_idx = 0;
-  if (slot_number > GRID_WIDTH) { slot_number -= GRID_WIDTH; grid_idx = 1; }
+  if (slot_number >= GRID_WIDTH) { slot_number -= GRID_WIDTH; grid_idx = 1; }
   // Find first device that is hosting this slot_number.
 
   GridDeviceTrack *gdt = &proj.grids[grid_idx].tracks[slot_number];
