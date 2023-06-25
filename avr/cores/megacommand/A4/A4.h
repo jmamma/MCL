@@ -8,6 +8,7 @@
 #include "A4Messages.h"
 #include "A4Params.h"
 #include "A4Sysex.h"
+#include "A4Track.h"
 
 /**
  * \addtogroup a4_a4

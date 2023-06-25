@@ -4,6 +4,7 @@
 #define PROJECT_H__
 
 #include "Grid.h"
+#include "MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
@@ -24,7 +25,7 @@ public:
   File file;
   uint8_t grid_select;
 
-  DeviceGrid grids[NUM_GRIDS];
+  MidiDeviceGrid grids[NUM_GRIDS];
 
   void chdir_projects();
   bool project_loaded = false;

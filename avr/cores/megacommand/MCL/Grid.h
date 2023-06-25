@@ -3,7 +3,6 @@
 #ifndef GRID_H__
 #define GRID_H__
 
-#include "A4Track.h"
 #include "GridRowHeader.h"
 #include "MCLSd.h"
 #include "SdFat.h"
@@ -114,27 +113,6 @@ public:
   }
 
   bool sync() { return file.sync(); }
-};
-
-class DeviceGrid : public Grid {
-
-  public:
-  GridDeviceTrack tracks[GRID_WIDTH];
-  void add_track(uint8_t track_idx, GridDeviceTrack *gdt) {
-    if (gdt->mem_slot_idx == 255) { gdt->mem_slot_idx = track_idx; }
-    memcpy(tracks + track_idx, gdt, sizeof(GridDeviceTrack));
-  }
-  void cleanup(uint8_t device_idx) {
-    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      if (tracks[n].device_idx == device_idx) { tracks[n].init(); }
-    }
-  }
-
-  void init() {
-    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      tracks[n].init();
-    }
-  }
 };
 
 #endif /* GRID_H__ */
