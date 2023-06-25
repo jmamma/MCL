@@ -19,25 +19,25 @@ void GridIOPage::init() {
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    GridDeviceTrack *gdt =
-        mcl_actions.get_grid_dev_track(n);
+    GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
 
     uint8_t device_idx = gdt->device_idx;
     if (gdt == nullptr)
       continue;
-
-    if ((gdt->group_type == GROUP_DEV) &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, device_idx)) {
-      track_select_array[n] = 1;
+    uint8_t match = 255;
+    switch (gdt->group_type) {
+    case GROUP_DEV:
+      match = gdt->device_idx;
+      break;
+    case GROUP_AUX:
+    case GROUP_TEMPO:
+      match = gdt->group_type + 1;
+      break;
     }
-    // AUX tracks
-    if ((gdt->group_type == GROUP_AUX) &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, 2)) {
-      track_select_array[n] = 1;
+    if (match == 255) {
+      continue;
     }
-
-    if ((gdt->group_type == GROUP_TEMPO) &&
-        IS_BIT_SET16(mcl_cfg.track_type_select, 3)) {
+    if (IS_BIT_SET16(mcl_cfg.track_type_select, match)) {
       track_select_array[n] = 1;
     }
   }
@@ -58,7 +58,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_SCALE: {
         goto toggle_grid;
       }
-     }
+      }
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
@@ -82,16 +82,16 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-//   encoders[3]->pressmode = !encoders[3]->pressmode;
+    //   encoders[3]->pressmode = !encoders[3]->pressmode;
   }
- // if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+  // if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
   //    EVENT_PRESSED(event, Buttons.ENCODER2) ||
   //    EVENT_PRESSED(event, Buttons.ENCODER3) ||
   //    EVENT_PRESSED(event, Buttons.ENCODER4)) {
- // }
-  if  (EVENT_RELEASED(event, Buttons.BUTTON1) ||
+  // }
+  if (EVENT_RELEASED(event, Buttons.BUTTON1) ||
       EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    close:
+  close:
     mcl.setPage(GRID_PAGE);
     return true;
   }
