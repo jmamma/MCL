@@ -401,7 +401,7 @@ again:
       row = row_array[n];
       if (q == 255) {
         GridDeviceTrack *gdt = get_grid_dev_track(n);
-        if (gdt == nullptr) {
+        if (gdt != nullptr) {
           transition_level[n] = 0;
           if (increase_loops) {
             if (next_transitions[n] == next_transition) {
