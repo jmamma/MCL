@@ -517,7 +517,7 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     }
     DEBUG_PRINTLN("load immediate track");
     ptrack->load_immediate(track_idx, gdt->seq_track);
-    ptrack->store_in_mem(track_idx);
+    ptrack->store_in_mem(gdt->mem_slot_idx);
     send_masks[pos] = 1;
   }
   return true;
