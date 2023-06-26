@@ -35,6 +35,7 @@ void GridTask::run() {
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
 
+  trig_interface.check_key_throttle();
 
   if (stop_hard_callback) {
       mcl_actions_callbacks.StopHardCallback();

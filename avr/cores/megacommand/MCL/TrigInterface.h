@@ -65,6 +65,8 @@ public:
   bool state = false;
   uint64_t cmd_key_state;
   uint64_t ignore_next_mask;
+  uint16_t last_clock;
+  bool throttle;
 
   TrigInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;
@@ -79,9 +81,9 @@ public:
   bool on(bool clear_states = true);
   bool off();
 
+  bool check_key_throttle();
   void enable_listener();
   void disable_listener();
-
   virtual void start();
   virtual void end();
   bool is_key_down(uint8_t key) { return IS_BIT_SET64(cmd_key_state, key); }
