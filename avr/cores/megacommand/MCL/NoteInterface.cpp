@@ -15,27 +15,11 @@ bool NoteInterface::is_note(uint8_t note_num) {
    return IS_BIT_SET32(mask, note_num);
 }
 
-bool NoteInterface::is_note_on(uint8_t note_num) {
-   return IS_BIT_SET32(notes_on, note_num);
-}
-
-bool NoteInterface::is_note_off(uint8_t note_num) {
-   return IS_BIT_SET32(notes_off, note_num);
-}
-
 void NoteInterface::clear_note(uint8_t note_num) {
    if (note_num < NI_MAX_NOTES) {
      CLEAR_BIT32(notes_on, note_num);
      CLEAR_BIT32(notes_off, note_num);
    }
-}
-
-bool NoteInterface::is_event(gui_event_t *event) {
-  DEBUG_PRINTLN(event->source);
-  if (event->source >= 128) {
-    return true;
-  }
-  return false;
 }
 
 void NoteInterface::add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t port) {
@@ -106,25 +90,9 @@ uint8_t NoteInterface::get_first_md_note() {
   return 255;
 }
 
-bool NoteInterface::notes_all_off_md() {
-  
-  if (((uint16_t) notes_on == 0) && ((uint16_t)notes_off > 0)) {
-    return true;
-  }
-  return false;
-}
-
-bool NoteInterface::notes_all_off() {
-  if ((notes_on == 0) && (notes_off > 0)) {
-    return true;
-  }
-  return false;
-}
-
 uint8_t NoteInterface::notes_count_on() {
   return popcount32(notes_on);
 }
-
 uint8_t NoteInterface::notes_count_off() {
   return popcount32(notes_off);
 }
