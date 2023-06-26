@@ -94,6 +94,6 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
 //__SIZE_PROBE<BANK1_AUX_TRACKS_START> addr_aux;
 //__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
-//__SIZE_PROBE<BANK1_FILE_ENTRIES_START> addr_file_start;
-//__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;
+//__SIZE_PROBE<BANK3_FILE_ENTRIES_START> addr_file_start;
+//__SIZE_PROBE<BANK3_FILE_ENTRIES_END> addr_end;
 //__SIZE_PROBE<COMMSG_SLOTS_END> addr_end;

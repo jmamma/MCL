@@ -55,7 +55,7 @@ void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry, uint8_t &type) {
   volatile uint8_t *ptr =
-      (uint8_t *)BANK1_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+      (uint8_t *)BANK3_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
   char buf[FILE_ENTRY_SIZE];
   get_bank3(buf, ptr, FILE_ENTRY_SIZE);
   type = buf[0];
@@ -71,7 +71,7 @@ bool FileBrowserPage::add_entry(const char *entry, uint8_t type) {
   strncpy(buf + 1, entry, FILE_ENTRY_SIZE - 1);
   buf[FILE_ENTRY_SIZE - 1] = '\0';
   volatile uint8_t *ptr =
-      (uint8_t *)BANK1_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
+      (uint8_t *)BANK3_FILE_ENTRIES_START + numEntries * FILE_ENTRY_SIZE;
   put_bank3(ptr, buf, sizeof(buf));
   numEntries++;
   return true;

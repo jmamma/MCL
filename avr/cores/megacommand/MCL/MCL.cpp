@@ -95,7 +95,7 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(GridChainTrack));
 
   DEBUG_PRINTLN("bank1 end: ");
-  DEBUG_PRINTLN(BANK1_FILE_ENTRIES_END);
+  DEBUG_PRINTLN(BANK3_FILE_ENTRIES_END);
   bool ret = false;
 
   delay(100);
