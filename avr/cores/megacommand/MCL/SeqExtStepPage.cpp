@@ -53,8 +53,9 @@ void SeqExtStepPage::config_encoders() {
     cur_y = fov_y + 1;
     cur_w = timing_mid;
 
-    seq_extparam4.cur = 16;
   }
+
+  seq_extparam4.cur = 16;
   seq_extparam1.old = seq_extparam1.cur;
   seq_extparam2.old = seq_extparam2.cur;
   seq_extparam3.old = seq_extparam3.cur;

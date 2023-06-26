@@ -3,7 +3,6 @@ AVR_DIR=$(cd "../../../../tools/avr"; pwd)
 DEV=/dev/$(ls /dev | grep usb | grep cu | tail -n 1)
 make -j8
 
-if [ $? -eq 0 ]; then
 
   size=$(${AVR_DIR}/bin/avr-size main.elf | tail -n 1 | awk '{ print $1 + $2}')
   limit=$((256 * 1024 - 16 * 1024))
@@ -18,6 +17,7 @@ if [ $? -eq 0 ]; then
   echo RAM_USED: $ram_used
   echo RAM_FREE: $ram_free
 
+if [ $? -eq 0 ]; then
   ${AVR_DIR}/bin/avr-nm main.elf -Crtd --size-sort | grep -i ' [dbv] ' | sort
   #avrdude -c atmelice_isp -p m2560 -D -Uflash:w:./main.hex  -B 1
   ${AVR_DIR}/bin/avrdude -C${AVR_DIR}/etc/avrdude.conf -V -patmega2560 -c arduino -P${DEV} -b115200 -D -Uflash:w:./main.hex

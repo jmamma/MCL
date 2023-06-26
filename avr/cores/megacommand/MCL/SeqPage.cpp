@@ -208,7 +208,6 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     }
     MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
     midi_device = dev;
-    midi_device = dev;
     select_track(dev, track);
     opt_trackid = last_ext_track + 1;
     opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
@@ -240,9 +239,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_ext_track = min(track, NUM_EXT_TRACKS - 1);
   }
 #endif
-  if (GUI.currentPage()) {
-    GUI.currentPage()->config();
-  }
+  config_encoders();
 }
 
 bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
@@ -252,6 +249,11 @@ bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
   mute_mask = 0;
 
   uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+
+  //Hack to display last_ext_track
+  if (offset > 0 && !is_md_device) {
+    SET_BIT16(mute_mask, last_ext_track);
+  }
 
   for (uint8_t n = 0; n < len; n++) {
 
