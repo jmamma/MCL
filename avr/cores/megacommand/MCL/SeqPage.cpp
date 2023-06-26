@@ -102,9 +102,13 @@ void SeqPage::init() {
   disable_record();
   page_count = 4;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
+  config_encoders();
   seqpage_midi_events.setup_callbacks();
+
   oled_display.clearDisplay();
+
   toggle_device = true;
+
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
