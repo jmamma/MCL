@@ -110,7 +110,6 @@ void SeqPage::init() {
   toggle_device = true;
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);

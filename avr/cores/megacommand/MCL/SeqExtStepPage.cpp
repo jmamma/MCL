@@ -83,7 +83,6 @@ void SeqExtStepPage::init() {
 
   // Common menu entries
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
