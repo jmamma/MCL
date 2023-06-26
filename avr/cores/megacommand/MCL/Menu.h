@@ -5,7 +5,6 @@
 #define MAX_MENU_ITEMS 16
 typedef void (*menu_function_t)();
 
-extern const PageIndex menu_target_pages[] PROGMEM;
 extern const menu_function_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 

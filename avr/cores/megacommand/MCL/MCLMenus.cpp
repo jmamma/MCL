@@ -28,43 +28,6 @@ uint8_t opt_import_count = 16;
 
 void new_proj_handler() { proj.new_project_prompt(); }
 
-const PageIndex menu_target_pages[] PROGMEM = {
-    255,
-
-    // 1 - load_proj_page
-    LOAD_PROJ_PAGE,
-    255,
-    // CONVERT_PROJ_PAGE,
-    MIDI_CONFIG_PAGE,
-    MD_CONFIG_PAGE,
-    CHAIN_CONFIG_PAGE,
-    AUX_CONFIG_PAGE,
-
-    // 7
-    MCL_CONFIG_PAGE,
-
-    // 8 - ram_config_page
-    RAM_CONFIG_PAGE,
-
-    // 9
-    POLY_PAGE,
-    // 10
-    ARP_PAGE,
-    // 11
-    MD_IMPORT_PAGE,
-    // 12
-    MIDIPORT_MENU_PAGE,
-    // 13
-    MIDIPROGRAM_MENU_PAGE,
-    // 14
-    MIDICLOCK_MENU_PAGE,
-    // 15
-    MIDIROUTE_MENU_PAGE,
-    // 16
-    MIDIMACHINEDRUM_MENU_PAGE,
-    // 17
-    SOUND_BROWSER
-};
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 

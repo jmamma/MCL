@@ -60,7 +60,7 @@ const char* MenuBase::get_item_name(uint8_t item_n) {
 
 PageIndex MenuBase::get_page_callback(uint8_t item_n) {
   auto *item = get_item(item_n);
-  return (PageIndex)pgm_read_word(menu_target_pages + item->page_callback_id);
+  return (PageIndex) item->page_callback_id;
 }
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
