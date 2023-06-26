@@ -1,7 +1,7 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef SOUNDBROWSERPAGE_H__
-#define SOUNDBROWSERPAGE_H__
+#ifndef SAMPLEBROWSERPAGE_H__
+#define SAMPLEBROWSERPAGE_H__
 
 #include "FileBrowserPage.h"
 #include "MidiSysex.h"
@@ -31,7 +31,7 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   virtual void on_cancel();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  void draw_scrollbar(uint8_t x_offset);
+
   void init(uint8_t show_samplemgr_);
   virtual void init() { init(false); }
   void setup();
@@ -47,4 +47,4 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
 
 extern SampleBrowserPage sample_browser;
 
-#endif /* SOUNDBROWSERPAGE_H__ */
+#endif /* SAMPLEBROWSERPAGE_H__ */

@@ -75,7 +75,8 @@ static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &midiprogram_menu_page,    // Index: 35
       &midiclock_menu_page,      // Index: 36
       &midiroute_menu_page,      // Index: 37
-      &midimachinedrum_menu_page // Index: 38
+      &midimachinedrum_menu_page,// Index: 38
+      &sound_browser             // Index: 39
 };
 
 void MCL::setup() {
@@ -249,7 +250,9 @@ bool mcl_handleEvent(gui_event_t *event) {
           mcl.currentPage() != SEQ_PTC_PAGE &&
           mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
           seq_step_page.prepare = true;
-          seq_step_page.last_page = mcl.currentPage();
+          if (mcl.currentPage() != SOUND_BROWSER && mcl.currentPage() != ARP_PAGE && mcl.currentPage() != POLY_PAGE) {
+            seq_step_page.last_page = mcl.currentPage();
+          }
           mcl.setPage(SEQ_STEP_PAGE);
         } else {
           if (seq_step_page.recording) {

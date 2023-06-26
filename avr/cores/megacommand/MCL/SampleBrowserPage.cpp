@@ -1,5 +1,4 @@
 #include "MCL_impl.h"
-#include "ResourceManager.h"
 
 const char *c_wav_root = "/Samples/WAV";
 const char *c_syx_root = "/Samples/SYX";
@@ -85,6 +84,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   file_types.reset();
   file_types.add(c_wav_suffix);
   file_types.add(c_syx_suffix);
+  strcpy(str_save, "[ RECV ]");
 
   trig_interface.off();
   filemenu_active = false;
@@ -112,8 +112,6 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
     query_filesystem();
   }
 
-  R.Clear();
-  R.use_machine_names_short();
 }
 
 // send current selected sample file to slot

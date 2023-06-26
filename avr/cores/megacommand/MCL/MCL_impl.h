@@ -34,6 +34,7 @@
 #include "PolyPage.h"
 
 #ifdef SOUND_PAGE
+#include "SoundBrowserPage.h"
 #include "SampleBrowserPage.h"
 #endif
 

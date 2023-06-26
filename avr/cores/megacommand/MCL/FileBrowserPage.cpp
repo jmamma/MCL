@@ -5,6 +5,7 @@ File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
 char FileBrowserPage::title[12];
+char FileBrowserPage::str_save[12];
 char FileBrowserPage::focus_match[14];
 uint8_t FileBrowserPage::cur_file = 0;
 
@@ -103,7 +104,7 @@ void FileBrowserPage::query_filesystem() {
   cur_file = 255;
 
   if (show_save) {
-    add_entry("[ RECV ]");
+    add_entry(&str_save[0]);
   }
   // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
   // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);

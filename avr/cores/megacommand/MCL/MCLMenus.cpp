@@ -61,7 +61,9 @@ const PageIndex menu_target_pages[] PROGMEM = {
     // 15
     MIDIROUTE_MENU_PAGE,
     // 16
-    MIDIMACHINEDRUM_MENU_PAGE
+    MIDIMACHINEDRUM_MENU_PAGE,
+    // 17
+    SOUND_BROWSER
 };
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,

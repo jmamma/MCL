@@ -73,13 +73,14 @@ enum PageIndex {
     MIDIPROGRAM_MENU_PAGE,    // Index: 35
     MIDICLOCK_MENU_PAGE,      // Index: 36
     MIDIROUTE_MENU_PAGE,      // Index: 37
-    MIDIMACHINEDRUM_MENU_PAGE // Index: 38
-  };
+    MIDIMACHINEDRUM_MENU_PAGE,// Index: 38
+    SOUND_BROWSER             // Index: 39
+};
 
 
 class MCL {
 public:
-  static constexpr uint8_t NUM_PAGES = 39;
+  static constexpr uint8_t NUM_PAGES = 40;
 
   static LightPage *const pages_table[NUM_PAGES] PROGMEM;
 

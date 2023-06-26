@@ -314,10 +314,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_step_menu_layout = 96;
   union {
     menu_t<seq_menu_page_N> seq_menu_layout[0];
-    char zz__seq_menu_layout[453];
+    char zz__seq_menu_layout[474];
   };
-  static constexpr size_t countof_seq_menu_layout = 453 / sizeof(menu_t<seq_menu_page_N>);
-  static constexpr size_t sizeofof_seq_menu_layout = 453;
+  static constexpr size_t countof_seq_menu_layout = 474 / sizeof(menu_t<seq_menu_page_N>);
+  static constexpr size_t sizeofof_seq_menu_layout = 474;
   union {
     menu_t<file_menu_page_N> file_menu_layout[0];
     char zz__file_menu_layout[159];
@@ -408,7 +408,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 96 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 96;
-  static constexpr size_t __total_size = 2139;
+  static constexpr size_t __total_size = 2160;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

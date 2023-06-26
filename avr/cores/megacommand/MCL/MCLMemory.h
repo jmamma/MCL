@@ -100,9 +100,9 @@ constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK
 constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
 
 // 512x file entries (16 bytes each), stored in Bank3
-constexpr size_t NUM_FILE_ENTRIES = 256;
-constexpr size_t FILE_ENTRY_SIZE = 32;
+constexpr size_t NUM_FILE_ENTRIES = 408;
+constexpr size_t FILE_ENTRY_SIZE = 20;
 constexpr size_t BANK3_FILE_ENTRIES_START = 0x0000;
-constexpr size_t BANK3_FILE_ENTRIES_END = 0x6000;
+constexpr size_t BANK3_FILE_ENTRIES_END = 0x2000;
 
 // At 0xCAF4

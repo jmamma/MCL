@@ -82,6 +82,9 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
+  if (midi_device == &MD) {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
+  }
   cc_link_enable = true;
   scale_padding = false;
   ptc_param_len.handler = pattern_len_handler;
