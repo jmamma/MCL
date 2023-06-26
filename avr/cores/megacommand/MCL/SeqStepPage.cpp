@@ -6,16 +6,15 @@
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
-  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
-  seq_param3.old = seq_param3.cur;
+
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
-  seq_param4.cur = 0;
-  seq_param4.old = 0;
   if (tuning) {
     seq_param4.max = tuning->len - 1 + tuning->base;
   } else {
     seq_param4.max = 1;
   }
+  seq_param4.cur = 0;
+  seq_param4.old = 0;
   // config info labels
   const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
   const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
@@ -312,7 +311,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (show_seq_menu) {
-       opt_trackid = track + 1; 
+       opt_trackid = track + 1;
        note_interface.ignoreNextEvent(track);
        select_track(device, track);
        seq_menu_page.select_item(0);
