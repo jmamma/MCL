@@ -15,7 +15,6 @@ void SampleBrowserPage::setup() {
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
   sysex = &(Midi.midiSysex);
-  show_samplemgr = false;
   FileBrowserPage::setup();
   _cd(c_wav_root);
   position.reset();
@@ -81,7 +80,7 @@ end:
   oled_display.display();
 }
 
-void SampleBrowserPage::init() {
+void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   FileBrowserPage::selection_change = true;
   file_types.reset();
   file_types.add(c_wav_suffix);
@@ -91,6 +90,7 @@ void SampleBrowserPage::init() {
   filemenu_active = false;
   select_dirs = false;
   show_overwrite = false;
+  show_samplemgr = show_samplemgr_;
 
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
@@ -189,14 +189,12 @@ void SampleBrowserPage::recv_wav(int slot, bool silent) {
 void SampleBrowserPage::on_new() {
   if (!show_samplemgr) {
     pending_action = PA_NEW;
-    show_samplemgr = true;
     show_ram_slots = true;
-    init();
+    init(true);
   } else {
     // shouldn't happen.
     // show_save = false for samplemgr.
-    show_samplemgr = false;
-    init();
+    init(false);
   }
 }
 
@@ -204,7 +202,7 @@ void SampleBrowserPage::on_cancel() {
   pending_action = 0;
   if (show_samplemgr) {
     show_samplemgr = false;
-//    init();
+    //init(false);
   } else {
     // TODO cd .. ?
     _cd_up();
@@ -214,10 +212,9 @@ void SampleBrowserPage::on_cancel() {
 void SampleBrowserPage::on_select(const char *__) {
   if (!show_samplemgr) {
     pending_action = PA_SELECT;
-    show_samplemgr = true;
     show_ram_slots = false;
     DEBUG_PRINTLN("on select");
-    init();
+    init(true);
   } else {
     auto slot = encoders[1]->cur;
     switch (pending_action) {
@@ -229,8 +226,7 @@ void SampleBrowserPage::on_select(const char *__) {
       break;
     }
     pending_action = 0;
-    show_samplemgr = false;
-    init();
+    init(false);
   }
 }
 
@@ -303,9 +299,8 @@ bool SampleBrowserPage::_handle_filemenu() {
   }
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_RECVALL:
-    show_samplemgr = true;
     show_ram_slots = true;
-    init();
+    init(true);
     if (numEntries == 0) {
       gfx.alert("NON", "UW");
       goto end;
@@ -325,9 +320,8 @@ bool SampleBrowserPage::_handle_filemenu() {
       }
     }
   end:
-    show_samplemgr = false;
     show_ram_slots = false;
-    init();
+    init(false);
     return true;
   case FM_SENDALL:
     if (!mcl_gui.wait_for_confirm("Send all", "Overwrite?")) {

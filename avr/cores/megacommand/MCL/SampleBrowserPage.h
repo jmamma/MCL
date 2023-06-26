@@ -32,7 +32,8 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   void draw_scrollbar(uint8_t x_offset);
-  void init();
+  void init(uint8_t show_samplemgr_);
+  virtual void init() { init(false); }
   void setup();
   void send_sample(int slot, char *newname = nullptr, bool silent = false);
   void recv_wav(int slot, bool silent = false);

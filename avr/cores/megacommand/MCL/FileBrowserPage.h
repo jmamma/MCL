@@ -91,11 +91,10 @@ public:
   static File file;
   static int numEntries;
 
-  static char lwd[128];
+  char lwd[128];
   static char title[12];
 
-  static uint8_t cur_col;
-  static uint8_t cur_row;
+  uint8_t cur_row;
   static uint8_t cur_file;
 
   // configuration, should be set before calling base init()
@@ -117,7 +116,7 @@ public:
   static char focus_match[PRJ_NAME_LEN];
   static FileBrowserFileTypes file_types;
 
-  static FileSystemPosition position;
+  FileSystemPosition position;
 
   static bool selection_change;
   static uint16_t selection_change_clock;

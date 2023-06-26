@@ -4,11 +4,8 @@
 File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
-char FileBrowserPage::lwd[128];
 char FileBrowserPage::title[12];
 char FileBrowserPage::focus_match[14];
-uint8_t FileBrowserPage::cur_col = 0;
-uint8_t FileBrowserPage::cur_row = 0;
 uint8_t FileBrowserPage::cur_file = 0;
 
 bool FileBrowserPage::draw_dirs = false;
@@ -26,8 +23,6 @@ bool FileBrowserPage::filemenu_active = false;
 
 bool FileBrowserPage::call_handle_filemenu = false;
 
-FileSystemPosition FileBrowserPage::position;
-
 FileBrowserFileTypes FileBrowserPage::file_types;
 
 bool FileBrowserPage::selection_change = false;
@@ -36,7 +31,7 @@ uint16_t FileBrowserPage::selection_change_clock = 0;
 
 void FileBrowserPage::cleanup() {
   // always call setup() when entering this page.
-  this->isSetup = false;
+//  this->isSetup = false;
 }
 
 void FileBrowserPage::setup() {
@@ -46,6 +41,9 @@ void FileBrowserPage::setup() {
   strcpy(title, "Files");
   SD.chdir();
   strcpy(lwd, "/");
+
+  encoders[1]->cur = 1;
+  encoders[2]->cur = 1;
 }
 
 void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
@@ -103,10 +101,6 @@ void FileBrowserPage::query_filesystem() {
   d.rewind();
   numEntries = 0;
   cur_file = 255;
-
-  //  cur_row = 0;
-  encoders[1]->cur = 1;
-  encoders[2]->cur = 1;
 
   if (show_save) {
     add_entry("[ RECV ]");
@@ -357,6 +351,8 @@ bool FileBrowserPage::_cd(const char *child) {
   uint16_t pos = encoders[1]->getValue();
   uint8_t row = cur_row;
   init();
+  encoders[1]->cur = 1;
+  encoders[2]->cur = 1;
   position.push(pos, row);
   return true;
 }
