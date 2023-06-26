@@ -157,7 +157,7 @@ public:
   virtual void setup();
   virtual void init();
   virtual void cleanup();
-  virtual void config_encoders() = 0;
+  virtual void config_encoders();
   static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;

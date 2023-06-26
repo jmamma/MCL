@@ -36,6 +36,7 @@ void SeqStepPage::config() {
 }
 
 void SeqStepPage::config_encoders() {
+  SeqPage::config_encoders();
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   seq_param3.old = seq_param3.cur;

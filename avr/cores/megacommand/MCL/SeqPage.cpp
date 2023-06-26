@@ -96,6 +96,11 @@ void SeqPage::disable_record() {
   clearLed2();
 }
 
+void SeqPage::config_encoders() {
+  seq_menu_entry_encoder.cur = 0;
+  seq_menu_page.cur_row = 0;
+}
+
 void SeqPage::init() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
@@ -236,6 +241,9 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   else {
     DEBUG_PRINTLN("setting ext track");
     last_ext_track = min(track, NUM_EXT_TRACKS - 1);
+    auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+    MD.sync_seqtrack(active_track.length, active_track.speed,
+                     active_track.step_count);
   }
 #endif
   config_encoders();

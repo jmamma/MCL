@@ -109,6 +109,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
     show_filemenu = true;
     show_new_folder = true;
     show_parent = true;
+    SD.chdir(lwd);
     query_filesystem();
   }
 

@@ -50,6 +50,7 @@ void SeqPtcPage::cleanup() {
   params_reset();
 }
 void SeqPtcPage::config_encoders() {
+  SeqPage::config_encoders();
   ptc_param_len.min = 1;
   bool show_chan = true;
   if (midi_device == &MD) {

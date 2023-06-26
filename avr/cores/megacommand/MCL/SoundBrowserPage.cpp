@@ -26,6 +26,7 @@ void SoundBrowserPage::init() {
   show_filemenu = true;
   show_new_folder = true;
   show_parent = true;
+  SD.chdir(lwd);
   query_filesystem();
 
   strcpy(str_save, "[ SAVE ]");
@@ -91,7 +92,7 @@ void SoundBrowserPage::on_new() {
 }
 
 void SoundBrowserPage::on_cancel() {
-  if (strcmp(lwd, "/") == 0) { mcl.setPage(SEQ_STEP_PAGE); return; }
+  if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
   _cd_up();
 }
 

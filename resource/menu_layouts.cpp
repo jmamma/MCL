@@ -197,7 +197,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"CC:",         0, 133,                 5,                   17, 255,  0,  55},
         {"SLIDE:",      0, 2,                   2,                   18, 255,  0,  25},
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  ARP_PAGE, 0,  0},
-        {"TRANSPOSE:",  0, 12,                  0,                   19, 255,  0,  0},
+        {"KEY:",        0, 12,                  12,                  19, 255,  0,  104},
         {"VEL:",        0, 128,                 0,                   20, 255,  0,  0},
         {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, 255,  0,  60},
         {"SPEED:",      0, 7,                   7,                   22, 255,  5,  41},
