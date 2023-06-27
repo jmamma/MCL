@@ -17,7 +17,7 @@
 #include "Fonts/TomThumb.h"
 
 #define VERSION 4050
-#define VERSION_STR "S4.50"
+#define VERSION_STR "T4.50"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -74,13 +74,14 @@ enum PageIndex {
     MIDICLOCK_MENU_PAGE,      // Index: 36
     MIDIROUTE_MENU_PAGE,      // Index: 37
     MIDIMACHINEDRUM_MENU_PAGE,// Index: 38
-    SOUND_BROWSER             // Index: 39
+    SOUND_BROWSER,            // Index: 39
+    PERF_PAGE_0               // Index: 40
 };
 
 
 class MCL {
 public:
-  static constexpr uint8_t NUM_PAGES = 40;
+  static constexpr uint8_t NUM_PAGES = 41;
 
   static LightPage *const pages_table[NUM_PAGES] PROGMEM;
 

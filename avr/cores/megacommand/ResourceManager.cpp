@@ -72,6 +72,10 @@ void ResourceManager::restore_page_entry_deps() {
   R.page_entries->Entries[idx].Page = WD_PAGE_0;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
   ++idx;
+  R.page_entries->Entries[idx].Page = PERF_PAGE_0;
+  R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
+  ++idx;
+
 #endif
 #ifdef LOUDNESS_PAGE
   R.page_entries->Entries[idx].Page = LOUDNESS_PAGE;

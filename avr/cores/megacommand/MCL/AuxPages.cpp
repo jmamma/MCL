@@ -1,17 +1,22 @@
 #include "MCL_impl.h"
 
-MCLEncoder mixer_param1(0, 127);
-MCLEncoder mixer_param2(0, 127);
-MCLEncoder mixer_param3(0, 127);
-MCLEncoder mixer_param4(0, 127);
+MCLEncoder mixer_param1;
+MCLEncoder mixer_param2;
+MCLEncoder mixer_param3;
+MCLEncoder mixer_param4;
 
 MCLEncoder route_param1(2, 5);
 MCLExpEncoder route_param2(1, 64);
 
-MCLEncoder fx_param1(0, 127);
-MCLEncoder fx_param2(0, 127);
-MCLEncoder fx_param3(0, 127);
-MCLEncoder fx_param4(0, 127);
+MCLEncoder fx_param1;
+MCLEncoder fx_param2;
+MCLEncoder fx_param3;
+MCLEncoder fx_param4;
+
+PerfEncoder perf_param1;
+PerfEncoder perf_param2;
+PerfEncoder perf_param3;
+PerfEncoder perf_param4;
 
 MixerPage mixer_page(&mixer_param1, &mixer_param2, &mixer_param3,
                      &mixer_param4);
@@ -45,4 +50,6 @@ FXPage fx_page_b(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
                  (fx_param_t*) &fx_reverb_params, 8, "REVERB", 1);
 
 LFOPage lfo_page(&(mcl_seq.lfo_tracks[0]), &fx_param1, &fx_param2, &fx_param3, &fx_param4);
+
+PerfPage perf_page(&perf_param1, &perf_param2, &perf_param3, &perf_param4);
 

@@ -14,6 +14,7 @@ PageSelectEntry Entries[] = {
 #endif
 #ifdef WAV_DESIGNER
     {"WAV DESIGNER", WD_PAGE_0, 9, 2, 24, 19, nullptr},
+    {"PERF",       PERF_PAGE_0, 10, 2, 24, 19, nullptr},
 #endif
     {"DELAY", FX_PAGE_A, 12, 3, 24, 25, nullptr},
     {"REVERB", FX_PAGE_B, 13, 3, 24, 25, nullptr},
