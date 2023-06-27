@@ -242,7 +242,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     DEBUG_PRINTLN("setting ext track");
     last_ext_track = min(track, NUM_EXT_TRACKS - 1);
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-    MD.sync_seqtrack(active_track.length, active_track.speed,
+    MD.sync_seqtrack(min(active_track.length,64), active_track.speed,
                      active_track.step_count);
   }
 #endif
