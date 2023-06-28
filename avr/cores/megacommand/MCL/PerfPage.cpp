@@ -1,6 +1,10 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+#define LEARN_MIN 1
+#define LEARN_MAX 2
+#define LEARN_OFF 0
+
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
@@ -13,25 +17,24 @@ void PerfPage::setup() {
 void PerfPage::init() {
   DEBUG_PRINT_FN();
   PerfPageParent::init();
+  trig_interface.on();
+  MD.set_trigleds(0b0011001100110011, TRIGLED_OVERLAY);
 }
 
 void PerfPage::cleanup() { PerfPageParent::cleanup(); }
 
 void PerfPage::config_encoders() {
-  if (page_mode < PERF_DESTINATION) {
-    encoders[0] = &fx_param1;
     encoders[1] = &fx_param2;
     encoders[2] = &fx_param3;
     encoders[3] = &fx_param4;
 
+  if (page_mode < PERF_DESTINATION) {
+    encoders[0] = &fx_param1;
     uint8_t c = page_mode;
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
 
     encoders[0]->cur = p->dest;
-    ((PerfEncoder *)encoders[0])->max = NUM_MD_TRACKS + 4 + 16;
-
     encoders[1]->cur = p->param;
-    ((PerfEncoder *)encoders[1])->max = 23;
 
     encoders[2]->cur = p->min;
     ((PerfEncoder *)encoders[2])->max = 127;
@@ -44,10 +47,18 @@ void PerfPage::config_encoders() {
 
   if (page_mode == PERF_DESTINATION) {
     encoders[0] = perf_encoders[0];
-    encoders[1] = perf_encoders[1];
-    encoders[2] = perf_encoders[2];
-    encoders[3] = perf_encoders[3];
+    ((PerfEncoder *)encoders[0])->max = 127;
+    config_encoder_range(1,encoders);
+
+    PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
+    encoders[1]->cur = p->dest;
+    encoders[2]->cur = p->param;
+
+    encoders[3]->cur = p->max;
+    ((PerfEncoder *)encoders[3])->max = 127;
+
   }
+
   //  loop();
   PerfPageParent::config_encoders_timeout(encoders);
 }
@@ -94,10 +105,12 @@ void PerfPage::display() {
     info2 = "PER>DST";
   }
   if (page_mode == PERF_DESTINATION) {
-    mcl_gui.draw_knob(0, encoders[0], "A");
-    mcl_gui.draw_knob(1, encoders[1], "B");
-    mcl_gui.draw_knob(2, encoders[2], "C");
-    mcl_gui.draw_knob(3, encoders[3], "D");
+    char *str = "A ";
+    str[1] = '1' + perf_id;
+    mcl_gui.draw_knob(0, encoders[0], str);
+    draw_dest(1, encoders[1]->cur);
+    draw_param(2, encoders[1]->cur, encoders[2]->cur);
+    mcl_gui.draw_knob(3, encoders[3], "MIN");
     info2 = "PER>MOD";
   }
 
@@ -105,6 +118,22 @@ void PerfPage::display() {
 
   oled_display.display();
   oled_display.setFont(oldfont);
+}
+
+void PerfPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
+  if (learn) {
+    PerfData *d = &perf_encoders[perf_id]->perf_data;
+    uint8_t n = d->add_param(track, param, learn, value);
+    if (n == page_mode) { config_encoders(); }
+  }
+
+  //MIDI LEARN current mode;
+  uint8_t a = page_mode == PERF_DESTINATION ? 1 : 0;
+    if (encoders[a]->cur == 0 && encoders[a + 1]->cur > 1) {
+      encoders[a]->cur = track + 1;
+      encoders[a + 1]->cur = param;
+    }
+
 }
 
 void PerfPage::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -115,45 +144,21 @@ void PerfPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
   // If external keyboard controlling MD pitch, send parameter updates
   // to all polyphonic tracks
-  uint8_t param_true = 0;
 
   MD.parseCC(channel, param, &track, &track_param);
   if (track > 15) {
     return;
   }
-  if (learn) {
-    encoders[0]->cur = track + 1;
-    encoders[1]->cur = track_param;
-    if (value < encoders[2]->cur) {
-      encoders[2]->cur = value;
-    }
-    if (value > encoders[3]->cur) {
-      encoders[3]->cur = value;
-    }
-  }
-  if (page_mode < PERF_DESTINATION) {
-    if (encoders[0]->cur == 0 && encoders[1]->cur > 1) {
-      encoders[0]->cur = track + 1;
-      encoders[1]->cur = track_param;
-    }
-  }
+
+  learn_param(track, track_param, value);
+
 }
 
 void PerfPage::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-  if (learn) {
-    encoders[0]->cur = channel + 1 + 16 + 4;
-    encoders[1]->cur = param;
-    ((PerfEncoder *)encoders[1])->max = 127;
-    if (value < encoders[2]->cur) {
-      encoders[2]->cur = value;
-    }
-    if (value > encoders[3]->cur) {
-      encoders[3]->cur = value;
-    }
-  }
+  learn_param(channel + 16 + 4, param, value);
 }
 
 
@@ -182,6 +187,29 @@ void PerfPage::remove_callbacks() {
   midi_state = false;
 }
 
+void PerfPage::send_locks(uint8_t mode) {
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+  uint8_t params[24];
+  memset(params, 255, sizeof(params));
+
+  for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+    PerfParam *p = &perf_encoders[perf_id]->perf_data.params[n];
+    uint8_t dest = p->dest;
+    uint8_t param = p->param;
+
+    if (param >= 24) { continue; }
+
+    if (dest == last_md_track + 1) {
+      if (mode == LEARN_MIN) {
+        params[param] = p->min;
+      }
+      if (mode == LEARN_MAX) {
+        params[param] = p->max;
+      }
+    }
+  }
+  MD.activate_encoder_interface(params);
+}
 
 bool PerfPage::handleEvent(gui_event_t *event) {
   if (PerfPageParent::handleEvent(event)) { return true; }
@@ -192,10 +220,28 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     auto device = midi_active_peering.get_device(port);
 
     uint8_t track = event->source - 128;
-    uint8_t page_select = 0;
-    uint8_t step = track + (page_select * 16);
+
+    if (!learn) { return true; }
+
+
     if (event->mask == EVENT_BUTTON_PRESSED) {
+         perf_id = track / 4;
+         uint8_t b = track - (perf_id) * 4;
+         if (b == 2) {
+            learn = LEARN_MIN;
+         }
+         if (b == 3) {
+            learn = LEARN_MAX;
+         }
+         send_locks(learn);
     }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+       if (note_interface.notes_all_off()){
+         learn = LEARN_OFF;
+       }
+    }
+
+
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {

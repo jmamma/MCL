@@ -233,11 +233,11 @@ void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
   // If external keyboard controlling MD pitch, send parameter updates
   // to all polyphonic tracks
-  uint8_t param_true = 0;
 
   MD.parseCC(channel, param, &track, &track_param);
   if (track > 15) { return; }
 
+  //Midi LEARN
   if (page_mode == LFO_DESTINATION) {
     if (encoders[0]->cur == 0 && encoders[1]->cur > 1) {
       encoders[0]->cur = track + 1;

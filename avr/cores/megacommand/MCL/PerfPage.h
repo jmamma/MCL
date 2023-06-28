@@ -29,8 +29,8 @@ public:
 
   bool handleEvent(gui_event_t *event);
 
-  void draw_dest(uint8_t knob, uint8_t value);
-  void draw_param(uint8_t knob, uint8_t  dest, uint8_t param);
+  void learn_param(uint8_t track, uint8_t param, uint8_t value);
+
   void display();
   void setup();
 
@@ -39,6 +39,8 @@ public:
   void cleanup();
 
   virtual void config_encoders();
+
+  void send_locks(uint8_t mode);
 
   void setup_callbacks();
   void remove_callbacks();

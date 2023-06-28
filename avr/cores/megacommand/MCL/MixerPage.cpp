@@ -56,11 +56,11 @@ void MixerPage::init() {
   }
   MD.set_key_repeat(0);
   trig_interface.on();
+  MD.set_trigleds(0, TRIGLED_OVERLAY);
   preview_mute_set = 255;
   bool switch_tracks = false;
   midi_events.setup_callbacks();
   oled_display.clearDisplay();
-  MD.set_trigleds(0, TRIGLED_OVERLAY);
   oled_draw_mutes();
   set_display_mode(MODEL_LEVEL);
   first_track = 255;
