@@ -10,7 +10,6 @@ void PerfPage::setup() {
   perf_encoders[3] = &perf_param4;
 }
 
-
 void PerfPage::init() {
   DEBUG_PRINT_FN();
   oled_display.clearDisplay();
@@ -21,9 +20,7 @@ void PerfPage::init() {
   setup_callbacks();
 }
 
-void PerfPage::cleanup() {
-  remove_callbacks();
-}
+void PerfPage::cleanup() { remove_callbacks(); }
 
 void PerfPage::config_encoders() {
   if (page_mode < PERF_DESTINATION) {
@@ -46,15 +43,17 @@ void PerfPage::config_encoders() {
 
     encoders[3]->cur = p->max;
     ((PerfEncoder *)encoders[3])->max = 127;
-
-    if (encoders[0]->cur < NUM_MD_TRACKS) {
+    if (encoders[0]->cur < NUM_MD_TRACKS + 4) {
       ((PerfEncoder *)encoders[1])->max = 7;
     }
 
-    if (encoders[0]->cur < NUM_MD_TRACKS + 4) {
+    if (encoders[0]->cur < NUM_MD_TRACKS + 4 + 16) {
       ((PerfEncoder *)encoders[1])->max = 127;
     }
- }
+    else {
+    ((PerfEncoder *)encoders[1])->max = 23;
+    }
+  }
 
   if (page_mode == PERF_DESTINATION) {
     encoders[0] = perf_encoders[0];
@@ -70,39 +69,47 @@ void PerfPage::config_encoders() {
         slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
 }
-
 void PerfPage::loop() {
 
   if (page_mode < PERF_DESTINATION) {
-       if (encoders[0]->hasChanged() && encoders[0]->cur == 0) {
-         encoders[1]->cur = 0;
-       }
-       uint8_t c = page_mode;
-       PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
-       p->dest = encoders[0]->cur;
-       p->param = encoders[1]->cur;
-       p->min = encoders[2]->cur;
-       p->max = encoders[3]->cur;
+    if (encoders[0]->hasChanged() && encoders[0]->cur == 0) {
+      encoders[1]->cur = 0;
+    }
+    uint8_t c = page_mode;
+    PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
+    p->dest = encoders[0]->cur;
+    p->param = encoders[1]->cur;
+    p->min = encoders[2]->cur;
+    p->max = encoders[3]->cur;
   }
+
+    if (encoders[0]->cur < NUM_MD_TRACKS + 4) {
+      ((PerfEncoder *)encoders[1])->max = 7;
+    }
+
+    if (encoders[0]->cur < NUM_MD_TRACKS + 4 + 16) {
+      ((PerfEncoder *)encoders[1])->max = 127;
+    }
+    else {
+    ((PerfEncoder *)encoders[1])->max = 23;
+    }
 }
 
 void PerfPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
 
   char myName[4] = "-- ";
 
-  const char* modelname = NULL;
+  const char *modelname = NULL;
   if (dest == 0) {
     if (param > 1) {
-      strcpy(myName,"LER");
+      strcpy(myName, "LER");
     }
-  }
-  else {
+  } else {
     if (dest < 17) {
       modelname = model_param_name(MD.kit.get_model(dest - 1), param);
     } else if (dest < 20) {
       modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
-    }
-    else {
+    } else {
       mcl_gui.put_value_at(param, myName);
     }
     if (modelname != NULL) {
@@ -117,29 +124,28 @@ void PerfPage::draw_dest(uint8_t knob, uint8_t value) {
   if (value > 20) {
     strcpy(K, "MI ");
     K[2] = '0' + value - 20 + 1;
-  }
-  else {
-  switch (value) {
-  case 0:
-    strcpy(K, "--");
-    break;
-  case 17:
-    strcpy(K, "ECH");
-    break;
-  case 18:
-    strcpy(K, "REV");
-    break;
-  case 19:
-    strcpy(K, "EQ");
-    break;
-  case 20:
-    strcpy(K, "DYN");
-    break;
-  default:
-    //  K[0] = 'T';
-    mcl_gui.put_value_at(value, K);
-    break;
-  }
+  } else {
+    switch (value) {
+    case 0:
+      strcpy(K, "--");
+      break;
+    case 17:
+      strcpy(K, "ECH");
+      break;
+    case 18:
+      strcpy(K, "REV");
+      break;
+    case 19:
+      strcpy(K, "EQ");
+      break;
+    case 20:
+      strcpy(K, "DYN");
+      break;
+    default:
+      //  K[0] = 'T';
+      mcl_gui.put_value_at(value, K);
+      break;
+    }
   }
   mcl_gui.draw_knob(knob, "DEST", K);
 }
@@ -156,7 +162,7 @@ void PerfPage::display() {
   uint8_t width = 13;
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
-   mcl_gui.draw_knob_frame();
+  mcl_gui.draw_knob_frame();
 
   const char *info1;
   const char *info2;
@@ -193,18 +199,24 @@ void PerfPage::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t param_true = 0;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
+  if (track > 15) {
+    return;
+  }
   if (learn) {
     encoders[0]->cur = track + 1;
     encoders[1]->cur = track_param;
-    if (value < encoders[2]->cur) { encoders[2]->cur = value; }
-    if (value > encoders[3]->cur) { encoders[3]->cur = value; }
+    if (value < encoders[2]->cur) {
+      encoders[2]->cur = value;
+    }
+    if (value > encoders[3]->cur) {
+      encoders[3]->cur = value;
+    }
   }
   if (page_mode < PERF_DESTINATION) {
-       if (encoders[0]->cur == 0 && encoders[1]->cur > 1) {
-          encoders[0]->cur = track + 1;
-          encoders[1]->cur = track_param;
-       }
+    if (encoders[0]->cur == 0 && encoders[1]->cur > 1) {
+      encoders[0]->cur = track + 1;
+      encoders[1]->cur = track_param;
+    }
   }
 }
 
@@ -215,11 +227,15 @@ void PerfPage::onControlChangeCallback_Midi2(uint8_t *msg) {
   if (learn) {
     encoders[0]->cur = channel + 1 + 16 + 4;
     encoders[1]->cur = param;
-    if (value < encoders[2]->cur) { encoders[2]->cur = value; }
-    if (value > encoders[3]->cur) { encoders[3]->cur = value; }
+    ((PerfEncoder *)encoders[1])->max = 127;
+    if (value < encoders[2]->cur) {
+      encoders[2]->cur = value;
+    }
+    if (value > encoders[3]->cur) {
+      encoders[3]->cur = value;
+    }
   }
 }
-
 
 void PerfPage::setup_callbacks() {
   if (midi_state) {
@@ -229,7 +245,6 @@ void PerfPage::setup_callbacks() {
       this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi);
   Midi2.addOnControlChangeCallback(
       this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi2);
-
 
   midi_state = true;
 }
@@ -243,7 +258,6 @@ void PerfPage::remove_callbacks() {
       this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi);
   Midi2.removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi2);
-
 
   midi_state = false;
 }
@@ -272,7 +286,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
   */
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     page_mode++;
-    if (page_mode > PERF_DESTINATION) { page_mode = 0; }
+    if (page_mode > PERF_DESTINATION) {
+      page_mode = 0;
+    }
     config_encoders();
   }
 
