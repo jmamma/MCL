@@ -7,6 +7,7 @@
 #include "MCLEncoder.h"
 #include "LFOSeqTrack.h"
 #include "SeqPage.h"
+#include "PerfPageParent.h"
 
 #define NUM_LFO_PAGES 2
 
@@ -16,8 +17,9 @@
 #define IEXP_WAV 3
 #define IRAMP_WAV 4
 #define EXP_WAV 5
-//
-class LFOPage : public SeqPage, MidiCallback {
+
+
+class LFOPage : public SeqPage, PerfPageParent {
 public:
   LFOPage(LFOSeqTrack *lfo_track_, Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)

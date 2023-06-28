@@ -12,15 +12,10 @@ void PerfPage::setup() {
 
 void PerfPage::init() {
   DEBUG_PRINT_FN();
-  oled_display.clearDisplay();
-  oled_display.setFont();
-  config_encoders();
-  R.Clear();
-  R.use_machine_param_names();
-  setup_callbacks();
+  PerfPageParent::init();
 }
 
-void PerfPage::cleanup() { remove_callbacks(); }
+void PerfPage::cleanup() { PerfPageParent::cleanup(); }
 
 void PerfPage::config_encoders() {
   if (page_mode < PERF_DESTINATION) {
@@ -43,16 +38,8 @@ void PerfPage::config_encoders() {
 
     encoders[3]->cur = p->max;
     ((PerfEncoder *)encoders[3])->max = 127;
-    if (encoders[0]->cur < NUM_MD_TRACKS + 4) {
-      ((PerfEncoder *)encoders[1])->max = 7;
-    }
 
-    if (encoders[0]->cur < NUM_MD_TRACKS + 4 + 16) {
-      ((PerfEncoder *)encoders[1])->max = 127;
-    }
-    else {
-    ((PerfEncoder *)encoders[1])->max = 23;
-    }
+    config_encoder_range(0,encoders);
   }
 
   if (page_mode == PERF_DESTINATION) {
@@ -62,13 +49,9 @@ void PerfPage::config_encoders() {
     encoders[3] = perf_encoders[3];
   }
   //  loop();
-
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    encoders[i]->old = encoders[i]->cur;
-    ((LightPage *)this)->encoders_used_clock[i] =
-        slowclock - SHOW_VALUE_TIMEOUT - 1;
-  }
+  PerfPageParent::config_encoders_timeout(encoders);
 }
+
 void PerfPage::loop() {
 
   if (page_mode < PERF_DESTINATION) {
@@ -83,71 +66,7 @@ void PerfPage::loop() {
     p->max = encoders[3]->cur;
   }
 
-    if (encoders[0]->cur < NUM_MD_TRACKS + 4) {
-      ((PerfEncoder *)encoders[1])->max = 7;
-    }
-
-    if (encoders[0]->cur < NUM_MD_TRACKS + 4 + 16) {
-      ((PerfEncoder *)encoders[1])->max = 127;
-    }
-    else {
-    ((PerfEncoder *)encoders[1])->max = 23;
-    }
-}
-
-void PerfPage::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
-
-  char myName[4] = "-- ";
-
-  const char *modelname = NULL;
-  if (dest == 0) {
-    if (param > 1) {
-      strcpy(myName, "LER");
-    }
-  } else {
-    if (dest < 17) {
-      modelname = model_param_name(MD.kit.get_model(dest - 1), param);
-    } else if (dest < 20) {
-      modelname = fx_param_name(MD_FX_ECHO + dest - 17, param);
-    } else {
-      mcl_gui.put_value_at(param, myName);
-    }
-    if (modelname != NULL) {
-      strncpy(myName, modelname, 4);
-    }
-  }
-  mcl_gui.draw_knob(knob, "PAR", myName);
-}
-
-void PerfPage::draw_dest(uint8_t knob, uint8_t value) {
-  char K[4];
-  if (value > 20) {
-    strcpy(K, "MI ");
-    K[2] = '0' + value - 20 + 1;
-  } else {
-    switch (value) {
-    case 0:
-      strcpy(K, "--");
-      break;
-    case 17:
-      strcpy(K, "ECH");
-      break;
-    case 18:
-      strcpy(K, "REV");
-      break;
-    case 19:
-      strcpy(K, "EQ");
-      break;
-    case 20:
-      strcpy(K, "DYN");
-      break;
-    default:
-      //  K[0] = 'T';
-      mcl_gui.put_value_at(value, K);
-      break;
-    }
-  }
-  mcl_gui.draw_knob(knob, "DEST", K);
+   config_encoder_range(0,encoders);
 }
 
 void PerfPage::display() {
@@ -237,6 +156,7 @@ void PerfPage::onControlChangeCallback_Midi2(uint8_t *msg) {
   }
 }
 
+
 void PerfPage::setup_callbacks() {
   if (midi_state) {
     return;
@@ -262,7 +182,10 @@ void PerfPage::remove_callbacks() {
   midi_state = false;
 }
 
+
 bool PerfPage::handleEvent(gui_event_t *event) {
+  if (PerfPageParent::handleEvent(event)) { return true; }
+
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -274,16 +197,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
     }
   }
-  if (event->mask == EVENT_BUTTON_RELEASED) {
-    return true;
-  }
-  /*  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-        EVENT_PRESSED(event, Buttons.ENCODER2) ||
-        EVENT_PRESSED(event, Buttons.ENCODER3) ||
-        EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      mcl.setPage(GRID_PAGE);
-    }
-  */
+
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     page_mode++;
     if (page_mode > PERF_DESTINATION) {
@@ -299,10 +213,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     learn = false;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
 
   return false;
 }

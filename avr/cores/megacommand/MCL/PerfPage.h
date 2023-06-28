@@ -6,12 +6,13 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
+#include "PerfPageParent.h"
 #include "PerfEncoder.h"
 
 #define NUM_PERF_CONTROLS 4
 #define PERF_DESTINATION NUM_PERF_PARAMS
 
-class PerfPage : public LightPage, MidiCallback {
+class PerfPage : public LightPage, PerfPageParent {
 public:
   PerfPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
@@ -36,7 +37,9 @@ public:
   void init();
   void loop();
   void cleanup();
+
   virtual void config_encoders();
+
   void setup_callbacks();
   void remove_callbacks();
 
