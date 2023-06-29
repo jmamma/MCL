@@ -2,8 +2,8 @@
 
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
-#include "WProgram.h"
 #include "PerfData.h"
+#include "WProgram.h"
 
 #define NUM_PERF_PARAMS 8
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
@@ -22,39 +22,58 @@ public:
   PerfParam params[NUM_PERF_PARAMS];
   PerfParam src_param;
 
-  PerfData() { init(); }
+  PerfData() { init_params(); }
+
+  uint8_t find_empty() {
+    uint8_t match = 255;
+    uint8_t empty = 255;
+
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      // Find first empty
+      if (params[a].dest == 0) {
+        return a;
+      }
+      // Update existing, if matches
+    }
+    return 255;
+  }
 
   uint8_t add_param(uint8_t dest, uint8_t param, uint8_t learn, uint8_t value) {
     uint8_t match = 255;
     uint8_t empty = 255;
 
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      //Find first empty
-      if (params[a].dest == 0) { empty = min(a,empty); }
+      // Find first empty
+      if (params[a].dest == 0) {
+        empty = min(a, empty);
+      }
       if (params[a].dest == dest + 1 && params[a].param == param) {
-        //Update existing, if matches
+        // Update existing, if matches
         match = a;
       }
     }
 
     uint8_t b = match;
-    if (b == 255) { b = empty; }
-    if (b == 255) { return 255; }
+    if (b == 255) {
+      b = empty;
+    }
+    if (b == 255) {
+      return 255;
+    }
 
     params[b].dest = dest + 1;
     params[b].param = param;
 
     if (learn == LEARN_MIN) {
       params[b].min = value;
-    }
-    else {
+    } else {
       params[b].max = value;
     }
     return b;
   }
 
   void *data() const { return (void *)&params; }
-  void init() {
+  void init_params() {
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       params[a].dest = 0;
       params[a].param = 0;
