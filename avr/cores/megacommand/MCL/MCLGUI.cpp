@@ -125,9 +125,9 @@ void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text) {
   draw_text_encoder(x, knob_y0, title, text);
 }
 
-void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title) {
+void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title, bool highlight) {
   uint8_t x = knob_x0 + i * knob_w;
-  draw_light_encoder(x + 7, 6, enc, title);
+  draw_light_encoder(x + 7, 6, enc, title,highlight);
 }
 
 static char title_buf[16];
@@ -412,14 +412,13 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
   oled_display.setFont(oldfont);
 }
 
-void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
-                                const char *name) {
+void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder, const char *name, bool highlight) {
   bool show_value = show_encoder_value(encoder);
-  draw_light_encoder(x, y, encoder->cur, name, show_value);
+  draw_light_encoder(x, y, encoder->cur, name, highlight, show_value);
 }
 
 void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
-                                const char *name, bool show_value) {
+                                const char *name, bool highlight, bool show_value) {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
@@ -450,6 +449,7 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
 
   draw_encoder(x, y, value);
 
+  if (highlight) { oled_display.fillRect(x - 2,0,15,20,INVERT); }
   oled_display.setFont(oldfont);
 }
 

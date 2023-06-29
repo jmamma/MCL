@@ -60,9 +60,9 @@ public:
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
                        bool show_value);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
-                          const char *name);
-  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
-                          bool show_value);
+                          const char *name, bool highlight = false);
+  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool highlight = false,
+                          bool show_value = false);
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t *note_mask);
@@ -80,7 +80,7 @@ public:
 
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char *title, const char *text);
-  void draw_knob(uint8_t i, Encoder *enc, const char *name);
+  void draw_knob(uint8_t i, Encoder *enc, const char *name, bool highlight = false);
 
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
