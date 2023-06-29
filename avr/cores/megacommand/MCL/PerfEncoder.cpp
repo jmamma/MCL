@@ -7,7 +7,6 @@
 void PerfEncoder::send_params() {
     for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
        if (perf_data.params[n].dest == 0) { continue; }
-       MidiUartClass *uart = &MidiUart2;
 
        uint8_t dest = perf_data.params[n].dest - 1;
        uint8_t param = perf_data.params[n].param;
@@ -16,12 +15,13 @@ void PerfEncoder::send_params() {
        int8_t range = max - min;
        int16_t q = cur * range;
        uint8_t val = ((int16_t) q / (int16_t) 128) + min;
-       if (dest > NUM_MD_TRACKS + 4) {
+       if (dest >= NUM_MD_TRACKS + 4) {
           uint8_t channel = dest - NUM_MD_TRACKS;
-          uart->sendCC(channel, param, val);
+          MidiUart2.sendCC(channel, param, val);
         }
-       else if (dest > NUM_MD_TRACKS ) {
+       else if (dest >= NUM_MD_TRACKS ) {
           MD.sendFXParam(param, val, MD_FX_ECHO + dest - NUM_MD_TRACKS);
+          setLed2();
        }
        else {
           MD.setTrackParam_inline(dest, param, val);

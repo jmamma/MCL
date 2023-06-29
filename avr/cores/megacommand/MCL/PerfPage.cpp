@@ -28,17 +28,15 @@ void PerfPage::config_encoder_range(uint8_t i) {
  ((PerfEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16;
  ((PerfEncoder *)encoders[i + 1])->min = 0;
 
-
- DEBUG_PRINTLN(encoders[i]->cur);
- DEBUG_PRINTLN(encoders[i + 1]->cur);
-  if (encoders[i]->cur >= 16 + 4) {
-    ((PerfEncoder *)encoders[i + 1])->max = 127;
+  uint8_t dest = encoders[i]->cur - 1;
+  if (dest >= NUM_MD_TRACKS + 4) {
+    ((MCLEncoder *)encoders[i + 1])->max = 127;
   }
-  else if (encoders[i]->cur >= 16) {
-    ((PerfEncoder *)encoders[i + 1])->max = 7;
+  else if (dest >= NUM_MD_TRACKS) {
+    ((MCLEncoder *)encoders[i + 1])->max = 7;
   }
   else {
-     ((PerfEncoder *)encoders[i + 1])->max = 23;
+     ((MCLEncoder *)encoders[i + 1])->max = 23;
   }
 }
 

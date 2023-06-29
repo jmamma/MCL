@@ -41,10 +41,11 @@ void LFOPage::config_encoder_range(uint8_t i) {
 
  ((MCLEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16; 
 
-  if (encoders[i]->cur >= NUM_MD_TRACKS + 4) {
+  uint8_t dest = encoders[i]->cur - 1;
+  if (dest >= NUM_MD_TRACKS + 4) {
     ((MCLEncoder *)encoders[i + 1])->max = 127;
   }
-  else if (encoders[i]->cur >= NUM_MD_TRACKS) {
+  else if (dest >= NUM_MD_TRACKS) {
     ((MCLEncoder *)encoders[i + 1])->max = 7;
   }
   else {
