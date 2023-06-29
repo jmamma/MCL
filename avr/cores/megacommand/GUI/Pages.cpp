@@ -4,7 +4,7 @@
 #include "Pages.h"
 #include "WProgram.h"
 #include "DiagnosticPage.h"
-
+#include "Encoders.h"
 /**
  * \addtogroup GUI
  *
@@ -47,8 +47,6 @@ void PageContainer::pushPage(LightPage* page) {
 void PageParent::redisplayPage() {
   redisplay = true;
 }
-
-uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];
 
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];

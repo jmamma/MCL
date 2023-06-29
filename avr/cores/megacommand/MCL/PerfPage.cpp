@@ -1,5 +1,6 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
+#include "MCLMemory.h"
 
 #define LEARN_MIN 1
 #define LEARN_MAX 2
@@ -23,6 +24,24 @@ void PerfPage::init() {
 
 void PerfPage::cleanup() { PerfPageParent::cleanup(); }
 
+void PerfPage::config_encoder_range(uint8_t i) {
+ ((PerfEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16;
+ ((PerfEncoder *)encoders[i + 1])->min = 0;
+
+
+ DEBUG_PRINTLN(encoders[i]->cur);
+ DEBUG_PRINTLN(encoders[i + 1]->cur);
+  if (encoders[i]->cur >= 16 + 4) {
+    ((PerfEncoder *)encoders[i + 1])->max = 127;
+  }
+  else if (encoders[i]->cur >= 16) {
+    ((PerfEncoder *)encoders[i + 1])->max = 7;
+  }
+  else {
+     ((PerfEncoder *)encoders[i + 1])->max = 23;
+  }
+}
+
 void PerfPage::config_encoders() {
     encoders[1] = &fx_param2;
     encoders[2] = &fx_param3;
@@ -42,30 +61,34 @@ void PerfPage::config_encoders() {
     encoders[3]->cur = p->max;
     ((PerfEncoder *)encoders[3])->max = 127;
 
-    config_encoder_range(0,encoders);
+    config_encoder_range(0);
   }
 
   if (page_mode == PERF_DESTINATION) {
-    encoders[0] = perf_encoders[0];
+    encoders[0] = perf_encoders[perf_id];
     ((PerfEncoder *)encoders[0])->max = 127;
-    config_encoder_range(1,encoders);
+    config_encoder_range(1);
 
     PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
     encoders[1]->cur = p->dest;
     encoders[2]->cur = p->param;
 
-    encoders[3]->cur = p->max;
+    encoders[3]->cur = p->min;
     ((PerfEncoder *)encoders[3])->max = 127;
 
   }
-
-  //  loop();
-  PerfPageParent::config_encoders_timeout(encoders);
+/*
+      for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    encoders[i]->old = encoders[i]->cur;
+    ((LightPage *)this)->encoders_used_clock[i] =
+        slowclock - SHOW_VALUE_TIMEOUT - 1;
+  }
+*/
 }
-
-void PerfPage::loop() {
-
+void PerfPage::update_params() {
   if (page_mode < PERF_DESTINATION) {
+    config_encoder_range(0);
+
     if (encoders[0]->hasChanged() && encoders[0]->cur == 0) {
       encoders[1]->cur = 0;
     }
@@ -76,8 +99,23 @@ void PerfPage::loop() {
     p->min = encoders[2]->cur;
     p->max = encoders[3]->cur;
   }
+  else {
+    config_encoder_range(1);
 
-   config_encoder_range(0,encoders);
+    if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
+      encoders[2]->cur = 0;
+    }
+     uint8_t c = page_mode;
+     PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
+     p->dest = encoders[1]->cur;
+     p->param = encoders[2]->cur;
+     p->min = encoders[3]->cur;
+  }
+
+}
+
+void PerfPage::loop() {
+   update_params();
 }
 
 void PerfPage::display() {
@@ -120,19 +158,30 @@ void PerfPage::display() {
   oled_display.setFont(oldfont);
 }
 
-void PerfPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
+void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
+  //Intercept controller param.
+  PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
+  if (dest + 1== p->dest && param == p->param) {
+    perf_encoders[perf_id]->cur = value;
+  }
+
   if (learn) {
     PerfData *d = &perf_encoders[perf_id]->perf_data;
-    uint8_t n = d->add_param(track, param, learn, value);
-    if (n == page_mode) { config_encoders(); }
+    uint8_t n = d->add_param(dest, param, learn, value);
+    page_mode = n;
+    config_encoders();
   }
 
   //MIDI LEARN current mode;
   uint8_t a = page_mode == PERF_DESTINATION ? 1 : 0;
-    if (encoders[a]->cur == 0 && encoders[a + 1]->cur > 1) {
-      encoders[a]->cur = track + 1;
+
+  if (encoders[a]->cur == 0 && encoders[a + 1]->cur > 0) {
+      encoders[a]->cur = dest + 1;
       encoders[a + 1]->cur = param;
-    }
+      encoders[a + 2]->cur = 0;
+      update_params();
+      config_encoders();
+  }
 
 }
 
@@ -221,27 +270,29 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source - 128;
 
-    if (!learn) { return true; }
-
-
     if (event->mask == EVENT_BUTTON_PRESSED) {
-         perf_id = track / 4;
+         uint8_t id = track / 4;
+         if (perf_id != id) {
+           perf_id = track / 4;
+           config_encoders();
+         }
          uint8_t b = track - (perf_id) * 4;
-         if (b == 2) {
+         if (b == 0) {
             learn = LEARN_MIN;
          }
-         if (b == 3) {
+         if (b == 1) {
             learn = LEARN_MAX;
          }
-         send_locks(learn);
+         if (page_mode < PERF_DESTINATION) {
+           send_locks(learn);
+         }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
        if (note_interface.notes_all_off()){
          learn = LEARN_OFF;
+         MD.deactivate_encoder_interface();
        }
     }
-
-
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {

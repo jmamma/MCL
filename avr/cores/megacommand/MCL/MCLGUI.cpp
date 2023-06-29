@@ -345,7 +345,7 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
       return true;
     } else {
       ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
-          slowclock - SHOW_VALUE_TIMEOUT - 1;
+          slowclock + SHOW_VALUE_TIMEOUT + 1;
     }
   }
 

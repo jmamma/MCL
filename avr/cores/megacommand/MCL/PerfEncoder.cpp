@@ -10,8 +10,7 @@ int PerfEncoder::update(encoder_t *enc) {
   if (hasChanged()) {
     for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
        if (perf_data.params[n].dest == 0) { continue; }
-       MidiUartClass *uart = &MidiUart;
-       if (perf_data.params[n].dest > 20) { uart = &MidiUart2; }
+       MidiUartClass *uart = &MidiUart2;
 
        uint8_t dest = perf_data.params[n].dest - 1;
        uint8_t param = perf_data.params[n].param;

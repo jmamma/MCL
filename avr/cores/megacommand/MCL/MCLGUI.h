@@ -6,8 +6,6 @@
 #include "QuestionDialogPage.h"
 #include "TextInputPage.h"
 
-#define SHOW_VALUE_TIMEOUT 2000
-
 class MCLGUI {
 public:
   uint8_t s_progress_cookie = 0b00110011;
@@ -84,13 +82,6 @@ public:
   void draw_knob(uint8_t i, const char *title, const char *text);
   void draw_knob(uint8_t i, Encoder *enc, const char *name);
 
-  void init_encoders_used_clock() {
-
-    for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-      ((LightPage *)GUI.currentPage())->encoders_used_clock[n] =
-          slowclock - SHOW_VALUE_TIMEOUT - 1;
-    }
-  }
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;

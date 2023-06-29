@@ -3,6 +3,8 @@
 #ifndef GUI_H__
 #define GUI_H__
 
+#define SHOW_VALUE_TIMEOUT 2000
+
 #include <stdlib.h>
 
 #include "Task.h"

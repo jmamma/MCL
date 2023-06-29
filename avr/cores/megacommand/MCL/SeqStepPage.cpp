@@ -263,7 +263,7 @@ void SeqStepPage::loop() {
   }
 
   if (note_interface.notes_all_off_md() && !grid_page.bank_popup) {
-    mcl_gui.init_encoders_used_clock();
+    init_encoders_used_clock();
     // active_track.reset_params();
     MD.deactivate_encoder_interface();
 

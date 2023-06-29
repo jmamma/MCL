@@ -37,6 +37,21 @@ void LFOPage::cleanup() {
   oled_display.clearDisplay();
 }
 
+void LFOPage::config_encoder_range(uint8_t i) {
+
+ ((MCLEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16; 
+
+  if (encoders[i]->cur >= NUM_MD_TRACKS + 4) {
+    ((MCLEncoder *)encoders[i + 1])->max = 127;
+  }
+  else if (encoders[i]->cur >= NUM_MD_TRACKS) {
+    ((MCLEncoder *)encoders[i + 1])->max = 7;
+  }
+  else {
+     ((MCLEncoder *)encoders[i + 1])->max = 23; 
+  }
+}
+
 void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
@@ -48,8 +63,8 @@ void LFOPage::config_encoders() {
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 
-    config_encoder_range(0,encoders);
-    config_encoder_range(2,encoders);
+    config_encoder_range(0);
+    config_encoder_range(2);
   }
   if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = waveform;
@@ -66,13 +81,18 @@ void LFOPage::config_encoders() {
   }
   //  loop();
 
-  PerfPageParent::config_encoders_timeout(encoders);
+    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    encoders[i]->old = encoders[i]->cur;
+    encoders_used_clock[i] =
+        slowclock;
+  }
+
 }
 
 void LFOPage::loop() {
   if (page_mode == LFO_DESTINATION) {
-    config_encoder_range(0,encoders);
-    config_encoder_range(2,encoders);
+    config_encoder_range(0);
+    config_encoder_range(2);
 
     if (encoders[0]->hasChanged()) {
       USE_LOCK();
@@ -239,11 +259,11 @@ void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
 
   //Midi LEARN
   if (page_mode == LFO_DESTINATION) {
-    if (encoders[0]->cur == 0 && encoders[1]->cur > 1) {
+    if (encoders[0]->cur == 0 && encoders[1]->cur > 0) {
       encoders[0]->cur = track + 1;
       encoders[1]->cur = track_param;
     }
-    if (encoders[2]->cur == 0 && encoders[3]->cur > 1) {
+    if (encoders[2]->cur == 0 && encoders[3]->cur > 0) {
       encoders[2]->cur = track + 1;
       encoders[3]->cur = track_param;
     }

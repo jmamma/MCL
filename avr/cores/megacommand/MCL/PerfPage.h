@@ -19,7 +19,7 @@ public:
       : LightPage(e1, e2, e3, e4) {
   }
 
-  bool learn = false;
+  uint8_t learn = 0;
 
   bool midi_state = false;
   uint8_t page_mode;
@@ -28,8 +28,8 @@ public:
   PerfEncoder *perf_encoders[4];
 
   bool handleEvent(gui_event_t *event);
-
-  void learn_param(uint8_t track, uint8_t param, uint8_t value);
+  void update_params();
+  void learn_param(uint8_t dest, uint8_t param, uint8_t value);
 
   void display();
   void setup();
@@ -44,6 +44,8 @@ public:
 
   void setup_callbacks();
   void remove_callbacks();
+
+  void config_encoder_range(uint8_t i);
 
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);

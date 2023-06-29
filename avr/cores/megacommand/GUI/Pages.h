@@ -156,7 +156,8 @@ public:
   uint8_t curpage;
   PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
-  static uint16_t encoders_used_clock[GUI_NUM_ENCODERS];
+
+  uint16_t encoders_used_clock[4];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL) {
@@ -182,6 +183,12 @@ public:
       changed while locked, they will send out their new value.
   **/
   void unlockEncoders() {} // TODO
+
+  void init_encoders_used_clock() {
+    for (uint8_t n = 0; n < 4; n++) {
+      encoders_used_clock[n] = slowclock;
+    }
+  }
 };
 
 class Page : public PageParent {
