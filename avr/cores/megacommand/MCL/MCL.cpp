@@ -311,6 +311,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_CLEAR: {
+        if (mcl.currentPage() == PERF_PAGE_0)
+          break;
         if (mcl.currentPage() == SEQ_STEP_PAGE)
           break;
         if ((note_interface.notes_count_on() > 0) ||

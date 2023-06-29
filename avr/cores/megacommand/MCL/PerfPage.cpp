@@ -265,12 +265,11 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     switch (key) {
     case MDX_KEY_CLEAR:
-      if (learn) {
         char *str = "CLEAR PARAMS";
         oled_display.textbox(str, "");
         MD.popup_text(str);
         perf_encoders[perf_id]->perf_data.init_params();
-      }
+        config_encoders();
       break;
     }
     return true;
