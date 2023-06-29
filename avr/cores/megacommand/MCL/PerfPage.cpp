@@ -67,12 +67,11 @@ void PerfPage::config_encoders() {
   if (page_mode == PERF_DESTINATION) {
     encoders[0] = perf_encoders[perf_id];
     ((PerfEncoder *)encoders[0])->max = 127;
-    config_encoder_range(1);
 
     PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
     encoders[1]->cur = p->dest;
     encoders[2]->cur = p->param;
-
+    config_encoder_range(1);
     encoders[3]->cur = p->min;
     ((PerfEncoder *)encoders[3])->max = 127;
 
@@ -130,15 +129,16 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
+  const char *info2 = "PERFORM";
   const char *info1;
-  const char *info2;
 
   if (page_mode < PERF_DESTINATION) {
     draw_dest(0, encoders[0]->cur);
     draw_param(1, encoders[0]->cur, encoders[1]->cur);
     mcl_gui.draw_knob(2, encoders[2], "MIN");
     mcl_gui.draw_knob(3, encoders[3], "MAX");
-    info2 = "PER>DST";
+    info1 = "PARAM 1";
+    mcl_gui.put_value_at(page_mode + 1, info1 + 6);
   }
   if (page_mode == PERF_DESTINATION) {
     char *str = "A ";
@@ -147,7 +147,7 @@ void PerfPage::display() {
     draw_dest(1, encoders[1]->cur);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
     mcl_gui.draw_knob(3, encoders[3], "MIN");
-    info2 = "PER>MOD";
+    info1 = "CONTROL";
   }
 
   mcl_gui.draw_panel_labels(info1, info2);
@@ -160,8 +160,19 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   //Intercept controller param.
   PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
   if (dest + 1== p->dest && param == p->param) {
-    perf_encoders[perf_id]->cur = value;
+    //Controller param, start value;
+    uint8_t min = p->min;
+    uint8_t max = 127;
+    if (value >= min) {
+       uint8_t cur = value - min;
+       int8_t range = max - min;
+       uint8_t val = ((float) cur / (float) range) * 127.0f;
+       perf_encoders[perf_id]->cur = val;
+       perf_encoders[perf_id]->send_params();
+       if (mcl.currentPage() == PERF_PAGE_0) { update_params(); }
+    }
   }
+  if (mcl.currentPage() == PERF_PAGE_0) {
 
   if (learn) {
     PerfData *d = &perf_encoders[perf_id]->perf_data;
@@ -180,58 +191,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       update_params();
       config_encoders();
   }
-
-}
-
-void PerfPage::onControlChangeCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
-  // If external keyboard controlling MD pitch, send parameter updates
-  // to all polyphonic tracks
-
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) {
-    return;
   }
-
-  learn_param(track, track_param, value);
-
-}
-
-void PerfPage::onControlChangeCallback_Midi2(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  learn_param(channel + 16 + 4, param, value);
-}
-
-
-void PerfPage::setup_callbacks() {
-  if (midi_state) {
-    return;
-  }
-  Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi);
-  Midi2.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi2);
-
-  midi_state = true;
-}
-
-void PerfPage::remove_callbacks() {
-  if (!midi_state) {
-    return;
-  }
-
-  Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi);
-  Midi2.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&PerfPage::onControlChangeCallback_Midi2);
-
-  midi_state = false;
 }
 
 void PerfPage::send_locks(uint8_t mode) {
@@ -281,14 +241,15 @@ bool PerfPage::handleEvent(gui_event_t *event) {
          if (b == 1) {
             learn = LEARN_MAX;
          }
-         if (page_mode < PERF_DESTINATION) {
-           send_locks(learn);
-         }
+         send_locks(learn);
+         old_mode = page_mode;
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
        if (note_interface.notes_all_off()){
          learn = LEARN_OFF;
          MD.deactivate_encoder_interface();
+         page_mode = old_mode;
+         config_encoders();
        }
     }
   }

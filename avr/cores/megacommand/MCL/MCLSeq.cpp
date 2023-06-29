@@ -325,26 +325,28 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param > 23) {
     return;
   } // ignore level/mute
+  perf_page.learn_param(track, track_param, value);
+  lfo_page.learn_param(track, track_param, value);
+
   if (!update_params) {
     return;
   }
   mcl_seq.md_tracks[track].update_param(track_param, value);
-#ifdef LFO_TRACKS
   for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
     mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param,
                                                          value);
   }
-#endif
+
 }
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-#ifdef EXT_TRACKS
+
+  if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
     if (mcl_seq.ext_tracks[n].channel == channel) {
-      if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
         if (value > 0) {
           CLEAR_BIT16(mixer_page.mute_sets[1][mixer_page.current_mute_set], n);
           mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_ON;
@@ -357,8 +359,9 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
         mcl_seq.ext_tracks[n].update_param(param, value);
       }
     }
+   return;
   }
-#endif
+  perf_page.learn_param(channel + 16 + 4, param, value);
 }
 
 void MCLSeqMidiEvents::setup_callbacks() {

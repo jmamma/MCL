@@ -46,12 +46,8 @@ public:
   void cleanup();
   virtual void config_encoders();
 
-  void setup_callbacks();
-  void remove_callbacks();
-
   void config_encoder_range(uint8_t i);
-
-  void onControlChangeCallback_Midi(uint8_t *msg);
+  void learn_param(uint8_t track, uint8_t param, uint8_t value);
 };
 
 extern MCLEncoder lfo_page_param1;

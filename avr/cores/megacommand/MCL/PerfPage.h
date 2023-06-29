@@ -20,6 +20,7 @@ public:
   }
 
   uint8_t learn = 0;
+  uint8_t old_mode = 0;
 
   bool midi_state = false;
   uint8_t page_mode;
@@ -41,9 +42,6 @@ public:
   virtual void config_encoders();
 
   void send_locks(uint8_t mode);
-
-  void setup_callbacks();
-  void remove_callbacks();
 
   void config_encoder_range(uint8_t i);
 

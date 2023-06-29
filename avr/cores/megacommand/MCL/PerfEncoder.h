@@ -14,7 +14,7 @@ class PerfEncoder : public MCLEncoder {
 
   public:
   PerfData perf_data;
-
+  void send_params();
     /**
        Create a new range-limited encoder with max and min value, short
        name, initial value, and handling function. The initRangeEncoder

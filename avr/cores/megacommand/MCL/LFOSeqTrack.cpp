@@ -88,25 +88,23 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       uint8_t wav_value = get_wav_value(sample_count, i);
       if (last_wav_value[i] != wav_value) {
-        uint8_t dest = params[i].dest;
+        uint8_t dest = params[i].dest - 1;
         uint8_t param = params[i].param;
-        if (dest > 0) {
-          // MD CC LFO
-          if (dest <= NUM_MD_TRACKS) {
-            MD.setTrackParam_inline(dest - 1, param,
-                                    wav_value, uart);
-          }
-          // MD FX LFO
-          else if (dest <= NUM_MD_TRACKS + 4) {
-            MD.sendFXParam(param, wav_value,
-                           MD_FX_ECHO + dest - NUM_MD_TRACKS - 1, uart);
-          }
-          else if (dest <= NUM_MD_TRACKS + 4 + 16) {
-            MidiUartClass *uart = &MidiUart2;
-            uart->sendCC(dest - 1, param, wav_value);
-          }
-          last_wav_value[i] = wav_value;
+        if (dest == 0) {
+          continue;
         }
+
+        if (dest > NUM_MD_TRACKS + 4) {
+          uint8_t channel = dest - NUM_MD_TRACKS;
+          MidiUart2.sendCC(channel, param, wav_value);
+        } else if (dest > NUM_MD_TRACKS) {
+          MD.sendFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS,
+                         uart);
+        } else {
+          MD.setTrackParam_inline(dest, param, wav_value, uart);
+        }
+
+        last_wav_value[i] = wav_value;
       }
     }
   }

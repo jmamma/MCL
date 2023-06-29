@@ -245,51 +245,19 @@ void LFOPage::display() {
   oled_display.setFont(oldfont);
 }
 
-void LFOPage::onControlChangeCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
-  // If external keyboard controlling MD pitch, send parameter updates
-  // to all polyphonic tracks
-
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
-
-  //Midi LEARN
+void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
+  if (mcl.currentPage() == LFO_PAGE) {
   if (page_mode == LFO_DESTINATION) {
     if (encoders[0]->cur == 0 && encoders[1]->cur > 0) {
       encoders[0]->cur = track + 1;
-      encoders[1]->cur = track_param;
+      encoders[1]->cur = param;
     }
     if (encoders[2]->cur == 0 && encoders[3]->cur > 0) {
       encoders[2]->cur = track + 1;
-      encoders[3]->cur = track_param;
+      encoders[3]->cur = param;
     }
   }
-
-}
-
-void LFOPage::setup_callbacks() {
-  if (midi_state) {
-    return;
   }
-  Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&LFOPage::onControlChangeCallback_Midi);
-
-  midi_state = true;
-}
-
-void LFOPage::remove_callbacks() {
-  if (!midi_state) {
-    return;
-  }
-
-  Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&LFOPage::onControlChangeCallback_Midi);
-
-  midi_state = false;
 }
 
 
