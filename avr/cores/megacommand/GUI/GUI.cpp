@@ -101,12 +101,10 @@ void GuiClass::loop() {
     if (page != NULL) {
       page->update();
       page->loop();
+      page->finalize();
     }
   }
 
-  if (sketch != NULL) {
-    sketch->loop();
-  }
 #ifndef HOST_MIDIDUINO
   ::loop();
 #endif
@@ -119,12 +117,6 @@ void GuiClass::loop() {
 
   display();
 
-  if (sketch != NULL) {
-    PageParent *page = sketch->currentPage();
-    if (page != NULL) {
-      page->finalize();
-    }
-  }
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 

@@ -77,13 +77,11 @@ void PerfPage::config_encoders() {
     ((PerfEncoder *)encoders[3])->max = 127;
 
   }
-/*
-      for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     encoders[i]->old = encoders[i]->cur;
-    ((LightPage *)this)->encoders_used_clock[i] =
-        slowclock - SHOW_VALUE_TIMEOUT - 1;
+    ((LightPage *)this)->encoders_used_clock[i] = slowclock;
   }
-*/
 }
 void PerfPage::update_params() {
   if (page_mode < PERF_DESTINATION) {

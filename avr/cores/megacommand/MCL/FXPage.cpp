@@ -42,11 +42,10 @@ void FXPage::update_encoders() {
       encoders[n]->cur = MD.kit.dynamics[fx_param];
       break;
     }
-
     encoders[n]->old = encoders[n]->cur;
-    ((LightPage *)this)->encoders_used_clock[n] =
-        slowclock - SHOW_VALUE_TIMEOUT - 1;
   }
+
+  init_encoders_used_clock();
 }
 
 void FXPage::cleanup() {

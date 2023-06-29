@@ -34,7 +34,6 @@ void PageContainer::pushPage(LightPage* page) {
   }
 
   pageStack.push(page);
-
   page->init();
   page->redisplayPage();
   page->show();
