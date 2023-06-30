@@ -2,51 +2,6 @@
 #include <avr/pgmspace.h>
 #include "MCL.h"
 #include "MCL_impl.h"
-extern const unsigned char __R_font_default[] PROGMEM;
-struct __T_font_default {
-  union {
-    unsigned char font[0];
-    char zz__font[1280];
-  };
-  static constexpr size_t countof_font = 1280 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_font = 1280;
-  static constexpr size_t __total_size = 1280;
-};
-
-extern const unsigned char __R_font_elektrothic[] PROGMEM;
-struct __T_font_elektrothic {
-  union {
-    GFXglyph ElektrothicGlyphs[0];
-    char zz__ElektrothicGlyphs[665];
-  };
-  static constexpr size_t countof_ElektrothicGlyphs = 665 / sizeof(GFXglyph);
-  static constexpr size_t sizeofof_ElektrothicGlyphs = 665;
-  union {
-    unsigned char ElektrothicBitmaps[0];
-    char zz__ElektrothicBitmaps[593];
-  };
-  static constexpr size_t countof_ElektrothicBitmaps = 593 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_ElektrothicBitmaps = 593;
-  static constexpr size_t __total_size = 1258;
-};
-
-extern const unsigned char __R_font_tomthumb[] PROGMEM;
-struct __T_font_tomthumb {
-  union {
-    GFXglyph TomThumbGlyphs[0];
-    char zz__TomThumbGlyphs[665];
-  };
-  static constexpr size_t countof_TomThumbGlyphs = 665 / sizeof(GFXglyph);
-  static constexpr size_t sizeofof_TomThumbGlyphs = 665;
-  union {
-    unsigned char TomThumbBitmaps[0];
-    char zz__TomThumbBitmaps[418];
-  };
-  static constexpr size_t countof_TomThumbBitmaps = 418 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_TomThumbBitmaps = 418;
-  static constexpr size_t __total_size = 1083;
-};
-
 extern const unsigned char __R_icons_boot[] PROGMEM;
 struct __T_icons_boot {
   union {
