@@ -16,7 +16,7 @@ class PerfEncoder : public MCLEncoder {
   PerfData perf_data;
   uint8_t active_scene_a = 0;
   uint8_t active_scene_b = 1;
-  void send_params();
+  void send_params(uint8_t cur_, uint8_t scene = 255);
     /**
        Create a new range-limited encoder with max and min value, short
        name, initial value, and handling function. The initRangeEncoder

@@ -19,6 +19,7 @@ void PerfPage::init() {
   DEBUG_PRINT_FN();
   PerfPageParent::init();
   trig_interface.on();
+  last_mask = last_blink_mask = 0;
 }
 
 void PerfPage::set_led_mask() {
@@ -35,7 +36,7 @@ void PerfPage::set_led_mask() {
 
   uint16_t blink_mask = 0;
   blink_mask |= e->perf_data.active_scenes;
-  blink_mask ^= mask;
+  blink_mask &= ~mask;
   if (last_blink_mask != blink_mask) {
     MD.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, blink);
   }
@@ -44,7 +45,7 @@ void PerfPage::set_led_mask() {
   last_mask = mask;
 }
 
-void PerfPage::cleanup() { PerfPageParent::cleanup(); }
+void PerfPage::cleanup() { PerfPageParent::cleanup(); trig_interface.off(); }
 
 void PerfPage::config_encoder_range(uint8_t i) {
   ((PerfEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16;
@@ -199,7 +200,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       int8_t range = max - min;
       uint8_t val = ((float)cur / (float)range) * 127.0f;
       perf_encoders[perf_id]->cur = val;
-      perf_encoders[perf_id]->send_params();
+      perf_encoders[perf_id]->send_params(val);
       if (mcl.currentPage() == PERF_PAGE_0) {
         update_params();
       }
@@ -306,13 +307,14 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
     case MDX_KEY_YES: {
         PerfEncoder *e = perf_encoders[perf_id];
-        setLed2();
-        for (uint8_t n = 0; n < 4; n++) {
+        uint8_t n;
+        for (n = 0; n < 4; n++) {
           if (note_interface.is_note_on(n)) {
-            if (n > 1) { e->active_scene_b = n; }
-            else { e->active_scene_a = n; }
+            if (n > 1) { e->active_scene_b = n; break; }
+            else { e->active_scene_a = n; break; }
           }
         }
+        e->send_params(0, n);
       break;
     }
     }
