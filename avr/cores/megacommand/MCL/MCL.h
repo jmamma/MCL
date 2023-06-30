@@ -17,7 +17,7 @@
 #include "Fonts/TomThumb.h"
 
 #define VERSION 4050
-#define VERSION_STR "S4.50"
+#define VERSION_STR "V4.50"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800

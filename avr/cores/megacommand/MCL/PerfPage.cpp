@@ -188,7 +188,8 @@ void PerfPage::display() {
     char *str1;
     str1 = "VAL";
     uint8_t v = encoders[2]->cur;
-    if (encoders[2]->cur == 0) {
+    bool is_lock = encoders[2]->cur != 0;
+    if (!is_lock) {
       str1 = "OFF";
       //Show the "non-lock" value
       if (learn > 0) {
@@ -203,8 +204,10 @@ void PerfPage::display() {
     }
 
     bool show_value = mcl_gui.show_encoder_value(encoders[2]);
-    mcl_gui.draw_light_encoder(MCLGUI::knob_x0 + 2 * MCLGUI::knob_w + 7, 6, v, str1, false, show_value);
+    mcl_gui.draw_light_encoder(MCLGUI::knob_x0 + 2 * MCLGUI::knob_w + 7, 6, v, str1, is_lock, show_value);
 
+ }
+  if (learn) {
     oled_display.fillRect(0,0,10,12, WHITE);
     oled_display.setFont(&Elektrothic);
     oled_display.setCursor(2, 10);
@@ -213,7 +216,7 @@ void PerfPage::display() {
   }
   if (page_mode == PERF_DESTINATION) {
     mcl_gui.draw_knob(0, encoders[0], "VAL");
-    draw_dest(1, encoders[1]->cur);
+    draw_dest(1, encoders[1]->cur, false);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
     mcl_gui.draw_knob(3, encoders[3], "MIN");
     info2 = "CONTROL";
@@ -312,17 +315,19 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     auto device = midi_active_peering.get_device(port);
 
       uint8_t track = event->source - 128;
-      uint8_t id = track / 4;
+     uint8_t id = track / 4;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (track > 4) { return true; }
       uint8_t b = track - (track / 4)*4;
 
       learn = b + 1;
       send_locks(learn);
       config_encoders();
       if (page_mode == PERF_DESTINATION) {
-          uint8_t id = perf_encoders[perf_id]->perf_data.find_empty() + 1;
-          if (id == 255) { id = 16; }
+          //uint8_t id = perf_encoders[perf_id]->perf_data.find_empty() + 1;
+          //if (id == 255) { id = 16; }
+          id = 0;
           page_mode = last_page_mode == 255 ? id : last_page_mode;
           config_encoders();
       }

@@ -15,7 +15,7 @@ public:
   bool midi_state = false;
 
 
-  void draw_dest(uint8_t knob, uint8_t value);
+  void draw_dest(uint8_t knob, uint8_t value, bool dest = true);
   void draw_param(uint8_t knob, uint8_t  dest, uint8_t param);
 
   virtual void display();

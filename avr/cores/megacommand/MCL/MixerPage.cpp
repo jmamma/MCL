@@ -42,18 +42,22 @@ void MixerPage::oled_draw_mutes() {
 }
 
 void MixerPage::setup() {
+        /*
   encoders[0]->handler = encoder_level_handle;
   encoders[1]->handler = encoder_filtf_handle;
   encoders[2]->handler = encoder_filtw_handle;
   encoders[3]->handler = encoder_filtq_handle;
+  */
 }
 
 void MixerPage::init() {
   level_pressmode = 0;
+  /*
   for (uint8_t i = 0; i < 4; i++) {
     encoders[i]->cur = 64;
     encoders[i]->old = 64;
   }
+  */
   MD.set_key_repeat(0);
   trig_interface.on();
   MD.set_trigleds(0, TRIGLED_OVERLAY);

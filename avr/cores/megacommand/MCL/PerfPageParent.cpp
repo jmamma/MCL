@@ -45,7 +45,7 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
   mcl_gui.draw_knob(knob, "PAR", myName);
 }
 
-void PerfPageParent::draw_dest(uint8_t knob, uint8_t value) {
+void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest) {
   char K[4];
   K[0] = value > 20 ? 'M' : 'T';
   switch (value) {
@@ -71,7 +71,9 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value) {
     mcl_gui.put_value_at(value, K + 1);
     break;
   }
-  mcl_gui.draw_knob(knob, "DEST", K);
+  char *str1 = "DEST";
+  if (!dest) { str1 = "SRC"; }
+  mcl_gui.draw_knob(knob, str1, K);
 }
 
 void PerfPageParent::display() {}

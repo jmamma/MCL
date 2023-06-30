@@ -18,8 +18,8 @@ PerfEncoder perf_param2;
 PerfEncoder perf_param3;
 PerfEncoder perf_param4;
 
-MixerPage mixer_page(&mixer_param1, &mixer_param2, &mixer_param3,
-                     &mixer_param4);
+MixerPage mixer_page(&perf_param1, &perf_param2, &perf_param3,
+                     &perf_param4);
 RoutePage route_page(&route_param1, &route_param2);
 
 fx_param_t fx_echo_params[8] = {
