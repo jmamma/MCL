@@ -172,7 +172,7 @@ void PerfPage::display() {
   mcl_gui.draw_knob_frame();
 
   const char *info1 = "";
-  const char *info2;
+  const char *info2 = "PARAMETER";
 
   uint8_t scene = learn - 1;
 
@@ -182,7 +182,7 @@ void PerfPage::display() {
 
     PerfEncoder *e = perf_encoders[perf_id];
 
-    info1 = "PAR>  ";
+    info1 = "LCK>  ";
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
     char *str1;

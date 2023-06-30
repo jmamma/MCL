@@ -99,14 +99,46 @@ public:
     return 255;
   }
 
+  bool check_scene_isempty(uint8_t scene, uint8_t dest = 255) {
+    uint8_t match = 255;
+    uint8_t empty = 255;
+    uint8_t s = scene - 1;
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      if (dest == 255) {
+         if (params[a].dest > 0  && params[a].scenes[s] != 255) {
+          return false;
+        }
+      }
+      else {
+         if (params[a].dest == dest + 1  && params[a].scenes[s] != 255) {
+          return false;
+         }
+      }
+    }
+    return true;
+  }
+
   void clear_param_scene(uint8_t dest, uint8_t param, uint8_t scene) {
     uint8_t s = scene - 1;
+    uint8_t match = 255;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
       if (params[a].dest == dest + 1 && params[a].param == param) {
+         if (match == 255) { match = a; }
          params[a].scenes[s] = 255;
       }
     }
+    if (check_scene_isempty(scene)) {
+      active_scenes &= ~(1 << s);
+    }
+    for (uint8_t n = 0; n < NUM_SCENES; n++) {
+      if (!check_scene_isempty(n + 1,dest)) {
+        return;
+      }
+    }
+    if (match == 255) { return; }
+    params[match].dest = 0;
+    params[match].param = 0;
   }
 
   uint8_t add_param(uint8_t dest, uint8_t param, uint8_t scene, uint8_t value) {
