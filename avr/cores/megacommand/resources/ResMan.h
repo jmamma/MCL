@@ -1,10 +1,4 @@
   
-__T_font_default *font_default;  
-void use_font_default() { font_default = (__T_font_default*) __use_resource(__R_font_default); }  
-__T_font_elektrothic *font_elektrothic;  
-void use_font_elektrothic() { font_elektrothic = (__T_font_elektrothic*) __use_resource(__R_font_elektrothic); }  
-__T_font_tomthumb *font_tomthumb;  
-void use_font_tomthumb() { font_tomthumb = (__T_font_tomthumb*) __use_resource(__R_font_tomthumb); }  
 __T_icons_boot *icons_boot;  
 void use_icons_boot() { icons_boot = (__T_icons_boot*) __use_resource(__R_icons_boot); }  
 __T_icons_device *icons_device;  

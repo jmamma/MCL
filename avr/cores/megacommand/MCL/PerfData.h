@@ -43,7 +43,7 @@ public:
     return 255;
   }
 
-  uint8_t add_param(uint8_t dest, uint8_t param, uint8_t learn, uint8_t value) {
+  uint8_t add_param(uint8_t dest, uint8_t param, uint8_t scene, uint8_t value) {
     uint8_t match = 255;
     uint8_t empty = 255;
 
@@ -69,8 +69,8 @@ public:
     params[b].dest = dest + 1;
     params[b].param = param;
 
-    if (learn > 0) {
-      uint8_t s = learn - 1;
+    if (scene > 0) {
+      uint8_t s = scene - 1;
       active_scenes |= (1 << s);
       params[b].scenes[s] = value;
     }
@@ -80,10 +80,13 @@ public:
 
   void *data() const { return (void *)&params; }
   void init_params() {
+    memset(params,0,sizeof(params));
+    /*
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       params[a].dest = 0;
       params[a].param = 0;
     }
+    */
   }
   void clear_scene(uint8_t s) {
     active_scenes &= ~(1 << s);

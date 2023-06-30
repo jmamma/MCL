@@ -26,6 +26,9 @@ public:
   uint8_t page_mode;
   uint8_t perf_id;
 
+  uint16_t last_mask = 0;
+  uint16_t last_blink_mask = 0;
+
   PerfEncoder *perf_encoders[4];
 
   bool handleEvent(gui_event_t *event);

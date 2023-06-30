@@ -19,7 +19,6 @@ void PerfPage::init() {
   DEBUG_PRINT_FN();
   PerfPageParent::init();
   trig_interface.on();
-  set_led_mask();
 }
 
 void PerfPage::set_led_mask() {
@@ -28,11 +27,21 @@ void PerfPage::set_led_mask() {
   PerfEncoder *e = perf_encoders[perf_id];
   SET_BIT16(mask, e->active_scene_a);
   SET_BIT16(mask, e->active_scene_b);
-  MD.set_trigleds(mask, TRIGLED_EXCLUSIVE);
+
+  if (last_mask != mask) {
+    MD.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
+  }
   bool blink = true;
+
   uint16_t blink_mask = 0;
   blink_mask |= e->perf_data.active_scenes;
-  MD.set_trigleds(mask, TRIGLED_EXCLUSIVE, blink);
+  blink_mask ^= mask;
+  if (last_blink_mask != blink_mask) {
+    MD.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, blink);
+  }
+
+  last_blink_mask = blink_mask;
+  last_mask = mask;
 }
 
 void PerfPage::cleanup() { PerfPageParent::cleanup(); }
@@ -64,12 +73,11 @@ void PerfPage::config_encoders() {
 
     encoders[0]->cur = p->dest;
     encoders[1]->cur = p->param;
-
-    encoders[2]->cur = p->scenes[e->active_scene_a];
+    if (learn) {
+      uint8_t scene = learn - 1;
+      encoders[2]->cur = p->scenes[scene];
+    }
     ((PerfEncoder *)encoders[2])->max = 127;
-
-    encoders[3]->cur = p->scenes[e->active_scene_b];
-    ((PerfEncoder *)encoders[3])->max = 127;
 
     config_encoder_range(0);
   }
@@ -103,8 +111,10 @@ void PerfPage::update_params() {
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
     p->dest = encoders[0]->cur;
     p->param = encoders[1]->cur;
-    p->scenes[e->active_scene_a] = encoders[2]->cur;
-    p->scenes[e->active_scene_b] = encoders[3]->cur;
+    if (learn) {
+      uint8_t scene = learn - 1;
+      p->scenes[scene] = encoders[2]->cur;
+    }
   } else {
     config_encoder_range(1);
 
@@ -119,7 +129,7 @@ void PerfPage::update_params() {
   }
 }
 
-void PerfPage::loop() { update_params(); }
+void PerfPage::loop() { update_params(); set_led_mask(); }
 
 void PerfPage::display() {
   oled_display.clearDisplay();
@@ -144,16 +154,21 @@ void PerfPage::display() {
 
     PerfEncoder *e = perf_encoders[perf_id];
 
-    char *str1 = "A";
-    char *str2 = "A";
+    char *str1 = " A";
 
-    str1[0] = 'A' + e->active_scene_a;
-    str2[1] = 'A' + e->active_scene_b;
+    uint8_t scene = learn - 1;
+    str1[1] = 'A' + scene;
 
-    mcl_gui.draw_knob(2, encoders[2], str1, learn == LEARN_MIN);
-    mcl_gui.draw_knob(3, encoders[3], str2, learn == LEARN_MAX);
+    mcl_gui.draw_knob(2, encoders[2], str1);
+
     info1 = "PARAM 1";
     mcl_gui.put_value_at(page_mode + 1, info1 + 6);
+
+    oled_display.fillRect(0,0,10,12, WHITE);
+    oled_display.setFont(&Elektrothic);
+    oled_display.setCursor(2, 10);
+    oled_display.setTextColor(BLACK, WHITE);
+    oled_display.print((char) (0x3C + scene));
   }
   if (page_mode == PERF_DESTINATION) {
     char *str = "A ";
@@ -165,10 +180,11 @@ void PerfPage::display() {
     info1 = "CONTROL";
   }
 
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setFont(oldfont);
   mcl_gui.draw_panel_labels(info1, info2);
 
   oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
@@ -249,28 +265,13 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (perf_id != id) {
         perf_id = id;
-        config_encoders();
       }
       uint8_t b = track - (perf_id)*4;
 
       learn = b + 1;
       send_locks(learn);
+      config_encoders();
 
-      PerfEncoder *e = perf_encoders[perf_id];
-
-      //Change scene.
-      if (trig_interface.is_key_down(MDX_KEY_YES)) {
-
-         if (track > 1) {
-            e->active_scene_b = track;
-         }
-         else {
-            e->active_scene_a = track;
-         }
-         set_led_mask();
-      }
-
-      old_mode = page_mode;
       if (page_mode == PERF_DESTINATION) {
         uint8_t id = perf_encoders[perf_id]->perf_data.find_empty();
         if (id != 255) {
@@ -284,19 +285,16 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         MD.deactivate_encoder_interface();
-        page_mode = old_mode;
+        page_mode = PERF_DESTINATION;
         config_encoders();
       }
     }
   }
 
   if (EVENT_CMD(event)) {
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-      return seq_menu_page.handleEvent(event);
-    }
     uint8_t key = event->source - 64;
     switch (key) {
-    case MDX_KEY_CLEAR:
+    case MDX_KEY_CLEAR: {
         char *str = "CLEAR SCENE";
         oled_display.textbox(str, "");
         MD.popup_text(str);
@@ -304,7 +302,19 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           if (note_interface.is_note_on(n)) { perf_encoders[perf_id]->perf_data.clear_scene(n); }
         }
         config_encoders();
+        break;
+    }
+    case MDX_KEY_YES: {
+        PerfEncoder *e = perf_encoders[perf_id];
+        setLed2();
+        for (uint8_t n = 0; n < 4; n++) {
+          if (note_interface.is_note_on(n)) {
+            if (n > 1) { e->active_scene_b = n; }
+            else { e->active_scene_a = n; }
+          }
+        }
       break;
+    }
     }
     return true;
   }
