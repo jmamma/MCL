@@ -21,6 +21,7 @@ void PerfPage::init() {
   trig_interface.on();
   last_mask = last_blink_mask = 0;
   show_menu = false;
+  last_page_mode = 255;
 }
 
 void PerfPage::set_led_mask() {
@@ -62,14 +63,15 @@ void PerfPage::config_encoder_range(uint8_t i) {
   }
 }
 
-void PerfPage::config_encoders() {
+void PerfPage::config_encoders(uint8_t show_val) {
   encoders[1] = &fx_param2;
   encoders[2] = &fx_param3;
   encoders[3] = &fx_param4;
 
-  if (page_mode < PERF_DESTINATION) {
+  if (page_mode > PERF_DESTINATION) {
+    last_page_mode = page_mode;
     encoders[0] = &fx_param1;
-    uint8_t c = page_mode;
+    uint8_t c = page_mode - 1;
     PerfEncoder *e = perf_encoders[perf_id];
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
 
@@ -96,19 +98,22 @@ void PerfPage::config_encoders() {
     ((PerfEncoder *)encoders[3])->max = 127;
   }
 
+  if (!show_val) {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     encoders[i]->old = encoders[i]->cur;
-    ((LightPage *)this)->encoders_used_clock[i] = slowclock;
+    ((LightPage *)this)->encoders_used_clock[i] = slowclock + SHOW_VALUE_TIMEOUT + 1;
+  }
   }
 }
 void PerfPage::update_params() {
-  if (page_mode < PERF_DESTINATION) {
+
+  uint8_t c = page_mode - 1;
+  if (page_mode > PERF_DESTINATION) {
     config_encoder_range(0);
 
     if (encoders[0]->hasChanged() && encoders[0]->cur == 0) {
       encoders[1]->cur = 0;
     }
-    uint8_t c = page_mode;
     PerfEncoder *e = perf_encoders[perf_id];
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
     p->dest = encoders[0]->cur;
@@ -123,7 +128,6 @@ void PerfPage::update_params() {
     if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
       encoders[2]->cur = 0;
     }
-    uint8_t c = page_mode;
     PerfData *d = &perf_encoders[perf_id]->perf_data;
     d->dest = encoders[1]->cur;
     d->param = encoders[2]->cur;
@@ -152,7 +156,7 @@ void PerfPage::display() {
 
   auto oldfont = oled_display.getFont();
 
-  mcl_gui.draw_panel_number(perf_id);
+  mcl_gui.draw_panel_number(perf_id + 1);
 
   uint8_t x = mcl_gui.knob_x0 + 5;
   uint8_t y = 8;
@@ -162,24 +166,22 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
-  const char *info1 = "PAR>  ";
+  const char *info1 = "";
   const char *info2;
 
   uint8_t scene = learn - 1;
 
-  if (page_mode < PERF_DESTINATION) {
+  if (page_mode > PERF_DESTINATION) {
     draw_dest(0, encoders[0]->cur);
     draw_param(1, encoders[0]->cur, encoders[1]->cur);
 
     PerfEncoder *e = perf_encoders[perf_id];
 
-    char *str1 = " A";
+    info1 = "PAR>  ";
+    mcl_gui.put_value_at(page_mode, info1 + 4);
 
-    str1[1] = 'A' + scene;
-
+    char *str1 = "VAL";
     mcl_gui.draw_knob(2, encoders[2], str1);
-
-    mcl_gui.put_value_at(page_mode + 1, info1 + 4);
 
     oled_display.fillRect(0,0,10,12, WHITE);
     oled_display.setFont(&Elektrothic);
@@ -231,8 +233,8 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
 
     if (learn) {
       uint8_t n = d->add_param(dest, param, learn, value);
-      page_mode = n;
-      config_encoders();
+      page_mode = n + 1;
+      config_encoders(true);
     }
 
     // MIDI LEARN current mode;
@@ -272,6 +274,7 @@ void PerfPage::send_locks(uint8_t mode) {
 }
 
 bool PerfPage::handleEvent(gui_event_t *event) {
+
   if (PerfPageParent::handleEvent(event)) {
     return true;
   }
@@ -290,13 +293,11 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       learn = b + 1;
       send_locks(learn);
       config_encoders();
-
       if (page_mode == PERF_DESTINATION) {
-        uint8_t id = perf_encoders[perf_id]->perf_data.find_empty();
-        if (id != 255) {
-          page_mode = id;
+          uint8_t id = perf_encoders[perf_id]->perf_data.find_empty() + 1;
+          if (id == 255) { id = 16; }
+          page_mode = last_page_mode == 255 ? id : last_page_mode;
           config_encoders();
-        }
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
@@ -312,6 +313,10 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
+    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+       return perf_menu_page.handleEvent(event);
+    }
+
     switch (key) {
     case MDX_KEY_CLEAR: {
         char *str = "CLEAR SCENE";
@@ -340,7 +345,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     page_mode++;
-    if (page_mode > PERF_DESTINATION) {
+    if (page_mode > 16) {
       page_mode = 0;
     }
     config_encoders();

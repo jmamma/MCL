@@ -24,7 +24,7 @@ public:
   virtual void init();
   virtual void loop();
   virtual void cleanup();
-  virtual void config_encoders();
+  virtual void config_encoders() {};
   virtual void setup_callbacks() {};
   virtual void remove_callbacks() {};
 

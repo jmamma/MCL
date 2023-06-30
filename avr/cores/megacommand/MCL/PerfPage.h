@@ -10,7 +10,7 @@
 #include "PerfEncoder.h"
 
 #define NUM_PERF_CONTROLS 4
-#define PERF_DESTINATION NUM_PERF_PARAMS
+#define PERF_DESTINATION 0
 
 class PerfPage : public LightPage, PerfPageParent {
 public:
@@ -21,6 +21,7 @@ public:
 
   uint8_t learn = 0;
   uint8_t old_mode = 0;
+  uint8_t last_page_mode;
 
   bool midi_state = false;
   uint8_t page_mode;
@@ -45,7 +46,7 @@ public:
   void cleanup();
 
   void set_led_mask();
-  virtual void config_encoders();
+  void config_encoders(uint8_t show_val = false);
 
   void send_locks(uint8_t mode);
 
