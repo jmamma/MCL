@@ -79,9 +79,12 @@ void PerfPage::config_encoders(uint8_t show_val) {
     encoders[1]->cur = p->param;
     if (learn) {
       uint8_t scene = learn - 1;
-      encoders[2]->cur = p->get_scene_value(scene);
+      uint8_t v = p->scenes[scene];
+      if (v == 255) { v = 0; }
+      else { v++; }
+      encoders[2]->cur = v;
     }
-    ((PerfEncoder *)encoders[2])->max = 127;
+    ((PerfEncoder *)encoders[2])->max = 128;
 
     config_encoder_range(0);
   }
@@ -120,7 +123,9 @@ void PerfPage::update_params() {
     p->param = encoders[1]->cur;
     if (learn) {
       uint8_t scene = learn - 1;
-      p->scenes[scene] = encoders[2]->cur;
+      if (encoders[2]->cur > 0) {
+        p->scenes[scene] = encoders[2]->cur - 1;
+      }
     }
   } else {
     config_encoder_range(1);
@@ -180,8 +185,25 @@ void PerfPage::display() {
     info1 = "PAR>  ";
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
-    char *str1 = "VAL";
-    mcl_gui.draw_knob(2, encoders[2], str1);
+    char *str1;
+    str1 = "VAL";
+    uint8_t v = encoders[2]->cur;
+    if (encoders[2]->cur == 0) {
+      str1 = "OFF";
+      //Show the "non-lock" value
+      if (learn > 0) {
+        uint8_t scene = learn - 1;
+        uint8_t c = page_mode - 1;
+        v = perf_encoders[perf_id]->perf_data.params[c].get_scene_value(scene);
+      }
+      else { v = 0; }
+    }
+    else {
+      v -= 1;
+    }
+
+    bool show_value = mcl_gui.show_encoder_value(encoders[2]);
+    mcl_gui.draw_light_encoder(MCLGUI::knob_x0 + 2 * MCLGUI::knob_w + 7, 6, v, str1, false, show_value);
 
     oled_display.fillRect(0,0,10,12, WHITE);
     oled_display.setFont(&Elektrothic);
