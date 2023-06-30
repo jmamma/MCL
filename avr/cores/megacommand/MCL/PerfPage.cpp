@@ -79,7 +79,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
     encoders[1]->cur = p->param;
     if (learn) {
       uint8_t scene = learn - 1;
-      encoders[2]->cur = p->scenes[scene];
+      encoders[2]->cur = p->get_scene_value(scene);
     }
     ((PerfEncoder *)encoders[2])->max = 127;
 
@@ -233,8 +233,13 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
 
     if (learn) {
       uint8_t n = d->add_param(dest, param, learn, value);
-      page_mode = n + 1;
-      config_encoders(true);
+      if (n < 255) {
+         if (dest + 1 <= NUM_MD_TRACKS) {
+           trig_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
+         }
+        page_mode = n + 1;
+        config_encoders(true);
+      }
     }
 
     // MIDI LEARN current mode;
@@ -316,8 +321,33 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
        return perf_menu_page.handleEvent(event);
     }
-
     switch (key) {
+    // ENCODER BUTTONS
+    case 0x10:
+    case 0x11:
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17: {
+      if (learn == 0) { return true; }
+      uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
+
+      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+          d->clear_param_scene(last_md_track, param, learn);
+      }
+      if (event->mask == EVENT_BUTTON_PRESSED) {
+          if (d->find_match(last_md_track, param, learn) == 255) { 
+          trig_interface.ignoreNextEvent(key);
+          d->add_param(last_md_track, param, learn, MD.kit.params[last_md_track][param]);
+          }
+      }
+      send_locks(learn);
+      config_encoders();
+      return true;
+    }
     case MDX_KEY_CLEAR: {
         char *str = "CLEAR SCENE";
         oled_display.textbox(str, "");
