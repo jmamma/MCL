@@ -10,8 +10,8 @@ void PerfEncoder::send_params() {
 
        uint8_t dest = perf_data.params[n].dest - 1;
        uint8_t param = perf_data.params[n].param;
-       uint8_t min = perf_data.params[n].min;
-       uint8_t max = perf_data.params[n].max;
+       uint8_t min = perf_data.params[n].scenes[active_scene_a];
+       uint8_t max = perf_data.params[n].scenes[active_scene_b];
        int8_t range = max - min;
        int16_t q = cur * range;
        uint8_t val = ((int16_t) q / (int16_t) 128) + min;

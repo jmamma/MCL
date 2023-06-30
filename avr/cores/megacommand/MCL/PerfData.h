@@ -5,14 +5,14 @@
 #include "PerfData.h"
 #include "WProgram.h"
 
-#define NUM_PERF_PARAMS 8
+#define NUM_PERF_PARAMS 16
+#define NUM_SCENES 4
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 class PerfParam {
 public:
   uint8_t dest;
   uint8_t param;
-  uint8_t min;
-  uint8_t max;
+  uint8_t scenes[NUM_SCENES];
 };
 
 #define LEARN_MIN 1
@@ -20,7 +20,12 @@ public:
 class PerfData {
 public:
   PerfParam params[NUM_PERF_PARAMS];
-  PerfParam src_param;
+
+  uint8_t dest;
+  uint8_t param;
+  uint8_t min;
+
+  uint8_t active_scenes;
 
   PerfData() { init_params(); }
 
@@ -64,11 +69,12 @@ public:
     params[b].dest = dest + 1;
     params[b].param = param;
 
-    if (learn == LEARN_MIN) {
-      params[b].min = value;
-    } else {
-      params[b].max = value;
+    if (learn > 0) {
+      uint8_t s = learn - 1;
+      active_scenes |= (1 << s);
+      params[b].scenes[s] = value;
     }
+
     return b;
   }
 
@@ -77,8 +83,12 @@ public:
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       params[a].dest = 0;
       params[a].param = 0;
-      params[a].min = 0;
-      params[a].max = 127;
+    }
+  }
+  void clear_scene(uint8_t s) {
+    active_scenes &= ~(1 << s);
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      params[a].scenes[s] = 0;
     }
   }
 };

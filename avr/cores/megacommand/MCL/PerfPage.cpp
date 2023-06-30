@@ -19,7 +19,20 @@ void PerfPage::init() {
   DEBUG_PRINT_FN();
   PerfPageParent::init();
   trig_interface.on();
-  MD.set_trigleds(0b0011001100110011, TRIGLED_OVERLAY);
+  set_led_mask();
+}
+
+void PerfPage::set_led_mask() {
+  uint16_t mask = 0;
+
+  PerfEncoder *e = perf_encoders[perf_id];
+  SET_BIT16(mask, e->active_scene_a);
+  SET_BIT16(mask, e->active_scene_b);
+  MD.set_trigleds(mask, TRIGLED_EXCLUSIVE);
+  bool blink = true;
+  uint16_t blink_mask = 0;
+  blink_mask |= e->perf_data.active_scenes;
+  MD.set_trigleds(mask, TRIGLED_EXCLUSIVE, blink);
 }
 
 void PerfPage::cleanup() { PerfPageParent::cleanup(); }
@@ -46,15 +59,16 @@ void PerfPage::config_encoders() {
   if (page_mode < PERF_DESTINATION) {
     encoders[0] = &fx_param1;
     uint8_t c = page_mode;
+    PerfEncoder *e = perf_encoders[perf_id];
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
 
     encoders[0]->cur = p->dest;
     encoders[1]->cur = p->param;
 
-    encoders[2]->cur = p->min;
+    encoders[2]->cur = p->scenes[e->active_scene_a];
     ((PerfEncoder *)encoders[2])->max = 127;
 
-    encoders[3]->cur = p->max;
+    encoders[3]->cur = p->scenes[e->active_scene_b];
     ((PerfEncoder *)encoders[3])->max = 127;
 
     config_encoder_range(0);
@@ -64,11 +78,11 @@ void PerfPage::config_encoders() {
     encoders[0] = perf_encoders[perf_id];
     ((PerfEncoder *)encoders[0])->max = 127;
 
-    PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
-    encoders[1]->cur = p->dest;
-    encoders[2]->cur = p->param;
+    PerfData *d = &perf_encoders[perf_id]->perf_data;
+    encoders[1]->cur = d->dest;
+    encoders[2]->cur = d->param;
     config_encoder_range(1);
-    encoders[3]->cur = p->min;
+    encoders[3]->cur = d->min;
     ((PerfEncoder *)encoders[3])->max = 127;
   }
 
@@ -85,11 +99,12 @@ void PerfPage::update_params() {
       encoders[1]->cur = 0;
     }
     uint8_t c = page_mode;
+    PerfEncoder *e = perf_encoders[perf_id];
     PerfParam *p = &perf_encoders[perf_id]->perf_data.params[c];
     p->dest = encoders[0]->cur;
     p->param = encoders[1]->cur;
-    p->min = encoders[2]->cur;
-    p->max = encoders[3]->cur;
+    p->scenes[e->active_scene_a] = encoders[2]->cur;
+    p->scenes[e->active_scene_b] = encoders[3]->cur;
   } else {
     config_encoder_range(1);
 
@@ -97,10 +112,10 @@ void PerfPage::update_params() {
       encoders[2]->cur = 0;
     }
     uint8_t c = page_mode;
-    PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
-    p->dest = encoders[1]->cur;
-    p->param = encoders[2]->cur;
-    p->min = encoders[3]->cur;
+    PerfData *d = &perf_encoders[perf_id]->perf_data;
+    d->dest = encoders[1]->cur;
+    d->param = encoders[2]->cur;
+    d->min = encoders[3]->cur;
   }
 }
 
@@ -126,8 +141,17 @@ void PerfPage::display() {
   if (page_mode < PERF_DESTINATION) {
     draw_dest(0, encoders[0]->cur);
     draw_param(1, encoders[0]->cur, encoders[1]->cur);
-    mcl_gui.draw_knob(2, encoders[2], "MIN", learn == LEARN_MIN);
-    mcl_gui.draw_knob(3, encoders[3], "MAX", learn == LEARN_MAX);
+
+    PerfEncoder *e = perf_encoders[perf_id];
+
+    char *str1 = "A";
+    char *str2 = "A";
+
+    str1[0] = 'A' + e->active_scene_a;
+    str2[1] = 'A' + e->active_scene_b;
+
+    mcl_gui.draw_knob(2, encoders[2], str1, learn == LEARN_MIN);
+    mcl_gui.draw_knob(3, encoders[3], str2, learn == LEARN_MAX);
     info1 = "PARAM 1";
     mcl_gui.put_value_at(page_mode + 1, info1 + 6);
   }
@@ -149,10 +173,10 @@ void PerfPage::display() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   // Intercept controller param.
-  PerfParam *p = &perf_encoders[perf_id]->perf_data.src_param;
-  if (dest + 1 == p->dest && param == p->param) {
+  PerfData *d = &perf_encoders[perf_id]->perf_data;
+  if (dest + 1 == d->dest && param == d->param) {
     // Controller param, start value;
-    uint8_t min = p->min;
+    uint8_t min = d->min;
     uint8_t max = 127;
     if (value >= min) {
       uint8_t cur = value - min;
@@ -168,7 +192,6 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   if (mcl.currentPage() == PERF_PAGE_0) {
 
     if (learn) {
-      PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t n = d->add_param(dest, param, learn, value);
       page_mode = n;
       config_encoders();
@@ -202,11 +225,8 @@ void PerfPage::send_locks(uint8_t mode) {
     }
 
     if (dest == last_md_track + 1) {
-      if (mode == LEARN_MIN) {
-        params[param] = p->min;
-      }
-      if (mode == LEARN_MAX) {
-        params[param] = p->max;
+      if (learn > 0) {
+        params[param] = p->scenes[learn - 1];
       }
     }
   }
@@ -223,22 +243,33 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     auto device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+      uint8_t track = event->source - 128;
+      uint8_t id = track / 4;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      uint8_t id = track / 4;
       if (perf_id != id) {
-        perf_id = track / 4;
+        perf_id = id;
         config_encoders();
       }
       uint8_t b = track - (perf_id)*4;
-      if (b == 0) {
-        learn = LEARN_MIN;
-      }
-      if (b == 1) {
-        learn = LEARN_MAX;
-      }
+
+      learn = b + 1;
       send_locks(learn);
+
+      PerfEncoder *e = perf_encoders[perf_id];
+
+      //Change scene.
+      if (trig_interface.is_key_down(MDX_KEY_YES)) {
+
+         if (track > 1) {
+            e->active_scene_b = track;
+         }
+         else {
+            e->active_scene_a = track;
+         }
+         set_led_mask();
+      }
+
       old_mode = page_mode;
       if (page_mode == PERF_DESTINATION) {
         uint8_t id = perf_encoders[perf_id]->perf_data.find_empty();
@@ -249,6 +280,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
+
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         MD.deactivate_encoder_interface();
@@ -265,10 +297,12 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     switch (key) {
     case MDX_KEY_CLEAR:
-        char *str = "CLEAR PARAMS";
+        char *str = "CLEAR SCENE";
         oled_display.textbox(str, "");
         MD.popup_text(str);
-        perf_encoders[perf_id]->perf_data.init_params();
+        for (uint8_t n = 0; n < 4; n++) {
+          if (note_interface.is_note_on(n)) { perf_encoders[perf_id]->perf_data.clear_scene(n); }
+        }
         config_encoders();
       break;
     }

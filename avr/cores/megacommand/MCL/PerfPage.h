@@ -39,6 +39,7 @@ public:
   void loop();
   void cleanup();
 
+  void set_led_mask();
   virtual void config_encoders();
 
   void send_locks(uint8_t mode);
