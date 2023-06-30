@@ -95,6 +95,10 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.midi_ctrl_port,
     // 57
     &mcl_cfg.md_trig_channel,
+    // 58
+    &perf_page.page_mode,
+    // 59
+    &perf_page.perf_id
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -182,6 +186,7 @@ MenuPage<file_menu_page_N> file_menu_page(&config_param1, &file_menu_encoder);
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 MenuPage<seq_menu_page_N> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<perf_menu_page_N> perf_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
@@ -194,3 +199,5 @@ MenuPage<grid_slot_page_N> grid_slot_page(&grid_slot_param1, &grid_slot_param2);
 MCLEncoder wavdesign_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wavdesign_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
 MenuPage<wavdesign_menu_page_N> wavdesign_menu_page(&wavdesign_menu_value_encoder, &wavdesign_menu_entry_encoder);
+
+

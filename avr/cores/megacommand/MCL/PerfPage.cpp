@@ -20,6 +20,7 @@ void PerfPage::init() {
   PerfPageParent::init();
   trig_interface.on();
   last_mask = last_blink_mask = 0;
+  show_menu = false;
 }
 
 void PerfPage::set_led_mask() {
@@ -130,10 +131,25 @@ void PerfPage::update_params() {
   }
 }
 
-void PerfPage::loop() { update_params(); set_led_mask(); }
+void PerfPage::loop() {
+  if (show_menu) {
+    perf_menu_page.loop();
+    return;
+  }
+  update_params();
+  set_led_mask();
+}
 
 void PerfPage::display() {
+  if (show_menu) {
+    constexpr uint8_t width = 52;
+    oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
+    perf_menu_page.draw_menu(128 - width, 8, width);
+    return;
+  }
+
   oled_display.clearDisplay();
+
   auto oldfont = oled_display.getFont();
 
   mcl_gui.draw_panel_number(perf_id);
@@ -146,8 +162,10 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
-  const char *info2 = "PERFORM";
-  const char *info1;
+  const char *info1 = "PAR>  ";
+  const char *info2;
+
+  uint8_t scene = learn - 1;
 
   if (page_mode < PERF_DESTINATION) {
     draw_dest(0, encoders[0]->cur);
@@ -157,13 +175,11 @@ void PerfPage::display() {
 
     char *str1 = " A";
 
-    uint8_t scene = learn - 1;
     str1[1] = 'A' + scene;
 
     mcl_gui.draw_knob(2, encoders[2], str1);
 
-    info1 = "PARAM 1";
-    mcl_gui.put_value_at(page_mode + 1, info1 + 6);
+    mcl_gui.put_value_at(page_mode + 1, info1 + 4);
 
     oled_display.fillRect(0,0,10,12, WHITE);
     oled_display.setFont(&Elektrothic);
@@ -172,18 +188,23 @@ void PerfPage::display() {
     oled_display.print((char) (0x3C + scene));
   }
   if (page_mode == PERF_DESTINATION) {
-    char *str = "A ";
-    str[1] = '1' + perf_id;
-    mcl_gui.draw_knob(0, encoders[0], str);
+    mcl_gui.draw_knob(0, encoders[0], "VAL");
     draw_dest(1, encoders[1]->cur);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
     mcl_gui.draw_knob(3, encoders[3], "MIN");
-    info1 = "CONTROL";
+    info2 = "CONTROL";
   }
 
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(oldfont);
   mcl_gui.draw_panel_labels(info1, info2);
+
+  PerfEncoder *e = perf_encoders[perf_id];
+  oled_display.setCursor(80, MCLGUI::pane_info2_y + 4);
+  char *str3 = "SCENE: A -> B";
+  str3[7] = 'A' + e->active_scene_a;
+  str3[12] = 'A' + e->active_scene_b;
+  oled_display.print(str3);
 
   oled_display.display();
 }
@@ -264,10 +285,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       uint8_t id = track / 4;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (perf_id != id) {
-        perf_id = id;
-      }
-      uint8_t b = track - (perf_id)*4;
+      uint8_t b = track - (track / 4)*4;
 
       learn = b + 1;
       send_locks(learn);
@@ -276,7 +294,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (page_mode == PERF_DESTINATION) {
         uint8_t id = perf_encoders[perf_id]->perf_data.find_empty();
         if (id != 255) {
-          page_mode = perf_id;
+          page_mode = id;
           config_encoders();
         }
       }
@@ -328,11 +346,15 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     config_encoders();
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    learn = true;
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+     show_menu = true;
+      encoders[0] = &seq_menu_value_encoder;
+      encoders[1] = &seq_menu_entry_encoder;
+      perf_menu_page.init();
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    learn = false;
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+     show_menu = false;
+     config_encoders();
   }
 
   return false;

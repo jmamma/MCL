@@ -29,6 +29,8 @@ public:
   uint16_t last_mask = 0;
   uint16_t last_blink_mask = 0;
 
+  bool show_menu = false;
+
   PerfEncoder *perf_encoders[4];
 
   bool handleEvent(gui_event_t *event);

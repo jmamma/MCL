@@ -252,7 +252,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
     21, 0,
 };
 
-menu_t<3> wavdesign_menu_layout = {
+menu_t<wavdesign_menu_page_N> wavdesign_menu_layout = {
     "",
     {
         //           m  r  n  d   p  f   o
@@ -261,5 +261,16 @@ menu_t<3> wavdesign_menu_layout = {
         {"TRANSFER", 0, 0, 0, 0,  255, 22, 0},
     },
     23, 0
+};
+
+menu_t<perf_menu_page_N> perf_menu_layout = {
+    "",
+    {
+        //           m  r  n  d   p  f   o
+
+        {"CTRL SEL:",0,  4, 0, 59, 255, 0, 0 },
+        {"EDIT:",    0, 17, 1, 58, 255, 0,  116},
+    },
+    0, 0
 };
 

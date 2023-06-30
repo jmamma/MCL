@@ -250,10 +250,16 @@ struct __T_machine_param_names {
 extern const unsigned char __R_menu_layouts[] PROGMEM;
 struct __T_menu_layouts {
   union {
-    menu_t<3> wavdesign_menu_layout[0];
+    menu_t<perf_menu_page_N> perf_menu_layout[0];
+    char zz__perf_menu_layout[54];
+  };
+  static constexpr size_t countof_perf_menu_layout = 54 / sizeof(menu_t<perf_menu_page_N>);
+  static constexpr size_t sizeofof_perf_menu_layout = 54;
+  union {
+    menu_t<wavdesign_menu_page_N> wavdesign_menu_layout[0];
     char zz__wavdesign_menu_layout[75];
   };
-  static constexpr size_t countof_wavdesign_menu_layout = 75 / sizeof(menu_t<3>);
+  static constexpr size_t countof_wavdesign_menu_layout = 75 / sizeof(menu_t<wavdesign_menu_page_N>);
   static constexpr size_t sizeofof_wavdesign_menu_layout = 75;
   union {
     menu_t<grid_slot_page_N> slot_menu_layout[0];
@@ -363,18 +369,18 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 96 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 96;
-  static constexpr size_t __total_size = 2160;
+  static constexpr size_t __total_size = 2214;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[1044];
+    char zz__MENU_OPTIONS[1053];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 1044 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 1044;
-  static constexpr size_t __total_size = 1044;
+  static constexpr size_t countof_MENU_OPTIONS = 1053 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1053;
+  static constexpr size_t __total_size = 1053;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;
