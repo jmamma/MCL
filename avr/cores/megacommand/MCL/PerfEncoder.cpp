@@ -13,7 +13,7 @@ void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val) {
     MD.sendFXParam(param, val, MD_FX_ECHO + dest - NUM_MD_TRACKS);
     setLed2();
   } else {
-    MD.setTrackParam_inline(dest, param, val);
+    MD.setTrackParam(dest, param, val);
   }
 }
 
@@ -25,7 +25,7 @@ void PerfEncoder::send_params(uint8_t cur_) {
 
   morph.populate(s1, s2);
 
-  for (uint8_t n = 0; n < NUM_PERF_PARAMS * 2; n++) {
+  for (uint8_t n = 0; n < morph.count; n++) {
 
     PerfFade *f = &morph.fades[n];
 

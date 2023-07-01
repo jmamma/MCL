@@ -38,7 +38,9 @@ enum PageIndex {
     MIXER_PAGE,          // Index: 3
     GRID_SAVE_PAGE,      // Index: 4
     GRID_LOAD_PAGE,      // Index: 5
+#ifdef WAV_DESIGNER
     WD_MIXER_PAGE,       // Index: 6
+#endif
     SEQ_STEP_PAGE,       // Index: 7
     SEQ_EXTSTEP_PAGE,    // Index: 8
     SEQ_PTC_PAGE,        // Index: 9

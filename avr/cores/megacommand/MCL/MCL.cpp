@@ -41,7 +41,9 @@ static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &mixer_page,          // Index: 3
       &grid_save_page,      // Index: 4
       &grid_load_page,      // Index: 5
+#ifdef WAV_DESIGNER
       &wd.mixer,       // Index: 6
+#endif
       &seq_step_page,       // Index: 7
       &seq_extstep_page,    // Index: 8
       &seq_ptc_page,        // Index: 9

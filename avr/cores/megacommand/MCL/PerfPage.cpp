@@ -304,6 +304,7 @@ void PerfPage::send_locks(uint8_t scene) {
           params[param] = p->val;
       }
   }
+  seq_step_page.disable_paramupdate_events();
   MD.activate_encoder_interface(params);
 }
 
@@ -341,6 +342,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
+        seq_step_page.enable_paramupdate_events();
         MD.deactivate_encoder_interface();
         page_mode = PERF_DESTINATION;
         config_encoders();
@@ -382,7 +384,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       config_encoders();
       return true;
     }
-    case MDX_KEY_CLEAR: {
+    case MDX_KEY_NO: {
         char *str = "CLEAR SCENE";
         oled_display.textbox(str, "");
         MD.popup_text(str);

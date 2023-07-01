@@ -89,23 +89,21 @@ public:
 
     params[b].dest = dest + 1;
     params[b].param = param;
+    params[b].val = value;
     count++;
     return b;
   }
 
   void clear_param(uint8_t dest, uint8_t param) {
-        uint8_t match = 255;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
       if (params[a].dest == dest + 1 && params[a].param == param) {
-         if (match == 255) { match = a; }
          params[a].val = 255;
+         params[a].dest = 0;
+         params[a].param = 0;
+         count--;
       }
     }
-    if (match == 255) { return; }
-    params[match].dest = 0;
-    params[match].param = 0;
-    count--;
   }
 
   uint8_t find_empty() {
@@ -227,8 +225,13 @@ public:
        if (p->dest != 0) {
            f->dest = p->dest;
            f->param = p->param;
-           f->min = p->val;
-           f->max = get_param_device(p->dest, p->param);
+           uint8_t v = get_param_device(p->dest, p->param);
+           f->min = p->val == 255 ? v : p->val;
+           f->max = v;
+           DEBUG_PRINT("ADDING ");
+           DEBUG_PRINT(f->min);
+           DEBUG_PRINT(" ");
+           DEBUG_PRINT(f->max);
            count++;
        }
     }
@@ -238,16 +241,23 @@ public:
        PerfParam *p = &s2->params[n];
        if (p->dest != 0) {
            uint8_t m = find_existing(p->dest, p->param);
+           uint8_t v = get_param_device(p->dest, p->param);
            if (m != 255) {
              f = &fades[m];
+             DEBUG_PRINTLN("exists");
            }
            else {
              f->dest = p->dest;
              f->param = p->param;
-             f->min = get_param_device(p->dest, p->param);
+             f->min = v;
              count++;
+             DEBUG_PRINTLN("does not exist");
            }
-           f->max = p->val;
+           f->max = p->val == 255 ? v : p->val;
+           DEBUG_PRINT("HERE ");
+           DEBUG_PRINT(f->min);
+           DEBUG_PRINT(" ");
+           DEBUG_PRINT(f->max);
        }
     }
   }
