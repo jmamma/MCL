@@ -28,18 +28,24 @@ void PerfEncoder::send_params(uint8_t cur_) {
   for (uint8_t n = 0; n < morph.count; n++) {
 
     PerfFade *f = &morph.fades[n];
-
+    DEBUG_PRINTLN("send para");
+    DEBUG_PRINTLN(f->max);
+    DEBUG_PRINTLN(f->min);
+ 
     uint8_t val = 0;
     if (f->max == 255 || f->min == 255) {
       continue;
     }
     int8_t range = f->max - f->min;
     int16_t q = cur_ * range;
+    DEBUG_PRINTLN("range");
+    DEBUG_PRINTLN(range);
     val = ((int16_t)q / (int16_t)127) + min;
-
+    if (f->min > f->max) { val += f->min; }
     if (val > 127) {
       continue;
     }
+    DEBUG_PRINTLN(val);
     send_param(f->dest - 1, f->param, val);
   }
 }
