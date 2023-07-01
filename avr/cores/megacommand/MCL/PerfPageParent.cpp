@@ -7,6 +7,7 @@ void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 
 void PerfPageParent::init() {
   DEBUG_PRINT_FN();
+  MD.set_key_repeat(0);
   oled_display.clearDisplay();
   oled_display.setFont();
   config_encoders();
@@ -15,7 +16,7 @@ void PerfPageParent::init() {
   setup_callbacks();
 }
 
-void PerfPageParent::cleanup() { remove_callbacks(); }
+void PerfPageParent::cleanup() { MD.set_key_repeat(1); remove_callbacks(); }
 
 void PerfPageParent::loop() {}
 
