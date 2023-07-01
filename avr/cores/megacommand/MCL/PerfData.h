@@ -11,7 +11,7 @@
 #define NUM_SCENES 4
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 
-static uint8_t get_param_offset(uint8_t dest, uint8_t param) {
+static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   if (dest <= NUM_MD_TRACKS) {
     return MD.kit.params[dest - 1][param];
   } else {
@@ -34,114 +34,37 @@ static uint8_t get_param_offset(uint8_t dest, uint8_t param) {
   return 255;
 }
 
+
+
 class PerfParam {
 public:
   uint8_t dest;
   uint8_t param;
-  uint8_t scenes[NUM_SCENES];
-
-  uint8_t get_scene_value(uint8_t scene) {
-     uint8_t v = scenes[scene];
-     if (v == 255) {
-        if (dest >= NUM_MD_TRACKS + 4) {
-          //Todo MIDI default ?
-          v = 0;
-        }
-        else {
-          v = get_param_offset(dest, param);
-        }
-     }
-     if (v == 255) {
-       return 0;
-     }
-     return v;
-  }
+  uint8_t val;
 
 };
 
 #define LEARN_MIN 1
 
-class PerfData {
+class PerfScene {
 public:
   PerfParam params[NUM_PERF_PARAMS];
+  uint8_t count;
+  PerfScene() { init(); }
 
-  uint8_t dest;
-  uint8_t param;
-  uint8_t min;
+  bool is_active() { return count > 0; }
 
-  uint8_t active_scenes;
-
-  PerfData() { init_params(); }
-
-  uint8_t find_match(uint8_t dest, uint8_t param, uint8_t scene) {
-    uint8_t match = 255;
-    uint8_t empty = 255;
-    uint8_t s = scene - 1;
+  void init() {
+    count = 0;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      if (params[a].dest == dest + 1 && params[a].param == param && params[a].scenes[s] != 255) {
-          return a;
-      }
+      params[a].dest = 0;
+      params[a].param = 0;
+      params[a].val = 255;
     }
-    return 255;
   }
 
-  uint8_t find_empty() {
-    uint8_t match = 255;
-    uint8_t empty = 255;
+  uint8_t add_param(uint8_t dest, uint8_t param, uint8_t value) {
 
-    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      // Find first empty
-      if (params[a].dest == 0) {
-        return a;
-      }
-      // Update existing, if matches
-    }
-    return 255;
-  }
-
-  bool check_scene_isempty(uint8_t scene, uint8_t dest = 255) {
-    uint8_t match = 255;
-    uint8_t empty = 255;
-    uint8_t s = scene - 1;
-    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      if (dest == 255) {
-         if (params[a].dest > 0  && params[a].scenes[s] != 255) {
-          return false;
-        }
-      }
-      else {
-         if (params[a].dest == dest + 1  && params[a].scenes[s] != 255) {
-          return false;
-         }
-      }
-    }
-    return true;
-  }
-
-  void clear_param_scene(uint8_t dest, uint8_t param, uint8_t scene) {
-    uint8_t s = scene - 1;
-    uint8_t match = 255;
-    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      // Find match
-      if (params[a].dest == dest + 1 && params[a].param == param) {
-         if (match == 255) { match = a; }
-         params[a].scenes[s] = 255;
-      }
-    }
-    if (check_scene_isempty(scene)) {
-      active_scenes &= ~(1 << s);
-    }
-    for (uint8_t n = 0; n < NUM_SCENES; n++) {
-      if (!check_scene_isempty(n + 1,dest)) {
-        return;
-      }
-    }
-    if (match == 255) { return; }
-    params[match].dest = 0;
-    params[match].param = 0;
-  }
-
-  uint8_t add_param(uint8_t dest, uint8_t param, uint8_t scene, uint8_t value) {
     uint8_t match = 255;
     uint8_t empty = 255;
 
@@ -166,30 +89,169 @@ public:
 
     params[b].dest = dest + 1;
     params[b].param = param;
-
-    if (scene > 0) {
-      uint8_t s = scene - 1;
-      active_scenes |= (1 << s);
-      params[b].scenes[s] = value;
-    }
-
+    count++;
     return b;
   }
 
-  void *data() const { return (void *)&params; }
-  void init_params() {
+  void clear_param(uint8_t dest, uint8_t param) {
+        uint8_t match = 255;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      params[a].dest = 0;
-      params[a].param = 0;
-      memset(params[a].scenes,255,sizeof(params[a].scenes));
+      // Find match
+      if (params[a].dest == dest + 1 && params[a].param == param) {
+         if (match == 255) { match = a; }
+         params[a].val = 255;
+      }
+    }
+    if (match == 255) { return; }
+    params[match].dest = 0;
+    params[match].param = 0;
+    count--;
+  }
+
+  uint8_t find_empty() {
+    uint8_t match = 255;
+    uint8_t empty = 255;
+
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      // Find first empty
+      if (params[a].dest == 0) {
+        return a;
+      }
+      // Update existing, if matches
+    }
+    return 255;
+  }
+
+  uint8_t find_match(uint8_t dest_, uint8_t param_) {
+
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      if (params[a].dest == dest_ + 1 && params[a].param == param_ && params[a].val != 255) {
+          return a;
+      }
+    }
+    return 255;
+  }
+
+
+};
+
+class PerfData {
+public:
+  PerfScene scenes[NUM_SCENES];
+
+  uint8_t src;
+  uint8_t param;
+  uint8_t min;
+
+  PerfData() { init_params(); }
+
+  void *data() const { return (void *)&scenes; }
+
+  uint16_t get_active_scene_mask() {
+    uint16_t mask = 0;
+    for (uint8_t n = 0; n < NUM_SCENES; n++) {
+       if (scenes[n].is_active()) {
+         mask |= (1 << n);
+       }
+    }
+    return mask;
+  }
+
+  uint8_t find_match(uint8_t dest_, uint8_t param_, uint8_t scene) {
+    PerfScene *s = &scenes[scene];
+    return s->find_match(dest_, param_);
+  }
+
+  void clear_param_scene(uint8_t dest_, uint8_t param_, uint8_t scene) {
+
+    PerfScene *s = &scenes[scene];
+    s->clear_param(dest_, param_);
+  }
+
+  uint8_t add_param(uint8_t dest_, uint8_t param_, uint8_t scene, uint8_t value) {
+
+    PerfScene *s = &scenes[scene];
+
+    return s->add_param(dest_,param_,value);
+
+ }
+
+  void init_params() {
+    for (uint8_t n = 0; n < NUM_SCENES; n++) {
+      PerfScene *s = &scenes[n];
+      s->init();
     }
   }
-  void clear_scene(uint8_t s) {
-    active_scenes &= ~(1 << s);
-    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      params[a].scenes[s] = 255;
+  void clear_scene(uint8_t scene) {
+    PerfScene *s = &scenes[scene];
+    s->init();
+  }
+};
+
+class PerfFade {
+public:
+  PerfFade() {
+    dest = 0;
+    param = 0;
+    min = 255;
+    max = 255;
+  }
+  uint8_t dest;
+  uint8_t param;
+  uint8_t min;
+  uint8_t max;
+};
+
+
+class PerfMorph {
+public:
+  PerfFade fades[NUM_PERF_PARAMS * 2];
+  uint8_t count;
+  PerfMorph() {
+  }
+
+  uint8_t find_existing(uint8_t dest, uint8_t param) {
+    for (uint8_t n = 0; n < count; n++) {
+       PerfFade *f = &fades[n];
+       if (f->dest == 0) { return 255; }
+       if (f->dest == dest && f->param == param) { return n; }
+    }
+    return 255;
+  }
+
+  void populate(PerfScene *s1, PerfScene *s2) {
+    count = 0;
+    for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+       PerfFade *f = &fades[count];
+       PerfParam *p = &s1->params[n];
+       if (p->dest != 0) {
+           f->dest = p->dest;
+           f->param = p->param;
+           f->min = p->val;
+           f->max = get_param_device(p->dest, p->param);
+           count++;
+       }
+    }
+
+    for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+       PerfFade *f = &fades[count];
+       PerfParam *p = &s2->params[n];
+       if (p->dest != 0) {
+           uint8_t m = find_existing(p->dest, p->param);
+           if (m != 255) {
+             f = &fades[m];
+           }
+           else {
+             f->dest = p->dest;
+             f->param = p->param;
+             f->min = get_param_device(p->dest, p->param);
+             count++;
+           }
+           f->max = p->val;
+       }
     }
   }
 };
+
 
 #endif /* PERFDATATRACK_H__ */
