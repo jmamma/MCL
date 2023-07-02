@@ -197,7 +197,7 @@ void PerfPage::display() {
   str1[1] = 'A' + perf_id;
   mcl_gui.draw_knob(0, encoders[0], str1);
 
-  if (page_mode > PERF_DESTINATION || learn) {
+  if (learn) {
     draw_dest(1, encoders[1]->cur);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
 
@@ -220,7 +220,7 @@ void PerfPage::display() {
     mcl_gui.draw_light_encoder(MCLGUI::knob_x0 + 3 * MCLGUI::knob_w + 7, 6, v,
                                str1, is_lock, show_value);
 
-  } else if (page_mode == PERF_DESTINATION) {
+  } else {
     draw_dest(1, encoders[1]->cur, false);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
     mcl_gui.draw_knob(3, encoders[3], "THR");
@@ -339,7 +339,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     uint8_t track = event->source - 128;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (track > NUM_SCENES) {
+      if (track >= NUM_SCENES) {
         return true;
       }
 
@@ -438,17 +438,17 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_UP: {
-        if (page_mode < NUM_PERF_PARAMS){
+       if (learn && page_mode < NUM_PERF_PARAMS){
           page_mode++;
-        }
-        config_encoders();
+          config_encoders();
+       }
         return true;
       }
       case MDX_KEY_DOWN: {
-        if (page_mode > 0) {
+        if (learn && page_mode > 0) {
           page_mode--;
+          config_encoders();
         }
-        config_encoders();
         return true;
       }
       }

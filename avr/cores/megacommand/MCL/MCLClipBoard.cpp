@@ -69,6 +69,18 @@ bool MCLClipBoard::copy_sequencer(uint8_t offset) {
   return true;
 }
 
+void MCLClipBoard::copy_scene(PerfScene *s1) {
+  memcpy(&scene, s1, sizeof(scene));
+  copy_scene_active = 1;
+}
+
+bool MCLClipBoard::paste_scene(PerfScene *s1) {
+  if (copy_scene_active) {
+    memcpy(s1, &scene, sizeof(scene));
+  }
+  return copy_scene_active;
+}
+
 bool MCLClipBoard::copy_sequencer_track(uint8_t track) {
   DEBUG_PRINT_FN();
   bool ret = false;
