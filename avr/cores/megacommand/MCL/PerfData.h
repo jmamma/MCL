@@ -2,13 +2,10 @@
 
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
-#include "PerfData.h"
 #include "WProgram.h"
 #include "MCLMemory.h"
 #include "MD.h"
 
-#define NUM_PERF_PARAMS 16
-#define NUM_SCENES 4
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 
 static uint8_t get_param_device(uint8_t dest, uint8_t param) {
@@ -135,7 +132,7 @@ public:
 
 class PerfData {
 public:
-  PerfScene scenes[NUM_SCENES];
+  static PerfScene scenes[NUM_SCENES];
 
   uint8_t src;
   uint8_t param;
@@ -184,6 +181,7 @@ public:
     PerfScene *s = &scenes[scene];
     s->init();
   }
+
 };
 
 class PerfFade {
@@ -219,6 +217,11 @@ public:
 
   void populate(PerfScene *s1, PerfScene *s2) {
     count = 0;
+    if (s1 == nullptr && s2 == nullptr) { return; }
+    if (s1 == nullptr) {
+      s1 = s2;
+      s2 = nullptr;
+    }
     for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
        PerfFade *f = &fades[count];
        PerfParam *p = &s1->params[n];
@@ -235,7 +238,7 @@ public:
            count++;
        }
     }
-
+    if (s2 == nullptr) { return; }
     for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
        PerfFade *f = &fades[count];
        PerfParam *p = &s2->params[n];

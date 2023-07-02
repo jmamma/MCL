@@ -45,6 +45,9 @@ constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
 constexpr size_t NUM_LFO_TRACKS = 1;
 
+constexpr size_t NUM_PERF_PARAMS = 16;
+constexpr size_t NUM_SCENES = 8;
+
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
 // GridTrack 7

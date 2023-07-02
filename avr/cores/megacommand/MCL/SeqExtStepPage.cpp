@@ -79,7 +79,7 @@ void SeqExtStepPage::init() {
 
   last_cur_x = -1;
   config_encoders();
-  midi_events.setup_callbacks();
+//  midi_events.setup_callbacks();
 
   // Common menu entries
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
@@ -90,7 +90,7 @@ void SeqExtStepPage::init() {
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
-  midi_events.remove_callbacks();
+//  midi_events.remove_callbacks();
 }
 
 #define MAX_FOV_W 96
