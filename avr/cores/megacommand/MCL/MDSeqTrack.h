@@ -25,7 +25,7 @@ public:
 
   static uint16_t sync_cursor;
   static uint16_t md_trig_mask;
-  static uint16_t load_machine_cache;
+  static uint32_t load_machine_cache;
 
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {

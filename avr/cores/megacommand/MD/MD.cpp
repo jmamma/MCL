@@ -153,16 +153,16 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   }
   grid_idx = 1;
 
-  gdt.init(MDFX_TRACK_TYPE, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[0]), 0);
+  gdt.init(MDFX_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.mdfx_track), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
 
-  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[1]), 0);
+  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[0]), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 1, &gdt);
 
-  gdt.init(MDLFO_TRACK_TYPE, GROUP_AUX, device_idx, &(mcl_seq.aux_tracks[2]), 0);
+  gdt.init(MDLFO_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[1]), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 2, &gdt);
 
-  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx, &(mcl_seq.aux_tracks[3]), 0);
+  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[2]), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 3, &gdt);
 
 }
@@ -415,6 +415,12 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   data[4] = 0x7F & name[2];
   data[5] = 0x7F & name[3];
   sendRequest(data, 6);
+}
+
+uint8_t MDClass::assignFXParamsBulk(uint8_t *values, bool send) {
+  uint8_t data[2 + 8 * 4] = {0x70, 0x5a};
+  memcpy(&data[2], values, 8 * 4);
+  return sendRequest(data, sizeof(data), send);
 }
 
 uint8_t MDClass::sendFXParamsBulk(uint8_t *values, bool send) {

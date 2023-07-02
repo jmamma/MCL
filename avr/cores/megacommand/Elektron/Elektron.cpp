@@ -245,12 +245,13 @@ void ElektronDevice::deactivate_track_select() {
   waitBlocking();
 }
 
-void ElektronDevice::undokit_sync() {
-  uint8_t data[2] = {0x70, 0x42};
+void ElektronDevice::undokit_sync(uint32_t track_mask) {
+  uint8_t a = track_mask & 0x7F;
+  uint8_t b = (track_mask >> 7) & 0x7F;
+  uint8_t c = (track_mask >> 14) & 0x7F;
+  uint8_t data[5] = { 0x70, 0x42, a, b, c }; 
   sendRequest(data, sizeof(data));
 }
-
-
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
                                   uint8_t blink) {

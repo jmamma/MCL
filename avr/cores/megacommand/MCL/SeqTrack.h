@@ -74,6 +74,8 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
+  uint8_t count_down;
+
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
   ALWAYS_INLINE() void step_count_inc() {
@@ -84,6 +86,24 @@ public:
       step_count++;
     }
   }
+
+  ALWAYS_INLINE() void seq() {
+    uint8_t timing_mid = get_timing_mid();
+    mod12_counter++;
+    if (count_down) {
+      count_down--;
+      if (count_down == 0) {
+        reset();
+        mod12_counter = 0;
+      }
+    }
+    if (mod12_counter == timing_mid) {
+      count_down = 0;
+      mod12_counter = 0;
+      step_count_inc();
+    }
+  }
+
 
   ALWAYS_INLINE() void reset() {
     mod12_counter = -1;
@@ -198,8 +218,6 @@ public:
   uint8_t iterations_6;
   uint8_t iterations_7;
   uint8_t iterations_8;
-
-  uint8_t count_down;
 
   uint16_t cur_event_idx;
 

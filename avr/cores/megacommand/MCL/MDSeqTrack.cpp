@@ -2,7 +2,7 @@
 
 uint16_t MDSeqTrack::sync_cursor = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
-uint16_t MDSeqTrack::load_machine_cache = 0;
+uint32_t MDSeqTrack::load_machine_cache = 0;
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
   uint8_t old_length = length;
@@ -84,7 +84,7 @@ void MDSeqTrack::load_cache() {
   MD.insertMachineInKit(track_number, &(t.machine),false);
   t.load_seq_data((SeqTrack *)this);
 
-  SET_BIT16(load_machine_cache, track_number);
+  SET_BIT32(load_machine_cache, track_number);
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {

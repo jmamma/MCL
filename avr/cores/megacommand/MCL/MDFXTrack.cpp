@@ -7,12 +7,23 @@ void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
 }
 
 void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-    send_fx();
+}
+
+void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                              uint8_t slotnumber) {
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
+  // load_seq_data(seq_track);
+}
+
+bool MDFXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+  bool send = true;
+  MD.assignFXParamsBulk(reverb, send);
+  return true;
 }
 
 uint16_t MDFXTrack::calc_latency(uint8_t tracknumber) {
   bool send = false;
-  return send_fx(send);
+  return MD.assignFXParamsBulk(reverb, send);
 }
 
 uint16_t MDFXTrack::send_fx(bool send) {

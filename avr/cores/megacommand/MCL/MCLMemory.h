@@ -35,7 +35,7 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 
 constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 
-constexpr size_t NUM_AUX_TRACKS = 4;
+constexpr size_t NUM_AUX_TRACKS = 3;
 
 constexpr size_t GRIDCHAIN_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid

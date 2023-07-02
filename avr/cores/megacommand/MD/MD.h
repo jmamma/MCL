@@ -139,6 +139,7 @@ public:
    **/
 
   // Send multiple values simultaneously (single sysex message);
+  uint8_t assignFXParamsBulk(uint8_t *values, bool send = true);
   uint8_t sendFXParamsBulk(uint8_t *values, bool send = true);
   uint8_t sendFXParams(uint8_t *values, uint8_t type, bool send = true);
 
