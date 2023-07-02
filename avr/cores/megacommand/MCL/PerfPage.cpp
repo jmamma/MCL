@@ -200,7 +200,7 @@ void PerfPage::display() {
     info1 = "LCK>  ";
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
-    char *str1 = "VAL";
+    char *str1 = "LCK";
     uint8_t v = encoders[3]->cur;
     bool is_lock = encoders[3]->cur != 0;
     if (!is_lock) {
@@ -220,7 +220,7 @@ void PerfPage::display() {
   else if (page_mode == PERF_DESTINATION) {
    draw_dest(1, encoders[1]->cur, false);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
-    mcl_gui.draw_knob(3, encoders[3], "MIN");
+    mcl_gui.draw_knob(3, encoders[3], "THR");
     info2 = "CONTROL";
   }
 
@@ -241,8 +241,8 @@ void PerfPage::display() {
 
   oled_display.setCursor(80, MCLGUI::pane_info2_y + 4);
   char *str3 = "SCENE: A    B";
-  str3[7] = '0' + e->active_scene_a;
-  str3[12] = '0' + e->active_scene_b;
+  str3[7] = '1' + e->active_scene_a;
+  str3[12] = '1' + e->active_scene_b;
   oled_display.print(str3);
   oled_display.writeFastHLine(109, MCLGUI::pane_info2_y + 1, 5, WHITE);
   oled_display.writeFastVLine(109 + ((e->cur * 5) / 128), MCLGUI::pane_info2_y ,3, WHITE);

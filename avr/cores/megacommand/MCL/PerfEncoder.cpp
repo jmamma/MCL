@@ -40,8 +40,8 @@ void PerfEncoder::send_params(uint8_t cur_) {
     int16_t q = cur_ * range;
     DEBUG_PRINTLN("range");
     DEBUG_PRINTLN(range);
-    val = ((int16_t)q / (int16_t)127) + min;
-    if (f->min > f->max) { val += f->min; }
+    DEBUG_PRINTLN(cur);
+    val = ((int16_t)q / (int16_t)127) + f->min;
     if (val > 127) {
       continue;
     }
