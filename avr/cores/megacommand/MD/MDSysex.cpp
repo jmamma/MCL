@@ -78,6 +78,8 @@ void MDSysexListenerClass::end() {
       break;
     }
 
+    perf_page.learn_param(fx_type + 16, param, value);
+
     for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
       mcl_seq.lfo_tracks[n].check_and_update_params_offset(17 + fx_type, param, value);
     }
