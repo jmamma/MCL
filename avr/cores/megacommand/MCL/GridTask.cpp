@@ -12,6 +12,7 @@ void GridTask::gui_update() {
       if (last_active_row < GRID_LENGTH) {
         grid_page.set_active_row(last_active_row); // send led update
         MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
+        DEBUG_PRINTLN("draw pattern idx");
       }
     }
     MDSeqTrack::gui_update = 0;
@@ -58,7 +59,7 @@ void GridTask::run() {
   GridTask::transition_handler();
 }
 
-void GridTask::update_transition_details(uint8_t last_slot, uint8_t last_row) {
+void GridTask::update_transition_details(uint8_t last_slot) {
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
@@ -68,7 +69,6 @@ void GridTask::update_transition_details(uint8_t last_slot, uint8_t last_row) {
       devs[1]->asElektronDevice(),
   };
 
-  last_active_row = last_row;
   GridRowHeader row_header;
   proj.read_grid_row_header(&row_header, last_active_row);
   uint8_t dev_idx = 0;
@@ -155,7 +155,7 @@ void GridTask::transition_handler() {
     }
 
     if (last_slot != 255 && send_device[0]) {
-      update_transition_details(last_slot, slots_changed[last_slot]);
+      update_transition_details(last_slot);
     }
 
     DEBUG_PRINTLN(F("sending tracks"));
@@ -247,6 +247,7 @@ void GridTask::transition_handler() {
       }
       mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
+    last_active_row = slots_changed[last_slot];
     next_active_row = mcl_actions.links[last_slot].row;
     chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
     DEBUG_PRINTLN("ROWS");

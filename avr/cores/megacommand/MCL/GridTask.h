@@ -96,7 +96,7 @@ public:
   }
 
   void gui_update();
-  void update_transition_details(uint8_t last_slot, uint8_t last_row);
+  void update_transition_details(uint8_t last_slot);
   void transition_handler();
 
   bool link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed, uint8_t *track_select_array, GridDeviceTrack *gdt);
