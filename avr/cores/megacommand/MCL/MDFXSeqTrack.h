@@ -23,7 +23,7 @@ public:
     if (count_down) {
       count_down--;
       if (count_down == 0) {
-        MDSeqTrack::load_machine_cache |= (0b1111 << 16);
+        MDSeqTrack::load_machine_cache |= ((uint32_t) 0b1111 << 16);
         reset();
         mod12_counter = 0;
       }

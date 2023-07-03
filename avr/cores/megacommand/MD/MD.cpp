@@ -713,7 +713,7 @@ end:
   return sendRequest(data, i, send);
 }
 
-void MDClass::loadMachinesCache(uint16_t track_mask) {
+void MDClass::loadMachinesCache(uint32_t track_mask) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
