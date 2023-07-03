@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-uint16_t MDSeqTrack::sync_cursor = 0;
+bool MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
 uint32_t MDSeqTrack::load_machine_cache = 0;
 
@@ -112,7 +112,10 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-      SET_BIT16(sync_cursor, track_number);
+      if (mcl.currentPage() == SEQ_STEP_PAGE && last_md_track == track_number) {
+         MD.sync_seqtrack(length, speed, length - 1, uart);
+      }
+      gui_update = 1;
     }
     else if (count_down < track_number / 4 + 1) {
       goto end;

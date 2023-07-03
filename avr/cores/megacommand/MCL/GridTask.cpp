@@ -7,25 +7,14 @@ void GridTask::setup(uint16_t _interval) { interval = _interval; }
 void GridTask::destroy() {}
 
 void GridTask::gui_update() {
-  auto &active_track = mcl_seq.md_tracks[last_md_track];
-  if (mcl.currentPage() == SEQ_STEP_PAGE &&
-      IS_BIT_SET(MDSeqTrack::sync_cursor, last_md_track)) {
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.length - 1);
-  }
-  grid_page.set_active_row(last_active_row); // send led update
-  MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
-}
-
-void GridTask::sync_cursor() {
-  if (MDSeqTrack::sync_cursor) {
+  if (MDSeqTrack::gui_update) {
     if (MidiClock.state == 2) {
       if (last_active_row < GRID_LENGTH) {
-        gui_update();
-        MD.setKitName(kit_names[0]);
+        grid_page.set_active_row(last_active_row); // send led update
+        MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
       }
     }
-    MDSeqTrack::sync_cursor = 0;
+    MDSeqTrack::gui_update = 0;
   }
 }
 
@@ -38,13 +27,13 @@ void GridTask::run() {
   trig_interface.check_key_throttle();
 
   if (stop_hard_callback) {
-      mcl_actions_callbacks.StopHardCallback();
-      stop_hard_callback = false;
-      load_queue.init();
-      return;
-    }
+    mcl_actions_callbacks.StopHardCallback();
+    stop_hard_callback = false;
+    load_queue.init();
+    return;
+  }
 
-  sync_cursor();
+  gui_update();
 
   if (!load_queue.is_empty()) {
     uint8_t mode;
@@ -57,7 +46,11 @@ void GridTask::run() {
       if (row_select_array[n] < 128) {
         track_select[n] = 1;
       }
-      DEBUG_PRINT(n); DEBUG_PRINT(" "); DEBUG_PRINT(track_select[n]); DEBUG_PRINT(" "); DEBUG_PRINTLN(row_select_array[n]);
+      DEBUG_PRINT(n);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT(track_select[n]);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINTLN(row_select_array[n]);
     }
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(255, track_select, row_select_array, mode);
@@ -65,8 +58,7 @@ void GridTask::run() {
   GridTask::transition_handler();
 }
 
-void GridTask::transition_handler() {
-
+void GridTask::update_transition_details(uint8_t last_slot, uint8_t last_row) {
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
@@ -74,6 +66,28 @@ void GridTask::transition_handler() {
   ElektronDevice *elektron_devs[2] = {
       devs[0]->asElektronDevice(),
       devs[1]->asElektronDevice(),
+  };
+
+  last_active_row = last_row;
+  GridRowHeader row_header;
+  proj.read_grid_row_header(&row_header, last_active_row);
+  uint8_t dev_idx = 0;
+
+  uint8_t len = elektron_devs[0]->sysex_protocol.kitname_length;
+
+  if (row_header.active) {
+    memcpy(kit_names[dev_idx], row_header.name, len);
+    kit_names[dev_idx][len - 1] = '\0';
+  } else {
+    strcpy(kit_names[dev_idx], "NEW_KIT");
+  }
+}
+
+void GridTask::transition_handler() {
+
+  MidiDevice *devs[2] = {
+      midi_active_peering.get_device(UART1_PORT),
+      midi_active_peering.get_device(UART2_PORT),
   };
 
   bool send_device[2] = {0};
@@ -86,19 +100,17 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-
   GUI.removeTask(&grid_task);
 
-  //240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
-  //               = 0.032 * MidiClock.get_tempo()
+  // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
+  //                = 0.032 * MidiClock.get_tempo()
   //
   while (MidiClock.clock_less_than(
              MidiClock.div32th_counter + 0.032 * MidiClock.get_tempo(),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
-   float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
-   float div32th_time = 1.0 / div32th_per_second;
-
+    float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
+    float div32th_time = 1.0 / div32th_per_second;
 
     if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
       break;
@@ -110,15 +122,18 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN((int)SP);
 
     uint8_t row = 255;
-
+    uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       slots_changed[n] = 255;
 
       DEBUG_PRINTLN(n);
-      DEBUG_PRINT(mcl_actions.next_transition); DEBUG_PRINT(" "); DEBUG_PRINTLN(mcl_actions.next_transitions[n]);
+      DEBUG_PRINT(mcl_actions.next_transition);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINTLN(mcl_actions.next_transitions[n]);
 
       if ((mcl_actions.links[n].loops == 0) ||
-          (grid_page.active_slots[n] == SLOT_DISABLED) || (mcl_actions.next_transition != mcl_actions.next_transitions[n]))
+          (grid_page.active_slots[n] == SLOT_DISABLED) ||
+          (mcl_actions.next_transition != mcl_actions.next_transitions[n]))
         continue;
 
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
@@ -131,11 +146,16 @@ void GridTask::transition_handler() {
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
         send_device[device_idx] = true;
+        last_slot = n;
       }
 
       if (row == 255) {
         row = slots_changed[n];
       }
+    }
+
+    if (last_slot != 255 && send_device[0]) {
+      update_transition_details(last_slot, slots_changed[last_slot]);
     }
 
     DEBUG_PRINTLN(F("sending tracks"));
@@ -178,11 +198,11 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-           MidiUartParent::handle_midi_lock = 1;
-           handleIncomingMidi();
-           MidiUartParent::handle_midi_lock = 0;
+            MidiUartParent::handle_midi_lock = 1;
+            handleIncomingMidi();
+            MidiUartParent::handle_midi_lock = 0;
             if ((float)diff > (tempo * 0.8f) * 0.08) {
-                GUI.loop();
+              GUI.loop();
             }
           }
         }
@@ -206,8 +226,8 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN("time");
     DEBUG_PRINTLN(t);
 
+
     // Once tracks are cached, we can calculate their next transition
-    uint8_t last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
 
@@ -218,39 +238,22 @@ void GridTask::transition_handler() {
       bool ignore_chain_settings = true;
       bool auto_check = true;
       if (track_select_array[n] > 0) {
-        last_slot = n;
         ignore_chain_settings = false;
         auto_check = false;
-      }
-      else if (mcl_actions.chains[n].mode == LOAD_AUTO && mcl_actions.links[n].loops == 0) {
+      } else if (mcl_actions.chains[n].mode == LOAD_AUTO &&
+                 mcl_actions.links[n].loops == 0) {
         mcl_actions.next_transitions[n] = -1;
         continue;
       }
       mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
+    next_active_row = mcl_actions.links[last_slot].row;
+    chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
+    DEBUG_PRINTLN("ROWS");
+    DEBUG_PRINTLN(next_active_row);
+    DEBUG_PRINTLN(last_active_row);
 
-    if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
-      last_active_row = slots_changed[last_slot];
-      next_active_row = mcl_actions.links[last_slot].row;
-      chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
-
-      GridRowHeader row_header;
-      proj.read_grid_row_header(&row_header, last_active_row);
-      uint8_t dev_idx = 0;
-
-      if (elektron_devs[dev_idx]) {
-        uint8_t len = elektron_devs[dev_idx]->sysex_protocol.kitname_length;
-
-        if (row_header.active) {
-          memcpy(kit_names[dev_idx], row_header.name, len);
-          kit_names[dev_idx][len - 1] = '\0';
-        } else {
-          strcpy(kit_names[dev_idx], "NEW_KIT");
-        }
-      }
-    }
-
-    sync_cursor();
+    gui_update();
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();
   }
@@ -274,16 +277,8 @@ bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
   return false;
 }
 
-bool GridTask::transition_load(uint8_t n, uint8_t track_idx, GridDeviceTrack *gdt) {
-  MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
-  };
-  ElektronDevice *elektron_devs[2] = {
-      devs[0]->asElektronDevice(),
-      devs[1]->asElektronDevice(),
-  };
-
+bool GridTask::transition_load(uint8_t n, uint8_t track_idx,
+                               GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
 
   auto *pmem_track =

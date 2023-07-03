@@ -713,13 +713,13 @@ end:
   return sendRequest(data, i, send);
 }
 
-void MDClass::loadMachinesCache(uint32_t track_mask) {
+void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
   uint8_t data[5] = { 0x70, 0x62, a, b, c };
-  sendRequest(data, countof(data));
+  sendRequest(data, countof(data), uart_);
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {

@@ -271,7 +271,8 @@ void MCLSeq::seq() {
   mdfx_track.seq();
 
   if (MDSeqTrack::load_machine_cache) {
-    MD.loadMachinesCache(MDSeqTrack::load_machine_cache);
+    MD.setKitName(grid_task.kit_names[0], uart);
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
   }
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {

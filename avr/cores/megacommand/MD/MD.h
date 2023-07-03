@@ -265,7 +265,7 @@ public:
      return sendMachine(track + 16, machine, send_level, send);
   }
 
-  void loadMachinesCache(uint32_t track_mask);
+  void loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_ = nullptr);
 
   /**
    * Inserts a machine in to the MDKit object
