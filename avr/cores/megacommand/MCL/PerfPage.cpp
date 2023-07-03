@@ -21,6 +21,7 @@ void PerfPage::init() {
   last_mask = last_blink_mask = 0;
   show_menu = false;
   last_page_mode = 255;
+  MD.set_rec_mode(3);
 }
 
 void PerfPage::set_led_mask() {
@@ -51,6 +52,7 @@ void PerfPage::set_led_mask() {
 void PerfPage::cleanup() {
   PerfPageParent::cleanup();
   trig_interface.off();
+  MD.set_rec_mode(0);
 }
 
 void PerfPage::config_encoder_range(uint8_t i) {
@@ -413,27 +415,38 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       return true;
     }
     }
+    uint8_t t = note_interface.get_first_md_note();
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_NO: {
+      case MDX_KEY_COPY: {
+        char *str = "COPY SCENE";
+        oled_display.textbox(str, "");
+        MD.popup_text(str);
+        mcl_clipboard.copy_scene(&perf_encoders[perf_id]->perf_data.scenes[t]);
+        break;
+      }
+      case MDX_KEY_PASTE: {
+        if (mcl_clipboard.paste_scene(&perf_encoders[perf_id]->perf_data.scenes[t])) {
+          char *str = "PASTE SCENE";
+          oled_display.textbox(str, "");
+          MD.popup_text(str);
+        }
+        break;
+      }
+      case MDX_KEY_CLEAR: {
         char *str = "CLEAR SCENE";
         oled_display.textbox(str, "");
         MD.popup_text(str);
-        for (uint8_t n = 0; n < 4; n++) {
-          if (note_interface.is_note_on(n)) {
-            perf_encoders[perf_id]->perf_data.clear_scene(n);
-          }
-        }
+        perf_encoders[perf_id]->perf_data.clear_scene(t);
         config_encoders();
         break;
       }
       case MDX_KEY_YES: {
-        uint8_t a = note_interface.get_first_md_note();
         PerfEncoder *e = perf_encoders[perf_id];
-        if (a >= NUM_SCENES) {
+        if (t >= NUM_SCENES) {
           return true;
         }
-        PerfScene *s1 = &e->perf_data.scenes[a], *s2 = nullptr;
+        PerfScene *s1 = &e->perf_data.scenes[t], *s2 = nullptr;
         e->send_params(0,s1,s2);
         return true;
       }
