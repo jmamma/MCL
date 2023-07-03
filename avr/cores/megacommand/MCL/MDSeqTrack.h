@@ -23,7 +23,7 @@ public:
 
   uint8_t locks_params_orig[NUM_LOCKS];
 
-  static bool gui_update;
+  static uint16_t gui_update;
   static uint16_t md_trig_mask;
   static uint32_t load_machine_cache;
 

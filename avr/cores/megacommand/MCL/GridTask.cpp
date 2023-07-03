@@ -15,6 +15,10 @@ void GridTask::gui_update() {
   if (MDSeqTrack::gui_update) {
     if (MidiClock.state == 2) {
       if (last_active_row < GRID_LENGTH) {
+       if (mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
+           auto active_track = mcl_seq.md_tracks[last_md_track];
+           MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1);
+       }
        row_update();
       }
     }
