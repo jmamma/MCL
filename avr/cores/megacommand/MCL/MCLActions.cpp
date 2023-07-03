@@ -452,7 +452,7 @@ again:
 
   grid_task.next_active_row = row;
   grid_task.chain_behaviour = false;
-  grid_task.gui_update();
+  grid_task.row_update();
 
   if (recalc_latency) {
     calc_latency();
@@ -665,7 +665,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     grid_task.next_active_row = links[last_slot].row;
     grid_task.chain_behaviour = chains[last_slot].mode > 1;
   }
-  grid_task.gui_update();
+  grid_task.row_update();
 
   calc_next_transition();
   calc_latency();

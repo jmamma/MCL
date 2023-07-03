@@ -6,13 +6,16 @@ void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
 void GridTask::destroy() {}
 
+void GridTask::row_update() {
+  grid_page.set_active_row(last_active_row); // send led update
+  MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
+}
+
 void GridTask::gui_update() {
   if (MDSeqTrack::gui_update) {
     if (MidiClock.state == 2) {
       if (last_active_row < GRID_LENGTH) {
-        grid_page.set_active_row(last_active_row); // send led update
-        MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
-        DEBUG_PRINTLN("draw pattern idx");
+       row_update();
       }
     }
     MDSeqTrack::gui_update = 0;
@@ -59,7 +62,7 @@ void GridTask::run() {
   GridTask::transition_handler();
 }
 
-void GridTask::update_transition_details(uint8_t last_slot) {
+void GridTask::update_transition_details() {
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
@@ -70,7 +73,7 @@ void GridTask::update_transition_details(uint8_t last_slot) {
   };
 
   GridRowHeader row_header;
-  proj.read_grid_row_header(&row_header, last_active_row);
+  proj.read_grid_row_header(&row_header, next_active_row);
   uint8_t dev_idx = 0;
 
   uint8_t len = elektron_devs[0]->sysex_protocol.kitname_length;
@@ -146,7 +149,6 @@ void GridTask::transition_handler() {
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
         send_device[device_idx] = true;
-        last_slot = n;
       }
 
       if (row == 255) {
@@ -154,8 +156,10 @@ void GridTask::transition_handler() {
       }
     }
 
-    if (last_slot != 255 && send_device[0]) {
-      update_transition_details(last_slot);
+    if (send_device[0]) {
+      //Send kitName before tracks are cache-loaded in MD.
+      //This allows the kitName to be stored in the undokit.
+      update_transition_details();
     }
 
     DEBUG_PRINTLN(F("sending tracks"));
@@ -238,6 +242,7 @@ void GridTask::transition_handler() {
       bool ignore_chain_settings = true;
       bool auto_check = true;
       if (track_select_array[n] > 0) {
+        last_slot = n;
         ignore_chain_settings = false;
         auto_check = false;
       } else if (mcl_actions.chains[n].mode == LOAD_AUTO &&
@@ -247,12 +252,11 @@ void GridTask::transition_handler() {
       }
       mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
-    last_active_row = slots_changed[last_slot];
-    next_active_row = mcl_actions.links[last_slot].row;
-    chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
-    DEBUG_PRINTLN("ROWS");
-    DEBUG_PRINTLN(next_active_row);
-    DEBUG_PRINTLN(last_active_row);
+    if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
+      last_active_row = slots_changed[last_slot];
+      next_active_row = mcl_actions.links[last_slot].row;
+      chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
+    }
 
     gui_update();
     mcl_actions.calc_next_transition();
