@@ -19,6 +19,8 @@ public:
       : LightPage(e1, e2, e3, e4) {
   }
 
+  uint8_t undo = 255;
+
   uint8_t learn = 0;
   uint8_t old_mode = 0;
   uint8_t last_page_mode;

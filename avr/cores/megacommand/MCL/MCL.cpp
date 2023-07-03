@@ -278,7 +278,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_COPY: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if (mcl.currentPage() != SEQ_PTC_PAGE &&
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
@@ -295,7 +295,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_PASTE: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if (mcl.currentPage() != SEQ_PTC_PAGE &&
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
@@ -313,9 +313,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_CLEAR: {
-        if (mcl.currentPage() == PERF_PAGE_0)
-          break;
-        if (mcl.currentPage() == SEQ_STEP_PAGE)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if ((note_interface.notes_count_on() > 0) ||
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||

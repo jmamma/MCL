@@ -28,8 +28,12 @@ void PerfPage::set_led_mask() {
   uint16_t mask = 0;
 
   PerfEncoder *e = perf_encoders[perf_id];
-  if (e->active_scene_a < NUM_SCENES) { SET_BIT16(mask, e->active_scene_a); }
-  if (e->active_scene_b < NUM_SCENES) { SET_BIT16(mask, e->active_scene_b); }
+  if (e->active_scene_a < NUM_SCENES) {
+    SET_BIT16(mask, e->active_scene_a);
+  }
+  if (e->active_scene_b < NUM_SCENES) {
+    SET_BIT16(mask, e->active_scene_b);
+  }
 
   if (last_mask != mask) {
     MD.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
@@ -244,7 +248,8 @@ void PerfPage::display() {
   oled_display.setFont(oldfont);
   mcl_gui.draw_panel_labels(info1, info2);
 
-  if (trig_interface.is_key_down(MDX_KEY_LEFT) || trig_interface.is_key_down(MDX_KEY_RIGHT)) {
+  if (trig_interface.is_key_down(MDX_KEY_LEFT) ||
+      trig_interface.is_key_down(MDX_KEY_RIGHT)) {
     oled_display.setCursor(54, MCLGUI::pane_info2_y + 4);
     oled_display.print(F("SELECT"));
   }
@@ -288,6 +293,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
           trig_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
         }
         page_mode = n + 1;
+        undo = 255;
         config_encoders(true);
       }
     }
@@ -348,12 +354,12 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       PerfEncoder *e = perf_encoders[perf_id];
 
       if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
-         e->active_scene_a = e->active_scene_a == track ? 255 : track;
-         return true;
+        e->active_scene_a = e->active_scene_a == track ? 255 : track;
+        return true;
       }
       if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
-         e->active_scene_b = e->active_scene_b == track ? 255 : track;
-         return true;
+        e->active_scene_b = e->active_scene_b == track ? 255 : track;
+        return true;
       }
 
       learn = track + 1;
@@ -361,7 +367,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       send_locks(scene);
       config_encoders();
       if (page_mode == PERF_DESTINATION) {
-        page_mode = last_page_mode == 255 ? 0 : last_page_mode;
+        page_mode = last_page_mode == 255 ? 1 : last_page_mode;
         config_encoders();
       }
     }
@@ -415,46 +421,75 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       return true;
     }
     }
-    uint8_t t = note_interface.get_first_md_note();
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      switch (key) {
-      case MDX_KEY_COPY: {
-        char *str = "COPY SCENE";
-        oled_display.textbox(str, "");
-        MD.popup_text(str);
-        mcl_clipboard.copy_scene(&perf_encoders[perf_id]->perf_data.scenes[t]);
-        break;
-      }
-      case MDX_KEY_PASTE: {
-        if (mcl_clipboard.paste_scene(&perf_encoders[perf_id]->perf_data.scenes[t])) {
-          char *str = "PASTE SCENE";
+
+      uint8_t t = note_interface.get_first_md_note();
+      if (t < NUM_SCENES) {
+        switch (key) {
+        case MDX_KEY_COPY: {
+          char *str = "COPY SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
-        }
-        break;
-      }
-      case MDX_KEY_CLEAR: {
-        char *str = "CLEAR SCENE";
-        oled_display.textbox(str, "");
-        MD.popup_text(str);
-        perf_encoders[perf_id]->perf_data.clear_scene(t);
-        config_encoders();
-        break;
-      }
-      case MDX_KEY_YES: {
-        PerfEncoder *e = perf_encoders[perf_id];
-        if (t >= NUM_SCENES) {
+          mcl_clipboard.copy_scene(
+              &perf_encoders[perf_id]->perf_data.scenes[t]);
+          undo = 255;
           return true;
         }
-        PerfScene *s1 = &e->perf_data.scenes[t], *s2 = nullptr;
-        e->send_params(0,s1,s2);
-        return true;
+        case MDX_KEY_PASTE: {
+          if (undo < NUM_SCENES) { return; }
+          if (mcl_clipboard.paste_scene(
+                  &perf_encoders[perf_id]->perf_data.scenes[t])) {
+            char *str = "PASTE SCENE";
+            oled_display.textbox(str, "");
+            MD.popup_text(str);
+            config_encoders();
+            send_locks(t);
+          }
+          return true;
+        }
+        case MDX_KEY_CLEAR: {
+          if (t == undo) {
+           if (mcl_clipboard.paste_scene(
+              &perf_encoders[perf_id]->perf_data.scenes[undo])) {
+                  char *str = "UNDO CLEAR";
+                  oled_display.textbox(str, "");
+                  MD.popup_text(str);
+                  undo = 255;
+                  goto end_clear;
+           }
+           undo = 255;
+           return true;
+          }
+          else {
+            undo = t;
+            mcl_clipboard.copy_scene(&perf_encoders[perf_id]->perf_data.scenes[t]);
+          }
+          char *str = "CLEAR SCENE";
+          oled_display.textbox(str, "");
+          MD.popup_text(str);
+          perf_encoders[perf_id]->perf_data.clear_scene(t);
+          end_clear:
+          config_encoders();
+          send_locks(t);
+          return true;
+        }
+        case MDX_KEY_YES: {
+          PerfEncoder *e = perf_encoders[perf_id];
+          if (t >= NUM_SCENES) {
+            return true;
+          }
+          PerfScene *s1 = &e->perf_data.scenes[t], *s2 = nullptr;
+          e->send_params(0, s1, s2);
+          return true;
+        }
+        }
       }
+      switch (key) {
       case MDX_KEY_UP: {
-       if (learn && page_mode < NUM_PERF_PARAMS){
+        if (learn && page_mode < NUM_PERF_PARAMS) {
           page_mode++;
           config_encoders();
-       }
+        }
         return true;
       }
       case MDX_KEY_DOWN: {
