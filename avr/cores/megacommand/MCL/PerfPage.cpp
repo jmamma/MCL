@@ -72,17 +72,7 @@ void PerfPage::config_encoder_range(uint8_t i) {
     ((MCLEncoder *)encoders[i + 1])->max = 23;
   }
 }
-void PerfPage::recalc_src_params() {
-  PerfData::src_params = 0;
-  for (uint8_t n = 0; n < 4; n++) {
-    PerfData *d = &perf_encoders[n]->perf_data;
-    if (d->src > 0 && d->src <= NUM_MD_TRACKS && d->param < 24) {
-      DEBUG_PRINTLN("Setting bit");
-      DEBUG_PRINTLN(d->param);
-      SET_BIT32(PerfData::src_params, d->param);
-    }
-  }
-}
+
 void PerfPage::config_encoders(uint8_t show_val) {
 
   encoders[0] = perf_encoders[perf_id];
@@ -169,7 +159,6 @@ void PerfPage::update_params() {
     if (encoders[1]->hasChanged() || encoders[2]->hasChanged()) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       d->update_src(encoders[1]->cur, encoders[2]->cur, encoders[3]->cur);
-      recalc_src_params();
     }
   }
 }

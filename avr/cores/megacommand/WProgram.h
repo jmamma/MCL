@@ -11,7 +11,7 @@
 
 #include "wiring_private.h"
 
-#define DEBUGMODE
+//#define DEBUGMODE
 
 #ifdef MEGACOMMAND
   #define SD_CS 53 //PB0

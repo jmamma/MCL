@@ -134,7 +134,6 @@ public:
 class PerfData {
 public:
   static PerfScene scenes[NUM_SCENES];
-  static uint32_t src_params;
 
   uint8_t src;
   uint8_t param;
