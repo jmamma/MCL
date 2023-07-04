@@ -493,7 +493,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_DOWN: {
-        if (learn && page_mode > 0) {
+        if (learn && page_mode > 1) {
           page_mode--;
           config_encoders();
         }
