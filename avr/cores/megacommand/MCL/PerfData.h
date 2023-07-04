@@ -91,16 +91,19 @@ public:
     return b;
   }
 
-  void clear_param(uint8_t dest, uint8_t param) {
+  bool clear_param(uint8_t dest, uint8_t param) {
+    bool ret = false;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
       if (params[a].dest == dest + 1 && params[a].param == param) {
          params[a].val = 255;
          params[a].dest = 0;
          params[a].param = 0;
+         ret = true;
          count--;
       }
     }
+    return ret;
   }
 
   uint8_t find_empty() {
@@ -133,10 +136,12 @@ public:
 class PerfData {
 public:
   static PerfScene scenes[NUM_SCENES];
+  static uint32_t track_params[NUM_MD_TRACKS];
 
   uint8_t src;
   uint8_t param;
   uint8_t min;
+
 
   PerfData() { init_params(); }
 
@@ -160,27 +165,44 @@ public:
   void clear_param_scene(uint8_t dest_, uint8_t param_, uint8_t scene) {
 
     PerfScene *s = &scenes[scene];
-    s->clear_param(dest_, param_);
+    bool ret = s->clear_param(dest_, param_);
+    if (ret && dest_ < NUM_MD_TRACKS) {
+      CLEAR_BIT32(track_params[dest_], param_);
+    }
+
   }
 
   uint8_t add_param(uint8_t dest_, uint8_t param_, uint8_t scene, uint8_t value) {
 
     PerfScene *s = &scenes[scene];
 
-    return s->add_param(dest_,param_,value);
+    uint8_t ret = s->add_param(dest_,param_,value);
+    if (ret != 255 && dest_ < NUM_MD_TRACKS) {
+      SET_BIT32(track_params[dest_], param_);
+    }
+
+    return ret;
 
  }
 
-  void init_params() {
-    for (uint8_t n = 0; n < NUM_SCENES; n++) {
-      PerfScene *s = &scenes[n];
-      s->init();
-    }
-  }
   void clear_scene(uint8_t scene) {
     PerfScene *s = &scenes[scene];
+    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
+      uint8_t t = s->params[a].dest - 1;
+      if (t < NUM_MD_TRACKS) {
+        CLEAR_BIT32(track_params[t], s->params[a].param);
+      }
+    }
     s->init();
   }
+
+  void init_params() {
+    for (uint8_t n = 0; n < NUM_SCENES; n++) {
+      clear_scene(n);
+    }
+    memset(track_params,0,sizeof(track_params));
+  }
+
 
 };
 

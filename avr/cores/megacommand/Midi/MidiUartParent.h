@@ -83,6 +83,7 @@ public:
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
   virtual void m_putc(uint8_t c) = 0;
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
+  virtual void m_recv(uint8_t *src, uint16_t size) = 0;
   virtual bool avail() { return false; }
 
   virtual uint8_t getc() { return 0; }

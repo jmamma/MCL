@@ -374,12 +374,12 @@ void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
 }
 
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
-                            MidiUartParent *uart_, bool update_kit) {
-  setTrackParam_inline(track, param, value, uart_, update_kit);
+                            MidiUartParent *uart_, bool update_kit, bool loopback) {
+  setTrackParam_inline(track, param, value, uart_, update_kit, loopback);
 }
 
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
-                                   MidiUartParent *uart_, bool update_kit) {
+                                   MidiUartParent *uart_, bool update_kit, bool loopback) {
 
   if (uart_ == nullptr) {
     uart_ = uart;
@@ -402,6 +402,11 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     cc = 8 + b;
   } else {
     return;
+  }
+  if (loopback) {
+    uint8_t msg[3] = {(uint8_t)(MIDI_CONTROL_CHANGE | (channel + global.baseChannel)), cc, value};
+    uart_->m_recv(msg, 3);
+    //MidiUart.m_recv(msg, 3);
   }
   uart_->sendCC(channel + global.baseChannel, cc, value);
 }

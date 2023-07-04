@@ -307,6 +307,10 @@ public:
     }
   }
 
+  ALWAYS_INLINE() void m_recv(uint8_t *src, uint16_t size) {
+    rxRb.put_h_isr(src, size);
+  }
+
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     txRb.put_h_isr(src, size);
     set_tx();

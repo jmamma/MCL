@@ -433,8 +433,10 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     }
     lock_idx += lock_bit;
     if (send) {
-      MD.setTrackParam_inline(track_number, locks_params[c] - 1, send_param,
-                              uart);
+      uint8_t p = locks_params[c] - 1;
+      bool loopback = IS_BIT_SET32(PerfData::track_params[track_number], p);
+      bool update_kit = false;
+      MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit, loopback);
     }
   }
 }
