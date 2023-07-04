@@ -15,7 +15,6 @@ void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val) {
     MidiUart2.sendCC(channel, param, val);
   } else if (dest >= NUM_MD_TRACKS) {
     MD.sendFXParam(param, val, MD_FX_ECHO + dest - NUM_MD_TRACKS);
-    setLed2();
   } else {
     MD.setTrackParam(dest, param, val);
   }
