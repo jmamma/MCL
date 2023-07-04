@@ -28,16 +28,22 @@ void PerfPage::set_led_mask() {
   uint16_t mask = 0;
 
   PerfEncoder *e = perf_encoders[perf_id];
-  if (e->active_scene_a < NUM_SCENES) {
-    SET_BIT16(mask, e->active_scene_a);
-  }
-  if (e->active_scene_b < NUM_SCENES) {
-    SET_BIT16(mask, e->active_scene_b);
-  }
 
+  if (show_menu) {
+    SET_BIT16(mask, perf_id);
+  }
+  else {
+    if (e->active_scene_a < NUM_SCENES) {
+      SET_BIT16(mask, e->active_scene_a);
+    }
+    if (e->active_scene_b < NUM_SCENES) {
+      SET_BIT16(mask, e->active_scene_b);
+    }
+  }
   if (last_mask != mask) {
     MD.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
   }
+  if (show_menu) { last_mask = mask; return; }
   bool blink = true;
 
   uint16_t blink_mask = 0;
@@ -164,12 +170,12 @@ void PerfPage::update_params() {
 }
 
 void PerfPage::loop() {
+  set_led_mask();
   if (show_menu) {
     perf_menu_page.loop();
     return;
   }
   update_params();
-  set_led_mask();
 }
 
 void PerfPage::display() {
@@ -352,6 +358,8 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (track >= NUM_SCENES) {
         return true;
       }
+
+      if (show_menu) { perf_id = track; config_encoders(); return true; }
 
       PerfEncoder *e = perf_encoders[perf_id];
 
