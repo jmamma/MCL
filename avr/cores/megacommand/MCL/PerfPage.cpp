@@ -284,7 +284,9 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
     }
   }
   if (mcl.currentPage() == PERF_PAGE_0) {
-
+    if (dest > NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
+        return;
+    }
     if (learn) {
       uint8_t scene = learn - 1;
       uint8_t n = d->add_param(dest, param, scene, value);

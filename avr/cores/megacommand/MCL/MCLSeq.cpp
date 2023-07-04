@@ -368,7 +368,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
    return;
   }
 
-  if (MidiClock.state != 2) { perf_page.learn_param(channel + 16 + 4, param, value); }
+  perf_page.learn_param(channel + 16 + 4, param, value);
 }
 
 void MCLSeqMidiEvents::setup_callbacks() {
