@@ -14,6 +14,7 @@ class PerfEncoder : public MCLEncoder {
 
   public:
   PerfData perf_data;
+
   uint8_t active_scene_a = 0;
   uint8_t active_scene_b = 1;
   void send();

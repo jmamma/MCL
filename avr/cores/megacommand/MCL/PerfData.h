@@ -91,7 +91,7 @@ public:
     return b;
   }
 
-  bool clear_param(uint8_t dest, uint8_t param) {
+  void clear_param(uint8_t dest, uint8_t param) {
     bool ret = false;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
@@ -99,11 +99,9 @@ public:
          params[a].val = 255;
          params[a].dest = 0;
          params[a].param = 0;
-         ret = true;
          count--;
       }
     }
-    return ret;
   }
 
   uint8_t find_empty() {
@@ -136,7 +134,7 @@ public:
 class PerfData {
 public:
   static PerfScene scenes[NUM_SCENES];
-  static uint32_t track_params[NUM_MD_TRACKS];
+  static uint32_t src_params;
 
   uint8_t src;
   uint8_t param;
@@ -146,6 +144,12 @@ public:
   PerfData() { init_params(); }
 
   void *data() const { return (void *)&scenes; }
+
+  void update_src(uint8_t src_, uint8_t param_, uint8_t min_) {
+    src = src_;
+    param = param_;
+    min = min_;
+  }
 
   uint16_t get_active_scene_mask() {
     uint16_t mask = 0;
@@ -165,33 +169,20 @@ public:
   void clear_param_scene(uint8_t dest_, uint8_t param_, uint8_t scene) {
 
     PerfScene *s = &scenes[scene];
-    bool ret = s->clear_param(dest_, param_);
-    if (ret && dest_ < NUM_MD_TRACKS) {
-      CLEAR_BIT32(track_params[dest_], param_);
-    }
+    s->clear_param(dest_, param_);
 
   }
 
   uint8_t add_param(uint8_t dest_, uint8_t param_, uint8_t scene, uint8_t value) {
 
     PerfScene *s = &scenes[scene];
-
-    uint8_t ret = s->add_param(dest_,param_,value);
-    if (ret != 255 && dest_ < NUM_MD_TRACKS) {
-      SET_BIT32(track_params[dest_], param_);
-    }
-
-    return ret;
-
- }
+    return s->add_param(dest_,param_,value);
+  }
 
   void clear_scene(uint8_t scene) {
     PerfScene *s = &scenes[scene];
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       uint8_t t = s->params[a].dest - 1;
-      if (t < NUM_MD_TRACKS) {
-        CLEAR_BIT32(track_params[t], s->params[a].param);
-      }
     }
     s->init();
   }
@@ -200,7 +191,6 @@ public:
     for (uint8_t n = 0; n < NUM_SCENES; n++) {
       clear_scene(n);
     }
-    memset(track_params,0,sizeof(track_params));
   }
 
 

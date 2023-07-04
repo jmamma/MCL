@@ -108,6 +108,7 @@ bool ElektronDevice::get_fw_caps() {
 }
 
 void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+  encoder_interface = true;
   uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
 
   uint8_t mod7 = 0;
@@ -131,6 +132,7 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
 void ElektronDevice::deactivate_encoder_interface() {
   uint8_t data[3] = {0x70, 0x36, 0x00};
   sendRequest(data, sizeof(data));
+  encoder_interface = false;
   //waitBlocking();
 }
 

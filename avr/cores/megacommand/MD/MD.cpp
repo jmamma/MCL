@@ -405,8 +405,8 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
   }
   if (loopback) {
     uint8_t msg[3] = {(uint8_t)(MIDI_CONTROL_CHANGE | (channel + global.baseChannel)), cc, value};
-    uart_->m_recv(msg, 3);
-    //MidiUart.m_recv(msg, 3);
+    //uart_->m_recv(msg, 3);
+    MidiUart.m_recv(msg, 3);
   }
   uart_->sendCC(channel + global.baseChannel, cc, value);
 }

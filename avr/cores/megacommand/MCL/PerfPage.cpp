@@ -72,7 +72,17 @@ void PerfPage::config_encoder_range(uint8_t i) {
     ((MCLEncoder *)encoders[i + 1])->max = 23;
   }
 }
-
+void PerfPage::recalc_src_params() {
+  PerfData::src_params = 0;
+  for (uint8_t n = 0; n < 4; n++) {
+    PerfData *d = &perf_encoders[n]->perf_data;
+    if (d->src > 0 && d->src <= NUM_MD_TRACKS && d->param < 24) {
+      DEBUG_PRINTLN("Setting bit");
+      DEBUG_PRINTLN(d->param);
+      SET_BIT32(PerfData::src_params, d->param);
+    }
+  }
+}
 void PerfPage::config_encoders(uint8_t show_val) {
 
   encoders[0] = perf_encoders[perf_id];
@@ -156,10 +166,11 @@ void PerfPage::update_params() {
     if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
       encoders[2]->cur = 0;
     }
-    PerfData *d = &perf_encoders[perf_id]->perf_data;
-    d->src = encoders[1]->cur;
-    d->param = encoders[2]->cur;
-    d->min = encoders[3]->cur;
+    if (encoders[1]->hasChanged() || encoders[2]->hasChanged()) {
+      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      d->update_src(encoders[1]->cur, encoders[2]->cur, encoders[3]->cur);
+      recalc_src_params();
+    }
   }
 }
 
@@ -436,7 +447,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_PASTE: {
-          if (undo < NUM_SCENES) { return; }
+          if (undo < NUM_SCENES) {
+            return;
+          }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
             char *str = "PASTE SCENE";
@@ -449,26 +462,26 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_CLEAR: {
           if (t == undo) {
-           if (mcl_clipboard.paste_scene(
-              &perf_encoders[perf_id]->perf_data.scenes[undo])) {
-                  char *str = "UNDO CLEAR";
-                  oled_display.textbox(str, "");
-                  MD.popup_text(str);
-                  undo = 255;
-                  goto end_clear;
-           }
-           undo = 255;
-           return true;
-          }
-          else {
+            if (mcl_clipboard.paste_scene(
+                    &perf_encoders[perf_id]->perf_data.scenes[undo])) {
+              char *str = "UNDO CLEAR";
+              oled_display.textbox(str, "");
+              MD.popup_text(str);
+              undo = 255;
+              goto end_clear;
+            }
+            undo = 255;
+            return true;
+          } else {
             undo = t;
-            mcl_clipboard.copy_scene(&perf_encoders[perf_id]->perf_data.scenes[t]);
+            mcl_clipboard.copy_scene(
+                &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
           char *str = "CLEAR SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
           perf_encoders[perf_id]->perf_data.clear_scene(t);
-          end_clear:
+        end_clear:
           config_encoders();
           send_locks(t);
           return true;

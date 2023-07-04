@@ -20,6 +20,7 @@ public:
   bool reset_on_release = false;
   bool update_params_queue;
   bool prepare = false;
+
   uint8_t pitch_param;
   uint16_t ignore_release;
   uint16_t update_params_clock;

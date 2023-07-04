@@ -101,6 +101,9 @@ void SeqStepPage::cleanup() {
   params_reset();
   MD.set_rec_mode(0);
   MD.popup_text(127, 2); // clear persistent trig mode popup
+  if (MD.encoder_interface) {
+    MD.deactivate_encoder_interface();
+  }
 }
 
 void SeqStepPage::display() {
@@ -313,11 +316,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (show_seq_menu) {
-       opt_trackid = track + 1;
-       note_interface.ignoreNextEvent(track);
-       select_track(device, track);
-       seq_menu_page.select_item(0);
-       return true;
+      opt_trackid = track + 1;
+      note_interface.ignoreNextEvent(track);
+      select_track(device, track);
+      seq_menu_page.select_item(0);
+      return true;
     }
     uint8_t step = track + (page_select * 16);
 
@@ -367,7 +370,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
       if (pitch > 127) {
-         pitch = MD.kit.params[last_md_track][0];
+        pitch = MD.kit.params[last_md_track][0];
       }
       /*
       if (pitch == 255) {

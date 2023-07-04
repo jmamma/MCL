@@ -37,6 +37,7 @@ public:
   PerfEncoder *perf_encoders[4];
 
   bool handleEvent(gui_event_t *event);
+  void recalc_src_params();
   void update_params();
   void learn_param(uint8_t dest, uint8_t param, uint8_t value);
 
