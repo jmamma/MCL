@@ -112,7 +112,7 @@ extern MCLEncoder wavdesign_menu_entry_encoder;
 constexpr size_t wavdesign_menu_page_N = 3;
 extern MenuPage<wavdesign_menu_page_N> wavdesign_menu_page;
 
-constexpr size_t perf_menu_page_N = 2;
+constexpr size_t perf_menu_page_N = 1;
 extern MenuPage<perf_menu_page_N> perf_menu_page;
 
 extern uint8_t opt_import_src;

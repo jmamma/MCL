@@ -269,7 +269,7 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
         //           m  r  n  d   p  f   o
 
         {"CTRL SEL:",0,  4, 4, 59, 255, 0,  117},
-        {"PARAM:",    0, 17, 1, 58, 255, 0,  116},
+      //  {"PARAM:",    0, 17, 1, 58, 255, 0,  116},
     },
     0, 0
 };

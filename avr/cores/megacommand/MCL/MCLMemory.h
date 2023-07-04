@@ -35,9 +35,10 @@ constexpr size_t NUM_EXT_TRACKS = 0;
 
 constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 
-constexpr size_t NUM_AUX_TRACKS = 3;
+constexpr size_t NUM_AUX_TRACKS = 4;
 
-constexpr size_t GRIDCHAIN_TRACK_NUM = 11;
+constexpr size_t GRIDCHAIN_TRACK_NUM = 10;
+constexpr size_t PERF_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
 constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
@@ -73,6 +74,7 @@ constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
 constexpr size_t MDFX_TRACK_LEN = 43;
 constexpr size_t MDTEMPO_TRACK_LEN = 11;
+constexpr size_t PERF_TRACK_LEN = 423;
 constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 
 //Use these to produce compiler errors that probes the sizes!
@@ -99,8 +101,9 @@ constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHA
 constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
 constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
 constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
+constexpr size_t BANK1_PERF_TRACK_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
 // 6x A4 tracks
-constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;
+constexpr size_t BANK1_A4_TRACKS_START = BANK1_MDTEMPO_TRACK_START + PERF_TRACK_LEN;
 
 // 512x file entries (16 bytes each), stored in Bank3
 constexpr size_t NUM_FILE_ENTRIES = 408;

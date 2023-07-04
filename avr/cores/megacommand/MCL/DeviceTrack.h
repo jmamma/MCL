@@ -18,6 +18,8 @@ class MDRouteTrack;
 class MDTempoTrack;
 class MDLFOTrack;
 class MNMTrack;
+class PerfTrack;
+class GridChainTrack;
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
   void _dynamik_kast_impl(DeviceTrack *p, klass **pp) {                        \
@@ -50,6 +52,8 @@ private:
   __IMPL_DYNAMIK_KAST(MDTempoTrack, MDTEMPO_TRACK_TYPE, MDTEMPO_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MNMTrack, MNM_TRACK_TYPE, MNM_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDLFOTrack, MDLFO_TRACK_TYPE, MDLFO_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(PerfTrack, PERF_TRACK_TYPE, PERF_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
 
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);

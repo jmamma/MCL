@@ -77,6 +77,7 @@
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
 #include "GridChainTrack.h"
+#include "PerfTrack.h"
 
 #include "ArpSeqTrack.h"
 #include "EmptyTrack.h"

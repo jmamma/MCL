@@ -69,6 +69,8 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 // !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
 // Do compile with avr-gcc and observe the error messages
 
+//__SIZE_PROBE<BANK1_MDTEMPO_TRACK_START + 2094 * NUM_EXT_TRACKS> size;
+//__SIZE_PROBE<sizeof(PerfTrack)> perftrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(a4sound_t)> sza4t;
