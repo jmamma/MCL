@@ -42,22 +42,27 @@ void MixerPage::oled_draw_mutes() {
 }
 
 void MixerPage::setup() {
-        /*
-  encoders[0]->handler = encoder_level_handle;
-  encoders[1]->handler = encoder_filtf_handle;
-  encoders[2]->handler = encoder_filtw_handle;
-  encoders[3]->handler = encoder_filtq_handle;
-  */
+  mixer_param1.handler = encoder_level_handle;
+  mixer_param2.handler = encoder_filtf_handle;
+  mixer_param3.handler = encoder_filtw_handle;
+  mixer_param4.handler = encoder_filtq_handle;
+}
+
+void MixerPage::restore_encoders() {
+  encoders[0] = &perf_param1;
+  encoders[1] = &perf_param2;
+  encoders[2] = &perf_param3;
+  encoders[3] = &perf_param4;
 }
 
 void MixerPage::init() {
   level_pressmode = 0;
-  /*
-  for (uint8_t i = 0; i < 4; i++) {
-    encoders[i]->cur = 64;
-    encoders[i]->old = 64;
+  if (note_interface.notes_count_on() > 0) {
+    for (uint8_t i = 0; i < 4; i++) {
+      encoders[i]->cur = 64;
+      encoders[i]->old = 64;
+    }
   }
-  */
   MD.set_key_repeat(0);
   trig_interface.on();
   MD.set_trigleds(0, TRIGLED_OVERLAY);
@@ -71,6 +76,7 @@ void MixerPage::init() {
   redraw_mask = -1;
   show_mixer_menu = 0;
   populate_mute_set();
+  restore_encoders();
 //  R.Clear();
 //  R.use_machine_param_names();
 }
@@ -394,6 +400,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED && track <= len) {
       if (note_interface.is_note(track)) {
+        encoders[0] = &mixer_param1;
+        encoders[1] = &mixer_param2;
+        encoders[2] = &mixer_param3;
+        encoders[3] = &mixer_param4;
         if (show_mixer_menu || preview_mute_set != 255) {
 
           SeqTrack *seq_track = is_md_device
@@ -437,6 +447,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       SET_BIT16(redraw_mask, track);
       if (note_interface.notes_count_on() == 0) {
+        restore_encoders();
         first_track = 255;
         note_interface.init_notes();
         oled_draw_mutes();
