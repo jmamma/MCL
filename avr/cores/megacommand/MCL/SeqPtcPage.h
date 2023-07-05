@@ -55,6 +55,9 @@ public:
   bool scale_padding;
   bool cc_link_enable;
 
+  uint8_t octs[NUM_DEVS];
+  uint8_t fine_tunes[NUM_DEVS];
+
   uint8_t find_arp_track(uint8_t channel_event);
 
   SeqPtcMidiEvents midi_events;
