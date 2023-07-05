@@ -47,6 +47,7 @@ public:
   void loop();
   void cleanup();
 
+  void func_enc_check();
   void set_led_mask();
   void config_encoders(uint8_t show_val = false);
 

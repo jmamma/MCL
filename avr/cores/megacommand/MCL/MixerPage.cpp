@@ -89,7 +89,9 @@ void MixerPage::set_level(int curtrack, int value) {
   // in_sysex = 0;
 }
 
-void MixerPage::loop() {}
+void MixerPage::loop() {
+  perf_page.func_enc_check();
+}
 
 void MixerPage::draw_levels() {}
 

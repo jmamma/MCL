@@ -37,8 +37,7 @@ void PerfPage::set_led_mask() {
 
   if (show_menu) {
     SET_BIT16(mask, perf_id);
-  }
-  else {
+  } else {
     if (e->active_scene_a < NUM_SCENES) {
       SET_BIT16(mask, e->active_scene_a);
     }
@@ -49,7 +48,10 @@ void PerfPage::set_led_mask() {
   if (last_mask != mask) {
     MD.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
   }
-  if (show_menu) { last_mask = mask; return; }
+  if (show_menu) {
+    last_mask = mask;
+    return;
+  }
   bool blink = true;
 
   uint16_t blink_mask = 0;
@@ -70,7 +72,21 @@ void PerfPage::cleanup() {
   trig_interface.off();
   MD.set_rec_mode(0);
 }
-
+void PerfPage::func_enc_check() {
+  if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+    for (uint8_t n = 0; n < 4; n++) {
+      PerfEncoder *e = perf_encoders[n];
+      int dir = e->cur - e->old;
+      if (dir < 0) {
+        e->cur = 0;
+      }
+      if (dir > 0) {
+        e->cur = 127;
+      }
+      e->send();
+    }
+  }
+}
 void PerfPage::config_encoder_range(uint8_t i) {
   ((PerfEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16;
   ((PerfEncoder *)encoders[i + 1])->min = 0;
@@ -140,7 +156,9 @@ void PerfPage::config_encoders(uint8_t show_val) {
   }
 }
 void PerfPage::update_params() {
-  if (show_menu) { return; }
+  if (show_menu) {
+    return;
+  }
   uint8_t c = page_mode - 1;
   if (page_mode > PERF_DESTINATION) {
     config_encoder_range(1);
@@ -179,6 +197,7 @@ void PerfPage::loop() {
     perf_menu_page.loop();
     return;
   }
+  func_enc_check();
   update_params();
 }
 
@@ -295,7 +314,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   }
   if (mcl.currentPage() == PERF_PAGE_0) {
     if (dest > NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
-        return;
+      return;
     }
     if (learn) {
       uint8_t scene = learn - 1;
@@ -326,10 +345,9 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
 void rename_perf() {
   const char *my_title = "PerfCtrl Name:";
 
-  mcl_gui.wait_for_input(perf_page.perf_encoders[perf_page.perf_id]->name, my_title, 8);
-
+  mcl_gui.wait_for_input(perf_page.perf_encoders[perf_page.perf_id]->name,
+                         my_title, 8);
 }
-
 
 void PerfPage::send_locks(uint8_t scene) {
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
@@ -371,7 +389,10 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      if (show_menu) { perf_id = track; return true; }
+      if (show_menu) {
+        perf_id = track;
+        return true;
+      }
 
       PerfEncoder *e = perf_encoders[perf_id];
 
@@ -394,7 +415,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if (show_menu) { return true; }
+      if (show_menu) {
+        return true;
+      }
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         seq_step_page.enable_paramupdate_events();
