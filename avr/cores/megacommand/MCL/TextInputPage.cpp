@@ -28,12 +28,6 @@ void TextInputPage::setup() {}
 
 void TextInputPage::init() {
   oled_display.setTextColor(WHITE, BLACK);
-  key_repeat_old = MD.key_repeat;
-  MD.set_key_repeat(1);
-}
-
-void TextInputPage::cleanup() {
-  MD.set_key_repeat(key_repeat_old);
 }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {

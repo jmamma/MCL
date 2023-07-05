@@ -27,6 +27,7 @@ void PerfPage::init() {
   show_menu = false;
   last_page_mode = 255;
   MD.set_rec_mode(3);
+  config_encoders();
 }
 
 void PerfPage::set_led_mask() {
@@ -550,10 +551,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN("calling menu func");
       (*row_func)();
     }
-
-    show_menu = false;
-    config_encoders();
-
+    init();
     return true;
   }
 
