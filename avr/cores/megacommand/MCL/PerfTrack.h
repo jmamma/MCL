@@ -14,6 +14,12 @@ public:
   uint8_t active_scene_b;
 
   uint8_t cur;
+  void init() {
+    src = param = min = 0;
+    active_scene_a = 0;
+    active_scene_b = 1;
+  }
+
 };
 
 class PerfTrackData {
@@ -29,7 +35,14 @@ public:
     static_assert(sizeof(PerfTrack) <= PERF_TRACK_LEN);
   }
 
-  void init() {}
+  void init() {
+    for (uint8_t n = 0; n < NUM_SCENES; n++) {
+      if (n < 4) {
+        encs[n].init();
+      }
+      scenes[n].init();
+    }
+  }
 
   void load_perf();
   void get_perf();

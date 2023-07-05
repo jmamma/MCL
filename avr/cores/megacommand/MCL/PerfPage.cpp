@@ -8,10 +8,6 @@
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
-  perf_encoders[0] = &perf_param1;
-  perf_encoders[1] = &perf_param2;
-  perf_encoders[2] = &perf_param3;
-  perf_encoders[3] = &perf_param4;
 }
 
 void PerfPage::init() {
@@ -85,8 +81,6 @@ void PerfPage::config_encoders(uint8_t show_val) {
   encoders[1] = &fx_param2;
   encoders[2] = &fx_param3;
   encoders[3] = &fx_param4;
-
-  ((PerfEncoder *)encoders[0])->max = 127;
 
   if (page_mode > PERF_DESTINATION) {
     if (learn) {

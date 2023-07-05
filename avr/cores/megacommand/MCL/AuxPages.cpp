@@ -13,10 +13,10 @@ MCLEncoder fx_param2;
 MCLEncoder fx_param3;
 MCLEncoder fx_param4;
 
-PerfEncoder perf_param1;
-PerfEncoder perf_param2;
-PerfEncoder perf_param3;
-PerfEncoder perf_param4;
+PerfEncoder perf_param1(0,127);
+PerfEncoder perf_param2(0,127);
+PerfEncoder perf_param3(0,127);
+PerfEncoder perf_param4(0,127);
 
 MixerPage mixer_page(&perf_param1, &perf_param2, &perf_param3,
                      &perf_param4);
