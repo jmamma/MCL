@@ -239,7 +239,7 @@ void PerfPage::display() {
     draw_dest(1, encoders[1]->cur, false);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
     mcl_gui.draw_knob(3, encoders[3], "THR");
-    info2 = "CONTROL";
+    strcpy(info2, e->name);
   }
 
   // oled_display.fillCircle(6, 6, 6, WHITE);
@@ -321,6 +321,14 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
     }
   }
 }
+
+void rename_perf() {
+  const char *my_title = "PerfCtrl Name:";
+
+  mcl_gui.wait_for_input(perf_page.perf_encoders[perf_page.perf_id]->name, my_title, 8);
+
+}
+
 
 void PerfPage::send_locks(uint8_t scene) {
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
@@ -536,8 +544,16 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    void (*row_func)() =
+        perf_menu_page.menu.get_row_function(perf_menu_page.encoders[1]->cur);
+    if (row_func != NULL) {
+      DEBUG_PRINTLN("calling menu func");
+      (*row_func)();
+    }
+
     show_menu = false;
     config_encoders();
+
     return true;
   }
 

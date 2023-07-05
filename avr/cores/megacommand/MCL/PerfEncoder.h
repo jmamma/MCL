@@ -15,7 +15,7 @@ class PerfEncoder : public MCLEncoder {
      **/
 
   public:
-  char name[PERF_NAME_LENGTH] = "";
+  char name[PERF_NAME_LENGTH] = "CONTROL";
 
   PerfData perf_data;
 

@@ -155,6 +155,8 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     usb_disk_mode,
     // 29
     mcl_setup,
+    // 30
+    rename_perf,
 };
 MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
 

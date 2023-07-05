@@ -334,7 +334,10 @@ public:
   bool loadedKit;
   /** Set to true if the global was loaded (usually set by MDTask). **/
   bool loadedGlobal;
+
   bool encoder_interface;
+  uint8_t key_repeat;
+
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id,
       const ElektronSysexProtocol& protocol)

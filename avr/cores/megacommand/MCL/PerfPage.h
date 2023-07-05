@@ -57,6 +57,7 @@ public:
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
 };
+extern void rename_perf();
 
 extern MCLEncoder perf_page_param1;
 extern MCLEncoder perf_page_param2;

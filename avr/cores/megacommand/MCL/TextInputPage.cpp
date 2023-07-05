@@ -26,7 +26,15 @@ uint8_t _findchar(char chr) {
 
 void TextInputPage::setup() {}
 
-void TextInputPage::init() { oled_display.setTextColor(WHITE, BLACK); }
+void TextInputPage::init() {
+  oled_display.setTextColor(WHITE, BLACK);
+  key_repeat_old = MD.key_repeat;
+  MD.set_key_repeat(1);
+}
+
+void TextInputPage::cleanup() {
+  MD.set_key_repeat(key_repeat_old);
+}
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   textp = text_;
@@ -83,7 +91,20 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
 }
 
 void TextInputPage::loop() {
-  if (normal_mode == false) {
+  if (normal_mode) {
+  if (encoders[0]->hasChanged()) {
+    update_char();
+    last_clock = slowclock;
+  }
+
+  if (encoders[1]->hasChanged()) {
+    last_clock = slowclock;
+    encoders[1]->old = encoders[1]->cur;
+    text[cursor_position] = _getchar(encoders[1]->getValue());
+  }
+
+  }
+  else {
     if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
       ((MCLEncoder *)encoders[0])->max = charpane_w - 4;
     }
@@ -97,7 +118,6 @@ void TextInputPage::loop() {
 // E0 -> x axis [0..17]
 // E1 -> y axis [0..3]
 void TextInputPage::config_charpane() {
-#ifdef OLED_DISPLAY
   // char pane not supported on 1602 displays
 
   ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
@@ -111,26 +131,6 @@ void TextInputPage::config_charpane() {
   encoders[1]->cur = chridx / charpane_w;
   encoders[1]->old = encoders[1]->cur;
 
-  oled_display.setFont(&TomThumb);
-  oled_display.clearDisplay();
-  oled_display.drawRect(0, 0, 128, 32, WHITE);
-  uint8_t chidx = 0;
-  for (uint8_t y = 0; y < charpane_h; ++y) {
-    for (uint8_t x = 0; x < charpane_w; ++x) {
-      auto sx = x, sy = y;
-      calc_charpane_coord(sx, sy);
-      oled_display.setCursor(sx + charpane_padx, sy + charpane_pady);
-      oled_display.print(_getchar(chidx));
-      ++chidx;
-    }
-  }
-
-  // initial highlight of selected char
-  uint8_t sx = encoders[0]->cur, sy = encoders[1]->cur;
-  calc_charpane_coord(sx, sy);
-  oled_display.fillRect(sx, sy, 5, 7, INVERT);
-  oled_display.display();
-#endif
 }
 
 void TextInputPage::display_normal() {
@@ -142,16 +142,6 @@ void TextInputPage::display_normal() {
 
   // Check to see that the character chosen is in the list of allowed
   // characters
-  if (encoders[0]->hasChanged()) {
-    update_char();
-    last_clock = slowclock;
-  }
-
-  if (encoders[1]->hasChanged()) {
-    last_clock = slowclock;
-    encoders[1]->old = encoders[1]->cur;
-    text[cursor_position] = _getchar(encoders[1]->getValue());
-  }
   auto time = clock_diff(last_clock, slowclock);
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
@@ -173,32 +163,33 @@ void TextInputPage::display_normal() {
     last_clock = slowclock;
   }
   oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 void TextInputPage::display_charpane() {
-#ifdef OLED_DISPLAY
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
-    // clear old highlight
-    uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
-    calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 5, 7, INVERT);
+  oled_display.setFont(&TomThumb);
+  oled_display.clearDisplay();
+  oled_display.drawRect(0, 0, 128, 32, WHITE);
+  uint8_t chidx = 0;
+  for (uint8_t y = 0; y < charpane_h; ++y) {
+    for (uint8_t x = 0; x < charpane_w; ++x) {
+      auto sx = x, sy = y;
+      calc_charpane_coord(sx, sy);
+      oled_display.setCursor(sx + charpane_padx, sy + charpane_pady);
+      oled_display.print(_getchar(chidx));
+      ++chidx;
+    }
+  }
+
     // draw new highlight
-    sx = encoders[0]->cur;
-    sy = encoders[1]->cur;
+    uint8_t sx = encoders[0]->cur;
+    uint8_t sy = encoders[1]->cur;
     calc_charpane_coord(sx, sy);
     oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // update text. in charpane mode, cursor_position remains constant
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
-    // mark encoders as unchanged
-    encoders[0]->old = encoders[0]->cur;
-    encoders[1]->old = encoders[1]->cur;
-  }
 
   last_clock = slowclock;
-  oled_display.display();
-#endif
 }
 
 void TextInputPage::display() {
@@ -206,6 +197,8 @@ void TextInputPage::display() {
     display_normal();
   else
     display_charpane();
+
+  oled_display.display();
 }
 
 bool TextInputPage::handleEvent(gui_event_t *event) {

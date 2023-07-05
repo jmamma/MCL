@@ -107,13 +107,8 @@ void GuiClass::loop() {
     }
   }
 
-#ifndef HOST_MIDIDUINO
-  ::loop();
-#endif
   if (use_screen_saver && clock_minutes >= SCREEN_SAVER_TIME) {
-#ifdef OLED_DISPLAY
     oled_display.screen_saver = true;
-#endif
   }
   MidiUartParent::handle_midi_lock = 0;
 

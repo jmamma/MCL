@@ -63,3 +63,4 @@ int PerfEncoder::update(encoder_t *enc) {
   }
   return cur;
 }
+

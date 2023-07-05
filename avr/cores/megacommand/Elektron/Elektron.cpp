@@ -172,6 +172,7 @@ void ElektronDevice::set_rec_mode(uint8_t mode) {
 }
 
 void ElektronDevice::set_key_repeat(uint8_t mode) {
+  key_repeat = mode;
   uint8_t data[3] = {0x70, 0x4E, mode};
   sendRequest(data, sizeof(data));
   // waitBlocking();
