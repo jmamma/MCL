@@ -1,6 +1,7 @@
 #include "MCL_impl.h"
 
 void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+  DEBUG_PRINTLN("transition send");
   load_perf();
 }
 
@@ -21,12 +22,15 @@ void PerfTrack::get_perf() {
   }
   DEBUG_PRINTLN("get perf");
   DEBUG_PRINTLN(sizeof(scenes));
-  memcpy(&scenes[0], &PerfData::scenes[0], sizeof(scenes));
+  memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
+  scenes[0].debug();
 }
 
 
 void PerfTrack::load_perf() {
-
+  DEBUG_PRINTLN("load perf");
+  DEBUG_PRINTLN( sizeof(scenes));
+  scenes[0].debug();
   for (uint8_t n = 0; n < 4; n++) {
     PerfEncoder *e = perf_page.perf_encoders[n];
     PerfData *d = &e->perf_data;
@@ -38,12 +42,11 @@ void PerfTrack::load_perf() {
     e->cur = encs[n].cur;
   }
 
-  DEBUG_PRINTLN("load perf");
-  DEBUG_PRINTLN( sizeof(scenes));
-  memcpy(&PerfData::scenes[0], &scenes[0], sizeof(scenes));
+ memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
 }
 
 void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  DEBUG_PRINTLN("load immediate");
   load_link_data(seq_track);
   load_perf();
 }

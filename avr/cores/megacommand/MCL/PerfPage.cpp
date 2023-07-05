@@ -8,6 +8,11 @@
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
+  perf_param1.init();
+  perf_param2.init();
+  perf_param3.init();
+  perf_param4.init();
+
   perf_encoders[0] = &perf_param1;
   perf_encoders[1] = &perf_param2;
   perf_encoders[2] = &perf_param3;
@@ -134,7 +139,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
   }
 }
 void PerfPage::update_params() {
-
+  if (show_menu) { return; }
   uint8_t c = page_mode - 1;
   if (page_mode > PERF_DESTINATION) {
     config_encoder_range(1);
@@ -357,7 +362,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      if (show_menu) { perf_id = track; config_encoders(); return true; }
+      if (show_menu) { perf_id = track; return true; }
 
       PerfEncoder *e = perf_encoders[perf_id];
 
@@ -380,7 +385,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-
+      if (show_menu) { return true; }
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         seq_step_page.enable_paramupdate_events();
@@ -528,10 +533,12 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     encoders[0] = &seq_menu_value_encoder;
     encoders[1] = &seq_menu_entry_encoder;
     perf_menu_page.init();
+    return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     show_menu = false;
     config_encoders();
+    return true;
   }
 
   return false;

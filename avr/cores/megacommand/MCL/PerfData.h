@@ -47,7 +47,7 @@ class PerfScene {
 public:
   PerfParam params[NUM_PERF_PARAMS];
   uint8_t count;
-  PerfScene() { init(); }
+  PerfScene() { }
 
   bool is_active() { return count > 0; }
 
@@ -57,6 +57,17 @@ public:
       params[a].dest = 0;
       params[a].param = 0;
       params[a].val = 255;
+    }
+  }
+
+  void debug() {
+    DEBUG_PRINT("count: "); DEBUG_PRINTLN(count);
+    for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+    DEBUG_PRINT("PARAM "); DEBUG_PRINT(n); 
+    DEBUG_PRINT(" DEST:"); DEBUG_PRINT(params[n].dest); 
+    DEBUG_PRINT(" PARAM:"); DEBUG_PRINT(params[n].param);
+    DEBUG_PRINT(" DEST:"); DEBUG_PRINT(params[n].dest); 
+    DEBUG_PRINTLN("");
     }
   }
 
@@ -140,7 +151,12 @@ public:
   uint8_t min;
 
 
-  PerfData() { init_params(); }
+  PerfData() { }
+
+  void init() {
+    src = param = min = 0;
+    init_params();
+  }
 
   void *data() const { return (void *)&scenes; }
 

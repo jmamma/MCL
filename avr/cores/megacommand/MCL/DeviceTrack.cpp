@@ -56,6 +56,9 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid 
 
   // virtual functions are ready
 
+  DEBUG_PRINTLN("device load from 512");
+  DEBUG_PRINTLN(active != EMPTY_TRACK_TYPE);
+  DEBUG_PRINTLN(ptrack->get_track_size());
   if (active != EMPTY_TRACK_TYPE) {
     if ( ptrack->get_track_size() < 512) { return ptrack; }
     size_t len = ptrack->get_track_size() - 512;
