@@ -76,14 +76,17 @@ void PerfPage::func_enc_check() {
   if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
     for (uint8_t n = 0; n < 4; n++) {
       PerfEncoder *e = perf_encoders[n];
-      int dir = e->cur - e->old;
-      if (dir < 0) {
-        e->cur = 0;
+      if (e->hasChanged()) {
+        int dir = e->cur - e->old;
+        if (dir < 0) {
+          e->cur = 0;
+        }
+        if (dir > 0) {
+          e->cur = 127;
+        }
+        e->old = e->cur;
+        e->send();
       }
-      if (dir > 0) {
-        e->cur = 127;
-      }
-      e->send();
     }
   }
 }
