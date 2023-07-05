@@ -156,6 +156,7 @@ void MCL::setup() {
   A4SysexListener.setup(&Midi2);
   MNMSysexListener.setup(&Midi2);
 #endif
+  perf_page.setup();
 
   grid_task.init();
 

@@ -8,6 +8,10 @@
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
+  perf_encoders[0] = &perf_param1;
+  perf_encoders[1] = &perf_param2;
+  perf_encoders[2] = &perf_param3;
+  perf_encoders[3] = &perf_param4;
 }
 
 void PerfPage::init() {
