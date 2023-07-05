@@ -390,7 +390,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
 
       if (show_menu) {
-        perf_id = track;
+        if (track < 4) {
+          perf_id = track;
+        }
         return true;
       }
 
