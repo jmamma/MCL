@@ -6,6 +6,7 @@
 
 class PerfTrackEncoderData {
 public:
+  char name[PERF_NAME_LENGTH];
   uint8_t src;
   uint8_t param;
   uint8_t min;

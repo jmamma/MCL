@@ -6,6 +6,8 @@
 #include "MCLEncoder.h"
 #include "PerfData.h"
 
+#define PERF_NAME_LENGTH 9
+
 class PerfEncoder : public MCLEncoder {
     /**
        \addtogroup gui_rangeencoder_class
@@ -13,6 +15,8 @@ class PerfEncoder : public MCLEncoder {
      **/
 
   public:
+  char name[PERF_NAME_LENGTH] = "";
+
   PerfData perf_data;
 
   uint8_t active_scene_a = 0;

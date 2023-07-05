@@ -74,7 +74,7 @@ constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
 constexpr size_t MDFX_TRACK_LEN = 43;
 constexpr size_t MDTEMPO_TRACK_LEN = 11;
-constexpr size_t PERF_TRACK_LEN = 423;
+constexpr size_t PERF_TRACK_LEN = 459;
 constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 
 //Use these to produce compiler errors that probes the sizes!

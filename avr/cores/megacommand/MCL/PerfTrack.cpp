@@ -19,18 +19,17 @@ void PerfTrack::get_perf() {
     encs[n].active_scene_a = e->active_scene_a;
     encs[n].active_scene_b = e->active_scene_b;
     encs[n].cur = e->cur;
+    memcpy(encs[n].name,e->name, PERF_NAME_LENGTH);
   }
   DEBUG_PRINTLN("get perf");
   DEBUG_PRINTLN(sizeof(scenes));
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
-  scenes[0].debug();
 }
 
 
 void PerfTrack::load_perf() {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
-  scenes[0].debug();
   for (uint8_t n = 0; n < 4; n++) {
     PerfEncoder *e = perf_page.perf_encoders[n];
     PerfData *d = &e->perf_data;
@@ -40,6 +39,7 @@ void PerfTrack::load_perf() {
     e->active_scene_a = encs[n].active_scene_a;
     e->active_scene_b = encs[n].active_scene_b;
     e->cur = encs[n].cur;
+    memcpy(e->name,encs[n].name, PERF_NAME_LENGTH);
   }
 
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
