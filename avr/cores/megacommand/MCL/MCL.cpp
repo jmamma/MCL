@@ -174,7 +174,6 @@ void MCL::setup() {
 #endif
   }
   param4.cur = 4;
-  mcl.pushPage(PERF_PAGE_0);
 }
 
 bool mcl_handleEvent(gui_event_t *event) {

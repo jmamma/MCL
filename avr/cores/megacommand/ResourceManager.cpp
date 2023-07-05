@@ -45,54 +45,38 @@ void ResourceManager::Restore(uint8_t *buf, size_t sz) {
 
 void ResourceManager::restore_page_entry_deps() {
   // calibrate references
-  R.page_entries->Entries[0].Page = GRID_PAGE;
   R.page_entries->Entries[0].IconData = R.icons_page->icon_grid;
-  R.page_entries->Entries[1].Page = MIXER_PAGE;
   R.page_entries->Entries[1].IconData = R.icons_page->icon_mixer;
-  R.page_entries->Entries[2].Page = ROUTE_PAGE;
-  R.page_entries->Entries[2].IconData = R.icons_page->icon_route;
-  R.page_entries->Entries[3].Page = LFO_PAGE;
-  R.page_entries->Entries[3].IconData = R.icons_page->icon_lfo;
+  R.page_entries->Entries[2].IconData = R.icons_page->icon_perf;
+  R.page_entries->Entries[3].IconData = R.icons_page->icon_route;
 
-  R.page_entries->Entries[4].Page = SEQ_STEP_PAGE;
+
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
-
-  R.page_entries->Entries[5].Page = SEQ_EXTSTEP_PAGE;
   R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].Page = SEQ_PTC_PAGE;
   R.page_entries->Entries[6].IconData = R.icons_page->icon_chroma;
+  R.page_entries->Entries[7].IconData = R.icons_page->icon_lfo;
 
-  uint8_t idx = 7;
+
+  uint8_t idx = 8;
 #ifdef SOUND_PAGE
-  R.page_entries->Entries[idx].Page = SAMPLE_BROWSER;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_sample;
   ++idx;
 #endif
 #ifdef WAV_DESIGNER
-  R.page_entries->Entries[idx].Page = WD_PAGE_0;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
   ++idx;
-  R.page_entries->Entries[idx].Page = PERF_PAGE_0;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
-  ++idx;
-
 #endif
 #ifdef LOUDNESS_PAGE
-  R.page_entries->Entries[idx].Page = LOUDNESS_PAGE;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_loudness;
   ++idx;
 #endif
 
-  R.page_entries->Entries[idx].Page = FX_PAGE_A;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_rhytmecho;
   ++idx;
-  R.page_entries->Entries[idx].Page = FX_PAGE_B;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
   ++idx;
-  R.page_entries->Entries[idx].Page = RAM_PAGE_A;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram1;
   ++idx;
-  R.page_entries->Entries[idx].Page = RAM_PAGE_B;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
   // calibration complete
 }

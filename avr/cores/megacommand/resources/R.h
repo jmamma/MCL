@@ -110,6 +110,12 @@ struct __T_icons_knob {
 extern const unsigned char __R_icons_page[] PROGMEM;
 struct __T_icons_page {
   union {
+    unsigned char icon_perf[0];
+    char zz__icon_perf[54];
+  };
+  static constexpr size_t countof_icon_perf = 54 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_perf = 54;
+  union {
     unsigned char icon_chroma[0];
     char zz__icon_chroma[75];
   };
@@ -141,10 +147,10 @@ struct __T_icons_page {
   static constexpr size_t sizeofof_icon_sample = 75;
   union {
     unsigned char icon_route[0];
-    char zz__icon_route[48];
+    char zz__icon_route[42];
   };
-  static constexpr size_t countof_icon_route = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_route = 48;
+  static constexpr size_t countof_icon_route = 42 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_route = 42;
   union {
     unsigned char icon_rhytmecho[0];
     char zz__icon_rhytmecho[75];
@@ -165,10 +171,10 @@ struct __T_icons_page {
   static constexpr size_t sizeofof_icon_mixer = 48;
   union {
     unsigned char icon_step[0];
-    char zz__icon_step[75];
+    char zz__icon_step[63];
   };
-  static constexpr size_t countof_icon_step = 75 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_step = 75;
+  static constexpr size_t countof_icon_step = 63 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_step = 63;
   union {
     unsigned char icon_wavd[0];
     char zz__icon_wavd[57];
@@ -193,7 +199,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
-  static constexpr size_t __total_size = 918;
+  static constexpr size_t __total_size = 954;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
