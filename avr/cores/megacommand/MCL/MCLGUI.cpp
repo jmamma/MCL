@@ -330,7 +330,7 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
   draw_encoder(x, y, encoder->cur);
 }
 
-bool MCLGUI::show_encoder_value(Encoder *encoder) {
+bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
   uint8_t match = 255;
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match == 255; i++) {
@@ -341,11 +341,11 @@ bool MCLGUI::show_encoder_value(Encoder *encoder) {
 
   if (match != 255) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
-                   slowclock) < SHOW_VALUE_TIMEOUT) {
+                   slowclock) < timeout) {
       return true;
     } else {
       ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
-          slowclock + SHOW_VALUE_TIMEOUT + 1;
+          slowclock + timeout + 1;
     }
   }
 

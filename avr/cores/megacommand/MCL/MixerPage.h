@@ -40,6 +40,8 @@ public:
   uint16_t redraw_mask;
   bool show_mixer_menu;
 
+  bool draw_encoders;
+
   uint8_t current_mute_set = 0;
   uint8_t preview_mute_set = 255;
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);

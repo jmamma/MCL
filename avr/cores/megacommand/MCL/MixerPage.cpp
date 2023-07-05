@@ -71,7 +71,8 @@ void MixerPage::init() {
   redraw_mask = -1;
   show_mixer_menu = 0;
   populate_mute_set();
-//  R.Clear();
+  draw_encoders = false;
+  //  R.Clear();
 //  R.use_machine_param_names();
 }
 
@@ -91,6 +92,22 @@ void MixerPage::set_level(int curtrack, int value) {
 
 void MixerPage::loop() {
   perf_page.func_enc_check();
+  bool old_draw_encoders = draw_encoders;
+  if (draw_encoders && trig_interface.is_key_down(MDX_KEY_FUNC)) {
+    draw_encoders = true;
+  }
+  else {
+      draw_encoders = false;
+      constexpr int timeout = 800;
+      for (uint8_t n = 0; n < 4; n++) {
+         if (note_interface.notes_on) { encoders_used_clock[n] = slowclock + timeout + 1; }
+         if (mcl_gui.show_encoder_value(encoders[n],timeout)) { draw_encoders = true; }
+      }
+  }
+  if (draw_encoders != old_draw_encoders) {
+    if (!draw_encoders) { redraw_mask = -1;
+    oled_display.clearDisplay(); oled_draw_mutes(); }
+  }
 }
 
 void MixerPage::draw_levels() {}
@@ -189,17 +206,29 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 void MixerPage::display() {
 
   auto oldfont = oled_display.getFont();
-
-  uint8_t fader_level;
-  uint8_t meter_level;
-  uint8_t fader_x = 0;
-  constexpr uint8_t fader_y = 11;
-
   if (oled_display.textbox_enabled) {
     oled_display.clearDisplay();
     oled_draw_mutes();
     redraw_mask = -1;
   }
+
+  else if (draw_encoders) {
+    //oled_display.clearDisplay();
+    oled_display.fillRect(0,0,128,12,BLACK);
+    for (uint8_t n = 0; n < 4; n++) {
+      char *str1 = "A";
+      str1[0] = 'A' + n;
+      uint8_t pos = n * 24;
+      mcl_gui.draw_encoder(24 + pos, 0, encoders[n]->cur);
+      oled_display.setCursor(16 + pos, 2);
+      oled_display.print(str1);
+    }
+  }
+  uint8_t fader_level;
+  uint8_t meter_level;
+  uint8_t fader_x = 0;
+  constexpr uint8_t fader_y = 11;
+
   bool is_md_device = (midi_device == &MD);
 
   uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
@@ -389,7 +418,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (track > 16) {
       return false;
     }
-
     if (!show_mixer_menu && preview_mute_set == 255) {
       trig_interface.send_md_leds(TRIGLED_OVERLAY);
     }
