@@ -746,6 +746,7 @@ void opt_clear_track_handler() {
       if (is_poly) {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+            mcl_clipboard.copy_sequencer_track(c);
             mcl_seq.md_tracks[c].clear_track();
           }
         }
@@ -908,15 +909,26 @@ void opt_paste_track_handler() {
   }
   if (opt_paste == 1) {
     if (SeqPage::midi_device == &MD) {
+      bool is_poly = false;
       if (!undo) {
         oled_display.textbox("PASTE TRACK", "");
         MD.popup_text(6);
       } else {
         oled_display.textbox("UNDO TRACK", "");
+        is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
         MD.popup_text(23);
       }
+      if (is_poly) {
+        for (uint8_t c = 0; c < 16; c++) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+            mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track, c);
+          }
+        }
+      }
+      else {
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_md_track);
+      }
     } else {
       char *str = "UNDO EXT TRACK";
       if (!undo) {
