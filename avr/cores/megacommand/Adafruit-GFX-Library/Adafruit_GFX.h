@@ -34,8 +34,8 @@ class Adafruit_GFX : public Print {
   // optimized code.  Otherwise 'generic' versions are used.
   virtual void setRotation(uint8_t r);
   virtual void invertDisplay(boolean i);
-  virtual void draw_textbox(char *text, char *text2);
-
+  void draw_textbox(char *text, char *text2);
+  void draw_textbox(const char *text1, const char *text2);
   // BASIC DRAW API
   // These MAY be overridden by the subclass to provide device-specific
   // optimized code.  Otherwise 'generic' versions are used.

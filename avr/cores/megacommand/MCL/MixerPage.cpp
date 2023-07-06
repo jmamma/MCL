@@ -63,7 +63,6 @@ void MixerPage::init() {
   MD.set_trigleds(0, TRIGLED_OVERLAY);
   preview_mute_set = 255;
   bool switch_tracks = false;
-  midi_events.setup_callbacks();
   oled_display.clearDisplay();
   oled_draw_mutes();
   set_display_mode(MODEL_LEVEL);
@@ -81,7 +80,6 @@ void MixerPage::cleanup() {
   oled_display.clearDisplay();
   MD.set_key_repeat(1);
   trig_interface.off();
-  midi_events.remove_callbacks();
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -165,6 +163,7 @@ void send_fx(uint8_t param, EncoderParent *enc, uint8_t type) {
   oled_display.textbox(str, str2);
 }
 
+/*
 void encoder_filtf_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MODEL_FLTF);
 }
@@ -180,6 +179,7 @@ void encoder_filtq_handle(EncoderParent *enc) {
 void encoder_lastparam_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
 }
+*/
 
 void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
@@ -636,14 +636,15 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
+/*
 void MixerMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
   Midi.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
-  Midi.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
+  //Midi.addOnNoteOffCallback(
+  //    this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MixerMidiEvents::onControlChangeCallback_Midi);
@@ -669,7 +670,7 @@ void MixerMidiEvents::remove_callbacks() {
 }
 
 void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
   uint8_t track;
@@ -679,6 +680,10 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track > 15) {
     return;
   }
+}
+*/
+
+void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value) {
   if (track_param == 32) {
     return;
   } // don't process mute
@@ -698,7 +703,7 @@ void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   mixer_page.set_display_mode(track_param);
 }
 
-uint8_t MixerMidiEvents::note_to_trig(uint8_t note_num) {
+uint8_t MixerPage::note_to_trig(uint8_t note_num) {
   uint8_t trig_num = 0;
   for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
     if (note_num == MD.global.drumMapping[i]) {
@@ -707,7 +712,8 @@ uint8_t MixerMidiEvents::note_to_trig(uint8_t note_num) {
   }
   return trig_num;
 }
-void MixerMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
+
+void MixerPage::onNoteOnCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
@@ -716,4 +722,3 @@ void MixerMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
     mixer_page.disp_levels[n] = MD.kit.levels[n];
   }
 }
-void MixerMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}

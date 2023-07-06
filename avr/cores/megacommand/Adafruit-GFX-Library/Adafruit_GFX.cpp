@@ -963,6 +963,14 @@ void Adafruit_GFX::setRotation(uint8_t x) {
   }
 }
 
+void Adafruit_GFX::draw_textbox(const char *text1, const char *text2) {
+  char str1[16];
+  char str2[16];
+  strcpy_P(str1, text1);
+  strcpy_P(str1, text2);
+  draw_textbox(str1, str2);
+}
+
 void Adafruit_GFX::draw_textbox(char *text, char *text2) {
   auto oldfont = getFont();
   setFont();

@@ -309,7 +309,9 @@ void MCLSeq::seq() {
   }
 }
 
-void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
+void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
+  mixer_page.onNoteOnCallback_Midi(msg);
+}
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
 
@@ -322,6 +324,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   MD.parseCC(channel, param, &track, &track_param);
   if (track > 15) { return; }
+
+  if (mcl.currentPage() == MIXER_PAGE) { mixer_page.onControlChangeCallback_Midi(track, track_param, value); }
 
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
@@ -375,10 +379,11 @@ void MCLSeqMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  /*
+  
   Midi.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
-`  Midi.addOnNoteOffCallback(
+ /*
+  Midi.addOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   */
   update_params = true;
@@ -398,9 +403,10 @@ void MCLSeqMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  /*
+  
   Midi.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
+  /*
   Midi.removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
   */

@@ -228,11 +228,6 @@ void PageSelectPage::display() {
   oled_display.print(F("PAGE SELECT"));
   oled_display.setTextColor(WHITE);
   uint8_t label_pos[4] = {30, 57, 81, 104};
-  for (uint8_t i = 0; i < 4; ++i) {
-    get_category_name_by_idx(i, str);
-    oled_display.setCursor(label_pos[i], 31);
-    oled_display.print(str);
-  }
   pageidx = get_pageidx(page_select);
   get_page_icon(pageidx, icon, iconw, iconh);
   get_page(pageidx, str);
@@ -250,6 +245,10 @@ void PageSelectPage::display() {
   uint8_t group_x = 28;
   uint8_t pagenr = 0;
   for (uint8_t i = 0; i < 4; ++i) {
+    get_category_name_by_idx(i, str);
+    oled_display.setCursor(label_pos[i], 31);
+    oled_display.print(str);
+
     uint8_t trig_x = group_x + 2;
     if (i == catidx) {
       oled_display.fillRect(group_x, 18, 23, 6, WHITE);

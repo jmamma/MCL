@@ -13,7 +13,6 @@ public:
 
   void setup_callbacks();
   void remove_callbacks();
-  uint8_t note_to_trig(uint8_t note_num);
   void onNoteOnCallback_Midi(uint8_t *msg);
   void onNoteOffCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
@@ -27,7 +26,6 @@ void encoder_lastparam_handle(EncoderParent *enc);
 
 class MixerPage : public LightPage {
 public:
-  MixerMidiEvents midi_events;
 
   uint8_t level_pressmode = 0;
   int8_t disp_levels[16];
@@ -64,6 +62,12 @@ public:
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state);
   void populate_mute_set();
+
+  //Handled in MCLSeq
+  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value);
+
+  uint8_t note_to_trig(uint8_t note_num);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
