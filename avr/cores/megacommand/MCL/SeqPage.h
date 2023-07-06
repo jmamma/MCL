@@ -100,6 +100,8 @@ public:
   static uint8_t last_step;
   static uint32_t last_md_model;
 
+  static uint8_t last_seq_page;
+
   static bool recording;
 
   static uint16_t mute_mask;
