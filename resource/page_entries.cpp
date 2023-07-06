@@ -8,9 +8,9 @@ PageSelectEntry Entries[] = {
     {"ROUTE", ROUTE_PAGE, 3, 0, 24, 14, nullptr},
 
     {"STEP EDIT", SEQ_STEP_PAGE, 4, 1, 24, 21, nullptr},
-    {"PIANO ROLL", SEQ_EXTSTEP_PAGE, 5, 1, 24, 25, nullptr},
-    {"CHROMATIC", SEQ_PTC_PAGE, 6, 1, 24, 25, nullptr},
-    {"LFO", LFO_PAGE, 7, 1, 24, 24, nullptr},
+    {"LFO", LFO_PAGE, 5, 1, 24, 24, nullptr},
+    {"PIANO ROLL", SEQ_EXTSTEP_PAGE, 6, 1, 24, 25, nullptr},
+    {"CHROMATIC", SEQ_PTC_PAGE, 7, 1, 24, 25, nullptr},
 #ifdef SOUND_PAGE
     {"SAMPLE MANAGER", SAMPLE_BROWSER, 8, 2, 24, 25, nullptr},
 #endif

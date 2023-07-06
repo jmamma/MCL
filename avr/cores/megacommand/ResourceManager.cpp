@@ -52,9 +52,9 @@ void ResourceManager::restore_page_entry_deps() {
 
 
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
-  R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].IconData = R.icons_page->icon_chroma;
-  R.page_entries->Entries[7].IconData = R.icons_page->icon_lfo;
+  R.page_entries->Entries[5].IconData = R.icons_page->icon_lfo;
+  R.page_entries->Entries[6].IconData = R.icons_page->icon_pianoroll;
+  R.page_entries->Entries[7].IconData = R.icons_page->icon_chroma;
 
 
   uint8_t idx = 8;
