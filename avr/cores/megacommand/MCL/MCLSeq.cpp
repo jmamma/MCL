@@ -46,8 +46,8 @@ void MCLSeq::setup() {
 
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
-  MidiClock.addOnMidiStartCallback(
-      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
+//  MidiClock.addOnMidiStartCallback(
+//      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
   MidiClock.addOnMidiStartImmediateCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartImmediateCallback);
 
@@ -161,9 +161,13 @@ void MCLSeq::onMidiStartImmediateCallback() {
   seq_rec_play();
 
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+  if (SeqPage::recording) {
+    oled_display.textbox("REC", "");
+  }
 }
 
-void MCLSeq::onMidiStartCallback() {}
+void MCLSeq::onMidiStartCallback() {
+}
 
 void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS

@@ -79,6 +79,7 @@ void MixerPage::cleanup() {
   //  md_exploit.off();
   oled_display.clearDisplay();
   MD.set_key_repeat(1);
+  disable_record_mutes();
   trig_interface.off();
 }
 
@@ -615,8 +616,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    trig_interface.on();
-    disable_record_mutes();
     mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
