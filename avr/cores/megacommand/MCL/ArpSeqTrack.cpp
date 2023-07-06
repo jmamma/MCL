@@ -19,7 +19,6 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
-
 void ArpSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;

@@ -20,6 +20,7 @@
 #define SEQ_SPEED_1_2X 4
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
+#define SEQ_SPEED_4X 7
 
 #define MASK_PATTERN 0
 #define MASK_LOCK 1
@@ -122,6 +123,9 @@ public:
     case SEQ_SPEED_2X:
       timing_mid = 6;
       break;
+    case SEQ_SPEED_4X:
+      timing_mid = 3;
+      break;
     case SEQ_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
@@ -153,6 +157,9 @@ public:
     case SEQ_SPEED_2X:
       timing_mid = 6;
       break;
+    case SEQ_SPEED_4X:
+      timing_mid = 3;
+      break;
     case SEQ_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
@@ -183,6 +190,9 @@ public:
       break;
     case SEQ_SPEED_2X:
       multi = 0.5;
+      break;
+    case SEQ_SPEED_4X:
+      multi = 0.25;
       break;
     case SEQ_SPEED_3_4X:
       multi = (4.0 / 3.0);

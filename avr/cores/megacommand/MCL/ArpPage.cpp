@@ -2,13 +2,13 @@
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
-MCLEncoder arp_rate(0, 4, ENCODER_RES_SEQ);
+MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
-void ArpPage::setup() {}
+void ArpPage::setup() {
+}
 
 void ArpPage::init() {
-
   DEBUG_PRINT_FN();
   oled_display.setFont();
   seq_ptc_page.display();
@@ -28,7 +28,7 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
     arp_track = &mcl_seq.ext_arp_tracks[n];
   }
 
-  arp_rate.cur = arp_track->rate;
+  arp_rate.cur = arp_track->length;
   arp_rate.old = arp_rate.cur;
 
   arp_range.cur = arp_track->range;
@@ -74,8 +74,7 @@ void ArpPage::loop() {
   }
 
   if (encoders[2]->hasChanged()) {
-    arp_track->set_length(1 << arp_rate.cur);
-    arp_track->rate = arp_rate.cur;
+    arp_track->set_length(arp_rate.cur);
   }
 }
 

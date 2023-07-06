@@ -40,8 +40,7 @@ class ArpSeqData {
   uint8_t enabled : 4;
   uint8_t range : 4;
   uint8_t oct : 4;
-  uint8_t rate : 4;
-  uint8_t mode;
+  uint8_t mode : 4;
 
   uint8_t fine_tune;
   uint64_t note_mask[2]; //input notes
@@ -68,8 +67,7 @@ public:
 
   void init() {
     speed = SEQ_SPEED_2X;
-    rate = 1;
-    length = 1 << rate; //Arp rate is function of length
+    length = 1;
     enabled = false;
     range = 0;
     oct = 1;
