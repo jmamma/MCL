@@ -252,7 +252,8 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.fillRect(dlg_info_x1 + 1, dlg_info_y1 + 1, dlg_info_w - 2, 6,
                         WHITE);
 
-  oled_display.fillCircle(dlg_circle_x, dlg_circle_y, 6, WHITE);
+  oled_display.fillRect(dlg_circle_x - 4, dlg_circle_y - 4, 9, 9, WHITE);
+
   oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y - 3, 3, 4, BLACK);
   oled_display.fillRect(dlg_circle_x - 1, dlg_circle_y + 2, 3, 2, BLACK);
 
