@@ -341,7 +341,7 @@ bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
 
   if (match != 255) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
-                   slowclock) < timeout) {
+                   slowclock) < timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
       return true;
     } else {
       ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =

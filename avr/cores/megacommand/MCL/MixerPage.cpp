@@ -98,7 +98,7 @@ void MixerPage::loop() {
   }
   else {
       draw_encoders = false;
-      constexpr int timeout = 800;
+      constexpr int timeout = 1000;
       for (uint8_t n = 0; n < 4; n++) {
          if (note_interface.notes_on) { encoders_used_clock[n] = slowclock + timeout + 1; }
          if (mcl_gui.show_encoder_value(encoders[n],timeout)) { draw_encoders = true; }
