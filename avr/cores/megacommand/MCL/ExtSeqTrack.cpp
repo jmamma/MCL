@@ -994,8 +994,11 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     DEBUG_DUMP(F("adding lock"));
     DEBUG_DUMP(lock_idx);
 
+
+    constexpr uint8_t oneshot = 14;
+
     e->is_lock = true;
-    e->cond_id = 0;
+    e->cond_id = track_param == PARAM_PRG ? oneshot : 0;
     e->lock_idx = lock_idx;
     e->event_value = value;
     e->event_on = event_on;
