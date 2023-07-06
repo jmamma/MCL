@@ -12,9 +12,8 @@ void WavDesigner::prompt_send() {
   sample_browser.show_samplemgr = true;
   sample_browser.pending_action = PA_SELECT;
   sample_browser.setup();
-  sample_browser.show_samplemgr = true;
   wd.render();
-  sample_browser.init();
+  sample_browser.init(true);
   if (sample_browser.file.open(WAV_NAME, O_READ)) {
     while (mcl.currentPage() == SAMPLE_BROWSER &&
            sample_browser.pending_action == PA_SELECT && sample_browser.show_samplemgr) {
