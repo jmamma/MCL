@@ -81,6 +81,8 @@ public:
                     uint8_t track_number = 255,
                     MidiUartParent *uart_ = nullptr);
 
+  void buffer_notesoff_ext(uint8_t track_number);
+
   void clear_trig_fromext(uint8_t note_num);
 
   uint8_t get_note_from_machine_pitch(uint8_t pitch);

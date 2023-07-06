@@ -52,6 +52,7 @@ void SeqPtcPage::cleanup() {
   params_reset();
 }
 void SeqPtcPage::config_encoders() {
+  if (show_seq_menu) { return; }
   SeqPage::config_encoders();
   ptc_param_len.min = 1;
   bool show_chan = true;
@@ -452,6 +453,7 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
   mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
   //}
 }
+
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
                               uint8_t track_number, MidiUartParent *uart_) {
   if (track_number == 255) {
@@ -462,6 +464,10 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
   reset_undo();
   mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
   //}
+}
+
+void SeqPtcPage::buffer_notesoff_ext(uint8_t track_number) {
+  mcl_seq.ext_tracks[track_number].buffer_notesoff();
 }
 
 void SeqPtcPage::recalc_notemask() {
