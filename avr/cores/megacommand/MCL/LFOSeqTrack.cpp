@@ -1,79 +1,73 @@
 #include "MCL_impl.h"
 
-void LFOSeqTrack::load_wav_table(uint8_t table) {
+static uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
+
+void LFOSeqTrack::load_tables() {
   SinLFO sin_lfo;
   TriLFO tri_lfo;
   RampLFO ramp_lfo;
-  IRampLFO iramp_lfo;
-  ExpLFO exp_lfo;
   IExpLFO iexp_lfo;
   LFO *lfo;
+
+
+  for (uint8_t n = 0; n < 4; n++) {
+    switch (n) {
+    case SIN_WAV:
+      lfo = (LFO *)&sin_lfo;
+      offset_behaviour = LFO_OFFSET_CENTRE;
+      break;
+    case TRI_WAV:
+      lfo = (LFO *)&tri_lfo;
+      offset_behaviour = LFO_OFFSET_CENTRE;
+      break;
+    case RAMP_WAV:
+      lfo = (LFO *)&ramp_lfo;
+      offset_behaviour = LFO_OFFSET_MAX;
+      break;
+    case IEXP_WAV:
+      lfo = (LFO *)&iexp_lfo;
+      offset_behaviour = LFO_OFFSET_MAX;
+      break;
+    }
+    lfo->amplitude = 128;
+    for (uint8_t i = 0; i < LFO_LENGTH; i++) {
+      wav_tables[n][i] = lfo->get_sample(i);
+    }
+  }
+}
+
+int16_t LFOSeqTrack::get_sample(uint8_t n) {
+
+  int8_t out = 0;
   switch (wav_type) {
-  case SIN_WAV:
-    lfo = (LFO *)&sin_lfo;
-    offset_behaviour = LFO_OFFSET_CENTRE;
+    case IRAMP_WAV:
+    case EXP_WAV:
+    out = 128 - wav_tables[wav_type - 2][n];
     break;
-  case TRI_WAV:
-    lfo = (LFO *)&tri_lfo;
-    offset_behaviour = LFO_OFFSET_CENTRE;
-    break;
-  case IRAMP_WAV:
-    lfo = (LFO *)&iramp_lfo;
-    offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case RAMP_WAV:
-    lfo = (LFO *)&ramp_lfo;
-    offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case EXP_WAV:
-    lfo = (LFO *)&exp_lfo;
-    offset_behaviour = LFO_OFFSET_MAX;
-    break;
-  case IEXP_WAV:
-    lfo = (LFO *)&iexp_lfo;
-    offset_behaviour = LFO_OFFSET_MAX;
+    default:
+    out = wav_tables[wav_type][n];
     break;
   }
-  lfo->amplitude = params[table].depth;
-  // ExpLFO exp_lfo(20);
-  for (uint8_t n = 0; n < LFO_LENGTH; n++) {
-    wav_table[table][n] = (float)lfo->get_sample(n);
+
+  switch (offset_behaviour) {
+    case LFO_OFFSET_CENTRE:
+      out -= 64;
+      break;
   }
-  wav_table_state[table] = true;
+
+  return out;
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
   int8_t offset = params[param].offset;
-  int8_t depth = params[param].depth;
-  int8_t sample = wav_table[param][sample_count];
-  int16_t val;
+  int16_t depth = params[param].depth;
 
-  switch (offset_behaviour) {
-  case LFO_OFFSET_CENTRE:
-    val = offset + (sample - (depth / 2));
-    if (val > 127) {
-      return 127;
-    }
-    if (val < 0) {
-      return 0;
-    } else {
-      return (uint8_t)val;
-    }
-    break;
-  case LFO_OFFSET_MAX:
-    // val = 127 - sample;
-    val = offset - depth + sample;
-    if (val > 127) {
-      return 127;
-    }
-    if (val < 0) {
-      return 0;
-    } else {
-      return (uint8_t)val;
-    }
-    break;
-  }
-  return offset;
+  int8_t sample = (get_sample(sample_count) * depth) / 128;
+  int val = sample + offset;
+  if (val > 127) { return 127; }
+  if (val <  0) { return 0; }
+
+  return (uint8_t)val;
 }
 
 void LFOSeqTrack::seq(MidiUartParent *uart_) {
@@ -141,7 +135,6 @@ void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,
                                                  uint8_t value) {
   for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
     if ((params[n].dest == track) && (params[n].param == dest)) {
-      wav_table_state[n] = false;
       params[n].offset = value;
     }
   }

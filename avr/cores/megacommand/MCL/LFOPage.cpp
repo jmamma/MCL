@@ -14,8 +14,6 @@ void LFOPage::setup() {
 
   lfo_track->params[0].update_offset();
   lfo_track->params[1].update_offset();
-  lfo_track->wav_table_state[0] = false;
-  lfo_track->wav_table_state[1] = false;
   DEBUG_PRINT_FN();
 }
 
@@ -153,13 +151,6 @@ void LFOPage::loop() {
     }
   }
 
-  if (!lfo_track->wav_table_up_to_date(0)) {
-    lfo_track->load_wav_table(0);
-  }
-
-  if (!lfo_track->wav_table_up_to_date(1)) {
-    lfo_track->load_wav_table(1);
-  }
 }
 
 void LFOPage::display() {
@@ -174,7 +165,6 @@ void LFOPage::display() {
   uint8_t y = 8;
   uint8_t lfo_height = 7;
   uint8_t width = 13;
-  LFOSeqTrack temp_track;
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
@@ -186,14 +176,23 @@ void LFOPage::display() {
     draw_param(3, encoders[2]->cur, encoders[3]->cur);
   }
   if (page_mode == LFO_SETTINGS) {
-    temp_track.set_wav_type(lfo_track->wav_type);
-    temp_track.set_depth(0, lfo_height);
-    temp_track.load_wav_table(0);
     uint8_t inc = LFO_LENGTH / width;
     for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
       if (n < LFO_LENGTH) {
-        oled_display.drawPixel(x, y + lfo_height - temp_track.wav_table[0][n],
-                               WHITE);
+        int16_t out = 0;
+
+        switch (lfo_track->wav_type) {
+          case IRAMP_WAV:
+          case EXP_WAV:
+             out = (int16_t)128 - lfo_track->wav_tables[lfo_track->wav_type - 2][n];
+          break;
+          default:
+             out = lfo_track->wav_tables[lfo_track->wav_type][n];
+          break;
+        }
+        uint8_t sample = ((int16_t) out * (int16_t) lfo_height) / 128;
+
+        oled_display.drawPixel(x, y + lfo_height - sample, WHITE);
       }
     }
 

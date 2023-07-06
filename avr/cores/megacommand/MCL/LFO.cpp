@@ -34,9 +34,9 @@ uint8_t ExpLFO::get_sample(uint8_t sample_number) {
 
 
 uint8_t IExpLFO::get_sample(uint8_t sample_number) {
-  uint8_t y = amplitude - (uint8_t)((float)amplitude *
-                                    powf(M_E, (float)-1 * (float)sample_number *
-                                                  (float)time_constant));
+  ExpLFO e;
+  e.amplitude = amplitude;
+  uint8_t y = amplitude - e.get_sample(sample_number);
   return y;
 }
 
@@ -48,7 +48,9 @@ uint8_t RampLFO::get_sample(uint8_t sample_number) {
 }
 
 uint8_t IRampLFO::get_sample(uint8_t sample_number) {
-  uint8_t y = amplitude - ((float)amplitude / (float)(LFO_LENGTH)) * (sample_number);
+  RampLFO r;
+  r.amplitude = amplitude;
+  uint8_t y = amplitude - r.get_sample(sample_number);
 
   return y;
 }

@@ -40,8 +40,7 @@ public:
   LFOSeqParam params[NUM_LFO_PARAMS];
 
   uint8_t wav_type;
-  uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];
-  bool wav_table_state[NUM_LFO_PARAMS];
+
   uint8_t last_wav_value[NUM_LFO_PARAMS];
   uint8_t sample_hold;
 
@@ -65,6 +64,7 @@ public:
   }
 };
 
+
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
   MidiUartParent *uart;
@@ -72,29 +72,27 @@ public:
   uint8_t step_count;
   uint8_t sample_count;
 
+  static uint8_t wav_tables[4][WAV_LENGTH];
+
   LFOSeqTrack() { init(); };
+
+  int16_t get_sample(uint8_t n);
+
+  void load_tables();
+
   ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t param);
   void update_kit_params();
   void update_params_offset();
   void reset_params_offset();
 
-  bool wav_table_up_to_date(uint8_t n) { return wav_table_state[n]; }
-
   void check_and_update_params_offset(uint8_t dest, uint8_t param,
                                       uint8_t value);
   void set_wav_type(uint8_t _wav_type) {
-    if (wav_type != _wav_type) {
       wav_type = _wav_type;
-      wav_table_state[0] = false;
-      wav_table_state[1] = false;
-    }
   }
   void set_speed(uint8_t _speed) { speed = _speed; }
   void set_depth(uint8_t param, uint8_t depth) {
-    if (params[param].depth != depth) {
       params[param].depth = depth;
-      wav_table_state[param] = false;
-    }
   }
   void load_wav_table(uint8_t table);
   ALWAYS_INLINE() void seq(MidiUartParent *uart_);

@@ -12,6 +12,9 @@ void MCLSeq::setup() {
     md_arp_tracks[i].track_number = i;
   }
 #ifdef LFO_TRACKS
+
+  lfo_tracks[0].load_tables();
+
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].track_number = i;
     if (i == 0) {
