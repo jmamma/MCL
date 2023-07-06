@@ -8,8 +8,6 @@ MidiDevice *SeqPage::midi_device = &MD;
 uint8_t SeqPage::last_param_id = 0;
 uint8_t SeqPage::last_rec_event = 0;
 
-uint8_t SeqPage::last_seq_page = 0;
-
 uint8_t SeqPage::page_count = 4;
 
 uint8_t SeqPage::pianoroll_mode = 0;
@@ -384,11 +382,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       show_seq_menu = true;
       // capture current page.
       opt_seqpage_capture = this;
-      if (mcl.currentPage() != last_seq_page) {
-        seq_menu_entry_encoder.cur = 0;
-        seq_menu_page.cur_row = 0;
-        last_seq_page = mcl.currentPage();
-       }
 
       if (midi_device == &MD) {
         auto &active_track = mcl_seq.md_tracks[last_md_track];

@@ -12,9 +12,12 @@ void MenuPageBase::init() {
   R.restore_menu_layout_deps();
 
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
+
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
+    cur_row = 0;
   }
+
   ((MCLEncoder *)encoders[0])->max =
       get_menu()->get_option_range(encoders[1]->cur) - 1;
   ((MCLEncoder *)encoders[0])->min =
