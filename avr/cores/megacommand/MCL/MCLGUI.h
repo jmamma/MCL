@@ -21,9 +21,9 @@ public:
     strncpy(str_print, buffer + str_offset, s);
     str_offset += s;
   }
-  */
 
   void print_str() { oled_display.print(str_print); str_offset = 0; }
+  */
 
   uint8_t s_progress_cookie = 0b00110011;
   uint8_t s_progress_count = 0;

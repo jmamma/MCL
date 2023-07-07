@@ -115,9 +115,7 @@ void FileBrowserPage::query_filesystem() {
   }
   //  iterate through the files
   while (file.openNext(&d, O_READ) && (numEntries < MAX_ENTRIES)) {
-    for (uint8_t c = 0; c < FILE_ENTRY_SIZE; c++) {
-      temp_entry[c] = 0;
-    }
+    memset(temp_entry, 0, sizeof(temp_entry));
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     bool is_match_file = false;
     DEBUG_PRINTLN(numEntries);

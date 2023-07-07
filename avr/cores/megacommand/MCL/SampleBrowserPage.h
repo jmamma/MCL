@@ -32,7 +32,7 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
 
-  void init(uint8_t show_samplemgr_);
+  void init(uint8_t show_samplemgr_, bool query = true);
   virtual void init() { init(false); }
   void setup();
   void send_sample(int slot, char *newname = nullptr, bool silent = false);

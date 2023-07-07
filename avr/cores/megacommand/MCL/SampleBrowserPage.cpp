@@ -58,18 +58,28 @@ void SampleBrowserPage::display() {
       oled_display.print(wav_file.header.fmt.bitRate);
       oled_display.print(F("/"));
       oled_display.print(wav_file.header.fmt.numChannels);
+      /*
       float seconds = wav_file.header.get_length() / (float)wav_file.header.fmt.sampleRate;
       int16_t minutes = seconds * 0.01666666667f;
       int16_t ms = ((float)seconds - int(seconds)) * 1000;
-
+      */
       oled_display.setCursor(0, 30);
-
+      /*
       oled_display.print(minutes);
       oled_display.print(F(":"));
       oled_display.print(int(seconds));
       oled_display.print(F(":"));
       oled_display.print(ms);
-
+      */
+      uint32_t size = wav_file.file.size();
+      if (size < 1024) {
+       oled_display.print(size);
+       oled_display.print("B");
+      }
+      else {
+       oled_display.print(size / 1024);
+       oled_display.print("kB");
+      }
       wav_file.close();
     }
   }
@@ -79,7 +89,7 @@ end:
   oled_display.display();
 }
 
-void SampleBrowserPage::init(uint8_t show_samplemgr_) {
+void SampleBrowserPage::init(uint8_t show_samplemgr_, bool query) {
   FileBrowserPage::selection_change = true;
   file_types.reset();
   file_types.add(c_wav_suffix);
@@ -109,8 +119,10 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
     show_filemenu = true;
     show_new_folder = true;
     show_parent = true;
-    SD.chdir(lwd);
-    query_filesystem();
+    if (query) {
+      SD.chdir(lwd);
+      query_filesystem();
+    }
   }
 
 }
@@ -216,16 +228,18 @@ void SampleBrowserPage::on_select(const char *__) {
     init(true);
   } else {
     auto slot = encoders[1]->cur;
+    bool query = true;
     switch (pending_action) {
     case PA_NEW:
       recv_wav(slot);
       break;
     case PA_SELECT:
       send_sample(slot);
+      query = false;
       break;
     }
     pending_action = 0;
-    init(false);
+    init(false, query);
   }
 }
 
