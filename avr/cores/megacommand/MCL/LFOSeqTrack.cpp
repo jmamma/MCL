@@ -38,7 +38,7 @@ void LFOSeqTrack::load_tables() {
 
 int16_t LFOSeqTrack::get_sample(uint8_t n) {
 
-  int8_t out = 0;
+  int16_t out = 0;
   switch (wav_type) {
     case IRAMP_WAV:
     case EXP_WAV:
@@ -62,12 +62,12 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
   int8_t offset = params[param].offset;
   int16_t depth = params[param].depth;
 
-  int8_t sample = (get_sample(sample_count) * depth) / 128;
-  int val = sample + offset;
-  if (val > 127) { return 127; }
-  if (val <  0) { return 0; }
+  int16_t sample = (get_sample(sample_count) * depth) / 128;
+  sample += offset;
+  if (sample > 127) { return 127; }
+  if (sample < 0) { return 0; }
 
-  return (uint8_t)val;
+  return (uint8_t) sample;
 }
 
 void LFOSeqTrack::seq(MidiUartParent *uart_) {
@@ -75,18 +75,15 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_;
 
   if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&
-      IS_BIT_SET64(pattern_mask, step_count)) {
-    sample_count = 0;
-  }
+       IS_BIT_SET64(pattern_mask, step_count)) {
+      sample_count = 0;
+   }
   if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       uint8_t wav_value = get_wav_value(sample_count, i);
       if (last_wav_value[i] != wav_value) {
         uint8_t dest = params[i].dest - 1;
         uint8_t param = params[i].param;
-        if (dest == 0) {
-          continue;
-        }
 
         if (dest >= NUM_MD_TRACKS + 4) {
           uint8_t channel = dest - NUM_MD_TRACKS;
@@ -107,12 +104,12 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
     sample_count += 2;
   } else {
     sample_hold += 1;
-    if (sample_hold >= speed - 1) {
+    if (sample_hold >= (speed - 1)) {
       sample_hold = 0;
       sample_count += 1;
     }
   }
-  if (sample_count > LFO_LENGTH) {
+  if (sample_count >= LFO_LENGTH) {
     // Free running LFO should reset, oneshot should hold at last value.
     if (mode == LFO_MODE_ONE) {
       sample_count = LFO_LENGTH - 1;
