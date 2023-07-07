@@ -100,11 +100,11 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
     }
   }
 
-  if (speed == 0) {
-    sample_count += 2;
+  if (speed < 8) {
+    sample_count += 8 - speed;
   } else {
     sample_hold += 1;
-    if (sample_hold >= (speed - 1)) {
+    if (sample_hold >= (speed - 8)) {
       sample_hold = 0;
       sample_count += 1;
     }
