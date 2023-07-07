@@ -14,19 +14,15 @@ void LFOSeqTrack::load_tables() {
     switch (n) {
     case SIN_WAV:
       lfo = (LFO *)&sin_lfo;
-      offset_behaviour = LFO_OFFSET_CENTRE;
       break;
     case TRI_WAV:
       lfo = (LFO *)&tri_lfo;
-      offset_behaviour = LFO_OFFSET_CENTRE;
       break;
     case RAMP_WAV:
       lfo = (LFO *)&ramp_lfo;
-      offset_behaviour = LFO_OFFSET_MAX;
       break;
     case IEXP_WAV:
       lfo = (LFO *)&iexp_lfo;
-      offset_behaviour = LFO_OFFSET_MAX;
       break;
     }
     lfo->amplitude = 128;
@@ -49,12 +45,17 @@ int16_t LFOSeqTrack::get_sample(uint8_t n) {
     break;
   }
 
-  switch (offset_behaviour) {
-    case LFO_OFFSET_CENTRE:
-      out -= 64;
-      break;
+  switch (wav_type) {
+    //OFFSET CENTRE
+    case SIN_WAV:
+    case TRI_WAV:
+       out -= 64;
+       break;
+    //OFFSET MAX
+    default:
+       out -= 128;
+       break;
   }
-
   return out;
 }
 
@@ -62,8 +63,8 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
   int8_t offset = params[param].offset;
   int16_t depth = params[param].depth;
 
-  int16_t sample = (get_sample(sample_count) * depth) / 128;
-  sample += offset;
+  int16_t sample = ((get_sample(sample_count) * depth) /  128) + offset;
+
   if (sample > 127) { return 127; }
   if (sample < 0) { return 0; }
 

@@ -42,11 +42,11 @@ public:
   uint8_t wav_type;
 
   uint8_t last_wav_value[NUM_LFO_PARAMS];
-  uint8_t sample_hold;
+  uint8_t sample_hold; //<--- shouldnt be stored here;
 
   uint8_t speed;
   uint8_t mode;
-  uint8_t offset_behaviour;
+  uint8_t offset_behaviour; //<--- no longer needed
   uint64_t pattern_mask;
   bool enable;
   uint8_t length;
