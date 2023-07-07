@@ -6,8 +6,25 @@
 #include "QuestionDialogPage.h"
 #include "TextInputPage.h"
 
+//class MCLGUI : public Print {
 class MCLGUI {
 public:
+
+  /*
+   * Print child implementation:
+   *
+  char str_print[30];
+  bool str_offset = 0;
+  size_t write(uint8_t c) { };
+  size_t write(const uint8_t *buffer, size_t size) {
+    uint8_t s =  min(sizeof(str_print),size);
+    strncpy(str_print, buffer + str_offset, s);
+    str_offset += s;
+  }
+  */
+
+  void print_str() { oled_display.print(str_print); str_offset = 0; }
+
   uint8_t s_progress_cookie = 0b00110011;
   uint8_t s_progress_count = 0;
 
