@@ -571,7 +571,10 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
     // plock
     uint8_t param = locks_params[ev.lock_idx] - 1;
     if (param == PARAM_PRG) {
-      uart->sendProgramChange(channel, ev.event_value);
+      if (!pgm_oneshot) {
+        pgm_oneshot = true;
+        uart->sendProgramChange(channel, ev.event_value);
+      }
     } else {
       if (param == PARAM_PB) {
         uart->sendPitchBend(channel, ev.event_value << 7);
@@ -730,77 +733,79 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   if (condition > 64) {
     condition -= 64;
   }
+  bool send_note = false;
 
   switch (condition) {
   case 0:
   case 1:
-    note_on(note, velocity);
+    send_note = true;
     break;
   case 2:
     if (!IS_BIT_SET(iterations_8, 0)) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 3:
     if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 6:
     if (iterations_6 == 6) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 4:
     if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 8:
     if (iterations_8 == 8) {
-      note_on(note, velocity);
+      send_note = true;
     }
   case 5:
     if (iterations_5 == 5) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 7:
     if (iterations_7 == 7) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 9:
     if (get_random_byte() <= 13) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 10:
     if (get_random_byte() <= 32) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 11:
     if (get_random_byte() <= 64) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 12:
     if (get_random_byte() <= 96) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 13:
     if (get_random_byte() <= 115) {
-      note_on(note, velocity);
+      send_note = true;
     }
     break;
   case 14:
     if (!IS_BIT_SET128_P(oneshot_mask, step_count)) {
       SET_BIT128_P(oneshot_mask, step_count);
-      note_on(note, velocity);
+      send_note = true;
     }
   }
+  if (send_note) { note_on(note, velocity); }
 }
 
 void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartParent *uart_) {
@@ -998,7 +1003,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     constexpr uint8_t oneshot = 14;
 
     e->is_lock = true;
-    e->cond_id = track_param == PARAM_PRG ? oneshot : 0;
+    e->cond_id = 0;
     e->lock_idx = lock_idx;
     e->event_value = value;
     e->event_on = event_on;

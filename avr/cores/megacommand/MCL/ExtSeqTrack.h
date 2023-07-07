@@ -151,6 +151,7 @@ public:
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
   uint64_t ignore_notes[2];
+  bool pgm_oneshot;
 
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
@@ -163,6 +164,7 @@ public:
     SeqTrack::reset();
     memset(oneshot_mask,0,sizeof(oneshot_mask));
     memset(ignore_notes,0, sizeof(ignore_notes));
+    pgm_oneshot = 0;
   }
 
   void seq(MidiUartParent *uart_);
