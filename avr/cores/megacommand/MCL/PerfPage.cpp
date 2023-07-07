@@ -299,27 +299,32 @@ void PerfPage::display() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   // Intercept controller param.
-  PerfData *d = &perf_encoders[perf_id]->perf_data;
-  if (dest + 1 == d->src && param == d->param) {
-    // Controller param, start value;
-    uint8_t min = d->min;
-    uint8_t max = 127;
-    if (value >= min) {
-      uint8_t cur = value - min;
-      int8_t range = max - min;
-      uint8_t val = ((float)cur / (float)range) * 127.0f;
-      perf_encoders[perf_id]->cur = val;
-      perf_encoders[perf_id]->send();
-      if (mcl.currentPage() == PERF_PAGE_0) {
-        update_params();
+
+  for (uint8_t i = 0; i < 4; i++) {
+    PerfData *d = &perf_encoders[i]->perf_data;
+    if (dest + 1 == d->src && param == d->param) {
+      // Controller param, start value;
+      uint8_t min = d->min;
+      uint8_t max = 127;
+      if (value >= min) {
+        uint8_t cur = value - min;
+        int8_t range = max - min;
+        uint8_t val = ((float)cur / (float)range) * 127.0f;
+        perf_encoders[i]->cur = val;
+        perf_encoders[i]->send();
+        if (mcl.currentPage() == PERF_PAGE_0) {
+          update_params();
+        }
       }
     }
   }
+
   if (mcl.currentPage() == PERF_PAGE_0) {
     if (dest > NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
       return;
     }
     if (learn) {
+      PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t scene = learn - 1;
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
