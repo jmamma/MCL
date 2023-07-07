@@ -100,7 +100,17 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
       }
     }
   }
+  if (speed < 1) {
+    sample_count += 1;
+  } else {
+    sample_hold += 1;
+    if (sample_hold >= (speed - 1)) {
+      sample_hold = 0;
+      sample_count += 1;
+    }
+  }
 
+ /*
   if (speed < 8) {
     sample_count += 8 - speed;
   } else {
@@ -110,6 +120,7 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
       sample_count += 1;
     }
   }
+  */
   if (sample_count >= LFO_LENGTH) {
     // Free running LFO should reset, oneshot should hold at last value.
     if (mode == LFO_MODE_ONE) {
