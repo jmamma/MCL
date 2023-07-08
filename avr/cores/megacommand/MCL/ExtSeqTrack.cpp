@@ -901,6 +901,8 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
         continue;
       int16_t event_x = n * timing_mid + events[i].micro_timing - timing_mid;
       if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
+        uint8_t param = locks_params[lock_idx] - 1;
+        if (param == PARAM_PRG) { pgm_oneshot = 0; }
         remove_event(i);
         ret = true;
       }
