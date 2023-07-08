@@ -26,13 +26,15 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   uint8_t pending_action = 0;
   bool show_ram_slots = false;
 
+  uint8_t old_cur_row = 255;
+
   virtual void on_new();
   virtual void on_select(const char*);
   virtual void on_cancel();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
 
-  void init(uint8_t show_samplemgr_, bool query = true);
+  void init(uint8_t show_samplemgr_);
   virtual void init() { init(false); }
   void setup();
   void send_sample(int slot, char *newname = nullptr, bool silent = false);
@@ -45,6 +47,9 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   void query_sample_slots();
 };
 
+extern MCLEncoder samplebrowser_param1;
+extern MCLEncoder samplebrowser_param2;
+extern MCLEncoder samplebrowser_param3;
 extern SampleBrowserPage sample_browser;
 
 #endif /* SAMPLEBROWSERPAGE_H__ */

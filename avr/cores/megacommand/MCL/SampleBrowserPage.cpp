@@ -89,7 +89,7 @@ end:
   oled_display.display();
 }
 
-void SampleBrowserPage::init(uint8_t show_samplemgr_, bool query) {
+void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   FileBrowserPage::selection_change = true;
   file_types.reset();
   file_types.add(c_wav_suffix);
@@ -104,6 +104,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_, bool query) {
 
   if (show_samplemgr) {
     strcpy(title, "MD-ROM");
+    encoders[1] = &samplebrowser_param3;
     draw_dirs = false;
     show_dirs = false;
     show_save = false;
@@ -113,16 +114,18 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_, bool query) {
     query_sample_slots();
   } else {
     strcpy(title, "SAMPLE");
+    encoders[1] = &samplebrowser_param2;
+    if (old_cur_row != 255) { cur_row = old_cur_row; old_cur_row = 255;}
     draw_dirs = true;
     show_dirs = true;
     show_save = true;
     show_filemenu = true;
     show_new_folder = true;
     show_parent = true;
-    if (query) {
+    //if (query) {
       SD.chdir(lwd);
       query_filesystem();
-    }
+   // }
   }
 
 }
@@ -228,18 +231,16 @@ void SampleBrowserPage::on_select(const char *__) {
     init(true);
   } else {
     auto slot = encoders[1]->cur;
-    bool query = true;
     switch (pending_action) {
     case PA_NEW:
       recv_wav(slot);
       break;
     case PA_SELECT:
       send_sample(slot);
-      query = false;
       break;
     }
     pending_action = 0;
-    init(false, query);
+    init(false);
   }
 }
 
@@ -267,6 +268,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
 void SampleBrowserPage::query_sample_slots() {
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
+  old_cur_row = cur_row;
   numEntries = 0;
   cur_file = 255; // XXX why 255?
   cur_row = 0;
@@ -407,4 +409,6 @@ void SampleBrowserPage::end() {
 
 MCLEncoder samplebrowser_param1(0, 1, ENCODER_RES_SYS);
 MCLEncoder samplebrowser_param2(0, 36, ENCODER_RES_SYS);
+MCLEncoder samplebrowser_param3(0, 36, ENCODER_RES_SYS);
+
 SampleBrowserPage sample_browser(&samplebrowser_param1, &samplebrowser_param2);

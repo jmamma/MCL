@@ -159,7 +159,6 @@ void FileBrowserPage::init() {
   draw_dirs = false;
   strcpy(focus_match, "");
   file_types.reset();
-  query_filesystem();
 }
 
 void FileBrowserPage::draw_menu() {
