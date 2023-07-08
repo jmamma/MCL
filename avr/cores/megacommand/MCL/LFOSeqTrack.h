@@ -40,6 +40,8 @@ public:
   LFOSeqParam params[NUM_LFO_PARAMS];
 
   uint8_t wav_type;
+  uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];// <--- remove
+  bool wav_table_state[NUM_LFO_PARAMS]; // <---- remove
 
   uint8_t last_wav_value[NUM_LFO_PARAMS];
   uint8_t sample_hold; //<--- shouldnt be stored here;
