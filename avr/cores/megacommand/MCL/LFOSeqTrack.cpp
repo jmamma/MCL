@@ -59,8 +59,8 @@ int16_t LFOSeqTrack::get_sample(uint8_t n) {
   return out;
 }
 
-uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t param) {
-  int8_t offset = params[param].offset;
+uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param) {
+  int8_t offset = get_param_offset(dest, param);
   int16_t depth = params[param].depth;
 
   int16_t sample = ((get_sample(sample_count) * depth) /  128) + offset;
@@ -81,9 +81,9 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
    }
   if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
-      uint8_t wav_value = get_wav_value(sample_count, i);
+      uint8_t dest = params[i].dest - 1;
+      uint8_t wav_value = get_wav_value(sample_count, dest, i);
       if (last_wav_value[i] != wav_value) {
-        uint8_t dest = params[i].dest - 1;
         uint8_t param = params[i].param;
 
         if (dest >= NUM_MD_TRACKS + 4) {
@@ -140,72 +140,11 @@ void LFOSeqTrack::seq(MidiUartParent *uart_) {
   uart = uart_old;
 }
 
-void LFOSeqTrack::check_and_update_params_offset(uint8_t track, uint8_t dest,
-                                                 uint8_t value) {
-  for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    if ((params[n].dest == track) && (params[n].param == dest)) {
-      params[n].offset = value;
-    }
-  }
-}
-
-void LFOSeqTrack::reset_params_offset() {
-  if (enable) {
-    for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-      params[n].reset_param_offset();
-    }
-  }
-}
-
-void LFOSeqTrack::update_params_offset() {
-  for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    params[n].update_offset();
-  }
-}
-
-void LFOSeqTrack::update_kit_params() {
-  for (uint8_t n = 0; n < NUM_LFO_PARAMS; n++) {
-    params[n].update_kit();
-  }
-}
-
-void LFOSeqParam::update_kit() {
-  if (dest <= NUM_MD_TRACKS) {
-    MD.kit.params[dest - 1][param] = offset;
+uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
+  if (dest < NUM_MD_TRACKS) {
+    return MD.kit.params[dest][param];
   } else {
-    switch (dest - NUM_MD_TRACKS - 1) {
-    case MD_FX_ECHO - MD_FX_ECHO:
-      MD.kit.delay[param] = offset;
-      break;
-    case MD_FX_DYN - MD_FX_ECHO:
-      MD.kit.dynamics[param] = offset;
-      break;
-    case MD_FX_REV - MD_FX_ECHO:
-      MD.kit.reverb[param] = offset;
-      break;
-    case MD_FX_EQ - MD_FX_ECHO:
-      MD.kit.eq[param] = offset;
-      break;
-    }
-  }
-}
-
-void LFOSeqParam::update_offset() { offset = get_param_offset(dest, param); }
-void LFOSeqParam::reset_param_offset() { reset_param(dest, param, offset); }
-
-void LFOSeqParam::reset_param(uint8_t dest, uint8_t param, uint8_t value) {
-  if (dest <= NUM_MD_TRACKS) {
-    MD.setTrackParam(dest - 1, param, value);
-  } else {
-    MD.sendFXParam(param, value, MD_FX_ECHO + dest - NUM_MD_TRACKS - 1);
-  }
-}
-
-uint8_t LFOSeqParam::get_param_offset(uint8_t dest, uint8_t param) {
-  if (dest <= NUM_MD_TRACKS) {
-    return MD.kit.params[dest - 1][param];
-  } else {
-    switch (dest - NUM_MD_TRACKS - 1) {
+    switch (dest - NUM_MD_TRACKS) {
     case MD_FX_ECHO - MD_FX_ECHO:
       return MD.kit.delay[param];
       break;

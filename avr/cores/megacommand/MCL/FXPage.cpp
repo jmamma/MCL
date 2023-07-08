@@ -79,11 +79,6 @@ void FXPage::loop() {
         MD.kit.eq[fx_param] = encoders[i]->cur;
         break;
       }
-      for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-        mcl_seq.lfo_tracks[n].check_and_update_params_offset(
-            NUM_MD_TRACKS + 1 + fx_type - MD_FX_ECHO, fx_param,
-            encoders[i]->cur);
-      }
     }
   }
 }

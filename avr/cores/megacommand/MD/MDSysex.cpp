@@ -80,10 +80,6 @@ void MDSysexListenerClass::end() {
 
     perf_page.learn_param(fx_type + 16, param, value);
 
-    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(17 + fx_type, param, value);
-    }
-
     break;
 
   case MD_SET_LFO_PARAM_ID:
@@ -101,9 +97,6 @@ void MDSysexListenerClass::end() {
     //LFOS, LFOD, LFOM
     if (4 < param && param < 8) {
       MD.kit.params[track][param + 16] = value;
-      for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-        mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param + 16, value);
-      }
     }
 
     break;

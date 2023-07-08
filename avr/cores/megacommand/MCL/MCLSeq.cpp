@@ -76,16 +76,10 @@ void MCLSeq::disable() {
 // restore kit params
 void MCLSeq::update_kit_params() {
 #ifdef LFO_TRACKS
-  for (uint8_t n = 0; n < NUM_LFO_TRACKS; n++) {
-    mcl_seq.lfo_tracks[n].update_kit_params();
-  }
 #endif
 }
 void MCLSeq::update_params() {
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].update_params_offset();
-  }
 #endif
 }
 
@@ -147,9 +141,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
   sei();
 
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].update_params_offset();
-  }
 #endif
   seq_rec_play();
 
@@ -182,9 +173,6 @@ void MCLSeq::onMidiStopCallback() {
     }
   }
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].reset_params_offset();
-  }
 #endif
 }
 
@@ -338,10 +326,6 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   if (!update_params) {
     return;
-  }
-  for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-    mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param,
-                                                         value);
   }
 
 }

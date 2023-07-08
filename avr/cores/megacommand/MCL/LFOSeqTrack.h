@@ -28,11 +28,6 @@ public:
   uint8_t depth;
   uint8_t offset;
 
-  uint8_t get_param_offset(uint8_t dest, uint8_t param);
-  void reset_param(uint8_t dest, uint8_t param, uint8_t value);
-  void reset_param_offset();
-  void update_offset();
-  void update_kit();
 };
 
 class LFOSeqTrackData {
@@ -46,6 +41,7 @@ public:
   uint8_t last_wav_value[NUM_LFO_PARAMS];
   uint8_t sample_hold; //<--- shouldnt be stored here;
 
+  
   uint8_t speed;
   uint8_t mode;
   uint8_t offset_behaviour; //<--- no longer needed
@@ -82,13 +78,9 @@ public:
 
   void load_tables();
 
-  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t param);
-  void update_kit_params();
-  void update_params_offset();
-  void reset_params_offset();
+  uint8_t get_param_offset(uint8_t dest, uint8_t param);
+  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param);
 
-  void check_and_update_params_offset(uint8_t dest, uint8_t param,
-                                      uint8_t value);
   void set_wav_type(uint8_t _wav_type) {
       wav_type = _wav_type;
   }

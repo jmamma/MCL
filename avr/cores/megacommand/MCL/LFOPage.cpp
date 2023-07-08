@@ -12,8 +12,6 @@
 void LFOPage::setup() {
   //  lfo_track = &mcl_seq.lfo_tracks[0];
 
-  lfo_track->params[0].update_offset();
-  lfo_track->params[1].update_offset();
   DEBUG_PRINT_FN();
 }
 
@@ -96,38 +94,30 @@ void LFOPage::loop() {
     if (encoders[0]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      lfo_track->params[0].reset_param_offset();
       lfo_track->params[0].dest = encoders[0]->cur;
-      lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
     if (encoders[1]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      lfo_track->params[0].reset_param_offset();
       lfo_track->params[0].param = encoders[1]->cur;
       //  lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
       //     encoders[0]->cur, encoders[1]->cur);
-      lfo_track->params[0].update_offset();
       CLEAR_LOCK();
     }
 
     if (encoders[2]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      lfo_track->params[1].reset_param_offset();
       lfo_track->params[1].dest = encoders[2]->cur;
-      lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
     if (encoders[3]->hasChanged()) {
       USE_LOCK();
       SET_LOCK();
-      lfo_track->params[1].reset_param_offset();
       lfo_track->params[1].param = encoders[3]->cur;
       //  lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
       //     encoders[2]->cur, encoders[3]->cur);
-      lfo_track->params[1].update_offset();
       CLEAR_LOCK();
     }
   }
@@ -315,9 +305,6 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    if (lfo_track->enable) {
-      lfo_track->reset_params_offset();
-    }
     lfo_track->enable = !(lfo_track->enable);
   }
   return false;

@@ -359,17 +359,11 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
 
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
-  for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-    mcl_seq.lfo_tracks[n].update_params_offset();
-  }
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
   if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
     MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr, true);
-    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param, MD.kit.params_orig[track][param]);
-    }
   }
 }
 
