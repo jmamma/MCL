@@ -2,10 +2,14 @@
 
 #include "Grid.h"
 
-#define GROUP_DEV 0
-#define GROUP_AUX 1
-#define GROUP_TEMPO 2
 #define EMPTY_TRACK_TYPE 0
+
+enum GridGroup {
+  GROUP_DEV,
+  GROUP_PERF,
+  GROUP_AUX,
+  GROUP_TEMPO,
+};
 
 class SeqTrack;
 
@@ -13,7 +17,7 @@ class GridDeviceTrack {
 public:
   uint8_t device_idx;
   uint8_t track_type;
-  uint8_t group_type;
+  GridGroup group_type;
   uint8_t mem_slot_idx;
   SeqTrack *seq_track;
 
@@ -21,7 +25,7 @@ public:
     init();
   }
 
-  void init(uint8_t _track_type = EMPTY_TRACK_TYPE, uint8_t _group_type = GROUP_DEV, uint8_t _device_idx = 255, SeqTrack *_seq_track = nullptr, uint8_t _mem_slot_idx = 255) {
+  void init(uint8_t _track_type = EMPTY_TRACK_TYPE, GridGroup _group_type = GROUP_DEV, uint8_t _device_idx = 255, SeqTrack *_seq_track = nullptr, uint8_t _mem_slot_idx = 255) {
     track_type = _track_type;
     group_type = _group_type;
     mem_slot_idx = _mem_slot_idx;

@@ -30,6 +30,7 @@ void GridIOPage::track_select_array_from_type_select(
       match = gdt->device_idx;
       break;
     case GROUP_AUX:
+    case GROUP_PERF:
     case GROUP_TEMPO:
       match = gdt->group_type + 1;
       break;
@@ -44,6 +45,32 @@ void GridIOPage::track_select_array_from_type_select(
 }
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
+  if (note_interface.is_event(event)) {
+    uint8_t track = event->source - 128;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (show_track_type) {
+        if (track < 5) {
+          TOGGLE_BIT16(mcl_cfg.track_type_select, track);
+          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+        }
+      } else {
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+      }
+    } else {
+      if (!show_track_type) {
+        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        if (note_interface.notes_all_off()) {
+          if (BUTTON_DOWN(Buttons.BUTTON2)) {
+            return true;
+          } else {
+            action();
+          }
+        }
+      }
+    }
+
+    return true;
+  }
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {

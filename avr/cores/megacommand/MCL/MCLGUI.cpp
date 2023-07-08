@@ -659,7 +659,9 @@ void MCLGUI::draw_track_type_select(uint8_t x, uint8_t y,
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  for (uint8_t i = 0; i < 4; i++) {
+  for (uint8_t i = 0; i < 5; i++) {
+
+    oled_display.setCursor(x, y);
     switch (i) {
     case 0:
       strcpy(dev, devs[0]->name);
@@ -672,21 +674,23 @@ void MCLGUI::draw_track_type_select(uint8_t x, uint8_t y,
       }
       break;
     case 2:
-      strcpy(dev, "FX");
+      strcpy(dev, "PF");
       break;
     case 3:
-      strcpy(dev, "TEMPO");
+      strcpy(dev, "FX");
+      break;
+    case 4:
+      strcpy(dev, "TP");
       break;
     }
 
-    oled_display.setCursor(x, y);
     oled_display.print(dev);
     if (IS_BIT_SET(track_type_select, i)) {
       oled_display.fillRect(x, y + 4, seq_w, trig_h, WHITE);
     } else {
       oled_display.drawRect(x, y + 4, seq_w, trig_h, WHITE);
     }
-    x += 16;
+    x += 18;
   }
 }
 

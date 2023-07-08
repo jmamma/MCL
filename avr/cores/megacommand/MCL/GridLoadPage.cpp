@@ -108,7 +108,7 @@ void GridLoadPage::display() {
   auto oldfont = oled_display.getFont();
 
   if (show_track_type) {
-    mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
+    mcl_gui.draw_track_type_select(23, MCLGUI::s_menu_y + 12,
                                    mcl_cfg.track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
@@ -230,33 +230,6 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     return true;
   }
   DEBUG_DUMP(event->source);
-  if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (show_track_type) {
-        if (track < 4) {
-          TOGGLE_BIT16(mcl_cfg.track_type_select, track);
-          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
-        }
-      } else {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
-      }
-    } else {
-      if (!show_track_type) {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
-        if (note_interface.notes_all_off()) {
-          DEBUG_PRINTLN(F("notes all off"));
-          if (BUTTON_DOWN(Buttons.BUTTON2)) {
-            return true;
-          } else {
-            load();
-          }
-        }
-      }
-    }
-    return true;
-  }
-
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {

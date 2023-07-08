@@ -20,6 +20,7 @@ class GridIOPage : public LightPage {
  virtual void cleanup();
  virtual void draw_popup();
  virtual void group_select();
+ virtual void action() = 0;
  virtual bool handleEvent(gui_event_t *event);
 };
 

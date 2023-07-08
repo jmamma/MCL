@@ -34,7 +34,7 @@ void GridSavePage::display() {
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
   if (show_track_type) {
-    mcl_gui.draw_track_type_select(36, MCLGUI::s_menu_y + 12,
+    mcl_gui.draw_track_type_select(23, MCLGUI::s_menu_y + 12,
                                    mcl_cfg.track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
@@ -111,33 +111,6 @@ void GridSavePage::group_select() {
 
 bool GridSavePage::handleEvent(gui_event_t *event) {
   if (GridIOPage::handleEvent(event)) {
-    return true;
-  }
-
-  if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (show_track_type) {
-        if (track < 4) {
-          TOGGLE_BIT16(mcl_cfg.track_type_select, track);
-          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
-        }
-      } else {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
-      }
-    } else {
-      if (!show_track_type) {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
-        if (note_interface.notes_all_off()) {
-          if (BUTTON_DOWN(Buttons.BUTTON2)) {
-            return true;
-          } else {
-            save();
-          }
-        }
-      }
-    }
-
     return true;
   }
 

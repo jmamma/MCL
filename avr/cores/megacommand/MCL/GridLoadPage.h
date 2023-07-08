@@ -22,6 +22,7 @@ class GridLoadPage : public GridIOPage {
  void draw_popup();
  void draw_popup_title();
  void display();
+ void action() { load(); }
  void init();
  void setup();
 };

@@ -15,6 +15,7 @@ public:
   bool handleEvent(gui_event_t *event);
   void group_select();
   void loop();
+  void action() { save(); }
   void display();
   void init();
   void setup();
