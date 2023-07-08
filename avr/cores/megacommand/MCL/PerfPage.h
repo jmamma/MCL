@@ -26,8 +26,8 @@ public:
   uint8_t last_page_mode;
 
   bool midi_state = false;
-  uint8_t page_mode;
-  uint8_t perf_id;
+  uint8_t page_mode = 0;
+  uint8_t perf_id = 0;
 
   uint16_t last_mask = 0;
   uint16_t last_blink_mask = 0;

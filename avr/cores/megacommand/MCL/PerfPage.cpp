@@ -187,7 +187,7 @@ void PerfPage::update_params() {
     if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
       encoders[2]->cur = 0;
     }
-    if (encoders[1]->hasChanged() || encoders[2]->hasChanged()) {
+    if (encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       d->update_src(encoders[1]->cur, encoders[2]->cur, encoders[3]->cur);
     }
@@ -307,9 +307,9 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       uint8_t min = d->min;
       uint8_t max = 127;
       if (value >= min) {
-        uint8_t cur = value - min;
-        int8_t range = max - min;
-        uint8_t val = ((float)cur / (float)range) * 127.0f;
+        int16_t cur = value - min;
+        int16_t range = max - min;
+        uint8_t val = (cur * (int16_t)127) / range;
         perf_encoders[i]->cur = val;
         perf_encoders[i]->send();
         if (mcl.currentPage() == PERF_PAGE_0) {
@@ -320,7 +320,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   }
 
   if (mcl.currentPage() == PERF_PAGE_0) {
-    if (dest > NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
+    if (dest >= NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
       return;
     }
     if (learn) {
@@ -560,6 +560,15 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
+  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+    if (learn) {
+      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      uint8_t scene = learn - 1;
+      d->clear_param_scene(encoders[1]->cur - 1 , encoders[2]->cur, scene);
+      config_encoders();
+    }
+  }
+
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
   page_mode_up:
     page_mode++;
