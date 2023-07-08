@@ -183,58 +183,6 @@ bool MDSeqTrack::is_param(uint8_t param_id) {
   return false;
 }
 
-void MDSeqTrack::update_param(uint8_t param_id, uint8_t value) {
-  bool match = false;
-  for (uint8_t c = 0; c < NUM_LOCKS && match == false; c++) {
-    if (locks_params[c] > 0) {
-      if (locks_params[c] - 1 == param_id) {
-        locks_params_orig[c] = value;
-        match = true;
-      }
-    }
-  }
-}
-
-void MDSeqTrack::update_kit_params() {
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] > 0) {
-      uint8_t param_id = locks_params[c] - 1;
-      MD.kit.params[track_number][param_id] = locks_params_orig[c];
-    }
-  }
-}
-
-void MDSeqTrack::update_params() {
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] > 0) {
-      uint8_t param_id = locks_params[c] - 1;
-      locks_params_orig[c] = MD.kit.params[track_number][param_id];
-    }
-  }
-}
-
-void MDSeqTrack::reset_params() {
-  MDTrack md_track;
-
-  md_track.get_machine_from_kit(track_number);
-  bool re_assign = false;
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] > 0) {
-      uint8_t param = locks_params[c] - 1;
-      if (param > 23) {
-        DEBUG_PRINTLN("param out of bounds");
-        return;
-      }
-      re_assign = true;
-      md_track.machine.params[param] = locks_params_orig[c];
-    }
-  }
-  if (re_assign) {
-    DEBUG_PRINTLN("re-assign machine");
-    MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
-  }
-}
-
 void MDSeqTrack::recalc_slides() {
   if (locks_slides_recalc == 255) {
     return;
@@ -309,7 +257,7 @@ again:
           mask &= ~cur_mask;
           // all targets hit?
         } else if (steps[next_step].trig) {
-          locks_slide_next_lock_val[i] = locks_params_orig[i];
+          locks_slide_next_lock_val[i] = MD.kit.params[track_number][locks_params[i] - 1];
           locks_slide_next_lock_step[i] = next_step;
           mask &= ~cur_mask;
         }
@@ -427,7 +375,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
         send_param = locks[lock_idx];
         send = true;
       } else if (trig) {
-        send_param = locks_params_orig[c];
+        send_param = MD.kit.params[track_number][locks_params[c] - 1];
         send = true;
       }
     }
@@ -576,7 +524,6 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
   for (uint8_t c = 0; c < NUM_LOCKS && match == 255; c++) {
     if (locks_params[c] == 0) {
       locks_params[c] = track_param + 1;
-      locks_params_orig[c] = MD.kit.params[track_number][track_param];
       match = c;
     }
   }
@@ -751,7 +698,7 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
     }
   }
 
-  MD.setTrackParam(track_number, param_id, locks_params_orig[match]);
+  MD.setTrackParam(track_number, param_id, MD.kit.params[track_number][locks_params[match] - 1]);
 }
 
 
@@ -790,7 +737,7 @@ void MDSeqTrack::clear_conditional() {
   oneshot_mask = 0;
 }
 
-void MDSeqTrack::clear_locks(bool reset_params_) {
+void MDSeqTrack::clear_locks() {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
@@ -799,17 +746,14 @@ void MDSeqTrack::clear_locks(bool reset_params_) {
   }
 
   memset(locks, 0, sizeof(locks));
-  if (reset_params_) {
-    reset_params();
-  }
   cur_event_idx = 0;
 }
 
-void MDSeqTrack::clear_track(bool locks, bool reset_params_) {
+void MDSeqTrack::clear_track(bool locks) {
   clear_conditional();
   if (locks) {
     DEBUG_DUMP("clear locks");
-    clear_locks(reset_params_);
+    clear_locks();
   }
   memset(steps, 0, sizeof(steps));
 }

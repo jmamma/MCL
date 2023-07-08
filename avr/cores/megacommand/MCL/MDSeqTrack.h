@@ -21,8 +21,6 @@ public:
 
   uint64_t oneshot_mask;
 
-  uint8_t locks_params_orig[NUM_LOCKS];
-
   static uint16_t gui_update;
   static uint16_t md_trig_mask;
   static uint32_t load_machine_cache;
@@ -77,14 +75,11 @@ public:
   uint8_t get_step_locks(uint8_t step);
   void clear_conditional();
   void clear_step_lock(uint8_t step, uint8_t param_id);
-  void clear_locks(bool reset_params_ = true);
-  void clear_track(bool locks = true, bool reset_params_ = true);
+  void clear_locks();
+  void clear_track(bool locks = true);
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
-  void update_kit_params();
-  void update_params();
-  void update_param(uint8_t param_id, uint8_t value);
-  void reset_params();
+
   void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
   void set_length(uint8_t len, bool expand = false);

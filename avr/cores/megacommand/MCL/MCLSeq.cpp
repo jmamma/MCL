@@ -75,9 +75,6 @@ void MCLSeq::disable() {
 }
 // restore kit params
 void MCLSeq::update_kit_params() {
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].update_kit_params();
-  }
 #ifdef LFO_TRACKS
   for (uint8_t n = 0; n < NUM_LFO_TRACKS; n++) {
     mcl_seq.lfo_tracks[n].update_kit_params();
@@ -85,9 +82,6 @@ void MCLSeq::update_kit_params() {
 #endif
 }
 void MCLSeq::update_params() {
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].update_params();
-  }
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
@@ -152,10 +146,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
 
   sei();
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].update_params();
-  }
-
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].update_params_offset();
@@ -183,8 +173,9 @@ void MCLSeq::onMidiStopCallback() {
     }
   }
 #endif
+  MD.reset_dsp_params();
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       md_tracks[i].locks_slide_data[c].init();
@@ -348,7 +339,6 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (!update_params) {
     return;
   }
-  mcl_seq.md_tracks[track].update_param(track_param, value);
   for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
     mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, track_param,
                                                          value);

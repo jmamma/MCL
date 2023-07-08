@@ -359,9 +359,6 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
 
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].update_params();
-  }
   for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
     mcl_seq.lfo_tracks[n].update_params_offset();
   }
@@ -1164,9 +1161,6 @@ void MDClass::updateKitParams() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
-    mcl_seq.md_tracks[n].update_kit_params();
-    //Perform silent reset, to prevent MDkit copying running parameter locks in to undo kit
-    mcl_seq.md_tracks[n].reset_params();
   }
   undokit_sync();
 

@@ -100,7 +100,6 @@ void MDSysexListenerClass::end() {
 
     //LFOS, LFOD, LFOM
     if (4 < param && param < 8) {
-      mcl_seq.md_tracks[track].update_param(param + 16, value);
       MD.kit.params[track][param + 16] = value;
       for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
         mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param + 16, value);

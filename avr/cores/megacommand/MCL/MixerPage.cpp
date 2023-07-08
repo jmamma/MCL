@@ -501,7 +501,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
               for (uint8_t c = 0; c < 24; c++) {
                 MD.restore_kit_param(i, c);
               }
-              mcl_seq.md_tracks[i].update_params();
             }
           }
         }
@@ -693,9 +692,6 @@ void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
   for (int i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
       MD.setTrackParam(i, track_param, value, nullptr, true);
-      if (track_param < 24) {
-        mcl_seq.md_tracks[i].update_param(track_param, value);
-      }
       SET_BIT16(mixer_page.redraw_mask, i);
     }
   }

@@ -252,6 +252,12 @@ void ElektronDevice::undokit_sync() {
   sendRequest(data, sizeof(data));
 }
 
+void ElektronDevice::reset_dsp_params() {
+  uint8_t data[2] = { 0x70, 0x43 };
+  sendRequest(data, sizeof(data));
+}
+
+
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
                                   uint8_t blink) {
   uint8_t data[5] = {0x70, 0x35, 0x00, 0x00, 0x00};

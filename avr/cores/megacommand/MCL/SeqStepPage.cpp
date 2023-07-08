@@ -275,10 +275,6 @@ void SeqStepPage::loop() {
     update_params_clock = slowclock;
 
     note_interface.init_notes();
-    if (reset_on_release) {
-      active_track.reset_params();
-      reset_on_release = false;
-    }
   }
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
@@ -697,9 +693,6 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
     seq_step_page.config_encoders();
 
-    mcl_seq.md_tracks[track].update_param(track_param, value);
-
-    MD.kit.params[track][track_param] = value;
     mcl_seq.md_tracks[track].record_track_locks(track_param, value);
     return;
   }

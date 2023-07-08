@@ -427,6 +427,7 @@ public:
   void set_key_repeat(uint8_t mode);
 
   void undokit_sync();
+  void reset_dsp_params();
   /**
    * Send a sysex request to the device. All the request calls
    * are wrapped in appropriate methods like requestKit,

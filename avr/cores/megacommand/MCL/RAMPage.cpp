@@ -83,9 +83,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   MDTrack md_track;
   MDSeqTrack md_seq_track;
   bool clear_locks = true;
-  bool send_params = false;
 
-  md_seq_track.clear_track(clear_locks, send_params);
+  md_seq_track.clear_track(clear_locks);
 
   md_track.machine.init();
 
@@ -194,11 +193,10 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   uint8_t track_length = encoders[3]->cur * 4;
   uint8_t step_inc = track_length / slices;
   bool clear_locks = true;
-  bool send_params = false;
 
   auto &trk = mcl_seq.md_tracks[track];
   auto &ln_trk = mcl_seq.md_tracks[linked_track];
-  trk.clear_track(clear_locks, send_params);
+  trk.clear_track(clear_locks);
 
   trk.locks_params[0] = ROM_STRT + 1;
   trk.locks_params[1] = ROM_END + 1;
@@ -284,12 +282,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   MDSeqTrack md_seq_track;
 
   bool clear_locks = true;
-  bool send_params = false;
 
-  md_seq_track.clear_track(clear_locks, send_params);
+  md_seq_track.clear_track(clear_locks);
 
-  mcl_seq.md_tracks[track].clear_track(
-      clear_locks, send_params); // make sure current track does not retrigger
+  mcl_seq.md_tracks[track].clear_track(clear_locks); // make sure current track does not retrigger
 
   md_track.machine.init();
 
@@ -659,9 +655,6 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
         }
         */
       } else {
-        if (track_param < 24) {
-          mcl_seq.md_tracks[n].update_param(track_param, value);
-        }
         MD.setTrackParam(n, track_param, value, nullptr, true);
       }
     }
