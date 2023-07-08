@@ -34,7 +34,7 @@ F_CPU = 16000000L
 
 INOFILES=$(wildcard *.pde)
 
-OPTIM_FLAGS   = -Os
+OPTIM_FLAGS   = -Os --short-enums
 WARN_FLAGS    = -Wall -Wextra -Wdouble-promotion
 COMPILE_FLAGS = -c $(OPTIM_FLAGS) $(WARN_FLAGS) -MMD
 FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver

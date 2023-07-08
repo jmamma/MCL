@@ -37,7 +37,7 @@ function compile($f) {
     -D__AVR_ATmega2560__ `
     -DAVR `
     -std=gnu++1z `
-    -Os -fpermissive $f -c -o "$m/$n.o"
+    -Os --short-enums -fpermissive $f -c -o "$m/$n.o"
   ../../tools/avr/bin/avr-objcopy -O binary -j .data "$m/$n.o" "$m/$n.hex"
   cd ../compress
   dotnet run "$m/$n.hex" "$m/$n.ez"
