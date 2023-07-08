@@ -320,7 +320,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   }
 
   if (mcl.currentPage() == PERF_PAGE_0) {
-    if (dest >= NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
+    if (dest >= NUM_MD_TRACKS + 4) { // && MidiClock.state == 2) {
       return;
     }
     if (learn) {
