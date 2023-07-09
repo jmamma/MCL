@@ -78,11 +78,7 @@ void LFOPage::config_encoders() {
   }
   //  loop();
 
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    encoders[i]->old = encoders[i]->cur;
-    encoders_used_clock[i] =
-        slowclock;
-  }
+  init_encoders_used_clock();
 
 }
 

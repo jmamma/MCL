@@ -64,13 +64,13 @@ void MixerPage::init() {
   preview_mute_set = 255;
   bool switch_tracks = false;
   oled_display.clearDisplay();
-  oled_draw_mutes();
   set_display_mode(MODEL_LEVEL);
   first_track = 255;
   redraw_mask = -1;
   show_mixer_menu = 0;
-  populate_mute_set();
+  //populate_mute_set();
   draw_encoders = false;
+  redraw_mutes = true;
   //  R.Clear();
 //  R.use_machine_param_names();
 }
@@ -90,6 +90,7 @@ void MixerPage::set_level(int curtrack, int value) {
 }
 
 void MixerPage::loop() {
+  constexpr int timeout = 1500;
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
   if (draw_encoders && trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -97,7 +98,6 @@ void MixerPage::loop() {
   }
   else {
       draw_encoders = false;
-      constexpr int timeout = 1000;
       for (uint8_t n = 0; n < 4; n++) {
          if (note_interface.notes_on) { encoders_used_clock[n] = slowclock + timeout + 1; }
          if (mcl_gui.show_encoder_value(encoders[n],timeout)) { draw_encoders = true; }
@@ -107,6 +107,11 @@ void MixerPage::loop() {
     if (!draw_encoders) { redraw_mask = -1;
     oled_display.clearDisplay(); oled_draw_mutes(); }
   }
+
+  if (!draw_encoders) {
+    init_encoders_used_clock(timeout);
+  }
+
 }
 
 void MixerPage::draw_levels() {}
@@ -225,6 +230,7 @@ void MixerPage::display() {
       oled_display.print(str1);
     }
   }
+  else if (redraw_mutes) { oled_draw_mutes(); redraw_mutes = false; }
   uint8_t fader_level;
   uint8_t meter_level;
   uint8_t fader_x = 0;
@@ -433,7 +439,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
                                     : (SeqTrack *)&mcl_seq.ext_tracks[track];
 
           uint8_t mute_set = current_mute_set;
-          if (current_mute_set == 255) { return; }
           uint8_t state = 0;
 
           if (preview_mute_set == 255 || preview_mute_set == current_mute_set) {
@@ -448,6 +453,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             mute_set = preview_mute_set;
             state = IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
           }
+
+          if (mute_set == 255) { return; }
 
           if (state == SEQ_MUTE_ON) {
             CLEAR_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
@@ -686,6 +693,7 @@ uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
 void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value) {
   if (track_param == 32) {
+    redraw_mutes = true;
     return;
   } // don't process mute
   if (mixer_page.midi_device != &MD) {

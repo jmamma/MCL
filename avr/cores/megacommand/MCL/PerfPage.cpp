@@ -151,11 +151,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
   }
 
   if (!show_val) {
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-      encoders[i]->old = encoders[i]->cur;
-      ((LightPage *)this)->encoders_used_clock[i] =
-          slowclock + SHOW_VALUE_TIMEOUT + 1;
-    }
+    init_encoders_used_clock();
   }
 }
 void PerfPage::update_params() {

@@ -72,6 +72,14 @@ void LightPage::update() {
   }
 }
 
+void LightPage::init_encoders_used_clock(uint16_t timeout) {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+      encoders[i]->old = encoders[i]->cur;
+      ((LightPage *)this)->encoders_used_clock[i] =
+          slowclock + timeout + 1;
+  }
+}
+
 void LightPage::clear() {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if (encoders[i] != NULL)

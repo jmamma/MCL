@@ -184,11 +184,7 @@ public:
   **/
   void unlockEncoders() {} // TODO
 
-  void init_encoders_used_clock() {
-    for (uint8_t n = 0; n < 4; n++) {
-      encoders_used_clock[n] = slowclock + SHOW_VALUE_TIMEOUT + 1;
-    }
-  }
+  void init_encoders_used_clock(uint16_t timeout = SHOW_VALUE_TIMEOUT);
 };
 
 class Page : public PageParent {
