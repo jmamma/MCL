@@ -27,10 +27,12 @@ class PerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
   PerfScene scenes[NUM_SCENES];
+  MuteSet mute_sets[2];
 };
 
 class PerfTrack : public AUXTrack, public PerfTrackData {
 public:
+
   PerfTrack() {
     active = PERF_TRACK_TYPE;
     static_assert(sizeof(PerfTrack) <= PERF_TRACK_LEN);
@@ -43,6 +45,7 @@ public:
       }
       scenes[n].init();
     }
+    memset(mute_sets, 0, sizeof(mute_sets));
   }
 
   void load_perf();

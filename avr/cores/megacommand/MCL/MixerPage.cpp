@@ -24,7 +24,7 @@ void MixerPage::oled_draw_mutes() {
 
     uint8_t mute_state =
         preview_mute_set != 255
-            ? IS_BIT_SET16(mute_sets[!is_md_device][preview_mute_set], i)
+            ? IS_BIT_SET16(mute_sets[!is_md_device].mutes[preview_mute_set], i)
             : seq_track->mute_state == SEQ_MUTE_OFF;
 
     //   if (note_interface.is_note(i)) {
@@ -236,17 +236,17 @@ void MixerPage::display() {
   uint8_t *levels = is_md_device ? disp_levels : ext_disp_levels;
 
   if (preview_mute_set != 255) {
-    if (mute_sets[!is_md_device][preview_mute_set] != seq_step_page.mute_mask) {
-      seq_step_page.mute_mask = mute_sets[!is_md_device][preview_mute_set];
-      MD.set_trigleds(mute_sets[!is_md_device][preview_mute_set],
+    if (mute_sets[!is_md_device].mutes[preview_mute_set] != seq_step_page.mute_mask) {
+      seq_step_page.mute_mask = mute_sets[!is_md_device].mutes[preview_mute_set];
+      MD.set_trigleds(mute_sets[!is_md_device].mutes[preview_mute_set],
                       TRIGLED_EXCLUSIVE);
       oled_draw_mutes();
     }
   } else if (show_mixer_menu && seq_step_page.display_mute_mask(midi_device)) {
     oled_draw_mutes();
-  } else if (mute_sets[!is_md_device][current_mute_set] !=
+  } else if (current_mute_set != 255 && mute_sets[!is_md_device].mutes[current_mute_set] !=
              seq_step_page.mute_mask) {
-    seq_step_page.mute_mask = mute_sets[!is_md_device][current_mute_set];
+    seq_step_page.mute_mask = mute_sets[!is_md_device].mutes[current_mute_set];
     oled_draw_mutes();
   }
 
@@ -340,6 +340,7 @@ void MixerPage::disable_record_mutes() {
 }
 
 void MixerPage::populate_mute_set() {
+  if (current_mute_set == 255) { return; }
   for (uint8_t dev = 0; dev < 2; dev++) {
 
     uint8_t len = (dev == 0) ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
@@ -348,9 +349,9 @@ void MixerPage::populate_mute_set() {
       SeqTrack *seq_track = (dev == 0) ? (SeqTrack *)&mcl_seq.md_tracks[n]
                                        : (SeqTrack *)&mcl_seq.ext_tracks[n];
       if (seq_track->mute_state == SEQ_MUTE_ON) {
-        CLEAR_BIT16(mute_sets[dev][current_mute_set], n);
+        CLEAR_BIT16(mute_sets[dev].mutes[current_mute_set], n);
       } else {
-        SET_BIT16(mute_sets[dev][current_mute_set], n);
+        SET_BIT16(mute_sets[dev].mutes[current_mute_set], n);
       }
     }
   }
@@ -377,7 +378,7 @@ void MixerPage::switch_mute_set(uint8_t state) {
       SeqTrack *seq_track = (dev == 0) ? (SeqTrack *)&mcl_seq.md_tracks[n]
                                        : (SeqTrack *)&mcl_seq.ext_tracks[n];
 
-      if (IS_BIT_CLEAR16(mute_sets[dev][state], n)) {
+      if (IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n)) {
         if (seq_track->mute_state == SEQ_MUTE_OFF) {
           seq_track->toggle_mute();
           devs[dev]->muteTrack(n, SEQ_MUTE_ON);
@@ -432,6 +433,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
                                     : (SeqTrack *)&mcl_seq.ext_tracks[track];
 
           uint8_t mute_set = current_mute_set;
+          if (current_mute_set == 255) { return; }
           uint8_t state = 0;
 
           if (preview_mute_set == 255 || preview_mute_set == current_mute_set) {
@@ -444,13 +446,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           } else {
           update_mute_set:
             mute_set = preview_mute_set;
-            state = IS_BIT_SET16(mute_sets[!is_md_device][mute_set], track);
+            state = IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
           }
 
           if (state == SEQ_MUTE_ON) {
-            CLEAR_BIT16(mute_sets[!is_md_device][mute_set], track);
+            CLEAR_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
           } else {
-            SET_BIT16(mute_sets[!is_md_device][mute_set], track);
+            SET_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
           }
 
           if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
@@ -533,12 +535,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
                                           : (SeqTrack *)&mcl_seq.ext_tracks[i];
                 seq_track->toggle_mute();
                 midi_device->muteTrack(i, seq_track->mute_state);
+                if (current_mute_set == 255) { break; }
                 uint8_t state =
-                    IS_BIT_SET16(mute_sets[!is_md_device][current_mute_set], i);
+                    IS_BIT_SET16(mute_sets[!is_md_device].mutes[current_mute_set], i);
                 if (state == SEQ_MUTE_ON) {
-                  CLEAR_BIT16(mute_sets[!is_md_device][current_mute_set], i);
+                  CLEAR_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
                 } else {
-                  SET_BIT16(mute_sets[!is_md_device][current_mute_set], i);
+                  SET_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
                 }
               }
             }

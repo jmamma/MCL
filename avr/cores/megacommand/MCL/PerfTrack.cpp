@@ -24,6 +24,7 @@ void PerfTrack::get_perf() {
   DEBUG_PRINTLN("get perf");
   DEBUG_PRINTLN(sizeof(scenes));
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
+  memcpy(mute_sets,mixer_page.mute_sets, sizeof(mute_sets));
 }
 
 
@@ -41,8 +42,8 @@ void PerfTrack::load_perf() {
     e->cur = encs[n].cur;
     memcpy(e->name,encs[n].name, PERF_NAME_LENGTH);
   }
-
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
+ memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets));
 }
 
 void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {

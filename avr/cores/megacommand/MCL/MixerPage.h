@@ -7,6 +7,11 @@
 #include "GUI.h"
 
 
+class MuteSet {
+  public:
+  uint16_t mutes[4];
+};
+
 class MixerMidiEvents : public MidiCallback {
 public:
   bool state;
@@ -40,10 +45,11 @@ public:
 
   bool draw_encoders;
 
-  uint8_t current_mute_set = 0;
+  uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);
-  uint16_t mute_sets[2][4];
+
+  MuteSet mute_sets[2];
 
   uint8_t get_mute_set(uint8_t key);
 

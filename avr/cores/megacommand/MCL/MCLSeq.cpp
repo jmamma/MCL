@@ -49,8 +49,8 @@ void MCLSeq::setup() {
 
   MidiClock.addOnMidiStopCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStopCallback);
-//  MidiClock.addOnMidiStartCallback(
-//      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
+  //  MidiClock.addOnMidiStartCallback(
+  //      this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartCallback);
   MidiClock.addOnMidiStartImmediateCallback(
       this, (midi_clock_callback_ptr_t)&MCLSeq::onMidiStartImmediateCallback);
 
@@ -150,8 +150,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
   }
 }
 
-void MCLSeq::onMidiStartCallback() {
-}
+void MCLSeq::onMidiStartCallback() {}
 
 void MCLSeq::onMidiStopCallback() {
 #ifdef EXT_TRACKS
@@ -309,14 +308,25 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) { return; }
+  if (track > 15) {
+    return;
+  }
 
-  if (mcl.currentPage() == MIXER_PAGE) { mixer_page.onControlChangeCallback_Midi(track, track_param, value); }
+  if (mcl.currentPage() == MIXER_PAGE) {
+    mixer_page.onControlChangeCallback_Midi(track, track_param, value);
+  }
 
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
-    if (value > 0) { CLEAR_BIT16(mixer_page.mute_sets[0][mixer_page.current_mute_set], track); }
-    else { SET_BIT16(mixer_page.mute_sets[0][mixer_page.current_mute_set], track); }
+    if (mixer_page.current_mute_set != 255) {
+      if (value > 0) {
+        CLEAR_BIT16(mixer_page.mute_sets[0].mutes[mixer_page.current_mute_set],
+                    track);
+      } else {
+        SET_BIT16(mixer_page.mute_sets[0].mutes[mixer_page.current_mute_set],
+                  track);
+      }
+    }
   }
   if (track_param > 23) {
     return;
@@ -327,7 +337,6 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (!update_params) {
     return;
   }
-
 }
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -336,21 +345,24 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
 
   if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
-  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-    if (mcl_seq.ext_tracks[n].channel == channel) {
-        if (value > 0) {
-          CLEAR_BIT16(mixer_page.mute_sets[1][mixer_page.current_mute_set], n);
-          mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_ON;
-          mcl_seq.ext_tracks[n].buffer_notesoff();
-        } else {
-          SET_BIT16(mixer_page.mute_sets[1][mixer_page.current_mute_set], n);
-          mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
-        }
+    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+      if (mcl_seq.ext_tracks[n].channel != channel) {
+        continue;
+      }
+      mcl_seq.ext_tracks[n].mute_state = value > 0;
+      if (mixer_page.current_mute_set == 255) {
+        continue;
+      }
+      if (value > 0) {
+        CLEAR_BIT16(
+            mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
+        mcl_seq.ext_tracks[n].buffer_notesoff();
       } else {
-        mcl_seq.ext_tracks[n].update_param(param, value);
+        SET_BIT16(
+            mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
       }
     }
-   return;
+    return;
   }
 
   perf_page.learn_param(channel + 16 + 4, param, value);
@@ -360,13 +372,13 @@ void MCLSeqMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  
+
   Midi.addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
- /*
-  Midi.addOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
-  */
+  /*
+   Midi.addOnNoteOffCallback(
+       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
+   */
   update_params = true;
   Midi.addOnControlChangeCallback(
       this,
@@ -384,7 +396,7 @@ void MCLSeqMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  
+
   Midi.removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
   /*
