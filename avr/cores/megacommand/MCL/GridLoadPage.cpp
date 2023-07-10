@@ -52,8 +52,8 @@ void GridLoadPage::draw_popup() {
 }
 
 void GridLoadPage::display_load() {
-  char *str2 = " SLOTS";
-  char *str1 = "LOAD";
+  const char *str2 = " SLOTS";
+  const char *str1 = "LOAD";
   if (mcl_cfg.load_mode == LOAD_QUEUE) {
     str1 = "QUEUE";
   }
@@ -205,7 +205,8 @@ void GridLoadPage::load() {
 
 void GridLoadPage::group_select() {
   show_track_type = true;
-  MD.popup_text("LOAD GROUPS", true);
+  char str[] = "LOAD GROUPS";
+  MD.popup_text(str, true);
   MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 

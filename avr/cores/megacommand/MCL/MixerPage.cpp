@@ -223,7 +223,7 @@ void MixerPage::display() {
     //oled_display.clearDisplay();
     oled_display.fillRect(0,0,128,12,BLACK);
     for (uint8_t n = 0; n < 4; n++) {
-      char *str1 = "A";
+      char str1[] = "A";
       str1[0] = 'A' + n;
       uint8_t pos = n * 24;
       mcl_gui.draw_encoder(24 + pos, 0, encoders[n]->cur);

@@ -227,7 +227,7 @@ void PerfPage::display() {
 
   PerfEncoder *e = perf_encoders[perf_id];
 
-  char *str1 = " A";
+  char str1[] = " A";
   str1[1] = 'A' + perf_id;
   mcl_gui.draw_knob(0, encoders[0], str1);
 
@@ -238,7 +238,7 @@ void PerfPage::display() {
     info1 = "LCK>  ";
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
-    char *str1 = "LCK";
+    const char *str1 = "LCK";
     uint8_t v = encoders[3]->cur;
     bool is_lock = encoders[3]->cur != 0;
     if (!is_lock) {
@@ -283,7 +283,7 @@ void PerfPage::display() {
   }
 
   oled_display.setCursor(80, MCLGUI::pane_info2_y + 4);
-  char *str3 = "SCENE: A    B";
+  char str3[] = "SCENE: A    B";
   str3[7] = e->active_scene_a == 255 ? '-' : '1' + e->active_scene_a;
   str3[12] = e->active_scene_b == 255 ? '-' : '1' + e->active_scene_b;
   oled_display.print(str3);
@@ -478,7 +478,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (t < NUM_SCENES) {
         switch (key) {
         case MDX_KEY_COPY: {
-          char *str = "COPY SCENE";
+          char str[] = "COPY SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
           mcl_clipboard.copy_scene(
@@ -492,7 +492,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
-            char *str = "PASTE SCENE";
+            char str[] = "PASTE SCENE";
             oled_display.textbox(str, "");
             MD.popup_text(str);
             config_encoders();
@@ -504,7 +504,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
                     &perf_encoders[perf_id]->perf_data.scenes[undo])) {
-              char *str = "UNDO CLEAR";
+              char str[] = "UNDO CLEAR";
               oled_display.textbox(str, "");
               MD.popup_text(str);
               undo = 255;
@@ -517,7 +517,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             mcl_clipboard.copy_scene(
                 &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
-          char *str = "CLEAR SCENE";
+          char str[] = "CLEAR SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
           perf_encoders[perf_id]->perf_data.clear_scene(t);

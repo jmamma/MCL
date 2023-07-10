@@ -486,13 +486,13 @@ void SeqPtcPage::recalc_notemask() {
 }
 
 void SeqPtcPage::draw_popup_transpose() {
-  char *str = "KEY:   ";
+  char str[] = "KEY:   ";
   mcl_gui.put_value_at(transpose, str + 5);
   MD.popup_text(str);
 }
 
 void SeqPtcPage::draw_popup_octave() {
-  char *str = "OCT:   ";
+  char str[] = "OCT:   ";
   mcl_gui.put_value_at(ptc_param_oct.cur, str + 5);
   MD.popup_text(str);
 }

@@ -734,12 +734,12 @@ void opt_clear_track_handler() {
       }
     } else if (opt_clear == 1) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-      char *str = "CLEAR TRACK";
+      const char *str = "CLEAR TRACK";
       if (is_poly) {
         str = "CLEAR POLY TRACKS";
       }
       oled_display.textbox(str, "");
-      MD.popup_text(str);
+      MD.popup_text((char*) str);
       if (copy) {
         opt_copy_track_handler(opt_clear);
       }
@@ -758,7 +758,7 @@ void opt_clear_track_handler() {
     if (copy) {
       opt_copy_track_handler(opt_clear);
     }
-    char *str = "CLEAR EXT TRACK";
+    const char *str = "CLEAR EXT TRACK";
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         str = "CLEAR EXT TRACKS";
@@ -768,8 +768,8 @@ void opt_clear_track_handler() {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
     if (opt_clear) {
-      oled_display.textbox(str, "");
-      MD.popup_text(str);
+      oled_display.textbox((char*) str, "");
+      MD.popup_text((char*) str);
     }
   }
   opt_clear = 0;
@@ -898,12 +898,12 @@ void opt_paste_track_handler() {
       }
       mcl_clipboard.paste_sequencer();
     } else {
-      char *str = "UNDO EXT TRACKS";
+      const char *str = "UNDO EXT TRACKS";
       if (!undo) {
         str = "PASTE EXT TRACKS";
       }
       oled_display.textbox(str, "");
-      MD.popup_text(str);
+      MD.popup_text((char*)str);
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
   }
@@ -930,12 +930,12 @@ void opt_paste_track_handler() {
                                           last_md_track);
       }
     } else {
-      char *str = "UNDO EXT TRACK";
+      const char *str = "UNDO EXT TRACK";
       if (!undo) {
         str = "PASTE EXT TRACK";
       }
       oled_display.textbox(str, "");
-      MD.popup_text(str);
+      MD.popup_text((char*)str);
 
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_ext_track + NUM_MD_TRACKS);

@@ -17,7 +17,7 @@ bool MCLClipBoard::open() {
   DEBUG_PRINT_FN();
 
   SD.chdir("/");
-  char *str = FILENAME_CLIPBOARD;
+  char str[] = FILENAME_CLIPBOARD;
   char grid_filename[sizeof(FILENAME_CLIPBOARD) + 2];
   strcpy(grid_filename, str);
   uint8_t l = strlen(grid_filename);

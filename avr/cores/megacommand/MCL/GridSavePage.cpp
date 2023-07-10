@@ -7,15 +7,15 @@ void GridSavePage::init() {
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
   grid_page.reload_slot_models = false;
-  MD.popup_text("SAVE SLOTS", true);
+  char str[] = "SAVE SLOTS";
+  MD.popup_text(str, true);
   draw_popup();
 }
 
 void GridSavePage::setup() {}
 
 void GridSavePage::draw_popup() {
-  char str[16];
-  strcpy(str, "GROUP SAVE");
+  char str[16] = "GROUP SAVE";
 
   if (!show_track_type) {
     strcpy(str, "SAVE TO  ");
@@ -105,7 +105,8 @@ void GridSavePage::save() {
 
 void GridSavePage::group_select() {
   show_track_type = true;
-  MD.popup_text("SAVE GROUPS", true);
+  char str[] = "SAVE GROUPS";
+  MD.popup_text(str, true);
   MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 

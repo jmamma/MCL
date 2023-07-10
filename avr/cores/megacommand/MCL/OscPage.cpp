@@ -167,7 +167,7 @@ void OscPage::display() {
   }
   oled_display.print(F(" "));
 
-  char *str = "    ";
+  char str[] = "    ";
   if (show_freq) {
     float freq = get_freq();
     oled_display.print((int)freq);
