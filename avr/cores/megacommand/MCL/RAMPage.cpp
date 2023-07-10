@@ -46,6 +46,8 @@ void RAMPage::init() {
       }
     }
   }
+  R.Clear();
+  R.use_icons_knob();
 }
 
 void RAMPage::cleanup() { oled_display.clearDisplay(); }
@@ -563,32 +565,35 @@ void RAMPage::display() {
     oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
   }
 
+  bool flip_hor = false, flip_vert = false;
+  uint8_t *icon = R.icons_knob->wheel_top;
   switch (wheel_spin) {
   case 0:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE);
     break;
   case 1:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE);
+    icon = R.icons_knob->wheel_angle;
     break;
   case 2:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE);
+    icon = R.icons_knob->wheel_side;
     break;
   case 3:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, false, true);
+    icon = R.icons_knob->wheel_angle; flip_hor = false; flip_vert = true;
     break;
   case 4:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE, false, true);
+    icon = R.icons_knob->wheel_top; flip_hor = false; flip_vert = true;
     break;
   case 5:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, true);
+    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = true;
     break;
   case 6:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE, true, false);
+    icon = R.icons_knob->wheel_side; flip_hor = true; flip_vert = false;
     break;
   case 7:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, false);
+    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = false;
     break;
   }
+  oled_display.drawBitmap(w_x, w_y, icon, 19, 19, WHITE, flip_hor, flip_vert);
+
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
       ((RAMPage::rec_states[page_id] == STATE_RECORD) ||
        (RAMPage::rec_states[page_id] == STATE_PLAY))) {

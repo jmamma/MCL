@@ -18,6 +18,7 @@ void FXPage::init() {
   R.Clear();
   R.use_icons_page();
   R.use_machine_param_names();
+  R.use_icons_knob();
   last_page = mcl.currentPage();
 }
 void FXPage::update_encoders() {
@@ -25,7 +26,7 @@ void FXPage::update_encoders() {
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     ((MCLEncoder *)encoders[n])->max = 127;
 
-    uint8_t a = ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS) + n;
+    uint8_t a = ((!page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
 
     switch (params[a].type) {
@@ -108,7 +109,7 @@ void FXPage::display() {
     //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
   }
   oled_display.setFont(&TomThumb);
-  const char *info1;
+  const char *info1;;
   const char *info2;
   if (page_mode) {
     info1 = "FX A";

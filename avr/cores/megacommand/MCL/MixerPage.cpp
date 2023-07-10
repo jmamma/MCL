@@ -71,7 +71,8 @@ void MixerPage::init() {
   //populate_mute_set();
   draw_encoders = false;
   redraw_mutes = true;
-  //  R.Clear();
+  R.Clear();
+  R.use_icons_knob();
 //  R.use_machine_param_names();
 }
 

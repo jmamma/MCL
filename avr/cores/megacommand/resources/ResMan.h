@@ -5,6 +5,8 @@ __T_icons_device *icons_device;
 void use_icons_device() { icons_device = (__T_icons_device*) __use_resource(__R_icons_device); }  
 __T_icons_knob *icons_knob;  
 void use_icons_knob() { icons_knob = (__T_icons_knob*) __use_resource(__R_icons_knob); }  
+__T_icons_logo *icons_logo;  
+void use_icons_logo() { icons_logo = (__T_icons_logo*) __use_resource(__R_icons_logo); }  
 __T_icons_page *icons_page;  
 void use_icons_page() { icons_page = (__T_icons_page*) __use_resource(__R_icons_page); }  
 __T_machine_names_long *machine_names_long;  

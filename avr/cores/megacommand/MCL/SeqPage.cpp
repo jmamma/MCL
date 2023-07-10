@@ -135,6 +135,7 @@ void SeqPage::init() {
   last_md_model = MD.kit.models[MD.currentTrack];
 
   R.Clear();
+  R.use_icons_knob();
   R.use_machine_names_short();
   R.use_machine_param_names();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;

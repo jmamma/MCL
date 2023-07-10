@@ -107,6 +107,53 @@ struct __T_icons_knob {
   static constexpr size_t __total_size = 325;
 };
 
+extern const unsigned char __R_icons_logo[] PROGMEM;
+struct __T_icons_logo {
+  union {
+    unsigned char icon_md_logo_medium[0];
+    char zz__icon_md_logo_medium[27];
+  };
+  static constexpr size_t countof_icon_md_logo_medium = 27 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_md_logo_medium = 27;
+  union {
+    unsigned char icon_analog_logo_medium[0];
+    char zz__icon_analog_logo_medium[18];
+  };
+  static constexpr size_t countof_icon_analog_logo_medium = 18 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_analog_logo_medium = 18;
+  union {
+    unsigned char icon_metronome_logo_medium[0];
+    char zz__icon_metronome_logo_medium[18];
+  };
+  static constexpr size_t countof_icon_metronome_logo_medium = 18 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_metronome_logo_medium = 18;
+  union {
+    unsigned char icon_route_logo_medium[0];
+    char zz__icon_route_logo_medium[20];
+  };
+  static constexpr size_t countof_icon_route_logo_medium = 20 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_route_logo_medium = 20;
+  union {
+    unsigned char icon_perf_logo_small[0];
+    char zz__icon_perf_logo_small[8];
+  };
+  static constexpr size_t countof_icon_perf_logo_small = 8 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_perf_logo_small = 8;
+  union {
+    unsigned char icon_mnm_logo_medium[0];
+    char zz__icon_mnm_logo_medium[18];
+  };
+  static constexpr size_t countof_icon_mnm_logo_medium = 18 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_mnm_logo_medium = 18;
+  union {
+    unsigned char icon_midi_logo_medium[0];
+    char zz__icon_midi_logo_medium[18];
+  };
+  static constexpr size_t countof_icon_midi_logo_medium = 18 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_midi_logo_medium = 18;
+  static constexpr size_t __total_size = 127;
+};
+
 extern const unsigned char __R_icons_page[] PROGMEM;
 struct __T_icons_page {
   union {

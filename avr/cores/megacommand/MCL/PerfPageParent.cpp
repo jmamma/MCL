@@ -13,6 +13,7 @@ void PerfPageParent::init() {
   config_encoders();
   R.Clear();
   R.use_machine_param_names();
+  R.use_icons_knob();
   setup_callbacks();
 }
 
