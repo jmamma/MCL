@@ -33,7 +33,9 @@ public:
   bool midi_state = false;
 
   char fx_page_title[8];
-  fx_param_t *params;
+
+  fx_param_t params[2][8];
+
   uint8_t num_of_params;
 
   bool page_mode;
