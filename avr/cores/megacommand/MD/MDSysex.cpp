@@ -61,7 +61,7 @@ void MDSysexListenerClass::end() {
     value = sysex->getByte(offset++);
     fx_type = msgType - MD_SET_RHYTHM_ECHO_PARAM_ID;
 
-    if (param > 8) { return; }
+    if (param > 7) { return; }
 
     switch (msgType) {
       case MD_SET_RHYTHM_ECHO_PARAM_ID:
