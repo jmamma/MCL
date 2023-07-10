@@ -397,7 +397,12 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
   } else {
     return;
   }
+  if (update_kit) {
   uart_->sendCC(channel + global.baseChannel, cc, value);
+  }
+  else {
+  uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
+  }
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
