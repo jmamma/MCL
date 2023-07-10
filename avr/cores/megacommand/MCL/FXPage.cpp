@@ -26,7 +26,7 @@ void FXPage::update_encoders() {
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     ((MCLEncoder *)encoders[n])->max = 127;
 
-    uint8_t a = ((!page_mode * GUI_NUM_ENCODERS) + n;
+    uint8_t a = ((uint8_t)!page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
 
     switch (params[a].type) {
@@ -90,11 +90,12 @@ void FXPage::display() {
   oled_display.clearDisplay();
   auto oldfont = oled_display.getFont();
 
-  if (page_id == 0) {
-    oled_display.drawBitmap(0, 0, R.icons_page->icon_rhytmecho, 24, 18, WHITE);
-  } else {
-    oled_display.drawBitmap(0, 0, R.icons_page->icon_gatebox, 24, 18, WHITE);
+  uint8_t *icon = R.icons_page->icon_rhytmecho;
+  if (page_id == 1) {
+    icon = R.icons_page->icon_gatebox;
   }
+
+  oled_display.drawBitmap(0, 0, icon, 24, 18, WHITE);
   mcl_gui.draw_knob_frame();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
@@ -113,8 +114,8 @@ void FXPage::display() {
   const char *info2;
   if (page_mode) {
     info1 = "FX A";
-  } else {
-    info1 = "FX B";
+   } else {
+     info1 = "FX B";
   }
   info2 = &fx_page_title[0];
   mcl_gui.draw_panel_labels(info1, info2);
