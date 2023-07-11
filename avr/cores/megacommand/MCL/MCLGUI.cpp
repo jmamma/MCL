@@ -648,22 +648,34 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
   }
 }
 
-void MCLGUI::draw_track_type_select(uint8_t x, uint8_t y,
-                                    uint8_t track_type_select) {
+void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
   char dev[6];
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
+  oled_display.clearDisplay();
+
+  uint8_t x = 0;
+  oled_display.fillRect(0, 0, 128, 7, WHITE);
+  oled_display.setCursor(s_title_x + (s_title_w - 5 * 4) / 2, 6);
+  // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
+  oled_display.setTextColor(BLACK);
+  oled_display.println("GROUPS");
 
   for (uint8_t i = 0; i < 5; i++) {
 
-    oled_display.setCursor(x, y);
+    uint8_t *icon = nullptr;
+    uint8_t w = 18, h = 9;
+    uint8_t offset = 3;
+    int8_t y_offset = 0;
     switch (i) {
     case 0:
-      strcpy(dev, devs[0]->name);
+      icon = devs[0]->icon_logo();
       break;
     case 1:
+      icon = devs[1]->icon_logo();
+      offset = 4;
       if (devs[1] != nullptr) {
         strcpy(dev, devs[1]->name);
       } else {
@@ -671,23 +683,44 @@ void MCLGUI::draw_track_type_select(uint8_t x, uint8_t y,
       }
       break;
     case 2:
+      icon =  R.icons_logo->icon_perf_logo_medium;
       strcpy(dev, "PF");
+      offset = 3;
       break;
     case 3:
+      icon =  R.icons_logo->icon_route_logo_medium;
+      w = 14, h = 10;
+      offset = 5;
       strcpy(dev, "FX");
       break;
     case 4:
+      w = 15, h = 12;
+      offset = 6;
+      y_offset = -1;
+      icon = R.icons_logo->icon_metronome_logo_medium;
       strcpy(dev, "TP");
       break;
     }
 
-    oled_display.print(dev);
-    if (IS_BIT_SET(track_type_select, i)) {
-      oled_display.fillRect(x, y + 4, seq_w, trig_h, WHITE);
+//    oled_display.drawRect(x, y - 4, 24, 18, WHITE);
+    if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, w, h, WHITE); }
+    //oled_display.print(dev);
+    bool select = IS_BIT_SET(track_type_select, i);
+
+    if (select) {
+      oled_display.fillRect(x, 9, 24, 21, INVERT);
+
+       oled_display.drawRect(x + 1, 10, 22, 19, BLACK);
     } else {
-      oled_display.drawRect(x, y + 4, seq_w, trig_h, WHITE);
+       oled_display.drawRect(x, 9, 24, 21, WHITE);
     }
-    x += 18;
+      oled_display.drawPixel(x,9,!select);
+      oled_display.drawPixel(x + 23,9,!select);
+      oled_display.drawPixel(x,9 + 20,!select);
+      oled_display.drawPixel(x + 23,9 + 20,!select);
+
+
+    x += 26;
   }
 }
 

@@ -114,6 +114,10 @@ bool A4Class::probe() {
 uint8_t* A4Class::icon() {
   return R.icons_device->icon_a4;
 }
+uint8_t* A4Class::icon_logo() {
+  return R.icons_logo->icon_analog_logo_medium;
+}
+
 
 
 void A4Class::requestKitX(uint8_t kit) { sendRequest(A4_KITX_REQUEST_ID, kit); }

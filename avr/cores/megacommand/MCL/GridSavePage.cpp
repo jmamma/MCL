@@ -34,8 +34,7 @@ void GridSavePage::display() {
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
   if (show_track_type) {
-    mcl_gui.draw_track_type_select(23, MCLGUI::s_menu_y + 12,
-                                   mcl_cfg.track_type_select);
+    mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
     oled_display.setFont(&Elektrothic);

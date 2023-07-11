@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
@@ -14,6 +15,8 @@ void GridIOPage::init() {
   old_grid = proj.get_grid();
   show_track_type = false;
   track_select = 0;
+  R.Clear();
+  R.use_icons_logo();
 }
 
 void GridIOPage::track_select_array_from_type_select(

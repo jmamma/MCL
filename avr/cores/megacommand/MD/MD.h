@@ -63,7 +63,7 @@ public:
   virtual void setup();
   virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
-
+  virtual uint8_t* icon_logo();
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

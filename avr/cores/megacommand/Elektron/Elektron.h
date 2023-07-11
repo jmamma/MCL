@@ -173,6 +173,7 @@ public:
   virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
+  virtual uint8_t *icon_logo();
 };
 
 /// Base class for Elektron sysex listeners

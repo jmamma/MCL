@@ -261,6 +261,7 @@ bool MDClass::probe() {
 
 // Caller is responsible to make sure icons_device is loaded in RM
 uint8_t *MDClass::icon() { return R.icons_device->icon_md; }
+uint8_t *MDClass::icon_logo() { return R.icons_logo->icon_md_logo_medium; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
   uint8_t i;

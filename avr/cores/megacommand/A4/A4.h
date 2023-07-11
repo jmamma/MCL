@@ -39,6 +39,7 @@ public:
   virtual bool probe();
   virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
+  virtual uint8_t* icon_logo();
 
   virtual uint16_t sendKitParams(uint8_t* masks);
 
