@@ -654,15 +654,17 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
-  oled_display.clearDisplay();
+//  oled_display.clearDisplay();
 
   uint8_t x = 0;
-  oled_display.fillRect(0, 0, 128, 7, WHITE);
+  //oled_display.fillRect(0, 0, 128, 7, WHITE);
+  oled_display.fillRect(s_title_x + 10, 0, 40, 7, WHITE);
   oled_display.setCursor(s_title_x + (s_title_w - 5 * 4) / 2, 6);
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.setTextColor(BLACK);
   oled_display.println("GROUPS");
 
+  oled_display.fillRect(0, 8, 128, 23, BLACK);
   for (uint8_t i = 0; i < 5; i++) {
 
     uint8_t *icon = nullptr;
