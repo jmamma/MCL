@@ -21,7 +21,7 @@ void GridSavePage::draw_popup() {
     strcpy(str, "SAVE TO  ");
     str[8] = 'X' + proj.get_grid();
   }
-  mcl_gui.draw_popup(str, true, 28);
+  mcl_gui.draw_popup(str, true);
 }
 
 void GridSavePage::loop() {}
@@ -36,14 +36,14 @@ void GridSavePage::display() {
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 25, note_interface.notes_off | note_interface.notes_on );
     oled_display.setFont(&Elektrothic);
     oled_display.setCursor(MCLGUI::s_menu_x + 4, 22);
     oled_display.print((char)(0x3A + proj.get_grid()));
 
     oled_display.setFont(&TomThumb);
 
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 4,
+    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 8,
                               "MODE", "SAVE");
 
     char step[4] = {'\0'};
@@ -54,24 +54,24 @@ void GridSavePage::display() {
     mcl_gui.put_value_at(step_count, step);
 
     // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
-    // MCLGUI::s_menu_y + 4, "STEP", step);
+    // MCLGUI::s_menu_y + 8, "STEP", step);
 
     oled_display.setFont(&TomThumb);
     // draw data flow in the center
     constexpr uint8_t data_x = 56;
 
-    oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 12);
+    oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 16);
     oled_display.print(F("SND"));
-    oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 19);
+    oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 23);
     oled_display.print(F("SEQ"));
 
-    oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 8, 2, WHITE);
-    oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 15, 2,
+    oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 12, 2, WHITE);
+    oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 19, 2,
                                WHITE);
-    oled_display.drawFastVLine(data_x + 15 + 9, MCLGUI::s_menu_y + 8, 8, WHITE);
-    mcl_gui.draw_horizontal_arrow(data_x + 16 + 9, MCLGUI::s_menu_y + 12, 5);
+    oled_display.drawFastVLine(data_x + 15 + 9, MCLGUI::s_menu_y + 12, 8, WHITE);
+    mcl_gui.draw_horizontal_arrow(data_x + 16 + 9, MCLGUI::s_menu_y + 16, 5);
 
-    oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 15);
+    oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 19);
     oled_display.print(F("GRID"));
   }
   oled_display.display();

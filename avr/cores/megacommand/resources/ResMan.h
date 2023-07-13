@@ -20,6 +20,4 @@ void use_menu_layouts() { menu_layouts = (__T_menu_layouts*) __use_resource(__R_
 __T_menu_options *menu_options;  
 void use_menu_options() { menu_options = (__T_menu_options*) __use_resource(__R_menu_options); }  
 __T_page_entries *page_entries;  
-void use_page_entries() { page_entries = (__T_page_entries*) __use_resource(__R_page_entries); }  
-__T_tuning *tuning;  
-void use_tuning() { tuning = (__T_tuning*) __use_resource(__R_tuning); }
+void use_page_entries() { page_entries = (__T_page_entries*) __use_resource(__R_page_entries); }

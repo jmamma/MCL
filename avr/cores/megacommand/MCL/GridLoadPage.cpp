@@ -48,7 +48,7 @@ void GridLoadPage::draw_popup() {
     strcpy(str, "LOAD FROM  ");
     str[10] = 'X' + proj.get_grid();
   }
-  mcl_gui.draw_popup(str, true, 28);
+  mcl_gui.draw_popup(str, true);
 }
 
 void GridLoadPage::display_load() {
@@ -110,7 +110,7 @@ void GridLoadPage::display() {
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 21, note_interface.notes_off | note_interface.notes_on );
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 21, note_interface.notes_off | note_interface.notes_on );
 
 
     oled_display.setFont(&Elektrothic);
@@ -120,13 +120,13 @@ void GridLoadPage::display() {
     oled_display.setFont(&TomThumb);
     char K[4] = {'\0'};
 
-    //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4,
+    //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
 
     char modestr[7];
     get_modestr(modestr);
 
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 4,
+    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 8,
                               "MODE", modestr);
 
 
@@ -136,7 +136,7 @@ void GridLoadPage::display() {
       } else {
         mcl_gui.put_value_at(encoders[1]->cur, K);
       }
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 4,
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 8,
                                 "LEN", K);
     }
     // draw quantize
@@ -146,7 +146,7 @@ void GridLoadPage::display() {
       mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
     }
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
-                              MCLGUI::s_menu_y + 4, "QUANT", K);
+                              MCLGUI::s_menu_y + 8, "QUANT", K);
 
     oled_display.setFont(&TomThumb);
     // draw step count
@@ -155,22 +155,22 @@ void GridLoadPage::display() {
         (64 *
          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
     oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11,
-                           MCLGUI::s_menu_y + 18);
+                           MCLGUI::s_menu_y + 4 + 18);
     oled_display.print(step_count);
 
     // draw data flow in the center
     /*
-    oled_display.setCursor(48, MCLGUI::s_menu_y + 12);
+    oled_display.setCursor(48, MCLGUI::s_menu_y + 4 + 12);
     oled_display.print(F("SND"));
-    oled_display.setCursor(46, MCLGUI::s_menu_y + 19);
+    oled_display.setCursor(46, MCLGUI::s_menu_y + 4 + 19);
     oled_display.print(F("GRID"));
 
-    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 8, 5);
-    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 15, 5);
+    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 4 + 8, 5);
+    mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 4 + 15, 5);
 
-    oled_display.setCursor(74, MCLGUI::s_menu_y + 12);
+    oled_display.setCursor(74, MCLGUI::s_menu_y + 4 + 12);
     oled_display.print(F("MD"));
-    oled_display.setCursor(74, MCLGUI::s_menu_y + 19);
+    oled_display.setCursor(74, MCLGUI::s_menu_y + 4 + 19);
     oled_display.print(F("SEQ"));
     */
   }

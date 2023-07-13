@@ -144,8 +144,10 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
 
   // draw menu body
   oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 2, BLACK);
-  oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h, WHITE);
+  oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 3, s_menu_w - 2, 4, WHITE);
+  oled_display.drawPixel(s_menu_x, s_menu_y + 2, BLACK);
+  oled_display.drawPixel(s_menu_x + s_menu_w - 1, s_menu_y + 2, BLACK);
 
   // draw the title '____/**********\____' part
   oled_display.drawRect(s_title_x, s_menu_y, s_title_w, 2, BLACK);
@@ -665,73 +667,54 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
   oled_display.println("GROUPS");
 
   oled_display.fillRect(0, 8, 128, 23, BLACK);
+  MCLGIF *gif;
+
   for (uint8_t i = 0; i < 5; i++) {
 
+    bool select = IS_BIT_SET(track_type_select, i);
+
     uint8_t *icon = nullptr;
-    uint8_t w = 18, h = 9;
     uint8_t offset = 3;
     int8_t y_offset = 0;
     switch (i) {
     case 0:
       icon = devs[0]->icon_logo();
-      machinedrum_gif.set_bmp(R.icons_logo->machinedrum_gif);
-      icon = machinedrum_gif.get_next_frame();
-      w = machinedrum_gif.w;
-      h = machinedrum_gif.h;
+      gif = devs[0]->gif();
+      gif->set_bmp(icon);
       break;
     case 1:
       icon = devs[1]->icon_logo();
+      gif = devs[1]->gif();
+      gif->set_bmp(icon);
       offset = 4;
-      midi_gif.set_bmp(R.icons_logo->midi_gif);
-      icon = midi_gif.get_next_frame();
-      w = midi_gif.w;
-      h = midi_gif.h;
-
-      if (devs[1] != nullptr) {
-        strcpy(dev, devs[1]->name);
-      } else {
-        strcpy(dev, "MI");
-      }
       break;
     case 2:
-      icon =  R.icons_logo->icon_perf_logo_medium;
-      perf_gif.set_bmp(R.icons_logo->perf_gif);
-
-      w = perf_gif.w;
-      h = perf_gif.h;
-      icon = perf_gif.get_next_frame();
-      strcpy(dev, "PF");
+      gif = &perf_gif;
+      gif->set_bmp(R.icons_logo->perf_gif);
       offset = 3;
       break;
     case 3:
-      icon =  R.icons_logo->icon_route_logo_medium;
-      route_gif.set_bmp(R.icons_logo->route_gif);
-      icon = route_gif.get_next_frame();
-      w = route_gif.w;
-      h = route_gif.h;
+      gif = &route_gif;
+      gif->set_bmp(R.icons_logo->route_gif);
       offset = 5;
-      strcpy(dev, "FX");
       break;
     case 4:
-      w = metronome_gif.w;
-      h = metronome_gif.h;
+      gif = &metronome_gif;
+      gif->set_bmp(R.icons_logo->metronome_gif);
       offset = 4;
       y_offset = -3;
-      //MCLGIF metronome_gif2(R.icons_logo->metronome_gif, 45, 10, 17, 15, DIR_FWDBACK);
-      //icon = R.icons_logo:->icon_metronome_logo_medium;
-      metronome_gif.set_bmp(R.icons_logo->metronome_gif);
-      icon = metronome_gif.get_next_frame();
-      //icon = R.icons_logo->metronome_gif;
-      strcpy(dev, "TP");
       break;
     }
 
-//    oled_display.drawRect(x, y - 4, 24, 18, WHITE);
-    if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, w, h, WHITE); }
-    //oled_display.print(dev);
-    bool select = IS_BIT_SET(track_type_select, i);
+    icon = select ? gif->get_frame(0) : gif->get_next_frame();
+    //icon = gif->get_next_frame();
+
+    if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, gif->w, gif->h, WHITE); }
+
+    //if (note_interface.is_note_on(i)) { gif->loop_count = 0; }
 
     if (select) {
+      gif->reset();
       oled_display.fillRect(x, 9, 24, 21, INVERT);
 
        oled_display.drawRect(x + 1, 10, 22, 19, BLACK);
@@ -742,7 +725,6 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       oled_display.drawPixel(x + 23,9,!select);
       oled_display.drawPixel(x,9 + 20,!select);
       oled_display.drawPixel(x + 23,9 + 20,!select);
-
 
     x += 26;
   }
