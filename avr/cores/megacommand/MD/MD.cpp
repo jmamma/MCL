@@ -153,13 +153,13 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   }
   grid_idx = 1;
 
-  gdt.init(MDFX_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.mdfx_track), 0);
+  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx, (SeqTrack*) &(mcl_seq.mdfx_track), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
 
   gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[0]), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 1, &gdt);
 
-  gdt.init(MDLFO_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[1]), 0);
+  gdt.init(MDLFO_TRACK_TYPE, GROUP_DEV, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[1]), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM + 2, &gdt);
 
   gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[2]), 0);
