@@ -660,11 +660,11 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 
   uint8_t x = 0;
   //oled_display.fillRect(0, 0, 128, 7, WHITE);
-  oled_display.fillRect(s_title_x + 10, 0, 40, 7, WHITE);
-  oled_display.setCursor(s_title_x + (s_title_w - 5 * 4) / 2, 6);
+  oled_display.fillRect(s_title_x + 10, 0, 50, 7, WHITE);
+  oled_display.setCursor(s_title_x + (s_title_w - 12 * 4) / 2 + 2, 6);
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.setTextColor(BLACK);
-  oled_display.println("GROUPS");
+  oled_display.println("GROUP SELECT");
 
   oled_display.fillRect(0, 8, 128, 23, BLACK);
   MCLGIF *gif;

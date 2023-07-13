@@ -55,7 +55,7 @@ public:
 
   uint8_t *get_next_frame() {
     uint8_t *bmp = get_frame(cur_frame);
-    if (clock_diff(last_frame_clock,slowclock) < 100 || loop_count == loops) { return bmp; }
+    if (clock_diff(last_frame_clock,slowclock) < 80 || loop_count == loops) { return bmp; }
     last_frame_clock = slowclock;
     cur_frame += inc;
 
