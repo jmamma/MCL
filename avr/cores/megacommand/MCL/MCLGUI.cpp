@@ -143,7 +143,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.setFont(&TomThumb);
 
   // draw menu body
-  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 2, BLACK);
+  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 4, BLACK);
   oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 3, s_menu_w - 2, 4, WHITE);
   oled_display.drawPixel(s_menu_x, s_menu_y + 2, BLACK);

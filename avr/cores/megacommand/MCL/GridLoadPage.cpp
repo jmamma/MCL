@@ -110,11 +110,11 @@ void GridLoadPage::display() {
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 21, note_interface.notes_off | note_interface.notes_on );
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20, note_interface.notes_off | note_interface.notes_on );
 
 
     oled_display.setFont(&Elektrothic);
-    oled_display.setCursor(MCLGUI::s_menu_x + 4, 22);
+    oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
     oled_display.print((char) (0x3A +  proj.get_grid()));
 
     oled_display.setFont(&TomThumb);
@@ -126,7 +126,7 @@ void GridLoadPage::display() {
     char modestr[7];
     get_modestr(modestr);
 
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 8,
+    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7,
                               "MODE", modestr);
 
 
@@ -136,7 +136,7 @@ void GridLoadPage::display() {
       } else {
         mcl_gui.put_value_at(encoders[1]->cur, K);
       }
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 8,
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 7,
                                 "LEN", K);
     }
     // draw quantize
@@ -146,7 +146,7 @@ void GridLoadPage::display() {
       mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
     }
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
-                              MCLGUI::s_menu_y + 8, "QUANT", K);
+                              MCLGUI::s_menu_y + 7, "QUANT", K);
 
     oled_display.setFont(&TomThumb);
     // draw step count
@@ -155,7 +155,7 @@ void GridLoadPage::display() {
         (64 *
          ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
     oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11,
-                           MCLGUI::s_menu_y + 4 + 18);
+                           MCLGUI::s_menu_y + 4 + 17);
     oled_display.print(step_count);
 
     // draw data flow in the center

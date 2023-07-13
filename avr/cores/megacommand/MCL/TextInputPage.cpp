@@ -60,7 +60,7 @@ void TextInputPage::config_normal() {
   update_char();
 #ifdef OLED_DISPLAY
   // redraw popup body
-  mcl_gui.draw_popup(title);
+  mcl_gui.draw_popup(title,false,24);
 #endif
   // update clock
   last_clock = slowclock;

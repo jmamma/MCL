@@ -104,7 +104,7 @@ public:
   static constexpr uint8_t trig_h = 5;
 
   static constexpr uint8_t s_menu_w = 104;
-  static constexpr uint8_t s_menu_h = 28;
+  static constexpr uint8_t s_menu_h = 27;
   static constexpr uint8_t s_menu_x = (128 - s_menu_w) / 2;
   static constexpr uint8_t s_menu_y = 0;
   static constexpr uint8_t s_title_x = 31;
