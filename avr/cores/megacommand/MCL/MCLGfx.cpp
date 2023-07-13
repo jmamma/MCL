@@ -1,4 +1,13 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
+
+MCLGIF metronome_gif(nullptr,   45, 10, 17, 15, DIR_FWDBACK);
+MCLGIF perf_gif(nullptr,        27, 7, 18, 9, DIR_FWDBACK);
+MCLGIF route_gif(nullptr,       20, 5, 14, 10, DIR_FWDBACK);
+MCLGIF analog_gif(nullptr,      27, 7, 18, 9, DIR_FWDBACK);
+MCLGIF monomachine_gif(nullptr, 27, 10, 18, 9, DIR_FWDBACK);
+MCLGIF machinedrum_gif(nullptr, 27, 8, 18, 9, DIR_FWD);
+MCLGIF midi_gif(nullptr,        27, 8, 18, 9, DIR_FWD);
 
 void MCLGfx::init_oled() {
   oled_display.begin();

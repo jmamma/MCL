@@ -143,15 +143,15 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   oled_display.setFont(&TomThumb);
 
   // draw menu body
-  oled_display.fillRect(s_menu_x - 1, s_menu_y - 2, s_menu_w + 2, h + 2, BLACK);
-  oled_display.drawRect(s_menu_x, s_menu_y, s_menu_w, h, WHITE);
-  oled_display.fillRect(s_menu_x + 1, s_menu_y - 1, s_menu_w - 2, 5, WHITE);
+  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 2, BLACK);
+  oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h, WHITE);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y + 3, s_menu_w - 2, 4, WHITE);
 
   // draw the title '____/**********\____' part
-  oled_display.drawRect(s_title_x, s_menu_y - 4, s_title_w, 4, BLACK);
-  oled_display.fillRect(s_title_x, s_menu_y - 3, s_title_w, 3, WHITE);
-  oled_display.drawPixel(s_title_x, s_menu_y - 3, BLACK);
-  oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y - 3, BLACK);
+  oled_display.drawRect(s_title_x, s_menu_y, s_title_w, 2, BLACK);
+  oled_display.fillRect(s_title_x, s_menu_y + 0, s_title_w, 2, WHITE);
+  oled_display.drawPixel(s_title_x, s_menu_y + 0, BLACK);
+  oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y, BLACK);
 
   oled_display.setTextColor(BLACK);
 
@@ -161,7 +161,7 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
     if (title_buf[n] == ' ') { whitespace++; }
   }
   len -= whitespace;
-  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 3);
+  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 6);
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
@@ -674,10 +674,19 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
     switch (i) {
     case 0:
       icon = devs[0]->icon_logo();
+      machinedrum_gif.set_bmp(R.icons_logo->machinedrum_gif);
+      icon = machinedrum_gif.get_next_frame();
+      w = machinedrum_gif.w;
+      h = machinedrum_gif.h;
       break;
     case 1:
       icon = devs[1]->icon_logo();
       offset = 4;
+      midi_gif.set_bmp(R.icons_logo->midi_gif);
+      icon = midi_gif.get_next_frame();
+      w = midi_gif.w;
+      h = midi_gif.h;
+
       if (devs[1] != nullptr) {
         strcpy(dev, devs[1]->name);
       } else {
@@ -686,20 +695,33 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       break;
     case 2:
       icon =  R.icons_logo->icon_perf_logo_medium;
+      perf_gif.set_bmp(R.icons_logo->perf_gif);
+
+      w = perf_gif.w;
+      h = perf_gif.h;
+      icon = perf_gif.get_next_frame();
       strcpy(dev, "PF");
       offset = 3;
       break;
     case 3:
       icon =  R.icons_logo->icon_route_logo_medium;
-      w = 14, h = 10;
+      route_gif.set_bmp(R.icons_logo->route_gif);
+      icon = route_gif.get_next_frame();
+      w = route_gif.w;
+      h = route_gif.h;
       offset = 5;
       strcpy(dev, "FX");
       break;
     case 4:
-      w = 15, h = 12;
-      offset = 6;
-      y_offset = -1;
-      icon = R.icons_logo->icon_metronome_logo_medium;
+      w = metronome_gif.w;
+      h = metronome_gif.h;
+      offset = 4;
+      y_offset = -3;
+      //MCLGIF metronome_gif2(R.icons_logo->metronome_gif, 45, 10, 17, 15, DIR_FWDBACK);
+      //icon = R.icons_logo:->icon_metronome_logo_medium;
+      metronome_gif.set_bmp(R.icons_logo->metronome_gif);
+      icon = metronome_gif.get_next_frame();
+      //icon = R.icons_logo->metronome_gif;
       strcpy(dev, "TP");
       break;
     }

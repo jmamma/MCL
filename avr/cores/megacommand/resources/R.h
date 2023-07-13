@@ -110,6 +110,48 @@ struct __T_icons_knob {
 extern const unsigned char __R_icons_logo[] PROGMEM;
 struct __T_icons_logo {
   union {
+    unsigned char metronome_gif[0];
+    char zz__metronome_gif[450];
+  };
+  static constexpr size_t countof_metronome_gif = 450 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_metronome_gif = 450;
+  union {
+    unsigned char monomachine_gif[0];
+    char zz__monomachine_gif[270];
+  };
+  static constexpr size_t countof_monomachine_gif = 270 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_monomachine_gif = 270;
+  union {
+    unsigned char midi_gif[0];
+    char zz__midi_gif[216];
+  };
+  static constexpr size_t countof_midi_gif = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_midi_gif = 216;
+  union {
+    unsigned char machinedrum_gif[0];
+    char zz__machinedrum_gif[216];
+  };
+  static constexpr size_t countof_machinedrum_gif = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_machinedrum_gif = 216;
+  union {
+    unsigned char analog_gif[0];
+    char zz__analog_gif[189];
+  };
+  static constexpr size_t countof_analog_gif = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_analog_gif = 189;
+  union {
+    unsigned char route_gif[0];
+    char zz__route_gif[100];
+  };
+  static constexpr size_t countof_route_gif = 100 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_route_gif = 100;
+  union {
+    unsigned char perf_gif[0];
+    char zz__perf_gif[189];
+  };
+  static constexpr size_t countof_perf_gif = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_perf_gif = 189;
+  union {
     unsigned char icon_md_logo_medium[0];
     char zz__icon_md_logo_medium[27];
   };
@@ -151,7 +193,7 @@ struct __T_icons_logo {
   };
   static constexpr size_t countof_icon_midi_logo_medium = 27 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_midi_logo_medium = 27;
-  static constexpr size_t __total_size = 179;
+  static constexpr size_t __total_size = 1809;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;
