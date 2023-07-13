@@ -706,15 +706,15 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       break;
     }
 
-    icon = select ? gif->get_frame(0) : gif->get_next_frame();
-    //icon = gif->get_next_frame();
+    //icon = select ? gif->get_frame(0) : gif->get_next_frame();
+    icon = gif->get_next_frame();
 
     if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, gif->w, gif->h, WHITE); }
 
-    //if (note_interface.is_note_on(i)) { gif->loop_count = 0; }
+    if (note_interface.is_note_on(i)) { gif->loop_count = 0; }
 
     if (select) {
-      gif->reset();
+   //   gif->reset();
       oled_display.fillRect(x, 9, 24, 21, INVERT);
 
        oled_display.drawRect(x + 1, 10, 22, 19, BLACK);

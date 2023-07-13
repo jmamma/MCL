@@ -3,12 +3,12 @@
 
 MCLGIF metronome_gif(45, 10, 17, 15, DIR_FWDBACK,1);
 MCLGIF perf_gif(27, 7, 18, 9, DIR_FWDBACK, 1);
-MCLGIF route_gif(20, 5, 14, 10, DIR_FWDBACK, 2);
+MCLGIF route_gif(20, 5, 14, 10, DIR_FWDBACK, 1);
 
 MCLGIF analog_gif(27, 7, 18, 9, DIR_FWDBACK, 1);
 MCLGIF monomachine_gif(27, 10, 18, 9, DIR_FWDBACK, 1);
-MCLGIF machinedrum_gif(27, 8, 18, 9, DIR_FWD, 2);
-MCLGIF midi_gif(27, 8, 18, 9, DIR_FWD, 2);
+MCLGIF machinedrum_gif(27, 8, 18, 9, DIR_FWD, 1);
+MCLGIF midi_gif(27, 8, 18, 9, DIR_FWD, 1);
 
 void MCLGfx::init_oled() {
   oled_display.begin();

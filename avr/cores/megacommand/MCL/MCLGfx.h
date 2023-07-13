@@ -32,7 +32,7 @@ public:
     dir = dir_;
     loops = loops_;
     reset();
-    uint8_t loop_count = 255;
+    loop_count = loops;
   }
 
   void reset() {
