@@ -119,8 +119,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     return false;
   }
 
-  file.seekEnd();
-  fsize = file.position();
+  MidiSDSSysexListener.setup(&Midi);
+  fsize = file.size();
   file.seek(0);
 
   // 1st packet: sysex request.
@@ -131,8 +131,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
   }
   buf[4] = sample_number & 0x7F;
   buf[5] = (sample_number >> 7) & 0x7F;
-  MidiUart.sendRaw(buf, szbuf);
   state = SDS_SEND;
+  MidiUart.sendRaw(buf, szbuf);
   reply = waitForHandshake();
   if (reply == MIDI_SDS_CANCEL) {
     ret = false;
@@ -194,10 +194,10 @@ retry:
     } // otherwise, don't expect ACK reply (maybe MD-specific name-setting command)
   }
   // later packets
-
 cleanup:
   file.close();
   state = SDS_READY;
+  MidiSDSSysexListener.cleanup(&Midi);
   return ret;
 }
 
