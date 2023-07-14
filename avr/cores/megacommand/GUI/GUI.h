@@ -74,8 +74,7 @@ public:
    *
    * If a sketch is already active, its hide() method is called.
    * After the sketch is switched, the show() method of the new sketch
-   * is called, and the currentPage() is redisplayed by calling
-   * redisplayPage().
+   * is called
    **/
   void setSketch(Sketch *_sketch);
   /** Returns a pointer to the current sketches currentPage(). **/
@@ -189,12 +188,6 @@ public:
   void display_lcd();
 
   void display();
-
-  /**
-   * This method sets the redisplay flag of the active page to true so
-   * that it gets redisplayed on the next call to display().
-   **/
-  void redisplay();
 
 };
 

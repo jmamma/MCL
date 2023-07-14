@@ -18,6 +18,8 @@
  * GUI Pages
  **/
 
+uint16_t LightPage::encoders_used_clock[4];
+
 void Page::update() {}
 
 void PageContainer::pushPage(LightPage* page) {
@@ -35,16 +37,11 @@ void PageContainer::pushPage(LightPage* page) {
 
   pageStack.push(page);
   page->init();
-  page->redisplayPage();
   page->show();
 #ifdef ENABLE_DIAG_LOGGING
   // deactivate diagnostic page on pushPage
   diag_page.deactivate();
 #endif
-}
-
-void PageParent::redisplayPage() {
-  redisplay = true;
 }
 
 void LightPage::update() {
@@ -66,7 +63,6 @@ void LightPage::update() {
         clock_minutes = 0;
         minuteclock = 0;
         encoders_used_clock[i] = slowclock;
-        redisplay = true;
       }
     }
   }

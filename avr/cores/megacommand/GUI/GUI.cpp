@@ -21,8 +21,6 @@ void GuiClass::setSketch(Sketch *_sketch) {
   if (sketch != NULL) {
     sketch->show();
   }
-  if (currentPage() != NULL)
-    currentPage()->redisplayPage();
 }
 
 void GuiClass::setPage(LightPage *page) {
@@ -50,14 +48,6 @@ LightPage *GuiClass::currentPage() {
     return sketch->currentPage();
   else
     return NULL;
-}
-
-void GuiClass::redisplay() {
-  if (sketch != NULL) {
-    PageParent *page = sketch->currentPage();
-    if (page != NULL)
-      page->redisplay = true;
-  }
 }
 
 void loop();
@@ -130,7 +120,6 @@ void GuiClass::display() {
     page = sketch->currentPage();
     if (page != NULL) {
       page->display();
-      page->redisplay = false;
     }
   }
 

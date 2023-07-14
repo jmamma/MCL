@@ -64,9 +64,6 @@ class PageParent {
    **/
 
 public:
-  /** Set to true will cause the next call to display() to redisplay the page on
-   * the display. **/
-  bool redisplay;
   /** Set to true when the setup() function has been called. **/
   bool isSetup;
 
@@ -120,11 +117,6 @@ public:
   virtual void hide() {}
 
   /**
-   * This method clears the display and sets the redisplay flag of the
-   * page to true.
-   **/
-  void redisplayPage();
-  /**
    * The basic event handler of the page, called by the event handling
    * part of the GUI main loop when the page is active. Should return
    * true if the event was handled by the page.
@@ -153,11 +145,10 @@ public:
 class LightPage : public PageParent {
 
 public:
-  uint8_t curpage;
   PageContainer *parent;
   Encoder *encoders[GUI_NUM_ENCODERS];
 
-  uint16_t encoders_used_clock[4];
+  static uint16_t encoders_used_clock[4];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL) {
@@ -192,11 +183,9 @@ public:
   /** The parent container of the page, usually the Sketch which contains it.
    * **/
   PageContainer *parent;
-  bool redisplay;
 
   Page(const char *_name = NULL, const char *_shortName = NULL) : PageParent() {
     parent = NULL;
-    redisplay = false;
     isSetup = false;
   }
 
@@ -277,12 +266,8 @@ public:
       page->parent = NULL;
       page->hide();
     }
-
     page = currentPage();
-    if (page != NULL) {
-      page->redisplayPage();
-    }
-    else {
+    if (page == NULL) {
       if (lastpage == NULL) { return; }
       pageStack.reset();
       pushPage(lastpage);
