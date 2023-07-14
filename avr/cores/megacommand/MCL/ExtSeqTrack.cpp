@@ -443,19 +443,25 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   uint8_t step = (cur_x / timing_mid);
   uint8_t start_utiming = timing_mid + cur_x - (step * timing_mid);
 
+  DEBUG_DUMP(step);
+  DEBUG_DUMP(start_utiming);
+
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  again:
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+
+  DEBUG_DUMP(end_step);
+  DEBUG_DUMP(end_utiming);
 
   if (end_step == step) {
     DEBUG_PRINTLN(F("ALERT start == end"));
     end_step = end_step + 1;
-    end_utiming -= timing_mid;
+    goto again;
   }
 
   if (end_step >= length) {
     end_step = end_step - length;
   }
-
   uint16_t ev_idx;
   uint16_t note_idx = find_midi_note(step, cur_y, ev_idx, /*event_on*/ true);
   if (note_idx != 0xFFFF) {
@@ -488,7 +494,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   uint16_t note_idx_off, note_idx_on;
   bool note_on_found = false;
   uint16_t ev_idx, ev_end;
-  uint16_t note_start, note_end;
+  int16_t note_start, note_end;
   bool ret = false;
 
   for (int i = 0; i < length; i++) {
@@ -525,10 +531,9 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     note_idx_off = find_midi_note(i, cur_y, ev_idx, /*event_on*/ false);
 
     if (note_idx_off != 0xFFFF) {
-      DEBUG_DUMP(F("Wrap"));
       // Remove wrap around notes
       auto &ev = events[note_idx_off];
-      uint16_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
+      int16_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
       if (note_end > cur_x) {
         remove_event(note_idx_off);
         for (uint8_t j = length - 1; j > i; j--) {
@@ -684,7 +689,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
     // Locate NEXT
     uint8_t next_step = 0;
-    if (step_count == length) {
+    if (step_count == length - 1) {
       next_step = 0;
       ev_idx = 0;
     } else {
@@ -1031,6 +1036,8 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
   e.event_on = event_on;
   e.micro_timing = utiming;
 
+  DEBUG_PRINTLN("adding step");
+  DEBUG_DUMP(event_on); DEBUG_DUMP(step); DEBUG_DUMP(utiming);
   if (add_event(step, &e) == 0xFFFF) {
     return false;
   }

@@ -230,8 +230,8 @@ void SeqExtStepPage::draw_lockeditor() {
       }
       auto &ev_j = active_track.events[next_lock_ev];
 
-      uint16_t start_x = i * timing_mid + ev.micro_timing - timing_mid;
-      uint16_t end_x = j * timing_mid + ev_j.micro_timing - timing_mid;
+      int16_t start_x = i * timing_mid + ev.micro_timing - timing_mid;
+      int16_t end_x = j * timing_mid + ev_j.micro_timing - timing_mid;
 
       if (is_within_fov(start_x, end_x)) {
         uint8_t start_fov_x, end_fov_x;
@@ -239,8 +239,8 @@ void SeqExtStepPage::draw_lockeditor() {
         uint8_t start_y = ev.event_value;
         uint8_t end_y = ev_j.event_value;
 
-        uint16_t start_x_tmp = start_x;
-        uint16_t end_x_tmp = end_x;
+        int16_t start_x_tmp = start_x;
+        int16_t end_x_tmp = end_x;
         uint8_t start_y_tmp = start_y;
         uint8_t end_y_tmp = end_y;
 
@@ -379,8 +379,12 @@ void SeqExtStepPage::draw_pianoroll() {
       }
       auto &ev_j = active_track.events[note_off_idx];
 
-      uint16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
-      uint16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
+      int16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
+      int16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
+
+      if (note_end < note_start) {
+          note_end += active_track.length * timing_mid;
+      }
 
       if (is_within_fov(note_start, note_end)) {
         uint8_t note_fov_start, note_fov_end;
