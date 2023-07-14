@@ -382,10 +382,6 @@ void SeqExtStepPage::draw_pianoroll() {
       int16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
       int16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
-      if (note_end < note_start) {
-          note_end += active_track.length * timing_mid;
-      }
-
       if (is_within_fov(note_start, note_end)) {
         uint8_t note_fov_start, note_fov_end;
 
@@ -425,7 +421,7 @@ void SeqExtStepPage::draw_pianoroll() {
             }
 
             if (note_end > fov_offset) {
-              oled_display.drawRect(draw_x, proj_y, note_fov_end, 1, WHITE);
+             oled_display.drawRect(draw_x, proj_y, note_fov_end, 1, WHITE);
             }
 
           } else {
@@ -476,8 +472,11 @@ void SeqExtStepPage::draw_pianoroll() {
 void SeqExtStepPage::draw_viewport_minimap() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
+
   constexpr uint16_t width = pidx_w * 4 + 3;
-  uint16_t pattern_end = active_track.length * timing_mid;
+
+  uint16_t pattern_end = max(16,active_track.length) * timing_mid;
+
   uint16_t cur_tick_x =
       active_track.step_count * timing_mid + active_track.mod12_counter;
 
@@ -489,7 +488,9 @@ void SeqExtStepPage::draw_viewport_minimap() {
   uint16_t s = fov_offset * (width - 1) / pattern_end;
   uint16_t w = fov_length * (width - 2) / pattern_end;
   uint16_t p = min(width, cur_tick_x * (width - 1) / pattern_end);
+
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
+
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 }
 
@@ -514,12 +515,18 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
     }
 
   } else {
-    if (cur_x >= fov_offset + fov_length - w) {
-      if (fov_offset + fov_length + diff < roll_length) {
+    if (cur_x + w >= fov_offset + fov_length) {
+      if (fov_offset + fov_length < roll_length) {
         fov_offset += diff;
         cur_x = fov_offset + fov_length - w;
       }
-    } else {
+      else {
+        if (cur_x + diff < roll_length) {
+        cur_x += diff;
+        cur_w = roll_length - cur_x;
+        }
+      }
+   } else {
       cur_x += diff;
       if (cur_x > fov_offset + fov_length - w) {
         cur_x = fov_offset + fov_length - w;
@@ -597,7 +604,7 @@ void SeqExtStepPage::pos_cur_w(int16_t diff) {
     cur_w += diff;
     cur_w = max(cur_w, cur_w_min);
   } else {
-    if (cur_x >= fov_offset + fov_length - cur_w - diff) {
+    if (cur_x + cur_w >= fov_offset + fov_length) {
       if (fov_offset + fov_length + diff < roll_length) {
         cur_w += diff;
         fov_offset += diff;
@@ -685,34 +692,45 @@ void SeqExtStepPage::loop() {
   }
   seq_extparam3.cur = 64;
   seq_extparam3.old = 64;
+
+  roll_length = active_track.length * timing_mid; // in ticks
+
+  if (seq_extparam4.hasChanged()) {
+
+    if (seq_extparam4.cur > zoom_max) {
+      seq_extparam4.cur = zoom_max;
+    }
+    if (seq_extparam4.cur > active_track.length) {
+      seq_extparam4.cur = active_track.length;
+    }
+
+    uint8_t fov_zoom = seq_extparam4.cur;
+
+    int old_length = fov_length;
+    fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
+
+
+    int diff = (fov_length - old_length);
+
+    int x = cur_x - fov_offset;
+
+    fov_offset -= (float) diff * ((float) x / (float) fov_length);
+    //fov_offset -= (diff *  x) / fov_length;
+
+    if (fov_length + fov_offset > roll_length) {
+      fov_offset = roll_length - fov_length;
+    }
+
+    fov_pixels_per_tick = (float)fov_w / (float)fov_length;
+  }
+
 }
 
 void SeqExtStepPage::display() {
 #ifdef EXT_TRACKS
   oled_display.clearDisplay();
-
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
-
-  roll_length = active_track.length * timing_mid; // in ticks
-
-  // FOV offsets
-
-  if (seq_extparam4.cur > zoom_max) {
-    seq_extparam4.cur = zoom_max;
-  }
-  if (seq_extparam4.cur > active_track.length) {
-    seq_extparam4.cur = active_track.length;
-  }
-
-  uint8_t fov_zoom = seq_extparam4.cur;
-
-  fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
-  if (fov_length + fov_offset > roll_length) {
-    fov_offset = roll_length - fov_length;
-  }
-
-  fov_pixels_per_tick = (float)fov_w / (float)fov_length;
 
   draw_viewport_minimap();
   draw_grid();
@@ -817,6 +835,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_PRESSED) {
       // cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
       int a = 16 * timing_mid;
+      pos_cur_x(((cur_x / a) * a + timing_mid * track) - cur_x);
       pos_cur_x(((cur_x / a) * a + timing_mid * track) - cur_x);
       note_interface.last_note = track;
     }
