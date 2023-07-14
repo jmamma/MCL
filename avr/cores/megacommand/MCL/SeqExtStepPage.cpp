@@ -523,7 +523,7 @@ void SeqExtStepPage::pos_cur_x(int16_t diff) {
       else {
         if (cur_x + diff < roll_length) {
         cur_x += diff;
-        cur_w = roll_length - cur_x;
+       // cur_w = roll_length - cur_x;
         }
       }
    } else {
@@ -546,15 +546,17 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
   //  if (MidiClock.state != 2) {
   fov_y = fov_y_;
   cur_y = cur_y_;
-
   for (uint8_t n = 0; n < 16; n++) {
     if (note_interface.is_note_on(n)) {
       auto &active_track = mcl_seq.ext_tracks[last_ext_track];
       uint8_t timing_mid = active_track.get_timing_mid();
 
-      active_track.del_note(fov_offset + timing_mid * n, cur_w - 1, cur_y);
-      active_track.add_note(fov_offset + timing_mid * n, cur_w, cur_y, velocity,
-                            cond);
+      uint16_t pos = fov_offset + timing_mid * n;
+      uint8_t w = cur_w;
+      if (pos + w >= roll_length) { w = roll_length - pos - 1; }
+
+      active_track.del_note(pos, w - 1, cur_y);
+      active_track.add_note(pos, w, cur_y, velocity, cond);
     }
   }
 
@@ -786,11 +788,14 @@ void SeqExtStepPage::display() {
 
 void SeqExtStepPage::enter_notes() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+  uint8_t w = cur_w;
+  if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
+
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     if (active_track.notes_on[n].value == 255)
       continue;
-    active_track.del_note(cur_x, cur_w - 1, active_track.notes_on[n].value);
-    active_track.add_note(cur_x, cur_w, active_track.notes_on[n].value,
+    active_track.del_note(cur_x, w - 1, active_track.notes_on[n].value);
+    active_track.add_note(cur_x, w, active_track.notes_on[n].value,
                           velocity, cond);
   }
 }
@@ -865,10 +870,30 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       w = seq_extparam4.cur / 2;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
          w *= 2;
-         inc = 8;
+         inc = 12;
       }
     }
-
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      switch (key) {
+        case MDX_KEY_SCALE: {
+          // seq_extparam4.cur = 16;
+          int diff = cur_x - fov_offset;
+          int a = timing_mid * 16;
+          fov_offset += a;
+          cur_x += a;
+          if (cur_x + cur_w > roll_length) {
+            cur_x = cur_x - (cur_x / a ) * a;
+            fov_offset = 0;
+          }
+          pos_cur_x(0);
+          /*  if (fov_offset + fov_length > roll_length) {
+              cur_x = cur_x - fov_offset;
+              fov_offset = 0;
+            } */
+          return true;
+        }
+      }
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (trig_interface.is_key_down(MDX_KEY_YES)) {
         w = 1;
@@ -877,11 +902,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (trig_interface.is_key_down(MDX_KEY_NO) || note_interface.notes_count_on()) {
         switch (key) {
         case MDX_KEY_UP: {
-          seq_extparam4.cur -= inc;
+          seq_extparam4.cur -= 2;
           return true;
         }
         case MDX_KEY_DOWN: {
-          seq_extparam4.cur += inc;
+          seq_extparam4.cur += 2;
           return true;
         }
         case MDX_KEY_LEFT: {
@@ -934,24 +959,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           pos_cur_y(-1 * inc);
           return true;
         }
-        case MDX_KEY_SCALE: {
-          // seq_extparam4.cur = 16;
-          int diff = cur_x - fov_offset;
-          int a = timing_mid * 16;
-          fov_offset += a;
-          cur_x += a;
-          if (cur_x + cur_w > roll_length) {
-            cur_x = cur_x - (cur_x / a ) * a;
-            fov_offset = 0;
-          }
-          pos_cur_x(0);
-          /*  if (fov_offset + fov_length > roll_length) {
-              cur_x = cur_x - fov_offset;
-              fov_offset = 0;
-            } */
-          return true;
-        }
-          // case MDX_KEY_YES: {
+         // case MDX_KEY_YES: {
           //   ignore_clear = true;
           //   goto YES;
           // }
@@ -997,9 +1005,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
+        uint8_t w = cur_w;
+        if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
 
-        if (!active_track.del_note(cur_x, cur_w - 1, cur_y)) {
-          active_track.add_note(cur_x, cur_w, cur_y, velocity, cond);
+        if (!active_track.del_note(cur_x, w - 1, cur_y)) {
+          active_track.add_note(cur_x, w, cur_y, velocity, cond);
         }
       }
       return true;
