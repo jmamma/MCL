@@ -196,11 +196,12 @@ bool MenuPageBase::enter() {
 }
 
 bool MenuPageBase::exit() {
+  if (GUI.currentPage() != this) { return; }
   // Page *exit_page_callback = get_menu()->get_exit_page_callback();
   DEBUG_PRINTLN("calling exit func");
   void (*exit_func)() = get_menu()->get_exit_function();
   if (exit_func != NULL) {
-    (*exit_func)();
+ //   (*exit_func)();
     //
   }
   // if (exit_page_callback != NULL) {
