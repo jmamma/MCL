@@ -182,8 +182,8 @@ bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
   PageIndex page_callback = get_menu()->get_page_callback(encoders[1]->cur);
-  if (page_callback != 255) {
-    DEBUG_PRINTLN("pushing page");
+  if (page_callback != NULL_PAGE) {
+    DEBUG_PRINTLN("menu pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
     mcl.pushPage(page_callback);
     return true;
@@ -246,6 +246,7 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
   YES:
+    DEBUG_PRINTLN("YES");
     enter();
     return true;
   }

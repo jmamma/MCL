@@ -37,7 +37,7 @@ INOFILES=$(wildcard *.pde)
 OPTIM_FLAGS   = -Os --short-enums
 WARN_FLAGS    = -Wall -Wextra -Wdouble-promotion
 COMPILE_FLAGS = -c $(OPTIM_FLAGS) $(WARN_FLAGS) -MMD
-FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver
+FEATURE_FLAGS = -ffunction-sections -fdata-sections -flto=jobserver -fshort-enums
 LINK_FLAGS    = -lm -Wl,--gc-sections,--defsym=__stack=0x801FA1,--section-start,.sdcard=0x801FA2,--section-start,.data=0x802200,--defsym=__heap_end=0x80ffff,--relax
 ARCH_FLAGS    = -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR_MEGA2560 -DARDUINO_ARCH_AVR
 

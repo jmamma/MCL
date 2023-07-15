@@ -77,7 +77,8 @@ enum PageIndex {
     MIDIROUTE_MENU_PAGE,      // Index: 37
     MIDIMACHINEDRUM_MENU_PAGE,// Index: 38
     SOUND_BROWSER,            // Index: 39
-    PERF_PAGE_0               // Index: 40
+    PERF_PAGE_0,             // Index: 40
+    NULL_PAGE = 255
 };
 
 
@@ -87,14 +88,14 @@ public:
 
   static LightPage *const pages_table[NUM_PAGES] PROGMEM;
 
-  PageIndex current_page = 0;
+  PageIndex current_page = GRID_PAGE;
 
   LightPage *getPage(PageIndex page) {
     return (LightPage*) pgm_read_word(pages_table + page);
   }
   void setPage(PageIndex page) {
     if (page >= NUM_PAGES) {
-      page = 0;
+      page = GRID_PAGE;
     }
     current_page = page;
     GUI.setPage(getPage(page));
@@ -102,7 +103,7 @@ public:
 
   void pushPage(PageIndex page) {
     if (page >= NUM_PAGES) {
-      page = 0;
+      page = GRID_PAGE;
     }
     current_page = page;
     GUI.pushPage(getPage(page));
@@ -112,11 +113,11 @@ public:
     GUI.popPage();
     for (uint8_t n = 0; n < NUM_PAGES; n++) {
       if (GUI.currentPage() == getPage(n)) {
-        current_page = n;
+        current_page = (PageIndex) n;
         return;
       }
     }
-    current_page = 255;
+    current_page = NULL_PAGE;
   }
 
   bool isSeqPage() {

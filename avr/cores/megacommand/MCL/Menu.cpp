@@ -15,7 +15,7 @@ void MenuBase::enable_entry(uint8_t entry_index, bool en) {
 bool MenuBase::is_entry_enable(uint8_t entry_index) {
   auto midx = entry_index / 8;
   auto bit = entry_index % 8;
-  return bit_is_set(entry_mask[midx], bit);
+  return IS_BIT_SET(entry_mask[midx], bit);
 }
 
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
@@ -37,8 +37,10 @@ const menu_item_t *MenuBase::get_item(uint8_t item_n) {
   uint8_t entry_cnt = get_entry_count();
   for(uint8_t idx = 0; idx < entry_cnt; ++idx) {
     if(is_entry_enable(idx)) {
+       DEBUG_PRINTLN(idx);
       if (item_n == 0) {
-        return get_entry_address(idx);
+         DEBUG_PRINTLN(idx);
+         return get_entry_address(idx);
       }else {
         --item_n;
       }
@@ -59,7 +61,9 @@ const char* MenuBase::get_item_name(uint8_t item_n) {
 }
 
 PageIndex MenuBase::get_page_callback(uint8_t item_n) {
+  DEBUG_PRINTLN("get page callback");
   auto *item = get_item(item_n);
+  DEBUG_PRINTLN(item->page_callback_id);
   return (PageIndex) item->page_callback_id;
 }
 

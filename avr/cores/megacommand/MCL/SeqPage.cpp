@@ -108,6 +108,7 @@ void SeqPage::init() {
   oled_display.clearDisplay();
 
   toggle_device = true;
+  DEBUG_PRINTLN("seq page init");
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
@@ -658,8 +659,11 @@ void opt_length_handler() {
 void opt_channel_handler() {
   if (SeqPage::midi_device == &MD) {
   } else {
-    mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-    mcl_seq.ext_tracks[last_ext_track].channel = opt_channel - 1;
+    uint8_t chan = opt_channel - 1;
+    if (mcl_seq.ext_tracks[last_ext_track].channel != chan) {
+      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
+      mcl_seq.ext_tracks[last_ext_track].channel = chan;
+    }
   }
 }
 

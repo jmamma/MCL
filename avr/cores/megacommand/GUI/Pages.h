@@ -260,14 +260,15 @@ public:
   void popPage() {
     LightPage *lastpage = currentPage();
     currentPage()->cleanup();
-    LightPage *page;
-    pageStack.pop(&page);
-    if (page != NULL) {
+    LightPage *page = nullptr;
+    if (!pageStack.pop(&page)) { goto reset; }
+    if (page != nullptr) {
       page->parent = NULL;
       page->hide();
     }
     page = currentPage();
-    if (page == NULL) {
+    if (page == nullptr) {
+      reset:
       if (lastpage == NULL) { return; }
       pageStack.reset();
       pushPage(lastpage);

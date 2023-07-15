@@ -52,7 +52,7 @@ public:
   uint8_t row_scan = 0;
   uint64_t row_states[2];
 
-  PageIndex last_page = 255;
+  PageIndex last_page = NULL_PAGE;
 
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;

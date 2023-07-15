@@ -63,6 +63,7 @@ void SeqExtStepPage::config_encoders() {
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
 
+
 #endif
 }
 
@@ -78,14 +79,10 @@ void SeqExtStepPage::init() {
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
   last_cur_x = -1;
+  config_menu_entries();
   config_encoders();
 //  midi_events.setup_callbacks();
 
-  // Common menu entries
-  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
 }
 
 void SeqExtStepPage::cleanup() {
@@ -381,6 +378,8 @@ void SeqExtStepPage::draw_pianoroll() {
       int16_t note_start = i * timing_mid + ev.micro_timing - timing_mid;
       int16_t note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
 
+      if (i > j && j == 0) { note_end += timing_mid * active_track.length; }
+
       if (is_within_fov(note_start, note_end)) {
         uint8_t note_fov_start, note_fov_end;
 
@@ -615,8 +614,11 @@ void SeqExtStepPage::pos_cur_w(int16_t diff) {
     }
   }
 }
+void SeqExtStepPage::config_menu_entries() {
+  seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
 
-void SeqExtStepPage::loop() {
 
   if (pianoroll_mode == 0) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
@@ -636,6 +638,11 @@ void SeqExtStepPage::loop() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
   }
+
+}
+
+void SeqExtStepPage::loop() {
+  config_menu_entries();
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
   SeqPage::loop();

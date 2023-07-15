@@ -90,6 +90,7 @@ public:
   }
   void param_select_update();
   void enter_notes();
+  void config_menu_entries();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void loop();

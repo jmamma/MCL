@@ -19,7 +19,7 @@ struct menu_item_t {
   uint8_t range;
   uint8_t number_of_options;
   uint8_t destination_var_id; // look up the value in menu_target_param
-  uint8_t page_callback_id;   // look up the page callback in menu_target_pages
+  PageIndex page_callback_id;   // look up the page callback in menu_target_pages
   uint8_t row_function_id;    // look up the value in menu_target_functions
   uint8_t options_begin;
 };
@@ -28,7 +28,7 @@ template <uint8_t N> struct menu_t {
   char name[10];
   menu_item_t items[N];
   uint8_t exit_function_id;   // look up the value in menu_target_functions
-  uint8_t exit_page_callback_id;
+  PageIndex exit_page_callback_id;
 };
 
 class MenuBase {
