@@ -79,6 +79,7 @@ void MDSysexListenerClass::end() {
     }
 
     perf_page.learn_param(fx_type + 16, param, value);
+    lfo_page.learn_param(fx_type + 16, param, value);
 
     break;
 
