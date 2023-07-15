@@ -31,7 +31,6 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
 #ifdef EXT_TRACKS
   if (show_seq_menu) { return; }
-  SeqPage::config_encoders();
   seq_extparam1.max = 127;
   seq_extparam2.max = 127;
   seq_extparam3.max = 128;

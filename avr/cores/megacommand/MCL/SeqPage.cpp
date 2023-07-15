@@ -96,9 +96,6 @@ void SeqPage::disable_record() {
   clearLed2();
 }
 
-void SeqPage::config_encoders() {
-}
-
 void SeqPage::init() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
@@ -246,7 +243,8 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
                      active_track.step_count);
   }
 #endif
-  config_encoders();
+  GUI.currentPage()->config();
+  //config_encoders();
 }
 
 bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {

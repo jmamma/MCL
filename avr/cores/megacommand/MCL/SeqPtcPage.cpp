@@ -53,7 +53,6 @@ void SeqPtcPage::cleanup() {
 }
 void SeqPtcPage::config_encoders() {
   if (show_seq_menu) { return; }
-  SeqPage::config_encoders();
   ptc_param_len.min = 1;
   bool show_chan = true;
 
