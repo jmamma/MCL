@@ -112,16 +112,15 @@ bool A4Class::probe() {
 
 // Caller is responsible to make sure icons_device is loaded in RM
 MCLGIF* A4Class::gif() {
-  return &analog_gif;
+  return R.icons_logo->analog_gif;
+}
+uint8_t* A4Class::gif_data() {
+  return R.icons_logo->analog_gif_data; ;
 }
 
 uint8_t* A4Class::icon() {
   return R.icons_device->icon_a4;
 }
-uint8_t* A4Class::icon_logo() {
-  return R.icons_logo->analog_gif; ;
-}
-
 
 
 void A4Class::requestKitX(uint8_t kit) { sendRequest(A4_KITX_REQUEST_ID, kit); }

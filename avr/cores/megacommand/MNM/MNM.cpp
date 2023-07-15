@@ -111,8 +111,8 @@ uint8_t* MNMClass::icon() {
   return R.icons_device->icon_mnm;
 }
 
-uint8_t *MNMClass::icon_logo() { return R.icons_logo->monomachine_gif; ; }
-MCLGIF *MNMClass::gif() { return &monomachine_gif; }
+uint8_t *MNMClass::gif_data() { return R.icons_logo->monomachine_gif_data; ; }
+MCLGIF *MNMClass::gif() { return R.icons_logo->monomachine_gif;; }
 
 void MNMClass::requestKit(uint8_t kit) {
   uint8_t workspace = 0;

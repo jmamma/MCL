@@ -110,48 +110,90 @@ struct __T_icons_knob {
 extern const unsigned char __R_icons_logo[] PROGMEM;
 struct __T_icons_logo {
   union {
-    unsigned char metronome_gif[0];
-    char zz__metronome_gif[450];
+    unsigned char metronome_gif_data[0];
+    char zz__metronome_gif_data[450];
   };
-  static constexpr size_t countof_metronome_gif = 450 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_metronome_gif = 450;
+  static constexpr size_t countof_metronome_gif_data = 450 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_metronome_gif_data = 450;
   union {
-    unsigned char monomachine_gif[0];
-    char zz__monomachine_gif[270];
+    unsigned char monomachine_gif_data[0];
+    char zz__monomachine_gif_data[270];
   };
-  static constexpr size_t countof_monomachine_gif = 270 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_monomachine_gif = 270;
+  static constexpr size_t countof_monomachine_gif_data = 270 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_monomachine_gif_data = 270;
   union {
-    unsigned char midi_gif[0];
-    char zz__midi_gif[216];
+    unsigned char midi_gif_data[0];
+    char zz__midi_gif_data[216];
   };
-  static constexpr size_t countof_midi_gif = 216 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_midi_gif = 216;
+  static constexpr size_t countof_midi_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_midi_gif_data = 216;
   union {
-    unsigned char machinedrum_gif[0];
-    char zz__machinedrum_gif[216];
+    unsigned char machinedrum_gif_data[0];
+    char zz__machinedrum_gif_data[216];
   };
-  static constexpr size_t countof_machinedrum_gif = 216 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_machinedrum_gif = 216;
+  static constexpr size_t countof_machinedrum_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_machinedrum_gif_data = 216;
   union {
-    unsigned char analog_gif[0];
-    char zz__analog_gif[189];
+    unsigned char analog_gif_data[0];
+    char zz__analog_gif_data[189];
   };
-  static constexpr size_t countof_analog_gif = 189 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_analog_gif = 189;
+  static constexpr size_t countof_analog_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_analog_gif_data = 189;
   union {
-    unsigned char route_gif[0];
-    char zz__route_gif[100];
+    unsigned char route_gif_data[0];
+    char zz__route_gif_data[100];
   };
-  static constexpr size_t countof_route_gif = 100 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_route_gif = 100;
+  static constexpr size_t countof_route_gif_data = 100 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_route_gif_data = 100;
   union {
-    unsigned char perf_gif[0];
-    char zz__perf_gif[189];
+    unsigned char perf_gif_data[0];
+    char zz__perf_gif_data[189];
   };
-  static constexpr size_t countof_perf_gif = 189 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_perf_gif = 189;
-  static constexpr size_t __total_size = 1630;
+  static constexpr size_t countof_perf_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_perf_gif_data = 189;
+  union {
+    MCLGIF midi_gif[0];
+    char zz__midi_gif[13];
+  };
+  static constexpr size_t countof_midi_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_midi_gif = 13;
+  union {
+    MCLGIF machinedrum_gif[0];
+    char zz__machinedrum_gif[13];
+  };
+  static constexpr size_t countof_machinedrum_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_machinedrum_gif = 13;
+  union {
+    MCLGIF monomachine_gif[0];
+    char zz__monomachine_gif[13];
+  };
+  static constexpr size_t countof_monomachine_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_monomachine_gif = 13;
+  union {
+    MCLGIF analog_gif[0];
+    char zz__analog_gif[13];
+  };
+  static constexpr size_t countof_analog_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_analog_gif = 13;
+  union {
+    MCLGIF route_gif[0];
+    char zz__route_gif[13];
+  };
+  static constexpr size_t countof_route_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_route_gif = 13;
+  union {
+    MCLGIF perf_gif[0];
+    char zz__perf_gif[13];
+  };
+  static constexpr size_t countof_perf_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_perf_gif = 13;
+  union {
+    MCLGIF metronome_gif[0];
+    char zz__metronome_gif[13];
+  };
+  static constexpr size_t countof_metronome_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_metronome_gif = 13;
+  static constexpr size_t __total_size = 1721;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;

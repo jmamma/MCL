@@ -13,8 +13,8 @@ void MidiDevice::cleanup(uint8_t device_idx) {
     proj.grids[n].cleanup(device_idx);
   }
 }
-uint8_t *MidiDevice::icon_logo() { return R.icons_logo->midi_gif; }
-MCLGIF *MidiDevice::gif() { return &midi_gif; }
+uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
+MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }

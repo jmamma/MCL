@@ -678,29 +678,29 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
     int8_t y_offset = 0;
     switch (i) {
     case 0:
-      icon = devs[0]->icon_logo();
+      icon = devs[0]->gif_data();
       gif = devs[0]->gif();
       gif->set_bmp(icon);
       break;
     case 1:
-      icon = devs[1]->icon_logo();
+      icon = devs[1]->gif_data();
       gif = devs[1]->gif();
       gif->set_bmp(icon);
       offset = 4;
       break;
     case 2:
-      gif = &perf_gif;
-      gif->set_bmp(R.icons_logo->perf_gif);
+      gif = R.icons_logo->perf_gif;
+      gif->set_bmp(R.icons_logo->perf_gif_data);
       offset = 3;
       break;
     case 3:
-      gif = &route_gif;
-      gif->set_bmp(R.icons_logo->route_gif);
+      gif = R.icons_logo->route_gif;
+      gif->set_bmp(R.icons_logo->route_gif_data);
       offset = 5;
       break;
     case 4:
-      gif = &metronome_gif;
-      gif->set_bmp(R.icons_logo->metronome_gif);
+      gif = R.icons_logo->metronome_gif;
+      gif->set_bmp(R.icons_logo->metronome_gif_data);
       offset = 4;
       y_offset = -3;
       break;
@@ -711,7 +711,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 
     if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, gif->w, gif->h, WHITE); }
 
-    if (note_interface.is_note_on(i)) { gif->loop_count = 0; }
+    if (note_interface.is_note_on(i)) { gif->reset(); }
 
     if (select) {
    //   gif->reset();

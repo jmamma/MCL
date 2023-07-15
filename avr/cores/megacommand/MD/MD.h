@@ -64,7 +64,7 @@ public:
   virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
   virtual MCLGIF *gif();
-  virtual uint8_t* icon_logo();
+  virtual uint8_t* gif_data();
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

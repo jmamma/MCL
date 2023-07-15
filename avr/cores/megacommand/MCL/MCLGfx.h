@@ -8,33 +8,25 @@ enum MCLGIFDir {
   DIR_FWDBACK,
 };
 
+
 class MCLGIF {
-private:
-  int8_t cur_frame = 0;
-  int8_t inc = 0;
-  uint16_t last_frame_clock;
 public:
-  uint8_t *bitmap;
   uint8_t frame_offset_bytes;
   uint8_t num_of_frames;
   uint8_t w;
   uint8_t h;
+  MCLGIFDir dir;
   uint8_t loops;
 
+//  MCLGIF(uint8_t b, uint8_t n, uint8_t w_, uint8_t h_, MCLGIFDir d, uint8_t l) : frame_offset_bytes(b), num_of_frames(n), w(w_), h(h_), dir(d),loops(l) { }
+
+//private:
+
   uint8_t loop_count;
-  MCLGIFDir dir;
-
-  MCLGIF(uint8_t frame_offset_, uint8_t num_of_frames_, uint8_t w_, uint8_t h_, MCLGIFDir dir_, uint8_t loops_ = 0) {
-    frame_offset_bytes = frame_offset_;
-    num_of_frames = num_of_frames_;
-    w = w_;
-    h = h_;
-    dir = dir_;
-    loops = loops_;
-    reset();
-    loop_count = loops;
-  }
-
+  int8_t cur_frame;
+  int8_t inc;
+  uint16_t last_frame_clock;
+  uint8_t *bitmap;
   void reset() {
     inc = 1;
     cur_frame = 0;
@@ -88,11 +80,4 @@ public:
 };
 extern MCLGfx gfx;
 
-extern MCLGIF metronome_gif;
-extern MCLGIF perf_gif;
-extern MCLGIF route_gif;
-extern MCLGIF analog_gif;
-extern MCLGIF midi_gif;
-extern MCLGIF monomachine_gif;
-extern MCLGIF machinedrum_gif;
 #endif /* MCLGFX_H__ */

@@ -175,7 +175,7 @@ public:
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
   virtual MCLGIF *gif();
-  virtual uint8_t *icon_logo();
+  virtual uint8_t *gif_data();
 };
 
 /// Base class for Elektron sysex listeners
