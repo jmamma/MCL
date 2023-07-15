@@ -173,6 +173,7 @@ void PerfPage::update_params() {
       PerfParam *p = &perf_encoders[perf_id]->perf_data.scenes[scene].params[c];
       p->dest = encoders[1]->cur;
       p->param = encoders[2]->cur;
+      if (encoders[3]->hasChanged() && BUTTON_DOWN(Buttons.ENCODER4)) { GUI.ignoreNextEvent(Buttons.ENCODER4); }
       if (encoders[3]->cur > 0) {
         p->val = encoders[3]->cur - 1;
       }
@@ -556,7 +557,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+
+  if (EVENT_RELEASED(event, Buttons.ENCODER4)) {
+  //if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
     if (learn) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t scene = learn - 1;
