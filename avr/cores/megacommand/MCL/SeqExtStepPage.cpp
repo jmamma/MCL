@@ -707,10 +707,10 @@ void SeqExtStepPage::loop() {
       seq_extparam4.cur = zoom_max;
   }
 
-  uint8_t z = (float)active_track.length * active_track.get_speed_multiplier();
-  if (seq_extparam4.cur > z) {
-      seq_extparam4.cur = z;
-  }
+//  uint8_t z = (float)active_track.length * active_track.get_speed_multiplier();
+//  if (seq_extparam4.cur > z) {
+//      seq_extparam4.cur = z;
+//  }
 
 
   if (seq_extparam4.hasChanged()) {
@@ -719,7 +719,7 @@ void SeqExtStepPage::loop() {
 
     int old_length = fov_length;
     fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
-
+    if (fov_length > roll_length) { fov_length = roll_length; }
 
     int diff = (fov_length - old_length);
 
@@ -731,6 +731,7 @@ void SeqExtStepPage::loop() {
     if (fov_length + fov_offset > roll_length) {
       fov_offset = roll_length - fov_length;
     }
+    fov_offset = max(0,fov_offset);
 
     fov_pixels_per_tick = (float)fov_w / (float)fov_length;
   }
