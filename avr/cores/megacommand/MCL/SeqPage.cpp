@@ -688,9 +688,12 @@ void opt_speed_handler() {
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       auto &active_track = mcl_seq.md_tracks[last_md_track];
-      active_track.set_speed(opt_speed);
-      MD.sync_seqtrack(active_track.length, active_track.speed,
-                       active_track.step_count);
+      uint8_t last_speed = active_track.speed;
+      if (opt_speed != last_speed) {
+        active_track.set_speed(opt_speed);
+        MD.sync_seqtrack(active_track.length, active_track.speed,
+                         active_track.step_count);
+      }
     }
     seq_step_page.config_encoders();
   }
@@ -702,8 +705,11 @@ void opt_speed_handler() {
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      mcl_seq.ext_tracks[last_ext_track].set_speed(opt_speed);
-      seq_extstep_page.config_encoders();
+      uint8_t last_speed = mcl_seq.ext_tracks[last_ext_track].speed;
+      if (opt_speed != last_speed) {
+        mcl_seq.ext_tracks[last_ext_track].set_speed(opt_speed);
+        seq_extstep_page.config_encoders();
+      }
     }
   }
 #endif
