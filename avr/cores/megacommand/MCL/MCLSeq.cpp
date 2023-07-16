@@ -267,7 +267,7 @@ void MCLSeq::seq() {
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].seq(uart);
+    lfo_tracks[i].seq(uart, uart2);
   }
 #endif
 

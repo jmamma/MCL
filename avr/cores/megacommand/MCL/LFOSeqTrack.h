@@ -89,7 +89,7 @@ public:
       params[param].depth = depth;
   }
   void load_wav_table(uint8_t table);
-  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
+  ALWAYS_INLINE() void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
 };
 
 #endif /* LFOSEQTRACK_H__ */
