@@ -53,7 +53,6 @@ bool SeqPage::recording = false;
 uint8_t SeqPage::last_midi_state = 0;
 uint8_t SeqPage::last_step = 255;
 
-static SeqPage *opt_seqpage_capture = nullptr;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
@@ -380,8 +379,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return true;
     } else if (!show_seq_menu) {
       show_seq_menu = true;
-      // capture current page.
-      opt_seqpage_capture = this;
 
       if (midi_device == &MD) {
         auto &active_track = mcl_seq.md_tracks[last_md_track];
@@ -670,7 +667,7 @@ void opt_channel_handler() {
 void opt_mask_handler() { seq_step_page.config_mask_info(false); }
 
 void opt_trackid_handler() {
-  opt_seqpage_capture->select_track(SeqPage::midi_device, opt_trackid - 1);
+  seq_step_page.select_track(SeqPage::midi_device, opt_trackid - 1);
 }
 
 void opt_speed_handler() {
@@ -703,7 +700,7 @@ void opt_speed_handler() {
     }
   }
 #endif
-  opt_seqpage_capture->init();
+//  opt_seqpage_capture->init();
 }
 
 void opt_clear_track_handler() {

@@ -37,9 +37,7 @@ const menu_item_t *MenuBase::get_item(uint8_t item_n) {
   uint8_t entry_cnt = get_entry_count();
   for(uint8_t idx = 0; idx < entry_cnt; ++idx) {
     if(is_entry_enable(idx)) {
-       DEBUG_PRINTLN(idx);
       if (item_n == 0) {
-         DEBUG_PRINTLN(idx);
          return get_entry_address(idx);
       }else {
         --item_n;
