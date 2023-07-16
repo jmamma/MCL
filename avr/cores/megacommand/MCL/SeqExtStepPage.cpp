@@ -47,6 +47,7 @@ void SeqExtStepPage::config_encoders() {
 
     seq_extparam2.cur = 64;
 
+    seq_extparam4.cur = 16;
     seq_extparam3.handler = NULL;
     seq_extparam3.cur = 64;
     fov_offset = 0;
@@ -57,7 +58,6 @@ void SeqExtStepPage::config_encoders() {
 
   }
 
-  seq_extparam4.cur = 16;
   seq_extparam1.old = seq_extparam1.cur;
   seq_extparam2.old = seq_extparam2.cur;
   seq_extparam3.old = seq_extparam3.cur;
@@ -890,12 +890,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
         case MDX_KEY_SCALE: {
-          // seq_extparam4.cur = 16;
-          int diff = cur_x - fov_offset;
-          int a = timing_mid * 16;
-          fov_offset += a;
+       //   seq_extparam4.cur = 16;
+          //
+          //int a = fov_length
+          int a = timing_mid * 16;// / active_track.get_speed_multiplier();
           cur_x += a;
-          if (cur_x + cur_w > roll_length) {
+          if (cur_x > fov_offset + fov_length) { fov_offset += a; }
+          if (cur_x >= roll_length) {
             cur_x = cur_x - (cur_x / a ) * a;
             fov_offset = 0;
           }
