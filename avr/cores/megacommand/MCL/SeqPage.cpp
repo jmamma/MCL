@@ -406,7 +406,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;
-    oled_display.clearDisplay();
+    //oled_display.clearDisplay();
     void (*row_func)();
     if (show_seq_menu) {
       row_func =
