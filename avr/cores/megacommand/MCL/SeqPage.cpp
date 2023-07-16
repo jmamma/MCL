@@ -121,6 +121,9 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, false);
+
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, false);
   /*
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
@@ -411,10 +414,13 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       row_func =
           seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+      uint8_t old_dev = midi_device;
       midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
-      opt_speed_handler();
-      opt_length_handler();
-      opt_channel_handler();
+      if (old_dev == midi_device) {
+        opt_speed_handler();
+        opt_length_handler();
+        opt_channel_handler();
+      }
     } else if (show_step_menu) {
       row_func =
           step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
@@ -647,6 +653,7 @@ void opt_length_handler() {
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
   } else {
+    opt_length = max(opt_length, 2);
     mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     mcl_seq.ext_tracks[last_ext_track].set_length(opt_length);
     seq_extparam4.cur = opt_length;
