@@ -1006,7 +1006,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
       bool clear = false;
       clear = active_track.del_track_locks(cur_x, lock_idx, lock_cur_y);
-      if (!clear) {
+      if (!clear && active_track.locks_params[lock_idx] - 1 > 0) {
         active_track.set_track_locks(step, utiming,
                                      active_track.locks_params[lock_idx] - 1,
                                      lock_cur_y, slide, lock_idx);
