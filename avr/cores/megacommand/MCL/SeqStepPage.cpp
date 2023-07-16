@@ -53,6 +53,8 @@ void SeqStepPage::init() {
   pitch_param = 255;
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
+
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   midi_events.setup_callbacks();

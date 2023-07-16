@@ -93,6 +93,10 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
   if (midi_device == &MD) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
+    seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
+  }
+  else {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, true);
   }
   cc_link_enable = true;
   scale_padding = false;

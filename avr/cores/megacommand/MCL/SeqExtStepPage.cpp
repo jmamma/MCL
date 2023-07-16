@@ -493,7 +493,7 @@ void SeqExtStepPage::draw_viewport_minimap() {
 }
 
 void SeqExtStepPage::pos_cur_x(int16_t diff) {
-  uint8_t w = cur_w;
+  uint16_t w = cur_w;
   if (pianoroll_mode >= 1) {
     w = 3;
   }
@@ -550,7 +550,7 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       uint8_t timing_mid = active_track.get_timing_mid();
 
       uint16_t pos = fov_offset + timing_mid * n;
-      uint8_t w = cur_w;
+      uint16_t w = cur_w;
       if (pos + w >= roll_length) { w = roll_length - pos - 1; }
 
       active_track.del_note(pos, w - 1, cur_y);
@@ -618,7 +618,7 @@ void SeqExtStepPage::config_menu_entries() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
-
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, true);
 
   if (pianoroll_mode == 0) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
@@ -707,6 +707,7 @@ void SeqExtStepPage::loop() {
       seq_extparam4.cur = zoom_max;
   }
 
+  if (cur_w > roll_length) { cur_w = roll_length / 2; }
 
   int z = (float)active_track.length * active_track.get_speed_multiplier();
   if (seq_extparam4.cur > z) {
@@ -801,7 +802,7 @@ void SeqExtStepPage::display() {
 
 void SeqExtStepPage::enter_notes() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-  uint8_t w = cur_w;
+  uint16_t w = cur_w;
   if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
 
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
@@ -1018,7 +1019,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (active_track.notes_on_count > 0) {
         enter_notes();
       } else {
-        uint8_t w = cur_w;
+        uint16_t w = cur_w;
         if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
 
         if (!active_track.del_note(cur_x, w - 1, cur_y)) {

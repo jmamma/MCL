@@ -91,7 +91,7 @@ extern MenuPage<file_menu_page_N> file_menu_page;
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
 
-constexpr size_t seq_menu_page_N = 22;
+constexpr size_t seq_menu_page_N = 23;
 extern MenuPage<seq_menu_page_N> seq_menu_page;
 
 extern MCLEncoder step_menu_value_encoder;
