@@ -143,7 +143,7 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
 uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
   if (dest < NUM_MD_TRACKS) {
     return MD.kit.params[dest][param];
-  } else {
+  } else if (dest < NUM_MD_TRACKS + 4) {
     switch (dest - NUM_MD_TRACKS) {
     case MD_FX_ECHO - MD_FX_ECHO:
       return MD.kit.delay[param];
@@ -159,6 +159,14 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
       return MD.kit.eq[param];
       break;
     }
+  }
+  else {
+      if (dest == params[0].dest - 1 && params[0].param == param) {
+        return params[0].offset;
+      }
+      if (dest == params[1].dest - 1 && params[1].param == param) {
+        return params[1].offset;
+      }
   }
   return 255;
 }
