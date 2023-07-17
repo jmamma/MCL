@@ -222,7 +222,7 @@ void LFOPage::display() {
   else if (page_mode == LFO_OFFSET) {
     draw_knob(2, encoders[2], "PAR1");
     draw_knob(3, encoders[3], "PAR2");
-    info2 = "LFO>OFFSET";
+    info2 = "LFO>PAR";
   }
 
   oled_display.setFont(&TomThumb);

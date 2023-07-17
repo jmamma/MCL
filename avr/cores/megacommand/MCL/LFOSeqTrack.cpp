@@ -81,6 +81,7 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
    }
   if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
+      if (params[i].dest == 0) { continue; }
       uint8_t dest = params[i].dest - 1;
       uint8_t wav_value = get_wav_value(sample_count, dest, i);
       if (last_wav_value[i] != wav_value) {
@@ -93,7 +94,7 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
           MD.sendFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS,
                          uart);
         } else {
-          MD.setTrackParam_inline(dest, param, wav_value, uart);
+          MD.setTrackParam(dest, param, wav_value, uart);
         }
 
         last_wav_value[i] = wav_value;
@@ -151,7 +152,6 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
     case MD_FX_DYN - MD_FX_ECHO:
       return MD.kit.dynamics[param];
       break;
-
     case MD_FX_REV - MD_FX_ECHO:
       return MD.kit.reverb[param];
       break;
@@ -160,13 +160,8 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
       break;
     }
   }
-  else {
-      if (dest == params[0].dest - 1 && params[0].param == param) {
-        return params[0].offset;
-      }
-      if (dest == params[1].dest - 1 && params[1].param == param) {
-        return params[1].offset;
-      }
+  else if (param < 2) {
+      return params[param].offset;
   }
   return 255;
 }
