@@ -13,16 +13,10 @@ void MCLSeq::setup() {
   }
 #ifdef LFO_TRACKS
 
-  lfo_tracks[0].load_tables();
+  lfo_tracks[0].load_tables(); //Only needs to be done once
 
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].track_number = i;
-    if (i == 0) {
-      lfo_tracks[i].params[0].dest = 17;
-      lfo_tracks[i].params[1].dest = 18;
-      lfo_tracks[i].params[0].param = 7;
-      lfo_tracks[i].params[1].param = 7;
-    }
   }
 #endif
 #ifdef EXT_TRACKS

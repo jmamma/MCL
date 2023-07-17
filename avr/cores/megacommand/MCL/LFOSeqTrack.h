@@ -41,7 +41,6 @@ public:
   uint8_t last_wav_value[NUM_LFO_PARAMS];
   uint8_t sample_hold; //<--- shouldnt be stored here;
 
-  
   uint8_t speed;
   uint8_t mode;
   uint8_t offset_behaviour; //<--- no longer needed
@@ -57,7 +56,7 @@ public:
     length = 16;
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       last_wav_value[a] = 255;
-      params[a].dest = 255;
+      params[a].dest = 0;
     }
   }
 };
