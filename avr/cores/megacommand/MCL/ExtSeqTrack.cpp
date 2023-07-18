@@ -1066,13 +1066,14 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint16_t start_x = notes_on[n].x;
   uint16_t end_x = step * timing_mid + utiming - timing_mid;
 
+  if (MidiClock.state == 2 && SeqPage::recording) {
+
   if (end_x < start_x) {
     del_note(0, end_x, note_num);
     end_x += length * timing_mid;
   }
   uint16_t w = end_x - start_x;
 
-  if (MidiClock.state == 2 && SeqPage::recording) {
     del_note(start_x, w, note_num);
     add_note(start_x, w, note_num, notes_on[n].velocity);
   }
