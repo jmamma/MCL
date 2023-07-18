@@ -28,7 +28,6 @@ template <uint8_t N> struct menu_t {
   char name[10];
   menu_item_t items[N];
   uint8_t exit_function_id;   // look up the value in menu_target_functions
-  PageIndex exit_page_callback_id;
 };
 
 class MenuBase {
@@ -37,8 +36,8 @@ public:
   uint8_t entry_mask[4];
   menu_option_t* custom_options;
 
-  MenuBase() { 
-    memset(entry_mask, 0xFF, sizeof(entry_mask)); 
+  MenuBase() {
+    memset(entry_mask, 0xFF, sizeof(entry_mask));
     custom_options = nullptr;
   }
 

@@ -20,7 +20,7 @@ menu_t<boot_menu_page_N> boot_menu_layout = {
         {"USB DISK",    0, 0, 0, 0, NULL_PAGE, 28, 0},
         {"EXIT",        0, 0, 0, 0, NULL_PAGE, 29, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 
@@ -31,7 +31,7 @@ menu_t<start_menu_page_N> start_menu_layout = {
         {"LOAD PROJECT", 0, 0, 0, 0, LOAD_PROJ_PAGE, 0, 0},
         {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<system_menu_page_N> system_menu_layout = {
@@ -46,7 +46,7 @@ menu_t<system_menu_page_N> system_menu_layout = {
         {"AUX PAGES",    0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, MCL_CONFIG_PAGE, 0, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<aux_config_page_N> auxconfig_menu_layout = {
@@ -55,7 +55,7 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
         //           m  r  n  d  p  f  o
         {"RAM Page" ,0, 0, 0, 0, RAM_CONFIG_PAGE, 0, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<ram_config_page_N> rampage1_menu_layout = {
@@ -64,7 +64,7 @@ menu_t<ram_config_page_N> rampage1_menu_layout = {
         //        m  r  n  d  p  f  o
         {"LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<midi_config_page_N> midiconfig_menu_layout = {
@@ -76,7 +76,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
         {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
@@ -88,7 +88,7 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"DRIVER 2:", 0, 2, 2, 4, 0, NULL_PAGE, 84},
         {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
     },
-    24, NULL_PAGE
+    24
 };
 
 menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
@@ -98,7 +98,7 @@ menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
         {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 88},
         {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 88},
     },
-    24, NULL_PAGE
+    24
 };
 
 
@@ -110,7 +110,7 @@ menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
         {"CLOCK SEND:", 0, 4, 4, 6, 0, NULL_PAGE, 100},
         {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 100},
     },
-    24, NULL_PAGE
+    24
 };
 
 menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
@@ -124,7 +124,7 @@ menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
 
         {"CC LOOP:", 0, 2, 2, 11, NULL_PAGE, 0, 86},
     },
-    24, NULL_PAGE
+    24
 };
 
 menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
@@ -135,7 +135,7 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
         {"POLY CHAN:",  0, 18, 2, 46, NULL_PAGE, 0, 88},
         {"TRIG CHAN:",   0, 18, 2, 57, NULL_PAGE, 0, 18},
     },
-    24, NULL_PAGE
+    24
 };
 
 menu_t<md_config_page_N> mdconfig_menu_layout = {
@@ -146,7 +146,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
         {"POLY CONFIG", 0, 0,  0, 0, POLY_PAGE, 0, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<md_import_page_N> mdimport_menu_layout = {
@@ -158,7 +158,7 @@ menu_t<md_import_page_N> mdimport_menu_layout = {
         {"COUNT:", 1, 128,  0,  45, NULL_PAGE, 0, 0},
         {"RUN",    0,   0,  0,   0, NULL_PAGE, 25, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<mcl_config_page_N> mclconfig_menu_layout = {
@@ -167,7 +167,7 @@ menu_t<mcl_config_page_N> mclconfig_menu_layout = {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, NULL_PAGE, 0, 23},
     },
-    1, NULL_PAGE
+    1
 };
 
 menu_t<file_menu_page_N> file_menu_layout = {
@@ -182,7 +182,7 @@ menu_t<file_menu_page_N> file_menu_layout = {
         {"RECV ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"SEND ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
     },
-    0, NULL_PAGE
+    0
 };
 
 menu_t<seq_menu_page_N> seq_menu_layout = {
@@ -213,7 +213,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
     },
-    14, NULL_PAGE
+    14
 };
 
 menu_t<step_menu_page_N> step_menu_layout = {
@@ -225,7 +225,7 @@ menu_t<step_menu_page_N> step_menu_layout = {
         {"PASTE STEP", 0, 0, 0, 0,  NULL_PAGE, 17, 0},
         {"MUTE STEP",  0, 0, 0, 0,  NULL_PAGE, 18, 0},
     },
-    19, NULL_PAGE
+    19
 };
 
 menu_t<grid_slot_page_N> slot_menu_layout = {
@@ -249,7 +249,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         {"PASTE:",  0, 2,   2, 38, NULL_PAGE, 0,  33},
         {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 20, 0},
     },
-    21, NULL_PAGE
+    21
 };
 
 menu_t<wavdesign_menu_page_N> wavdesign_menu_layout = {
@@ -260,7 +260,7 @@ menu_t<wavdesign_menu_page_N> wavdesign_menu_layout = {
         {"WAV:",     0, 6, 6, 41, NULL_PAGE, 0,  74},
         {"TRANSFER", 0, 0, 0, 0,  NULL_PAGE, 22, 0},
     },
-    23, NULL_PAGE
+    23
 };
 
 menu_t<perf_menu_page_N> perf_menu_layout = {
@@ -272,6 +272,6 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
         {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 30, 0},
       //  {"PARAM:",    0, 17, 1, 58, NULL_PAGE, 0,  116},
     },
-    0, NULL_PAGE
+    0
 };
 
