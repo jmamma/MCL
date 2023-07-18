@@ -28,8 +28,10 @@ public:
   uint16_t last_frame_clock;
   uint8_t *bitmap;
   void reset() {
-    inc = 1;
-    cur_frame = 0;
+    if (inc == 0) {
+      inc = 1;
+      cur_frame = 0;
+    }
     loop_count = 0;
   }
 
