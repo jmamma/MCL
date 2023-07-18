@@ -32,6 +32,7 @@ void GridTask::run() {
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
 
+  perf_page.encoder_check();
   trig_interface.check_key_throttle();
 
   if (stop_hard_callback) {

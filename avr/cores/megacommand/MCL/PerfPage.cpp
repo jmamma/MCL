@@ -294,6 +294,14 @@ void PerfPage::display() {
   oled_display.display();
 }
 
+
+void PerfPage::encoder_check() {
+  if (GUI.currentPage() == this) return;
+  for (uint8_t i = 0; i < 4; i++) {
+    if (perf_encoders[i]->hasChanged()) { perf_encoders[i]->send(); }
+  }
+}
+
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   // Intercept controller param.
 
@@ -308,7 +316,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
         int16_t range = max - min;
         uint8_t val = (cur * (int16_t)127) / range;
         perf_encoders[i]->cur = val;
-        perf_encoders[i]->send();
+        //perf_encoders[i]->send();
         if (mcl.currentPage() == PERF_PAGE_0) {
           update_params();
         }
