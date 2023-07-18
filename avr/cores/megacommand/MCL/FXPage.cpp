@@ -26,7 +26,7 @@ void FXPage::update_encoders() {
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     ((MCLEncoder *)encoders[n])->max = 127;
 
-    uint8_t a = ((uint8_t)!page_mode * GUI_NUM_ENCODERS) + n;
+    uint8_t a = ((uint8_t)page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
 
     switch (params[a].type) {
@@ -58,7 +58,7 @@ void FXPage::cleanup() {
 void FXPage::loop() {
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    uint8_t n = i + ((page_mode ? 1 : 0) * GUI_NUM_ENCODERS);
+    uint8_t n = i + (page_mode * GUI_NUM_ENCODERS);
 
     if (encoders[i]->hasChanged()) {
       uint8_t fx_param = params[n].param;
