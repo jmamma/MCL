@@ -80,6 +80,8 @@ void MDSysexListenerClass::end() {
 
     perf_page.learn_param(fx_type + 16, param, value);
     lfo_page.learn_param(fx_type + 16, param, value);
+    if (GUI.currentPage() == &fx_page_a) { fx_page_a.update_encoders(); }
+    if (GUI.currentPage() == &fx_page_b) { fx_page_b.update_encoders(); }
 
     break;
 
