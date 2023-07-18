@@ -36,34 +36,33 @@ void SampleBrowserPage::display() {
 
     if (len > 4) {
       bool is_wav = strcmp(c_wav_suffix, (&temp_entry[len - 4])) == 0;
+      bool is_syx = strcmp(c_syx_suffix, (&temp_entry[len - 4])) == 0;
       Wav wav_file;
 
-      if (!is_wav || (is_wav && !wav_file.open(temp_entry, false))) {
-        FileBrowserPage::selection_change = false;
-        goto end;
-      }
+      uint32_t size = 0;
 
-      oled_display.setCursor(0, 23);
+      if (is_wav) {
+        if (!wav_file.open(temp_entry, false)) { goto end; }
+        oled_display.setCursor(0, 23);
 
-      float sample_rate_f = (wav_file.header.fmt.sampleRate * 0.001f);
-      uint16_t sample_rate = (uint16_t)sample_rate_f;
-      oled_display.print(sample_rate);
-      oled_display.print(F("."));
+        float sample_rate_f = (wav_file.header.fmt.sampleRate * 0.001f);
+        uint16_t sample_rate = (uint16_t)sample_rate_f;
+        oled_display.print(sample_rate);
+        oled_display.print('.');
 
-      uint8_t decimal =
-          ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;
-      oled_display.print(decimal);
-      oled_display.print(F("k "));
+        uint8_t decimal =
+            ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;
+        oled_display.print(decimal);
+        oled_display.print(F("k "));
 
-      oled_display.print(wav_file.header.fmt.bitRate);
-      oled_display.print(F("/"));
-      oled_display.print(wav_file.header.fmt.numChannels);
+        oled_display.print(wav_file.header.fmt.bitRate);
+        oled_display.print('/');
+        oled_display.print(wav_file.header.fmt.numChannels);
       /*
       float seconds = wav_file.header.get_length() / (float)wav_file.header.fmt.sampleRate;
       int16_t minutes = seconds * 0.01666666667f;
       int16_t ms = ((float)seconds - int(seconds)) * 1000;
       */
-      oled_display.setCursor(0, 30);
       /*
       oled_display.print(minutes);
       oled_display.print(F(":"));
@@ -71,20 +70,28 @@ void SampleBrowserPage::display() {
       oled_display.print(F(":"));
       oled_display.print(ms);
       */
-      uint32_t size = wav_file.file.size();
+        uint32_t size = wav_file.file.size();
+        wav_file.close();
+      }
+      else if (is_syx) {
+        File tmp_file;
+        if (!tmp_file.open(temp_entry)) { goto end; }
+        size = tmp_file.size();
+        tmp_file.close();
+      }
+      oled_display.setCursor(0, 30);
       if (size < 1024) {
        oled_display.print(size);
-       oled_display.print("B");
+       oled_display.print('B');
       }
       else {
        oled_display.print(size / 1024);
-       oled_display.print("kB");
+       oled_display.print(F("kB"));
       }
-      wav_file.close();
     }
   }
-  FileBrowserPage::selection_change = false;
 end:
+  FileBrowserPage::selection_change = false;
   draw_filebrowser();
   oled_display.display();
 }
