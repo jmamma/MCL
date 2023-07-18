@@ -683,7 +683,6 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   }
   i++;
 
-  bool set_level = false;
   if (mode == 0) {
     goto end;
   }
@@ -707,7 +706,6 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   data[i++] = machine->muteGroup;
   if (level != 255) {
     data[i++] = level;
-    set_level = true;
   }
 
 end:
