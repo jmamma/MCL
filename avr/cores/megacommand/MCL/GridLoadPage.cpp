@@ -64,7 +64,7 @@ void GridLoadPage::display_load() {
   oled_display.textbox(str1, str2);
 }
 
-void GridLoadPage::get_modestr(char *modestr) {
+void GridLoadPage::loop() {
   if (encoders[0]->hasChanged()) {
     mcl_cfg.load_mode = encoders[0]->cur;
     draw_popup_title();
@@ -81,6 +81,10 @@ void GridLoadPage::get_modestr(char *modestr) {
       mcl_cfg.chain_load_quant = encoders[3]->cur;
   }
 
+
+}
+
+void GridLoadPage::get_modestr(char *modestr) {
   switch (encoders[0]->cur) {
   case LOAD_MANUAL: {
     strcpy(modestr, "MAN");
