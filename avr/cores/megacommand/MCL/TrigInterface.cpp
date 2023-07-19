@@ -85,7 +85,7 @@ bool TrigInterface::off() {
 }
 
 bool TrigInterface::check_key_throttle() {
-  if (clock_diff(last_clock, slowclock) < 10) {
+  if (clock_diff(last_clock, slowclock) < 30) {
     return true;
   } else {
     throttle = false;
