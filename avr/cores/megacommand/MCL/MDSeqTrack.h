@@ -27,7 +27,7 @@ public:
 
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
-    SeqTrack::reset();
+    SeqSlideTrack::reset();
     oneshot_mask = 0;
     record_mutes = false;
   }

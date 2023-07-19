@@ -299,6 +299,14 @@ public:
   uint8_t locks_slides_recalc = 255;
   uint16_t locks_slides_idx = 0;
 
+  ALWAYS_INLINE() void reset() {
+    for (uint8_t n = 0; n < NUM_LOCKS; n++) {
+      locks_slide_data[n].init();
+    }
+    SeqTrack::reset();
+  }
+
+
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,
                      int8_t y1);
   void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);

@@ -161,7 +161,7 @@ public:
   ExtSeqTrack() : SeqSlideTrack() { active = EXT_TRACK_TYPE; }
 
   ALWAYS_INLINE() void reset() {
-    SeqTrack::reset();
+    SeqSlideTrack::reset();
     memset(oneshot_mask,0,sizeof(oneshot_mask));
     memset(ignore_notes,0, sizeof(ignore_notes));
     pgm_oneshot = 0;
