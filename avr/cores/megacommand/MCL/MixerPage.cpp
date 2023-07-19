@@ -561,7 +561,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
                    midi_device->muteTrack(i, mute_state);
                    if (current_mute_set == 255) {
-                     break;
+                     continue;
                    }
                    uint8_t state = IS_BIT_SET16(
                        mute_sets[!is_md_device].mutes[current_mute_set], i);
