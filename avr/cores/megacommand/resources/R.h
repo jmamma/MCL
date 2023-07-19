@@ -111,10 +111,10 @@ extern const unsigned char __R_icons_logo[] PROGMEM;
 struct __T_icons_logo {
   union {
     unsigned char metronome_gif_data[0];
-    char zz__metronome_gif_data[450];
+    char zz__metronome_gif_data[360];
   };
-  static constexpr size_t countof_metronome_gif_data = 450 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_metronome_gif_data = 450;
+  static constexpr size_t countof_metronome_gif_data = 360 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_metronome_gif_data = 360;
   union {
     unsigned char monomachine_gif_data[0];
     char zz__monomachine_gif_data[270];
@@ -193,7 +193,7 @@ struct __T_icons_logo {
   };
   static constexpr size_t countof_metronome_gif = 13 / sizeof(MCLGIF);
   static constexpr size_t sizeofof_metronome_gif = 13;
-  static constexpr size_t __total_size = 1721;
+  static constexpr size_t __total_size = 1631;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;
