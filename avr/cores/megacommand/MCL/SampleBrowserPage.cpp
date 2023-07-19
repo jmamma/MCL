@@ -29,6 +29,7 @@ void SampleBrowserPage::display() {
     if (clock_diff(FileBrowserPage::selection_change_clock, slowclock) < 200) {
       goto end;
     }
+    FileBrowserPage::selection_change = false;
     char temp_entry[FILE_ENTRY_SIZE];
 
     get_entry(encoders[1]->getValue(), temp_entry);
@@ -79,6 +80,7 @@ void SampleBrowserPage::display() {
         size = tmp_file.size();
         tmp_file.close();
       }
+      else { goto end; }
       oled_display.setCursor(0, 30);
       if (size < 1024) {
        oled_display.print(size);
@@ -90,8 +92,8 @@ void SampleBrowserPage::display() {
       }
     }
   }
-end:
   FileBrowserPage::selection_change = false;
+end:
   draw_filebrowser();
   oled_display.display();
 }
