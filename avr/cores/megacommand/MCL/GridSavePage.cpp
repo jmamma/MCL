@@ -157,7 +157,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     track_select_array_from_type_select(track_select_array);
 
     oled_display.textbox("SAVE GROUPS", "");
-    oled_display.display();
+    //oled_display.display();
 
     uint8_t save_mode = SAVE_SEQ;
 
