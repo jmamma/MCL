@@ -273,7 +273,7 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.setFont(oldfont);
 }
 
-void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
+void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight) {
   bool vert_flip = false;
   bool horiz_flip = false;
   uint8_t image_w = 11;
@@ -324,6 +324,8 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value) {
 
   oled_display.drawBitmap(x, y, icon, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
+
+  if (highlight) { oled_display.fillRect(x, y,11,11,INVERT); }
 }
 
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
@@ -448,8 +450,8 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   y += 2;
 
   draw_encoder(x, y, value);
+  if (highlight) { oled_display.fillRect(x - 2, 0, 15,20,INVERT); }
 
-  if (highlight) { oled_display.fillRect(x - 2,0,15,20,INVERT); }
   oled_display.setFont(oldfont);
 }
 

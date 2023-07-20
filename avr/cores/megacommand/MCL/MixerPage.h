@@ -51,6 +51,9 @@ public:
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);
 
   MuteSet mute_sets[2];
+  uint8_t perf_locks[4][4];
+
+  uint8_t perf_locks_temp[4];
 
   uint8_t get_mute_set(uint8_t key);
 
@@ -59,16 +62,20 @@ public:
       : LightPage(e1, e2, e3, e4) {
         midi_device = &MD;
         memset(mute_sets,0xFF,sizeof(mute_sets));
+        memset(perf_locks,0xFF,sizeof(perf_locks));
       }
   void adjust_param(EncoderParent *enc, uint8_t param);
 
   void draw_levels();
+  void redraw();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
   void disable_record_mutes();
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state);
   void populate_mute_set();
+
+  void load_perf_locks(uint8_t state);
 
   //Handled in MCLSeq
   void onNoteOnCallback_Midi(uint8_t *msg);

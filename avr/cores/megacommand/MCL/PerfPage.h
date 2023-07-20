@@ -56,6 +56,7 @@ public:
   void config_encoder_range(uint8_t i);
 
   void encoder_check();
+  void encoder_send();
 
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);

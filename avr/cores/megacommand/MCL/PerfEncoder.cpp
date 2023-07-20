@@ -58,9 +58,6 @@ void PerfEncoder::send() {
 int PerfEncoder::update(encoder_t *enc) {
   MCLEncoder::update(enc);
   // Update all params
-  if (hasChanged()) {
-    send();
-  }
   return cur;
 }
 

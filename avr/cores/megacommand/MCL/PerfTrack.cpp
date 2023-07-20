@@ -25,6 +25,7 @@ void PerfTrack::get_perf() {
   DEBUG_PRINTLN(sizeof(scenes));
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
   memcpy(mute_sets,mixer_page.mute_sets, sizeof(mute_sets));
+  memcpy(perf_locks,mixer_page.perf_locks, sizeof(perf_locks));
 }
 
 
@@ -44,6 +45,7 @@ void PerfTrack::load_perf() {
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
  memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets));
+ memcpy(mixer_page.perf_locks, perf_locks, sizeof(perf_locks));
 }
 
 void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {

@@ -65,7 +65,7 @@ public:
   void clear_leftpane();
   void clear_rightpane();
 
-  void draw_encoder(uint8_t x, uint8_t y, uint8_t value);
+  void draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight = false);
   void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
 
   bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);

@@ -17,6 +17,14 @@ void PerfPage::setup() {
   perf_encoders[1] = &perf_param2;
   perf_encoders[2] = &perf_param3;
   perf_encoders[3] = &perf_param4;
+
+  perf_param2.active_scene_a = 2;
+  perf_param2.active_scene_b = 3;
+  perf_param3.active_scene_a = 4;
+  perf_param3.active_scene_b = 5;
+  perf_param4.active_scene_a = 6;
+  perf_param4.active_scene_b = 7;
+
   isSetup = true;
 }
 
@@ -199,6 +207,7 @@ void PerfPage::loop() {
     return;
   }
   func_enc_check();
+  encoder_send();
   update_params();
 }
 
@@ -297,7 +306,11 @@ void PerfPage::display() {
 
 
 void PerfPage::encoder_check() {
-  if (GUI.currentPage() == this) return;
+  if (GUI.currentPage() == this || mcl.currentPage() == MIXER_PAGE) return;
+  encoder_send();
+}
+
+void PerfPage::encoder_send() {
   for (uint8_t i = 0; i < 4; i++) {
     if (perf_encoders[i]->hasChanged()) { perf_encoders[i]->send(); }
   }
