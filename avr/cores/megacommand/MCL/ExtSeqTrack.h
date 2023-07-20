@@ -276,31 +276,14 @@ public:
     }
   }
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
-    if (IS_BIT_SET(*buf, 0)) {
-      uart->sendNoteOff(channel, offset, 0);
+    uint8_t count = 0;
+    while (*buf) {
+      if (*buf & 1) {
+         uart->sendNoteOff(channel, offset + count, 0);
+      }
+      count++;
+      *buf >>= 1;
     }
-    if (IS_BIT_SET(*buf, 1)) {
-      uart->sendNoteOff(channel, offset + 1, 0);
-    }
-    if (IS_BIT_SET(*buf, 2)) {
-      uart->sendNoteOff(channel, offset + 2, 0);
-    }
-    if (IS_BIT_SET(*buf, 3)) {
-      uart->sendNoteOff(channel, offset + 3, 0);
-    }
-    if (IS_BIT_SET(*buf, 4)) {
-      uart->sendNoteOff(channel, offset + 4, 0);
-    }
-    if (IS_BIT_SET(*buf, 5)) {
-      uart->sendNoteOff(channel, offset + 5, 0);
-    }
-    if (IS_BIT_SET(*buf, 6)) {
-      uart->sendNoteOff(channel, offset + 6, 0);
-    }
-    if (IS_BIT_SET(*buf, 7)) {
-      uart->sendNoteOff(channel, offset + 7, 0);
-    }
-    *buf = 0;
   }
 
   void rotate_left() { modify_track(DIR_LEFT); }
