@@ -187,7 +187,6 @@ ISR(TIMER1_COMPA_vect) {
         mcl_seq.seq();
         MidiUartParent::handle_midi_lock = _midi_lock_tmp;
         MidiClock.inCallback = false;
-        //MidiClock.callCallbacks();
       }
     }
   }

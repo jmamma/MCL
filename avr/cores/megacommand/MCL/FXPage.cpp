@@ -123,43 +123,6 @@ void FXPage::display() {
   oled_display.setFont(oldfont);
 }
 
-void FXPage::onControlChangeCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
-  // If external keyboard controlling MD pitch, send parameter updates
-  // to all polyphonic tracks
-  uint8_t param_true = 0;
-
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) {
-    return;
-  }
-}
-
-void FXPage::setup_callbacks() {
-  if (midi_state) {
-    return;
-  }
-  Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&FXPage::onControlChangeCallback_Midi);
-
-  midi_state = true;
-}
-
-void FXPage::remove_callbacks() {
-  if (!midi_state) {
-    return;
-  }
-
-  Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&FXPage::onControlChangeCallback_Midi);
-
-  midi_state = false;
-}
-
 bool FXPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
     uint8_t track = event->source - 128;
