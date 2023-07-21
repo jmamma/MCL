@@ -36,6 +36,11 @@
 
 #define UART1_PORT 1
 
+// Sequencer editing constants
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+#define DIR_REVERSE 2
+
 class SeqTrack_270 {};
 
 class SlideData {

@@ -24,11 +24,6 @@
 
 #define MD_KITBUF_POS 63
 
-// Sequencer editing constants
-#define DIR_LEFT 0
-#define DIR_RIGHT 1
-#define DIR_REVERSE 2
-
 extern void mcl_setup();
 
 enum PageIndex {

@@ -4,8 +4,9 @@
 #define MDSEQTRACK_H__
 
 #include "MD.h"
-#include "MDSeqTrackData.h"
 #include "SeqTrack.h"
+#include "MDSeqTrackData.h"
+#include "DeviceTrack.h"
 
 #define UART1_PORT 1
 

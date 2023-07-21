@@ -9,7 +9,6 @@
 #include "WProgram.h"
 #include "midi-common.h"
 #include <inttypes.h>
-
 /**
  * \addtogroup Midi
  *
@@ -126,10 +125,12 @@ public:
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiStopCallbacks;
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> onMidiContinueCallbacks;
 
+  /*
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on192Callbacks;
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on96Callbacks;
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on32Callbacks;
   CallbackVector1<ClockCallback, NUM_CLOCK_CALLBACKS, uint32_t> on16Callbacks;
+  */
 
   void addOnMidiStartImmediateCallback(ClockCallback *obj,
                                        midi_clock_callback_ptr_t func) {
@@ -176,6 +177,7 @@ public:
   void removeOnMidiContinueCallback(ClockCallback *obj) {
     onMidiContinueCallbacks.remove(obj);
   }
+/*
   void addOn192Callback(ClockCallback *obj, midi_clock_callback_ptr_t func) {
     on192Callbacks.add(obj, func);
   }
@@ -207,11 +209,12 @@ public:
     on16Callbacks.remove(obj, func);
   }
   void removeOn16Callback(ClockCallback *obj) { on16Callbacks.remove(obj); }
-
+*/
   ALWAYS_INLINE() void init();
 
   volatile bool inCallback = false;
 
+  /*
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)
       return;
@@ -229,7 +232,6 @@ public:
     MidiUartParent::handle_midi_lock = 1;
 
     sei();
-
     on192Callbacks.call(div192th_counter);
 
     if (isMidiEvent) {
@@ -243,11 +245,10 @@ public:
         on32Callbacks.call(div32th_counter);
       }
     }
-
     inCallback = false;
     SREG = _irqlock_tmp;
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
-  }
+  }*/
 
   ALWAYS_INLINE() void handleImmediateClock() {
     // if (clock > clock_last_time) {

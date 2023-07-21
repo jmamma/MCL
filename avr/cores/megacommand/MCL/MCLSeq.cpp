@@ -53,20 +53,6 @@ void MCLSeq::setup() {
   midi_events.setup_callbacks();
 };
 
-void MCLSeq::enable() {
-  if (state) {
-    return;
-  }
-  MidiClock.addOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
-  state = true;
-}
-void MCLSeq::disable() {
-  if (!state) {
-    return;
-  }
-  MidiClock.removeOn192Callback(this, (midi_clock_callback_ptr_t)&MCLSeq::seq);
-  state = false;
-}
 // restore kit params
 void MCLSeq::update_kit_params() {
 #ifdef LFO_TRACKS
@@ -170,6 +156,7 @@ void MCLSeq::onMidiStopCallback() {
 }
 
 void MCLSeq::seq() {
+  if (!state) { return; }
 
   MidiUartParent *uart;
   MidiUartParent *uart2;

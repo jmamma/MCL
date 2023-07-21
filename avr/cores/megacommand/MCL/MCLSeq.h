@@ -2,12 +2,16 @@
 
 #pragma once
 
-#include "LFOSeqTrack.h"
+#include "MCLMemory.h"
+#include "MidiClock.h"
+#include "Midi.h"
+
 #include "MDSeqTrack.h"
-#include "ExtSeqTrack.h"
+#include "LFOSeqTrack.h"
 #include "ArpSeqTrack.h"
-#include "MDFXSeqTrack.h"
-//#include "MDTrack.h"
+#include "ExtSeqTrack.h"
+#include "MDFXseqTrack.h"
+
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
@@ -61,11 +65,13 @@ public:
   MDFXSeqTrack mdfx_track;
 
   MCLSeqMidiEvents midi_events;
+
   bool state = false;
 
+  void enable() { state = true; }
+  void disable() { state = false; }
+
   void setup();
-  void enable();
-  void disable();
 
   uint8_t find_ext_track(uint8_t channel);
 
@@ -79,4 +85,3 @@ public:
 };
 
 extern MCLSeq mcl_seq;
-
