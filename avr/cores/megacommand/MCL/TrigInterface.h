@@ -23,6 +23,7 @@
 #define MDX_KEY_SCALE 0x2A
 #define MDX_KEY_MUTE 0x2B
 #define MDX_KEY_SONG 0x2C
+#define MDX_KEY_EXTENDED 0x2D
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
 #define MDX_KEY_STOP 0x32
