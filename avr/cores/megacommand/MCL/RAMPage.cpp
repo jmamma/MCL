@@ -235,7 +235,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
       }
       case 6: {
         uint8_t t;
-        t = random(0, slices);
+        t = get_random(slices);
         trk.set_track_locks_i(n, 0, sample_inc * (t) + 0);
         uint8_t val = (sample_inc) * (t + 1) + 0;
         trk.set_track_locks_i(n, 1, val);

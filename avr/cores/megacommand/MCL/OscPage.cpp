@@ -8,7 +8,7 @@ uint32_t OscPage::exploit_delay_clock = 0;
 
 void OscPage::setup() {
   for (uint8_t i = 0; i < 16; i++) {
-    usr_values[i] = random(127);
+    usr_values[i] = get_random(127);
   }
 }
 
