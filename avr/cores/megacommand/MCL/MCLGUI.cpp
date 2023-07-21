@@ -462,27 +462,28 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setTextColor(WHITE);
   SeqTrack seq_track;
   uint8_t timing_mid = seq_track.get_timing_mid(speed);
-  uint8_t heights_len;
   uint8_t degrees = timing_mid * 2;
   uint8_t heights[16];
   // Triplets
+
+  uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
+  uint8_t heights_triplets[16] = {11, 2, 4, 8, 6,  10, 6, 2,
+                                    10, 2, 6, 8, 10, 4,  6, 2};
+  uint8_t heights_triplets2[8] = {11, 4, 8, 10, 2, 8, 4, 2};
+  uint8_t heights_highres[12] = {11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+
+  uint8_t *h = heights_highres;
+  uint8_t heights_len = 12;
+
   if (speed == SEQ_SPEED_2X) {
-    uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
-    memcpy(&heights, &heights_lowres, 6);
+    h = heights_lowres;
     heights_len = 6;
   } else if (speed == SEQ_SPEED_3_4X) {
-    uint8_t heights_triplets[16] = {11, 2, 4, 8, 6,  10, 6, 2,
-                                    10, 2, 6, 8, 10, 4,  6, 2};
-    memcpy(&heights, &heights_triplets, 16);
+    h = heights_triplets;
     heights_len = 16;
   } else if (speed == SEQ_SPEED_3_2X) {
-    uint8_t heights_triplets2[8] = {11, 4, 8, 10, 2, 8, 4, 2};
-    memcpy(&heights, &heights_triplets2, 8);
+    h = heights_triplets2;
     heights_len = 8;
-  } else {
-    uint8_t heights_highres[12] = {11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
-    memcpy(&heights, &heights_highres, 12);
-    heights_len = 12;
   }
   uint8_t y_pos = 11;
   uint8_t a = 0;
@@ -512,16 +513,16 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setCursor(x_pos + 34, 10);
   oled_display.print(F("uTIMING: "));
   oled_display.print(K);
-  oled_display.drawLine(x, y_pos + heights[0], x + w, y_pos + heights[0],
+  oled_display.drawLine(x, y_pos + h[0], x + w, y_pos + h[0],
                         WHITE);
   for (uint8_t n = 0; n <= degrees; n++) {
-    oled_display.drawLine(x, y_pos + heights[0], x,
-                          y_pos + heights[0] - heights[a], WHITE);
+    oled_display.drawLine(x, y_pos + h[0], x,
+                          y_pos + h[0] - h[a], WHITE);
     a++;
 
     if (n == timing) {
-      oled_display.fillRect(x - 1, y_pos + heights[0] + 3, 3, 3, WHITE);
-      oled_display.drawPixel(x, y_pos + heights[0] + 2, WHITE);
+      oled_display.fillRect(x - 1, y_pos + h[0] + 3, 3, 3, WHITE);
+      oled_display.drawPixel(x, y_pos + h[0] + 2, WHITE);
     }
 
     if (a == heights_len) {
