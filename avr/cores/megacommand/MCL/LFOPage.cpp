@@ -97,33 +97,17 @@ void LFOPage::loop() {
     config_encoder_range(2);
 
     if (encoders[0]->hasChanged()) {
-      USE_LOCK();
-      SET_LOCK();
       lfo_track->params[0].dest = encoders[0]->cur;
-      CLEAR_LOCK();
     }
     if (encoders[1]->hasChanged()) {
-      USE_LOCK();
-      SET_LOCK();
       lfo_track->params[0].param = encoders[1]->cur;
-      //  lfo_track->params[0].offset = lfo_track->params[0].get_param_offset(
-      //     encoders[0]->cur, encoders[1]->cur);
-      CLEAR_LOCK();
     }
 
     if (encoders[2]->hasChanged()) {
-      USE_LOCK();
-      SET_LOCK();
       lfo_track->params[1].dest = encoders[2]->cur;
-      CLEAR_LOCK();
     }
     if (encoders[3]->hasChanged()) {
-      USE_LOCK();
-      SET_LOCK();
       lfo_track->params[1].param = encoders[3]->cur;
-      //  lfo_track->params[1].offset = lfo_track->params[1].get_param_offset(
-      //     encoders[2]->cur, encoders[3]->cur);
-      CLEAR_LOCK();
     }
   }
   // wav_tables need to be recalculated when depth or waveform changes.

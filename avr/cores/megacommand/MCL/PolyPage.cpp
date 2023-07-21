@@ -22,22 +22,23 @@ void PolyPage::cleanup() {
 void PolyPage::draw_mask() {
   for (int i = 0; i < 16; i++) {
 
+    uint8_t x = i * 8;
     if (note_interface.is_note(i)) {
 
-      oled_display.fillRect(0 + i * 8, 2, 6, 6, WHITE);
+      oled_display.fillRect(x, 2, 6, 6, WHITE);
     }
 
     else if (IS_BIT_SET16(*poly_mask, i)) {
 
-      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
-      oled_display.drawRect(0 + i * 8, 2, 6, 6, WHITE);
+      oled_display.fillRect(x, 2, 6, 6, BLACK);
+      oled_display.drawRect(x, 2, 6, 6, WHITE);
 
     }
 
     else {
 
-      oled_display.fillRect(0 + i * 8, 2, 6, 6, BLACK);
-      oled_display.drawLine(+i * 8, 5, 5 + (i * 8), 5, WHITE);
+      oled_display.fillRect(x, 2, 6, 6, BLACK);
+      oled_display.drawLine(x, 5, 5 + x, 5, WHITE);
     }
   }
 }
