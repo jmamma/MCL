@@ -271,12 +271,6 @@ struct __T_icons_page {
   static constexpr size_t countof_icon_wavd = 57 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_wavd = 57;
   union {
-    unsigned char icon_loudness[0];
-    char zz__icon_loudness[48];
-  };
-  static constexpr size_t countof_icon_loudness = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_loudness = 48;
-  union {
     unsigned char icon_lfo[0];
     char zz__icon_lfo[72];
   };
@@ -288,7 +282,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
-  static constexpr size_t __total_size = 954;
+  static constexpr size_t __total_size = 906;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
