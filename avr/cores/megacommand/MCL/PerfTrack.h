@@ -27,8 +27,10 @@ class PerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
   PerfScene scenes[NUM_SCENES];
+  //Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
+  //
 };
 
 class PerfTrack : public AUXTrack, public PerfTrackData {
