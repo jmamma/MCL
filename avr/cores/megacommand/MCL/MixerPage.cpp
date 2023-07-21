@@ -96,6 +96,8 @@ void MixerPage::load_perf_locks(uint8_t state) {
     uint8_t val = perf_locks[state][n];
     if (val < 128) {
       encoders[n]->cur = val;
+      ((PerfEncoder*)encoders[n])->send();
+      encoders[n]->old = encoders[n]->cur;
     }
   }
 }
@@ -104,6 +106,7 @@ void MixerPage::loop() {
   constexpr int timeout = 1500;
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
+
 
   if (preview_mute_set != 255 && note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
@@ -116,6 +119,7 @@ void MixerPage::loop() {
       }
     }
   }
+
   perf_page.encoder_send();
 
   if (draw_encoders && trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -413,7 +417,7 @@ void MixerPage::populate_mute_set() {
 }
 
 void MixerPage::switch_mute_set(uint8_t state) {
-  load_perf_locks(state);
+  if (state < 4) { load_perf_locks(state); }
 
   if (current_mute_set == state) {
     return;
@@ -768,12 +772,15 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
   if (preview_mute_set != 255) {
     if (event->source >= Buttons.ENCODER1 && event->source <= Buttons.ENCODER4) {
-      uint8_t set = event->source - Buttons.ENCODER1;
+      uint8_t b = event->source - Buttons.ENCODER1;
       if ((event)->mask & EVENT_BUTTON_RELEASED) {
-        perf_locks[preview_mute_set][set] = 255;
+        perf_locks[preview_mute_set][b] = 255;
       }
       if ((event)->mask & EVENT_BUTTON_PRESSED) {
-        perf_locks[preview_mute_set][set] = encoders[set]->cur;
+        if (perf_locks[preview_mute_set][b] == 255) {
+          GUI.ignoreNextEvent(event->source);
+          perf_locks[preview_mute_set][b] = encoders[b]->cur;
+        }
       }
       return true;
     }
