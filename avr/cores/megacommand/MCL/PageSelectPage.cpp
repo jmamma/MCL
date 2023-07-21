@@ -29,7 +29,7 @@ static PageIndex get_page(uint8_t pageidx, char *str) {
     return R.page_entries->Entries[pageidx].Page;
   } else {
     if (str) {
-      strncpy(str, "----", 5);
+      strcpy(str, "----");
     }
     return 255;
   }
@@ -69,7 +69,7 @@ static void get_category_name(uint8_t page_number, char *str) {
 
 get_category_name_fail:
   if (str) {
-    strncpy(str, "----", 5);
+    strcpy(str, "----");
   }
   return;
 }

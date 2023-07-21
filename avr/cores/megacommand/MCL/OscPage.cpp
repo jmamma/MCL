@@ -281,7 +281,6 @@ void OscPage::draw_usr() {
 
 void OscPage::draw_levels() {
   uint8_t scaled_level;
-  char str[17] = "                ";
   uint8_t x = 64;
   uint8_t w = 128 - x;
   UsrOsc usr_osc(w);
