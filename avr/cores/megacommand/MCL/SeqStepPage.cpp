@@ -36,7 +36,9 @@ void SeqStepPage::config() {
 }
 
 void SeqStepPage::config_encoders() {
-  if (show_seq_menu || show_step_menu) { return; }
+  if (show_seq_menu || show_step_menu) {
+    return;
+  }
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   seq_param3.old = seq_param3.cur;
@@ -536,15 +538,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         break;
       }
-      case MDX_KEY_YES: {
-        if (step == 255) {
-          return true;
-        }
-        active_track.send_parameter_locks(step, true);
-        reset_on_release = true;
-        MD.triggerTrack(last_md_track, 127);
-        break;
-      }
       case MDX_KEY_NO: {
         if (mask_type != MASK_PATTERN) {
           mask_type = MASK_PATTERN;
@@ -586,35 +579,33 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         break;
       }
-      case MDX_KEY_UP: {
-        if (step == 255) {
-          return;
-        }
-        seq_param1.cur += 1;
-        return true;
       }
-      case MDX_KEY_DOWN: {
-        if (step == 255) {
-          return;
+      if (step != 255) {
+        switch (key) {
+        case MDX_KEY_YES: {
+          active_track.send_parameter_locks(step, true);
+          reset_on_release = true;
+          MD.triggerTrack(last_md_track, 127);
+          break;
         }
-        seq_param1.cur -= 1;
 
-        return;
-      }
-      case MDX_KEY_LEFT: {
-        if (step == 255) {
-          return;
+        case MDX_KEY_UP: {
+          seq_param1.cur += 1;
+          break;
         }
-        seq_param2.cur -= 1;
-        return true;
-      }
-      case MDX_KEY_RIGHT: {
-        if (step == 255) {
-          return;
+        case MDX_KEY_DOWN: {
+          seq_param1.cur -= 1;
+          break;
         }
-        seq_param2.cur += 1;
-        return true;
-      }
+        case MDX_KEY_LEFT: {
+          seq_param2.cur -= 1;
+          break;
+        }
+        case MDX_KEY_RIGHT: {
+          seq_param2.cur += 1;
+          break;
+        }
+        }
       }
       return true;
     }
