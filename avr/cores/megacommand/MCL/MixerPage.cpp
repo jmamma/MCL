@@ -694,10 +694,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-    seq_step_page.mute_mask = 0;
     //show_mixer_menu = true;
-    setLed2();
-    record_mutes_set(true);
+    if (note_interface.notes_on) {
+      setLed2();
+      record_mutes_set(true);
+    }
     return true;
   }
 
