@@ -36,6 +36,8 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 
   memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
   load_link_data(seq_track);
+  ext_track->clear_mutes();
+  ext_track->pgm_oneshot = 0;
   ext_track->set_length(seq_track->length);
   seq_track->mute_state = old_mute;
 #endif

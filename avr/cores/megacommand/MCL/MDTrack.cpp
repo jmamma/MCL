@@ -113,7 +113,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
 
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
   load_link_data(seq_track);
-  md_seq_track->oneshot_mask = 0;
+  md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);
 }
 
@@ -157,6 +157,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   uint32_t len;
 
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+  md_seq_track->store_mute_state();
 
   if (column != 255 && online == true) {
     get_machine_from_kit(column);
