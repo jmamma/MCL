@@ -96,7 +96,7 @@ void MixerPage::load_perf_locks(uint8_t state) {
     uint8_t val = perf_locks[state][n];
     if (val < 128) {
       encoders[n]->cur = val;
-      ((PerfEncoder*)encoders[n])->send();
+      ((PerfEncoder *)encoders[n])->send();
       encoders[n]->old = encoders[n]->cur;
     }
   }
@@ -106,7 +106,6 @@ void MixerPage::loop() {
   constexpr int timeout = 1500;
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
-
 
   if (preview_mute_set != 255 && note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
@@ -417,11 +416,10 @@ void MixerPage::populate_mute_set() {
 }
 
 void MixerPage::switch_mute_set(uint8_t state) {
-  if (state < 4) { load_perf_locks(state); }
-
-  if (current_mute_set == state) {
-    return;
+  if (state < 4) {
+    load_perf_locks(state);
   }
+
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
@@ -498,6 +496,9 @@ void MixerPage::toggle_or_solo(bool solo) {
   for (int i = 0; i < len; i++) {
     bool note_on = note_interface.is_note_on(i);
     bool mute_state = false;
+    bool state =
+        IS_BIT_SET16(mute_sets[!is_md_device].mutes[current_mute_set], i);
+
     if (solo) {
       if (is_md_device) {
         if (mcl_seq.md_tracks[i].mute_state == note_on) {
@@ -511,11 +512,7 @@ void MixerPage::toggle_or_solo(bool solo) {
         }
       }
       midi_device->muteTrack(i, !note_on);
-      if (note_on == SEQ_MUTE_OFF) {
-        CLEAR_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
-      } else {
-        SET_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
-      }
+      state = note_on;
     } else if (note_on) {
       // TOGGLE
       if (is_md_device) {
@@ -526,18 +523,17 @@ void MixerPage::toggle_or_solo(bool solo) {
         mute_state = mcl_seq.ext_tracks[i].mute_state;
       }
       midi_device->muteTrack(i, mute_state);
-
-      if (current_mute_set == 255) {
-        continue;
-      }
-      uint8_t state =
-          IS_BIT_SET16(mute_sets[!is_md_device].mutes[current_mute_set], i);
-      if (state == SEQ_MUTE_ON) {
-        CLEAR_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
-      } else {
-        SET_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
-      }
     }
+  /*
+    if (current_mute_set == 255) {
+      continue;
+    }
+    if (state == SEQ_MUTE_ON) {
+      CLEAR_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
+    } else {
+      SET_BIT16(mute_sets[!is_md_device].mutes[current_mute_set], i);
+    }
+   */
   }
   oled_draw_mutes();
 }
@@ -569,27 +565,15 @@ bool MixerPage::handleEvent(gui_event_t *event) {
                                     ? (SeqTrack *)&mcl_seq.md_tracks[track]
                                     : (SeqTrack *)&mcl_seq.ext_tracks[track];
 
-          uint8_t mute_set = current_mute_set;
-          uint8_t state = 0;
-
-          if (preview_mute_set == 255) {
-            seq_track->toggle_mute();
-            midi_device->muteTrack(track, seq_track->mute_state);
-            state = seq_track->mute_state;
-            if (preview_mute_set == current_mute_set) {
-              goto update_mute_set;
-            }
-          } else {
-          update_mute_set:
-            mute_set = preview_mute_set;
-            state =
-                IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
-          }
+          uint8_t mute_set = preview_mute_set;
 
           if (mute_set == 255) {
+            seq_track->toggle_mute();
+            midi_device->muteTrack(track, seq_track->mute_state);
             return;
           }
 
+          bool state = IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
           if (state == SEQ_MUTE_ON) {
             CLEAR_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
           } else {
@@ -771,7 +755,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (preview_mute_set != 255) {
-    if (event->source >= Buttons.ENCODER1 && event->source <= Buttons.ENCODER4) {
+    if (event->source >= Buttons.ENCODER1 &&
+        event->source <= Buttons.ENCODER4) {
       uint8_t b = event->source - Buttons.ENCODER1;
       if ((event)->mask & EVENT_BUTTON_RELEASED) {
         perf_locks[preview_mute_set][b] = 255;
@@ -784,7 +769,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       return true;
     }
- }
+  }
 
   return false;
 }
