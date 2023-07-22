@@ -150,6 +150,7 @@ public:
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
+  uint64_t mute_mask[2];
   uint64_t ignore_notes[2];
   bool pgm_oneshot;
 
@@ -206,6 +207,8 @@ public:
   // clear_track_locks: if value != 255, delete specific lock event of value.
   // otherwise delete all locks matching track_param of any value
   bool del_track_locks(int16_t cur_x, uint8_t lock_idx, uint8_t value);
+  void clear_mutes();
+  void clear_track_locks();
   void clear_track_locks(uint8_t idx);
   bool clear_track_locks(uint8_t step, uint8_t track_param,
                          uint8_t value = 255);

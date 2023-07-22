@@ -486,7 +486,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 
   if (device == DEVICE_MD) {
     auto &active_track = mcl_seq.md_tracks[last_md_track];
-    uint64_t mask, lock_mask, oneshot_mask = 0, slide_mask = 0;
+    uint64_t mask, lock_mask, mute_mask = 0, slide_mask = 0;
     active_track.get_mask(&mask, MASK_PATTERN);
     uint64_t led_mask = 0;
 
@@ -500,8 +500,8 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       mask = lock_mask;
       break;
     case MASK_MUTE:
-      oneshot_mask = active_track.oneshot_mask;
-      led_mask = oneshot_mask;
+      mute_mask = active_track.mute_mask;
+      led_mask = mute_mask;
       break;
     case MASK_SLIDE:
       active_track.get_mask(&slide_mask, MASK_SLIDE);
@@ -510,7 +510,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     }
     shed_mask(led_mask, active_track.length, offset);
     draw_mask(offset, mask, active_track.step_count, active_track.length,
-              oneshot_mask, slide_mask, show_current_step);
+              mute_mask, slide_mask, show_current_step);
 
     if (recording)
       return;
@@ -807,9 +807,7 @@ void opt_clear_locks_handler() {
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
     if (opt_clear == 2) {
       oled_display.textbox("CLEAR ", "LOCKS");
-      for (uint8_t n = 0; n < NUM_LOCKS; n++) {
-        active_track.clear_track_locks(n);
-      }
+      active_track.clear_track_locks();
     }
     if (opt_clear == 1) {
       oled_display.textbox("CLEAR ", "LOCK");
@@ -1091,7 +1089,7 @@ void opt_paste_step_handler() {
 void opt_mute_step_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     if (note_interface.is_note_on(n)) {
-      TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].oneshot_mask,
+      TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].mute_mask,
                    n + SeqPage::page_select * 16);
     }
   }

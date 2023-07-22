@@ -72,7 +72,9 @@ public:
   void redraw();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
-  void disable_record_mutes();
+
+  void record_mutes_set(bool state);
+  void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state);
   void populate_mute_set();

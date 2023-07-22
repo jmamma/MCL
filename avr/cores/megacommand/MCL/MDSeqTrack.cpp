@@ -45,6 +45,13 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
   }
 }
 
+void MDSeqTrack::store_mute_state() {
+  for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+    if (IS_BIT_SET64(mute_mask, n)) { set_step(n,MASK_PATTERN, 0); set_step(n,MASK_LOCK, 0); }
+  }
+  clear_mutes();
+}
+
 void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
                            bool timing_adjust) {
   if (old_speed == 255) {
@@ -123,8 +130,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     uint8_t u = 0;
     uint8_t q = 0;
     uint8_t s = get_quantized_step(u, q);
-    if (mute_state == SEQ_MUTE_ON) { SET_BIT64(oneshot_mask, s); }
-    else { CLEAR_BIT64(oneshot_mask, s); }
+    SET_BIT64(mute_mask, s);
   }
 
   if ((mute_state == SEQ_MUTE_OFF) &&
@@ -305,7 +311,7 @@ void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
       }
       break;
     case MASK_MUTE:
-      if (IS_BIT_SET64(oneshot_mask, i)) {
+      if (IS_BIT_SET64(mute_mask, i)) {
         set_bit = true;
       }
       break;
@@ -323,7 +329,7 @@ bool MDSeqTrack::get_step(uint8_t step, uint8_t mask_type) const {
   case MASK_LOCK:
     return steps[step].locks_enabled;
   case MASK_MUTE:
-    return IS_BIT_SET64(oneshot_mask, step);
+    return IS_BIT_SET64(mute_mask, step);
   case MASK_SLIDE:
     return steps[step].slide;
   default:
@@ -341,9 +347,9 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
     break;
   case MASK_MUTE:
     if (val) {
-      SET_BIT64(oneshot_mask, step);
+      SET_BIT64(mute_mask, step);
     } else {
-      CLEAR_BIT64(oneshot_mask, step);
+      CLEAR_BIT64(mute_mask, step);
     }
     break;
   case MASK_SLIDE:
@@ -420,7 +426,7 @@ void MDSeqTrack::send_trig_inline() {
 uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
 
   bool send_trig = TRIG_FALSE;
-  if (IS_BIT_SET64(oneshot_mask, step_count)) {
+  if (IS_BIT_SET64(oneshot_mask, step_count) || IS_BIT_SET64(mute_mask, step_count)) {
     return TRIG_ONESHOT;
   }
   switch (condition) {
@@ -728,13 +734,19 @@ uint8_t MDSeqTrack::get_step_locks(uint8_t step) {
   return steps[step].locks_enabled ? steps[step].locks : 0;
 }
 
+void MDSeqTrack::clear_mutes() {
+  oneshot_mask = 0;
+  mute_mask = 0;
+}
+
 void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < NUM_MD_STEPS; c++) {
     steps[c].cond_id = 0;
     steps[c].cond_plock = 0;
     timing[c] = 0;
   }
-  oneshot_mask = 0;
+  clear_mutes();
+  ignore_step = 255;
 }
 
 void MDSeqTrack::clear_locks() {

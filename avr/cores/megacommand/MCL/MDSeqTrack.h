@@ -21,6 +21,7 @@ class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
 public:
 
   uint64_t oneshot_mask;
+  uint64_t mute_mask;
 
   static uint16_t gui_update;
   static uint16_t md_trig_mask;
@@ -67,6 +68,7 @@ public:
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
+  void clear_mutes();
   void clear_slide_data();
   void clear_step_locks(uint8_t step);
   // disable the step locks, but not remove them. so later can be re-activated.
