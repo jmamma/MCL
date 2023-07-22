@@ -1054,6 +1054,23 @@ bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
   return true;
 }
 
+void ExtSeqTrack::store_mute_state() {
+  uint8_t timing_mid = get_timing_mid();
+  for (uint8_t n = 0; n < NUM_EXT_STEPS; n++) {
+    if (IS_BIT_SET128_P(mute_mask, n)) {
+      uint16_t ev_idx, ev_end;
+      loc:
+      locate(n, ev_idx, ev_end);
+      for (uint8_t m = ev_idx; m < ev_end; m++) {
+        if (!events[m].is_lock && events[m].event_on) {
+           if (del_note(n * timing_mid + events[m].micro_timing - timing_mid, timing_mid, events[m].event_value)) { goto loc; }
+        }
+      }
+    }
+  }
+  clear_mutes();
+}
+
 void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
   uint8_t condition = 0;

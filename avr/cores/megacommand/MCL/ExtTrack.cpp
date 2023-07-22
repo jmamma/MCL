@@ -54,7 +54,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   if (grid == nullptr) { DEBUG_PRINTLN("grid is nullptr"); }
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-
+  //ext_track->store_mute_state();
 #ifdef EXT_TRACKS
   if (online) {
     get_track_from_sysex(column);

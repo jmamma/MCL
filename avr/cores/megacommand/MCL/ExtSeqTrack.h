@@ -214,6 +214,7 @@ public:
                          uint8_t value = 255);
   bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
   void clear_track();
+  void store_mute_state();
   void set_length(uint8_t len, bool expand = false);
   void re_sync();
   void reset_params();
