@@ -68,6 +68,7 @@ public:
   void record_track(uint8_t velocity);
   void record_track_locks(uint8_t track_param, uint8_t value);
   void record_track_pitch(uint8_t pitch);
+  void clear_mute();
   void clear_mutes();
   void clear_slide_data();
   void clear_step_locks(uint8_t step);

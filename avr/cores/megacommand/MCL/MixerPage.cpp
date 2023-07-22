@@ -358,8 +358,8 @@ void MixerPage::record_mutes_set(bool state) {
     bool is_md_device = (midi_device == &MD);
     for (uint8_t i = 0; i < 16; i++) {
         if (note_interface.is_note_on(i)) {
-           if (is_md_device) {  mcl_seq.md_tracks[i].record_mutes = state; if (!state) mcl_seq.md_tracks[i].clear_mutes(); }
-           else if (i < mcl_seq.num_ext_tracks) { mcl_seq.ext_tracks[i].record_mutes = state; if (!state) mcl_seq.ext_tracks[i].clear_mutes(); }
+           if (is_md_device) {  mcl_seq.md_tracks[i].record_mutes = state; if (!state) mcl_seq.md_tracks[i].clear_mute(); }
+           else if (i < mcl_seq.num_ext_tracks) { mcl_seq.ext_tracks[i].record_mutes = state; if (!state) mcl_seq.ext_tracks[i].clear_mute(); }
         }
     }
 }
@@ -368,10 +368,10 @@ void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
     if (n < mcl_seq.num_ext_tracks) {
       mcl_seq.ext_tracks[n].record_mutes = false;
-      if (clear) { mcl_seq.ext_tracks[n].clear_mutes(); }
+   `   if (clear) { mcl_seq.ext_tracks[n].clear_mute(); }
    }
     mcl_seq.md_tracks[n].record_mutes = false;
-    if (clear) { mcl_seq.md_tracks[n].clear_mutes(); }
+    if (clear) { mcl_seq.md_tracks[n].clear_mute(); }
   }
   if (!seq_step_page.recording) {
     clearLed2();

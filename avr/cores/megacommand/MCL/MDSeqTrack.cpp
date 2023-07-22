@@ -734,6 +734,10 @@ uint8_t MDSeqTrack::get_step_locks(uint8_t step) {
   return steps[step].locks_enabled ? steps[step].locks : 0;
 }
 
+void MDSeqTrack::clear_mute() {
+  mute_mask = 0;
+}
+
 void MDSeqTrack::clear_mutes() {
   oneshot_mask = 0;
   mute_mask = 0;

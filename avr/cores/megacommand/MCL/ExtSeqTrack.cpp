@@ -1120,6 +1120,10 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
   add_notes_on(step * timing_mid + utiming - timing_mid, note_num, velocity);
 }
 
+void ExtSeqTrack::clear_mute() {
+  memset(mute_mask,0,sizeof(mute_mask));
+}
+
 void ExtSeqTrack::clear_mutes() {
   memset(oneshot_mask,0,sizeof(oneshot_mask));
   memset(mute_mask,0,sizeof(mute_mask));
