@@ -512,7 +512,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
 
     uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
-    if (event->mask == EVENT_BUTTON_PRESSED && track <= len) {
+    if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
         if (show_mixer_menu || preview_mute_set != 255) {
 
@@ -524,7 +524,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
           //Toggle active mutes
           if (mute_set == 255) {
-            seq_track->toggle_mute();
+            if (is_md_device) { mcl_seq.md_tracks[track].toggle_mute(); }
+            else { mcl_seq.ext_tracks[track].toggle_mute(); }
             midi_device->muteTrack(track, seq_track->mute_state);
             return;
           }
