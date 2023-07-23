@@ -211,9 +211,9 @@ ALWAYS_INLINE() void gui_poll() {
   static bool inGui = false;
   if (inGui) {
     return;
-  } else {
-    inGui = true;
   }
+
+  inGui = true;
 
   uint16_t sr = SR165.read16();
   if (sr != oldsr) {
