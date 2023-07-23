@@ -449,14 +449,14 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
   again:
   uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
-
   DEBUG_DUMP(end_step);
   DEBUG_DUMP(end_utiming);
 
   if (end_step == step) {
     DEBUG_PRINTLN(F("ALERT start == end"));
     end_step = end_step + 1;
-    goto again;
+    if (mcl_cfg.rec_quant) { end_utiming = timing_mid; }
+    else { goto again; }
   }
 
   if (end_step >= length) {
