@@ -429,78 +429,16 @@ uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
   if (IS_BIT_SET64(oneshot_mask, step_count) || IS_BIT_SET64(mute_mask, step_count)) {
     return TRIG_ONESHOT;
   }
-  switch (condition) {
-  case 0:
-  case 1:
-    send_trig = TRIG_TRUE;
-    break;
-  case 2:
-    if (!IS_BIT_SET(iterations_8, 0)) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 3:
-    if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 6:
-    if (iterations_6 == 6) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 4:
-    if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 8:
-    if ((iterations_8 == 8)) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 5:
-    if (iterations_5 == 5) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 7:
-    if (iterations_7 == 7) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 9:
-    if (get_random_byte() <= 13) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 10:
-    if (get_random_byte() <= 32) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 11:
-    if (get_random_byte() <= 64) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 12:
-    if (get_random_byte() <= 96) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 13:
-    if (get_random_byte() <= 115) {
-      send_trig = TRIG_TRUE;
-    }
-    break;
-  case 14:
+  if (condition == 14) {
     if (!IS_BIT_SET64(oneshot_mask, step_count)) {
       SET_BIT64(oneshot_mask, step_count);
       send_trig = TRIG_TRUE;
     }
   }
-  return send_trig;
+  else {
+    send_trig = SeqTrack::conditional(condition);
+  }
+   return send_trig;
 }
 
 uint8_t MDSeqTrack::get_track_lock_implicit(uint8_t step, uint8_t param) {

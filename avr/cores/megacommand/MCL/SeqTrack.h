@@ -294,6 +294,7 @@ public:
       step_count++;
     }
   }
+  bool conditional(uint8_t condition);
 };
 
 class SeqSlideTrack : public SeqTrack {

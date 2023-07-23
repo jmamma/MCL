@@ -740,78 +740,18 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   if (condition > 64) {
     condition -= 64;
   }
-  bool send_note = false;
 
-  switch (condition) {
-  case 0:
-  case 1:
-    send_note = true;
-    break;
-  case 2:
-    if (!IS_BIT_SET(iterations_8, 0)) {
-      send_note = true;
-    }
-    break;
-  case 3:
-    if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      send_note = true;
-    }
-    break;
-  case 6:
-    if (iterations_6 == 6) {
-      send_note = true;
-    }
-    break;
-  case 4:
-    if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      send_note = true;
-    }
-    break;
-  case 8:
-    if (iterations_8 == 8) {
-      send_note = true;
-    }
-  case 5:
-    if (iterations_5 == 5) {
-      send_note = true;
-    }
-    break;
-  case 7:
-    if (iterations_7 == 7) {
-      send_note = true;
-    }
-    break;
-  case 9:
-    if (get_random_byte() <= 13) {
-      send_note = true;
-    }
-    break;
-  case 10:
-    if (get_random_byte() <= 32) {
-      send_note = true;
-    }
-    break;
-  case 11:
-    if (get_random_byte() <= 64) {
-      send_note = true;
-    }
-    break;
-  case 12:
-    if (get_random_byte() <= 96) {
-      send_note = true;
-    }
-    break;
-  case 13:
-    if (get_random_byte() <= 115) {
-      send_note = true;
-    }
-    break;
-  case 14:
+  bool send_note = false;
+  if (condition == 14) {
     if (!IS_BIT_SET128_P(oneshot_mask, step_count)) {
       SET_BIT128_P(oneshot_mask, step_count);
       send_note = true;
     }
   }
+  else {
+    send_note = SeqTrack::conditional(condition);
+  }
+
   if (send_note) { note_on(note, velocity); }
 }
 
