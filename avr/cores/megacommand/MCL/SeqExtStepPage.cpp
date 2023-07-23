@@ -396,7 +396,7 @@ void SeqExtStepPage::draw_pianoroll() {
           note_fov_end = (float)(note_end - fov_offset) * fov_pixels_per_tick;
         }
         //On screen notes to be no less than 2 pixels, regardless of zoom
-        if (note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
+        if (i < j && note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
         //if (note_fov_end <= note_fov_start) { note_fov_end = note_fov_start + 1; }
         uint8_t note_fov_y = fov_h - ((note_val - fov_y) * (fov_h / fov_notes));
         // Draw vertical projection
