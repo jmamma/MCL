@@ -180,7 +180,7 @@ void SeqExtStepPage::draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2,
   oled_display.drawLine(x1, y1 + 1, x2, y2 + 1, color);
 }
 
-bool SeqExtStepPage::draw_lockeditor() {
+void SeqExtStepPage::draw_lockeditor() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
 
@@ -195,8 +195,6 @@ bool SeqExtStepPage::draw_lockeditor() {
   uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
   uint8_t j = 0;
 
-  uint16_t event_count = active_track.event_count;
-
   for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
     /*    if (j > i) {
@@ -208,7 +206,6 @@ bool SeqExtStepPage::draw_lockeditor() {
         }*/
     ev_end += active_track.timing_buckets.get(i);
     for (; ev_idx != ev_end; ++ev_idx) {
-      if (active_track.event_count != event_count) { return false; }
       auto &ev = active_track.events[ev_idx];
 
       if (!ev.is_lock || (ev.lock_idx != pianoroll_mode - 1)) {
@@ -333,7 +330,6 @@ bool SeqExtStepPage::draw_lockeditor() {
   oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y - 2, WHITE);
   oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1 - 2, WHITE);
   oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2, WHITE);
-  return true;
 }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w) {
@@ -341,7 +337,7 @@ void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w) {
   oled_display.fillRect(x + 1, y + 1, w - 2, fov_h / fov_notes - 2, BLACK);
 }
 
-bool SeqExtStepPage::draw_pianoroll() {
+void SeqExtStepPage::draw_pianoroll() {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
 
@@ -357,16 +353,11 @@ bool SeqExtStepPage::draw_pianoroll() {
 
   uint16_t ev_idx = 0, ev_end = 0;
   uint8_t h = fov_h / fov_notes;
-
-  uint16_t event_count = active_track.event_count;
-    //  MidiUartParent::handle_midi_lock = 1;
   for (int i = 0; i < active_track.length; i++) {
     // Update bucket index range
-    uint8_t buckets = active_track.timing_buckets.get(i);
-    ev_end += buckets;
+    ev_end += active_track.timing_buckets.get(i);
 
     for (; ev_idx != ev_end; ++ev_idx) {
-      if (active_track.event_count != event_count) { return false; }
       auto &ev = active_track.events[ev_idx];
       int note_val = ev.event_value;
       // Check if note is note_on and is visible within fov vertical
@@ -461,8 +452,6 @@ bool SeqExtStepPage::draw_pianoroll() {
       }
     }
   }
-
-     // MidiUartParent::handle_midi_lock = 0;
   // Draw interactive cursor
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
   int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
@@ -477,7 +466,6 @@ bool SeqExtStepPage::draw_pianoroll() {
     oled_display.fillRect(draw_x + fov_cur_x, draw_y + fov_cur_y, fov_cur_w,
                         (fov_h / fov_notes), WHITE);
   }
-  return true;
 }
 
 void SeqExtStepPage::draw_viewport_minimap() {
@@ -757,7 +745,6 @@ void SeqExtStepPage::loop() {
 
 void SeqExtStepPage::display() {
 #ifdef EXT_TRACKS
-  again:
   oled_display.clearDisplay();
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
@@ -776,12 +763,12 @@ void SeqExtStepPage::display() {
     str[4] = 0;
     strcat(info1, str);
     strcpy(info2, "NOTE");
-    if (!draw_pianoroll()) { goto again; }
+    draw_pianoroll();
   } else {
     strcpy(info2, "LOCK  ");
     mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
     mcl_gui.put_value_at(lock_cur_y, info1);
-    if (!draw_lockeditor()) { goto again; }
+    draw_lockeditor();
   }
   draw_seq_pos();
 
