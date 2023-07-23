@@ -692,7 +692,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   // float div192th_time = 1.25 / tempo;
   // diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
-  float ms = (0.80 / 1.25) * tempo;
+  //float ms = (0.08 * 0.80) * tempo == 0.064 * tempo;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
@@ -712,7 +712,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       handleIncomingMidi();
-      if (((float)diff > 0.08 * 0.8 * tempo) && gui_update) {
+      if (((float)diff > 0.064 * tempo) && gui_update) {
         GUI.loop();
       }
     }
