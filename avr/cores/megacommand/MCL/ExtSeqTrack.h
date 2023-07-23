@@ -154,6 +154,7 @@ public:
   uint64_t ignore_notes[2];
   bool pgm_oneshot;
 
+  static uint8_t epoch;
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
 

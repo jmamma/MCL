@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+static uint8_t ExtSeqTrack::epoch = 0;
 
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
@@ -85,6 +86,7 @@ void ExtSeqTrack::remove_event(uint16_t index) {
   if (step < step_count) {
     cur_event_idx--;
   }
+  epoch++;
   --event_count;
 }
 
@@ -111,6 +113,7 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
     cur_event_idx++;
   }
   ++event_count;
+  epoch++;
   return idx;
 }
 
