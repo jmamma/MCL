@@ -104,8 +104,13 @@ void MCLGUI::draw_vertical_separator(uint8_t x) {
 
 void MCLGUI::draw_vertical_scrollbar(uint8_t x, uint8_t n_items,
                                      uint8_t n_window, uint8_t n_current) {
-  uint8_t length = round(((float)(n_window - 1) / (float)(n_items - 1)) * 32);
-  uint8_t y = round(((float)(n_current) / (float)(n_items - 1)) * 32);
+  //uint8_t length = round(((float)(n_window - 1) / (float)(n_items - 1)) * 32);
+  //uint8_t y = round(((float)(n_current) / (float)(n_items - 1)) * 32);
+
+  uint8_t length = 1 + ((uint16_t) (n_window - 1) * 32) / (n_items - 1);
+  uint8_t y = (((uint16_t) n_current * 32) / (n_items - 1));
+  if (y + length > 32) { length--; }
+
   mcl_gui.draw_vertical_separator(x + 1);
   oled_display.fillRect(x + 1, y + 1, 3, length - 2, BLACK);
   oled_display.drawRect(x, y, 5, length, WHITE);
