@@ -747,14 +747,13 @@ void SeqExtStepPage::display() {
 #ifdef EXT_TRACKS
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
-
-  begin:
+  uint8_t epoch = 0;
+  do {
   oled_display.clearDisplay();
   draw_viewport_minimap();
   draw_grid();
-
   mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
-  uint8_t epoch = active_track.epoch;
+  epoch = active_track.epoch;
   if (pianoroll_mode == 0) {
     MusicalNotes number_to_note;
     uint8_t oct = cur_y / 12;
@@ -772,7 +771,7 @@ void SeqExtStepPage::display() {
     mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
-  if (epoch != active_track.epoch) { goto begin; }
+  } while (epoch != ExtSeqTrack::epoch);
   draw_seq_pos();
 
   SeqPage::display();

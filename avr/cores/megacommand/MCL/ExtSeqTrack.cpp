@@ -1,5 +1,5 @@
 #include "MCL_impl.h"
-static uint8_t ExtSeqTrack::epoch = 0;
+uint8_t ExtSeqTrack::epoch = 0;
 
 void ExtSeqTrack::set_speed(uint8_t _speed) {
   uint8_t old_speed = speed;
