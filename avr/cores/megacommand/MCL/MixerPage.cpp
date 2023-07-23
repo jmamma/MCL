@@ -269,9 +269,10 @@ void MixerPage::display() {
     oled_draw_mutes();
   }
   else if (mute_set != 255 && mute_sets[!is_md_device].mutes[mute_set] != seq_step_page.mute_mask) {
-    MD.set_trigleds(mute_sets[!is_md_device].mutes[mute_set],
-                      TRIGLED_EXCLUSIVE);
-    seq_step_page.mute_mask = mute_sets[!is_md_device].mutes[mute_set];
+    uint16_t mask = mute_sets[!is_md_device].mutes[mute_set];
+    if (!is_md_device) { mask &= 0b111111; }
+    MD.set_trigleds(mask, TRIGLED_EXCLUSIVE);
+    seq_step_page.mute_mask = mask;
     oled_draw_mutes();
   }
   if (draw_encoders || preview_mute_set != 255) {
@@ -368,7 +369,7 @@ void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
     if (n < mcl_seq.num_ext_tracks) {
       mcl_seq.ext_tracks[n].record_mutes = false;
-   `   if (clear) { mcl_seq.ext_tracks[n].clear_mute(); }
+      if (clear) { mcl_seq.ext_tracks[n].clear_mute(); }
    }
     mcl_seq.md_tracks[n].record_mutes = false;
     if (clear) { mcl_seq.md_tracks[n].clear_mute(); }
@@ -452,6 +453,7 @@ uint8_t MixerPage::get_mute_set(uint8_t key) {
 
 void MixerPage::redraw() {
   redraw_mask = -1;
+  seq_step_page.mute_mask++;
   oled_display.clearDisplay();
   oled_draw_mutes();
 }
