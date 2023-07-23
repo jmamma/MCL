@@ -135,13 +135,14 @@ uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
 
   int8_t mod12 = mod12_counter - 1;
 
-  uint8_t step = step_count;
 
+  uint8_t step = step_count;
+/*
   if ((step == 0) && (mod12 < 0)) {
     mod12 += timing_mid;
     step = length - 1;
   }
-
+*/
   utiming = mod12 + timing_mid;
 
   if (quant) {
