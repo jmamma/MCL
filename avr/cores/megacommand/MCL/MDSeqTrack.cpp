@@ -858,6 +858,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(timing, timing + 1, length - 1);
     steps[length - 1] = step_buf;
     timing[length - 1] = timing_buf;
+    ROTATE_LEFT(mute_mask, 1);
     break;
   }
   case DIR_RIGHT: {
@@ -874,12 +875,14 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(timing + 1, timing, length - 1);
     steps[0] = step_buf;
     timing[0] = timing_buf;
+    ROTATE_RIGHT(mute_mask,1);
     break;
   }
   case DIR_REVERSE: {
     uint8_t rev_locks[NUM_MD_LOCK_SLOTS];
     memcpy(rev_locks, locks, sizeof(locks));
     uint16_t l = 0, r = 0;
+    mute_mask = 0; //unimplemented
     // reverse steps & locks
     for (int i = 0; i <= length / 2; ++i) {
       int j = length - i - 1;
@@ -898,6 +901,14 @@ void MDSeqTrack::modify_track(uint8_t dir) {
       timing_buf = timing[i];
       timing[i] = timing[j];
       timing[j] = timing_buf;
+      /*
+      bool a = IS_BIT_SET64(mute_mask, i);
+      bool b = IS_BIT_SET64(mute_mask, j);
+      if (a) { SET_BIT64(mute_mask, j); }
+      else { CLEAR_BIT64(mute_mask,j); }
+      if (b) { SET_BIT64(mute_mask, i); }
+      else { CLEAR_BIT64(mute_mask,i); }
+      */
     }
     break;
   }
