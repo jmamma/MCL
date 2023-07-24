@@ -1,3 +1,192 @@
+MCL 4.50 24/07/2023
+
+Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
+
+- Performance Page + Performance Controllers
+  A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
+  by 4 user programmable Performance Controllers (A,B,C,D).
+
+  Each Contoller can be assigned two scenes. Press either [LEFT] or
+  [RIGHT] and then a corresponding Scene Trig to assign the left-most and
+  right-most Scenes to the Controller.
+
+  Rotating a Perormance Controller will morph between values across the assigned scenes.
+  [ Func ] + Rotate for Controller hard pan.
+
+  Each scene can have up to 16 "Scene Locks". A Scene lock can be any MD
+  paramater, or any external MIDI CC paramater. To assign a lock to a scene,
+  hold the corresponding Scene Trig and rotate the desired parameter on the
+  MD or external MIDI.
+
+  Controllers A,B,C,D can be controlled externally by any MD parameter, or any
+  MIDI CC.
+
+  A parameter "LEARN" feature can be enable by setting Dest to "--" and Param
+  to "LEARN".
+
+  Performance Controller Names can be customized from the Performance Page's "Shift" menu.
+
+  A new slot "PF", has been addded to the Grid Y, slot 12.
+  Performance Controllers and their shared Scene data can be saved or loaded
+  to this slot.
+  Mixer Page, Mute Sets and Performance Controller Locks are also stored in
+  the PF.
+
+- Mixer Page:
+
+  The [Scale] button can be used to toggle between the MD or Ext MIDI tracks.
+
+  [Trig] + [Classic/Extended] is now Track Parameter Reset.
+
+  [Trig] + [YES] or [YES] + [Trig] to toggle mutes.
+
+  [Trig] + [NO] to solo tracks.
+
+  [Func] + [YES] to flip mutes.
+
+  [Trig] + [Global] record sequencer mutes.
+  [Trig] + [Kit] clear track's sequencer mutes.
+  [Global + Kit] clear all track's sequencer mutes.
+
+  The 4 Encoders of the Mixer Page are now Performance Controllers (A,B,C,D).
+
+  The Mixer Page now features 4 "Mute Sets" assigned to the MD's Arrow Keys.
+
+  To load a Mute Set, hold down an Arroy Key and press [YES]
+  To edit a Mute Set, hold down an Arrow Key and toggle Trig Keys.
+
+  Each Mute Set also includes Performance Controller Locks.
+
+  To set a Performance Controller lock, hold down an Arrow Key and rotate the
+  respective encoder.
+
+- Chromatic Page:
+
+  [Scale] button can be used to toggle between devices.
+
+  When the MIDI device is active, the MD's [Trig] keys can now be used to play External MIDI.
+
+  Sequencer menu option, TRANSPOSE renamed to KEY. Now show's note A,A#,B,B#,C etc..
+
+  Oct and Fine Tune values are now device indepenent.
+
+
+- Sequencer:
+
+  The MD's kit parameters are no longer updated when parameter locks or
+  LFO data is sent from MCL.
+
+  Improved track expansion. When a Track's length is increased, the existing
+  pattern  will be copied and filled across the new length.
+
+  Step menu has been deprecated.
+
+  Step mutes are now shown when editting the Pattern Mask.
+
+  [ Trig ] + [ No ] to toggle step mutes
+
+  Exiting Step Edit by pressing [ Record ] will now take you back to the last
+  MCL Page you were using.
+
+- Piano Roll
+
+  A number of bug fixes related to missing notes, or unpredictable note
+  length.
+
+  Quantization record could lead to incorrect note length.
+
+  Zoom is now cursor relative.
+
+  Added "CC REC" option to enable/disable recording of automation data.
+
+  The MD's scale menu can be used to set the speed and length of Ext MIDI tracks (up to
+  64 steps).
+
+  Program Change automation is now oneshot, and only a single change is
+  permitted per parameter.
+
+  Various GUI improvements.
+
+- Arpeggiator
+
+  Improved ARP Latch mode, Latch is reset upon next note when all keys are
+  released.
+
+  More ARP Speeds are available.
+
+  Arpeggiator can play on beat, or freely depending on "QUANT" Sequencer Menu
+  option.
+
+- LFO
+
+  The LFO performance has been improved.
+  The assignable Destinations now include External MIDI CCs.
+  Parameter Learn is supported: set Dest to "--" and Param to "LEARN".
+
+  An additional LFO sub page has been added to modify the LFO Offset for MIDI
+  CC parameters.
+
+- Grid Page
+
+  [ Scale ] button to toggle between Grids X and Y.
+
+  Slots selection can now extend across both Grids allowing Clear/Copy/Paste
+  commands to apply to both Grids simultaneously. This also includes slot
+  parameter updates.
+
+  Insert Rows option has been deprecated.
+
+  Added a throttle to the [YES] key to prevent accidental double fire.
+
+- Sound Browser
+
+  The functionality to Save and Load MD Sounds is now separated from Sample
+  Management.
+
+  The dedicated Sound Browser is accessible from the Sequencer Track Menu.
+
+- Sample Browser
+
+  GUI has been improved significantly to allow ease of navigation.
+  .WAV and .SYX formats are detected automatically.
+
+  File names increased to 32 characters. 256 files can be listed per directory.
+
+- Save:
+
+  Sequencer mutes are stored with MD tracks. Saving MD track will cause the
+  mute state to be applied to the active sequence and stored. where a mute is
+  present, the trig and lock mask will be removed/
+
+- Group Select
+
+  The Group Select menu has been updated.
+
+  Accessible by entering Load/Save page and holding [YES]
+
+  The Selectable Groups are now:
+    - MD, MIDI, PERFORMANCE, ROUTE, TEMPO.
+
+  The MD FX slot is now always loaded with MD group.
+
+  LFO and Performance Slots (PF) are loaded with the PERFORMANCE group.
+
+- Transitions + Slot Loading:
+
+  MDFX data is now cached ahead of time and loaded immediately on transtion.
+
+- Func + Ext
+
+  The MD's undokit is now synced per track. Previously all tracks were synced
+  to the undokit leading to unexpected behaviour when performing [ Func + Ext
+  ].
+
+  The MD's LEV values are no longer reset by [ Func + Ext ]
+
+- Page Select
+
+  Page Select layout has changed to accomodate the Performance Page.
+
 MCL 4.43 13/04/2023
 
 - Fixes
