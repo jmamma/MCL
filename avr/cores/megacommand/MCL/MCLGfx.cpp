@@ -28,10 +28,10 @@ void MCLGfx::draw_evil(unsigned char* evil) {
   oled_display.setCursor(x - 60, 20);
   oled_display.println("MACHINE IS O.K.");
 
-  oled_display.drawBitmap(x, 0, evil, 45, 32, BLACK);
+  oled_display.drawBitmap(x, 1, evil, 33, 31, BLACK);
   oled_display.display();
 }
-  delay(1000);
+  delay(2000);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(oldfont);
 }

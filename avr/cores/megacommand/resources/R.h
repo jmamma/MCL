@@ -6,17 +6,17 @@ extern const unsigned char __R_icons_boot[] PROGMEM;
 struct __T_icons_boot {
   union {
     unsigned char evilknievel_bitmap[0];
-    char zz__evilknievel_bitmap[192];
+    char zz__evilknievel_bitmap[155];
   };
-  static constexpr size_t countof_evilknievel_bitmap = 192 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_evilknievel_bitmap = 192;
+  static constexpr size_t countof_evilknievel_bitmap = 155 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_evilknievel_bitmap = 155;
   union {
     unsigned char mcl_logo_bitmap[0];
     char zz__mcl_logo_bitmap[152];
   };
   static constexpr size_t countof_mcl_logo_bitmap = 152 / sizeof(unsigned char);
   static constexpr size_t sizeofof_mcl_logo_bitmap = 152;
-  static constexpr size_t __total_size = 344;
+  static constexpr size_t __total_size = 307;
 };
 
 extern const unsigned char __R_icons_device[] PROGMEM;

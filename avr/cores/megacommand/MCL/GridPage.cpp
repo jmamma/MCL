@@ -899,7 +899,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
-        inc = 16;
+        inc = 4;
       }
       if (show_slot_menu) {
         switch (key) {
