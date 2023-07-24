@@ -144,7 +144,6 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         //              m  r   n  d  p  f  o
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
-        {"POLY CONFIG", 0, 0,  0, 0, POLY_PAGE, 0, 0},
     },
     0
 };

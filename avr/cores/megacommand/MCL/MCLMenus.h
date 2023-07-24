@@ -45,7 +45,7 @@ extern MenuPage<system_menu_page_N> system_page;
 constexpr size_t midi_config_page_N = 5;
 extern MenuPage<midi_config_page_N> midi_config_page;
 
-constexpr size_t md_config_page_N = 3;
+constexpr size_t md_config_page_N = 2;
 extern MenuPage<md_config_page_N> md_config_page;
 
 constexpr size_t mcl_config_page_N = 1;
