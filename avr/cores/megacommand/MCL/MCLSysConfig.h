@@ -48,7 +48,7 @@ public:
   uint8_t midi_forward_2;
   uint8_t midi_forward_usb;
 
-  uint8_t auto_save;
+  uint8_t rec_automation;
   uint8_t load_mode;
   uint8_t chain_queue_length;
   uint8_t chain_load_quant;

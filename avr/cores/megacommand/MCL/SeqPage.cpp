@@ -121,6 +121,7 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_AUTOMATION, false);
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, false);

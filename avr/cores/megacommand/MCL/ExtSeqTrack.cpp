@@ -810,7 +810,7 @@ uint8_t ExtSeqTrack::find_lock_idx(uint8_t param_id) {
 
 void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
                                      bool slide) {
-  if (step_count >= length) {
+  if (!mcl_cfg.rec_automation || step_count >= length) {
     return;
   }
 

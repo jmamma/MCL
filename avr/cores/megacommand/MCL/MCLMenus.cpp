@@ -98,7 +98,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 58
     &perf_page.page_mode,
     // 59
-    &perf_page.perf_id
+    &perf_page.perf_id,
+    // 60
+    &mcl_cfg.rec_automation,
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {

@@ -211,6 +211,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"REVERSE:",    0, 3,                   3,                   29, NULL_PAGE,  13, 27},
         {"POLYPHONY",   0, 0,                   0,                   0,  POLY_PAGE,  0,  0},
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
+        {"CC REC:",     0, 2,                   2,                   60, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
     },
     14

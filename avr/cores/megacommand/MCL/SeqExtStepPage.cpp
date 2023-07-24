@@ -620,6 +620,7 @@ void SeqExtStepPage::config_menu_entries() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_AUTOMATION, true);
 
   if (pianoroll_mode == 0) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);

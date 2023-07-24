@@ -134,7 +134,7 @@ bool MCLSysConfig::cfg_init() {
   midi_forward_2 = 0;
   midi_forward_usb = 0;
 
-  auto_save = 1;
+  rec_automation = 1;
   auto_normalize = 1;
   load_mode = LOAD_MANUAL;
   chain_queue_length = 1;

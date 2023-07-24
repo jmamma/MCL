@@ -35,7 +35,8 @@
 #define SEQ_MENU_REVERSE 19
 #define SEQ_MENU_POLY 20
 #define SEQ_MENU_QUANT 21
-#define SEQ_MENU_SOUND 22
+#define SEQ_MENU_AUTOMATION 22
+#define SEQ_MENU_SOUND 23
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;
