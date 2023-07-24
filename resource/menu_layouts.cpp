@@ -211,22 +211,10 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"REVERSE:",    0, 3,                   3,                   29, NULL_PAGE,  13, 27},
         {"POLYPHONY",   0, 0,                   0,                   0,  POLY_PAGE,  0,  0},
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
-        {"CC REC:",     0, 2,                   2,                   60, NULL_PAGE,  0,  25},
+        {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
     },
     14
-};
-
-menu_t<step_menu_page_N> step_menu_layout = {
-    "STP",
-    {
-        //             m  r  n  d   p  f   o
-        {"CLEAR:",     0, 2, 2, 30, NULL_PAGE, 15, 30},
-        {"COPY STEP",  0, 0, 0, 0,  NULL_PAGE, 16, 0},
-        {"PASTE STEP", 0, 0, 0, 0,  NULL_PAGE, 17, 0},
-        {"MUTE STEP",  0, 0, 0, 0,  NULL_PAGE, 18, 0},
-    },
-    19
 };
 
 menu_t<grid_slot_page_N> slot_menu_layout = {

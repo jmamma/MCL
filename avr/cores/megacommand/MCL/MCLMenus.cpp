@@ -54,7 +54,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &opt_copy, &opt_clear, &opt_paste, &opt_shift, &opt_reverse,
 
     // 30
-    &opt_clear_step,
+    &mcl_cfg.rec_automation,
 
     // 31
     &grid_page.grid_select_apply, &mcl_cfg.load_mode, &slot.link.loops,
@@ -99,8 +99,6 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &perf_page.page_mode,
     // 59
     &perf_page.perf_id,
-    // 60
-    &mcl_cfg.rec_automation,
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -124,12 +122,12 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     // 14
     seq_menu_handler,
     // 15
-    opt_clear_step_locks_handler,
-    opt_copy_step_handler_cb,
-    opt_paste_step_handler,
-    opt_mute_step_handler,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
     // 19
-    step_menu_handler,
+    nullptr,
     // 20
     rename_row,
     // 21
@@ -191,10 +189,6 @@ MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
 MenuPage<seq_menu_page_N> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
 MenuPage<perf_menu_page_N> perf_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
-
-MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
-MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<step_menu_page_N> step_menu_page(&step_menu_value_encoder, &step_menu_entry_encoder);
 
 MCLEncoder grid_slot_param1(0, 7, ENCODER_RES_PAT);
 MCLEncoder grid_slot_param2(0, 16, ENCODER_RES_PAT);

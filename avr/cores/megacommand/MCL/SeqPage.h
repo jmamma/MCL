@@ -63,7 +63,6 @@ extern void opt_paste_page_handler();
 extern void opt_clear_step_handler();
 
 extern void seq_menu_handler();
-extern void step_menu_handler();
 
 
 class MidiDevice;
@@ -91,7 +90,6 @@ public:
   static MidiDevice* midi_device;
 
   static bool show_seq_menu;
-  static bool show_step_menu;
   static bool toggle_device;
 
   static uint8_t last_midi_state;

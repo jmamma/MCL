@@ -94,7 +94,6 @@ void ResourceManager::restore_menu_layout_deps() {
 	ram_config_page.set_layout(R.menu_layouts->rampage1_menu_layout);
 	file_menu_page.set_layout(R.menu_layouts->file_menu_layout);
 	seq_menu_page.set_layout(R.menu_layouts->seq_menu_layout);
-	step_menu_page.set_layout(R.menu_layouts->step_menu_layout);
 	grid_slot_page.set_layout(R.menu_layouts->slot_menu_layout);
 	wavdesign_menu_page.set_layout(R.menu_layouts->wavdesign_menu_layout);
     md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);

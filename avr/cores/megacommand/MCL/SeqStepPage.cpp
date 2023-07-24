@@ -36,7 +36,7 @@ void SeqStepPage::config() {
 }
 
 void SeqStepPage::config_encoders() {
-  if (show_seq_menu || show_step_menu) {
+  if (show_seq_menu) {
     return;
   }
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
@@ -152,7 +152,7 @@ void SeqStepPage::display() {
 
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-      (!show_step_menu) && (tuning != NULL) && !(recording)) {
+      (tuning != NULL) && !(recording)) {
     uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur; // + tuning->base;
     SET_BIT64(note_mask, note);
@@ -172,7 +172,7 @@ void SeqStepPage::display() {
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-        (!show_step_menu) && (!recording)) {
+        (!recording)) {
 
       mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].speed,
                                seq_param2.cur);

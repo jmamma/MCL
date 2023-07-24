@@ -94,12 +94,6 @@ extern MCLEncoder seq_menu_entry_encoder;
 constexpr size_t seq_menu_page_N = 24;
 extern MenuPage<seq_menu_page_N> seq_menu_page;
 
-extern MCLEncoder step_menu_value_encoder;
-extern MCLEncoder step_menu_entry_encoder;
-
-constexpr size_t step_menu_page_N = 4;
-extern MenuPage<step_menu_page_N> step_menu_page;
-
 extern MCLEncoder grid_slot_param1;
 extern MCLEncoder grid_slot_param2;
 

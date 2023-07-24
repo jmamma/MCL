@@ -23,7 +23,6 @@ uint8_t SeqPage::slide = true;
 uint8_t SeqPage::md_micro = false;
 
 bool SeqPage::show_seq_menu = false;
-bool SeqPage::show_step_menu = false;
 bool SeqPage::toggle_device = true;
 
 uint16_t SeqPage::mute_mask = 0;
@@ -365,23 +364,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if ((note_interface.notes_count_on() != 0) && (!show_step_menu) &&
-        (mcl.currentPage() != SEQ_PTC_PAGE)) {
-      uint8_t note = 255;
-      note = note_interface.get_first_md_note();
-      if (note == 255) {
-        return false;
-      }
-      step_select = note;
-
-      opt_param1_capture = (MCLEncoder *)encoders[0];
-      opt_param2_capture = (MCLEncoder *)encoders[1];
-      encoders[0] = &step_menu_value_encoder;
-      encoders[1] = &step_menu_entry_encoder;
-      step_menu_page.init();
-      show_step_menu = true;
-      return true;
-    } else if (!show_seq_menu) {
+    if (!show_seq_menu) {
       show_seq_menu = true;
 
       if (midi_device == &MD) {
@@ -422,14 +405,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_length_handler();
         opt_channel_handler();
       }
-    } else if (show_step_menu) {
-      row_func =
-          step_menu_page.menu.get_row_function(step_menu_page.encoders[1]->cur);
     }
     if (row_func != NULL) {
       row_func();
       show_seq_menu = false;
-      show_step_menu = false;
       init();
       return true;
     }
@@ -437,13 +416,8 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       show_seq_menu = false;
       return true;
     }
-    if (show_step_menu && step_menu_page.enter()) {
-      show_step_menu = false;
-      return true;
-    }
 
     show_seq_menu = false;
-    show_step_menu = false;
     init_encoders_used_clock();
     init();
     return true;
@@ -1204,8 +1178,6 @@ void opt_reverse_track_handler() {
 
 void seq_menu_handler() {
 }
-void step_menu_handler() {
-}
 
 void SeqPage::config_as_trackedit() {
 
@@ -1246,8 +1218,6 @@ void SeqPage::loop() {
       seq_menu_value_encoder.cur = opt_trackid;
     }
     return;
-  } else if (show_step_menu) {
-    step_menu_page.loop();
   }
 }
 
@@ -1329,13 +1299,10 @@ void SeqPage::display() {
   //  draw info lines
   mcl_gui.draw_panel_labels(info1, info2);
 
-  if (show_seq_menu || show_step_menu) {
+  if (show_seq_menu) {
     constexpr uint8_t width = 52;
     oled_display.setFont(&TomThumb);
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
-    if (show_step_menu) {
-      step_menu_page.draw_menu(128 - width, 8, width);
-    }
     if (show_seq_menu) {
       seq_menu_page.draw_menu(128 - width, 8, width);
     }
