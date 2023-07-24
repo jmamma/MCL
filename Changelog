@@ -4,33 +4,32 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Performance Page + Performance Controllers
   A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
-  by 4 user programmable Performance Controllers (A,B,C,D).
+  between 4 user programmable Performance Controllers (A,B,C,D).
 
-  Each Controller can be assigned two scenes. Press either [LEFT] or
-  [RIGHT] and then a corresponding Scene Trig to assign the left-most and
-  right-most Scenes to the Controller.
+  Each Controller can be assigned two scenes. Press either [LEFT] or [RIGHT] and then
+  a corresponding Scene Trig to assign the left-most and right-most Scenes to the Controller.
 
   Rotating a Performance Controller will morph between values across the assigned scenes.
   [ Func ] + Rotate for Controller hard pan.
 
-  Each scene can have up to 16 "Scene Locks". A Scene lock can be any MD
-  parameter, or any external MIDI CC parameter. To assign a lock to a scene,
-  hold the corresponding Scene Trig and rotate the desired parameter on the
-  MD or external MIDI.
+  Each scene can have up to 16 "Scene Locks".
 
-  Controllers A,B,C,D can be controlled externally by any MD parameter, or any
-  MIDI CC.
+  A Scene lock can be any MD parameter, or any external MIDI CC parameter.
 
-  A parameter "LEARN" feature can be enable by setting Dest to "--" and Param
-  to "LEARN".
+  To assign a lock to a scene, hold the corresponding Scene Trig and rotate the desired
+  parameter on the MD or external MIDI.
+
+  Controllers A,B,C,D can be controlled externally by any MD parameter, or any MIDI CC.
+
+  A parameter "LEARN" feature can be enable by setting Dest to "--" and Param to "LEARN".
 
   Performance Controller Names can be customized from the Performance Page's "Shift" menu.
 
   A new slot "PF", has been added to the Grid Y, slot 12.
-  Performance Controllers and their shared Scene data can be saved or loaded
-  to this slot.
-  Mixer Page, Mute Sets and Performance Controller Locks are also stored in
-  the PF.
+
+  Performance Controllers and their shared Scene data can be saved or loaded to this slot.
+
+  Mixer Page, Mute Sets and Performance Controller Locks are also stored in the PF.
 
 - Mixer Page:
 
@@ -84,8 +83,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   [ Trig ] + [ No ] to toggle step mutes
 
-  Exiting Step Edit by pressing [ Record ] will now take you back to the last
-  MCL Page you were using.
+  Exiting Step Edit by pressing [ Record ] will now take you back to the last MCL Page.
 
 - Piano Roll
 
@@ -98,11 +96,9 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Added "CC REC" option to enable/disable recording of automation data.
 
-  The MD's scale menu can be used to set the speed and length of Ext MIDI tracks (up to
-  64 steps).
+  The MD's scale menu can be used to set the speed and length of Ext MIDI tracks (up to 64 steps).
 
-  Program Change automation is now oneshot, and only a single change is
-  permitted per parameter.
+  Program Change automation is now oneshot, and only a single change is permitted per parameter.
 
   Various GUI improvements.
 
@@ -113,29 +109,28 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   More ARP Speeds are available.
 
-  Arpeggiator can play on beat, or freely depending on "QUANT" Sequencer Menu
-  option.
+  Arpeggiator can play on beat, or freely depending on "QUANT" Sequencer Menu option.
 
 - LFO
 
   The LFO performance has been improved.
+
   The assignable Destinations now include External MIDI CCs.
+
   Parameter Learn is supported: set Dest to "--" and Param to "LEARN".
 
-  An additional LFO sub page has been added to modify the LFO Offset for MIDI
-  CC parameters.
+  An additional LFO sub page has been added to modify the LFO Offset for MIDI CC parameters.
 
 - Grid Page
 
   [ Scale ] button to toggle between Grids X and Y.
 
-  Slots selection can now extend across both Grids allowing Clear/Copy/Paste
-  commands to apply to both Grids simultaneously. This also includes slot
-  parameter updates.
+  Slots selection can now extend across both Grids allowing Clear/Copy/Paste commands to apply to
+  both Grids simultaneously. This also includes slot parameter updates.
 
   Insert Rows option has been deprecated.
 
-  Added a throttle to the [YES] key to prevent accidental double fire.
+  Added a throttle to the [YES] key to prevent accidental double tap.
 
 - Sound Browser
 
@@ -147,15 +142,15 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 - Sample Browser
 
   GUI has been improved significantly to allow ease of navigation.
+
   .WAV and .SYX formats are detected automatically.
 
   File names increased to 32 characters. 256 files can be listed per directory.
 
 - Save:
 
-  Sequencer mutes are stored with MD tracks. Saving MD track will cause the
-  mute state to be applied to the active sequence and stored. where a mute is
-  present, the trig and lock mask will be removed/
+  Sequencer mutes are stored with MD tracks. Saving MD track will cause the mute state to be applied
+  to the active sequence and stored. where a mute is present, the trig and lock mask will be removed.
 
 - Group Select
 
@@ -176,9 +171,8 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Func + Ext
 
-  The MD's undokit is now synced per track. Previously all tracks were synced
-  to the undokit leading to unexpected behaviour when performing [ Func + Ext
-  ].
+  The MD's undokit is now synced per track. Previously all tracks were synced to the undokit
+  leading to unexpected behaviour when performing [ Func + Ext ].
 
   The MD's LEV values are no longer reset by [ Func + Ext ]
 
