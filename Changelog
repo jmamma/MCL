@@ -6,15 +6,15 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
   A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
   by 4 user programmable Performance Controllers (A,B,C,D).
 
-  Each Contoller can be assigned two scenes. Press either [LEFT] or
+  Each Controller can be assigned two scenes. Press either [LEFT] or
   [RIGHT] and then a corresponding Scene Trig to assign the left-most and
   right-most Scenes to the Controller.
 
-  Rotating a Perormance Controller will morph between values across the assigned scenes.
+  Rotating a Performance Controller will morph between values across the assigned scenes.
   [ Func ] + Rotate for Controller hard pan.
 
   Each scene can have up to 16 "Scene Locks". A Scene lock can be any MD
-  paramater, or any external MIDI CC paramater. To assign a lock to a scene,
+  parameter, or any external MIDI CC parameter. To assign a lock to a scene,
   hold the corresponding Scene Trig and rotate the desired parameter on the
   MD or external MIDI.
 
@@ -26,7 +26,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Performance Controller Names can be customized from the Performance Page's "Shift" menu.
 
-  A new slot "PF", has been addded to the Grid Y, slot 12.
+  A new slot "PF", has been added to the Grid Y, slot 12.
   Performance Controllers and their shared Scene data can be saved or loaded
   to this slot.
   Mixer Page, Mute Sets and Performance Controller Locks are also stored in
@@ -52,7 +52,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   The Mixer Page now features 4 "Mute Sets" assigned to the MD's Arrow Keys.
 
-  To load a Mute Set, hold down an Arroy Key and press [YES]
+  To load a Mute Set, hold down an Arrow Key and press [YES]
   To edit a Mute Set, hold down an Arrow Key and toggle Trig Keys.
 
   Each Mute Set also includes Performance Controller Locks.
@@ -68,7 +68,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Sequencer menu option, TRANSPOSE renamed to KEY. Now show's note A,A#,B,B#,C etc..
 
-  Oct and Fine Tune values are now device indepenent.
+  Oct and Fine Tune values are now device independent.
 
 
 - Sequencer:
@@ -81,7 +81,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Step menu has been deprecated.
 
-  Step mutes are now shown when editting the Pattern Mask.
+  Step mutes are now shown when editing the Pattern Mask.
 
   [ Trig ] + [ No ] to toggle step mutes
 
@@ -173,7 +173,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Transitions + Slot Loading:
 
-  MDFX data is now cached ahead of time and loaded immediately on transtion.
+  MDFX data is now cached ahead of time and loaded immediately on transition.
 
 - Func + Ext
 
@@ -185,7 +185,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Page Select
 
-  Page Select layout has changed to accomodate the Performance Page.
+  Page Select layout has changed to accommodate the Performance Page.
 
 MCL 4.43 13/04/2023
 
@@ -241,7 +241,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 - Fixes
 
-  Grid Page: Allow length adustment across multiple slots when slot speeds are the
+  Grid Page: Allow length adjustment across multiple slots when slot speeds are the
   same.
 
   Program Change Advanced mode did not work over USB MIDI
@@ -260,7 +260,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
   GUI input from MD's trig keys would sometimes be unreliable.
 
 - Changes:
-  Improved overall framerate and responsiveness of MCL particulary on the Grid Page.
+  Improved overall framerate and responsiveness of MCL particularly on the Grid Page.
 
   Overhauled the method in which MD tracks are loaded such that there are no dropped notes during transitions.
 
@@ -299,7 +299,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
   Loop points are now stored in saved .wav file(s) when receiving looped SDS samples.
 
-  MCL Sequencer now supports triggering and recording from a dedicated MIDI channel via an external drump pad. See MD MIDI -> TRIG CHAN.
+  MCL Sequencer now supports triggering and recording from a dedicated MIDI channel via an external drum pad. See MD MIDI -> TRIG CHAN.
 
 - USB MIDI:
 
@@ -354,7 +354,7 @@ Please install Machinedrum OS X.06 before using MCL 4.11
 
   Project rename was broken in 4.10
 
-  Kit and sequencer params weren't updated during a paramater change on linked/poly tracks.
+  Kit and sequencer params weren't updated during a parameter change on linked/poly tracks.
   This could cause incorrect value reset on sequencer stop.
 
   Piano Roll track menu would incorrectly show "clear track message" in certain circumstances.
@@ -515,13 +515,13 @@ MCL 4.00 21/08/2021
 MCL 4.00 is an significant achieviement. It builds upon the foundations of the 3.XX firmware,
 whilst improving stability, performance and workflow across several key areas.
 The Machinedrum and MCL integration is now closer than ever.
-In short, MCL 4.0 achieves the original vision of the project, a seemless
+In short, MCL 4.0 achieves the original vision of the project, a seamless
 enhancement of the Elektron Machinedrum.
 
 It is recommended that you read the updated user documentation in which
 many of the changes listed below, are explained in greater detail.
 
-- Enhanced GUI / Machinedrum GUI convergance.
+- Enhanced GUI / Machinedrum GUI convergence.
  Version X.05 of the MD firmware introduces a third editing mode beyond Classic and Extended
  entitled Enhanced Mode.
 
@@ -533,12 +533,12 @@ many of the changes listed below, are explained in greater detail.
  Enhanced mode enables the Machinedrum's GUI to be fully integrated in to the MCL workflow
  All MD sequencer editing commands now apply to the MCL sequencer.
 
- See the MCL 4.0 user documenation for a summary of commands.
+ See the MCL 4.0 user documentation for a summary of commands.
 
 - Changes:
  Chain Mode renamed to Load Mode.
- Grids A/B are now relabelled to X/Y.
- Grid rows are no longer labelled numerically and instead represented by the corresponding
+ Grids A/B are now relabeled to X/Y.
+ Grid rows are no longer labeled numerically and instead represented by the corresponding
 
  Bank + Pattern.
 
@@ -991,7 +991,7 @@ MCL 3.00 20/12/2020
 	on the MC the MD's LEDs will illuminate according to the pattern sequence on the MC.
 
     The MD's cursor (indicating current sequence position) will also be
-	illimunated during playblack. The cursor is synced to the MD's current pattern speed + length.
+	illuminated during playback. The cursor is synced to the MD's current pattern speed + length.
 
     When using the Trig Interface to select tracks, the LEDs will illuminate appropriately.
 
@@ -1335,7 +1335,7 @@ General:
 - Fix: SeqExtPage bad character glitch
 - Fix: SeqParam page showing param values offset by 1.
 - Fix: SeqParam page not allowing selection of all 24 params
-- Fix: reolution bug causing glitched track length for A4/Ext tracks
+- Fix: resolution bug causing glitched track length for A4/Ext tracks
 - Fix: Grid copy + paste was broken. Would not copy sequencer data correctly.
 - Diversion track for MDExploit no longer fixed to track 16, will be
 calculated dynamically
