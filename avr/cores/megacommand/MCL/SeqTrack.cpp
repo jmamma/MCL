@@ -160,7 +160,7 @@ uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
 bool SeqTrack::conditional(uint8_t condition) {
   bool send_note = false;
   uint8_t random_byte = 0;
-  if (condition >= 9) { random_byte = get_random(100); }
+  if (condition >= 9) { random_byte = get_random_byte(); }
 
   switch (condition) {
   case 0:
@@ -202,27 +202,27 @@ bool SeqTrack::conditional(uint8_t condition) {
     }
     break;
   case 9:
-    if (random_byte <= 10) {
+    if (random_byte <= 13) {
       send_note = true;
     }
     break;
   case 10:
-    if (random_byte <= 25) {
+    if (random_byte <= 32) {
       send_note = true;
     }
     break;
   case 11:
-    if (random_byte <= 50) {
+    if (random_byte <= 64) {
       send_note = true;
     }
     break;
   case 12:
-    if (random_byte <= 75) {
+    if (random_byte <= 96) {
       send_note = true;
     }
     break;
   case 13:
-    if (random_byte <= 90) {
+    if (random_byte <= 115) {
       send_note = true;
     }
     break;
