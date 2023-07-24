@@ -21,7 +21,7 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Controllers A,B,C,D can be controlled externally by any MD parameter, or any MIDI CC.
 
-  A parameter "LEARN" feature can be enable by setting Dest to "--" and Param to "LEARN".
+  A parameter "LEARN" feature can be enable by setting Dest to "--" and Para to "LER".
 
   Performance Controller Names can be customized from the Performance Page's "Shift" menu.
 
