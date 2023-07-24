@@ -70,7 +70,6 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Oct and Fine Tune values are now device independent.
 
-
 - Sequencer:
 
   The MD's kit parameters are no longer updated when parameter locks or
