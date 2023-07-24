@@ -468,6 +468,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     switch (mask_type) {
     case MASK_PATTERN:
       led_mask = mask;
+      mute_mask = active_track.mute_mask;
       break;
     case MASK_LOCK:
       active_track.get_mask(&lock_mask, MASK_LOCK);

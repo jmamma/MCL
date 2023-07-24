@@ -543,6 +543,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           mask_type = MASK_PATTERN;
           config_mask_info(false);
         }
+        else {
+          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+            if (note_interface.is_note_on(n)) {
+              uint8_t s = n + (page_select * 16);
+              TOGGLE_BIT64(active_track.mute_mask,s);
+            }
+          }
+        }
         break;
       }
       case MDX_KEY_BANKB: {
