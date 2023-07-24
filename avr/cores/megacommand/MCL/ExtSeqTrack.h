@@ -231,7 +231,7 @@ public:
 
   bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
   void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity,
-                uint8_t cond = 0);
+                uint8_t cond = 0, uint8_t quant = 0);
 
   // find midi note within the given step.
   // returns: note index & step start index.

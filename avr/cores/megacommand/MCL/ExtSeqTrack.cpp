@@ -439,7 +439,7 @@ void ExtSeqTrack::remove_notes_on(uint8_t value) {
 }
 
 void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
-                           uint8_t velocity, uint8_t cond) {
+                           uint8_t velocity, uint8_t cond, uint8_t quant) {
 
   uint8_t timing_mid = get_timing_mid();
 
@@ -458,7 +458,7 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   if (end_step == step) {
     DEBUG_PRINTLN(F("ALERT start == end"));
     end_step = end_step + 1;
-    if (mcl_cfg.rec_quant) { end_utiming = timing_mid; }
+    if (quant) { end_utiming = timing_mid; }
     else { goto again; }
   }
 
@@ -1042,7 +1042,7 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint16_t w = end_x - start_x;
 
     del_note(start_x, w, note_num);
-    add_note(start_x, w, note_num, notes_on[n].velocity);
+    add_note(start_x, w, note_num, notes_on[n].velocity, mcl_cfg.rec_quant);
   }
 
   notes_on[n].value = 255;
