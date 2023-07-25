@@ -262,7 +262,7 @@ void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
     lfo_track->params[0].offset = value;
     reconfig = true;
   }
-  if (lfo_track->params[1].dest - 1 == track && lfo_track->params[0].param == param) {
+  if (lfo_track->params[1].dest - 1 == track && lfo_track->params[1].param == param) {
     lfo_track->params[1].offset = value;
     reconfig = true;
   }
