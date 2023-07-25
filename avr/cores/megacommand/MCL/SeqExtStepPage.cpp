@@ -711,13 +711,20 @@ void SeqExtStepPage::loop() {
 
   if (cur_w > roll_length) { cur_w = roll_length / 2; }
 
-  int z = (float)active_track.length * active_track.get_speed_multiplier();
-  if (seq_extparam4.cur > z) {
-      seq_extparam4.cur = z;
+  int fov_length_new = active_track.length * timing_mid * fov_pixels_per_tick;
+  if (fov_length_new < fov_w) {
+      seq_extparam4.cur = active_track.length  * active_track.get_speed_multiplier();
+      if (seq_extparam4.cur > zoom_max) {
+        seq_extparam4.cur = zoom_max;
+      }
+      fov_length = fov_w;
+
+      goto change;
+//      fov_offset = 0;
+//      cur_x = 0;
   }
-
-
   if (seq_extparam4.hasChanged()) {
+    change:
     uint8_t fov_zoom = seq_extparam4.cur;
 
     fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
