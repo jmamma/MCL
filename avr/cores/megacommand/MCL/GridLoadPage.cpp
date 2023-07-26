@@ -7,17 +7,18 @@ void GridLoadPage::init() {
   note_interface.init_notes();
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
-  draw_popup_title();
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
   encoders[3]->cur = mcl_cfg.chain_load_quant;
+
+  draw_popup_title(mcl_cfg.load_mode);
 }
 
 void GridLoadPage::setup() {}
 
-void GridLoadPage::get_mode_str(char *str) {
-  switch (encoders[0]->cur) {
+void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
+  switch (mode) {
   case LOAD_MANUAL: {
     strcpy(str, "MANUAL");
     break;
@@ -34,10 +35,10 @@ void GridLoadPage::get_mode_str(char *str) {
   }
   }
 }
-void GridLoadPage::draw_popup_title() {
+void GridLoadPage::draw_popup_title(uint8_t mode, bool persistent) {
   char modestr[16] = "LOAD ";
-  get_mode_str(modestr + 5);
-  MD.popup_text(modestr, true);
+  get_mode_str(modestr + 5, mode);
+  MD.popup_text(modestr, persistent);
 }
 
 void GridLoadPage::draw_popup() {
@@ -67,7 +68,7 @@ void GridLoadPage::display_load() {
 void GridLoadPage::loop() {
   if (encoders[0]->hasChanged()) {
     mcl_cfg.load_mode = encoders[0]->cur;
-    draw_popup_title();
+    draw_popup_title(mcl_cfg.load_mode);
   }
   if (encoders[1]->hasChanged()) {
     if (encoders[0]->cur == LOAD_QUEUE) {

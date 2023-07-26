@@ -17,10 +17,10 @@ class GridLoadPage : public GridIOPage {
  void group_select();
  void group_load(uint8_t row, bool silent = false);
  bool handleEvent(gui_event_t *event);
- void get_mode_str(char *str);
+ void get_mode_str(char *str, uint8_t mode);
  void display_load();
  void draw_popup();
- void draw_popup_title();
+ void draw_popup_title(uint8_t mode, bool persistent = true);
  void loop();
  void display();
  void action() { load(); }
