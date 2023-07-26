@@ -52,7 +52,7 @@ void SeqExtStepPage::config_encoders() {
     seq_extparam3.cur = 64;
     fov_offset = 0;
     cur_x = 0;
-    fov_y = 64;
+    fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
 
