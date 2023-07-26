@@ -202,27 +202,27 @@ bool SeqTrack::conditional(uint8_t condition) {
     }
     break;
   case 9:
-    if (random_byte <= 13) {
+    if (random_byte <= 26) {
       send_note = true;
     }
     break;
   case 10:
-    if (random_byte <= 32) {
-      send_note = true;
-    }
-    break;
-  case 11:
     if (random_byte <= 64) {
       send_note = true;
     }
     break;
+  case 11:
+    if (random_byte <= 128) {
+      send_note = true;
+    }
+    break;
   case 12:
-    if (random_byte <= 96) {
+    if (random_byte <= 192) {
       send_note = true;
     }
     break;
   case 13:
-    if (random_byte <= 115) {
+    if (random_byte <= 230) {
       send_note = true;
     }
     break;
