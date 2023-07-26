@@ -183,7 +183,7 @@ void GridLoadPage::display() {
   oled_display.setFont(oldfont);
 }
 void GridLoadPage::load() {
-  display_load();
+  //display_load();
 //  oled_display.display();
   /// !Note, note_off_event has reentry issues, so we have to first set
   /// the page to avoid driving this code path again.
@@ -214,15 +214,15 @@ void GridLoadPage::group_select() {
   MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
-void GridLoadPage::group_load(uint8_t row, bool silent) {
+void GridLoadPage::group_load(uint8_t row) {
 
   if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
-  if (!silent) {
-    oled_display.textbox("LOAD GROUPS", "");
-  }
+ // if (!silent) {
+ //   oled_display.textbox("LOAD GROUPS", "");
+ // }
   //oled_display.display();
 
   mcl_actions.write_original = 1;
