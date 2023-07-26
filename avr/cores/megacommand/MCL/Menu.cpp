@@ -20,6 +20,7 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
 
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
   const menu_item_t *item = get_item(item_n);
+  if (item == nullptr) { return nullptr; }
   return (menu_function_t)pgm_read_word(menu_target_functions + item->row_function_id);
 }
 
@@ -62,6 +63,7 @@ PageIndex MenuBase::get_page_callback(uint8_t item_n) {
   DEBUG_PRINTLN("get page callback");
   auto *item = get_item(item_n);
   DEBUG_PRINTLN(item->page_callback_id);
+  if (item == nullptr) { return NULL_PAGE; }
   return (PageIndex) item->page_callback_id;
 }
 
