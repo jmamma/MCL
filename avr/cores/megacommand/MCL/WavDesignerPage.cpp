@@ -49,16 +49,10 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
       uint8_t inc = 1;
     //  if (show_menu) {
         switch (key) {
-        case MDX_KEY_YES:
-          //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
-          return true;
-        case MDX_KEY_NO:
-          //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
-          return true;
-        case MDX_KEY_UP:
+        case MDX_KEY_DOWN:
           encoders[1]->cur -= inc;
           break;
-        case MDX_KEY_DOWN:
+        case MDX_KEY_UP:
           encoders[1]->cur += inc;
           break;
         case MDX_KEY_LEFT:

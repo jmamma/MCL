@@ -45,6 +45,17 @@ bool OscPage::handleEvent(gui_event_t *event) {
     }
     trig_interface.send_md_leds(TRIGLED_OVERLAY);
   }
+  if (EVENT_CMD(event)) {
+    uint8_t key = event->source - 64;
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+        switch (key) {
+        case MDX_KEY_NO:
+          //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+            show_freq = !show_freq;
+          return true;
+        }
+    }
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     show_freq = !show_freq;
   }
