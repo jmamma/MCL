@@ -4,7 +4,7 @@
 PageSelectEntry Entries[] = {
     {"GRID", GRID_PAGE, 0, 0, 24, 15, nullptr},
     {"MIXER", MIXER_PAGE, 1, 0, 24, 16, nullptr},
-    {"PERF", PERF_PAGE_0, 2, 0, 24, 18, nullptr},
+    {"PERFORMANCE", PERF_PAGE_0, 2, 0, 24, 18, nullptr},
     {"ROUTE", ROUTE_PAGE, 3, 0, 24, 14, nullptr},
 
     {"STEP EDIT", SEQ_STEP_PAGE, 4, 1, 24, 21, nullptr},
