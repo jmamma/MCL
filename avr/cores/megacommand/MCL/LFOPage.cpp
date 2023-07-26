@@ -302,6 +302,14 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      case MDX_KEY_YES: {
+        lfo_track->enable = true;
+        break;
+      }
+      case MDX_KEY_NO: {
+        lfo_track->enable = false;
+        break;
+      }
       case MDX_KEY_UP: {
         if (page_mode < LFO_OFFSET) {
           page_mode++;
