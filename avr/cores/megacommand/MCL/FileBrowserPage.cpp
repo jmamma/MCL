@@ -85,7 +85,7 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
   file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
   file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
-  file_menu_page.menu.enable_entry(FM_OVERWRITE, show_overwrite);
+  file_menu_page.menu.enable_entry(FM_OVERWRITE, false); //show_overwrite);
   file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
   file_menu_page.menu.enable_entry(FM_RECVALL, false);
   file_menu_page.menu.enable_entry(FM_SENDALL, false);
@@ -516,13 +516,12 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     encoders[0] = param1;
     encoders[1] = param2;
 
+    filemenu_active = false;
     if (_handle_filemenu()) {
       init();
       return true;
     }
-    filemenu_active = false;
     selection_change = true;
-    display();
     return true;
   }
 
