@@ -885,10 +885,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
           case MDX_KEY_BANKB:
           case MDX_KEY_BANKC: {
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
+            grid_load_page.display_load();
             return true;
           }
           case MDX_KEY_NO: {
             goto next;
+          }
+          case MDX_KEY_PATSONGKIT: {
+            set_active_row(grid_task.last_active_row);
+            return true;
           }
           }
         }
@@ -968,7 +973,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
             return true;
           }
         }
-        }
+       }
       }
       switch (key) {
       case MDX_KEY_SCALE: {
@@ -1081,11 +1086,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
     slot_apply = 0;
     old_col = 255;
     if (!slot.is_ext_track()) {
-      grid_slot_page.menu.enable_entry(2, true);
-      grid_slot_page.menu.enable_entry(3, false);
-    } else {
+      grid_slot_page.menu.enable_entry(1, true);
       grid_slot_page.menu.enable_entry(2, false);
-      grid_slot_page.menu.enable_entry(3, true);
+    } else {
+      grid_slot_page.menu.enable_entry(1, false);
+      grid_slot_page.menu.enable_entry(2, true);
     }
     show_slot_menu = true;
     grid_slot_page.init();

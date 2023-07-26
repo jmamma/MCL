@@ -352,10 +352,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_wavdesign_menu_layout = 74;
   union {
     menu_t<grid_slot_page_N> slot_menu_layout[0];
-    char zz__slot_menu_layout[221];
+    char zz__slot_menu_layout[200];
   };
-  static constexpr size_t countof_slot_menu_layout = 221 / sizeof(menu_t<grid_slot_page_N>);
-  static constexpr size_t sizeofof_slot_menu_layout = 221;
+  static constexpr size_t countof_slot_menu_layout = 200 / sizeof(menu_t<grid_slot_page_N>);
+  static constexpr size_t sizeofof_slot_menu_layout = 200;
   union {
     menu_t<seq_menu_page_N> seq_menu_layout[0];
     char zz__seq_menu_layout[515];
@@ -382,10 +382,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_mdimport_menu_layout = 95;
   union {
     menu_t<md_config_page_N> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[74];
+    char zz__mdconfig_menu_layout[53];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 74 / sizeof(menu_t<md_config_page_N>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 74;
+  static constexpr size_t countof_mdconfig_menu_layout = 53 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 53;
   union {
     menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout[0];
     char zz__midimachinedrum_menu_layout[74];
@@ -452,7 +452,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2141;
+  static constexpr size_t __total_size = 2099;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

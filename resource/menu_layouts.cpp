@@ -221,7 +221,6 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
     {
         //          m  r    n  d   p  f   o
         {"GRID: ",  0, 2,   2, 31, NULL_PAGE, 0,  52},
-        {"MODE:",   1, 4,   3, 32, NULL_PAGE, 0,  20},
         // for non-ext tracks
         {"LEN:   ",   1, 65,  0, 39, NULL_PAGE, 0,  0},
         // for ext tracks
