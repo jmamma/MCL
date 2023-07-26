@@ -94,6 +94,7 @@ void FileBrowserPage::query_filesystem() {
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
 
   DEBUG_PRINTLN("query");
+  DEBUG_PRINTLN(lwd);
   DEBUG_PRINTLN(file_menu_encoder.max);
 
   //  reset directory pointer
@@ -159,6 +160,7 @@ void FileBrowserPage::init() {
   draw_dirs = false;
   strcpy(focus_match, "");
   file_types.reset();
+  SD.chdir(lwd);
 }
 
 void FileBrowserPage::draw_menu() {
@@ -525,6 +527,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+  GUI.ignoreNextEvent(event->source);
   YES:
     int i_save;
     _calcindices(i_save);
@@ -538,31 +541,32 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 
         if (encoders[1]->getValue() == i_save) {
           on_new();
-          return true;
+          goto fin;
         }
 
         // chdir to parent
         if ((temp_entry[0] == '.') && (temp_entry[1] == '.')) {
           _cd_up();
-          return true;
+          goto fin;
         }
     //  }
       // chdir to child
       if (!select_dirs && file.isDirectory()) {
         _cd(temp_entry);
-        return true;
+        goto fin;
       }
     }
 
-  //  if (!dir_only) {
       GUI.ignoreNextEvent(event->source);
       on_select(temp_entry);
-  //  }
+    fin:
+    //file.close();
     return true;
   }
 
   // cancel
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  GUI.ignoreNextEvent(event->source);
   NO:
     on_cancel();
     return true;
