@@ -91,6 +91,9 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
+
   void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
   // scale machine track vol by percentage
   void scale_vol(float scale);

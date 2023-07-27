@@ -609,7 +609,6 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
          if (last_ext_track == c) { seq_extparam4.cur = length; }
       }
     } else {
-      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
       mcl_seq.ext_tracks[last_ext_track].set_length(length);
       seq_extparam4.cur = length;
     }

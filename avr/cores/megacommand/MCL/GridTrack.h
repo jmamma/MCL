@@ -86,7 +86,10 @@ public:
   void load_link_data(SeqTrack *seq_track);
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
+
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
+
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);

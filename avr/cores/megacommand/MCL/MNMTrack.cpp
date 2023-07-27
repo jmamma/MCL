@@ -32,6 +32,11 @@ void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
 }
 
+void MNMTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+  DEBUG_PRINT_FN();
+  load_seq_data(seq_track);
+}
+
 void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
   DEBUG_PRINT_FN();
   memcpy(machine.params, MNM.kit.parameters[tracknumber], 72);

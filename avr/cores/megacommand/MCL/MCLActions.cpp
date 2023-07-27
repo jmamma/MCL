@@ -510,16 +510,17 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
     DEBUG_PRINTLN(pos);
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
-    ptrack->load_seq_data(gdt->seq_track);
   } else {
     if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
       ptrack->init_track_type(ptrack->get_parent_model());
     }
-    DEBUG_PRINTLN("load immediate track");
-    ptrack->load_immediate(track_idx, gdt->seq_track);
-    ptrack->store_in_mem(gdt->mem_slot_idx);
     send_masks[pos] = 1;
   }
+  if (ptrack != nullptr) {
+      ptrack->load_immediate_cleared(track_idx, gdt->seq_track);
+      ptrack->store_in_mem(gdt->mem_slot_idx);
+   }
+
   return true;
 }
 
