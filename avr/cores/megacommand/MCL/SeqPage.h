@@ -146,6 +146,7 @@ public:
   void toggle_ext_mask(uint8_t track);
 
   void params_reset();
+  void length_handler(uint8_t length, bool multi = false);
 
   bool display_mute_mask(MidiDevice *device, uint8_t offset = 0);
 

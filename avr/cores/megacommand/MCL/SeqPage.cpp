@@ -580,60 +580,54 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
   draw_knob(1, "UTIM", K);
 }
 
+void SeqPage::length_handler(uint8_t length, bool multi) {
+  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  if (SeqPage::midi_device == &MD) {
+
+    if (multi) {
+      for (uint8_t c = 0; c < 16; c++) {
+        mcl_seq.md_tracks[c].set_length(length);
+      }
+    } else {
+      if ((mcl_cfg.poly_mask) && (is_poly)) {
+        for (uint8_t c = 0; c < 16; c++) {
+          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+            mcl_seq.md_tracks[c].set_length(length);
+          }
+        }
+      } else {
+        mcl_seq.md_tracks[last_md_track].set_length(length);
+      }
+    }
+    auto &active_track = mcl_seq.md_tracks[last_md_track];
+    MD.sync_seqtrack(active_track.length, active_track.speed,
+                     active_track.step_count);
+  } else {
+    if (multi) {
+      for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
+        mcl_seq.ext_tracks[c].set_length(length);
+         if (last_ext_track == c) { seq_extparam4.cur = length; }
+      }
+    } else {
+      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
+      mcl_seq.ext_tracks[last_ext_track].set_length(length);
+      seq_extparam4.cur = length;
+    }
+  }
+}
+
+
 void pattern_len_handler(EncoderParent *enc) {
   MCLEncoder *enc_ = (MCLEncoder *)enc;
   if (!enc_->hasChanged()) {
     return;
   }
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-  if (SeqPage::midi_device == &MD) {
-
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      for (uint8_t c = 0; c < 16; c++) {
-        mcl_seq.md_tracks[c].set_length(enc_->cur);
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-    } else {
-      if ((mcl_cfg.poly_mask) && (is_poly)) {
-        for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-            mcl_seq.md_tracks[c].set_length(enc_->cur);
-          }
-        }
-      } else {
-        mcl_seq.md_tracks[last_md_track].set_length(enc_->cur);
-      }
-    }
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
-  } else {
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
-        mcl_seq.ext_tracks[c].set_length(enc_->cur);
-         if (last_ext_track == c) { seq_extparam4.cur = enc_->cur; }
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-    } else {
-      mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-      mcl_seq.ext_tracks[last_ext_track].set_length(enc_->cur);
-      seq_extparam4.cur = enc_->cur;
-    }
-  }
+  seq_step_page.length_handler(enc_->cur, BUTTON_DOWN(Buttons.BUTTON4));
+  GUI.ignoreNextEvent(Buttons.BUTTON4);
 }
 
 void opt_length_handler() {
-  if (SeqPage::midi_device == &MD) {
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    active_track.set_length(opt_length);
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
-  } else {
-    opt_length = max(opt_length, 2);
-    mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
-    mcl_seq.ext_tracks[last_ext_track].set_length(opt_length);
-    seq_extparam4.cur = opt_length;
-  }
+  seq_step_page.length_handler(opt_length);
 }
 
 void opt_channel_handler() {
