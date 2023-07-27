@@ -1,13 +1,17 @@
 #include "MCL_impl.h"
 uint8_t ExtSeqTrack::epoch = 0;
 
-void ExtSeqTrack::set_speed(uint8_t _speed) {
-  uint8_t old_speed = speed;
-  float mult = get_speed_multiplier(_speed) / get_speed_multiplier(old_speed);
-  for (uint16_t i = 0; i < event_count; i++) {
-    events[i].micro_timing = round(mult * (float)events[i].micro_timing);
+void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed, bool timing_adjust) {
+  if (old_speed == 255) {
+    old_speed = speed;
   }
-  speed = _speed;
+  if (timing_adjust) {
+    float mult = get_speed_multiplier(new_speed) / get_speed_multiplier(old_speed);
+    for (uint16_t i = 0; i < event_count; i++) {
+      events[i].micro_timing = round(mult * (float)events[i].micro_timing);
+    }
+  }
+  speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
     mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;

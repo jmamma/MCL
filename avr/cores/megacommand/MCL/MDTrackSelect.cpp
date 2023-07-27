@@ -98,7 +98,7 @@ void MDTrackSelect::end() {
            mcl_seq.md_tracks[n].set_speed(new_speed, 255, false);
         }
         else {
-           mcl_seq.ext_tracks[n].set_speed(new_speed);
+           mcl_seq.ext_tracks[n].set_speed(new_speed, 255, false);
            if (last_ext_track == n) { seq_extparam4.cur = length; }
         }
         seq_track->mute_state = SEQ_MUTE_ON;
@@ -112,7 +112,7 @@ void MDTrackSelect::end() {
            mcl_seq.md_tracks[n].set_speed(new_speed, old_speeds[n], true);
         }
         else {
-           mcl_seq.ext_tracks[n].set_speed(new_speed);
+           mcl_seq.ext_tracks[n].set_speed(new_speed, old_speeds[n], true);
         }
         seq_track->mute_state = old_mutes[n];
       }
