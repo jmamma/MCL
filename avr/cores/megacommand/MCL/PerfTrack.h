@@ -41,6 +41,10 @@ public:
     static_assert(sizeof(PerfTrack) <= PERF_TRACK_LEN);
   }
 
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+    init();
+  }
+
   void init() {
     for (uint8_t n = 0; n < NUM_SCENES; n++) {
       if (n < 4) {
