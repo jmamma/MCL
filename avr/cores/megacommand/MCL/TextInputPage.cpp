@@ -211,10 +211,10 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
+        encoders[1]->cur += normal_mode ? inc : -1 * inc;
         break;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
+        encoders[1]->cur += normal_mode ? -1 * inc : inc;
         break;
       case MDX_KEY_LEFT:
         encoders[0]->cur -= inc;
