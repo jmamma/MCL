@@ -53,6 +53,10 @@ void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   place_fx_in_kit();
 }
 
+void MDFXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_link_data(seq_track);
+}
+
 void MDFXTrack::place_fx_in_kit() {
   DEBUG_PRINTLN("place");
   memcpy(MD.kit.reverb, reverb, sizeof(reverb) * 4);

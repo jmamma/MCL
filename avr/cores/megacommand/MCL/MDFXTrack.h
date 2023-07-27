@@ -47,7 +47,9 @@ public:
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber);
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
+
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
   virtual uint16_t get_region() { return BANK1_MDFX_TRACK_START; }
