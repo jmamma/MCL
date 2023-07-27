@@ -706,7 +706,7 @@ void opt_clear_track_handler() {
   COPY:
     copy = true;
   }
-  if (SeqPage::midi_device == &MD) {
+  if (SeqPage::midi_device == &MD || !(mcl.currentPage() == SEQ_PTC_PAGE || mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
     if (opt_clear == 2) {
 
       MD.popup_text(2);
