@@ -62,6 +62,9 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
         if (a == old_length) { a = 0; }
       }
   }
+  else if (length < old_length) {
+    buffer_notesoff();
+  }
 
 }
 
