@@ -13,6 +13,10 @@ uint16_t MDTempoTrack::send_tempo(bool send) {
   return MD.setTempo(tempo, send);
 }
 
+void MDTempoTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_link_data(seq_track);
+}
+
 void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
   send_tempo();
