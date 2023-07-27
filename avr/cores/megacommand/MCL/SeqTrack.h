@@ -186,6 +186,46 @@ public:
 
   float get_speed_multiplier() { return get_speed_multiplier(speed); }
 
+  void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
+    n = 1;
+    d = 1;
+    switch (speed_) {
+    default:
+    case SEQ_SPEED_1X:
+      //n = 1;
+      //d = 1;
+      break;
+    case SEQ_SPEED_2X:
+      //n = 1;
+      d = 2;
+      break;
+    case SEQ_SPEED_4X:
+      //n = 1;
+      d = 4;
+      break;
+    case SEQ_SPEED_3_4X:
+      n = 4;
+      d = 3;
+      break;
+    case SEQ_SPEED_3_2X:
+      n = 2;
+      d = 3;
+      break;
+    case SEQ_SPEED_1_2X:
+      n = 2;
+      //d = 1;
+      break;
+    case SEQ_SPEED_1_4X:
+      n = 4;
+      //d = 1;
+      break;
+    case SEQ_SPEED_1_8X:
+      n = 8;
+      //d = 1;
+      break;
+    }
+  }
+
   float get_speed_multiplier(uint8_t speed_) {
     float multi;
     switch (speed_) {
