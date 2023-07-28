@@ -607,7 +607,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       if (dst != nullptr) {
         if (row_header.active) {
           uint8_t len = elektron_dev->sysex_protocol.kitname_length;
-          memcpy(dst, row_header.name, len);
+          strncpy(dst, row_header.name, len);
+          m_toupper(dst);
           dst[len - 1] = '\0';
         } else {
           strcpy(dst, "NEW KIT");

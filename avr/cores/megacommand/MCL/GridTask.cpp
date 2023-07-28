@@ -85,6 +85,7 @@ void GridTask::update_transition_details() {
 
   if (row_header.active) {
     memcpy(kit_names[dev_idx], row_header.name, len);
+    m_toupper(kit_names[dev_idx]);
     kit_names[dev_idx][len - 1] = '\0';
   } else {
     strcpy(kit_names[dev_idx], "NEW_KIT");
