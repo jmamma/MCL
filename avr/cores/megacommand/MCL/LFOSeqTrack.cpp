@@ -60,7 +60,7 @@ int16_t LFOSeqTrack::get_sample(uint8_t n) {
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param) {
-  int8_t offset = get_param_offset(dest, param);
+  int8_t offset = get_param_offset(dest, params[param].param);
   int16_t depth = params[param].depth;
 
   int16_t sample = ((get_sample(sample_count) * depth) /  128) + offset;
@@ -160,8 +160,9 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
       break;
     }
   }
-  else if (param < 2) {
-      return params[param].offset;
+  else {
+    //MIDI
+    return param;
   }
   return 255;
 }
