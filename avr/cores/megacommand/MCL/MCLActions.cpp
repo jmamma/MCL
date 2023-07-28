@@ -354,6 +354,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     if (device_track == nullptr || device_track->active != gdt->track_type && device_track->get_parent_model() != gdt->track_type) {
       empty_track.clear();
+      if (device_track->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
       device_track = device_track->init_track_type(gdt->track_type);
       if (device_track) {
         device_track->init(track_idx, gdt->seq_track);
@@ -506,8 +507,7 @@ bool MCLActions::load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
 
   if (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
     empty_track.clear();
-    DEBUG_PRINTLN("Clearing track");
-    DEBUG_PRINTLN(pos);
+    if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
     ptrack->init_track_type(gdt->track_type);
     ptrack->init(track_idx, gdt->seq_track);
     ptrack->load_immediate_cleared(track_idx, gdt->seq_track);
@@ -755,6 +755,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       // EMPTY_TRACK_TYPE
       ////DEBUG_PRINTLN(F("clear track"));
       empty_track.clear();
+      if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
       ptrack = empty_track.init_track_type(gdt->track_type);
       ptrack->init(track_idx, gdt->seq_track);
     } else {
