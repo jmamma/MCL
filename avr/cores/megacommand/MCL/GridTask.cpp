@@ -281,7 +281,8 @@ bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
   }
   slots_changed[n] = mcl_actions.links[n].row;
   track_select_array[n] = 1;
-  memcpy(&mcl_actions.links[n], &pmem_track->link, sizeof(GridLink));
+
+  pmem_track->link.store_in_mem(n, &(mcl_actions.links[0]));
   if (pmem_track->active) {
     return true;
   }
