@@ -7,7 +7,7 @@ inline char _getchar(uint8_t i) {
   if (i >= sz_allowedchar)
     i = sz_allowedchar - 1;
   return i
-      ["abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=! "];
+      ["abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=!"];
 }
 
 // chr -> idx
@@ -28,6 +28,7 @@ void TextInputPage::setup() {}
 
 void TextInputPage::init() {
   oled_display.setTextColor(WHITE, BLACK);
+  mcl_gui.draw_popup(title,false,24);
 }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
@@ -36,6 +37,11 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   length = len;
   max_length = len;
   strncpy(text, text_, len);
+  //Replace null characeters with space, it will be added back in upon exit.
+  for (uint8_t n = 0; n < len; n++) {
+    if (text[n] == '\0') { text[n] = ' '; }
+  }
+  text[sizeof(text) - 1] = '\0';
   cursor_position = 0;
   config_normal();
 }
@@ -60,7 +66,6 @@ void TextInputPage::config_normal() {
   update_char();
 #ifdef OLED_DISPLAY
   // redraw popup body
-  mcl_gui.draw_popup(title,false,24);
 #endif
   // update clock
   last_clock = slowclock;
@@ -250,6 +255,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         cursor_position = length - 1;
       }
       // then, config normal input line
+      init();
       config_normal();
       return true;
     }
