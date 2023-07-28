@@ -64,12 +64,15 @@ bool Grid::new_file(const char *gridname) {
 
 bool Grid::new_grid(const char *gridname) {
 
-  bool ret;
+  bool ret = false;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Creating new grid"));
   if (!new_file(gridname)) {
-    return false;
+    goto end;
+  }
+  if (!write_header()) {
+    goto end;
   }
 
   DEBUG_PRINTLN(F("Initializing grid.. please wait"));
@@ -78,7 +81,7 @@ bool Grid::new_grid(const char *gridname) {
 #endif
   // Initialise the project file by filling the grid with blank data.
   uint8_t ledstatus;
-  for (int32_t i = 0; i < GRID_LENGTH; i++) {
+  for (uint16_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
     mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
@@ -96,26 +99,17 @@ bool Grid::new_grid(const char *gridname) {
     ret = clear_row(i);
     if (!ret) {
       DEBUG_PRINTLN(F("coud not clear row"));
-      return false;
+      goto end;
     }
   }
+  ret = true;
+  end:
   clearLed2();
-  ret = file.seekSet(0);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("Could not seek"));
-    return false;
-  }
-
-  if (!write_header()) {
-    return false;
-  }
-
   file.close();
-  return true;
+  return ret;
 }
 
-bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
+bool Grid::copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_row,
                      bool destination_same) {
   DEBUG_PRINT_FN();
   DEBUG_PRINT(s_col);
@@ -138,14 +132,13 @@ bool Grid::copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
   track->store_in_grid(d_col, d_row);
 }
 
-uint8_t Grid::get_slot_model(int column, int row, bool load) {
+uint8_t Grid::get_slot_model(uint8_t column, uint16_t row, bool load) {
   GridTrack temp_track;
   temp_track.load_from_grid(column, row);
-  // XXX why active, not the actual model?
   return temp_track.active;
 }
 
-bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
+bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
 
   bool ret;
   int b;
@@ -183,7 +176,7 @@ bool Grid::clear_slot(int16_t column, int16_t row, bool update_header) {
   return true;
 }
 
-__attribute__((noinline)) bool Grid::clear_row(int16_t row) {
+bool Grid::clear_row(uint16_t row) {
   GridRowHeader row_header;
   row_header.init();
   for (int x = 0; x < GRID_WIDTH; x++) {
