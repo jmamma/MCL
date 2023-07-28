@@ -131,9 +131,9 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     "MD MIDI",
     {
         //              m  r   n  d  p  f  o
-        {"CHRO CHAN:",  0, 18, 2, 9, NULL_PAGE, 0, 18},
-        {"POLY CHAN:",  0, 18, 2, 46, NULL_PAGE, 0, 88},
-        {"TRIG CHAN:",   0, 18, 2, 57, NULL_PAGE, 0, 18},
+        {"CHRO CHAN:",  0, 17, 2, 9, NULL_PAGE, 0, 18},
+        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 88},
+        {"TRIG CHAN:",   0, 17, 2, 57, NULL_PAGE, 0, 18},
     },
     24
 };

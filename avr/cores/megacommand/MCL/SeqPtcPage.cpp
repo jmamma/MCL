@@ -681,14 +681,10 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
 }
 
 uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
-  if ((mcl_cfg.uart2_poly_chan - 1 == channel) ||
-      (mcl_cfg.uart2_poly_chan == MIDI_OMNI_MODE)) {
+  if (mcl_cfg.uart2_poly_chan - 1 == channel) {
     return POLY_EVENT;
   }
-
-  if (((mcl_cfg.uart2_ctrl_chan - 1 == channel) ||
-       (mcl_cfg.uart2_ctrl_chan == MIDI_OMNI_MODE)) &&
-      (mcl.currentPage() != SEQ_EXTSTEP_PAGE)) {
+  if (mcl_cfg.uart2_ctrl_chan - 1 == channel) {
     return CTRL_EVENT;
   }
   if (mcl_cfg.md_trig_channel - 1 == channel) {
