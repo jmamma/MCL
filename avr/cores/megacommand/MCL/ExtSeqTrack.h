@@ -94,7 +94,8 @@ struct ext_event_t {
 
 class NoteVector {
 public:
-  uint16_t x;
+  uint8_t step;
+  uint8_t utiming;
   uint8_t value;
   uint8_t velocity;
 };
@@ -225,7 +226,7 @@ public:
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
   void init_notes_on();
-  void add_notes_on(uint16_t x, uint8_t value, uint8_t velocity);
+  void add_notes_on(uint8_t step, uint8_t utiming, uint8_t value, uint8_t velocity);
   uint8_t find_notes_on(uint8_t value);
   void remove_notes_on(uint8_t value);
 
