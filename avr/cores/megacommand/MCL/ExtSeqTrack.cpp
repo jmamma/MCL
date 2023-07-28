@@ -1049,7 +1049,7 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   uint16_t w = end_x - start_x;
 
     del_note(start_x, w, note_num);
-    add_note(start_x, w, note_num, notes_on[n].velocity, mcl_cfg.rec_quant);
+    add_note(start_x, w, note_num, notes_on[n].velocity, 0, mcl_cfg.rec_quant);
   }
 
   notes_on[n].value = 255;
