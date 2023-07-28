@@ -706,7 +706,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
 
   if (channel_event) {
-    SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
+      SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+    }
   } else {
     auto active_device = midi_active_peering.get_device(UART2_PORT);
     uint8_t n = mcl_seq.find_ext_track(channel);
@@ -833,7 +835,6 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
   }
 
 #ifdef EXT_TRACKS
-  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
   pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
 
   seq_ptc_page.config_encoders();
