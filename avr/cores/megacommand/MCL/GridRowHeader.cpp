@@ -18,10 +18,13 @@ bool GridRowHeader::is_empty() {
 }
 
 void GridRowHeader::init() {
+  memset(this, 0, sizeof(GridRowHeader));
+  /*
   active = false;
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {
     track_type[x] = EMPTY_TRACK_TYPE;
     model[x] = 0;
   }
+  */
 }
 
