@@ -103,6 +103,7 @@ public:
   }
 
   void clear_param(uint8_t dest, uint8_t param) {
+    if (count == 0) { return; }
     bool ret = false;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match

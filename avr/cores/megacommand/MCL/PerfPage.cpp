@@ -184,6 +184,7 @@ void PerfPage::update_params() {
       p->param = encoders[2]->cur;
       if (encoders[3]->hasChanged() && BUTTON_DOWN(Buttons.ENCODER4)) { GUI.ignoreNextEvent(Buttons.ENCODER4); }
       if (encoders[3]->cur > 0) {
+        if (p->val == 255) { perf_encoders[perf_id]->perf_data.scenes[scene].count++; }
         p->val = encoders[3]->cur - 1;
       }
     }
@@ -256,7 +257,7 @@ void PerfPage::display() {
       str1 = "OFF";
       // Show the "non-lock" value
       uint8_t c = page_mode - 1;
-      v = perf_encoders[perf_id]->perf_data.scenes[scene].params[c].val;
+      v = 0; //perf_encoders[perf_id]->perf_data.scenes[scene].params[c].val;
     } else {
       v -= 1;
     }
@@ -585,8 +586,10 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     if (learn) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t scene = learn - 1;
-      d->clear_param_scene(encoders[1]->cur - 1 , encoders[2]->cur, scene);
-      config_encoders();
+      if (encoders[1]->cur != 0 && encoders[2]->cur != 255) {
+        d->clear_param_scene(encoders[1]->cur - 1 , encoders[2]->cur, scene);
+        config_encoders();
+      }
     }
   }
 
