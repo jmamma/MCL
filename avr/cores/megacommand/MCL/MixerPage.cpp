@@ -541,7 +541,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
 
          // oled_draw_mutes();
-        } else if (first_track == 255) {
+        } else if (first_track == 255 && midi_device == &MD) {
           first_track = track;
           MD.setStatus(0x22, track);
         }
