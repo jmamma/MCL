@@ -395,7 +395,8 @@ void ExtSeqTrack::init_notes_on() {
   }
 }
 
-void ExtSeqTrack::add_notes_on(uint8_t step, uint8_t utiming, uint8_t value, uint8_t velocity) {
+void ExtSeqTrack::add_notes_on(uint8_t step, int8_t utiming, uint8_t value,
+                               uint8_t velocity) {
   if (notes_on_count >= NUM_NOTES_ON) {
     return;
   }
@@ -449,7 +450,7 @@ void ExtSeqTrack::remove_notes_on(uint8_t value) {
 }
 
 void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
-                           uint8_t velocity, uint8_t cond, uint8_t quant) {
+                           uint8_t velocity, uint8_t cond) {
 
   uint8_t timing_mid = get_timing_mid();
 
@@ -1041,20 +1042,27 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
   if (n == 255)
     return;
 
-  int16_t w = 0;
   if (MidiClock.state == 2 && SeqPage::recording) {
 
     int8_t utiming = mod12_counter - 1;
     uint8_t step = step_count;
 
+    ignore_step = step;
+    SET_BIT128_P(ignore_notes, note_num);
+
+    uint16_t w = 0;
+
     int16_t start_x = notes_on[n].step * timing_mid + notes_on[n].utiming;
     int16_t end_x = step * timing_mid + utiming;
+    int16_t roll_length = length * timing_mid;
+    bool wrap = false;
 
     if (mcl_cfg.rec_quant) {
       if (end_x < start_x) {
-        end_x += length * timing_mid;
+        end_x += roll_length;
+        wrap = true;
       }
-      w = max(1,end_x - start_x);
+      w = max(1, end_x - start_x);
 
       if (notes_on[n].utiming > timing_mid / 2) {
         notes_on[n].step++;
@@ -1065,16 +1073,14 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
       notes_on[n].utiming = 0;
       start_x = notes_on[n].step * timing_mid + notes_on[n].utiming;
       end_x = start_x + w;
+      if (end_x > roll_length) {  del_note(0, end_x - roll_length, note_num); }
+    } else {
+      if (end_x < start_x) {
+        del_note(0, end_x, note_num);
+        end_x += roll_length;
+      }
+      w = end_x - start_x;
     }
-
-    ignore_step = step;
-    SET_BIT128_P(ignore_notes, note_num);
-
-    if (end_x < start_x) {
-      del_note(0, end_x, note_num);
-      end_x += length * timing_mid;
-    }
-    w = end_x - start_x;
     del_note(start_x, w, note_num);
     add_note(start_x, w, note_num, notes_on[n].velocity, 0);
   }
@@ -1088,7 +1094,7 @@ void ExtSeqTrack::record_track_noteon(uint8_t note_num, uint8_t velocity) {
   uint8_t condition = 0;
 
   uint8_t timing_mid = get_timing_mid();
-  uint8_t utiming = mod12_counter - 1;
+  int8_t utiming = mod12_counter - 1;
   uint8_t step = step_count;
 
   ignore_step = step;
