@@ -395,6 +395,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
       if (!active_track.get_step(step, mask_type)) {
+        reset_undo();
         bool cond_plock;
         active_track.steps[step].cond_id =
             translate_to_step_conditional(condition, &cond_plock);
@@ -422,6 +423,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         if (clock_diff(note_interface.note_hold[port], slowclock) <
             TRIG_HOLD_TIME) {
+          reset_undo();
           active_track.set_step(step, mask_type, false);
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;
