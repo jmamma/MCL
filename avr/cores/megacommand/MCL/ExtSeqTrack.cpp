@@ -1064,16 +1064,18 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
       }
       w = max(1, end_x - start_x);
 
-      if (notes_on[n].utiming > timing_mid / 2) {
-        notes_on[n].step++;
-        if (notes_on[n].step == length) {
-          notes_on[n].step = 0;
+      int8_t u = notes_on[n].utiming;
+      uint8_t s = notes_on[n].step;
+      if (u > timing_mid / 2) {
+        s++;
+        if (s == length) {
+          s = 0;
         }
       }
-      notes_on[n].utiming = 0;
-      start_x = notes_on[n].step * timing_mid + notes_on[n].utiming;
+      u = 0;
+      start_x = s * timing_mid + u;
       end_x = start_x + w;
-      if (end_x > roll_length) {  del_note(0, end_x - roll_length, note_num); }
+      if (end_x > roll_length) { del_note(0, end_x - roll_length, note_num); }
     } else {
       if (end_x < start_x) {
         del_note(0, end_x, note_num);
