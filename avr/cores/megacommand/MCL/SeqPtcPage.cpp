@@ -105,7 +105,6 @@ void SeqPtcPage::init() {
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_chan);
   trig_interface.on();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
-  trig_interface.on();
   config();
   re_init = false;
 }
