@@ -79,7 +79,7 @@ public:
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find first empty
       if (params[a].dest == 0) {
-        empty = min(a, empty);
+        if (empty == 255) { empty = a; }
       }
       if (params[a].dest == dest + 1 && params[a].param == param) {
         // Update existing, if matches
