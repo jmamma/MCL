@@ -774,6 +774,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
         }
       }
       if (slot_load == 1) {
+        DEBUG_PRINTLN("slot load put");
         grid_task.load_queue.put(mcl_cfg.load_mode,ypos, track_select_array);
       }
       // If all slots are deleted then clear the row name
@@ -794,6 +795,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     if (proj.get_grid() == 0) {
       proj.select_grid(1);
       width = encoders[2]->cur;
+      _col = 0;
       goto again;
     }
     load_old_col();
