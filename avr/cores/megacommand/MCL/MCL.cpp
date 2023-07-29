@@ -321,13 +321,10 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         opt_clear = 2;
         //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
-        if (mcl.currentPage() == SEQ_PTC_PAGE ||
-            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
-          //  if (SeqPage::midi_device == dev) {
+        if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
+        if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
-          //  } else {
-          //    opt_clear = SeqPage::recording ? 2 : 1;
-          //  }
+          if (seq_extstep_page.pianoroll_mode > 0) { opt_clear_locks_handler(); break; }
         }
         opt_clear_track_handler();
         break;
