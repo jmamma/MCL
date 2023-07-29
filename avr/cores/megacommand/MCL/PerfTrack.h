@@ -52,7 +52,7 @@ public:
       }
       scenes[n].init();
     }
-    memset(mute_sets, 0, sizeof(mute_sets));
+    memset(mute_sets, 0xFF, sizeof(mute_sets));
     memset(perf_locks, 255, sizeof(perf_locks));
   }
 
