@@ -105,7 +105,7 @@ void GridPage::loop() {
   int8_t diff, new_val;
   if (show_slot_menu) {
     if (encoders[2]->hasChanged()) {
-      if ((proj.get_grid() == 0) && (encoders[2]->cur + cur_col > GRID_WIDTH)) {
+        if ((proj.get_grid() == 0) && (getCol() + encoders[2]->cur > GRID_WIDTH)) {
         old_col = getCol();
         cur_col = 0;
         param1.cur = 0;
@@ -722,7 +722,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
     bool activate_header = false;
 
-    uint8_t track_select_array[GRID_LENGTH] = {0};
+    uint8_t track_select_array[NUM_SLOTS] = {0};
     GridRowHeader header;
 
     SeqTrack seq_track;
