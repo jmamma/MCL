@@ -114,7 +114,7 @@ void ElektronHelper::from64Bit(uint64_t num, uint8_t *b) {
 
 bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
   uint16_t cksum = 0;
-  for (int i = 0; i < len - 4; i++) {
+  for (uint16_t i = 0; i < len - 4; i++) {
   cksum += data[i];
   }
   cksum &= 0x3FFF;
@@ -133,7 +133,7 @@ bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
 
 bool ElektronHelper::checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset, uint16_t len) {
   uint16_t cksum = 0;
-  for (int i = 0; i < len - 4; i++) {
+  for (uint16_t i = 0; i < len - 4; i++) {
     cksum += midi->midiSysex.getByte(i + offset);
   }
   cksum &= 0x3FFF;
@@ -151,7 +151,7 @@ bool ElektronHelper::checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset, 
 void ElektronHelper::calculateSysexChecksumAnalog(uint8_t *data, uint16_t len) {
 	data[0] = 0xF0;
   uint16_t checksum = 0;
-  for (int i = 9; i < len; i++)
+  for (uint16_t i = 9; i < len; i++)
     checksum += data[i];
   data[len] = (uint8_t)((checksum >> 7) & 0x7F);
   data[len + 1] = (uint8_t)(checksum & 0x7F);
@@ -165,7 +165,7 @@ void ElektronHelper::calculateSysexChecksumAnalog(uint8_t *data, uint16_t len) {
 /* check sysex */
 bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
   uint16_t cksum = 0;
-  for (int i = 9 - 6; i < len - 4; i++) {
+  for (uint16_t i = 9 - 6; i < len - 4; i++) {
     cksum += data[i];
   }
   cksum &= 0x3FFF;
@@ -186,7 +186,7 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
 
 bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16_t len) {
   uint16_t cksum = 0;
-  for (int i = 9 - 6; i < len - 4; i++) {
+  for (uint16_t i = 9 - 6; i < len - 4; i++) {
     cksum += midi->midiSysex.getByte(i + offset);
   }
   cksum &= 0x3FFF;
@@ -207,7 +207,7 @@ bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16
 void ElektronHelper::calculateSysexChecksum(uint8_t *data, uint16_t len) {
 	data[0] = 0xF0;
   uint16_t checksum = 0;
-  for (int i = 9; i < len; i++)
+  for (uint16_t i = 9; i < len; i++)
     checksum += data[i];
   data[len] = (uint8_t)((checksum >> 7) & 0x7F);
   data[len + 1] = (uint8_t)(checksum & 0x7F);
