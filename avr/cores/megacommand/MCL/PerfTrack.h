@@ -19,6 +19,8 @@ public:
     src = param = min = 0;
     active_scene_a = 0;
     active_scene_b = 1;
+    const char *str = "CONTROL";
+    strcpy(name, str);
   }
 
 };
