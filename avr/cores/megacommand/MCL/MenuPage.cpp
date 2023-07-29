@@ -191,8 +191,9 @@ bool MenuPageBase::enter() {
   if (row_func != NULL) {
     DEBUG_PRINTLN(F("calling callback func"));
     (*row_func)();
-    return false;
+    return true;
   }
+  return false;
 }
 
 bool MenuPageBase::exit() {
