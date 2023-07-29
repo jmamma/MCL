@@ -12,22 +12,30 @@ class LoadQueue {
   uint8_t modes[NUM_LINKS];
   uint8_t rd;
   uint8_t wr;
+  bool full;
 
   void init() {
     rd = 0;
     wr = 0;
+    bool full = false;
   }
 
   void put(uint8_t mode, uint8_t *row_select) {
+    if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
     modes[wr++] = mode;
     if (wr == NUM_LINKS) {
        wr = 0;
     }
+    if (wr == rd) {
+        full = true;
+    }
   }
 
 
   void put(uint8_t mode, uint8_t row, uint8_t *track_select_array) {
+    if (full) { return; }
+
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
        row_selects[wr][n] = 255;
        if (track_select_array[n]) { row_selects[wr][n] = row; }
@@ -35,6 +43,9 @@ class LoadQueue {
     modes[wr++] = mode;
     if (wr == NUM_LINKS) {
        wr = 0;
+    }
+    if (wr == rd) {
+      full = true;
     }
   }
 
@@ -44,11 +55,11 @@ class LoadQueue {
     if (rd == NUM_LINKS) {
        rd = 0;
     }
+    full = false;
   }
 
   bool is_empty() {
-    bool ret = (rd == wr);
-    return ret;
+    return !full && (rd == wr);
   }
 
 };
