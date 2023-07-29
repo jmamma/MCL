@@ -2,12 +2,19 @@
 
 void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
+}
+
+void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                                  uint8_t slotnumber) {
+  DEBUG_PRINTLN("transition send");
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_perf();
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
   return 0;
 }
+
 void PerfTrack::get_perf() {
 
   for (uint8_t n = 0; n < 4; n++) {
