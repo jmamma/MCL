@@ -286,7 +286,7 @@ public:
     uint8_t count = 0;
     while (*buf) {
       if (*buf & 1) {
-         uart->sendNoteOff(channel, offset + count, 0);
+         uart->sendNoteOff(channel, offset + count);
       }
       count++;
       *buf >>= 1;

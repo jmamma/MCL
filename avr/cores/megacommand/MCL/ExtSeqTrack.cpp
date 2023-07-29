@@ -738,7 +738,7 @@ void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
   if (uart_ == nullptr) {
     uart_ = uart;
   }
-  uart_->sendNoteOff(channel, note, velocity);
+  uart_->sendNoteOff(channel, note);
   CLEAR_BIT128_P(note_buffer, note);
 }
 

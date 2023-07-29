@@ -104,7 +104,6 @@ public:
 
   void clear_param(uint8_t dest, uint8_t param) {
     if (count == 0) { return; }
-    bool ret = false;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
       if (params[a].dest == dest + 1 && params[a].param == param) {
@@ -117,9 +116,6 @@ public:
   }
 
   uint8_t find_empty() {
-    uint8_t match = 255;
-    uint8_t empty = 255;
-
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find first empty
       if (params[a].dest == 0) {
@@ -197,9 +193,6 @@ public:
 
   void clear_scene(uint8_t scene) {
     PerfScene *s = &scenes[scene];
-    for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      uint8_t t = s->params[a].dest - 1;
-    }
     s->init();
   }
 

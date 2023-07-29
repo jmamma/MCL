@@ -17,7 +17,7 @@
 #include "Fonts/TomThumb.h"
 
 #define VERSION 4050
-#define VERSION_STR "SS4.50"
+#define VERSION_STR "RF4.50"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -107,7 +107,7 @@ public:
   void popPage() {
     GUI.popPage();
     for (uint8_t n = 0; n < NUM_PAGES; n++) {
-      if (GUI.currentPage() == getPage(n)) {
+      if (GUI.currentPage() == getPage((PageIndex) n)) {
         current_page = (PageIndex) n;
         return;
       }

@@ -79,7 +79,7 @@ public:
   }
   virtual void initSerial() { }
 
-  virtual uint8_t m_getc() {}
+  virtual uint8_t m_getc() = 0;
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
   virtual void m_putc(uint8_t c) = 0;
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
@@ -171,9 +171,9 @@ public:
   }
 
   ALWAYS_INLINE()
-  void sendNoteOff(uint8_t channel, uint8_t note, uint8_t velocity) {
+  void sendNoteOff(uint8_t channel, uint8_t note) {
 #ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if ((channel >= 16) || (note >= 128))
       return;
 #endif
 

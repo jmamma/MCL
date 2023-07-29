@@ -220,8 +220,8 @@ public:
   ALWAYS_INLINE() void tx_isr() {
 #ifdef RUNNING_STATUS_OUT
     bool rs = 1;
-#endif
   again:
+#endif
     if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
       // ==> flush the sidechannel now

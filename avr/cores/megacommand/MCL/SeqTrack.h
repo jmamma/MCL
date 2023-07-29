@@ -260,7 +260,7 @@ public:
 
   uint8_t get_quantized_step() {
     uint8_t u = 0;
-    get_quantized_step(u);
+    return get_quantized_step(u);
   }
   uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = 255);
 };

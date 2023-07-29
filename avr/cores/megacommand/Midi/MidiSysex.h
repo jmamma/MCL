@@ -62,7 +62,7 @@ class MidiSysexLedger {
 public:
   uint8_t state : 2;
   uint16_t recordLen : 14; // 16383 max record length
-  uint8_t *ptr;
+  volatile unsigned char *ptr;
 };
 
 #define SYSEX_STATE_NULL 0
@@ -128,7 +128,6 @@ public:
   }
 
   void get_next_msg() {
-    uint8_t n = msg_rd;
     msg_rd++;
     if (msg_rd == NUM_SYSEX_MSGS) {
       msg_rd = 0;
@@ -176,7 +175,7 @@ public:
     return get_bank1(src);
   }
 
-  ALWAYS_INLINE() bool recordByte(uint8_t c) {
+  ALWAYS_INLINE() void recordByte(uint8_t c) {
     putByte(c);
     ledger[msg_wr].recordLen++;
   }
