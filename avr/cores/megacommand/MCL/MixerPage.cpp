@@ -107,7 +107,8 @@ void MixerPage::loop() {
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
 
-  if (preview_mute_set != 255 && note_interface.notes_on == 0) {
+  if ((MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
+      note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
       if (encoders[n]->hasChanged()) {
         if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
@@ -267,10 +268,12 @@ void MixerPage::display() {
 
   if (show_mixer_menu && seq_step_page.display_mute_mask(midi_device)) {
     oled_draw_mutes();
-  }
-  else if (mute_set != 255 && mute_sets[!is_md_device].mutes[mute_set] != seq_step_page.mute_mask) {
+  } else if (mute_set != 255 && mute_sets[!is_md_device].mutes[mute_set] !=
+                                    seq_step_page.mute_mask) {
     uint16_t mask = mute_sets[!is_md_device].mutes[mute_set];
-    if (!is_md_device) { mask &= 0b111111; }
+    if (!is_md_device) {
+      mask &= 0b111111;
+    }
     MD.set_trigleds(mask, TRIGLED_EXCLUSIVE);
     seq_step_page.mute_mask = mask;
     oled_draw_mutes();
@@ -283,7 +286,7 @@ void MixerPage::display() {
       str1[0] = 'A' + n;
       uint8_t pos = n * 24;
       bool highlight =
-          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255);
+          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO));
       uint8_t val =
           highlight ? perf_locks[preview_mute_set][n] : encoders[n]->cur;
       mcl_gui.draw_encoder(24 + pos, fader_y + 4, val, highlight);
@@ -356,23 +359,34 @@ void MixerPage::display() {
 }
 
 void MixerPage::record_mutes_set(bool state) {
-    bool is_md_device = (midi_device == &MD);
-    for (uint8_t i = 0; i < 16; i++) {
-        if (note_interface.is_note_on(i)) {
-           if (is_md_device) {  mcl_seq.md_tracks[i].record_mutes = state; if (!state) mcl_seq.md_tracks[i].clear_mute(); }
-           else if (i < mcl_seq.num_ext_tracks) { mcl_seq.ext_tracks[i].record_mutes = state; if (!state) mcl_seq.ext_tracks[i].clear_mute(); }
-        }
+  bool is_md_device = (midi_device == &MD);
+  for (uint8_t i = 0; i < 16; i++) {
+    if (note_interface.is_note_on(i)) {
+      if (is_md_device) {
+        mcl_seq.md_tracks[i].record_mutes = state;
+        if (!state)
+          mcl_seq.md_tracks[i].clear_mute();
+      } else if (i < mcl_seq.num_ext_tracks) {
+        mcl_seq.ext_tracks[i].record_mutes = state;
+        if (!state)
+          mcl_seq.ext_tracks[i].clear_mute();
+      }
     }
+  }
 }
 
 void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t n = 0; n < mcl_seq.num_md_tracks; n++) {
     if (n < mcl_seq.num_ext_tracks) {
       mcl_seq.ext_tracks[n].record_mutes = false;
-      if (clear) { mcl_seq.ext_tracks[n].clear_mute(); }
-   }
+      if (clear) {
+        mcl_seq.ext_tracks[n].clear_mute();
+      }
+    }
     mcl_seq.md_tracks[n].record_mutes = false;
-    if (clear) { mcl_seq.md_tracks[n].clear_mute(); }
+    if (clear) {
+      mcl_seq.md_tracks[n].clear_mute();
+    }
   }
   if (!seq_step_page.recording) {
     clearLed2();
@@ -418,11 +432,11 @@ void MixerPage::switch_mute_set(uint8_t state) {
 
       uint8_t mute_set = state;
       bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
-      //Flip
+      // Flip
       if (state == 4 && devs[dev] == midi_device) {
         mute_state = !seq_track->mute_state;
       }
-      //Switch
+      // Switch
       if (mute_state != seq_track->mute_state) {
         devs[dev]->muteTrack(n, mute_state);
         if (is_md_device) {
@@ -495,14 +509,12 @@ void MixerPage::toggle_or_solo(bool solo) {
 
 bool MixerPage::handleEvent(gui_event_t *event) {
 
-
   if (note_interface.is_event(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;
 
     uint8_t track = event->source - 128;
-
 
     uint8_t is_md_device = (midi_device == &MD);
 
@@ -524,23 +536,27 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
           uint8_t mute_set = preview_mute_set;
 
-          //Toggle active mutes
+          // Toggle active mutes
           if (mute_set == 255) {
-            if (is_md_device) { mcl_seq.md_tracks[track].toggle_mute(); }
-            else { mcl_seq.ext_tracks[track].toggle_mute(); }
+            if (is_md_device) {
+              mcl_seq.md_tracks[track].toggle_mute();
+            } else {
+              mcl_seq.ext_tracks[track].toggle_mute();
+            }
             midi_device->muteTrack(track, seq_track->mute_state);
             return;
           }
 
-          //Toggle preview mutes
-          bool state = IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
+          // Toggle preview mutes
+          bool state =
+              IS_BIT_SET16(mute_sets[!is_md_device].mutes[mute_set], track);
           if (state == SEQ_MUTE_ON) {
             CLEAR_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
           } else {
             SET_BIT16(mute_sets[!is_md_device].mutes[mute_set], track);
           }
 
-         // oled_draw_mutes();
+          // oled_draw_mutes();
         } else if (first_track == 255 && midi_device == &MD) {
           first_track = track;
           MD.setStatus(0x22, track);
@@ -575,14 +591,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_KIT: {
         record_mutes_set(false);
-       // trig_interface.ignore_next_event(GLOBAL);
-      break;
+        // trig_interface.ignore_next_event(GLOBAL);
+        break;
       }
-     case MDX_KEY_PATSONGKIT: {
+      case MDX_KEY_PATSONGKIT: {
         bool clear = true;
         disable_record_mutes(true);
-       // trig_interface.ignore_next_event(GLOBAL);
-      break;
+        // trig_interface.ignore_next_event(GLOBAL);
+        break;
       }
       case MDX_KEY_EXTENDED: {
         if (midi_device == &MD) {
@@ -597,15 +613,21 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_NO: {
-        if (note_interface.notes_count_on() == 0) {
-          mcl.setPage(fx_page_a.last_page);
-          return true;
-        }
+        uint64_t mask =
+            ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
+            ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN);
+        if (((trig_interface.cmd_key_state & mask) == 0)) {
+          if (note_interface.notes_count_on() == 0) {
+            mcl.setPage(fx_page_a.last_page);
+            return true;
+          }
           toggle_or_solo(true);
+        }
         break;
       }
       case MDX_KEY_YES: {
-        if (preview_mute_set == 255 && trig_interface.is_key_down(MDX_KEY_FUNC) &&
+        if (preview_mute_set == 255 &&
+            trig_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
           switch_mute_set(4); //---> Flip mutes
           break;
@@ -643,7 +665,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         } else {
           preview_mute_set = set;
           for (uint8_t n = 0; n < 4; n++) {
-            if (perf_locks_temp[n] == 255) {
+            if (perf_locks_temp[n] == 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
               perf_locks_temp[n] = encoders[n]->cur;
               encoders[n]->old = encoders[n]->cur;
             }
@@ -682,8 +704,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           preview_mute_set = 255;
           redraw();
           for (uint8_t n = 0; n < 4; n++) {
-            if (perf_locks_temp[n] != 255) {
-              setLed2();
+            if (perf_locks_temp[n] != 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
               encoders[n]->cur = perf_locks_temp[n];
               encoders[n]->old = encoders[n]->cur;
             }
@@ -696,7 +717,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-    //show_mixer_menu = true;
+    // show_mixer_menu = true;
     if (note_interface.notes_on) {
       setLed2();
       record_mutes_set(true);
@@ -720,7 +741,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (preview_mute_set != 255) {
+  if (preview_mute_set != 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
     if (event->source >= Buttons.ENCODER1 &&
         event->source <= Buttons.ENCODER4) {
       uint8_t b = event->source - Buttons.ENCODER1;
