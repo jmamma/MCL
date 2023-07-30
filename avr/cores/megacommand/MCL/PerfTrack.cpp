@@ -47,6 +47,7 @@ void PerfTrack::load_perf() {
     e->active_scene_a = encs[n].active_scene_a;
     e->active_scene_b = encs[n].active_scene_b;
     e->cur = encs[n].cur;
+    e->old = encs[n].cur;
     memcpy(e->name,encs[n].name, PERF_NAME_LENGTH);
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
