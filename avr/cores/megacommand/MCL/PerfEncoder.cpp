@@ -5,7 +5,7 @@
 
 #define DIV_1_127 (1.00f / 127.0f)
 
-static PerfScene PerfData::scenes[NUM_SCENES];
+PerfScene PerfData::scenes[NUM_SCENES];
 
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val) {
   if (dest >= NUM_MD_TRACKS + 4) {

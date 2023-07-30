@@ -98,7 +98,9 @@ public:
     params[b].dest = dest + 1;
     params[b].param = param;
     params[b].val = value;
-    count++;
+    if (match == 255) {
+      count++;
+    }
     return b;
   }
 
