@@ -107,7 +107,7 @@ void MixerPage::loop() {
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
 
-  if ((MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
+  if ((trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
       note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
       if (encoders[n]->hasChanged()) {
@@ -286,7 +286,7 @@ void MixerPage::display() {
       str1[0] = 'A' + n;
       uint8_t pos = n * 24;
       bool highlight =
-          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO));
+          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (trig_interface.is_key_down(MDX_KEY_NO));
       uint8_t val =
           highlight ? perf_locks[preview_mute_set][n] : encoders[n]->cur;
       mcl_gui.draw_encoder(24 + pos, fader_y + 4, val, highlight);
@@ -665,7 +665,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         } else {
           preview_mute_set = set;
           for (uint8_t n = 0; n < 4; n++) {
-            if (perf_locks_temp[n] == 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
+            if (perf_locks_temp[n] == 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
               perf_locks_temp[n] = encoders[n]->cur;
               encoders[n]->old = encoders[n]->cur;
             }
@@ -704,7 +704,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           preview_mute_set = 255;
           redraw();
           for (uint8_t n = 0; n < 4; n++) {
-            if (perf_locks_temp[n] != 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
+            if (perf_locks_temp[n] != 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
               encoders[n]->cur = perf_locks_temp[n];
               encoders[n]->old = encoders[n]->cur;
             }
@@ -741,7 +741,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (preview_mute_set != 255 && (MidiClock.state != 2 || trig_interface.is_key_down(MDX_KEY_NO))) {
+  if (preview_mute_set != 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
     if (event->source >= Buttons.ENCODER1 &&
         event->source <= Buttons.ENCODER4) {
       uint8_t b = event->source - Buttons.ENCODER1;
