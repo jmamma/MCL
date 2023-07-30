@@ -27,7 +27,7 @@ void RoutePage::draw_routes() {
 
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (mcl_cfg.routing[i] != 6) {
       cur = (char)'A' + mcl_cfg.routing[i];

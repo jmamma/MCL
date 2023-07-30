@@ -67,7 +67,6 @@ public:
         memset(perf_locks,0xFF,sizeof(perf_locks));
       }
   void adjust_param(EncoderParent *enc, uint8_t param);
-
   void draw_levels();
   void redraw();
   void set_level(int curtrack, int value);

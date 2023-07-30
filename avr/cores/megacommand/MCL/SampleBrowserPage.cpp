@@ -391,8 +391,8 @@ void SampleBrowserPage::end() {
   char s_tmpbuf[5];
   char temp_entry[FILE_ENTRY_SIZE];
 
-  for (int i = 0, j = 7; i < nr_samplecount; ++i) {
-    for (int k = 0; k < 5; ++k) {
+  for (uint8_t i = 0, j = 7; i < nr_samplecount; ++i) {
+    for (uint8_t k = 0; k < 5; ++k) {
       s_tmpbuf[k] = sysex->getByte(++j);
     }
     bool slot_occupied = s_tmpbuf[4];

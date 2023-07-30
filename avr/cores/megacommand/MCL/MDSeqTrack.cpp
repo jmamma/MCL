@@ -287,7 +287,7 @@ again:
 
 void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
   *_pmask = 0;
-  for (int i = 0; i < NUM_MD_STEPS; i++) {
+  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
     bool set_bit = false;
     switch (mask_type) {
     case MASK_PATTERN:
@@ -714,7 +714,7 @@ void MDSeqTrack::clear_track(bool locks) {
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   DEBUG_PRINT_FN();
-  for (int i = 0; i < 24; i++) {
+  for (uint8_t i = 0; i < 24; i++) {
     if (!IS_BIT_SET32(pattern->lockPatterns[track_number], i)) {
       continue;
     }
@@ -722,7 +722,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
     if (idx < 0) {
       continue;
     }
-    for (int s = 0; s < 64; s++) {
+    for (uint8_t s = 0; s < 64; s++) {
       int8_t lockval = pattern->locks[idx][s];
       if (lockval >= 0 &&
           IS_BIT_SET64(pattern->trigPatterns[track_number], s)) {
@@ -822,7 +822,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     uint16_t l = 0, r = 0;
     //mute_mask = 0; //unimplemented
     // reverse steps & locks
-    for (int i = 0; i <= length / 2; ++i) {
+    for (uint8_t i = 0; i <= length / 2; ++i) {
       int j = length - i - 1;
       if (j < i) {
         break;

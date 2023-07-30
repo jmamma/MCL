@@ -86,7 +86,7 @@ void OscPage::loop() {
   int dir = 0;
   int16_t newval;
   int8_t diff = enc_->cur - enc_->old;
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       if (osc_waveform == SIN_OSC) {
         newval = sine_levels[i] + diff;

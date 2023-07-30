@@ -165,7 +165,7 @@ void encoder_level_handle(EncoderParent *enc) {
   int dir = enc->getValue() - enc->old;
   int track_newval;
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       track_newval = min(max(MD.kit.levels[i] + dir, 0), 127);
       mixer_page.set_level(i, track_newval);

@@ -20,7 +20,7 @@ void PolyPage::cleanup() {
 }
 
 void PolyPage::draw_mask() {
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t x = i * 8;
     if (note_interface.is_note(i)) {

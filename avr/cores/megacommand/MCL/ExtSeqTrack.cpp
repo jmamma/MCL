@@ -510,7 +510,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   int16_t note_start, note_end;
   bool ret = false;
 
-  for (int i = 0; i < length; i++) {
+  for (uint8_t i = 0; i < length; i++) {
 
   again:
     note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);

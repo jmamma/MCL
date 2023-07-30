@@ -700,7 +700,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 
   uint8_t store_lock = 255;
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if ((note_interface.is_note_on(i))) {
       step = i + (SeqPage::page_select * 16);
       if (step < active_track.length) {

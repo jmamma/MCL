@@ -179,7 +179,7 @@ bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
 bool Grid::clear_row(uint16_t row) {
   GridRowHeader row_header;
   row_header.init();
-  for (int x = 0; x < GRID_WIDTH; x++) {
+  for (uint8_t x = 0; x < GRID_WIDTH; x++) {
     clear_slot(x, row, false);
   }
   return write_row_header(&row_header, row);

@@ -609,7 +609,7 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 }
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, const uint16_t &trig_selection) {
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (IS_BIT_SET16(trig_selection,i)) {
       oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
     }
@@ -625,7 +625,7 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
                         const uint64_t &pattern_mask, uint8_t step_count,
                         uint8_t length, const uint64_t &mute_mask,
                         const uint64_t &slide_mask) {
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
     bool in_range = idx < length;
@@ -741,7 +741,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
                        const uint64_t &lock_mask, uint8_t step_count,
                        uint8_t length, bool show_current_step) {
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t idx = i + offset;
     bool in_range = idx < length;

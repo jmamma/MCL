@@ -349,7 +349,7 @@ void SeqExtStepPage::draw_pianoroll() {
 
   uint16_t ev_idx = 0, ev_end = 0;
   uint8_t h = fov_h / fov_notes;
-  for (int i = 0; i < active_track.length; i++) {
+  for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
     ev_end += active_track.timing_buckets.get(i);
 
