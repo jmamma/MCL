@@ -96,8 +96,8 @@ void MixerPage::load_perf_locks(uint8_t state) {
     uint8_t val = perf_locks[state][n];
     if (val < 128) {
       encoders[n]->cur = val;
+      encoders[n]->old = val;
       ((PerfEncoder *)encoders[n])->send();
-      encoders[n]->old = encoders[n]->cur;
     }
   }
 }
@@ -676,14 +676,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN: {
         uint64_t mask =
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
-            ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) |
-            ((uint64_t)1 << MDX_KEY_YES);
+            ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) | ((uint64_t)1 << MDX_KEY_YES);
         if ((trig_interface.cmd_key_state & mask) == 0) {
           trig_interface.send_md_leds(TRIGLED_OVERLAY);
           preview_mute_set = 255;
           redraw();
           for (uint8_t n = 0; n < 4; n++) {
             if (perf_locks_temp[n] != 255) {
+              setLed2();
               encoders[n]->cur = perf_locks_temp[n];
               encoders[n]->old = encoders[n]->cur;
             }
@@ -705,13 +705,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-  global_release:
-    if (preview_mute_set == 255) {
+
+    global_release:
+      preview_mute_set = 255;
       show_mixer_menu = false;
       disable_record_mutes();
       MD.set_trigleds(0, TRIGLED_OVERLAY);
-      oled_draw_mutes();
-    }
+      redraw();
     return true;
   }
 
