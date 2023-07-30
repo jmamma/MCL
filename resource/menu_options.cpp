@@ -15,7 +15,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 16: MD NORMALIZE
   {0, "OFF"},{1, "AUTO"},
   // 18: MD CTRL CHAN
-  {0, "INT"},{17, "OMNI"},
+  {0, "--"},{17, "OMNI"},
   // 20: MD CHAIN/Slot CHAIN
   {1, "AUT"},{2,"MAN"},{3,"QUE"},
   // 23: SYSTEM DISPLAY
